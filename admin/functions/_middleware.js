@@ -5,7 +5,6 @@ import { resolveDevstudioSession } from './_shared/session.js';
 const PUBLIC_API_PATHS = new Set([
   '/api/session/login/google',
   '/api/session/finish',
-  '/api/e2e/session',
 ]);
 
 function isApiPath(pathname) {

@@ -24,11 +24,6 @@ BERLIN_BASE_URL = "https://berlin-dev.clickeen.workers.dev"
 TOKYO_PUBLIC_BASE_URL = "https://tokyo.dev.clickeen.com"
 PUBLIC_SERVING_BASE_URL = "https://dev.clk.live"
 
-[[kv_namespaces]]
-binding = "USAGE_KV"
-id = "eca50e55fa2a4f94a01fb81aeebf8377"
-preview_id = "b31d28eb386c4c068821e32d41fbc92a"
-
 [[r2_buckets]]
 binding = "TOKYO_R2"
 bucket_name = "tokyo-assets-dev"

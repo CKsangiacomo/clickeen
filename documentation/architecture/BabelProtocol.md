@@ -8,7 +8,7 @@ Babel is Clickeen's translated-locale value protocol for account widgets. It is 
 
 Builder edits one account-owned widget instance in the account base locale.
 
-After save, translation generation is explicit work from the Translations panel. Roma calls Tokyo once. Tokyo resolves the current saved instance content, widget editable-field contract, target locales, existing translated values, stable field identities, delta, and saved base content marker. San Francisco receives widget-generic saved text fields and returns translated text primitive values with that marker. Tokyo stores translated locale values only when the marker still matches current saved base content. Public widget package bytes are public artifacts, not source truth, and are not rebuilt from overlays during visitor serving or publish.
+After save, translation generation is explicit work from the Translations panel. Roma calls Tokyo with the current account active-locale snapshot. Tokyo reads the current saved instance content, widget editable-field contract, existing translated values, stable field identities, delta, and saved base content marker. San Francisco receives widget-generic saved text fields and returns translated text primitive values with that marker. Tokyo stores translated locale values only when the marker still matches current saved base content. Public widget package bytes are public artifacts, not source truth, and are not rebuilt from overlays during visitor serving or publish.
 
 ## Source Of Text Truth
 
@@ -32,8 +32,8 @@ No producer receives wildcard, glob, template, or sidecar paths.
 
 For a given saved `instance.content.json` and widget editable-field contract:
 
-1. Tokyo extracts required concrete text primitive paths.
-2. Tokyo decides the delta: missing locale values plus fields marked `changed`.
+1. The saved instance content and widget editable-field contract provide the required concrete text primitive paths.
+2. Roma submits the current account active-locale snapshot for the operation; Tokyo-worker reads existing stored overlays for those locales.
 3. San Francisco receives exactly those paths and their current base values.
 4. San Francisco returns exactly those paths and translated values.
 5. Tokyo rejects the response if any required path is missing.
@@ -79,13 +79,13 @@ Manual translation edits are temporary overrides of the current translated value
 
 ## Tokyo PBX Rule
 
-Tokyo-worker validates, stores, reads, generates, and completes translated locale values through named product operations.
+Tokyo-worker stores, reads, and completes translated locale value artifacts through named storage operations. San Francisco generates translated values.
 
 Tokyo-worker must not:
 
 - Expose private storage object IDs as locale identity.
 - Orchestrate San Francisco work from Roma-side storage walks.
-- Repair values it produced or accepted.
+- Repair values it accepted.
 - Preserve old l10n route or path shapes.
 - Preserve old account/widget storage grouping shapes.
 

@@ -88,20 +88,6 @@ function panelLabel(panelId: string): string {
   return fieldLabel(panelId || 'defaults');
 }
 
-function widgetLabel(widgetType: string): string {
-  const labels: Record<string, string> = {
-    'big-bang': 'Big Bang',
-    calltoaction: 'Call to Action',
-    cards: 'Cards',
-    countdown: 'Countdown',
-    faq: 'FAQ',
-    logoshowcase: 'Logo Showcase',
-    'split-carousel-media': 'Split Carousel Media',
-    'split-media': 'Split Media',
-  };
-  return labels[widgetType] ?? fieldLabel(widgetType);
-}
-
 function panelSortValue(panelId: string): number {
   const index = PANEL_ORDER.indexOf(panelId);
   return index >= 0 ? index : PANEL_ORDER.length;
@@ -239,6 +225,12 @@ function compiledControlsFromPayload(payload: unknown): DefaultsControl[] {
     );
 }
 
+function compiledDisplayNameFromPayload(payload: unknown): string | null {
+  if (!isRecord(payload)) return null;
+  const displayName = typeof payload.displayName === 'string' ? payload.displayName.trim() : '';
+  return displayName || null;
+}
+
 function uniqueControls(controls: DefaultsControl[]): DefaultsControl[] {
   const seen = new Set<string>();
   const unique: DefaultsControl[] = [];
@@ -320,35 +312,15 @@ function isControlVisible(control: DefaultsControl, values: Record<string, unkno
     .every((condition) => evaluateShowIfCondition(condition, values));
 }
 
-function JsonDefaultsField(args: {
-  control: DefaultsControl;
-  value: unknown;
-  onChange: (path: string, value: unknown) => void;
-}) {
-  const [text, setText] = useState(() => JSON.stringify(args.value ?? null, null, 2));
-
-  useEffect(() => {
-    setText(JSON.stringify(args.value ?? null, null, 2));
-  }, [args.value]);
-
-  const commit = () => {
-    try {
-      args.onChange(args.control.path, JSON.parse(text) as unknown);
-    } catch {
-      setText(JSON.stringify(args.value ?? null, null, 2));
-    }
-  };
-
+function isSupportedDefaultsControl(control: DefaultsControl): boolean {
   return (
-    <label className="widget-defaults-field widget-defaults-field--json">
-      <span className="body-s">{args.control.label || fieldLabel(args.control.path)}</span>
-      <textarea
-        className="widget-defaults-input widget-defaults-textarea"
-        value={text}
-        onBlur={commit}
-        onChange={(event) => setText(event.currentTarget.value)}
-      />
-    </label>
+    control.type === 'toggle' ||
+    control.type === 'valuefield' ||
+    control.type === 'textedit' ||
+    control.type === 'input' ||
+    control.type === 'textarea' ||
+    control.type === 'dropdown-edit' ||
+    Boolean(control.options?.length)
   );
 }
 
@@ -362,7 +334,7 @@ function DefaultsField(args: {
   const value = readPathValue(values, control.path);
   const label = control.label || fieldLabel(control.path);
 
-  if (control.type === 'toggle' || typeof value === 'boolean') {
+  if (control.type === 'toggle') {
     return (
       <label className="widget-defaults-field widget-defaults-field--toggle">
         <span className="body-s">{label}</span>
@@ -398,7 +370,7 @@ function DefaultsField(args: {
     );
   }
 
-  if (control.type === 'valuefield' || typeof value === 'number') {
+  if (control.type === 'valuefield') {
     return (
       <label className="widget-defaults-field">
         <span className="body-s">{label}</span>
@@ -412,12 +384,18 @@ function DefaultsField(args: {
     );
   }
 
-  if (Array.isArray(value) || isRecord(value)) {
-    return <JsonDefaultsField control={control} value={value} onChange={onChange} />;
+  if (
+    control.type !== 'textedit' &&
+    control.type !== 'input' &&
+    control.type !== 'textarea' &&
+    control.type !== 'dropdown-edit'
+  ) {
+    return null;
   }
 
   const text = typeof value === 'string' ? value : '';
   const multiline =
+    control.type === 'textarea' ||
     control.type === 'textedit' ||
     control.type === 'dropdown-edit' ||
     text.length > 72 ||
@@ -470,6 +448,7 @@ export function WidgetDefaultsDomain() {
   const [baseline, setBaseline] = useState<AccountWidgetDefaultsDocument | null>(null);
   const [draft, setDraft] = useState<AccountWidgetDefaultsDocument | null>(null);
   const [compiledControls, setCompiledControls] = useState<Record<string, DefaultsControl[]>>({});
+  const [compiledWidgetLabels, setCompiledWidgetLabels] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [compiledLoading, setCompiledLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -477,17 +456,19 @@ export function WidgetDefaultsDomain() {
 
   const widgetTypes = useMemo(
     () =>
-      draft
-        ? Object.keys(draft.widgets)
-            .sort((left, right) => left.localeCompare(right))
-        : [],
+      draft ? Object.keys(draft.widgets).sort((left, right) => left.localeCompare(right)) : [],
     [draft],
   );
   const widgetTypesKey = widgetTypes.join('\n');
   const dirty = Boolean(baseline && draft && stableJson(baseline) !== stableJson(draft));
   const controlsLoaded =
     widgetTypes.length > 0 &&
-    widgetTypes.every((widgetType) => Array.isArray(compiledControls[widgetType]));
+    widgetTypes.every(
+      (widgetType) =>
+        Array.isArray(compiledControls[widgetType]) &&
+        typeof compiledWidgetLabels[widgetType] === 'string' &&
+        compiledWidgetLabels[widgetType].trim(),
+    );
 
   const loadDefaults = useCallback(async () => {
     setLoading(true);
@@ -519,12 +500,20 @@ export function WidgetDefaultsDomain() {
     Promise.all(
       requestedWidgetTypes.map(async (widgetType) => {
         const { payload } = await getCompiledWidget(widgetType);
-        return [widgetType, compiledControlsFromPayload(payload)] as const;
+        const displayName = compiledDisplayNameFromPayload(payload);
+        if (!displayName)
+          throw new Error(`Compiled widget metadata missing displayName: ${widgetType}`);
+        return [widgetType, displayName, compiledControlsFromPayload(payload)] as const;
       }),
     )
       .then((entries) => {
         if (cancelled) return;
-        setCompiledControls(Object.fromEntries(entries));
+        setCompiledWidgetLabels(
+          Object.fromEntries(entries.map(([widgetType, displayName]) => [widgetType, displayName])),
+        );
+        setCompiledControls(
+          Object.fromEntries(entries.map(([widgetType, , controls]) => [widgetType, controls])),
+        );
       })
       .catch((error) => {
         if (cancelled) return;
@@ -610,14 +599,42 @@ export function WidgetDefaultsDomain() {
         ),
       );
       const coreControlPaths = new Set(compiledCoreControls.map((control) => control.path));
+      const widgetLabel = compiledWidgetLabels[widgetType] as string;
       return collectDefaultPaths(core)
         .filter((path) => !isPathCoveredByControl(path, coreControlPaths))
         .filter((path) => !isPathCoveredByMetadata(path, CORE_SOFTWARE_METADATA_PATHS))
-        .map((path) => `${widgetLabel(widgetType)}: ${path}`);
+        .map((path) => `${widgetLabel}: ${path}`);
     });
 
     return [...shellPaths, ...corePaths].sort((left, right) => left.localeCompare(right));
-  }, [compiledControls, controlsLoaded, draft, widgetTypes]);
+  }, [compiledControls, compiledWidgetLabels, controlsLoaded, draft, widgetTypes]);
+
+  const unsupportedDefaultControls = useMemo(() => {
+    if (!draft || !controlsLoaded) return [];
+    const shellControls = uniqueControls(
+      Object.values(compiledControls)
+        .flat()
+        .filter(
+          (control) => isShellControlPath(control.path) && pathExists(draft.shell, control.path),
+        ),
+    )
+      .filter((control) => !isSupportedDefaultsControl(control))
+      .map((control) => `Shell: ${control.path} (${control.type})`);
+
+    const coreControls = widgetTypes.flatMap((widgetType) => {
+      const core = draft.widgets[widgetType]?.core ?? {};
+      const widgetLabel = compiledWidgetLabels[widgetType] as string;
+      return uniqueControls(
+        (compiledControls[widgetType] ?? []).filter(
+          (control) => !isShellControlPath(control.path) && pathExists(core, control.path),
+        ),
+      )
+        .filter((control) => !isSupportedDefaultsControl(control))
+        .map((control) => `${widgetLabel}: ${control.path} (${control.type})`);
+    });
+
+    return [...shellControls, ...coreControls].sort((left, right) => left.localeCompare(right));
+  }, [compiledControls, compiledWidgetLabels, controlsLoaded, draft, widgetTypes]);
 
   const updateShellPath = useCallback((path: string, value: unknown) => {
     setDraft((current) =>
@@ -698,10 +715,24 @@ export function WidgetDefaultsDomain() {
   }
 
   if (compiledLoading || !controlsLoaded) {
+    if (error && !compiledLoading) {
+      return (
+        <section className="roma-module-surface widget-defaults-contract-error">
+          <div>
+            <h2 className="heading-4">Widget Defaults Contract Error</h2>
+            <p className="body-s widget-defaults-error">{error}</p>
+          </div>
+          <p className="body-m">
+            Widget defaults require compiled Builder metadata. Fix Widget Shell or the widget spec
+            before editing defaults.
+          </p>
+        </section>
+      );
+    }
     return <section className="roma-module-surface body-m">Loading Builder controls...</section>;
   }
 
-  if (unmappedDefaultPaths.length > 0) {
+  if (unmappedDefaultPaths.length > 0 || unsupportedDefaultControls.length > 0) {
     return (
       <section className="roma-module-surface widget-defaults-contract-error">
         <div>
@@ -710,10 +741,11 @@ export function WidgetDefaultsDomain() {
         </div>
         <p className="body-m">
           Account defaults contain paths that are not exposed by the compiled Builder control
-          contract. Fix Widget Shell or the widget spec before editing defaults.
+          contract, or compiled controls that the defaults editor does not support. Fix Widget Shell
+          or the widget spec before editing defaults.
         </p>
         <pre className="widget-defaults-contract-error__paths">
-          {unmappedDefaultPaths.join('\n')}
+          {[...unmappedDefaultPaths, ...unsupportedDefaultControls].join('\n')}
         </pre>
       </section>
     );
@@ -768,7 +800,7 @@ export function WidgetDefaultsDomain() {
       <div className="widget-defaults-widgets">
         {widgetEntries.map(([widgetType, core, groups]) => (
           <section className="widget-defaults-widget" key={widgetType}>
-            <h3 className="heading-5">{widgetLabel(widgetType)}</h3>
+            <h3 className="heading-5">{compiledWidgetLabels[widgetType] as string}</h3>
             {groups.map((group) => (
               <DefaultsGroup
                 key={`${widgetType}:${group.key}`}

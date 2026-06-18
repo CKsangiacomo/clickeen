@@ -242,7 +242,10 @@ export async function compileWidgetServer(widgetJson: RawWidget): Promise<Compil
     throw new Error('[BobCompiler] widget JSON missing widgetname');
   }
 
-  const displayName = (typeof widgetJson.displayName === 'string' && widgetJson.displayName.trim()) || widgetname;
+  const displayName = typeof widgetJson.displayName === 'string' ? widgetJson.displayName.trim() : '';
+  if (!displayName) {
+    throw new Error(`[BobCompiler] ${widgetname} widget JSON missing displayName`);
+  }
   const rawItemKey = widgetJson.itemKey;
   const itemKey = typeof rawItemKey === 'string' && rawItemKey.trim() ? rawItemKey.trim() : null;
   const normalization = normalizeWidgetNormalizationSpec(widgetJson.normalization);

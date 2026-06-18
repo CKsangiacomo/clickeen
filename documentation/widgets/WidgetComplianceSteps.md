@@ -627,9 +627,10 @@ Account defaults smoke:
 - Creating a new instance submits resolved `source.config` from Roma to Tokyo.
   Tokyo derives `instance.content.json` from that config and must not call
   widget factory defaults during product create.
-- Create/save/materialization carries source metadata such as `baseLocale`,
-  `targetLocales`, and `meta`; those are not account defaults policy and must
-  not be dropped or silently defaulted.
+- Create/save/materialization carries source metadata such as `baseLocale` and
+  `meta`; those are not account defaults policy and must not be dropped or
+  silently defaulted. Account active locales are Roma account settings and are
+  not copied into every widget instance.
 - Changing account defaults affects only future new instances. Existing saved
   instances and duplicates keep their saved source.
 - Roma Widget Defaults maps every account Shell/Core default path to compiled

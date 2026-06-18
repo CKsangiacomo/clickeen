@@ -1,6 +1,8 @@
 {
   "v": 1,
   "widgetname": "logoshowcase",
+  "displayName": "Logo Showcase",
+  "description": "",
   "itemKey": "logoshowcase.item",
   "normalization": {
     "idRules": [

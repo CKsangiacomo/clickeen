@@ -1,6 +1,8 @@
 {
   "v": 1,
   "widgetname": "countdown",
+  "displayName": "Countdown",
+  "description": "",
   "itemKey": "countdown.item",
   "defaults": {
     "uiLabels": {
@@ -58,7 +60,7 @@
         "repeat": "never",
         "timeUnit": "hours",
         "timezone": "UTC",
-          "targetDate": "2030-01-01T00:00",
+        "targetDate": "2030-01-01T00:00",
         "timeAmount": 1,
         "targetNumber": 1000,
         "countDuration": 5,

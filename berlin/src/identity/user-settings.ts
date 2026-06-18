@@ -7,7 +7,12 @@ import type { BerlinUserProfilePayload } from '../bootstrap/types';
 import { json, validationError } from '../http';
 import { normalizeUserSettingsPayload } from './user-row-normalization';
 import type { UserRow as BerlinUserRow } from './user-row-normalization';
-import { readSupabaseAdminJson, supabaseAdminErrorResponse, supabaseAdminFetch } from '../supabase-admin';
+import {
+  readSupabaseAdminJson,
+  supabaseAdminArrayPayload,
+  supabaseAdminErrorResponse,
+  supabaseAdminFetch,
+} from '../supabase-admin';
 import { type Env } from '../types';
 
 export type UserSettingsPatch = {
@@ -131,7 +136,12 @@ async function loadCurrentUserSettingsRow(args: {
       response: supabaseAdminErrorResponse('coreui.errors.db.readFailed', response.status, payload),
     };
   }
-  return { ok: true, row: Array.isArray(payload) ? payload[0] || null : null };
+  const rows = supabaseAdminArrayPayload<{ country?: unknown; timezone?: unknown }>(
+    payload,
+    'coreui.errors.db.readFailed',
+  );
+  if (!rows.ok) return rows;
+  return { ok: true, row: rows.value[0] || null };
 }
 
 export async function patchUserSettings(args: {
@@ -190,8 +200,9 @@ export async function patchUserSettings(args: {
       response: supabaseAdminErrorResponse('coreui.errors.db.writeFailed', response.status, payload),
     };
   }
-  const rows = Array.isArray(payload) ? payload : [];
-  const profile = normalizeUserSettingsPayload(args.userId, rows[0] ?? null);
+  const rows = supabaseAdminArrayPayload<BerlinUserRow>(payload, 'coreui.errors.db.writeFailed');
+  if (!rows.ok) return rows;
+  const profile = normalizeUserSettingsPayload(args.userId, rows.value[0] ?? null);
   if (!profile) {
     return {
       ok: false,

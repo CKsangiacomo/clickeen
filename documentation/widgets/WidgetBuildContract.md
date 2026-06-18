@@ -72,10 +72,11 @@ Account-owned runtime data lives under
 `accounts/{accountPublicId}/instances/{instanceId}/`, never under
 `tokyo/product/widgets/{widgetType}/`.
 
-Instance source metadata travels with the instance. `baseLocale`,
-`targetLocales`, and `meta` are source metadata, not account default policy.
-Create/save/materialization code must carry them through explicitly and must not
-drop them or silently invent fallback values.
+Instance source metadata travels with the instance. `baseLocale` and `meta` are
+source metadata, not account default policy. Create/save/materialization code
+must carry them through explicitly and must not drop them or silently invent
+fallback values. Account active locales are account settings in Roma; they are
+not copied into every widget instance.
 
 Account-owned widget defaults live under:
 
@@ -636,9 +637,10 @@ Shared Settings defaults must be executable:
 Locale switcher display state is Shell-owned, but locale availability is not.
 Tier policy decides locale capacity, Account Settings decides
 `baseLocale`/`selectedTargetLocales`/`localePolicy`, and the runtime package
-delivers the locale list available to a rendered widget. The Shell locale
-switcher may show only the locales delivered by that runtime package; selected
-target locales are not readiness.
+delivers the locale list available to a rendered widget. The selected target
+locales field is the account active-locale selection, not per-widget readiness.
+The Shell locale switcher may show only the locales delivered by that runtime
+package.
 
 Supported social-share channel leaves are `copy`, `sms`, `email`, `whatsapp`,
 `telegram`, `signal`, `messenger`, `wechat`, `line`, `slack`, `teams`,

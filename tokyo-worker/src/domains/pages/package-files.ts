@@ -3,8 +3,7 @@ import { publicPackageContentType } from '../public-package-serve-metadata';
 import { accountPagePublishFileKey } from './keys';
 import { PageOperationError } from './types';
 
-type R2TextObject = {
-  text(): Promise<string>;
+type R2MetadataObject = {
   httpMetadata?: { contentType?: string | null } | null;
 };
 
@@ -24,15 +23,15 @@ class PagePackageOperationError extends Error {
   }
 }
 
-async function readRequiredText(args: {
+async function assertRequiredObject(args: {
   env: Env;
   key: string;
   reasonKey: string;
-}): Promise<string> {
-  const object = await args.env.TOKYO_R2.get(args.key) as R2TextObject | null;
+}): Promise<void> {
+  const object = (await args.env.TOKYO_R2.head(args.key)) as R2MetadataObject | null;
   if (!object) throw new PagePackageOperationError(args.reasonKey, args.key);
-  if (!publicPackageContentType(object)) throw new PagePackageOperationError('page.package.metadataInvalid', args.key);
-  return object.text();
+  if (!publicPackageContentType(object))
+    throw new PagePackageOperationError('page.package.metadataInvalid', args.key);
 }
 
 export async function verifyAccountPagePublicPackageReady(args: {
@@ -41,18 +40,18 @@ export async function verifyAccountPagePublicPackageReady(args: {
   pageId: string;
 }): Promise<PagePublicPackageReadinessResult> {
   try {
-    const [indexHtml, stylesCss, runtimeJs] = await Promise.all([
-      readRequiredText({
+    await Promise.all([
+      assertRequiredObject({
         env: args.env,
         key: accountPagePublishFileKey(args.accountId, args.pageId, 'index.html'),
         reasonKey: 'page.package.indexMissing',
       }),
-      readRequiredText({
+      assertRequiredObject({
         env: args.env,
         key: accountPagePublishFileKey(args.accountId, args.pageId, 'styles.css'),
         reasonKey: 'page.package.stylesMissing',
       }),
-      readRequiredText({
+      assertRequiredObject({
         env: args.env,
         key: accountPagePublishFileKey(args.accountId, args.pageId, 'runtime.js'),
         reasonKey: 'page.package.runtimeMissing',
@@ -63,7 +62,8 @@ export async function verifyAccountPagePublicPackageReady(args: {
     const detail = error instanceof Error ? error.message : String(error);
     return {
       ok: false,
-      reasonKey: error instanceof PagePackageOperationError ? error.reasonKey : 'page.package.notReady',
+      reasonKey:
+        error instanceof PagePackageOperationError ? error.reasonKey : 'page.package.notReady',
       detail,
     };
   }
@@ -76,7 +76,9 @@ export async function purgeAccountPagePublicCache(args: {
 }): Promise<void> {
   const zoneId = String(args.env.CLOUDFLARE_ZONE_ID || '').trim();
   const token = String(args.env.CLOUDFLARE_API_TOKEN || '').trim();
-  const publicServingBase = String(args.env.PUBLIC_SERVING_BASE_URL || '').trim().replace(/\/+$/, '');
+  const publicServingBase = String(args.env.PUBLIC_SERVING_BASE_URL || '')
+    .trim()
+    .replace(/\/+$/, '');
   if (!zoneId || !token || !publicServingBase) {
     throw new PageOperationError({
       kind: 'UPSTREAM_UNAVAILABLE',
@@ -85,23 +87,20 @@ export async function purgeAccountPagePublicCache(args: {
     });
   }
   const base = `${publicServingBase}/${args.accountId}/pages/${args.pageId}`;
-  const response = await fetch(`https://api.cloudflare.com/client/v4/zones/${encodeURIComponent(zoneId)}/purge_cache`, {
-    method: 'POST',
-    headers: {
-      authorization: `Bearer ${token}`,
-      'content-type': 'application/json',
+  const response = await fetch(
+    `https://api.cloudflare.com/client/v4/zones/${encodeURIComponent(zoneId)}/purge_cache`,
+    {
+      method: 'POST',
+      headers: {
+        authorization: `Bearer ${token}`,
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({
+        files: [base, `${base}/`, `${base}/index.html`, `${base}/styles.css`, `${base}/runtime.js`],
+      }),
     },
-    body: JSON.stringify({
-      files: [
-        base,
-        `${base}/`,
-        `${base}/index.html`,
-        `${base}/styles.css`,
-        `${base}/runtime.js`,
-      ],
-    }),
-  });
-  const payload = await response.json().catch(() => null) as { success?: unknown } | null;
+  );
+  const payload = (await response.json().catch(() => null)) as { success?: unknown } | null;
   if (!response.ok || payload?.success !== true) {
     throw new PageOperationError({
       kind: 'UPSTREAM_UNAVAILABLE',

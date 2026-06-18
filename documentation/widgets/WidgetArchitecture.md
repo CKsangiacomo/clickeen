@@ -97,9 +97,10 @@ Factory defaults seed accounts. After an account has widget defaults, new
 instance creation uses account defaults. Bob never fetches account defaults and
 does not maintain a live fallback ladder.
 
-Source metadata travels with the instance source. `baseLocale`, `targetLocales`,
-and `meta` are not account default policy and must not be dropped, silently
-defaulted, or inferred during create/save/materialization.
+Source metadata travels with the instance source. `baseLocale` and `meta` are
+not account default policy and must not be dropped, silently defaulted, or
+inferred during create/save/materialization. Account active locales do not travel
+with each widget instance; Roma account settings own them.
 
 Roma Widget Defaults is not a second editor contract. It renders account
 defaults through the compiled Builder control contract. Any Shell or Core
@@ -268,6 +269,8 @@ Locale ownership is split across product authorities:
 - Tier policy decides locale capacity through `l10n.locales.max`.
 - Account Settings decides the selected locales the account uses:
   `baseLocale`, `selectedTargetLocales`, and `localePolicy`.
+- The selected locales are account active locales. They apply to every widget in
+  the account as soon as Roma saves account settings.
 - Translation readiness comes from current saved translated overlay values for
   the specific account instance.
 - The Widget Shell locale switcher only decides whether and where a specific
@@ -277,7 +280,7 @@ Locale ownership is split across product authorities:
 `localeSwitcher.position` are Shell display state. Widget source must not carry
 fake locale policy such as IP behavior or pinned-locale selection. The Shell
 locale switcher reads the locale list delivered by the runtime package; it must
-not infer public language options from Account Settings target-locale intent.
+not infer public language options from Account Settings intent alone.
 
 ### Core
 
@@ -665,7 +668,7 @@ Preview update payload includes the active state plus locale context:
 ```text
 Bob compiled widget package + current instance state
 -> Roma builds index.html/styles.css/runtime.js
--> Roma saves source/artifacts through Tokyo product operation
+-> Roma saves source/artifacts through Tokyo storage command
 -> Tokyo stores exact submitted objects
 ```
 

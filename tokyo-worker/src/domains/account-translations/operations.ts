@@ -22,9 +22,7 @@ import {
   readAccountInstanceContentDocument,
   readAccountInstanceDocument,
 } from '../account-instances/source';
-import {
-  completeAccountInstanceTranslatedLocaleValues,
-} from './values';
+import { completeAccountInstanceTranslatedLocaleValues } from './values';
 import {
   readInstanceRegistryRow,
   updateInstanceRegistryTranslationStatus,
@@ -79,7 +77,13 @@ export type InstanceTranslationGenerationResult =
       baseLocale: string | null;
       reasonKey: string;
       detail: string;
-      results: Array<{ locale: string; ok: false; reasonKey: string; detail: string; path?: string }>;
+      results: Array<{
+        locale: string;
+        ok: false;
+        reasonKey: string;
+        detail: string;
+        path?: string;
+      }>;
     };
 
 export type LocaleTranslationCompletionResult =
@@ -124,8 +128,23 @@ function generationFailure(args: {
 function normalizeLocaleList(value: unknown): string[] {
   if (!Array.isArray(value)) return [];
   return Array.from(
-    new Set(value.map((entry) => normalizeLocale(entry)).filter((entry): entry is string => Boolean(entry))),
+    new Set(
+      value
+        .map((entry) => normalizeLocale(entry))
+        .filter((entry): entry is string => Boolean(entry)),
+    ),
   );
+}
+
+function normalizeRequestedLocaleList(value: unknown): string[] | null {
+  if (!Array.isArray(value)) return null;
+  const locales: string[] = [];
+  for (const entry of value) {
+    const locale = normalizeLocale(entry);
+    if (!locale) return null;
+    if (!locales.includes(locale)) locales.push(locale);
+  }
+  return locales;
 }
 
 function resolveTranslationQueue(env: Env): TranslationQueue | null {
@@ -188,7 +207,9 @@ function sameJobBasis(args: {
       baseText: field.baseText,
     }))
     .sort((left, right) => left.identityKey.localeCompare(right.identityKey));
-  const jobBasis = [...args.job.basis.fields].sort((left, right) => left.identityKey.localeCompare(right.identityKey));
+  const jobBasis = [...args.job.basis.fields].sort((left, right) =>
+    left.identityKey.localeCompare(right.identityKey),
+  );
   return JSON.stringify(currentBasis) === JSON.stringify(jobBasis);
 }
 
@@ -202,7 +223,11 @@ async function baseContentMarkerForJob(job: InstanceTranslationJob): Promise<str
   });
 }
 
-function currentOperationMatchesCompletionJob(current: TranslationGenerationOperationDocument, job: InstanceTranslationJob, jobBaseContentMarker: string): boolean {
+function currentOperationMatchesCompletionJob(
+  current: TranslationGenerationOperationDocument,
+  job: InstanceTranslationJob,
+  jobBaseContentMarker: string,
+): boolean {
   return current.jobId === job.jobId && current.baseContentMarker === jobBaseContentMarker;
 }
 
@@ -236,7 +261,9 @@ function createTranslationGenerationOperationDocument(args: {
     locales[job.targetLocale] = {
       locale: job.targetLocale,
       status: 'queued',
-      paths: job.changedFields.map((field) => field.path).sort((left, right) => left.localeCompare(right)),
+      paths: job.changedFields
+        .map((field) => field.path)
+        .sort((left, right) => left.localeCompare(right)),
       updatedAt: args.requestedAt,
     };
   }
@@ -257,7 +284,9 @@ function createTranslationGenerationOperationDocument(args: {
       completedLocales: [],
       failedLocales: [],
       supersededLocales: [],
-      pendingLocales: args.jobs.map((job) => job.targetLocale).sort((left, right) => left.localeCompare(right)),
+      pendingLocales: args.jobs
+        .map((job) => job.targetLocale)
+        .sort((left, right) => left.localeCompare(right)),
       currentReadyLocales: args.currentReadyLocales,
       locales,
       basis: buildJobBasis(args.jobs),
@@ -341,7 +370,11 @@ function applyRegistryStatusToGenerationSummary(args: {
   ) {
     return args.summary;
   }
-  if (args.registryStatus === 'queued' || args.registryStatus === 'running' || args.registryStatus === 'failed') {
+  if (
+    args.registryStatus === 'queued' ||
+    args.registryStatus === 'running' ||
+    args.registryStatus === 'failed'
+  ) {
     return { ...args.summary, status: args.registryStatus };
   }
   return { ...args.summary, status: 'idle' };
@@ -354,7 +387,10 @@ function isActiveGenerationSummary(summary: TranslationGenerationOperationSummar
 function shouldTimeoutGeneration(summary: TranslationGenerationOperationSummary): boolean {
   if (!isActiveGenerationSummary(summary) || !summary.requestedAt) return false;
   const requestedAtMs = Date.parse(summary.requestedAt);
-  return Number.isFinite(requestedAtMs) && Date.now() - requestedAtMs >= TRANSLATION_GENERATION_ACTIVE_TIMEOUT_MS;
+  return (
+    Number.isFinite(requestedAtMs) &&
+    Date.now() - requestedAtMs >= TRANSLATION_GENERATION_ACTIVE_TIMEOUT_MS
+  );
 }
 
 async function timeoutStalledGeneration(args: {
@@ -379,8 +415,10 @@ async function timeoutStalledGeneration(args: {
     now,
     status: 'timed_out',
     reasonKey: 'instance.translation.timed_out',
-    detail: 'Translation generation timed out before all locale jobs reported completion or failure.',
-    localeDetail: 'Translation job did not report completion or failure before the generation timeout.',
+    detail:
+      'Translation generation timed out before all locale jobs reported completion or failure.',
+    localeDetail:
+      'Translation job did not report completion or failure before the generation timeout.',
   });
   await writeRegistryTranslationStatus({
     env: args.env,
@@ -388,13 +426,14 @@ async function timeoutStalledGeneration(args: {
     instanceId: args.instanceId,
     status: 'failed',
   });
-  const timedOutJob = await readLatestTranslationGenerationOperation({
-    env: args.env,
-    accountId: args.accountId,
-    instanceId: args.instanceId,
-    widgetType: args.job.widgetType,
-    currentReadyLocales: args.currentReadyLocales,
-  }) ?? args.job;
+  const timedOutJob =
+    (await readLatestTranslationGenerationOperation({
+      env: args.env,
+      accountId: args.accountId,
+      instanceId: args.instanceId,
+      widgetType: args.job.widgetType,
+      currentReadyLocales: args.currentReadyLocales,
+    })) ?? args.job;
   const productLocales = args.productLocales?.map((locale) => {
     const failedLocale = timedOutJob.locales[locale.locale];
     if (failedLocale?.status !== 'failed') return locale;
@@ -450,7 +489,6 @@ export async function readInstanceTranslationGeneration(args: {
       detail: instance.reasonKey,
     };
   }
-  const targetLocales = instance.value.targetLocales;
   const content = await readAccountInstanceContentDocument({
     env: args.env,
     accountId: args.accountId,
@@ -464,12 +502,14 @@ export async function readInstanceTranslationGeneration(args: {
       detail: content.reasonKey,
     };
   }
-  const overlays = localeOverlayByLocale(await listLocaleOverlays({
-    env: args.env,
-    accountId: args.accountId,
-    widgetCode: instance.value.widgetCode,
-    instanceId: args.instanceId,
-  }));
+  const overlays = localeOverlayByLocale(
+    await listLocaleOverlays({
+      env: args.env,
+      accountId: args.accountId,
+      widgetCode: instance.value.widgetCode,
+      instanceId: args.instanceId,
+    }),
+  );
   const widgetDefinition = getWidgetDefinition(instance.value.widgetType);
   let currentBaseContentMarker: string | undefined;
   let currentGenerationRequestMarker: string | undefined;
@@ -485,10 +525,6 @@ export async function readInstanceTranslationGeneration(args: {
         widgetContractHash: await buildWidgetContractMarker(widgetDefinition.editableFields),
         fields,
       });
-      currentGenerationRequestMarker = await buildGenerationRequestMarker({
-        baseContentMarker: currentBaseContentMarker,
-        targetLocales,
-      });
     } catch (error) {
       return {
         ok: false,
@@ -497,7 +533,7 @@ export async function readInstanceTranslationGeneration(args: {
       };
     }
   }
-  const currentReadyLocales = readyLocalesForOverlays(content.value, targetLocales, overlays, currentBaseContentMarker);
+  const currentReadyLocales: string[] = [];
   const job = await readLatestTranslationGenerationOperation({
     env: args.env,
     accountId: args.accountId,
@@ -505,7 +541,7 @@ export async function readInstanceTranslationGeneration(args: {
     widgetType: instance.value.widgetType,
     currentReadyLocales,
   });
-  const summaryTargetLocales = job?.targetLocales.length ? job.targetLocales : targetLocales;
+  const summaryTargetLocales = job?.targetLocales ?? [];
   if (currentBaseContentMarker) {
     currentGenerationRequestMarker = await buildGenerationRequestMarker({
       baseContentMarker: currentBaseContentMarker,
@@ -592,9 +628,15 @@ export async function generateInstanceTranslations(args: {
   }
 
   const baseLocale = normalizeLocale(args.baseLocale) ?? instance.value.baseLocale;
-  const requestedTargets = normalizeLocaleList(args.targetLocales);
-  const targetLocales = (requestedTargets.length ? requestedTargets : instance.value.targetLocales)
-    .filter((locale) => locale !== baseLocale);
+  const requestedTargets = normalizeRequestedLocaleList(args.targetLocales);
+  if (!requestedTargets) {
+    return generationFailure({
+      baseLocale,
+      reasonKey: 'coreui.errors.payload.invalid',
+      detail: 'targetLocales must be the current account active locale snapshot supplied by Roma.',
+    });
+  }
+  const targetLocales = requestedTargets.filter((locale) => locale !== baseLocale);
   const uniqueTargetLocales = Array.from(new Set(targetLocales));
   if (!uniqueTargetLocales.length) {
     await writeRegistryTranslationStatus({
@@ -623,7 +665,10 @@ export async function generateInstanceTranslations(args: {
   }
 
   const widgetDefinition = getWidgetDefinition(instance.value.widgetType);
-  if (!widgetDefinition?.editableFields || widgetDefinition.editableFields.widgetType !== instance.value.widgetType) {
+  if (
+    !widgetDefinition?.editableFields ||
+    widgetDefinition.editableFields.widgetType !== instance.value.widgetType
+  ) {
     return generationFailure({
       baseLocale,
       reasonKey: 'instance.translation.widget_unsupported',
@@ -676,13 +721,20 @@ export async function generateInstanceTranslations(args: {
     baseContentMarker,
     targetLocales: uniqueTargetLocales,
   });
-  const overlays = localeOverlayByLocale(await listLocaleOverlays({
-    env: args.env,
-    accountId: args.accountId,
-    widgetCode: instance.value.widgetCode,
-    instanceId: args.instanceId,
-  }));
-  const currentReadyLocales = readyLocalesForOverlays(content.value, uniqueTargetLocales, overlays, baseContentMarker);
+  const overlays = localeOverlayByLocale(
+    await listLocaleOverlays({
+      env: args.env,
+      accountId: args.accountId,
+      widgetCode: instance.value.widgetCode,
+      instanceId: args.instanceId,
+    }),
+  );
+  const currentReadyLocales = readyLocalesForOverlays(
+    content.value,
+    uniqueTargetLocales,
+    overlays,
+    baseContentMarker,
+  );
   const existingJob = await readLatestTranslationGenerationOperation({
     env: args.env,
     accountId: args.accountId,
@@ -691,7 +743,9 @@ export async function generateInstanceTranslations(args: {
     currentReadyLocales,
   });
   if (existingJob && existingJob.baseContentMarker === baseContentMarker) {
-    const existingTargetLocales = existingJob.targetLocales.length ? existingJob.targetLocales : uniqueTargetLocales;
+    const existingTargetLocales = existingJob.targetLocales.length
+      ? existingJob.targetLocales
+      : uniqueTargetLocales;
     const existingGenerationRequestMarker = await buildGenerationRequestMarker({
       baseContentMarker,
       targetLocales: existingTargetLocales,
@@ -710,7 +764,12 @@ export async function generateInstanceTranslations(args: {
       instanceId: args.instanceId,
       baseLocale,
       targetLocales: existingTargetLocales,
-      currentReadyLocales: readyLocalesForOverlays(content.value, existingTargetLocales, overlays, baseContentMarker),
+      currentReadyLocales: readyLocalesForOverlays(
+        content.value,
+        existingTargetLocales,
+        overlays,
+        baseContentMarker,
+      ),
       outOfSyncLocales: existingOutOfSyncLocales,
       currentBaseContentMarker: baseContentMarker,
       currentGenerationRequestMarker: existingGenerationRequestMarker,
@@ -753,12 +812,16 @@ export async function generateInstanceTranslations(args: {
     currentBaseContentMarker: baseContentMarker,
     job: null,
   });
-  const productLocaleByLocale = new Map(productLocalesBeforeGeneration.map((entry) => [entry.locale, entry]));
+  const productLocaleByLocale = new Map(
+    productLocalesBeforeGeneration.map((entry) => [entry.locale, entry]),
+  );
 
   for (const locale of uniqueTargetLocales) {
     const previousSavedTextFields = currentSavedTextFields;
     const overlay = overlays.get(locale);
-    const missingTranslatedFields = currentSavedTextFields.filter((field) => typeof overlay?.values[field.path] !== 'string');
+    const missingTranslatedFields = currentSavedTextFields.filter(
+      (field) => typeof overlay?.values[field.path] !== 'string',
+    );
     const productLocale = productLocaleByLocale.get(locale);
     let changedFields = currentSavedTextFields;
     if (productLocale?.state === 'inSync') {
@@ -766,7 +829,9 @@ export async function generateInstanceTranslations(args: {
     } else if (overlay?.baseContentMarker === baseContentMarker) {
       changedFields = missingTranslatedFields;
     } else if (overlay && overlay.baseContentMarker !== baseContentMarker) {
-      changedFields = missingTranslatedFields.length ? missingTranslatedFields : currentSavedTextFields;
+      changedFields = missingTranslatedFields.length
+        ? missingTranslatedFields
+        : currentSavedTextFields;
     }
     if (!changedFields.length) {
       skippedLocales.push(locale);
@@ -843,7 +908,9 @@ export async function generateInstanceTranslations(args: {
   const createdGenerationOperation = await createTranslationGenerationOperation({
     env: args.env,
     operation: generationOperation,
-    expiresAt: new Date(Date.parse(requestedAt) + TRANSLATION_GENERATION_ACTIVE_TIMEOUT_MS).toISOString(),
+    expiresAt: new Date(
+      Date.parse(requestedAt) + TRANSLATION_GENERATION_ACTIVE_TIMEOUT_MS,
+    ).toISOString(),
   });
   if (createdGenerationOperation.jobId !== generationOperation.jobId) {
     const activeProductLocales = productLocaleStatesForOverlays({
@@ -863,7 +930,12 @@ export async function generateInstanceTranslations(args: {
         instanceId: args.instanceId,
         baseLocale,
         targetLocales: createdGenerationOperation.targetLocales,
-        currentReadyLocales: readyLocalesForOverlays(content.value, createdGenerationOperation.targetLocales, overlays, baseContentMarker),
+        currentReadyLocales: readyLocalesForOverlays(
+          content.value,
+          createdGenerationOperation.targetLocales,
+          overlays,
+          baseContentMarker,
+        ),
         outOfSyncLocales: activeProductLocales
           .filter((entry) => entry.state === 'outOfSync')
           .map((entry) => entry.locale),
@@ -948,7 +1020,13 @@ export async function completeLocaleTranslation(args: {
 }): Promise<LocaleTranslationCompletionResult> {
   const locale = normalizeLocale(args.locale) ?? '';
   const job = normalizeInstanceTranslationJob(args.job);
-  if (!locale || !job || job.accountPublicId !== args.accountId || job.instanceId !== args.instanceId || job.targetLocale !== locale) {
+  if (
+    !locale ||
+    !job ||
+    job.accountPublicId !== args.accountId ||
+    job.instanceId !== args.instanceId ||
+    job.targetLocale !== locale
+  ) {
     return {
       ok: false,
       locale,
@@ -971,7 +1049,10 @@ export async function completeLocaleTranslation(args: {
     };
   }
   const widgetDefinition = getWidgetDefinition(instance.value.widgetType);
-  if (!widgetDefinition?.editableFields || widgetDefinition.editableFields.widgetType !== instance.value.widgetType) {
+  if (
+    !widgetDefinition?.editableFields ||
+    widgetDefinition.editableFields.widgetType !== instance.value.widgetType
+  ) {
     return {
       ok: false,
       locale,
@@ -1018,7 +1099,8 @@ export async function completeLocaleTranslation(args: {
       applied: false,
       locale,
       reasonKey: 'instance.translation.stale_generation',
-      detail: 'This translation job does not match the active translation operation for the instance.',
+      detail:
+        'This translation job does not match the active translation operation for the instance.',
     };
   }
   if (jobBaseContentMarker !== currentBaseContentMarker) {
@@ -1029,7 +1111,8 @@ export async function completeLocaleTranslation(args: {
       locale,
       now,
       reasonKey: 'instance.translation.stale_source_text',
-      detail: 'Current saved text for the translated fields no longer matches the translation job basis.',
+      detail:
+        'Current saved text for the translated fields no longer matches the translation job basis.',
     });
     const updatedJob = await updateOperationStatusFromLocales({
       env: args.env,
@@ -1057,14 +1140,17 @@ export async function completeLocaleTranslation(args: {
       applied: false,
       locale,
       reasonKey: 'instance.translation.stale_source_text',
-      detail: 'Current saved text for the translated fields no longer matches the translation job basis.',
+      detail:
+        'Current saved text for the translated fields no longer matches the translation job basis.',
     };
   }
-  if (!sameJobBasis({
-    currentSavedTextFields,
-    job,
-    widgetContractHash: await buildWidgetContractMarker(widgetDefinition.editableFields),
-  })) {
+  if (
+    !sameJobBasis({
+      currentSavedTextFields,
+      job,
+      widgetContractHash: await buildWidgetContractMarker(widgetDefinition.editableFields),
+    })
+  ) {
     const now = new Date().toISOString();
     await markTranslationGenerationLocaleStale({
       env: args.env,
@@ -1072,7 +1158,8 @@ export async function completeLocaleTranslation(args: {
       locale,
       now,
       reasonKey: 'instance.translation.stale_source_text',
-      detail: 'Current saved text for the translated fields no longer matches the translation job basis.',
+      detail:
+        'Current saved text for the translated fields no longer matches the translation job basis.',
     });
     const updatedJob = await updateOperationStatusFromLocales({
       env: args.env,
@@ -1100,16 +1187,19 @@ export async function completeLocaleTranslation(args: {
       applied: false,
       locale,
       reasonKey: 'instance.translation.stale_source_text',
-      detail: 'Current saved text for the translated fields no longer matches the translation job basis.',
+      detail:
+        'Current saved text for the translated fields no longer matches the translation job basis.',
     };
   }
 
-  const existingOverlay = localeOverlayByLocale(await listLocaleOverlays({
-    env: args.env,
-    accountId: args.accountId,
-    widgetCode: instance.value.widgetCode,
-    instanceId: args.instanceId,
-  })).get(locale);
+  const existingOverlay = localeOverlayByLocale(
+    await listLocaleOverlays({
+      env: args.env,
+      accountId: args.accountId,
+      widgetCode: instance.value.widgetCode,
+      instanceId: args.instanceId,
+    }),
+  ).get(locale);
   const existingValues: Record<string, string> = {};
   for (const field of currentSavedTextFields) {
     const translated = existingOverlay?.values[field.path];
@@ -1161,14 +1251,21 @@ export async function completeLocaleTranslation(args: {
     instanceId: args.instanceId,
     widgetType: instance.value.widgetType,
   });
-  const overlays = localeOverlayByLocale(await listLocaleOverlays({
-    env: args.env,
-    accountId: args.accountId,
-    widgetCode: instance.value.widgetCode,
-    instanceId: args.instanceId,
-  }));
+  const overlays = localeOverlayByLocale(
+    await listLocaleOverlays({
+      env: args.env,
+      accountId: args.accountId,
+      widgetCode: instance.value.widgetCode,
+      instanceId: args.instanceId,
+    }),
+  );
   const readyLocales = content.ok
-    ? readyLocalesForOverlays(content.value, currentJob.targetLocales, overlays, jobBaseContentMarker)
+    ? readyLocalesForOverlays(
+        content.value,
+        currentJob.targetLocales,
+        overlays,
+        jobBaseContentMarker,
+      )
     : currentJob.currentReadyLocales;
   const updatedJob = await completeTranslationGenerationLocale({
     env: args.env,
@@ -1214,7 +1311,7 @@ export async function failLocaleTranslation(args: {
   const jobId = job?.jobId ?? normalizeFailureText(rawJob?.jobId);
   const accountPublicId = job?.accountPublicId ?? normalizeFailureText(rawJob?.accountPublicId);
   const instanceId = job?.instanceId ?? normalizeFailureText(rawJob?.instanceId);
-  const targetLocale = job?.targetLocale ?? (normalizeLocale(rawJob?.targetLocale) ?? '');
+  const targetLocale = job?.targetLocale ?? normalizeLocale(rawJob?.targetLocale) ?? '';
   const reasonKey = normalizeFailureText(args.reasonKey);
   const detail = normalizeFailureText(args.detail);
   if (
@@ -1259,7 +1356,10 @@ export async function failLocaleTranslation(args: {
   if (
     !currentJob ||
     (jobId && currentJob.jobId !== jobId) ||
-    (job ? jobBaseContentMarker == null || !currentOperationMatchesCompletionJob(currentJob, job, jobBaseContentMarker) : false) ||
+    (job
+      ? jobBaseContentMarker == null ||
+        !currentOperationMatchesCompletionJob(currentJob, job, jobBaseContentMarker)
+      : false) ||
     !currentJob.locales[locale]
   ) {
     return {
@@ -1267,7 +1367,8 @@ export async function failLocaleTranslation(args: {
       recorded: false,
       locale,
       reasonKey: 'instance.translation.stale_generation',
-      detail: 'This translation job does not match the active translation operation for the instance.',
+      detail:
+        'This translation job does not match the active translation operation for the instance.',
     };
   }
   const now = new Date().toISOString();

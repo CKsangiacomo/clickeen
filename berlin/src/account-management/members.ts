@@ -1,7 +1,12 @@
 import type { BerlinAccountContext, BerlinAccountMember } from '../bootstrap/types';
 import { listAccountMembers } from '../bootstrap/state';
 import { json, validationError } from '../http';
-import { readSupabaseAdminJson, supabaseAdminErrorResponse, supabaseAdminFetch } from '../supabase-admin';
+import {
+  readSupabaseAdminJson,
+  supabaseAdminArrayPayload,
+  supabaseAdminErrorResponse,
+  supabaseAdminFetch,
+} from '../supabase-admin';
 import { type Env } from '../types';
 import { asTrimmedString, readJsonPayload } from '../utils/primitives';
 
@@ -82,14 +87,15 @@ async function patchMemberRole(args: {
   if (!response.ok) {
     return { ok: false, response: supabaseAdminErrorResponse('coreui.errors.db.writeFailed', response.status, payload) };
   }
-  const rows = Array.isArray(payload) ? payload : [];
-  if (!rows[0]?.user_id) {
+  const rows = supabaseAdminArrayPayload<{ role?: unknown; user_id?: unknown }>(payload, 'coreui.errors.db.writeFailed');
+  if (!rows.ok) return rows;
+  if (!rows.value[0]?.user_id) {
     return {
       ok: false,
       response: json({ error: { kind: 'NOT_FOUND', reasonKey: 'coreui.errors.account.memberNotFound' } }, { status: 404 }),
     };
   }
-  const role = normalizeMemberRole(rows[0]?.role);
+  const role = normalizeMemberRole(rows.value[0]?.role);
   if (!role || role === 'owner') {
     return { ok: false, response: validationError('coreui.errors.db.writeFailed') };
   }
@@ -158,8 +164,9 @@ async function deleteAccountMember(args: {
   if (!response.ok) {
     return supabaseAdminErrorResponse('coreui.errors.db.writeFailed', response.status, payload);
   }
-  const rows = Array.isArray(payload) ? payload : [];
-  if (!rows[0]?.user_id) {
+  const rows = supabaseAdminArrayPayload<{ user_id?: unknown }>(payload, 'coreui.errors.db.writeFailed');
+  if (!rows.ok) return rows.response;
+  if (!rows.value[0]?.user_id) {
     return json({ error: { kind: 'NOT_FOUND', reasonKey: 'coreui.errors.account.memberNotFound' } }, { status: 404 });
   }
   return null;

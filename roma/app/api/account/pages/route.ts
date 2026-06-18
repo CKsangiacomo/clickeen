@@ -10,6 +10,7 @@ import type {
   AccountPageSource,
 } from '@roma/lib/account-page-direct';
 import { readJsonPayloadOrValidation } from '@roma/lib/route-helpers';
+import { loadCurrentAccountLocalesState } from '@roma/lib/account-locales-state';
 import {
   resolveCurrentAccountRouteContext,
   withSession,
@@ -48,7 +49,11 @@ function pageMetadataFromCreatePayload(body: Record<string, unknown>): AccountPa
   return { title, description, robots, ...(canonicalUrl ? { canonicalUrl } : {}) };
 }
 
-function createPageSourceFromPayload(raw: unknown, accountId: string): AccountPageSource | null {
+function createPageSourceFromPayload(
+  raw: unknown,
+  accountId: string,
+  localePolicy: { baseLocale: string; ip: { countryToLocale: Record<string, string> } },
+): AccountPageSource | null {
   if (!isRecord(raw)) return null;
   const metadata = pageMetadataFromCreatePayload(raw);
   if (!metadata) return null;
@@ -64,9 +69,12 @@ function createPageSourceFromPayload(raw: unknown, accountId: string): AccountPa
     displayName,
     metadata,
     localization: {
-      defaultLocale: 'en',
+      defaultLocale: localePolicy.baseLocale,
       ipLocalizationEnabled: false,
-      countryLocaleRules: [],
+      countryLocaleRules: Object.entries(localePolicy.ip.countryToLocale).map(([country, locale]) => ({
+        country,
+        locale,
+      })),
       languageSwitcherEnabled: false,
       missingLocaleBehavior: 'block_publish',
     },
@@ -115,7 +123,41 @@ export async function POST(request: NextRequest) {
   }
 
   const accountId = current.value.authzPayload.accountPublicId;
-  const source = createPageSourceFromPayload(bodyResult.payload, accountId);
+  const accountLocales = await loadCurrentAccountLocalesState({
+    accessToken: current.value.accessToken,
+    accountId: current.value.authzPayload.accountId,
+    requestId: current.value.requestId,
+  }).catch((error) => ({
+    ok: false as const,
+    status: 502,
+    payload: {
+      error: {
+        kind: 'UPSTREAM_UNAVAILABLE',
+        reasonKey: 'coreui.errors.auth.contextUnavailable',
+        detail: error instanceof Error ? error.message : String(error),
+      },
+    },
+  }));
+  if (!accountLocales.ok) {
+    return withSession(
+      request,
+      NextResponse.json(
+        accountLocales.payload ?? {
+          error: {
+            kind: accountLocales.status === 401 ? 'AUTH' : 'UPSTREAM_UNAVAILABLE',
+            reasonKey:
+              accountLocales.status === 401
+                ? 'coreui.errors.auth.required'
+                : 'coreui.errors.auth.contextUnavailable',
+          },
+        },
+        { status: accountLocales.status },
+      ),
+      current.value.setCookies,
+    );
+  }
+
+  const source = createPageSourceFromPayload(bodyResult.payload, accountId, accountLocales.localePolicy);
   if (!source) {
     return withSession(
       request,

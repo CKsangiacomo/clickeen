@@ -1,7 +1,4 @@
-import {
-  assertRomaAccountCapsuleAuth,
-  TOKYO_INTERNAL_SERVICE_ROMA_EDGE,
-} from './auth';
+import { assertRomaAccountCapsuleAuth, TOKYO_INTERNAL_SERVICE_ROMA_EDGE } from './auth';
 import { prettyStableJson, sha256Hex } from './asset-utils';
 import { json } from './http';
 import { roleRank, type MemberRole } from './domains/assets';
@@ -37,24 +34,6 @@ export function respondValidation(
   status = 422,
 ): Response {
   return respond(json({ error: { kind: 'VALIDATION', reasonKey } }, { status }));
-}
-
-export function respondInternalOnly(
-  respond: TokyoRouteArgs['respond'],
-  detail: string,
-): Response {
-  return respond(
-    json(
-      {
-        error: {
-          kind: 'VALIDATION',
-          reasonKey: 'tokyo.errors.internalOnly',
-          detail,
-        },
-      },
-      { status: 410 },
-    ),
-  );
 }
 
 export async function authorizeRomaAccountScopedRequest(args: {

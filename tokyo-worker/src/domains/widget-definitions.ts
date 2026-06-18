@@ -14,6 +14,8 @@ import { pathBelongsToShell } from '@clickeen/widget-shell';
 export type WidgetDefinition = {
   widgetType: string;
   widgetCode: string;
+  displayName: string;
+  description: string;
   editableFields: WidgetEditableFieldsContract;
 };
 
@@ -33,6 +35,10 @@ function cloneRecord(value: Record<string, unknown>): Record<string, unknown> {
 function asNonEmptyString(value: unknown): string | null {
   const normalized = typeof value === 'string' ? value.trim() : '';
   return normalized || null;
+}
+
+function asExactString(value: unknown): string | null {
+  return typeof value === 'string' ? value : null;
 }
 
 function readPath(value: unknown, path: string): unknown {
@@ -152,6 +158,14 @@ function readWidgetDefinitionSource(source: WidgetDefinitionSource): WidgetDefin
   if (widgetType !== source.widgetType) {
     throw new Error(`widget_definition_widget_type_mismatch:${source.widgetType}`);
   }
+  const displayName = asNonEmptyString(spec.displayName);
+  if (!displayName) {
+    throw new Error(`widget_definition_display_name_missing:${source.widgetType}`);
+  }
+  const description = asExactString(spec.description);
+  if (description == null) {
+    throw new Error(`widget_definition_description_missing:${source.widgetType}`);
+  }
   if (!isRecord(spec.defaults)) {
     throw new Error(`widget_definition_defaults_missing:${source.widgetType}`);
   }
@@ -168,6 +182,8 @@ function readWidgetDefinitionSource(source: WidgetDefinitionSource): WidgetDefin
   return {
     widgetType,
     widgetCode,
+    displayName,
+    description,
     itemKey: asNonEmptyString(spec.itemKey),
     editableFields,
     defaults: spec.defaults,
@@ -189,6 +205,8 @@ function publicEntry(entry: WidgetDefinitionInternal): WidgetDefinition {
   return {
     widgetType: entry.widgetType,
     widgetCode: entry.widgetCode,
+    displayName: entry.displayName,
+    description: entry.description,
     editableFields: entry.editableFields,
   };
 }
@@ -196,10 +214,6 @@ function publicEntry(entry: WidgetDefinitionInternal): WidgetDefinition {
 function resolveDefinitionInternal(widgetType: string): WidgetDefinitionInternal | null {
   const normalized = String(widgetType || '').trim();
   return WIDGET_DEFINITIONS.find((candidate) => candidate.widgetType === normalized) || null;
-}
-
-export function validateWidgetSource(): { ok: true; widgetTypes: string[] } {
-  return { ok: true, widgetTypes: WIDGET_DEFINITIONS.map((entry) => entry.widgetType) };
 }
 
 export function listWidgetDefinitions(): WidgetDefinition[] {

@@ -5,7 +5,7 @@ Runtime code + deploy config are truth. If this doc drifts from `berlin/*`, upda
 
 For the canonical account-management model, see `documentation/architecture/AccountManagement.md`.
 
-DB Pivot note: this doc is being converged to the active one-user-one-account model. Any mention of `user_profiles`, `account_members`, `active_account_id`, `login_identities`, or `accountPublicId` describes current runtime residue only, not the target model.
+DB Pivot note: this doc is being converged to the active one-user-one-account model. Any mention of `account_members`, `login_identities`, or `accountPublicId` describes current runtime residue only, not the target model.
 
 ## Purpose
 
@@ -63,7 +63,7 @@ Berlin still hosts account-management surfaces from the PRD 65 account-boundary 
 These surfaces must not be expanded in Berlin without a PRD:
 
 - team/user CRUD currently backed by old account-member residue
-- contact-method verification and profile mutation endpoints
+- profile mutation endpoints
 - account governance and lifecycle operations
 - post-login invitation listing, issuance, revocation, and team/user-management workflows
 - account deletion outside the login/session boundary
@@ -90,9 +90,6 @@ Residual public account-management routes:
 
 - `GET /v1/me`
 - `PUT /v1/me`
-- `POST /v1/me/contact-methods/:channel/start`
-- `POST /v1/me/contact-methods/:channel/verify`
-- `GET /v1/me/identities`
 - `GET /v1/accounts/:id`
 - `DELETE /v1/accounts/:id` (disabled; explicit conflict, no mutation)
 - `GET /v1/accounts/:id/members`
@@ -105,9 +102,6 @@ Residual public account-management routes:
 - `POST /v1/accounts/:id/owner-transfer`
 - `POST /v1/invitations/:token/accept` (signed-in accept is disabled; invitation acceptance happens during login)
 - `POST /v1/accounts/:id/lifecycle/tier-drop/dismiss`
-- `GET /v1/accounts/:id/publish-containment`
-
-`GET /v1/accounts/:id/publish-containment` is a policy-only read used by Roma's publish action boundary. Berlin reads `account_publish_containment` for the account block state and reason only; Tokyo remains the owner of widget instance inventory, editable config, display metadata, localization overlays, and publish/live state.
 
 Berlin does not build, validate, migrate, or clean Tokyo/R2 account paths. Account-owned assets and instances use `accountPublicId` in Tokyo storage; private UUIDs stay relational and session-scoped. Product policy that affects asset storage, publication, downgrade, suspension, or stale-root cleanup belongs to Roma/system account operations, with Berlin only supplying the stable session/account truth and narrow account-governance reads named above.
 
@@ -176,7 +170,7 @@ Session state persistence:
 OAuth transaction state:
 
 - One-time opaque `state` IDs are persisted in `BERLIN_AUTH_TICKETS` with consume-once semantics.
-- PKCE verifier + flow metadata are never encoded in callback URLs.
+- PKCE verifier and login state metadata are never encoded in callback URLs.
 - The selected finish redirect is stored on the state ticket so callback returns the `finishId` to the same allowlisted surface that started login.
 
 OAuth finish state:
@@ -233,6 +227,10 @@ Required for direct Google login:
 - `BERLIN_GOOGLE_CLIENT_ID`
 - `BERLIN_GOOGLE_CLIENT_SECRET`
 - `BERLIN_GOOGLE_CALLBACK_URL`
+
+Current product login provider:
+
+- `BERLIN_ALLOWED_PROVIDERS=google`
 
 Recommended:
 

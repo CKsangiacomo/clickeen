@@ -1,7 +1,12 @@
 import type { BerlinAccountContext } from '../bootstrap/types';
-import { json, validationError } from '../http';
-import { readSupabaseAdminListAll } from '../supabase-admin';
-import { readSupabaseAdminJson, supabaseAdminErrorResponse, supabaseAdminFetch } from '../supabase-admin';
+import { internalError, json, validationError } from '../http';
+import {
+  readSupabaseAdminJson,
+  readSupabaseAdminListAll,
+  supabaseAdminArrayPayload,
+  supabaseAdminErrorResponse,
+  supabaseAdminFetch,
+} from '../supabase-admin';
 import { type Env } from '../types';
 import { asTrimmedString, readJsonPayload } from '../utils/primitives';
 
@@ -94,7 +99,11 @@ function normalizeEmail(value: unknown): string | null {
   return EMAIL_PATTERN.test(normalized) ? normalized : null;
 }
 
-function normalizeInvitationRow(row: InvitationRow): BerlinAccountInvitation | null {
+function normalizeInvitationRow(
+  row: InvitationRow,
+  reasonKey: string,
+  detail: string,
+): Result<BerlinAccountInvitation> {
   const invitationId = asTrimmedString(row.id);
   const accountId = asTrimmedString(row.account_id);
   const email = normalizeEmail(row.email);
@@ -103,19 +112,22 @@ function normalizeInvitationRow(row: InvitationRow): BerlinAccountInvitation | n
   const expiresAt = asTrimmedString(row.expires_at);
   const createdAt = asTrimmedString(row.created_at);
   if (!invitationId || !accountId || !email || !role || !status || !expiresAt || !createdAt) {
-    return null;
+    return { ok: false, response: internalError(reasonKey, detail) };
   }
 
   return {
-    invitationId,
-    accountId,
-    email,
-    role,
-    status,
-    expiresAt,
-    acceptedAt: asTrimmedString(row.accepted_at),
-    revokedAt: asTrimmedString(row.revoked_at),
-    createdAt,
+    ok: true,
+    value: {
+      invitationId,
+      accountId,
+      email,
+      role,
+      status,
+      expiresAt,
+      acceptedAt: asTrimmedString(row.accepted_at),
+      revokedAt: asTrimmedString(row.revoked_at),
+      createdAt,
+    },
   };
 }
 
@@ -140,8 +152,13 @@ async function loadInvitationById(env: Env, invitationId: string): Promise<Resul
       response: supabaseAdminErrorResponse('coreui.errors.db.readFailed', response.status, payload),
     };
   }
-  const row = Array.isArray(payload) ? payload[0] ?? null : null;
-  return { ok: true, value: row ? normalizeInvitationRow(row) : null };
+  const rows = supabaseAdminArrayPayload<InvitationRow>(payload, 'coreui.errors.db.readFailed');
+  if (!rows.ok) return rows;
+  const row = rows.value[0] ?? null;
+  if (!row) return { ok: true, value: null };
+  const invitation = normalizeInvitationRow(row, 'coreui.errors.db.readFailed', 'invitation_row_malformed');
+  if (!invitation.ok) return invitation;
+  return { ok: true, value: invitation.value };
 }
 
 async function loadPendingInvitationByEmail(
@@ -167,8 +184,13 @@ async function loadPendingInvitationByEmail(
       response: supabaseAdminErrorResponse('coreui.errors.db.readFailed', response.status, payload),
     };
   }
-  const row = Array.isArray(payload) ? payload[0] ?? null : null;
-  return { ok: true, value: row ? normalizeInvitationRow(row) : null };
+  const rows = supabaseAdminArrayPayload<InvitationRow>(payload, 'coreui.errors.db.readFailed');
+  if (!rows.ok) return rows;
+  const row = rows.value[0] ?? null;
+  if (!row) return { ok: true, value: null };
+  const invitation = normalizeInvitationRow(row, 'coreui.errors.db.readFailed', 'invitation_row_malformed');
+  if (!invitation.ok) return invitation;
+  return { ok: true, value: invitation.value };
 }
 
 async function listAccountInvitations(env: Env, accountId: string): Promise<Result<BerlinAccountInvitation[]>> {
@@ -186,10 +208,12 @@ async function listAccountInvitations(env: Env, accountId: string): Promise<Resu
   });
   if (!rows.ok) return rows;
 
-  const invitations = rows.value
-    .map((row) => normalizeInvitationRow(row))
-    .filter((row): row is BerlinAccountInvitation => Boolean(row))
-    .filter((invitation) => !isInvitationExpired(invitation));
+  const invitations: BerlinAccountInvitation[] = [];
+  for (const row of rows.value) {
+    const invitation = normalizeInvitationRow(row, 'coreui.errors.db.readFailed', 'invitation_row_malformed');
+    if (!invitation.ok) return invitation;
+    if (!isInvitationExpired(invitation.value)) invitations.push(invitation.value);
+  }
 
   return { ok: true, value: invitations };
 }
@@ -242,9 +266,10 @@ async function createInvitation(args: {
       response: supabaseAdminErrorResponse('coreui.errors.db.writeFailed', response.status, payload),
     };
   }
-  const row = Array.isArray(payload) ? payload[0] ?? null : null;
-  const invitation = row ? normalizeInvitationRow(row) : null;
-  if (!invitation) {
+  const rows = supabaseAdminArrayPayload<InvitationRow>(payload, 'coreui.errors.db.writeFailed');
+  if (!rows.ok) return rows;
+  const row = rows.value[0] ?? null;
+  if (!row) {
     return {
       ok: false,
       response: json(
@@ -259,7 +284,7 @@ async function createInvitation(args: {
       ),
     };
   }
-  return { ok: true, value: invitation };
+  return normalizeInvitationRow(row, 'coreui.errors.db.writeFailed', 'invitation_create_malformed_row');
 }
 
 async function updateInvitation(args: {
@@ -282,9 +307,10 @@ async function updateInvitation(args: {
       response: supabaseAdminErrorResponse('coreui.errors.db.writeFailed', response.status, payload),
     };
   }
-  const row = Array.isArray(payload) ? payload[0] ?? null : null;
-  const invitation = row ? normalizeInvitationRow(row) : null;
-  if (!invitation) {
+  const rows = supabaseAdminArrayPayload<InvitationRow>(payload, 'coreui.errors.db.writeFailed');
+  if (!rows.ok) return rows;
+  const row = rows.value[0] ?? null;
+  if (!row) {
     return {
       ok: false,
       response: json(
@@ -299,7 +325,7 @@ async function updateInvitation(args: {
       ),
     };
   }
-  return { ok: true, value: invitation };
+  return normalizeInvitationRow(row, 'coreui.errors.db.writeFailed', 'invitation_update_malformed_row');
 }
 
 async function ensureEmailNotAlreadyUser(args: {
@@ -318,8 +344,9 @@ async function ensureEmailNotAlreadyUser(args: {
   if (!response.ok) {
     return supabaseAdminErrorResponse('coreui.errors.db.readFailed', response.status, payload);
   }
-  const rows = Array.isArray(payload) ? payload : [];
-  if (rows[0]?.user_id) {
+  const rows = supabaseAdminArrayPayload<{ user_id?: unknown }>(payload, 'coreui.errors.db.readFailed');
+  if (!rows.ok) return rows.response;
+  if (rows.value[0]?.user_id) {
     return conflictResponse('coreui.errors.account.memberAlreadyExists', 'user_already_associated');
   }
   return null;

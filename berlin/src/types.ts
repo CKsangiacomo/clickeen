@@ -15,12 +15,8 @@ export type Env = {
   BERLIN_ACCESS_PUBLIC_KEY_PEM?: string;
   BERLIN_ACCESS_PREVIOUS_PUBLIC_KEY_PEM?: string;
   BERLIN_ACCESS_PREVIOUS_KID?: string;
-  E2E_AUTH_ENABLED?: string;
-  E2E_AUTH_SECRET?: string;
-  E2E_ALLOWED_EMAILS?: string;
   BERLIN_SESSION_KV?: KVNamespace;
   BERLIN_AUTH_TICKETS?: DurableObjectNamespace;
-  RENDER_SNAPSHOT_QUEUE?: Queue<unknown>;
 };
 
 export type JwtHeader = {
@@ -73,13 +69,11 @@ export type SessionState = DirectProviderSessionState;
 
 export type OAuthTransaction = {
   v: 1;
-  flow: 'login' | 'link';
+  flow: 'login';
   provider: string;
   codeVerifier: string;
   createdAt: number;
   expiresAt: number;
-  sid?: string;
-  userId?: string;
   intent?: LoginIntent;
   next?: string;
   invitationId?: string;

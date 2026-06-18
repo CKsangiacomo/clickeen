@@ -5,10 +5,7 @@ import {
   accountInstanceLocaleOverlaysPrefix,
 } from '../account-instances/keys';
 import { loadJson, putJson } from '../storage';
-import type {
-  LocaleOverlayDocument,
-  LocaleOverlayStatus,
-} from '../account-instances/types';
+import type { LocaleOverlayDocument, LocaleOverlayStatus } from '../account-instances/types';
 import type { SavedTextField } from '@clickeen/ck-contracts/translated-value-primitives';
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -33,12 +30,15 @@ export function normalizeLocaleOverlayDocument(raw: unknown): LocaleOverlayDocum
   const payload = isRecord(raw) ? raw : null;
   if (!payload || payload.v !== 1) return null;
   const locale = normalizeLocale(payload.locale);
-  const baseContentMarker = typeof payload.baseContentMarker === 'string' ? payload.baseContentMarker.trim() : '';
-  const widgetContractHash = typeof payload.widgetContractHash === 'string' ? payload.widgetContractHash.trim() : '';
+  const baseContentMarker =
+    typeof payload.baseContentMarker === 'string' ? payload.baseContentMarker.trim() : '';
+  const widgetContractHash =
+    typeof payload.widgetContractHash === 'string' ? payload.widgetContractHash.trim() : '';
   const status = normalizeStatus(payload.status);
   const values = normalizeValues(payload.values);
   const updatedAt = typeof payload.updatedAt === 'string' ? payload.updatedAt.trim() : '';
-  if (!locale || !baseContentMarker || !widgetContractHash || !status || !values || !updatedAt) return null;
+  if (!locale || !baseContentMarker || !widgetContractHash || !status || !values || !updatedAt)
+    return null;
   return {
     v: 1,
     locale,
@@ -47,8 +47,12 @@ export function normalizeLocaleOverlayDocument(raw: unknown): LocaleOverlayDocum
     status,
     values,
     updatedAt,
-    ...(typeof payload.reasonKey === 'string' && payload.reasonKey.trim() ? { reasonKey: payload.reasonKey.trim() } : {}),
-    ...(typeof payload.detail === 'string' && payload.detail.trim() ? { detail: payload.detail.trim() } : {}),
+    ...(typeof payload.reasonKey === 'string' && payload.reasonKey.trim()
+      ? { reasonKey: payload.reasonKey.trim() }
+      : {}),
+    ...(typeof payload.detail === 'string' && payload.detail.trim()
+      ? { detail: payload.detail.trim() }
+      : {}),
   };
 }
 
@@ -87,9 +91,17 @@ export async function readLocaleOverlay(args: {
 }): Promise<LocaleOverlayDocument | null> {
   const locale = normalizeLocale(args.locale);
   if (!locale) return null;
-  return normalizeLocaleOverlayDocument(
-    await loadJson(args.env, accountInstanceLocaleOverlayKey(args.accountId, args.widgetCode, args.instanceId, locale)),
+  const key = accountInstanceLocaleOverlayKey(
+    args.accountId,
+    args.widgetCode,
+    args.instanceId,
+    locale,
   );
+  const raw = await loadJson(args.env, key);
+  if (!raw) return null;
+  const overlay = normalizeLocaleOverlayDocument(raw);
+  if (!overlay) throw new Error(`coreui.errors.instance.overlay.invalid:${key}`);
+  return overlay;
 }
 
 export async function writeLocaleOverlay(args: {
@@ -101,7 +113,12 @@ export async function writeLocaleOverlay(args: {
 }): Promise<LocaleOverlayDocument> {
   await putJson(
     args.env,
-    accountInstanceLocaleOverlayKey(args.accountId, args.widgetCode, args.instanceId, args.overlay.locale),
+    accountInstanceLocaleOverlayKey(
+      args.accountId,
+      args.widgetCode,
+      args.instanceId,
+      args.overlay.locale,
+    ),
     args.overlay,
   );
   return args.overlay;
@@ -113,28 +130,11 @@ export async function listLocaleOverlays(args: {
   widgetCode: string;
   instanceId: string;
 }): Promise<LocaleOverlayDocument[]> {
-  const prefix = accountInstanceLocaleOverlaysPrefix(args.accountId, args.widgetCode, args.instanceId);
-  const overlays: LocaleOverlayDocument[] = [];
-  let cursor: string | undefined;
-  do {
-    const listed = await args.env.TOKYO_R2.list({ prefix, cursor } as R2ListOptions);
-    for (const object of listed.objects) {
-      if (!object.key.endsWith('.json')) continue;
-      const overlay = normalizeLocaleOverlayDocument(await loadJson(args.env, object.key));
-      if (overlay) overlays.push(overlay);
-    }
-    cursor = listed.truncated ? listed.cursor : undefined;
-  } while (cursor);
-  return overlays.sort((left, right) => left.locale.localeCompare(right.locale));
-}
-
-export async function listLocaleOverlaysStrict(args: {
-  env: Env;
-  accountId: string;
-  widgetCode: string;
-  instanceId: string;
-}): Promise<LocaleOverlayDocument[]> {
-  const prefix = accountInstanceLocaleOverlaysPrefix(args.accountId, args.widgetCode, args.instanceId);
+  const prefix = accountInstanceLocaleOverlaysPrefix(
+    args.accountId,
+    args.widgetCode,
+    args.instanceId,
+  );
   const overlays: LocaleOverlayDocument[] = [];
   let cursor: string | undefined;
   do {
@@ -150,6 +150,40 @@ export async function listLocaleOverlaysStrict(args: {
   return overlays.sort((left, right) => left.locale.localeCompare(right.locale));
 }
 
-export function localeOverlayByLocale(overlays: LocaleOverlayDocument[]): Map<string, LocaleOverlayDocument> {
+export async function listLocaleOverlaysStrict(args: {
+  env: Env;
+  accountId: string;
+  widgetCode: string;
+  instanceId: string;
+}): Promise<LocaleOverlayDocument[]> {
+  const prefix = accountInstanceLocaleOverlaysPrefix(
+    args.accountId,
+    args.widgetCode,
+    args.instanceId,
+  );
+  const overlays: LocaleOverlayDocument[] = [];
+  let cursor: string | undefined;
+  do {
+    const listed = await args.env.TOKYO_R2.list({ prefix, cursor } as R2ListOptions);
+    for (const object of listed.objects) {
+      if (!object.key.endsWith('.json')) continue;
+      const overlay = await readLocaleOverlay({
+        env: args.env,
+        accountId: args.accountId,
+        widgetCode: args.widgetCode,
+        instanceId: args.instanceId,
+        locale: object.key.slice(prefix.length).replace(/\.json$/, ''),
+      });
+      if (!overlay) throw new Error(`coreui.errors.instance.overlay.invalid:${object.key}`);
+      overlays.push(overlay);
+    }
+    cursor = listed.truncated ? listed.cursor : undefined;
+  } while (cursor);
+  return overlays.sort((left, right) => left.locale.localeCompare(right.locale));
+}
+
+export function localeOverlayByLocale(
+  overlays: LocaleOverlayDocument[],
+): Map<string, LocaleOverlayDocument> {
   return new Map(overlays.map((overlay) => [overlay.locale, overlay]));
 }

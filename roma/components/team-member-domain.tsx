@@ -10,7 +10,6 @@ import { useRomaAccountContext } from './roma-account-context';
 type TeamMemberProfile = {
   userId: string;
   primaryEmail: string;
-  emailVerified: boolean;
   givenName: string | null;
   familyName: string | null;
   primaryLanguage: string | null;
@@ -276,10 +275,6 @@ export function TeamMemberDomain({ memberId }: TeamMemberDomainProps) {
               <div className="roma-field">
                 <span className="label-s">Primary email</span>
                 <p className="body-m">{formatNullableValue(member.member.profile?.primaryEmail)}</p>
-              </div>
-              <div className="roma-field">
-                <span className="label-s">Email verified</span>
-                <p className="body-m">{member.member.profile ? (member.member.profile.emailVerified ? 'Yes' : 'No') : 'Not set'}</p>
               </div>
               <div className="roma-field">
                 <span className="label-s">Primary Language</span>

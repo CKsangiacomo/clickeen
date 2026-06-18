@@ -3,7 +3,7 @@ import { readJsonPayload } from '../utils/primitives';
 
 export type TicketConsumeResult<T> =
   | { outcome: 'ok'; ticket: T }
-  | { outcome: 'missing' | 'expired' | 'alreadyConsumed' | 'storeUnavailable' };
+  | { outcome: 'missing' | 'expired' | 'alreadyConsumed' | 'storeUnavailable' | 'corrupt' };
 
 type TicketKind = 'state' | 'finish';
 
@@ -52,6 +52,19 @@ function logTicketStoreWarning(args: {
   console.warn(
     serializeCkLogEvent({
       event: 'boundary.operation_failed',
+      service: 'berlin',
+      stage: 'unknown',
+      requestId: resolveTicketLogRequestId(args.source),
+      boundary: args.boundary,
+      detail: args.detail,
+    }),
+  );
+}
+
+function logTicketStoreIntegrityError(args: { boundary: string; detail: string; source?: Request | Response | null }): void {
+  console.error(
+    serializeCkLogEvent({
+      event: 'boundary.integrity_failed',
       service: 'berlin',
       stage: 'unknown',
       requestId: resolveTicketLogRequestId(args.source),
@@ -168,14 +181,17 @@ export async function consumeAuthTicket<T>(
   });
 
   const body = readObject(await readTicketStoreJson(response, 'auth.ticket.consume.responseJson'));
-  if (!response.ok || !body) return { outcome: 'missing' };
+  if (!body) return { outcome: 'corrupt' };
+  if (!response.ok) {
+    return claimAsString(body.error) === 'ticket_store_corrupt' ? { outcome: 'corrupt' } : { outcome: 'storeUnavailable' };
+  }
 
   const outcome = claimAsString(body.outcome);
   if (outcome === 'missing' || outcome === 'expired' || outcome === 'alreadyConsumed') return { outcome };
-  if (outcome !== 'ok') return { outcome: 'missing' };
+  if (outcome !== 'ok') return { outcome: 'corrupt' };
 
   const ticket = validator(body.ticket);
-  if (!ticket) return { outcome: 'missing' };
+  if (!ticket) return { outcome: 'corrupt' };
   return { outcome: 'ok', ticket };
 }
 
@@ -208,9 +224,19 @@ export class BerlinAuthTicketDO {
       return json({ error: 'invalid_request' }, { status: 422 });
     }
 
-    const current = toStoredTicket(await this.state.storage.get(STORAGE_KEY));
-    if (!current || current.kind !== expectedKind) {
+    const stored = await this.state.storage.get(STORAGE_KEY);
+    if (stored == null) {
       return json({ ok: true, outcome: 'missing' });
+    }
+
+    const current = toStoredTicket(stored);
+    if (!current || current.kind !== expectedKind) {
+      logTicketStoreIntegrityError({
+        boundary: 'auth.ticket.consume.storage',
+        source: request,
+        detail: !current ? 'stored_ticket_malformed' : 'stored_ticket_kind_mismatch',
+      });
+      return json({ error: 'ticket_store_corrupt' }, { status: 500 });
     }
 
     if (current.consumedAt) {
@@ -250,9 +276,18 @@ export class BerlinAuthTicketDO {
   }
 
   async alarm(): Promise<void> {
-    const current = toStoredTicket(await this.state.storage.get(STORAGE_KEY));
-    if (!current) {
+    const stored = await this.state.storage.get(STORAGE_KEY);
+    if (stored == null) {
       await this.state.storage.deleteAll().catch(() => undefined);
+      return;
+    }
+
+    const current = toStoredTicket(stored);
+    if (!current) {
+      logTicketStoreIntegrityError({
+        boundary: 'auth.ticket.alarm.storage',
+        detail: 'stored_ticket_malformed',
+      });
       return;
     }
 

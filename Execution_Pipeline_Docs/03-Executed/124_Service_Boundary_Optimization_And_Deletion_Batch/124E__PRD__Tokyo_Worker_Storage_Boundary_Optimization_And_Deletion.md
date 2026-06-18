@@ -1,6 +1,6 @@
 # PRD 124E - Tokyo-worker Storage Boundary Optimization And Deletion
 
-Status: EXECUTING
+Status: EXECUTED
 Parent: PRD 124
 Owner: Tokyo-worker R2 storage boundary
 Date: 2026-06-17
@@ -63,13 +63,55 @@ Tokyo-worker does not own:
 - TW-01: removed public `tokyo.dev.clickeen.com/__internal/*` Worker route.
 - TW-01: removed `x-ck-internal-service` from public CORS advertised request headers.
 - TW-01: Roma/San Francisco internal calls remain through Cloudflare service bindings.
+- TW-01 closure verification: active Wrangler routes expose only public static/asset paths plus health. Internal route handlers still exist for service-binding calls, but `finalizeTokyoObservedResponse` applies public CORS only to non-`/__internal/` paths and does not advertise `x-ck-internal-service`.
+
+2026-06-17 dead surface and readiness cleanup slice:
+
+- TW-12: deleted the dead Tokyo-worker `/__internal/instances/:id/duplicate` 410 route and removed its unused shared reason key.
+- TW-13: deleted the unused Tokyo-worker `USAGE_KV` binding and Env type field. Roma keeps its own `USAGE_KV` account rate-limit/usage binding; Tokyo-worker had no active caller.
+- TW-14: deleted unused Tokyo-worker helpers `validateWidgetSource` and `respondInternalOnly`.
+- TW-15: page package readiness now checks R2 object existence and content-type metadata with `head`; it no longer reads full page package bytes during publish readiness.
+- Boundary rationale: these changes delete dead storage-worker surfaces and reduce byte reads. They do not move policy, composition, or authoring decisions into Tokyo-worker.
+
+2026-06-17 registry corruption closure slice:
+
+- TW-03: account instance registry listing now fails closed when Supabase returns a present malformed row instead of filtering it out.
+- TW-03: account instance registry read now distinguishes absent rows from present malformed rows; absent returns `null`, malformed throws `tokyo.instance.registry.read_invalid`.
+- Boundary rationale: Tokyo-worker owns storage reads for instance registry state and must not convert corrupt stored state into absence.
+
+2026-06-17 persisted JSON and overlay corruption slice:
+
+- TW-08: shared R2 JSON reads now distinguish missing objects from present invalid JSON; present invalid JSON throws `tokyo.storage.json_invalid`.
+- TW-08: locale overlay reads and listings now fail on present invalid overlay documents instead of skipping them.
+- TW-08: page serve-state JSON parse failures now fail as `tokyo.errors.page.serveStateInvalid`.
+- TW-08: translation operation and locale ledger reads now fail when Supabase returns present malformed rows instead of filtering them out.
+- TW-08: translated-locale listing no longer returns `[]` for invalid ids, missing instance location, or invalid source/content; those states fail explicitly.
+- Boundary rationale: Tokyo-worker owns persisted R2/Supabase storage reads. Missing can be absence; present malformed storage is corruption and cannot be omitted.
+
+2026-06-17 asset upload policy/byte boundary slice:
+
+- TW-09: Roma sends explicit upload size and account storage quota preconditions from current account policy.
+- TW-09: Tokyo-worker rejects missing/malformed quota headers and enforces byte-size/storage preconditions at the asset write boundary before R2 mutation.
+- Boundary rationale: Roma remains account/tier policy owner. Tokyo-worker only enforces explicit storage write preconditions and byte safety for the bytes it stores.
+
+2026-06-17 public serving policy doc-truth slice:
+
+- TW-11: deleted obsolete active documentation for `accounts/{accountPublicId}/website/serving-policy.json`.
+- TW-11: active docs now state that `clk.live` serving uses Tokyo serve state for stored artifact delivery, while Roma/system account operations own account policy decisions before publish/unpublish.
+- Boundary rationale: no new serving-policy runtime file was invented. The docs now match the current storage system and service boundaries.
+
+2026-06-17 PRD 125 split:
+
+- TW-02, TW-04, TW-05, TW-06, TW-07, and TW-10 require authority/product-contract decisions before code execution.
+- Those findings were split to `Execution_Pipeline_Docs/01-Planning/125__PRD__Tokyo_Worker_Authority_Migration_Decisions.md`.
+- Boundary rationale: PRD 124 is a deletion/optimization batch. It must not fake completion of major ownership migrations by adding local Tokyo-worker machinery.
 
 ## Completion Gates
 
 - No public header-only internal write route can mutate account data.
 - Tokyo-worker does not treat corrupt persisted state as absence.
-- Tokyo-worker does not invent base locale, empty target lists, or repaired source.
-- Page publish pipeline has one package authority or is explicitly disabled.
-- Translation orchestration owner is explicit and documented.
 - Dead routes/bindings/helpers are deleted.
-- V1-V8 subagent audit is clean before moving to executed.
+- TW-02, TW-04, TW-05, TW-06, TW-07, and TW-10 are not claimed complete here;
+  they are split to PRD 125 for authority decisions before implementation.
+- V1-V8 subagent audit is clean for the completed PRD 124E slices before moving
+  to executed.

@@ -1,18 +1,34 @@
 import { asTrimmedString } from '@clickeen/ck-contracts';
-import { isCompactAccountPublicId, isCompactInstanceId, isWidgetOverlayCode } from '@clickeen/ck-contracts/overlay-identity';
+import {
+  isCompactAccountPublicId,
+  isCompactInstanceId,
+  isWidgetOverlayCode,
+} from '@clickeen/ck-contracts/overlay-identity';
 import { normalizeLocale } from '../../asset-utils';
 import type {
   AccountInstanceConfigDocument,
   AccountInstanceContentDocument,
   AccountInstanceContentFieldStatus,
 } from './types';
-import { normalizeLocaleList, normalizeStorageId } from './utils';
+import { normalizeStorageId } from './utils';
 
 function asRecord(value: unknown): Record<string, unknown> | null {
-  return value && typeof value === 'object' && !Array.isArray(value) ? (value as Record<string, unknown>) : null;
+  return value && typeof value === 'object' && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : null;
 }
 
-export function normalizeAccountInstanceConfigDocument(raw: unknown): AccountInstanceConfigDocument | null {
+function normalizeInstanceMeta(value: unknown): Record<string, unknown> | null {
+  const meta = asRecord(value);
+  if (!meta) return null;
+  const normalized = { ...meta };
+  delete normalized.targetLocales;
+  return normalized;
+}
+
+export function normalizeAccountInstanceConfigDocument(
+  raw: unknown,
+): AccountInstanceConfigDocument | null {
   const payload = asRecord(raw);
   if (!payload) return null;
   const id = normalizeStorageId(payload.id) ?? '';
@@ -24,9 +40,18 @@ export function normalizeAccountInstanceConfigDocument(raw: unknown): AccountIns
   const updatedAt = asTrimmedString(payload.updatedAt) ?? '';
   const config = asRecord(payload.config);
   const baseLocale = normalizeLocale(payload.baseLocale) ?? '';
-  const targetLocales = normalizeLocaleList(payload.targetLocales);
-  if (!isCompactInstanceId(id) || !isCompactAccountPublicId(accountId) || !isWidgetOverlayCode(widgetCode) || !widgetType || !config || !baseLocale || !targetLocales || !createdAt || !updatedAt) return null;
-  const meta = asRecord(payload.meta) ?? (payload.meta === null || payload.meta === undefined ? null : null);
+  if (
+    !isCompactInstanceId(id) ||
+    !isCompactAccountPublicId(accountId) ||
+    !isWidgetOverlayCode(widgetCode) ||
+    !widgetType ||
+    !config ||
+    !baseLocale ||
+    !createdAt ||
+    !updatedAt
+  )
+    return null;
+  const meta = normalizeInstanceMeta(payload.meta);
   const publicPackageFingerprint = asTrimmedString(payload.publicPackageFingerprint);
   if (
     Object.prototype.hasOwnProperty.call(payload, 'publicPackageFingerprint') &&
@@ -44,7 +69,6 @@ export function normalizeAccountInstanceConfigDocument(raw: unknown): AccountIns
     meta,
     config,
     baseLocale,
-    targetLocales,
     ...(publicPackageFingerprint ? { publicPackageFingerprint } : {}),
     createdAt,
     updatedAt,
@@ -55,7 +79,9 @@ function normalizeContentFieldStatus(value: unknown): AccountInstanceContentFiel
   return value === 'ok' || value === 'changed' ? value : null;
 }
 
-export function normalizeAccountInstanceContentDocument(raw: unknown): AccountInstanceContentDocument | null {
+export function normalizeAccountInstanceContentDocument(
+  raw: unknown,
+): AccountInstanceContentDocument | null {
   const payload = asRecord(raw);
   if (!payload) return null;
   const id = normalizeStorageId(payload.id) ?? '';
@@ -64,7 +90,14 @@ export function normalizeAccountInstanceContentDocument(raw: unknown): AccountIn
   const updatedAt = asTrimmedString(payload.updatedAt) ?? '';
   const rawFields = asRecord(payload.fields);
   if (asRecord(payload.localeSync)) return null;
-  if (!isCompactInstanceId(id) || !isCompactAccountPublicId(accountId) || !widgetType || !updatedAt || !rawFields) return null;
+  if (
+    !isCompactInstanceId(id) ||
+    !isCompactAccountPublicId(accountId) ||
+    !widgetType ||
+    !updatedAt ||
+    !rawFields
+  )
+    return null;
   const fields: AccountInstanceContentDocument['fields'] = {};
   for (const [path, rawField] of Object.entries(rawFields)) {
     const field = asRecord(rawField);
@@ -74,8 +107,12 @@ export function normalizeAccountInstanceContentDocument(raw: unknown): AccountIn
     const status = normalizeContentFieldStatus(field.status);
     if (value == null || !status) return null;
     fields[path] = {
-      ...(typeof field.identityKey === 'string' && field.identityKey ? { identityKey: field.identityKey } : {}),
-      ...(typeof field.fieldPattern === 'string' && field.fieldPattern ? { fieldPattern: field.fieldPattern } : {}),
+      ...(typeof field.identityKey === 'string' && field.identityKey
+        ? { identityKey: field.identityKey }
+        : {}),
+      ...(typeof field.fieldPattern === 'string' && field.fieldPattern
+        ? { fieldPattern: field.fieldPattern }
+        : {}),
       value,
       status,
     };

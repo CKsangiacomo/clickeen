@@ -1,6 +1,8 @@
 {
   "v": 1,
   "widgetname": "faq",
+  "displayName": "FAQ",
+  "description": "",
   "itemKey": "faq.item",
   "normalization": {
     "idRules": [

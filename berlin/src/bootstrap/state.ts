@@ -16,8 +16,13 @@ import type {
 import { internalError, validationError } from '../http';
 import { normalizeUserSettingsPayload } from '../identity/user-row-normalization';
 import type { UserRow as BerlinUserRow } from '../identity/user-row-normalization';
-import { readSupabaseAdminListAll } from '../supabase-admin';
-import { readSupabaseAdminJson, supabaseAdminErrorResponse, supabaseAdminFetch } from '../supabase-admin';
+import {
+  readSupabaseAdminJson,
+  readSupabaseAdminListAll,
+  supabaseAdminArrayPayload,
+  supabaseAdminErrorResponse,
+  supabaseAdminFetch,
+} from '../supabase-admin';
 import { type Env } from '../types';
 import { asTrimmedString, isUuid } from '../utils/primitives';
 
@@ -177,7 +182,9 @@ async function loadUserRow(
       response: supabaseAdminErrorResponse('coreui.errors.db.readFailed', response.status, payload),
     };
   }
-  return { ok: true, value: Array.isArray(payload) ? payload[0] || null : null };
+  const rows = supabaseAdminArrayPayload<BerlinUserRow>(payload, 'coreui.errors.db.readFailed');
+  if (!rows.ok) return rows;
+  return { ok: true, value: rows.value[0] || null };
 }
 
 async function loadAccountMembershipRows(
@@ -375,7 +382,10 @@ async function loadUsersByIds(
       };
     }
 
-    for (const row of Array.isArray(payload) ? payload : []) {
+    const rows = supabaseAdminArrayPayload<BerlinUserRow>(payload, 'coreui.errors.db.readFailed');
+    if (!rows.ok) return rows;
+
+    for (const row of rows.value) {
       const userId = asTrimmedString(row.user_id);
       if (!userId) continue;
       const issues = validateProfileLocation(row.country, row.timezone, `users.${userId}`);

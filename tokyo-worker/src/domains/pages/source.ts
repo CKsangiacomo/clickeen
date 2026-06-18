@@ -202,6 +202,49 @@ export async function listAccountPages(args: {
   return { v: 1, accountId, pages };
 }
 
+export async function listAccountPageIdsPlacingInstance(args: {
+  env: Env;
+  accountId: string;
+  instanceId: string;
+}): Promise<string[]> {
+  const accountId = assertAccountId(args.accountId);
+  const instanceId = String(args.instanceId || '').trim();
+  if (!isCompactInstanceId(instanceId)) {
+    throw new PageOperationError({
+      kind: 'VALIDATION',
+      reasonKey: 'coreui.errors.instance.invalidPayload',
+    });
+  }
+
+  const pageIds: string[] = [];
+  let cursor: string | undefined = undefined;
+  do {
+    const listed = await args.env.TOKYO_R2.list({
+      prefix: `${accountPagesRoot(accountId)}/`,
+      cursor,
+    });
+    for (const object of listed.objects) {
+      if (!object.key.endsWith('/source.json')) continue;
+      const pageId = normalizePageId(object.key.split('/').at(-2));
+      if (!pageId) {
+        failSourceInvalid([object.key]);
+      }
+      const source = await loadStoredPageSource({
+        env: args.env,
+        key: accountPageSourceKey(accountId, pageId),
+      });
+      if (!source.exists) failSourceInvalid([object.key]);
+      assertPageSourceContract({ source: source.value, accountId, pageId });
+      const accepted = source.value as { placements: Array<{ instanceId: string }> };
+      if (accepted.placements.some((placement) => placement.instanceId === instanceId)) {
+        pageIds.push(pageId);
+      }
+    }
+    cursor = listed.truncated ? listed.cursor : undefined;
+  } while (cursor);
+  return pageIds;
+}
+
 export async function saveAccountPageSource(args: {
   env: Env;
   accountId: string;

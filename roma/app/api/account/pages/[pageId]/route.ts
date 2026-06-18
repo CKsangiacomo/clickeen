@@ -10,11 +10,35 @@ import { readJsonPayloadOrValidation } from '@roma/lib/route-helpers';
 import {
   resolveCurrentAccountRouteContext,
   withSession,
+  type CurrentAccountRouteContext,
 } from '../../_lib/current-account-route';
 
 export const runtime = 'edge';
 
 type RouteContext = { params: Promise<{ pageId: string }> };
+
+type RouteFailureLike = {
+  ok: false;
+  status: number;
+  error: {
+    kind: string;
+    reasonKey: string;
+    detail?: string;
+    paths?: string[];
+  };
+};
+
+function routeFailureResponse(
+  request: NextRequest,
+  failure: RouteFailureLike,
+  setCookies: CurrentAccountRouteContext['setCookies'],
+) {
+  return withSession(
+    request,
+    NextResponse.json({ error: failure.error }, { status: failure.status }),
+    setCookies,
+  );
+}
 
 async function requirePageIdParam(context: RouteContext) {
   const { pageId: rawPageId } = await context.params;
@@ -153,7 +177,7 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
   }
 
   const accountId = current.value.authzPayload.accountPublicId;
-  let deleted: { existed: boolean };
+  let deleted: Awaited<ReturnType<typeof deleteAccountPageFromTokyo>>;
   try {
     deleted = await deleteAccountPageFromTokyo({
       accountId,
@@ -178,10 +202,13 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
       current.value.setCookies,
     );
   }
+  if (!deleted.ok) {
+    return routeFailureResponse(request, deleted, current.value.setCookies);
+  }
 
   return withSession(
     request,
-    NextResponse.json({ accountId, pageId, deleted: deleted.existed, existed: deleted.existed }),
+    NextResponse.json({ accountId, pageId, deleted: deleted.value.existed, existed: deleted.value.existed }),
     current.value.setCookies,
   );
 }

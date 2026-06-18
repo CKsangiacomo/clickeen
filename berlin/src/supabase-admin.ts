@@ -59,6 +59,15 @@ export function supabaseAdminErrorResponse(
   return internalError(reasonKey, detail || `supabase_status_${status}`);
 }
 
+export function supabaseAdminArrayPayload<T>(
+  payload: unknown,
+  reasonKey: string,
+  detail = 'supabase_payload_not_array',
+): Result<T[]> {
+  if (Array.isArray(payload)) return { ok: true, value: payload as T[] };
+  return { ok: false, response: internalError(reasonKey, detail) };
+}
+
 export async function readSupabaseAdminListAll<T>(args: {
   env: Env;
   pathname: string;
@@ -86,9 +95,11 @@ export async function readSupabaseAdminListAll<T>(args: {
       };
     }
 
-    const pageRows = Array.isArray(payload) ? payload : [];
-    rows.push(...pageRows);
-    if (pageRows.length < pageSize) break;
+    const pageRows = supabaseAdminArrayPayload<T>(payload, reasonKey, 'supabase_list_payload_not_array');
+    if (!pageRows.ok) return pageRows;
+
+    rows.push(...pageRows.value);
+    if (pageRows.value.length < pageSize) break;
   }
 
   return { ok: true, value: rows };

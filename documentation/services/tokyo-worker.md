@@ -1,8 +1,8 @@
 # Tokyo-worker - R2 Boundary
 
-Tokyo-worker is the Tokyo R2 boundary for account runtime data, account assets,
-saved widget instances, translated locale values, page source, generated public
-packages, and public artifact serving.
+Tokyo-worker is the Tokyo R2/storage/CDN boundary for account runtime data,
+account assets, saved widget instance files, translated locale values, page
+files, generated public packages, and public artifact serving.
 
 Tokyo-worker stores and serves bytes. Roma owns account product decisions.
 
@@ -14,9 +14,10 @@ For platform context see:
 
 ## Product Role
 
-Tokyo-worker receives an already-authorized product operation from Roma, proves
+Tokyo-worker receives an already-authorized storage operation from Roma, proves
 that the operation addresses the account path named by the Roma account context,
-then reads or writes the exact R2 objects for that operation.
+then adds, deletes, reads, lists, or serves the exact R2 objects for that
+operation.
 
 Tokyo-worker owns:
 
@@ -90,7 +91,8 @@ accounts/{accountPublicId}/instances/{instanceId}/
 ```
 
 `instance.config.json` carries non-text config, widget identity, display
-metadata, locale metadata, and timestamps.
+metadata, base locale, and timestamps. Account active locales are Roma account
+settings, not instance config.
 
 `instance.content.json` carries base user-visible text values.
 
@@ -126,7 +128,7 @@ Generated page package files live beside the page source under:
 accounts/{accountPublicId}/pages/{pageId}/
 ```
 
-Roma owns page product operations. Tokyo-worker stores the source, package, and
+Roma owns page product decisions. Tokyo-worker stores the source, package, and
 serve state under the account path Roma names.
 
 ## Public Serving
@@ -158,14 +160,14 @@ Private source and state files remain private account storage.
 ## Private Roma Routes
 
 Roma reaches Tokyo-worker through private Cloudflare service bindings for
-product-control operations. The request carries the Roma account authz capsule
+storage commands. The request carries the Roma account authz capsule
 and the account public id.
 
-`/__internal/**` is not a public Tokyo route. Internal product-control,
+`/__internal/**` is not a public Tokyo route. Internal storage commands,
 asset-control, and translation completion calls must arrive through Cloudflare
 service bindings. Public CORS does not advertise the internal-service header.
 
-Product-control routes cover:
+Storage command routes cover:
 
 - widget definition reads
 - account instance list/open/create/save/rename/delete
@@ -194,10 +196,11 @@ the system product tree.
 
 ## Translation Jobs
 
-Tokyo-worker owns the account-instance translation job producer. Generate
-translations reads the saved base content, editable-field contract, locale
-overlays, current markers, and account policy supplied through Roma, then
-produces jobs for San Francisco.
+Tokyo-worker stores account-instance translation operation records and locale
+overlay artifacts. Roma submits the current account active-locale snapshot for a
+generation operation; Tokyo-worker reads saved base content, editable-field
+contract facts, locale overlays, and current markers, then records the exact jobs
+sent to San Francisco.
 
 San Francisco completion writes durable translated values back through the
 Tokyo account-instance locale boundary.

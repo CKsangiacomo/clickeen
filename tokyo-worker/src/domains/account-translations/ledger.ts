@@ -13,12 +13,7 @@ export type TranslationOperationStatus =
   | 'failed'
   | 'timed_out';
 
-type TranslationOperationLocaleDbStatus =
-  | 'queued'
-  | 'running'
-  | 'completed'
-  | 'failed'
-  | 'stale';
+type TranslationOperationLocaleDbStatus = 'queued' | 'running' | 'completed' | 'failed' | 'stale';
 
 type TranslationOperationDbRow = {
   id: string;
@@ -63,7 +58,11 @@ async function assertSupabaseOk(response: Response, operation: string): Promise<
   if (!response.ok) {
     const detail =
       payload && typeof payload === 'object' && !Array.isArray(payload)
-        ? String((payload as { message?: unknown; code?: unknown }).message ?? (payload as { code?: unknown }).code ?? operation)
+        ? String(
+            (payload as { message?: unknown; code?: unknown }).message ??
+              (payload as { code?: unknown }).code ??
+              operation,
+          )
         : operation;
     throw new Error(`tokyo.translation.operation.${operation}:${detail}`);
   }
@@ -75,13 +74,17 @@ function stringArray(value: unknown): string[] {
   return value.filter((entry): entry is string => typeof entry === 'string' && entry.length > 0);
 }
 
-function localeStatusFromDb(status: TranslationOperationLocaleDbStatus): TranslationGenerationLocaleStatus {
+function localeStatusFromDb(
+  status: TranslationOperationLocaleDbStatus,
+): TranslationGenerationLocaleStatus {
   if (status === 'stale') return 'superseded';
   if (status === 'running') return 'queued';
   return status;
 }
 
-function operationStatusForDocument(status: TranslationOperationStatus): TranslationGenerationOperationDocument['status'] {
+function operationStatusForDocument(
+  status: TranslationOperationStatus,
+): TranslationGenerationOperationDocument['status'] {
   if (status === 'timed_out') return 'failed';
   return status;
 }
@@ -97,7 +100,11 @@ function normalizeOperationRow(value: unknown): TranslationOperationDbRow | null
     typeof row.base_locale !== 'string' ||
     typeof row.base_content_marker !== 'string' ||
     typeof row.generation_request_marker !== 'string' ||
-    (status !== 'queued' && status !== 'running' && status !== 'completed' && status !== 'failed' && status !== 'timed_out') ||
+    (status !== 'queued' &&
+      status !== 'running' &&
+      status !== 'completed' &&
+      status !== 'failed' &&
+      status !== 'timed_out') ||
     typeof row.requested_at !== 'string' ||
     typeof row.updated_at !== 'string' ||
     typeof row.expires_at !== 'string'
@@ -129,7 +136,11 @@ function normalizeLocaleRow(value: unknown): TranslationOperationLocaleDbRow | n
   if (
     typeof row.operation_id !== 'string' ||
     typeof row.locale !== 'string' ||
-    (status !== 'queued' && status !== 'running' && status !== 'completed' && status !== 'failed' && status !== 'stale') ||
+    (status !== 'queued' &&
+      status !== 'running' &&
+      status !== 'completed' &&
+      status !== 'failed' &&
+      status !== 'stale') ||
     (enqueueStatus !== 'pending' && enqueueStatus !== 'sent' && enqueueStatus !== 'failed') ||
     typeof row.base_content_marker !== 'string' ||
     typeof row.requested_at !== 'string' ||
@@ -199,7 +210,10 @@ function documentFromRows(args: {
   });
 }
 
-async function readLocalesForOperation(env: Env, operationId: string): Promise<TranslationOperationLocaleDbRow[]> {
+async function readLocalesForOperation(
+  env: Env,
+  operationId: string,
+): Promise<TranslationOperationLocaleDbRow[]> {
   const payload = await assertSupabaseOk(
     await supabaseFetch(
       env,
@@ -208,10 +222,15 @@ async function readLocalesForOperation(env: Env, operationId: string): Promise<T
     'read_locales_failed',
   );
   if (!Array.isArray(payload)) throw new Error('tokyo.translation.operation.read_locales_invalid');
-  return payload.map(normalizeLocaleRow).filter((row): row is TranslationOperationLocaleDbRow => Boolean(row));
+  const rows = payload.map(normalizeLocaleRow);
+  if (rows.some((row) => !row)) throw new Error('tokyo.translation.operation.read_locales_invalid');
+  return rows as TranslationOperationLocaleDbRow[];
 }
 
-function compareOperationRecency(left: TranslationOperationDbRow, right: TranslationOperationDbRow): number {
+function compareOperationRecency(
+  left: TranslationOperationDbRow,
+  right: TranslationOperationDbRow,
+): number {
   const requested = right.requested_at.localeCompare(left.requested_at);
   if (requested !== 0) return requested;
   const updated = right.updated_at.localeCompare(left.updated_at);
@@ -219,9 +238,13 @@ function compareOperationRecency(left: TranslationOperationDbRow, right: Transla
   return left.id.localeCompare(right.id);
 }
 
-function selectCurrentOperation(rows: TranslationOperationDbRow[]): TranslationOperationDbRow | null {
+function selectCurrentOperation(
+  rows: TranslationOperationDbRow[],
+): TranslationOperationDbRow | null {
   const ordered = [...rows].sort(compareOperationRecency);
-  return ordered.find((row) => row.status === 'queued' || row.status === 'running') ?? ordered[0] ?? null;
+  return (
+    ordered.find((row) => row.status === 'queued' || row.status === 'running') ?? ordered[0] ?? null
+  );
 }
 
 export async function readLatestTranslationGenerationOperation(args: {
@@ -238,8 +261,12 @@ export async function readLatestTranslationGenerationOperation(args: {
     ),
     'read_operation_failed',
   );
-  if (!Array.isArray(payload)) throw new Error('tokyo.translation.operation.read_operation_invalid');
-  const operation = selectCurrentOperation(payload.map(normalizeOperationRow).filter((row): row is TranslationOperationDbRow => Boolean(row)));
+  if (!Array.isArray(payload))
+    throw new Error('tokyo.translation.operation.read_operation_invalid');
+  const rows = payload.map(normalizeOperationRow);
+  if (rows.some((row) => !row))
+    throw new Error('tokyo.translation.operation.read_operation_invalid');
+  const operation = selectCurrentOperation(rows as TranslationOperationDbRow[]);
   if (!operation) return null;
   const locales = await readLocalesForOperation(args.env, operation.id);
   return documentFromRows({
@@ -270,11 +297,15 @@ export async function createTranslationGenerationOperation(args: {
     reason_key: args.operation.reasonKey ?? null,
     detail: args.operation.detail ?? null,
   };
-  const operationResponse = await supabaseFetch(args.env, '/rest/v1/translation_generation_operations', {
-    method: 'POST',
-    headers: { Prefer: 'return=minimal' },
-    body: JSON.stringify(operationPayload),
-  });
+  const operationResponse = await supabaseFetch(
+    args.env,
+    '/rest/v1/translation_generation_operations',
+    {
+      method: 'POST',
+      headers: { Prefer: 'return=minimal' },
+      body: JSON.stringify(operationPayload),
+    },
+  );
   if (operationResponse.status === 409) {
     const existing = await readLatestTranslationGenerationOperation({
       env: args.env,
@@ -283,7 +314,8 @@ export async function createTranslationGenerationOperation(args: {
       widgetType: args.operation.widgetType,
       currentReadyLocales: args.operation.currentReadyLocales,
     });
-    if (existing && (existing.status === 'queued' || existing.status === 'running')) return existing;
+    if (existing && (existing.status === 'queued' || existing.status === 'running'))
+      return existing;
   }
   await assertSupabaseOk(operationResponse, 'create_operation_failed');
 
@@ -319,11 +351,19 @@ export async function markTranslationGenerationEnqueued(args: {
   now: string;
 }): Promise<void> {
   await assertSupabaseOk(
-    await supabaseFetch(args.env, `/rest/v1/translation_generation_operation_locales?operation_id=${eq(args.operationId)}`, {
-      method: 'PATCH',
-      headers: { Prefer: 'return=minimal' },
-      body: JSON.stringify({ enqueue_status: 'sent', job_id: args.operationId, updated_at: args.now }),
-    }),
+    await supabaseFetch(
+      args.env,
+      `/rest/v1/translation_generation_operation_locales?operation_id=${eq(args.operationId)}`,
+      {
+        method: 'PATCH',
+        headers: { Prefer: 'return=minimal' },
+        body: JSON.stringify({
+          enqueue_status: 'sent',
+          job_id: args.operationId,
+          updated_at: args.now,
+        }),
+      },
+    ),
     'mark_enqueued_failed',
   );
 }
@@ -338,31 +378,39 @@ export async function failTranslationGenerationOperation(args: {
   status?: 'failed' | 'timed_out';
 }): Promise<void> {
   await assertSupabaseOk(
-    await supabaseFetch(args.env, `/rest/v1/translation_generation_operations?id=${eq(args.operationId)}`, {
-      method: 'PATCH',
-      headers: { Prefer: 'return=minimal' },
-      body: JSON.stringify({
-        status: args.status ?? 'failed',
-        updated_at: args.now,
-        reason_key: args.reasonKey,
-        detail: args.detail,
-      }),
-    }),
+    await supabaseFetch(
+      args.env,
+      `/rest/v1/translation_generation_operations?id=${eq(args.operationId)}`,
+      {
+        method: 'PATCH',
+        headers: { Prefer: 'return=minimal' },
+        body: JSON.stringify({
+          status: args.status ?? 'failed',
+          updated_at: args.now,
+          reason_key: args.reasonKey,
+          detail: args.detail,
+        }),
+      },
+    ),
     'fail_operation_failed',
   );
   await assertSupabaseOk(
-    await supabaseFetch(args.env, `/rest/v1/translation_generation_operation_locales?operation_id=${eq(args.operationId)}`, {
-      method: 'PATCH',
-      headers: { Prefer: 'return=minimal' },
-      body: JSON.stringify({
-        status: 'failed',
-        enqueue_status: 'failed',
-        updated_at: args.now,
-        completed_at: args.now,
-        reason_key: args.reasonKey,
-        detail: args.localeDetail ?? args.detail,
-      }),
-    }),
+    await supabaseFetch(
+      args.env,
+      `/rest/v1/translation_generation_operation_locales?operation_id=${eq(args.operationId)}`,
+      {
+        method: 'PATCH',
+        headers: { Prefer: 'return=minimal' },
+        body: JSON.stringify({
+          status: 'failed',
+          enqueue_status: 'failed',
+          updated_at: args.now,
+          completed_at: args.now,
+          reason_key: args.reasonKey,
+          detail: args.localeDetail ?? args.detail,
+        }),
+      },
+    ),
     'fail_operation_locales_failed',
   );
 }
@@ -404,11 +452,15 @@ export async function completeTranslationGenerationLocale(args: {
   currentReadyLocales: string[];
 }): Promise<TranslationGenerationOperationDocument | null> {
   await assertSupabaseOk(
-    await supabaseFetch(args.env, `/rest/v1/translation_generation_operation_locales?operation_id=${eq(args.operationId)}&locale=${eq(args.locale)}`, {
-      method: 'PATCH',
-      headers: { Prefer: 'return=minimal' },
-      body: JSON.stringify({ status: 'completed', updated_at: args.now, completed_at: args.now }),
-    }),
+    await supabaseFetch(
+      args.env,
+      `/rest/v1/translation_generation_operation_locales?operation_id=${eq(args.operationId)}&locale=${eq(args.locale)}`,
+      {
+        method: 'PATCH',
+        headers: { Prefer: 'return=minimal' },
+        body: JSON.stringify({ status: 'completed', updated_at: args.now, completed_at: args.now }),
+      },
+    ),
     'complete_locale_failed',
   );
   return updateOperationStatusFromLocales({
@@ -431,17 +483,21 @@ export async function failTranslationGenerationLocale(args: {
   currentReadyLocales: string[];
 }): Promise<TranslationGenerationOperationDocument | null> {
   await assertSupabaseOk(
-    await supabaseFetch(args.env, `/rest/v1/translation_generation_operation_locales?operation_id=${eq(args.operationId)}&locale=${eq(args.locale)}`, {
-      method: 'PATCH',
-      headers: { Prefer: 'return=minimal' },
-      body: JSON.stringify({
-        status: 'failed',
-        updated_at: args.now,
-        completed_at: args.now,
-        reason_key: args.reasonKey,
-        detail: args.detail,
-      }),
-    }),
+    await supabaseFetch(
+      args.env,
+      `/rest/v1/translation_generation_operation_locales?operation_id=${eq(args.operationId)}&locale=${eq(args.locale)}`,
+      {
+        method: 'PATCH',
+        headers: { Prefer: 'return=minimal' },
+        body: JSON.stringify({
+          status: 'failed',
+          updated_at: args.now,
+          completed_at: args.now,
+          reason_key: args.reasonKey,
+          detail: args.detail,
+        }),
+      },
+    ),
     'fail_locale_failed',
   );
   return updateOperationStatusFromLocales({
@@ -467,20 +523,30 @@ export async function updateOperationStatusFromLocales(args: {
   const operation = await readOperationRowById(args.env, args.operationId);
   if (!operation) return null;
   const locales = await readLocalesForOperation(args.env, args.operationId);
-  const hasPending = locales.some((locale) => locale.status === 'queued' || locale.status === 'running');
+  const hasPending = locales.some(
+    (locale) => locale.status === 'queued' || locale.status === 'running',
+  );
   const hasFailed = locales.some((locale) => locale.status === 'failed');
-  const status: TranslationOperationStatus = hasPending ? 'running' : hasFailed ? 'failed' : 'completed';
+  const status: TranslationOperationStatus = hasPending
+    ? 'running'
+    : hasFailed
+      ? 'failed'
+      : 'completed';
   await assertSupabaseOk(
-    await supabaseFetch(args.env, `/rest/v1/translation_generation_operations?id=${eq(args.operationId)}`, {
-      method: 'PATCH',
-      headers: { Prefer: 'return=minimal' },
-      body: JSON.stringify({
-        status,
-        updated_at: args.now,
-        reason_key: status === 'failed' ? args.reasonKey ?? operation.reason_key ?? null : null,
-        detail: status === 'failed' ? args.detail ?? operation.detail ?? null : null,
-      }),
-    }),
+    await supabaseFetch(
+      args.env,
+      `/rest/v1/translation_generation_operations?id=${eq(args.operationId)}`,
+      {
+        method: 'PATCH',
+        headers: { Prefer: 'return=minimal' },
+        body: JSON.stringify({
+          status,
+          updated_at: args.now,
+          reason_key: status === 'failed' ? (args.reasonKey ?? operation.reason_key ?? null) : null,
+          detail: status === 'failed' ? (args.detail ?? operation.detail ?? null) : null,
+        }),
+      },
+    ),
     'update_operation_status_failed',
   );
   const updated = await readOperationRowById(args.env, args.operationId);
@@ -494,11 +560,18 @@ export async function updateOperationStatusFromLocales(args: {
   });
 }
 
-async function readOperationRowById(env: Env, operationId: string): Promise<TranslationOperationDbRow | null> {
+async function readOperationRowById(
+  env: Env,
+  operationId: string,
+): Promise<TranslationOperationDbRow | null> {
   const payload = await assertSupabaseOk(
-    await supabaseFetch(env, `/rest/v1/translation_generation_operations?id=${eq(operationId)}&select=*&limit=1`),
+    await supabaseFetch(
+      env,
+      `/rest/v1/translation_generation_operations?id=${eq(operationId)}&select=*&limit=1`,
+    ),
     'read_operation_by_id_failed',
   );
-  if (!Array.isArray(payload)) throw new Error('tokyo.translation.operation.read_operation_by_id_invalid');
+  if (!Array.isArray(payload))
+    throw new Error('tokyo.translation.operation.read_operation_by_id_invalid');
   return normalizeOperationRow(payload[0]);
 }

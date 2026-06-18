@@ -1,6 +1,8 @@
 {
   "v": 1,
   "widgetname": "big-bang",
+  "displayName": "Big Bang",
+  "description": "",
   "itemKey": "bigBang.item",
   "defaults": {
     "uiLabels": {

@@ -14,7 +14,6 @@ export type AccountInstanceDocument = {
   meta?: Record<string, unknown> | null;
   config: Record<string, unknown>;
   baseLocale: string;
-  targetLocales: string[];
   publishStatus: InstanceServeState;
   createdAt: string;
   updatedAt: string;
@@ -29,7 +28,6 @@ export type AccountInstanceConfigDocument = {
   meta?: Record<string, unknown> | null;
   config: Record<string, unknown>;
   baseLocale: string;
-  targetLocales: string[];
   publicPackageFingerprint?: string;
   createdAt: string;
   updatedAt: string;
@@ -65,12 +63,15 @@ export type AccountInstanceContentDocument = {
   id: string;
   accountId: string;
   widgetType: string;
-  fields: Record<string, {
-    identityKey?: string;
-    fieldPattern?: string;
-    value: string;
-    status: AccountInstanceContentFieldStatus;
-  }>;
+  fields: Record<
+    string,
+    {
+      identityKey?: string;
+      fieldPattern?: string;
+      value: string;
+      status: AccountInstanceContentFieldStatus;
+    }
+  >;
   updatedAt: string;
 };
 
@@ -81,11 +82,7 @@ export type TranslationGenerationOperationStatus =
   | 'failed'
   | 'superseded';
 
-export type TranslationGenerationLocaleStatus =
-  | 'queued'
-  | 'completed'
-  | 'failed'
-  | 'superseded';
+export type TranslationGenerationLocaleStatus = 'queued' | 'completed' | 'failed' | 'superseded';
 
 export type TranslationGenerationOperationBasis = Array<{
   locale: string;

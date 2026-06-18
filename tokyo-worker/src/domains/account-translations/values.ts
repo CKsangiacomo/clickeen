@@ -1,8 +1,6 @@
 import { normalizeLocale } from '../../asset-utils';
 import type { Env } from '../../types';
-import {
-  resolveAccountInstanceLocation,
-} from '../account-instances/registry';
+import { resolveAccountInstanceLocation } from '../account-instances/registry';
 import {
   buildCurrentLocaleOverlayMetadata,
   readConfigDocumentByLocation,
@@ -32,7 +30,10 @@ export async function readAccountInstanceTranslatedLocaleValues(args: {
   accountId: string;
   widgetType?: string | null;
   locale: string;
-}): Promise<{ ok: true; value: { locale: string; values: Record<string, string> } } | AccountInstanceSourceReadFailure> {
+}): Promise<
+  | { ok: true; value: { locale: string; values: Record<string, string> } }
+  | AccountInstanceSourceReadFailure
+> {
   const locale = normalizeLocale(args.locale);
   if (!locale) {
     return { ok: false, kind: 'VALIDATION', reasonKey: 'tokyo.translation.locale.invalid' };
@@ -43,7 +44,8 @@ export async function readAccountInstanceTranslatedLocaleValues(args: {
     instanceId: args.instanceId,
     widgetType: args.widgetType,
   });
-  if (!location) return { ok: false, kind: 'NOT_FOUND', reasonKey: 'coreui.errors.instance.notFound' };
+  if (!location)
+    return { ok: false, kind: 'NOT_FOUND', reasonKey: 'coreui.errors.instance.notFound' };
   const configDoc = await readConfigDocumentByLocation({
     env: args.env,
     accountId: location.accountId,
@@ -59,7 +61,8 @@ export async function readAccountInstanceTranslatedLocaleValues(args: {
         configDoc,
       })
     : null;
-  if (!configDoc || !content) return { ok: false, kind: 'VALIDATION', reasonKey: 'coreui.errors.instance.content.invalid' };
+  if (!configDoc || !content)
+    return { ok: false, kind: 'VALIDATION', reasonKey: 'coreui.errors.instance.content.invalid' };
   const overlay = await readLocaleOverlay({
     env: args.env,
     accountId: location.accountId,
@@ -166,7 +169,13 @@ export async function completeAccountInstanceTranslatedLocaleValues(args: {
     widgetType: args.widgetType,
   });
   if (!location) throw new Error('coreui.errors.instance.notFound');
-  const targetLocales = Array.from(new Set(args.targetLocales.map((entry) => normalizeLocale(entry)).filter((entry): entry is string => Boolean(entry))));
+  const targetLocales = Array.from(
+    new Set(
+      args.targetLocales
+        .map((entry) => normalizeLocale(entry))
+        .filter((entry): entry is string => Boolean(entry)),
+    ),
+  );
   const changedPaths = new Set(args.paths);
   const configDoc = await readConfigDocumentByLocation({
     env: args.env,
@@ -185,7 +194,10 @@ export async function completeAccountInstanceTranslatedLocaleValues(args: {
     : null;
   if (!configDoc || !content) throw new Error('coreui.errors.instance.content.invalid');
   const currentMetadata = await buildCurrentLocaleOverlayMetadata({ configDoc, content });
-  assertLocaleOverlayValuesMatchSavedTextFields({ fields: currentMetadata.fields, values: args.values });
+  assertLocaleOverlayValuesMatchSavedTextFields({
+    fields: currentMetadata.fields,
+    values: args.values,
+  });
   const updatedAt = nowIso();
   await writeLocaleOverlay({
     env: args.env,
@@ -202,12 +214,16 @@ export async function completeAccountInstanceTranslatedLocaleValues(args: {
       updatedAt,
     },
   });
-  const targetOverlayByLocale = new Map((await listLocaleOverlays({
-    env: args.env,
-    accountId: location.accountId,
-    widgetCode: location.widgetCode,
-    instanceId: location.instanceId,
-  })).map((overlay) => [overlay.locale, overlay]));
+  const targetOverlayByLocale = new Map(
+    (
+      await listLocaleOverlays({
+        env: args.env,
+        accountId: location.accountId,
+        widgetCode: location.widgetCode,
+        instanceId: location.instanceId,
+      })
+    ).map((overlay) => [overlay.locale, overlay]),
+  );
   await updateContentDocumentByLocation({
     env: args.env,
     accountId: location.accountId,
@@ -223,12 +239,15 @@ export async function completeAccountInstanceTranslatedLocaleValues(args: {
         const currentField = currentContent.fields[field.path];
         const allTargetsOk =
           targetLocales.length === 0 ||
-          targetLocales.every((targetLocale) => (
-            targetOverlayByLocale.get(targetLocale)?.status === 'inSync' &&
-            targetOverlayByLocale.get(targetLocale)?.baseContentMarker === currentMetadata.baseContentMarker &&
-            targetOverlayByLocale.get(targetLocale)?.widgetContractHash === currentMetadata.widgetContractHash &&
-            typeof targetOverlayByLocale.get(targetLocale)?.values[field.path] === 'string'
-          ));
+          targetLocales.every(
+            (targetLocale) =>
+              targetOverlayByLocale.get(targetLocale)?.status === 'inSync' &&
+              targetOverlayByLocale.get(targetLocale)?.baseContentMarker ===
+                currentMetadata.baseContentMarker &&
+              targetOverlayByLocale.get(targetLocale)?.widgetContractHash ===
+                currentMetadata.widgetContractHash &&
+              typeof targetOverlayByLocale.get(targetLocale)?.values[field.path] === 'string',
+          );
         next.fields[field.path] = {
           ...currentField,
           status: changedPaths.has(field.path) && allTargetsOk ? 'ok' : currentField.status,
@@ -248,14 +267,14 @@ export async function listAccountInstanceTranslatedLocaleValues(args: {
 }): Promise<Array<{ locale: string }>> {
   const instanceId = normalizeStorageId(args.instanceId);
   const accountId = normalizeStorageId(args.accountId);
-  if (!instanceId || !accountId) return [];
+  if (!instanceId || !accountId) throw new Error('coreui.errors.instance.invalidPayload');
   const location = await resolveAccountInstanceLocation({
     env: args.env,
     accountId,
     instanceId,
     widgetType: args.widgetType,
   });
-  if (!location) return [];
+  if (!location) throw new Error('coreui.errors.instance.notFound');
   const configDoc = await readConfigDocumentByLocation({
     env: args.env,
     accountId: location.accountId,
@@ -271,19 +290,22 @@ export async function listAccountInstanceTranslatedLocaleValues(args: {
         configDoc,
       })
     : null;
-  if (!configDoc || !content) return [];
+  if (!configDoc || !content) throw new Error('coreui.errors.instance.content.invalid');
   const current = await buildCurrentLocaleOverlayMetadata({ configDoc, content });
-  return (await listLocaleOverlays({
-    env: args.env,
-    accountId: location.accountId,
-    widgetCode: location.widgetCode,
-    instanceId: location.instanceId,
-  }))
-    .filter((overlay) => (
-      overlay.status === 'inSync' &&
-      overlay.baseContentMarker === current.baseContentMarker &&
-      overlay.widgetContractHash === current.widgetContractHash &&
-      localeOverlayHasCompleteSavedTextValues({ fields: current.fields, overlay })
-    ))
+  return (
+    await listLocaleOverlays({
+      env: args.env,
+      accountId: location.accountId,
+      widgetCode: location.widgetCode,
+      instanceId: location.instanceId,
+    })
+  )
+    .filter(
+      (overlay) =>
+        overlay.status === 'inSync' &&
+        overlay.baseContentMarker === current.baseContentMarker &&
+        overlay.widgetContractHash === current.widgetContractHash &&
+        localeOverlayHasCompleteSavedTextValues({ fields: current.fields, overlay }),
+    )
     .map((overlay) => ({ locale: overlay.locale }));
 }

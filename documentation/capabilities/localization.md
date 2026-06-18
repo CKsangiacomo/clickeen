@@ -65,9 +65,12 @@ Producers receive concrete paths and base values. No producer receives wildcard,
 1. User saves one widget instance in Bob/Roma.
 2. Tokyo saves approved instance config/content.
 3. User opens the Translations panel and clicks Generate translations.
-4. Roma calls one Tokyo product command: generate translations for the account instance.
-5. Tokyo resolves target locales, editable fields, current saved base content, existing translated values, missing/out-of-sync locales, and the saved base content marker.
-6. Tokyo accepts async translation work for that marker and queues concrete locale jobs.
+4. Roma calls one Tokyo storage command with the current account active-locale
+   snapshot from account settings.
+5. Tokyo reads the saved widget files and existing overlays, then records the
+   exact operation locale snapshot it was given.
+6. Tokyo accepts async translation work for that marker and queues concrete
+   locale jobs for that operation snapshot.
 7. San Francisco translates concrete text primitive paths and values.
 8. San Francisco completes the work through Tokyo with the marker it translated.
 9. Tokyo applies translated locale values only if the marker still matches current saved base content.
@@ -78,7 +81,7 @@ No step repairs values, drops paths, guesses paths, scans widget software to red
 
 The Builder Translations panel is inspection and manual value override for translated locale values.
 
-Roma shows account setup: base locale, plan translation allowance, target locales, sync state, and readiness counts. Bob's preview dropdown is populated from complete translated locales that Tokyo lists for the saved instance. Account-enabled languages without translated values for the current content are absent from the dropdown.
+Roma shows account setup: base locale, plan translation allowance, account active locales, sync state, and readiness counts. Bob's preview dropdown is populated from complete translated locales that Tokyo lists for the saved instance. Account active languages without translated values for the current content are absent from the dropdown.
 
 If current saved base content does not match the marker for existing translated values, Bob shows:
 

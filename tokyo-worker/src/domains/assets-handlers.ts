@@ -153,6 +153,35 @@ function assertSafeSvgUpload(body: ArrayBuffer): { ok: true } | { ok: false; det
   return { ok: true };
 }
 
+function readLimitHeader(req: Request, name: string): number | null {
+  const raw = req.headers.get(name);
+  if (!raw) {
+    throw new Error(`${name}_missing`);
+  }
+  if (raw === 'unlimited') return null;
+  if (!/^[1-9][0-9]*$/.test(raw)) {
+    throw new Error(`${name}_invalid`);
+  }
+  const value = Number(raw);
+  if (!Number.isSafeInteger(value)) {
+    throw new Error(`${name}_invalid`);
+  }
+  return value;
+}
+
+function assetLimitResponse(detail: string): Response {
+  return json(
+    {
+      error: {
+        kind: 'DENY',
+        reasonKey: 'coreui.upsell.reason.limitReached',
+        detail,
+      },
+    },
+    { status: 403 },
+  );
+}
+
 function serializeAccountAssetRecord(file: AccountAssetFile): Record<string, unknown> {
   return {
     assetRef: file.assetRef,
@@ -240,6 +269,27 @@ export async function handleUploadAccountAsset(req: Request, env: Env): Promise<
     }
   }
 
+  let uploadSizeLimit: number | null = null;
+  let storageLimit: number | null = null;
+  try {
+    uploadSizeLimit = readLimitHeader(req, 'x-upload-size-max');
+    storageLimit = readLimitHeader(req, 'x-storage-bytes-max');
+  } catch (error) {
+    return json(
+      {
+        error: {
+          kind: 'VALIDATION',
+          reasonKey: 'coreui.errors.payload.invalid',
+          detail: error instanceof Error ? error.message : String(error),
+        },
+      },
+      { status: 422 },
+    );
+  }
+  if (uploadSizeLimit !== null && body.byteLength > uploadSizeLimit) {
+    return assetLimitResponse('uploads.size.max');
+  }
+
   const assetRef = filename;
   const key = buildAccountAssetKey(accountId, assetRef);
   const existing = await loadAccountAssetByRef(env, accountId, assetRef).catch((error) => {
@@ -249,6 +299,19 @@ export async function handleUploadAccountAsset(req: Request, env: Env): Promise<
   });
   if (existing instanceof AccountAssetMetadataError) return accountAssetMetadataInvalidResponse(existing);
   if (existing instanceof AccountAssetKeyError) return accountAssetKeyInvalidResponse(existing);
+  if (storageLimit !== null) {
+    const currentBytes = await loadAccountStoredBytesUsage(env, accountId).catch((error) => {
+      if (error instanceof AccountAssetMetadataError) return error;
+      if (error instanceof AccountAssetKeyError) return error;
+      throw error;
+    });
+    if (currentBytes instanceof AccountAssetMetadataError) return accountAssetMetadataInvalidResponse(currentBytes);
+    if (currentBytes instanceof AccountAssetKeyError) return accountAssetKeyInvalidResponse(currentBytes);
+    const replacedBytes = existing?.sizeBytes ?? 0;
+    if (currentBytes - replacedBytes + body.byteLength > storageLimit) {
+      return assetLimitResponse('storage.bytes.max');
+    }
+  }
   const createdAt = existing?.createdAt ?? new Date().toISOString();
   await env.TOKYO_R2.put(key, body, {
     httpMetadata: { contentType },

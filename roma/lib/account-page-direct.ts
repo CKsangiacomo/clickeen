@@ -102,6 +102,18 @@ function invalidTokyoPayload(detail: string): RouteFailure {
   };
 }
 
+function notFoundFailure(args: { reasonKey: string; detail?: string }): RouteFailure {
+  return {
+    ok: false,
+    status: 404,
+    error: {
+      kind: 'NOT_FOUND',
+      reasonKey: args.reasonKey,
+      ...(args.detail ? { detail: args.detail } : {}),
+    },
+  };
+}
+
 function normalizeRobots(value: unknown): PageRobots | null {
   return value === 'index,follow' || value === 'noindex,nofollow' ? value : null;
 }
@@ -276,7 +288,7 @@ export async function deleteAccountPageFromTokyo(args: {
   accountCapsule?: string | null;
   internalServiceName?: string | null;
   requestId?: string | null;
-}): Promise<{ existed: boolean }> {
+}): Promise<{ ok: true; value: { existed: boolean } } | RouteFailure> {
   const result = await callTokyo(tokyoCallContext(args), {
     path: `/__internal/pages/${encodeURIComponent(args.pageId)}`,
     method: 'DELETE',
@@ -284,11 +296,23 @@ export async function deleteAccountPageFromTokyo(args: {
     errorDetail: 'tokyo_account_page_delete_http_error',
     errorKey: 'coreui.errors.db.writeFailed',
   });
-  if (!result.ok && result.status !== 404) {
-    throw new Error(result.error.detail ?? result.error.reasonKey);
+  if (!result.ok) {
+    if (result.status === 404) {
+      return notFoundFailure({
+        reasonKey: 'coreui.errors.page.notFound',
+        detail: result.error.detail,
+      });
+    }
+    return result;
   }
   const payload = result.ok && isRecord(result.value) ? result.value : null;
-  return { existed: payload?.existed === true || payload?.deleted === true };
+  if (payload?.existed === false || payload?.deleted === false) {
+    return notFoundFailure({ reasonKey: 'coreui.errors.page.notFound' });
+  }
+  if (payload?.existed !== true && payload?.deleted !== true) {
+    return invalidTokyoPayload('invalid Tokyo delete page payload');
+  }
+  return { ok: true, value: { existed: true } };
 }
 
 export async function publishAccountPageInTokyo(args: {

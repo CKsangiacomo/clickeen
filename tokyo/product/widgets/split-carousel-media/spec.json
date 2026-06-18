@@ -1,6 +1,8 @@
 {
   "v": 1,
   "widgetname": "split-carousel-media",
+  "displayName": "Split Carousel Media",
+  "description": "",
   "itemKey": "split-carousel-media.item",
   "defaults": {
     "uiLabels": {

@@ -30,15 +30,30 @@ function normalizeConditionalEtag(httpEtag: string): string {
 export async function loadJson<T>(env: Env, key: string): Promise<T | null> {
   const obj = await env.TOKYO_R2.get(key);
   if (!obj) return null;
-  const json = (await obj.json().catch(() => null)) as T | null;
-  return json ?? null;
+  try {
+    const json = (await obj.json()) as T | null;
+    if (json == null) throw new Error('json_null');
+    return json;
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
+    throw new Error(`tokyo.storage.json_invalid:${key}:${detail}`);
+  }
 }
 
-export async function loadJsonObject<T>(env: Env, key: string): Promise<{ value: T; httpEtag: string } | null> {
+export async function loadJsonObject<T>(
+  env: Env,
+  key: string,
+): Promise<{ value: T; httpEtag: string } | null> {
   const obj = await env.TOKYO_R2.get(key);
   if (!obj) return null;
-  const json = (await obj.json().catch(() => null)) as T | null;
-  return json == null ? null : { value: json, httpEtag: obj.httpEtag };
+  try {
+    const json = (await obj.json()) as T | null;
+    if (json == null) throw new Error('json_null');
+    return { value: json, httpEtag: obj.httpEtag };
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
+    throw new Error(`tokyo.storage.json_invalid:${key}:${detail}`);
+  }
 }
 
 export async function deletePrefix(env: Env, prefix: string): Promise<void> {

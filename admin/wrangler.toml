@@ -10,4 +10,4 @@ DEVSTUDIO_GITHUB_REPOSITORY = "CKsangiacomo/clickeen"
 ENV_STAGE = "cloud-dev"
 
 [secrets]
-required = ["DEVSTUDIO_GITHUB_TOKEN", "E2E_AUTH_SECRET"]
+required = ["DEVSTUDIO_GITHUB_TOKEN"]

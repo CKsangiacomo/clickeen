@@ -18,17 +18,11 @@ BERLIN_FINISH_REDIRECT_URL = "https://roma.dev.clickeen.com/api/session/finish"
 BERLIN_ALLOWED_FINISH_REDIRECT_URLS = "https://devstudio.clickeen.com/api/session/finish"
 BERLIN_ALLOWED_PROVIDERS = "google"
 ENV_STAGE = "cloud-dev"
-E2E_AUTH_ENABLED = "true"
-E2E_ALLOWED_EMAILS = "playwright@clickeen.com"
 
 [[kv_namespaces]]
 binding = "BERLIN_SESSION_KV"
 id = "bf40f9bee2f74772ad7f0e9fb640ee29"
 preview_id = "fa868bb00ba04b7d83e215a6d4652c31"
-
-[[queues.producers]]
-binding = "RENDER_SNAPSHOT_QUEUE"
-queue = "instance-render-snapshot-cloud-dev"
 
 [[durable_objects.bindings]]
 name = "BERLIN_AUTH_TICKETS"

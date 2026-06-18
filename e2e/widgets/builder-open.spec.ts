@@ -3,7 +3,7 @@ import { hasAuthCookies } from '../helpers/auth-state';
 
 test.describe('Roma Builder authenticated smoke', () => {
   test.beforeEach(() => {
-    test.skip(!hasAuthCookies(), 'No e2e auth state found. Configure E2E_USER_EMAIL and E2E_AUTH_SECRET.');
+    test.skip(!hasAuthCookies(), 'No e2e auth state found. Create an ignored storage state file before running authenticated specs.');
   });
 
   test('opens Widgets and loads the first editable instance in Builder', async ({ page }, testInfo) => {

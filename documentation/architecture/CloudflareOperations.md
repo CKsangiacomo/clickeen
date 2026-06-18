@@ -112,7 +112,7 @@ pnpm cf:pages:put-secret <project-name> <secret-name> --apply
 
 `pnpm cf:pages:devstudio-env` is read-only. It compares the live DevStudio Pages
 env against `admin/wrangler.toml` and the required live-only
-`DEVSTUDIO_GITHUB_TOKEN` and `E2E_AUTH_SECRET` secrets.
+`DEVSTUDIO_GITHUB_TOKEN` secret.
 
 `pnpm cf:pages:sync-devstudio-env --apply` writes the non-secret DevStudio Pages
 production vars from `admin/wrangler.toml` and writes the required Pages secrets

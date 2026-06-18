@@ -1,9 +1,6 @@
 import type { Env } from '../../types';
 import { normalizeLocale } from '../../asset-utils';
-import {
-  accountInstanceConfigKey,
-  accountInstanceContentKey,
-} from './keys';
+import { accountInstanceConfigKey, accountInstanceContentKey } from './keys';
 import {
   createInstanceRegistryRow,
   listInstanceRegistryRows,
@@ -51,14 +48,21 @@ function normalizeDisplayName(value: unknown): string | null {
 
 function normalizeMeta(value: unknown): Record<string, unknown> | null {
   if (value == null) return null;
-  if (value && typeof value === 'object' && !Array.isArray(value)) return value as Record<string, unknown>;
+  if (value && typeof value === 'object' && !Array.isArray(value)) {
+    const meta = { ...(value as Record<string, unknown>) };
+    delete meta.targetLocales;
+    return meta;
+  }
   throw new Error('coreui.errors.instance.invalidPayload');
 }
 
 function displayNameFromConfigDocument(configDoc: AccountInstanceConfigDocument): string {
   const displayName = normalizeDisplayName(configDoc.displayName);
   if (displayName) return displayName;
-  const meta = configDoc.meta && typeof configDoc.meta === 'object' && !Array.isArray(configDoc.meta) ? configDoc.meta : null;
+  const meta =
+    configDoc.meta && typeof configDoc.meta === 'object' && !Array.isArray(configDoc.meta)
+      ? configDoc.meta
+      : null;
   return (
     normalizeDisplayName(meta?.styleName) ??
     normalizeDisplayName(meta?.name) ??
@@ -76,7 +80,10 @@ export async function buildCurrentLocaleOverlayMetadata(args: {
   fields: SavedTextField[];
 }> {
   const widgetDefinition = getWidgetDefinition(args.configDoc.widgetType);
-  if (!widgetDefinition?.editableFields || widgetDefinition.editableFields.widgetType !== args.configDoc.widgetType) {
+  if (
+    !widgetDefinition?.editableFields ||
+    widgetDefinition.editableFields.widgetType !== args.configDoc.widgetType
+  ) {
     throw new Error(`tokyo.translation.widget_unsupported:${args.configDoc.widgetType}`);
   }
   const widgetContractHash = await buildWidgetContractMarker(widgetDefinition.editableFields);
@@ -90,7 +97,12 @@ export async function buildCurrentLocaleOverlayMetadata(args: {
   const expectedPaths = new Set(fields.map((field) => field.path));
   for (const field of fields) {
     const saved = args.content.fields[field.path];
-    if (!saved || saved.value !== field.baseText || saved.identityKey !== field.identityKey || saved.fieldPattern !== field.fieldPattern) {
+    if (
+      !saved ||
+      saved.value !== field.baseText ||
+      saved.identityKey !== field.identityKey ||
+      saved.fieldPattern !== field.fieldPattern
+    ) {
       throw new Error(`coreui.errors.instance.content.invalid:${field.path}`);
     }
   }
@@ -130,23 +142,15 @@ function hasOwnRecordValue(record: Record<string, unknown> | null, key: string):
   return Boolean(record && Object.prototype.hasOwnProperty.call(record, key));
 }
 
-function normalizeLocaleArrayStrict(value: unknown): string[] | null {
-  if (!Array.isArray(value)) return null;
-  const locales: string[] = [];
-  for (const entry of value) {
-    const locale = normalizeLocale(entry);
-    if (!locale) return null;
-    if (!locales.includes(locale)) locales.push(locale);
-  }
-  return locales;
-}
-
 function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
 }
 
 function deleteExistingPath(root: Record<string, unknown>, path: string): void {
-  const parts = path.split('.').map((part) => part.trim()).filter(Boolean);
+  const parts = path
+    .split('.')
+    .map((part) => part.trim())
+    .filter(Boolean);
   let current: unknown = root;
   for (let index = 0; index < parts.length; index += 1) {
     const part = parts[index]!;
@@ -170,7 +174,10 @@ function deleteExistingPath(root: Record<string, unknown>, path: string): void {
 }
 
 function setValueAtPath(root: Record<string, unknown>, path: string, value: string): void {
-  const parts = path.split('.').map((part) => part.trim()).filter(Boolean);
+  const parts = path
+    .split('.')
+    .map((part) => part.trim())
+    .filter(Boolean);
   let current: unknown = root;
   for (let index = 0; index < parts.length; index += 1) {
     const part = parts[index]!;
@@ -179,7 +186,8 @@ function setValueAtPath(root: Record<string, unknown>, path: string, value: stri
     if (numeric) {
       if (!Array.isArray(current)) throw new Error(`tokyo.instance.content.pathInvalid:${path}`);
       const offset = Number(part);
-      if (offset < 0 || offset >= current.length) throw new Error(`tokyo.instance.content.pathInvalid:${path}`);
+      if (offset < 0 || offset >= current.length)
+        throw new Error(`tokyo.instance.content.pathInvalid:${path}`);
       if (last) {
         current[offset] = value;
         return;
@@ -219,12 +227,7 @@ function extractContentFields(args: {
   })) {
     const previous = previousByIdentity.get(item.identityKey) ?? args.previous?.fields[item.path];
     const sameValue = previous && previous.value === item.baseText;
-    const status =
-      sameValue
-        ? previous.status
-        : args.previous
-          ? 'changed'
-          : args.initialStatus;
+    const status = sameValue ? previous.status : args.previous ? 'changed' : args.initialStatus;
     fields[item.path] = {
       identityKey: item.identityKey,
       fieldPattern: item.fieldPattern,
@@ -263,22 +266,16 @@ function composeConfigWithContent(args: {
   return next;
 }
 
-function resolveBaseLocale(meta: Record<string, unknown> | null, existing?: AccountInstanceConfigDocument | null): string {
+function resolveBaseLocale(
+  meta: Record<string, unknown> | null,
+  existing?: AccountInstanceConfigDocument | null,
+): string {
   if (hasOwnRecordValue(meta, 'baseLocale')) {
     const fromMeta = normalizeLocale(meta?.baseLocale);
     if (!fromMeta) throw new Error('coreui.errors.instance.invalidPayload');
     return fromMeta;
   }
   return existing?.baseLocale ?? 'en';
-}
-
-function resolveTargetLocales(meta: Record<string, unknown> | null, existing?: AccountInstanceConfigDocument | null): string[] {
-  if (hasOwnRecordValue(meta, 'targetLocales')) {
-    const fromMeta = normalizeLocaleArrayStrict(meta?.targetLocales);
-    if (!fromMeta) throw new Error('coreui.errors.instance.invalidPayload');
-    return fromMeta;
-  }
-  return existing?.targetLocales ?? [];
 }
 
 function toAccountInstanceSourcePointer(args: {
@@ -296,7 +293,9 @@ function toAccountInstanceSourcePointer(args: {
     displayName: configDoc.displayName,
     meta: configDoc.meta ?? null,
     publishStatus: args.publishStatus,
-    ...(configDoc.publicPackageFingerprint ? { publicPackageFingerprint: configDoc.publicPackageFingerprint } : {}),
+    ...(configDoc.publicPackageFingerprint
+      ? { publicPackageFingerprint: configDoc.publicPackageFingerprint }
+      : {}),
     updatedAt: args.updatedAt,
   };
 }
@@ -315,7 +314,6 @@ function instanceFromConfigAndContent(args: {
     meta: args.configDoc.meta ?? null,
     config: args.fullConfig,
     baseLocale: args.configDoc.baseLocale,
-    targetLocales: args.configDoc.targetLocales,
     publishStatus: 'unpublished',
     createdAt: args.configDoc.createdAt,
     updatedAt: args.configDoc.updatedAt,
@@ -360,8 +358,13 @@ async function remapLocaleOverlaysForSavedContent(args: {
       .filter(([, field]) => typeof field.identityKey === 'string' && field.identityKey)
       .map(([path, field]) => [field.identityKey as string, { path, field }]),
   );
-  const previousByPath = new Map(Object.entries(args.previous.fields).map(([path, field]) => [path, { path, field }]));
-  const metadata = await buildCurrentLocaleOverlayMetadata({ configDoc: args.configDoc, content: args.next });
+  const previousByPath = new Map(
+    Object.entries(args.previous.fields).map(([path, field]) => [path, { path, field }]),
+  );
+  const metadata = await buildCurrentLocaleOverlayMetadata({
+    configDoc: args.configDoc,
+    content: args.next,
+  });
   for (const overlay of await listLocaleOverlays({
     env: args.env,
     accountId: args.accountId,
@@ -370,15 +373,16 @@ async function remapLocaleOverlaysForSavedContent(args: {
   })) {
     const values: Record<string, string> = {};
     for (const [path, field] of Object.entries(args.next.fields)) {
-      const previous =
-        field.identityKey
-          ? previousByIdentity.get(field.identityKey)
-          : previousByPath.get(path);
+      const previous = field.identityKey
+        ? previousByIdentity.get(field.identityKey)
+        : previousByPath.get(path);
       if (!previous || previous.field.value !== field.value) continue;
       const translated = overlay.values[previous.path];
       if (typeof translated === 'string') values[path] = translated;
     }
-    const complete = Object.keys(args.next.fields).every((path) => typeof values[path] === 'string');
+    const complete = Object.keys(args.next.fields).every(
+      (path) => typeof values[path] === 'string',
+    );
     await writeLocaleOverlay({
       env: args.env,
       accountId: args.accountId,
@@ -403,7 +407,10 @@ export async function readConfigDocumentByLocation(args: {
   instanceId: string;
 }): Promise<AccountInstanceConfigDocument | null> {
   return normalizeAccountInstanceConfigDocument(
-    await loadJson(args.env, accountInstanceConfigKey(args.accountId, args.widgetCode, args.instanceId)),
+    await loadJson(
+      args.env,
+      accountInstanceConfigKey(args.accountId, args.widgetCode, args.instanceId),
+    ),
   );
 }
 
@@ -456,7 +463,10 @@ async function readAccountInstanceSummaryByLocation(args: {
   editedAt: string;
 }): Promise<AccountInstanceSummary | null> {
   const configDoc = normalizeAccountInstanceConfigDocument(
-    await loadJson(args.env, accountInstanceConfigKey(args.accountId, args.widgetCode, args.instanceId)),
+    await loadJson(
+      args.env,
+      accountInstanceConfigKey(args.accountId, args.widgetCode, args.instanceId),
+    ),
   );
   return configDoc
     ? summaryFromConfigDocument({
@@ -516,7 +526,6 @@ export async function writeAccountInstanceSource(args: {
   });
   const meta = normalizeMeta(args.meta);
   const baseLocale = resolveBaseLocale(meta, existingConfig);
-  const targetLocales = resolveTargetLocales(meta, existingConfig);
   const previousContent = await readContentDocumentByLocation({
     env: args.env,
     accountId,
@@ -545,8 +554,9 @@ export async function writeAccountInstanceSource(args: {
       config: args.config,
     }),
     baseLocale,
-    targetLocales,
-    ...(args.publicPackageFingerprint ? { publicPackageFingerprint: args.publicPackageFingerprint } : {}),
+    ...(args.publicPackageFingerprint
+      ? { publicPackageFingerprint: args.publicPackageFingerprint }
+      : {}),
     createdAt: existingConfig?.createdAt ?? now,
     updatedAt: now,
   };
@@ -610,7 +620,8 @@ export async function readAccountInstanceSourcePointer(args: {
     instanceId,
     widgetType: args.widgetType,
   });
-  if (!location) return { ok: false, kind: 'NOT_FOUND', reasonKey: 'coreui.errors.instance.notFound' };
+  if (!location)
+    return { ok: false, kind: 'NOT_FOUND', reasonKey: 'coreui.errors.instance.notFound' };
   const configDoc = await readConfigDocumentByLocation({
     env: args.env,
     accountId: location.accountId,
@@ -655,7 +666,8 @@ export async function readAccountInstanceDocument(args: {
     instanceId,
     widgetType: args.widgetType,
   });
-  if (!location) return { ok: false, kind: 'NOT_FOUND', reasonKey: 'coreui.errors.instance.notFound' };
+  if (!location)
+    return { ok: false, kind: 'NOT_FOUND', reasonKey: 'coreui.errors.instance.notFound' };
   const instance = await readComposedInstanceByLocation({
     env: args.env,
     accountId: location.accountId,
@@ -680,7 +692,9 @@ export async function readAccountInstanceContentDocument(args: {
   instanceId: string;
   accountId: string;
   widgetType?: string | null;
-}): Promise<{ ok: true; value: AccountInstanceContentDocument } | AccountInstanceSourceReadFailure> {
+}): Promise<
+  { ok: true; value: AccountInstanceContentDocument } | AccountInstanceSourceReadFailure
+> {
   const instanceId = normalizeStorageId(args.instanceId);
   const accountId = normalizeStorageId(args.accountId);
   if (!instanceId || !accountId) {
@@ -692,7 +706,8 @@ export async function readAccountInstanceContentDocument(args: {
     instanceId,
     widgetType: args.widgetType,
   });
-  if (!location) return { ok: false, kind: 'NOT_FOUND', reasonKey: 'coreui.errors.instance.notFound' };
+  if (!location)
+    return { ok: false, kind: 'NOT_FOUND', reasonKey: 'coreui.errors.instance.notFound' };
   const configDoc = await readConfigDocumentByLocation({
     env: args.env,
     accountId: location.accountId,
@@ -745,7 +760,8 @@ export async function renameAccountInstanceDisplay(args: {
   const instanceId = normalizeStorageId(args.instanceId);
   const accountId = normalizeStorageId(args.accountId);
   const displayName = normalizeDisplayName(args.displayName);
-  if (!instanceId || !accountId || !displayName) throw new Error('coreui.errors.instance.invalidPayload');
+  if (!instanceId || !accountId || !displayName)
+    throw new Error('coreui.errors.instance.invalidPayload');
   const location = await resolveAccountInstanceLocation({
     env: args.env,
     accountId,
@@ -761,11 +777,15 @@ export async function renameAccountInstanceDisplay(args: {
   });
   if (!configDoc) throw new Error('coreui.errors.instance.config.invalid');
   const updatedAt = nowIso();
-  await putJson(args.env, accountInstanceConfigKey(location.accountId, location.widgetCode, location.instanceId), {
-    ...configDoc,
-    displayName,
-    updatedAt,
-  } satisfies AccountInstanceConfigDocument);
+  await putJson(
+    args.env,
+    accountInstanceConfigKey(location.accountId, location.widgetCode, location.instanceId),
+    {
+      ...configDoc,
+      displayName,
+      updatedAt,
+    } satisfies AccountInstanceConfigDocument,
+  );
   await updateInstanceRegistryEditedAt({
     env: args.env,
     accountId: location.accountId,
@@ -790,7 +810,12 @@ export async function readAccountInstanceSource(args: {
     widgetCode: pointer.widgetCode,
     instanceId: pointer.id,
   });
-  if (!instance || !instance.config || typeof instance.config !== 'object' || Array.isArray(instance.config)) {
+  if (
+    !instance ||
+    !instance.config ||
+    typeof instance.config !== 'object' ||
+    Array.isArray(instance.config)
+  ) {
     return { ok: false, kind: 'VALIDATION', reasonKey: 'coreui.errors.instance.config.invalid' };
   }
   return { ok: true, value: { pointer, config: instance.config } };

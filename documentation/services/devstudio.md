@@ -73,7 +73,6 @@ Required Pages configuration:
 - `DEVSTUDIO_GITHUB_REPOSITORY`
 - `ENV_STAGE`
 - `DEVSTUDIO_GITHUB_TOKEN` as a Pages secret
-- `E2E_AUTH_SECRET` as a Pages secret for remote Playwright verification
 
 `admin/wrangler.toml` is the source of truth for non-secret Pages configuration
 once the Cloudflare Pages project root is `admin`. Use

@@ -130,7 +130,8 @@ export function PagesDomain() {
   const [pageSource, setPageSource] = useState<AccountPageSource | null>(null);
   const [pagePublishStatus, setPagePublishStatus] = useState<PagePublishStatus>('unpublished');
   const [widgetInstances, setWidgetInstances] = useState<WidgetInstance[]>(() => cachedWidgets?.data.instances ?? []);
-  const [accountLocaleOptions, setAccountLocaleOptions] = useState<string[]>(['en']);
+  const [accountLocaleOptions, setAccountLocaleOptions] = useState<string[]>([]);
+  const [accountCountryLocaleRules, setAccountCountryLocaleRules] = useState<Array<{ country: string; locale: string }>>([]);
   const [addInstancesOpen, setAddInstancesOpen] = useState(false);
   const [checkedInstanceIds, setCheckedInstanceIds] = useState<string[]>([]);
   const [pickerVisibleLimit, setPickerVisibleLimit] = useState(50);
@@ -201,17 +202,31 @@ export function PagesDomain() {
     try {
       const payload = await accountApi.fetchJson<{
         selectedTargetLocales?: unknown;
-        localePolicy?: { baseLocale?: unknown } | null;
+        localePolicy?: { baseLocale?: unknown; ip?: { countryToLocale?: unknown } | null } | null;
       }>('/api/account/locales', { method: 'GET' });
-      const baseLocale = normalizeLocaleToken(payload.localePolicy?.baseLocale) ?? 'en';
-      const selectedTargetLocales = Array.isArray(payload.selectedTargetLocales)
-        ? payload.selectedTargetLocales
-            .map((entry) => normalizeLocaleToken(entry))
-            .filter((entry): entry is string => Boolean(entry))
+      const baseLocale = normalizeLocaleToken(payload.localePolicy?.baseLocale);
+      if (!baseLocale) throw new Error('coreui.errors.account.locales.invalid');
+      if (!Array.isArray(payload.selectedTargetLocales)) throw new Error('coreui.errors.account.locales.invalid');
+      const selectedTargetLocales = payload.selectedTargetLocales
+        .map((entry) => normalizeLocaleToken(entry))
+        .filter((entry): entry is string => Boolean(entry));
+      if (selectedTargetLocales.length !== payload.selectedTargetLocales.length) {
+        throw new Error('coreui.errors.account.locales.invalid');
+      }
+      const rawCountryToLocale = payload.localePolicy?.ip?.countryToLocale;
+      const countryLocaleRules = rawCountryToLocale && typeof rawCountryToLocale === 'object' && !Array.isArray(rawCountryToLocale)
+        ? Object.entries(rawCountryToLocale).map(([country, locale]) => ({
+            country: country.trim().toUpperCase(),
+            locale: normalizeLocaleToken(locale) ?? '',
+          })).filter((rule) => /^[A-Z]{2}$/.test(rule.country) && Boolean(rule.locale))
         : [];
       setAccountLocaleOptions(Array.from(new Set([baseLocale, ...selectedTargetLocales])));
-    } catch {
-      setAccountLocaleOptions(['en']);
+      setAccountCountryLocaleRules(countryLocaleRules);
+    } catch (error) {
+      setAccountLocaleOptions([]);
+      setAccountCountryLocaleRules([]);
+      const message = error instanceof Error ? error.message : String(error);
+      setDataError(resolveAccountShellErrorCopy(message, 'Failed to load account language settings. Please try again.'));
     }
   }, [accountApi]);
 
@@ -438,11 +453,13 @@ export function PagesDomain() {
         ...current.localization,
         countryLocaleRules: [
           ...current.localization.countryLocaleRules,
-          { country: 'US', locale: current.localization.defaultLocale },
+          accountCountryLocaleRules.find((rule) => (
+            !current.localization.countryLocaleRules.some((existing) => existing.country === rule.country)
+          )) ?? { country: '', locale: current.localization.defaultLocale },
         ],
       },
     } : current);
-  }, []);
+  }, [accountCountryLocaleRules]);
 
   const removeCountryLocaleRule = useCallback((index: number) => {
     setPageSource((current) => current ? {

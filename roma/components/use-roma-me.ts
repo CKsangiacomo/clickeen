@@ -37,7 +37,6 @@ export type RomaMeResponse = {
   profile?: {
     userId: string;
     primaryEmail: string;
-    emailVerified: boolean;
     givenName: string | null;
     familyName: string | null;
     primaryLanguage: string | null;
@@ -45,7 +44,6 @@ export type RomaMeResponse = {
     timezone: string | null;
   } | null;
   activeAccount?: RomaActiveAccount | null;
-  accounts: RomaAccountSummary[];
   authz?: {
     accountId?: string | null;
     accountPublicId?: string | null;

@@ -41,7 +41,7 @@ function expectNoCollectedErrors(label: string, collector: ErrorCollector) {
 
 test.describe('Widget Defaults', () => {
   test.beforeEach(() => {
-    test.skip(!hasAuthCookies(), 'No e2e auth state found. Configure E2E_USER_EMAIL and E2E_AUTH_SECRET.');
+    test.skip(!hasAuthCookies(), 'No e2e auth state found. Create an ignored storage state file before running authenticated specs.');
   });
 
   test('loads editable account defaults without unmapped paths', async ({ page }) => {

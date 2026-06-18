@@ -1,6 +1,8 @@
 {
   "v": 1,
   "widgetname": "split-media",
+  "displayName": "Split Media",
+  "description": "",
   "itemKey": "split-media.item",
   "defaults": {
     "uiLabels": {

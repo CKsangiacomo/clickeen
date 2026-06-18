@@ -7,7 +7,6 @@ import {
   listAccountInstancesInTokyo,
   listTokyoWidgetDefinitions,
 } from '@roma/lib/account-instance-direct';
-import { validateAccountInstanceConfigStructure } from '@roma/lib/account-instance-save-policy';
 import { loadCurrentAccountLocalesState } from '@roma/lib/account-locales-state';
 import { loadAccountWidgetDefaultsInTokyo } from '@roma/lib/account-widget-defaults-direct';
 import {
@@ -15,10 +14,7 @@ import {
   materializeAccountInstancePublicPackage,
 } from '@roma/lib/account-instance-public-package';
 import { readJsonPayloadOrValidation } from '@roma/lib/route-helpers';
-import {
-  resolveCurrentAccountRouteContext,
-  withSession,
-} from '../_lib/current-account-route';
+import { resolveCurrentAccountRouteContext, withSession } from '../_lib/current-account-route';
 
 export const runtime = 'edge';
 
@@ -70,7 +66,10 @@ export async function POST(request: NextRequest) {
   const current = await resolveCurrentAccountRouteContext({ request, minRole: 'editor' });
   if (!current.ok) return current.response;
 
-  const bodyResult = await readJsonPayloadOrValidation<{ widgetType?: unknown; displayName?: unknown } | null>(request);
+  const bodyResult = await readJsonPayloadOrValidation<{
+    widgetType?: unknown;
+    displayName?: unknown;
+  } | null>(request);
   if (!bodyResult.ok) {
     return withSession(
       request,
@@ -138,8 +137,14 @@ export async function POST(request: NextRequest) {
     typeof widgetTypesLimitRaw === 'number' && Number.isFinite(widgetTypesLimitRaw)
       ? Math.max(0, Math.floor(widgetTypesLimitRaw))
       : null;
-  const usedWidgetTypes = new Set(widgetInstances.value.accountInstances.map((instance) => instance.widgetType));
-  if (widgetTypesLimit != null && !usedWidgetTypes.has(widgetType) && usedWidgetTypes.size >= widgetTypesLimit) {
+  const usedWidgetTypes = new Set(
+    widgetInstances.value.accountInstances.map((instance) => instance.widgetType),
+  );
+  if (
+    widgetTypesLimit != null &&
+    !usedWidgetTypes.has(widgetType) &&
+    usedWidgetTypes.size >= widgetTypesLimit
+  ) {
     return withSession(
       request,
       NextResponse.json(
@@ -163,7 +168,10 @@ export async function POST(request: NextRequest) {
   if (!accountWidgetDefaults.ok) {
     return withSession(
       request,
-      NextResponse.json({ error: accountWidgetDefaults.error }, { status: accountWidgetDefaults.status }),
+      NextResponse.json(
+        { error: accountWidgetDefaults.error },
+        { status: accountWidgetDefaults.status },
+      ),
       current.value.setCookies,
     );
   }
@@ -204,17 +212,6 @@ export async function POST(request: NextRequest) {
       current.value.setCookies,
     );
   }
-  const structureGate = validateAccountInstanceConfigStructure({
-    widgetType,
-    config: materialized.config,
-  });
-  if (!structureGate.ok) {
-    return withSession(
-      request,
-      NextResponse.json({ error: structureGate.error }, { status: structureGate.status }),
-      current.value.setCookies,
-    );
-  }
   const accountLocales = await loadCurrentAccountLocalesState({
     accessToken: current.value.accessToken,
     accountId: current.value.authzPayload.accountId,
@@ -240,7 +237,6 @@ export async function POST(request: NextRequest) {
     );
   }
   const baseLocale = accountLocales.localePolicy.baseLocale;
-  const targetLocales = accountLocales.selectedTargetLocales;
   const instanceId = createCompactInstanceId();
   const compiled = await compileWidgetForInstancePackage(request, widgetType);
   if (!compiled.ok) {
@@ -276,10 +272,8 @@ export async function POST(request: NextRequest) {
     config: materialized.config,
     publicPackage: publicPackage.value,
     baseLocale,
-    targetLocales,
     meta: {
       baseLocale,
-      targetLocales,
     },
     requestId: current.value.requestId,
   });

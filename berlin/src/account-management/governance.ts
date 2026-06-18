@@ -1,6 +1,11 @@
 import type { BerlinAccountContext } from '../bootstrap/types';
 import { json, validationError } from '../http';
-import { readSupabaseAdminJson, supabaseAdminErrorResponse, supabaseAdminFetch } from '../supabase-admin';
+import {
+  readSupabaseAdminJson,
+  supabaseAdminArrayPayload,
+  supabaseAdminErrorResponse,
+  supabaseAdminFetch,
+} from '../supabase-admin';
 import { type Env } from '../types';
 import { asTrimmedString, normalizeUuid, readJsonPayload } from '../utils/primitives';
 
@@ -68,8 +73,9 @@ async function patchAccount(
       response: supabaseAdminErrorResponse('coreui.errors.db.writeFailed', response.status, payload),
     };
   }
-  const rows = Array.isArray(payload) ? payload : [];
-  if (!asTrimmedString(rows[0]?.id)) {
+  const rows = supabaseAdminArrayPayload<{ id?: unknown }>(payload, 'coreui.errors.db.writeFailed');
+  if (!rows.ok) return rows;
+  if (!asTrimmedString(rows.value[0]?.id)) {
     return {
       ok: false,
       response: json(

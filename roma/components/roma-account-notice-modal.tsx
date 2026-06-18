@@ -45,12 +45,11 @@ function summarizeTierDrop(fromTier: AccountTier, toTier: AccountTier): { title:
 }
 
 export function RomaAccountNoticeModal() {
-  const { accountContext, data, reload } = useRomaAccountContext();
+  const { accountContext, activeAccount, reload } = useRomaAccountContext();
   const accountApi = useRomaAccountApi();
   const accountId = accountContext.accountId;
 
-  const account = Array.isArray(data.accounts) ? (data.accounts.find((entry) => entry?.accountId === accountId) ?? null) : null;
-  const lifecycle = account?.lifecycleNotice ?? null;
+  const lifecycle = activeAccount.lifecycleNotice ?? null;
 
   const changedAt = typeof lifecycle?.tierChangedAt === 'string' ? lifecycle.tierChangedAt : null;
   const fromTier = normalizeTier(lifecycle?.tierChangedFrom);

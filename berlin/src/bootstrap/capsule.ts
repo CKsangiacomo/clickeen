@@ -107,7 +107,6 @@ export async function buildBootstrapPayload(args: {
         user: args.state.user,
         profile: args.state.profile,
         activeAccount,
-        accounts: args.state.accounts,
         authz: {
           accountCapsule: capsule.token,
           accountId: activeAccount.accountId,

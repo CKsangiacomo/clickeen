@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { generateAccountInstanceTranslations } from '@roma/lib/account-instance-translations';
-import { readJsonPayloadOrValidation, requireInstanceIdParam } from '@roma/lib/route-helpers';
+import { loadCurrentAccountLocalesState } from '@roma/lib/account-locales-state';
+import { requireInstanceIdParam } from '@roma/lib/route-helpers';
 import {
   resolveCurrentAccountRouteContext,
   withSession,
@@ -24,36 +25,40 @@ export async function POST(request: NextRequest, context: RouteContext) {
     );
   }
 
-  const bodyResult = await readJsonPayloadOrValidation<{ baseLocale?: unknown; targetLocales?: unknown } | null>(request);
-  if (!bodyResult.ok) {
-    return withSession(
-      request,
-      NextResponse.json({ error: bodyResult.error }, { status: bodyResult.status }),
-      current.value.setCookies,
-    );
-  }
-
-  const body = bodyResult.payload;
-  const baseLocale = typeof body?.baseLocale === 'string' ? body.baseLocale.trim() : '';
-  const targetLocales = Array.isArray(body?.targetLocales)
-    ? body.targetLocales.filter((entry): entry is string => typeof entry === 'string')
-    : [];
-  if (!baseLocale || targetLocales.some((locale) => !locale.trim())) {
+  const accountLocales = await loadCurrentAccountLocalesState({
+    accessToken: current.value.accessToken,
+    accountId: current.value.authzPayload.accountId,
+    requestId: current.value.requestId,
+  });
+  if (!accountLocales.ok) {
     return withSession(
       request,
       NextResponse.json(
-        { error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.invalid' } },
-        { status: 422 },
+        accountLocales.payload ?? {
+          error: {
+            kind: accountLocales.status === 401 ? 'AUTH' : 'UPSTREAM_UNAVAILABLE',
+            reasonKey:
+              accountLocales.status === 401
+                ? 'coreui.errors.auth.required'
+                : 'coreui.errors.auth.contextUnavailable',
+            detail: accountLocales.detail,
+          },
+        },
+        { status: accountLocales.status },
       ),
       current.value.setCookies,
     );
   }
+  const baseLocale = accountLocales.localePolicy.baseLocale;
+  const activeLocalesToGenerate = accountLocales.selectedTargetLocales.filter(
+    (locale) => locale !== baseLocale,
+  );
 
   const generated = await generateAccountInstanceTranslations({
     accountId,
     instanceId,
     baseLocale,
-    targetLocales,
+    targetLocales: activeLocalesToGenerate,
     accountCapsule: current.value.authzToken,
     requestId: current.value.requestId,
   });

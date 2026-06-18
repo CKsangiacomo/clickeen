@@ -2,7 +2,6 @@ import { resolveBerlinBaseUrl } from './env.js';
 
 export const ADMIN_ACCOUNT_ID = 'CLICKEEN';
 export const ADMIN_ROLES = new Set(['owner', 'admin']);
-export const E2E_AUTH_HEADER = 'x-ck-e2e-auth';
 
 export function extractReasonKey(payload, fallback) {
   const error = payload && typeof payload === 'object' ? payload.error : null;
@@ -148,28 +147,4 @@ export async function refreshBerlinSession(env, refreshToken) {
     accessTokenMaxAge: payload.accessTokenMaxAge,
     refreshTokenMaxAge: payload.refreshTokenMaxAge,
   };
-}
-
-export async function requestBerlinE2ESession(env, email, secret) {
-  const berlinBase = resolveBerlinBaseUrl(env);
-  const response = await fetch(`${berlinBase}/internal/e2e/session`, {
-    method: 'POST',
-    headers: {
-      [E2E_AUTH_HEADER]: secret,
-      'content-type': 'application/json',
-      accept: 'application/json',
-    },
-    cache: 'no-store',
-    body: JSON.stringify({ email }),
-  });
-  const payload = await response.json().catch(() => null);
-  if (!response.ok || !payload) {
-    return {
-      ok: false,
-      status: response.status || 502,
-      reasonKey: extractReasonKey(payload, 'coreui.errors.auth.login_failed'),
-      payload,
-    };
-  }
-  return { ok: true, payload };
 }

@@ -1,13 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { isCompactPageId } from '@clickeen/ck-contracts/overlay-identity';
-import {
-  loadAccountPageFromTokyo,
-  publishAccountPageInTokyo,
-} from '@roma/lib/account-page-direct';
-import {
-  listAccountInstancesInTokyo,
-} from '@roma/lib/account-instance-direct';
-import { loadAccountPublishContainment } from '@roma/lib/berlin-product';
+import { publishAccountPageInTokyo } from '@roma/lib/account-page-direct';
 import {
   resolveCurrentAccountRouteContext,
   withSession,
@@ -27,13 +20,6 @@ async function requirePageIdParam(context: RouteContext) {
   };
 }
 
-function routeKind(status: number): 'AUTH' | 'DENY' | 'VALIDATION' | 'UPSTREAM_UNAVAILABLE' {
-  if (status === 401) return 'AUTH';
-  if (status === 403) return 'DENY';
-  if (status === 422) return 'VALIDATION';
-  return 'UPSTREAM_UNAVAILABLE';
-}
-
 export async function POST(request: NextRequest, context: RouteContext) {
   const current = await resolveCurrentAccountRouteContext({ request, minRole: 'editor' });
   if (!current.ok) return current.response;
@@ -47,125 +33,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
     );
   }
 
-  const berlinAccountId = current.value.authzPayload.accountId;
   const accountId = current.value.authzPayload.accountPublicId;
-  const containment = await loadAccountPublishContainment(
-    berlinAccountId,
-    current.value.accessToken,
-    current.value.requestId,
-  );
-  if (!containment.ok) {
-    const status = containment.status === 401 ? 401 : containment.status === 403 ? 403 : 502;
-    return withSession(
-      request,
-      NextResponse.json(
-        { error: { kind: routeKind(status), reasonKey: containment.reasonKey, detail: containment.detail } },
-        { status },
-      ),
-      current.value.setCookies,
-    );
-  }
-  if (containment.containment.active) {
-    return withSession(
-      request,
-      NextResponse.json(
-        {
-          error: {
-            kind: 'DENY',
-            reasonKey: 'coreui.errors.account.publishingPaused',
-            detail: containment.containment.reason ?? 'account_publish_containment_active',
-          },
-        },
-        { status: 403 },
-      ),
-      current.value.setCookies,
-    );
-  }
-
-  const page = await loadAccountPageFromTokyo({
-    accountId,
-    pageId,
-    accountCapsule: current.value.authzToken,
-    requestId: current.value.requestId,
-  });
-  if (!page.ok) {
-    return withSession(
-      request,
-      NextResponse.json({ error: page.error }, { status: page.status }),
-      current.value.setCookies,
-    );
-  }
-  if (!page.value) {
-    return withSession(
-      request,
-      NextResponse.json(
-        { error: { kind: 'NOT_FOUND', reasonKey: 'coreui.errors.page.notFound' } },
-        { status: 404 },
-      ),
-      current.value.setCookies,
-    );
-  }
-  if (page.value.source.placements.length < 1) {
-    return withSession(
-      request,
-      NextResponse.json(
-        { error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.page.empty' } },
-        { status: 409 },
-      ),
-      current.value.setCookies,
-    );
-  }
-
-  const accountInstances = await listAccountInstancesInTokyo({
-    accountId,
-    accountCapsule: current.value.authzToken,
-    requestId: current.value.requestId,
-  });
-  if (!accountInstances.ok) {
-    return withSession(
-      request,
-      NextResponse.json(
-        {
-          error: {
-            kind: routeKind(accountInstances.status),
-            reasonKey: accountInstances.error.reasonKey,
-            detail: accountInstances.error.detail,
-          },
-        },
-        { status: accountInstances.status },
-      ),
-      current.value.setCookies,
-    );
-  }
-
-  const instanceStatusById = new Map(
-    accountInstances.value.accountInstances.map((instance) => [instance.instanceId, instance.publishStatus]),
-  );
-  const blockingInstanceIds = Array.from(
-    new Set(
-      page.value.source.placements
-        .map((placement) => placement.instanceId)
-        .filter((instanceId) => instanceStatusById.get(instanceId) !== 'published'),
-    ),
-  );
-  if (blockingInstanceIds.length > 0) {
-    return withSession(
-      request,
-      NextResponse.json(
-        {
-          error: {
-            kind: 'VALIDATION',
-            reasonKey: 'coreui.errors.page.instanceBlocksPublish',
-            detail: 'Page publish requires every placed instance to be published.',
-            instanceIds: blockingInstanceIds,
-          },
-        },
-        { status: 409 },
-      ),
-      current.value.setCookies,
-    );
-  }
-
   const result = await publishAccountPageInTokyo({
     accountId,
     pageId,

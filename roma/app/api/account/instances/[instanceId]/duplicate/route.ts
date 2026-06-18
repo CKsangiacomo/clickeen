@@ -49,8 +49,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
   const widgetType = source.value.row.widgetType;
   const baseLocale = source.value.row.baseLocale;
-  const targetLocales = source.value.row.targetLocales;
-  if (!baseLocale || !targetLocales) {
+  if (!baseLocale) {
     return withSession(
       request,
       NextResponse.json(
@@ -71,7 +70,6 @@ export async function POST(request: NextRequest, context: RouteContext) {
     );
   }
   const policyGate = validateAccountInstanceSavePolicy({
-    widgetType,
     config: source.value.config,
     authz: current.value.authzPayload,
     limits: compiled.value.limits,
@@ -111,7 +109,6 @@ export async function POST(request: NextRequest, context: RouteContext) {
     config: source.value.config,
     publicPackage: publicPackage.value,
     baseLocale,
-    targetLocales,
     meta: source.value.row.meta ?? null,
     requestId: current.value.requestId,
   });

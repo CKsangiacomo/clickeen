@@ -190,6 +190,8 @@ export async function POST(request: NextRequest) {
   if (contentType) headers.set('content-type', contentType);
   if (filename) headers.set('x-filename', filename);
   if (source) headers.set('x-source', source);
+  headers.set('x-upload-size-max', uploadSizeLimit === null ? 'unlimited' : String(uploadSizeLimit));
+  headers.set('x-storage-bytes-max', storageLimit === null ? 'unlimited' : String(storageLimit));
 
   try {
     const upstream = await fetchTokyoAssetControl({

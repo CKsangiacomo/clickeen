@@ -2,7 +2,6 @@ import { normalizeLocaleToken } from '@clickeen/l10n';
 import { NextRequest, NextResponse } from 'next/server';
 import {
   deleteAccountInstanceFromTokyo,
-  listPageIdsPlacingInstanceForAccount,
   saveAccountInstanceInTokyo,
 } from '@roma/lib/account-instance-direct';
 import {
@@ -143,7 +142,6 @@ export async function PUT(request: NextRequest, context: RouteContext) {
     );
   }
   const policyGate = validateAccountInstanceSavePolicy({
-    widgetType,
     config,
     authz: current.value.authzPayload,
     limits: compiled.value.limits,
@@ -212,37 +210,7 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
     );
   }
 
-  const placedPages = await listPageIdsPlacingInstanceForAccount({
-    accountId,
-    instanceId,
-    accountCapsule: current.value.authzToken,
-    requestId: current.value.requestId,
-  });
-  if (!placedPages.ok) {
-    return withSession(
-      request,
-      NextResponse.json({ error: placedPages.error }, { status: placedPages.status }),
-      current.value.setCookies,
-    );
-  }
-  if (placedPages.value.length) {
-    return withSession(
-      request,
-      NextResponse.json(
-        {
-          error: {
-            kind: 'VALIDATION',
-            reasonKey: 'coreui.errors.instance.placedOnPage',
-            detail: 'Remove this widget from every page before deleting it.',
-            pageIds: placedPages.value,
-          },
-        },
-        { status: 422 },
-      ),
-      current.value.setCookies,
-    );
-  }
-  let deleted: { existed: boolean };
+  let deleted: Awaited<ReturnType<typeof deleteAccountInstanceFromTokyo>>;
   try {
     deleted = await deleteAccountInstanceFromTokyo({
       accountId,
@@ -272,14 +240,17 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
       current.value.setCookies,
     );
   }
+  if (!deleted.ok) {
+    return routeFailureResponse(request, deleted, current.value.setCookies);
+  }
 
   return withSession(
     request,
     NextResponse.json({
       accountId,
       instanceId,
-      deleted: deleted.existed,
-      existed: deleted.existed,
+      deleted: deleted.value.existed,
+      existed: deleted.value.existed,
     }),
     current.value.setCookies,
   );

@@ -1,6 +1,6 @@
 # PRD 124 - Service Boundary Optimization And Deletion Audit
 
-Status: EXECUTING
+Status: EXECUTED
 Owner: Product architecture
 Date: 2026-06-17
 Stage: 02-Executing
@@ -83,11 +83,11 @@ This ledger is the current execution truth for PRD 124. A subPRD stays in
 
 | PRD | Status | Done | Open |
 | --- | --- | --- | --- |
-| 124A Berlin | Executing | BER-01 invitation/login identity critical slice; BER-02 account deletion disabled instead of returning DB-only success. BER-03 code is locally moved from Berlin to Roma and active docs are updated. | BER-03 is blocked from closure/deploy by missing `roma-dev` Pages `SUPABASE_SERVICE_ROLE_KEY`; configured Cloudflare REST token failed apply with 403. BER-04 through BER-12 remain open. BER-01 and BER-02 still require final subPRD closure verification before 124A can move to executed. |
+| 124A Berlin | Executed | BER-01 through BER-12 are complete and independently verified. Berlin invitation acceptance is login-time RPC flow, account deletion is explicit conflict/no mutation, locale mutation moved to Roma, publish containment and runtime E2E session minting were deleted, profile/bootstrap legacy fields were removed, dead render/link/doc residue was deleted, Supabase row/list payloads fail closed, and corrupt ticket state no longer masquerades as missing. | None. 124A moved to `03-Executed`. |
 | 124B Bob | Executed | BOB-01 through BOB-08 are complete. BOB-06 closure made malformed widget software fail in existing Bob compiler/control paths for presets, JSON attrs/options, show-if, and linked ops. | Final V1-V8 closure audit passed. |
-| 124C Roma | Executing | RMA-004 asset delete response truth; RMA-005 explicit Bob origin; BER-02 overlap for account deletion conflict/removal from settings. | RMA-001, RMA-002, RMA-003, and RMA-006 through RMA-013 remain open. |
+| 124C Roma | Executed | RMA-001 through RMA-013 are complete and independently verified. Roma no longer invents page locale/country defaults, renders generic Widget Defaults fallback editors, owns widget-specific Core schemas, reports malformed asset/delete upstream success, silently falls back to Bob origin, exposes runtime E2E session minting, traverses pages/instances for storage relationship checks, owns duplicate widget metadata maps, carries a duplicate Tokyo client wrapper, performs broad locale-lock inventory reads, or reports visible delete success on absence/corruption. | None. 124C moved to `03-Executed`. |
 | 124D Tokyo product roots | Executed | TOKYO-R2-001 aligned non-Prague R2 sync triggers for `tokyo/roma/**`; TOKYO-R2-002 deleted dead `tokyo/_redirects`; TOKYO-R2-003 deleted dead `tokyo/accounts` fixture root and added the existing PR architecture gate check against reintroduction; TOKYO-R2-004, TOKYO-R2-005, and TOKYO-R2-006 are recorded as completed historical Prague cleanup before the scope correction; TOKYO-R2-007 deleted dormant `tokyo/product/media/brand/**` and removed the `product/media` sync root; TOKYO-R2-008 deleted legacy PRD 106/107 direct account R2 repair/audit scripts and removed the exposed `audit:106` closure ritual. | Final V1-V8 closure audits passed. TOKYO-R2-009 and remaining Prague/page work are deferred to the planned Prague/page-composer sequence. |
-| 124E Tokyo-worker | Executing | TW-01 critical slice removed public `__internal/*` write route exposure and public CORS advertisement for the internal header. | TW-02 through TW-15 remain open. TW-01 still requires final subPRD closure verification before 124E can move to executed. |
+| 124E Tokyo-worker | Executed | TW-01 public internal-route exposure is closed and verified. TW-03/TW-08 corrupt registry, persisted JSON, overlay, serve-state, translation ledger, and translated-locale reads now fail closed. TW-09 asset upload has explicit Roma policy headers and Tokyo byte/storage preconditions. TW-11 stale `website/serving-policy.json` documentation was deleted. TW-12/TW-13/TW-14/TW-15 deleted dead duplicate route/reason key, unused KV binding/type, unused helpers, and full-byte page readiness reads. | TW-02, TW-04, TW-05, TW-06, TW-07, and TW-10 were split to PRD 125 because they require product authority decisions before code execution. |
 
 Recent execution commits:
 
@@ -152,3 +152,10 @@ PRD 124 closes only when each subPRD is either:
 
 The parent cannot close while an active finding is merely renamed, hidden,
 warning-only, or left as "legacy continuity" in a product path.
+
+## Closure
+
+2026-06-17: PRD 124 is executed. SubPRDs 124A, 124B, 124C, 124D, and 124E
+are in `03-Executed`. Remaining Tokyo-worker authority migrations were split to
+PRD 125 with explicit owner, scope, and no active claim of completion inside
+PRD 124.

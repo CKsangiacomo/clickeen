@@ -1,6 +1,8 @@
 {
   "v": 1,
   "widgetname": "calltoaction",
+  "displayName": "Call to Action",
+  "description": "",
   "itemKey": "calltoaction.item",
   "defaults": {
     "uiLabels": {

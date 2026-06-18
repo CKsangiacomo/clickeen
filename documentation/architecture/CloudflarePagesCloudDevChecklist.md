@@ -165,7 +165,6 @@ Env contract:
 | `DEVSTUDIO_GITHUB_REPOSITORY` | yes | `CKsangiacomo/clickeen` | `admin/wrangler.toml` |
 | `ENV_STAGE` | yes | `cloud-dev` | `admin/wrangler.toml` |
 | `DEVSTUDIO_GITHUB_TOKEN` | yes | GitHub contents token scoped to this repo | Cloudflare Pages secret |
-| `E2E_AUTH_SECRET` | yes | shared Berlin/Playwright e2e bootstrap secret | Cloudflare Pages secret |
 
 Verification:
 - `pnpm cf:pages:devstudio-env` compares live DevStudio Pages env against
@@ -209,8 +208,8 @@ Worker secrets:
 - San Francisco: `AI_GRANT_HMAC_SECRET`
 
 Pages secrets:
-- Roma: `AI_GRANT_HMAC_SECRET` is required for account Copilot grant/outcome signing. `SUPABASE_SERVICE_ROLE_KEY` is required for Roma-owned account settings writes. Roma -> Tokyo/Tokyo-worker product control uses service bindings and account-widget l10n generation runs through Tokyo-worker -> San Francisco `SANFRANCISCO_L10N`.
-- DevStudio: `DEVSTUDIO_GITHUB_TOKEN` is required for GitHub-backed policy writes; `E2E_AUTH_SECRET` is required for the dev-only remote Playwright bootstrap.
+- Roma: `AI_GRANT_HMAC_SECRET` is required for account Copilot grant/outcome signing. `SUPABASE_SERVICE_ROLE_KEY` is required for Roma-owned account settings writes. Roma -> Tokyo/Tokyo-worker storage commands use service bindings and account-widget l10n generation records jobs through Tokyo-worker -> San Francisco `SANFRANCISCO_L10N`.
+- DevStudio: `DEVSTUDIO_GITHUB_TOKEN` is required for GitHub-backed policy writes.
 
 CI secrets/vars:
 - `CLOUDFLARE_API_TOKEN` for GitHub Actions/Wrangler workflows only. Do not reuse
@@ -224,7 +223,7 @@ Rules:
 - Bob and Roma host/base-URL vars belong in app-local `wrangler.toml`.
 - Bob and Roma Supabase runtime values belong in the Cloudflare dashboard/runtime env, not committed repo literals.
 - Roma asset control requires the `TOKYO_ASSET_CONTROL` service binding to target `tokyo-assets-dev`; the asset lane no longer depends on Roma/Tokyo-worker shared-secret parity.
-- Roma product control requires the `TOKYO_PRODUCT_CONTROL` service binding to target `tokyo-assets-dev`; Builder open/save/l10n authoring no longer depend on public Tokyo shared-secret HTTP.
+- Roma uses the `TOKYO_PRODUCT_CONTROL` service binding for Tokyo storage commands targeting `tokyo-assets-dev`; Builder open/save/l10n authoring no longer depend on public Tokyo shared-secret HTTP.
 - Worker and Pages secrets stay live-only, but any new secret must be documented here with owning service and purpose.
 - If a Pages custom domain serves stale runtime after a Git-connected deploy, fix the underlying config or verification gap; do not normalize direct artifact deploys as the operating model.
 

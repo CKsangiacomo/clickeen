@@ -18,6 +18,8 @@ import {
   readAccountInstanceSourcePointer,
   renameAccountInstanceDisplay,
 } from '../domains/account-instances/source';
+import { listAccountPageIdsPlacingInstance, PageOperationError } from '../domains/pages';
+import { accountHasInstanceRegistryRows } from '../domains/account-instances/registry';
 import { json } from '../http';
 import {
   authorizeAccountInstanceControlRequest,
@@ -38,15 +40,18 @@ function normalizeSubmittedMeta(value: unknown): Record<string, unknown> | null 
   return isRecord(value) ? { ...value } : null;
 }
 
-function normalizeSubmittedTargetLocales(value: unknown): string[] | null {
-  if (!Array.isArray(value)) return null;
-  const locales: string[] = [];
-  for (const entry of value) {
-    const locale = normalizeLocale(entry);
-    if (!locale) return null;
-    if (!locales.includes(locale)) locales.push(locale);
-  }
-  return locales;
+function pageOperationErrorResponse(error: PageOperationError): Response {
+  return json(
+    {
+      error: {
+        kind: error.kind,
+        reasonKey: error.reasonKey,
+        detail: error.message,
+        ...(error.paths.length ? { paths: error.paths } : {}),
+      },
+    },
+    { status: error.status },
+  );
 }
 
 export async function tryHandleInternalInstanceRoutes(
@@ -54,12 +59,64 @@ export async function tryHandleInternalInstanceRoutes(
 ): Promise<Response | null> {
   const { req, env, pathname, respond } = args;
 
-  const internalAccountInstancesListMatch = pathname.match(/^\/__internal\/accounts\/([^/]+)\/instances$/);
-  if (internalAccountInstancesListMatch) {
-    const pathAccountId = normalizeAccountPublicId(decodeURIComponent(internalAccountInstancesListMatch[1] || ''));
+  const internalAccountInstanceFactsMatch = pathname.match(
+    /^\/__internal\/accounts\/([^/]+)\/instances\/facts$/,
+  );
+  if (internalAccountInstanceFactsMatch) {
+    const pathAccountId = normalizeAccountPublicId(
+      decodeURIComponent(internalAccountInstanceFactsMatch[1] || ''),
+    );
     const accountId = normalizeAccountPublicId(req.headers.get('x-account-id'));
     if (!accountId || !pathAccountId || pathAccountId !== accountId) {
-      return respondValidation(respond, 'coreui.errors.instance.invalidPayload', accountId ? 403 : 422);
+      return respondValidation(
+        respond,
+        'coreui.errors.instance.invalidPayload',
+        accountId ? 403 : 422,
+      );
+    }
+    if (req.method !== 'GET') return respondMethodNotAllowed(respond);
+    const authErr = await authorizeAccountInstanceControlRequest({
+      req,
+      env,
+      accountId,
+      minRole: 'viewer',
+    });
+    if (authErr) return respond(authErr);
+
+    try {
+      const hasInstances = await accountHasInstanceRegistryRows({ env, accountId });
+      return respond(json({ ok: true, accountId, hasInstances }));
+    } catch (error) {
+      const detail = error instanceof Error ? error.message : String(error);
+      return respond(
+        json(
+          {
+            error: {
+              kind: 'UPSTREAM_UNAVAILABLE',
+              reasonKey: 'coreui.errors.db.readFailed',
+              detail,
+            },
+          },
+          { status: 502 },
+        ),
+      );
+    }
+  }
+
+  const internalAccountInstancesListMatch = pathname.match(
+    /^\/__internal\/accounts\/([^/]+)\/instances$/,
+  );
+  if (internalAccountInstancesListMatch) {
+    const pathAccountId = normalizeAccountPublicId(
+      decodeURIComponent(internalAccountInstancesListMatch[1] || ''),
+    );
+    const accountId = normalizeAccountPublicId(req.headers.get('x-account-id'));
+    if (!accountId || !pathAccountId || pathAccountId !== accountId) {
+      return respondValidation(
+        respond,
+        'coreui.errors.instance.invalidPayload',
+        accountId ? 403 : 422,
+      );
     }
     if (req.method !== 'GET') return respondMethodNotAllowed(respond);
     const authErr = await authorizeAccountInstanceControlRequest({
@@ -77,12 +134,15 @@ export async function tryHandleInternalInstanceRoutes(
           ok: true,
           accountId,
           accountInstances,
-          publishedCount: accountInstances.filter((entry) => entry.publishStatus === 'published').length,
+          publishedCount: accountInstances.filter((entry) => entry.publishStatus === 'published')
+            .length,
         }),
       );
     } catch (error) {
       const detail = error instanceof Error ? error.message : String(error);
-      return respond(json({ error: { kind: 'VALIDATION', reasonKey: detail, detail } }, { status: 422 }));
+      return respond(
+        json({ error: { kind: 'VALIDATION', reasonKey: detail, detail } }, { status: 422 }),
+      );
     }
   }
 
@@ -100,7 +160,8 @@ export async function tryHandleInternalInstanceRoutes(
       boundary: 'internal.instance.create.body',
       accountId,
     });
-    if (!isRecord(rawBody)) return respondValidation(respond, 'coreui.errors.instance.invalidPayload');
+    if (!isRecord(rawBody))
+      return respondValidation(respond, 'coreui.errors.instance.invalidPayload');
     const widgetType = typeof rawBody.widgetType === 'string' ? rawBody.widgetType.trim() : '';
     if (!widgetType) return respondValidation(respond, 'coreui.errors.instance.invalidPayload');
     const source = isRecord(rawBody.source) ? rawBody.source : null;
@@ -110,16 +171,11 @@ export async function tryHandleInternalInstanceRoutes(
     const submittedMeta = normalizeSubmittedMeta(rawBody.meta);
     if (!submittedMeta) return respondValidation(respond, 'coreui.errors.instance.invalidPayload');
     const baseLocale = normalizeLocale(rawBody.baseLocale ?? submittedMeta.baseLocale);
-    const targetLocales = normalizeSubmittedTargetLocales(
-      Object.prototype.hasOwnProperty.call(rawBody, 'targetLocales')
-        ? rawBody.targetLocales
-        : submittedMeta.targetLocales,
-    );
-    if (!instanceId || !config || !publicPackage || !baseLocale || !targetLocales) return respondValidation(respond, 'coreui.errors.instance.invalidPayload');
+    if (!instanceId || !config || !publicPackage || !baseLocale)
+      return respondValidation(respond, 'coreui.errors.instance.invalidPayload');
     const meta = {
       ...submittedMeta,
       baseLocale,
-      targetLocales,
     };
 
     try {
@@ -159,7 +215,11 @@ export async function tryHandleInternalInstanceRoutes(
     const instanceId = normalizeStorageId(decodeURIComponent(internalInstanceRenameMatch[1] || ''));
     const accountId = normalizeAccountPublicId(req.headers.get('x-account-id'));
     if (!accountId || !instanceId || !isValidScopedInstance(instanceId, accountId)) {
-      return respondValidation(respond, 'coreui.errors.instance.invalidPayload', accountId ? 403 : 422);
+      return respondValidation(
+        respond,
+        'coreui.errors.instance.invalidPayload',
+        accountId ? 403 : 422,
+      );
     }
     if (req.method !== 'POST') return respondMethodNotAllowed(respond);
     const auth = await authorizeRomaEditorTransition({ req, env, accountId });
@@ -199,52 +259,55 @@ export async function tryHandleInternalInstanceRoutes(
     }
   }
 
-  const internalInstanceDuplicateMatch = pathname.match(/^\/__internal\/instances\/([^/]+)\/duplicate$/);
-  if (internalInstanceDuplicateMatch) {
-    const sourceInstanceId = normalizeStorageId(decodeURIComponent(internalInstanceDuplicateMatch[1] || ''));
-    const accountId = normalizeAccountPublicId(req.headers.get('x-account-id'));
-    if (!accountId || !sourceInstanceId || !isValidScopedInstance(sourceInstanceId, accountId)) {
-      return respondValidation(respond, 'coreui.errors.instance.invalidPayload', accountId ? 403 : 422);
-    }
-    if (req.method !== 'POST') return respondMethodNotAllowed(respond);
-    const auth = await authorizeRomaEditorTransition({ req, env, accountId });
-    if (!auth.ok) return respond(auth.response);
-
-    return respondValidation(respond, 'coreui.errors.instance.duplicateUnsupported', 410);
-  }
-
-  const internalInstancePublishMatch = pathname.match(/^\/__internal\/instances\/([^/]+)\/(publish|unpublish)$/);
+  const internalInstancePublishMatch = pathname.match(
+    /^\/__internal\/instances\/([^/]+)\/(publish|unpublish)$/,
+  );
   if (internalInstancePublishMatch) {
-    const instanceId = normalizeStorageId(decodeURIComponent(internalInstancePublishMatch[1] || ''));
+    const instanceId = normalizeStorageId(
+      decodeURIComponent(internalInstancePublishMatch[1] || ''),
+    );
     const action = internalInstancePublishMatch[2] === 'publish' ? 'publish' : 'unpublish';
     const accountId = normalizeAccountPublicId(req.headers.get('x-account-id'));
     if (!accountId || !instanceId || !isValidScopedInstance(instanceId, accountId)) {
-      return respondValidation(respond, 'coreui.errors.instance.invalidPayload', accountId ? 403 : 422);
+      return respondValidation(
+        respond,
+        'coreui.errors.instance.invalidPayload',
+        accountId ? 403 : 422,
+      );
     }
     if (req.method !== 'POST') return respondMethodNotAllowed(respond);
     const auth = await authorizeRomaEditorTransition({ req, env, accountId });
     if (!auth.ok) return respond(auth.response);
 
     try {
-      const transition = action === 'publish'
-        ? await publishAccountInstanceTransition({
-            env,
-            accountId,
-            instanceId,
-          })
-        : await unpublishAccountInstanceTransition({ env, accountId, instanceId });
+      const transition =
+        action === 'publish'
+          ? await publishAccountInstanceTransition({
+              env,
+              accountId,
+              instanceId,
+            })
+          : await unpublishAccountInstanceTransition({ env, accountId, instanceId });
       return respond(json({ ok: true, ...transition }));
     } catch (error) {
       return respond(transitionErrorResponse(error));
     }
   }
 
-  const internalInstancePackageMatch = pathname.match(/^\/__internal\/instances\/([^/]+)\/package$/);
+  const internalInstancePackageMatch = pathname.match(
+    /^\/__internal\/instances\/([^/]+)\/package$/,
+  );
   if (internalInstancePackageMatch) {
-    const instanceId = normalizeStorageId(decodeURIComponent(internalInstancePackageMatch[1] || ''));
+    const instanceId = normalizeStorageId(
+      decodeURIComponent(internalInstancePackageMatch[1] || ''),
+    );
     const accountId = normalizeAccountPublicId(req.headers.get('x-account-id'));
     if (!accountId || !instanceId || !isValidScopedInstance(instanceId, accountId)) {
-      return respondValidation(respond, 'coreui.errors.instance.invalidPayload', accountId ? 403 : 422);
+      return respondValidation(
+        respond,
+        'coreui.errors.instance.invalidPayload',
+        accountId ? 403 : 422,
+      );
     }
     if (req.method !== 'GET') return respondMethodNotAllowed(respond);
     const authErr = await authorizeAccountInstanceControlRequest({
@@ -294,7 +357,12 @@ export async function tryHandleInternalInstanceRoutes(
       if (!publicPackage) {
         return respond(
           json(
-            { error: { kind: 'NOT_FOUND', reasonKey: 'coreui.errors.instance.publicPackageNotFound' } },
+            {
+              error: {
+                kind: 'NOT_FOUND',
+                reasonKey: 'coreui.errors.instance.publicPackageNotFound',
+              },
+            },
             { status: 404 },
           ),
         );
@@ -322,7 +390,11 @@ export async function tryHandleInternalInstanceRoutes(
     const instanceId = normalizeStorageId(decodeURIComponent(internalInstanceMatch[1] || ''));
     const accountId = normalizeAccountPublicId(req.headers.get('x-account-id'));
     if (!accountId || !instanceId || !isValidScopedInstance(instanceId, accountId)) {
-      return respondValidation(respond, 'coreui.errors.instance.invalidPayload', accountId ? 403 : 422);
+      return respondValidation(
+        respond,
+        'coreui.errors.instance.invalidPayload',
+        accountId ? 403 : 422,
+      );
     }
 
     if (req.method === 'GET') {
@@ -353,7 +425,6 @@ export async function tryHandleInternalInstanceRoutes(
           publishStatus: instance.value.publishStatus,
           updatedAt: instance.value.updatedAt,
           baseLocale: instance.value.baseLocale,
-          targetLocales: instance.value.targetLocales,
           meta: instance.value.meta ?? null,
           config: instance.value.config,
         }),
@@ -371,7 +442,9 @@ export async function tryHandleInternalInstanceRoutes(
         instanceId,
         accountId,
       })) as Record<string, unknown> | null;
-      const publicPackage = isRecord(body) ? readSubmittedInstancePublicPackage(body.publicPackage) : null;
+      const publicPackage = isRecord(body)
+        ? readSubmittedInstancePublicPackage(body.publicPackage)
+        : null;
       if (!isRecord(body) || !isRecord(body.config) || !publicPackage) {
         return respondValidation(respond, 'coreui.errors.instance.invalidPayload');
       }
@@ -407,8 +480,53 @@ export async function tryHandleInternalInstanceRoutes(
     if (req.method === 'DELETE') {
       const auth = await authorizeRomaEditorTransition({ req, env, accountId });
       if (!auth.ok) return respond(auth.response);
-      const deleted = await deleteAccountInstanceSubtree(env, instanceId, accountId);
-      return respond(json({ ok: true, deleted: deleted.existed, existed: deleted.existed }));
+      try {
+        const placedPageIds = await listAccountPageIdsPlacingInstance({
+          env,
+          accountId,
+          instanceId,
+        });
+        if (placedPageIds.length) {
+          return respond(
+            json(
+              {
+                error: {
+                  kind: 'VALIDATION',
+                  reasonKey: 'coreui.errors.instance.placedOnPage',
+                  detail: 'Remove this widget from every page before deleting it.',
+                  pageIds: placedPageIds,
+                },
+              },
+              { status: 422 },
+            ),
+          );
+        }
+        const deleted = await deleteAccountInstanceSubtree(env, instanceId, accountId);
+        if (!deleted.existed) {
+          return respond(
+            json(
+              { error: { kind: 'NOT_FOUND', reasonKey: 'coreui.errors.instance.notFound' } },
+              { status: 404 },
+            ),
+          );
+        }
+        return respond(json({ ok: true, deleted: deleted.existed, existed: deleted.existed }));
+      } catch (error) {
+        if (error instanceof PageOperationError) return respond(pageOperationErrorResponse(error));
+        const detail = error instanceof Error ? error.message : String(error);
+        return respond(
+          json(
+            {
+              error: {
+                kind: 'UPSTREAM_UNAVAILABLE',
+                reasonKey: 'coreui.errors.db.writeFailed',
+                detail,
+              },
+            },
+            { status: 502 },
+          ),
+        );
+      }
     }
 
     return respondMethodNotAllowed(respond);

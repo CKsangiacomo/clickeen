@@ -504,7 +504,7 @@ test.describe('PRD106F authenticated Builder browser certification', () => {
   test.beforeEach(() => {
     test.skip(
       !hasAuthCookies(),
-      'No e2e auth state found. Configure E2E_USER_EMAIL and E2E_AUTH_SECRET.',
+      'No e2e auth state found. Create an ignored storage state file before running authenticated specs.',
     );
   });
 

@@ -1,5 +1,5 @@
 import { claimAsString } from '../utils/claims';
-import { authError, conflictError, json, redirect, validationError } from '../http';
+import { authError, conflictError, internalError, json, redirect, validationError } from '../http';
 import { capture, exact, type BerlinRoute } from '../http/routing';
 import { readJsonBody } from '../http/auth-request';
 import {
@@ -308,7 +308,14 @@ async function handleProviderLoginCallback(
       stateValid: isValidOauthStateId(stateForError),
     });
     if (isValidOauthStateId(stateForError)) {
-      await consumeOauthTransaction(env, stateForError);
+      const consumed = await consumeOauthTransaction(env, stateForError);
+      if (consumed.outcome === 'corrupt') {
+        logAuthFlow(request, 'error', 'auth.provider.callback.failed', {
+          reasonKey: 'berlin.errors.auth.ticket_store_corrupt',
+          detailCode: 'oauth_state_corrupt',
+        });
+        return internalError('berlin.errors.auth.ticket_store_corrupt', 'oauth_state_corrupt');
+      }
       const loginRedirectUrl = resolveLoginErrorRedirectUrl(env, 'coreui.errors.auth.provider.denied');
       if (loginRedirectUrl) return redirect(loginRedirectUrl);
     }
@@ -338,6 +345,13 @@ async function handleProviderLoginCallback(
       detailCode: 'missing_oauth_state_store',
     });
     return authError('berlin.errors.auth.config_missing', 503, 'missing_oauth_state_store');
+  }
+  if (consumedState.outcome === 'corrupt') {
+    logAuthFlow(request, 'error', 'auth.provider.callback.failed', {
+      reasonKey: 'berlin.errors.auth.ticket_store_corrupt',
+      detailCode: 'oauth_state_corrupt',
+    });
+    return internalError('berlin.errors.auth.ticket_store_corrupt', 'oauth_state_corrupt');
   }
   if (consumedState.outcome !== 'ok' || consumedState.ticket.flow !== 'login') {
     logAuthFlow(request, 'warn', 'auth.provider.callback.rejected', {
@@ -469,6 +483,13 @@ async function handleFinish(request: Request, env: Env): Promise<Response> {
       detailCode: 'missing_oauth_finish_store',
     });
     return authError('berlin.errors.auth.config_missing', 503, 'missing_oauth_finish_store');
+  }
+  if (consumedFinish.outcome === 'corrupt') {
+    logAuthFlow(request, 'error', 'auth.finish.failed', {
+      reasonKey: 'berlin.errors.auth.ticket_store_corrupt',
+      detailCode: 'oauth_finish_corrupt',
+    });
+    return internalError('berlin.errors.auth.ticket_store_corrupt', 'oauth_finish_corrupt');
   }
   if (consumedFinish.outcome === 'alreadyConsumed') {
     logAuthFlow(request, 'warn', 'auth.finish.rejected', {

@@ -79,7 +79,7 @@ that exposes it.
 | ------------- | ---------------------------- | --------------------------------------------------- |
 | Roma          | Cloudflare Pages / Next.js   | Current-account app, Builder host, account routes   |
 | Bob           | Cloudflare Pages / Next.js   | Builder editor for one account instance             |
-| Tokyo-worker  | Cloudflare Workers + R2      | Account product operations and public serving       |
+| Tokyo-worker  | Cloudflare Workers + R2      | Account R2 storage boundary and public file serving |
 | Tokyo R2      | Cloudflare R2                | Product software and account runtime storage        |
 | Berlin        | Cloudflare Workers           | Auth, session bootstrap, account authz capsule      |
 | Prague        | Cloudflare Pages / Astro     | Marketing, gallery, demo/funnel pages               |
@@ -123,8 +123,6 @@ accounts/{accountPublicId}/
       index.html
       styles.css
       runtime.js
-  website/
-    serving-policy.json
 ```
 
 Product software and product-owned static resources live outside account runtime

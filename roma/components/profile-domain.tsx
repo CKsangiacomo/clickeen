@@ -25,7 +25,6 @@ type UserSettingsProfile = {
   country: string | null;
   timezone: string | null;
   primaryEmail: string;
-  emailVerified: boolean;
 };
 
 const USER_SETTINGS_REASON_COPY: Record<string, string> = {
@@ -271,7 +270,6 @@ export function ProfileDomain() {
       <section className="rd-canvas-module">
         <h2 className="heading-6">Email</h2>
         <p className="body-s">Primary email: {profile.primaryEmail}</p>
-        <p className="body-s">Email verified: {profile.emailVerified ? 'yes' : 'no'}</p>
       </section>
 
       {saveError ? (

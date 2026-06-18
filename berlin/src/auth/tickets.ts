@@ -33,17 +33,14 @@ function toOauthTransaction(value: unknown): OAuthTransaction | null {
   const codeVerifier = claimAsString(record.codeVerifier);
   const createdAt = claimAsNumber(record.createdAt);
   const expiresAt = claimAsNumber(record.expiresAt);
-  const sid = claimAsString(record.sid) || undefined;
-  const userId = claimAsString(record.userId) || undefined;
   const intent = normalizeIntent(record.intent) || undefined;
   const next = normalizeNextPath(record.next) || undefined;
   const invitationId = claimAsString(record.invitationId) || undefined;
   const finishRedirectUrl = normalizeFinishRedirectUrl(record.finishRedirectUrl) || undefined;
 
   if (version !== 1) return null;
-  if ((flow !== 'login' && flow !== 'link') || !provider || !codeVerifier) return null;
+  if (flow !== 'login' || !provider || !codeVerifier) return null;
   if (!createdAt || !expiresAt || expiresAt <= createdAt) return null;
-  if (flow === 'link' && (!sid || !userId)) return null;
   if (record.intent !== undefined && !intent) return null;
   if (record.next !== undefined && !next) return null;
   if (record.finishRedirectUrl !== undefined && !finishRedirectUrl) return null;
@@ -61,8 +58,6 @@ function toOauthTransaction(value: unknown): OAuthTransaction | null {
     codeVerifier,
     createdAt,
     expiresAt,
-    ...(sid ? { sid } : {}),
-    ...(userId ? { userId } : {}),
     ...(intent ? { intent } : {}),
     ...(next ? { next } : {}),
     ...(invitationId ? { invitationId } : {}),

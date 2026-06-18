@@ -25,6 +25,64 @@ import {
   normalizeAccountPublicId,
   readInternalProductJsonBody,
 } from './internal-product-route-utils';
+import { readAccountInstanceSourcePointer } from '../domains/account-instances/source';
+
+function pagePlacementInstanceIds(source: unknown): string[] {
+  if (!isRecord(source) || !Array.isArray(source.placements)) {
+    throw new PageOperationError({
+      kind: 'VALIDATION',
+      reasonKey: 'tokyo.errors.page.sourceInvalid',
+    });
+  }
+  const instanceIds: string[] = [];
+  for (const placement of source.placements) {
+    if (!isRecord(placement) || typeof placement.instanceId !== 'string' || !placement.instanceId) {
+      throw new PageOperationError({
+        kind: 'VALIDATION',
+        reasonKey: 'tokyo.errors.page.sourceInvalid',
+      });
+    }
+    instanceIds.push(placement.instanceId);
+  }
+  return Array.from(new Set(instanceIds));
+}
+
+async function assertPagePublishPreconditions(args: {
+  env: TokyoRouteArgs['env'];
+  accountId: string;
+  source: unknown;
+}): Promise<void> {
+  const instanceIds = pagePlacementInstanceIds(args.source);
+  if (!instanceIds.length) {
+    throw new PageOperationError({
+      kind: 'VALIDATION',
+      reasonKey: 'coreui.errors.page.empty',
+      status: 422,
+    });
+  }
+
+  const blockers: string[] = [];
+  for (const instanceId of instanceIds) {
+    const instance = await readAccountInstanceSourcePointer({
+      env: args.env,
+      accountId: args.accountId,
+      instanceId,
+    });
+    if (!instance.ok) {
+      blockers.push(`${instanceId}:${instance.reasonKey}`);
+      continue;
+    }
+    if (instance.value.publishStatus !== 'published') blockers.push(`${instanceId}:unpublished`);
+  }
+  if (blockers.length) {
+    throw new PageOperationError({
+      kind: 'VALIDATION',
+      reasonKey: 'coreui.errors.page.instanceBlocksPublish',
+      status: 422,
+      detail: `Page publish requires every placed instance to be published: ${blockers.join(', ')}`,
+    });
+  }
+}
 
 function pageErrorResponse(error: unknown): Response {
   if (error instanceof PageOperationError) {
@@ -153,6 +211,7 @@ export async function tryHandleInternalPageRoutes(args: TokyoRouteArgs): Promise
         );
       }
       if (action === 'publish') {
+        await assertPagePublishPreconditions({ env, accountId, source });
         const ready = await verifyAccountPagePublicPackageReady({ env, accountId, pageId });
         if (!ready.ok) {
           return respond(
@@ -268,6 +327,14 @@ export async function tryHandleInternalPageRoutes(args: TokyoRouteArgs): Promise
       if (authErr) return respond(authErr);
       try {
         const deleted = await deleteAccountPageSource({ env, accountId, pageId });
+        if (!deleted.existed) {
+          return respond(
+            json(
+              { error: { kind: 'NOT_FOUND', reasonKey: 'tokyo.errors.page.notFound' } },
+              { status: 404 },
+            ),
+          );
+        }
         return respond(json({ ok: true, accountId, pageId, deleted: deleted.existed, existed: deleted.existed }));
       } catch (error) {
         return respond(pageErrorResponse(error));

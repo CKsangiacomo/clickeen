@@ -19,7 +19,6 @@ export type BerlinUserPayload = {
 export type BerlinUserProfilePayload = {
   userId: string;
   primaryEmail: string;
-  emailVerified: boolean;
   givenName: string | null;
   familyName: string | null;
   primaryLanguage: string | null;
@@ -51,7 +50,6 @@ export type BerlinBootstrapPayload = {
   user: BerlinUserPayload;
   profile: BerlinUserProfilePayload;
   activeAccount: BerlinAccountContext;
-  accounts: BerlinAccountContext[];
   authz: null | {
     accountCapsule: string;
     accountId: string;
