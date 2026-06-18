@@ -17,7 +17,7 @@ import {
   readInstanceServeState,
   writeInstanceServeState,
 } from './serve-state';
-import type { AccountInstanceSourcePointer } from './types';
+import type { AccountInstanceContentDocument, AccountInstanceSourcePointer } from './types';
 import { normalizeStorageId } from './utils';
 import { deletePrefix } from '../storage';
 
@@ -169,9 +169,14 @@ export async function createAccountInstanceFromSubmittedSource(args: {
   widgetType: string;
   displayName?: unknown;
   config: Record<string, unknown>;
+  content: AccountInstanceContentDocument;
   meta: Record<string, unknown>;
   publicPackage: SubmittedInstancePublicPackage;
-}): Promise<{ pointer: AccountInstanceSourcePointer; config: Record<string, unknown> }> {
+}): Promise<{
+  pointer: AccountInstanceSourcePointer;
+  config: Record<string, unknown>;
+  content: AccountInstanceContentDocument;
+}> {
   const { accountId, instanceId } = assertScopedIds(args.accountId, args.instanceId);
   const widgetType = normalizeStorageId(args.widgetType);
   if (!widgetType) {
@@ -217,6 +222,7 @@ export async function createAccountInstanceFromSubmittedSource(args: {
       instanceId,
       widgetType,
       config: args.config,
+      content: args.content,
       displayName: normalizeDisplayName(args.displayName),
       meta: args.meta,
       publicPackageFingerprint: packaged.fingerprint,
@@ -229,7 +235,7 @@ export async function createAccountInstanceFromSubmittedSource(args: {
       detail: error instanceof Error ? error.message : String(error),
     });
   }
-  return { pointer: saved.pointer, config: args.config };
+  return { pointer: saved.pointer, config: args.config, content: args.content };
 }
 
 export async function saveAccountInstanceTransition(args: {
@@ -238,6 +244,7 @@ export async function saveAccountInstanceTransition(args: {
   instanceId: string;
   submittedWidgetType: string;
   config: Record<string, unknown>;
+  content: AccountInstanceContentDocument;
   publicPackage: SubmittedInstancePublicPackage;
   displayName?: unknown;
   hasDisplayName: boolean;
@@ -290,6 +297,7 @@ export async function saveAccountInstanceTransition(args: {
     instanceId,
     widgetType: existingWidgetType,
     config: args.config,
+    content: args.content,
     displayName: args.hasDisplayName ? args.displayName : existing.value.pointer.displayName,
     meta: args.hasMeta ? args.meta : existing.value.pointer.meta ?? null,
     publicPackageFingerprint: packaged.fingerprint,

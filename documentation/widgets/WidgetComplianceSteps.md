@@ -420,7 +420,7 @@ GATE
   menu without console errors.
 - Locale switcher options come from the runtime package locale list. Tier
   decides locale capacity, Account Settings decides selected locales, and the
-  Shell utility must not invent options from selected target locales alone.
+  Shell utility must not invent options outside the account active locales.
 
 ---
 
@@ -624,9 +624,9 @@ Account defaults smoke:
 - `accounts/{accountPublicId}/widget-defaults.json` already exists before
   creating a new instance; missing or invalid account defaults fail the create
   boundary.
-- Creating a new instance submits resolved `source.config` from Roma to Tokyo.
-  Tokyo derives `instance.content.json` from that config and must not call
-  widget factory defaults during product create.
+- Creating a new instance submits resolved `source.config` and
+  `source.content` from Roma to Tokyo. Tokyo stores those exact submitted source
+  artifacts and must not call widget factory defaults during product create.
 - Create/save/materialization carries source metadata such as `baseLocale` and
   `meta`; those are not account defaults policy and must not be dropped or
   silently defaulted. Account active locales are Roma account settings and are

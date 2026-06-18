@@ -8,6 +8,7 @@ import {
   compileWidgetForInstancePackage,
   materializeAccountInstancePublicPackage,
 } from '@roma/lib/account-instance-public-package';
+import { materializeAccountInstanceSourceArtifacts } from '@roma/lib/account-instance-source-artifacts';
 import { validateAccountInstanceSavePolicy } from '@roma/lib/account-instance-save-policy';
 import { requireInstanceIdParam } from '@roma/lib/route-helpers';
 import {
@@ -99,6 +100,21 @@ export async function POST(request: NextRequest, context: RouteContext) {
       current.value.setCookies,
     );
   }
+  const sourceArtifacts = materializeAccountInstanceSourceArtifacts({
+    accountId,
+    instanceId,
+    widgetType,
+    config: source.value.config,
+    editableFields: compiled.value.editableFields ?? null,
+    initialStatus: 'ok',
+  });
+  if (!sourceArtifacts.ok) {
+    return withSession(
+      request,
+      NextResponse.json({ error: sourceArtifacts.error }, { status: sourceArtifacts.status }),
+      current.value.setCookies,
+    );
+  }
 
   const duplicate = await createAccountInstanceInTokyo({
     accountId,
@@ -106,7 +122,8 @@ export async function POST(request: NextRequest, context: RouteContext) {
     instanceId,
     widgetType,
     displayName: null,
-    config: source.value.config,
+    config: sourceArtifacts.value.config,
+    content: sourceArtifacts.value.content,
     publicPackage: publicPackage.value,
     baseLocale,
     meta: source.value.row.meta ?? null,

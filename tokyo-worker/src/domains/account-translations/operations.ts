@@ -5,10 +5,7 @@ import {
   type InstanceTranslationJob,
 } from '@clickeen/ck-contracts/instance-translation-jobs';
 import { resolveAiAgent } from '@clickeen/ck-contracts/ai';
-import {
-  extractSavedTextFieldsForEditableFields,
-  type SavedTextField,
-} from '@clickeen/ck-contracts/translated-value-primitives';
+import type { SavedTextField } from '@clickeen/ck-contracts/translated-value-primitives';
 import {
   resolveAiRuntimeBudget,
   resolveAiRuntimePolicy,
@@ -21,6 +18,7 @@ import { listLocaleOverlays, localeOverlayByLocale } from './overlays';
 import {
   readAccountInstanceContentDocument,
   readAccountInstanceDocument,
+  savedTextFieldsFromContentDocument,
 } from '../account-instances/source';
 import { completeAccountInstanceTranslatedLocaleValues } from './values';
 import {
@@ -514,24 +512,16 @@ export async function readInstanceTranslationGeneration(args: {
   let currentBaseContentMarker: string | undefined;
   let currentGenerationRequestMarker: string | undefined;
   if (widgetDefinition?.editableFields) {
-    try {
-      const fields = extractSavedTextFieldsForEditableFields({
-        contract: widgetDefinition.editableFields,
-        config: instance.value.config,
-      });
-      currentBaseContentMarker = await buildBaseContentMarker({
-        baseLocale: instance.value.baseLocale,
-        widgetType: instance.value.widgetType,
-        widgetContractHash: await buildWidgetContractMarker(widgetDefinition.editableFields),
-        fields,
-      });
-    } catch (error) {
-      return {
-        ok: false,
-        reasonKey: 'instance.translation.contract_invalid',
-        detail: error instanceof Error ? error.message : String(error),
-      };
-    }
+    const fields = savedTextFieldsFromContentDocument(
+      content.value,
+      widgetDefinition.editableFields,
+    );
+    currentBaseContentMarker = await buildBaseContentMarker({
+      baseLocale: instance.value.baseLocale,
+      widgetType: instance.value.widgetType,
+      widgetContractHash: await buildWidgetContractMarker(widgetDefinition.editableFields),
+      fields,
+    });
   }
   const currentReadyLocales: string[] = [];
   const job = await readLatestTranslationGenerationOperation({
@@ -676,19 +666,6 @@ export async function generateInstanceTranslations(args: {
     });
   }
 
-  let currentSavedTextFields: SavedTextField[];
-  try {
-    currentSavedTextFields = extractSavedTextFieldsForEditableFields({
-      contract: widgetDefinition.editableFields,
-      config: instance.value.config,
-    });
-  } catch (error) {
-    return generationFailure({
-      baseLocale,
-      reasonKey: 'instance.translation.contract_invalid',
-      detail: error instanceof Error ? error.message : String(error),
-    });
-  }
   const content = await readAccountInstanceContentDocument({
     env: args.env,
     accountId: args.accountId,
@@ -702,6 +679,10 @@ export async function generateInstanceTranslations(args: {
       detail: content.reasonKey,
     });
   }
+  const currentSavedTextFields = savedTextFieldsFromContentDocument(
+    content.value,
+    widgetDefinition.editableFields,
+  );
 
   const jobs: InstanceTranslationJob[] = [];
   const skippedLocales: string[] = [];
@@ -1068,20 +1049,24 @@ export async function completeLocaleTranslation(args: {
     widgetType: instance.value.widgetType,
   });
 
-  let currentSavedTextFields: SavedTextField[];
-  try {
-    currentSavedTextFields = extractSavedTextFieldsForEditableFields({
-      contract: widgetDefinition.editableFields,
-      config: instance.value.config,
-    });
-  } catch (error) {
+  const currentContent = await readAccountInstanceContentDocument({
+    env: args.env,
+    accountId: args.accountId,
+    instanceId: args.instanceId,
+    widgetType: instance.value.widgetType,
+  });
+  if (!currentContent.ok) {
     return {
       ok: false,
       locale,
-      reasonKey: 'instance.translation.contract_invalid',
-      detail: error instanceof Error ? error.message : String(error),
+      reasonKey: currentContent.reasonKey,
+      detail: currentContent.reasonKey,
     };
   }
+  const currentSavedTextFields = savedTextFieldsFromContentDocument(
+    currentContent.value,
+    widgetDefinition.editableFields,
+  );
   const currentBaseContentMarker = await buildBaseContentMarker({
     baseLocale: instance.value.baseLocale,
     widgetType: instance.value.widgetType,

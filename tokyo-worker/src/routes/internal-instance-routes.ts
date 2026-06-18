@@ -14,10 +14,11 @@ import {
 } from '../domains/account-instances/package-files';
 import {
   listAccountInstances,
-  readAccountInstanceDocument,
+  readAccountInstanceSource,
   readAccountInstanceSourcePointer,
   renameAccountInstanceDisplay,
 } from '../domains/account-instances/source';
+import { normalizeAccountInstanceContentDocument } from '../domains/account-instances/normalize';
 import { listAccountPageIdsPlacingInstance, PageOperationError } from '../domains/pages';
 import { accountHasInstanceRegistryRows } from '../domains/account-instances/registry';
 import { json } from '../http';
@@ -166,12 +167,13 @@ export async function tryHandleInternalInstanceRoutes(
     if (!widgetType) return respondValidation(respond, 'coreui.errors.instance.invalidPayload');
     const source = isRecord(rawBody.source) ? rawBody.source : null;
     const config = isRecord(source?.config) ? source.config : null;
+    const content = normalizeAccountInstanceContentDocument(source?.content);
     const instanceId = normalizeStorageId(rawBody.instanceId);
     const publicPackage = readSubmittedInstancePublicPackage(rawBody.publicPackage);
     const submittedMeta = normalizeSubmittedMeta(rawBody.meta);
     if (!submittedMeta) return respondValidation(respond, 'coreui.errors.instance.invalidPayload');
     const baseLocale = normalizeLocale(rawBody.baseLocale ?? submittedMeta.baseLocale);
-    if (!instanceId || !config || !publicPackage || !baseLocale)
+    if (!instanceId || !config || !content || !publicPackage || !baseLocale)
       return respondValidation(respond, 'coreui.errors.instance.invalidPayload');
     const meta = {
       ...submittedMeta,
@@ -186,6 +188,7 @@ export async function tryHandleInternalInstanceRoutes(
         widgetType,
         displayName: rawBody.displayName,
         config,
+        content,
         meta,
         publicPackage,
       });
@@ -200,7 +203,10 @@ export async function tryHandleInternalInstanceRoutes(
             displayName: created.pointer.displayName,
             publishStatus: created.pointer.publishStatus,
             updatedAt: created.pointer.updatedAt,
-            config: created.config,
+            source: {
+              config: created.config,
+              content: created.content,
+            },
           },
           { status: 201 },
         ),
@@ -405,28 +411,32 @@ export async function tryHandleInternalInstanceRoutes(
         minRole: 'viewer',
       });
       if (authErr) return respond(authErr);
-      const instance = await readAccountInstanceDocument({ env, accountId, instanceId });
-      if (!instance.ok) {
+      const source = await readAccountInstanceSource({ env, accountId, instanceId });
+      if (!source.ok) {
         return respond(
           json(
-            { error: { kind: instance.kind, reasonKey: instance.reasonKey } },
-            { status: instance.kind === 'NOT_FOUND' ? 404 : 422 },
+            { error: { kind: source.kind, reasonKey: source.reasonKey } },
+            { status: source.kind === 'NOT_FOUND' ? 404 : 422 },
           ),
         );
       }
+      const { pointer } = source.value;
       return respond(
         json({
           ok: true,
           accountId,
-          instanceId: instance.value.id,
-          widgetCode: instance.value.widgetCode,
-          widgetType: instance.value.widgetType,
-          displayName: instance.value.displayName,
-          publishStatus: instance.value.publishStatus,
-          updatedAt: instance.value.updatedAt,
-          baseLocale: instance.value.baseLocale,
-          meta: instance.value.meta ?? null,
-          config: instance.value.config,
+          instanceId: pointer.id,
+          widgetCode: pointer.widgetCode,
+          widgetType: pointer.widgetType,
+          displayName: pointer.displayName,
+          publishStatus: pointer.publishStatus,
+          updatedAt: pointer.updatedAt,
+          baseLocale: pointer.baseLocale,
+          meta: pointer.meta ?? null,
+          source: {
+            config: source.value.config,
+            content: source.value.content,
+          },
         }),
       );
     }
@@ -442,10 +452,13 @@ export async function tryHandleInternalInstanceRoutes(
         instanceId,
         accountId,
       })) as Record<string, unknown> | null;
+      const source = isRecord(body?.source) ? body.source : null;
+      const config = isRecord(source?.config) ? source.config : null;
+      const content = normalizeAccountInstanceContentDocument(source?.content);
       const publicPackage = isRecord(body)
         ? readSubmittedInstancePublicPackage(body.publicPackage)
         : null;
-      if (!isRecord(body) || !isRecord(body.config) || !publicPackage) {
+      if (!isRecord(body) || !config || !content || !publicPackage) {
         return respondValidation(respond, 'coreui.errors.instance.invalidPayload');
       }
       try {
@@ -454,7 +467,8 @@ export async function tryHandleInternalInstanceRoutes(
           accountId,
           instanceId,
           submittedWidgetType: body.widgetType as string,
-          config: body.config,
+          config,
+          content,
           publicPackage,
           displayName: body.displayName,
           hasDisplayName: Object.prototype.hasOwnProperty.call(body, 'displayName'),

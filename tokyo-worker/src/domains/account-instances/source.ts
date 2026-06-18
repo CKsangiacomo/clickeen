@@ -15,16 +15,10 @@ import {
 } from './normalize';
 import { loadJson, loadJsonObject, putJson, putJsonIfUnchanged } from '../storage';
 import { getWidgetDefinition, resolveWidgetCode } from '../widget-definitions';
-import {
-  extractSavedTextFieldsForEditableFields,
-  type SavedTextField,
+import type {
+  SavedTextField,
+  WidgetEditableFieldsContract,
 } from '@clickeen/ck-contracts/translated-value-primitives';
-import {
-  listLocaleOverlays,
-  localeOverlayHasCompleteSavedTextValues,
-  readLocaleOverlay,
-  writeLocaleOverlay,
-} from '../account-translations/overlays';
 import { buildBaseContentMarker, buildWidgetContractMarker } from '../account-translations/markers';
 import type {
   AccountInstanceConfigDocument,
@@ -87,28 +81,7 @@ export async function buildCurrentLocaleOverlayMetadata(args: {
     throw new Error(`tokyo.translation.widget_unsupported:${args.configDoc.widgetType}`);
   }
   const widgetContractHash = await buildWidgetContractMarker(widgetDefinition.editableFields);
-  const fields = extractSavedTextFieldsForEditableFields({
-    contract: widgetDefinition.editableFields,
-    config: composeConfigWithContent({
-      config: args.configDoc.config,
-      content: args.content,
-    }),
-  });
-  const expectedPaths = new Set(fields.map((field) => field.path));
-  for (const field of fields) {
-    const saved = args.content.fields[field.path];
-    if (
-      !saved ||
-      saved.value !== field.baseText ||
-      saved.identityKey !== field.identityKey ||
-      saved.fieldPattern !== field.fieldPattern
-    ) {
-      throw new Error(`coreui.errors.instance.content.invalid:${field.path}`);
-    }
-  }
-  for (const path of Object.keys(args.content.fields)) {
-    if (!expectedPaths.has(path)) throw new Error(`coreui.errors.instance.content.invalid:${path}`);
-  }
+  const fields = savedTextFieldsFromContentDocument(args.content, widgetDefinition.editableFields);
   return {
     baseContentMarker: await buildBaseContentMarker({
       baseLocale: args.configDoc.baseLocale,
@@ -146,124 +119,26 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
 }
 
-function deleteExistingPath(root: Record<string, unknown>, path: string): void {
-  const parts = path
-    .split('.')
-    .map((part) => part.trim())
-    .filter(Boolean);
-  let current: unknown = root;
-  for (let index = 0; index < parts.length; index += 1) {
-    const part = parts[index]!;
-    const last = index === parts.length - 1;
-    const numeric = /^\d+$/.test(part);
-    if (numeric) {
-      if (!Array.isArray(current)) return;
-      const offset = Number(part);
-      if (offset < 0 || offset >= current.length) return;
-      if (last) return;
-      current = current[offset];
-      continue;
-    }
-    if (!isRecord(current) || !Object.prototype.hasOwnProperty.call(current, part)) return;
-    if (last) {
-      delete current[part];
-      return;
-    }
-    current = current[part];
-  }
-}
-
-function setValueAtPath(root: Record<string, unknown>, path: string, value: string): void {
-  const parts = path
-    .split('.')
-    .map((part) => part.trim())
-    .filter(Boolean);
-  let current: unknown = root;
-  for (let index = 0; index < parts.length; index += 1) {
-    const part = parts[index]!;
-    const last = index === parts.length - 1;
-    const numeric = /^\d+$/.test(part);
-    if (numeric) {
-      if (!Array.isArray(current)) throw new Error(`tokyo.instance.content.pathInvalid:${path}`);
-      const offset = Number(part);
-      if (offset < 0 || offset >= current.length)
-        throw new Error(`tokyo.instance.content.pathInvalid:${path}`);
-      if (last) {
-        current[offset] = value;
-        return;
-      }
-      current = current[offset];
-      continue;
-    }
-    if (!isRecord(current)) throw new Error(`tokyo.instance.content.pathInvalid:${path}`);
-    if (last) {
-      current[part] = value;
-      return;
-    }
-    if (!Object.prototype.hasOwnProperty.call(current, part) || current[part] == null) {
-      current[part] = /^\d+$/.test(parts[index + 1] ?? '') ? [] : {};
-    }
-    current = current[part];
-  }
-}
-
-function extractContentFields(args: {
-  widgetType: string;
-  config: Record<string, unknown>;
-  previous?: AccountInstanceContentDocument | null;
-  initialStatus: 'ok' | 'changed';
-}): AccountInstanceContentDocument['fields'] {
-  const widgetDefinition = getWidgetDefinition(args.widgetType);
-  if (!widgetDefinition?.editableFields) return {};
-  const fields: AccountInstanceContentDocument['fields'] = {};
-  const previousByIdentity = new Map(
-    Object.values(args.previous?.fields ?? {})
-      .filter((field) => typeof field.identityKey === 'string' && field.identityKey)
-      .map((field) => [field.identityKey as string, field]),
-  );
-  for (const item of extractSavedTextFieldsForEditableFields({
-    contract: widgetDefinition.editableFields,
-    config: args.config,
-  })) {
-    const previous = previousByIdentity.get(item.identityKey) ?? args.previous?.fields[item.path];
-    const sameValue = previous && previous.value === item.baseText;
-    const status = sameValue ? previous.status : args.previous ? 'changed' : args.initialStatus;
-    fields[item.path] = {
-      identityKey: item.identityKey,
-      fieldPattern: item.fieldPattern,
-      value: item.baseText,
-      status,
-    };
-  }
-  return fields;
-}
-
-function stripContentFromConfig(args: {
-  widgetType: string;
-  config: Record<string, unknown>;
-}): Record<string, unknown> {
-  const widgetDefinition = getWidgetDefinition(args.widgetType);
-  if (!widgetDefinition?.editableFields) return structuredClone(args.config);
-  const next = structuredClone(args.config);
-  for (const item of extractSavedTextFieldsForEditableFields({
-    contract: widgetDefinition.editableFields,
-    config: args.config,
-  })) {
-    deleteExistingPath(next, item.path);
-  }
-  return next;
-}
-
-function composeConfigWithContent(args: {
-  config: Record<string, unknown>;
-  content: AccountInstanceContentDocument | null;
-}): Record<string, unknown> {
-  const next = structuredClone(args.config);
-  if (!args.content) return next;
-  for (const [path, field] of Object.entries(args.content.fields)) {
-    setValueAtPath(next, path, field.value);
-  }
-  return next;
+export function savedTextFieldsFromContentDocument(
+  content: AccountInstanceContentDocument,
+  contract: WidgetEditableFieldsContract,
+): SavedTextField[] {
+  const contractFieldByPath = new Map(contract.fields.map((field) => [field.path, field]));
+  return Object.entries(content.fields)
+    .map(([path, field]) => {
+      const contractField = contractFieldByPath.get(path);
+      if (!contractField) throw new Error(`coreui.errors.instance.content.invalid:${path}`);
+      return {
+        identityKey: field.identityKey ?? '',
+        fieldPattern: field.fieldPattern ?? '',
+        path,
+        type: contractField.type,
+        label: contractField.label,
+        role: contractField.role,
+        baseText: field.value,
+      };
+    })
+    .sort((left, right) => left.path.localeCompare(right.path));
 }
 
 function resolveBaseLocale(
@@ -292,6 +167,7 @@ function toAccountInstanceSourcePointer(args: {
     widgetType: configDoc.widgetType,
     displayName: configDoc.displayName,
     meta: configDoc.meta ?? null,
+    baseLocale: configDoc.baseLocale,
     publishStatus: args.publishStatus,
     ...(configDoc.publicPackageFingerprint
       ? { publicPackageFingerprint: configDoc.publicPackageFingerprint }
@@ -302,8 +178,9 @@ function toAccountInstanceSourcePointer(args: {
 
 function instanceFromConfigAndContent(args: {
   configDoc: AccountInstanceConfigDocument;
-  fullConfig: Record<string, unknown>;
+  content: AccountInstanceContentDocument;
 }): AccountInstanceDocument {
+  void args.content;
   return {
     v: 1,
     id: args.configDoc.id,
@@ -312,92 +189,12 @@ function instanceFromConfigAndContent(args: {
     widgetType: args.configDoc.widgetType,
     displayName: args.configDoc.displayName,
     meta: args.configDoc.meta ?? null,
-    config: args.fullConfig,
+    config: args.configDoc.config,
     baseLocale: args.configDoc.baseLocale,
     publishStatus: 'unpublished',
     createdAt: args.configDoc.createdAt,
     updatedAt: args.configDoc.updatedAt,
   };
-}
-
-function contentDocumentFromConfig(args: {
-  instanceId: string;
-  accountId: string;
-  widgetType: string;
-  config: Record<string, unknown>;
-  previous?: AccountInstanceContentDocument | null;
-  updatedAt: string;
-  initialStatus: 'ok' | 'changed';
-}): AccountInstanceContentDocument {
-  return {
-    id: args.instanceId,
-    accountId: args.accountId,
-    widgetType: args.widgetType,
-    fields: extractContentFields({
-      widgetType: args.widgetType,
-      config: args.config,
-      previous: args.previous,
-      initialStatus: args.initialStatus,
-    }),
-    updatedAt: args.updatedAt,
-  };
-}
-
-async function remapLocaleOverlaysForSavedContent(args: {
-  env: Env;
-  accountId: string;
-  widgetCode: string;
-  instanceId: string;
-  configDoc: AccountInstanceConfigDocument;
-  previous: AccountInstanceContentDocument | null;
-  next: AccountInstanceContentDocument;
-}): Promise<void> {
-  if (!args.previous) return;
-  const previousByIdentity = new Map(
-    Object.entries(args.previous.fields)
-      .filter(([, field]) => typeof field.identityKey === 'string' && field.identityKey)
-      .map(([path, field]) => [field.identityKey as string, { path, field }]),
-  );
-  const previousByPath = new Map(
-    Object.entries(args.previous.fields).map(([path, field]) => [path, { path, field }]),
-  );
-  const metadata = await buildCurrentLocaleOverlayMetadata({
-    configDoc: args.configDoc,
-    content: args.next,
-  });
-  for (const overlay of await listLocaleOverlays({
-    env: args.env,
-    accountId: args.accountId,
-    widgetCode: args.widgetCode,
-    instanceId: args.instanceId,
-  })) {
-    const values: Record<string, string> = {};
-    for (const [path, field] of Object.entries(args.next.fields)) {
-      const previous = field.identityKey
-        ? previousByIdentity.get(field.identityKey)
-        : previousByPath.get(path);
-      if (!previous || previous.field.value !== field.value) continue;
-      const translated = overlay.values[previous.path];
-      if (typeof translated === 'string') values[path] = translated;
-    }
-    const complete = Object.keys(args.next.fields).every(
-      (path) => typeof values[path] === 'string',
-    );
-    await writeLocaleOverlay({
-      env: args.env,
-      accountId: args.accountId,
-      widgetCode: args.widgetCode,
-      instanceId: args.instanceId,
-      overlay: {
-        ...overlay,
-        baseContentMarker: metadata.baseContentMarker,
-        widgetContractHash: metadata.widgetContractHash,
-        status: complete && overlay.status !== 'failed' ? 'inSync' : 'outOfSync',
-        values,
-        updatedAt: args.configDoc.updatedAt,
-      },
-    });
-  }
 }
 
 export async function readConfigDocumentByLocation(args: {
@@ -477,7 +274,7 @@ async function readAccountInstanceSummaryByLocation(args: {
     : null;
 }
 
-async function readComposedInstanceByLocation(args: {
+async function readStoredInstanceByLocation(args: {
   env: Env;
   accountId: string;
   widgetCode: string;
@@ -486,13 +283,10 @@ async function readComposedInstanceByLocation(args: {
   const configDoc = await readConfigDocumentByLocation(args);
   if (!configDoc) return null;
   const contentDoc = await readContentDocumentByLocation({ ...args, configDoc });
-  const fullConfig = composeConfigWithContent({
-    config: configDoc.config,
-    content: contentDoc,
-  });
+  if (!contentDoc) return null;
   return instanceFromConfigAndContent({
     configDoc,
-    fullConfig,
+    content: contentDoc,
   });
 }
 
@@ -502,6 +296,7 @@ export async function writeAccountInstanceSource(args: {
   accountId: string;
   widgetType: string;
   config: Record<string, unknown>;
+  content: AccountInstanceContentDocument;
   displayName?: unknown;
   meta?: unknown;
   publicPackageFingerprint?: string | null;
@@ -526,22 +321,14 @@ export async function writeAccountInstanceSource(args: {
   });
   const meta = normalizeMeta(args.meta);
   const baseLocale = resolveBaseLocale(meta, existingConfig);
-  const previousContent = await readContentDocumentByLocation({
-    env: args.env,
-    accountId,
-    widgetCode,
-    instanceId,
-    configDoc: existingConfig,
-  });
-  const content = contentDocumentFromConfig({
-    instanceId,
-    accountId,
-    widgetType,
-    config: args.config,
-    previous: previousContent,
-    updatedAt: now,
-    initialStatus: existingConfig ? 'changed' : 'ok',
-  });
+  const content = args.content;
+  if (
+    content.id !== instanceId ||
+    content.accountId !== accountId ||
+    content.widgetType !== widgetType
+  ) {
+    throw new Error('coreui.errors.instance.content.invalid');
+  }
   const configDoc: AccountInstanceConfigDocument = {
     id: instanceId,
     accountId,
@@ -549,10 +336,7 @@ export async function writeAccountInstanceSource(args: {
     widgetType,
     displayName: normalizeDisplayName(args.displayName),
     meta,
-    config: stripContentFromConfig({
-      widgetType,
-      config: args.config,
-    }),
+    config: args.config,
     baseLocale,
     ...(args.publicPackageFingerprint
       ? { publicPackageFingerprint: args.publicPackageFingerprint }
@@ -560,21 +344,9 @@ export async function writeAccountInstanceSource(args: {
     createdAt: existingConfig?.createdAt ?? now,
     updatedAt: now,
   };
-  if (previousContent) {
-    await buildCurrentLocaleOverlayMetadata({ configDoc, content });
-  }
   const registry = await readInstanceRegistryRow({ env: args.env, accountId, instanceId });
   await putJson(args.env, accountInstanceConfigKey(accountId, widgetCode, instanceId), configDoc);
   await putJson(args.env, accountInstanceContentKey(accountId, widgetCode, instanceId), content);
-  await remapLocaleOverlaysForSavedContent({
-    env: args.env,
-    accountId,
-    widgetCode,
-    instanceId,
-    configDoc,
-    previous: previousContent,
-    next: content,
-  });
   if (registry) {
     await updateInstanceRegistryEditedAt({
       env: args.env,
@@ -668,7 +440,7 @@ export async function readAccountInstanceDocument(args: {
   });
   if (!location)
     return { ok: false, kind: 'NOT_FOUND', reasonKey: 'coreui.errors.instance.notFound' };
-  const instance = await readComposedInstanceByLocation({
+  const instance = await readStoredInstanceByLocation({
     env: args.env,
     accountId: location.accountId,
     widgetCode: location.widgetCode,
@@ -804,7 +576,13 @@ export async function readAccountInstanceSource(args: {
   const pointerResult = await readAccountInstanceSourcePointer(args);
   if (!pointerResult.ok) return pointerResult;
   const pointer = pointerResult.value;
-  const instance = await readComposedInstanceByLocation({
+  const instance = await readStoredInstanceByLocation({
+    env: args.env,
+    accountId: pointer.accountId,
+    widgetCode: pointer.widgetCode,
+    instanceId: pointer.id,
+  });
+  const content = await readContentDocumentByLocation({
     env: args.env,
     accountId: pointer.accountId,
     widgetCode: pointer.widgetCode,
@@ -814,9 +592,10 @@ export async function readAccountInstanceSource(args: {
     !instance ||
     !instance.config ||
     typeof instance.config !== 'object' ||
-    Array.isArray(instance.config)
+    Array.isArray(instance.config) ||
+    !content
   ) {
     return { ok: false, kind: 'VALIDATION', reasonKey: 'coreui.errors.instance.config.invalid' };
   }
-  return { ok: true, value: { pointer, config: instance.config } };
+  return { ok: true, value: { pointer, config: instance.config, content } };
 }

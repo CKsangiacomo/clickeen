@@ -139,6 +139,7 @@ export type AccountInstanceSourcePointer = {
   widgetType: string;
   displayName: string | null;
   meta?: Record<string, unknown> | null;
+  baseLocale: string;
   publishStatus: InstanceServeState;
   publicPackageFingerprint?: string;
   updatedAt: string;
@@ -147,6 +148,7 @@ export type AccountInstanceSourcePointer = {
 export type AccountInstanceSourceDocument = {
   pointer: AccountInstanceSourcePointer;
   config: Record<string, unknown>;
+  content: AccountInstanceContentDocument;
 };
 
 export type AccountInstanceSourceReadFailure = {

@@ -41,7 +41,7 @@ Roma, Bob, San Francisco, or shared product contracts.
 | TW-02 registry/serve-state split truth        | Decide whether Supabase registry remains Tokyo-worker operational storage truth or moves to an R2 runtime record / another owner.      | Not a deletion. It changes runtime identity/status authority for instance listing, publish state, and public serving.     |
 | TW-04 page package/publish pipeline           | Decide the page package writer and package readiness authority.                                                                        | Tokyo-worker currently reads/checks page package files, but no current Roma page package writer exists in this PRD scope. |
 | TW-05 page source authority                   | Decide how much page source contract validation/versioning/list summaries belong in Roma/shared contracts versus Tokyo-worker storage. | Moving this changes page create/save/list/open contracts and cannot be faked with local checks.                           |
-| TW-06 instance source/content composition     | Remove per-instance active-locale truth and decide the remaining content extraction/overlay remap owner.                               | Active locales are account settings. Removing Tokyo extraction/remap requires Roma/Bob save payload changes first.        |
+| TW-06 instance source/content composition     | Decision executed: active locales are Roma account settings; Roma materializes and composes source artifacts; Tokyo-worker stores exact files. | Active locales are account settings. Removing Tokyo extraction/remap required Roma/Bob save payload changes first.        |
 | TW-07 translation orchestration               | Decide whether translation orchestration moves to Roma/San Francisco and what storage artifacts Tokyo-worker keeps.                    | This changes policy, AI job creation, ledger ownership, and San Francisco contracts.                                      |
 | TW-10 account widget defaults materialization | Decide whether Roma or shared build contracts materialize account widget defaults and Tokyo-worker only stores exact bytes.            | Current Tokyo-worker seeding from widget specs is real product behavior and needs a replacement writer before deletion.   |
 
@@ -103,8 +103,29 @@ Roma, Bob, San Francisco, or shared product contracts.
   locales apply to all widgets immediately after settings save, and per-widget
   readiness comes from stored overlays/artifacts.
 
-Open after this slice:
+Open after this locale-authority slice, before the source/content artifact slice:
 
-- TW-06 remaining: content extraction and overlay remap still live in
-  Tokyo-worker and require a separate owner decision before deletion.
+- TW-06 still required removal of Tokyo-worker content extraction and overlay
+  remap after Roma source artifact materialization was in place.
+- TW-10, TW-04, TW-05, TW-02, and TW-07 remain open.
+
+2026-06-17 TW-06 source/content artifact slice:
+
+- Roma now materializes the exact split source artifacts for account instances:
+  `instance.config.json` content-free config plus `instance.content.json` saved
+  text fields. Tokyo-worker stores those submitted files.
+- Roma composes stored config/content back into the full Builder config when
+  opening an instance for Bob.
+- Tokyo-worker no longer extracts text fields from submitted config, strips text
+  fields out of config, composes config/content for open, or remaps locale
+  overlays during save.
+- Existing locale overlays are left as stored artifacts. Per-widget readiness is
+  determined by stored overlay markers versus the current submitted content
+  artifact; save no longer silently carries translations forward.
+- Tokyo-worker translation operations read saved text fields from
+  `instance.content.json` and use the widget contract only for metadata/hash
+  facts. They do not extract saved text from instance config.
+
+Open after this source/content artifact slice:
+
 - TW-10, TW-04, TW-05, TW-02, and TW-07 remain open.

@@ -4,6 +4,7 @@ import {
   materializeConfigMedia,
 } from '@clickeen/ck-contracts';
 import type { LimitsSpec } from '@clickeen/ck-policy';
+import type { WidgetEditableFieldsContract } from '@clickeen/ck-contracts/translated-value-primitives';
 import {
   WIDGET_SHELL_RUNTIME_MODULE_END,
   WIDGET_SHELL_RUNTIME_PAYLOAD_END,
@@ -36,6 +37,7 @@ export type CompiledWidgetForPublicPackage = {
   widgetname: string;
   displayName?: string;
   limits: LimitsSpec;
+  editableFields?: WidgetEditableFieldsContract;
   widgetPackage?: {
     files: Partial<Record<string, WidgetPackageFileContext>>;
   };

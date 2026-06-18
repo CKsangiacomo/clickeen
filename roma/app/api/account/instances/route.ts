@@ -13,6 +13,7 @@ import {
   compileWidgetForInstancePackage,
   materializeAccountInstancePublicPackage,
 } from '@roma/lib/account-instance-public-package';
+import { materializeAccountInstanceSourceArtifacts } from '@roma/lib/account-instance-source-artifacts';
 import { readJsonPayloadOrValidation } from '@roma/lib/route-helpers';
 import { resolveCurrentAccountRouteContext, withSession } from '../_lib/current-account-route';
 
@@ -263,13 +264,29 @@ export async function POST(request: NextRequest) {
       current.value.setCookies,
     );
   }
+  const sourceArtifacts = materializeAccountInstanceSourceArtifacts({
+    accountId,
+    instanceId,
+    widgetType,
+    config: materialized.config,
+    editableFields: compiled.value.editableFields ?? null,
+    initialStatus: 'ok',
+  });
+  if (!sourceArtifacts.ok) {
+    return withSession(
+      request,
+      NextResponse.json({ error: sourceArtifacts.error }, { status: sourceArtifacts.status }),
+      current.value.setCookies,
+    );
+  }
   const created = await createAccountInstanceInTokyo({
     accountId,
     accountCapsule: current.value.authzToken,
     instanceId,
     widgetType,
     displayName,
-    config: materialized.config,
+    config: sourceArtifacts.value.config,
+    content: sourceArtifacts.value.content,
     publicPackage: publicPackage.value,
     baseLocale,
     meta: {

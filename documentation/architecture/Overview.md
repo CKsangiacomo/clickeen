@@ -243,7 +243,7 @@ They may be served by Tokyo-worker through friendly public routes, but Roma, Tok
 - Serves account asset reads on routes carrying `accountPublicId`; legacy non-account asset paths are hard-failed.
 - In-place account asset byte replacement keeps the same account asset reference and must not require instance rebuilds.
 - Asset delete is synchronous and explicit, with no silent runtime healing.
-- Writes account-instance config/content, locale overlays, and submitted public package artifacts under `accounts/{accountPublicId}/instances/{instanceId}/` from explicit Roma/system operations. Tokyo-worker uses Supabase-backed product/operation facts for instance registry, publish state, and translation liveness; public visitor serving reads stored R2/CDN artifacts and does not hit Supabase.
+- Stores exact Roma-submitted account-instance config/content, locale overlays, and public package artifacts under `accounts/{accountPublicId}/instances/{instanceId}/`. Tokyo-worker uses Supabase-backed product/operation facts for instance registry, publish state, and translation liveness; public visitor serving reads stored R2/CDN artifacts and does not hit Supabase.
 - Publishes by verifying stored public package artifacts and setting Tokyo-owned publish status.
 
 #### Asset ownership model (canonical)

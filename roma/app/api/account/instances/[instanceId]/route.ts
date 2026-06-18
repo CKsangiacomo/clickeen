@@ -8,6 +8,7 @@ import {
   compileWidgetForInstancePackage,
   materializeAccountInstancePublicPackage,
 } from '@roma/lib/account-instance-public-package';
+import { materializeAccountInstanceSourceArtifacts } from '@roma/lib/account-instance-source-artifacts';
 import { validateAccountInstanceSavePolicy } from '@roma/lib/account-instance-save-policy';
 import { readJsonPayloadOrValidation, requireInstanceIdParam } from '@roma/lib/route-helpers';
 import {
@@ -56,16 +57,13 @@ export async function PUT(request: NextRequest, context: RouteContext) {
       current.value.setCookies,
     );
   }
-  const bodyResult = await readJsonPayloadOrValidation<
-    | {
-        widgetType?: string;
-        config?: Record<string, unknown>;
-        baseLocale?: string | null;
-        displayName?: string | null;
-        meta?: Record<string, unknown> | null;
-      }
-    | null
-  >(request);
+  const bodyResult = await readJsonPayloadOrValidation<{
+    widgetType?: string;
+    config?: Record<string, unknown>;
+    baseLocale?: string | null;
+    displayName?: string | null;
+    meta?: Record<string, unknown> | null;
+  } | null>(request);
   if (!bodyResult.ok) {
     return withSession(
       request,
@@ -94,7 +92,13 @@ export async function PUT(request: NextRequest, context: RouteContext) {
           ? null
           : undefined
       : undefined;
-  if (!widgetType || !config || typeof config !== 'object' || Array.isArray(config) || !baseLocale) {
+  if (
+    !widgetType ||
+    !config ||
+    typeof config !== 'object' ||
+    Array.isArray(config) ||
+    !baseLocale
+  ) {
     return withSession(
       request,
       NextResponse.json(
@@ -104,11 +108,7 @@ export async function PUT(request: NextRequest, context: RouteContext) {
       current.value.setCookies,
     );
   }
-  if (
-    body &&
-    Object.prototype.hasOwnProperty.call(body, 'meta') &&
-    meta === undefined
-  ) {
+  if (body && Object.prototype.hasOwnProperty.call(body, 'meta') && meta === undefined) {
     return withSession(
       request,
       NextResponse.json(
@@ -171,12 +171,28 @@ export async function PUT(request: NextRequest, context: RouteContext) {
       current.value.setCookies,
     );
   }
+  const sourceArtifacts = materializeAccountInstanceSourceArtifacts({
+    accountId,
+    instanceId,
+    widgetType,
+    config,
+    editableFields: compiled.value.editableFields ?? null,
+    initialStatus: 'changed',
+  });
+  if (!sourceArtifacts.ok) {
+    return withSession(
+      request,
+      NextResponse.json({ error: sourceArtifacts.error }, { status: sourceArtifacts.status }),
+      current.value.setCookies,
+    );
+  }
 
   const result = await saveAccountInstanceInTokyo({
     accountId,
     instanceId,
     widgetType,
-    config,
+    config: sourceArtifacts.value.config,
+    content: sourceArtifacts.value.content,
     publicPackage: publicPackage.value,
     ...(displayName !== undefined ? { displayName } : {}),
     ...(meta !== undefined ? { meta } : {}),

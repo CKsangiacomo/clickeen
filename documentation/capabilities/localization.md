@@ -63,7 +63,7 @@ Producers receive concrete paths and base values. No producer receives wildcard,
 ## Translation Generate Flow
 
 1. User saves one widget instance in Bob/Roma.
-2. Tokyo saves approved instance config/content.
+2. Roma submits approved instance config/content artifacts; Tokyo stores them.
 3. User opens the Translations panel and clicks Generate translations.
 4. Roma calls one Tokyo storage command with the current account active-locale
    snapshot from account settings.

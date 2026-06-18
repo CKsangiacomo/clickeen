@@ -97,7 +97,7 @@ settings, not instance config.
 `instance.content.json` carries base user-visible text values.
 
 `overlays/locales/{locale}.json` carries durable translated values for one
-target locale.
+account active locale.
 
 `index.html`, `styles.css`, and `runtime.js` are the generated browser package
 saved with the instance.

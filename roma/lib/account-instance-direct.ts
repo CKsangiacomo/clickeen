@@ -2,6 +2,10 @@ import { asTrimmedString, isRecord } from '@clickeen/ck-contracts';
 import { readWidgetEditableFieldsContract } from '@clickeen/ck-contracts/translated-value-primitives';
 import type { WidgetEditableFieldsContract } from '@clickeen/ck-contracts/translated-value-primitives';
 import { callTokyo, type TokyoCallContext } from './tokyo-client';
+import {
+  composeConfigWithInstanceContent,
+  type AccountInstanceContentDocument,
+} from './account-instance-source-artifacts';
 
 // Roma's direct instance path is the server boundary for one boring product flow:
 // call Tokyo's named account-instance verbs and surface their result.
@@ -96,6 +100,16 @@ function normalizeInstanceMeta(value: unknown): Record<string, unknown> | null {
   return meta;
 }
 
+function isAccountInstanceContentDocument(value: unknown): value is AccountInstanceContentDocument {
+  if (!isRecord(value) || !isRecord(value.fields)) return false;
+  return (
+    typeof value.id === 'string' &&
+    typeof value.accountId === 'string' &&
+    typeof value.widgetType === 'string' &&
+    typeof value.updatedAt === 'string'
+  );
+}
+
 function notFoundFailure(args: { reasonKey: string; detail?: string }): RouteFailure {
   return {
     ok: false,
@@ -183,10 +197,15 @@ function normalizeTokyoWidgetDefinitions(raw: unknown): TokyoWidgetDefinition[] 
   return entries as TokyoWidgetDefinition[];
 }
 
-function normalizeAccountInstancePayload(
-  payload: unknown,
-): { row: AccountInstanceCoreRow; config: Record<string, unknown> } | null {
-  if (!isRecord(payload) || !isRecord(payload.config)) return null;
+function normalizeAccountInstancePayload(payload: unknown): {
+  row: AccountInstanceCoreRow;
+  config: Record<string, unknown>;
+} | null {
+  if (!isRecord(payload)) return null;
+  const source = isRecord(payload.source) ? payload.source : null;
+  const sourceConfig = isRecord(source?.config) ? source.config : null;
+  const sourceContent = isAccountInstanceContentDocument(source?.content) ? source.content : null;
+  if (!sourceConfig || !sourceContent) return null;
   const instanceId = asTrimmedString(payload.instanceId ?? payload.id);
   const accountId = asTrimmedString(payload.accountId);
   const widgetType = asTrimmedString(payload.widgetType);
@@ -210,7 +229,10 @@ function normalizeAccountInstancePayload(
             : undefined,
       meta: normalizeInstanceMeta(payload.meta),
     },
-    config: payload.config,
+    config: composeConfigWithInstanceContent({
+      config: sourceConfig,
+      content: sourceContent,
+    }),
   };
 }
 
@@ -250,6 +272,7 @@ export async function createAccountInstanceInTokyo(args: {
   widgetType: string;
   displayName?: string | null;
   config: Record<string, unknown>;
+  content: AccountInstanceContentDocument;
   publicPackage: {
     v: 1;
     indexHtml: string;
@@ -286,6 +309,7 @@ export async function createAccountInstanceInTokyo(args: {
       ...(args.displayName !== undefined ? { displayName: args.displayName } : {}),
       source: {
         config: args.config,
+        content: args.content,
       },
       publicPackage: args.publicPackage,
       baseLocale: args.baseLocale,
@@ -311,6 +335,7 @@ export async function saveAccountInstanceInTokyo(args: {
   accountCapsule?: string | null;
   widgetType: string;
   config: Record<string, unknown>;
+  content: AccountInstanceContentDocument;
   publicPackage: {
     v: 1;
     indexHtml: string;
@@ -335,7 +360,10 @@ export async function saveAccountInstanceInTokyo(args: {
     method: 'PUT',
     body: {
       widgetType: args.widgetType,
-      config: args.config,
+      source: {
+        config: args.config,
+        content: args.content,
+      },
       publicPackage: args.publicPackage,
       ...(args.displayName !== undefined ? { displayName: args.displayName } : {}),
       ...(args.meta !== undefined ? { meta: normalizeInstanceMeta(args.meta) } : {}),
