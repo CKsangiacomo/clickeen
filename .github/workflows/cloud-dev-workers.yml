@@ -134,5 +134,5 @@ jobs:
           pnpm -C tokyo-worker exec wrangler versions deploy "${version_id}@100" --yes
 
       - name: Sync Tokyo deploy roots to R2 (cloud-dev)
-        if: steps.changes.outputs.tokyo == 'true' || steps.changes.outputs.tokyo_assets == 'true'
+        if: steps.changes.outputs.tokyo_assets == 'true'
         run: node scripts/tokyo-r2-deploy-sync.mjs --remote
