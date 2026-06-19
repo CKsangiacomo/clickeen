@@ -100,6 +100,10 @@ control contract. Every account Shell default path and every account widget Core
 default path must be covered by a real Builder control path. If a path is not
 covered, Roma must stop with a contract error listing the missing paths. It must
 not infer a generic field, hide the path, or save through the broken contract.
+Coverage is checked against the rendered Builder panel controls, not metadata
+alone. If compiled metadata names a default path but the mounted panel HTML does
+not render a matching `[data-bob-path]`, Widget Defaults fails closed with a
+contract error and does not expose Save.
 
 The only exception is software metadata, not account-editable defaults:
 `uiLabels.core.*` and `typography.roleScales.*`. These families exist so Builder

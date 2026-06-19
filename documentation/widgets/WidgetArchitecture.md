@@ -107,7 +107,11 @@ Roma Widget Defaults is not a second editor contract. It renders account
 defaults through the compiled Builder control contract. Any Shell or Core
 default path that is not covered by a Builder control is a contract error that
 must be fixed in Widget Shell or the widget spec; Roma must not invent fallback
-controls for it.
+controls for it. Roma verifies the rendered `[data-bob-path]` set from the
+mounted Builder panel HTML before the surface becomes editable. A path present
+only in compiled metadata is not enough, because Widget Defaults edits the
+rendered control surface. Dieter media and hydration failures block editing and
+save.
 
 Software metadata is not account-editable default truth. Only
 `uiLabels.core.*` and `typography.roleScales.*` may travel with account defaults

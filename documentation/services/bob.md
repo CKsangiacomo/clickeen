@@ -179,6 +179,15 @@ Common primitives include:
 Controls emit edit operations. The edit engine applies those operations to the
 current in-memory instance state.
 
+Bob also exposes a narrow `@clickeen/bob/control-host` module for non-editor
+surfaces that must reuse Builder control presentation. That export is limited to
+compiled-control DOM helpers, Dieter media loading, Dieter hydrator execution,
+show-if visibility, and field value serialization/parsing. It does not export
+Bob session state, live edit application, preview binding, save behavior, or
+account persistence. Roma Widget Defaults uses this presentation seam to bind
+compiled controls to the account defaults draft document while Roma remains the
+save authority.
+
 ## Builder Copilot
 
 Builder Copilot uses Bob's compiled controls as the editable surface. The Bob

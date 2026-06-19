@@ -209,6 +209,19 @@ Berlin owns person identity, account membership, roles, invitations, ownership,
 and account lifecycle records. Roma renders those surfaces and sends mutations
 through same-origin routes backed by Berlin.
 
+Roma owns Settings > Widget Defaults. That surface edits only the current
+account defaults document through `/api/account/widget-defaults`; it does not
+open a Bob editing session and does not save widget instances. The UI consumes
+compiled Builder panel HTML and Dieter media, binds controls to the Roma draft
+defaults document, and saves the full document back through the same Roma route.
+
+Widget Defaults must fail closed when compiled Builder controls are unavailable,
+when Dieter media or hydration fails, or when the rendered controls do not cover
+every requested Shell/Core default path. Metadata coverage alone is not enough:
+the rendered `[data-bob-path]` set is the editable surface. Runtime Dieter media
+URLs are served on Roma through `/dieter/*`, proxied to Tokyo, because compiled
+controls use same-origin Dieter URLs.
+
 Account deletion is disabled in the current runtime. Roma does not offer the
 delete-account settings action and `DELETE /api/account` returns an explicit
 conflict until one account-root deletion operation owns both Berlin DB cleanup

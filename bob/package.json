@@ -3,7 +3,8 @@
   "private": true,
   "version": "0.0.0",
   "exports": {
-    "./compiled-widget-route": "./lib/api/compiled-widget-route.ts"
+    "./compiled-widget-route": "./lib/api/compiled-widget-route.ts",
+    "./control-host": "./lib/control-host.ts"
   },
   "scripts": {
     "dev": "next dev",
