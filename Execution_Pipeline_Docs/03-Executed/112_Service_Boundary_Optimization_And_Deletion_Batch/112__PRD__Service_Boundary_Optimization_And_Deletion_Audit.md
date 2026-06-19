@@ -1,4 +1,4 @@
-# PRD 124 - Service Boundary Optimization And Deletion Audit
+# PRD 112 - Service Boundary Optimization And Deletion Audit
 
 Status: EXECUTED
 Owner: Product architecture
@@ -70,39 +70,39 @@ Every finding and execution step must be checked against:
 
 | PRD | Service | Purpose |
 | --- | --- | --- |
-| 124A | Berlin | Keep Berlin to auth/session/bootstrap and delete/extract account-management residue. |
-| 124B | Bob | Keep Bob to browser-memory editing and delete/move account/product authority. |
-| 124C | Roma | Keep Roma to current-account app orchestration and remove fallbacks/duplicate product logic. |
-| 124D | Tokyo product roots | Keep Tokyo roots to git-authored deploy artifacts and delete stale roots/assets/scripts. |
-| 124E | Tokyo-worker | Keep Tokyo-worker to storage/serving and delete/move product-policy/composition authority. |
+| 112A | Berlin | Keep Berlin to auth/session/bootstrap and delete/extract account-management residue. |
+| 112B | Bob | Keep Bob to browser-memory editing and delete/move account/product authority. |
+| 112C | Roma | Keep Roma to current-account app orchestration and remove fallbacks/duplicate product logic. |
+| 112D | Tokyo product roots | Keep Tokyo roots to git-authored deploy artifacts and delete stale roots/assets/scripts. |
+| 112E | Tokyo-worker | Keep Tokyo-worker to storage/serving and delete/move product-policy/composition authority. |
 
 ## Execution Ledger
 
-This ledger is the current execution truth for PRD 124. A subPRD stays in
+This ledger is the current execution truth for PRD 112. A subPRD stays in
 `02-Executing` until every completion gate in that subPRD is satisfied.
 
 | PRD | Status | Done | Open |
 | --- | --- | --- | --- |
-| 124A Berlin | Executed | BER-01 through BER-12 are complete and independently verified. Berlin invitation acceptance is login-time RPC flow, account deletion is explicit conflict/no mutation, locale mutation moved to Roma, publish containment and runtime E2E session minting were deleted, profile/bootstrap legacy fields were removed, dead render/link/doc residue was deleted, Supabase row/list payloads fail closed, and corrupt ticket state no longer masquerades as missing. | None. 124A moved to `03-Executed`. |
-| 124B Bob | Executed | BOB-01 through BOB-08 are complete. BOB-06 closure made malformed widget software fail in existing Bob compiler/control paths for presets, JSON attrs/options, show-if, and linked ops. | Final V1-V8 closure audit passed. |
-| 124C Roma | Executed | RMA-001 through RMA-013 are complete and independently verified. Roma no longer invents page locale/country defaults, renders generic Widget Defaults fallback editors, owns widget-specific Core schemas, reports malformed asset/delete upstream success, silently falls back to Bob origin, exposes runtime E2E session minting, delegates storage relationship truth to Tokyo-worker, owns duplicate widget metadata maps, carries a duplicate Tokyo client wrapper, performs broad locale-lock inventory reads, or reports visible delete success on absence/corruption. Roma still owns product placement checks such as preventing deletion of an instance used by account pages. | None. 124C moved to `03-Executed`. |
-| 124D Tokyo product roots | Executed | TOKYO-R2-001 aligned non-Prague R2 sync triggers for `tokyo/roma/**`; TOKYO-R2-002 deleted dead `tokyo/_redirects`; TOKYO-R2-003 deleted dead `tokyo/accounts` fixture root and added the existing PR architecture gate check against reintroduction; TOKYO-R2-004, TOKYO-R2-005, and TOKYO-R2-006 are recorded as completed historical Prague cleanup before the scope correction; TOKYO-R2-007 deleted dormant `tokyo/product/media/brand/**` and removed the `product/media` sync root; TOKYO-R2-008 deleted legacy PRD 106/107 direct account R2 repair/audit scripts and removed the exposed `audit:106` closure ritual. | Final V1-V8 closure audits passed. TOKYO-R2-009 and remaining Prague/page work are deferred to the planned Prague/page-composer sequence. |
-| 124E Tokyo-worker | Executed | TW-01 public internal-route exposure is closed and verified. TW-03/TW-08 corrupt registry, persisted JSON, overlay, serve-state, translation ledger, and translated-locale reads now fail closed. TW-09 asset upload has explicit Roma policy headers and Tokyo byte/storage preconditions. TW-11 stale `website/serving-policy.json` documentation was deleted. TW-12/TW-13/TW-14/TW-15 deleted dead duplicate route/reason key, unused KV binding/type, unused helpers, and full-byte page readiness reads. | TW-02, TW-04, TW-05, TW-06, TW-07, and TW-10 were split to PRD 125 because they require product authority decisions before code execution. |
+| 112A Berlin | Executed | BER-01 through BER-12 are complete and independently verified. Berlin invitation acceptance is login-time RPC flow, account deletion is explicit conflict/no mutation, locale mutation moved to Roma, publish containment and runtime E2E session minting were deleted, profile/bootstrap legacy fields were removed, dead render/link/doc residue was deleted, Supabase row/list payloads fail closed, and corrupt ticket state no longer masquerades as missing. | None. 112A moved to `03-Executed`. |
+| 112B Bob | Executed | BOB-01 through BOB-08 are complete. BOB-06 closure made malformed widget software fail in existing Bob compiler/control paths for presets, JSON attrs/options, show-if, and linked ops. | Final V1-V8 closure audit passed. |
+| 112C Roma | Executed | RMA-001 through RMA-013 are complete and independently verified. Roma no longer invents page locale/country defaults, renders generic Widget Defaults fallback editors, owns widget-specific Core schemas, reports malformed asset/delete upstream success, silently falls back to Bob origin, exposes runtime E2E session minting, delegates storage relationship truth to Tokyo-worker, owns duplicate widget metadata maps, carries a duplicate Tokyo client wrapper, performs broad locale-lock inventory reads, or reports visible delete success on absence/corruption. Roma still owns product placement checks such as preventing deletion of an instance used by account pages. | None. 112C moved to `03-Executed`. |
+| 112D Tokyo product roots | Executed | TOKYO-R2-001 aligned non-Prague R2 sync triggers for `tokyo/roma/**`; TOKYO-R2-002 deleted dead `tokyo/_redirects`; TOKYO-R2-003 deleted dead `tokyo/accounts` fixture root and added the existing PR architecture gate check against reintroduction; TOKYO-R2-004, TOKYO-R2-005, and TOKYO-R2-006 are recorded as completed historical Prague cleanup before the scope correction; TOKYO-R2-007 deleted dormant `tokyo/product/media/brand/**` and removed the `product/media` sync root; TOKYO-R2-008 deleted legacy PRD 106/107 direct account R2 repair/audit scripts and removed the exposed `audit:106` closure ritual. | Final V1-V8 closure audits passed. TOKYO-R2-009 and remaining Prague/page work are deferred to the planned Prague/page-composer sequence. |
+| 112E Tokyo-worker | Executed | TW-01 public internal-route exposure is closed and verified. TW-03/TW-08 corrupt registry, persisted JSON, overlay, serve-state, translation ledger, and translated-locale reads now fail closed. TW-09 asset upload has explicit Roma policy headers and Tokyo byte/storage preconditions. TW-11 stale `website/serving-policy.json` documentation was deleted. TW-12/TW-13/TW-14/TW-15 deleted dead duplicate route/reason key, unused KV binding/type, unused helpers, and full-byte page readiness reads. | TW-02, TW-04, TW-05, TW-06, TW-07, and TW-10 were split to PRD 113 because they require product authority decisions before code execution. |
 
 Recent execution commits:
 
 | Commit | Scope |
 | --- | --- |
-| `758bc5db` | PRD 124 critical boundary cleanup across Berlin/Roma/Tokyo-worker. |
-| `b2d399a5` | PRD 124B Bob authority cleanup. |
+| `758bc5db` | PRD 112 critical boundary cleanup across Berlin/Roma/Tokyo-worker. |
+| `b2d399a5` | PRD 112B Bob authority cleanup. |
 | `1092a023` | Over-scoped Bob strictness pass; superseded by correction. |
-| `4d9c52d0` | Corrected PRD 124B strictness drift, moved 124B back to executing, and left BOB-06 open. |
-| `0d4fcf79` | Executed PRD 124B BOB-06 compiler/control strictness and moved 124B to executed. |
+| `4d9c52d0` | Corrected PRD 112B strictness drift, moved 112B back to executing, and left BOB-06 open. |
+| `0d4fcf79` | Executed PRD 112B BOB-06 compiler/control strictness and moved 112B to executed. |
 
 Execution tenet:
 
 It is prohibited to reinterpret a PRD finding into an ideal system and then add
-machinery to enforce that interpretation. PRD 124 execution is deletion first:
+machinery to enforce that interpretation. PRD 112 execution is deletion first:
 remove dead paths, wrong-service authority, duplicate truth, and silent fallback
 behavior at the named product boundary.
 
@@ -144,7 +144,7 @@ behavior at the named product boundary.
 
 ## Closure Criteria
 
-PRD 124 closes only when each subPRD is either:
+PRD 112 closes only when each subPRD is either:
 
 - executed and moved to `03-Executed`; or
 - split into a newer numbered PRD with explicit owner, blocker, and no active
@@ -155,7 +155,7 @@ warning-only, or left as "legacy continuity" in a product path.
 
 ## Closure
 
-2026-06-17: PRD 124 is executed. SubPRDs 124A, 124B, 124C, 124D, and 124E
+2026-06-17: PRD 112 is executed. SubPRDs 112A, 112B, 112C, 112D, and 112E
 are in `03-Executed`. Remaining Tokyo-worker authority migrations were split to
-PRD 125 with explicit owner, scope, and no active claim of completion inside
-PRD 124.
+PRD 113 with explicit owner, scope, and no active claim of completion inside
+PRD 112.

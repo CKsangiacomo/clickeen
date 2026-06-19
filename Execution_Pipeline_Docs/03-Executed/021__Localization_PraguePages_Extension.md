@@ -1,6 +1,6 @@
 # Prague Widget Pages / Blocks Localization (Owned Surface)
 
-Status: deprecated in favor of the prague-strings pipeline defined in `Execution_Pipeline_Docs/00-Strategy/026__Localization_PragueCopy_Base_Overlays_Manifest.md`.
+Status: deprecated in favor of the prague-strings pipeline defined in `Execution_Pipeline_Docs/00-Strategy/strategy_PRD__Localization_Prague_Copy_Base_Overlays_Manifest.md`.
 
 **Status:** execution plan / spec
 

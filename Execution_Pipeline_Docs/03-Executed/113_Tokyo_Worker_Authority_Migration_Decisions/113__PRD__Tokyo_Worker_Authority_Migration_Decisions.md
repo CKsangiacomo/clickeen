@@ -1,16 +1,16 @@
-# PRD 125 - Tokyo-worker Authority Migration Decisions
+# PRD 113 - Tokyo-worker Authority Migration Decisions
 
 Status: EXECUTED
-Origin: PRD 124E split
+Origin: PRD 112E split
 Owner: Product architecture
 Date: 2026-06-17
 
 ## Purpose
 
-PRD 124 deleted and tightened the Tokyo-worker storage boundary where the work was
+PRD 112 deleted and tightened the Tokyo-worker storage boundary where the work was
 bounded and deterministic. The remaining Tokyo-worker findings require product
 authority decisions before code execution. They must not be completed inside PRD
-124 by renaming, warning, compatibility wrapping, or adding enforcement machinery.
+112 by renaming, warning, compatibility wrapping, or adding enforcement machinery.
 
 Bottom line: Tokyo is storage/CDN. Tokyo-worker may add exact files, delete exact
 files, read/list storage facts, and serve exact files. Product meaning belongs to
@@ -36,7 +36,7 @@ Roma, Bob, San Francisco, or shared product contracts.
 
 ## Split Findings
 
-| Source                                        | Decision needed                                                                                                                        | Why PRD 124 did not finish it                                                                                             |
+| Source                                        | Decision needed                                                                                                                        | Why PRD 112 did not finish it                                                                                             |
 | --------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
 | TW-02 registry/serve-state split truth        | Decision executed: R2 `serve-state.json` is instance publish/public-serving truth; listing reads R2 instance folders.                 | Supabase `instances.publish_status` is no longer runtime truth. Translation registry cleanup remains TW-07.              |
 | TW-04 page package/publish pipeline           | Decision executed: current account page publish is unavailable until Roma writes page packages.                                         | No current Roma page package writer exists in this PRD scope.                                                            |
@@ -254,4 +254,4 @@ Open after this registry/serve-state authority slice, before the translation orc
 
 Open after this translation orchestration deletion slice:
 
-- No PRD 125 Tokyo-worker authority slices remain open.
+- No PRD 113 Tokyo-worker authority slices remain open.

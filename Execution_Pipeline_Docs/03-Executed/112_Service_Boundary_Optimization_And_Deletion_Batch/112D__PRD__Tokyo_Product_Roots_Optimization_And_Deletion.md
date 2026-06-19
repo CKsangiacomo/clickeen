@@ -1,7 +1,7 @@
-# PRD 124D - Tokyo Product Roots Optimization And Deletion
+# PRD 112D - Tokyo Product Roots Optimization And Deletion
 
 Status: EXECUTED
-Parent: PRD 124
+Parent: PRD 112
 Owner: Tokyo git-authored product roots
 Date: 2026-06-17
 
@@ -16,7 +16,7 @@ Tokyo product roots own git-authored static R2 artifacts:
 - `tokyo/roma/**`
 
 Prague/page files may physically deploy through Tokyo R2, but Prague and page
-composition work is not in the current PRD 124 execution scope. Remaining
+composition work is not in the current PRD 112 execution scope. Remaining
 Prague/page findings are deferred to the planned Prague/page-composer sequence.
 
 Tokyo product roots do not own:
@@ -39,7 +39,7 @@ Tokyo product roots do not own:
 | TOKYO-R2-006 | Low | FAQ page assets | Orphan assets | `tokyo/prague/pages/faq/assets/**` | Remove or wire explicit page JSON references. Add orphan asset check for Prague page assets. | Prague FAQ assets | V3, V7 |
 | TOKYO-R2-007 | Medium | Product media root | Dormant deploy root | `tokyo/product/media/brand/**`, sync map | Decide owner. Remove root/assets or wire consumers plus deploy trigger. Dormant roots cannot drift. | Product media direct URLs | V3, V6 |
 | TOKYO-R2-008 | Medium | Legacy widget repair/audit scripts | Direct account repair path | `scripts/widgets/migrate-106.ts`, `repair-107-fill-contract.ts`, `audit-106.mjs` | Archive write scripts as historical PRD evidence or delete them. Future repairs use Roma/Tokyo-worker product routes. Diagnostics must be explicitly non-runtime. | Admin account artifacts, account defaults/instances | V2, V6, V7, V8 |
-| TOKYO-R2-009 | Deferred | Prague block pages | Legacy marketing content model | `tokyo/prague/pages/**/*.json`, Prague overview docs | Deferred to the planned Prague/page-composer sequence after prerequisites. Do not execute in this PRD 124 pass. | Prague content, SEO, page model | V1, V3, V6 |
+| TOKYO-R2-009 | Deferred | Prague block pages | Legacy marketing content model | `tokyo/prague/pages/**/*.json`, Prague overview docs | Deferred to the planned Prague/page-composer sequence after prerequisites. Do not execute in this PRD 112 pass. | Prague content, SEO, page model | V1, V3, V6 |
 
 ## Execution Slices
 
@@ -80,7 +80,7 @@ Tokyo product roots do not own:
 
 2026-06-17 scope correction:
 
-- Prague/page work is no longer active scope for this PRD 124 pass. TOKYO-R2-004, TOKYO-R2-005, and TOKYO-R2-006 remain recorded as completed historical cleanup, but they do not authorize more Prague/page execution under 124D.
+- Prague/page work is no longer active scope for this PRD 112 pass. TOKYO-R2-004, TOKYO-R2-005, and TOKYO-R2-006 remain recorded as completed historical cleanup, but they do not authorize more Prague/page execution under 112D.
 - TOKYO-R2-009 is deferred to the planned Prague/page-composer sequence. Any remaining Prague trigger/path cleanup must be handled there or in a newer explicit Prague PRD.
 
 2026-06-17 non-Prague R2 trigger alignment slice:
@@ -104,5 +104,5 @@ Tokyo product roots do not own:
 - Every in-scope synced Tokyo root has a matching deploy trigger or explicit workflow.
 - No tracked `tokyo/accounts/**` exists as source.
 - No direct account R2 write repair scripts remain executable as product paths.
-- Prague/page findings are explicitly deferred, not claimed green in this PRD 124 pass.
+- Prague/page findings are explicitly deferred, not claimed green in this PRD 112 pass.
 - V1-V8 subagent audit is clean before moving to executed.

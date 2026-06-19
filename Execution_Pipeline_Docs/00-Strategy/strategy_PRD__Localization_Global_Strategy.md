@@ -1,4 +1,4 @@
-# Localization & Global Strategy
+# Strategy PRD - Localization & Global Strategy
 
 **STATUS: PLANNING — REVIEW BEFORE EXECUTION**  
 **Created:** 2024-12-27  

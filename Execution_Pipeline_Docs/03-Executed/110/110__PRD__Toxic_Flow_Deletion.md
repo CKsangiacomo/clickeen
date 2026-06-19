@@ -6,7 +6,7 @@ Date: 2026-06-05
 Parent: `106__Umbrella__Composition_Vision.md`
 
 Closeout: PRD 110 was retired on 2026-06-18. Its deletion scope was already
-completed by the executed PRD 124/124A-E and PRD 125 batches, with supporting
+completed by the executed PRD 112/112A-E and PRD 113 batches, with supporting
 cleanup from PRD 106/107. Remaining Page Composer product work belongs to the
 Roma/Page Composer authority. Prague migration and block deletion belong to PRD
 121. Do not execute PRD 110's step ledger retroactively.
@@ -16,7 +16,7 @@ Depends on:
 - `PRD106A2_WidgetShellExtraction.md`
 - `PRD106B_PageComposer.md`
 - `PRD106C_Prague astro blocks migration to widget instances.md`
-- `121__PRD__Prague_Migration_From_Astro_Blocks_To_Page_Composer.md`
+- `planning_PRD__Prague_Migration_From_Astro_Blocks_To_Page_Composer.md`
   Series step: 9
   Unlocks: clean PRD106 execution slate.
   Authority owned by this PRD: deletion/fencing of toxic flows, functions, files, routes, tests, storage shapes, docs, and LOCs.

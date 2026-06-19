@@ -1,4 +1,4 @@
-# PRD — Connectors: Universal Data Sources (URL / API / OAuth) + Policy Gating
+# Strategy PRD - Connectors: Universal Data Sources (URL / API / OAuth) + Policy Gating
 
 Status: Draft (planning-only; not executed)
 Owner: Clickeen core platform

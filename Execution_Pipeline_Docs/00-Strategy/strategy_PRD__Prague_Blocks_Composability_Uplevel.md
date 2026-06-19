@@ -1,4 +1,4 @@
-# PRD 18: Prague Blocks Composability Uplevel
+# Strategy PRD - Prague Blocks Composability Uplevel
 
 ## Status
 - **Status**: Proposed

@@ -1,6 +1,6 @@
 # 120B1 - EXEC - Builder Copilot Operator
 
-Status: EXECUTING OPERATOR SCOPE - CODE COMPLETE, AUTHENTICATED BROWSER VERIFICATION BLOCKED — revised 2026-06-09 after the three-perspective
+Status: TECHNICAL OPERATOR SLICE COMPLETE - PRODUCT COPILOT/AGENT NOT DELIVERED — revised 2026-06-09 after the three-perspective
 pre-execution review
 Owner: Bob compiler + Bob UI + Roma copilot route + San Francisco copilot core
 Parent: `120B__PRD__Builder_Copilot_Refactor.md` (120B-1 Operator slice)
@@ -22,6 +22,19 @@ Execution amendment applied on 2026-06-18:
   value generation only after the target is grounded.
 - Product truth remains in Bob browser memory until user Save. Roma routes and mints the
   account grant. San Francisco executes AI. Tokyo/Tokyo-worker remain storage/R2.
+
+Closeout amendment applied on 2026-06-19:
+
+- 120B1 closes only the technical Operator slice: visible-control snapshots, target
+  resolution, scoped request envelope, San Francisco edit execution, and Bob
+  browser-memory apply/undo.
+- It does not close product Copilot or deliver a real Builder Agent. Guide, Advice,
+  account/tier/upgrade help, publish help, active-locale help, support behavior,
+  conversion behavior, and workforce-agent behavior are out of scope here.
+- Human product testing showed the current Copilot UX is below the product bar. That is
+  not a reason to keep testing this PRD as product-success evidence; it is the reason the
+  successor product-agent rebuild exists:
+  `Execution_Pipeline_Docs/01-Planning/planning_PRD__Builder_Copilot_Real_Agent_Rebuild.md`.
 
 Decisions consumed (ratified):
 
@@ -145,7 +158,7 @@ Copilot (Q4). i18n of Copilot copy (English-only pre-GA).
 
 ## Current Execution Evidence - 2026-06-18
 
-Status: executing, not closed.
+Status: technical Operator slice complete; product Copilot/agent not delivered.
 
 Green local gates:
 
@@ -174,14 +187,15 @@ Green local gates:
   TPM PASS for implementation/system cohesion/product law after the selected
   model, no-ops, and TTL-doc fixes.
 
-Red runtime gate:
+Removed product-success gate:
 
-- `pnpm exec playwright test e2e/widgets/builder-open.spec.ts`
-
-Deterministic stop reason: the authenticated Builder smoke lands on the Roma sign-in
-screen with `coreui.errors.auth.required`, so Playwright never reaches Widgets, Builder,
-Bob, controls, assets, or Copilot. Per execution rules, do not move this PRD to executed
-or advance to the next slice until authenticated Builder runtime proof is green.
+- `pnpm exec playwright test e2e/widgets/builder-open.spec.ts` was previously listed as
+  a red runtime closeout gate because Playwright authentication did not reach Builder.
+- That gate is no longer a reason to keep 120B1 open. The human product finding is
+  stronger and more direct: the shipped Copilot UX is not an acceptable product Copilot
+  or real agent.
+- Therefore 120B1 closes as a technical Operator slice only. Product Copilot/agent
+  verification moves to the successor planning PRD and must not be claimed here.
 
 ## Acceptance
 

@@ -7,7 +7,7 @@ Parent: `106__Umbrella__Composition_Vision.md`
 Audit: `PRD106C2_Prague astro blocks audit.md`
 Series step: 6
 Depends on: `PRD106A2_WidgetShellExtraction.md`, `PRD106C2_Prague astro blocks audit.md`
-Unlocks: `PRD106C3_Split_Widget.md`, `PRD106C4_Cards_Widget.md`, `PRD106C5_BigBang_Widget.md`, `PRD106C6_CTA_Widget.md`, `../../01-Planning/121__PRD__Prague_Migration_From_Astro_Blocks_To_Page_Composer.md`
+Unlocks: `PRD106C3_Split_Widget.md`, `PRD106C4_Cards_Widget.md`, `PRD106C5_BigBang_Widget.md`, `PRD106C6_CTA_Widget.md`, `../../01-Planning/planning_PRD__Prague_Migration_From_Astro_Blocks_To_Page_Composer.md`
 Authority owned by this PRD: Prague block-to-widget migration map and child PRD scope.
 Authority explicitly not owned by this PRD: shared Shell extraction, Page Composer implementation, individual Widget Core implementation, Prague route cutover.
 

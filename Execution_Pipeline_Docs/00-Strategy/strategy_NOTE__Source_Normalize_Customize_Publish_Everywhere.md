@@ -1,4 +1,4 @@
-# 18 — Source → Normalize → Customize → Publish Everywhere (Strategy Note)
+# Strategy Note - Source → Normalize → Customize → Publish Everywhere (Strategy Note)
 
 **Purpose:** Lock the core platform concept in writing so we can turn it into a PRD (and avoid drifting into widget-by-widget thinking).
 

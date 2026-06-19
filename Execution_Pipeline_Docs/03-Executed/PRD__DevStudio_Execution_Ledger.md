@@ -187,7 +187,7 @@ Cloudflare verification run after REST-token repair:
   successfully without deploying.
 - Out-of-scope correction: a temporary generated component-page whitespace cleanup
   was reverted because generator/showcase hygiene belongs to
-  `111__PRD__DevStudio_Design_Governance.md`, not this Migration PRD. The generated
+  `planning_PRD__DevStudio_Design_Governance.md`, not this Migration PRD. The generated
   component output remains governed by the existing generator until Design
   Governance Step 0 opens.
 - `git diff --check` currently reports trailing whitespace in generated

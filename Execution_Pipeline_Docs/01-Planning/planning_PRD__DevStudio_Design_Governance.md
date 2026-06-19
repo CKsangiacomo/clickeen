@@ -1,4 +1,4 @@
-# PRD 111 - DevStudio Design Governance
+# Planning PRD - DevStudio Design Governance
 
 Status: PLANNING
 Owner: Internal platform (DevStudio) + Dieter
@@ -9,7 +9,7 @@ Numbering: deliberately unnumbered per product owner; sibling of
 Prerequisite status: `Execution_Pipeline_Docs/03-Executed/PRD__DevStudio_Cloudflare_Migration.md`
 is complete through Step 7. This PRD is not executing in the migration-cleanup pass.
 Policy-section extension remains deferred to the San Francisco AI-plane schema
-authority in `Execution_Pipeline_Docs/01-Planning/120A1__EXEC__AI_Plane_Capability_Conformance_Routing.md`.
+authority in `Execution_Pipeline_Docs/03-Executed/120/120A1__EXEC__AI_Plane_Capability_Conformance_Routing.md`.
 
 Related:
 

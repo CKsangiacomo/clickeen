@@ -1,15 +1,15 @@
 # PRD 120A - San Francisco AI Plane Role and Contract
 
-Status: EXECUTING - CODE COMPLETE, AUTHENTICATED BROWSER VERIFICATION BLOCKED
+Status: TECHNICAL AI-PLANE SLICE COMPLETE - PRODUCT AGENT WORK OUT OF SCOPE
 Owner: Product + Architecture (San Francisco)
 Priority: P0 for 120A1; P1 for 120A-2
 Date: 2026-06-08
-Stage: 02-Executing/120
+Stage: 03-Executed/120
 Type: Sub-PRD from PRD 120
 
 Parent:
 
-- `Execution_Pipeline_Docs/02-Executing/120/120__PRD__San_Francisco_Agent_Platform_Architecture_Decision.md`
+- `Execution_Pipeline_Docs/03-Executed/120/120__PRD__San_Francisco_Agent_Platform_Architecture_Decision.md`
 
 Related:
 
@@ -70,6 +70,16 @@ Execution amendment applied on 2026-06-18:
 - No 120A work may move product truth into San Francisco or give Tokyo/Tokyo-worker an AI
   orchestration role. Roma mints account/user grants; Bob owns the open working copy;
   San Francisco executes AI calls only.
+
+Closeout amendment applied on 2026-06-19:
+
+- 120A is complete only as the technical AI-plane support slice for the Builder
+  Operator: capability/provider request safety, model picker eligibility, typed
+  provider errors, and the scoped San Francisco execution boundary.
+- 120A did not deliver a product Copilot, Builder Agent, Guide, Advice, account/tier
+  help, or workforce-agent runtime.
+- The real Builder product-agent rebuild is tracked separately in
+  `Execution_Pipeline_Docs/01-Planning/planning_PRD__Builder_Copilot_Real_Agent_Rebuild.md`.
 
 ---
 

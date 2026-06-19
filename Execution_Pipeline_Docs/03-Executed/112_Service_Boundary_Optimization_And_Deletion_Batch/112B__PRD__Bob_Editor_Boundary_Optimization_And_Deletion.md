@@ -1,7 +1,7 @@
-# PRD 124B - Bob Editor Boundary Optimization And Deletion
+# PRD 112B - Bob Editor Boundary Optimization And Deletion
 
 Status: EXECUTED
-Parent: PRD 124
+Parent: PRD 112
 Owner: Bob editor boundary
 Date: 2026-06-17
 
@@ -62,7 +62,7 @@ Bob does not own:
 
 2026-06-17 correction slice:
 
-- Reopened PRD 124B after removing the over-scoped compiler/session strictness pass. The remaining BOB-06 work stays open.
+- Reopened PRD 112B after removing the over-scoped compiler/session strictness pass. The remaining BOB-06 work stays open.
 - Retained only narrow fallback deletion: ToolDrawer `show-if` no longer swallows parse/eval errors, and dirty/save signature no longer substitutes `{}` when config serialization fails.
 
 2026-06-17 BOB-06 closure slice:

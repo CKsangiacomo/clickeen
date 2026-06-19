@@ -1,4 +1,4 @@
-# PRD 122 - Withdrawn SEO/GEO Static Build Planning Note
+# Planning PRD - Withdrawn SEO/GEO Static Build Planning Note
 
 Status: Withdrawn
 Owner: Product + Architecture

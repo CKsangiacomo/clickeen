@@ -32,7 +32,7 @@ Current Architecture (ground truth)
 
 Drift Findings (Priority)
 Critical: Prague localization PRDs still reference prague-strings and manifest-based paths.
-- `Execution_Pipeline_Docs/00-Strategy/026__Localization_PragueCopy_Base_Overlays_Manifest.md`
+- `Execution_Pipeline_Docs/00-Strategy/strategy_PRD__Localization_Prague_Copy_Base_Overlays_Manifest.md`
 - `Execution_Pipeline_Docs/03-Executed/021__Localization_PraguePages_Extension.md`
 - `Execution_Pipeline_Docs/00-Strategy/009__PRD_Prague_Blocks_Components_Refactor.md`
 Update to: `prague/content/**` base + `scripts/prague-l10n/*` + `tokyo/l10n/prague/**` overlays with `index.json`. Remove prague-strings and manifest references.
@@ -41,7 +41,7 @@ Critical: Instance l10n PRDs still reference `widget_instance_locales` and globa
 - `Execution_Pipeline_Docs/00-Strategy/010__PRD_Version_Limits_Assets_Localization.md`
 - `Execution_Pipeline_Docs/00-Strategy/014__Localization_Architecture_Update.md`
 - `Execution_Pipeline_Docs/00-Strategy/008__PRD_System_User_Instance_Split.md`
-- `Execution_Pipeline_Docs/00-Strategy/016__Blueprint_Layers_Personalization_Playbooks_Execution.md`
+- `Execution_Pipeline_Docs/00-Strategy/strategy_PRD__Blueprint_Layers_Personalization_Playbooks_Execution.md`
 Update to: `widget_instance_overlays`, `l10n_publish_state` dirty-set queue, `l10n_overlay_versions`, deterministic overlay paths, and per-instance `index.json`. Remove references to a global l10n manifest or scheduled full republish.
 
 Major: Execution plan status still includes completed prague-strings removal tasks.

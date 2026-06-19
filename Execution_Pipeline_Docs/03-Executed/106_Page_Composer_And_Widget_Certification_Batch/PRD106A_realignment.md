@@ -28,7 +28,7 @@ Sibling PRDs:
 - `PRD106B_PageComposer.md` owns the Page Composer implementation boundary.
 - `PRD106C_Prague astro blocks migration to widget instances.md` owns the
   Prague block-to-widget migration.
-- `../../01-Planning/121__PRD__Prague_Migration_From_Astro_Blocks_To_Page_Composer.md`
+- `../../01-Planning/planning_PRD__Prague_Migration_From_Astro_Blocks_To_Page_Composer.md`
   owns the Prague site migration from Astro block assembly to composed page
   output after Page Composer and migrated widget instances exist.
 - `../../01-Planning/110__PRD__Toxic_Flow_Deletion.md` owns the executable

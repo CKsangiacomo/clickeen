@@ -1,7 +1,7 @@
-# PRD 124A - Berlin Identity Boundary Optimization And Deletion
+# PRD 112A - Berlin Identity Boundary Optimization And Deletion
 
 Status: EXECUTED
-Parent: PRD 124
+Parent: PRD 112
 Owner: Berlin auth/session boundary
 Date: 2026-06-17
 

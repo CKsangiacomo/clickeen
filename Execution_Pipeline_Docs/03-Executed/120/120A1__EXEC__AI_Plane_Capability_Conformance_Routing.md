@@ -1,6 +1,6 @@
 # 120A1 - EXEC - AI Plane: Capability Registry, Conformance, Typed Errors, Routing
 
-Status: EXECUTING ACTIVE SCOPE - CODE COMPLETE, AUTHENTICATED BROWSER VERIFICATION BLOCKED — revised 2026-06-09 after the three-perspective
+Status: TECHNICAL AI-PLANE SLICE COMPLETE - PRODUCT AGENT WORK OUT OF SCOPE — revised 2026-06-09 after the three-perspective
 pre-execution review (PM / TPM / Dev Manager)
 Owner: San Francisco plane
 Parent: `120A__PRD__San_Francisco_AI_Plane_Role_And_Contract.md` (120A-1 slice)
@@ -20,6 +20,15 @@ Execution amendment applied on 2026-06-18:
   picker eligibility. It must not become a runtime validation ritual.
 - The stale translation-queue premise is removed. Do not add a queue to satisfy this
   document.
+
+Closeout amendment applied on 2026-06-19:
+
+- 120A1 closes only the technical San Francisco slice needed by the Builder Operator:
+  model capability data, callable-provider request construction, picker eligibility,
+  scoped grants, and typed provider failures.
+- It is not product Copilot completion and not a real-agent delivery. Guide, Advice,
+  account/tier support, upgrade guidance, and durable workforce-agent behavior are out
+  of scope and belong to the successor planning PRD.
 
 Decisions consumed (ratified):
 

@@ -1,4 +1,4 @@
-# PRD 120C - Workforce Agents Architecture Scaffolding
+# Planning PRD - Workforce Agents Architecture Scaffolding
 
 Status: PLANNING
 Owner: Product + Architecture (San Francisco)
@@ -27,7 +27,7 @@ Execution amendment applied on 2026-06-18:
 
 Parent:
 
-- `Execution_Pipeline_Docs/01-Planning/120__PRD__San_Francisco_Agent_Platform_Architecture_Decision.md`
+- `Execution_Pipeline_Docs/03-Executed/120/120__PRD__San_Francisco_Agent_Platform_Architecture_Decision.md`
 
 Related:
 

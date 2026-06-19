@@ -1,4 +1,4 @@
-# Prague Strings Localization — Base + Overlays + Manifest (Instance-Style)
+# Strategy PRD - Prague Strings Localization — Base + Overlays + Manifest (Instance-Style)
 
 Status: Proposal (words-only)
 

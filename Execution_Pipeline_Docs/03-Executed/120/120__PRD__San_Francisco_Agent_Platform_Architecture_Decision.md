@@ -1,10 +1,10 @@
 # PRD 120 - San Francisco Agent Platform: Architecture Decision
 
-Status: EXECUTING - CODE COMPLETE, AUTHENTICATED BROWSER VERIFICATION BLOCKED
+Status: TECHNICAL OPERATOR/AI-PLANE SLICE COMPLETE - PRODUCT COPILOT/AGENT NOT DELIVERED
 Owner: Product + Architecture (San Francisco)
-Priority: P0 for Builder Copilot proof; P1 for durable workforce architecture
+Priority: P0 for technical Builder Operator / AI-plane proof; P1 for durable workforce architecture
 Date: 2026-06-07
-Stage: 02-Executing/120
+Stage: 03-Executed/120
 Type: Architecture decision (understand → survey → recommend)
 
 Related:
@@ -56,7 +56,7 @@ operate the actual editor.
 
 Execution amendment applied on 2026-06-18 after 120 series review:
 
-- **Do not execute the full 120 series as written.** Execute only the next product proof:
+- **Do not execute the full 120 series as written.** Execute only the next technical proof:
   Builder Copilot as a visible Builder-control operator, plus the minimum San Francisco
   provider-call and typed-error hardening required to make that proof safe.
 - **Remove the stale translation queue premise.** the removed translation queue is not a
@@ -71,13 +71,30 @@ Execution amendment applied on 2026-06-18 after 120 series review:
   controls; Roma owns account/session/tier/grant/save routing; Tokyo/Tokyo-worker remain
   storage/R2 surfaces; San Francisco owns only AI execution.
 
+Closeout amendment applied on 2026-06-19:
+
+- **Close only the technical slice.** PRD 120 completed a technical Operator/AI-plane
+  slice: Bob can expose visible Builder controls as the edit surface; Roma can route the
+  account-scoped Copilot request and mint the scoped AI grant; San Francisco can execute
+  the AI call with model capability/provider safety and product-safe typed errors; Bob can
+  apply/undo returned edit ops in browser memory.
+- **Do not call this product Copilot or a real agent.** This PRD did not deliver the
+  Builder Agent, Guide, Advice, account/tier/upgrade help, active-locale help, support
+  flows, conversion flows, autonomous workforce agents, durable agents, MCP/outbound
+  tooling, or a complete product Copilot experience.
+- **Do not keep testing bad product UX as a closeout gate for this PRD.** Human product
+  testing showed the current user-facing Copilot is below the Clickeen product bar. That
+  finding belongs to the successor product-agent PRD, not to this technical slice's
+  closure.
+- **Successor product-agent work lives in planning:** `Execution_Pipeline_Docs/01-Planning/planning_PRD__Builder_Copilot_Real_Agent_Rebuild.md`.
+
 ---
 
 ## 1. Understand Clickeen first
 
-### 1.0 The immediate product proof
+### 1.0 The immediate technical proof
 
-The immediate product proof for PRD 120 is not GTM, UX Writer, MCP, or a durable
+The immediate technical proof for PRD 120 is not GTM, UX Writer, MCP, or a durable
 orchestrator.
 
 The proof is Builder Copilot operating Builder correctly.
@@ -101,7 +118,7 @@ language against that contract before model planning. PRD 120B must fix that gro
 layer; it must not turn this into schema redesign, per-widget prompt glue, or more
 workforce-agent theory.
 
-The required first proof is deliberately boring:
+The required technical proof is deliberately boring:
 
 - "What can you edit?" returns the actual current Builder controls.
 - "Change the button from blue to green" works.
@@ -113,16 +130,18 @@ The required first proof is deliberately boring:
   stale Copilot result overwrites manual edits.
 
 Until those pass across the shipped widgets, the rest of the workforce-agent architecture
-is planning, not product proof.
+is planning. Passing them still does not make the shipped Copilot a real product agent.
 
-That first proof is not the whole Copilot. Builder Copilot may later need a Guide capability:
+That first proof is not the whole Copilot. Builder Copilot needs a separate product-agent
+rebuild for Guide/Advice/account help:
 when a user asks "what do I do in the panels?", "how do I add/remove/reorder this?", or
 "why don't I see that setting?", Copilot should understand the whole current widget, not
 only one isolated op. That requires a shaped whole-widget capability map: panels, groups,
 visible controls, hidden/disabled dependencies, repeatable structures, and supported
 workflows. It is not solved by vague source-code access. The Guide capability depends on
 the Operator capability because "do it" follow-ups must become validated Builder ops.
-Guide is deferred until the Operator proof is green.
+Guide, Advice, account/tier help, and upgrade/publish guidance are not closed by PRD 120;
+they are tracked by the successor planning PRD.
 
 ### 1.1 The company goal
 
@@ -146,7 +165,7 @@ one plane, while product truth remains owned by Bob/Roma/Tokyo or the specific
 orchestrator/review boundary. One agent that mints its own grants, holds its own provider
 keys, calls providers directly, or writes product state directly breaks the guarantee for
 the whole system, not just itself. One Copilot that cannot operate Builder controls breaks
-the product proof today. So PRD 120 is both: (1) fix the shipped Builder Copilot as a
+the technical editor-operation proof today. So PRD 120 is both: (1) fix the shipped Builder Copilot as a
 control operator, and (2) preserve the single AI plane for the workforce that follows.
 
 ### 1.1.1 The Clickeen-specific constraint
@@ -524,7 +543,8 @@ Execution priority correction: the interactive surface is not just "one of the s
 Builder Copilot is the P0 proof gate. The active 120B Operator work uses Bob's existing
 compiled controls plus compiler-owned vocabulary as the Copilot action surface. 120A1 runs
 in parallel as the release gate for model capability, picker eligibility, and typed
-provider errors. Durable workforce scaffolding is sequenced after the Copilot proof.
+provider errors. Durable workforce scaffolding is sequenced after the Operator/AI-plane
+technical proof.
 
 Why this is the right fit for _Clickeen specifically_:
 
@@ -603,17 +623,17 @@ breaks the product-truth guarantee. There is no partial compliance.
 This decision doc proposed the sequence; each phase was intended to become an
 execution slice.
 
-- **120B1 — P0 Interactive Builder Copilot Operator rescue (resolves EB-007).** Use Bob's
+- **120B1 — P0 Interactive Builder Operator technical slice (resolves EB-007).** Use Bob's
   compiled Builder control contract as Copilot's action surface; build the visible-control
   vocabulary; answer capability questions deterministically; validate structured ops
   against current editable paths; apply only to Bob's in-memory working copy; preserve
   dirty state; add fixture/eval scenarios for the shipped widgets. First code gate:
   stop treating keyword-ranked `controls[]` and raw source snippets as model target
   authority; Bob grounds the target from visible compiled controls before any model-backed
-  edit. The first green bar is not abstract: button green, button label, hide button,
+  edit. The technical green bar is not abstract: button green, button label, hide button,
   background, title, share, and branding edits must work or clarify correctly in preview.
-- **120B-2 — Builder Copilot Guide layer.** After the Operator slice is green, add
-  whole-widget/panel/workflow guidance for prompts like "what do I do in the panels?",
+- **Successor product-agent PRD — Builder Agent.** Add whole-widget/panel/workflow
+  guidance for prompts like "what do I do in the panels?",
   "how do I add/remove/reorder this?", and "why don't I see that setting?" This is not
   grounding alone and not abstract advice. It requires a full current-widget capability
   map, panel/workflow map, repeatable structure map, conditional control map, and a

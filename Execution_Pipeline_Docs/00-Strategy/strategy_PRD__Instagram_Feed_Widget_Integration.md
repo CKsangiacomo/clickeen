@@ -1,4 +1,4 @@
-# INTEGRATIONPRD — Instagram Feed Widget
+# Strategy PRD - Instagram Feed Widget
 Version: v0.2 (Integration-focused)  
 Owner: Clickeen (Widget Platform)  
 Status: Draft for implementation planning

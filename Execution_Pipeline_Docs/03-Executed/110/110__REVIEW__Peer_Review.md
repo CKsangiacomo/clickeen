@@ -10,7 +10,7 @@ headers, and direct reads of the current Roma/Bob/Tokyo/Prague tree.
 Retire PRD 110. Do not execute it.
 
 PRD 110's deletion scope is already superseded by executed work in the
-124/124A-E + 125 batch, with supporting cleanup from 106/107. Its ledger is
+112/112A-E + 113 batch, with supporting cleanup from 106/107. Its ledger is
 empty because the toxic paths it was meant to delete are already gone.
 
 Retiring 110 does not mean Page Composer is complete. Page Composer has live
@@ -51,8 +51,8 @@ surviving authority.
 | Roma materialization parity | `roma/lib/account-instance-public-package.ts` exists | Present |
 | Tokyo page summary/product derivation | direct Tokyo page-domain read | Removed from Tokyo authority |
 | Tokyo pages as storage boundary | direct Tokyo page-domain read | Storage-only shape |
-| 124/124A-E status | executed PRD headers | Executed |
-| 125 status | executed PRD header | Executed |
+| 112/112A-E status | executed PRD headers | Executed |
+| 113 status | executed PRD header | Executed |
 
 This is the deletion half of 110. It is complete.
 
@@ -97,7 +97,7 @@ deletion, and each fence lift.
 
 1. Move PRD 110 to `03-Executed/` as historically superseded.
 2. Add a short closeout header saying deletion scope was executed by
-   124/124A-E + 125, with supporting 106/107 cleanup.
+   112/112A-E + 113, with supporting 106/107 cleanup.
 3. State explicitly that PRD 110 is not the owner of remaining Page Composer
    product work.
 4. Carry these open Roma/Page Composer items forward:

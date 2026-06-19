@@ -1,28 +1,41 @@
 # PRD 120B - Builder Copilot Refactor
 
-Status: EXECUTING - CODE COMPLETE, AUTHENTICATED BROWSER VERIFICATION BLOCKED
+Status: TECHNICAL OPERATOR SLICE COMPLETE - PRODUCT COPILOT/AGENT NOT DELIVERED
 Owner: Product + Architecture (Bob, Roma, San Francisco)
 Priority: P0
 Date: 2026-06-08
-Stage: 02-Executing/120
+Stage: 03-Executed/120
 Type: Sub-PRD from PRD 120
 Ship-gate: PRD 120A1 (model capability + typed provider-error hardening) must be green
-before release. The active execution slice is the compiled-control Operator path; Guide
-work is deferred until Operator proof is green.
+for the technical Operator slice. Product Copilot/agent behavior is not closed by this
+PRD and is tracked by the successor planning PRD.
 
 Execution amendment applied on 2026-06-18:
 
 - The executable P0 is **Operator only**: visible-control contract, deterministic target
   resolution, structured ops, Bob validation/apply/undo, and browser-memory preview.
 - Guide, Advice, free-tier conversion mode, KPI loops, durable/workforce-agent work, and
-  any new routing machinery are deferred until the Operator proof is green.
+  any new routing machinery are not closed by this technical Operator slice.
 - Do not reinterpret this PRD into a general agent platform rebuild. Bob exposes the
   controls; Roma routes/mints grants according to account/tier; San Francisco executes AI
   calls; Tokyo/Tokyo-worker stay storage/R2.
 
+Closeout amendment applied on 2026-06-19:
+
+- 120B closes only the technical Builder Operator slice: visible-control grounding,
+  deterministic target resolution, structured edit ops, Bob browser-memory apply/undo,
+  and the Roma/San Francisco request path needed for scoped AI execution.
+- 120B did not deliver the user-facing product Copilot or a real Builder Agent. It did
+  not deliver Guide, Advice, account/tier/upgrade help, publish help, active-locale help,
+  support workflows, autonomous behavior, or durable workforce agents.
+- Human product testing showed the current Copilot UX is below the product bar. Do not
+  treat repeated browser testing of that UX as proof that 120B delivered product Copilot.
+- The product-agent rebuild is tracked by
+  `Execution_Pipeline_Docs/01-Planning/planning_PRD__Builder_Copilot_Real_Agent_Rebuild.md`.
+
 Parent:
 
-- `Execution_Pipeline_Docs/02-Executing/120/120__PRD__San_Francisco_Agent_Platform_Architecture_Decision.md`
+- `Execution_Pipeline_Docs/03-Executed/120/120__PRD__San_Francisco_Agent_Platform_Architecture_Decision.md`
 
 Related:
 
@@ -63,22 +76,24 @@ and lets the model guess from raw-ish metadata. Execution must wire Copilot to t
 it must not redesign widget state, invent a new schema, or write another agent-platform
 paper before passing the editor tests.
 
-Reality gate: before Clickeen can claim an AI-native Builder, the Copilot must handle the
+Technical gate: before this Operator slice can be called complete, Copilot must handle the
 boring edits a user expects. If it cannot understand "button" in the current Builder
-contract and change a button from blue to green in preview, the Copilot has failed,
+contract and change a button from blue to green in preview, the Operator slice has failed,
 regardless of how correct the broader agent platform is.
 
-That reality gate is necessary, not sufficient. Builder Copilot has one executable P0 job
-and later deferred jobs:
+That technical gate was necessary for the Operator slice, not sufficient for
+product Copilot. Builder Copilot has one executed technical job and separate product-agent
+jobs:
 
 1. **Operator** - execute clear user intent against visible Builder controls. This is the
    only P0 execution scope.
-2. **Guide (deferred)** - explain how the current widget works in Builder: what the panels do, where
+2. **Guide (successor product-agent PRD)** - explain how the current widget works in Builder: what the panels do, where
    controls live, how to add/remove/reorder/configure things, why controls are visible or
    hidden, and how to perform multi-step widget workflows.
-3. **Advice (deferred)** - answer in-domain product questions about
+3. **Advice/account help (successor product-agent PRD)** - answer in-domain product questions about
    the user's widget, grounded in its actual state, ending with an actionable offer.
-   Free-tier conversion behavior is not part of P0.
+   Account, tier, publish, upgrade, active-locale, and conversion behavior are not part of
+   the 120 technical Operator slice.
 
 The Operator job fixes the lowest embarrassing failure: "change button color to blue" must
 be a deterministic Builder edit. The Guide job fixes the larger product failure: Copilot
@@ -91,9 +106,9 @@ Execution is therefore split:
 
 - **120B1 Operator** - grounding, visible-control resolver, deterministic capability
   answers, structured ops, Bob validation/apply/undo, and the earth-test edits.
-- **120B-2 Guide (deferred)** - whole-widget/panel/workflow understanding: panel map, control map,
-  repeatable structures, conditional controls, add/remove/reorder workflows, and
-  explanation-to-op apply where appropriate.
+- **Successor product-agent PRD** - whole-widget/panel/workflow understanding, account
+  and tier context, publish/upgrade/help guidance, and agent behavior beyond direct
+  control edits.
 
 120B1 starts with the concrete code move ratified on 2026-06-18: use the existing
 compiled controls as Copilot's Operator authority, add compiler-owned vocabulary, and
@@ -101,7 +116,7 @@ stop asking San Francisco to infer targets from shredded controls or raw widget 
 120A1 can run in parallel as a provider/model safety ship gate, but it does not block Bob
 from fixing the payload.
 
-The first green bar is not theoretical:
+The technical green bar is not theoretical:
 
 - "What can you edit?" answers from visible Builder controls.
 - "Change the button from blue to green" works or asks the right button clarification.
@@ -385,11 +400,12 @@ Required scenario tracking:
 | `Save it` / `Publish it`                  | Explain that Copilot edits in Builder; Save/Publish use Builder controls.                           |
 | `Translate this widget to French.`        | Explain that translations run from the Translations panel after save; do not rewrite base content.  |
 
-### 3.2.3 Deferred Guide scenarios
+### 3.2.3 Successor product-agent Guide scenarios
 
-After the Operator earth tests are green, Copilot must support whole-widget Builder Guide
-questions. These are not abstract design critiques. They are product-help answers about the
-current widget, panels, controls, and workflows.
+The successor product-agent PRD must support whole-widget Builder Guide questions. These
+are not abstract design critiques and they are not closed by the 120 technical Operator
+slice. They are product-help answers about the current widget, panels, controls, account
+state, and workflows.
 
 Required Guide prompts:
 

@@ -77,7 +77,7 @@ Use this map when deciding which document owns a question:
 | Broad pre-GA cleanup audit                        | `105K__PRD__Pre_GA_Codebase_And_Documentation_Cleanup_Verification.md`              |
 | R2 bucket and widget package cleanup              | `105L__PRD__R2_Bucket_And_Widget_Package_Source_Cleanup.md`                         |
 | Tokyo-worker implementation refactor              | `105M__PRD__Tokyo_Worker_Instance_Runtime_Refactor.md`                              |
-| Withdrawn SEO/GEO page/block strategy note        | `../../01-Planning/122__WITHDRAWN__SEO_GEO_Static_Build_And_Page_Block_Strategy.md` |
+| Withdrawn SEO/GEO page/block strategy note        | `../../01-Planning/planning_PRD__WITHDRAWN__SEO_GEO_Static_Build_And_Page_Block_Strategy.md` |
 
 If two sub-PRDs appear to conflict, the more specific implementation PRD wins only inside its declared scope and only if it still obeys this master PRD. For example, `105M` owns Tokyo-worker artifact/runtime implementation; it does not get to change the instance folder taxonomy.
 

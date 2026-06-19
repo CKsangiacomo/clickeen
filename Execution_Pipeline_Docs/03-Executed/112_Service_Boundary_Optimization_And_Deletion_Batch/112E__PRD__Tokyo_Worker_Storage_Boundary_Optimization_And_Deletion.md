@@ -1,7 +1,7 @@
-# PRD 124E - Tokyo-worker Storage Boundary Optimization And Deletion
+# PRD 112E - Tokyo-worker Storage Boundary Optimization And Deletion
 
 Status: EXECUTED
-Parent: PRD 124
+Parent: PRD 112
 Owner: Tokyo-worker R2 storage boundary
 Date: 2026-06-17
 
@@ -100,11 +100,11 @@ Tokyo-worker does not own:
 - TW-11: active docs now state that `clk.live` serving uses Tokyo serve state for stored artifact delivery, while Roma/system account operations own account policy decisions before publish/unpublish.
 - Boundary rationale: no new serving-policy runtime file was invented. The docs now match the current storage system and service boundaries.
 
-2026-06-17 PRD 125 split:
+2026-06-17 PRD 113 split:
 
 - TW-02, TW-04, TW-05, TW-06, TW-07, and TW-10 require authority/product-contract decisions before code execution.
-- Those findings were split to `Execution_Pipeline_Docs/01-Planning/125__PRD__Tokyo_Worker_Authority_Migration_Decisions.md`.
-- Boundary rationale: PRD 124 is a deletion/optimization batch. It must not fake completion of major ownership migrations by adding local Tokyo-worker machinery.
+- Those findings were split to `Execution_Pipeline_Docs/03-Executed/113_Tokyo_Worker_Authority_Migration_Decisions/113__PRD__Tokyo_Worker_Authority_Migration_Decisions.md`.
+- Boundary rationale: PRD 112 is a deletion/optimization batch. It must not fake completion of major ownership migrations by adding local Tokyo-worker machinery.
 
 ## Completion Gates
 
@@ -112,6 +112,6 @@ Tokyo-worker does not own:
 - Tokyo-worker does not treat corrupt persisted state as absence.
 - Dead routes/bindings/helpers are deleted.
 - TW-02, TW-04, TW-05, TW-06, TW-07, and TW-10 are not claimed complete here;
-  they are split to PRD 125 for authority decisions before implementation.
-- V1-V8 subagent audit is clean for the completed PRD 124E slices before moving
+  they are split to PRD 113 for authority decisions before implementation.
+- V1-V8 subagent audit is clean for the completed PRD 112E slices before moving
   to executed.

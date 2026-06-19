@@ -16,7 +16,7 @@ Execution split:
   Astro block work into real widgets and widget instances.
 - `PRD106C3` through `PRD106C6` define the new Prague-absorbing widgets as
   Widget Shell plus Widget Core deltas.
-- `../../01-Planning/121__PRD__Prague_Migration_From_Astro_Blocks_To_Page_Composer.md`
+- `../../01-Planning/planning_PRD__Prague_Migration_From_Astro_Blocks_To_Page_Composer.md`
   moves Prague pages from Astro block assembly to composed Clickeen page output
   after the widget-instance ports are real.
 - `../../01-Planning/110__PRD__Toxic_Flow_Deletion.md` owns the deletion/fencing
@@ -61,7 +61,7 @@ umbrella is the source of truth for the contract language.
 | Cards Core                                     | `PRD106C4_Cards_Widget.md`                                                           |
 | Big Bang Core                                  | `PRD106C5_BigBang_Widget.md`                                                         |
 | CTA Core                                       | `PRD106C6_CTA_Widget.md`                                                             |
-| Prague route cutover to composed pages         | `../../01-Planning/121__PRD__Prague_Migration_From_Astro_Blocks_To_Page_Composer.md` |
+| Prague route cutover to composed pages         | `../../01-Planning/planning_PRD__Prague_Migration_From_Astro_Blocks_To_Page_Composer.md` |
 | Toxic-flow deletion/fencing                    | `../../01-Planning/110__PRD__Toxic_Flow_Deletion.md`                                 |
 
 ## Series Step Order
@@ -75,7 +75,7 @@ Execute in this order unless Pietro explicitly changes the order.
 5. Execute `PRD106C2_Prague astro blocks audit.md`.
 6. Execute `PRD106C_Prague astro blocks migration to widget instances.md`.
 7. Execute widget Core PRDs one at a time: Split, Cards, Big Bang, CTA.
-8. Execute `../../01-Planning/121__PRD__Prague_Migration_From_Astro_Blocks_To_Page_Composer.md`.
+8. Execute `../../01-Planning/planning_PRD__Prague_Migration_From_Astro_Blocks_To_Page_Composer.md`.
 9. Execute `../../01-Planning/110__PRD__Toxic_Flow_Deletion.md`.
 
 Do not merge steps across PRDs. A PRD may reference another PRD, but it may not

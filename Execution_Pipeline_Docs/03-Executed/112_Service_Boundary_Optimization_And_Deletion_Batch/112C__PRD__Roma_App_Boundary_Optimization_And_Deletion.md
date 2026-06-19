@@ -1,7 +1,7 @@
-# PRD 124C - Roma App Boundary Optimization And Deletion
+# PRD 112C - Roma App Boundary Optimization And Deletion
 
 Status: EXECUTED
-Parent: PRD 124
+Parent: PRD 112
 Owner: Roma current-account app boundary
 Date: 2026-06-17
 
