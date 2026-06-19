@@ -15,6 +15,16 @@ Blocker meanings:
 - 120B = Builder Copilot control-operator proof.
 - 120A-2 = durable/service plane contract.
 
+Execution amendment applied on 2026-06-18:
+
+- 120C remains deferred and must not execute during the Builder Copilot Operator proof.
+- The prior translation-queue premise is false for the current product.
+  Do not add a queue, Tokyo-worker orchestration role, or workforce-agent scaffold to
+  satisfy this planning text.
+- When 120C is reopened, it must start from current runtime truth: Roma owns account/user
+  product orchestration, Tokyo/Tokyo-worker are storage/R2, and San Francisco owns AI
+  execution only.
+
 Parent:
 
 - `Execution_Pipeline_Docs/01-Planning/120__PRD__San_Francisco_Agent_Platform_Architecture_Decision.md`
@@ -25,7 +35,8 @@ Related:
 - `documentation/ai/infrastructure.md`
 - `documentation/ai/agents/gtm.md`
 - `documentation/ai/agents/ux-writer.md`
-- `sanfrancisco/src/instance-translation-queue.ts`
+- `sanfrancisco/src/agents/l10nTranslationCore.ts`
+- `sanfrancisco/src/l10n-account-routes.ts`
 - `tokyo-worker/src/domains/account-translations/operations.ts`
 - `packages/ck-contracts/src/ai.ts`
 
@@ -245,15 +256,16 @@ This PRD does not build the outbound layer.
 
 ## 5. First Reference Agent
 
-SUPERSEDED (D5, ratified 2026-06-09): the reference agent is the **Widget Instance
-Translator re-base**, not UX Writer.
+SUPERSEDED for current execution (2026-06-18): no reference agent is selected for
+execution now. Builder Copilot Operator must go green first. The earlier D5 proposal
+selected **Widget Instance Translator re-base** over UX Writer, but that proposal relied
+on stale translation execution assumptions and must be re-reviewed before 120C executes.
 
 Reason:
 
-- it is the shipped internal agent — production-real, not speculative
-- it already runs the Option C pattern (orchestration in Tokyo-worker, execution
-  through San Francisco via the `INSTANCE_TRANSLATION_JOBS` queue); 120C formalizes
-  and improves what production already proves
+- it is a real product need, not a speculative GTM/UX Writer agent
+- it must be re-grounded before execution because account translation generation is not
+  currently queue-backed product orchestration
 - the D9 regression gate (29-locale overlay fixture) bounds the risk better than any
   greenfield agent could
 - it satisfies the product owner's "better, not worse" bar: the re-base IS the

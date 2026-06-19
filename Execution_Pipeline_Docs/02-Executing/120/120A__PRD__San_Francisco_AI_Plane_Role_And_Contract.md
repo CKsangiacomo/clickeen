@@ -1,15 +1,15 @@
 # PRD 120A - San Francisco AI Plane Role and Contract
 
-Status: PLANNING
+Status: EXECUTING - CODE COMPLETE, AUTHENTICATED BROWSER VERIFICATION BLOCKED
 Owner: Product + Architecture (San Francisco)
 Priority: P0 for 120A1; P1 for 120A-2
 Date: 2026-06-08
-Stage: 01-Planning
+Stage: 02-Executing/120
 Type: Sub-PRD from PRD 120
 
 Parent:
 
-- `Execution_Pipeline_Docs/01-Planning/120__PRD__San_Francisco_Agent_Platform_Architecture_Decision.md`
+- `Execution_Pipeline_Docs/02-Executing/120/120__PRD__San_Francisco_Agent_Platform_Architecture_Decision.md`
 
 Related:
 
@@ -32,7 +32,7 @@ San Francisco is not a chatbot service and not an agent-specific worker. San Fra
 the **single AI control and execution plane** for Clickeen.
 
 Copilot-first correction: the first execution slice of this PRD is a release gate for
-Builder Copilot model/provider safety, not a blocker for Bob's `EditorContract` projection
+Builder Copilot model/provider safety, not a blocker for Bob's compiled-control Operator
 work. 120A1 is successful only when Builder can no longer select or call unsupported model
 shapes and raw provider payloads no longer leak into Copilot. Anything durable,
 service-scoped, autonomous, or workforce-agent specific belongs to 120A-2/120C and must not
@@ -58,6 +58,18 @@ Execution sequencing:
 Execution order: 120B1/120B-2 may start immediately. 120A1 runs in parallel and must be
 green before release. 120A-2 and 120C remain deferred until the shipped Builder Copilot is
 green.
+
+Execution amendment applied on 2026-06-18:
+
+- 120A1 execution is narrowed to the live San Francisco provider-call defect and
+  product-safe typed-error boundary needed for Builder Copilot Operator.
+- Capability metadata and provider-call proof are deploy/build evidence for callable
+  model shapes. They must not become runtime rituals that normal product work depends on.
+- Routing, failover, escalation, conversion mode, durable budgets, and workforce-agent
+  telemetry remain future work unless the Operator slice proves they are required.
+- No 120A work may move product truth into San Francisco or give Tokyo/Tokyo-worker an AI
+  orchestration role. Roma mints account/user grants; Bob owns the open working copy;
+  San Francisco executes AI calls only.
 
 ---
 
@@ -184,10 +196,11 @@ Each allowed model must declare:
 San Francisco must construct provider requests from this registry, not from string-prefix
 heuristics such as `model.startsWith('gpt-5')`.
 
-The registry must be self-verifying. A provider-conformance check must call each declared
-model with its declared parameters and fail loudly when provider behavior no longer
-matches the declared capability. A declared capability that has never passed conformance is
-unverified and must not be picker-eligible.
+The registry must be backed by deploy/build provider-call proof. That proof calls each
+declared picker-eligible model with its declared parameters and fails before release when
+provider behavior no longer matches the declared capability. This is release evidence, not
+a runtime dependency for normal Builder work. A declared capability that has never passed
+that proof is unverified and must not be picker-eligible.
 
 Minimum conformance coverage:
 
@@ -287,20 +300,17 @@ product-boundary-safe output.
 
 - Define San Francisco's role as the single AI plane.
 - For 120A1, add or design model capability metadata needed by Builder Copilot.
-- For 120A1, add provider-conformance checks for picker-eligible Copilot models.
+- For 120A1, add provider-call proof for picker-eligible Copilot models as deploy/build
+  evidence.
 - For 120A1, remove hardcoded model string heuristics from provider request
   construction.
 - For 120A1, define product-safe error envelopes and prevent raw provider JSON from
   reaching Builder.
-- For 120A1, make model picker eligibility depend on provider conformance and policy.
-- For 120A1, ship the routing contract (PR-13/D8): `AgentRoutingPolicy` in the signed
-  policy (turn-class → model within the allowed set, single-step escalation on invalid
-  structured output, declared failover on typed provider errors, every decision
-  recorded in the learning event; pinned user picks exempt from automatic switching).
-- For 120A1, enforce Q6 conversion mode in the plane: the signed policy carries
-  `copilotMode: 'full' | 'conversion'` (derived by Roma at grant mint from tier ∧
-  useful-turn usage); a conversion-mode grant can never obtain a full model
-  execution — the plane returns only the validated conversion template.
+- For 120A1, make model picker eligibility depend on policy plus known callable provider
+  shape. The picker must not offer a model San Francisco cannot call.
+- DEFERRED beyond 120A1: route classes, declared failover, escalation, conversion mode,
+  and durable-agent routing. Do not execute those as part of the Operator proof unless a
+  concrete Operator requirement exposes them.
 - For 120A-2, define the shared execution core contract used by Copilots and workforce
   agents.
 - For 120A-2, separate interactive and durable workload budget concepts.
@@ -332,7 +342,7 @@ product-boundary-safe output.
 - What is the exact model capability schema?
 - Where does that schema live?
 - How is capability distinct from policy in `ai-runtime.matrix.json`?
-- How does each capability profile get conformance-tested?
+- How is each callable provider/model shape proven before deploy?
 - How does the OpenAI provider construct requests without string-prefix heuristics?
 - How are provider errors mapped to product-safe errors?
 - What makes a model picker-eligible for Builder Copilot?
@@ -342,9 +352,9 @@ product-boundary-safe output.
 120A1 execution is complete only when (criteria are lineup-agnostic per PR-2/D1 —
 the gpt-5.2 incident is the motivating example, never the definition of done):
 
-- no model is callable without a fresh passing conformance profile.
+- no model is callable by Builder Copilot unless San Francisco has an explicit provider
+  call shape for it.
 - no provider request parameter is derived from model-id string matching.
-- a model capability declaration cannot merge without a passing conformance check.
 - an unverified model is not picker-eligible.
 - raw provider payloads never reach product surfaces (negative fixture proves it).
 - model picker options cannot select a model shape San Francisco cannot call.

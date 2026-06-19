@@ -1,7 +1,7 @@
 STATUS: REFERENCE — MUST MATCH RUNTIME
 This document is the operational spec for the San Francisco worker: bindings, deploy shape, endpoints, limits, and runbooks.
 Runtime code + deployed Cloudflare bindings are operational truth; any mismatch here is a P0 doc bug and must be updated immediately.
-Last synced to repository runtime: April 30, 2026.
+Last synced to repository runtime: June 18, 2026.
 
 # San Francisco — Infrastructure & Operations
 
@@ -23,7 +23,7 @@ This doc is meant to answer:
   - `sanfrancisco/src/telemetry.ts`
   - `sanfrancisco/src/l10n-routes.ts`
 - Wrangler config: `sanfrancisco/wrangler.toml`
-- Deploy: Cloudflare “Workers → Deploy from Git” (root directory: `sanfrancisco`)
+- Deploy: GitHub Actions `cloud-dev workers deploy`
 
 Naming:
 - Dev worker name defaults to `sanfrancisco-dev` in `sanfrancisco/wrangler.toml`
@@ -42,8 +42,8 @@ Worker vars/secrets:
 - `AI_GRANT_HMAC_SECRET` (secret): shared HMAC secret for Clickeen grant verification, outcome signatures, and Prague string translation request signatures
 - `DEEPSEEK_API_KEY` (secret, optional): required only when an execution reaches the model provider
 - `DEEPSEEK_BASE_URL` (optional): defaults to `https://api.deepseek.com`
-- `DEEPSEEK_MODEL` (optional): defaults to `deepseek-chat`
 - `OPENAI_API_KEY` (secret, optional): required for Paid Standard/Premium tiers and L10n
+- `OPENAI_BASE_URL` (optional): defaults to `https://api.openai.com`
 - `OPENAI_MODEL`: required for Prague strings L10n; no runtime default is allowed
 
 Provider/model policy:
@@ -51,6 +51,7 @@ Provider/model policy:
 - `@clickeen/ck-policy` owns the tier + agent runtime policy matrix.
 - Roma and San Francisco internal services mint signed grants with direct `AgentRuntimePolicy`.
 - San Francisco enforces the signed `modelsByProvider`, `defaultModel`, optional `selectedModel`, token ceiling, turn ceiling, and timeout ceiling.
+- Model picker availability is driven by signed policy plus explicit callable capability data; conformance reports and `proofRef` fields are release evidence only and are not runtime gates.
 - **Prague strings L10n**: local/dev signed tooling route; OpenAI model comes only from required `OPENAI_MODEL`.
 - **Account-widget Instance Translation Agent**: `widget.instance.translator`. The diagnostic agent endpoint remains available, but active product generation currently returns unavailable until San Francisco owns a real async generation endpoint, queue production, and operation state. Tokyo-worker owns only exact translated locale overlay storage.
 
@@ -207,11 +208,11 @@ Actions:
 - Set the secret in Cloudflare Worker settings (dev/prod separately).
 - Ensure every live grant/outcome issuer has the same secret configured for its environment.
 
-### “Missing DEEPSEEK_API_KEY”
-Meaning: the execution reached a code path that requires model access.
+### “AI provider is unavailable.”
+Meaning: execution reached a code path that requires model access, but the selected provider is not configured.
 
 Actions:
-- Set `DEEPSEEK_API_KEY` in the San Francisco environment.
+- Set the required provider API key in the San Francisco environment.
 - Note: many deterministic “clarify/explain/guard” paths work without provider keys.
 
 ## 7) Development

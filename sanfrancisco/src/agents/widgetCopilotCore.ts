@@ -1,11 +1,9 @@
 import type { AIGrant, Env, Usage } from "../types";
 import { HttpError, asString, isRecord } from "../http";
 import { callChatCompletion, type ChatMessage } from "../ai/chat";
-import globalDictionary from "../lexicon/global_dictionary.json";
 import {
   buildCsSystemPrompt,
   finalizeCsOps,
-  resolveCsPrelude,
 } from "./widgetCopilotCsProduct";
 import {
   WIDGET_COPILOT_PROMPT_PROFILE_VERSION,
@@ -35,31 +33,35 @@ type ControlSummary = {
   min?: number;
   max?: number;
   itemIdPath?: string;
+  currentValue?: unknown;
 };
 
 type WidgetCopilotInput = {
   sessionId: string;
-  prompt: string;
+  userMessage: string;
   widgetType: string;
-  currentConfig: Record<string, unknown>;
+  activeLocale: string;
+  snapshotHash: string;
+  turnClass: "resolved_edit" | "multi_op_plan";
+  resolvedTarget?: { path: string; valueType: string; currentValue: unknown };
+  snapshot: {
+    widgetType: string;
+    displayName: string;
+    controls: ControlSummary[];
+  };
   controls: ControlSummary[];
-  widgetPackage: Record<string, unknown>;
 };
 
 type WidgetOp =
   | { op: "set"; path: string; value: unknown }
   | { op: "insert"; path: string; index: number; value: unknown }
+  | { op: "remove"; path: string; itemId: string }
   | { op: "remove"; path: string; index: number }
   | { op: "move"; path: string; from: number; to: number };
 
 type WidgetCopilotResult = {
   message: string;
   ops?: WidgetOp[];
-  cta?: {
-    text: string;
-    action: "signup" | "upgrade" | "learn-more";
-    url?: string;
-  };
   meta?: {
     intent?: "edit" | "explain" | "clarify";
     outcome?: "ops_applied" | "no_ops";
@@ -87,7 +89,7 @@ type CopilotSession = {
 
 const PROMPT_VERSION = "widget.copilot.core.v2@2026-02-11";
 const INVALID_STRUCTURED_EDIT_MESSAGE =
-  'I had trouble generating a structured edit. Please try again, or ask for one specific change (e.g. "translate the content to French").';
+  "Copilot couldn't produce a valid edit for this widget. Nothing was changed.";
 
 type WidgetCopilotRuntime = {
   agentId: "cs.widget.copilot.v1";
@@ -138,14 +140,12 @@ function summarizeOpsForLearning(args: {
 
 function invalidStructuredEditError(
   provider: string,
-  detail?: string,
+  _detail?: string,
 ): HttpError {
   return new HttpError(502, {
     code: "PROVIDER_ERROR",
     provider,
-    message: detail
-      ? `${INVALID_STRUCTURED_EDIT_MESSAGE} ${detail}`
-      : INVALID_STRUCTURED_EDIT_MESSAGE,
+    message: INVALID_STRUCTURED_EDIT_MESSAGE,
   });
 }
 
@@ -157,7 +157,7 @@ function isWidgetOp(value: unknown): value is WidgetOp {
   if (op === "set") return value.value !== undefined;
   if (op === "insert")
     return typeof value.index === "number" && value.value !== undefined;
-  if (op === "remove") return typeof value.index === "number";
+  if (op === "remove") return typeof value.index === "number" || isExactNonEmptyString(value.itemId);
   if (op === "move")
     return typeof value.from === "number" && typeof value.to === "number";
   return false;
@@ -167,7 +167,7 @@ function controlIssue(index: number, field: string, message: string): {
   path: string;
   message: string;
 } {
-  return { path: `input.controls[${index}].${field}`, message };
+  return { path: `input.snapshot.controls[${index}].${field}`, message };
 }
 
 function isExactNonEmptyString(value: unknown): value is string {
@@ -203,7 +203,7 @@ function validateControlSummary(value: unknown, index: number): {
   issue: { path: string; message: string };
 } {
   if (!isRecord(value)) {
-    return { ok: false, issue: { path: `input.controls[${index}]`, message: "control must be an object" } };
+    return { ok: false, issue: { path: `input.snapshot.controls[${index}]`, message: "control must be an object" } };
   }
   if (!isControlPath(value.path)) {
     return { ok: false, issue: controlIssue(index, "path", "path must be an exact dot path without empty or prohibited segments") };
@@ -216,9 +216,9 @@ function validateControlSummary(value: unknown, index: number): {
   if (
     value.options !== undefined &&
     (!Array.isArray(value.options) ||
-      !value.options.every((option) => isRecord(option) && typeof option.label === "string" && typeof option.value === "string"))
+      !value.options.every((option) => isRecord(option) && typeof option.label === "string" && ["string", "number", "boolean"].includes(typeof option.value)))
   ) {
-    return { ok: false, issue: controlIssue(index, "options", "options must be label/value string objects") };
+    return { ok: false, issue: controlIssue(index, "options", "options must be label/value objects") };
   }
   if (value.enumValues !== undefined && (!Array.isArray(value.enumValues) || !value.enumValues.every((entry) => typeof entry === "string"))) {
     return { ok: false, issue: controlIssue(index, "enumValues", "enumValues must be strings") };
@@ -269,35 +269,15 @@ function valueFitsControl(control: ControlSummary, value: unknown): boolean {
   return typeof value === "string";
 }
 
-function getAtPath(data: Record<string, unknown>, path: string): unknown {
-  let current: unknown = data;
-  for (const segment of path.split(".")) {
-    if (!isRecord(current)) return undefined;
-    current = current[segment];
-  }
-  return current;
-}
-
-function pathIndexesExist(data: Record<string, unknown>, path: string): boolean {
-  let current: unknown = data;
-  for (const segment of path.split(".")) {
-    if (/^\d+$/.test(segment)) {
-      if (!Array.isArray(current)) return false;
-      const index = Number(segment);
-      if (index < 0 || index >= current.length) return false;
-      current = current[index];
-      continue;
-    }
-    if (!isRecord(current) && !Array.isArray(current)) return false;
-    current = (current as Record<string, unknown>)[segment];
-  }
-  return true;
+function valueHasItemId(value: unknown, itemIdPath: string): boolean {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+  const itemId = (value as Record<string, unknown>)[itemIdPath];
+  return isExactNonEmptyString(itemId);
 }
 
 function validateModelOpsAgainstControls(
   ops: WidgetOp[] | undefined,
   controls: ControlSummary[],
-  currentConfig: Record<string, unknown>,
   provider: string,
 ): void {
   if (!ops?.length) return;
@@ -309,9 +289,6 @@ function validateModelOpsAgainstControls(
     if (!control) {
       throw invalidStructuredEditError(provider, `Model output op ${index} targets a path outside editable controls.`);
     }
-    if (!pathIndexesExist(currentConfig, op.path)) {
-      throw invalidStructuredEditError(provider, `Model output op ${index} targets an index outside current config.`);
-    }
     if (op.op === "set") {
       if (!valueFitsControl(control, op.value)) {
         throw invalidStructuredEditError(provider, `Model output op ${index} has invalid value for ${op.path}.`);
@@ -321,7 +298,7 @@ function validateModelOpsAgainstControls(
     if (control.kind !== "array") {
       throw invalidStructuredEditError(provider, `Model output op ${index} uses an array operation on a non-array control.`);
     }
-    const currentValue = getAtPath(currentConfig, op.path);
+    const currentValue = control.currentValue;
     if (!Array.isArray(currentValue)) {
       throw invalidStructuredEditError(provider, `Model output op ${index} targets a non-array value.`);
     }
@@ -331,7 +308,26 @@ function validateModelOpsAgainstControls(
     if (op.op === "insert" && op.index > currentValue.length) {
       throw invalidStructuredEditError(provider, `Model output op ${index} insert index is out of range.`);
     }
-    if (op.op === "remove" && (!Number.isInteger(op.index) || op.index < 0)) {
+    if (op.op === "insert" && control.itemIdPath && !valueHasItemId(op.value, control.itemIdPath)) {
+      throw invalidStructuredEditError(provider, `Model output op ${index} inserted item is missing itemId for ${op.path}.`);
+    }
+    if (op.op === "remove" && control.itemIdPath) {
+      if (!("itemId" in op) || !isExactNonEmptyString(op.itemId)) {
+        throw invalidStructuredEditError(provider, `Model output op ${index} must remove by itemId for ${op.path}.`);
+      }
+      const itemIndex = currentValue.findIndex((item) => {
+        if (!item || typeof item !== "object" || Array.isArray(item)) return false;
+        return (item as Record<string, unknown>)[control.itemIdPath as string] === op.itemId;
+      });
+      if (itemIndex < 0) {
+        throw invalidStructuredEditError(provider, `Model output op ${index} remove itemId is not present in ${op.path}.`);
+      }
+      continue;
+    }
+    if (op.op === "remove" && ("itemId" in op)) {
+      throw invalidStructuredEditError(provider, `Model output op ${index} uses itemId on an array without item identity.`);
+    }
+    if (op.op === "remove" && (!("index" in op) || !Number.isInteger(op.index) || op.index < 0)) {
       throw invalidStructuredEditError(provider, `Model output op ${index} has invalid remove index.`);
     }
     if (op.op === "remove" && op.index >= currentValue.length) {
@@ -354,41 +350,58 @@ function parseWidgetCopilotInput(input: unknown): WidgetCopilotInput {
       issues: [{ path: "input", message: "Expected an object" }],
     });
   const sessionId = (asString(input.sessionId) ?? "").trim();
-  const prompt = (asString(input.prompt) ?? "").trim();
+  const userMessage = (asString(input.userMessage) ?? "").trim();
   const widgetType = (asString(input.widgetType) ?? "").trim();
-  const currentConfig = isRecord(input.currentConfig)
-    ? input.currentConfig
-    : null;
-  const controls = Array.isArray(input.controls) ? input.controls : null;
-  const widgetPackage = isRecord(input.widgetPackage)
-    ? input.widgetPackage
-    : null;
-
+  const activeLocale = (asString(input.activeLocale) ?? "").trim();
+  const snapshotHash = (asString(input.snapshotHash) ?? "").trim();
+  const turnClass = (asString(input.turnClass) ?? "").trim();
+  const snapshot = isRecord(input.snapshot) ? input.snapshot : null;
+  const controls = snapshot && Array.isArray(snapshot.controls) ? snapshot.controls : null;
+  const resolvedTarget = isRecord(input.resolvedTarget)
+    ? {
+        path: (asString(input.resolvedTarget.path) ?? "").trim(),
+        valueType: (asString(input.resolvedTarget.valueType) ?? "").trim(),
+        currentValue: input.resolvedTarget.currentValue,
+      }
+    : undefined;
   const issues: Array<{ path: string; message: string }> = [];
   if (!sessionId)
     issues.push({ path: "input.sessionId", message: "Missing required value" });
-  if (!prompt)
-    issues.push({ path: "input.prompt", message: "Missing required value" });
+  if (!userMessage)
+    issues.push({ path: "input.userMessage", message: "Missing required value" });
   if (!widgetType)
     issues.push({
       path: "input.widgetType",
       message: "Missing required value",
     });
-  if (!currentConfig)
+  if (!activeLocale)
     issues.push({
-      path: "input.currentConfig",
-      message: "currentConfig must be an object",
+      path: "input.activeLocale",
+      message: "Missing required value",
+    });
+  if (!snapshotHash)
+    issues.push({
+      path: "input.snapshotHash",
+      message: "Missing required value",
+    });
+  if (turnClass !== "resolved_edit" && turnClass !== "multi_op_plan")
+    issues.push({
+      path: "input.turnClass",
+      message: "turnClass must be resolved_edit or multi_op_plan",
+    });
+  if (!snapshot)
+    issues.push({
+      path: "input.snapshot",
+      message: "snapshot must be an object",
     });
   if (!controls)
     issues.push({
-      path: "input.controls",
-      message: "controls must be an array",
+      path: "input.snapshot.controls",
+      message: "snapshot.controls must be an array",
     });
-  if (!widgetPackage)
-    issues.push({
-      path: "input.widgetPackage",
-      message: "widgetPackage must be an object",
-    });
+  if (turnClass === "resolved_edit" && (!resolvedTarget?.path || !resolvedTarget.valueType)) {
+    issues.push({ path: "input.resolvedTarget", message: "resolvedTarget is required for resolved_edit" });
+  }
   if (issues.length)
     throw new HttpError(400, {
       code: "BAD_REQUEST",
@@ -409,125 +422,15 @@ function parseWidgetCopilotInput(input: unknown): WidgetCopilotInput {
 
   return {
     sessionId,
-    prompt,
+    userMessage,
     widgetType,
-    currentConfig: currentConfig as Record<string, unknown>,
+    activeLocale,
+    snapshotHash,
+    turnClass: turnClass as "resolved_edit" | "multi_op_plan",
+    ...(resolvedTarget ? { resolvedTarget } : {}),
+    snapshot: snapshot as WidgetCopilotInput["snapshot"],
     controls: controls as ControlSummary[],
-    widgetPackage: widgetPackage as Record<string, unknown>,
   };
-}
-
-function normalizeToken(input: string): string {
-  return input
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, " ")
-    .trim();
-}
-
-function bestControlMatch(
-  prompt: string,
-  controls: ControlSummary[],
-): ControlSummary | null {
-  const p = normalizeToken(prompt);
-  if (!p) return null;
-  const pTokens = new Set(p.split(" ").filter(Boolean));
-  if (pTokens.size === 0) return null;
-
-  let best: { score: number; control: ControlSummary } | null = null;
-  for (const c of controls) {
-    const label = typeof c.label === "string" ? c.label : "";
-    const path = typeof c.path === "string" ? c.path : "";
-    const groupLabel = typeof c.groupLabel === "string" ? c.groupLabel : "";
-    const hay = normalizeToken(
-      [label, path, groupLabel].filter(Boolean).join(" "),
-    );
-    if (!hay) continue;
-    const hTokens = hay.split(" ").filter(Boolean);
-    if (hTokens.length === 0) continue;
-
-    let score = 0;
-    for (const t of hTokens) {
-      if (pTokens.has(t)) score += 1;
-    }
-    if (label && p.includes(normalizeToken(label))) score += 3;
-    if (path && p.includes(normalizeToken(path))) score += 2;
-    if (score <= 0) continue;
-
-    if (!best || score > best.score) best = { score, control: c };
-  }
-
-  if (!best || best.score < 2) return null;
-  return best.control;
-}
-
-function explainMessage(input: WidgetCopilotInput): string {
-  const s = normalizeToken(input.prompt);
-
-  if (
-    /\b(what can you do|what can i do|how do i use|how does this work)\b/i.test(
-      input.prompt,
-    )
-  ) {
-    return (
-      "I can help you customize this widget by changing the settings that are available in the editable controls. " +
-      "Ask for one small change at a time (title, colors, layout, fonts, or content like questions/answers)."
-    );
-  }
-
-  if (s.includes("accordion")) {
-    return (
-      "An accordion shows each item as a collapsible row. Usually you click the row title to expand its content. " +
-      "If you enable multi-open, multiple rows can stay expanded at the same time."
-    );
-  }
-
-  if (
-    /\bmulti[-\s]*open\b/i.test(input.prompt) ||
-    s.includes("multi open") ||
-    s.includes("multiopen")
-  ) {
-    return "“Multi-open” controls whether multiple accordion rows can be expanded at once (instead of only one at a time).";
-  }
-
-  if (
-    /\bexpand[-\s]*all\b/i.test(input.prompt) ||
-    s.includes("expand all") ||
-    s.includes("expandall")
-  ) {
-    return "“Expand all” controls whether all accordion rows start expanded.";
-  }
-
-  if (
-    /\bexpand[-\s]*first\b/i.test(input.prompt) ||
-    s.includes("expand first") ||
-    s.includes("expandfirst")
-  ) {
-    return "“Expand first” controls whether the first accordion row starts expanded when the widget loads.";
-  }
-
-  const matched = bestControlMatch(input.prompt, input.controls);
-  if (matched) {
-    const label = matched.label?.trim() || matched.path;
-    const where = matched.groupLabel?.trim() || matched.panelId || "the editor";
-    const kind = matched.kind ? ` (${matched.kind})` : "";
-    if (
-      matched.kind === "enum" &&
-      Array.isArray(matched.enumValues) &&
-      matched.enumValues.length > 0
-    ) {
-      const values = matched.enumValues.slice(0, 12).join(", ");
-      return `“${label}”${kind} is an editable setting in ${where}. Allowed values include: ${values}. Tell me what you want it set to and I’ll change it.`;
-    }
-    if (matched.kind === "boolean") {
-      return `“${label}”${kind} is a toggle in ${where}. Tell me if you want it on or off and I’ll update it.`;
-    }
-    return `“${label}”${kind} is an editable setting in ${where}. Tell me what you want and I’ll change it.`;
-  }
-
-  return (
-    "I can explain specific settings if you mention them by name (like “multi-open”, “expand all”, or “show title”). " +
-    "Or tell me what you want to change and I’ll apply it."
-  );
 }
 
 async function getSession(
@@ -605,7 +508,7 @@ export async function executeWidgetCopilotWithRuntime(
       }),
       ...(extras ?? {}),
     });
-  const languageInfo = resolveConversationLanguage(session, input.prompt);
+  const languageInfo = resolveConversationLanguage(session, input.userMessage);
   const conversationLanguage = languageInfo.language || "en";
   if (
     !session.conversationLanguage ||
@@ -616,7 +519,7 @@ export async function executeWidgetCopilotWithRuntime(
     session.languageConfidence = languageInfo.confidence;
   }
 
-  const cfError = looksLikeCloudflareErrorPage(input.prompt);
+  const cfError = looksLikeCloudflareErrorPage(input.userMessage);
   if (cfError) {
     session.lastActiveAtMs = Date.now();
     const msg =
@@ -625,7 +528,7 @@ export async function executeWidgetCopilotWithRuntime(
 
     session.turns = [
       ...session.turns,
-      { role: "user" as const, content: input.prompt },
+      { role: "user" as const, content: input.userMessage },
       { role: "assistant" as const, content: msg },
     ].slice(-10) as CopilotSession["turns"];
     await putSession(env, session, runtime.sessionKeyPrefix);
@@ -646,48 +549,6 @@ export async function executeWidgetCopilotWithRuntime(
         latencyMs: 0,
       },
     };
-  }
-
-  const returnLocalMessage = async (args: {
-    message: string;
-    usageModel: string;
-    intent: NonNullable<WidgetCopilotResult["meta"]>["intent"];
-    cta?: WidgetCopilotResult["cta"];
-    language?: string;
-  }) => {
-    await putSession(env, session, runtime.sessionKeyPrefix);
-    return {
-      result: {
-        message: args.message,
-        ...(args.cta ? { cta: args.cta } : {}),
-        meta: baseMeta(args.intent, "no_ops", {
-          language: args.language ?? conversationLanguage,
-          languageConfidence: session.languageConfidence,
-        }),
-      },
-      usage: {
-        provider: "local",
-        model: args.usageModel,
-        promptTokens: 0,
-        completionTokens: 0,
-        latencyMs: 0,
-      },
-    };
-  };
-
-  const prelude = resolveCsPrelude({
-    conversationLanguage,
-    session,
-    input,
-    explainMessage: () => explainMessage(input),
-    dict: globalDictionary,
-  });
-  if (prelude) {
-    return returnLocalMessage({
-      message: prelude.message,
-      usageModel: prelude.usageModel,
-      intent: prelude.intent,
-    });
   }
 
   const user = buildCsPromptPayload(input);
@@ -734,34 +595,19 @@ export async function executeWidgetCopilotWithRuntime(
       lastUsage.provider,
       "Model output is missing a message.",
     );
-  validateModelOpsAgainstControls(ops, input.controls, input.currentConfig, lastUsage.provider);
+  validateModelOpsAgainstControls(ops, input.controls, lastUsage.provider);
 
   const latencyMs = Date.now() - overallStartedAt;
 
-  const ctaRaw = parsed.cta;
-  let cta: WidgetCopilotResult["cta"];
-  if (isRecord(ctaRaw)) {
-    const text = (asString(ctaRaw.text) ?? "").trim();
-    const action = (asString(ctaRaw.action) ?? "").trim();
-    const url = (asString(ctaRaw.url) ?? "").trim();
-    if (
-      text &&
-      (action === "signup" || action === "upgrade" || action === "learn-more")
-    ) {
-      cta = { text, action, ...(url ? { url } : {}) };
-    }
-  }
-
   let finalMessage = message;
   let finalOps = ops && ops.length ? ops : undefined;
-  let finalCta: WidgetCopilotResult["cta"] | undefined = cta;
   let finalMeta: WidgetCopilotResult["meta"] = metaWithOps(
     finalOps ? "edit" : "clarify",
     finalOps ? "ops_applied" : "no_ops",
     finalOps,
   );
   const finalizedCs = finalizeCsOps({
-    prompt: input.prompt,
+    prompt: input.userMessage,
     forbidInternalControlDumpPromptLine:
       runtime.forbidInternalControlDumpPromptLine,
     message: finalMessage,
@@ -773,15 +619,11 @@ export async function executeWidgetCopilotWithRuntime(
     finalMeta = metaWithOps("clarify", "no_ops", undefined);
   }
 
-  if (finalOps && finalOps.length) {
-    finalMeta = metaWithOps("edit", "ops_applied", finalOps);
-  } else {
-    finalMeta = metaWithOps(
-      "clarify",
-      finalMeta?.outcome ?? "no_ops",
-      undefined,
-    );
+  if (!finalOps || finalOps.length === 0) {
+    throw invalidStructuredEditError(lastUsage.provider);
   }
+
+  finalMeta = metaWithOps("edit", "ops_applied", finalOps);
 
   const hasEdit = Boolean(finalOps && finalOps.length > 0);
   session.lastActiveAtMs = Date.now();
@@ -790,7 +632,7 @@ export async function executeWidgetCopilotWithRuntime(
     : session.successfulEdits;
   session.turns = [
     ...session.turns,
-    { role: "user" as const, content: input.prompt },
+    { role: "user" as const, content: input.userMessage },
     { role: "assistant" as const, content: finalMessage },
   ].slice(-10) as CopilotSession["turns"];
   await putSession(env, session, runtime.sessionKeyPrefix);
@@ -798,7 +640,6 @@ export async function executeWidgetCopilotWithRuntime(
   const result: WidgetCopilotResult = {
     message: finalMessage,
     ...(finalOps && finalOps.length ? { ops: finalOps } : {}),
-    ...(finalCta ? { cta: finalCta } : {}),
     meta: finalMeta,
   };
 

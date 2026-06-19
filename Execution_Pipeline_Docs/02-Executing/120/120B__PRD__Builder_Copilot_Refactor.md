@@ -1,18 +1,28 @@
 # PRD 120B - Builder Copilot Refactor
 
-Status: PLANNING
+Status: EXECUTING - CODE COMPLETE, AUTHENTICATED BROWSER VERIFICATION BLOCKED
 Owner: Product + Architecture (Bob, Roma, San Francisco)
 Priority: P0
 Date: 2026-06-08
-Stage: 01-Planning
+Stage: 02-Executing/120
 Type: Sub-PRD from PRD 120
 Ship-gate: PRD 120A1 (model capability + typed provider-error hardening) must be green
-before release. The `EditorContract` projection and deterministic Builder Guide work are
-not blocked by 120A1.
+before release. The active execution slice is the compiled-control Operator path; Guide
+work is deferred until Operator proof is green.
+
+Execution amendment applied on 2026-06-18:
+
+- The executable P0 is **Operator only**: visible-control contract, deterministic target
+  resolution, structured ops, Bob validation/apply/undo, and browser-memory preview.
+- Guide, Advice, free-tier conversion mode, KPI loops, durable/workforce-agent work, and
+  any new routing machinery are deferred until the Operator proof is green.
+- Do not reinterpret this PRD into a general agent platform rebuild. Bob exposes the
+  controls; Roma routes/mints grants according to account/tier; San Francisco executes AI
+  calls; Tokyo/Tokyo-worker stay storage/R2.
 
 Parent:
 
-- `Execution_Pipeline_Docs/01-Planning/120__PRD__San_Francisco_Agent_Platform_Architecture_Decision.md`
+- `Execution_Pipeline_Docs/02-Executing/120/120__PRD__San_Francisco_Agent_Platform_Architecture_Decision.md`
 
 Related:
 
@@ -58,17 +68,17 @@ boring edits a user expects. If it cannot understand "button" in the current Bui
 contract and change a button from blue to green in preview, the Copilot has failed,
 regardless of how correct the broader agent platform is.
 
-That reality gate is necessary, not sufficient. Builder Copilot has two concrete product
-jobs:
+That reality gate is necessary, not sufficient. Builder Copilot has one executable P0 job
+and later deferred jobs:
 
-1. **Operator** - execute clear user intent against visible Builder controls.
-2. **Guide** - explain how the current widget works in Builder: what the panels do, where
+1. **Operator** - execute clear user intent against visible Builder controls. This is the
+   only P0 execution scope.
+2. **Guide (deferred)** - explain how the current widget works in Builder: what the panels do, where
    controls live, how to add/remove/reorder/configure things, why controls are visible or
    hidden, and how to perform multi-step widget workflows.
-3. **Advice** (added Q3 round 5, 2026-06-09) - answer in-domain product questions about
+3. **Advice (deferred)** - answer in-domain product questions about
    the user's widget, grounded in its actual state, ending with an actionable offer.
-   Free-tier behavior follows Q6: one useful turn (any capability), then the conversion
-   template (grounded encouragement + entitlement-matched upgrade recommendation).
+   Free-tier conversion behavior is not part of P0.
 
 The Operator job fixes the lowest embarrassing failure: "change button color to blue" must
 be a deterministic Builder edit. The Guide job fixes the larger product failure: Copilot
@@ -81,14 +91,15 @@ Execution is therefore split:
 
 - **120B1 Operator** - grounding, visible-control resolver, deterministic capability
   answers, structured ops, Bob validation/apply/undo, and the earth-test edits.
-- **120B-2 Guide** - whole-widget/panel/workflow understanding: panel map, control map,
+- **120B-2 Guide (deferred)** - whole-widget/panel/workflow understanding: panel map, control map,
   repeatable structures, conditional controls, add/remove/reorder workflows, and
   explanation-to-op apply where appropriate.
 
-120B1 and 120B-2 both start with the same concrete code move: project the existing
-`EditorContract` into Copilot instead of flattening it into scraps. 120A1 can run in
-parallel as a provider/model safety ship gate, but it does not block Bob from fixing the
-payload.
+120B1 starts with the concrete code move ratified on 2026-06-18: use the existing
+compiled controls as Copilot's Operator authority, add compiler-owned vocabulary, and
+stop asking San Francisco to infer targets from shredded controls or raw widget source.
+120A1 can run in parallel as a provider/model safety ship gate, but it does not block Bob
+from fixing the payload.
 
 The first green bar is not theoretical:
 
@@ -149,7 +160,7 @@ This exposes several failures:
   "button", "CTA", "title", "background", "card", "stage", or "share" to the actual
   Builder controls and paths available in the open widget
 
-Current code defect, named:
+Original code defect, named:
 
 - `bob/lib/compiler/editor-contract.ts` already models the editor as a structured
   `EditorContract` tree: panels, clusters, shared nodes, field nodes, `showIf`, and field
@@ -178,9 +189,9 @@ controls before any model-backed edit plan is accepted.
 
 ## 3. Target Behavior
 
-### 3.0 Two Copilot capabilities
+### 3.0 Operator first; Guide later
 
-Builder Copilot must support two capabilities without mixing them:
+Builder Copilot must eventually support two capabilities without mixing them:
 
 - **Control operation:** user gives a clear edit request; Copilot resolves it to current
   visible controls and returns validated ops.
@@ -188,7 +199,7 @@ Builder Copilot must support two capabilities without mixing them:
   answers from the whole current widget contract and current state, using panel/control
   names the user sees.
 
-The second capability depends on the first. Guide answers are only useful if Copilot can
+Only Control operation is P0 execution scope. The second capability depends on the first. Guide answers are only useful if Copilot can
 turn direct "do it" follow-ups into exact Builder ops. Otherwise the Guide becomes another
 chat panel that explains things but cannot help the user finish.
 
@@ -198,7 +209,7 @@ it whole-widget product understanding. The right input is not "the whole codebas
 right input is a shaped Builder snapshot that includes the whole current widget capability
 map.
 
-Guide capability requires whole-widget context, not only the single control the user may
+Deferred Guide capability requires whole-widget context, not only the single control the user may
 edit:
 
 - panel map: Content, Layout, Appearance, Typography, Settings, Translations, and which
@@ -325,16 +336,12 @@ The execution PRD must cover these Builder Copilot intents first:
 - add/remove/reorder repeatable Core items where the compiled contract explicitly exposes
   that structure
 - explain why a requested edit cannot be performed
-- answer in-domain product questions about the user's widget (`advice`, Q3 round 5:
-  grounded in the widget snapshot, ending with an actionable offer — "what do you
-  think of my widget?", "what's the best color for this button?")
+- answer deterministic no-control responses when the request cannot land on a visible
+  Builder control
 
-Only **out-of-domain** requests (meta-chat, off-product asks) fail with the
-product-safe canned redirect; in-domain questions without an edit target are
-`advice`, not failures. (Earlier drafts of this section said all out-of-taxonomy
-requests must fail — superseded by Q3 round 5, 2026-06-09.) On free accounts, the
-Q6 conversion model applies after the useful-turn quota (see the authoritative
-execution contract). No request may guess or write private paths.
+Only requests that resolve to visible Builder controls become edit turns in P0. Requests
+without an edit target receive deterministic product-safe copy without a model call.
+Advice and conversion mode are deferred. No request may guess or write private paths.
 
 Authoritative execution contract: `120B1__EXEC__Builder_Copilot_Operator.md` (where
 this PRD and the EXEC spec differ, the EXEC spec governs).
@@ -378,7 +385,7 @@ Required scenario tracking:
 | `Save it` / `Publish it`                  | Explain that Copilot edits in Builder; Save/Publish use Builder controls.                           |
 | `Translate this widget to French.`        | Explain that translations run from the Translations panel after save; do not rewrite base content.  |
 
-### 3.2.3 Guide scenarios
+### 3.2.3 Deferred Guide scenarios
 
 After the Operator earth tests are green, Copilot must support whole-widget Builder Guide
 questions. These are not abstract design critiques. They are product-help answers about the
@@ -456,23 +463,24 @@ Required substrate:
 
 The first slice is a focused refactor, not a platform project:
 
-1. **Bob compiler projection** - add a structured `builderContract` / `editorContract`
-   projection to `CompiledWidget` from the existing `EditorContract` tree. The projection
-   must include panels, clusters/groups, fields, shared Shell nodes, labels, paths, types,
-   options/enums, `kind`, `showIf` dependencies, repeatable/template metadata, and the
-   current value/visibility state needed by Copilot.
-2. **Bob Copilot payload** - `CopilotPane` sends the structured contract snapshot as the
-   Copilot authority. A flat `controls[]` may remain only as an apply allowlist/outcome
-   metadata helper.
+1. **Bob compiled-control snapshot** - for the Operator slice, use existing
+   `CompiledWidget.controls` as the Builder authority. The Bob compiler emits Copilot
+   aliases, ambiguity groups, and choice labels on those controls. Bob filters by `showIf`
+   against the current browser-memory instance state and includes current values in the
+   snapshot.
+2. **Bob Copilot payload** - `CopilotPane` sends the typed Builder envelope with the
+   visible compiled-control snapshot as the Copilot authority. A flat `controls[]` may
+   remain only as an apply allowlist/outcome metadata helper.
 3. **Roma payload validation** - the account Copilot route validates that the structured
    snapshot exists and is shaped correctly before calling San Francisco.
-4. **San Francisco contract input** - `widgetCopilotCore` accepts the structured contract
-   and uses it for deterministic Guide answers and target resolution.
+4. **San Francisco contract input** - `widgetCopilotCore` accepts the scoped Builder
+   envelope after Bob has grounded the target; San Francisco does not re-derive Builder
+   meaning from widget source.
 5. **Stop prompt shredding** - `csPromptPayload` must stop using keyword-ranked control
    fragments and raw `widget.html` / `widget.css` / `widget.client.js` snippets as the
    primary Builder guidance payload.
-6. **Deterministic Guide answers** - "what can you edit?", "what do I do in the panels?",
-   and "where is X?" answer from the structured contract without a model call.
+6. **Deterministic Operator answers** - capability, save/publish, translation, and
+   no-control responses are rendered by Bob without a model call.
 7. **Deterministic Operator resolver** - ambiguous edit targets ask clarification before
    model planning; the model may help with values only after the target is grounded.
 8. **Bob apply/undo/conflict safety** - ops still apply through Bob validation; stale
@@ -610,10 +618,9 @@ when policy and model capability allow it.
 - Fix Builder Copilot's user-facing runtime behavior.
 - Separate Copilot behavior from future workforce-agent behavior.
 - Use compiled Builder controls as the source of edit capability.
-- Project the existing `EditorContract` tree into Copilot's turn payload instead of
-  creating a parallel Guide schema.
-- Add the projected contract to `CompiledWidget` / compiler output so Bob does not
-  reconstruct Guide context from flat controls.
+- Use existing compiled controls as Copilot's Operator authority, with compiler-emitted
+  vocabulary and ambiguity groups.
+- Keep Guide/whole-widget projection work out of this Operator slice.
 - Remove raw widget source padding and keyword-prefiltered controls as the primary
   Builder guidance payload.
 - Build the visible-control vocabulary map that lets Copilot understand user words like
@@ -621,8 +628,8 @@ when policy and model capability allow it.
 - Build the deterministic resolver that maps natural-language user phrases to visible
   Builder controls before model planning.
 - Add deterministic answer for "what can you edit?"
-- Add 120B-2 whole-widget Guide answers for "how do I do X?", "where is X?", "what do I
-  do in the panels?", and "why is X missing?"
+- Defer 120B-2 whole-widget Guide answers for "how do I do X?", "where is X?", "what do I
+  do in the panels?", and "why is X missing?" until Operator proof is green.
 - Validate structured ops before applying.
 - Map AI/provider failures to product-safe messages.
 - Remove `role`-flag flattening from Copilot core where EB-007 requires it.
@@ -641,8 +648,9 @@ when policy and model capability allow it.
 - External outbound tool/MCP layer.
 - Any direct San Francisco write to account instance persistence.
 - Replacing Builder controls.
-- Building a second whole-widget Guide schema parallel to `EditorContract`.
-- Blocking the Bob `EditorContract` projection on 120A1 model/provider work.
+- Building a second whole-widget Guide schema.
+- Treating the earlier `EditorContract` projection idea as an active closure gate for
+  this Operator slice.
 - Rebuilding widget schema or adding per-widget prompt glue to compensate for missing
   grounding.
 - Letting the model choose edit targets from raw metadata without deterministic visible
@@ -674,15 +682,13 @@ This PRD is execution-ready only when the execution spec can answer:
 - How does locale/base-authoring behavior stay bounded?
 - Which fixture/eval scenarios prove Copilot behavior for each shipped widget?
 - Which grounded vocabulary entries map common user words to current controls?
-- Which panels, groups, controls, repeatable structures, and workflows does Guide expose
-  for each shipped widget?
-- How are hidden/disabled control dependencies represented?
-- How is the structured panel/control/condition/repeatable map projected from
-  `EditorContract` into the Copilot turn payload?
+- Which visible compiled controls, current values, aliases, and ambiguity groups are
+  included in the Operator snapshot for each shipped widget?
+- How are hidden/disabled control dependencies excluded from the Operator action surface?
 - Which flat `controls[]` usage remains only as an apply allowlist or outcome metadata
   helper?
 - Which raw source snippets and keyword-prefilter paths are removed from normal Builder
-  Guide payloads?
+  Operator payloads?
 - How does a Guide answer become validated Builder ops when the user says "do it"?
 
 Execution is complete only when:
@@ -695,17 +701,13 @@ Execution is complete only when:
   correct ambiguity handling when Header CTA and Action button both exist.
 - The model is never the first system asked to decide what "button," "title,"
   "background," "card," "stage," "pod," or "share" means.
-- "What do I do in the panels?" returns a useful whole-widget explanation grounded in the
-  current widget's actual panels, groups, and controls.
-- The Copilot turn payload carries the structured panel/control/condition/repeatable map
-  projected from `EditorContract`; a flat, keyword-ranked `controls[]` is no longer the
-  whole-widget authority.
-- Normal Builder Guide payloads no longer depend on raw `widget.html`, `widget.css`, or
+- The Copilot turn payload carries the scoped visible-control Operator snapshot; a flat,
+  keyword-ranked `controls[]` is no longer the model's target authority.
+- Normal Builder Operator payloads do not depend on raw `widget.html`, `widget.css`, or
   `widget.client.js` source snippets.
-- "What can you edit?", "What do I do in the panels?", and "Where is X?" do not call the
-  model.
-- "How do I add/remove/reorder X?" answers with the correct current-widget workflow and can
-  apply validated ops when enough information is present.
+- "What can you edit?" does not call the model.
+- Guide prompts such as "What do I do in the panels?", "Where is X?", and "How do I
+  add/remove/reorder X?" remain deferred until the Operator slice is green.
 - Repeatable actions use stable item identity where available, not only array indexes.
 - "Why don't I see X?" explains the actual conditional dependency or states that the
   current widget does not support it.

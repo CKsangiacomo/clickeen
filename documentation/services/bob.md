@@ -179,6 +179,50 @@ Common primitives include:
 Controls emit edit operations. The edit engine applies those operations to the
 current in-memory instance state.
 
+## Builder Copilot
+
+Builder Copilot uses Bob's compiled controls as the editable surface. The Bob
+compiler emits Copilot vocabulary on each compiled control. Bob builds a control
+snapshot from the current compiled widget and browser-memory instance state,
+including current values and `showIf` visibility.
+
+Bob handles deterministic Copilot turns locally before any network call:
+
+- capability questions such as "what can you edit?"
+- save/publish explanations
+- translation explanations
+- simple ambiguity prompts for visible controls
+- out-of-domain redirects back to widget editing
+
+For edit-looking prompts, Bob scopes the model-backed payload to visible controls
+that match the current compiler-owned Builder vocabulary. If no visible control
+matches, Bob answers locally instead of asking San Francisco to guess a product
+target. Widget package source is not sent as Copilot prompt context.
+
+When a prompt maps to more than one visible control, Bob asks a clarification
+question and renders the compiler-owned choice labels as buttons. The pending
+choice lives only in the Copilot browser-memory thread. Clicking a choice, or
+typing a unique choice label/token, binds the next turn to that selected
+visible control before any San Francisco request is made. A non-matching answer
+fails visibly instead of being reinterpreted as a hidden target.
+
+Model-backed turns still route through Roma to San Francisco, but San Francisco
+receives an explicit Builder envelope: `instanceId`, `widgetType`,
+`activeLocale`, `snapshotHash`, `turnClass`, optional `resolvedTarget`, the
+scoped current control snapshot, `userMessage`, and `sessionId`. Bob remains the
+owner of the open working copy and visible Builder-control meaning.
+
+When San Francisco returns valid edit ops, Bob applies them immediately to the
+browser-memory working copy and preview through the same in-memory op path used
+by manual controls. Bob stores one inverse op set for a one-turn Undo. This does
+not save, publish, or mutate account persistence; the user still saves through
+the normal Roma save path.
+
+Repeatable controls preserve item identity. If a compiled array control exposes
+`itemIdPath`, Copilot insert values must include that id field and remove ops
+must name `itemId`; index-based remove is accepted only for array controls with
+no item identity.
+
 ## Preview
 
 Bob preview loads the widget runtime in a sandboxed iframe and streams working

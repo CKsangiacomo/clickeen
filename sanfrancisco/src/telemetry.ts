@@ -3,7 +3,6 @@ import { verifyBodySignature } from './signatures';
 import type { CopilotLearningMetadata, Env, InteractionEvent, OutcomeAttachRequest } from './types';
 
 const OUTCOME_EVENTS = new Set([
-  'cta_clicked',
   'edit_applied',
   'edit_rejected',
   'edit_undone',
@@ -20,10 +19,21 @@ function toIsoDay(ms: number): string {
 }
 
 function promptHasUrl(input: unknown): boolean {
-  if (!isRecord(input)) return false;
-  const prompt = asTrimmedString(input.prompt);
+  const prompt = resolveCopilotPrompt(input);
   if (!prompt) return false;
   return /\bhttps?:\/\/[^\s<>"')]+/i.test(prompt) || /\b([a-z0-9-]+\.)+[a-z]{2,}(\/[^\s<>"')]+)?\b/i.test(prompt);
+}
+
+function resolveCopilotPrompt(input: unknown): string | null {
+  if (!isRecord(input)) return null;
+  return asTrimmedString((input as any).userMessage) ?? asTrimmedString((input as any).prompt);
+}
+
+function resolveCopilotControls(input: unknown): unknown[] {
+  if (!isRecord(input)) return [];
+  if (Array.isArray((input as any).controls)) return (input as any).controls;
+  const snapshot = isRecord((input as any).snapshot) ? (input as any).snapshot : null;
+  return Array.isArray((snapshot as any)?.controls) ? (snapshot as any).controls : [];
 }
 
 export function isOutcomeAttachRequest(value: unknown): value is OutcomeAttachRequest {
@@ -180,11 +190,13 @@ export function resolveLearningCaptureDecision(e: InteractionEvent): LearningCap
 
 function sanitizeInputForLearning(input: unknown): Record<string, unknown> | null {
   if (!isRecord(input)) return null;
-  const prompt = asTrimmedString((input as any).prompt);
-  const widgetType = asTrimmedString((input as any).widgetType);
+  const prompt = resolveCopilotPrompt(input);
+  const snapshot = isRecord((input as any).snapshot) ? (input as any).snapshot : null;
+  const widgetType = asTrimmedString((input as any).widgetType) ?? asTrimmedString((snapshot as any)?.widgetType);
   const sessionId = asTrimmedString((input as any).sessionId);
-  const controls = Array.isArray((input as any).controls)
-    ? (input as any).controls
+  const inputControls = resolveCopilotControls(input);
+  const controls = inputControls.length
+    ? inputControls
         .filter(isRecord)
         .map((control: Record<string, unknown>) => ({
           path: asTrimmedString(control.path) ?? '',
@@ -225,7 +237,7 @@ export async function indexCopilotEvent(env: Env, e: InteractionEvent): Promise<
   const runtimeEnv = asTrimmedString(env.ENVIRONMENT) ?? 'unknown';
   const envStage = isRecord(e.trace) ? asTrimmedString((e.trace as any).envStage) : null;
   const sessionId = isRecord(e.trace) ? asTrimmedString((e.trace as any).sessionId) : null;
-  const instancePublicId = isRecord(e.trace) ? asTrimmedString((e.trace as any).instancePublicId) : null;
+  const instanceId = isRecord(e.trace) ? asTrimmedString((e.trace as any).instanceId) : null;
 
   const day = toIsoDay(e.occurredAtMs);
   const agentId = e.agentId;
@@ -235,9 +247,10 @@ export async function indexCopilotEvent(env: Env, e: InteractionEvent): Promise<
   let hasUrl = 0;
 
   if (isRecord(e.input)) {
-    widgetType = asTrimmedString((e.input as any).widgetType);
-    const controls = (e.input as any).controls;
-    controlCount = Array.isArray(controls) ? controls.length : null;
+    const snapshot = isRecord((e.input as any).snapshot) ? (e.input as any).snapshot : null;
+    widgetType = asTrimmedString((e.input as any).widgetType) ?? asTrimmedString((snapshot as any)?.widgetType);
+    const controls = resolveCopilotControls(e.input);
+    controlCount = controls.length ? controls.length : null;
     hasUrl = promptHasUrl(e.input) ? 1 : 0;
   }
 
@@ -303,7 +316,7 @@ export async function indexCopilotEvent(env: Env, e: InteractionEvent): Promise<
         runtimeEnv,
         envStage,
         sessionId,
-        instancePublicId,
+        instanceId,
         agentId,
         widgetType,
         intent,

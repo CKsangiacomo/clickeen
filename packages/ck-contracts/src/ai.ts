@@ -83,10 +83,68 @@ export type AiModelCatalogEntry = {
   notes?: string;
 };
 
+export type AiModelTokenParam = 'max_tokens' | 'max_completion_tokens';
+
+export type AiModelCapability = AiModelCatalogEntry & {
+  tokenParam: AiModelTokenParam;
+  supportsTemperature: boolean;
+  reasoningEffort?: 'none' | 'low' | 'medium' | 'high' | 'xhigh';
+  pickerEligibility: {
+    eligible: boolean;
+    proofRef?: string;
+    checkedAt?: string;
+  };
+};
+
 export type AiModelUiMeta = {
   provider: AiProvider;
   model: string;
   label: string;
+};
+
+export type BuilderCopilotTurnClass = 'resolved_edit' | 'multi_op_plan';
+
+export type BuilderCopilotSnapshotControl = {
+  path: string;
+  panelId?: string;
+  groupId?: string;
+  groupLabel?: string;
+  type: string;
+  kind: string;
+  label: string;
+  options?: Array<{ label: string; value: string | number | boolean }>;
+  enumValues?: string[];
+  min?: number;
+  max?: number;
+  itemIdPath?: string;
+  currentValue: unknown;
+  aliases: string[];
+  ambiguityGroup?: string;
+  choiceLabel?: string;
+};
+
+export type BuilderCopilotSnapshot = {
+  widgetType: string;
+  displayName: string;
+  controls: BuilderCopilotSnapshotControl[];
+};
+
+export type BuilderCopilotResolvedTarget = {
+  path: string;
+  valueType: string;
+  currentValue: unknown;
+};
+
+export type BuilderCopilotRequestEnvelope = {
+  instanceId: string;
+  widgetType: string;
+  activeLocale: string;
+  snapshotHash: string;
+  turnClass: BuilderCopilotTurnClass;
+  resolvedTarget?: BuilderCopilotResolvedTarget;
+  snapshot: BuilderCopilotSnapshot;
+  userMessage: string;
+  sessionId: string;
 };
 
 const AI_AGENT_REGISTRY: AiRegistryEntry[] = [
@@ -108,7 +166,7 @@ const AI_AGENT_REGISTRY: AiRegistryEntry[] = [
     category: 'system_agent',
     taskClass: 'l10n.instance',
     description: 'Widget Instance Translator.',
-    owner: 'tokyo-worker.account-widget-l10n',
+    owner: 'sanfrancisco.instance-translation',
     boundary: 'account_widget_translated_values',
     supportedProviders: ['deepseek', 'openai'],
     defaultProvider: 'deepseek',
@@ -121,20 +179,63 @@ const PROVIDER_LABELS: Record<AiProvider, string> = {
   openai: 'OpenAI',
 };
 
-const AI_MODEL_CATALOG: AiModelCatalogEntry[] = [
-  { provider: 'deepseek', model: 'deepseek-chat', label: 'DeepSeek Chat' },
-  { provider: 'openai', model: 'gpt-5-mini', label: 'GPT 5 Mini' },
-  { provider: 'openai', model: 'gpt-5', label: 'GPT 5 High' },
-  { provider: 'openai', model: 'gpt-5.2', label: 'GPT 5.2 High' },
+const AI_MODEL_CAPABILITIES: AiModelCapability[] = [
+  {
+    provider: 'deepseek',
+    model: 'deepseek-chat',
+    label: 'DeepSeek Chat',
+    tokenParam: 'max_tokens',
+    supportsTemperature: true,
+    pickerEligibility: {
+      eligible: true,
+      proofRef: 'documentation/ai/model-conformance/2026-06-18-copilot-picker.md',
+      checkedAt: '2026-06-18T21:42:52Z',
+    },
+  },
+  {
+    provider: 'openai',
+    model: 'gpt-5-mini',
+    label: 'GPT 5 Mini',
+    tokenParam: 'max_completion_tokens',
+    supportsTemperature: false,
+    pickerEligibility: {
+      eligible: true,
+      proofRef: 'documentation/ai/model-conformance/2026-06-18-copilot-picker.md',
+      checkedAt: '2026-06-18T21:42:52Z',
+    },
+  },
+  {
+    provider: 'openai',
+    model: 'gpt-5',
+    label: 'GPT 5 High',
+    tokenParam: 'max_completion_tokens',
+    supportsTemperature: false,
+    pickerEligibility: {
+      eligible: true,
+      proofRef: 'documentation/ai/model-conformance/2026-06-18-copilot-picker.md',
+      checkedAt: '2026-06-18T21:42:52Z',
+    },
+  },
+  {
+    provider: 'openai',
+    model: 'gpt-5.2',
+    label: 'GPT 5.2 High',
+    tokenParam: 'max_completion_tokens',
+    supportsTemperature: false,
+    pickerEligibility: {
+      eligible: true,
+      proofRef: 'documentation/ai/model-conformance/2026-06-18-copilot-picker.md',
+      checkedAt: '2026-06-18T21:42:52Z',
+    },
+  },
 ];
-
 const AGENT_LOOKUP = new Map<string, AiRegistryEntry>();
 const MODEL_LABELS = new Map<string, string>();
 
-for (const model of AI_MODEL_CATALOG) {
+for (const model of AI_MODEL_CAPABILITIES) {
   const key = `${model.provider}:${model.model}`;
   if (MODEL_LABELS.has(key)) {
-    throw new Error(`[ck-contracts] Duplicate AI model catalog entry: ${key}`);
+    throw new Error(`[ck-contracts] Duplicate AI model capability entry: ${key}`);
   }
   MODEL_LABELS.set(key, model.label);
 }
@@ -183,7 +284,25 @@ export function listAiProviderUi(): AiProviderUiMeta[] {
 }
 
 export function listAiModelCatalog(): AiModelCatalogEntry[] {
-  return AI_MODEL_CATALOG.slice();
+  return AI_MODEL_CAPABILITIES.map(({ provider, model, label, contextWindowTokens, notes }) => ({
+    provider,
+    model,
+    label,
+    ...(contextWindowTokens ? { contextWindowTokens } : {}),
+    ...(notes ? { notes } : {}),
+  }));
+}
+
+export function listAiModelCapabilities(): AiModelCapability[] {
+  return AI_MODEL_CAPABILITIES.map((entry) => ({ ...entry }));
+}
+
+export function resolveAiModelCapability(provider: unknown, model: unknown): AiModelCapability | null {
+  const providerId = typeof provider === 'string' ? provider.trim() : '';
+  const modelId = typeof model === 'string' ? model.trim() : '';
+  if (!providerId || !modelId) return null;
+  const entry = AI_MODEL_CAPABILITIES.find((candidate) => candidate.provider === providerId && candidate.model === modelId);
+  return entry ? { ...entry } : null;
 }
 
 export function labelAiProvider(provider: unknown): string {
@@ -199,8 +318,8 @@ export function labelAiModel(model: unknown, provider?: unknown): string {
     const label = MODEL_LABELS.get(`${providerId}:${modelId}`);
     if (label) return label;
   }
-  const catalogEntry = AI_MODEL_CATALOG.find((entry) => entry.model === modelId);
-  return catalogEntry?.label ?? modelId;
+  const capability = AI_MODEL_CAPABILITIES.find((entry) => entry.model === modelId);
+  return capability?.label ?? modelId;
 }
 
 export function listAiModelsForUi(args: {
@@ -222,6 +341,8 @@ export function deriveAiModelOptionsForUi(policy: Pick<AgentRuntimePolicy, 'mode
   for (const [provider, modelPolicy] of Object.entries(policy.modelsByProvider) as Array<[AiProvider, AiModelPolicy | undefined]>) {
     if (!modelPolicy) continue;
     modelPolicy.allowed.forEach((model) => {
+      const capability = resolveAiModelCapability(provider, model);
+      if (!capability?.pickerEligibility.eligible) return;
       out.push({ provider, model, label: labelAiModel(model, provider) });
     });
   }

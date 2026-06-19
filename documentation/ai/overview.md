@@ -185,7 +185,7 @@ type AIGrant = {
     timeoutMs: number;
     policyVersion: string;
   };
-  trace: { sessionId?: string; instancePublicId?: string };
+  trace: { sessionId?: string; instanceId?: string };
 };
 ```
 
@@ -222,7 +222,7 @@ type AIError =
   | { code: 'GRANT_EXPIRED'; message: string }
   | { code: 'CAPABILITY_DENIED'; message: string }
   | { code: 'BUDGET_EXCEEDED'; message: string }
-  | { code: 'PROVIDER_ERROR'; message: string; provider: string }
+  | { code: 'PROVIDER_ERROR'; message: string; provider: string; upstreamStatus?: number }
   | { code: 'BAD_REQUEST'; message: string; issues?: Array<{ path: string; message: string }> };
 ```
 
@@ -284,7 +284,7 @@ Orchestration is San Francisco’s “meat” and is built incrementally behind 
 Phase‑1 (shipped orchestration surface):
 - Multiple agents behind the same `/v1/execute` interface:
   - `cs.widget.copilot.v1` (live account widget editing Copilot)
-- Provider/model policy is explicit per agent and account tier. Agents retry retryable upstream failures against the same selected/default model, then return typed errors; they do not silently cross-switch providers or models.
+- Provider/model policy is explicit per agent and account tier. The current `/v1/execute` path makes one provider call per turn, returns typed provider errors, and does not silently cross-switch providers or models. Retry behavior is future explicit work.
 - No general “tool” system yet; any extra capabilities must be explicitly implemented inside the agent (for example: widget copilot includes bounded, SSRF-guarded single-page URL reads + Cloudflare HTML detection).
 - Always returns structured JSON (never “go edit X” prose), plus usage metadata.
 

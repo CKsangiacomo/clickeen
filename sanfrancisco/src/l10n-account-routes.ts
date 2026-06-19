@@ -87,14 +87,14 @@ function assertProviderConfigured(env: Env, provider: string): void {
     throw new HttpError(502, {
       code: 'PROVIDER_ERROR',
       provider: 'deepseek',
-      message: 'Missing DEEPSEEK_API_KEY',
+      message: 'AI provider is unavailable.',
     });
   }
   if (provider === 'openai' && !env.OPENAI_API_KEY) {
     throw new HttpError(502, {
       code: 'PROVIDER_ERROR',
       provider: 'openai',
-      message: 'Missing OPENAI_API_KEY',
+      message: 'AI provider is unavailable.',
     });
   }
 }

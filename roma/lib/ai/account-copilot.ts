@@ -38,7 +38,6 @@ type AIGrant = {
 };
 
 const OUTCOME_EVENTS = new Set([
-  'cta_clicked',
   'edit_applied',
   'edit_rejected',
   'edit_undone',

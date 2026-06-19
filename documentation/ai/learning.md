@@ -27,7 +27,7 @@ Every `/v1/execute` produces an `InteractionEvent` (see `sanfrancisco/src/types.
 - `agentId`
 - `occurredAtMs`
 - `subject` (anon/user/service)
-- `trace` (may include `sessionId`, `instancePublicId`, `envStage`)
+- `trace` (may include `sessionId`, `instanceId`, `envStage`)
 - `input` (agent input)
 - `result` (agent result)
 - `usage` (provider/model/token/latency)
@@ -39,14 +39,16 @@ This event is:
 
 ### 1.2 Outcome events (Roma/Bob attach)
 
-San Francisco cannot infer conversions or UX decisions. Those are attached via `/v1/outcome`.
+San Francisco cannot infer Builder UX decisions. Those are attached via `/v1/outcome`.
 
 Payload: `OutcomeAttachRequest` (see `sanfrancisco/src/types.ts`)
 
 Events currently supported:
-- `ux_keep`, `ux_undo`
-- `cta_clicked`
-- `upgrade_clicked`, `upgrade_completed`
+- `edit_applied`
+- `edit_rejected`
+- `edit_undone`
+- `clarification_needed`
+- `invalid_output`
 
 Auth:
 - The caller must sign the JSON body with `AI_GRANT_HMAC_SECRET` and pass the signature as `x-clickeen-signature`.
@@ -68,12 +70,11 @@ San Francisco maintains two D1 tables. Their schema is owned by San Francisco D1
 #### `copilot_events_v1`
 One row per `requestId` with “learning features” extracted from the raw event:
 - `day`, `runtimeEnv`, `envStage`
-- `sessionId`, `instancePublicId`
+- `sessionId`, `instanceId` (stored in the current D1 `instancePublicId` column)
 - `agentId`, `widgetType`
 - `intent`, `outcome`
 - `hasUrl`, `controlCount`
 - `opsCount`, `uniquePathsTouched`, `scopesTouched`
-- `ctaAction`
 - `promptVersion`, `policyVersion`, `dictionaryHash`
 - `provider`, `model`, `latencyMs`
 
@@ -113,10 +114,8 @@ From `copilot_events_v1`:
 - ops size (`opsCount`, `uniquePathsTouched`, `scopesTouched`)
 
 From `copilot_outcomes_v1`:
-- undo rate (`ux_undo / (ux_keep + ux_undo)`)
+- undo rate (`edit_undone / edit_applied`)
 - time-to-decision
-- CTA click-through (`cta_clicked / sessions`)
-- conversion rates (signup/upgrade events)
 
 ## 6) Operational runbooks (what to do when metrics go bad)
 

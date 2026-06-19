@@ -30,7 +30,9 @@ Health contract:
 - Grant verification accepts the active internal Clickeen issuers `roma` and `sanfrancisco`.
 - The live product Copilot path executes only from Roma account routes; Bob no longer owns a public Minibob copilot flow.
 - Agent routing uses registry canonical IDs.
-- Provider execution retries transient upstream failures once against the same selected/default model. It does not silently switch models or providers.
+- Provider execution does not silently switch models or providers. The current `/v1/execute` path makes one provider call per turn; retry behavior is future explicit work.
+- Provider request shape comes from the explicit shared AI model capability table (`ck-contracts`), not provider/model string heuristics.
+- Provider errors returned to product callers are typed `PROVIDER_ERROR` responses with safe messages and optional upstream status; raw upstream bodies are not product payloads.
 - OpenAI responses are normalized across string/array/refusal content shapes before being treated as empty output.
 - Live product widget-copilot canonical ID:
   - `cs.widget.copilot.v1` (account Builder editor copilot)
@@ -38,12 +40,16 @@ Health contract:
 - Prompt persona pack lives in `sanfrancisco/src/agents/widgetCopilotPromptProfiles.ts`.
 - Widget copilot now runs with shared execution plumbing + role-scoped policy behavior:
   - CS policy (`cs.widget.copilot.v1`): full in-product editor assistant behavior (control-driven edits), no public-signup CTA flow.
-- CS prompt payload expands tokenized content paths into concrete editable content entries for rewrite intents and forbids requesting control/config dumps from users.
+- Builder capability/explain/clarification turns are handled by Bob from the current compiled control snapshot before a San Francisco request is made.
+- CS prompt payload is built from the explicit Builder envelope that Roma forwards from Bob: `turnClass`, optional `resolvedTarget`, and the scoped current control snapshot. It does not accept the old free-form `currentConfig`/`controls` payload and does not include widget package source, widget HTML/CSS/client source, or keyword-ranked source padding.
+- If the scoped Builder context is too large, San Francisco fails visibly instead of truncating controls or current values.
 - Runtime modules are split between a shared core and thin per-agent wrappers:
   - shared core: `sanfrancisco/src/agents/widgetCopilotCore.ts`
   - CS wrapper: `sanfrancisco/src/agents/csWidgetCopilot.ts` (KV namespace `copilot:cs:session:*`)
 - **Runtime policy execution:** Enforces the signed `AgentRuntimePolicy` from the grant: `defaultModel`, `modelsByProvider`, optional `selectedModel`, request ceilings, and learning-capture rules. Product/account policy decides the allowed model set before grant issuance.
-- Request tracking persists to `SF_KV` per grant with TTL aligned to grant expiry.
+- Copilot session memory persists in `SF_KV` for 24 hours under the
+  role-specific session namespace. Signed Roma grants remain short-lived per
+  request and are verified on each San Francisco execution.
 - Contract coverage now explicitly guards grant verification, budget enforcement, provider routing, and concurrency ceilings before further AI-plane sophistication lands.
 
 ## Entrypoint posture

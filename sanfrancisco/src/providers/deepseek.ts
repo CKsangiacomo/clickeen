@@ -1,3 +1,4 @@
+import { resolveAiModelCapability } from '@clickeen/ck-contracts/ai';
 import { HttpError, asString, isRecord } from '../http';
 import type { Env, Usage } from '../types';
 import type { ChatMessage } from '../ai/chat';
@@ -8,6 +9,15 @@ type OpenAIChatResponse = {
   model?: string;
 };
 
+function providerFailure(args: { status: number; message: string; upstreamStatus?: number }): HttpError {
+  return new HttpError(args.status, {
+    code: 'PROVIDER_ERROR',
+    provider: 'deepseek',
+    message: args.message,
+    ...(typeof args.upstreamStatus === 'number' ? { upstreamStatus: args.upstreamStatus } : {}),
+  });
+}
+
 export async function callDeepseekChat(args: {
   env: Env;
   model: string;
@@ -17,7 +27,14 @@ export async function callDeepseekChat(args: {
   timeoutMs: number;
 }): Promise<{ content: string; usage: Usage }> {
   if (!args.env.DEEPSEEK_API_KEY) {
-    throw new HttpError(500, { code: 'PROVIDER_ERROR', provider: 'deepseek', message: 'Missing DEEPSEEK_API_KEY' });
+    throw providerFailure({ status: 500, message: 'AI provider is unavailable.' });
+  }
+  const capability = resolveAiModelCapability('deepseek', args.model);
+  if (!capability) {
+    throw providerFailure({
+      status: 403,
+      message: 'DeepSeek model is not configured for this AI surface.',
+    });
   }
 
   const controller = new AbortController();
@@ -28,6 +45,9 @@ export async function callDeepseekChat(args: {
     let res: Response;
     try {
       const baseUrl = args.env.DEEPSEEK_BASE_URL ?? 'https://api.deepseek.com';
+      const tokenBudget = capability.tokenParam === 'max_completion_tokens'
+        ? { max_completion_tokens: args.maxTokens }
+        : { max_tokens: args.maxTokens };
       res = await fetch(`${baseUrl.replace(/\/+$/, '')}/v1/chat/completions`, {
         method: 'POST',
         headers: {
@@ -38,8 +58,8 @@ export async function callDeepseekChat(args: {
         body: JSON.stringify({
           model: args.model,
           messages: args.messages,
-          temperature: args.temperature,
-          max_tokens: args.maxTokens,
+          ...(capability.supportsTemperature ? { temperature: args.temperature } : {}),
+          ...tokenBudget,
         }),
       });
     } catch (err: unknown) {
@@ -47,12 +67,12 @@ export async function callDeepseekChat(args: {
       if (name === 'AbortError') {
         throw new HttpError(429, { code: 'BUDGET_EXCEEDED', message: 'Execution timeout exceeded' });
       }
-      throw new HttpError(502, { code: 'PROVIDER_ERROR', provider: 'deepseek', message: 'Upstream request failed' });
+      throw providerFailure({ status: 502, message: 'DeepSeek request failed.' });
     }
 
     if (!res.ok) {
-      const text = await res.text().catch(() => '');
-      throw new HttpError(502, { code: 'PROVIDER_ERROR', provider: 'deepseek', message: `Upstream error (${res.status}) ${text}`.trim() });
+      await res.text().catch(() => '');
+      throw providerFailure({ status: 502, message: 'DeepSeek returned an upstream error.', upstreamStatus: res.status });
     }
 
     let responseJson: OpenAIChatResponse;
@@ -63,13 +83,13 @@ export async function callDeepseekChat(args: {
       if (name === 'AbortError') {
         throw new HttpError(429, { code: 'BUDGET_EXCEEDED', message: 'Execution timeout exceeded' });
       }
-      throw new HttpError(502, { code: 'PROVIDER_ERROR', provider: 'deepseek', message: 'Invalid upstream JSON' });
+      throw providerFailure({ status: 502, message: 'DeepSeek returned invalid JSON.' });
     }
 
     const latencyMs = Date.now() - startedAt;
     const content = responseJson.choices?.[0]?.message?.content ?? '';
-    if (!content) throw new HttpError(502, { code: 'PROVIDER_ERROR', provider: 'deepseek', message: 'Empty model response' });
-    const { prompt_tokens: promptTokens, completion_tokens: completionTokens } = responseJson.usage ?? {}; if (!responseJson.model?.trim() || typeof promptTokens !== 'number' || !Number.isInteger(promptTokens) || promptTokens < 0 || typeof completionTokens !== 'number' || !Number.isInteger(completionTokens) || completionTokens < 0) throw new HttpError(502, { code: 'PROVIDER_ERROR', provider: 'deepseek', message: 'Missing upstream usage' });
+    if (!content) throw providerFailure({ status: 502, message: 'DeepSeek returned an empty response.' });
+    const { prompt_tokens: promptTokens, completion_tokens: completionTokens } = responseJson.usage ?? {}; if (!responseJson.model?.trim() || typeof promptTokens !== 'number' || !Number.isInteger(promptTokens) || promptTokens < 0 || typeof completionTokens !== 'number' || !Number.isInteger(completionTokens) || completionTokens < 0) throw providerFailure({ status: 502, message: 'DeepSeek returned an incomplete response.' });
 
     return { content, usage: { provider: 'deepseek', model: responseJson.model.trim(), promptTokens, completionTokens, latencyMs } };
   } finally {

@@ -13,7 +13,7 @@ export const WIDGET_COPILOT_PROMPT_PROFILES: Record<WidgetCopilotRole, WidgetCop
   cs: {
     role: 'cs',
     intro: "You are Clickeen's CS (Customer Success) widget copilot.",
-    objective: '3) Optionally return a conversion CTA (signup/publish/upgrade) only when it naturally fits the conversation.',
+    objective: '3) Return only a JSON message and optional edit ops for the current Builder turn.',
     focus: '- Keep edits minimal and user-goal focused.',
   },
 };

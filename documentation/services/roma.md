@@ -217,8 +217,12 @@ and Tokyo/R2 account storage cleanup.
 ## AI
 
 Roma grants Builder Copilot access for the current account and calls San
-Francisco. Bob sends prompt and current in-memory config through Roma. Roma
-resolves account and widget identity from the saved instance context.
+Francisco. Bob sends the explicit Builder Copilot envelope through Roma:
+`instanceId`, `widgetType`, `activeLocale`, `snapshotHash`, `turnClass`,
+optional `resolvedTarget`, scoped control `snapshot`, `userMessage`, and
+`sessionId`. Roma validates that envelope, resolves account and widget identity
+from the saved instance context, mints the account grant, and forwards the
+envelope to San Francisco.
 
 ## Deploy Plane
 

@@ -1,13 +1,12 @@
-export type CopilotCta = { text: string; action: 'upgrade' | 'learn-more'; url?: string };
-
 export type CopilotMessage = {
   id: string;
   role: 'user' | 'assistant';
   text: string;
   ts: number;
   requestId?: string;
-  cta?: CopilotCta;
-  hasPendingDecision?: boolean;
+  hasUndoAction?: boolean;
+  undoToken?: string;
+  clarificationChoices?: Array<{ label: string; path: string }>;
 };
 
 export type CopilotThread = {

@@ -19,7 +19,7 @@ export type AIGrant = {
   ai?: AiGrantPolicy;
   trace?: {
     sessionId?: string;
-    instancePublicId?: string;
+    instanceId?: string;
     envStage?: string;
   };
 };
@@ -43,7 +43,6 @@ export type ExecuteResponse = {
 };
 
 export type CopilotOutcomeEvent =
-  | 'cta_clicked'
   | 'edit_applied'
   | 'edit_rejected'
   | 'edit_undone'
@@ -91,7 +90,7 @@ export type AIError =
   | { code: 'CAPABILITY_DENIED'; message: string }
   | { code: 'BUDGET_EXCEEDED'; message: string }
   | { code: 'BAD_REQUEST'; message: string; issues?: Array<{ path: string; message: string }> }
-  | { code: 'PROVIDER_ERROR'; message: string; provider: string };
+  | { code: 'PROVIDER_ERROR'; message: string; provider: string; upstreamStatus?: number };
 
 export type InteractionEvent = {
   v: 1;
@@ -116,8 +115,8 @@ export type Env = {
   AI_GRANT_HMAC_SECRET: string;
   DEEPSEEK_API_KEY?: string;
   DEEPSEEK_BASE_URL?: string;
-  DEEPSEEK_MODEL?: string;
   OPENAI_API_KEY?: string;
+  OPENAI_BASE_URL?: string;
   OPENAI_MODEL?: string;
   SF_KV: KVNamespace;
   SF_EVENTS?: Queue<InteractionEvent>;

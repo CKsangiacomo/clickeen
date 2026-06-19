@@ -58,6 +58,8 @@ export const REASON_KEY_VALUES = [
   'coreui.errors.builder.open.invalidRequest',
   'coreui.errors.builder.open.stale',
   'coreui.errors.builder.open.timeout',
+  'coreui.errors.copilot.failed',
+  'coreui.errors.copilot.invalidEdit',
   'coreui.errors.db.readFailed',
   'coreui.errors.db.writeFailed',
   'coreui.errors.entitlements.entitlement.notFound',

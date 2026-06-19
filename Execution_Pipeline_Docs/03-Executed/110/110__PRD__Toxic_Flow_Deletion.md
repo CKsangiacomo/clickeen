@@ -1,9 +1,15 @@
 # PRD 110 - Toxic Flow Deletion
 
-Status: Draft execution PRD
+Status: Retired / superseded - do not execute
 Owner: Cross-system cleanup owner
 Date: 2026-06-05
 Parent: `106__Umbrella__Composition_Vision.md`
+
+Closeout: PRD 110 was retired on 2026-06-18. Its deletion scope was already
+completed by the executed PRD 124/124A-E and PRD 125 batches, with supporting
+cleanup from PRD 106/107. Remaining Page Composer product work belongs to the
+Roma/Page Composer authority. Prague migration and block deletion belong to PRD
+121. Do not execute PRD 110's step ledger retroactively.
 Depends on:
 
 - `PRD106A_realignment.md`

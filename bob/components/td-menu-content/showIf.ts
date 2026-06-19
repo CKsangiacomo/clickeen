@@ -245,6 +245,11 @@ export function validateShowIfExpression(raw: string): void {
   visit(ast);
 }
 
+export function evaluateShowIfExpression(raw: string, data: Record<string, unknown>): boolean {
+  const ast = parseShowIf(raw);
+  return ast ? evalAst(ast, data) : true;
+}
+
 function resolveValue(node: ShowIfAst, data: Record<string, unknown>): unknown {
   if (node.type === 'path') return getAt<unknown>(data, node.value);
   if (node.type === 'literal') return node.value;

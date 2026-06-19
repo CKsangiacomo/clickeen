@@ -1,3 +1,4 @@
+import { resolveAiModelCapability } from '@clickeen/ck-contracts/ai';
 import { HttpError, asString, isRecord } from '../http';
 import type { Env, Usage } from '../types';
 import type { ChatMessage } from '../ai/chat';
@@ -55,36 +56,18 @@ function extractText(value: unknown): string {
   return '';
 }
 
-function usesMaxCompletionTokens(model: string): boolean {
-  const normalized = model.trim().toLowerCase();
-  return normalized.startsWith('gpt-5');
-}
-
-function supportsCustomTemperature(model: string): boolean {
-  const normalized = model.trim().toLowerCase();
-  return !normalized.startsWith('gpt-5');
-}
-
-function reasoningEffortForModel(model: string): 'minimal' | null {
-  const normalized = model.trim().toLowerCase();
-  return normalized.startsWith('gpt-5') ? 'minimal' : null;
-}
-
-function describeEmptyResponse(args: { model: string; response: OpenAIChatResponse }): string {
-  const choice = args.response.choices?.[0];
-  const finishReason = choice?.finish_reason || 'unknown';
-  const completionTokens = args.response.usage?.completion_tokens ?? 0;
-  const reasoningTokens = args.response.usage?.completion_tokens_details?.reasoning_tokens ?? 0;
-  const refusal = extractText(choice?.message?.refusal);
-  return [
-    `Empty model response for ${args.response.model || args.model}`,
-    `finish_reason=${finishReason}`,
-    `completion_tokens=${completionTokens}`,
-    `reasoning_tokens=${reasoningTokens}`,
-    refusal ? `refusal=${refusal}` : null,
-  ]
-    .filter((part): part is string => Boolean(part))
-    .join('; ');
+function providerFailure(args: {
+  status: number;
+  provider: 'openai';
+  message: string;
+  upstreamStatus?: number;
+}): HttpError {
+  return new HttpError(args.status, {
+    code: 'PROVIDER_ERROR',
+    provider: args.provider,
+    message: args.message,
+    ...(typeof args.upstreamStatus === 'number' ? { upstreamStatus: args.upstreamStatus } : {}),
+  });
 }
 
 export async function callOpenAiChat(args: {
@@ -96,7 +79,15 @@ export async function callOpenAiChat(args: {
   timeoutMs: number;
 }): Promise<{ content: string; usage: Usage }> {
   if (!args.env.OPENAI_API_KEY) {
-    throw new HttpError(500, { code: 'PROVIDER_ERROR', provider: 'openai', message: 'Missing OPENAI_API_KEY' });
+    throw providerFailure({ status: 500, provider: 'openai', message: 'AI provider is unavailable.' });
+  }
+  const capability = resolveAiModelCapability('openai', args.model);
+  if (!capability) {
+    throw providerFailure({
+      status: 403,
+      provider: 'openai',
+      message: 'OpenAI model is not configured for this AI surface.',
+    });
   }
 
   const controller = new AbortController();
@@ -106,8 +97,11 @@ export async function callOpenAiChat(args: {
   try {
     let res: Response;
     try {
-      const reasoningEffort = reasoningEffortForModel(args.model);
-      res = await fetch('https://api.openai.com/v1/chat/completions', {
+      const tokenBudget = capability.tokenParam === 'max_completion_tokens'
+        ? { max_completion_tokens: args.maxTokens }
+        : { max_tokens: args.maxTokens };
+      const baseUrl = args.env.OPENAI_BASE_URL ?? 'https://api.openai.com';
+      res = await fetch(`${baseUrl.replace(/\/+$/, '')}/v1/chat/completions`, {
         method: 'POST',
         headers: {
           authorization: `Bearer ${args.env.OPENAI_API_KEY}`,
@@ -117,11 +111,9 @@ export async function callOpenAiChat(args: {
         body: JSON.stringify({
           model: args.model,
           messages: args.messages,
-          ...(supportsCustomTemperature(args.model) ? { temperature: args.temperature } : {}),
-          ...(reasoningEffort ? { reasoning_effort: reasoningEffort } : {}),
-          ...(usesMaxCompletionTokens(args.model)
-            ? { max_completion_tokens: args.maxTokens }
-            : { max_tokens: args.maxTokens }),
+          ...(capability.supportsTemperature ? { temperature: args.temperature } : {}),
+          ...(capability.reasoningEffort ? { reasoning_effort: capability.reasoningEffort } : {}),
+          ...tokenBudget,
         }),
       });
     } catch (err: unknown) {
@@ -129,12 +121,17 @@ export async function callOpenAiChat(args: {
       if (name === 'AbortError') {
         throw new HttpError(429, { code: 'BUDGET_EXCEEDED', message: 'Execution timeout exceeded' });
       }
-      throw new HttpError(502, { code: 'PROVIDER_ERROR', provider: 'openai', message: 'Upstream request failed' });
+      throw providerFailure({ status: 502, provider: 'openai', message: 'OpenAI request failed.' });
     }
 
     if (!res.ok) {
-      const text = await res.text().catch(() => '');
-      throw new HttpError(502, { code: 'PROVIDER_ERROR', provider: 'openai', message: `Upstream error (${res.status}) ${text}`.trim() });
+      await res.text().catch(() => '');
+      throw providerFailure({
+        status: 502,
+        provider: 'openai',
+        message: 'OpenAI returned an upstream error.',
+        upstreamStatus: res.status,
+      });
     }
 
     let responseJson: OpenAIChatResponse;
@@ -145,7 +142,7 @@ export async function callOpenAiChat(args: {
       if (name === 'AbortError') {
         throw new HttpError(429, { code: 'BUDGET_EXCEEDED', message: 'Execution timeout exceeded' });
       }
-      throw new HttpError(502, { code: 'PROVIDER_ERROR', provider: 'openai', message: 'Invalid upstream JSON' });
+      throw providerFailure({ status: 502, provider: 'openai', message: 'OpenAI returned invalid JSON.' });
     }
 
     const latencyMs = Date.now() - startedAt;
@@ -155,13 +152,9 @@ export async function callOpenAiChat(args: {
       extractText(firstMessage?.refusal) ||
       extractText(responseJson.output_text);
     if (!content) {
-      throw new HttpError(502, {
-        code: 'PROVIDER_ERROR',
-        provider: 'openai',
-        message: describeEmptyResponse({ model: args.model, response: responseJson }),
-      });
+      throw providerFailure({ status: 502, provider: 'openai', message: 'OpenAI returned an empty response.' });
     }
-    const { prompt_tokens: promptTokens, completion_tokens: completionTokens } = responseJson.usage ?? {}; if (!responseJson.model?.trim() || typeof promptTokens !== 'number' || !Number.isInteger(promptTokens) || promptTokens < 0 || typeof completionTokens !== 'number' || !Number.isInteger(completionTokens) || completionTokens < 0) throw new HttpError(502, { code: 'PROVIDER_ERROR', provider: 'openai', message: 'Missing upstream usage' });
+    const { prompt_tokens: promptTokens, completion_tokens: completionTokens } = responseJson.usage ?? {}; if (!responseJson.model?.trim() || typeof promptTokens !== 'number' || !Number.isInteger(promptTokens) || promptTokens < 0 || typeof completionTokens !== 'number' || !Number.isInteger(completionTokens) || completionTokens < 0) throw providerFailure({ status: 502, provider: 'openai', message: 'OpenAI returned an incomplete response.' });
 
     return { content, usage: { provider: 'openai', model: responseJson.model.trim(), promptTokens, completionTokens, latencyMs } };
   } finally {

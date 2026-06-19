@@ -5,6 +5,7 @@ import { getAt, setAt } from '../utils/paths';
 export type WidgetOp =
   | { op: 'set'; path: string; value: unknown }
   | { op: 'insert'; path: string; index: number; value: unknown }
+  | { op: 'remove'; path: string; itemId: string }
   | { op: 'remove'; path: string; index: number }
   | { op: 'move'; path: string; from: number; to: number };
 
@@ -62,6 +63,13 @@ function removeAtPath(data: Record<string, unknown>, path: string, index: number
   }
   const next = current.filter((_item, idx) => idx !== index);
   return setAt(data, path, next) as Record<string, unknown>;
+}
+
+function indexForItemId(items: unknown[], itemIdPath: string, itemId: string): number {
+  return items.findIndex((item) => {
+    if (!item || typeof item !== 'object' || Array.isArray(item)) return false;
+    return (item as Record<string, unknown>)[itemIdPath] === itemId;
+  });
 }
 
 function moveAtPath(data: Record<string, unknown>, path: string, from: number, to: number) {
@@ -155,6 +163,15 @@ export function applyWidgetOps(args: {
       if (raw.index > len) {
         return { ok: false, errors: [{ opIndex: idx, path, message: `index out of range (0..${len})` }] };
       }
+      if (control.itemIdPath) {
+        const itemId =
+          raw.value && typeof raw.value === 'object' && !Array.isArray(raw.value)
+            ? (raw.value as Record<string, unknown>)[control.itemIdPath]
+            : undefined;
+        if (typeof itemId !== 'string' || !itemId.trim()) {
+          return { ok: false, errors: [{ opIndex: idx, path, message: 'Inserted item is missing required itemId' }] };
+        }
+      }
       const next = insertAtPath(working, path, raw.index, raw.value);
       working = next;
       continue;
@@ -164,20 +181,32 @@ export function applyWidgetOps(args: {
       if (control.kind !== 'array') {
         return { ok: false, errors: [{ opIndex: idx, path, message: 'Target path is not an array control' }] };
       }
-      if (!isInteger(raw.index) || raw.index < 0) {
-        return { ok: false, errors: [{ opIndex: idx, path, message: 'index must be an integer >= 0' }] };
-      }
       const current = getAt<unknown>(working, path);
       if (!Array.isArray(current)) {
         return { ok: false, errors: [{ opIndex: idx, path, message: 'Target must be an array' }] };
       }
-      if (raw.index >= current.length) {
+      let removeIndex: number;
+      if (control.itemIdPath) {
+        if (typeof raw.itemId !== 'string' || !raw.itemId.trim()) {
+          return { ok: false, errors: [{ opIndex: idx, path, message: 'itemId is required for this array control' }] };
+        }
+        removeIndex = indexForItemId(current, control.itemIdPath, raw.itemId);
+        if (removeIndex < 0) {
+          return { ok: false, errors: [{ opIndex: idx, path, message: `itemId "${raw.itemId}" was not found` }] };
+        }
+      } else {
+        if (!isInteger(raw.index) || raw.index < 0) {
+          return { ok: false, errors: [{ opIndex: idx, path, message: 'index must be an integer >= 0' }] };
+        }
+        removeIndex = raw.index;
+      }
+      if (removeIndex >= current.length) {
         return {
           ok: false,
           errors: [{ opIndex: idx, path, message: `index out of range (0..${Math.max(0, current.length - 1)})` }],
         };
       }
-      const next = removeAtPath(working, path, raw.index);
+      const next = removeAtPath(working, path, removeIndex);
       working = next;
       continue;
     }

@@ -1,8 +1,17 @@
 import { asTrimmedString, looksLikeHtmlErrorPage } from '@clickeen/ck-contracts';
+import type { BuilderCopilotRequestEnvelope } from '@clickeen/ck-contracts/ai';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { WidgetOp } from '../lib/ops';
+import {
+  buildCopilotControlSnapshot,
+  type CopilotClarificationChoice,
+  resolveBobCopilotEditScope,
+  resolveBobCopilotDeterministicTurn,
+} from '../lib/copilot/controlContract';
 import type { CopilotMessage } from '../lib/copilot/types';
+import { buildCopilotUndoOps } from '../lib/copilot/undo';
 import { useWidgetSession, useWidgetSessionChrome, useWidgetSessionCopilot } from '../lib/session/useWidgetSession';
+import { serializeInstanceDataSignature } from '../lib/session/sessionTypes';
 
 type WidgetSessionValue = ReturnType<typeof useWidgetSession>;
 
@@ -29,7 +38,7 @@ function safeJsonParse(text: string): unknown {
 
 function normalizeAssistantText(text: string): string {
   const candidate = (text || '').trim();
-  if (!candidate) return 'Done.';
+  if (!candidate) return '';
   if (looksLikeHtmlErrorPage(candidate)) return 'Copilot is temporarily unavailable (received an HTML error page). Please try again in a moment.';
   if (candidate === 'Unhandled error') return 'Copilot hit a backend timeout. Please try again (or ask for a smaller, single change).';
   if (candidate.toLowerCase().includes('empty model response')) {
@@ -39,9 +48,29 @@ function normalizeAssistantText(text: string): string {
   return candidate;
 }
 
+const COPILOT_INVALID_EDIT_MESSAGE = "Copilot couldn't produce a valid edit for this widget. Nothing was changed.";
+
+function copilotReasonKeyMessage(reasonKey: string): string | null {
+  if (reasonKey === 'coreui.upsell.reason.limitReached') {
+    return "You've used all your Copilot turns for this month. They reset on the 1st.";
+  }
+  if (reasonKey === 'coreui.errors.ai.model.notAllowed') return "Copilot couldn't run this model. Try again, or pick another model.";
+  if (reasonKey === 'coreui.errors.copilot.invalidEdit') return COPILOT_INVALID_EDIT_MESSAGE;
+  if (reasonKey === 'coreui.errors.copilot.failed') return 'Copilot failed unexpectedly. Please try again.';
+  return null;
+}
+
 function normalizeErrorMessage(args: { resStatus?: number; parsed?: any; bodyText?: string; fallback?: string }): string {
   const bodyText = args.bodyText || '';
   const parsed = args.parsed || null;
+  const reasonKey =
+    typeof parsed?.reasonKey === 'string'
+      ? parsed.reasonKey
+      : typeof parsed?.error?.reasonKey === 'string'
+        ? parsed.error.reasonKey
+        : '';
+  const reasonKeyMessage = reasonKey ? copilotReasonKeyMessage(reasonKey) : null;
+  if (reasonKeyMessage) return reasonKeyMessage;
 
   const parsedMessage =
     typeof parsed?.message === 'string'
@@ -52,7 +81,7 @@ function normalizeErrorMessage(args: { resStatus?: number; parsed?: any; bodyTex
           ? parsed.error
           : '';
 
-  const candidate = (parsedMessage || bodyText || args.fallback || '').trim();
+  const candidate = (parsedMessage || (parsed === null ? bodyText : '') || args.fallback || '').trim();
   if (!candidate) return 'Copilot failed unexpectedly. Please try again.';
   return normalizeAssistantText(candidate);
 }
@@ -90,15 +119,20 @@ function buildOutcomeMetadata(ops: WidgetOp[] | null, controls: Array<{ path: st
   };
 }
 
+function summarizeAppliedOps(ops: WidgetOp[], controls: Array<{ path: string; label?: string }>): string {
+  const byPath = new Map(controls.map((control) => [control.path, control]));
+  const labels = Array.from(new Set(ops.map((op) => byPath.get(op.path)?.label).filter(Boolean))).slice(0, 3);
+  if (!labels.length) return 'Changed this widget.';
+  return `Changed ${labels.join(', ')}.`;
+}
+
 function initialCopilotMessage(widgetType: string): string {
   const label = titleCase(widgetType) || 'widget';
-  return `You’re editing a ${label} widget in your account. Ask me for a concrete content, layout, styling, or settings change and I’ll stage it for review.`;
+  return `You’re editing a ${label} widget in your account. Ask me for a concrete content, layout, styling, or settings change and I’ll apply it here. You can undo the last Copilot change before saving.`;
 }
 
 type CopilotSurfaceContract = {
   initialMessage: (widgetType: string) => string;
-  pendingMessageText: (message: string) => string;
-  pendingNudge: string;
 };
 
 type SharedCopilotPaneProps = {
@@ -112,8 +146,6 @@ export function AccountCopilotPane() {
   const surfaceContract = useMemo<CopilotSurfaceContract>(() => {
     return {
       initialMessage: (widgetType) => initialCopilotMessage(widgetType),
-      pendingMessageText: (message) => `${message}\n\nWant to keep this change?`,
-      pendingNudge: 'Keep or Undo? (Use the buttons above, or type “keep” / “undo”.)',
     };
   }, []);
 
@@ -133,10 +165,23 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
   const [status, setStatus] = useState<'idle' | 'loading'>('idle');
   const [selectedModelKey, setSelectedModelKey] = useState('');
 
-  const pendingDecisionRef = useRef(false);
-  const pendingOpsRef = useRef<WidgetOp[] | null>(null);
+  const undoRef = useRef<{
+    ops: WidgetOp[];
+    requestId: string;
+    appliedAtMs: number;
+    metadata: ReturnType<typeof buildOutcomeMetadata>;
+    token: string;
+    postApplySignature: string;
+  } | null>(null);
+  const pendingClarificationRef = useRef<{
+    prompt: string;
+    choices: CopilotClarificationChoice[];
+  } | null>(null);
+  const [undoAvailable, setUndoAvailable] = useState(false);
+  const [activeUndoToken, setActiveUndoToken] = useState('');
   const listRef = useRef<HTMLDivElement | null>(null);
   const convoKeyRef = useRef<string | null>(null);
+  const instanceDataRef = useRef(session.instanceData);
 
   const threadKey = useMemo(() => {
     if (!widgetType) return null;
@@ -165,16 +210,12 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
     });
   }, [defaultModel, modelOptions]);
 
-  const getPendingDecisionMessage = (): CopilotMessage | null => {
-    for (let i = messages.length - 1; i >= 0; i--) {
-      const msg = messages[i];
-      if (msg.role === 'assistant' && msg.hasPendingDecision) return msg;
-    }
-    return null;
-  };
+  useEffect(() => {
+    instanceDataRef.current = session.instanceData;
+  }, [session.instanceData]);
 
   const reportOutcome = async (args: {
-    event: 'edit_applied' | 'edit_undone' | 'cta_clicked';
+    event: 'edit_applied' | 'edit_undone';
     requestId: string;
     sessionId: string;
     timeToDecisionMs?: number;
@@ -225,7 +266,6 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
   useEffect(() => {
     if (!threadKey) return;
     convoKeyRef.current = threadKey;
-    pendingDecisionRef.current = messages.some((m) => Boolean(m.hasPendingDecision));
   }, [threadKey, messages]);
 
   const uiDisabledReason = useMemo(() => {
@@ -234,9 +274,19 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
     return null;
   }, [compiled, canApplyOps]);
 
+  const copilotControlSnapshot = useMemo(() => {
+    if (!compiled) return null;
+    return buildCopilotControlSnapshot({
+      widgetType: compiled.widgetname,
+      displayName: compiled.displayName,
+      controls: compiled.controls,
+      currentConfig: session.instanceData,
+    });
+  }, [compiled, session.instanceData]);
+
   const controlsForAi = useMemo(() => {
-    if (!compiled) return [];
-    return compiled.controls.map((c) => ({
+    if (!copilotControlSnapshot) return [];
+    return copilotControlSnapshot.controls.map((c) => ({
       path: c.path,
       panelId: c.panelId,
       groupId: c.groupId,
@@ -249,8 +299,12 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
       min: c.min,
       max: c.max,
       itemIdPath: c.itemIdPath,
+      currentValue: c.currentValue,
+      aliases: c.aliases,
+      ambiguityGroup: c.ambiguityGroup,
+      choiceLabel: c.choiceLabel,
     }));
-  }, [compiled]);
+  }, [copilotControlSnapshot]);
 
   const pushMessage = (msg: Omit<CopilotMessage, 'id' | 'ts'>) => {
     if (!threadKey) return;
@@ -260,81 +314,79 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
     });
   };
 
-  const clearPendingDecision = () => {
-    pendingDecisionRef.current = false;
-    pendingOpsRef.current = null;
-    if (!threadKey) return;
-    copilot.updateCopilotThread(threadKey, (current) => {
-      const base = current ?? { sessionId: crypto.randomUUID(), messages: [] };
-      return {
-        ...base,
-        messages: base.messages.map((m) => (m.hasPendingDecision ? { ...m, hasPendingDecision: false } : m)),
-      };
-    });
+  const findPendingClarificationChoice = (prompt: string): CopilotClarificationChoice | null => {
+    const pending = pendingClarificationRef.current;
+    if (!pending) return null;
+    const normalizedPrompt = prompt
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, ' ')
+      .trim();
+    if (!normalizedPrompt) return null;
+    const matches = pending.choices.filter((choice) => {
+        const normalizedLabel = choice.label
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, ' ')
+          .trim();
+        return (
+          normalizedLabel === normalizedPrompt ||
+          new RegExp(`(?:^| )${normalizedPrompt.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?: |$)`).test(normalizedLabel)
+        );
+      });
+    return matches.length === 1 ? matches[0] : null;
   };
 
-  const handleSend = async () => {
+  const handleSend = async (promptOverride?: string) => {
     if (uiDisabledReason) return;
     const activeCompiled = compiled;
     if (!activeCompiled) return;
-    const prompt = draft.trim();
+    const prompt = (promptOverride ?? draft).trim();
     if (!prompt) return;
+    const clarificationChoice = findPendingClarificationChoice(prompt);
+    const promptForResolution = clarificationChoice
+      ? `${pendingClarificationRef.current?.prompt || ''} ${clarificationChoice.label}`.trim()
+      : prompt;
+    const resolvedChoicePath = clarificationChoice?.path ?? null;
+    if (clarificationChoice) {
+      pendingClarificationRef.current = null;
+    }
 
-    // If there's a pending decision, block new requests until the user explicitly keeps or undoes.
-    if (pendingDecisionRef.current) {
-      const pending = getPendingDecisionMessage();
-      const pendingRequestId = pending?.requestId || '';
-      const pendingTs = pending?.ts;
-      const timeToDecisionMs = typeof pendingTs === 'number' ? Math.max(0, Date.now() - pendingTs) : undefined;
-
-      const normalized = prompt.toLowerCase();
-      if (normalized === 'keep') {
-        setDraft('');
-        pushMessage({ role: 'user', text: prompt });
-        const pendingOps = pendingOpsRef.current;
-        if (pendingOps && pendingOps.length > 0) {
-          const applied = session.applyOps(pendingOps);
-          if (!applied.ok) {
-            const details = applied.errors.map((e) => `${e.path ? `${e.path}: ` : ''}${e.message}`).join('\n');
-            pushMessage({
-              role: 'assistant',
-              text: `I couldn’t keep that change because it’s no longer valid:\n${details}`,
-            });
-            clearPendingDecision();
-            return;
-          }
-        }
-        void reportOutcome({
-          event: 'edit_applied',
-          requestId: pendingRequestId,
-          sessionId: copilotSessionId,
-          timeToDecisionMs,
-          metadata: buildOutcomeMetadata(pendingOps, controlsForAi),
-        });
-        clearPendingDecision();
-        pushMessage({ role: 'assistant', text: 'Great — keeping it. What would you like to change next?' });
+    const normalized = prompt.toLowerCase();
+    if (normalized === 'undo' && undoRef.current) {
+      setDraft('');
+      pushMessage({ role: 'user', text: prompt });
+      const undo = undoRef.current;
+      if (serializeInstanceDataSignature(instanceDataRef.current) !== undo.postApplySignature) {
+        pushMessage({ role: 'assistant', text: 'The widget changed after Copilot applied that edit. Undo was not applied.' });
+        undoRef.current = null;
+        setUndoAvailable(false);
+        setActiveUndoToken('');
         return;
       }
-      if (normalized === 'undo') {
-        setDraft('');
-        pushMessage({ role: 'user', text: prompt });
-        void reportOutcome({
-          event: 'edit_undone',
-          requestId: pendingRequestId,
-          sessionId: copilotSessionId,
-          timeToDecisionMs,
-          metadata: buildOutcomeMetadata(pendingOpsRef.current, controlsForAi),
-        });
-        clearPendingDecision();
-        pushMessage({ role: 'assistant', text: 'Ok — reverted. What should we try instead?' });
+      const applied = session.applyOps(undo.ops);
+      if (!applied.ok) {
+        pushMessage({ role: 'assistant', text: COPILOT_INVALID_EDIT_MESSAGE });
+        undoRef.current = null;
+        setUndoAvailable(false);
+        setActiveUndoToken('');
         return;
       }
-      const nudge = surfaceContract.pendingNudge;
-      const last = messages[messages.length - 1];
-      if (!(last?.role === 'assistant' && last.text === nudge)) {
-        pushMessage({ role: 'assistant', text: nudge });
-      }
+      void reportOutcome({
+        event: 'edit_undone',
+        requestId: undo.requestId,
+        sessionId: copilotSessionId,
+        timeToDecisionMs: Math.max(0, Date.now() - undo.appliedAtMs),
+        metadata: undo.metadata,
+      });
+      undoRef.current = null;
+      setUndoAvailable(false);
+      setActiveUndoToken('');
+      pushMessage({ role: 'assistant', text: 'Undone.' });
       return;
+    }
+    if (undoRef.current) {
+      undoRef.current = null;
+      setUndoAvailable(false);
+      setActiveUndoToken('');
     }
 
     let sessionId = copilotSessionId;
@@ -356,6 +408,70 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
       pushMessage({ role: 'assistant', text: 'Copilot session not ready. Please try again in a moment.' });
       return;
     }
+
+    if (pendingClarificationRef.current && !clarificationChoice && copilotControlSnapshot) {
+      const freshDeterministicTurn = resolveBobCopilotDeterministicTurn({ prompt, snapshot: copilotControlSnapshot });
+      const freshEditScope = resolveBobCopilotEditScope({ prompt, snapshot: copilotControlSnapshot });
+      if (!freshDeterministicTurn.handled && !freshEditScope.scoped && !freshEditScope.handled) {
+        setDraft('');
+        pushMessage({ role: 'user', text: prompt });
+        pushMessage({
+          role: 'assistant',
+          text: "I couldn't pin down what to change. Try naming the control, like 'the Header CTA' or 'the FAQ title'.",
+        });
+        pendingClarificationRef.current = null;
+        return;
+      }
+      pendingClarificationRef.current = null;
+    }
+
+    const deterministicTurn = !clarificationChoice && copilotControlSnapshot
+      ? resolveBobCopilotDeterministicTurn({ prompt, snapshot: copilotControlSnapshot })
+      : { handled: false as const };
+    if (deterministicTurn.handled) {
+      setDraft('');
+      pushMessage({ role: 'user', text: prompt });
+      if (deterministicTurn.clarificationChoices?.length) {
+        pendingClarificationRef.current = {
+          prompt,
+          choices: deterministicTurn.clarificationChoices,
+        };
+      }
+      pushMessage({
+        role: 'assistant',
+        text: deterministicTurn.message,
+        ...(deterministicTurn.clarificationChoices?.length
+          ? { clarificationChoices: deterministicTurn.clarificationChoices }
+          : {}),
+      });
+      return;
+    }
+
+    const editScope = copilotControlSnapshot && resolvedChoicePath
+      ? {
+          scoped: true as const,
+          controls: copilotControlSnapshot.controls.filter((control) => control.path === resolvedChoicePath),
+        }
+      : copilotControlSnapshot
+      ? resolveBobCopilotEditScope({ prompt: promptForResolution, snapshot: copilotControlSnapshot })
+      : { scoped: false as const, handled: false as const };
+    if (!editScope.scoped && editScope.handled) {
+      setDraft('');
+      pushMessage({ role: 'user', text: prompt });
+      pushMessage({ role: 'assistant', text: editScope.message });
+      return;
+    }
+    if (!editScope.scoped) {
+      setDraft('');
+      pushMessage({ role: 'user', text: prompt });
+      pushMessage({
+        role: 'assistant',
+        text: "I can only edit visible Builder controls for this widget. Ask for a concrete change, like 'change the title' or 'hide the button'.",
+      });
+      return;
+    }
+    const activeControlsForAi = controlsForAi.filter((control) => editScope.controls.some((scoped) => scoped.path === control.path));
+
     if (!chrome.policy) {
       pushMessage({
         role: 'assistant',
@@ -367,17 +483,45 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
     setStatus('loading');
     setDraft('');
     pushMessage({ role: 'user', text: prompt });
+    const requestSignature = serializeInstanceDataSignature(instanceDataRef.current);
+    const requestBaseData = instanceDataRef.current;
+    const activeLocale = chrome.meta?.baseLocale;
+    const instanceId = chrome.meta?.instanceId;
+    if (!activeLocale || !instanceId || !copilotControlSnapshot) {
+      pushMessage({
+        role: 'assistant',
+        text: 'Editor context is not ready yet. Wait for Builder boot to complete and try again.',
+      });
+      setStatus('idle');
+      return;
+    }
+    const targetControl = editScope.controls.length === 1 ? editScope.controls[0] : null;
+    const envelope: BuilderCopilotRequestEnvelope = {
+      instanceId,
+      widgetType: activeCompiled.widgetname,
+      activeLocale,
+      snapshotHash: serializeInstanceDataSignature({ snapshot: copilotControlSnapshot }),
+      turnClass: editScope.controls.length === 1 ? 'resolved_edit' : 'multi_op_plan',
+      ...(targetControl
+        ? {
+            resolvedTarget: {
+              path: targetControl.path,
+              valueType: targetControl.kind,
+              currentValue: targetControl.currentValue,
+            },
+          }
+        : {}),
+      snapshot: { ...copilotControlSnapshot, controls: activeControlsForAi },
+      userMessage: promptForResolution,
+      sessionId,
+    };
 
     try {
       const res = await session.apiFetch('/api/ai/widget-copilot', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          prompt,
-          currentConfig: session.instanceData,
-          controls: controlsForAi,
-          widgetPackage: activeCompiled.widgetPackage ?? null,
-          sessionId,
+          ...envelope,
           ...(selectedModel ? { selectedModel } : {}),
         }),
       });
@@ -398,27 +542,64 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
         );
       }
 
-      const message = normalizeAssistantText(asTrimmedString(parsed?.message) || 'Done.');
-      const cta = parsed?.cta && typeof parsed.cta === 'object' ? parsed.cta : undefined;
+      const message = normalizeAssistantText(asTrimmedString(parsed?.message) || '');
       const ops = Array.isArray(parsed?.ops) ? (parsed.ops as WidgetOp[]) : null;
       const requestId = asTrimmedString(parsed?.meta?.requestId) || asTrimmedString(parsed?.requestId);
+      if (!message && (!ops || ops.length === 0)) {
+        throw new Error(COPILOT_INVALID_EDIT_MESSAGE);
+      }
 
       if (ops && ops.length > 0) {
-        pendingOpsRef.current = ops;
-        pendingDecisionRef.current = true;
-        const pendingText = surfaceContract.pendingMessageText(message);
+        if (serializeInstanceDataSignature(instanceDataRef.current) !== requestSignature) {
+          pushMessage({ role: 'assistant', text: 'The widget changed while Copilot was working. Nothing was applied - try again.' });
+          setStatus('idle');
+          return;
+        }
+        const inverseOps = buildCopilotUndoOps({ before: requestBaseData, ops, controls: compiled.controls });
+        if (!inverseOps) {
+          pushMessage({ role: 'assistant', text: COPILOT_INVALID_EDIT_MESSAGE });
+          setStatus('idle');
+          return;
+        }
+        const applied = session.applyOps(ops);
+        if (!applied.ok) {
+          pushMessage({ role: 'assistant', text: COPILOT_INVALID_EDIT_MESSAGE });
+          setStatus('idle');
+          return;
+        }
+        const postApplySignature = serializeInstanceDataSignature(applied.data);
+        const metadata = buildOutcomeMetadata(ops, activeControlsForAi);
+        const appliedAtMs = Date.now();
+        const undoToken = crypto.randomUUID();
+        undoRef.current = {
+          ops: inverseOps,
+          requestId: requestId || '',
+          appliedAtMs,
+          metadata,
+          token: undoToken,
+          postApplySignature,
+        };
+        setUndoAvailable(true);
+        setActiveUndoToken(undoToken);
+        void reportOutcome({
+          event: 'edit_applied',
+          requestId: requestId || '',
+          sessionId,
+          metadata,
+        });
+        const appliedText = summarizeAppliedOps(ops, activeControlsForAi);
         pushMessage({
           role: 'assistant',
-          text: pendingText,
-          cta,
-          hasPendingDecision: true,
+          text: `${appliedText} ${message}`.trim(),
+          hasUndoAction: true,
+          undoToken,
           ...(requestId ? { requestId } : {}),
         });
         setStatus('idle');
         return;
       }
 
-      pushMessage({ role: 'assistant', text: message, cta, ...(requestId ? { requestId } : {}) });
+      pushMessage({ role: 'assistant', text: message, ...(requestId ? { requestId } : {}) });
       setStatus('idle');
     } catch (err) {
       setStatus('idle');
@@ -451,7 +632,6 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
         aria-label="Copilot conversation"
       >
         {messages.map((m) => {
-          const cta = m.cta;
           return (
             <div key={m.id} style={{ alignSelf: m.role === 'user' ? 'flex-end' : 'flex-start', maxWidth: '92%' }}>
                 <div
@@ -467,98 +647,63 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
                   {m.text}
                 </div>
 
-                {cta?.text ? (
-                  <div style={{ marginTop: 'var(--space-1)' }}>
-                    {cta.action === 'upgrade' ? (
+                {m.clarificationChoices?.length ? (
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-1)', marginTop: 'var(--space-2)' }}>
+                    {m.clarificationChoices.map((choice) => (
                       <button
+                        key={`${choice.path}:${choice.label}`}
                         className="diet-btn-txt"
-                        data-size="md"
-                        data-variant="primary"
+                        data-size="sm"
+                        data-variant="neutral"
                         type="button"
                         onClick={() => {
-                          void reportOutcome({
-                            event: 'cta_clicked',
-                            requestId: m.requestId || '',
-                            sessionId: copilotSessionId,
-                          });
-                          chrome.requestUpsell(cta.text);
+                          void handleSend(choice.label);
                         }}
+                        disabled={status === 'loading' || Boolean(uiDisabledReason)}
                       >
-                        <span className="diet-btn-txt__label">{cta.text}</span>
+                        <span className="diet-btn-txt__label">{choice.label}</span>
                       </button>
-                    ) : (
-                      <a
-                        className="diet-btn-txt"
-                        data-size="md"
-                        data-variant="primary"
-                        href={cta.url || '#'}
-                        target={cta.url ? '_blank' : undefined}
-                        rel={cta.url ? 'noreferrer' : undefined}
-                        onClick={() => {
-                          void reportOutcome({
-                            event: 'cta_clicked',
-                            requestId: m.requestId || '',
-                            sessionId: copilotSessionId,
-                          });
-                        }}
-                      >
-                        <span className="diet-btn-txt__label">{cta.text}</span>
-                      </a>
-                    )}
+                    ))}
                   </div>
                 ) : null}
 
-            {m.hasPendingDecision ? (
+            {m.hasUndoAction && undoAvailable && m.undoToken === activeUndoToken ? (
               <div style={{ display: 'flex', gap: 'var(--space-2)', marginTop: 'var(--space-1)' }}>
-                <button
-                  className="diet-btn-txt"
-                  data-size="md"
-                  data-variant="primary"
-                  type="button"
-                  onClick={() => {
-                    const pendingOps = pendingOpsRef.current;
-                    if (pendingOps && pendingOps.length > 0) {
-                      const applied = session.applyOps(pendingOps);
-                      if (!applied.ok) {
-                        const details = applied.errors.map((e) => `${e.path ? `${e.path}: ` : ''}${e.message}`).join('\n');
-                        pushMessage({
-                          role: 'assistant',
-                          text: `I couldn’t keep that change because it’s no longer valid:\n${details}`,
-                        });
-                        clearPendingDecision();
-                        return;
-                      }
-                    }
-                    void reportOutcome({
-                      event: 'edit_applied',
-                      requestId: m.requestId || '',
-                      sessionId: copilotSessionId,
-                      timeToDecisionMs: Math.max(0, Date.now() - m.ts),
-                      metadata: buildOutcomeMetadata(pendingOps, controlsForAi),
-                    });
-                    clearPendingDecision();
-                    pushMessage({ role: 'assistant', text: 'Great — keeping it. What would you like to change next?' });
-                  }}
-                >
-                  <span className="diet-btn-txt__label">Keep</span>
-                </button>
                 <button
                   className="diet-btn-txt"
                   data-size="md"
                   data-variant="neutral"
                   type="button"
                   onClick={() => {
+                    const undo = undoRef.current;
+                    if (!undo) return;
+                    if (serializeInstanceDataSignature(instanceDataRef.current) !== undo.postApplySignature) {
+                      pushMessage({ role: 'assistant', text: 'The widget changed after Copilot applied that edit. Undo was not applied.' });
+                      undoRef.current = null;
+                      setUndoAvailable(false);
+                      setActiveUndoToken('');
+                      return;
+                    }
+                    const applied = session.applyOps(undo.ops);
+                    if (!applied.ok) {
+                      pushMessage({ role: 'assistant', text: COPILOT_INVALID_EDIT_MESSAGE });
+                      undoRef.current = null;
+                      setUndoAvailable(false);
+                      setActiveUndoToken('');
+                      return;
+                    }
                     void reportOutcome({
                       event: 'edit_undone',
-                      requestId: m.requestId || '',
+                      requestId: undo.requestId,
                       sessionId: copilotSessionId,
-                      timeToDecisionMs: Math.max(0, Date.now() - m.ts),
-                      metadata: buildOutcomeMetadata(pendingOpsRef.current, controlsForAi),
+                      timeToDecisionMs: Math.max(0, Date.now() - undo.appliedAtMs),
+                      metadata: undo.metadata,
                     });
-                    clearPendingDecision();
-                    pushMessage({ role: 'assistant', text: 'Ok — reverted. What should we try instead?' });
+                    undoRef.current = null;
+                    setUndoAvailable(false);
+                    setActiveUndoToken('');
+                    pushMessage({ role: 'assistant', text: 'Undone.' });
                   }}
-                  disabled={!pendingOpsRef.current}
                 >
                   <span className="diet-btn-txt__label">Undo</span>
                 </button>
@@ -632,7 +777,9 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
             data-size="md"
             data-variant="primary"
             type="button"
-            onClick={handleSend}
+            onClick={() => {
+              void handleSend();
+            }}
             disabled={status === 'loading' || Boolean(uiDisabledReason) || !draft.trim()}
           >
             <span className="diet-btn-txt__label">{status === 'loading' ? '...' : 'Send'}</span>

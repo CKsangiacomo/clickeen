@@ -1,10 +1,10 @@
 # PRD 120 - San Francisco Agent Platform: Architecture Decision
 
-Status: PLANNING
+Status: EXECUTING - CODE COMPLETE, AUTHENTICATED BROWSER VERIFICATION BLOCKED
 Owner: Product + Architecture (San Francisco)
 Priority: P0 for Builder Copilot proof; P1 for durable workforce architecture
 Date: 2026-06-07
-Stage: 01-Planning
+Stage: 02-Executing/120
 Type: Architecture decision (understand → survey → recommend)
 
 Related:
@@ -54,6 +54,23 @@ architecture sounds. The durable workforce-agent platform remains the correct lo
 architecture, but it is secondary until PRD 120B proves that San Francisco + Bob can
 operate the actual editor.
 
+Execution amendment applied on 2026-06-18 after 120 series review:
+
+- **Do not execute the full 120 series as written.** Execute only the next product proof:
+  Builder Copilot as a visible Builder-control operator, plus the minimum San Francisco
+  provider-call and typed-error hardening required to make that proof safe.
+- **Remove the stale translation queue premise.** the removed translation queue is not a
+  current product mechanism. The current checked truth is that San Francisco exposes
+  internal HTTP instance-translation diagnostic routes, while Roma account translation
+  generation is disabled until the owner path is deliberately re-enabled. Do not add a
+  queue to satisfy this PRD.
+- **Defer workforce-agent architecture.** 120C, durable agents, MCP/outbound tooling,
+  learning loops beyond shipped telemetry, Guide, Advice, and free-tier conversion-mode
+  machinery are not part of the first execution slice.
+- **Keep product authority simple.** Bob owns the open Builder working copy and visible
+  controls; Roma owns account/session/tier/grant/save routing; Tokyo/Tokyo-worker remain
+  storage/R2 surfaces; San Francisco owns only AI execution.
+
 ---
 
 ## 1. Understand Clickeen first
@@ -98,13 +115,14 @@ The required first proof is deliberately boring:
 Until those pass across the shipped widgets, the rest of the workforce-agent architecture
 is planning, not product proof.
 
-That first proof is not the whole Copilot. Builder Copilot also needs a Guide capability:
+That first proof is not the whole Copilot. Builder Copilot may later need a Guide capability:
 when a user asks "what do I do in the panels?", "how do I add/remove/reorder this?", or
 "why don't I see that setting?", Copilot should understand the whole current widget, not
 only one isolated op. That requires a shaped whole-widget capability map: panels, groups,
 visible controls, hidden/disabled dependencies, repeatable structures, and supported
 workflows. It is not solved by vague source-code access. The Guide capability depends on
 the Operator capability because "do it" follow-ups must become validated Builder ops.
+Guide is deferred until the Operator proof is green.
 
 ### 1.1 The company goal
 
@@ -140,8 +158,8 @@ Clickeen already has named authorities:
 
 - Bob owns the in-memory Builder working copy for one open widget instance.
 - Roma owns the account Builder host and account-scoped product routes.
-- Tokyo owns instance source, translation generation state, package files, publish state,
-  and account-owned instance operations.
+- Tokyo owns instance source, locale overlay storage, package files, publish state, and
+  account-owned instance operations.
 - Product-specific orchestrators own their own review artifacts and workflow state.
 - San Francisco owns AI execution: provider keys, grants/policy, model routing,
   capability validation, budgets, typed errors, telemetry, eval signals, and learning
@@ -180,9 +198,10 @@ already owns the AI plane:
   `SF_EVENTS`; the consumer writes raw samples to R2 and indexes to D1; `/v1/outcome`
   attaches conversions. Bindings already provisioned: `SF_KV`, `SF_EVENTS`, `SF_D1`,
   `SF_R2` (`documentation/ai/infrastructure.md`).
-- **Two execution shapes already coexist:** synchronous `/v1/execute` (Builder Copilot)
-  and queue-driven async work (account-widget instance translation via
-  `INSTANCE_TRANSLATION_JOBS`).
+- **Two San Francisco HTTP surfaces already coexist:** synchronous `/v1/execute` (Builder
+  Copilot) and internal instance-translation diagnostic routes. The removed
+  removed translation queue is not current product truth and must not be rebuilt as
+  a PRD compliance artifact.
 
 This is the decisive fact: **the AI plane already exists and is disciplined.** The
 question is not "where does the agent platform live" — it lives in San Francisco. The
@@ -220,7 +239,7 @@ shape, and a one-size design would be wrong.
 | Agent                            | Canonical / proposed id           | Status                | Owner surface           | Source                |
 | -------------------------------- | --------------------------------- | --------------------- | ----------------------- | --------------------- |
 | Builder Copilot                  | `cs.widget.copilot.v1`            | **Shipped**           | Roma account Builder    | overview, ai.ts       |
-| Widget Instance Translator       | `widget.instance.translator`      | **Shipped (queue)**   | Tokyo-worker → SF queue | overview, ai.ts       |
+| Widget Instance Translator       | `widget.instance.translator`      | **Diagnostic HTTP route; product generation disabled** | Roma/Tokyo storage boundary + SF diagnostic route | overview, ai.ts       |
 | GTM Agent ("AI VP of Marketing") | `ops.gtm.*` (proposed)            | **Spec'd, not built** | internal/ops cron       | `agents/gtm.md`       |
 | UX Writer                        | `ops.uxwriter.*` (proposed)       | **Spec'd, not built** | internal/ops cron       | `agents/ux-writer.md` |
 | Support Reply                    | `support.reply` (named)           | Future                | (TBD)                   | overview "Terms"      |
@@ -341,10 +360,9 @@ execution surfaces sit behind that one plane:
    task-fanout (Durable Object/queue/cron) may run as a **governed sibling worker per
    durable agent** (preserving isolation and independent deploy), but **all model calls,
    grant/policy enforcement, budget accounting, and learning-event emission route back
-   through San Francisco's shared spine** (exactly like Tokyo-worker already dispatches
-   instance translation to San Francisco through the `INSTANCE_TRANSLATION_JOBS` queue;
-   corrected per review PR-1 — the previously cited `SANFRANCISCO_L10N` service binding
-   exists only in stale docs, not in code).
+   through San Francisco's shared spine**. The previous draft cited a
+   removed translation queue as precedent; that mechanism is not present in the
+   current product and must not be recreated merely to match old planning text.
 
 In other words: **orchestration is per-agent and isolated; the AI plane is singular and
 shared.** No agent re-implements grants, keys, routing, budgets, or learning. SF governs
@@ -503,10 +521,10 @@ execution surfaces — interactive (`/v1/execute`) and durable (governed orchest
 workers that route all model/policy/budget/learning through San Francisco).**
 
 Execution priority correction: the interactive surface is not just "one of the surfaces."
-Builder Copilot is the P0 proof gate. The concrete 120B Builder-contract projection work is
-not blocked by 120A1; Bob can start projecting `EditorContract` into Copilot immediately.
-120A1 runs in parallel as the release gate for model capability, picker eligibility, and
-typed provider errors. Durable workforce scaffolding is sequenced after the Copilot proof.
+Builder Copilot is the P0 proof gate. The active 120B Operator work uses Bob's existing
+compiled controls plus compiler-owned vocabulary as the Copilot action surface. 120A1 runs
+in parallel as the release gate for model capability, picker eligibility, and typed
+provider errors. Durable workforce scaffolding is sequenced after the Copilot proof.
 
 Why this is the right fit for _Clickeen specifically_:
 
@@ -517,10 +535,10 @@ Why this is the right fit for _Clickeen specifically_:
    authority.
 1. **It honors the shipped isolation tenet** while keeping the "AI Workforce OS" real —
    the two things the canonical docs insist on simultaneously.
-2. **It generalizes a pattern already in production**, not a theory: account-widget
-   instance translation is already an external orchestrator (Tokyo-worker) dispatching
-   work to San Francisco's execution plane through the `INSTANCE_TRANSLATION_JOBS`
-   queue. Option C is "do that, on purpose, for every durable agent."
+2. **It generalizes the correct boundary, not a stale mechanism:** model calls belong to
+   San Francisco; account/product state remains with the owning product boundary. Do not
+   infer a queue, Tokyo-worker orchestration role, or new storage responsibility from old
+   translation text.
 3. **It refuses duplicate truth.** One provider-key home, one model router, one budget
    authority, one learning loop. Adding the GTM Agent does not re-implement any of that —
    it implements only its orchestration + its prompts + its boundary.
@@ -590,10 +608,10 @@ execution slice.
   vocabulary; answer capability questions deterministically; validate structured ops
   against current editable paths; apply only to Bob's in-memory working copy; preserve
   dirty state; add fixture/eval scenarios for the shipped widgets. First code gate:
-  project the existing `EditorContract` into Copilot instead of flattening it to
-  keyword-ranked `controls[]`. The first green bar is not abstract: button green, button
-  label, hide button, background, title, share, and branding edits must work or clarify
-  correctly in preview.
+  stop treating keyword-ranked `controls[]` and raw source snippets as model target
+  authority; Bob grounds the target from visible compiled controls before any model-backed
+  edit. The first green bar is not abstract: button green, button label, hide button,
+  background, title, share, and branding edits must work or clarify correctly in preview.
 - **120B-2 — Builder Copilot Guide layer.** After the Operator slice is green, add
   whole-widget/panel/workflow guidance for prompts like "what do I do in the panels?",
   "how do I add/remove/reorder this?", and "why don't I see that setting?" This is not
@@ -604,7 +622,7 @@ execution slice.
   capability metadata, provider-conformance checks, typed provider errors, and picker
   eligibility so Builder Copilot cannot select or call an unsupported model shape. This
   runs alongside 120B1/120B-2 and must be green before release, but it must not block the
-  Bob `EditorContract` projection work.
+  Bob compiled-control Operator work.
 - **120A-2 — Durable/service plane contract.** Define the service-binding execution
   interface San Francisco exposes to durable orchestrators: service-scoped policy/grant
   model, budget split, shared execution core, structured result + usage, telemetry,
@@ -689,11 +707,10 @@ Each phase ships docs-in-sync with code before moving to `03-Executed`, per the 
 
 ## 7. Open questions (resolve before 120A execution)
 
-1. **Service-scoped execution transport:** RESOLVED (D5 dispositions, 2026-06-09):
-   request/response durable calls → private service binding; fire-and-forget jobs →
-   queue (matching the shipped `INSTANCE_TRANSLATION_JOBS` pattern — note the
-   previously cited `SANFRANCISCO_L10N` binding never existed in code). No
-   authenticated internal HTTP path.
+1. **Service-scoped execution transport:** DEFERRED. The previous resolution depended on
+   the non-current the removed translation queue premise. Resolve transport only when a real
+   durable agent enters execution review; do not introduce transport machinery during the
+   Builder Copilot Operator proof.
 2. **Where do ops-agent outputs live?** GTM JSON and UX audit reports are neither account
    truth nor SF telemetry. Proposed: a service-owned review store (R2 + D1) owned by the
    agent's orchestrator, explicitly outside product persistence. Confirm the boundary name.
