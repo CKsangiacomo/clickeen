@@ -12,12 +12,16 @@ on:
       - "tokyo/product/themes/**"
       - "tokyo/product/dieter/**"
       - "tokyo/roma/**"
+      - "dieter/**"
       - "packages/ck-contracts/**"
       - "packages/ck-policy/**"
       - "packages/l10n/**"
       - "packages/widget-shell/**"
       - "scripts/infra/**"
       - "scripts/verify/**"
+      - "scripts/build-dieter.js"
+      - "scripts/process-svgs.js"
+      - "scripts/verify-svgs.js"
       - "scripts/tokyo-r2-deploy-sync.mjs"
       - ".github/workflows/cloud-dev-workers.yml"
   workflow_dispatch: {}
@@ -84,6 +88,7 @@ jobs:
           sanfrancisco=false
           tokyo=false
           tokyo_assets=false
+          dieter_artifacts=false
 
           workflow_changed=false
           if path_changed '^\.github/workflows/cloud-dev-workers\.yml$'; then
@@ -102,7 +107,11 @@ jobs:
             tokyo=true
           fi
 
-          if path_changed '^(tokyo/product/widgets/|tokyo/product/fonts/|tokyo/product/themes/|tokyo/product/dieter/|tokyo/roma/|scripts/tokyo-r2-deploy-sync\.mjs)'; then
+          if path_changed '^(dieter/|scripts/build-dieter\.js|scripts/process-svgs\.js|scripts/verify-svgs\.js)'; then
+            dieter_artifacts=true
+          fi
+
+          if [ "$dieter_artifacts" = "true" ] || path_changed '^(tokyo/product/widgets/|tokyo/product/fonts/|tokyo/product/themes/|tokyo/product/dieter/|tokyo/roma/|scripts/tokyo-r2-deploy-sync\.mjs)'; then
             tokyo_assets=true
           fi
 
@@ -111,6 +120,7 @@ jobs:
             echo "sanfrancisco=$sanfrancisco"
             echo "tokyo=$tokyo"
             echo "tokyo_assets=$tokyo_assets"
+            echo "dieter_artifacts=$dieter_artifacts"
           } >> "$GITHUB_OUTPUT"
 
       - name: Deploy berlin-dev
@@ -132,6 +142,10 @@ jobs:
             exit 1
           fi
           pnpm -C tokyo-worker exec wrangler versions deploy "${version_id}@100" --yes
+
+      - name: Build Dieter deploy artifacts
+        if: steps.changes.outputs.dieter_artifacts == 'true'
+        run: pnpm build:dieter
 
       - name: Sync Tokyo deploy roots to R2 (cloud-dev)
         if: steps.changes.outputs.tokyo_assets == 'true'

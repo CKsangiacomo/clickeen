@@ -53,6 +53,75 @@
   padding: 0;
 }
 
+.devstudio-token-editor {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: grid;
+  place-items: center;
+  padding: var(--space-6);
+  background: color-mix(in oklab, var(--color-system-black), transparent 64%);
+}
+
+.devstudio-token-editor__panel {
+  display: grid;
+  gap: var(--space-4);
+  width: min(420px, 100%);
+  padding: var(--space-5);
+  border-radius: var(--radius-4);
+  background: var(--role-surface-bg, var(--color-system-white));
+  border: 1px solid var(--role-border);
+  box-shadow: var(--shadow-lg, 0 18px 48px color-mix(in oklab, var(--color-system-black), transparent 82%));
+}
+
+.devstudio-token-editor__header,
+.devstudio-token-editor__actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.devstudio-token-editor__header h2 {
+  margin: 0;
+}
+
+.devstudio-token-editor__field {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.devstudio-token-editor__select,
+.devstudio-token-editor__input {
+  width: 100%;
+  box-sizing: border-box;
+  min-height: var(--control-size-md);
+  padding-inline: var(--space-3);
+  border-radius: var(--control-radius-md);
+  border: 1px solid var(--role-border);
+  background: var(--color-system-white);
+  color: var(--color-text);
+  font: 500 var(--fs-13)/var(--lh-body-ui) var(--font-ui);
+}
+
+.devstudio-token-editor__select:focus,
+.devstudio-token-editor__input:focus {
+  outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, var(--color-system-blue));
+  outline-offset: var(--focus-ring-offset, 2px);
+}
+
+.devstudio-token-editor__diff {
+  min-height: 1.4em;
+  color: color-mix(in oklab, var(--color-text), transparent 35%);
+}
+
+.devstudio-token-editor__panel[data-state="error"] .devstudio-token-editor__diff {
+  color: var(--color-system-red);
+}
+
+.devstudio-token-editor__panel[data-state="saved"] .devstudio-token-editor__diff {
+  color: var(--color-system-green);
+}
 
 /* Remove default gray background on inline code elements in some browsers */
 code {

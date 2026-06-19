@@ -5,6 +5,8 @@ on:
     branches: [main]
     paths:
       - 'admin/**'
+      - 'dieter/**'
+      - 'scripts/dieter/**'
       - 'documentation/engineering/PlaywrightE2E.md'
       - '.github/workflows/devstudio-verify.yml'
   workflow_dispatch: {}
@@ -28,6 +30,8 @@ jobs:
             command: pnpm --filter @clickeen/devstudio build
           - name: Check DevStudio Functions
             command: pnpm --filter @clickeen/devstudio check:functions
+          - name: Check Dieter Governance
+            command: pnpm dieter:governance:check
     permissions:
       contents: read
     steps:

@@ -35,6 +35,7 @@
     "build:bob": "pnpm --filter @clickeen/bob build",
     "build:devstudio": "pnpm --filter @clickeen/devstudio build",
     "build:dieter": "pnpm --filter @ck/dieter build",
+    "dieter:governance:check": "node scripts/dieter/governance-guards.mjs",
     "build:prague": "pnpm --filter @clickeen/prague build",
     "build:roma": "pnpm --filter @clickeen/roma build",
     "prague:l10n:translate": "node scripts/prague-l10n/translate.mjs",

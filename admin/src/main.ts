@@ -26,7 +26,7 @@ import {
   hydrateValuefield,
 } from '@dieter/components';
 import dietIconCss from '@dieter/components/icon/icon.css?raw';
-import { typographySections, getTypographySampleText } from './data/typography';
+import { typographySections, typographyRoleCount, getTypographySampleText } from './data/typography';
 import {
   ENTITLEMENT_META,
   isPolicyEntitled,
@@ -267,6 +267,176 @@ function executeScripts(scope: DocumentFragment | Element) {
   });
 }
 
+type DieterTokenKind = 'colors' | 'typography';
+type DieterToken = {
+  token: string;
+  value: string;
+  editable: boolean;
+};
+
+const tokenCache = new Map<DieterTokenKind, DieterToken[]>();
+let tokenEditor: HTMLElement | null = null;
+
+async function fetchDieterTokens(kind: DieterTokenKind): Promise<DieterToken[]> {
+  const cached = tokenCache.get(kind);
+  if (cached) return cached;
+  const res = await fetch(`/api/dieter/tokens/${kind}`, {
+    method: 'GET',
+    headers: { Accept: 'application/json' },
+  });
+  const payload = await res.json().catch(() => null);
+  if (!res.ok || !payload?.ok || !Array.isArray(payload.tokens)) {
+    const message = payload?.error?.detail || payload?.error?.reasonKey || `HTTP_${res.status}`;
+    throw new Error(message);
+  }
+  tokenCache.set(kind, payload.tokens);
+  return payload.tokens;
+}
+
+async function saveDieterToken(kind: DieterTokenKind, token: string, value: string): Promise<DieterToken[]> {
+  const res = await fetch(`/api/dieter/tokens/${kind}/value`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+    body: JSON.stringify({ token, value }),
+  });
+  const payload = await res.json().catch(() => null);
+  if (!res.ok || !payload?.ok || !Array.isArray(payload.tokens)) {
+    const message = payload?.error?.detail || payload?.error?.reasonKey || `HTTP_${res.status}`;
+    throw new Error(message);
+  }
+  tokenCache.set(kind, payload.tokens);
+  return payload.tokens;
+}
+
+function closeTokenEditor() {
+  tokenEditor?.remove();
+  tokenEditor = null;
+}
+
+function updateVisibleTokenValue(token: string, value: string) {
+  document.querySelectorAll<HTMLElement>(`[data-token-value="${CSS.escape(token)}"]`).forEach((node) => {
+    node.textContent = value;
+  });
+  document.querySelectorAll<HTMLElement>(`[data-token="${CSS.escape(token)}"]`).forEach((node) => {
+    node.setAttribute('data-value', value);
+  });
+}
+
+async function openTokenEditor(kind: DieterTokenKind, preferredToken?: string) {
+  closeTokenEditor();
+
+  const overlay = document.createElement('div');
+  overlay.className = 'devstudio-token-editor';
+  overlay.innerHTML = `
+    <form class="devstudio-token-editor__panel" data-state="loading">
+      <div class="devstudio-token-editor__header">
+        <h2 class="heading-4">Edit Token</h2>
+        <button class="diet-btn-ic" data-size="sm" data-variant="neutral" type="button" data-token-editor-close aria-label="Close">
+          <span class="diet-btn-ic__icon" data-icon="multiply"></span>
+        </button>
+      </div>
+      <label class="devstudio-token-editor__field">
+        <span class="label-xs">Token</span>
+        <select class="devstudio-token-editor__select" name="token"></select>
+      </label>
+      <label class="devstudio-token-editor__field">
+        <span class="label-xs">Value</span>
+        <input class="devstudio-token-editor__input" name="value" type="text" autocomplete="off" />
+      </label>
+      <div class="devstudio-token-editor__diff body-xs" aria-live="polite"></div>
+      <div class="devstudio-token-editor__actions">
+        <button class="diet-btn-txt" data-size="md" data-variant="secondary" type="button" data-token-editor-close>
+          <span class="diet-btn-txt__label">Cancel</span>
+        </button>
+        <button class="diet-btn-txt" data-size="md" data-variant="primary" type="submit">
+          <span class="diet-btn-txt__label">Confirm Commit</span>
+        </button>
+      </div>
+    </form>
+  `;
+  document.body.append(overlay);
+  tokenEditor = overlay;
+  hydrateIcons(overlay);
+
+  const form = overlay.querySelector<HTMLFormElement>('form');
+  const select = overlay.querySelector<HTMLSelectElement>('select[name="token"]');
+  const input = overlay.querySelector<HTMLInputElement>('input[name="value"]');
+  const diff = overlay.querySelector<HTMLElement>('.devstudio-token-editor__diff');
+  if (!form || !select || !input || !diff) return;
+
+  overlay.addEventListener('click', (event) => {
+    const target = event.target;
+    if (target === overlay || (target instanceof Element && target.closest('[data-token-editor-close]'))) {
+      event.preventDefault();
+      closeTokenEditor();
+    }
+  });
+
+  const setStatus = (message: string, state = 'ready') => {
+    form.dataset.state = state;
+    diff.textContent = message;
+  };
+
+  try {
+    const tokens = (await fetchDieterTokens(kind)).filter((token) => token.editable);
+    select.replaceChildren(
+      ...tokens.map((entry) => {
+        const option = document.createElement('option');
+        option.value = entry.token;
+        option.textContent = entry.token;
+        return option;
+      }),
+    );
+    const selected = tokens.find((entry) => entry.token === preferredToken) ?? tokens[0];
+    if (!selected) {
+      setStatus('No editable tokens found.', 'error');
+      return;
+    }
+    select.value = selected.token;
+    input.value = selected.value;
+
+    const syncDiff = () => {
+      const current = tokens.find((entry) => entry.token === select.value);
+      if (!current) return;
+      if (input.value.trim() === current.value) {
+        setStatus(`${current.token}: unchanged`);
+      } else {
+        setStatus(`${current.token}: ${current.value} -> ${input.value.trim()}`);
+      }
+    };
+
+    select.addEventListener('change', () => {
+      const current = tokens.find((entry) => entry.token === select.value);
+      input.value = current?.value ?? '';
+      syncDiff();
+    });
+    input.addEventListener('input', syncDiff);
+    syncDiff();
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const token = select.value;
+      const value = input.value.trim();
+      const current = tokens.find((entry) => entry.token === token);
+      if (!current || !value || value === current.value) {
+        syncDiff();
+        return;
+      }
+      setStatus(`${token}: committing ${current.value} -> ${value}`, 'saving');
+      try {
+        const nextTokens = await saveDieterToken(kind, token, value);
+        const next = nextTokens.find((entry) => entry.token === token);
+        if (next) updateVisibleTokenValue(token, next.value);
+        setStatus(`${token}: committed. CI will rebuild Dieter artifacts.`, 'saved');
+      } catch (error) {
+        setStatus(error instanceof Error ? error.message : String(error), 'error');
+      }
+    });
+  } catch (error) {
+    setStatus(error instanceof Error ? error.message : String(error), 'error');
+  }
+}
+
 function renderHtmlPage(htmlPath: string, styles: string[] = []): DocumentFragment {
   const raw = showcaseModules[htmlPath];
   const template = document.createElement('template');
@@ -384,6 +554,8 @@ function wrapWithPageChrome(fragment: DocumentFragment, title: string): Document
 function hydrateTypographyPage(scope: ParentNode) {
   const container = scope.querySelector<HTMLElement>('.typography-page__sections');
   if (!container || container.childElementCount) return;
+  const page = scope.querySelector<HTMLElement>('.typography-page');
+  page?.setAttribute('data-governance-count', String(typographyRoleCount));
 
   const doc = container.ownerDocument;
 
@@ -426,7 +598,14 @@ function hydrateTypographyPage(scope: ParentNode) {
       sampleElement.className = sample.className;
       sampleElement.textContent = getTypographySampleText(sample.sample);
 
-      previewWrapper.appendChild(sampleElement);
+      const editButton = doc.createElement('button');
+      editButton.className = 'token-edit-trigger';
+      editButton.type = 'button';
+      editButton.setAttribute('data-token-edit', 'typography');
+      editButton.setAttribute('aria-label', `Edit typography tokens for ${sample.name}`);
+      editButton.appendChild(sampleElement);
+
+      previewWrapper.appendChild(editButton);
       specWrapper.appendChild(previewWrapper);
 
       row.appendChild(specWrapper);
@@ -462,6 +641,13 @@ function renderFromHash() {
   main.replaceChildren(wrapped);
   hydrateDieterComponents(main);
   hydrateTypographyPage(main);
+  main.querySelectorAll<HTMLElement>('[data-token-edit]').forEach((node) => {
+    node.addEventListener('click', () => {
+      const editKind = node.getAttribute('data-token-edit');
+      if (editKind !== 'color' && editKind !== 'typography') return;
+      openTokenEditor(editKind === 'color' ? 'colors' : 'typography', node.getAttribute('data-token') ?? undefined);
+    });
+  });
 }
 
 window.addEventListener('hashchange', renderFromHash);

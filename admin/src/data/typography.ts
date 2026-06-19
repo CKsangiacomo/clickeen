@@ -16,76 +16,26 @@ export interface TypographySection {
 const nameFromClass = (className: string): string =>
   className.replace(/-/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase());
 
-const BODY_SCALE = [
-  'body-xxs',
-  'body-xs',
-  'body-s',
-  'body-m',
-  'body-l',
-  'body-xl',
-  'body-xxl',
-];
+const generatedSections = generated as Record<string, Array<{ className: string; sample?: string }>>;
 
-const WEBSITE_BODY_SCALE = ['body-website', 'body-website-large', 'body-website-xlarge'];
+export const typographySections: TypographySection[] = Object.entries(generatedSections).map(([title, entries]) => ({
+  title,
+  samples: entries.map((entry) => ({
+    name: nameFromClass(entry.className),
+    className: entry.className,
+    sample: entry.sample ?? defaultSample,
+  })),
+}));
 
-const LABEL_SCALE = [
-  'label-xxs',
-  'label-xs',
-  'label-s',
-  'label-m',
-  'label-l',
-  'label-xl',
-  'label-xxl',
-  'caption',
-  'caption-small',
-  'overline',
-  'overline-small',
-];
+export const typographyRoleCount = typographySections.reduce((count, section) => count + section.samples.length, 0);
 
-const flatLookup = Object.values(generated)
-  .flat()
-  .reduce<Record<string, string>>((acc, entry) => {
-    acc[entry.className] = entry.sample ?? defaultSample;
-    return acc;
-  }, {});
-
-const buildScale = (classes: string[]): TypographySample[] =>
-  classes.map((className) => ({
-    name: nameFromClass(className),
-    className,
-    sample: flatLookup[className] ?? defaultSample,
-  }));
-
-export const typographySections: TypographySection[] = [
-  {
-    title: 'Marketing Display',
-    samples: (generated['Marketing Display'] ?? []).map((entry) => ({
-      name: nameFromClass(entry.className),
-      className: entry.className,
-      sample: entry.sample ?? defaultSample,
-    })),
-  },
-  {
-    title: 'Headings',
-    samples: generated['Headings'].map((entry) => ({
-      name: nameFromClass(entry.className),
-      className: entry.className,
-      sample: entry.sample ?? defaultSample,
-    })),
-  },
-  {
-    title: 'Body',
-    samples: buildScale(BODY_SCALE),
-  },
-  {
-    title: 'Website Body',
-    samples: buildScale(WEBSITE_BODY_SCALE),
-  },
-  {
-    title: 'Labels & Captions',
-    samples: buildScale(LABEL_SCALE),
-  },
-];
+export const typographyTokenClasses: TypographySample[] = typographySections.flatMap((section) =>
+  section.samples.map((sample) => ({
+    name: sample.name,
+    className: sample.className,
+    sample: sample.sample,
+  })),
+);
 
 export function getTypographySampleText(sample?: string): string {
   return sample ?? defaultSample;

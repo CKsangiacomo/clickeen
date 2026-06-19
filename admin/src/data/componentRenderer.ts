@@ -23,6 +23,11 @@ type Preview = {
   sizeContext?: Record<string, StencilContext>;
 };
 
+type SpecAttribute = {
+  enum?: string[];
+  values?: string[];
+};
+
 const wrapPreviewComponents = new Set<string>(['button']);
 
 const resolveContext = (base: StencilContext, overrides: StencilContext): StencilContext =>
@@ -129,7 +134,27 @@ export const renderComponentDoc = (source: ComponentSource): ComponentDoc | null
     ? source.spec.defaults
     : Array.isArray(source.spec?.previews)
       ? source.spec.previews
-      : [];
+      : Array.isArray(source.spec?.examples)
+        ? (source.spec.examples as Array<Record<string, unknown>>).map((example, index) => ({
+            id: typeof example?.description === 'string' ? example.description : `${source.name}-${index + 1}`,
+            spec: [typeof example?.code === 'string' ? example.code : source.spec.syntax].filter(Boolean),
+            sizes:
+              source.spec.attributes &&
+              typeof source.spec.attributes === 'object' &&
+              !Array.isArray(source.spec.attributes) &&
+              Array.isArray((source.spec.attributes as Record<string, SpecAttribute>).size?.values)
+                ? (source.spec.attributes as Record<string, SpecAttribute>).size.values
+                : undefined,
+            context: {
+              id: `${source.name}-${index + 1}`,
+              label: 'Rich text',
+              size: 'md',
+              path: 'bodyHtml',
+              placeholder: 'The quick brown fox jumps over the lazy dog',
+              allowLinks: 'true',
+            },
+          }))
+        : [];
   const previews: Preview[] = variantsSource;
 
   if (!previews.length) return null;
@@ -139,6 +164,23 @@ export const renderComponentDoc = (source: ComponentSource): ComponentDoc | null
     .filter((html): html is string => Boolean(html));
 
   if (!variantsHtml.length) return null;
+
+  const renderedForCoverage = variantsHtml.join('\n');
+  const attributes = source.spec?.attributes;
+  if (attributes && typeof attributes === 'object' && !Array.isArray(attributes)) {
+    Object.entries(attributes as Record<string, SpecAttribute>).forEach(([name, attribute]) => {
+      const values = Array.isArray(attribute.enum)
+        ? attribute.enum
+        : Array.isArray(attribute.values)
+          ? attribute.values
+          : [];
+      values.forEach((value) => {
+        if (!renderedForCoverage.includes(value)) {
+          throw new Error(`[componentRenderer] ${source.name} does not render ${name}="${value}"`);
+        }
+      });
+    });
+  }
 
   const pageHtml = `
 <div>

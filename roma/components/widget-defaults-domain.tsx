@@ -390,7 +390,22 @@ function DefaultsField(args: {
     control.type !== 'textarea' &&
     control.type !== 'dropdown-edit'
   ) {
-    return null;
+    const rawValue = readPathValue(values, control.path);
+    const displayValue =
+      typeof rawValue === 'string'
+        ? rawValue
+        : isRecord(rawValue) || Array.isArray(rawValue)
+          ? JSON.stringify(rawValue)
+          : String(rawValue ?? '');
+    return (
+      <div className="widget-defaults-field widget-defaults-field--locked">
+        <span className="body-s">{label}</span>
+        <span className="widget-defaults-locked-value caption" data-locked>
+          {displayValue || '(complex value)'}
+        </span>
+        <span className="widget-defaults-locked-note caption">Not editable from this surface</span>
+      </div>
+    );
   }
 
   const text = typeof value === 'string' ? value : '';
@@ -732,7 +747,7 @@ export function WidgetDefaultsDomain() {
     return <section className="roma-module-surface body-m">Loading Builder controls...</section>;
   }
 
-  if (unmappedDefaultPaths.length > 0 || unsupportedDefaultControls.length > 0) {
+  if (unmappedDefaultPaths.length > 0) {
     return (
       <section className="roma-module-surface widget-defaults-contract-error">
         <div>
@@ -741,11 +756,10 @@ export function WidgetDefaultsDomain() {
         </div>
         <p className="body-m">
           Account defaults contain paths that are not exposed by the compiled Builder control
-          contract, or compiled controls that the defaults editor does not support. Fix Widget Shell
-          or the widget spec before editing defaults.
+          contract. Fix Widget Shell or the widget spec before editing defaults.
         </p>
         <pre className="widget-defaults-contract-error__paths">
-          {[...unmappedDefaultPaths, ...unsupportedDefaultControls].join('\n')}
+          {unmappedDefaultPaths.join('\n')}
         </pre>
       </section>
     );
@@ -782,6 +796,15 @@ export function WidgetDefaultsDomain() {
           </button>
         </div>
       </div>
+
+      {unsupportedDefaultControls.length > 0 ? (
+        <div className="widget-defaults-locked-summary">
+          <p className="body-s">
+            {unsupportedDefaultControls.length} default(s) are preserved but not editable from Widget
+            Defaults. They will still be used for new instances.
+          </p>
+        </div>
+      ) : null}
 
       <div className="widget-defaults-section">
         {shellGroups.map((group) => (

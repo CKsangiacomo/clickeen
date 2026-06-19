@@ -25,13 +25,23 @@ function resolveKey(key: string, stack: StencilContext[]): unknown {
   const ctxIndex = stack.length - 1 - upLevels;
   if (ctxIndex < 0) return undefined;
 
-  let value: unknown = stack[ctxIndex];
-  for (let i = 0; i < segments.length; i += 1) {
-    if (value == null) return undefined;
-    if (typeof value !== 'object') return undefined;
-    value = (value as Record<string, unknown>)[segments[i]];
+  const resolveFrom = (context: StencilContext): unknown => {
+    let value: unknown = context;
+    for (let i = 0; i < segments.length; i += 1) {
+      if (value == null) return undefined;
+      if (typeof value !== 'object') return undefined;
+      value = (value as Record<string, unknown>)[segments[i]];
+    }
+    return value;
+  };
+
+  if (upLevels > 0) return resolveFrom(stack[ctxIndex]);
+
+  for (let index = ctxIndex; index >= 0; index -= 1) {
+    const value = resolveFrom(stack[index]);
+    if (typeof value !== 'undefined') return value;
   }
-  return value;
+  return undefined;
 }
 
 export function interpolateStencilContext(context: StencilContext, options?: RenderOptions): StencilContext {
