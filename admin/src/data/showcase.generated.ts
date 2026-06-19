@@ -16,13 +16,14 @@ import html13 from "../html/components/repeater.html?raw";
 import html14 from "../html/components/segmented.html?raw";
 import html15 from "../html/components/slider.html?raw";
 import html16 from "../html/components/tabs.html?raw";
-import html17 from "../html/components/textfield.html?raw";
-import html18 from "../html/components/toggle.html?raw";
-import html19 from "../html/components/valuefield.html?raw";
-import html20 from "../html/foundations/colors.html?raw";
-import html21 from "../html/foundations/icons.html?raw";
-import html22 from "../html/foundations/typography.html?raw";
-import html23 from "../html/tools/entitlements.html?raw";
+import html17 from "../html/components/textedit.html?raw";
+import html18 from "../html/components/textfield.html?raw";
+import html19 from "../html/components/toggle.html?raw";
+import html20 from "../html/components/valuefield.html?raw";
+import html21 from "../html/foundations/colors.html?raw";
+import html22 from "../html/foundations/icons.html?raw";
+import html23 from "../html/foundations/typography.html?raw";
+import html24 from "../html/tools/entitlements.html?raw";
 
 export const staticShowcaseModules: Record<string, string> = {
   "../html/components/bulk-edit.html": html0,
@@ -42,11 +43,12 @@ export const staticShowcaseModules: Record<string, string> = {
   "../html/components/segmented.html": html14,
   "../html/components/slider.html": html15,
   "../html/components/tabs.html": html16,
-  "../html/components/textfield.html": html17,
-  "../html/components/toggle.html": html18,
-  "../html/components/valuefield.html": html19,
-  "../html/foundations/colors.html": html20,
-  "../html/foundations/icons.html": html21,
-  "../html/foundations/typography.html": html22,
-  "../html/tools/entitlements.html": html23,
+  "../html/components/textedit.html": html17,
+  "../html/components/textfield.html": html18,
+  "../html/components/toggle.html": html19,
+  "../html/components/valuefield.html": html20,
+  "../html/foundations/colors.html": html21,
+  "../html/foundations/icons.html": html22,
+  "../html/foundations/typography.html": html23,
+  "../html/tools/entitlements.html": html24,
 };

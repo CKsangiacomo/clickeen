@@ -74,30 +74,77 @@ export function interpolateStencilContext(context: StencilContext, options?: Ren
 
 export function renderStencil(stencil: string, context: StencilContext): string {
   const renderBlock = (input: string, stack: StencilContext[]): string => {
-    const eachRegex = /{{#each\s+([^\s}]+)}}([\s\S]*?){{\/each}}/g;
-    input = input.replace(eachRegex, (_match, key: string, block: string) => {
-      const value = resolveKey(key, stack);
-      if (!Array.isArray(value)) return '';
-      return value
-        .map((item: unknown) =>
-          renderBlock(block, [...stack, typeof item === 'object' && item !== null ? (item as StencilContext) : { this: item }]),
-        )
-        .join('');
-    });
+    const openRegex = /{{#(each|if|unless)\s+([^}]+)}}/g;
+    const tagRegex = /{{#(each|if|unless)\s+[^}]+}}|{{\/(each|if|unless)}}|{{else}}/g;
+    let output = '';
+    let cursor = 0;
+    let openMatch: RegExpExecArray | null;
 
-    const ifElseRegex = /{{#if\s+([^\s}]+)}}([\s\S]*?)(?:{{else}}([\s\S]*?))?{{\/if}}/g;
-    input = input.replace(ifElseRegex, (_match, key: string, truthy: string, falsy: string | undefined) => {
-      const value = resolveKey(key, stack);
-      const block = isTruthy(value) ? truthy : falsy;
-      return block ? renderBlock(block, stack) : '';
-    });
+    while ((openMatch = openRegex.exec(input))) {
+      const blockType = openMatch[1] as 'each' | 'if' | 'unless';
+      const key = openMatch[2].trim();
+      const contentStart = openRegex.lastIndex;
+      output += input.slice(cursor, openMatch.index);
 
-    const unlessRegex = /{{#unless\s+([^\s}]+)}}([\s\S]*?){{\/unless}}/g;
-    input = input.replace(unlessRegex, (_match, key: string, block: string) => {
+      tagRegex.lastIndex = contentStart;
+      let depth = 1;
+      let elseIndex: number | null = null;
+      let closeStart = -1;
+      let closeEnd = -1;
+      let tagMatch: RegExpExecArray | null;
+
+      while ((tagMatch = tagRegex.exec(input))) {
+        if (tagMatch[1]) {
+          depth += 1;
+          continue;
+        }
+
+        if (tagMatch[2]) {
+          depth -= 1;
+          if (depth === 0) {
+            closeStart = tagMatch.index;
+            closeEnd = tagRegex.lastIndex;
+            break;
+          }
+          continue;
+        }
+
+        if (blockType === 'if' && depth === 1 && elseIndex === null) {
+          elseIndex = tagMatch.index;
+        }
+      }
+
+      if (closeStart < 0 || closeEnd < 0) {
+        throw new Error(`[stencilRenderer] Unclosed ${blockType} block for ${key}`);
+      }
+
+      const truthyBlock = input.slice(contentStart, elseIndex ?? closeStart);
+      const falsyBlock = elseIndex === null ? undefined : input.slice(elseIndex + '{{else}}'.length, closeStart);
       const value = resolveKey(key, stack);
-      if (isTruthy(value)) return '';
-      return renderBlock(block, stack);
-    });
+
+      if (blockType === 'each') {
+        if (Array.isArray(value)) {
+          output += value
+            .map((item: unknown) =>
+              renderBlock(
+                truthyBlock,
+                [...stack, typeof item === 'object' && item !== null ? (item as StencilContext) : { this: item }],
+              ),
+            )
+            .join('');
+        }
+      } else if (blockType === 'if') {
+        const selectedBlock = isTruthy(value) ? truthyBlock : falsyBlock;
+        output += selectedBlock ? renderBlock(selectedBlock, stack) : '';
+      } else if (!isTruthy(value)) {
+        output += renderBlock(truthyBlock, stack);
+      }
+
+      cursor = closeEnd;
+      openRegex.lastIndex = cursor;
+    }
+
+    input = output + input.slice(cursor);
 
     input = input.replace(/{{\s*([^#/][^}\s]+)\s*}}/g, (_match, key: string) => {
       const value = resolveKey(key, stack);

@@ -25,6 +25,7 @@ type Preview = {
 
 type SpecAttribute = {
   enum?: string[];
+  type?: string;
   values?: string[];
 };
 
@@ -32,6 +33,36 @@ const wrapPreviewComponents = new Set<string>(['button']);
 
 const resolveContext = (base: StencilContext, overrides: StencilContext): StencilContext =>
   interpolateStencilContext({ ...base, ...overrides });
+
+const getAttributeValues = (attribute: SpecAttribute): string[] => {
+  if (Array.isArray(attribute.enum)) return attribute.enum;
+  if (attribute.type === 'enum' && Array.isArray(attribute.values)) return attribute.values;
+  return [];
+};
+
+const renderPreviews = (source: ComponentSource, previews: Preview[]): string[] =>
+  previews
+    .map((preview) => renderVariantTiles(source.name, preview, source.template))
+    .filter((html): html is string => Boolean(html));
+
+const createCoveragePreview = (source: ComponentSource, preview: Preview, name: string, value: string): Preview => {
+  const baseContext = preview.context ?? {};
+  const contextSize = typeof baseContext.size === 'string' ? baseContext.size : undefined;
+  const previewSize = Array.isArray(preview.sizes) && preview.sizes.length > 0 ? preview.sizes[0] : undefined;
+  const size = name === 'size' ? value : (contextSize ?? previewSize);
+
+  return {
+    id: `${source.name}-${name}-${value}`,
+    spec: [source.name, `${name}='{{${name}}}'`],
+    context: {
+      ...baseContext,
+      ...(size ? { size } : {}),
+      [name]: value,
+      id: `${source.name}-${name}-${value}`,
+    },
+    sizes: size ? [size] : undefined,
+  };
+};
 
 const renderVariantTiles = (
   componentName: string,
@@ -159,21 +190,30 @@ export const renderComponentDoc = (source: ComponentSource): ComponentDoc | null
 
   if (!previews.length) return null;
 
-  const variantsHtml = previews
-    .map((preview) => renderVariantTiles(source.name, preview, source.template))
-    .filter((html): html is string => Boolean(html));
+  const variantsHtml = renderPreviews(source, previews);
 
   if (!variantsHtml.length) return null;
 
-  const renderedForCoverage = variantsHtml.join('\n');
+  let renderedForCoverage = variantsHtml.join('\n');
   const attributes = source.spec?.attributes;
   if (attributes && typeof attributes === 'object' && !Array.isArray(attributes)) {
+    const coveragePreviews: Preview[] = [];
     Object.entries(attributes as Record<string, SpecAttribute>).forEach(([name, attribute]) => {
-      const values = Array.isArray(attribute.enum)
-        ? attribute.enum
-        : Array.isArray(attribute.values)
-          ? attribute.values
-          : [];
+      const values = getAttributeValues(attribute);
+      values.forEach((value) => {
+        if (!renderedForCoverage.includes(value)) {
+          coveragePreviews.push(createCoveragePreview(source, previews[0], name, value));
+        }
+      });
+    });
+
+    if (coveragePreviews.length > 0) {
+      variantsHtml.push(...renderPreviews(source, coveragePreviews));
+      renderedForCoverage = variantsHtml.join('\n');
+    }
+
+    Object.entries(attributes as Record<string, SpecAttribute>).forEach(([name, attribute]) => {
+      const values = getAttributeValues(attribute);
       values.forEach((value) => {
         if (!renderedForCoverage.includes(value)) {
           throw new Error(`[componentRenderer] ${source.name} does not render ${name}="${value}"`);
