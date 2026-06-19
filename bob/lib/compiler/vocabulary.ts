@@ -32,17 +32,42 @@ function humanizeChoiceLabel(input: string): string {
     .join(' ');
 }
 
-function choiceLabelForControl(control: CompiledControl, label: string): string {
-  const path = control.path || '';
-  const text = `${label} ${control.groupLabel || ''}`.toLowerCase();
+function choiceLabelFromPath(path: string): string {
+  if (!path) return '';
+
+  const typographyRole = path.match(/^typography\.roles\.([^.]+)\./);
+  if (typographyRole?.[1]) return humanizeChoiceLabel(typographyRole[1]);
+  if (path === 'typography.globalFamily') return 'Global typography';
+
+  if (path === 'headerCta.enabled') return 'Header CTA visibility';
+  if (path === 'headerCta.label') return 'Header CTA label';
+  if (path.endsWith('.action.enabled')) return 'Action button visibility';
+  if (path.endsWith('.action.label')) return 'Action button label';
+  if (path.startsWith('countdown.actions.during.')) return 'Countdown action';
+  if (path.startsWith('countdown.actions.after.')) return 'Finished action';
+
+  if (path.startsWith('localeSwitcher.') || path.startsWith('appearance.localeSwitcher')) return 'Locale switcher';
+  if (path.startsWith('behavior.socialShare.')) return 'Social share';
+  if (path.startsWith('behavior.showBacklink')) return 'Made with Clickeen';
+
   if (path.startsWith('headerCta.') || path.startsWith('appearance.headerCta.') || path === 'header.ctaPlacement') {
     return 'Header CTA';
   }
+  if (path.startsWith('header.')) return 'Header';
+  if (path.startsWith('stage.')) return 'Stage';
+  if (path.startsWith('pod.')) return 'Pod';
+
+  return '';
+}
+
+function choiceLabelForControl(control: CompiledControl, label: string): string {
+  const path = control.path || '';
+  const text = `${label} ${control.groupLabel || ''}`.toLowerCase();
+  const pathChoiceLabel = choiceLabelFromPath(path);
+  if (pathChoiceLabel) return pathChoiceLabel;
   if (path.includes('.action.') || /\baction\b/.test(text)) {
     return 'Action button';
   }
-  if (path.startsWith('stage.')) return 'Stage';
-  if (path.startsWith('pod.')) return 'Pod';
   if (text.includes('stage') && text.includes('pod')) return 'Stage/Pod appearance';
   return humanizeChoiceLabel(control.groupLabel || label);
 }

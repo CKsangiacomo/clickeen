@@ -225,16 +225,16 @@ function resolveClarification(prompt: string, snapshot: CopilotControlSnapshot):
   message: string;
   choices?: CopilotClarificationChoice[];
 } | null {
-  const normalized = normalizeToken(prompt);
   if (/\bbackground\b/i.test(prompt)) {
+    const contextualMatches = contextualMatchingControls(prompt, snapshot).filter(isBackgroundTarget);
+    const backgroundTargets = contextualMatches.length ? contextualMatches : snapshot.controls.filter(isBackgroundTarget);
     const choices = clarificationFromChoices(
       'Which background should I change?',
-      matchingControls(prompt, snapshot).filter(
-        (control) => control.ambiguityGroup === 'background' || control.aliases.some((alias) => matchesAlias(normalized, alias)),
-      ),
+      backgroundTargets,
     );
     if (choices) return choices;
   }
+  const normalized = normalizeToken(prompt);
   if (/\b(button|cta)\b/i.test(prompt)) {
     const choices = clarificationFromChoices(
       'Which button should I change?',
