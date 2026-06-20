@@ -70,3 +70,27 @@ housekeeping.
    the contract slots change.
 2. Add one sentence forbidding 121E from ever accumulating a named-agent roster
    — its protection is structural, not a catalog.
+
+---
+
+## Addendum - Best-Practice / State-Of-The-Art Lens
+
+Sourcing caveat: applied from the agentic-engineering canon current to ~Jan 2026
+(see umbrella addendum). Live web pull was unavailable this session.
+
+The lens affirms 121E. Two refinements:
+
+- **E1 — Most "internal agents" will be workflows, and the guardrail should say
+  so.** The canon's bias is workflows over agents for bounded, repeatable jobs.
+  Section 3 already forbids assuming every agent is conversational; extend it to
+  forbid assuming every internal worker needs an agent *loop* at all. Many will
+  be single-call or prompt-chain workflows riding the same envelope. This keeps
+  future builders from over-building agent machinery for cron-shaped jobs.
+
+- **E2 — The shared rail that actually matters is the loop + trace + eval seam,
+  not a "memory/context shape."** Section 3 worries about a shared memory shape
+  (correctly). The canon says the real reusable infrastructure is the
+  execution/trace/eval substrate; memory should stay agent-specific or absent.
+  Affirms the PRD's instinct.
+
+No change to the verdict: ship it as a thin structural guardrail.

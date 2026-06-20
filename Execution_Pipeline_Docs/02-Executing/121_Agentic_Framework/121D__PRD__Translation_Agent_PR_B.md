@@ -108,3 +108,61 @@ former unless a real product gap in 103 forces the latter.
 3. **Resolve multi-locale fan-out:** scope v1 to single-target or specify
    partial-failure + per-locale review semantics.
 4. **Define uncertainty/warning triggers** so review flags carry real signal.
+
+---
+
+## Addendum - Best-Practice / State-Of-The-Art Lens
+
+Sourcing caveat: applied from the agentic-engineering canon current to ~Jan 2026
+(see umbrella addendum). Live web pull was unavailable this session.
+
+### Is Translation even an "agent"? The canon says: probably a workflow.
+
+The most useful best-practice question here is the workflows-vs-agents one.
+Translation as described — artifact in, field map, protected tokens, localized
+artifact out, review — is a **deterministic workflow with one (or few) model
+calls**, not an open-ended agent that needs a tool loop. The canon is explicit
+that you should use the *simplest* pattern that works, and most "agent" needs are
+actually workflows (cheaper, more reliable, more testable). Calling it
+"Translation Agent" is fine as a product name, but the PRD should not import
+agent-loop machinery (iterative tool calls, dynamic planning) it does not need.
+
+**D-add-1: classify it honestly.** State whether each invocation is a single
+structured model call per field-batch (a workflow) or genuinely needs a reasoning
+loop (e.g., the agent decides to fetch a glossary, then re-translate). If it is
+the former — and Section 2's requirements suggest it is — implement it as a
+**prompt-chaining / structured-output workflow**, and let it still ride the 121
+envelope. This makes 121D an even *better* proof: it shows the rails carry a
+workflow-shaped worker, not just chatty agents.
+
+### Structured output is the core reliability mechanism here
+
+Protected tokens/placeholders/URLs surviving translation is a
+constrained-generation problem. Best practice: structured output with the
+protected fields passed as non-translatable slots and validated post-hoc, not a
+free-text translation the agent is "told" to preserve structure in.
+
+**D-add-2:** specify structured/constrained output with protected fields as typed
+slots + a deterministic post-validation that fails the artifact if a protected
+token changed. This is more reliable than prompt-instructing preservation and it
+makes the "cannot silently translate/drop protected structure" acceptance
+criterion mechanically enforceable rather than hopeful.
+
+### Evals are the natural fit and cheap here
+
+Translation is the *easiest* place in the series to stand up evals (reference
+translations, token-preservation checks, back-translation spot checks). Since the
+canon wants eval-driven development, and 121D is bounded, it is the ideal second
+eval harness after 121C.
+
+**D-add-3:** add a small translation eval (token preservation rate, protected-
+field integrity, locale spot checks) as day-one scope.
+
+### Net
+
+This sharpens, not reverses, my main finding (resolve the 103 reconciliation
+first). The canon adds that the *right shape* for this worker is likely a
+structured-output **workflow**, which is cheaper and more testable than an
+agent-loop, and that makes the 103 keep/wrap decision easier: wrap 103's
+translation core as a workflow step under the 121 envelope, add structured-output
+validation and a small eval, and avoid building agent machinery it doesn't need.

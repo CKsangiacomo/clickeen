@@ -125,3 +125,63 @@ move.
    orchestrator responsibility.
 5. Keep the "must not" fence (Section 3) prominent — it is the most valuable
    part of the document.
+
+---
+
+## Addendum - Best-Practice / State-Of-The-Art Lens
+
+Sourcing caveat: applied from the agentic-engineering canon current to ~Jan 2026
+(see umbrella addendum). Live web pull was unavailable this session.
+
+### The routing nuance 121B over-corrects on
+
+121B's framing — "routing means orchestrating a known agent execution, not
+regexing raw user language" — is correct *as a reaction to the regex brain*, but
+it throws out a legitimate pattern. In the canon, **routing is a named workflow
+pattern**: an LLM (or cheap classifier) directs an input to the right
+specialized path. The series treats all routing as the enemy because the old
+implementation was brittle regex. Distinguish three things the PRD currently
+blurs:
+
+- **Brittle pre-agent regex intent-matching** — correctly killed.
+- **LLM intent classification *inside* the agent's reasoning** — a recommended
+  pattern; this is how Product Copilot decides answer/ask/suggest/apply/tool.
+- **Model/difficulty routing (cascade)** — route a step to a cheap model first,
+  escalate to frontier on low confidence or high stakes. This is best practice
+  for cost and is exactly what 121H wants. Section 4.2 gestures at it ("task
+  class, eval-backed model fitness") but does not name the cascade pattern.
+
+Recommendation: rename the anti-pattern precisely ("no brittle pre-agent regex
+intent routing") and explicitly *bless* LLM classification and model cascades as
+sanctioned patterns. Otherwise a literal reader avoids a cheap-model
+pre-classifier that the architecture should want.
+
+### Orchestrator scope against the canon
+
+- **B1 — The orchestrator's first real job is running the agent loop, not
+  routing tables.** Per the canon, San Francisco's day-one increment is: validate
+  envelope → load agent runtime → **run the model-tool-observe loop with stopping
+  conditions and budget** → record trace → return. The eight responsibilities in
+  Section 3 omit the loop, which is the actual orchestration primitive. Add it;
+  it subsumes "fallback behavior" (a loop/escalation policy) and makes the
+  registry/tool-routing/child-routing surfaces clearly secondary.
+
+- **B2 — Orchestrator-worker is the pattern Section 4.4 is reaching for, and the
+  canon says price it honestly.** Child-agent routing = the orchestrator-worker
+  multi-agent pattern, which costs ~15× tokens and fragments context. The
+  deferral (slice 8) is well-supported, but frame it as "multi-agent is expensive
+  and context-fragmenting; defer until a task genuinely needs parallel
+  specialist work," not merely "after two agents exist."
+
+- **B3 — Keep San Francisco a stateless reducer over context.** *12-factor
+  agents* argues the orchestrator should be a stateless function over an explicit
+  context window, with state owned outside. This matches the series' "product
+  surfaces own truth" — make it explicit that San Francisco holds no per-session
+  agent memory; conversation/thread state is passed in by the product surface
+  each turn. This prevents the orchestrator from quietly becoming a stateful
+  brain.
+
+Net: my main finding stands (re-sequence Section 3 to envelope + model routing +
+trace first). The canon adds one item to the day-one list I under-weighted —
+**the agent loop itself** — and reframes child-agent routing as the expensive
+multi-agent pattern it is.

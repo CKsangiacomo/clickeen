@@ -98,3 +98,52 @@ relationship to 085A.
 3. **Forbid building speculative instrumentation,** not just fabricating
    outcomes — record what surfaces already emit; do not manufacture events.
 4. Confirm no eval/corpus/rollup work is authorized under 121G.
+
+---
+
+## Addendum - Best-Practice / State-Of-The-Art Lens
+
+Sourcing caveat: applied from the agentic-engineering canon current to ~Jan 2026
+(see umbrella addendum). Live web pull was unavailable this session.
+
+### One correction to my original review: evals are not "future learning"
+
+My original review endorsed deferring nearly everything in 121G, including evals.
+The canon corrects this. **Eval-driven development is day-one practice**, not a
+future learning loop: you build a small eval set + LLM-as-judge alongside the
+*first* agent so you can prove it beats what it replaced and catch regressions.
+121G correctly separates "execution is not learning," but it lumps *evals* into
+the deferred learning system. That is the one thing in 121G that should move
+forward.
+
+**G-add-1: split 121G into two tiers.**
+- **Tier 1 (day-one, ships with 121C/121D):** a small eval harness + judge per
+  agent, using the trace records 121G already specifies. This is how acceptance
+  criteria are proven and how prompt/model changes are gated.
+- **Tier 2 (genuinely deferred):** the corpus, rollups, global widget-network
+  learning, and any tuned-model path — async/governed, future-PRD.
+
+This keeps 121G's restraint where it belongs (no autonomous learning, no silent
+mutation) while pulling the cheap, high-leverage primitive (a handful of evals)
+to where the canon puts it.
+
+### "No silent self-mutation" is exactly right and ahead of the curve
+
+Section 6 (evals → review → release → rollback before any prompt/model/tool
+change) is precisely the canon's promotion discipline and many teams skip it.
+Keep it verbatim. The only addition: name **LLM-as-judge** as the accepted method
+for grading open-ended Copilot quality, and **reference-based checks** for bounded
+tasks (translation token preservation) — so "evals" isn't left as an undefined
+noun.
+
+### Trace as eval substrate, not just learning substrate
+
+The Section 3 trace list is also the eval input. State that the day-one trace
+serves evals first and learning later, so there is one capture path, not two.
+
+### Net
+
+The lens *reverses* one of my original endorsements (don't defer evals) and
+*affirms* the rest (defer the corpus and learning loop; forbid silent mutation).
+Tier-1 evals are day-one; everything else stays the governed future seam 121G
+correctly describes.

@@ -122,3 +122,84 @@ specified before build. Those are not optional details; they are the engine.
    child-agent calls are not pulled into scope.
 5. **Stub the child-agent decision branch** — the agent may choose it; the route
    returns "not available yet" until a second agent exists (per 121B).
+
+---
+
+## Addendum - Best-Practice / State-Of-The-Art Lens
+
+Sourcing caveat: applied from the agentic-engineering canon current to ~Jan 2026
+(see umbrella addendum). Live web pull was unavailable this session. This is the
+keystone PRD, so this addendum is the most consequential.
+
+### The largest gap: 121C describes a turn, not an agent loop
+
+The canon's definition of an agent is a model that **iterates** — calls a tool,
+observes the result, reasons again, and decides whether to continue — until a
+stopping condition. 121C's Section 4 describes a single decision among
+answer/ask/suggest/apply/tool/refuse, which is one *step*, not a loop. A real
+Product Copilot must, for example: read the widget summary → realize it needs the
+schema for a specific control → fetch it → then propose the edit. That is two
+tool observations before the answer. As written, 121C could be implemented as a
+single-shot classifier-plus-generation and still pass its acceptance criteria —
+which would reproduce the masquerade in a new costume.
+
+**C-add-1 (must fix): specify the loop.** Define max steps per user turn, the
+stopping condition (final answer / apply / refuse / ask), per-turn token budget,
+and what happens at the ceiling. This is the difference between "real agent" and
+"single call," and it is the PRD's actual acceptance test.
+
+### Context capsule: move to just-in-time (sharpens my original finding)
+
+My original review asked for a capsule budget. The canon goes further: the
+current best practice is a **thin orientation capsule + context-fetch tools**,
+not a fat pre-loaded payload. The closed-system thesis (Clickeen can answer
+orientation cheaply) actually argues *for* just-in-time: give the agent a small
+capsule (widget type, instance id, dirty/publish state, available actions) plus
+tools to pull the editable schema, a specific control's detail, or account
+limits *when it decides it needs them*. This is cheaper, avoids context rot, and
+scales to large widgets where a full schema would blow the budget.
+
+**C-add-2: reframe Section 5** as orientation-capsule + context tools, and state
+the budget for the capsule (small) separately from on-demand fetches.
+
+### Evals are day-one for THIS PRD, not deferred to 121G
+
+You cannot prove acceptance criterion 3 ("can decide answer/ask/suggest/apply/
+tool/refuse") without a labelled set of turns and an LLM-as-judge or rubric.
+The canon treats a small eval harness as part of building the first agent, not a
+future learning system. 121G's trace records are the substrate, but the *eval
+set + judge* must ship with 121C.
+
+**C-add-3: add a day-one eval to scope** — a modest set of representative Builder
+turns with expected decision-types and a judge for answer quality. This is how
+you know the regex brain was actually replaced by something better, not just
+different.
+
+### Reliability mechanics around the apply boundary
+
+The product-law boundary (Bob validates, user saves) is correct but is a *safety*
+boundary, not a *reliability* mechanism. The canon adds:
+
+**C-add-4:** use structured/constrained decoding for the draft-action output so
+the apply payload is schema-valid by construction; on Bob validation failure,
+feed the typed error back to the model for one bounded retry (tool-error-as-
+teaching), rather than surfacing a dead end. This is the standard agent
+reliability loop and it folds directly into the agent loop (C-add-1).
+
+### Multi-turn state
+
+Section 5 lists "recent Copilot thread state" in the capsule but the PRD has no
+memory strategy. Per *12-factor agents*, keep the agent a stateless reducer:
+Bob/Roma own the thread; each turn passes the prior thread state in; San
+Francisco holds nothing. State this so thread memory doesn't accidentally land in
+the orchestrator.
+
+### Net
+
+My original two required interfaces (capsule shape/budget, draft-action contract)
+stand and are reinforced. The canon adds three things I under-weighted, all
+buildable inside this same PRD: **the agent loop (C-add-1), just-in-time context
+(C-add-2), and a day-one eval (C-add-3)**, plus the reliability retry loop
+(C-add-4). With these, 121C is the right "build the agent with thin scaffolding,
+then let 121A/121B be written from what it needed" sequencing the canon
+recommends.

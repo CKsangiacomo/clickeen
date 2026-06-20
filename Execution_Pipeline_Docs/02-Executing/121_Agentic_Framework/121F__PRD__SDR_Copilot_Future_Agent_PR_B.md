@@ -70,3 +70,33 @@ two-Copilot shape. Ship as-is.
    Copilot acceptance should assert no Builder-specific vocabulary
    ("widget edit," "save/publish," "Builder context") appears in the shared
    agent contract that a future SDR Copilot would inherit.
+
+---
+
+## Addendum - Best-Practice / State-Of-The-Art Lens
+
+Sourcing caveat: applied from the agentic-engineering canon current to ~Jan 2026
+(see umbrella addendum). Live web pull was unavailable this session.
+
+The lens strongly affirms 121F — separating two user-facing agents instead of
+forcing a shared "Copilot framework" is exactly the canon's "small, focused
+agents; don't build a framework" guidance, applied at the right seam. Two
+additions:
+
+- **F-add-1 — SDR Copilot's distinctness is mostly *context and tools*, which is
+  the canon's real unit of agent identity.** *12-factor agents* frames an agent
+  as a prompt + a context window + a tool set + a loop. Section 2's difference
+  list (user, surface, context, tools, permissions, goals) is precisely that.
+  Reinforce: what is shared is the *execution substrate* (loop runner, model
+  adapters, trace); what is never shared is the prompt/context/tool triple. That
+  is the correct, modern line — sharper than "infrastructure vs Copilot
+  framework."
+
+- **F-add-2 — SDR Copilot's risk model is different and the canon cares.** A
+  public/funnel agent talking to prospects needs prompt-injection and
+  data-exfiltration guardrails that an authenticated in-product Copilot does not.
+  Section 5 lists "refusal/safety rules" — good; flag that untrusted-input
+  hardening (treat prospect input as data, not instructions) is a first-class
+  requirement for the future SDR PRD, not an afterthought.
+
+No change to verdict: ship as-is.

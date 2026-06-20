@@ -120,3 +120,59 @@ rule*, and this PRD is exactly the rail it should be.
    standalone — the architecture is provisional until an agent exercises it.
 4. Replace any implied central tool registry with the umbrella's
    **product-surface tool manifest** leaning, so a registry is not built here.
+
+---
+
+## Addendum - Best-Practice / State-Of-The-Art Lens
+
+Sourcing caveat: applied from the agentic-engineering canon current to ~Jan 2026
+(Anthropic *Building Effective Agents*, *Effective context engineering for AI
+agents*, multi-agent research write-up; *12-factor agents*; Cognition *Don't
+Build Multi-Agents*). Live web pull was unavailable this session — re-verify the
+contested points before locking. See the umbrella review's addendum for the full
+canon; this addendum applies it to the architecture rail.
+
+### What 121A gets right against the canon
+
+- **Agent ≠ model call ≠ router ≠ validator (Section 2)** matches the field's
+  hard-won definition: an agent is a worker with a purpose, a context contract, a
+  tool surface, and a loop. 121A has all of these except the loop.
+- **"Product surface invokes the agent"** aligns with *12-factor agents*' "own
+  your control flow" and "small, focused agents" — invocation is deterministic
+  code, reasoning is the model. Good.
+- **Provider independence below the agent contract** is exactly right and ahead
+  of frameworks that couple agent logic to a provider SDK.
+
+### Best-practice gaps to add
+
+- **A1 (critical) — Specify the agent loop as a first-class architecture
+  surface.** The current "reasoning step" (Section 2) and the Section 4 shape
+  list describe a single inference, not an agent. Add: iteration model,
+  observation handling (tool result → re-reason), explicit stopping conditions,
+  a max-step ceiling, and a per-invocation token/cost budget. This is *the*
+  defining agent mechanic and it is the one infrastructure piece that genuinely
+  is shared across all agents — it belongs in 121A more than the child-agent
+  boundary does.
+
+- **A2 — Reframe "context contract" toward just-in-time retrieval (Section 6).**
+  121A says context must be "product-surface-provided, bounded, typed." Modern
+  practice splits this: a thin **orientation capsule** (what/where/allowed) plus
+  **context-fetch tools** the agent calls when it needs detail. Bake the seam for
+  context-as-tools into the rail now, or every agent will default to fat
+  pre-loaded payloads and hit context rot. This is cheap to state and expensive
+  to retrofit.
+
+- **A3 — Tool contract is missing the ergonomics half (Section 7).** The nine
+  declared fields are the *machine* contract. Add the *agent* contract: what the
+  tool returns to the model (high-signal, token-efficient), and error messages
+  written to help the model recover. The ACI is as important as the schema.
+
+- **A4 — Name the eval seam.** Trace/versioning (Section 9) is recorded for
+  "future learning," but the same records feed a day-one eval harness. State that
+  the architecture's trace is the substrate for evals from the first agent, so
+  121C/121G don't build two capture paths.
+
+These reinforce, not reverse, my main finding: 121A should be a thin rail
+ratified by 121C. The loop (A1) and just-in-time context (A2) are the two things
+that genuinely belong in the rail on day one; the child-agent boundary and tool
+registry still do not.

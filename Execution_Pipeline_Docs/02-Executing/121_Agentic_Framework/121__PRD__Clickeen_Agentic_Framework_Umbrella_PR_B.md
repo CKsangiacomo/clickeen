@@ -135,3 +135,111 @@ exist. Fixing reconciliation at the umbrella level and adding day-one-vs-deferre
 labels in 121A/121B resolves most of the series' risk. The keystone build (121C)
 is sound but must specify its two real interfaces — context capsule shape/budget
 and the draft-action contract — before implementation.
+
+---
+
+## Addendum - Best-Practice / State-Of-The-Art Lens
+
+Caveat on sourcing: live web research tooling was unavailable in this session,
+so this addendum applies the established agentic-engineering canon from training
+knowledge (current to ~January 2026), not a fresh literature pull. The canon I
+am measuring against: Anthropic's *Building Effective Agents* and *Effective
+context engineering for AI agents*, Anthropic's multi-agent research-system
+write-up, the community *12-factor agents* principles, and Cognition's *Don't
+Build Multi-Agents*. The field moves fast; treat specific claims as "best
+practice as of early 2026," and re-verify the two contested areas flagged below
+(just-in-time context, multi-agent) against current sources before locking
+architecture.
+
+### The canon, stated once (sub-PRD addenda reference this)
+
+1. **Don't build a framework first.** The strongest current guidance is explicit:
+   frameworks add abstraction layers that hide the prompt, the context window,
+   and the loop, and make failures hard to debug. Recommended path is direct
+   model calls + minimal scaffolding for the first real agent, then extract
+   shared structure from proven repetition. The umbrella already says this
+   (OQ10, "extract from real repeated needs"), and it is the most
+   best-practice-aligned instinct in the series. 121A/121B partially betray it by
+   front-loading contracts.
+
+2. **Workflows vs agents is the foundational distinction.** Workflows =
+   predefined code paths (deterministic, cheaper, more reliable). Agents = the
+   model directs its own process via tools in a loop. Most "agent" needs are met
+   by workflows. *Routing* is a named, legitimate workflow pattern — which means
+   the series' blanket suspicion of "routing" (born from the regex trauma)
+   over-corrects. See the routing note below.
+
+3. **The agent loop is the defining mechanic** and it is **absent from the
+   series.** An agent is: model → (tool call) → observe result → reason again →
+   … → stop. It needs explicit stopping conditions, a max-iteration ceiling, and
+   a token/cost budget per turn. The series describes a single turn's *decision
+   set* (answer/ask/suggest/apply/tool/refuse) but never the iterate-until-done
+   loop, which is what separates a real agent from a fancy single call. This is
+   the largest best-practice gap in the whole series.
+
+4. **Context engineering is the primary discipline, and the bias has shifted to
+   just-in-time.** Context is finite and degrades with volume ("context rot");
+   curate the smallest high-signal set. Current best practice favors giving the
+   agent lightweight references + tools to *pull* context on demand over
+   pre-loading a fat "everything" payload. The series' "context capsule" is the
+   right concept but assumes a **pre-computed, front-loaded capsule** — a
+   half-generation-old pattern. Best-in-class is hybrid: thin capsule for
+   orientation + tools to fetch widget/schema/account detail when the agent
+   actually needs it.
+
+5. **Tools are the agent-computer interface (ACI).** Few, non-overlapping,
+   token-efficient; they return high-signal natural responses and error messages
+   that teach the model how to recover. The series treats tools as typed RPC
+   (input/output schema, owner, side-effect level) but says nothing about what a
+   tool *returns to the model* or how errors guide it — the ergonomics half.
+
+6. **Eval-driven development is day-one, not a future learning loop.** A small
+   eval set + LLM-as-judge for open-ended quality is built alongside the first
+   agent. The series files evals under 121G "future learning," which is too late:
+   121C cannot prove "the agent chooses the right action" without an eval
+   harness, and that harness is the same primitive 121G later needs.
+
+7. **Be cautious with multi-agent.** Multi-agent fragments context and multiplies
+   cost (~15× tokens in Anthropic's research system); it is justified for
+   parallel, read-heavy work and risky where shared context matters. The series'
+   instinct to *defer* child-agent calls is well-supported — but "Product Copilot
+   calls Translation Agent" is exactly a context-fragmenting handoff, so the
+   deferral should be framed as a cost/quality decision, not just a sequencing
+   one.
+
+### Net-new series-level findings from this lens
+
+- **F1 — The agent loop must be specified (esp. 121A and 121C).** Add loop
+  semantics to the architecture: iteration, observation, stopping condition,
+  max-steps, per-turn budget. Without it, "real agent" is undefined and 121C
+  could ship another single-shot call wearing an agent label.
+
+- **F2 — Move to just-in-time context (121A/121C).** Reframe the capsule as a
+  thin orientation layer plus context-fetch tools, not a fat pre-load. This is
+  also the cheaper path and it is what makes the closed-system thesis pay off
+  without "context rot."
+
+- **F3 — Don't discard routing-the-pattern with regex-the-mistake.** The series
+  correctly kills brittle regex intent-matching, but an LLM-based intent
+  classifier/router is a recommended workflow pattern and may belong *inside*
+  Product Copilot's reasoning or as a cheap pre-classifier for model routing
+  (121H). Say "no brittle pre-agent regex," not "no routing."
+
+- **F4 — Evals are day-one infra for 121C, not deferred to 121G.** Pull a minimal
+  eval harness forward into the first agent build.
+
+- **F5 — Reliability mechanics are unstated.** Structured/constrained decoding
+  for the apply action, retry-with-feedback on validation failure, and explicit
+  human-in-the-loop only for irreversible steps. The series has the *boundary*
+  (Bob validates) but not the *reliability loop* around it.
+
+- **F6 — Strongest-version sequencing.** Best practice would build 121C
+  (Product Copilot) with direct model calls + a thin capsule + the agent loop +
+  a tiny eval set, and let 121A/121B be *written down after* from what 121C
+  actually needed. The series already leans this way in prose; the addenda below
+  push each PRD to honor it in structure.
+
+None of this contradicts the product-law spine, which remains correct and is
+genuinely ahead of most "agent frameworks" in keeping truth and side effects in
+product surfaces. The lens sharpens *how the brain is built*, not *who owns
+truth*.

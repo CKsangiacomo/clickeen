@@ -83,3 +83,49 @@ zero present cost is exactly right.
    already-wired hosted providers; the additional provider classes are config
    slots, not adapters to build now. This prevents the Section 3 list from being
    read as a build list.
+
+---
+
+## Addendum - Best-Practice / State-Of-The-Art Lens
+
+Sourcing caveat: applied from the agentic-engineering canon current to ~Jan 2026
+(see umbrella addendum). Live web pull was unavailable this session. Model
+strategy is the fastest-moving area of all — re-verify provider/price specifics
+against current sources before any commitment.
+
+The lens strongly affirms 121H's posture (provider independence, self-hosting as
+a future option decided by task fitness, honest ops costs). Refinements:
+
+- **H-add-1 — Name the pattern: model cascade.** The task-fitness split
+  (Sections 4–5) is the **cascade / model-routing** pattern from the canon:
+  cheap/small model first, escalate to frontier on low confidence or high stakes.
+  Naming it makes 121B's router concrete (a confidence threshold + escalation
+  step) rather than an abstract "route by fitness." It is also the single biggest
+  cost lever in the whole system.
+
+- **H-add-2 — Routing decisions must be eval-gated, and the canon agrees the
+  default should be "frontier until proven."** Section 5 says routing is
+  "eval-backed"; sharpen to: a cheaper/local route is only enabled for a task
+  class *after* an eval shows parity on that class, and it auto-falls-back to
+  frontier on low confidence. This prevents quality regressions from creeping in
+  via cost optimization — the most common failure mode of model routing.
+
+- **H-add-3 — Self-hosting's real near-term value is the bounded, high-volume,
+  private task classes** (classification, tool selection, structured extraction,
+  the cheap leg of a cascade), exactly as Section 4 says. The canon adds: these
+  are also where small open models have closed the gap most, so the option is
+  *more* live than it was a year ago — but the ops checklist (Section 6) is real
+  and the "don't pretend the cheap server is free" warning is correct. No change
+  needed; the framing is right.
+
+- **H-add-4 — Structured-output reliability is provider-dependent.** Different
+  providers/models support constrained decoding differently. Since the series
+  relies on structured output for the apply action (121C) and protected-field
+  translation (121D), add structured-output capability to the routing
+  requirements (Section 5), so a route is never chosen that can't honor the
+  agent's output contract.
+
+Net: 121H is the most best-practice-aligned PRD in the series. The lens just
+names the patterns it already implies (cascade, eval-gated routing,
+structured-output capability as a routing constraint) so 121B can implement them
+concretely.
