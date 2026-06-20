@@ -297,9 +297,14 @@ a {
   justify-items: center;
 }
 
+.widget-defaults-widgets {
+  justify-items: center;
+}
+
 .widget-defaults-widget {
   display: grid;
   gap: var(--space-3);
+  width: min(100%, 620px);
   min-width: 0;
   border-radius: var(--control-radius-2xl);
   background: var(--color-system-white);
