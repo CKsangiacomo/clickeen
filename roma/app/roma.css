@@ -293,6 +293,10 @@ a {
   min-width: 0;
 }
 
+.widget-defaults-section {
+  justify-items: center;
+}
+
 .widget-defaults-widget {
   display: grid;
   gap: var(--space-3);
@@ -335,7 +339,7 @@ a {
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
-  max-width: 720px;
+  width: min(100%, 520px);
 }
 
 .widget-defaults-builder-fields .tdmenucontent__cluster {

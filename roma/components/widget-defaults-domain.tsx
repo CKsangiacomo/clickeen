@@ -661,7 +661,6 @@ export function WidgetDefaultsDomain() {
     <section className="widget-defaults">
       <div className="widget-defaults-toolbar">
         <div>
-          <h2 className="heading-4">Global Shell Defaults</h2>
           {compiledLoading ? <p className="body-s">Loading Builder controls...</p> : null}
           {error ? <p className="body-s widget-defaults-error">{error}</p> : null}
         </div>
