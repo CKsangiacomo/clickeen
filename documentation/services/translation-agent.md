@@ -7,7 +7,7 @@ Last synced to repository runtime: June 20, 2026.
 ## Identity
 
 - Agent ID: `widget.instance.translator`
-- Brain home: `translation-agent/`
+- Brain home: `agents/translation-agent/`
 - Runtime type: structured-output workflow, not a conversational Copilot loop.
 - Invoked by: existing San Francisco account-widget instance translation endpoints.
 
@@ -45,7 +45,7 @@ Translation Agent does not own:
 
 Keeping the endpoint in San Francisco does not make San Francisco the
 translation brain. San Francisco remains the grant/model-execution adapter;
-`translation-agent/` owns the translation-specific reasoning, structure, and
+`agents/translation-agent/` owns the translation-specific reasoning, structure, and
 validation.
 
 ## Failure Rules
@@ -66,7 +66,7 @@ translation set, or treat corrupt output as absence.
 
 ## Eval Gate
 
-The repository-owned eval harness lives in `translation-agent/evals/` and runs:
+The repository-owned eval harness lives in `agents/translation-agent/evals/` and runs:
 
 ```bash
 pnpm --filter @clickeen/translation-agent eval:translation-agent

@@ -7,7 +7,7 @@ Product Copilot is the Builder-facing Clickeen agent brain.
 Code lives in:
 
 ```text
-product-copilot/
+agents/product-copilot/
 ```
 
 ## Authority
@@ -52,7 +52,7 @@ San Francisco does not store Product Copilot conversation/thread state.
 The day-one Product Copilot eval harness lives in:
 
 ```text
-product-copilot/evals/
+agents/product-copilot/evals/
 ```
 
 Run:

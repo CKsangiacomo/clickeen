@@ -4,10 +4,10 @@ packages:
   - bob
   - dieter
   - prague
-  - product-copilot
+  - agents/product-copilot
   - roma
   - sanfrancisco
-  - translation-agent
+  - agents/translation-agent
   - tokyo-worker
   - packages/ck-policy
   - packages/ck-contracts

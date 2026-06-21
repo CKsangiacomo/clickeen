@@ -1,5 +1,13 @@
 const LOCALE_PATTERN = /^[a-z]{2,3}(?:-[a-z0-9]+)*$/;
 
+export {
+  BRACE_PLACEHOLDER_PATTERN,
+  HTML_TAG_PATTERN,
+  TranslationSafetyError,
+  assertTranslationSafety,
+  type TranslationSafetyItem,
+} from './translationSafety';
+
 export function normalizeLocaleToken(raw: unknown): string | null {
   const value = typeof raw === 'string' ? raw.trim().toLowerCase().replace(/_/g, '-') : '';
   if (!value) return null;

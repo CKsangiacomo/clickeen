@@ -1,6 +1,6 @@
 import { HttpError, asTrimmedString, json, noStore } from './http';
 import { verifyBodySignature } from './signatures';
-import { executePragueStringsTranslate, isPragueStringsTranslationRequest } from './agents/l10nPragueStrings';
+import { executePragueStringsTranslate, isPragueStringsTranslationRequest } from './prague-l10n-strings';
 import { withInflightLimit } from './concurrency';
 import type { Env } from './types';
 

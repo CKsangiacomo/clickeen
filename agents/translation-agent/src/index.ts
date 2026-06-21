@@ -1,7 +1,11 @@
-import { assertTranslationSafety, BRACE_PLACEHOLDER_PATTERN, HTML_TAG_PATTERN } from './translationSafety';
+import {
+  BRACE_PLACEHOLDER_PATTERN,
+  HTML_TAG_PATTERN,
+  TranslationSafetyError,
+  assertTranslationSafety,
+} from '@clickeen/l10n';
 import { TranslationAgentError } from './errors';
 export { TranslationAgentError } from './errors';
-export { assertTranslationSafety } from './translationSafety';
 
 function providerError(provider: string, message: string): TranslationAgentError {
   return new TranslationAgentError(502, { code: 'PROVIDER_ERROR', provider, message });
@@ -9,6 +13,21 @@ function providerError(provider: string, message: string): TranslationAgentError
 
 function badRequest(message: string): TranslationAgentError {
   return new TranslationAgentError(400, { code: 'BAD_REQUEST', message });
+}
+
+function assertAgentTranslationSafety(
+  expected: TranslationItem,
+  translatedValue: string,
+  provider: string,
+): void {
+  try {
+    assertTranslationSafety(expected, translatedValue, provider);
+  } catch (error) {
+    if (error instanceof TranslationSafetyError) {
+      throw providerError(error.provider, error.message);
+    }
+    throw error;
+  }
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -233,14 +252,14 @@ export function restoreStructuredTranslationResults(args: {
           throw providerError(provider, `Missing translated value for path: ${entry.path}`);
         }
         const normalized = normalizeBracePlaceholderSpacing(entry.value, translated);
-        assertTranslationSafety(entry, normalized, provider);
+        assertAgentTranslationSafety(entry, normalized, provider);
         return { path: entry.path, value: normalized };
       }
 
       const richtextPlan = args.plan.richtextPlansByPath.get(entry.path);
       if (!richtextPlan) return null;
       const restored = rebuildRichtextFromSegments(richtextPlan, translatedByPath, provider);
-      assertTranslationSafety(entry, restored, provider);
+      assertAgentTranslationSafety(entry, restored, provider);
       return { path: entry.path, value: restored };
     })
     .filter((item): item is { path: string; value: string } => Boolean(item));
@@ -321,7 +340,7 @@ export function parseTranslationResult(
       throw providerError(provider, `Missing translated value for path: ${item.path}`);
     }
     const normalizedValue = normalizeBracePlaceholderSpacing(item.value, value);
-    assertTranslationSafety(item, normalizedValue, provider);
+    assertAgentTranslationSafety(item, normalizedValue, provider);
     return { path: item.path, value: normalizedValue };
   });
 }

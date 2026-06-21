@@ -77,6 +77,38 @@ importers:
         specifier: ^5.9.3
         version: 5.9.3
 
+  agents/product-copilot:
+    dependencies:
+      '@clickeen/ck-contracts':
+        specifier: workspace:*
+        version: link:../../packages/ck-contracts
+    devDependencies:
+      '@types/node':
+        specifier: ^20.16.5
+        version: 20.19.25
+      tsx:
+        specifier: ^4.20.6
+        version: 4.20.6
+      typescript:
+        specifier: ^5.4.5
+        version: 5.9.3
+
+  agents/translation-agent:
+    dependencies:
+      '@clickeen/l10n':
+        specifier: workspace:*
+        version: link:../../packages/l10n
+    devDependencies:
+      '@types/node':
+        specifier: ^20.14.2
+        version: 20.19.25
+      tsx:
+        specifier: ^4.20.3
+        version: 4.20.6
+      typescript:
+        specifier: ^5.4.5
+        version: 5.9.3
+
   berlin:
     dependencies:
       '@clickeen/ck-contracts':
@@ -195,22 +227,6 @@ importers:
         specifier: ^5.9.3
         version: 5.9.3
 
-  product-copilot:
-    dependencies:
-      '@clickeen/ck-contracts':
-        specifier: workspace:*
-        version: link:../packages/ck-contracts
-    devDependencies:
-      '@types/node':
-        specifier: ^20.16.5
-        version: 20.19.25
-      tsx:
-        specifier: ^4.20.6
-        version: 4.20.6
-      typescript:
-        specifier: ^5.4.5
-        version: 5.9.3
-
   roma:
     dependencies:
       '@clickeen/bob':
@@ -270,10 +286,10 @@ importers:
         version: link:../packages/l10n
       '@clickeen/product-copilot':
         specifier: workspace:*
-        version: link:../product-copilot
+        version: link:../agents/product-copilot
       '@clickeen/translation-agent':
         specifier: workspace:*
-        version: link:../translation-agent
+        version: link:../agents/translation-agent
     devDependencies:
       '@cloudflare/workers-types':
         specifier: ^4.20251228.0
@@ -319,18 +335,6 @@ importers:
       svg-path-commander:
         specifier: ^1.0.4
         version: 1.0.5
-
-  translation-agent:
-    devDependencies:
-      '@types/node':
-        specifier: ^20.14.2
-        version: 20.19.25
-      tsx:
-        specifier: ^4.20.3
-        version: 4.20.6
-      typescript:
-        specifier: ^5.4.5
-        version: 5.9.3
 
 packages:
 

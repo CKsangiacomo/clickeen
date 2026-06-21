@@ -1,6 +1,6 @@
 import { listAiAgents, resolveAiAgent } from '@clickeen/ck-contracts/ai';
 import { WorkerEntrypoint } from 'cloudflare:workers';
-import { executeCsWidgetCopilot } from './agents/csWidgetCopilot';
+import { executeCsWidgetCopilot } from './agent-adapters/productCopilot';
 import { withInflightLimit } from './concurrency';
 import { assertCap, verifyGrant } from './grants';
 import {

@@ -17,8 +17,8 @@ This doc is meant to answer:
 
 - Code: `sanfrancisco/`
 - Entrypoint shell: `sanfrancisco/src/index.ts`
-- Product Copilot brain module: `product-copilot/`
-- Translation Agent brain module: `translation-agent/`
+- Product Copilot brain module: `agents/product-copilot/`
+- Translation Agent brain module: `agents/translation-agent/`
 - Extracted runtime modules:
   - `sanfrancisco/src/concurrency.ts`
   - `sanfrancisco/src/signatures.ts`
@@ -59,7 +59,7 @@ Provider/model policy:
   Product Copilot thread-turn state is owned outside San Francisco.
 - Model picker availability is driven by signed policy plus explicit callable capability data; conformance reports and `proofRef` fields are release evidence only and are not runtime gates.
 - **Prague strings L10n**: local/dev signed tooling route; OpenAI model comes only from required `OPENAI_MODEL`.
-- **Account-widget Instance Translation Agent**: `widget.instance.translator`. The translation brain lives in `translation-agent/`; San Francisco remains the grant/model-execution adapter for the existing diagnostic endpoint. Active product generation currently returns unavailable until San Francisco owns a real async generation endpoint, queue production, and operation state. Tokyo-worker owns only exact translated locale overlay storage.
+- **Account-widget Instance Translation Agent**: `widget.instance.translator`. The translation brain lives in `agents/translation-agent/`; San Francisco remains the grant/model-execution adapter for the existing diagnostic endpoint. Active product generation currently returns unavailable until San Francisco owns a real async generation endpoint, queue production, and operation state. Tokyo-worker owns only exact translated locale overlay storage.
 
 ## 3) HTTP endpoints
 

@@ -82,14 +82,14 @@ Health contract:
   San Francisco does not yet expose the async generation owner endpoint.
 - The HTTP `translate-saved-instance` endpoint remains for direct diagnostics and tests; it is not the active save/generate product orchestration boundary.
 - Localization prompts preserve source acronym style and must not add parenthetical acronym expansions that were not present in source text (especially headings/titles).
-- Richtext translation uses one structured path: `translation-agent/` extracts visible text segments, translates those strings only, rebuilds the original HTML, then validates placeholder parity, HTML tag parity, and anchor integrity.
+- Richtext translation uses one structured path: `agents/translation-agent/` extracts visible text segments, translates those strings only, and rebuilds the original HTML; neutral `@clickeen/l10n` safety primitives validate placeholder parity, HTML tag parity, and anchor integrity.
 - l10n translation calls go through the shared policy router via `callChatCompletion` (same request/token enforcement + provider/model allowlist). Instance Translation must not set local token or timeout caps that override the signed grant; `ck-policy` is the model and budget authority for each queued job.
 
 ## Prague posture
 - Prague does not own the account-widget locale runtime.
 - Public widget package files are public artifacts, not San Francisco output. San Francisco produces translated values only; it does not write public widget files.
 - San Francisco must not write Prague overlay files or resurrect a Prague-specific widget localization path.
-- Prague system-string l10n may reuse `translation-agent/` safety primitives, but Prague remains a separate system-owned flow and maps safety failures back to San Francisco `PROVIDER_ERROR` responses.
+- Prague system-string l10n may reuse neutral `@clickeen/l10n` safety primitives, but Prague remains a separate system-owned flow and maps safety failures back to San Francisco `PROVIDER_ERROR` responses.
 
 ## Rules
 - Agent writes must not invent paths, patch formats, readiness state, or layer

@@ -39,10 +39,10 @@ Post-deploy findings:
 
 Core runtime files:
 - `packages/ck-contracts/src/ai.js`
-- `product-copilot/src/index.ts`
+- `agents/product-copilot/src/index.ts`
 - `roma/lib/ai/account-copilot.ts`
 - `sanfrancisco/src/index.ts`
-- `sanfrancisco/src/agents/csWidgetCopilot.ts`
+- `sanfrancisco/src/agent-adapters/productCopilot.ts`
 - `bob/components/CopilotPane.tsx`
 - `admin/src/html/tools/entitlements.html`
 

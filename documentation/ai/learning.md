@@ -24,7 +24,7 @@ trace/outcome -> eval/review -> release -> rollback
 ```
 
 The first Product Copilot eval harness is a deterministic fixture runner in
-`product-copilot/evals/`. It is an acceptance/regression gate for the Product
+`agents/product-copilot/evals/`. It is an acceptance/regression gate for the Product
 Copilot brain contract; it is not autonomous learning.
 
 ## 1) The two event streams
@@ -116,7 +116,7 @@ If any of these are missing, analysis becomes garbage (“we changed something, 
 ## 4) Product Copilot eval harness (current repo reality)
 
 The active repo-owned Product Copilot eval harness lives in
-`product-copilot/evals/` and runs through:
+`agents/product-copilot/evals/` and runs through:
 
 ```bash
 pnpm --filter @clickeen/product-copilot eval:product-copilot
@@ -134,7 +134,7 @@ harness behind them.
 ## 4.1) Translation Agent eval harness (current repo reality)
 
 The active repo-owned Translation Agent eval harness lives in
-`translation-agent/evals/` and runs through:
+`agents/translation-agent/evals/` and runs through:
 
 ```bash
 pnpm --filter @clickeen/translation-agent eval:translation-agent

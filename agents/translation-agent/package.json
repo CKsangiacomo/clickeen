@@ -10,7 +10,9 @@
     "eval:translation-agent": "tsx evals/run-translation-agent-eval.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
-  "dependencies": {},
+  "dependencies": {
+    "@clickeen/l10n": "workspace:*"
+  },
   "devDependencies": {
     "@types/node": "^20.14.2",
     "tsx": "^4.20.3",

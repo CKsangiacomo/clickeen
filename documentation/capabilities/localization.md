@@ -19,14 +19,23 @@ There is no account-widget `localization.json`, layer sidecar, text pack, select
 
 `packages/l10n/locales.json` is the canonical registry of supported locale tokens and labels.
 
-Use `@clickeen/l10n` only for locale data helpers:
+Use `@clickeen/l10n` for locale data helpers:
 
 - `normalizeLocaleToken`
 - `localeCandidates`
 - `normalizeCanonicalLocalesFile`
 - `resolveLocaleLabel`
 
-`@clickeen/l10n` must not own widget path extraction, translation job assembly, or storage identity.
+`@clickeen/l10n` also owns generic translation safety primitives that are not
+specific to one agent or product flow:
+
+- `assertTranslationSafety`
+- `TranslationSafetyError`
+- placeholder parity checks
+- richtext tag and anchor integrity checks
+
+`@clickeen/l10n` must not own widget path extraction, translation job assembly,
+agent prompts, agent output contracts, or storage identity.
 
 ## Account Locale Policy
 

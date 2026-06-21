@@ -1,7 +1,7 @@
 import { normalizeLocaleToken } from '@clickeen/l10n';
-import { TranslationAgentError, assertTranslationSafety } from '@clickeen/translation-agent';
-import type { Env, Usage } from '../types';
-import { HttpError, asString, isRecord } from '../http';
+import { TranslationSafetyError, assertTranslationSafety } from '@clickeen/l10n';
+import type { Env, Usage } from './types';
+import { HttpError, asString, isRecord } from './http';
 
 export type PragueStringsTranslationRequest = {
   v: 1;
@@ -33,7 +33,7 @@ function assertPragueTranslationSafety(
   try {
     assertTranslationSafety(expected, translatedValue, 'openai');
   } catch (error) {
-    if (error instanceof TranslationAgentError) {
+    if (error instanceof TranslationSafetyError) {
       throw new HttpError(error.status, {
         code: 'PROVIDER_ERROR',
         provider: error.provider ?? 'openai',
