@@ -3,8 +3,21 @@ export type AiPolicyProfile = 'free' | 'tier1' | 'tier2' | 'tier3' | 'tier4';
 export type AiExecutionSurface = 'execute' | 'endpoint';
 export type AiAgentCategory = 'copilot' | 'system_agent';
 export type AiRegistryBoundary =
-  | 'editor_ops_only'
+  | 'product_copilot_draft_actions'
   | 'account_widget_translated_values';
+export type AiAgentHome =
+  | 'product-copilot'
+  | 'translation-agent'
+  | 'future-agent';
+export type AiLoopOwner =
+  | 'bob-live-draft'
+  | 'agent-home'
+  | 'single-pass-workflow'
+  | 'future-decision';
+export type AiRuntimeIdentity =
+  | 'authenticated-product'
+  | 'internal-service'
+  | 'future-public-sdr';
 
 export type AiBudget = {
   maxTokens: number;
@@ -49,6 +62,10 @@ type AiRegistryBase = {
   taskClass: string;
   description: string;
   owner: string;
+  agentHome: AiAgentHome;
+  loopOwner: AiLoopOwner;
+  runtimeIdentity: AiRuntimeIdentity;
+  traceNamespace: string;
   boundary: AiRegistryBoundary;
   supportedProviders: AiProvider[];
   defaultProvider: AiProvider;
@@ -60,12 +77,12 @@ type AiRegistryBase = {
 export type AiCopilotRegistryEntry = AiRegistryBase & {
   category: 'copilot';
   surface: string;
-  boundary: 'editor_ops_only';
+  boundary: 'product_copilot_draft_actions';
 };
 
 export type AiSystemAgentRegistryEntry = AiRegistryBase & {
   category: 'system_agent';
-  boundary: Exclude<AiRegistryBoundary, 'editor_ops_only'>;
+  boundary: Exclude<AiRegistryBoundary, 'product_copilot_draft_actions'>;
 };
 
 export type AiRegistryEntry = AiCopilotRegistryEntry | AiSystemAgentRegistryEntry;
@@ -88,6 +105,16 @@ export type AiModelTokenParam = 'max_tokens' | 'max_completion_tokens';
 export type AiModelCapability = AiModelCatalogEntry & {
   tokenParam: AiModelTokenParam;
   supportsTemperature: boolean;
+  supportsStructuredOutput: boolean;
+  supportsToolCalls: boolean;
+  supportsPromptCaching: boolean;
+  contextWindowTokens: number;
+  latencyClass: 'low' | 'medium' | 'high' | 'unknown';
+  costClass: 'low' | 'medium' | 'high' | 'unknown';
+  privacyBoundary: 'external-hosted' | 'clickeen-hosted' | 'unknown';
+  fallbackEligible: boolean;
+  taskClassEligibility: string[];
+  evalStatus: 'unproven' | 'candidate' | 'approved';
   reasoningEffort?: 'none' | 'low' | 'medium' | 'high' | 'xhigh';
   pickerEligibility: {
     eligible: boolean;
@@ -102,49 +129,79 @@ export type AiModelUiMeta = {
   label: string;
 };
 
-export type BuilderCopilotTurnClass = 'resolved_edit' | 'multi_op_plan';
-
-export type BuilderCopilotSnapshotControl = {
+export type ProductCopilotControl = {
   path: string;
   panelId?: string;
   groupId?: string;
   groupLabel?: string;
   type: string;
   kind: string;
-  label: string;
+  label?: string;
   options?: Array<{ label: string; value: string | number | boolean }>;
   enumValues?: string[];
   min?: number;
   max?: number;
   itemIdPath?: string;
   currentValue: unknown;
-  aliases: string[];
-  ambiguityGroup?: string;
-  choiceLabel?: string;
 };
 
-export type BuilderCopilotSnapshot = {
-  widgetType: string;
-  displayName: string;
-  controls: BuilderCopilotSnapshotControl[];
-};
-
-export type BuilderCopilotResolvedTarget = {
-  path: string;
-  valueType: string;
-  currentValue: unknown;
-};
-
-export type BuilderCopilotRequestEnvelope = {
+export type ProductCopilotContextCapsule = {
+  version: 'product-copilot.context.v1';
   instanceId: string;
   widgetType: string;
+  displayName: string;
   activeLocale: string;
-  snapshotHash: string;
-  turnClass: BuilderCopilotTurnClass;
-  resolvedTarget?: BuilderCopilotResolvedTarget;
-  snapshot: BuilderCopilotSnapshot;
-  userMessage: string;
+  draftSignature: string;
+  controls: ProductCopilotControl[];
+  availableActions: Array<'draft_edit'>;
+  unavailableCapabilities: string[];
+  selectedControlPath?: string;
+  traceRequestId: string;
+};
+
+export type ProductCopilotConversationMessage = {
+  role: 'user' | 'assistant';
+  text: string;
+};
+
+export type ProductCopilotRequestEnvelope = {
+  instanceId: string;
   sessionId: string;
+  userMessage: string;
+  context: ProductCopilotContextCapsule;
+  conversationHistory?: ProductCopilotConversationMessage[];
+};
+
+export type ProductCopilotWidgetOp =
+  | { op: 'set'; path: string; value: unknown }
+  | { op: 'insert'; path: string; index: number; value: unknown }
+  | { op: 'remove'; path: string; itemId: string }
+  | { op: 'remove'; path: string; index: number }
+  | { op: 'move'; path: string; from: number; to: number };
+
+export type ProductCopilotOutputKind =
+  | 'answer'
+  | 'clarification'
+  | 'suggestion'
+  | 'draft_edit'
+  | 'refusal'
+  | 'error';
+
+export type ProductCopilotResponse = {
+  kind: ProductCopilotOutputKind;
+  message: string;
+  draftEdit?: {
+    ops: ProductCopilotWidgetOp[];
+  };
+  meta?: {
+    requestId?: string;
+    promptVersion?: string;
+    contextVersion?: ProductCopilotContextCapsule['version'];
+    opsCount?: number;
+    uniquePathsTouched?: number;
+    touchedPaths?: string[];
+    validationRetryCount?: number;
+  };
 };
 
 const AI_AGENT_REGISTRY: AiRegistryEntry[] = [
@@ -154,8 +211,12 @@ const AI_AGENT_REGISTRY: AiRegistryEntry[] = [
     taskClass: 'copilot.widget.editor',
     description: 'Builder Copilot.',
     owner: 'roma.builder',
+    agentHome: 'product-copilot',
+    loopOwner: 'bob-live-draft',
+    runtimeIdentity: 'authenticated-product',
+    traceNamespace: 'product-copilot',
     surface: 'roma.builder',
-    boundary: 'editor_ops_only',
+    boundary: 'product_copilot_draft_actions',
     supportedProviders: ['deepseek', 'openai'],
     defaultProvider: 'openai',
     executionSurface: 'execute',
@@ -167,6 +228,10 @@ const AI_AGENT_REGISTRY: AiRegistryEntry[] = [
     taskClass: 'l10n.instance',
     description: 'Widget Instance Translator.',
     owner: 'sanfrancisco.instance-translation',
+    agentHome: 'translation-agent',
+    loopOwner: 'single-pass-workflow',
+    runtimeIdentity: 'internal-service',
+    traceNamespace: 'translation-agent',
     boundary: 'account_widget_translated_values',
     supportedProviders: ['deepseek', 'openai'],
     defaultProvider: 'deepseek',
@@ -184,8 +249,18 @@ const AI_MODEL_CAPABILITIES: AiModelCapability[] = [
     provider: 'deepseek',
     model: 'deepseek-chat',
     label: 'DeepSeek Chat',
+    contextWindowTokens: 64000,
     tokenParam: 'max_tokens',
     supportsTemperature: true,
+    supportsStructuredOutput: false,
+    supportsToolCalls: false,
+    supportsPromptCaching: false,
+    latencyClass: 'medium',
+    costClass: 'low',
+    privacyBoundary: 'external-hosted',
+    fallbackEligible: true,
+    taskClassEligibility: ['copilot.widget.editor', 'l10n.instance'],
+    evalStatus: 'candidate',
     pickerEligibility: {
       eligible: true,
       proofRef: 'documentation/ai/model-conformance/2026-06-18-copilot-picker.md',
@@ -196,8 +271,18 @@ const AI_MODEL_CAPABILITIES: AiModelCapability[] = [
     provider: 'openai',
     model: 'gpt-5-mini',
     label: 'GPT 5 Mini',
+    contextWindowTokens: 128000,
     tokenParam: 'max_completion_tokens',
     supportsTemperature: false,
+    supportsStructuredOutput: true,
+    supportsToolCalls: true,
+    supportsPromptCaching: true,
+    latencyClass: 'medium',
+    costClass: 'medium',
+    privacyBoundary: 'external-hosted',
+    fallbackEligible: true,
+    taskClassEligibility: ['copilot.widget.editor', 'l10n.instance'],
+    evalStatus: 'candidate',
     pickerEligibility: {
       eligible: true,
       proofRef: 'documentation/ai/model-conformance/2026-06-18-copilot-picker.md',
@@ -208,8 +293,18 @@ const AI_MODEL_CAPABILITIES: AiModelCapability[] = [
     provider: 'openai',
     model: 'gpt-5',
     label: 'GPT 5 High',
+    contextWindowTokens: 128000,
     tokenParam: 'max_completion_tokens',
     supportsTemperature: false,
+    supportsStructuredOutput: true,
+    supportsToolCalls: true,
+    supportsPromptCaching: true,
+    latencyClass: 'high',
+    costClass: 'high',
+    privacyBoundary: 'external-hosted',
+    fallbackEligible: false,
+    taskClassEligibility: ['copilot.widget.editor'],
+    evalStatus: 'candidate',
     pickerEligibility: {
       eligible: true,
       proofRef: 'documentation/ai/model-conformance/2026-06-18-copilot-picker.md',
@@ -220,8 +315,18 @@ const AI_MODEL_CAPABILITIES: AiModelCapability[] = [
     provider: 'openai',
     model: 'gpt-5.2',
     label: 'GPT 5.2 High',
+    contextWindowTokens: 128000,
     tokenParam: 'max_completion_tokens',
     supportsTemperature: false,
+    supportsStructuredOutput: true,
+    supportsToolCalls: true,
+    supportsPromptCaching: true,
+    latencyClass: 'high',
+    costClass: 'high',
+    privacyBoundary: 'external-hosted',
+    fallbackEligible: false,
+    taskClassEligibility: ['copilot.widget.editor'],
+    evalStatus: 'candidate',
     pickerEligibility: {
       eligible: true,
       proofRef: 'documentation/ai/model-conformance/2026-06-18-copilot-picker.md',
@@ -249,6 +354,18 @@ for (const entry of AI_AGENT_REGISTRY) {
   }
   if (!entry.supportedProviders.includes(entry.defaultProvider)) {
     throw new Error(`[ck-contracts] AI registry entry defaultProvider not supported: ${entry.agentId}`);
+  }
+  if (!entry.agentHome.trim()) {
+    throw new Error(`[ck-contracts] AI registry entry missing agentHome: ${entry.agentId}`);
+  }
+  if (!entry.loopOwner.trim()) {
+    throw new Error(`[ck-contracts] AI registry entry missing loopOwner: ${entry.agentId}`);
+  }
+  if (!entry.runtimeIdentity.trim()) {
+    throw new Error(`[ck-contracts] AI registry entry missing runtimeIdentity: ${entry.agentId}`);
+  }
+  if (!entry.traceNamespace.trim()) {
+    throw new Error(`[ck-contracts] AI registry entry missing traceNamespace: ${entry.agentId}`);
   }
   if (AGENT_LOOKUP.has(entry.agentId)) {
     throw new Error(`[ck-contracts] Duplicate AI registry agentId: ${entry.agentId}`);

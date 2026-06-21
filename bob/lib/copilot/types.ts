@@ -6,7 +6,6 @@ export type CopilotMessage = {
   requestId?: string;
   hasUndoAction?: boolean;
   undoToken?: string;
-  clarificationChoices?: Array<{ label: string; path: string }>;
 };
 
 export type CopilotThread = {

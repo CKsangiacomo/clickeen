@@ -3,7 +3,6 @@ import { decodeHtmlEntities, parseTooldrawerAttributes } from '../compiler.share
 import { getIcon } from '../icons';
 import { getAt } from '../utils/paths';
 import { validateShowIfExpression } from '../../components/td-menu-content/showIf';
-import { buildCopilotVocabulary, validateCopilotVocabulary } from './vocabulary';
 
 const TOKEN_SEGMENT = /^__[^.]+__$/;
 
@@ -389,14 +388,12 @@ export function compileControlsFromPanels(args: {
     const overrideOptions = optionsByPath[control.path];
     const controlWithOptions = overrideOptions ? { ...control, options: overrideOptions } : control;
     const meta = inferControlMetadata(controlWithOptions, args.defaults);
-    return { ...controlWithOptions, ...meta, ...buildCopilotVocabulary(controlWithOptions) };
+    return { ...controlWithOptions, ...meta };
   });
 
   const unknownControl = controls.find((control) => !control.kind || control.kind === 'unknown');
   if (unknownControl) {
     throw new Error(`[BobCompiler] Control "${unknownControl.path}" is missing kind metadata`);
   }
-  validateCopilotVocabulary(controls);
-
   return controls;
 }

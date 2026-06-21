@@ -8,19 +8,20 @@ import { assertCap, verifyGrant } from './grants';
 import { resolveModelSelection } from './ai/modelRouter';
 import { HttpError, asTrimmedString, isRecord, json, noStore, readJson } from './http';
 import type { AIGrant, Env, InteractionEvent, Usage } from './types';
+import { callChatCompletion } from './ai/chat';
 import {
   MAX_TOTAL_INPUT_CHARS,
   MAX_TOTAL_ITEMS,
+  TranslationAgentError,
   buildSystemPrompt,
   buildStructuredTranslationPlan,
   buildUserPrompt,
   chunkTranslationEntries,
-  executeTranslationModel,
   isLikelyNonTranslatableLiteral,
   parseTranslationResult,
   restoreStructuredTranslationResults,
   type TranslationItem,
-} from './agents/l10nTranslationCore';
+} from '@clickeen/translation-agent';
 
 const TRANSLATOR_AGENT_ID = 'widget.instance.translator';
 
@@ -258,12 +259,15 @@ export async function produceCurrentLanguageValues(args: {
     let provider = '';
 
     for (const batch of batches) {
-      const result = await executeTranslationModel({
+      const result = await callChatCompletion({
         env: args.env,
         grant: args.grant,
         agentId: TRANSLATOR_AGENT_ID,
-        system,
-        user: buildUserPrompt(batch),
+        messages: [
+          { role: 'system', content: system },
+          { role: 'user', content: buildUserPrompt(batch) },
+        ],
+        temperature: 0.2,
       });
       provider = result.usage.provider;
       if (!provider || !result.usage.model.trim() || !Number.isInteger(result.usage.promptTokens) || result.usage.promptTokens < 0 || !Number.isInteger(result.usage.completionTokens) || result.usage.completionTokens < 0 || (usage && (usage.provider !== result.usage.provider || usage.model !== result.usage.model))) throw new HttpError(502, { code: 'PROVIDER_ERROR', provider, message: 'Translation usage invalid' });
@@ -364,7 +368,25 @@ export async function handleInstanceTranslationAgent(
   }
 
   const startedAtMs = Date.now();
-  const result = await produceInstanceTranslationValues({ env, grant, request: body });
+  let result: InstanceTranslationAgentResult;
+  try {
+    result = await produceInstanceTranslationValues({ env, grant, request: body });
+  } catch (error) {
+    if (error instanceof TranslationAgentError) {
+      if (error.code === 'BAD_REQUEST') {
+        throw new HttpError(error.status, {
+          code: 'BAD_REQUEST',
+          message: error.message,
+        });
+      }
+      throw new HttpError(error.status, {
+        code: 'PROVIDER_ERROR',
+        provider: error.provider ?? 'translation-agent',
+        message: error.message,
+      });
+    }
+    throw error;
+  }
   await sendInstanceTranslationAudit({
     env,
     ctx,

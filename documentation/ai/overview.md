@@ -2,11 +2,13 @@ STATUS: REFERENCE — MUST MATCH RUNTIME
 This document describes the current boundary between product/backend grant issuers and San Francisco.
 Runtime code + `supabase/migrations/` + deployed Cloudflare config are operational truth; any mismatch here is a P0 doc bug and must be updated immediately.
 
-# System: San Francisco — AI Workforce Operating System
+# System: Clickeen AI
 
 ## The Workforce OS
 
-**Clickeen is an AI-first company.** San Francisco is not just a feature—it's the **operating system for the company's AI workforce**.
+**Clickeen is an AI-first company.** The AI workforce is built from named agent
+homes plus San Francisco model execution. San Francisco is not the Product
+Copilot brain.
 
 Traditional SaaS companies need full teams to operate at scale—sales, support, marketing, localization, ops. Clickeen operates with **1 human + AI agents**:
 
@@ -15,7 +17,9 @@ Traditional SaaS companies need full teams to operate at scale—sales, support,
 | Builder Copilot | Help account users customize widgets | Product specialists |
 | Widget Instance Translator | Translate saved widget instances into enabled locales | Localization team |
 
-**Every agent learns automatically** from outcomes—improving prompts, accumulating golden examples, and evolving over time. Day 1 agents are mediocre. Day 100 agents are excellent.
+Agents do not silently learn in production. San Francisco captures traces and
+surface-owned outcomes so evals/review can improve prompts, models, tools, and
+policies through an explicit release/rollback path.
 
 See also:
 - `learning.md` — How agents learn from outcomes
@@ -27,7 +31,17 @@ See also:
 
 ## Technical Purpose
 
-San Francisco is Clickeen's **AI execution service**: it runs copilots and operational agents at scale, calling LLM providers and returning strictly-structured outputs.
+San Francisco is Clickeen's **AI execution service**: it verifies grants,
+routes model calls, enforces runtime policy, records trace metadata, and
+returns strictly-structured outputs for named agents.
+
+Product Copilot brain code lives in the isolated `product-copilot` workspace.
+Bob/Roma invoke it for Builder turns; San Francisco only executes its governed
+model calls.
+
+Translation Agent brain code lives in the isolated `translation-agent`
+workspace. San Francisco verifies the grant and executes governed model calls;
+product workflows own overlay acceptance and storage.
 
 At GA scale (100s of widgets, millions of installs), San Francisco must be **isolated** from:
 - product/auth/persistence authority in Roma/Berlin/Tokyo
@@ -44,14 +58,15 @@ Roma and San Francisco internal services are the trusted backend surfaces that i
 
 Boundary (explicit ownership):
 - LLM provider keys and model execution live in San Francisco.
-- Agent orchestration (routing, prompts, tools) lives in San Francisco.
+- Model/provider execution and runtime policy enforcement live in San Francisco.
+  Product-specific agent brains live in their own homes.
 
 ### San Francisco (Execution + Orchestration)
-San Francisco is the **AI runtime**.
+San Francisco is the **AI engine and model-execution boundary**.
 - Holds provider keys
 - Chooses provider/model for a given **Agent** within the constraints of the **AI Grant**
 - Enforces AI execution limits (tokens/$ budgets, concurrency, timeouts)
-- Executes agents (copilot, support, community manager, etc.)
+- Executes model calls for known agents
 - Returns **structured results + usage metadata**
 
 Boundary (explicit ownership):
@@ -81,8 +96,9 @@ Widget copilot routing (shipped):
 - Account Builder uses `cs.widget.copilot.v1`
 - Roma mints the request grant server-side for the account route.
 - DevStudio Entitlements exposes the model catalog and per-agent runtime policy by tier; it does not create a separate AI access truth.
-- Runtime behavior is policy-scoped by agent role (shared infra, separate behavior packs):
-  - `cs.widget.copilot.v1`: in-product editor copilot (control-driven edits and task-completion clarifications).
+- Runtime behavior is policy-scoped by agent id:
+  - `cs.widget.copilot.v1`: Product Copilot in Builder, using the isolated
+    `product-copilot` brain and Bob-owned draft validation/apply.
 
 Deployment status (code-synced on February 26, 2026; last cloud-dev smoke notes from February 11, 2026):
 - Local + cloud-dev target behavior: browser calls `POST /api/account/instances/:instanceId/copilot` on Roma.
@@ -99,12 +115,16 @@ Keeping product/persistence owners and San Francisco separate prevents:
 
 ## Key Product Invariants
 - **Editor is strict**: invalid edits are rejected immediately and surfaced.
-- **AI edits are machine diffs**: editor agents return `ops[]` rather than prose instructions.
+- **Product Copilot is conversational**: it returns one typed result kind:
+  `answer`, `clarification`, `suggestion`, `draft_edit`, `refusal`, or `error`.
+- **Draft edits are machine diffs**: `draft_edit` returns reversible ops that
+  Bob validates against the live browser-memory draft before applying.
 - **Provider selection is explicit**: outages return explicit errors.
 - **Provider calls are server-side**: browsers talk only to Clickeen surfaces.
 
 ## Terms (Precise)
-- **Agent**: A named AI capability (e.g. `editor.faqAnswer`, `support.reply`, `ops.communityModeration`).
+- **Agent**: A named Clickeen worker with an agent home, context contract,
+  output contract, validation boundary, runtime policy, and trace/eval record.
 - **AI Grant**: A signed authorization payload from a trusted Clickeen backend surface (Roma for account-mode product flows, San Francisco internal services for service work) that defines what San Francisco is allowed to do for a subject for a short time window.
 - **Execution Request**: The payload sent to San Francisco containing `agentId`, input, and the AI Grant.
 - **Result**: Structured output from San Francisco (`ops[]` for editor agents, or a typed payload for non-editor agents).
@@ -115,9 +135,9 @@ Keeping product/persistence owners and San Francisco separate prevents:
 ### Editor agents (inside Clickeen app)
 1) Core Builder open now loads through one Roma same-origin route (`GET /api/builder/:instanceId/open`) that resolves the saved authoring revision server-side for Roma's host-open flow. Account-mode save delegates back to Roma through `PUT /api/account/instances/:instanceId`. Builder no longer carries localization refresh/status commands on the active account authoring path.
 2) Account-mode Builder requests execute through Roma instance routes. Roma mints the short-lived AI Grant inline for that request.
-3) Bob calls San Francisco with `{ grant, agentId, input, context }`.
-4) San Francisco returns `{ ops[], usage }`.
-5) Bob applies `ops[]` locally as pure state transforms. If an op cannot be applied, Bob fails loudly (platform bug) and the developer fixes the widget/package or copilot output.
+3) The agent brain calls San Francisco with `{ grant, agentId, input, context }`.
+4) San Francisco verifies the grant, applies policy, routes the model call, emits trace metadata, and returns a structured result.
+5) Bob validates/applies draft edit actions locally as pure state transforms. If an op cannot be applied, Bob fails loudly.
 
 ### System agents (Clickeen’s internal workforce)
 - A trusted backend surface triggers an explicit system-agent execution request to San Francisco.
@@ -135,7 +155,7 @@ San Francisco is deployed as a **Cloudflare Worker** and currently ships:
   Francisco owns a real async generation endpoint.
 - `POST /v1/l10n/translate` (local + cloud-dev only; HMAC body signature; `ENVIRONMENT in {local,dev}`)
 - Cloudflare bindings:
-  - `SF_KV` (agent sessions)
+  - `SF_KV` (San Francisco-owned state needs; Product Copilot sessions are not stored in San Francisco KV)
   - `SF_EVENTS` (queue for async event ingestion)
   - `SF_D1` (queryable indexes)
   - `SF_R2` (raw event storage)
@@ -144,7 +164,10 @@ San Francisco is deployed as a **Cloudflare Worker** and currently ships:
   - `widget.instance.translator`
   - `POST /v1/execute` currently wires executors for: `cs.widget.copilot.v1`.
 
-This matters because the “learning loop” is not theoretical: every `/v1/execute` call enqueues an `InteractionEvent`, and the queue consumer writes raw payloads to R2 + indexes a small subset into D1.
+This matters because the trace/eval foundation is not theoretical: every
+`/v1/execute` call enqueues an `InteractionEvent`, and the queue consumer writes
+eligible raw payloads to R2 + indexes a small subset into D1. Captured traces do
+not mutate prompts, models, tools, or policy without eval/review/release.
 
 ## Contracts
 
@@ -185,7 +208,7 @@ type AIGrant = {
     timeoutMs: number;
     policyVersion: string;
   };
-  trace: { sessionId?: string; instanceId?: string };
+  trace: { sessionId?: string; instanceId?: string; surfaceId?: string };
 };
 ```
 
@@ -197,8 +220,10 @@ Format:
 `v1.<base64url(payloadJson)>.<base64url(hmacSha256("v1.<payloadB64>", AI_GRANT_HMAC_SECRET))>`
 
 ### Results (from San Francisco)
-San Francisco always returns a **structured** result (never prose instructions).
-- Editor agents return `ops[]` only.
+San Francisco always returns a **structured** result (never untyped prose
+instructions).
+- Product Copilot returns the typed union `answer | clarification | suggestion
+  | draft_edit | refusal | error`; only `draft_edit` carries ops.
 - Non-editor agents return a typed JSON payload per agent.
 ```ts
 type EditorAIResult = {

@@ -33,6 +33,7 @@ type AIGrant = {
   trace?: {
     sessionId?: string;
     instanceId?: string;
+    surfaceId?: string;
     envStage?: string;
   };
 };
@@ -198,6 +199,7 @@ export async function issueAccountCopilotGrant(args: {
     trace: {
       sessionId,
       ...(instanceId ? { instanceId } : {}),
+      surfaceId: 'roma.builder',
       envStage: resolveEnvStage(),
     },
   };
@@ -288,6 +290,9 @@ export async function executeCopilotOnSanFrancisco(args: {
 
 export function isValidCopilotOutcomePayload(value: unknown): value is {
   requestId: string;
+  outcomeId?: string;
+  surfaceId?: string;
+  artifactId?: string;
   sessionId: string;
   event: string;
   occurredAtMs: number;
@@ -297,12 +302,18 @@ export function isValidCopilotOutcomePayload(value: unknown): value is {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
   const body = value as Record<string, unknown>;
   const requestId = asTrimmedString(body.requestId);
+  const outcomeId = asTrimmedString(body.outcomeId);
+  const surfaceId = asTrimmedString(body.surfaceId);
+  const artifactId = asTrimmedString(body.artifactId);
   const sessionId = asTrimmedString(body.sessionId);
   const event = asTrimmedString(body.event);
   const occurredAtMs = body.occurredAtMs;
   const timeToDecisionMs = body.timeToDecisionMs;
   const accountIdHash = body.accountIdHash;
   if (!requestId || !sessionId || !event || !OUTCOME_EVENTS.has(event as any)) return false;
+  if (body.outcomeId !== undefined && !outcomeId) return false;
+  if (body.surfaceId !== undefined && !surfaceId) return false;
+  if (body.artifactId !== undefined && !artifactId) return false;
   if (typeof occurredAtMs !== 'number' || !Number.isFinite(occurredAtMs)) return false;
   if (timeToDecisionMs !== undefined && (typeof timeToDecisionMs !== 'number' || !Number.isFinite(timeToDecisionMs) || timeToDecisionMs < 0)) {
     return false;

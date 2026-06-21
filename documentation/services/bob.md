@@ -190,36 +190,20 @@ save authority.
 
 ## Builder Copilot
 
-Builder Copilot uses Bob's compiled controls as the editable surface. The Bob
-compiler emits Copilot vocabulary on each compiled control. Bob builds a control
-snapshot from the current compiled widget and browser-memory instance state,
-including current values and `showIf` visibility.
+Product Copilot turns route through Roma with a bounded
+`product-copilot.context.v1` capsule. Bob builds that capsule from the open
+browser-memory draft: `instanceId`, widget identity, active locale, draft
+signature, visible editable controls with current values, unavailable
+capabilities, and bounded `conversationHistory` from Bob's browser-memory
+Copilot thread. `showIf`-hidden controls are excluded from the capsule. Widget
+package source is not sent as Copilot prompt context.
 
-Bob handles deterministic Copilot turns locally before any network call:
-
-- capability questions such as "what can you edit?"
-- save/publish explanations
-- translation explanations
-- simple ambiguity prompts for visible controls
-- out-of-domain redirects back to widget editing
-
-For edit-looking prompts, Bob scopes the model-backed payload to visible controls
-that match the current compiler-owned Builder vocabulary. If no visible control
-matches, Bob answers locally instead of asking San Francisco to guess a product
-target. Widget package source is not sent as Copilot prompt context.
-
-When a prompt maps to more than one visible control, Bob asks a clarification
-question and renders the compiler-owned choice labels as buttons. The pending
-choice lives only in the Copilot browser-memory thread. Clicking a choice, or
-typing a unique choice label/token, binds the next turn to that selected
-visible control before any San Francisco request is made. A non-matching answer
-fails visibly instead of being reinterpreted as a hidden target.
-
-Model-backed turns still route through Roma to San Francisco, but San Francisco
-receives an explicit Builder envelope: `instanceId`, `widgetType`,
-`activeLocale`, `snapshotHash`, `turnClass`, optional `resolvedTarget`, the
-scoped current control snapshot, `userMessage`, and `sessionId`. Bob remains the
-owner of the open working copy and visible Builder-control meaning.
+Bob does not pre-route user language with regex/control matching before the
+agent sees the turn. The Product Copilot brain returns one typed result kind:
+`answer`, `clarification`, `suggestion`, `draft_edit`, `refusal`, or `error`.
+Bob remains the owner of the open working copy, model-visible Product Copilot
+thread context, terminal draft validation, and reversible draft apply.
+San Francisco does not store Product Copilot thread state.
 
 When San Francisco returns valid edit ops, Bob applies them immediately to the
 browser-memory working copy and preview through the same in-memory op path used

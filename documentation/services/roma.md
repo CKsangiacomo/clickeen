@@ -230,12 +230,16 @@ and Tokyo/R2 account storage cleanup.
 ## AI
 
 Roma grants Builder Copilot access for the current account and calls San
-Francisco. Bob sends the explicit Builder Copilot envelope through Roma:
-`instanceId`, `widgetType`, `activeLocale`, `snapshotHash`, `turnClass`,
-optional `resolvedTarget`, scoped control `snapshot`, `userMessage`, and
-`sessionId`. Roma validates that envelope, resolves account and widget identity
-from the saved instance context, mints the account grant, and forwards the
-envelope to San Francisco.
+Francisco. Bob sends the Product Copilot request through Roma: `instanceId`,
+`sessionId`, `userMessage`, bounded `conversationHistory`, and a
+`product-copilot.context.v1` capsule with widget identity, locale, draft
+signature, editable controls/current values, available draft actions, and
+unavailable capabilities. Roma validates that capsule, resolves account and
+widget identity from the saved instance context, mints the account grant, and
+forwards the request for governed model execution. Roma attaches outcome
+linkage fields such as `surfaceId: roma.builder` and the opened `instanceId`
+as the artifact id when forwarding Product Copilot outcomes. Linkage is not
+attribution.
 
 ## Deploy Plane
 

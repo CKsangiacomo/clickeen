@@ -11,8 +11,7 @@ import {
   resolveAiModelCapability,
   type AiModelRef,
   type AiProvider,
-  type BuilderCopilotRequestEnvelope,
-  type BuilderCopilotTurnClass,
+  type ProductCopilotRequestEnvelope,
 } from '@clickeen/ck-contracts/ai';
 
 export const runtime = 'edge';
@@ -115,42 +114,61 @@ function validateControlCatalog(controls: unknown, pathPrefix = 'snapshot.contro
   return issues;
 }
 
-function isTurnClass(value: unknown): value is BuilderCopilotTurnClass {
-  return value === 'resolved_edit' || value === 'multi_op_plan';
+function validateConversationHistory(value: unknown): Array<{ path: string; message: string }> {
+  if (value === undefined) return [];
+  if (!Array.isArray(value)) return [{ path: 'conversationHistory', message: 'conversationHistory must be an array' }];
+  if (value.length > 8) return [{ path: 'conversationHistory', message: 'conversationHistory must contain at most 8 messages' }];
+  const issues: Array<{ path: string; message: string }> = [];
+  value.forEach((entry, index) => {
+    if (!isRecord(entry)) {
+      issues.push({ path: `conversationHistory[${index}]`, message: 'message must be an object' });
+      return;
+    }
+    if (entry.role !== 'user' && entry.role !== 'assistant') issues.push({ path: `conversationHistory[${index}].role`, message: 'role must be user or assistant' });
+    const text = asTrimmedString(entry.text);
+    if (!text) issues.push({ path: `conversationHistory[${index}].text`, message: 'text is required' });
+    if (text && text.length > 2000) issues.push({ path: `conversationHistory[${index}].text`, message: 'text must be at most 2000 characters' });
+  });
+  return issues;
 }
 
-function validateCopilotEnvelope(payload: Record<string, unknown>, routeInstanceId: string): { envelope: BuilderCopilotRequestEnvelope | null; issues: Array<{ path: string; message: string }> } {
+function validateCopilotEnvelope(payload: Record<string, unknown>, routeInstanceId: string): { envelope: ProductCopilotRequestEnvelope | null; issues: Array<{ path: string; message: string }> } {
   const issues: Array<{ path: string; message: string }> = [];
-  const snapshot = isRecord(payload.snapshot) ? payload.snapshot : null;
-  const resolvedTarget = isRecord(payload.resolvedTarget) ? payload.resolvedTarget : null;
+  const context = isRecord(payload.context) ? payload.context : null;
 
-  for (const field of ['instanceId', 'widgetType', 'activeLocale', 'snapshotHash', 'userMessage', 'sessionId']) {
+  for (const field of ['instanceId', 'userMessage', 'sessionId']) {
     if (!isExactNonEmptyString(payload[field])) issues.push({ path: field, message: `${field} is required` });
   }
   if (payload.instanceId && payload.instanceId !== routeInstanceId) {
     issues.push({ path: 'instanceId', message: 'instanceId must match the route instance' });
   }
-  if (!isTurnClass(payload.turnClass)) issues.push({ path: 'turnClass', message: 'turnClass must be resolved_edit or multi_op_plan' });
-  if (!snapshot) {
-    issues.push({ path: 'snapshot', message: 'snapshot must be an object' });
+  if (!context) {
+    issues.push({ path: 'context', message: 'context must be an object' });
   } else {
-    if (!isExactNonEmptyString(snapshot.widgetType)) issues.push({ path: 'snapshot.widgetType', message: 'snapshot.widgetType is required' });
-    if (!isExactNonEmptyString(snapshot.displayName)) issues.push({ path: 'snapshot.displayName', message: 'snapshot.displayName is required' });
-    if (!Array.isArray(snapshot.controls) || snapshot.controls.length === 0) {
-      issues.push({ path: 'snapshot.controls', message: 'snapshot.controls must be a non-empty array' });
+    if (context.version !== 'product-copilot.context.v1') issues.push({ path: 'context.version', message: 'unsupported context version' });
+    for (const field of ['instanceId', 'widgetType', 'displayName', 'activeLocale', 'draftSignature', 'traceRequestId']) {
+      if (!isExactNonEmptyString(context[field])) issues.push({ path: `context.${field}`, message: `${field} is required` });
     }
-    issues.push(...validateControlCatalog(snapshot.controls, 'snapshot.controls'));
-  }
-  if (payload.turnClass === 'resolved_edit') {
-    if (!resolvedTarget) {
-      issues.push({ path: 'resolvedTarget', message: 'resolvedTarget is required for resolved_edit' });
-    } else {
-      if (!isControlPath(resolvedTarget.path)) issues.push({ path: 'resolvedTarget.path', message: 'resolvedTarget.path is required' });
-      if (!isExactNonEmptyString(resolvedTarget.valueType)) issues.push({ path: 'resolvedTarget.valueType', message: 'resolvedTarget.valueType is required' });
+    if (context.instanceId && context.instanceId !== routeInstanceId) {
+      issues.push({ path: 'context.instanceId', message: 'context instance must match the route instance' });
+    }
+    if (!Array.isArray(context.controls) || context.controls.length === 0) {
+      issues.push({ path: 'context.controls', message: 'context.controls must be a non-empty array' });
+    }
+    issues.push(...validateControlCatalog(context.controls, 'context.controls'));
+    if (!Array.isArray(context.availableActions) || !context.availableActions.includes('draft_edit')) {
+      issues.push({ path: 'context.availableActions', message: 'draft_edit action must be declared' });
+    }
+    if (!Array.isArray(context.unavailableCapabilities) || !context.unavailableCapabilities.every((entry) => typeof entry === 'string')) {
+      issues.push({ path: 'context.unavailableCapabilities', message: 'unavailableCapabilities must be a string array' });
+    }
+    if (context.selectedControlPath !== undefined && !isControlPath(context.selectedControlPath)) {
+      issues.push({ path: 'context.selectedControlPath', message: 'selectedControlPath must be an exact path when present' });
     }
   }
-  if (issues.length || !snapshot) return { envelope: null, issues };
-  return { envelope: payload as BuilderCopilotRequestEnvelope, issues: [] };
+  issues.push(...validateConversationHistory(payload.conversationHistory));
+  if (issues.length || !context) return { envelope: null, issues };
+  return { envelope: payload as ProductCopilotRequestEnvelope, issues: [] };
 }
 
 export async function POST(request: NextRequest, context: RouteContext) {
@@ -196,11 +214,11 @@ export async function POST(request: NextRequest, context: RouteContext) {
       );
     }
     const widgetType = currentInstance.value.row.widgetType;
-    if (envelope.widgetType !== widgetType || envelope.snapshot.widgetType !== widgetType) {
+    if (envelope.context.widgetType !== widgetType) {
       return withSession(
         request,
         NextResponse.json(
-          { error: 'VALIDATION', issues: [{ path: 'widgetType', message: 'widgetType must match the instance widget type' }] },
+          { error: 'VALIDATION', issues: [{ path: 'context.widgetType', message: 'widgetType must match the instance widget type' }] },
           { status: 422 },
         ),
         current.value.setCookies,

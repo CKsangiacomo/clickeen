@@ -1,0 +1,21 @@
+{
+  "name": "@clickeen/product-copilot",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "eval:product-copilot": "tsx evals/run-product-copilot-eval.ts",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@clickeen/ck-contracts": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^20.16.5",
+    "tsx": "^4.20.6",
+    "typescript": "^5.4.5"
+  }
+}

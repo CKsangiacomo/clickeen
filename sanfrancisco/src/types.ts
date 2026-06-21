@@ -20,6 +20,7 @@ export type AIGrant = {
   trace?: {
     sessionId?: string;
     instanceId?: string;
+    surfaceId?: string;
     envStage?: string;
   };
 };
@@ -68,6 +69,9 @@ export type CopilotLearningMetadata = {
 
 export type OutcomeAttachRequest = {
   requestId: string;
+  outcomeId?: string;
+  surfaceId?: string;
+  artifactId?: string;
   sessionId: string;
   event: CopilotOutcomeEvent;
   occurredAtMs: number;

@@ -1,7 +1,7 @@
 import { normalizeLocaleToken } from '@clickeen/l10n';
+import { TranslationAgentError, assertTranslationSafety } from '@clickeen/translation-agent';
 import type { Env, Usage } from '../types';
 import { HttpError, asString, isRecord } from '../http';
-import { assertTranslationSafety } from './translationSafety';
 
 export type PragueStringsTranslationRequest = {
   v: 1;
@@ -25,6 +25,24 @@ type OpenAIResponse = {
   usage?: { input_tokens?: number; output_tokens?: number };
   model?: string;
 };
+
+function assertPragueTranslationSafety(
+  expected: { path: string; type: 'string' | 'richtext'; value: string },
+  translatedValue: string,
+): void {
+  try {
+    assertTranslationSafety(expected, translatedValue, 'openai');
+  } catch (error) {
+    if (error instanceof TranslationAgentError) {
+      throw new HttpError(error.status, {
+        code: 'PROVIDER_ERROR',
+        provider: error.provider ?? 'openai',
+        message: error.message,
+      });
+    }
+    throw error;
+  }
+}
 
 const PROMPT_VERSION = 'prague.strings.l10n@2026-05-06.1';
 const POLICY_VERSION = 'l10n.ops.v1';
@@ -252,7 +270,7 @@ export async function executePragueStringsTranslate(requestPayload: PragueString
     if (!actual || actual.path !== expected.path || typeof actual.value !== 'string') {
       throw new HttpError(502, { code: 'PROVIDER_ERROR', provider: 'openai', message: `Unexpected path at index ${i}` });
     }
-    assertTranslationSafety(expected, actual.value, 'openai');
+    assertPragueTranslationSafety(expected, actual.value);
   }
 
   await writeLog(env, requestPayload, {

@@ -6,7 +6,7 @@ Runtime code + deployed Cloudflare bindings are operational truth; any mismatch 
 
 ## 0) What “learning” means (for Clickeen)
 
-“Learning” is not “more logs”. Learning means **outcomes** that let us answer:
+“Learning” is not “more logs”. Learning means **outcomes and evals** that let us answer:
 - did an edit succeed (ops applied)?
 - did the user keep or undo it?
 - did the user convert (signup/upgrade)?
@@ -16,6 +16,16 @@ San Francisco provides the execution surface and the learning data plane:
 - it logs every interaction (best-effort, non-blocking)
 - it indexes a minimal subset for querying
 - it accepts outcome attachments from Roma/Bob (sources of truth for conversions + UX decisions)
+
+Day-one capture is not autonomous learning. The behavior-change path is:
+
+```text
+trace/outcome -> eval/review -> release -> rollback
+```
+
+The first Product Copilot eval harness is a deterministic fixture runner in
+`product-copilot/evals/`. It is an acceptance/regression gate for the Product
+Copilot brain contract; it is not autonomous learning.
 
 ## 1) The two event streams
 
@@ -27,7 +37,7 @@ Every `/v1/execute` produces an `InteractionEvent` (see `sanfrancisco/src/types.
 - `agentId`
 - `occurredAtMs`
 - `subject` (anon/user/service)
-- `trace` (may include `sessionId`, `instanceId`, `envStage`)
+- `trace` (may include `sessionId`, `instanceId`, `surfaceId`, `envStage`)
 - `input` (agent input)
 - `result` (agent result)
 - `usage` (provider/model/token/latency)
@@ -50,6 +60,11 @@ Events currently supported:
 - `clarification_needed`
 - `invalid_output`
 
+Outcome payloads may include `outcomeId`, `surfaceId`, and `artifactId` linkage
+fields. Linkage is not causality. Later save, publish, undo, conversion, or
+absence does not prove the agent caused the outcome until a future governed
+attribution system proves that link.
+
 Auth:
 - The caller must sign the JSON body with `AI_GRANT_HMAC_SECRET` and pass the signature as `x-clickeen-signature`.
 - Roma is the live product backend surface that forwards account-mode outcomes to San Francisco.
@@ -70,7 +85,7 @@ San Francisco maintains two D1 tables. Their schema is owned by San Francisco D1
 #### `copilot_events_v1`
 One row per `requestId` with “learning features” extracted from the raw event:
 - `day`, `runtimeEnv`, `envStage`
-- `sessionId`, `instanceId` (stored in the current D1 `instancePublicId` column)
+- `surfaceId`, `sessionId`, `instanceId` (stored in the current D1 `instancePublicId` column)
 - `agentId`, `widgetType`
 - `intent`, `outcome`
 - `hasUrl`, `controlCount`
@@ -81,8 +96,12 @@ One row per `requestId` with “learning features” extracted from the raw even
 #### `copilot_outcomes_v1`
 One row per `(requestId, event)`:
 - `day`, `occurredAtMs`, `sessionId`
+- `outcomeId`, `surfaceId`, `artifactId`
 - `timeToDecisionMs` (for keep/undo)
 - `accountIdHash` (optional, for cohort analysis)
+
+Missing outcomes remain missing. Corrupt traces or outcomes are invalid, not
+absence.
 
 ## 3) Versioning (so improvements are attributable)
 
@@ -94,22 +113,42 @@ Every interaction should include these “version stamps” in the indexed row:
 
 If any of these are missing, analysis becomes garbage (“we changed something, but don’t know what”).
 
-## 4) Copilot regression harness (current repo reality)
+## 4) Product Copilot eval harness (current repo reality)
 
-There is currently **no active repo-owned golden-set fixture suite** for Copilot in this codebase.
+The active repo-owned Product Copilot eval harness lives in
+`product-copilot/evals/` and runs through:
 
-If we reintroduce one, it must:
-- execute from a real test or verification path
-- protect deterministic UX-critical behavior such as routing decisions, clarifications, and guards
-- justify its maintenance cost by catching user-facing regressions before they ship
+```bash
+pnpm --filter @clickeen/product-copilot eval:product-copilot
+```
 
-Do not add passive fixture files or fixture-only docs without an executable harness behind them.
+It is an executable acceptance/regression gate for the Product Copilot brain
+contract. The day-one fixture set covers conversational answer, clarification,
+draft edit, exact draft ops, one bounded structural retry, and draft-edit
+wording that must not claim applied/saved/published product success before Bob
+validates and applies the draft edit.
+
+Do not add passive fixture files or fixture-only docs without an executable
+harness behind them.
+
+## 4.1) Translation Agent eval harness (current repo reality)
+
+The active repo-owned Translation Agent eval harness lives in
+`translation-agent/evals/` and runs through:
+
+```bash
+pnpm --filter @clickeen/translation-agent eval:translation-agent
+```
+
+It is an executable acceptance/regression gate for exact path preservation,
+malformed structured output rejection, placeholder parity, richtext tag parity,
+and anchor integrity. It is not autonomous learning and it does not call an LLM.
 
 ## 5) What to measure (minimum)
 
 From `copilot_events_v1`:
 - intent distribution (`explain|clarify|edit`)
-- outcome distribution (`no_ops|ops_applied|invalid_ops|...`)
+- outcome distribution (`no_ops|draft_edit_returned|invalid_ops|...`)
 - latency (`p50/p95`)
 - ops size (`opsCount`, `uniquePathsTouched`, `scopesTouched`)
 

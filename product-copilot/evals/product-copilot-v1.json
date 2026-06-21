@@ -1,0 +1,95 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "casual-guides-back",
+      "prompt": "My dog peed on my bed today",
+      "expectedKind": "answer",
+      "modelResponses": [
+        {
+          "kind": "answer",
+          "message": "That sounds rough. Want to turn that into a lighter widget headline or a fun FAQ item?"
+        }
+      ]
+    },
+    {
+      "id": "draft-edit-title",
+      "prompt": "Change the title to Hello Riviera",
+      "expectedKind": "draft_edit",
+      "expectedOps": [
+        {
+          "op": "set",
+          "path": "content.title",
+          "value": "Hello Riviera"
+        }
+      ],
+      "modelResponses": [
+        {
+          "kind": "draft_edit",
+          "message": "I drafted that title change.",
+          "draftEdit": {
+            "ops": [
+              {
+                "op": "set",
+                "path": "content.title",
+                "value": "Hello Riviera"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "invalid-path-retry",
+      "prompt": "Change the title to Hello Riviera",
+      "expectedKind": "draft_edit",
+      "expectedValidationRetryCount": 1,
+      "expectedOps": [
+        {
+          "op": "set",
+          "path": "content.title",
+          "value": "Hello Riviera"
+        }
+      ],
+      "modelResponses": [
+        {
+          "kind": "draft_edit",
+          "message": "I changed it.",
+          "draftEdit": {
+            "ops": [
+              {
+                "op": "set",
+                "path": "content.hiddenTitle",
+                "value": "Hello Riviera"
+              }
+            ]
+          }
+        },
+        {
+          "kind": "draft_edit",
+          "message": "I drafted the visible title change.",
+          "draftEdit": {
+            "ops": [
+              {
+                "op": "set",
+                "path": "content.title",
+                "value": "Hello Riviera"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "ambiguous-edit-asks",
+      "prompt": "Make it pop",
+      "expectedKind": "clarification",
+      "modelResponses": [
+        {
+          "kind": "clarification",
+          "message": "Which part should I make stronger: the title, the button, or the supporting copy?"
+        }
+      ]
+    }
+  ]
+}

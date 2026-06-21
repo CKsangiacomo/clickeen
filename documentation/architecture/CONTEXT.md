@@ -61,6 +61,8 @@ paths and product routes as any other account.
 | Runtime bytes                              | Cloudflare R2/CDN through Tokyo-worker                          |
 | Relational account/support data            | Michael/Supabase                                                |
 | AI execution                               | San Francisco                                                   |
+| Product Copilot brain                      | `product-copilot` workspace                                     |
+| Translation Agent brain                    | `translation-agent` workspace                                   |
 | Design system                              | Dieter                                                          |
 
 When runtime behavior and docs disagree, use this order:
@@ -85,6 +87,8 @@ that exposes it.
 | Prague        | Cloudflare Pages / Astro     | Marketing, gallery, demo/funnel pages               |
 | DevStudio     | Cloudflare Pages             | Internal toolbench through the normal admin account |
 | San Francisco | Workers/D1/KV/R2/Queues      | AI workforce services                               |
+| Product Copilot | Workspace module           | Builder Product Copilot brain                       |
+| Translation Agent | Workspace module         | Account-widget translation brain                    |
 | Michael       | Supabase Postgres            | Account/user/support relational data                |
 | Dieter        | Git source + Tokyo artifacts | Design system tokens/components                     |
 

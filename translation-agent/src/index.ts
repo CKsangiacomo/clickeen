@@ -1,7 +1,23 @@
-import type { AIGrant, Env, Usage } from '../types';
-import { HttpError, asString, isRecord } from '../http';
-import { callChatCompletion } from '../ai/chat';
 import { assertTranslationSafety, BRACE_PLACEHOLDER_PATTERN, HTML_TAG_PATTERN } from './translationSafety';
+import { TranslationAgentError } from './errors';
+export { TranslationAgentError } from './errors';
+export { assertTranslationSafety } from './translationSafety';
+
+function providerError(provider: string, message: string): TranslationAgentError {
+  return new TranslationAgentError(502, { code: 'PROVIDER_ERROR', provider, message });
+}
+
+function badRequest(message: string): TranslationAgentError {
+  return new TranslationAgentError(400, { code: 'BAD_REQUEST', message });
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
+}
+
+function asString(value: unknown): string | null {
+  return typeof value === 'string' ? value : null;
+}
 
 export type TranslationItem = {
   path: string;
@@ -86,25 +102,6 @@ export function buildUserPrompt(items: TranslationItem[]): string {
     '',
     JSON.stringify(payload),
   ].join('\n');
-}
-
-export async function executeTranslationModel(args: {
-  env: Env;
-  grant: AIGrant;
-  agentId: string;
-  system: string;
-  user: string;
-}): Promise<{ content: string; usage: Usage }> {
-  return callChatCompletion({
-    env: args.env,
-    grant: args.grant,
-    agentId: args.agentId,
-    messages: [
-      { role: 'system', content: args.system },
-      { role: 'user', content: args.user },
-    ],
-    temperature: 0.2,
-  });
 }
 
 function escapeRegExp(value: string): string {
@@ -193,11 +190,7 @@ function rebuildRichtextFromSegments(
       if (!part.segmentPath) return part.value;
       const translated = translatedSegments.get(part.segmentPath);
       if (typeof translated !== 'string') {
-        throw new HttpError(502, {
-          code: 'PROVIDER_ERROR',
-          provider,
-          message: `Missing translated richtext segment: ${part.segmentPath}`,
-        });
+        throw providerError(provider, `Missing translated richtext segment: ${part.segmentPath}`);
       }
       return translated;
     })
@@ -237,11 +230,7 @@ export function restoreStructuredTranslationResults(args: {
       if (entry.type !== 'richtext') {
         const translated = translatedByPath.get(entry.path);
         if (typeof translated !== 'string') {
-          throw new HttpError(502, {
-            code: 'PROVIDER_ERROR',
-            provider,
-            message: `Missing translated value for path: ${entry.path}`,
-          });
+          throw providerError(provider, `Missing translated value for path: ${entry.path}`);
         }
         const normalized = normalizeBracePlaceholderSpacing(entry.value, translated);
         assertTranslationSafety(entry, normalized, provider);
@@ -265,10 +254,7 @@ export function chunkTranslationEntries(entries: TranslationItem[]): Translation
   for (const entry of entries) {
     const nextChars = entry.value.length;
     if (nextChars > MAX_BATCH_INPUT_CHARS) {
-      throw new HttpError(400, {
-        code: 'BAD_REQUEST',
-        message: `Item too large for translation batch (${entry.path})`,
-      });
+      throw badRequest(`Item too large for translation batch (${entry.path})`);
     }
     const exceedItems = current.length >= MAX_BATCH_ITEMS;
     const exceedChars = currentChars + nextChars > MAX_BATCH_INPUT_CHARS;
@@ -294,16 +280,12 @@ export function parseTranslationResult(
   try {
     json = JSON.parse(raw);
   } catch {
-    throw new HttpError(502, { code: 'PROVIDER_ERROR', provider, message: 'Invalid JSON response' });
+    throw providerError(provider, 'Invalid JSON response');
   }
 
   const items = Array.isArray(json) ? json : null;
   if (!items) {
-    throw new HttpError(502, {
-      code: 'PROVIDER_ERROR',
-      provider,
-      message: 'Expected JSON array response',
-    });
+    throw providerError(provider, 'Expected JSON array response');
   }
 
   const expectedPaths = new Set(expected.map((item) => item.path));
@@ -312,55 +294,31 @@ export function parseTranslationResult(
 
   items.forEach((entry: unknown, index: number) => {
     if (!isRecord(entry)) {
-      throw new HttpError(502, {
-        code: 'PROVIDER_ERROR',
-        provider,
-        message: `Item ${index} is not an object`,
-      });
+      throw providerError(provider, `Item ${index} is not an object`);
     }
     const path = asString(entry.path);
     const value = asString(entry.value);
     if (!path || value == null) {
-      throw new HttpError(502, {
-        code: 'PROVIDER_ERROR',
-        provider,
-        message: `Item ${index} missing path/value`,
-      });
+      throw providerError(provider, `Item ${index} missing path/value`);
     }
     if (!expectedPaths.has(path)) {
-      throw new HttpError(502, {
-        code: 'PROVIDER_ERROR',
-        provider,
-        message: `Unexpected path: ${path}`,
-      });
+      throw providerError(provider, `Unexpected path: ${path}`);
     }
     if (seen.has(path)) {
-      throw new HttpError(502, {
-        code: 'PROVIDER_ERROR',
-        provider,
-        message: `Duplicate path: ${path}`,
-      });
+      throw providerError(provider, `Duplicate path: ${path}`);
     }
     seen.add(path);
     mapped.set(path, value);
   });
 
   if (mapped.size !== expected.length) {
-    throw new HttpError(502, {
-      code: 'PROVIDER_ERROR',
-      provider,
-      message: 'Translation output size mismatch',
-    });
+    throw providerError(provider, 'Translation output size mismatch');
   }
 
   return expected.map((item) => {
     const value = mapped.get(item.path);
     if (typeof value !== 'string') {
-      throw new HttpError(502, {
-        code: 'PROVIDER_ERROR',
-        provider,
-        message: `Missing translated value for path: ${item.path}`,
-      });
+      throw providerError(provider, `Missing translated value for path: ${item.path}`);
     }
     const normalizedValue = normalizeBracePlaceholderSpacing(item.value, value);
     assertTranslationSafety(item, normalizedValue, provider);

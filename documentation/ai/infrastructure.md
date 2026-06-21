@@ -1,7 +1,7 @@
 STATUS: REFERENCE — MUST MATCH RUNTIME
 This document is the operational spec for the San Francisco worker: bindings, deploy shape, endpoints, limits, and runbooks.
 Runtime code + deployed Cloudflare bindings are operational truth; any mismatch here is a P0 doc bug and must be updated immediately.
-Last synced to repository runtime: June 18, 2026.
+Last synced to repository runtime: June 20, 2026.
 
 # San Francisco — Infrastructure & Operations
 
@@ -17,6 +17,8 @@ This doc is meant to answer:
 
 - Code: `sanfrancisco/`
 - Entrypoint shell: `sanfrancisco/src/index.ts`
+- Product Copilot brain module: `product-copilot/`
+- Translation Agent brain module: `translation-agent/`
 - Extracted runtime modules:
   - `sanfrancisco/src/concurrency.ts`
   - `sanfrancisco/src/signatures.ts`
@@ -32,7 +34,9 @@ Naming:
 ## 2) Bindings & environment variables
 
 Bindings (Cloudflare primitives):
-- `SF_KV`: KV namespace used for short-lived session state (examples below)
+- `SF_KV`: KV namespace retained for San Francisco-owned state needs. Product
+  Copilot `/v1/execute` no longer stores conversation/thread state in
+  San Francisco KV.
 - `SF_EVENTS`: Queue used for non-blocking ingestion of interaction events
 - `SF_D1`: D1 database for queryable indexes
 - `SF_R2`: R2 bucket for raw event payload storage
@@ -50,10 +54,12 @@ Provider/model policy:
 - `@clickeen/ck-contracts` owns the model catalog.
 - `@clickeen/ck-policy` owns the tier + agent runtime policy matrix.
 - Roma and San Francisco internal services mint signed grants with direct `AgentRuntimePolicy`.
-- San Francisco enforces the signed `modelsByProvider`, `defaultModel`, optional `selectedModel`, token ceiling, turn ceiling, and timeout ceiling.
+- San Francisco enforces the signed `modelsByProvider`, `defaultModel`,
+  optional `selectedModel`, token ceiling, and timeout ceiling per execution.
+  Product Copilot thread-turn state is owned outside San Francisco.
 - Model picker availability is driven by signed policy plus explicit callable capability data; conformance reports and `proofRef` fields are release evidence only and are not runtime gates.
 - **Prague strings L10n**: local/dev signed tooling route; OpenAI model comes only from required `OPENAI_MODEL`.
-- **Account-widget Instance Translation Agent**: `widget.instance.translator`. The diagnostic agent endpoint remains available, but active product generation currently returns unavailable until San Francisco owns a real async generation endpoint, queue production, and operation state. Tokyo-worker owns only exact translated locale overlay storage.
+- **Account-widget Instance Translation Agent**: `widget.instance.translator`. The translation brain lives in `translation-agent/`; San Francisco remains the grant/model-execution adapter for the existing diagnostic endpoint. Active product generation currently returns unavailable until San Francisco owns a real async generation endpoint, queue production, and operation state. Tokyo-worker owns only exact translated locale overlay storage.
 
 ## 3) HTTP endpoints
 
@@ -72,7 +78,7 @@ Behavior (high level):
 - Parse `{grant, agentId, input, trace?}`
 - Verify grant signature + expiry (`AI_GRANT_HMAC_SECRET`)
 - Assert capability `agent:${agentId}`
-- Execute the agent
+- Execute the agent/model call without storing Product Copilot session state
 - Enqueue an `InteractionEvent` to `SF_EVENTS` (non-blocking)
 - Return `{requestId, agentId, result, usage}`
 
@@ -85,6 +91,9 @@ Auth:
 
 Storage:
 - Persists to D1 table `copilot_outcomes_v1`.
+- Outcome rows may include linkage fields: `outcomeId`, `surfaceId`, and
+  `artifactId`. Linkage is not causality; attribution remains future governed
+  work.
 
 ### `POST /v1/agents/instance-translation/runtime-status`
 Purpose: fast readiness check for the account-widget translation model runtime.
@@ -121,12 +130,10 @@ Provider:
 
 ## 4) State + storage layout (shipped)
 
-### KV (hot session state)
+### KV
 
-KV is used for “chat thread” / short-lived session state (24h TTL).
-
-Example keys (current code):
-- `copilot:cs:session:${sessionId}` (CS widget copilot session)
+Product Copilot `/v1/execute` is stateless per model call and does not store
+conversation/thread state in `SF_KV`.
 
 ### Queue (non-blocking ingestion)
 
@@ -151,10 +158,12 @@ San Francisco D1 schema is owned by `sanfrancisco/migrations/`, not Worker boot 
 
 - `copilot_events_v1`
   - one row per interaction (by `requestId`)
-  - indexed by `day`, `envStage`, `agentId`, `widgetType`, `sessionId`, `intent`, `outcome`
+  - indexed by `day`, `envStage`, `surfaceId`, `agentId`, `widgetType`,
+    `sessionId`, `intent`, `outcome`
 - `copilot_outcomes_v1`
   - one row per `(requestId, event)`
-  - used for conversion + UX outcome attribution
+  - stores optional `outcomeId`, `surfaceId`, and `artifactId` linkage fields
+  - used for conversion + UX outcome attachment, not automatic causal claims
 
 If D1 schema is missing or stale, migrations must be applied before deploy/runtime verification. Worker code does not create or alter telemetry tables at request time.
 

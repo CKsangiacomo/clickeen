@@ -37,19 +37,23 @@ Health contract:
 - Live product widget-copilot canonical ID:
   - `cs.widget.copilot.v1` (account Builder editor copilot)
 - The Roma grant issuer mints the live account Builder copilot grant for `cs.widget.copilot.v1`.
-- Prompt persona pack lives in `sanfrancisco/src/agents/widgetCopilotPromptProfiles.ts`.
-- Widget copilot now runs with shared execution plumbing + role-scoped policy behavior:
-  - CS policy (`cs.widget.copilot.v1`): full in-product editor assistant behavior (control-driven edits), no public-signup CTA flow.
-- Builder capability/explain/clarification turns are handled by Bob from the current compiled control snapshot before a San Francisco request is made.
-- CS prompt payload is built from the explicit Builder envelope that Roma forwards from Bob: `turnClass`, optional `resolvedTarget`, and the scoped current control snapshot. It does not accept the old free-form `currentConfig`/`controls` payload and does not include widget package source, widget HTML/CSS/client source, or keyword-ranked source padding.
-- If the scoped Builder context is too large, San Francisco fails visibly instead of truncating controls or current values.
-- Runtime modules are split between a shared core and thin per-agent wrappers:
-  - shared core: `sanfrancisco/src/agents/widgetCopilotCore.ts`
-  - CS wrapper: `sanfrancisco/src/agents/csWidgetCopilot.ts` (KV namespace `copilot:cs:session:*`)
+- Product Copilot brain code lives in the isolated `product-copilot` workspace.
+  San Francisco calls that brain through a thin `cs.widget.copilot.v1` adapter.
+- Translation Agent brain code lives in the isolated `translation-agent`
+  workspace. San Francisco keeps the existing translation endpoint and adapts it
+  to governed model execution.
+- Product Copilot uses the `product-copilot.context.v1` capsule and typed output
+  union: `answer`, `clarification`, `suggestion`, `draft_edit`, `refusal`, or
+  `error`.
+- Bob no longer pre-routes user language with regex/control matching before the
+  Product Copilot brain reasons. Bob still owns live draft validation/apply.
+- The Product Copilot brain fails visibly when the context capsule is malformed
+  or too large. It does not truncate controls or current values silently.
 - **Runtime policy execution:** Enforces the signed `AgentRuntimePolicy` from the grant: `defaultModel`, `modelsByProvider`, optional `selectedModel`, request ceilings, and learning-capture rules. Product/account policy decides the allowed model set before grant issuance.
-- Copilot session memory persists in `SF_KV` for 24 hours under the
-  role-specific session namespace. Signed Roma grants remain short-lived per
-  request and are verified on each San Francisco execution.
+- Product Copilot execution through `/v1/execute` is stateless per model call.
+  San Francisco verifies the signed Roma grant, applies runtime policy, routes
+  the provider/model call, emits trace/outcome metadata, and returns. Product
+  Copilot conversation/thread state does not live in San Francisco KV.
 - Contract coverage now explicitly guards grant verification, budget enforcement, provider routing, and concurrency ceilings before further AI-plane sophistication lands.
 
 ## Entrypoint posture
@@ -78,13 +82,14 @@ Health contract:
   San Francisco does not yet expose the async generation owner endpoint.
 - The HTTP `translate-saved-instance` endpoint remains for direct diagnostics and tests; it is not the active save/generate product orchestration boundary.
 - Localization prompts preserve source acronym style and must not add parenthetical acronym expansions that were not present in source text (especially headings/titles).
-- Richtext translation uses one structured path: San Francisco extracts visible text segments, translates those strings only, rebuilds the original HTML, then validates placeholder parity, HTML tag parity, and anchor integrity.
+- Richtext translation uses one structured path: `translation-agent/` extracts visible text segments, translates those strings only, rebuilds the original HTML, then validates placeholder parity, HTML tag parity, and anchor integrity.
 - l10n translation calls go through the shared policy router via `callChatCompletion` (same request/token enforcement + provider/model allowlist). Instance Translation must not set local token or timeout caps that override the signed grant; `ck-policy` is the model and budget authority for each queued job.
 
 ## Prague posture
 - Prague does not own the account-widget locale runtime.
 - Public widget package files are public artifacts, not San Francisco output. San Francisco produces translated values only; it does not write public widget files.
 - San Francisco must not write Prague overlay files or resurrect a Prague-specific widget localization path.
+- Prague system-string l10n may reuse `translation-agent/` safety primitives, but Prague remains a separate system-owned flow and maps safety failures back to San Francisco `PROVIDER_ERROR` responses.
 
 ## Rules
 - Agent writes must not invent paths, patch formats, readiness state, or layer

@@ -1,0 +1,19 @@
+{
+  "name": "@clickeen/translation-agent",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "eval:translation-agent": "tsx evals/run-translation-agent-eval.ts",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@types/node": "^20.14.2",
+    "tsx": "^4.20.3",
+    "typescript": "^5.4.5"
+  }
+}

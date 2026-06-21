@@ -195,7 +195,7 @@ async function handleOutcome(request: Request, env: Env): Promise<Response> {
     throw new HttpError(400, {
       code: 'BAD_REQUEST',
       message: 'Invalid request',
-      issues: [{ path: '', message: 'Expected { requestId, sessionId, event, occurredAtMs }' }],
+      issues: [{ path: '', message: 'Expected { requestId, sessionId, event, occurredAtMs } with optional linkage fields' }],
     });
   }
 

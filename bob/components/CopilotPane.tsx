@@ -1,17 +1,18 @@
 import { asTrimmedString, looksLikeHtmlErrorPage } from '@clickeen/ck-contracts';
-import type { BuilderCopilotRequestEnvelope } from '@clickeen/ck-contracts/ai';
+import type {
+  ProductCopilotControl,
+  ProductCopilotRequestEnvelope,
+  ProductCopilotResponse,
+} from '@clickeen/ck-contracts/ai';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { WidgetOp } from '../lib/ops';
-import {
-  buildCopilotControlSnapshot,
-  type CopilotClarificationChoice,
-  resolveBobCopilotEditScope,
-  resolveBobCopilotDeterministicTurn,
-} from '../lib/copilot/controlContract';
 import type { CopilotMessage } from '../lib/copilot/types';
 import { buildCopilotUndoOps } from '../lib/copilot/undo';
 import { useWidgetSession, useWidgetSessionChrome, useWidgetSessionCopilot } from '../lib/session/useWidgetSession';
 import { serializeInstanceDataSignature } from '../lib/session/sessionTypes';
+import type { CompiledControl } from '../lib/types';
+import { getAt } from '../lib/utils/paths';
+import { evaluateShowIfExpression } from './td-menu-content/showIf';
 
 type WidgetSessionValue = ReturnType<typeof useWidgetSession>;
 
@@ -88,6 +89,44 @@ function normalizeErrorMessage(args: { resStatus?: number; parsed?: any; bodyTex
 
 function newId(): string {
   return crypto.randomUUID();
+}
+
+function buildCopilotConversationHistory(thread: { messages: CopilotMessage[] } | null | undefined): ProductCopilotRequestEnvelope['conversationHistory'] {
+  const messages = thread?.messages ?? [];
+  return messages
+    .filter((message) => message.role === 'user' || message.role === 'assistant')
+    .map((message) => ({
+      role: message.role,
+      text: message.text.trim().slice(0, 2000),
+    }))
+    .filter((message) => message.text)
+    .slice(-8);
+}
+
+function buildProductCopilotControls(args: {
+  controls: CompiledControl[];
+  currentConfig: unknown;
+}): ProductCopilotControl[] {
+  const currentConfig = args.currentConfig && typeof args.currentConfig === 'object' && !Array.isArray(args.currentConfig)
+    ? (args.currentConfig as Record<string, unknown>)
+    : {};
+  return args.controls
+    .filter((control) => !control.showIf || evaluateShowIfExpression(control.showIf, currentConfig))
+    .map((control) => ({
+      path: control.path,
+      panelId: control.panelId,
+      groupId: control.groupId,
+      groupLabel: control.groupLabel,
+      type: control.type,
+      kind: control.kind ?? '',
+      label: control.label,
+      options: control.options,
+      enumValues: control.enumValues,
+      min: control.min,
+      max: control.max,
+      itemIdPath: control.itemIdPath,
+      currentValue: getAt(currentConfig, control.path),
+    }));
 }
 
 function buildOutcomeMetadata(ops: WidgetOp[] | null, controls: Array<{ path: string; label?: string; groupId?: string; groupLabel?: string }>) {
@@ -172,10 +211,6 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
     metadata: ReturnType<typeof buildOutcomeMetadata>;
     token: string;
     postApplySignature: string;
-  } | null>(null);
-  const pendingClarificationRef = useRef<{
-    prompt: string;
-    choices: CopilotClarificationChoice[];
   } | null>(null);
   const [undoAvailable, setUndoAvailable] = useState(false);
   const [activeUndoToken, setActiveUndoToken] = useState('');
@@ -274,37 +309,13 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
     return null;
   }, [compiled, canApplyOps]);
 
-  const copilotControlSnapshot = useMemo(() => {
-    if (!compiled) return null;
-    return buildCopilotControlSnapshot({
-      widgetType: compiled.widgetname,
-      displayName: compiled.displayName,
+  const controlsForAi = useMemo(() => {
+    if (!compiled) return [];
+    return buildProductCopilotControls({
       controls: compiled.controls,
       currentConfig: session.instanceData,
     });
   }, [compiled, session.instanceData]);
-
-  const controlsForAi = useMemo(() => {
-    if (!copilotControlSnapshot) return [];
-    return copilotControlSnapshot.controls.map((c) => ({
-      path: c.path,
-      panelId: c.panelId,
-      groupId: c.groupId,
-      groupLabel: c.groupLabel,
-      type: c.type,
-      kind: c.kind,
-      label: c.label,
-      options: c.options,
-      enumValues: c.enumValues,
-      min: c.min,
-      max: c.max,
-      itemIdPath: c.itemIdPath,
-      currentValue: c.currentValue,
-      aliases: c.aliases,
-      ambiguityGroup: c.ambiguityGroup,
-      choiceLabel: c.choiceLabel,
-    }));
-  }, [copilotControlSnapshot]);
 
   const pushMessage = (msg: Omit<CopilotMessage, 'id' | 'ts'>) => {
     if (!threadKey) return;
@@ -314,41 +325,12 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
     });
   };
 
-  const findPendingClarificationChoice = (prompt: string): CopilotClarificationChoice | null => {
-    const pending = pendingClarificationRef.current;
-    if (!pending) return null;
-    const normalizedPrompt = prompt
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, ' ')
-      .trim();
-    if (!normalizedPrompt) return null;
-    const matches = pending.choices.filter((choice) => {
-        const normalizedLabel = choice.label
-          .toLowerCase()
-          .replace(/[^a-z0-9]+/g, ' ')
-          .trim();
-        return (
-          normalizedLabel === normalizedPrompt ||
-          new RegExp(`(?:^| )${normalizedPrompt.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?: |$)`).test(normalizedLabel)
-        );
-      });
-    return matches.length === 1 ? matches[0] : null;
-  };
-
   const handleSend = async (promptOverride?: string) => {
     if (uiDisabledReason) return;
     const activeCompiled = compiled;
     if (!activeCompiled) return;
     const prompt = (promptOverride ?? draft).trim();
     if (!prompt) return;
-    const clarificationChoice = findPendingClarificationChoice(prompt);
-    const promptForResolution = clarificationChoice
-      ? `${pendingClarificationRef.current?.prompt || ''} ${clarificationChoice.label}`.trim()
-      : prompt;
-    const resolvedChoicePath = clarificationChoice?.path ?? null;
-    if (clarificationChoice) {
-      pendingClarificationRef.current = null;
-    }
 
     const normalized = prompt.toLowerCase();
     if (normalized === 'undo' && undoRef.current) {
@@ -409,69 +391,6 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
       return;
     }
 
-    if (pendingClarificationRef.current && !clarificationChoice && copilotControlSnapshot) {
-      const freshDeterministicTurn = resolveBobCopilotDeterministicTurn({ prompt, snapshot: copilotControlSnapshot });
-      const freshEditScope = resolveBobCopilotEditScope({ prompt, snapshot: copilotControlSnapshot });
-      if (!freshDeterministicTurn.handled && !freshEditScope.scoped && !freshEditScope.handled) {
-        setDraft('');
-        pushMessage({ role: 'user', text: prompt });
-        pushMessage({
-          role: 'assistant',
-          text: "I couldn't pin down what to change. Try naming the control, like 'the Header CTA' or 'the FAQ title'.",
-        });
-        pendingClarificationRef.current = null;
-        return;
-      }
-      pendingClarificationRef.current = null;
-    }
-
-    const deterministicTurn = !clarificationChoice && copilotControlSnapshot
-      ? resolveBobCopilotDeterministicTurn({ prompt, snapshot: copilotControlSnapshot })
-      : { handled: false as const };
-    if (deterministicTurn.handled) {
-      setDraft('');
-      pushMessage({ role: 'user', text: prompt });
-      if (deterministicTurn.clarificationChoices?.length) {
-        pendingClarificationRef.current = {
-          prompt,
-          choices: deterministicTurn.clarificationChoices,
-        };
-      }
-      pushMessage({
-        role: 'assistant',
-        text: deterministicTurn.message,
-        ...(deterministicTurn.clarificationChoices?.length
-          ? { clarificationChoices: deterministicTurn.clarificationChoices }
-          : {}),
-      });
-      return;
-    }
-
-    const editScope = copilotControlSnapshot && resolvedChoicePath
-      ? {
-          scoped: true as const,
-          controls: copilotControlSnapshot.controls.filter((control) => control.path === resolvedChoicePath),
-        }
-      : copilotControlSnapshot
-      ? resolveBobCopilotEditScope({ prompt: promptForResolution, snapshot: copilotControlSnapshot })
-      : { scoped: false as const, handled: false as const };
-    if (!editScope.scoped && editScope.handled) {
-      setDraft('');
-      pushMessage({ role: 'user', text: prompt });
-      pushMessage({ role: 'assistant', text: editScope.message });
-      return;
-    }
-    if (!editScope.scoped) {
-      setDraft('');
-      pushMessage({ role: 'user', text: prompt });
-      pushMessage({
-        role: 'assistant',
-        text: "I can only edit visible Builder controls for this widget. Ask for a concrete change, like 'change the title' or 'hide the button'.",
-      });
-      return;
-    }
-    const activeControlsForAi = controlsForAi.filter((control) => editScope.controls.some((scoped) => scoped.path === control.path));
-
     if (!chrome.policy) {
       pushMessage({
         role: 'assistant',
@@ -487,7 +406,7 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
     const requestBaseData = instanceDataRef.current;
     const activeLocale = chrome.meta?.baseLocale;
     const instanceId = chrome.meta?.instanceId;
-    if (!activeLocale || !instanceId || !copilotControlSnapshot) {
+    if (!activeLocale || !instanceId || controlsForAi.length === 0) {
       pushMessage({
         role: 'assistant',
         text: 'Editor context is not ready yet. Wait for Builder boot to complete and try again.',
@@ -495,25 +414,30 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
       setStatus('idle');
       return;
     }
-    const targetControl = editScope.controls.length === 1 ? editScope.controls[0] : null;
-    const envelope: BuilderCopilotRequestEnvelope = {
+    const traceRequestId = crypto.randomUUID();
+    const envelope: ProductCopilotRequestEnvelope = {
       instanceId,
-      widgetType: activeCompiled.widgetname,
-      activeLocale,
-      snapshotHash: serializeInstanceDataSignature({ snapshot: copilotControlSnapshot }),
-      turnClass: editScope.controls.length === 1 ? 'resolved_edit' : 'multi_op_plan',
-      ...(targetControl
-        ? {
-            resolvedTarget: {
-              path: targetControl.path,
-              valueType: targetControl.kind,
-              currentValue: targetControl.currentValue,
-            },
-          }
-        : {}),
-      snapshot: { ...copilotControlSnapshot, controls: activeControlsForAi },
-      userMessage: promptForResolution,
       sessionId,
+      userMessage: prompt,
+      context: {
+        version: 'product-copilot.context.v1',
+        instanceId,
+        widgetType: activeCompiled.widgetname,
+        displayName: activeCompiled.displayName,
+        activeLocale,
+        draftSignature: requestSignature,
+        controls: controlsForAi,
+        availableActions: ['draft_edit'],
+        unavailableCapabilities: [
+          'saved-product-mutation',
+          'publish',
+          'translation-generation',
+          'analytics-lookup',
+          'child-agent-call',
+        ],
+        traceRequestId,
+      },
+      conversationHistory: buildCopilotConversationHistory(thread),
     };
 
     try {
@@ -542,20 +466,21 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
         );
       }
 
-      const message = normalizeAssistantText(asTrimmedString(parsed?.message) || '');
-      const ops = Array.isArray(parsed?.ops) ? (parsed.ops as WidgetOp[]) : null;
+      const response = parsed as ProductCopilotResponse | null;
+      const message = normalizeAssistantText(asTrimmedString(response?.message) || '');
+      const ops = Array.isArray(response?.draftEdit?.ops) ? (response.draftEdit.ops as WidgetOp[]) : null;
       const requestId = asTrimmedString(parsed?.meta?.requestId) || asTrimmedString(parsed?.requestId);
-      if (!message && (!ops || ops.length === 0)) {
+      if (!response || !asTrimmedString(response.kind) || (!message && (!ops || ops.length === 0))) {
         throw new Error(COPILOT_INVALID_EDIT_MESSAGE);
       }
 
-      if (ops && ops.length > 0) {
+      if (response.kind === 'draft_edit' && ops && ops.length > 0) {
         if (serializeInstanceDataSignature(instanceDataRef.current) !== requestSignature) {
           pushMessage({ role: 'assistant', text: 'The widget changed while Copilot was working. Nothing was applied - try again.' });
           setStatus('idle');
           return;
         }
-        const inverseOps = buildCopilotUndoOps({ before: requestBaseData, ops, controls: compiled.controls });
+        const inverseOps = buildCopilotUndoOps({ before: requestBaseData, ops, controls: activeCompiled.controls });
         if (!inverseOps) {
           pushMessage({ role: 'assistant', text: COPILOT_INVALID_EDIT_MESSAGE });
           setStatus('idle');
@@ -568,7 +493,7 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
           return;
         }
         const postApplySignature = serializeInstanceDataSignature(applied.data);
-        const metadata = buildOutcomeMetadata(ops, activeControlsForAi);
+        const metadata = buildOutcomeMetadata(ops, controlsForAi);
         const appliedAtMs = Date.now();
         const undoToken = crypto.randomUUID();
         undoRef.current = {
@@ -587,7 +512,7 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
           sessionId,
           metadata,
         });
-        const appliedText = summarizeAppliedOps(ops, activeControlsForAi);
+        const appliedText = summarizeAppliedOps(ops, controlsForAi);
         pushMessage({
           role: 'assistant',
           text: `${appliedText} ${message}`.trim(),
@@ -646,26 +571,6 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
                 >
                   {m.text}
                 </div>
-
-                {m.clarificationChoices?.length ? (
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-1)', marginTop: 'var(--space-2)' }}>
-                    {m.clarificationChoices.map((choice) => (
-                      <button
-                        key={`${choice.path}:${choice.label}`}
-                        className="diet-btn-txt"
-                        data-size="sm"
-                        data-variant="neutral"
-                        type="button"
-                        onClick={() => {
-                          void handleSend(choice.label);
-                        }}
-                        disabled={status === 'loading' || Boolean(uiDisabledReason)}
-                      >
-                        <span className="diet-btn-txt__label">{choice.label}</span>
-                      </button>
-                    ))}
-                  </div>
-                ) : null}
 
             {m.hasUndoAction && undoAvailable && m.undoToken === activeUndoToken ? (
               <div style={{ display: 'flex', gap: 'var(--space-2)', marginTop: 'var(--space-1)' }}>

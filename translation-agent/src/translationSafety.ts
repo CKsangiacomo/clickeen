@@ -1,4 +1,4 @@
-import { HttpError } from '../http';
+import { TranslationAgentError } from './errors';
 
 export type TranslationSafetyItem = {
   path: string;
@@ -53,11 +53,7 @@ function assertPlaceholderParity(args: {
   const sourceMap = buildCountMap(extractPlaceholders(args.source));
   const translatedMap = buildCountMap(extractPlaceholders(args.translated));
   if (!countMapsEqual(sourceMap, translatedMap)) {
-    throw new HttpError(502, {
-      code: 'PROVIDER_ERROR',
-      provider: args.provider,
-      message: `Placeholder mismatch at path: ${args.path}`,
-    });
+    throw new TranslationAgentError(502, { code: 'PROVIDER_ERROR', provider: args.provider, message: `Placeholder mismatch at path: ${args.path}` });
   }
 }
 
@@ -88,19 +84,11 @@ function assertRichtextTagParity(args: {
   const sourceTags = extractTagTokens(args.source);
   const translatedTags = extractTagTokens(args.translated);
   if (sourceTags.length !== translatedTags.length) {
-    throw new HttpError(502, {
-      code: 'PROVIDER_ERROR',
-      provider: args.provider,
-      message: `Richtext tag mismatch at path: ${args.path}`,
-    });
+    throw new TranslationAgentError(502, { code: 'PROVIDER_ERROR', provider: args.provider, message: `Richtext tag mismatch at path: ${args.path}` });
   }
   for (let i = 0; i < sourceTags.length; i += 1) {
     if (sourceTags[i] !== translatedTags[i]) {
-      throw new HttpError(502, {
-        code: 'PROVIDER_ERROR',
-        provider: args.provider,
-        message: `Richtext tag mismatch at path: ${args.path}`,
-      });
+      throw new TranslationAgentError(502, { code: 'PROVIDER_ERROR', provider: args.provider, message: `Richtext tag mismatch at path: ${args.path}` });
     }
   }
 }
@@ -140,26 +128,14 @@ function assertRichtextAnchorParity(args: {
   if (sourceAnchors.length === 0) return;
   const translatedAnchors = extractRichtextAnchors(args.translated);
   if (sourceAnchors.length !== translatedAnchors.length) {
-    throw new HttpError(502, {
-      code: 'PROVIDER_ERROR',
-      provider: args.provider,
-      message: `Richtext anchor count mismatch at path: ${args.path}`,
-    });
+    throw new TranslationAgentError(502, { code: 'PROVIDER_ERROR', provider: args.provider, message: `Richtext anchor count mismatch at path: ${args.path}` });
   }
   for (let i = 0; i < sourceAnchors.length; i += 1) {
     if (sourceAnchors[i].hasVisibleText !== translatedAnchors[i].hasVisibleText) {
-      throw new HttpError(502, {
-        code: 'PROVIDER_ERROR',
-        provider: args.provider,
-        message: `Richtext anchor text mismatch at path: ${args.path}`,
-      });
+      throw new TranslationAgentError(502, { code: 'PROVIDER_ERROR', provider: args.provider, message: `Richtext anchor text mismatch at path: ${args.path}` });
     }
     if (sourceAnchors[i].href !== translatedAnchors[i].href) {
-      throw new HttpError(502, {
-        code: 'PROVIDER_ERROR',
-        provider: args.provider,
-        message: `Richtext anchor href mismatch at path: ${args.path}`,
-      });
+      throw new TranslationAgentError(502, { code: 'PROVIDER_ERROR', provider: args.provider, message: `Richtext anchor href mismatch at path: ${args.path}` });
     }
   }
 }

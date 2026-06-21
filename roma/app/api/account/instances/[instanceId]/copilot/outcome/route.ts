@@ -48,6 +48,9 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
     const forwarded = await forwardCopilotOutcome({
       ...body,
+      outcomeId: `${body.requestId}:${body.event}`,
+      surfaceId: 'roma.builder',
+      artifactId: instanceId,
       accountIdHash: await hashCopilotAccountId(current.value.authzPayload.accountId),
     });
     if (!forwarded.ok) {

@@ -47,9 +47,6 @@ export interface CompiledControl {
   max?: number;
   step?: number;
   required?: boolean;
-  copilotAliases?: string[];
-  copilotAmbiguityGroup?: string;
-  copilotChoiceLabel?: string;
 }
 
 export type WidgetPresetSpec = {
