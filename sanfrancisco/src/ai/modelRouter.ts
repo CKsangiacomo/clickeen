@@ -1,6 +1,7 @@
 import { resolveAiAgent } from '@clickeen/ck-contracts/ai';
 import { HttpError } from '../http';
-import type { AIGrant } from '../types';
+import type { AIGrant, Env } from '../types';
+import { assertModelRuntimeAvailable } from './modelAvailability';
 
 export type AiProvider = 'deepseek' | 'openai';
 
@@ -50,7 +51,7 @@ function resolveModelForProvider(args: {
   throw new HttpError(403, { code: 'CAPABILITY_DENIED', message: `Model policy missing for provider: ${args.provider}` });
 }
 
-export function resolveModelSelection(args: { grant: AIGrant; agentId: string }): ModelSelection {
+export function resolveModelSelection(args: { env: Env; grant: AIGrant; agentId: string }): ModelSelection {
   const resolved = resolveAiAgent(args.agentId);
   if (!resolved) {
     throw new HttpError(403, { code: 'CAPABILITY_DENIED', message: `Unknown agentId: ${args.agentId}` });
@@ -63,6 +64,8 @@ export function resolveModelSelection(args: { grant: AIGrant; agentId: string })
     grant: args.grant,
     grantModelPolicy: modelPolicy ? { defaultModel: modelPolicy.defaultModel, allowed: modelPolicy.allowed } : null,
   });
+
+  assertModelRuntimeAvailable({ env: args.env, provider, model });
 
   return { provider, model, canonicalAgentId: resolved.canonicalId };
 }

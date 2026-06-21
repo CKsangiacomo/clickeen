@@ -42,8 +42,10 @@ Health contract:
   DevStudio is the planned internal management surface for that config.
   `pnpm ai:model-conformance -- --write` generates source-controlled
   conformance evidence for the configured provider/model call shapes.
-  San Francisco remains the runtime authority that will resolve configured,
-  conformance-checked model availability before execution.
+  San Francisco resolves runtime availability before execution from managed
+  config membership, passing generated conformance evidence, and the current
+  Worker provider bindings. It fails visibly; it does not silently substitute
+  providers or models.
 - Provider errors returned to product callers are typed `PROVIDER_ERROR` responses with safe messages and optional upstream status; raw upstream bodies are not product payloads.
 - OpenAI responses are normalized across string/array/refusal content shapes before being treated as empty output.
 - Live product widget-copilot canonical ID:

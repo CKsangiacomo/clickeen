@@ -57,8 +57,10 @@ Provider/model policy:
 - `pnpm ai:model-conformance -- --write` generates
   `documentation/ai/model-conformance/latest.json` and
   `documentation/ai/model-conformance/latest.md` from that managed config. These
-  files prove provider/model call shape for configured candidates; they are not
-  runtime availability dependencies. The generator also fails if
+  files prove provider/model call shape for configured candidates. San Francisco
+  runtime reads the committed evidence artifact as an availability input, but
+  runtime never runs the proof command or calls provider probes as part of
+  normal product work. The generator also fails if
   `@clickeen/ck-policy` contains a runtime-selectable model that is not declared
   in the managed config, so policy drift cannot masquerade as complete evidence.
 - `@clickeen/ck-policy` owns the tier + agent runtime policy matrix.
@@ -66,12 +68,12 @@ Provider/model policy:
 - San Francisco enforces the signed `modelsByProvider`, `defaultModel`,
   optional `selectedModel`, token ceiling, and timeout ceiling per execution.
   Product Copilot thread-turn state is owned outside San Francisco.
-- Model choices are currently driven by signed policy plus catalog capability
-  data. Conformance reports are release evidence only and are not runtime gates.
-  The managed model config and generated conformance evidence have landed as
-  source-controlled intent/evidence; the next model-management slices move live
-  availability resolution to San Francisco, then expose the config through
-  DevStudio.
+- Model choices are driven by signed policy plus catalog capability data. Before
+  execution, San Francisco verifies that the selected/default model is present
+  in managed config, has passing generated conformance evidence, and has its
+  provider configured in the current Worker environment. It does not silently
+  substitute unavailable providers or models. The next model-management slices
+  expose this through Roma/Bob and DevStudio.
 - **Prague strings L10n**: local/dev signed tooling route; OpenAI model comes only from required `OPENAI_MODEL`.
 - **Account-widget Instance Translation Agent**: `widget.instance.translator`. The translation brain lives in `agents/translation-agent/`; San Francisco remains the grant/model-execution adapter for the existing diagnostic endpoint. Active product generation currently returns unavailable until San Francisco owns a real async generation endpoint, queue production, and operation state. Tokyo-worker owns only exact translated locale overlay storage.
 
@@ -123,7 +125,9 @@ Purpose: fast readiness check for the account-widget translation model runtime.
 Boundary:
 - Roma calls this through the explicit `SANFRANCISCO_BASE_URL`.
 - The request requires `Authorization: Bearer <AI grant>` with `agent:widget.instance.translator`.
-- San Francisco verifies the selected/default provider is configured in the current worker environment.
+- San Francisco verifies the selected/default model is present in managed
+  config, has passing generated conformance evidence, and has its provider
+  configured in the current Worker environment.
 
 ### `POST /v1/agents/instance-translation/translate-saved-instance`
 Purpose: run the account-widget Instance Translation Agent for direct diagnostics and legacy tests. It is not the active product generation path.
@@ -136,7 +140,9 @@ Boundary:
 Contract:
 - Roma sends only `v`, `widgetType`, `sourceLanguage`, `targetLanguage`, and `items[]` with concrete `path`, `type`, and `value`.
 - San Francisco does not receive widget config, wildcard path declarations, account ids, storage paths, live pointer state, publication state, previous values, or patch operations.
-- San Francisco derives execution limits from the signed grant and may reduce provider availability only by env reality: providers not configured in the current environment are removed from the allowed set.
+- San Francisco derives execution limits from the signed grant and fails visibly
+  when selected/default model availability does not satisfy managed config,
+  generated conformance evidence, and current Worker provider binding.
 - San Francisco returns `{ v: 1, values }` with the exact same path set it received. Missing or extra paths fail visibly.
 
 ### `POST /v1/l10n/translate` (local + cloud-dev)

@@ -83,23 +83,6 @@ function bearerToken(request: Request): string | null {
   return token.trim() || null;
 }
 
-function assertProviderConfigured(env: Env, provider: string): void {
-  if (provider === 'deepseek' && !env.DEEPSEEK_API_KEY) {
-    throw new HttpError(502, {
-      code: 'PROVIDER_ERROR',
-      provider: 'deepseek',
-      message: 'AI provider is unavailable.',
-    });
-  }
-  if (provider === 'openai' && !env.OPENAI_API_KEY) {
-    throw new HttpError(502, {
-      code: 'PROVIDER_ERROR',
-      provider: 'openai',
-      message: 'AI provider is unavailable.',
-    });
-  }
-}
-
 function normalizeSavedTextItems(raw: unknown): SavedTextGraphItem[] | null {
   if (!Array.isArray(raw)) return null;
   const items: SavedTextGraphItem[] = [];
@@ -419,8 +402,7 @@ export async function handleInstanceTranslationRuntimeStatus(
   }
   const grant = await verifyGrant(token, env.AI_GRANT_HMAC_SECRET);
   assertCap(grant, `agent:${resolvedAgent.canonicalId}`);
-  const selection = resolveModelSelection({ grant, agentId: resolvedAgent.canonicalId });
-  assertProviderConfigured(env, selection.provider);
+  const selection = resolveModelSelection({ env, grant, agentId: resolvedAgent.canonicalId });
 
   return noStore(
     json({

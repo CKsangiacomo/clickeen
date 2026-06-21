@@ -1,6 +1,6 @@
 {
   "v": 1,
-  "generatedAt": "2026-06-21T19:02:19.763Z",
+  "generatedAt": "2026-06-21T19:13:18.862Z",
   "command": "pnpm ai:model-conformance -- --write",
   "envSource": ".env.local + process.env",
   "modelSource": "@clickeen/ck-contracts/ai-model-management",
@@ -14,7 +14,7 @@
       "httpStatus": 200,
       "content": true,
       "usage": true,
-      "latencyMs": 1040
+      "latencyMs": 1647
     },
     {
       "status": "passed",
@@ -24,7 +24,7 @@
       "httpStatus": 200,
       "content": true,
       "usage": true,
-      "latencyMs": 1503
+      "latencyMs": 1264
     },
     {
       "status": "passed",
@@ -34,7 +34,7 @@
       "httpStatus": 200,
       "content": true,
       "usage": true,
-      "latencyMs": 729
+      "latencyMs": 1394
     },
     {
       "status": "passed",
@@ -44,7 +44,7 @@
       "httpStatus": 200,
       "content": true,
       "usage": true,
-      "latencyMs": 335
+      "latencyMs": 331
     },
     {
       "status": "passed",
@@ -54,7 +54,7 @@
       "httpStatus": 200,
       "content": true,
       "usage": true,
-      "latencyMs": 893
+      "latencyMs": 1530
     }
   ]
 }

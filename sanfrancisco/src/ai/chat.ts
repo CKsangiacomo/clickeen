@@ -45,7 +45,7 @@ export async function callChatCompletion(args: {
   messages: ChatMessage[];
   temperature?: number;
 }): Promise<{ content: string; usage: Usage }> {
-  const selection = resolveModelSelection({ grant: args.grant, agentId: args.agentId });
+  const selection = resolveModelSelection({ env: args.env, grant: args.grant, agentId: args.agentId });
 
   const budget = resolveGrantBudgets(args.grant);
   const temperature = typeof args.temperature === 'number' ? args.temperature : 0.2;

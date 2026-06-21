@@ -75,10 +75,13 @@ LLM management source:
 - `pnpm ai:model-conformance -- --write` generates
   `documentation/ai/model-conformance/latest.json` and
   `documentation/ai/model-conformance/latest.md` from that managed config. These
-  files are evidence, not product runtime dependencies.
+  committed files are San Francisco runtime availability inputs. DevStudio may
+  display/manage them, but normal product runtime must not run the proof command
+  or provider probes.
 - The managed config declares all Product Copilot enabled models and one
-  Clickeen default. Later San Francisco/Roma/Bob slices consume that config.
-  The picker itself owns no model truth.
+  Clickeen default. San Francisco consumes that config for runtime availability;
+  later Roma/Bob slices consume it for grant issuance and picker display. The
+  picker itself owns no model truth.
 - SDR Copilot has no public model picker. DevStudio may manage its future model
   policy, but public/prospect users never choose a model.
 - Internal agents use internal model routing config, not picker UI.
