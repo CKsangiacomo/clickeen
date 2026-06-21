@@ -21,6 +21,8 @@ Translation Agent owns:
 
 - Translation prompt construction.
 - Richtext visible-text segmentation and restoration.
+- Non-translatable literal classification for empty values, URLs, emails,
+  token-only placeholders, and structure-only values.
 - Placeholder, HTML tag, and anchor integrity validation.
 - Exact output path preservation.
 - Structured translated-value production.
@@ -73,4 +75,7 @@ pnpm --filter @clickeen/translation-agent eval:translation-agent
 ```
 
 It is a deterministic acceptance/regression gate for the V1 structured-output
-contract. It does not call an LLM.
+contract. It does not call an LLM. The current gate covers locale/prompt
+instruction, token-only literal protection, batch path preservation, malformed
+provider JSON, exact path/schema preservation, placeholder parity, richtext tag
+and anchor preservation, and missing richtext segment rejection.

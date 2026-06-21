@@ -68,6 +68,10 @@ export const MAX_TOTAL_ITEMS = 800;
 export const MAX_TOTAL_INPUT_CHARS = 60000;
 const URL_PATTERN = /^https?:\/\/\S+$/i;
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const PURE_BRACE_PLACEHOLDERS_PATTERN =
+  /^(?:\{\{[^{}]+\}\}|\{[^{}]+\})(?:\s+(?:\{\{[^{}]+\}\}|\{[^{}]+\}))*$/;
+const PURE_COLON_PLACEHOLDERS_PATTERN =
+  /^:[a-zA-Z_][a-zA-Z0-9_]*(?:\s+:[a-zA-Z_][a-zA-Z0-9_]*)*$/;
 const UNICODE_LETTER_PATTERN = /[\p{L}\p{M}]/u;
 
 export function buildSystemPrompt(args: {
@@ -148,6 +152,8 @@ export function isLikelyNonTranslatableLiteral(value: string): boolean {
   if (!trimmed) return true;
   if (URL_PATTERN.test(trimmed)) return true;
   if (EMAIL_PATTERN.test(trimmed)) return true;
+  if (PURE_BRACE_PLACEHOLDERS_PATTERN.test(trimmed)) return true;
+  if (PURE_COLON_PLACEHOLDERS_PATTERN.test(trimmed)) return true;
   if (!UNICODE_LETTER_PATTERN.test(trimmed)) return true;
   return false;
 }
