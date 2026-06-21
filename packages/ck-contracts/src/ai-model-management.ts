@@ -48,12 +48,13 @@ const AI_POLICY_PROFILES: readonly AiPolicyProfile[] = ['free', 'tier1', 'tier2'
 export const AI_MODEL_MANAGEMENT_CONFIG: AiModelManagementConfig = {
   v: 1,
   productCopilot: {
-    defaultModel: { provider: 'openai', model: 'gpt-5-mini' },
+    defaultModel: { provider: 'openai', model: 'gpt-5.4-mini' },
     enabledModels: [
-      { provider: 'deepseek', model: 'deepseek-chat' },
-      { provider: 'openai', model: 'gpt-5-mini' },
-      { provider: 'openai', model: 'gpt-5' },
-      { provider: 'openai', model: 'gpt-5.2' },
+      { provider: 'deepseek', model: 'deepseek-v4-flash' },
+      { provider: 'deepseek', model: 'deepseek-v4-pro' },
+      { provider: 'openai', model: 'gpt-5.4-mini' },
+      { provider: 'openai', model: 'gpt-5.4' },
+      { provider: 'openai', model: 'gpt-5.5' },
     ],
     userPicker: 'all-enabled-models',
   },
@@ -66,27 +67,27 @@ export const AI_MODEL_MANAGEMENT_CONFIG: AiModelManagementConfig = {
       routes: [
         {
           policyProfile: 'free',
-          model: { provider: 'deepseek', model: 'deepseek-chat' },
+          model: { provider: 'deepseek', model: 'deepseek-v4-flash' },
           reason: 'low-cost translation route for free accounts',
         },
         {
           policyProfile: 'tier1',
-          model: { provider: 'deepseek', model: 'deepseek-chat' },
+          model: { provider: 'deepseek', model: 'deepseek-v4-flash' },
           reason: 'low-cost translation route for tier1 accounts',
         },
         {
           policyProfile: 'tier2',
-          model: { provider: 'openai', model: 'gpt-5-mini' },
+          model: { provider: 'openai', model: 'gpt-5.4-mini' },
           reason: 'paid translation route with stronger hosted model',
         },
         {
           policyProfile: 'tier3',
-          model: { provider: 'openai', model: 'gpt-5-mini' },
+          model: { provider: 'openai', model: 'gpt-5.4-mini' },
           reason: 'paid translation route with stronger hosted model',
         },
         {
           policyProfile: 'tier4',
-          model: { provider: 'openai', model: 'gpt-5-mini' },
+          model: { provider: 'openai', model: 'gpt-5.4-mini' },
           reason: 'paid translation route with stronger hosted model',
         },
       ],

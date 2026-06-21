@@ -1,0 +1,60 @@
+{
+  "v": 1,
+  "generatedAt": "2026-06-21T19:02:19.763Z",
+  "command": "pnpm ai:model-conformance -- --write",
+  "envSource": ".env.local + process.env",
+  "modelSource": "@clickeen/ck-contracts/ai-model-management",
+  "prompt": "Reply with exactly: ok",
+  "results": [
+    {
+      "status": "passed",
+      "provider": "deepseek",
+      "model": "deepseek-v4-flash",
+      "returnedModel": "deepseek-v4-flash",
+      "httpStatus": 200,
+      "content": true,
+      "usage": true,
+      "latencyMs": 1040
+    },
+    {
+      "status": "passed",
+      "provider": "deepseek",
+      "model": "deepseek-v4-pro",
+      "returnedModel": "deepseek-v4-pro",
+      "httpStatus": 200,
+      "content": true,
+      "usage": true,
+      "latencyMs": 1503
+    },
+    {
+      "status": "passed",
+      "provider": "openai",
+      "model": "gpt-5.4",
+      "returnedModel": "gpt-5.4-2026-03-05",
+      "httpStatus": 200,
+      "content": true,
+      "usage": true,
+      "latencyMs": 729
+    },
+    {
+      "status": "passed",
+      "provider": "openai",
+      "model": "gpt-5.4-mini",
+      "returnedModel": "gpt-5.4-mini-2026-03-17",
+      "httpStatus": 200,
+      "content": true,
+      "usage": true,
+      "latencyMs": 335
+    },
+    {
+      "status": "passed",
+      "provider": "openai",
+      "model": "gpt-5.5",
+      "returnedModel": "gpt-5.5-2026-04-23",
+      "httpStatus": 200,
+      "content": true,
+      "usage": true,
+      "latencyMs": 893
+    }
+  ]
+}

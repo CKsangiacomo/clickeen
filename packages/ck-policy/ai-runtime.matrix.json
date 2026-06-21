@@ -5,13 +5,13 @@
       "free": {
         "defaultModel": {
           "provider": "deepseek",
-          "model": "deepseek-chat"
+          "model": "deepseek-v4-flash"
         },
         "modelsByProvider": {
           "deepseek": {
-            "defaultModel": "deepseek-chat",
+            "defaultModel": "deepseek-v4-flash",
             "allowed": [
-              "deepseek-chat"
+              "deepseek-v4-flash"
             ]
           }
         },
@@ -28,17 +28,26 @@
       "tier1": {
         "defaultModel": {
           "provider": "openai",
-          "model": "gpt-5-mini"
+          "model": "gpt-5.4-mini"
         },
         "modelsByProvider": {
-          "openai": {
-            "defaultModel": "gpt-5-mini",
+          "deepseek": {
+            "defaultModel": "deepseek-v4-flash",
             "allowed": [
-              "gpt-5-mini"
+              "deepseek-v4-flash",
+              "deepseek-v4-pro"
+            ]
+          },
+          "openai": {
+            "defaultModel": "gpt-5.4-mini",
+            "allowed": [
+              "gpt-5.4-mini",
+              "gpt-5.4",
+              "gpt-5.5"
             ]
           }
         },
-        "allowModelPicker": false,
+        "allowModelPicker": true,
         "budget": {
           "maxTokens": 900,
           "timeoutMs": 45000
@@ -51,15 +60,22 @@
       "tier2": {
         "defaultModel": {
           "provider": "openai",
-          "model": "gpt-5.2"
+          "model": "gpt-5.4-mini"
         },
         "modelsByProvider": {
-          "openai": {
-            "defaultModel": "gpt-5.2",
+          "deepseek": {
+            "defaultModel": "deepseek-v4-flash",
             "allowed": [
-              "gpt-5-mini",
-              "gpt-5",
-              "gpt-5.2"
+              "deepseek-v4-flash",
+              "deepseek-v4-pro"
+            ]
+          },
+          "openai": {
+            "defaultModel": "gpt-5.4-mini",
+            "allowed": [
+              "gpt-5.4-mini",
+              "gpt-5.4",
+              "gpt-5.5"
             ]
           }
         },
@@ -76,15 +92,22 @@
       "tier3": {
         "defaultModel": {
           "provider": "openai",
-          "model": "gpt-5.2"
+          "model": "gpt-5.4-mini"
         },
         "modelsByProvider": {
-          "openai": {
-            "defaultModel": "gpt-5.2",
+          "deepseek": {
+            "defaultModel": "deepseek-v4-flash",
             "allowed": [
-              "gpt-5-mini",
-              "gpt-5",
-              "gpt-5.2"
+              "deepseek-v4-flash",
+              "deepseek-v4-pro"
+            ]
+          },
+          "openai": {
+            "defaultModel": "gpt-5.4-mini",
+            "allowed": [
+              "gpt-5.4-mini",
+              "gpt-5.4",
+              "gpt-5.5"
             ]
           }
         },
@@ -101,15 +124,22 @@
       "tier4": {
         "defaultModel": {
           "provider": "openai",
-          "model": "gpt-5.2"
+          "model": "gpt-5.4-mini"
         },
         "modelsByProvider": {
-          "openai": {
-            "defaultModel": "gpt-5.2",
+          "deepseek": {
+            "defaultModel": "deepseek-v4-flash",
             "allowed": [
-              "gpt-5-mini",
-              "gpt-5",
-              "gpt-5.2"
+              "deepseek-v4-flash",
+              "deepseek-v4-pro"
+            ]
+          },
+          "openai": {
+            "defaultModel": "gpt-5.4-mini",
+            "allowed": [
+              "gpt-5.4-mini",
+              "gpt-5.4",
+              "gpt-5.5"
             ]
           }
         },
@@ -128,13 +158,13 @@
       "free": {
         "defaultModel": {
           "provider": "deepseek",
-          "model": "deepseek-chat"
+          "model": "deepseek-v4-flash"
         },
         "modelsByProvider": {
           "deepseek": {
-            "defaultModel": "deepseek-chat",
+            "defaultModel": "deepseek-v4-flash",
             "allowed": [
-              "deepseek-chat"
+              "deepseek-v4-flash"
             ]
           }
         },
@@ -151,13 +181,13 @@
       "tier1": {
         "defaultModel": {
           "provider": "deepseek",
-          "model": "deepseek-chat"
+          "model": "deepseek-v4-flash"
         },
         "modelsByProvider": {
           "deepseek": {
-            "defaultModel": "deepseek-chat",
+            "defaultModel": "deepseek-v4-flash",
             "allowed": [
-              "deepseek-chat"
+              "deepseek-v4-flash"
             ]
           }
         },
@@ -174,19 +204,13 @@
       "tier2": {
         "defaultModel": {
           "provider": "openai",
-          "model": "gpt-5-mini"
+          "model": "gpt-5.4-mini"
         },
         "modelsByProvider": {
-          "deepseek": {
-            "defaultModel": "deepseek-chat",
-            "allowed": [
-              "deepseek-chat"
-            ]
-          },
           "openai": {
-            "defaultModel": "gpt-5-mini",
+            "defaultModel": "gpt-5.4-mini",
             "allowed": [
-              "gpt-5-mini"
+              "gpt-5.4-mini"
             ]
           }
         },
@@ -203,19 +227,13 @@
       "tier3": {
         "defaultModel": {
           "provider": "openai",
-          "model": "gpt-5-mini"
+          "model": "gpt-5.4-mini"
         },
         "modelsByProvider": {
-          "deepseek": {
-            "defaultModel": "deepseek-chat",
-            "allowed": [
-              "deepseek-chat"
-            ]
-          },
           "openai": {
-            "defaultModel": "gpt-5-mini",
+            "defaultModel": "gpt-5.4-mini",
             "allowed": [
-              "gpt-5-mini"
+              "gpt-5.4-mini"
             ]
           }
         },
@@ -232,19 +250,13 @@
       "tier4": {
         "defaultModel": {
           "provider": "openai",
-          "model": "gpt-5-mini"
+          "model": "gpt-5.4-mini"
         },
         "modelsByProvider": {
-          "deepseek": {
-            "defaultModel": "deepseek-chat",
-            "allowed": [
-              "deepseek-chat"
-            ]
-          },
           "openai": {
-            "defaultModel": "gpt-5-mini",
+            "defaultModel": "gpt-5.4-mini",
             "allowed": [
-              "gpt-5-mini"
+              "gpt-5.4-mini"
             ]
           }
         },

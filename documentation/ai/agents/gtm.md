@@ -597,10 +597,10 @@ crons = ["0 2 * * 0"]  # Every Sunday at 2am UTC
   },
   
   "llm": {
-    "research": { "model": "gpt-5-mini", "maxTokens": 2000 },
-    "strategy": { "model": "gpt-5", "maxTokens": 4000 },
-    "copy": { "model": "gpt-5", "maxTokens": 4000 },
-    "localize": { "model": "gpt-5-mini", "maxTokens": 2000 }
+    "research": { "model": "gpt-5.4-mini", "maxTokens": 2000 },
+    "strategy": { "model": "gpt-5.5", "maxTokens": 4000 },
+    "copy": { "model": "gpt-5.5", "maxTokens": 4000 },
+    "localize": { "model": "gpt-5.4-mini", "maxTokens": 2000 }
   },
   
   "tokenBudgetPerRun": 500000,

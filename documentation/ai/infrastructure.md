@@ -54,6 +54,13 @@ Provider/model policy:
 - `@clickeen/ck-contracts/ai-model-management` owns the source-controlled
   managed model config for Product Copilot enabled models/default, SDR no-picker
   posture, and internal-agent routing intent.
+- `pnpm ai:model-conformance -- --write` generates
+  `documentation/ai/model-conformance/latest.json` and
+  `documentation/ai/model-conformance/latest.md` from that managed config. These
+  files prove provider/model call shape for configured candidates; they are not
+  runtime availability dependencies. The generator also fails if
+  `@clickeen/ck-policy` contains a runtime-selectable model that is not declared
+  in the managed config, so policy drift cannot masquerade as complete evidence.
 - `@clickeen/ck-policy` owns the tier + agent runtime policy matrix.
 - Roma and San Francisco internal services mint signed grants with direct `AgentRuntimePolicy`.
 - San Francisco enforces the signed `modelsByProvider`, `defaultModel`,
@@ -61,9 +68,10 @@ Provider/model policy:
   Product Copilot thread-turn state is owned outside San Francisco.
 - Model choices are currently driven by signed policy plus catalog capability
   data. Conformance reports are release evidence only and are not runtime gates.
-  The managed model config has landed as source-controlled intent; the next
-  model-management slices move generated conformance and live availability to
-  San Francisco, then expose the config through DevStudio.
+  The managed model config and generated conformance evidence have landed as
+  source-controlled intent/evidence; the next model-management slices move live
+  availability resolution to San Francisco, then expose the config through
+  DevStudio.
 - **Prague strings L10n**: local/dev signed tooling route; OpenAI model comes only from required `OPENAI_MODEL`.
 - **Account-widget Instance Translation Agent**: `widget.instance.translator`. The translation brain lives in `agents/translation-agent/`; San Francisco remains the grant/model-execution adapter for the existing diagnostic endpoint. Active product generation currently returns unavailable until San Francisco owns a real async generation endpoint, queue production, and operation state. Tokyo-worker owns only exact translated locale overlay storage.
 
@@ -204,7 +212,7 @@ Canonical runtime budget source:
 | `cs.widget.copilot.v1` | `650 / 45s / 2` | `900 / 45s / 3` | `1400 / 60s / 3` | `1600 / 60s / 3` |
 | `widget.instance.translator` | `900 / 20s / 1` | `1200 / 30s / 1` | `1800 / 45s / 1` | `2200 / 60s / 1` |
 
-Model policy is canonical in `packages/ck-policy/src/ai-runtime.ts` and surfaced in DevStudio from the same source. Tier 2 and Tier 3 can expose a single combined model dropdown for supported customer-facing agents; the underlying signed policy still keeps provider and model separate for enforcement.
+Model policy is canonical in `packages/ck-policy/src/ai-runtime.ts` and surfaced in DevStudio from the same source. Paid Product Copilot tiers expose all configured Product Copilot models in one combined dropdown; SDR Copilot exposes no public model picker; internal agents do not expose picker UI. The underlying signed policy still keeps provider and model separate for enforcement.
 
 ## 6) Common failure modes (runbook)
 

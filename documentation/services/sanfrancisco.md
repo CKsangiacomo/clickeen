@@ -40,6 +40,8 @@ Health contract:
 - Provider request shape comes from the explicit shared AI model capability table (`ck-contracts`), not provider/model string heuristics.
 - Managed model intent comes from `@clickeen/ck-contracts/ai-model-management`.
   DevStudio is the planned internal management surface for that config.
+  `pnpm ai:model-conformance -- --write` generates source-controlled
+  conformance evidence for the configured provider/model call shapes.
   San Francisco remains the runtime authority that will resolve configured,
   conformance-checked model availability before execution.
 - Provider errors returned to product callers are typed `PROVIDER_ERROR` responses with safe messages and optional upstream status; raw upstream bodies are not product payloads.

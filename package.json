@@ -8,6 +8,7 @@
     "validate:widgets": "node scripts/generate-widget-definition-sources.mjs --check && node scripts/widgets/compile-all.mjs",
     "build:i18n": "node scripts/i18n/build.mjs && node scripts/i18n/validate.mjs",
     "build:l10n": "node scripts/l10n/build.mjs && node scripts/l10n/validate.mjs",
+    "ai:model-conformance": "tsx scripts/ai/generate-model-conformance.ts",
     "build": "pnpm validate:widgets && pnpm build:i18n && pnpm build:l10n && turbo build",
     "lint": "pnpm validate:widgets && turbo lint",
     "typecheck": "pnpm validate:widgets && turbo typecheck",
@@ -53,6 +54,7 @@
     "eslint-plugin-react-hooks": "5.2.0",
     "glob": "^10.3.10",
     "prettier": "^3.3.2",
+    "tsx": "4.20.6",
     "turbo": "^2.0.6",
     "typescript": "^5.4.5"
   },

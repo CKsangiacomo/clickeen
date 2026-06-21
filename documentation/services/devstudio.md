@@ -72,6 +72,10 @@ LLM management source:
 - `@clickeen/ck-contracts/ai` owns model candidate facts.
 - `@clickeen/ck-contracts/ai-model-management` owns the managed model
   configuration shape and current source-controlled config artifact.
+- `pnpm ai:model-conformance -- --write` generates
+  `documentation/ai/model-conformance/latest.json` and
+  `documentation/ai/model-conformance/latest.md` from that managed config. These
+  files are evidence, not product runtime dependencies.
 - The managed config declares all Product Copilot enabled models and one
   Clickeen default. Later San Francisco/Roma/Bob slices consume that config.
   The picker itself owns no model truth.
