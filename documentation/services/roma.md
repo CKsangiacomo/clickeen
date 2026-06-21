@@ -241,6 +241,15 @@ linkage fields such as `surfaceId: roma.builder` and the opened `instanceId`
 as the artifact id when forwarding Product Copilot outcomes. Linkage is not
 attribution.
 
+Product Copilot model selection is also Roma-owned. Bob may send a selected
+model from the UI, but Roma validates it against
+`@clickeen/ck-contracts/ai-model-management` Product Copilot managed models
+before minting a grant. Roma refuses to mint a Product Copilot grant if the
+selected model, default model, or runtime policy model set drifts outside that
+managed config. Paid Product Copilot grant policy must include every managed
+Product Copilot model; free policy may remain narrower. The picker owns no model
+truth, and Roma does not silently substitute another provider or model.
+
 Roma validates current-account and widget authority plus the top-level Copilot
 envelope. It does not duplicate the Product Copilot brain's edit-control
 catalog validation. Invalid edit-control context travels to the Product Copilot

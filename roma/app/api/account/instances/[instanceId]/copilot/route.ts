@@ -8,11 +8,11 @@ import { loadTokyoAccountInstanceDocument } from '@roma/lib/account-instance-dir
 import { requireInstanceIdParam } from '@roma/lib/route-helpers';
 import { resolveCurrentAccountRouteContext, withSession } from '../../../_lib/current-account-route';
 import {
-  resolveAiModelCapability,
   type AiModelRef,
   type AiProvider,
   type ProductCopilotRequestEnvelope,
 } from '@clickeen/ck-contracts/ai';
+import { isProductCopilotManagedModel } from '@clickeen/ck-contracts/ai-model-management';
 
 export const runtime = 'edge';
 
@@ -34,11 +34,11 @@ function parseSelectedModel(value: unknown): SelectedModelParseResult {
   if (!provider || !model) {
     return { ok: false, message: 'selectedModel.provider and selectedModel.model are required' };
   }
-  const capability = resolveAiModelCapability(provider as AiProvider, model);
-  if (!capability) {
-    return { ok: false, message: `selectedModel is not configured for this AI surface: ${provider}:${model}` };
+  const selected = { provider: provider as AiProvider, model };
+  if (!isProductCopilotManagedModel(selected)) {
+    return { ok: false, message: `selectedModel is not managed for Product Copilot: ${provider}:${model}` };
   }
-  return { ok: true, value: { provider: capability.provider, model: capability.model } };
+  return { ok: true, value: selected };
 }
 
 function isExactNonEmptyString(value: unknown): value is string {

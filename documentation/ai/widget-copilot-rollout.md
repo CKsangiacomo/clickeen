@@ -14,7 +14,12 @@ This runbook captures the rollout status for the account Builder Copilot path an
 
 - Backend grant resolution on the live account path:
   - account Builder -> `cs.widget.copilot.v1`
-- Bob does not choose the AI provider, model, or agent. Roma mints the account grant from account policy and the single account Copilot contract.
+- Bob does not own the AI provider, model, or agent. If Bob sends a selected
+  model from the UI, Roma validates it against the Product Copilot managed model
+  config before minting the grant. Roma mints the account grant from account
+  policy and the single account Copilot contract. Paid Product Copilot policy
+  must include every managed Product Copilot model; free policy may remain
+  narrower.
 - Bob sends a bounded `product-copilot.context.v1` capsule. It does not use the
   removed scoped-control pre-routing envelope.
 - Product Copilot returns the typed union `answer | clarification | suggestion

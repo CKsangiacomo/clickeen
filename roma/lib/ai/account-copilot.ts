@@ -13,6 +13,10 @@ import {
   type AiGrantPolicy,
   type AiModelRef,
 } from '@clickeen/ck-contracts/ai';
+import {
+  isProductCopilotManagedModel,
+  listProductCopilotManagedModels,
+} from '@clickeen/ck-contracts/ai-model-management';
 import { reserveAccountLimitUse, type RomaUsageKv } from '../account-limit-usage';
 import { getOptionalCloudflareRequestContext } from '../cloudflare-request-context';
 import { resolveProductCopilotBaseUrl } from '../env/product-copilot';
@@ -48,6 +52,49 @@ const OUTCOME_EVENTS = new Set([
 ] as const);
 export const ACCOUNT_WIDGET_COPILOT_AGENT_ID = 'cs.widget.copilot.v1';
 export type AccountCopilotRuntimeUi = AgentRuntimePolicyUi;
+
+function modelKey(model: AiModelRef): string {
+  return `${model.provider}:${model.model}`;
+}
+
+function policyModelKeys(ai: AiGrantPolicy): Set<string> {
+  const out = new Set<string>();
+  for (const [provider, policy] of Object.entries(ai.modelsByProvider)) {
+    if (!policy) continue;
+    policy.allowed.forEach((model) => out.add(`${provider}:${model}`));
+  }
+  return out;
+}
+
+function isPaidProductCopilotProfile(profile: AiGrantPolicy['policyProfile']): boolean {
+  return profile !== 'free';
+}
+
+function assertProductCopilotGrantPolicyManaged(ai: AiGrantPolicy): void {
+  const managedModels = listProductCopilotManagedModels();
+  const managed = new Set(managedModels.map(modelKey));
+  if (!managed.has(modelKey(ai.defaultModel))) {
+    throw new Error(`[Roma] Product Copilot default model is not managed: ${modelKey(ai.defaultModel)}`);
+  }
+  if (ai.selectedModel && !managed.has(modelKey(ai.selectedModel))) {
+    throw new Error(`[Roma] Product Copilot selected model is not managed: ${modelKey(ai.selectedModel)}`);
+  }
+  for (const [provider, policy] of Object.entries(ai.modelsByProvider)) {
+    if (!policy) continue;
+    for (const model of policy.allowed) {
+      const key = `${provider}:${model}`;
+      if (!managed.has(key)) {
+        throw new Error(`[Roma] Product Copilot policy model is not managed: ${key}`);
+      }
+    }
+  }
+  if (isPaidProductCopilotProfile(ai.policyProfile)) {
+    const policyModels = policyModelKeys(ai);
+    if (policyModels.size !== managed.size || managedModels.some((model) => !policyModels.has(modelKey(model)))) {
+      throw new Error('[Roma] Paid Product Copilot policy must include every managed Product Copilot model');
+    }
+  }
+}
 
 function readTrimmedSecret(value: unknown): string {
   return typeof value === 'string' ? value.trim() : '';
@@ -131,11 +178,15 @@ export async function issueAccountCopilotGrant(args: {
 
   let ai: AiGrantPolicy;
   try {
+    if (args.selectedModel && !isProductCopilotManagedModel(args.selectedModel)) {
+      throw new Error(`[Roma] Selected Product Copilot model is not managed: ${modelKey(args.selectedModel)}`);
+    }
     ai = resolveAiRuntimePolicy({
       entry,
       policyProfile: args.authz.profile,
       selectedModel: args.selectedModel ?? undefined,
     });
+    assertProductCopilotGrantPolicyManaged(ai);
   } catch (error) {
     return {
       ok: false,
@@ -218,6 +269,7 @@ export function resolveAccountCopilotRuntimeUi(args: {
     entry: resolvedAgent.entry,
     policyProfile: args.authz.profile,
   });
+  assertProductCopilotGrantPolicyManaged(policy);
   return deriveAiRuntimePolicyUi(policy);
 }
 

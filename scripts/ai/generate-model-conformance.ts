@@ -129,20 +129,36 @@ function configuredModelKeys(config: AiModelManagementConfig): Set<string> {
 
 function findPolicyModelDrift(config: AiModelManagementConfig): DriftResult[] {
   const configured = configuredModelKeys(config);
+  const productCopilotManaged = new Set(config.productCopilot.enabledModels.map(modelKey));
+  const productCopilotPaidProfiles = new Set(['tier1', 'tier2', 'tier3', 'tier4']);
   const drift: DriftResult[] = [];
   for (const [agentId, byTier] of Object.entries(AI_RUNTIME_MATRIX.agents)) {
     for (const [tier, policy] of Object.entries(byTier)) {
+      const tierModelKeys = new Set<string>();
       for (const [provider, modelPolicy] of Object.entries(policy.modelsByProvider) as Array<[
         AiProvider,
         { allowed: string[] } | undefined,
       ]>) {
         for (const model of modelPolicy?.allowed ?? []) {
+          tierModelKeys.add(`${provider}:${model}`);
           if (configured.has(`${provider}:${model}`)) continue;
           drift.push({
             status: 'failed',
             provider,
             model,
             reason: `policy_model_missing_from_managed_config:${agentId}/${tier}`,
+          });
+        }
+      }
+      if (agentId === 'cs.widget.copilot.v1' && productCopilotPaidProfiles.has(tier)) {
+        for (const key of productCopilotManaged) {
+          if (tierModelKeys.has(key)) continue;
+          const [provider, model] = key.split(':') as [AiProvider, string];
+          drift.push({
+            status: 'failed',
+            provider,
+            model,
+            reason: `paid_product_copilot_policy_missing_managed_model:${agentId}/${tier}`,
           });
         }
       }

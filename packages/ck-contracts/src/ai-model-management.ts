@@ -247,3 +247,15 @@ export function getAiModelManagementConfig(): AiModelManagementConfig {
   }
   return result.config;
 }
+
+export function listProductCopilotManagedModels(): AiModelRef[] {
+  return getAiModelManagementConfig().productCopilot.enabledModels.map((model) => ({ ...model }));
+}
+
+export function getProductCopilotManagedDefaultModel(): AiModelRef {
+  return { ...getAiModelManagementConfig().productCopilot.defaultModel };
+}
+
+export function isProductCopilotManagedModel(model: AiModelRef): boolean {
+  return listProductCopilotManagedModels().some((entry) => modelKey(entry) === modelKey(model));
+}
