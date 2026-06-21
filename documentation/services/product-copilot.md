@@ -91,7 +91,10 @@ pnpm --filter @clickeen/product-copilot eval:product-copilot
 This harness uses deterministic mocked model outputs to check the Product
 Copilot output union, bounded structural retry, draft-edit shape, and wording
 that must not claim Bob-applied product success before Bob validates/applies
-the draft edit.
+the draft edit. It also asserts visible terminal failure for malformed model
+output, rejects non-edit responses that smuggle draft payloads, records expected
+model-call counts, and prints pass@1, retryRecovered, passFinal, and total
+model calls.
 
 ## Context Capsule
 

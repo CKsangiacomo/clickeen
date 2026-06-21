@@ -15,6 +15,7 @@ type EvalCase = {
   invalidEditContext?: boolean;
   expectedMessageIncludes?: string;
   expectedValidationRetryCount?: number;
+  expectedModelCallCount?: number;
   expectedOps?: ProductCopilotWidgetOp[];
   modelResponses: unknown[];
 };
@@ -78,7 +79,19 @@ function stableJson(value: unknown): string {
   return JSON.stringify(value);
 }
 
-async function runCase(testCase: EvalCase): Promise<void> {
+function modelContentFromFixture(response: unknown): string {
+  if (isRawContentFixture(response)) return response.rawContent;
+  return JSON.stringify(response);
+}
+
+function isRawContentFixture(value: unknown): value is { rawContent: string } {
+  return Boolean(value) &&
+    typeof value === 'object' &&
+    !Array.isArray(value) &&
+    typeof (value as { rawContent?: unknown }).rawContent === 'string';
+}
+
+async function runCase(testCase: EvalCase): Promise<{ passed: true; modelCallCount: number; validationRetryCount: number }> {
   let callIndex = 0;
   const execution = await executeProductCopilot({
     input: baseInput(testCase),
@@ -87,7 +100,7 @@ async function runCase(testCase: EvalCase): Promise<void> {
       callIndex += 1;
       if (!response) throw new Error(`[${testCase.id}] missing mocked model response ${callIndex}`);
       return {
-        content: JSON.stringify(response),
+        content: modelContentFromFixture(response),
         usage: {
           provider: 'eval',
           model: 'fixture',
@@ -120,13 +133,28 @@ async function runCase(testCase: EvalCase): Promise<void> {
       throw new Error(`[${testCase.id}] draft edit message claims terminal product success`);
     }
   }
+  const expectedModelCallCount = testCase.expectedModelCallCount ?? testCase.modelResponses.length;
+  if (callIndex !== expectedModelCallCount) {
+    throw new Error(`[${testCase.id}] expected ${expectedModelCallCount} model call(s), got ${callIndex}`);
+  }
+  return { passed: true, modelCallCount: callIndex, validationRetryCount: actualRetryCount };
 }
 
 async function main(): Promise<void> {
+  let passAt1 = 0;
+  let passAll = 0;
+  let retryRecovered = 0;
+  let modelCalls = 0;
   for (const testCase of evalFile.cases) {
-    await runCase(testCase);
+    const result = await runCase(testCase);
+    if (result.passed) {
+      if (result.validationRetryCount === 0) passAt1 += 1;
+      if (result.validationRetryCount > 0) retryRecovered += 1;
+      passAll += 1;
+    }
+    modelCalls += result.modelCallCount;
   }
-  console.log(`[product-copilot-eval] PASS ${evalFile.cases.length} cases`);
+  console.log(`[product-copilot-eval] PASS ${evalFile.cases.length} cases pass@1=${passAt1}/${evalFile.cases.length} retryRecovered=${retryRecovered} passFinal=${passAll}/${evalFile.cases.length} modelCalls=${modelCalls}`);
 }
 
 main().catch((error) => {
