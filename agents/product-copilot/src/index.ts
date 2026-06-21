@@ -44,7 +44,7 @@ export class ProductCopilotInputError extends Error {
   }
 }
 
-const PROMPT_VERSION = 'product-copilot.brain.v1@2026-06-20';
+const PROMPT_VERSION = 'product-copilot.brain.v1@2026-06-21';
 const MAX_CONVERSATION_HISTORY_MESSAGES = 8;
 const MAX_CONVERSATION_HISTORY_CHARS = 2000;
 const MAX_CONTEXT_PROMPT_CHARS = 18_000;
@@ -349,6 +349,7 @@ function buildSystemPrompt(activeLocale: string): string {
     '- You may return draft_edit only when the requested edit is clear enough and can be represented using the provided editable controls.',
     '- Never invent control paths. Never claim a draft edit succeeded unless you return valid draftEdit.ops.',
     '- If context is missing, stale, too large, or the request is unsafe/unavailable, return clarification, refusal, or error.',
+    '- When you refuse because a capability is unavailable here (for example publish, save, or analytics), briefly point the user to where they can actually do it (the main app / product surface) and offer what you CAN do in this draft.',
     '- Translations are generated from the Translations workflow after save; do not localize base content here.',
     '',
     'Output must be JSON only:',

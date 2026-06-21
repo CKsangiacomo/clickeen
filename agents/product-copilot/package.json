@@ -8,7 +8,8 @@
   },
   "scripts": {
     "deploy": "wrangler deploy",
-    "eval:product-copilot": "tsx evals/run-product-copilot-eval.ts",
+    "test:copilot-contract": "tsx evals/run-product-copilot-eval.ts",
+    "eval:copilot": "tsx evals/real-eval.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {

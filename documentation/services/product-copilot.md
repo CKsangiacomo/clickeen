@@ -74,27 +74,43 @@ The worker verifies the Product Copilot input shape, runs Product Copilot
 reasoning, and calls San Francisco only for provider/model execution under the
 same signed grant.
 
-## Eval Gate
+## Evals
 
-The day-one Product Copilot eval harness lives in:
+There are two distinct harnesses in `agents/product-copilot/evals/`. They must
+not be confused: one is a contract test, the other is the real agent eval.
 
-```text
-agents/product-copilot/evals/
-```
-
-Run:
+### Contract test (deterministic, mocked model)
 
 ```bash
-pnpm --filter @clickeen/product-copilot eval:product-copilot
+pnpm --filter @clickeen/product-copilot test:copilot-contract
 ```
 
-This harness uses deterministic mocked model outputs to check the Product
-Copilot output union, bounded structural retry, draft-edit shape, and wording
-that must not claim Bob-applied product success before Bob validates/applies
-the draft edit. It also asserts visible terminal failure for malformed model
-output, rejects non-edit responses that smuggle draft payloads, records expected
-model-call counts, and prints pass@1, retryRecovered, passFinal, and total
-model calls.
+Runner: `run-product-copilot-eval.ts`. This is a **fixture/contract test**, not
+an agent eval. It feeds hand-written model outputs through the brain to verify
+the output union, bounded structural retry, draft-edit shape, malformed-output
+terminal failure, non-edit responses that smuggle draft payloads, and expected
+model-call counts. It never calls a model. It is a readiness gate for the
+parser/validator contract only — not proof that "Product Copilot works."
+
+### Real eval (live model, 121C §8.1)
+
+```bash
+pnpm --filter @clickeen/product-copilot eval:copilot
+```
+
+Runner: `real-eval.ts`. This is the day-one Product Copilot eval. It calls the
+**real model** through the real brain (`executeProductCopilot`) over
+representative Builder turns (conversation, off-topic guided back, "what can you
+do", ambiguous intent, concrete edit, product guidance, refusal of unavailable
+capability, edit against a missing control). Each turn is scored with
+deterministic structural checks plus an **LLM-judge rubric** (tone, grounding,
+helpfulness, intent). It records **transcripts** under
+`agents/product-copilot/evals/transcripts/` and reports **pass@1 and pass^k**
+(k configurable via `COPILOT_EVAL_K`, default 3). It exits non-zero unless
+pass^k is full-green, so it is a real regression gate for prompt,
+output-contract, and model-route changes. It requires `OPENAI_API_KEY` in
+`.env.local`. Trace records should feed this harness rather than creating a
+second capture path (121G).
 
 ## Context Capsule
 

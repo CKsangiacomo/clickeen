@@ -101,7 +101,9 @@ function normalizeErrorMessage(args: { resStatus?: number; parsed?: any; bodyTex
   if (reasonKey === 'coreui.errors.copilot.invalidContext' && reasonKeyMessage) {
     return `${reasonKeyMessage}${issueSummary}`;
   }
-  if (reasonKeyMessage) return reasonKeyMessage;
+  // Surface the actual failing field(s) instead of hiding every rejection behind a
+  // blanket "Refresh Builder" (121C §8.2 visible-failure taxonomy; V1/V6).
+  if (reasonKeyMessage) return `${reasonKeyMessage}${issueSummary}`;
   if (detail.trim()) return normalizeAssistantText(`${detail.trim()}${issueSummary}`);
 
   const parsedMessage =
