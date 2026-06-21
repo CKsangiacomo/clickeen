@@ -116,11 +116,6 @@ export type AiModelCapability = AiModelCatalogEntry & {
   taskClassEligibility: string[];
   evalStatus: 'unproven' | 'candidate' | 'approved';
   reasoningEffort?: 'none' | 'low' | 'medium' | 'high' | 'xhigh';
-  pickerEligibility: {
-    eligible: boolean;
-    proofRef?: string;
-    checkedAt?: string;
-  };
 };
 
 export type AiModelUiMeta = {
@@ -261,11 +256,6 @@ const AI_MODEL_CAPABILITIES: AiModelCapability[] = [
     fallbackEligible: true,
     taskClassEligibility: ['copilot.widget.editor', 'l10n.instance'],
     evalStatus: 'candidate',
-    pickerEligibility: {
-      eligible: true,
-      proofRef: 'documentation/ai/model-conformance/2026-06-18-copilot-picker.md',
-      checkedAt: '2026-06-18T21:42:52Z',
-    },
   },
   {
     provider: 'openai',
@@ -283,11 +273,6 @@ const AI_MODEL_CAPABILITIES: AiModelCapability[] = [
     fallbackEligible: true,
     taskClassEligibility: ['copilot.widget.editor', 'l10n.instance'],
     evalStatus: 'candidate',
-    pickerEligibility: {
-      eligible: true,
-      proofRef: 'documentation/ai/model-conformance/2026-06-18-copilot-picker.md',
-      checkedAt: '2026-06-18T21:42:52Z',
-    },
   },
   {
     provider: 'openai',
@@ -305,11 +290,6 @@ const AI_MODEL_CAPABILITIES: AiModelCapability[] = [
     fallbackEligible: false,
     taskClassEligibility: ['copilot.widget.editor'],
     evalStatus: 'candidate',
-    pickerEligibility: {
-      eligible: true,
-      proofRef: 'documentation/ai/model-conformance/2026-06-18-copilot-picker.md',
-      checkedAt: '2026-06-18T21:42:52Z',
-    },
   },
   {
     provider: 'openai',
@@ -327,11 +307,6 @@ const AI_MODEL_CAPABILITIES: AiModelCapability[] = [
     fallbackEligible: false,
     taskClassEligibility: ['copilot.widget.editor'],
     evalStatus: 'candidate',
-    pickerEligibility: {
-      eligible: true,
-      proofRef: 'documentation/ai/model-conformance/2026-06-18-copilot-picker.md',
-      checkedAt: '2026-06-18T21:42:52Z',
-    },
   },
 ];
 const AGENT_LOOKUP = new Map<string, AiRegistryEntry>();
@@ -458,8 +433,7 @@ export function deriveAiModelOptionsForUi(policy: Pick<AgentRuntimePolicy, 'mode
   for (const [provider, modelPolicy] of Object.entries(policy.modelsByProvider) as Array<[AiProvider, AiModelPolicy | undefined]>) {
     if (!modelPolicy) continue;
     modelPolicy.allowed.forEach((model) => {
-      const capability = resolveAiModelCapability(provider, model);
-      if (!capability?.pickerEligibility.eligible) return;
+      if (!resolveAiModelCapability(provider, model)) return;
       out.push({ provider, model, label: labelAiModel(model, provider) });
     });
   }

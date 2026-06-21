@@ -2,7 +2,7 @@
 
 Date: 2026-06-18T21:42:52Z
 Surface: San Francisco Builder Copilot provider-call proof
-Scope: PRD 120A1 Slice 1 picker-eligible model request shapes
+Scope: PRD 120A1 Slice 1 model request shapes
 
 This is release evidence only. Normal product work does not call this proof and does not
 depend on a runtime test, probe, or validation ritual.

@@ -38,9 +38,6 @@ function parseSelectedModel(value: unknown): SelectedModelParseResult {
   if (!capability) {
     return { ok: false, message: `selectedModel is not configured for this AI surface: ${provider}:${model}` };
   }
-  if (!capability.pickerEligibility.eligible) {
-    return { ok: false, message: `selectedModel is not available for this AI surface: ${provider}:${model}` };
-  }
   return { ok: true, value: { provider: capability.provider, model: capability.model } };
 }
 

@@ -56,7 +56,10 @@ Provider/model policy:
 - San Francisco enforces the signed `modelsByProvider`, `defaultModel`,
   optional `selectedModel`, token ceiling, and timeout ceiling per execution.
   Product Copilot thread-turn state is owned outside San Francisco.
-- Model picker availability is driven by signed policy plus explicit callable capability data; conformance reports and `proofRef` fields are release evidence only and are not runtime gates.
+- Model choices are currently driven by signed policy plus catalog capability
+  data. Conformance reports are release evidence only and are not runtime gates.
+  The next model-management slice moves live availability to San Francisco and
+  DevStudio-managed configuration.
 - **Prague strings L10n**: local/dev signed tooling route; OpenAI model comes only from required `OPENAI_MODEL`.
 - **Account-widget Instance Translation Agent**: `widget.instance.translator`. The translation brain lives in `agents/translation-agent/`; San Francisco remains the grant/model-execution adapter for the existing diagnostic endpoint. Active product generation currently returns unavailable until San Francisco owns a real async generation endpoint, queue production, and operation state. Tokyo-worker owns only exact translated locale overlay storage.
 
