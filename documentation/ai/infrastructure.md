@@ -17,7 +17,7 @@ This doc is meant to answer:
 
 - Code: `sanfrancisco/`
 - Entrypoint shell: `sanfrancisco/src/index.ts`
-- Product Copilot brain module: `agents/product-copilot/`
+- Product Copilot worker and brain module: `agents/product-copilot/`
 - Translation Agent brain module: `agents/translation-agent/`
 - Extracted runtime modules:
   - `sanfrancisco/src/concurrency.ts`
@@ -35,8 +35,7 @@ Naming:
 
 Bindings (Cloudflare primitives):
 - `SF_KV`: KV namespace retained for San Francisco-owned state needs. Product
-  Copilot `/v1/execute` no longer stores conversation/thread state in
-  San Francisco KV.
+  Copilot conversation/thread state does not live in San Francisco KV.
 - `SF_EVENTS`: Queue used for non-blocking ingestion of interaction events
 - `SF_D1`: D1 database for queryable indexes
 - `SF_R2`: R2 bucket for raw event payload storage
@@ -71,16 +70,24 @@ Response:
 { "ok": true, "service": "sanfrancisco", "env": "dev", "ts": 1730000000000 }
 ```
 
-### `POST /v1/execute`
-Purpose: execute a named agent under a Clickeen-signed grant.
+### `POST /v1/model/chat`
+Purpose: execute one governed model call for an agent home under a
+Clickeen-signed grant.
 
 Behavior (high level):
-- Parse `{grant, agentId, input, trace?}`
+- Parse `{grant, agentId, messages, temperature?, trace?}`
 - Verify grant signature + expiry (`AI_GRANT_HMAC_SECRET`)
 - Assert capability `agent:${agentId}`
-- Execute the agent/model call without storing Product Copilot session state
+- Route the provider/model call under the signed runtime policy
 - Enqueue an `InteractionEvent` to `SF_EVENTS` (non-blocking)
-- Return `{requestId, agentId, result, usage}`
+- Return `{requestId, agentId, content, usage}`
+
+### `POST /v1/execute`
+Purpose: deprecated San Francisco agent-brain execution endpoint.
+
+Behavior:
+- Returns a visible 410.
+- Product Copilot execution belongs to `agents/product-copilot/`.
 
 ### `POST /v1/outcome`
 Purpose: attach post-execution outcomes (conversion + UX decisions) to an execution `requestId`.
@@ -132,12 +139,13 @@ Provider:
 
 ### KV
 
-Product Copilot `/v1/execute` is stateless per model call and does not store
-conversation/thread state in `SF_KV`.
+Product Copilot conversation/thread state does not live in `SF_KV`.
+Product Copilot `/v1/execute` belongs to the Product Copilot worker.
 
 ### Queue (non-blocking ingestion)
 
-`/v1/execute` sends an `InteractionEvent` to the `SF_EVENTS` queue.
+San Francisco `/v1/model/chat` sends an `InteractionEvent` to the
+`SF_EVENTS` queue.
 
 Design intent:
 - execution must not block on logging/indexing

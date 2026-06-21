@@ -31,17 +31,18 @@ See also:
 
 ## Technical Purpose
 
-San Francisco is Clickeen's **AI execution service**: it verifies grants,
-routes model calls, enforces runtime policy, records trace metadata, and
-returns strictly-structured outputs for named agents.
+San Francisco is Clickeen's **AI engine**: it verifies grants, routes model
+calls, enforces runtime policy, records trace metadata, and returns governed
+model output to named agent homes.
 
-Product Copilot brain code lives in the isolated `product-copilot` workspace.
-Bob/Roma invoke it for Builder turns; San Francisco only executes its governed
-model calls.
+Product Copilot brain/runtime code lives in the isolated
+`agents/product-copilot/` Cloudflare Worker. Bob/Roma invoke it for Builder
+turns; San Francisco only executes its governed model calls.
 
-Translation Agent brain code lives in the isolated `translation-agent`
-workspace. San Francisco verifies the grant and executes governed model calls;
-product workflows own overlay acceptance and storage.
+Translation Agent brain code lives in `agents/translation-agent/`. Its current
+diagnostic execution path still runs through San Francisco and is realigned in
+the Translation Agent slice; product workflows own overlay acceptance and
+storage.
 
 At GA scale (100s of widgets, millions of installs), San Francisco must be **isolated** from:
 - product/auth/persistence authority in Roma/Berlin/Tokyo
@@ -67,11 +68,12 @@ San Francisco is the **AI engine and model-execution boundary**.
 - Chooses provider/model for a given **Agent** within the constraints of the **AI Grant**
 - Enforces AI execution limits (tokens/$ budgets, concurrency, timeouts)
 - Executes model calls for known agents
-- Returns **structured results + usage metadata**
+- Returns **model output + usage metadata**
 
 Boundary (explicit ownership):
 - Policy, entitlements, and persistence live outside San Francisco in the trusted product/account owners.
-- San Francisco executes based on the AI Grant + request payload and returns structured results.
+- San Francisco executes model calls based on the AI Grant + request payload and
+  returns model output. Agent reasoning lives in the agent home.
 
 ## Runtime Policy Access Control
 LLM access is strictly tiered, but San Francisco does not receive a hidden access label. The grant issuer resolves real account entitlements plus the agent ID into a signed `AgentRuntimePolicy` during grant issuance.
@@ -125,19 +127,21 @@ Keeping product/persistence owners and San Francisco separate prevents:
 ## Terms (Precise)
 - **Agent**: A named Clickeen worker with an agent home, context contract,
   output contract, validation boundary, runtime policy, and trace/eval record.
-- **AI Grant**: A signed authorization payload from a trusted Clickeen backend surface (Roma for account-mode product flows, San Francisco internal services for service work) that defines what San Francisco is allowed to do for a subject for a short time window.
-- **Execution Request**: The payload sent to San Francisco containing `agentId`, input, and the AI Grant.
-- **Result**: Structured output from San Francisco (`ops[]` for editor agents, or a typed payload for non-editor agents).
+- **AI Grant**: A signed authorization payload from a trusted Clickeen backend surface (Roma for account-mode product flows, San Francisco internal services for service work) that defines what model execution San Francisco is allowed to do for a subject for a short time window.
+- **Agent Execution Request**: The payload sent to an agent home containing the agent input and AI Grant.
+- **Model Call Request**: The payload an agent home sends to San Francisco containing `agentId`, model messages, and the AI Grant.
+- **Result**: Structured output from an agent home (`draft_edit` ops for editor agents, or a typed payload for non-editor agents). San Francisco returns model content plus usage metadata to the agent home.
 - **Playbook**: A versioned runtime contract attached to an `agentId` via the registry (server-resolved, not client-selected).
 
 ## High‑Level Data Flow
 
 ### Editor agents (inside Clickeen app)
 1) Core Builder open now loads through one Roma same-origin route (`GET /api/builder/:instanceId/open`) that resolves the saved authoring revision server-side for Roma's host-open flow. Account-mode save delegates back to Roma through `PUT /api/account/instances/:instanceId`. Builder no longer carries localization refresh/status commands on the active account authoring path.
-2) Account-mode Builder requests execute through Roma instance routes. Roma mints the short-lived AI Grant inline for that request.
-3) The agent brain calls San Francisco with `{ grant, agentId, input, context }`.
-4) San Francisco verifies the grant, applies policy, routes the model call, emits trace metadata, and returns a structured result.
-5) Bob validates/applies draft edit actions locally as pure state transforms. If an op cannot be applied, Bob fails loudly.
+2) Account-mode Builder requests execute through Roma instance routes. Roma validates account/widget authority, mints the short-lived AI Grant inline for that request, and calls the Product Copilot worker.
+3) The Product Copilot worker runs the agent brain and calls San Francisco with `{ grant, agentId, messages }` only when it needs governed model output.
+4) San Francisco verifies the grant, applies policy, routes the model call, emits trace metadata, and returns model content plus usage metadata.
+5) Product Copilot returns the typed agent result to Roma/Bob.
+6) Bob validates/applies draft edit actions locally as pure state transforms. If an op cannot be applied, Bob fails loudly.
 
 ### System agents (Clickeen’s internal workforce)
 - A trusted backend surface triggers an explicit system-agent execution request to San Francisco.
@@ -149,7 +153,8 @@ San Francisco is deployed as a **Cloudflare Worker** and currently ships:
 
 - Endpoints:
   - `GET /healthz`
-- `POST /v1/execute` (requires a Clickeen-signed AI Grant)
+- `POST /v1/model/chat` (requires a Clickeen-signed AI Grant)
+- `POST /v1/execute` (deprecated; returns visible 410)
 - `POST /v1/outcome` (outcome attach, signed by the calling Clickeen backend surface)
 - Account-widget l10n generation currently returns unavailable until San
   Francisco owns a real async generation endpoint.
@@ -162,10 +167,9 @@ San Francisco is deployed as a **Cloudflare Worker** and currently ships:
 - AI surfaces currently recognized by the worker:
   - `cs.widget.copilot.v1`
   - `widget.instance.translator`
-  - `POST /v1/execute` currently wires executors for: `cs.widget.copilot.v1`.
 
 This matters because the trace/eval foundation is not theoretical: every
-`/v1/execute` call enqueues an `InteractionEvent`, and the queue consumer writes
+`/v1/model/chat` call enqueues an `InteractionEvent`, and the queue consumer writes
 eligible raw payloads to R2 + indexes a small subset into D1. Captured traces do
 not mutate prompts, models, tools, or policy without eval/review/release.
 
@@ -219,12 +223,14 @@ San Francisco verifies grants using an HMAC signature shared across trusted Clic
 Format:
 `v1.<base64url(payloadJson)>.<base64url(hmacSha256("v1.<payloadB64>", AI_GRANT_HMAC_SECRET))>`
 
-### Results (from San Francisco)
-San Francisco always returns a **structured** result (never untyped prose
+### Results (from agent homes)
+Agent homes always return a **structured** result (never untyped prose
 instructions).
 - Product Copilot returns the typed union `answer | clarification | suggestion
   | draft_edit | refusal | error`; only `draft_edit` carries ops.
 - Non-editor agents return a typed JSON payload per agent.
+San Francisco returns governed model content plus usage metadata to agent homes;
+it does not return Product Copilot's typed union to Roma/Bob.
 ```ts
 type EditorAIResult = {
   requestId: string;
@@ -257,7 +263,8 @@ type AIError =
 Shipped in this repo:
 1) **Account-mode product AI**
    - Roma owns authenticated Builder Copilot execution on instance-scoped account routes.
-   - Roma consumes Berlin-minted account truth, mints the request-scoped AI Grant, and calls San Francisco directly.
+   - Roma consumes Berlin-minted account truth, mints the request-scoped AI Grant, and calls the Product Copilot worker.
+   - The Product Copilot worker calls San Francisco only for governed `/v1/model/chat`.
 2) **Prague demo**
    - Prague demo is not a live AI execution surface in the current product path.
    - Minibob no longer has Bob-owned public Copilot/session routes.
@@ -270,28 +277,28 @@ Health check for deploys and local dev.
 
 Response: `{ ok: true, service: "sanfrancisco", env: "dev|prod|...", ts: <ms> }`
 
-#### `POST /v1/execute`
-Execute an agent under a Clickeen-issued grant.
+#### `POST /v1/model/chat`
+Execute one governed model call for an agent home under a Clickeen-issued grant.
 
 Request:
 ```json
 {
   "grant": "<string>",
   "agentId": "cs.widget.copilot.v1",
-  "input": {},
-  "trace": { "requestId": "optional-uuid", "client": "roma|ops" }
+  "messages": [],
+  "trace": { "requestId": "optional-uuid", "client": "product-copilot" }
 }
 ```
 
 Response:
 ```json
-{ "requestId": "uuid", "agentId": "cs.widget.copilot.v1", "result": {}, "usage": {} }
+{ "requestId": "uuid", "agentId": "cs.widget.copilot.v1", "content": "...", "usage": {} }
 ```
 
 Behavior:
 - verifies grant signature + expiry
 - asserts capability `agent:${agentId}` (aliases are resolved to canonical IDs)
-- executes the agent
+- executes the provider/model call under the signed runtime policy
 - enqueues an `InteractionEvent` into `SF_EVENTS` (non-blocking)
 
 #### `POST /v1/outcome`
@@ -303,15 +310,17 @@ Attach post-execution outcomes (UX decisions, conversions) that San Francisco ca
 
 Why it exists: San Francisco can’t infer conversions; Roma/Bob are the sources of truth for those moments.
 
-## Agent Orchestration (San Francisco Core)
-Orchestration is San Francisco’s “meat” and is built incrementally behind the same execution interface.
+## Agent Homes And Model Execution
 
-Phase‑1 (shipped orchestration surface):
-- Multiple agents behind the same `/v1/execute` interface:
-  - `cs.widget.copilot.v1` (live account widget editing Copilot)
-- Provider/model policy is explicit per agent and account tier. The current `/v1/execute` path makes one provider call per turn, returns typed provider errors, and does not silently cross-switch providers or models. Retry behavior is future explicit work.
-- No general “tool” system yet; any extra capabilities must be explicitly implemented inside the agent (for example: widget copilot includes bounded, SSRF-guarded single-page URL reads + Cloudflare HTML detection).
-- Always returns structured JSON (never “go edit X” prose), plus usage metadata.
+Phase-1 shipped surface:
+- Product Copilot has its own worker home in `agents/product-copilot/`.
+- Provider/model policy is explicit per agent and account tier. The current
+  `/v1/model/chat` path makes one provider call per request, returns typed
+  provider errors, and does not silently cross-switch providers or models.
+  Retry behavior is future explicit work.
+- No general tool system exists.
+- San Francisco returns model content plus usage metadata; the agent home
+  returns the typed agent result.
 
 GA roadmap (still behind the same interface):
 - Agent registry (configs in code or a San Francisco-owned store)
@@ -378,13 +387,14 @@ Status: shipped
 
 Definition of done:
   - New service deployable exists (Cloudflare Workers).
-  - Health endpoint and base `POST /v1/execute` handler exists (returns typed errors).
+  - Health endpoint and base `POST /v1/model/chat` handler exists.
 
 ### Milestone 2 — Ship Builder Copilot
 Status: shipped
 
 Definition of done:
-  - `agentId: cs.widget.copilot.v1` works end-to-end in San Francisco
+  - `agentId: cs.widget.copilot.v1` works end-to-end through the Product
+    Copilot worker, with San Francisco only providing governed `/v1/model/chat`.
   - Response is structured JSON + usage metadata (no prose-only responses)
 
 ### Milestone 3 — Product backends issue AI grants
@@ -397,12 +407,14 @@ Definition of done:
 
 Minibob no longer owns a public AI grant/session mint on Bob.
 
-### Milestone 4 — Bob uses San Francisco for AI
+### Milestone 4 — Bob uses Product Copilot through Roma
 Status: shipped
 
 Definition of done:
 - Bob no longer calls provider APIs directly.
-- Account-mode Builder calls San Francisco through Roma-owned backend routes.
+- Account-mode Builder calls the Product Copilot worker through Roma-owned
+  backend routes. The Product Copilot worker calls San Francisco for governed
+  `/v1/model/chat`.
 - Errors are explicit; no silent behavior changes.
 
 ### Milestone 5 — Remove Bob-local AI route

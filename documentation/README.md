@@ -29,7 +29,7 @@ documentation/
 │   ├── devstudio.md         # Internal toolbench
 │   ├── tokyo.md             # Asset CDN
 │   ├── tokyo-worker.md      # Account storage, assets, instances, translations, public artifacts
-│   ├── sanfrancisco.md      # AI workforce OS
+│   ├── sanfrancisco.md      # AI engine and governed model execution
 │   ├── venice.md            # Embed runtime
 │   ├── michael.md           # Database schema
 │   └── prague/              # Marketing surface
@@ -220,7 +220,7 @@ If you change runtime behavior, update docs in the same PR/commit:
 
 - Compiler determinism: repo typecheck/build plus Cloudflare verification, not a localhost Bob HTTP gate
 - Quick grep for removed/renamed surfaces:
-  - `rg -n "/api/ai/widget-copilot|/api/ai/outcome|/api/account/instances/.*/copilot|/v1/execute|SANFRANCISCO_BASE_URL|AI_GRANT_HMAC_SECRET" documentation`
+  - `rg -n "/api/ai/widget-copilot|/api/ai/outcome|/api/account/instances/.*/copilot|/v1/model/chat|/v1/execute|PRODUCT_COPILOT_BASE_URL|SANFRANCISCO_BASE_URL|AI_GRANT_HMAC_SECRET" documentation`
   - `rg -n "claims/minibob/complete|/api/account/assets|POST /api/instance\\b" documentation --glob '*.md'`
   - `rg -n "/api/bootstrap|/api/account/widgets|/api/session/finish|/api/account/assets" documentation --glob '*.md'`
   - `rg -n "published/widgets|/renders/widgets|accounts/.*/widgets|root (widgets|public|published|l10n)" documentation --glob '*.md'`

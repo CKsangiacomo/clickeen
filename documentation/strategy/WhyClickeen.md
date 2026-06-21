@@ -33,7 +33,7 @@ This is Clickeen's thesis. It's new territory—and we're writing the playbook.
 │                              ↓                                      │
 │  ┌─────────────────────────────────────────────────────────────┐   │
 │  │  LAYER 3: OPERATING                                         │   │
-│  │  AI Agents (San Francisco) — Sales, support, marketing, ops │   │
+│  │  AI Agents (agent homes + AI engine) — Sales, support, ops  │   │
 │  └─────────────────────────────────────────────────────────────┘   │
 └─────────────────────────────────────────────────────────────────────┘
 ```
@@ -43,7 +43,8 @@ This is Clickeen's thesis. It's new territory—and we're writing the playbook.
 - **AI coding assistants** build the product from specs and PRDs
 - **AI agents** run the company: sales, support, marketing, localization, ops
 
-**San Francisco (our AI orchestration service) is not a feature—it's the operating system for the company's workforce.**
+**The Clickeen AI workforce is not a feature.** It is built from named agent
+homes plus San Francisco as the governed AI engine behind them.
 
 See: `documentation/ai/overview.md`, `documentation/ai/learning.md`, `documentation/ai/infrastructure.md`
 

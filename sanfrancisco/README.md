@@ -9,7 +9,8 @@ Local dev:
 
 Endpoints:
 - `GET /healthz`
-- `POST /v1/execute`
+- `POST /v1/model/chat`
+- `POST /v1/execute` (deprecated; visible 410)
 - `POST /v1/outcome` (signed outcome attach)
 
 Deploy note:

@@ -60,9 +60,9 @@ paths and product routes as any other account.
 | Public serving state                       | Tokyo-worker                                                    |
 | Runtime bytes                              | Cloudflare R2/CDN through Tokyo-worker                          |
 | Relational account/support data            | Michael/Supabase                                                |
-| AI execution                               | San Francisco                                                   |
-| Product Copilot brain                      | `product-copilot` workspace                                     |
-| Translation Agent brain                    | `translation-agent` workspace                                   |
+| AI model execution                         | San Francisco                                                   |
+| Product Copilot brain/runtime              | `agents/product-copilot` Cloudflare Worker                      |
+| Translation Agent brain                    | `agents/translation-agent/` workspace                           |
 | Design system                              | Dieter                                                          |
 
 When runtime behavior and docs disagree, use this order:
@@ -86,9 +86,9 @@ that exposes it.
 | Berlin        | Cloudflare Workers           | Auth, session bootstrap, account authz capsule      |
 | Prague        | Cloudflare Pages / Astro     | Marketing, gallery, demo/funnel pages               |
 | DevStudio     | Cloudflare Pages             | Internal toolbench through the normal admin account |
-| San Francisco | Workers/D1/KV/R2/Queues      | AI workforce services                               |
-| Product Copilot | Workspace module           | Builder Product Copilot brain                       |
-| Translation Agent | Workspace module         | Account-widget translation brain                    |
+| San Francisco | Workers/D1/KV/R2/Queues      | Governed AI model execution and trace/outcome sink  |
+| Product Copilot | Cloudflare Worker          | Builder Product Copilot brain                       |
+| Translation Agent | Workspace module         | Account-widget translation brain in `agents/translation-agent/` |
 | Michael       | Supabase Postgres            | Account/user/support relational data                |
 | Dieter        | Git source + Tokyo artifacts | Design system tokens/components                     |
 

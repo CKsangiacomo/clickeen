@@ -15,6 +15,7 @@ import {
 } from '@clickeen/ck-contracts/ai';
 import { reserveAccountLimitUse, type RomaUsageKv } from '../account-limit-usage';
 import { getOptionalCloudflareRequestContext } from '../cloudflare-request-context';
+import { resolveProductCopilotBaseUrl } from '../env/product-copilot';
 import { resolveSanfranciscoBaseUrl } from '../env/sanfrancisco';
 
 type AIGrant = {
@@ -237,7 +238,7 @@ function summarizeUpstreamError(args: { serviceName: string; baseUrl: string; st
   return args.bodyText || `${args.serviceName} error (${args.status})`;
 }
 
-export async function executeCopilotOnSanFrancisco(args: {
+export async function executeCopilotOnProductCopilot(args: {
   grant: string;
   agentId: string;
   input: unknown;
@@ -247,7 +248,7 @@ export async function executeCopilotOnSanFrancisco(args: {
   | { ok: true; requestId: string; result: unknown }
   | { ok: false; status: number; message: string; reasonKey?: string; issues?: Array<{ path: string; message: string }> }
 > {
-  const baseUrl = resolveSanfranciscoBaseUrl().replace(/\/+$/, '');
+  const baseUrl = resolveProductCopilotBaseUrl().replace(/\/+$/, '');
   let res: Response;
   try {
     res = await fetch(`${baseUrl}/v1/execute`, {
@@ -266,7 +267,7 @@ export async function executeCopilotOnSanFrancisco(args: {
     });
   } catch (error) {
     const detail = error instanceof Error ? error.message : String(error);
-    return { ok: false, status: 502, message: `SanFrancisco request failed: ${detail}` };
+    return { ok: false, status: 502, message: `Product Copilot request failed: ${detail}` };
   }
 
   const text = await res.text().catch(() => '');
@@ -277,7 +278,7 @@ export async function executeCopilotOnSanFrancisco(args: {
         ? payload.error.message
         : typeof payload?.message === 'string'
           ? payload.message
-          : summarizeUpstreamError({ serviceName: 'SanFrancisco', baseUrl, status: res.status, bodyText: text });
+          : summarizeUpstreamError({ serviceName: 'Product Copilot', baseUrl, status: res.status, bodyText: text });
     const issues = Array.isArray(payload?.error?.issues)
       ? payload.error.issues.filter((issue: unknown): issue is { path: string; message: string } => {
           return Boolean(issue) &&

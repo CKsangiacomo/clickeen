@@ -1,6 +1,6 @@
-import { listAiAgents, resolveAiAgent } from '@clickeen/ck-contracts/ai';
+import { resolveAiAgent } from '@clickeen/ck-contracts/ai';
 import { WorkerEntrypoint } from 'cloudflare:workers';
-import { executeCsWidgetCopilot } from './agent-adapters/productCopilot';
+import { callChatCompletion, type ChatMessage } from './ai/chat';
 import { withInflightLimit } from './concurrency';
 import { assertCap, verifyGrant } from './grants';
 import {
@@ -31,16 +31,34 @@ import {
 import type {
   AIGrant,
   Env,
-  ExecuteRequest,
-  ExecuteResponse,
   InteractionEvent,
+  ModelChatRequest,
+  ModelChatResponse,
   OutcomeAttachRequest,
   Usage,
 } from './types';
 
-function isExecuteRequest(value: unknown): value is ExecuteRequest {
+function isChatMessage(value: unknown): value is ChatMessage {
   if (!isRecord(value)) return false;
-  return typeof value.grant === 'string' && typeof value.agentId === 'string';
+  return (
+    (value.role === 'system' || value.role === 'user' || value.role === 'assistant') &&
+    typeof value.content === 'string' &&
+    value.content.length > 0 &&
+    value.content.length <= 80_000
+  );
+}
+
+function isModelChatRequest(value: unknown): value is ModelChatRequest {
+  if (!isRecord(value)) return false;
+  return (
+    typeof value.grant === 'string' &&
+    typeof value.agentId === 'string' &&
+    Array.isArray(value.messages) &&
+    value.messages.length > 0 &&
+    value.messages.length <= 24 &&
+    value.messages.every(isChatMessage) &&
+    (value.temperature === undefined || (typeof value.temperature === 'number' && Number.isFinite(value.temperature)))
+  );
 }
 
 function okHealth(env: Env): Response {
@@ -54,12 +72,6 @@ function okHealth(env: Env): Response {
   );
 }
 
-type AgentExecutor = (args: { grant: AIGrant; input: unknown }, env: Env) => Promise<{ result: unknown; usage: any }>;
-
-const AGENT_EXECUTORS: Record<string, AgentExecutor> = {
-  'cs.widget.copilot.v1': executeCsWidgetCopilot,
-};
-
 function usageForExecutionFailure(grant: AIGrant, startedAtMs: number): Usage {
   const modelRef = grant.ai?.selectedModel ?? grant.ai?.defaultModel;
   return {
@@ -71,29 +83,7 @@ function usageForExecutionFailure(grant: AIGrant, startedAtMs: number): Usage {
   };
 }
 
-const EXECUTABLE_AGENT_IDS = new Set(
-  listAiAgents()
-    .filter((entry) => entry.executionSurface === 'execute')
-    .map((entry) => entry.agentId),
-);
-
-for (const agentId of EXECUTABLE_AGENT_IDS) {
-  if (!AGENT_EXECUTORS[agentId]) {
-    throw new Error(`[sanfrancisco] Missing executor for agentId: ${agentId}`);
-  }
-}
-
-for (const agentId of Object.keys(AGENT_EXECUTORS)) {
-  const resolved = resolveAiAgent(agentId);
-  if (!resolved) {
-    throw new Error(`[sanfrancisco] Executor has no registry entry: ${agentId}`);
-  }
-  if (resolved.entry.executionSurface !== 'execute') {
-    throw new Error(`[sanfrancisco] Executor registered for non-execute agent: ${agentId}`);
-  }
-}
-
-async function handleExecute(
+async function handleModelChat(
   request: Request,
   env: Env,
   ctx: ExecutionContext,
@@ -101,8 +91,8 @@ async function handleExecute(
 ): Promise<Response> {
   return await withInflightLimit(async () => {
     const body = await readJson(request);
-    if (!isExecuteRequest(body)) {
-      throw new HttpError(400, { code: 'BAD_REQUEST', message: 'Invalid request', issues: [{ path: '', message: 'Expected { grant, agentId, input }' }] });
+    if (!isModelChatRequest(body)) {
+      throw new HttpError(400, { code: 'BAD_REQUEST', message: 'Invalid request', issues: [{ path: '', message: 'Expected { grant, agentId, messages }' }] });
     }
 
     const grant: AIGrant = await verifyGrant(body.grant, env.AI_GRANT_HMAC_SECRET);
@@ -111,18 +101,11 @@ async function handleExecute(
       throw new HttpError(403, { code: 'CAPABILITY_DENIED', message: `Unknown agentId: ${body.agentId}` });
     }
     const canonicalId = resolvedAgent.canonicalId;
-    if (resolvedAgent.entry.executionSurface !== 'execute') {
-      throw new HttpError(403, { code: 'CAPABILITY_DENIED', message: `AI surface not executable via /v1/execute: ${canonicalId}` });
-    }
     assertCap(grant, `agent:${canonicalId}`);
 
     const requestId = requestContext.requestId;
     const occurredAtMs = Date.now();
 
-    const executor = AGENT_EXECUTORS[canonicalId];
-    if (!executor) {
-      throw new HttpError(403, { code: 'CAPABILITY_DENIED', message: `Unknown agentId: ${canonicalId}` });
-    }
     const baseEvent: Omit<InteractionEvent, 'result' | 'usage'> = {
       v: 1,
       requestId,
@@ -136,7 +119,7 @@ async function handleExecute(
         learningCapture: grant.ai?.learningCapture,
         taskClass: resolvedAgent.entry.taskClass,
       },
-      input: body.input,
+      input: { kind: 'model_chat', messages: body.messages },
     };
 
     const sendEvent = (event: InteractionEvent) => {
@@ -148,9 +131,15 @@ async function handleExecute(
       );
     };
 
-    let executed: { result: unknown; usage: Usage };
+    let executed: { content: string; usage: Usage };
     try {
-      executed = await executor({ grant, input: body.input }, env);
+      executed = await callChatCompletion({
+        env,
+        grant,
+        agentId: canonicalId,
+        messages: body.messages,
+        temperature: body.temperature,
+      });
     } catch (err) {
       const message = err instanceof HttpError ? err.error?.message ?? err.message : err instanceof Error ? err.message : 'Unknown execution error';
       sendEvent({
@@ -171,11 +160,11 @@ async function handleExecute(
 
     sendEvent({
       ...baseEvent,
-      result: executed.result,
+      result: { kind: 'model_chat', content: executed.content },
       usage: executed.usage,
     });
 
-    const response: ExecuteResponse = { requestId, agentId: canonicalId, result: executed.result, usage: executed.usage };
+    const response: ModelChatResponse = { requestId, agentId: canonicalId, content: executed.content, usage: executed.usage };
     return noStore(json(response));
   });
 }
@@ -216,11 +205,23 @@ export default class SanFranciscoWorker extends WorkerEntrypoint<Env> {
           boundary: 'health',
         });
       }
+      if (request.method === 'POST' && url.pathname === '/v1/model/chat') {
+        return finalizeSanFranciscoObservedResponse({
+          context: requestContext,
+          response: await handleModelChat(request, this.env, this.ctx, requestContext),
+          boundary: 'ai.model.chat',
+        });
+      }
       if (request.method === 'POST' && url.pathname === '/v1/execute') {
         return finalizeSanFranciscoObservedResponse({
           context: requestContext,
-          response: await handleExecute(request, this.env, this.ctx, requestContext),
-          boundary: 'ai.execute',
+          response: noStore(json({
+            error: {
+              code: 'BAD_REQUEST',
+              message: 'San Francisco no longer executes agent brains. Call the agent home and use /v1/model/chat only for governed model execution.',
+            },
+          }, { status: 410 })),
+          boundary: 'ai.execute.deprecated',
         });
       }
       if (request.method === 'POST' && url.pathname === '/v1/outcome') {

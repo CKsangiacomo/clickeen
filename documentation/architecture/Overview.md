@@ -21,9 +21,11 @@ Clickeen is designed to be **built by AI** and **run by AI**:
 | ----------------------------- | ------------------------------------------------------------- |
 | **Human (1)**                 | Vision, architecture, taste, strategic decisions              |
 | **AI Coding**                 | Build product from specs (Cursor, Claude, GPT)                |
-| **AI Agents (San Francisco)** | Run the company: sales, support, marketing, localization, ops |
+| **AI Agents (agent homes)**   | Run the company through named agent homes; San Francisco provides governed model execution |
 
-**San Francisco is the Workforce OS** — the system that operates the AI agents who run the company.
+**San Francisco is the AI engine** — governed model execution, trace/outcome
+capture, and provider routing for named agent homes. Agent execution lives in
+the agent home.
 
 See: `documentation/ai/overview.md`, `documentation/ai/learning.md`, `documentation/ai/infrastructure.md`
 
@@ -84,7 +86,7 @@ This keeps customer actions close to one cross-service request, removes stale re
 | **Roma**          | `roma/`         | Cloudflare Pages                     | Product shell, account domains, Bob host orchestration                  | ✅ Active   |
 | **DevStudio**     | `admin/`        | Cloudflare Pages                     | Internal Berlin-authenticated toolbench for Dieter/foundation inspection and policy editing | ✅ Internal |
 | **Venice**        | `venice/`       | Cloudflare Pages (Next.js Edge)      | Legacy SSR embed runtime replaced by `clk.live` static artifacts        | Removed from active serving |
-| **San Francisco** | `sanfrancisco/` | Cloudflare Workers (D1/KV/R2/Queues) | AI Workforce OS: agents, learning, orchestration                        | ✅ Phase 1  |
+| **San Francisco** | `sanfrancisco/` | Cloudflare Workers (D1/KV/R2/Queues) | Governed model execution, trace/outcome capture, provider routing       | ✅ Phase 1  |
 | **Michael**       | `supabase/`     | Supabase Postgres                    | Database with RLS                                                       | ✅ Active   |
 | **Dieter**        | `dieter/`       | (build artifact)                     | Design system: tokens, 16+ components                                   | ✅ Active   |
 | **Tokyo**         | `tokyo/`        | Cloudflare R2                        | Canonical product asset roots, account runtime storage, Dieter/fonts/Prague artifacts | ✅ Active   |
@@ -257,8 +259,9 @@ They may be served by Tokyo-worker through friendly public routes, but Roma, Tok
 
 #### San Francisco (Workers + D1/KV/R2/Queues)
 
-- `/healthz`, `/v1/execute`, `/v1/outcome`, queue consumer for non-blocking log writes.
-- Stores sessions in KV, raw logs in R2, indexes in D1.
+- `/healthz`, `/v1/model/chat`, `/v1/outcome`, queue consumer for non-blocking log writes.
+- Stores raw logs in R2 and indexes in D1. Product Copilot sessions do not live
+  in San Francisco KV.
 
 ### Environment variables (minimum matrix)
 
@@ -268,7 +271,8 @@ They may be served by Tokyo-worker through friendly public routes, but Roma, Tok
 | **Tokyo-worker (Workers)**  | `PUBLIC_SERVING_BASE_URL`   | `https://dev.clk.live`                  | `https://clk.live`                  | Public-serving origin used for cache purge and environment smoke                 |
 | **Roma (Pages)**            | `NEXT_PUBLIC_BOB_URL`       | `https://bob.dev.clickeen.com`          | `https://app.clickeen.com`          | Builder iframe origin (no query override; configured per environment)            |
 | **Roma (Pages)**            | `NEXT_PUBLIC_CLK_LIVE_URL`  | `https://dev.clk.live`                  | `https://clk.live`                  | Public widget/page copy-code origin                                               |
-| **Roma (Pages)**            | `SANFRANCISCO_BASE_URL`     | `https://sanfrancisco.dev.clickeen.com` | `https://sanfrancisco.clickeen.com` | Explicit base URL for Copilot execution (San Francisco); no fallback probing     |
+| **Roma (Pages)**            | `PRODUCT_COPILOT_BASE_URL`  | `https://product-copilot-dev.clickeen.workers.dev` | configured Product Copilot worker URL | Explicit base URL for Product Copilot execution; no fallback probing        |
+| **Roma (Pages)**            | `SANFRANCISCO_BASE_URL`     | `https://sanfrancisco.dev.clickeen.com` | `https://sanfrancisco.clickeen.com` | Explicit base URL for AI outcome and San Francisco-owned diagnostic paths         |
 | **Roma/San Francisco (trusted backends)** | `ENV_STAGE`   | `cloud-dev`                             | `ga`                                | Exposure stage stamped into AI grants on the active product/internal issuer path |
 | **Roma/San Francisco**      | `AI_GRANT_HMAC_SECRET`      | dev secret                              | prod secret                         | Shared HMAC secret between trusted grant issuers and San Francisco               |
 | **San Francisco (Workers)** | `DEEPSEEK_API_KEY`          | dev key                                 | prod key                            | Provider key lives only in San Francisco                                         |
@@ -416,7 +420,8 @@ Copilot execution is a separate, budgeted flow that never exposes provider keys 
 │                                                                         │
 │  Account-mode Builder:                                                  │
 │    Browser UI (Bob iframe) → Roma instance-scoped copilot route         │
-│    → SanFrancisco /v1/execute                                            │
+│    → Product Copilot Worker /v1/execute                                  │
+│    → SanFrancisco /v1/model/chat                                         │
 │                                                                         │
 │  Outcomes (keep/undo/CTA clicks):                                       │
 │    Browser → Roma same-origin outcome route                             │

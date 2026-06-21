@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { asTrimmedString, isRecord } from '@clickeen/ck-contracts';
 import {
-  executeCopilotOnSanFrancisco,
+  executeCopilotOnProductCopilot,
   issueAccountCopilotGrant,
 } from '@roma/lib/ai/account-copilot';
 import { loadTokyoAccountInstanceDocument } from '@roma/lib/account-instance-direct';
@@ -195,7 +195,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
       );
     }
 
-    const executed = await executeCopilotOnSanFrancisco({
+    const executed = await executeCopilotOnProductCopilot({
       grant: issued.grant,
       agentId: issued.agentId,
       traceClient: 'roma',

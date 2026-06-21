@@ -219,7 +219,7 @@ const AI_AGENT_REGISTRY: AiRegistryEntry[] = [
     boundary: 'product_copilot_draft_actions',
     supportedProviders: ['deepseek', 'openai'],
     defaultProvider: 'openai',
-    executionSurface: 'execute',
+    executionSurface: 'endpoint',
     requiredEntitlements: ['copilot.turns.monthly.max'],
   },
   {

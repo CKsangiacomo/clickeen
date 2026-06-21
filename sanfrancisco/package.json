@@ -11,7 +11,6 @@
     "@clickeen/ck-contracts": "workspace:*",
     "@clickeen/ck-policy": "workspace:*",
     "@clickeen/l10n": "workspace:*",
-    "@clickeen/product-copilot": "workspace:*",
     "@clickeen/translation-agent": "workspace:*"
   },
   "devDependencies": {

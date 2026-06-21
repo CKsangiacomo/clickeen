@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - "berlin/**"
+      - "agents/product-copilot/**"
       - "sanfrancisco/**"
       - "tokyo-worker/**"
       - "tokyo/product/widgets/**"
@@ -66,6 +67,7 @@ jobs:
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             {
               echo "berlin=true"
+              echo "product_copilot=true"
               echo "sanfrancisco=true"
               echo "tokyo=true"
               echo "tokyo_assets=true"
@@ -85,6 +87,7 @@ jobs:
           }
 
           berlin=false
+          product_copilot=false
           sanfrancisco=false
           tokyo=false
           tokyo_assets=false
@@ -97,6 +100,10 @@ jobs:
 
           if [ "$workflow_changed" = "true" ] || path_changed '^(berlin/|scripts/infra/)'; then
             berlin=true
+          fi
+
+          if [ "$workflow_changed" = "true" ] || path_changed '^(agents/product-copilot/|scripts/infra/|packages/(ck-contracts|ck-policy)/)'; then
+            product_copilot=true
           fi
 
           if [ "$workflow_changed" = "true" ] || path_changed '^(sanfrancisco/|scripts/infra/|packages/(ck-contracts|ck-policy|l10n)/)'; then
@@ -117,6 +124,7 @@ jobs:
 
           {
             echo "berlin=$berlin"
+            echo "product_copilot=$product_copilot"
             echo "sanfrancisco=$sanfrancisco"
             echo "tokyo=$tokyo"
             echo "tokyo_assets=$tokyo_assets"
@@ -130,6 +138,10 @@ jobs:
       - name: Deploy sanfrancisco-dev
         if: steps.changes.outputs.sanfrancisco == 'true'
         run: pnpm -C sanfrancisco run deploy
+
+      - name: Deploy product-copilot-dev
+        if: steps.changes.outputs.product_copilot == 'true'
+        run: pnpm -C agents/product-copilot run deploy
 
       - name: Deploy tokyo-assets-dev (tokyo-worker)
         if: steps.changes.outputs.tokyo == 'true'

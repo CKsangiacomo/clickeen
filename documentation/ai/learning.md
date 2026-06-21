@@ -31,15 +31,15 @@ Copilot brain contract; it is not autonomous learning.
 
 ### 1.1 Interaction events (San Francisco emits)
 
-Every `/v1/execute` produces an `InteractionEvent` (see `sanfrancisco/src/types.ts`):
+Every San Francisco `/v1/model/chat` call produces an `InteractionEvent` (see `sanfrancisco/src/types.ts`):
 
 - `requestId` (uuid)
 - `agentId`
 - `occurredAtMs`
 - `subject` (anon/user/service)
 - `trace` (may include `sessionId`, `instanceId`, `surfaceId`, `envStage`)
-- `input` (agent input)
-- `result` (agent result)
+- `input` (model-call input envelope)
+- `result` (model-call result envelope)
 - `usage` (provider/model/token/latency)
 
 This event is:

@@ -43,6 +43,25 @@ export type ExecuteResponse = {
   usage: Usage;
 };
 
+export type ModelChatRequest = {
+  grant: string;
+  agentId: string;
+  messages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }>;
+  temperature?: number;
+  trace?: {
+    requestId?: string;
+    client?: 'product-copilot' | 'translation-agent' | 'ops';
+    locale?: string;
+  };
+};
+
+export type ModelChatResponse = {
+  requestId: string;
+  agentId: string;
+  content: string;
+  usage: Usage;
+};
+
 export type CopilotOutcomeEvent =
   | 'edit_applied'
   | 'edit_rejected'

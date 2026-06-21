@@ -10,6 +10,12 @@ Code lives in:
 agents/product-copilot/
 ```
 
+Runtime lives in the Cloudflare Worker configured by:
+
+```text
+agents/product-copilot/wrangler.toml
+```
+
 ## Authority
 
 Product Copilot owns:
@@ -37,15 +43,36 @@ Product Copilot does not own:
 ```text
 Bob builds product-copilot.context.v1 from the open draft
 -> Roma validates account/widget authority and mints the AI grant
--> San Francisco verifies the grant and calls the Product Copilot brain module
--> Product Copilot asks San Francisco's model executor for governed model calls
+-> Roma calls the Product Copilot worker at PRODUCT_COPILOT_BASE_URL
+-> Product Copilot asks San Francisco's /v1/model/chat endpoint for governed model calls
 -> San Francisco records trace/usage and returns the typed result
 -> Bob validates/applies draft_edit ops, if any
 ```
 
 The browser never calls a model provider.
 
-San Francisco does not store Product Copilot conversation/thread state.
+San Francisco does not execute the Product Copilot brain and does not store
+Product Copilot conversation/thread state.
+
+## Worker Contract
+
+`POST /v1/execute` belongs to the Product Copilot worker, not San Francisco.
+
+Request:
+
+```json
+{ "grant": "<signed AI grant>", "agentId": "cs.widget.copilot.v1", "input": {} }
+```
+
+Response:
+
+```json
+{ "requestId": "<id>", "agentId": "cs.widget.copilot.v1", "result": {}, "usage": {} }
+```
+
+The worker verifies the Product Copilot input shape, runs Product Copilot
+reasoning, and calls San Francisco only for provider/model execution under the
+same signed grant.
 
 ## Eval Gate
 

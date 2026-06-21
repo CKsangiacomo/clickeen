@@ -4,7 +4,7 @@ This file keeps rollout history, but the current runtime owner shape is now:
 - account-mode Builder Copilot: Roma-owned backend routes
 - Prague demo: not a live Copilot execution surface
 - Account Builder widget copilot: one Roma-owned account path using `cs.widget.copilot.v1`
-- Product Copilot brain code: isolated `product-copilot` workspace
+- Product Copilot brain/runtime code: isolated `agents/product-copilot/` worker
 
 ## Purpose
 
@@ -40,9 +40,10 @@ Post-deploy findings:
 Core runtime files:
 - `packages/ck-contracts/src/ai.js`
 - `agents/product-copilot/src/index.ts`
+- `agents/product-copilot/src/worker.ts`
+- `agents/product-copilot/wrangler.toml`
 - `roma/lib/ai/account-copilot.ts`
 - `sanfrancisco/src/index.ts`
-- `sanfrancisco/src/agent-adapters/productCopilot.ts`
 - `bob/components/CopilotPane.tsx`
 - `admin/src/html/tools/entitlements.html`
 

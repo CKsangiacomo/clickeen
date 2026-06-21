@@ -1,13 +1,16 @@
-# System: San Francisco - AI Workforce OS
+# System: San Francisco - AI Engine
 
 ## Identity
 - Tier: Core
-- Purpose: Agent execution and automation (localization, sales/support/ops agents, learning logs).
+- Purpose: governed model execution, provider routing, usage/trace capture, and
+  AI outcome ingestion. San Francisco does not execute Product Copilot brain
+  logic.
 
 ## Interfaces
 - `GET /healthz`
+- `POST /v1/model/chat` for governed model execution under a signed AI grant.
+- `POST /v1/outcome` for post-execution Product Copilot outcomes.
 - Queue consumers for agent jobs.
-- HTTP endpoints for AI outcomes.
 - `POST /v1/agents/instance-translation/translate-saved-instance` for direct diagnostics/tests of account-widget instance translation.
 - `POST /v1/agents/instance-translation/runtime-status` for translator runtime diagnostics.
 
@@ -24,24 +27,27 @@
 Health contract:
 - `GET /healthz` -> `{ "ok": true, "service": "sanfrancisco", "env": "<stage>", "ts": <unix_ms> }`
 
-## Copilot execution (shipped)
-- Endpoint: `POST /v1/execute`.
+## Model execution (shipped)
+- Endpoint: `POST /v1/model/chat`.
 - Requires a Clickeen-signed grant; enforces `agent:*` caps and `ai` policy capsule.
 - Grant verification accepts the active internal Clickeen issuers `roma` and `sanfrancisco`.
-- The live product Copilot path executes only from Roma account routes; Bob no longer owns a public Minibob copilot flow.
-- Agent routing uses registry canonical IDs.
-- Provider execution does not silently switch models or providers. The current `/v1/execute` path makes one provider call per turn; retry behavior is future explicit work.
+- Product Copilot brain execution lives in the `product-copilot` worker. Roma
+  calls that worker; that worker calls San Francisco only for model execution.
+- Agent/model routing uses registry canonical IDs.
+- Provider execution does not silently switch models or providers. The current
+  `/v1/model/chat` path makes one provider call per request; retry behavior is
+  future explicit work.
 - Provider request shape comes from the explicit shared AI model capability table (`ck-contracts`), not provider/model string heuristics.
 - Provider errors returned to product callers are typed `PROVIDER_ERROR` responses with safe messages and optional upstream status; raw upstream bodies are not product payloads.
 - OpenAI responses are normalized across string/array/refusal content shapes before being treated as empty output.
 - Live product widget-copilot canonical ID:
   - `cs.widget.copilot.v1` (account Builder editor copilot)
 - The Roma grant issuer mints the live account Builder copilot grant for `cs.widget.copilot.v1`.
-- Product Copilot brain code lives in the isolated `product-copilot` workspace.
-  San Francisco calls that brain through a thin `cs.widget.copilot.v1` adapter.
-- Translation Agent brain code lives in the isolated `translation-agent`
-  workspace. San Francisco keeps the existing translation endpoint and adapts it
-  to governed model execution.
+- Product Copilot brain code and worker entrypoint live in the isolated
+  `agents/product-copilot/` workspace.
+- Translation Agent brain code lives in `agents/translation-agent/`. San
+  Francisco keeps the existing translation diagnostic endpoint until the
+  Translation Agent slice moves that execution path into its own worker home.
 - Product Copilot uses the `product-copilot.context.v1` capsule and typed output
   union: `answer`, `clarification`, `suggestion`, `draft_edit`, `refusal`, or
   `error`.
@@ -50,11 +56,16 @@ Health contract:
 - The Product Copilot brain fails visibly when the context capsule is malformed
   or too large. It does not truncate controls or current values silently.
 - **Runtime policy execution:** Enforces the signed `AgentRuntimePolicy` from the grant: `defaultModel`, `modelsByProvider`, optional `selectedModel`, request ceilings, and learning-capture rules. Product/account policy decides the allowed model set before grant issuance.
-- Product Copilot execution through `/v1/execute` is stateless per model call.
+- Product Copilot model execution through `/v1/model/chat` is stateless per call.
   San Francisco verifies the signed Roma grant, applies runtime policy, routes
-  the provider/model call, emits trace/outcome metadata, and returns. Product
+  the provider/model call, emits usage/trace metadata, and returns. Product
   Copilot conversation/thread state does not live in San Francisco KV.
 - Contract coverage now explicitly guards grant verification, budget enforcement, provider routing, and concurrency ceilings before further AI-plane sophistication lands.
+
+`POST /v1/execute` is deprecated in San Francisco and returns a visible 410.
+Product Copilot must be called through its own home. Translation Agent's
+remaining San Francisco diagnostic execution path is a known transitional
+exception owned by the Translation Agent realignment slice.
 
 ## Entrypoint posture
 - `sanfrancisco/src/index.ts` is now a thin route shell.
