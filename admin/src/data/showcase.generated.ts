@@ -24,6 +24,7 @@ import html21 from "../html/foundations/colors.html?raw";
 import html22 from "../html/foundations/icons.html?raw";
 import html23 from "../html/foundations/typography.html?raw";
 import html24 from "../html/tools/entitlements.html?raw";
+import html25 from "../html/tools/llm-management.html?raw";
 
 export const staticShowcaseModules: Record<string, string> = {
   "../html/components/bulk-edit.html": html0,
@@ -51,4 +52,5 @@ export const staticShowcaseModules: Record<string, string> = {
   "../html/foundations/icons.html": html22,
   "../html/foundations/typography.html": html23,
   "../html/tools/entitlements.html": html24,
+  "../html/tools/llm-management.html": html25,
 };

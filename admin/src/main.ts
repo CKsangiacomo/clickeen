@@ -39,11 +39,17 @@ import {
 import {
   labelAiModel,
   listAiAgents,
+  listAiModelCapabilities,
   listAiModelCatalog,
   listAiProviderUi,
   type AiProvider,
 } from '@clickeen/ck-contracts/ai';
+import {
+  AI_MODEL_MANAGEMENT_CONFIG,
+  validateAiModelManagementConfig,
+} from '@clickeen/ck-contracts/ai-model-management';
 import type { AccountAssetsClient } from '@dieter/components/shared/account-assets';
+import latestModelConformance from '../../documentation/ai/model-conformance/latest.json';
 
 const entitlements = getEntitlementsMatrix();
 
@@ -141,6 +147,14 @@ window.__CK_AI_ACCESS__ = {
   agents: aiAgentsByTier,
   copilots: aiAgentsByTier.filter((agent) => agent.category === 'copilot'),
   systemAgents: aiAgentsByTier.filter((agent) => agent.category === 'system_agent'),
+};
+
+window.__CK_LLM_MANAGEMENT__ = {
+  source: '@clickeen/ck-contracts/ai-model-management',
+  config: AI_MODEL_MANAGEMENT_CONFIG,
+  validation: validateAiModelManagementConfig(AI_MODEL_MANAGEMENT_CONFIG),
+  conformance: latestModelConformance,
+  capabilities: listAiModelCapabilities(),
 };
 
 const appRoot = document.getElementById('app');

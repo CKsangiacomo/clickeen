@@ -1,0 +1,295 @@
+<style>
+  .llm-management {
+    display: grid;
+    gap: var(--space-5);
+  }
+
+  .llm-management__header {
+    display: flex;
+    align-items: start;
+    justify-content: space-between;
+    gap: var(--space-4);
+  }
+
+  .llm-management__meta {
+    display: grid;
+    gap: 4px;
+    color: color-mix(in oklab, var(--color-text), transparent 38%);
+  }
+
+  .llm-management__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: var(--space-4);
+  }
+
+  .llm-management__panel {
+    display: grid;
+    gap: var(--space-3);
+    padding: var(--space-4);
+    border: 1px solid var(--color-system-gray-5);
+    border-radius: var(--control-radius-lg);
+    background: var(--color-system-white);
+  }
+
+  .llm-management__panel h2,
+  .llm-management__panel h3 {
+    margin: 0;
+  }
+
+  .llm-management__list {
+    display: grid;
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .llm-management__row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: var(--space-3);
+    align-items: center;
+    min-height: 32px;
+    padding: 8px 10px;
+    border-radius: var(--control-radius-md);
+    background: color-mix(in oklab, var(--color-system-gray-6), white 54%);
+  }
+
+  .llm-management__row-main {
+    display: grid;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  .llm-management__code {
+    font-family: var(--font-mono);
+    font-size: var(--fs-10);
+    color: color-mix(in oklab, var(--color-text), transparent 20%);
+    overflow-wrap: anywhere;
+  }
+
+  .llm-management__badge {
+    display: inline-flex;
+    align-items: center;
+    min-height: 20px;
+    padding-inline: 8px;
+    border-radius: var(--control-radius-sm);
+    font: 600 var(--fs-10)/1 var(--font-ui);
+    color: var(--color-system-green-contrast);
+    background: color-mix(in oklab, var(--color-system-green), transparent 84%);
+    white-space: nowrap;
+  }
+
+  .llm-management__badge[data-state='blocked'] {
+    color: var(--color-system-red);
+    background: color-mix(in oklab, var(--color-system-red), transparent 88%);
+  }
+
+  .llm-management__table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+    overflow: hidden;
+    border-radius: var(--control-radius-lg);
+    background: var(--color-system-white);
+  }
+
+  .llm-management__table th,
+  .llm-management__table td {
+    text-align: left;
+    vertical-align: top;
+    padding: 9px 10px;
+    border-bottom: 1px solid var(--color-system-gray-5);
+  }
+
+  .llm-management__table th {
+    font: 600 var(--fs-10)/1.2 var(--font-ui);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: color-mix(in oklab, var(--color-text), transparent 45%);
+  }
+
+  .llm-management__table td {
+    word-break: break-word;
+  }
+</style>
+
+<h1 class="heading-2">LLM Management</h1>
+
+<section class="devstudio-page-section llm-management" id="llm-management-root" aria-live="polite"></section>
+
+<script type="module">
+  const root = document.getElementById('llm-management-root');
+  const management = window.__CK_LLM_MANAGEMENT__ || null;
+  const providers = new Map((window.__CK_AI_ACCESS__?.providers || []).map((entry) => [entry.provider, entry.label]));
+  const capabilities = new Map((management?.capabilities || []).map((entry) => [`${entry.provider}:${entry.model}`, entry]));
+  const conformance = new Map((management?.conformance?.results || []).map((entry) => [`${entry.provider}:${entry.model}`, entry]));
+
+  const text = (value, fallback = '') => String(value ?? fallback);
+  const modelKey = (model) => `${model?.provider || ''}:${model?.model || ''}`;
+  const providerLabel = (provider) => providers.get(provider) || provider || '';
+  const modelLabel = (model) => capabilities.get(modelKey(model))?.label || model?.model || '';
+  const statusLabel = (state) => state === 'passed' ? 'passed' : 'blocked';
+  const sameModel = (left, right) => modelKey(left) === modelKey(right);
+
+  function createBadge(label, state = 'passed') {
+    const badge = document.createElement('span');
+    badge.className = 'llm-management__badge';
+    badge.dataset.state = state;
+    badge.textContent = label;
+    return badge;
+  }
+
+  function createModelRow(model, opts = {}) {
+    const key = modelKey(model);
+    const proof = conformance.get(key);
+    const li = document.createElement('li');
+    li.className = 'llm-management__row';
+    const main = document.createElement('div');
+    main.className = 'llm-management__row-main';
+    const label = document.createElement('span');
+    label.className = 'body-s';
+    label.textContent = modelLabel(model);
+    const code = document.createElement('span');
+    code.className = 'llm-management__code';
+    code.textContent = `${providerLabel(model.provider)} / ${model.model}`;
+    main.append(label, code);
+    li.append(main);
+    const status = createBadge(statusLabel(proof?.status), proof?.status === 'passed' ? 'passed' : 'blocked');
+    if (opts.default) status.textContent = `Default / ${status.textContent}`;
+    li.append(status);
+    return li;
+  }
+
+  function renderProductCopilot(config) {
+    const section = document.createElement('section');
+    section.className = 'llm-management__panel';
+    section.innerHTML = `
+      <h2 class="heading-4">Product Copilot</h2>
+      <p class="body-s llm-management__meta">Paid users see every enabled model in Builder. Roma validates selection before minting the grant.</p>
+    `;
+    const list = document.createElement('ul');
+    list.className = 'llm-management__list';
+    config.enabledModels.forEach((model) => {
+      list.append(createModelRow(model, { default: sameModel(model, config.defaultModel) }));
+    });
+    section.append(list);
+    return section;
+  }
+
+  function renderSdrCopilot(config) {
+    const section = document.createElement('section');
+    section.className = 'llm-management__panel';
+    section.innerHTML = `
+      <h2 class="heading-4">SDR Copilot</h2>
+      <p class="body-s llm-management__meta">Public/prospect users never see a model picker. The future SDR path stays separately governed.</p>
+    `;
+    const list = document.createElement('ul');
+    list.className = 'llm-management__list';
+    const row = document.createElement('li');
+    row.className = 'llm-management__row';
+    const main = document.createElement('div');
+    main.className = 'llm-management__row-main';
+    const label = document.createElement('span');
+    label.className = 'body-s';
+    label.textContent = config.publicPicker === 'none' ? 'No public picker' : 'Unexpected public picker';
+    const code = document.createElement('span');
+    code.className = 'llm-management__code';
+    code.textContent = `${(config.enabledModels || []).length} configured model(s)`;
+    main.append(label, code);
+    row.append(main, createBadge(config.publicPicker === 'none' ? 'Compliant' : 'Blocked', config.publicPicker === 'none' ? 'passed' : 'blocked'));
+    list.append(row);
+    section.append(list);
+    return section;
+  }
+
+  function renderInternalAgents(internalAgents) {
+    const section = document.createElement('section');
+    section.className = 'llm-management__panel';
+    section.innerHTML = `
+      <h2 class="heading-4">Internal Agents</h2>
+      <p class="body-s llm-management__meta">Internal agents use internal routing logic. They do not expose picker UI.</p>
+    `;
+    const list = document.createElement('ul');
+    list.className = 'llm-management__list';
+    Object.entries(internalAgents || {}).forEach(([agentId, agentConfig]) => {
+      (agentConfig.routes || []).forEach((route) => {
+        const li = createModelRow(route.model);
+        const code = li.querySelector('.llm-management__code');
+        if (code) code.textContent = `${agentId} / ${route.policyProfile} / ${modelKey(route.model)}`;
+        list.append(li);
+      });
+    });
+    section.append(list);
+    return section;
+  }
+
+  function renderConformance() {
+    const section = document.createElement('section');
+    section.className = 'llm-management__panel';
+    section.innerHTML = `
+      <h2 class="heading-4">Conformance Evidence</h2>
+      <p class="body-s llm-management__meta">Generated ${text(management?.conformance?.generatedAt, 'unknown')} from committed managed config.</p>
+    `;
+    const table = document.createElement('table');
+    table.className = 'llm-management__table';
+    table.innerHTML = `
+      <thead>
+        <tr>
+          <th>Model</th>
+          <th>Status</th>
+          <th>HTTP</th>
+          <th>Returned model</th>
+          <th>Latency</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    `;
+    const tbody = table.querySelector('tbody');
+    (management?.conformance?.results || []).forEach((result) => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td><span class="body-s">${modelLabel(result)}</span><br><span class="llm-management__code">${providerLabel(result.provider)} / ${result.model}</span></td>
+        <td></td>
+        <td>${text(result.httpStatus, '-')}</td>
+        <td><span class="llm-management__code">${text(result.returnedModel, '-')}</span></td>
+        <td>${Number.isFinite(result.latencyMs) ? `${result.latencyMs}ms` : '-'}</td>
+      `;
+      tr.children[1].append(createBadge(statusLabel(result.status), result.status === 'passed' ? 'passed' : 'blocked'));
+      tbody.append(tr);
+    });
+    section.append(table);
+    return section;
+  }
+
+  function render() {
+    if (!root) return;
+    root.replaceChildren();
+    if (!management?.config) {
+      root.textContent = 'LLM management data is unavailable in this build.';
+      return;
+    }
+    const header = document.createElement('div');
+    header.className = 'llm-management__header';
+    header.innerHTML = `
+      <div class="llm-management__meta body-s">
+        <span>Source: ${management.source || 'unknown'}</span>
+        <span>Runtime evidence: documentation/ai/model-conformance/latest.json</span>
+      </div>
+    `;
+    header.append(createBadge(management.validation?.ok ? 'Config valid' : 'Config invalid', management.validation?.ok ? 'passed' : 'blocked'));
+
+    const grid = document.createElement('div');
+    grid.className = 'llm-management__grid';
+    grid.append(
+      renderProductCopilot(management.config.productCopilot),
+      renderSdrCopilot(management.config.sdrCopilot),
+      renderInternalAgents(management.config.internalAgents),
+    );
+
+    root.append(header, grid, renderConformance());
+  }
+
+  render();
+</script>

@@ -42,6 +42,31 @@ declare global {
       copilots?: Window['__CK_AI_ACCESS__']['agents'];
       systemAgents?: Window['__CK_AI_ACCESS__']['agents'];
     };
+    __CK_LLM_MANAGEMENT__?: {
+      source: string;
+      config: import('@clickeen/ck-contracts/ai-model-management').AiModelManagementConfig;
+      validation: import('@clickeen/ck-contracts/ai-model-management').AiModelManagementValidationResult;
+      conformance: {
+        v: number;
+        generatedAt: string;
+        command: string;
+        envSource: string;
+        modelSource: string;
+        prompt: string;
+        results: Array<{
+          status: string;
+          provider: string;
+          model: string;
+          returnedModel?: string;
+          httpStatus?: number;
+          content?: boolean;
+          usage?: boolean;
+          latencyMs?: number;
+          reason?: string;
+        }>;
+      };
+      capabilities: Array<import('@clickeen/ck-contracts/ai').AiModelCapability>;
+    };
   }
 }
 

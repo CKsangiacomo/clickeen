@@ -13,6 +13,8 @@ superadmin account browser.
 - Foundations: Colors, Typography, Icons.
 - Dieter Components: generated/static component showcase pages.
 - Policy: entitlements + AI runtime Policy Editor at `/#/policy/entitlements`.
+- LLM Management: read-only managed model configuration and conformance evidence
+  at `/#/policy/llm-management`.
 
 The Bob UI Native husk and the local widget-authoring workspace are removed.
 
@@ -26,6 +28,11 @@ The Bob UI Native husk and the local widget-authoring workspace are removed.
 
 Policy writes go through Pages Functions, validate with `@clickeen/ck-policy`, and
 commit matrix JSON updates to GitHub.
+
+LLM Management reads source-controlled model config from
+`@clickeen/ck-contracts/ai-model-management` and committed evidence from
+`documentation/ai/model-conformance/latest.json`. It does not probe providers,
+read provider secrets, or mutate live San Francisco runtime state.
 
 ## Verification
 

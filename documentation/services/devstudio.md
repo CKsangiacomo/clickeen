@@ -30,12 +30,12 @@ Cloudflare Access is not the DevStudio auth boundary.
 
 ## Current Surface
 
-DevStudio has three sections:
+DevStudio has these sections:
 
 - **Foundations** — Colors, Typography, Icons.
 - **Dieter Components** — generated/static component showcase pages.
 - **Policy** — the entitlements and AI runtime Policy Editor.
-- **LLM Management** — planned internal management surface for Clickeen model
+- **LLM Management** — read-only internal visibility into Clickeen managed model
   configuration and generated conformance evidence.
 
 The old Bob UI Native husk is removed. The old local widget-authoring workspace is
@@ -85,9 +85,11 @@ LLM management source:
 - SDR Copilot has no public model picker. DevStudio may manage its future model
   policy, but public/prospect users never choose a model.
 - Internal agents use internal model routing config, not picker UI.
-- DevStudio displays and edits managed configuration; San Francisco remains the
-  runtime model execution authority. DevStudio must not directly mutate live
-  worker runtime state or provider secrets.
+- DevStudio displays managed configuration; San Francisco remains the runtime
+  model execution authority. The current shipped DevStudio surface is
+  read-only: it displays committed managed config and committed conformance
+  evidence at `/#/policy/llm-management`. DevStudio must not directly mutate
+  live worker runtime state or provider secrets.
 
 Required Pages configuration:
 

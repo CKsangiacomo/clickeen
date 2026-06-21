@@ -29,6 +29,7 @@ export const showcaseModules = staticShowcaseModules;
 const toSlug = (path: string) => path.split('/').pop()?.replace(/\.html$/, '') ?? '';
 
 const toTitle = (slug: string) => {
+  if (slug === 'llm-management') return 'LLM Management';
   return slug.replace(/[-_]/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase());
 };
 
@@ -43,6 +44,7 @@ const getFolderFromPath = (path: string): string => {
 
 const buildPagePath = (folder: string, slug: string): string => {
   if (folder === 'tools' && slug === 'entitlements') return '#/policy/entitlements';
+  if (folder === 'tools' && slug === 'llm-management') return '#/policy/llm-management';
   return `#/dieter/${slug}`;
 };
 
