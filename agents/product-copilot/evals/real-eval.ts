@@ -138,8 +138,13 @@ function realisticControls(omitTitle = false): ProductCopilotControl[] {
   return omitTitle ? base.filter((control) => control.path !== 'content.title') : base;
 }
 
-function envelopeFor(prompt: string, opts: { omitTitle?: boolean; availableActions?: string[] } = {}): ProductCopilotRequestEnvelope {
+function envelopeFor(prompt: string, opts: { omitTitle?: boolean; availableActions?: string[]; oversizedCapsule?: boolean } = {}): ProductCopilotRequestEnvelope {
   const controls = realisticControls(opts.omitTitle);
+  if (opts.oversizedCapsule) {
+    // Force the serialized capsule past MAX_CONTEXT_PROMPT_CHARS to prove the brain
+    // degrades (disables draft_edit) instead of killing the conversation.
+    controls.push({ path: 'content.bigBlob', panelId: 'content', type: 'textarea', kind: 'string', label: 'Big blob', currentValue: 'x'.repeat(150_000) });
+  }
   return {
     instanceId: 'eval-instance',
     sessionId: 'eval-session',
@@ -164,7 +169,7 @@ type CaseKind = 'answer' | 'clarification' | 'suggestion' | 'draft_edit' | 'refu
 type EvalCase = {
   id: string;
   prompt: string;
-  envelopeOpts?: { omitTitle?: boolean; availableActions?: string[] };
+  envelopeOpts?: { omitTitle?: boolean; availableActions?: string[]; oversizedCapsule?: boolean };
   acceptKinds: CaseKind[];
   rubric: string; // what the judge checks (subjective quality)
   structuralCheck?: (result: { kind: string; message: string; ops: unknown[] }) => string | null; // returns issue or null
@@ -225,6 +230,13 @@ const CASES: EvalCase[] = [
       const hits = (ops as Array<{ path: string }>).some((op) => op.path === 'content.title');
       return hits ? 'edited content.title even though it is not in the control map' : null;
     },
+  },
+  {
+    id: 'oversized-capsule-still-conversational',
+    prompt: 'where am I?',
+    envelopeOpts: { oversizedCapsule: true },
+    acceptKinds: ['answer', 'clarification', 'suggestion'],
+    rubric: 'Despite an oversized edit-control catalog (draft editing is disabled for the turn), the agent answers the simple conversational question ("where am I") helpfully. It must NOT report the request as invalid or failed.',
   },
 ];
 

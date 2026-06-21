@@ -47,7 +47,7 @@ export class ProductCopilotInputError extends Error {
 const PROMPT_VERSION = 'product-copilot.brain.v1@2026-06-21';
 const MAX_CONVERSATION_HISTORY_MESSAGES = 8;
 const MAX_CONVERSATION_HISTORY_CHARS = 2000;
-const MAX_CONTEXT_PROMPT_CHARS = 18_000;
+const MAX_CONTEXT_PROMPT_CHARS = 120_000;
 const CONTROL_KINDS = new Set(['string', 'number', 'boolean', 'enum', 'color', 'json', 'array', 'object']);
 const PROHIBITED_PATH_SEGMENTS = new Set(['__proto__', 'prototype', 'constructor']);
 const TOKEN_SEGMENT_RE = /^__[^.]+__$/;
@@ -301,7 +301,7 @@ function buildContextPrompt(
   context: ProductCopilotContextCapsule,
   userMessage: string,
   editContext: ValidatedProductCopilotInput['editContext'],
-): string {
+): string | null {
   const availableActions = editContext.available ? context.availableActions.join(', ') : '[none]';
   const unavailableCapabilities = [
     ...context.unavailableCapabilities,
@@ -328,7 +328,7 @@ function buildContextPrompt(
       : `Reason: ${editContext.issues.length ? editContext.issues.map(formatIssue).join('; ') : 'No editable controls were available.'}`,
   ].join('\n');
   if (payload.length > MAX_CONTEXT_PROMPT_CHARS) {
-    throw new ProductCopilotInputError([{ path: 'context', message: 'context capsule is too large for this turn' }]);
+    return null;
   }
   return payload;
 }
@@ -448,7 +448,22 @@ export async function executeProductCopilot(args: {
 }): Promise<ProductCopilotExecutionResult> {
   const validatedInput = validateProductCopilotRequest(args.input);
   const input = validatedInput.envelope;
-  const contextPrompt = buildContextPrompt(input.context, input.userMessage, validatedInput.editContext);
+  let editContext = validatedInput.editContext;
+  let contextPrompt = buildContextPrompt(input.context, input.userMessage, editContext);
+  if (contextPrompt === null && editContext.available) {
+    // Oversized edit-control catalog is DEGRADED EDIT context, not a turn failure
+    // (121C §5 / product-copilot.md): keep widget/session orientation, disable
+    // draft_edit, and let the conversation proceed instead of hard-rejecting the turn.
+    editContext = {
+      available: false,
+      controls: [],
+      issues: [...editContext.issues, { path: 'context', message: 'context capsule too large; draft editing disabled for this turn' }],
+    };
+    contextPrompt = buildContextPrompt(input.context, input.userMessage, editContext);
+  }
+  if (contextPrompt === null) {
+    throw new ProductCopilotInputError([{ path: 'context', message: 'context capsule is too large for this turn' }]);
+  }
   const messages: ProductCopilotModelMessage[] = [
     { role: 'system', content: buildSystemPrompt(input.context.activeLocale) },
     ...(input.conversationHistory ?? []).map((message) => ({ role: message.role, content: message.text }) as ProductCopilotModelMessage),
@@ -456,7 +471,7 @@ export async function executeProductCopilot(args: {
   ];
 
   const first = await args.executeModel({ messages, temperature: 0.2 });
-  const firstParsed = validateModelResponse(parseJsonObject(first.content), validatedInput.editContext);
+  const firstParsed = validateModelResponse(parseJsonObject(first.content), editContext);
   if (firstParsed.ok) {
     return {
       result: {
@@ -476,7 +491,7 @@ export async function executeProductCopilot(args: {
     },
   ];
   const second = await args.executeModel({ messages: retryMessages, temperature: 0.2 });
-  const secondParsed = validateModelResponse(parseJsonObject(second.content), validatedInput.editContext);
+  const secondParsed = validateModelResponse(parseJsonObject(second.content), editContext);
   if (secondParsed.ok) {
     return {
       result: {
@@ -494,7 +509,7 @@ export async function executeProductCopilot(args: {
   }
 
   const editContextBlocked =
-    !validatedInput.editContext.available &&
+    !editContext.available &&
     (firstParsed.message === EDIT_CONTEXT_UNAVAILABLE_MESSAGE ||
       secondParsed.message === EDIT_CONTEXT_UNAVAILABLE_MESSAGE);
   const response: ProductCopilotResponse = {
