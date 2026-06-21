@@ -35,6 +35,8 @@ DevStudio has three sections:
 - **Foundations** — Colors, Typography, Icons.
 - **Dieter Components** — generated/static component showcase pages.
 - **Policy** — the entitlements and AI runtime Policy Editor.
+- **LLM Management** — planned internal management surface for Clickeen model
+  configuration and generated conformance evidence.
 
 The old Bob UI Native husk is removed. The old local widget-authoring workspace is
 also removed. Widget editing belongs to the real Roma -> Bob -> Tokyo product path.
@@ -64,6 +66,21 @@ apply `@clickeen/ck-policy` validators and commit updated JSON back to `main`.
 Every policy API request verifies the Berlin session and Clickeen admin account
 context before reading or writing. Invalid edits return typed failures and do not
 commit. GitHub SHA conflicts return typed conflicts and require a refetch/retry.
+
+LLM management source:
+
+- `@clickeen/ck-contracts/ai` owns model candidate facts.
+- `@clickeen/ck-contracts/ai-model-management` owns the managed model
+  configuration shape and current source-controlled config artifact.
+- The managed config declares all Product Copilot enabled models and one
+  Clickeen default. Later San Francisco/Roma/Bob slices consume that config.
+  The picker itself owns no model truth.
+- SDR Copilot has no public model picker. DevStudio may manage its future model
+  policy, but public/prospect users never choose a model.
+- Internal agents use internal model routing config, not picker UI.
+- DevStudio displays and edits managed configuration; San Francisco remains the
+  runtime model execution authority. DevStudio must not directly mutate live
+  worker runtime state or provider secrets.
 
 Required Pages configuration:
 

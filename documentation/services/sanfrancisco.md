@@ -38,6 +38,10 @@ Health contract:
   `/v1/model/chat` path makes one provider call per request; retry behavior is
   future explicit work.
 - Provider request shape comes from the explicit shared AI model capability table (`ck-contracts`), not provider/model string heuristics.
+- Managed model intent comes from `@clickeen/ck-contracts/ai-model-management`.
+  DevStudio is the planned internal management surface for that config.
+  San Francisco remains the runtime authority that will resolve configured,
+  conformance-checked model availability before execution.
 - Provider errors returned to product callers are typed `PROVIDER_ERROR` responses with safe messages and optional upstream status; raw upstream bodies are not product payloads.
 - OpenAI responses are normalized across string/array/refusal content shapes before being treated as empty output.
 - Live product widget-copilot canonical ID:

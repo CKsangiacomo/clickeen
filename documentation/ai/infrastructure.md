@@ -51,6 +51,9 @@ Worker vars/secrets:
 
 Provider/model policy:
 - `@clickeen/ck-contracts` owns the model catalog.
+- `@clickeen/ck-contracts/ai-model-management` owns the source-controlled
+  managed model config for Product Copilot enabled models/default, SDR no-picker
+  posture, and internal-agent routing intent.
 - `@clickeen/ck-policy` owns the tier + agent runtime policy matrix.
 - Roma and San Francisco internal services mint signed grants with direct `AgentRuntimePolicy`.
 - San Francisco enforces the signed `modelsByProvider`, `defaultModel`,
@@ -58,8 +61,9 @@ Provider/model policy:
   Product Copilot thread-turn state is owned outside San Francisco.
 - Model choices are currently driven by signed policy plus catalog capability
   data. Conformance reports are release evidence only and are not runtime gates.
-  The next model-management slice moves live availability to San Francisco and
-  DevStudio-managed configuration.
+  The managed model config has landed as source-controlled intent; the next
+  model-management slices move generated conformance and live availability to
+  San Francisco, then expose the config through DevStudio.
 - **Prague strings L10n**: local/dev signed tooling route; OpenAI model comes only from required `OPENAI_MODEL`.
 - **Account-widget Instance Translation Agent**: `widget.instance.translator`. The translation brain lives in `agents/translation-agent/`; San Francisco remains the grant/model-execution adapter for the existing diagnostic endpoint. Active product generation currently returns unavailable until San Francisco owns a real async generation endpoint, queue production, and operation state. Tokyo-worker owns only exact translated locale overlay storage.
 

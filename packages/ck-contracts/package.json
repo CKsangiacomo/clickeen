@@ -12,6 +12,7 @@
   "exports": {
     ".": "./src/index.ts",
     "./ai": "./src/ai.ts",
+    "./ai-model-management": "./src/ai-model-management.ts",
     "./ids": "./src/ids.ts",
     "./overlay-codebooks": "./src/overlay-codebooks.ts",
     "./overlay-identity": "./src/overlay-identity.ts",
