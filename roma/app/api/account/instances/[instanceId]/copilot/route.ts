@@ -18,7 +18,6 @@ export const runtime = 'edge';
 
 type RouteContext = { params: Promise<{ instanceId: string }> };
 
-const CONTROL_KINDS: ReadonlySet<string> = new Set(['string', 'number', 'boolean', 'enum', 'color', 'json', 'array', 'object']);
 const COPILOT_INVALID_EDIT_MESSAGE = "Copilot couldn't produce a valid edit for this widget. Nothing was changed.";
 
 type SelectedModelParseResult =
@@ -52,66 +51,6 @@ function isExactNonEmptyString(value: unknown): value is string {
 function isControlPath(value: unknown): value is string {
   return isExactNonEmptyString(value) &&
     !value.split('.').some((segment) => !segment || segment === '__proto__' || segment === 'prototype' || segment === 'constructor');
-}
-
-function controlEnumValues(control: Record<string, unknown>): string[] {
-  if (Array.isArray(control.enumValues)) return control.enumValues.filter((entry): entry is string => typeof entry === 'string' && entry.length > 0);
-  if (Array.isArray(control.options)) {
-    return control.options
-      .filter((option): option is { value: string } => isRecord(option) && typeof option.value === 'string' && option.value.length > 0)
-      .map((option) => option.value);
-  }
-  return [];
-}
-
-function validateControlCatalog(controls: unknown, pathPrefix = 'snapshot.controls'): Array<{ path: string; message: string }> {
-  if (!Array.isArray(controls)) return [];
-  const issues: Array<{ path: string; message: string }> = [];
-  controls.forEach((control, index) => {
-    if (!isRecord(control)) {
-      issues.push({ path: `${pathPrefix}[${index}]`, message: 'control must be an object' });
-      return;
-    }
-    if (!isControlPath(control.path)) {
-      issues.push({ path: `${pathPrefix}[${index}].path`, message: 'path must be an exact dot path without empty or prohibited segments' });
-    }
-    for (const field of ['panelId', 'groupId', 'groupLabel', 'type', 'kind', 'label', 'itemIdPath']) {
-      if (control[field] !== undefined && typeof control[field] !== 'string') {
-        issues.push({ path: `${pathPrefix}[${index}].${field}`, message: `${field} must be a string` });
-      }
-    }
-    if (
-      control.options !== undefined &&
-      (!Array.isArray(control.options) ||
-        !control.options.every(
-          (option) =>
-            isRecord(option) &&
-            typeof option.label === 'string' &&
-            ['string', 'number', 'boolean'].includes(typeof option.value),
-        ))
-    ) {
-      issues.push({ path: `${pathPrefix}[${index}].options`, message: 'options must be label/value objects' });
-    }
-    if (control.enumValues !== undefined && (!Array.isArray(control.enumValues) || !control.enumValues.every((entry) => typeof entry === 'string'))) {
-      issues.push({ path: `${pathPrefix}[${index}].enumValues`, message: 'enumValues must be strings' });
-    }
-    if (control.min !== undefined && (typeof control.min !== 'number' || !Number.isFinite(control.min))) {
-      issues.push({ path: `${pathPrefix}[${index}].min`, message: 'min must be a finite number' });
-    }
-    if (control.max !== undefined && (typeof control.max !== 'number' || !Number.isFinite(control.max))) {
-      issues.push({ path: `${pathPrefix}[${index}].max`, message: 'max must be a finite number' });
-    }
-    if (!CONTROL_KINDS.has(String(control.kind || ''))) {
-      issues.push({ path: `${pathPrefix}[${index}].kind`, message: 'kind must be a supported control kind' });
-    }
-    if (control.kind === 'enum' && controlEnumValues(control).length === 0) {
-      issues.push({ path: `${pathPrefix}[${index}].enumValues`, message: 'enum controls must declare values' });
-    }
-    if (control.aliases !== undefined && (!Array.isArray(control.aliases) || !control.aliases.every((entry) => typeof entry === 'string'))) {
-      issues.push({ path: `${pathPrefix}[${index}].aliases`, message: 'aliases must be strings' });
-    }
-  });
-  return issues;
 }
 
 function validateConversationHistory(value: unknown): Array<{ path: string; message: string }> {
@@ -152,12 +91,13 @@ function validateCopilotEnvelope(payload: Record<string, unknown>, routeInstance
     if (context.instanceId && context.instanceId !== routeInstanceId) {
       issues.push({ path: 'context.instanceId', message: 'context instance must match the route instance' });
     }
-    if (!Array.isArray(context.controls) || context.controls.length === 0) {
-      issues.push({ path: 'context.controls', message: 'context.controls must be a non-empty array' });
+    if (context.controls !== undefined && !Array.isArray(context.controls)) {
+      issues.push({ path: 'context.controls', message: 'context.controls must be an array when present' });
     }
-    issues.push(...validateControlCatalog(context.controls, 'context.controls'));
-    if (!Array.isArray(context.availableActions) || !context.availableActions.includes('draft_edit')) {
-      issues.push({ path: 'context.availableActions', message: 'draft_edit action must be declared' });
+    if (!Array.isArray(context.availableActions)) {
+      issues.push({ path: 'context.availableActions', message: 'availableActions must be an array' });
+    } else if (context.availableActions.some((entry) => entry !== 'draft_edit')) {
+      issues.push({ path: 'context.availableActions', message: 'availableActions contains an unsupported action' });
     }
     if (!Array.isArray(context.unavailableCapabilities) || !context.unavailableCapabilities.every((entry) => typeof entry === 'string')) {
       issues.push({ path: 'context.unavailableCapabilities', message: 'unavailableCapabilities must be a string array' });
@@ -264,14 +204,22 @@ export async function POST(request: NextRequest, context: RouteContext) {
     });
     if (!executed.ok) {
       const invalidEdit = executed.message.includes(COPILOT_INVALID_EDIT_MESSAGE);
+      const reasonKey =
+        invalidEdit
+          ? 'coreui.errors.copilot.invalidEdit'
+          : executed.reasonKey === 'coreui.errors.copilot.invalidContext' ||
+              executed.reasonKey === 'coreui.errors.copilot.invalidRequest'
+            ? executed.reasonKey
+            : 'coreui.errors.copilot.failed';
       return withSession(
         request,
         NextResponse.json(
           {
             error: {
               kind: 'UPSTREAM_UNAVAILABLE',
-              reasonKey: invalidEdit ? 'coreui.errors.copilot.invalidEdit' : 'coreui.errors.copilot.failed',
+              reasonKey,
               detail: invalidEdit ? COPILOT_INVALID_EDIT_MESSAGE : executed.message,
+              ...(executed.issues?.length ? { issues: executed.issues } : {}),
             },
           },
           { status: executed.status },

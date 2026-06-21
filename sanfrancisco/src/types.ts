@@ -93,7 +93,7 @@ export type AIError =
   | { code: 'GRANT_EXPIRED'; message: string }
   | { code: 'CAPABILITY_DENIED'; message: string }
   | { code: 'BUDGET_EXCEEDED'; message: string }
-  | { code: 'BAD_REQUEST'; message: string; issues?: Array<{ path: string; message: string }> }
+  | { code: 'BAD_REQUEST'; message: string; reasonKey?: string; issues?: Array<{ path: string; message: string }> }
   | { code: 'PROVIDER_ERROR'; message: string; provider: string; upstreamStatus?: number };
 
 export type InteractionEvent = {

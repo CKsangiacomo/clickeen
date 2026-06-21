@@ -241,6 +241,18 @@ linkage fields such as `surfaceId: roma.builder` and the opened `instanceId`
 as the artifact id when forwarding Product Copilot outcomes. Linkage is not
 attribution.
 
+Roma validates current-account and widget authority plus the top-level Copilot
+envelope. It does not duplicate the Product Copilot brain's edit-control
+catalog validation. Invalid edit-control context travels to the Product Copilot
+contract as degraded edit context: conversation may continue, while
+`draft_edit` is unavailable until Bob supplies valid edit controls. Specific
+Copilot context failures are returned to Bob with their reason/issue details
+instead of being collapsed into a generic upstream failure.
+
+Roma does not infer Copilot failure meaning from HTTP status alone. San
+Francisco/Product Copilot must return explicit reason keys for invalid Product
+Copilot requests; provider/upstream failures remain provider/upstream failures.
+
 ## Deploy Plane
 
 Roma is a Cloudflare Pages app with Git-connected deploy from `main`.

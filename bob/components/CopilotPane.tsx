@@ -56,9 +56,25 @@ function copilotReasonKeyMessage(reasonKey: string): string | null {
     return "You've used all your Copilot turns for this month. They reset on the 1st.";
   }
   if (reasonKey === 'coreui.errors.ai.model.notAllowed') return "Copilot couldn't run this model. Try again, or pick another model.";
+  if (reasonKey === 'coreui.errors.copilot.invalidContext') return 'Copilot context is invalid. I can keep talking, but Builder editing is unavailable until the editor context refreshes.';
   if (reasonKey === 'coreui.errors.copilot.invalidEdit') return COPILOT_INVALID_EDIT_MESSAGE;
+  if (reasonKey === 'coreui.errors.copilot.invalidRequest') return 'Copilot request context is invalid. Refresh Builder and try again.';
   if (reasonKey === 'coreui.errors.copilot.failed') return 'Copilot failed unexpectedly. Please try again.';
   return null;
+}
+
+function formatIssueSummary(issues: unknown): string {
+  if (!Array.isArray(issues)) return '';
+  const lines = issues
+    .filter((issue): issue is { path: string; message: string } => {
+      return Boolean(issue) &&
+        typeof issue === 'object' &&
+        typeof (issue as any).path === 'string' &&
+        typeof (issue as any).message === 'string';
+    })
+    .slice(0, 3)
+    .map((issue) => `${issue.path}: ${issue.message}`);
+  return lines.length ? ` (${lines.join('; ')})` : '';
 }
 
 function normalizeErrorMessage(args: { resStatus?: number; parsed?: any; bodyText?: string; fallback?: string }): string {
@@ -70,8 +86,19 @@ function normalizeErrorMessage(args: { resStatus?: number; parsed?: any; bodyTex
       : typeof parsed?.error?.reasonKey === 'string'
         ? parsed.error.reasonKey
         : '';
+  const issueSummary = formatIssueSummary(parsed?.issues ?? parsed?.error?.issues);
+  const detail =
+    typeof parsed?.detail === 'string'
+      ? parsed.detail
+      : typeof parsed?.error?.detail === 'string'
+        ? parsed.error.detail
+        : '';
   const reasonKeyMessage = reasonKey ? copilotReasonKeyMessage(reasonKey) : null;
+  if (reasonKey === 'coreui.errors.copilot.invalidContext' && reasonKeyMessage) {
+    return `${reasonKeyMessage}${issueSummary}`;
+  }
   if (reasonKeyMessage) return reasonKeyMessage;
+  if (detail.trim()) return normalizeAssistantText(`${detail.trim()}${issueSummary}`);
 
   const parsedMessage =
     typeof parsed?.message === 'string'
@@ -82,7 +109,7 @@ function normalizeErrorMessage(args: { resStatus?: number; parsed?: any; bodyTex
           ? parsed.error
           : '';
 
-  const candidate = (parsedMessage || (parsed === null ? bodyText : '') || args.fallback || '').trim();
+  const candidate = (`${parsedMessage || (parsed === null ? bodyText : '') || args.fallback || ''}${issueSummary}`).trim();
   if (!candidate) return 'Copilot failed unexpectedly. Please try again.';
   return normalizeAssistantText(candidate);
 }
@@ -195,7 +222,6 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
   const chrome = useWidgetSessionChrome();
   const copilot = useWidgetSessionCopilot();
   const compiled = session.compiled;
-  const canApplyOps = Boolean(compiled && compiled.controls.length > 0);
 
   const widgetType = compiled?.widgetname ?? null;
   const instanceId = chrome.meta?.instanceId ?? null;
@@ -276,7 +302,7 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
   };
 
   useEffect(() => {
-    if (!threadKey || !compiled || !canApplyOps || !widgetType) return;
+    if (!threadKey || !compiled || !widgetType) return;
     if (thread && thread.messages.length > 0) return;
 
     copilot.setCopilotThread(threadKey, {
@@ -290,7 +316,7 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
         },
       ],
     });
-  }, [threadKey, compiled, canApplyOps, widgetType, thread, copilot, surfaceContract]);
+  }, [threadKey, compiled, widgetType, thread, copilot, surfaceContract]);
 
   useEffect(() => {
     const el = listRef.current;
@@ -305,9 +331,8 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
 
   const uiDisabledReason = useMemo(() => {
     if (!compiled) return 'Load an instance to begin.';
-    if (!canApplyOps) return `Ops are not enabled for "${compiled.widgetname}" yet.`;
     return null;
-  }, [compiled, canApplyOps]);
+  }, [compiled]);
 
   const controlsForAi = useMemo(() => {
     if (!compiled) return [];
@@ -372,7 +397,7 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
     }
 
     let sessionId = copilotSessionId;
-    if (!sessionId && threadKey && compiled && canApplyOps && widgetType) {
+    if (!sessionId && threadKey && compiled && widgetType) {
       sessionId = crypto.randomUUID();
       copilot.setCopilotThread(threadKey, {
         sessionId,
@@ -406,7 +431,7 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
     const requestBaseData = instanceDataRef.current;
     const activeLocale = chrome.meta?.baseLocale;
     const instanceId = chrome.meta?.instanceId;
-    if (!activeLocale || !instanceId || controlsForAi.length === 0) {
+    if (!activeLocale || !instanceId) {
       pushMessage({
         role: 'assistant',
         text: 'Editor context is not ready yet. Wait for Builder boot to complete and try again.',
@@ -427,7 +452,7 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
         activeLocale,
         draftSignature: requestSignature,
         controls: controlsForAi,
-        availableActions: ['draft_edit'],
+        availableActions: controlsForAi.length > 0 ? ['draft_edit'] : [],
         unavailableCapabilities: [
           'saved-product-mutation',
           'publish',

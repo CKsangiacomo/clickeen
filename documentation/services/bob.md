@@ -198,6 +198,12 @@ capabilities, and bounded `conversationHistory` from Bob's browser-memory
 Copilot thread. `showIf`-hidden controls are excluded from the capsule. Widget
 package source is not sent as Copilot prompt context.
 
+Conversational Product Copilot turns require the widget/session orientation,
+but they do not require a valid edit-control catalog. If Builder control
+metadata is invalid or unavailable, Bob still allows the turn so Product
+Copilot can answer, clarify, suggest, refuse, or report an error. Draft edits
+remain unavailable until the edit context is valid.
+
 Bob does not pre-route user language with regex/control matching before the
 agent sees the turn. The Product Copilot brain returns one typed result kind:
 `answer`, `clarification`, `suggestion`, `draft_edit`, `refusal`, or `error`.

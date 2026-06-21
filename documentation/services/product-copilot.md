@@ -86,3 +86,16 @@ mutation authority.
 
 Malformed, missing, forbidden, stale, or oversized context fails visibly. It is
 not silently substituted.
+
+Conversational turns and draft-edit turns have different context requirements.
+The widget/session orientation is required for every turn. The edit-control
+catalog is required only for `draft_edit`. When the edit-control catalog is
+missing, malformed, or invalid, Product Copilot treats draft editing as
+unavailable for that turn and may still return `answer`, `clarification`,
+`suggestion`, `refusal`, or `error`. It must not invent controls, silently drop
+bad controls, or claim an edit succeeded.
+
+Invalid required request context is different from degraded edit context. If
+the required widget/session orientation is missing or malformed, the turn fails
+visibly as an invalid Product Copilot request. If only edit controls are
+invalid, the turn may continue but `draft_edit` is unavailable.

@@ -28,6 +28,7 @@ export async function executeCsWidgetCopilot(
     if (error instanceof ProductCopilotInputError) {
       throw new HttpError(400, {
         code: 'BAD_REQUEST',
+        reasonKey: 'coreui.errors.copilot.invalidRequest',
         message: 'Invalid Product Copilot input',
         issues: error.issues,
       });

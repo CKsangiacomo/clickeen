@@ -51,6 +51,16 @@ const MAX_CONTEXT_PROMPT_CHARS = 18_000;
 const CONTROL_KINDS = new Set(['string', 'number', 'boolean', 'enum', 'color', 'json', 'array', 'object']);
 const PROHIBITED_PATH_SEGMENTS = new Set(['__proto__', 'prototype', 'constructor']);
 const TOKEN_SEGMENT_RE = /^__[^.]+__$/;
+const EDIT_CONTEXT_UNAVAILABLE_MESSAGE = 'Draft editing is unavailable for this turn because Builder sent an invalid edit context. You can still answer conversationally, ask a clarification, suggest next steps, refuse, or return an error.';
+
+type ValidatedProductCopilotInput = {
+  envelope: ProductCopilotRequestEnvelope;
+  editContext: {
+    available: boolean;
+    controls: ProductCopilotControl[];
+    issues: Array<{ path: string; message: string }>;
+  };
+};
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
@@ -209,9 +219,10 @@ function validateConversationHistory(value: unknown): Array<{ path: string; mess
   return issues;
 }
 
-export function validateProductCopilotRequest(input: unknown): asserts input is ProductCopilotRequestEnvelope {
+export function validateProductCopilotRequest(input: unknown): ValidatedProductCopilotInput {
   if (!isRecord(input)) throw new ProductCopilotInputError([{ path: 'input', message: 'input must be an object' }]);
   const issues: Array<{ path: string; message: string }> = [];
+  const editContextIssues: Array<{ path: string; message: string }> = [];
   if (!isExactNonEmptyString(input.instanceId)) issues.push({ path: 'instanceId', message: 'instanceId is required' });
   if (!isExactNonEmptyString(input.sessionId)) issues.push({ path: 'sessionId', message: 'sessionId is required' });
   if (!isExactNonEmptyString(input.userMessage)) issues.push({ path: 'userMessage', message: 'userMessage is required' });
@@ -224,13 +235,17 @@ export function validateProductCopilotRequest(input: unknown): asserts input is 
       if (!isExactNonEmptyString(context[field])) issues.push({ path: `context.${field}`, message: `${field} is required` });
     }
     if (context.instanceId !== input.instanceId) issues.push({ path: 'context.instanceId', message: 'context instance must match envelope instance' });
-    if (!Array.isArray(context.controls) || context.controls.length === 0) {
-      issues.push({ path: 'context.controls', message: 'context.controls must be a non-empty array' });
+    if (!Array.isArray(context.controls)) {
+      editContextIssues.push({ path: 'context.controls', message: 'context.controls must be an array for draft editing' });
+    } else if (context.controls.length === 0) {
+      editContextIssues.push({ path: 'context.controls', message: 'context.controls must contain at least one editable control for draft editing' });
     } else {
-      context.controls.forEach((control, index) => issues.push(...validateControl(control, index)));
+      context.controls.forEach((control, index) => editContextIssues.push(...validateControl(control, index)));
     }
-    if (!Array.isArray(context.availableActions) || !context.availableActions.includes('draft_edit')) {
-      issues.push({ path: 'context.availableActions', message: 'draft_edit action must be declared' });
+    if (!Array.isArray(context.availableActions)) {
+      issues.push({ path: 'context.availableActions', message: 'availableActions must be an array' });
+    } else if (context.availableActions.some((entry) => entry !== 'draft_edit')) {
+      issues.push({ path: 'context.availableActions', message: 'availableActions contains an unsupported action' });
     }
     if (!Array.isArray(context.unavailableCapabilities) || !context.unavailableCapabilities.every((entry) => typeof entry === 'string')) {
       issues.push({ path: 'context.unavailableCapabilities', message: 'unavailableCapabilities must be a string array' });
@@ -241,6 +256,16 @@ export function validateProductCopilotRequest(input: unknown): asserts input is 
   }
   issues.push(...validateConversationHistory(input.conversationHistory));
   if (issues.length) throw new ProductCopilotInputError(issues);
+  const envelope = input as ProductCopilotRequestEnvelope;
+  const controls = editContextIssues.length ? [] : envelope.context.controls;
+  return {
+    envelope,
+    editContext: {
+      available: controls.length > 0 && envelope.context.availableActions.includes('draft_edit'),
+      controls,
+      issues: editContextIssues,
+    },
+  };
 }
 
 function serializePromptValue(value: unknown): string {
@@ -268,7 +293,20 @@ function controlLine(control: ProductCopilotControl): string {
   return `- ${control.path}${extras.length ? ` | ${extras.join(' | ')}` : ''} | current=${serializePromptValue(control.currentValue)}`;
 }
 
-function buildContextPrompt(context: ProductCopilotContextCapsule, userMessage: string): string {
+function formatIssue(issue: { path: string; message: string }): string {
+  return `${issue.path}: ${issue.message}`;
+}
+
+function buildContextPrompt(
+  context: ProductCopilotContextCapsule,
+  userMessage: string,
+  editContext: ValidatedProductCopilotInput['editContext'],
+): string {
+  const availableActions = editContext.available ? context.availableActions.join(', ') : '[none]';
+  const unavailableCapabilities = [
+    ...context.unavailableCapabilities,
+    ...(editContext.available ? [] : ['draft-edit-context-invalid']),
+  ];
   const payload = [
     `User request: ${userMessage}`,
     '',
@@ -279,11 +317,15 @@ function buildContextPrompt(context: ProductCopilotContextCapsule, userMessage: 
     `- activeLocale: ${context.activeLocale}`,
     `- draftSignature: ${context.draftSignature}`,
     `- selectedControlPath: ${context.selectedControlPath ?? '[none]'}`,
-    `- availableActions: ${context.availableActions.join(', ')}`,
-    `- unavailableCapabilities: ${context.unavailableCapabilities.length ? context.unavailableCapabilities.join(', ') : '[none]'}`,
+    `- availableActions: ${availableActions}`,
+    `- unavailableCapabilities: ${unavailableCapabilities.length ? unavailableCapabilities.join(', ') : '[none]'}`,
     '',
-    'Editable draft controls:',
-    context.controls.map(controlLine).join('\n'),
+    editContext.available
+      ? 'Editable draft controls:'
+      : 'Editable draft controls are unavailable for this turn.',
+    editContext.available
+      ? editContext.controls.map(controlLine).join('\n')
+      : `Reason: ${editContext.issues.length ? editContext.issues.map(formatIssue).join('; ') : 'No editable controls were available.'}`,
   ].join('\n');
   if (payload.length > MAX_CONTEXT_PROMPT_CHARS) {
     throw new ProductCopilotInputError([{ path: 'context', message: 'context capsule is too large for this turn' }]);
@@ -336,7 +378,10 @@ function parseJsonObject(text: string): Record<string, unknown> | null {
   }
 }
 
-function validateModelResponse(value: Record<string, unknown> | null, controls: ProductCopilotControl[]): {
+function validateModelResponse(
+  value: Record<string, unknown> | null,
+  editContext: ValidatedProductCopilotInput['editContext'],
+): {
   ok: true;
   response: ProductCopilotResponse;
 } | {
@@ -353,10 +398,11 @@ function validateModelResponse(value: Record<string, unknown> | null, controls: 
   const draftEdit = isRecord(value.draftEdit) ? value.draftEdit : null;
   const rawOps = draftEdit?.ops;
   if (kind === 'draft_edit') {
+    if (!editContext.available) return { ok: false, message: EDIT_CONTEXT_UNAVAILABLE_MESSAGE };
     if (!Array.isArray(rawOps) || rawOps.length === 0) return { ok: false, message: 'draft_edit requires non-empty draftEdit.ops.' };
     if (!rawOps.every(isWidgetOp)) return { ok: false, message: 'draftEdit.ops contains malformed operations.' };
     for (const [index, op] of rawOps.entries()) {
-      const issue = validateOpAgainstControls(op, index, controls);
+      const issue = validateOpAgainstControls(op, index, editContext.controls);
       if (issue) return { ok: false, message: issue };
     }
     return {
@@ -399,9 +445,9 @@ export async function executeProductCopilot(args: {
   input: unknown;
   executeModel: ProductCopilotModelExecutor;
 }): Promise<ProductCopilotExecutionResult> {
-  validateProductCopilotRequest(args.input);
-  const input = args.input;
-  const contextPrompt = buildContextPrompt(input.context, input.userMessage);
+  const validatedInput = validateProductCopilotRequest(args.input);
+  const input = validatedInput.envelope;
+  const contextPrompt = buildContextPrompt(input.context, input.userMessage, validatedInput.editContext);
   const messages: ProductCopilotModelMessage[] = [
     { role: 'system', content: buildSystemPrompt(input.context.activeLocale) },
     ...(input.conversationHistory ?? []).map((message) => ({ role: message.role, content: message.text }) as ProductCopilotModelMessage),
@@ -409,7 +455,7 @@ export async function executeProductCopilot(args: {
   ];
 
   const first = await args.executeModel({ messages, temperature: 0.2 });
-  const firstParsed = validateModelResponse(parseJsonObject(first.content), input.context.controls);
+  const firstParsed = validateModelResponse(parseJsonObject(first.content), validatedInput.editContext);
   if (firstParsed.ok) {
     return {
       result: {
@@ -429,7 +475,7 @@ export async function executeProductCopilot(args: {
     },
   ];
   const second = await args.executeModel({ messages: retryMessages, temperature: 0.2 });
-  const secondParsed = validateModelResponse(parseJsonObject(second.content), input.context.controls);
+  const secondParsed = validateModelResponse(parseJsonObject(second.content), validatedInput.editContext);
   if (secondParsed.ok) {
     return {
       result: {
@@ -446,9 +492,15 @@ export async function executeProductCopilot(args: {
     };
   }
 
+  const editContextBlocked =
+    !validatedInput.editContext.available &&
+    (firstParsed.message === EDIT_CONTEXT_UNAVAILABLE_MESSAGE ||
+      secondParsed.message === EDIT_CONTEXT_UNAVAILABLE_MESSAGE);
   const response: ProductCopilotResponse = {
     kind: 'error',
-    message: "Copilot couldn't produce a valid response for this turn. Nothing was changed.",
+    message: editContextBlocked
+      ? "I can keep talking, but I can't edit this widget right now because Builder edit context is invalid. Nothing was changed."
+      : "Copilot couldn't produce a valid response for this turn. Nothing was changed.",
   };
   return {
     result: {

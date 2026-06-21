@@ -12,6 +12,8 @@ type EvalCase = {
   id: string;
   prompt: string;
   expectedKind: ProductCopilotOutputKind;
+  invalidEditContext?: boolean;
+  expectedMessageIncludes?: string;
   expectedValidationRetryCount?: number;
   expectedOps?: ProductCopilotWidgetOp[];
   modelResponses: unknown[];
@@ -37,7 +39,16 @@ function baseInput(testCase: EvalCase): ProductCopilotRequestEnvelope {
       displayName: 'Big Bang',
       activeLocale: 'en',
       draftSignature: `draft-${testCase.id}`,
-      controls: [
+      controls: testCase.invalidEditContext ? [
+        {
+          path: 'content.title',
+          panelId: 'content',
+          type: 'textfield',
+          kind: 'unknown',
+          label: 'Title',
+          currentValue: 'Old title',
+        },
+      ] as any : [
         {
           path: 'content.title',
           panelId: 'content',
@@ -90,6 +101,9 @@ async function runCase(testCase: EvalCase): Promise<void> {
 
   if (execution.result.kind !== testCase.expectedKind) {
     throw new Error(`[${testCase.id}] expected ${testCase.expectedKind}, got ${execution.result.kind}`);
+  }
+  if (testCase.expectedMessageIncludes && !execution.result.message.includes(testCase.expectedMessageIncludes)) {
+    throw new Error(`[${testCase.id}] expected message to include "${testCase.expectedMessageIncludes}", got "${execution.result.message}"`);
   }
   const actualRetryCount = execution.result.meta?.validationRetryCount ?? 0;
   const expectedRetryCount = testCase.expectedValidationRetryCount ?? 0;

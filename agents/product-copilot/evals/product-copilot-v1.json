@@ -90,6 +90,54 @@
           "message": "Which part should I make stronger: the title, the button, or the supporting copy?"
         }
       ]
+    },
+    {
+      "id": "conversation-survives-invalid-edit-context",
+      "prompt": "What can you do?",
+      "invalidEditContext": true,
+      "expectedKind": "answer",
+      "modelResponses": [
+        {
+          "kind": "answer",
+          "message": "I can help with copy, layout ideas, and product guidance. Editing is temporarily unavailable because the Builder edit context is invalid."
+        }
+      ]
+    },
+    {
+      "id": "draft-edit-blocked-with-invalid-edit-context",
+      "prompt": "Change the title to Hello Riviera",
+      "invalidEditContext": true,
+      "expectedKind": "error",
+      "expectedMessageIncludes": "Builder edit context is invalid",
+      "expectedValidationRetryCount": 1,
+      "modelResponses": [
+        {
+          "kind": "draft_edit",
+          "message": "I changed it.",
+          "draftEdit": {
+            "ops": [
+              {
+                "op": "set",
+                "path": "content.title",
+                "value": "Hello Riviera"
+              }
+            ]
+          }
+        },
+        {
+          "kind": "draft_edit",
+          "message": "I changed it.",
+          "draftEdit": {
+            "ops": [
+              {
+                "op": "set",
+                "path": "content.title",
+                "value": "Hello Riviera"
+              }
+            ]
+          }
+        }
+      ]
     }
   ]
 }

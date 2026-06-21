@@ -245,7 +245,7 @@ export async function executeCopilotOnSanFrancisco(args: {
   requestId?: string | null;
 }): Promise<
   | { ok: true; requestId: string; result: unknown }
-  | { ok: false; status: number; message: string }
+  | { ok: false; status: number; message: string; reasonKey?: string; issues?: Array<{ path: string; message: string }> }
 > {
   const baseUrl = resolveSanfranciscoBaseUrl().replace(/\/+$/, '');
   let res: Response;
@@ -278,7 +278,16 @@ export async function executeCopilotOnSanFrancisco(args: {
         : typeof payload?.message === 'string'
           ? payload.message
           : summarizeUpstreamError({ serviceName: 'SanFrancisco', baseUrl, status: res.status, bodyText: text });
-    return { ok: false, status: res.status, message };
+    const issues = Array.isArray(payload?.error?.issues)
+      ? payload.error.issues.filter((issue: unknown): issue is { path: string; message: string } => {
+          return Boolean(issue) &&
+            typeof issue === 'object' &&
+            typeof (issue as any).path === 'string' &&
+            typeof (issue as any).message === 'string';
+        })
+      : undefined;
+    const reasonKey = typeof payload?.error?.reasonKey === 'string' ? payload.error.reasonKey : undefined;
+    return { ok: false, status: res.status, message, ...(reasonKey ? { reasonKey } : {}), ...(issues?.length ? { issues } : {}) };
   }
 
   return {
