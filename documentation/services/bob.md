@@ -211,6 +211,14 @@ Bob remains the owner of the open working copy, model-visible Product Copilot
 thread context, terminal draft validation, and reversible draft apply.
 San Francisco does not store Product Copilot thread state.
 
+Product Copilot model picker state is display/input state only. Bob renders the
+model options and default model that Roma sends in the Builder-open payload.
+Bob sends a `selectedModel` override only when Roma explicitly set
+`allowModelPicker: true`; when no picker is allowed, Bob sends no selected model
+and Roma/San Francisco use the policy default. Bob does not own model lists,
+model availability, provider keys, runtime conformance evidence, or fallback
+selection.
+
 When San Francisco returns valid edit ops, Bob applies them immediately to the
 browser-memory working copy and preview through the same in-memory op path used
 by manual controls. Bob stores one inverse op set for a one-turn Undo. This does

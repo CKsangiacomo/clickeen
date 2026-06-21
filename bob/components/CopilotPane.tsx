@@ -51,6 +51,10 @@ function normalizeAssistantText(text: string): string {
 
 const COPILOT_INVALID_EDIT_MESSAGE = "Copilot couldn't produce a valid edit for this widget. Nothing was changed.";
 
+function copilotModelKey(model: { provider: string; model: string }): string {
+  return `${model.provider}:${model.model}`;
+}
+
 function copilotReasonKeyMessage(reasonKey: string): string | null {
   if (reasonKey === 'coreui.upsell.reason.limitReached') {
     return "You've used all your Copilot turns for this month. They reset on the 1st.";
@@ -252,24 +256,27 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
   const thread = threadKey ? copilot.copilotThreads?.[threadKey] ?? null : null;
   const messages = useMemo(() => thread?.messages ?? [], [thread?.messages]);
   const copilotSessionId = thread?.sessionId ?? '';
+  const allowModelPicker = chrome.copilot?.allowModelPicker === true;
   const modelOptions = useMemo(() => chrome.copilot?.modelOptions ?? [], [chrome.copilot?.modelOptions]);
   const defaultModel = chrome.copilot?.selectedModel ?? chrome.copilot?.defaultModel ?? null;
   const selectedModel = useMemo(() => {
-    const key = selectedModelKey || (defaultModel ? `${defaultModel.provider}:${defaultModel.model}` : '');
-    return modelOptions.find((option) => `${option.provider}:${option.model}` === key) ?? defaultModel;
-  }, [defaultModel, modelOptions, selectedModelKey]);
+    if (!allowModelPicker) return null;
+    const key = selectedModelKey || (defaultModel ? copilotModelKey(defaultModel) : '');
+    if (!key) return null;
+    return modelOptions.find((option) => copilotModelKey(option) === key) ?? null;
+  }, [allowModelPicker, defaultModel, modelOptions, selectedModelKey]);
 
   useEffect(() => {
-    if (!defaultModel) {
+    if (!allowModelPicker || !defaultModel) {
       setSelectedModelKey('');
       return;
     }
-    const defaultKey = `${defaultModel.provider}:${defaultModel.model}`;
+    const defaultKey = copilotModelKey(defaultModel);
     setSelectedModelKey((current) => {
-      if (current && modelOptions.some((option) => `${option.provider}:${option.model}` === current)) return current;
-      return defaultKey;
+      if (current && modelOptions.some((option) => copilotModelKey(option) === current)) return current;
+      return modelOptions.some((option) => copilotModelKey(option) === defaultKey) ? defaultKey : '';
     });
-  }, [defaultModel, modelOptions]);
+  }, [allowModelPicker, defaultModel, modelOptions]);
 
   useEffect(() => {
     instanceDataRef.current = session.instanceData;
@@ -471,7 +478,7 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...envelope,
-          ...(selectedModel ? { selectedModel } : {}),
+          ...(allowModelPicker && selectedModel ? { selectedModel } : {}),
         }),
       });
 
@@ -652,7 +659,7 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
           background: 'var(--color-system-white)',
         }}
       >
-        {chrome.copilot?.allowModelPicker && modelOptions.length > 1 ? (
+        {allowModelPicker && modelOptions.length > 1 ? (
           <div style={{ marginBottom: 'var(--space-2)' }}>
             <select
               className="body-s"
@@ -670,7 +677,7 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
               }}
             >
               {modelOptions.map((option) => {
-                const key = `${option.provider}:${option.model}`;
+                const key = copilotModelKey(option);
                 return (
                   <option key={key} value={key}>
                     {option.label}
