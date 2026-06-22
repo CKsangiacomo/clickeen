@@ -6,6 +6,31 @@ It contains current system truth only. Detailed service behavior, PRD records,
 execution notes, migrations, and deep implementation detail live in the linked
 service, architecture, widget, and migration files.
 
+## What Clickeen Is
+
+Clickeen is an agent-operated product, not a SaaS with AI features.
+
+The system is deliberately lean and built on a structured, AI-legible schema so
+that agents operate it directly. Agents are smart operators: they know what to
+do, where, and how, and they execute operations on the structured substrate.
+The codebase is the operable surface; the agents operating it are the product.
+
+This is Clickeen's moat. Legacy SaaS and incumbents have large complex
+codebases operated by humans through UIs/APIs, with AI bolted on as a feature.
+Clickeen inverts that. Incumbents cannot replicate it without rebuilding from
+zero.
+
+How the system is organized for agent-operability:
+
+- a structured, typed, AI-legible schema (widget specs, compiled control/field
+  maps, the locale-overlay model, `baseContentMarker` / `widgetContractHash`)
+  that agents read and operate;
+- product-law ownership boundaries (Roma = account/authority, Bob = draft,
+  Tokyo = storage, San Francisco = governed model execution) so agents operate
+  inside known authority instead of rediscovering it;
+- agent homes under `agents/<name>` — the operators;
+- San Francisco — the governed model-execution engine the agents call.
+
 ## System Is Simple
 
 - Widgets are software and live in the system.

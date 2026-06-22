@@ -4,6 +4,41 @@ This repo is an AI-native build. Agents win here by following current product
 truth, executing through named authorities, and leaving documentation sharper
 than they found it.
 
+## What This System Is
+
+Clickeen is an agent-operated product. This is the premise; read it before
+anything below.
+
+The codebase is deliberately lean and built around a structured, AI-legible
+schema so that agents can operate the system directly. Agents are the
+operators — they know what to do, where, and how, and they execute operations
+on the structured substrate. Agents are not features bolted onto a SaaS. The
+intelligence lives in the agents, not in hardcoded pipelines.
+
+This is the moat. Legacy SaaS and incumbents have large, complex codebases that
+humans operate through UIs and APIs, with AI added as a feature. Clickeen is the
+opposite: a lean, schema-structured, AI-legible system that agents operate.
+That operability is what competitors cannot copy without rebuilding from zero.
+
+For any agent (AI or human) working in this tree:
+
+- The first instinct is: keep the system lean and agent-operable. A change
+  either increases agent-operability or adds legacy weight.
+- A hardcoded flow with an AI call in the middle (service A calls service B,
+  validates, writes) is a legacy pipeline, not an agent. Do not build it and
+  call it an agent.
+- Do not add framework machinery, compatibility wrappers, broad registries,
+  phasing labels ("V1", "floor", "ship the wire first"), or ceremony. These
+  turn this into a legacy SaaS and destroy the moat.
+- The structured schema (widget specs, control/field maps, the overlay model,
+  markers, product-law ownership boundaries) is the substrate agents operate.
+  Keep it structured, typed, and AI-legible.
+- When unsure: does this change let a smart agent operate the system better, or
+  does it hardcode a human-written flow around a model call? Prefer the former.
+
+The gates and discipline below exist to protect agent-operability — not to
+manage a legacy codebase.
+
 ## Read Order
 
 Before touching product-path code or data, read:
