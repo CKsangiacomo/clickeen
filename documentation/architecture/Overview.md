@@ -65,7 +65,7 @@ Generated/public artifacts are written only by artifact builders.
 | Widget definitions | Approved widget source under `tokyo/product/widgets/{widgetType}/` read by widget-definition operations | Generated manifests are not source authority. |
 | Account instance source | Tokyo account instance operations over `instance.config.json` and `instance.content.json` | `instance.json` is not written or read by active runtime code. |
 | Account instance listing | `listAccountInstances` | Any account index file is a private cache below the operation, not a Roma API. |
-| Translations | Roma account command boundary; San Francisco must own any future async generation endpoint | Locale values live under `overlays/locales/{locale}.json`; Tokyo-worker stores exact overlay files only. |
+| Translations | Roma account command boundary; Translation Agent Worker calls San Francisco /v1/model/chat and writes overlays via Tokyo-worker | Locale values live under `overlays/locales/{locale}.json`; Tokyo-worker stores exact overlay files only. |
 | Publish state | Tokyo publish/unpublish operations and publish status | Generated files are output, not the state machine. |
 | Public serving | `clk.live/{accountPublicId}/{instanceId}` serving stored package artifacts from R2/CDN | Missing artifacts fail visibly; visitor requests do not read Supabase or compose widgets from authoring source. |
 
@@ -146,7 +146,7 @@ Pages fallback hosts are platform defaults, not canonical product hosts. Bob and
 | **R2**            | Tokyo (assets), San Francisco (raw logs)                  | Cheap object storage, zero egress for CDN patterns       |
 | **KV**            | San Francisco (sessions), Atlas (read-only runtime cache) | Hot key/value state, TTLs                                |
 | **D1**            | San Francisco (indexes)                                   | Queryable learning metadata; low-ops SQL                 |
-| **Queues**        | San Francisco                                             | Non-blocking logging/ingestion; keep request path fast   |
+| **Queues** | San Francisco (log writes only) | Non-blocking log writes only; not used for product work or async generation |
 | **Cron Triggers** | San Francisco (later)                                     | Scheduled analysis/maintenance without extra infra       |
 
 ### Resource naming conventions (dev/prod split)
@@ -279,7 +279,7 @@ They may be served by Tokyo-worker through friendly public routes, but Roma, Tok
 
 **Hard security rule:**
 
-- There is no shared-secret bearer lane for product or internal AI execution. Roma Copilot/outcomes and Prague string translation use HMAC-signed request bodies. Account-widget translation generation currently returns unavailable until San Francisco owns a real async generation endpoint.
+- There is no shared-secret bearer lane for product or internal AI execution. Roma Copilot/outcomes and Prague string translation use HMAC-signed request bodies. The Translation Agent now has its own Worker home; Roma account-widget generation remains disabled until Roma is wired to call that Worker. The Worker calls San Francisco `/v1/model/chat` for governed model execution and writes translated locale values through Tokyo-worker.
 
 **DB Pivot Supabase rule:**
 
@@ -348,9 +348,10 @@ Non-negotiable:
     backend surface.
   - Roma Copilot/outcome and Prague string-translation calls use HMAC body
     signatures. Roma -> Tokyo/Tokyo-worker account product control uses private
-    Cloudflare service bindings. Account-widget translation generation currently
-    returns unavailable until San Francisco owns a real async generation
-    endpoint.
+    Cloudflare service bindings. The Translation Agent has its own Worker home;
+    Roma account-widget generation remains disabled until Roma is wired to call
+    that Worker. The Worker calls San Francisco `/v1/model/chat` and writes
+    translated locale values through Tokyo-worker.
 - **Caching**:
   - Tokyo deploy-managed media is long-cacheable when versioned; avoid cache on widget `spec.json` when iterating in dev.
   - Public embed serving returns generated static files from `clk.live/{accountPublicId}/{instanceId}`.
@@ -420,7 +421,7 @@ Copilot execution is a separate, budgeted flow that never exposes provider keys 
 │                                                                         │
 │  Account-mode Builder:                                                  │
 │    Browser UI (Bob iframe) → Roma instance-scoped copilot route         │
-│    → Product Copilot Worker /v1/execute                                  │
+│    → Product Copilot Worker (its own /v1/execute)                        │
 │    → SanFrancisco /v1/model/chat                                         │
 │                                                                         │
 │  Outcomes (keep/undo/CTA clicks):                                       │

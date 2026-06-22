@@ -21,7 +21,7 @@ Roma owns the current-account product shell:
 - account widget instance commands
 - account page commands
 - account asset commands
-- Builder host orchestration
+- Builder host flow
 - team, billing, usage, AI, profile, and settings surfaces
 
 Bob is the editor. Tokyo-worker is the R2 boundary. Berlin owns auth and account
@@ -123,13 +123,15 @@ and public serving can reject mixed package state deterministically.
 
 Translation generation is a separate explicit operation from the Translations
 panel. Roma resolves the current account active locales for that command, but
-generation is currently unavailable until San Francisco owns a real async
-generation endpoint. Roma fails that command visibly instead of routing it
-through Tokyo-worker.
+generation remains unavailable until Roma is wired to the Translation Agent
+Worker. Roma fails that command visibly instead of routing it through
+Tokyo-worker. In 121D, Roma mints a translation grant and calls the Translation
+Agent Worker, which calls San Francisco `/v1/model/chat` and writes overlays via
+Tokyo-worker.
 
 Roma Builder owns public widget copy actions for the current account and opened
 instance. It builds the public URL and iframe/script snippets from the current
-account public id, the concrete instance id, the configured public-serving
+account public id, the exact instance id, the configured public-serving
 origin, and the publish status returned by the Builder-open envelope.
 Unpublished instances do not expose copyable public code.
 

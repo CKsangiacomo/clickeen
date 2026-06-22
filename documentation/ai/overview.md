@@ -39,10 +39,11 @@ Product Copilot brain/runtime code lives in the isolated
 `agents/product-copilot/` Cloudflare Worker. Bob/Roma invoke it for Builder
 turns; San Francisco only executes its governed model calls.
 
-Translation Agent brain code lives in `agents/translation-agent/`. Its current
-diagnostic execution path still runs through San Francisco and is realigned in
-the Translation Agent slice; product workflows own overlay acceptance and
-storage.
+Translation Agent brain/runtime code lives in the isolated
+`agents/translation-agent/` Cloudflare Worker. Roma wiring is still in 121D
+execution, but the agent home exists: it calls San Francisco `/v1/model/chat`
+and writes overlays via Tokyo-worker. San Francisco stays the model execution
+boundary. Product paths own overlay acceptance and storage.
 
 At GA scale (100s of widgets, millions of installs), San Francisco must be **isolated** from:
 - product/auth/persistence authority in Roma/Berlin/Tokyo
@@ -62,7 +63,7 @@ Boundary (explicit ownership):
 - Model/provider execution and runtime policy enforcement live in San Francisco.
   Product-specific agent brains live in their own homes.
 
-### San Francisco (Execution + Orchestration)
+### San Francisco (Model Execution)
 San Francisco is the **AI engine and model-execution boundary**.
 - Holds provider keys
 - Chooses provider/model for a given **Agent** within the constraints of the **AI Grant**
@@ -102,11 +103,10 @@ Widget copilot routing (shipped):
   - `cs.widget.copilot.v1`: Product Copilot in Builder, using the isolated
     `product-copilot` brain and Bob-owned draft validation/apply.
 
-Deployment status (code-synced on February 26, 2026; last cloud-dev smoke notes from February 11, 2026):
+Deployment status:
 - Local + cloud-dev target behavior: browser calls `POST /api/account/instances/:instanceId/copilot` on Roma.
-- Verified post-deploy routing on cloud-dev:
-  - account Builder requests execute through Roma instance routes
-  - widget-copilot alias resolves to CS on the live product path
+- Account Builder requests execute through Roma instance routes.
+- widget-copilot alias resolves to the Product Copilot Worker on the live product path.
 
 ## Why This Separation Exists (GA Reality)
 At scale, AI workloads are bursty, slow, and failure-prone; instance APIs must remain boring and stable.
@@ -156,12 +156,13 @@ San Francisco is deployed as a **Cloudflare Worker** and currently ships:
 - `POST /v1/model/chat` (requires a Clickeen-signed AI Grant)
 - `POST /v1/execute` (deprecated; returns visible 410)
 - `POST /v1/outcome` (outcome attach, signed by the calling Clickeen backend surface)
-- Account-widget l10n generation currently returns unavailable until San
-  Francisco owns a real async generation endpoint.
+- Account-widget l10n generation currently returns the `generationUnavailable`
+  stub until Roma is wired to the Translation Agent Worker. That Worker calls
+  San Francisco `/v1/model/chat` and writes overlays via Tokyo-worker.
 - `POST /v1/l10n/translate` (local + cloud-dev only; HMAC body signature; `ENVIRONMENT in {local,dev}`)
 - Cloudflare bindings:
   - `SF_KV` (San Francisco-owned state needs; Product Copilot sessions are not stored in San Francisco KV)
-  - `SF_EVENTS` (queue for async event ingestion)
+  - `SF_EVENTS` (event sink for ingestion)
   - `SF_D1` (queryable indexes)
   - `SF_R2` (raw event storage)
 - AI surfaces currently recognized by the worker:
@@ -169,7 +170,7 @@ San Francisco is deployed as a **Cloudflare Worker** and currently ships:
   - `widget.instance.translator`
 
 This matters because the trace/eval foundation is not theoretical: every
-`/v1/model/chat` call enqueues an `InteractionEvent`, and the queue consumer writes
+`/v1/model/chat` call emits an `InteractionEvent`, and San Francisco writes
 eligible raw payloads to R2 + indexes a small subset into D1. Captured traces do
 not mutate prompts, models, tools, or policy without eval/review/release.
 
@@ -297,9 +298,10 @@ Response:
 
 Behavior:
 - verifies grant signature + expiry
-- asserts capability `agent:${agentId}` (aliases are resolved to canonical IDs)
+- requires the request `agentId` to match the signed grant `ai.agentId`
+- asserts capability `agent:${agentId}` after canonical resolution
 - executes the provider/model call under the signed runtime policy
-- enqueues an `InteractionEvent` into `SF_EVENTS` (non-blocking)
+- emits an `InteractionEvent` into `SF_EVENTS` (non-blocking)
 
 #### `POST /v1/outcome`
 Attach post-execution outcomes (UX decisions, conversions) that San Francisco cannot infer.
@@ -322,11 +324,11 @@ Phase-1 shipped surface:
 - San Francisco returns model content plus usage metadata; the agent home
   returns the typed agent result.
 
-GA roadmap (still behind the same interface):
-- Agent registry (configs in code or a San Francisco-owned store)
-- Provider/model selection rules per agent (explicit, versioned)
-- Tool allowlists per agent (e.g. `tool:analyzeUrl`, `tool:searchDocs`)
-- Background execution for operational agents (queues/workers)
+GA direction (still behind the same `/v1/model/chat` interface): keep agents as
+lean Worker homes that call San Francisco for governed model execution. No
+generic agent registry, no per-agent tool allowlists, and no San
+Francisco-owned background execution system. Operational agents ship as their
+own Worker homes, not as pipelines inside San Francisco.
 
 ## Limits (Product Policy vs San Francisco)
 
@@ -357,7 +359,8 @@ San Francisco applies a per-isolate in-flight cap to fail fast under load.
 If the cap is exceeded, the worker returns `429` with `BUDGET_EXCEEDED` (this prevents tail-latency collapse).
 
 ### Event ingestion (best-effort by design)
-Execution responses must not block on logging/indexing. The queue pipeline is intentionally best-effort:
+Execution responses must not block on logging/indexing. Event ingestion is
+intentionally best-effort:
 - failures are logged to console
 - execution still returns a structured result
 

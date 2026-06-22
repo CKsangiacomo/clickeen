@@ -1,6 +1,6 @@
 # Clickeen Babel Protocol
 
-Status: Active protocol. Generic widget text extraction is owned by `Execution_Pipeline_Docs/01-Planning/103J__PRD__Generic_Widget_Translation_System.md`; saved-base-content translation sync is owned by `Execution_Pipeline_Docs/01-Planning/103K__PRD__Saved_Base_Content_Translation_Sync.md`.
+Status: Active protocol. Generic widget text extraction is owned by `Execution_Pipeline_Docs/03-Executed/103_Translation_Field_And_Agent_Contract_Batch/103J__PRD__Generic_Widget_Translation_System.md`; saved-base-content translation sync is owned by `Execution_Pipeline_Docs/03-Executed/103_Translation_Workflow_And_Sync_Batch/103K__PRD__Saved_Base_Content_Translation_Sync.md`.
 
 Babel is Clickeen's translated-locale value protocol for account widgets. It is not a separate translation schema, a runtime fallback system, a selected-pointer system, or a storage locator layer.
 
@@ -11,8 +11,10 @@ Builder edits one account-owned widget instance in the account base locale.
 After save, translated locale values are explicit account work from the
 Translations panel. Tokyo-worker currently stores, reads, and lists exact
 translated-locale overlay files only. Roma returns translation generation
-unavailable until San Francisco owns a real async generation endpoint and
-operation state. Public widget package bytes are public artifacts, not source
+unavailable until Roma is wired to the Translation Agent Worker. In 121D, Roma
+mints a grant, the Translation Agent Worker calls San Francisco
+`/v1/model/chat`, and writes overlays via Tokyo-worker. San Francisco owns model
+execution only. Public widget package bytes are public artifacts, not source
 truth, and are not rebuilt from overlays during visitor serving or publish.
 
 ## Source Of Text Truth
@@ -23,7 +25,7 @@ Each widget declares its editable/translatable field graph once in:
 tokyo/product/widgets/{widgetType}/editable-fields.json
 ```
 
-Repeatable declaration paths are extraction instructions inside the product boundary. Producer payloads always contain concrete paths:
+Repeatable declaration paths are extraction instructions inside the product boundary. Producer payloads always contain exact paths:
 
 ```json
 {
@@ -37,9 +39,9 @@ No producer receives wildcard, glob, template, or sidecar paths.
 
 For a given saved `instance.content.json` and widget editable-field contract:
 
-1. The saved instance content and widget editable-field contract provide the required concrete text primitive paths.
+1. The saved instance content and widget editable-field contract provide the required exact text primitive paths.
 2. Roma owns the user-facing generation command and account active-locale lookup.
-3. Until San Francisco owns generation, Roma returns `coreui.errors.translation.generationUnavailable`.
+3. Until Roma is wired to the Translation Agent Worker, Roma returns `coreui.errors.translation.generationUnavailable`.
 4. Tokyo-worker stores exact overlay value maps that Roma submits through the storage route.
 5. Tokyo-worker rejects malformed overlay value maps before writing them.
 
@@ -83,15 +85,16 @@ Manual translation edits are temporary overrides of the current translated value
 ## Tokyo PBX Rule
 
 Tokyo-worker stores and reads translated locale value artifacts through named
-storage operations. San Francisco must own translated-value generation before
-generation is enabled again.
+storage operations. Translation Agent has its own Worker home; generation is
+enabled only after Roma is wired to that Worker. San Francisco stays the model
+execution boundary the Translation Agent calls.
 
 Tokyo-worker must not:
 
 - Expose private storage object IDs as locale identity.
-- Orchestrate San Francisco work from Roma-side storage walks.
+- Start San Francisco work from Roma-side storage walks.
 - Repair values it accepted.
-- Maintain generation queues, ledgers, operation snapshots, or completion state.
+- Maintain generation ledgers, operation snapshots, or completion state.
 - Preserve old l10n route or path shapes.
 - Preserve old account/widget storage grouping shapes.
 

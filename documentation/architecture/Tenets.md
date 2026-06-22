@@ -47,7 +47,9 @@
 
 ## Tenet 0: Clickeen Is an Editing Platform
 
-Clickeen exists to **edit and customize widgets**. Users make choices, and those choices are saved exactly as made.
+Clickeen is an agent-operated product, not a SaaS with AI features. Agents are smart operators that know what to do, where, and how, and they operate a lean, structured, AI-legible schema directly. This is the moat: incumbents and legacy SaaS have large codebases operated by humans through UIs and APIs with AI bolted on; Clickeen inverts that, and competitors cannot copy it without rebuilding from zero.
+
+Within that agent-operated system, Clickeen exists to **edit and customize widgets**. Users make choices, and those choices are saved exactly as made.
 
 ### Why This Matters
 
@@ -430,7 +432,7 @@ These panels ensure consistency across all widgets. Widget developers use the st
 | Tenet | One-liner |
 |-------|-----------|
 | **0** | No fallbacks for instance config/identity |
-| **1** | 5 widget files = complete truth |
+| **1** | Widget files (core runtime + contract) = complete truth |
 | **2** | Orchestrators are dumb pipes |
 | **3** | System fails visibly |
 | **4** | All styling uses Dieter tokens |

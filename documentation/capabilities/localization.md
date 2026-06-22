@@ -1,6 +1,6 @@
 # Localization Capability
 
-Status: PRD 105 instance-folder/runtime model. Saved-base-content translation sync is current marker-based behavior, not job-lineage truth.
+Status: PRD 105 instance-folder/runtime model. Translation generation is still disabled from Roma (`generationUnavailable`) until Roma is wired to call the Translation Agent Worker. The generation owner is Translation Agent as its own Worker, not San Francisco.
 
 Localization translates account-instance content values into translated locale values. It is not a storage-object protocol, a runtime fallback system, or a second widget source model.
 
@@ -10,10 +10,9 @@ Localization translates account-instance content values into translated locale v
 - Locale is not base instance identity.
 - Product identity for account-widget translation is `instanceId + locale`.
 - Storage object names, overlay IDs, generated filenames, and private R2 keys are not product identity.
-- The translated value body is an exact path/value map.
-- Translation sync is determined by whether translated values were generated from the current saved base content marker.
+- The translated value body is an exact path/value map for one locale.
 
-There is no account-widget `localization.json`, layer sidecar, text pack, selected-locale pointer, or compatibility bridge to old pre-GA l10n storage. The saved base content marker is private Tokyo operation state for sync; it is not a public storage identity or widget source model.
+There is no account-widget `localization.json`, layer sidecar, text pack, selected-locale pointer, extra operation file, or compatibility bridge to old pre-GA l10n storage.
 
 ## Canonical Locale Registry
 
@@ -60,14 +59,14 @@ Each widget declares customer-visible editable/translatable fields in:
 tokyo/product/widgets/{widgetType}/editable-fields.json
 ```
 
-Collection declarations are extraction instructions only. They are expanded against `instance.content.json` into concrete paths such as:
+Collection declarations are extraction instructions only. They are expanded against `instance.content.json` into exact content paths such as:
 
 ```txt
 sections.0.faqs.0.question
 sections.0.faqs.0.answer
 ```
 
-Producers receive concrete paths and base values. No producer receives wildcard, glob, template, storage path, or sidecar paths.
+Producers receive exact content paths and base values. No producer receives wildcard, glob, template, storage path, or sidecar paths.
 
 ## Translation Generate Flow
 
@@ -75,9 +74,11 @@ Producers receive concrete paths and base values. No producer receives wildcard,
 2. Roma submits approved instance config/content artifacts; Tokyo stores them.
 3. User opens the Translations panel and clicks Generate translations.
 4. Roma reads the current account active locales from account settings.
-5. Roma returns `coreui.errors.translation.generationUnavailable` until San
-   Francisco owns a real async generation endpoint, queue production, and
-   operation state.
+5. Roma returns `coreui.errors.translation.generationUnavailable` until Roma is
+   wired to call the Translation Agent Worker. Translation Agent owns translation
+   reasoning, calls San Francisco `/v1/model/chat` for governed model execution,
+   and writes locale overlays through Tokyo-worker. San Francisco stays a
+   stateless model gateway and owns no account-widget generation work.
 6. Tokyo-worker remains the storage boundary for exact translated-locale overlay
    files that Roma writes through the translated-values route.
 
@@ -87,17 +88,16 @@ No step repairs values, drops paths, guesses paths, scans widget software to red
 
 The Builder Translations panel is inspection and manual value override for translated locale values.
 
-Roma shows account setup: base locale, plan translation allowance, account active locales, sync state, and readiness counts. Bob's preview dropdown is populated from complete translated locales that Tokyo lists for the saved instance. Account active languages without translated values for the current content are absent from the dropdown.
+Roma shows account setup: base locale, plan translation allowance, account
+active locales, and the count of active locale overlays present for the saved
+instance. Bob's preview dropdown is populated from translated locale values that
+Tokyo lists for the saved instance. Account active languages without translated
+values are absent from the dropdown.
 
-If current saved base content does not match the marker for existing translated values, Bob shows:
-
-```txt
-The base content has changed. Regenerate translations.
-```
-
-Generate cannot start while no San Francisco generation owner exists. When a
-future generation owner is introduced, repeated Generate for the same active
-saved base content marker must not create competing jobs.
+Generate cannot start while Roma is not wired to the Translation Agent Worker.
+When Translation Agent becomes the generation owner, repeated Generate writes
+the current active locale overlays again. It does not create a separate
+operation model.
 
 When a translated locale is selected, Bob preview resolves:
 
@@ -132,7 +132,7 @@ accounts/{accountPublicId}/instances/{instanceId}/
   runtime.js
 ```
 
-Durable translated locale values live privately under `overlays/locales/{locale}.json`; they are translated value source, not visitor files. Public package files are output submitted on save. Publish status is product state. Publish, unpublish, and tier-serving operations gate serving of those files; they do not rebuild widget package bytes. Visitor serving reads R2/CDN artifacts only; it does not query Supabase, compose translations, inspect account policy, or repair stale language output on visitor requests.
+Durable translated locale values live privately under `overlays/locales/{locale}.json`; they are translated value source, not visitor files. Public package files are output submitted on save. Publish status is product state. Publish, unpublish, and tier-serving operations gate serving of those files; they do not rebuild widget package bytes. Visitor serving reads R2/CDN artifacts only; it does not query Supabase, compose translations, inspect account policy, or repair locale output on visitor requests.
 
 ## Prague
 
@@ -144,7 +144,7 @@ Prague embeds account widgets only through public published artifacts:
 https://clk.live/{accountPublicId}/{instanceId}
 ```
 
-`accountInstanceRef.locale`, if reintroduced by a future public runtime contract, is only a public locale selector. It is not widget locale availability, private translation state, a generation marker, or an overlay/layer identity. Prague must not preserve or reintroduce account-widget localization storage vocabulary.
+`accountInstanceRef.locale`, if reintroduced by a future public runtime contract, is only a public locale selector. It is not widget locale availability, private translation state, or an overlay/layer identity. Prague must not preserve or reintroduce account-widget localization storage vocabulary.
 
 ## Deleted Pre-GA Concepts
 

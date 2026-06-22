@@ -14,7 +14,7 @@ This isn't about adding AI to existing workflows. It's about rebuilding software
 
 The unlock isn't the LLMs. It's the **operating discipline** that makes autonomous execution safe, measurable, and governable at scale.
 
-I'm building Clickeen as proof: a global SaaS company run by one founder and a fleet of agents, serving customers in 14 languages across 100+ countries—without a traditional team.
+I'm building Clickeen as proof: a global SaaS company run by one founder and a fleet of agents, serving customers in 29 languages across 100+ countries—without a traditional team.
 
 ---
 
@@ -73,9 +73,9 @@ I wanted Clickeen to be global from day one. That meant localization couldn't be
 
 **The traditional approach explodes:**
 - Copy-based model: "Duplicate the widget per language"
-- 1 widget × 14 languages = 14 versions
-- 100 widgets × 14 languages = 1,400 versions to maintain
-- Every change requires 14× updates, 14× QA, 14× drift management
+- 1 widget × 29 languages = 29 versions
+- 100 widgets × 29 languages = 2,900 versions to maintain
+- Every change requires 29× updates, 29× QA, 29× drift management
 
 This doesn't scale. It's a maintenance death spiral.
 
@@ -185,7 +185,7 @@ This enables execution at scale:
 
 **Localization agent:**
 - Reads base config → extracts translatable strings → generates locale overlays
-- Runs for 100 widgets × 14 languages = 1,400 translation jobs
+- Runs for 100 widgets × 29 languages = 2,900 translation jobs
 - Cost: ~$12 (vs. $50k+ for human translation)
 - Deterministic, measurable, improvable through outcome loops
 
@@ -221,9 +221,11 @@ This isn't vaporware. Here's what exists:
 - Minibob - "Try before signup" playground
 
 **AI Workforce:**
-- Localization pipeline - Automated translation → overlay generation
-- SDR agent - Anonymous visitor → personalized demo → signup intent
+- Overlay composition runtime - One base experience + typed locale overlays applied deterministically at serve time
+- Product Copilot agent - Governed agent home operating instance editing through San Francisco's model gateway
 - Learning infrastructure - Outcome tracking, agent improvement loops
+
+Autonomous translation generation is in active development as its own agent Worker (plan 121D); the overlay composition runtime it feeds is live today.
 
 **Scale proof:**
 - Serving embeds/localized pages across the active locale set (currently 28 non-EN locale overlays plus EN base in widget-page pipelines)

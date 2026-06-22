@@ -6,10 +6,10 @@
 
 ## What We Are
 
-**Clickeen is an AI-native creative operations platform.**
+**Clickeen is an agent-operated creative operations platform: agents operate the product directly — create, personalize, translate, and route content — rather than Clickeen being a SaaS with AI bolted on.**
 
 We enable businesses to create content once and render infinite personalized variants across:
-- 🌍 Languages (14+)
+- 🌍 Languages (29)
 - 📍 Geographies (currency, legal, pricing)
 - 🏢 Industries (positioning, messaging)
 - 🧪 Experiments (A/B testing)
@@ -64,7 +64,7 @@ We enable businesses to create content once and render infinite personalized var
 ## Positioning
 
 **Primary message:**
-"Create once, personalize infinitely. Clickeen renders your content in 14 languages + regional variants + A/B tests from a single source."
+"Create once, personalize infinitely. Clickeen renders your content in 29 languages + regional variants + A/B tests from a single source."
 
 **Secondary messages by tier id:**
 
@@ -145,7 +145,7 @@ We enable businesses to create content once and render infinite personalized var
 - "New layer of the internet" (too vague, too grandiose)
 
 **We ARE:**
-- "AI-native creative operations platform"
+- "Agent-operated creative operations platform"
 - "Create once, render infinite personalized variants"
 - "Multi-language + multi-dimensional personalization from a single source"
 
@@ -155,7 +155,7 @@ We enable businesses to create content once and render infinite personalized var
 
 **Phase 1 (Month 1-12): Multi-Language Foundation**
 - Ship: Widgets, emails, ads, social, landing pages
-- Feature: 14 languages automatic
+- Feature: 29-language translation overlay via a dedicated Translation Agent (planned, in flight)
 - Message: "Your marketing, every language, zero extra work"
 
 **Phase 2 (Month 13-18): Geo + Experiments**
@@ -176,10 +176,10 @@ We enable businesses to create content once and render infinite personalized var
 ## Sales Narrative
 
 **For SMBs:**
-"You're spending $4,200/year on Typeform, Mailchimp, Buffer, and Unbounce. Clickeen does all of that for $480/year, plus you get 14 languages included. That's an 88% cost reduction."
+"You're spending $4,200/year on Typeform, Mailchimp, Buffer, and Unbounce. Clickeen does all of that for $480/year, plus you get 29 languages included. That's an 88% cost reduction."
 
 **For Mid-Market:**
-"You're managing 5 separate tools and still only reaching English speakers. Clickeen gives you widgets, emails, landing pages, and social in 14 languages, with A/B testing built in, for $1,188/year."
+"You're managing 5 separate tools and still only reaching English speakers. Clickeen gives you widgets, emails, landing pages, and social in 29 languages, with A/B testing built in, for $1,188/year."
 
 **For Large Accounts:**
 "You're spending $200K-500K/year on personalization vendors (Optimizely, Dynamic Yield, Mutiny, Phrase). Clickeen replaces the creative variant management layer for $11,988/year. That's a 95% cost reduction for the same output - personalized, localized content across all your surfaces."

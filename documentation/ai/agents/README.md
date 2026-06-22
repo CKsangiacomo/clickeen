@@ -2,6 +2,8 @@
 
 This folder is for **agent specs**: the durable prompts + operating rules for specific AI agents we run (or simulate in dev).
 
+Current contents: `gtm.md` and `ux-writer.md` are future, unbuilt PRDs (pre-thesis; see the note atop each). The two live agent homes are `agents/product-copilot/` and `agents/translation-agent/`.
+
 What belongs here:
 - **Role specs**: mission, inputs/outputs, invariants, success metrics
 - **Tools + permissions**: what the agent can call, what it must never do

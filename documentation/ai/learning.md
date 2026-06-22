@@ -113,20 +113,12 @@ Every interaction should include these “version stamps” in the indexed row:
 
 If any of these are missing, analysis becomes garbage (“we changed something, but don’t know what”).
 
-## 4) Product Copilot eval harness (current repo reality)
+## 4) Product Copilot evals (current repo reality)
 
-The active repo-owned Product Copilot eval harness lives in
-`agents/product-copilot/evals/` and runs through:
+Product Copilot ships two executable gates in `agents/product-copilot/evals/`:
 
-```bash
-pnpm --filter @clickeen/product-copilot eval:product-copilot
-```
-
-It is an executable acceptance/regression gate for the Product Copilot brain
-contract. The day-one fixture set covers conversational answer, clarification,
-draft edit, exact draft ops, one bounded structural retry, and draft-edit
-wording that must not claim applied/saved/published product success before Bob
-validates and applies the draft edit.
+- **Contract test** — `pnpm --filter @clickeen/product-copilot test:copilot-contract`. A deterministic fixture runner (no live model call) that pins the Product Copilot brain contract: conversational answer, clarification, draft edit, exact draft ops, one bounded structural retry, and draft-edit wording that must not claim applied/saved/published product success before Bob validates and applies the draft edit.
+- **Real eval** — `pnpm --filter @clickeen/product-copilot eval:copilot`. Calls the live model through `real-eval.ts`, scores each case with an LLM-as-judge rubric, runs pass@1 and pass^k (majority over K samples), writes transcripts under `evals/transcripts/`, and exits non-zero on any failure (regression gate).
 
 Do not add passive fixture files or fixture-only docs without an executable
 harness behind them.

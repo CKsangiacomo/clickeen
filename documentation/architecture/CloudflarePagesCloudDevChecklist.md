@@ -205,9 +205,10 @@ These values remain outside git by design. Keep the inventory true; do not store
 Worker secrets:
 - Berlin: `SUPABASE_SERVICE_ROLE_KEY`
 - San Francisco: `AI_GRANT_HMAC_SECRET`
+- Translation Agent: `AI_GRANT_HMAC_SECRET`
 
 Pages secrets:
-- Roma: `AI_GRANT_HMAC_SECRET` is required for account Copilot grant/outcome signing. `SUPABASE_SERVICE_ROLE_KEY` is required for Roma-owned account settings writes. Roma -> Tokyo/Tokyo-worker storage commands use service bindings. Account-widget l10n generation currently returns unavailable until San Francisco owns a real async generation endpoint.
+- Roma: `AI_GRANT_HMAC_SECRET` is required for account Copilot grant/outcome signing and Translation Agent grant minting. `SUPABASE_SERVICE_ROLE_KEY` is required for Roma-owned account settings writes. Roma -> Tokyo/Tokyo-worker storage commands use service bindings. Account-widget l10n generation currently returns unavailable until Roma is wired to call the Translation Agent Worker; that Worker calls San Francisco `/v1/model/chat` and writes translated locale values via Tokyo-worker.
 - DevStudio: `DEVSTUDIO_GITHUB_TOKEN` is required for GitHub-backed policy writes.
 
 CI secrets/vars:

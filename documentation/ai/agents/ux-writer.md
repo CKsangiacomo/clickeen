@@ -1,7 +1,9 @@
 # UX Writer Agent — Async Localization Intelligence System
 
-STATUS: PRD (not yet implemented)
+STATUS: PRD (not yet implemented) — pre-thesis spec
 Created: 2026-01-02
+
+> **Pre-thesis spec.** Written before the agent-operated-product thesis (see AGENTS.md "What This System Is"). Before build, re-ground this as a lean Worker home that calls San Francisco `/v1/model/chat` for governed model execution — not a bespoke Durable-Object/Queue orchestration framework. Proposed copy changes are recommendations on human-generated content; a human reviews and applies them (content source authority, AGENTS.md).
 
 ---
 

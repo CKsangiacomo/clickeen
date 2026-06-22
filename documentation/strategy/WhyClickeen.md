@@ -435,7 +435,7 @@ Same widget, different contexts:
 ├── Landing Page: What placement converts?
 └── Ad: What format performs?
 
-San Francisco learns from ALL → improves ALL
+Agents learn from ALL contexts → improve ALL
 ```
 
 ### The 100⁵ Mental Model
@@ -543,7 +543,7 @@ Traditional localization:
 └── Timeline: Weeks to months
 
 Clickeen model:
-├── San Francisco handles it
+├── Translation Agent (its own Worker) handles it via San Francisco's governed model
 └── Timeline: Instant
 ```
 

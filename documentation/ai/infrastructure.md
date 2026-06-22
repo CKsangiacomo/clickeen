@@ -75,7 +75,13 @@ Provider/model policy:
   substitute unavailable providers or models. The next model-management slices
   expose this through Roma/Bob and DevStudio.
 - **Prague strings L10n**: local/dev signed tooling route; OpenAI model comes only from required `OPENAI_MODEL`.
-- **Account-widget Instance Translation Agent**: `widget.instance.translator`. The translation brain lives in `agents/translation-agent/`; San Francisco remains the grant/model-execution adapter for the existing diagnostic endpoint. Active product generation currently returns unavailable until San Francisco owns a real async generation endpoint, queue production, and operation state. Tokyo-worker owns only exact translated locale overlay storage.
+- **Account-widget Instance Translation Agent**: `widget.instance.translator`.
+  The translation brain/runtime lives in the `agents/translation-agent/`
+  Cloudflare Worker. Active product generation currently returns the
+  `generationUnavailable` stub until Roma is wired to that Worker. The Worker
+  calls San Francisco `/v1/model/chat` and writes overlays via Tokyo-worker. San
+  Francisco owns model execution only. Tokyo-worker owns only exact translated
+  locale overlay storage.
 
 ## 3) HTTP endpoints
 
@@ -94,9 +100,10 @@ Clickeen-signed grant.
 Behavior (high level):
 - Parse `{grant, agentId, messages, temperature?, trace?}`
 - Verify grant signature + expiry (`AI_GRANT_HMAC_SECRET`)
-- Assert capability `agent:${agentId}`
+- Require the request `agentId` to match the signed grant `ai.agentId`
+- Assert capability `agent:${agentId}` after canonical resolution
 - Route the provider/model call under the signed runtime policy
-- Enqueue an `InteractionEvent` to `SF_EVENTS` (non-blocking)
+- Emit an `InteractionEvent` to `SF_EVENTS` (non-blocking)
 - Return `{requestId, agentId, content, usage}`
 
 ### `POST /v1/execute`
@@ -135,10 +142,11 @@ Purpose: run the account-widget Instance Translation Agent for direct diagnostic
 Boundary:
 - Roma calls this through the explicit `SANFRANCISCO_BASE_URL`.
 - The request requires `Authorization: Bearer <AI grant>` with `agent:widget.instance.translator`.
-- Tokyo-worker is not a caller and does not queue San Francisco work.
+- Tokyo-worker is not a caller and does not start San Francisco work.
 
 Contract:
-- Roma sends only `v`, `widgetType`, `sourceLanguage`, `targetLanguage`, and `items[]` with concrete `path`, `type`, and `value`.
+- Roma sends only `v`, `widgetType`, `sourceLanguage`, requested language, and
+  `items[]` with exact `path`, `type`, and `value`.
 - San Francisco does not receive widget config, wildcard path declarations, account ids, storage paths, live pointer state, publication state, previous values, or patch operations.
 - San Francisco derives execution limits from the signed grant and fails visibly
   when selected/default model availability does not satisfy managed config,
@@ -163,10 +171,10 @@ Provider:
 Product Copilot conversation/thread state does not live in `SF_KV`.
 Product Copilot `/v1/execute` belongs to the Product Copilot worker.
 
-### Queue (non-blocking ingestion)
+### Event Ingestion
 
 San Francisco `/v1/model/chat` sends an `InteractionEvent` to the
-`SF_EVENTS` queue.
+`SF_EVENTS` event sink.
 
 Design intent:
 - execution must not block on logging/indexing
@@ -194,7 +202,7 @@ San Francisco D1 schema is owned by `sanfrancisco/migrations/`, not Worker boot 
   - stores optional `outcomeId`, `surfaceId`, and `artifactId` linkage fields
   - used for conversion + UX outcome attachment, not automatic causal claims
 
-If D1 schema is missing or stale, migrations must be applied before deploy/runtime verification. Worker code does not create or alter telemetry tables at request time.
+If D1 schema is missing or out of date, migrations must be applied before deploy/runtime verification. Worker code does not create or alter telemetry tables at request time.
 
 ## 5) Limits and budgets
 

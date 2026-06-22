@@ -13,7 +13,7 @@ The product begins with widgets. The future extends the same source/overlay/mate
 one account-owned base source
 explicit editable fields
 explicit translatable fields
-San Francisco translation work
+Translation Agent translation work
 deterministic locale overlays
 validated public artifacts
 Cloudflare-backed serving
@@ -53,7 +53,7 @@ The important point is not that every surface is the same product object. It is 
 Bob edits one account widget instance in browser memory.
 Roma opens and saves account-owned artifacts.
 Tokyo stores account-owned source and overlays.
-San Francisco translates declared fields.
+Translation Agent translates declared fields, calling San Francisco only as the stateless model gateway.
 Roma turns saved source into submitted public output.
 ```
 

@@ -1,7 +1,9 @@
 # GTM Agent — AI VP of Marketing
 
-STATUS: PRD (not yet implemented)
+STATUS: PRD (not yet implemented) — pre-thesis spec
 Created: 2026-01-02
+
+> **Pre-thesis spec.** Written before the agent-operated-product thesis (see AGENTS.md "What This System Is"). Before build, re-ground this as a lean Worker home that operates structured artifacts through named authorities and calls San Francisco `/v1/model/chat` for governed model execution — not a bespoke Durable-Object/Queue orchestration framework. Localization flows through the Translation overlay system, not a parallel pipeline.
 
 ---
 

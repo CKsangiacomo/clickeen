@@ -207,12 +207,13 @@ accounts/{accountPublicId}/instances/{instanceId}/overlays/locales/{locale}.json
 ```
 
 Tokyo-worker lists, reads, and writes those overlay files for Roma and approved
-internal callers. It does not own translation generation, queue production,
-operation ledgers, AI runtime policy, or completion/failure state.
+internal callers. It does not own translation generation, AI runtime policy, or
+completion/failure state.
 
-Roma currently returns translation generation unavailable until San Francisco
-owns a real async generation endpoint. Tokyo-worker does not provide a fallback
-generation route.
+Roma currently returns translation generation unavailable until Roma is wired to
+the Translation Agent Worker. Translation Agent calls San Francisco
+`/v1/model/chat` and writes overlays back through Tokyo-worker. Tokyo-worker does
+not provide a generation route.
 
 ## DevOps
 

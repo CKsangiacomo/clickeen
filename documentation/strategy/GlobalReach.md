@@ -89,7 +89,7 @@ Traditional localization:
 └── Timeline: 6-12 weeks per language. Cost: $10-50k per language.
 
 Clickeen model:
-├── San Francisco Translator agent processes (seconds)
+├── Translation Agent operates per locale (seconds)
 ├── Native speaker review (one-time, optional)
 │
 └── Timeline: Hours to days. Cost: negligible.
@@ -115,56 +115,6 @@ Clickeen model:
 - **Marketing-Copywriter:** Creates culturally-adapted copy. Understands local market pain points. Uses local idioms. Different tone per culture (direct for US, polite for Japan, etc.).
 
 - **Content-Writer:** Creates SEO content for each market. Uses local keywords (not translated keywords). Writes about locally-relevant topics.
-
----
-
-## Market & Language Prioritization
-
-Even with geography as a non-concept, prioritization still matters for:
-- Payment method integration
-- Quality review of AI output
-- SEO and marketing focus
-
-### Phase 1: 5 Languages = 2B+ People
-
-| Language | Markets Covered |
-|----------|-----------------|
-| English | USA, Canada, Australia, UK, India, Nigeria, Kenya, South Africa, Ghana |
-| Spanish | Latin America, US Hispanic, Spain |
-| Portuguese | Brazil |
-| German | Germany, Austria, Switzerland |
-| French | France, Canada, Belgium, Francophone Africa, Morocco |
-
-### Phase 2: Extended Reach
-
-| Language | Markets |
-|----------|---------|
-| Japanese | Japan |
-| Italian | Italy |
-| Dutch | Netherlands, Belgium |
-
-### Phase 3: Asia-Pacific
-
-| Language | Markets |
-|----------|---------|
-| Hindi | India (extends reach beyond English speakers) |
-| Traditional Chinese | Taiwan, Hong Kong |
-| Korean | South Korea |
-
-### Phase 4+: Growth Markets
-
-| Language | Markets |
-|----------|---------|
-| Polish | Poland (EU growth market) |
-| Turkish | Turkey (emerging market) |
-| Arabic | Middle East (requires RTL support) |
-
-### On Hold (Geopolitical)
-
-| Market | Reason |
-|--------|--------|
-| 🇨🇳 China | Great Firewall, regulations, geopolitical risk |
-| 🇷🇺 Russia | Sanctions, payment restrictions, geopolitical risk |
 
 ---
 
@@ -336,7 +286,7 @@ The system doesn't launch in markets. The system is everywhere, always, adapting
 | Requirement | Clickeen | Traditional SaaS |
 |-------------|----------|------------------|
 | Edge-first infrastructure | ✅ Built on Cloudflare | ❌ Regional deployments |
-| AI localization agents | ✅ San Francisco | ❌ Human translators |
+| AI localization agents | ✅ Translation Agent (its own Worker home) | ❌ Human translators |
 | Zero-egress CDN | ✅ R2 | ❌ Paying per-GB globally |
 | Global payments | ✅ Stripe everywhere | ⚠️ Often regional |
 | No locale assumptions | ✅ Designed without geography | ❌ Would require rewrite |

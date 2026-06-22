@@ -10,18 +10,19 @@
 - `GET /healthz`
 - `POST /v1/model/chat` for governed model execution under a signed AI grant.
 - `POST /v1/outcome` for post-execution Product Copilot outcomes.
-- Queue consumers for agent jobs.
+- No background consumers for product work. Model execution is stateless per call;
+  telemetry and outcome persistence remain San Francisco responsibilities.
 - `POST /v1/agents/instance-translation/translate-saved-instance` for direct diagnostics/tests of account-widget instance translation.
 - `POST /v1/agents/instance-translation/runtime-status` for translator runtime diagnostics.
 
 ## Dependencies
 - Roma (account command boundary and diagnostic caller)
 - Tokyo-worker (exact translated locale overlay storage through `TOKYO_PRODUCT_CONTROL`)
-- Cloudflare KV/R2/Queues (state, logs, scheduling)
+- Cloudflare KV/R2/event sinks (state, logs, scheduling)
 
 ## Deployment
 - Cloudflare Workers (edge).
-- Uses KV + R2 + Queues.
+- Uses KV + R2 + event sinks.
 - Cloudflare Workers observability is the first boring production sink for San Francisco runtime errors and operator logs.
 
 Health contract:
@@ -30,6 +31,7 @@ Health contract:
 ## Model execution (shipped)
 - Endpoint: `POST /v1/model/chat`.
 - Requires a Clickeen-signed grant; enforces `agent:*` caps and `ai` policy capsule.
+- Requires the request `agentId` to match the signed grant `ai.agentId`.
 - Grant verification accepts the active internal Clickeen issuers `roma` and `sanfrancisco`.
 - Product Copilot brain execution lives in the `product-copilot` worker. Roma
   calls that worker; that worker calls San Francisco only for model execution.
@@ -53,9 +55,9 @@ Health contract:
 - The Roma grant issuer mints the live account Builder copilot grant for `cs.widget.copilot.v1`.
 - Product Copilot brain code and worker entrypoint live in the isolated
   `agents/product-copilot/` workspace.
-- Translation Agent brain code lives in `agents/translation-agent/`. San
-  Francisco keeps the existing translation diagnostic endpoint until the
-  Translation Agent slice moves that execution path into its own worker home.
+- Translation Agent brain code and Worker entrypoint live in
+  `agents/translation-agent/`. San Francisco remains the governed model
+  execution gateway for Translation Agent calls.
 - Product Copilot uses the `product-copilot.context.v1` capsule and typed output
   union: `answer`, `clarification`, `suggestion`, `draft_edit`, `refusal`, or
   `error`.
@@ -77,9 +79,10 @@ exception owned by the Translation Agent realignment slice.
 
 ## Entrypoint posture
 - `sanfrancisco/src/index.ts` is now a thin route shell.
-- The default export is a Cloudflare `WorkerEntrypoint`; account-widget
-  instance translation can consume queued jobs when a San Francisco-owned
-  generation endpoint produces them.
+- The default export is a Cloudflare `WorkerEntrypoint`. Account-widget
+  instance translation jobs belong to the Translation Agent Worker home from
+  121D, not to a San Francisco-owned generation endpoint; San Francisco only
+  executes model calls.
 - Extracted runtime modules own:
   - request-signature helpers: `sanfrancisco/src/signatures.ts`
   - concurrency limiting: `sanfrancisco/src/concurrency.ts`
@@ -87,22 +90,28 @@ exception owned by the Translation Agent realignment slice.
   - account-widget instance translation handlers: `sanfrancisco/src/l10n-account-routes.ts`
 
 ## Account-widget Instance Translation
-- Base Save does not enqueue translation.
+- Base Save does not start translation.
 - Roma owns account-command acceptance and account active-locale selection.
-- San Francisco owns AI value production and is the required owner for any
-  future async translation generation endpoint, queue production, and operation
-  state.
+- Translation generation is owned by the Translation Agent Worker home from
+  121D. It calls San Francisco `/v1/model/chat` for model execution and writes
+  overlays via Tokyo-worker. San Francisco owns no async generation endpoint.
 - Tokyo-worker owns only exact translated locale overlay storage.
-- There is no active account-widget translation generation queue binding.
-- Runtime target payloads are widget-generic saved text fields, including stable
-  identity keys, current paths, labels, roles, base text, source basis, and saved
-  base content markers.
-- The active product generation command currently returns unavailable because
-  San Francisco does not yet expose the async generation owner endpoint.
-- The HTTP `translate-saved-instance` endpoint remains for direct diagnostics and tests; it is not the active save/generate product orchestration boundary.
+- There is no active account-widget translation generation background binding.
+- Runtime translation payloads are widget-generic saved text fields, including stable
+  identity keys, current paths, labels, roles, base text, and source basis.
+- The active product generation command currently returns the
+  `generationUnavailable` stub until Roma is wired to the Translation Agent
+  Worker. 121D stands up the Translation Agent Worker, not a San Francisco
+  generation endpoint.
+- The HTTP `translate-saved-instance` endpoint remains for direct diagnostics
+  and tests; it is not the active save/generate product path.
 - Localization prompts preserve source acronym style and must not add parenthetical acronym expansions that were not present in source text (especially headings/titles).
 - Richtext translation uses one structured path: `agents/translation-agent/` extracts visible text segments, translates those strings only, and rebuilds the original HTML; neutral `@clickeen/l10n` safety primitives validate placeholder parity, HTML tag parity, and anchor integrity.
-- l10n translation calls go through the shared policy router via `callChatCompletion` (same request/token enforcement + provider/model allowlist). Instance Translation must not set local token or timeout caps that override the signed grant; `ck-policy` is the model and budget authority for each queued job.
+- l10n translation calls go through the shared policy router via
+  `callChatCompletion` with the same request/token enforcement and
+  provider/model allowlist. Instance Translation must not set local token or
+  timeout caps that override the signed grant; `ck-policy` is the model and
+  budget authority for each model call.
 
 ## Prague posture
 - Prague does not own the account-widget locale runtime.
@@ -113,8 +122,8 @@ exception owned by the Translation Agent realignment slice.
 ## Rules
 - Agent writes must not invent paths, patch formats, readiness state, or layer
   authoring surfaces.
-- The active locale overlay stores concrete primitive values only.
-- Tokyo-worker must not own translation generation state, queue production, AI
+- The active locale overlay stores primitive translated values only.
+- Tokyo-worker must not own translation generation state, AI
   policy, or completion/failure state.
 
 ## Links

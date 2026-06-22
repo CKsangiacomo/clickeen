@@ -317,7 +317,7 @@ Build contract:
 ```text
 root: bob/
 command: pnpm build:cf
-output: bob/.vercel/output/static
+output: bob/.cloudflare/output/static
 ```
 
 Before any Cloudflare Pages, custom-domain, DNS, or Pages config operation, run:

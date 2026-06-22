@@ -7,10 +7,10 @@ PRD 100 removes runtime embed composition. SEO/GEO is no longer a Venice loader 
 The surviving model is:
 
 ```txt
-save -> San Francisco coding agent -> generated semantic browser files -> clk.live
+save -> Translation Agent Worker (its own home) -> thin typed locale overlays via Tokyo-worker -> clk.live
 ```
 
-SEO/GEO optimization is a paid build shape that PRD 101 will define. It means the coding agent writes richer static output for the instance mini-site: semantic HTML, structured data, crawler-friendly locale files, and approved metadata. Public visitors still receive only generated files from:
+SEO/GEO optimization is a paid build shape that PRD 101 will define. It means a future SEO/GEO/AEO agent (its own cron Worker home, like the Translation Agent) refines one canonical account artifact plus thin typed locale overlays into crawlable clk.live locale pages: semantic HTML, structured data, crawler-friendly locale files, hreflang/SSR/edge, and approved metadata — with no duplication of source truth. San Francisco only provides governed model execution to that agent. Public visitors still receive only generated files from:
 
 ```txt
 https://clk.live/{accountPublicId}/{instanceId}
