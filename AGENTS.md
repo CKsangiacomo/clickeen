@@ -62,17 +62,16 @@ Agents treat those sources differently:
 - For AI-generated content, agents may operate autonomously inside the approved
   product rules because the content is already agent-produced under Clickeen
   direction.
-- For integration-sourced content, agents operate freely: they may translate,
-  summarize, extract, paraphrase, route, display, analyze, and build product
-  experiences on it, and they may sync or write back through the authorized
-  integration path (for example, update a contact, close a ticket, push to a
-  CRM). The one line they do not cross: they must never falsify or misrepresent
-  what the source actually said. Source truth is preserved; derivatives and
-  syncs are the work.
+- For integration-sourced content, agents must not rewrite the source truth.
+  They may use it, summarize it, extract from it, route it, display it, analyze
+  it, and build product experiences around it. They may mutate it only through
+  an explicit authorized integration write path. Source truth is preserved;
+  derivatives and syncs are the work.
 
 The rule across all three sources is source-truth fidelity, not touch/no-touch:
-agents derive from and operate on content freely; a change to source truth is
-authorized by whoever owns it — the human, the product tenets, or the external
+agents derive from and operate on content according to its source authority; a
+change to source truth is authorized by whoever owns it — the human, the
+product tenets, or the external
 system.
 
 Around the content, agents operate the Clickeen system itself: widgets, pages,
