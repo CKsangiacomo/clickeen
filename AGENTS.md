@@ -39,6 +39,52 @@ For any agent (AI or human) working in this tree:
 The gates and discipline below exist to protect agent-operability — not to
 manage a legacy codebase.
 
+## Content Source Authority
+
+Clickeen serves content. That is the end product of websites, widgets, pages,
+emails, reports, feeds, and future runtime surfaces.
+
+Content in Clickeen has three source authorities:
+
+1. Human-generated content: copy, pages, blogs, emails, widget text, product
+   descriptions, support articles, and other content authored by a person.
+2. AI-generated content: content written by agents from human direction,
+   account rules, brand rules, product rules, or approved system direction.
+3. Integration-sourced content: reviews, feeds, listings, CRM rows, analytics,
+   support data, aggregated records, and anything Clickeen pulls from another
+   system.
+
+Agents treat those sources differently:
+
+- For human-generated content, agents may recommend improvements, propose edits,
+  translate, optimize, restructure, and apply user-approved changes. Human
+  intent remains the source authority.
+- For AI-generated content, agents may operate autonomously inside the approved
+  product rules because the content is already agent-produced under Clickeen
+  direction.
+- For integration-sourced content, agents operate freely: they may translate,
+  summarize, extract, paraphrase, route, display, analyze, and build product
+  experiences on it, and they may sync or write back through the authorized
+  integration path (for example, update a contact, close a ticket, push to a
+  CRM). The one line they do not cross: they must never falsify or misrepresent
+  what the source actually said. Source truth is preserved; derivatives and
+  syncs are the work.
+
+The rule across all three sources is source-truth fidelity, not touch/no-touch:
+agents derive from and operate on content freely; a change to source truth is
+authorized by whoever owns it — the human, the product tenets, or the external
+system.
+
+Around the content, agents operate the Clickeen system itself: widgets, pages,
+reports, analytics, support tickets, locale overlays, runtime packages, account
+assets, routes, and storage folders. Different agents own different operational
+domains, but the rule is the same: operate structured artifacts directly through
+named authorities.
+
+This is the fundamental difference from legacy SaaS. Legacy SaaS builds heavy
+application code and adds AI as a feature. Clickeen structures content and the
+system around it so agents can operate the product.
+
 ## Read Order
 
 Before touching product-path code or data, read:

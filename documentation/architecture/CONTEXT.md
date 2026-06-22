@@ -31,6 +31,47 @@ How the system is organized for agent-operability:
 - agent homes under `agents/<name>` — the operators;
 - San Francisco — the governed model-execution engine the agents call.
 
+## Content Source Authority
+
+Clickeen serves content. Websites, widgets, pages, emails, reports, feeds, and
+future runtime surfaces exist to deliver content to users, crawlers, answer
+engines, integrations, and downstream systems.
+
+Content in Clickeen has three source authorities:
+
+1. Human-generated content: copy, pages, blogs, emails, widget text, product
+   descriptions, support articles, and other content authored by a person.
+2. AI-generated content: content written by agents from human direction,
+   account rules, brand rules, product rules, or approved system direction.
+3. Integration-sourced content: reviews, feeds, listings, CRM rows, analytics,
+   support data, aggregated records, and anything Clickeen pulls from another
+   system.
+
+Agent authority follows the source:
+
+- Human-generated content: agents can recommend improvements, propose edits,
+  translate, optimize, restructure, and apply user-approved changes. Human
+  intent remains the source authority.
+- AI-generated content: agents can operate autonomously inside approved product
+  rules because the content is already agent-produced under Clickeen direction.
+- Integration-sourced content: agents operate freely. They may translate,
+  summarize, extract, paraphrase, route, display, analyze, and build product
+  experiences on it, and they may sync or write back through the authorized
+  integration path (for example, update a contact, close a ticket, push to a
+  CRM). The one line they do not cross: they must never falsify or misrepresent
+  what the source actually said. Source truth is preserved; derivatives and
+  syncs are the work.
+
+The rule across all three sources is source-truth fidelity, not touch/no-touch:
+agents derive from and operate on content freely; a change to source truth is
+authorized by whoever owns it — the human, the product tenets, or the external
+system.
+
+The surrounding system is also agent-operated. Widgets, pages, reports,
+analytics, support tickets, locale overlays, runtime packages, account assets,
+routes, and storage folders are structured artifacts that agents operate through
+named authorities.
+
 ## System Is Simple
 
 - Widgets are software and live in the system.
