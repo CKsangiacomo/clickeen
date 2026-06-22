@@ -271,6 +271,11 @@ export function useSessionTransport(args: {
       const result = await dispatchHostAccountCommand({
         command: inputUrl === '/api/ai/widget-copilot' ? 'run-copilot' : 'attach-ai-outcome',
         instanceId,
+        // Copilot turns are variable-latency: a large draft_edit (many ops) on a
+        // reasoning model can exceed the 15s default and trip
+        // coreui.errors.builder.command.timeout. Match the 120s ceiling other host
+        // commands use. Proper long-term fix is end-to-end streaming (121C §6).
+        timeoutMs: 120_000,
         ...(typeof body === 'undefined' ? {} : { body }),
       });
       return createJsonResponse(result.status, result.payload);
