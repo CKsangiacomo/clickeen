@@ -446,7 +446,7 @@ Tokyo-worker does not reason about shrinking or extending active locales.
 Roma owns the account-wide update loop for saved account instances:
 
 - list saved account instances;
-- compare previous active locales to next active locales;
+- compare previous active locales to new active locales;
 - delete removed active locale overlay files through Tokyo-worker;
 - call Translation Agent Worker for added active locales;
 - return the settings result and translation update result.
@@ -521,6 +521,8 @@ public page/runtime consumption remain later work.
 - Overlay files live under the account instance overlay folder.
 - Tokyo-worker stores exact requested files and does not interpret product
   meaning.
+- Overlay write/read validation uses saved `instance.content.json` field paths,
+  not a rederived field list from the current widget definition.
 - Account settings active-locale changes compare previous active locales to next
   active locales: removed locales are deleted, added locales are generated, and
   unchanged locales are left alone.

@@ -25,6 +25,12 @@ Agent to create those overlay files for saved instances. When Roma Settings sees
 active locales removed by the user, Roma asks Tokyo-worker to delete those exact
 overlay files; Translation Agent is not involved in deletion.
 
+The saved `instance.content.json` field map is the overlay source. Translation
+Agent translates those paths and Tokyo-worker validates writes against those
+paths. It must not rederive the translation field list from the current widget
+definition during overlay write/read, because saved account instances are the
+runtime artifact being translated.
+
 ## Runtime
 
 Translation Agent runs as a Cloudflare Worker:

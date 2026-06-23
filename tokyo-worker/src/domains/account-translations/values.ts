@@ -1,11 +1,11 @@
 import { normalizeLocale } from '../../asset-utils';
 import type { Env } from '../../types';
 import {
-  buildLocaleOverlayFields,
   readConfigDocumentByLocation,
   readContentDocumentByLocation,
 } from '../account-instances/source';
 import type {
+  AccountInstanceContentDocument,
   AccountInstanceConfigDocument,
   AccountInstanceSourceReadFailure,
 } from '../account-instances/types';
@@ -49,6 +49,10 @@ async function resolveStoredTranslationSource(args: {
   return { configDoc, content };
 }
 
+function savedContentOverlayFields(content: AccountInstanceContentDocument): Array<{ path: string }> {
+  return Object.keys(content.fields).map((path) => ({ path }));
+}
+
 export async function readAccountInstanceTranslatedLocaleValues(args: {
   env: Env;
   instanceId: string;
@@ -78,16 +82,13 @@ export async function readAccountInstanceTranslatedLocaleValues(args: {
     instanceId: stored.configDoc.id,
     locale,
   });
-  const current = buildLocaleOverlayFields({
-    configDoc: stored.configDoc,
-    content: stored.content,
-  });
+  const current = savedContentOverlayFields(stored.content);
   if (!overlay) {
     return { ok: false, kind: 'NOT_FOUND', reasonKey: 'tokyo.translation.notFound' };
   }
-  assertLocaleOverlayValuesMatchSavedTextFields({ fields: current.fields, values: overlay.values });
+  assertLocaleOverlayValuesMatchSavedTextFields({ fields: current, values: overlay.values });
   const values: Record<string, string> = {};
-  for (const { path } of current.fields) {
+  for (const { path } of current) {
     values[path] = overlay.values[path]!;
   }
   return { ok: true, value: { locale, values } };
@@ -114,11 +115,8 @@ export async function writeAccountInstanceTranslatedLocaleValues(args: {
     widgetType: args.widgetType,
   });
   if (!stored) throw new Error('coreui.errors.instance.notFound');
-  const metadata = buildLocaleOverlayFields({
-    configDoc: stored.configDoc,
-    content: stored.content,
-  });
-  assertLocaleOverlayValuesMatchSavedTextFields({ fields: metadata.fields, values: args.values });
+  const fields = savedContentOverlayFields(stored.content);
+  assertLocaleOverlayValuesMatchSavedTextFields({ fields, values: args.values });
   await writeLocaleOverlay({
     env: args.env,
     accountId: stored.configDoc.accountId,
@@ -179,10 +177,7 @@ export async function listAccountInstanceTranslatedLocaleValues(args: {
     widgetType: args.widgetType,
   });
   if (!stored) throw new Error('coreui.errors.instance.notFound');
-  const current = buildLocaleOverlayFields({
-    configDoc: stored.configDoc,
-    content: stored.content,
-  });
+  const current = savedContentOverlayFields(stored.content);
   const overlays = await listLocaleOverlays({
     env: args.env,
     accountId: stored.configDoc.accountId,
@@ -191,7 +186,7 @@ export async function listAccountInstanceTranslatedLocaleValues(args: {
   });
   for (const entry of overlays) {
     assertLocaleOverlayValuesMatchSavedTextFields({
-      fields: current.fields,
+      fields: current,
       values: entry.overlay.values,
     });
   }

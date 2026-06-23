@@ -6,7 +6,6 @@ import {
 } from '../account-instances/keys';
 import { deleteObject, loadJson, putJson } from '../storage';
 import type { LocaleOverlayDocument } from '../account-instances/types';
-import type { SavedTextField } from '@clickeen/ck-contracts/translated-value-primitives';
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
@@ -38,7 +37,7 @@ export function normalizeLocaleOverlayDocument(raw: unknown): LocaleOverlayDocum
 }
 
 export function assertLocaleOverlayValuesMatchSavedTextFields(args: {
-  fields: SavedTextField[];
+  fields: Array<{ path: string }>;
   values: Record<string, string>;
 }): void {
   const fieldPaths = new Set(args.fields.map((field) => field.path));
