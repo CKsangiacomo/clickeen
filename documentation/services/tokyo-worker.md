@@ -102,9 +102,9 @@ account active locale.
 Translation Agent writes translated locale values through Tokyo-worker with the
 Roma-issued Translation Agent grant. Tokyo-worker verifies that the grant names
 the same account, instance, and locale before storing the value map. Roma account
-settings deletes overlay files whose locale is not in the next active locale set
-through Tokyo-worker with the Roma account capsule. Tokyo does not decide active
-locales, tier, translation meaning, or model policy.
+settings deletes removed active locale overlay files through Tokyo-worker with
+the Roma account capsule. Tokyo does not decide active locales, tier,
+translation meaning, or model policy.
 
 `index.html`, `styles.css`, and `runtime.js` are the generated browser package
 saved with the instance.

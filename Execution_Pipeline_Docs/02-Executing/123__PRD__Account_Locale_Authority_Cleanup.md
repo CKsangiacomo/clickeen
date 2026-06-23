@@ -335,9 +335,9 @@ Action:
   behavior.
 - Preserve the existing tier-capacity enforcement through `l10n.locales.max`.
 - Prove account settings active-locale reconciliation through Roma
-  `/api/account/locales`: inactive saved-instance overlay files are deleted,
-  missing active overlays are created through Translation Agent, and existing
-  active overlays are left alone.
+  `/api/account/locales`: removed active locale overlay files are deleted,
+  added active locale overlays are created through Translation Agent, and
+  unchanged active locales are left alone.
 
 Architecture compliance:
 
@@ -615,8 +615,8 @@ PRD 123 can move to `03-Executed` only when all are true:
 - Account locale capacity still comes from tier policy.
 - Account selected locales still come from account settings.
 - Account settings active-locale reconciliation is proven through Roma
-  `/api/account/locales`, including exact overlay delete for inactive overlay
-  files and Translation Agent generation for missing active overlay files.
+  `/api/account/locales`, including exact overlay delete for removed active
+  locales and Translation Agent generation for added active locales.
 - Roma save, duplicate, and translation generation routes no longer accept caller
   locale fields as authority; the old manual translation write route is absent.
 - Tokyo no longer invents locale authority through fallback values.

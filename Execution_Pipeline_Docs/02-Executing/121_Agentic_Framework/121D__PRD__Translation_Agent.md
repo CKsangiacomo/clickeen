@@ -109,10 +109,10 @@ Current closure state:
 - Bob translation UI is one explicit Generate translations action,
   active-locale selection, running state while the operation is in flight, and
   direct result text with the generated active-locale count after Roma returns.
-- Account settings active-locale changes must reconcile saved instance overlay
-  folders against the next active locale set: overlay files for inactive locales
-  are deleted, active locales missing overlay files are generated, and existing
-  overlay files for still-active locales are left alone.
+- Account settings active-locale changes compare the previous active locales to
+  the new active locales: removed locales delete exact overlay files,
+  added locales generate exact overlay files, and unchanged locales are left
+  alone.
 - Public `clk.live`/pages locale consumption remains future work, not a 121D
   closure blocker.
 
@@ -226,11 +226,11 @@ copy as translated copy.
 
 Account settings saves active locales. Roma then performs exact overlay work:
 
-- overlay files whose locale is no longer active -> delete exact overlay files
-  through Tokyo-worker for saved account instances;
-- active locales missing overlay files -> call Translation Agent Worker for
-  missing overlays on saved account instances;
-- existing overlay files for still-active locales -> leave alone.
+- removed active locales -> delete exact overlay files through Tokyo-worker for
+  saved account instances;
+- added active locales -> call Translation Agent Worker for those locale
+  overlays on saved account instances;
+- unchanged active locales -> leave existing overlay files alone.
 
 There is no user prompt. Saving settings is the user decision.
 
@@ -433,9 +433,9 @@ When the user saves account language settings:
 - overlay files whose locale is no longer active cause Roma to ask Tokyo-worker
   to delete exact overlay files at
   `accounts/{accountPublicId}/instances/{instanceId}/overlays/locales/{locale}.json`;
-- active locales missing overlay files cause Roma to call the same Translation
-  Agent Worker path to create missing overlays;
-- existing overlay files for still-active locales remain untouched.
+- added active locales cause Roma to call the same Translation Agent Worker
+  path to create those overlay files;
+- unchanged active locales remain untouched.
 
 There is no popup asking whether to update translations. Saving settings is the
 user decision.
@@ -446,10 +446,9 @@ Tokyo-worker does not reason about shrinking or extending active locales.
 Roma owns the account-wide update loop for saved account instances:
 
 - list saved account instances;
-- list each saved instance's existing overlay files;
-- delete overlay files whose locale is not in the next active locale set through
-  Tokyo-worker;
-- call Translation Agent Worker for active locales missing overlay files;
+- compare previous active locales to next active locales;
+- delete removed active locale overlay files through Tokyo-worker;
+- call Translation Agent Worker for added active locales;
 - return the settings result and translation update result.
 
 If account-wide translation work is too large for a direct save path, Roma must
@@ -522,9 +521,9 @@ public page/runtime consumption remain later work.
 - Overlay files live under the account instance overlay folder.
 - Tokyo-worker stores exact requested files and does not interpret product
   meaning.
-- Account settings active-locale changes reconcile saved instance overlay files
-  against the next active locale set: inactive overlays are deleted, missing
-  active overlays are generated, and existing active overlays are left alone.
+- Account settings active-locale changes compare previous active locales to next
+  active locales: removed locales are deleted, added locales are generated, and
+  unchanged locales are left alone.
 - Missing provider/model/grant/locale/source/overlay write fails explicitly.
 - A partial run cannot report full success.
 - Service docs and executed notes are updated after the runtime path works.

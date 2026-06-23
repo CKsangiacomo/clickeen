@@ -20,10 +20,10 @@ Tokyo-worker stores exact translated locale files in R2.
 Bob displays the user operation.
 
 Active locales are the locales the user wants widgets and pages displayed in.
-When Roma Settings finds an active locale missing an overlay file for a saved
-instance, Roma calls Translation Agent to create that missing overlay. When Roma
-Settings finds an overlay file whose locale is not active, Roma asks Tokyo-worker
-to delete the exact overlay file; Translation Agent is not involved in deletion.
+When Roma Settings sees active locales added by the user, Roma calls Translation
+Agent to create those overlay files for saved instances. When Roma Settings sees
+active locales removed by the user, Roma asks Tokyo-worker to delete those exact
+overlay files; Translation Agent is not involved in deletion.
 
 ## Runtime
 

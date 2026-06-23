@@ -12,7 +12,6 @@ import { listAccountInstancesInTokyo } from '@roma/lib/account-instance-direct';
 import {
   deleteAccountInstanceTranslationValues,
   generateAccountInstanceTranslations,
-  loadAccountInstanceTranslations,
 } from '@roma/lib/account-instance-translations';
 import { loadAccountBaseLocaleLockState } from '@roma/lib/account-base-locale-lock';
 import {
@@ -104,6 +103,7 @@ async function reconcileAccountLocaleOverlays(args: {
   accountId: string;
   accountCapsule?: string | null;
   requestId?: string | null;
+  previousActiveLocales: string[];
   nextActiveLocales: string[];
   baseLocale: string;
   authz: Parameters<typeof generateAccountInstanceTranslations>[0]['authz'];
@@ -118,8 +118,25 @@ async function reconcileAccountLocaleOverlays(args: {
     }
   | LocaleOverlayUpdateFailure
 > {
+  const previousActiveLocales = Array.from(
+    new Set(args.previousActiveLocales.filter((locale) => locale !== args.baseLocale)),
+  );
   const nextActiveLocales = Array.from(new Set(args.nextActiveLocales.filter((locale) => locale !== args.baseLocale)));
+  const previousActiveSet = new Set(previousActiveLocales);
   const nextActiveSet = new Set(nextActiveLocales);
+  const removedLocales = previousActiveLocales.filter((locale) => !nextActiveSet.has(locale));
+  const addedLocales = nextActiveLocales.filter((locale) => !previousActiveSet.has(locale));
+
+  if (removedLocales.length === 0 && addedLocales.length === 0) {
+    return {
+      ok: true,
+      value: {
+        instancesChecked: 0,
+        deleted: [],
+        generated: [],
+      },
+    };
+  }
 
   const instances = await listAccountInstancesInTokyo({
     accountId: args.accountId,
@@ -132,23 +149,6 @@ async function reconcileAccountLocaleOverlays(args: {
   const generated: Array<{ instanceId: string; locales: string[] }> = [];
 
   for (const instance of instances.value.accountInstances) {
-    const existing = await loadAccountInstanceTranslations({
-      accountId: args.accountId,
-      instanceId: instance.instanceId,
-      accountCapsule: args.accountCapsule,
-      requestId: args.requestId,
-    });
-    if (!existing.ok) {
-      return localeOverlayFailure({
-        status: existing.status,
-        kind: existing.error.kind,
-        reasonKey: existing.error.reasonKey,
-        detail: `list:${instance.instanceId}:${existing.error.detail ?? existing.error.reasonKey}`,
-      });
-    }
-
-    const existingLocales = existing.value.translations.map((entry) => entry.locale);
-    const removedLocales = existingLocales.filter((locale) => !nextActiveSet.has(locale));
     for (const locale of removedLocales) {
       const result = await deleteAccountInstanceTranslationValues({
         accountId: args.accountId,
@@ -168,14 +168,13 @@ async function reconcileAccountLocaleOverlays(args: {
       deleted.push({ instanceId: instance.instanceId, locale });
     }
 
-    const missingAddedLocales = nextActiveLocales.filter((locale) => !existingLocales.includes(locale));
-    if (missingAddedLocales.length === 0) continue;
+    if (addedLocales.length === 0) continue;
 
     const generation = await generateAccountInstanceTranslations({
       accountId: args.accountId,
       instanceId: instance.instanceId,
       baseLocale: args.baseLocale,
-      activeLocales: missingAddedLocales,
+      activeLocales: addedLocales,
       authz: args.authz,
       accountCapsule: args.accountCapsule,
       requestId: args.requestId,
@@ -185,7 +184,7 @@ async function reconcileAccountLocaleOverlays(args: {
         status: generation.status,
         kind: generation.error.kind,
         reasonKey: generation.error.reasonKey,
-        detail: `generate:${instance.instanceId}:${missingAddedLocales.join(',')}:${generation.error.detail ?? generation.error.reasonKey}`,
+        detail: `generate:${instance.instanceId}:${addedLocales.join(',')}:${generation.error.detail ?? generation.error.reasonKey}`,
       });
     }
     if (!generation.value.translation.accepted) {
@@ -193,7 +192,7 @@ async function reconcileAccountLocaleOverlays(args: {
         status: 422,
         kind: 'VALIDATION',
         reasonKey: 'coreui.errors.translation.failed',
-        detail: `generate:${instance.instanceId}:${missingAddedLocales.join(',')}:not_accepted`,
+        detail: `generate:${instance.instanceId}:${addedLocales.join(',')}:not_accepted`,
       });
     }
     generated.push({ instanceId: instance.instanceId, locales: generation.value.translation.activeLocales });
@@ -472,6 +471,7 @@ export async function PUT(request: NextRequest) {
       accountId: current.value.authzPayload.accountPublicId,
       accountCapsule: current.value.authzToken,
       requestId: current.value.requestId,
+      previousActiveLocales: accountState.activeLocales,
       nextActiveLocales: activeLocales,
       baseLocale,
       authz: current.value.authzPayload,

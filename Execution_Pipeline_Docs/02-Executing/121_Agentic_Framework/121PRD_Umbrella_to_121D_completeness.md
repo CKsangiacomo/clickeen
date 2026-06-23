@@ -349,9 +349,9 @@ Future work may use Translation Agent overlays. It must not be smuggled into
 - 121D Translation Agent runtime path works through Roma, Translation Agent
   Worker, San Francisco, and Tokyo-worker.
 - 121D makes Translation Agent a real Cloudflare Worker agent home.
-- Account settings active-locale save reconciles saved instance overlay folders
-  against the next active locale set: inactive overlays are deleted, missing
-  active overlays are generated, and existing active overlays are left alone.
+- Account settings active-locale save compares previous active locales to next
+  active locales: removed locales delete exact overlay files, added locales
+  generate exact overlay files, and unchanged locales are left alone.
 - Bob translation panel follows 121D exactly.
 - Roma owns active locales and account authorization.
 - Translation Agent owns translation reasoning only.
