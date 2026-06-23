@@ -29,6 +29,7 @@
     "cf:dns:records": "node scripts/cloudflare/api.mjs dns:records",
     "cf:dns:upsert-cname": "node scripts/cloudflare/api.mjs dns:upsert-cname",
     "e2e": "playwright test",
+    "e2e:auth:roma-dev": "node scripts/e2e/roma-dev-auth.mjs",
     "e2e:headed": "playwright test --headed",
     "e2e:ui": "playwright test --ui",
     "dev:prague": "pnpm --filter @clickeen/prague dev",

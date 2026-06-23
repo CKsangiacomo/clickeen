@@ -87,6 +87,9 @@ function resolveRateLimitPolicy(method: string, path: string): RateLimitPolicy |
   if (method === 'POST' && path === '/auth/finish') {
     return { bucket: 'auth.finish', max: 20, windowSec: 60 };
   }
+  if (method === 'POST' && path === '/auth/login/dev-admin') {
+    return { bucket: 'auth.login.dev_admin', max: 12, windowSec: 60 };
+  }
   if (method === 'POST' && path === '/auth/refresh') {
     return { bucket: 'auth.refresh', max: 60, windowSec: 60 };
   }

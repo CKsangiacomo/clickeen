@@ -1,5 +1,6 @@
 import { claimAsString } from '../utils/claims';
 import { authError, conflictError, internalError, json, redirect, validationError } from '../http';
+import { loadPrincipalAccountState } from '../bootstrap/state';
 import { capture, exact, type BerlinRoute } from '../http/routing';
 import { readJsonBody } from '../http/auth-request';
 import {
@@ -28,15 +29,93 @@ import { OAUTH_FINISH_TTL_SECONDS, OAUTH_STATE_TTL_SECONDS, type Env, type OAuth
 import { loadSessionState } from '../session/kv';
 import { ensureProductAccountStateForIdentity, type ProviderIdentity } from '../identity/resolve-login-account';
 import { buildGoogleAuthorizeUrl, exchangeGoogleCallback } from './providers/google';
+import { readSupabaseAdminJson, supabaseAdminFetch, supabaseAdminErrorResponse } from '../supabase-admin';
 
 type AuthLogLevel = 'info' | 'warn' | 'error';
 const INVITE_NEXT_PATTERN = /^\/accept-invite\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})(?:[/?#]|$)/i;
+
+type DevAdminUserRow = {
+  user_id?: unknown;
+  primary_email?: unknown;
+};
 
 function safeDetail(value: unknown, fallback: string): string {
   const normalized = typeof value === 'string' ? value.trim() : '';
   if (!normalized) return fallback;
   if (/^[a-z0-9_.:-]{1,96}$/i.test(normalized)) return normalized;
   return fallback;
+}
+
+function normalizeEmail(value: unknown): string | null {
+  const normalized = claimAsString(value)?.toLowerCase();
+  if (!normalized) return null;
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalized) ? normalized : null;
+}
+
+function resolveStage(env: Env): string {
+  const stage = claimAsString(env.ENV_STAGE)?.toLowerCase();
+  if (stage) return stage;
+  const issuer = claimAsString(env.BERLIN_ISSUER)?.toLowerCase() || '';
+  if (issuer.includes('localhost')) return 'local';
+  if (issuer.includes('berlin-dev')) return 'cloud-dev';
+  return 'unknown';
+}
+
+function resolveDevAdminCredentials(env: Env): { email: string; password: string; accountId: string } | null {
+  const email = normalizeEmail(env.BERLIN_DEV_ADMIN_EMAIL) || normalizeEmail(env.CK_ADMIN_EMAIL);
+  const password = claimAsString(env.BERLIN_DEV_ADMIN_PASSWORD) || claimAsString(env.CK_ADMIN_PASSWORD);
+  const accountId = claimAsString(env.BERLIN_DEV_ADMIN_ACCOUNT_ID) || 'CLICKEEN';
+  if (!email || !password || !accountId) return null;
+  return { email, password, accountId };
+}
+
+function isDevAdminLoginAllowed(env: Env): boolean {
+  const stage = resolveStage(env);
+  return stage === 'local' || stage === 'cloud-dev';
+}
+
+async function sha256(value: string): Promise<string> {
+  const bytes = new TextEncoder().encode(value);
+  const digest = await crypto.subtle.digest('SHA-256', bytes);
+  return Array.from(new Uint8Array(digest))
+    .map((byte) => byte.toString(16).padStart(2, '0'))
+    .join('');
+}
+
+async function stringsMatch(left: string, right: string): Promise<boolean> {
+  return (await sha256(left)) === (await sha256(right));
+}
+
+async function resolveDevAdminUserId(
+  env: Env,
+  email: string,
+): Promise<{ ok: true; userId: string } | { ok: false; response: Response }> {
+  const params = new URLSearchParams({
+    select: 'user_id,primary_email',
+    primary_email: `eq.${email}`,
+    limit: '1',
+  });
+  const response = await supabaseAdminFetch(env, `/rest/v1/users?${params.toString()}`, {
+    method: 'GET',
+  });
+  const payload = await readSupabaseAdminJson<DevAdminUserRow[] | Record<string, unknown>>(response);
+  if (!response.ok) {
+    return {
+      ok: false,
+      response: supabaseAdminErrorResponse('coreui.errors.db.readFailed', response.status, payload),
+    };
+  }
+  if (!Array.isArray(payload)) {
+    return { ok: false, response: internalError('coreui.errors.db.readFailed', 'dev_admin_user_payload_invalid') };
+  }
+
+  const row = payload[0];
+  const userId = claimAsString(row?.user_id);
+  const rowEmail = normalizeEmail(row?.primary_email);
+  if (!userId || rowEmail !== email) {
+    return { ok: false, response: authError('coreui.errors.auth.forbidden', 403, 'dev_admin_user_missing') };
+  }
+  return { ok: true, userId };
 }
 
 function logAuthFlow(
@@ -459,6 +538,54 @@ async function handleProviderLoginCallback(
   return redirect(destination.toString());
 }
 
+async function createFinishTransactionForIssuedSession(args: {
+  env: Env;
+  provider: string;
+  userId: string;
+  session: Awaited<ReturnType<typeof issueSession>>;
+  next: string;
+  intent: 'signin' | 'signup_prague';
+  finishRedirectUrl: string;
+}): Promise<{ ok: true; finishUrl: string } | { ok: false; response: Response }> {
+  if (!args.finishRedirectUrl) {
+    return {
+      ok: false,
+      response: authError('berlin.errors.auth.config_missing', 503, 'missing_finish_redirect_url'),
+    };
+  }
+
+  const nowSec = Math.floor(Date.now() / 1000);
+  const finishId = createFinishId();
+  const finishTransaction: OAuthFinishTransaction = {
+    v: 1,
+    provider: args.provider,
+    sessionId: args.session.sid,
+    userId: args.userId,
+    createdAccount: false,
+    accessToken: args.session.accessToken,
+    refreshToken: args.session.refreshToken,
+    accessTokenMaxAge: args.session.accessTokenMaxAge,
+    refreshTokenMaxAge: args.session.refreshTokenMaxAge,
+    expiresAt: args.session.expiresAt,
+    intent: args.intent,
+    next: args.next,
+    createdAt: nowSec,
+    finishExpiresAt: nowSec + OAUTH_FINISH_TTL_SECONDS,
+    finishRedirectUrl: args.finishRedirectUrl,
+  };
+  const stored = await saveOauthFinishTransaction(args.env, finishId, finishTransaction);
+  if (!stored) {
+    return {
+      ok: false,
+      response: authError('berlin.errors.auth.config_missing', 503, 'missing_oauth_finish_store'),
+    };
+  }
+
+  const destination = new URL(args.finishRedirectUrl);
+  destination.searchParams.set('finishId', finishId);
+  return { ok: true, finishUrl: destination.toString() };
+}
+
 async function handleFinish(request: Request, env: Env): Promise<Response> {
   const body = await readJsonBody(request);
   const finishFromBody = claimAsString(body?.finishId);
@@ -549,7 +676,97 @@ async function handleFinish(request: Request, env: Env): Promise<Response> {
   });
 }
 
+async function handleDevAdminLogin(request: Request, env: Env): Promise<Response> {
+  if (!isDevAdminLoginAllowed(env)) {
+    return json({ error: 'NOT_FOUND' }, { status: 404 });
+  }
+
+  const credentials = resolveDevAdminCredentials(env);
+  if (!credentials) {
+    return authError('berlin.errors.auth.config_missing', 503, 'dev_admin_credentials_missing');
+  }
+
+  const body = await readJsonBody(request);
+  const email = normalizeEmail(body?.email);
+  const password = claimAsString(body?.password);
+  const hasNext = Object.prototype.hasOwnProperty.call(body ?? {}, 'next');
+  const hasIntent = Object.prototype.hasOwnProperty.call(body ?? {}, 'intent');
+  const next = normalizeNextPath(body?.next);
+  const intent = normalizeIntent(body?.intent);
+  const hasFinishRedirect = Object.prototype.hasOwnProperty.call(body ?? {}, 'finishRedirectUrl');
+  const finishRedirect = resolveRequestedFinishRedirectUrl(env, body?.finishRedirectUrl, hasFinishRedirect);
+  if (!finishRedirect.ok) {
+    return validationError('coreui.errors.auth.next.invalid', finishRedirect.detail);
+  }
+  if (hasNext && !next) {
+    return validationError('coreui.errors.auth.next.invalid');
+  }
+  if (hasIntent && !intent) {
+    return validationError('coreui.errors.auth.intent.invalid');
+  }
+  const finishRedirectUrl = finishRedirect.url || resolveFinishRedirectUrl(env);
+  if (!finishRedirectUrl) {
+    return authError('berlin.errors.auth.config_missing', 503, 'missing_finish_redirect_url');
+  }
+
+  if (!email || !password) {
+    return validationError('coreui.errors.auth.required', 'dev_admin_credentials_required');
+  }
+
+  const [emailMatches, passwordMatches] = await Promise.all([
+    stringsMatch(email, credentials.email),
+    stringsMatch(password, credentials.password),
+  ]);
+  if (!emailMatches || !passwordMatches) {
+    logAuthFlow(request, 'warn', 'auth.dev_admin.rejected', {
+      reasonKey: 'coreui.errors.auth.required',
+    });
+    return authError('coreui.errors.auth.required', 401, 'dev_admin_credentials_invalid');
+  }
+
+  const user = await resolveDevAdminUserId(env, credentials.email);
+  if (!user.ok) return user.response;
+
+  const accountState = await loadPrincipalAccountState({
+    env,
+    userId: user.userId,
+    sessionRole: 'authenticated',
+  });
+  if (!accountState.ok) return accountState.response;
+  if (accountState.value.defaultAccount?.accountId !== credentials.accountId) {
+    return authError('coreui.errors.auth.forbidden', 403, 'dev_admin_account_mismatch');
+  }
+
+  const session = await issueSession(env, {
+    userId: user.userId,
+    authMode: 'direct_provider',
+  });
+  const finish = await createFinishTransactionForIssuedSession({
+    env,
+    provider: 'dev-admin',
+    userId: user.userId,
+    session,
+    next: next || '/home',
+    intent: intent || 'signin',
+    finishRedirectUrl,
+  });
+  if (!finish.ok) return finish.response;
+
+  logAuthFlow(request, 'info', 'auth.dev_admin.ready', {
+    next: next || '/home',
+    userId: user.userId,
+  });
+  return json({
+    ok: true,
+    provider: 'dev-admin',
+    finishUrl: finish.finishUrl,
+  });
+}
+
 export const AUTH_ROUTES: BerlinRoute[] = [
+  exact('/auth/login/dev-admin', {
+    POST: ({ request, env }) => handleDevAdminLogin(request, env),
+  }),
   {
     pattern: /^\/auth\/login\/([^/]+)\/start$/,
     methods: {

@@ -18,8 +18,8 @@ Rules:
 - Bob and Roma `wrangler.toml` files must stay within the Pages-supported schema. Worker-only blocks such as top-level `observability` or named environments like `local` are not valid Pages config.
 - Prague keeps runtime vars in the Cloudflare Pages dashboard because it does not use app-local Wrangler config today.
 - DevStudio is the canonical internal Pages toolbench at `https://devstudio.clickeen.com`.
-- GitHub runtime verification stays unauthenticated until a real provider-based test adapter exists; do not keep public password login for smoke coverage.
-- Authenticated cloud-dev smoke is manual Google login, Roma bootstrap, Builder open/save, Widgets read, locales, assets, and logout.
+- GitHub runtime verification stays unauthenticated unless cloud-dev admin auth secrets are available to the runner; do not keep public auth bypasses for smoke coverage.
+- Authenticated cloud-dev smoke uses Berlin's dev-admin provider to mint a normal session for the existing `CLICKEEN` account, then verifies Roma bootstrap, Builder open/save, Widgets read, locales, assets, and logout.
 - Berlin/Roma product auth, bootstrap, Builder, account registry, Tokyo, and Tokyo-worker account-control paths must not require shared-secret bearer auth. Internal San Francisco tooling requests use signed request bodies.
 
 ## Bob
@@ -151,7 +151,8 @@ Public host:
   health checks require fallback reachability.
 
 Auth:
-- Berlin/Google login is the only auth boundary.
+- Berlin is the auth boundary. Google is the normal human login provider; the
+  Berlin dev-admin provider exists only for cloud-dev authenticated e2e.
 - Cloudflare Access is not the DevStudio auth boundary.
 - The signed-in Berlin session must resolve to the normal Clickeen admin account.
 
@@ -203,12 +204,12 @@ Forbidden deploy targets for these git-authored media:
 These values remain outside git by design. Keep the inventory true; do not store secret values in repo files.
 
 Worker secrets:
-- Berlin: `SUPABASE_SERVICE_ROLE_KEY`
+- Berlin: `SUPABASE_SERVICE_ROLE_KEY`, `BERLIN_DEV_ADMIN_EMAIL`, `BERLIN_DEV_ADMIN_PASSWORD`
 - San Francisco: `AI_GRANT_HMAC_SECRET`
 - Translation Agent: `AI_GRANT_HMAC_SECRET`
 
 Pages secrets:
-- Roma: `AI_GRANT_HMAC_SECRET` is required for account Copilot grant/outcome signing and Translation Agent grant minting. `SUPABASE_SERVICE_ROLE_KEY` is required for Roma-owned account settings writes. Roma -> Tokyo/Tokyo-worker storage commands use service bindings. Account-widget l10n generation currently returns unavailable until Roma is wired to call the Translation Agent Worker; that Worker calls San Francisco `/v1/model/chat` and writes translated locale values via Tokyo-worker.
+- Roma: `AI_GRANT_HMAC_SECRET` is required for account Copilot grant/outcome signing and Translation Agent grant minting. `SUPABASE_SERVICE_ROLE_KEY` is required for Roma-owned account settings writes. Roma -> Tokyo/Tokyo-worker storage commands use service bindings. Account-widget l10n generation calls the Translation Agent Worker; that Worker calls San Francisco `/v1/model/chat` and writes translated locale values via Tokyo-worker.
 - DevStudio: `DEVSTUDIO_GITHUB_TOKEN` is required for GitHub-backed policy writes.
 
 CI secrets/vars:

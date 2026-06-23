@@ -18,6 +18,7 @@ BERLIN_FINISH_REDIRECT_URL = "https://roma.dev.clickeen.com/api/session/finish"
 BERLIN_ALLOWED_FINISH_REDIRECT_URLS = "https://devstudio.clickeen.com/api/session/finish"
 BERLIN_ALLOWED_PROVIDERS = "google"
 ENV_STAGE = "cloud-dev"
+BERLIN_DEV_ADMIN_ACCOUNT_ID = "CLICKEEN"
 
 [[kv_namespaces]]
 binding = "BERLIN_SESSION_KV"

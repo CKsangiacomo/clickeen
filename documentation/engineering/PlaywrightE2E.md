@@ -44,9 +44,11 @@ The Roma default is preserved when neither `E2E_ROMA_URL` nor `E2E_BASE_URL` is 
 
 Do not automate Google OAuth.
 
-Authenticated tests use an ignored Playwright storage-state file created outside
-the product runtime. The product no longer exposes Roma, DevStudio, or Berlin
-E2E session-mint endpoints.
+Authenticated tests use an ignored Playwright storage-state file created from
+Berlin's cloud-dev admin auth provider. The provider accepts the configured
+admin email and password, verifies that the existing user resolves to the
+normal `CLICKEEN` account, issues a normal Berlin session, and lets Roma finish
+the session through `/api/session/finish`.
 
 After that, tests exercise the real product path:
 
@@ -66,8 +68,16 @@ e2e/.auth/roma-dev.json
 
 It is ignored by git.
 
-Create or refresh it outside Clickeen product services. If it is missing,
-authenticated specs skip and public smoke specs still run.
+Create or refresh it with:
+
+```bash
+pnpm e2e:auth:roma-dev
+```
+
+The command reads `BERLIN_DEV_ADMIN_EMAIL`/`BERLIN_DEV_ADMIN_PASSWORD`, falling
+back to `CK_ADMIN_EMAIL`/`CK_ADMIN_PASSWORD`, from the environment or local
+`.env.local`. If the storage state is missing, authenticated specs skip and
+public smoke specs still run.
 
 ## Current Specs
 
