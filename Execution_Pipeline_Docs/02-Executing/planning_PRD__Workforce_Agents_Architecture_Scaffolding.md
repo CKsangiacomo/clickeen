@@ -31,10 +31,10 @@ Parent:
 
 Related:
 
-- `documentation/ai/overview.md`
-- `documentation/ai/infrastructure.md`
-- `documentation/ai/agents/gtm.md`
-- `documentation/ai/agents/ux-writer.md`
+- `documentation/ai/README.md`
+- `documentation/ai/sanfrancisco.md`
+- `documentation/ai/agents/Planned_Agents/gtm.md`
+- `documentation/ai/agents/Planned_Agents/ux-writer.md`
 - `agents/translation-agent/`
 - `tokyo-worker/src/domains/account-translations/operations.ts`
 - `packages/ck-contracts/src/ai.ts`

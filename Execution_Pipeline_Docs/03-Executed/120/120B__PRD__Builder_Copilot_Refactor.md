@@ -30,8 +30,8 @@ Closeout amendment applied on 2026-06-19:
   support workflows, autonomous behavior, or durable workforce agents.
 - Human product testing showed the current Copilot UX is below the product bar. Do not
   treat repeated browser testing of that UX as proof that 120B delivered product Copilot.
-- The product-agent rebuild is tracked by
-  `Execution_Pipeline_Docs/01-Planning/planning_PRD__Builder_Copilot_Real_Agent_Rebuild.md`.
+- The product-agent rebuild shipped as
+  `Execution_Pipeline_Docs/02-Executing/121_Agentic_Framework/121C__PRD__Product_Copilot_Real_Agent.md`.
 
 Parent:
 
@@ -47,7 +47,7 @@ Related:
 - `sanfrancisco/src/agents/widgetCopilotCore.ts`
 - `sanfrancisco/src/agents/csWidgetCopilot.ts`
 - `sanfrancisco/src/agents/csPromptPayload.ts`
-- `documentation/services/sanfrancisco.md`
+- `documentation/ai/sanfrancisco.md`
 - EB-007 (copilot core re-separation)
 
 ---

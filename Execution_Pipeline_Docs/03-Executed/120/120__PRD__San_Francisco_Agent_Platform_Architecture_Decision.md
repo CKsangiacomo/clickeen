@@ -9,11 +9,10 @@ Type: Architecture decision (understand → survey → recommend)
 
 Related:
 
-- `documentation/ai/overview.md` (San Francisco = AI Workforce OS)
-- `documentation/ai/infrastructure.md` (bindings, budgets, endpoints)
-- `documentation/services/sanfrancisco.md` (shipped runtime truth)
-- `documentation/ai/agents/gtm.md` (GTM Agent spec — not implemented)
-- `documentation/ai/agents/ux-writer.md` (UX Writer spec — not implemented)
+- `documentation/ai/README.md` (AI plane and agent docs home)
+- `documentation/ai/sanfrancisco.md` (shipped runtime truth)
+- `documentation/ai/agents/Planned_Agents/gtm.md` (planned GTM Agent placeholder)
+- `documentation/ai/agents/Planned_Agents/ux-writer.md` (planned UX Writer placeholder)
 - `packages/ck-contracts/src/ai.ts` (agent registry)
 - EB-007 (Evergreen Backlog: copilot core re-separation)
 - Anthropic, "Building agents that reach production systems with MCP"
@@ -86,7 +85,7 @@ Closeout amendment applied on 2026-06-19:
   testing showed the current user-facing Copilot is below the Clickeen product bar. That
   finding belongs to the successor product-agent PRD, not to this technical slice's
   closure.
-- **Successor product-agent work lives in planning:** `Execution_Pipeline_Docs/01-Planning/planning_PRD__Builder_Copilot_Real_Agent_Rebuild.md`.
+- **Successor product-agent work shipped as** `Execution_Pipeline_Docs/02-Executing/121_Agentic_Framework/121C__PRD__Product_Copilot_Real_Agent.md`.
 
 ---
 
@@ -149,7 +148,7 @@ Clickeen is an AI-first company building AI-operated, embeddable widgets — sof
 like organisms (atomic design), operated by AI, served in 29+ languages, stacked into
 edge-served pages. The product thesis ("reimagining the webpage") is inseparable from an
 operational thesis: **Clickeen runs as 1 human + an AI workforce.** Sales, support,
-marketing, localization, and ops are agents, not teams (`documentation/ai/overview.md`).
+marketing, localization, and ops are agents, not teams (`documentation/ai/README.md`).
 
 That means agents are not a feature bolted onto the product. They are how the company
 operates and how the product self-improves. The platform that runs them is core
@@ -202,7 +201,7 @@ owner, a second policy owner, or a second provider-key owner.
 ### 1.2 What San Francisco already is
 
 San Francisco is already named, in canonical docs, as the **"operating system for the
-company's AI workforce"** (`documentation/ai/overview.md`). It is a Cloudflare Worker that
+company's AI workforce"** (`documentation/ai/README.md`). It is a Cloudflare Worker that
 already owns the AI plane:
 
 - **Grants:** HMAC-signed `AIGrant` from trusted issuers (`roma`, `sanfrancisco`),
@@ -216,7 +215,7 @@ already owns the AI plane:
 - **Telemetry + learning loop:** every `/v1/execute` enqueues an `InteractionEvent` to
   `SF_EVENTS`; the consumer writes raw samples to R2 and indexes to D1; `/v1/outcome`
   attaches conversions. Bindings already provisioned: `SF_KV`, `SF_EVENTS`, `SF_D1`,
-  `SF_R2` (`documentation/ai/infrastructure.md`).
+  `SF_R2` (`documentation/ai/sanfrancisco.md`).
 - **Two San Francisco HTTP surfaces already coexist:** synchronous `/v1/execute` (Builder
   Copilot) and internal instance-translation diagnostic routes. The removed
   removed translation queue is not current product truth and must not be rebuilt as
@@ -259,15 +258,14 @@ shape, and a one-size design would be wrong.
 | -------------------------------- | --------------------------------- | --------------------- | ----------------------- | --------------------- |
 | Builder Copilot                  | `cs.widget.copilot.v1`            | **Shipped**           | Roma account Builder    | overview, ai.ts       |
 | Widget Instance Translator       | `widget.instance.translator`      | **Diagnostic HTTP route; product generation disabled** | Roma/Tokyo storage boundary + SF diagnostic route | overview, ai.ts       |
-| GTM Agent ("AI VP of Marketing") | `ops.gtm.*` (proposed)            | **Spec'd, not built** | internal/ops cron       | `agents/gtm.md`       |
-| UX Writer                        | `ops.uxwriter.*` (proposed)       | **Spec'd, not built** | internal/ops cron       | `agents/ux-writer.md` |
+| GTM Agent                        | `ops.gtm.*` (proposed)            | **Planned, not built** | internal/ops            | `documentation/ai/agents/Planned_Agents/gtm.md`       |
+| UX Writer                        | `ops.uxwriter.*` (proposed)       | **Planned, not built** | internal/ops            | `documentation/ai/agents/Planned_Agents/ux-writer.md` |
 | Support Reply                    | `support.reply` (named)           | Future                | (TBD)                   | overview "Terms"      |
 | Community Moderation             | `ops.communityModeration` (named) | Future                | (TBD)                   | overview "Terms"      |
 
-The overview's roster table ("replaces product specialists / localization team / marketing
-org") and its Terms section naming `support.reply` and `ops.communityModeration` make the
-intended end-state explicit: a workforce spanning **editor assistance, localization,
-marketing, support, and ops moderation.**
+The AI docs name a future workforce spanning editor assistance, localization,
+marketing, support, and ops moderation. Only shipped agents and current planned-agent
+placeholders are authoritative after the AI-folder cleanup.
 
 Dispositions for the shipped roster (PR-14/D9, ratified 2026-06-09):
 
@@ -283,11 +281,9 @@ Dispositions for the shipped roster (PR-14/D9, ratified 2026-06-09):
 - **Interactive / synchronous** — request→response, latency-bound (seconds), one grant
   per call, session in KV. Examples: Builder Copilot; future Support Reply (live).
   Fits today's `/v1/execute` model exactly.
-- **Durable / async** — multi-phase, runs minutes→hours, survives crashes, resumes from
-  checkpoint, cron- or event-triggered, fans work out to parallel tasks. Examples: GTM
-  Agent, UX Writer (both spec'd with a Durable Object orchestrator + task queue + own
-  D1/R2), and the instance translator (already queue-driven). This shape does **not** fit
-  a single synchronous `/v1/execute` call.
+- **Durable / async** — future agents may need long-running or scheduled work. The
+  concrete worker, cron, or storage shape must be proven by a real PRD for that agent;
+  planned placeholders do not imply any runtime primitive or service store.
 
 **Dimension B — Subject / trust:**
 
@@ -300,20 +296,18 @@ Dispositions for the shipped roster (PR-14/D9, ratified 2026-06-09):
 
 - `editor_ops_only` (returns `ops[]` into a widget): Builder Copilot.
 - `account_widget_translated_values`: Instance Translator.
-- **New boundaries the roster implies:** ops/marketing artifacts (GTM JSON, audit
-  reports) written to a service-owned store for human review — not account truth, not
-  product persistence.
+- **Future boundaries must be named by their PRD:** planned GTM or copy artifacts do not
+  exist until a product authority, artifact shape, and review/apply path are defined.
 
 **Dimension D — Autonomy / human-in-loop:** copilots are human-driven each turn; ops
 agents are autonomous-with-human-review (propose → human accepts → committed).
 
 ### 2.3 The conclusion this forces
 
-The roster is **bimodal**. Half of it (copilots, live support) is synchronous and already
-fits San Francisco's execute path. The other half (GTM, UX Writer, moderation sweeps) is
-**durable, long-running, orchestrated** — and the existing specs for those two were
-written as _separate Cloudflare Worker services_ with their own Durable Objects, queues,
-D1, and R2.
+The roster may become bimodal. Copilots and live support are synchronous and already fit
+San Francisco's execute path. Future GTM, UX Writer, or moderation agents may need
+scheduled or long-running work, but the old separate-worker/queue sketches are not current
+authority.
 
 So the central decision is not "what's the agent contract." It is:
 
@@ -352,8 +346,8 @@ Objects + cron + task queues) in one deployable.
 
 ### Option B — Sibling services, fully independent (the current spec'd default)
 
-GTM and UX Writer ship as `services/gtm-agent` and `services/ux-writer`, each with its own
-grant handling, model client, telemetry, D1/R2 — as their specs currently describe.
+GTM and UX Writer ship as independent services, each with its own grant handling, model
+client, telemetry, and storage, as old pre-thesis sketches described.
 
 - **Pros:** maximal isolation; each agent deploys independently; matches the specs as
   written.
@@ -363,8 +357,8 @@ grant handling, model client, telemetry, D1/R2 — as their specs currently desc
   must have exactly one atom/authority; sibling-per-agent gives it N copies, which is
   precisely the "duplicate truth / divergent behavior" AGENTS.md forbids — now committed at
   the platform layer instead of in a stray table. Provider keys spread across N workers.
-  The "AI Workforce OS" becomes N disconnected workers with no shared spine — the OS
-  framing dies. This is the option that most directly **violates the system-wide atomic
+  The shared AI plane becomes N disconnected workers with no shared spine. This is the
+  option that most directly **violates the system-wide atomic
   invariant the whole codebase is built on.** **Rejected as the default**, though its
   isolation instinct is correct.
 
@@ -375,9 +369,8 @@ grant/capability/boundary enforcement, budgets, and the telemetry/learning loop.
 execution surfaces sit behind that one plane:
 
 1. **Interactive surface** (`/v1/execute`, as today) for synchronous agents.
-2. **Durable surface** — orchestrated, long-running agents. Their orchestrator +
-   task-fanout (Durable Object/queue/cron) may run as a **governed sibling worker per
-   durable agent** (preserving isolation and independent deploy), but **all model calls,
+2. **Durable surface** — future long-running agents may run in an isolated worker or
+   scheduled operation if a concrete PRD proves that need, but **all model calls,
    grant/policy enforcement, budget accounting, and learning-event emission route back
    through San Francisco's shared spine**. The previous draft cited a
    removed translation queue as precedent; that mechanism is not present in the
@@ -553,8 +546,7 @@ Why this is the right fit for _Clickeen specifically_:
    volatility classes into one deployable. Option C keeps the AI spine one authority while
    letting each product/orchestrator boundary keep its own persistence, review, and commit
    authority.
-1. **It honors the shipped isolation tenet** while keeping the "AI Workforce OS" real —
-   the two things the canonical docs insist on simultaneously.
+1. **It honors the shipped isolation tenet** while keeping the shared AI plane real.
 2. **It generalizes the correct boundary, not a stale mechanism:** model calls belong to
    San Francisco; account/product state remains with the owning product boundary. Do not
    infer a queue, Tokyo-worker orchestration role, or new storage responsibility from old
@@ -610,7 +602,7 @@ breaks the product-truth guarantee. There is no partial compliance.
 
 ### What is per-agent (owned, isolated)
 
-- Orchestration shape (synchronous vs. Durable Object + queue + cron).
+- Orchestration shape, only when a future agent PRD proves it is needed.
 - Prompts/persona, phase logic, task fanout.
 - The agent's declared boundary and its output target (ops, translated values, ops
   artifacts for review).

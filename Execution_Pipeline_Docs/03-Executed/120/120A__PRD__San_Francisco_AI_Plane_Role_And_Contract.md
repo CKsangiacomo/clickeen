@@ -13,9 +13,8 @@ Parent:
 
 Related:
 
-- `documentation/ai/overview.md`
-- `documentation/ai/infrastructure.md`
-- `documentation/services/sanfrancisco.md`
+- `documentation/ai/README.md`
+- `documentation/ai/sanfrancisco.md`
 - `packages/ck-contracts/src/ai.ts`
 - `packages/ck-policy/ai-runtime.matrix.json`
 - `sanfrancisco/src/ai/modelRouter.ts`
@@ -78,8 +77,8 @@ Closeout amendment applied on 2026-06-19:
   provider errors, and the scoped San Francisco execution boundary.
 - 120A did not deliver a product Copilot, Builder Agent, Guide, Advice, account/tier
   help, or workforce-agent runtime.
-- The real Builder product-agent rebuild is tracked separately in
-  `Execution_Pipeline_Docs/01-Planning/planning_PRD__Builder_Copilot_Real_Agent_Rebuild.md`.
+- The real Builder product-agent rebuild shipped as
+  `Execution_Pipeline_Docs/02-Executing/121_Agentic_Framework/121C__PRD__Product_Copilot_Real_Agent.md`.
 
 ---
 
@@ -402,5 +401,5 @@ Authoritative execution contract: `120A1__EXEC__AI_Plane_Capability_Conformance_
    speculative framework beyond the model capability registry and shared execution core.
 
 4. **Moves toward intended architecture**
-   Yes. This makes the "AI Workforce OS" claim technically real without confusing user
-   Copilots and company workforce agents.
+   Yes. This keeps the shared AI plane real without confusing user Copilots and company
+   workforce agents.
