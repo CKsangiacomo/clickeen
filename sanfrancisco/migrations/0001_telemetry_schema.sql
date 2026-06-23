@@ -1,6 +1,6 @@
 -- Migration number: 0001 	 2026-04-28T12:19:06.891Z
 
-CREATE TABLE IF NOT EXISTS copilot_events_v1 (
+CREATE TABLE IF NOT EXISTS copilot_events (
   requestId TEXT PRIMARY KEY NOT NULL,
   day TEXT NOT NULL,
   occurredAtMs INTEGER NOT NULL,
@@ -18,8 +18,8 @@ CREATE TABLE IF NOT EXISTS copilot_events_v1 (
   uniquePathsTouched INTEGER,
   scopesTouched TEXT,
   ctaAction TEXT,
-  promptVersion TEXT,
-  policyVersion TEXT,
+  promptId TEXT,
+  policyId TEXT,
   dictionaryHash TEXT,
   aiProfile TEXT,
   taskClass TEXT,
@@ -28,7 +28,7 @@ CREATE TABLE IF NOT EXISTS copilot_events_v1 (
   latencyMs INTEGER
 );
 
-CREATE TABLE IF NOT EXISTS copilot_outcomes_v1 (
+CREATE TABLE IF NOT EXISTS copilot_outcomes (
   requestId TEXT NOT NULL,
   event TEXT NOT NULL,
   day TEXT NOT NULL,
@@ -39,23 +39,23 @@ CREATE TABLE IF NOT EXISTS copilot_outcomes_v1 (
   PRIMARY KEY (requestId, event)
 );
 
-CREATE INDEX IF NOT EXISTS idx_copilot_events_v1_day_agent
-  ON copilot_events_v1(day, agentId);
+CREATE INDEX IF NOT EXISTS idx_copilot_events_day_agent
+  ON copilot_events(day, agentId);
 
-CREATE INDEX IF NOT EXISTS idx_copilot_events_v1_day_stage
-  ON copilot_events_v1(day, envStage);
+CREATE INDEX IF NOT EXISTS idx_copilot_events_day_stage
+  ON copilot_events(day, envStage);
 
-CREATE INDEX IF NOT EXISTS idx_copilot_events_v1_day_widget
-  ON copilot_events_v1(day, widgetType);
+CREATE INDEX IF NOT EXISTS idx_copilot_events_day_widget
+  ON copilot_events(day, widgetType);
 
-CREATE INDEX IF NOT EXISTS idx_copilot_events_v1_day_session
-  ON copilot_events_v1(day, sessionId);
+CREATE INDEX IF NOT EXISTS idx_copilot_events_day_session
+  ON copilot_events(day, sessionId);
 
-CREATE INDEX IF NOT EXISTS idx_copilot_events_v1_day_intent_outcome
-  ON copilot_events_v1(day, intent, outcome);
+CREATE INDEX IF NOT EXISTS idx_copilot_events_day_intent_outcome
+  ON copilot_events(day, intent, outcome);
 
-CREATE INDEX IF NOT EXISTS idx_copilot_outcomes_v1_day_event
-  ON copilot_outcomes_v1(day, event);
+CREATE INDEX IF NOT EXISTS idx_copilot_outcomes_day_event
+  ON copilot_outcomes(day, event);
 
-CREATE INDEX IF NOT EXISTS idx_copilot_outcomes_v1_request
-  ON copilot_outcomes_v1(requestId);
+CREATE INDEX IF NOT EXISTS idx_copilot_outcomes_request
+  ON copilot_outcomes(requestId);

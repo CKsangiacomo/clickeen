@@ -1,7 +1,6 @@
 {
-  "v": 1,
   "agents": {
-    "cs.widget.copilot.v1": {
+    "product.copilot": {
       "free": {
         "defaultModel": {
           "provider": "deepseek",

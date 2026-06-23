@@ -1,5 +1,5 @@
 {
-  "baseFingerprint": "6ee19ebd0cfbc54425d7d6ca9ae2fc04c47db84105b4ca54b907caf8c1939e97",
+  "baseFingerprint": "84c9aea52c4d9a2bdbc7d9dfac2245cf4ad7a1aa553226b202fc9aa3ada75ea1",
   "baseUpdatedAt": "2026-02-10T05:01:15.355Z",
   "ops": [
     {
@@ -172,6 +172,5 @@
       "path": "blocks.cta.copy.subheadline",
       "value": "Aloita ilmaiseksi, muokkaa ulkoasu brändiisi sopivaksi ja julkaise UKK, joka skaalautuu useille sivuille."
     }
-  ],
-  "v": 1
+  ]
 }

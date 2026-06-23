@@ -53,7 +53,6 @@ export function normalizeAccountPageSource(raw: unknown, expected?: {
 }): AccountPageSource | null {
   if (!isRecord(raw)) return null;
   if (
-    raw.schemaVersion !== 1 ||
     !isCompactPageId(raw.pageId) ||
     !isCompactAccountPublicId(raw.accountPublicId) ||
     (expected?.pageId && raw.pageId !== expected.pageId) ||
@@ -91,9 +90,9 @@ export function normalizeAccountPageSource(raw: unknown, expected?: {
     !Array.isArray(raw.placements) ||
     !raw.placements.every(isPagePlacement) ||
     !isExactNonEmptyString(raw.displayName) ||
-    typeof raw.version !== 'number' ||
-    !Number.isInteger(raw.version) ||
-    raw.version < 1 ||
+    typeof raw.revision !== 'number' ||
+    !Number.isInteger(raw.revision) ||
+    raw.revision < 1 ||
     !isExactNonEmptyString(raw.createdAt) ||
     !isExactNonEmptyString(raw.updatedAt)
   ) {
@@ -131,7 +130,7 @@ export function materializeAccountPageSourceSave(args: {
   return {
     ...submitted,
     createdAt: current.createdAt,
-    version: current.version + 1,
+    revision: current.revision + 1,
     updatedAt: args.now ?? new Date().toISOString(),
   };
 }

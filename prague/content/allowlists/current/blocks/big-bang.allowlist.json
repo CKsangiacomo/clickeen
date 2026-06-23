@@ -1,0 +1,12 @@
+{
+  "paths": [
+    {
+      "path": "copy.headline",
+      "type": "string"
+    },
+    {
+      "path": "copy.body",
+      "type": "string"
+    }
+  ]
+}

@@ -47,10 +47,10 @@ San Francisco does not own:
 | Method | Path | Current behavior |
 | --- | --- | --- |
 | `GET`/`HEAD` | `/healthz` | returns Worker health |
-| `POST` | `/v1/model/chat` | executes one governed model call for a built agent home |
-| `POST` | `/v1/outcome` | stores a signed outcome attachment |
-| `POST` | `/v1/execute` | returns `410`; San Francisco does not execute agent brains |
-| `POST` | `/v1/l10n/translate` | Prague system-copy translation tooling only |
+| `POST` | `/model/chat` | executes one governed model call for a built agent home |
+| `POST` | `/outcome` | stores a signed outcome attachment |
+| `POST` | `/execute` | returns `410`; San Francisco does not execute agent brains |
+| `POST` | `/l10n/translate` | Prague system-copy translation tooling only |
 
 ### `/healthz`
 
@@ -60,14 +60,14 @@ Response:
 { "ok": true, "service": "sanfrancisco", "env": "dev", "ts": 0 }
 ```
 
-### `/v1/model/chat`
+### `/model/chat`
 
 Request type: `ModelChatRequest` in `sanfrancisco/src/types.ts`.
 
 ```json
 {
-  "grant": "v1.<payload>.<signature>",
-  "agentId": "cs.widget.copilot.v1",
+  "grant": "ckgrant.<payload>.<signature>",
+  "agentId": "product.copilot",
   "messages": [
     { "role": "system", "content": "..." },
     { "role": "user", "content": "..." }
@@ -93,7 +93,7 @@ Response type: `ModelChatResponse` in `sanfrancisco/src/types.ts`.
 ```json
 {
   "requestId": "uuid",
-  "agentId": "cs.widget.copilot.v1",
+  "agentId": "product.copilot",
   "content": "...",
   "usage": {
     "provider": "openai",
@@ -105,14 +105,14 @@ Response type: `ModelChatResponse` in `sanfrancisco/src/types.ts`.
 }
 ```
 
-### `/v1/outcome`
+### `/outcome`
 
 Request type: `OutcomeAttachRequest` in `sanfrancisco/src/types.ts`.
 
 The caller sends the exact JSON body and signs:
 
 ```text
-outcome.v1.<bodyText>
+outcome.<bodyText>
 ```
 
 The signature is sent as:
@@ -161,7 +161,7 @@ Grant verification lives in `sanfrancisco/src/grants.ts`.
 Format:
 
 ```text
-v1.<base64url(payloadJson)>.<base64url(hmacSha256("v1.<payloadB64>", AI_GRANT_HMAC_SECRET))>
+ckgrant.<base64url(payloadJson)>.<base64url(hmacSha256("ckgrant.<payloadB64>", AI_GRANT_HMAC_SECRET))>
 ```
 
 Required payload fields:
@@ -191,9 +191,9 @@ Required `ai` policy fields:
 - `maxMonthlyTurns`
 - `timeoutMs`
 - `learningCapture.rawSamplePercent`
-- `policyVersion`
+- `policyId`
 
-For `/v1/model/chat`, San Francisco also enforces:
+For `/model/chat`, San Francisco also enforces:
 
 - `grant.ai.agentId` must match the canonical `agentId` from
   `packages/ck-contracts/src/ai.ts`;
@@ -241,7 +241,7 @@ failure.
 
 ## Telemetry Writes
 
-For each `/v1/model/chat` call, San Francisco builds an `InteractionEvent`.
+For each `/model/chat` call, San Francisco builds an `InteractionEvent`.
 
 If `SF_EVENTS` exists, the event is sent to the queue with `ctx.waitUntil`.
 Queue handling:
@@ -265,7 +265,7 @@ errors return `500`.
 | `401` | `GRANT_EXPIRED` | expired grant |
 | `403` | `CAPABILITY_DENIED` | unknown agent, missing capability, agent/policy mismatch, provider/model not allowed |
 | `500` | `PROVIDER_ERROR` | missing provider key, provider failure, outcome persistence failure |
-| `410` | `BAD_REQUEST` | `/v1/execute` called on San Francisco |
+| `410` | `BAD_REQUEST` | `/execute` called on San Francisco |
 
 Provider/model failure is explicit. It is not silently retried through a
 different model or provider.
@@ -274,10 +274,10 @@ different model or provider.
 
 | Caller | Path | How it calls |
 | --- | --- | --- |
-| Product Copilot Worker | `agents/product-copilot/src/worker.ts` | service binding `SANFRANCISCO_AI_ENGINE` or `SANFRANCISCO_BASE_URL` to `/v1/model/chat` |
-| Translation Agent Worker | `agents/translation-agent/src/worker.ts` | service binding `SANFRANCISCO_AI_ENGINE` to `/v1/model/chat` |
-| Bob/Roma outcome attach | Bob `/api/ai/outcome` -> Roma `/api/account/instances/{instanceId}/copilot/outcome` | Roma signs and forwards to San Francisco `/v1/outcome` |
-| Prague system-copy tooling | `sanfrancisco/src/l10n-routes.ts` | `/v1/l10n/translate` |
+| Product Copilot Worker | `agents/product-copilot/src/worker.ts` | service binding `SANFRANCISCO_AI_ENGINE` or `SANFRANCISCO_BASE_URL` to `/model/chat` |
+| Translation Agent Worker | `agents/translation-agent/src/worker.ts` | service binding `SANFRANCISCO_AI_ENGINE` to `/model/chat` |
+| Bob/Roma outcome attach | Bob `/api/ai/outcome` -> Roma `/api/account/instances/{instanceId}/copilot/outcome` | Roma signs and forwards to San Francisco `/outcome` |
+| Prague system-copy tooling | `sanfrancisco/src/l10n-routes.ts` | `/l10n/translate` |
 
 ## Deploy Path
 

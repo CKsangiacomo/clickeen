@@ -5,7 +5,6 @@ export type GrantSubject =
   | { kind: 'service'; serviceId: string };
 
 export type AIGrant = {
-  v: 1;
   iss: 'roma' | 'sanfrancisco';
   jti?: string;
   sub: GrantSubject;
@@ -116,7 +115,6 @@ export type AIError =
   | { code: 'PROVIDER_ERROR'; message: string; provider: string; upstreamStatus?: number };
 
 export type InteractionEvent = {
-  v: 1;
   requestId: string;
   agentId: string;
   occurredAtMs: number;
@@ -124,7 +122,7 @@ export type InteractionEvent = {
   trace?: AIGrant['trace'];
   ai?: {
     policyProfile?: AiGrantPolicy['policyProfile'];
-    policyVersion?: string;
+    policyId?: string;
     learningCapture?: AiGrantPolicy['learningCapture'];
     taskClass?: string;
   };

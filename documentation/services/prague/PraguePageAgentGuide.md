@@ -33,7 +33,7 @@ Only read these:
 - `documentation/capabilities/localization.md`
 - `prague/src/lib/blockRegistry.ts` (Prague marketing-section required keys + meta fields)
 - `tokyo/prague/pages/{widget}/{overview|templates|examples|features|pricing}.json` (repo-authored source; deployed R2 home is `prague/pages/**`)
-- `prague/content/allowlists/v1/**`
+- `prague/content/allowlists/current/**`
 
 Read only this scope for a Prague marketing-page edit.
 
@@ -47,7 +47,7 @@ Default scope:
 
 Only if the PRD explicitly requires new string keys:
 
-- `prague/content/allowlists/v1/blocks/{blockKind}.allowlist.json`
+- `prague/content/allowlists/current/blocks/{blockKind}.allowlist.json`
 
 Generated translation sidecars are outside this default edit scope:
 
@@ -102,7 +102,6 @@ Example shape:
 
 ```json
 {
-  "v": 1,
   "blocks": [
     { "id": "page-meta", "type": "page-meta", "copy": { "title": "...", "description": "..." } },
     { "id": "navmeta", "type": "navmeta", "copy": { "title": "...", "description": "..." } },
@@ -138,7 +137,7 @@ Required keys (current Prague section registry):
 
 If you add **new string keys** for an existing section type:
 
-- Update `prague/content/allowlists/v1/blocks/{blockKind}.allowlist.json`
+- Update `prague/content/allowlists/current/blocks/{blockKind}.allowlist.json`
 
 If you need a **new Prague section type**, stop and ask; that change requires a
 PRD and registry update.

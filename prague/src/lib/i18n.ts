@@ -1,6 +1,6 @@
 import { localeCandidates } from '@clickeen/l10n';
 import { PRAGUE_CANONICAL_LOCALES, type PragueLocale } from './locales';
-import chromeJson from '../../content/base/v1/chrome.json';
+import chromeJson from '../../content/base/current/chrome.json';
 
 // Prague chrome i18n (system-owned strings).
 // - Pre-GA PRD 098 cut: Prague widget pages do not own an overlay/layer runtime.
@@ -60,11 +60,11 @@ function resolveLocale(locale: string): string {
 function getChromeStrings(locale: string): Record<string, unknown> {
   resolveLocale(locale);
   if (!chromeJson || typeof chromeJson !== 'object' || Array.isArray(chromeJson)) {
-    throw new Error('[prague] Invalid chrome base file: prague/content/base/v1/chrome.json');
+    throw new Error('[prague] Invalid chrome base file: prague/content/base/current/chrome.json');
   }
   const strings = (chromeJson as Record<string, unknown>).strings;
   if (!strings || typeof strings !== 'object' || Array.isArray(strings)) {
-    throw new Error('[prague] Missing chrome strings: prague/content/base/v1/chrome.json');
+    throw new Error('[prague] Missing chrome strings: prague/content/base/current/chrome.json');
   }
   return strings as Record<string, unknown>;
 }

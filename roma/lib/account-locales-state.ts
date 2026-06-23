@@ -22,7 +22,7 @@ export async function loadCurrentAccountLocalesState(args: {
 > {
   const berlinBase = resolveBerlinBaseUrl().replace(/\/+$/, '');
   const upstream = await fetch(
-    `${berlinBase}/v1/accounts/${encodeURIComponent(args.accountId)}`,
+    `${berlinBase}/accounts/${encodeURIComponent(args.accountId)}`,
     {
       method: 'GET',
       headers: {

@@ -128,7 +128,7 @@ Translation generation is a separate explicit operation from the Translations
 panel. Roma resolves the current account active locales for that command,
 applies the current tier limit, loads the saved instance source from
 Tokyo-worker, mints a Translation Agent grant, and calls the Translation Agent
-Worker. Translation Agent calls San Francisco `/v1/model/chat` and writes
+Worker. Translation Agent calls San Francisco `/model/chat` and writes
 overlays via Tokyo-worker.
 
 Account language settings are also an overlay operation. When the user saves
@@ -245,7 +245,7 @@ and Tokyo/R2 account storage cleanup.
 Roma grants Builder Copilot access for the current account and calls San
 Francisco. Bob sends the Product Copilot request through Roma: `instanceId`,
 `sessionId`, `userMessage`, bounded `conversationHistory`, and a
-`product-copilot.context.v1` capsule with widget identity, locale, draft
+`product-copilot.context` capsule with widget identity, locale, draft
 signature, editable controls/current values, available draft actions, and
 unavailable capabilities. Roma validates that capsule, resolves account and
 widget identity from the saved instance context, mints the account grant, and

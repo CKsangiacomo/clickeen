@@ -12,7 +12,7 @@ export async function POST(request: NextRequest) {
     request,
     accessToken: current.value.accessToken,
     setCookies: current.value.setCookies,
-    path: `/v1/accounts/${encodeURIComponent(current.value.authzPayload.accountId)}/lifecycle/tier-drop/dismiss`,
+    path: `/accounts/${encodeURIComponent(current.value.authzPayload.accountId)}/lifecycle/tier-drop/dismiss`,
     method: 'POST',
     redirect: 'manual',
   });

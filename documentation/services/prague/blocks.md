@@ -1,4 +1,4 @@
-# Prague — Marketing Section Reference (v0)
+# Prague — Marketing Section Reference (current)
 
 This doc is the **implementation contract** for building Prague marketing pages.
 

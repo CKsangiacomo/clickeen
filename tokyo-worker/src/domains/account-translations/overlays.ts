@@ -23,16 +23,15 @@ function normalizeValues(value: unknown): Record<string, string> | null {
 
 export function normalizeLocaleOverlayDocument(raw: unknown): LocaleOverlayDocument | null {
   const payload = isRecord(raw) ? raw : null;
-  if (!payload || payload.v !== 1) return null;
+  if (!payload) return null;
   const values = normalizeValues(payload.values);
   if (!values) return null;
-  const allowedKeys = new Set(['v', 'values']);
+  const allowedKeys = new Set(['values']);
   for (const key of Object.keys(payload)) {
     if (!allowedKeys.has(key)) return null;
   }
   return {
-    v: 1,
-    values,
+        values,
   };
 }
 

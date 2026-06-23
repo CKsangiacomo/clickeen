@@ -12,14 +12,14 @@ Local dev:
 
 Endpoints:
 - `GET /healthz`
-- `POST /v1/model/chat`
-- `POST /v1/execute` (deprecated; visible 410)
-- `POST /v1/outcome` (signed outcome attach)
+- `POST /model/chat`
+- `POST /execute` (deprecated; visible 410)
+- `POST /outcome` (signed outcome attach)
 
 Deploy:
 - Cloud-dev deploys through GitHub Actions `cloud-dev workers deploy`.
 - Worker config lives in `sanfrancisco/wrangler.toml`.
 - Do not use the Cloudflare dashboard worker Git deploy control as the deploy authority.
 
-Grant format (v1):
-`v1.<base64url(payloadJson)>.<base64url(hmacSha256("v1.<payloadB64>", AI_GRANT_HMAC_SECRET))>`
+Grant format:
+`ckgrant.<base64url(payloadJson)>.<base64url(hmacSha256("ckgrant.<payloadB64>", AI_GRANT_HMAC_SECRET))>`

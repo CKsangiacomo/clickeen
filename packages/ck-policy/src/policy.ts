@@ -31,8 +31,7 @@ function createTotalPolicyBase(args: ResolvePolicyArgs): Policy {
   const limits = Object.fromEntries(PLAN_LIMIT_KEYS.map((k) => [k, 0])) as Policy['limits'];
 
   return {
-    v: 1,
-    profile: args.profile,
+        profile: args.profile,
     role: args.role,
     flags,
     limits,

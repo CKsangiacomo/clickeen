@@ -6,7 +6,7 @@ import { rotateRefreshRti, resolvePrincipalSession } from './auth-session';
 import { loadSessionState, revokeSessionBySid, revokeSessionsByUserId, saveSessionState } from './kv';
 import { resolveSigningContext, signAccessToken, signRefreshToken, verifyRefreshToken } from '../crypto/jwt';
 import { resolveAudience, resolveIssuer } from '../auth/config';
-import { ACCESS_TOKEN_TTL_SECONDS, REFRESH_TOKEN_TTL_SECONDS, type AccessClaims, type Env, type RefreshPayloadV2 } from '../types';
+import { ACCESS_TOKEN_TTL_SECONDS, REFRESH_TOKEN_TTL_SECONDS, type AccessClaims, type Env, type RefreshPayloadRecord } from '../types';
 
 async function handleRefresh(request: Request, env: Env): Promise<Response> {
   const body = await readJsonBody(request);
@@ -27,15 +27,15 @@ async function handleRefresh(request: Request, env: Env): Promise<Response> {
     return authError('coreui.errors.auth.required', 401, 'refresh_subject_mismatch');
   }
 
-  if (state.ver !== payload.ver) {
+  if (state.sessionRevision !== payload.sessionRevision) {
     await saveSessionState(env, { ...state, revoked: true });
-    return authError('coreui.errors.auth.required', 401, 'refresh_version_mismatch');
+    return authError('coreui.errors.auth.required', 401, 'refresh_revision_mismatch');
   }
 
   const rotated = await rotateRefreshRti(env, state, {
     sid: payload.sid,
     rti: payload.rti,
-    ver: payload.ver,
+    sessionRevision: payload.sessionRevision,
     userId: payload.userId,
   });
   if (!rotated.ok) return rotated.response;
@@ -44,7 +44,7 @@ async function handleRefresh(request: Request, env: Env): Promise<Response> {
   const claims: AccessClaims = {
     sub: state.userId,
     sid: state.sid,
-    ver: state.ver,
+    sessionRevision: state.sessionRevision,
     role: 'authenticated',
     iat: nowSec,
     exp: nowSec + ACCESS_TOKEN_TTL_SECONDS,
@@ -52,11 +52,10 @@ async function handleRefresh(request: Request, env: Env): Promise<Response> {
     aud: resolveAudience(env),
   };
 
-  const refreshPayload: RefreshPayloadV2 = {
-    v: 2,
+  const refreshPayload: RefreshPayloadRecord = {
     sid: state.sid,
     rti: rotated.nextRti,
-    ver: state.ver,
+    sessionRevision: state.sessionRevision,
     userId: state.userId,
     exp: nowSec + REFRESH_TOKEN_TTL_SECONDS,
   };

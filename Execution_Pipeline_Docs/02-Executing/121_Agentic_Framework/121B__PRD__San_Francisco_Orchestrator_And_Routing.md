@@ -80,9 +80,9 @@ model execution. It must not greenfield a broad agent platform.
 
 Current deployed primitives include:
 
-- `/v1/model/chat`;
-- deprecated `/v1/execute` returning visible failure in San Francisco;
-- `/v1/outcome`;
+- `/model/chat`;
+- deprecated `/execute` returning visible failure in San Francisco;
+- `/outcome`;
 - grant verification;
 - model/provider execution;
 - runtime policy checks;
@@ -98,7 +98,7 @@ San Francisco is responsible for:
 - exact model/provider execution;
 - OpenAI and DeepSeek provider execution;
 - trace/cost/error recording;
-- `/v1/outcome` attachment path;
+- `/outcome` attachment path;
 - explicit failure when the exact authorized model/provider path is unavailable.
 
 San Francisco must not become responsible for:
@@ -127,14 +127,14 @@ Any Product Copilot conversation/session state currently held in San Francisco
 KV must move to the Product Copilot agent home or to the Bob/Roma-owned
 conversation path defined by 121C.
 
-## 3.1 V1 Provider Boundary
+## 3.1 Current Provider Boundary
 
-V1 supported provider keys are:
+Current supported provider keys are:
 
 - OpenAI;
 - DeepSeek.
 
-That is sufficient for V1.
+That is sufficient for the current product.
 
 Provider independence means agents do not hardcode providers. It does not mean
 Clickeen must support many providers on day one.
@@ -275,7 +275,7 @@ Roma account translation route reads active locales
 ```
 
 `widget.instance.translator` is moved by 121D into its own Translation Agent
-Worker home. It must not move into generic San Francisco `/v1/execute`.
+Worker home. It must not move into generic San Francisco `/execute`.
 
 ## 7. Execution Slices
 
@@ -284,7 +284,7 @@ Worker home. It must not move into generic San Francisco `/v1/execute`.
 3. Define static typed agent config for current execution.
 4. Define OpenAI and DeepSeek provider adapter/config shape.
 5. Define structured result validation.
-6. Define trace record and `/v1/outcome` attachment.
+6. Define trace record and `/outcome` attachment.
 7. Move Product Copilot session/thread state out of San Francisco KV.
 8. Prove with Product Copilot.
 9. Prove with Translation Agent or another focused server-side agent when

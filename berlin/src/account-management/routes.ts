@@ -334,18 +334,18 @@ async function handleInvitationAccept(
 }
 
 export const ACCOUNT_MANAGEMENT_ROUTES: BerlinRoute[] = [
-  exact('/v1/me', {
+  exact('/me', {
     GET: ({ request, env }) => handleMe(request, env),
     PUT: ({ request, env }) => handleMeUpdate(request, env),
   }),
   {
-    pattern: /^\/v1\/invitations\/([^/]+)\/accept$/,
+    pattern: /^\/invitations\/([^/]+)\/accept$/,
     methods: {
       POST: ({ request, env, match }) => handleInvitationAccept(request, env, capture(match, 1)),
     },
   },
   {
-    pattern: /^\/v1\/accounts\/([^/]+)\/members\/([^/]+)$/,
+    pattern: /^\/accounts\/([^/]+)\/members\/([^/]+)$/,
     methods: {
       GET: ({ request, env, match }) => handleAccountMemberById(request, env, capture(match, 1), capture(match, 2)),
       PATCH: ({ request, env, match }) => handleAccountMemberPatch(request, env, capture(match, 1), capture(match, 2)),
@@ -354,39 +354,39 @@ export const ACCOUNT_MANAGEMENT_ROUTES: BerlinRoute[] = [
     },
   },
   {
-    pattern: /^\/v1\/accounts\/([^/]+)\/members$/,
+    pattern: /^\/accounts\/([^/]+)\/members$/,
     methods: {
       GET: ({ request, env, match }) => handleAccountMembers(request, env, capture(match, 1)),
     },
   },
   {
-    pattern: /^\/v1\/accounts\/([^/]+)\/invitations\/([^/]+)$/,
+    pattern: /^\/accounts\/([^/]+)\/invitations\/([^/]+)$/,
     methods: {
       DELETE: ({ request, env, match }) =>
         handleAccountInvitationDelete(request, env, capture(match, 1), capture(match, 2)),
     },
   },
   {
-    pattern: /^\/v1\/accounts\/([^/]+)\/invitations$/,
+    pattern: /^\/accounts\/([^/]+)\/invitations$/,
     methods: {
       GET: ({ request, env, match }) => handleAccountInvitations(request, env, capture(match, 1)),
       POST: ({ request, env, match }) => handleAccountInvitations(request, env, capture(match, 1)),
     },
   },
   {
-    pattern: /^\/v1\/accounts\/([^/]+)\/lifecycle\/tier-drop\/dismiss$/,
+    pattern: /^\/accounts\/([^/]+)\/lifecycle\/tier-drop\/dismiss$/,
     methods: {
       POST: ({ request, env, match }) => handleAccountLifecycleTierDropDismiss(request, env, capture(match, 1)),
     },
   },
   {
-    pattern: /^\/v1\/accounts\/([^/]+)\/owner-transfer$/,
+    pattern: /^\/accounts\/([^/]+)\/owner-transfer$/,
     methods: {
       POST: ({ request, env, match }) => handleAccountOwnerTransfer(request, env, capture(match, 1)),
     },
   },
   {
-    pattern: /^\/v1\/accounts\/([^/]+)$/,
+    pattern: /^\/accounts\/([^/]+)$/,
     methods: {
       GET: ({ request, env, match }) => handleAccountById(request, env, capture(match, 1)),
       DELETE: ({ request, env, match }) => handleAccountDelete(request, env, capture(match, 1)),

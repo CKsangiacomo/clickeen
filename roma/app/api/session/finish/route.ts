@@ -99,7 +99,7 @@ async function fetchBootstrap(
     }
   | { ok: false; reasonKey: string }
 > {
-  const response = await fetch(`${berlinBase}/v1/session/bootstrap`, {
+  const response = await fetch(`${berlinBase}/session/bootstrap`, {
     method: 'GET',
     headers: {
       authorization: `Bearer ${accessToken}`,

@@ -126,7 +126,7 @@ operation is running, Bob disables the button and displays the active-locale
 count already present in the open editor payload. When the operation returns,
 Bob shows the direct result text and refreshes overlay inspection.
 
-Bob does not create translation jobs, poll backend status, stream counters, or
+Bob does not create backend translation tasks, poll backend status, stream counters, or
 invent locale authority. Saved locale overlay files remain Tokyo-worker/R2
 state.
 
@@ -206,7 +206,7 @@ save authority.
 ## Builder Copilot
 
 Product Copilot turns route through Roma with a bounded
-`product-copilot.context.v1` capsule. Bob builds that capsule from the open
+`product-copilot context` capsule. Bob builds that capsule from the open
 browser-memory draft: `instanceId`, widget identity, active locale, draft
 signature, visible editable controls with current values, unavailable
 capabilities, and bounded `conversationHistory` from Bob's browser-memory

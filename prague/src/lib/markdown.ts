@@ -273,7 +273,7 @@ async function applyPageTranslation(
 ): Promise<Record<string, unknown>> {
   const translation = await loadPageTranslation(opts);
   if (!translation) return opts.pageJson;
-  if (!isPlainObject(translation) || translation.v !== 1 || !Array.isArray(translation.ops)) {
+  if (!isPlainObject(translation) || !Array.isArray(translation.ops)) {
     throw new Error(`[prague] Invalid Prague page translation: tokyo/prague/pages/${opts.widget}/${opts.page}.translations/${opts.locale}.json`);
   }
   const translated = cloneJson(opts.pageJson);

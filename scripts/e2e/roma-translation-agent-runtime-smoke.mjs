@@ -116,7 +116,7 @@ async function readTranslationInventory(romaBase, cookies, instanceId, expected)
     cookies,
     `/api/account/instances/${encodeURIComponent(instanceId)}/translations`,
   );
-  if (!response.ok || payload?.v !== 1 || payload?.baseLocale !== expected.baseLocale) {
+  if (!response.ok || payload?.baseLocale !== expected.baseLocale) {
     throw new Error(`Translation inventory read failed: HTTP ${response.status}`);
   }
   const translatedLocales = assertStringArray(
@@ -135,7 +135,7 @@ async function readLocaleOverlay(romaBase, cookies, instanceId, locale) {
     cookies,
     `/api/account/instances/${encodeURIComponent(instanceId)}/translations/${encodeURIComponent(locale)}`,
   );
-  if (!response.ok || payload?.v !== 1 || payload?.locale !== locale || !payload?.values) {
+  if (!response.ok || payload?.locale !== locale || !payload?.values) {
     throw new Error(`Translation overlay read failed for ${locale}: HTTP ${response.status}`);
   }
   const values = payload.values;
@@ -174,7 +174,11 @@ async function runBobGenerationSmoke(romaBase, authStatePath, instanceId, expect
     const response = await responsePromise;
     const payload = await response.json().catch(() => null);
     const generatedLocales = assertGenerationPayload(response.status(), payload, expected);
-    await frame.getByText(`Generated ${generatedLocales.length} translations.`).waitFor({ timeout: 30_000 });
+    const successText =
+      generatedLocales.length === 1
+        ? 'Generated 1 active locale.'
+        : `Generated ${generatedLocales.length} active locales.`;
+    await frame.getByText(successText).waitFor({ timeout: 30_000 });
     return { builderUrl: page.url(), generatedLocales };
   } finally {
     await browser.close();

@@ -27,7 +27,6 @@ export function isValidFinishId(value: string | null): value is string {
 function toOauthTransaction(value: unknown): OAuthTransaction | null {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
   const record = value as Record<string, unknown>;
-  const version = claimAsNumber(record.v);
   const flow = claimAsString(record.flow);
   const provider = normalizeProvider(record.provider);
   const codeVerifier = claimAsString(record.codeVerifier);
@@ -38,7 +37,6 @@ function toOauthTransaction(value: unknown): OAuthTransaction | null {
   const invitationId = claimAsString(record.invitationId) || undefined;
   const finishRedirectUrl = normalizeFinishRedirectUrl(record.finishRedirectUrl) || undefined;
 
-  if (version !== 1) return null;
   if (flow !== 'login' || !provider || !codeVerifier) return null;
   if (!createdAt || !expiresAt || expiresAt <= createdAt) return null;
   if (record.intent !== undefined && !intent) return null;
@@ -52,7 +50,6 @@ function toOauthTransaction(value: unknown): OAuthTransaction | null {
   }
 
   return {
-    v: 1,
     flow,
     provider,
     codeVerifier,
@@ -68,7 +65,6 @@ function toOauthTransaction(value: unknown): OAuthTransaction | null {
 function toOauthFinishTransaction(value: unknown): OAuthFinishTransaction | null {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
   const record = value as Record<string, unknown>;
-  const version = claimAsNumber(record.v);
   const provider = normalizeProvider(record.provider);
   const userId = claimAsString(record.userId);
   const createdAccount = typeof record.createdAccount === 'boolean' ? record.createdAccount : null;
@@ -84,7 +80,6 @@ function toOauthFinishTransaction(value: unknown): OAuthFinishTransaction | null
   const finishExpiresAt = claimAsNumber(record.finishExpiresAt);
   const finishRedirectUrl = normalizeFinishRedirectUrl(record.finishRedirectUrl) || undefined;
 
-  if (version !== 1) return null;
   if (!provider || !userId || !sessionId || createdAccount == null) return null;
   if (!accessToken || !refreshToken || !expiresAt) return null;
   if (!accessTokenMaxAge || accessTokenMaxAge <= 0) return null;
@@ -94,7 +89,6 @@ function toOauthFinishTransaction(value: unknown): OAuthFinishTransaction | null
   if (record.finishRedirectUrl !== undefined && !finishRedirectUrl) return null;
 
   return {
-    v: 1,
     provider,
     userId,
     createdAccount,

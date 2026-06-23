@@ -30,7 +30,7 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
     request,
     accessToken: current.value.accessToken,
     setCookies: current.value.setCookies,
-    path: `/v1/accounts/${encodeURIComponent(current.value.authzPayload.accountId)}/invitations/${encodeURIComponent(invitationId)}`,
+    path: `/accounts/${encodeURIComponent(current.value.authzPayload.accountId)}/invitations/${encodeURIComponent(invitationId)}`,
     method: 'DELETE',
   });
 }

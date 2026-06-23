@@ -51,7 +51,7 @@ Elfsight uses a vertical icon menu with 4 tabs:
 2. **Actions** (🔗 icon) - Button/link actions during countdown and after it ends
 3. **Position** (📐 icon) - Widget positioning and layout on page
 4. **Theme** (🎨 icon) - Visual styling, colors, fonts, animations
-5. **Settings** (⚙️ icon) - Google Analytics, Custom CSS (skip GA for V1)
+5. **Settings** (⚙️ icon) - Google Analytics, Custom CSS (skip GA for current scope)
 
 ---
 
@@ -136,7 +136,7 @@ Actions that appear **while the timer is counting down**
 
 2. **Form** (📋 icon)
    - "Open a form to collect user data"
-   - ⚠️ **Skip for V1** (requires form builder integration)
+   - ⚠️ **Skip for current scope** (requires form builder integration)
 
 **Link Configuration** (when Link selected):
 - **Button Link** - URL input
@@ -280,7 +280,7 @@ Grid of themed presets (2 columns × 5 rows = 10 themes):
 7. **New Year** - Red/white celebration
 8. **Valentine's Day** - Pink/red romantic
 
-**Implementation Note:** Start with 2-3 holiday themes in V1, expand later
+**Implementation Note:** Start with 2-3 holiday themes in current scope, expand later
 
 ### "Customize Theme" Button
 Opens detailed customization panel (modal or expandable section)
@@ -331,7 +331,7 @@ Applied to: Timer boxes, buttons, container
 - **Font** - Dropdown
   - Default: "Default"
   - Options: System fonts
-  - ⚠️ **V1: Default only** (skip font library)
+  - ⚠️ **current scope: Default only** (skip font library)
 
 - **Heading Font Size** - Slider or numeric input
   - Default: 20px
@@ -380,7 +380,7 @@ Visual cards showing timer display styles:
 #### Animation
 - **Dropdown selector**
   - Default: "None"
-  - Options: None, Fade, Slide (⚠️ V1: None + Fade only)
+  - Options: None, Fade, Slide (⚠️ current scope: None + Fade only)
   - Applied to digit changes
 
 #### Separator
@@ -419,7 +419,7 @@ Visual cards showing timer display styles:
   - "Google Analytics or Google Tag Manager must be installed on your site."
   - "If both are present, events will be sent to each."
   - "For example, you can see how many visitors clicked the button or submitted the form."
-- ⚠️ **Skip for V1** (analytics integration is <30% priority)
+- ⚠️ **Skip for current scope** (analytics integration is <30% priority)
 
 ### Custom CSS
 - **Heading:** "Custom CSS"
@@ -536,7 +536,7 @@ Visual cards showing timer display styles:
             "type": {
               "type": "string",
               "enum": ["link"],
-              "description": "V1: link only. Future: form"
+              "description": "current scope: link only. Future: form"
             },
             "buttonText": {
               "type": "string",
@@ -674,7 +674,7 @@ Visual cards showing timer display styles:
       "font": {
         "type": "string",
         "default": "default",
-        "description": "V1: default only. Future: font library"
+        "description": "current scope: default only. Future: font library"
       },
       "headingFontSize": {
         "type": "number",
@@ -706,7 +706,7 @@ Visual cards showing timer display styles:
         "type": "string",
         "enum": ["none", "fade"],
         "default": "none",
-        "description": "V1: none + fade only. Future: slide"
+        "description": "current scope: none + fade only. Future: slide"
       },
       "separator": {
         "type": "string",
@@ -759,7 +759,7 @@ Vertical stack of four Dieter icon buttons:
 | `link` | `actions` | Button actions (during/after countdown) |
 | `square.grid.2x2` | `position` | Layout position, width, alignment |
 | `paintpalette` | `theme` | Colors, fonts, timer style, animations |
-| `gear` | `settings` | Custom CSS (skip Analytics for V1) |
+| `gear` | `settings` | Custom CSS (skip Analytics for current scope) |
 
 ---
 
@@ -1035,8 +1035,8 @@ Vertical stack of four Dieter icon buttons:
           <span className="action-choice-label">Link</span>
           <p className="action-choice-desc">Redirect visitors to a chosen URL</p>
         </button>
-        {/* Form action - disabled for V1 */}
-        <button className="action-choice-card disabled" title="Coming in V2">
+        {/* Form action - disabled for current scope */}
+        <button className="action-choice-card disabled" title="Coming in future scope">
           <span className="action-choice-icon">📋</span>
           <span className="action-choice-label">Form</span>
           <p className="action-choice-desc">Open a form to collect user data</p>
@@ -1315,7 +1315,7 @@ Vertical stack of four Dieter icon buttons:
           <select className="diet-dropdown" disabled>
             <option value="default">Default</option>
           </select>
-          <p className="text-sm text-muted">Font library coming in V2</p>
+          <p className="text-sm text-muted">Font library coming in future scope</p>
         </label>
 
         <label className="diet-input" data-size="lg">
@@ -1406,13 +1406,13 @@ Vertical stack of four Dieter icon buttons:
 <>
   <div className="heading-3">Settings</div>
   <div className="stack">
-    {/* Google Analytics - Skip for V1 */}
+    {/* Google Analytics - Skip for current scope */}
     <div className="settings-section disabled">
       <h4 className="heading-4">Google Analytics</h4>
       <button className="diet-btn" data-variant="neutral" disabled>
         <span className="diet-btn__label">+ Add Event</span>
       </button>
-      <p className="text-sm text-muted">Coming in V2</p>
+      <p className="text-sm text-muted">Coming in future scope</p>
     </div>
 
     {/* Custom CSS */}
@@ -1820,7 +1820,7 @@ Historical planning snapshot from pre-ship discovery. Current implementation tru
 - ✨ **More precise** timer (RAF vs setInterval)
 - ✨ **Instant preview updates** (postMessage patches)
 
-### Skip for V1 (<30% Optional):
+### Skip for current scope (<30% Optional):
 - ⚠️ Form action (open form modal)
 - ⚠️ Google Analytics events tracking
 - ⚠️ Custom JS (CSS only)

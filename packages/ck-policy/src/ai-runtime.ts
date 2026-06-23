@@ -24,7 +24,6 @@ export type AgentTierRuntimeConfig = {
 };
 
 export type AiRuntimeMatrix = {
-  v: 1;
   agents: Record<string, Record<PolicyProfile, AgentTierRuntimeConfig>>;
 };
 
@@ -120,7 +119,6 @@ function assertAgentTierRuntimeConfig(value: unknown, label: string): asserts va
 
 export function assertAiRuntimeMatrix(input: unknown = rawRuntimeMatrix): AiRuntimeMatrix {
   if (!isRecord(input)) throw new Error('[ck-policy] AI runtime matrix must be an object');
-  if (input.v !== 1) throw new Error('[ck-policy] AI runtime matrix must be v=1');
   if (!isRecord(input.agents)) throw new Error('[ck-policy] AI runtime matrix missing agents');
   const catalogKeys = new Set(listAiModelCatalog().map((model) => `${model.provider}:${model.model}`));
   for (const [agentId, byTier] of Object.entries(input.agents)) {
@@ -283,7 +281,7 @@ function stableJson(value: unknown): string {
   return `{${entries.map(([key, entry]) => `${JSON.stringify(key)}:${stableJson(entry)}`).join(',')}}`;
 }
 
-function fnv1aHash(input: string): string {
+function stableHash(input: string): string {
   let hash = 2166136261;
   for (let i = 0; i < input.length; i += 1) {
     hash ^= input.charCodeAt(i);
@@ -292,8 +290,8 @@ function fnv1aHash(input: string): string {
   return (hash >>> 0).toString(16).padStart(8, '0');
 }
 
-function policyVersionFor(input: Omit<AgentRuntimePolicy, 'policyVersion'>): string {
-  return `ai-runtime-v1-${fnv1aHash(stableJson(input))}`;
+function policyIdFor(input: Omit<AgentRuntimePolicy, 'policyId'>): string {
+  return `ai-runtime-${stableHash(stableJson(input))}`;
 }
 
 function monthlyTurnCeiling(policyProfile: PolicyProfile, entry: AiRegistryEntry): number | null {
@@ -346,7 +344,7 @@ function buildRuntimePolicy(args: {
     });
   }
 
-  const base: Omit<AgentRuntimePolicy, 'policyVersion'> = {
+  const base: Omit<AgentRuntimePolicy, 'policyId'> = {
     agentId: args.entry.agentId,
     policyProfile: args.policyProfile,
     enabled: true,
@@ -363,7 +361,7 @@ function buildRuntimePolicy(args: {
 
   return {
     ...base,
-    policyVersion: policyVersionFor(base),
+    policyId: policyIdFor(base),
   };
 }
 

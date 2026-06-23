@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
     request,
     accessToken: current.value.accessToken,
     setCookies: current.value.setCookies,
-    path: `/v1/accounts/${encodeURIComponent(current.value.authzPayload.accountId)}/members`,
+    path: `/accounts/${encodeURIComponent(current.value.authzPayload.accountId)}/members`,
     method: 'GET',
   });
 }

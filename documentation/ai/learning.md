@@ -31,8 +31,8 @@ deploy. There is no autonomous production mutation loop.
 
 | Source | Runtime path | Stored by |
 | --- | --- | --- |
-| Model interaction | `POST /v1/model/chat` | San Francisco queue consumer |
-| Outcome attachment | `POST /v1/outcome` | San Francisco request handler |
+| Model interaction | `POST /model/chat` | San Francisco queue consumer |
+| Outcome attachment | `POST /outcome` | San Francisco request handler |
 | Product Copilot contract eval | `agents/product-copilot/evals/` | local/CI command output |
 | Product Copilot real eval | `agents/product-copilot/evals/real-eval.ts` | local transcripts |
 | Translation Agent eval | `agents/translation-agent/evals/` | local command output |
@@ -41,7 +41,7 @@ deploy. There is no autonomous production mutation loop.
 
 Type: `InteractionEvent` in `sanfrancisco/src/types.ts`.
 
-San Francisco creates one interaction event for each `/v1/model/chat` call.
+San Francisco creates one interaction event for each `/model/chat` call.
 
 Fields:
 
@@ -52,7 +52,7 @@ Fields:
 - `subject`
 - `trace`
 - `ai.policyProfile`
-- `ai.policyVersion`
+- `ai.policyId`
 - `ai.learningCapture`
 - `ai.taskClass`
 - `input`
@@ -62,7 +62,7 @@ Fields:
 Emission path:
 
 ```text
-/v1/model/chat
+/model/chat
 -> build InteractionEvent
 -> if SF_EVENTS exists, enqueue with ctx.waitUntil
 -> queue consumer indexes D1
@@ -79,13 +79,13 @@ Type: `OutcomeAttachRequest` in `sanfrancisco/src/types.ts`.
 Endpoint:
 
 ```text
-POST /v1/outcome
+POST /outcome
 ```
 
 Signature:
 
 ```text
-x-clickeen-signature = hmacSha256("outcome.v1.<bodyText>", AI_GRANT_HMAC_SECRET)
+x-clickeen-signature = hmacSha256("outcome.<bodyText>", AI_GRANT_HMAC_SECRET)
 ```
 
 Required fields:
@@ -120,16 +120,16 @@ Interaction indexing and raw sample capture are different.
 
 | Storage | Rule |
 | --- | --- |
-| `SF_D1.copilot_events_v1` | queue consumer attempts to index every valid interaction event |
+| `SF_D1.copilot_events` | queue consumer attempts to index every valid interaction event |
 | `SF_R2.learning/...` | only paid eligible Product Copilot samples selected by `learningCapture.rawSamplePercent` |
-| `SF_D1.copilot_outcomes_v1` | outcome endpoint writes every valid signed outcome |
+| `SF_D1.copilot_outcomes` | outcome endpoint writes every valid signed outcome |
 
 Raw R2 sampling is controlled by `resolveLearningCaptureDecision` in
 `sanfrancisco/src/telemetry.ts`.
 
 Current raw-sample eligibility:
 
-- `agentId === "cs.widget.copilot.v1"`;
+- `agentId === "product.copilot"`;
 - subject kind is `user`;
 - `ai.learningCapture.rawSamplePercent > 0`;
 - deterministic hash of subject/agent/request falls inside the sample percent.
@@ -145,8 +145,8 @@ Schema authority: `sanfrancisco/migrations/`.
 
 Tables:
 
-- `copilot_events_v1`
-- `copilot_outcomes_v1`
+- `copilot_events`
+- `copilot_outcomes`
 
 ### R2
 
@@ -171,7 +171,7 @@ The queue consumer is `SanFranciscoWorker.queue` in `sanfrancisco/src/index.ts`.
 
 ## D1 Event Index
 
-`copilot_events_v1` stores queryable features extracted from interaction events:
+`copilot_events` stores queryable features extracted from interaction events:
 
 - `requestId`
 - `day`
@@ -191,8 +191,8 @@ The queue consumer is `SanFranciscoWorker.queue` in `sanfrancisco/src/index.ts`.
 - `uniquePathsTouched`
 - `scopesTouched`
 - `ctaAction`
-- `promptVersion`
-- `policyVersion`
+- `promptId`
+- `policyId`
 - `dictionaryHash`
 - `taskClass`
 - `provider`
@@ -203,7 +203,7 @@ D1 insert failures are logged and do not fail the model response.
 
 ## D1 Outcome Index
 
-`copilot_outcomes_v1` stores signed outcome attachments:
+`copilot_outcomes` stores signed outcome attachments:
 
 - `requestId`
 - `event`
@@ -218,16 +218,16 @@ D1 insert failures are logged and do not fail the model response.
 
 Outcome insert failure returns `500 PROVIDER_ERROR`.
 
-## Version Stamps
+## Run Signals
 
 Indexed events may include:
 
-- `promptVersion`
-- `policyVersion`
+- `promptId`
+- `policyId`
 - `dictionaryHash`
 - `envStage`
 
-Promotion decisions must not treat a run with missing required version context as
+Promotion decisions must not treat a run with missing required prompt/policy context as
 strong release evidence.
 
 ## Eval Gates
@@ -261,10 +261,10 @@ Common questions:
 
 | Question | Table |
 | --- | --- |
-| Model latency by agent/model | `copilot_events_v1` |
-| Invalid output or no-op rate | `copilot_events_v1` |
-| Undo rate | `copilot_outcomes_v1` |
-| Time to user decision | `copilot_outcomes_v1` |
+| Model latency by agent/model | `copilot_events` |
+| Invalid output or no-op rate | `copilot_events` |
+| Undo rate | `copilot_outcomes` |
+| Time to user decision | `copilot_outcomes` |
 | Raw sampled payload for a request | `SF_R2 learning/...` |
 
 ## Failure Semantics
@@ -275,9 +275,9 @@ Common questions:
 | queue message malformed | message is acknowledged and skipped |
 | D1 event index insert fails | logged; model response is not changed |
 | R2 sample write fails | logged; queue processing continues |
-| outcome signature invalid | `/v1/outcome` returns an error |
-| outcome payload invalid | `/v1/outcome` returns `400 BAD_REQUEST` |
-| outcome D1 insert fails | `/v1/outcome` returns `500 PROVIDER_ERROR` |
+| outcome signature invalid | `/outcome` returns an error |
+| outcome payload invalid | `/outcome` returns `400 BAD_REQUEST` |
+| outcome D1 insert fails | `/outcome` returns `500 PROVIDER_ERROR` |
 
 ## Privacy And Redaction
 
@@ -295,5 +295,5 @@ Before promoting an AI behavior change:
 1. Run the eval gate for the affected agent.
 2. Run San Francisco typecheck if grant/model/telemetry code changed.
 3. Verify deploy workflow status after push.
-4. Confirm no new V1-V8 violation was introduced.
+4. Confirm no new core violation violation was introduced.
 5. Keep rollback as a normal code revert/deploy path.

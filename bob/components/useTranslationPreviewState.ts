@@ -95,7 +95,7 @@ export function useTranslationPreviewState(args: {
       })
       .catch((caught) => {
         if (cancelled) return;
-        setTranslatedLocales({ v: 1, baseLocale: args.baseLocale, translations: [] });
+        setTranslatedLocales({ baseLocale: args.baseLocale, translations: [] });
         const status =
           typeof (caught as { status?: unknown } | null | undefined)?.status === 'number'
             ? (caught as { status: number }).status

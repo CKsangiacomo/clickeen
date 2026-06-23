@@ -3,7 +3,6 @@ import type { Env } from '../types';
 import { putJson } from './storage';
 
 export type AccountWidgetDefaultsDocument = {
-  v: 1;
   accountId: string;
   shell: Record<string, unknown>;
   widgets: Record<
@@ -41,7 +40,7 @@ export function normalizeAccountWidgetDefaultsDocument(
   value: unknown,
   accountId: string,
 ): AccountWidgetDefaultsDocument | null {
-  if (!isRecord(value) || value.v !== 1 || value.accountId !== accountId) return null;
+  if (!isRecord(value) || value.accountId !== accountId) return null;
   if (!isRecord(value.shell) || !isRecord(value.widgets)) return null;
   if (typeof value.seededAt !== 'string' || !value.seededAt.trim()) return null;
   if (typeof value.updatedAt !== 'string' || !value.updatedAt.trim()) return null;
@@ -57,7 +56,6 @@ export function normalizeAccountWidgetDefaultsDocument(
   }
 
   return {
-    v: 1,
     accountId,
     shell,
     widgets,

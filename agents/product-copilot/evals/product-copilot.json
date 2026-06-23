@@ -1,0 +1,191 @@
+{
+  "cases": [
+    {
+      "id": "casual-guides-back",
+      "prompt": "My dog peed on my bed today",
+      "expectedKind": "answer",
+      "expectedModelCallCount": 1,
+      "modelResponses": [
+        {
+          "kind": "answer",
+          "message": "That sounds rough. Want to turn that into a lighter widget headline or a fun FAQ item?"
+        }
+      ]
+    },
+    {
+      "id": "draft-edit-title",
+      "prompt": "Change the title to Hello Riviera",
+      "expectedKind": "draft_edit",
+      "expectedModelCallCount": 1,
+      "expectedOps": [
+        {
+          "op": "set",
+          "path": "content.title",
+          "value": "Hello Riviera"
+        }
+      ],
+      "modelResponses": [
+        {
+          "kind": "draft_edit",
+          "message": "I drafted that title change.",
+          "draftEdit": {
+            "ops": [
+              {
+                "op": "set",
+                "path": "content.title",
+                "value": "Hello Riviera"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "invalid-path-retry",
+      "prompt": "Change the title to Hello Riviera",
+      "expectedKind": "draft_edit",
+      "expectedValidationRetryCount": 1,
+      "expectedModelCallCount": 2,
+      "expectedOps": [
+        {
+          "op": "set",
+          "path": "content.title",
+          "value": "Hello Riviera"
+        }
+      ],
+      "modelResponses": [
+        {
+          "kind": "draft_edit",
+          "message": "I changed it.",
+          "draftEdit": {
+            "ops": [
+              {
+                "op": "set",
+                "path": "content.hiddenTitle",
+                "value": "Hello Riviera"
+              }
+            ]
+          }
+        },
+        {
+          "kind": "draft_edit",
+          "message": "I drafted the visible title change.",
+          "draftEdit": {
+            "ops": [
+              {
+                "op": "set",
+                "path": "content.title",
+                "value": "Hello Riviera"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "ambiguous-edit-asks",
+      "prompt": "Make it pop",
+      "expectedKind": "clarification",
+      "expectedModelCallCount": 1,
+      "modelResponses": [
+        {
+          "kind": "clarification",
+          "message": "Which part should I make stronger: the title, the button, or the supporting copy?"
+        }
+      ]
+    },
+    {
+      "id": "conversation-survives-invalid-edit-context",
+      "prompt": "What can you do?",
+      "invalidEditContext": true,
+      "expectedKind": "answer",
+      "expectedModelCallCount": 1,
+      "modelResponses": [
+        {
+          "kind": "answer",
+          "message": "I can help with copy, layout ideas, and product guidance. Editing is temporarily unavailable because the Builder edit context is invalid."
+        }
+      ]
+    },
+    {
+      "id": "draft-edit-blocked-with-invalid-edit-context",
+      "prompt": "Change the title to Hello Riviera",
+      "invalidEditContext": true,
+      "expectedKind": "error",
+      "expectedMessageIncludes": "Builder edit context is invalid",
+      "expectedValidationRetryCount": 1,
+      "expectedModelCallCount": 2,
+      "modelResponses": [
+        {
+          "kind": "draft_edit",
+          "message": "I changed it.",
+          "draftEdit": {
+            "ops": [
+              {
+                "op": "set",
+                "path": "content.title",
+                "value": "Hello Riviera"
+              }
+            ]
+          }
+        },
+        {
+          "kind": "draft_edit",
+          "message": "I changed it.",
+          "draftEdit": {
+            "ops": [
+              {
+                "op": "set",
+                "path": "content.title",
+                "value": "Hello Riviera"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "malformed-model-output-visible-error",
+      "prompt": "Give me a better headline",
+      "expectedKind": "error",
+      "expectedMessageIncludes": "couldn't produce a valid response",
+      "expectedValidationRetryCount": 1,
+      "expectedModelCallCount": 2,
+      "modelResponses": [
+        {
+          "rawContent": "not json"
+        },
+        {
+          "kind": "draft_edit",
+          "message": ""
+        }
+      ]
+    },
+    {
+      "id": "non-edit-with-draft-payload-rejected",
+      "prompt": "Any suggestion for the hero?",
+      "expectedKind": "suggestion",
+      "expectedValidationRetryCount": 1,
+      "expectedModelCallCount": 2,
+      "modelResponses": [
+        {
+          "kind": "suggestion",
+          "message": "Use a more specific outcome-focused headline.",
+          "draftEdit": {
+            "ops": [
+              {
+                "op": "set",
+                "path": "content.title",
+                "value": "Better headline"
+              }
+            ]
+          }
+        },
+        {
+          "kind": "suggestion",
+          "message": "Use a more specific outcome-focused headline."
+        }
+      ]
+    }
+  ]
+}

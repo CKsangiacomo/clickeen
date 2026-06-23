@@ -1,5 +1,5 @@
 {
-  "baseFingerprint": "b4a4a7941e0ce43f8e07123f70bcc017bd1b394b4ca890dc40608d797f09e958",
+  "baseFingerprint": "31d4c10e9df8f59e9dc74fc5f57c88187fb95bfa6bb30e994a492dca94626b74",
   "baseUpdatedAt": "2026-02-04T05:36:55.805Z",
   "ops": [
     {
@@ -22,6 +22,5 @@
       "path": "blocks.hero.copy.subheadline",
       "value": "Kaikki mitä tarvitset kiireellisyyden tunteen luomiseen ja toimintaan kannustamiseen."
     }
-  ],
-  "v": 1
+  ]
 }

@@ -28,7 +28,7 @@ management, and runtime policy files.
 
 | Agent | Registry id | Current model route authority |
 | --- | --- | --- |
-| Product Copilot | `cs.widget.copilot.v1` | Roma-minted grant using `packages/ck-policy/ai-runtime.matrix.json` |
+| Product Copilot | `product.copilot` | Roma-minted grant using `packages/ck-policy/ai-runtime.matrix.json` |
 | Translation Agent | `widget.instance.translator` | Roma-minted grant using `packages/ck-policy/ai-runtime.matrix.json` |
 
 San Francisco executes the signed route it receives. It does not read model

@@ -45,7 +45,7 @@ export async function GET(request: NextRequest) {
 
   try {
     const berlinBase = resolveBerlinBaseUrl().replace(/\/+$/, '');
-    const upstream = await fetch(`${berlinBase}/v1/session/bootstrap`, {
+    const upstream = await fetch(`${berlinBase}/session/bootstrap`, {
       method: 'GET',
       headers: {
         authorization: `Bearer ${session.accessToken}`,

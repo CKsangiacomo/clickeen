@@ -40,9 +40,6 @@ export function assertEntitlementsMatrix(input: unknown): EntitlementsMatrix {
   if (!isRecord(input)) {
     throw new Error('[ck-policy] Entitlements matrix must be an object');
   }
-  if (input.v !== 1) {
-    throw new Error('[ck-policy] Entitlements matrix v must be 1');
-  }
   const tiersRaw = input.tiers;
   if (!Array.isArray(tiersRaw)) {
     throw new Error('[ck-policy] Entitlements matrix tiers must be an array');
@@ -90,7 +87,7 @@ export function assertEntitlementsMatrix(input: unknown): EntitlementsMatrix {
     entitlements[key] = { kind, values };
   }
 
-  return { v: 1, tiers, entitlements };
+  return { tiers, entitlements };
 }
 
 export function getEntitlementsMatrix(): EntitlementsMatrix {

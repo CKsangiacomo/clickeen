@@ -17,7 +17,7 @@ for isolated build/debug work only and are not product runtime evidence.
 Tokyo-worker keeps the same PBX boundary in deployed runtime. It may validate
 service auth, account capsule to path match, method/path/ID shape, widget
 codebook, object schema, R2 existence, and technical request bounds; it does not
-decide product policy, billing/tier state, publication eligibility, l10n version
+decide product policy, billing/tier state, publication eligibility, l10n locale
 caps, upload entitlements, or account storage caps. Product state and policy come
 from the real Roma -> Bob -> Tokyo account path.
 

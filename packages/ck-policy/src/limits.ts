@@ -25,7 +25,6 @@ export type NumericLimit = {
 export type LimitEntry = FlagLimit | NumericLimit;
 
 export type LimitsSpec = {
-  v: 1;
   limits: LimitEntry[];
 };
 
@@ -137,9 +136,6 @@ export function parseLimitsSpec(raw: unknown): LimitsSpec {
   if (!isRecord(raw)) {
     throw new Error('[ck-policy] limits.json must be an object');
   }
-  if (raw.v !== 1) {
-    throw new Error('[ck-policy] limits.json v must be 1');
-  }
   if (!Array.isArray(raw.limits)) {
     throw new Error('[ck-policy] limits.json limits must be an array');
   }
@@ -185,7 +181,7 @@ export function parseLimitsSpec(raw: unknown): LimitsSpec {
     });
   });
 
-  return { v: 1, limits };
+  return { limits };
 }
 
 function parseSegments(path: string): string[] {

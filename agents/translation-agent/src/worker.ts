@@ -105,7 +105,7 @@ async function hmacSha256(secret: string, message: string): Promise<Uint8Array> 
 
 function readGrantPayload(grant: string): { payloadB64: string; sigB64: string; payload: unknown } {
   const parts = grant.split('.');
-  if (parts.length !== 3 || parts[0] !== 'v1') {
+  if (parts.length !== 3 || parts[0] !== 'ckgrant') {
     throw new HttpError(401, { error: { code: 'GRANT_INVALID', message: 'Invalid grant format' } });
   }
   try {
@@ -127,7 +127,7 @@ async function verifyRomaTranslationGrant(args: {
     throw new HttpError(500, { error: { code: 'PROVIDER_ERROR', provider: 'translation-agent', message: 'Missing AI_GRANT_HMAC_SECRET' } });
   }
   const { payloadB64, sigB64, payload } = readGrantPayload(args.grant);
-  const expectedSig = await hmacSha256(args.secret, `v1.${payloadB64}`);
+  const expectedSig = await hmacSha256(args.secret, `ckgrant.${payloadB64}`);
   const providedSig = base64UrlToBytes(sigB64);
   if (!timingSafeEqualBytes(expectedSig, providedSig)) {
     throw new HttpError(401, { error: { code: 'GRANT_INVALID', message: 'Grant signature mismatch' } });
@@ -314,7 +314,7 @@ async function callSanFranciscoModel(args: {
       },
     });
   }
-  const response = await args.env.SANFRANCISCO_AI_ENGINE.fetch('https://sanfrancisco.internal/v1/model/chat', {
+  const response = await args.env.SANFRANCISCO_AI_ENGINE.fetch('https://sanfrancisco.internal/model/chat', {
     method: 'POST',
     headers,
     body,
@@ -490,7 +490,7 @@ export default {
       });
     }
     try {
-      if (request.method !== 'POST' || url.pathname !== '/v1/translate-instance') {
+      if (request.method !== 'POST' || url.pathname !== '/translate-instance') {
         throw new HttpError(404, { error: { code: 'BAD_REQUEST', message: 'Not found' } });
       }
       const body = normalizeWorkerRequest(await readJson(request));

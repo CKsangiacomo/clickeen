@@ -84,8 +84,7 @@ type BobOpenEditorMessage = {
   policy?: unknown;
   copilot?: unknown;
   translationSetup?: {
-    v: 1;
-    baseLocale: string;
+        baseLocale: string;
     planTranslationsMax: number | null;
     activeLocales: string[];
   };
@@ -218,8 +217,7 @@ function buildTranslationSetup(args: {
     .filter((locale) => locale !== args.baseLocale);
   const planTranslationsMax = args.accountPolicy.limits['l10n.locales.max'];
   return {
-    v: 1,
-    baseLocale: args.baseLocale,
+        baseLocale: args.baseLocale,
     planTranslationsMax: typeof planTranslationsMax === 'number' && Number.isFinite(planTranslationsMax)
       ? Math.max(0, Math.floor(planTranslationsMax))
       : null,

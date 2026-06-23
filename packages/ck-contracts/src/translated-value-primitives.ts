@@ -14,7 +14,6 @@ export type WidgetEditableField = {
 };
 
 export type WidgetEditableFieldsContract = {
-  v: 1;
   widgetType: string;
   fields: WidgetEditableField[];
 };
@@ -73,7 +72,6 @@ export type BabelTextProducerItem = {
 };
 
 export type BabelTextProducerRequest = {
-  v: 1;
   widgetType: string;
   sourceLanguage: string;
   targetLanguage: string;
@@ -81,7 +79,6 @@ export type BabelTextProducerRequest = {
 };
 
 export type BabelTextProducerResponse = {
-  v: 1;
   values: TranslatedValueMap;
 };
 
@@ -222,7 +219,7 @@ function assertConcretePath(path: string): string[] {
 }
 
 export function readWidgetEditableFieldsContract(content: unknown): WidgetEditableFieldsContract {
-  if (!isRecord(content) || content.v !== 1 || !Array.isArray(content.fields)) {
+  if (!isRecord(content) || !Array.isArray(content.fields)) {
     throw new Error('widget_editable_fields_contract_invalid');
   }
   const widgetType = asNonEmptyString(content.widgetType);
@@ -257,7 +254,7 @@ export function readWidgetEditableFieldsContract(content: unknown): WidgetEditab
     seen.add(field.path);
   }
 
-  return { v: 1, widgetType, fields };
+  return { widgetType, fields };
 }
 
 function extractSavedTextFieldsForField(args: {

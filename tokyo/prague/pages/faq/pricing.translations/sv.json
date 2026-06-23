@@ -1,5 +1,5 @@
 {
-  "baseFingerprint": "2117e442f13493f814e8ccb8d70d962e3c7ed0bd1ac039db30f59a3bdda46f05",
+  "baseFingerprint": "eee0fbcdaf0134cbe794944efcbc962315a354e360818b68237d06ff0cf37a8e",
   "baseUpdatedAt": "2026-02-04T17:11:45.000Z",
   "ops": [
     {
@@ -22,6 +22,5 @@
       "path": "blocks.hero.copy.subheadline",
       "value": "Enkla nivåer. Uppgradera när du behöver fler widgetar och ta bort varumärkesprofilering."
     }
-  ],
-  "v": 1
+  ]
 }

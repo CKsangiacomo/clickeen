@@ -24,7 +24,6 @@ function serveStatePayload(
   now = new Date().toISOString(),
 ) {
   return {
-    v: 1,
     accountId: coordinate.accountId,
     pageId: coordinate.pageId,
     status,
@@ -46,7 +45,6 @@ async function readStoredServeState(env: Env, coordinate: PageCoordinate): Promi
   if (
     !record ||
     Array.isArray(record) ||
-    record.v !== 1 ||
     record.accountId !== coordinate.accountId ||
     record.pageId !== coordinate.pageId ||
     (record.status !== 'published' && record.status !== 'unpublished') ||

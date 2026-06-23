@@ -1,5 +1,5 @@
 {
-  "baseFingerprint": "2305d4ce1a0e97a712865b2953290acd1b02296020b215efcbea8bcde639fc66",
+  "baseFingerprint": "8efbf9938bc513aced5d05ca11487b99d86e8a39aafb9b9b21be1618cbac36cf",
   "baseUpdatedAt": null,
   "ops": [
     {
@@ -232,6 +232,5 @@
       "path": "blocks.cta.copy.subheadline",
       "value": "ফ্রি দিয়ে শুরু করুন, ডিজাইন কাস্টমাইজ করুন, আর মিনিটের মধ্যে প্রোডাকশন-রেডি FAQ পাবলিশ করুন।"
     }
-  ],
-  "v": 1
+  ]
 }

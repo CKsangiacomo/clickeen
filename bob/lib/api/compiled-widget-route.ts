@@ -118,8 +118,7 @@ function buildWidgetPackage(args: {
     } satisfies WidgetPackageFileContext;
   }
   return {
-    v: 1,
-    widgetType: args.widgetname,
+        widgetType: args.widgetname,
     files,
   };
 }
@@ -178,7 +177,7 @@ export async function getCompiledWidgetRouteResponse(req: NextRequest, ctx: { pa
     const limitsText = limitsRes.ok ? await limitsRes.text() : '';
     const [htmlText, cssText, jsText] = await Promise.all([htmlRes.text(), cssRes.text(), jsRes.text()]);
     const widgetJson = JSON.parse(specText) as RawWidget;
-    if (widgetJson.v !== 1) {
+    if (!widgetJson || typeof widgetJson !== 'object' || Array.isArray(widgetJson)) {
       return compiledWidgetError({ reasonKey: 'coreui.errors.widget.compiled.invalid', status: 503 }, corsHeaders);
     }
 

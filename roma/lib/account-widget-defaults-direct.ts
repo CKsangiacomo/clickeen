@@ -2,7 +2,6 @@ import { isRecord } from '@clickeen/ck-contracts';
 import { callTokyo, type TokyoCallContext } from './tokyo-client';
 
 export type AccountWidgetDefaultsDocument = {
-  v: 1;
   accountId: string;
   shell: Record<string, unknown>;
   widgets: Record<string, {
@@ -13,7 +12,7 @@ export type AccountWidgetDefaultsDocument = {
 };
 
 function normalizeAccountWidgetDefaults(raw: unknown): AccountWidgetDefaultsDocument | null {
-  if (!isRecord(raw) || raw.v !== 1) return null;
+  if (!isRecord(raw)) return null;
   if (typeof raw.accountId !== 'string' || !isRecord(raw.shell) || !isRecord(raw.widgets)) return null;
   const widgets: AccountWidgetDefaultsDocument['widgets'] = {};
   for (const [widgetType, widgetDefaults] of Object.entries(raw.widgets)) {
@@ -23,7 +22,6 @@ function normalizeAccountWidgetDefaults(raw: unknown): AccountWidgetDefaultsDocu
     };
   }
   return {
-    v: 1,
     accountId: raw.accountId,
     shell: raw.shell,
     widgets,

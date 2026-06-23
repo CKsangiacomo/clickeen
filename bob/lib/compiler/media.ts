@@ -6,7 +6,6 @@ export function requireTokyoUrl(): string {
 }
 
 type DieterManifest = {
-  v: number;
   gitSha: string;
   builtAt?: string;
   components: string[];

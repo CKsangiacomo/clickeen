@@ -51,7 +51,7 @@ export type AgentRuntimePolicy = {
   maxMonthlyTurns: number | null;
   timeoutMs: number;
   learningCapture: AiLearningCapturePolicy;
-  policyVersion: string;
+  policyId: string;
 };
 
 export type AiGrantPolicy = AgentRuntimePolicy;
@@ -140,7 +140,6 @@ export type ProductCopilotControl = {
 };
 
 export type ProductCopilotContextCapsule = {
-  version: 'product-copilot.context.v1';
   instanceId: string;
   widgetType: string;
   displayName: string;
@@ -189,8 +188,7 @@ export type ProductCopilotResponse = {
   };
   meta?: {
     requestId?: string;
-    promptVersion?: string;
-    contextVersion?: ProductCopilotContextCapsule['version'];
+    promptId?: string;
     opsCount?: number;
     uniquePathsTouched?: number;
     touchedPaths?: string[];
@@ -200,7 +198,7 @@ export type ProductCopilotResponse = {
 
 const AI_AGENT_REGISTRY: AiRegistryEntry[] = [
   {
-    agentId: 'cs.widget.copilot.v1',
+    agentId: 'product.copilot',
     category: 'copilot',
     taskClass: 'copilot.widget.editor',
     description: 'Builder Copilot.',

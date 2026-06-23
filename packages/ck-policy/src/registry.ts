@@ -1,7 +1,6 @@
 // Keep in sync with packages/ck-policy/entitlements.matrix.json (registry is the typed source of truth).
 export const ENTITLEMENT_KEYS = [
   'l10n.locales.max',
-  'l10n.versions.max',
   'branding.remove',
   'embed.seoGeo.enabled',
   'widget.socialShare.enabled',
@@ -26,7 +25,6 @@ export type FlagKey = (typeof FLAG_KEYS)[number];
 
 export const PLAN_LIMIT_KEYS = [
   'l10n.locales.max',
-  'l10n.versions.max',
   'copilot.turns.monthly.max',
   'storage.bytes.max',
   'views.monthly.max',
@@ -57,15 +55,6 @@ export const ENTITLEMENT_META: Record<EntitlementKey, EntitlementMeta> = {
       status: 'enforced',
       owner: 'Roma account locale settings',
       note: 'Roma rejects selected translated locales above the plan limit before saving account locale settings. Base language is not counted.',
-    },
-  },
-  'l10n.versions.max': {
-    label: 'Translation value history',
-    description: 'Maximum retained translated-value history entries if a later workflow enables history.',
-    enforcement: {
-      status: 'gap',
-      owner: 'Unassigned translation workflow',
-      note: 'The active PRD 103 path stores the current translated locale values only. Manual edits overwrite the current value map, and regeneration may replace them. No active workflow retains multiple translated-value versions.',
     },
   },
   'branding.remove': {

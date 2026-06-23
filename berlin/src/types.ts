@@ -33,7 +33,7 @@ export type JwtHeader = {
 export type AccessClaims = Record<string, unknown> & {
   sub?: string;
   sid?: string;
-  ver?: number;
+  sessionRevision?: number;
   iat?: number;
   exp?: number;
   nbf?: number;
@@ -41,16 +41,15 @@ export type AccessClaims = Record<string, unknown> & {
   aud?: string | string[];
 };
 
-export type RefreshPayloadV2 = {
-  v: 2;
+export type RefreshPayloadRecord = {
   sid: string;
   rti: string;
-  ver: number;
+  sessionRevision: number;
   userId: string;
   exp: number;
 };
 
-export type RefreshPayload = RefreshPayloadV2;
+export type RefreshPayload = RefreshPayloadRecord;
 
 export type AuthMode = 'direct_provider';
 
@@ -59,7 +58,7 @@ type BaseSessionState = {
   currentRti: string;
   rtiRotatedAt: number;
   userId: string;
-  ver: number;
+  sessionRevision: number;
   revoked: boolean;
   authMode: AuthMode;
   createdAt: number;
@@ -73,7 +72,6 @@ export type DirectProviderSessionState = BaseSessionState & {
 export type SessionState = DirectProviderSessionState;
 
 export type OAuthTransaction = {
-  v: 1;
   flow: 'login';
   provider: string;
   codeVerifier: string;
@@ -88,7 +86,6 @@ export type OAuthTransaction = {
 export type LoginIntent = 'signin' | 'signup_prague';
 
 export type OAuthFinishTransaction = {
-  v: 1;
   provider: string;
   userId: string;
   createdAccount: boolean;
@@ -107,14 +104,14 @@ export type OAuthFinishTransaction = {
 
 export type SessionIssueArgs = {
   sid?: string;
-  ver?: number;
+  sessionRevision?: number;
   userId: string;
   authMode: 'direct_provider';
 };
 
 export type SessionIssueResult = {
   sid: string;
-  ver: number;
+  sessionRevision: number;
   accessToken: string;
   refreshToken: string;
   accessTokenMaxAge: number;
@@ -153,11 +150,11 @@ export const REFRESH_RTI_GRACE_MS = 30_000;
 export const REFRESH_TOKEN_PREFIX = 'ckr';
 export const DEFAULT_AUDIENCE = 'clickeen.product';
 export const DEFAULT_ISSUER = 'berlin.local';
-export const SIGNING_CONTEXT_KEY = '__CK_BERLIN_SIGNING_CONTEXT_V2__';
-export const REFRESH_KEY_CACHE = '__CK_BERLIN_REFRESH_KEY_V2__';
+export const SIGNING_CONTEXT_KEY = '__CK_BERLIN_SIGNING_CONTEXT__';
+export const REFRESH_KEY_CACHE = '__CK_BERLIN_REFRESH_KEY__';
 
-export const SESSION_KV_PREFIX = 'berlin:session:v1';
-export const USER_INDEX_KV_PREFIX = 'berlin:user-sessions:v1';
+export const SESSION_KV_PREFIX = 'berlin:session';
+export const USER_INDEX_KV_PREFIX = 'berlin:user-sessions';
 
 export const CACHE_HEADERS = {
   'cache-control': 'no-store',

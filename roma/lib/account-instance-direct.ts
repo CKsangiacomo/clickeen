@@ -298,8 +298,7 @@ export async function createAccountInstanceInTokyo(args: {
   config: Record<string, unknown>;
   content: AccountInstanceContentDocument;
   publicPackage: {
-    v: 1;
-    indexHtml: string;
+        indexHtml: string;
     stylesCss: string;
     runtimeJs: string;
   };
@@ -373,8 +372,7 @@ export async function saveAccountInstanceInTokyo(args: {
   config: Record<string, unknown>;
   content: AccountInstanceContentDocument;
   publicPackage: {
-    v: 1;
-    indexHtml: string;
+        indexHtml: string;
     stylesCss: string;
     runtimeJs: string;
   };

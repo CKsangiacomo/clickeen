@@ -95,8 +95,7 @@ function writeDieterManifest({ dist, repoRoot }) {
   }
 
   const manifest = {
-    v: 1,
-    gitSha: tryGetGitSha(repoRoot),
+        gitSha: tryGetGitSha(repoRoot),
     components,
     componentsWithJs,
     aliases,

@@ -1,5 +1,5 @@
 {
-  "baseFingerprint": "d83b4036d7a0bcac6310d5bfd2bc0b96db54f71371b849cb5aac64713eabee8a",
+  "baseFingerprint": "2769858e7b2c8135a5aed20ab0f769ebb76007a06bdf6637986cc050b7e09992",
   "baseUpdatedAt": "2026-02-04T05:36:55.804Z",
   "ops": [
     {
@@ -22,6 +22,5 @@
       "path": "blocks.hero.copy.subheadline",
       "value": "Se hvordan team bruker nedtellinger til lanseringer, salg og arrangementer."
     }
-  ],
-  "v": 1
+  ]
 }

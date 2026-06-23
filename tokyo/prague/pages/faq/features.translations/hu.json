@@ -1,5 +1,5 @@
 {
-  "baseFingerprint": "0b100a5d1ae83ab52e896df8966d63df65d2506af0b7ba59037512898a1584a1",
+  "baseFingerprint": "8c033ca4ce491d88e790009a33661f4b546e2508b30687940c67797a5098c8d7",
   "baseUpdatedAt": "2026-02-10T05:01:38.052Z",
   "ops": [
     {
@@ -272,6 +272,5 @@
       "path": "blocks.cta.copy.subheadline",
       "value": "Kezdd ingyen, publikálj gyorsan, és tartsd naprakészen a GYIK-ot minden oldalon és nyelven."
     }
-  ],
-  "v": 1
+  ]
 }

@@ -32,7 +32,7 @@ async function hmacSha256(secret: string, message: string): Promise<Uint8Array> 
 
 export async function verifyGrant(grant: string, secret: string): Promise<AIGrant> {
   const parts = grant.split('.');
-  if (parts.length !== 3 || parts[0] !== 'v1') {
+  if (parts.length !== 3 || parts[0] !== 'ckgrant') {
     throw new HttpError(401, { code: 'GRANT_INVALID', message: 'Invalid grant format' });
   }
 
@@ -49,7 +49,6 @@ export async function verifyGrant(grant: string, secret: string): Promise<AIGran
 
   if (!isRecord(payload)) throw new HttpError(401, { code: 'GRANT_INVALID', message: 'Invalid grant payload' });
 
-  const v = asNumber(payload.v);
   const iss = asString(payload.iss);
   const exp = asNumber(payload.exp);
   const jtiRaw = (payload as any).jti;
@@ -60,7 +59,6 @@ export async function verifyGrant(grant: string, secret: string): Promise<AIGran
   const sub = isRecord(payload.sub) ? payload.sub : null;
 
   if (
-    v !== 1 ||
     !iss ||
     !isAiGrantIssuer(iss) ||
     exp === null ||
@@ -87,7 +85,7 @@ export async function verifyGrant(grant: string, secret: string): Promise<AIGran
     throw new HttpError(401, { code: 'GRANT_INVALID', message: 'Grant subject kind is invalid' });
   }
 
-  const expectedSig = await hmacSha256(secret, `v1.${payloadB64}`);
+  const expectedSig = await hmacSha256(secret, `ckgrant.${payloadB64}`);
   const providedSig = base64UrlToBytes(sigB64);
   if (!timingSafeEqualBytes(expectedSig, providedSig)) {
     throw new HttpError(401, { code: 'GRANT_INVALID', message: 'Grant signature mismatch' });
@@ -160,8 +158,8 @@ function normalizeAiPolicy(value: unknown): AiGrantPolicy | undefined {
   const maxMonthlyTurns = maxMonthlyTurnsRaw === null ? null : asPositiveInteger(maxMonthlyTurnsRaw);
   const timeoutMs = asPositiveInteger((value as any).timeoutMs);
   const learningCapture = normalizeLearningCapturePolicy((value as any).learningCapture);
-  const policyVersion = asString((value as any).policyVersion);
-  if (!maxTokensPerCall || !maxTurnsPerThread || maxMonthlyTurns === undefined || !timeoutMs || !learningCapture || !policyVersion) {
+  const policyId = asString((value as any).policyId);
+  if (!maxTokensPerCall || !maxTurnsPerThread || maxMonthlyTurns === undefined || !timeoutMs || !learningCapture || !policyId) {
     throw new HttpError(401, { code: 'GRANT_INVALID', message: 'Grant ai policy has invalid limits' });
   }
 
@@ -178,7 +176,7 @@ function normalizeAiPolicy(value: unknown): AiGrantPolicy | undefined {
     maxMonthlyTurns,
     timeoutMs,
     learningCapture,
-    policyVersion,
+    policyId,
   };
 }
 

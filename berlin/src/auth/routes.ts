@@ -291,8 +291,7 @@ async function createProviderLoginStart(args: {
   const nowSec = Math.floor(Date.now() / 1000);
   const stateId = createOauthStateId();
   const transaction: OAuthTransaction = {
-    v: 1,
-    flow: 'login',
+        flow: 'login',
     provider,
     codeVerifier,
     createdAt: nowSec,
@@ -501,8 +500,7 @@ async function handleProviderLoginCallback(
 
   const finishId = createFinishId();
   const finishTransaction: OAuthFinishTransaction = {
-    v: 1,
-    provider: transaction.provider,
+        provider: transaction.provider,
     sessionId: session.sid,
     userId,
     createdAccount,
@@ -557,8 +555,7 @@ async function createFinishTransactionForIssuedSession(args: {
   const nowSec = Math.floor(Date.now() / 1000);
   const finishId = createFinishId();
   const finishTransaction: OAuthFinishTransaction = {
-    v: 1,
-    provider: args.provider,
+        provider: args.provider,
     sessionId: args.session.sid,
     userId: args.userId,
     createdAccount: false,

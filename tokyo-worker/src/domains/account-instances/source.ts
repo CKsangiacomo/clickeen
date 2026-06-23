@@ -154,8 +154,7 @@ function toAccountInstanceSourcePointer(args: {
 }): AccountInstanceSourcePointer {
   const { configDoc } = args;
   return {
-    v: 1,
-    id: configDoc.id,
+        id: configDoc.id,
     accountId: configDoc.accountId,
     widgetCode: configDoc.widgetCode,
     widgetType: configDoc.widgetType,
@@ -176,8 +175,7 @@ function instanceFromConfigAndContent(args: {
 }): AccountInstanceDocument {
   void args.content;
   return {
-    v: 1,
-    id: args.configDoc.id,
+        id: args.configDoc.id,
     accountId: args.configDoc.accountId,
     widgetCode: args.configDoc.widgetCode,
     widgetType: args.configDoc.widgetType,

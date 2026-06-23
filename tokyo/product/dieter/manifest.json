@@ -1,6 +1,5 @@
 {
-  "v": 1,
-  "gitSha": "94d44d9cea592e3c2bca5c6a1e552249ddf9c9d8",
+  "gitSha": "fa06b9aa200e35e41a547089af79eb1247319949",
   "components": [
     "bulk-edit",
     "button",

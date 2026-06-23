@@ -8,7 +8,6 @@ const ROMA_AUTHZ_CAPSULE_MAX_SKEW_SEC = 60;
 const RS256_ALG = 'RSASSA-PKCS1-v1_5';
 
 export type RomaAccountAuthzCapsulePayload = {
-  v: 1;
   typ: 'roma.account';
   iss: 'berlin';
   aud: 'roma';
@@ -26,7 +25,7 @@ export type RomaAccountAuthzCapsulePayload = {
   exp: number;
 };
 
-type SignableRomaAccountAuthzCapsulePayload = Omit<RomaAccountAuthzCapsulePayload, 'v' | 'typ' | 'iss' | 'aud'>;
+type SignableRomaAccountAuthzCapsulePayload = Omit<RomaAccountAuthzCapsulePayload, 'typ' | 'iss' | 'aud'>;
 type RomaAccountAuthzCapsuleHeader = {
   alg: 'RS256';
   typ: 'JWT';
@@ -125,7 +124,6 @@ function normalizeAccountPayload(
 ): RomaAccountAuthzCapsulePayload | null {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
   const record = raw as Record<string, unknown>;
-  if (record.v !== 1) return null;
   if (record.typ !== 'roma.account') return null;
   if (record.iss !== 'berlin') return null;
   if (record.aud !== 'roma') return null;
@@ -160,7 +158,6 @@ function normalizeAccountPayload(
   if (iat > nowSec + ROMA_AUTHZ_CAPSULE_MAX_SKEW_SEC) return null;
 
   return {
-    v: 1,
     typ: 'roma.account',
     iss: 'berlin',
     aud: 'roma',
@@ -190,7 +187,6 @@ export async function mintRomaAccountAuthzCapsule(
 
   const payload: RomaAccountAuthzCapsulePayload = {
     ...input,
-    v: 1,
     typ: 'roma.account',
     iss: 'berlin',
     aud: 'roma',

@@ -14,7 +14,6 @@ type TicketStoreEnv = {
 };
 
 type StoredTicket = {
-  v: 1;
   kind: TicketKind;
   payload: unknown;
   expiresAt: number;
@@ -110,19 +109,16 @@ function readObject(value: unknown): JsonRecord | null {
 function toStoredTicket(value: unknown): StoredTicket | null {
   const record = readObject(value);
   if (!record) return null;
-  const version = claimAsNumber(record.v);
   const kind = claimAsString(record.kind);
   const expiresAt = claimAsNumber(record.expiresAt);
   const consumedAt = claimAsNumber(record.consumedAt) || undefined;
   const consumeOutcome = claimAsString(record.consumeOutcome) || undefined;
   const cleanupAt = claimAsNumber(record.cleanupAt);
-  if (version !== 1) return null;
   if (kind !== 'state' && kind !== 'finish') return null;
   if (!expiresAt || expiresAt <= 0) return null;
   if (!cleanupAt || cleanupAt <= 0) return null;
   if (consumeOutcome !== undefined && consumeOutcome !== 'consumed' && consumeOutcome !== 'expired') return null;
   return {
-    v: 1,
     kind,
     payload: record.payload,
     expiresAt,
@@ -206,7 +202,6 @@ export class BerlinAuthTicketDO {
       return json({ error: 'invalid_request' }, { status: 422 });
     }
     const record: StoredTicket = {
-      v: 1,
       kind,
       payload: body?.payload,
       expiresAt,

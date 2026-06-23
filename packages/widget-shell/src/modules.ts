@@ -1,4 +1,4 @@
-import { SHELL_EDITABLE_FIELD_PATHS, SHELL_STATE_FAMILIES, WIDGET_SHELL_VERSION, type WidgetShellContribution } from './contract';
+import { SHELL_EDITABLE_FIELD_PATHS, SHELL_STATE_FAMILIES, type WidgetShellContribution } from './contract';
 
 export const WIDGET_SHELL_CSS_MODULE_KEYS = [
   'product/widgets/shared/header.css',
@@ -34,7 +34,6 @@ export function createWidgetShellContribution(args: {
   coreRuntimeModuleKeys?: readonly string[];
 }): WidgetShellContribution {
   return {
-    schemaVersion: WIDGET_SHELL_VERSION,
     widgetType: args.widgetType,
     shellStateFamilies: SHELL_STATE_FAMILIES,
     shellEditableFieldPaths: SHELL_EDITABLE_FIELD_PATHS,

@@ -9,7 +9,7 @@ import {
   type Env,
   type JwtHeader,
   type RefreshPayload,
-  type RefreshPayloadV2,
+  type RefreshPayloadRecord,
   type RefreshResult,
   type SigningContext,
   type SigningPublic,
@@ -130,13 +130,13 @@ async function resolveRefreshHmacKey(env: Env): Promise<CryptoKey> {
   return key;
 }
 
-export async function deriveNextRti(env: Env, args: { sid: string; ver: number; rti: string }): Promise<string> {
+export async function deriveNextRti(env: Env, args: { sid: string; sessionRevision: number; rti: string }): Promise<string> {
   const key = await resolveRefreshHmacKey(env);
   // Derive the next RTI deterministically from the currently presented token state.
   // This keeps the refresh grace window convergent under concurrent refresh attempts:
   // two valid refreshes racing on the same prior RTI compute the same next RTI instead
   // of minting divergent session state that immediately invalidates one caller.
-  const payload = `${args.sid}.${args.ver}.${args.rti}`;
+  const payload = `${args.sid}.${args.sessionRevision}.${args.rti}`;
   const digest = await crypto.subtle.sign('HMAC', key, enc.encode(payload));
   return toBase64Url(new Uint8Array(digest));
 }
@@ -196,7 +196,7 @@ export async function verifyAccessToken(token: string, env: Env): Promise<{ ok: 
   return { ok: true, claims };
 }
 
-export async function signRefreshToken(payload: RefreshPayloadV2, env: Env): Promise<string> {
+export async function signRefreshToken(payload: RefreshPayloadRecord, env: Env): Promise<string> {
   const key = await resolveRefreshHmacKey(env);
   const body = encodeJsonBase64Url(payload);
   const signature = await crypto.subtle.sign('HMAC', key, enc.encode(body));
@@ -214,10 +214,8 @@ export async function verifyRefreshToken(token: string, env: Env, options: { all
 
   const parsed = decodeJsonBase64Url<RefreshPayload>(body);
   if (!parsed || typeof parsed !== 'object') return { ok: false, reason: 'payload' };
-  const version = claimAsNumber(parsed.v);
-  if (version !== 2) return { ok: false, reason: 'version' };
   const payload = parsed as RefreshPayload;
-  if (!claimAsString(payload.sid) || !claimAsString(payload.rti) || !claimAsNumber(payload.ver) || !claimAsString(payload.userId)) {
+  if (!claimAsString(payload.sid) || !claimAsString(payload.rti) || !claimAsNumber(payload.sessionRevision) || !claimAsString(payload.userId)) {
     return { ok: false, reason: 'payload' };
   }
   const exp = claimAsNumber(payload.exp);

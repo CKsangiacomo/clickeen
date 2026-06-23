@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
     request,
     accessToken: current.value.accessToken,
     setCookies: current.value.setCookies,
-    path: `/v1/accounts/${encodeURIComponent(current.value.authzPayload.accountId)}/invitations`,
+    path: `/accounts/${encodeURIComponent(current.value.authzPayload.accountId)}/invitations`,
     method: 'GET',
   });
 }
@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
     request,
     accessToken: current.value.accessToken,
     setCookies: current.value.setCookies,
-    path: `/v1/accounts/${encodeURIComponent(current.value.authzPayload.accountId)}/invitations`,
+    path: `/accounts/${encodeURIComponent(current.value.authzPayload.accountId)}/invitations`,
     method: 'POST',
     accept: request.headers.get('accept'),
     contentType: request.headers.get('content-type'),

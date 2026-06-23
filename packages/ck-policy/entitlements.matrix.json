@@ -1,5 +1,4 @@
 {
-  "v": 1,
   "tiers": [
     "free",
     "tier1",
@@ -16,16 +15,6 @@
         "tier2": 28,
         "tier3": 28,
         "tier4": 28
-      }
-    },
-    "l10n.versions.max": {
-      "kind": "limit",
-      "values": {
-        "free": 1,
-        "tier1": 3,
-        "tier2": 5,
-        "tier3": 10,
-        "tier4": 10
       }
     },
     "branding.remove": {

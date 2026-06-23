@@ -1,6 +1,6 @@
 # content.faq — FAQ Widget PRD
 
-STATUS: PRD — IMPLEMENTED (v1) / Iterating
+STATUS: PRD — IMPLEMENTED (current) / Iterating
 
 This is the canonical PRD for the FAQ widget in the Clickeen model.
 For competitor feature inventory, see `documentation/widgets/FAQ/FAQ_competitoranalysis.md`.
@@ -34,7 +34,7 @@ Layout choices (inside the same Type):
 3. **Deterministic render**: the same instance state produces the same output every time.
 4. **Scoped runtime**: runtime queries inside the widget root (no global selectors for internals).
 
-## Subject Policy — Entitlements (v1)
+## Subject Policy — Entitlements (current)
 
 Tier values are defined globally in `packages/ck-policy/entitlements.matrix.json`.
 

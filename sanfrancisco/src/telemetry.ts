@@ -129,12 +129,12 @@ export async function verifyOutcomeSignature(args: { request: Request; env: Env;
   await verifyBodySignature({
     signature: args.request.headers.get('x-clickeen-signature'),
     secret: args.env.AI_GRANT_HMAC_SECRET,
-    message: `outcome.v1.${args.bodyText}`,
+    message: `outcome.${args.bodyText}`,
     missingSecretMessage: 'Missing AI_GRANT_HMAC_SECRET',
   });
 }
 
-function fnv1aHash(input: string): number {
+function stableHash(input: string): number {
   let hash = 2166136261;
   for (let i = 0; i < input.length; i += 1) {
     hash ^= input.charCodeAt(i);
@@ -144,11 +144,11 @@ function fnv1aHash(input: string): number {
 }
 
 function stableHashHex(input: string): string {
-  return fnv1aHash(input).toString(16).padStart(8, '0');
+  return stableHash(input).toString(16).padStart(8, '0');
 }
 
 function deterministicPercent(input: string): number {
-  return fnv1aHash(input) % 100;
+  return stableHash(input) % 100;
 }
 
 function resolveSubjectHash(e: InteractionEvent): string | null {
@@ -181,7 +181,7 @@ function readTouchedControls(value: unknown): NonNullable<CopilotLearningMetadat
 }
 
 function hasPaidLearningEntitlement(e: InteractionEvent): boolean {
-  if (e.agentId !== 'cs.widget.copilot.v1') return false;
+  if (e.agentId !== 'product.copilot') return false;
   if (e.subject.kind !== 'user') return false;
   const samplePercent = e.ai?.learningCapture?.rawSamplePercent;
   return typeof samplePercent === 'number' && Number.isFinite(samplePercent) && samplePercent > 0;
@@ -233,7 +233,6 @@ function sanitizeInputForLearning(input: unknown): Record<string, unknown> | nul
 
 export function buildLearningSample(e: InteractionEvent, decision: Extract<LearningCaptureDecision, { captureRaw: true }>): Record<string, unknown> {
   return {
-    v: 1,
     captureReason: decision.reason,
     requestId: e.requestId,
     agentId: e.agentId,
@@ -270,8 +269,8 @@ export async function indexCopilotEvent(env: Env, e: InteractionEvent): Promise<
 
   let intent: string | null = null;
   let outcome: string | null = null;
-  let promptVersion: string | null = null;
-  let policyVersion: string | null = asTrimmedString(e.ai?.policyVersion) ?? null;
+  let promptId: string | null = null;
+  let policyId: string | null = asTrimmedString(e.ai?.policyId) ?? null;
   let dictionaryHash: string | null = null;
 
   let ctaAction: string | null = null;
@@ -286,8 +285,8 @@ export async function indexCopilotEvent(env: Env, e: InteractionEvent): Promise<
     outcome = resultKind === 'draft_edit' ? 'draft_edit_returned' : meta ? asTrimmedString(meta.outcome) : null;
     intent = intent ?? asTrimmedString((e.result as any).operation);
     outcome = outcome ?? asTrimmedString((e.result as any).outcome);
-    promptVersion = meta ? asTrimmedString(meta.promptVersion) : null;
-    policyVersion = (meta ? asTrimmedString(meta.policyVersion) : null) ?? policyVersion;
+    promptId = meta ? asTrimmedString(meta.promptId) : null;
+    policyId = (meta ? asTrimmedString(meta.policyId) : null) ?? policyId;
     dictionaryHash = meta ? asTrimmedString(meta.dictionaryHash) : null;
 
     const cta = isRecord((e.result as any).cta) ? ((e.result as any).cta as any) : null;
@@ -321,8 +320,8 @@ export async function indexCopilotEvent(env: Env, e: InteractionEvent): Promise<
 
   try {
     await env.SF_D1.prepare(
-      `INSERT OR REPLACE INTO copilot_events_v1
-      (requestId, day, occurredAtMs, runtimeEnv, envStage, surfaceId, sessionId, instancePublicId, agentId, widgetType, intent, outcome, hasUrl, controlCount, opsCount, uniquePathsTouched, scopesTouched, ctaAction, promptVersion, policyVersion, dictionaryHash, taskClass, provider, model, latencyMs)
+      `INSERT OR REPLACE INTO copilot_events
+      (requestId, day, occurredAtMs, runtimeEnv, envStage, surfaceId, sessionId, instancePublicId, agentId, widgetType, intent, outcome, hasUrl, controlCount, opsCount, uniquePathsTouched, scopesTouched, ctaAction, promptId, policyId, dictionaryHash, taskClass, provider, model, latencyMs)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     )
       .bind(
@@ -344,8 +343,8 @@ export async function indexCopilotEvent(env: Env, e: InteractionEvent): Promise<
         uniquePathsTouched,
         scopesTouched,
         ctaAction,
-        promptVersion,
-        policyVersion,
+        promptId,
+        policyId,
         dictionaryHash,
         taskClass,
         provider,
@@ -362,7 +361,7 @@ export async function persistOutcomeAttach(env: Env, body: OutcomeAttachRequest)
   const day = toIsoDay(body.occurredAtMs);
   try {
     await env.SF_D1.prepare(
-      `INSERT OR REPLACE INTO copilot_outcomes_v1
+      `INSERT OR REPLACE INTO copilot_outcomes
       (requestId, outcomeId, surfaceId, artifactId, event, day, occurredAtMs, sessionId, timeToDecisionMs, accountIdHash)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     )

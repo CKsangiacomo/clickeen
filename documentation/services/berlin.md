@@ -37,7 +37,7 @@ Berlin permanently owns:
 - Refresh rotation and session revocation.
 - JWKS publication for verifier services.
 - `GET /auth/session` identity/session status.
-- `GET /v1/session/bootstrap` as the read-only session bootstrap surface.
+- `GET /session/bootstrap` as the read-only session bootstrap surface.
 - The signed account authz capsule needed by Roma/Bob for the active account context.
 - Request IDs, structured request-completion logs, and the first auth/session mutation rate-limit floor.
 
@@ -84,24 +84,24 @@ Canonical public auth/session routes:
 - `GET /auth/session`
 - `POST /auth/refresh`
 - `POST /auth/logout`
-- `GET /v1/session/bootstrap`
+- `GET /session/bootstrap`
 
 Residual public account-management routes:
 
-- `GET /v1/me`
-- `PUT /v1/me`
-- `GET /v1/accounts/:id`
-- `DELETE /v1/accounts/:id` (disabled; explicit conflict, no mutation)
-- `GET /v1/accounts/:id/members`
-- `GET /v1/accounts/:id/members/:memberId`
-- `PATCH /v1/accounts/:id/members/:memberId`
-- `DELETE /v1/accounts/:id/members/:memberId`
-- `GET /v1/accounts/:id/invitations`
-- `POST /v1/accounts/:id/invitations`
-- `DELETE /v1/accounts/:id/invitations/:invitationId`
-- `POST /v1/accounts/:id/owner-transfer`
-- `POST /v1/invitations/:token/accept` (signed-in accept is disabled; invitation acceptance happens during login)
-- `POST /v1/accounts/:id/lifecycle/tier-drop/dismiss`
+- `GET /me`
+- `PUT /me`
+- `GET /accounts/:id`
+- `DELETE /accounts/:id` (disabled; explicit conflict, no mutation)
+- `GET /accounts/:id/members`
+- `GET /accounts/:id/members/:memberId`
+- `PATCH /accounts/:id/members/:memberId`
+- `DELETE /accounts/:id/members/:memberId`
+- `GET /accounts/:id/invitations`
+- `POST /accounts/:id/invitations`
+- `DELETE /accounts/:id/invitations/:invitationId`
+- `POST /accounts/:id/owner-transfer`
+- `POST /invitations/:token/accept` (signed-in accept is disabled; invitation acceptance happens during login)
+- `POST /accounts/:id/lifecycle/tier-drop/dismiss`
 
 Berlin does not build, validate, migrate, or clean Tokyo/R2 account paths. Account-owned assets and instances use `accountPublicId` in Tokyo storage; private UUIDs stay relational and session-scoped. Product policy that affects asset storage, publication, downgrade, suspension, or stale-root cleanup belongs to Roma/system account operations, with Berlin only supplying the stable session/account truth and narrow account-governance reads named above.
 
@@ -150,7 +150,7 @@ Requested finish redirects must be absolute `http`/`https` URLs, normalized by B
   - the first valid `/auth/refresh` rotates the session RTI and returns the next refresh token
   - one grace-window retry using the immediately previous refresh token is allowed so concurrent refresh attempts converge on the same next RTI instead of revoking a healthy session
   - replay of an old refresh token after the grace window is treated as reuse and revokes the session
-  - refresh payload version `2` is the only accepted shape; old V1 refresh tokens force normal login
+  - refresh payload sessionRevision is the only accepted shape; old refresh tokens force normal login
   - `POST /auth/logout` with `scope=user` revokes every session for the current user
   - logout with a specific refresh token revokes only that session
 - Session cookies used by Roma/Bob:

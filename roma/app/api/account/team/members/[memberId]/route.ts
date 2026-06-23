@@ -35,7 +35,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
     request,
     accessToken: current.value.accessToken,
     setCookies: current.value.setCookies,
-    path: `/v1/accounts/${encodeURIComponent(current.value.authzPayload.accountId)}/members/${encodeURIComponent(memberId)}`,
+    path: `/accounts/${encodeURIComponent(current.value.authzPayload.accountId)}/members/${encodeURIComponent(memberId)}`,
     method: 'GET',
   });
 }
@@ -54,7 +54,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     request,
     accessToken: current.value.accessToken,
     setCookies: current.value.setCookies,
-    path: `/v1/accounts/${encodeURIComponent(current.value.authzPayload.accountId)}/members/${encodeURIComponent(memberId)}`,
+    path: `/accounts/${encodeURIComponent(current.value.authzPayload.accountId)}/members/${encodeURIComponent(memberId)}`,
     method: 'PATCH',
     accept: request.headers.get('accept'),
     contentType: request.headers.get('content-type'),
@@ -76,7 +76,7 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
     request,
     accessToken: current.value.accessToken,
     setCookies: current.value.setCookies,
-    path: `/v1/accounts/${encodeURIComponent(current.value.authzPayload.accountId)}/members/${encodeURIComponent(memberId)}`,
+    path: `/accounts/${encodeURIComponent(current.value.authzPayload.accountId)}/members/${encodeURIComponent(memberId)}`,
     method: 'DELETE',
     accept: request.headers.get('accept'),
   });

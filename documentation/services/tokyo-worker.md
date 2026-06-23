@@ -25,7 +25,7 @@ Tokyo-worker owns:
 - account widget instance R2 operations
 - translated locale value R2 operations
 - page source and page package R2 operations
-- public package readiness checks
+- public package file serving
 - `clk.live` and `dev.clk.live` static artifact serving
 
 Roma owns:
@@ -222,7 +222,7 @@ approved internal callers. It does not own translation generation, AI runtime
 policy, active-locale authority, or completion/failure state.
 
 Roma calls the Translation Agent Worker for account-widget translation
-generation. Translation Agent calls San Francisco `/v1/model/chat` and writes
+generation. Translation Agent calls San Francisco `/model/chat` and writes
 overlays back through Tokyo-worker. Tokyo-worker does not provide a generation
 route.
 

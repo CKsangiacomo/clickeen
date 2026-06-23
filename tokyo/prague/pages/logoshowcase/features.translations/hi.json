@@ -1,5 +1,5 @@
 {
-  "baseFingerprint": "d41d4a0b02cdb929a2ec512341c9b767ed0bf338a58a7fcee2272de063044077",
+  "baseFingerprint": "4b48625cee1daa76ee339867a8648a7a29934cc98e4a3417e374681bb6109d10",
   "baseUpdatedAt": "2026-02-04T05:36:55.817Z",
   "ops": [
     {
@@ -22,6 +22,5 @@
       "path": "blocks.hero.copy.subheadline",
       "value": "तेज़, लचीला, और हर जगह शानदार दिखने के लिए डिज़ाइन किया गया।"
     }
-  ],
-  "v": 1
+  ]
 }

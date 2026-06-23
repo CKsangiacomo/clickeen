@@ -2,7 +2,6 @@ import { asTrimmedString, isRecord } from '@clickeen/ck-contracts';
 import type { WidgetEditableFieldsContract, WidgetEditableField } from '@clickeen/ck-contracts/translated-value-primitives';
 
 export type TranslationSetup = {
-  v: 1;
   baseLocale: string;
   planTranslationsMax: number | null;
   activeLocales: string[];
@@ -13,13 +12,11 @@ export type TranslatedLocaleEntry = {
 };
 
 export type TranslatedLocalesData = {
-  v: 1;
   baseLocale: string;
   translations: TranslatedLocaleEntry[];
 };
 
 export type TranslatedLocaleValuesData = {
-  v: 1;
   locale: string;
   values: Record<string, string>;
 };
@@ -76,7 +73,7 @@ function normalizeTranslatedLocaleEntry(raw: unknown): TranslatedLocaleEntry | n
 }
 
 export function normalizeTranslationSetup(payload: unknown): TranslationSetup | null {
-  if (!isRecord(payload) || payload.v !== 1) return null;
+  if (!isRecord(payload)) return null;
   const baseLocale = asTrimmedString(payload.baseLocale);
   if (!baseLocale) return null;
   const planTranslationsMax =
@@ -84,7 +81,6 @@ export function normalizeTranslationSetup(payload: unknown): TranslationSetup | 
       ? Math.max(0, Math.floor(payload.planTranslationsMax))
       : null;
   return {
-    v: 1,
     baseLocale,
     planTranslationsMax,
     activeLocales: normalizeLocaleList(payload.activeLocales).filter((locale) => locale !== baseLocale),
@@ -92,7 +88,7 @@ export function normalizeTranslationSetup(payload: unknown): TranslationSetup | 
 }
 
 export function normalizeTranslatedLocales(payload: unknown): TranslatedLocalesData | null {
-  if (!isRecord(payload) || payload.v !== 1) return null;
+  if (!isRecord(payload)) return null;
   const baseLocale = asTrimmedString(payload.baseLocale);
   if (!baseLocale || !Array.isArray(payload.translations)) return null;
 
@@ -102,20 +98,18 @@ export function normalizeTranslatedLocales(payload: unknown): TranslatedLocalesD
   if (translations.length !== payload.translations.length) return null;
 
   return {
-    v: 1,
     baseLocale,
     translations,
   };
 }
 
 export function normalizeTranslatedLocaleValues(payload: unknown): TranslatedLocaleValuesData | null {
-  if (!isRecord(payload) || payload.v !== 1) return null;
+  if (!isRecord(payload)) return null;
   const locale = asTrimmedString(payload.locale);
   if (!locale) return null;
   const values = normalizeValueMap(payload.values);
   if (!values) return null;
   return {
-    v: 1,
     locale,
     values,
   };

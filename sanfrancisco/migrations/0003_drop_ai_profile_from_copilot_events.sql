@@ -1,8 +1,8 @@
 -- Migration number: 0003 	 2026-05-06T00:00:00.000Z
 
-DROP TABLE IF EXISTS copilot_events_v1_without_profile;
+DROP TABLE IF EXISTS copilot_events_without_profile;
 
-CREATE TABLE copilot_events_v1_without_profile (
+CREATE TABLE copilot_events_without_profile (
   requestId TEXT PRIMARY KEY NOT NULL,
   day TEXT NOT NULL,
   occurredAtMs INTEGER NOT NULL,
@@ -20,8 +20,8 @@ CREATE TABLE copilot_events_v1_without_profile (
   uniquePathsTouched INTEGER,
   scopesTouched TEXT,
   ctaAction TEXT,
-  promptVersion TEXT,
-  policyVersion TEXT,
+  promptId TEXT,
+  policyId TEXT,
   dictionaryHash TEXT,
   taskClass TEXT,
   provider TEXT,
@@ -29,7 +29,7 @@ CREATE TABLE copilot_events_v1_without_profile (
   latencyMs INTEGER
 );
 
-INSERT OR REPLACE INTO copilot_events_v1_without_profile (
+INSERT OR REPLACE INTO copilot_events_without_profile (
   requestId,
   day,
   occurredAtMs,
@@ -47,8 +47,8 @@ INSERT OR REPLACE INTO copilot_events_v1_without_profile (
   uniquePathsTouched,
   scopesTouched,
   ctaAction,
-  promptVersion,
-  policyVersion,
+  promptId,
+  policyId,
   dictionaryHash,
   taskClass,
   provider,
@@ -73,31 +73,31 @@ SELECT
   uniquePathsTouched,
   scopesTouched,
   ctaAction,
-  promptVersion,
-  policyVersion,
+  promptId,
+  policyId,
   dictionaryHash,
   taskClass,
   provider,
   model,
   latencyMs
-FROM copilot_events_v1;
+FROM copilot_events;
 
-DROP TABLE copilot_events_v1;
+DROP TABLE copilot_events;
 
-ALTER TABLE copilot_events_v1_without_profile
-  RENAME TO copilot_events_v1;
+ALTER TABLE copilot_events_without_profile
+  RENAME TO copilot_events;
 
-CREATE INDEX IF NOT EXISTS idx_copilot_events_v1_day_agent
-  ON copilot_events_v1(day, agentId);
+CREATE INDEX IF NOT EXISTS idx_copilot_events_day_agent
+  ON copilot_events(day, agentId);
 
-CREATE INDEX IF NOT EXISTS idx_copilot_events_v1_day_stage
-  ON copilot_events_v1(day, envStage);
+CREATE INDEX IF NOT EXISTS idx_copilot_events_day_stage
+  ON copilot_events(day, envStage);
 
-CREATE INDEX IF NOT EXISTS idx_copilot_events_v1_day_widget
-  ON copilot_events_v1(day, widgetType);
+CREATE INDEX IF NOT EXISTS idx_copilot_events_day_widget
+  ON copilot_events(day, widgetType);
 
-CREATE INDEX IF NOT EXISTS idx_copilot_events_v1_day_session
-  ON copilot_events_v1(day, sessionId);
+CREATE INDEX IF NOT EXISTS idx_copilot_events_day_session
+  ON copilot_events(day, sessionId);
 
-CREATE INDEX IF NOT EXISTS idx_copilot_events_v1_day_intent_outcome
-  ON copilot_events_v1(day, intent, outcome);
+CREATE INDEX IF NOT EXISTS idx_copilot_events_day_intent_outcome
+  ON copilot_events(day, intent, outcome);

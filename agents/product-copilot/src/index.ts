@@ -44,7 +44,7 @@ export class ProductCopilotInputError extends Error {
   }
 }
 
-const PROMPT_VERSION = 'product-copilot.brain.v1@2026-06-21';
+const PROMPT_ID = 'product-copilot.brain@2026-06-21';
 const MAX_CONVERSATION_HISTORY_MESSAGES = 8;
 const MAX_CONVERSATION_HISTORY_CHARS = 2000;
 const MAX_CONTEXT_PROMPT_CHARS = 120_000;
@@ -230,7 +230,6 @@ export function validateProductCopilotRequest(input: unknown): ValidatedProductC
   if (!context) {
     issues.push({ path: 'context', message: 'context must be an object' });
   } else {
-    if (context.version !== 'product-copilot.context.v1') issues.push({ path: 'context.version', message: 'unsupported context version' });
     for (const field of ['instanceId', 'widgetType', 'displayName', 'activeLocale', 'draftSignature', 'traceRequestId']) {
       if (!isExactNonEmptyString(context[field])) issues.push({ path: `context.${field}`, message: `${field} is required` });
     }
@@ -311,7 +310,6 @@ function buildContextPrompt(
     `User request: ${userMessage}`,
     '',
     'Context capsule:',
-    `- version: ${context.version}`,
     `- widgetType: ${context.widgetType}`,
     `- displayName: ${context.displayName}`,
     `- activeLocale: ${context.activeLocale}`,
@@ -419,8 +417,7 @@ function responseMeta(args: {
   const ops = args.response.draftEdit?.ops ?? [];
   const touchedPaths = Array.from(new Set(ops.map((op) => op.path)));
   return {
-    promptVersion: PROMPT_VERSION,
-    contextVersion: 'product-copilot.context.v1',
+    promptId: PROMPT_ID,
     validationRetryCount: args.retryCount,
     ...(ops.length
       ? {

@@ -4,7 +4,6 @@ type CatalogValue = string | Record<string, string>;
 type Catalog = Record<string, CatalogValue>;
 
 export type I18nManifest = {
-  v: number;
   gitSha: string;
   locales: Record<string, { dir: 'ltr' | 'rtl' }>;
   bundles: Record<string, Record<string, string>>;
@@ -42,7 +41,7 @@ export async function loadI18nManifest(): Promise<I18nManifest> {
     const res = await fetch(url);
     if (!res.ok) throw new Error(`[i18n] Failed to load manifest (${res.status}) ${url}`);
     const json = (await res.json()) as I18nManifest;
-    if (!json || typeof json !== 'object' || typeof json.v !== 'number') {
+    if (!json || typeof json !== 'object' || Array.isArray(json)) {
       throw new Error(`[i18n] Invalid manifest ${url}`);
     }
     if (!json.locales || typeof json.locales !== 'object') throw new Error(`[i18n] manifest.locales missing (${url})`);

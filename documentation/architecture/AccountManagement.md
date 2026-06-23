@@ -8,7 +8,7 @@ For product/system context, see [CONTEXT.md](./CONTEXT.md) and [Overview.md](./O
 
 ## Hard Invariant
 
-Clickeen V1 uses a deliberately boring account model:
+Clickeen current uses a deliberately boring account model:
 
 ```text
 One user belongs to one account.
@@ -16,7 +16,7 @@ One account has many users.
 The user's role is the user's role in that account.
 ```
 
-There is no active V1 customer account switching model and no core many-to-many membership table.
+There is no active current customer account switching model and no core many-to-many membership table.
 
 If someone tries to invite or add an email already associated with a user, Berlin rejects the operation:
 
@@ -33,7 +33,7 @@ That rejection is product behavior. The system must not silently attach the same
 | `Account` | The business/customer boundary for billing, tier, product access, instances, and deletion cleanup. | Berlin/account DB model for account truth; Roma/Tokyo consume account context through product operations. |
 | `User` | The human using Clickeen, including the one account they belong to and their role in that account. | Berlin owns user/auth truth. |
 | `Role` | The user's permission level in their one account: `owner`, `admin`, `editor`, or `viewer`. | Stored on `users`, not on a membership row. |
-| `Invite Members` | Account-scoped invitation lifecycle for creating another user in the same account. | Berlin V1 lifecycle table/route surface. |
+| `Invite Members` | Account-scoped invitation lifecycle for creating another user in the same account. | Berlin current lifecycle table/route surface. |
 | `Login Method` | A way to prove the human can sign into Clickeen, such as Google login. | Berlin login boundary. |
 | `Account Connection` | Account-authorized external provider/source, such as a Google Business Profile connection for a reviews widget. | Future connector PRD, account-owned. |
 | `Connection Resource` | A selectable external business/resource under an account connection. | Future connector PRD. |
@@ -102,7 +102,7 @@ Roles do not replace billing/tier policy. Billing/tier policy does not redefine 
 
 ## Invite Members
 
-Invite Members is a real V1 feature.
+Invite Members is a real current feature.
 
 Rules:
 
@@ -113,7 +113,7 @@ Rules:
 - no `account_members` row is created;
 - removing a non-owner team member removes that user from the account model rather than creating an account-less or multi-account user.
 
-Owner transfer survives as a V1 account operation, but it must be rewritten against `users.role`, not membership rows.
+Owner transfer survives as a current account operation, but it must be rewritten against `users.role`, not membership rows.
 
 ## Login And Connectors
 
@@ -158,7 +158,7 @@ Berlin owns:
 - first-account provisioning;
 - invitation acceptance;
 - user/account bootstrap context;
-- V1 Invite Members lifecycle until a later PRD moves it.
+- current Invite Members lifecycle until a later PRD moves it.
 
 Berlin must not preserve old `user_profiles`, `account_members`, `active_account_id`, or connector-looking `linkedIdentities` output as product truth.
 

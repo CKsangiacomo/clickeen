@@ -5,7 +5,6 @@ export type MemberRole = 'viewer' | 'editor' | 'admin' | 'owner';
 export type EntitlementKind = 'flag' | 'limit';
 
 export type EntitlementsMatrix = {
-  v: 1;
   tiers: PolicyProfile[];
   entitlements: Record<
     string,
@@ -17,7 +16,6 @@ export type EntitlementsMatrix = {
 };
 
 export type Policy = {
-  v: 1;
   profile: PolicyProfile;
   role: MemberRole;
   flags: Record<string, boolean>;

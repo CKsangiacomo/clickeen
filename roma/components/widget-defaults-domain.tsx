@@ -10,8 +10,7 @@ import {
 } from './widget-defaults-builder-controls';
 
 type AccountWidgetDefaultsDocument = {
-  v: 1;
-  accountId: string;
+    accountId: string;
   shell: Record<string, unknown>;
   widgets: Record<
     string,

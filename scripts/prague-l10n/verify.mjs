@@ -106,11 +106,11 @@ function buildPageBase({ pageId, pageJson, pagePath }) {
     }
     baseBlocks[id] = { copy };
   }
-  return { v: 1, pageId, blocks: baseBlocks };
+  return { pageId, blocks: baseBlocks };
 }
 
 function validateOverlay(overlay, overlayPath, expectedFingerprint) {
-  if (!isPlainObject(overlay) || overlay.v !== 1) {
+  if (!isPlainObject(overlay)) {
     throw new Error(`[prague-l10n] Invalid translation file: ${overlayPath}`);
   }
   if (overlay.baseFingerprint !== expectedFingerprint) {

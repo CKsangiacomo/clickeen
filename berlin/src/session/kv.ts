@@ -22,7 +22,7 @@ function requireSessionKv(env: Env): KVNamespace {
 function toSessionState(value: unknown, sid: string): SessionState | null {
   if (value == null) return null; if (typeof value !== 'object' || Array.isArray(value)) throw new Error('berlin.session.state_invalid');
   const record = value as Record<string, unknown>;
-  if (record.sid !== sid || typeof record.currentRti !== 'string' || !record.currentRti || typeof record.userId !== 'string' || !record.userId || record.authMode !== 'direct_provider' || !Number.isInteger(record.rtiRotatedAt) || !Number.isInteger(record.ver) || !Number.isInteger(record.createdAt) || !Number.isInteger(record.updatedAt) || typeof record.revoked !== 'boolean') throw new Error('berlin.session.state_invalid');
+  if (record.sid !== sid || typeof record.currentRti !== 'string' || !record.currentRti || typeof record.userId !== 'string' || !record.userId || record.authMode !== 'direct_provider' || !Number.isInteger(record.rtiRotatedAt) || !Number.isInteger(record.sessionRevision) || !Number.isInteger(record.createdAt) || !Number.isInteger(record.updatedAt) || typeof record.revoked !== 'boolean') throw new Error('berlin.session.state_invalid');
   return record as SessionState;
 }
 

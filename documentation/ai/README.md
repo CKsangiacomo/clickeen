@@ -22,7 +22,7 @@ Current built agents are registered in `packages/ck-contracts/src/ai.ts`.
 
 | Agent id | Agent home | Runtime identity | Boundary |
 | --- | --- | --- | --- |
-| `cs.widget.copilot.v1` | `product-copilot` | authenticated product request | `product_copilot_draft_actions` |
+| `product.copilot` | `product-copilot` | authenticated product request | `product_copilot_draft_actions` |
 | `widget.instance.translator` | `translation-agent` | internal service request | `account_widget_translated_values` |
 
 If an agent id is not in this table and not registered in

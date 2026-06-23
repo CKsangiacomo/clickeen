@@ -2,7 +2,6 @@ import type { AiGrantPolicy } from '@clickeen/ck-contracts/ai';
 import { getOptionalCloudflareRequestContext } from '../cloudflare-request-context';
 
 export type RomaAIGrant = {
-  v: 1;
   iss: 'roma';
   jti?: string;
   sub: { kind: 'user'; userId: string; accountId: string };
@@ -65,7 +64,7 @@ export function resolveEnvStage(): string {
 
 export async function mintRomaAIGrant(grant: RomaAIGrant, secret: string): Promise<string> {
   const payloadB64 = base64UrlEncodeBytes(new TextEncoder().encode(JSON.stringify(grant)));
-  const sigBytes = await hmacSha256(secret, `v1.${payloadB64}`);
+  const sigBytes = await hmacSha256(secret, `ckgrant.${payloadB64}`);
   const sigB64 = base64UrlEncodeBytes(sigBytes);
-  return `v1.${payloadB64}.${sigB64}`;
+  return `ckgrant.${payloadB64}.${sigB64}`;
 }

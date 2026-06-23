@@ -48,7 +48,7 @@ export function validateDevstudioBootstrap(payload) {
 
 export async function fetchBootstrap(env, accessToken) {
   const berlinBase = resolveBerlinBaseUrl(env);
-  const response = await fetch(`${berlinBase}/v1/session/bootstrap`, {
+  const response = await fetch(`${berlinBase}/session/bootstrap`, {
     method: 'GET',
     headers: {
       authorization: `Bearer ${accessToken}`,

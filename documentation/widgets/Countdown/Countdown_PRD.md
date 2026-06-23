@@ -11,7 +11,7 @@ Renders a configurable countdown / personal countdown / number counter with opti
 3. **Deterministic render**: the same instance state produces the same output every time.
 4. **CSS-first variants**: variants are driven by `data-*` + CSS variables; JS only sets attributes/vars and updates text/visibility.
 
-## Entitlements + limits (v1)
+## Entitlements + limits (current)
 
 - Tier values live in the global matrix: `packages/ck-policy/entitlements.matrix.json`.
 - Widget policy-key mapping lives in `tokyo/product/widgets/countdown/limits.json`.
@@ -103,7 +103,7 @@ Note: `workspace.websiteUrl` is a workspace setting (persistent on the workspace
 - `countdown.appearance.cardwrapper.shadow`: Shadow (enabled/inset/x/y/blur/spread/color/alpha).
 - `countdown.appearance.cardwrapper.radiusLinked|radius|radiusTL|TR|BR|BL`: Radius controls for tiles.
 - `countdown.appearance.separator`: Color/style picker.
-- During-countdown action type is fixed to link in V1 and must not be stored as
+- During-countdown action type is fixed to link in current and must not be stored as
   an account default unless a future Builder control makes it editable.
 - `countdown.actions.during.url`: URL input (supports `#`, root-relative, http(s), mailto, and tel).
 - `countdown.actions.during.text`: Text input (default: "Purchase now").

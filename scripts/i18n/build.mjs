@@ -114,8 +114,7 @@ function main() {
   }
 
   const manifest = {
-    v: 1,
-    gitSha: tryGetGitSha(),
+        gitSha: tryGetGitSha(),
     locales: {},
     bundles: {},
   };

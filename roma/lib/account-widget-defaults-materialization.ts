@@ -69,8 +69,7 @@ export async function materializeInitialAccountWidgetDefaults(args: {
   }
 
   const widgetDefaults: AccountWidgetDefaultsDocument = {
-    v: 1,
-    accountId: args.accountId,
+        accountId: args.accountId,
     shell: cloneRecord(WIDGET_SHELL_FACTORY_DEFAULTS as unknown as Record<string, unknown>),
     widgets,
     seededAt: now,

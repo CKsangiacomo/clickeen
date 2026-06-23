@@ -17,13 +17,13 @@ Code authority:
 
 | Concern | Current value |
 | --- | --- |
-| Agent id | `cs.widget.copilot.v1` |
+| Agent id | `product.copilot` |
 | Worker name | `product-copilot-dev` |
 | Worker entrypoint | `agents/product-copilot/src/worker.ts` |
 | Brain contract | `agents/product-copilot/src/index.ts` |
 | Wrangler config | `agents/product-copilot/wrangler.toml` |
 | Product caller | Roma account Builder route |
-| Model executor | San Francisco `/v1/model/chat` |
+| Model executor | San Francisco `/model/chat` |
 
 ## Authority Matrix
 
@@ -48,8 +48,8 @@ Bob CopilotPane
 -> Roma loads current instance and validates account/instance authority
 -> Roma validates optional selectedModel
 -> Roma mints AI grant and reserves copilot usage
--> Roma calls Product Copilot Worker POST /v1/execute
--> Product Copilot calls San Francisco POST /v1/model/chat
+-> Roma calls Product Copilot Worker POST /execute
+-> Product Copilot calls San Francisco POST /model/chat
 -> Product Copilot returns ProductCopilotResponse
 -> Bob applies draft_edit in browser memory only, if valid and draft signature still matches
 ```
@@ -62,7 +62,7 @@ Grant facts:
 
 - issuer: `roma`;
 - subject: current authenticated user/account;
-- cap: `agent:cs.widget.copilot.v1`;
+- cap: `agent:product.copilot`;
 - mode: `editor`;
 - trace surface: `roma.builder`;
 - model policy: resolved from `packages/ck-policy/ai-runtime.matrix.json`;
@@ -84,21 +84,20 @@ HEAD /healthz
 Execute:
 
 ```text
-POST /v1/execute
+POST /execute
 ```
 
 Worker request:
 
 ```json
 {
-  "grant": "v1.<payload>.<signature>",
-  "agentId": "cs.widget.copilot.v1",
+  "grant": "ckgrant.<payload>.<signature>",
+  "agentId": "product.copilot",
   "input": {
     "instanceId": "QD1G068MX7",
     "sessionId": "browser-session-id",
     "userMessage": "Change the button text",
     "context": {
-      "version": "product-copilot.context.v1",
       "instanceId": "QD1G068MX7",
       "widgetType": "faq",
       "displayName": "FAQ",
@@ -133,7 +132,7 @@ Worker response:
 ```json
 {
   "requestId": "uuid",
-  "agentId": "cs.widget.copilot.v1",
+  "agentId": "product.copilot",
   "result": {
     "kind": "answer",
     "message": "..."
@@ -162,7 +161,6 @@ Required route-level fields:
 
 Required context fields:
 
-- `version = "product-copilot.context.v1"`
 - `instanceId`
 - `widgetType`
 - `displayName`
@@ -238,7 +236,7 @@ Apply is browser-memory only. User save remains a Roma account operation. Publis
 remains Roma-owned. Tokyo persistence is not touched by Product Copilot.
 
 Bob reports outcomes through `/api/ai/outcome`, which routes through Roma to San
-Francisco `/v1/outcome`.
+Francisco `/outcome`.
 
 ## Error Contract
 

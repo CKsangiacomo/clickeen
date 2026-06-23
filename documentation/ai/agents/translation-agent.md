@@ -35,7 +35,7 @@ Code authority:
 | Translation Agent | translation planning, protected-token handling, model prompts, exact overlay value production |
 | San Francisco | signed model execution and usage metadata |
 | Tokyo-worker | account instance overlay file storage in R2 |
-| Bob | user-facing Translations panel and progress/result display |
+| Bob | user-facing Translations panel and request/result display |
 
 Translation Agent does not own account permission, tier permission, active locale
 selection, deletion, visitor runtime, or saved instance source truth.
@@ -92,14 +92,14 @@ HEAD /healthz
 Translate:
 
 ```text
-POST /v1/translate-instance
+POST /translate-instance
 ```
 
 Request:
 
 ```json
 {
-  "grant": "v1.<payload>.<signature>",
+  "grant": "ckgrant.<payload>.<signature>",
   "agentId": "widget.instance.translator",
   "accountPublicId": "CLICKEEN",
   "instanceId": "QD1G068MX7",
@@ -196,7 +196,7 @@ Translation Agent:
 - rejects unexpected output paths;
 - rejects missing requested paths.
 
-Model calls go through San Francisco `/v1/model/chat` using the same Roma grant.
+Model calls go through San Francisco `/model/chat` using the same Roma grant.
 
 ## Tokyo Overlay Write Contract
 

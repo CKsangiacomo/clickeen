@@ -13,7 +13,7 @@ async function proxyMe(request: NextRequest, method: 'GET' | 'PUT') {
     request,
     accessToken: session.accessToken,
     setCookies: session.setCookies,
-    path: '/v1/me',
+    path: '/me',
     method,
     accept: request.headers.get('accept'),
     ...(method === 'PUT'

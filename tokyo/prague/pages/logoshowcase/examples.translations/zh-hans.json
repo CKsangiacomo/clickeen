@@ -1,5 +1,5 @@
 {
-  "baseFingerprint": "2e3f8977ce48623e862f8aeab9876469349397101f6cb3ff0463cf6221796603",
+  "baseFingerprint": "07440508c624c8f39e5b8f750a96dfc5d2f0a23918458281b9b03d6eb76962e5",
   "baseUpdatedAt": "2026-02-04T05:36:55.817Z",
   "ops": [
     {
@@ -22,6 +22,5 @@
       "path": "blocks.hero.copy.subheadline",
       "value": "查看常见的展示位置和使用场景。"
     }
-  ],
-  "v": 1
+  ]
 }

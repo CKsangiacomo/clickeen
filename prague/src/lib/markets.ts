@@ -13,18 +13,12 @@ export type PragueMarket = {
 };
 
 export type PragueMarketsConfig = {
-  v: 1;
   markets: PragueMarket[];
 };
 
 function normalizeMarketsConfig(raw: unknown): PragueMarketsConfig {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) {
     throw new Error(`[prague] Invalid markets config (expected object): ${MARKETS_FILE_LABEL}`);
-  }
-
-  const v = (raw as any).v;
-  if (v !== 1) {
-    throw new Error(`[prague] Invalid markets config version (expected v=1): ${MARKETS_FILE_LABEL}`);
   }
 
   const marketsRaw = (raw as any).markets;
@@ -91,7 +85,7 @@ function normalizeMarketsConfig(raw: unknown): PragueMarketsConfig {
     return { key, country, defaultLocale, locales: localesUnique };
   });
 
-  return { v: 1, markets };
+  return { markets };
 }
 
 export const PRAGUE_MARKETS: PragueMarketsConfig = normalizeMarketsConfig(marketsJson);

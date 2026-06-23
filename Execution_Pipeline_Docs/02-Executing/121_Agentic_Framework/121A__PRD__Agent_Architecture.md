@@ -299,7 +299,7 @@ Current registry/policy wiring is seed evidence, not a compatibility contract.
 
 Known current ids include:
 
-- `cs.widget.copilot.v1`;
+- `product.copilot`;
 - `widget.instance.translator`.
 
 If current ids, names, or output shapes encode the old fake-agent worldview,

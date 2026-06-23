@@ -150,7 +150,6 @@ function envelopeFor(prompt: string, opts: { omitTitle?: boolean; availableActio
     sessionId: 'eval-session',
     userMessage: prompt,
     context: {
-      version: 'product-copilot.context.v1',
       instanceId: 'eval-instance',
       widgetType: 'bigbang',
       displayName: 'Riviera B&B',

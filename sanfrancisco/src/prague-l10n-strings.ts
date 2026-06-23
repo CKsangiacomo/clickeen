@@ -4,7 +4,6 @@ import type { Env, Usage } from './types';
 import { HttpError, asString, isRecord } from './http';
 
 export type PragueStringsTranslationRequest = {
-  v: 1;
   surface: 'prague';
   kind: 'system';
   chunkKey: string;
@@ -12,7 +11,7 @@ export type PragueStringsTranslationRequest = {
   locale: string;
   sourceRevision: string;
   baseUpdatedAt: string;
-  allowlistVersion: number;
+  allowlistId: number;
   allowlistHash?: string;
   items: Array<{ path: string; type: 'string' | 'richtext'; value: string }>;
 };
@@ -44,8 +43,8 @@ function assertPragueTranslationSafety(
   }
 }
 
-const PROMPT_VERSION = 'prague.strings.l10n@2026-05-06.1';
-const POLICY_VERSION = 'l10n.ops.v1';
+const PROMPT_ID = 'prague.strings.l10n@2026-05-06.1';
+const POLICY_ID = 'l10n.ops';
 
 const MAX_ITEMS = 250;
 const MAX_INPUT_CHARS = 12000;
@@ -54,7 +53,6 @@ const TIMEOUT_MS = 90_000;
 
 export function isPragueStringsTranslationRequest(value: unknown): value is PragueStringsTranslationRequest {
   if (!isRecord(value)) return false;
-  if (value.v !== 1) return false;
   if (value.surface !== 'prague') return false;
   if (value.kind !== 'system') return false;
   const chunkKey = asString((value as any).chunkKey);
@@ -62,10 +60,10 @@ export function isPragueStringsTranslationRequest(value: unknown): value is Prag
   const locale = asString((value as any).locale);
   const sourceRevision = asString((value as any).sourceRevision);
   const baseUpdatedAt = asString((value as any).baseUpdatedAt);
-  const allowlistVersion = (value as any).allowlistVersion;
+  const allowlistId = (value as any).allowlistId;
   const items = (value as any).items;
   if (!chunkKey || !blockKind || !locale || !sourceRevision || !baseUpdatedAt) return false;
-  if (typeof allowlistVersion !== 'number' || !Number.isFinite(allowlistVersion)) return false;
+  if (typeof allowlistId !== 'number' || !Number.isFinite(allowlistId)) return false;
   if (!Array.isArray(items)) return false;
   for (const item of items) {
     if (!isRecord(item)) return false;
@@ -96,7 +94,7 @@ function buildSystemPrompt(locale: string, chunkKey: string, blockKind: string):
     '- Preserve URLs, emails, brand names, and placeholders (e.g. {token}, {{token}}, :token).',
     '- For richtext values, preserve existing HTML tags and attributes; do not add new tags.',
     '- For richtext links, keep every meaningful linked phrase as linked text in output (do not move link text outside <a> tags).',
-    '- Write in natural, native marketing copy for the target locale (not literal translation).',
+    '- Write in natural, native marketing copy for the requested locale (not literal translation).',
     '- If literal wording sounds awkward, rewrite idiomatically while preserving intent.',
     '- Prefer concise, fluent, modern phrasing suitable for a product website.',
     '- Preserve acronym style from source; do not add parenthetical expansions that are not present in source text.',
@@ -227,7 +225,7 @@ async function writeLog(env: Env, requestPayload: PragueStringsTranslationReques
   await env.SF_R2.put(key, JSON.stringify(payload), { httpMetadata: { contentType: 'application/json' } });
 }
 
-export async function executePragueStringsTranslate(requestPayload: PragueStringsTranslationRequest, env: Env): Promise<{ v: 1; locale: string; items: TranslationItem[] }> {
+export async function executePragueStringsTranslate(requestPayload: PragueStringsTranslationRequest, env: Env): Promise<{ locale: string; items: TranslationItem[] }> {
   const startedAt = Date.now();
   const locale = normalizeLocaleToken(requestPayload.locale);
   if (!locale) {
@@ -247,7 +245,7 @@ export async function executePragueStringsTranslate(requestPayload: PragueString
       chunkKey: requestPayload.chunkKey,
       blockKind: requestPayload.blockKind,
     });
-    return { v: 1, locale, items: [] };
+    return { locale, items: [] };
   }
 
   const totalChars = requestPayload.items.reduce((sum, item) => sum + item.value.length, 0);
@@ -281,12 +279,12 @@ export async function executePragueStringsTranslate(requestPayload: PragueString
     blockKind: requestPayload.blockKind,
     sourceRevision: requestPayload.sourceRevision,
     baseUpdatedAt: requestPayload.baseUpdatedAt,
-    allowlistVersion: requestPayload.allowlistVersion,
+    allowlistId: requestPayload.allowlistId,
     allowlistHash: requestPayload.allowlistHash ?? null,
-    promptVersion: PROMPT_VERSION,
-    policyVersion: POLICY_VERSION,
+    promptId: PROMPT_ID,
+    policyId: POLICY_ID,
     usage,
   });
 
-  return { v: 1, locale, items };
+  return { locale, items };
 }

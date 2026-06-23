@@ -49,7 +49,6 @@ async function runRouteSmoke(romaBase, cookies, instance) {
     sessionId,
     userMessage: 'In one short sentence, tell me what widget I am editing.',
     context: {
-      version: 'product-copilot.context.v1',
       instanceId: instance.instanceId,
       widgetType: instance.widgetType,
       displayName: instance.displayName || 'Widget',
@@ -87,7 +86,6 @@ async function runNoFallbackSmoke(romaBase, cookies, instance) {
     userMessage: 'Tell me what widget this is.',
     selectedModel: { provider: 'openai', model: 'not-a-managed-model' },
     context: {
-      version: 'product-copilot.context.v1',
       instanceId: instance.instanceId,
       widgetType: instance.widgetType,
       displayName: instance.displayName || 'Widget',

@@ -24,8 +24,7 @@ type WidgetPackageFileContext = {
 };
 
 export type SavedWidgetPublicPackage = {
-  v: 1;
-  indexHtml: string;
+    indexHtml: string;
   stylesCss: string;
   runtimeJs: string;
   dependencies: {
@@ -372,8 +371,7 @@ export function buildSavedWidgetPublicPackage(args: PackageBuildArgs): SavedWidg
   });
   const stripped = stripScripts(stamped);
   return {
-    v: 1,
-    indexHtml: buildIndexHtml(args, stripped.body),
+        indexHtml: buildIndexHtml(args, stripped.body),
     stylesCss: buildStyles(args, widgetHtml, includeSocialShare),
     runtimeJs: buildRuntime(args, stripped.scriptSources, includeSocialShare),
     dependencies: { instanceIds: [] },

@@ -21,11 +21,10 @@ type EvalCase = {
 };
 
 type EvalFile = {
-  version: 1;
   cases: EvalCase[];
 };
 
-const evalPath = path.join(path.dirname(fileURLToPath(import.meta.url)), 'product-copilot-v1.json');
+const evalPath = path.join(path.dirname(fileURLToPath(import.meta.url)), 'product-copilot.json');
 const evalFile = JSON.parse(readFileSync(evalPath, 'utf8')) as EvalFile;
 
 function baseInput(testCase: EvalCase): ProductCopilotRequestEnvelope {
@@ -34,7 +33,6 @@ function baseInput(testCase: EvalCase): ProductCopilotRequestEnvelope {
     sessionId: `session-${testCase.id}`,
     userMessage: testCase.prompt,
     context: {
-      version: 'product-copilot.context.v1',
       instanceId: `eval-${testCase.id}`,
       widgetType: 'bigbang',
       displayName: 'Big Bang',

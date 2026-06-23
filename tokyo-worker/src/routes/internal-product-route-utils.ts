@@ -82,7 +82,7 @@ async function verifyTranslationAgentWriteGrant(args: {
   }
   const grant = String(args.req.headers.get('x-ck-ai-grant') || '').trim();
   const parts = grant.split('.');
-  if (parts.length !== 3 || parts[0] !== 'v1') {
+  if (parts.length !== 3 || parts[0] !== 'ckgrant') {
     return json({ error: { kind: 'AUTH', reasonKey: 'tokyo.translation.writeGrantInvalid' } }, { status: 401 });
   }
   const payloadB64 = parts[1] ?? '';
@@ -94,7 +94,7 @@ async function verifyTranslationAgentWriteGrant(args: {
   } catch {
     return json({ error: { kind: 'AUTH', reasonKey: 'tokyo.translation.writeGrantInvalid' } }, { status: 401 });
   }
-  const expectedSig = await hmacSha256(secret, `v1.${payloadB64}`);
+  const expectedSig = await hmacSha256(secret, `ckgrant.${payloadB64}`);
   const providedSig = base64UrlToBytes(sigB64);
   if (!timingSafeEqualBytes(expectedSig, providedSig)) {
     return json({ error: { kind: 'AUTH', reasonKey: 'tokyo.translation.writeGrantInvalid' } }, { status: 401 });

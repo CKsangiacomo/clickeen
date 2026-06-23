@@ -1,6 +1,5 @@
 export type AccountInstanceDocument = {
-  v: 1;
-  id: string;
+    id: string;
   accountId: string;
   widgetCode: string;
   widgetType: string;
@@ -40,8 +39,7 @@ export type AccountInstanceSummary = {
 export type AccountInstanceContentFieldStatus = 'ok' | 'changed';
 
 export type LocaleOverlayDocument = {
-  v: 1;
-  values: Record<string, string>;
+    values: Record<string, string>;
 };
 
 export type AccountInstanceContentDocument = {
@@ -61,8 +59,7 @@ export type AccountInstanceContentDocument = {
 };
 
 export type AccountInstanceSourcePointer = {
-  v: 1;
-  id: string;
+    id: string;
   accountId: string;
   widgetCode: string;
   widgetType: string;

@@ -28,7 +28,6 @@ export type InternalAgentManagedModelConfig = {
 };
 
 export type AiModelManagementConfig = {
-  v: 1;
   productCopilot: ProductCopilotManagedModelConfig;
   sdrCopilot: SdrCopilotManagedModelConfig;
   internalAgents: Record<string, InternalAgentManagedModelConfig>;
@@ -46,7 +45,6 @@ export type AiModelManagementValidationResult =
 const AI_POLICY_PROFILES: readonly AiPolicyProfile[] = ['free', 'tier1', 'tier2', 'tier3', 'tier4'];
 
 export const AI_MODEL_MANAGEMENT_CONFIG: AiModelManagementConfig = {
-  v: 1,
   productCopilot: {
     defaultModel: { provider: 'openai', model: 'gpt-5.4-mini' },
     enabledModels: [
@@ -154,8 +152,8 @@ export function validateAiModelManagementConfig(
   value: unknown,
 ): AiModelManagementValidationResult {
   const issues: AiModelManagementValidationIssue[] = [];
-  if (!isRecord(value) || value.v !== 1) {
-    return { ok: false, issues: [{ path: 'v', message: 'Expected AI model management config v1' }] };
+  if (!isRecord(value)) {
+    return { ok: false, issues: [{ path: '', message: 'Expected AI model management config object' }] };
   }
 
   const productCopilot = isRecord(value.productCopilot) ? value.productCopilot : null;

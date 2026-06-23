@@ -1,5 +1,5 @@
 {
-  "baseFingerprint": "11b13fc8cf15ccc9628da4be25e35f846dc1f8345caca9076a9a42800f5dc624",
+  "baseFingerprint": "deab54297163bbedd29896ecf8a79aaecab47bb053f6a1e08b894d5aee55681c",
   "baseUpdatedAt": "2026-02-04T05:36:55.818Z",
   "ops": [
     {
@@ -87,6 +87,5 @@
       "path": "blocks.minibob.copy.subhead",
       "value": "แก้ไขอินสแตนซ์ตัวอย่างใน minibob แล้วเผยแพร่เมื่อคุณพร้อม"
     }
-  ],
-  "v": 1
+  ]
 }

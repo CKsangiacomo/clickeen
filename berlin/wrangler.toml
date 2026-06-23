@@ -30,5 +30,5 @@ name = "BERLIN_AUTH_TICKETS"
 class_name = "BerlinAuthTicketDO"
 
 [[migrations]]
-tag = "v1"
+tag = "current"
 new_sqlite_classes = ["BerlinAuthTicketDO"]

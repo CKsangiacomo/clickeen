@@ -33,7 +33,7 @@ Why this is the core framework:
 How it differs from other widgets:
 - It’s a data-backed content widget: it depends on an external “posts” dataset that is rendered by the chosen Type.
 
-## Entitlements + limits (v1)
+## Entitlements + limits (current)
 
 Notes:
 - This widget is not yet a Tokyo widget package in this repo; exact state paths are TBD until `tokyo/product/widgets/<widgetType>/spec.json` exists (`widgetType=instagramfeed` when this ships).

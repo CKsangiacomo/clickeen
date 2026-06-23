@@ -124,8 +124,7 @@ export async function writeAccountInstanceTranslatedLocaleValues(args: {
     instanceId: stored.configDoc.id,
     locale,
     overlay: {
-      v: 1,
-      values: args.values,
+            values: args.values,
     },
   });
   return { locale, values: args.values };

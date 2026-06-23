@@ -35,7 +35,7 @@ const OUTCOME_EVENTS = new Set([
   'clarification_needed',
   'invalid_output',
 ] as const);
-export const ACCOUNT_WIDGET_COPILOT_AGENT_ID = 'cs.widget.copilot.v1';
+export const ACCOUNT_WIDGET_COPILOT_AGENT_ID = 'product.copilot';
 export type AccountCopilotRuntimeUi = AgentRuntimePolicyUi;
 
 function modelKey(model: AiModelRef): string {
@@ -175,7 +175,6 @@ export async function issueAccountCopilotGrant(args: {
   const nowSec = Math.floor(Date.now() / 1000);
   const exp = nowSec + 10 * 60;
   const grantPayload: RomaAIGrant = {
-    v: 1,
     iss: 'roma',
     jti: crypto.randomUUID(),
     sub: { kind: 'user', userId: args.authz.userId, accountId: args.authz.accountId },
@@ -242,7 +241,7 @@ export async function executeCopilotOnProductCopilot(args: {
   const baseUrl = resolveProductCopilotBaseUrl().replace(/\/+$/, '');
   let res: Response;
   try {
-    res = await fetch(`${baseUrl}/v1/execute`, {
+    res = await fetch(`${baseUrl}/execute`, {
       method: 'POST',
       headers: {
         'content-type': 'application/json',
@@ -326,17 +325,17 @@ export function isValidCopilotOutcomePayload(value: unknown): value is {
 export async function hashCopilotAccountId(accountId: string): Promise<string> {
   const normalized = String(accountId || '').trim();
   if (!normalized) return '';
-  return hmacSha256Base64Url(resolveAiGrantSecret(), `copilot.account.v1.${normalized}`);
+  return hmacSha256Base64Url(resolveAiGrantSecret(), `copilot.account.${normalized}`);
 }
 
 export async function forwardCopilotOutcome(body: unknown): Promise<{ ok: true; upstream: unknown } | { ok: false; message: string }> {
   const bodyText = JSON.stringify(body);
-  const signature = await hmacSha256Base64Url(resolveAiGrantSecret(), `outcome.v1.${bodyText}`);
+  const signature = await hmacSha256Base64Url(resolveAiGrantSecret(), `outcome.${bodyText}`);
   const baseUrl = resolveSanfranciscoBaseUrl().replace(/\/+$/, '');
 
   let response: Response;
   try {
-    response = await fetch(`${baseUrl}/v1/outcome`, {
+    response = await fetch(`${baseUrl}/outcome`, {
       method: 'POST',
       headers: {
         'content-type': 'application/json',

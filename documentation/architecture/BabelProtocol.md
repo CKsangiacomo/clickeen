@@ -12,7 +12,7 @@ After save, translated locale values are explicit account work from the
 Translations panel. Tokyo-worker currently stores, reads, and lists exact
 translated-locale overlay files only. Roma calls the Translation Agent Worker
 for generation. Roma mints the agent grant, the Translation Agent Worker calls
-San Francisco `/v1/model/chat` for model execution, and the Translation Agent
+San Francisco `/model/chat` for model execution, and the Translation Agent
 writes overlays through Tokyo-worker. San Francisco owns model execution only.
 Public widget package bytes are public artifacts, not source truth, and are not
 rebuilt from overlays during visitor serving or publish.
@@ -66,16 +66,18 @@ The translated value body is an exact value map:
 }
 ```
 
-The API body does not carry product identity, readiness, job state, source version, hash identity, or storage path. Product operations carry identity and state.
+The API body does not carry product identity, lifecycle state, backend task state, source
+revision, hash identity, or storage path. Product operations carry identity and
+state.
 
 Tokyo stores the durable translated-locale product result as
 `overlays/locales/{locale}.json`. That overlay is the exact value-map artifact
-for one locale. It carries no lifecycle metadata, job state, or storage
+for one locale. It carries no lifecycle metadata, backend task state, or storage
 identity exposed to Bob/Roma/San Francisco/public widget consumers.
 
 ## Runtime Resolution
 
-Babel v1 uses one translated locale value map at a time:
+Babel current uses one translated locale value map at a time:
 
 ```txt
 resolvedState = resolveTranslatedValues(baseState, translatedValues)

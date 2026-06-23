@@ -6,7 +6,7 @@ import {
   type ProductCopilotModelUsage,
 } from './index';
 
-const PRODUCT_COPILOT_AGENT_ID = 'cs.widget.copilot.v1';
+const PRODUCT_COPILOT_AGENT_ID = 'product.copilot';
 
 type Env = {
   ENVIRONMENT?: string;
@@ -101,12 +101,12 @@ async function callSanFranciscoModel(args: {
   };
 
   const response = args.env.SANFRANCISCO_AI_ENGINE
-    ? await args.env.SANFRANCISCO_AI_ENGINE.fetch('https://sanfrancisco.internal/v1/model/chat', {
+    ? await args.env.SANFRANCISCO_AI_ENGINE.fetch('https://sanfrancisco.internal/model/chat', {
         method: 'POST',
         headers,
         body,
       })
-    : await fetch(`${resolveSanFranciscoBaseUrl(args.env)}/v1/model/chat`, {
+    : await fetch(`${resolveSanFranciscoBaseUrl(args.env)}/model/chat`, {
         method: 'POST',
         headers,
         body,
@@ -151,7 +151,7 @@ export default {
     }
 
     try {
-      if (request.method !== 'POST' || url.pathname !== '/v1/execute') {
+      if (request.method !== 'POST' || url.pathname !== '/execute') {
         throw new HttpError(404, { error: { code: 'BAD_REQUEST', message: 'Not found' } });
       }
 

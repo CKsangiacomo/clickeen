@@ -5,7 +5,7 @@ STATUS: DRAFT
 ## 1) High level description of what the widget does
 LogoShowcase renders a **header** + one or more **strips** of logos (each strip contains an ordered list of logos, optionally clickable) in one of two **Types** (Grid / Carousel). Users edit the widget in Bob; the widget runtime applies the saved state deterministically on `{ type: 'ck:state-update' }`.
 
-## Subject Policy — Entitlements (v1)
+## Subject Policy — Entitlements (current)
 
 Tier values are defined globally in `packages/ck-policy/entitlements.matrix.json`.
 
@@ -398,7 +398,7 @@ Defaults are the authoritative state shape. They must be complete (no missing pa
 
 ### Decisions required (blockers) — must be resolved in defaults
 If any item below is undecided, the implementer must stop and ask; do not guess.
-We intentionally ship **no custom tint** in v1. `appearance.logoLook` is limited to `original | grayscale` (no `customColor` mode).
+We intentionally ship **no custom tint** in current. `appearance.logoLook` is limited to `original | grayscale` (no `customColor` mode).
 
 ### Asset Handling
 - **Selection path**: logo images use the shared media-only `dropdown-fill` flow.
@@ -433,7 +433,7 @@ logoshowcase.typeConfig.carousel.*
 ```
 
 Logo Showcase does not expose SEO/GEO/schema/canonical defaults or controls in
-v1 because no named public output path exists for them.
+current because no named public output path exists for them.
 
 ### Per-type Shell recommendations
 Type recommendations primarily concern **Pod presets** because width/containment

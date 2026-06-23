@@ -10,8 +10,8 @@ is not documented here.
 
 | Agent | Agent id | Worker | Wrangler | Inbound caller | Outbound dependencies | Mutation boundary | Verification |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| Product Copilot | `cs.widget.copilot.v1` | `agents/product-copilot/src/worker.ts` | `agents/product-copilot/wrangler.toml` | Roma account Builder route | San Francisco `/v1/model/chat` | Bob live draft only; save/publish remains Roma | `pnpm --filter @clickeen/product-copilot test:copilot-contract`, `pnpm --filter @clickeen/product-copilot eval:copilot` |
-| Translation Agent | `widget.instance.translator` | `agents/translation-agent/src/worker.ts` | `agents/translation-agent/wrangler.toml` | Roma translation routes/service binding | San Francisco `/v1/model/chat`, Tokyo-worker internal product route | account instance locale overlay files in Tokyo/R2 | `pnpm --filter @clickeen/translation-agent eval:translation-agent`, `pnpm e2e:smoke:translation-agent-runtime` |
+| Product Copilot | `product.copilot` | `agents/product-copilot/src/worker.ts` | `agents/product-copilot/wrangler.toml` | Roma account Builder route | San Francisco `/model/chat` | Bob live draft only; save/publish remains Roma | `pnpm --filter @clickeen/product-copilot test:copilot-contract`, `pnpm --filter @clickeen/product-copilot eval:copilot` |
+| Translation Agent | `widget.instance.translator` | `agents/translation-agent/src/worker.ts` | `agents/translation-agent/wrangler.toml` | Roma translation routes/service binding | San Francisco `/model/chat`, Tokyo-worker internal product route | account instance locale overlay files in Tokyo/R2 | `pnpm --filter @clickeen/translation-agent eval:translation-agent`, `pnpm e2e:smoke:translation-agent-runtime` |
 
 ## Agent Home Contract
 

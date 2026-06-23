@@ -19,7 +19,7 @@ Related:
 - `Execution_Pipeline_Docs/02-Executing/121_Agentic_Framework/121A__PRD__Agent_Architecture.md`
 - `Execution_Pipeline_Docs/02-Executing/121_Agentic_Framework/121B__PRD__San_Francisco_Orchestrator_And_Routing.md`
 - `Execution_Pipeline_Docs/02-Executing/121_Agentic_Framework/121C__PRD__Product_Copilot_Real_Agent.md`
-- `Execution_Pipeline_Docs/02-Executing/121_Agentic_Framework/121D__PRD__Translation_Agent.md`
+- `Execution_Pipeline_Docs/03-Executed/121_Agentic_Framework/121D__PRD__Translation_Agent.md`
 - `Execution_Pipeline_Docs/02-Executing/121_Agentic_Framework/121E__PRD__Future_Internal_Agents_Scope.md`
 - `Execution_Pipeline_Docs/02-Executing/121_Agentic_Framework/121F__PRD__SDR_Copilot_Future_Agent.md`
 - `Execution_Pipeline_Docs/02-Executing/121_Agentic_Framework/121G__PRD__Learning_And_Outcomes_Foundation.md`
@@ -120,7 +120,8 @@ What still does not exist yet:
 - production Ombra layer that is provider-agnostic and agentic end to end.
 
 Therefore this PRD remains the series charter, but current execution truth is
-owned by 121C, 121D, and `121PRD_Umbrella_to_121D_completeness.md`.
+owned by 121C, 121D, and
+`Execution_Pipeline_Docs/03-Executed/121_Agentic_Framework/121PRD_Umbrella_to_121D_completeness.md`.
 
 ## 1. The Core Thesis
 
@@ -699,10 +700,7 @@ Options:
 1. **Hardcoded tools inside each agent**
    - Fast, but repeats current if/then failure at larger scale.
 
-2. **Central typed tool registry**
-   - Clear but may become overbuilt before real tools exist.
-
-3. **Product-surface tool manifests**
+2. **Product-surface tool manifests**
    - Product surfaces expose the tools allowed for this context. The agent
      brain can request only those tools/actions, and the owning product surface
      validates/applies them.
@@ -948,7 +946,7 @@ integration mechanics, not proof that the current product has an agent:
 - Bob's browser-memory session apply path;
 - Bob's undo mechanics for applied ops;
 - Roma's account-scoped AI grant issuance and San Francisco forwarding helper;
-- San Francisco's `/v1/execute` gateway, grant verification, model selection,
+- San Francisco's `/execute` gateway, grant verification, model selection,
   provider call path, usage metadata, and telemetry spine;
 - shared policy/model catalog primitives where they fit the new envelope.
 

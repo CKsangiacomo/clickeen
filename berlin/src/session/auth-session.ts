@@ -21,13 +21,13 @@ export async function issueSession(env: Env, args: SessionIssueArgs): Promise<Se
 
   const sid = args.sid || crypto.randomUUID();
   const existing = args.sid ? await loadSessionState(env, sid) : null;
-  const ver = Number.isFinite(args.ver) && (args.ver as number) > 0 ? (args.ver as number) : existing?.ver || 1;
+  const sessionRevision = Number.isFinite(args.sessionRevision) && (args.sessionRevision as number) > 0 ? (args.sessionRevision as number) : existing?.sessionRevision || 1;
   const rti = crypto.randomUUID();
 
   const claims: AccessClaims = {
     sub: args.userId,
     sid,
-    ver,
+    sessionRevision,
     role: 'authenticated',
     iat: nowSec,
     exp: nowSec + ACCESS_TOKEN_TTL_SECONDS,
@@ -36,10 +36,9 @@ export async function issueSession(env: Env, args: SessionIssueArgs): Promise<Se
   };
 
   const refreshPayload = {
-    v: 2 as const,
     sid,
     rti,
-    ver,
+    sessionRevision,
     userId: args.userId,
     exp: nowSec + REFRESH_TOKEN_TTL_SECONDS,
   };
@@ -54,7 +53,7 @@ export async function issueSession(env: Env, args: SessionIssueArgs): Promise<Se
     currentRti: rti,
     rtiRotatedAt: nowMs,
     userId: args.userId,
-    ver,
+    sessionRevision,
     revoked: false,
     authMode: args.authMode,
     createdAt: existing?.createdAt || nowMs,
@@ -70,7 +69,7 @@ export async function issueSession(env: Env, args: SessionIssueArgs): Promise<Se
 
   return {
     sid,
-    ver,
+    sessionRevision,
     accessToken,
     refreshToken,
     accessTokenMaxAge: ACCESS_TOKEN_TTL_SECONDS,
@@ -106,7 +105,7 @@ export async function resolvePrincipalSession(
 export async function rotateRefreshRti(
   env: Env,
   state: SessionState,
-  payload: { sid: string; rti: string; ver: number; userId: string },
+  payload: { sid: string; rti: string; sessionRevision: number; userId: string },
 ): Promise<
   | { ok: true; nextRti: string; shouldPersist: boolean }
   | { ok: false; response: Response }
@@ -117,12 +116,12 @@ export async function rotateRefreshRti(
 
   if (state.currentRti === payload.rti) {
     shouldPersist = true;
-    nextRti = await deriveNextRti(env, { sid: state.sid, ver: state.ver, rti: payload.rti });
+    nextRti = await deriveNextRti(env, { sid: state.sid, sessionRevision: state.sessionRevision, rti: payload.rti });
   } else {
     const rotatedAt = Number.isFinite(state.rtiRotatedAt) ? state.rtiRotatedAt : state.updatedAt;
     const withinGrace = nowMs >= rotatedAt && nowMs - rotatedAt < REFRESH_RTI_GRACE_MS;
     if (withinGrace) {
-      const expectedCurrent = await deriveNextRti(env, { sid: state.sid, ver: state.ver, rti: payload.rti });
+      const expectedCurrent = await deriveNextRti(env, { sid: state.sid, sessionRevision: state.sessionRevision, rti: payload.rti });
       if (expectedCurrent === state.currentRti) {
         nextRti = state.currentRti;
       }

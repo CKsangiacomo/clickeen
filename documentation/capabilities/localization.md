@@ -33,7 +33,7 @@ specific to one agent or product flow:
 - placeholder parity checks
 - richtext tag and anchor integrity checks
 
-`@clickeen/l10n` must not own widget path extraction, translation job assembly,
+`@clickeen/l10n` must not own widget path extraction, Translation Agent operation assembly,
 agent prompts, agent output contracts, or storage identity.
 
 ## Account Locale Policy
@@ -47,7 +47,7 @@ entitlements + account active locales + saved instance content
 Entitlement keys include:
 
 - `l10n.locales.max`
-- `l10n.versions.max`
+- `l10n.locales.max`
 
 Account active locales are managed in Roma Settings. Builder edits one active base-locale instance at a time. Translation generation is explicit work from the Translations panel, not a hidden save side effect.
 
@@ -75,7 +75,7 @@ Producers receive exact content paths and base values. No producer receives wild
 3. User opens the Translations panel and clicks Generate translations.
 4. Roma reads the current account active locales from account settings.
 5. Roma calls the Translation Agent Worker. Translation Agent owns translation
-   reasoning, calls San Francisco `/v1/model/chat` for governed model execution,
+   reasoning, calls San Francisco `/model/chat` for governed model execution,
    and writes locale overlays through Tokyo-worker. San Francisco stays a
    stateless model gateway and owns no account-widget generation work.
 6. Tokyo-worker remains the storage boundary for exact translated-locale overlay

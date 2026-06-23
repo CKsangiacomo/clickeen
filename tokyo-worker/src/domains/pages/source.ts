@@ -69,7 +69,7 @@ export async function readAccountPageSource(args: {
 export async function listAccountPageSources(args: {
   env: Env;
   accountId: string;
-}): Promise<{ v: 1; accountId: string; sources: unknown[] }> {
+}): Promise<{ accountId: string; sources: unknown[] }> {
   const accountId = assertAccountId(args.accountId);
   const sources: unknown[] = [];
   let cursor: string | undefined = undefined;
@@ -90,7 +90,7 @@ export async function listAccountPageSources(args: {
     }
     cursor = listed.truncated ? listed.cursor : undefined;
   } while (cursor);
-  return { v: 1, accountId, sources };
+  return { accountId, sources };
 }
 
 export async function saveAccountPageSource(args: {

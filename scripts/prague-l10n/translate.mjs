@@ -20,7 +20,7 @@ import {
 } from './lib.mjs';
 
 const REPO_ROOT = path.resolve(fileURLToPath(new URL('.', import.meta.url)), '../..');
-const ALLOWLIST_ROOT = path.join(REPO_ROOT, 'prague', 'content', 'allowlists', 'v1');
+const ALLOWLIST_ROOT = path.join(REPO_ROOT, 'prague', 'content', 'allowlists', 'current');
 const TOKYO_PRAGUE_PAGES_ROOT = path.join(REPO_ROOT, 'tokyo', 'prague', 'pages');
 const LOCALES_PATH = path.join(REPO_ROOT, 'packages', 'l10n', 'locales.json');
 const DOTENV_LOCAL = path.join(REPO_ROOT, '.env.local');
@@ -64,7 +64,7 @@ function base64UrlEncodeBuffer(buffer) {
 }
 
 function signPragueL10nBody({ secret, bodyText }) {
-  return base64UrlEncodeBuffer(createHmac('sha256', secret).update(`prague-l10n.v1.${bodyText}`).digest());
+  return base64UrlEncodeBuffer(createHmac('sha256', secret).update(`prague-l10n.${bodyText}`).digest());
 }
 
 async function loadDotenvIfPresent() {
@@ -169,7 +169,7 @@ function buildPageBase({ pageId, blocks, pagePath }) {
     }
     baseBlocks[id] = { copy };
   }
-  return { v: 1, pageId, blocks: baseBlocks };
+  return { pageId, blocks: baseBlocks };
 }
 
 async function loadLocales() {
@@ -197,7 +197,7 @@ function isPlainObject(value) {
 
 async function loadAllowlist(filePath) {
   const allowlist = await readJson(filePath);
-  if (!isPlainObject(allowlist) || allowlist.v !== 1 || !Array.isArray(allowlist.paths)) {
+  if (!isPlainObject(allowlist)  || !Array.isArray(allowlist.paths)) {
     throw new Error(`[prague-l10n] Invalid allowlist ${filePath}`);
   }
   const entries = [];
@@ -212,7 +212,7 @@ async function loadAllowlist(filePath) {
     }
     entries.push({ path: pathValue, type: typeValue });
   }
-  return { v: allowlist.v, entries };
+  return { entries };
 }
 
 function parseSfStatus(err) {
@@ -288,7 +288,7 @@ async function translateWithSanFrancisco({ job, items }) {
     throw new Error('[prague-l10n] Missing AI_GRANT_HMAC_SECRET for San Francisco request signing');
   }
   const baseUrl = getSfBaseUrl();
-  const url = `${baseUrl}/v1/l10n/translate`;
+  const url = `${baseUrl}/l10n/translate`;
   const bodyText = JSON.stringify({ ...job, items });
   const res = await fetch(url, {
     method: 'POST',
@@ -303,7 +303,7 @@ async function translateWithSanFrancisco({ job, items }) {
     throw new Error(`[prague-l10n] San Francisco error ${res.status} (${url}): ${body}`);
   }
   const json = await res.json();
-  if (!json || json.v !== 1 || !Array.isArray(json.items)) {
+  if (!json  || !Array.isArray(json.items)) {
     throw new Error('[prague-l10n] Invalid San Francisco response');
   }
   if (json.items.length !== items.length) {
@@ -369,14 +369,14 @@ async function translatePage({ pageId, page, pagePath, base, blockTypeMap, baseF
 
   const expectedPaths = new Set();
   const pageItems = [];
-  let allowlistVersionMax = 1;
+  let allowlistEntryCountMax = 0;
   for (const [blockId, blockType] of blockTypeMap.entries()) {
     const allowlistPath = path.join(ALLOWLIST_ROOT, 'blocks', `${blockType}.allowlist.json`);
     if (!(await fileExists(allowlistPath))) {
       throw new Error(`[prague-l10n] Missing allowlist for block type ${blockType}: ${allowlistPath}`);
     }
     const allowlist = await loadAllowlist(allowlistPath);
-    allowlistVersionMax = Math.max(allowlistVersionMax, allowlist.v);
+    allowlistEntryCountMax = Math.max(allowlistEntryCountMax, allowlist.entries.length);
     const blockBase = base.blocks[blockId];
     if (!isPlainObject(blockBase)) {
       throw new Error(`[prague-l10n] ${pageId}: block ${blockId} base missing`);
@@ -407,7 +407,7 @@ async function translatePage({ pageId, page, pagePath, base, blockTypeMap, baseF
       needsRegeneration = true;
     } else {
       const overlay = await readJson(outPath);
-      if (!overlay || typeof overlay !== 'object' || overlay.v !== 1) {
+      if (!overlay || typeof overlay !== 'object' ) {
         needsRegeneration = true;
       } else if (overlay.baseFingerprint !== baseFingerprint) {
         needsRegeneration = true;
@@ -441,7 +441,6 @@ async function translatePage({ pageId, page, pagePath, base, blockTypeMap, baseF
     }
 
     const jobBase = {
-      v: 1,
       surface: 'prague',
       kind: 'system',
       chunkKey: `${pageId}/page`,
@@ -449,7 +448,7 @@ async function translatePage({ pageId, page, pagePath, base, blockTypeMap, baseF
       locale,
       baseFingerprint,
       baseUpdatedAt,
-      allowlistVersion: allowlistVersionMax,
+      allowlistId: allowlistEntryCountMax,
     };
 
     const batches = splitTranslateBatches(toTranslate);
@@ -489,7 +488,7 @@ async function translatePage({ pageId, page, pagePath, base, blockTypeMap, baseF
     const outPath = pageTranslationPath({ pageFilePath: pagePath, page, locale });
     const outDir = path.dirname(outPath);
     await ensureDir(outDir);
-    await fs.writeFile(outPath, prettyStableJson({ v: 1, baseFingerprint, baseUpdatedAt, ops }));
+    await fs.writeFile(outPath, prettyStableJson({ baseFingerprint, baseUpdatedAt, ops }));
   }
 }
 

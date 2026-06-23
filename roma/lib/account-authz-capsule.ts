@@ -29,7 +29,7 @@ export type AccountCapsuleAuthzResult =
       error: AccountCapsuleAuthzError;
     };
 
-const BERLIN_ACCOUNT_CAPSULE_JWKS_CACHE_KEY = '__CK_ROMA_ACCOUNT_CAPSULE_JWKS_V1__';
+const BERLIN_ACCOUNT_CAPSULE_JWKS_CACHE_KEY = '__CK_ROMA_ACCOUNT_CAPSULE_JWKS__';
 function roleRank(value: MemberRole): number {
   switch (value) {
     case 'owner':
@@ -132,7 +132,7 @@ async function fetchBootstrapAccountCapsule(accessToken: string): Promise<string
     return null;
   }
 
-  const response = await fetch(`${berlinBase}/v1/session/bootstrap`, {
+  const response = await fetch(`${berlinBase}/session/bootstrap`, {
     method: 'GET',
     headers: {
       authorization: `Bearer ${accessToken}`,

@@ -81,7 +81,6 @@ function validateCopilotEnvelope(payload: Record<string, unknown>, routeInstance
   if (!context) {
     issues.push({ path: 'context', message: 'context must be an object' });
   } else {
-    if (context.version !== 'product-copilot.context.v1') issues.push({ path: 'context.version', message: 'unsupported context version' });
     for (const field of ['instanceId', 'widgetType', 'displayName', 'activeLocale', 'draftSignature', 'traceRequestId']) {
       if (!isExactNonEmptyString(context[field])) issues.push({ path: `context.${field}`, message: `${field} is required` });
     }

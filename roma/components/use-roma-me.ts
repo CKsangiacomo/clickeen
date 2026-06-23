@@ -66,8 +66,7 @@ export type ResolvedRomaContext = {
 };
 
 export type RomaAuthzPolicy = {
-  v: 1;
-  profile: 'free' | 'tier1' | 'tier2' | 'tier3' | 'tier4';
+    profile: 'free' | 'tier1' | 'tier2' | 'tier3' | 'tier4';
   role: 'viewer' | 'editor' | 'admin' | 'owner';
   flags: Record<string, boolean>;
   limits: Record<string, number | null>;
@@ -144,8 +143,7 @@ export function resolveAccountPolicyFromRomaAuthz(data: RomaMeResponse | null, a
   if (!entitlements) return null;
 
   return {
-    v: 1,
-    profile,
+        profile,
     role,
     flags: { ...(entitlements.flags ?? {}) },
     limits: { ...(entitlements.limits ?? {}) },

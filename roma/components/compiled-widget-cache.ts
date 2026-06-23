@@ -3,7 +3,7 @@
 import { fetchSameOriginJson } from './same-origin-json';
 
 const COMPILED_WIDGET_CACHE_TTL_MS = 5 * 60_000;
-const COMPILED_WIDGET_STORE_KEY = '__CK_ROMA_COMPILED_WIDGET_STORE_V1__';
+const COMPILED_WIDGET_STORE_KEY = '__CK_ROMA_COMPILED_WIDGET_STORE__';
 
 type CompiledWidgetCacheEntry = {
   payload: unknown;

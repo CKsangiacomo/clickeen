@@ -1,5 +1,5 @@
 {
-  "baseFingerprint": "5c131ea21d13058dcd5cb1924e033ff5caf0bac49aff5ec92b366fcd73e62127",
+  "baseFingerprint": "7674097846719ec849086d6089aaf64062adbe2c54b7b8cd33ea23a0d6d51908",
   "baseUpdatedAt": "2026-02-04T05:36:55.808Z",
   "ops": [
     {
@@ -22,6 +22,5 @@
       "path": "blocks.hero.copy.subheadline",
       "value": "すべてのClickeenプランに含まれています。"
     }
-  ],
-  "v": 1
+  ]
 }

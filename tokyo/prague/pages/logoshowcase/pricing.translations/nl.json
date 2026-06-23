@@ -1,5 +1,5 @@
 {
-  "baseFingerprint": "141ec2ccd3097d0a5ff351e4a42f00d8f6062b3462eb6166ff3a83a85f7d1b1c",
+  "baseFingerprint": "fcf88c0630ab3f359a9f428a57c114984c334f542e63383a77c9cf4beff2589b",
   "baseUpdatedAt": "2026-02-04T05:36:55.819Z",
   "ops": [
     {
@@ -22,6 +22,5 @@
       "path": "blocks.hero.copy.subheadline",
       "value": "Begin gratis. Upgrade wanneer je meer widgets en geen branding wilt."
     }
-  ],
-  "v": 1
+  ]
 }

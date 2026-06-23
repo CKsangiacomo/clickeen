@@ -102,7 +102,7 @@ function normalizeErrorMessage(args: { resStatus?: number; parsed?: any; bodyTex
     return `${reasonKeyMessage}${issueSummary}`;
   }
   // Surface the actual failing field(s) instead of hiding every rejection behind a
-  // blanket "Refresh Builder" (121C §8.2 visible-failure taxonomy; V1/V6).
+  // blanket "Refresh Builder" (121C §8.2 visible-failure taxonomy).
   if (reasonKeyMessage) return `${reasonKeyMessage}${issueSummary}`;
   if (detail.trim()) return normalizeAssistantText(`${detail.trim()}${issueSummary}`);
 
@@ -454,7 +454,6 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
       sessionId,
       userMessage: prompt,
       context: {
-        version: 'product-copilot.context.v1',
         instanceId,
         widgetType: activeCompiled.widgetname,
         displayName: activeCompiled.displayName,

@@ -12,7 +12,7 @@ export type RomaUsageKv = {
 };
 
 function limitCounterKey(accountId: string, limitKey: PlanLimitKey, periodKey: string): string {
-  return `usage.limit.v1.${limitKey}.${periodKey}.acct:${accountId}`;
+  return `usage.limit.${limitKey}.${periodKey}.acct:${accountId}`;
 }
 
 function currentLimitPeriodKey(now = new Date()): string {

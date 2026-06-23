@@ -19,7 +19,7 @@ async function handleSessionBootstrap(request: Request, env: Env): Promise<Respo
 }
 
 export const BOOTSTRAP_ROUTES: BerlinRoute[] = [
-  exact('/v1/session/bootstrap', {
+  exact('/session/bootstrap', {
     GET: ({ request, env }) => handleSessionBootstrap(request, env),
   }),
 ];

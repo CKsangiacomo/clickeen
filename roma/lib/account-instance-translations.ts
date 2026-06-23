@@ -69,14 +69,12 @@ export type InstanceTranslationSummary = {
 };
 
 export type InstanceTranslationsPayload = {
-  v: 1;
-  baseLocale: string;
+    baseLocale: string;
   translations: InstanceTranslationSummary[];
 };
 
 export type InstanceTranslationValuesPayload = {
-  v: 1;
-  locale: string;
+    locale: string;
   values: Record<string, string>;
 };
 
@@ -120,7 +118,7 @@ function normalizeTranslationSummary(raw: unknown): InstanceTranslationSummary |
 }
 
 function normalizeTranslationsPayload(payload: unknown): InstanceTranslationsPayload | null {
-  if (!isRecord(payload) || payload.v !== 1) return null;
+  if (!isRecord(payload)) return null;
   const baseLocale = asTrimmedString(payload.baseLocale);
   if (!baseLocale || !Array.isArray(payload.translations)) return null;
   const translations = payload.translations
@@ -128,17 +126,16 @@ function normalizeTranslationsPayload(payload: unknown): InstanceTranslationsPay
     .filter((entry): entry is InstanceTranslationSummary => Boolean(entry));
   if (translations.length !== payload.translations.length) return null;
   return {
-    v: 1,
     baseLocale,
     translations,
   };
 }
 
 function normalizeTranslationValuesPayload(payload: unknown): InstanceTranslationValuesPayload | null {
-  if (!isRecord(payload) || payload.v !== 1) return null;
+  if (!isRecord(payload)) return null;
   const locale = asTrimmedString(payload.locale);
   const values = normalizeValueMap(payload.values);
-  return locale && values ? { v: 1, locale, values } : null;
+  return locale && values ? { locale, values } : null;
 }
 
 function normalizeStringArray(raw: unknown): string[] | null {
@@ -293,8 +290,7 @@ async function issueTranslationAgentGrant(args: {
   const budgets = resolveAiRuntimeBudget(ai);
   const nowSec = Math.floor(Date.now() / 1000);
   const grantPayload: RomaAIGrant = {
-    v: 1,
-    iss: 'roma',
+        iss: 'roma',
     jti: crypto.randomUUID(),
     sub: { kind: 'user', userId: args.authz.userId, accountId: args.authz.accountId },
     exp: nowSec + 10 * 60,
@@ -419,7 +415,7 @@ export async function generateAccountInstanceTranslations(args: {
   let response: Response;
   try {
     response = await fetchTranslationAgent({
-      path: '/v1/translate-instance',
+      path: '/translate-instance',
       method: 'POST',
       requestId: args.requestId,
       body: {
@@ -531,7 +527,7 @@ export async function deleteAccountInstanceTranslationValues(args: {
   if (!result.ok) return result;
   const payload = isRecord(result.value) ? result.value : null;
   const deletedLocale = asTrimmedString(payload?.locale);
-  if (payload?.ok !== true || payload?.v !== 1 || deletedLocale !== locale) {
+  if (payload?.ok !== true || deletedLocale !== locale) {
     return invalidPayload('tokyo_instance_translation_delete_invalid_payload');
   }
   return { ok: true, value: { locale } };

@@ -23,8 +23,7 @@ type PublicPackageFilePayload = {
 };
 
 export type SubmittedInstancePublicPackage = {
-  v: 1;
-  indexHtml: string;
+    indexHtml: string;
   stylesCss: string;
   runtimeJs: string;
 };
@@ -73,10 +72,8 @@ function filesFromSubmittedPackage(pkg: SubmittedInstancePublicPackage): PublicP
 function normalizeSubmittedPackage(value: unknown): SubmittedInstancePublicPackage | null {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
   const raw = value as Record<string, unknown>;
-  if (raw.v !== 1) return null;
   if (typeof raw.indexHtml !== 'string' || typeof raw.stylesCss !== 'string' || typeof raw.runtimeJs !== 'string') return null;
   return {
-    v: 1,
     indexHtml: raw.indexHtml,
     stylesCss: raw.stylesCss,
     runtimeJs: raw.runtimeJs,
@@ -140,8 +137,7 @@ export async function readInstancePublicPackage(args: {
     }
   }
   return {
-    v: 1 as const,
-    indexHtml: await indexObject.text(),
+        indexHtml: await indexObject.text(),
     stylesCss: await stylesObject.text(),
     runtimeJs: await runtimeObject.text(),
   };

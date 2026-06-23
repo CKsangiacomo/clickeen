@@ -9,7 +9,7 @@ import {
 import { json } from './response';
 import { type Env } from '../types';
 
-const RATE_LIMIT_PREFIX = 'berlin:ratelimit:v1';
+const RATE_LIMIT_PREFIX = 'berlin:ratelimit';
 
 export type BerlinRequestContext = {
   service: 'berlin';

@@ -1,5 +1,5 @@
 {
-  "baseFingerprint": "0d67ec5edb583027196d7ccde56428b11437c8bde1a7ef5c27d976ea45da4ebd",
+  "baseFingerprint": "dec6c83786fef74819c4ee820331c1af6b7f96b89139ea238de2188318acd19a",
   "baseUpdatedAt": "2026-02-04T15:59:12.732Z",
   "ops": [
     {
@@ -152,6 +152,5 @@
       "path": "blocks.cta.copy.subheadline",
       "value": "방문자를 고객으로 전환하는 강력한 카운트다운 타이머."
     }
-  ],
-  "v": 1
+  ]
 }

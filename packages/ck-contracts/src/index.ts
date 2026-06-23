@@ -50,7 +50,6 @@ export type RateLimitRecord = {
 };
 
 export type AccountLocalePolicy = {
-  v: 1;
   baseLocale: string;
   ip: {
     countryToLocale: Record<string, string>;
@@ -220,7 +219,7 @@ export function parseAccountLocaleListStrict(value: unknown): string[] {
 }
 
 export function parseAccountLocalePolicyStrict(raw: unknown): AccountLocalePolicy {
-  if (!isRecord(raw) || raw.v !== 1) failAccountLocaleContract('policy_missing');
+  if (!isRecord(raw)) failAccountLocaleContract('policy_missing');
   const baseLocale = normalizeSupportedLocaleToken(raw.baseLocale);
   if (!baseLocale) failAccountLocaleContract('policy_base_locale_invalid');
   const ipRaw = isRecord(raw.ip) ? raw.ip : null;
@@ -238,8 +237,7 @@ export function parseAccountLocalePolicyStrict(raw: unknown): AccountLocalePolic
   }
 
   return {
-    v: 1,
-    baseLocale,
+        baseLocale,
     ip: {
       countryToLocale,
     },
@@ -270,10 +268,6 @@ export function validateAccountLocalePolicy(raw: unknown, path = 'policy'): Acco
   if (!isRecord(raw)) {
     return [{ path, message: 'policy must be an object' }];
   }
-  if (raw.v !== 1) {
-    return [{ path: `${path}.v`, message: 'policy.v must be 1' }];
-  }
-
   const issues: AccountLocaleValidationIssue[] = [];
   if (!normalizeSupportedLocaleToken(raw.baseLocale)) {
     issues.push({ path: `${path}.baseLocale`, message: 'baseLocale must be a supported locale token' });

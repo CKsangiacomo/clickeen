@@ -67,7 +67,6 @@ function createPageSourceFromPayload(
   if (!displayName) return null;
   const now = new Date().toISOString();
   return {
-    schemaVersion: 1,
     pageId: createCompactPageId(),
     accountPublicId: accountId,
     displayName,
@@ -83,7 +82,7 @@ function createPageSourceFromPayload(
       missingLocaleBehavior: 'block_publish',
     },
     placements: [],
-    version: 1,
+    revision: 1,
     createdAt: now,
     updatedAt: now,
   };

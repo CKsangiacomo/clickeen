@@ -52,7 +52,7 @@ Prague’s canonical URL identity is `/{market}/{locale}/...`:
 Root `/` is a non-canonical entry surface:
 - if a valid cookie market exists, it 302s to `/{market}/{locale}/`
 - else if IP geo maps to a market, it 302s to `/{market}/{defaultLocale}/`
-- else it 302s to the default canonical (v0.2: `/us/en/`) — **no picker UI**
+- else it 302s to the default canonical (current: `/us/en/`) — **no picker UI**
 
 ### 1.1 Widget directory
 
@@ -134,7 +134,6 @@ Each marketed widget must ship:
 The widget overview page uses Prague's legacy `blocks[]` JSON field to render a deterministic marketing-section layout. Example schema (shape, not a full spec):
 ```json
 {
-  "v": 1,
   "blocks": [
     { "id": "page-meta", "type": "page-meta", "copy": { "title": "...", "description": "..." } },
     { "id": "hero", "type": "hero", "copy": { "headline": "...", "subheadline": "..." }, "visual": true },

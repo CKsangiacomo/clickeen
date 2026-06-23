@@ -1,7 +1,6 @@
 import { CompiledPanel } from './types';
 
 export type RawWidget = {
-  v?: unknown;
   widgetname?: unknown;
   displayName?: unknown;
   itemKey?: unknown;

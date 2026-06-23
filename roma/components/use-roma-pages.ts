@@ -24,14 +24,13 @@ export type PagePlacement = {
 };
 
 export type AccountPageSource = {
-  schemaVersion: 1;
   pageId: string;
   accountPublicId: string;
   displayName: string;
   metadata: PageMetadata;
   localization: PageLocalization;
   placements: PagePlacement[];
-  version: number;
+  revision: number;
   createdAt: string;
   updatedAt: string;
 };

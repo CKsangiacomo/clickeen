@@ -242,7 +242,6 @@ r2://supernova-assets/
 
 ```json
 {
-  "v": 1,
   "gitSha": "...",
   "effects": {
     "gsap": {

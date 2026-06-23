@@ -8,8 +8,7 @@ import { useRomaAccountApi } from './account-api';
 type AccountLocalesPayload = {
   activeLocales: string[];
   localePolicy: {
-    v: 1;
-    baseLocale: string;
+        baseLocale: string;
     ip: { countryToLocale: Record<string, string> };
   };
 };
@@ -172,8 +171,7 @@ export function AccountLocaleSettingsCard(args: {
       const payload: AccountLocalesPayload = {
         activeLocales,
         localePolicy: {
-          v: 1,
-          baseLocale: normalizedBase,
+                    baseLocale: normalizedBase,
           ip: {
             countryToLocale: buildDefaultCountryToLocale({
               enabledLocales,

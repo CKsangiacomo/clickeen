@@ -109,7 +109,6 @@ async function handleModelChat(
     const occurredAtMs = Date.now();
 
     const baseEvent: Omit<InteractionEvent, 'result' | 'usage'> = {
-      v: 1,
       requestId,
       agentId: canonicalId,
       occurredAtMs,
@@ -117,7 +116,7 @@ async function handleModelChat(
       trace: grant.trace,
       ai: {
         policyProfile: grant.ai?.policyProfile,
-        policyVersion: grant.ai?.policyVersion,
+        policyId: grant.ai?.policyId,
         learningCapture: grant.ai?.learningCapture,
         taskClass: resolvedAgent.entry.taskClass,
       },
@@ -207,33 +206,33 @@ export default class SanFranciscoWorker extends WorkerEntrypoint<Env> {
           boundary: 'health',
         });
       }
-      if (request.method === 'POST' && url.pathname === '/v1/model/chat') {
+      if (request.method === 'POST' && url.pathname === '/model/chat') {
         return finalizeSanFranciscoObservedResponse({
           context: requestContext,
           response: await handleModelChat(request, this.env, this.ctx, requestContext),
           boundary: 'ai.model.chat',
         });
       }
-      if (request.method === 'POST' && url.pathname === '/v1/execute') {
+      if (request.method === 'POST' && url.pathname === '/execute') {
         return finalizeSanFranciscoObservedResponse({
           context: requestContext,
           response: noStore(json({
             error: {
               code: 'BAD_REQUEST',
-              message: 'San Francisco no longer executes agent brains. Call the agent home and use /v1/model/chat only for governed model execution.',
+              message: 'San Francisco no longer executes agent brains. Call the agent home and use /model/chat only for governed model execution.',
             },
           }, { status: 410 })),
           boundary: 'ai.execute.deprecated',
         });
       }
-      if (request.method === 'POST' && url.pathname === '/v1/outcome') {
+      if (request.method === 'POST' && url.pathname === '/outcome') {
         return finalizeSanFranciscoObservedResponse({
           context: requestContext,
           response: await handleOutcome(request, this.env),
           boundary: 'ai.outcome',
         });
       }
-      if (request.method === 'POST' && url.pathname === '/v1/l10n/translate') {
+      if (request.method === 'POST' && url.pathname === '/l10n/translate') {
         return finalizeSanFranciscoObservedResponse({
           context: requestContext,
           response: await handlePragueStringsTranslate(request, this.env),

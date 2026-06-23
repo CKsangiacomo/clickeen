@@ -1,0 +1,12 @@
+{
+  "paths": [
+    {
+      "path": "copy.heading",
+      "type": "string"
+    },
+    {
+      "path": "copy.subhead",
+      "type": "string"
+    }
+  ]
+}

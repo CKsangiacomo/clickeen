@@ -31,7 +31,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
     request,
     accessToken: session.accessToken,
     setCookies: session.setCookies,
-    path: `/v1/invitations/${encodeURIComponent(token)}/accept`,
+    path: `/invitations/${encodeURIComponent(token)}/accept`,
     method: 'POST',
   });
 }

@@ -54,8 +54,7 @@ export async function tryHandleInternalTranslationRoutes(
     const translations = await listAccountInstanceTranslatedLocaleValues({ env, accountId, instanceId });
     return respond(json({
       ok: true,
-      v: 1,
-      baseLocale: instance.value.baseLocale,
+            baseLocale: instance.value.baseLocale,
       translations,
     }));
   }
@@ -82,7 +81,7 @@ export async function tryHandleInternalTranslationRoutes(
       if (!translation.ok) {
         return respond(json({ error: { kind: 'NOT_FOUND', reasonKey: 'tokyo.translation.notFound' } }, { status: 404 }));
       }
-      return respond(json({ ok: true, v: 1, ...translation.value }));
+      return respond(json({ ok: true, ...translation.value }));
     }
 
     if (req.method === 'PUT') {
@@ -100,7 +99,7 @@ export async function tryHandleInternalTranslationRoutes(
 
       try {
         const translation = await writeAccountInstanceTranslatedLocaleValues({ env, accountId, instanceId, locale, values });
-        return respond(json({ ok: true, v: 1, locale: translation.locale }));
+        return respond(json({ ok: true, locale: translation.locale }));
       } catch (error) {
         const detail = error instanceof Error ? error.message : String(error);
         return respond(json({ error: { kind: 'VALIDATION', reasonKey: detail, detail } }, { status: 422 }));
@@ -118,7 +117,7 @@ export async function tryHandleInternalTranslationRoutes(
 
       try {
         const translation = await deleteAccountInstanceTranslatedLocaleValues({ env, accountId, instanceId, locale });
-        return respond(json({ ok: true, v: 1, locale: translation.locale }));
+        return respond(json({ ok: true, locale: translation.locale }));
       } catch (error) {
         const detail = error instanceof Error ? error.message : String(error);
         return respond(json({ error: { kind: 'VALIDATION', reasonKey: detail, detail } }, { status: 422 }));

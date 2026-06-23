@@ -167,7 +167,7 @@ Current Product Copilot does not include:
 - QA/recommendation agent calls;
 - generic memory;
 - generic document retrieval system;
-- generalized tool registry.
+- generalized tool machinery.
 
 ## 7. Product Actions
 

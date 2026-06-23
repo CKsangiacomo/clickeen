@@ -45,7 +45,7 @@ async function resolveAuthzVersion(args: {
       }),
     ),
   );
-  return `authz:v2:${toBase64Url(new Uint8Array(digest))}`;
+  return `authz:${toBase64Url(new Uint8Array(digest))}`;
 }
 
 export async function buildBootstrapPayload(args: {

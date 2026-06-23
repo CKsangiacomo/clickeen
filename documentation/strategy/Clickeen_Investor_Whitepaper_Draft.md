@@ -185,7 +185,7 @@ This enables execution at scale:
 
 **Localization agent:**
 - Reads base config → extracts translatable strings → generates locale overlays
-- Runs for 100 widgets × 29 languages = 2,900 translation jobs
+- Runs for 100 widgets × 29 languages = 2,900 generated locale overlays
 - Cost: ~$12 (vs. $50k+ for human translation)
 - Deterministic, measurable, improvable through outcome loops
 

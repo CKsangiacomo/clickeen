@@ -79,8 +79,7 @@ export interface WidgetPackageFileContext {
 }
 
 export interface WidgetPackageContext {
-  v: 1;
-  widgetType: string;
+    widgetType: string;
   files: Partial<Record<WidgetPackageFileName, WidgetPackageFileContext>>;
 }
 

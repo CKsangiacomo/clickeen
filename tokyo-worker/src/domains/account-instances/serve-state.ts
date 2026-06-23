@@ -31,7 +31,6 @@ function serveStatePayload(
   now = new Date().toISOString(),
 ) {
   return {
-    v: 1,
     accountId: coordinate.accountId,
     instanceId: coordinate.instanceId,
     status,
@@ -54,7 +53,6 @@ async function readStoredServeState(env: Env, coordinate: InstanceCoordinate): P
   if (
     !record ||
     Array.isArray(record) ||
-    record.v !== 1 ||
     record.accountId !== coordinate.accountId ||
     record.instanceId !== coordinate.instanceId ||
     (record.status !== 'published' && record.status !== 'unpublished') ||

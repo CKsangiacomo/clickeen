@@ -1,7 +1,7 @@
 # Multi-Tenancy — The Figma Model
 
 Canonical account-management architecture lives in `documentation/architecture/AccountManagement.md`.
-Active V1 truth is one user, one account, and role on `users`.
+Active current truth is one user, one account, and role on `users`.
 This file records product packaging semantics for tenancy, collaboration, roles,
 and tiers.
 
@@ -403,7 +403,7 @@ users own one account association and role
 Tokyo owns account instance operations
 ```
 
-Role truth for active V1 lives on `users`.
+Role truth for active current lives on `users`.
 
 ---
 

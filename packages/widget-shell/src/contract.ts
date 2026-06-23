@@ -1,5 +1,3 @@
-export const WIDGET_SHELL_VERSION = 1;
-
 export const SHELL_STATE_FAMILIES = [
   'header',
   'headerCta',
@@ -104,7 +102,6 @@ export type WidgetShellCoreSize = {
 };
 
 export type WidgetShellContribution = {
-  schemaVersion: typeof WIDGET_SHELL_VERSION;
   widgetType: string;
   shellStateFamilies: readonly string[];
   shellEditableFieldPaths: readonly string[];

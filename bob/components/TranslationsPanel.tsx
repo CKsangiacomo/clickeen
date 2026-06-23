@@ -207,7 +207,7 @@ export function resolveGenerateTranslationsMessage(payload: unknown): string {
   if (generated !== activeLocales.length || generated <= 0) {
     throw new Error('Translations could not be generated.');
   }
-  return `Generated ${generated} translations.`;
+  return generated === 1 ? 'Generated 1 active locale.' : `Generated ${generated} active locales.`;
 }
 
 function resolveGenerateTranslationsError(): string {

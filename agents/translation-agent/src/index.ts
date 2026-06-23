@@ -59,8 +59,8 @@ export type StructuredTranslationPlan = {
   richtextPlansByPath: Map<string, RichtextSegmentPlan>;
 };
 
-export const PROMPT_VERSION = 'widget.instance.translator@2026-05-06.1';
-export const POLICY_VERSION = 'instance.translation.values.v1';
+export const PROMPT_ID = 'widget.instance.translator@2026-05-06.1';
+export const POLICY_ID = 'instance.translation.values';
 
 const MAX_BATCH_ITEMS = 80;
 const MAX_BATCH_INPUT_CHARS = 4000;
