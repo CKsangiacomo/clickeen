@@ -28,8 +28,7 @@ resolve through Berlin bootstrap to the normal Clickeen admin account
 account coordinate, not a superadmin bypass.
 
 DevStudio uses host-scoped session cookies on `devstudio.clickeen.com`, set by
-the DevStudio Pages finish route after Berlin login. Those cookies are for the
-internal toolbench only; Roma/Bob product sessions do not consume DevStudio
+the DevStudio Pages finish route after Berlin login. Those cookies are for DevStudio only; Roma/Bob product sessions do not consume DevStudio
 cookies, and DevStudio must not consume customer product-session cookies.
 
 Cloudflare Access is not the DevStudio auth boundary.
