@@ -226,10 +226,10 @@ copy as translated copy.
 
 Account settings saves active locales. Roma then performs exact overlay work:
 
-- removed active locales -> delete exact overlay files through Tokyo-worker for
-  saved account instances;
 - added active locales -> call Translation Agent Worker for those locale
-  overlays on saved account instances;
+  overlays on saved account instances before the settings row is written;
+- removed active locales -> after the settings row is written, delete exact
+  overlay files through Tokyo-worker for saved account instances;
 - unchanged active locales -> leave existing overlay files alone.
 
 There is no user prompt. Saving settings is the user decision.
@@ -430,11 +430,10 @@ Account settings own active locales.
 
 When the user saves account language settings:
 
-- overlay files whose locale is no longer active cause Roma to ask Tokyo-worker
-  to delete exact overlay files at
-  `accounts/{accountPublicId}/instances/{instanceId}/overlays/locales/{locale}.json`;
 - added active locales cause Roma to call the same Translation Agent Worker
-  path to create those overlay files;
+  path to create those overlay files before the settings row is written;
+- removed active locales cause Roma to ask Tokyo-worker to delete exact overlay
+  files after the settings row is written;
 - unchanged active locales remain untouched.
 
 There is no popup asking whether to update translations. Saving settings is the
@@ -447,8 +446,12 @@ Roma owns the account-wide update loop for saved account instances:
 
 - list saved account instances;
 - compare previous active locales to new active locales;
-- delete removed active locale overlay files through Tokyo-worker;
-- call Translation Agent Worker for added active locales;
+- return immediately when active locales and locale policy are unchanged;
+- call Translation Agent Worker for added active locales before writing account
+  settings;
+- write account settings;
+- delete removed active locale overlay files through Tokyo-worker after writing
+  account settings;
 - return the settings result and translation update result.
 
 If account-wide translation work is too large for a direct save path, Roma must
@@ -523,9 +526,10 @@ public page/runtime consumption remain later work.
   meaning.
 - Overlay write/read validation uses saved `instance.content.json` field paths,
   not a rederived field list from the current widget definition.
-- Account settings active-locale changes compare previous active locales to next
-  active locales: removed locales are deleted, added locales are generated, and
-  unchanged locales are left alone.
+- Account settings active-locale changes compare previous active locales to new
+  active locales: unchanged settings return no overlay work, added locales are
+  generated before the settings write, and removed locales are deleted after the
+  settings write.
 - Missing provider/model/grant/locale/source/overlay write fails explicitly.
 - A partial run cannot report full success.
 - Service docs and executed notes are updated after the runtime path works.

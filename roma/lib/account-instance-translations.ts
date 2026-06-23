@@ -531,7 +531,9 @@ export async function deleteAccountInstanceTranslationValues(args: {
   if (!result.ok) return result;
   const payload = isRecord(result.value) ? result.value : null;
   const deletedLocale = asTrimmedString(payload?.locale);
-  if (deletedLocale !== locale) return invalidPayload('tokyo_instance_translation_delete_invalid_payload');
+  if (payload?.ok !== true || payload?.v !== 1 || deletedLocale !== locale) {
+    return invalidPayload('tokyo_instance_translation_delete_invalid_payload');
+  }
   return { ok: true, value: { locale } };
 }
 

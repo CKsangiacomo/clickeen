@@ -42,6 +42,12 @@ type LocaleOverlayUpdateFailure = {
   };
 };
 
+type LocaleOverlayUpdateValue = {
+  instancesChecked: number;
+  deleted: Array<{ instanceId: string; locale: string }>;
+  generated: Array<{ instanceId: string; locales: string[] }>;
+};
+
 function resolveSupabaseAdminConfig(): { baseUrl: string; serviceRoleKey: string } {
   const baseUrl = String(process.env.SUPABASE_URL || '').trim().replace(/\/+$/, '');
   const serviceRoleKey = String(process.env.SUPABASE_SERVICE_ROLE_KEY || '').trim();
@@ -99,43 +105,66 @@ function localeOverlayFailure(args: {
   };
 }
 
-async function reconcileAccountLocaleOverlays(args: {
-  accountId: string;
-  accountCapsule?: string | null;
-  requestId?: string | null;
+function emptyOverlayUpdate(): LocaleOverlayUpdateValue {
+  return {
+    instancesChecked: 0,
+    deleted: [],
+    generated: [],
+  };
+}
+
+function sameJson(left: unknown, right: unknown): boolean {
+  return JSON.stringify(left) === JSON.stringify(right);
+}
+
+function resolveActiveLocaleDelta(args: {
   previousActiveLocales: string[];
   nextActiveLocales: string[];
   baseLocale: string;
-  authz: Parameters<typeof generateAccountInstanceTranslations>[0]['authz'];
-}): Promise<
-  | {
-      ok: true;
-      value: {
-        instancesChecked: number;
-        deleted: Array<{ instanceId: string; locale: string }>;
-        generated: Array<{ instanceId: string; locales: string[] }>;
-      };
-    }
-  | LocaleOverlayUpdateFailure
-> {
+}): {
+  addedLocales: string[];
+  removedLocales: string[];
+} {
   const previousActiveLocales = Array.from(
     new Set(args.previousActiveLocales.filter((locale) => locale !== args.baseLocale)),
   );
   const nextActiveLocales = Array.from(new Set(args.nextActiveLocales.filter((locale) => locale !== args.baseLocale)));
   const previousActiveSet = new Set(previousActiveLocales);
   const nextActiveSet = new Set(nextActiveLocales);
-  const removedLocales = previousActiveLocales.filter((locale) => !nextActiveSet.has(locale));
-  const addedLocales = nextActiveLocales.filter((locale) => !previousActiveSet.has(locale));
+  return {
+    addedLocales: nextActiveLocales.filter((locale) => !previousActiveSet.has(locale)),
+    removedLocales: previousActiveLocales.filter((locale) => !nextActiveSet.has(locale)),
+  };
+}
+
+function mergeOverlayUpdates(left: LocaleOverlayUpdateValue, right: LocaleOverlayUpdateValue): LocaleOverlayUpdateValue {
+  return {
+    instancesChecked: Math.max(left.instancesChecked, right.instancesChecked),
+    deleted: [...left.deleted, ...right.deleted],
+    generated: [...left.generated, ...right.generated],
+  };
+}
+
+async function reconcileAccountLocaleOverlays(args: {
+  accountId: string;
+  accountCapsule?: string | null;
+  requestId?: string | null;
+  addedLocales: string[];
+  removedLocales: string[];
+  baseLocale: string;
+  authz: Parameters<typeof generateAccountInstanceTranslations>[0]['authz'];
+}): Promise<
+  | {
+      ok: true;
+      value: LocaleOverlayUpdateValue;
+    }
+  | LocaleOverlayUpdateFailure
+> {
+  const removedLocales = Array.from(new Set(args.removedLocales.filter((locale) => locale !== args.baseLocale)));
+  const addedLocales = Array.from(new Set(args.addedLocales.filter((locale) => locale !== args.baseLocale)));
 
   if (removedLocales.length === 0 && addedLocales.length === 0) {
-    return {
-      ok: true,
-      value: {
-        instancesChecked: 0,
-        deleted: [],
-        generated: [],
-      },
-    };
+    return { ok: true, value: emptyOverlayUpdate() };
   }
 
   const instances = await listAccountInstancesInTokyo({
@@ -412,6 +441,50 @@ export async function PUT(request: NextRequest) {
       );
     }
 
+    const activeDelta = resolveActiveLocaleDelta({
+      previousActiveLocales: accountState.activeLocales,
+      nextActiveLocales: activeLocales,
+      baseLocale,
+    });
+    const settingsUnchanged =
+      activeDelta.addedLocales.length === 0 &&
+      activeDelta.removedLocales.length === 0 &&
+      sameJson(localePolicy, accountState.localePolicy);
+
+    if (settingsUnchanged) {
+      return withSession(
+        request,
+        NextResponse.json({
+          accountId: current.value.authzPayload.accountId,
+          activeLocales: accountState.activeLocales,
+          localePolicy: accountState.localePolicy,
+          overlayUpdate: emptyOverlayUpdate(),
+        }),
+        current.value.setCookies,
+      );
+    }
+
+    let overlayUpdate = emptyOverlayUpdate();
+    if (activeDelta.addedLocales.length > 0) {
+      const addedOverlayUpdate = await reconcileAccountLocaleOverlays({
+        accountId: current.value.authzPayload.accountPublicId,
+        accountCapsule: current.value.authzToken,
+        requestId: current.value.requestId,
+        addedLocales: activeDelta.addedLocales,
+        removedLocales: [],
+        baseLocale,
+        authz: current.value.authzPayload,
+      });
+      if (!addedOverlayUpdate.ok) {
+        return withSession(
+          request,
+          NextResponse.json({ error: addedOverlayUpdate.error }, { status: addedOverlayUpdate.status }),
+          current.value.setCookies,
+        );
+      }
+      overlayUpdate = mergeOverlayUpdates(overlayUpdate, addedOverlayUpdate.value);
+    }
+
     const params = new URLSearchParams({
       id: `eq.${current.value.authzPayload.accountId}`,
       select: ACCOUNT_ACTIVE_LOCALES_PATCH_SELECT,
@@ -467,21 +540,24 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    const overlayUpdate = await reconcileAccountLocaleOverlays({
-      accountId: current.value.authzPayload.accountPublicId,
-      accountCapsule: current.value.authzToken,
-      requestId: current.value.requestId,
-      previousActiveLocales: accountState.activeLocales,
-      nextActiveLocales: activeLocales,
-      baseLocale,
-      authz: current.value.authzPayload,
-    });
-    if (!overlayUpdate.ok) {
-      return withSession(
-        request,
-        NextResponse.json({ error: overlayUpdate.error }, { status: overlayUpdate.status }),
-        current.value.setCookies,
-      );
+    if (activeDelta.removedLocales.length > 0) {
+      const removedOverlayUpdate = await reconcileAccountLocaleOverlays({
+        accountId: current.value.authzPayload.accountPublicId,
+        accountCapsule: current.value.authzToken,
+        requestId: current.value.requestId,
+        addedLocales: [],
+        removedLocales: activeDelta.removedLocales,
+        baseLocale,
+        authz: current.value.authzPayload,
+      });
+      if (!removedOverlayUpdate.ok) {
+        return withSession(
+          request,
+          NextResponse.json({ error: removedOverlayUpdate.error }, { status: removedOverlayUpdate.status }),
+          current.value.setCookies,
+        );
+      }
+      overlayUpdate = mergeOverlayUpdates(overlayUpdate, removedOverlayUpdate.value);
     }
 
     return withSession(
@@ -489,7 +565,7 @@ export async function PUT(request: NextRequest) {
       NextResponse.json({
         accountId: current.value.authzPayload.accountId,
         ...readAccountActiveLocalesPatch(patchedRow),
-        overlayUpdate: overlayUpdate.value,
+        overlayUpdate,
       }),
       current.value.setCookies,
     );
