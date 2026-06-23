@@ -8,7 +8,7 @@ Numbering: deliberately unnumbered per product owner.
 
 Related:
 
-- `Execution_Pipeline_Docs/01-Planning/planning_PRD__DevStudio_Design_Governance.md`
+- `Execution_Pipeline_Docs/02-Executing/PRD__DevStudio_Design_Governance.md`
   (owns Dieter token/showcase governance + the tokenization CI guard that already
   covers `roma/app` and `roma/components` incl. inline TSX styles — Step 5 there.
   This PRD **consumes** that guard; it does not reinvent it.)
