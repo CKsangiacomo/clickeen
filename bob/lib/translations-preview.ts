@@ -24,20 +24,20 @@ export type TranslatedLocaleValuesData = {
   values: Record<string, string>;
 };
 
-export type TranslationReviewItem = {
+export type TranslationOverlayItem = {
   label: string;
   path: string;
   value: string;
   missingPaths: string[];
 };
 
-export type TranslationReviewSection = {
+export type TranslationOverlaySection = {
   title: string;
-  items: TranslationReviewItem[];
+  items: TranslationOverlayItem[];
 };
 
-export type TranslationReview = {
-  sections: TranslationReviewSection[];
+export type TranslationOverlayInspection = {
+  sections: TranslationOverlaySection[];
   missingPaths: string[];
 };
 
@@ -234,14 +234,14 @@ function expandFieldPaths(root: Record<string, unknown>, pattern: string): strin
   return out;
 }
 
-function reviewGroupKey(path: string): string {
+function overlayGroupKey(path: string): string {
   const parts = path.split('.').filter(Boolean);
   const firstIndex = parts.findIndex((part) => /^\d+$/.test(part));
   if (firstIndex > 0) return parts.slice(0, firstIndex + 1).join('.');
   return parts[0] || 'content';
 }
 
-function reviewGroupTitle(args: {
+function overlayGroupTitle(args: {
   config: Record<string, unknown>;
   values: Record<string, string>;
   groupKey: string;
@@ -264,26 +264,26 @@ function reviewGroupTitle(args: {
   return index ? `${titleCaseSegment(lastText)} ${Number(index) + 1}` : titleCaseSegment(lastText);
 }
 
-function isReviewableTextField(field: WidgetEditableField): boolean {
+function isOverlayTextField(field: WidgetEditableField): boolean {
   return field.type === 'string' || field.type === 'richtext';
 }
 
-export function buildEditableFieldsTranslationReview(args: {
+export function buildEditableFieldsTranslationOverlayInspection(args: {
   contract: WidgetEditableFieldsContract;
   config: Record<string, unknown>;
   values: Record<string, string>;
-}): TranslationReview {
+}): TranslationOverlayInspection {
   const missingPaths: string[] = [];
-  const sectionsByKey = new Map<string, TranslationReviewSection>();
+  const sectionsByKey = new Map<string, TranslationOverlaySection>();
 
   for (const field of args.contract.fields) {
-    if (!isReviewableTextField(field)) continue;
+    if (!isOverlayTextField(field)) continue;
     for (const path of expandFieldPaths(args.config, field.path)) {
-      const groupKey = reviewGroupKey(path);
+      const groupKey = overlayGroupKey(path);
       let section = sectionsByKey.get(groupKey);
       if (!section) {
         section = {
-          title: reviewGroupTitle({ config: args.config, values: args.values, groupKey }),
+          title: overlayGroupTitle({ config: args.config, values: args.values, groupKey }),
           items: [],
         };
         sectionsByKey.set(groupKey, section);

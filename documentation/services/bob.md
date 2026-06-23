@@ -115,6 +115,21 @@ duplicate, and delete.
 Dirty/save comparison uses the current editor config directly; Bob does not
 substitute an empty config when serialization fails.
 
+## Translation Panel
+
+Bob owns the Translations panel display for the open editor session. It does not
+choose generation locales or write translation files.
+
+The panel sends one Generate translations command with the open `instanceId`.
+Roma resolves active locales and calls the Translation Agent Worker. While the
+operation is running, Bob disables the button and displays the active-locale
+count already present in the open editor payload. When the operation returns,
+Bob shows the direct result text and refreshes overlay inspection.
+
+Bob does not create translation jobs, poll backend status, stream counters, or
+invent locale authority. Saved locale overlay files remain Tokyo-worker/R2
+state.
+
 ## Widget Software
 
 Widget software is system software stored in:
@@ -287,8 +302,21 @@ resolve, and delete operations stay behind Roma current-account routes.
 
 Bob edits the base locale in the active session.
 
-The Translations panel asks Roma to generate missing or changed translated
-values. Tokyo-worker stores translated locale values under:
+The Translations panel shows one explicit account operation:
+
+```text
+Generate translations
+Generated N translations.
+Translations could not be generated.
+```
+
+Bob sends only the opened `instanceId` to Roma. Roma resolves the account,
+active locales, tier, saved instance source, and Translation Agent grant. Bob
+does not send locale authority for generation.
+
+After Roma returns, Bob refreshes the overlay list and lets the user preview
+active locales that have saved overlay values. Tokyo-worker stores translated
+locale values under:
 
 ```text
 accounts/{accountPublicId}/instances/{instanceId}/overlays/locales/{locale}.json

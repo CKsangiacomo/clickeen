@@ -52,11 +52,12 @@ execution or Tokyo writes, the Worker verifies that the signed grant:
 
 The request body alone is not authority for account or instance writes.
 
-The Worker produces the translated values for every requested active locale
-before writing any locale through Tokyo-worker. A model or translation failure
-therefore stops before Tokyo writes. Tokyo-worker also verifies the same
-Roma-issued grant on Translation Agent writes and accepts the write only for the
-named account instance and locale.
+The Worker writes a locale overlay only after that locale has complete overlay
+values. A model, translation, or Tokyo write failure returns an explicit failure
+and cannot be reported as full success. Any completed overlay file already
+written remains an exact file in the account instance overlay folder.
+Tokyo-worker also verifies the same Roma-issued grant on Translation Agent
+writes and accepts the write only for the named account instance and locale.
 
 The Worker does not own account permission, tier permission, locale selection,
 review dashboards, background workers, or visitor runtime behavior.
@@ -81,3 +82,17 @@ accounts/{accountPublicId}/instances/{instanceId}/overlays/locales/{locale}.json
 
 Tokyo-worker stores the files. It does not decide active locales or translation
 meaning.
+
+## Runtime Smoke
+
+Refresh the cloud-dev Roma auth state and run the product-path smoke:
+
+```bash
+pnpm e2e:auth:roma-dev
+pnpm e2e:smoke:translation-agent-runtime
+```
+
+The smoke runs against Roma cloud-dev. It generates translations for the saved
+account instance, verifies the generated overlay inventory through Roma read
+routes, reads one overlay value file, and opens Bob's Translations panel against
+the same instance.

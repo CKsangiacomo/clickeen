@@ -107,3 +107,26 @@ It verifies three things:
   substituting another model;
 - Bob receives the Builder instance, Copilot returns a `draft_edit`, Bob applies
   it in browser memory, exposes `Undo`, and Undo completes.
+
+## Translation Agent Runtime Smoke
+
+After refreshing auth state, run:
+
+```bash
+pnpm e2e:smoke:translation-agent-runtime
+```
+
+The smoke uses the authenticated Roma storage state and the `CLICKEEN` account.
+By default it opens instance `QD1G068MX7`; override with
+`E2E_TRANSLATION_INSTANCE_ID` only when proving another saved instance.
+It verifies the real product path:
+
+```text
+Bob Translations panel -> Roma -> Translation Agent Worker -> San Francisco -> Tokyo-worker/R2
+```
+
+The command clicks Bob's real `Generate translations` button, waits for the Roma
+generation response, requires the exact success shape with non-empty
+`activeLocales` and empty `skippedLocales`, verifies Bob shows
+`Generated N translations.`, then reads the generated overlay list and one
+locale overlay through Roma and renders translated overlay values in Bob.

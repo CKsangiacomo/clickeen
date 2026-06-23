@@ -13,9 +13,9 @@ import {
   useWidgetSessionTransport,
 } from '../lib/session/useWidgetSession';
 import type { TranslatedLocalesData, TranslationSetup } from './useTranslationPreviewState';
-import { buildEditableFieldsTranslationReview } from '../lib/translations-preview';
+import { buildEditableFieldsTranslationOverlayInspection } from '../lib/translations-preview';
 import { listActivePreviewLocales } from '../lib/translations-preview';
-import type { TranslationReview } from '../lib/translations-preview';
+import type { TranslationOverlayInspection } from '../lib/translations-preview';
 
 const CANONICAL_LOCALES = normalizeCanonicalLocalesFile(localesJson);
 const BUILDER_UI_LOCALE = 'en';
@@ -134,6 +134,7 @@ export function resolveTranslationPanelProductState(args: {
   operationError?: string | null;
 }): TranslationPanelProductState {
   const activeSet = new Set(args.activeLocales);
+  const activeLocaleCount = activeSet.size;
   const translatedPanelLocales = args.translatedLocales
     .filter((locale) => activeSet.has(locale))
     .sort((left, right) => left.localeCompare(right));
@@ -165,7 +166,10 @@ export function resolveTranslationPanelProductState(args: {
   if (args.isGenerating) {
     return {
       primaryState: 'generating',
-      primaryMessage: 'Generating translations.',
+      primaryMessage:
+        activeLocaleCount === 1
+          ? 'Generating 1 active locale.'
+          : `Generating ${activeLocaleCount} active locales.`,
       canGenerate: false,
       translatedPanelLocales,
     };
@@ -206,35 +210,18 @@ export function resolveGenerateTranslationsMessage(payload: unknown): string {
   return `Generated ${generated} translations.`;
 }
 
-function resolveGenerateTranslationsError(payload: unknown): string {
-  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
-    return 'Translations could not be generated.';
-  }
-  const error = (payload as Record<string, unknown>).error;
-  if (error && typeof error === 'object' && !Array.isArray(error)) {
-    const detail = (error as Record<string, unknown>).detail;
-    const reasonKey = (error as Record<string, unknown>).reasonKey;
-    if (typeof detail === 'string' && detail.trim()) return detail.trim();
-    if (typeof reasonKey === 'string' && reasonKey.trim()) return reasonKey.trim();
-  }
-  const translation = (payload as Record<string, unknown>).translation;
-  if (translation && typeof translation === 'object' && !Array.isArray(translation)) {
-    const detail = (translation as Record<string, unknown>).detail;
-    const reasonKey = (translation as Record<string, unknown>).reasonKey;
-    if (typeof detail === 'string' && detail.trim()) return detail.trim();
-    if (typeof reasonKey === 'string' && reasonKey.trim()) return reasonKey.trim();
-  }
+function resolveGenerateTranslationsError(): string {
   return 'Translations could not be generated.';
 }
 
-export function TranslationReviewRows({
-  review,
+export function TranslationOverlayRows({
+  inspection,
 }: {
-  review: TranslationReview;
+  inspection: TranslationOverlayInspection;
 }) {
   return (
-    <div className="tdmenucontent__fields" data-testid="translation-review-rows">
-      {review.sections.map((section, sectionIndex) => (
+    <div className="tdmenucontent__fields" data-testid="translation-overlay-rows">
+      {inspection.sections.map((section, sectionIndex) => (
         <div className="tdmenucontent__cluster" key={`${section.title}:${sectionIndex}`}>
           <div className="overline-small tdmenucontent__cluster-label">{section.title}</div>
           <div className="tdmenucontent__cluster-body">
@@ -329,9 +316,9 @@ export function TranslationsPanel({
   const sourceSelectedValues =
     isSelectedTranslatedLocale ? translationValuesByLocale[localeValue] ?? null : null;
   const selectedValues = isSelectedTranslatedLocale ? sourceSelectedValues : null;
-  const selectedReview = useMemo(() => {
+  const selectedInspection = useMemo(() => {
     if (!session.compiled?.editableFields || !selectedValues) return null;
-    return buildEditableFieldsTranslationReview({
+    return buildEditableFieldsTranslationOverlayInspection({
       contract: session.compiled.editableFields,
       config: session.instanceData,
       values: selectedValues,
@@ -353,7 +340,7 @@ export function TranslationsPanel({
         instanceId,
       });
       if (!response.ok) {
-        throw new Error(resolveGenerateTranslationsError(response.json));
+        throw new Error(resolveGenerateTranslationsError());
       }
       setGenerateResultMessage(resolveGenerateTranslationsMessage(response.json));
       onRequestTranslationsRefresh();
@@ -433,8 +420,8 @@ export function TranslationsPanel({
         {!translationsError && selectedValues && !session.compiled.editableFields ? (
           <div className="label-s label-muted">No translation fields declared for this widget.</div>
         ) : null}
-        {!translationsError && selectedReview ? (
-          <TranslationReviewRows review={selectedReview} />
+        {!translationsError && selectedInspection ? (
+          <TranslationOverlayRows inspection={selectedInspection} />
         ) : null}
       </div>
     </div>

@@ -101,13 +101,18 @@ Already real:
 - Product Copilot runtime proof through Roma, Product Copilot Worker, San
   Francisco, and Bob apply/undo is complete.
 - Tokyo-worker has account instance translation value storage.
+- Translation Agent runtime proof through Roma, Translation Agent Worker, San
+  Francisco, Tokyo-worker, R2 overlay files, and Bob preview is complete on
+  cloud-dev.
+- Bob translation UI sends only the instance generation command, shows the
+  running state while generation is in flight, returns direct operation result
+  text with the generated active-locale count, and refreshes overlay inspection.
 
-Still incomplete:
+Remaining closure work:
 
-- Runtime currently does not consume the instance overlay folder for served
-  locale choices.
-- Bob translation UI still has review/status dashboard language.
 - Some docs still describe future agent work as if it were current execution.
+- Keep future public locale serving and account-settings locale-change
+  automation out of 121D closure.
 
 ## 4. Completeness Scope
 
@@ -358,11 +363,12 @@ Future work may use Translation Agent overlays. It must not be smuggled into
 
 Code:
 
-- finish Product Copilot runtime path;
-- execute 121D;
-- confirm 121D added the Translation Agent Worker home;
-- delete redundant runtime discovery and compatibility paths still present;
-- remove Bob translation dashboard vocabulary from the generation panel.
+- Product Copilot runtime path is complete;
+- 121D Translation Agent runtime path is complete on cloud-dev;
+- 121D added the Translation Agent Worker home;
+- delete redundant runtime discovery and compatibility paths only when still
+  present in current product code;
+- remove stale docs that describe future agent work as current execution.
 
 Docs:
 
@@ -378,4 +384,23 @@ Evidence:
 - run focused developer commands for touched surfaces;
 - prove behavior through owning product routes;
 - record runtime result after code works;
-- record no-fallback behavior for unavailable model/grant/source/overlay write.
+- record no-fallback behavior where it can be proved without mutating live
+  infrastructure; do not break cloud-dev secrets or service bindings just to
+  manufacture a negative runtime case.
+
+Current evidence:
+
+- Product Copilot runtime smoke is green through
+  `pnpm e2e:smoke:copilot-runtime`.
+- Translation Agent generation was proved on `QD1G068MX7` in account
+  `CLICKEEN` through `pnpm e2e:smoke:translation-agent-runtime`: Bob clicked
+  Generate translations, Roma returned `200`, all 28 active non-base locales
+  generated, `skippedLocales: []`, and Tokyo/R2 contains 28 exact overlay
+  files.
+- The same smoke opens Bob's deployed Builder, selects one generated locale, and
+  renders translated overlay values.
+- Translation Agent negative behavior is verified through code and focused evals:
+  malformed model output, unexpected paths, missing paths, corrupted rich text,
+  and placeholder mismatch fail explicitly. Live cloud-dev model/grant/write
+  outage cases are not forced by this PRD because doing so would require
+  altering managed runtime configuration.

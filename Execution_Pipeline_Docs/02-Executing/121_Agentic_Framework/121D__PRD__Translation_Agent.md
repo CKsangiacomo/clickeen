@@ -103,12 +103,14 @@ Current working pieces:
 - Roma generation mints the Translation Agent grant and calls the Translation
   Agent Worker.
 
-Current missing pieces:
+Current closure state:
 
-- Runtime currently does not consume the instance overlay folder for served
-  locale choices.
-- Bob translation UI must stay simple: one explicit Generate translations
-  action, active-locale selection, and direct status from that operation.
+- The product generation path is live on cloud-dev.
+- Bob translation UI is one explicit Generate translations action,
+  active-locale selection, running state while the operation is in flight, and
+  direct result text with the generated active-locale count after Roma returns.
+- Public `clk.live`/pages locale serving and account-settings locale-change
+  automation remain future work, not 121D closure blockers.
 
 ## 4. 121D Scope
 
@@ -232,7 +234,7 @@ This is account-wide work over saved account instances. Roma must list the
 saved account instances it is updating. 121D does not introduce a separate
 retry system.
 
-### Slice 7 - Transition Cleanup
+### Transition Cleanup
 
 Once the Worker path works, remove the product dependency on the San Francisco
 saved-instance translation route. Broader series cleanup belongs in
@@ -385,12 +387,19 @@ Bob shows one action:
 
 ```text
 Generate translations
+Generating {activeLocaleCount} active locales
+Generated translations
+Translations could not be generated
 ```
 
 After the click, Bob disables the button while the operation is in flight. When
 Roma returns, Bob shows the operation result and refreshes the overlay list.
 Bob does not show backend job state, raw reason keys, or locale authority
 details in this panel.
+
+The in-flight count is only the active locale count Bob already received in the
+open editor payload. Bob does not create a job, poll for backend state, stream a
+counter, or invent another locale authority.
 
 Bob treats generation as successful only when Roma returns the exact generated
 shape:
@@ -466,6 +475,8 @@ that locale exists. If an overlay file is deleted, that locale does not exist.
 Run focused commands for the changed surfaces:
 
 ```bash
+pnpm e2e:auth:roma-dev
+pnpm e2e:smoke:translation-agent-runtime
 pnpm --filter @clickeen/translation-agent eval:translation-agent
 pnpm --filter @clickeen/translation-agent typecheck
 pnpm --filter @clickeen/sanfrancisco typecheck
@@ -483,9 +494,11 @@ Broaden commands only if implementation touches shared contracts or policy.
 Slice status as of the current execution: Translation Agent Worker home exists
 and Roma invokes it from the product generation route. Bob's Translations panel
 uses account active locales for language selection, sends only the instance
-generation command to Roma, and does not run save-follow-up generation state,
-readiness polling, or translated/active progress machinery. Runtime public
-locale consumption and account-language change automation remain later work.
+generation command to Roma, shows running state while the operation is in
+flight, shows the generated active-locale count after Roma returns, and does not
+run save-follow-up generation state, polling, jobs, or backend status machinery.
+Runtime public locale consumption and
+account-language change automation remain later work.
 
 - Translation Agent has a Cloudflare Worker entrypoint and deploy config.
 - Bob panel is one explicit Generate translations button and direct operation
@@ -507,6 +520,22 @@ locale consumption and account-language change automation remain later work.
 - Missing provider/model/grant/locale/source/overlay write fails explicitly.
 - A partial run cannot report full success.
 - Service docs and executed notes are updated after the runtime path works.
+
+Current cloud-dev evidence:
+
+- Repeatable smoke command: `pnpm e2e:smoke:translation-agent-runtime`.
+- Runtime path proved on `QD1G068MX7` in account `CLICKEEN`.
+- Bob click invoked the Roma generation route and it returned `200`.
+- Translation Agent generated all 28 active non-base locales.
+- `skippedLocales: []`.
+- Tokyo/R2 contains 28 overlay files under the account instance overlay folder.
+- Sampled overlays use exact `{ v, values }` shape.
+- Bob Translations panel opens on the deployed Builder, selects Japanese, and
+  renders translated overlay values.
+- Translation Agent writes only complete locale overlay files. If a later locale
+  fails, the run must return explicit failure and must not report full success;
+  any completed overlay file already written remains an exact file in the
+  account instance overlay folder.
 
 ## 18. Required Audit
 
