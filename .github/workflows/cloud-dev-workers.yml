@@ -167,6 +167,17 @@ jobs:
         if: steps.changes.outputs.translation_agent == 'true'
         run: pnpm -C agents/translation-agent run deploy
 
+      - name: Sync translation-agent-dev AI grant secret
+        if: steps.changes.outputs.translation_agent == 'true'
+        env:
+          AI_GRANT_HMAC_SECRET: ${{ secrets.AI_GRANT_HMAC_SECRET }}
+        run: |
+          if [ -z "$AI_GRANT_HMAC_SECRET" ]; then
+            echo "Missing AI_GRANT_HMAC_SECRET GitHub secret for translation-agent-dev." >&2
+            exit 1
+          fi
+          printf '%s' "$AI_GRANT_HMAC_SECRET" | pnpm -C agents/translation-agent exec wrangler secret put AI_GRANT_HMAC_SECRET
+
       - name: Build Dieter deploy artifacts
         if: steps.changes.outputs.dieter_artifacts == 'true'
         run: pnpm build:dieter
