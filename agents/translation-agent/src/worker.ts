@@ -13,6 +13,7 @@ import {
 
 const TRANSLATION_AGENT_ID = 'widget.instance.translator';
 const TOKYO_INTERNAL_SERVICE_TRANSLATION_AGENT = 'translation-agent';
+const LOCALE_TRANSLATION_CONCURRENCY = 6;
 
 type Env = {
   ENVIRONMENT?: string;
@@ -444,27 +445,19 @@ async function executeTranslationRun(args: {
   requestId: string;
   request: TranslationAgentWorkerRequest;
 }): Promise<TranslationLocaleResult[]> {
-  const translated = new Map<string, Record<string, string>>();
-  for (const locale of args.request.activeLocales) {
-    translated.set(locale, await translateLocale({
+  const results = new Array<TranslationLocaleResult>(args.request.activeLocales.length);
+  let nextLocaleIndex = 0;
+  const runNext = async (): Promise<void> => {
+    const localeIndex = nextLocaleIndex;
+    nextLocaleIndex += 1;
+    const locale = args.request.activeLocales[localeIndex];
+    if (!locale) return;
+    const values = await translateLocale({
       env: args.env,
       requestId: args.requestId,
       request: args.request,
       locale,
-    }));
-  }
-  const results: TranslationLocaleResult[] = [];
-  for (const locale of args.request.activeLocales) {
-    const values = translated.get(locale);
-    if (!values) {
-      throw new HttpError(502, {
-        error: {
-          code: 'PROVIDER_ERROR',
-          provider: 'translation-agent',
-          message: `Translation Agent did not produce values for ${locale}.`,
-        },
-      });
-    }
+    });
     await writeTokyoOverlayValues({
       env: args.env,
       requestId: args.requestId,
@@ -474,8 +467,14 @@ async function executeTranslationRun(args: {
       locale,
       values,
     });
-    results.push({ locale, ok: true, count: Object.keys(values).length });
-  }
+    results[localeIndex] = { locale, ok: true, count: Object.keys(values).length };
+    await runNext();
+  };
+  const workers = Array.from(
+    { length: Math.min(LOCALE_TRANSLATION_CONCURRENCY, args.request.activeLocales.length) },
+    () => runNext(),
+  );
+  await Promise.all(workers);
   return results;
 }
 
