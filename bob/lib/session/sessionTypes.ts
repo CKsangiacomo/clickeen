@@ -106,9 +106,7 @@ export type BobAccountCommand =
   | AccountAssetHostCommand
   | 'list-translations'
   | 'read-translation'
-  | 'save-translation'
   | 'generate-translations'
-  | 'read-translation-generation'
   | 'run-copilot'
   | 'attach-ai-outcome';
 

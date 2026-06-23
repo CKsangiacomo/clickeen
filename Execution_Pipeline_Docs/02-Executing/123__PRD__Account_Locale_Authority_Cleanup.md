@@ -165,17 +165,17 @@ Required correction:
 - Tokyo does not prefer arbitrary request locale values over account-derived
   scope.
 
-### V-123-04 - Manual translation write accepts arbitrary locale path params
+### V-123-04 - Manual translation write route existed
 
 Current behavior:
 
-- Roma trims the route `locale` parameter and writes a locale overlay.
-- Tokyo validates overlay shape and stores the provided locale.
+- The old Roma manual translation write route has been removed.
+- Locale overlay writes now belong to the Translation Agent path.
 
 Product-law problem:
 
-- Any syntactically valid locale can become stored account translation state.
-- Account settings no longer decide what locales the account uses.
+- Reintroducing a manual write route would let a caller create translated locale
+  state outside the active-locale authority.
 
 Core violation:
 
@@ -449,24 +449,23 @@ Completion evidence:
 - Generation route tests or focused assertions show requested unsupported
   targets cannot generate translation jobs.
 
-### Step 6 - Bind manual translation writes to account-selected locales
+### Step 6 - Keep manual translation writes deleted
 
 Action:
 
-- Update manual translation save route to require the target locale to be in
-  current account selected target locales.
-- Reject writes to the account base locale through the translated-locale route.
+- Keep the Roma manual translation save route deleted.
+- Do not add Bob or Roma commands that write translated locale overlays directly.
 - Keep Tokyo overlay storage as storage only.
 
 Architecture compliance:
 
 - Roma remains the account route/API boundary.
-- Tokyo stores the submitted translated value map.
+- Tokyo stores exact overlay files requested by the owning product path.
 
 Product-law compliance:
 
 - Account settings decide which translated locales exist for account work.
-- Builder edits one widget and one active locale at a time.
+- Translation Agent owns translated overlay writes for current generation work.
 
 Core violation protection:
 
@@ -475,8 +474,7 @@ Core violation protection:
 
 Completion evidence:
 
-- Manual translation route evidence shows unsupported locales fail before Tokyo
-  writes an overlay.
+- Manual translation route evidence shows the direct write path is absent.
 
 ### Step 7 - Remove Tokyo locale fallback authority
 
@@ -612,8 +610,8 @@ PRD 123 can move to `03-Executed` only when all are true:
 
 - Account locale capacity still comes from tier policy.
 - Account selected locales still come from account settings.
-- Roma save, duplicate, translation generation, and manual translation routes no
-  longer accept caller locale fields as authority.
+- Roma save, duplicate, and translation generation routes no longer accept caller
+  locale fields as authority; the old manual translation write route is absent.
 - Tokyo no longer invents locale authority through fallback values.
 - Public package locale behavior is explicit and does not silently substitute a
   requested unsupported locale.

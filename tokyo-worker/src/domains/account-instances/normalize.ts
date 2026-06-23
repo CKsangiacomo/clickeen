@@ -19,10 +19,19 @@ function asRecord(value: unknown): Record<string, unknown> | null {
 }
 
 function normalizeInstanceMeta(value: unknown): Record<string, unknown> | null {
+  if (value == null) return null;
   const meta = asRecord(value);
   if (!meta) return null;
-  if (Object.prototype.hasOwnProperty.call(meta, 'targetLocales')) return null;
-  return { ...meta };
+  const out: Record<string, unknown> = {};
+  const allowedKeys = new Set(['baseLocale', 'styleName', 'name', 'title']);
+  for (const key of Object.keys(meta)) {
+    if (!allowedKeys.has(key)) return null;
+  }
+  for (const key of ['baseLocale', 'styleName', 'name', 'title']) {
+    const entry = meta[key];
+    if (typeof entry === 'string' && entry.trim()) out[key] = entry.trim();
+  }
+  return out;
 }
 
 export function normalizeAccountInstanceConfigDocument(

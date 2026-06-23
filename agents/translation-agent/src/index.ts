@@ -94,7 +94,7 @@ export function buildSystemPrompt(args: {
     '- Preserve paths exactly.',
     '- Preserve URLs, emails, brand names, and placeholders (e.g. {token}, {{token}}, :token).',
     '- For richtext values, translate only the provided visible text. Do not add HTML tags.',
-    '- Write in natural, native product/UI copy for the target locale (not literal translation).',
+    '- Write in natural, native product/UI copy for the requested locale (not literal translation).',
     '- If literal wording sounds awkward, rewrite idiomatically while preserving intent.',
     '- Prefer concise, fluent phrasing that reads as originally written in the locale.',
     '- Preserve acronym style from source; do not add parenthetical expansions that are not present in source text.',

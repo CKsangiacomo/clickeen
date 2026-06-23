@@ -5,7 +5,7 @@ export type TranslationSetup = {
   v: 1;
   baseLocale: string;
   planTranslationsMax: number | null;
-  selectedTargetLocales: string[];
+  activeLocales: string[];
 };
 
 export type TranslatedLocaleEntry = {
@@ -42,13 +42,9 @@ export type TranslationReview = {
 };
 
 export type TranslationPanelLocaleState = {
-  expectedTranslationsCount: number;
-  readyTranslationsCount: number;
-  allExpectedTranslationsReady: boolean;
   localeValues: string[];
   localeValue: string;
   selectedTranslationEntry: TranslatedLocaleEntry | null;
-  shouldRefreshOnDropdownOpen: boolean;
 };
 
 function normalizeValueMap(raw: unknown): Record<string, string> | null {
@@ -91,7 +87,7 @@ export function normalizeTranslationSetup(payload: unknown): TranslationSetup | 
     v: 1,
     baseLocale,
     planTranslationsMax,
-    selectedTargetLocales: normalizeLocaleList(payload.selectedTargetLocales).filter((locale) => locale !== baseLocale),
+    activeLocales: normalizeLocaleList(payload.activeLocales).filter((locale) => locale !== baseLocale),
   };
 }
 
@@ -130,42 +126,33 @@ export function listPreviewableLocales(data: TranslatedLocalesData | null): stri
   return Array.from(new Set([data.baseLocale, ...data.translations.map((entry) => entry.locale)]));
 }
 
+export function listActivePreviewLocales(args: { baseLocale: string; activeLocales: string[] }): string[] {
+  const activeLocales = normalizeLocaleList(args.activeLocales).filter((locale) => locale !== args.baseLocale);
+  return args.baseLocale ? [args.baseLocale, ...activeLocales] : activeLocales;
+}
+
 export function retainTranslatedLocaleValues(
   current: Record<string, Record<string, string>>,
   translatedLocales: TranslatedLocalesData,
 ): Record<string, Record<string, string>> {
-  const readyLocales = new Set(translatedLocales.translations.map((entry) => entry.locale));
+  const translatedLocaleSet = new Set(translatedLocales.translations.map((entry) => entry.locale));
   const next: Record<string, Record<string, string>> = {};
   for (const [locale, values] of Object.entries(current)) {
-    if (readyLocales.has(locale)) next[locale] = values;
+    if (translatedLocaleSet.has(locale)) next[locale] = values;
   }
   return next;
 }
 
 export function buildTranslationPanelLocaleState(args: {
   baseLocale: string;
-  selectedTargetLocales: string[];
+  activeLocales: string[];
   translatedLocales: TranslatedLocalesData | null;
   requestedLocale: string;
 }): TranslationPanelLocaleState {
-  const expectedLocales = new Set(args.selectedTargetLocales.filter((locale) => locale !== args.baseLocale));
-  const readyLocales = new Set(
-    (args.translatedLocales?.translations ?? [])
-      .map((entry) => entry.locale)
-      .filter((locale) => expectedLocales.has(locale)),
-  );
-  const expectedTranslationsCount = expectedLocales.size;
-  const readyTranslationsCount = readyLocales.size;
-  const allExpectedTranslationsReady =
-    expectedTranslationsCount > 0 && readyTranslationsCount === expectedTranslationsCount;
-  const localeValues = args.baseLocale
-    ? [
-        args.baseLocale,
-        ...(args.translatedLocales?.translations ?? [])
-          .filter((entry) => expectedLocales.has(entry.locale))
-          .map((entry) => entry.locale),
-      ]
-    : [];
+  const localeValues = listActivePreviewLocales({
+    baseLocale: args.baseLocale,
+    activeLocales: args.activeLocales,
+  });
   const localeValue =
     args.requestedLocale && localeValues.includes(args.requestedLocale)
       ? args.requestedLocale
@@ -176,13 +163,9 @@ export function buildTranslationPanelLocaleState(args: {
       : null;
 
   return {
-    expectedTranslationsCount,
-    readyTranslationsCount,
-    allExpectedTranslationsReady,
     localeValues,
     localeValue,
     selectedTranslationEntry,
-    shouldRefreshOnDropdownOpen: readyTranslationsCount !== expectedTranslationsCount,
   };
 }
 

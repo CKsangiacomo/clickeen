@@ -642,9 +642,9 @@ Shared Settings defaults must be executable:
 
 Locale switcher display state is Shell-owned, but locale availability is not.
 Tier policy decides locale capacity, Account Settings decides
-`baseLocale`/`selectedTargetLocales`/`localePolicy`, and the runtime package
-delivers the locale list available to a rendered widget. The selected target
-locales field is the account active-locale selection, not per-widget readiness.
+`baseLocale`/`activeLocales`/`localePolicy`, and the runtime package
+delivers the locale list available to a rendered widget. Active locales are the
+account language selection, not per-widget readiness.
 The Shell locale switcher may show only the locales delivered by that runtime
 package.
 

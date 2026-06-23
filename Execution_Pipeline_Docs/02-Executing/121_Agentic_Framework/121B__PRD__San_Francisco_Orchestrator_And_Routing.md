@@ -22,24 +22,24 @@ Related:
 This PRD defines San Francisco as the AI engine and model-routing boundary for
 real Clickeen agents.
 
-San Francisco V1 is not the Product Copilot brain.
+San Francisco is not the Product Copilot brain.
 
-San Francisco V1 is not Bob.
+San Francisco is not Bob.
 
-San Francisco V1 is not product truth.
+San Francisco is not product truth.
 
-San Francisco V1 is a stateless execution boundary for known agent model calls:
+San Francisco is a stateless execution boundary for known agent model calls:
 
 - verify grant;
 - apply runtime policy;
-- route/execute an allowed model provider;
-- validate structured result shape;
+- execute the exact allowed model/provider route;
 - emit trace/outcome metadata;
 - return to the caller.
 
-Routing here means model/provider routing under policy. It does not mean
-regexing raw user language, choosing which product agent should answer, or
-deciding product intent before the agent reasons.
+Routing here means executing the model/provider route already authorized by the
+grant. It does not mean regexing raw user language, choosing which product
+agent should answer, deciding product intent before the agent reasons, or
+falling back to a substitute model.
 
 Known agent execution follows this shape:
 
@@ -49,9 +49,8 @@ invoking surface
 -> context contract
 -> grant in the execution contract
 -> runtime policy
--> model/provider route
--> structured model result
--> governed result
+-> exact model/provider execution
+-> model content plus usage/error metadata
 -> trace/outcome record
 ```
 
@@ -76,32 +75,31 @@ That is not yet orchestration.
 
 It is transport and constraint infrastructure.
 
-V1 should extend this deployed spine. It should not greenfield a broad agent
-platform before the first real agent proves the contract.
+The 121 series extends this deployed spine only where agents need governed
+model execution. It must not greenfield a broad agent platform.
 
 Current deployed primitives include:
 
-- `/v1/execute`;
+- `/v1/model/chat`;
+- deprecated `/v1/execute` returning visible failure in San Francisco;
 - `/v1/outcome`;
 - grant verification;
 - model/provider execution;
 - runtime policy checks;
 - telemetry/event capture.
 
-## 3. San Francisco V1 Responsibilities
+## 3. San Francisco Responsibilities
 
-San Francisco V1 is responsible for:
+San Francisco is responsible for:
 
-- invocation envelope validation;
-- caller-to-agent authorization from the existing Roma/account grant path;
-- static typed agent config used by runtime policy;
+- model-call request validation;
+- grant verification;
 - runtime policy application from the verified grant;
-- model/provider routing;
+- exact model/provider execution;
 - OpenAI and DeepSeek provider execution;
-- structured result validation;
 - trace/cost/error recording;
 - `/v1/outcome` attachment path;
-- fallback behavior where allowed.
+- explicit failure when the exact authorized model/provider path is unavailable.
 
 San Francisco must not become responsible for:
 
@@ -114,11 +112,14 @@ San Francisco must not become responsible for:
 - running the live Builder draft loop;
 - calling back into Bob to execute browser-memory tools;
 - owning product mutations.
+- owning Translation Agent overlay writes.
+- routing tools or child agents.
+- falling back to substitute models, providers, locales, or artifacts.
 
 San Francisco is stateless per model execution call.
 
-It verifies the grant, resolves policy, routes/executes the model call,
-validates the structured result, emits trace, and returns.
+It verifies the grant, resolves policy, executes the exact model call, emits
+trace, and returns model content plus usage/error metadata to the agent home.
 
 It does not own per-session or per-thread state.
 
@@ -176,70 +177,59 @@ The invoking product/workflow surface names the agent.
 Examples:
 
 - Bob invokes `product-copilot`.
-- Roma/background workflow invokes `translation-agent`.
+- Roma invokes `translation-agent` for account translation work.
 - Future SDR surface invokes `sdr-copilot`.
 
-San Francisco validates that the caller is allowed to invoke that agent.
+The invoking product surface owns caller-to-agent authority before the model
+call. San Francisco verifies the signed grant and model policy for the model
+execution request.
 
 This is caller-to-agent authorization, not intent routing.
 
 Raw user text never chooses the global product agent.
 
-### 4.2 Model Routing
+### 4.2 Exact Model Execution
 
-San Francisco chooses the model/provider for an execution step based on:
+San Francisco receives an exact model/provider route in the governed model-call
+request.
 
-- agent policy;
-- task class;
-- context size;
-- privacy/cost/latency constraints;
-- eval-backed model fitness;
-- fallback policy.
+San Francisco verifies:
 
-Model routing is below the agent contract.
+- the grant signature and expiry;
+- the agent capability;
+- the requested provider/model is allowed by the grant policy;
+- the provider key and model route are available.
 
-V1 model routing is limited to configured OpenAI and DeepSeek routes.
+Then it executes that exact route or fails explicitly.
 
-Additional providers remain extension-safe options, not V1 requirements.
+Route selection belongs before the San Francisco execution request. San
+Francisco must not substitute a different provider/model after receiving the
+exact execution contract.
 
-### 4.3 Tool Routing
+Current model execution is limited to configured OpenAI and DeepSeek routes.
 
-Agents may ask to call tools.
+Additional providers remain extension-safe options, not current execution
+requirements.
 
-Tool routing applies only when the tool is server-side/durable or exposed
-through an explicit product-owned governed route.
+### 4.3 Product Capability Routing
 
-San Francisco routes the tool call only if:
+Agents may ask to use product capabilities.
 
-- the tool is in the agent's allowed manifest;
-- the caller has authority;
-- the input schema validates;
-- the tool owner accepts the call;
-- side-effect/review policy allows it.
+Product capability calls are owned by agent homes and product surfaces, not San
+Francisco. If a future agent needs a server-side capability, that capability is
+exposed through its owning product route and a separate PRD. Product mutations
+never become San Francisco-owned.
 
-Product mutations never become San Francisco-owned.
-
-For interactive Product Copilot V1, Bob validates and applies live
-browser-memory draft actions. San Francisco does not call back into Bob to
-execute product tools.
+For interactive Product Copilot, Bob applies live browser-memory draft actions.
+San Francisco does not call back into Bob to execute product tools.
 
 ### 4.4 Child-Agent Routing
 
-Some agents may call another agent.
+San Francisco does not route child agents in the 121 execution scope.
 
-This must be explicit, not implicit.
-
-Child-agent routing is a future capability unless the Product Owner decides
-otherwise. It is not required for the first Product Copilot execution slice.
-
-Child-agent calls require:
-
-- parent agent permission;
-- child agent permission;
-- bounded context handoff;
-- trace linkage;
-- result contract;
-- loop/depth limits.
+Future agent-to-agent calls require their own PRD and must name the parent
+agent, child agent, product purpose, context handoff, result contract, and loop
+limits. They are not implied by the San Francisco model-execution boundary.
 
 ### 4.5 Outcome Routing
 
@@ -258,10 +248,10 @@ Bob user writes message
 -> Product Copilot brain receives the governed execution contract
 -> Product Copilot brain calls San Francisco for model execution
 -> San Francisco verifies grant and policy
--> San Francisco routes configured OpenAI/DeepSeek model call
--> San Francisco validates structured result and emits trace
--> typed response/action returns to Product Copilot/Bob
--> Bob validates and applies reversible draft edits in browser memory
+-> San Francisco executes exact configured OpenAI/DeepSeek model call
+-> San Francisco emits trace and returns model content plus usage/error metadata
+-> Product Copilot returns typed response/action to Bob
+-> Bob applies reversible draft edits in browser memory
 -> Roma persists only through existing account/product routes
 -> outcome attaches through the governed outcome path
 ```
@@ -275,26 +265,23 @@ Product Copilot session/thread state does not live in San Francisco.
 ## 6. Translation Agent Example
 
 ```text
-Roma or workflow requests translation job
--> Translation Agent home receives artifact context and grant
--> Translation Agent home calls San Francisco for model execution
--> San Francisco validates translation-agent invocation
--> agent receives artifact context and locale target
--> agent reasons over translatable content and protected structure
--> model route executes under policy
--> output returns as reviewable translated artifact
--> product workflow accepts/rejects/applies through product routes
+Roma account translation route reads active locales
+-> Roma calls Translation Agent Worker with saved instance coordinate and grant
+-> Translation Agent Worker calls San Francisco for model execution
+-> San Francisco verifies grant and executes exact model/provider route
+-> Translation Agent reasons over translatable content and protected structure
+-> Translation Agent writes locale overlays through Tokyo-worker
+-> runtime consumes the saved overlay folder
 ```
 
-`widget.instance.translator` currently executes through the instance-translation
-endpoint surface. Moving Translation Agent into generic `/v1/execute` requires
-an explicit later decision.
+`widget.instance.translator` is moved by 121D into its own Translation Agent
+Worker home. It must not move into generic San Francisco `/v1/execute`.
 
 ## 7. Execution Slices
 
 1. Define the San Francisco model execution contract.
 2. Define invocation envelope and grant-in-contract validation.
-3. Define static typed agent config for V1.
+3. Define static typed agent config for current execution.
 4. Define OpenAI and DeepSeek provider adapter/config shape.
 5. Define structured result validation.
 6. Define trace record and `/v1/outcome` attachment.
@@ -302,16 +289,16 @@ an explicit later decision.
 8. Prove with Product Copilot.
 9. Prove with Translation Agent or another focused server-side agent when
    explicitly selected.
-10. Add child-agent routing only after two real agents exist and the Product
-    Owner decides it belongs in scope.
+10. Leave agent-to-agent calls out of scope until a separate PRD names the real
+    product use case.
 
 ## 8. Acceptance Criteria
 
 - San Francisco routes known agent executions, not raw product meaning.
 - Model routing is provider-independent.
-- V1 supports OpenAI and DeepSeek provider keys only, while keeping provider
+- Current execution supports OpenAI and DeepSeek provider keys only, while keeping provider
   addition extension-safe through San Francisco config/adapter/policy/tests.
-- Tool routing requires explicit manifests and validation.
+- Product capability routing is outside San Francisco.
 - Product surfaces retain product authority.
 - San Francisco is stateless per model execution call.
 - Product Copilot session/thread state does not remain in San Francisco KV.
@@ -320,8 +307,8 @@ an explicit later decision.
 - Routing is model/provider routing, not intent routing.
 - Product Copilot live draft loop remains in Bob.
 - There is no San Francisco-to-Bob live product mutation channel.
-- Fallback is explicit, policy-allowed, trace-visible, and fail-closed when not
-  allowed.
+- Exact route unavailability fails explicitly. There is no silent substitute
+  model, provider, locale, artifact, or product path.
 - Traces distinguish gateway plumbing from agent reasoning.
 - The architecture can support Product Copilot and Translation Agent without
   forcing shared product logic.

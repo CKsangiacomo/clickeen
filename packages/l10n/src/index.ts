@@ -86,13 +86,13 @@ export function normalizeCanonicalLocalesFile(raw: unknown): CanonicalLocaleEntr
 export function resolveLocaleLabel(args: {
   locales: CanonicalLocaleEntry[];
   uiLocale: string;
-  targetLocale: string;
+  locale: string;
 }): string {
-  const target = normalizeLocaleToken(args.targetLocale);
-  if (!target) return String(args.targetLocale || '').trim() || 'Unknown';
+  const locale = normalizeLocaleToken(args.locale);
+  if (!locale) return String(args.locale || '').trim() || 'Unknown';
 
   const ui = normalizeLocaleToken(args.uiLocale) ?? 'en';
-  const entry = args.locales.find((item) => normalizeLocaleToken(item.code) === target) ?? null;
+  const entry = args.locales.find((item) => normalizeLocaleToken(item.code) === locale) ?? null;
 
   const candidates = entry?.labels ? localeCandidates(ui, Object.keys(entry.labels)) : [];
   for (const candidate of candidates) {
@@ -104,9 +104,9 @@ export function resolveLocaleLabel(args: {
 
   try {
     const display = new Intl.DisplayNames([ui], { type: 'language' });
-    const label = display.of(target);
-    return label || target;
+    const label = display.of(locale);
+    return label || locale;
   } catch {
-    return target;
+    return locale;
   }
 }

@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { resolvePolicy } from '@clickeen/ck-policy';
 import { generateAccountInstanceTranslations } from '@roma/lib/account-instance-translations';
+import { enforceActiveLocaleEntitlement } from '@roma/lib/account-locale-entitlements';
 import { loadCurrentAccountLocalesState } from '@roma/lib/account-locales-state';
 import { requireInstanceIdParam } from '@roma/lib/route-helpers';
 import {
@@ -50,15 +52,22 @@ export async function POST(request: NextRequest, context: RouteContext) {
     );
   }
   const baseLocale = accountLocales.localePolicy.baseLocale;
-  const activeLocalesToGenerate = accountLocales.selectedTargetLocales.filter(
+  const activeLocalesToGenerate = accountLocales.activeLocales.filter(
     (locale) => locale !== baseLocale,
   );
+  const policy = resolvePolicy({
+    profile: current.value.authzPayload.profile,
+    role: current.value.authzPayload.role,
+  });
+  const entitlementGate = enforceActiveLocaleEntitlement(policy, activeLocalesToGenerate);
+  if (entitlementGate) return withSession(request, entitlementGate, current.value.setCookies);
 
   const generated = await generateAccountInstanceTranslations({
     accountId,
     instanceId,
     baseLocale,
     activeLocales: activeLocalesToGenerate,
+    authz: current.value.authzPayload,
     accountCapsule: current.value.authzToken,
     requestId: current.value.requestId,
   });

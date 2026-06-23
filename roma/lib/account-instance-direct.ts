@@ -94,24 +94,18 @@ function invalidTokyoPayload(detail: string): RouteFailure {
 }
 
 function normalizeInstanceMeta(value: unknown): Record<string, unknown> | null {
+  if (value == null) return null;
   if (!isRecord(value)) return null;
-  if (Object.prototype.hasOwnProperty.call(value, 'targetLocales')) return null;
-  return { ...value };
-}
-
-function hasRetiredTargetLocales(value: unknown): boolean {
-  return isRecord(value) && Object.prototype.hasOwnProperty.call(value, 'targetLocales');
-}
-
-function retiredTargetLocalesFailure(): RouteFailure {
-  return {
-    ok: false,
-    status: 422,
-    error: {
-      kind: 'VALIDATION',
-      reasonKey: 'coreui.errors.instance.targetLocalesRemoved',
-    },
-  };
+  const out: Record<string, unknown> = {};
+  const allowedKeys = new Set(['baseLocale', 'styleName', 'name', 'title']);
+  for (const key of Object.keys(value)) {
+    if (!allowedKeys.has(key)) return null;
+  }
+  for (const key of ['baseLocale', 'styleName', 'name', 'title']) {
+    const entry = value[key];
+    if (typeof entry === 'string' && entry.trim()) out[key] = entry.trim();
+  }
+  return out;
 }
 
 function isAccountInstanceContentDocument(value: unknown): value is AccountInstanceContentDocument {
@@ -314,8 +308,18 @@ export async function createAccountInstanceInTokyo(args: {
       },
     };
   }
-  if (hasRetiredTargetLocales(args.meta)) return retiredTargetLocalesFailure();
-
+  const normalizedMeta = normalizeInstanceMeta(args.meta);
+  if (args.meta != null && !normalizedMeta) {
+    return {
+      ok: false,
+      status: 422,
+      error: {
+        kind: 'VALIDATION',
+        reasonKey: 'coreui.errors.instance.invalidPayload',
+        detail: 'meta_invalid',
+      },
+    };
+  }
   const result = await callTokyo(tokyoCallContext(args), {
     path: '/__internal/instances',
     method: 'POST',
@@ -330,7 +334,7 @@ export async function createAccountInstanceInTokyo(args: {
       publicPackage: args.publicPackage,
       baseLocale: args.baseLocale,
       meta: {
-        ...(normalizeInstanceMeta(args.meta) ?? {}),
+        ...(normalizedMeta ?? {}),
         baseLocale: args.baseLocale,
       },
     },
@@ -372,7 +376,18 @@ export async function saveAccountInstanceInTokyo(args: {
     }
   | RouteFailure
 > {
-  if (hasRetiredTargetLocales(args.meta)) return retiredTargetLocalesFailure();
+  const normalizedMeta = normalizeInstanceMeta(args.meta);
+  if (args.meta != null && !normalizedMeta) {
+    return {
+      ok: false,
+      status: 422,
+      error: {
+        kind: 'VALIDATION',
+        reasonKey: 'coreui.errors.instance.invalidPayload',
+        detail: 'meta_invalid',
+      },
+    };
+  }
   const result = await callTokyo(tokyoCallContext(args), {
     path: `/__internal/instances/${encodeURIComponent(args.instanceId)}`,
     method: 'PUT',
@@ -385,7 +400,7 @@ export async function saveAccountInstanceInTokyo(args: {
       },
       publicPackage: args.publicPackage,
       ...(args.displayName !== undefined ? { displayName: args.displayName } : {}),
-      ...(args.meta !== undefined ? { meta: args.meta } : {}),
+      ...(args.meta !== undefined ? { meta: normalizedMeta } : {}),
     },
     decode: (payload) => payload,
     errorDetail: 'tokyo_instance_save_http_error',

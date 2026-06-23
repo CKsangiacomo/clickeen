@@ -104,10 +104,16 @@ importers:
 
   agents/translation-agent:
     dependencies:
+      '@clickeen/ck-contracts':
+        specifier: workspace:*
+        version: link:../../packages/ck-contracts
       '@clickeen/l10n':
         specifier: workspace:*
         version: link:../../packages/l10n
     devDependencies:
+      '@cloudflare/workers-types':
+        specifier: ^4.20251228.0
+        version: 4.20251228.0
       '@types/node':
         specifier: ^20.14.2
         version: 20.19.25
@@ -117,6 +123,9 @@ importers:
       typescript:
         specifier: ^5.4.5
         version: 5.9.3
+      wrangler:
+        specifier: ^4.54.0
+        version: 4.54.0(@cloudflare/workers-types@4.20251228.0)
 
   berlin:
     dependencies:
@@ -293,9 +302,6 @@ importers:
       '@clickeen/l10n':
         specifier: workspace:*
         version: link:../packages/l10n
-      '@clickeen/translation-agent':
-        specifier: workspace:*
-        version: link:../agents/translation-agent
     devDependencies:
       '@cloudflare/workers-types':
         specifier: ^4.20251228.0

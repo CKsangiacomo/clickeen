@@ -6,6 +6,7 @@ on:
     paths:
       - "berlin/**"
       - "agents/product-copilot/**"
+      - "agents/translation-agent/**"
       - "sanfrancisco/**"
       - "tokyo-worker/**"
       - "tokyo/product/widgets/**"
@@ -68,6 +69,7 @@ jobs:
             {
               echo "berlin=true"
               echo "product_copilot=true"
+              echo "translation_agent=true"
               echo "sanfrancisco=true"
               echo "tokyo=true"
               echo "tokyo_assets=true"
@@ -88,6 +90,7 @@ jobs:
 
           berlin=false
           product_copilot=false
+          translation_agent=false
           sanfrancisco=false
           tokyo=false
           tokyo_assets=false
@@ -104,6 +107,10 @@ jobs:
 
           if [ "$workflow_changed" = "true" ] || path_changed '^(agents/product-copilot/|scripts/infra/|packages/(ck-contracts|ck-policy)/)'; then
             product_copilot=true
+          fi
+
+          if [ "$workflow_changed" = "true" ] || path_changed '^(agents/translation-agent/|scripts/infra/|packages/(ck-contracts|ck-policy|l10n)/)'; then
+            translation_agent=true
           fi
 
           if [ "$workflow_changed" = "true" ] || path_changed '^(sanfrancisco/|scripts/infra/|packages/(ck-contracts|ck-policy|l10n)/)'; then
@@ -125,6 +132,7 @@ jobs:
           {
             echo "berlin=$berlin"
             echo "product_copilot=$product_copilot"
+            echo "translation_agent=$translation_agent"
             echo "sanfrancisco=$sanfrancisco"
             echo "tokyo=$tokyo"
             echo "tokyo_assets=$tokyo_assets"
@@ -139,10 +147,6 @@ jobs:
         if: steps.changes.outputs.sanfrancisco == 'true'
         run: pnpm -C sanfrancisco run deploy
 
-      - name: Deploy product-copilot-dev
-        if: steps.changes.outputs.product_copilot == 'true'
-        run: pnpm -C agents/product-copilot run deploy
-
       - name: Deploy tokyo-assets-dev (tokyo-worker)
         if: steps.changes.outputs.tokyo == 'true'
         run: |
@@ -154,6 +158,14 @@ jobs:
             exit 1
           fi
           pnpm -C tokyo-worker exec wrangler versions deploy "${version_id}@100" --yes
+
+      - name: Deploy product-copilot-dev
+        if: steps.changes.outputs.product_copilot == 'true'
+        run: pnpm -C agents/product-copilot run deploy
+
+      - name: Deploy translation-agent-dev
+        if: steps.changes.outputs.translation_agent == 'true'
+        run: pnpm -C agents/translation-agent run deploy
 
       - name: Build Dieter deploy artifacts
         if: steps.changes.outputs.dieter_artifacts == 'true'

@@ -122,12 +122,11 @@ fingerprint on newly saved source and package objects so package reads, publish,
 and public serving can reject mixed package state deterministically.
 
 Translation generation is a separate explicit operation from the Translations
-panel. Roma resolves the current account active locales for that command, but
-generation remains unavailable until Roma is wired to the Translation Agent
-Worker. Roma fails that command visibly instead of routing it through
-Tokyo-worker. In 121D, Roma mints a translation grant and calls the Translation
-Agent Worker, which calls San Francisco `/v1/model/chat` and writes overlays via
-Tokyo-worker.
+panel. Roma resolves the current account active locales for that command,
+applies the current tier limit, loads the saved instance source from
+Tokyo-worker, mints a Translation Agent grant, and calls the Translation Agent
+Worker. Translation Agent calls San Francisco `/v1/model/chat` and writes
+overlays via Tokyo-worker.
 
 Roma Builder owns public widget copy actions for the current account and opened
 instance. It builds the public URL and iframe/script snippets from the current

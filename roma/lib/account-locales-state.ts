@@ -10,7 +10,7 @@ export async function loadCurrentAccountLocalesState(args: {
 }): Promise<
   | {
       ok: true;
-      selectedTargetLocales: string[];
+      activeLocales: string[];
       localePolicy: ReturnType<typeof parseAccountLocalePolicyStrict>;
     }
   | {
@@ -35,8 +35,8 @@ export async function loadCurrentAccountLocalesState(args: {
   );
   const payload = (await upstream.json().catch(() => null)) as
     | {
-        account?: {
-          selectedTargetLocales?: unknown;
+      account?: {
+          activeLocales?: unknown;
           localePolicy?: unknown;
         } | null;
         error?: unknown;
@@ -54,7 +54,7 @@ export async function loadCurrentAccountLocalesState(args: {
 
   return {
     ok: true,
-    selectedTargetLocales: parseAccountLocaleListStrict(payload?.account?.selectedTargetLocales),
+    activeLocales: parseAccountLocaleListStrict(payload?.account?.activeLocales),
     localePolicy: parseAccountLocalePolicyStrict(payload?.account?.localePolicy),
   };
 }

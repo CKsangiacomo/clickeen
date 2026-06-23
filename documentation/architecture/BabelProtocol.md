@@ -10,12 +10,12 @@ Builder edits one account-owned widget instance in the account base locale.
 
 After save, translated locale values are explicit account work from the
 Translations panel. Tokyo-worker currently stores, reads, and lists exact
-translated-locale overlay files only. Roma returns translation generation
-unavailable until Roma is wired to the Translation Agent Worker. In 121D, Roma
-mints a grant, the Translation Agent Worker calls San Francisco
-`/v1/model/chat`, and writes overlays via Tokyo-worker. San Francisco owns model
-execution only. Public widget package bytes are public artifacts, not source
-truth, and are not rebuilt from overlays during visitor serving or publish.
+translated-locale overlay files only. Roma calls the Translation Agent Worker
+for generation. Roma mints the agent grant, the Translation Agent Worker calls
+San Francisco `/v1/model/chat` for model execution, and the Translation Agent
+writes overlays through Tokyo-worker. San Francisco owns model execution only.
+Public widget package bytes are public artifacts, not source truth, and are not
+rebuilt from overlays during visitor serving or publish.
 
 ## Source Of Text Truth
 
@@ -41,8 +41,8 @@ For a given saved `instance.content.json` and widget editable-field contract:
 
 1. The saved instance content and widget editable-field contract provide the required exact text primitive paths.
 2. Roma owns the user-facing generation command and account active-locale lookup.
-3. Until Roma is wired to the Translation Agent Worker, Roma returns `coreui.errors.translation.generationUnavailable`.
-4. Tokyo-worker stores exact overlay value maps that Roma submits through the storage route.
+3. Roma calls the Translation Agent Worker for generation.
+4. Translation Agent writes exact overlay value maps through Tokyo-worker.
 5. Tokyo-worker rejects malformed overlay value maps before writing them.
 
 The system does not normalize, drop, repair, coerce, or infer producer output.
@@ -68,7 +68,10 @@ The translated value body is an exact value map:
 
 The API body does not carry product identity, readiness, job state, source version, hash identity, or storage path. Product operations carry identity and state.
 
-Under PRD 105, Tokyo stores the durable translated-locale product result as `overlays/locales/{locale}.json`. That private overlay document wraps the API value map with marker/status metadata used by Tokyo. Bob, Roma, San Francisco, and public widget consumers still speak the API value-map contract, not private storage object identity.
+Tokyo stores the durable translated-locale product result as
+`overlays/locales/{locale}.json`. That overlay is the exact value-map artifact
+for one locale. It carries no lifecycle metadata, job state, or storage
+identity exposed to Bob/Roma/San Francisco/public widget consumers.
 
 ## Runtime Resolution
 
@@ -78,16 +81,16 @@ Babel v1 uses one translated locale value map at a time:
 resolvedState = resolveTranslatedValues(baseState, translatedValues)
 ```
 
-No multi-layer precedence resolver is part of this protocol. A/B, geo, personalization, or stacked transformations require a later PRD.
-
-Manual translation edits are temporary overrides of the current translated value map. The system does not store manual status, review status, provenance, or a protected override layer. If a field is regenerated, the regenerated translated value replaces the manual value.
+No multi-layer precedence resolver is part of this protocol. A/B, geo,
+personalization, manual translation editing, or stacked transformations require a
+later PRD.
 
 ## Tokyo PBX Rule
 
 Tokyo-worker stores and reads translated locale value artifacts through named
-storage operations. Translation Agent has its own Worker home; generation is
-enabled only after Roma is wired to that Worker. San Francisco stays the model
-execution boundary the Translation Agent calls.
+storage operations. Translation Agent has its own Worker home. Roma calls that
+Worker for generation, and San Francisco stays the model execution boundary the
+Translation Agent calls.
 
 Tokyo-worker must not:
 

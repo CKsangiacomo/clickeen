@@ -15,7 +15,6 @@ import type {
   SavedTextField,
   WidgetEditableFieldsContract,
 } from '@clickeen/ck-contracts/translated-value-primitives';
-import { buildBaseContentMarker, buildWidgetContractMarker } from '../account-translations/markers';
 import type {
   AccountInstanceConfigDocument,
   AccountInstanceContentDocument,
@@ -43,10 +42,17 @@ function normalizeDisplayName(value: unknown): string | null {
 function normalizeMeta(value: unknown): Record<string, unknown> | null {
   if (value == null) return null;
   if (value && typeof value === 'object' && !Array.isArray(value)) {
-    if (Object.prototype.hasOwnProperty.call(value, 'targetLocales')) {
-      throw new Error('coreui.errors.instance.targetLocalesRemoved');
+    const meta = value as Record<string, unknown>;
+    const out: Record<string, unknown> = {};
+    const allowedKeys = new Set(['baseLocale', 'styleName', 'name', 'title']);
+    for (const key of Object.keys(meta)) {
+      if (!allowedKeys.has(key)) throw new Error('coreui.errors.instance.invalidPayload');
     }
-    return { ...(value as Record<string, unknown>) };
+    for (const key of ['baseLocale', 'styleName', 'name', 'title']) {
+      const entry = meta[key];
+      if (typeof entry === 'string' && entry.trim()) out[key] = entry.trim();
+    }
+    return out;
   }
   throw new Error('coreui.errors.instance.invalidPayload');
 }
@@ -66,14 +72,12 @@ function displayNameFromConfigDocument(configDoc: AccountInstanceConfigDocument)
   );
 }
 
-export async function buildCurrentLocaleOverlayMetadata(args: {
+export function buildLocaleOverlayFields(args: {
   configDoc: AccountInstanceConfigDocument;
   content: AccountInstanceContentDocument;
-}): Promise<{
-  baseContentMarker: string;
-  widgetContractHash: string;
+}): {
   fields: SavedTextField[];
-}> {
+} {
   const widgetDefinition = getWidgetDefinition(args.configDoc.widgetType);
   if (
     !widgetDefinition?.editableFields ||
@@ -81,18 +85,8 @@ export async function buildCurrentLocaleOverlayMetadata(args: {
   ) {
     throw new Error(`tokyo.translation.widget_unsupported:${args.configDoc.widgetType}`);
   }
-  const widgetContractHash = await buildWidgetContractMarker(widgetDefinition.editableFields);
   const fields = savedTextFieldsFromContentDocument(args.content, widgetDefinition.editableFields);
-  return {
-    baseContentMarker: await buildBaseContentMarker({
-      baseLocale: args.configDoc.baseLocale,
-      widgetType: args.configDoc.widgetType,
-      widgetContractHash,
-      fields,
-    }),
-    widgetContractHash,
-    fields,
-  };
+  return { fields };
 }
 
 function summaryFromConfigDocument(args: {

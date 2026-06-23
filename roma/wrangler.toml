@@ -19,6 +19,10 @@ service = "tokyo-assets-dev"
 binding = "TOKYO_PRODUCT_CONTROL"
 service = "tokyo-assets-dev"
 
+[[services]]
+binding = "TRANSLATION_AGENT"
+service = "translation-agent-dev"
+
 [[kv_namespaces]]
 binding = "USAGE_KV"
 id = "eca50e55fa2a4f94a01fb81aeebf8377"

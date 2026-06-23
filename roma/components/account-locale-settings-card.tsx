@@ -6,7 +6,7 @@ import localesJson from '@clickeen/l10n/locales.json';
 import { useRomaAccountApi } from './account-api';
 
 type AccountLocalesPayload = {
-  selectedTargetLocales: string[];
+  activeLocales: string[];
   localePolicy: {
     v: 1;
     baseLocale: string;
@@ -53,7 +53,7 @@ function resolveLocaleUiLabel(code: string): string {
   const label = resolveLocaleLabel({
     locales: CANONICAL_LOCALES,
     uiLocale: 'en',
-    targetLocale: normalized,
+    locale: normalized,
   });
   return `${label} (${normalized})`;
 }
@@ -110,7 +110,7 @@ export function AccountLocaleSettingsCard(args: {
   const [success, setSuccess] = useState<string | null>(null);
   const [baseLocaleLocked, setBaseLocaleLocked] = useState(false);
   const [draftBaseLocale, setDraftBaseLocale] = useState('en');
-  const [draftSelectedTargetLocales, setDraftSelectedTargetLocales] = useState<string[]>([]);
+  const [draftActiveLocales, setDraftActiveLocales] = useState<string[]>([]);
 
   const loadSettings = useCallback(async () => {
     if (!args.accountId) return;
@@ -118,7 +118,7 @@ export function AccountLocaleSettingsCard(args: {
     setError(null);
     try {
       const payload = await accountApi.fetchJson<{
-        selectedTargetLocales: string[];
+        activeLocales: string[];
         baseLocaleLocked?: unknown;
         localePolicy?: {
           baseLocale?: unknown;
@@ -130,7 +130,7 @@ export function AccountLocaleSettingsCard(args: {
       if (!baseLocale) throw new Error('coreui.errors.account.locales.invalidBaseLocale');
       setBaseLocaleLocked(payload.baseLocaleLocked === true);
       setDraftBaseLocale(baseLocale);
-      setDraftSelectedTargetLocales(payload.selectedTargetLocales);
+      setDraftActiveLocales(payload.activeLocales);
       setSuccess(null);
       setSettingsReady(true);
     } catch (nextError) {
@@ -148,15 +148,14 @@ export function AccountLocaleSettingsCard(args: {
   }, [loadSettings]);
 
   const baseLocale = normalizeLocaleToken(draftBaseLocale) ?? '';
-  const effectiveSelectedTargetLocales = draftSelectedTargetLocales;
   const localeOptions = useMemo(
     () =>
       CANONICAL_LOCALES.filter((entry) => entry.code !== baseLocale).map((entry) => ({
         code: entry.code,
         label: resolveLocaleUiLabel(entry.code),
-        enabled: effectiveSelectedTargetLocales.includes(entry.code),
+        enabled: draftActiveLocales.includes(entry.code),
       })),
-    [baseLocale, effectiveSelectedTargetLocales],
+    [baseLocale, draftActiveLocales],
   );
   const saveSettings = useCallback(async () => {
     if (!args.accountId) return;
@@ -167,11 +166,11 @@ export function AccountLocaleSettingsCard(args: {
     try {
       const normalizedBase = normalizeLocaleToken(draftBaseLocale);
       if (!normalizedBase) throw new Error('coreui.errors.account.locales.invalidBaseLocale');
-      const selectedTargetLocales = draftSelectedTargetLocales;
+      const activeLocales = draftActiveLocales;
 
-      const enabledLocales = [normalizedBase, ...selectedTargetLocales];
+      const enabledLocales = [normalizedBase, ...activeLocales];
       const payload: AccountLocalesPayload = {
-        selectedTargetLocales,
+        activeLocales,
         localePolicy: {
           v: 1,
           baseLocale: normalizedBase,
@@ -199,12 +198,12 @@ export function AccountLocaleSettingsCard(args: {
     } finally {
       setSaving(false);
     }
-  }, [args, accountApi, draftSelectedTargetLocales, draftBaseLocale, loadSettings]);
+  }, [args, accountApi, draftActiveLocales, draftBaseLocale, loadSettings]);
 
   return (
     <section className="rd-canvas-module">
       <h2 className="heading-6">Languages</h2>
-      <p className="body-m">These account languages drive automatic translation after Save for every widget in this account.</p>
+      <p className="body-m">These account languages decide which translations Bob can generate for widgets in this account.</p>
       <p className="body-s">
         Base language is the source language for generated translations. It can be changed only before the first widget save in this account. After authoring
         starts, changing it becomes a support/migration operation.
@@ -237,7 +236,7 @@ export function AccountLocaleSettingsCard(args: {
                 const nextBase = normalizeLocaleToken(event.target.value);
                 if (!nextBase) return;
                 setDraftBaseLocale(nextBase);
-                setDraftSelectedTargetLocales((current) => current.filter((entry) => entry !== nextBase));
+                setDraftActiveLocales((current) => current.filter((entry) => entry !== nextBase));
               }}
             >
               {CANONICAL_LOCALES.map((entry) => (
@@ -254,9 +253,9 @@ export function AccountLocaleSettingsCard(args: {
           </label>
 
           <div className="roma-inline-stack">
-            <div className="label-s">Selected target languages</div>
+            <div className="label-s">Active languages</div>
             <p className="body-s">
-              Base language is always enabled. Add the other languages that should update automatically after Save.
+              Base language is always enabled. Choose the other languages available for translation generation.
             </p>
             <div className="roma-locale-settings__list">
               {localeOptions.map((entry) => (
@@ -267,7 +266,7 @@ export function AccountLocaleSettingsCard(args: {
                     disabled={loading || saving || !args.canEdit}
                     onChange={(event) => {
                       const nextChecked = event.target.checked;
-                      setDraftSelectedTargetLocales((current) => {
+                      setDraftActiveLocales((current) => {
                         const values = new Set(current);
                         if (nextChecked) values.add(entry.code);
                         else values.delete(entry.code);

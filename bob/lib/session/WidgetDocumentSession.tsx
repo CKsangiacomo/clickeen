@@ -30,9 +30,7 @@ export type WidgetDocumentSessionValue = {
 type WidgetSessionTransportValue = {
   listTranslations: ReturnType<typeof useSessionTransport>['listTranslations'];
   readTranslation: ReturnType<typeof useSessionTransport>['readTranslation'];
-  saveTranslation: ReturnType<typeof useSessionTransport>['saveTranslation'];
   generateTranslations: ReturnType<typeof useSessionTransport>['generateTranslations'];
-  readTranslationGeneration: ReturnType<typeof useSessionTransport>['readTranslationGeneration'];
 };
 
 const WidgetDocumentSessionContext = createContext<WidgetDocumentSessionValue | null>(null);
@@ -98,16 +96,12 @@ export function WidgetDocumentSessionProvider({ children }: { children: ReactNod
     () => ({
       listTranslations: transport.listTranslations,
       readTranslation: transport.readTranslation,
-      saveTranslation: transport.saveTranslation,
       generateTranslations: transport.generateTranslations,
-      readTranslationGeneration: transport.readTranslationGeneration,
     }),
     [
       transport.generateTranslations,
       transport.listTranslations,
-      transport.readTranslationGeneration,
       transport.readTranslation,
-      transport.saveTranslation,
     ],
   );
 

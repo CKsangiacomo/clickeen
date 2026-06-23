@@ -10,38 +10,6 @@ import {
 import type { ExecuteAccountCommand } from './sessionTransport';
 import { assertSessionConfigContract } from './sessionConfig';
 
-function normalizeTranslationFollowup(payload: unknown):
-  | { ok: true }
-  | { ok: false; reasonKey: string; detail?: string } {
-  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) return { ok: true };
-  const followup = payload as Record<string, unknown>;
-  if (followup.ok !== false) return { ok: true };
-  const failedResults = Array.isArray(followup.results)
-    ? followup.results.filter((entry): entry is Record<string, unknown> => {
-        return Boolean(entry && typeof entry === 'object' && !Array.isArray(entry) && entry.ok === false);
-      })
-    : [];
-  const firstFailure = failedResults[0] ?? null;
-  const reasonKey =
-    typeof firstFailure?.reasonKey === 'string' && firstFailure.reasonKey.trim()
-      ? firstFailure.reasonKey.trim()
-      : 'coreui.errors.translations.acceptanceFailed';
-  const locale =
-    typeof firstFailure?.locale === 'string' && firstFailure.locale.trim()
-      ? firstFailure.locale.trim()
-      : '';
-  const detailText =
-    typeof firstFailure?.detail === 'string' && firstFailure.detail.trim()
-      ? firstFailure.detail.trim()
-      : '';
-  const detail = [locale, detailText].filter(Boolean).join(': ') || undefined;
-  return {
-    ok: false,
-    reasonKey,
-    ...(detail ? { detail } : {}),
-  };
-}
-
 export function useSessionSaving(args: {
   stateRef: MutableRefObject<SessionState>;
   metaRef: MutableRefObject<SessionMeta>;
@@ -141,15 +109,7 @@ export function useSessionSaving(args: {
         savedInstanceDataSignature: submittedInstanceDataSignature,
         isDirty: serializeInstanceDataSignature(nextInstanceData) !== submittedInstanceDataSignature,
         isSaving: false,
-        error: (() => {
-          const translationFollowup = normalizeTranslationFollowup(json?.translation);
-          if (translationFollowup.ok) return null;
-          return {
-            source: 'translation',
-            message: translationFollowup.reasonKey,
-            ...(translationFollowup.detail ? { detail: translationFollowup.detail } : {}),
-          };
-        })(),
+        error: null,
       };
       setUpsell(null);
       stateRef.current = nextState;

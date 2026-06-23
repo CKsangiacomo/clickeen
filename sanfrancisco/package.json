@@ -10,8 +10,7 @@
   "dependencies": {
     "@clickeen/ck-contracts": "workspace:*",
     "@clickeen/ck-policy": "workspace:*",
-    "@clickeen/l10n": "workspace:*",
-    "@clickeen/translation-agent": "workspace:*"
+    "@clickeen/l10n": "workspace:*"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20251228.0",

@@ -5,7 +5,7 @@ import {
   accountInstanceLocaleOverlaysPrefix,
 } from '../account-instances/keys';
 import { loadJson, putJson } from '../storage';
-import type { LocaleOverlayDocument, LocaleOverlayStatus } from '../account-instances/types';
+import type { LocaleOverlayDocument } from '../account-instances/types';
 import type { SavedTextField } from '@clickeen/ck-contracts/translated-value-primitives';
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -22,47 +22,19 @@ function normalizeValues(value: unknown): Record<string, string> | null {
   return values;
 }
 
-function normalizeStatus(value: unknown): LocaleOverlayStatus | null {
-  return value === 'inSync' || value === 'outOfSync' || value === 'failed' ? value : null;
-}
-
 export function normalizeLocaleOverlayDocument(raw: unknown): LocaleOverlayDocument | null {
   const payload = isRecord(raw) ? raw : null;
   if (!payload || payload.v !== 1) return null;
-  const locale = normalizeLocale(payload.locale);
-  const baseContentMarker =
-    typeof payload.baseContentMarker === 'string' ? payload.baseContentMarker.trim() : '';
-  const widgetContractHash =
-    typeof payload.widgetContractHash === 'string' ? payload.widgetContractHash.trim() : '';
-  const status = normalizeStatus(payload.status);
   const values = normalizeValues(payload.values);
-  const updatedAt = typeof payload.updatedAt === 'string' ? payload.updatedAt.trim() : '';
-  if (!locale || !baseContentMarker || !widgetContractHash || !status || !values || !updatedAt)
-    return null;
+  if (!values) return null;
+  const allowedKeys = new Set(['v', 'values']);
+  for (const key of Object.keys(payload)) {
+    if (!allowedKeys.has(key)) return null;
+  }
   return {
     v: 1,
-    locale,
-    baseContentMarker,
-    widgetContractHash,
-    status,
     values,
-    updatedAt,
-    ...(typeof payload.reasonKey === 'string' && payload.reasonKey.trim()
-      ? { reasonKey: payload.reasonKey.trim() }
-      : {}),
-    ...(typeof payload.detail === 'string' && payload.detail.trim()
-      ? { detail: payload.detail.trim() }
-      : {}),
   };
-}
-
-export function localeOverlayHasCompleteSavedTextValues(args: {
-  fields: SavedTextField[];
-  overlay: LocaleOverlayDocument | null;
-}): boolean {
-  if (!args.overlay) return false;
-  const paths = args.fields.map((field) => field.path);
-  return paths.length > 0 && paths.every((path) => typeof args.overlay?.values[path] === 'string');
 }
 
 export function assertLocaleOverlayValuesMatchSavedTextFields(args: {
@@ -109,15 +81,18 @@ export async function writeLocaleOverlay(args: {
   accountId: string;
   widgetCode: string;
   instanceId: string;
+  locale: string;
   overlay: LocaleOverlayDocument;
 }): Promise<LocaleOverlayDocument> {
+  const locale = normalizeLocale(args.locale);
+  if (!locale) throw new Error('tokyo.translation.locale.invalid');
   await putJson(
     args.env,
     accountInstanceLocaleOverlayKey(
       args.accountId,
       args.widgetCode,
       args.instanceId,
-      args.overlay.locale,
+      locale,
     ),
     args.overlay,
   );
@@ -129,13 +104,13 @@ export async function listLocaleOverlays(args: {
   accountId: string;
   widgetCode: string;
   instanceId: string;
-}): Promise<LocaleOverlayDocument[]> {
+}): Promise<Array<{ locale: string; overlay: LocaleOverlayDocument }>> {
   const prefix = accountInstanceLocaleOverlaysPrefix(
     args.accountId,
     args.widgetCode,
     args.instanceId,
   );
-  const overlays: LocaleOverlayDocument[] = [];
+  const overlays: Array<{ locale: string; overlay: LocaleOverlayDocument }> = [];
   let cursor: string | undefined;
   do {
     const listed = await args.env.TOKYO_R2.list({ prefix, cursor } as R2ListOptions);
@@ -143,7 +118,9 @@ export async function listLocaleOverlays(args: {
       if (!object.key.endsWith('.json')) continue;
       const overlay = normalizeLocaleOverlayDocument(await loadJson(args.env, object.key));
       if (!overlay) throw new Error(`coreui.errors.instance.overlay.invalid:${object.key}`);
-      overlays.push(overlay);
+      const locale = normalizeLocale(object.key.slice(prefix.length).replace(/\.json$/, ''));
+      if (!locale) throw new Error(`coreui.errors.instance.overlay.invalid:${object.key}`);
+      overlays.push({ locale, overlay });
     }
     cursor = listed.truncated ? listed.cursor : undefined;
   } while (cursor);
@@ -155,13 +132,13 @@ export async function listLocaleOverlaysStrict(args: {
   accountId: string;
   widgetCode: string;
   instanceId: string;
-}): Promise<LocaleOverlayDocument[]> {
+}): Promise<Array<{ locale: string; overlay: LocaleOverlayDocument }>> {
   const prefix = accountInstanceLocaleOverlaysPrefix(
     args.accountId,
     args.widgetCode,
     args.instanceId,
   );
-  const overlays: LocaleOverlayDocument[] = [];
+  const overlays: Array<{ locale: string; overlay: LocaleOverlayDocument }> = [];
   let cursor: string | undefined;
   do {
     const listed = await args.env.TOKYO_R2.list({ prefix, cursor } as R2ListOptions);
@@ -175,7 +152,9 @@ export async function listLocaleOverlaysStrict(args: {
         locale: object.key.slice(prefix.length).replace(/\.json$/, ''),
       });
       if (!overlay) throw new Error(`coreui.errors.instance.overlay.invalid:${object.key}`);
-      overlays.push(overlay);
+      const locale = normalizeLocale(object.key.slice(prefix.length).replace(/\.json$/, ''));
+      if (!locale) throw new Error(`coreui.errors.instance.overlay.invalid:${object.key}`);
+      overlays.push({ locale, overlay });
     }
     cursor = listed.truncated ? listed.cursor : undefined;
   } while (cursor);
@@ -183,7 +162,7 @@ export async function listLocaleOverlaysStrict(args: {
 }
 
 export function localeOverlayByLocale(
-  overlays: LocaleOverlayDocument[],
+  overlays: Array<{ locale: string; overlay: LocaleOverlayDocument }>,
 ): Map<string, LocaleOverlayDocument> {
-  return new Map(overlays.map((overlay) => [overlay.locale, overlay]));
+  return new Map(overlays.map((entry) => [entry.locale, entry.overlay]));
 }

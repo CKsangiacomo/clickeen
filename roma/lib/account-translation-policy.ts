@@ -50,7 +50,7 @@ export async function loadAccountTranslationLanguagePolicy(args: {
     ok: true,
     value: {
       baseLocale: state.localePolicy.baseLocale,
-      desiredLocales: [state.localePolicy.baseLocale, ...state.selectedTargetLocales],
+      desiredLocales: [state.localePolicy.baseLocale, ...state.activeLocales],
       countryToLocale: state.localePolicy.ip.countryToLocale,
     },
   };

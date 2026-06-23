@@ -272,14 +272,14 @@ Builder.
 Locale ownership is split across product authorities:
 
 - Tier policy decides locale capacity through `l10n.locales.max`.
-- Account Settings decides the selected locales the account uses:
-  `baseLocale`, `selectedTargetLocales`, and `localePolicy`.
-- The selected locales are account active locales. They apply to every widget in
-  the account as soon as Roma saves account settings.
-- Translation readiness comes from current saved translated overlay values for
-  the specific account instance.
+- Account Settings decides the active locales the account uses:
+  `baseLocale`, `activeLocales`, and `localePolicy`.
+- Active locales apply to every widget in the account as soon as Roma saves
+  account settings.
+- Translation availability comes from current saved translated overlay values
+  for the specific account instance.
 - The Widget Shell locale switcher only decides whether and where a specific
-  widget exposes already-ready locales.
+  widget exposes saved translated locales.
 
 `localeSwitcher.enabled`, `localeSwitcher.attachTo`, and
 `localeSwitcher.position` are Shell display state. Widget source must not carry

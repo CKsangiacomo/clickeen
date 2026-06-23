@@ -18,30 +18,15 @@ import {
   listProductCopilotManagedModels,
 } from '@clickeen/ck-contracts/ai-model-management';
 import { reserveAccountLimitUse, type RomaUsageKv } from '../account-limit-usage';
-import { getOptionalCloudflareRequestContext } from '../cloudflare-request-context';
 import { resolveProductCopilotBaseUrl } from '../env/product-copilot';
 import { resolveSanfranciscoBaseUrl } from '../env/sanfrancisco';
-
-type AIGrant = {
-  v: 1;
-  iss: 'roma';
-  jti?: string;
-  sub: { kind: 'user'; userId: string; accountId: string };
-  exp: number;
-  caps: string[];
-  budgets: {
-    maxTokens: number;
-    timeoutMs: number;
-  };
-  mode: 'editor' | 'ops';
-  ai?: AiGrantPolicy;
-  trace?: {
-    sessionId?: string;
-    instanceId?: string;
-    surfaceId?: string;
-    envStage?: string;
-  };
-};
+import {
+  hmacSha256Base64Url,
+  mintRomaAIGrant,
+  resolveAiGrantSecret,
+  resolveEnvStage,
+  type RomaAIGrant,
+} from './grants';
 
 const OUTCOME_EVENTS = new Set([
   'edit_applied',
@@ -94,52 +79,6 @@ function assertProductCopilotGrantPolicyManaged(ai: AiGrantPolicy): void {
       throw new Error('[Roma] Paid Product Copilot policy must include every managed Product Copilot model');
     }
   }
-}
-
-function readTrimmedSecret(value: unknown): string {
-  return typeof value === 'string' ? value.trim() : '';
-}
-
-function resolveAiGrantSecret(): string {
-  const fromRequestContext = getOptionalCloudflareRequestContext<{ env?: { AI_GRANT_HMAC_SECRET?: string } }>()
-    ?.env?.AI_GRANT_HMAC_SECRET;
-  const requestSecret = readTrimmedSecret(fromRequestContext);
-  if (requestSecret) return requestSecret;
-
-  const processSecret = readTrimmedSecret(typeof process !== 'undefined' ? process.env.AI_GRANT_HMAC_SECRET : undefined);
-  if (processSecret) return processSecret;
-
-  throw new Error('[Roma] Missing AI_GRANT_HMAC_SECRET');
-}
-
-function base64UrlEncodeBytes(bytes: Uint8Array): string {
-  let binary = '';
-  for (let i = 0; i < bytes.length; i += 1) binary += String.fromCharCode(bytes[i]);
-  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
-}
-
-async function hmacSha256(secret: string, message: string): Promise<Uint8Array> {
-  const enc = new TextEncoder();
-  const key = await crypto.subtle.importKey('raw', enc.encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
-  const sig = await crypto.subtle.sign('HMAC', key, enc.encode(message));
-  return new Uint8Array(sig);
-}
-
-async function hmacSha256Base64Url(secret: string, message: string): Promise<string> {
-  return base64UrlEncodeBytes(await hmacSha256(secret, message));
-}
-
-function resolveEnvStage(): string {
-  const stage = String(process.env.ENV_STAGE || process.env.CF_PAGES_BRANCH || '').trim().toLowerCase();
-  if (stage) return stage;
-  return process.env.NODE_ENV === 'development' ? 'local' : 'cloud-dev';
-}
-
-async function mintGrant(grant: AIGrant, secret: string): Promise<string> {
-  const payloadB64 = base64UrlEncodeBytes(new TextEncoder().encode(JSON.stringify(grant)));
-  const sigBytes = await hmacSha256(secret, `v1.${payloadB64}`);
-  const sigB64 = base64UrlEncodeBytes(sigBytes);
-  return `v1.${payloadB64}.${sigB64}`;
 }
 
 export async function issueAccountCopilotGrant(args: {
@@ -235,7 +174,7 @@ export async function issueAccountCopilotGrant(args: {
 
   const nowSec = Math.floor(Date.now() / 1000);
   const exp = nowSec + 10 * 60;
-  const grantPayload: AIGrant = {
+  const grantPayload: RomaAIGrant = {
     v: 1,
     iss: 'roma',
     jti: crypto.randomUUID(),
@@ -256,7 +195,7 @@ export async function issueAccountCopilotGrant(args: {
     },
   };
 
-  const grant = await mintGrant(grantPayload, resolveAiGrantSecret());
+  const grant = await mintRomaAIGrant(grantPayload, resolveAiGrantSecret());
   return { ok: true, grant, exp, agentId: resolvedAgent.canonicalId };
 }
 

@@ -45,9 +45,7 @@ type BobAccountCommand =
   | AccountAssetHostCommand
   | 'list-translations'
   | 'read-translation'
-  | 'save-translation'
   | 'generate-translations'
-  | 'read-translation-generation'
   | 'run-copilot'
   | 'attach-ai-outcome';
 
@@ -89,7 +87,7 @@ type BobOpenEditorMessage = {
     v: 1;
     baseLocale: string;
     planTranslationsMax: number | null;
-    selectedTargetLocales: string[];
+    activeLocales: string[];
   };
 };
 
@@ -188,23 +186,11 @@ function resolveBobAccountCommandRequest(args: {
         method: 'GET',
         path: `/api/account/instances/${encodeURIComponent(instanceId)}/translations/${encodeURIComponent(locale)}`,
       };
-    case 'save-translation':
-      if (!instanceId || !locale) return null;
-      return {
-        method: 'PUT',
-        path: `/api/account/instances/${encodeURIComponent(instanceId)}/translations/${encodeURIComponent(locale)}`,
-      };
     case 'generate-translations':
       if (!instanceId) return null;
       return {
         method: 'POST',
         path: `/api/account/instances/${encodeURIComponent(instanceId)}/translations/generate`,
-      };
-    case 'read-translation-generation':
-      if (!instanceId) return null;
-      return {
-        method: 'GET',
-        path: `/api/account/instances/${encodeURIComponent(instanceId)}/translations/generation`,
       };
     case 'run-copilot':
       if (!instanceId) return null;
@@ -228,7 +214,7 @@ function buildTranslationSetup(args: {
   activeAccount: ReturnType<typeof useRomaAccountContext>['activeAccount'];
   accountPolicy: ReturnType<typeof useRomaAccountContext>['accountPolicy'];
 }): BobOpenEditorPayload['translationSetup'] {
-  const selectedTargetLocales = parseAccountLocaleListStrict(args.activeAccount.selectedTargetLocales)
+  const activeLocales = parseAccountLocaleListStrict(args.activeAccount.activeLocales)
     .filter((locale) => locale !== args.baseLocale);
   const planTranslationsMax = args.accountPolicy.limits['l10n.locales.max'];
   return {
@@ -237,7 +223,7 @@ function buildTranslationSetup(args: {
     planTranslationsMax: typeof planTranslationsMax === 'number' && Number.isFinite(planTranslationsMax)
       ? Math.max(0, Math.floor(planTranslationsMax))
       : null,
-    selectedTargetLocales,
+    activeLocales,
   };
 }
 

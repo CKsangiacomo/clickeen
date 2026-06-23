@@ -85,7 +85,7 @@ export async function tryHandleInternalTranslationRoutes(
     }
 
     if (req.method === 'PUT') {
-      const auth = await authorizeTranslatedLocaleWriteTransition({ req, env, accountId });
+      const auth = await authorizeTranslatedLocaleWriteTransition({ req, env, accountId, instanceId, locale });
       if (!auth.ok) return respond(auth.response);
 
       const body = (await readInternalProductJsonBody({

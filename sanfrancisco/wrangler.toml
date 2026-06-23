@@ -29,7 +29,3 @@ queue = "sanfrancisco-events-dev"
 
 [[queues.consumers]]
 queue = "sanfrancisco-events-dev"
-
-[[services]]
-binding = "TOKYO_PRODUCT_CONTROL"
-service = "tokyo-assets-dev"

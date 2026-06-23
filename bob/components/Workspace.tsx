@@ -65,7 +65,7 @@ export function Workspace({
       ? (materialized as Record<string, unknown>)
       : instanceData;
   }, [instanceData, mediaAssetRefs, resolvedAssets, unresolvedMediaAssetRefs]);
-  const previewStateReady = mediaAssets.ok && !unresolvedMediaAssetRefs.length;
+  const mediaPreviewStateReady = mediaAssets.ok && !unresolvedMediaAssetRefs.length;
   const effectivePreviewableLocales = useMemo(() => {
     const previewableLocales = Array.from(
       new Set(
@@ -82,14 +82,15 @@ export function Workspace({
   const fallbackPreviewLocale = baseLocale || effectivePreviewableLocales[0] || '';
   const effectivePreviewLocale =
     previewMode === 'translations'
-      ? translationPreviewLocale && effectivePreviewableLocales.includes(translationPreviewLocale)
-        ? translationPreviewLocale
-        : fallbackPreviewLocale
+      ? translationPreviewLocale || fallbackPreviewLocale
       : fallbackPreviewLocale;
   const selectedTranslationValues =
     previewMode === 'translations' && effectivePreviewLocale !== baseLocale
       ? translationValuesByLanguage[effectivePreviewLocale] ?? null
       : null;
+  const translationPreviewUnavailable =
+    previewMode === 'translations' && effectivePreviewLocale !== baseLocale && !selectedTranslationValues;
+  const previewStateReady = mediaPreviewStateReady && !translationPreviewUnavailable;
   const resolvedPreviewInstanceData = useMemo(() => {
     if (!selectedTranslationValues) return previewInstanceData;
     return resolveTranslatedValues(previewInstanceData, selectedTranslationValues);
@@ -389,7 +390,12 @@ export function Workspace({
         sandbox="allow-scripts allow-same-origin"
         style={iframeBackdrop ? ({ background: iframeBackdrop } as any) : undefined}
       />
-      {hasWidget && !iframeHasState ? (
+      {hasWidget && translationPreviewUnavailable ? (
+        <div className="workspace-status-overlay" role="status" aria-live="polite">
+          <span className="label-s">Generate translations to preview this language.</span>
+        </div>
+      ) : null}
+      {hasWidget && !translationPreviewUnavailable && !iframeHasState ? (
         <div className="workspace-status-overlay" role="status" aria-live="polite">
           <span className="label-s">Loading preview...</span>
         </div>

@@ -128,14 +128,22 @@ function normalizeSubmittedMeta(value: unknown): Record<string, unknown> | null 
   if (value == null) return null;
   if (typeof value === 'object' && !Array.isArray(value)) {
     const meta = value as Record<string, unknown>;
-    if (Object.prototype.hasOwnProperty.call(meta, 'targetLocales')) {
-      throw new AccountInstanceTransitionError({
-        status: 422,
-        kind: 'VALIDATION',
-        reasonKey: 'coreui.errors.instance.targetLocalesRemoved',
-      });
+    const out: Record<string, unknown> = {};
+    const allowedKeys = new Set(['baseLocale', 'styleName', 'name', 'title']);
+    for (const key of Object.keys(meta)) {
+      if (!allowedKeys.has(key)) {
+        throw new AccountInstanceTransitionError({
+          status: 422,
+          kind: 'VALIDATION',
+          reasonKey: 'coreui.errors.instance.invalidPayload',
+        });
+      }
     }
-    return meta;
+    for (const key of ['baseLocale', 'styleName', 'name', 'title']) {
+      const entry = meta[key];
+      if (typeof entry === 'string' && entry.trim()) out[key] = entry.trim();
+    }
+    return out;
   }
   throw new AccountInstanceTransitionError({
     status: 422,

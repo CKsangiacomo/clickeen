@@ -37,8 +37,16 @@ import {
 function normalizeSubmittedMeta(value: unknown): Record<string, unknown> | null {
   if (value == null) return {};
   if (!isRecord(value)) return null;
-  if (Object.prototype.hasOwnProperty.call(value, 'targetLocales')) return null;
-  return { ...value };
+  const out: Record<string, unknown> = {};
+  const allowedKeys = new Set(['baseLocale', 'styleName', 'name', 'title']);
+  for (const key of Object.keys(value)) {
+    if (!allowedKeys.has(key)) return null;
+  }
+  for (const key of ['baseLocale', 'styleName', 'name', 'title']) {
+    const entry = value[key];
+    if (typeof entry === 'string' && entry.trim()) out[key] = entry.trim();
+  }
+  return out;
 }
 
 export async function tryHandleInternalInstanceRoutes(

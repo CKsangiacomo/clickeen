@@ -279,7 +279,7 @@ They may be served by Tokyo-worker through friendly public routes, but Roma, Tok
 
 **Hard security rule:**
 
-- There is no shared-secret bearer lane for product or internal AI execution. Roma Copilot/outcomes and Prague string translation use HMAC-signed request bodies. The Translation Agent now has its own Worker home; Roma account-widget generation remains disabled until Roma is wired to call that Worker. The Worker calls San Francisco `/v1/model/chat` for governed model execution and writes translated locale values through Tokyo-worker.
+- There is no shared-secret bearer lane for product or internal AI execution. Roma Copilot/outcomes and Prague string translation use HMAC-signed request bodies. The Translation Agent has its own Worker home. Roma calls that Worker for account-widget generation, the Worker calls San Francisco `/v1/model/chat` for governed model execution, and the Worker writes translated locale values through Tokyo-worker.
 
 **DB Pivot Supabase rule:**
 
@@ -348,10 +348,10 @@ Non-negotiable:
     backend surface.
   - Roma Copilot/outcome and Prague string-translation calls use HMAC body
     signatures. Roma -> Tokyo/Tokyo-worker account product control uses private
-    Cloudflare service bindings. The Translation Agent has its own Worker home;
-    Roma account-widget generation remains disabled until Roma is wired to call
-    that Worker. The Worker calls San Francisco `/v1/model/chat` and writes
-    translated locale values through Tokyo-worker.
+    Cloudflare service bindings. The Translation Agent has its own Worker home.
+    Roma calls that Worker for account-widget generation. The Worker calls San
+    Francisco `/v1/model/chat` and writes translated locale values through
+    Tokyo-worker.
 - **Caching**:
   - Tokyo deploy-managed media is long-cacheable when versioned; avoid cache on widget `spec.json` when iterating in dev.
   - Public embed serving returns generated static files from `clk.live/{accountPublicId}/{instanceId}`.

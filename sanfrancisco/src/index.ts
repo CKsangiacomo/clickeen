@@ -17,10 +17,6 @@ import {
   handlePragueStringsTranslate,
 } from './l10n-routes';
 import {
-  handleInstanceTranslationAgent,
-  handleInstanceTranslationRuntimeStatus,
-} from './l10n-account-routes';
-import {
   buildLearningSample,
   indexCopilotEvent,
   isOutcomeAttachRequest,
@@ -101,6 +97,12 @@ async function handleModelChat(
       throw new HttpError(403, { code: 'CAPABILITY_DENIED', message: `Unknown agentId: ${body.agentId}` });
     }
     const canonicalId = resolvedAgent.canonicalId;
+    if (grant.ai?.agentId !== canonicalId) {
+      throw new HttpError(403, {
+        code: 'CAPABILITY_DENIED',
+        message: `Grant AI policy does not match request agentId: ${canonicalId}`,
+      });
+    }
     assertCap(grant, `agent:${canonicalId}`);
 
     const requestId = requestContext.requestId;
@@ -238,21 +240,6 @@ export default class SanFranciscoWorker extends WorkerEntrypoint<Env> {
           boundary: 'l10n.translate',
         });
       }
-      if (request.method === 'POST' && url.pathname === '/v1/agents/instance-translation/translate-saved-instance') {
-        return finalizeSanFranciscoObservedResponse({
-          context: requestContext,
-          response: await handleInstanceTranslationAgent(request, this.env, this.ctx, requestContext.requestId),
-          boundary: 'agent.instanceTranslation.translateSavedInstance',
-        });
-      }
-      if (request.method === 'POST' && url.pathname === '/v1/agents/instance-translation/runtime-status') {
-        return finalizeSanFranciscoObservedResponse({
-          context: requestContext,
-          response: await handleInstanceTranslationRuntimeStatus(request, this.env),
-          boundary: 'agent.instanceTranslation.runtimeStatus',
-        });
-      }
-
       throw new HttpError(404, { code: 'BAD_REQUEST', message: 'Not found' });
     } catch (err: unknown) {
       if (err instanceof HttpError) {

@@ -35,32 +35,12 @@ export type ReadTranslation = (
   args: ReadTranslationArgs
 ) => Promise<{ ok: boolean; status: number; json: any }>;
 
-export type SaveTranslationArgs = {
-  instanceId: string;
-  locale: string;
-  values: Record<string, string>;
-};
-
-export type SaveTranslation = (
-  args: SaveTranslationArgs
-) => Promise<{ ok: boolean; status: number; json: any }>;
-
 export type GenerateTranslationsArgs = {
   instanceId: string;
-  baseLocale: string;
-  activeLocales: string[];
 };
 
 export type GenerateTranslations = (
   args: GenerateTranslationsArgs
-) => Promise<{ ok: boolean; status: number; json: any }>;
-
-export type ReadTranslationGenerationArgs = {
-  instanceId: string;
-};
-
-export type ReadTranslationGeneration = (
-  args: ReadTranslationGenerationArgs
 ) => Promise<{ ok: boolean; status: number; json: any }>;
 
 const HOST_ORIGIN_WAIT_MS = 3_000;
@@ -342,45 +322,13 @@ export function useSessionTransport(args: {
     [dispatchHostAccountCommand],
   );
 
-  const saveTranslation: SaveTranslation = useCallback(
-    async (commandArgs: SaveTranslationArgs) => {
-      const instanceId = String(commandArgs.instanceId || '').trim();
-      const result = await dispatchHostAccountCommand({
-        command: 'save-translation',
-        instanceId,
-        body: {
-          locale: commandArgs.locale,
-          values: commandArgs.values,
-        },
-      });
-      return { ok: result.ok, status: result.status, json: result.payload };
-    },
-    [dispatchHostAccountCommand],
-  );
-
   const generateTranslations: GenerateTranslations = useCallback(
     async (commandArgs: GenerateTranslationsArgs) => {
       const instanceId = String(commandArgs.instanceId || '').trim();
       const result = await dispatchHostAccountCommand({
         command: 'generate-translations',
         instanceId,
-        body: {
-          baseLocale: commandArgs.baseLocale,
-          activeLocales: commandArgs.activeLocales,
-        },
         timeoutMs: 120_000,
-      });
-      return { ok: result.ok, status: result.status, json: result.payload };
-    },
-    [dispatchHostAccountCommand],
-  );
-
-  const readTranslationGeneration: ReadTranslationGeneration = useCallback(
-    async (commandArgs: ReadTranslationGenerationArgs) => {
-      const instanceId = String(commandArgs.instanceId || '').trim();
-      const result = await dispatchHostAccountCommand({
-        command: 'read-translation-generation',
-        instanceId,
       });
       return { ok: result.ok, status: result.status, json: result.payload };
     },
@@ -394,8 +342,6 @@ export function useSessionTransport(args: {
     executeAccountCommand,
     listTranslations,
     readTranslation,
-    saveTranslation,
     generateTranslations,
-    readTranslationGeneration,
   };
 }

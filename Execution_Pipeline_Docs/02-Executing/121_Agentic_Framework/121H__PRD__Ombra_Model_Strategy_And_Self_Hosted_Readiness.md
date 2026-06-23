@@ -35,6 +35,10 @@ Agents are product workers.
 
 Models are execution dependencies.
 
+Content source authority still applies. Model strategy must not give an agent
+permission to rewrite human-generated or integration-sourced truth beyond the
+authority granted by the product surface or integration write path.
+
 Ombra must not be hardcoded to one provider, one model family, or one hosting
 model.
 
@@ -55,8 +59,7 @@ Future provider classes may include:
 - specialized hosted models;
 - Clickeen-hosted/self-hosted models;
 - hybrid chains;
-- judge/classifier/summarizer models;
-- fallback models.
+- judge/classifier/summarizer models.
 
 These are future options/config slots, not adapters to build now.
 
@@ -104,13 +107,16 @@ Model routing must consider:
 - cost;
 - latency;
 - quality evals;
-- fallback behavior;
 - provider availability;
 - self-hosted capacity.
 
 Routing decisions must be observable and versioned.
 
-V1 routing is policy-driven over OpenAI and DeepSeek.
+Current routing is policy-driven over OpenAI and DeepSeek.
+
+No 121 execution path may silently fall back to a substitute model, provider,
+locale, artifact, or product path. If the exact authorized route is unavailable,
+the operation fails explicitly.
 
 Task-class routing requires a model capability registry before it can be
 trusted.
@@ -127,7 +133,6 @@ The capability registry must be able to express:
 - cost class;
 - privacy/data boundary compatibility;
 - prompt caching support;
-- fallback eligibility;
 - task-class eligibility;
 - eval status.
 
@@ -148,9 +153,10 @@ Prompt caching is a model/provider cost primitive. It may reduce cost and
 latency for repeated system prompts, schemas, rubrics, and stable context. It
 must remain below the agent contract and must not change agent behavior.
 
-Fallback must be explicit, policy-allowed, trace-visible, quality/privacy/policy
-safe, and fail-closed otherwise. It must never be a silent downgrade for
-high-risk user-facing answers.
+Exact-route unavailability fails explicitly. No current 121 execution path may
+substitute a different model, provider, locale, artifact, or product path. Any
+future route-selection strategy must be defined before the exact execution
+contract is sent, and it must not masquerade as fallback.
 
 ## 6. Operational Reality
 
@@ -161,7 +167,7 @@ Any self-hosted execution PRD must include:
 - capacity;
 - latency;
 - monitoring;
-- fallback;
+- exact-route failure handling;
 - release testing;
 - evals;
 - security;
@@ -187,10 +193,11 @@ Widget network learning, if any, is async, governed, sampled, and future scoped.
   only after the capability registry and task evals exist.
 - Capability registry gaps are explicit and include structured output,
   tool-call support, reasoning effort, latency/cost, privacy compatibility,
-  prompt caching, fallback eligibility, task eligibility, and eval status.
+  prompt caching, task eligibility, and eval status.
 - Cheaper/local/self-hosted routes are disabled for a task class until evals
   prove task fitness.
-- Fallback is explicit, trace-visible, and fail-closed when not allowed.
+- Exact route unavailability fails explicitly. No 121 execution path silently
+  substitutes a model, provider, locale, artifact, or product path.
 - Prompt caching is recognized as a cost primitive below the agent contract.
 - Published widget visitor runtime does not call live model routes.
 - Product Copilot and Translation Agent can use different model routes without

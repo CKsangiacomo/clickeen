@@ -21,6 +21,17 @@ Related:
 
 This PRD defines the architecture rails for real Clickeen agents.
 
+Clickeen serves content. Content has source authority:
+
+- human-generated content remains under human intent;
+- AI-generated content can be operated by agents under approved product rules;
+- integration-sourced content is used by agents but not rewritten unless an
+  explicit authorized integration write path exists.
+
+Agents also operate the structured Clickeen system around that content:
+widgets, pages, reports, analytics, support tickets, locale overlays, runtime
+packages, account assets, routes, and storage folders.
+
 It does not define Product Copilot behavior.
 
 It does not define SDR Copilot behavior.
@@ -49,7 +60,10 @@ An agent is not a grant.
 
 An agent is not a validator.
 
-An agent is a named Clickeen worker with:
+An agent is a named Clickeen worker that operates a structured product artifact
+through named authorities.
+
+Each real agent has:
 
 - a product/workflow purpose;
 - an owner;
@@ -57,7 +71,7 @@ An agent is a named Clickeen worker with:
 - an invocation boundary;
 - a loop owner;
 - a context contract;
-- an allowed capability/tool surface;
+- an allowed product capability surface;
 - a reasoning step;
 - an output contract;
 - validation boundaries;
@@ -103,9 +117,9 @@ agent home
 owner / invoking product or workflow surface
 loop owner
 invocation envelope
-context capsule reference, version, and freshness marker
+context capsule reference, version, and source coordinate
 instructions/profile reference
-allowed capability/tool manifest
+allowed product capability manifest
 model-policy reference
 structured output schema
 validation boundary
@@ -121,7 +135,7 @@ Day-one examples:
   explicitly allowed.
 - `model-policy reference` can point at existing San Francisco grant/policy.
 - `instructions/profile reference` can be one versioned prompt/instruction file.
-- `allowed capability/tool manifest` can be a local product-surface manifest,
+- `allowed product capability manifest` can be a local product-surface manifest,
   not a central registry.
 - `trace/eval record` can start as one minimal trace shape consumed by the first
   Product Copilot eval harness.
@@ -172,7 +186,7 @@ architecture unless the Product Owner decides otherwise:
 
 - child-agent invocation boundary;
 - multi-agent handoff machinery;
-- central universal tool registry;
+- shared product capability manifests;
 - generic outcome subsystem;
 - self-hosted/hybrid model taxonomy as implementation;
 - compatibility shims for old fake-agent contracts.
@@ -233,17 +247,18 @@ Each agent context contract must state:
 - what information is available;
 - what information is unavailable or forbidden;
 - context version;
-- staleness/freshness marker;
+- context version/source coordinate;
 - whether product-owned context fetch tools are available;
 - visible failure behavior for missing, stale, malformed, or forbidden context.
 
-## 7. Tools And Actions
+## 7. Product Capabilities And Actions
 
-Tools are explicit capabilities exposed to an agent.
+Product capabilities are explicit operations exposed to an agent by an owning
+product surface.
 
-Tools are not discovered by regex.
+Product capabilities are not discovered by regex.
 
-Tools must declare:
+Product capabilities must declare:
 
 - name;
 - purpose;
@@ -255,15 +270,15 @@ Tools must declare:
 - review requirement;
 - error contract.
 
-The agent can reason about tools. Product-owned code validates and executes
-side effects.
+The agent can reason about product capabilities. Product-owned surfaces execute
+their own side effects.
 
-Tool manifests begin as product-surface manifests. A central tool registry is
+Capability manifests begin as product-surface manifests. A central registry is
 not required for the first real agent.
 
-Tool responses must be designed for the model as well as the machine: concise,
-high-signal, and explicit enough for the agent to recover from expected errors
-without silently substituting or claiming success.
+Capability responses must be designed for the model as well as the machine:
+concise, high-signal, and explicit enough for the agent to recover from expected
+errors without silently substituting or claiming success.
 
 ## 8. Models
 
@@ -275,7 +290,7 @@ The architecture must support:
 - cheaper hosted models;
 - Clickeen-hosted/self-hosted models;
 - hybrid routing;
-- fallback models;
+- explicit unavailable-model failure;
 - specialized classifier/judge/summarizer models.
 
 No agent may hardcode one provider as product architecture.
@@ -317,9 +332,9 @@ the first eval harness. 121G may later broaden shared learning and outcomes
 infrastructure, but 121C must not create a second incompatible capture path.
 
 Failure behavior must be trace-visible. Missing context, stale context,
-unavailable tools, unavailable providers, malformed model output, disallowed
-fallback, and product validation failure must fail visibly. They must not be
-silently repaired, substituted, or reported as success.
+unavailable product capabilities, unavailable providers, malformed model output,
+and product validation failure must fail visibly. They must not be silently
+repaired, substituted, or reported as success.
 
 ## 9.1 Loop Semantics
 

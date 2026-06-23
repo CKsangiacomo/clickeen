@@ -1,0 +1,19 @@
+name = "translation-agent-dev"
+main = "src/worker.ts"
+compatibility_date = "2025-12-28"
+workers_dev = false
+
+[observability]
+enabled = true
+head_sampling_rate = 1
+
+[vars]
+ENVIRONMENT = "dev"
+
+[[services]]
+binding = "SANFRANCISCO_AI_ENGINE"
+service = "sanfrancisco-dev"
+
+[[services]]
+binding = "TOKYO_PRODUCT_CONTROL"
+service = "tokyo-assets-dev"

@@ -26,13 +26,18 @@ This replaces the current regex/control-matcher masquerade.
 Product Copilot is the hard agent because it is broad, conversational, and
 inside live product work.
 
-V1 is a real conversational agent contract, not a universal tool loop. It uses
-single-pass capsule reasoning with a typed output and Bob-owned live draft
-validation/apply.
+The current Product Copilot is a real conversational agent contract, not a
+universal tool loop. It uses single-pass capsule reasoning with a typed output.
+Bob owns the browser-memory Builder artifact and consumes Product Copilot's
+structured result.
 
 ## 2. Product Reality
 
-Product Copilot lives in Bob/Roma.
+Product Copilot lives in the Product Copilot Cloudflare Worker agent home.
+
+Bob/Roma invoke it from the Builder product surface. Bob owns the in-browser
+draft artifact. Roma owns current account, tier, routes, and save. San
+Francisco executes governed model calls only.
 
 It helps a user work inside Clickeen:
 
@@ -61,6 +66,7 @@ must not collapse into a dumb edit-only bot.
   `multi_op_plan`, regex-scoped controls, or edit-only wire assumptions as the
   new brain contract.
 - Do not create an SF-to-Bob live product callback loop.
+- Do not move Product Copilot brain logic into Bob/Roma route code.
 
 ## 4. Conversation First
 
@@ -84,18 +90,16 @@ Only after reasoning does the agent decide:
 - ask a clarification;
 - suggest;
 - apply a draft edit;
-- call a tool;
-- call another agent when allowed;
+- call an explicitly allowed product capability;
 - refuse.
 
-The V1 output union is:
+The output union is:
 
 ```text
 answer | clarification | suggestion | draft_edit | refusal | error
 ```
 
-This output union is the first proof that Product Copilot is not an edit-only
-bot.
+This output union proves Product Copilot is not an edit-only bot.
 
 ## 5. Context Capsule
 
@@ -148,17 +152,17 @@ Initial Product Copilot capabilities should include:
 
 Later capabilities may include:
 
-- analytics tool call;
+- analytics product capability call;
 - translation agent call;
 - QA/recommendation agent call;
-- account/page workflow tools.
+- account/page workflow capabilities.
 
 Later does not mean build now.
 
-V1 does not include:
+Current Product Copilot does not include:
 
 - child-agent calls;
-- analytics tools;
+- analytics product capabilities;
 - Translation Agent calls;
 - QA/recommendation agent calls;
 - generic memory;
@@ -183,7 +187,7 @@ The model never bypasses this.
 
 ### 7.1 Draft-Action Contract
 
-Product Copilot V1 must define a new draft-action contract.
+Product Copilot must define a new draft-action contract.
 
 It must not inherit the legacy `resolved_edit | multi_op_plan` shape or any
 pre-model semantic routing fields.
@@ -212,10 +216,9 @@ San Francisco executes model calls for the Product Copilot brain under the
 
 - verify grant;
 - apply runtime policy;
-- route model/provider calls;
-- validate structured result shape where applicable;
+- execute exact model/provider calls;
 - record trace/cost/errors;
-- return governed result.
+- return model content plus usage/error metadata to the Product Copilot home.
 
 San Francisco does not own Bob state or Roma account truth.
 
@@ -226,7 +229,7 @@ home or the Bob/Roma path defined by the execution slice, not San Francisco KV.
 
 ## 8.1 Day-One Eval Harness
 
-Product Copilot V1 requires an eval harness before replacing the current shipped
+Product Copilot requires an eval harness before replacing the current shipped
 path.
 
 The harness must include:
@@ -263,21 +266,21 @@ They must surface as `clarification`, `refusal`, or `error`, never success.
 - Product Copilot can converse normally.
 - Product Copilot can understand open-ended product intent without regex
   control matching.
-- Product Copilot can decide answer/ask/suggest/apply/tool/refuse.
+- Product Copilot can decide answer/ask/suggest/apply/refuse.
 - Draft edits are validated by Bob before application.
 - Saved product data changes still go through existing product routes.
 - Current hardcoded control matcher is removed from the agent-brain path.
 - The old pre-model routing envelope is removed from the brain path, including
   `turnClass`, `resolvedTarget`, scoped-control regex assumptions,
   `resolved_edit`, and `multi_op_plan`.
-- Product Copilot uses the V1 output union:
+- Product Copilot uses the output union:
   `answer | clarification | suggestion | draft_edit | refusal | error`.
-- Product Copilot V1 uses single-pass capsule reasoning with at most one
+- Product Copilot uses single-pass capsule reasoning with at most one
   bounded brain self-validation retry.
 - Bob remains the terminal live-state validator for draft edits.
 - The context capsule is bounded, privacy-scoped, versioned, and explicit about
   unavailable data.
 - Product Copilot session/thread state does not live in San Francisco KV.
-- V1 ships with a day-one eval harness and visible failure taxonomy.
+- Product Copilot ships with an eval harness and visible failure taxonomy.
 - Traces record agent version, context version, model route, actions, and
   validation outcomes.

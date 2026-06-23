@@ -7,15 +7,19 @@
     ".": "./src/index.ts"
   },
   "scripts": {
+    "deploy": "wrangler deploy",
     "eval:translation-agent": "tsx evals/run-translation-agent-eval.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
+    "@clickeen/ck-contracts": "workspace:*",
     "@clickeen/l10n": "workspace:*"
   },
   "devDependencies": {
+    "@cloudflare/workers-types": "^4.20251228.0",
     "@types/node": "^20.14.2",
     "tsx": "^4.20.3",
-    "typescript": "^5.4.5"
+    "typescript": "^5.4.5",
+    "wrangler": "^4.54.0"
   }
 }

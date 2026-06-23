@@ -35,8 +35,7 @@ Related:
 - `documentation/ai/infrastructure.md`
 - `documentation/ai/agents/gtm.md`
 - `documentation/ai/agents/ux-writer.md`
-- `sanfrancisco/src/agents/l10nTranslationCore.ts`
-- `sanfrancisco/src/l10n-account-routes.ts`
+- `agents/translation-agent/`
 - `tokyo-worker/src/domains/account-translations/operations.ts`
 - `packages/ck-contracts/src/ai.ts`
 

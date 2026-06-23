@@ -17,6 +17,7 @@ Related:
 - `121A__PRD__Agent_Architecture.md`
 - `121B__PRD__San_Francisco_Orchestrator_And_Routing.md`
 - `121D__PRD__Translation_Agent.md`
+- `121PRD_Umbrella_to_121D_completeness.md`
 
 ---
 
@@ -34,6 +35,12 @@ It does not commit Clickeen to a set of named internal agents.
 121D Translation Agent is the first proof-of-pattern: a focused internal worker
 can be structured-output, single-purpose, non-conversational, in its own agent
 home, with explicit grant, validation, trace, and product-owned apply.
+
+The SEO/GEO/AEO Agent belongs in this future-internal-agent scope. It is not
+part of 121D execution. Translation Agent generates the locale overlays;
+clk.live widget runtime / Pages later serve those overlays as crawlable locale
+surfaces; the SEO/GEO/AEO Agent is the future async worker that measures and
+improves those surfaces.
 
 ## 2. Future Internal Agent Pattern
 
@@ -106,7 +113,69 @@ context, shared tools, or shared review/apply systems.
 
 But internal agents keep their own domain contracts.
 
-## 6. Acceptance Criteria
+## 6. Future SEO/GEO/AEO Agent
+
+The SEO/GEO/AEO Agent is a future focused internal agent in the closed
+translation-overlay growth loop:
+
+```text
+Translation Agent generates overlays
+-> clk.live widget runtime / Pages serve crawlable locale surfaces
+-> SEO/GEO/AEO Agent measures and improves performance
+-> improvements feed back into future Translation Agent overlay generation
+```
+
+Definitions:
+
+- SEO: search-engine discoverability and ranking in each locale.
+- GEO: geographic/local-market intent inside a language or region.
+- AEO: answer-engine optimization for AI answer engines and search answer
+  experiences.
+
+Why it belongs in 121E:
+
+- it is an internal worker, not a user-facing copilot;
+- it is cron/scheduled/server-side work, never visitor-path work;
+- it measures published surfaces and proposes improvements;
+- it depends on 121D output quality and future clk.live / Pages crawlable
+  serving;
+- it has its own trigger, subject, input contract, output contract, review/apply
+  boundary, and trace path;
+- it improves Translation Agent work but does not replace Translation Agent.
+
+The future agent's likely responsibilities:
+
+- track locale-page ranking and indexing status by market;
+- identify weak titles, headings, labels, snippets, FAQ answers, and thin fields;
+- detect local-market phrasing gaps, including regional differences inside a
+  language;
+- detect answer-engine citation opportunities and answerability gaps;
+- propose overlay improvements or Translation Agent guidance updates;
+- feed measured improvements into Translation Agent evals, prompts, and future
+  generation policy;
+- produce traceable recommendations that can be reviewed, evaluated, and applied
+  through product-owned routes.
+
+Hard boundaries:
+
+- no live visitor or crawler request may trigger the SEO/GEO/AEO Agent;
+- no silent mutation of live overlays;
+- no direct product-state writes outside product-owned review/apply routes;
+- no broad agent mesh or generic tool platform implied by this future agent;
+- no claim that 121D is incomplete merely because this future agent is not built.
+
+Admission gate for a future execution PRD:
+
+- name the published surface authority: clk.live runtime, Pages, or both;
+- name the metrics/source authorities for ranking, indexing, answer visibility,
+  and crawler evidence;
+- define how recommendations flow back into Translation Agent without bypassing
+  eval/review/apply;
+- define failure behavior when external search/answer data is unavailable;
+- prove that normal product serving stays off the AI request path;
+- prove that customer-visible content is not silently rewritten by a cron job.
+
+## 7. Acceptance Criteria
 
 - This PRD creates future-scope guardrails, not implementation commitments.
 - This PRD creates no implementation tickets by itself.
@@ -118,5 +187,8 @@ But internal agents keep their own domain contracts.
 - Product Copilot is not treated as the template for all agents.
 - San Francisco orchestration can support future internal agents without making
   them product-truth owners.
+- The SEO/GEO/AEO Agent is admitted as a future internal agent shape: cron,
+  async, measured, governed, and outside the visitor path.
+- The SEO/GEO/AEO Agent is not a blocker for 121D Translation Agent execution.
 - No internal-agent registry UI, workforce dashboard, catalog, generic memory,
   marketplace, workflow platform, mesh, or placeholder stubs are implied.

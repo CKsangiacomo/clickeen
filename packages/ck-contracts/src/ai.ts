@@ -221,7 +221,7 @@ const AI_AGENT_REGISTRY: AiRegistryEntry[] = [
     category: 'system_agent',
     taskClass: 'l10n.instance',
     description: 'Widget Instance Translator.',
-    owner: 'sanfrancisco.instance-translation',
+    owner: 'translation-agent',
     agentHome: 'translation-agent',
     loopOwner: 'single-pass-workflow',
     runtimeIdentity: 'internal-service',

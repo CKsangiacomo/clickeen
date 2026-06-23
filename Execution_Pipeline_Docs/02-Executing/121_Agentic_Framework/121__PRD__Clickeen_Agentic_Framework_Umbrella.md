@@ -30,17 +30,50 @@ Related:
 
 ---
 
-## 0. Blunt Current Reality
+## 0. Current Product Law
 
-This PRD is not governance for an existing Clickeen agent platform.
+Clickeen serves content.
 
-Clickeen has not yet shipped a real agent framework.
+That is the end product of websites, widgets, pages, emails, reports, feeds,
+and future runtime surfaces.
 
-Clickeen has not yet shipped a real Product Copilot agent.
+Content in Clickeen has source authority:
 
-San Francisco is not yet the AI workforce operating system described in strategy
-docs. It is a real and useful AI execution gateway, but not yet an agent
-orchestration platform.
+1. Human-generated content: authored copy, pages, blogs, emails, widget text,
+   support articles, and similar account content.
+2. AI-generated content: content written by agents from human direction,
+   account rules, brand rules, product rules, or approved system direction.
+3. Integration-sourced content: reviews, feeds, listings, CRM rows, analytics,
+   support data, aggregated records, and content pulled from another system.
+
+Agents operate according to that source authority:
+
+- For human-generated content, agents recommend improvements, propose edits,
+  translate, optimize, restructure, and apply user-approved changes.
+- For AI-generated content, agents may operate autonomously inside approved
+  product rules because the content is already agent-produced under Clickeen
+  direction.
+- For integration-sourced content, agents do not rewrite the source truth. They
+  may use, summarize, route, display, analyze, and build product experiences
+  around it. They mutate it only through an explicit authorized integration
+  write path.
+
+Around the content, agents operate the Clickeen system itself: widgets, pages,
+reports, analytics, support tickets, locale overlays, runtime packages, account
+assets, routes, and storage folders. The codebase stays lean and structured so
+agents can operate these artifacts directly through named authorities.
+
+This is the difference from legacy SaaS. Clickeen does not build heavy product
+code and bolt AI onto it. Clickeen structures content and the system around it
+so agents can operate the product.
+
+## 0.1 Current Runtime Truth
+
+This PRD started as a build-from-zero charter. Current execution has moved the
+series forward.
+
+San Francisco is not the AI workforce operating system described in strategy
+docs. It is a real and useful governed model-execution engine.
 
 What exists today:
 
@@ -52,9 +85,8 @@ What exists today:
 - San Francisco has a real model-call spine: HMAC grant verification, runtime
   policy, provider/model execution, usage/errors, telemetry, and provider key
   custody.
-- Current Builder "Copilot" has useful plumbing, but its effective brain is a
-  local regex/control matcher plus one scoped model call. That is not a real
-  agent.
+- Product Copilot brain exists as a real Cloudflare Worker agent home.
+- Translation Agent brain exists as a real Cloudflare Worker agent home.
 
 Do not confuse the easy plumbing with the hard product.
 
@@ -68,40 +100,27 @@ product capability, recover from ambiguity, or produce an outcome worth saving.
 A correct grant is a permission check. A correct provider router is dispatch. A
 correct validator is a safety boundary. None of those is intelligence.
 
-The hard part is the agent brain:
+The hard part is the agent operating the structured artifact:
 
 - understand what the user is trying to do;
 - decide whether this is conversation, guidance, product help, edit, strategy,
   account workflow, analytics, or something else;
-- decide whether to answer, ask, suggest, apply, call a tool, call another
-  agent, or refuse;
+- decide whether to answer, ask, suggest, apply, call an explicitly allowed
+  product capability, or refuse;
 - choose the relevant Clickeen context and capability;
 - produce a valid action or useful answer;
 - explain the result so the user keeps moving.
 
-The current if/then control parser does not solve that. It avoids the real
-problem by forcing the user into visible-control matching before the model gets
-to reason.
+What still does not exist yet:
 
-What does not exist yet:
+- runtime consumption of saved locale overlays;
+- richer Bob translation operation display backed by the Translation Agent run;
+- governed Product Copilot product-path smoke proof;
+- internal agent workforce platform;
+- production Ombra layer that is provider-agnostic and agentic end to end.
 
-- no real Product Copilot brain;
-- no conversational turn planner;
-- no shared agent execution envelope beyond narrow current contracts;
-- no tool framework;
-- no context capsule system;
-- no isolated Cloudflare home for each agent brain;
-- no agent-to-agent calls;
-- no internal agent workforce platform;
-- no durable agent orchestrator;
-- no real learning/improvement substrate;
-- no production Ombra layer that is provider-agnostic and agentic end to end.
-
-Therefore this PRD is a build charter.
-
-It defines how Clickeen should build the first real agent system around the
-real product authorities it already has, without pretending those authorities
-are themselves the agent.
+Therefore this PRD remains the series charter, but current execution truth is
+owned by 121C, 121D, and `121PRD_Umbrella_to_121D_completeness.md`.
 
 ## 1. The Core Thesis
 
@@ -282,7 +301,8 @@ The model/provider underneath Ombra may be:
 - hybrid routing across providers by task.
 
 The user should not need to understand provider routing. The user uses Ombra.
-San Francisco chooses allowed inference under policy.
+For current 121 execution, San Francisco verifies the grant/policy and executes
+the exact authorized model route.
 
 Provider selection must not change the Clickeen action contract.
 
@@ -438,8 +458,8 @@ Product Copilot must:
 - guide the user toward useful Clickeen work;
 - explain product/account/workflow state from product-owned truth;
 - reason over Clickeen context;
-- decide whether to answer, ask, suggest, call a tool, call another agent, or
-  return a validated action for Bob/product-owned apply;
+- decide whether to answer, ask, suggest, call an explicitly allowed product
+  capability, or return a validated action for Bob/product-owned apply;
 - apply product changes only through the owning product surface.
 
 It must not be reduced to visible-control matching.
@@ -536,7 +556,7 @@ the primitives that exist.
 This umbrella settles the first topology so 121A, 121B, and 121C do not guess
 independently.
 
-Product Copilot V1 has three separate layers:
+Product Copilot has three separate layers:
 
 ```text
 Bob
@@ -774,7 +794,7 @@ Options:
      to make many tasks bounded; keeps sensitive/high-volume tasks eligible for
      local/Clickeen-hosted inference; avoids provider ideology.
    - Cons: needs routing policy, task classification, evals, operational
-     maintenance, latency/capacity planning, and explicit fallback behavior.
+     maintenance, and latency/capacity planning.
 
 Current leaning:
 
@@ -792,8 +812,8 @@ Current leaning:
     correctness, and high-risk user-facing answers.
 - Self-hosted inference is an operational surface: model/backend updates,
   model release testing, storage, capacity, latency, GPU/driver/runtime issues,
-  API compatibility, performance drift, monitoring, and fallback plans must be
-  part of any execution PRD that introduces it.
+  API compatibility, performance drift, monitoring, and exact-route failure
+  handling must be part of any execution PRD that introduces it.
 
 ### OQ8 - What does learning/improvement mean?
 
@@ -996,8 +1016,8 @@ This umbrella should produce or replace these PRDs:
 2. **121B - San Francisco AI Engine And Routing Boundary**
    - Define San Francisco as AI engine: model execution, policy, routing
      metadata, trace, and outcomes.
-   - Define agent/model/tool routing boundaries without making San Francisco a
-     product-state owner.
+   - Define model-execution boundaries without making San Francisco a
+     product-state owner or tool router.
    - Make clear routing is not raw-text regex matching.
 
 3. **121C - Product Copilot Real Agent**

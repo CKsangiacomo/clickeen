@@ -25,16 +25,16 @@ const marketConfig = getPragueMarket(market);
 const locales = marketConfig?.locales ?? listPragueLocales();
 const currentPath = Astro.url?.pathname ?? `/${market}/${locale}/`;
 const currentSearch = Astro.url?.search ?? '';
-const localeHrefFor = (targetLocale: string) => {
+const localeHrefFor = (nextLocale: string) => {
   const prefix = `/${market}/${locale}`;
-  if (currentPath === '/' || currentPath === '') return `/${market}/${targetLocale}/${currentSearch}`;
-  if (currentPath === prefix) return `/${market}/${targetLocale}/${currentSearch}`;
-  if (currentPath === `${prefix}/`) return `/${market}/${targetLocale}/${currentSearch}`;
+  if (currentPath === '/' || currentPath === '') return `/${market}/${nextLocale}/${currentSearch}`;
+  if (currentPath === prefix) return `/${market}/${nextLocale}/${currentSearch}`;
+  if (currentPath === `${prefix}/`) return `/${market}/${nextLocale}/${currentSearch}`;
   if (currentPath.startsWith(`${prefix}/`)) {
     const rest = currentPath.slice(prefix.length) || '/';
-    return `/${market}/${targetLocale}${rest}${currentSearch}`;
+    return `/${market}/${nextLocale}${rest}${currentSearch}`;
   }
-  return `/${market}/${targetLocale}/${currentSearch}`;
+  return `/${market}/${nextLocale}/${currentSearch}`;
 };
 ---
 

@@ -10,14 +10,13 @@
 - `GET /healthz`
 - `POST /v1/model/chat` for governed model execution under a signed AI grant.
 - `POST /v1/outcome` for post-execution Product Copilot outcomes.
+- `POST /v1/l10n/translate` for Prague system-copy tooling only. It is not the
+  account-widget Translation Agent path and does not write locale overlays.
 - No background consumers for product work. Model execution is stateless per call;
   telemetry and outcome persistence remain San Francisco responsibilities.
-- `POST /v1/agents/instance-translation/translate-saved-instance` for direct diagnostics/tests of account-widget instance translation.
-- `POST /v1/agents/instance-translation/runtime-status` for translator runtime diagnostics.
 
 ## Dependencies
-- Roma (account command boundary and diagnostic caller)
-- Tokyo-worker (exact translated locale overlay storage through `TOKYO_PRODUCT_CONTROL`)
+- Roma (account command boundary, grant issuer, and AI outcome caller)
 - Cloudflare KV/R2/event sinks (state, logs, scheduling)
 
 ## Deployment
@@ -73,38 +72,33 @@ Health contract:
 - Contract coverage now explicitly guards grant verification, budget enforcement, provider routing, and concurrency ceilings before further AI-plane sophistication lands.
 
 `POST /v1/execute` is deprecated in San Francisco and returns a visible 410.
-Product Copilot must be called through its own home. Translation Agent's
-remaining San Francisco diagnostic execution path is a known transitional
-exception owned by the Translation Agent realignment slice.
+Product Copilot must be called through its own home. Translation Agent must be
+called through its own home.
 
 ## Entrypoint posture
 - `sanfrancisco/src/index.ts` is now a thin route shell.
 - The default export is a Cloudflare `WorkerEntrypoint`. Account-widget
   instance translation jobs belong to the Translation Agent Worker home from
-  121D, not to a San Francisco-owned generation endpoint; San Francisco only
+  121D, not to San Francisco; San Francisco only
   executes model calls.
 - Extracted runtime modules own:
   - request-signature helpers: `sanfrancisco/src/signatures.ts`
   - concurrency limiting: `sanfrancisco/src/concurrency.ts`
   - telemetry and outcome persistence: `sanfrancisco/src/telemetry.ts`
-  - account-widget instance translation handlers: `sanfrancisco/src/l10n-account-routes.ts`
 
 ## Account-widget Instance Translation
 - Base Save does not start translation.
 - Roma owns account-command acceptance and account active-locale selection.
 - Translation generation is owned by the Translation Agent Worker home from
   121D. It calls San Francisco `/v1/model/chat` for model execution and writes
-  overlays via Tokyo-worker. San Francisco owns no async generation endpoint.
+  overlays via Tokyo-worker. San Francisco owns no account-widget generation
+  path.
 - Tokyo-worker owns only exact translated locale overlay storage.
 - There is no active account-widget translation generation background binding.
 - Runtime translation payloads are widget-generic saved text fields, including stable
   identity keys, current paths, labels, roles, base text, and source basis.
-- The active product generation command currently returns the
-  `generationUnavailable` stub until Roma is wired to the Translation Agent
-  Worker. 121D stands up the Translation Agent Worker, not a San Francisco
-  generation endpoint.
-- The HTTP `translate-saved-instance` endpoint remains for direct diagnostics
-  and tests; it is not the active save/generate product path.
+- The active product generation command is owned by Roma and the Translation
+  Agent Worker. San Francisco is not the account-widget generation product path.
 - Localization prompts preserve source acronym style and must not add parenthetical acronym expansions that were not present in source text (especially headings/titles).
 - Richtext translation uses one structured path: `agents/translation-agent/` extracts visible text segments, translates those strings only, and rebuilds the original HTML; neutral `@clickeen/l10n` safety primitives validate placeholder parity, HTML tag parity, and anchor integrity.
 - l10n translation calls go through the shared policy router via

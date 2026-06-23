@@ -23,8 +23,7 @@ zero.
 How the system is organized for agent-operability:
 
 - a structured, typed, AI-legible schema (widget specs, compiled control/field
-  maps, the locale-overlay model, `baseContentMarker` / `widgetContractHash`)
-  that agents read and operate;
+  maps, and exact locale overlay value maps) that agents read and operate;
 - product-law ownership boundaries (Roma = account/authority, Bob = draft,
   Tokyo = storage, San Francisco = governed model execution) so agents operate
   inside known authority instead of rediscovering it;
@@ -127,7 +126,7 @@ paths and product routes as any other account.
 | Relational account/support data            | Michael/Supabase                                                |
 | AI model execution                         | San Francisco                                                   |
 | Product Copilot brain/runtime              | `agents/product-copilot` Cloudflare Worker                      |
-| Translation Agent brain                    | `agents/translation-agent/` workspace                           |
+| Translation Agent brain/runtime            | `agents/translation-agent` Cloudflare Worker                     |
 | Design system                              | Dieter                                                          |
 
 When runtime behavior and docs disagree, use this order:
@@ -153,7 +152,7 @@ that exposes it.
 | DevStudio     | Cloudflare Pages             | Internal toolbench through the normal admin account |
 | San Francisco | Workers/D1/KV/R2/Queues      | Governed AI model execution and trace/outcome sink  |
 | Product Copilot | Cloudflare Worker          | Builder Product Copilot brain                       |
-| Translation Agent | Workspace module         | Account-widget translation brain in `agents/translation-agent/` |
+| Translation Agent | Cloudflare Worker        | Account-widget translation agent home                           |
 | Michael       | Supabase Postgres            | Account/user/support relational data                |
 | Dieter        | Git source + Tokyo artifacts | Design system tokens/components                     |
 

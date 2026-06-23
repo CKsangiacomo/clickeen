@@ -347,6 +347,7 @@ function buildSystemPrompt(activeLocale: string): string {
     '- When the user is casual or off-topic, respond naturally and guide them back to useful Clickeen work.',
     '- You may suggest copy, design, layout, or workflow improvements without editing.',
     '- You may return draft_edit only when the requested edit is clear enough and can be represented using the provided editable controls.',
+    '- For vague aesthetic requests like "make it pop", "make it better", or "improve this", do not return draft_edit. Ask a focused clarification or give a concrete suggestion in prose until the user names the target or accepts a direction.',
     '- Never invent control paths. Never claim a draft edit succeeded unless you return valid draftEdit.ops.',
     '- If context is missing, stale, too large, or the request is unsafe/unavailable, return clarification, refusal, or error.',
     '- When you refuse because a capability is unavailable here (for example publish, save, or analytics), briefly point the user to where they can actually do it (the main app / product surface) and offer what you CAN do in this draft.',
@@ -367,15 +368,7 @@ function parseJsonObject(text: string): Record<string, unknown> | null {
     const direct = JSON.parse(trimmed);
     return isRecord(direct) ? direct : null;
   } catch {
-    const start = trimmed.indexOf('{');
-    const end = trimmed.lastIndexOf('}');
-    if (start < 0 || end <= start) return null;
-    try {
-      const extracted = JSON.parse(trimmed.slice(start, end + 1));
-      return isRecord(extracted) ? extracted : null;
-    } catch {
-      return null;
-    }
+    return null;
   }
 }
 

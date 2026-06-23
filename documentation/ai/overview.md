@@ -144,8 +144,10 @@ Keeping product/persistence owners and San Francisco separate prevents:
 6) Bob validates/applies draft edit actions locally as pure state transforms. If an op cannot be applied, Bob fails loudly.
 
 ### System agents (Clickeen’s internal workforce)
-- A trusted backend surface triggers an explicit system-agent execution request to San Francisco.
-- Result is used by the owning system boundary, such as widget translation overlays or Prague copy output.
+- A trusted backend surface calls the owning agent home for the system task.
+- The agent home calls San Francisco only when it needs governed model output.
+- The agent home writes or returns the artifact owned by that system boundary,
+  such as widget translation overlays or Prague copy output.
 
 ## Runtime Reality (what’s actually shipped)
 
@@ -156,10 +158,10 @@ San Francisco is deployed as a **Cloudflare Worker** and currently ships:
 - `POST /v1/model/chat` (requires a Clickeen-signed AI Grant)
 - `POST /v1/execute` (deprecated; returns visible 410)
 - `POST /v1/outcome` (outcome attach, signed by the calling Clickeen backend surface)
-- Account-widget l10n generation currently returns the `generationUnavailable`
-  stub until Roma is wired to the Translation Agent Worker. That Worker calls
-  San Francisco `/v1/model/chat` and writes overlays via Tokyo-worker.
-- `POST /v1/l10n/translate` (local + cloud-dev only; HMAC body signature; `ENVIRONMENT in {local,dev}`)
+- Account-widget l10n generation calls the Translation Agent Worker through
+  Roma. That Worker calls San Francisco `/v1/model/chat` and writes overlays via
+  Tokyo-worker.
+- `POST /v1/l10n/translate` (Prague system-copy tooling only; local + cloud-dev only; HMAC body signature; `ENVIRONMENT in {local,dev}`)
 - Cloudflare bindings:
   - `SF_KV` (San Francisco-owned state needs; Product Copilot sessions are not stored in San Francisco KV)
   - `SF_EVENTS` (event sink for ingestion)

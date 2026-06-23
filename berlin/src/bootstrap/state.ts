@@ -13,6 +13,12 @@ import type {
   BerlinUserProfilePayload,
   AccountTier,
 } from './types';
+import {
+  ACCOUNT_MEMBERSHIP_BOOTSTRAP_SELECT,
+  readStoredAccountActiveLocales,
+  readStoredAccountLocalePolicy,
+  type BerlinAccountStorageAccountRow,
+} from './account-locale-storage';
 import { internalError, validationError } from '../http';
 import { normalizeUserSettingsPayload } from '../identity/user-row-normalization';
 import type { UserRow as BerlinUserRow } from '../identity/user-row-normalization';
@@ -35,15 +41,7 @@ type AccountMembershipRow = {
   user_id?: unknown;
   role?: unknown;
   created_at?: unknown;
-  accounts?: {
-    id?: unknown;
-    status?: unknown;
-    tier?: unknown;
-    status_changed_at?: unknown;
-    selected_target_locales?: unknown;
-    locale_policy?: unknown;
-    created_at?: unknown;
-  } | null;
+  accounts?: BerlinAccountStorageAccountRow | null;
 };
 
 type AccountMemberRow = {
@@ -132,7 +130,7 @@ function validateProfileLocation(rawCountry: unknown, rawTimezone: unknown, path
 }
 
 function validateAccountLocaleState(rawLocales: unknown, rawPolicy: unknown, path: string): string[] {
-  const issues = validateAccountLocaleList(rawLocales, `${path}.selectedTargetLocales`, {
+  const issues = validateAccountLocaleList(rawLocales, `${path}.activeLocales`, {
     allowNull: true,
   }).map((issue) => `${issue.path}:${issue.message}`);
 
@@ -192,8 +190,7 @@ async function loadAccountMembershipRows(
   userId: string,
 ): Promise<Result<AccountMembershipRow[]>> {
   const params = new URLSearchParams({
-    select:
-      'account_id,user_id,role,created_at,accounts(id,status,tier,status_changed_at,selected_target_locales,locale_policy,created_at)',
+    select: ACCOUNT_MEMBERSHIP_BOOTSTRAP_SELECT,
     user_id: `eq.${userId}`,
     order: 'created_at.asc,account_id.asc',
   });
@@ -259,9 +256,9 @@ function normalizeAccounts(rows: AccountMembershipRow[]): Result<BerlinAccountCo
       issues.push(`accounts.${accountId}.status_missing`);
       continue;
     }
-    const selectedTargetLocales = account.selected_target_locales ?? [];
-    const localePolicy = account.locale_policy;
-    const localeIssues = validateAccountLocaleState(selectedTargetLocales, localePolicy, `accounts.${accountId}`);
+    const activeLocales = readStoredAccountActiveLocales(account);
+    const localePolicy = readStoredAccountLocalePolicy(account);
+    const localeIssues = validateAccountLocaleState(activeLocales, localePolicy, `accounts.${accountId}`);
     if (localeIssues.length) {
       issues.push(...localeIssues);
       continue;
@@ -282,7 +279,7 @@ function normalizeAccounts(rows: AccountMembershipRow[]): Result<BerlinAccountCo
         tierDropDismissedAt: null,
         tierDropEmailSentAt: null,
       },
-      selectedTargetLocales,
+      activeLocales,
       localePolicy,
     });
   }

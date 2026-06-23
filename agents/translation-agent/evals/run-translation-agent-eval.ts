@@ -75,7 +75,7 @@ const cases: CaseResult[] = [
     if (!prompt.includes('Translate into locale: it-IT.')) {
       throw new Error('locale instruction missing from system prompt');
     }
-    if (!prompt.includes('Write in natural, native product/UI copy for the target locale')) {
+    if (!prompt.includes('Write in natural, native product/UI copy for the requested locale')) {
       throw new Error('product copy instruction missing from system prompt');
     }
   }),

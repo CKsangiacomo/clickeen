@@ -23,7 +23,7 @@ This doc is meant to answer:
   - `sanfrancisco/src/concurrency.ts`
   - `sanfrancisco/src/signatures.ts`
   - `sanfrancisco/src/telemetry.ts`
-  - `sanfrancisco/src/l10n-routes.ts`
+  - `sanfrancisco/src/l10n-routes.ts` (Prague system-copy tooling only)
 - Wrangler config: `sanfrancisco/wrangler.toml`
 - Deploy: GitHub Actions `cloud-dev workers deploy`
 
@@ -77,11 +77,10 @@ Provider/model policy:
 - **Prague strings L10n**: local/dev signed tooling route; OpenAI model comes only from required `OPENAI_MODEL`.
 - **Account-widget Instance Translation Agent**: `widget.instance.translator`.
   The translation brain/runtime lives in the `agents/translation-agent/`
-  Cloudflare Worker. Active product generation currently returns the
-  `generationUnavailable` stub until Roma is wired to that Worker. The Worker
-  calls San Francisco `/v1/model/chat` and writes overlays via Tokyo-worker. San
-  Francisco owns model execution only. Tokyo-worker owns only exact translated
-  locale overlay storage.
+  Cloudflare Worker. Roma active product generation calls that Worker. The
+  Worker calls San Francisco `/v1/model/chat` and writes overlays via
+  Tokyo-worker. San Francisco owns model execution only. Tokyo-worker owns only
+  exact translated locale overlay storage.
 
 ## 3) HTTP endpoints
 
@@ -126,35 +125,27 @@ Storage:
   `artifactId`. Linkage is not causality; attribution remains future governed
   work.
 
-### `POST /v1/agents/instance-translation/runtime-status`
-Purpose: fast readiness check for the account-widget translation model runtime.
+### Translation Agent Model Calls
+Purpose: Translation Agent calls San Francisco only for governed model
+execution through `POST /v1/model/chat`.
 
 Boundary:
-- Roma calls this through the explicit `SANFRANCISCO_BASE_URL`.
-- The request requires `Authorization: Bearer <AI grant>` with `agent:widget.instance.translator`.
-- San Francisco verifies the selected/default model is present in managed
-  config, has passing generated conformance evidence, and has its provider
-  configured in the current Worker environment.
-
-### `POST /v1/agents/instance-translation/translate-saved-instance`
-Purpose: run the account-widget Instance Translation Agent for direct diagnostics and legacy tests. It is not the active product generation path.
-
-Boundary:
-- Roma calls this through the explicit `SANFRANCISCO_BASE_URL`.
-- The request requires `Authorization: Bearer <AI grant>` with `agent:widget.instance.translator`.
-- Tokyo-worker is not a caller and does not start San Francisco work.
-
-Contract:
-- Roma sends only `v`, `widgetType`, `sourceLanguage`, requested language, and
-  `items[]` with exact `path`, `type`, and `value`.
-- San Francisco does not receive widget config, wildcard path declarations, account ids, storage paths, live pointer state, publication state, previous values, or patch operations.
+- Translation Agent calls San Francisco through its Cloudflare service binding.
+- The request includes a signed grant with `agent:widget.instance.translator`.
+- San Francisco verifies the grant, model policy, provider binding, and request
+  `agentId`. It does not write locale overlays or own account-widget generation.
 - San Francisco derives execution limits from the signed grant and fails visibly
   when selected/default model availability does not satisfy managed config,
   generated conformance evidence, and current Worker provider binding.
-- San Francisco returns `{ v: 1, values }` with the exact same path set it received. Missing or extra paths fail visibly.
+- San Francisco returns model `content` plus usage metadata. Translation Agent
+  parses the content, restores protected structure, enforces exact requested
+  paths, and writes locale overlays through Tokyo-worker.
 
 ### `POST /v1/l10n/translate` (local + cloud-dev)
 Purpose: translate Prague system-owned base content (prague-l10n pipeline).
+This is not the account-widget Translation Agent, does not create saved
+instance locale overlays, and does not make San Francisco a widget translation
+generation owner.
 
 Auth:
 - Header `x-clickeen-signature` must be present.

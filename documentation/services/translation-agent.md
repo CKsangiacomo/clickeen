@@ -1,81 +1,83 @@
-STATUS: REFERENCE - MUST MATCH RUNTIME
-This document describes the current Translation Agent brain home. Runtime code is operational truth.
-Last synced to repository runtime: June 20, 2026.
-
 # Translation Agent
 
-## Identity
+Translation Agent is Clickeen's account-widget localization agent home.
 
-- Agent ID: `widget.instance.translator`
-- Brain home: `agents/translation-agent/`
-- Runtime type: structured-output workflow, not a conversational Copilot loop.
-- Invoked by: existing San Francisco account-widget instance translation endpoints.
+For platform context see:
 
-The Translation Agent is a focused internal product worker. It translates saved
-widget-instance text into an enabled locale and returns exact path/value output
-for the owning product workflow to accept and store.
+- `documentation/architecture/CONTEXT.md`
+- `documentation/services/roma.md`
+- `documentation/services/sanfrancisco.md`
+- `documentation/services/tokyo-worker.md`
 
-## Ownership
+## Product Role
 
-Translation Agent owns:
+Translation Agent owns translation reasoning and locale overlay creation for
+saved account widget instances.
 
-- Translation prompt construction.
-- Richtext visible-text segmentation and restoration.
-- Non-translatable literal classification for empty values, URLs, emails,
-  token-only placeholders, and structure-only values.
-- Placeholder, HTML tag, and anchor integrity validation.
-- Exact output path preservation.
-- Structured translated-value production.
+Roma owns the current account, tier, active locales, routes, and save.
+San Francisco owns governed model execution.
+Tokyo-worker stores exact translated locale files in R2.
+Bob displays the user operation.
 
-Translation Agent does not own:
+## Runtime
 
-- Account/session truth.
-- Grant issuance.
-- Provider keys.
-- Product save/apply/review workflows.
-- Tokyo storage.
-- Public widget runtime bytes.
+Translation Agent runs as a Cloudflare Worker:
 
-## Runtime Flow
-
-1. Roma or an internal workflow invokes the existing account-widget translation endpoint.
-2. San Francisco verifies the signed grant for `agent:widget.instance.translator`.
-3. San Francisco adapts the request into Translation Agent brain functions.
-4. Translation Agent builds model batches and validates the structured output.
-5. San Francisco executes governed model calls through the shared policy router and records trace metadata.
-6. The owning product workflow accepts and stores translated locale overlays through the existing product path.
-
-Keeping the endpoint in San Francisco does not make San Francisco the
-translation brain. San Francisco remains the grant/model-execution adapter;
-`agents/translation-agent/` owns the translation-specific reasoning, structure, and
-validation.
-
-## Failure Rules
-
-The workflow fails visibly for:
-
-- Missing output path.
-- Extra output path.
-- Duplicate output path.
-- Malformed JSON.
-- Output size mismatch.
-- Placeholder mismatch.
-- Richtext tag mismatch.
-- Richtext anchor mismatch.
-
-It must not drop invalid values, invent missing paths, partially apply a
-translation set, or treat corrupt output as absence.
-
-## Eval Gate
-
-The repository-owned eval harness lives in `agents/translation-agent/evals/` and runs:
-
-```bash
-pnpm --filter @clickeen/translation-agent eval:translation-agent
+```text
+agents/translation-agent/src/worker.ts
 ```
 
-It is a deterministic acceptance/regression gate for the V1 structured-output
-contract. It does not call an LLM. The current gate covers locale/prompt
-instruction, token-only literal protection, batch path preservation, malformed
-provider JSON, exact path/schema preservation, placeholder parity, richtext tag
-and anchor preservation, and missing richtext segment rejection.
+The Worker accepts Roma-issued saved-instance translation work, calls San
+Francisco `/v1/model/chat` with the Translation Agent grant, and writes completed
+locale overlay values through Tokyo-worker.
+
+The Worker is not public-routed. It is a service-bound agent home for Roma.
+
+The Worker request path is:
+
+```text
+POST /v1/translate-instance
+```
+
+The request body carries the saved instance coordinate, active locale list,
+source text items, and Roma-issued Translation Agent grant. Before model
+execution or Tokyo writes, the Worker verifies that the signed grant:
+
+- was issued by Roma;
+- has `agent:widget.instance.translator`;
+- has `ai.agentId = widget.instance.translator`;
+- names the same `accountPublicId` in `trace.accountPublicId`;
+- names the same `instanceId` in `trace.instanceId`.
+- names the same active locales in `trace.activeLocales`.
+
+The request body alone is not authority for account or instance writes.
+
+The Worker produces the translated values for every requested active locale
+before writing any locale through Tokyo-worker. A model or translation failure
+therefore stops before Tokyo writes. Tokyo-worker also verifies the same
+Roma-issued grant on Translation Agent writes and accepts the write only for the
+named account instance and locale.
+
+The Worker does not own account permission, tier permission, locale selection,
+review dashboards, background workers, or visitor runtime behavior.
+
+## Product Path
+
+```text
+Roma account route
+-> Translation Agent Worker
+-> San Francisco /v1/model/chat
+-> Translation Agent writes locale values through Tokyo-worker
+-> Tokyo-worker stores overlay files in R2
+```
+
+## Storage
+
+Translated locale values live under the account instance overlay folder:
+
+```text
+accounts/{accountPublicId}/instances/{instanceId}/overlays/locales/{locale}.json
+```
+
+Tokyo-worker stores the files. It does not decide active locales or translation
+meaning.

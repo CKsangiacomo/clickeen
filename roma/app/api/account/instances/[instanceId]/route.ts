@@ -117,16 +117,6 @@ export async function PUT(request: NextRequest, context: RouteContext) {
       current.value.setCookies,
     );
   }
-  if (meta && Object.prototype.hasOwnProperty.call(meta, 'targetLocales')) {
-    return withSession(
-      request,
-      NextResponse.json(
-        { error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.instance.targetLocalesRemoved' } },
-        { status: 422 },
-      ),
-      current.value.setCookies,
-    );
-  }
   if (
     body &&
     Object.prototype.hasOwnProperty.call(body, 'displayName') &&

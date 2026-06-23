@@ -1,6 +1,6 @@
 # Localization Capability
 
-Status: PRD 105 instance-folder/runtime model. Translation generation is still disabled from Roma (`generationUnavailable`) until Roma is wired to call the Translation Agent Worker. The generation owner is Translation Agent as its own Worker, not San Francisco.
+Status: PRD 105 instance-folder/runtime model. Roma calls the Translation Agent Worker for account-widget generation. The generation owner is Translation Agent as its own Worker, not San Francisco.
 
 Localization translates account-instance content values into translated locale values. It is not a storage-object protocol, a runtime fallback system, or a second widget source model.
 
@@ -74,30 +74,33 @@ Producers receive exact content paths and base values. No producer receives wild
 2. Roma submits approved instance config/content artifacts; Tokyo stores them.
 3. User opens the Translations panel and clicks Generate translations.
 4. Roma reads the current account active locales from account settings.
-5. Roma returns `coreui.errors.translation.generationUnavailable` until Roma is
-   wired to call the Translation Agent Worker. Translation Agent owns translation
+5. Roma calls the Translation Agent Worker. Translation Agent owns translation
    reasoning, calls San Francisco `/v1/model/chat` for governed model execution,
    and writes locale overlays through Tokyo-worker. San Francisco stays a
    stateless model gateway and owns no account-widget generation work.
 6. Tokyo-worker remains the storage boundary for exact translated-locale overlay
-   files that Roma writes through the translated-values route.
+   files that Translation Agent writes through Tokyo-worker.
 
 No step repairs values, drops paths, guesses paths, scans widget software to rediscover meaning, or exposes storage object identity to Bob/Roma.
 
 ## Builder Preview
 
-The Builder Translations panel is inspection and manual value override for translated locale values.
+The Builder Translations panel requests Translation Agent generation and inspects
+translated locale values. It does not manually edit translated overlay values in
+the current product path.
 
-Roma shows account setup: base locale, plan translation allowance, account
-active locales, and the count of active locale overlays present for the saved
-instance. Bob's preview dropdown is populated from translated locale values that
-Tokyo lists for the saved instance. Account active languages without translated
-values are absent from the dropdown.
+Roma shows account setup: base locale, plan translation allowance, and account
+active locales. Bob's Translations panel language selector is populated from
+account active locales so the user can choose the language they intend to work
+with. The iframe preview only renders a non-base language when Tokyo has
+translated values for that locale. If an active locale has no overlay values,
+Bob says to generate translations instead of showing base copy as translated
+copy.
 
-Generate cannot start while Roma is not wired to the Translation Agent Worker.
-When Translation Agent becomes the generation owner, repeated Generate writes
-the current active locale overlays again. It does not create a separate
-operation model.
+Generate is an explicit account-widget operation. Roma calls the Translation
+Agent Worker for the current active locales; repeated Generate writes the
+current active locale overlays again. It does not create a separate operation
+model.
 
 When a translated locale is selected, Bob preview resolves:
 
@@ -105,7 +108,8 @@ When a translated locale is selected, Bob preview resolves:
 base instance state + one translated locale value map
 ```
 
-Manual edits overwrite the current translated value map for that locale. The system does not store override status, review status, provenance, or a protected manual layer. If that field is regenerated, the new AI translation replaces the manual value.
+Manual translated-value editing is not part of the current product path. Any
+future manual editing flow requires a separate product decision and PRD.
 
 ## Public Static Locale Serving
 
@@ -154,7 +158,7 @@ The following are not part of the active account-widget localization capability:
 - `textPack`.
 - `L10nOp`.
 - Public base snapshots/fingerprints as storage identity.
-- Overlay status/readiness inside translated value bodies.
+- Translation lifecycle metadata inside translated value bodies.
 - User-authored translation layers.
 - Locale-suffixed instance IDs.
 - Selected-locale or selected-overlay pointers as product truth.

@@ -9,6 +9,13 @@ import {
 import { resolvePolicy } from '@clickeen/ck-policy';
 import { normalizeLocaleToken } from '@clickeen/l10n';
 import { loadAccountBaseLocaleLockState } from '@roma/lib/account-base-locale-lock';
+import {
+  ACCOUNT_ACTIVE_LOCALES_PATCH_SELECT,
+  buildAccountActiveLocalesPatch,
+  readAccountActiveLocalesPatch,
+  type AccountActiveLocalesPatchRow,
+} from '@roma/lib/account-active-locales-storage';
+import { enforceActiveLocaleEntitlement } from '@roma/lib/account-locale-entitlements';
 import { loadCurrentAccountLocalesState } from '@roma/lib/account-locales-state';
 import { readJsonPayloadOrValidation } from '@roma/lib/route-helpers';
 import { resolveCurrentAccountRouteContext, withSession } from '../_lib/current-account-route';
@@ -16,14 +23,8 @@ import { resolveCurrentAccountRouteContext, withSession } from '../_lib/current-
 export const runtime = 'edge';
 
 type AccountLocalesWritePayload = {
-  selectedTargetLocales?: unknown;
+  activeLocales?: unknown;
   localePolicy?: unknown;
-};
-
-type AccountLocalePatchRow = {
-  id?: unknown;
-  selected_target_locales?: unknown;
-  locale_policy?: unknown;
 };
 
 function resolveSupabaseAdminConfig(): { baseUrl: string; serviceRoleKey: string } {
@@ -64,30 +65,6 @@ function resolveDbErrorDetail(payload: unknown, fallback: string): string {
   if (!isRecord(payload)) return fallback;
   const message = payload.message ?? payload.error_description ?? payload.error;
   return typeof message === 'string' && message.trim() ? message.trim() : fallback;
-}
-
-function resolveTranslatedLocaleEntitlementMax(policy: ReturnType<typeof resolvePolicy>): number | null {
-  const raw = policy.limits['l10n.locales.max'];
-  return raw == null ? null : Math.max(0, Math.floor(raw));
-}
-
-function enforceLocaleSelection(policy: ReturnType<typeof resolvePolicy>, locales: string[]): NextResponse | null {
-  const maxTranslatedLocales = resolveTranslatedLocaleEntitlementMax(policy);
-  if (maxTranslatedLocales != null && locales.length > maxTranslatedLocales) {
-    return NextResponse.json(
-      {
-        error: {
-          kind: 'DENY',
-          reasonKey: 'coreui.upsell.reason.limitReached',
-          upsell: 'UP',
-          detail: `l10n.locales.max=${maxTranslatedLocales}`,
-        },
-      },
-      { status: 403 },
-    );
-  }
-
-  return null;
 }
 
 export async function GET(request: NextRequest) {
@@ -148,7 +125,7 @@ export async function GET(request: NextRequest) {
       request,
       NextResponse.json({
         accountId: current.value.authzPayload.accountId,
-        selectedTargetLocales: accountState.selectedTargetLocales,
+        activeLocales: accountState.activeLocales,
         localePolicy: accountState.localePolicy,
         baseLocaleLocked: baseLocaleLock.locked,
       }),
@@ -199,7 +176,7 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    const localeIssues = validateAccountLocaleList(body.selectedTargetLocales, 'selectedTargetLocales');
+    const localeIssues = validateAccountLocaleList(body.activeLocales, 'activeLocales');
     if (localeIssues.length) {
       return withSession(request, NextResponse.json(localeIssues, { status: 422 }), current.value.setCookies);
     }
@@ -209,7 +186,7 @@ export async function PUT(request: NextRequest) {
       return withSession(request, NextResponse.json(policyIssues, { status: 422 }), current.value.setCookies);
     }
 
-    const selectedTargetLocales = parseAccountLocaleListStrict(body.selectedTargetLocales);
+    const activeLocales = parseAccountLocaleListStrict(body.activeLocales);
     const localePolicy = parseAccountLocalePolicyStrict(body.localePolicy);
     const baseLocale = normalizeLocaleToken(localePolicy.baseLocale);
     if (!baseLocale) {
@@ -227,7 +204,7 @@ export async function PUT(request: NextRequest) {
       profile: current.value.authzPayload.profile,
       role: current.value.authzPayload.role,
     });
-    const entitlementGate = enforceLocaleSelection(policy, selectedTargetLocales);
+    const entitlementGate = enforceActiveLocaleEntitlement(policy, activeLocales);
     if (entitlementGate) return withSession(request, entitlementGate, current.value.setCookies);
 
     const accountState = await loadCurrentAccountLocalesState({
@@ -296,15 +273,12 @@ export async function PUT(request: NextRequest) {
 
     const params = new URLSearchParams({
       id: `eq.${current.value.authzPayload.accountId}`,
-      select: 'id,selected_target_locales,locale_policy',
+      select: ACCOUNT_ACTIVE_LOCALES_PATCH_SELECT,
     });
     const upstream = await supabaseAdminFetch(`/rest/v1/accounts?${params.toString()}`, {
       method: 'PATCH',
       headers: { Prefer: 'return=representation' },
-      body: JSON.stringify({
-        selected_target_locales: selectedTargetLocales,
-        locale_policy: localePolicy,
-      }),
+      body: JSON.stringify(buildAccountActiveLocalesPatch({ activeLocales, localePolicy })),
     });
     const upstreamPayload = await readJson(upstream);
     if (!upstream.ok) {
@@ -340,7 +314,7 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    const patchedRow = upstreamPayload[0] as AccountLocalePatchRow | undefined;
+    const patchedRow = upstreamPayload[0] as AccountActiveLocalesPatchRow | undefined;
     if (!isRecord(patchedRow) || patchedRow.id !== current.value.authzPayload.accountId) {
       return withSession(
         request,
@@ -356,8 +330,7 @@ export async function PUT(request: NextRequest) {
       request,
       NextResponse.json({
         accountId: current.value.authzPayload.accountId,
-        selectedTargetLocales: parseAccountLocaleListStrict(patchedRow.selected_target_locales),
-        localePolicy: parseAccountLocalePolicyStrict(patchedRow.locale_policy),
+        ...readAccountActiveLocalesPatch(patchedRow),
       }),
       current.value.setCookies,
     );

@@ -37,7 +37,7 @@ function resolveLocaleUiLabel(code: string): string {
   const label = resolveLocaleLabel({
     locales: CANONICAL_LOCALES,
     uiLocale: 'en',
-    targetLocale: normalized,
+    locale: normalized,
   });
   return `${label} (${normalized})`;
 }
@@ -201,16 +201,16 @@ export function PagesDomain() {
   const refreshAccountLocales = useCallback(async () => {
     try {
       const payload = await accountApi.fetchJson<{
-        selectedTargetLocales?: unknown;
+        activeLocales?: unknown;
         localePolicy?: { baseLocale?: unknown; ip?: { countryToLocale?: unknown } | null } | null;
       }>('/api/account/locales', { method: 'GET' });
       const baseLocale = normalizeLocaleToken(payload.localePolicy?.baseLocale);
       if (!baseLocale) throw new Error('coreui.errors.account.locales.invalid');
-      if (!Array.isArray(payload.selectedTargetLocales)) throw new Error('coreui.errors.account.locales.invalid');
-      const selectedTargetLocales = payload.selectedTargetLocales
+      if (!Array.isArray(payload.activeLocales)) throw new Error('coreui.errors.account.locales.invalid');
+      const activeLocales = payload.activeLocales
         .map((entry) => normalizeLocaleToken(entry))
         .filter((entry): entry is string => Boolean(entry));
-      if (selectedTargetLocales.length !== payload.selectedTargetLocales.length) {
+      if (activeLocales.length !== payload.activeLocales.length) {
         throw new Error('coreui.errors.account.locales.invalid');
       }
       const rawCountryToLocale = payload.localePolicy?.ip?.countryToLocale;
@@ -220,7 +220,7 @@ export function PagesDomain() {
             locale: normalizeLocaleToken(locale) ?? '',
           })).filter((rule) => /^[A-Z]{2}$/.test(rule.country) && Boolean(rule.locale))
         : [];
-      setAccountLocaleOptions(Array.from(new Set([baseLocale, ...selectedTargetLocales])));
+      setAccountLocaleOptions(Array.from(new Set([baseLocale, ...activeLocales])));
       setAccountCountryLocaleRules(countryLocaleRules);
     } catch (error) {
       setAccountLocaleOptions([]);
