@@ -302,9 +302,6 @@ export async function POST(request: NextRequest) {
     content: sourceArtifacts.value.content,
     publicPackage: publicPackage.value,
     baseLocale,
-    meta: {
-      baseLocale,
-    },
     requestId: current.value.requestId,
   });
   if (!created.ok) {

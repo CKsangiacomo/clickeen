@@ -10,6 +10,7 @@ import {
 } from '@roma/lib/account-instance-public-package';
 import { materializeAccountInstanceSourceArtifacts } from '@roma/lib/account-instance-source-artifacts';
 import { validateAccountInstanceSavePolicy } from '@roma/lib/account-instance-save-policy';
+import { loadCurrentAccountLocalesState } from '@roma/lib/account-locales-state';
 import { requireInstanceIdParam } from '@roma/lib/route-helpers';
 import {
   resolveCurrentAccountRouteContext,
@@ -48,18 +49,33 @@ export async function POST(request: NextRequest, context: RouteContext) {
     );
   }
 
-  const widgetType = source.value.row.widgetType;
-  const baseLocale = source.value.row.baseLocale;
-  if (!baseLocale) {
+  const accountLocales = await loadCurrentAccountLocalesState({
+    accessToken: current.value.accessToken,
+    accountId: current.value.authzPayload.accountId,
+    requestId: current.value.requestId,
+  });
+  if (!accountLocales.ok) {
     return withSession(
       request,
       NextResponse.json(
-        { error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.instance.invalidPayload' } },
-        { status: 422 },
+        accountLocales.payload ?? {
+          error: {
+            kind: accountLocales.status === 401 ? 'AUTH' : 'UPSTREAM_UNAVAILABLE',
+            reasonKey:
+              accountLocales.status === 401
+                ? 'coreui.errors.auth.required'
+                : 'coreui.errors.auth.contextUnavailable',
+            detail: accountLocales.detail,
+          },
+        },
+        { status: accountLocales.status },
       ),
       current.value.setCookies,
     );
   }
+
+  const widgetType = source.value.row.widgetType;
+  const baseLocale = accountLocales.localePolicy.baseLocale;
 
   const instanceId = createCompactInstanceId();
   const compiled = await compileWidgetForInstancePackage(request, widgetType);
@@ -126,7 +142,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
     content: sourceArtifacts.value.content,
     publicPackage: publicPackage.value,
     baseLocale,
-    meta: source.value.row.meta ?? null,
+    meta: null,
     requestId: current.value.requestId,
   });
   if (!duplicate.ok) {

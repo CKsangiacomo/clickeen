@@ -1,9 +1,9 @@
 # PRD 123 - Account Locale Authority Cleanup
 
-Status: EXECUTING
+Status: EXECUTED
 Owner: Roma/Berlin/Tokyo account product boundary
 Date: 2026-06-17
-Stage: 02-Executing
+Stage: 03-Executed
 Priority: P0 architecture cleanup
 
 ## Purpose
@@ -72,7 +72,7 @@ already moved after PRD 120.
   silently normalizing it:
   `berlin/src/bootstrap/state.ts`
 - Roma instance create reads account locale state and uses account
-  `baseLocale` and `selectedTargetLocales`:
+  `baseLocale` and active locales:
   `roma/app/api/account/instances/route.ts`
 - Roma Builder host passes Bob translation setup from current account policy:
   `roma/components/builder-domain.tsx`
@@ -118,7 +118,7 @@ Required correction:
 Current behavior:
 
 - Roma forwards submitted `meta` during instance save.
-- Tokyo resolves stored `baseLocale` and `targetLocales` from submitted meta.
+- Tokyo resolves stored `baseLocale` from submitted meta.
 
 Product-law problem:
 
@@ -143,7 +143,7 @@ Required correction:
 Current behavior:
 
 - `roma/app/api/account/instances/[instanceId]/translations/generate/route.ts`
-  reads `baseLocale` and `targetLocales` from the POST body.
+  reads `baseLocale` and a caller-supplied locale list from the POST body.
 - Tokyo generation prefers provided values over stored instance values.
 
 Product-law problem:
@@ -395,8 +395,9 @@ Completion evidence:
 Action:
 
 - Update duplicate route to load current account locale settings.
-- Use current account active locales for the new instance.
-- Fail if the source instance base conflicts with the account base locale.
+- Use current account locale settings for the new instance package and create
+  command.
+- Ignore source instance locale metadata as authority.
 
 Architecture compliance:
 
@@ -417,14 +418,14 @@ Core violation protection:
 Completion evidence:
 
 - Duplicate route evidence shows account settings are loaded and stale source
-  targets are not copied as authority.
+  locale metadata is not copied as authority.
 
 ### Step 5 - Make translation generation account-derived
 
 Action:
 
 - Update Roma translation-generate route to ignore/reject request-supplied
-  `baseLocale` and `targetLocales`.
+  `baseLocale` and locale lists.
 - Load current account locale settings in Roma.
 - Send account-authorized generation scope to Tokyo.
 - Update Tokyo generation code so arbitrary request locale values are not
@@ -595,7 +596,7 @@ Completion evidence:
 Use these searches to prove the cleanup is real:
 
 ```bash
-rg -n "baseLocale|targetLocales|selectedTargetLocales|localePolicy|countryToLocale|languageSwitcher|ipLocalization|defaultLocale|accountInstanceRef\\.locale|\\?locale=" roma bob tokyo-worker packages documentation Execution_Pipeline_Docs
+rg -n "baseLocale|localePolicy|countryToLocale|languageSwitcher|ipLocalization|defaultLocale|accountInstanceRef\\.locale|\\?locale=" roma bob tokyo-worker packages documentation Execution_Pipeline_Docs
 rg -n "l10n\\.locales\\.max|selected_target_locales|locale_policy" berlin packages supabase
 ```
 
@@ -632,3 +633,50 @@ PRD 123 can move to `03-Executed` only when all are true:
 
 Append execution notes below during implementation. Keep this section factual:
 what changed, what checked green, and what remains deferred.
+
+### 2026-06-23 execution pass - account widget locale authority closeout
+
+Scope:
+
+- Treated this as pre-GA cleanup. Toxic locale-authority remnants were removed,
+  not preserved behind compatibility paths.
+- Kept pages/prague locale authority cleanup deferred as already recorded above.
+
+Code changes:
+
+- Roma duplicate now loads current account locale state and uses the account
+  `localePolicy.baseLocale` for the copied instance package and Tokyo create
+  command.
+- Roma duplicate no longer copies source instance `meta` into the new instance.
+  Source instance locale metadata is ignored as authority.
+- Roma direct instance helper keeps reading stored Tokyo metadata, but
+  caller/source metadata can no longer submit `baseLocale` as authority for
+  create/save commands.
+- Roma instance routes no longer submit caller/source `meta.baseLocale`. The
+  direct helper still stamps account-derived `baseLocale` into Tokyo's current
+  storage metadata shape.
+- Public widget runtime package no longer reads `?locale=` and silently maps an
+  unsupported request to base. Current base-only packages expose the base locale
+  as the selected locale.
+
+Docs changed:
+
+- `documentation/services/roma.md` now states that duplicate is a new account
+  operation and does not copy locale authority from the source instance.
+- `documentation/services/tokyo-worker.md` now states that public serving serves
+  stored package bytes and does not invent translated output from query locale.
+
+Verification:
+
+- `rg` found no remaining old locale-authority wording in this PRD and the
+  touched active docs.
+- `rg` found no remaining duplicate source-base authority, copied source meta,
+  public `requestedLocale`, public query parsing, or payload-locale fallback in
+  the touched account-widget runtime files.
+- `git diff --check` passed.
+- `pnpm --filter @clickeen/roma lint` passed.
+- `pnpm --filter @clickeen/roma typecheck` passed after the concurrent build
+  finished regenerating `.next/types`.
+- `set -a; source .env.local; set +a; pnpm --filter @clickeen/roma build`
+  passed. Running the build without the repo env failed earlier because
+  `NEXT_PUBLIC_TOKYO_URL` is required.

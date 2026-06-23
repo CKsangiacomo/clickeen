@@ -108,6 +108,21 @@ function normalizeInstanceMeta(value: unknown): Record<string, unknown> | null {
   return out;
 }
 
+function normalizeCallerInstanceMeta(value: unknown): Record<string, unknown> | null {
+  if (value == null) return null;
+  if (!isRecord(value)) return null;
+  const out: Record<string, unknown> = {};
+  const allowedKeys = new Set(['styleName', 'name', 'title']);
+  for (const key of Object.keys(value)) {
+    if (!allowedKeys.has(key)) return null;
+  }
+  for (const key of ['styleName', 'name', 'title']) {
+    const entry = value[key];
+    if (typeof entry === 'string' && entry.trim()) out[key] = entry.trim();
+  }
+  return out;
+}
+
 function isAccountInstanceContentDocument(value: unknown): value is AccountInstanceContentDocument {
   if (!isRecord(value) || !isRecord(value.fields)) return false;
   return (
@@ -308,7 +323,7 @@ export async function createAccountInstanceInTokyo(args: {
       },
     };
   }
-  const normalizedMeta = normalizeInstanceMeta(args.meta);
+  const normalizedMeta = normalizeCallerInstanceMeta(args.meta);
   if (args.meta != null && !normalizedMeta) {
     return {
       ok: false,
@@ -376,7 +391,7 @@ export async function saveAccountInstanceInTokyo(args: {
     }
   | RouteFailure
 > {
-  const normalizedMeta = normalizeInstanceMeta(args.meta);
+  const normalizedMeta = normalizeCallerInstanceMeta(args.meta);
   if (args.meta != null && !normalizedMeta) {
     return {
       ok: false,

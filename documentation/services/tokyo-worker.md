@@ -162,7 +162,9 @@ Serving reads generated widget package files from the account folder after
 `accounts/{accountPublicId}/instances/{instanceId}/serve-state.json` is
 published. Account page public serving is
 unavailable until Roma writes page packages. Tokyo-worker does not generate page
-package files.
+package files. Public serving serves the stored package bytes as written; it
+does not interpret a query locale to invent translated output when the stored
+package contains only base content.
 
 Public support files are:
 

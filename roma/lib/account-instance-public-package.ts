@@ -301,11 +301,7 @@ function buildRuntime(args: PackageBuildArgs, scriptSources: string[], includeSo
   const payload = `${RUNTIME_PAYLOAD_START}
 (function () {
   var payload = ${JSON.stringify({ instanceId: args.instanceId, baseLocale: args.baseLocale, locales })};
-  var params = new URLSearchParams(window.location.search || '');
-  var requestedLocale = String(params.get('locale') || '').toLowerCase();
-  var selectedLocale = Object.prototype.hasOwnProperty.call(payload.locales, requestedLocale)
-    ? requestedLocale
-    : payload.baseLocale;
+  var selectedLocale = payload.baseLocale;
   var selectedState = payload.locales[selectedLocale];
   if (!selectedState || typeof selectedState !== 'object') {
     throw new Error('[Clickeen] Missing saved widget state for ' + payload.instanceId + ' / ' + selectedLocale);

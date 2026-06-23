@@ -116,10 +116,13 @@ accounts/{accountPublicId}/instances/{instanceId}/
 Create, save, and duplicate all use the same package contract: Roma compiles the
 widget software, materializes the current account config into `index.html`,
 `styles.css`, and `runtime.js`, then submits those exact files with the source
-to Tokyo-worker. Tokyo-worker stores the submitted files; it does not render,
-compile, infer, or repair widget package bytes. Tokyo-worker records a package
-fingerprint on newly saved source and package objects so package reads, publish,
-and public serving can reject mixed package state deterministically.
+to Tokyo-worker. Roma derives the package base locale from current account
+settings. Duplicate is a new account operation; it does not copy locale
+authority from the source instance. Tokyo-worker stores the submitted files; it
+does not render, compile, infer, or repair widget package bytes. Tokyo-worker
+records a package fingerprint on newly saved source and package objects so
+package reads, publish, and public serving can reject mixed package state
+deterministically.
 
 Translation generation is a separate explicit operation from the Translations
 panel. Roma resolves the current account active locales for that command,
