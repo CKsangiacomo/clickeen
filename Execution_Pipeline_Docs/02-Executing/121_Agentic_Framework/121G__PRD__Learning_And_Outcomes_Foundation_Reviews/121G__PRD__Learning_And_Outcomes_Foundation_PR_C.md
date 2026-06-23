@@ -11,7 +11,7 @@ Verdict: Pass as trace/outcome foundation; must not become a learning platform y
 
 This review was rechecked against:
 
-- `documentation/ai/infrastructure.md`
+- `documentation/ai/sanfrancisco.md`
 - `sanfrancisco/src/index.ts`
 - `sanfrancisco/src/telemetry.ts`
 - `roma/app/api/account/instances/[instanceId]/copilot/outcome/route.ts`

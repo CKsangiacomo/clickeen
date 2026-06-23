@@ -11,7 +11,7 @@ Verdict: Pass as model-strategy guardrail; must not become self-hosted/model-rou
 
 This review was rechecked against:
 
-- `documentation/ai/infrastructure.md`
+- `documentation/ai/sanfrancisco.md`
 - `packages/ck-contracts/src/ai.ts`
 - `packages/ck-policy/src/ai-runtime.ts`
 - `sanfrancisco/src/ai/modelRouter.ts`

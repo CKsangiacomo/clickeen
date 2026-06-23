@@ -165,7 +165,7 @@ Expected implementation areas:
 tokyo/prague/pages/**
 prague/src/**
 prague/README.md
-documentation/ai/BUILD_PraguePage.md
+documentation/services/prague/PraguePageAgentGuide.md
 documentation/services/prague/**
 documentation/widgets/**
 documentation/architecture/CONTEXT.md

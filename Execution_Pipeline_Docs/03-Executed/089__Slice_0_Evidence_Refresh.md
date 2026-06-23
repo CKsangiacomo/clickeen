@@ -68,9 +68,9 @@ Action: Slice 9 rewrites these active docs so they describe `instanceId`, `/widg
 - `documentation/capabilities/localization.md`
 - `documentation/capabilities/seo-geo.md`
 - `documentation/capabilities/multitenancy.md`
-- `documentation/ai/BUILD_PraguePage.md`
-- `documentation/ai/overview.md`
-- `documentation/ai/widget-copilot-rollout.md`
+- `documentation/services/prague/PraguePageAgentGuide.md`
+- `documentation/ai/README.md`
+- `documentation/ai/agents/product-copilot.md`
 - `documentation/widgets/WidgetArchitecture.md`
 - `documentation/widgets/WidgetBuildContract.md`
 - `documentation/widgets/WidgetComplianceSteps.md`

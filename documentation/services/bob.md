@@ -231,7 +231,7 @@ model options and default model that Roma sends in the Builder-open payload.
 Bob sends a `selectedModel` override only when Roma explicitly set
 `allowModelPicker: true`; when no picker is allowed, Bob sends no selected model
 and Roma/San Francisco use the policy default. Bob does not own model lists,
-model availability, provider keys, runtime conformance evidence, or fallback
+model availability, provider keys, provider catalog monitoring, or fallback
 selection.
 
 When San Francisco returns valid edit ops, Bob applies them immediately to the

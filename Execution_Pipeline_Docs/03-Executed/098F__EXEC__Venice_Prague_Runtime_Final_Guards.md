@@ -196,7 +196,7 @@ This slice is not done until these docs are updated or explicitly marked unchang
   - Update only if it contains concrete old implementation claims; keep strategy-level language if still accurate.
 - `documentation/README.md`
   - Update docs index if Overlay/Babel docs changed names, scope, or status.
-- `documentation/services/tokyo-worker.md`, `documentation/services/roma.md`, `documentation/services/bob.md`, and `documentation/services/sanfrancisco.md`
+- `documentation/services/tokyo-worker.md`, `documentation/services/roma.md`, `documentation/services/bob.md`, and `documentation/ai/sanfrancisco.md`
   - Final consistency pass after runtime wiring so no service doc preserves old l10n/text-pack/ready-locale truth.
 
 ## Verification Gates

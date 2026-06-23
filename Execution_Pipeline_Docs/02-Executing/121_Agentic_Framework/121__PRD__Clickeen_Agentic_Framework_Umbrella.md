@@ -12,8 +12,8 @@ Related:
 
 - `documentation/architecture/CONTEXT.md`
 - `documentation/strategy/WhyClickeen.md`
-- `documentation/ai/overview.md`
-- `documentation/ai/infrastructure.md`
+- `documentation/ai/README.md`
+- `documentation/ai/sanfrancisco.md`
 - `documentation/services/bob.md`
 - `documentation/services/roma.md`
 - `Execution_Pipeline_Docs/02-Executing/121_Agentic_Framework/121A__PRD__Agent_Architecture.md`

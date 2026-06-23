@@ -6,7 +6,7 @@ For platform context see:
 
 - `documentation/architecture/CONTEXT.md`
 - `documentation/services/roma.md`
-- `documentation/services/sanfrancisco.md`
+- `documentation/ai/sanfrancisco.md`
 - `documentation/services/tokyo-worker.md`
 
 ## Product Role

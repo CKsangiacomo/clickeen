@@ -117,7 +117,7 @@ tokyo/prague/pages/**/*.json
 tokyo-worker/src/**/*.test.ts
 roma/**/*.test.ts
 prague/README.md
-documentation/ai/BUILD_PraguePage.md
+documentation/services/prague/PraguePageAgentGuide.md
 documentation/services/devstudio.md
 documentation/services/roma.md
 documentation/services/prague/prague-overview.md
@@ -160,7 +160,7 @@ Stop and revise if execution requires:
 Active docs to update from `00000001` to `CLICKEEN`:
 
 ```text
-documentation/ai/BUILD_PraguePage.md
+documentation/services/prague/PraguePageAgentGuide.md
 documentation/capabilities/multitenancy.md
 documentation/services/devstudio.md
 documentation/services/roma.md

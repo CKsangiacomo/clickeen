@@ -11,8 +11,8 @@ Related:
 
 - `121__PRD__Clickeen_Agentic_Framework_Umbrella.md`
 - `121A__PRD__Agent_Architecture.md`
-- `documentation/ai/infrastructure.md`
-- `documentation/services/sanfrancisco.md`
+- `documentation/ai/README.md`
+- `documentation/ai/sanfrancisco.md`
 - `Execution_Pipeline_Docs/03-Executed/120/120__PRD__San_Francisco_Agent_Platform_Architecture_Decision.md`
 
 ---

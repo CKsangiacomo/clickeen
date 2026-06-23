@@ -12,7 +12,7 @@ Verdict: Pass as future-scope guardrail; must not leak SDR concepts into Product
 This review was rechecked against:
 
 - `documentation/strategy/WhyClickeen.md`
-- `documentation/ai/overview.md`
+- `documentation/ai/README.md`
 - `packages/ck-contracts/src/ai.ts`
 - `bob/components/CopilotPane.tsx`
 - `roma/lib/ai/account-copilot.ts`

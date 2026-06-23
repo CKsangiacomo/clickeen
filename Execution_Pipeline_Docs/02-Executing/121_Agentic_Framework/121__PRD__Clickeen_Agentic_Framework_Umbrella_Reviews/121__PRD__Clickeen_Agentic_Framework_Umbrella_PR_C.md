@@ -13,8 +13,8 @@ This review was rechecked against:
 
 - `documentation/architecture/CONTEXT.md`
 - `documentation/strategy/WhyClickeen.md`
-- `documentation/ai/overview.md`
-- `documentation/ai/infrastructure.md`
+- `documentation/ai/README.md`
+- `documentation/ai/sanfrancisco.md`
 - `packages/ck-contracts/src/ai.ts`
 - `sanfrancisco/src/index.ts`
 - `sanfrancisco/src/telemetry.ts`

@@ -214,8 +214,8 @@ Known stale docs include:
 - `documentation/strategy/Clickeen-Babel.md`
 - `documentation/capabilities/localization.md`
 - `documentation/capabilities/seo-geo.md`
-- `documentation/ai/BUILD_PraguePage.md`
-- `documentation/ai/overview.md`
+- `documentation/services/prague/PraguePageAgentGuide.md`
+- `documentation/ai/README.md`
 - `documentation/widgets/WidgetPraguePagesBuilder.md`
 - `documentation/widgets/WidgetBuildContract.md`
 - `documentation/widgets/WidgetComplianceSteps.md`
@@ -526,9 +526,9 @@ Required docs:
 - `documentation/strategy/Clickeen-Babel.md`
 - `documentation/capabilities/localization.md`
 - `documentation/capabilities/seo-geo.md`
-- `documentation/ai/BUILD_PraguePage.md`
-- `documentation/ai/overview.md`
-- `documentation/ai/widget-copilot-rollout.md`
+- `documentation/services/prague/PraguePageAgentGuide.md`
+- `documentation/ai/README.md`
+- `documentation/ai/agents/product-copilot.md`
 - `documentation/widgets/WidgetPraguePagesBuilder.md`
 - `documentation/widgets/WidgetBuildContract.md`
 - `documentation/widgets/WidgetComplianceSteps.md`

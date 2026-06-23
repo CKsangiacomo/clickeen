@@ -72,7 +72,7 @@ prague/src/markets/markets.json
 prague/src/**
 tokyo/prague/pages/**
 tokyo/prague/pages/**/*.translations/*.json
-documentation/ai/BUILD_PraguePage.md
+documentation/services/prague/PraguePageAgentGuide.md
 documentation/services/prague/**
 documentation/widgets/WidgetPraguePagesBuilder.md
 documentation/widgets/FAQ/FAQ_PraguePages.md
@@ -113,7 +113,7 @@ Static checks:
 ```sh
 rg -n "resolveTokyoInstanceLocales|instanceL10n|instanceLocalesRaw|fallbackInstanceLocales|chooseOverviewHeroLocales|resolveOverviewHeroNamedLocaleCount" prague/src -S
 rg -n "localeSync|translatedValues|translation-generation-job|baseContentMarker|generationRequestMarker|queuedLocales|pendingLocales|completedLocales|currentReadyLocales|supersededLocales|sanfrancisco|San Francisco" prague/src -S
-rg -n "locale-showcase|localeShowcase|accountInstanceRef\\.locale|localeOverride|\\?locale=" prague/src tokyo/prague/pages documentation/services/prague documentation/ai/BUILD_PraguePage.md documentation/widgets prague/README.md -S
+rg -n "locale-showcase|localeShowcase|accountInstanceRef\\.locale|localeOverride|\\?locale=" prague/src tokyo/prague/pages documentation/services/prague documentation/services/prague/PraguePageAgentGuide.md documentation/widgets prague/README.md -S
 rg -n "marketConfig\\?\\.locales|listPragueLocales\\(|regionalFallbackLocales|tier1Locales|nativeLocale" prague/src prague/src/markets/markets.json -S
 rg -n "locale \\|\\| 'en'|locale \\|\\| \"en\"|\\?\\? 'en'|\\?\\? \"en\"|searchParams\\.set\\('locale'|searchParams\\.set\\(\"locale\"" prague/src -S
 rg -n "injected after minibob|first complete account instance ref|same instance.*locales|instance-available locales|intersect.*instance|query param" documentation/services/prague documentation/widgets documentation/ai prague/README.md -S
@@ -147,7 +147,7 @@ documentation/services/prague/prague-overview.md
 documentation/services/prague/blocks.md
 documentation/capabilities/localization.md
 documentation/architecture/CONTEXT.md
-documentation/ai/BUILD_PraguePage.md
+documentation/services/prague/PraguePageAgentGuide.md
 documentation/widgets/WidgetPraguePagesBuilder.md
 documentation/widgets/FAQ/FAQ_PraguePages.md
 prague/README.md

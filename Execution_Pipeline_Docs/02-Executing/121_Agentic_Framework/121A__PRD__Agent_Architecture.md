@@ -12,8 +12,8 @@ Related:
 - `121__PRD__Clickeen_Agentic_Framework_Umbrella.md`
 - `documentation/architecture/CONTEXT.md`
 - `documentation/strategy/WhyClickeen.md`
-- `documentation/ai/overview.md`
-- `documentation/ai/infrastructure.md`
+- `documentation/ai/README.md`
+- `documentation/ai/sanfrancisco.md`
 
 ---
 

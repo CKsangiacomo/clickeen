@@ -198,7 +198,7 @@ The historical phase notes below remain as execution archive only. They are not 
 
 Read-only:
 
-- `documentation/services/sanfrancisco.md`
+- `documentation/ai/sanfrancisco.md`
 - `documentation/strategy/Clickeen-Babel.md`
 - `tokyo-worker/**`
 

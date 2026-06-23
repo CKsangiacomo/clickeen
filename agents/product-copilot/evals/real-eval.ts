@@ -10,7 +10,7 @@
  * be able to FAIL. Exit code is non-zero if any required case fails.
  *
  * Env: reads OPENAI_API_KEY / OPENAI_BASE_URL (and DEEPSEEK_*) from .env.local
- * then process.env — same loader as scripts/ai/generate-model-conformance.ts.
+ * then process.env.
  */
 import { readFileSync } from 'node:fs';
 import path from 'node:path';

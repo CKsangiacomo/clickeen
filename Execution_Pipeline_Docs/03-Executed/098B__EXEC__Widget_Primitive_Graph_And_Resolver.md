@@ -210,7 +210,7 @@ This slice is not done until these docs are updated or explicitly marked unchang
 - `documentation/widgets/WidgetBuildContract.md`
   - Add the `overlays.v = 1` text primitive declaration contract and collection-to-concrete-path rule.
   - State that producers never receive wildcard/template paths.
-- `documentation/ai/BUILD_Widget.md`
+- `documentation/widgets/WidgetAgentGuide.md`
   - Update agent/widget authoring guidance so new widgets declare editable/translatable primitives in `spec.json`, not sidecars.
 - `documentation/architecture/CONTEXT.md`
   - Update the Widget Architecture and `spec.json` glossary sections to include primitive graph authority.

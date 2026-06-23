@@ -49,7 +49,6 @@ import {
   validateAiModelManagementConfig,
 } from '@clickeen/ck-contracts/ai-model-management';
 import type { AccountAssetsClient } from '@dieter/components/shared/account-assets';
-import latestModelConformance from '../../documentation/ai/model-conformance/latest.json';
 
 const entitlements = getEntitlementsMatrix();
 
@@ -153,7 +152,6 @@ window.__CK_LLM_MANAGEMENT__ = {
   source: '@clickeen/ck-contracts/ai-model-management',
   config: AI_MODEL_MANAGEMENT_CONFIG,
   validation: validateAiModelManagementConfig(AI_MODEL_MANAGEMENT_CONFIG),
-  conformance: latestModelConformance,
   capabilities: listAiModelCapabilities(),
 };
 

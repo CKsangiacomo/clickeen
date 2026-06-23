@@ -26,8 +26,8 @@ Current Architecture (ground truth)
 - `documentation/services/tokyo-worker.md`
 - `documentation/services/prague/prague-overview.md`
 - `documentation/services/prague/blocks.md`
-- `documentation/services/sanfrancisco.md`
-- `documentation/ai/infrastructure.md`
+- `documentation/ai/sanfrancisco.md`
+- `documentation/ai/sanfrancisco.md`
 - `documentation/services/paris.md`
 
 Drift Findings (Priority)

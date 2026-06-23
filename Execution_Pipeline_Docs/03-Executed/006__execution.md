@@ -107,7 +107,7 @@ Deliver localization as a deterministic, budgeted, overlay-based system that sca
    - Update `documentation/capabilities/localization.md`
    - Update `documentation/capabilities/multitenancy.md`
    - Update `documentation/services/paris.md`
-   - Update `documentation/services/sanfrancisco.md`
+   - Update `documentation/ai/sanfrancisco.md`
    - Update `documentation/services/venice.md`
 
 ## Acceptance Criteria (V0)

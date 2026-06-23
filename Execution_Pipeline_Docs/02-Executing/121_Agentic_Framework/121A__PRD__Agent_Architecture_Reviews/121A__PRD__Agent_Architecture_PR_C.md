@@ -12,7 +12,7 @@ Verdict: Pass as architecture rail PRD, with contract precision needed before im
 This review was rechecked against:
 
 - `documentation/architecture/CONTEXT.md`
-- `documentation/ai/infrastructure.md`
+- `documentation/ai/sanfrancisco.md`
 - `packages/ck-contracts/src/ai.ts`
 - `packages/ck-policy/src/ai-runtime.ts`
 - `sanfrancisco/src/index.ts`

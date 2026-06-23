@@ -328,7 +328,9 @@ Read the detail doc owned by the surface being changed:
 | Bob                   | `documentation/services/bob.md`                      |
 | Prague                | `documentation/services/prague/prague-overview.md`   |
 | DevStudio             | `documentation/services/devstudio.md`                |
-| AI/San Francisco      | `documentation/ai/overview.md`                       |
+| AI plane              | `documentation/ai/README.md`                         |
+| San Francisco         | `documentation/ai/sanfrancisco.md`                   |
+| Built agents          | `documentation/ai/agents/`                           |
 | Product strategy      | `documentation/strategy/WhyClickeen.md`              |
 
 Widget-specific work also requires the relevant widget PRD under

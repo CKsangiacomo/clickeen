@@ -124,7 +124,6 @@
   const management = window.__CK_LLM_MANAGEMENT__ || null;
   const providers = new Map((window.__CK_AI_ACCESS__?.providers || []).map((entry) => [entry.provider, entry.label]));
   const capabilities = new Map((management?.capabilities || []).map((entry) => [`${entry.provider}:${entry.model}`, entry]));
-  const conformance = new Map((management?.conformance?.results || []).map((entry) => [`${entry.provider}:${entry.model}`, entry]));
 
   const text = (value, fallback = '') => String(value ?? fallback);
   const modelKey = (model) => `${model?.provider || ''}:${model?.model || ''}`;
@@ -142,8 +141,6 @@
   }
 
   function createModelRow(model, opts = {}) {
-    const key = modelKey(model);
-    const proof = conformance.get(key);
     const li = document.createElement('li');
     li.className = 'llm-management__row';
     const main = document.createElement('div');
@@ -156,8 +153,7 @@
     code.textContent = `${providerLabel(model.provider)} / ${model.model}`;
     main.append(label, code);
     li.append(main);
-    const status = createBadge(statusLabel(proof?.status), proof?.status === 'passed' ? 'passed' : 'blocked');
-    if (opts.default) status.textContent = `Default / ${status.textContent}`;
+    const status = createBadge(opts.default ? 'Default / configured' : 'Configured');
     li.append(status);
     return li;
   }
@@ -225,41 +221,13 @@
     return section;
   }
 
-  function renderConformance() {
+  function renderModelOperations() {
     const section = document.createElement('section');
     section.className = 'llm-management__panel';
     section.innerHTML = `
-      <h2 class="heading-4">Conformance Evidence</h2>
-      <p class="body-s llm-management__meta">Generated ${text(management?.conformance?.generatedAt, 'unknown')} from committed managed config.</p>
+      <h2 class="heading-4">Model Operations</h2>
+      <p class="body-s llm-management__meta">Roma and policy code use committed model management data when minting signed model requests. San Francisco executes the signed request and checks provider credentials. Provider catalog watching, conformance runs, and model-file updates are future DevOps Agent work.</p>
     `;
-    const table = document.createElement('table');
-    table.className = 'llm-management__table';
-    table.innerHTML = `
-      <thead>
-        <tr>
-          <th>Model</th>
-          <th>Status</th>
-          <th>HTTP</th>
-          <th>Returned model</th>
-          <th>Latency</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    `;
-    const tbody = table.querySelector('tbody');
-    (management?.conformance?.results || []).forEach((result) => {
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td><span class="body-s">${modelLabel(result)}</span><br><span class="llm-management__code">${providerLabel(result.provider)} / ${result.model}</span></td>
-        <td></td>
-        <td>${text(result.httpStatus, '-')}</td>
-        <td><span class="llm-management__code">${text(result.returnedModel, '-')}</span></td>
-        <td>${Number.isFinite(result.latencyMs) ? `${result.latencyMs}ms` : '-'}</td>
-      `;
-      tr.children[1].append(createBadge(statusLabel(result.status), result.status === 'passed' ? 'passed' : 'blocked'));
-      tbody.append(tr);
-    });
-    section.append(table);
     return section;
   }
 
@@ -275,7 +243,7 @@
     header.innerHTML = `
       <div class="llm-management__meta body-s">
         <span>Source: ${management.source || 'unknown'}</span>
-        <span>Runtime evidence: documentation/ai/model-conformance/latest.json</span>
+        <span>Displayed model data is build-time management data; no documentation JSON is a runtime input.</span>
       </div>
     `;
     header.append(createBadge(management.validation?.ok ? 'Config valid' : 'Config invalid', management.validation?.ok ? 'passed' : 'blocked'));
@@ -288,7 +256,7 @@
       renderInternalAgents(management.config.internalAgents),
     );
 
-    root.append(header, grid, renderConformance());
+    root.append(header, grid, renderModelOperations());
   }
 
   render();

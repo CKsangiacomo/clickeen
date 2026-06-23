@@ -227,10 +227,10 @@ This slice is not done until these docs are updated or explicitly marked unchang
   - Update save flow: Roma saves base config to Tokyo, extracts concrete primitives, calls San Francisco, then asks Tokyo to store overlay values.
   - Remove statements that account-widget l10n generation uses Tokyo-worker private binding as the producer path.
   - Document per-language follow-up result as save-response UI information only, not durable overlay truth.
-- `documentation/services/sanfrancisco.md`
+- `documentation/ai/sanfrancisco.md`
   - Replace old l10n op-generation contract with exact text value producer contract.
   - State San Francisco receives concrete primitive variables and returns exact values only.
-- `documentation/ai/infrastructure.md`
+- `documentation/ai/sanfrancisco.md`
   - Update San Francisco agent responsibility: value production only; no storage, no wildcard expansion, no account overlay lifecycle.
 - `documentation/architecture/BabelProtocol.md`
   - Update execution flow to Roma-orchestrated save follow-up and exact path-set validation.

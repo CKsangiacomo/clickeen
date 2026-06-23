@@ -112,7 +112,7 @@ prague/src/blocks/embed-carousel/**
 prague/src/blocks/mobile-showcase/**
 prague/src/lib/blockRegistry.ts
 prague/src/lib/markdown.ts
-documentation/ai/BUILD_PraguePage.md
+documentation/services/prague/PraguePageAgentGuide.md
 documentation/services/prague/**
 documentation/widgets/**
 documentation/architecture/CONTEXT.md
@@ -174,7 +174,7 @@ Update active docs so documentation and code speak the same Prague boundary:
 documentation/architecture/CONTEXT.md
 documentation/capabilities/localization.md
 documentation/capabilities/multitenancy.md
-documentation/ai/BUILD_PraguePage.md
+documentation/services/prague/PraguePageAgentGuide.md
 documentation/services/prague/prague-overview.md
 documentation/services/prague/blocks.md
 documentation/widgets/WidgetPraguePagesBuilder.md

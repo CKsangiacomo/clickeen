@@ -11,7 +11,7 @@ Verdict: Pass directionally, but V1 must be the smallest extension of current Sa
 
 This review was rechecked against:
 
-- `documentation/ai/infrastructure.md`
+- `documentation/ai/sanfrancisco.md`
 - `sanfrancisco/src/index.ts`
 - `sanfrancisco/src/ai/modelRouter.ts`
 - `sanfrancisco/src/telemetry.ts`

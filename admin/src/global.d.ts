@@ -46,25 +46,6 @@ declare global {
       source: string;
       config: import('@clickeen/ck-contracts/ai-model-management').AiModelManagementConfig;
       validation: import('@clickeen/ck-contracts/ai-model-management').AiModelManagementValidationResult;
-      conformance: {
-        v: number;
-        generatedAt: string;
-        command: string;
-        envSource: string;
-        modelSource: string;
-        prompt: string;
-        results: Array<{
-          status: string;
-          provider: string;
-          model: string;
-          returnedModel?: string;
-          httpStatus?: number;
-          content?: boolean;
-          usage?: boolean;
-          latencyMs?: number;
-          reason?: string;
-        }>;
-      };
       capabilities: Array<import('@clickeen/ck-contracts/ai').AiModelCapability>;
     };
   }

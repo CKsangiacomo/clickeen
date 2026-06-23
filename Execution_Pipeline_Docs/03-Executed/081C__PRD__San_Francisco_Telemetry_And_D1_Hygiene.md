@@ -352,7 +352,7 @@ Current state:
 - San Francisco source has no `ensureD1Schema` and no runtime D1 `CREATE TABLE`, `ALTER TABLE`, or `CREATE INDEX`.
 - D1 schema is in `sanfrancisco/migrations/`.
 - `sanfrancisco/wrangler.toml` points `SF_D1` at `sanfrancisco_d1_dev` with `migrations_dir = "migrations"`.
-- `documentation/ai/infrastructure.md` no longer describes runtime schema bootstrap.
+- `documentation/ai/sanfrancisco.md` no longer describes runtime schema bootstrap.
 
 Intentional behavior:
 

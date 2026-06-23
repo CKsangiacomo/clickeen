@@ -36,7 +36,7 @@ DevStudio has these sections:
 - **Dieter Components** — generated/static component showcase pages.
 - **Policy** — the entitlements and AI runtime Policy Editor.
 - **LLM Management** — read-only internal visibility into Clickeen managed model
-  configuration and generated conformance evidence.
+  configuration.
 
 The old Bob UI Native husk is removed. The old local widget-authoring workspace is
 also removed. Widget editing belongs to the real Roma -> Bob -> Tokyo product path.
@@ -72,24 +72,20 @@ LLM management source:
 - `@clickeen/ck-contracts/ai` owns model candidate facts.
 - `@clickeen/ck-contracts/ai-model-management` owns the managed model
   configuration shape and current source-controlled config artifact.
-- `pnpm ai:model-conformance -- --write` generates
-  `documentation/ai/model-conformance/latest.json` and
-  `documentation/ai/model-conformance/latest.md` from that managed config. These
-  committed files are San Francisco runtime availability inputs. DevStudio may
-  display/manage them, but normal product runtime must not run the proof command
-  or provider probes.
 - The managed config declares all Product Copilot enabled models and one
-  Clickeen default. San Francisco consumes that config for runtime availability;
-  later Roma/Bob slices consume it for grant issuance and picker display. The
-  picker itself owns no model truth.
+  Clickeen default. Roma/Bob consume it for grant issuance and picker display.
+  San Francisco executes the model route in the signed runtime policy and does
+  not read documentation files as runtime model truth. The picker itself owns no
+  model truth.
 - SDR Copilot has no public model picker. DevStudio may manage its future model
   policy, but public/prospect users never choose a model.
 - Internal agents use internal model routing config, not picker UI.
 - DevStudio displays managed configuration; San Francisco remains the runtime
   model execution authority. The current shipped DevStudio surface is
-  read-only: it displays committed managed config and committed conformance
-  evidence at `/#/policy/llm-management`. DevStudio must not directly mutate
-  live worker runtime state or provider secrets.
+  read-only: it displays committed managed config at
+  `/#/policy/llm-management`. DevStudio must not directly mutate live worker
+  runtime state or provider secrets. Future provider catalog monitoring,
+  conformance runs, and model-file updates belong to the planned DevOps Agent.
 
 Required Pages configuration:
 

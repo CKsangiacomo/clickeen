@@ -996,7 +996,7 @@ Evidence:
 - `documentation/services/bob.md`, `documentation/capabilities/multitenancy.md`,
   and `packages/ck-policy/src/registry.ts` still describe Bob policy/upsell
   enforcement.
-- `documentation/services/prague/*`, `documentation/ai/BUILD_PraguePage.md`,
+- `documentation/services/prague/*`, `documentation/services/prague/PraguePageAgentGuide.md`,
   `documentation/widgets/WidgetComplianceSteps.md`,
   `documentation/widgets/WidgetGTMStrategy.md`,
   `documentation/widgets/WidgetPraguePagesBuilder.md`,

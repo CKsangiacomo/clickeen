@@ -29,13 +29,13 @@ documentation/
 │   ├── devstudio.md         # Internal toolbench
 │   ├── tokyo.md             # Asset CDN
 │   ├── tokyo-worker.md      # Account storage, assets, instances, translations, public artifacts
-│   ├── sanfrancisco.md      # AI engine and governed model execution
 │   ├── venice.md            # Embed runtime
 │   ├── michael.md           # Database schema
 │   └── prague/              # Marketing surface
 │       ├── prague-overview.md
 │       ├── blocks.md
-│       └── layout.md
+│       ├── layout.md
+│       └── PraguePageAgentGuide.md
 │
 ├── capabilities/             # CROSS-CUTTING FEATURES
 │   ├── supernova.md         # NextGen web design effects
@@ -43,19 +43,21 @@ documentation/
 │   ├── localization.md      # i18n + l10n (runtime contract)
 │   └── multitenancy.md      # Team/account model
 │
-├── ai/                       # AI ARCHITECTURE
-│   ├── overview.md          # San Francisco platform
-│   ├── infrastructure.md    # Cloudflare infra
-│   ├── learning.md          # How agents learn
-│   ├── widget-copilot-rollout.md # account Builder Copilot rollout status
+├── ai/                       # AI PLANE + AGENT HOMES
+│   ├── README.md            # AI taxonomy and product law
+│   ├── sanfrancisco.md      # Governed model execution
+│   ├── ombra.md             # Product AI layer / model strategy guardrail
+│   ├── learning.md          # Trace/outcome/eval/release loop
 │   ├── agents/
-│   │   ├── ux-writer.md     # UX Writer agent
-│   │   ├── gtm.md           # GTM agent
+│   │   ├── product-copilot.md
+│   │   ├── translation-agent.md
+│   │   └── Planned_Agents/
 │
 └── widgets/                  # WIDGET SPECS
     ├── WidgetBuildContract.md # Normative build contract
     ├── WidgetComplianceSteps.md # Execution checklist
     ├── WidgetArchitecture.md # System-level reference
+    ├── WidgetAgentGuide.md   # Agent execution guide for widget edits
     └── {widget}/            # Per-widget specs
         └── {widget}_PRD.md
 ```
@@ -64,9 +66,9 @@ documentation/
 | ----------------- | ------------------------------------ |
 | **strategy/**     | WHY are we building this?            |
 | **architecture/** | HOW is it designed?                  |
-| **services/**     | WHAT systems run?                    |
+| **services/**     | WHAT product/runtime systems run?    |
 | **capabilities/** | WHAT features span systems?          |
-| **ai/**           | WHO runs the company? (AI workforce) |
+| **ai/**           | WHAT is the AI plane and agents?     |
 | **widgets/**      | WHAT do we ship?                     |
 
 Surface split to keep straight when reading the repo:
@@ -192,7 +194,9 @@ If you change runtime behavior, update docs in the same PR/commit:
 - **Build/deploy changes**
   - Update the system doc and any operational runbooks
 - **Copilot/AI behavior changes**
-  - Update `documentation/ai/*.md` (UX + contract)
+  - Update the owning AI doc under `documentation/ai/`
+  - Built agent docs live under `documentation/ai/agents/`
+  - Planned agent docs live under `documentation/ai/agents/Planned_Agents/`
 - **Widget spec/runtime changes**
   - Update the widget PRD under `documentation/widgets/{WidgetName}/`
   - If it affects shared runtime (stage/pod/typography/branding), update `documentation/architecture/CONTEXT.md`

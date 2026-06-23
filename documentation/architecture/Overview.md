@@ -27,7 +27,7 @@ Clickeen is designed to be **built by AI** and **run by AI**:
 capture, and provider routing for named agent homes. Agent execution lives in
 the agent home.
 
-See: `documentation/ai/overview.md`, `documentation/ai/learning.md`, `documentation/ai/infrastructure.md`
+See: `documentation/ai/README.md`, `documentation/ai/sanfrancisco.md`, `documentation/ai/learning.md`, and `documentation/ai/agents/`
 
 ---
 

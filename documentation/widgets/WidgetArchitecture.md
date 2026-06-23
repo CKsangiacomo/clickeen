@@ -7,7 +7,7 @@ Purpose: system-level reference for widget runtime and data flow.
 Related:
 
 - `documentation/widgets/WidgetBuildContract.md`
-- `documentation/ai/BUILD_Widget.md`
+- `documentation/widgets/WidgetAgentGuide.md`
 - `documentation/architecture/CONTEXT.md`
 - `Execution_Pipeline_Docs/03-Executed/106_Page_Composer_And_Widget_Certification_Batch/PRD106A2_WidgetShellExtraction.md`
 - `Execution_Pipeline_Docs/03-Executed/106_Page_Composer_And_Widget_Certification_Batch/PRD106A3_AccountWidgetDefaults.md`

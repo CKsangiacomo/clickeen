@@ -37,7 +37,7 @@ Legacy PRDs 07–14 are now archived. This document is the single, small, execut
 **Deliverables**
 - Extend the l10n job contract to include policy context minted by Paris.
 - Route l10nInstance through the same grant/policy capsule path as other agents (or define a single explicit service-grant path with the same constraints).
-- Document the l10n AI policy contract in `documentation/services/sanfrancisco.md` (and update any affected AI infrastructure docs).
+- Document the l10n AI policy contract in `documentation/ai/sanfrancisco.md` (and update any affected AI infrastructure docs).
 
 ---
 

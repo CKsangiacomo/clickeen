@@ -308,7 +308,7 @@ For account user instances:
 - `dieter/components/shared/assetUpload.ts`
 - touched Bob/Roma/context docs for current-truth wording
 - `documentation/architecture/Overview.md`
-- `documentation/ai/overview.md`
+- `documentation/ai/README.md`
 - `documentation/services/roma.md`
 
 ### Toxic LOCs and code shapes to remove or collapse

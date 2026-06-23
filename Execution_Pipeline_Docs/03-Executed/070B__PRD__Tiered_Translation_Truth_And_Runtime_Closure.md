@@ -1373,7 +1373,7 @@ When this ships, update:
 - `documentation/capabilities/localization.md`
 - `documentation/services/roma.md`
 - `documentation/services/bob.md`
-- `documentation/services/sanfrancisco.md`
+- `documentation/ai/sanfrancisco.md`
 - `documentation/services/venice.md`
 - `documentation/services/tokyo-worker.md`
 - `documentation/architecture/CONTEXT.md`

@@ -166,8 +166,8 @@ If a proposed fix adds more framework shape than it deletes, it is out of contra
      - `sanfrancisco/src/agents/widgetCopilotCore.ts`
      - `sanfrancisco/src/agents/sdrWidgetCopilot.ts`
      - `sanfrancisco/src/agents/csWidgetCopilot.ts`
-     - `documentation/ai/widget-copilot-rollout.md`
-     - `documentation/services/sanfrancisco.md`
+     - `documentation/ai/agents/product-copilot.md`
+     - `documentation/ai/sanfrancisco.md`
    - shared grant plumbing and telemetry shape may be correct, but shared product contract, shared UX assumptions, and shared agent-core semantics are now suspect
 
 11. Dieter is now part of the authoring runtime, not just a styling layer, and that boundary needs an explicit decision.

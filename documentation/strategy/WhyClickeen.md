@@ -4,7 +4,8 @@ STATUS: INFORMATIVE — STRATEGY & VISION
 This page explains what we're building and why. It is not a spec.
 For technical implementation, see:
 - `documentation/architecture/CONTEXT.md` — Architecture, glossary, implementation status
-- `documentation/services/` — Service PRDs (Roma, Bob, Venice, Tokyo-worker, San Francisco, etc.)
+- `documentation/services/` — Product service docs (Roma, Bob, Tokyo-worker, etc.)
+- `documentation/ai/` — AI plane and agent docs
 - `documentation/widgets/` — Widget PRDs
 
 ---
@@ -46,7 +47,8 @@ This is Clickeen's thesis. It's new territory—and we're writing the playbook.
 **The Clickeen AI workforce is not a feature.** It is built from named agent
 homes plus San Francisco as the governed AI engine behind them.
 
-See: `documentation/ai/overview.md`, `documentation/ai/learning.md`, `documentation/ai/infrastructure.md`
+See: `documentation/ai/README.md`, `documentation/ai/sanfrancisco.md`,
+`documentation/ai/learning.md`, and `documentation/ai/agents/`.
 
 ---
 
@@ -586,5 +588,5 @@ This is uncharted territory. The system might plateau. Agents might not generali
 Technical implementation details live in:
 - `documentation/architecture/CONTEXT.md` — Architecture snapshot, systems, glossary
 - `documentation/architecture/Overview.md` — System boundaries and data flows
-- `documentation/services/` — System PRDs (Roma/Bob/Venice/Tokyo/Tokyo-worker/Dieter/Michael/DevStudio/Prague/San Francisco)
-- `documentation/ai/` — San Francisco PRDs (overview/learning/infrastructure)
+- `documentation/services/` — Product/runtime service docs
+- `documentation/ai/` — AI plane and agent docs
