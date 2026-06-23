@@ -209,6 +209,7 @@ Worker secrets:
 - Berlin: `SUPABASE_SERVICE_ROLE_KEY`, `BERLIN_DEV_ADMIN_EMAIL`, `BERLIN_DEV_ADMIN_PASSWORD`
 - San Francisco: `AI_GRANT_HMAC_SECRET`
 - Translation Agent: `AI_GRANT_HMAC_SECRET`
+- Tokyo-worker: `AI_GRANT_HMAC_SECRET` for Translation Agent overlay write grant verification
 
 Pages secrets:
 - Roma: `AI_GRANT_HMAC_SECRET` is required for account Copilot grant/outcome signing and Translation Agent grant minting. `SUPABASE_SERVICE_ROLE_KEY` is required for Roma-owned account settings writes. Roma -> Tokyo/Tokyo-worker storage commands use service bindings. Account-widget l10n generation calls the Translation Agent Worker; that Worker calls San Francisco `/v1/model/chat` and writes translated locale values via Tokyo-worker.

@@ -159,6 +159,17 @@ jobs:
           fi
           pnpm -C tokyo-worker exec wrangler versions deploy "${version_id}@100" --yes
 
+      - name: Sync tokyo-assets-dev AI grant secret
+        if: steps.changes.outputs.tokyo == 'true' || steps.changes.outputs.translation_agent == 'true'
+        env:
+          AI_GRANT_HMAC_SECRET: ${{ secrets.AI_GRANT_HMAC_SECRET }}
+        run: |
+          if [ -z "$AI_GRANT_HMAC_SECRET" ]; then
+            echo "Missing AI_GRANT_HMAC_SECRET GitHub secret for tokyo-assets-dev." >&2
+            exit 1
+          fi
+          printf '%s' "$AI_GRANT_HMAC_SECRET" | pnpm -C tokyo-worker exec wrangler secret put AI_GRANT_HMAC_SECRET
+
       - name: Deploy product-copilot-dev
         if: steps.changes.outputs.product_copilot == 'true'
         run: pnpm -C agents/product-copilot run deploy
