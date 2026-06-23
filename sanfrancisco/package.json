@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "deploy": "node ../scripts/infra/ensure-queues.mjs --write --queues sanfrancisco-events-dev && wrangler d1 migrations apply sanfrancisco_d1_dev --remote && wrangler deploy",
+    "deploy": "node ../scripts/infra/ensure-queues.mjs --write --queues sanfrancisco-events-dev && wrangler deploy",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
