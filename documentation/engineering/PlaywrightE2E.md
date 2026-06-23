@@ -89,3 +89,21 @@ run.
 
 If auth secrets are missing, authenticated specs skip and the public smoke still
 runs.
+
+## Product Copilot Runtime Smoke
+
+After refreshing auth state, run:
+
+```bash
+pnpm e2e:smoke:copilot-runtime
+```
+
+The smoke uses the authenticated Roma storage state and the `CLICKEEN` account.
+It verifies three things:
+
+- authenticated Roma -> Product Copilot route returns `kind: answer` with a
+  `meta.requestId`;
+- an unmanaged selected model is rejected with HTTP 422 instead of silently
+  substituting another model;
+- Bob receives the Builder instance, Copilot returns a `draft_edit`, Bob applies
+  it in browser memory, exposes `Undo`, and Undo completes.

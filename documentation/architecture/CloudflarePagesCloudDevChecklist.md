@@ -77,6 +77,8 @@ Env contract:
 | `NEXT_PUBLIC_TOKYO_URL` | yes | `https://tokyo.dev.clickeen.com` | `roma/wrangler.toml` |
 | `NEXT_PUBLIC_CLK_LIVE_URL` | yes | `https://dev.clk.live` | `roma/wrangler.toml` |
 | `BERLIN_BASE_URL` | yes | `https://berlin-dev.clickeen.workers.dev` | `roma/wrangler.toml` |
+| `PRODUCT_COPILOT_BASE_URL` | yes | `https://product-copilot-dev.clickeen.workers.dev` | `roma/wrangler.toml` |
+| `SANFRANCISCO_BASE_URL` | yes | `https://sanfrancisco.dev.clickeen.com` | `roma/wrangler.toml` |
 | `NEXT_PUBLIC_BOB_URL` | yes | `https://bob.dev.clickeen.com` | `roma/wrangler.toml` |
 | `SUPABASE_URL` | yes | `https://ebmqwqdexmemhrdhkmwn.supabase.co` | Cloudflare Pages dashboard + GitHub Actions env |
 | `SUPABASE_ANON_KEY` | yes | cloud-dev anon key for project `ebmqwqdexmemhrdhkmwn` | Cloudflare Pages dashboard + GitHub Actions env |
