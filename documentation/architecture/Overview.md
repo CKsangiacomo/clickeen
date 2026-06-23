@@ -65,7 +65,7 @@ Generated/public artifacts are written only by artifact builders.
 | Widget definitions | Approved widget source under `tokyo/product/widgets/{widgetType}/` read by widget-definition operations | Generated manifests are not source authority. |
 | Account instance source | Tokyo account instance operations over `instance.config.json` and `instance.content.json` | `instance.json` is not written or read by active runtime code. |
 | Account instance listing | `listAccountInstances` | Any account index file is a private cache below the operation, not a Roma API. |
-| Translations | Roma account command boundary; Translation Agent Worker calls San Francisco /v1/model/chat and writes overlays via Tokyo-worker | Locale values live under `overlays/locales/{locale}.json`; Tokyo-worker stores exact overlay files only. |
+| Translations | Roma account command boundary; Translation Agent Worker calls San Francisco /model/chat and writes overlays via Tokyo-worker | Locale values live under `overlays/locales/{locale}.json`; Tokyo-worker stores exact overlay files only. |
 | Publish state | Tokyo publish/unpublish operations and publish status | Generated files are output, not the state machine. |
 | Public serving | `clk.live/{accountPublicId}/{instanceId}` serving stored package artifacts from R2/CDN | Missing artifacts fail visibly; visitor requests do not read Supabase or compose widgets from authoring source. |
 
@@ -84,7 +84,7 @@ This keeps customer actions close to one cross-service request, removes stale re
 | **Prague**        | `prague/`       | Cloudflare Pages                     | Marketing + SEO surface                                                 | ✅ Active   |
 | **Bob**           | `bob/`          | Cloudflare Pages                     | Widget builder, compiler, ToolDrawer, preview                           | ✅ Active   |
 | **Roma**          | `roma/`         | Cloudflare Pages                     | Product shell, account domains, Bob host orchestration                  | ✅ Active   |
-| **DevStudio**     | `admin/`        | Cloudflare Pages                     | Internal Berlin-authenticated toolbench for Dieter/foundation inspection and policy editing | ✅ Internal |
+| **DevStudio**     | `admin/`        | Cloudflare Pages                     | The one human's cockpit for governing the AI-operated company — see rendered truth, steer through named authorities | ✅ Internal |
 | **Venice**        | `venice/`       | Cloudflare Pages (Next.js Edge)      | Legacy SSR embed runtime replaced by `clk.live` static artifacts        | Removed from active serving |
 | **San Francisco** | `sanfrancisco/` | Cloudflare Workers (D1/KV/R2/Queues) | Governed model execution, trace/outcome capture, provider routing       | ✅ Phase 1  |
 | **Michael**       | `supabase/`     | Supabase Postgres                    | Database with RLS                                                       | ✅ Active   |
@@ -205,7 +205,7 @@ They may be served by Tokyo-worker through friendly public routes, but Roma, Tok
 #### Roma (Pages)
 
 - Roma is the domain shell (`/home`, `/profile`, `/widgets`, `/builder`, `/assets`, `/team`, `/billing`, `/usage`, `/ai`, `/settings`).
-- Roma resolves identity/account/authz context through `/api/bootstrap` (proxy to Berlin `GET /v1/session/bootstrap`), including an account authz capsule and an account entitlement snapshot.
+- Roma resolves identity/account/authz context through `/api/bootstrap` (proxy to Berlin `GET /session/bootstrap`), including an account authz capsule and an account entitlement snapshot.
 - Roma exposes person-scoped User Settings through `/profile`, using Berlin-owned `/api/me` same-origin routes.
 - Current Roma resolves one effective active account context per session and does not expose customer account switching. Cloud-dev still usually collapses to the seeded Clickeen/admin account, while any internal account switching belongs to DevStudio and future customer multi-account switching belongs to a separate Roma-for-agency product.
 - Roma uses named same-origin account routes and injects short-lived authz headers:
@@ -215,8 +215,8 @@ They may be served by Tokyo-worker through friendly public routes, but Roma, Tok
 
 #### DevStudio (Pages)
 
-- DevStudio is the internal toolbench, not a second customer account shell.
-- It is the surface where Clickeen runs internal platform work such as Dieter/foundation inspection and policy editing.
+- DevStudio is the one human's cockpit for governing the AI-operated company, not a second customer account shell.
+- It is the surface where the one human sees rendered truth and steers through named authorities — today: Dieter/foundation inspection, policy editing, and managed-model visibility.
 - Canonical host is `https://devstudio.clickeen.com`.
 - Berlin/Google login is the sole auth boundary. The signed-in user must resolve to the normal Clickeen admin account; DevStudio does not invent a second account, allowlist, or Cloudflare Access auth model.
 - Removed widget-authoring and company-plane action lanes must not be reintroduced.
@@ -259,7 +259,7 @@ They may be served by Tokyo-worker through friendly public routes, but Roma, Tok
 
 #### San Francisco (Workers + D1/KV/R2/Queues)
 
-- `/healthz`, `/v1/model/chat`, `/v1/outcome`, queue consumer for non-blocking log writes.
+- `/healthz`, `/model/chat`, `/outcome`, queue consumer for non-blocking log writes.
 - Stores raw logs in R2 and indexes in D1. Product Copilot sessions do not live
   in San Francisco KV.
 
@@ -279,7 +279,7 @@ They may be served by Tokyo-worker through friendly public routes, but Roma, Tok
 
 **Hard security rule:**
 
-- There is no shared-secret bearer lane for product or internal AI execution. Roma Copilot/outcomes and Prague string translation use HMAC-signed request bodies. The Translation Agent has its own Worker home. Roma calls that Worker for account-widget generation, the Worker calls San Francisco `/v1/model/chat` for governed model execution, and the Worker writes translated locale values through Tokyo-worker.
+- There is no shared-secret bearer lane for product or internal AI execution. Roma Copilot/outcomes and Prague string translation use HMAC-signed request bodies. The Translation Agent has its own Worker home. Roma calls that Worker for account-widget generation, the Worker calls San Francisco `/model/chat` for governed model execution, and the Worker writes translated locale values through Tokyo-worker.
 
 **DB Pivot Supabase rule:**
 
@@ -294,12 +294,12 @@ They may be served by Tokyo-worker through friendly public routes, but Roma, Tok
 
 **Pages build settings**
 
-- Node + pnpm versions pinned so cloud builds match local.
+- Node + pnpm toolchain pinned so cloud builds match local.
 - Build command matches repo build (Turbo fan-out).
 
 **Caching**
 
-- Tokyo (`/dieter/**`, `/widgets/**`) uses long caching for versioned media; avoid caching `spec.json` aggressively in dev.
+- Tokyo (`/dieter/**`, `/widgets/**`) uses long caching for content-hashed media; avoid caching `spec.json` aggressively in dev.
 - Public embed serving uses cached generated files from `clk.live/{accountPublicId}/{instanceId}`.
 
 **Access control**
@@ -350,7 +350,7 @@ Non-negotiable:
     signatures. Roma -> Tokyo/Tokyo-worker account product control uses private
     Cloudflare service bindings. The Translation Agent has its own Worker home.
     Roma calls that Worker for account-widget generation. The Worker calls San
-    Francisco `/v1/model/chat` and writes translated locale values through
+    Francisco `/model/chat` and writes translated locale values through
     Tokyo-worker.
 - **Caching**:
   - Tokyo deploy-managed media is long-cacheable when versioned; avoid cache on widget `spec.json` when iterating in dev.
@@ -421,12 +421,12 @@ Copilot execution is a separate, budgeted flow that never exposes provider keys 
 │                                                                         │
 │  Account-mode Builder:                                                  │
 │    Browser UI (Bob iframe) → Roma instance-scoped copilot route         │
-│    → Product Copilot Worker (its own /v1/execute)                        │
-│    → SanFrancisco /v1/model/chat                                         │
+│    → Product Copilot Worker (its own /execute)                        │
+│    → SanFrancisco /model/chat                                         │
 │                                                                         │
 │  Outcomes (keep/undo/CTA clicks):                                       │
 │    Browser → Roma same-origin outcome route                             │
-│           → POST /v1/outcome (SanFrancisco, signed)                     │
+│           → POST /outcome (SanFrancisco, signed)                     │
 └─────────────────────────────────────────────────────────────────────────┘
 ```
 

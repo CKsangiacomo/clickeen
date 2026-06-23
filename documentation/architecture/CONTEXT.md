@@ -149,7 +149,7 @@ that exposes it.
 | Tokyo R2      | Cloudflare R2                | Product software and account runtime storage        |
 | Berlin        | Cloudflare Workers           | Auth, session bootstrap, account authz capsule      |
 | Prague        | Cloudflare Pages / Astro     | Marketing, gallery, demo/funnel pages               |
-| DevStudio     | Cloudflare Pages             | Internal toolbench through the normal admin account |
+| DevStudio     | Cloudflare Pages             | The one human's cockpit for governing the AI-operated company (through the normal admin account) |
 | San Francisco | Workers/D1/KV/R2/Queues      | Governed AI model execution and trace/outcome sink  |
 | Product Copilot | Cloudflare Worker          | Builder Product Copilot brain                       |
 | Translation Agent | Cloudflare Worker        | Account-widget translation agent home                           |

@@ -1,6 +1,12 @@
-# DevStudio — Internal Toolbench
+# DevStudio — The One Human's Cockpit for an AI-Operated Company
 
-DevStudio is Clickeen's internal platform toolbench, served from Cloudflare Pages.
+**DevStudio is the one human's cockpit for governing an AI-operated company.**
+
+Clickeen is built and operated by an AI fleet under one human who cannot read every diff or watch every agent run. DevStudio is the single surface where that human governs the company: by LOOKING at rendered truth (design, product, agents, content, runtime state) and STEERING through named authorities with validated commits.
+
+What DevStudio shows must be derived truth — never hand-editable — because the moment the supervised can edit what the human looks at, supervision is impossible.
+
+DevStudio is served from Cloudflare Pages.
 
 Canonical URL:
 

@@ -26,7 +26,7 @@ documentation/
 │   ├── bob.md               # Editor
 │   ├── roma.md              # Product shell + Builder host
 │   ├── dieter.md            # Design system
-│   ├── devstudio.md         # Internal toolbench
+│   ├── devstudio.md         # Human's cockpit for the AI-operated company
 │   ├── tokyo.md             # Asset CDN
 │   ├── tokyo-worker.md      # Account storage, assets, instances, translations, public artifacts
 │   ├── venice.md            # Embed runtime
@@ -72,7 +72,7 @@ documentation/
 
 Surface split to keep straight when reading the repo:
 - `Roma` = account-scoped customer/member shell
-- `DevStudio` = internal toolbench for platform curation, verification, and local utility pages
+- `DevStudio` = the one human's cockpit for governing an AI-operated company (see rendered truth, steer through named authorities)
 
 ---
 
@@ -139,15 +139,15 @@ Source of truth: `tokyo/product/widgets/{widget}/` (spec + runtime + widget cont
    - Cloud-dev host is `https://tokyo.dev.clickeen.com`
 2. **Bob runtime** reads widget definitions/assets from Tokyo:
    - `bob/lib/env/tokyo.ts` resolves `NEXT_PUBLIC_TOKYO_URL` -> `https://tokyo.dev.clickeen.com` by default.
-3. **DevStudio** is the cloud internal toolbench:
+3. **DevStudio** is the one human's cockpit for governing the AI-operated company:
    - canonical host is `https://devstudio.clickeen.com`
    - it no longer hosts the local widget-authoring workspace
    - it does not provide widget-authoring routes
 4. **Cloud-dev Roma** is the supported product/account host surface:
-   - `roma/app/api/bootstrap/route.ts` proxies to Berlin `GET /v1/session/bootstrap`
+   - `roma/app/api/bootstrap/route.ts` proxies to Berlin `GET /session/bootstrap`
    - `roma/components/builder-domain.tsx` sends `ck:open-editor` to Bob after `bob:session-ready`
    - code changes only appear there after deploy
-Result: Roma remains the customer account shell; DevStudio remains the Berlin-authenticated internal toolbench on Cloudflare Pages.
+Result: Roma remains the customer account shell; DevStudio remains the Berlin-authenticated cockpit for governing the AI-operated company on Cloudflare Pages.
 
 ### A.1) Auth issuer alignment (critical)
 
@@ -224,7 +224,7 @@ If you change runtime behavior, update docs in the same PR/commit:
 
 - Compiler determinism: repo typecheck/build plus Cloudflare verification, not a localhost Bob HTTP gate
 - Quick grep for removed/renamed surfaces:
-  - `rg -n "/api/ai/widget-copilot|/api/ai/outcome|/api/account/instances/.*/copilot|/v1/model/chat|/v1/execute|PRODUCT_COPILOT_BASE_URL|SANFRANCISCO_BASE_URL|AI_GRANT_HMAC_SECRET" documentation`
+  - `rg -n "/api/ai/widget-copilot|/api/ai/outcome|/api/account/instances/.*/copilot|/model/chat|/execute|PRODUCT_COPILOT_BASE_URL|SANFRANCISCO_BASE_URL|AI_GRANT_HMAC_SECRET" documentation`
   - `rg -n "claims/minibob/complete|/api/account/assets|POST /api/instance\\b" documentation --glob '*.md'`
   - `rg -n "/api/bootstrap|/api/account/widgets|/api/session/finish|/api/account/assets" documentation --glob '*.md'`
   - `rg -n "published/widgets|/renders/widgets|accounts/.*/widgets|root (widgets|public|published|l10n)" documentation --glob '*.md'`
