@@ -11,8 +11,8 @@ Related:
 
 - `documentation/ai/README.md` (AI plane and agent docs home)
 - `documentation/ai/sanfrancisco.md` (shipped runtime truth)
-- `documentation/ai/agents/Planned_Agents/gtm.md` (planned GTM Agent placeholder)
-- `documentation/ai/agents/Planned_Agents/ux-writer.md` (planned UX Writer placeholder)
+- `Execution_Pipeline_Docs/01-Planning/AI_Planned_Agents/gtm.md` (planned GTM Agent placeholder)
+- `Execution_Pipeline_Docs/01-Planning/AI_Planned_Agents/ux-writer.md` (planned UX Writer placeholder)
 - `packages/ck-contracts/src/ai.ts` (agent registry)
 - EB-007 (Evergreen Backlog: copilot core re-separation)
 - Anthropic, "Building agents that reach production systems with MCP"
@@ -258,8 +258,8 @@ shape, and a one-size design would be wrong.
 | -------------------------------- | --------------------------------- | --------------------- | ----------------------- | --------------------- |
 | Builder Copilot                  | `cs.widget.copilot.v1`            | **Shipped**           | Roma account Builder    | overview, ai.ts       |
 | Widget Instance Translator       | `widget.instance.translator`      | **Diagnostic HTTP route; product generation disabled** | Roma/Tokyo storage boundary + SF diagnostic route | overview, ai.ts       |
-| GTM Agent                        | `ops.gtm.*` (proposed)            | **Planned, not built** | internal/ops            | `documentation/ai/agents/Planned_Agents/gtm.md`       |
-| UX Writer                        | `ops.uxwriter.*` (proposed)       | **Planned, not built** | internal/ops            | `documentation/ai/agents/Planned_Agents/ux-writer.md` |
+| GTM Agent                        | `ops.gtm.*` (proposed)            | **Planned, not built** | internal/ops            | `Execution_Pipeline_Docs/01-Planning/AI_Planned_Agents/gtm.md`       |
+| UX Writer                        | `ops.uxwriter.*` (proposed)       | **Planned, not built** | internal/ops            | `Execution_Pipeline_Docs/01-Planning/AI_Planned_Agents/ux-writer.md` |
 | Support Reply                    | `support.reply` (named)           | Future                | (TBD)                   | overview "Terms"      |
 | Community Moderation             | `ops.communityModeration` (named) | Future                | (TBD)                   | overview "Terms"      |
 

@@ -263,7 +263,7 @@ In the Clickeen model, "localization" isn't a project. It's not even a feature. 
 User in Germany:
 ├── Lands on site → German
 ├── Uses Minibob → German
-├── SDR Copilot → German
+├── Uses Clickeen product surfaces → German
 ├── Signs up → German
 ├── Uses Bob → German
 ├── Gets support → German

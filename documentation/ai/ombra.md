@@ -1,55 +1,89 @@
 # Ombra
 
-STATUS: STRATEGY GUARDRAIL - NOT A RUNTIME SERVICE
+STATUS: CURRENT SYSTEM OPERATOR SPEC
 
-Ombra is Clickeen's product AI layer and model strategy name.
+Ombra is Clickeen's current model-strategy boundary name. It is not a Worker,
+not an endpoint, not an agent home, and not a product service.
 
-Ombra is not:
+## Definition
 
-- one provider;
-- one model;
-- San Francisco;
-- an agent home;
-- visitor runtime;
-- a Cloudflare Worker in the current system.
+Ombra names the rule that Clickeen AI behavior is product-shaped while model
+providers remain replaceable execution dependencies. In the current system,
+Ombra is implemented through explicit agent registry, model capability, model
+management, and runtime policy files.
 
-## Meaning
+## Current Authorities
 
-Users experience Clickeen AI as product behavior: Builder help, translation,
-optimization, future support, future DevOps operations, and future growth work.
-Ombra is the product layer that keeps those experiences Clickeen-shaped while
-models underneath can change.
+| Concern | Source of truth |
+| --- | --- |
+| Built agent ids and boundaries | `packages/ck-contracts/src/ai.ts` |
+| Model capabilities | `packages/ck-contracts/src/ai.ts` |
+| Model management data shown in DevStudio | `packages/ck-contracts/src/ai-model-management.ts` |
+| Runtime policy matrix minted into grants | `packages/ck-policy/ai-runtime.matrix.json` |
+| Grant enforcement | `sanfrancisco/src/grants.ts` |
+| Provider/model selection | `sanfrancisco/src/ai/modelRouter.ts` |
+| Provider credentials | San Francisco Worker secrets |
 
-San Francisco remains the governed model-execution engine. Agent homes remain
-the operators. Models are execution dependencies.
+## Current Runtime Consumers
 
-## Current Runtime
+| Agent | Registry id | Current model route authority |
+| --- | --- | --- |
+| Product Copilot | `cs.widget.copilot.v1` | Roma-minted grant using `packages/ck-policy/ai-runtime.matrix.json` |
+| Translation Agent | `widget.instance.translator` | Roma-minted grant using `packages/ck-policy/ai-runtime.matrix.json` |
 
-There is no separate Ombra runtime service in the repo.
+San Francisco executes the signed route it receives. It does not read model
+truth from `documentation/`.
 
-Current live AI runtime is:
+## Model Policy Change Procedure
 
-```text
-Product Copilot Worker -> San Francisco /v1/model/chat
-Translation Agent Worker -> San Francisco /v1/model/chat
+To change a current model/provider route:
+
+1. Update model capability or management data in `packages/ck-contracts/src/ai.ts`
+   or `packages/ck-contracts/src/ai-model-management.ts` when the candidate
+   model itself changes.
+2. Update `packages/ck-policy/ai-runtime.matrix.json` when the runtime policy
+   minted into grants changes.
+3. Run the checks for the affected agent.
+4. Run the San Francisco typecheck when grant/model routing is affected.
+5. Commit and deploy through the repo/GitHub Actions path.
+
+Required checks:
+
+```bash
+pnpm --filter @clickeen/sanfrancisco typecheck
+pnpm --filter @clickeen/product-copilot typecheck
+pnpm --filter @clickeen/product-copilot eval:copilot
+pnpm --filter @clickeen/translation-agent typecheck
+pnpm --filter @clickeen/translation-agent eval:translation-agent
 ```
 
-## Model Strategy
+Run only the checks relevant to the affected route plus San Francisco when the
+grant/model boundary changes.
 
-The model/provider layer must stay explicit and closed-system:
+## Disallowed Runtime Behavior
 
-- no silent fallback;
-- no model string guessing;
-- no runtime provider probing on product requests;
-- no visitor request path model calls;
-- no docs JSON as runtime model truth.
+Current runtime must not:
 
-Future model catalog monitoring, conformance checks, and model-file updates
-belong to the planned DevOps Agent. San Francisco executes the configured model
-route it receives under a signed policy.
+- silently fallback to another provider/model;
+- guess model strings;
+- probe provider catalogs during product requests;
+- read model truth from `documentation/`;
+- call models from visitor runtime;
+- let agent homes own provider credentials;
+- let a caller request a model outside the signed grant policy.
 
-## Public Runtime Boundary
+## Verification
 
-Published widgets and pages serve generated files from the runtime plane. They
-must not call Ombra, San Francisco, or live model routes during visitor
-requests.
+Use static checks plus product-path checks:
+
+```bash
+pnpm --filter @clickeen/sanfrancisco typecheck
+pnpm --filter @clickeen/product-copilot eval:copilot
+pnpm --filter @clickeen/translation-agent eval:translation-agent
+gh run list --branch main --limit 10
+```
+
+## Out Of Scope
+
+Ombra does not define agent scope, provider monitoring jobs, or model decision
+history.

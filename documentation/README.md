@@ -50,8 +50,7 @@ documentation/
 │   ├── learning.md          # Trace/outcome/eval/release loop
 │   ├── agents/
 │   │   ├── product-copilot.md
-│   │   ├── translation-agent.md
-│   │   └── Planned_Agents/
+│   │   └── translation-agent.md
 │
 └── widgets/                  # WIDGET SPECS
     ├── WidgetBuildContract.md # Normative build contract
@@ -64,12 +63,12 @@ documentation/
 
 | Folder            | What It Answers                      |
 | ----------------- | ------------------------------------ |
-| **strategy/**     | WHY are we building this?            |
-| **architecture/** | HOW is it designed?                  |
-| **services/**     | WHAT product/runtime systems run?    |
-| **capabilities/** | WHAT features span systems?          |
-| **ai/**           | WHAT is the AI plane and agents?     |
-| **widgets/**      | WHAT do we ship?                     |
+| **strategy/**     | High-level WHY and direction only    |
+| **architecture/** | Current platform design and boundaries |
+| **services/**     | Current product/runtime systems      |
+| **capabilities/** | Current cross-system capabilities    |
+| **ai/**           | Current AI plane and built agents    |
+| **widgets/**      | Current widget contracts             |
 
 Surface split to keep straight when reading the repo:
 - `Roma` = account-scoped customer/member shell
@@ -82,7 +81,8 @@ Surface split to keep straight when reading the repo:
 There are **two doc roots** in the repo and they are intentionally different:
 
 - `documentation/` = **current system truth**. It must match runtime code + schema + deployed config. If it drifts, fix it immediately.
-- `Execution_Pipeline_Docs/` = **process artifacts** (planning → executing → executed). It records intent and history and can be stale by design.
+- `documentation/strategy/` = **high-level vision and direction**. It may describe where Clickeen is going, but it must not define routes, schemas, worker names, storage paths, cron shapes, eval commands, execution slices, or acceptance criteria.
+- `Execution_Pipeline_Docs/` = **process artifacts** (planning → executing → executed). It records intent, detailed future plans, reviews, migrations, history, and evidence.
 
 Use `documentation/` for authoritative behavior; use `Execution_Pipeline_Docs/` for context on how/why decisions were made.
 
@@ -196,7 +196,7 @@ If you change runtime behavior, update docs in the same PR/commit:
 - **Copilot/AI behavior changes**
   - Update the owning AI doc under `documentation/ai/`
   - Built agent docs live under `documentation/ai/agents/`
-  - Planned agent docs live under `documentation/ai/agents/Planned_Agents/`
+  - Non-current agent planning belongs in `Execution_Pipeline_Docs/`
 - **Widget spec/runtime changes**
   - Update the widget PRD under `documentation/widgets/{WidgetName}/`
   - If it affects shared runtime (stage/pod/typography/branding), update `documentation/architecture/CONTEXT.md`

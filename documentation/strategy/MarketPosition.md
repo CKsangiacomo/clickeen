@@ -155,7 +155,7 @@ We enable businesses to create content once and render infinite personalized var
 
 **Phase 1 (Month 1-12): Multi-Language Foundation**
 - Ship: Widgets, emails, ads, social, landing pages
-- Feature: 29-language translation overlay via a dedicated Translation Agent (planned, in flight)
+- Feature: 29-language translation overlay via the dedicated Translation Agent and overlay system
 - Message: "Your marketing, every language, zero extra work"
 
 **Phase 2 (Month 13-18): Geo + Experiments**

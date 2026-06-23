@@ -1,180 +1,299 @@
-STATUS: REFERENCE — MUST MATCH RUNTIME
-This document describes how San Francisco “learns” via outcomes: what is logged, what is indexed, what is considered success/failure, and how we prevent regressions.
-Runtime code + deployed Cloudflare bindings are operational truth; any mismatch here is a P0 doc bug and must be updated immediately.
+# San Francisco Learning
 
-# San Francisco — Learning Loop
+STATUS: CURRENT SYSTEM OPERATOR SPEC
 
-## 0) What “learning” means (for Clickeen)
+This document describes the current San Francisco event, outcome, storage, and
+eval gates. It is not a planning document and does not describe autonomous
+learning.
 
-“Learning” is not “more logs”. Learning means **outcomes and evals** that let us answer:
-- did an edit succeed (ops applied)?
-- did the user keep or undo it?
-- did the user convert (signup/upgrade)?
-- where is the system failing (timeouts, upstream errors, invalid ops)?
+Code authorities:
 
-San Francisco provides the execution surface and the learning data plane:
-- it logs every interaction (best-effort, non-blocking)
-- it indexes a minimal subset for querying
-- it accepts outcome attachments from Roma/Bob (sources of truth for conversions + UX decisions)
+- `sanfrancisco/src/index.ts`
+- `sanfrancisco/src/telemetry.ts`
+- `sanfrancisco/src/types.ts`
+- `sanfrancisco/migrations/`
+- `agents/product-copilot/evals/`
+- `agents/translation-agent/evals/`
 
-Day-one capture is not autonomous learning. The behavior-change path is:
+## Learning Definition
+
+Current learning means:
 
 ```text
-trace/outcome -> eval/review -> release -> rollback
+model-call event -> outcome attach -> eval/regression gate -> reviewed release
 ```
 
-The first Product Copilot eval harness is a deterministic fixture runner in
-`agents/product-copilot/evals/`. It is an acceptance/regression gate for the Product
-Copilot brain contract; it is not autonomous learning.
+San Francisco records model-call events and signed outcome attachments. Agent
+behavior changes only through code, prompts, policy files, evals, review, and
+deploy. There is no autonomous production mutation loop.
 
-## 1) The two event streams
+## Event Sources
 
-### 1.1 Interaction events (San Francisco emits)
+| Source | Runtime path | Stored by |
+| --- | --- | --- |
+| Model interaction | `POST /v1/model/chat` | San Francisco queue consumer |
+| Outcome attachment | `POST /v1/outcome` | San Francisco request handler |
+| Product Copilot contract eval | `agents/product-copilot/evals/` | local/CI command output |
+| Product Copilot real eval | `agents/product-copilot/evals/real-eval.ts` | local transcripts |
+| Translation Agent eval | `agents/translation-agent/evals/` | local command output |
 
-Every San Francisco `/v1/model/chat` call produces an `InteractionEvent` (see `sanfrancisco/src/types.ts`):
+## Interaction Event Contract
 
-- `requestId` (uuid)
+Type: `InteractionEvent` in `sanfrancisco/src/types.ts`.
+
+San Francisco creates one interaction event for each `/v1/model/chat` call.
+
+Fields:
+
+- `v`
+- `requestId`
 - `agentId`
 - `occurredAtMs`
-- `subject` (anon/user/service)
-- `trace` (may include `sessionId`, `instanceId`, `surfaceId`, `envStage`)
-- `input` (model-call input envelope)
-- `result` (model-call result envelope)
-- `usage` (provider/model/token/latency)
+- `subject`
+- `trace`
+- `ai.policyProfile`
+- `ai.policyVersion`
+- `ai.learningCapture`
+- `ai.taskClass`
+- `input`
+- `result`
+- `usage`
 
-This event is:
-1) enqueued into `SF_EVENTS`
-2) written raw to `SF_R2`
-3) indexed into `SF_D1` (best-effort)
+Emission path:
 
-### 1.2 Outcome events (Roma/Bob attach)
+```text
+/v1/model/chat
+-> build InteractionEvent
+-> if SF_EVENTS exists, enqueue with ctx.waitUntil
+-> queue consumer indexes D1
+-> queue consumer may write sampled raw R2 payload
+```
 
-San Francisco cannot infer Builder UX decisions. Those are attached via `/v1/outcome`.
+If `SF_EVENTS` is absent, the model call still returns and no interaction event
+is emitted.
 
-Payload: `OutcomeAttachRequest` (see `sanfrancisco/src/types.ts`)
+## Outcome Attach Contract
 
-Events currently supported:
+Type: `OutcomeAttachRequest` in `sanfrancisco/src/types.ts`.
+
+Endpoint:
+
+```text
+POST /v1/outcome
+```
+
+Signature:
+
+```text
+x-clickeen-signature = hmacSha256("outcome.v1.<bodyText>", AI_GRANT_HMAC_SECRET)
+```
+
+Required fields:
+
+- `requestId`
+- `sessionId`
+- `event`
+- `occurredAtMs`
+
+Accepted `event` values:
+
 - `edit_applied`
 - `edit_rejected`
 - `edit_undone`
 - `clarification_needed`
 - `invalid_output`
 
-Outcome payloads may include `outcomeId`, `surfaceId`, and `artifactId` linkage
-fields. Linkage is not causality. Later save, publish, undo, conversion, or
-absence does not prove the agent caused the outcome until a future governed
-attribution system proves that link.
+Optional fields:
 
-Auth:
-- The caller must sign the JSON body with `AI_GRANT_HMAC_SECRET` and pass the signature as `x-clickeen-signature`.
-- Roma is the live product backend surface that forwards account-mode outcomes to San Francisco.
+- `outcomeId`
+- `surfaceId`
+- `artifactId`
+- `timeToDecisionMs`
+- `accountIdHash`
+- `metadata`
 
-## 2) Storage model (cheap raw + small indexes)
+No current attribution contract proves causality from outcome linkage.
 
-### 2.1 R2: bounded raw learning samples
+## Capture And Sampling Rules
 
-Selected paid samples are stored as JSON in R2:
-`learning/{ENVIRONMENT}/{agentId}/{YYYY-MM-DD}/{requestId}.json`
+Interaction indexing and raw sample capture are different.
 
-R2 is the bounded debug/eval store. The durable fact layer remains D1 metering and outcome rows.
+| Storage | Rule |
+| --- | --- |
+| `SF_D1.copilot_events_v1` | queue consumer attempts to index every valid interaction event |
+| `SF_R2.learning/...` | only paid eligible Product Copilot samples selected by `learningCapture.rawSamplePercent` |
+| `SF_D1.copilot_outcomes_v1` | outcome endpoint writes every valid signed outcome |
 
-### 2.2 D1: queryable indexes
+Raw R2 sampling is controlled by `resolveLearningCaptureDecision` in
+`sanfrancisco/src/telemetry.ts`.
 
-San Francisco maintains two D1 tables. Their schema is owned by San Francisco D1 migrations, not runtime Worker boot code:
+Current raw-sample eligibility:
 
-#### `copilot_events_v1`
-One row per `requestId` with “learning features” extracted from the raw event:
-- `day`, `runtimeEnv`, `envStage`
-- `surfaceId`, `sessionId`, `instanceId` (stored in the current D1 `instancePublicId` column)
-- `agentId`, `widgetType`
-- `intent`, `outcome`
-- `hasUrl`, `controlCount`
-- `opsCount`, `uniquePathsTouched`, `scopesTouched`
-- `promptVersion`, `policyVersion`, `dictionaryHash`
-- `provider`, `model`, `latencyMs`
+- `agentId === "cs.widget.copilot.v1"`;
+- subject kind is `user`;
+- `ai.learningCapture.rawSamplePercent > 0`;
+- deterministic hash of subject/agent/request falls inside the sample percent.
 
-#### `copilot_outcomes_v1`
-One row per `(requestId, event)`:
-- `day`, `occurredAtMs`, `sessionId`
-- `outcomeId`, `surfaceId`, `artifactId`
-- `timeToDecisionMs` (for keep/undo)
-- `accountIdHash` (optional, for cohort analysis)
+Translation Agent interactions are indexed when emitted but are not currently raw
+sample eligible.
 
-Missing outcomes remain missing. Corrupt traces or outcomes are invalid, not
-absence.
+## Storage Authorities
 
-## 3) Versioning (so improvements are attributable)
+### D1
 
-Every interaction should include these “version stamps” in the indexed row:
-- `promptVersion` (agent prompt revision)
-- `policyVersion` (post-model rules revision)
-- `dictionaryHash` (hash of global edit dictionary)
-- `envStage` (exposure stage: `local|cloud-dev|uat|limited-ga|ga`)
+Schema authority: `sanfrancisco/migrations/`.
 
-If any of these are missing, analysis becomes garbage (“we changed something, but don’t know what”).
+Tables:
 
-## 4) Product Copilot evals (current repo reality)
+- `copilot_events_v1`
+- `copilot_outcomes_v1`
 
-Product Copilot ships two executable gates in `agents/product-copilot/evals/`:
+### R2
 
-- **Contract test** — `pnpm --filter @clickeen/product-copilot test:copilot-contract`. A deterministic fixture runner (no live model call) that pins the Product Copilot brain contract: conversational answer, clarification, draft edit, exact draft ops, one bounded structural retry, and draft-edit wording that must not claim applied/saved/published product success before Bob validates and applies the draft edit.
-- **Real eval** — `pnpm --filter @clickeen/product-copilot eval:copilot`. Calls the live model through `real-eval.ts`, scores each case with an LLM-as-judge rubric, runs pass@1 and pass^k (majority over K samples), writes transcripts under `evals/transcripts/`, and exits non-zero on any failure (regression gate).
+Sample key format:
 
-Do not add passive fixture files or fixture-only docs without an executable
-harness behind them.
+```text
+learning/{ENVIRONMENT}/{agentId}/{YYYY-MM-DD}/{requestId}.json
+```
 
-## 4.1) Translation Agent eval harness (current repo reality)
+Sample shape is produced by `buildLearningSample` in
+`sanfrancisco/src/telemetry.ts`.
 
-The active repo-owned Translation Agent eval harness lives in
-`agents/translation-agent/evals/` and runs through:
+### Queue
+
+Queue binding:
+
+```text
+SF_EVENTS
+```
+
+The queue consumer is `SanFranciscoWorker.queue` in `sanfrancisco/src/index.ts`.
+
+## D1 Event Index
+
+`copilot_events_v1` stores queryable features extracted from interaction events:
+
+- `requestId`
+- `day`
+- `occurredAtMs`
+- `runtimeEnv`
+- `envStage`
+- `surfaceId`
+- `sessionId`
+- `instancePublicId`
+- `agentId`
+- `widgetType`
+- `intent`
+- `outcome`
+- `hasUrl`
+- `controlCount`
+- `opsCount`
+- `uniquePathsTouched`
+- `scopesTouched`
+- `ctaAction`
+- `promptVersion`
+- `policyVersion`
+- `dictionaryHash`
+- `taskClass`
+- `provider`
+- `model`
+- `latencyMs`
+
+D1 insert failures are logged and do not fail the model response.
+
+## D1 Outcome Index
+
+`copilot_outcomes_v1` stores signed outcome attachments:
+
+- `requestId`
+- `event`
+- `day`
+- `occurredAtMs`
+- `sessionId`
+- `timeToDecisionMs`
+- `accountIdHash`
+- `outcomeId`
+- `surfaceId`
+- `artifactId`
+
+Outcome insert failure returns `500 PROVIDER_ERROR`.
+
+## Version Stamps
+
+Indexed events may include:
+
+- `promptVersion`
+- `policyVersion`
+- `dictionaryHash`
+- `envStage`
+
+Promotion decisions must not treat a run with missing required version context as
+strong release evidence.
+
+## Eval Gates
+
+Product Copilot:
+
+```bash
+pnpm --filter @clickeen/product-copilot test:copilot-contract
+pnpm --filter @clickeen/product-copilot eval:copilot
+```
+
+Translation Agent:
 
 ```bash
 pnpm --filter @clickeen/translation-agent eval:translation-agent
 ```
 
-It is an executable acceptance/regression gate for exact path preservation,
-malformed structured output rejection, placeholder parity, richtext tag parity,
-and anchor integrity. It is not autonomous learning and it does not call an LLM.
+Runtime smoke that exercises Translation Agent through Roma/Bob/Tokyo:
 
-## 5) What to measure (minimum)
+```bash
+pnpm e2e:auth:roma-dev
+pnpm e2e:smoke:translation-agent-runtime
+```
 
-From `copilot_events_v1`:
-- intent distribution (`explain|clarify|edit`)
-- outcome distribution (`no_ops|draft_edit_returned|invalid_ops|...`)
-- latency (`p50/p95`)
-- ops size (`opsCount`, `uniquePathsTouched`, `scopesTouched`)
+## Operational Queries
 
-From `copilot_outcomes_v1`:
-- undo rate (`edit_undone / edit_applied`)
-- time-to-decision
+D1 table reads must use the Cloudflare operation path from
+`documentation/architecture/CloudflareOperations.md`.
 
-## 6) Operational runbooks (what to do when metrics go bad)
+Common questions:
 
-### Invalid ops spikes
-Likely causes:
-- prompt drift (model started returning non-conforming ops)
-- missing/incorrect control constraints in input fixtures
-- policy layer regression
+| Question | Table |
+| --- | --- |
+| Model latency by agent/model | `copilot_events_v1` |
+| Invalid output or no-op rate | `copilot_events_v1` |
+| Undo rate | `copilot_outcomes_v1` |
+| Time to user decision | `copilot_outcomes_v1` |
+| Raw sampled payload for a request | `SF_R2 learning/...` |
 
-First actions:
-- inspect raw R2 payload for a few failing `requestId`s
-- confirm which `promptVersion/policyVersion/dictionaryHash` is responsible
+## Failure Semantics
 
-### Undo rate spikes
-Likely causes:
-- too-big edits (scope/groups too broad)
-- ambiguous vocabulary not clarified
+| Failure | Current behavior |
+| --- | --- |
+| `SF_EVENTS` absent | model response can still succeed; no event is queued |
+| queue message malformed | message is acknowledged and skipped |
+| D1 event index insert fails | logged; model response is not changed |
+| R2 sample write fails | logged; queue processing continues |
+| outcome signature invalid | `/v1/outcome` returns an error |
+| outcome payload invalid | `/v1/outcome` returns `400 BAD_REQUEST` |
+| outcome D1 insert fails | `/v1/outcome` returns `500 PROVIDER_ERROR` |
 
-First actions:
-- expand dictionary clarifications for the top ambiguous phrases
-- tighten policy layer (caps + scope confirmation)
+## Privacy And Redaction
 
-### Upstream provider errors/timeouts
-Likely causes:
-- model output invalid JSON
-- timeouts due to slow upstream or too-large prompts
+Raw R2 samples may contain model inputs and outputs. Current raw capture is
+limited by paid Product Copilot sampling policy. Do not broaden raw capture
+without updating the grant policy, eval/review process, and this document.
 
-First actions:
-- confirm timeouts are enforced by grant budgets
-- ensure “repair retry” doesn’t amplify timeouts
-- keep fail-soft parsing so UI does not devolve into 502 spam
+Integration-sourced content must preserve source truth. Human-generated content
+may be analyzed or proposed for improvement according to source authority.
+
+## Release And Rollback Gate
+
+Before promoting an AI behavior change:
+
+1. Run the eval gate for the affected agent.
+2. Run San Francisco typecheck if grant/model/telemetry code changed.
+3. Verify deploy workflow status after push.
+4. Confirm no new V1-V8 violation was introduced.
+5. Keep rollback as a normal code revert/deploy path.

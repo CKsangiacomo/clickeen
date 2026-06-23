@@ -1,147 +1,289 @@
-STATUS: REFERENCE — MUST MATCH RUNTIME
-
 # Product Copilot
 
-Product Copilot is the Builder-facing Clickeen agent brain.
+STATUS: CURRENT SYSTEM OPERATOR SPEC
 
-Code lives in:
+Product Copilot is the current Builder agent home for Bob draft operations and
+Builder help.
+
+Code authority:
+
+- `agents/product-copilot/`
+- `bob/components/CopilotPane.tsx`
+- `bob/lib/session/sessionTransport.ts`
+- `roma/app/api/account/instances/[instanceId]/copilot/route.ts`
+- `roma/lib/ai/account-copilot.ts`
+
+## Runtime Coordinates
+
+| Concern | Current value |
+| --- | --- |
+| Agent id | `cs.widget.copilot.v1` |
+| Worker name | `product-copilot-dev` |
+| Worker entrypoint | `agents/product-copilot/src/worker.ts` |
+| Brain contract | `agents/product-copilot/src/index.ts` |
+| Wrangler config | `agents/product-copilot/wrangler.toml` |
+| Product caller | Roma account Builder route |
+| Model executor | San Francisco `/v1/model/chat` |
+
+## Authority Matrix
+
+| Authority | Owns |
+| --- | --- |
+| Bob | open Builder draft, visible controls, draft signature, browser-memory apply/undo |
+| Roma | current account/session/tier, instance route authority, model selection validation, AI grant minting, usage reservation |
+| Product Copilot Worker | Product Copilot reasoning, model prompts, output parsing, `draft_edit` structural validation, one bounded structural retry |
+| San Francisco | grant/model enforcement, provider call, usage metadata, telemetry |
+| Tokyo-worker | saved account instance storage when the user saves through Roma |
+
+Product Copilot does not save, publish, mutate Tokyo, mint grants, own provider
+keys, or decide account permissions.
+
+## Entrypoint Flow
 
 ```text
-agents/product-copilot/
+Bob CopilotPane
+-> session.apiFetch('/api/ai/widget-copilot')
+-> Bob hosted session dispatch command: run-copilot
+-> Roma POST /api/account/instances/[instanceId]/copilot
+-> Roma loads current instance and validates account/instance authority
+-> Roma validates optional selectedModel
+-> Roma mints AI grant and reserves copilot usage
+-> Roma calls Product Copilot Worker POST /v1/execute
+-> Product Copilot calls San Francisco POST /v1/model/chat
+-> Product Copilot returns ProductCopilotResponse
+-> Bob applies draft_edit in browser memory only, if valid and draft signature still matches
 ```
 
-Runtime lives in the Cloudflare Worker configured by:
+## Roma Grant And Model Policy
+
+Roma mints the Product Copilot grant in `roma/lib/ai/account-copilot.ts`.
+
+Grant facts:
+
+- issuer: `roma`;
+- subject: current authenticated user/account;
+- cap: `agent:cs.widget.copilot.v1`;
+- mode: `editor`;
+- trace surface: `roma.builder`;
+- model policy: resolved from `packages/ck-policy/ai-runtime.matrix.json`;
+- optional selected model: accepted only if managed by
+  `isProductCopilotManagedModel`.
+
+Product Copilot passes the grant to San Francisco. San Francisco enforces the
+canonical agent id, capability, budget, and model policy.
+
+## Worker HTTP Contract
+
+Health:
 
 ```text
-agents/product-copilot/wrangler.toml
+GET /healthz
+HEAD /healthz
 ```
 
-## Authority
-
-Product Copilot owns:
-
-- Product Copilot reasoning instructions.
-- The `product-copilot.context.v1` capsule interpretation.
-- The typed output union:
-  `answer | clarification | suggestion | draft_edit | refusal | error`.
-- Structural validation of its own `draft_edit` ops before returning.
-- One bounded structural retry when model output is malformed.
-
-Product Copilot does not own:
-
-- account/session truth;
-- grant issuance;
-- provider keys;
-- saved product data;
-- Bob browser-memory draft state;
-- Bob terminal draft validation/apply;
-- Roma save/publish routes;
-- Tokyo account storage.
-
-## Runtime Flow
+Execute:
 
 ```text
-Bob builds product-copilot.context.v1 from the open draft
--> Roma validates account/widget authority and mints the AI grant
--> Roma calls the Product Copilot worker at PRODUCT_COPILOT_BASE_URL
--> Product Copilot asks San Francisco's /v1/model/chat endpoint for governed model calls
--> San Francisco records trace/usage and returns the typed result
--> Bob validates/applies draft_edit ops, if any
+POST /v1/execute
 ```
 
-The browser never calls a model provider.
-
-San Francisco does not execute the Product Copilot brain and does not store
-Product Copilot conversation/thread state.
-
-## Worker Contract
-
-`POST /v1/execute` belongs to the Product Copilot worker, not San Francisco.
-
-Request:
+Worker request:
 
 ```json
-{ "grant": "<signed AI grant>", "agentId": "cs.widget.copilot.v1", "input": {} }
+{
+  "grant": "v1.<payload>.<signature>",
+  "agentId": "cs.widget.copilot.v1",
+  "input": {
+    "instanceId": "QD1G068MX7",
+    "sessionId": "browser-session-id",
+    "userMessage": "Change the button text",
+    "context": {
+      "version": "product-copilot.context.v1",
+      "instanceId": "QD1G068MX7",
+      "widgetType": "faq",
+      "displayName": "FAQ",
+      "activeLocale": "en",
+      "draftSignature": "signature",
+      "controls": [],
+      "availableActions": ["draft_edit"],
+      "unavailableCapabilities": [
+        "saved-product-mutation",
+        "publish",
+        "translation-generation",
+        "analytics-lookup",
+        "child-agent-call"
+      ],
+      "traceRequestId": "uuid",
+      "selectedControlPath": "optional.path"
+    },
+    "conversationHistory": [
+      { "role": "user", "text": "previous turn" },
+      { "role": "assistant", "text": "previous answer" }
+    ]
+  },
+  "trace": {
+    "client": "roma",
+    "requestId": "uuid"
+  }
+}
 ```
 
-Response:
+Worker response:
 
 ```json
-{ "requestId": "<id>", "agentId": "cs.widget.copilot.v1", "result": {}, "usage": {} }
+{
+  "requestId": "uuid",
+  "agentId": "cs.widget.copilot.v1",
+  "result": {
+    "kind": "answer",
+    "message": "..."
+  },
+  "usage": {
+    "provider": "openai",
+    "model": "gpt-5.4-mini",
+    "promptTokens": 0,
+    "completionTokens": 0,
+    "latencyMs": 0
+  }
+}
 ```
 
-The worker verifies the Product Copilot input shape, runs Product Copilot
-reasoning, and calls San Francisco only for provider/model execution under the
-same signed grant.
+## Input Envelope
 
-## Evals
+Input type: `ProductCopilotRequestEnvelope` in
+`packages/ck-contracts/src/ai.ts`.
 
-There are two distinct harnesses in `agents/product-copilot/evals/`. They must
-not be confused: one is a contract test, the other is the real agent eval.
+Required route-level fields:
 
-### Contract test (deterministic, mocked model)
+- `instanceId`
+- `sessionId`
+- `userMessage`
+- `context`
 
-```bash
-pnpm --filter @clickeen/product-copilot test:copilot-contract
-```
+Required context fields:
 
-Runner: `run-product-copilot-eval.ts`. This is a **fixture/contract test**, not
-an agent eval. It feeds hand-written model outputs through the brain to verify
-the output union, bounded structural retry, draft-edit shape, malformed-output
-terminal failure, non-edit responses that smuggle draft payloads, and expected
-model-call counts. It never calls a model. It is a readiness gate for the
-parser/validator contract only — not proof that "Product Copilot works."
+- `version = "product-copilot.context.v1"`
+- `instanceId`
+- `widgetType`
+- `displayName`
+- `activeLocale`
+- `draftSignature`
+- `controls`
+- `availableActions`
+- `unavailableCapabilities`
+- `traceRequestId`
 
-### Real eval (live model, 121C §8.1)
+Optional fields:
 
-```bash
-pnpm --filter @clickeen/product-copilot eval:copilot
-```
+- `context.selectedControlPath`
+- `conversationHistory`
+- Roma request `selectedModel`
 
-Runner: `real-eval.ts`. This is the day-one Product Copilot eval. It calls the
-**real model** through the real brain (`executeProductCopilot`) over
-representative Builder turns (conversation, off-topic guided back, "what can you
-do", ambiguous intent, concrete edit, product guidance, refusal of unavailable
-capability, edit against a missing control). Each turn is scored with
-deterministic structural checks plus an **LLM-judge rubric** (tone, grounding,
-helpfulness, intent). It records **transcripts** under
-`agents/product-copilot/evals/transcripts/` and reports **pass@1 and pass^k**
-(k configurable via `COPILOT_EVAL_K`, default 3). It exits non-zero unless
-pass^k is full-green, so it is a real regression gate for prompt,
-output-contract, and model-route changes. It requires `OPENAI_API_KEY` in
-`.env.local`. Trace records should feed this harness rather than creating a
-second capture path (121G).
+Roma validates the envelope before calling Product Copilot. Product Copilot
+also validates its input shape through `executeProductCopilot`.
 
-## Context Capsule
+## Context Capsule Rules
 
-The capsule is bounded and product-owned. It includes only facts needed for the
-current Builder turn:
+The context capsule includes only current Builder-turn facts:
 
-- instance id;
+- current instance id;
 - widget type/display name;
 - active locale;
 - draft signature;
-- visible editable controls and current draft values;
-- declared available actions;
+- visible editable controls and values;
+- available draft actions;
 - unavailable capabilities;
-- bounded conversation history from Bob.
+- bounded conversation history.
 
-It does not include hidden Builder controls, unrelated account data,
-cross-account data, SDR/prospect data, widget package source, or saved-product
-mutation authority.
+The capsule must not include hidden controls, unrelated account data, cross
+account data, widget package source, saved-product mutation authority, or other
+product domains.
 
-Malformed, missing, forbidden, stale, or oversized context fails visibly. It is
-not silently substituted.
+If required widget/session context is invalid, the turn fails. If edit controls
+are unavailable or invalid, `draft_edit` is unavailable for that turn; the agent
+may still return another valid output kind.
 
-Conversational turns and draft-edit turns have different context requirements.
-The widget/session orientation is required for every turn. The edit-control
-catalog is required only for `draft_edit`. When the edit-control catalog is
-missing, malformed, or invalid, Product Copilot treats draft editing as
-unavailable for that turn and may still return `answer`, `clarification`,
-`suggestion`, `refusal`, or `error`. It must not invent controls, silently drop
-bad controls, or claim an edit succeeded.
+## Output Union And Draft Ops
 
-Invalid required request context is different from degraded edit context. If
-the required widget/session orientation is missing or malformed, the turn fails
-visibly as an invalid Product Copilot request. If only edit controls are
-invalid, the turn may continue but `draft_edit` is unavailable.
+Output type: `ProductCopilotResponse` in `packages/ck-contracts/src/ai.ts`.
+
+Allowed `kind` values:
+
+- `answer`
+- `clarification`
+- `suggestion`
+- `draft_edit`
+- `refusal`
+- `error`
+
+Allowed draft ops:
+
+- `set`
+- `insert`
+- `remove`
+- `move`
+
+Product Copilot validates returned draft ops structurally before returning them
+to Roma/Bob. It does not apply them.
+
+## Bob Apply And Persistence Boundary
+
+Bob applies `draft_edit` only when:
+
+- the current draft signature still matches the request signature;
+- inverse undo ops can be built;
+- `session.applyOps(ops)` succeeds.
+
+Apply is browser-memory only. User save remains a Roma account operation. Publish
+remains Roma-owned. Tokyo persistence is not touched by Product Copilot.
+
+Bob reports outcomes through `/api/ai/outcome`, which routes through Roma to San
+Francisco `/v1/outcome`.
+
+## Error Contract
+
+| Surface | Status/result | Cause |
+| --- | --- | --- |
+| Roma route | `422` | invalid envelope or selected model |
+| Roma route | `403` | account/tier/model/usage denial |
+| Product Copilot Worker | `400 BAD_REQUEST` | invalid worker request or invalid Product Copilot input |
+| Product Copilot Worker | `404 BAD_REQUEST` | unknown worker path |
+| Product Copilot Worker | `500 PROVIDER_ERROR` | missing San Francisco config or unexpected failure |
+| Product Copilot result | `kind: "error"` | brain could not produce valid output after bounded structural retry |
+| Bob | assistant message, no apply | stale draft signature, invalid ops, failed undo construction, failed apply |
+
+## Runtime Config And Deploy
+
+`agents/product-copilot/wrangler.toml`:
+
+- `ENVIRONMENT = "dev"`
+- `SANFRANCISCO_BASE_URL = "https://sanfrancisco.dev.clickeen.com"`
+- service binding `SANFRANCISCO_AI_ENGINE -> sanfrancisco-dev`
+
+Product Copilot uses the service binding when present and falls back to
+`SANFRANCISCO_BASE_URL` otherwise.
+
+Deploy evidence comes from the GitHub Actions `cloud-dev workers deploy`
+workflow after pushing `main`.
+
+## Verification
+
+Local checks:
+
+```bash
+pnpm --filter @clickeen/product-copilot typecheck
+pnpm --filter @clickeen/product-copilot test:copilot-contract
+pnpm --filter @clickeen/product-copilot eval:copilot
+```
+
+Runtime health:
+
+```bash
+curl -s https://product-copilot-dev.clickeen.workers.dev/healthz
+```
+
+Deploy state:
+
+```bash
+gh run list --branch main --limit 10
+```

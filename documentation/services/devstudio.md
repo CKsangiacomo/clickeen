@@ -77,15 +77,12 @@ LLM management source:
   San Francisco executes the model route in the signed runtime policy and does
   not read documentation files as runtime model truth. The picker itself owns no
   model truth.
-- SDR Copilot has no public model picker. DevStudio may manage its future model
-  policy, but public/prospect users never choose a model.
 - Internal agents use internal model routing config, not picker UI.
 - DevStudio displays managed configuration; San Francisco remains the runtime
   model execution authority. The current shipped DevStudio surface is
   read-only: it displays committed managed config at
   `/#/policy/llm-management`. DevStudio must not directly mutate live worker
-  runtime state or provider secrets. Future provider catalog monitoring,
-  conformance runs, and model-file updates belong to the planned DevOps Agent.
+  runtime state or provider secrets.
 
 Required Pages configuration:
 

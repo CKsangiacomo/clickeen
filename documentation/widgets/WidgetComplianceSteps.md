@@ -560,7 +560,7 @@ GATE (local)
 
 Widget `seo-geo.ts` files and `catalog.capabilities.seoGeo` are deleted from the widget source model. Do not add them in widget build work.
 
-PRD 101 will define generated static SEO/GEO payloads for `clk.live` output when enabled (`excerptHtml` and optional `schemaJsonLd`), and empty strings when disabled.
+Generated static SEO/GEO payloads for `clk.live` output are not widget source model fields. Widget build work must not add `excerptHtml`, `schemaJsonLd`, or SEO/GEO sidecars to widget source.
 
 ---
 

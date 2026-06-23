@@ -1,110 +1,293 @@
 # Translation Agent
 
-Translation Agent is Clickeen's account-widget localization agent home.
+STATUS: CURRENT SYSTEM OPERATOR SPEC
 
-For platform context see:
+Translation Agent is the current account-widget translation agent home. It
+translates saved account instance content into locale overlay files.
 
-- `documentation/architecture/CONTEXT.md`
-- `documentation/services/roma.md`
-- `documentation/ai/sanfrancisco.md`
-- `documentation/services/tokyo-worker.md`
+Code authority:
 
-## Product Role
+- `agents/translation-agent/`
+- `roma/app/api/account/instances/[instanceId]/translations/generate/route.ts`
+- `roma/lib/account-instance-translations.ts`
+- `roma/lib/translation-agent-control.ts`
+- `tokyo-worker/src/routes/internal-product-route-utils.ts`
 
-Translation Agent owns translation reasoning and locale overlay creation for
-saved account widget instances.
+## Runtime Coordinates
 
-Roma owns the current account, tier, active locales, routes, and save.
-San Francisco owns governed model execution.
-Tokyo-worker stores exact translated locale files in R2.
-Bob displays the user operation.
+| Concern | Current value |
+| --- | --- |
+| Agent id | `widget.instance.translator` |
+| Worker name | `translation-agent-dev` |
+| Worker entrypoint | `agents/translation-agent/src/worker.ts` |
+| Translation logic | `agents/translation-agent/src/index.ts` |
+| Wrangler config | `agents/translation-agent/wrangler.toml` |
+| Public worker URL | none; `workers_dev = false` |
+| Inbound caller | Roma `TRANSLATION_AGENT` service binding |
+| Model executor | San Francisco `SANFRANCISCO_AI_ENGINE` service binding |
+| Write target | Tokyo-worker `TOKYO_PRODUCT_CONTROL` service binding |
 
-Active locales are the locales the user wants widgets and pages displayed in.
-When Roma Settings sees active locales added by the user, Roma calls Translation
-Agent to create those overlay files for saved instances. When Roma Settings sees
-active locales removed by the user, Roma asks Tokyo-worker to delete those exact
-overlay files; Translation Agent is not involved in deletion.
+## Ownership
 
-The saved `instance.content.json` field map is the overlay source. Translation
-Agent translates those paths and Tokyo-worker validates writes against those
-paths. It must not rederive the translation field list from the current widget
-definition during overlay write/read, because saved account instances are the
-runtime artifact being translated.
+| Authority | Owns |
+| --- | --- |
+| Roma | current account, tier, active locales, saved instance route, grant issuance |
+| Translation Agent | translation planning, protected-token handling, model prompts, exact overlay value production |
+| San Francisco | signed model execution and usage metadata |
+| Tokyo-worker | account instance overlay file storage in R2 |
+| Bob | user-facing Translations panel and progress/result display |
 
-## Runtime
+Translation Agent does not own account permission, tier permission, active locale
+selection, deletion, visitor runtime, or saved instance source truth.
 
-Translation Agent runs as a Cloudflare Worker:
+## Product Triggers
+
+Current generation route:
 
 ```text
-agents/translation-agent/src/worker.ts
+POST /api/account/instances/{instanceId}/translations/generate
 ```
 
-The Worker accepts Roma-issued saved-instance translation work, calls San
-Francisco `/v1/model/chat` with the Translation Agent grant, and writes completed
-locale overlay values through Tokyo-worker.
+Roma loads current account locale state, excludes the base locale, enforces tier
+locale entitlement, loads the saved instance source from Tokyo-worker, builds
+translation items from saved `source.content.fields`, mints the Translation
+Agent grant, and calls the Translation Agent service binding.
 
-The Worker is not public-routed. It is a service-bound agent home for Roma.
+Locale removal is not Translation Agent work. Roma/Tokyo delete exact overlay
+files for removed active locales.
 
-The Worker request path is:
+## Roma Request Construction
+
+Roma builds items from the saved instance source:
+
+```text
+source.content.fields[path].value
+```
+
+Item shape sent to Translation Agent:
+
+```json
+{
+  "path": "content.title",
+  "type": "string",
+  "value": "Book a demo",
+  "label": "optional identityKey",
+  "role": "optional fieldPattern"
+}
+```
+
+Rich text is detected from HTML-like values and sent as `type: "richtext"`.
+The saved instance field map is authority. Translation Agent must not rederive
+the field list from current widget source code during overlay writes.
+
+## Worker HTTP Contract
+
+Health:
+
+```text
+GET /healthz
+HEAD /healthz
+```
+
+Translate:
 
 ```text
 POST /v1/translate-instance
 ```
 
-The request body carries the saved instance coordinate, active locale list,
-source text items, and Roma-issued Translation Agent grant. Before model
-execution or Tokyo writes, the Worker verifies that the signed grant:
+Request:
 
-- was issued by Roma;
-- has `agent:widget.instance.translator`;
-- has `ai.agentId = widget.instance.translator`;
-- names the same `accountPublicId` in `trace.accountPublicId`;
-- names the same `instanceId` in `trace.instanceId`.
-- names the same active locales in `trace.activeLocales`.
-
-The request body alone is not authority for account or instance writes.
-
-The Worker writes a locale overlay only after that locale has complete overlay
-values. A model, translation, or Tokyo write failure returns an explicit failure
-and cannot be reported as full success. Any completed overlay file already
-written remains an exact file in the account instance overlay folder.
-Tokyo-worker also verifies the same Roma-issued grant on Translation Agent
-writes and accepts the write only for the named account instance and locale.
-
-The Worker does not own account permission, tier permission, locale selection,
-review dashboards, background workers, or visitor runtime behavior.
-
-## Product Path
-
-```text
-Roma account route
--> Translation Agent Worker
--> San Francisco /v1/model/chat
--> Translation Agent writes locale values through Tokyo-worker
--> Tokyo-worker stores overlay files in R2
+```json
+{
+  "grant": "v1.<payload>.<signature>",
+  "agentId": "widget.instance.translator",
+  "accountPublicId": "CLICKEEN",
+  "instanceId": "QD1G068MX7",
+  "widgetType": "faq",
+  "baseLocale": "en",
+  "activeLocales": ["fr", "de"],
+  "items": [
+    {
+      "path": "content.title",
+      "type": "string",
+      "value": "Book a demo",
+      "label": "title",
+      "role": "headline",
+      "promptType": "string"
+    }
+  ],
+  "trace": {
+    "requestId": "uuid",
+    "client": "roma"
+  }
+}
 ```
 
-## Storage
+Required fields:
 
-Translated locale values live under the account instance overlay folder:
+- `grant`
+- `accountPublicId`
+- `instanceId`
+- `activeLocales`
+- `items`
+
+Optional fields:
+
+- `agentId`
+- `widgetType`
+- `baseLocale`
+- `trace.requestId`
+- `trace.client`
+
+Response:
+
+```json
+{
+  "requestId": "uuid",
+  "agentId": "widget.instance.translator",
+  "translation": {
+    "ok": true,
+    "baseLocale": "en",
+    "activeLocales": ["fr", "de"],
+    "results": [
+      { "locale": "fr", "ok": true, "count": 12 },
+      { "locale": "de", "ok": true, "count": 12 }
+    ]
+  }
+}
+```
+
+If the worker returns a response with failed locale results, status is `424`.
+Current locale execution uses `Promise.all`; an exception aborts the request and
+returns an error payload. Overlay files written before the failure are not rolled
+back.
+
+## Grant And Write Authorization
+
+Translation Agent verifies the Roma-issued grant before model execution or Tokyo
+writes.
+
+Required grant facts:
+
+- `iss = "roma"`;
+- `caps` includes `agent:widget.instance.translator`;
+- `ai.agentId = "widget.instance.translator"`;
+- `trace.accountPublicId` equals request `accountPublicId`;
+- `trace.instanceId` equals request `instanceId`;
+- `trace.activeLocales` is the same set as request `activeLocales`;
+- `exp` is greater than current time.
+
+Tokyo-worker verifies the same grant on each write using the `x-ck-ai-grant`
+header and accepts only:
+
+- the same account id;
+- the same instance id;
+- a locale included in `trace.activeLocales`.
+
+## Translation Planning And Safety
+
+Translation Agent:
+
+- chunks model entries before model calls;
+- protects placeholders, URLs, emails, tags, and structured tokens;
+- parses structured model output;
+- restores protected tokens;
+- validates that every requested path has exactly one translated value;
+- rejects unexpected output paths;
+- rejects missing requested paths.
+
+Model calls go through San Francisco `/v1/model/chat` using the same Roma grant.
+
+## Tokyo Overlay Write Contract
+
+Translation Agent writes one locale at a time through Tokyo-worker:
+
+```text
+PUT /__internal/instances/{instanceId}/translations/{locale}
+```
+
+Headers:
+
+```text
+x-account-id: {accountPublicId}
+x-ck-internal-service: translation-agent
+x-ck-ai-grant: {grant}
+```
+
+Body:
+
+```json
+{ "values": { "content.title": "Réserver une démo" } }
+```
+
+Expected Tokyo response:
+
+```json
+{ "ok": true, "locale": "fr" }
+```
+
+## Storage And Verification
+
+Overlay file path:
 
 ```text
 accounts/{accountPublicId}/instances/{instanceId}/overlays/locales/{locale}.json
 ```
 
-Tokyo-worker stores the files. It does not decide active locales or translation
-meaning.
+Tokyo-worker stores the file. Translation Agent does not store files directly in
+R2.
 
-## Runtime Smoke
+## Failure Semantics
 
-Refresh the cloud-dev Roma auth state and run the product-path smoke:
+| Failure | Current behavior |
+| --- | --- |
+| invalid worker request | `400 BAD_REQUEST` |
+| invalid or expired grant | `401 GRANT_INVALID` or `401 GRANT_EXPIRED` |
+| grant/request mismatch | `403 CAPABILITY_DENIED` |
+| missing `SANFRANCISCO_AI_ENGINE` | `500 PROVIDER_ERROR` |
+| San Francisco provider/model failure | forwarded explicit error |
+| malformed model output | explicit Translation Agent error |
+| missing requested path | `502 PROVIDER_ERROR` |
+| unexpected translated path | `502 PROVIDER_ERROR` |
+| missing `TOKYO_PRODUCT_CONTROL` | `500 PROVIDER_ERROR` |
+| Tokyo write rejection | forwarded explicit error |
+| failure after prior locale writes | request fails; prior written overlay files remain |
+
+No full-success response may be returned unless every requested active locale has
+a successful overlay write.
+
+## Runtime Config And Deploy
+
+`agents/translation-agent/wrangler.toml`:
+
+- `name = "translation-agent-dev"`
+- `workers_dev = false`
+- `ENVIRONMENT = "dev"`
+- service binding `SANFRANCISCO_AI_ENGINE -> sanfrancisco-dev`
+- service binding `TOKYO_PRODUCT_CONTROL -> tokyo-assets-dev`
+
+Required secret/env:
+
+- `AI_GRANT_HMAC_SECRET`
+
+Deploy evidence comes from the GitHub Actions `cloud-dev workers deploy`
+workflow after pushing `main`.
+
+## Evals And Runtime Smoke
+
+Local checks:
+
+```bash
+pnpm --filter @clickeen/translation-agent typecheck
+pnpm --filter @clickeen/translation-agent eval:translation-agent
+```
+
+Runtime smoke:
 
 ```bash
 pnpm e2e:auth:roma-dev
 pnpm e2e:smoke:translation-agent-runtime
 ```
 
-The smoke runs against Roma cloud-dev. It generates translations for the saved
-account instance, verifies the generated overlay inventory through Roma read
-routes, reads one overlay value file, and opens Bob's Translations panel against
-the same instance.
+The runtime smoke exercises Roma, Translation Agent, San Francisco, Tokyo-worker,
+and Bob's Translations panel against cloud-dev.
