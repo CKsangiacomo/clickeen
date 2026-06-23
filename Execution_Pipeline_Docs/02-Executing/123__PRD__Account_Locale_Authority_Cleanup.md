@@ -185,17 +185,16 @@ Core violation:
 
 Required correction:
 
-- Roma requires the requested locale to be one of the account selected target
-  locales.
+- Roma requires the requested locale to be one of the account active locales.
 - Roma rejects writes to the account base locale through the translated-locale
   write route.
 - Tokyo stores the explicit overlay after Roma has applied account policy.
 
-### V-123-05 - Duplicate preserves stale source target locales
+### V-123-05 - Duplicate preserves stale source active locales
 
 Current behavior:
 
-- Duplicate reads `baseLocale` and `targetLocales` from the source instance.
+- Duplicate reads `baseLocale` and old locale intent from the source instance.
 - The new instance inherits those values even if account settings changed.
 
 Product-law problem:
@@ -210,7 +209,7 @@ Core violation:
 Required correction:
 
 - Duplicate loads current account locale settings.
-- New duplicate uses current account selected target locales.
+- New duplicate uses current account active locales.
 - Base locale must match the account base locale or fail at Roma's account
   boundary.
 
@@ -236,7 +235,8 @@ Core violation:
 Required correction:
 
 - Public package output must be honest about available locale content.
-- Account-selected target locales are intent, not public-ready runtime output.
+- Account active locales are display intent, not proof that an overlay file
+  exists for a saved instance.
 - Public locale availability must come from saved complete translated output, or
   the package remains base-only without pretending otherwise.
 
@@ -273,7 +273,7 @@ Current behavior:
 - Prague docs and markdown support imply `accountInstanceRef.locale` or
   `?locale=` can select account-widget translated output.
 - Public serving currently serves stored package files and does not prove a
-  concrete locale artifact for that selector.
+  saved locale overlay file for that selector.
 
 Why deferred:
 
@@ -328,12 +328,16 @@ Completion evidence:
 
 Action:
 
-- Ensure account-selected target locales cannot include the account base locale.
+- Ensure account active locales cannot include the account base locale.
 - Ensure `countryToLocale` values, where still active, point only to account
-  enabled locales.
+  active locales.
 - Ensure unknown locale policy keys are not silently accepted as current product
   behavior.
 - Preserve the existing tier-capacity enforcement through `l10n.locales.max`.
+- Prove account settings active-locale reconciliation through Roma
+  `/api/account/locales`: inactive saved-instance overlay files are deleted,
+  missing active overlays are created through Translation Agent, and existing
+  active overlays are left alone.
 
 Architecture compliance:
 
@@ -391,7 +395,7 @@ Completion evidence:
 Action:
 
 - Update duplicate route to load current account locale settings.
-- Use account-selected target locales for the new instance.
+- Use current account active locales for the new instance.
 - Fail if the source instance base conflicts with the account base locale.
 
 Architecture compliance:
@@ -512,7 +516,7 @@ Action:
 - Public package output must include only locale content that actually exists as
   saved runtime-ready output.
 - If only base output exists, public package remains base-only and does not
-  pretend account-selected target locales are public-ready.
+  pretend account active locales have saved overlay output.
 - Unknown requested locale must not silently substitute base while implying the
   requested locale was served.
 
@@ -610,6 +614,9 @@ PRD 123 can move to `03-Executed` only when all are true:
 
 - Account locale capacity still comes from tier policy.
 - Account selected locales still come from account settings.
+- Account settings active-locale reconciliation is proven through Roma
+  `/api/account/locales`, including exact overlay delete for inactive overlay
+  files and Translation Agent generation for missing active overlay files.
 - Roma save, duplicate, and translation generation routes no longer accept caller
   locale fields as authority; the old manual translation write route is absent.
 - Tokyo no longer invents locale authority through fallback values.

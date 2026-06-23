@@ -1,5 +1,6 @@
 import { normalizeStorageId } from '../asset-utils';
 import {
+  deleteAccountInstanceTranslatedLocaleValues,
   listAccountInstanceTranslatedLocaleValues,
   readAccountInstanceTranslatedLocaleValues,
   writeAccountInstanceTranslatedLocaleValues,
@@ -99,6 +100,24 @@ export async function tryHandleInternalTranslationRoutes(
 
       try {
         const translation = await writeAccountInstanceTranslatedLocaleValues({ env, accountId, instanceId, locale, values });
+        return respond(json({ ok: true, v: 1, locale: translation.locale }));
+      } catch (error) {
+        const detail = error instanceof Error ? error.message : String(error);
+        return respond(json({ error: { kind: 'VALIDATION', reasonKey: detail, detail } }, { status: 422 }));
+      }
+    }
+
+    if (req.method === 'DELETE') {
+      const authErr = await authorizeAccountInstanceControlRequest({
+        req,
+        env,
+        accountId,
+        minRole: 'admin',
+      });
+      if (authErr) return respond(authErr);
+
+      try {
+        const translation = await deleteAccountInstanceTranslatedLocaleValues({ env, accountId, instanceId, locale });
         return respond(json({ ok: true, v: 1, locale: translation.locale }));
       } catch (error) {
         const detail = error instanceof Error ? error.message : String(error);

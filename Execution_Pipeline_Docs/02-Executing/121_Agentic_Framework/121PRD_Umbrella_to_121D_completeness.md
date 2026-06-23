@@ -111,8 +111,10 @@ Already real:
 Remaining closure work:
 
 - Some docs still describe future agent work as if it were current execution.
-- Keep future public locale serving and account-settings locale-change
-  automation out of 121D closure.
+- Keep future public locale serving out of 121D closure.
+- Keep account settings active-locale reconciliation inside 121D closure: saving
+  active locales must reconcile saved instance overlay files through Roma,
+  Translation Agent, and Tokyo-worker.
 
 ## 4. Completeness Scope
 
@@ -147,9 +149,9 @@ Roma invocation
 -> Bob explicit generate result and overlay inspection
 ```
 
-Runtime overlay consumption and account-settings-driven overlay delete/create
-belong to later clk.live/pages and account settings execution. They are not part
-of the current 121D execution path.
+Runtime overlay consumption belongs to later clk.live/pages execution. Account
+settings-driven overlay delete/create is part of the current 121D execution path
+because active locales are the user's display intent.
 
 This completeness PRD owns the 121-series closure:
 
@@ -347,6 +349,9 @@ Future work may use Translation Agent overlays. It must not be smuggled into
 - 121D Translation Agent runtime path works through Roma, Translation Agent
   Worker, San Francisco, and Tokyo-worker.
 - 121D makes Translation Agent a real Cloudflare Worker agent home.
+- Account settings active-locale save reconciles saved instance overlay folders
+  against the next active locale set: inactive overlays are deleted, missing
+  active overlays are generated, and existing active overlays are left alone.
 - Bob translation panel follows 121D exactly.
 - Roma owns active locales and account authorization.
 - Translation Agent owns translation reasoning only.
@@ -365,6 +370,8 @@ Code:
 
 - Product Copilot runtime path is complete;
 - 121D Translation Agent runtime path is complete on cloud-dev;
+- account settings active-locale reconciliation updates overlay files through the
+  Roma settings route;
 - 121D added the Translation Agent Worker home;
 - delete redundant runtime discovery and compatibility paths only when still
   present in current product code;

@@ -40,6 +40,10 @@ export async function loadJson<T>(env: Env, key: string): Promise<T | null> {
   }
 }
 
+export async function deleteObject(env: Env, key: string): Promise<void> {
+  await env.TOKYO_R2.delete(key);
+}
+
 export async function loadJsonObject<T>(
   env: Env,
   key: string,

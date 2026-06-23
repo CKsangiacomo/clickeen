@@ -8,6 +8,12 @@ import {
 } from '@clickeen/ck-contracts';
 import { resolvePolicy } from '@clickeen/ck-policy';
 import { normalizeLocaleToken } from '@clickeen/l10n';
+import { listAccountInstancesInTokyo } from '@roma/lib/account-instance-direct';
+import {
+  deleteAccountInstanceTranslationValues,
+  generateAccountInstanceTranslations,
+  loadAccountInstanceTranslations,
+} from '@roma/lib/account-instance-translations';
 import { loadAccountBaseLocaleLockState } from '@roma/lib/account-base-locale-lock';
 import {
   ACCOUNT_ACTIVE_LOCALES_PATCH_SELECT,
@@ -25,6 +31,16 @@ export const runtime = 'edge';
 type AccountLocalesWritePayload = {
   activeLocales?: unknown;
   localePolicy?: unknown;
+};
+
+type LocaleOverlayUpdateFailure = {
+  ok: false;
+  status: number;
+  error: {
+    kind: 'VALIDATION' | 'AUTH' | 'DENY' | 'NOT_FOUND' | 'UPSTREAM_UNAVAILABLE';
+    reasonKey: string;
+    detail?: string;
+  };
 };
 
 function resolveSupabaseAdminConfig(): { baseUrl: string; serviceRoleKey: string } {
@@ -65,6 +81,132 @@ function resolveDbErrorDetail(payload: unknown, fallback: string): string {
   if (!isRecord(payload)) return fallback;
   const message = payload.message ?? payload.error_description ?? payload.error;
   return typeof message === 'string' && message.trim() ? message.trim() : fallback;
+}
+
+function localeOverlayFailure(args: {
+  status: number;
+  kind: LocaleOverlayUpdateFailure['error']['kind'];
+  reasonKey: string;
+  detail: string;
+}): LocaleOverlayUpdateFailure {
+  return {
+    ok: false,
+    status: args.status,
+    error: {
+      kind: args.kind,
+      reasonKey: args.reasonKey,
+      detail: args.detail,
+    },
+  };
+}
+
+async function reconcileAccountLocaleOverlays(args: {
+  accountId: string;
+  accountCapsule?: string | null;
+  requestId?: string | null;
+  nextActiveLocales: string[];
+  baseLocale: string;
+  authz: Parameters<typeof generateAccountInstanceTranslations>[0]['authz'];
+}): Promise<
+  | {
+      ok: true;
+      value: {
+        instancesChecked: number;
+        deleted: Array<{ instanceId: string; locale: string }>;
+        generated: Array<{ instanceId: string; locales: string[] }>;
+      };
+    }
+  | LocaleOverlayUpdateFailure
+> {
+  const nextActiveLocales = Array.from(new Set(args.nextActiveLocales.filter((locale) => locale !== args.baseLocale)));
+  const nextActiveSet = new Set(nextActiveLocales);
+
+  const instances = await listAccountInstancesInTokyo({
+    accountId: args.accountId,
+    accountCapsule: args.accountCapsule,
+    requestId: args.requestId,
+  });
+  if (!instances.ok) return instances;
+
+  const deleted: Array<{ instanceId: string; locale: string }> = [];
+  const generated: Array<{ instanceId: string; locales: string[] }> = [];
+
+  for (const instance of instances.value.accountInstances) {
+    const existing = await loadAccountInstanceTranslations({
+      accountId: args.accountId,
+      instanceId: instance.instanceId,
+      accountCapsule: args.accountCapsule,
+      requestId: args.requestId,
+    });
+    if (!existing.ok) {
+      return localeOverlayFailure({
+        status: existing.status,
+        kind: existing.error.kind,
+        reasonKey: existing.error.reasonKey,
+        detail: `list:${instance.instanceId}:${existing.error.detail ?? existing.error.reasonKey}`,
+      });
+    }
+
+    const existingLocales = existing.value.translations.map((entry) => entry.locale);
+    const removedLocales = existingLocales.filter((locale) => !nextActiveSet.has(locale));
+    for (const locale of removedLocales) {
+      const result = await deleteAccountInstanceTranslationValues({
+        accountId: args.accountId,
+        instanceId: instance.instanceId,
+        locale,
+        accountCapsule: args.accountCapsule,
+        requestId: args.requestId,
+      });
+      if (!result.ok) {
+        return localeOverlayFailure({
+          status: result.status,
+          kind: result.error.kind,
+          reasonKey: result.error.reasonKey,
+          detail: `delete:${instance.instanceId}:${locale}:${result.error.detail ?? result.error.reasonKey}`,
+        });
+      }
+      deleted.push({ instanceId: instance.instanceId, locale });
+    }
+
+    const missingAddedLocales = nextActiveLocales.filter((locale) => !existingLocales.includes(locale));
+    if (missingAddedLocales.length === 0) continue;
+
+    const generation = await generateAccountInstanceTranslations({
+      accountId: args.accountId,
+      instanceId: instance.instanceId,
+      baseLocale: args.baseLocale,
+      activeLocales: missingAddedLocales,
+      authz: args.authz,
+      accountCapsule: args.accountCapsule,
+      requestId: args.requestId,
+    });
+    if (!generation.ok) {
+      return localeOverlayFailure({
+        status: generation.status,
+        kind: generation.error.kind,
+        reasonKey: generation.error.reasonKey,
+        detail: `generate:${instance.instanceId}:${missingAddedLocales.join(',')}:${generation.error.detail ?? generation.error.reasonKey}`,
+      });
+    }
+    if (!generation.value.translation.accepted) {
+      return localeOverlayFailure({
+        status: 422,
+        kind: 'VALIDATION',
+        reasonKey: 'coreui.errors.translation.failed',
+        detail: `generate:${instance.instanceId}:${missingAddedLocales.join(',')}:not_accepted`,
+      });
+    }
+    generated.push({ instanceId: instance.instanceId, locales: generation.value.translation.activeLocales });
+  }
+
+  return {
+    ok: true,
+    value: {
+      instancesChecked: instances.value.accountInstances.length,
+      deleted,
+      generated,
+    },
+  };
 }
 
 export async function GET(request: NextRequest) {
@@ -326,11 +468,28 @@ export async function PUT(request: NextRequest) {
       );
     }
 
+    const overlayUpdate = await reconcileAccountLocaleOverlays({
+      accountId: current.value.authzPayload.accountPublicId,
+      accountCapsule: current.value.authzToken,
+      requestId: current.value.requestId,
+      nextActiveLocales: activeLocales,
+      baseLocale,
+      authz: current.value.authzPayload,
+    });
+    if (!overlayUpdate.ok) {
+      return withSession(
+        request,
+        NextResponse.json({ error: overlayUpdate.error }, { status: overlayUpdate.status }),
+        current.value.setCookies,
+      );
+    }
+
     return withSession(
       request,
       NextResponse.json({
         accountId: current.value.authzPayload.accountId,
         ...readAccountActiveLocalesPatch(patchedRow),
+        overlayUpdate: overlayUpdate.value,
       }),
       current.value.setCookies,
     );

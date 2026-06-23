@@ -4,7 +4,7 @@ import {
   accountInstanceLocaleOverlayKey,
   accountInstanceLocaleOverlaysPrefix,
 } from '../account-instances/keys';
-import { loadJson, putJson } from '../storage';
+import { deleteObject, loadJson, putJson } from '../storage';
 import type { LocaleOverlayDocument } from '../account-instances/types';
 import type { SavedTextField } from '@clickeen/ck-contracts/translated-value-primitives';
 
@@ -97,6 +97,27 @@ export async function writeLocaleOverlay(args: {
     args.overlay,
   );
   return args.overlay;
+}
+
+export async function deleteLocaleOverlay(args: {
+  env: Env;
+  accountId: string;
+  widgetCode: string;
+  instanceId: string;
+  locale: string;
+}): Promise<{ locale: string }> {
+  const locale = normalizeLocale(args.locale);
+  if (!locale) throw new Error('tokyo.translation.locale.invalid');
+  await deleteObject(
+    args.env,
+    accountInstanceLocaleOverlayKey(
+      args.accountId,
+      args.widgetCode,
+      args.instanceId,
+      locale,
+    ),
+  );
+  return { locale };
 }
 
 export async function listLocaleOverlays(args: {

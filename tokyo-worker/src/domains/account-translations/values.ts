@@ -12,6 +12,7 @@ import type {
 import { normalizeStorageId } from '../account-instances/utils';
 import {
   assertLocaleOverlayValuesMatchSavedTextFields,
+  deleteLocaleOverlay,
   listLocaleOverlays,
   readLocaleOverlay,
   writeLocaleOverlay,
@@ -130,6 +131,36 @@ export async function writeAccountInstanceTranslatedLocaleValues(args: {
     },
   });
   return { locale, values: args.values };
+}
+
+export async function deleteAccountInstanceTranslatedLocaleValues(args: {
+  env: Env;
+  instanceId: string;
+  accountId: string;
+  widgetType?: string | null;
+  locale: string;
+}): Promise<{ locale: string }> {
+  const instanceId = normalizeStorageId(args.instanceId);
+  const accountId = normalizeStorageId(args.accountId);
+  const locale = normalizeLocale(args.locale);
+  if (!instanceId || !accountId || !locale) {
+    throw new Error('tokyo.translation.values_invalid');
+  }
+  const stored = await resolveStoredTranslationSource({
+    env: args.env,
+    accountId,
+    instanceId,
+    widgetType: args.widgetType,
+  });
+  if (!stored) throw new Error('coreui.errors.instance.notFound');
+  await deleteLocaleOverlay({
+    env: args.env,
+    accountId: stored.configDoc.accountId,
+    widgetCode: stored.configDoc.widgetCode,
+    instanceId: stored.configDoc.id,
+    locale,
+  });
+  return { locale };
 }
 
 export async function listAccountInstanceTranslatedLocaleValues(args: {

@@ -128,6 +128,14 @@ Tokyo-worker, mints a Translation Agent grant, and calls the Translation Agent
 Worker. Translation Agent calls San Francisco `/v1/model/chat` and writes
 overlays via Tokyo-worker.
 
+Account language settings are also an overlay operation. When the user saves
+active locales in Roma Settings, Roma reconciles each saved instance overlay
+folder against the next active locale set. Overlay files whose locale is no
+longer active are deleted through Tokyo-worker. Active locales missing an overlay
+file are generated through the same Translation Agent Worker path. Existing
+overlay files for still-active locales are left alone. Roma does not ask Bob and
+does not create a background locale job; saving settings is the user decision.
+
 Roma Builder owns public widget copy actions for the current account and opened
 instance. It builds the public URL and iframe/script snippets from the current
 account public id, the exact instance id, the configured public-serving

@@ -505,6 +505,36 @@ export async function readAccountInstanceTranslationValues(args: {
   return { ok: true, value };
 }
 
+export async function deleteAccountInstanceTranslationValues(args: {
+  accountId: string;
+  instanceId: string;
+  locale: string;
+  accountCapsule?: string | null;
+  requestId?: string | null;
+}): Promise<{ ok: true; value: { locale: string } } | RouteFailure> {
+  const locale = asTrimmedString(args.locale);
+  if (!locale) return invalidPayload('locale_missing');
+  const result = await callTokyo<unknown>(
+    {
+      accountId: args.accountId,
+      accountCapsule: args.accountCapsule,
+      requestId: args.requestId,
+    },
+    {
+      path: `/__internal/instances/${encodeURIComponent(args.instanceId)}/translations/${encodeURIComponent(locale)}`,
+      method: 'DELETE',
+      decode: (payload) => payload,
+      errorKey: 'tokyo.errors.translation.invalid',
+      errorDetail: 'tokyo_instance_translation_delete_http_error',
+    },
+  );
+  if (!result.ok) return result;
+  const payload = isRecord(result.value) ? result.value : null;
+  const deletedLocale = asTrimmedString(payload?.locale);
+  if (deletedLocale !== locale) return invalidPayload('tokyo_instance_translation_delete_invalid_payload');
+  return { ok: true, value: { locale } };
+}
+
 export async function writeAccountInstanceTranslationValues(args: {
   accountId: string;
   instanceId: string;
