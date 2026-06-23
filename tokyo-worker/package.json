@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "deploy": "wrangler deploy",
+    "deploy": "wrangler deploy --routes \"\"",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {

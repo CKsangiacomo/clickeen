@@ -149,15 +149,7 @@ jobs:
 
       - name: Deploy tokyo-assets-dev (tokyo-worker)
         if: steps.changes.outputs.tokyo == 'true'
-        run: |
-          upload_output="$(pnpm -C tokyo-worker exec wrangler versions upload --message "$GITHUB_SHA")"
-          printf '%s\n' "$upload_output"
-          version_id="$(printf '%s\n' "$upload_output" | awk '/Worker Version ID:/ {print $4}')"
-          if [ -z "$version_id" ]; then
-            echo "Tokyo-worker version upload did not return a Worker Version ID." >&2
-            exit 1
-          fi
-          pnpm -C tokyo-worker exec wrangler versions deploy "${version_id}@100" --yes
+        run: pnpm -C tokyo-worker run deploy
 
       - name: Sync tokyo-assets-dev AI grant secret
         if: steps.changes.outputs.tokyo == 'true' || steps.changes.outputs.translation_agent == 'true'
