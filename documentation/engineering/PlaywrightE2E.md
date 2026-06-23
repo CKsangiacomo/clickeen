@@ -74,10 +74,12 @@ Create or refresh it with:
 pnpm e2e:auth:roma-dev
 ```
 
-The command reads `BERLIN_DEV_ADMIN_EMAIL`/`BERLIN_DEV_ADMIN_PASSWORD`, falling
-back to `CK_ADMIN_EMAIL`/`CK_ADMIN_PASSWORD`, from the environment or local
-`.env.local`. If the storage state is missing, authenticated specs skip and
-public smoke specs still run.
+The command reads `CK_ADMIN_EMAIL`/`CK_ADMIN_PASSWORD`, falling back to
+`BERLIN_DEV_ADMIN_EMAIL`/`BERLIN_DEV_ADMIN_PASSWORD`, from the environment or
+local `.env.local`. Berlin stores the same values in its
+`BERLIN_DEV_ADMIN_EMAIL`/`BERLIN_DEV_ADMIN_PASSWORD` Worker secrets. If the
+storage state is missing, authenticated specs skip and public smoke specs still
+run.
 
 ## Current Specs
 

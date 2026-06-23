@@ -130,8 +130,8 @@ async function main() {
   const romaBase = (process.env.E2E_ROMA_URL || process.env.E2E_BASE_URL || DEFAULT_ROMA_URL).replace(/\/+$/, '');
   const berlinBase = (process.env.E2E_BERLIN_URL || DEFAULT_BERLIN_URL).replace(/\/+$/, '');
   const authStatePath = process.env.E2E_AUTH_STATE || DEFAULT_AUTH_STATE;
-  const email = requiredEnv('BERLIN_DEV_ADMIN_EMAIL', 'CK_ADMIN_EMAIL');
-  const password = requiredEnv('BERLIN_DEV_ADMIN_PASSWORD', 'CK_ADMIN_PASSWORD');
+  const email = requiredEnv('CK_ADMIN_EMAIL', 'BERLIN_DEV_ADMIN_EMAIL');
+  const password = requiredEnv('CK_ADMIN_PASSWORD', 'BERLIN_DEV_ADMIN_PASSWORD');
 
   const finishRedirectUrl = new URL('/api/session/finish', romaBase).toString();
   const loginResponse = await fetch(`${berlinBase}/auth/login/dev-admin`, {
