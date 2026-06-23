@@ -194,7 +194,7 @@ async function runBobOverlaySmoke(romaBase, authStatePath, instanceId, locale) {
     await frame.getByRole('tab', { name: 'Translations' }).click();
     await frame.getByRole('button', { name: 'Generate translations' }).waitFor({ timeout: 30_000 });
     await frame.getByLabel('Preview locale').selectOption(locale);
-    const rows = frame.locator('[data-testid="translation-overlay-rows"], [data-testid="translation-review-rows"]');
+    const rows = frame.getByTestId('translation-overlay-rows');
     await rows.waitFor({ timeout: 30_000 });
     const rowText = (await rows.textContent({ timeout: 30_000 }))?.trim() || '';
     if (!rowText) throw new Error('Bob translation overlay rows rendered empty text');
