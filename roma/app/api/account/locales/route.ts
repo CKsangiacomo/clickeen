@@ -465,24 +465,24 @@ export async function PUT(request: NextRequest) {
     }
 
     let overlayUpdate = emptyOverlayUpdate();
-    if (activeDelta.addedLocales.length > 0) {
-      const addedOverlayUpdate = await reconcileAccountLocaleOverlays({
+    if (activeDelta.addedLocales.length > 0 || activeDelta.removedLocales.length > 0) {
+      const pendingOverlayUpdate = await reconcileAccountLocaleOverlays({
         accountId: current.value.authzPayload.accountPublicId,
         accountCapsule: current.value.authzToken,
         requestId: current.value.requestId,
         addedLocales: activeDelta.addedLocales,
-        removedLocales: [],
+        removedLocales: activeDelta.removedLocales,
         baseLocale,
         authz: current.value.authzPayload,
       });
-      if (!addedOverlayUpdate.ok) {
+      if (!pendingOverlayUpdate.ok) {
         return withSession(
           request,
-          NextResponse.json({ error: addedOverlayUpdate.error }, { status: addedOverlayUpdate.status }),
+          NextResponse.json({ error: pendingOverlayUpdate.error }, { status: pendingOverlayUpdate.status }),
           current.value.setCookies,
         );
       }
-      overlayUpdate = mergeOverlayUpdates(overlayUpdate, addedOverlayUpdate.value);
+      overlayUpdate = mergeOverlayUpdates(overlayUpdate, pendingOverlayUpdate.value);
     }
 
     const params = new URLSearchParams({
@@ -538,26 +538,6 @@ export async function PUT(request: NextRequest) {
         ),
         current.value.setCookies,
       );
-    }
-
-    if (activeDelta.removedLocales.length > 0) {
-      const removedOverlayUpdate = await reconcileAccountLocaleOverlays({
-        accountId: current.value.authzPayload.accountPublicId,
-        accountCapsule: current.value.authzToken,
-        requestId: current.value.requestId,
-        addedLocales: [],
-        removedLocales: activeDelta.removedLocales,
-        baseLocale,
-        authz: current.value.authzPayload,
-      });
-      if (!removedOverlayUpdate.ok) {
-        return withSession(
-          request,
-          NextResponse.json({ error: removedOverlayUpdate.error }, { status: removedOverlayUpdate.status }),
-          current.value.setCookies,
-        );
-      }
-      overlayUpdate = mergeOverlayUpdates(overlayUpdate, removedOverlayUpdate.value);
     }
 
     return withSession(

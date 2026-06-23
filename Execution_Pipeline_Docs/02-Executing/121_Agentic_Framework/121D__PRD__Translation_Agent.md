@@ -228,8 +228,8 @@ Account settings saves active locales. Roma then performs exact overlay work:
 
 - added active locales -> call Translation Agent Worker for those locale
   overlays on saved account instances before the settings row is written;
-- removed active locales -> after the settings row is written, delete exact
-  overlay files through Tokyo-worker for saved account instances;
+- removed active locales -> delete exact overlay files through Tokyo-worker for
+  saved account instances before the settings row is written;
 - unchanged active locales -> leave existing overlay files alone.
 
 There is no user prompt. Saving settings is the user decision.
@@ -433,7 +433,7 @@ When the user saves account language settings:
 - added active locales cause Roma to call the same Translation Agent Worker
   path to create those overlay files before the settings row is written;
 - removed active locales cause Roma to ask Tokyo-worker to delete exact overlay
-  files after the settings row is written;
+  files before the settings row is written;
 - unchanged active locales remain untouched.
 
 There is no popup asking whether to update translations. Saving settings is the
@@ -449,9 +449,9 @@ Roma owns the account-wide update loop for saved account instances:
 - return immediately when active locales and locale policy are unchanged;
 - call Translation Agent Worker for added active locales before writing account
   settings;
-- write account settings;
-- delete removed active locale overlay files through Tokyo-worker after writing
+- delete removed active locale overlay files through Tokyo-worker before writing
   account settings;
+- write account settings;
 - return the settings result and translation update result.
 
 If account-wide translation work is too large for a direct save path, Roma must
@@ -528,7 +528,7 @@ public page/runtime consumption remain later work.
   not a rederived field list from the current widget definition.
 - Account settings active-locale changes compare previous active locales to new
   active locales: unchanged settings return no overlay work, added locales are
-  generated before the settings write, and removed locales are deleted after the
+  generated before the settings write, and removed locales are deleted before the
   settings write.
 - Missing provider/model/grant/locale/source/overlay write fails explicitly.
 - A partial run cannot report full success.

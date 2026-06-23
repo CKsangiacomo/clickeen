@@ -131,7 +131,7 @@ overlays via Tokyo-worker.
 Account language settings are also an overlay operation. When the user saves
 active locales in Roma Settings, Roma compares the previous active locales to
 the new active locales for saved account instances. Removed active locales
-delete exact overlay files through Tokyo-worker after the settings write. Added
+delete exact overlay files through Tokyo-worker before the settings write. Added
 active locales are generated through the same Translation Agent Worker path
 before the settings write. If active locales and locale policy are unchanged,
 Roma returns no overlay work. Roma does not ask Bob and
