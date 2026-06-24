@@ -1,12 +1,12 @@
 # 121 PRD - Clickeen Agentic Framework Umbrella
 
-Status: EXECUTING
+Status: EXECUTED
 Owner: Product + Architecture
 Priority: P0
 Date: 2026-06-20
+Executed: 2026-06-23
 Type: Umbrella PRD / build-from-zero charter
-Pre-execution amendment state: settled for 121A/121B/121C execution after
-peer-review convergence.
+Execution state: closed by 121-through-121D runtime completeness.
 
 Related:
 
@@ -16,9 +16,9 @@ Related:
 - `documentation/ai/sanfrancisco.md`
 - `documentation/services/bob.md`
 - `documentation/services/roma.md`
-- `Execution_Pipeline_Docs/02-Executing/121_Agentic_Framework/121A__PRD__Agent_Architecture.md`
-- `Execution_Pipeline_Docs/02-Executing/121_Agentic_Framework/121B__PRD__San_Francisco_Orchestrator_And_Routing.md`
-- `Execution_Pipeline_Docs/02-Executing/121_Agentic_Framework/121C__PRD__Product_Copilot_Real_Agent.md`
+- `Execution_Pipeline_Docs/03-Executed/121_Agentic_Framework/121A__PRD__Agent_Architecture.md`
+- `Execution_Pipeline_Docs/03-Executed/121_Agentic_Framework/121B__PRD__San_Francisco_Orchestrator_And_Routing.md`
+- `Execution_Pipeline_Docs/03-Executed/121_Agentic_Framework/121C__PRD__Product_Copilot_Real_Agent.md`
 - `Execution_Pipeline_Docs/03-Executed/121_Agentic_Framework/121D__PRD__Translation_Agent.md`
 - `Execution_Pipeline_Docs/01-Planning/planning_PRD__Future_Internal_Agents_Scope.md`
 - `Execution_Pipeline_Docs/01-Planning/AI_Planned_Agents/sdr-copilot.md`

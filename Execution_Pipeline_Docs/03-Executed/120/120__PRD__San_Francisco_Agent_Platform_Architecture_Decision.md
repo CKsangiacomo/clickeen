@@ -85,7 +85,7 @@ Closeout amendment applied on 2026-06-19:
   testing showed the current user-facing Copilot is below the Clickeen product bar. That
   finding belongs to the successor product-agent PRD, not to this technical slice's
   closure.
-- **Successor product-agent work shipped as** `Execution_Pipeline_Docs/02-Executing/121_Agentic_Framework/121C__PRD__Product_Copilot_Real_Agent.md`.
+- **Successor product-agent work shipped as** `Execution_Pipeline_Docs/03-Executed/121_Agentic_Framework/121C__PRD__Product_Copilot_Real_Agent.md`.
 
 ---
 

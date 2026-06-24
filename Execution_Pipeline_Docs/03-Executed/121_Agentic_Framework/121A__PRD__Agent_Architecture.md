@@ -1,11 +1,12 @@
 # 121A PRD - Agent Architecture
 
-Status: EXECUTING
+Status: EXECUTED
 Owner: Product + Architecture
 Priority: P0
 Date: 2026-06-20
+Executed: 2026-06-23
 Type: Sub-PRD / architecture
-Pre-execution amendment state: settled for first execution slice after peer-review convergence.
+Execution state: closed by 121-through-121D runtime completeness.
 
 Related:
 

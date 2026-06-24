@@ -78,7 +78,7 @@ Closeout amendment applied on 2026-06-19:
 - 120A did not deliver a product Copilot, Builder Agent, Guide, Advice, account/tier
   help, or workforce-agent runtime.
 - The real Builder product-agent rebuild shipped as
-  `Execution_Pipeline_Docs/02-Executing/121_Agentic_Framework/121C__PRD__Product_Copilot_Real_Agent.md`.
+  `Execution_Pipeline_Docs/03-Executed/121_Agentic_Framework/121C__PRD__Product_Copilot_Real_Agent.md`.
 
 ---
 

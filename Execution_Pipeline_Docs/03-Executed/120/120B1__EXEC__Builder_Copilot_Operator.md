@@ -34,7 +34,7 @@ Closeout amendment applied on 2026-06-19:
 - Human product testing showed the current Copilot UX is below the product bar. That is
   not a reason to keep testing this PRD as product-success evidence; it is the reason the
   successor product-agent rebuild shipped as
-  `Execution_Pipeline_Docs/02-Executing/121_Agentic_Framework/121C__PRD__Product_Copilot_Real_Agent.md`.
+  `Execution_Pipeline_Docs/03-Executed/121_Agentic_Framework/121C__PRD__Product_Copilot_Real_Agent.md`.
 
 Decisions consumed (ratified):
 

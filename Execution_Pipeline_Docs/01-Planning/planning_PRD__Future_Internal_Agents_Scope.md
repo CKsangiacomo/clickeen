@@ -15,9 +15,9 @@ closure. It remains visible planning, not active execution.
 
 Related:
 
-- `121__PRD__Clickeen_Agentic_Framework_Umbrella.md`
-- `121A__PRD__Agent_Architecture.md`
-- `121B__PRD__San_Francisco_Orchestrator_And_Routing.md`
+- `Execution_Pipeline_Docs/03-Executed/121_Agentic_Framework/121__PRD__Clickeen_Agentic_Framework_Umbrella.md`
+- `Execution_Pipeline_Docs/03-Executed/121_Agentic_Framework/121A__PRD__Agent_Architecture.md`
+- `Execution_Pipeline_Docs/03-Executed/121_Agentic_Framework/121B__PRD__San_Francisco_Orchestrator_And_Routing.md`
 - `Execution_Pipeline_Docs/03-Executed/121_Agentic_Framework/121D__PRD__Translation_Agent.md`
 - `Execution_Pipeline_Docs/03-Executed/121_Agentic_Framework/121PRD_Umbrella_to_121D_completeness.md`
 - `Execution_Pipeline_Docs/01-Planning/AI_Planned_Agents/seo-geo-aeo.md`
