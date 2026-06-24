@@ -1,11 +1,13 @@
-# 121G PRD - Learning And Outcomes Foundation
+# Planning PRD - Agent Learning And Outcomes Foundation
 
-Status: EXECUTING
+Status: PLANNED - NOT BUILT
 Owner: Product + Architecture + AI Runtime
 Priority: P1
 Date: 2026-06-20
-Type: Sub-PRD / future-scope guardrail
-Pre-execution amendment state: settled as trace/outcome/eval foundation after peer-review convergence.
+Type: Planning PRD / future-scope guardrail
+
+Origin: extracted from the 121 series after the 121-through-121D execution
+closure. It remains visible planning, not active execution.
 
 Related:
 

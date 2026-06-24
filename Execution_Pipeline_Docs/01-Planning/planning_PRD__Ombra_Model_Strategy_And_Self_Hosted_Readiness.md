@@ -1,11 +1,13 @@
-# 121H PRD - Ombra Model Strategy And Self-Hosted Readiness
+# Planning PRD - Ombra Model Strategy And Self-Hosted Readiness
 
-Status: EXECUTING
+Status: PLANNED - NOT BUILT
 Owner: Product + Architecture + AI Runtime
 Priority: P1
 Date: 2026-06-20
-Type: Sub-PRD / future-scope guardrail
-Pre-execution amendment state: settled as provider/model readiness guardrail after peer-review convergence.
+Type: Planning PRD / future-scope guardrail
+
+Origin: extracted from the 121 series after the 121-through-121D execution
+closure. It remains visible planning, not active execution.
 
 Related:
 

@@ -20,10 +20,10 @@ Related:
 - `Execution_Pipeline_Docs/02-Executing/121_Agentic_Framework/121B__PRD__San_Francisco_Orchestrator_And_Routing.md`
 - `Execution_Pipeline_Docs/02-Executing/121_Agentic_Framework/121C__PRD__Product_Copilot_Real_Agent.md`
 - `Execution_Pipeline_Docs/03-Executed/121_Agentic_Framework/121D__PRD__Translation_Agent.md`
-- `Execution_Pipeline_Docs/02-Executing/121_Agentic_Framework/121E__PRD__Future_Internal_Agents_Scope.md`
-- `Execution_Pipeline_Docs/02-Executing/121_Agentic_Framework/121F__PRD__SDR_Copilot_Future_Agent.md`
-- `Execution_Pipeline_Docs/02-Executing/121_Agentic_Framework/121G__PRD__Learning_And_Outcomes_Foundation.md`
-- `Execution_Pipeline_Docs/02-Executing/121_Agentic_Framework/121H__PRD__Ombra_Model_Strategy_And_Self_Hosted_Readiness.md`
+- `Execution_Pipeline_Docs/01-Planning/planning_PRD__Future_Internal_Agents_Scope.md`
+- `Execution_Pipeline_Docs/01-Planning/AI_Planned_Agents/sdr-copilot.md`
+- `Execution_Pipeline_Docs/01-Planning/planning_PRD__Agent_Learning_And_Outcomes_Foundation.md`
+- `Execution_Pipeline_Docs/01-Planning/planning_PRD__Ombra_Model_Strategy_And_Self_Hosted_Readiness.md`
 - `Execution_Pipeline_Docs/03-Executed/085__PRD__San_Francisco_Agentic_Platform_Product_Strategy.md`
 - `Execution_Pipeline_Docs/03-Executed/085C__PRD__San_Francisco_Customer_Facing_Agent_Ownership.md`
 - `Execution_Pipeline_Docs/03-Executed/085D__PRD__San_Francisco_Internal_Agentic_Workforce_Boundary.md`
@@ -852,9 +852,10 @@ Current leaning:
 - Use them first for evals and prompt/model selection.
 - Product Copilot's acceptance eval suite is owned by 121C and built with the
   first Product Copilot implementation.
-- 121G owns shared trace/outcome/eval plumbing and vocabulary. 121C does not
-  wait for 121G to be complete; it can start from canned traces and live turn
-  records, then integrate richer 121G plumbing as it lands.
+- The planning PRD for agent learning and outcomes owns shared trace/outcome/eval
+  plumbing and vocabulary. 121C does not wait for that planning work to be
+  complete; it can start from canned traces and live turn records, then
+  integrate richer plumbing as it lands.
 - Preserve Clickeen-hosted/tuned models as a real future provider path.
 - Treat the global widget-network learning loop as the strategic north star.
 - Keep published widget runtime edge-served and AI-independent; use logs,
@@ -1030,19 +1031,19 @@ This umbrella should produce or replace these PRDs:
    - Prove the architecture supports non-Copilot workers without importing
      Product Copilot behavior.
 
-5. **121E - Future Internal Agents Scope**
+5. **Future Internal Agents Scope**
    - Future-scope guardrail.
    - Ensure architecture does not hardcode every agent as Product Copilot.
 
-6. **121F - SDR Copilot Future Agent**
+6. **SDR Copilot Future Agent**
    - Future-scope guardrail.
    - Ensure SDR Copilot remains separate from Product Copilot.
 
-7. **121G - Learning And Outcomes Foundation**
+7. **Agent Learning And Outcomes Foundation**
    - Future-scope guardrail with day-one trace/outcome requirements.
    - Ensure future learning is possible without silent self-mutation.
 
-8. **121H - Ombra Model Strategy And Self-Hosted Readiness**
+8. **Ombra Model Strategy And Self-Hosted Readiness**
    - Future-scope guardrail.
    - Ensure provider independence and self-hosted readiness without building
      self-hosted inference on day one.
@@ -1110,11 +1111,12 @@ Recommended first wave:
 4. Execute 121C Product Copilot as the first hard user-facing agent proof,
    including its isolated Cloudflare brain home and day-one eval suite.
 5. Execute 121D Translation Agent as the first focused internal-agent proof.
-6. Keep 121E/121F as future-scope guardrails, not build-now commitments.
-7. Keep 121G shared trace/outcome/eval foundation without making 121C wait on
-   the full learning foundation.
-8. Keep 121H model/provider/self-hosted readiness without making self-hosting a
-   day-one dependency.
+6. Keep future internal-agent and SDR Copilot scope in planning, not active
+   execution.
+7. Keep shared trace/outcome/eval foundation in planning without making 121C
+   wait on the full learning foundation.
+8. Keep Ombra model/provider/self-hosted readiness in planning without making
+   self-hosting a day-one dependency.
 9. Preserve Bob in-memory validation and Roma persistence boundaries.
 10. Keep provider/model routing under San Francisco/Ombra policy.
 11. Add outcome hooks for future learning without claiming autonomous learning is

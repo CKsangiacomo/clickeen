@@ -328,8 +328,9 @@ Trace does not become product truth.
 Trace and eval are part of the same architecture rail.
 
 The first real Product Copilot slice must produce trace records that can feed
-the first eval harness. 121G may later broaden shared learning and outcomes
-infrastructure, but 121C must not create a second incompatible capture path.
+the first eval harness. The planning PRD for agent learning and outcomes may
+later broaden shared learning and outcomes infrastructure, but 121C must not
+create a second incompatible capture path.
 
 Failure behavior must be trace-visible. Missing context, stale context,
 unavailable product capabilities, unavailable providers, malformed model output,

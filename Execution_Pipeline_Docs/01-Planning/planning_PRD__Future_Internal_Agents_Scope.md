@@ -1,15 +1,17 @@
-# 121E PRD - Future Internal Agents Scope
+# Planning PRD - Future Internal Agents Scope
 
-Status: EXECUTING
+Status: PLANNED - NOT BUILT
 Owner: Product + Architecture
 Priority: P1
 Date: 2026-06-20
-Type: Sub-PRD / future-scope guardrail
-Pre-execution amendment state: settled as guardrail after peer-review convergence.
+Type: Planning PRD / future-scope guardrail
 
-Execution status note: this PRD is a guardrail, not a build commitment. It
+Planning status note: this PRD is a guardrail, not a build commitment. It
 creates no implementation tickets by itself. Future internal agents require
 their own Product Owner-approved execution PRD.
+
+Origin: extracted from the 121 series after the 121-through-121D execution
+closure. It remains visible planning, not active execution.
 
 Related:
 
@@ -18,6 +20,7 @@ Related:
 - `121B__PRD__San_Francisco_Orchestrator_And_Routing.md`
 - `Execution_Pipeline_Docs/03-Executed/121_Agentic_Framework/121D__PRD__Translation_Agent.md`
 - `Execution_Pipeline_Docs/03-Executed/121_Agentic_Framework/121PRD_Umbrella_to_121D_completeness.md`
+- `Execution_Pipeline_Docs/01-Planning/AI_Planned_Agents/seo-geo-aeo.md`
 
 ---
 
@@ -132,7 +135,7 @@ Definitions:
 - AEO: answer-engine optimization for AI answer engines and search answer
   experiences.
 
-Why it belongs in 121E:
+Why it belongs in future internal-agent planning:
 
 - it is an internal worker, not a user-facing copilot;
 - it is cron/scheduled/server-side work, never visitor-path work;
