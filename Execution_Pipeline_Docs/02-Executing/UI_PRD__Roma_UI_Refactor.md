@@ -133,10 +133,34 @@ Map raw reason keys to user copy; one honest "not available" treatment for
 genuinely-unbuilt features (no scattered hardcoded feature-off booleans); add
 loading/empty/error to every domain.
 
-### 3.5 Tokenize the last mile
+### 3.5 Tokenize the last mile (coordinate with DevStudio)
 
-Replace the 12 inline `style={{px}}` with `--space-*` tokens. The DevStudio
-tokenization guard then keeps it clean.
+DevStudio owns the tokenization guard **and** cleaning the ~12 inline-px sites. Roma's
+role here is **verification** (Step 6): confirm 0 remain after DevStudio's pass; clean
+only residual Roma-only sites DevStudio didn't reach. Do not re-edit the same lines.
+
+## Coordination + execution rules (cross-PRD)
+
+- **Ownership split.** This PRD makes Roma *consume* Dieter. The sibling
+  `UI_PRD__Devstudio_as_a_trustworthy_Reveal_cockpit_DieterComponents.md` owns Dieter
+  itself (derived pages, `textrename` cleanup, ghost token, tokenization guard, token
+  editor) — don't duplicate that work here.
+- **Inline-px is owned by DevStudio.** DevStudio owns the tokenization guard *and*
+  cleaning the ~20 inline-px sites in Roma/Bob. Roma's Step 6 is **verification only**
+  if DevStudio already cleaned them — do not re-edit the same lines.
+- **Sequence.** Roma starts after DevStudio's guard + Dieter cleanup are live (Roma
+  consumes Dieter; the guard is what keeps Roma honest).
+- **Start from clean git.** Commit any in-flight doc/taxonomy cleanup before code
+  work — don't mix doc churn into code commits.
+- **Honest stubs, not invented behavior.** When Roma hits a stub surface
+  (billing/usage/pages "not available"), clean the UI state honestly; do not build
+  the feature behind it.
+- **Re-audit Step 0.** The §2 counts are a baseline; recount on the real code first.
+- **Proof is visual.** UI changes need before/after browser screenshots — lint/typecheck
+  green is not sufficient.
+- **Docs are part of done.** `roma.md` must match the executed behavior.
+- **No new framework.** The shared primitive layer is a small set on Dieter, not a
+  component framework. This is cleanup/convergence.
 
 ## 4. Steps
 
@@ -148,7 +172,7 @@ tokenization guard then keeps it clean.
 | 3    | **Port remaining domains** (`pages`, `assets`, `team`, `profile`, `settings`, `usage`, `billing`, `ai`, `home`) onto the same primitives + Dieter components. | Each domain built from the primitive layer; tables/empty-states/modals no longer one-offs; parallel `.roma-*` CSS retired.                | Per-domain forks of the primitives; new visual language on any screen.                               |
 | 4    | **Break the 5 monoliths** into subcomponents.                                                                                                                | Each former monolith under a named subcomponent structure (<~400 lines each, or justified); behavior unchanged.                           | Behavior changes; logic moved across ownership boundaries.                                           |
 | 5    | **Copy + states pass:** reason-key → user copy map; one honest unavailable treatment; loading/empty/error on every domain.                                   | No raw reason keys or dev/internal copy in the UI; every domain has the three states.                                                     | Hiding unbuilt features silently; inventing product behavior to fill gaps.                           |
-| 6    | **Tokenize inline styles** (12 sites) to `--space-*`; confirm the DevStudio tokenization guard is green on `roma`.                                            | 0 inline `style={{px}}` bypassing tokens in Roma components; guard green.                                                                 | Reinventing the guard; scoping it down to pass dirty code.                                           |
+| 6    | **Verify inline-px tokenization** (DevStudio owns the cleanup + guard): if DevStudio already cleaned the sites, Roma *verifies* 0 remain and cleans only residual Roma-only sites DevStudio didn't reach; do not re-edit sites DevStudio fixed.                                            | 0 inline `style={{px}}` bypassing tokens in Roma components; guard green.                                                                 | Reinventing the guard; scoping it down to pass dirty code.                                           |
 | 7    | **Docs sync:** `roma.md` gains "Roma uses Dieter + the shared primitive layer; no parallel component system."                                                | Docs diff in the same PR as the final code step.                                                                                          | Deferring docs; leaving `roma.md` describing the parallel system as current.                         |
 
 ## 5. Out of scope

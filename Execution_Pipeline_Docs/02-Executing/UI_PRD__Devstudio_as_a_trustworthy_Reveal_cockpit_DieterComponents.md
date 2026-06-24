@@ -170,13 +170,33 @@ earlier draft called this "TRUST via CI guards." That framing is rejected.)
   session + `CLICKEEN` admin account + the existing commit lane.
 - Cloudflare Access is not the DevStudio auth boundary.
 
+## Coordination + execution rules (cross-PRD)
+
+- **Ownership split.** This PRD owns Dieter itself (derived pages, `textrename`
+  cleanup, ghost token, tokenization guard, token editor). The sibling
+  `UI_PRD__Roma_UI_Refactor.md` consumes Dieter and makes Roma launch-grade — a
+  different job; don't blur it.
+- **Inline-px is owned here.** This PRD owns the tokenization guard *and* cleaning
+  the ~20 inline-px sites in Roma/Bob (Step 3). The Roma PRD's matching step is
+  **verification only** — it must not re-edit the same lines.
+- **Sequence.** DevStudio goes first — its guard + Dieter cleanup are the foundation
+  the Roma PRD leans on.
+- **Start from clean git.** Commit in-flight doc/taxonomy cleanup before code work —
+  don't mix doc churn into code commits.
+- **Re-audit Step 0.** The §2 counts are a baseline; recount on the real code first.
+- **Proof is visual.** UI changes need before/after browser screenshots — lint green
+  is not sufficient.
+- **Docs are part of done.** `devstudio.md` must match the executed behavior.
+- **No new framework.** This is cleanup/convergence onto existing Dieter + current
+  product law — not a build.
+
 ## 5. Steps
 
 | Step | Action | Completion evidence | NOT_ALLOWED |
 | --- | --- | --- | --- |
 | 1 | **Kill the ghost token:** replace the `--radius-4` reference on the colors page (chip `border-radius`) with `--control-radius-md`; confirm no `--radius-4` anywhere; chips render the correct radius. | `grep --radius-4` → 0; chips render radius; visual parity. | Silently defining `--radius-4`; leaving the reference. |
 | 2 | **Remove dead `textrename`:** delete `dieter/components/textrename/`; remove the `registry.json` entry and the `hydrateTextrename` export in `index.ts`; rebuild (`pnpm build:dieter`) so the manifest + `tokyo/product/dieter/components/textrename/` drop it; remove the `Overview.md` component-table row. | `grep textrename` → only the historical 112B record; `build:dieter` green; typecheck green (no consumer broke). | Keeping it "just in case"; breaking the export surface without confirming no consumer. |
-| 3 | **Tokenize inline-px:** replace the ~20 hardcoded px values in Roma (16) + Bob (4) components with `--space-*` tokens. | 0 inline `style={{...px}}` bypassing tokens in Roma/Bob components; tokenization guard green. | Reinventing the guard; scoping it to pass dirty code. |
+| 3 | **Tokenize inline-px (this PRD owns it; Roma verifies):** replace the ~20 hardcoded px values in Roma (16) + Bob (4) components with `--space-*` tokens + stand up the tokenization guard. The Roma PRD's Step 6 is verification-only — it must not re-edit these lines. | 0 inline `style={{...px}}` bypassing tokens in Roma/Bob components; tokenization guard green. | Reinventing the guard; scoping it to pass dirty code. |
 | 4 | **Verify the loop + editor:** confirm derived pages stay guarded (coverage/stencil/ghost guards green); confirm the values-only token editor round-trips on `devstudio.clickeen.com` (edit → commit → `build:dieter` → Tokyo R2 → product chrome reflects it). | Guards green; editor round-trip proven; invalid value → typed 422; conflict → typed 409. | Shipping the editor before Step 3 (tokenization) is clean. |
 | 5 | **Docs sync:** confirm this PRD's §2 matches the audited numbers; `devstudio.md` already carries the reveal-cockpit tenet. | Docs match runtime. | Deferring docs. |
 
