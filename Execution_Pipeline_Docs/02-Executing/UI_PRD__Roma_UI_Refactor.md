@@ -1,14 +1,14 @@
 # Planning PRD - Roma UI Refactor
 
-Status: PLANNING
+Status: EXECUTING
 Owner: Roma + Dieter
 Date: 2026-06-23
-Stage: 01-Planning
+Stage: 02-Executing
 Numbering: deliberately unnumbered per product owner.
 
 Related:
 
-- `Execution_Pipeline_Docs/02-Executing/PRD__Devstudio_as_a_trustworthy_Reveal_cockpit_DieterComponents.md`
+- `Execution_Pipeline_Docs/02-Executing/UI_PRD__Devstudio_as_a_trustworthy_Reveal_cockpit_DieterComponents.md`
   (owns Dieter token/showcase governance + the tokenization CI guard that already
   covers `roma/app` and `roma/components` incl. inline TSX styles — Step 5 there.
   This PRD **consumes** that guard; it does not reinvent it.)
