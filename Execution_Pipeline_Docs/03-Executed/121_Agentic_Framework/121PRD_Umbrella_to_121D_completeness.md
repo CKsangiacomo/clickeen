@@ -14,7 +14,7 @@ Related:
 - `121B__PRD__San_Francisco_Orchestrator_And_Routing.md`
 - `121C__PRD__Product_Copilot_Real_Agent.md`
 - `121D__PRD__Translation_Agent.md`
-- `Execution_Pipeline_Docs/01-Planning/planning_PRD__Future_Internal_Agents_Scope.md`
+- `Execution_Pipeline_Docs/01-Planning/AI_Planned_Agents/README.md`
 - `Execution_Pipeline_Docs/01-Planning/AI_Planned_Agents/sdr-copilot.md`
 - `Execution_Pipeline_Docs/01-Planning/planning_PRD__Agent_Learning_And_Outcomes_Foundation.md`
 - `Execution_Pipeline_Docs/01-Planning/planning_PRD__Ombra_Model_Strategy_And_Self_Hosted_Readiness.md`
@@ -130,7 +130,7 @@ This PRD does not cover:
 
 - Translation Agent implementation detail; see 121D;
 - future ranking/measurement agent implementation; see
-  `Execution_Pipeline_Docs/01-Planning/planning_PRD__Future_Internal_Agents_Scope.md`;
+  `Execution_Pipeline_Docs/01-Planning/AI_Planned_Agents/seo-geo-aeo.md`;
 - crawlable public locale pages/SEO serving;
 - background/admin translation;
 - broad product capability registries;
@@ -336,9 +336,9 @@ These are future PRDs, not 121-to-121D work:
 | Future work | Owner doc |
 | --- | --- |
 | clk.live / Pages crawlable locale serving | Future runtime/pages PRD |
-| Ranking/measurement agent for locale pages | `Execution_Pipeline_Docs/01-Planning/planning_PRD__Future_Internal_Agents_Scope.md` |
-| Product Copilot invoking Translation Agent | Future internal-agent PRD |
-| background/admin translation | Future internal-agent PRD |
+| Ranking/measurement agent for locale pages | `Execution_Pipeline_Docs/01-Planning/AI_Planned_Agents/seo-geo-aeo.md` |
+| Product Copilot invoking Translation Agent | Future planned-agent PRD |
+| background/admin translation | Future planned-agent PRD |
 | self-hosted/Ombra model readiness | `Execution_Pipeline_Docs/01-Planning/planning_PRD__Ombra_Model_Strategy_And_Self_Hosted_Readiness.md` |
 
 Future work may use Translation Agent overlays. It must not be smuggled into

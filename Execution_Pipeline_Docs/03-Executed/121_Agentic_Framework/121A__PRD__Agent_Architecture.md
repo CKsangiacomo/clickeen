@@ -371,7 +371,7 @@ artifacts are server-side and product-owned.
 - The real-agent contract is a shape of fields/pointers/defaults before it is a
   set of subsystems.
 - Raw user text is not globally regex-routed before agent reasoning.
-- Product Copilot, SDR Copilot, Translation Agent, and future internal agents
+- Product Copilot, SDR Copilot, Translation Agent, and planned agents
   can have separate PRDs without sharing product logic.
 - Product-state changes remain owned and validated by product surfaces.
 - San Francisco can execute AI model/policy/provider infrastructure without

@@ -20,7 +20,7 @@ Related:
 - `Execution_Pipeline_Docs/03-Executed/121_Agentic_Framework/121B__PRD__San_Francisco_Orchestrator_And_Routing.md`
 - `Execution_Pipeline_Docs/03-Executed/121_Agentic_Framework/121C__PRD__Product_Copilot_Real_Agent.md`
 - `Execution_Pipeline_Docs/03-Executed/121_Agentic_Framework/121D__PRD__Translation_Agent.md`
-- `Execution_Pipeline_Docs/01-Planning/planning_PRD__Future_Internal_Agents_Scope.md`
+- `Execution_Pipeline_Docs/01-Planning/AI_Planned_Agents/README.md`
 - `Execution_Pipeline_Docs/01-Planning/AI_Planned_Agents/sdr-copilot.md`
 - `Execution_Pipeline_Docs/01-Planning/planning_PRD__Agent_Learning_And_Outcomes_Foundation.md`
 - `Execution_Pipeline_Docs/01-Planning/planning_PRD__Ombra_Model_Strategy_And_Self_Hosted_Readiness.md`
@@ -1031,8 +1031,9 @@ This umbrella should produce or replace these PRDs:
    - Prove the architecture supports non-Copilot workers without importing
      Product Copilot behavior.
 
-5. **Future Internal Agents Scope**
-   - Future-scope guardrail.
+5. **Planned Agents**
+   - Future planned-agent specs live one file per planned agent in
+     `Execution_Pipeline_Docs/01-Planning/AI_Planned_Agents/`.
    - Ensure architecture does not hardcode every agent as Product Copilot.
 
 6. **SDR Copilot Future Agent**
@@ -1111,8 +1112,8 @@ Recommended first wave:
 4. Execute 121C Product Copilot as the first hard user-facing agent proof,
    including its isolated Cloudflare brain home and day-one eval suite.
 5. Execute 121D Translation Agent as the first focused internal-agent proof.
-6. Keep future internal-agent and SDR Copilot scope in planning, not active
-   execution.
+6. Keep planned-agent scope in `AI_Planned_Agents/`, one file per planned
+   agent, not active execution.
 7. Keep shared trace/outcome/eval foundation in planning without making 121C
    wait on the full learning foundation.
 8. Keep Ombra model/provider/self-hosted readiness in planning without making

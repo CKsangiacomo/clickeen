@@ -133,7 +133,7 @@ The capsule must also declare:
 
 The capsule contains only the user's own widget/session/account facts needed for
 the turn. It must not include unrelated account data, cross-account data,
-hidden product data, SDR/prospect data, or future internal-agent records unless
+hidden product data, SDR/prospect data, or planned-agent records unless
 a later PRD explicitly authorizes that context.
 
 Missing, stale, invalid, oversized, or forbidden context must produce a visible
