@@ -4,6 +4,9 @@ STATUS: PLANNED - NOT BUILT
 
 This folder contains one planning spec per future Clickeen agent.
 
+Root-level agent files are planned-agent specs. Supporting research lives under
+`Research/` and is not itself a planned agent.
+
 There is no separate generic future-agent umbrella PRD. A planned agent earns
 its place by naming a concrete product job and the structured artifact it will
 operate. If the job is not concrete enough for its own file, it is not ready to
@@ -47,3 +50,7 @@ Current planned agents:
 - `ux-writer.md`
 - `seo-geo-aeo.md`
 - `sdr-copilot.md`
+
+Supporting research:
+
+- `Research/LLM_Provider_Landscape_June2026.md`
