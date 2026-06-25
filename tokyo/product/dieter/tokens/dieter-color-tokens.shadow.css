@@ -12,6 +12,10 @@
   /* Text color tokens */
   --color-text: var(--color-system-black);
   --color-text-secondary: color-mix(in oklab, var(--color-system-black), transparent 45%);
+  --role-surface: var(--color-system-white);
+  --role-surface-bg: var(--color-system-white);
+  --role-border: var(--color-system-gray-5);
+  --focus-ring-color: var(--color-system-blue);
 
   /* Global state mix controls */
   --state-darken-target: black;

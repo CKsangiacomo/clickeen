@@ -68,7 +68,7 @@ function renderColorRows(tokens) {
       if (!entries.length) return '';
       return `
   <h3>${group}</h3>
-  ${entries
+${entries
     .map(
       (entry) => `
   <div class="row" data-cols="1" data-token="${entry.name}">

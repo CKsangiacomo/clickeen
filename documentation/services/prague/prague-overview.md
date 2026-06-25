@@ -1,213 +1,206 @@
-# Prague — Marketing & SEO Surface
+# Prague - Marketing Surface
 
-STATUS: Runtime reality (this repo)
-Created: 2024-12-27
-Last updated: 2026-05-26
+STATUS: CURRENT SYSTEM OPERATOR SPEC
 
----
+Prague is Clickeen's public marketing surface. It is an Astro app deployed on Cloudflare Pages and served as static output. Prague explains and sells widgets. It is not the account Pages product, and it is not the widget editor.
 
-## 0) What Prague is (in this repo)
+Account Pages are stacks of saved widget instances owned by Roma and Tokyo-worker. Prague marketing pages are repo-authored JSON documents under `tokyo/prague/pages/**`.
 
-Prague is the marketing + SEO surface, implemented as an **Astro** app deployed on **Cloudflare Pages**. GA routing is **market+locale** and pages render server-side from canonical page JSON so Prague can emit canonical SEO tags.
+## Runtime Authority
 
-Deploy contract:
-- Prague has **one deploy plane**: Git-connected Cloudflare Pages build.
-- Canonical cloud-dev host: `https://prague.dev.clickeen.com`
-- GitHub Actions may verify Prague builds and publish git-authored Prague content to Tokyo/R2 `prague/**`, but must not create Pages projects, sync Pages secrets, or deploy Prague Pages artifacts.
-- Prague’s Pages build contract is app-local:
-  - root: `prague/`
-  - build command: `pnpm build`
-  - output: `prague/dist`
-- Manual Cloudflare project/env alignment is documented in `documentation/architecture/CloudflarePagesCloudDevChecklist.md`.
+| Concern | Current authority |
+| --- | --- |
+| App source | `prague/` |
+| Deploy surface | Cloudflare Pages project `prague-dev` |
+| Cloud-dev host | `https://prague.dev.clickeen.com` |
+| Build command | `pnpm build` from `prague/` |
+| Build output | `prague/dist` |
+| Adapter | `@astrojs/cloudflare` with `output: "static"` |
+| Page source | `tokyo/prague/pages/{widget}/{page}.json` |
+| Page translation sidecars | `tokyo/prague/pages/{widget}/{page}.translations/{locale}.json` |
+| Public widget embeds | `https://clk.live/{accountPublicId}/{instanceId}` |
 
-Tokyo/R2 content contract:
-- `tokyo/prague/**` is git-authored source/deploy content that syncs to canonical R2 `prague/**`.
-- Prague page translations live beside the page JSON: `tokyo/prague/pages/{widget}/{page}.translations/{locale}.json`, deployed to `prague/pages/{widget}/{page}.translations/{locale}.json`.
-- Prague localization must not publish to root `l10n/**`.
-- Tokyo Pages/static output may serve friendly URLs, but it is a deploy/source convenience and not a second Prague content authority.
+Prague bundles repo JSON through Astro glob loading at build/runtime. The same git-authored Prague content also deploys to Tokyo/R2 under `prague/**` for the static-content root, but live Prague page rendering in this repo does not fetch page JSON from R2.
 
-In this repo snapshot, Prague’s widget marketing content is sourced from **checked-in JSON** under `tokyo/prague/pages/*/*.json` (single source of layout + base copy). Prague page translations are page-owned sidecars beside those JSON files. Prague does not own account-widget translated value maps or locale availability.
+Prague does not write account assets, account instances, account pages, or account overlay folders.
 
-At build time, Prague:
-- enumerates widgets by scanning `tokyo/product/widgets/*` (excluding `_*/` and `shared/`)
-- enumerates locales via `prague/src/lib/locales.ts`
-- renders a fixed set of routes under `prague/src/pages/**`
-- fails fast if required widget page JSON files are missing
+## Routes
 
-At request time (widget pages only), Prague:
-- loads canonical page JSON
-- validates Prague marketing-section contracts and compact account-instance embed IDs
-- renders HTML from that page JSON
+| Route | Behavior |
+| --- | --- |
+| `/` | Redirects to a canonical `/{market}/{locale}/` route using explicit query/cookie preference, Cloudflare country, then default market. |
+| `/{market}/{locale}/` | Widget directory. Reads every widget `overview.json` and renders cards. |
+| `/{market}/{locale}/privacy/` | Prague privacy page. |
+| `/{market}/{locale}/create/` | Redirects to Roma `${PUBLIC_ROMA_URL}/home` with Prague source context. Returns `503` if `PUBLIC_ROMA_URL` is not configured. |
+| `/{market}/{locale}/widgets/{widget}/` | Widget overview page from `overview.json`. |
+| `/{market}/{locale}/widgets/{widget}/{examples|features|pricing}/` | Widget subpages from their matching JSON file. |
+| `/{segment}/` | Redirect helper for known market or locale segments. Unknown segments return redirect behavior from the catch-all route. |
+| `/{segment}/**` | Catch-all redirect route for unsupported Prague paths. |
 
-Note: the helper module is still named `prague/src/lib/markdown.ts`, but it no longer parses markdown. It loads the JSON page specs described below.
+Canonical identity is `/{market}/{locale}/...`. Markets and allowed locales are defined in `prague/src/markets/markets.json` and `packages/l10n/locales.json`.
 
----
+Route operator notes:
 
-## 1) Routes (shipped)
+- `/?reset=1` and `/?reset=true` clear Prague market/locale preference cookies before choosing the canonical route.
+- Widget overview canonical subpage requests redirect to `/{market}/{locale}/widgets/{widget}/`.
+- Invalid widget subpage names return `404`.
+- Prague routes are static Astro routes; they do not call Roma account APIs.
 
-Prague’s canonical URL identity is `/{market}/{locale}/...`:
-- `market` is allowexternally referenced and configured in `prague/src/markets/markets.json` (e.g. `us`, `uk`, `it`, `ca`)
-- `locale` is a supported locale token (from `packages/l10n/locales.json`, further constrained per-market by `prague/src/markets/markets.json`)
+## Content Model
 
-Root `/` is a non-canonical entry surface:
-- if a valid cookie market exists, it 302s to `/{market}/{locale}/`
-- else if IP geo maps to a market, it 302s to `/{market}/{defaultLocale}/`
-- else it 302s to the default canonical (current: `/us/en/`) — **no picker UI**
+Each marketed widget must have:
 
-### 1.1 Widget directory
+```text
+tokyo/prague/pages/{widget}/overview.json
+tokyo/prague/pages/{widget}/examples.json
+tokyo/prague/pages/{widget}/features.json
+tokyo/prague/pages/{widget}/pricing.json
+```
 
-- `/{market}/{locale}/` — Widget directory page (lists widgets by reading `overview.json` hero copy plus page-owned translation sidecars)
+Each page JSON contains a `blocks[]` array. `blocks[]` is the current Prague implementation field for marketing sections. It is not the account Pages model.
 
-There is currently no dedicated `/{market}/{locale}/widgets/` index route in this repo snapshot; keep any “view all widgets” links aligned with the actual directory page.
+Required non-visual blocks:
 
-### 1.2 Widget overview
+| Block | Required where | Purpose |
+| --- | --- | --- |
+| `page-meta` | Every Prague widget page | `<title>` and description |
+| `navmeta` | Widget overview | Widget mega-menu title and description |
 
-- `/{market}/{locale}/widgets/{widget}` — Widget landing page (overview). Renders the full landing marketing-section stack from:
-  - `tokyo/prague/pages/{widget}/overview.json`
+Localized Prague page copy is applied from sidecar files:
 
-This route is strict: it throws at build time if `overview.json` is missing required blocks/copy fields.
+```text
+tokyo/prague/pages/{widget}/{page}.translations/{locale}.json
+```
 
-Overview hero runtime behavior:
-- For `hero` blocks on the overview route, Prague may render the explicitly referenced published account-widget artifact. If the ref omits `locale`, Prague embeds the base artifact.
-- Prague does not discover account-widget locale availability, intersect market locales with widget locales, or auto-build multi-locale widget showcases.
-- `accountInstanceRef.locale` is not part of the current default public artifact model. If a future public runtime contract reintroduces a locale selector, it must select only public widget runtime behavior; it is never translation state, locale availability, or a private account-widget contract.
-- If a non-base Prague page translation sidecar is missing, Prague fails fast instead of silently falling back to base copy.
+The sidecar contains `ops[]` entries that set string values on the page JSON. If a non-English Prague route has no required sidecar, Prague fails visibly. It does not substitute base copy.
 
-### 1.3 Widget subpages
+## Section Registry
 
-- `/{market}/{locale}/widgets/{widget}/{page}` where `page ∈ { examples, features, pricing }`
+Prague only renders section types registered in:
 
-Current repo behavior:
-- these pages render blocks from JSON like overview; in this snapshot many subpages are intentionally minimal (typically `page-meta` + `hero`) until richer stacks are authored
-- source: `tokyo/prague/pages/{widget}/{examples|features|pricing}.json`
+```text
+prague/src/lib/blockRegistry.ts
+```
 
----
+The loader is:
 
-### 1.4 Create bridge route
+```text
+prague/src/lib/markdown.ts
+```
 
-- `/{market}/{locale}/create` is a redirect bridge from Prague into Roma (`${PUBLIC_ROMA_URL}/home`).
-- Prague preserves incoming query params and appends source context (`from=prague_create`, `market`, `locale`).
-- If `PUBLIC_ROMA_URL` is missing, this route fails visibly with `503` (no silent fallback).
-- Prague does not own account-widget translation generation or serving. Published account widgets are served from `clk.live` static artifacts generated by Tokyo.
+The loader name is historical code naming; it loads JSON page specs, applies sidecars, validates section copy/meta, and returns page blocks to Astro pages.
 
----
+Registered section types:
 
-## 1.5 Authoring Prague Marketing Sections (AI checklist)
+```text
+big-bang
+hero
+split
+split-carousel
+steps
+subpage-cards
+control-moat
+global-moat
+platform-strip
+cta-bottom-block
+minibob
+embed-carousel
+mobile-showcase
+feature-explorer
+navmeta
+page-meta
+```
 
-Prague widget pages are rendered from Prague marketing JSON in Tokyo. The legacy runtime field is named `blocks[]`, but that is a Prague marketing-section implementation detail, not the PRD 106 page model. These are marketing pages, not the account-widget authoring or translation runtime. When you add or edit sections, keep these filesystems in lockstep:
+Use `documentation/services/prague/blocks.md` for the exact required copy keys and allowed meta keys.
 
-1) **Renderer** (Astro): `prague/src/blocks/**` + `prague/src/lib/blockRegistry.ts`
-2) **Base copy** (source): `tokyo/prague/pages/{widget}/{overview|examples|features|pricing}.json`
-3) **Embeds** (optional): `accountInstanceRef.instanceId` must use PRD 098 compact instance IDs.
+## Public Widget Embeds
 
-Account-widget embeds are public artifact references only:
-- Required identity: `accountInstanceRef.accountPublicId` + `accountInstanceRef.instanceId`
-- Locale selector: optional `accountInstanceRef.locale` only when the public runtime supports a locale selection. Omitted locale means the base public artifact.
-- Forbidden: widget-locale discovery modules, market-locale fallback lists, private translation state, and `wgt_*` / `ins_*` aliases
+Prague can embed a published widget only when the page JSON explicitly provides:
 
-### Add a new marketing section type
-
-- Add the renderer: `prague/src/blocks/{blockType}/{blockType}.astro`
-- Register it: `prague/src/lib/blockRegistry.ts`
-- Use it in a page JSON: `tokyo/prague/pages/{widget}/*.json` (ensure each section entry has `{ id, type, copy: {...} }`)
-- Validate contracts locally:
-  - `pnpm --filter @clickeen/prague typecheck`
-  - `pnpm --filter @clickeen/prague build`
-
-### Edit an existing marketing section
-
-- Keep `id` stable for deterministic section rendering and links.
-- Prefer adding a new section `type` over mutating semantics of an existing one.
-
----
-
-## 2) Content source of truth (Git -> Tokyo/R2 -> Prague)
-
-### 2.1 Canonical page JSONs (required)
-
-Each marketed widget must ship:
-- `tokyo/prague/pages/{widget}/overview.json`
-- `tokyo/prague/pages/{widget}/examples.json`
-- `tokyo/prague/pages/{widget}/features.json`
-- `tokyo/prague/pages/{widget}/pricing.json`
-
-The widget overview page uses Prague's legacy `blocks[]` JSON field to render a deterministic marketing-section layout. Example schema (shape, not a full spec):
 ```json
 {
-  "blocks": [
-    { "id": "page-meta", "type": "page-meta", "copy": { "title": "...", "description": "..." } },
-    { "id": "hero", "type": "hero", "copy": { "headline": "...", "subheadline": "..." }, "visual": true },
-    { "id": "minibob", "type": "minibob", "copy": { "heading": "...", "subhead": "..." } }
+  "accountInstanceRef": {
+    "accountPublicId": "[accountPublicId]",
+    "instanceId": "[instanceId]"
+  }
+}
+```
+
+Some section types carry refs inside `items[]` instead of on the section root:
+
+```json
+{
+  "items": [
+    {
+      "accountInstanceRef": {
+        "accountPublicId": "[accountPublicId]",
+        "instanceId": "[instanceId]"
+      }
+    }
   ]
 }
 ```
 
-Required non-visual marketing sections:
-- `navmeta` (overview only, used by the mega menu)
-- `page-meta` (all widget pages, used for `<head>` title/description)
+Current runtime supports nested refs in `hero`, `split-carousel`,
+`embed-carousel`, and `mobile-showcase` item shapes. `embed-carousel` and
+`mobile-showcase` require non-empty `items`.
 
-Notes:
-- Page JSON is the **single source of truth** for layout + base copy on Prague.
-- Visual embeds are explicit: use `accountInstanceRef.accountPublicId` plus `accountInstanceRef.instanceId` on sections that should embed an account instance. Admin/example embeds use `accountPublicId: "CLICKEEN"`.
-- Prague page JSON and page-owned translation sidecars deploy under R2 `prague/pages/**`.
-- Root `l10n/**` is not a Prague storage or deploy target.
+Rules:
 
-Prague merges page-owned translation sidecars for localized marketing pages. Account-widget translated values stay on the Tokyo account-widget path; public widget package files served from `clk.live` are public artifacts, not Prague translation truth.
+- Admin examples use the normal admin account public id `CLICKEEN`.
+- Prague must not infer account, instance, or locale from widget type.
+- Prague must not read private account translation state.
+- Prague embeds public artifacts served by `clk.live`.
 
-Validation:
-- Marketing-section meta + copy are validated via `prague/src/lib/blockRegistry.ts` during page load.
-- Account instance embeds are validated against the current public instance/runtime contract; missing account instances fail fast in dev/build.
+## Environment
 
----
+| Name | Used by |
+| --- | --- |
+| `PUBLIC_TOKYO_URL` | Required by Prague base layout for Dieter token CSS and product static resources. |
+| `PUBLIC_ROMA_URL` | Create route redirect into Roma. |
+| `PUBLIC_CLK_LIVE_URL` | Optional base URL for public widget artifact validation and embeds. Defaults to `https://clk.live` where code allows. |
+| `PRAGUE_VALIDATE_ACCOUNT_INSTANCE` | Enables account instance availability check during Prague page loading. |
+| `PRAGUE_VALIDATE_ACCOUNT_INSTANCE_STRICT` | Makes availability check failures fatal where code enables validation. |
 
-## 3) Minibob Demo Section (shipped)
+Do not document secret values. Prague does not need account-write secrets.
 
-Prague keeps the `minibob` section type as a **demo surface**, not as a second editor mode.
+Validation defaults:
 
-Implementation:
-- `prague/src/blocks/minibob/minibob.astro`
-- renders the marketing copy section (`heading`, `subhead`)
-- embeds the public live widget through `InstanceEmbed`
-- links the user to `/{market}/{locale}/create`
+- In development, account-instance validation is on unless `PRAGUE_VALIDATE_ACCOUNT_INSTANCE=0`.
+- Strict validation is on in production only when validation is explicitly enabled.
 
-What it no longer does:
-- does not iframe Bob
-- does not boot Bob in a demo-editor mode
-- does not fetch editor bootstrap payloads from Bob
-- does not export draft state from a Bob iframe
-- does not start a server-side handoff
+## Operator Commands
 
-Defaults (local/dev):
-- example embeds must use explicit `accountPublicId + instanceId` refs. Prague must not derive instance identity from widget slug, `wgt_main_{widget}`, or any hidden lookup.
+From repo root:
 
-Demo locale visibility contract:
-- the demo can view locales that are already public-live through `clk.live`/Tokyo artifact truth
-- the demo does not gain locale governance, translation generation, publish, or account writes
-- the demo is not a save-capable editor identity
+```bash
+pnpm --filter @clickeen/prague typecheck
+pnpm --filter @clickeen/prague build
+pnpm prague:l10n:verify
+pnpm cf:api:preflight
+pnpm cf:pages:project prague-dev
+pnpm cf:pages:domains prague-dev
+```
 
----
+Runtime smoke:
 
-## 4) Determinism rules (why this is strict)
+```text
+https://prague.dev.clickeen.com/us/en/
+https://prague.dev.clickeen.com/us/en/widgets/countdown/
+```
 
-- Widget marketing pages are JSON-only in this repo snapshot: no markdown crawling, no build-time parsing heuristics.
-- Builds fail fast when the per-widget page contract is broken (missing required JSON/copy).
-- Account instance embeds (visual widget instances inside Prague blocks) use explicit account and instance identity. Prague must not infer account-widget locale availability or assume generated per-locale HTML files.
-- For canonical `/{market}/{locale}/...` URLs, Prague must not vary indexable content by request IP/cookies/experiment keys; market-bound routing and locale availability are derived from `prague/src/markets/markets.json`.
+## Hard Stops
 
----
+Stop before editing if the request asks Prague to:
 
-## 5) Not shipped (in this repo snapshot)
+- save account instances or account pages
+- generate account translations
+- write Tokyo account folders
+- become the Bob editor
+- create private locale authority
+- author `templates`, `outcomes`, or `cta` as Prague page or section identities
+- use `feature-explorer` until its contract is corrected; the registry requires `copy.categories[]`, while the current renderer reads top-level `categories`
+- add a section type without updating `blockRegistry.ts`
+- add a route that is not represented in `prague/src/pages/**`
 
-The following ideas are intentionally not implemented here and must not be treated as executed behavior:
-- long-tail hubs/spokes/comparisons pages
-- any markdown-driven widget page pipeline under `tokyo/prague/pages/*/**/*.md`
-- acquisition personalization preview / “Make this widget yours”
-
-If/when long-tail SEO is reintroduced, it should ship behind a PRD with a deterministic contract (and this doc should be updated at the same time).
-
----
-
-## Links
-
-- Prague marketing section reference: `documentation/services/prague/blocks.md`
-- Localization contract: `documentation/capabilities/localization.md`
+Prague is the marketing surface. Account operations belong to Roma and Tokyo-worker.

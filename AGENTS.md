@@ -101,7 +101,8 @@ Examples:
 | Roma routes or shell     | `documentation/services/roma.md`                           |
 | Bob Builder              | `documentation/services/bob.md`                            |
 | Tokyo-worker operations  | `documentation/services/tokyo-worker.md`                   |
-| Cloudflare/R2 operations | `documentation/architecture/CloudflareOperations.md`       |
+| Cloudflare/R2 operations | `documentation/engineering/CloudflareOperations.md`        |
+| Supabase/schema changes  | `documentation/engineering/SupabaseOperations.md`          |
 | Widget behavior          | relevant `documentation/widgets/**` doc plus widget source |
 
 ## Authority Gate
@@ -152,7 +153,7 @@ Use product routes for product mutations.
 - Auth/account context comes from Berlin/Roma session bootstrap.
 
 Remote Cloudflare operations use the repo command path from
-`documentation/architecture/CloudflareOperations.md`.
+`documentation/engineering/CloudflareOperations.md`.
 
 Required preflight:
 
@@ -176,7 +177,7 @@ operation path:
 | Tokyo product roots in R2         | `cloud-dev workers deploy` R2 sync step                                           |
 | R2 object reads/writes            | repo Cloudflare R2 commands after `pnpm cf:preflight`                             |
 | Pages/DNS/config reads/writes     | repo Cloudflare API commands after `pnpm cf:api:preflight`                        |
-| Supabase schema                   | reviewed SQL migration plus `supabase migrations deploy` workflow                 |
+| Supabase schema                   | reviewed SQL migration plus `supabase migrations deploy` workflow; see `documentation/engineering/SupabaseOperations.md` |
 
 Use GitHub Actions run status for Worker/R2 deploy evidence. Use Cloudflare
 Pages project state and cloud-dev surface checks for Pages runtime evidence.

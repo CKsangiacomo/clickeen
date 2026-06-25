@@ -1,11 +1,9 @@
 # Berlin - Identity-To-Session Boundary
 
-STATUS: REFERENCE - MUST MATCH RUNTIME
+STATUS: CURRENT SYSTEM OPERATOR SPEC
 Runtime code + deploy config are truth. If this doc drifts from `berlin/*`, update it immediately.
 
 For the canonical account-management model, see `documentation/architecture/AccountManagement.md`.
-
-DB Pivot note: this doc is being converged to the active one-user-one-account model. Any mention of `account_members`, `login_identities`, or `accountPublicId` describes current runtime residue only, not the target model.
 
 ## Purpose
 
@@ -13,7 +11,7 @@ Berlin is Clickeen's identity-to-session boundary.
 
 Given a verified provider identity, Berlin produces a valid, safe, scoped Clickeen session.
 
-That means Berlin is not a pure token vending machine, and it is not the long-term home for every account-management workflow. Berlin owns login-time account truth: the minimum account read/write authority needed to answer:
+That means Berlin is not a pure token vending machine. Berlin owns login-time account truth: the minimum account read/write authority needed to answer:
 
 - who is this person?
 - which Clickeen user does this provider login map to?
@@ -21,7 +19,7 @@ That means Berlin is not a pure token vending machine, and it is not the long-te
 - is this login allowed to create or accept access?
 - what stable authz capsule does Roma/Bob need at session start?
 
-Berlin must keep that login-time truth boring, explicit, and session-scoped. Rich account-management product surfaces are extraction targets, not the Berlin mandate.
+Berlin keeps that login-time truth boring, explicit, and session-scoped.
 
 ## Permanent Mandate
 
@@ -32,7 +30,7 @@ Berlin permanently owns:
 - First-login account provisioning when no invitation or existing user/account applies.
 - Account id minting during account provisioning.
 - Invitation acceptance at login time when the login flow carries an invitation context. Acceptance creates the invited user in the invited account and marks the invitation accepted in one database transaction.
-- Current account resolution for session landing. In the DB Pivot target there is exactly one account per user.
+- Current account resolution for session landing. Current runtime lands a user in one current account.
 - Berlin access-token and refresh-token issuance.
 - Refresh rotation and session revocation.
 - JWKS publication for verifier services.
@@ -46,33 +44,15 @@ The signed account authz capsule carries stable account authz truth only. Mutabl
 ## Boundary Rules
 
 - Direct provider login is the canonical cloud path: `Roma -> Berlin -> provider -> Berlin -> Roma`.
-- Supabase Auth provider redirects are legacy residue and must not be reintroduced as the browser-visible customer login path.
-- The current `public.login_identities` table is runtime residue and a DB Pivot deletion target. Berlin's target login mapping is the approved `users` login fields. Product shells must not consume Supabase Auth identities, provider payloads, or connector state as account truth.
+- Supabase Auth provider redirects are not the browser-visible customer login path.
+- Product shells must not consume Supabase Auth identities, provider payloads, or connector state as account truth.
 - Bootstrap is read-only. It resolves real user/account state and mints session/bootstrap truth; it must not silently repair missing user, role, login mapping, or account state on the hot path.
-- Bootstrap exposes the one current account id for the user. The old `accountId` plus `accountPublicId` split is not target DB Pivot truth.
+- Bootstrap exposes the one current account id for the user. Product storage uses the compact public account coordinate.
 - Missing canonical user, role, login mapping, or account state at bootstrap is a producer bug and must fail explicitly.
-- Current account resolution comes from `users.account_id`. Berlin must never open a privileged fallback account.
+- Current account resolution comes from `users.account_id`. Berlin must never open a privileged alternate account.
 - Invalid persisted profile/account locale-policy truth must fail explicitly in canonical product/account routes. Berlin logs the defect and does not silently default it away.
 - Product shells must not treat login provider summaries as connector/account linkage. Login is not connector authorization.
-- Future providers such as Apple, Microsoft, Meta/Facebook, or others plug into the same provider adapter shape: provider verifies identity; Berlin maps identity to Clickeen account/session truth.
-
-## Current Extraction Targets
-
-Berlin still hosts account-management surfaces from the PRD 65 account-boundary execution. They are current runtime surface, but they are not the corrected long-term Berlin mandate.
-
-These surfaces must not be expanded in Berlin without a PRD:
-
-- team/user CRUD currently backed by old account-member residue
-- profile mutation endpoints
-- account governance and lifecycle operations
-- post-login invitation listing, issuance, revocation, and team/user-management workflows
-- account deletion outside the login/session boundary
-
-Correct direction:
-
-- Keep login-time account truth in Berlin.
-- Move account-management product workflows to their surviving account-management boundary through a dedicated PRD.
-- Do not preserve toxic or duplicate account truth just because a Berlin route currently exists.
+- Additional login providers plug into the same provider adapter shape: provider verifies identity; Berlin maps identity to Clickeen account/session truth.
 
 ## Runtime Surface
 
@@ -81,6 +61,7 @@ Canonical public auth/session routes:
 - `GET /auth/login/:provider/start`
 - `GET /auth/login/:provider/callback`
 - `POST /auth/finish`
+- `POST /auth/login/dev-admin`
 - `GET /auth/session`
 - `POST /auth/refresh`
 - `POST /auth/logout`
@@ -109,14 +90,21 @@ Berlin does not claim full account deletion. Account deletion remains disabled
 until a single account-root operation owns Berlin database cleanup and Tokyo/R2
 account storage cleanup.
 
-Internal routes:
+Verifier metadata route:
 
 - `GET /.well-known/jwks.json`
+
+Internal route:
+
 - `GET /internal/healthz`
 
 Health contract:
 
 - `GET /internal/healthz` -> `{ "ok": true, "service": "berlin" }`
+
+`POST /auth/login/dev-admin` is the dev manual login path. It is rate-limited
+like other auth mutation routes and is available only under the configured
+cloud-dev/admin constraints.
 
 ## Login Flow
 
@@ -177,7 +165,7 @@ OAuth finish state:
 
 - One-time opaque `finishId` records are persisted in `BERLIN_AUTH_TICKETS` with consume-once semantics.
 - Browser callback redirects only carry `finishId`.
-- Provider redirect allow-lists must target Berlin callback URLs only, not Roma callback URLs.
+- Provider redirect allow-lists must point to Berlin callback URLs only, not Roma callback URLs.
 
 ## Dependencies
 
@@ -208,7 +196,7 @@ Berlin creates accounts with a compact `accounts.id` product coordinate:
 
 Existing pre-GA account rows are corrected by append-only Supabase migrations. Berlin does not derive, repair, or recompute `accountPublicId` during bootstrap.
 
-PRD 099 cleanup must not introduce UUID account folders in Tokyo. Any CI guard or migration dry-run that finds `accounts/{uuid}/assets/**`, `accounts/{uuid}/widgets/**`, or `accounts/{uuid}/instances/wgt_*` treats those keys as stale migration material requiring a restore manifest and rollback rehearsal before deletion.
+Berlin must not introduce UUID account folders in Tokyo. Any migration guard that finds `accounts/{uuid}/assets/**`, `accounts/{uuid}/widgets/**`, or `accounts/{uuid}/instances/wgt_*` must stop the operation.
 
 ## Environment
 
@@ -227,6 +215,19 @@ Required for direct Google login:
 - `BERLIN_GOOGLE_CLIENT_ID`
 - `BERLIN_GOOGLE_CLIENT_SECRET`
 - `BERLIN_GOOGLE_CALLBACK_URL`
+
+Required for dev admin login:
+
+- `BERLIN_DEV_ADMIN_EMAIL`
+- `BERLIN_DEV_ADMIN_PASSWORD`
+- `BERLIN_DEV_ADMIN_ACCOUNT_ID`
+
+Runtime aliases still accepted by code:
+
+- `CK_ADMIN_EMAIL`
+- `CK_ADMIN_PASSWORD`
+
+Prefer the `BERLIN_DEV_ADMIN_*` names in env files and Cloudflare config.
 
 Current product login provider:
 
@@ -255,6 +256,15 @@ directly; the old local `dev-up` key materialization path is retired.
 - Cloud-dev Google callback: `https://berlin.dev.clickeen.com/auth/login/google/callback`
 - Berlin reuses the access signing keypair for account capsules. There is no separate capsule secret to distribute.
 
+Cloudflare Worker config:
+
+```text
+worker: berlin-dev
+route: berlin.dev.clickeen.com
+KV: BERLIN_SESSION_KV
+Durable Object: BERLIN_AUTH_TICKETS
+```
+
 ## Operational Floor
 
 Berlin emits one structured JSON completion log per request with:
@@ -270,10 +280,17 @@ Berlin emits one structured JSON completion log per request with:
 
 Berlin returns `x-request-id` on every response so Roma/internal callers can correlate failures to Berlin logs.
 
-The current rate-limit floor is intentionally narrow:
+The current rate-limit floor is intentionally narrow and route-specific:
+
+| Route | Bucket | Limit |
+| --- | --- | --- |
+| `GET /auth/login/:provider/start` | `auth.login.provider.start` | 12 per 60 seconds |
+| `POST /auth/finish` | `auth.finish` | 20 per 60 seconds |
+| `POST /auth/login/dev-admin` | `auth.login.dev_admin` | 12 per 60 seconds |
+| `POST /auth/refresh` | `auth.refresh` | 60 per 60 seconds |
+| `POST /auth/logout` | `auth.logout` | 60 per 60 seconds |
 
 - key = per-IP bucket
 - storage = `BERLIN_SESSION_KV` under a dedicated prefix
-- protected routes = auth/session mutation routes only
 - missing `BERLIN_SESSION_KV` or missing client IP is service/request-contract failure before protected route dispatch
 - limited responses return `429 coreui.errors.rateLimit.exceeded` plus `retry-after` and `x-rate-limit-*` headers

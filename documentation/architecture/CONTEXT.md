@@ -1,5 +1,7 @@
 # Clickeen Current System Context
 
+STATUS: CURRENT SYSTEM OPERATOR SPEC
+
 This is the first product/architecture file agents read.
 
 It contains current system truth only. Detailed service behavior, PRD records,
@@ -15,10 +17,8 @@ that agents operate it directly. Agents are smart operators: they know what to
 do, where, and how, and they execute operations on the structured substrate.
 The codebase is the operable surface; the agents operating it are the product.
 
-This is Clickeen's moat. Legacy SaaS and incumbents have large complex
-codebases operated by humans through UIs/APIs, with AI bolted on as a feature.
-Clickeen inverts that. Incumbents cannot replicate it without rebuilding from
-zero.
+Clickeen's architecture inverts legacy SaaS: keep the system structured and
+agent-operable instead of growing a large human-operated app with AI bolted on.
 
 How the system is organized for agent-operability:
 
@@ -33,8 +33,8 @@ How the system is organized for agent-operability:
 ## Content Source Authority
 
 Clickeen serves content. Websites, widgets, pages, emails, reports, feeds, and
-future runtime surfaces exist to deliver content to users, crawlers, answer
-engines, integrations, and downstream systems.
+runtime surfaces deliver content to users, crawlers, answer engines,
+integrations, and downstream systems.
 
 Content in Clickeen has three source authorities:
 
@@ -75,7 +75,8 @@ named authorities.
 - Widgets are software and live in the system.
 - Users create widget instances in Roma/Bob and save them in their account in
   Tokyo.
-- Pages are stacks of instances that live in Tokyo.
+- Clickeen Pages are account-owned stacks of saved widget instances that live in
+  Tokyo.
 - Bob is an editor. User opens and edits are browser-memory work. User save is
   the persistence boundary.
 - Tokyo is responsible for account runtime storage in R2.
@@ -88,10 +89,16 @@ named authorities.
 
 Clickeen is a simple account product.
 
+- One user belongs to one account.
+- One account has many users.
+- The user's role is the user's role in that account.
+- There is no customer account switching model.
+- `accounts.id` is the compact account product/storage coordinate.
+- `accountPublicId` is the API/embed/authz field name for that same value.
 - Widgets are software.
 - Instances are saved account-owned widgets.
 - Assets are account-owned files.
-- Pages are account-owned stacks of saved instances.
+- Clickeen Pages are account-owned stacks of saved widget instances.
 - Roma is the account app: it routes the user to the current account, enforces
   account policy, and saves account work.
 - Bob is the Builder editor: it edits one widget instance in browser memory and
@@ -120,10 +127,10 @@ paths and product routes as any other account.
 | Widget software                            | `tokyo/product/widgets/{widgetType}/` in git, deployed to Tokyo |
 | Account instances                          | Tokyo-worker over `accounts/{accountPublicId}/instances/`       |
 | Account assets                             | Tokyo-worker over `accounts/{accountPublicId}/assets/`          |
-| Account pages                              | Tokyo-worker over `accounts/{accountPublicId}/pages/`           |
+| Clickeen Pages                            | Tokyo-worker over `accounts/{accountPublicId}/pages/`           |
 | Public serving state                       | Tokyo-worker                                                    |
 | Runtime bytes                              | Cloudflare R2/CDN through Tokyo-worker                          |
-| Relational account/support data            | Michael/Supabase                                                |
+| Relational account/user/invitation/locale data | Michael/Supabase                                           |
 | AI model execution                         | San Francisco                                                   |
 | Product Copilot brain/runtime              | `agents/product-copilot` Cloudflare Worker                      |
 | Translation Agent brain/runtime            | `agents/translation-agent` Cloudflare Worker                     |
@@ -151,9 +158,9 @@ that exposes it.
 | Prague        | Cloudflare Pages / Astro     | Marketing, gallery, demo/funnel pages               |
 | DevStudio     | Cloudflare Pages             | The one human's cockpit for governing the AI-operated company (through the normal admin account) |
 | San Francisco | Workers/D1/KV/R2/Queues      | Governed AI model execution and trace/outcome sink  |
-| Product Copilot | Cloudflare Worker          | Builder Product Copilot brain                       |
-| Translation Agent | Cloudflare Worker        | Account-widget translation agent home                           |
-| Michael       | Supabase Postgres            | Account/user/support relational data                |
+| Product Copilot | Cloudflare Worker          | Builder Product Copilot brain; agent id `product.copilot` |
+| Translation Agent | Cloudflare Worker        | Translation Agent brain; agent id `widget.instance.translator` |
+| Michael       | Supabase Postgres            | Account/user/invitation/locale relational data      |
 | Dieter        | Git source + Tokyo artifacts | Design system tokens/components                     |
 
 Cloud-dev product runtime evidence comes from deployed cloud-dev surfaces:
@@ -163,6 +170,7 @@ https://roma.dev.clickeen.com
 https://bob.dev.clickeen.com
 https://tokyo.dev.clickeen.com
 https://berlin.dev.clickeen.com
+https://dev.clk.live/{accountPublicId}/{instanceId}
 https://devstudio.clickeen.com
 ```
 
@@ -188,10 +196,10 @@ accounts/{accountPublicId}/
   pages/
     {pageId}/
       source.json
-      serve-state.json
-      index.html
-      styles.css
-      runtime.js
+      serve-state.json              # when submitted
+      index.html                    # when submitted
+      styles.css                    # when submitted
+      runtime.js                    # when submitted
 ```
 
 Product software and product-owned static resources live outside account runtime
@@ -210,7 +218,7 @@ The active account asset file shape is:
 accounts/{accountPublicId}/assets/{filename}
 ```
 
-Accepted SVG files are account media when stored through the account asset
+Accepted SVG files are account assets when stored through the account asset
 route. They are classified as vector assets by Tokyo-worker.
 
 ## Product Flows
@@ -235,15 +243,16 @@ route. They are classified as vector assets by Tokyo-worker.
    `accounts/{accountPublicId}/assets/{filename}` with required metadata.
 5. Roma and Bob read the same Tokyo account asset truth.
 
-### Pages
+### Clickeen Pages
 
-1. Roma manages account page source, source save stamps, summaries, and
+1. Roma manages Clickeen Page source, source save stamps, summaries, and
    placement product rules.
-2. A page is an ordered stack of account instance placements.
+2. A Clickeen Page is an ordered stack of saved account widget instance
+   placements.
 3. Tokyo-worker stores page source, serve-state, and any submitted page package
    files under the account page folder.
-4. Current account page publish and public page serving are unavailable until
-   Roma writes page packages.
+4. Page publish and public page serving are currently disabled because Roma
+   does not currently write page packages.
 5. Published page source cannot be edited or deleted until Roma unpublishes it.
 
 ### Clickeen-Owned Examples
@@ -265,7 +274,7 @@ Use the owning surface for evidence:
 | Account instance behavior     | Roma account instance routes and Tokyo-worker                 |
 | Widget software source        | `tokyo/product/widgets/{widgetType}/`                         |
 | Cloud-dev worker/R2 deploy    | GitHub Actions worker deploy runs and R2 evidence             |
-| Roma/Bob/Prague Pages runtime | Cloudflare Pages Git build state and cloud-dev surface checks |
+| Roma/Bob/Prague app runtime   | Cloudflare Pages Git build state and cloud-dev surface checks |
 | Account coordinate            | Berlin/Roma bootstrap plus migrations                         |
 
 ## DevOps Operating Model
@@ -312,7 +321,7 @@ Pages deploy rule:
 - Bob, Roma, and Prague deploy through Cloudflare Pages Git builds.
 - GitHub Actions verify build contracts and surface reachability.
 - Pages project/env/host setup is documented in
-  `documentation/architecture/CloudflarePagesCloudDevChecklist.md`.
+  `documentation/engineering/CloudflarePagesCloudDevChecklist.md`.
 
 ## Detail Docs
 
@@ -320,11 +329,18 @@ Read the detail doc owned by the surface being changed:
 
 | Area                  | Detail Doc                                           |
 | --------------------- | ---------------------------------------------------- |
+| Account model         | `documentation/architecture/AccountManagement.md`    |
 | Account assets        | `documentation/architecture/AssetManagement.md`      |
+| Babel protocol        | `documentation/architecture/BabelProtocol.md`        |
+| Locale overlays       | `documentation/architecture/OverlayArchitecture.md`  |
+| Runtime profiles      | `documentation/architecture/RuntimeProfiles.md`      |
+| Cloud-dev Pages setup | `documentation/engineering/CloudflarePagesCloudDevChecklist.md` |
 | Roma                  | `documentation/services/roma.md`                     |
+| Berlin                | `documentation/services/berlin.md`                   |
 | Tokyo-worker          | `documentation/services/tokyo-worker.md`             |
 | Tokyo storage/deploy  | `documentation/services/tokyo.md`                    |
-| Cloudflare operations | `documentation/architecture/CloudflareOperations.md` |
+| Michael data plane    | `documentation/services/michael.md`                  |
+| Cloudflare operations | `documentation/engineering/CloudflareOperations.md` |
 | Bob                   | `documentation/services/bob.md`                      |
 | Prague                | `documentation/services/prague/prague-overview.md`   |
 | DevStudio             | `documentation/services/devstudio.md`                |
@@ -333,5 +349,6 @@ Read the detail doc owned by the surface being changed:
 | Built agents          | `documentation/ai/agents/`                           |
 | Product strategy      | `documentation/strategy/WhyClickeen.md`              |
 
-Widget-specific work also requires the relevant widget PRD under
-`documentation/widgets/` and the widget source under `tokyo/product/widgets/`.
+Widget-specific work also requires the relevant widget operator spec under
+`documentation/widgets/widgets/`, any affected authoring/shared manuals under
+`documentation/widgets/`, and the widget source under `tokyo/product/widgets/`.

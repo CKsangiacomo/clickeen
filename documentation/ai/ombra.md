@@ -20,9 +20,26 @@ management, and runtime policy files.
 | Model capabilities | `packages/ck-contracts/src/ai.ts` |
 | Model management data shown in DevStudio | `packages/ck-contracts/src/ai-model-management.ts` |
 | Runtime policy matrix minted into grants | `packages/ck-policy/ai-runtime.matrix.json` |
+| Runtime policy derivation and budget helpers | `packages/ck-policy/src/ai-runtime.ts` |
 | Grant enforcement | `sanfrancisco/src/grants.ts` |
-| Provider/model selection | `sanfrancisco/src/ai/modelRouter.ts` |
+| Provider/model selection | `sanfrancisco/src/ai/modelRouter.ts`, `sanfrancisco/src/ai/chat.ts` |
 | Provider credentials | San Francisco Worker secrets |
+
+## Runtime Resource Impact
+
+Ombra itself has no Worker, endpoint, D1 database, R2 bucket, KV namespace,
+queue, secret, or deploy target. Operational changes happen through the files
+and services below.
+
+| Change | File/service touched | Runtime effect |
+| --- | --- | --- |
+| Add or remove a built agent id | `packages/ck-contracts/src/ai.ts` plus agent home/deploy docs | changes which `agentId` San Francisco can resolve |
+| Change model capability metadata | `packages/ck-contracts/src/ai.ts` | changes model capability truth consumed by policy/UI code |
+| Change DevStudio model-management display data | `packages/ck-contracts/src/ai-model-management.ts` | changes operator-facing model information |
+| Change tier/runtime AI model policy | `packages/ck-policy/ai-runtime.matrix.json` | changes the policy Roma mints into grants |
+| Change grant enforcement | `sanfrancisco/src/grants.ts` | changes San Francisco runtime enforcement |
+| Change provider/model routing | `sanfrancisco/src/ai/modelRouter.ts`, `sanfrancisco/src/ai/chat.ts` | changes the selected provider/model execution path |
+| Change provider credentials | San Francisco Worker secrets | enables or disables model routes at runtime |
 
 ## Current Runtime Consumers
 
@@ -60,6 +77,33 @@ pnpm --filter @clickeen/translation-agent eval:translation-agent
 Run only the checks relevant to the affected route plus San Francisco when the
 grant/model boundary changes.
 
+## Operator Checklist
+
+Before changing model policy:
+
+1. Identify the agent id and tier affected.
+2. Confirm the model exists in the capability/management files.
+3. Confirm the provider key exists in San Francisco cloud-dev if the route will
+   be exercised at runtime.
+4. Update the policy matrix.
+5. Run the affected agent eval plus San Francisco typecheck.
+6. Push and verify the `cloud-dev workers deploy` workflow.
+7. Run the relevant product smoke when the route is user-facing.
+
+Do not change runtime policy by editing documentation. Documentation records the
+operator contract; it is not read by Roma, San Francisco, or the agents.
+
+## Common Failure Map
+
+| Symptom | Likely owner | Operator action |
+| --- | --- | --- |
+| `Unknown agentId` | `packages/ck-contracts/src/ai.ts` | verify the agent is registered and deployed as a current agent home |
+| `Grant AI policy does not match request agentId` | Roma grant minting or caller request | inspect caller route and grant payload trace |
+| `Model provider mismatch` | signed policy vs selected model | inspect `selectedModel`, `defaultModel`, and `modelsByProvider` in minted policy |
+| `Model not allowed` | policy matrix | verify `packages/ck-policy/ai-runtime.matrix.json` for the agent/tier |
+| missing provider key | San Francisco secret | add/fix the Worker secret; do not switch model/provider silently |
+| DevStudio model display disagrees with runtime | management metadata vs policy matrix | update the stale source; do not treat UI display as runtime truth |
+
 ## Disallowed Runtime Behavior
 
 Current runtime must not:
@@ -85,5 +129,5 @@ gh run list --branch main --limit 10
 
 ## Out Of Scope
 
-Ombra does not define agent scope, provider monitoring jobs, or model decision
-history.
+Ombra does not define agent scope, provider monitoring jobs, model decision
+history, or planned-agent model policy.

@@ -1,5 +1,7 @@
 # Bob - Widget Editor
 
+STATUS: CURRENT SYSTEM OPERATOR SPEC
+
 Bob is Clickeen's widget editor. It loads widget software and one saved widget
 instance, edits the instance in browser memory, previews the working state, and
 delegates persistence back to Roma.
@@ -30,7 +32,7 @@ Tokyo-worker owns R2 storage. Widget software lives in the system product tree.
 
 The active account authoring flow is:
 
-1. Roma resolves the current account and target `instanceId`.
+1. Roma resolves the current account and opened `instanceId`.
 2. Roma opens one saved widget document.
 3. Roma loads the compiled widget software.
 4. Roma sends Bob a `ck:open-editor` message.
@@ -47,48 +49,78 @@ Between open and save, Bob writes no account persistence.
 
 Bob announces readiness:
 
-```js
+```json
 {
-  type: 'bob:session-ready';
+  "type": "bob:session-ready"
 }
 ```
 
 Roma opens Bob:
 
-```js
+```json
 {
-  type: ('ck:open-editor',
-    requestId,
-    widgetname,
-    compiled,
-    instanceData,
-    policy,
-    accountPublicId,
-    instanceId,
-    label,
-    source,
-    meta);
+  "type": "ck:open-editor",
+  "requestId": "[requestId]",
+  "widgetname": "[widgetType]",
+  "baseLocale": "[baseLocale]",
+  "compiled": "[compiledWidgetPayload]",
+  "instanceData": "[savedInstanceData]",
+  "policy": "[policySnapshot]",
+  "accountPublicId": "[accountPublicId]",
+  "instanceId": "[instanceId]",
+  "publishStatus": "[published|unpublished]",
+  "label": "[displayName]",
+  "meta": "[metadata]",
+  "copilot": "[copilotRuntimeUi]",
+  "translationSetup": "[translationSetup]"
 }
 ```
 
 Bob replies with:
 
-```js
+```json
 {
-  type: ('bob:open-editor-applied', requestId);
+  "type": "bob:open-editor-applied",
+  "requestId": "[requestId]",
+  "instanceId": "[instanceId]",
+  "widgetname": "[widgetType]"
 }
 ```
 
 or:
 
-```js
+```json
 {
-  type: ('bob:open-editor-failed', requestId, error);
+  "type": "bob:open-editor-failed",
+  "requestId": "[requestId]",
+  "reasonKey": "[reasonKey]",
+  "message": "[message]"
 }
 ```
 
 Open succeeds only with explicit compiled widget software and explicit saved
 instance data from Roma.
+
+Bob also notifies Roma when the browser-memory working copy changes:
+
+```json
+{
+  "type": "bob:dirty-state-changed",
+  "isDirty": "[true|false]"
+}
+```
+
+Roma replies to account commands with:
+
+```json
+{
+  "type": "host:account-command-result",
+  "requestId": "[requestId]",
+  "ok": "[true|false]",
+  "command": "[command]",
+  "result": "[commandResult]"
+}
+```
 
 ## Save Contract
 
@@ -100,10 +132,10 @@ Bob sends current document metadata and working config back to Roma:
 - display name
 - source metadata
 - current config/content state
-- generated browser package files
 
-Roma performs the account save command. Tokyo-worker stores the saved source and
-package under:
+Bob sends this as a `bob:account-command` with `command: "update-instance"`.
+Roma compiles/materializes the browser package files and performs the account
+save command. Tokyo-worker stores the saved source and package under:
 
 ```text
 accounts/{accountPublicId}/instances/{instanceId}/
@@ -111,6 +143,18 @@ accounts/{accountPublicId}/instances/{instanceId}/
 
 Save is separate from translation generation, publish, unpublish, rename,
 duplicate, and delete.
+
+Bob account commands currently include:
+
+- `update-instance`
+- `list-assets`
+- `resolve-assets`
+- `upload-asset`
+- `list-translations`
+- `read-translation`
+- `generate-translations`
+- `run-copilot`
+- `attach-ai-outcome`
 
 Dirty/save comparison uses the current editor config directly; Bob does not
 substitute an empty config when serialization fails.
@@ -122,13 +166,13 @@ choose generation locales or write translation files.
 
 The panel sends one Generate translations command with the open `instanceId`.
 Roma resolves active locales and calls the Translation Agent Worker. While the
-operation is running, Bob disables the button and displays the active-locale
-count already present in the open editor payload. When the operation returns,
-Bob shows the direct result text and refreshes overlay inspection.
+operation is running, Bob disables the button and displays progress from the
+active locale list already present in the open editor payload. When the
+operation returns, Bob shows the direct result text and refreshes overlay
+inspection.
 
-Bob does not create backend translation tasks, poll backend status, stream counters, or
-invent locale authority. Saved locale overlay files remain Tokyo-worker/R2
-state.
+Bob does not create backend translation tasks, poll backend status, or invent
+locale authority. Saved locale overlay files remain Tokyo-worker/R2 state.
 
 ## Widget Software
 
@@ -148,12 +192,12 @@ Each widget package contains:
 
 ```text
 spec.json
+editable-fields.json
+limits.json
 widget.html
 widget.css
 widget.client.js
-editable-fields.json
-limits.json
-pages/*.json
+declared support files
 ```
 
 `spec.json` carries defaults and editor structure. `editable-fields.json`
@@ -170,13 +214,32 @@ Bob compiles widget `spec.json` into:
 - editor binding metadata
 - AI context metadata
 
-Compiler source lives under `bob/lib/compile`.
+Compiler source lives under `bob/lib/compiler*` and the compiled-widget API
+helpers under `bob/lib/api/compiled-widget-route.ts`.
 
 The compile API is:
 
 ```text
 GET /api/widgets/{widgetname}/compiled
 ```
+
+Bob also has same-origin static proxy routes for editor/runtime resources:
+
+```text
+GET /widgets/**
+GET /dieter/**
+GET /fonts/**
+GET /l10n/**
+```
+
+The Bob-local AI API routes are guard routes only:
+
+```text
+POST /api/ai/widget-copilot -> 409
+POST /api/ai/outcome -> 409
+```
+
+Copilot traffic must run through Roma account routes.
 
 Compiled payloads are consumed by Roma Builder and Bob session state.
 
@@ -231,8 +294,8 @@ model options and default model that Roma sends in the Builder-open payload.
 Bob sends a `selectedModel` override only when Roma explicitly set
 `allowModelPicker: true`; when no picker is allowed, Bob sends no selected model
 and Roma/San Francisco use the policy default. Bob does not own model lists,
-model availability, provider keys, provider catalog monitoring, or fallback
-selection.
+model availability, provider keys, provider catalog monitoring, or automatic
+alternate model selection.
 
 When San Francisco returns valid edit ops, Bob applies them immediately to the
 browser-memory working copy and preview through the same in-memory op path used
@@ -250,17 +313,21 @@ no item identity.
 Bob preview loads the widget runtime in a sandboxed iframe and streams working
 state updates:
 
-```js
+```json
 {
-  type: ('ck:state-update', widgetname, state, device, theme);
+  "type": "ck:state-update",
+  "widgetname": "[widgetType]",
+  "state": "[workingState]",
+  "device": "[desktop|mobile]",
+  "theme": "[light|dark]"
 }
 ```
 
 Widget runtime sends:
 
-```js
+```json
 {
-  type: 'ck:ready';
+  "type": "ck:ready"
 }
 ```
 
@@ -348,6 +415,28 @@ command: pnpm build:cf
 output: bob/.cloudflare/output/static
 ```
 
+Package commands:
+
+```bash
+pnpm --filter @clickeen/bob typecheck
+pnpm --filter @clickeen/bob lint
+pnpm --filter @clickeen/bob build:cf
+```
+
+Cloudflare Pages config:
+
+```text
+project: bob-dev
+output: .cloudflare/output/static
+compatibility flags: nodejs_compat_populate_process_env, nodejs_compat
+```
+
+Runtime env:
+
+| Name | Purpose |
+| --- | --- |
+| `NEXT_PUBLIC_TOKYO_URL` | Tokyo public static/resource origin for widget software and Dieter media. |
+
 Before any Cloudflare Pages, custom-domain, DNS, or Pages config operation, run:
 
 ```bash
@@ -355,3 +444,11 @@ pnpm cf:api:preflight
 ```
 
 Runtime evidence comes from cloud-dev Cloudflare surfaces.
+
+## Hard Stops
+
+- Do not add account persistence inside Bob.
+- Do not save package files from Bob.
+- Do not let Bob choose account locales, tier policy, model availability, or storage paths.
+- Do not create Bob account asset API routes; asset commands go through Roma.
+- Do not treat Builder preview as public serving evidence.

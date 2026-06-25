@@ -1,37 +1,66 @@
-# Prague Layout System (Core)
+# Prague Layout System
 
-Prague is the marketing + SEO surface. Its layout system must be **stable**, **simple**, and **reusable** across the 100⁵ page surface.
+STATUS: CURRENT SYSTEM OPERATOR SPEC
 
-## Decisions (non-negotiable)
+Prague uses a small CSS primitive set for marketing pages. The primitives live in Prague because Prague owns the public marketing presentation layer.
 
-- **Flex-first**: use flexbox primitives for layout and composition; avoid “grid systems”.
-- **One breakpoint**: only `desktop` vs `mobile` (single media query).
-- **Wide container**: modern screens justify a larger max width.
-  - Current container max: `1560px`
+## Source Files
 
-## Primitives
+| Concern | File |
+| --- | --- |
+| Layout primitives | `prague/public/styles/layout.css` |
+| UI primitives | `prague/public/styles/primitives.css` |
+| Element styles | `prague/public/styles/elements.css` |
+| Base app styles | `prague/public/styles/base.css` |
+| Global app loader | `prague/src/layouts/Base.astro` |
+| Section components | `prague/src/blocks/**` |
 
-Prague uses a tiny set of CSS utilities (no framework):
-- `ck-canvas` — full-bleed block surface (the “stage” analogue)
-- `ck-inline` — optional inline wrapper (max width + gutters; the “pod” analogue)
-- `ck-stack` — vertical layout (`flex-direction: column`)
-- `ck-row` — horizontal layout (`flex-wrap: wrap`)
-- `ck-split` — two-column hero split (stacks on mobile)
+`Base.astro` loads `elements.css`, `layout.css`, `primitives.css`, and
+`base.css` for current Prague pages.
 
-Source: `prague/public/styles/layout.css` in the repo. When Prague content/assets are synced to Tokyo R2, their storage home is under root `prague/`, never root `l10n/`, `published/`, or account runtime folders.
+## Layout Primitives
 
-## The “don’t die” contract (wrapper jail prevention)
+| Class | Purpose |
+| --- | --- |
+| `ck-canvas` | Full-width section surface. Owns background and vertical rhythm. |
+| `ck-inline` | Width-constrained inner wrapper and gutters. |
+| `ck-stack` | Vertical flex layout. |
+| `ck-row` | Horizontal flex layout with wrapping. |
+| `ck-split` | Two-column composition that stacks on mobile. |
+| `ck-heroCanvas` | Hero canvas surface used by Prague hero composition. |
 
-`ck-canvas` / `ck-inline` MUST NOT:
-- set `overflow` (no accidental clipping)
-- set `position` (no stacking context surprises)
-- center children by default (`justify-content/align-items`)
+## UI Primitives
 
-Blocks own behavior:
-- Scroll containers live inside the block (e.g. carousels use `overflow-x: auto` on the carousel element).
-- Backgrounds belong to `ck-canvas`; width constraints belong to `ck-inline`.
+| Class | Purpose |
+| --- | --- |
+| `ck-btn` | Button styles with `primary`, `secondary`, `secondaryCta`, `glass`, and `ghost` variants. |
+| `ck-badge` | Small badge or pill. |
+| `ck-card` | Repeated item card. |
+| `ck-media` | Screenshot, video, or visual frame. |
 
-## Rule for blocks
+Typography uses Dieter utility classes already available to Prague, such as `heading-*`, `body-*`, `label-*`, and `overline`.
 
-Blocks may add local styling, but **must not invent breakpoints** or ad-hoc page spacing.
-They compose the primitives above and rely on Dieter foundation tokens for spacing/typography/colors.
+## Rules
+
+- `ck-canvas` and `ck-inline` do not set `overflow`, `position`, or default child centering.
+- Scroll behavior belongs inside the block that needs it.
+- Backgrounds belong to `ck-canvas`.
+- Width constraints belong to `ck-inline`.
+- Blocks compose primitives; they do not invent parallel layout systems.
+- Blocks do not add new breakpoints unless the runtime task explicitly changes Prague layout primitives.
+
+## Verification
+
+Run:
+
+```bash
+pnpm --filter @clickeen/prague typecheck
+pnpm --filter @clickeen/prague build
+```
+
+Use browser evidence on:
+
+```text
+https://prague.dev.clickeen.com/us/en/
+https://prague.dev.clickeen.com/us/en/widgets/countdown/
+```

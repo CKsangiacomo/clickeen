@@ -174,32 +174,6 @@
     return section;
   }
 
-  function renderSdrCopilot(config) {
-    const section = document.createElement('section');
-    section.className = 'llm-management__panel';
-    section.innerHTML = `
-      <h2 class="heading-4">SDR Copilot</h2>
-      <p class="body-s llm-management__meta">Public/prospect users never see a model picker. The future SDR path stays separately governed.</p>
-    `;
-    const list = document.createElement('ul');
-    list.className = 'llm-management__list';
-    const row = document.createElement('li');
-    row.className = 'llm-management__row';
-    const main = document.createElement('div');
-    main.className = 'llm-management__row-main';
-    const label = document.createElement('span');
-    label.className = 'body-s';
-    label.textContent = config.publicPicker === 'none' ? 'No public picker' : 'Unexpected public picker';
-    const code = document.createElement('span');
-    code.className = 'llm-management__code';
-    code.textContent = `${(config.enabledModels || []).length} configured model(s)`;
-    main.append(label, code);
-    row.append(main, createBadge(config.publicPicker === 'none' ? 'Compliant' : 'Blocked', config.publicPicker === 'none' ? 'passed' : 'blocked'));
-    list.append(row);
-    section.append(list);
-    return section;
-  }
-
   function renderInternalAgents(internalAgents) {
     const section = document.createElement('section');
     section.className = 'llm-management__panel';
@@ -226,7 +200,7 @@
     section.className = 'llm-management__panel';
     section.innerHTML = `
       <h2 class="heading-4">Model Operations</h2>
-      <p class="body-s llm-management__meta">Roma and policy code use committed model management data when minting signed model requests. San Francisco executes the signed request and checks provider credentials. Provider catalog watching, conformance runs, and model-file updates are future DevOps Agent work.</p>
+      <p class="body-s llm-management__meta">Roma and policy code use committed model management data when minting signed model requests. San Francisco executes the signed request and checks provider credentials. This surface displays current committed model-management data only.</p>
     `;
     return section;
   }
@@ -252,7 +226,6 @@
     grid.className = 'llm-management__grid';
     grid.append(
       renderProductCopilot(management.config.productCopilot),
-      renderSdrCopilot(management.config.sdrCopilot),
       renderInternalAgents(management.config.internalAgents),
     );
 

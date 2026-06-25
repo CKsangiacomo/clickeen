@@ -7,17 +7,14 @@ export type AiRegistryBoundary =
   | 'account_widget_translated_values';
 export type AiAgentHome =
   | 'product-copilot'
-  | 'translation-agent'
-  | 'future-agent';
+  | 'translation-agent';
 export type AiLoopOwner =
   | 'bob-live-draft'
   | 'agent-home'
-  | 'single-pass-workflow'
-  | 'future-decision';
+  | 'single-pass-workflow';
 export type AiRuntimeIdentity =
   | 'authenticated-product'
-  | 'internal-service'
-  | 'future-public-sdr';
+  | 'internal-service';
 
 export type AiBudget = {
   maxTokens: number;

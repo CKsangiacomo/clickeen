@@ -1,5 +1,7 @@
 # Tokyo-worker - R2 Boundary
 
+STATUS: CURRENT SYSTEM OPERATOR SPEC
+
 Tokyo-worker is the Tokyo R2/storage/CDN boundary for account runtime data,
 account assets, saved widget instance files, translated locale values, page
 files, generated public packages, and public artifact serving.
@@ -10,7 +12,7 @@ For platform context see:
 
 - `documentation/architecture/CONTEXT.md`
 - `documentation/architecture/AssetManagement.md`
-- `documentation/architecture/CloudflareOperations.md`
+- `documentation/engineering/CloudflareOperations.md`
 
 ## Product Role
 
@@ -27,6 +29,7 @@ Tokyo-worker owns:
 - page source and page package R2 operations
 - public package file serving
 - `clk.live` and `dev.clk.live` static artifact serving
+- `GET /healthz`
 
 Roma owns:
 
@@ -173,6 +176,9 @@ Public support files are:
 
 Private source and state files remain private account storage.
 
+Public page-serving URL shape is parsed by Tokyo-worker, but current page
+public serving returns `404` until Roma writes real page packages.
+
 ## Private Roma Routes
 
 Roma reaches Tokyo-worker through private Cloudflare service bindings for
@@ -191,6 +197,37 @@ Storage command routes cover:
 - translated locale reads and writes
 - account asset list/upload/resolve/delete
 - page source/package/serve-state operations
+
+Current internal route families:
+
+| Route | Methods | Purpose |
+| --- | --- | --- |
+| `/__internal/widgets/definitions` | `GET` | list/read widget definition summaries |
+| `/__internal/accounts/{accountPublicId}/instances` | `GET` | list account instances |
+| `/__internal/accounts/{accountPublicId}/instances/facts` | `GET` | account instance facts used by Roma |
+| `/__internal/instances` | `POST` | create saved account instance |
+| `/__internal/instances/{instanceId}` | `GET`, `PUT`, `DELETE` | open/save/delete one account instance |
+| `/__internal/instances/{instanceId}/rename` | `POST` | rename one account instance |
+| `/__internal/instances/{instanceId}/{publish|unpublish}` | `POST` | update widget serve state |
+| `/__internal/instances/{instanceId}/package` | `GET` | read generated package metadata/files where supported |
+| `/__internal/instances/{instanceId}/translations` | `GET` | list saved translated locale value files |
+| `/__internal/instances/{instanceId}/translations/{locale}` | `GET`, `PUT`, `DELETE` | read/write/delete one translated value file |
+| `/__internal/accounts/{accountPublicId}/pages` | `GET` | list account pages |
+| `/__internal/pages` | `POST` | create account page source |
+| `/__internal/pages/{pageId}` | `GET`, `PUT`, `DELETE` | read/save/delete account page source |
+| `/__internal/pages/{pageId}/{publish|unpublish}` | `POST` | update page serve state |
+| `/__internal/accounts/{accountPublicId}/widget-defaults` | `GET`, `POST`, `PUT` | read/create/write account widget defaults |
+| `/__internal/assets/upload` | `POST` | upload account asset bytes |
+| `/__internal/assets/account/{accountPublicId}` | `GET` | list account asset metadata |
+| `/__internal/assets/account/{accountPublicId}/usage` | `GET` | account asset usage facts |
+| `/__internal/assets/account/{accountPublicId}/resolve` | `POST` | resolve account asset references |
+| `/__internal/assets/account/{accountPublicId}/asset/{assetRef}` | `DELETE` | delete exact account asset |
+
+Health route:
+
+```text
+GET /healthz -> { "up": true }
+```
 
 ## Widget Software
 
@@ -238,4 +275,38 @@ pnpm cf:preflight
 ```
 
 Cloudflare/R2 evidence comes from the repo commands documented in
-`documentation/architecture/CloudflareOperations.md`.
+`documentation/engineering/CloudflareOperations.md`.
+
+Cloud-dev Worker config:
+
+```text
+worker: tokyo-assets-dev
+routes:
+  dev.clk.live/*
+  tokyo.dev.clickeen.com/healthz
+  tokyo.dev.clickeen.com/widgets/*
+  tokyo.dev.clickeen.com/dieter/*
+  tokyo.dev.clickeen.com/i18n/*
+  tokyo.dev.clickeen.com/prague/l10n/*
+  tokyo.dev.clickeen.com/prague/assets/*
+  tokyo.dev.clickeen.com/assets/account/*
+  tokyo.dev.clickeen.com/fonts/*
+R2 binding: TOKYO_R2
+```
+
+Worker env and bindings:
+
+| Name | Required | Purpose |
+| --- | --- | --- |
+| `TOKYO_R2` | yes | R2 bucket binding for static and account storage. |
+| `BERLIN_BASE_URL` | yes | Berlin session/JWKS authority for private request verification. |
+| `TOKYO_PUBLIC_BASE_URL` | yes | Public Tokyo static/resource origin. |
+| `PUBLIC_SERVING_BASE_URL` | yes | Public `clk.live`/`dev.clk.live` serving origin. |
+| `BERLIN_JWKS_URL` | no | Explicit JWKS URL when not derived from Berlin base URL. |
+| `AI_GRANT_HMAC_SECRET` | no | HMAC secret for AI grant verification where grant path uses it. |
+| `CLOUDFLARE_ZONE_ID` | no | Cloudflare purge support when purge is enabled. |
+| `CLOUDFLARE_API_TOKEN` | no | Cloudflare purge support when purge is enabled. |
+
+Current `tokyo-worker/wrangler.toml` binds `TOKYO_R2` and configures
+`BERLIN_BASE_URL`, `TOKYO_PUBLIC_BASE_URL`, and `PUBLIC_SERVING_BASE_URL` for
+cloud-dev.

@@ -41,11 +41,13 @@ deploy. There is no autonomous production mutation loop.
 
 Type: `InteractionEvent` in `sanfrancisco/src/types.ts`.
 
-San Francisco creates one interaction event for each `/model/chat` call.
+San Francisco creates an interaction event only after `/model/chat` request
+shape, grant verification, agent resolution, and capability checks succeed.
+Provider execution failures after that point still emit an interaction event
+with an `execution_failure` outcome.
 
 Fields:
 
-- `v`
 - `requestId`
 - `agentId`
 - `occurredAtMs`
@@ -85,7 +87,7 @@ POST /outcome
 Signature:
 
 ```text
-x-clickeen-signature = hmacSha256("outcome.<bodyText>", AI_GRANT_HMAC_SECRET)
+x-clickeen-signature = hmacSha256("outcome.[body text]", AI_GRANT_HMAC_SECRET)
 ```
 
 Required fields:
@@ -121,7 +123,7 @@ Interaction indexing and raw sample capture are different.
 | Storage | Rule |
 | --- | --- |
 | `SF_D1.copilot_events` | queue consumer attempts to index every valid interaction event |
-| `SF_R2.learning/...` | only paid eligible Product Copilot samples selected by `learningCapture.rawSamplePercent` |
+| `SF_R2 learning/[environment]/[agent id]/[yyyy-mm-dd]/[request id].json` | only paid eligible Product Copilot samples selected by `learningCapture.rawSamplePercent` |
 | `SF_D1.copilot_outcomes` | outcome endpoint writes every valid signed outcome |
 
 Raw R2 sampling is controlled by `resolveLearningCaptureDecision` in
@@ -143,21 +145,51 @@ sample eligible.
 
 Schema authority: `sanfrancisco/migrations/`.
 
+Cloud-dev database:
+
+```text
+sanfrancisco_d1_dev
+9ee059a3-538f-4b71-b2ea-f04b33e4897a
+```
+
 Tables:
 
 - `copilot_events`
 - `copilot_outcomes`
 
+D1 migrations are not applied by the San Francisco Worker deploy command. Schema
+changes require the approved Cloudflare D1 operation path before runtime code or
+operators rely on new columns.
+
 ### R2
+
+Cloud-dev bucket:
+
+```text
+sanfrancisco-logs-dev
+```
 
 Sample key format:
 
 ```text
-learning/{ENVIRONMENT}/{agentId}/{YYYY-MM-DD}/{requestId}.json
+learning/[environment]/[agent id]/[yyyy-mm-dd]/[request id].json
 ```
 
 Sample shape is produced by `buildLearningSample` in
 `sanfrancisco/src/telemetry.ts`.
+
+Current raw sample fields:
+
+- `captureReason`
+- `requestId`
+- `agentId`
+- `occurredAtMs`
+- `subjectHash`
+- `trace`
+- `ai`
+- sanitized `input`
+- `result`
+- `usage`
 
 ### Queue
 
@@ -167,7 +199,15 @@ Queue binding:
 SF_EVENTS
 ```
 
+Cloud-dev queue:
+
+```text
+sanfrancisco-events-dev
+```
+
 The queue consumer is `SanFranciscoWorker.queue` in `sanfrancisco/src/index.ts`.
+The San Francisco package deploy command ensures this queue exists before
+`wrangler deploy`.
 
 ## D1 Event Index
 
@@ -193,11 +233,15 @@ The queue consumer is `SanFranciscoWorker.queue` in `sanfrancisco/src/index.ts`.
 - `ctaAction`
 - `promptId`
 - `policyId`
+- `aiProfile`
 - `dictionaryHash`
 - `taskClass`
 - `provider`
 - `model`
 - `latencyMs`
+
+The D1 schema includes `aiProfile`. Current runtime does not populate that
+column when indexing events.
 
 D1 insert failures are logged and do not fail the model response.
 
@@ -255,7 +299,7 @@ pnpm e2e:smoke:translation-agent-runtime
 ## Operational Queries
 
 D1 table reads must use the Cloudflare operation path from
-`documentation/architecture/CloudflareOperations.md`.
+`documentation/engineering/CloudflareOperations.md`.
 
 Common questions:
 
@@ -265,17 +309,29 @@ Common questions:
 | Invalid output or no-op rate | `copilot_events` |
 | Undo rate | `copilot_outcomes` |
 | Time to user decision | `copilot_outcomes` |
-| Raw sampled payload for a request | `SF_R2 learning/...` |
+| Raw sampled payload for a request | `SF_R2 learning/[environment]/[agent id]/[yyyy-mm-dd]/[request id].json` |
+
+Operator lookup sequence:
+
+1. Capture `x-request-id` from the product or Worker response.
+2. Check `copilot_events` by `requestId` for model-call metadata.
+3. Check `copilot_outcomes` by `requestId` for attached user decisions.
+4. If raw capture was eligible and sampled, inspect
+   `SF_R2 learning/[environment]/[agent id]/[yyyy-mm-dd]/[request id].json`.
+5. Treat missing raw R2 sample as normal unless the event policy had positive
+   `learningCapture.rawSamplePercent` and the deterministic sample selected it.
 
 ## Failure Semantics
 
 | Failure | Current behavior |
 | --- | --- |
 | `SF_EVENTS` absent | model response can still succeed; no event is queued |
+| `SF_EVENTS.send` fails | send failure is logged from `ctx.waitUntil`; model response can still succeed |
 | queue message malformed | message is acknowledged and skipped |
 | D1 event index insert fails | logged; model response is not changed |
 | R2 sample write fails | logged; queue processing continues |
-| outcome signature invalid | `/outcome` returns an error |
+| outcome signature missing | `/outcome` returns `401 CAPABILITY_DENIED` |
+| outcome signature invalid | `/outcome` returns `403 CAPABILITY_DENIED` |
 | outcome payload invalid | `/outcome` returns `400 BAD_REQUEST` |
 | outcome D1 insert fails | `/outcome` returns `500 PROVIDER_ERROR` |
 
@@ -295,5 +351,5 @@ Before promoting an AI behavior change:
 1. Run the eval gate for the affected agent.
 2. Run San Francisco typecheck if grant/model/telemetry code changed.
 3. Verify deploy workflow status after push.
-4. Confirm no new core violation violation was introduced.
+4. Confirm no new core violation was introduced.
 5. Keep rollback as a normal code revert/deploy path.

@@ -1,40 +1,31 @@
-# System: Tokyo - Product Assets And Account Storage
+# Tokyo - R2 Storage And Static Deploy Contract
 
-STATUS: REFERENCE - MUST MATCH PRD 099 DEPLOY ROOTS, PRD 103 PRODUCT-OPERATION VOCABULARY, AND PRD 105 INSTANCE FOLDER TENETS
+STATUS: CURRENT SYSTEM OPERATOR SPEC
 
-PRD 103 DB PIVOT NOTE: account instance product boundaries are now operation-shaped. `instance.json` and `instances/index.json` are not active product runtime contracts. Public generated artifacts are R2/CDN serving output, not authoring or publish state.
+Tokyo is the storage and static-serving plane. Tokyo is not an editor, account authority, page builder, translation authority, or AI runtime.
 
-PRD 105 NOTE: active account instance runtime shape is `instance.config.json`, `instance.content.json`, `overlays/locales/{locale}.json`, `index.html`, `styles.css`, and `runtime.js`. Per-locale HTML/JS files and versioned script/style artifacts are not current default architecture.
+Tokyo has two forms:
 
-Tokyo is the storage and static-serving plane. It is not an editor, account authority, or Prague-specific runtime.
-
-## Product Model
-
-Tokyo has three boring jobs:
-
-- Serve git-authored product software/static resources from canonical R2 roots: `dieter/`, `fonts/`, `product/`, and `prague/`.
-- Store account-owned data through Tokyo-worker: assets and widget instances.
-- Serve stored public widget package artifacts through `clk.live` public read paths.
-
-The ownership boundary is always the account. Admin is just the Clickeen account with broader permissions; admin-owned instances are stored exactly like customer-owned instances.
+- `tokyo/` repo folders: git-authored source/deploy artifacts.
+- `tokyo-worker/`: Cloudflare Worker that reads, writes, and serves Tokyo R2.
 
 ## R2 Root Contract
 
 Tokyo R2 has one runtime-managed account root plus git-authored deploy roots:
 
-```txt
+```text
 accounts/   runtime-managed account storage
 dieter/     git-authored shared design-system media
 fonts/      git-authored global Clickeen font media
-product/    git-authored product software and product media
+product/    git-authored product software and media
 prague/     git-authored marketing/site/GTM content
 ```
 
-Only `accounts/` is runtime-managed by product/account operations. Roma, Tokyo-worker, public serving, and account lifecycle flows must not mutate `dieter/`, `fonts/`, `product/`, or `prague/` as customer state.
+Only `accounts/` is runtime-managed by product/account operations.
 
 Git-authored deploy mapping:
 
-```txt
+```text
 tokyo/product/widgets/**  -> product/widgets/**
 tokyo/product/dieter/**   -> dieter/**
 tokyo/product/fonts/**    -> fonts/**
@@ -42,17 +33,22 @@ tokyo/roma/**             -> product/roma/**
 tokyo/prague/**           -> prague/**
 ```
 
-`product/widgets/` is widget software. Accounts own widget instances under `accounts/{accountPublicId}/instances/**`; accounts do not own or mutate widget software.
+`tokyo/product/themes/**` exists in the repo and is watched by the worker deploy
+workflow, but the current R2 deploy sync script does not map it to an R2 root.
+Do not claim theme artifacts are deployed until `scripts/tokyo-r2-deploy-sync.mjs`
+maps that source.
 
-Tokyo Pages/static output and friendly static routes are source/deploy and serving convenience only. They must not become a second authority for widget software, Dieter media, fonts, product media, or Prague content. For example, `/widgets/{widgetType}/spec.json` is a friendly serving path for the canonical R2 object `product/widgets/{widgetType}/spec.json`, not a root `widgets/` storage truth.
+Operator script:
 
-Deploy tooling must not publish git-authored media to root `widgets/`, root `l10n/`, root `public/`, or root `published/`. Published projection keys are account-owned runtime/public serving state under the owning instance, not a deploy-root pattern.
+```text
+scripts/tokyo-r2-deploy-sync.mjs
+```
 
-## Runtime Account Shape
+## Account Runtime Shape
 
-Account-owned payloads and public artifacts live under the account root:
+Account-owned payloads live under:
 
-```txt
+```text
 accounts/{accountPublicId}/
   assets/
     {assetRef}
@@ -67,65 +63,104 @@ accounts/{accountPublicId}/
       index.html
       styles.css
       runtime.js
+  pages/
+    {pageId}/
+      source.json
+      serve-state.json
+      index.html
+      styles.css
+      runtime.js
 ```
 
 Rules:
 
-- `accountPublicId` is the compact public account storage ID from account truth.
-- `instanceId` is the stable compact generated instance identity. Public embeds also carry `accountPublicId`.
-- Instance names are labels only and must never be used as storage keys.
-- Widget codes (`FAQ`, `CTD`, `LGS`, etc.) are codebook metadata used by overlay identity and contracts. They are not storage folders and are never required to locate an instance.
-- Instance locale values are addressed by Tokyo operations using `{instanceId, locale}` and persist under `overlays/locales/{locale}.json`. Overlay paths are not product identity.
-- Instance listing comes from Tokyo operations backed by account R2 instance folders, not `instances/index.json` or the `instances` DB row.
-- Browser package files `index.html`, `styles.css`, and `runtime.js` are public artifacts, not identity, ownership, saved config, or product publish truth. Roma materializes them during create/save/duplicate and submits them to Tokyo-worker with the saved source. Tokyo-worker stores the exact submitted bytes.
-- Those files can exist for composition before public standalone serving. `clk.live` serving requires `accounts/{accountPublicId}/instances/{instanceId}/serve-state.json` to be `published`; Roma/system account operations own account policy decisions that decide whether publish/unpublish should be allowed.
-- Page package files, when present, live beside page source under `accounts/{accountPublicId}/pages/{pageId}/`. Current account page publish and public page serving are unavailable until Roma writes page packages. Save/delete of published page source requires Roma to unpublish first.
-- Page source is stored at `accounts/{accountPublicId}/pages/{pageId}/source.json`; Roma validates page source, stamps page source saves, derives account page list summaries, and decides page placement product rules. Tokyo stores and reads the exact source document under the account path.
-- Page serve state is stored as opaque bytes at `accounts/{accountPublicId}/pages/{pageId}/serve-state.json`.
-- Prague page translations are not account-instance overlays.
+- `accountPublicId` is the compact public account storage coordinate.
+- `instanceId` is the stable compact widget instance coordinate.
+- Instance labels are not storage keys.
+- Widget codes are metadata, not storage folders.
+- Overlay files are durable translated values for an active account locale.
+- Browser package files are public artifacts saved by Roma through Tokyo-worker.
+- Tokyo-worker stores exact submitted bytes. It does not compile, translate, or infer product meaning.
 
-## Public Static Serving
+## Public Serving
 
-Public serving uses direct account-scoped static URLs:
+Production:
 
-```txt
+```text
 https://clk.live/{accountPublicId}/{instanceId}
 ```
 
-`clk.live` is the production public-serving host. Cloud-dev uses the same path shape on:
+Cloud-dev:
 
-```txt
+```text
 https://dev.clk.live/{accountPublicId}/{instanceId}
 ```
 
-Cloud-dev must not bind the dev Tokyo-worker to `clk.live`.
+Public serving reads `index.html`, `styles.css`, and `runtime.js` from the account instance folder only after `serve-state.json` says the instance is published and package fingerprint checks pass.
 
-Account page public serving is unavailable until Roma writes page packages.
+Current account page public serving returns `404` until Roma writes real page packages.
 
-Those routes map to generated `index.html`, `styles.css`, and `runtime.js` packages only after Tokyo serve state allows public delivery. Support files are served only when they are generated browser files on the public allowlist.
+## Static Read Paths
 
-## Forbidden Concepts
+Friendly public paths map to canonical roots:
 
-- No account-instance tree outside `accounts/{accountPublicId}/instances/{instanceId}`.
-- No public instance mirror tree.
-- No separate admin-owned catalog lane, sample lane, or example storage lane.
-- No hidden `listed` / `duplicable` / distribution flags inside customer instance data.
-- No Prague-specific widget storage.
-- No root `widgets/` tree for widget software; widget software is served from `product/widgets/`.
-- No root `l10n/` tree for Prague localization; Prague page translations stay beside page JSON under `prague/pages/{widget}/{page}.translations/{locale}.json`.
+| Friendly path | Canonical R2 root |
+| --- | --- |
+| `/widgets/**` | `product/widgets/**` |
+| `/dieter/**` | `dieter/**` |
+| `/fonts/**` | `fonts/**` |
+| `/i18n/**` | `product/roma/i18n/public/**` |
+| `/assets/account/**` | account asset reads allowed by Tokyo-worker |
+| `/prague/l10n/**` | Prague l10n static path |
+| `/prague/assets/**` | Prague static assets |
 
-Clickeen-owned references, when needed, live outside instance data. Example: Prague page JSON may point at a normal account-owned instance through `accountInstanceRef.accountPublicId` and `accountInstanceRef.instanceId`.
+Friendly paths are serving paths, not storage roots.
 
-## Interfaces
+## Forbidden Storage Roots
 
-Public static/read paths:
+Do not create or deploy:
 
-- `/widgets/**` -> canonical R2 `product/widgets/**`
-- `/dieter/**`
-- `/fonts/**`
-- `/i18n/**`
-- `https://dev.clk.live/{accountPublicId}/{instanceId}` in cloud-dev
-- `https://clk.live/{accountPublicId}/{instanceId}` in production
-- `/assets/account/**`
+```text
+widgets/
+l10n/
+public/
+published/
+```
 
-Private account-control paths are owned by Tokyo-worker and reached from Roma through Cloudflare service bindings.
+Do not create account-instance trees outside:
+
+```text
+accounts/{accountPublicId}/instances/{instanceId}/
+```
+
+## Operator Commands
+
+Dry-run deploy sync:
+
+```bash
+pnpm tokyo:r2:sync:check
+```
+
+Remote deploy sync:
+
+```bash
+pnpm cf:preflight
+pnpm tokyo:r2:sync:remote
+```
+
+Remote R2 reads/writes must use the repo commands documented in:
+
+```text
+documentation/engineering/CloudflareOperations.md
+```
+
+## Hard Stops
+
+Stop if a change would:
+
+- write product deploy artifacts into `accounts/`
+- write account runtime artifacts into `dieter/`, `fonts/`, `product/`, or `prague/`
+- publish root `widgets/`, `l10n/`, `public/`, or `published/`
+- use UUID account folders
+- treat Prague page translations as account instance overlays
+- treat Tokyo static paths as account or policy authority

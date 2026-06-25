@@ -13,8 +13,11 @@ Docs are not a "single source of truth". When docs and code disagree, debug usin
 ```
 documentation/
 ├── strategy/                 # WHY — Vision, moats, business model
-│   ├── WhyClickeen.md       # Vision, AI-first, strategic moats
-│   └── GlobalReach.md       # 100⁵ scale model
+│   ├── README.md            # Strategy routing and authority boundary
+│   ├── WhyClickeen.md       # Canonical thesis and strategic moats
+│   ├── Clickeen-Babel.md    # Babel/global-content moat
+│   ├── GlobalReach.md       # Global-by-default strategy
+│   └── MarketPosition.md    # Market narrative
 │
 ├── architecture/             # HOW — Platform design, principles
 │   ├── CONTEXT.md           # Current state, glossary, what exists
@@ -29,7 +32,6 @@ documentation/
 │   ├── devstudio.md         # Human's cockpit for the AI-operated company
 │   ├── tokyo.md             # Asset CDN
 │   ├── tokyo-worker.md      # Account storage, assets, instances, translations, public artifacts
-│   ├── venice.md            # Embed runtime
 │   ├── michael.md           # Database schema
 │   └── prague/              # Marketing surface
 │       ├── prague-overview.md
@@ -52,13 +54,17 @@ documentation/
 │   │   ├── product-copilot.md
 │   │   └── translation-agent.md
 │
-└── widgets/                  # WIDGET SPECS
-    ├── WidgetBuildContract.md # Normative build contract
-    ├── WidgetComplianceSteps.md # Execution checklist
-    ├── WidgetArchitecture.md # System-level reference
-    ├── WidgetAgentGuide.md   # Agent execution guide for widget edits
-    └── {widget}/            # Per-widget specs
-        └── {widget}_PRD.md
+├── engineering/              # OPERATOR RUNBOOKS
+│   ├── PlaywrightE2E.md      # Deployed-runtime browser evidence
+│   ├── CloudflareOperations.md # R2, Pages, DNS, and deploy command paths
+│   ├── CloudflarePagesCloudDevChecklist.md # Cloud-dev Pages/env/bindings
+│   └── SupabaseOperations.md # Supabase schema migrations and DB runbook
+│
+└── widgets/                  # WIDGET OPERATOR MANUALS
+    ├── README.md            # Widget docs map and authorities
+    ├── authoring/           # Source contract, Bob controls, execution checklist
+    ├── shared/              # Shell/Core and shared runtime utilities
+    └── widgets/             # One operator spec per built widget
 ```
 
 | Folder            | What It Answers                      |
@@ -68,6 +74,7 @@ documentation/
 | **services/**     | Current product/runtime systems      |
 | **capabilities/** | Current cross-system capabilities    |
 | **ai/**           | Current AI plane and built agents    |
+| **engineering/**  | Current runbooks, deploy ops, e2e evidence |
 | **widgets/**      | Current widget contracts             |
 
 Surface split to keep straight when reading the repo:
@@ -92,7 +99,7 @@ Use `documentation/` for authoritative behavior; use `Execution_Pipeline_Docs/` 
 
 This repo is operated by **1 human architect + multiple AI dev teams**. The system is modular and contract-driven so AIs can work in parallel safely.
 
-- **Modular surfaces:** widgets in `tokyo/product/widgets/`; services isolated under `bob/`, `roma/`, `admin/`, `prague/`, `venice/`, `tokyo-worker/`, `sanfrancisco/`.
+- **Modular surfaces:** widgets in `tokyo/product/widgets/`; services isolated under `bob/`, `roma/`, `admin/`, `prague/`, `tokyo-worker/`, `sanfrancisco/`.
 - **Explicit contracts:** `spec.json`, `editable-fields.json`, `*.allowlist.json`, PRDs, and service docs define what is safe to change. If it is not in a contract, assume it is unsafe.
 - **Automation intent:** local support-stack changes are local only. Cloud-dev propagation is explicit (promote/deploy).
 - **Agent expectation:** AIs must understand the end-to-end journey below. If you do not, stop and re-trace from code before editing.
@@ -189,23 +196,28 @@ If you change runtime behavior, update docs in the same PR/commit:
   - Update the owning system doc (`documentation/services/{system}.md`)
   - Update any cross-system flow diagrams (`documentation/architecture/Overview.md`)
 - **New env vars / Cloudflare bindings**
-  - Update the owning system doc + relevant runbooks
+  - Update the owning system doc + relevant engineering runbooks
   - Never document actual secret values (names only)
+- **Supabase schema changes**
+  - Add a reviewed SQL migration under `supabase/migrations/`
+  - Update `documentation/services/michael.md` and `documentation/engineering/SupabaseOperations.md`
+  - Deploy only through the `supabase migrations deploy` GitHub Actions workflow
 - **Build/deploy changes**
-  - Update the system doc and any operational runbooks
+  - Update the system doc and any engineering runbooks
 - **Copilot/AI behavior changes**
   - Update the owning AI doc under `documentation/ai/`
   - Built agent docs live under `documentation/ai/agents/`
   - Non-current agent planning belongs in `Execution_Pipeline_Docs/`
 - **Widget spec/runtime changes**
-  - Update the widget PRD under `documentation/widgets/{WidgetName}/`
-  - If it affects shared runtime (stage/pod/typography/branding), update `documentation/architecture/CONTEXT.md`
+  - Update the widget operator spec under `documentation/widgets/widgets/`
+  - Update authoring manuals under `documentation/widgets/authoring/` when source, Bob controls, or package boundaries change
+  - Update shared Shell manuals under `documentation/widgets/shared/` when stage/pod/typography/branding/share/locale behavior changes
 - **Capability changes (Supernova, SEO/GEO, multitenancy)**
   - Update `documentation/capabilities/{capability}.md`
 - **Prague strings localization pipeline**
   - Update `documentation/capabilities/localization.md` + `documentation/services/prague/*.md`
 - **Instance l10n / locale resolution**
-  - Update `documentation/capabilities/localization.md` + `documentation/services/venice.md` (and `documentation/capabilities/seo-geo.md` when schema/excerpt behavior changes)
+  - Update `documentation/capabilities/localization.md` + `documentation/services/tokyo-worker.md` (and `documentation/capabilities/seo-geo.md` when schema/excerpt behavior changes)
 - **Tokyo R2 root/storage changes**
   - Update `documentation/architecture/Overview.md`, `documentation/architecture/Tenets.md`, and the owning system docs
   - Re-check that only `accounts/` is runtime-managed and that `dieter/`, `fonts/`, `product/`, and `prague/` remain deploy-managed roots

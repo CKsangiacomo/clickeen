@@ -1,5 +1,7 @@
 # Clickeen Account Asset Library Contract
 
+STATUS: CURRENT SYSTEM OPERATOR SPEC
+
 This file is the architecture contract for account-owned assets across Roma,
 Bob, and Tokyo-worker.
 
@@ -74,6 +76,24 @@ accounts/{accountPublicId}/assets/{filename}
 The account asset list returns current account facts from Tokyo-worker. Storage
 usage reads the same account asset authority.
 
+## Route And Storage Contract
+
+Roma owns the user-facing account asset API. Tokyo-worker owns the R2 object
+operation.
+
+Operator shape:
+
+```text
+authenticated Roma request
+-> current account from Berlin/Roma context
+-> Roma account asset route
+-> Tokyo-worker asset operation
+-> accounts/{accountPublicId}/assets/{filename}
+```
+
+Tokyo-worker responses must identify the current account asset operation result
+without exposing private storage object identity as product truth.
+
 ## Upload Boundary
 
 Validation happens before a file becomes an account asset.
@@ -83,12 +103,70 @@ Accepted files satisfy:
 - account route has a valid current account
 - filename is safe for the account asset folder
 - path stays inside `accounts/{accountPublicId}/assets/`
-- extension and MIME/type match the accepted asset contract
+- extension is non-scriptable, MIME is accepted, and SVG-like uploads pass SVG
+  safety checks
 - size is inside the account upload limit enforced by Roma/system account policy
 - bytes are accepted by the upload safety checks
 
 SVG is accepted as `image/svg+xml` and classified as a vector asset. SVG safety
 checks happen before Tokyo-worker writes the object.
+
+## Operator Routes
+
+| Product operation | Roma route | Min role | Tokyo-worker route | Success payload |
+| --- | --- | --- | --- | --- |
+| List assets | `GET /api/account/assets` | `viewer` | `GET /__internal/assets/account/{accountPublicId}` | `{ accountId, storageBytesUsed, assets }` |
+| Resolve asset refs | `POST /api/account/assets/resolve` | `viewer` | `POST /__internal/assets/account/{accountPublicId}/resolve` | `{ assets: [{ assetRef, url }] }` |
+| Upload asset | `POST /api/account/assets/upload` | `editor` | `POST /__internal/assets/upload` | `AccountAssetRecord` |
+| Delete asset | `DELETE /api/account/assets/{assetRef}` | `editor` | `DELETE /__internal/assets/account/{accountPublicId}/asset/{assetRef}` | `{ accountId, assetRef, deleted: true }` |
+| Public asset read | generated/public asset URL | public read | account asset public route | asset bytes or `404` |
+
+Upload also rejects disabled accounts at the Tokyo-worker boundary.
+
+## Upload Contract
+
+Roma upload requests use:
+
+```text
+content-type: [accepted MIME type]
+x-filename: [single safe filename]
+x-source: [asset source]
+body: [raw file bytes]
+```
+
+The browser/client must not send `x-account-id`. Roma derives the account from
+the current session and rejects client-supplied account ids.
+
+Accepted `x-source` values are:
+
+```text
+bob.publish
+bob.export
+devstudio
+promotion
+api
+```
+
+Filename rules:
+
+- one filename only, no folders;
+- maximum length is 180 characters;
+- starts and ends with an alphanumeric character;
+- may contain `A-Z`, `a-z`, `0-9`, `.`, `_`, and `-`.
+
+Upload type rules:
+
+- accepted MIME families are `image/*`, `video/*`, and `audio/*`;
+- `application/pdf` is accepted;
+- scriptable/executable extensions are rejected;
+- SVG-like uploads pass SVG safety checks before write.
+
+SVG safety rejects scripts, `foreignObject`, event handlers, JavaScript hrefs,
+HTML data URLs, invalid UTF-8, and missing SVG roots.
+
+Uploading the same filename overwrites that account asset. Replacement preserves
+the existing `createdAt` value and storage-limit math subtracts the replaced
+bytes before applying the new upload size.
 
 ## Resolve Boundary
 
@@ -102,7 +180,15 @@ the asset from the same account folder.
 
 Delete addresses one exact account asset reference in the current account.
 Tokyo-worker removes the addressed object from the account asset folder and
-returns current account facts after the mutation.
+returns:
+
+```json
+{
+  "accountId": "[accountPublicId]",
+  "assetRef": "[assetRef]",
+  "deleted": true
+}
+```
 
 Roma accepts delete success only when Tokyo-worker returns the current account
 public id, the exact asset reference, and `deleted: true`. Missing, malformed,
@@ -112,6 +198,28 @@ contract failures.
 References from existing widget instances remain saved widget data. A user can
 repair or replace those references by editing the instance in Bob and saving
 through Roma.
+
+## Failure Semantics
+
+- Malformed Tokyo success payloads become Roma `502`.
+- Missing resolved assets return `422`.
+- Corrupt asset metadata or invalid asset keys return validation errors.
+- Corrupt metadata/key state is not treated as absence.
+- Asset delete of a missing object returns `404`; Roma must not report success.
+
+## Verification
+
+Verify asset behavior through the owning surface:
+
+| Concern | Verification |
+| --- | --- |
+| Asset appears in product UI | Roma account asset library or `/api/account/assets` |
+| Asset object exists | R2 evidence under `accounts/{accountPublicId}/assets/{filename}` after `pnpm cf:preflight` |
+| Asset reference saved in a widget | Roma/Bob saved instance state through account instance route |
+| Public asset delivery | public runtime request for the generated artifact that references the account asset |
+
+Browser memory proves only the current Bob draft. It does not prove asset
+persistence.
 
 ## Compliance
 

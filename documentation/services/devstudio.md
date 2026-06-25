@@ -1,130 +1,139 @@
-# DevStudio — The One Human's Cockpit for an AI-Operated Company
+# DevStudio - Human Cockpit For The AI-Operated Company
 
-**DevStudio is the one human's cockpit for governing an AI-operated company.**
+STATUS: CURRENT SYSTEM OPERATOR SPEC
 
-Clickeen is built and operated by an AI fleet under one human who cannot read every diff or watch every agent run. DevStudio is the single surface where that human governs the company: by LOOKING at rendered truth (design, product, agents, content, runtime state) and STEERING through named authorities with validated commits.
+DevStudio is the Cloudflare Pages cockpit where the one human governs the AI-operated company. It shows rendered/source-controlled truth and allows steering only through named Pages Functions that validate input and commit to `main`.
 
-What DevStudio shows must be derived truth — never hand-editable — because the moment the supervised can edit what the human looks at, supervision is impossible.
+DevStudio is not Roma, not Bob, not a customer account shell, and not a general admin bypass. The signed-in human must resolve through Berlin to the normal Clickeen admin account:
 
-DevStudio is served from Cloudflare Pages.
+```text
+accountPublicId: CLICKEEN
+```
 
-Canonical URL:
+## Runtime Authority
+
+| Concern | Current authority |
+| --- | --- |
+| App source | `admin/` |
+| Cloudflare Pages project | `devstudio` |
+| Canonical host | `https://devstudio.clickeen.com` |
+| Production branch | `main` |
+| Build command | `pnpm build` |
+| Build output | `admin/dist` |
+| Auth/session | Berlin login + DevStudio Pages session finish route |
+| Write path | Pages Functions under `admin/functions/**` |
+| Commit branch | `DEVSTUDIO_GITHUB_REPOSITORY` + `DEVSTUDIO_GITHUB_BRANCH` |
+
+Non-canonical Pages origins redirect or block through `admin/functions/_middleware.js` unless Cloudflare project health behavior requires otherwise.
+
+## Current Sections
+
+| Section | Runtime source |
+| --- | --- |
+| Foundations: Colors, Typography, Icons | Generated from Dieter source and DevStudio static page generation. |
+| Dieter Components | Generated/static component showcase pages from Dieter component specs and snippets. |
+| Entitlements | Pages Functions read/write entitlement policy files through GitHub. The same tool also renders AI runtime policy editing backed by `/api/ai-runtime/*`. |
+| LLM Management | Read-only generated visibility into managed model configuration. It is not a runtime API-backed editor. |
+
+Hash routes are generated from `admin/src/html/**` and route data in `admin/src/data/routes.ts`. There is no separate design-system admin app.
+
+## Pages Functions
+
+| Route | Purpose |
+| --- | --- |
+| `GET /api/entitlements/matrix` | Read committed entitlement matrix. |
+| `POST /api/entitlements/matrix/cell` | Validate and commit one entitlement matrix edit. |
+| `GET /api/ai-runtime/matrix` | Read committed AI runtime policy matrix. |
+| `POST /api/ai-runtime/matrix/cell` | Validate and commit one AI runtime policy edit. |
+| `GET /api/session/login/google` | Start Berlin login for DevStudio. |
+| `GET /api/session/finish` | Redeem Berlin finish transaction and set DevStudio session cookie. |
+| `GET /api/dieter/tokens/colors` | Read source-controlled Dieter color tokens. |
+| `POST /api/dieter/tokens/colors/value` | Validate and commit one Dieter color token edit. |
+| `GET /api/dieter/tokens/typography` | Read source-controlled Dieter typography tokens. |
+| `POST /api/dieter/tokens/typography/value` | Validate and commit one Dieter typography token edit. |
+
+Every write uses GitHub SHA conflict checks. A stale write fails; it does not overwrite current `main`.
+
+## Auth And Safety Gates
+
+DevStudio APIs stop on:
+
+- missing Berlin config or invalid Berlin session
+- account not equal to `CLICKEEN`
+- role not `owner` or `admin`
+- invalid POST origin
+- invalid persisted policy or token file
+- GitHub read/write failure
+- GitHub SHA conflict
+
+Cloudflare Access is not the DevStudio auth boundary.
+
+## Environment
+
+Configured in `admin/wrangler.toml` and Cloudflare Pages:
+
+| Name | Purpose |
+| --- | --- |
+| `BERLIN_BASE_URL` | Berlin session/finish verification. |
+| `DEVSTUDIO_CANONICAL_ORIGIN` | Canonical host enforcement. |
+| `DEVSTUDIO_GITHUB_BRANCH` | Commit branch, currently `main`. |
+| `DEVSTUDIO_GITHUB_REPOSITORY` | Repository for source-controlled writes. |
+| `ENV_STAGE` | Runtime stage label. |
+| `DEVSTUDIO_GITHUB_TOKEN` | Pages secret for GitHub contents reads/writes. |
+
+Cloudflare API commands require root `.env.local` values:
+
+```text
+CLOUDFLARE_ACCOUNT_ID
+CLOUDFLARE_REST_API_TOKEN
+```
+
+`DEVSTUDIO_GITHUB_TOKEN` is required when syncing DevStudio Pages env/secrets or
+when DevStudio runtime Pages Functions read/write repository contents. General
+Cloudflare project/domain reads do not require it.
+
+Do not document secret values.
+
+## Build And Verification
+
+DevStudio generation:
+
+```bash
+pnpm --filter @clickeen/devstudio generate
+```
+
+Build/checks:
+
+```bash
+pnpm --filter @clickeen/devstudio typecheck
+pnpm --filter @clickeen/devstudio lint
+pnpm --filter @clickeen/devstudio build
+pnpm --filter @clickeen/devstudio check:functions
+```
+
+Cloudflare Pages verification:
+
+```bash
+pnpm cf:api:preflight
+pnpm cf:pages:project devstudio
+pnpm cf:pages:devstudio-env
+```
+
+Runtime evidence:
 
 ```text
 https://devstudio.clickeen.com
 ```
 
-## Boundary
+Use Berlin-authenticated browser evidence for product truth.
 
-- DevStudio is not Roma 2.
-- DevStudio is not a customer account shell.
-- DevStudio is not a global superadmin dashboard.
-- DevStudio does not own widget authoring truth.
-- DevStudio does not create a second account model, allowlist model, or auth bypass.
+## Hard Stops
 
-Berlin/Google login is the only DevStudio auth boundary. The signed-in user must
-resolve through Berlin bootstrap to the normal Clickeen admin account
-(`accountPublicId: "CLICKEEN"`) with an admin/owner role. `CLICKEEN` is a normal
-account coordinate, not a superadmin bypass.
+Do not use DevStudio to:
 
-DevStudio uses host-scoped session cookies on `devstudio.clickeen.com`, set by
-the DevStudio Pages finish route after Berlin login. Those cookies are for DevStudio only; Roma/Bob product sessions do not consume DevStudio
-cookies, and DevStudio must not consume customer product-session cookies.
-
-Cloudflare Access is not the DevStudio auth boundary.
-
-## Current Surface
-
-DevStudio has these sections:
-
-- **Foundations** — Colors, Typography, Icons.
-- **Dieter Components** — generated/static component showcase pages.
-- **Policy** — the entitlements and AI runtime Policy Editor.
-- **LLM Management** — read-only internal visibility into Clickeen managed model
-  configuration.
-
-The old Bob UI Native husk is removed. The old local widget-authoring workspace is
-also removed. Widget editing belongs to the real Roma -> Bob -> Tokyo product path.
-
-## Runtime Model
-
-DevStudio deploys as the `devstudio` Cloudflare Pages project. Its Pages fallback
-host is `devstudio-dev.pages.dev`; that host is not canonical and must redirect or
-be blocked unless Cloudflare project health checks require otherwise.
-
-The static app bundle is produced by `admin/scripts/build-static.mjs`. The policy
-API is implemented as Pages Functions in `admin/functions/`; local dev-server
-middleware must not own policy, theme, or icon rebuild write APIs.
-
-Policy routes:
-
-```text
-GET  /api/entitlements/matrix
-POST /api/entitlements/matrix/cell
-GET  /api/ai-runtime/matrix
-POST /api/ai-runtime/matrix/cell
-```
-
-Policy reads use the GitHub contents API against current `main`, so the editor
-shows committed policy state rather than the Pages build snapshot. Policy writes
-apply `@clickeen/ck-policy` validators and commit updated JSON back to `main`.
-Every policy API request verifies the Berlin session and Clickeen admin account
-context before reading or writing. Invalid edits return typed failures and do not
-commit. GitHub SHA conflicts return typed conflicts and require a refetch/retry.
-
-LLM management source:
-
-- `@clickeen/ck-contracts/ai` owns model candidate facts.
-- `@clickeen/ck-contracts/ai-model-management` owns the managed model
-  configuration shape and current source-controlled config artifact.
-- The managed config declares all Product Copilot enabled models and one
-  Clickeen default. Roma/Bob consume it for grant issuance and picker display.
-  San Francisco executes the model route in the signed runtime policy and does
-  not read documentation files as runtime model truth. The picker itself owns no
-  model truth.
-- Internal agents use internal model routing config, not picker UI.
-- DevStudio displays managed configuration; San Francisco remains the runtime
-  model execution authority. The current shipped DevStudio surface is
-  read-only: it displays committed managed config at
-  `/#/policy/llm-management`. DevStudio must not directly mutate live worker
-  runtime state or provider secrets.
-
-Required Pages configuration:
-
-- `BERLIN_BASE_URL`
-- `DEVSTUDIO_CANONICAL_ORIGIN`
-- `DEVSTUDIO_GITHUB_BRANCH`
-- `DEVSTUDIO_GITHUB_REPOSITORY`
-- `ENV_STAGE`
-- `DEVSTUDIO_GITHUB_TOKEN` as a Pages secret
-
-`admin/wrangler.toml` is the source of truth for non-secret Pages configuration
-once the Cloudflare Pages project root is `admin`. Use
-`pnpm cf:pages:devstudio-env` from the repo root to compare live Pages env against
-that file without exposing secret values. Use
-`pnpm cf:pages:sync-devstudio-env --apply` to write the non-secret vars and the
-required Pages secrets from root `.env.local`.
-
-## Local Runtime
-
-DevStudio product evidence comes from the Berlin-authenticated Cloudflare Pages
-surface, not from a local dev server. Local runtime work must not reintroduce
-hidden local write lanes.
-
-Use package-level checks for build and Pages Functions verification:
-
-```bash
-pnpm --filter @clickeen/devstudio build
-pnpm --filter @clickeen/devstudio check:functions
-```
-
-## Build-Time Generation
-
-DevStudio generates Dieter/component showcase pages before build:
-
-- `scripts/generate-component-pages.ts`
-- `scripts/generate-typography-json.cjs`
-- `scripts/generate-static-registries.mjs`
-
-Generated showcase pages mirror Dieter source. They do not define component
-behavior.
+- edit customer account data
+- host widget authoring
+- bypass Roma/Bob/Tokyo product paths
+- mutate live worker runtime state directly
+- store or display secret values
+- create a parallel account, allowlist, model, or policy authority

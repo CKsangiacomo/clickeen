@@ -139,7 +139,7 @@ Default widget work may edit only:
 
 Do not create widget-local helper files unless the PRD explicitly names them.
 
-Do not edit shared runtime, Bob, Roma, Tokyo-worker, Venice, Prague, Dieter, or
+Do not edit shared runtime, Bob, Roma, Tokyo-worker, Prague, Dieter, or
 `packages/widget-shell/` during normal Core work. Shared edits require their own
 PRD step and green evidence.
 
@@ -329,5 +329,5 @@ Do not finish with failing validation.
 - Every runtime-read path exists in defaults.
 - Every customer-visible text path is in `editable-fields.json`.
 - `limits.json` uses existing entitlement keys.
-- No new shared runtime, Bob, Roma, Tokyo-worker, Prague, Venice, or Dieter
+- No new shared runtime, Bob, Roma, Tokyo-worker, Prague, or Dieter
   edits were made unless the PRD explicitly owned that shared surface.

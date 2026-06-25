@@ -1,5 +1,4 @@
 # Strategy PRD - Instagram Feed Widget
-Version: v0.2 (Integration-focused)  
 Owner: Clickeen (Widget Platform)  
 Status: Draft for implementation planning
 
@@ -187,7 +186,7 @@ Editor preview should use the same Venice endpoints to avoid special-case behavi
 All endpoints below are **browser-facing**. Venice can proxy to Paris.
 
 ### 9.1 Fetch dataset (read)
-`GET /v1/integrations/instagram/feed`
+`GET /integrations/instagram/feed`
 - Query params:
   - `instanceId` (or derived from widget runtime token)
   - `sourceType=profile|hashtag`
@@ -200,7 +199,7 @@ All endpoints below are **browser-facing**. Venice can proxy to Paris.
   - May include `nextRefreshAllowedAt` when stale but blocked.
 
 ### 9.2 Force refresh (write)
-`POST /v1/integrations/instagram/refresh`
+`POST /integrations/instagram/refresh`
 - Body:
   - `instanceId`
   - `sourceType`
@@ -211,7 +210,7 @@ All endpoints below are **browser-facing**. Venice can proxy to Paris.
   - If blocked: return `409 REFRESH_BLOCKED` with `nextRefreshAllowedAt` and `reasonCode` (see 10.2).
 
 ### 9.3 OAuth connect initiation (paid)
-`GET /v1/integrations/instagram/connect`
+`GET /integrations/instagram/connect`
 - Params:
   - `instanceId`
   - `redirectUri` (back to editor UI)
@@ -219,14 +218,14 @@ All endpoints below are **browser-facing**. Venice can proxy to Paris.
   - Initiates provider OAuth
 
 ### 9.4 OAuth callback
-`GET /v1/integrations/instagram/callback`
+`GET /integrations/instagram/callback`
 - Provider-specific params
 - Behavior:
   - Exchanges code for tokens and stores via Paris
   - Redirects user back to editor UI with status
 
 ### 9.5 Disconnect
-`POST /v1/integrations/instagram/disconnect`
+`POST /integrations/instagram/disconnect`
 - Body: `instanceId`
 - Behavior: deletes stored tokens & invalidates caches.
 
@@ -263,7 +262,7 @@ Example `409 REFRESH_BLOCKED` payload:
 - Maintain counters by (workspaceId, instanceId, sourceKey):
   - `force_refresh_count_day`
   - `force_refresh_count_hour`
-- Implement rolling windows or calendar windows; calendar day is fine for v0.1.
+- Implement rolling windows or calendar windows; calendar day is fine for the first implementation.
 - TTL rule:
   - If cache age < `ttlMinutes.min`, block background refresh.
   - Force refresh may bypass TTL but counts against quota.
@@ -305,19 +304,19 @@ These requirements must exist in the editor and/or preview for a coherent integr
 
 ---
 
-## 14) Rollout Plan
-### Phase 1 (MVP)
+## 14) Build Sequence
+### Profile Source
 - Profile source only
 - Free-tier: once/day refresh (TTL 24h)
 - Venice read endpoint + Paris caching/quota enforcement
 - No OAuth
 
-### Phase 2
+### Paid Refresh And OAuth
 - Paid-tier refresh expansion
 - Manual “Refresh now” with quota enforcement
 - Add OAuth connect for reliability (if desired)
 
-### Phase 3
+### Hashtag Source
 - Hashtag source (typically gated behind OAuth)
 - Additional improvements: better carousel behaviors, video playback rules, post hiding UI improvements
 
@@ -343,14 +342,14 @@ Track per workspace and globally:
 - Integration tests (staging):
   - read returns cached data
   - refresh increments quota and blocks at cap
-  - OAuth connect/disconnect (Phase 2+)
+  - OAuth connect/disconnect for the paid refresh and OAuth path
 - UI contract tests:
   - error mapping to “Next refresh available” and “Upgrade” prompts
 
 ---
 
 ## 17) Open Questions (answer before implementation)
-1. Do we commit to **Connected Mode first** (recommended), or do we ship **Public Profile** MVP first?
+1. Do we commit to **Connected Mode first** (recommended), or do we ship **Public Profile** first?
 2. Are we willing to restrict hashtags to OAuth-only?
 3. Do we need width/height in post data to support “original aspect ratio” in layout logic?
 4. What is the required auth mechanism from widget runtime → Venice (instance token, signed request, etc.)?

@@ -248,10 +248,15 @@ function runWranglerPut(entry) {
       entry.contentType,
     ];
 
+    const env = { ...process.env };
+    if (env.GITHUB_ACTIONS !== 'true') {
+      delete env.CLOUDFLARE_API_TOKEN;
+      delete env.CF_API_TOKEN;
+    }
     const child = spawn('pnpm', wranglerArgs, {
       cwd: repoRoot,
       stdio: ['ignore', 'pipe', 'pipe'],
-      env: process.env,
+      env,
     });
     let stdout = '';
     let stderr = '';

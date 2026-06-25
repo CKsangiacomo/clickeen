@@ -10,7 +10,6 @@ const PRODUCT_COPILOT_AGENT_ID = 'product.copilot';
 
 type Env = {
   ENVIRONMENT?: string;
-  SANFRANCISCO_BASE_URL?: string;
   SANFRANCISCO_AI_ENGINE?: Fetcher;
 };
 
@@ -68,18 +67,6 @@ function resolveRequestId(request: Request, body: ProductCopilotWorkerRequest): 
   );
 }
 
-function resolveSanFranciscoBaseUrl(env: Env): string {
-  const raw = typeof env.SANFRANCISCO_BASE_URL === 'string' ? env.SANFRANCISCO_BASE_URL.trim() : '';
-  if (raw) return raw.replace(/\/+$/, '');
-  throw new HttpError(500, {
-    error: {
-      code: 'PROVIDER_ERROR',
-      provider: 'product-copilot',
-      message: 'Missing SANFRANCISCO_BASE_URL for Product Copilot model execution.',
-    },
-  });
-}
-
 async function callSanFranciscoModel(args: {
   env: Env;
   requestId: string;
@@ -100,18 +87,21 @@ async function callSanFranciscoModel(args: {
     [CK_REQUEST_ID_HEADER]: args.requestId,
   };
 
-  const response = args.env.SANFRANCISCO_AI_ENGINE
-    ? await args.env.SANFRANCISCO_AI_ENGINE.fetch('https://sanfrancisco.internal/model/chat', {
-        method: 'POST',
-        headers,
-        body,
-      })
-    : await fetch(`${resolveSanFranciscoBaseUrl(args.env)}/model/chat`, {
-        method: 'POST',
-        headers,
-        body,
-        cache: 'no-store',
-      });
+  if (!args.env.SANFRANCISCO_AI_ENGINE) {
+    throw new HttpError(500, {
+      error: {
+        code: 'PROVIDER_ERROR',
+        provider: 'product-copilot',
+        message: 'Missing SANFRANCISCO_AI_ENGINE service binding for Product Copilot model execution.',
+      },
+    });
+  }
+
+  const response = await args.env.SANFRANCISCO_AI_ENGINE.fetch('https://sanfrancisco.internal/model/chat', {
+    method: 'POST',
+    headers,
+    body,
+  });
 
   const text = await response.text().catch(() => '');
   let payload: unknown = null;

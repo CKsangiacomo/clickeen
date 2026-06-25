@@ -1,5 +1,7 @@
 # Roma - Account App
 
+STATUS: CURRENT SYSTEM OPERATOR SPEC
+
 Roma is the authenticated product app. It routes the user to the current
 account, enforces what that account can do, and saves account-owned work through
 Tokyo.
@@ -9,7 +11,7 @@ For platform context see:
 - `documentation/architecture/CONTEXT.md`
 - `documentation/architecture/AccountManagement.md`
 - `documentation/architecture/AssetManagement.md`
-- `documentation/architecture/CloudflareOperations.md`
+- `documentation/engineering/CloudflareOperations.md`
 
 ## Product Role
 
@@ -34,8 +36,10 @@ Roma account-shell routes include:
 - `/home`
 - `/profile`
 - `/widgets`
+- `/widgets/:instanceId`
 - `/builder`
 - `/builder/:instanceId`
+- `/pages`
 - `/assets`
 - `/team`
 - `/billing`
@@ -84,10 +88,22 @@ service:
 | `/api/account/assets/**`    | Tokyo-worker through asset control                     |
 | `/api/account/pages/**`     | Tokyo-worker through product control                   |
 | `/api/account/usage`        | Tokyo-worker storage facts plus account policy context |
-| `/api/ai/**`                | San Francisco through Roma grants                      |
+| `/api/account/widget-defaults` | Roma defaults document backed by Tokyo-worker        |
+| `/api/builder/:instanceId/open` | Roma Builder-open envelope backed by Tokyo-worker    |
+| `/api/widgets/:widgetname/compiled` | Bob compiler payload proxy/read route          |
+| `/api/account/instances/:instanceId/copilot` | San Francisco through Roma grants       |
+| `/api/account/instances/:instanceId/copilot/outcome` | San Francisco outcome/linkage path |
 
 Roma attaches the account authz capsule and account public id to private
 Tokyo-worker calls.
+
+Current account-governance routes include:
+
+| Roma route | Owner behind Roma |
+| --- | --- |
+| `DELETE /api/account` | Roma disabled account deletion conflict response |
+| `POST /api/account/owner-transfer` | Berlin owner-transfer governance |
+| `POST /api/account/lifecycle/tier-drop/dismiss` | Berlin account lifecycle notice dismissal |
 
 ## Builder Orchestration
 
@@ -133,12 +149,15 @@ overlays via Tokyo-worker.
 
 Account language settings are also an overlay operation. When the user saves
 active locales in Roma Settings, Roma compares the previous active locales to
-the new active locales for saved account instances. Removed active locales
-delete exact overlay files through Tokyo-worker before the settings write. Added
-active locales are generated through the same Translation Agent Worker path
-before the settings write. If active locales and locale policy are unchanged,
-Roma returns no overlay work. Roma does not ask Bob and
-does not create a background locale job; saving settings is the user decision.
+the new active locales, writes the account locale settings to Supabase, then
+runs overlay follow-up for saved account instances. Removed active locales
+delete exact overlay files through Tokyo-worker. Added active locales are
+generated through the same Translation Agent Worker path. If overlay follow-up
+fails after the settings write, Roma returns the saved settings with
+`overlayUpdate.ok: false`; it does not pretend overlay work fully completed.
+If active locales and locale policy are unchanged, Roma returns no overlay
+work. Roma does not ask Bob and does not create a background locale job; saving
+settings is the user decision.
 
 Roma Builder owns public widget copy actions for the current account and opened
 instance. It builds the public URL and iframe/script snippets from the current
@@ -293,6 +312,22 @@ command: pnpm build:cf
 output: roma/.vercel/output/static
 ```
 
+Package commands:
+
+```bash
+pnpm --filter @clickeen/roma typecheck
+pnpm --filter @clickeen/roma lint
+pnpm --filter @clickeen/roma build:cf
+```
+
+Cloudflare Pages config:
+
+```text
+project: roma-dev
+output: .vercel/output/static
+compatibility flags: nodejs_compat, nodejs_compat_populate_process_env
+```
+
 Before any Cloudflare Pages, custom-domain, DNS, or Pages config operation, run:
 
 ```bash
@@ -300,3 +335,34 @@ pnpm cf:api:preflight
 ```
 
 Runtime evidence comes from cloud-dev Cloudflare surfaces.
+
+Required runtime configuration:
+
+| Name | Purpose |
+| --- | --- |
+| `NEXT_PUBLIC_BOB_URL` | Bob Builder iframe origin. |
+| `NEXT_PUBLIC_TOKYO_URL` | Tokyo public static/resource origin. |
+| `NEXT_PUBLIC_CLK_LIVE_URL` | Public widget serving origin for copy/open snippets. |
+| `BERLIN_BASE_URL` | Berlin auth/session authority. |
+| `PRODUCT_COPILOT_BASE_URL` | Product Copilot worker origin where used. |
+| `SANFRANCISCO_BASE_URL` | San Francisco model execution authority. |
+| `TRANSLATION_AGENT` | Cloudflare service binding for Translation Agent Worker. |
+| `TOKYO_ASSET_CONTROL` | Cloudflare service binding for account asset operations. |
+| `TOKYO_PRODUCT_CONTROL` | Cloudflare service binding for product/account instance and page operations. |
+| `USAGE_KV` | Usage/account metrics KV binding. |
+| `SUPABASE_URL` | Roma account locale/settings route database URL; supplied in cloud-dev CI/env. |
+| `SUPABASE_SERVICE_ROLE_KEY` | Roma service-role account locale/settings writes; supplied as a secret. |
+
+Cloudflare Pages config evidence uses:
+
+```bash
+pnpm cf:api:preflight
+```
+
+## Hard Stops
+
+- Do not bypass Roma for account mutations from browser code.
+- Do not let Bob, Prague, or DevStudio write account instances directly.
+- Do not move Tokyo/R2 byte storage into Roma.
+- Do not treat settings save as a background job when the user made a direct settings change.
+- Do not silently substitute provider/model/locale/account state when an upstream owner rejects the operation.

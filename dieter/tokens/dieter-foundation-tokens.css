@@ -57,6 +57,10 @@
   --control-radius-9xl: 4.25rem;   /* 68px */
   --control-radius-10xl: 4.75rem;  /* 76px */
 
+  /* Surface radius aliases used by generated DevStudio/Dieter previews */
+  --radius-3: var(--control-radius-md);
+  --radius-4: var(--control-radius-lg);
+
   /* Icon sizing */
   --icon-size-12: 0.75rem;
   --icon-size-16: 1rem;

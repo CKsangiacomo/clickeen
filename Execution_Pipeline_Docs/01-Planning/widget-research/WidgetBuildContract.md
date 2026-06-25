@@ -179,7 +179,7 @@ Stop if:
 - The change requires Shell mutation, new shared controls, new shared runtime,
   new shared appearance behavior, locale-switcher behavior,
   preview-localization behavior, branding behavior, runtime message behavior,
-  Bob/Roma/Tokyo-worker/Venice/Prague/Dieter edits, or package assembly
+  Bob/Roma/Tokyo-worker/Prague/Dieter edits, or package assembly
   changes, and the PRD does not explicitly own that shared surface.
 - The change alters social-share behavior, branding/backlink behavior, package
   assembly, or shared Settings semantics without PRD ownership of that shared
@@ -1200,7 +1200,7 @@ Required before final response:
   shared menu, `behavior.socialShare.channels.*` filters actions, Builder
   preview does not attempt popup/clipboard actions, and public iframe snippets
   include clipboard/popup permissions.
-- No shared runtime/Bob/Roma/Tokyo-worker/Prague/Venice/Dieter edits were made
+- No shared runtime/Bob/Roma/Tokyo-worker/Prague/Dieter edits were made
   unless the PRD explicitly owned that shared surface.
 - `pnpm validate:widgets` passes.
 - `pnpm cf:preflight` passes before Cloudflare R2 operations.

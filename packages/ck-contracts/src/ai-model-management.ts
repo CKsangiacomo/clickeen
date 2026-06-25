@@ -11,12 +11,6 @@ export type ProductCopilotManagedModelConfig = {
   userPicker: 'all-enabled-models';
 };
 
-export type SdrCopilotManagedModelConfig = {
-  enabledModels: AiModelRef[];
-  publicPicker: 'none';
-  defaultModel?: AiModelRef;
-};
-
 export type InternalAgentModelRoute = {
   policyProfile: AiPolicyProfile | 'default';
   model: AiModelRef;
@@ -29,7 +23,6 @@ export type InternalAgentManagedModelConfig = {
 
 export type AiModelManagementConfig = {
   productCopilot: ProductCopilotManagedModelConfig;
-  sdrCopilot: SdrCopilotManagedModelConfig;
   internalAgents: Record<string, InternalAgentManagedModelConfig>;
 };
 
@@ -55,10 +48,6 @@ export const AI_MODEL_MANAGEMENT_CONFIG: AiModelManagementConfig = {
       { provider: 'openai', model: 'gpt-5.5' },
     ],
     userPicker: 'all-enabled-models',
-  },
-  sdrCopilot: {
-    enabledModels: [],
-    publicPicker: 'none',
   },
   internalAgents: {
     'widget.instance.translator': {
@@ -179,23 +168,6 @@ export function validateAiModelManagementConfig(
         path: 'productCopilot.defaultModel',
         message: 'Product Copilot default model must be included in enabled models',
       });
-    }
-  }
-
-  const sdrCopilot = isRecord(value.sdrCopilot) ? value.sdrCopilot : null;
-  if (!sdrCopilot) {
-    issues.push({ path: 'sdrCopilot', message: 'Expected SDR Copilot model config' });
-  } else {
-    validateModelList({
-      issues,
-      path: 'sdrCopilot.enabledModels',
-      models: sdrCopilot.enabledModels,
-    });
-    if (sdrCopilot.publicPicker !== 'none') {
-      issues.push({ path: 'sdrCopilot.publicPicker', message: 'SDR Copilot must not expose a public model picker' });
-    }
-    if (sdrCopilot.defaultModel !== undefined) {
-      pushModelIssue(issues, 'sdrCopilot.defaultModel', sdrCopilot.defaultModel);
     }
   }
 

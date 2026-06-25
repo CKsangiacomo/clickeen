@@ -1,418 +1,275 @@
-# Multi-Tenancy — The Figma Model
+# Multitenancy Capability
 
-Canonical account-management architecture lives in `documentation/architecture/AccountManagement.md`.
-Active current truth is one user, one account, and role on `users`.
-This file records product packaging semantics for tenancy, collaboration, roles,
-and tiers.
+STATUS: CURRENT SYSTEM OPERATOR SPEC
 
-## Core Principle
+Multitenancy is deterministic account law in Clickeen. Strategy, PLG
+positioning, seat packaging ideas, and unshipped comments do not define current
+runtime truth.
 
-Clickeen is multi-tenant from day 1 with no artificial limits on collaboration. This is the Figma model: make it easy for teams to adopt, and stickiness compounds.
+Canonical account-management architecture:
 
----
+- `documentation/architecture/AccountManagement.md`
+- `documentation/services/berlin.md`
+- `documentation/services/roma.md`
+- `documentation/services/michael.md`
 
-## Status
+## Code Authority
 
-Active enforcement is:
+| Concern | File |
+| --- | --- |
+| Berlin account/session bootstrap | `berlin/src/bootstrap/routes.ts` |
+| Berlin account-management routes | `berlin/src/account-management/routes.ts` |
+| Berlin invitations | `berlin/src/account-management/invitations.ts` |
+| Roma bootstrap proxy | `roma/app/api/bootstrap/route.ts` |
+| Roma current user/account route | `roma/app/api/me/route.ts` |
+| Roma team routes | `roma/app/api/account/team/**` |
+| Roma owner transfer route | `roma/app/api/account/owner-transfer/route.ts` |
+| Roma tier-drop dismiss route | `roma/app/api/account/lifecycle/tier-drop/dismiss/route.ts` |
+| Roma account asset upload | `roma/app/api/account/assets/upload/route.ts` |
+| Roma instance create/save/publish routes | `roma/app/api/account/instances/**` |
+| Roma page publish disabled route | `roma/app/api/account/pages/[pageId]/publish/route.ts` |
+| Roma instance save policy | `roma/lib/account-instance-save-policy.ts` |
+| Policy resolver | `packages/ck-policy/src/policy.ts` |
+| Policy registry/matrix | `packages/ck-policy/src/registry.ts`, `packages/ck-policy/entitlements.matrix.json` |
+| Tokyo asset limit enforcement | `tokyo-worker/src/domains/assets-handlers.ts` |
+| Current DB foundation | `supabase/migrations/20260522090000__prd103_db_core_foundation.sql` |
 
-- Global entitlements matrix: `packages/ck-policy/entitlements.matrix.json`
-- Per-widget limits mapping: `tokyo/product/widgets/{widget}/limits.json` for editor/runtime capability context; account-level publish, upload/storage, tier, and downgrade enforcement belongs to Roma/system account operations
-- Comments collaboration is product packaging without shipped comment APIs/UI in this repo snapshot.
-- Cloud-dev uses the seeded Clickeen/admin account. The schema remains account-scoped, and Roma presents the current account only.
+## Product Law
 
-Seat, instance-count, and widget-type packaging in this file becomes enforcement
-only through explicit Roma/system account operations.
-
-Runtime policy uses stable ids only: `free`, `tier1`, `tier2`, `tier3`, and `tier4`. There are no commercial tier names in the product contract. `free`, `tier1`, `tier2`, and `tier3` are widget-only tiers. `tier4` is the first tier that includes customer-owned pages built from widget instances.
-
----
-
-## Tier Packaging
-
-| Tier       | Viewers | Editors | Widget Types | Instances | Content       | Features                  |
-| ---------- | ------- | ------- | ------------ | --------- | ------------- | ------------------------- |
-| **Free**   | ∞       | 1       | 1            | 1         | Limited       | Limited                   |
-| **Tier 1** | ∞       | 3-5     | 1            | 1         | higher limits | branding removed          |
-| **Tier 2** | ∞       | ∞       | 3            | 5         | higher limits | + SEO/GEO, auto-translate |
-| **Tier 3** | ∞       | ∞       | All          | ∞         | ∞             | + Supernova               |
-| **Tier 4** | ∞       | ∞       | All          | ∞         | ∞             | + pages                   |
-
-### Tier Details
-
-**Free:**
-
-- 1 editor (solo use)
-- 1 widget type (e.g., only FAQ)
-- 1 instance (can't embed on multiple pages)
-- Limited content (e.g., max 4 FAQs per section, max 2 sections)
-- Limited features (no SEO/GEO, no auto-translate)
-- Website URL for AI (Copilot context) enabled
-- No Supernova
-- "Made with Clickeen" branding
-
-**Tier 1:**
-
-- 3-5 editors
-- 1 widget type
-- 1 published instance
-- Higher content caps (e.g., 10 FAQs per section)
-- Website URL for AI (Copilot context) enabled
-- No SEO/GEO, no auto-translate, no Supernova
-- Branding optional
-
-**Tier 2:**
-
-- Unlimited editors
-- Up to 3 widget types
-- Up to 5 published instances
-- Higher content limits
-- SEO/GEO enabled
-- Auto-translate enabled
-- No Supernova
-- No branding
-
-**Tier 3:**
-
-- Everything in Tier 2
-- Unlimited widget types and published instances
-- Unlimited auto-translate locales within the supported locale set
-- Supernova effects enabled
-- Priority support
-
-**Tier 4:**
-
-- Everything in Tier 3
-- Customer-owned pages built from widget instance stacks
-- Commercial home for account pages built from widget instance stacks
-- Availability is controlled by account policy/profile, not by a separate product mode
-
-**Key rules:**
-
-- **Viewers are always unlimited** at every tier (including Free)
-- **Viewers can comment** (feedback loop, collaboration without editing)
-- **Upgrade drivers:** SEO/GEO and translation → Tier 2, effects → Tier 3, pages/sites → Tier 4
-- **No limits on collaboration** once you hit Tier 2
-
----
-
-## Why Unlimited Viewers Matters
-
-### 1) Virality Within Organizations
-
-```
-Day 1:  Marketer creates FAQ widget
-Day 3:  Shares view link with PM → PM comments
-Day 7:  PM shares with Product → Product comments
-Day 14: Designer joins as editor to improve styling
-Day 30: 15 people viewing/commenting, 3 editors
+```text
+One user belongs to one account.
+One account has many users.
+The user's role is the user's role in that account.
 ```
 
-Every viewer is a potential editor. Every editor is a potential account owner.
+Current account truth:
 
-### 2) No Friction for Adoption
+- no customer account switching;
+- no core many-to-many membership table;
+- role lives on `users.role`;
+- `accounts.id` is the compact account product/storage coordinate;
+- `accountPublicId` is the API/embed/authz field name for that same value;
+- Clickeen admin uses the normal `CLICKEEN` account.
 
-**Bad model:**
+Current relational truth lives in:
 
-> "You've hit 3 viewers. Upgrade to add more."
+```text
+public.accounts
+public.users
+public.account_invitations
+```
 
-User: _finds a different tool_
+The current role/account invariant is:
 
-**Good model (Clickeen):**
+```text
+users.account_id -> accounts.id
+users.role -> role inside that account
+```
 
-> "Invite anyone to view and comment. Upgrade when you need more editors."
+## Authorities
 
-User: _invites whole team, becomes dependent on Clickeen_
+| Concern | Authority |
+| --- | --- |
+| Login/session/account bootstrap | Berlin |
+| Current account shell and product routes | Roma |
+| Relational account/user/team data | Michael/Supabase |
+| Account assets/instances/pages files | Tokyo-worker over Tokyo R2 |
+| Account product policy | Roma using `@clickeen/ck-policy` |
+| Public widget serving | Tokyo-worker generated package serving |
 
-### 3) Switching Costs Compound
+Account-scoped product work follows:
 
-More people in the account = harder to leave.
-
-If 20 people are viewing and commenting on widgets, switching means:
-
-- Re-training everyone
-- Losing all comment history
-- Breaking embedded widgets
-
-**Multi-tenant = stickiness moat.**
-
----
+```text
+Roma current account
+-> accountPublicId
+-> Roma account route
+-> owning service
+-> accounts/{accountPublicId}/...
+```
 
 ## Roles
 
-| Role       | View | Comment | Edit | Create | Manage Team | Billing |
-| ---------- | ---- | ------- | ---- | ------ | ----------- | ------- |
-| **Viewer** | ✅   | ✅      | ❌   | ❌     | ❌          | ❌      |
-| **Editor** | ✅   | ✅      | ✅   | ✅     | ❌          | ❌      |
-| **Admin**  | ✅   | ✅      | ✅   | ✅     | ✅          | ❌      |
-| **Owner**  | ✅   | ✅      | ✅   | ✅     | ✅          | ✅      |
-
-**Viewers:**
-
-- Can see all widgets in the account
-- Can leave comments (feedback, suggestions, approvals)
-- Cannot edit or create widgets
-- Are outside editor seat limits
-
-**Editors:**
-
-- Can create and edit widgets
-- Count toward seat limits (Free/Tier 1)
-- Unlimited in Tier 2/3
-
----
-
-## Account Structure
-
-```
-Account
-├── Plan: { tier, billingEmail, ... }
-├── Members[]
-│   ├── { userId, role: 'owner', joinedAt }
-│   ├── { userId, role: 'editor', joinedAt }
-│   ├── { userId, role: 'viewer', joinedAt }
-│   └── ...
-└── WidgetInstances[] in Tokyo
-    ├── { instanceId, widgetType, config, displayName, ... }
-    └── ...
-```
-
-**Instances belong to accounts, not users.** If an editor leaves, the account-owned instances stay. Widget software belongs to the product plane under `product/widgets/`, not to any account.
-
-## Account-Only Tenancy (Shipped)
-
-Accounts are the primary tenant boundary:
-
-- Collaboration boundary (roles, comments, instance ownership)
-- Ownership/metering boundary for uploads (Tokyo asset authority uses the account's `accountPublicId`; browser path is Roma account routes only)
-- Policy/entitlement context for editor surfaces (Roma/Bob)
-- Management-plane boundary for publish/unpublish/delete/downgrade/cap/tier correctness
-
-```
-account
-  ├── widget instances (account-owned)
-  ├── members/roles (account boundary)
-  ├── account-owned assets
-  ├── published projections for account-owned instances
-  └── authz + entitlement context
-```
-
-Key boundary rules:
-
-- Instances, assets, locales, and membership are all account-scoped.
-- Roma asset reads are account-canonical (`/api/account/assets`).
-- Roma injects a short-lived authz capsule (`x-ck-authz-capsule`) for account-scoped product-control calls.
-- Curated platform content uses the normal Clickeen/admin account `CLICKEEN`; references carry `accountPublicId + instanceId`.
-- Tokyo-worker and Venice are PBX layers. Roma/system account operations decide billing tier, cap eligibility, downgrade correctness, and published projection eligibility.
-
----
-
-## Commenting System (target; not shipped)
-
-Viewers need a way to provide feedback without editing. Comments are:
-
-- Tied to a widget instance
-- Optionally tied to a specific field/element (like Figma's comment pins)
-- Resolvable (mark as done)
-- Visible to all account members
-
-### Comment Schema
-
-```typescript
-type Comment = {
-  id: string;
-  accountId: string;
-  widgetInstanceId: string;
-  userId: string;
-  text: string;
-  target?: {
-    path: string; // e.g., "sections[0].faqs[2].answer"
-    elementId?: string; // DOM element reference
-  };
-  resolved: boolean;
-  createdAt: Date;
-  updatedAt: Date;
-};
-```
-
-### UX (Bob)
-
-- Viewer mode: Can view widget, leave comments, cannot edit
-- Editor mode: Full editing + can see/resolve comments
-- Comment indicator: Badge on widget showing unresolved comment count
-
----
-
-## Tier Gating (target packaging)
-
-| Product area                 | Free         | Tier 1   | Tier 2  | Tier 3         | Tier 4         |
-| ---------------------------- | ------------ | -------- | ------- | -------------- | -------------- |
-| **Viewers**                  | ∞            | ∞        | ∞       | ∞              | ∞              |
-| **Editors**                  | 1            | 3-5      | ∞       | ∞              | ∞              |
-| **Widget types**             | 1            | 1        | 3       | ∞              | ∞              |
-| **Published instances**      | 1            | 1        | 5       | ∞              | ∞              |
-| **Content**                  | Limited      | Higher   | Higher  | ∞              | ∞              |
-| **SEO/GEO**                  | ❌           | ❌       | ✅      | ✅             | ✅             |
-| **Website URL (AI context)** | ✅           | ✅       | ✅      | ✅             | ✅             |
-| **AI Model Quality**         | Basic (Fast) | Standard | Premium | Premium (SOTA) | Premium (SOTA) |
-| **Auto-translate**           | ❌           | ❌       | ✅      | ✅             | ✅             |
-| **Supernova**                | ❌           | ❌       | ❌      | ✅             | ✅             |
-| **Pages**                    | ❌           | ❌       | ❌      | ❌             | ✅             |
-| **Branding**                 | Required     | Optional | None    | None           | None           |
-
-**Upgrade triggers:**
-
-- "I need more widget types" → Tier 2
-- "I need more published instances" → Tier 2
-- "I want SEO/GEO" → Tier 2
-- "Add another editor" blocked at seat limit → Tier 2
-- "I want auto-translate" → Tier 2
-- "I want Supernova effects" → Tier 3
-- "I want landing pages" → Tier 4
-- Viewers are never blocked
-
----
-
-## Why This Is The Figma Model
-
-| Figma                             | Clickeen                                         |
-| --------------------------------- | ------------------------------------------------ |
-| Unlimited viewers on any file     | Unlimited viewers on any widget                  |
-| Pay per editor seat               | Upgrade tiers unlock more editors                |
-| Comments on designs               | Comments on widgets                              |
-| Workspace = organizing unit       | Account = organizing unit                        |
-| Switching cost = team is embedded | Switching cost = widgets are embedded everywhere |
-
----
-
-## Why Multi-Tenant from Day 1
-
-### 1) Large-Account Ready Without "Contact Sales"
-
-Agencies, marketing teams, and enterprises can self-serve. No sales call required for collaboration.
-
-### 2) AI + Multi-Tenant = Leverage
-
-```
-Traditional SaaS:
-- 5-seat limit → sales call → negotiation
-- Cost: $150K/year sales rep
-
-Clickeen:
-- Invite 50 viewers → they upgrade themselves when needed
-- Product prompts nudge at the right moment
-- Cost: $0.001 per conversation
-```
-
-### 3) PLG Flywheel
-
-```
-Free user → invites team as viewers → viewers comment
-→ viewers want to edit → upgrade to add seats
-→ more editors → more widgets → more embeds
-→ more embeds seen → more signups → repeat
-```
-
----
-
-## Technical Notes
-
-## Runtime Subjects — current truth
-
-The shared Builder core models the Roma-hosted account Builder path.
-
-**Current architecture:**
-
-- Builder authoring is the Roma-hosted account path only.
-- Bob receives one open payload and one policy object from Roma.
-- MiniBob/demo surfaces are Prague/funnel surfaces outside shared Bob account authoring.
-
-**Plan limits:**
-
-- Plan limits are **usage counters** for cost drivers we want bounded in demo/free usage (ex: uploads, Copilot turns, crawls).
-- Plan limits are **decided and enforced by the account management plane** (Roma/system account operations) before or during the product mutation that would exceed policy. Storage/serve systems return usage facts and perform technical safety checks. Bob uses the resolved policy for UX gating + upsell messaging.
-- Plan limits are defined by the real account policy plus explicit demo-surface gates, not by a fake `minibob` subject profile and not by individual widgets.
-
-**How this appears in widget PRDs (required):**
-
-- PRDs list **which entitlement keys** a widget uses and **how they map** to widget state (paths + metrics).
-- Tier values live only in the global matrix: `packages/ck-policy/entitlements.matrix.json`.
-- Widget capability metadata lives in `tokyo/product/widgets/{widget}/limits.json` (flags/limits). Plan limits are global and enforced by Roma/system account operations.
-- Template: `documentation/widgets/_templates/SubjectPolicyMatrices.md` (no per-widget tier matrices).
-
-**Upsell popup standard (durable):**
-
-- Every rejected plan limit uses the same **Upsell** popup (no per-row copy).
-- The system chooses the destination and CTA deterministically:
-  - If the viewer has no account/session (Prague demo / anonymous): upsell takes them to **Create Free Account**
-  - If the viewer is logged in but blocked by plan/tier: upsell takes them to **Upgrade Plan**
-- PRDs do **not** encode "free vs paid" in per-row copy; it is derived from the matrix deltas and current viewer profile.
-
-**Builder boot today:**
-
-- Roma opens Bob through one message payload: `postMessage { type:'ck:open-editor', ... }`.
-- Shared Builder core does not accept or switch on `subjectMode`.
-- Shared Builder core does not URL-bootstrap account sessions.
-
-**What still matters:**
-
-- Uploads and Copilot remain bounded by server-side policy limit enforcement.
-- Widget type creation is bounded by the account policy system-widget path: Roma filters unavailable system widget options and rejects direct create requests that would exceed `widgets.types.max`.
-- Monthly public view limits remain a named pre-GA enforcement gap, not a customer-facing active claim. Before GA, public view usage is observed from the serving plane, and over-limit policy plus published-projection correctness is driven by Roma/system account operations.
-- Shared Builder carries the Roma account Builder identity.
-
-**Why this scales:**
-
-- The editor stays one product path: account opens widget, Bob edits, Roma saves.
-- Demo/funnel surfaces can evolve separately without contaminating the shared Builder core.
-
-### Server-Side Enforcement
-
-Current shipped behavior:
-
-- Account member listing is read-only via `GET /api/account/team` and `GET /api/account/team/members/:memberId` for authorized users.
-- Publish and editor behavior use policy/entitlement enforcement already wired in runtime.
-- System widget creation uses `widgets.types.max` to hide unavailable create options and reject direct create requests.
-- There is no shipped seat-limit write-path enforcement yet.
-- There is no shipped `SEAT_LIMIT_EXCEEDED` runtime error yet.
-- `views.monthly.max` public embed enforcement is not active runtime behavior until telemetry, management-plane enforcement, and public miss/deny behavior are specified.
-
-Planned behavior (not shipped):
-
-- Add member management write endpoints.
-- Enforce `maxEditors` on add/update editor-role operations.
-- Keep viewer invites uncapped.
-
-### Bob UX
-
-Current shipped behavior:
-
-- Role/policy-aware editing gates are enforced by resolved account policy.
-
-Planned behavior (not shipped):
-
-- Explicit seat-remaining UI and editor seat warning states.
-- Invite modal enforcing seat caps at submission time.
-
-### Active Account Schema
-
-Active account truth is:
+| Role | Current meaning |
+| --- | --- |
+| `viewer` | Can view account surfaces allowed to viewers. |
+| `editor` | Viewer + edit/create product content where policy allows. |
+| `admin` | Editor + normal account/team/settings operations where policy allows. |
+| `owner` | Admin + final accountable holder of the account. |
+
+Effective capability is:
 
 ```text
-accounts own account/billing/status truth
-users own one account association and role
-Tokyo owns account instance operations
+user role + account tier/status/policy
 ```
 
-Role truth for active current lives on `users`.
+Role checks happen at the Roma account route and/or the Berlin backing route.
+Do not infer role permission from UI visibility alone.
 
----
+## Current Account And Team Routes
 
-## Summary
+| Product operation | Roma route | Berlin backing route | Current behavior |
+| --- | --- | --- | --- |
+| Bootstrap current account | `/api/bootstrap` | `GET /session/bootstrap` | resolves session/current account and writes account authz cookie |
+| Current user/account view | `/api/me` | `/me` | read/update current user profile |
+| Team overview | `/api/account/team` | `GET /accounts/:id/members` | viewer+ lists account users |
+| Member read | `/api/account/team/members/:memberId` | `GET /accounts/:id/members/:memberId` | viewer+ reads member |
+| Member update | `/api/account/team/members/:memberId` | `PATCH /accounts/:id/members/:memberId` | admin+; cannot mutate owner illegally |
+| Member delete | `/api/account/team/members/:memberId` | `DELETE /accounts/:id/members/:memberId` | admin+; owner deletion is blocked |
+| Invitations list/create | `/api/account/team/invitations` | `GET/POST /accounts/:id/invitations` | admin/owner list and create account invitations |
+| Invitation delete | `/api/account/team/invitations/:invitationId` | `DELETE /accounts/:id/invitations/:invitationId` | admin/owner delete invitation |
+| Login-time invitation acceptance | Berlin OAuth login flow from `/accept-invite/{invitationId}` | login identity resolver | accepts invitation during login and creates the user in invited account |
+| Signed-in invitation acceptance | `/api/invitations/:token/accept` | `POST /invitations/:token/accept` | Roma proxy exists; Berlin currently rejects with `invitation_accept_requires_login_flow` |
+| Owner transfer | `/api/account/owner-transfer` | `POST /accounts/:id/owner-transfer` | owner-only transfer |
+| Tier-drop dismissal | `/api/account/lifecycle/tier-drop/dismiss` | `POST /accounts/:id/lifecycle/tier-drop/dismiss` | Berlin allows admin/owner |
+| Account deletion | `DELETE /api/account` | `DELETE /accounts/:id` | owner-only request; currently returns conflict and does not delete account root |
 
-1. **Viewers are always unlimited** — at every tier, including Free
-2. **Viewers can comment** — collaboration without editing
-3. **Editor seats are the upgrade lever** — capped in Free/Tier 1, unlimited in Tier 2/3
-4. **Instances belong to accounts** — portable, team-owned
-5. **No sales call for teams** — self-serve collaboration from day 1
+Invite creation rejects an email already associated with a user. Runtime
+invitation acceptance is login-time work: Berlin carries the invitation through
+OAuth state and creates the user in the invited account while marking the
+invitation accepted. The signed-in `POST /invitations/:token/accept` path is
+disabled and returns `invitation_accept_requires_login_flow`.
 
-This is the Figma model applied to widgets: make adoption frictionless, let stickiness compound, charge for serious usage.
+## Operator Recipes
+
+### Resolve Current Account
+
+1. Browser calls Roma:
+
+```text
+GET /api/bootstrap
+```
+
+2. Roma proxies to Berlin `GET /session/bootstrap`.
+3. Berlin returns the current user, account, role, account public id, account
+   authz capsule, and entitlement snapshot.
+4. Roma uses that account context for subsequent account routes.
+
+### List Or Change Team Access
+
+Use Roma account routes only:
+
+```text
+GET /api/account/team
+GET /api/account/team/members/{memberId}
+PATCH /api/account/team/members/{memberId}
+DELETE /api/account/team/members/{memberId}
+GET /api/account/team/invitations
+POST /api/account/team/invitations
+DELETE /api/account/team/invitations/{invitationId}
+```
+
+Roma forwards to Berlin. Berlin persists account/user/invitation relational
+state through Supabase service-role access.
+
+### Enforce Account Product Policy
+
+Berlin mints the current account role, profile, and entitlement snapshot into
+session/bootstrap/account authz. Roma product routes resolve policy from the
+current authz payload and entitlement snapshot. The resolver is:
+
+```text
+resolvePolicyFromEntitlementsSnapshot(...)
+```
+
+Operational examples:
+
+- account locale settings enforce `l10n.locales.max`;
+- instance save/duplicate applies widget `limits.json` through Roma save
+  policy;
+- instance publish enforces `instances.published.max`;
+- widget create enforces `widgets.types.max`;
+- asset upload checks `uploads.size.max` and `storage.bytes.max` in Roma and
+  Tokyo-worker;
+- Copilot grant issuance enforces `copilot.turns.monthly.max`.
+
+### Verify Account-Owned Files
+
+Account-owned runtime files use:
+
+```text
+accounts/{accountPublicId}/...
+```
+
+Verify product behavior through Roma account routes first. Use R2 evidence after
+`pnpm cf:preflight` only when raw storage bytes or metadata are the concern.
+
+## Entitlements
+
+The current entitlement source is:
+
+```text
+packages/ck-policy/entitlements.matrix.json
+packages/ck-policy/src/registry.ts
+```
+
+Current entitlement keys:
+
+| Key | Kind | Enforcement owner | Status |
+| --- | --- | --- | --- |
+| `l10n.locales.max` | limit | Roma account locale settings | enforced |
+| `branding.remove` | flag | Roma save policy | enforced |
+| `embed.seoGeo.enabled` | flag | no proven active runtime owner outside policy metadata | gap |
+| `widget.socialShare.enabled` | flag | Roma save policy | enforced |
+| `copilot.turns.monthly.max` | limit | Roma copilot grant issuance | enforced |
+| `storage.bytes.max` | limit | Roma upload route and Tokyo-worker assets | enforced |
+| `views.monthly.max` | limit | clk.live public-serving telemetry | gap |
+| `instances.published.max` | limit | Roma publish route | enforced |
+| `widgets.types.max` | limit | Roma system widget/create routes | enforced |
+| `uploads.size.max` | limit | Roma upload route and Tokyo-worker assets | enforced |
+| `items.group.small.max` | limit | Roma save policy | enforced |
+| `items.group.medium.max` | limit | Roma save policy | enforced |
+| `items.group.large.max` | limit | Roma save policy | enforced |
+
+Tier values are read from the matrix. Do not restate commercial package prose
+here unless it maps to exact entitlement keys.
+
+Operator warning: `packages/ck-policy/src/registry.ts` currently marks
+`embed.seoGeo.enabled` as `enforced`, but runtime evidence does not prove an
+active consumer in Roma save, Roma publish, or Tokyo-worker public serving.
+Treat this row as conflicting policy metadata until code and registry agree.
+
+## Failure Semantics
+
+| Case | Result |
+| --- | --- |
+| No current account/session | Roma route fails auth; no account fallback |
+| Role below route requirement | explicit deny from Roma/Berlin |
+| Unknown member/invitation | `404` from owning account route |
+| Duplicate invitation email/user conflict | explicit conflict; no silent attach |
+| Account deletion | explicit conflict; no account-root delete |
+| Entitlement limit exceeded | explicit product-policy failure |
+| Policy key exists but no runtime consumer | documented as `gap`, not claimed enforced |
+
+## Known Current Gaps
+
+These are not active runtime truth:
+
+- comments API/UI;
+- seat-limit/editor-count entitlement key;
+- `SEAT_LIMIT_EXCEEDED` runtime error;
+- customer account switching;
+- core `account_members` role authority;
+- public monthly view denial/upsell behavior for `views.monthly.max`;
+- page publish is disabled; Roma returns `422 coreui.errors.page.publishUnavailable`, and public page copy/open is not active.
+
+## Verification
+
+| Concern | Verification |
+| --- | --- |
+| Current account/session | Roma `/api/bootstrap` sets the account authz cookie, returns current account context, and does not expose `authz.accountCapsule` in JSON; `/api/me` returns current user/profile |
+| Berlin account/team behavior | Berlin backing routes through Roma account routes |
+| Relational account schema | Supabase migrations and `documentation/services/michael.md` |
+| Role/account invariant | `users.account_id` and `users.role` current truth |
+| Entitlement keys/values | `packages/ck-policy/entitlements.matrix.json` |
+| Entitlement metadata/enforcement status | runtime owner evidence plus `packages/ck-policy/src/registry.ts`; `embed.seoGeo.enabled` currently conflicts |
+| Account files | Roma routes first; raw bytes require `pnpm cf:preflight` and R2 evidence |
+| Page publish disabled | `POST /api/account/pages/{pageId}/publish` returns `422 coreui.errors.page.publishUnavailable` |
+
+## Not Current Product Truth
+
+- Figma/PLG strategy as runtime law.
+- Viewer comments as shipped role capability.
+- Seat packaging as enforced entitlement.
+- One user directly belonging to multiple customer accounts.
+- `active_account_id`.
+- `account_members` as core role authority.

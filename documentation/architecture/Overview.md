@@ -1,173 +1,119 @@
-# CLICKEEN Platform Architecture — Phase 1
+# Clickeen Architecture Overview
 
-This document describes system boundaries, data flows, and how the platform fits together.
+STATUS: CURRENT SYSTEM OPERATOR SPEC
 
-PRD 105 NOTE: this doc uses the current product-operation model and instance-folder/runtime authority from `Execution_Pipeline_Docs/03-Executed/105_Instance_Runtime_And_Verification_Batch/105__PRD__Instance_Folder_Tenets.md`.
+This document is the current architecture map for Clickeen. It is not a PRD,
+roadmap, launch plan, or historical execution record.
 
-**For definitions and glossary:** See `CONTEXT.md`
-**For canonical asset behavior:** See [AssetManagement.md](./AssetManagement.md)
-**For strategy and vision:** See `documentation/strategy/WhyClickeen.md`
-**For system details:** See `documentation/services/` and `documentation/ai/`
+For first-read context, use `documentation/architecture/CONTEXT.md`. For
+surface-specific behavior, use the owning detail doc under `documentation/`.
 
-For debugging reality, follow the “Debugging order” in `CONTEXT.md` (runtime code + DB schema, then deployed Cloudflare config, then docs).
+## What Clickeen Is
 
----
+Clickeen is an agent-operated product.
 
-## AI-First Company
+The codebase is deliberately lean and built around structured, AI-legible
+artifacts so agents can operate the system directly. Agents are not features
+bolted onto a SaaS. Agents are the operators, and the structured product
+substrate is what they operate.
 
-Clickeen is designed to be **built by AI** and **run by AI**:
+Legacy SaaS puts most product intelligence into a large application codebase.
+Humans operate that codebase through UIs, APIs, dashboards, workflows, and admin
+tools. AI is then added as a feature: a copilot, assistant, model call,
+automation, or workflow helper. That model grows orchestration code,
+compatibility paths, validation layers, state machines, and fallback behavior.
 
-| Layer                         | Responsibility                                                |
-| ----------------------------- | ------------------------------------------------------------- |
-| **Human (1)**                 | Vision, architecture, taste, strategic decisions              |
-| **AI Coding**                 | Build product from specs (Cursor, Claude, GPT)                |
-| **AI Agents (agent homes)**   | Run the company through named agent homes; San Francisco provides governed model execution |
+Clickeen is the opposite. The system stays lean, structured, typed, and
+AI-legible. Widget specs, control maps, field maps, account files, overlays,
+page files, policy files, routes, and storage folders are product artifacts
+agents can understand and operate. The intelligence lives in the agents and in
+their ability to operate the structured substrate through named authorities.
 
-**San Francisco is the AI engine** — governed model execution, trace/outcome
-capture, and provider routing for named agent homes. Agent execution lives in
-the agent home.
+The architecture exists to protect that model:
 
-See: `documentation/ai/README.md`, `documentation/ai/sanfrancisco.md`, `documentation/ai/learning.md`, and `documentation/ai/agents/`
+- product artifacts are structured, typed, and readable by agents;
+- named authorities own product boundaries;
+- runtime storage follows ownership;
+- agents operate through those authorities instead of hardcoded legacy
+  pipelines;
+- invalid or unavailable truth fails explicitly.
 
----
+Content exists inside this model. Widgets, pages, emails, reports, feeds,
+locale overlays, and public runtime surfaces carry content, but Clickeen is not
+defined as a CMS or a generic content host. Clickeen structures content and the
+system around it so agents can operate the product.
 
-## Core Architecture Principles
+## Product Law
 
-> Full details: [Tenets.md](./Tenets.md)
+Clickeen is a simple account product.
 
-| Principle                      | Rule                                                                                                                                                                                                                     |
-| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **No Fallbacks**               | Orchestrators never invent/heal instance config. If base data is missing/invalid, the system fails visibly. Public renders must be revision-coherent (single published revision; missing locale artifacts fail visibly). |
-| **Widget Files = Truth**       | Core runtime files + contract files in `tokyo/product/widgets/{name}/` define widget behavior and validation; their deployed Tokyo R2 home is `product/widgets/{name}/`.                                                                                                                    |
-| **Orchestrators = Dumb Pipes** | Bob/Roma/Tokyo-worker avoid widget-specific logic. Roma may compose page packages from saved widget packages and page source. Tokyo-worker validates submitted package/storage shape but must not “fix” state ad hoc.                    |
-| **Dieter Tokens**              | All colors/typography in widget configs use Dieter tokens by default. Users can override with HEX/RGB.                                                                                                                   |
-| **Locale Is Not Identity**     | Locale is a runtime parameter. IDs (`instanceId`) must be locale-free; account-widget localization is applied through translated locale values and generated public artifacts, not DB fan-out.                              |
+- One user belongs to one account.
+- `accounts.id` is the compact account product/storage coordinate.
+- `accountPublicId` is the API/embed/authz field name for that same value.
+- Widgets are software and live in the system.
+- Users create widget instances in Roma/Bob and save them in their account.
+- Pages are account-owned stacks of saved instances.
+- Bob is an editor. Open/edit work is browser memory. Save is the persistence
+  boundary.
+- Roma is the account app. Roma routes the user to the current account,
+  enforces tier/product policy, and saves account work through owner services.
+- Tokyo-worker stores and serves account runtime files in R2.
+- Berlin owns authentication and account session bootstrap.
+- San Francisco owns governed model execution.
+- Built agents live under `agents/<name>` and operate their product boundary.
+- Clickeen admin work uses the normal admin account.
 
----
-
-## Product Operations Own State
-
-Clickeen does use durable storage, generated files, caches, queues, and static artifacts. Those are implementation tools, not the product vocabulary.
-
-The account Builder path is intentionally direct:
+The active cloud-dev admin account coordinate is:
 
 ```text
-Roma sends one product command.
-The owning service resolves its own source once.
-The owning service returns product state or accepts named async work.
-Generated/public artifacts are written only by artifact builders.
+CLICKEEN
 ```
 
-### Current Product Authorities
+## Named Authorities
 
-| Concern | Product authority | Storage/artifact implementation rule |
+| Concern | Authority | Current runtime/source |
 | --- | --- | --- |
-| Widget definitions | Approved widget source under `tokyo/product/widgets/{widgetType}/` read by widget-definition operations | Generated manifests are not source authority. |
-| Account instance source | Tokyo account instance operations over `instance.config.json` and `instance.content.json` | `instance.json` is not written or read by active runtime code. |
-| Account instance listing | `listAccountInstances` | Any account index file is a private cache below the operation, not a Roma API. |
-| Translations | Roma account command boundary; Translation Agent Worker calls San Francisco /model/chat and writes overlays via Tokyo-worker | Locale values live under `overlays/locales/{locale}.json`; Tokyo-worker stores exact overlay files only. |
-| Publish state | Tokyo publish/unpublish operations and publish status | Generated files are output, not the state machine. |
-| Public serving | `clk.live/{accountPublicId}/{instanceId}` serving stored package artifacts from R2/CDN | Missing artifacts fail visibly; visitor requests do not read Supabase or compose widgets from authoring source. |
+| Authentication and session bootstrap | Berlin | `berlin/` |
+| Current account and account product routes | Roma | `roma/` |
+| Builder editing state | Bob | `bob/` browser-memory session |
+| Account runtime storage | Tokyo-worker | `tokyo-worker/` over Tokyo R2 |
+| Product widget software | Git-authored Tokyo product root | `tokyo/product/widgets/` deployed to `product/widgets/` |
+| Public widget serving | Tokyo-worker public serving | generated instance files under `accounts/{accountPublicId}/...`; page public serving is disabled until Roma writes page packages |
+| Relational account/support data | Michael/Supabase | `supabase/migrations/` and service-owned routes |
+| Model execution | San Francisco | `sanfrancisco/` |
+| Product Copilot brain | Product Copilot Worker | `agents/product-copilot/` |
+| Translation brain | Translation Agent Worker | `agents/translation-agent/` |
+| Design system | Dieter | `dieter/`, `tokyo/product/dieter/`, `dieter/` R2 root |
+| Marketing/demo pages | Prague | `prague/` and `prague/` R2 root |
+| Internal cockpit | DevStudio | `admin/` |
 
-### Why this matters
-
-Product-operation boundaries keep the system fast and understandable. Roma owns account product actions. Tokyo-worker owns exact account storage reads/writes and public file serving.
-
-This keeps customer actions close to one cross-service request, removes stale read windows, and stops storage layouts from becoming accidental architecture.
-
----
+No service should rediscover an authority already minted by the owner for a
+normal product flow. When a boundary needs proof, it uses the named product
+token/capsule/grant for that boundary.
 
 ## System Map
 
-| System            | Repo Path       | Deploy                               | Responsibility                                                          | Status      |
-| ----------------- | --------------- | ------------------------------------ | ----------------------------------------------------------------------- | ----------- |
-| **Prague**        | `prague/`       | Cloudflare Pages                     | Marketing + SEO surface                                                 | ✅ Active   |
-| **Bob**           | `bob/`          | Cloudflare Pages                     | Widget builder, compiler, ToolDrawer, preview                           | ✅ Active   |
-| **Roma**          | `roma/`         | Cloudflare Pages                     | Product shell, account domains, Bob host orchestration                  | ✅ Active   |
-| **DevStudio**     | `admin/`        | Cloudflare Pages                     | The one human's cockpit for governing the AI-operated company — see rendered truth, steer through named authorities | ✅ Internal |
-| **Venice**        | `venice/`       | Cloudflare Pages (Next.js Edge)      | Legacy SSR embed runtime replaced by `clk.live` static artifacts        | Removed from active serving |
-| **San Francisco** | `sanfrancisco/` | Cloudflare Workers (D1/KV/R2/Queues) | Governed model execution, trace/outcome capture, provider routing       | ✅ Phase 1  |
-| **Michael**       | `supabase/`     | Supabase Postgres                    | Database with RLS                                                       | ✅ Active   |
-| **Dieter**        | `dieter/`       | (build artifact)                     | Design system: tokens, 16+ components                                   | ✅ Active   |
-| **Tokyo**         | `tokyo/`        | Cloudflare R2                        | Canonical product asset roots, account runtime storage, Dieter/fonts/Prague artifacts | ✅ Active   |
-| **Tokyo Worker**  | `tokyo-worker/` | Cloudflare Workers + Queues          | Tokyo PBX for account storage, assets, account instances, translations, and public artifacts | ✅ Active   |
+| System | Runtime | Role |
+| --- | --- | --- |
+| Roma | Cloudflare Pages / Next.js | Account app, Builder host, account routes |
+| Bob | Cloudflare Pages / Next.js | Builder editor for one opened account instance |
+| Berlin | Cloudflare Worker | Auth/session/account bootstrap |
+| Tokyo-worker | Cloudflare Worker + R2 | Account storage boundary and public file serving |
+| Tokyo R2 | Cloudflare R2 | Product roots and account runtime storage |
+| San Francisco | Cloudflare Worker + D1/KV/R2/Queues | Governed model execution and trace/outcome sink |
+| Product Copilot | Cloudflare Worker | Builder Product Copilot agent home |
+| Translation Agent | Cloudflare Worker | Translation Agent home |
+| Prague | Cloudflare Pages / Astro | Marketing, gallery, demo/funnel pages |
+| DevStudio | Cloudflare Pages | Internal cockpit through the normal admin account |
+| Michael | Supabase Postgres | Relational account/user/support data |
+| Dieter | Git source + Tokyo artifacts | Design tokens/components |
 
----
+Public widget serving is generated static artifact delivery through `clk.live`
+/ `dev.clk.live` backed by Tokyo-worker and R2.
 
-## Cloudflare Environments (Detailed Spec)
+## Storage Ownership
 
-This section specifies the **Cloudflare environment model** and the **canonical runtime surfaces** for Phase 1.
-
-### Environments
-
-There is no “pre‑GA” environment. We use **5 layers**:
-
-| Environment    | Purpose                                         | Code source        | Exposure model                                               |
-| -------------- | ----------------------------------------------- | ------------------ | ------------------------------------------------------------ |
-| **Local**      | Fast iteration + deterministic debugging        | local working tree | developer machine only                                       |
-| **Cloud-dev**  | End-to-end HTTPS integration & shared debugging | `main`             | internal/dev (can break)                                     |
-| **UAT**        | QA/UAT on real infra                            | release build      | allowlist: Clickeen-owned demo accounts                      |
-| **Limited GA** | Global, limited rollout                         | release build      | ~10% of accounts (mix of countries/ICPs), observe for X days |
-| **GA**         | Full rollout                                    | release build      | 100% of accounts                                             |
-
-### Release process (simple, enforced)
-
-Each release proceeds in 3 steps:
-
-1. **UAT**: release to X Clickeen-owned demo accounts for testing/QA/UAT
-2. **Limited GA**: release to ~10% of accounts globally (diverse countries/ICPs), observe for a specified window
-3. **GA**: if the release passes Limited GA, roll out to 100%
-
-### Canonical domains (dev + prod)
-
-| System            | Cloud-dev                                    | Production                          |
-| ----------------- | -------------------------------------------- | ----------------------------------- |
-| **Bob**           | `https://bob.dev.clickeen.com`               | `https://app.clickeen.com`          |
-| **Roma**          | `https://roma.dev.clickeen.com`              | `https://app.clickeen.com`          |
-| **Prague**        | `https://prague.dev.clickeen.com` (optional) | `https://clickeen.com`              |
-| **Public embeds** | `https://dev.clk.live`                       | `https://clk.live`                  |
-| **Tokyo**         | `https://tokyo.dev.clickeen.com`             | `https://tokyo.clickeen.com`        |
-| **San Francisco** | `https://sanfrancisco.dev.clickeen.com`      | `https://sanfrancisco.clickeen.com` |
-| **DevStudio**     | `https://devstudio.clickeen.com`             | internal-only                       |
-
-**Fallback origins (when custom domains aren’t configured yet):**
-
-- **Pages**: `{project}.pages.dev`
-- **Workers**: `{script}.workers.dev`
-
-Pages fallback hosts are platform defaults, not canonical product hosts. Bob and Roma must use `*.dev.clickeen.com` in cloud-dev because authenticated Builder flows rely on shared httpOnly cookies across those subdomains.
-
-### Cloudflare primitives (what we use and why)
-
-| Primitive         | Used by                                                   | Why                                                      |
-| ----------------- | --------------------------------------------------------- | -------------------------------------------------------- |
-| **Pages**         | Prague, Bob, Roma                                          | Static + Next.js-style app surfaces; simple deploy model |
-| **Workers**       | Tokyo-worker, San Francisco                 | Edge HTTP services; consistent global runtime            |
-| **R2**            | Tokyo (assets), San Francisco (raw logs)                  | Cheap object storage, zero egress for CDN patterns       |
-| **KV**            | San Francisco (sessions), Atlas (read-only runtime cache) | Hot key/value state, TTLs                                |
-| **D1**            | San Francisco (indexes)                                   | Queryable learning metadata; low-ops SQL                 |
-| **Queues** | San Francisco (log writes only) | Non-blocking log writes only; not used for product work or async generation |
-| **Cron Triggers** | San Francisco (later)                                     | Scheduled analysis/maintenance without extra infra       |
-
-### Resource naming conventions (dev/prod split)
-
-**Rule:** dev and prod resources are separate (no mixing).
-
-- **Workers**: `{system}-dev`, `{system}-prod`
-- **R2**:
-  - Tokyo: `tokyo-assets-dev`, `tokyo-assets-prod`
-  - San Francisco logs: `sanfrancisco-logs-dev`, `sanfrancisco-logs-prod`
-- **KV**:
-  - San Francisco: `sanfrancisco_kv_dev`, `sanfrancisco_kv_prod`
-  - Atlas: (separate KV, read-only)
-- **D1**:
-  - San Francisco: `sanfrancisco_d1_dev`, `sanfrancisco_d1_prod`
-- **Queues**:
-  - San Francisco: `sanfrancisco-events-dev`, `sanfrancisco-events-prod`
-
-### Tokyo R2 root model
-
-Tokyo R2 has five canonical roots:
+Tokyo R2 has these current roots:
 
 ```text
 accounts/
@@ -177,519 +123,231 @@ product/
 prague/
 ```
 
-Only `accounts/` is runtime-managed by product/account operations. It owns account instances, uploaded assets, private overlay objects, and generated account-scoped browser files:
+Only `accounts/` is runtime-managed account storage. It owns:
 
 ```text
-accounts/{accountPublicId}/instances/{instanceId}/...
-accounts/{accountPublicId}/assets/...
+accounts/{accountPublicId}/
+  assets/
+    {filename}
+  instances/
+    {instanceId}/
+      instance.config.json
+      instance.content.json
+      overlays/
+        locales/
+          {locale}.json
+      serve-state.json
+      index.html
+      styles.css
+      runtime.js
+  pages/
+    {pageId}/
+      source.json
+      serve-state.json              # when submitted
+      index.html                    # when submitted
+      styles.css                    # when submitted
+      runtime.js                    # when submitted
 ```
 
-The non-account roots are git-authored deploy artifacts synced into R2 from the repo/deploy pipeline:
+The non-account roots are git-authored deploy artifacts:
+
+- `product/widgets/**` for widget software;
+- `product/roma/**` for Roma public i18n/static support artifacts;
+- `dieter/**` for design-system artifacts;
+- `fonts/**` for global font media;
+- `prague/**` for Prague content/media.
+
+Root `widgets/`, `public/`, `published/`, and `l10n/` are not storage
+authorities.
+
+## Product Flows
+
+### Builder Open/Edit/Save
 
 ```text
-dieter/
-fonts/
-product/
-prague/
+Roma resolves current account/session
+-> Roma opens one account instance through Tokyo-worker
+-> Roma sends Bob one ck:open-editor payload
+-> Bob edits in browser memory
+-> User saves
+-> Roma submits the saved instance/package through Tokyo-worker
+-> Tokyo-worker stores the exact submitted account files
 ```
 
-They may be served by Tokyo-worker through friendly public routes, but Roma, Tokyo-worker, and account lifecycle operations must not mutate them as account runtime state. Root `widgets/`, `public/`, `published/`, and `l10n/` are not storage authorities.
+Bob does not own persistence. Tokyo-worker does not infer widget meaning from
+saved source. Roma does not mutate widget semantics.
 
-### Routes & bindings (high level)
+### Public Widget Serving
 
-#### Bob (Pages)
-
-- **Bob compiles widget specs** by fetching `spec.json` from Tokyo via `NEXT_PUBLIC_TOKYO_URL` (even locally).
-- Bob is the account editor kernel only. Account-mode bootstrap/authz come from Roma host messaging and same-origin Roma account routes. Public playback belongs to Prague and `clk.live` static artifacts, not to Bob helper routes.
-
-#### Roma (Pages)
-
-- Roma is the domain shell (`/home`, `/profile`, `/widgets`, `/builder`, `/assets`, `/team`, `/billing`, `/usage`, `/ai`, `/settings`).
-- Roma resolves identity/account/authz context through `/api/bootstrap` (proxy to Berlin `GET /session/bootstrap`), including an account authz capsule and an account entitlement snapshot.
-- Roma exposes person-scoped User Settings through `/profile`, using Berlin-owned `/api/me` same-origin routes.
-- Current Roma resolves one effective active account context per session and does not expose customer account switching. Cloud-dev still usually collapses to the seeded Clickeen/admin account, while any internal account switching belongs to DevStudio and future customer multi-account switching belongs to a separate Roma-for-agency product.
-- Roma uses named same-origin account routes and injects short-lived authz headers:
-  - `x-ck-authz-capsule` for account-scoped calls
-- Roma serves Berlin-backed account member reads on same-origin routes (`GET /api/account/team` and `GET /api/account/team/members/:memberId`).
-- Roma Builder embeds Bob and sends one explicit `ck:open-editor` payload after `bob:session-ready`.
-
-#### DevStudio (Pages)
-
-- DevStudio is the one human's cockpit for governing the AI-operated company, not a second customer account shell.
-- It is the surface where the one human sees rendered truth and steers through named authorities — today: Dieter/foundation inspection, policy editing, and managed-model visibility.
-- Canonical host is `https://devstudio.clickeen.com`.
-- Berlin/Google login is the sole auth boundary. The signed-in user must resolve to the normal Clickeen admin account; DevStudio does not invent a second account, allowlist, or Cloudflare Access auth model.
-- Removed widget-authoring and company-plane action lanes must not be reintroduced.
-
-#### Public Embeds (`clk.live`)
-
-- Public embed surface: third-party websites load generated static files from `clk.live`.
-- Serving maps `/{accountPublicId}/{instanceId}` to generated public artifacts for the owning account instance.
-- Public requests perform no product-service lookup, runtime composition, overlay resolution, or database call.
-- If the instance is unpublished or a requested generated artifact is missing, the public URL returns 404.
-- Locale variants and any SEO/GEO output are generated ahead of serving by named publish/artifact work.
-
-#### Tokyo (R2)
-
-- Serves product widget software from R2 `product/widgets/**` through friendly `/widgets/**` routes.
-- Serves Dieter from R2 `dieter/**`, global fonts from `fonts/**`, and Prague content from `prague/**`.
-- **Deterministic compilation contract** depends on the deployed Dieter manifest under the canonical `dieter/` root.
-- Serves account-owned generated browser files from `accounts/{accountPublicId}/instances/{instanceId}/`.
-- Prague website base copy lives in the `prague/` root. Account-widget translated locale values are build inputs for generated instance files; Prague does not own a separate widget localization runtime.
-
-#### Tokyo Worker (Workers + Queues)
-
-- Canonical asset management contract (cross-surface behavior): [AssetManagement.md](./AssetManagement.md)
-- Handles private Roma-bound account asset authority routes and stores accepted account assets under `accounts/{accountPublicId}/assets/`.
-- Tokyo-worker validates/resolves account-owned asset refs for authoring and build consumption, but this repo snapshot does not persist a canonical "where used" table in Michael.
-- Serves account asset reads on routes carrying `accountPublicId`; legacy non-account asset paths are hard-failed.
-- In-place account asset byte replacement keeps the same account asset reference and must not require instance rebuilds.
-- Asset delete is synchronous and explicit, with no silent runtime healing.
-- Stores exact Roma-submitted account-instance config/content, locale overlays, public package artifacts, and `serve-state.json` under `accounts/{accountPublicId}/instances/{instanceId}/`. Public visitor serving reads stored R2/CDN artifacts and R2 serve state; it does not hit Supabase.
-- Publishes by verifying stored public package artifacts and setting the instance R2 `serve-state.json`.
-
-#### Asset ownership model (canonical)
-
-- Ownership boundary is account (`accountPublicId` for R2 storage; private UUIDs remain relational implementation details).
-- End-to-end flow:
-  1. Bob uploads through Roma (`POST /api/account/assets/upload`), and Roma forwards to Tokyo-worker over the `TOKYO_ASSET_CONTROL` Cloudflare service binding with optional public/widget trace headers.
-  2. Tokyo-worker writes the accepted account asset under `accounts/{accountPublicId}/assets/` and returns the account asset reference used by Bob/Roma.
-  3. Roma validates account commands at the product boundary and Tokyo/Tokyo-worker enforce canonical asset/config contracts on write.
-  4. Roma Assets reads/deletes via Roma asset routes (`/api/account/assets*`) which forward to Tokyo-worker through the private service binding plus the Roma account capsule; Tokyo-worker enforces account membership role.
-
-#### San Francisco (Workers + D1/KV/R2/Queues)
-
-- `/healthz`, `/model/chat`, `/outcome`, queue consumer for non-blocking log writes.
-- Stores raw logs in R2 and indexes in D1. Product Copilot sessions do not live
-  in San Francisco KV.
-
-### Environment variables (minimum matrix)
-
-| Surface                     | Variable                    | Dev                                     | Prod                                | Notes                                                                            |
-| --------------------------- | --------------------------- | --------------------------------------- | ----------------------------------- | -------------------------------------------------------------------------------- |
-| **Bob (Pages)**             | `NEXT_PUBLIC_TOKYO_URL`     | `https://tokyo.dev.clickeen.com`        | `https://tokyo.clickeen.com`        | Compiler fetches widget specs over HTTP (even locally)                           |
-| **Tokyo-worker (Workers)**  | `PUBLIC_SERVING_BASE_URL`   | `https://dev.clk.live`                  | `https://clk.live`                  | Public-serving origin used for cache purge and environment smoke                 |
-| **Roma (Pages)**            | `NEXT_PUBLIC_BOB_URL`       | `https://bob.dev.clickeen.com`          | `https://app.clickeen.com`          | Builder iframe origin (no query override; configured per environment)            |
-| **Roma (Pages)**            | `NEXT_PUBLIC_CLK_LIVE_URL`  | `https://dev.clk.live`                  | `https://clk.live`                  | Public widget/page copy-code origin                                               |
-| **Roma (Pages)**            | `PRODUCT_COPILOT_BASE_URL`  | `https://product-copilot-dev.clickeen.workers.dev` | configured Product Copilot worker URL | Explicit base URL for Product Copilot execution; no fallback probing        |
-| **Roma (Pages)**            | `SANFRANCISCO_BASE_URL`     | `https://sanfrancisco.dev.clickeen.com` | `https://sanfrancisco.clickeen.com` | Explicit base URL for AI outcome and San Francisco-owned diagnostic paths         |
-| **Roma/San Francisco (trusted backends)** | `ENV_STAGE`   | `cloud-dev`                             | `ga`                                | Exposure stage stamped into AI grants on the active product/internal issuer path |
-| **Roma/San Francisco**      | `AI_GRANT_HMAC_SECRET`      | dev secret                              | prod secret                         | Shared HMAC secret between trusted grant issuers and San Francisco               |
-| **San Francisco (Workers)** | `DEEPSEEK_API_KEY`          | dev key                                 | prod key                            | Provider key lives only in San Francisco                                         |
-
-**Hard security rule:**
-
-- There is no shared-secret bearer lane for product or internal AI execution. Roma Copilot/outcomes and Prague string translation use HMAC-signed request bodies. The Translation Agent has its own Worker home. Roma calls that Worker for account-widget generation, the Worker calls San Francisco `/model/chat` for governed model execution, and the Worker writes translated locale values through Tokyo-worker.
-
-**DB Pivot Supabase rule:**
-
-- Local scripts must not start, reset, migrate, seed, or switch Supabase targets for active product execution. Supabase schema changes go through reviewed migrations and the approved deploy path.
-
-### Cloudflare config checklist (what “done” looks like)
-
-**DNS & custom domains**
-
-- `bob.dev`, `roma.dev`, `tokyo.dev`, `dev.clk.live`, and `sanfrancisco.dev` point at the corresponding cloud-dev Pages/Workers deployments.
-- Production domains (`app`, `tokyo`, `clk.live`, `sanfrancisco`) are configured similarly.
-
-**Pages build settings**
-
-- Node + pnpm toolchain pinned so cloud builds match local.
-- Build command matches repo build (Turbo fan-out).
-
-**Caching**
-
-- Tokyo (`/dieter/**`, `/widgets/**`) uses long caching for content-hashed media; avoid caching `spec.json` aggressively in dev.
-- Public embed serving uses cached generated files from `clk.live/{accountPublicId}/{instanceId}`.
-
-**Access control**
-
-- Optional: protect shared `*.dev` surfaces behind Access during early phases.
-
-**Observability**
-
-- Prefer Cloudflare-native logs/analytics (avoid 3rd-party vendors on embed surfaces).
-
-### Deploy discipline (Cloud-dev vs releases)
-
-- **Cloud-dev** auto-deploys from `main` for fast iteration.
-- **UAT / Limited GA / GA** are release stages of the same release build, separated by **account-level exposure controls** (allowlist/percentage rollout) and an observation window.
-- **Pages apps** (`bob`, `roma`, `prague`) deploy through **Cloudflare Pages Git build only**.
-- GitHub Actions may verify builds/tests, but must not create Pages projects, sync Pages secrets, or deploy Pages artifacts.
-- The manual Pages project contract lives in [CloudflarePagesCloudDevChecklist.md](./CloudflarePagesCloudDevChecklist.md).
-
-### Cloud-dev verification contract
-
-Pages app workflows are verification-only. Cloudflare Pages Git build owns the Pages deploy plane, and workflows must not invent deploy-time contracts for those apps.
-
-Canonical machine-health endpoints:
-
-| Surface       | Canonical URL                                              | Expected shape                                                       | Owner         |
-| ------------- | ---------------------------------------------------------- | -------------------------------------------------------------------- | ------------- |
-| Berlin        | `https://berlin-dev.clickeen.workers.dev/internal/healthz` | `{ "ok": true, "service": "berlin" }`                                | Berlin        |
-| Tokyo-worker  | `https://tokyo.dev.clickeen.com/healthz`                   | `{ "up": true }`                                                     | Tokyo-worker  |
-| San Francisco | `https://sanfrancisco.dev.clickeen.com/healthz`            | `{ "ok": true, "service": "sanfrancisco", "env": "...", "ts": ... }` | San Francisco |
-
-Pages surfaces do not currently publish dedicated machine-health JSON endpoints. Their Git-connected Cloudflare Pages projects own deployment; GitHub workflows may only verify build contracts, and any runtime reachability smoke must not assume GitHub just performed the deploy.
-
-Non-negotiable:
-
-- No workflow may probe undocumented health sub-routes.
-- Cross-service cloud-dev verification runs in one dedicated workflow.
-- When a service health contract changes, the service doc and the centralized verification workflow must change in the same commit.
-
-### Security & config (Cloudflare-level defaults)
-
-- **HTTPS everywhere**: redirect HTTP → HTTPS; HSTS enabled on production domains.
-- **Dev surfaces protected**: shared `*.dev` surfaces may be protected behind Cloudflare Access. DevStudio uses Berlin/Google auth on `https://devstudio.clickeen.com`, not Cloudflare Access.
-- **Secrets isolation**:
-  - Provider keys live only in San Francisco.
-  - Supabase service role lives only where explicitly required by the owning
-    backend surface.
-  - Roma Copilot/outcome and Prague string-translation calls use HMAC body
-    signatures. Roma -> Tokyo/Tokyo-worker account product control uses private
-    Cloudflare service bindings. The Translation Agent has its own Worker home.
-    Roma calls that Worker for account-widget generation. The Worker calls San
-    Francisco `/model/chat` and writes translated locale values through
-    Tokyo-worker.
-- **Caching**:
-  - Tokyo deploy-managed media is long-cacheable when versioned; avoid cache on widget `spec.json` when iterating in dev.
-  - Public embed serving returns generated static files from `clk.live/{accountPublicId}/{instanceId}`.
-
----
-
-## Architecture Overview
-
-```
-┌─────────────────────────────────────────────────────────────────────────┐
-│                           EDITING FLOW                                  │
-│                                                                         │
-│  ┌─────────┐    GET /api/builder/:instanceId/open                                    ┌──────────────┐        │
-│  │   Bob   │ ◄──────────────────────────────── │ Bob/Roma route │        │
-│  │ Builder │                                   │ Michael metadata│       │
-│  │         │                                   │ + Tokyo config │        │
-│  └────┬────┘                                   └──────┬────────┘        │
-│       │                                              │                  │
-│       │ postMessage                                 │                   │
-│       │ { type: 'ck:state-update', state }         │                   │
-│       ▼                                             │                   │
-│  ┌─────────┐                                        │                   │
-│  │ Preview │ ◄── widget.client.js                  │                   │
-│  │ iframe  │     from Tokyo                        │                   │
-│  └─────────┘                                        │                   │
-│       │                                             │                   │
-│       │ User clicks Save                            │                   │
-│       │                                             ▼                   │
-│       └──────────────────────────────────────► ┌──────────────┐        │
-│            PUT /api/account/instances/:instanceId                                     │ Tokyo saved    │      │
-│                                                │   revision      │      │
-│                                                └──────┬─────────┘        │
-│                                                       │                  │
-│                                                       ▼                  │
-│                                                  ┌──────────────┐        │
-│                                                  │ Tokyo-worker │        │
-│                                                  │ explicit     │        │
-│                                                  │ sync         │        │
-│                                                  └──────────────┘        │
-└─────────────────────────────────────────────────────────────────────────┘
-
-┌─────────────────────────────────────────────────────────────────────────┐
-│                           EMBED FLOW                                    │
-│                                                                         │
-│  ┌──────────────┐   GET clk.live/{accountPublicId}/{instanceId}       │
-│  │ Third-party  │ ──────────────────────► ┌─────────┐ ───► ┌─────────┐ │
-│  │   Website    │                         │ Static  │      │  Tokyo  │ │
-│  └──────────────┘ ◄────────────────────── │  Edge   │ ◄─── │   R2    │ │
-│                                           └─────────┘      └─────────┘ │
-│                     SSR HTML + bootstrapped state                       │
-└─────────────────────────────────────────────────────────────────────────┘
+```text
+Visitor requests https://clk.live/{accountPublicId}/{instanceId}
+-> Tokyo-worker public route host-gates the request
+-> Tokyo-worker reads serve-state and generated browser files from R2
+-> Tokyo-worker returns stored public artifacts or 404
 ```
 
-### Roma host flow (current)
+Visitor requests do not call models, read Supabase, compose widgets from
+authoring source, or repair missing artifacts.
 
-- Roma does not rely on Bob URL-bootstrap for normal Builder opens.
-- Roma resolves selected instance from URL path (`/builder/:instanceId`) and keeps that as the single active selection source.
-- Roma preloads the instance + compiled payload, then opens Bob via one `ck:open-editor` message and waits only for Bob to confirm it applied the open payload or report a real open failure.
+Cloud-dev public serving uses:
 
-### AI Copilot Flow (Current)
-
-Copilot execution is a separate, budgeted flow that never exposes provider keys to the browser.
-
-```
-┌─────────────────────────────────────────────────────────────────────────┐
-│                           AI COPILOT FLOW                               │
-│                                                                         │
-│  Account-mode Builder:                                                  │
-│    Browser UI (Bob iframe) → Roma instance-scoped copilot route         │
-│    → Product Copilot Worker (its own /execute)                        │
-│    → SanFrancisco /model/chat                                         │
-│                                                                         │
-│  Outcomes (keep/undo/CTA clicks):                                       │
-│    Browser → Roma same-origin outcome route                             │
-│           → POST /outcome (SanFrancisco, signed)                     │
-└─────────────────────────────────────────────────────────────────────────┘
-```
-
-Notes:
-
-- `envStage` is stamped into grants by the active trusted issuer path (Roma on the live product path) so San Francisco can index learning data by exposure stage.
-- San Francisco stores raw interaction payloads in R2 and indexes a queryable subset in D1 (see `documentation/ai/learning.md`).
-- Deployment contract: account Builder Copilot executes through Roma instance routes, not Bob same-origin AI routes.
-
----
-
-## Account Builder Open/Edit/Save Architecture
-
-On the active account authoring path, the widget document exists in exactly 2 places during editing:
-
-1. **Tokyo saved revision** — persisted document truth
-2. **Bob's React state** — working copy (`instanceData`)
-
-**The Pattern:**
-
-```
-1. Load:    GET /api/builder/:instanceId/open  → Roma gets the saved widget and opens Bob once
-2. Edit:    All changes in React state   → ZERO API calls
-3. Preview: postMessage to iframe        → widget.client.js updates DOM
-4. Save: Roma-hosted Builder sends an account mutation command to Roma, and Roma executes `PUT /api/account/instances/:instanceId` → commits the one widget document to Tokyo and returns immediately
-```
-
-In Roma account flows, the host performs the initial load call and sends Bob one resolved `ck:open-editor` payload. Save returns through that same Roma account boundary.
-
-Builder no longer mounts a localization authoring lane on this path. Translation and runtime convergence are downstream follow-up work, not part of the user meaning of Save.
-
-Preview reflects the widget Bob is editing. It is not a second widget-shaped state.
-
-**Between load and save:** Zero base-config writes. 10,000 users editing = 10,000 in-memory states, no server load for base config.
-
----
-
-## Widget Runtime Architecture
-
-### Tokyo Widget Folder
-
-Each widget type has a complete authored definition in the repo and a deployed R2 home under `product/widgets/{widgetType}/`:
-
-```
-tokyo/product/widgets/{widgetType}/
-├── spec.json          # Defaults + ToolDrawer DSL
-├── widget.html        # Semantic HTML with data-role attributes
-├── widget.css         # Scoped styles using Dieter tokens
-├── widget.client.js   # applyState() for live DOM updates
-└── editable-fields.json # Editable/translatable text contract when needed
-```
-
-Friendly `/widgets/{widgetType}/...` URLs are route aliases. They must resolve to `product/widgets/{widgetType}/...` in R2 and must not create a root `widgets/` storage authority.
-
-### Shared Runtime Modules
-
-All widgets use shared modules from `tokyo/product/widgets/shared/`:
-
-| Module          | Global Function                                                               | Purpose                                                                                                                                                              |
-| --------------- | ----------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `fill.js`       | `CKFill.toCssBackground(fill)` / `CKFill.toCssColor(fill)`                    | Resolve fill configs (color/gradient/image/video) to CSS                                                                                                             |
-| `header.js`     | `CKHeader.applyHeader(state, widgetRoot)`                                     | Shared header (title/subtitle/CTA) behavior + CSS vars                                                                                                               |
-| `surface.js`    | `CKSurface.applyCardWrapper(cardwrapper, scopeEl)`                            | Shared card wrapper vars (border/shadow/radius + inside-shadow layer placement)                                                                                      |
-| `stagePod.js`   | `CKStagePod.applyStagePod(stage, pod, scopeEl)`                               | Stage/pod layout, padding, radius, alignment                                                                                                                         |
-| `typography.js` | `CKTypography.applyTypography(typography, root, roleConfig, runtimeContext?)` | Typography with dynamic Google Fonts (18 curated fonts), category-grouped picker in Bob, and locale/script fallback stacks resolved by family class (`sans`/`serif`) |
-| `branding.js`   | _(self-executing)_                                                            | Injects "Made with Clickeen" backlink + reacts to state updates                                                                                                      |
-
-### Stage/Pod Architecture
-
-All widgets use a consistent wrapper structure:
-
-```html
-<div class="stage" data-role="stage">
-  <!-- Workspace backdrop -->
-  <div class="pod" data-role="pod">
-    <!-- Widget surface -->
-    <div data-ck-widget="{widgetType}">
-      <!-- Widget root -->
-      <!-- Widget content -->
-    </div>
-  </div>
-</div>
-```
-
-Layout options applied via `CKStagePod.applyStagePod()`:
-
-- **Stage:** background, canvas sizing mode (`wrap`/`fill`/`viewport`/`fixed`), alignment, padding per device (`desktop` + `mobile`, linked or per-side)
-- **Pod:** background, padding per device (`desktop` + `mobile`, linked or per-side), corner radius (linked/per-corner), width mode (wrap/full/fixed)
-
-### Preview Protocol
-
-Bob sends state updates to the preview iframe via postMessage:
-
-```javascript
-iframe.contentWindow.postMessage(
-  {
-    type: 'ck:state-update',
-    widgetname: 'faq',
-    state: instanceData,
-    device: 'desktop',
-    theme: 'light',
-  },
-  '*',
-);
-```
-
-`widget.client.js` listens and calls `applyState(state)` to update DOM in place (no reload).
-
----
-
-## Bob's Compiler Architecture
-
-The compiler (`bob/lib/compiler/`) transforms `spec.json` into a `CompiledWidget`:
-
-```typescript
-interface CompiledWidget {
-  widgetname: string;
-  displayName: string;
-  defaults: Record<string, unknown>;
-  panels: Array<{ id: string; label: string; html: string }>;
-  controls: Array<{ path: string; kind: string; ... }>;  // AI ops allowlist
-  media: { htmlUrl, cssUrl, jsUrl, dieter: { styles[], scripts[] } };
-}
-```
-
-### Compiler Modules (Auto-Generation)
-
-Located in `bob/lib/compiler/modules/`:
-
-| Module          | Trigger                                   | Generated Panel                                                                                      |
-| --------------- | ----------------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| `typography.ts` | `defaults.typography.roles` exists        | Typography panel with font family, size preset, style, weight per role                               |
-| `stagePod.ts`   | `defaults.stage` or `defaults.pod` exists | Stage/Pod layout panel with stage canvas mode + per-device padding + radius/width/alignment controls |
-
-### Stencil System
-
-`<tooldrawer-field>` macros are expanded using Dieter component stencils:
-
-- Repo-authored stencil HTML: `tokyo/product/dieter/components/{component}/{component}.html`
-- Repo-authored specs: `tokyo/product/dieter/components/{component}/{component}.spec.json`
-- Deployed R2 home: `dieter/components/{component}/...`
-- Adds `data-bob-path` for binding, `data-bob-showif` for conditionals
-
----
-
-## Dieter Component Library
-
-16+ specialized components for widget editing:
-
-| Component          | Purpose                           |
-| ------------------ | --------------------------------- |
-| `toggle`           | Boolean switch                    |
-| `textfield`        | Text input                        |
-| `slider`           | Numeric range                     |
-| `dropdown-actions` | Select from options               |
-| `dropdown-fill`    | Color/image picker                |
-| `dropdown-edit`    | Rich text with formatting palette |
-| `choice-tiles`     | Visual option cards               |
-| `segmented`        | Radio-style segments              |
-| `tabs`             | Tab navigation                    |
-| `object-manager`   | Array add/remove/reorder          |
-| `repeater`         | Nested item blocks                |
-| `popover`          | Floating panel                    |
-| `popaddlink`       | URL input with validation         |
-| `textedit`         | Text editing                      |
-| `textrename`       | Inline rename                     |
-| `button`           | Actions                           |
-
-Each component has: CSS contract, HTML stencil, hydration script, spec.json.
-
----
-
-## Static Embed Architecture
-
-Public embeds serve generated static files from:
-
-```txt
-https://clk.live/{accountPublicId}/{instanceId}
-```
-
-In cloud-dev, the same path is served from:
-
-```txt
+```text
 https://dev.clk.live/{accountPublicId}/{instanceId}
 ```
 
-`clk.live` is reserved for production public serving.
+Production public serving uses:
 
-The serving layer validates the two coordinates, checks a positive browser-file allowlist, rewrites to the matching Tokyo/R2 object under the account instance folder, and returns either the file or 404. It does not compose widgets per request.
-
----
-
-## Data Flows
-
-### 1. Editing Flow
-
-```
-User opens widget → Roma GET /api/builder/:instanceId/open
-                  → Roma sends one ck:open-editor payload to Bob
-                  → Bob stores in React state
-                  → User edits (state changes, postMessage to preview)
-                  → User clicks Save
-                  → Roma same-origin route saves approved instance config/content in Tokyo
-                  → Translations are generated later from the Translations panel
+```text
+https://clk.live/{accountPublicId}/{instanceId}
 ```
 
-### 2. Embed View Flow
+### Account Assets
 
-```
-Visitor loads embed → {environment public-serving host}/{accountPublicId}/{instanceId}
-                    → static serving reads the requested generated artifact
-                    → browser loads allowed sibling CSS/JS/assets only
-```
-
-### 3. Form Submission Flow
-
-```
-Submission proxy path hard-cut in this repo snapshot.
-`POST /s/:instanceId` is not an active runtime contract.
+```text
+Bob/Roma asset UI
+-> Roma account asset route
+-> Tokyo-worker asset operation
+-> accounts/{accountPublicId}/assets/{filename}
 ```
 
----
+See `documentation/architecture/AssetManagement.md` for the full asset
+contract.
 
-## Performance Budgets
+### Account Pages
 
-| Metric               | Target | Hard Limit |
-| -------------------- | ------ | ---------- |
-| Embed size (gzipped) | ≤80KB  | 200KB      |
-| Edge TTFB            | ≤100ms | —          |
-| TTI (4G)             | <1s    | —          |
+Pages are account-owned stacks of saved instances. Roma owns page source rules
+and product actions. Tokyo-worker stores the exact page source/package files
+that Roma submits under:
 
----
+```text
+accounts/{accountPublicId}/pages/{pageId}/
+```
 
-## Security & Privacy
+Page publish and public page serving are currently disabled. Tokyo-worker parses
+page public routes but returns `404`, and internal publish returns
+`coreui.errors.page.publishUnavailable` until Roma writes page packages.
 
-- **Embeds:** No third-party scripts, no cookies, no storage
-- **Secrets:** Supabase service role stays in Berlin/Tokyo-worker where explicitly required; LLM provider keys stay in San Francisco
-- **CSP:** Strict; no third-party; `form-action 'self'`
+### Translation Overlays
 
----
+Translation overlays are account instance content artifacts:
 
-## Current Implementation Status
+```text
+accounts/{accountPublicId}/instances/{instanceId}/overlays/locales/{locale}.json
+```
 
-### Widgets Implemented
+The Translation Agent translates active non-base locales and writes exact locale
+overlay files through Tokyo-worker. Roma owns account locale settings and tier
+authority. Tokyo stores and serves exact files; it does not infer locale
+meaning.
 
-| Widget | Status      | Notable Patterns                                              |
-| ------ | ----------- | ------------------------------------------------------------- |
-| FAQ    | ✅ Complete | object-manager → repeater (nested), dropdown-edit (rich text) |
+See:
 
-### What's Working
+- `documentation/architecture/OverlayArchitecture.md`
+- `documentation/architecture/BabelProtocol.md`
+- `documentation/ai/agents/translation-agent.md`
 
-- Bob compiler with stencil expansion
-- Deterministic compilation contract (Dieter bundling manifest + no classname heuristics)
-- Cloudflare verification as the runtime/product verification plane
-- Auto-generated Typography and Stage/Pod panels
-- Shared runtime modules (CKStagePod, CKTypography)
-- Two-API-Call pattern (base config)
-- Ops validation against controls[] allowlist
-- Public instance artifact assembly and serving moved to Tokyo-worker + `clk.live` static public artifacts
-- Dieter component library (16+ components)
+### AI Agent Execution
 
-### What's Planned
+Product Copilot:
 
-- SEO/GEO static artifact build shape (host JSON-LD + excerpt output without a Venice runtime)
-- Prague long-tail SEO surfaces (hubs/spokes/comparisons)
-- Additional widget types
+```text
+Bob CopilotPane
+-> Roma account Copilot route
+-> Product Copilot Worker
+-> San Francisco /model/chat
+-> provider selected by signed grant
+```
+
+Translation Agent:
+
+```text
+Roma translation operation
+-> Translation Agent Worker
+-> San Francisco /model/chat
+-> Tokyo-worker overlay write
+```
+
+San Francisco executes signed model requests. It does not execute agent brains,
+own account policy, write account files, or switch providers/models silently.
+
+## Content Source Authority
+
+Content is a major class of product artifact, not the top-level architecture
+definition.
+
+Agents treat content according to source authority:
+
+| Source | Agent authority |
+| --- | --- |
+| Human-generated content | Recommend, propose, translate, optimize, restructure, and apply user-approved changes. |
+| AI-generated content | Operate autonomously inside approved product rules. |
+| Integration-sourced content | Use, summarize, extract, route, display, analyze, and derive from it; do not rewrite source truth except through an explicit authorized integration write path. |
+
+The rule is source-truth fidelity. Around content, agents also operate widgets,
+pages, reports, analytics, support tickets, locale overlays, runtime packages,
+account assets, routes, and storage folders.
+
+## Runtime And Deploy Evidence
+
+Cloud-dev runtime evidence comes from deployed cloud-dev surfaces:
+
+```text
+https://roma.dev.clickeen.com
+https://bob.dev.clickeen.com
+https://tokyo.dev.clickeen.com
+https://berlin.dev.clickeen.com
+https://dev.clk.live
+https://prague.dev.clickeen.com
+https://devstudio.clickeen.com
+https://sanfrancisco.dev.clickeen.com/healthz
+https://product-copilot-dev.clickeen.workers.dev/healthz
+```
+
+Translation Agent has no public human runtime URL. Verify it through GitHub
+Actions `cloud-dev workers deploy` evidence plus the Roma translation smoke path.
+
+Use the owning deployment path:
+
+| Surface | Deploy/evidence path |
+| --- | --- |
+| Bob/Roma/Prague Pages | Cloudflare Pages Git-connected build from `main` |
+| DevStudio Pages | Cloudflare Pages project plus repo Cloudflare API checks |
+| Berlin/San Francisco/Tokyo-worker/Product Copilot/Translation Agent | GitHub Actions `cloud-dev workers deploy` |
+| Tokyo product roots in R2 | `cloud-dev workers deploy` R2 sync step |
+| Supabase schema | reviewed SQL migration plus migration deploy workflow |
+| R2 object reads/writes | repo R2 commands after `pnpm cf:preflight` |
+| Pages/DNS/config reads/writes | repo Cloudflare API commands after `pnpm cf:api:preflight` |
+
+See:
+
+- `documentation/engineering/CloudflareOperations.md`
+- `documentation/engineering/CloudflarePagesCloudDevChecklist.md`
+- `documentation/architecture/RuntimeProfiles.md`
+
+## Current Detail Docs
+
+| Area | Detail doc |
+| --- | --- |
+| Current system context | `documentation/architecture/CONTEXT.md` |
+| Architecture tenets | `documentation/architecture/Tenets.md` |
+| Account model | `documentation/architecture/AccountManagement.md` |
+| Account assets | `documentation/architecture/AssetManagement.md` |
+| Translation overlays | `documentation/architecture/OverlayArchitecture.md`, `documentation/architecture/BabelProtocol.md` |
+| Runtime profiles | `documentation/architecture/RuntimeProfiles.md` |
+| Cloudflare operations | `documentation/engineering/CloudflareOperations.md` |
+| Cloudflare Pages setup | `documentation/engineering/CloudflarePagesCloudDevChecklist.md` |
+| Roma | `documentation/services/roma.md` |
+| Bob | `documentation/services/bob.md` |
+| Tokyo-worker | `documentation/services/tokyo-worker.md` |
+| Tokyo storage/deploy | `documentation/services/tokyo.md` |
+| Berlin | `documentation/services/berlin.md` |
+| Prague | `documentation/services/prague/prague-overview.md` |
+| DevStudio | `documentation/services/devstudio.md` |
+| AI plane | `documentation/ai/README.md` |
+| San Francisco | `documentation/ai/sanfrancisco.md` |
+| Built agents | `documentation/ai/agents/` |
+| Product strategy | `documentation/strategy/WhyClickeen.md` |
+
+When code and docs disagree, runtime code, migrations, deployed Cloudflare
+configuration, and service docs win over this overview. Fix the stale doc with
+the behavior change or immediately after verifying the behavior.

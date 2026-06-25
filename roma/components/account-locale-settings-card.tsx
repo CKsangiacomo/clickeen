@@ -8,8 +8,19 @@ import { useRomaAccountApi } from './account-api';
 type AccountLocalesPayload = {
   activeLocales: string[];
   localePolicy: {
-        baseLocale: string;
+    baseLocale: string;
     ip: { countryToLocale: Record<string, string> };
+  };
+};
+
+type AccountLocalesSaveResponse = {
+  overlayUpdate?: {
+    ok?: unknown;
+    skipped?: unknown[];
+    error?: {
+      reasonKey?: unknown;
+      detail?: unknown;
+    };
   };
 };
 
@@ -94,6 +105,21 @@ function resolveAccountLocalesErrorCopy(reason: unknown, fallback: string): stri
   if (mapped) return mapped;
   if (normalized.startsWith('HTTP_') || normalized.startsWith('coreui.')) return fallback;
   return normalized;
+}
+
+function resolveAccountLocalesSuccessCopy(payload: AccountLocalesSaveResponse): string {
+  const overlayUpdate = payload.overlayUpdate;
+  if (!overlayUpdate || overlayUpdate.ok === true) {
+    const skipped = Array.isArray(overlayUpdate?.skipped) ? overlayUpdate.skipped.length : 0;
+    return skipped > 0
+      ? `Saved languages. Translation updates skipped ${skipped} widget${skipped === 1 ? '' : 's'} with no translation fields.`
+      : 'Saved languages.';
+  }
+  const reason = resolveAccountLocalesErrorCopy(
+    overlayUpdate.error?.reasonKey ?? overlayUpdate.error?.detail,
+    'Translation updates did not fully complete.',
+  );
+  return `Saved languages. ${reason}`;
 }
 
 export function AccountLocaleSettingsCard(args: {
@@ -181,14 +207,14 @@ export function AccountLocaleSettingsCard(args: {
         },
       };
 
-      await accountApi.fetchJson('/api/account/locales', {
+      const saved = await accountApi.fetchJson<AccountLocalesSaveResponse>('/api/account/locales', {
         method: 'PUT',
         headers: accountApi.buildHeaders({ contentType: 'application/json' }),
         body: JSON.stringify(payload),
       });
       await loadSettings();
       await args.onSaved?.();
-      setSuccess('Saved languages.');
+      setSuccess(resolveAccountLocalesSuccessCopy(saved));
     } catch (nextError) {
       setError(
         resolveAccountLocalesErrorCopy(nextError instanceof Error ? nextError.message : nextError, 'Saving account languages failed. Please try again.'),

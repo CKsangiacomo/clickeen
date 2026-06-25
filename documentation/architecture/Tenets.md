@@ -1,332 +1,191 @@
 # Clickeen Architecture Tenets
 
-> **Purpose**: Authoritative guide for AI agents and developers. All architectural decisions flow from these principles.
+STATUS: CURRENT SYSTEM OPERATOR SPEC
 
-> **Canonical asset contract**: [AssetManagement.md](./AssetManagement.md)
+These tenets are the rules agents and developers use when changing Clickeen.
+They protect the agent-operated architecture described in
+`documentation/architecture/CONTEXT.md`.
 
----
+## Core Premise
 
-## Summary Diagram
+Clickeen is an agent-operated product.
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                    CLICKEEN ARCHITECTURE                        │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                 │
-│   ┌─────────────────────────────────────────────────────────┐   │
-│   │              TENET 0: EDITING PLATFORM                  │   │
-│   │         "Clickeen edits widgets. No fallbacks."         │   │
-│   └─────────────────────────────────────────────────────────┘   │
-│                              │                                  │
-│   ┌──────────────────────────┼──────────────────────────────┐   │
-│   │                          ▼                              │   │
-│   │   ┌─────────────┐  ┌─────────────┐  ┌─────────────┐     │   │
-│   │   │  TENET 1    │  │  TENET 2    │  │  TENET 3    │     │   │
-│   │   │ Widget      │  │ Orchestrators│  │ System      │     │   │
-│   │   │ Files =     │  │ = Dumb      │  │ Fails       │     │   │
-│   │   │ Truth       │  │ Pipes       │  │ Visibly     │     │   │
-│   │   └─────────────┘  └─────────────┘  └─────────────┘     │   │
-│   │                          │                              │   │
-│   │   ┌──────────────────────┼──────────────────────────┐   │   │
-│   │   │                      ▼                          │   │   │
-│   │   │   ┌─────────────────────────────────────────┐   │   │   │
-│   │   │   │           TENET 4: DIETER TOKENS        │   │   │   │
-│   │   │   │   "All styling uses Dieter tokens"      │   │   │   │
-│   │   │   └─────────────────────────────────────────┘   │   │   │
-│   │   │   ┌─────────────────────────────────────────┐   │   │   │
-│   │   │   │        TENET 5: BORING SAAS SHELL       │   │   │   │
-│   │   │   │ "Boot once. Trust current-account truth"│   │   │   │
-│   │   │   └─────────────────────────────────────────┘   │   │   │
-│   │   └─────────────────────────────────────────────────┘   │   │
-│   └─────────────────────────────────────────────────────────┘   │
-│                                                                 │
-└─────────────────────────────────────────────────────────────────┘
-```
+The system is deliberately lean and structured so agents can operate it
+directly. Agents are the operators; the codebase and stored artifacts are the
+structured substrate. A change either improves agent-operability or adds legacy
+weight.
 
----
+Do not build a hardcoded service pipeline with an AI call in the middle and
+call it an agent. Real Clickeen agents own an operational domain and operate
+structured artifacts through named authorities.
 
-## Tenet 0: Clickeen Is an Editing Platform
+## Product Law
 
-Clickeen is an agent-operated product, not a SaaS with AI features. Agents are smart operators that know what to do, where, and how, and they operate a lean, structured, AI-legible schema directly. This is the moat: incumbents and legacy SaaS have large codebases operated by humans through UIs and APIs with AI bolted on; Clickeen inverts that, and competitors cannot copy it without rebuilding from zero.
+Clickeen is a simple account product.
 
-Within that agent-operated system, Clickeen exists to **edit and customize widgets**. Users make choices, and those choices are saved exactly as made.
+- One user belongs to one account.
+- One account has many users.
+- The user's role is the user's role in that account.
+- There is no customer account switching model.
+- `accounts.id` is the compact account product/storage coordinate.
+- `accountPublicId` is the API/embed/authz field name for that same value.
+- Widgets are software and live in the system.
+- Users create widget instances in Roma/Bob and save them in their account.
+- Pages are account-owned stacks of saved instances.
+- Bob edits in browser memory; user save is the persistence boundary.
+- Roma is the account app; it routes the user, enforces tier/product policy,
+  and saves account work through owner services.
+- Tokyo-worker stores and serves account runtime files in R2.
+- Admin uses the normal `CLICKEEN` account.
 
-### Why This Matters
-
-```
-User Intent → Clickeen Saves → Embed Renders
-
-     ┌──────────────────┐
-     │   User chooses   │
-     │   red button     │
-     └────────┬─────────┘
-              │
-              ▼
-     ┌──────────────────┐
-     │   Clickeen saves │
-     │   "red"          │
-     └────────┬─────────┘
-              │
-              ▼
-     ┌──────────────────┐
-     │   Embed shows    │
-     │   red button     │
-     └──────────────────┘
-```
-
-If any system along this path "corrects" or "defaults" the value, the user's intent is lost.
-
-### The Rule
-
-**There are no fallbacks for instance identity or instance config in Clickeen.**
-
-- If a config value is missing → the system fails visibly
-- If a config value is wrong → the system fails visibly
-- The widget files define everything; orchestrators pass data through unchanged
-
-Note: request parameters (like `locale`) may have a deterministic default (Phase 1: `en`) when omitted. This is not identity and must not create DB fan-out.
-Note: localization/translated-locale values are **not** “fallbacks for config.” The base config is always complete and renderable. PRD 098 `overlayId` language is historical storage vocabulary; current translation product authority is PRD 103J generic widget translation and PRD 103 translated-locale operations. Consumers must not silently substitute base, stale, or other locale output and must not lie about the rendered locale.
-
-### Why No Fallbacks
-
-| With Fallbacks | Without Fallbacks |
-|----------------|-------------------|
-| Bug is hidden | Bug is visible |
-| User sees wrong output | Developer sees error |
-| Hard to debug | Easy to fix |
-| AI learns bad patterns | AI learns correct patterns |
-
----
-
-## Tenet 1: Widget Files Are Complete Truth
-
-Every widget is defined by **core runtime files + contract files** authored in the repo and deployed to Tokyo R2:
-
-```
-tokyo/product/widgets/{widgetname}/
-├── spec.json              ← Schema + defaults + ToolDrawer panels
-├── widget.html            ← HTML structure
-├── widget.css             ← All styling
-├── widget.client.js       ← Runtime behavior
-├── editable-fields.json   ← Editable/translatable text contract when needed
-└── limits.json            ← Widget path/op mapping to ck-policy entitlement keys
-```
-
-Their deployed R2 home is:
+Current account storage coordinate:
 
 ```text
-product/widgets/{widgetname}/
+Roma current account
+-> accountPublicId
+-> Roma account route
+-> Tokyo-worker
+-> accounts/{accountPublicId}/...
 ```
 
-### What This Means
+## Tenet 1: Agents Operate Structured Artifacts
 
-- Core runtime files contain **everything** about widget behavior
-- Contract files define editor/runtime validation, translatable fields, and policy-key mappings
-- Prague pages and retained Prague localization belong under the `prague/` root, not inside widget storage
-- No other system adds, removes, or modifies widget behavior
-- If it's not in these files, it doesn't exist
-- Friendly URLs may serve widget files from `/widgets/{widgetname}/...`, but root `widgets/` is not a storage authority
+Clickeen artifacts must stay structured, typed, and AI-legible.
 
-### Data Flow
+Examples:
 
-```
-┌─────────────────┐
-│   Tokyo         │
-│ (core files)    │
-└────────┬────────┘
-         │
-         │ provides definition
-         ▼
-┌─────────────────┐      ┌─────────────────┐
-│   Bob           │ ←──→ │   Michael       │
-│   (Editor)      │      │   (Database)    │
-└────────┬────────┘      └─────────────────┘
-         │
-         │ user edits instanceData
-         ▼
-┌─────────────────┐
-│  clk.live       │
-│  (Public files) │
-└─────────────────┘
-```
+- widget specs;
+- compiled control and field maps;
+- editable/translatable field contracts;
+- account instance config/content files;
+- locale overlay value maps;
+- page source files;
+- account asset references;
+- policy matrices and grants;
+- service-owned route contracts.
 
----
+Agents should be able to read the artifact, understand the product boundary,
+and operate it directly. If a change hides meaning inside ad hoc code,
+compatibility wrappers, undocumented side effects, or stringly conventions, it
+weakens the system.
 
-## Tenet 2: Orchestrators Are Dumb Pipes
+## Tenet 2: Named Authorities Own Boundaries
 
-Bob, Roma, and Tokyo-worker are **orchestrators**. They move data between systems.
+Each product boundary has one owner.
 
-### What Orchestrators Do
+| Boundary | Authority |
+| --- | --- |
+| Authentication and bootstrap | Berlin |
+| Current account, account routes, tier/product policy | Roma |
+| Builder draft editing | Bob |
+| Account runtime storage and public file serving | Tokyo-worker |
+| Product widget software | Git-authored Tokyo product root |
+| Model execution | San Francisco |
+| Product Copilot reasoning | Product Copilot Worker |
+| Translation generation | Translation Agent Worker |
+| Relational account/support data | Michael/Supabase |
+| Design system | Dieter |
 
-| System | Role |
-|--------|------|
-| **Bob** | Loads widget definition from Tokyo, renders ToolDrawer, stores edits in memory |
-| **Roma** | Resolves current account context and forwards product commands to owner-correct services |
-| **Tokyo-worker** | Materializes saved/live/localization/public artifacts from owner truth |
-| **clk.live** | Serves generated public files; it is not an authoring or orchestration surface |
-| **Michael** | Stores account/registry state; it does not own widget semantics |
+Normal product flows operate from the authority already minted by the owner.
+They must not repeatedly rediscover account, tier, model, locale, or storage
+truth in every downstream step.
 
-### What Orchestrators Never Do
+## Tenet 3: No Fallbacks, No Silent Substitution
 
-- Validate widget data beyond basic JSON structure
-- Apply default values
-- "Heal" or mutate stored configs (beyond deterministic overlay composition)
-- Know widget-specific logic
-- Generate widget HTML/CSS/JS
+Clickeen must not silently replace missing, invalid, stale, unavailable, or
+malformed truth with invented truth.
 
-### Diagram
+This applies to:
 
-```
-         Tokyo (Source of Truth)
-              │
-    ┌─────────┼─────────┐
-    │         │         │
-    ▼         ▼         ▼
-  Bob    clk.live     Roma
-    │         │         │
-    │    (dumb pipes)   │
-    │         │         │
-    └─────────┼─────────┘
-              │
-              ▼
-     Tokyo-worker / Michael
-```
+- instance identity;
+- account identity;
+- widget config/content;
+- locale overlays;
+- model/provider routes;
+- storage paths;
+- public artifacts;
+- account assets;
+- page source and package files.
 
----
+If requested truth is unavailable, the system returns an explicit error or
+serves nothing at that boundary. It does not substitute another account,
+another locale, another model, another provider, another storage path, or stale
+compatibility shape.
 
-## Tenet 3: The System Fails Visibly
+Deterministic defaults are allowed only when they are the explicit contract of
+that request parameter and do not change identity or claim unavailable work
+completed.
 
-When something is wrong, the system **stops and shows an error**.
+## Tenet 4: No Silent Healing
 
-### Why Visible Failure
+Invalid persisted or user state must not be normalized, repaired, rewritten, or
+coerced without an explicit product operation.
 
-```
-Widget Missing Field
-        │
-        ▼
-┌─────────────────┐
-│  System throws  │
-│  error message  │
-└────────┬────────┘
-         │
-         ▼
-┌─────────────────┐
-│  Developer sees │
-│  exact problem  │
-└────────┬────────┘
-         │
-         ▼
-┌─────────────────┐
-│  Fix is applied │
-│  to widget file │
-└─────────────────┘
+The system may validate and reject. It may apply an explicit user/agent action
+through the owning authority. It must not “helpfully” mutate stored truth while
+pretending the original operation succeeded.
+
+## Tenet 5: Product Commands Stay Boring
+
+The normal product path should be direct:
+
+```text
+user intent
+-> Roma current account route
+-> owning service/agent
+-> exact product artifact write/read
+-> explicit result
 ```
 
-### What This Enables
+The browser expresses user intent. It is not the source of account truth and is
+not an orchestration bus for server-owned identity/account state.
 
-- Bugs are caught immediately
-- AI agents see clear errors and learn correct patterns
-- Widget developers know exactly what to fix
-- No silent corruption of user data
+Internal systems talk through named service bindings/routes and carry only the
+authority needed for the operation. Do not invent broad registries, runtime
+discovery, compatibility layers, or meta-frameworks for deterministic product
+commands.
 
----
+## Tenet 6: Widget Software Is Product Truth
 
-## Tenet 4: Dieter Tokens Principle
+Widget software is authored in git and deployed to Tokyo R2:
 
-All colors, typography, and spacing in widget configs use **Dieter design tokens**.
-
-### Default Values Use Tokens
-
-```json
-{
-  "appearance": {
-    "headingColor": "var(--color-text)",
-    "buttonBackground": "var(--color-primary)",
-    "buttonTextColor": "var(--color-on-primary)"
-  }
-}
+```text
+tokyo/product/widgets/{widgetType}/
 ```
 
-### User Overrides Allowed
+Its deployed R2 home is:
 
-Users can override with RGB/HEX values in controls:
-
-```json
-{
-  "appearance": {
-    "headingColor": "#FF5500",
-    "buttonBackground": "rgb(100, 50, 200)"
-  }
-}
+```text
+product/widgets/{widgetType}/
 ```
 
-### Why Tokens First
+A widget's files define its behavior:
 
-| Benefit | Explanation |
-|---------|-------------|
-| Consistency | All widgets share the same design language |
-| Theming | Change tokens once, all widgets update |
-| AI-friendly | AI knows valid token names |
-| User flexibility | Users can still use custom colors |
+- `spec.json`;
+- `widget.html`;
+- `widget.css`;
+- `widget.client.js`;
+- `editable-fields.json` when the widget has editable/translatable text;
+- `limits.json` when the widget maps controls/paths to policy keys.
 
----
+Bob compiles widget definitions into editor controls. Roma saves account
+instances. Tokyo-worker stores submitted runtime files. None of those systems
+should invent widget-specific semantics outside the widget contract.
 
-## Tenet 5: Boring SaaS Shells Operate From Minted Truth
+## Tenet 7: Bob Edits In Browser Memory
 
-Clickeen is a complex multi-system platform, but the product shell must behave like a boring SaaS app.
+Bob is the Builder editor.
 
-That means the normal product path is:
+During editing, the working copy lives in browser memory. Bob can apply local
+draft operations, preview updates, undo, and user edits. Persistence happens
+when the user saves through Roma.
 
-1. user signs in
-2. the system mints identity, active account, and entitlements once
-3. Roma boots with that truth
-4. domains operate from the current account
-5. internal systems talk directly to the real owner systems
+Product Copilot draft edits also land in Bob browser memory. Product Copilot
+does not save, publish, or mutate Tokyo.
 
-### What This Means
+## Tenet 8: Storage Follows Ownership
 
-- Roma is not supposed to rediscover the current account on every domain action.
-- The browser is not the source of account truth for normal product flows.
-- Internal systems must not keep asking each other to re-prove already-minted current-account truth.
-- The browser expresses user intent; it is not an orchestration bus for server-owned identity/account state.
-- Explicit `accountId` is exceptional, not normal. It belongs only on flows like switch-account, support/internal tools, or clearly cross-account actions.
-
-### Why This Matters
-
-Without this tenet, the system drifts into a broken product shape:
-
-- bootstrap already knows the current account
-- each domain asks again "what account is this?"
-- server routes re-check already-minted truth
-- browser code starts ferrying context between internal services
-
-That creates duplication, drift, and blocked product domains.
-
-With this tenet:
-
-- the shell boots once
-- the current account is trusted
-- domains become boring
-- systems compose cleanly
-- complexity stays at the real ownership boundaries instead of leaking into every user flow
-
-### The Rule
-
-For ordinary product usage:
-
-- mint current-account truth once at the correct authority boundary
-- operate from that truth
-- send commands to the real owner systems directly
-
-If a normal product flow requires the browser to repeatedly restate "which account is this?", the architecture is wrong even if each local step looks explicit.
-
----
-
-## Tenet 6: Storage Follows Ownership
-
-Tokyo R2 roots encode durable ownership and deploy boundaries, not URL shapes.
-
-The canonical roots are:
+Tokyo R2 roots encode ownership and deploy boundaries:
 
 ```text
 accounts/
@@ -336,105 +195,150 @@ product/
 prague/
 ```
 
-Only `accounts/` is runtime-managed account storage. It owns account instances, uploaded assets, overlays, and account-scoped published projections under `accounts/{accountPublicId}/...`.
+Only `accounts/` is runtime-managed account storage. It owns account instances,
+uploaded account assets, overlays, account pages, and generated account-scoped
+browser files.
 
-The non-account roots are git-authored deploy artifacts synced to R2:
+The non-account roots are git-authored deploy artifacts. Account operations must
+not mutate them as runtime state.
 
-- `dieter/` for shared design-system media
-- `fonts/` for global Clickeen font CDN files
-- `product/` for product media and widget software
-- `prague/` for marketing/site/GTM content
+Root `widgets/`, `public/`, `published/`, and `l10n/` are not product storage
+boundaries.
 
-Root `widgets/`, `public/`, `published/`, and `l10n/` are not product storage boundaries. Public routing, publication state, and localization must not create fake root storage authorities.
+## Tenet 9: Translation Overlays Are Exact Files
 
----
+Translation overlays are account instance content artifacts:
 
-## System Architecture Overview
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│                        TOKYO                                │
-│ accounts runtime + git-authored product/dieter/fonts/prague  │
-└─────────────────────────────────────────────────────────────┘
-                              │
-           ┌──────────────────┼──────────────────┐
-           │                  │                  │
-           ▼                  ▼                  ▼
-    ┌─────────────┐    ┌─────────────┐    ┌─────────────┐
-    │    BOB      │    │   VENICE    │    │TOKYO-WORKER │
-    │   Editor    │    │   Embed     │    │ Account I/O │
-    │             │    │             │    │             │
-    │ Compiles    │    │ Serves      │    │ Saves       │
-    │ spec.json   │    │ published   │    │ instances,  │
-    │ to UI       │    │ projections │    │ assets,proj │
-    └──────┬──────┘    └─────────────┘    └──────┬──────┘
-           │                                     │
-           └─────────────────┬───────────────────┘
-                             │
-                             ▼
-                      ┌─────────────┐
-                      │    ROMA     │
-                      │ Product app │
-                      │             │
-                      │ Opens/saves │
-                      │ account     │
-                      │ instances   │
-                      └──────┬──────┘
-                             │
-                             ▼
-                      ┌─────────────┐
-                      │   MICHAEL   │
-                      │  Supabase   │
-                      │             │
-                      │ Account DB, │
-                      │ RLS, audit, │
-                      │ projections │
-                      └─────────────┘
+```text
+accounts/{accountPublicId}/instances/{instanceId}/overlays/locales/{locale}.json
 ```
 
----
+The file body is an exact translated value map:
 
-## The Verification Question
+```json
+{
+  "values": {
+    "[field path]": "[translated value]"
+  }
+}
+```
 
-When reviewing any code change, ask:
+The account, instance, and locale coordinates come from the operation/path.
+They are not lifecycle metadata inside the file.
 
-> **"Does this system know something only the widget should know?"**
+Available locales come from the account tier. Active locales are the locales
+the user selected for the account. Translation Agent writes overlays for active
+non-base locales. Tokyo stores and serves exact files. Tokyo does not infer
+meaning.
 
-If yes → the change violates architecture
-If no → the change is correct
+## Tenet 10: Content Source Authority Is Preserved
 
-### Canonical examples (golden path)
+Content has three source authorities:
 
-| Change | Why it’s correct |
-|--------|------------------|
-| Bob renders ToolDrawer from `spec.json` | Bob compiles the widget definition into UI; it doesn’t invent widget semantics. |
-| Public embed serving returns generated static files from `clk.live/{accountPublicId}/{instanceId}` | Public serving does not mutate widget meaning or compose widgets per view. |
-| Roma opens/saves account instances through Tokyo-backed routes | Roma orchestrates the product command, but widget semantics still live in the widget package. |
+| Source | Agent behavior |
+| --- | --- |
+| Human-generated | Agents may recommend, propose, translate, optimize, restructure, and apply user-approved changes. |
+| AI-generated | Agents may operate autonomously inside approved product rules. |
+| Integration-sourced | Agents may use, summarize, extract, route, display, analyze, and derive from it; source truth changes require an explicit authorized integration write path. |
 
----
+The rule is source-truth fidelity. Agents can operate the system around content,
+but they must not rewrite source truth they do not own.
 
-## Platform Auto-Generated Panels
+## Tenet 11: Public Widget Runtime Serves Stored Artifacts
 
-Bob automatically generates these standard panels for every widget:
+Public widget runtime serves generated files from Tokyo/R2 through the public
+serving host:
 
-| Panel | Purpose |
-|-------|---------|
-| **Typography** | Font families, sizes, weights for text roles |
-| **Stage/Pod Layout** | Padding, alignment, width, corner radius |
-| **Stage/Pod Appearance** | Background colors/fills |
+```text
+https://dev.clk.live/{accountPublicId}/{instanceId}
+https://clk.live/{accountPublicId}/{instanceId}
+```
 
-These panels ensure consistency across all widgets. Widget developers use the standard structure.
+Visitor requests must not:
 
----
+- call models;
+- read Supabase;
+- compose widgets from authoring source;
+- regenerate overlays;
+- repair missing artifacts;
+- switch to another locale/account/instance.
 
-## Quick Reference
+If the requested public artifact is not available, the boundary returns an
+explicit failure such as 404.
 
-| Tenet | One-liner |
-|-------|-----------|
-| **0** | No fallbacks for instance config/identity |
-| **1** | Widget files (core runtime + contract) = complete truth |
-| **2** | Orchestrators are dumb pipes |
-| **3** | System fails visibly |
-| **4** | All styling uses Dieter tokens |
-| **5** | SaaS shells operate from minted current-account truth |
-| **6** | Storage follows ownership |
+Page source is current account-owned product data. Page publish and page public
+serving are currently unavailable until Roma writes page packages. Tokyo-worker
+must not compose pages from source on visitor requests.
+
+## Tenet 12: Dieter Tokens First
+
+Widget configs use Dieter tokens by default for styling. User overrides are
+allowed through explicit controls when the widget contract permits them.
+
+Example token-shaped value:
+
+```json
+{
+  "appearance": {
+    "headingColor": "var(--color-text)",
+    "buttonBackground": "var(--color-primary)"
+  }
+}
+```
+
+Example explicit user override:
+
+```json
+{
+  "appearance": {
+    "headingColor": "#FF5500"
+  }
+}
+```
+
+## Tenet 13: Documentation Is Operator Truth
+
+`documentation/` is a current service manual and developer knowledgebase. It is
+not a place for planning, legacy support, or execution history.
+
+- Current architecture docs describe current system truth.
+- Service docs describe operator behavior, contracts, bindings, dependencies,
+  routes, storage, and verification.
+- Planning and future scope live in `Execution_Pipeline_Docs/01-Planning/`.
+- Historical execution records live in `Execution_Pipeline_Docs/03-Executed/`.
+
+If runtime and docs disagree, runtime code/migrations/deployed configuration win
+and the stale doc must be fixed.
+
+## Core Violations
+
+These are the named violations agents audit after product-path,
+cross-system, managed-service, deploy, remote-data, or architecture changes.
+Run V1-V8 before final response for those changes and report the result.
+
+| ID | Violation | Audit question |
+| --- | --- | --- |
+| V1 | Silent substitution | Did the change replace missing, invalid, stale, or malformed truth with an invented value? |
+| V2 | Silent healing | Did the change normalize, coerce, repair, or rewrite invalid persisted/user state without failure? |
+| V3 | Silent omission | Did the change drop a required input, artifact, operation, edit, module, event, or policy? |
+| V4 | Fail-open control | Did enforcement turn off when a dependency was missing, malformed, or unavailable? |
+| V5 | Corruption-as-absence | Did corrupt stored state become treated as missing, new, empty, ignored, or overwritten? |
+| V6 | Partial-success masquerade | Did the product claim full success after some requested work was dropped, rejected, or filtered? |
+| V7 | Masquerade/redress | Did the same failing workflow continue under a different wrapper, name, path, retry, or log? |
+| V8 | Runtime test dependency | Did normal product work start depending on tests, probes, helper checks, or validation rituals? |
+
+## Review Questions
+
+Before approving a change, ask:
+
+1. Does this improve agent-operability, or does it add legacy machinery?
+2. Which named authority owns the operation?
+3. Is any unavailable truth silently substituted?
+4. Is invalid state silently healed?
+5. Is product work being claimed complete when part of it failed or was
+   skipped?
+6. Does storage follow the owning account/product root?
+7. Can a smart agent understand and operate the artifact without hidden
+   conventions?
+
+If the answer exposes drift, fix the design before adding code.

@@ -1,14 +1,19 @@
 # Cloudflare Pages Cloud-Dev Checklist
 
-Status: FINAL STATE AFTER PRD 063 + PRD 099B DEPLOY ROOT CONTRACT
-Owner: Human architect for dashboard alignment; repo/runtime owners for app-local build contracts
+STATUS: CURRENT SYSTEM OPERATOR SPEC
 
-This checklist is the canonical manual setup contract for Cloudflare Pages `cloud-dev`.
+This checklist is the current manual setup contract for Cloudflare Pages
+`cloud-dev`. It documents live Pages project requirements, app-local build
+contracts, custom domains, required env vars, service bindings, and live-only
+secrets.
 
 Rules:
 - Cloudflare Pages Git build is the deploy plane for Bob, Roma, and Prague.
 - Tokyo/R2 git-authored deploy roots are `dieter/`, `fonts/`, `product/`, and `prague/`; only `accounts/` is runtime-managed account storage.
-- Tokyo Pages/static output is a source/deploy and friendly-serving convenience. It must not become a second authority for product widget software, Dieter media, fonts, product media, or Prague content.
+- Tokyo-worker/R2 is the source/deploy and friendly-serving boundary for
+  Tokyo-owned static product roots. It must not become a second authority for
+  product widget software, Dieter media, fonts, product media, or Prague
+  content.
 - Widget software is served from canonical R2 `product/widgets/**`. Friendly `/widgets/**` routes must resolve there, not to root `widgets/**` or stale static output.
 - Prague page translations deploy beside page JSON under `prague/pages/{widget}/{page}.translations/{locale}.json`, never under root `l10n/**`.
 - GitHub Actions must not create Pages projects or sync Pages secrets.
@@ -16,11 +21,65 @@ Rules:
 - Bob and Roma must use custom `*.dev.clickeen.com` hosts for authenticated Builder flows. `*.pages.dev` is not a valid public runtime host for those apps.
 - Bob and Roma keep host/base-URL runtime vars in app-local `wrangler.toml`. Supabase project values are live environment config, not committed repo literals.
 - Bob and Roma `wrangler.toml` files must stay within the Pages-supported schema. Worker-only blocks such as top-level `observability` or named environments like `local` are not valid Pages config.
-- Prague keeps runtime vars in the Cloudflare Pages dashboard because it does not use app-local Wrangler config today.
+- Prague keeps runtime vars in the Cloudflare Pages dashboard.
 - DevStudio is the canonical internal Pages toolbench at `https://devstudio.clickeen.com`.
 - GitHub runtime verification stays unauthenticated unless cloud-dev admin auth secrets are available to the runner; do not keep public auth bypasses for smoke coverage.
-- Authenticated cloud-dev smoke uses Berlin's dev-admin provider to mint a normal session for the existing `CLICKEEN` account, then verifies Roma bootstrap, Builder open/save, Widgets read, locales, assets, and logout.
+- Authenticated cloud-dev E2E uses Berlin's dev-admin provider to mint a normal
+  session for the existing `CLICKEEN` account. The exact coverage is owned by
+  `documentation/engineering/PlaywrightE2E.md` and the current `e2e/**` specs.
 - Berlin/Roma product auth, bootstrap, Builder, account registry, Tokyo, and Tokyo-worker account-control paths must not require shared-secret bearer auth. Internal San Francisco tooling requests use signed request bodies.
+
+## AI Operator Quick Start
+
+Start every Pages/config task with read-only evidence:
+
+```bash
+pnpm cf:api:preflight
+pnpm cf:pages:project bob-dev
+pnpm cf:pages:project roma-dev
+pnpm cf:pages:project prague-dev
+pnpm cf:pages:project devstudio
+```
+
+For custom domains:
+
+```bash
+pnpm cf:pages:domains bob-dev
+pnpm cf:pages:domains roma-dev
+pnpm cf:pages:domains prague-dev
+pnpm cf:pages:domains devstudio
+```
+
+For DevStudio env/project drift:
+
+```bash
+pnpm cf:pages:devstudio-env
+pnpm cf:pages:sync-devstudio-env
+pnpm cf:pages:sync-devstudio-project
+```
+
+Only add `--apply` after the dry-run output is the intended mutation.
+
+If `pnpm cf:api:preflight` fails, stop. Do not use dashboard screenshots,
+guessed Pages state, direct artifact deploys, or a public auth bypass as
+replacement evidence.
+
+## Authority Map
+
+| Concern | Authority | Evidence |
+| --- | --- | --- |
+| Bob Pages project config | Cloudflare Pages project `bob-dev` | `pnpm cf:pages:project bob-dev` |
+| Roma Pages project config | Cloudflare Pages project `roma-dev` | `pnpm cf:pages:project roma-dev` |
+| Prague Pages project config | Cloudflare Pages project `prague-dev` | `pnpm cf:pages:project prague-dev` |
+| DevStudio Pages project config | Cloudflare Pages project `devstudio` | `pnpm cf:pages:project devstudio` |
+| Bob/Roma host/base URL vars | app-local `wrangler.toml` | repo diff plus Pages project build/runtime evidence |
+| Prague runtime vars | Cloudflare Pages dashboard/runtime env | Cloudflare Pages project/env evidence |
+| Roma Supabase values/secrets | Cloudflare Pages dashboard/runtime env | Cloudflare Pages project/env evidence |
+| Roma service bindings/KV | Cloudflare Pages dashboard/project config | Cloudflare Pages project evidence |
+| DevStudio env/project sync | repo Cloudflare API helper | dry-run, `--apply`, read-back |
+| Custom domains | Cloudflare Pages domains + DNS | `pnpm cf:pages:domains`, `pnpm cf:dns:records` |
+| Public embed route | Tokyo-worker zone route | `https://dev.clk.live/{accountPublicId}/{instanceId}` plus route-boundary checks |
+| Git-authored R2 product roots | Tokyo/R2 product-root sync | `pnpm tokyo:r2:sync:*` plus exact R2 key evidence |
 
 ## Bob
 
@@ -50,6 +109,23 @@ Env contract:
 Dashboard action:
 - Keep `NEXT_PUBLIC_TOKYO_URL` in `bob/wrangler.toml`.
 - Runtime flags: `nodejs_compat`, `nodejs_compat_populate_process_env`
+
+Operator checks:
+
+```bash
+pnpm cf:api:preflight
+pnpm cf:pages:project bob-dev
+pnpm cf:pages:domains bob-dev
+```
+
+Pass criteria:
+
+- project root directory is `bob`;
+- production branch is `main`;
+- build command is `pnpm build:cf`;
+- output directory is `.cloudflare/output/static`;
+- custom domain includes `bob.dev.clickeen.com`;
+- runtime responds at `https://bob.dev.clickeen.com/bob`.
 
 ## Roma
 
@@ -86,10 +162,38 @@ Env contract:
 
 Dashboard action:
 - Keep `SUPABASE_URL`, `SUPABASE_ANON_KEY`, and `SUPABASE_SERVICE_ROLE_KEY` in the Cloudflare Pages dashboard for the live Roma app.
+- Keep `AI_GRANT_HMAC_SECRET` as a Roma Pages secret for Copilot grant/outcome signing and Translation Agent grant minting.
 - Keep the host/base-URL vars in `roma/wrangler.toml`.
 - Configure the `TOKYO_ASSET_CONTROL` service binding on Roma Pages to target the `tokyo-assets-dev` worker.
 - Configure the `TOKYO_PRODUCT_CONTROL` service binding on Roma Pages to target the `tokyo-assets-dev` worker.
+- Configure the `TRANSLATION_AGENT` service binding on Roma Pages to target the `translation-agent-dev` worker.
+- Configure `USAGE_KV` on Roma Pages with the namespace ids in `roma/wrangler.toml`.
 - Runtime flags: `nodejs_compat`, `nodejs_compat_populate_process_env`
+
+Runtime host note:
+- Roma runtime truth is `BERLIN_BASE_URL=https://berlin-dev.clickeen.workers.dev` from `roma/wrangler.toml`.
+- GitHub Actions may inject `BERLIN_BASE_URL=https://berlin.dev.clickeen.com` for build/verify jobs. That is CI input, not the committed Roma Pages runtime contract.
+
+Operator checks:
+
+```bash
+pnpm cf:api:preflight
+pnpm cf:pages:project roma-dev
+pnpm cf:pages:domains roma-dev
+```
+
+Pass criteria:
+
+- project root directory is `roma`;
+- production branch is `main`;
+- build command is `pnpm build:cf`;
+- output directory is `.vercel/output/static`;
+- custom domain includes `roma.dev.clickeen.com`;
+- runtime responds at `https://roma.dev.clickeen.com/home`;
+- live env/secrets include the three Supabase values listed above;
+- service bindings include `TOKYO_ASSET_CONTROL`, `TOKYO_PRODUCT_CONTROL`, and
+  `TRANSLATION_AGENT`;
+- KV bindings include `USAGE_KV`.
 
 ## Public Embeds
 
@@ -132,11 +236,29 @@ Env contract:
 Dashboard action:
 - Keep the 3 public base URLs in the Cloudflare Pages dashboard.
 
+Operator checks:
+
+```bash
+pnpm cf:api:preflight
+pnpm cf:pages:project prague-dev
+pnpm cf:pages:domains prague-dev
+```
+
+Pass criteria:
+
+- project root directory is `prague`;
+- production branch is `main`;
+- build command is `pnpm build`;
+- output directory is `dist`;
+- custom domain includes `prague.dev.clickeen.com`;
+- runtime responds at `https://prague.dev.clickeen.com/us/en/`;
+- live runtime env includes the required public base URLs listed above.
+
 ## DevStudio
 
 Project:
 - Project name: `devstudio`
-- Pages fallback host: `devstudio-dev.pages.dev`
+- Pages platform-default host: `devstudio-dev.pages.dev`
 
 Git settings:
 - Repo: `CKsangiacomo/clickeen`
@@ -149,8 +271,8 @@ Git settings:
 Public host:
 - Canonical host: `https://devstudio.clickeen.com`
 - Required: yes
-- `*.pages.dev` allowed as public runtime host: no, except if Cloudflare project
-  health checks require fallback reachability.
+- `*.pages.dev` allowed as public runtime host: no, except when Cloudflare
+  project health checks require platform-default host reachability.
 
 Auth:
 - Berlin is the auth boundary. Google is the normal human login provider; the
@@ -173,6 +295,20 @@ Verification:
 - `pnpm cf:pages:devstudio-env` compares live DevStudio Pages env against
   `admin/wrangler.toml` and confirms whether the live-only required Pages
   secrets exist.
+
+Operator commands:
+
+```bash
+pnpm cf:api:preflight
+pnpm cf:pages:devstudio-env
+pnpm cf:pages:sync-devstudio-env
+pnpm cf:pages:sync-devstudio-env --apply
+pnpm cf:pages:sync-devstudio-project
+pnpm cf:pages:sync-devstudio-project --apply
+pnpm cf:pages:put-secret devstudio DEVSTUDIO_GITHUB_TOKEN --apply
+pnpm cf:pages:domains devstudio
+pnpm cf:dns:records clickeen.com devstudio.clickeen.com
+```
 
 Policy API:
 - Pages Functions own `/api/entitlements/matrix`, `/api/entitlements/matrix/cell`,
@@ -199,7 +335,16 @@ Forbidden deploy targets for these git-authored media:
 - root `public/**`
 - root `published/**`
 
-`published/**`, while it may exist during PRD 099 execution, is runtime/public projection state and must not be normalized as a deploy destination for git-authored media.
+`published/**`, if present, is runtime/public projection state and must not be
+normalized as a deploy destination for git-authored media.
+
+Prague R2 sync note:
+- `tokyo/prague/**` is supported by `pnpm tokyo:r2:sync:check` and `pnpm tokyo:r2:sync:remote`.
+- Current `cloud-dev workers deploy` R2 sync trigger does not automatically run for `tokyo/prague/**` changes.
+- Current `cloud-dev prague content release` validates/builds Prague content and does not sync `tokyo/prague/**` to R2.
+- If Prague R2 content must be updated before the workflow trigger includes it,
+  run the Tokyo product-root sync path deliberately and verify exact `prague/**`
+  keys in R2.
 
 ## Live-Only Secrets And External State
 
@@ -212,7 +357,7 @@ Worker secrets:
 - Tokyo-worker: `AI_GRANT_HMAC_SECRET` for Translation Agent overlay write grant verification
 
 Pages secrets:
-- Roma: `AI_GRANT_HMAC_SECRET` is required for account Copilot grant/outcome signing and Translation Agent grant minting. `SUPABASE_SERVICE_ROLE_KEY` is required for Roma-owned account settings writes. Roma -> Tokyo/Tokyo-worker storage commands use service bindings. Account-widget l10n generation calls the Translation Agent Worker; that Worker calls San Francisco `/model/chat` and writes translated locale values via Tokyo-worker.
+- Roma: `AI_GRANT_HMAC_SECRET` is required for account Copilot grant/outcome signing and Translation Agent grant minting. `SUPABASE_SERVICE_ROLE_KEY` is required for Roma-owned account settings writes. Roma -> Tokyo/Tokyo-worker storage commands use service bindings. Account instance translation generation calls the Translation Agent Worker; that Worker calls San Francisco `/model/chat` and writes translated locale values via Tokyo-worker.
 - DevStudio: `DEVSTUDIO_GITHUB_TOKEN` is required for GitHub-backed policy writes.
 
 CI secrets/vars:
@@ -221,26 +366,69 @@ CI secrets/vars:
 - `CLOUDFLARE_REST_API_TOKEN` for local Pages/DNS/config repo helper commands.
 - `CLOUDFLARE_ACCOUNT_ID`
 - `AI_GRANT_HMAC_SECRET` for Prague string translation request signing
-- No Supabase deploy secrets are required by GitHub Actions. Supabase migrations are applied deliberately from an authenticated operator/agent environment, then committed as schema history.
+- Supabase migration workflow: `SUPABASE_ACCESS_TOKEN`,
+  `SUPABASE_DB_PASSWORD`, and `SUPABASE_URL_CLOUD_DEV`. Supabase schema changes
+  deploy through the reviewed migration workflow, not through Pages or Worker
+  deploys. See `documentation/engineering/SupabaseOperations.md`.
 
 Rules:
 - Bob and Roma host/base-URL vars belong in app-local `wrangler.toml`.
 - Bob and Roma Supabase runtime values belong in the Cloudflare dashboard/runtime env, not committed repo literals.
-- Roma asset control requires the `TOKYO_ASSET_CONTROL` service binding to target `tokyo-assets-dev`; the asset lane no longer depends on Roma/Tokyo-worker shared-secret parity.
-- Roma uses the `TOKYO_PRODUCT_CONTROL` service binding for Tokyo storage commands targeting `tokyo-assets-dev`; Builder open/save/l10n authoring no longer depend on public Tokyo shared-secret HTTP.
+- Roma asset control requires the `TOKYO_ASSET_CONTROL` service binding to target `tokyo-assets-dev`.
+- Roma uses the `TOKYO_PRODUCT_CONTROL` service binding for Tokyo storage commands targeting `tokyo-assets-dev`.
+- Roma uses the `TRANSLATION_AGENT` service binding for account instance translation generation.
 - Worker and Pages secrets stay live-only, but any new secret must be documented here with owning service and purpose.
-- If a Pages custom domain serves stale runtime after a Git-connected deploy, fix the underlying config or verification gap; do not normalize direct artifact deploys as the operating model.
+- If a Pages custom domain serves a previous deploy after a Git-connected deploy,
+  fix the underlying config or verification gap; do not normalize direct
+  artifact deploys as the operating model.
 
-## PRD 63 Completion Proof
+## Verification
 
-- Bob, Roma, and Prague are Git-connected Pages projects.
-- Git build is the active deploy behavior for Bob, Roma, and Prague.
-- Bob and Roma non-secret vars are present in `wrangler.toml`, not duplicated in the Cloudflare dashboard.
-- Prague runtime vars are present in the Cloudflare dashboard.
+Run verification from the owning surface:
+
+```bash
+pnpm cf:api:preflight
+pnpm cf:pages:project bob-dev
+pnpm cf:pages:project roma-dev
+pnpm cf:pages:project prague-dev
+pnpm cf:pages:project devstudio
+pnpm cf:pages:domains bob-dev
+pnpm cf:pages:domains roma-dev
+pnpm cf:pages:domains prague-dev
+pnpm cf:pages:domains devstudio
+pnpm cf:pages:devstudio-env
+pnpm cf:dns:records clickeen.com devstudio.clickeen.com
+```
+
+Runtime URLs:
+
+```text
+https://bob.dev.clickeen.com/bob
+https://roma.dev.clickeen.com/home
+https://dev.clk.live/{accountPublicId}/{instanceId}
+https://prague.dev.clickeen.com/us/en/
+https://devstudio.clickeen.com
+```
+
+Pass criteria:
+
+- Bob, Roma, Prague, and DevStudio are Git-connected Pages projects.
+- Git build is the active deploy behavior for Bob, Roma, Prague, and DevStudio.
+- Bob and Roma non-secret vars are present in app-local `wrangler.toml`.
+- Roma Supabase env/secrets are live-only Cloudflare Pages config.
+- Prague runtime vars are live-only Cloudflare Pages config.
 - Bob and Roma custom-domain bindings are active on `*.dev.clickeen.com`.
-- No GitHub workflow still creates Pages projects, syncs Pages secrets, or deploys Pages artifacts.
-- Verified cloud-dev host behavior on 2026-03-10:
-  - `https://bob.dev.clickeen.com/bob` returns `200`
-  - `https://roma.dev.clickeen.com/home` redirects to login when unauthenticated
-  - `https://dev.clk.live/{accountPublicId}/{instanceId}` returns generated static HTML for a known published cloud-dev instance
-  - `https://prague.dev.clickeen.com/us/en/` returns `200`
+- DevStudio custom-domain binding is active on `devstudio.clickeen.com`.
+- No GitHub workflow creates Pages projects, syncs Pages secrets, or deploys
+  Pages artifacts for these apps.
+
+Hard stops:
+
+- failed `pnpm cf:api:preflight`;
+- project is not Git-connected to `CKsangiacomo/clickeen` on `main`;
+- custom domain missing or pointing at the wrong Pages project;
+- Pages env mismatch for a required variable/secret;
+- Roma service binding or KV binding missing;
+- direct Pages artifact deploy proposed as a replacement for Git-connected
+  deploys;
+- authenticated cloud-dev verification attempted through public auth bypasses.

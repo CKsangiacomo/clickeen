@@ -1,5 +1,7 @@
 # Clickeen: Building the First AI-Operated Company
 
+STATUS: COLLATERAL - INVESTOR NARRATIVE, NOT CURRENT SYSTEM TRUTH
+
 **Date:** January 2026
 **Audience:** Seed / Series A investors
 **Author:** Piero Salerno, Founder
@@ -216,7 +218,7 @@ This isn't vaporware. Here's what exists:
 
 **Product:**
 - Widget builder (Bob) - Real-time preview, publish flow
-- Embed runtime (Venice) - SSR delivery with locale overlays from a single source of truth
+- Public widget serving (Tokyo-worker / clk.live) - account-scoped static artifacts from one source plus locale overlays
 - Marketing site (Prague) - Localized across the active locale set
 - Minibob - "Try before signup" playground
 

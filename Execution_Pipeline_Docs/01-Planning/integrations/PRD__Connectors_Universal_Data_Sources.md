@@ -34,7 +34,7 @@ Competitors present “90+ widgets”, but much of the work is repeatable: a **d
   - Paid: allow full “juice” (OAuth/API, higher freshness/fields/caps)
 - Define a scalable path to “90 widgets without 90 engines”.
 
-### Non-goals (v1)
+### Non-goals
 - Implementing any specific connector in code (this PRD is planning-only).
 - Solving scraping legality/ToS in detail (must be handled per connector).
 - Building the full billing system (uses existing policy architecture).
@@ -203,7 +203,7 @@ PRDs should not invent keys; keys must be registered in the shared capability re
 ---
 
 ## 7) Developer LOE (rough)
-Planning-level estimate for platform v1:
+Planning-level estimate for the platform build:
 - Registry + policy keys + gating UI wiring: **2–5 days**
 - Connection storage model (workspace connections) + minimal APIs: **3–7 days**
 - One connector family end-to-end (e.g. Google Reviews URL mode only): **3–10 days** (depends heavily on acquisition method)
@@ -339,4 +339,3 @@ When the FAQ widget and Reviews widget are prioritized for execution, **structur
 - Reviews widget: emit `AggregateRating` JSON-LD (and optionally individual `Review` entries) from the normalized reviews dataset
 - Schema must reflect the actual rendered state, not stale or cached content
 - Schema emission must be covered in the widget's connector PRD and Venice rendering spec
-

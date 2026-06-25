@@ -1,311 +1,135 @@
-# Prague — Marketing Section Reference (current)
+# Prague Marketing Sections
 
-This doc is the **implementation contract** for building Prague marketing pages.
+STATUS: CURRENT SYSTEM OPERATOR SPEC
 
-Goal: a small, reusable set of **primitives** and Prague **marketing sections** for landing, features, examples, pricing, create/install, and platform pages. The runtime JSON field is still named `blocks[]`; that is a Prague-only implementation name, not the PRD 106 account page model.
+This file is the Prague section registry manual. It documents what Prague can render today from `tokyo/prague/pages/{widget}/{page}.json`.
 
-## 1) Primitives (must be reusable everywhere)
+Prague marketing sections are Astro components registered in `prague/src/lib/blockRegistry.ts`. A section type is valid only when it is registered there.
 
-### 1.1 Layout primitives (non-negotiable)
+## Runtime Files
 
-These are the core “stage/pod” concepts without using those names:
-- `ck-canvas` — full‑bleed block surface (background + vertical rhythm).
-- `ck-inline` — optional inline wrapper (max width + gutters). Anything “inline” lives inside this.
+| Concern | File |
+| --- | --- |
+| Registry and validation | `prague/src/lib/blockRegistry.ts` |
+| Page JSON loader | `prague/src/lib/markdown.ts` |
+| Section renderer | `prague/src/components/WidgetBlocks.astro` |
+| Section components | `prague/src/blocks/**` |
+| Layout utilities | `prague/public/styles/layout.css` |
+| Primitive utilities | `prague/public/styles/primitives.css` |
+| Page JSON source | `tokyo/prague/pages/{widget}/{page}.json` |
+
+## Page JSON Shape
+
+```json
+{
+  "blocks": [
+    {
+      "id": "[stable-block-id]",
+      "type": "[registered-section-type]",
+      "copy": {
+        "[copyKey]": "[copyValue]"
+      }
+    }
+  ]
+}
+```
 
 Rules:
-- `ck-canvas` / `ck-inline` must not set `overflow`, `position`, or default centering.
-- Scroll containers (carousels, horizontal galleries) own `overflow-x: auto` themselves.
 
-Source: `prague/public/styles/layout.css`.
+- `id` is stable inside the page.
+- `type` is one registered section type.
+- `copy` holds the base-language strings and structured string arrays for that section.
+- Section-level meta keys are allowed only when listed in the registry.
 
-### 1.2 UI primitives (CSS utilities)
+## Registered Section Contracts
 
-These are the atoms used inside blocks:
-- Buttons: `ck-btn` (`primary|secondary|ghost`)
-- Badge/pill: `ck-badge`
-- Card surface: `ck-card`
-- Media frame: `ck-media` (screenshots/video frames)
+| Type | Component | Required copy | Allowed meta | Rendered |
+| --- | --- | --- | --- | --- |
+| `big-bang` | `blocks/big-bang/big-bang.astro` | `headline`, `body` | none | yes |
+| `hero` | `blocks/hero/hero.astro` | `headline`, `subheadline` | `visual`, `accountInstanceRef`, `items` | yes |
+| `split` | `blocks/split/split.astro` | `headline`, `subheadline` | `accountInstanceRef`, `layout`, `copy` | yes |
+| `split-carousel` | `blocks/split-carousel/SplitCarousel.astro` | `headline` | `items`, `layout`, `copy` | yes |
+| `steps` | `blocks/steps/steps.astro` | `title`, `items[]` | `visual` | yes |
+| `subpage-cards` | `blocks/subpage-cards/subpage-cards.astro` | `title`, `items[]` | `links` | yes |
+| `control-moat` | `blocks/control-moat/control-moat.astro` | `title`, `items[]` | `visual` | yes |
+| `global-moat` | `blocks/global-moat/global-moat.astro` | `title`, `items[]` | `visual` | yes |
+| `platform-strip` | `blocks/platform-strip/platform-strip.astro` | `title`, `items[]` | `visual` | yes |
+| `cta-bottom-block` | `blocks/cta/cta.astro` | `headline`, `subheadline` | `copy`, `primaryCta` | yes |
+| `minibob` | `blocks/minibob/minibob.astro` | `heading`, `subhead` | `copy`, `mode`, `accountInstanceRef` | yes |
+| `embed-carousel` | `blocks/embed-carousel/embed-carousel.astro` | none | `items`, `options`, `copy` | yes when renderer supports it |
+| `mobile-showcase` | `blocks/mobile-showcase/mobile-showcase.astro` | none | `items`, `options`, `copy` | yes when renderer supports it |
+| `feature-explorer` | `blocks/feature-explorer/feature-explorer.astro` | `categories[]` | `options`, `copy` | blocked; registry requires `copy.categories[]`, renderer reads top-level `categories` |
+| `navmeta` | data only | `title`, `description` | none | no |
+| `page-meta` | data only | `title`, `description` | none | no |
 
-Typography uses Dieter utilities (e.g. `.heading-*`, `.label-*`, `.overline`, `.body-*`).
+Non-visual sections still live in `blocks[]` because the same page JSON owns SEO and menu copy.
 
-Source: `prague/public/styles/primitives.css`.
+## Account Instance References
 
-## 2) Marketing Sections (legacy `blocks[]` runtime name)
+Only sections with `accountInstanceRef` in their allowed meta may embed a public widget artifact.
 
-Marketing sections are **Astro components** in `prague/src/blocks/**`.
-Sections:
-- receive data via props
-- do not fetch
-- do not read from filesystem
-- use primitives for layout and UI
+Allowed root shape:
 
-Non-visual sections:
-- `navmeta` and `page-meta` are data-only entries (strings for navigation + SEO).
-- They are present in `blocks[]` but are not rendered by the section renderer.
-
-Supported section types (registered):
-`big-bang`, `hero`, `split`, `split-carousel`, `steps`, `subpage-cards`, `control-moat`, `global-moat`, `platform-strip`, `cta-bottom-block`, `minibob`, `embed-carousel`, `mobile-showcase`, `feature-explorer`, `navmeta`, `page-meta`.
-
-### Section registry + validation (executed)
-
-Prague validates widget marketing page JSON at load time:
-- Registry: `prague/src/lib/blockRegistry.ts`
-- Loader: `prague/src/lib/markdown.ts`
-
-Validation rules:
-- A section may only include meta keys registered for its type (example: `visual`, `accountInstanceRef`).
-- Required copy keys are enforced per section type.
-
-Required copy keys (enforced today):
-- `big-bang`: `headline`, `body`
-- `hero`: `headline`, `subheadline` (meta: `visual`, `accountInstanceRef`, `items`)
-- `split`: `headline`, `subheadline` (meta: `layout`, `accountInstanceRef`)
-- `split-carousel`: `headline` (meta: `layout`, `items`)
-- `steps`: `title`, `items[]` (meta: `visual`)
-- `subpage-cards`: `title`, `items[]` (meta: `links`)
-- `control-moat`: `title`, `items[]` (meta: `visual`)
-- `global-moat`: `title`, `items[]` (meta: `visual`)
-- `platform-strip`: `title`, `items[]` (meta: `visual`)
-- `cta-bottom-block`: `headline`, `subheadline`
-- `minibob`: `heading`, `subhead`
-- `feature-explorer`: `categories[]`
-- `navmeta`: `title`, `description`
-- `page-meta`: `title`, `description`
-
-Notes:
-- `embed-carousel` and `mobile-showcase` currently have no enforced required keys; they are meta-driven (`items`, `options`).
-
-Sections without required keys in the registry have no enforced required keys yet; use their component props below as the expected shape.
-
-Only section types registered in `prague/src/lib/blockRegistry.ts` are supported at runtime. Other section folders that exist on disk but are not registered must not be referenced in page JSON.
-
-### Naming + taxonomy (non-negotiable)
-
-This is where we win (or die). The filesystem is the taxonomy.
-
-- **Folder names describe the section type**, not the page family: `hero/`, `steps/`, `cta/`, `minibob/`, `split/`.
-- **File names are kebab-case** and match the section type: `hero.astro`, `split.astro`, `steps.astro`.
-- **Variants prefer props over forks** when layout is the same; use a layout prop instead of new section types.
-- **Site chrome lives under `blocks/site/`** (Nav, Footer) and is not part of page JSON.
-
-Examples:
-
-```
-prague/src/blocks/site/nav/Nav.astro
-prague/src/blocks/site/footer.astro
-prague/src/blocks/hero/hero.astro
-prague/src/blocks/split/split.astro
-prague/src/blocks/steps/steps.astro
-prague/src/blocks/cta/cta.astro
+```json
+{
+  "accountInstanceRef": {
+    "accountPublicId": "[accountPublicId]",
+    "instanceId": "[instanceId]"
+  }
+}
 ```
 
-### 2.1 Navigation
+Allowed nested item shape:
 
-`site/nav/Nav.astro` (system-owned)
-- Primary nav is derived from the URL and `resolveWidgetsMegaMenu()` (no page-authored `items[]` in the scalable path).
-- The **Widgets** nav item behaves as:
-  - Hover/focus opens the mega menu (CSS-only via `:has()` + `focus-within`)
-  - “View all widgets” CTA links to `/{market}/{locale}/` (directory page)
-- Widget secondary tabs are also derived from the URL:
-  - `/[market]/[locale]/widgets/[widget]` → Overview
-  - `/[market]/[locale]/widgets/[widget]/examples|features|pricing`
+```json
+{
+  "items": [
+    {
+      "accountInstanceRef": {
+        "accountPublicId": "[accountPublicId]",
+        "instanceId": "[instanceId]"
+      }
+    }
+  ]
+}
+```
 
-`site/nav/widgetsMegaMenu.ts`
-- Resolves mega menu content from the canonical widget registry + each widget’s page JSON:
-  - `title` comes from `blocks[].id=="navmeta" && type=="navmeta"` → `copy.title`
-  - `description` comes from `blocks[].id=="navmeta" && type=="navmeta"` → `copy.description`
-  - Authored source: `tokyo/prague/pages/{widget}/overview.json`; deployed R2 home: `prague/pages/{widget}/overview.json`
+Nested refs are currently used by `hero`, `split-carousel`, `embed-carousel`,
+and `mobile-showcase`. `embed-carousel` and `mobile-showcase` require non-empty
+`items`.
 
-`site/footer`
-- Props: `{ market: string, locale: string }`
+The current validator allows an optional `locale` string on the ref. Treat it only as an explicit public artifact selector when a page author deliberately sets it. It is not active locale authority, not account translation state, and not a discovery instruction.
 
-Non-visual section contracts (required):
-- `navmeta` (overview only) requires `copy.title` + `copy.description` or the build fails.
-- `page-meta` (all widget pages) requires `copy.title` + `copy.description` or the build fails.
+Rules:
 
-### 2.2 Hero
+- `accountPublicId` and `instanceId` are required when `accountInstanceRef` exists.
+- No other keys are supported inside `accountInstanceRef`.
+- Prague must not derive instance identity from widget slug.
+- Prague must not use private account folders or account translation folders.
 
-`blocks/hero/hero`
-- Props: `{ headline: string, subheadline?: string, primaryCta: { label: string, href: string }, secondaryCta?: { label: string, href: string }, actionGroup?: ActionGroup, accountInstanceRef?: { accountPublicId: string, instanceId: string, locale?: string } }`
-- Owns: H1 + subhead + primary/secondary CTA + account instance embed (optional)
+## Section Editing Checklist
 
-Copy contract:
-- `headline` and `subheadline` come from `blocks[].copy`.
-- CTA labels come from Prague chrome strings (`prague.cta.*`), not from page copy.
+1. Read `prague/src/lib/blockRegistry.ts`.
+2. Edit only a current page JSON under `tokyo/prague/pages/{widget}/{overview|examples|features|pricing}.json`.
+3. Use existing section types unless the task explicitly includes a registry/component change.
+4. Keep `page-meta` on every widget page.
+5. Keep `navmeta` on every widget overview page.
+6. Run Prague checks.
 
-**Contract (non-negotiable):**
-- The hero visual is rendered only when an account instance is explicitly provided via `accountInstanceRef.accountPublicId` + `accountInstanceRef.instanceId`.
-- Pages opt in by adding the complete `accountInstanceRef` to the hero block in the canonical page spec.
-- Prague embeds the base public widget artifact. Locale-specific public widget selection is not part of the current default artifact model and must not be implied by private translation state.
-- `visual: true` is legacy metadata only; it does not embed anything by itself.
+Commands:
 
-**Embed rule (strict):**
-- Prague embeds the canonical static account-scoped route: `https://clk.live/{accountPublicId}/{instanceId}`.
-- Locale is never encoded into `instanceId`.
-- `accountInstanceRef` may contain only `accountPublicId`, `instanceId`, and optional `locale`. `locale` has no current default public artifact meaning. If a future public runtime contract gives it meaning, it must select public runtime behavior only and must not be treated as locale availability, translation state, or a private account-widget contract.
-- Prague must not depend on a hidden instance-only lookup, root published registry, or instance-only public route.
-- `wgt_*`, `ins_*`, and `ins_*.<locale>` are invalid current product identities and must fail at the boundary (no legacy support).
+```bash
+pnpm --filter @clickeen/prague typecheck
+pnpm --filter @clickeen/prague build
+```
 
-### 2.3 Big bang
+## Hard Stops
 
-`blocks/big-bang/big-bang`
-- Props: `{ headline: string, body: string, primaryCta: { label: string, href: string }, secondaryCta?: { label: string, href: string }, actionGroup?: ActionGroup }`
+Stop if:
 
-Copy contract:
-- `headline`, `body`
-- CTA labels come from Prague chrome strings (`prague.cta.*`), not from page copy.
-
-### 2.4 Split (consolidated)
-
-`blocks/split/split`
-- Props: `{ headline: string, subheadline?: string, primaryCta, secondaryCta?, actionGroup?, accountInstanceRef?, layout: 'visual-left' | 'visual-right' | 'stacked' }`
-- Layouts: `visual-left`, `visual-right`, `stacked`
-
-Copy contract:
-- `headline`, `subheadline`
-
-Embed rules:
-- Account instance visuals render only when `accountInstanceRef.accountPublicId` + `accountInstanceRef.instanceId` are present.
-
-### 2.5 How-it-works (steps)
-
-`blocks/steps/steps`
-- Props: `{ title: string, subhead?: string, steps: { title: string, body: string }[] }`
-
-Copy contract:
-- `title` (required by registry, used as section heading)
-- `items[]` (mapped to `steps[]`)
-
-### 2.6 Split Carousel
-
-`blocks/split-carousel/SplitCarousel.astro`
-- Props: `{ headline: string, subheadline?: string, layout: 'visual-left' | 'visual-right' | 'stacked', items: any[] }`
-- Used for: visual comparison sections where one side is a carousel of account instance embeds.
-
-Copy contract:
-- `headline`, `subheadline`
-
-### 2.7 Subpage Cards (Overview navigation)
-
-`blocks/subpage-cards/subpage-cards`
-- Props: `{ title: string, subhead?: string, items: { title: string, body: string }[], links?: { page: 'examples'|'features'|'pricing', iconName?: string }[] }`
-- Used for: Overview pages to deep-link into Examples/Features/Pricing.
-
-Copy contract:
-- `title`, `items[]` (and optional `subhead`)
-
-### 2.8 Control moat (Design depth)
-
-`blocks/control-moat/control-moat`
-- Props: `{ title: string, subhead?: string, items: { title: string, body: string }[], visual?: any }`
-- Used for: “Design control” deep dive sections.
-
-Copy contract:
-- `title`, `items[]` (and optional `subhead`)
-
-### 2.9 Global moat (Localization/infra proof)
-
-`blocks/global-moat/global-moat`
-- Props: `{ title: string, subhead?: string, items: { title: string, body: string }[], visual?: any }`
-- Used for: “Global by default / infra” proof sections.
-
-Copy contract:
-- `title`, `items[]` (and optional `subhead`)
-
-### 2.10 Platform strip (Enterprise baseline)
-
-`blocks/platform-strip/platform-strip`
-- Props: `{ title: string, subhead?: string, items: { title: string, body: string }[], visual?: any }`
-- Used for: quiet enterprise baseline reassurance.
-
-Copy contract:
-- `title`, `items[]` (and optional `subhead`)
-
-### 2.11 CTA bottom block
-
-`blocks/cta/cta` (`type: "cta-bottom-block"`)
-- Props: `{ headline: string, subheadline?: string, primaryCta: { label: string, href: string } }`
-- CTA label/href are standardized at the page level (Prague chrome / route config), not authored per-block.
-
-Copy contract:
-- `headline`, `subheadline`
-
-### Action group (flexible CTA pattern)
-`ActionGroup` supports CTA layouts beyond primary/secondary:
-- Shape: `{ layout: 'row' | 'column' | 'grid', columns?: number, actions: [{ type: 'link' | 'button' | 'modal', variant: 'primary' | 'secondary' | 'ghost', label: string, href?: string, onClick?: string }] }`
-- Legacy CTA props (`primaryCta`, `secondaryCta`) are still supported and map to an `ActionGroup` internally.
-
-### 2.12 Locale showcase
-
-Removed from launch scope by PRD 104D.
-
-Prague must not infer widget locale availability from market locale lists, route locale, or a private translation helper. A future localization proof block must use explicit account-widget artifact references and fail fast when an expected artifact is not published.
-
-### 2.13 Minibob block
-
-`blocks/minibob/minibob`
-- Island: the only Prague section that ships JS.
-- Responsibility: render the public demo experience and send the visitor to account signup.
-- Structure (non-negotiable):
-  - Stage: heading + subhead (from compiled strings for `blocks[].id=="minibob"`)
-  - Pod: public demo interaction or explicit account-scoped embed when configured
-- Contract:
-  - It must not introduce global CSS (only block-scoped styles).
-  - It must not access host cookies/storage.
-  - It must not boot Bob or start a draft handoff flow.
-  - It must not derive storage identity from widget type. If it embeds a real example widget, that reference must be a normal account instance ref carrying `accountPublicId` + `instanceId` (`CLICKEEN` for admin examples).
-
-## 3) Prague Marketing Page Layout
-
-Prague marketing pages are JSON section lists in a fixed order. This is not the PRD 106 customer page model; customer pages are stacks of saved widget instances. Example Prague widget landing layout:
-- site/nav (global chrome)
-- hero
-- minibob
-- subpage-cards (overview only)
-- split / split-carousel (optional; page-specific)
-- steps / control-moat / global-moat / platform-strip (page-specific)
-- cta-bottom-block
-
-## 4) Content mapping (Tokyo → Prague)
-
-Prague is **JSON-only** for widget marketing pages in this repo snapshot.
-
-- Canonical widget pages:
-  - Authored source in this repo: `tokyo/prague/pages/{widget}/{overview|examples|features|pricing}.json`.
-  - Deployed R2 home: `prague/pages/{widget}/{overview|examples|features|pricing}.json`.
-  - Prague renders the `blocks[]` marketing-section entries by `type` and embeds account instances only when a complete `accountInstanceRef` is present.
-  - Prague validates `accountInstanceRef.accountPublicId` + `accountInstanceRef.instanceId` during page load; missing account instances fail fast in dev/build.
-  - Prague may pass only an explicit authored `accountInstanceRef.locale` to public `clk.live` artifact paths. Prague must not infer widget locale from the route locale, account-widget translation internals, or market config.
-  - Page JSON is layout + base copy.
-  - Account-widget translated locale values are not Prague page sidecars; live account widgets are served as generated `clk.live` artifacts.
-- Admin/example references:
-  - Admin examples are normal account-owned instances under `accounts/CLICKEEN/instances/{instanceId}/`.
-  - Prague page JSON must reference them as `{ "accountPublicId": "CLICKEEN", "instanceId": "{instanceId}" }`.
-  - Prague must not store or resolve examples as old `wgt_*` / `ins_*` identities, account UUID folders, or an admin-specific storage lane.
-- Canonical overview is fail-fast for required meta blocks (`navmeta`, `page-meta`) and for per-block validation in the registry. See `prague/src/pages/[market]/[locale]/widgets/[widget]/index.astro`.
-
----
-
-## Links
-
-- Prague overview: `documentation/services/prague/prague-overview.md`
-- Localization contract: `documentation/capabilities/localization.md`
-
-### 2.14 Embed Carousel (Premium)
-
-`blocks/embed-carousel/embed-carousel`
-- Props: `{ items: { accountInstanceRef: { accountPublicId: string, instanceId: string, locale?: string } }[], options: Object }`
-- Behavior: Horizontal scroll snap carousel of lazy−loaded Clickeen widgets.
-- Used for: "Made with Clickeen" galleries.
-
-### 2.15 Mobile Showcase (Premium)
-
-`blocks/mobile-showcase/mobile-showcase`
-- Props: `{ items: { accountInstanceRef: { accountPublicId: string, instanceId: string, locale?: string } }[], options: { device: 'iphone'|'android' } }`
-- Behavior: Horizontal scroll of mobile device frames showing widget content.
-
-### 2.16 Feature Explorer (Premium)
-
-`blocks/feature-explorer/feature-explorer`
-- Props: `{ categories: { name: string, features: Feature[] }[], options: Object }`
-- Behavior: Tabbed/Pill navigation switching between feature grids. Client-side interactive.
+- the section type is not registered
+- a required copy key is missing
+- a page needs account data that is not an explicit public `accountInstanceRef`
+- the task asks Prague to own account page or account translation operations
+- the task asks for generated translation sidecars without an explicit localization task
+- the task asks for `feature-explorer`; current registry validation and renderer input shape are not aligned

@@ -32,20 +32,26 @@ type AccountLocalesWritePayload = {
   localePolicy?: unknown;
 };
 
+type LocaleOverlayUpdateError = {
+  kind: 'VALIDATION' | 'AUTH' | 'DENY' | 'NOT_FOUND' | 'UPSTREAM_UNAVAILABLE';
+  reasonKey: string;
+  detail?: string;
+};
+
 type LocaleOverlayUpdateFailure = {
   ok: false;
   status: number;
-  error: {
-    kind: 'VALIDATION' | 'AUTH' | 'DENY' | 'NOT_FOUND' | 'UPSTREAM_UNAVAILABLE';
-    reasonKey: string;
-    detail?: string;
-  };
+  error: LocaleOverlayUpdateError;
+  value?: LocaleOverlayUpdateValue;
 };
 
 type LocaleOverlayUpdateValue = {
+  ok: boolean;
   instancesChecked: number;
   deleted: Array<{ instanceId: string; locale: string }>;
   generated: Array<{ instanceId: string; locales: string[] }>;
+  skipped: Array<{ instanceId: string; locales: string[]; reasonKey: string; detail?: string }>;
+  error?: LocaleOverlayUpdateError;
 };
 
 function resolveSupabaseAdminConfig(): { baseUrl: string; serviceRoleKey: string } {
@@ -90,26 +96,31 @@ function resolveDbErrorDetail(payload: unknown, fallback: string): string {
 
 function localeOverlayFailure(args: {
   status: number;
-  kind: LocaleOverlayUpdateFailure['error']['kind'];
+  kind: LocaleOverlayUpdateError['kind'];
   reasonKey: string;
   detail: string;
+  value?: Omit<LocaleOverlayUpdateValue, 'ok' | 'error'>;
 }): LocaleOverlayUpdateFailure {
+  const error: LocaleOverlayUpdateError = {
+    kind: args.kind,
+    reasonKey: args.reasonKey,
+    detail: args.detail,
+  };
   return {
     ok: false,
     status: args.status,
-    error: {
-      kind: args.kind,
-      reasonKey: args.reasonKey,
-      detail: args.detail,
-    },
+    error,
+    ...(args.value ? { value: { ...args.value, ok: false, error } } : {}),
   };
 }
 
 function emptyOverlayUpdate(): LocaleOverlayUpdateValue {
   return {
+    ok: true,
     instancesChecked: 0,
     deleted: [],
     generated: [],
+    skipped: [],
   };
 }
 
@@ -142,6 +153,9 @@ function mergeOverlayUpdates(left: LocaleOverlayUpdateValue, right: LocaleOverla
     instancesChecked: Math.max(left.instancesChecked, right.instancesChecked),
     deleted: [...left.deleted, ...right.deleted],
     generated: [...left.generated, ...right.generated],
+    skipped: [...left.skipped, ...right.skipped],
+    ok: left.ok && right.ok,
+    ...(right.error ? { error: right.error } : left.error ? { error: left.error } : {}),
   };
 }
 
@@ -176,8 +190,11 @@ async function reconcileAccountLocaleOverlays(args: {
 
   const deleted: Array<{ instanceId: string; locale: string }> = [];
   const generated: Array<{ instanceId: string; locales: string[] }> = [];
+  const skipped: Array<{ instanceId: string; locales: string[]; reasonKey: string; detail?: string }> = [];
+  let instancesChecked = 0;
 
   for (const instance of instances.value.accountInstances) {
+    instancesChecked += 1;
     for (const locale of removedLocales) {
       const result = await deleteAccountInstanceTranslationValues({
         accountId: args.accountId,
@@ -192,6 +209,7 @@ async function reconcileAccountLocaleOverlays(args: {
           kind: result.error.kind,
           reasonKey: result.error.reasonKey,
           detail: `delete:${instance.instanceId}:${locale}:${result.error.detail ?? result.error.reasonKey}`,
+          value: { instancesChecked, deleted, generated, skipped },
         });
       }
       deleted.push({ instanceId: instance.instanceId, locale });
@@ -209,20 +227,31 @@ async function reconcileAccountLocaleOverlays(args: {
       requestId: args.requestId,
     });
     if (!generation.ok) {
+      if (generation.error.detail === 'saved_instance_has_no_translatable_fields') {
+        skipped.push({
+          instanceId: instance.instanceId,
+          locales: addedLocales,
+          reasonKey: generation.error.reasonKey,
+          detail: generation.error.detail,
+        });
+        continue;
+      }
       return localeOverlayFailure({
         status: generation.status,
         kind: generation.error.kind,
         reasonKey: generation.error.reasonKey,
         detail: `generate:${instance.instanceId}:${addedLocales.join(',')}:${generation.error.detail ?? generation.error.reasonKey}`,
+        value: { instancesChecked, deleted, generated, skipped },
       });
     }
     if (!generation.value.translation.accepted) {
-      return localeOverlayFailure({
-        status: 422,
-        kind: 'VALIDATION',
-        reasonKey: 'coreui.errors.translation.failed',
-        detail: `generate:${instance.instanceId}:${addedLocales.join(',')}:not_accepted`,
+      skipped.push({
+        instanceId: instance.instanceId,
+        locales: addedLocales,
+        reasonKey: 'coreui.errors.translation.noActiveLocales',
+        detail: 'not_accepted',
       });
+      continue;
     }
     generated.push({ instanceId: instance.instanceId, locales: generation.value.translation.activeLocales });
   }
@@ -230,9 +259,11 @@ async function reconcileAccountLocaleOverlays(args: {
   return {
     ok: true,
     value: {
-      instancesChecked: instances.value.accountInstances.length,
+      ok: true,
+      instancesChecked,
       deleted,
       generated,
+      skipped,
     },
   };
 }
@@ -464,27 +495,6 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    let overlayUpdate = emptyOverlayUpdate();
-    if (activeDelta.addedLocales.length > 0 || activeDelta.removedLocales.length > 0) {
-      const pendingOverlayUpdate = await reconcileAccountLocaleOverlays({
-        accountId: current.value.authzPayload.accountPublicId,
-        accountCapsule: current.value.authzToken,
-        requestId: current.value.requestId,
-        addedLocales: activeDelta.addedLocales,
-        removedLocales: activeDelta.removedLocales,
-        baseLocale,
-        authz: current.value.authzPayload,
-      });
-      if (!pendingOverlayUpdate.ok) {
-        return withSession(
-          request,
-          NextResponse.json({ error: pendingOverlayUpdate.error }, { status: pendingOverlayUpdate.status }),
-          current.value.setCookies,
-        );
-      }
-      overlayUpdate = mergeOverlayUpdates(overlayUpdate, pendingOverlayUpdate.value);
-    }
-
     const params = new URLSearchParams({
       id: `eq.${current.value.authzPayload.accountId}`,
       select: ACCOUNT_ACTIVE_LOCALES_PATCH_SELECT,
@@ -538,6 +548,28 @@ export async function PUT(request: NextRequest) {
         ),
         current.value.setCookies,
       );
+    }
+
+    let overlayUpdate = emptyOverlayUpdate();
+    if (activeDelta.addedLocales.length > 0 || activeDelta.removedLocales.length > 0) {
+      const pendingOverlayUpdate = await reconcileAccountLocaleOverlays({
+        accountId: current.value.authzPayload.accountPublicId,
+        accountCapsule: current.value.authzToken,
+        requestId: current.value.requestId,
+        addedLocales: activeDelta.addedLocales,
+        removedLocales: activeDelta.removedLocales,
+        baseLocale,
+        authz: current.value.authzPayload,
+      });
+      if (pendingOverlayUpdate.ok) {
+        overlayUpdate = mergeOverlayUpdates(overlayUpdate, pendingOverlayUpdate.value);
+      } else {
+        overlayUpdate = pendingOverlayUpdate.value ?? {
+          ...emptyOverlayUpdate(),
+          ok: false,
+          error: pendingOverlayUpdate.error,
+        };
+      }
     }
 
     return withSession(

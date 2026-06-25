@@ -1,211 +1,93 @@
 # Clickeen Market Position
 
-**Last Updated:** January 20, 2026
+STATUS: INFORMATIVE - STRATEGY & MARKET NARRATIVE
 
----
+This document is market positioning, not product policy. Do not use it as
+runtime truth for tiers, routes, billing, page serving, limits, or agent
+contracts.
 
-## What We Are
+## Position
 
-**Clickeen is an agent-operated creative operations platform: agents operate the product directly — create, personalize, translate, and route content — rather than Clickeen being a SaaS with AI bolted on.**
+Clickeen is an agent-operated content product. Structured artifacts are the
+operator surface.
 
-We enable businesses to create content once and render infinite personalized variants across:
-- 🌍 Languages (29)
-- 📍 Geographies (currency, legal, pricing)
-- 🏢 Industries (positioning, messaging)
-- 🧪 Experiments (A/B testing)
-- 🎯 Accounts (ABM personalization)
+The product starts with embeddable widgets because widgets are fast to adopt and
+easy to understand. When attribution, sharing, or reuse is explicitly designed
+into the surface, a public widget can also become distribution. The larger
+position is broader: Clickeen structures content and product artifacts so agents
+can operate them directly.
 
-**Widgets are the distribution wedge, not the product definition.**
+The customer promise is:
 
----
+```text
+create once -> agents operate the structured artifact -> publish through named Clickeen authorities
+```
 
-## What We Replace
+Agents may generate, adapt, route, and improve content only when the artifact
+has structured fields, source authority, and an owning product route.
 
-### For SMBs ($120-2,388/year)
-- Typeform ($600/year) - forms/widgets
-- Mailchimp ($420/year) - email marketing
-- Buffer ($1,440/year) - social media
-- Unbounce ($1,740/year) - landing pages
+## What We Replace First
 
-**Total replaced: $4,200/year → Clickeen: $480-2,388/year**
+Clickeen begins with structured, account-owned public content artifacts:
 
-### For Mid-Market ($2,388-5,988/year)
-- Above +
-- Basic A/B testing
-- Industry personalization
-- Geo targeting
+- FAQ, logo, testimonial, countdown, contact, and related website widgets;
+- basic localized public content needs;
+- simple account-owned publishing workflows;
+- fragmented tools that make users copy the same content across surfaces.
 
-### For Large Accounts ($5,988-11,988/year)
-- Above +
-- ABM (account-specific overlays)
-- Unlimited experiments
-- API access
-- White-label
+The wedge matters because every embedded widget is also distribution. The user
+gets immediate value, and Clickeen gets a public surface with attribution and a
+path back into account creation.
 
-**Competitive comparison:**
-- We are NOT replacing: Optimizely ($50K-300K), Dynamic Yield ($100K+), Demandbase ($50K+)
-- We ARE the creative variant layer that sits below those tools
-- Most SMBs/mid-market don't need full enterprise personalization stacks
+## What We Are Not
 
----
+Clickeen does not optimize around opaque user-targeting or personalization
+suites. It is not a chatbot attached to a normal SaaS. It is not a CMS that
+happens to call a model.
 
-## Market Size
+Clickeen is a lean, structured system that agents can operate. That is the
+market difference.
 
-| Segment | Users | ARPU | ARR Potential |
-|---------|-------|------|---------------|
-| **SMB** | 2M | $480 | $960M |
-| **Mid-Market** | 500K | $2,388 | $1.19B |
-| **Large accounts** | 100K | $11,988 | $1.2B |
+## Advantages
 
-**Realistic 3-year target:** 2.5M users, $350 blended ARPU = **$875M ARR**
+### Agent-Operated Architecture
 
----
+Agents work over widget specs, control/field maps, locale overlays,
+account-owned artifacts, and product-law authorities instead of guessing
+through a large opaque app. This reduces operational cost and increases speed.
 
-## Positioning
+### Babel And Global Availability
 
-**Primary message:**
-"Create once, personalize infinitely. Clickeen renders your content in 29 languages + regional variants + A/B tests from a single source."
+Clickeen localizes without duplicating or rewriting source truth. Overlays are
+derivatives stored beside the account artifact and governed by active-locale
+operations. That makes global availability a built-in economic advantage rather
+than a services project.
 
-**Secondary messages by tier id:**
+### Product-Led Distribution
 
-**free:**
-"Create and publish one widget with Clickeen branding."
+Public widgets can become discovery surfaces when attribution, sharing, or
+reuse is part of the product policy for that surface.
 
-**tier1:**
-"Widget-only account with higher limits and branding removal."
+### Design-Led Quality
 
-**tier2:**
-"Widget-only account with SEO/GEO, more widget types, more published instances, and auto-translate."
+Public output should be fast, polished, accessible, embed-safe, locale-aware,
+and consistent with Dieter primitives. Clickeen can win conversion and retention
+by pairing that quality bar with agent-operated scale.
 
-**tier3:**
-"Widget-only account with unlimited widget scale and Supernova effects."
+## Competitive Frame
 
-**tier4:**
-"Pages: build landing pages from saved widget instances, with public serving through `clk.live`."
+Against widget incumbents, Clickeen wins on design quality, localization, and
+agent-operated content.
 
----
+Against landing-page and marketing tools, Clickeen starts narrower but has a
+structural advantage: one structured source can feed more surfaces over time.
 
-## Competitive Advantages
+Against legacy SaaS with AI features, Clickeen's difference is architectural.
+The agents are operators of the system, not assistants beside it.
 
-### vs Typeform/Tally (Widgets)
-- ✅ Multi-language built-in (they don't have this)
-- ✅ Viral loop (embedded = distribution)
-- ✅ AI pre-fill (website scraper)
+## Strategic Boundary
 
-### vs Mailchimp/SendGrid (Email)
-- ✅ Multi-language campaigns (they require plugins)
-- ✅ Widget-instance reuse across pages
-- ✅ Integrated with other surfaces
-
-### vs Unbounce/Instapage (Landing Pages)
-- ✅ Multi-language SEO pages (separate URLs per language)
-- ✅ Industry personalization (they don't have this)
-- ✅ Geo-targeting built-in
-
-### vs Webflow/Wix (Websites)
-- ✅ Multi-language from day 1 (they charge $25-100/mo extra)
-- ✅ Content-addressed (better performance, automatic versioning)
-- ✅ AI-powered translation (they require manual)
-
-### What we DON'T compete with (yet)
-- ❌ Full experimentation platforms (Optimizely, VWO) - we have basic A/B testing only
-- ❌ Large-account personalization suites (Dynamic Yield) - we have industry/ABM overlays, not full decisioning
-- ❌ CDPs (Segment, mParticle) - we assume identity is resolved upstream
-
----
-
-## Growth Model
-
-**Viral loop mechanics:**
-- Each widget embed = 10K monthly visitors
-- 1% CTR on "Powered by Clickeen" badge = 100 clicks
-- 40% conversion (website scraper pre-fill) = 40 new users
-- **Viral coefficient: 4.0 raw, 1.5-2.0 accounting for churn**
-
-**Conservative path (1.5× monthly viral):**
-- Month 12: $364K ARR
-- Month 24: $13.82M ARR
-- Month 36: $875M ARR (with personalization features)
-
-**Revenue by tier (Month 36):**
-- free: 85% of users, $0 revenue
-- tier1: widget-only paid entry
-- tier2: widget-only SEO/GEO and translation tier
-- tier3: widget-only premium effects tier
-- tier4: blocks/pages tier
-- **Blended ARPU: $350/year**
-
----
-
-## What We're NOT Saying
-
-**We are NOT:**
-- "Replacing the enterprise personalization stack" (too broad, missing components)
-- "Infinite variants" (technically true, operationally dangerous without governance)
-- "New layer of the internet" (too vague, too grandiose)
-
-**We ARE:**
-- "Agent-operated creative operations platform"
-- "Create once, render infinite personalized variants"
-- "Multi-language + multi-dimensional personalization from a single source"
-
----
-
-## Roadmap Narrative
-
-**Phase 1 (Month 1-12): Multi-Language Foundation**
-- Ship: Widgets, emails, ads, social, landing pages
-- Feature: 29-language translation overlay via the dedicated Translation Agent and overlay system
-- Message: "Your marketing, every language, zero extra work"
-
-**Phase 2 (Month 13-18): Geo + Experiments**
-- Ship: Geo overlays (currency, legal, pricing)
-- Ship: A/B testing framework
-- Message: "Global marketing with built-in experimentation"
-
-**Phase 3 (Month 19-24): Industry Personalization**
-- Ship: Industry overlay system (50 industries)
-- Message: "Speak healthcare's language to healthcare companies"
-
-**Phase 4 (Month 25-30): ABM**
-- Ship: Account-specific overlays
-- Message: "Personalize for every Fortune 500 account automatically"
-
----
-
-## Sales Narrative
-
-**For SMBs:**
-"You're spending $4,200/year on Typeform, Mailchimp, Buffer, and Unbounce. Clickeen does all of that for $480/year, plus you get 29 languages included. That's an 88% cost reduction."
-
-**For Mid-Market:**
-"You're managing 5 separate tools and still only reaching English speakers. Clickeen gives you widgets, emails, landing pages, and social in 29 languages, with A/B testing built in, for $1,188/year."
-
-**For Large Accounts:**
-"You're spending $200K-500K/year on personalization vendors (Optimizely, Dynamic Yield, Mutiny, Phrase). Clickeen replaces the creative variant management layer for $11,988/year. That's a 95% cost reduction for the same output - personalized, localized content across all your surfaces."
-
----
-
-## Key Metrics to Track
-
-**Activation:**
-- % of users who embed widget (vs just create)
-- Time to first embed
-
-**Engagement:**
-- Dimensions used per user (locale only? locale + geo? locale + industry + ABM?)
-- Overlay generation requests (are large accounts using ABM?)
-
-**Revenue:**
-- ARPU by tier (is top-tier ARPU climbing to $20K-50K?)
-- Tier upgrade rates (`free` → `tier1` → `tier2` → `tier3` → `tier4`)
-- Feature adoption (% using geo, % using experiments, % using ABM)
-
-**Viral:**
-- Badge CTR (target: 1-2%)
-- Conversion from badge click (target: 40%)
-- Actual viral coefficient (target: 1.5-2.0×)
-
----
-
-**This is the market narrative. Technical implementation details live in `/documentation/architecture/BabelProtocol.md`.**
+This document can discuss market story and competitive posture. It must not
+define detailed roadmap phases, revenue forecasts, billing tiers, service
+contracts, or current implementation status. Those belong in planning,
+capability, service, and execution docs.

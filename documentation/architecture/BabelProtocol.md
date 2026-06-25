@@ -1,31 +1,70 @@
-# Clickeen Babel Protocol
+# Babel Protocol
 
-Status: Active protocol. Generic widget text extraction is owned by `Execution_Pipeline_Docs/03-Executed/103_Translation_Field_And_Agent_Contract_Batch/103J__PRD__Generic_Widget_Translation_System.md`; saved-base-content translation sync is owned by `Execution_Pipeline_Docs/03-Executed/103_Translation_Workflow_And_Sync_Batch/103K__PRD__Saved_Base_Content_Translation_Sync.md`.
+STATUS: CURRENT SYSTEM OPERATOR SPEC
 
-Babel is Clickeen's translated-locale value protocol for account widgets. It is not a separate translation schema, a runtime fallback system, a selected-pointer system, or a storage locator layer.
+Babel is Clickeen's translated-locale value protocol.
 
-## Product Boundary
+It is one of Clickeen's moat protocols because it lets one structured source
+artifact become localized in many languages without duplicating the source
+truth. Babel separates source truth from localized expression:
 
-Builder edits one account-owned widget instance in the account base locale.
+```txt
+source artifact + locale value overlay = localized artifact
+```
 
-After save, translated locale values are explicit account work from the
-Translations panel. Tokyo-worker currently stores, reads, and lists exact
-translated-locale overlay files only. Roma calls the Translation Agent Worker
-for generation. Roma mints the agent grant, the Translation Agent Worker calls
-San Francisco `/model/chat` for model execution, and the Translation Agent
-writes overlays through Tokyo-worker. San Francisco owns model execution only.
-Public widget package bytes are public artifacts, not source truth, and are not
-rebuilt from overlays during visitor serving or publish.
+The source artifact remains the source. A locale overlay is only the translated
+value map for that locale. This is what allows Clickeen to make content globally
+available while keeping the system lean, structured, and agent-operable.
 
-## Source Of Text Truth
+Babel is not:
 
-Each widget declares its editable/translatable field graph once in:
+- a separate translation schema;
+- a runtime fallback system;
+- a selected-pointer system;
+- a storage locator layer;
+- a lifecycle/status ledger;
+- a duplicated localized source tree.
+
+## What Babel Does
+
+Babel defines how Clickeen represents translated text for a source artifact.
+
+For one source artifact and one locale, Babel stores an exact value map:
+
+```json
+{
+  "values": {
+    "[field path]": "[translated value]"
+  }
+}
+```
+
+The field path points back to a typed, known text field in the source artifact.
+The translated value is the localized expression for that field. The overlay
+does not redefine the source, copy the source, or carry product identity inside
+the body.
+
+## Why Babel Exists
+
+Babel prevents duplicated product state by making localization an exact overlay
+operation: source truth stays singular, translated values stay separate, and
+agents operate structured locale files instead of copied localized trees. That
+is the moat.
+
+## Source Text Contract
+
+The source artifact declares or exposes its translatable text fields once. For
+widget software, field declarations live in:
 
 ```txt
 tokyo/product/widgets/{widgetType}/editable-fields.json
 ```
 
-Repeatable declaration paths are extraction instructions inside the product boundary. Producer payloads always contain exact paths:
+Runtime translation generation uses the saved instance `source.content.fields`
+map as the current source authority. Repeatable declaration paths expand before
+producer work; producer items and overlay keys are concrete paths only.
+
+Producer payloads use exact paths:
 
 ```json
 {
@@ -33,29 +72,18 @@ Repeatable declaration paths are extraction instructions inside the product boun
 }
 ```
 
-No producer receives wildcard, glob, template, or sidecar paths.
+No producer receives wildcard, glob, template, or sidecar paths. The operation
+works on exact text primitive paths only.
 
-## Exact Producer Contract
+## Locale Overlay Contract
 
-For a given saved `instance.content.json` and widget editable-field contract:
-
-1. The saved instance content and widget editable-field contract provide the required exact text primitive paths.
-2. Roma owns the user-facing generation command and account active-locale lookup.
-3. Roma calls the Translation Agent Worker for generation.
-4. Translation Agent writes exact overlay value maps through Tokyo-worker.
-5. Tokyo-worker rejects malformed overlay value maps before writing them.
-
-The system does not normalize, drop, repair, coerce, or infer producer output.
-
-## Translated Locale Values
-
-The product identity is:
+The product identity is carried by the operation/path:
 
 ```txt
-instanceId + locale
+source artifact identity + locale
 ```
 
-The translated value body is an exact value map:
+The overlay body is only the translated value map:
 
 ```json
 {
@@ -66,52 +94,120 @@ The translated value body is an exact value map:
 }
 ```
 
-The API body does not carry product identity, lifecycle state, backend task state, source
-revision, hash identity, or storage path. Product operations carry identity and
-state.
+The body must not carry:
 
-Tokyo stores the durable translated-locale product result as
-`overlays/locales/{locale}.json`. That overlay is the exact value-map artifact
-for one locale. It carries no lifecycle metadata, backend task state, or storage
-identity exposed to Bob/Roma/San Francisco/public widget consumers.
+- account identity;
+- artifact identity;
+- lifecycle state;
+- backend task state;
+- source revision;
+- hash identity;
+- storage path;
+- readiness/status fields;
+- selected translation pointers.
 
-## Runtime Resolution
+Product operations carry identity and state. Babel overlay bodies carry
+translated values.
 
-Babel current uses one translated locale value map at a time:
+## Resolution
+
+Babel uses one locale value map at a time:
 
 ```txt
-resolvedState = resolveTranslatedValues(baseState, translatedValues)
+localizedArtifact = applyLocaleValues(sourceArtifact, localeValues)
 ```
 
-No multi-layer precedence resolver is part of this protocol. A/B, geo,
-personalization, manual translation editing, or stacked transformations require a
-later PRD.
+There is no multi-layer precedence resolver in Babel. A missing translated
+value is missing translated truth. Babel does not choose another locale,
+another source, another path, or another stored shape.
 
-## Tokyo PBX Rule
+At generation, write, read, and list boundaries, Babel values must cover the
+exact saved text field set. Missing or unexpected paths fail explicitly. The
+resolver applies a validated locale value map; it does not choose fallbacks.
 
-Tokyo-worker stores and reads translated locale value artifacts through named
-storage operations. Translation Agent has its own Worker home. Roma calls that
-Worker for generation, and San Francisco stays the model execution boundary the
-Translation Agent calls.
+## Current Account Instance Path
+
+Account-instance Babel overlays live at:
+
+```txt
+accounts/{accountPublicId}/instances/{instanceId}/overlays/locales/{locale}.json
+```
+
+That path is an implementation of the Babel protocol for account instance
+content. The protocol is the exact value-map model, not the account-instance
+path itself.
+
+## Agent Operation
+
+Translation Agent produces Babel overlays. San Francisco owns model execution.
+Tokyo-worker stores and reads exact overlay files through named storage
+operations. Roma/Bob expose the user-facing product operation.
+
+Babel storage does not normalize, drop, repair, coerce, or infer accepted
+overlay values.
+
+Current route boundaries:
+
+| Operation | Route | Boundary |
+| --- | --- | --- |
+| List instance translations | `GET /api/account/instances/{instanceId}/translations` | Roma product route |
+| Read one translation | `GET /api/account/instances/{instanceId}/translations/{locale}` | Roma product route |
+| Generate translations | `POST /api/account/instances/{instanceId}/translations/generate` | Roma product route |
+| Update account active locales | `PUT /api/account/locales` | Roma product route |
+| Agent generation | `POST /translate-instance` | Translation Agent Worker |
+| List stored overlays | `GET /__internal/instances/{instanceId}/translations` | Tokyo-worker internal route |
+| Read/write/delete overlay | `GET/PUT/DELETE /__internal/instances/{instanceId}/translations/{locale}` | Tokyo-worker internal route |
+
+Write boundary:
+
+- Roma mints the Translation Agent grant.
+- Translation Agent verifies the grant.
+- Translation Agent writes through Tokyo-worker with `x-ck-ai-grant`.
+- Tokyo-worker verifies the grant and accepts only locales carried by that
+  grant.
+
+Failure semantics:
+
+- The base locale is not generated as an overlay.
+- If there are no active non-base locales, generation returns accepted false.
+- Generation success requires every requested locale write to succeed.
+- A failure after earlier locale writes does not roll back files already
+  written.
 
 Tokyo-worker must not:
 
-- Expose private storage object IDs as locale identity.
-- Start San Francisco work from Roma-side storage walks.
-- Repair values it accepted.
-- Maintain generation ledgers, operation snapshots, or completion state.
-- Preserve old l10n route or path shapes.
-- Preserve old account/widget storage grouping shapes.
+- expose private storage object IDs as locale identity;
+- start San Francisco work from storage walks;
+- repair values it accepted;
+- maintain generation ledgers, operation snapshots, or completion state;
+- accept translation paths or body shapes outside the current account-instance
+  overlay path and exact `{ "values": ... }` body.
 
-## Deleted Pre-GA Model
+## Verification
 
-The following are not active product truth:
+Verify Babel through exact artifacts, not status fields:
 
-- Widget `localization.json`.
-- `spec.json.overlays.text`.
-- `textPack`.
-- `L10nOp`.
-- Base snapshot/fingerprint identity for account-widget translations.
-- Readiness/status fields inside translated value bodies.
-- Selected translation pointers.
-- Compatibility readers for old translation paths.
+| Concern | Verification |
+| --- | --- |
+| Source text is eligible for translation | source artifact exposes exact translatable text paths |
+| Locale overlay was produced | exact `{ "values": ... }` overlay exists at the owning artifact locale path |
+| Overlay body is valid | every key is an expected text path and every value is a string |
+| Public/runtime localization | localized artifact uses the requested locale overlay or fails explicitly |
+| Missing locale | no fallback locale is served as if requested locale existed |
+
+Babel verification must not introduce readiness fields, lifecycle markers,
+fallback probes, generated ledgers, or repair jobs. The file is the product
+artifact.
+
+## Not Current Product Truth
+
+The following are not Babel:
+
+- widget `localization.json`;
+- `spec.json.overlays.text`;
+- `textPack`;
+- `L10nOp`;
+- base snapshot/fingerprint identity;
+- readiness/status fields inside translated value bodies;
+- selected translation pointers;
+- compatibility readers for old translation paths.

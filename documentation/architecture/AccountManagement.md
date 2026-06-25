@@ -1,14 +1,34 @@
 # Account Management
 
-STATUS: ACTIVE DB PIVOT MODEL
+STATUS: CURRENT SYSTEM OPERATOR SPEC
 
-This file is the canonical account-management model for the active DB Pivot execution. Older PRD 064/065/066/067/068/072 account-management docs are historical snapshots only.
+This file is the current account-management model for Clickeen. It describes
+current account truth and the account/storage coordinate rules used by Berlin,
+Roma, Tokyo-worker, and product routes.
 
 For product/system context, see [CONTEXT.md](./CONTEXT.md) and [Overview.md](./Overview.md).
 
+## Operator Quick Reference
+
+| Concern | Operator truth |
+| --- | --- |
+| Account authority | Berlin owns auth/user/account bootstrap truth. |
+| Product account shell | Roma consumes Berlin context and operates the current account. |
+| Account storage coordinate | `accounts.id`, exposed to product/API/runtime payloads as `accountPublicId`. |
+| Account runtime root | `accounts/{accountPublicId}/`. |
+| Role authority | `users.role` in the one-account user model. |
+| Tier/product policy | Roma/product policy, not Tokyo-worker. |
+| Account files | Tokyo-worker stores exact account instance/page/asset files under the account root. |
+| Public references | `accountPublicId + instanceId` or `accountPublicId + pageId`, depending on surface. |
+
+If an operator needs account truth, start at Berlin/Roma session bootstrap. If
+an operator needs account files, start at the Roma account route and
+Tokyo-worker account root. Do not derive account truth from public URLs, R2
+object listings, widget config, or browser-local state.
+
 ## Hard Invariant
 
-Clickeen current uses a deliberately boring account model:
+Clickeen uses a deliberately boring account model:
 
 ```text
 One user belongs to one account.
@@ -16,7 +36,8 @@ One account has many users.
 The user's role is the user's role in that account.
 ```
 
-There is no active current customer account switching model and no core many-to-many membership table.
+There is no current customer account switching model and no core many-to-many
+membership table.
 
 If someone tries to invite or add an email already associated with a user, Berlin rejects the operation:
 
@@ -34,10 +55,11 @@ That rejection is product behavior. The system must not silently attach the same
 | `User` | The human using Clickeen, including the one account they belong to and their role in that account. | Berlin owns user/auth truth. |
 | `Role` | The user's permission level in their one account: `owner`, `admin`, `editor`, or `viewer`. | Stored on `users`, not on a membership row. |
 | `Invite Members` | Account-scoped invitation lifecycle for creating another user in the same account. | Berlin current lifecycle table/route surface. |
-| `Login Method` | A way to prove the human can sign into Clickeen, such as Google login. | Berlin login boundary. |
-| `Account Connection` | Account-authorized external provider/source, such as a Google Business Profile connection for a reviews widget. | Future connector PRD, account-owned. |
-| `Connection Resource` | A selectable external business/resource under an account connection. | Future connector PRD. |
-| `Widget Source` | A widget instance reference to an account-owned connection resource. | Future connector/widget PRD. |
+| `Login Method` | The current human sign-in proof. Cloud-dev/current runtime uses Google login. | Berlin login boundary. |
+| `accountPublicId` | The product/API/runtime field name for the compact `accounts.id` coordinate. | Berlin/Roma carry it from account truth; Tokyo-worker enforces it against account paths. |
+
+Connector terms are not current account-management primitives. Integration
+account-connection terms must not be treated as account truth.
 
 ## Account
 
@@ -50,18 +72,59 @@ The account row answers:
 - when status last changed for grace/deletion workflows;
 - when the account was created.
 
-Account context must not derive product capabilities, display names, or slugs from the compact account id. If account display metadata is needed, it must be real account data with a named product owner.
+Account context must not derive product capabilities, account display metadata,
+or slugs from the compact account id. Roma may display the compact account
+coordinate as a coordinate label; that is not account display metadata.
 
-Account deletion is an operation, not a retained `closed` status. If an account is deleted, account DB rows and account-owned storage are cleaned up by the same account-root operation.
+Account deletion is an operation, not a retained `closed` status. If an account
+is deleted, account DB rows and account-owned storage must be cleaned up by the
+same account-root operation.
 
 Current runtime status: account deletion is disabled until that account-root operation exists. No service may return account deletion success after deleting only database rows or only storage objects.
 
-Agency later is account-to-account, not user-to-many-accounts:
+Agency or multi-account behavior is not current customer account behavior and
+does not belong in current account truth.
+
+## Current Tables And Account Coordinates
+
+Current account truth uses these relational tables/functions:
+
+| Relational object | Operator meaning |
+| --- | --- |
+| `accounts(id,status,status_changed_at,tier,created_at)` | Account existence, status, tier, lifecycle timing. |
+| `users(user_id,account_id,role,primary_email,login_provider,login_subject,first_name,last_name,primary_language,country,timezone,phone,whatsapp,created_at)` | One-account user, role, login mapping, accepted user fields. |
+| `account_invitations(...)` | Account-scoped invitation lifecycle. |
+| `resolve_login_identity` | Login identity resolution. |
+| `accept_login_invitation_identity` | Invite acceptance plus user creation. |
+| `transfer_account_owner` | Owner transfer operation. |
+
+`accounts.id` is the compact account product/storage coordinate.
+`accountPublicId` is the API/embed/authz field name for that same value.
+Current Berlin/Roma payloads may carry both `accountId` and `accountPublicId`;
+they must match.
+
+Account runtime storage uses:
 
 ```text
-agency account manages client account
-agency user belongs to agency account
-client user belongs to client account
+accounts/{accountPublicId}/
+```
+
+Public widget references use:
+
+```text
+accountPublicId + instanceId
+```
+
+Page references use:
+
+```text
+accountPublicId + pageId
+```
+
+When page public serving is enabled, the public route shape is:
+
+```text
+/{accountPublicId}/pages/{pageId}
 ```
 
 ## User
@@ -113,13 +176,14 @@ Rules:
 - no `account_members` row is created;
 - removing a non-owner team member removes that user from the account model rather than creating an account-less or multi-account user.
 
-Owner transfer survives as a current account operation, but it must be rewritten against `users.role`, not membership rows.
+Owner transfer is a current account operation and must operate against
+`users.role`, not membership rows.
 
 ## Login And Connectors
 
 Login is not connector authorization.
 
-Google login answers:
+Current runtime login is Google. Google login answers:
 
 ```text
 Which Clickeen user does this verified Google login belong to?
@@ -134,7 +198,46 @@ It does not create:
 - widget sources;
 - reusable provider tokens for widgets.
 
-When connectors are built, the user must explicitly authorize the account connection. Clickeen may suggest the same Google account used for login, but connector authorization remains a separate account-owned flow.
+Connector authorization is not a current account-management primitive.
+
+## Authz Capsule
+
+Berlin bootstrap/Roma account routes carry the account authority in an authz
+capsule. Current capsule payload fields are:
+
+```text
+accountId
+accountPublicId
+accountStatus
+accountWebsiteUrl
+entitlements
+profile
+role
+authzVersion
+iat
+exp
+```
+
+Roma verifies and refreshes the current-account capsule at account route
+boundaries. Roma `/api/bootstrap` strips `authz.accountCapsule` from the JSON
+response body and writes it as the account authz cookie.
+
+## Operator Routes
+
+| Product operation | Roma route | Berlin backing route | Owner |
+| --- | --- | --- | --- |
+| Bootstrap current account | `/api/bootstrap` | `GET /session/bootstrap` | Berlin/Roma |
+| Current user/account view | `/api/me` | `/me` | Berlin/Roma |
+| Team members | `/api/account/team/**` | `/accounts/:id/members` | Berlin |
+| Team invitations | `/api/account/team/invitations/**` | `/accounts/:id/invitations` | Berlin |
+| Login-time invitation acceptance | login callback flow | `POST /invitations/:token/accept` | Berlin |
+| Owner transfer | `/api/account/owner-transfer` | `/accounts/:id/owner-transfer` | Berlin |
+| Tier-drop dismissal | `/api/account/lifecycle/tier-drop/dismiss` | `/accounts/:id/lifecycle/tier-drop/dismiss` | Berlin |
+| Account deletion | `DELETE /api/account` | `DELETE /accounts/:id` | Roma/Berlin, currently disabled |
+
+Account deletion currently returns conflict. Roma `DELETE /api/account` and
+Berlin `DELETE /accounts/:id` must not report deletion success until the full
+account-root deletion operation exists.
 
 ## Product Surfaces
 
@@ -143,6 +246,10 @@ When connectors are built, the user must explicitly authorize the account connec
 Roma is the authenticated product shell for the current account. It receives Berlin-issued user/account context and uses Tokyo product operations for widget instance work.
 
 Roma does not own user/account truth and does not read Supabase tables directly for normal account truth.
+
+Roma account routes are the product mutation boundary for account-scoped work.
+They carry the current account coordinate to the owning service instead of
+letting downstream systems rediscover account identity.
 
 ### Bob
 
@@ -158,7 +265,7 @@ Berlin owns:
 - first-account provisioning;
 - invitation acceptance;
 - user/account bootstrap context;
-- current Invite Members lifecycle until a later PRD moves it.
+- current Invite Members lifecycle.
 
 Berlin must not preserve old `user_profiles`, `account_members`, `active_account_id`, or connector-looking `linkedIdentities` output as product truth.
 
@@ -175,9 +282,25 @@ translation generation.
 
 Public serving reads generated R2/CDN artifacts. It does not read authoring/account DB state.
 
-## Deleted Active Concepts
+## Verification
 
-These are not active product truth in the DB Pivot model:
+Verify account behavior through the owning authority:
+
+| Concern | Verification owner |
+| --- | --- |
+| Auth/session/account bootstrap | Berlin/Roma session bootstrap response |
+| Current account UI behavior | Roma authenticated account shell |
+| Account instance/page files | Roma account routes plus Tokyo-worker storage evidence |
+| Account assets | Roma `/api/account/assets` or Roma Assets UI |
+| Account storage bytes | R2 evidence after `pnpm cf:preflight` |
+| Supabase account schema changes | reviewed migration and Supabase migration workflow |
+
+Do not verify account truth by inspecting only browser memory or public runtime
+URLs. Public runtime proves serving, not account authority.
+
+## Not Current Product Truth
+
+These are not active product truth:
 
 - `Account Membership` as the core role authority;
 - one user directly belonging to multiple accounts;
@@ -186,20 +309,14 @@ These are not active product truth in the DB Pivot model:
 - `login_identities` as connector/provider state;
 - provider profile snapshots as user truth;
 - contact-verification tables as permanent user truth;
-- `accountPublicId` as a second co-equal account identity in the new DB model.
+- `accountPublicId` as a second co-equal account identity.
 
-## Execution References
+## Operator References
 
-Historical execution references:
+Current behavior is documented in:
 
-- `Execution_Pipeline_Docs/02-Executing/103_DB_Pivot__PRD__Operational_State_In_Supabase_Public_Artifacts_In_R2.md`
-- `Execution_Pipeline_Docs/02-Executing/103_DB_Pivot__EXEC__Operational_State_In_Supabase_Public_Artifacts_In_R2.md`
-- `Execution_Pipeline_Docs/02-Executing/103_DB_Accounts__PRD__Accounts_Table.md`
-- `Execution_Pipeline_Docs/02-Executing/103_DB_Users__PRD__Users_Table.md`
-- `Execution_Pipeline_Docs/02-Executing/103_DB_Berlin_Auth_Connector__AUDIT__Users_Login_Connector_Map.md`
-
-Current instance-folder and runtime authority:
-
-- `Execution_Pipeline_Docs/03-Executed/105_Instance_Runtime_And_Verification_Batch/105__PRD__Instance_Folder_Tenets.md`
-- `Execution_Pipeline_Docs/03-Executed/105_Instance_Runtime_And_Verification_Batch/105A__PRD__DB_R2_Operation_Authority.md`
-- `Execution_Pipeline_Docs/03-Executed/105_Instance_Runtime_And_Verification_Batch/105B__PRD__Core_DB_Model_Verification.md`
+- `documentation/services/berlin.md`
+- `documentation/services/roma.md`
+- `documentation/services/tokyo-worker.md`
+- `documentation/services/michael.md`
+- `documentation/architecture/CONTEXT.md`

@@ -1,97 +1,70 @@
 # Clickeen Babel Strategy
 
-Status: Active strategy note
-Updated: 2026-06-02
+STATUS: INFORMATIVE - STRATEGY & VISION
 
-## Core Thesis
+This document explains Babel as a strategic moat. It is not an implementation
+spec. Current overlay contracts live in `documentation/architecture/BabelProtocol.md`
+and `documentation/architecture/OverlayArchitecture.md`; current localization
+behavior lives in `documentation/capabilities/localization.md`.
 
-Clickeen is building account-owned presentation artifacts that start from one explicit base source and render into many validated public outputs.
+## Thesis
 
-The product begins with widgets. The future extends the same source/overlay/materialization discipline to pages built from saved widget instances.
+Babel is Clickeen's doctrine for global content availability.
 
-```text
-one account-owned base source
-explicit editable fields
-explicit translatable fields
-Translation Agent translation work
-deterministic locale overlays
-validated public artifacts
-Cloudflare-backed serving
-```
+Clickeen starts from one account-owned source and lets agents create structured
+locale overlays from that source. The current implemented surface is
+account-instance locale overlays: each active non-base locale can receive a
+complete value overlay for declared text fields without duplicating the widget
+as separate product truth.
 
-This is the Babel strategy: one user-authored source can become multilingual public content without duplicating product truth per language.
+That is the moat: content can become globally available because agents operate
+structured artifacts directly, not because humans copy pages and maintain
+parallel language trees.
 
-## Tier Truth
+## What Babel Is
 
-The only tier identifiers are:
+Babel is the product principle that:
 
-```text
-free
-tier1
-tier2
-tier3
-tier4
-```
+- source truth is explicit and account-owned;
+- translatable fields are declared, not guessed;
+- overlays are structured values, not copied products;
+- active locales are the account's selected translated locales, capped by
+  account policy, not ad hoc request fields;
+- generated localized content remains tied to the original source;
+- public serving reads stored artifacts instead of inventing localized truth.
 
-There are no commercial package names in the product contract.
+Babel can extend beyond widgets only when the surface declares source fields,
+overlay paths, write boundaries, and serving semantics. Do not imply that a new
+surface participates in Babel until those operator contracts exist.
 
-`free`, `tier1`, `tier2`, and `tier3` are widget-only tiers.
+## Why It Matters
 
-`tier4` is the first tier that includes customer-owned pages built from saved widget instances.
+Legacy software treats localization as duplication:
 
-## Product Sequence
+- duplicate a page per language;
+- duplicate a widget per language;
+- send strings to translators;
+- manage stale copies;
+- detach discovery metadata from the localized artifact that serves it.
 
-1. Widgets prove account-owned source, editor contracts, translation overlays, and public materialization.
-2. Pages become ordered stacks of saved widget instances.
-3. Roma will compose page packages from those saved instance packages.
-4. Until that writer exists, account page publish and public page serving are
-   unavailable. Tokyo serves exact stored widget package artifacts.
+Clickeen treats localization as an agent-operated overlay system:
 
-The important point is not that every surface is the same product object. It is that every surface uses the same boring substrate:
+- the user or system owns one source;
+- the Translation Agent operates the declared content;
+- the overlay is stored beside the account artifact;
+- serving must not pretend a missing localized artifact exists;
+- no fallback pretends missing localized content exists.
 
-```text
-Bob edits one account widget instance in browser memory.
-Roma opens and saves account-owned artifacts.
-Tokyo stores account-owned source and overlays.
-Translation Agent translates declared fields, calling San Francisco only as the stateless model gateway.
-Roma turns saved source into submitted public output.
-```
+Babel compounds when more surfaces expose declared translatable fields, exact
+overlay value maps, explicit failure on missing values, and named write/read
+authorities. Do not add copied locale trees, fallback locale serving, readiness
+ledgers, or compatibility readers.
 
-San Francisco should not need to know whether it is translating widget copy or page metadata. Tokyo should not invent a separate storage philosophy for each surface. Product meaning belongs at the contract edge.
+## Strategic Boundary
 
-## Pricing Doctrine
+Babel does not define routes, storage paths, tier ids, worker behavior, page
+writer sequencing, model policy, or acceptance criteria. Those belong in
+architecture, service, capability, AI, and execution docs.
 
-Pricing is not finalized in this document.
-
-Any future pricing work must use the five canonical tier ids:
-
-```text
-free   = widget-only free tier
-tier1  = widget-only paid tier
-tier2  = widget-only paid tier
-tier3  = widget-only paid tier
-tier4  = pages from saved widget instances tier
-```
-
-Do not introduce named packages as architecture truth. If the company later chooses customer-facing labels for marketing copy, those labels must map to the canonical tier ids and must not leak into policy, storage, contracts, migrations, PRDs, or service logic.
-
-## Why This Matters
-
-Most website and widget systems duplicate source truth:
-
-- one page per language;
-- one CMS entry per language;
-- separate translation plugins;
-- runtime fallbacks that hide drift;
-- separate SEO systems outside the authoring path.
-
-Clickeen's advantage is the opposite:
-
-- one base source;
-- declared fields;
-- generated overlays;
-- visible stale state;
-- deterministic public output;
-- account policy as the gate.
-
-That is why PRD 105 matters for widgets, PRD 106 matters for blocks/pages, and PRD 107 must handle SEO/GEO for both without creating a second translation or serving architecture.
+Use this document to understand why Babel matters. Use the current operator docs
+to change how Babel works.
