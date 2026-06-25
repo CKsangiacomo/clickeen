@@ -86,19 +86,23 @@ export function normalizeAccountPageSource(raw: unknown, expected?: {
     return null;
   }
 
+  const rawRevision = typeof raw.revision === 'number' ? raw.revision : raw.version;
   if (
     !Array.isArray(raw.placements) ||
     !raw.placements.every(isPagePlacement) ||
     !isExactNonEmptyString(raw.displayName) ||
-    typeof raw.revision !== 'number' ||
-    !Number.isInteger(raw.revision) ||
-    raw.revision < 1 ||
+    typeof rawRevision !== 'number' ||
+    !Number.isInteger(rawRevision) ||
+    rawRevision < 1 ||
     !isExactNonEmptyString(raw.createdAt) ||
     !isExactNonEmptyString(raw.updatedAt)
   ) {
     return null;
   }
-  return raw as AccountPageSource;
+  return {
+    ...raw,
+    revision: rawRevision,
+  } as AccountPageSource;
 }
 
 export function accountPageSummaryFromSource(source: AccountPageSource): AccountPageSummary {

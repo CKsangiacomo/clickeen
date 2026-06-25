@@ -8,6 +8,7 @@
     "build:cf": "node ../scripts/build-roma-cf.mjs",
     "start": "next start",
     "lint": "next lint",
+    "test:account-page-source": "tsx tests/run-account-page-source.ts",
     "test:instance-package": "tsx tests/run-instance-package-reroute.ts",
     "test:instance-save-cascade": "tsx tests/run-instance-save-cascade.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit"
