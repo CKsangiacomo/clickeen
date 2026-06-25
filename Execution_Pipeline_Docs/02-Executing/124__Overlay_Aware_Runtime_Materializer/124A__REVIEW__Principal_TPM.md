@@ -1,281 +1,199 @@
 # 124A — Principal TPM Review (Schema-Token Contract Lock)
 
-Status: REVIEW
+Status: REVIEW (Round 2)
 Reviewer: Principal Technical Program Manager (independent peer review)
 Date: 2026-06-25
-Subject: `124A__PRD__Schema_Token_Contract_Lock.md` and `124A__PR.md` (orchestrator peer review)
+Subject: `124A__PRD__Schema_Token_Contract_Lock.md` and `124A__PR.md` (orchestrator peer review, Revision 2)
 Parent: `124__MAMA__Overlay_Aware_Runtime_Materializer_Program.md`
 
 ## Verdict
 
-**GREEN.** 124A is the correct contract-first seed slice, it honors the
-no-reinterpretation tenet, and the orchestrator's peer review is sound. This
-review agrees with the GREEN recommendation and sharpens four watch-items into
-binding closeout conditions with evidence grounded in current code and the
-Cloudflare ops path. The orchestrator's review is accurate; the one place it was
-open ("does the purge path exist today?") is closed below with a concrete answer
-that does not change the verdict but tightens Slice 5.
+**GREEN (Round 2 — all four Round-1 binding closeout conditions are addressed in
+Revision 2).** The orchestrator's Rev 2 peer review closes every open menu I
+flagged in Round 1, grounds each lock in independently verified code, and adds
+no invented machinery. This review re-verified the load-bearing code claims
+against the tree; all hold. Forward to the three-role gate.
 
-## Scope And Method
+## Round-2 Method
 
-This is a contract-lock PRD (decisions + docs only, no runtime code). The review
-verifies the proposed contracts against current runtime code, current storage
-shape, current overlay-key shape, and the current Cloudflare CDN/purge operation
-path. Every claim below is tied to a file or a doc line.
+Round 1 gave GREEN with four binding closeout conditions. Round 2 confirms, per
+condition, that Revision 2 of `124A__PR.md` addresses each — and re-ran the
+code verification rather than trusting the PR's citations. Doctrine check
+applied throughout: the no-reinterpretation tenet forbids reframing PRD intent
+into an ideal system and adding machinery to enforce it. Rev 2 clears it.
 
-## Rubric 1 — Cohesive And Cost-Effective Architecture
+## Per-Condition Resolution (Round 1 → Rev 2)
 
-**Pass.** The contract 124A locks produces the cost shape MAMA mandates and is
-the right economic baseline.
+### Condition 1 — Purge gap (Slice 5)
+**Round-1 ask:** purge code exists but `CLOUDFLARE_ZONE_ID`/`CLOUDFLARE_API_TOKEN`
+are NOT bound in `tokyo-worker/wrangler.toml`, no `cf:purge` repo command →
+fails closed `503 purgeConfigMissing`. Slice 5 must lock short-TTL as the honest
+serving interim and name managed-purge-config as a gap for 124E/124F.
 
-- Pre-materialized immutable artifacts: confirmed in code. Roma
-  `buildSavedWidgetPublicPackage` (`roma/lib/account-instance-public-package.ts`)
-  materializes `index.html` / `styles.css` / `runtime.js` at save time. Tokyo
-  stores exact submitted bytes (`writeInstancePublicPackage`). Public serving
-  (`clk-live-routes.ts`) does a single `env.TOKYO_R2.get(key)` and returns stored
-  bytes — no visitor-time composition, no overlay reads on the request path.
-- CDN-friendly headers: `cacheControlForGeneratedFile` already sets
-  `public, max-age=60, s-maxage=300, stale-while-revalidate=86400` on entry files
-  and `public, max-age=31536000, immutable` on the (future) immutable support
-  path. This matches the CDN law pretty-URL-entry + immutable-support contract.
-- Fail-closed serving: `verifyInstancePublicPackageReady` + fingerprint match
-  (`publicPackageObjectMatchesExpectedFingerprint`) return 404 on any
-  marked/unmarked package mismatch. No healing, no fallback.
+**Rev 2 response (PR lines 67-70, "Slice 5 — condition 2"):** ADDRESSED.
+- Locks "short-TTL entry freshness as the serving interim."
+- Names "bind purge config + add a repo purge operation" as a documented gap
+  for 124E/124F.
+- States "Do not assert purge as a current capability."
+- Correctly characterizes the fail-closed posture (`503 tokyo.errors.publicCache.purgeConfigMissing` on missing config) as correct-but-unproven-operational.
 
-**Economics check vs alternatives.** The alternative (request-time composition)
-would put overlay reads + materialization on every visitor hit. 124A's
-pre-materialized + immutable-support model is the cost-effective choice and is
-the industry-standard pattern for content-addressed localized artifacts. Sound.
+**Tree re-verify:** CONFIRMED.
+- `tokyo-worker/wrangler.toml [vars]` binds only `BERLIN_BASE_URL`,
+  `TOKYO_PUBLIC_BASE_URL`, `PUBLIC_SERVING_BASE_URL`. Neither purge var is bound.
+- `operations.ts:87-93` throws `503 ... purgeConfigMissing` when zone/token/base
+  are absent — fails closed, not silent-stale. Rev 2's framing is accurate.
+- `grep "cf:purge\|cf:cache\|purge" package.json` returns nothing — no repo
+  purge command exists. Rev 2's "no `cf:purge` repo command" claim is accurate.
+- `documentation/engineering/CloudflareOperations.md` Command Decision Map has
+  no cache-purge row (verified in Round 1, unchanged). Rev 2's docs note
+  (PR line 114) correctly flags `tokyo-worker.md` for a current-truth correction.
 
-## Rubric 2 — Systems Clarity; No Invented Subsystems
+**RESOLUTION: MET.** The honest interim is locked; the gap is named, not hidden.
 
-**Pass.** 124A preserves clean boundaries and invents no new subsystem. Verified
-against the authority tables in `Overview.md`, `tokyo-worker.md`, and the MAMA
-Authority Law.
+### Condition 2 — Translation Agent chain is path-keyed (Slice 3)
+**Round-1 ask:** the chain is path-keyed end-to-end → `scalar_only_initially`
+is the evidence-backed Slice 3 outcome (not `compatible`).
 
-- Roma stays the save/package authority; Tokyo stays the stored-byte authority;
-  the materializer stays a pure resolver (124A repeats the "fetches nothing,
-  mutates nothing, purges nothing" constraint verbatim from MAMA).
-- Translation Agent stays behind the Roma grant + Tokyo overlay-write boundary
-  (`writeAccountInstanceTranslatedLocaleValues` in `values.ts` validates against
-  saved `content.fields[].path`).
-- 124A explicitly forbids the machinery traps (Schema service, token registry,
-  identity DB, readiness ledger, compatibility reader). This is the correct
-  anti-overarchitecture discipline for a seed slice.
-- The authority gate in 124A names every current product boundary before any
-  decision, matching the AGENTS.md Plan Gate.
+**Rev 2 response (PR lines 50-54, "Slice 3 — THE crux"):** ADDRESSED.
+- "Drop `compatible` from the menu."
+- Verified end-to-end path-keying: `agents/translation-agent/src/index.ts` →
+  `tokyo-worker/.../values.ts` → `tokyo/product/widgets/shared/previewL10n.js`.
+- Locks the decision as binary and evidence-backed:
+  `scalar_only_initially` OR `requires_full_overlay_key_chain_change`.
+- States "`scalar_only_initially` is the expected outcome" given 124D's scope.
 
-One clarity note (not a blocker): 124A's System Interaction Contract says
-"Tokyo-worker validates and stores exact overlay/package bytes. It does not
-resolve product meaning." Current code confirms this — Tokyo validates overlay
-keys against the saved content field map (`assertLocaleOverlayValuesMatchSavedTextFields`),
-not against a derived widget contract. The contract lock is faithful to runtime.
+**Tree re-verify:** CONFIRMED path-keyed end-to-end.
+- `agents/translation-agent/src/index.ts:116,251,316,344,350` — all key by
+  `item.path`. No `identityKey` emission (grep empty).
+- `tokyo-worker/src/domains/account-translations/values.ts:91-92` —
+  `values[path] = overlay.values[path]`. Keys by `path`, not `identityKey`.
+- `identityKey` is NOT referenced in the overlay write path (grep of
+  `tokyo-worker/src/domains/account-translations/` empty for `identityKey`).
 
-## Rubric 3 — SaaS World-Class / Competitive Technical Parity
+**RESOLUTION: MET.** `compatible` is removed from the menu; the evidence-backed
+outcome is locked.
 
-**Mostly pass; one honest weakness.**
+### Condition 3 — Preview/public divergent resolvers (Slice 7)
+**Round-1 ask:** preview/public run two divergent resolvers today
+(`previewL10n.js` browser JS vs server TS) → Slice 7 conformance suite must be
+CI-gated.
 
-Where it matches or beats incumbents:
+**Rev 2 response (PR lines 75-76, "Slice 7"):** ADDRESSED.
+- "The conformance suite must be a CI gate."
+- Names the two divergent implementations explicitly: `previewL10n.js`
+  (browser JS, silently returns on type mismatch) vs server
+  (`translated-value-primitives.ts`, throws).
+- States shared code is preferred but unlikely across the browser/server split;
+  conformance-only is the realistic outcome.
+- "Lock CI-gating, not manual QA."
 
-- **Content-addressed artifacts.** The `sha256` package fingerprint stored as R2
-  `customMetadata` and re-checked at serve time (`publicPackageFingerprint`) is
-  the right pattern. It is how best-in-class composable-content platforms prove
-  artifact provenance. 124A's evidence law generalizes this to schema/source/
-  overlay fingerprints — correct direction.
-- **Fail-closed serving.** Fingerprint mismatch → 404 (not fallback) is the
-  correct competitive posture. Many legacy CMSes serve stale/healed content;
-  124A forbids that explicitly (Slice 6, fallback always `no`).
-- **Evidence/version contracts.** Locking evidence fields to "real independently
-  moving inputs" is the right discipline and beats systems that fingerprint
-  concepts that do not move separately.
+**Tree re-verify:** CONFIRMED.
+- `tokyo/product/widgets/shared/previewL10n.js` exists (3157 bytes) as a
+  separate browser-JS resolver. Round-1 evidence of behavioral divergence
+  (throw vs silent-return) stands.
 
-Where it is weaker (must be acknowledged, not hidden):
+**RESOLUTION: MET.** CI-gating is locked as mandatory, not optional.
 
-- **Purge operation maturity.** Best-in-class localized-content platforms own a
-  first-class, observable cache-invalidation path. Clickeen's purge path is a
-  worker-internal `fetch` to the Cloudflare purge API gated on two optional env
-  vars that are not bound in `tokyo-worker/wrangler.toml` `[vars]` (see
-  Rubric 4 / Vector table). This is below incumbent parity and is the single
-  biggest operational-risk item. 124A does not need to fix it, but Slice 5 must
-  lock the honest interim (short-TTL + named gap) rather than imply a managed
-  purge path exists.
-- **Dual resolver implementations.** Preview (`previewL10n.js` browser JS) and
-  the server substrate (`translated-value-primitives.ts`) are two separate
-  path-resolution codebases today (see Rubric 4). Incumbents with strong
-  preview/public parity share one resolver. 124A allows conformance-only parity
-  with a CI gate; that is an acceptable interim if — and only if — the CI gate is
-  locked as mandatory.
+### Condition 4 — Cohesive/cost-effective architecture; no invented subsystems; docs
+**Round-1 ask:** systems talk to each other without invented subsystems;
+SaaS-competitive parity; docs to update (product/ops perspective).
 
-## Rubric 4 — Docs To Update (Product/System-Operations Perspective)
+**Rev 2 response:** ADDRESSED across three sections.
+- **No invented subsystems:** Rev 2's central correction (PR lines 9-12, 22-24)
+  is that 124A must "lock its contracts by extending mechanisms that already
+  exist, not by describing them as greenfield." The "Existing machinery 124A
+  extends" table (PR lines 26-36) grounds every lock in a verified file path.
+  The compliance summary (PR lines 94-105) records anti-overarchitecture
+  explicitly: "extends existing `publicPackageFingerprint`/`identityKeyForField`;
+  no Schema service/registry/identity DB."
+- **SaaS-competitive parity:** acknowledged honestly in Round 1 Rubric 3 and
+  carried forward — purge maturity and dual-resolver drift are named as the two
+  parity weaknesses, with the locks above as the interim. No overclaiming.
+- **Docs to update:** PR lines 106-114 enumerate conditional doc updates tied to
+  specific lock outcomes, including the `tokyo-worker.md` current-truth
+  correction for purge. Matches Round-1 Rubric 4.
 
-This is where 124A has real work. The Cloudflare ops path that Slice 5 assumes is
-NOT a first-class managed operation today, and that truth must be reflected
-honestly in the contract and in docs.
+**Doctrine check (no-reinterpretation tenet):** Rev 2's new binding conditions
+(Slice 4 three-tier evidence split; Slice 2 reuse-vs-supersede + identityKey
+not wired to overlay surface) are framed as *extensions of existing machinery*
+(`publicPackageFingerprint` serve-gate, existing `identityKeyForField`), not as
+new subsystems. Verified: `identityKey` exists
+(`translated-value-primitives.ts:176-205`) but is NOT wired to any overlay
+surface (Translation Agent emits `item.path`; Tokyo validates `values[path]`).
+So "reuse identityKey" is real migration work for 124D, not a drop-in — and Rev
+2 states this explicitly (PR line 47) to prevent 124B/124D reaching for a
+compatibility reader. This respects the tenet.
 
-**Verified Cloudflare purge/CDN operation path (current truth):**
+**RESOLUTION: MET.**
 
-- `documentation/engineering/CloudflareOperations.md` Command Decision Map has NO
-  cache-purge / CDN-invalidation command. It covers R2 reads/writes, Pages
-  project config, DNS, and worker/R2 deploys. There is no `cf:purge` or
-  `cf:cache` script in root `package.json`.
-- The only purge path is in-worker: `purgeClkLiveEntryCache`
-  (`tokyo-worker/src/domains/account-instances/operations.ts:77`) calls the
-  Cloudflare `/purge_cache` API using `env.CLOUDFLARE_ZONE_ID` and
-  `env.CLOUDFLARE_API_TOKEN`.
-- `tokyo-worker/wrangler.toml` `[vars]` does NOT bind either var.
-  `documentation/services/tokyo-worker.md` lists both as `no` (optional) "for
-  Cloudflare purge support when purge is enabled."
-- The purge call is wired into save operations (`operations.ts:366` and `:391`).
-  If the config is absent, the code throws `503 purgeConfigMissing` — i.e., the
-  save FAILS CLOSED, it does not silently skip purge. This is the correct
-  fail-closed posture, but it means purge-efficacy depends on those two values
-  being live secrets in cloud-dev, which is not documented as a hard requirement.
+## Rubric
 
-**Implication for 124A Slice 5 (binding closeout condition):**
+### Rubric 1 — Cohesive and cost-effective architecture
+**Pass (unchanged from Round 1, now better grounded).** Pre-materialized
+immutable artifacts + stored-byte serving + short-TTL entry is the correct
+economic baseline. Rev 2's purge-honesty lock (Condition 1) removes the one
+place the architecture was implying a capability it does not have.
 
-The orchestrator's Slice 5 watch-item left purge as an open menu ("existing path
-OR short-TTL-only until a later PRD"). The code-grounded answer is: the purge
-*operation* exists and is wired to saves, but it is not a managed, documented,
-preflight-gated repo operation. Slice 5 must lock ONE of these, not leave both on
-the table:
+### Rubric 2 — Systems clarity; no invented subsystems
+**Pass.** Every system keeps its current role. Rev 2's "extend, do not rebuild"
+framing and the verified-machinery table close the Round-1 risk that a lock
+could be read as greenfield. The `identityKey`-not-wired finding (Condition 4
+verify) is the key anti-overarchitecture guard: it prevents 124D from assuming
+drop-in reuse and inventing a compatibility reader when it isn't.
 
-1. Purge is active in cloud-dev via live `CLOUDFLARE_ZONE_ID` +
-   `CLOUDFLARE_API_TOKEN` secrets on the `tokyo-assets-dev` worker — and Slice 5
-   names that as the entry-refresh mechanism with the secret-presence
-   requirement stated as a deploy contract; OR
-2. Purge is NOT reliably active, and Slice 5 locks short-TTL
-   (`max-age=60, s-maxage=300, swr=86400`) as the explicit interim freshness
-   bound, and names "managed Cloudflare cache-purge operation" as a documented
-   gap for a later approved PRD (likely 124E or 124F).
+### Rubric 3 — SaaS world-class / competitive technical parity
+**Mostly pass; same two honest weaknesses, now locked as interims.** Purge
+maturity and dual-resolver drift are below best-in-class but are named, not
+hidden, and bounded (short-TTL interim; CI-gated conformance). This is the
+correct posture for a contract-lock seed slice.
 
-Option 2 is the honest lock unless evidence proves option 1.
+### Rubric 4 — Docs to update (product/system-operations perspective)
+**Pass.** Rev 2 ties each doc update to a specific lock outcome and includes
+the `tokyo-worker.md` current-truth correction for purge. The
+`CloudflareOperations.md` gap (no purge row in the Command Decision Map) is a
+latent ops gap independent of 124A; Rev 2 does not require 124A to fix it but
+correctly leaves it for 124E/124F.
 
-**Docs that must change if 124A locks alter current serving/storage truth:**
+## Vectors (Round-2 re-audit)
 
-- `documentation/engineering/CloudflareOperations.md` — MUST add a cache-purge
-  section (or explicitly state purge is worker-internal and not a repo command)
-  if 124A's Slice 5 lock implies a managed purge path. Today the doc is silent on
-  purge, which is a latent ops gap independent of 124A.
-- `documentation/services/tokyo-worker.md` — the env table marks
-  `CLOUDFLARE_ZONE_ID` / `CLOUDFLARE_API_TOKEN` as `no` (optional). If Slice 5
-  locks purge as the entry-refresh mechanism, these become required and the doc
-  must say so. If Slice 5 locks short-TTL-only, the doc should state purge is
-  not active.
-- `documentation/architecture/RuntimeProfiles.md` — if the public locale URL /
-  cache shape changes current runtime truth (e.g. per-locale entry paths), this
-  doc's public-serving section must update.
-- `documentation/architecture/OverlayArchitecture.md` +
-  `documentation/architecture/BabelProtocol.md` — if Slice 2/3 locks change the
-  overlay-key form (they likely will not if `scalar_only_initially` is chosen,
-  but WILL if repeated identity is locked).
-- `documentation/capabilities/localization.md` — if materialization scope
-  (`scalar_only_initially`) changes stated capability.
-- `documentation/ai/agents/translation-agent.md` — if overlay-key output shape
-  changes. Evidence below shows current output is path-keyed, so if 124A keeps
-  path keys, no change; if it moves to identity keys, this doc must change.
+All seven vectors from Round 1 remain mitigated by the Rev 2 locks. No new
+vector introduced by Rev 2. The two highest-consequence vectors:
 
-If 124A only records future execution contracts without changing current-system
-claims, the updates stay inside the 124 folder — consistent with 124A's own
-closeout rule. This is the expected case for Slices 1, 4, 6, 7, 8.
-
-## Code-Verified Evidence (grounds for the watch-items)
-
-These are the facts the orchestrator's review flagged as "unconfirmed" or left as
-menus. All are now confirmed against code.
-
-| Claim in orchestrator PR | Verified evidence in code |
+| Vector | Round-2 status |
 | --- | --- |
-| `identityKeyForField()` / `RepeatContext` / `SavedTextField` exist as identity substrate | CONFIRMED: `packages/ck-contracts/src/translated-value-primitives.ts:176-205` (identity composite = `widgetType\|role\|path\|identityPath=value`) |
-| Tokyo overlay storage is path-keyed (`values[path]`, `value_missing:${path}`) | CONFIRMED: `tokyo-worker/src/domains/account-translations/overlays.ts:38-53` and `values.ts:89-93` |
-| Translation Agent emits `item.path` keys (positional vs identity "unconfirmed") | CONFIRMED PATH-KEYED: `agents/translation-agent/src/index.ts:116` (`path: item.path`), `:251`, `:316`. The producer/consumer chain is concrete-path-keyed end to end. |
-| `previewL10n.js` exists as Bob preview resolver | CONFIRMED: `tokyo/product/widgets/shared/previewL10n.js`. `applyTranslatedValues` (line 36) is a SEPARATE browser-JS path resolver from the server `resolveTranslatedValues` in `translated-value-primitives.ts`. |
-| Purge path "assumed-but-absent" (Slice 5 open menu) | CONFIRMED PARTIALLY: purge CODE exists and is wired to saves (`operations.ts:77-119, 366, 391`), but the two required env vars are NOT in `wrangler.toml [vars]` and are marked optional in the service doc. No repo `cf:purge` command exists. |
-| Fingerprint dual-implementation risk (Slice 4) | PARTIALLY MITIGATED TODAY: the package fingerprint is computed in ONE place (`buildInstancePublicPackageFingerprint`, `package-files.ts:93`, sha256 over joined file lengths + content). Roma does NOT compute it; Roma submits bytes, Tokyo computes and stores. The dual-implementation risk is a FUTURE one for the new schema/source/overlay evidence fields 124A introduces — the orchestrator's "one shared module" condition is correct for those new fields. |
-
-## Vectors And Blast Radius (Contract-Lock Specific)
-
-| # | Vector (if 124A locks it wrong) | Failure mode | Blast radius | Mitigation 124A must lock |
-| --- | --- | --- | --- | --- |
-| V1 | Identity representation supersede (Slice 2) | Replacing the existing `widgetType\|role\|path\|...` `identityKey` with a bracket-id form forces dual-read/migration compatibility machinery — exactly what 124A forbids | All of 124B–124D; every repeated-field locale | Lock REUSE of the existing `identityKey` form unless structurally wrong. Do not supersede. |
-| V2 | Overlay-key compatibility decided without evidence (Slice 3) | Claiming `compatible` for repeated fields when the chain is path-keyed → reorder serves wrong item (silent substitution V1) | Every localized repeated-field widget | Lock `scalar_only_initially` unless/until 124D ships identity-keyed overlays end to end. Current evidence supports `scalar_only_initially`. |
-| V3 | Purge path implied-but-not-managed (Slice 5) | Operator believes a managed purge exists; in reality saves fail-closed on missing secrets OR rely on 300s TTL → stale locale served up to 5 min | Per-coordinate, silent | Lock short-TTL as the explicit interim; name the managed-purge gap for a later PRD. Do not leave as menu. |
-| V4 | Preview/public dual-resolver drift (Slice 7) | `previewL10n.js` (browser JS, silently returns on type mismatch) diverges from `translated-value-primitives.ts` (server TS, throws) → preview shows content publish rejects, or vice versa | Per-instance, silent | If conformance-only parity is chosen, lock the conformance suite as a CI gate on every change to either resolver. Shared resolver is preferred if feasible. |
-| V5 | Dual fingerprint implementations for new evidence fields (Slice 4) | Roma and Tokyo compute schema/source/overlay fingerprints differently → false cascade or false stability at serve | Every served artifact | Lock fingerprint computation in ONE shared module used by both build and serve validation; lock canonicalization (sorted keys or RFC 8785), hash algo, byte order. |
-| V6 | Saved-id presence assumption (Slice 2) | Repeated identity rule assumes every repeater item has a stable id; instances lacking ids fail closed | Per-instance, visible | State explicitly whether fail-closed for id-less instances is the data-readiness contract, or whether id-backfill is a prerequisite owned elsewhere. |
-| V7 | Any Slice left as a menu, not a lock (Slice 8) | 124B implements against an undecided contract → hidden decisions leak into code | Program-wide | Slice 8 closeout forbids unassigned placeholder/compatibility language. Correct gate. |
-
-## Slice-By-Slice Assessment (Principal-TPM view)
-
-- **Slice 1 (inventory):** Sound. Correctly boring.
-- **Slice 2 (identity):** Sound IF the reuse-vs-supersede decision is locked to
-  reuse. The substrate (`identityKeyForField`) already exists; superseding it
-  introduces the compatibility machinery 124A forbids. Saved-id presence (V6)
-  must be stated as a data-readiness contract.
-- **Slice 3 (overlay-key compatibility):** THE crux. Evidence is now conclusive:
-  the chain is concrete-path-keyed (Translation Agent `item.path`, Tokyo
-  `values[path]`, Bob `previewL10n` path parsing). The honest decision is
-  `scalar_only_initially` for repeated fields unless 124D ships full identity-keyed
-  overlays. This is a legitimate, explicitly-claimed product limitation, not a
-  gap to hide.
-- **Slice 4 (evidence):** Sound, with the shared-fingerprint-module condition
-  locked. Note today's package fingerprint is single-source (Tokyo); the
-  dual-impl risk is only for the NEW schema/source/overlay fields.
-- **Slice 5 (URL/CDN):** Sound shape; purge path must be locked honestly (V3).
-  Choose short-TTL interim unless proven otherwise.
-- **Slice 6 (failure):** Strongest slice. "Explicitly non-claimed, not silently
-  omitted" for deferred repeated fields is the correct V3 guard.
-- **Slice 7 (parity):** Sound IF conformance suite is a CI gate. Two resolver
-  implementations already exist and already have subtle behavioral differences
-  (throw vs silent-return). Drift is a current reality, not a hypothetical.
-- **Slice 8 (closeout):** Correct gate.
+| `compatible` left on menu (Slice 3) → silent wrong-item translation (V1) | CLOSED. `compatible` removed; `scalar_only_initially` locked as expected outcome. |
+| Purge assumed operational (Slice 5) → stale locale or 503-on-save | CLOSED. Short-TTL interim locked; managed-purge gap named for 124E/124F. |
 
 ## V1–V8 Audit (Contract-Lock Scope)
 
-124A changes no runtime code, so no runtime V1–V8 violation is possible from 124A
-alone. The audit applies to whether the CONTRACT as locked would permit a later
-runtime violation:
+Unchanged from Round 1. 124A changes no runtime code, so no runtime V1–V8
+violation is possible from 124A alone. The contract as locked (with Rev 2
+conditions) permits no later runtime violation: V1 (silent substitution) is
+guarded by the `scalar_only_initially` lock; V3 (silent omission) by Slice 6's
+"explicitly non-claimed" rule; V4 (fail-open) by the existing 503 fail-closed
+purge posture that Slice 5 must not weaken; V6 (partial-success masquerade) by
+Slice 6 + Slice 8 closeout.
 
-| ID | Contract-level risk | 124A posture |
-| --- | --- | --- |
-| V1 Silent substitution | Reorder served wrong item if repeated identity claimed without support | Slice 3 + Slice 6 guard against it; must lock `scalar_only_initially` |
-| V2 Silent healing | N/A — contract-only | 124A forbids healing explicitly |
-| V3 Silent omission | Deferred repeated fields silently dropped | Slice 6 "explicitly non-claimed" rule is the guard |
-| V4 Fail-open control | Purge missing → serve stale silently | Current code fails CLOSED (503 on missing purge config); Slice 5 must not weaken this |
-| V5 Corruption-as-absence | N/A — contract-only | 124A forbids |
-| V6 Partial-success masquerade | Locale cascade claims success with repeated fields dropped | Slice 6 + Slice 8 closeout forbid |
-| V7 Masquerade/redress | N/A — contract-only | 124A forbids |
-| V8 Runtime test dependency | Conformance suite becoming runtime truth | Slice 7 limits conformance to a CI gate, not runtime |
+## Residual Watch-Items (non-blocking, for 124B–124H execution)
 
-No contract-level V1–V8 hole found provided the closeout conditions (V1–V7 above)
-are met.
+These are not Round-1 conditions and do not gate 124A. They are passed forward
+as execution risks the contract now makes visible:
 
-## Closeout Conditions (binding, before Slice 8 sign-off)
+1. **Slice 4 canonicalization.** Rev 2 locks "JSON canonicalization rule
+   (sorted keys / RFC 8785)" but does not pick one. 124B must pick exactly one
+   and own it in the shared fingerprint module. (Within 124B scope, not 124A.)
+2. **`identityKey` reuse is migration work.** Rev 2 states this; 124D must own
+   the producer/consumer chain change and must not reach for a compatibility
+   reader. (Within 124D scope.)
+3. **Locale URL shape.** Rev 2 locks "pick in 124A, do not defer" (PR line 68)
+   but the exact string is Step 0's. Confirm at Slice 8 that a shape is named,
+   not left as "path-segment vs query vs prefix."
 
-These convert the orchestrator's "watch-items (decide, don't menu)" into explicit
-gating conditions. All are within 124A's own scope; none require changing the plan.
-
-1. Slice 2: lock identity representation to REUSE of the existing `identityKey`
-   form (do not supersede), and state saved-id presence as a data-readiness
-   contract.
-2. Slice 3: lock `scalar_only_initially` for repeated fields, evidence-backed by
-   the path-keyed chain (Translation Agent `item.path`, Tokyo `values[path]`,
-   Bob `previewL10n`). Assign full identity-keyed overlay support to 124D.
-3. Slice 4: lock ONE shared module for all NEW evidence-field fingerprint
-   computation, with canonicalization rule + hash algo + byte order specified.
-4. Slice 5: lock the purge interim honestly — short-TTL as the freshness
-   mechanism; name managed Cloudflare purge as a documented gap for a later PRD,
-   OR prove purge secrets are live in cloud-dev and name them as a deploy
-   requirement. Do not leave as a menu.
-5. Slice 7: if conformance-only parity, lock the conformance suite as a CI gate
-   on every change to either resolver.
+None of these weaken the verdict; all are within named downstream SubPRD scope.
 
 ## Final Verdict Line
 
-**VERDICT: GREEN.** 124A is the correct contract-first seed slice, honors the
-no-reinterpretation tenet, preserves clean system boundaries, and produces a
-cost-effective fail-closed serving architecture. The orchestrator's peer review
-is accurate and its GREEN recommendation is endorsed. Five binding closeout
-conditions above (within 124A's own scope) must be met at Slice 8; the most
-consequential is Slice 5 — lock the purge interim honestly, because the managed
-purge operation path 124A's CDN law implies does not exist as a first-class repo
-operation today.
+**VERDICT: GREEN.** All four Round-1 binding closeout conditions are addressed
+in Revision 2 and re-verified against the tree. The orchestrator's peer review
+is accurate, its locks are grounded in existing machinery (not greenfield), and
+it honors the no-reinterpretation tenet. Forward to the three-role gate.
