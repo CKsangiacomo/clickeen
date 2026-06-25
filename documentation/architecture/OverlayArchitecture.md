@@ -11,9 +11,10 @@ The Translation Agent writes localized values for the account's active non-base
 locales. Tokyo-worker stores the exact files in R2. Bob and Roma read the exact
 files that exist for the account instance.
 
-Public `clk.live` currently serves published package bytes from Tokyo-worker.
-It does not read locale overlay files or interpret a requested locale into
-translated output.
+Public `clk.live` serves published package bytes from Tokyo-worker. It does not
+read locale overlay files or interpret a requested locale into translated
+output. Explicit locale URLs serve generated locale package bytes already
+stored beside the source and overlay.
 
 There is no separate lifecycle layer, fallback locale, compatibility wrapper,
 readiness field, or status file.
@@ -24,6 +25,14 @@ Account-instance locale overlay files live under the owning account instance:
 
 ```text
 accounts/{accountPublicId}/instances/{instanceId}/overlays/locales/{locale}.json
+```
+
+Generated locale package artifacts live beside the instance source:
+
+```text
+accounts/{accountPublicId}/instances/{instanceId}/locales/{locale}/index.html
+accounts/{accountPublicId}/instances/{instanceId}/locales/{locale}/styles.css
+accounts/{accountPublicId}/instances/{instanceId}/locales/{locale}/runtime.js
 ```
 
 The file body is only the translated value map:
@@ -88,6 +97,8 @@ values, or producer-specific shapes.
 | Read exact overlay | `GET /__internal/instances/{instanceId}/translations/{locale}` | `viewer` | Tokyo-worker internal route |
 | Write exact overlay | `PUT /__internal/instances/{instanceId}/translations/{locale}` | Translation Agent grant | Tokyo-worker internal route |
 | Delete exact overlay | `DELETE /__internal/instances/{instanceId}/translations/{locale}` | `admin` | Tokyo-worker internal route |
+| Write generated locale package | `PUT /__internal/instances/{instanceId}/locales/{locale}/package` | Roma account capsule | Tokyo-worker internal route |
+| Delete generated locale package | `DELETE /__internal/instances/{instanceId}/locales/{locale}/package` | Roma account capsule | Tokyo-worker internal route |
 
 Write boundary:
 
@@ -95,6 +106,9 @@ Write boundary:
 - Translation Agent generates translated values and writes with `x-ck-ai-grant`.
 - Tokyo-worker verifies the grant and writes only the exact locale overlay
   allowed by the operation.
+- After overlay generation succeeds, Roma reads the exact overlay through
+  Tokyo-worker, materializes generated locale package bytes, and writes those
+  bytes back through Tokyo-worker with the Roma account capsule.
 
 ## Active Locale Changes
 
@@ -108,6 +122,7 @@ When active locales shrink:
 Roma saves activeLocales first
 -> Roma asks Tokyo-worker to delete overlay files for removed locales
 -> Tokyo-worker deletes exact files
+-> Roma asks Tokyo-worker to delete generated locale package files for removed locales
 ```
 
 When active locales expand:
@@ -116,6 +131,7 @@ When active locales expand:
 Roma saves activeLocales first
 -> Roma asks Translation Agent to generate overlays for added locales
 -> Translation Agent writes exact files through Tokyo-worker
+-> Roma materializes generated locale package files for the same added locales
 ```
 
 Tokyo-worker does not infer why a locale was added or removed. It stores,
@@ -135,7 +151,27 @@ account setting; the failed overlay operation is explicit follow-up failure.
 | No active non-base locales | generation returns `accepted: false` |
 | Invalid Translation Agent grant | write fails |
 | Tokyo write rejection | generation fails for that locale |
+| Locale package write rejection | generation response includes completed/skipped/failed package coordinates and full success is not claimed |
+| Source save locale package failure | source/base package remains saved; source-save response includes `sourceSaved: true`, `ok: false`, and exact `localeCascade` failure coordinates |
 | Failure after earlier locale writes | prior files remain; full success must not be claimed |
+
+## Command-Owned Cascade
+
+Cascade is owned by the command that changed source truth:
+
+```text
+source command changes truth -> same command names affected artifact coordinates
+```
+
+For current account widget instances, Roma source save writes the source and base
+package first. If active non-base locales exist, the same save command then
+regenerates those locale overlays through Translation Agent and materializes
+their stored locale packages. The synchronous cost surface is one instance times
+active non-base locales, bounded by the active locale entitlement. If follow-up
+fails, the response names completed, skipped, and failed coordinates. The system
+does not create a dependency graph, watcher, queue, readiness marker, status
+file, visitor-time resolver, or fallback base package to pretend stale locale
+artifacts are current.
 
 ## Verification
 
@@ -144,9 +180,10 @@ account setting; the failed overlay operation is explicit follow-up failure.
 | Account active locale setting | `GET /api/account/locales` |
 | Product-visible overlays | Roma translations routes or Bob Translations panel |
 | Stored overlay bytes | R2 evidence at `accounts/{accountPublicId}/instances/{instanceId}/overlays/locales/{locale}.json` after `pnpm cf:preflight` |
+| Generated locale package bytes | R2 evidence at `accounts/{accountPublicId}/instances/{instanceId}/locales/{locale}/` after `pnpm cf:preflight` |
 | Missing removed locale | exact overlay file is absent |
 | Added locale generation | exact overlay file exists with complete `{ "values": ... }` map |
-| Public runtime | current public runtime serves stored package bytes; it does not read overlays per request |
+| Public runtime | base URL serves base stored package bytes; explicit locale URL serves matching stored locale package bytes or `404 Locale not available` |
 
 Verification must not create marker files, readiness fields, lifecycle ledgers,
 fallback locale behavior, or repair jobs. The overlay file is the product

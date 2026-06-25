@@ -59,6 +59,11 @@ accounts/{accountPublicId}/
       overlays/
         locales/
           {locale}.json
+      locales/
+        {locale}/
+          index.html
+          styles.css
+          runtime.js
       serve-state.json
       index.html
       styles.css
@@ -80,6 +85,8 @@ Rules:
 - Widget codes are metadata, not storage folders.
 - Overlay files are durable translated values for an active account locale.
 - Browser package files are public artifacts saved by Roma through Tokyo-worker.
+- Locale package files are generated public artifacts derived from saved source
+  plus one exact locale overlay.
 - Tokyo-worker stores exact submitted bytes. It does not compile, translate, or infer product meaning.
 
 ## Public Serving
@@ -98,6 +105,20 @@ https://dev.clk.live/{accountPublicId}/{instanceId}
 
 Public serving reads `index.html`, `styles.css`, and `runtime.js` from the account instance folder only after `serve-state.json` says the instance is published and package fingerprint checks pass.
 
+Explicit locale serving uses:
+
+```text
+https://clk.live/{accountPublicId}/{instanceId}/locales/{locale}
+https://dev.clk.live/{accountPublicId}/{instanceId}/locales/{locale}
+```
+
+Locale serving reads stored bytes from
+`accounts/{accountPublicId}/instances/{instanceId}/locales/{locale}/` only when
+the instance is published and `index.html`, `styles.css`, and `runtime.js` all
+carry matching locale package metadata. Public serving does not read overlay
+files, call a materializer, ask Roma, or fall back to base content for a locale
+URL.
+
 Current account page public serving returns `404` until Roma writes real page packages.
 
 ## Static Read Paths
@@ -115,6 +136,12 @@ Friendly public paths map to canonical roots:
 | `/prague/assets/**` | Prague static assets |
 
 Friendly paths are serving paths, not storage roots.
+
+Account instance package files are stored bytes, not live views over
+`product/widgets/**`. `/dieter/**`, `/fonts/**`, and account asset paths are
+external delivery references served from their owning roots. Tokyo public
+serving does not recompute widget source, Dieter state, font state, or asset
+freshness on visitor requests.
 
 ## Forbidden Storage Roots
 

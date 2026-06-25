@@ -88,6 +88,11 @@ accounts/{accountPublicId}/instances/{instanceId}/
   overlays/
     locales/
       {locale}.json
+  locales/
+    {locale}/
+      index.html
+      styles.css
+      runtime.js
   index.html
   styles.css
   runtime.js
@@ -102,14 +107,22 @@ settings, not instance config.
 `overlays/locales/{locale}.json` carries durable translated values for one
 account active locale.
 
+`locales/{locale}/index.html`, `styles.css`, and `runtime.js` carry generated
+locale package bytes derived from the saved source plus the exact locale overlay.
+Tokyo-worker stores these bytes and their locale package metadata; it does not
+generate them. Public `clk.live` locale URLs serve these stored bytes only when
+the instance is published and all three locale package files carry matching
+coordinate, source timestamp, package fingerprint, and materializer contract
+metadata.
+
 Translation Agent writes translated locale values through Tokyo-worker with the
 Roma-issued Translation Agent grant. Tokyo-worker verifies that the grant names
 the same account, instance, and locale before storing the value map. Tokyo-worker
 validates the overlay value keys against the saved `instance.content.json` field
 map, not against a freshly derived widget contract. Roma account settings deletes
-removed active locale overlay files through Tokyo-worker with the Roma account
-capsule. Tokyo does not decide active locales, tier, translation meaning, or
-model policy.
+removed active locale overlay files and generated locale package files through
+Tokyo-worker with the Roma account capsule. Tokyo does not decide active
+locales, tier, translation meaning, or model policy.
 
 `index.html`, `styles.css`, and `runtime.js` are the generated browser package
 saved with the instance.
@@ -147,6 +160,11 @@ names. Current account page publish is unavailable until Roma writes page
 packages. Tokyo-worker rejects save/delete operations against published page
 source until Roma unpublishes the page.
 
+Current page source is a source document with widget placement references. It is
+not a generated page artifact and it does not duplicate child widget source.
+Tokyo-worker does not compose pages from child widget packages on public
+requests.
+
 ## Public Serving
 
 Production public serving uses:
@@ -175,6 +193,35 @@ Public support files are:
 - `runtime.js`
 
 Private source and state files remain private account storage.
+
+Explicit public locale serving uses:
+
+```text
+https://clk.live/{accountPublicId}/{instanceId}/locales/{locale}
+https://clk.live/{accountPublicId}/{instanceId}/locales/{locale}/index.html
+https://clk.live/{accountPublicId}/{instanceId}/locales/{locale}/styles.css
+https://clk.live/{accountPublicId}/{instanceId}/locales/{locale}/runtime.js
+```
+
+Cloud-dev uses the same path shape under `https://dev.clk.live`.
+Tokyo-worker reads only stored locale package files from:
+
+```text
+accounts/{accountPublicId}/instances/{instanceId}/locales/{locale}/
+```
+
+It does not read overlay files, call the runtime materializer, ask Roma, or
+compose translated output on visitor requests. If the stored locale package is
+missing, stale, malformed, or mismatched, Tokyo-worker returns `404 Locale not
+available` with `no-store` cache headers. It never falls back to base package
+bytes for a locale URL.
+
+Base package files and locale package files currently use the same short
+mutable cache headers:
+
+```text
+public, max-age=60, s-maxage=300, stale-while-revalidate=86400
+```
 
 Public page-serving URL shape is parsed by Tokyo-worker, but current page
 public serving returns `404` until Roma writes real page packages.
@@ -210,6 +257,7 @@ Current internal route families:
 | `/__internal/instances/{instanceId}/rename` | `POST` | rename one account instance |
 | `/__internal/instances/{instanceId}/{publish|unpublish}` | `POST` | update widget serve state |
 | `/__internal/instances/{instanceId}/package` | `GET` | read generated package metadata/files where supported |
+| `/__internal/instances/{instanceId}/locales/{locale}/package` | `PUT`, `DELETE` | write or delete generated locale package files |
 | `/__internal/instances/{instanceId}/translations` | `GET` | list saved translated locale value files |
 | `/__internal/instances/{instanceId}/translations/{locale}` | `GET`, `PUT`, `DELETE` | read/write/delete one translated value file |
 | `/__internal/accounts/{accountPublicId}/pages` | `GET` | list account pages |
@@ -257,6 +305,27 @@ accounts/{accountPublicId}/instances/{instanceId}/overlays/locales/{locale}.json
 Tokyo-worker lists, reads, writes, and deletes those overlay files for Roma and
 approved internal callers. It does not own translation generation, AI runtime
 policy, active-locale authority, or completion/failure state.
+
+Tokyo-worker also stores generated locale package bytes under:
+
+```text
+accounts/{accountPublicId}/instances/{instanceId}/locales/{locale}/
+```
+
+The stored package files are `index.html`, `styles.css`, and `runtime.js`.
+Their R2 custom metadata includes `publicPackageFingerprint`,
+`localePackageAccountPublicId`, `localePackageInstanceId`,
+`localePackageBaseLocale`, `localePackageLocale`,
+`localePackageSourceUpdatedAt`, and `materializerContractVersion`. Tokyo-worker
+does not store overlay values in package metadata. Public locale serving
+requires all three locale package files to exist and carry matching metadata for
+the requested coordinate.
+
+Tokyo-worker serves stored package bytes. It does not compare stored packages to
+current widget source, shared widget runtime, Dieter files, fonts, materializer
+code, or account assets on public requests. Broad dependency movement requires a
+named Roma/operator command or future broad re-resolution authority; it is not a
+Tokyo visitor-time lookup.
 
 Roma calls the Translation Agent Worker for account-widget translation
 generation. Translation Agent calls San Francisco `/model/chat` and writes

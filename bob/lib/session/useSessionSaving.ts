@@ -68,6 +68,28 @@ export function useSessionSaving(args: {
       });
       if (!ok) {
         const err = json?.error;
+        if (json?.sourceSaved === true && json?.localeCascade) {
+          const current = stateRef.current;
+          const currentInstanceDataSignature = serializeInstanceDataSignature(current.instanceData);
+          const hasEditsAfterSubmittedSave = currentInstanceDataSignature !== submittedInstanceDataSignature;
+          const nextInstanceData = hasEditsAfterSubmittedSave ? current.instanceData : config;
+          const nextState: SessionState = {
+            ...current,
+            instanceData: nextInstanceData,
+            savedInstanceDataSignature: submittedInstanceDataSignature,
+            isDirty: serializeInstanceDataSignature(nextInstanceData) !== submittedInstanceDataSignature,
+            isSaving: false,
+            error: {
+              source: 'translation',
+              message: err?.reasonKey || 'coreui.errors.translations.acceptanceFailed',
+              detail: typeof err?.detail === 'string' ? err.detail : undefined,
+            },
+          };
+          setUpsell(null);
+          stateRef.current = nextState;
+          setState(nextState);
+          return;
+        }
         if (err?.kind === 'VALIDATION') {
           const nextState: SessionState = {
             ...stateRef.current,

@@ -85,6 +85,12 @@ structural advantage: one structured source can feed more surfaces over time.
 Against legacy SaaS with AI features, Clickeen's difference is architectural.
 The agents are operators of the system, not assistants beside it.
 
+The long-range competitive posture extends beyond widgets and pages. Future
+Clickeen apps should not be separate SaaS kingdoms. They should be built on the
+same schema-first substrate, with shared schema where domain truth is shared,
+named command authorities for mutation, integration boundaries for external
+truth, and materialized surfaces as downstream expressions.
+
 ## Strategic Boundary
 
 This document can discuss market story and competitive posture. It must not

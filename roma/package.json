@@ -8,12 +8,15 @@
     "build:cf": "node ../scripts/build-roma-cf.mjs",
     "start": "next start",
     "lint": "next lint",
+    "test:instance-package": "tsx tests/run-instance-package-reroute.ts",
+    "test:instance-save-cascade": "tsx tests/run-instance-save-cascade.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
     "@clickeen/bob": "workspace:*",
     "@clickeen/ck-policy": "workspace:*",
     "@clickeen/ck-contracts": "workspace:*",
+    "@clickeen/ck-runtime-materializer": "workspace:*",
     "@clickeen/l10n": "workspace:*",
     "@clickeen/widget-shell": "workspace:*",
     "next": "15.5.2",
@@ -25,6 +28,7 @@
     "@types/node": "^20.16.5",
     "@types/react": "^18.3.5",
     "@types/react-dom": "^18.3.0",
+    "tsx": "^4.20.6",
     "vercel": "47.0.4",
     "typescript": "^5.4.5"
   }

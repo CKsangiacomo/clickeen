@@ -11,6 +11,7 @@ packages:
   - tokyo-worker
   - packages/ck-policy
   - packages/ck-contracts
+  - packages/ck-runtime-materializer
   - packages/l10n
   - packages/widget-shell
   - tooling/sf-symbols

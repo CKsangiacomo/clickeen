@@ -1,4 +1,5 @@
 import { isCompactAccountPublicId, isCompactInstanceId, isCompactPageId } from '@clickeen/ck-contracts/overlay-identity';
+import { normalizeLocale } from '../asset-utils';
 import { readAccountInstanceSourcePointer } from '../domains/account-instances/source';
 import { publicPackageContentType } from '../domains/public-package-serve-metadata';
 import {
@@ -6,9 +7,11 @@ import {
   PUBLIC_INDEX_FILE,
   PUBLIC_RUNTIME_FILE,
   PUBLIC_STYLES_FILE,
+  type PublicPackageFile,
 } from '../domains/account-instances/package-file-names';
 import {
   publicPackageObjectMatchesExpectedFingerprint,
+  readInstanceLocalePackageObject,
   verifyInstancePublicPackageReady,
 } from '../domains/account-instances/package-files';
 import { respondMethodNotAllowed, type TokyoRouteArgs } from '../route-helpers';
@@ -17,7 +20,18 @@ function notFound(): Response {
   return new Response('Not found', { status: 404 });
 }
 
-function isPageDeliveryFile(file: string): boolean {
+function localeNotAvailable(): Response {
+  return new Response('Locale not available', {
+    status: 404,
+    headers: {
+      'cache-control': 'no-store',
+      'cdn-cache-control': 'no-store',
+      'cloudflare-cdn-cache-control': 'no-store',
+    },
+  });
+}
+
+function isPageDeliveryFile(file: string): file is PublicPackageFile {
   return isPublicPackageFile(file);
 }
 
@@ -25,12 +39,18 @@ function parseClkLivePath(pathname: string): {
   kind: 'instance';
   accountId: string;
   instanceId: string;
-  file: string;
+  file: PublicPackageFile;
+} | {
+  kind: 'instance-locale';
+  accountId: string;
+  instanceId: string;
+  locale: string;
+  file: PublicPackageFile;
 } | {
   kind: 'page';
   accountId: string;
   pageId: string;
-  file: string;
+  file: PublicPackageFile;
 } | null {
   if (pathname.includes('%2f') || pathname.includes('%2F') || pathname.includes('\\')) return null;
   let decoded = '';
@@ -49,6 +69,18 @@ function parseClkLivePath(pathname: string): {
       const file = requestedFile ?? PUBLIC_INDEX_FILE;
       if (!isPageDeliveryFile(file)) return null;
       return { kind: 'page', accountId, pageId, file };
+    }
+  }
+
+  if (segments.length === 4 || segments.length === 5) {
+    const [accountId, instanceId, localeSegment, rawLocale, requestedFile] = segments;
+    if (localeSegment === 'locales') {
+      if (!isCompactAccountPublicId(accountId) || !isCompactInstanceId(instanceId)) return null;
+      const locale = normalizeLocale(rawLocale);
+      if (!locale || locale !== rawLocale) return null;
+      const file = requestedFile ?? PUBLIC_INDEX_FILE;
+      if (!isPublicPackageFile(file)) return null;
+      return { kind: 'instance-locale', accountId, instanceId, locale, file };
     }
   }
 
@@ -114,6 +146,28 @@ export async function tryHandleClkLiveStaticRoutes(
     instanceId: parsed.instanceId,
   });
   if (!pointer.ok || pointer.value.publishStatus !== 'published') return respond(notFound());
+
+  if (parsed.kind === 'instance-locale') {
+    const localePackage = await readInstanceLocalePackageObject({
+      env,
+      accountId: parsed.accountId,
+      instanceId: parsed.instanceId,
+      baseLocale: pointer.value.baseLocale,
+      locale: parsed.locale,
+      sourceUpdatedAt: pointer.value.updatedAt,
+      file: parsed.file,
+    });
+    return respond(
+      localePackage.ok
+        ? responseForObject(
+            `accounts/${parsed.accountId}/instances/${parsed.instanceId}/locales/${parsed.locale}/${parsed.file}`,
+            parsed.file,
+            localePackage.object,
+            req.method === 'HEAD',
+          )
+        : localeNotAvailable(),
+    );
+  }
 
   const ready = await verifyInstancePublicPackageReady({
     env,

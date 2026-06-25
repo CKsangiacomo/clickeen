@@ -176,6 +176,11 @@ Roma resolves those references through Tokyo-worker for the current account.
 Generated widget output uses the saved asset reference. Public delivery reads
 the asset from the same account folder.
 
+Account asset references are external dependencies of generated widget package
+bytes. Replacing an account asset can change delivered media without rewriting
+the widget package that references it. That is account asset authority, not a
+visitor-time package re-resolution path.
+
 ## Delete Boundary
 
 Delete addresses one exact account asset reference in the current account.

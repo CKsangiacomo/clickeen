@@ -141,8 +141,13 @@ save command. Tokyo-worker stores the saved source and package under:
 accounts/{accountPublicId}/instances/{instanceId}/
 ```
 
-Save is separate from translation generation, publish, unpublish, rename,
-duplicate, and delete.
+Save is separate from manual translation generation, publish, unpublish, rename,
+duplicate, and delete. For saved instances with active non-base locales, Roma
+may run the source-save locale follow-up inside the same `update-instance`
+command. If the source/base package save succeeds but that locale follow-up
+fails, Roma returns `sourceSaved: true`, `ok: false`, and `localeCascade`.
+Bob treats the submitted source as saved and surfaces translation attention
+instead of reporting that the source save was lost.
 
 Bob account commands currently include:
 
@@ -381,6 +386,13 @@ Bob sends only the opened `instanceId` to Roma. Roma resolves the account,
 active locales, tier, saved instance source, and Translation Agent grant. Bob
 does not send locale authority for generation.
 
+The normal save command uses the same `120_000ms` hosted command ceiling as
+translation generation because Roma source save may synchronously update the
+active non-base locale artifacts for the opened instance after the primary
+source/base save. Bob still treats Roma as the authority for the result. If Roma
+returns an explicit locale cascade failure, Bob surfaces the save error instead
+of silently treating every affected locale as current.
+
 After Roma returns, Bob refreshes the overlay list and lets the user preview
 active locales that have saved overlay values. Tokyo-worker stores translated
 locale values under:
@@ -389,7 +401,9 @@ locale values under:
 accounts/{accountPublicId}/instances/{instanceId}/overlays/locales/{locale}.json
 ```
 
-Translation generation is an explicit operation after save.
+Translation generation remains an explicit operation after save for manual
+regeneration; source save also runs the current bounded cascade for the opened
+instance when active non-base locales exist.
 
 ## Copilot
 

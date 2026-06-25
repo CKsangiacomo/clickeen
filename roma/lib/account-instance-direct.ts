@@ -429,6 +429,89 @@ export async function saveAccountInstanceInTokyo(args: {
   };
 }
 
+export async function writeAccountInstanceLocalePackageInTokyo(args: {
+  accountId: string;
+  instanceId: string;
+  locale: string;
+  baseLocale: string;
+  sourceUpdatedAt: string;
+  materializerContractVersion: string;
+  publicPackage: {
+    indexHtml: string;
+    stylesCss: string;
+    runtimeJs: string;
+  };
+  accountCapsule?: string | null;
+  internalServiceName?: string | null;
+  requestId?: string | null;
+}): Promise<
+  | {
+      ok: true;
+      value: {
+        accountId: string;
+        instanceId: string;
+        locale: string;
+        publicPackageFingerprint: string;
+      };
+    }
+  | RouteFailure
+> {
+  const result = await callTokyo(tokyoCallContext(args), {
+    path: `/__internal/instances/${encodeURIComponent(args.instanceId)}/locales/${encodeURIComponent(args.locale)}/package`,
+    method: 'PUT',
+    body: {
+      baseLocale: args.baseLocale,
+      sourceUpdatedAt: args.sourceUpdatedAt,
+      materializerContractVersion: args.materializerContractVersion,
+      publicPackage: args.publicPackage,
+    },
+    decode: (payload) => payload,
+    errorDetail: 'tokyo_instance_locale_package_write_http_error',
+    errorKey: 'coreui.errors.db.writeFailed',
+  });
+  if (!result.ok) return result;
+  const payload = isRecord(result.value) ? result.value : null;
+  const accountId = asTrimmedString(payload?.accountId);
+  const instanceId = asTrimmedString(payload?.instanceId);
+  const locale = asTrimmedString(payload?.locale);
+  const publicPackageFingerprint = asTrimmedString(payload?.publicPackageFingerprint);
+  if (
+    accountId !== args.accountId ||
+    instanceId !== args.instanceId ||
+    locale !== args.locale ||
+    !publicPackageFingerprint
+  ) {
+    return invalidTokyoPayload('invalid Tokyo locale package write payload');
+  }
+  return { ok: true, value: { accountId, instanceId, locale, publicPackageFingerprint } };
+}
+
+export async function deleteAccountInstanceLocalePackageInTokyo(args: {
+  accountId: string;
+  instanceId: string;
+  locale: string;
+  accountCapsule?: string | null;
+  internalServiceName?: string | null;
+  requestId?: string | null;
+}): Promise<{ ok: true; value: { accountId: string; instanceId: string; locale: string } } | RouteFailure> {
+  const result = await callTokyo(tokyoCallContext(args), {
+    path: `/__internal/instances/${encodeURIComponent(args.instanceId)}/locales/${encodeURIComponent(args.locale)}/package`,
+    method: 'DELETE',
+    decode: (payload) => payload,
+    errorDetail: 'tokyo_instance_locale_package_delete_http_error',
+    errorKey: 'coreui.errors.db.writeFailed',
+  });
+  if (!result.ok) return result;
+  const payload = isRecord(result.value) ? result.value : null;
+  const accountId = asTrimmedString(payload?.accountId);
+  const instanceId = asTrimmedString(payload?.instanceId);
+  const locale = asTrimmedString(payload?.locale);
+  if (accountId !== args.accountId || instanceId !== args.instanceId || locale !== args.locale) {
+    return invalidTokyoPayload('invalid Tokyo locale package delete payload');
+  }
+  return { ok: true, value: { accountId, instanceId, locale } };
+}
+
 async function postInstanceStatusTransition(args: {
   accountId: string;
   instanceId: string;

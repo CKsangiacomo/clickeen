@@ -49,6 +49,21 @@ Shell utilities live under `tokyo/product/widgets/shared/`.
 | Saved widget instances | Tokyo-worker under `accounts/{accountPublicId}/instances/{instanceId}/` |
 | Clickeen Pages | Tokyo-worker under `accounts/{accountPublicId}/pages/{pageId}/` |
 
+## Generated Package Dependency Rule
+
+Saved account widget packages are stored product bytes. Widget-local
+`widget.html`, `widget.css`, `widget.client.js`, selected shared widget
+CSS/JS, widget-shell markers, source state, and overlay state are resolved when
+Roma materializes `index.html`, `styles.css`, and `runtime.js`.
+
+Later widget software or shared runtime changes do not mutate already-stored
+account package files. They require a named account command or a future broad
+re-resolution command with exact coordinates. Public serving must not compare
+stored account package bytes to current widget source on visitor requests.
+
+`/dieter/**`, `/fonts/**`, and account asset references remain external
+delivery references owned by their own roots.
+
 Truth order follows `documentation/architecture/CONTEXT.md`: runtime code and
 migrations, deployed Cloudflare configuration/bindings, service and widget docs,
 then architecture docs. If runtime and docs disagree, fix the doc or the

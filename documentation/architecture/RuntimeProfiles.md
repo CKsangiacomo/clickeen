@@ -25,6 +25,13 @@ Production public serving uses:
 https://clk.live/{accountPublicId}/{instanceId}
 ```
 
+Explicit locale public serving uses:
+
+```text
+https://clk.live/{accountPublicId}/{instanceId}/locales/{locale}
+https://dev.clk.live/{accountPublicId}/{instanceId}/locales/{locale}
+```
+
 ## Local Runtime Rule
 
 There is no supported local Bob/Berlin/Tokyo runtime profile.
@@ -90,6 +97,11 @@ accounts/{accountPublicId}/
       overlays/
         locales/
           {locale}.json
+      locales/
+        {locale}/
+          index.html
+          styles.css
+          runtime.js
       serve-state.json
       index.html
       styles.css
@@ -109,19 +121,36 @@ Widget software lives under:
 product/widgets/
 ```
 
+Generated account widget packages are stored runtime artifacts under the
+account instance coordinate. Widget source and selected shared widget runtime
+files are sealed into those stored package files at materialization time.
+`/dieter/**`, `/fonts/**`, and account asset references remain external
+delivery dependencies. Public serving reads stored package bytes; it does not
+re-resolve product roots on visitor requests.
+
 Public instance serving uses the environment public-serving host plus:
 
 ```text
 /{accountPublicId}/{instanceId}
+/{accountPublicId}/{instanceId}/locales/{locale}
 ```
 
-That maps to generated browser files in the account instance folder. Routes
+The base URL maps to generated browser files in the account instance folder.
+The locale URL maps to generated locale package files under
+`accounts/{accountPublicId}/instances/{instanceId}/locales/{locale}/`. Routes
 must not rely on root `published/`, root `widgets/`, or account widgets storage.
 
 Public instance serving requires
 `accounts/{accountPublicId}/instances/{instanceId}/serve-state.json` to mark the
-instance as published. Page public serving is currently disabled because Roma
-does not currently write page packages.
+instance as published. Locale serving additionally requires all three locale
+package files to carry matching package fingerprint, coordinate, source
+timestamp, and materializer contract metadata. Page public serving is currently
+disabled because Roma does not currently write page packages.
+
+Current account page source stores widget instance placements. Page source is
+not a generated package and does not copy widget source truth. Future page
+packages must define child widget artifact coordinates/evidence before public
+page serving can become current runtime behavior.
 
 Public serving hosts `dev.clk.live` and `clk.live` expose generated artifacts
 only. Operational paths such as `/healthz`, `/__internal/*`, and `/widgets/*`

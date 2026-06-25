@@ -168,3 +168,9 @@ surface.js
 typography-data.js
 typography.js
 ```
+
+Shared runtime files are broad package dependencies. When Roma materializes a
+saved account widget package, selected shared CSS/JS modules are copied into
+the generated `styles.css` or `runtime.js` bytes. Later edits to shared widget
+files do not change already-stored account package bytes without a named
+regeneration command.

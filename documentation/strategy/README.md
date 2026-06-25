@@ -48,3 +48,4 @@ Those belong in:
 | `Clickeen-Babel.md` | Babel as the global-content moat |
 | `GlobalReach.md` | Global-by-default thesis |
 | `MarketPosition.md` | Market narrative and competitive posture |
+| `SchemaFirstApps.md` | Long-range thesis for schema-first agent-operable apps |

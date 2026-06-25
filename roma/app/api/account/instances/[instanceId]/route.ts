@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { resolvePolicyFromEntitlementsSnapshot } from '@clickeen/ck-policy';
 import {
   deleteAccountInstanceFromTokyo,
   saveAccountInstanceInTokyo,
@@ -10,6 +11,7 @@ import {
   materializeAccountInstancePublicPackage,
 } from '@roma/lib/account-instance-public-package';
 import { materializeAccountInstanceSourceArtifacts } from '@roma/lib/account-instance-source-artifacts';
+import { runAccountInstanceSourceSaveLocaleCascade } from '@roma/lib/account-instance-save-cascade';
 import { loadCurrentAccountLocalesState } from '@roma/lib/account-locales-state';
 import { validateAccountInstanceSavePolicy } from '@roma/lib/account-instance-save-policy';
 import { readJsonPayloadOrValidation, requireInstanceIdParam } from '@roma/lib/route-helpers';
@@ -229,10 +231,47 @@ export async function PUT(request: NextRequest, context: RouteContext) {
   if (!result.ok) {
     return routeFailureResponse(request, result, current.value.setCookies);
   }
+  const policy = resolvePolicyFromEntitlementsSnapshot({
+    profile: current.value.authzPayload.profile,
+    role: current.value.authzPayload.role,
+    entitlements: current.value.authzPayload.entitlements ?? null,
+  });
+  const activeLocaleCapRaw = policy.limits['l10n.locales.max'];
+  const activeLocaleCap =
+    typeof activeLocaleCapRaw === 'number' && Number.isFinite(activeLocaleCapRaw)
+      ? Math.max(0, Math.floor(activeLocaleCapRaw))
+      : null;
+  const localeCascade = await runAccountInstanceSourceSaveLocaleCascade({
+    request,
+    accountId,
+    instanceId,
+    baseLocale,
+    activeLocales: accountLocales.activeLocales,
+    configuredActiveLocaleCap: activeLocaleCap,
+    authz: current.value.authzPayload,
+    accountCapsule: current.value.authzToken,
+    requestId: current.value.requestId,
+  });
+  if (!localeCascade.ok) {
+    return withSession(
+      request,
+      NextResponse.json(
+        {
+          ok: false,
+          sourceSaved: true,
+          error: localeCascade.error,
+          localeCascade: localeCascade.value,
+        },
+        { status: localeCascade.status },
+      ),
+      current.value.setCookies,
+    );
+  }
   return withSession(
     request,
     NextResponse.json({
       ok: true,
+      localeCascade: localeCascade.value,
     }),
     current.value.setCookies,
   );

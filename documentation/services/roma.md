@@ -130,34 +130,60 @@ accounts/{accountPublicId}/instances/{instanceId}/
 ```
 
 Create, save, and duplicate all use the same package contract: Roma compiles the
-widget software, materializes the current account config into `index.html`,
-`styles.css`, and `runtime.js`, then submits those exact files with the source
-to Tokyo-worker. Roma derives the package base locale from current account
-settings. Duplicate is a new account operation; it does not copy locale
-authority from the source instance. Tokyo-worker stores the submitted files; it
-does not render, compile, infer, or repair widget package bytes. Tokyo-worker
-records a package fingerprint on newly saved source and package objects so
-package reads, publish, and public serving can reject mixed package state
-deterministically.
+widget software, materializes account asset references in the current account
+config, then delegates deterministic base byte generation to
+`@clickeen/ck-runtime-materializer` for `index.html`, `styles.css`, and
+`runtime.js`. Roma submits those exact files with the source to Tokyo-worker.
+Roma derives the package base locale from current account settings. Duplicate is
+a new account operation; it does not copy locale authority from the source
+instance. Tokyo-worker stores the submitted files; it does not render, compile,
+infer, or repair widget package bytes. Tokyo-worker records a package
+fingerprint on newly saved source and package objects so package reads, publish,
+and public serving can reject mixed package state deterministically.
+
+When the existing source-save command changes a saved instance, Roma first saves
+the source and base package. After that primary save succeeds, Roma runs the
+current active non-base locale cascade for that one instance: it regenerates
+overlays through the existing Translation Agent command and materializes the
+matching locale package bytes through the locale package helper one locale at a
+time. The bounded work is one instance times active non-base locales, with the
+active-locale count governed by `l10n.locales.max`. If there are no active
+non-base locales, the response includes an empty `localeCascade`. If locale
+follow-up fails after the source/base save, Roma returns `sourceSaved: true`,
+`ok: false`, an exact `localeCascade` failure coordinate, and later locales as
+not attempted instead of reporting full save success. Roma does not create a
+queue, watcher, status file, or visitor-time repair path for this cascade. Bob
+treats that response as saved source with translation follow-up attention, not
+as lost source edits.
 
 Translation generation is a separate explicit operation from the Translations
 panel. Roma resolves the current account active locales for that command,
 applies the current tier limit, loads the saved instance source from
 Tokyo-worker, mints a Translation Agent grant, and calls the Translation Agent
 Worker. Translation Agent calls San Francisco `/model/chat` and writes
-overlays via Tokyo-worker.
+overlays via Tokyo-worker. After every requested non-base overlay is written,
+Roma reads the exact saved source and exact overlay, calls
+`@clickeen/ck-runtime-materializer`, and submits the generated locale
+`index.html`, `styles.css`, and `runtime.js` bytes to Tokyo-worker under
+`accounts/{accountPublicId}/instances/{instanceId}/locales/{locale}/`. If a
+locale package fails after earlier locales succeed, Roma returns completed,
+skipped, and failed coordinates and does not claim full success.
 
 Account language settings are also an overlay operation. When the user saves
 active locales in Roma Settings, Roma compares the previous active locales to
 the new active locales, writes the account locale settings to Supabase, then
 runs overlay follow-up for saved account instances. Removed active locales
-delete exact overlay files through Tokyo-worker. Added active locales are
-generated through the same Translation Agent Worker path. If overlay follow-up
-fails after the settings write, Roma returns the saved settings with
-`overlayUpdate.ok: false`; it does not pretend overlay work fully completed.
+delete exact overlay files and generated locale package files through
+Tokyo-worker. Added active locales are generated through the same Translation
+Agent Worker path and then materialized into generated locale package bytes. If
+overlay or locale-package follow-up fails after the settings write, Roma returns
+the saved settings with `overlayUpdate.ok: false`; it does not pretend follow-up
+work fully completed.
 If active locales and locale policy are unchanged, Roma returns no overlay
 work. Roma does not ask Bob and does not create a background locale job; saving
-settings is the user decision.
+settings is the user decision. `overlayUpdate.cost` records the direct
+synchronous surface as saved instance count times changed non-base locale count,
+using the current `l10n.locales.max` cap for reference.
 
 Roma Builder owns public widget copy actions for the current account and opened
 instance. It builds the public URL and iframe/script snippets from the current
@@ -234,6 +260,12 @@ to read or write the named account page object. Current account page publish is
 disabled until Roma has a real page package writer. Public page copy/open actions
 are disabled until that writer exists. While a page is published, Roma requires
 unpublish before page source edit or delete.
+
+Current page source references saved widget instances by placement id and
+instance id. It does not embed widget source and does not currently store child
+widget artifact references. Any shift to generated child artifact coordinates,
+child evidence, or page package materialization belongs to a future Page Package
+PRD.
 
 ## Team, Profile, Settings
 

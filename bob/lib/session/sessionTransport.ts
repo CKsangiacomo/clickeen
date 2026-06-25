@@ -284,6 +284,7 @@ export function useSessionTransport(args: {
       const result = await dispatchHostAccountCommand({
         command: commandArgs.command,
         instanceId: commandArgs.instanceId,
+        ...(commandArgs.command === 'update-instance' ? { timeoutMs: 120_000 } : {}),
         ...(typeof commandArgs.body === 'undefined' ? {} : { body: commandArgs.body }),
       });
       return { ok: result.ok, status: result.status, json: result.payload };

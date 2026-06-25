@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { resolvePolicy } from '@clickeen/ck-policy';
+import { materializeAccountInstanceLocalePackages } from '@roma/lib/account-instance-locale-package';
 import { generateAccountInstanceTranslations } from '@roma/lib/account-instance-translations';
 import { enforceActiveLocaleEntitlement } from '@roma/lib/account-locale-entitlements';
 import { loadCurrentAccountLocalesState } from '@roma/lib/account-locales-state';
@@ -79,9 +80,46 @@ export async function POST(request: NextRequest, context: RouteContext) {
     );
   }
 
+  if (generated.value.translation.accepted) {
+    const localePackages = await materializeAccountInstanceLocalePackages({
+      request,
+      accountId,
+      instanceId,
+      baseLocale,
+      activeLocales: generated.value.translation.activeLocales,
+      accountCapsule: current.value.authzToken,
+      requestId: current.value.requestId,
+    });
+    if (!localePackages.ok) {
+      return withSession(
+        request,
+        NextResponse.json(
+          {
+            error: localePackages.error,
+            translation: generated.value.translation,
+            localePackages: localePackages.value,
+          },
+          { status: localePackages.status },
+        ),
+        current.value.setCookies,
+      );
+    }
+    return withSession(
+      request,
+      NextResponse.json(
+        {
+          ...generated.value,
+          localePackages: localePackages.value,
+        },
+        { status: generated.status },
+      ),
+      current.value.setCookies,
+    );
+  }
+
   return withSession(
     request,
-    NextResponse.json(generated.value, { status: generated.status }),
+    NextResponse.json({ ...generated.value, localePackages: { ok: true, completed: [], skipped: [] } }, { status: generated.status }),
     current.value.setCookies,
   );
 }

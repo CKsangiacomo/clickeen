@@ -80,6 +80,33 @@ Widgets are not the final definition of Clickeen. They are the first proof that
 the architecture works: structured source, agent-operated edits, account-owned
 storage, public runtime artifacts, and global availability from one source.
 
+## Beyond Surfaces
+
+Clickeen is not only moving from widgets to pages, sites, emails, reports, and
+other public artifacts. Those are downstream expressions of the same
+schema-first system.
+
+The larger thesis is schema-first apps:
+
+```text
+schema -> tokens -> product atoms -> surfaces -> apps
+```
+
+Future apps such as CRM, ORM, social media management, marketing automation,
+support, analytics, commerce, and operations should be built on top of the same
+schema-driven Clickeen substrate. They should not become separate SaaS kingdoms
+with their own disconnected truth. They should be agent-operable compositions
+over named source authorities, schema, records, content, relationships, events,
+assets, policies, and artifacts.
+
+These apps are not only larger rendered surfaces. Widgets, pages, emails, and
+reports mostly render truth. Apps also operate truth through command
+authorities, integration boundaries, agent homes, and materialized surfaces.
+The materializer is one capability of the substrate; it is not the whole
+substrate.
+
+See `documentation/strategy/SchemaFirstApps.md`.
+
 ## The Moats
 
 ### Agent-Operated Architecture

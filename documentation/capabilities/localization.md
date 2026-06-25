@@ -33,6 +33,7 @@ References:
 | Account base-locale lock helper | `roma/lib/account-base-locale-lock.ts` |
 | Roma translation routes | `roma/app/api/account/instances/[instanceId]/translations/**` |
 | Roma translation helpers | `roma/lib/account-instance-translations.ts` |
+| Roma locale package materialization | `roma/lib/account-instance-locale-package.ts` |
 | Roma Translation Agent binding helper | `roma/lib/translation-agent-control.ts` |
 | Bob user panel | `bob/components/TranslationsPanel.tsx` |
 | Translation Agent Worker | `agents/translation-agent/src/worker.ts` |
@@ -40,6 +41,7 @@ References:
 | Tokyo internal translation route | `tokyo-worker/src/routes/internal-translation-routes.ts` |
 | Tokyo overlay value storage | `tokyo-worker/src/domains/account-translations/values.ts` |
 | Tokyo overlay document helpers | `tokyo-worker/src/domains/account-translations/overlays.ts` |
+| Tokyo generated locale package storage | `tokyo-worker/src/domains/account-instances/package-files.ts` |
 | Locale registry/helpers | `packages/l10n/` |
 
 ## Authority Chain
@@ -52,6 +54,7 @@ References:
 | Translation reasoning | Translation Agent Worker |
 | Model execution | San Francisco `/model/chat` |
 | Overlay storage | Tokyo-worker over Tokyo R2 |
+| Generated locale package storage | Tokyo-worker over Tokyo R2 |
 | Builder display/action | Bob Translations panel |
 | Public static serving | Tokyo-worker generated package serving |
 
@@ -114,6 +117,13 @@ Save response:
   "overlayUpdate": {
     "ok": true,
     "instancesChecked": 0,
+    "cost": {
+      "instances": 0,
+      "changedLocales": 0,
+      "coordinates": 0,
+      "configuredActiveLocaleCap": 3,
+      "hostCommandTimeoutMs": 120000
+    },
     "deleted": [{ "instanceId": "[instance id]", "locale": "[removed locale]" }],
     "generated": [{ "instanceId": "[instance id]", "locales": ["[added locale]"] }],
     "skipped": [
@@ -123,7 +133,19 @@ Save response:
         "reasonKey": "[reason key]",
         "detail": "[detail]"
       }
-    ]
+    ],
+    "localePackages": {
+      "deleted": [{ "accountId": "[account public id]", "instanceId": "[instance id]", "locale": "[removed locale]" }],
+      "generated": [
+        {
+          "accountId": "[account public id]",
+          "instanceId": "[instance id]",
+          "locale": "[added locale]",
+          "publicPackageFingerprint": "sha256:[fingerprint]"
+        }
+      ],
+      "skipped": []
+    }
   }
 }
 ```
@@ -136,9 +158,21 @@ If overlay follow-up fails after the setting is saved, the same response uses
   "overlayUpdate": {
     "ok": false,
     "instancesChecked": 1,
+    "cost": {
+      "instances": 1,
+      "changedLocales": 1,
+      "coordinates": 1,
+      "configuredActiveLocaleCap": 3,
+      "hostCommandTimeoutMs": 120000
+    },
     "deleted": [],
     "generated": [],
     "skipped": [],
+    "localePackages": {
+      "deleted": [],
+      "generated": [],
+      "skipped": []
+    },
     "error": {
       "kind": "UPSTREAM_UNAVAILABLE",
       "reasonKey": "[reason key]",
@@ -149,13 +183,20 @@ If overlay follow-up fails after the setting is saved, the same response uses
 ```
 
 When active locales shrink, Roma saves the account setting first and then asks
-Tokyo-worker to delete exact overlay files for removed locales. When active
-locales expand, Roma saves the account setting first and then asks the
-Translation Agent to generate overlays for added locales.
+Tokyo-worker to delete exact overlay files and generated locale package files
+for removed locales. When active locales expand, Roma saves the account setting
+first, asks the Translation Agent to generate overlays for added locales one
+locale at a time, then materializes generated locale package bytes for those
+same locales. Per-locale execution prevents a batch failure from being assigned
+to an inferred locale.
 
 If overlay follow-up fails after the settings write, Roma reports
 `overlayUpdate.ok: false`. The saved account locale setting remains the account
 truth; the failed overlay operation is explicit follow-up failure.
+Generated locale package failures use the same explicit follow-up channel and
+include completed, skipped, and failed locale coordinates. `overlayUpdate.cost`
+records the synchronous coordinate surface as saved instance count times changed
+non-base locale count; it is command evidence, not a status ledger.
 
 ## Runtime Dependencies
 
@@ -320,6 +361,7 @@ on write, read, and list. Missing paths and unexpected paths fail.
 | Missing or unexpected overlay keys | validation fails |
 | Missing overlay | read returns `404` |
 | Failure after earlier locale writes | prior files remain; full success must not be claimed |
+| Source save locale follow-up failure | source/base save remains; response reports `sourceSaved: true`, `ok: false`, and explicit `localeCascade` failure coordinates |
 | Account locale follow-up failure | settings save remains; response reports `overlayUpdate.ok: false` |
 | Translation Agent binding missing | Roma returns explicit upstream failure |
 | San Francisco/model failure | Translation Agent/Roma return explicit failure; no full success |
@@ -336,6 +378,8 @@ Public coordinates:
 ```text
 https://dev.clk.live/{accountPublicId}/{instanceId}
 https://clk.live/{accountPublicId}/{instanceId}
+https://dev.clk.live/{accountPublicId}/{instanceId}/locales/{locale}
+https://clk.live/{accountPublicId}/{instanceId}/locales/{locale}
 ```
 
 Public serving reads generated package files such as:
@@ -344,10 +388,34 @@ Public serving reads generated package files such as:
 accounts/{accountPublicId}/instances/{instanceId}/index.html
 accounts/{accountPublicId}/instances/{instanceId}/styles.css
 accounts/{accountPublicId}/instances/{instanceId}/runtime.js
+accounts/{accountPublicId}/instances/{instanceId}/locales/{locale}/index.html
+accounts/{accountPublicId}/instances/{instanceId}/locales/{locale}/styles.css
+accounts/{accountPublicId}/instances/{instanceId}/locales/{locale}/runtime.js
 ```
 
 Locale overlays are private translated value source for account operations.
-They are not visitor files.
+They are not visitor files. Explicit locale public URLs serve generated locale
+package bytes only after Tokyo-worker verifies the instance is published and all
+three locale package files carry matching coordinate, source timestamp, package
+fingerprint, and materializer contract metadata. Missing, stale, malformed, or
+mismatched locale packages return `404 Locale not available` with `no-store`
+cache headers. Public serving does not fall back to base content for locale
+URLs.
+
+Saved source changes use command-owned cascade. Roma saves the source/base
+package first, then for that same instance regenerates current active non-base
+overlays through Translation Agent and materializes current locale packages one
+locale at a time. The cost surface is one instance times active non-base
+locales; active locale count is bounded by `l10n.locales.max`. If locale
+follow-up fails after the primary save, Roma names completed, skipped, and
+failed locale coordinates in `localeCascade`, marks later locales as not
+attempted, and does not return a full-success shape. No background job, status
+ledger, public runtime repair, or base-content fallback completes that work
+later.
+
+Bob handles this source-save follow-up shape as translation attention: the
+submitted widget source is treated as saved, while the locale cascade failure is
+shown through the Builder translation error surface.
 
 ## Prague Boundary
 
@@ -374,8 +442,9 @@ on Prague translation file changes in cloud-dev.
 | Account locale settings | `GET /api/account/locales` |
 | Product-visible translations | Roma translation routes or Bob Translations panel |
 | Stored overlay bytes | `pnpm cf:preflight` then `pnpm cf:r2:get accounts/{accountPublicId}/instances/{instanceId}/overlays/locales/{locale}.json` |
+| Generated locale package bytes | `pnpm cf:preflight` then R2 evidence at `accounts/{accountPublicId}/instances/{instanceId}/locales/{locale}/index.html`, `styles.css`, and `runtime.js` |
 | Translation Agent runtime | `pnpm e2e:smoke:translation-agent-runtime` |
-| Public static serving | `https://dev.clk.live/{accountPublicId}/{instanceId}` |
+| Public static serving | `https://dev.clk.live/{accountPublicId}/{instanceId}` and explicit `/locales/{locale}` URL |
 | Worker deploy evidence | GitHub Actions `cloud-dev workers deploy` |
 
 ## Not Current Product Truth

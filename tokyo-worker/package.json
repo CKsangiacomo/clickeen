@@ -5,6 +5,8 @@
   "type": "module",
   "scripts": {
     "deploy": "wrangler deploy --routes \"\"",
+    "test:clk-live": "tsx tests/run-clk-live-locale-serving.ts",
+    "test:locale-package": "tsx tests/run-locale-package-storage.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
@@ -15,6 +17,7 @@
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20251228.0",
+    "tsx": "^4.20.6",
     "wrangler": "^4.54.0"
   }
 }

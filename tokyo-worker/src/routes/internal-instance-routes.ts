@@ -8,9 +8,11 @@ import {
 } from '../domains/account-instances/operations';
 import { deleteAccountInstanceSubtree } from '../domains/account-instances/delete';
 import {
+  deleteInstanceLocalePackage,
   readInstancePublicPackage,
   readSubmittedInstancePublicPackage,
   verifyInstancePublicPackageReady,
+  writeInstanceLocalePackage,
 } from '../domains/account-instances/package-files';
 import {
   listAccountInstances,
@@ -383,6 +385,100 @@ export async function tryHandleInternalInstanceRoutes(
         ),
       );
     }
+  }
+
+  const internalInstanceLocalePackageMatch = pathname.match(
+    /^\/__internal\/instances\/([^/]+)\/locales\/([^/]+)\/package$/,
+  );
+  if (internalInstanceLocalePackageMatch) {
+    const instanceId = normalizeStorageId(
+      decodeURIComponent(internalInstanceLocalePackageMatch[1] || ''),
+    );
+    const locale = normalizeLocale(decodeURIComponent(internalInstanceLocalePackageMatch[2] || ''));
+    const accountId = normalizeAccountPublicId(req.headers.get('x-account-id'));
+    if (!accountId || !instanceId || !locale || !isValidScopedInstance(instanceId, accountId)) {
+      return respondValidation(
+        respond,
+        'coreui.errors.instance.invalidPayload',
+        accountId ? 403 : 422,
+      );
+    }
+    const auth = await authorizeRomaEditorTransition({ req, env, accountId });
+    if (!auth.ok) return respond(auth.response);
+
+    if (req.method === 'PUT') {
+      const body = (await readInternalProductJsonBody({
+        req,
+        env,
+        boundary: 'internal.instance.localePackage.body',
+        accountId,
+        instanceId,
+      })) as Record<string, unknown> | null;
+      const publicPackage = isRecord(body)
+        ? readSubmittedInstancePublicPackage(body.publicPackage)
+        : null;
+      const baseLocale = normalizeLocale(body?.baseLocale);
+      const sourceUpdatedAt = typeof body?.sourceUpdatedAt === 'string' ? body.sourceUpdatedAt.trim() : '';
+      const materializerContractVersion =
+        typeof body?.materializerContractVersion === 'string'
+          ? body.materializerContractVersion.trim()
+          : '';
+      if (!publicPackage || !baseLocale || !sourceUpdatedAt || !materializerContractVersion) {
+        return respondValidation(respond, 'coreui.errors.instance.invalidPayload');
+      }
+      if (locale === baseLocale) {
+        return respondValidation(respond, 'coreui.errors.instance.invalidPayload');
+      }
+
+      const stored = await writeInstanceLocalePackage({
+        env,
+        accountId,
+        instanceId,
+        baseLocale,
+        locale,
+        sourceUpdatedAt,
+        materializerContractVersion,
+        publicPackage,
+      });
+      if (!stored.ok) {
+        return respond(
+          json(
+            {
+              error: {
+                kind: 'VALIDATION',
+                reasonKey: 'coreui.errors.instance.embedNotReady',
+                detail: stored.detail,
+              },
+            },
+            { status: 409 },
+          ),
+        );
+      }
+      return respond(json({ ok: true, accountId, instanceId, locale, publicPackageFingerprint: stored.fingerprint }));
+    }
+
+    if (req.method === 'DELETE') {
+      try {
+        const deleted = await deleteInstanceLocalePackage({ env, accountId, instanceId, locale });
+        return respond(json({ ok: true, accountId, instanceId, locale: deleted.locale }));
+      } catch (error) {
+        const detail = error instanceof Error ? error.message : String(error);
+        return respond(
+          json(
+            {
+              error: {
+                kind: 'UPSTREAM_UNAVAILABLE',
+                reasonKey: 'coreui.errors.db.writeFailed',
+                detail,
+              },
+            },
+            { status: 502 },
+          ),
+        );
+      }
+    }
+
+    return respondMethodNotAllowed(respond);
   }
 
   const internalInstanceMatch = pathname.match(/^\/__internal\/instances\/([^/]+)$/);

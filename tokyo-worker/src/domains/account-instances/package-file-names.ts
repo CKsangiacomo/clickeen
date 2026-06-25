@@ -8,7 +8,12 @@ export const PUBLIC_PACKAGE_FILES = new Set([
   PUBLIC_RUNTIME_FILE,
 ]);
 
-export function isPublicPackageFile(file: string): boolean {
+export type PublicPackageFile =
+  | typeof PUBLIC_INDEX_FILE
+  | typeof PUBLIC_STYLES_FILE
+  | typeof PUBLIC_RUNTIME_FILE;
+
+export function isPublicPackageFile(file: string): file is PublicPackageFile {
   if (!file || file.startsWith('.') || file.includes('/') || file.includes('\\')) return false;
   if (file.includes('%') || file.includes('..')) return false;
   return PUBLIC_PACKAGE_FILES.has(file);
