@@ -18,7 +18,56 @@ contract lock. The layering is right: **MAMA = law, 124A = locked values,
 load-bearing document in the program — a mistake here propagates to all eight
 slices. It holds up.
 
-Three non-blocking observations, no blockers.
+Round-1 gate: **Staff-engineer GREEN, Principal-TPM GREEN, Senior-PM RED.**
+Architecturally MAMA is sound (both engineering roles GREEN, code-verified); the
+Senior-PM RED is a *product-ownership* finding — three visitor-facing concerns
+the load-bearing parent leaves silently unowned, which become runtime behavior in
+124D/124E if not pinned. Rev 2 folds in the PM's three ownership gaps and the
+TPM's CDN-law divergence. Those are **MAMA edits for the team** (I don't touch
+PRDs); this review captures them. Net: GREEN on architecture; GREEN on the PR
+once the team pins the three product owners in MAMA (or assigns them to named
+sub-PRDs).
+
+## Round-1 gate findings (folded into Rev 2)
+
+**Senior-PM RED — three product-ownership gaps the team must pin in MAMA** (the
+parent is load-bearing; unowned concerns become runtime behavior in 124D/124E):
+
+1. **Visitor-facing fail-closed contract is unowned.** "No fallback serving" is a
+   negative promise; MAMA never states what a *visitor* sees on a locale miss
+   (404 / explicit "not available in this locale" / fail-closed error) nor which
+   sub-PRD owns that surface. Pin the owner (124D or 124E) and the visitor UX.
+2. **Locale discovery / crawl exposure is unowned.** The coordinate is
+   `instance + locale`, but how a visitor reaches a localized URL, and whether
+   hreflang/sitemap/structured-data point at it, has no owner in 124A–124H (124H
+   is framed for future surfaces, not current-widget discovery). GlobalReach makes
+   crawlable coordinates a prerequisite for search/answer reach — V3
+   silent-omission risk on exactly the reach outcome the program delivers. Pin the
+   owner.
+3. **Admin-facing locale-status UX is implied, not owned.** "Active locale
+   add/remove" is in the cascade (124F) and "no full-success lies" is in
+   acceptance, but the account-admin surface ("French: live" vs "not yet
+   published") is never named. Pin 124F (or 124A) as the owner.
+4. *(non-blocking)* **Locale-as-layout is unacknowledged.** MAMA's Evidence/Identity
+   laws treat locale as a value-overlay dimension only; RTL / text-expansion
+   (Arabic, Hebrew, German) isn't named. GlobalReach defers RTL — acceptable — but
+   MAMA should state the deferral explicitly rather than leave it implicit.
+
+**Principal-TPM non-blocking — CDN-law divergence to note.** MAMA's CDN Law
+asserts "fingerprinted support files -> immutable long TTL CSS/JS," but
+`tokyo-worker/src/routes/clk-live-routes.ts:67-72` currently serves `styles.css`
+and `runtime.js` under bare (non-fingerprinted) filenames with the *same*
+short-TTL header as `index.html` (`max-age=60, s-maxage=300, swr=86400`). The
+two-tier CDN model is stated as program law but not yet satisfied by runtime
+code; **124E owns closing it**. MAMA should record this as an existing divergence,
+not leave it implicit.
+
+**Staff-engineer GREEN — affirmed (code-verified):** the product gap is real
+(`clk-live-routes.ts` has zero locale awareness; overlays exist in R2 but unused
+at serve); authority/identity/evidence laws are code-accurate (one fingerprint
+today, `publicPackageFingerprint`; `identityKeyForField` matches the identity law;
+reorder-safe cascade correctly deferred since `resolveTranslatedValues` uses
+concrete positional paths); MAMA is internally complete and adds zero machinery.
 
 ## What MAMA locks (and why each is right)
 
