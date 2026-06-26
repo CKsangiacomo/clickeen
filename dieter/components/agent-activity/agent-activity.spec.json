@@ -1,0 +1,31 @@
+{
+  "component": "agent-activity",
+  "syntax": "<div class='diet-agent-activity' data-size='{{SIZE}}' data-tone='{{TONE}}'>...</div>",
+  "attributes": {
+    "size": { "enum": ["sm", "md"], "default": "sm" },
+    "tone": { "enum": ["active"], "default": "active" },
+    "title": { "required": true },
+    "message": { "required": true }
+  },
+  "binding": { "type": "transient-agent-narration" },
+  "defaults": [
+    {
+      "id": "agent-activity",
+      "sizes": ["sm", "md"],
+      "variants": ["active"],
+      "spec": [
+        "diet-agent-activity",
+        "data-size='{{size}}'",
+        "data-tone='{{tone}}'"
+      ],
+      "context": {
+        "size": "sm",
+        "tone": "active",
+        "title": "Translation Agent",
+        "message": "Writing translations",
+        "titleClass": "label-s",
+        "rowClass": "body-s"
+      }
+    }
+  ]
+}

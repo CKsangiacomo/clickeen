@@ -119,24 +119,16 @@ export type BobAccountCommandMessage = {
   body?: unknown;
 };
 
-export type HostCommandActivityEvent = {
-  stage:
-    | 'command-started'
-    | 'locale-started'
-    | 'overlay-written'
-    | 'locale-failed';
-  locale?: string;
-  completed?: number;
-  total?: number;
+export type AgentActivityEvent = {
   message: string;
 };
 
-export type HostAccountCommandActivityMessage = {
-  type: 'host:account-command-activity';
+export type HostAgentActivityMessage = {
+  type: 'host:agent-activity';
   requestId: string;
   command: BobAccountCommand;
   instanceId?: string;
-  event: HostCommandActivityEvent;
+  event: AgentActivityEvent;
 };
 
 export type HostAccountCommandResultMessage = {

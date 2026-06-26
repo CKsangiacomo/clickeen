@@ -69,24 +69,16 @@ type HostAccountCommandResultMessage = {
   message?: string;
 };
 
-type HostCommandActivityEvent = {
-  stage:
-    | 'command-started'
-    | 'locale-started'
-    | 'overlay-written'
-    | 'locale-failed';
-  locale?: string;
-  completed?: number;
-  total?: number;
+type AgentActivityEvent = {
   message: string;
 };
 
-type HostAccountCommandActivityMessage = {
-  type: 'host:account-command-activity';
+type HostAgentActivityMessage = {
+  type: 'host:agent-activity';
   requestId: string;
   command: BobAccountCommand;
   instanceId?: string;
-  event: HostCommandActivityEvent;
+  event: AgentActivityEvent;
 };
 
 type BobOpenEditorMessage = {
@@ -249,12 +241,6 @@ function isAccountAssetCommand(command: BobAccountCommand): boolean {
   return command === 'list-assets' || command === 'resolve-assets' || command === 'upload-asset';
 }
 
-function isHostCommandActivityEvent(value: unknown): value is HostCommandActivityEvent {
-  if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
-  const record = value as Record<string, unknown>;
-  return typeof record.stage === 'string' && typeof record.message === 'string';
-}
-
 function isStreamedCommandResult(value: unknown): value is { status: number; payload: unknown } {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
   const record = value as Record<string, unknown>;
@@ -263,7 +249,7 @@ function isStreamedCommandResult(value: unknown): value is { status: number; pay
 
 async function readJsonOrStreamedCommandResult(args: {
   response: Response;
-  onActivity: (event: HostCommandActivityEvent) => void;
+  onActivity: (event: AgentActivityEvent) => void;
 }): Promise<unknown> {
   const contentType = args.response.headers.get('content-type') ?? '';
   if (!contentType.includes('text/event-stream') || !args.response.body) {
@@ -295,8 +281,9 @@ async function readJsonOrStreamedCommandResult(args: {
     } catch {
       return;
     }
-    if (eventName === 'activity' && isHostCommandActivityEvent(parsed)) {
-      args.onActivity(parsed);
+    if (eventName === 'activity' && parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+      const message = (parsed as { message?: unknown }).message;
+      if (typeof message === 'string') args.onActivity({ message });
       return;
     }
     if (eventName === 'result') {
@@ -485,9 +472,9 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
         };
         args.source.postMessage(message, bobBaseUrl);
       };
-      const sendActivity = (event: HostCommandActivityEvent) => {
-        const message: HostAccountCommandActivityMessage = {
-          type: 'host:account-command-activity',
+      const sendActivity = (event: AgentActivityEvent) => {
+        const message: HostAgentActivityMessage = {
+          type: 'host:agent-activity',
           requestId: args.requestId,
           command: args.command,
           ...(args.instanceId ? { instanceId: args.instanceId } : {}),

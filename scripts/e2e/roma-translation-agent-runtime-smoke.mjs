@@ -171,6 +171,8 @@ async function runBobGenerationSmoke(romaBase, authStatePath, instanceId, expect
     );
     await generateButton.click();
     await frame.getByRole('button', { name: 'Generating translations...' }).waitFor({ timeout: 10_000 });
+    await frame.getByText('Translation Agent').waitFor({ timeout: 30_000 });
+    await frame.getByText(/Writing (translations|[A-Z][A-Za-z ]+)/).first().waitFor({ timeout: 30_000 });
     const response = await responsePromise;
     const payload = await response.json().catch(() => null);
     const generatedLocales = assertGenerationPayload(response.status(), payload, expected);

@@ -70,6 +70,17 @@ analytics, support tickets, locale overlays, runtime packages, account assets,
 routes, and storage folders are structured artifacts that agents operate through
 named authorities.
 
+## Agent Activity
+
+Agent Activity is the direct line of feedback between an agent and the user.
+When an agent operates the system, the agent may narrate the operation as it
+happens. The product surface renders that narration temporarily and then goes
+quiet when the operation ends.
+
+Agent Activity is not job status, progress reconciliation, polling, probing,
+package/cache inspection, or UI-authored summary text. The agent owns the words.
+Host services transport them. Surfaces render them.
+
 ## System Is Simple
 
 - Widgets are software and live in the system.

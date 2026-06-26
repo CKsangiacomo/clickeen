@@ -67,6 +67,18 @@ Agents need a system they can read and operate. Clickeen is built around:
 This lets agents do real work over real product artifacts. They do not need to
 guess through opaque app state or drive a fragile human workflow.
 
+## Agent Activity
+
+Agent Activity is how an agent-operated product tells the user what is happening
+without turning the user into a job operator. The agent narrates direct work as
+it operates structured artifacts. The surface displays that narration while the
+operation is active and then gets out of the way.
+
+This is strategically different from legacy SaaS progress UI. Legacy products
+derive status from jobs, queues, polling, and reconciliation. Clickeen lets the
+agent speak while it works. Roma or another host may transport the event stream;
+Bob or another surface may render it. They do not author the activity.
+
 ## The Wedge
 
 Widgets are the starting wedge.

@@ -12,7 +12,7 @@ import {
   useWidgetSessionChrome,
   useWidgetSessionTransport,
 } from '../lib/session/useWidgetSession';
-import type { HostCommandActivityEvent } from '../lib/session/sessionTypes';
+import type { AgentActivityEvent } from '../lib/session/sessionTypes';
 import type { TranslatedLocalesData, TranslationSetup } from './useTranslationPreviewState';
 import { listPreviewableLocales } from '../lib/translations-preview';
 
@@ -21,7 +21,6 @@ const BUILDER_UI_LOCALE = 'en';
 
 type TranslationActivityRow = {
   key: string;
-  state: 'current' | 'done';
   message: string;
 };
 
@@ -74,37 +73,16 @@ function SelectField({
   );
 }
 
-function activityRowState(event: HostCommandActivityEvent): TranslationActivityRow['state'] {
-  if (event.stage === 'overlay-written') return 'done';
-  return 'current';
-}
-
-function formatActivityMessage(event: HostCommandActivityEvent): string {
-  const localeLabel = event.locale ? resolveLocaleLabel(event.locale) : '';
-  switch (event.stage) {
-    case 'command-started':
-      return 'Writing translations';
-    case 'locale-started':
-      return localeLabel ? `Writing ${localeLabel}` : 'Writing translation';
-    case 'overlay-written':
-      return localeLabel ? `${localeLabel} written` : 'Translation written';
-    default:
-      return event.message;
-  }
-}
-
-export function buildActivityRows(events: HostCommandActivityEvent[]): TranslationActivityRow[] {
+export function buildActivityRows(events: AgentActivityEvent[]): TranslationActivityRow[] {
   return events
-    .filter((event) => event.stage !== 'locale-failed')
     .slice(-6)
     .map((event, index) => ({
-      key: `${event.stage}:${event.locale ?? 'command'}:${index}`,
-      state: activityRowState(event),
-      message: formatActivityMessage(event),
+      key: `agent:${index}:${event.message}`,
+      message: event.message,
     }));
 }
 
-function CommandActivityBox({
+function AgentActivity({
   title,
   rows,
 }: {
@@ -113,14 +91,14 @@ function CommandActivityBox({
 }) {
   if (!rows.length) return null;
   return (
-    <div className="diet-command-activity" data-size="sm" data-tone="active" role="status" aria-live="polite">
-      <div className="diet-command-activity__header">
-        <span className="diet-command-activity__title label-s">{title}</span>
+    <div className="diet-agent-activity" data-size="sm" data-tone="active" role="status" aria-live="polite">
+      <div className="diet-agent-activity__header">
+        <span className="diet-agent-activity__title label-s">{title}</span>
       </div>
-      <div className="diet-command-activity__rows">
+      <div className="diet-agent-activity__rows">
         {rows.map((row) => (
-          <div className="diet-command-activity__row" data-state={row.state} key={row.key}>
-            <span className="diet-command-activity__text body-s">{row.message}</span>
+          <div className="diet-agent-activity__row" key={row.key}>
+            <span className="diet-agent-activity__text body-s">{row.message}</span>
           </div>
         ))}
       </div>
@@ -146,7 +124,7 @@ export function TranslationsPanel({
   const { generateTranslations } = useWidgetSessionTransport();
   const [isStartingTranslations, setIsStartingTranslations] = useState(false);
   const [isGeneratingTranslations, setIsGeneratingTranslations] = useState(false);
-  const [activityEvents, setActivityEvents] = useState<HostCommandActivityEvent[]>([]);
+  const [activityEvents, setActivityEvents] = useState<AgentActivityEvent[]>([]);
   const instanceId = chrome.meta?.instanceId ?? '';
   const baseLocale = translationSetup?.baseLocale || translatedLocales?.baseLocale || '';
   const planTranslationsCopy =
@@ -260,7 +238,7 @@ export function TranslationsPanel({
             <div className="label-s label-muted">{generateButton.message}</div>
           ) : null}
           {isGeneratingTranslations ? (
-            <CommandActivityBox title="Generating translations" rows={activityRows} />
+            <AgentActivity title="Translation Agent" rows={activityRows} />
           ) : null}
         </div>
         <SelectField

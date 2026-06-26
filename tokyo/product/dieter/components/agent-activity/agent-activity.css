@@ -1,0 +1,51 @@
+/* Dieter Agent Activity - transient agent narration display.
+   The agent owns the words; surfaces render them while the agent operates. */
+
+.diet-agent-activity {
+  display: grid;
+  gap: var(--space-2, 0.5rem);
+  inline-size: 100%;
+  padding: var(--space-3, 0.75rem);
+  border: 1px solid var(--color-system-gray-5);
+  border-radius: var(--control-radius-md, 0.375rem);
+  background: var(--color-system-white);
+  color: var(--color-system-black);
+  box-sizing: border-box;
+}
+
+.diet-agent-activity[data-size="sm"] {
+  gap: var(--space-1, 0.25rem);
+  padding: var(--space-2, 0.5rem);
+}
+
+.diet-agent-activity[data-tone="active"] {
+  border-color: color-mix(in oklab, var(--color-system-blue), var(--color-system-white) 45%);
+  background: color-mix(in oklab, var(--color-system-blue), var(--color-system-white) 90%);
+}
+
+.diet-agent-activity__header,
+.diet-agent-activity__row {
+  display: flex;
+  align-items: center;
+  min-inline-size: 0;
+}
+
+.diet-agent-activity__header {
+  gap: var(--control-inline-gap-sm, 0.375rem);
+}
+
+.diet-agent-activity__title,
+.diet-agent-activity__text {
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
+}
+
+.diet-agent-activity__rows {
+  display: grid;
+  gap: var(--space-1, 0.25rem);
+}
+
+.diet-agent-activity__row {
+  gap: var(--control-inline-gap-xs, 0.25rem);
+  color: color-mix(in oklab, var(--color-system-black), transparent 30%);
+}

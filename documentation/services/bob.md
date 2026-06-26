@@ -171,10 +171,10 @@ choose generation locales or write translation files.
 
 The panel sends one Generate translations command with the open `instanceId`.
 Roma resolves active locales and calls the Translation Agent Worker. While the
-operation is running, Bob disables the button and displays transient activity
-rows emitted by the active hosted command while overlays are written. When the
-operation returns, Bob refreshes the previewable translated locales from
-overlay truth and the transient activity UI disappears. Bob does not read or
+operation is running, Bob disables the button and displays transient Agent
+Activity rows authored by the Translation Agent while overlays are written. When
+the operation returns, Bob refreshes the previewable translated locales from
+overlay truth and the transient Agent Activity UI disappears. Bob does not read or
 interpret locale package, materializer, or cache-refresh state as translation
 truth.
 
@@ -182,6 +182,9 @@ Bob does not create persistent translation jobs, poll operation status, or
 invent locale authority. Bob also does not expose user translation overrides or
 a field-level overlay editor. Saved locale overlay files remain
 Tokyo-worker/R2 state.
+
+Agent Activity is a core product UI concept. Bob renders the agent's narration;
+it does not summarize, reinterpret, probe, reconcile, or persist it.
 
 ## Widget Software
 

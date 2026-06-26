@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { resolvePolicy } from '@clickeen/ck-policy';
-import { generateAccountInstanceTranslations } from '@roma/lib/account-instance-translations';
+import {
+  generateAccountInstanceTranslations,
+  type TranslationAgentActivityEvent,
+} from '@roma/lib/account-instance-translations';
 import { enforceActiveLocaleEntitlement } from '@roma/lib/account-locale-entitlements';
 import { loadCurrentAccountLocalesState } from '@roma/lib/account-locales-state';
 import { requireInstanceIdParam } from '@roma/lib/route-helpers';
@@ -12,18 +15,6 @@ import {
 export const runtime = 'edge';
 
 type RouteContext = { params: Promise<{ instanceId: string }> };
-type ActivityEvent = {
-  stage:
-    | 'command-started'
-    | 'locale-started'
-    | 'overlay-written'
-    | 'locale-failed';
-  locale?: string;
-  completed?: number;
-  total?: number;
-  message: string;
-};
-
 function sendEvent(controller: ReadableStreamDefaultController<Uint8Array>, event: string, payload: unknown) {
   controller.enqueue(new TextEncoder().encode(`event: ${event}\ndata: ${JSON.stringify(payload)}\n\n`));
 }
@@ -40,9 +31,8 @@ function streamGenerateTranslations(args: {
   const stream = new ReadableStream<Uint8Array>({
     async start(controller) {
       let settled = false;
-      const total = args.activeLocales.length;
 
-      const activity = (event: ActivityEvent) => sendEvent(controller, 'activity', event);
+      const activity = (event: TranslationAgentActivityEvent) => sendEvent(controller, 'activity', event);
       const result = (status: number, payload: unknown) => {
         if (settled) return;
         settled = true;
@@ -51,14 +41,7 @@ function streamGenerateTranslations(args: {
       };
 
       try {
-        activity({
-          stage: 'command-started',
-          completed: 0,
-          total,
-          message: total === 1 ? 'Generating 1 active locale.' : `Generating ${total} active locales.`,
-        });
-
-        if (!total) {
+        if (!args.activeLocales.length) {
           result(200, {
             ok: true,
             translation: {
@@ -80,15 +63,10 @@ function streamGenerateTranslations(args: {
           authz: args.authz,
           accountCapsule: args.accountCapsule,
           requestId: args.requestId,
+          onActivity: activity,
         });
 
         if (!generated.ok) {
-          activity({
-            stage: 'locale-failed',
-            completed: 0,
-            total,
-            message: 'Translation generation failed.',
-          });
           result(generated.status, {
             error: generated.error,
           });
@@ -98,16 +76,6 @@ function streamGenerateTranslations(args: {
         if (!generated.value.translation.accepted) {
           result(200, generated.value);
           return;
-        }
-
-        for (const locale of generated.value.translation.activeLocales) {
-          activity({
-            stage: 'overlay-written',
-            locale,
-            completed: 0,
-            total,
-            message: `${locale} overlay written.`,
-          });
         }
 
         result(200, generated.value);

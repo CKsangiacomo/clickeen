@@ -330,10 +330,9 @@ Write boundary:
 - Tokyo-worker verifies the grant and accepts only locales carried by the grant.
 
 Bob's current Translations panel displays request state, transient Roma
-command activity rows, and final generated active-locale counts. The activity
-rows are live output while the active hosted command writes overlays. They are
-not stored status, polling, a package/materializer lifecycle, or a Translation
-Agent progress stream.
+Agent Activity rows authored by Translation Agent while it writes overlays. The
+rows are live narration from the agent to the user. They are not stored status,
+polling, a package/materializer lifecycle, or Roma/Bob-authored summaries.
 Bob can preview a selected generated locale in the widget preview, but it does
 not expose user translation overrides, a field-level overlay editor, or a
 read-only overlay value dump. Overlay values remain generated artifacts owned by

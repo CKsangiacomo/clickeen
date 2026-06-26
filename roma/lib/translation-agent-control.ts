@@ -19,11 +19,12 @@ export async function fetchTranslationAgent(args: {
   method: 'POST';
   body: unknown;
   requestId?: string | null;
+  accept?: 'application/json' | 'text/event-stream';
 }): Promise<Response> {
   const path = args.path.startsWith('/') ? args.path : `/${args.path}`;
   const target = new URL(path, TRANSLATION_AGENT_ORIGIN);
   const headers = new Headers({
-    accept: 'application/json',
+    accept: args.accept ?? 'application/json',
     'content-type': 'application/json',
   });
   if (args.requestId) headers.set(CK_REQUEST_ID_HEADER, args.requestId);

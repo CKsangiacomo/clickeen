@@ -1,10 +1,10 @@
 {
-  "gitSha": "95951eb9db85ca874bd0a7de26d92d610e265a60",
+  "gitSha": "679e22f771e9ac1297c4312e6b78567a6b9c01f6",
   "components": [
+    "agent-activity",
     "bulk-edit",
     "button",
     "choice-tiles",
-    "command-activity",
     "dropdown-actions",
     "dropdown-border",
     "dropdown-edit",

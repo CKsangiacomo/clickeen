@@ -53,6 +53,10 @@ type TranslationAgentLocaleResult =
   | { locale: string; ok: true; count: number }
   | { locale: string; ok: false; reasonKey: string; detail?: string };
 
+export type TranslationAgentActivityEvent = {
+  message: string;
+};
+
 type TranslationAgentResponse = {
   requestId: string;
   agentId: typeof TRANSLATION_AGENT_ID;
@@ -235,6 +239,67 @@ function safeJsonParse(text: string): unknown {
   }
 }
 
+function isStreamedTranslationAgentResult(value: unknown): value is { status: number; payload: unknown } {
+  return isRecord(value) && typeof value.status === 'number' && Number.isFinite(value.status) && 'payload' in value;
+}
+
+async function readTranslationAgentResponse(args: {
+  response: Response;
+  onActivity?: (event: TranslationAgentActivityEvent) => void;
+}): Promise<{ status: number; payload: unknown; text: string }> {
+  const contentType = args.response.headers.get('content-type') ?? '';
+  if (!contentType.includes('text/event-stream') || !args.response.body) {
+    const text = await args.response.text().catch(() => '');
+    return { status: args.response.status, payload: safeJsonParse(text), text };
+  }
+
+  const reader = args.response.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = '';
+  let finalPayload: unknown = null;
+
+  const consumeEvent = (raw: string) => {
+    const lines = raw.split(/\r?\n/);
+    let eventName = 'message';
+    const dataLines: string[] = [];
+    for (const line of lines) {
+      if (line.startsWith('event:')) {
+        eventName = line.slice('event:'.length).trim();
+        continue;
+      }
+      if (line.startsWith('data:')) {
+        dataLines.push(line.slice('data:'.length).trimStart());
+      }
+    }
+    if (!dataLines.length) return;
+    const parsed = safeJsonParse(dataLines.join('\n'));
+    if (eventName === 'activity' && isRecord(parsed)) {
+      const message = parsed.message;
+      if (typeof message === 'string') args.onActivity?.({ message });
+      return;
+    }
+    if (eventName === 'result') finalPayload = parsed;
+  };
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (value) buffer += decoder.decode(value, { stream: !done });
+    let boundary = buffer.indexOf('\n\n');
+    while (boundary >= 0) {
+      consumeEvent(buffer.slice(0, boundary));
+      buffer = buffer.slice(boundary + 2);
+      boundary = buffer.indexOf('\n\n');
+    }
+    if (done) break;
+  }
+  const tail = `${buffer}${decoder.decode()}`.trim();
+  if (tail) consumeEvent(tail);
+  if (!isStreamedTranslationAgentResult(finalPayload)) {
+    return { status: 502, payload: null, text: 'translation_agent_stream_missing_result' };
+  }
+  return { status: finalPayload.status, payload: finalPayload.payload, text: JSON.stringify(finalPayload.payload) };
+}
+
 function sameStringSet(left: string[], right: string[]): boolean {
   const leftSet = new Set(left);
   const rightSet = new Set(right);
@@ -361,6 +426,7 @@ export async function generateAccountInstanceTranslations(args: {
   authz: RomaAccountAuthzCapsulePayload;
   accountCapsule?: string | null;
   requestId?: string | null;
+  onActivity?: (event: TranslationAgentActivityEvent) => void;
 }): Promise<{ ok: true; value: InstanceTranslationsGeneratePayload; status: number } | RouteFailure> {
   const baseLocale = asTrimmedString(args.baseLocale);
   const activeLocales = normalizeStringArray(args.activeLocales);
@@ -418,6 +484,7 @@ export async function generateAccountInstanceTranslations(args: {
       path: '/translate-instance',
       method: 'POST',
       requestId: args.requestId,
+      accept: args.onActivity ? 'text/event-stream' : 'application/json',
       body: {
         grant: issued.grant,
         agentId: issued.agentId,
@@ -441,12 +508,18 @@ export async function generateAccountInstanceTranslations(args: {
       },
     };
   }
-  const text = await response.text().catch(() => '');
-  const payload = safeJsonParse(text);
-  if (!response.ok) {
-    return routeFailureFromTranslationAgentError(response.status, payload, text || `translation_agent_http_${response.status}`);
+  const agentResult = await readTranslationAgentResponse({
+    response,
+    onActivity: args.onActivity,
+  });
+  if (agentResult.status < 200 || agentResult.status >= 300) {
+    return routeFailureFromTranslationAgentError(
+      agentResult.status,
+      agentResult.payload,
+      agentResult.text || `translation_agent_http_${agentResult.status}`,
+    );
   }
-  const translated = normalizeTranslationAgentResponse(payload);
+  const translated = normalizeTranslationAgentResponse(agentResult.payload);
   if (
     !translated ||
     !translated.translation.ok ||

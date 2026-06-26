@@ -53,6 +53,14 @@ type TranslationLocaleResult =
   | { locale: string; ok: true; count: number }
   | { locale: string; ok: false; reasonKey: string; detail?: string };
 
+type AgentActivityEvent = {
+  message: string;
+};
+
+function sendStreamEvent(controller: ReadableStreamDefaultController<Uint8Array>, event: string, payload: unknown) {
+  controller.enqueue(new TextEncoder().encode(`event: ${event}\ndata: ${JSON.stringify(payload)}\n\n`));
+}
+
 class HttpError extends Error {
   readonly status: number;
   readonly payload: unknown;
@@ -69,6 +77,13 @@ function json(value: unknown, init: ResponseInit = {}): Response {
   headers.set('content-type', 'application/json; charset=utf-8');
   headers.set('cache-control', 'no-store');
   return new Response(JSON.stringify(value), { ...init, headers });
+}
+
+function eventStream(stream: ReadableStream<Uint8Array>, init: ResponseInit = {}): Response {
+  const headers = new Headers(init.headers);
+  headers.set('content-type', 'text/event-stream; charset=utf-8');
+  headers.set('cache-control', 'no-store');
+  return new Response(stream, { ...init, headers });
 }
 
 async function readJson(request: Request): Promise<unknown> {
@@ -440,10 +455,19 @@ async function translateLocale(args: {
   return buildExactOverlayValues({ items: args.request.items, restored });
 }
 
+function resolveLocaleLabel(locale: string): string {
+  try {
+    return new Intl.DisplayNames(['en'], { type: 'language' }).of(locale) || locale;
+  } catch {
+    return locale;
+  }
+}
+
 async function executeTranslationRun(args: {
   env: Env;
   requestId: string;
   request: TranslationAgentWorkerRequest;
+  onActivity?: (event: AgentActivityEvent) => void;
 }): Promise<TranslationLocaleResult[]> {
   const results = new Array<TranslationLocaleResult>(args.request.activeLocales.length);
   let nextLocaleIndex = 0;
@@ -452,6 +476,10 @@ async function executeTranslationRun(args: {
     nextLocaleIndex += 1;
     const locale = args.request.activeLocales[localeIndex];
     if (!locale) return;
+    const localeLabel = resolveLocaleLabel(locale);
+    args.onActivity?.({
+      message: `Writing ${localeLabel}`,
+    });
     const values = await translateLocale({
       env: args.env,
       requestId: args.requestId,
@@ -467,6 +495,9 @@ async function executeTranslationRun(args: {
       locale,
       values,
     });
+    args.onActivity?.({
+      message: `${localeLabel} written`,
+    });
     results[localeIndex] = { locale, ok: true, count: Object.keys(values).length };
     await runNext();
   };
@@ -476,6 +507,96 @@ async function executeTranslationRun(args: {
   );
   await Promise.all(workers);
   return results;
+}
+
+async function handleTranslateInstance(args: {
+  request: Request;
+  env: Env;
+  streamActivity: boolean;
+}): Promise<Response> {
+  const body = normalizeWorkerRequest(await readJson(args.request));
+  if (!body) {
+    throw new HttpError(400, {
+      error: {
+        code: 'BAD_REQUEST',
+        reasonKey: 'coreui.errors.translation.invalidRequest',
+        message: 'Invalid Translation Agent worker request',
+        issues: [{ path: '', message: 'Expected { grant, accountPublicId, instanceId, activeLocales, items }' }],
+      },
+    });
+  }
+  const requestId = resolveRequestId(args.request, body);
+  await verifyRomaTranslationGrant({
+    grant: body.grant,
+    secret: args.env.AI_GRANT_HMAC_SECRET,
+    accountPublicId: body.accountPublicId,
+    instanceId: body.instanceId,
+    activeLocales: body.activeLocales,
+  });
+
+  const run = async (onActivity?: (event: AgentActivityEvent) => void) => {
+    onActivity?.({
+      message: 'Writing translations',
+    });
+    const results = await executeTranslationRun({
+      env: args.env,
+      requestId,
+      request: body,
+      onActivity,
+    });
+    const failed = results.filter((result) => !result.ok);
+    return {
+      status: failed.length ? 424 : 200,
+      payload: {
+        requestId,
+        agentId: TRANSLATION_AGENT_ID,
+        translation: {
+          ok: failed.length === 0,
+          baseLocale: body.baseLocale,
+          activeLocales: body.activeLocales,
+          results,
+        },
+      },
+    };
+  };
+
+  if (!args.streamActivity) {
+    const result = await run();
+    return json(result.payload, { status: result.status });
+  }
+
+  const stream = new ReadableStream<Uint8Array>({
+    async start(controller) {
+      try {
+        const result = await run((event) => sendStreamEvent(controller, 'activity', event));
+        sendStreamEvent(controller, 'result', result);
+        controller.close();
+      } catch (error) {
+        const status =
+          error instanceof HttpError ? error.status : error instanceof TranslationAgentError ? error.status : 500;
+        const payload = error instanceof HttpError
+          ? error.payload
+          : error instanceof TranslationAgentError
+            ? {
+                error: {
+                  code: error.code,
+                  message: error.message,
+                  ...(error.provider ? { provider: error.provider } : {}),
+                },
+              }
+            : {
+                error: {
+                  code: 'PROVIDER_ERROR',
+                  provider: 'translation-agent',
+                  message: error instanceof Error ? error.message : String(error),
+                },
+              };
+        sendStreamEvent(controller, 'result', { status, payload });
+        controller.close();
+      }
+    },
+  });
+  return eventStream(stream);
 }
 
 export default {
@@ -493,37 +614,11 @@ export default {
       if (request.method !== 'POST' || url.pathname !== '/translate-instance') {
         throw new HttpError(404, { error: { code: 'BAD_REQUEST', message: 'Not found' } });
       }
-      const body = normalizeWorkerRequest(await readJson(request));
-      if (!body) {
-        throw new HttpError(400, {
-          error: {
-            code: 'BAD_REQUEST',
-            reasonKey: 'coreui.errors.translation.invalidRequest',
-            message: 'Invalid Translation Agent worker request',
-            issues: [{ path: '', message: 'Expected { grant, accountPublicId, instanceId, activeLocales, items }' }],
-          },
-        });
-      }
-      const requestId = resolveRequestId(request, body);
-      await verifyRomaTranslationGrant({
-        grant: body.grant,
-        secret: env.AI_GRANT_HMAC_SECRET,
-        accountPublicId: body.accountPublicId,
-        instanceId: body.instanceId,
-        activeLocales: body.activeLocales,
+      return handleTranslateInstance({
+        request,
+        env,
+        streamActivity: request.headers.get('accept')?.includes('text/event-stream') === true,
       });
-      const results = await executeTranslationRun({ env, requestId, request: body });
-      const failed = results.filter((result) => !result.ok);
-      return json({
-        requestId,
-        agentId: TRANSLATION_AGENT_ID,
-        translation: {
-          ok: failed.length === 0,
-          baseLocale: body.baseLocale,
-          activeLocales: body.activeLocales,
-          results,
-        },
-      }, { status: failed.length ? 424 : 200 });
     } catch (error) {
       if (error instanceof TranslationAgentError) {
         return json(

@@ -168,10 +168,10 @@ Worker. Translation Agent calls San Francisco `/model/chat` and writes overlays
 via Tokyo-worker. That overlay write is the Translations panel command. Roma
 does not return locale package, materializer, or cache-refresh coordinates as
 translation truth for this command.
-When the command is invoked through hosted Bob, Roma may return the same final
-overlay-write truth through a transient event stream so Bob can display live
-activity rows while the command runs. These events are not persisted and are not
-product status.
+When the command is invoked through hosted Bob, Translation Agent may stream
+Agent Activity while it operates. Roma forwards that activity to Bob; Roma does
+not author it, summarize it, poll for it, persist it, or convert it into product
+status.
 
 Account language settings are also an overlay operation. When the user saves
 active locales in Roma Settings, Roma compares the previous active locales to

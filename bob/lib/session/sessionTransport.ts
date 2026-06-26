@@ -3,8 +3,8 @@ import type { AccountAssetsTransport } from '../../../dieter/components/shared/a
 import {
   type BobAccountCommand,
   type BobAccountCommandMessage,
-  type HostAccountCommandActivityMessage,
-  type HostCommandActivityEvent,
+  type AgentActivityEvent,
+  type HostAgentActivityMessage,
   type HostAccountCommandResultMessage,
   type SessionMeta,
 } from './sessionTypes';
@@ -39,7 +39,7 @@ export type ReadTranslation = (
 
 export type GenerateTranslationsArgs = {
   instanceId: string;
-  onActivity?: (event: HostCommandActivityEvent) => void;
+  onActivity?: (event: AgentActivityEvent) => void;
 };
 
 export type GenerateTranslations = (
@@ -136,7 +136,7 @@ export function useSessionTransport(args: {
       headers?: Record<string, string>;
       body?: unknown;
       timeoutMs?: number;
-      onActivity?: (event: HostCommandActivityEvent) => void;
+      onActivity?: (event: AgentActivityEvent) => void;
     }): Promise<{ ok: boolean; status: number; payload: any; message?: string }> => {
       const targetOrigin = await waitForHostOrigin();
       if (!targetOrigin) {
@@ -164,10 +164,10 @@ export function useSessionTransport(args: {
         const onMessage = (event: MessageEvent) => {
           if (event.origin !== targetOrigin) return;
           if (event.source !== window.parent) return;
-          const data = event.data as HostAccountCommandResultMessage | HostAccountCommandActivityMessage | null;
+          const data = event.data as HostAccountCommandResultMessage | HostAgentActivityMessage | null;
           if (!data || typeof data !== 'object') return;
           if (data.requestId !== requestId) return;
-          if (data.type === 'host:account-command-activity') {
+          if (data.type === 'host:agent-activity') {
             if (data.event && typeof data.event === 'object') commandArgs.onActivity?.(data.event);
             return;
           }

@@ -63,9 +63,10 @@ Locale removal is not Translation Agent work. Roma/Tokyo delete exact overlay
 files for removed active locales.
 
 Bob uses hosted Builder commands for translation operations. These commands have
-a `120_000ms` timeout. The Translation Agent does not expose its own progress
-stream; Roma may emit transient hosted-command activity events while it runs the
-direct per-locale generation and package materialization command.
+a `120_000ms` timeout. Translation Agent owns Agent Activity for this operation:
+while it translates and writes overlays, it may emit transient narration such as
+`Writing French` and `French written`. Roma transports this stream to Bob. Bob
+renders it temporarily.
 
 | Bob operation | Hosted command | Roma route |
 | --- | --- | --- |
@@ -73,10 +74,10 @@ direct per-locale generation and package materialization command.
 | read one translation | `read-translation` | `GET /api/account/instances/[instance id]/translations/[active locale]` |
 | generate translations | `generate-translations` | `POST /api/account/instances/[instance id]/translations/generate` |
 
-Bob's current Translations panel shows request state, transient Roma command
-activity rows, and final result messages such as a generated active-locale
-count. These rows are not stored status and do not come from Translation Agent
-polling.
+Bob's current Translations panel shows the Generate translations operation and
+transient Translation Agent Activity while the agent operates. It does not show
+generated-count summaries, queue state, package/cache state, or user translation
+overrides. Activity rows are not stored status and do not come from polling.
 
 ## Roma Public Translation API
 
