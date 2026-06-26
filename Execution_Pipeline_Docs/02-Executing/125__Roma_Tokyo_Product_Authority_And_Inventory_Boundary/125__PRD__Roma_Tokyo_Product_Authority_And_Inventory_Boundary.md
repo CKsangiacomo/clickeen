@@ -179,9 +179,10 @@ Tokyo does:
 - delete exact asset bytes;
 - validate storage path, filename, MIME type, SVG safety, and blob metadata.
 
-Same pattern means same authority ownership, not identical payload minimalism.
-Tokyo returns asset storage records and storage bytes because those are storage
-facts. Tokyo must not decide account policy or UI action availability.
+The shared authority rule is exact: Roma owns account policy and product
+response; Tokyo owns storage facts and byte operations. Tokyo returns asset
+storage records and storage bytes because those are storage facts. Tokyo must
+not decide account policy or UI action availability.
 
 ### Widgets Target Pattern
 
@@ -224,9 +225,41 @@ Forbidden response shape:
 After receiving `instanceIds`, Roma opens exact instances by id:
 
 ```text
-Roma -> Tokyo /__internal/instances/{instanceId}
-Roma -> Tokyo /__internal/instances/{instanceId}/package when package metadata is needed
+Roma -> Tokyo /__internal/instances/{instanceId}/list-facts
 ```
+
+For `/api/account/widgets`, the exact open must use the list-facts route only.
+That route reads only exact stored facts needed by the Widgets list. It is not
+an account inventory route and not a product-summary list.
+
+Required list-facts response shape:
+
+```json
+{
+  "ok": true,
+  "accountId": "CLICKEEN",
+  "instanceId": "ABC1234567",
+  "widgetType": "faq",
+  "displayName": null,
+  "updatedAt": "2026-06-26T00:00:00.000Z",
+  "publishStatus": "published"
+}
+```
+
+Tokyo returns the stored `instance.config.json` `displayName` as `string` or
+`null`. Tokyo must not derive a fallback label from widget type, widget
+metadata, instance id, or any other source. Roma applies the Widgets UI fallback
+label when rendering product rows.
+
+Tokyo list-facts implementation may read only:
+
+```text
+accounts/{accountId}/instances/{instanceId}/instance.config.json
+accounts/{accountId}/instances/{instanceId}/serve-state.json
+```
+
+Package, content, overlay, locale package, and public runtime bytes are not part
+of the Widgets list route.
 
 Roma builds the Widgets product response:
 
@@ -257,6 +290,7 @@ Roma decides:
 - `widgets.instances.max`;
 - `instances.published.max`;
 - whether a create click executes or returns an upgrade popup response;
+- whether a duplicate click executes or returns an upgrade popup response;
 - whether a publish click executes or returns an upgrade popup response;
 - permission or state denials for non-upgrade operations;
 - how to describe validation/denial to the product surface.
@@ -275,10 +309,32 @@ Tokyo instance coordinate enumeration:
 - lists objects under `accounts/{accountId}/instances/`;
 - derives unique immediate child `instanceId` coordinates from object keys;
 - rejects malformed immediate child coordinates;
+- if a malformed immediate child coordinate exists under the account instance
+  root, Tokyo returns HTTP 422 and must not omit that coordinate and continue;
 - returns sorted ids only;
 - does not require `instance.config.json` to exist before returning an id;
 - does not read config, content, serve-state, package files, or overlays while
   building the account list.
+
+Malformed coordinate failure contract:
+
+```http
+HTTP/1.1 422 Unprocessable Content
+Content-Type: application/json
+```
+
+```json
+{
+  "error": {
+    "kind": "VALIDATION",
+    "reasonKey": "tokyo.errors.instance.malformedCoordinate",
+    "detail": "accounts/CLICKEEN/instances/{badCoordinate}",
+    "phase": "account-instance-coordinate-enumeration"
+  }
+}
+```
+
+Tokyo must not normalize, repair, skip, or continue after that coordinate.
 
 Tokyo does not:
 
@@ -287,9 +343,20 @@ Tokyo does not:
 - decide account tier policy;
 - decide create/publish limits;
 - infer display name for the Widgets list response;
+- derive fallback display names in `list-facts`;
 - return publish counts for policy decisions;
 - repair missing objects;
 - omit corrupt objects.
+
+Tokyo `GET /__internal/instances/{instanceId}/list-facts` does not:
+
+- enumerate account instances;
+- decide product action meaning;
+- decide account tier policy;
+- return generated package bytes;
+- return content values;
+- return overlays;
+- return locale package facts.
 
 If Tokyo enumerates an instance id and the exact instance open fails, Roma must
 fail the Widgets response visibly. Roma must not silently drop that instance.
@@ -338,9 +405,10 @@ Current Roma `/widgets` needs:
 - display name
 - publish state
 - account policy limits
-- click-time create and publish upgrade responses
-- delete/rename/duplicate availability when those actions are permission or
-  state dependent
+- click-time create, duplicate, and publish upgrade responses
+- delete and rename availability when those actions are permission or state
+  dependent
+- duplicate click-time upgrade response where duplicate is shown
 
 Current code obtains the account instance list through:
 
@@ -408,15 +476,41 @@ Roma open fan-out contract:
 - the full widget catalog is always visible;
 - widget catalog visibility is not tier-gated;
 - create controls are always rendered and clickable from the catalog;
+- duplicate controls are always rendered and clickable wherever the Widgets
+  surface shows duplicate;
 - publish controls are always rendered and clickable from an instance surface;
 - `widgets.instances.max` is an action-time upgrade gate, not a
-  catalog visibility gate;
+  catalog visibility gate, not an already-saved instance open gate, and not a
+  use gate for saved widgets;
 - `instances.published.max` is an action-time publish upgrade gate, not an
   instance visibility gate;
+- duplicate is a create-like action and uses the same `widgets.instances.max`
+  upgrade gate as Create instance;
 - Roma opens returned `instanceIds` because they are the account's actual saved
   instance coordinates, not because Tokyo approved product eligibility;
-- Roma opens returned `instanceIds` with bounded concurrency, maximum 8 open
+- Roma uses two account inventory helpers:
+  `listAccountWidgetInstanceIds` and `loadAccountWidgetInstanceFacts`;
+- `listAccountWidgetInstanceIds` calls Tokyo
+  `GET /__internal/accounts/{accountId}/instances` and returns exact sorted
+  `instanceIds[]` only;
+- `loadAccountWidgetInstanceFacts` calls `listAccountWidgetInstanceIds`, then
+  opens each id through Tokyo
+  `GET /__internal/instances/{instanceId}/list-facts`;
+- `loadAccountWidgetInstanceFacts` uses bounded concurrency, maximum 8 list-fact
   requests at a time;
+- Widgets list and publish gate use `loadAccountWidgetInstanceFacts`;
+- Create and Duplicate gates use `listAccountWidgetInstanceIds.length`; they
+  must not open instance config or serve-state just to enforce
+  `widgets.instances.max`;
+- locale fan-out iterates `listAccountWidgetInstanceIds`; it must not open
+  config or serve-state just to discover coordinates;
+- base-locale lock derives `locked = true` from
+  `listAccountWidgetInstanceIds.length > 0`; it must not open Widgets list
+  facts;
+- for the Widgets list, the helper returns only instance identity, widget type,
+  display label, updated timestamp, and publish state;
+- Roma must not read content, overlays, generated packages, locale packages, or
+  public package bytes for the Widgets list;
 - Roma builds product rows only after every exact open succeeds;
 - Roma sorts final Widgets rows by opened instance `updatedAt` descending, then
   `instanceId` ascending;
@@ -454,8 +548,16 @@ Roma enforces:
 - `widgets.instances.max`
 - `instances.published.max`
 - create-click upgrade response before Tokyo writes
+- duplicate-click upgrade response before Tokyo writes
 - publish-click upgrade response before Tokyo writes
 - product error wording
+
+Roma policy source:
+
+- Roma resolves account policy from the Berlin-issued account/authz snapshot
+  through `@clickeen/ck-policy`.
+- Michael/Supabase provides account relational facts. It does not become the
+  entitlement matrix, Widgets inventory, or Widgets policy executor.
 
 Tokyo stores and returns:
 
@@ -467,9 +569,12 @@ Tokyo stores and returns:
 Code execution must not invent a saved-instance product policy. This PRD
 replaces the current incorrect `widgets.types.max` concept with
 `widgets.instances.max`. `widgets.instances.max` is the create-click upgrade
-gate for how many widget instances the account can create/open/use. The
-account's published instance entitlement is the publish-click upgrade gate.
-Those two gates are separate and both belong to Roma.
+gate for how many saved widget instances the account can create through
+create-like actions. It does not hide catalog widgets, hide saved instances,
+block opening already-saved instances, block using already-saved instances, or
+disable controls. The account's published instance entitlement is the
+publish-click upgrade gate. Those two gates are separate and both belong to
+Roma.
 
 ## 4A. Roma Widgets Product Payload, Upgrade, And Copy Contract
 
@@ -479,25 +584,55 @@ The Roma Widgets surface renders:
 full widget catalog
 saved account instances
 clickable Create instance controls
+clickable Duplicate controls where duplicate is shown
 clickable Publish controls
 ```
 
-The product model is not "disabled button with reason." The product model is
-"user expresses intent, Roma either executes or returns upgrade_required."
+The product model is not "disabled button with reason." The product model is:
+user expresses intent, then Roma either executes or returns HTTP 402 with
+`{ "ok": false, "kind": "UPGRADE_REQUIRED", "upgrade": ... }`.
+
+Role and state UX rule:
+
+```text
+Monetization gates are clickable upgrade popups.
+Role/state denials are explicit permission or state UX.
+Plan-limit conditions must never be represented as disabled buttons, tooltips,
+titles, inline raw errors, or list-payload availability booleans.
+```
 
 Create click contract:
 
 ```text
 User clicks Create instance
-Roma counts current account widget instances from exact opened instance facts
-Roma reads widgets.instances.max from Michael/Berlin policy
+Roma counts current account widget instances from the coordinate list length
+Roma resolves widgets.instances.max from the Berlin-issued account/authz
+snapshot through @clickeen/ck-policy
 
 If within entitlement:
   Roma mints the instance id
   Roma submits the exact create command to Tokyo
 
 If entitlement is reached:
-  Roma returns upgrade_required
+  Roma returns HTTP 402 with { "ok": false, "kind": "UPGRADE_REQUIRED", "upgrade": ... }
+  Roma does not call Tokyo
+  UI opens the upgrade popup
+```
+
+Duplicate click contract:
+
+```text
+User clicks Duplicate
+Roma counts current account widget instances from the coordinate list length
+Roma resolves widgets.instances.max from the Berlin-issued account/authz
+snapshot through @clickeen/ck-policy
+
+If within entitlement:
+  Roma mints the new instance id
+  Roma submits the exact duplicate/create command to Tokyo
+
+If entitlement is reached:
+  Roma returns HTTP 402 with { "ok": false, "kind": "UPGRADE_REQUIRED", "upgrade": ... }
   Roma does not call Tokyo
   UI opens the upgrade popup
 ```
@@ -506,14 +641,16 @@ Publish click contract:
 
 ```text
 User clicks Publish
-Roma counts currently published account instances from exact opened instance facts
-Roma reads instances.published.max from Michael/Berlin policy
+Roma counts currently published account instances from Roma-opened exact
+publish/list facts derived from the coordinate list
+Roma resolves instances.published.max from the Berlin-issued account/authz
+snapshot through @clickeen/ck-policy
 
 If within entitlement:
   Roma submits the exact publish command to Tokyo
 
 If entitlement is reached:
-  Roma returns upgrade_required
+  Roma returns HTTP 402 with { "ok": false, "kind": "UPGRADE_REQUIRED", "upgrade": ... }
   Roma does not call Tokyo
   UI opens the upgrade popup
 ```
@@ -522,6 +659,153 @@ The UI may show loading while the click is being handled. It must not remove the
 catalog item, hide the action, or convert an upgrade opportunity into a dead
 disabled control.
 
+Upgrade responses are command responses, not list payload state.
+
+Required HTTP response for create over entitlement:
+
+```http
+HTTP/1.1 402 Payment Required
+Content-Type: application/json
+```
+
+```json
+{
+  "ok": false,
+  "kind": "UPGRADE_REQUIRED",
+  "upgrade": {
+    "gate": "widgets.instances.max",
+    "action": "create_instance",
+    "current": 3,
+    "limit": 3
+  }
+}
+```
+
+Required HTTP response for duplicate over entitlement:
+
+```http
+HTTP/1.1 402 Payment Required
+Content-Type: application/json
+```
+
+```json
+{
+  "ok": false,
+  "kind": "UPGRADE_REQUIRED",
+  "upgrade": {
+    "gate": "widgets.instances.max",
+    "action": "duplicate_instance",
+    "current": 3,
+    "limit": 3
+  }
+}
+```
+
+Required HTTP response for publish over entitlement:
+
+```http
+HTTP/1.1 402 Payment Required
+Content-Type: application/json
+```
+
+```json
+{
+  "ok": false,
+  "kind": "UPGRADE_REQUIRED",
+  "upgrade": {
+    "gate": "instances.published.max",
+    "action": "publish_instance",
+    "current": 5,
+    "limit": 5
+  }
+}
+```
+
+The user-facing upgrade copy must be shown in the upgrade popup opened from the
+click. It must not be delivered as an account notice, disabled-button title,
+tooltip, raw reason key, inline technical error, generic permission denial, or
+any other non-popup substitute.
+
+The upgrade popup must render the primary copy, current/limit context, and an
+upgrade CTA from the HTTP 402 `UPGRADE_REQUIRED` payload.
+
+Forbidden Widgets list payload fields:
+
+```text
+canCreate
+createDisabledReason
+disabledReasonKey for Create instance
+disabledReasonKey for Duplicate
+disabledReasonKey for Publish
+boolean Create instance availability
+boolean Duplicate availability
+boolean Publish availability
+```
+
+Required `GET /api/account/widgets` response shape after PRD 125:
+
+```json
+{
+  "catalog": [
+    {
+      "widgetType": "faq",
+      "displayName": "FAQ",
+      "description": "Frequently asked questions"
+    }
+  ],
+  "instances": [
+    {
+      "instanceId": "ABC1234567",
+      "widgetType": "faq",
+      "displayName": "FAQ",
+      "status": "published",
+      "updatedAt": "2026-06-26T00:00:00.000Z"
+    }
+  ]
+}
+```
+
+Roma must not return both `catalog` and `systemWidgets` during migration.
+PRD 125 updates the client normalizer, cache, and UI to consume `catalog` plus
+`instances` only, with no compatibility fallback to `systemWidgets`, `canCreate`,
+`actions`, or monetization `disabledReasonKey` payloads.
+
+Role/state action rendering:
+
+```text
+Create instance is rendered from catalog rows.
+Duplicate is rendered from instance rows where the surface offers Duplicate.
+Publish is rendered from instance rows with status = unpublished.
+Unpublish is rendered from instance rows with status = published.
+Rename and Delete are rendered from the current account role and instance row.
+```
+
+The list response must not return action booleans for monetization. The client
+derives non-monetization role/state rendering from the current account role and
+the instance row state, then command routes enforce the same role/state boundary.
+
+`GET /api/account/widgets` must not decide monetization availability for Create
+instance, Duplicate, or Publish. Upgrade is determined only when the user clicks
+the action. Permission or state controls may still be unavailable where the user
+cannot perform the operation, but tier monetization controls are different:
+Create instance, Duplicate, and Publish remain clickable and resolve through
+HTTP 402 `UPGRADE_REQUIRED` when over entitlement.
+
+Client upgrade handling contract:
+
+```text
+Create, Duplicate, and Publish action handlers must inspect HTTP 402 JSON before
+generic same-origin error parsing.
+
+If response body is:
+{ "ok": false, "kind": "UPGRADE_REQUIRED", "upgrade": { ... } }
+
+Then the Widgets surface opens the upgrade popup with that payload.
+The body must not be wrapped under `error`.
+The client must not collapse it into HTTP_402, reasonKey, toast-only copy, or a
+disabled control.
+```
+
 Primary Widgets user copy:
 
 | State | Primary copy |
@@ -529,11 +813,12 @@ Primary Widgets user copy:
 | Inventory/open failure | We couldn't load your widgets. No widgets were changed. Try again. |
 | Corrupt saved widget | One saved widget needs attention before this list can load. No widgets were changed. |
 | Create upgrade gate | Upgrade to create more widgets. |
+| Duplicate upgrade gate | Upgrade to create more widgets. |
 | Publish upgrade gate | Upgrade to publish more widgets. |
 | Upstream unavailable | Widgets are unavailable right now. Please try again. |
 | Permission denial | You do not have permission to change widgets in this account. |
 
-Primary UI copy must not say:
+No user-visible copy may say:
 
 ```text
 account instance
@@ -561,7 +846,9 @@ add:    widgets.instances.max
 `widgets.instances.max` means:
 
 ```text
-Maximum widget instances the account can create/open/use.
+Maximum widget instances the account can create through create-like actions.
+This key is enforced when Create instance or Duplicate would add another saved
+widget instance.
 ```
 
 `widgets.instances.max` does not mean:
@@ -571,21 +858,41 @@ Maximum widget types.
 Catalog visibility.
 Catalog filtering.
 Disabled Create instance button.
+Disabled Duplicate button.
+Blocked opening of already-saved widget instances.
+Blocked use of already-saved widget instances.
 Tokyo storage permission.
 ```
 
-Initial tier values preserve the current commercial count while correcting the
-meaning:
+PRD 125 locks finite `widgets.instances.max` tier values for execution:
+
+```json
+{
+  "free": 3,
+  "tier1": 10,
+  "tier2": 25,
+  "tier3": 100,
+  "tier4": 250
+}
+```
+
+No `widgets.instances.max` tier value may be `null` after PRD 125 execution.
+
+PRD 125 also locks finite `instances.published.max` tier values for execution:
 
 ```json
 {
   "free": 1,
   "tier1": 1,
-  "tier2": 3,
-  "tier3": null,
-  "tier4": null
+  "tier2": 5,
+  "tier3": 25,
+  "tier4": 100
 }
 ```
+
+No `instances.published.max` tier value may be `null` after PRD 125 execution.
+For every tier, `widgets.instances.max` must be greater than or equal to
+`instances.published.max`.
 
 Execution requirements:
 
@@ -594,7 +901,14 @@ Execution requirements:
 - replace `widgets.types.max` with `widgets.instances.max` in
   `packages/ck-policy/entitlements.matrix.json`;
 - update Roma create route policy reads to use `widgets.instances.max`;
+- update Roma duplicate route to enforce `widgets.instances.max` before Tokyo
+  writes;
+- update Roma publish route to return exact HTTP 402 `UPGRADE_REQUIRED` for
+  `instances.published.max`;
 - update Roma Widgets route policy reads to use `widgets.instances.max`;
+- update Roma client Create, Duplicate, and Publish handlers to inspect
+  unwrapped HTTP 402 `UPGRADE_REQUIRED` bodies before generic error handling;
+- update `instances.published.max` tier values so every tier is finite;
 - remove user copy that says "widget type(s)" as a plan limit;
 - do not keep `widgets.types.max` as an alias or fallback;
 - do not add a saved-instance policy key.
@@ -628,6 +942,9 @@ Output:
   not preserved as an alias
 - exact current policy key used for `instances.published.max`
 - exact routes and UI surfaces that must return/open upgrade popup responses
+- policy arithmetic proof that every `widgets.instances.max` value is finite,
+  every `instances.published.max` value is finite, and
+  `widgets.instances.max >= instances.published.max` for every tier
 - V1-V8 risk list
 
 Compliance:
@@ -642,7 +959,9 @@ Move Roma Widgets away from Tokyo product-list reconstruction.
 Required behavior:
 
 - Roma returns the full widget catalog independent of account tier.
-- Roma returns saved account instances derived from exact instance opens.
+- Roma returns saved account instance rows derived from exact list-facts opens.
+- Roma uses coordinate-list ids directly for count, existence, and locale
+  fan-out paths that do not need row fields.
 - Roma owns product interpretation and account policy.
 - Tokyo returns `accountId + instanceIds[]` only.
 - Missing/corrupt inventory truth fails visibly.
@@ -655,24 +974,29 @@ Compliance:
 This removes Tokyo as product brain without replacing it with an inferred
 authority.
 
-### Slice 3: Widget Create/Publish Upgrade Gates
+### Slice 3: Widget Create/Duplicate/Publish Upgrade Gates
 
-Update create and publish enforcement so Roma uses exact opened instance facts
-from the `instanceIds[]` list.
+Update create, duplicate, and publish enforcement so Roma uses the cheapest
+truth required for each gate.
 
 Required behavior:
 
 - `widgets.instances.max` is enforced by Roma at Create instance click
   time.
+- `widgets.instances.max` is enforced by Roma at Duplicate click time.
 - `instances.published.max` is enforced by Roma at Publish click time.
-- create and publish upgrade gates use the same Roma-derived opened-instance
-  facts as Widgets list.
+- create and duplicate upgrade gates use the coordinate list length.
+- publish upgrade gate uses Roma-opened exact publish/list facts derived from
+  the coordinate list.
 - create remains clickable from the full catalog.
+- duplicate remains clickable wherever the Widgets surface shows it.
 - publish remains clickable from the instance surface.
-- when create exceeds entitlement, Roma returns `upgrade_required` and does not
-  call Tokyo.
-- when publish exceeds entitlement, Roma returns `upgrade_required` and does
-  not call Tokyo.
+- when create exceeds entitlement, Roma returns HTTP 402 `UPGRADE_REQUIRED` and
+  does not call Tokyo.
+- when duplicate exceeds entitlement, Roma returns HTTP 402 `UPGRADE_REQUIRED`
+  and does not call Tokyo.
+- when publish exceeds entitlement, Roma returns HTTP 402 `UPGRADE_REQUIRED`
+  and does not call Tokyo.
 - Roma does not use Tokyo `publishedCount`.
 - Roma does not use Tokyo widget type summaries.
 - Roma does not use `/instances/facts`.
@@ -694,10 +1018,10 @@ Required behavior:
 
 - one operation either leaves the locked route-contract state coherent or
   fails visibly;
-- create and publish over entitlement return upgrade responses before Tokyo is
-  called;
-- duplicate follows the same widget instance count entitlement as create unless
-  product explicitly defines a different upgrade rule;
+- create, duplicate, and publish over entitlement return upgrade responses
+  before Tokyo is called;
+- duplicate is a create-like action and uses the same `widgets.instances.max`
+  gate as Create instance;
 - no background repair path;
 - no dual-authority success response;
 - no cleanup operation that pretends partial completion is full success.
@@ -733,8 +1057,10 @@ GET /__internal/accounts/{accountId}/instances
   -> { ok: true, accountId, instanceIds }
 ```
 
-Delete this route only after Roma base-locale lock and every other caller uses
-the coordinate list:
+Do not delete this route. It remains the account coordinate-list route.
+
+Retire the facts route below only after Roma base-locale lock and every other
+caller has moved to the coordinate list plus exact list-facts opens:
 
 ```text
 GET /__internal/accounts/{accountId}/instances/facts
@@ -749,12 +1075,18 @@ No broken build. No preserved product-summary route. No shadow product path.
 Update current docs after runtime behavior is green:
 
 - `documentation/architecture/CONTEXT.md`
-- `documentation/services/roma.md`
-- `documentation/services/tokyo-worker.md`
-- `documentation/services/michael.md`
-- `documentation/capabilities/multitenancy.md` if policy key naming changes
+- `documentation/services/roma.md`: Widgets list flow, Create/Duplicate/Publish
+  clickable HTTP 402 `UPGRADE_REQUIRED`, no monetization booleans
+- `documentation/services/tokyo-worker.md`: account instance list returns only
+  `accountId + instanceIds[]`, add `/__internal/instances/{instanceId}/list-facts`,
+  and retire `/instances/facts` after callers move
+- `documentation/services/michael.md`: `public.instances` remains
+  registry/status only and is not Widgets inventory authority
+- `documentation/capabilities/multitenancy.md` because PRD 125 replaces
+  `widgets.types.max` with `widgets.instances.max`, locks finite tier values,
+  and changes Widgets monetization UX to click-time HTTP 402 `UPGRADE_REQUIRED`
 - `documentation/capabilities/localization.md` because locale fan-out cost
-  depends on account instance count
+  derives from coordinate count, not opened row facts
 - asset docs if the Assets boundary changes
 
 Compliance:
@@ -781,9 +1113,25 @@ Product verification must prove:
 - Roma Widgets loads from `accountId + instanceIds[]`.
 - Full widget catalog remains visible to every account tier.
 - Create controls remain visible and clickable for every catalog widget.
+- Duplicate controls remain visible and clickable wherever the Widgets surface
+  shows duplicate.
 - Publish controls remain visible and clickable from the instance surface.
-- Create over entitlement returns upgrade_required and does not call Tokyo.
-- Publish over entitlement returns upgrade_required and does not call Tokyo.
+- Create over entitlement returns HTTP 402 `UPGRADE_REQUIRED` and does not call
+  Tokyo.
+- Duplicate over entitlement returns HTTP 402 `UPGRADE_REQUIRED` and does not
+  call Tokyo.
+- Publish over entitlement returns HTTP 402 `UPGRADE_REQUIRED` and does not call
+  Tokyo.
+- Create, Duplicate, and Publish upgrade-required responses use HTTP 402 and
+  the exact `UPGRADE_REQUIRED` body shape from this PRD.
+- Every `widgets.instances.max` tier value is finite.
+- Every `instances.published.max` tier value is finite.
+- For every tier, `widgets.instances.max >= instances.published.max`.
+- `GET /api/account/widgets` does not return `canCreate`,
+  `createDisabledReason`, `disabledReasonKey` for Create instance,
+  `disabledReasonKey` for Duplicate, `disabledReasonKey` for Publish, boolean
+  Create instance availability, boolean Duplicate availability, or boolean
+  Publish availability.
 - Locale settings fan-out iterates the exact returned ids.
 - Base-locale lock derives instance existence from the coordinate list.
 - `widgets.instances.max` is not implemented as widget-type gating.
@@ -793,17 +1141,21 @@ Product verification must prove:
 - Rename/delete/publish/unpublish do not produce split truth.
 - Assets still list/upload/resolve/delete through the current account lane.
 - Tokyo no longer returns Widgets product summaries from the account list route.
-- User copy for inventory corruption, upgrade-required create, upgrade-required publish,
-  and upstream unavailable states does not render raw storage route, JSON,
-  `reasonKey`, or implementation detail as primary user copy.
+- User copy for inventory corruption, upgrade-required create,
+  upgrade-required duplicate, upgrade-required publish, and upstream unavailable
+  states does not render raw storage route, JSON, `reasonKey`, or
+  implementation detail as primary user copy.
 
 Focused tests or route-level checks must prove:
 
 - Tokyo list returns only `accountId + instanceIds[]`.
-- Tokyo coordinate enumeration rejects malformed immediate child coordinates.
+- Tokyo coordinate enumeration fails visibly on malformed immediate child
+  coordinates and does not omit them.
 - Roma fails the whole Widgets response when a returned id cannot open exactly.
-- Create upgrade gate derives from Roma-opened instance facts.
-- Publish upgrade gate derives from Roma-opened instance facts.
+- Create upgrade gate derives from coordinate list length.
+- Duplicate upgrade gate derives from coordinate list length.
+- Publish upgrade gate derives from Roma-opened exact publish/list facts from
+  the coordinate list.
 - Locale settings iterates exact returned ids.
 
 ## 7. V1-V8 Audit Requirements
@@ -830,7 +1182,13 @@ The most important audit questions for this PRD:
 - Did a tier limit hide catalog widgets?
 - Did a tier limit disable Create instance or Publish instead of producing an
   upgrade popup from the click?
+- Did a tier limit disable Duplicate instead of producing an upgrade popup from
+  the click?
 - Did `widgets.types.max` survive in active policy code?
+- Did any `widgets.instances.max` tier value remain `null`?
+- Did any `instances.published.max` tier value remain `null`?
+- Did any tier allow more published instances than created widget instances?
+- Did Roma open overlays/packages/runtime bytes just to render the Widgets list?
 
 ## 8. Acceptance Criteria
 
@@ -843,13 +1201,15 @@ This PRD is complete only when:
 4. Supabase/Michael is out of the Widgets inventory path.
 5. `widgets.types.max` is replaced by `widgets.instances.max` in active policy
    code.
-6. Assets boundary is documented in the same terms and not broken by the
+6. `widgets.instances.max` and `instances.published.max` are finite for every
+   tier, and `widgets.instances.max >= instances.published.max` for every tier.
+7. Assets boundary is documented in the same terms and not broken by the
    Widgets correction.
-7. Current docs match runtime behavior.
-8. Checks are green.
-9. V1-V8 audit is green.
-10. Full catalog visibility, clickable Create instance, clickable Publish, and
-   upgrade-required command responses are verified.
+8. Current docs match runtime behavior.
+9. Checks are green.
+10. V1-V8 audit is green.
+11. Full catalog visibility, clickable Create instance, clickable Duplicate,
+   clickable Publish, and upgrade-required command responses are verified.
 
 ## 9. Non-Goal
 
