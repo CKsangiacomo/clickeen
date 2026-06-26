@@ -42,8 +42,6 @@ function BuilderShell() {
   const {
     translatedLocales,
     valuesByLocale: translationValuesByLocale,
-    loading: translationsLoading,
-    error: translationsError,
   } = useTranslationPreviewState({
     instanceId,
     baseLocale,
@@ -79,9 +77,6 @@ function BuilderShell() {
             onPreviewModeChange={setPreviewMode}
             translationSetup={translationSetup}
             translatedLocales={translatedLocales}
-            translationValuesByLocale={translationValuesByLocale}
-            translationsLoading={translationsLoading}
-            translationsError={translationsError}
           />
           <Workspace
             baseLocale={baseLocale}

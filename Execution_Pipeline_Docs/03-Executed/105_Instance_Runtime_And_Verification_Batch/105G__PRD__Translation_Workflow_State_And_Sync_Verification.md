@@ -54,15 +54,12 @@ Translation is derived output. It is not a second authoring source, a queue moni
 
 ## User-Visible State Contract
 
-Bob must render one primary translation state at a time through one resolver.
+Bob must render translation UI from direct facts in the panel: saved instance
+facts, local dirty/saving state, direct command error, and temporary agent
+activity while the command is active. Bob must not add a standalone state
+resolver, queue monitor, reconciliation layer, or skeptical status vocabulary.
 
-Required resolver concept:
-
-```ts
-resolveTranslationPanelProductState(...)
-```
-
-Required state vocabulary:
+Historical state vocabulary superseded by the direct panel contract:
 
 ```text
 loading

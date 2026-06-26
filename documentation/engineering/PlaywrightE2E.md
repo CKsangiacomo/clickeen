@@ -331,9 +331,9 @@ Bob Translations panel -> Roma -> Translation Agent Worker -> San Francisco -> T
 
 The command clicks Bob's real `Generate translations` button, waits for the Roma
 generation response, requires the exact success shape with non-empty
-`activeLocales` and empty `skippedLocales`, verifies Bob shows
-`Generated N active locales.`, then reads the generated overlay list and one
-locale overlay through Roma and renders translated overlay values in Bob.
+`activeLocales` and empty `skippedLocales`, then reads the generated overlay
+list and one locale overlay through Roma and renders translated overlay values
+in Bob.
 
 Pass evidence is the command exiting `0` and printing JSON with:
 

@@ -173,8 +173,8 @@ The panel sends one Generate translations command with the open `instanceId`.
 Roma resolves active locales and calls the Translation Agent Worker. While the
 operation is running, Bob disables the button and displays transient activity
 rows emitted by the active hosted command while overlays are written. When the
-operation returns, Bob shows the direct result text and refreshes the
-previewable translated locales from overlay truth. Bob does not read or
+operation returns, Bob refreshes the previewable translated locales from
+overlay truth and the transient activity UI disappears. Bob does not read or
 interpret locale package, materializer, or cache-refresh state as translation
 truth.
 
@@ -382,8 +382,6 @@ The Translations panel shows one explicit account operation:
 
 ```text
 Generate translations
-Generated N translations.
-Translations could not be generated.
 ```
 
 Bob sends only the opened `instanceId` to Roma. Roma resolves the account,

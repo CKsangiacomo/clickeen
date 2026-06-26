@@ -48,34 +48,14 @@ Hard rules before implementation begins:
 
 ## User-Visible States
 
-Bob must render one primary translation product state at a time. A single resolver must own this:
+Bob must keep translation UI local and direct. It may show the temporary
+translation activity box while the agent command is active, a save-before-generate
+message when local edits are unsaved, or a direct command error. It must not add
+a separate translation product-state interpreter, queue monitor, reconciliation
+layer, or status vocabulary over the agent writing overlays.
 
-```ts
-resolveTranslationPanelProductState(...)
-```
-
-The resolver must produce:
-
-```ts
-type TranslationPanelProductState = {
-  primaryState:
-    | 'loading'
-    | 'unsaved'
-    | 'unavailable'
-    | 'ready'
-    | 'generating'
-    | 'baseChangedWhileGenerating'
-    | 'baseChanged'
-    | 'partialFailure'
-    | 'failed'
-    | 'available';
-  primaryMessage: string | null;
-  canGenerate: boolean;
-  reviewableLocales: string[];
-};
-```
-
-Only one primary message may be shown. Bob must not stack independent generation, inventory, error, and instruction messages that imply conflicting states.
+Only one panel message may be shown. Bob must not stack independent generation,
+inventory, error, and instruction messages that imply conflicting states.
 
 | State | Meaning | Generate button | Primary message |
 | --- | --- | --- | --- |
@@ -238,7 +218,7 @@ The final public contract must omit queue-progress arrays from Bob's UX model. B
 
 1. Tokyo adds `v: 2`, `generationRequestMarker`, and `locales[]` product states while old fields may still exist internally.
 2. Roma accepts and forwards the product summary. Old queue arrays become optional and non-authoritative.
-3. Bob normalizes the product summary and derives UX from `resolveTranslationPanelProductState()`.
+3. Bob derives UX directly from saved instance facts and local command activity.
 4. Bob stops requiring and rendering old progress arrays.
 5. Tokyo/Roma stop exposing queue arrays to Bob-facing routes, or move them into diagnostics that Bob does not consume.
 
@@ -621,7 +601,7 @@ Current file sizes at PRD creation:
 
 - Delete user-visible inventory progress at `bob/components/TranslationsPanel.tsx:660-663`.
   - Current bad output: `{readyTranslationsCount} of {expectedTranslationsCount} translations ready`.
-  - Replacement: no progress copy; primary message comes from `resolveTranslationPanelProductState()`.
+  - Replacement: no progress copy; only direct panel messages and active command activity.
 - Replace old `TranslationGenerationSummary` shape at `bob/components/TranslationsPanel.tsx:24-47`.
   - Remove public UX dependence on `completedLocales`, `pendingLocales`, `currentReadyLocales`, and `supersededLocales`.
   - Add `v: 2`, `active`, `generationRequestMarker`, and product `locales[]`.

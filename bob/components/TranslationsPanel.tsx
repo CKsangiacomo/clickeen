@@ -14,26 +14,14 @@ import {
 } from '../lib/session/useWidgetSession';
 import type { HostCommandActivityEvent } from '../lib/session/sessionTypes';
 import type { TranslatedLocalesData, TranslationSetup } from './useTranslationPreviewState';
-import { listActivePreviewLocales } from '../lib/translations-preview';
+import { listPreviewableLocales } from '../lib/translations-preview';
 
 const CANONICAL_LOCALES = normalizeCanonicalLocalesFile(localesJson);
 const BUILDER_UI_LOCALE = 'en';
 
-type TranslationPanelProductState = {
-  primaryState:
-    | 'unsaved'
-    | 'unavailable'
-    | 'generating'
-    | 'failed'
-    | 'available';
-  primaryMessage: string | null;
-  canGenerate: boolean;
-  translatedPanelLocales: string[];
-};
-
 type TranslationActivityRow = {
   key: string;
-  state: 'current' | 'done' | 'failed';
+  state: 'current' | 'done';
   message: string;
 };
 
@@ -86,139 +74,8 @@ function SelectField({
   );
 }
 
-export function buildGenerateTranslationsButtonState(args: {
-  instanceId: string;
-  hasActiveLocales: boolean;
-  hasTranslatableFields: boolean;
-  isDirty: boolean;
-  isSaving: boolean;
-  isStarting: boolean;
-  isGenerating: boolean;
-}): { disabled: boolean; label: string; message: string | null } {
-  if (args.isGenerating) {
-    return { disabled: true, label: 'Generating translations...', message: null };
-  }
-  if (args.isStarting) {
-    return { disabled: true, label: 'Generate translations', message: null };
-  }
-  if (!args.instanceId) {
-    return { disabled: true, label: 'Generate translations', message: null };
-  }
-  if (args.isSaving) {
-    return { disabled: true, label: 'Generate translations', message: null };
-  }
-  if (args.isDirty) {
-    return {
-      disabled: true,
-      label: 'Generate translations',
-      message: 'Save changes before generating translations.',
-    };
-  }
-  if (!args.hasActiveLocales) {
-    return { disabled: true, label: 'Generate translations', message: null };
-  }
-  if (!args.hasTranslatableFields) {
-    return {
-      disabled: true,
-      label: 'Generate translations',
-      message: 'This widget has no translation fields.',
-    };
-  }
-  return { disabled: false, label: 'Generate translations', message: null };
-}
-
-export function resolveTranslationPanelProductState(args: {
-  instanceId: string;
-  hasActiveLocales: boolean;
-  activeLocales: string[];
-  translatedLocales: string[];
-  hasTranslatableFields: boolean;
-  isDirty: boolean;
-  isSaving: boolean;
-  isGenerating: boolean;
-  operationError?: string | null;
-}): TranslationPanelProductState {
-  const activeSet = new Set(args.activeLocales);
-  const translatedPanelLocales = args.translatedLocales
-    .filter((locale) => activeSet.has(locale))
-    .sort((left, right) => left.localeCompare(right));
-  if (args.isDirty || args.isSaving) {
-    return {
-      primaryState: 'unsaved',
-      primaryMessage: 'Save changes before generating translations.',
-      canGenerate: false,
-      translatedPanelLocales,
-    };
-  }
-  if (!args.instanceId) {
-    return { primaryState: 'unavailable', primaryMessage: null, canGenerate: false, translatedPanelLocales: [] };
-  }
-  if (!args.hasActiveLocales) {
-    return { primaryState: 'unavailable', primaryMessage: null, canGenerate: false, translatedPanelLocales: [] };
-  }
-  if (!args.hasTranslatableFields) {
-    return {
-      primaryState: 'unavailable',
-      primaryMessage: 'This widget has no translation fields.',
-      canGenerate: false,
-      translatedPanelLocales: [],
-    };
-  }
-  if (args.operationError) {
-    return { primaryState: 'failed', primaryMessage: args.operationError, canGenerate: true, translatedPanelLocales };
-  }
-  if (args.isGenerating) {
-    return {
-      primaryState: 'generating',
-      primaryMessage: null,
-      canGenerate: false,
-      translatedPanelLocales,
-    };
-  }
-  if (translatedPanelLocales.length > 0) {
-    return { primaryState: 'available', primaryMessage: null, canGenerate: true, translatedPanelLocales };
-  }
-  return {
-    primaryState: 'available',
-    primaryMessage: 'No translations generated yet.',
-    canGenerate: true,
-    translatedPanelLocales,
-  };
-}
-
-export function resolveGenerateTranslationsMessage(payload: unknown): string {
-  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
-    throw new Error('Translations could not be generated.');
-  }
-  const translation = (payload as Record<string, unknown>).translation;
-  if (!translation || typeof translation !== 'object' || Array.isArray(translation)) {
-    throw new Error('Translations could not be generated.');
-  }
-  const translationRecord = translation as Record<string, unknown>;
-  const activeLocales = translationRecord.activeLocales;
-  if (
-    (payload as Record<string, unknown>).ok !== true ||
-    translationRecord.ok !== true ||
-    translationRecord.accepted !== true ||
-    !Array.isArray(activeLocales)
-  ) {
-    throw new Error('Translations could not be generated.');
-  }
-  const generated = activeLocales.filter((entry) => typeof entry === 'string' && entry.trim()).length;
-  if (generated !== activeLocales.length || generated <= 0) {
-    throw new Error('Translations could not be generated.');
-  }
-  return generated === 1 ? 'Generated 1 active locale.' : `Generated ${generated} active locales.`;
-}
-
-export function resolveGenerateTranslationsError(payload?: unknown): string {
-  void payload;
-  return 'Translations could not be generated.';
-}
-
 function activityRowState(event: HostCommandActivityEvent): TranslationActivityRow['state'] {
   if (event.stage === 'overlay-written') return 'done';
-  if (event.stage === 'locale-failed') return 'failed';
   return 'current';
 }
 
@@ -231,19 +88,20 @@ function formatActivityMessage(event: HostCommandActivityEvent): string {
       return localeLabel ? `Writing ${localeLabel}` : 'Writing translation';
     case 'overlay-written':
       return localeLabel ? `${localeLabel} written` : 'Translation written';
-    case 'locale-failed':
-      return 'Translations could not be generated';
     default:
       return event.message;
   }
 }
 
 export function buildActivityRows(events: HostCommandActivityEvent[]): TranslationActivityRow[] {
-  return events.slice(-6).map((event, index) => ({
-    key: `${event.stage}:${event.locale ?? 'command'}:${index}`,
-    state: activityRowState(event),
-    message: formatActivityMessage(event),
-  }));
+  return events
+    .filter((event) => event.stage !== 'locale-failed')
+    .slice(-6)
+    .map((event, index) => ({
+      key: `${event.stage}:${event.locale ?? 'command'}:${index}`,
+      state: activityRowState(event),
+      message: formatActivityMessage(event),
+    }));
 }
 
 function CommandActivityBox({
@@ -276,26 +134,18 @@ export function TranslationsPanel({
   onRequestTranslationsRefresh,
   translationSetup,
   translatedLocales,
-  translationValuesByLocale,
-  translationsLoading,
-  translationsError,
 }: {
   translationPreviewLocale: string;
   onTranslationPreviewLocaleChange: (locale: string) => void;
   onRequestTranslationsRefresh: () => void;
   translationSetup: TranslationSetup | null;
   translatedLocales: TranslatedLocalesData | null;
-  translationValuesByLocale: Record<string, Record<string, string>>;
-  translationsLoading: boolean;
-  translationsError: string | null;
 }) {
   const session = useWidgetSession();
   const chrome = useWidgetSessionChrome();
   const { generateTranslations } = useWidgetSessionTransport();
   const [isStartingTranslations, setIsStartingTranslations] = useState(false);
   const [isGeneratingTranslations, setIsGeneratingTranslations] = useState(false);
-  const [generateResultMessage, setGenerateResultMessage] = useState<string | null>(null);
-  const [generateErrorMessage, setGenerateErrorMessage] = useState<string | null>(null);
   const [activityEvents, setActivityEvents] = useState<HostCommandActivityEvent[]>([]);
   const instanceId = chrome.meta?.instanceId ?? '';
   const baseLocale = translationSetup?.baseLocale || translatedLocales?.baseLocale || '';
@@ -303,26 +153,18 @@ export function TranslationsPanel({
     translationSetup?.planTranslationsMax == null
       ? 'unlimited'
       : String(translationSetup.planTranslationsMax);
-  const translationError = session.error?.source === 'translation' ? session.error : null;
-  const panelProductState = resolveTranslationPanelProductState({
-    instanceId,
-    hasActiveLocales: Boolean(translationSetup?.activeLocales?.length),
-    activeLocales: translationSetup?.activeLocales ?? [],
-    translatedLocales: translatedLocales?.translations.map((entry) => entry.locale) ?? [],
-    hasTranslatableFields: Boolean(session.compiled?.editableFields?.fields?.length),
-    isDirty: session.isDirty,
-    isSaving: session.isSaving,
-    isGenerating: isGeneratingTranslations,
-    operationError: generateErrorMessage,
-  });
+  const activeLocales = useMemo(() => translationSetup?.activeLocales ?? [], [translationSetup?.activeLocales]);
+  const hasActiveLocales = activeLocales.length > 0;
+  const hasTranslatableFields = Boolean(session.compiled?.editableFields?.fields?.length);
+  const generateButtonMessage =
+    session.isDirty || session.isSaving
+      ? 'Save changes before generating translations.'
+      : hasActiveLocales && !hasTranslatableFields
+        ? 'This widget has no translation fields.'
+        : null;
   const localeValues = useMemo(
-    () => (
-      listActivePreviewLocales({
-        baseLocale,
-        activeLocales: translationSetup?.activeLocales ?? [],
-      })
-    ),
-    [baseLocale, translationSetup],
+    () => listPreviewableLocales(translatedLocales).filter((locale) => locale === baseLocale || activeLocales.includes(locale)),
+    [activeLocales, baseLocale, translatedLocales],
   );
   const localeOptions = useMemo(() => {
     return localeValues.map((locale) => ({
@@ -343,22 +185,21 @@ export function TranslationsPanel({
             label: 'Base locale only',
           },
         ];
-  const isSelectedTranslatedLocale =
-    Boolean(localeValue && localeValue !== baseLocale && panelProductState.translatedPanelLocales.includes(localeValue));
-  const selectedTranslationEntry = isSelectedTranslatedLocale ? { locale: localeValue } : null;
-  const sourceSelectedValues =
-    isSelectedTranslatedLocale ? translationValuesByLocale[localeValue] ?? null : null;
-  const selectedValues = isSelectedTranslatedLocale ? sourceSelectedValues : null;
   const generateButton = {
-    disabled: isStartingTranslations || !panelProductState.canGenerate,
+    disabled:
+      isStartingTranslations ||
+      isGeneratingTranslations ||
+      !instanceId ||
+      session.isSaving ||
+      session.isDirty ||
+      !hasActiveLocales ||
+      !hasTranslatableFields,
     label: isGeneratingTranslations ? 'Generating translations...' : 'Generate translations',
-    message: panelProductState.primaryMessage,
+    message: generateButtonMessage,
   };
   const activityRows = useMemo(() => buildActivityRows(activityEvents), [activityEvents]);
   const runGenerateTranslations = async () => {
     if (generateButton.disabled || !instanceId) return;
-    setGenerateResultMessage(null);
-    setGenerateErrorMessage(null);
     setActivityEvents([]);
     setIsStartingTranslations(true);
     setIsGeneratingTranslations(true);
@@ -369,15 +210,10 @@ export function TranslationsPanel({
           setActivityEvents((current) => [...current, event].slice(-12));
         },
       });
-      if (!response.ok) {
-        throw new Error(resolveGenerateTranslationsError(response.json));
-      }
-      setGenerateResultMessage(resolveGenerateTranslationsMessage(response.json));
-      onRequestTranslationsRefresh();
+      if (response.ok) onRequestTranslationsRefresh();
       setIsGeneratingTranslations(false);
       setActivityEvents([]);
-    } catch (error) {
-      setGenerateErrorMessage(error instanceof Error ? error.message : 'Translations could not be generated.');
+    } catch {
       setIsGeneratingTranslations(false);
       setActivityEvents([]);
     } finally {
@@ -385,8 +221,6 @@ export function TranslationsPanel({
     }
   };
   useEffect(() => {
-    setGenerateResultMessage(null);
-    setGenerateErrorMessage(null);
     setIsGeneratingTranslations(false);
     setActivityEvents([]);
   }, [instanceId]);
@@ -425,9 +259,6 @@ export function TranslationsPanel({
           {generateButton.message ? (
             <div className="label-s label-muted">{generateButton.message}</div>
           ) : null}
-          {generateResultMessage ? (
-            <div className="label-s label-muted">{generateResultMessage}</div>
-          ) : null}
           {isGeneratingTranslations ? (
             <CommandActivityBox title="Generating translations" rows={activityRows} />
           ) : null}
@@ -439,20 +270,6 @@ export function TranslationsPanel({
           options={selectOptions}
           disabled={!selectOptions[0]?.value}
         />
-        {translationsError ? (
-          <div className="label-s label-muted">{translationsError}</div>
-        ) : null}
-        {translationError ? (
-          <div className="label-s label-muted">
-            {translationError.detail || translationError.message || 'Translation failed.'}
-          </div>
-        ) : null}
-        {!translationsError && localeValue !== baseLocale && !selectedTranslationEntry && !translationsLoading ? (
-          <div className="label-s label-muted">Generate translations to preview this language.</div>
-        ) : null}
-        {!translationsError && selectedTranslationEntry && !selectedValues ? (
-          <div className="label-s label-muted">Loading current language values...</div>
-        ) : null}
       </div>
     </div>
   );

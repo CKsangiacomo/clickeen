@@ -80,17 +80,19 @@ export function Workspace({
     return previewableLocales;
   }, [baseLocale, previewablePreviewLocales]);
   const fallbackPreviewLocale = baseLocale || effectivePreviewableLocales[0] || '';
+  const requestedTranslationPreviewLocale =
+    translationPreviewLocale && effectivePreviewableLocales.includes(translationPreviewLocale)
+      ? translationPreviewLocale
+      : '';
   const effectivePreviewLocale =
     previewMode === 'translations'
-      ? translationPreviewLocale || fallbackPreviewLocale
+      ? requestedTranslationPreviewLocale || fallbackPreviewLocale
       : fallbackPreviewLocale;
   const selectedTranslationValues =
     previewMode === 'translations' && effectivePreviewLocale !== baseLocale
       ? translationValuesByLanguage[effectivePreviewLocale] ?? null
       : null;
-  const translationPreviewUnavailable =
-    previewMode === 'translations' && effectivePreviewLocale !== baseLocale && !selectedTranslationValues;
-  const previewStateReady = mediaPreviewStateReady && !translationPreviewUnavailable;
+  const previewStateReady = mediaPreviewStateReady;
   const resolvedPreviewInstanceData = useMemo(() => {
     if (!selectedTranslationValues) return previewInstanceData;
     return resolveTranslatedValues(previewInstanceData, selectedTranslationValues);
@@ -390,12 +392,7 @@ export function Workspace({
         sandbox="allow-scripts allow-same-origin"
         style={iframeBackdrop ? ({ background: iframeBackdrop } as any) : undefined}
       />
-      {hasWidget && translationPreviewUnavailable ? (
-        <div className="workspace-status-overlay" role="status" aria-live="polite">
-          <span className="label-s">Generate translations to preview this language.</span>
-        </div>
-      ) : null}
-      {hasWidget && !translationPreviewUnavailable && !iframeHasState ? (
+      {hasWidget && !iframeHasState ? (
         <div className="workspace-status-overlay" role="status" aria-live="polite">
           <span className="label-s">Loading preview...</span>
         </div>

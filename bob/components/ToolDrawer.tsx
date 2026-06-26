@@ -110,9 +110,6 @@ export function ToolDrawer({
   onPreviewModeChange,
   translationSetup,
   translatedLocales,
-  translationValuesByLocale,
-  translationsLoading,
-  translationsError,
 }: {
   translationPreviewLocale: string;
   onTranslationPreviewLocaleChange: (locale: string) => void;
@@ -120,9 +117,6 @@ export function ToolDrawer({
   onPreviewModeChange: (mode: 'editing' | 'translations') => void;
   translationSetup: TranslationSetup | null;
   translatedLocales: TranslatedLocalesData | null;
-  translationValuesByLocale: Record<string, Record<string, string>>;
-  translationsLoading: boolean;
-  translationsError: string | null;
 }) {
   const session = useWidgetSession();
   const compiled = session.compiled;
@@ -202,9 +196,6 @@ export function ToolDrawer({
       onRequestTranslationsRefresh={onRequestTranslationsRefresh}
       translationSetup={translationSetup}
       translatedLocales={translatedLocales}
-      translationValuesByLocale={translationValuesByLocale}
-      translationsLoading={translationsLoading}
-      translationsError={translationsError}
     />
   ) : (
     <TdMenuContent
