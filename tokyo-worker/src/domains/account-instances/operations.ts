@@ -74,13 +74,38 @@ function transitionFailureFromSavedRead(result: { kind: 'NOT_FOUND' | 'VALIDATIO
   });
 }
 
-async function purgeClkLiveEntryCache(args: {
+export function buildClkLiveEntryCachePurgeFiles(args: {
+  publicServingBase: string;
+  accountId: string;
+  instanceId: string;
+  locales?: string[];
+}): string[] {
+  const base = `${args.publicServingBase.replace(/\/+$/, '')}/${args.accountId}/${args.instanceId}`;
+  const files = new Set([
+    base,
+    `${base}/`,
+    `${base}/${PUBLIC_INDEX_FILE}`,
+    `${base}/${PUBLIC_STYLES_FILE}`,
+    `${base}/${PUBLIC_RUNTIME_FILE}`,
+  ]);
+  for (const locale of args.locales ?? []) {
+    const encodedLocale = encodeURIComponent(locale);
+    const localeBase = `${base}/locales/${encodedLocale}`;
+    files.add(localeBase);
+    files.add(`${localeBase}/`);
+    files.add(`${localeBase}/${PUBLIC_INDEX_FILE}`);
+    files.add(`${localeBase}/${PUBLIC_STYLES_FILE}`);
+    files.add(`${localeBase}/${PUBLIC_RUNTIME_FILE}`);
+  }
+  return [...files];
+}
+
+export async function purgeClkLiveEntryCache(args: {
   env: Env;
   accountId: string;
   instanceId: string;
   locales?: string[];
 }): Promise<void> {
-  void args.locales;
   const zoneId = String(args.env.CLOUDFLARE_ZONE_ID || '').trim();
   const token = String(args.env.CLOUDFLARE_API_TOKEN || '').trim();
   const publicServingBase = String(args.env.PUBLIC_SERVING_BASE_URL || '').trim().replace(/\/+$/, '');
@@ -91,21 +116,20 @@ async function purgeClkLiveEntryCache(args: {
       reasonKey: 'tokyo.errors.publicCache.purgeConfigMissing',
     });
   }
-  const base = `${publicServingBase}/${args.accountId}/${args.instanceId}`;
-  const files = new Set([
-    base,
-    `${base}/`,
-    `${base}/${PUBLIC_INDEX_FILE}`,
-    `${base}/${PUBLIC_STYLES_FILE}`,
-    `${base}/${PUBLIC_RUNTIME_FILE}`,
-  ]);
   const response = await fetch(`https://api.cloudflare.com/client/v4/zones/${encodeURIComponent(zoneId)}/purge_cache`, {
     method: 'POST',
     headers: {
       authorization: `Bearer ${token}`,
       'content-type': 'application/json',
     },
-    body: JSON.stringify({ files: [...files] }),
+    body: JSON.stringify({
+      files: buildClkLiveEntryCachePurgeFiles({
+        publicServingBase,
+        accountId: args.accountId,
+        instanceId: args.instanceId,
+        locales: args.locales,
+      }),
+    }),
   });
   const payload = await response.json().catch(() => null) as { success?: unknown } | null;
   if (!response.ok || payload?.success !== true) {

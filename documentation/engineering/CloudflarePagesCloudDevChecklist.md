@@ -355,14 +355,20 @@ Worker secrets:
 - San Francisco: `AI_GRANT_HMAC_SECRET`
 - Translation Agent: `AI_GRANT_HMAC_SECRET`
 - Tokyo-worker: `AI_GRANT_HMAC_SECRET` for Translation Agent overlay write grant verification
+- Tokyo-worker: `CLOUDFLARE_API_TOKEN` for exact public `clk.live` cache
+  purge after published package byte writes/deletes. Cloud-dev deploys this as a
+  Worker secret from the GitHub Actions `CLOUDFLARE_API_TOKEN` secret.
 
 Pages secrets:
 - Roma: `AI_GRANT_HMAC_SECRET` is required for account Copilot grant/outcome signing and Translation Agent grant minting. `SUPABASE_SERVICE_ROLE_KEY` is required for Roma-owned account settings writes. Roma -> Tokyo/Tokyo-worker storage commands use service bindings. Account instance translation generation calls the Translation Agent Worker; that Worker calls San Francisco `/model/chat` and writes translated locale values via Tokyo-worker.
 - DevStudio: `DEVSTUDIO_GITHUB_TOKEN` is required for GitHub-backed policy writes.
 
 CI secrets/vars:
-- `CLOUDFLARE_API_TOKEN` for GitHub Actions/Wrangler workflows only. Do not reuse
-  this ambiguous name for local repo Cloudflare helper commands.
+- `CLOUDFLARE_API_TOKEN` for GitHub Actions/Wrangler workflows and the
+  Tokyo-worker runtime public-cache purge secret installed by the
+  `cloud-dev workers deploy` workflow. This cloud-dev token must include Worker
+  deploy and public zone cache-purge authority. Do not reuse this ambiguous name
+  for local repo Cloudflare helper commands.
 - `CLOUDFLARE_REST_API_TOKEN` for local Pages/DNS/config repo helper commands.
 - `CLOUDFLARE_ACCOUNT_ID`
 - `AI_GRANT_HMAC_SECRET` for Prague string translation request signing

@@ -155,6 +155,10 @@ not attempted instead of reporting full save success. Roma does not create a
 queue, watcher, status file, or visitor-time repair path for this cascade. Bob
 treats that response as saved source with translation follow-up attention, not
 as lost source edits.
+For published instances, generated locale package writes include Tokyo public
+cache refresh for the affected locale URLs. If Tokyo writes package bytes but
+cannot refresh the edge, Roma reports the locale package failure phase as
+`cache-refresh` instead of claiming full locale success.
 
 Translation generation is a separate explicit operation from the Translations
 panel. Roma resolves the current account active locales for that command,
@@ -168,6 +172,8 @@ Roma reads the exact saved source and exact overlay, calls
 `accounts/{accountPublicId}/instances/{instanceId}/locales/{locale}/`. If a
 locale package fails after earlier locales succeed, Roma returns completed,
 skipped, and failed coordinates and does not claim full success.
+For published instances, a cache-refresh failure after package write is a
+failed locale package coordinate with phase `cache-refresh`.
 When the command is invoked through hosted Bob, Roma may return the same final
 command truth through a transient event stream so Bob can display live activity
 rows while the command runs. These events are not persisted and are not product
@@ -183,6 +189,8 @@ Agent Worker path and then materialized into generated locale package bytes. If
 overlay or locale-package follow-up fails after the settings write, Roma returns
 the saved settings with `overlayUpdate.ok: false`; it does not pretend follow-up
 work fully completed.
+For published instances, locale package delete/write follow-up includes Tokyo
+public cache refresh; a refresh failure is reported as phase `cache-refresh`.
 If active locales and locale policy are unchanged, Roma returns no overlay
 work. Roma does not ask Bob and does not create a background locale job; saving
 settings is the user decision. `overlayUpdate.cost` records the direct

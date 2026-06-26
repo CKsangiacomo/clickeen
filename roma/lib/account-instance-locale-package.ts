@@ -26,6 +26,7 @@ export type LocalePackagePhase =
   | 'overlay-read'
   | 'materializer'
   | 'package-write'
+  | 'cache-refresh'
   | 'locale-package-delete';
 
 export type LocalePackageCoordinate = {
@@ -101,6 +102,13 @@ export function buildLocalePackageMaterializationFailure(args: {
 
 function uniqueNonBaseLocales(locales: string[], baseLocale: string): string[] {
   return Array.from(new Set(locales.filter((locale) => locale && locale !== baseLocale)));
+}
+
+export function localePackagePhaseFromRouteFailure(
+  error: RouteFailure['error'],
+  defaultPhase: LocalePackagePhase,
+): LocalePackagePhase {
+  return error.reasonKey.startsWith('tokyo.errors.publicCache.') ? 'cache-refresh' : defaultPhase;
 }
 
 export async function materializeAccountInstanceLocalePackages(args: {
@@ -249,7 +257,7 @@ export async function materializeAccountInstanceLocalePackages(args: {
         accountId: args.accountId,
         instanceId: args.instanceId,
         locale,
-        phase: 'package-write',
+        phase: localePackagePhaseFromRouteFailure(stored.error, 'package-write'),
       });
     }
     if (stored.value.publicPackageFingerprint !== materialized.value.evidence.generatedPackageFingerprint) {

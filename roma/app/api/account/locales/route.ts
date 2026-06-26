@@ -12,6 +12,7 @@ import { listAccountInstancesInTokyo } from '@roma/lib/account-instance-direct';
 import {
   deleteAccountInstanceLocalePackageArtifact,
   materializeAccountInstanceLocalePackages,
+  type LocalePackagePhase,
   type LocalePackageMaterializationValue,
 } from '@roma/lib/account-instance-locale-package';
 import { buildLocalePackageDeleteFailureCoordinate } from '@roma/lib/account-locale-overlay-update';
@@ -76,9 +77,9 @@ type LocaleOverlayUpdateValue = {
     locale: string;
     phase:
       | 'translation-delete'
-      | 'locale-package-delete'
       | 'translation-generation'
-      | 'locale-package-materialize';
+      | 'locale-package-materialize'
+      | LocalePackagePhase;
     reasonKey: string;
     detail?: string;
   };
@@ -311,6 +312,13 @@ async function reconcileAccountLocaleOverlays(args: {
         requestId: args.requestId,
       });
       if (!packageDelete.ok) {
+        const packageFailure = buildLocalePackageDeleteFailureCoordinate({
+          accountId: args.accountId,
+          instanceId: instance.instanceId,
+          locale,
+          reasonKey: packageDelete.error.reasonKey,
+          ...(packageDelete.error.detail ? { detail: packageDelete.error.detail } : {}),
+        });
         return localeOverlayFailure({
           status: packageDelete.status,
           kind: packageDelete.error.kind,
@@ -324,19 +332,13 @@ async function reconcileAccountLocaleOverlays(args: {
             skipped,
             localePackages: {
               ...localePackages,
-              failed: buildLocalePackageDeleteFailureCoordinate({
-                accountId: args.accountId,
-                instanceId: instance.instanceId,
-                locale,
-                reasonKey: packageDelete.error.reasonKey,
-                ...(packageDelete.error.detail ? { detail: packageDelete.error.detail } : {}),
-              }),
+              failed: packageFailure,
             },
             failed: {
               accountId: args.accountId,
               instanceId: instance.instanceId,
               locale,
-              phase: 'locale-package-delete',
+              phase: packageFailure.phase,
               reasonKey: packageDelete.error.reasonKey,
               ...(packageDelete.error.detail ? { detail: packageDelete.error.detail } : {}),
             },
@@ -431,7 +433,7 @@ async function reconcileAccountLocaleOverlays(args: {
               accountId: args.accountId,
               instanceId: instance.instanceId,
               locale: packageMaterialization.value.failed?.locale ?? locale,
-              phase: 'locale-package-materialize',
+              phase: packageMaterialization.value.failed?.phase ?? 'locale-package-materialize',
               reasonKey: packageMaterialization.error.reasonKey,
               ...(packageMaterialization.error.detail ? { detail: packageMaterialization.error.detail } : {}),
             },

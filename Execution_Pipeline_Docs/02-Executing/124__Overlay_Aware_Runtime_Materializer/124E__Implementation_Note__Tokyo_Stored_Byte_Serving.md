@@ -67,14 +67,43 @@ public, max-age=60, s-maxage=300, stale-while-revalidate=86400
 124E does not introduce content-addressed immutable support files and does not
 claim immutable caching.
 
+After the June 26 audit correction, Tokyo-worker also refreshes Cloudflare cache
+for locale package mutations on published instances. The existing internal
+locale package `PUT`/`DELETE` route writes or deletes the stored locale package
+bytes, then purges the base public URLs and the exact locale URLs:
+
+```text
+/{accountPublicId}/{instanceId}
+/{accountPublicId}/{instanceId}/
+/{accountPublicId}/{instanceId}/index.html
+/{accountPublicId}/{instanceId}/styles.css
+/{accountPublicId}/{instanceId}/runtime.js
+/{accountPublicId}/{instanceId}/locales/{locale}
+/{accountPublicId}/{instanceId}/locales/{locale}/
+/{accountPublicId}/{instanceId}/locales/{locale}/index.html
+/{accountPublicId}/{instanceId}/locales/{locale}/styles.css
+/{accountPublicId}/{instanceId}/locales/{locale}/runtime.js
+```
+
+The refresh is not a status probe and not a background repair path. It is part
+of the same direct Tokyo command that mutates public package bytes. If the
+instance is unpublished, the package write/delete does not require cache purge
+because no public locale URL can serve. If the instance is published and purge
+configuration or purge execution fails, Tokyo returns
+`tokyo.errors.publicCache.*` and Roma reports the package failure phase as
+`cache-refresh`.
+
+Cloud-dev purge configuration is part of the Tokyo-worker deploy contract:
+`tokyo-worker/wrangler.toml` carries the `clk.live` zone id for
+`PUBLIC_SERVING_BASE_URL=https://dev.clk.live`, and the `cloud-dev workers
+deploy` workflow syncs `CLOUDFLARE_API_TOKEN` as a Tokyo Worker secret after
+Tokyo deploys.
+
 ## Non-Goals Preserved
 
 Tokyo-worker public serving does not read Babel overlay files, call the runtime
 materializer, ask Roma, call Supabase, call Translation Agent, discover locales,
 write hreflang, update sitemaps, or compose output on visitor requests.
-
-Purge ownership was documented but not changed in code. 124E local verification
-therefore did not run Cloudflare API preflight or remote purge checks.
 
 ## Verification
 

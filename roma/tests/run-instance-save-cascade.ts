@@ -226,6 +226,60 @@ async function testMaterializationFailurePreservesPackageCoordinates(): Promise<
   assert.equal(result.value.localePackages.failed?.phase, 'package-write');
 }
 
+async function testCacheRefreshFailurePreservesPackageCoordinates(): Promise<void> {
+  const result = await runAccountInstanceSourceSaveLocaleCascade({
+    ...baseArgs(),
+    deps: {
+      async generateTranslations(args: any) {
+        return {
+          ok: true,
+          status: 200,
+          value: {
+            ok: true,
+            translation: {
+              ok: true,
+              accepted: true,
+              baseLocale: args.baseLocale,
+              activeLocales: args.activeLocales,
+              skippedLocales: [],
+            },
+          },
+        };
+      },
+      async materializeLocalePackages() {
+        return {
+          ok: false,
+          status: 502,
+          error: {
+            kind: 'UPSTREAM_UNAVAILABLE',
+            reasonKey: 'tokyo.errors.publicCache.purgeFailed',
+            detail: 'cloudflare_purge_status_502',
+          },
+          value: {
+            ok: false,
+            completed: [],
+            skipped: [],
+            failed: {
+              accountId: 'CLICKEEN',
+              instanceId: 'ABCD123456',
+              locale: 'fr',
+              phase: 'cache-refresh',
+              reasonKey: 'tokyo.errors.publicCache.purgeFailed',
+              detail: 'cloudflare_purge_status_502',
+            },
+          },
+        };
+      },
+    } as never,
+  });
+
+  assert.equal(result.ok, false);
+  assert.equal(result.status, 502);
+  assert.equal(result.value.localePackages.failed?.locale, 'fr');
+  assert.equal(result.value.localePackages.failed?.phase, 'cache-refresh');
+  assert.equal(result.value.localePackages.failed?.reasonKey, 'tokyo.errors.publicCache.purgeFailed');
+}
+
 async function testNoBroadCascadeMachinery(): Promise<void> {
   const helperSource = await readFile(new URL('../lib/account-instance-save-cascade.ts', import.meta.url), 'utf8');
   const routeSource = await readFile(new URL('../app/api/account/instances/[instanceId]/route.ts', import.meta.url), 'utf8');
@@ -269,6 +323,7 @@ const tests: Array<{ name: string; run: () => Promise<void> }> = [
   { name: 'source save cascades through current translation and package helpers', run: testSuccessfulCascade },
   { name: 'translation failure names exact incomplete coordinates', run: testTranslationFailureNamesCoordinates },
   { name: 'materialization failure preserves package coordinates', run: testMaterializationFailurePreservesPackageCoordinates },
+  { name: 'cache refresh failure preserves package coordinates', run: testCacheRefreshFailurePreservesPackageCoordinates },
   { name: 'save cascade does not add broad machinery', run: testNoBroadCascadeMachinery },
   { name: 'active locale settings names bounded cost surface', run: testActiveLocaleSettingsCostSurfaceIsNamed },
   { name: 'Bob handles source-saved locale cascade failure as translation follow-up', run: testBobSourceSavedCascadeFailureHandoff },

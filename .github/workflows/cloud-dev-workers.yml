@@ -162,6 +162,15 @@ jobs:
           fi
           printf '%s' "$AI_GRANT_HMAC_SECRET" | pnpm -C tokyo-worker exec wrangler secret put AI_GRANT_HMAC_SECRET
 
+      - name: Sync tokyo-assets-dev public cache purge token
+        if: steps.changes.outputs.tokyo == 'true'
+        run: |
+          if [ -z "$CLOUDFLARE_API_TOKEN" ]; then
+            echo "Missing CLOUDFLARE_API_TOKEN GitHub secret for tokyo-assets-dev cache purge." >&2
+            exit 1
+          fi
+          printf '%s' "$CLOUDFLARE_API_TOKEN" | pnpm -C tokyo-worker exec wrangler secret put CLOUDFLARE_API_TOKEN
+
       - name: Deploy product-copilot-dev
         if: steps.changes.outputs.product_copilot == 'true'
         run: pnpm -C agents/product-copilot run deploy

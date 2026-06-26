@@ -60,13 +60,18 @@ not full success:
         "accountId": "[account public id]",
         "instanceId": "[instance id]",
         "locale": "[locale]",
-        "phase": "[translation-generation|overlay-read|materializer|package-write]",
+        "phase": "[translation-generation|overlay-read|materializer|package-write|cache-refresh]",
         "reasonKey": "[reason key]"
       }
     }
   }
 }
 ```
+
+After the June 26 audit correction, package helper failures caused by
+`tokyo.errors.publicCache.*` are reported as phase `cache-refresh`. This names
+the real failed phase when Tokyo has changed locale package bytes but cannot
+refresh Cloudflare cache for a published instance.
 
 Bob handles this response as saved source plus translation follow-up attention:
 the submitted source signature becomes the saved signature, and the error is
@@ -80,7 +85,7 @@ instances returned by the current account instance list helper.
 
 When locales shrink, Roma deletes exact overlay files and generated locale
 package files. The response does not imply removed locales stopped serving
-unless generated package deletion succeeds.
+unless generated package deletion and the required public cache refresh succeed.
 
 When locales expand, Roma generates overlays through Translation Agent and then
 materializes generated locale packages for those same added locales. Added
@@ -135,6 +140,8 @@ The tests cover:
   inference;
 - locale package materialization failure preserves completed/skipped/failed
   package coordinates;
+- cache-refresh failure preserves the failed package coordinate and names the
+  `cache-refresh` phase;
 - no broad dependency machinery was added;
 - active-locale settings expose the bounded cost surface;
 - Bob treats `sourceSaved: true` cascade failure as translation follow-up, not

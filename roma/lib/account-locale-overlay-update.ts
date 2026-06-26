@@ -1,4 +1,7 @@
-import type { LocalePackagePhase } from './account-instance-locale-package';
+import {
+  localePackagePhaseFromRouteFailure,
+  type LocalePackagePhase,
+} from './account-instance-locale-package';
 
 export type LocalePackageFailureCoordinate = {
   accountId: string;
@@ -20,7 +23,10 @@ export function buildLocalePackageDeleteFailureCoordinate(args: {
     accountId: args.accountId,
     instanceId: args.instanceId,
     locale: args.locale,
-    phase: 'locale-package-delete',
+    phase: localePackagePhaseFromRouteFailure(
+      { kind: 'UPSTREAM_UNAVAILABLE', reasonKey: args.reasonKey },
+      'locale-package-delete',
+    ),
     reasonKey: args.reasonKey,
     ...(args.detail ? { detail: args.detail } : {}),
   };

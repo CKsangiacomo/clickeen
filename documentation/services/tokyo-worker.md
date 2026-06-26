@@ -223,6 +223,14 @@ mutable cache headers:
 public, max-age=60, s-maxage=300, stale-while-revalidate=86400
 ```
 
+When a published instance's locale package is written or deleted through the
+internal package route, Tokyo-worker purges the base public URLs and the exact
+locale URLs for that package from Cloudflare cache before returning success. If
+that cache refresh fails, the internal command fails visibly with
+`tokyo.errors.publicCache.*`; Roma reports the locale package failure phase as
+`cache-refresh`. Unpublished instance locale package writes do not require a
+public cache refresh because no public locale URL can serve.
+
 Public page-serving URL shape is parsed by Tokyo-worker, but current page
 public serving returns `404` until Roma writes real page packages.
 
@@ -373,9 +381,11 @@ Worker env and bindings:
 | `PUBLIC_SERVING_BASE_URL` | yes | Public `clk.live`/`dev.clk.live` serving origin. |
 | `BERLIN_JWKS_URL` | no | Explicit JWKS URL when not derived from Berlin base URL. |
 | `AI_GRANT_HMAC_SECRET` | no | HMAC secret for AI grant verification where grant path uses it. |
-| `CLOUDFLARE_ZONE_ID` | no | Cloudflare purge support when purge is enabled. |
-| `CLOUDFLARE_API_TOKEN` | no | Cloudflare purge support when purge is enabled. |
+| `CLOUDFLARE_ZONE_ID` | yes for published public-byte mutations | Cloudflare zone for public cache refresh. |
+| `CLOUDFLARE_API_TOKEN` | yes for published public-byte mutations | Cloudflare API token allowed to purge the public zone. |
 
 Current `tokyo-worker/wrangler.toml` binds `TOKYO_R2` and configures
-`BERLIN_BASE_URL`, `TOKYO_PUBLIC_BASE_URL`, and `PUBLIC_SERVING_BASE_URL` for
-cloud-dev.
+`BERLIN_BASE_URL`, `TOKYO_PUBLIC_BASE_URL`, `PUBLIC_SERVING_BASE_URL`, and the
+cloud-dev `clk.live` `CLOUDFLARE_ZONE_ID`. The Cloudflare purge API token is
+deployed as the `CLOUDFLARE_API_TOKEN` Worker secret by the `cloud-dev workers
+deploy` workflow and is not stored in `wrangler.toml`.

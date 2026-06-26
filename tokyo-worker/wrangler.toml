@@ -23,6 +23,7 @@ head_sampling_rate = 1
 BERLIN_BASE_URL = "https://berlin-dev.clickeen.workers.dev"
 TOKYO_PUBLIC_BASE_URL = "https://tokyo.dev.clickeen.com"
 PUBLIC_SERVING_BASE_URL = "https://dev.clk.live"
+CLOUDFLARE_ZONE_ID = "baceb66ba550ebfb73dc4003a6f5ec5b"
 
 [[r2_buckets]]
 binding = "TOKYO_R2"

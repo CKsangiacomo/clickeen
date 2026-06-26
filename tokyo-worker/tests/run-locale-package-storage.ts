@@ -1,5 +1,8 @@
 import assert from 'node:assert/strict';
 import {
+  buildClkLiveEntryCachePurgeFiles,
+} from '../src/domains/account-instances/operations';
+import {
   deleteInstanceLocalePackage,
   writeInstanceLocalePackage,
 } from '../src/domains/account-instances/package-files';
@@ -116,9 +119,36 @@ async function testBaseLocalePackageWriteRejected(): Promise<void> {
   assert.equal(objects.size, 0);
 }
 
+function testLocalePurgeFilesIncludeEntryAndSupportFiles(): void {
+  const files = buildClkLiveEntryCachePurgeFiles({
+    publicServingBase: 'https://dev.clk.live/',
+    accountId: 'CLICKEEN',
+    instanceId: 'inst_locale_storage',
+    locales: ['fr', 'pt-BR'],
+  });
+  assert.deepEqual(files, [
+    'https://dev.clk.live/CLICKEEN/inst_locale_storage',
+    'https://dev.clk.live/CLICKEEN/inst_locale_storage/',
+    'https://dev.clk.live/CLICKEEN/inst_locale_storage/index.html',
+    'https://dev.clk.live/CLICKEEN/inst_locale_storage/styles.css',
+    'https://dev.clk.live/CLICKEEN/inst_locale_storage/runtime.js',
+    'https://dev.clk.live/CLICKEEN/inst_locale_storage/locales/fr',
+    'https://dev.clk.live/CLICKEEN/inst_locale_storage/locales/fr/',
+    'https://dev.clk.live/CLICKEEN/inst_locale_storage/locales/fr/index.html',
+    'https://dev.clk.live/CLICKEEN/inst_locale_storage/locales/fr/styles.css',
+    'https://dev.clk.live/CLICKEEN/inst_locale_storage/locales/fr/runtime.js',
+    'https://dev.clk.live/CLICKEEN/inst_locale_storage/locales/pt-BR',
+    'https://dev.clk.live/CLICKEEN/inst_locale_storage/locales/pt-BR/',
+    'https://dev.clk.live/CLICKEEN/inst_locale_storage/locales/pt-BR/index.html',
+    'https://dev.clk.live/CLICKEEN/inst_locale_storage/locales/pt-BR/styles.css',
+    'https://dev.clk.live/CLICKEEN/inst_locale_storage/locales/pt-BR/runtime.js',
+  ]);
+}
+
 const tests: Array<{ name: string; run: () => Promise<void> }> = [
   { name: 'locale package write metadata and delete', run: testLocalePackageWriteMetadataAndDelete },
   { name: 'base locale package write rejected', run: testBaseLocalePackageWriteRejected },
+  { name: 'locale purge files include entry and support files', run: async () => testLocalePurgeFilesIncludeEntryAndSupportFiles() },
 ];
 
 for (const test of tests) {

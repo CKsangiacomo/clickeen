@@ -1,8 +1,10 @@
 import { isRecord } from '@clickeen/ck-contracts';
 import { normalizeLocale, normalizeStorageId } from '../asset-utils';
 import {
+  AccountInstanceTransitionError,
   createAccountInstanceFromSubmittedSource,
   publishAccountInstanceTransition,
+  purgeClkLiveEntryCache,
   saveAccountInstanceTransition,
   unpublishAccountInstanceTransition,
 } from '../domains/account-instances/operations';
@@ -49,6 +51,33 @@ function normalizeSubmittedMeta(value: unknown): Record<string, unknown> | null 
     if (typeof entry === 'string' && entry.trim()) out[key] = entry.trim();
   }
   return out;
+}
+
+async function purgePublishedLocalePackageCache(args: {
+  env: TokyoRouteArgs['env'];
+  accountId: string;
+  instanceId: string;
+  locale: string;
+}): Promise<void> {
+  const pointer = await readAccountInstanceSourcePointer({
+    env: args.env,
+    accountId: args.accountId,
+    instanceId: args.instanceId,
+  });
+  if (!pointer.ok) {
+    throw new AccountInstanceTransitionError({
+      status: pointer.kind === 'NOT_FOUND' ? 404 : 422,
+      kind: pointer.kind,
+      reasonKey: pointer.kind === 'NOT_FOUND' ? 'coreui.errors.instance.notFound' : pointer.reasonKey,
+    });
+  }
+  if (pointer.value.publishStatus !== 'published') return;
+  await purgeClkLiveEntryCache({
+    env: args.env,
+    accountId: args.accountId,
+    instanceId: args.instanceId,
+    locales: [args.locale],
+  });
 }
 
 export async function tryHandleInternalInstanceRoutes(
@@ -454,27 +483,21 @@ export async function tryHandleInternalInstanceRoutes(
           ),
         );
       }
+      try {
+        await purgePublishedLocalePackageCache({ env, accountId, instanceId, locale });
+      } catch (error) {
+        return respond(transitionErrorResponse(error));
+      }
       return respond(json({ ok: true, accountId, instanceId, locale, publicPackageFingerprint: stored.fingerprint }));
     }
 
     if (req.method === 'DELETE') {
       try {
         const deleted = await deleteInstanceLocalePackage({ env, accountId, instanceId, locale });
+        await purgePublishedLocalePackageCache({ env, accountId, instanceId, locale });
         return respond(json({ ok: true, accountId, instanceId, locale: deleted.locale }));
       } catch (error) {
-        const detail = error instanceof Error ? error.message : String(error);
-        return respond(
-          json(
-            {
-              error: {
-                kind: 'UPSTREAM_UNAVAILABLE',
-                reasonKey: 'coreui.errors.db.writeFailed',
-                detail,
-              },
-            },
-            { status: 502 },
-          ),
-        );
+        return respond(transitionErrorResponse(error));
       }
     }
 
