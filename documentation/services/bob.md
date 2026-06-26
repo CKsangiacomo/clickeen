@@ -173,10 +173,12 @@ The panel sends one Generate translations command with the open `instanceId`.
 Roma resolves active locales and calls the Translation Agent Worker. While the
 operation is running, Bob disables the button and displays transient activity
 rows emitted by the active hosted command. When the operation returns, Bob shows
-the direct result text and refreshes overlay inspection.
+the direct result text and refreshes the previewable translated locales.
 
-Bob does not create backend translation tasks, poll backend status, or invent
-locale authority. Saved locale overlay files remain Tokyo-worker/R2 state.
+Bob does not create persistent translation jobs, poll operation status, or
+invent locale authority. Bob also does not expose user translation overrides or
+a field-level overlay editor. Saved locale overlay files remain
+Tokyo-worker/R2 state.
 
 ## Widget Software
 
@@ -393,8 +395,9 @@ returns an explicit locale cascade failure, Bob surfaces the save error instead
 of silently treating every affected locale as current.
 
 After Roma returns, Bob refreshes the overlay list and lets the user preview
-active locales that have saved overlay values. Tokyo-worker stores translated
-locale values under:
+active locales that have saved overlay values in the actual widget preview.
+Bob does not render the overlay value map as editable fields or inspection
+rows. Tokyo-worker stores translated locale values under:
 
 ```text
 accounts/{accountPublicId}/instances/{instanceId}/overlays/locales/{locale}.json

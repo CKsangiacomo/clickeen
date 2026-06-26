@@ -3,6 +3,7 @@ import {
   buildActivityRows,
   resolveGenerateTranslationsError,
   resolveGenerateTranslationsMessage,
+  resolveTranslationPanelProductState,
 } from '../components/TranslationsPanel';
 
 assert.equal(
@@ -50,7 +51,7 @@ assert.equal(
       },
     },
   }),
-  'Translations failed on de during package-write.',
+  'Translations could not finish for German while preparing the preview.',
 );
 
 assert.deepEqual(
@@ -60,10 +61,24 @@ assert.deepEqual(
     { stage: 'locale-failed', locale: 'de', phase: 'package-write', message: 'de failed.', total: 2, completed: 1 },
   ]).map((row) => ({ state: row.state, message: row.message })),
   [
-    { state: 'current', message: 'Generating 2 active locales.' },
-    { state: 'done', message: 'fr complete.' },
-    { state: 'failed', message: 'de failed.' },
+    { state: 'current', message: 'Creating translations' },
+    { state: 'done', message: 'French ready' },
+    { state: 'failed', message: 'German could not be completed' },
   ],
+);
+
+assert.equal(
+  resolveTranslationPanelProductState({
+    instanceId: 'INST',
+    hasActiveLocales: true,
+    activeLocales: ['fr'],
+    translatedLocales: [],
+    hasTranslatableFields: true,
+    isDirty: false,
+    isSaving: false,
+    isGenerating: true,
+  }).primaryMessage,
+  null,
 );
 
 console.log('translations panel command activity tests passed');

@@ -14,9 +14,7 @@ import {
 } from '../lib/session/useWidgetSession';
 import type { HostCommandActivityEvent } from '../lib/session/sessionTypes';
 import type { TranslatedLocalesData, TranslationSetup } from './useTranslationPreviewState';
-import { buildEditableFieldsTranslationOverlayInspection } from '../lib/translations-preview';
 import { listActivePreviewLocales } from '../lib/translations-preview';
-import type { TranslationOverlayInspection } from '../lib/translations-preview';
 
 const CANONICAL_LOCALES = normalizeCanonicalLocalesFile(localesJson);
 const BUILDER_UI_LOCALE = 'en';
@@ -141,7 +139,6 @@ export function resolveTranslationPanelProductState(args: {
   operationError?: string | null;
 }): TranslationPanelProductState {
   const activeSet = new Set(args.activeLocales);
-  const activeLocaleCount = activeSet.size;
   const translatedPanelLocales = args.translatedLocales
     .filter((locale) => activeSet.has(locale))
     .sort((left, right) => left.localeCompare(right));
@@ -173,10 +170,7 @@ export function resolveTranslationPanelProductState(args: {
   if (args.isGenerating) {
     return {
       primaryState: 'generating',
-      primaryMessage:
-        activeLocaleCount === 1
-          ? 'Generating 1 active locale.'
-          : `Generating ${activeLocaleCount} active locales.`,
+      primaryMessage: null,
       canGenerate: false,
       translatedPanelLocales,
     };
@@ -227,8 +221,15 @@ export function resolveGenerateTranslationsError(payload?: unknown): string {
         const failedRecord = failed as Record<string, unknown>;
         const locale = typeof failedRecord.locale === 'string' ? failedRecord.locale.trim() : '';
         const phase = typeof failedRecord.phase === 'string' ? failedRecord.phase.trim() : '';
-        if (locale && phase) return `Translations failed on ${locale} during ${phase}.`;
-        if (locale) return `Translations failed on ${locale}.`;
+        const localeLabel = locale ? resolveLocaleLabel(locale) : '';
+        const phaseLabel =
+          phase === 'package-write' || phase === 'package-materialization'
+            ? 'preparing the preview'
+            : phase === 'translation-generation'
+              ? 'creating the translation'
+              : '';
+        if (localeLabel && phaseLabel) return `Translations could not finish for ${localeLabel} while ${phaseLabel}.`;
+        if (localeLabel) return `Translations could not finish for ${localeLabel}.`;
       }
     }
   }
@@ -241,11 +242,33 @@ function activityRowState(event: HostCommandActivityEvent): TranslationActivityR
   return 'current';
 }
 
+function formatActivityMessage(event: HostCommandActivityEvent): string {
+  const localeLabel = event.locale ? resolveLocaleLabel(event.locale) : '';
+  switch (event.stage) {
+    case 'command-started':
+      return 'Creating translations';
+    case 'locale-started':
+      return localeLabel ? `Creating ${localeLabel} translation` : 'Creating translation';
+    case 'overlay-written':
+      return localeLabel ? `${localeLabel} translated` : 'Translation ready';
+    case 'package-materializing':
+      return localeLabel ? `Preparing ${localeLabel} preview` : 'Preparing preview';
+    case 'locale-completed':
+      return localeLabel ? `${localeLabel} ready` : 'Language ready';
+    case 'locale-failed':
+      return localeLabel ? `${localeLabel} could not be completed` : 'Language could not be completed';
+    case 'locale-not-attempted':
+      return localeLabel ? `${localeLabel} not completed` : 'Language not completed';
+    default:
+      return event.message;
+  }
+}
+
 export function buildActivityRows(events: HostCommandActivityEvent[]): TranslationActivityRow[] {
   return events.slice(-6).map((event, index) => ({
     key: `${event.stage}:${event.locale ?? 'command'}:${event.phase ?? ''}:${index}`,
     state: activityRowState(event),
-    message: event.message,
+    message: formatActivityMessage(event),
   }));
 }
 
@@ -260,7 +283,6 @@ function CommandActivityBox({
   return (
     <div className="diet-command-activity" data-size="sm" data-tone="active" role="status" aria-live="polite">
       <div className="diet-command-activity__header">
-        <span className="diet-command-activity__indicator" aria-hidden="true" />
         <span className="diet-command-activity__title label-s">{title}</span>
       </div>
       <div className="diet-command-activity__rows">
@@ -270,30 +292,6 @@ function CommandActivityBox({
           </div>
         ))}
       </div>
-    </div>
-  );
-}
-
-export function TranslationOverlayRows({
-  inspection,
-}: {
-  inspection: TranslationOverlayInspection;
-}) {
-  return (
-    <div className="tdmenucontent__fields" data-testid="translation-overlay-rows">
-      {inspection.sections.map((section, sectionIndex) => (
-        <div className="tdmenucontent__cluster" key={`${section.title}:${sectionIndex}`}>
-          <div className="overline-small tdmenucontent__cluster-label">{section.title}</div>
-          <div className="tdmenucontent__cluster-body">
-            {section.items.map((item) => (
-              <div className="tdmenucontent__cluster" key={item.path}>
-                <div className="label-s label-muted">{item.label}</div>
-                <div className="body-s">{item.value || 'Missing translation value.'}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      ))}
     </div>
   );
 }
@@ -377,14 +375,6 @@ export function TranslationsPanel({
   const sourceSelectedValues =
     isSelectedTranslatedLocale ? translationValuesByLocale[localeValue] ?? null : null;
   const selectedValues = isSelectedTranslatedLocale ? sourceSelectedValues : null;
-  const selectedInspection = useMemo(() => {
-    if (!session.compiled?.editableFields || !selectedValues) return null;
-    return buildEditableFieldsTranslationOverlayInspection({
-      contract: session.compiled.editableFields,
-      config: session.instanceData,
-      values: selectedValues,
-    });
-  }, [selectedValues, session.compiled?.editableFields, session.instanceData]);
   const generateButton = {
     disabled: isStartingTranslations || !panelProductState.canGenerate,
     label: isGeneratingTranslations ? 'Generating translations...' : 'Generate translations',
@@ -488,12 +478,6 @@ export function TranslationsPanel({
         ) : null}
         {!translationsError && selectedTranslationEntry && !selectedValues ? (
           <div className="label-s label-muted">Loading current language values...</div>
-        ) : null}
-        {!translationsError && selectedValues && !session.compiled.editableFields ? (
-          <div className="label-s label-muted">No translation fields declared for this widget.</div>
-        ) : null}
-        {!translationsError && selectedInspection ? (
-          <TranslationOverlayRows inspection={selectedInspection} />
         ) : null}
       </div>
     </div>

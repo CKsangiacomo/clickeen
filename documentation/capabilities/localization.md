@@ -333,6 +333,10 @@ Bob's current Translations panel displays request state, transient Roma
 command activity rows, and final generated active-locale counts. The activity
 rows are live output from the active hosted command. They are not stored status,
 polling, or a Translation Agent progress stream.
+Bob can preview a selected generated locale in the widget preview, but it does
+not expose user translation overrides, a field-level overlay editor, or a
+read-only overlay value dump. Overlay values remain generated artifacts owned by
+Translation Agent and Tokyo-worker authority.
 
 ## Overlay Contract
 

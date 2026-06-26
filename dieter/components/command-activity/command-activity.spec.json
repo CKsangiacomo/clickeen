@@ -23,7 +23,7 @@
         "size": "sm",
         "tone": "active",
         "title": "Generating translations",
-        "message": "Writing package",
+        "message": "Preparing preview",
         "rowState": "current",
         "titleClass": "label-s",
         "rowClass": "body-s"
