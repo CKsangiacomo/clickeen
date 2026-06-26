@@ -172,8 +172,11 @@ choose generation locales or write translation files.
 The panel sends one Generate translations command with the open `instanceId`.
 Roma resolves active locales and calls the Translation Agent Worker. While the
 operation is running, Bob disables the button and displays transient activity
-rows emitted by the active hosted command. When the operation returns, Bob shows
-the direct result text and refreshes the previewable translated locales.
+rows emitted by the active hosted command while overlays are written. When the
+operation returns, Bob shows the direct result text and refreshes the
+previewable translated locales from overlay truth. Bob does not read or
+interpret locale package, materializer, or cache-refresh state as translation
+truth.
 
 Bob does not create persistent translation jobs, poll operation status, or
 invent locale authority. Bob also does not expose user translation overrides or

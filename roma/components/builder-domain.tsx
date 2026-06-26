@@ -74,12 +74,8 @@ type HostCommandActivityEvent = {
     | 'command-started'
     | 'locale-started'
     | 'overlay-written'
-    | 'package-materializing'
-    | 'locale-completed'
-    | 'locale-failed'
-    | 'locale-not-attempted';
+    | 'locale-failed';
   locale?: string;
-  phase?: string;
   completed?: number;
   total?: number;
   message: string;

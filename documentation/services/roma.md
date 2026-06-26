@@ -164,20 +164,14 @@ Translation generation is a separate explicit operation from the Translations
 panel. Roma resolves the current account active locales for that command,
 applies the current tier limit, loads the saved instance source from
 Tokyo-worker, mints a Translation Agent grant, and calls the Translation Agent
-Worker. Translation Agent calls San Francisco `/model/chat` and writes
-overlays via Tokyo-worker. After every requested non-base overlay is written,
-Roma reads the exact saved source and exact overlay, calls
-`@clickeen/ck-runtime-materializer`, and submits the generated locale
-`index.html`, `styles.css`, and `runtime.js` bytes to Tokyo-worker under
-`accounts/{accountPublicId}/instances/{instanceId}/locales/{locale}/`. If a
-locale package fails after earlier locales succeed, Roma returns completed,
-skipped, and failed coordinates and does not claim full success.
-For published instances, a cache-refresh failure after package write is a
-failed locale package coordinate with phase `cache-refresh`.
+Worker. Translation Agent calls San Francisco `/model/chat` and writes overlays
+via Tokyo-worker. That overlay write is the Translations panel command. Roma
+does not return locale package, materializer, or cache-refresh coordinates as
+translation truth for this command.
 When the command is invoked through hosted Bob, Roma may return the same final
-command truth through a transient event stream so Bob can display live activity
-rows while the command runs. These events are not persisted and are not product
-status.
+overlay-write truth through a transient event stream so Bob can display live
+activity rows while the command runs. These events are not persisted and are not
+product status.
 
 Account language settings are also an overlay operation. When the user saves
 active locales in Roma Settings, Roma compares the previous active locales to

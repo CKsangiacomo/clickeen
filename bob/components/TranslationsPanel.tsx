@@ -212,32 +212,12 @@ export function resolveGenerateTranslationsMessage(payload: unknown): string {
 }
 
 export function resolveGenerateTranslationsError(payload?: unknown): string {
-  if (payload && typeof payload === 'object' && !Array.isArray(payload)) {
-    const record = payload as Record<string, unknown>;
-    const localePackages = record.localePackages;
-    if (localePackages && typeof localePackages === 'object' && !Array.isArray(localePackages)) {
-      const failed = (localePackages as Record<string, unknown>).failed;
-      if (failed && typeof failed === 'object' && !Array.isArray(failed)) {
-        const failedRecord = failed as Record<string, unknown>;
-        const locale = typeof failedRecord.locale === 'string' ? failedRecord.locale.trim() : '';
-        const phase = typeof failedRecord.phase === 'string' ? failedRecord.phase.trim() : '';
-        const localeLabel = locale ? resolveLocaleLabel(locale) : '';
-        const phaseLabel =
-          phase === 'package-write' || phase === 'package-materialization'
-            ? 'preparing the preview'
-            : phase === 'translation-generation'
-              ? 'creating the translation'
-              : '';
-        if (localeLabel && phaseLabel) return `Translations could not finish for ${localeLabel} while ${phaseLabel}.`;
-        if (localeLabel) return `Translations could not finish for ${localeLabel}.`;
-      }
-    }
-  }
+  void payload;
   return 'Translations could not be generated.';
 }
 
 function activityRowState(event: HostCommandActivityEvent): TranslationActivityRow['state'] {
-  if (event.stage === 'locale-completed' || event.stage === 'overlay-written') return 'done';
+  if (event.stage === 'overlay-written') return 'done';
   if (event.stage === 'locale-failed') return 'failed';
   return 'current';
 }
@@ -246,19 +226,13 @@ function formatActivityMessage(event: HostCommandActivityEvent): string {
   const localeLabel = event.locale ? resolveLocaleLabel(event.locale) : '';
   switch (event.stage) {
     case 'command-started':
-      return 'Creating translations';
+      return 'Writing translations';
     case 'locale-started':
-      return localeLabel ? `Creating ${localeLabel} translation` : 'Creating translation';
+      return localeLabel ? `Writing ${localeLabel}` : 'Writing translation';
     case 'overlay-written':
-      return localeLabel ? `${localeLabel} translated` : 'Translation ready';
-    case 'package-materializing':
-      return localeLabel ? `Preparing ${localeLabel} preview` : 'Preparing preview';
-    case 'locale-completed':
-      return localeLabel ? `${localeLabel} ready` : 'Language ready';
+      return localeLabel ? `${localeLabel} written` : 'Translation written';
     case 'locale-failed':
-      return localeLabel ? `${localeLabel} could not be completed` : 'Language could not be completed';
-    case 'locale-not-attempted':
-      return localeLabel ? `${localeLabel} not completed` : 'Language not completed';
+      return 'Translations could not be generated';
     default:
       return event.message;
   }
@@ -266,7 +240,7 @@ function formatActivityMessage(event: HostCommandActivityEvent): string {
 
 export function buildActivityRows(events: HostCommandActivityEvent[]): TranslationActivityRow[] {
   return events.slice(-6).map((event, index) => ({
-    key: `${event.stage}:${event.locale ?? 'command'}:${event.phase ?? ''}:${index}`,
+    key: `${event.stage}:${event.locale ?? 'command'}:${index}`,
     state: activityRowState(event),
     message: formatActivityMessage(event),
   }));

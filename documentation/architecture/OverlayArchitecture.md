@@ -151,7 +151,7 @@ account setting; the failed overlay operation is explicit follow-up failure.
 | No active non-base locales | generation returns `accepted: false` |
 | Invalid Translation Agent grant | write fails |
 | Tokyo write rejection | generation fails for that locale |
-| Locale package write rejection | generation response includes completed/skipped/failed package coordinates and full success is not claimed |
+| Locale package write rejection | source-save or settings package response includes completed/skipped/failed package coordinates and full success is not claimed |
 | Source save locale package failure | source/base package remains saved; source-save response includes `sourceSaved: true`, `ok: false`, and exact `localeCascade` failure coordinates |
 | Failure after earlier locale writes | prior files remain; full success must not be claimed |
 

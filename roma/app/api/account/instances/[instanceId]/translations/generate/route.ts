@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { resolvePolicy } from '@clickeen/ck-policy';
-import { materializeAccountInstanceLocalePackages } from '@roma/lib/account-instance-locale-package';
 import { generateAccountInstanceTranslations } from '@roma/lib/account-instance-translations';
 import { enforceActiveLocaleEntitlement } from '@roma/lib/account-locale-entitlements';
 import { loadCurrentAccountLocalesState } from '@roma/lib/account-locales-state';
@@ -18,12 +17,8 @@ type ActivityEvent = {
     | 'command-started'
     | 'locale-started'
     | 'overlay-written'
-    | 'package-materializing'
-    | 'locale-completed'
-    | 'locale-failed'
-    | 'locale-not-attempted';
+    | 'locale-failed';
   locale?: string;
-  phase?: string;
   completed?: number;
   total?: number;
   message: string;
@@ -34,7 +29,6 @@ function sendEvent(controller: ReadableStreamDefaultController<Uint8Array>, even
 }
 
 function streamGenerateTranslations(args: {
-  request: NextRequest;
   accountId: string;
   instanceId: string;
   baseLocale: string;
@@ -74,7 +68,6 @@ function streamGenerateTranslations(args: {
               activeLocales: [],
               skippedLocales: [],
             },
-            localePackages: { ok: true, completed: [], skipped: [] },
           });
           return;
         }
@@ -92,7 +85,6 @@ function streamGenerateTranslations(args: {
         if (!generated.ok) {
           activity({
             stage: 'locale-failed',
-            phase: 'translation-generation',
             completed: 0,
             total,
             message: 'Translation generation failed.',
@@ -104,7 +96,7 @@ function streamGenerateTranslations(args: {
         }
 
         if (!generated.value.translation.accepted) {
-          result(200, { ...generated.value, localePackages: { ok: true, completed: [], skipped: [] } });
+          result(200, generated.value);
           return;
         }
 
@@ -118,41 +110,7 @@ function streamGenerateTranslations(args: {
           });
         }
 
-        const localePackages = await materializeAccountInstanceLocalePackages({
-          request: args.request,
-          accountId: args.accountId,
-          instanceId: args.instanceId,
-          baseLocale: args.baseLocale,
-          activeLocales: generated.value.translation.activeLocales,
-          accountCapsule: args.accountCapsule,
-          requestId: args.requestId,
-          onActivity: activity,
-        });
-
-        if (!localePackages.ok) {
-          const failed = localePackages.value.failed;
-          if (failed) {
-            activity({
-              stage: 'locale-failed',
-              locale: failed.locale,
-              phase: failed.phase,
-              completed: localePackages.value.completed.length,
-              total,
-              message: `${failed.locale} failed during ${failed.phase}.`,
-            });
-          }
-          result(localePackages.status, {
-            error: localePackages.error,
-            translation: generated.value.translation,
-            localePackages: localePackages.value,
-          });
-          return;
-        }
-
-        result(200, {
-          ...generated.value,
-          localePackages: localePackages.value,
-        });
+        result(200, generated.value);
       } catch (error) {
         result(500, {
           error: {
@@ -227,7 +185,6 @@ export async function POST(request: NextRequest, context: RouteContext) {
     return withSession(
       request,
       streamGenerateTranslations({
-        request,
         accountId,
         instanceId,
         baseLocale,
@@ -257,46 +214,5 @@ export async function POST(request: NextRequest, context: RouteContext) {
     );
   }
 
-  if (generated.value.translation.accepted) {
-    const localePackages = await materializeAccountInstanceLocalePackages({
-      request,
-      accountId,
-      instanceId,
-      baseLocale,
-      activeLocales: generated.value.translation.activeLocales,
-      accountCapsule: current.value.authzToken,
-      requestId: current.value.requestId,
-    });
-    if (!localePackages.ok) {
-      return withSession(
-        request,
-        NextResponse.json(
-          {
-            error: localePackages.error,
-            translation: generated.value.translation,
-            localePackages: localePackages.value,
-          },
-          { status: localePackages.status },
-        ),
-        current.value.setCookies,
-      );
-    }
-    return withSession(
-      request,
-      NextResponse.json(
-        {
-          ...generated.value,
-          localePackages: localePackages.value,
-        },
-        { status: generated.status },
-      ),
-      current.value.setCookies,
-    );
-  }
-
-  return withSession(
-    request,
-    NextResponse.json({ ...generated.value, localePackages: { ok: true, completed: [], skipped: [] } }, { status: generated.status }),
-    current.value.setCookies,
-  );
+  return withSession(request, NextResponse.json(generated.value, { status: generated.status }), current.value.setCookies);
 }
