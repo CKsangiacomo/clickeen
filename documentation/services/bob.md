@@ -171,10 +171,9 @@ choose generation locales or write translation files.
 
 The panel sends one Generate translations command with the open `instanceId`.
 Roma resolves active locales and calls the Translation Agent Worker. While the
-operation is running, Bob disables the button and displays progress from the
-active locale list already present in the open editor payload. When the
-operation returns, Bob shows the direct result text and refreshes overlay
-inspection.
+operation is running, Bob disables the button and displays transient activity
+rows emitted by the active hosted command. When the operation returns, Bob shows
+the direct result text and refreshes overlay inspection.
 
 Bob does not create backend translation tasks, poll backend status, or invent
 locale authority. Saved locale overlay files remain Tokyo-worker/R2 state.

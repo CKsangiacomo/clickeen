@@ -12,7 +12,8 @@
     "build:cf": "node ../scripts/build-bob-cf.mjs",
     "start": "next start",
     "lint": "next lint",
-    "typecheck": "tsc -p tsconfig.json --noEmit"
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test:translations-panel": "tsx tests/run-translations-panel.ts"
   },
   "dependencies": {
     "@clickeen/ck-contracts": "workspace:*",

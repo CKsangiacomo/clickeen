@@ -1,0 +1,33 @@
+{
+  "component": "command-activity",
+  "syntax": "<div class='diet-command-activity' data-size='{{SIZE}}' data-tone='{{TONE}}'>…</div>",
+  "attributes": {
+    "size": { "enum": ["sm", "md"], "default": "sm" },
+    "tone": { "enum": ["active", "success", "error"], "default": "active" },
+    "title": { "required": true },
+    "message": { "required": true },
+    "rowState": { "enum": ["current", "done", "failed"], "default": "current" }
+  },
+  "binding": { "type": "transient-command-output" },
+  "defaults": [
+    {
+      "id": "command-activity",
+      "sizes": ["sm", "md"],
+      "variants": ["active", "success", "error"],
+      "spec": [
+        "diet-command-activity",
+        "data-size='{{size}}'",
+        "data-tone='{{tone}}'"
+      ],
+      "context": {
+        "size": "sm",
+        "tone": "active",
+        "title": "Generating translations",
+        "message": "Writing package",
+        "rowState": "current",
+        "titleClass": "label-s",
+        "rowClass": "body-s"
+      }
+    }
+  ]
+}

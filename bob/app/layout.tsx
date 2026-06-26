@@ -17,6 +17,7 @@ export default function RootLayout({
         <link rel="stylesheet" href={`${DIETER_BASE}/components/button/button.css`} />
         <link rel="stylesheet" href={`${DIETER_BASE}/components/toggle/toggle.css`} />
         <link rel="stylesheet" href={`${DIETER_BASE}/components/popover/popover.css`} />
+        <link rel="stylesheet" href={`${DIETER_BASE}/components/command-activity/command-activity.css`} />
       </head>
       <body className={interTight.className} suppressHydrationWarning>
         {children}

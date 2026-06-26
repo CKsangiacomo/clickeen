@@ -69,6 +69,30 @@ type HostAccountCommandResultMessage = {
   message?: string;
 };
 
+type HostCommandActivityEvent = {
+  stage:
+    | 'command-started'
+    | 'locale-started'
+    | 'overlay-written'
+    | 'package-materializing'
+    | 'locale-completed'
+    | 'locale-failed'
+    | 'locale-not-attempted';
+  locale?: string;
+  phase?: string;
+  completed?: number;
+  total?: number;
+  message: string;
+};
+
+type HostAccountCommandActivityMessage = {
+  type: 'host:account-command-activity';
+  requestId: string;
+  command: BobAccountCommand;
+  instanceId?: string;
+  event: HostCommandActivityEvent;
+};
+
 type BobOpenEditorMessage = {
   type: 'ck:open-editor';
   requestId: string;
@@ -229,6 +253,89 @@ function isAccountAssetCommand(command: BobAccountCommand): boolean {
   return command === 'list-assets' || command === 'resolve-assets' || command === 'upload-asset';
 }
 
+function isHostCommandActivityEvent(value: unknown): value is HostCommandActivityEvent {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
+  const record = value as Record<string, unknown>;
+  return typeof record.stage === 'string' && typeof record.message === 'string';
+}
+
+function isStreamedCommandResult(value: unknown): value is { status: number; payload: unknown } {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
+  const record = value as Record<string, unknown>;
+  return typeof record.status === 'number' && Number.isFinite(record.status) && 'payload' in record;
+}
+
+async function readJsonOrStreamedCommandResult(args: {
+  response: Response;
+  onActivity: (event: HostCommandActivityEvent) => void;
+}): Promise<unknown> {
+  const contentType = args.response.headers.get('content-type') ?? '';
+  if (!contentType.includes('text/event-stream') || !args.response.body) {
+    return args.response.json().catch(() => null);
+  }
+
+  const reader = args.response.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = '';
+  let finalPayload: unknown = null;
+
+  const consumeEvent = (raw: string) => {
+    const lines = raw.split(/\r?\n/);
+    let eventName = 'message';
+    const dataLines: string[] = [];
+    for (const line of lines) {
+      if (line.startsWith('event:')) {
+        eventName = line.slice('event:'.length).trim();
+        continue;
+      }
+      if (line.startsWith('data:')) {
+        dataLines.push(line.slice('data:'.length).trimStart());
+      }
+    }
+    if (!dataLines.length) return;
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(dataLines.join('\n'));
+    } catch {
+      return;
+    }
+    if (eventName === 'activity' && isHostCommandActivityEvent(parsed)) {
+      args.onActivity(parsed);
+      return;
+    }
+    if (eventName === 'result') {
+      finalPayload = parsed;
+    }
+  };
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (value) buffer += decoder.decode(value, { stream: !done });
+    let boundary = buffer.indexOf('\n\n');
+    while (boundary >= 0) {
+      consumeEvent(buffer.slice(0, boundary));
+      buffer = buffer.slice(boundary + 2);
+      boundary = buffer.indexOf('\n\n');
+    }
+    if (done) break;
+  }
+  const tail = `${buffer}${decoder.decode()}`.trim();
+  if (tail) consumeEvent(tail);
+  if (!isStreamedCommandResult(finalPayload)) {
+    return {
+      status: 502,
+      payload: {
+        error: {
+          kind: 'UPSTREAM_UNAVAILABLE',
+          reasonKey: 'coreui.errors.builder.command.invalid',
+          detail: 'host_command_stream_missing_result',
+        },
+      },
+    };
+  }
+  return finalPayload;
+}
+
 function decodeBuilderPathInstanceId(pathname: string): string {
   const match = /^\/builder\/([^/?#]+)$/.exec(pathname);
   if (!match) return '';
@@ -382,6 +489,16 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
         };
         args.source.postMessage(message, bobBaseUrl);
       };
+      const sendActivity = (event: HostCommandActivityEvent) => {
+        const message: HostAccountCommandActivityMessage = {
+          type: 'host:account-command-activity',
+          requestId: args.requestId,
+          command: args.command,
+          ...(args.instanceId ? { instanceId: args.instanceId } : {}),
+          event,
+        };
+        args.source.postMessage(message, bobBaseUrl);
+      };
       const commandUsesActiveInstance = !isAccountAssetCommand(args.command);
       const requestedInstanceId = typeof args.instanceId === 'string' ? args.instanceId.trim() : '';
       const scopedInstanceId = commandUsesActiveInstance
@@ -425,6 +542,9 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
         for (const [key, value] of Object.entries(args.headers ?? {})) {
           headers.set(key, value);
         }
+        if (args.command === 'generate-translations') {
+          headers.set('accept', 'text/event-stream');
+        }
         if (typeof args.body !== 'undefined' && route.method !== 'GET') {
           if (!headers.has('content-type')) {
             headers.set('content-type', 'application/json');
@@ -447,17 +567,23 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
         init.headers = headers;
 
         const response = await accountApi.fetchRaw(route.path, init);
-        const payload = (await response.json().catch(() => null)) as unknown;
+        const resultPayload = await readJsonOrStreamedCommandResult({
+          response,
+          onActivity: sendActivity,
+        });
+        const streamedResult = isStreamedCommandResult(resultPayload) ? resultPayload : null;
+        const status = streamedResult ? streamedResult.status : response.status;
+        const payload = streamedResult ? streamedResult.payload : resultPayload;
 
         reply({
           requestId: args.requestId,
           command: args.command,
           ...(scopedInstanceId ? { instanceId: scopedInstanceId } : {}),
-          ok: response.ok,
-          status: response.status,
+          ok: status >= 200 && status < 300,
+          status,
           payload,
           message:
-            response.ok || !payload || typeof payload !== 'object'
+            (status >= 200 && status < 300) || !payload || typeof payload !== 'object'
               ? undefined
               : typeof (
                     payload as {

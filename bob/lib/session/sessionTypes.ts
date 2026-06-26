@@ -119,6 +119,30 @@ export type BobAccountCommandMessage = {
   body?: unknown;
 };
 
+export type HostCommandActivityEvent = {
+  stage:
+    | 'command-started'
+    | 'locale-started'
+    | 'overlay-written'
+    | 'package-materializing'
+    | 'locale-completed'
+    | 'locale-failed'
+    | 'locale-not-attempted';
+  locale?: string;
+  phase?: string;
+  completed?: number;
+  total?: number;
+  message: string;
+};
+
+export type HostAccountCommandActivityMessage = {
+  type: 'host:account-command-activity';
+  requestId: string;
+  command: BobAccountCommand;
+  instanceId?: string;
+  event: HostCommandActivityEvent;
+};
+
 export type HostAccountCommandResultMessage = {
   type: 'host:account-command-result';
   requestId: string;

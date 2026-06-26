@@ -329,9 +329,10 @@ Write boundary:
 - Translation Agent writes through Tokyo-worker with `x-ck-ai-grant`.
 - Tokyo-worker verifies the grant and accepts only locales carried by the grant.
 
-Bob's current Translations panel displays request state and final generated
-active-locale counts. It does not receive a per-locale streaming progress event
-from the Translation Agent in current code.
+Bob's current Translations panel displays request state, transient Roma
+command activity rows, and final generated active-locale counts. The activity
+rows are live output from the active hosted command. They are not stored status,
+polling, or a Translation Agent progress stream.
 
 ## Overlay Contract
 

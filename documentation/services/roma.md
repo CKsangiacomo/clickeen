@@ -168,6 +168,10 @@ Roma reads the exact saved source and exact overlay, calls
 `accounts/{accountPublicId}/instances/{instanceId}/locales/{locale}/`. If a
 locale package fails after earlier locales succeed, Roma returns completed,
 skipped, and failed coordinates and does not claim full success.
+When the command is invoked through hosted Bob, Roma may return the same final
+command truth through a transient event stream so Bob can display live activity
+rows while the command runs. These events are not persisted and are not product
+status.
 
 Account language settings are also an overlay operation. When the user saves
 active locales in Roma Settings, Roma compares the previous active locales to

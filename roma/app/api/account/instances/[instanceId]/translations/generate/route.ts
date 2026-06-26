@@ -13,6 +13,166 @@ import {
 export const runtime = 'edge';
 
 type RouteContext = { params: Promise<{ instanceId: string }> };
+type ActivityEvent = {
+  stage:
+    | 'command-started'
+    | 'locale-started'
+    | 'overlay-written'
+    | 'package-materializing'
+    | 'locale-completed'
+    | 'locale-failed'
+    | 'locale-not-attempted';
+  locale?: string;
+  phase?: string;
+  completed?: number;
+  total?: number;
+  message: string;
+};
+
+function sendEvent(controller: ReadableStreamDefaultController<Uint8Array>, event: string, payload: unknown) {
+  controller.enqueue(new TextEncoder().encode(`event: ${event}\ndata: ${JSON.stringify(payload)}\n\n`));
+}
+
+function streamGenerateTranslations(args: {
+  request: NextRequest;
+  accountId: string;
+  instanceId: string;
+  baseLocale: string;
+  activeLocales: string[];
+  authz: Parameters<typeof generateAccountInstanceTranslations>[0]['authz'];
+  accountCapsule: string;
+  requestId: string;
+}) {
+  const stream = new ReadableStream<Uint8Array>({
+    async start(controller) {
+      let settled = false;
+      const total = args.activeLocales.length;
+
+      const activity = (event: ActivityEvent) => sendEvent(controller, 'activity', event);
+      const result = (status: number, payload: unknown) => {
+        if (settled) return;
+        settled = true;
+        sendEvent(controller, 'result', { status, payload });
+        controller.close();
+      };
+
+      try {
+        activity({
+          stage: 'command-started',
+          completed: 0,
+          total,
+          message: total === 1 ? 'Generating 1 active locale.' : `Generating ${total} active locales.`,
+        });
+
+        if (!total) {
+          result(200, {
+            ok: true,
+            translation: {
+              ok: true,
+              accepted: false,
+              baseLocale: args.baseLocale,
+              activeLocales: [],
+              skippedLocales: [],
+            },
+            localePackages: { ok: true, completed: [], skipped: [] },
+          });
+          return;
+        }
+
+        const generated = await generateAccountInstanceTranslations({
+          accountId: args.accountId,
+          instanceId: args.instanceId,
+          baseLocale: args.baseLocale,
+          activeLocales: args.activeLocales,
+          authz: args.authz,
+          accountCapsule: args.accountCapsule,
+          requestId: args.requestId,
+        });
+
+        if (!generated.ok) {
+          activity({
+            stage: 'locale-failed',
+            phase: 'translation-generation',
+            completed: 0,
+            total,
+            message: 'Translation generation failed.',
+          });
+          result(generated.status, {
+            error: generated.error,
+          });
+          return;
+        }
+
+        if (!generated.value.translation.accepted) {
+          result(200, { ...generated.value, localePackages: { ok: true, completed: [], skipped: [] } });
+          return;
+        }
+
+        for (const locale of generated.value.translation.activeLocales) {
+          activity({
+            stage: 'overlay-written',
+            locale,
+            completed: 0,
+            total,
+            message: `${locale} overlay written.`,
+          });
+        }
+
+        const localePackages = await materializeAccountInstanceLocalePackages({
+          request: args.request,
+          accountId: args.accountId,
+          instanceId: args.instanceId,
+          baseLocale: args.baseLocale,
+          activeLocales: generated.value.translation.activeLocales,
+          accountCapsule: args.accountCapsule,
+          requestId: args.requestId,
+          onActivity: activity,
+        });
+
+        if (!localePackages.ok) {
+          const failed = localePackages.value.failed;
+          if (failed) {
+            activity({
+              stage: 'locale-failed',
+              locale: failed.locale,
+              phase: failed.phase,
+              completed: localePackages.value.completed.length,
+              total,
+              message: `${failed.locale} failed during ${failed.phase}.`,
+            });
+          }
+          result(localePackages.status, {
+            error: localePackages.error,
+            translation: generated.value.translation,
+            localePackages: localePackages.value,
+          });
+          return;
+        }
+
+        result(200, {
+          ...generated.value,
+          localePackages: localePackages.value,
+        });
+      } catch (error) {
+        result(500, {
+          error: {
+            kind: 'UPSTREAM_UNAVAILABLE',
+            reasonKey: 'coreui.errors.translation.failed',
+            detail: error instanceof Error ? error.message : String(error),
+          },
+        });
+      }
+    },
+  });
+
+  return new NextResponse(stream, {
+    status: 200,
+    headers: {
+      'content-type': 'text/event-stream; charset=utf-8',
+      'cache-control': 'no-store',
+    },
+  });
+}
 
 export async function POST(request: NextRequest, context: RouteContext) {
   const current = await resolveCurrentAccountRouteContext({ request, minRole: 'editor' });
@@ -62,6 +222,23 @@ export async function POST(request: NextRequest, context: RouteContext) {
   });
   const entitlementGate = enforceActiveLocaleEntitlement(policy, activeLocalesToGenerate);
   if (entitlementGate) return withSession(request, entitlementGate, current.value.setCookies);
+
+  if (request.headers.get('accept')?.includes('text/event-stream')) {
+    return withSession(
+      request,
+      streamGenerateTranslations({
+        request,
+        accountId,
+        instanceId,
+        baseLocale,
+        activeLocales: activeLocalesToGenerate,
+        authz: current.value.authzPayload,
+        accountCapsule: current.value.authzToken,
+        requestId: current.value.requestId,
+      }),
+      current.value.setCookies,
+    );
+  }
 
   const generated = await generateAccountInstanceTranslations({
     accountId,

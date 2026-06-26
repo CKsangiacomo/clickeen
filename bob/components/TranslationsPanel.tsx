@@ -12,6 +12,7 @@ import {
   useWidgetSessionChrome,
   useWidgetSessionTransport,
 } from '../lib/session/useWidgetSession';
+import type { HostCommandActivityEvent } from '../lib/session/sessionTypes';
 import type { TranslatedLocalesData, TranslationSetup } from './useTranslationPreviewState';
 import { buildEditableFieldsTranslationOverlayInspection } from '../lib/translations-preview';
 import { listActivePreviewLocales } from '../lib/translations-preview';
@@ -30,6 +31,12 @@ type TranslationPanelProductState = {
   primaryMessage: string | null;
   canGenerate: boolean;
   translatedPanelLocales: string[];
+};
+
+type TranslationActivityRow = {
+  key: string;
+  state: 'current' | 'done' | 'failed';
+  message: string;
 };
 
 function resolveLocaleLabel(locale: string): string {
@@ -210,8 +217,61 @@ export function resolveGenerateTranslationsMessage(payload: unknown): string {
   return generated === 1 ? 'Generated 1 active locale.' : `Generated ${generated} active locales.`;
 }
 
-function resolveGenerateTranslationsError(): string {
+export function resolveGenerateTranslationsError(payload?: unknown): string {
+  if (payload && typeof payload === 'object' && !Array.isArray(payload)) {
+    const record = payload as Record<string, unknown>;
+    const localePackages = record.localePackages;
+    if (localePackages && typeof localePackages === 'object' && !Array.isArray(localePackages)) {
+      const failed = (localePackages as Record<string, unknown>).failed;
+      if (failed && typeof failed === 'object' && !Array.isArray(failed)) {
+        const failedRecord = failed as Record<string, unknown>;
+        const locale = typeof failedRecord.locale === 'string' ? failedRecord.locale.trim() : '';
+        const phase = typeof failedRecord.phase === 'string' ? failedRecord.phase.trim() : '';
+        if (locale && phase) return `Translations failed on ${locale} during ${phase}.`;
+        if (locale) return `Translations failed on ${locale}.`;
+      }
+    }
+  }
   return 'Translations could not be generated.';
+}
+
+function activityRowState(event: HostCommandActivityEvent): TranslationActivityRow['state'] {
+  if (event.stage === 'locale-completed' || event.stage === 'overlay-written') return 'done';
+  if (event.stage === 'locale-failed') return 'failed';
+  return 'current';
+}
+
+export function buildActivityRows(events: HostCommandActivityEvent[]): TranslationActivityRow[] {
+  return events.slice(-6).map((event, index) => ({
+    key: `${event.stage}:${event.locale ?? 'command'}:${event.phase ?? ''}:${index}`,
+    state: activityRowState(event),
+    message: event.message,
+  }));
+}
+
+function CommandActivityBox({
+  title,
+  rows,
+}: {
+  title: string;
+  rows: TranslationActivityRow[];
+}) {
+  if (!rows.length) return null;
+  return (
+    <div className="diet-command-activity" data-size="sm" data-tone="active" role="status" aria-live="polite">
+      <div className="diet-command-activity__header">
+        <span className="diet-command-activity__indicator" aria-hidden="true" />
+        <span className="diet-command-activity__title label-s">{title}</span>
+      </div>
+      <div className="diet-command-activity__rows">
+        {rows.map((row) => (
+          <div className="diet-command-activity__row" data-state={row.state} key={row.key}>
+            <span className="diet-command-activity__text body-s">{row.message}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 }
 
 export function TranslationOverlayRows({
@@ -264,6 +324,7 @@ export function TranslationsPanel({
   const [isGeneratingTranslations, setIsGeneratingTranslations] = useState(false);
   const [generateResultMessage, setGenerateResultMessage] = useState<string | null>(null);
   const [generateErrorMessage, setGenerateErrorMessage] = useState<string | null>(null);
+  const [activityEvents, setActivityEvents] = useState<HostCommandActivityEvent[]>([]);
   const instanceId = chrome.meta?.instanceId ?? '';
   const baseLocale = translationSetup?.baseLocale || translatedLocales?.baseLocale || '';
   const planTranslationsCopy =
@@ -329,25 +390,32 @@ export function TranslationsPanel({
     label: isGeneratingTranslations ? 'Generating translations...' : 'Generate translations',
     message: panelProductState.primaryMessage,
   };
+  const activityRows = useMemo(() => buildActivityRows(activityEvents), [activityEvents]);
   const runGenerateTranslations = async () => {
     if (generateButton.disabled || !instanceId) return;
     setGenerateResultMessage(null);
     setGenerateErrorMessage(null);
+    setActivityEvents([]);
     setIsStartingTranslations(true);
     setIsGeneratingTranslations(true);
     try {
       const response = await generateTranslations({
         instanceId,
+        onActivity: (event) => {
+          setActivityEvents((current) => [...current, event].slice(-12));
+        },
       });
       if (!response.ok) {
-        throw new Error(resolveGenerateTranslationsError());
+        throw new Error(resolveGenerateTranslationsError(response.json));
       }
       setGenerateResultMessage(resolveGenerateTranslationsMessage(response.json));
       onRequestTranslationsRefresh();
       setIsGeneratingTranslations(false);
+      setActivityEvents([]);
     } catch (error) {
       setGenerateErrorMessage(error instanceof Error ? error.message : 'Translations could not be generated.');
       setIsGeneratingTranslations(false);
+      setActivityEvents([]);
     } finally {
       setIsStartingTranslations(false);
     }
@@ -356,6 +424,7 @@ export function TranslationsPanel({
     setGenerateResultMessage(null);
     setGenerateErrorMessage(null);
     setIsGeneratingTranslations(false);
+    setActivityEvents([]);
   }, [instanceId]);
   if (!session.compiled) {
     return (
@@ -394,6 +463,9 @@ export function TranslationsPanel({
           ) : null}
           {generateResultMessage ? (
             <div className="label-s label-muted">{generateResultMessage}</div>
+          ) : null}
+          {isGeneratingTranslations ? (
+            <CommandActivityBox title="Generating translations" rows={activityRows} />
           ) : null}
         </div>
         <SelectField
