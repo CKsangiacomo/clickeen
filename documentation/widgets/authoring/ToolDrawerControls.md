@@ -158,7 +158,6 @@ Runtime component CSS/JS comes from the generated artifact manifest:
 tokyo/product/dieter/manifest.json
 ```
 
-Do not treat `dieter/components/registry.json` as shipped runtime truth.
 The generated manifest is the deploy artifact contract.
 
 ## Hard Stops
