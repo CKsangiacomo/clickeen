@@ -26,8 +26,12 @@ DevStudio only displays whatever Dieter actually is, so Dieter must be fixed fir
 | 126E | Components: dropdowns | dropdown-actions, -border, -edit, -fill, -shadow, -upload | 126A |
 | 126F | Components: composites | repeater, object-manager, bulk-edit, popover, tabs, popaddlink, menuactions | 126A |
 | 126G | Components: activity displays | agent-activity, command-activity | 126A |
-| 126H | DevStudio rollup | showcase shows the fixed Dieter; close the drift gate | 126A–126G |
-| 126I | Roma refactor | Roma consumes Dieter; delete the parallel `.roma-*` system | 126H |
+| 126H1 | DevStudio: visual modernity | modern look + dark mode, data-grid, skeletons/motion, nav, elevation | 126A |
+| 126H2 | DevStudio: CSS cleanup | delete dead CSS, extract embedded styles, tokenize, dedupe inline styles | 126A |
+| 126H3 | DevStudio: ops & governance | attribution, gated commits, validation, deploy robustness, build safety | — |
+| 126I | Roma refactor | Roma consumes Dieter; delete the parallel `.roma-*` system | 126A–126G |
+
+DevStudio's own UI/ops health (126H1–H3) runs **now**, in parallel with the component batches — the cockpit itself must be clean, not just its showcase of Dieter. They are independent of 126B–G.
 
 ## Audit criteria (shared by every component sub-PRD)
 For each component, check:
