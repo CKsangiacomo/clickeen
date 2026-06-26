@@ -2,55 +2,57 @@
 import html0 from "../html/components/bulk-edit.html?raw";
 import html1 from "../html/components/button.html?raw";
 import html2 from "../html/components/choice-tiles.html?raw";
-import html3 from "../html/components/dropdown-actions.html?raw";
-import html4 from "../html/components/dropdown-border.html?raw";
-import html5 from "../html/components/dropdown-edit.html?raw";
-import html6 from "../html/components/dropdown-fill.html?raw";
-import html7 from "../html/components/dropdown-shadow.html?raw";
-import html8 from "../html/components/dropdown-upload.html?raw";
-import html9 from "../html/components/menuactions.html?raw";
-import html10 from "../html/components/object-manager.html?raw";
-import html11 from "../html/components/popaddlink.html?raw";
-import html12 from "../html/components/popover.html?raw";
-import html13 from "../html/components/repeater.html?raw";
-import html14 from "../html/components/segmented.html?raw";
-import html15 from "../html/components/slider.html?raw";
-import html16 from "../html/components/tabs.html?raw";
-import html17 from "../html/components/textedit.html?raw";
-import html18 from "../html/components/textfield.html?raw";
-import html19 from "../html/components/toggle.html?raw";
-import html20 from "../html/components/valuefield.html?raw";
-import html21 from "../html/foundations/colors.html?raw";
-import html22 from "../html/foundations/icons.html?raw";
-import html23 from "../html/foundations/typography.html?raw";
-import html24 from "../html/tools/entitlements.html?raw";
-import html25 from "../html/tools/llm-management.html?raw";
+import html3 from "../html/components/command-activity.html?raw";
+import html4 from "../html/components/dropdown-actions.html?raw";
+import html5 from "../html/components/dropdown-border.html?raw";
+import html6 from "../html/components/dropdown-edit.html?raw";
+import html7 from "../html/components/dropdown-fill.html?raw";
+import html8 from "../html/components/dropdown-shadow.html?raw";
+import html9 from "../html/components/dropdown-upload.html?raw";
+import html10 from "../html/components/menuactions.html?raw";
+import html11 from "../html/components/object-manager.html?raw";
+import html12 from "../html/components/popaddlink.html?raw";
+import html13 from "../html/components/popover.html?raw";
+import html14 from "../html/components/repeater.html?raw";
+import html15 from "../html/components/segmented.html?raw";
+import html16 from "../html/components/slider.html?raw";
+import html17 from "../html/components/tabs.html?raw";
+import html18 from "../html/components/textedit.html?raw";
+import html19 from "../html/components/textfield.html?raw";
+import html20 from "../html/components/toggle.html?raw";
+import html21 from "../html/components/valuefield.html?raw";
+import html22 from "../html/foundations/colors.html?raw";
+import html23 from "../html/foundations/icons.html?raw";
+import html24 from "../html/foundations/typography.html?raw";
+import html25 from "../html/tools/entitlements.html?raw";
+import html26 from "../html/tools/llm-management.html?raw";
 
 export const staticShowcaseModules: Record<string, string> = {
   "../html/components/bulk-edit.html": html0,
   "../html/components/button.html": html1,
   "../html/components/choice-tiles.html": html2,
-  "../html/components/dropdown-actions.html": html3,
-  "../html/components/dropdown-border.html": html4,
-  "../html/components/dropdown-edit.html": html5,
-  "../html/components/dropdown-fill.html": html6,
-  "../html/components/dropdown-shadow.html": html7,
-  "../html/components/dropdown-upload.html": html8,
-  "../html/components/menuactions.html": html9,
-  "../html/components/object-manager.html": html10,
-  "../html/components/popaddlink.html": html11,
-  "../html/components/popover.html": html12,
-  "../html/components/repeater.html": html13,
-  "../html/components/segmented.html": html14,
-  "../html/components/slider.html": html15,
-  "../html/components/tabs.html": html16,
-  "../html/components/textedit.html": html17,
-  "../html/components/textfield.html": html18,
-  "../html/components/toggle.html": html19,
-  "../html/components/valuefield.html": html20,
-  "../html/foundations/colors.html": html21,
-  "../html/foundations/icons.html": html22,
-  "../html/foundations/typography.html": html23,
-  "../html/tools/entitlements.html": html24,
-  "../html/tools/llm-management.html": html25,
+  "../html/components/command-activity.html": html3,
+  "../html/components/dropdown-actions.html": html4,
+  "../html/components/dropdown-border.html": html5,
+  "../html/components/dropdown-edit.html": html6,
+  "../html/components/dropdown-fill.html": html7,
+  "../html/components/dropdown-shadow.html": html8,
+  "../html/components/dropdown-upload.html": html9,
+  "../html/components/menuactions.html": html10,
+  "../html/components/object-manager.html": html11,
+  "../html/components/popaddlink.html": html12,
+  "../html/components/popover.html": html13,
+  "../html/components/repeater.html": html14,
+  "../html/components/segmented.html": html15,
+  "../html/components/slider.html": html16,
+  "../html/components/tabs.html": html17,
+  "../html/components/textedit.html": html18,
+  "../html/components/textfield.html": html19,
+  "../html/components/toggle.html": html20,
+  "../html/components/valuefield.html": html21,
+  "../html/foundations/colors.html": html22,
+  "../html/foundations/icons.html": html23,
+  "../html/foundations/typography.html": html24,
+  "../html/tools/entitlements.html": html25,
+  "../html/tools/llm-management.html": html26,
 };

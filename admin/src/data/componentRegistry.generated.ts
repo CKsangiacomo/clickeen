@@ -3,141 +3,147 @@ import type { ComponentSpec } from './componentTypes';
 import spec0 from "../../../dieter/components/bulk-edit/bulk-edit.spec.json";
 import spec1 from "../../../dieter/components/button/button.spec.json";
 import spec2 from "../../../dieter/components/choice-tiles/choice-tiles.spec.json";
-import spec3 from "../../../dieter/components/dropdown-actions/dropdown-actions.spec.json";
-import spec4 from "../../../dieter/components/dropdown-border/dropdown-border.spec.json";
-import spec5 from "../../../dieter/components/dropdown-edit/dropdown-edit.spec.json";
-import spec6 from "../../../dieter/components/dropdown-fill/dropdown-fill.spec.json";
-import spec7 from "../../../dieter/components/dropdown-shadow/dropdown-shadow.spec.json";
-import spec8 from "../../../dieter/components/dropdown-upload/dropdown-upload.spec.json";
-import spec9 from "../../../dieter/components/menuactions/menuactions.spec.json";
-import spec10 from "../../../dieter/components/object-manager/object-manager.spec.json";
-import spec11 from "../../../dieter/components/popaddlink/popaddlink.spec.json";
-import spec12 from "../../../dieter/components/popover/popover.spec.json";
-import spec13 from "../../../dieter/components/repeater/repeater.spec.json";
-import spec14 from "../../../dieter/components/segmented/segmented.spec.json";
-import spec15 from "../../../dieter/components/slider/slider.spec.json";
-import spec16 from "../../../dieter/components/tabs/tabs.spec.json";
-import spec17 from "../../../dieter/components/textedit/textedit.spec.json";
-import spec18 from "../../../dieter/components/textfield/textfield.spec.json";
-import spec19 from "../../../dieter/components/toggle/toggle.spec.json";
-import spec20 from "../../../dieter/components/valuefield/valuefield.spec.json";
+import spec3 from "../../../dieter/components/command-activity/command-activity.spec.json";
+import spec4 from "../../../dieter/components/dropdown-actions/dropdown-actions.spec.json";
+import spec5 from "../../../dieter/components/dropdown-border/dropdown-border.spec.json";
+import spec6 from "../../../dieter/components/dropdown-edit/dropdown-edit.spec.json";
+import spec7 from "../../../dieter/components/dropdown-fill/dropdown-fill.spec.json";
+import spec8 from "../../../dieter/components/dropdown-shadow/dropdown-shadow.spec.json";
+import spec9 from "../../../dieter/components/dropdown-upload/dropdown-upload.spec.json";
+import spec10 from "../../../dieter/components/menuactions/menuactions.spec.json";
+import spec11 from "../../../dieter/components/object-manager/object-manager.spec.json";
+import spec12 from "../../../dieter/components/popaddlink/popaddlink.spec.json";
+import spec13 from "../../../dieter/components/popover/popover.spec.json";
+import spec14 from "../../../dieter/components/repeater/repeater.spec.json";
+import spec15 from "../../../dieter/components/segmented/segmented.spec.json";
+import spec16 from "../../../dieter/components/slider/slider.spec.json";
+import spec17 from "../../../dieter/components/tabs/tabs.spec.json";
+import spec18 from "../../../dieter/components/textedit/textedit.spec.json";
+import spec19 from "../../../dieter/components/textfield/textfield.spec.json";
+import spec20 from "../../../dieter/components/toggle/toggle.spec.json";
+import spec21 from "../../../dieter/components/valuefield/valuefield.spec.json";
 import template0 from "../../../dieter/components/bulk-edit/bulk-edit.html?raw";
 import template1 from "../../../dieter/components/button/button.html?raw";
 import template2 from "../../../dieter/components/choice-tiles/choice-tiles.html?raw";
-import template3 from "../../../dieter/components/dropdown-actions/dropdown-actions.html?raw";
-import template4 from "../../../dieter/components/dropdown-border/dropdown-border.html?raw";
-import template5 from "../../../dieter/components/dropdown-edit/dropdown-edit.html?raw";
-import template6 from "../../../dieter/components/dropdown-fill/dropdown-fill.html?raw";
-import template7 from "../../../dieter/components/dropdown-shadow/dropdown-shadow.html?raw";
-import template8 from "../../../dieter/components/dropdown-upload/dropdown-upload.html?raw";
-import template9 from "../../../dieter/components/menuactions/menuactions.html?raw";
-import template10 from "../../../dieter/components/object-manager/object-manager.html?raw";
-import template11 from "../../../dieter/components/popaddlink/popaddlink.html?raw";
-import template12 from "../../../dieter/components/popover/popover.html?raw";
-import template13 from "../../../dieter/components/repeater/repeater.html?raw";
-import template14 from "../../../dieter/components/segmented/segmented.html?raw";
-import template15 from "../../../dieter/components/slider/slider.html?raw";
-import template16 from "../../../dieter/components/tabs/tabs.html?raw";
-import template17 from "../../../dieter/components/textedit/textedit.html?raw";
-import template18 from "../../../dieter/components/textfield/textfield.html?raw";
-import template19 from "../../../dieter/components/textrename/textrename.html?raw";
-import template20 from "../../../dieter/components/toggle/toggle.html?raw";
-import template21 from "../../../dieter/components/valuefield/valuefield.html?raw";
+import template3 from "../../../dieter/components/command-activity/command-activity.html?raw";
+import template4 from "../../../dieter/components/dropdown-actions/dropdown-actions.html?raw";
+import template5 from "../../../dieter/components/dropdown-border/dropdown-border.html?raw";
+import template6 from "../../../dieter/components/dropdown-edit/dropdown-edit.html?raw";
+import template7 from "../../../dieter/components/dropdown-fill/dropdown-fill.html?raw";
+import template8 from "../../../dieter/components/dropdown-shadow/dropdown-shadow.html?raw";
+import template9 from "../../../dieter/components/dropdown-upload/dropdown-upload.html?raw";
+import template10 from "../../../dieter/components/menuactions/menuactions.html?raw";
+import template11 from "../../../dieter/components/object-manager/object-manager.html?raw";
+import template12 from "../../../dieter/components/popaddlink/popaddlink.html?raw";
+import template13 from "../../../dieter/components/popover/popover.html?raw";
+import template14 from "../../../dieter/components/repeater/repeater.html?raw";
+import template15 from "../../../dieter/components/segmented/segmented.html?raw";
+import template16 from "../../../dieter/components/slider/slider.html?raw";
+import template17 from "../../../dieter/components/tabs/tabs.html?raw";
+import template18 from "../../../dieter/components/textedit/textedit.html?raw";
+import template19 from "../../../dieter/components/textfield/textfield.html?raw";
+import template20 from "../../../dieter/components/textrename/textrename.html?raw";
+import template21 from "../../../dieter/components/toggle/toggle.html?raw";
+import template22 from "../../../dieter/components/valuefield/valuefield.html?raw";
 import css0 from "../../../dieter/components/bulk-edit/bulk-edit.css?raw";
 import css1 from "../../../dieter/components/button/button.css?raw";
 import css2 from "../../../dieter/components/choice-tiles/choice-tiles.css?raw";
-import css3 from "../../../dieter/components/dropdown-actions/dropdown-actions.css?raw";
-import css4 from "../../../dieter/components/dropdown-border/dropdown-border.css?raw";
-import css5 from "../../../dieter/components/dropdown-edit/dropdown-edit.css?raw";
-import css6 from "../../../dieter/components/dropdown-fill/dropdown-fill.css?raw";
-import css7 from "../../../dieter/components/dropdown-shadow/dropdown-shadow.css?raw";
-import css8 from "../../../dieter/components/dropdown-upload/dropdown-upload.css?raw";
-import css9 from "../../../dieter/components/icon/icon.css?raw";
-import css10 from "../../../dieter/components/menuactions/menuactions.css?raw";
-import css11 from "../../../dieter/components/object-manager/object-manager.css?raw";
-import css12 from "../../../dieter/components/popaddlink/popaddlink.css?raw";
-import css13 from "../../../dieter/components/popover/popover.css?raw";
-import css14 from "../../../dieter/components/repeater/repeater.css?raw";
-import css15 from "../../../dieter/components/segmented/segmented.css?raw";
-import css16 from "../../../dieter/components/slider/slider.css?raw";
-import css17 from "../../../dieter/components/tabs/tabs.css?raw";
-import css18 from "../../../dieter/components/textedit/textedit.css?raw";
-import css19 from "../../../dieter/components/textfield/textfield.css?raw";
-import css20 from "../../../dieter/components/textrename/textrename.css?raw";
-import css21 from "../../../dieter/components/toggle/toggle.css?raw";
-import css22 from "../../../dieter/components/valuefield/valuefield.css?raw";
+import css3 from "../../../dieter/components/command-activity/command-activity.css?raw";
+import css4 from "../../../dieter/components/dropdown-actions/dropdown-actions.css?raw";
+import css5 from "../../../dieter/components/dropdown-border/dropdown-border.css?raw";
+import css6 from "../../../dieter/components/dropdown-edit/dropdown-edit.css?raw";
+import css7 from "../../../dieter/components/dropdown-fill/dropdown-fill.css?raw";
+import css8 from "../../../dieter/components/dropdown-shadow/dropdown-shadow.css?raw";
+import css9 from "../../../dieter/components/dropdown-upload/dropdown-upload.css?raw";
+import css10 from "../../../dieter/components/icon/icon.css?raw";
+import css11 from "../../../dieter/components/menuactions/menuactions.css?raw";
+import css12 from "../../../dieter/components/object-manager/object-manager.css?raw";
+import css13 from "../../../dieter/components/popaddlink/popaddlink.css?raw";
+import css14 from "../../../dieter/components/popover/popover.css?raw";
+import css15 from "../../../dieter/components/repeater/repeater.css?raw";
+import css16 from "../../../dieter/components/segmented/segmented.css?raw";
+import css17 from "../../../dieter/components/slider/slider.css?raw";
+import css18 from "../../../dieter/components/tabs/tabs.css?raw";
+import css19 from "../../../dieter/components/textedit/textedit.css?raw";
+import css20 from "../../../dieter/components/textfield/textfield.css?raw";
+import css21 from "../../../dieter/components/textrename/textrename.css?raw";
+import css22 from "../../../dieter/components/toggle/toggle.css?raw";
+import css23 from "../../../dieter/components/valuefield/valuefield.css?raw";
 
 export const specModules: Record<string, ComponentSpec> = {
   "../../../dieter/components/bulk-edit/bulk-edit.spec.json": spec0 as ComponentSpec,
   "../../../dieter/components/button/button.spec.json": spec1 as ComponentSpec,
   "../../../dieter/components/choice-tiles/choice-tiles.spec.json": spec2 as ComponentSpec,
-  "../../../dieter/components/dropdown-actions/dropdown-actions.spec.json": spec3 as ComponentSpec,
-  "../../../dieter/components/dropdown-border/dropdown-border.spec.json": spec4 as ComponentSpec,
-  "../../../dieter/components/dropdown-edit/dropdown-edit.spec.json": spec5 as ComponentSpec,
-  "../../../dieter/components/dropdown-fill/dropdown-fill.spec.json": spec6 as ComponentSpec,
-  "../../../dieter/components/dropdown-shadow/dropdown-shadow.spec.json": spec7 as ComponentSpec,
-  "../../../dieter/components/dropdown-upload/dropdown-upload.spec.json": spec8 as ComponentSpec,
-  "../../../dieter/components/menuactions/menuactions.spec.json": spec9 as ComponentSpec,
-  "../../../dieter/components/object-manager/object-manager.spec.json": spec10 as ComponentSpec,
-  "../../../dieter/components/popaddlink/popaddlink.spec.json": spec11 as ComponentSpec,
-  "../../../dieter/components/popover/popover.spec.json": spec12 as ComponentSpec,
-  "../../../dieter/components/repeater/repeater.spec.json": spec13 as ComponentSpec,
-  "../../../dieter/components/segmented/segmented.spec.json": spec14 as ComponentSpec,
-  "../../../dieter/components/slider/slider.spec.json": spec15 as ComponentSpec,
-  "../../../dieter/components/tabs/tabs.spec.json": spec16 as ComponentSpec,
-  "../../../dieter/components/textedit/textedit.spec.json": spec17 as ComponentSpec,
-  "../../../dieter/components/textfield/textfield.spec.json": spec18 as ComponentSpec,
-  "../../../dieter/components/toggle/toggle.spec.json": spec19 as ComponentSpec,
-  "../../../dieter/components/valuefield/valuefield.spec.json": spec20 as ComponentSpec,
+  "../../../dieter/components/command-activity/command-activity.spec.json": spec3 as ComponentSpec,
+  "../../../dieter/components/dropdown-actions/dropdown-actions.spec.json": spec4 as ComponentSpec,
+  "../../../dieter/components/dropdown-border/dropdown-border.spec.json": spec5 as ComponentSpec,
+  "../../../dieter/components/dropdown-edit/dropdown-edit.spec.json": spec6 as ComponentSpec,
+  "../../../dieter/components/dropdown-fill/dropdown-fill.spec.json": spec7 as ComponentSpec,
+  "../../../dieter/components/dropdown-shadow/dropdown-shadow.spec.json": spec8 as ComponentSpec,
+  "../../../dieter/components/dropdown-upload/dropdown-upload.spec.json": spec9 as ComponentSpec,
+  "../../../dieter/components/menuactions/menuactions.spec.json": spec10 as ComponentSpec,
+  "../../../dieter/components/object-manager/object-manager.spec.json": spec11 as ComponentSpec,
+  "../../../dieter/components/popaddlink/popaddlink.spec.json": spec12 as ComponentSpec,
+  "../../../dieter/components/popover/popover.spec.json": spec13 as ComponentSpec,
+  "../../../dieter/components/repeater/repeater.spec.json": spec14 as ComponentSpec,
+  "../../../dieter/components/segmented/segmented.spec.json": spec15 as ComponentSpec,
+  "../../../dieter/components/slider/slider.spec.json": spec16 as ComponentSpec,
+  "../../../dieter/components/tabs/tabs.spec.json": spec17 as ComponentSpec,
+  "../../../dieter/components/textedit/textedit.spec.json": spec18 as ComponentSpec,
+  "../../../dieter/components/textfield/textfield.spec.json": spec19 as ComponentSpec,
+  "../../../dieter/components/toggle/toggle.spec.json": spec20 as ComponentSpec,
+  "../../../dieter/components/valuefield/valuefield.spec.json": spec21 as ComponentSpec,
 };
 
 export const templateModules: Record<string, string> = {
   "../../../dieter/components/bulk-edit/bulk-edit.html": template0,
   "../../../dieter/components/button/button.html": template1,
   "../../../dieter/components/choice-tiles/choice-tiles.html": template2,
-  "../../../dieter/components/dropdown-actions/dropdown-actions.html": template3,
-  "../../../dieter/components/dropdown-border/dropdown-border.html": template4,
-  "../../../dieter/components/dropdown-edit/dropdown-edit.html": template5,
-  "../../../dieter/components/dropdown-fill/dropdown-fill.html": template6,
-  "../../../dieter/components/dropdown-shadow/dropdown-shadow.html": template7,
-  "../../../dieter/components/dropdown-upload/dropdown-upload.html": template8,
-  "../../../dieter/components/menuactions/menuactions.html": template9,
-  "../../../dieter/components/object-manager/object-manager.html": template10,
-  "../../../dieter/components/popaddlink/popaddlink.html": template11,
-  "../../../dieter/components/popover/popover.html": template12,
-  "../../../dieter/components/repeater/repeater.html": template13,
-  "../../../dieter/components/segmented/segmented.html": template14,
-  "../../../dieter/components/slider/slider.html": template15,
-  "../../../dieter/components/tabs/tabs.html": template16,
-  "../../../dieter/components/textedit/textedit.html": template17,
-  "../../../dieter/components/textfield/textfield.html": template18,
-  "../../../dieter/components/textrename/textrename.html": template19,
-  "../../../dieter/components/toggle/toggle.html": template20,
-  "../../../dieter/components/valuefield/valuefield.html": template21,
+  "../../../dieter/components/command-activity/command-activity.html": template3,
+  "../../../dieter/components/dropdown-actions/dropdown-actions.html": template4,
+  "../../../dieter/components/dropdown-border/dropdown-border.html": template5,
+  "../../../dieter/components/dropdown-edit/dropdown-edit.html": template6,
+  "../../../dieter/components/dropdown-fill/dropdown-fill.html": template7,
+  "../../../dieter/components/dropdown-shadow/dropdown-shadow.html": template8,
+  "../../../dieter/components/dropdown-upload/dropdown-upload.html": template9,
+  "../../../dieter/components/menuactions/menuactions.html": template10,
+  "../../../dieter/components/object-manager/object-manager.html": template11,
+  "../../../dieter/components/popaddlink/popaddlink.html": template12,
+  "../../../dieter/components/popover/popover.html": template13,
+  "../../../dieter/components/repeater/repeater.html": template14,
+  "../../../dieter/components/segmented/segmented.html": template15,
+  "../../../dieter/components/slider/slider.html": template16,
+  "../../../dieter/components/tabs/tabs.html": template17,
+  "../../../dieter/components/textedit/textedit.html": template18,
+  "../../../dieter/components/textfield/textfield.html": template19,
+  "../../../dieter/components/textrename/textrename.html": template20,
+  "../../../dieter/components/toggle/toggle.html": template21,
+  "../../../dieter/components/valuefield/valuefield.html": template22,
 };
 
 export const cssModules: Record<string, string> = {
   "../../../dieter/components/bulk-edit/bulk-edit.css": css0,
   "../../../dieter/components/button/button.css": css1,
   "../../../dieter/components/choice-tiles/choice-tiles.css": css2,
-  "../../../dieter/components/dropdown-actions/dropdown-actions.css": css3,
-  "../../../dieter/components/dropdown-border/dropdown-border.css": css4,
-  "../../../dieter/components/dropdown-edit/dropdown-edit.css": css5,
-  "../../../dieter/components/dropdown-fill/dropdown-fill.css": css6,
-  "../../../dieter/components/dropdown-shadow/dropdown-shadow.css": css7,
-  "../../../dieter/components/dropdown-upload/dropdown-upload.css": css8,
-  "../../../dieter/components/icon/icon.css": css9,
-  "../../../dieter/components/menuactions/menuactions.css": css10,
-  "../../../dieter/components/object-manager/object-manager.css": css11,
-  "../../../dieter/components/popaddlink/popaddlink.css": css12,
-  "../../../dieter/components/popover/popover.css": css13,
-  "../../../dieter/components/repeater/repeater.css": css14,
-  "../../../dieter/components/segmented/segmented.css": css15,
-  "../../../dieter/components/slider/slider.css": css16,
-  "../../../dieter/components/tabs/tabs.css": css17,
-  "../../../dieter/components/textedit/textedit.css": css18,
-  "../../../dieter/components/textfield/textfield.css": css19,
-  "../../../dieter/components/textrename/textrename.css": css20,
-  "../../../dieter/components/toggle/toggle.css": css21,
-  "../../../dieter/components/valuefield/valuefield.css": css22,
+  "../../../dieter/components/command-activity/command-activity.css": css3,
+  "../../../dieter/components/dropdown-actions/dropdown-actions.css": css4,
+  "../../../dieter/components/dropdown-border/dropdown-border.css": css5,
+  "../../../dieter/components/dropdown-edit/dropdown-edit.css": css6,
+  "../../../dieter/components/dropdown-fill/dropdown-fill.css": css7,
+  "../../../dieter/components/dropdown-shadow/dropdown-shadow.css": css8,
+  "../../../dieter/components/dropdown-upload/dropdown-upload.css": css9,
+  "../../../dieter/components/icon/icon.css": css10,
+  "../../../dieter/components/menuactions/menuactions.css": css11,
+  "../../../dieter/components/object-manager/object-manager.css": css12,
+  "../../../dieter/components/popaddlink/popaddlink.css": css13,
+  "../../../dieter/components/popover/popover.css": css14,
+  "../../../dieter/components/repeater/repeater.css": css15,
+  "../../../dieter/components/segmented/segmented.css": css16,
+  "../../../dieter/components/slider/slider.css": css17,
+  "../../../dieter/components/tabs/tabs.css": css18,
+  "../../../dieter/components/textedit/textedit.css": css19,
+  "../../../dieter/components/textfield/textfield.css": css20,
+  "../../../dieter/components/textrename/textrename.css": css21,
+  "../../../dieter/components/toggle/toggle.css": css22,
+  "../../../dieter/components/valuefield/valuefield.css": css23,
 };
