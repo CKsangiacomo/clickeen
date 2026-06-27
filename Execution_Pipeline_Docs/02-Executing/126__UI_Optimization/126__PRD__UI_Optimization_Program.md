@@ -145,6 +145,37 @@ outward on a rotten inner doll is thrown-away work.
   verification, and a Done list — the 124/125 bar.
 - Start from clean git; commit doc work with explicit pathspecs.
 
+### Per-domain method — the six-step loop (runs once per domain)
+
+Every domain (color, typography, motion, iconography, accessibility, components,
+dialogs/modals, interactions, ops, surfaces) is processed through the same loop,
+**in this order**. The order is evidence → judgment → target → code-gap → plan →
+review → execute; each step is impossible to do honestly without the one before it.
+
+- **a. Capture what exists.** Read the as-built system. Do not reinvent what works
+  or delete what is live. (Anti-speculation floor.)
+- **b. Write it as the knowledgebase doc** in `documentation/engineering/UI/` — a
+  precise dev entry. Writing it *is* the first audit: gaps surface when you try to
+  state the system exactly. The kb is also the stable baseline judged against next.
+- **c. Audit against 2026 best practice.** Judge what can be improved or is
+  missing, by today's bar — explicitly modern, not the 20-year-old patterns that
+  built the system. The system accreted through AI defaults that regress to old
+  patterns; an audit that isn't a deliberate modern lens inherits that median.
+- **d. Update the doc to drive the system.** The kb doc becomes the target of
+  truth; code conforms to the doc, not the reverse. Doc-led prevents drift and
+  stops agents regressing to stale truth.
+- **e. Audit the codebase against the target.** Expose exactly what must change
+  in code (files, lines). This is time-bound execution analysis — it lives in the
+  PRD series `audits/` folder, not the permanent kb.
+- **f. Write the PRD** in the 126 series from (a + c + e). The plan is downstream
+  of evidence, not the source of it.
+- **Then peer-review the PRDs** (attack omissions) before any execution.
+
+The ordering is non-negotiable. Reverse any pair and the failure it closes
+reopens: (a/b) close speculation, (c) closes the dated median, (d) closes doc-code
+drift, (e/f) close invented plans, review closes overclaim. This is why the
+program runs serially per domain, not as one pass.
+
 ## 10. Parent acceptance — the splendid-bottom-up bar
 
 Not a bug list — a quality bar. The program is done when:
