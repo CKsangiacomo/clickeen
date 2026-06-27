@@ -6,22 +6,22 @@ Date: 2026-06-26
 Stage: 02-Executing
 
 This is the parent program PRD (MAMA). Execution flows through the domain PRDs
-**126A–126K** (one per `engineering/UI/` kb doc, in folder order) plus the two
+**126A–126K** in dependency order (§7) plus the two
 screen refactors **126L DevStudio UI** and **126M Roma UI** last. Each domain PRD
 is filled from its real audit. If a PRD conflicts with this MAMA, execution
 resolves to this MAMA.
 
 Related:
 
-- Domain PRDs **126A–126K** (mirror `documentation/engineering/UI/`, folder order):
-  126A accessibility, 126B color, 126C components, 126D dialogs-and-modals,
-  126E dieter, 126F iconography, 126G interactions, 126H motion, 126I ops,
-  126J surfaces, 126K typography.
+- Domain PRDs **126A–126K** (one per `engineering/UI/` kb doc, in dependency order):
+  126A accessibility, 126B color, 126C iconography, 126D typography,
+  126E interactions, 126F motion, 126G ops, 126H dieter, 126I components,
+  126J surfaces, 126K dialogs-and-modals.
 - Screen refactors (last): `126L__PRD__DevStudio_UI.md`, `126M__PRD__Roma_UI.md`.
 - `audits/` — real per-domain audits (`126X__Audit__*.md`); see `audits/README.md`
   for the bar.
-- Structural templates / granularity bar: `../124__Overlay_Aware_Runtime_Materializer/124__MAMA__*.md`,
-  `../125__Roma_Tokyo_Product_Authority_And_Inventory_Boundary/125__PRD__*.md`.
+- Structural templates / granularity bar: `../../03-Executed/124__Overlay_Aware_Runtime_Materializer/124__MAMA__*.md`,
+  `../../03-Executed/125__Roma_Tokyo_Product_Authority_And_Inventory_Boundary/125__PRD__*.md`.
 - **TBD law sources (must read before §4/§5 are binding):**
   `documentation/architecture/CONTEXT.md`, `documentation/AGENTS.md`,
   `documentation/services/devstudio.md`, `documentation/services/roma.md`,
@@ -111,25 +111,28 @@ surfaces (Prague, etc.); token authoring-as-a-feature.
 
 ## 7. The domain PRD series — order
 
-One PRD per `engineering/UI/` kb doc, in folder order; DevStudio UI and Roma UI
-last. Production order (audits + PRDs) follows the folder; **execution stays
-inside-out and gated** (§9) — the two are separate.
+One PRD per `engineering/UI/` kb doc, in **dependency order** (not alphabetical);
+DevStudio UI and Roma UI last. Production order (audits + PRDs) follows this
+table; **execution stays inside-out and gated** (§9).
 
 | PRD | Domain |
 | --- | --- |
 | 126A | accessibility |
 | 126B | color |
-| 126C | components |
-| 126D | dialogs-and-modals |
-| 126E | dieter (system + foundation) |
-| 126F | iconography |
-| 126G | interactions |
-| 126H | motion |
-| 126I | ops |
+| 126C | iconography |
+| 126D | typography |
+| 126E | interactions |
+| 126F | motion |
+| 126G | ops |
+| 126H | dieter (system + foundation) |
+| 126I | components (the pivot) |
 | 126J | surfaces |
-| 126K | typography |
+| 126K | dialogs-and-modals |
 | 126L | DevStudio UI refactor |
 | 126M | Roma UI refactor |
+
+**126I components is the pivot.** Domains 126A–126H feed the library; 126J surfaces
+and 126K dialogs-and-modals are built on / consume it. Then the screens.
 
 **DevStudio UI (126L) and Roma UI (126M) are last** because they're the outermost
 doll — they consume every domain beneath, so their PRDs are written once, against
@@ -162,7 +165,7 @@ Roma: Roma consumes DevStudio's tokenization guard.
 ### Per-domain method — the six-step loop (runs once per domain)
 
 Every domain (see the series in §7) is processed through the same loop, produced
-in `engineering/UI/` folder order, **in this order**. The order is evidence →
+in dependency order, **in this order**. The order is evidence →
 judgment → target → code-gap → plan → review → execute; each step is impossible
 to do honestly without the one before it.
 
@@ -211,15 +214,15 @@ Not a bug list — a quality bar. The program is done when:
 126__PRD__UI_Optimization_Program.md        (this MAMA)
 126A__PRD__Accessibility.md
 126B__PRD__Color.md
-126C__PRD__Components.md
-126D__PRD__Dialogs_and_Modals.md
-126E__PRD__Dieter.md
-126F__PRD__Iconography.md
-126G__PRD__Interactions.md
-126H__PRD__Motion.md
-126I__PRD__Ops.md
+126C__PRD__Iconography.md
+126D__PRD__Typography.md
+126E__PRD__Interactions.md
+126F__PRD__Motion.md
+126G__PRD__Ops.md
+126H__PRD__Dieter.md
+126I__PRD__Components.md
 126J__PRD__Surfaces.md
-126K__PRD__Typography.md
+126K__PRD__Dialogs_and_Modals.md
 126L__PRD__DevStudio_UI.md                  (screen refactor — second-to-last)
 126M__PRD__Roma_UI.md                       (screen refactor — last)
 audits/
