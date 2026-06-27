@@ -106,6 +106,21 @@ async function testCreateSaveDuplicateRoutePackageSubmission(): Promise<void> {
   assert.match(duplicateRoute, /instanceId,\n\s+baseLocale,/);
 }
 
+async function testSaveMetadataAbsenceContract(): Promise<void> {
+  const bobSaveSource = await readRouteSource('bob/lib/session/useSessionSaving.ts');
+  assert.doesNotMatch(bobSaveSource, /meta:\s*meta\?\.meta\s*\?\?\s*null/);
+  assert.doesNotMatch(bobSaveSource, /meta:\s*null/);
+  assert.match(bobSaveSource, /const saveBody: Record<string, unknown> = \{/);
+  assert.match(bobSaveSource, /saveBody\.meta = meta\.meta/);
+
+  const romaSaveRoute = await readRouteSource('roma/app/api/account/instances/[instanceId]/route.ts');
+  assert.match(romaSaveRoute, /body\.meta !== null/);
+  assert.match(romaSaveRoute, /\.\.\.\(meta !== undefined \? \{ meta \} : \{\}\)/);
+
+  const duplicateRoute = await readRouteSource('roma/app/api/account/instances/[instanceId]/duplicate/route.ts');
+  assert.doesNotMatch(duplicateRoute, /meta:\s*null/);
+}
+
 async function testErrorMapping(): Promise<void> {
   const compiled = await buildCompiledWidgetFixture('faq');
   const state = await buildAccountDefaultStateFixture('faq');
@@ -407,6 +422,7 @@ const tests: Array<{ name: string; run: () => Promise<void> }> = [
   { name: 'all-widget dual-build parity matrix', run: testAllWidgetDualBuildParity },
   { name: 'Roma adapter input contract', run: testAdapterInputContract },
   { name: 'create/save/duplicate route package submission', run: testCreateSaveDuplicateRoutePackageSubmission },
+  { name: 'save metadata absence contract', run: testSaveMetadataAbsenceContract },
   { name: 'error mapping', run: testErrorMapping },
   { name: 'byte-exact state serialization', run: testByteExactStateSerialization },
   { name: 'adapter evidence plumbing', run: testAdapterEvidencePlumbing },

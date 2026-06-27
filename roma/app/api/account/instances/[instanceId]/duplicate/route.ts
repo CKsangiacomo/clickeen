@@ -217,7 +217,6 @@ export async function POST(request: NextRequest, context: RouteContext) {
     content: sourceArtifacts.value.content,
     publicPackage: publicPackage.value,
     baseLocale,
-    meta: null,
     requestId: current.value.requestId,
   });
   if (!duplicate.ok) {

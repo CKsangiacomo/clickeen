@@ -90,10 +90,13 @@ export async function PUT(request: NextRequest, context: RouteContext) {
     body && Object.prototype.hasOwnProperty.call(body, 'meta')
       ? body.meta && typeof body.meta === 'object' && !Array.isArray(body.meta)
         ? (body.meta as Record<string, unknown>)
-        : body.meta === null
-          ? null
-          : undefined
+        : undefined
       : undefined;
+  const hasMalformedMeta =
+    body &&
+    Object.prototype.hasOwnProperty.call(body, 'meta') &&
+    body.meta !== null &&
+    meta === undefined;
   if (
     !widgetType ||
     !config ||
@@ -109,7 +112,7 @@ export async function PUT(request: NextRequest, context: RouteContext) {
       current.value.setCookies,
     );
   }
-  if (body && Object.prototype.hasOwnProperty.call(body, 'meta') && meta === undefined) {
+  if (hasMalformedMeta) {
     return withSession(
       request,
       NextResponse.json(

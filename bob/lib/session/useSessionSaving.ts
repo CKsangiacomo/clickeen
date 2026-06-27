@@ -55,16 +55,19 @@ export function useSessionSaving(args: {
       const config = snapshot.instanceData;
       assertSessionConfigContract(config, snapshot.compiled);
       const submittedInstanceDataSignature = serializeInstanceDataSignature(config);
+      const saveBody: Record<string, unknown> = {
+        widgetType,
+        config,
+        baseLocale: meta?.baseLocale ?? null,
+        displayName: meta?.label ?? null,
+      };
+      if (meta?.meta && typeof meta.meta === 'object' && !Array.isArray(meta.meta)) {
+        saveBody.meta = meta.meta;
+      }
       const { ok, json } = await executeAccountCommand({
         command: 'update-instance',
         instanceId,
-        body: {
-          widgetType,
-          config,
-          baseLocale: meta?.baseLocale ?? null,
-          displayName: meta?.label ?? null,
-          meta: meta?.meta ?? null,
-        },
+        body: saveBody,
       });
       if (!ok) {
         const err = json?.error;
