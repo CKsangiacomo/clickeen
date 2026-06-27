@@ -5,26 +5,28 @@ Owner: Clickeen product architecture + UI
 Date: 2026-06-26
 Stage: 02-Executing
 
-This is the parent program PRD (MAMA). Execution flows through the four track
-PRDs **126A → 126B → 126C → 126D**, inside-out. Each track gets its own audit,
-then its filled PRD, then subPRDs as the work reveals slices. If a track PRD or
-subPRD conflicts with this MAMA, execution resolves to this MAMA.
+This is the parent program PRD (MAMA). Execution flows through the domain PRDs
+**126A–126K** (one per `engineering/UI/` kb doc, in folder order) plus the two
+screen refactors **126L DevStudio UI** and **126M Roma UI** last. Each domain PRD
+is filled from its real audit. If a PRD conflicts with this MAMA, execution
+resolves to this MAMA.
 
 Related:
 
-- `126A__PRD__Dieter_Tokens.md` (track 1 — innermost doll)
-- `126B__PRD__Components.md` (track 2)
-- `126C__PRD__DevStudio_UI.md` (track 3 — absorbs the prior DevStudio draft)
-- `126D__PRD__Roma_UI.md` (track 4 — absorbs the prior Roma draft)
-- `audits/UI_Audit_Report.md`, `audits/DevStudio_Dieter_Sanity_Pass_Findings_June2026.md`
-  (interim; per-track audits follow)
+- Domain PRDs **126A–126K** (mirror `documentation/engineering/UI/`, folder order):
+  126A accessibility, 126B color, 126C components, 126D dialogs-and-modals,
+  126E dieter, 126F iconography, 126G interactions, 126H motion, 126I ops,
+  126J surfaces, 126K typography.
+- Screen refactors (last): `126L__PRD__DevStudio_UI.md`, `126M__PRD__Roma_UI.md`.
+- `audits/` — real per-domain audits (`126X__Audit__*.md`); see `audits/README.md`
+  for the bar.
 - Structural templates / granularity bar: `../124__Overlay_Aware_Runtime_Materializer/124__MAMA__*.md`,
-  `../125__Roma_Tokyo_Product_Authority_And_Inventory_Boundary/125__PRD__*.md`
+  `../125__Roma_Tokyo_Product_Authority_And_Inventory_Boundary/125__PRD__*.md`.
 - **TBD law sources (must read before §4/§5 are binding):**
   `documentation/architecture/CONTEXT.md`, `documentation/AGENTS.md`,
   `documentation/services/devstudio.md`, `documentation/services/roma.md`,
   `documentation/services/bob.md`,
-  `../03-Executed/PRD__DevStudio_Cloudflare_Migration.md` (§3.5 write path, §3.6 design freeze, Appendix A hash-frozen baseline)
+  `../03-Executed/PRD__DevStudio_Cloudflare_Migration.md` (§3.5 write path, §3.6 design freeze, Appendix A hash-frozen baseline).
 
 ## 1. Purpose
 
@@ -65,9 +67,8 @@ Consequences that drive the whole program:
 
 The UI was built through many passes, each fixing the symptom at whatever layer
 someone was standing in. Drift now sits at **every** layer. Another pass on top
-adds accretion; it does not clean the chain. So we stop, uplevel, and rebuild
-the reference chain from the center. The interim audit already confirms drift
-at all four layers (tokens, components, DevStudio, Roma).
+adds accretion; it does not clean the chain. So we stop, uplevel, and rebuild the
+reference chain from the center.
 
 ## 4. The law (binding rules) — DIRECTIONAL, to be grounded
 
@@ -102,25 +103,38 @@ Migration §3.5) to be confirmed against the law docs.
 
 ## 6. Scope
 
-**In:** Dieter tokens (126A), Dieter components (126B), DevStudio UI — all parts
-(126C), Roma UI — all parts (126D).
+**In:** the 11 kb domains (126A–126K, mirroring `engineering/UI/`) + DevStudio UI
+refactor (126L) + Roma UI refactor (126M).
 
 **Out:** any redesign; new product features; backend / route changes; other
 surfaces (Prague, etc.); token authoring-as-a-feature.
 
-## 7. The four tracks — order and why
+## 7. The domain PRD series — order
 
-Inside-out, **serial** (a track does not start until the one inside it is
-splendid and verified):
+One PRD per `engineering/UI/` kb doc, in folder order; DevStudio UI and Roma UI
+last. Production order (audits + PRDs) follows the folder; **execution stays
+inside-out and gated** (§9) — the two are separate.
 
-1. **126A — Dieter tokens.** The innermost doll; everything composes from it.
-2. **126B — Components.** Built on tokens.
-3. **126C — DevStudio UI.** Reveals/governs tokens + components; owns the
-   tokenization guard that Roma needs.
-4. **126D — Roma UI.** Consumes components + that guard; the largest surface.
+| PRD | Domain |
+| --- | --- |
+| 126A | accessibility |
+| 126B | color |
+| 126C | components |
+| 126D | dialogs-and-modals |
+| 126E | dieter (system + foundation) |
+| 126F | iconography |
+| 126G | interactions |
+| 126H | motion |
+| 126I | ops |
+| 126J | surfaces |
+| 126K | typography |
+| 126L | DevStudio UI refactor |
+| 126M | Roma UI refactor |
 
-Why serial: a splendid outer doll requires a splendid inner doll. Building
-outward on a rotten inner doll is thrown-away work.
+**DevStudio UI (126L) and Roma UI (126M) are last** because they're the outermost
+doll — they consume every domain beneath, so their PRDs are written once, against
+final upstream truth (no rework cascade). Within the last two, DevStudio before
+Roma: Roma consumes DevStudio's tokenization guard.
 
 ## 8. What must not happen
 
@@ -136,7 +150,7 @@ outward on a rotten inner doll is thrown-away work.
 
 ## 9. How we work (execution doctrine)
 
-- Within each track: **per-track audit → filled track PRD → subPRDs → code.**
+- Within each domain: **per-domain audit → filled PRD → code.**
 - One step at a time; green (named evidence) before the next.
 - **Splendid bar at each layer, verified, before the layer above may build on it.**
 - Proof is visual: before/after browser screenshots. Green lint is not enough.
@@ -147,16 +161,16 @@ outward on a rotten inner doll is thrown-away work.
 
 ### Per-domain method — the six-step loop (runs once per domain)
 
-Every domain (color, typography, motion, iconography, accessibility, components,
-dialogs/modals, interactions, ops, surfaces) is processed through the same loop,
-**in this order**. The order is evidence → judgment → target → code-gap → plan →
-review → execute; each step is impossible to do honestly without the one before it.
+Every domain (see the series in §7) is processed through the same loop, produced
+in `engineering/UI/` folder order, **in this order**. The order is evidence →
+judgment → target → code-gap → plan → review → execute; each step is impossible
+to do honestly without the one before it.
 
 - **a. Capture what exists.** Read the as-built system. Do not reinvent what works
   or delete what is live. (Anti-speculation floor.)
 - **b. Write it as the knowledgebase doc** in `documentation/engineering/UI/` — a
-  precise dev entry. Writing it *is* the first audit: gaps surface when you try to
-  state the system exactly. The kb is also the stable baseline judged against next.
+  precise dev entry. Writing it *is* the first audit: gaps surface when you try
+  to state the system exactly. The kb is also the stable baseline judged against next.
 - **c. Audit against 2026 best practice.** Judge what can be improved or is
   missing, by today's bar — explicitly modern, not the 20-year-old patterns that
   built the system. The system accreted through AI defaults that regress to old
@@ -195,18 +209,22 @@ Not a bug list — a quality bar. The program is done when:
 
 ```text
 126__PRD__UI_Optimization_Program.md        (this MAMA)
-126A__PRD__Dieter_Tokens.md                 (track 1 — directional skeleton)
-126B__PRD__Components.md                    (track 2 — directional skeleton)
-126C__PRD__DevStudio_UI.md                  (track 3 — absorbs prior DevStudio draft)
-126D__PRD__Roma_UI.md                       (track 4 — absorbs prior Roma draft)
+126A__PRD__Accessibility.md
+126B__PRD__Color.md
+126C__PRD__Components.md
+126D__PRD__Dialogs_and_Modals.md
+126E__PRD__Dieter.md
+126F__PRD__Iconography.md
+126G__PRD__Interactions.md
+126H__PRD__Motion.md
+126I__PRD__Ops.md
+126J__PRD__Surfaces.md
+126K__PRD__Typography.md
+126L__PRD__DevStudio_UI.md                  (screen refactor — second-to-last)
+126M__PRD__Roma_UI.md                       (screen refactor — last)
 audits/
-  UI_Audit_Report.md                        (interim, 4-phase)
-  DevStudio_Dieter_Sanity_Pass_Findings_June2026.md
-  126A__Audit__Dieter_Tokens.md             (slot — create when track 1 starts)
-  126B__Audit__Components.md                (slot)
-  126C__Audit__DevStudio_UI.md              (slot)
-  126D__Audit__Roma_UI.md                   (slot)
-subPRDs (126A1, 126D1, …) created per track as audits reveal slices.
+  README.md                                 (the audit bar)
+  126X__Audit__<domain>.md                  (one real audit per domain, in series order)
 ```
 
 ## 12. Permanent home for UI design-system truth (`documentation/engineering/UI/`)
@@ -221,15 +239,15 @@ is not itself a service, not product law, not a product feature.
 
 This program establishes **`documentation/engineering/UI/`** as that home.
 
-- **Docs-sync target for every track.** Each track's "docs are part of done"
+- **Docs-sync target for every domain.** Each domain's "docs are part of done"
   lands design-system truth here. The locked set (seeded 2026-06-27, each driven
-  by its track): `README.md` (index), `dieter.md` (system), `color.md`,
+  by its domain PRD): `README.md` (index), `dieter.md` (system), `color.md`,
   `typography.md`, `motion.md`, `iconography.md`, `accessibility.md`,
   `components.md`, `dialogs-and-modals.md`, `interactions.md`, `ops.md`,
   `surfaces.md`. Service-level truth still lands in
   `services/*.md`; `engineering/UI/` holds the cross-cutting design-system truth.
-- **Reference PRDs graduate into it.** A reference subPRD like `126A2` (color) is
-  the *working* version; its content becomes the canonical living doc
+- **Reference PRDs graduate into it.** A reference PRD like `126B` (color) is the
+  *working* version; its content becomes the canonical living doc
   (`documentation/engineering/UI/color.md`), and the PRD then links to it.
 - **One source of truth (by-reference law).** The living doc is canonical; PRDs
   link to it, they do not duplicate it — so the two cannot drift.
@@ -242,4 +260,5 @@ This program establishes **`documentation/engineering/UI/`** as that home.
 
 1. Ground the law (§4) and authority (§5) from the TBD law sources listed above.
 2. Confirm design-freeze scope and the Appendix A hash-frozen baseline.
-3. Then fill each track in audit → PRD order, starting with **126A (Dieter)**.
+3. Then fill each domain PRD in audit → PRD order, in `engineering/UI/` folder
+   order (§7), starting with **126A (accessibility)**.

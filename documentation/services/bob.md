@@ -395,12 +395,10 @@ Bob sends only the opened `instanceId` to Roma. Roma resolves the account,
 active locales, tier, saved instance source, and Translation Agent grant. Bob
 does not send locale authority for generation.
 
-The normal save command uses the same `120_000ms` hosted command ceiling as
-translation generation because Roma source save may synchronously update the
-active non-base locale artifacts for the opened instance after the primary
-source/base save. Bob still treats Roma as the authority for the result. If Roma
-returns an explicit locale cascade failure, Bob surfaces the save error instead
-of silently treating every affected locale as current.
+The normal save command is source/base persistence only. Roma does not generate
+translations, regenerate translations, materialize locale packages, refresh
+locale public cache, or return locale follow-up coordinates from save. Bob
+treats the save response as source/base persistence truth.
 
 After Roma returns, Bob refreshes the overlay list and lets the user preview
 active locales that have saved overlay values in the actual widget preview.
@@ -411,9 +409,10 @@ rows. Tokyo-worker stores translated locale values under:
 accounts/{accountPublicId}/instances/{instanceId}/overlays/locales/{locale}.json
 ```
 
-Translation generation remains an explicit operation after save for manual
-regeneration; source save also runs the current bounded cascade for the opened
-instance when active non-base locales exist.
+Translation generation and locale package refresh remain explicit operations
+from the Translations panel. When translations need update after source edits,
+PRD 126D owns the Builder UI treatment that points the user to Generate
+translations.
 
 ## Copilot
 

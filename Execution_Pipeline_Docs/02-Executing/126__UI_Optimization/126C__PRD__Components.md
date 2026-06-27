@@ -1,4 +1,4 @@
-# 126B — Track PRD: Dieter Components
+# 126C — PRD: Components
 
 Status: DRAFT — DIRECTIONAL SKELETON (fill only after the Components audit)
 Parent: `126__PRD__UI_Optimization_Program.md` (MAMA)

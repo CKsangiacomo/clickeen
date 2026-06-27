@@ -1,4 +1,4 @@
-# 126A2 — SubPRD: Color in Clickeen
+# 126B — PRD: Color
 
 Status: DRAFT
 Parent: `126A__PRD__Dieter_Tokens.md` → `126__PRD__UI_Optimization_Program.md` (MAMA)
