@@ -14,8 +14,9 @@ This subPRD updates Roma helper APIs so callers use the cheapest exact truth:
 - list-facts only for row fields; publish counts are computed by Roma callers
   from list-facts rows and are never returned as Tokyo `publishedCount`.
 
-This subPRD is not independently deployable with 125B until 125D, 125E, and
-125F migrate the remaining active callers that still need the old Tokyo payload.
+This subPRD is part of the single PRD 125 pre-GA cut. It may be implemented as
+a slice, but the branch must also execute 125D, 125E, and 125F before deploy so
+no active caller still needs the old Tokyo payload.
 
 ## 1. Owned Files
 
@@ -192,11 +193,11 @@ This subPRD provides helpers they consume.
 125C must not migrate Widgets API, Create, Duplicate, or Publish route behavior
 unless it is explicitly merged with 125D/125E in the same execution slice.
 
-### Release Sequencing Gate
+### Pre-GA Cut Gate
 
 125C alone does not make the 125B Tokyo payload swap deployable.
 
-Before 125B can deploy, the release train must include:
+Before deploy, the same implementation branch must include:
 
 ```text
 125C locale/base-locale helper consumers
@@ -206,17 +207,19 @@ Before 125B can deploy, the release train must include:
 ```
 
 125C done means its owned callers are migrated and the helper contracts are
-ready. PRD 125 release done means no active Roma caller expects old
+ready. PRD 125 acceptance means no active Roma caller expects old
 `accountInstances[]`, `publishedCount`, or `/instances/facts`.
 
 Compliance:
 
 This keeps helper work from smuggling product UX or command-gate changes into
-125C while still protecting the Roma/Tokyo route swap from partial deployment.
+125C while protecting the Roma/Tokyo route swap from partial deployment. It is
+not a staged migration; old and new payload contracts must not coexist after
+deploy.
 
 ### Docs Handoff
 
-Update current docs in 125G or hold this slice for the same PRD 125 release.
+Update current docs in 125G before PRD 125 acceptance.
 
 Docs affected by 125C behavior:
 
@@ -264,8 +267,8 @@ Focused evidence:
 - helper rejects old `accountInstances[]` and `publishedCount` payloads;
 - helper rejects any instance id that fails `isCompactInstanceId`;
 - helper rejects mismatched account/instance ids and invalid list-facts fields;
-- this slice is marked release-held until 125D/125E/125F migrate remaining
-  active callers.
+- this slice is not deployed until the same branch removes all active old
+  callers through 125D/125E/125F.
 
 125C-owned search proof:
 
@@ -305,8 +308,7 @@ This subPRD is done when:
 3. Base-locale lock uses coordinate existence only.
 4. Helpers reject old Tokyo payload fields and mismatched exact facts.
 5. Old facts/list-summary helper paths are gone from 125C-owned callers.
-6. 125C is release-held until 125D/125E/125F remove the remaining active old
-   callers, or all four slices execute in the same release train.
-7. Roma/localization docs are updated by 125G before PRD 125 acceptance, or this
-   slice remains release-held.
+6. 125C deploys only as part of the same pre-GA cut that removes the remaining
+   active old callers through 125D/125E/125F.
+7. Roma/localization docs are updated by 125G before PRD 125 acceptance.
 8. Checks are green.

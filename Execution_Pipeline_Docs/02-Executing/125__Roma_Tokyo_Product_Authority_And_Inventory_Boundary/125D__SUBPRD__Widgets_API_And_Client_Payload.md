@@ -12,10 +12,10 @@ does not disable monetization controls.
 Create, Duplicate, and Publish remain clickable. Upgrade is decided only by the
 command route after user intent.
 
-125D is not independently deployable unless 125B, 125C, 125E, and 125F are in
-the same release train. It consumes 125C helpers, depends on 125B's Tokyo route
-contract, and exposes clickable monetization actions that require 125E command
-upgrade gates.
+125D is part of the single PRD 125 pre-GA cut. It consumes 125C helpers,
+depends on 125B's Tokyo route contract, and exposes clickable monetization
+actions that require 125E command upgrade gates. It must not deploy as a
+standalone partial cut.
 
 ## 1. Owned Files
 
@@ -158,12 +158,12 @@ storage coordinate
 package
 ```
 
-## 5A. Release Sequencing Gate
+## 5A. Pre-GA Cut Gate
 
 125D changes the Widgets API/client contract and removes list-time monetization
 availability. It must not deploy alone.
 
-Required same-release dependencies:
+Required same-branch dependencies before deploy:
 
 ```text
 125B Tokyo coordinate/list-facts route contract
@@ -173,9 +173,9 @@ Required same-release dependencies:
 ```
 
 125D can be implemented before those slices locally, but cloud-dev/production
-deployment is held until the same release train verifies all remaining active
-Roma callers have moved off old Tokyo `accountInstances[]`, `publishedCount`,
-and `/instances/facts`.
+deploy happens only after the same branch verifies all active Roma callers have
+moved off old Tokyo `accountInstances[]`, `publishedCount`, and
+`/instances/facts`.
 
 Compliance:
 
@@ -185,7 +185,7 @@ Tokyo payload contract that is not deployed yet.
 
 ## 5B. Docs Handoff
 
-Update current docs in 125G or hold this slice for the same PRD 125 release.
+Update current docs in 125G before PRD 125 acceptance.
 
 Docs affected by 125D behavior:
 
@@ -269,8 +269,6 @@ This subPRD is done when:
 4. Monetization controls are clickable.
 5. Missing policy creates no disabled monetization control and no list-time
    monetization allowance.
-6. 125D is release-held until 125B/125C/125E/125F execute in the same release
-   train, or those dependencies are merged into the same slice.
-7. Roma/multitenancy/CONTEXT docs are updated by 125G before PRD 125 acceptance,
-   or this slice remains release-held.
+6. 125D deploys only as part of the same pre-GA cut as 125B/125C/125E/125F.
+7. Roma/multitenancy/CONTEXT docs are updated by 125G before PRD 125 acceptance.
 8. Checks are green.

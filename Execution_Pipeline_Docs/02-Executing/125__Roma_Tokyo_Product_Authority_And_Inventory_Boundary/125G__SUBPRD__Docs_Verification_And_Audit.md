@@ -72,7 +72,8 @@ Document:
 - `GET /__internal/instances/{instanceId}/list-facts` returns minimal exact
   row facts;
 - `displayName` is stored string or null, no fallback;
-- `/instances/facts` is retired after callers move;
+- `/instances/facts` is removed in the same pre-GA cut once the implementation
+  branch updates all callers;
 - Tokyo does not decide tier policy.
 
 ### Michael

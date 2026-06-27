@@ -65,6 +65,21 @@ No saved-instance policy invented to justify inventory fan-out.
 No active `widgets.types.max` policy after execution.
 ```
 
+Pre-GA execution law:
+
+```text
+PRD 125 is a clean pre-GA cut.
+SubPRDs are execution slices, not staged production releases.
+The old and new contracts must not coexist in cloud-dev or production after
+deploy.
+Do not build compatibility bridges, dual reads, aliases, shadow payloads, or
+temporary old/new modes.
+If one slice depends on another, execute them in the same implementation branch
+before deploy.
+If the branch cannot remove the old contract completely, the branch does not
+deploy.
+```
+
 ## 1. Product Law
 
 Clickeen is an agent-operated, schema/artifact-first product. The system must
@@ -448,7 +463,7 @@ This PRD forbids these implementation moves:
   product list.
 - Do not hide broken rows/files by dropping them from the UI.
 - Do not add fallback scans, repair probes, reconciliation jobs, dual reads, or
-  "temporary" compatibility paths.
+  compatibility paths.
 - Do not make Tokyo validate Roma's product decision.
 - Do not make Supabase store widget source, overlays, generated packages,
   assets, or rendered product artifacts.
@@ -1059,8 +1074,9 @@ GET /__internal/accounts/{accountId}/instances
 
 Do not delete this route. It remains the account coordinate-list route.
 
-Retire the facts route below only after Roma base-locale lock and every other
-caller has moved to the coordinate list plus exact list-facts opens:
+Remove the facts route below in the same pre-GA cut once the implementation
+branch verifies Roma base-locale lock and every other caller uses the coordinate
+list plus exact list-facts opens:
 
 ```text
 GET /__internal/accounts/{accountId}/instances/facts
@@ -1079,7 +1095,7 @@ Update current docs after runtime behavior is green:
   clickable HTTP 402 `UPGRADE_REQUIRED`, no monetization booleans
 - `documentation/services/tokyo-worker.md`: account instance list returns only
   `accountId + instanceIds[]`, add `/__internal/instances/{instanceId}/list-facts`,
-  and retire `/instances/facts` after callers move
+  and state `/instances/facts` is removed in the same pre-GA cut
 - `documentation/services/michael.md`: `public.instances` remains
   registry/status only and is not Widgets inventory authority
 - `documentation/capabilities/multitenancy.md` because PRD 125 replaces

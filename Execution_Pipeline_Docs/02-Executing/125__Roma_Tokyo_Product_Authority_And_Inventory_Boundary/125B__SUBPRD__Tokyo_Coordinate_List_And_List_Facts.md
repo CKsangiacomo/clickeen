@@ -10,8 +10,9 @@ Tokyo is the storage boundary. Tokyo must not build Widgets product rows, count
 published instances for policy, infer display names, decide tier eligibility, or
 repair account storage.
 
-This subPRD changes Tokyo account instance list behavior only. It is not
-independently deployable before Roma callers move to the new contract.
+This subPRD changes Tokyo account instance list behavior only. It is part of
+the single PRD 125 pre-GA cut: Roma callers must move to the new contract in
+the same implementation branch before deploy.
 
 ## 1. Owned Files
 
@@ -47,7 +48,8 @@ Current wrong behavior:
 - returns `accountInstances[]`;
 - returns `publishedCount`.
 
-Current route to retire after Roma callers move:
+Current route to remove in the same pre-GA cut once the branch verifies no
+active Roma caller remains:
 
 ```text
 GET /__internal/accounts/{accountId}/instances/facts
@@ -219,12 +221,11 @@ Compliance:
 This keeps Tokyo as storage coordinate authority without turning it into product
 inventory.
 
-### Step 1A: Release Sequencing Gate
+### Step 1A: Pre-GA Cut Gate
 
 125B changes the shared Tokyo route payload consumed by Roma. The account list
-payload change must not be deployed to cloud-dev or production until Roma
-callers from 125C, 125D, 125E, and 125F are migrated and verified in the same
-release train.
+payload change must not be deployed to cloud-dev or production until the same
+branch migrates and verifies Roma callers from 125C, 125D, 125E, and 125F.
 
 Required before deploy:
 
@@ -247,7 +248,7 @@ No active caller of the Tokyo account instance list route expects old fields.
 
 Compliance:
 
-This avoids a partial Roma/Tokyo contract swap while still rejecting dual-read
+This avoids a partial Roma/Tokyo contract swap while rejecting dual-read
 compatibility and shadow payloads.
 
 ### Step 2: Change Account List Route Payload
@@ -288,7 +289,7 @@ Do not delete:
 GET /__internal/accounts/{accountId}/instances
 ```
 
-Retire only after callers move:
+Remove in the same pre-GA cut after this branch updates all callers:
 
 ```text
 GET /__internal/accounts/{accountId}/instances/facts
@@ -300,8 +301,8 @@ No broken build and no shadow product facts route after migration.
 
 ### Step 6: Tokyo Service Docs Handoff
 
-Update `documentation/services/tokyo-worker.md` in the same PRD 125 release, or
-mark 125B runtime code as held until 125G updates that doc.
+Update `documentation/services/tokyo-worker.md` through 125G before PRD 125
+acceptance.
 
 Required doc facts:
 
@@ -311,8 +312,8 @@ Required doc facts:
   facts;
 - Tokyo returns stored `displayName` as string or `null`;
 - Tokyo does not infer fallback labels, policy, tier, or product availability;
-- `/__internal/accounts/{accountId}/instances/facts` is removed only after Roma
-  callers move.
+- `/__internal/accounts/{accountId}/instances/facts` is removed in the same
+  pre-GA cut once the branch verifies no active Roma caller remains.
 
 Compliance:
 
@@ -378,9 +379,10 @@ This subPRD is done when:
 3. Coordinate enumeration preserves R2 pagination and validates coordinates
    with `isCompactInstanceId` without normalization or config-file presence
    gating.
-4. `/instances/facts` is retired after Roma callers move.
-5. Roma caller migration is verified before deploy, or 125B is held for the
-   same-release train with 125C-F.
+4. `/instances/facts` is removed in the same pre-GA cut once the branch
+   verifies no active Roma caller remains.
+5. Roma caller migration is completed and verified in the same implementation
+   branch before deploy.
 6. `documentation/services/tokyo-worker.md` is updated by 125G before PRD 125 is
-   accepted, or this slice remains release-held.
+   accepted.
 7. Tests/checks are green.

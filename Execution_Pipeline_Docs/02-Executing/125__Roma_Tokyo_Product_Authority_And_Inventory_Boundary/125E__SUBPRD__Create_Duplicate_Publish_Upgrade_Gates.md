@@ -13,9 +13,9 @@ Tokyo may be called for storage facts through 125C helpers before the gate.
 Tokyo must not receive create, duplicate, publish, materialized package, or
 serve-state transition writes after an over-tier gate.
 
-125E is not independently deployable unless 125A, 125B, 125C, 125D, and 125F
-are in the same release train. It depends on the new policy key, the coordinate
-helpers, and the clickable Widgets client model.
+125E is part of the single PRD 125 pre-GA cut. It depends on the new policy
+key, the coordinate helpers, and the clickable Widgets client model. It must
+not deploy as a standalone partial cut.
 
 ## 1. Owned Files
 
@@ -230,11 +230,11 @@ Widgets action handlers must use existing raw response capability where needed
 `fetchJson` error mapping. Do not add a new transport abstraction for this.
 ```
 
-## 6A. Release Sequencing Gate
+## 6A. Pre-GA Cut Gate
 
 125E must not deploy alone.
 
-Required same-release dependencies:
+Required same-branch dependencies before deploy:
 
 ```text
 125A widgets.instances.max and finite instances.published.max
@@ -251,7 +251,7 @@ payload assumptions from surviving beside the command-time upgrade model.
 
 ## 6B. Docs Handoff
 
-Update current docs in 125G or hold this slice for the same PRD 125 release.
+Update current docs in 125G before PRD 125 acceptance.
 
 Docs affected by 125E behavior:
 
@@ -346,8 +346,7 @@ This subPRD is done when:
 4. Create/Duplicate/Publish use exact threshold math and finite policy limits.
 5. Already-published Publish remains idempotent and never opens upgrade.
 6. Duplicate source failure fails visibly with no write.
-7. 125E is release-held until 125A/125B/125C/125D/125F execute in the same
-   release train, or those dependencies are merged into the same slice.
-8. Roma/multitenancy/CONTEXT docs are updated by 125G before PRD 125 acceptance,
-   or this slice remains release-held.
+7. 125E deploys only as part of the same pre-GA cut as
+   125A/125B/125C/125D/125F.
+8. Roma/multitenancy/CONTEXT docs are updated by 125G before PRD 125 acceptance.
 9. Checks are green.

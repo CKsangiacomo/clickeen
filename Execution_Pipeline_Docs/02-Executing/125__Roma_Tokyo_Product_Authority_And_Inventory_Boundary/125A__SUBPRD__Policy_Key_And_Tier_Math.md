@@ -20,8 +20,8 @@ Hard inheritance:
 - Exact HTTP 402 command responses and client upgrade popup handling are owned
   by 125E unless this slice is explicitly merged with 125E.
 - No `widgets.types.max` active policy/read/doc remains after this slice.
-- This slice is not independently deployable by itself; it changes a shared
-  policy package used by Berlin and Roma.
+- This slice is part of the single PRD 125 pre-GA cut. It must not deploy alone
+  or create a deployed old/new policy coexistence window.
 
 ## 1. Current Runtime Facts
 
@@ -200,8 +200,9 @@ Remove active `widgets.types.max` reads.
 `roma/app/api/account/widgets/route.ts`:
 
 - remove tier/monetization create availability from the list response;
-- if the old payload shape must remain until 125D, set create availability only
-  from role/state, never from `widgets.instances.max`;
+- do not preserve the old payload shape for staged deploy;
+- if this file is touched in the same branch, make it conform to the 125D
+  payload contract before deploy;
 - do not introduce an instance-count disabled control;
 - do not compute `canCreate` from `widgets.instances.max`.
 
@@ -289,8 +290,9 @@ matrix.
 entitlement snapshots and Roma consumes account/authz policy.
 
 125A must be released with coordinated Berlin and Roma deployment evidence, or
-must be held until the dependent Roma command/client slices are in the same
-release train.
+must stay in the same implementation branch until the dependent Roma
+command/client slices are complete. There is no deployed old/new policy
+coexistence window.
 
 Required deploy/session verification after code deployment:
 
@@ -361,8 +363,9 @@ This subPRD is done when:
 3. `instances.published.max` is finite for every tier.
 4. `widgets.instances.max >= instances.published.max` for every tier.
 5. Roma create policy reads use `widgets.instances.max` by
-   `listAccountWidgetInstanceIds().instanceIds.length`; if 125A runs before
-   125C, this runtime change is held until the coordinate helper exists.
+   `listAccountWidgetInstanceIds().instanceIds.length`; if 125A is implemented
+   before 125C, this runtime change is not deployed until the coordinate helper
+   exists in the same branch.
 6. Widgets list payload no longer uses any tier limit to disable Create.
 7. Duplicate gate is explicitly deferred to 125E unless 125A is merged with
    125E and returns exact HTTP 402.
@@ -372,6 +375,5 @@ This subPRD is done when:
 9. `@clickeen/ck-policy` invariant test and typecheck are green.
 10. Roma typecheck/lint are green.
 11. Berlin typecheck is green.
-12. Berlin/Roma session blast radius is either verified after coordinated
-    deploy or the slice is held for same-release execution with dependent
-    slices.
+12. Berlin/Roma session blast radius is verified after the coordinated pre-GA
+    cut deploy.

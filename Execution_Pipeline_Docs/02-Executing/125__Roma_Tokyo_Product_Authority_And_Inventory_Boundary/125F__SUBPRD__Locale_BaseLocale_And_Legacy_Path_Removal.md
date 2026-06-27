@@ -9,10 +9,10 @@ Scope: locale fan-out, base-locale lock, old facts/list-summary route removal
 Locale fan-out and base-locale lock need account instance coordinates, not
 Widgets product summaries.
 
-This subPRD is the final old-path cleanup gate. It verifies the locale and
-base-locale migrations owned by 125C, then removes the legacy facts route and
-old list-summary helper only after 125B, 125C, 125D, and 125E have moved every
-active caller.
+This subPRD is the final old-path cleanup gate in the single PRD 125 pre-GA
+cut. It verifies the locale and base-locale migrations owned by 125C, then
+removes the legacy facts route and old list-summary helper in the same branch
+after 125B, 125C, 125D, and 125E update every active caller.
 
 125F must not deploy alone.
 
@@ -32,8 +32,7 @@ roma/app/api/account/locales/route.ts
 roma/lib/account-base-locale-lock.ts
 ```
 
-Docs are updated by 125G before PRD 125 acceptance, or this slice remains
-release-held.
+Docs are updated by 125G before PRD 125 acceptance.
 
 ## 2. Current Runtime Facts
 
@@ -127,8 +126,8 @@ Remove matching Roma helper:
 loadAccountInstanceFactsFromTokyo
 ```
 
-Also remove old list-summary helper/types only after every active caller has
-moved:
+Also remove old list-summary helper/types in the same branch once verification
+proves no active caller remains:
 
 ```text
 listAccountInstancesInTokyo
@@ -162,7 +161,7 @@ Do not change product behavior to satisfy old tests.
 
 ### Step 5: Docs Handoff
 
-Update current docs in 125G or hold this slice for the same PRD 125 release.
+Update current docs in 125G before PRD 125 acceptance.
 
 Docs affected by 125F behavior:
 
@@ -177,7 +176,8 @@ Required doc facts:
 - locale fan-out iterates account instance coordinate ids;
 - locale fan-out cost is coordinate count times changed non-base locale count;
 - base-locale lock derives existence from coordinate count;
-- Tokyo `/instances/facts` is removed after all active callers move.
+- Tokyo `/instances/facts` is removed in the same pre-GA cut once verification
+  proves no active caller remains.
 
 ## 5. Non-Goals
 
@@ -213,7 +213,8 @@ Focused evidence:
 - no active runtime caller uses `/instances/facts`;
 - no active runtime caller imports or calls `loadAccountInstanceFactsFromTokyo`;
 - no active runtime caller imports or calls `listAccountInstancesInTokyo`;
-- Tokyo `/instances/facts` route is removed after every caller moves;
+- Tokyo `/instances/facts` route is removed in the same pre-GA cut once
+  verification proves no active caller remains;
 - locale cascade behavior remains direct and synchronous.
 - coordinate-list failure produces visible locale follow-up failure and never
   zero-instance success.
@@ -249,12 +250,12 @@ This subPRD is done when:
 
 1. Locale fan-out is coordinate-only.
 2. Base-locale lock is coordinate-only.
-3. `/instances/facts` is removed only after every active runtime caller moves.
-4. Old list-summary helper/types are removed only after every active runtime
-   caller moves.
+3. `/instances/facts` is removed in the same pre-GA cut once verification
+   proves no active runtime caller remains.
+4. Old list-summary helper/types are removed in the same pre-GA cut once
+   verification proves no active runtime caller remains.
 5. Locale settings response/user behavior is unchanged except for coordinate
    source.
 6. Coordinate-list failure cannot become zero-instance success.
-7. Localization/Roma/Tokyo docs are updated by 125G before PRD 125 acceptance,
-   or this slice remains release-held.
+7. Localization/Roma/Tokyo docs are updated by 125G before PRD 125 acceptance.
 8. Checks are green.
