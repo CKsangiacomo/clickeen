@@ -142,12 +142,16 @@ accounts/{accountPublicId}/instances/{instanceId}/
 ```
 
 Save is separate from manual translation generation, publish, unpublish, rename,
-duplicate, and delete. For saved instances with active non-base locales, Roma
-may run the source-save locale follow-up inside the same `update-instance`
-command. If the source/base package save succeeds but that locale follow-up
-fails, Roma returns `sourceSaved: true`, `ok: false`, and `localeCascade`.
-Bob treats the submitted source as saved and surfaces translation attention
-instead of reporting that the source save was lost.
+duplicate, and delete. Roma does not generate translations, regenerate
+translations, materialize locale packages, refresh locale public cache, or return
+locale follow-up coordinates from the `update-instance` command. Bob treats the
+save response as source/base persistence truth only.
+
+When translations need update, that attention belongs to the Translations panel.
+PRD 126D owns the Builder UI treatment: a top-of-builder toast/banner points the
+user to the Translations panel and the explicit Generate translations action
+when exact stale-translation evidence exists. Bob must not infer that state from
+runtime package probes, active locale count alone, or hidden UI-authored status.
 
 Bob account commands currently include:
 

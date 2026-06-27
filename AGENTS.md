@@ -20,6 +20,19 @@ humans operate through UIs and APIs, with AI added as a feature. Clickeen is the
 opposite: a lean, schema-structured, AI-legible system that agents operate.
 That operability is what competitors cannot copy without rebuilding from zero.
 
+## Operating Model
+
+Clickeen is operated by one human product owner/architect plus an AI workforce.
+
+The human owns product direction, architecture judgment, and final authority.
+AI coding and devops agents operate the repo, implementation, documentation,
+verification, and managed-service workflows through the gates in this file.
+Runtime product agents operate customer/product artifacts through named product
+authorities.
+
+Clickeen is still a self-serve SaaS for customers, but the company and product
+are designed around agent operation rather than a large human operations team.
+
 For any agent (AI or human) working in this tree:
 
 - The first instinct is: keep the system lean and agent-operable. A change

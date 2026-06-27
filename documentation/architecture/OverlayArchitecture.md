@@ -151,26 +151,27 @@ account setting; the failed overlay operation is explicit follow-up failure.
 | No active non-base locales | generation returns `accepted: false` |
 | Invalid Translation Agent grant | write fails |
 | Tokyo write rejection | generation fails for that locale |
-| Locale package write rejection | source-save or settings package response includes completed/skipped/failed package coordinates and full success is not claimed |
-| Source save locale package failure | source/base package remains saved; source-save response includes `sourceSaved: true`, `ok: false`, and exact `localeCascade` failure coordinates |
+| Locale package write rejection | localization/settings package response includes completed/skipped/failed package coordinates and full success is not claimed |
+| Source save with stale overlays | source/base save remains save truth; translation update is explicit localization work |
 | Failure after earlier locale writes | prior files remain; full success must not be claimed |
 
 ## Command-Owned Cascade
 
-Cascade is owned by the command that changed source truth:
+Cascade is owned by the explicit localization command that changed overlay
+truth:
 
 ```text
-source command changes truth -> same command names affected artifact coordinates
+translation/settings command changes overlay truth -> same command names affected artifact coordinates
 ```
 
 For current account widget instances, Roma source save writes the source and base
-package first. If active non-base locales exist, the same save command then
-regenerates those locale overlays through Translation Agent and materializes
-their stored locale packages. The synchronous cost surface is one instance times
-active non-base locales, bounded by the active locale entitlement. If follow-up
-fails, the response names completed, skipped, and failed coordinates. The system
-does not create a dependency graph, watcher, queue, readiness marker, status
-file, visitor-time resolver, or fallback base package to pretend stale locale
+package only. It does not generate translations, regenerate translations, or
+materialize locale packages. Translation generation is explicit localization
+work through the Translations panel and Roma translation route. Locale package
+work follows that explicit localization operation or account locale settings
+operation, and failures are reported by that operation. The system does not
+create a dependency graph, watcher, queue, readiness marker, status file,
+visitor-time resolver, or fallback base package to pretend stale locale
 artifacts are current.
 
 ## Verification

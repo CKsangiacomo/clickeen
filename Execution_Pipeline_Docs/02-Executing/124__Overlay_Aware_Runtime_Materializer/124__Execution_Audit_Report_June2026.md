@@ -73,7 +73,9 @@ Doc-only contract PRD; the addendum is the deliverable. All 8 slices + drift con
 - NIT: two PRD-required tests missing (locale `styles.css`/`runtime.js` short-TTL assertion; stale-window doc test). Shared code path, low impact.
 
 ### 124F — EXECUTED-WITH-GAPS
-- ✓ Materialization cascade exemplary: per-coordinate failure with `{accountId,instanceId,locale,phase,reasonKey}`, first-failure-stops-remaining, `ok:false`+`sourceSaved:true` honesty, no status stores, scope bounded (no broad fan-out).
+- Historical note: 124F source-save follow-up was later superseded by the PRD
+  126D source-save/localization boundary correction. Current save behavior no
+  longer runs localization follow-up inside account-instance source save.
 - 🔴 **BLOCKER (V6, cache phase):** `purgeClkLiveEntryCache` is called only on publish/unpublish base transitions (`operations.ts:366,391`), **never on locale write/delete**. So source-save/overlay-write/locale-settings cascades regenerate packages but the old locale entry HTML stays at the edge — and the response reports `ok:true` full success. That is the V6 full-success-lie pattern, for the cache-refresh phase.
 - 🔴 **BLOCKER (response contract):** No cascade response shape carries the purge/cache-refresh phase field the PRD requires (since 124E selected purge).
 - ⚠ **GAP:** No no-op-save guard on `PUT /instances/{instanceId}` — every save regenerates all active locales (the locales-settings route *does* guard via `resolveActiveLocaleDelta`; the source PUT doesn't).
@@ -154,6 +156,7 @@ For the team — these are findings, not a decree. Owners are the natural PRD/sl
 - **124C:** `roma/lib/account-instance-public-package.ts:215-258` (reroute), `roma/tests/fixtures/124c-base-package-expected.json` (byte-parity); git `dd4063f1` (7 builder fns deleted). NIT: `tokyo-worker/.../package-files.ts:72`.
 - **124D:** `roma/lib/account-instance-locale-package.ts:106,171-284` (atomic), `tokyo-worker/.../keys.ts:22-33` (coordinate), `bob/components/Workspace.tsx:87-97` (preview bypass).
 - **124E:** `tokyo-worker/src/routes/clk-live-routes.ts:99-104,150-169,23-32` (headers, serve, fail-closed), `domains/account-instances/package-files.ts:303-388` (evidence), `operations.ts:77-119` (purge), `wrangler.toml` (no CF vars).
-- **124F:** `roma/lib/account-instance-save-cascade.ts` (honest coords), `roma/app/api/account/locales/route.ts:222-457` (reconcile), `tokyo-worker/.../operations.ts:366,391` (purge call sites), `bob/lib/session/useSessionSaving.ts:71-92` (UI consumer).
+- **124F:** source-save follow-up history is superseded by PRD 126D; current
+  locale settings follow-up remains in `roma/app/api/account/locales/route.ts`.
 - **124G:** `packages/ck-runtime-materializer/src/html.ts:51-53` (only code change), grep-empty no-machinery, Impl Note L64-91 (labeling).
 - **124H:** `tokyo-worker/src/routes/clk-live-routes.ts:139-141` (page 404), `roma/.../publish/route.ts` (422), `roma/lib/account-page-source.ts:46-48` (instance-ref), grep-empty no-future-surface.

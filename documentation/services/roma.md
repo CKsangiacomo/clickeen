@@ -141,33 +141,24 @@ infer, or repair widget package bytes. Tokyo-worker records a package
 fingerprint on newly saved source and package objects so package reads, publish,
 and public serving can reject mixed package state deterministically.
 
-When the existing source-save command changes a saved instance, Roma first saves
-the source and base package. After that primary save succeeds, Roma runs the
-current active non-base locale cascade for that one instance: it regenerates
-overlays through the existing Translation Agent command and materializes the
-matching locale package bytes through the locale package helper one locale at a
-time. The bounded work is one instance times active non-base locales, with the
-active-locale count governed by `l10n.locales.max`. If there are no active
-non-base locales, the response includes an empty `localeCascade`. If locale
-follow-up fails after the source/base save, Roma returns `sourceSaved: true`,
-`ok: false`, an exact `localeCascade` failure coordinate, and later locales as
-not attempted instead of reporting full save success. Roma does not create a
-queue, watcher, status file, or visitor-time repair path for this cascade. Bob
-treats that response as saved source with translation follow-up attention, not
-as lost source edits.
-For published instances, generated locale package writes include Tokyo public
-cache refresh for the affected locale URLs. If Tokyo writes package bytes but
-cannot refresh the edge, Roma reports the locale package failure phase as
-`cache-refresh` instead of claiming full locale success.
+When the existing source-save command changes a saved instance, Roma saves the
+source and base package only. It does not generate translations, regenerate
+translations, materialize locale packages, refresh locale public cache, or make
+the authoring save wait on locale follow-up. Save returns source/base save truth:
+`ok: true` when the source/base package was saved, or the exact source-save
+failure when it was not. A translation, locale package, or locale-cache failure
+is localization failure, not source-save failure.
 
 Translation generation is a separate explicit operation from the Translations
 panel. Roma resolves the current account active locales for that command,
 applies the current tier limit, loads the saved instance source from
 Tokyo-worker, mints a Translation Agent grant, and calls the Translation Agent
 Worker. Translation Agent calls San Francisco `/model/chat` and writes overlays
-via Tokyo-worker. That overlay write is the Translations panel command. Roma
-does not return locale package, materializer, or cache-refresh coordinates as
-translation truth for this command.
+via Tokyo-worker. After accepted overlay generation, Roma materializes the
+matching locale package bytes for the generated locales through the locale
+package helper. If locale package materialization or public cache refresh fails,
+the translation command reports the exact `localePackages` failure coordinates
+instead of claiming full localization success.
 When the command is invoked through hosted Bob, Translation Agent may stream
 Agent Activity while it operates. Roma forwards that activity to Bob; Roma does
 not author it, summarize it, poll for it, persist it, or convert it into product

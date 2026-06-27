@@ -286,8 +286,8 @@ async function testLocalePackageRejectsBaseAndInactiveLocales(): Promise<void> {
 
 async function testLocaleMaterializationRouteWiring(): Promise<void> {
   const generateRoute = await readRouteSource('roma/app/api/account/instances/[instanceId]/translations/generate/route.ts');
-  assert.doesNotMatch(generateRoute, /materializeAccountInstanceLocalePackages\(\{/);
-  assert.doesNotMatch(generateRoute, /localePackages/);
+  assert.match(generateRoute, /materializeAccountInstanceLocalePackages\(\{/);
+  assert.match(generateRoute, /localePackages/);
   assert.match(generateRoute, /generateAccountInstanceTranslations\(\{/);
 
   const settingsRoute = await readRouteSource('roma/app/api/account/locales/route.ts');

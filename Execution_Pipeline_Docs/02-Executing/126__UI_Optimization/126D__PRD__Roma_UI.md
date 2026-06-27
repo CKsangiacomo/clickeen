@@ -43,8 +43,66 @@ Related:
   (`roma.css`: 0 hex literals / 140 `var()` uses per the DevStudio audit). This is
   NOT a token exercise. The work is: stop using the parallel `.roma-*` component
   set; use Dieter components + one shared React primitive layer.
-- No new product features, no product-law changes, no backend/route changes. Roma
-  keeps owning exactly what it owns.
+- No new product features and no product-law changes. Roma keeps owning exactly
+  what it owns. Backend/route changes remain out of scope except the mandatory
+  source-save/localization boundary correction in the addendum below.
+
+## Mandatory addendum: save is not translation
+
+This PRD must correct the source-save/localization UX boundary during execution.
+The current behavior where Roma source save can run translation or locale package
+follow-up inside the same save request is not product-correct and must not
+survive the Roma UI refactor.
+
+The product law is:
+
+```text
+Save = persist widget source truth and the base runtime package.
+Generate/regenerate translations = explicit localization operation.
+Locale packages = derivative runtime artifacts from current source + current overlays.
+```
+
+Therefore, the Roma/Bob authoring save path must be restored to the save
+authority only: save the source/base package, then return the source save result.
+It must not generate translations, regenerate translations, materialize locale
+packages, refresh locale public cache, or make the authoring save wait on any
+locale follow-up. A translation, package, or locale-cache failure is a
+localization failure, not a source-save failure.
+
+The UI obligation for 126D is to surface this honestly instead of hiding it in
+save. When a saved widget has translations that need update, Bob/Roma must show
+a top-of-builder toast/banner that tells the user to open the Translations panel
+and click "Generate translations". The banner is a product signal and navigation
+aid. It must not auto-run translation generation, create a background queue,
+invent readiness state, poll/probe runtime packages, or reinterpret save as a
+localization command.
+
+This is required because save and translation have different product intent,
+authority, cost, and failure semantics:
+
+- Source save is the user/agent persistence boundary for the widget being edited.
+- Translation generation is AI-generated derivative content and requires explicit
+  localization intent.
+- Locale package materialization follows the localization operation that changed
+  overlays; it is not part of authoring save.
+- More active locales or slower model/cache work must not make Save slower,
+  ambiguous, or falsely failed.
+- Bob must tell the truth: saved source remains saved even when translations need
+  attention.
+
+Execution compliance for this addendum:
+
+- Roma account instance save route returns source/base save success or failure
+  only.
+- Translation generation/regeneration remains owned by the translation route and
+  the Translations panel action.
+- The top banner/toast appears only as a stale-translation attention signal and
+  points to the Translations panel.
+- If the codebase lacks exact persisted/evaluable stale-translation evidence, the
+  execution pass must stop and name the missing authority; it must not infer
+  staleness from runtime package probes or invented UI state.
+- `documentation/services/roma.md` and the relevant Bob/Roma detail docs must be
+  updated in the same PR to reflect the restored boundary.
 
 ## Authority
 
@@ -54,7 +112,7 @@ Related:
 | Component truth                      | `dieter/components/*` (`diet-textfield`, `diet-toggle`, `diet-segmented`, …)   |
 | Token truth                          | `dieter/tokens/*` (already adopted — out of scope)                             |
 | Tokenization CI guard                | DevStudio Design Governance PRD §3.6 / Step 5 (consumed here, not reinvented)  |
-| Roma product surfaces / routes / save| Roma (unchanged)                                                               |
+| Roma product surfaces / routes / save| Roma (product law unchanged; save/localization boundary corrected by addendum) |
 | What the "shared Roma primitive" set is | This PRD, Step 0 decision                                                     |
 
 ## 1. Why (product truth)
@@ -170,6 +228,10 @@ only residual Roma-only sites DevStudio didn't reach. Do not re-edit the same li
 - **Docs are part of done.** `roma.md` must match the executed behavior.
 - **No new framework.** The shared primitive layer is a small set on Dieter, not a
   component framework. This is cleanup/convergence.
+- **Save/localization boundary is mandatory.** The addendum above is an execution
+  requirement for this PRD even though the old draft said no route changes and
+  listed Bob out of scope. That old scope language cannot be used to preserve the
+  current save-time translation cascade.
 
 ## 4. Steps
 
@@ -188,8 +250,10 @@ only residual Roma-only sites DevStudio didn't reach. Do not re-edit the same li
 
 - A new visual language / redesign (design freeze; Dieter is the design).
 - Token authoring / governance (DevStudio Design Governance PRD owns).
-- Roma product-law changes, new features, backend / route changes.
-- Bob, Prague, DevStudio, widget-software surfaces.
+- Roma product-law changes, new features, backend / route changes beyond the
+  mandatory source-save/localization boundary correction in this PRD.
+- Bob, Prague, DevStudio, widget-software surfaces, except the top-of-builder
+  stale-translation attention banner required by the addendum.
 - The tokenization CI guard itself (DevStudio PRD Step 5 owns; this PRD consumes it).
 
 ## 6. Acceptance criteria
@@ -206,7 +270,10 @@ only residual Roma-only sites DevStudio didn't reach. Do not re-edit the same li
   treatment; every domain has loading / empty / error states.
 - Visual parity with current Roma (no redesign); DevStudio tokenization guard
   green on Roma incl. inline TSX.
-- Roma product law, routes, and save behavior unchanged.
+- Roma product law remains unchanged. Save behavior is corrected to the product
+  law above: source/base save does not run translation generation/regeneration or
+  locale package follow-up, and stale translations are surfaced as an explicit
+  Translations-panel action.
 
 ## 7. Planning review (per pipeline README)
 

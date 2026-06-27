@@ -4,6 +4,7 @@ import {
   generateAccountInstanceTranslations,
   type TranslationAgentActivityEvent,
 } from '@roma/lib/account-instance-translations';
+import { materializeAccountInstanceLocalePackages } from '@roma/lib/account-instance-locale-package';
 import { enforceActiveLocaleEntitlement } from '@roma/lib/account-locale-entitlements';
 import { loadCurrentAccountLocalesState } from '@roma/lib/account-locales-state';
 import { requireInstanceIdParam } from '@roma/lib/route-helpers';
@@ -20,6 +21,7 @@ function sendEvent(controller: ReadableStreamDefaultController<Uint8Array>, even
 }
 
 function streamGenerateTranslations(args: {
+  request: NextRequest;
   accountId: string;
   instanceId: string;
   baseLocale: string;
@@ -78,7 +80,30 @@ function streamGenerateTranslations(args: {
           return;
         }
 
-        result(200, generated.value);
+        const packages = await materializeAccountInstanceLocalePackages({
+          request: args.request,
+          accountId: args.accountId,
+          instanceId: args.instanceId,
+          baseLocale: args.baseLocale,
+          activeLocales: generated.value.translation.activeLocales,
+          accountCapsule: args.accountCapsule,
+          requestId: args.requestId,
+          onActivity: activity,
+        });
+        if (!packages.ok) {
+          result(packages.status, {
+            ok: false,
+            translation: generated.value.translation,
+            error: packages.error,
+            localePackages: packages.value,
+          });
+          return;
+        }
+
+        result(200, {
+          ...generated.value,
+          localePackages: packages.value,
+        });
       } catch (error) {
         result(500, {
           error: {
@@ -153,6 +178,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
     return withSession(
       request,
       streamGenerateTranslations({
+        request,
         accountId,
         instanceId,
         baseLocale,
@@ -181,6 +207,44 @@ export async function POST(request: NextRequest, context: RouteContext) {
       current.value.setCookies,
     );
   }
+  if (!generated.value.translation.accepted) {
+    return withSession(request, NextResponse.json(generated.value, { status: generated.status }), current.value.setCookies);
+  }
 
-  return withSession(request, NextResponse.json(generated.value, { status: generated.status }), current.value.setCookies);
+  const packages = await materializeAccountInstanceLocalePackages({
+    request,
+    accountId,
+    instanceId,
+    baseLocale,
+    activeLocales: generated.value.translation.activeLocales,
+    accountCapsule: current.value.authzToken,
+    requestId: current.value.requestId,
+  });
+  if (!packages.ok) {
+    return withSession(
+      request,
+      NextResponse.json(
+        {
+          ok: false,
+          translation: generated.value.translation,
+          error: packages.error,
+          localePackages: packages.value,
+        },
+        { status: packages.status },
+      ),
+      current.value.setCookies,
+    );
+  }
+
+  return withSession(
+    request,
+    NextResponse.json(
+      {
+        ...generated.value,
+        localePackages: packages.value,
+      },
+      { status: generated.status },
+    ),
+    current.value.setCookies,
+  );
 }

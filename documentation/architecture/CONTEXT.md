@@ -30,6 +30,19 @@ How the system is organized for agent-operability:
 - agent homes under `agents/<name>` — the operators;
 - San Francisco — the governed model-execution engine the agents call.
 
+## Operating Model
+
+Clickeen is operated by one human product owner/architect plus an AI workforce.
+
+The human owns product direction, architecture judgment, and final authority.
+AI coding and devops agents operate the repo, implementation, documentation,
+verification, and managed-service workflows through the gates in `AGENTS.md`.
+Runtime product agents operate customer/product artifacts through named product
+authorities.
+
+Clickeen is still a self-serve SaaS for customers, but the company and product
+are designed around agent operation rather than a large human operations team.
+
 ## Content Source Authority
 
 Clickeen serves content. Websites, widgets, pages, emails, reports, feeds, and

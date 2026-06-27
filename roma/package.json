@@ -10,7 +10,7 @@
     "lint": "next lint",
     "test:account-page-source": "tsx tests/run-account-page-source.ts",
     "test:instance-package": "tsx tests/run-instance-package-reroute.ts",
-    "test:instance-save-cascade": "tsx tests/run-instance-save-cascade.ts",
+    "test:instance-save-boundary": "tsx tests/run-instance-save-boundary.ts",
     "test:widget-command-gates": "tsx tests/run-widget-command-gates.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },

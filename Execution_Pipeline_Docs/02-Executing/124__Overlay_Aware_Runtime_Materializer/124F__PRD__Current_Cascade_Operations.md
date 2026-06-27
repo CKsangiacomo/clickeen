@@ -1,6 +1,6 @@
 # PRD 124F - Current Cascade Operations
 
-Status: EXECUTING
+Status: SUPERSEDED by PRD 126D source-save/localization boundary correction
 Parent: `124__MAMA__Overlay_Aware_Runtime_Materializer_Program.md`
 Depends on: 124A GREEN, 124B/124C/124D/124E CODE-DELIVERED for every runtime behavior 124F calls
 Owner: Roma account commands
@@ -187,7 +187,7 @@ incomplete coordinates are reported.
     through 124E evidence/source-pointer mismatch or continue only where 124E
     evidence still matches the published source pointer. Roma must not repair
     this on visitor requests.
-17. Bound the synchronous source-save cascade before implementation:
+17. Bound the synchronous superseded source-save follow-up before implementation:
     - active non-base locale count is governed by `l10n.locales.max`
       (`free: 0`, `tier1: 3`, `tier2-4: 28`);
     - source save is one instance times active non-base locales;
@@ -447,7 +447,7 @@ Prove command-owned cascade behavior.
      explicitly requests regeneration.
    - source save does not expose a top-level success shape that existing callers
      can read as full source-and-locale success when locale cascade failed.
-   - source-save cascade cost is bounded by one instance times active non-base
+   - superseded source-save follow-up cost is bounded by one instance times active non-base
      locales and the route stops before hidden partial sync if that work cannot
      fit the request budget.
 2. Overlay generation:

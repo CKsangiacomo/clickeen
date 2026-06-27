@@ -369,7 +369,7 @@ on write, read, and list. Missing paths and unexpected paths fail.
 | Missing or unexpected overlay keys | validation fails |
 | Missing overlay | read returns `404` |
 | Failure after earlier locale writes | prior files remain; full success must not be claimed |
-| Source save locale follow-up failure | source/base save remains; response reports `sourceSaved: true`, `ok: false`, and explicit `localeCascade` failure coordinates |
+| Source save with stale translations | source/base save remains save truth; translation update is an explicit Translations panel operation |
 | Account locale follow-up failure | settings save remains; response reports `overlayUpdate.ok: false` |
 | Translation Agent binding missing | Roma returns explicit upstream failure |
 | San Francisco/model failure | Translation Agent/Roma return explicit failure; no full success |
@@ -410,20 +410,17 @@ mismatched locale packages return `404 Locale not available` with `no-store`
 cache headers. Public serving does not fall back to base content for locale
 URLs.
 
-Saved source changes use command-owned cascade. Roma saves the source/base
-package first, then for that same instance regenerates current active non-base
-overlays through Translation Agent and materializes current locale packages one
-locale at a time. The cost surface is one instance times active non-base
-locales; active locale count is bounded by `l10n.locales.max`. If locale
-follow-up fails after the primary save, Roma names completed, skipped, and
-failed locale coordinates in `localeCascade`, marks later locales as not
-attempted, and does not return a full-success shape. No background job, status
-ledger, public runtime repair, or base-content fallback completes that work
-later.
-
-Bob handles this source-save follow-up shape as translation attention: the
-submitted widget source is treated as saved, while the locale cascade failure is
-shown through the Builder translation error surface.
+Saved source changes do not generate or regenerate translations. Roma source
+save persists the source and base package, then returns source-save truth.
+Translation update remains an explicit operation from Bob's Translations panel
+through Roma's translation route and the Translation Agent. After accepted
+overlay generation, the translation route materializes matching locale package
+bytes for the generated locales and reports exact `localePackages` coordinates
+if package write or public cache refresh fails. Bob may surface
+stale-translation attention only from exact stale-translation evidence; it must
+not infer that state from runtime package probes, active locale count alone, or
+hidden UI-authored status. No background job, status ledger, public runtime
+repair, or base-content fallback completes translation work later.
 
 ## Prague Boundary
 
