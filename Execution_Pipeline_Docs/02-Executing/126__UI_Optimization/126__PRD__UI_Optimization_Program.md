@@ -191,8 +191,11 @@ is not itself a service, not product law, not a product feature.
 This program establishes **`documentation/engineering/UI/`** as that home.
 
 - **Docs-sync target for every track.** Each track's "docs are part of done"
-  lands design-system truth here: color → `color.md`, later type / spacing /
-  components / screens as those tracks run. Service-level truth still lands in
+  lands design-system truth here. The locked set (seeded 2026-06-27, each driven
+  by its track): `README.md` (index), `dieter.md` (system), `color.md`,
+  `typography.md`, `motion.md`, `iconography.md`, `accessibility.md`,
+  `components.md`, `dialogs-and-modals.md`, `interactions.md`, `ops.md`,
+  `surfaces.md`. Service-level truth still lands in
   `services/*.md`; `engineering/UI/` holds the cross-cutting design-system truth.
 - **Reference PRDs graduate into it.** A reference subPRD like `126A2` (color) is
   the *working* version; its content becomes the canonical living doc
