@@ -83,18 +83,18 @@
         "free": 1,
         "tier1": 1,
         "tier2": 5,
-        "tier3": null,
-        "tier4": null
+        "tier3": 25,
+        "tier4": 100
       }
     },
-    "widgets.types.max": {
+    "widgets.instances.max": {
       "kind": "limit",
       "values": {
-        "free": 1,
-        "tier1": 1,
-        "tier2": 3,
-        "tier3": null,
-        "tier4": null
+        "free": 3,
+        "tier1": 10,
+        "tier2": 25,
+        "tier3": 100,
+        "tier4": 250
       }
     },
     "uploads.size.max": {

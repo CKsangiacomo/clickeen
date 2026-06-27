@@ -163,15 +163,19 @@ rg "publishedCount" tokyo-worker/src
 rg "publishedCount" roma/app/api/account roma/components roma/lib/account-instance-direct.ts
 ```
 
-Expected: Tokyo does not return `publishedCount`. Roma-local `publishedCount`
-is allowed only as a local variable computed from list-facts rows and must not
-be parsed from a Tokyo account list response.
+Expected: Tokyo does not return `publishedCount`. Roma must not parse it from a
+Tokyo account list response. A named retired-field rejection constant may
+mention the old field only to reject the payload.
 
 No old Widgets monetization list payload:
 
 ```bash
 rg "systemWidgets|canCreate|canPublish|canDuplicate|createDisabledReason|disabledReasonKey|actions\\.|actions\\s*:" roma/app/api/account/widgets roma/components
 ```
+
+Expected: no active old Widgets monetization payload consumption. A named
+retired-field rejection constant may mention old field names only to reject old
+payloads.
 
 No old command-time upgrade redress:
 

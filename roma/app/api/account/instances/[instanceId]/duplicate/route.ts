@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createCompactInstanceId } from '@clickeen/ck-contracts/overlay-identity';
+import { resolvePolicyFromEntitlementsSnapshot } from '@clickeen/ck-policy';
 import {
   createAccountInstanceInTokyo,
+  listAccountWidgetInstanceIds,
   loadTokyoAccountInstanceDocument,
 } from '@roma/lib/account-instance-direct';
 import {
@@ -20,6 +22,41 @@ import {
 export const runtime = 'edge';
 
 type RouteContext = { params: Promise<{ instanceId: string }> };
+
+function readFinitePolicyLimit(limits: Record<string, unknown>, key: string): number | null {
+  const value = limits[key];
+  if (typeof value !== 'number' || !Number.isFinite(value)) return null;
+  return Math.max(0, Math.floor(value));
+}
+
+function policyContractFailure(key: string): NextResponse {
+  return NextResponse.json(
+    {
+      error: {
+        kind: 'UPSTREAM_UNAVAILABLE',
+        reasonKey: 'roma.errors.policy.invalidEntitlement',
+        detail: key,
+      },
+    },
+    { status: 500 },
+  );
+}
+
+function upgradeRequired(args: {
+  gate: 'widgets.instances.max';
+  action: 'duplicate_instance';
+  current: number;
+  limit: number;
+}): NextResponse {
+  return NextResponse.json(
+    {
+      ok: false,
+      kind: 'UPGRADE_REQUIRED',
+      upgrade: args,
+    },
+    { status: 402 },
+  );
+}
 
 export async function POST(request: NextRequest, context: RouteContext) {
   const current = await resolveCurrentAccountRouteContext({ request, minRole: 'editor' });
@@ -45,6 +82,44 @@ export async function POST(request: NextRequest, context: RouteContext) {
     return withSession(
       request,
       NextResponse.json({ error: source.error }, { status: source.status }),
+      current.value.setCookies,
+    );
+  }
+
+  const widgetInstanceIds = await listAccountWidgetInstanceIds({
+    accountId,
+    accountCapsule: current.value.authzToken,
+    requestId: current.value.requestId,
+  });
+  if (!widgetInstanceIds.ok) {
+    return withSession(
+      request,
+      NextResponse.json({ error: widgetInstanceIds.error }, { status: widgetInstanceIds.status }),
+      current.value.setCookies,
+    );
+  }
+  const policy = resolvePolicyFromEntitlementsSnapshot({
+    profile: current.value.authzPayload.profile,
+    role: current.value.authzPayload.role,
+    entitlements: current.value.authzPayload.entitlements ?? null,
+  });
+  const widgetInstancesLimit = readFinitePolicyLimit(policy.limits, 'widgets.instances.max');
+  if (widgetInstancesLimit == null) {
+    return withSession(
+      request,
+      policyContractFailure('widgets.instances.max'),
+      current.value.setCookies,
+    );
+  }
+  if (widgetInstanceIds.value.instanceIds.length >= widgetInstancesLimit) {
+    return withSession(
+      request,
+      upgradeRequired({
+        gate: 'widgets.instances.max',
+        action: 'duplicate_instance',
+        current: widgetInstanceIds.value.instanceIds.length,
+        limit: widgetInstancesLimit,
+      }),
       current.value.setCookies,
     );
   }

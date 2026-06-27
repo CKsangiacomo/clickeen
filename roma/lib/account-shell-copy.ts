@@ -4,7 +4,7 @@ const ACCOUNT_SHELL_REASON_COPY: Record<string, string> = {
   'coreui.errors.auth.forbidden': 'You do not have permission to view this account.',
   'coreui.errors.db.readFailed': 'Loading failed. Please try again.',
   'coreui.errors.db.writeFailed': 'Saving failed. Please try again.',
-  'coreui.errors.payload.invalid': 'The server returned invalid data. Please try again.',
+  'coreui.errors.payload.invalid': 'Something did not load correctly. Please try again.',
   'coreui.errors.network.timeout': 'The request timed out. Please try again.',
   'coreui.errors.account.memberNotFound': 'That team member could not be found.',
   'coreui.errors.account.invitationNotFound': 'That invitation could not be found.',

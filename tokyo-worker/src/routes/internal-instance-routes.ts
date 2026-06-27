@@ -17,7 +17,8 @@ import {
   writeInstanceLocalePackage,
 } from '../domains/account-instances/package-files';
 import {
-  listAccountInstances,
+  AccountInstanceCoordinateError,
+  listAccountInstanceIds,
   readAccountInstanceSource,
   readAccountInstanceSourcePointer,
   renameAccountInstanceDisplay,
@@ -85,50 +86,6 @@ export async function tryHandleInternalInstanceRoutes(
 ): Promise<Response | null> {
   const { req, env, pathname, respond } = args;
 
-  const internalAccountInstanceFactsMatch = pathname.match(
-    /^\/__internal\/accounts\/([^/]+)\/instances\/facts$/,
-  );
-  if (internalAccountInstanceFactsMatch) {
-    const pathAccountId = normalizeAccountPublicId(
-      decodeURIComponent(internalAccountInstanceFactsMatch[1] || ''),
-    );
-    const accountId = normalizeAccountPublicId(req.headers.get('x-account-id'));
-    if (!accountId || !pathAccountId || pathAccountId !== accountId) {
-      return respondValidation(
-        respond,
-        'coreui.errors.instance.invalidPayload',
-        accountId ? 403 : 422,
-      );
-    }
-    if (req.method !== 'GET') return respondMethodNotAllowed(respond);
-    const authErr = await authorizeAccountInstanceControlRequest({
-      req,
-      env,
-      accountId,
-      minRole: 'viewer',
-    });
-    if (authErr) return respond(authErr);
-
-    try {
-      const hasInstances = (await listAccountInstances({ env, accountId })).length > 0;
-      return respond(json({ ok: true, accountId, hasInstances }));
-    } catch (error) {
-      const detail = error instanceof Error ? error.message : String(error);
-      return respond(
-        json(
-          {
-            error: {
-              kind: 'UPSTREAM_UNAVAILABLE',
-              reasonKey: 'coreui.errors.db.readFailed',
-              detail,
-            },
-          },
-          { status: 502 },
-        ),
-      );
-    }
-  }
-
   const internalAccountInstancesListMatch = pathname.match(
     /^\/__internal\/accounts\/([^/]+)\/instances$/,
   );
@@ -154,22 +111,89 @@ export async function tryHandleInternalInstanceRoutes(
     if (authErr) return respond(authErr);
 
     try {
-      const accountInstances = await listAccountInstances({ env, accountId });
+      const instanceIds = await listAccountInstanceIds({ env, accountId });
       return respond(
         json({
           ok: true,
           accountId,
-          accountInstances,
-          publishedCount: accountInstances.filter((entry) => entry.publishStatus === 'published')
-            .length,
+          instanceIds,
         }),
       );
     } catch (error) {
+      if (error instanceof AccountInstanceCoordinateError) {
+        return respond(
+          json(
+            {
+              error: {
+                kind: 'VALIDATION',
+                reasonKey: 'tokyo.errors.instance.malformedCoordinate',
+                detail: error.detail,
+                phase: 'account-instance-coordinate-enumeration',
+              },
+            },
+            { status: 422 },
+          ),
+        );
+      }
       const detail = error instanceof Error ? error.message : String(error);
       return respond(
         json({ error: { kind: 'VALIDATION', reasonKey: detail, detail } }, { status: 422 }),
       );
     }
+  }
+
+  const internalInstanceListFactsMatch = pathname.match(/^\/__internal\/instances\/([^/]+)\/list-facts$/);
+  if (internalInstanceListFactsMatch) {
+    const instanceId = normalizeStorageId(
+      decodeURIComponent(internalInstanceListFactsMatch[1] || ''),
+    );
+    const accountId = normalizeAccountPublicId(req.headers.get('x-account-id'));
+    if (!accountId || !instanceId || !isValidScopedInstance(instanceId, accountId)) {
+      return respondValidation(
+        respond,
+        'coreui.errors.instance.invalidPayload',
+        accountId ? 403 : 422,
+      );
+    }
+    if (req.method !== 'GET') return respondMethodNotAllowed(respond);
+    const authErr = await authorizeAccountInstanceControlRequest({
+      req,
+      env,
+      accountId,
+      minRole: 'viewer',
+    });
+    if (authErr) return respond(authErr);
+
+    const pointer = await readAccountInstanceSourcePointer({
+      env,
+      accountId,
+      instanceId,
+    });
+    if (!pointer.ok) {
+      return respond(
+        json(
+          {
+            error: {
+              kind: pointer.kind,
+              reasonKey: pointer.reasonKey,
+            },
+          },
+          { status: pointer.kind === 'NOT_FOUND' ? 404 : 422 },
+        ),
+      );
+    }
+
+    return respond(
+      json({
+        ok: true,
+        accountId: pointer.value.accountId,
+        instanceId: pointer.value.id,
+        widgetType: pointer.value.widgetType,
+        displayName: pointer.value.displayName,
+        updatedAt: pointer.value.updatedAt,
+        publishStatus: pointer.value.publishStatus,
+      }),
+    );
   }
 
   if (pathname === '/__internal/instances') {

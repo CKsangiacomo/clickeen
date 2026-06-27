@@ -302,7 +302,7 @@ async function testNoBroadCascadeMachinery(): Promise<void> {
 async function testActiveLocaleSettingsCostSurfaceIsNamed(): Promise<void> {
   const routeSource = await readFile(new URL('../app/api/account/locales/route.ts', import.meta.url), 'utf8');
   assert.match(routeSource, /changedLocaleCount = addedLocales\.length \+ removedLocales\.length/);
-  assert.match(routeSource, /coordinates: instances\.value\.accountInstances\.length \* changedLocaleCount/);
+  assert.match(routeSource, /coordinates: instances\.value\.instanceIds\.length \* changedLocaleCount/);
   assert.match(routeSource, /configuredActiveLocaleCap: args\.configuredActiveLocaleCap/);
   assert.match(routeSource, /hostCommandTimeoutMs: 120000/);
   assert.match(routeSource, /for \(const locale of addedLocales\)/);

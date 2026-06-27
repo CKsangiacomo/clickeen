@@ -93,6 +93,9 @@ Host services transport them. Surfaces render them.
 - Tokyo is responsible for account runtime storage in R2.
 - Roma is the app. Roma routes the user to their account, enforces the user's
   tier, and saves what the user does.
+- Roma owns widget inventory product meaning. Tokyo returns exact account
+  instance storage coordinates and exact row facts, not tier decisions or
+  product-shaped inventory summaries.
 - Clickeen uses Clickeen. Admin is a normal account using Clickeen's own
   widgets, assets, pages, and product routes.
 

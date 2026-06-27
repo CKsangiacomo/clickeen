@@ -4,7 +4,7 @@ import { createCompactInstanceId } from '@clickeen/ck-contracts/overlay-identity
 import { resolvePolicyFromEntitlementsSnapshot } from '@clickeen/ck-policy';
 import {
   createAccountInstanceInTokyo,
-  listAccountInstancesInTokyo,
+  listAccountWidgetInstanceIds,
   listTokyoWidgetDefinitions,
 } from '@roma/lib/account-instance-direct';
 import { loadCurrentAccountLocalesState } from '@roma/lib/account-locales-state';
@@ -31,6 +31,41 @@ function normalizeDisplayName(value: unknown): string | null | undefined {
 
 function cloneValue<T>(value: T): T {
   return JSON.parse(JSON.stringify(value)) as T;
+}
+
+function readFinitePolicyLimit(limits: Record<string, unknown>, key: string): number | null {
+  const value = limits[key];
+  if (typeof value !== 'number' || !Number.isFinite(value)) return null;
+  return Math.max(0, Math.floor(value));
+}
+
+function policyContractFailure(key: string): NextResponse {
+  return NextResponse.json(
+    {
+      error: {
+        kind: 'UPSTREAM_UNAVAILABLE',
+        reasonKey: 'roma.errors.policy.invalidEntitlement',
+        detail: key,
+      },
+    },
+    { status: 500 },
+  );
+}
+
+function upgradeRequired(args: {
+  gate: 'widgets.instances.max';
+  action: 'create_instance';
+  current: number;
+  limit: number;
+}): NextResponse {
+  return NextResponse.json(
+    {
+      ok: false,
+      kind: 'UPGRADE_REQUIRED',
+      upgrade: args,
+    },
+    { status: 402 },
+  );
 }
 
 function mergeDefaultsInto(
@@ -95,6 +130,43 @@ export async function POST(request: NextRequest) {
     );
   }
   const accountId = current.value.authzPayload.accountPublicId;
+  const widgetInstanceIds = await listAccountWidgetInstanceIds({
+    accountId,
+    accountCapsule: current.value.authzToken,
+    requestId: current.value.requestId,
+  });
+  if (!widgetInstanceIds.ok) {
+    return withSession(
+      request,
+      NextResponse.json({ error: widgetInstanceIds.error }, { status: widgetInstanceIds.status }),
+      current.value.setCookies,
+    );
+  }
+  const policy = resolvePolicyFromEntitlementsSnapshot({
+    profile: current.value.authzPayload.profile,
+    role: current.value.authzPayload.role,
+    entitlements: current.value.authzPayload.entitlements ?? null,
+  });
+  const widgetInstancesLimit = readFinitePolicyLimit(policy.limits, 'widgets.instances.max');
+  if (widgetInstancesLimit == null) {
+    return withSession(
+      request,
+      policyContractFailure('widgets.instances.max'),
+      current.value.setCookies,
+    );
+  }
+  if (widgetInstanceIds.value.instanceIds.length >= widgetInstancesLimit) {
+    return withSession(
+      request,
+      upgradeRequired({
+        gate: 'widgets.instances.max',
+        action: 'create_instance',
+        current: widgetInstanceIds.value.instanceIds.length,
+        limit: widgetInstancesLimit,
+      }),
+      current.value.setCookies,
+    );
+  }
   const widgetDefinitions = await listTokyoWidgetDefinitions({
     accountId,
     accountCapsule: current.value.authzToken,
@@ -113,51 +185,6 @@ export async function POST(request: NextRequest) {
       NextResponse.json(
         { error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.instance.widgetMissing' } },
         { status: 422 },
-      ),
-      current.value.setCookies,
-    );
-  }
-  const widgetInstances = await listAccountInstancesInTokyo({
-    accountId,
-    accountCapsule: current.value.authzToken,
-    requestId: current.value.requestId,
-  });
-  if (!widgetInstances.ok) {
-    return withSession(
-      request,
-      NextResponse.json({ error: widgetInstances.error }, { status: widgetInstances.status }),
-      current.value.setCookies,
-    );
-  }
-  const policy = resolvePolicyFromEntitlementsSnapshot({
-    profile: current.value.authzPayload.profile,
-    role: current.value.authzPayload.role,
-    entitlements: current.value.authzPayload.entitlements ?? null,
-  });
-  const widgetTypesLimitRaw = policy.limits['widgets.types.max'];
-  const widgetTypesLimit =
-    typeof widgetTypesLimitRaw === 'number' && Number.isFinite(widgetTypesLimitRaw)
-      ? Math.max(0, Math.floor(widgetTypesLimitRaw))
-      : null;
-  const usedWidgetTypes = new Set(
-    widgetInstances.value.accountInstances.map((instance) => instance.widgetType),
-  );
-  if (
-    widgetTypesLimit != null &&
-    !usedWidgetTypes.has(widgetType) &&
-    usedWidgetTypes.size >= widgetTypesLimit
-  ) {
-    return withSession(
-      request,
-      NextResponse.json(
-        {
-          error: {
-            kind: 'DENY',
-            reasonKey: 'coreui.upsell.reason.limitReached',
-            detail: `widgets.types.max=${widgetTypesLimit}`,
-          },
-        },
-        { status: 403 },
       ),
       current.value.setCookies,
     );

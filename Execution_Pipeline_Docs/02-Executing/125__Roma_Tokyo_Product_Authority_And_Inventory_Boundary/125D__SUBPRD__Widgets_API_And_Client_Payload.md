@@ -245,6 +245,8 @@ rg "systemWidgets|canCreate|disabledReasonKey|actions\\.publish|actions\\.duplic
 Expected result:
 
 - no old monetization list payload in active Widgets API/client.
+- named retired-field rejection constants may mention old field names only to
+  reject old payloads; they must not normalize, accept, or map those fields.
 
 ## 8. V1-V8 Audit
 

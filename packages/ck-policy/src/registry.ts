@@ -8,7 +8,7 @@ export const ENTITLEMENT_KEYS = [
   'storage.bytes.max',
   'views.monthly.max',
   'instances.published.max',
-  'widgets.types.max',
+  'widgets.instances.max',
   'uploads.size.max',
   'items.group.small.max',
   'items.group.medium.max',
@@ -29,7 +29,7 @@ export const PLAN_LIMIT_KEYS = [
   'storage.bytes.max',
   'views.monthly.max',
   'instances.published.max',
-  'widgets.types.max',
+  'widgets.instances.max',
   'uploads.size.max',
   'items.group.small.max',
   'items.group.medium.max',
@@ -120,13 +120,13 @@ export const ENTITLEMENT_META: Record<EntitlementKey, EntitlementMeta> = {
       note: 'Roma rejects publish when the account is already at the plan limit.',
     },
   },
-  'widgets.types.max': {
-    label: 'Widget types',
-    description: 'Maximum distinct widget types per account.',
+  'widgets.instances.max': {
+    label: 'Widget instances',
+    description: 'Maximum widget instances the account can create through create-like actions.',
     enforcement: {
       status: 'enforced',
-      owner: 'Roma system widget/create routes',
-      note: 'Roma filters system widget create options and rejects direct create requests that would exceed the account distinct-widget-type limit.',
+      owner: 'Roma create and duplicate command routes',
+      note: 'Roma create and duplicate enforce this before minting a new instance id, materializing package bytes, or calling Tokyo create/write routes.',
     },
   },
   'uploads.size.max': {

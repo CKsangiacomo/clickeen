@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { resolveAccountShellErrorCopy } from '../lib/account-shell-copy';
+import { resolveAccountShellErrorCopy, resolveAccountShellReason } from '../lib/account-shell-copy';
 import { useRomaAccountApi } from './account-api';
 import { prefetchCompiledWidget } from './compiled-widget-cache';
 import { useRomaAccountContext } from './roma-account-context';
@@ -15,26 +15,66 @@ import {
   readRomaWidgetsCache,
   updateRomaWidgetsCache,
   type RomaWidgetsResponse,
-  type SystemWidgetOption,
+  type WidgetCatalogOption,
   type WidgetInstance,
 } from './use-roma-widgets';
 
-type WidgetInstanceGroup = SystemWidgetOption & {
+type WidgetInstanceGroup = WidgetCatalogOption & {
   instances: WidgetInstance[];
 };
+
+type WidgetUpgradePrompt = {
+  message: string;
+  current: number;
+  limit: number;
+};
+
+function normalizeUpgradePrompt(payload: unknown): WidgetUpgradePrompt | null {
+  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) return null;
+  const record = payload as Record<string, unknown>;
+  if (record.kind !== 'UPGRADE_REQUIRED') return null;
+  const upgrade = record.upgrade;
+  if (!upgrade || typeof upgrade !== 'object' || Array.isArray(upgrade)) return null;
+  const upgradeRecord = upgrade as Record<string, unknown>;
+  const action = typeof upgradeRecord.action === 'string' ? upgradeRecord.action : '';
+  const current = typeof upgradeRecord.current === 'number' && Number.isFinite(upgradeRecord.current)
+    ? Math.max(0, Math.floor(upgradeRecord.current))
+    : null;
+  const limit = typeof upgradeRecord.limit === 'number' && Number.isFinite(upgradeRecord.limit)
+    ? Math.max(0, Math.floor(upgradeRecord.limit))
+    : null;
+  if (current == null || limit == null) return null;
+  if (action === 'create_instance' || action === 'duplicate_instance') {
+    return { message: 'Upgrade to create more widgets.', current, limit };
+  }
+  if (action === 'publish_instance') {
+    return { message: 'Upgrade to publish more widgets.', current, limit };
+  }
+  return null;
+}
+
+async function readJsonOrNull(response: Response): Promise<unknown> {
+  try {
+    return await response.json();
+  } catch {
+    return null;
+  }
+}
 
 export function WidgetsDomain() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const { accountContext } = useRomaAccountContext();
+  const { accountContext, accountPolicy } = useRomaAccountContext();
   const accountApi = useRomaAccountApi();
   const productAccountId = accountContext.accountPublicId;
+  const canMutateWidgets = accountPolicy.role !== 'viewer';
   const cachedWidgets = readRomaWidgetsCache(productAccountId);
 
   const [activeActionKey, setActiveActionKey] = useState<string | null>(null);
   const [mutationError, setMutationError] = useState<string | null>(null);
+  const [upgradePrompt, setUpgradePrompt] = useState<WidgetUpgradePrompt | null>(null);
   const [widgetInstances, setWidgetInstances] = useState<WidgetInstance[]>(() => cachedWidgets?.data.instances ?? []);
-  const [systemWidgets, setSystemWidgets] = useState<SystemWidgetOption[]>(() => cachedWidgets?.data.systemWidgets ?? []);
+  const [catalog, setCatalog] = useState<WidgetCatalogOption[]>(() => cachedWidgets?.data.catalog ?? []);
   const [domainLoading, setDomainLoading] = useState(() => !cachedWidgets);
   const [domainRefreshing, setDomainRefreshing] = useState(false);
   const [dataError, setDataError] = useState<string | null>(null);
@@ -46,7 +86,7 @@ export function WidgetsDomain() {
 
   const applyWidgets = useCallback((widgets: RomaWidgetsResponse) => {
     setWidgetInstances(widgets.instances);
-    setSystemWidgets(widgets.systemWidgets);
+    setCatalog(widgets.catalog);
   }, []);
 
   const refreshWidgets = useCallback(async (args?: { force?: boolean }) => {
@@ -90,7 +130,7 @@ export function WidgetsDomain() {
       setDomainLoading(false);
     } else {
       setWidgetInstances([]);
-      setSystemWidgets([]);
+      setCatalog([]);
       setDomainLoading(true);
     }
     void refreshWidgets();
@@ -100,18 +140,18 @@ export function WidgetsDomain() {
     () => Array.from(new Set(widgetInstances.map((instance) => instance.widgetType))).sort((a, b) => a.localeCompare(b)),
     [widgetInstances],
   );
-  const missingSystemWidgetTypes = useMemo(() => {
-    const systemWidgetTypeSet = new Set(systemWidgets.map((option) => option.widgetType));
-    return instanceWidgetTypes.filter((widgetType) => !systemWidgetTypeSet.has(widgetType));
-  }, [instanceWidgetTypes, systemWidgets]);
-  const widgetDataError = missingSystemWidgetTypes.length
-    ? `Widget data is invalid: account instances reference unavailable system widgets (${missingSystemWidgetTypes.join(', ')}).`
+  const missingCatalogWidgetTypes = useMemo(() => {
+    const catalogWidgetTypeSet = new Set(catalog.map((option) => option.widgetType));
+    return instanceWidgetTypes.filter((widgetType) => !catalogWidgetTypeSet.has(widgetType));
+  }, [instanceWidgetTypes, catalog]);
+  const widgetDataError = missingCatalogWidgetTypes.length
+    ? 'Some widgets could not load. Please try again.'
     : dataError;
 
   const groupedInstances = useMemo<WidgetInstanceGroup[]>(() => {
     const groups = new Map<string, WidgetInstanceGroup>();
 
-    systemWidgets.forEach((option) => {
+    catalog.forEach((option) => {
       groups.set(option.widgetType, {
         ...option,
         instances: [],
@@ -131,8 +171,8 @@ export function WidgetsDomain() {
         ...group,
         instances: group.instances.slice().sort((a, b) => a.instanceId.localeCompare(b.instanceId)),
       }))
-      .sort((a, b) => a.label.localeCompare(b.label));
-  }, [systemWidgets, widgetInstances]);
+      .sort((a, b) => a.displayName.localeCompare(b.displayName));
+  }, [catalog, widgetInstances]);
 
   useEffect(() => {
     const candidates = instanceWidgetTypes.slice(0, 8);
@@ -143,20 +183,30 @@ export function WidgetsDomain() {
 
   const handleCreateInstance = useCallback(
     async (widgetType: string) => {
-      if (!productAccountId) return;
+      if (!productAccountId || !canMutateWidgets) return;
       const actionKey = `create:${widgetType}`;
       setActiveActionKey(actionKey);
       setMutationError(null);
+      setUpgradePrompt(null);
       try {
-        const payload = await accountApi.fetchJson<{
-          instanceId?: string;
-          widgetType?: string;
-        }>('/api/account/instances', {
+        const response = await accountApi.fetchRaw('/api/account/instances', {
           method: 'POST',
           headers: accountApi.buildHeaders({ contentType: 'application/json' }),
           body: JSON.stringify({ widgetType }),
         });
-        const createdInstanceId = typeof payload.instanceId === 'string' ? payload.instanceId.trim() : '';
+        const payload = await readJsonOrNull(response);
+        if (response.status === 402) {
+          const prompt = normalizeUpgradePrompt(payload);
+          if (prompt) {
+            setUpgradePrompt(prompt);
+            return;
+          }
+        }
+        if (!response.ok) {
+          throw new Error(resolveAccountShellReason(payload, 'Creating the widget failed. Please try again.'));
+        }
+        const payloadRecord = payload && typeof payload === 'object' && !Array.isArray(payload) ? payload as Record<string, unknown> : null;
+        const createdInstanceId = typeof payloadRecord?.instanceId === 'string' ? payloadRecord.instanceId.trim() : '';
         if (!createdInstanceId) {
           throw new Error('coreui.errors.payload.invalid');
         }
@@ -169,23 +219,36 @@ export function WidgetsDomain() {
         setActiveActionKey((current) => (current === actionKey ? null : current));
       }
     },
-    [accountApi, productAccountId, refreshWidgets, router],
+    [accountApi, canMutateWidgets, productAccountId, refreshWidgets, router],
   );
 
   const handleDuplicateInstance = useCallback(
     async (instance: WidgetInstance) => {
-      if (!productAccountId) return;
+      if (!productAccountId || !canMutateWidgets) return;
       const actionKey = `duplicate:${instance.instanceId}`;
       setActiveActionKey(actionKey);
       setMutationError(null);
+      setUpgradePrompt(null);
       try {
-        const payload = await accountApi.fetchJson<{
-          instanceId?: string;
-          widgetType?: string;
-        }>(`/api/account/instances/${encodeURIComponent(instance.instanceId)}/duplicate`, {
+        const response = await accountApi.fetchRaw(`/api/account/instances/${encodeURIComponent(instance.instanceId)}/duplicate`, {
           method: 'POST',
         });
-        const duplicatedInstanceId = payload && typeof payload.instanceId === 'string' && payload.instanceId.trim() ? payload.instanceId.trim() : '';
+        const payload = await readJsonOrNull(response);
+        if (response.status === 402) {
+          const prompt = normalizeUpgradePrompt(payload);
+          if (prompt) {
+            setUpgradePrompt(prompt);
+            return;
+          }
+        }
+        if (!response.ok) {
+          throw new Error(resolveAccountShellReason(payload, 'Duplicating the widget failed. Please try again.'));
+        }
+        const payloadRecord = payload && typeof payload === 'object' && !Array.isArray(payload) ? payload as Record<string, unknown> : null;
+        const duplicatedInstanceId =
+          typeof payloadRecord?.instanceId === 'string' && payloadRecord.instanceId.trim()
+            ? payloadRecord.instanceId.trim()
+            : '';
         if (!duplicatedInstanceId) {
           throw new Error('coreui.errors.payload.invalid');
         }
@@ -197,12 +260,12 @@ export function WidgetsDomain() {
         setActiveActionKey((current) => (current === actionKey ? null : current));
       }
     },
-    [accountApi, productAccountId, refreshWidgets],
+    [accountApi, canMutateWidgets, productAccountId, refreshWidgets],
   );
 
   const handleDeleteInstance = useCallback(
     async (instance: WidgetInstance) => {
-      if (!productAccountId) return;
+      if (!productAccountId || !canMutateWidgets) return;
       const actionKey = `delete:${instance.instanceId}`;
       setActiveActionKey(actionKey);
       setMutationError(null);
@@ -218,22 +281,34 @@ export function WidgetsDomain() {
         setActiveActionKey((current) => (current === actionKey ? null : current));
       }
     },
-    [accountApi, productAccountId, refreshWidgets],
+    [accountApi, canMutateWidgets, productAccountId, refreshWidgets],
   );
 
   const handleStatusChange = useCallback(
     async (instance: WidgetInstance, nextStatus: 'published' | 'unpublished') => {
-      if (!productAccountId) return;
+      if (!productAccountId || !canMutateWidgets) return;
       const actionKey = `${nextStatus}:${instance.instanceId}`;
       setActiveActionKey(actionKey);
       setMutationError(null);
+      setUpgradePrompt(null);
       try {
-        await accountApi.fetchJson<{ status?: 'published' | 'unpublished' }>(
+        const response = await accountApi.fetchRaw(
           `/api/account/instances/${encodeURIComponent(instance.instanceId)}/${nextStatus === 'published' ? 'publish' : 'unpublish'}`,
           {
             method: 'POST',
           },
         );
+        const payload = await readJsonOrNull(response);
+        if (response.status === 402) {
+          const prompt = normalizeUpgradePrompt(payload);
+          if (prompt) {
+            setUpgradePrompt(prompt);
+            return;
+          }
+        }
+        if (!response.ok) {
+          throw new Error(resolveAccountShellReason(payload, 'Updating widget status failed. Please try again.'));
+        }
         await refreshWidgets({ force: true });
       } catch (err) {
         const message = err instanceof Error ? err.message : String(err);
@@ -242,16 +317,16 @@ export function WidgetsDomain() {
         setActiveActionKey((current) => (current === actionKey ? null : current));
       }
     },
-    [accountApi, productAccountId, refreshWidgets],
+    [accountApi, canMutateWidgets, productAccountId, refreshWidgets],
   );
 
   const startRename = useCallback((instance: WidgetInstance) => {
-    if (!instance.actions.rename) return;
+    if (!canMutateWidgets) return;
     setMutationError(null);
     setRenameError(null);
     setRenamingInstanceId(instance.instanceId);
     setRenameDraft(instance.displayName || DEFAULT_INSTANCE_DISPLAY_NAME);
-  }, []);
+  }, [canMutateWidgets]);
 
   const cancelRename = useCallback(() => {
     setRenamingInstanceId(null);
@@ -261,7 +336,7 @@ export function WidgetsDomain() {
 
   const handleRenameInstance = useCallback(
     async (instance: WidgetInstance) => {
-      if (!productAccountId || !instance.actions.rename) return;
+      if (!productAccountId || !canMutateWidgets) return;
       const nextDisplayName = renameDraft.trim();
       if (!nextDisplayName) {
         setRenameError('Instance name cannot be empty.');
@@ -300,7 +375,7 @@ export function WidgetsDomain() {
         setActiveActionKey((current) => (current === actionKey ? null : current));
       }
     },
-    [accountApi, productAccountId, cancelRename, renameDraft],
+    [accountApi, canMutateWidgets, productAccountId, cancelRename, renameDraft],
   );
 
   return (
@@ -330,27 +405,26 @@ export function WidgetsDomain() {
 
       {groupedInstances.map((group) => {
         const createActionKey = `create:${group.widgetType}`;
-        const createTitle = group.disabledReasonKey
-          ? resolveAccountShellErrorCopy(group.disabledReasonKey, 'This widget is not available on the current account plan.')
-          : group.description || undefined;
         return (
           <section className="rd-canvas-module" key={group.widgetType}>
             <div className="roma-toolbar">
-              <h2 className="heading-4">{group.label}</h2>
+              <h2 className="heading-4">{group.displayName}</h2>
               <p className="body-m roma-toolbar-count">
                 {group.instances.length} {group.instances.length === 1 ? 'instance' : 'instances'}
               </p>
-              <button
-                className="diet-btn-txt"
-                data-size="md"
-                data-variant="line2"
-                type="button"
-                onClick={() => void handleCreateInstance(group.widgetType)}
-                disabled={Boolean(activeActionKey) || !group.canCreate}
-                title={createTitle}
-              >
-                <span className="diet-btn-txt__label body-m">{activeActionKey === createActionKey ? 'Creating...' : 'Create instance'}</span>
-              </button>
+              {canMutateWidgets ? (
+                <button
+                  className="diet-btn-txt"
+                  data-size="md"
+                  data-variant="line2"
+                  type="button"
+                  onClick={() => void handleCreateInstance(group.widgetType)}
+                  disabled={Boolean(activeActionKey)}
+                  title={group.description || undefined}
+                >
+                  <span className="diet-btn-txt__label body-m">{activeActionKey === createActionKey ? 'Creating...' : 'Create instance'}</span>
+                </button>
+              ) : null}
             </div>
 
             <table className="roma-table">
@@ -368,12 +442,6 @@ export function WidgetsDomain() {
                   const deleteActionKey = `delete:${instance.instanceId}`;
                   const publishActionKey = `published:${instance.instanceId}`;
                   const unpublishActionKey = `unpublished:${instance.instanceId}`;
-                  const canEdit = instance.actions.edit;
-                  const canDuplicate = instance.actions.duplicate;
-                  const canDelete = instance.actions.delete;
-                  const canRename = instance.actions.rename;
-                  const canPublish = instance.actions.publish;
-                  const canUnpublish = instance.actions.unpublish;
                   const isSelected = selectedInstanceId === instance.instanceId;
                   const renameActionKey = `rename:${instance.instanceId}`;
                   const isRenaming = renamingInstanceId === instance.instanceId;
@@ -433,79 +501,77 @@ export function WidgetsDomain() {
                       <td className="body-s">{instance.instanceId}</td>
                       <td className="body-s">{instance.status === 'published' ? 'Published' : 'Unpublished'}</td>
                       <td className="roma-cell-actions">
-                        {canEdit ? (
-                          <Link
-                            href={buildBuilderRoute({
-                              instanceId: instance.instanceId,
-                              widgetType: instance.widgetType,
-                            })}
-                            className="diet-btn-txt"
-                            data-size="md"
-                            data-variant="line2"
-                          >
-                            <span className="diet-btn-txt__label body-m">Edit</span>
-                          </Link>
+                        {canMutateWidgets ? (
+                          <>
+                            <Link
+                              href={buildBuilderRoute({
+                                instanceId: instance.instanceId,
+                                widgetType: instance.widgetType,
+                              })}
+                              className="diet-btn-txt"
+                              data-size="md"
+                              data-variant="line2"
+                            >
+                              <span className="diet-btn-txt__label body-m">Edit</span>
+                            </Link>
+                            {instance.status === 'published' ? (
+                              <button
+                                className="diet-btn-txt"
+                                data-size="md"
+                                data-variant="secondary"
+                                type="button"
+                                onClick={() => void handleStatusChange(instance, 'unpublished')}
+                                disabled={Boolean(activeActionKey)}
+                              >
+                                <span className="diet-btn-txt__label body-m">{activeActionKey === unpublishActionKey ? 'Unpublishing...' : 'Unpublish'}</span>
+                              </button>
+                            ) : null}
+                            {instance.status === 'unpublished' ? (
+                              <button
+                                className="diet-btn-txt"
+                                data-size="md"
+                                data-variant="primary"
+                                type="button"
+                                onClick={() => void handleStatusChange(instance, 'published')}
+                                disabled={Boolean(activeActionKey)}
+                              >
+                                <span className="diet-btn-txt__label body-m">{activeActionKey === publishActionKey ? 'Publishing...' : 'Publish'}</span>
+                              </button>
+                            ) : null}
+                            <button
+                              className="diet-btn-txt"
+                              data-size="md"
+                              data-variant="secondary"
+                              type="button"
+                              onClick={() => startRename(instance)}
+                              disabled={Boolean(activeActionKey) || isRenaming}
+                            >
+                              <span className="diet-btn-txt__label body-m">Rename</span>
+                            </button>
+                            <button
+                              className="diet-btn-txt"
+                              data-size="md"
+                              data-variant="secondary"
+                              type="button"
+                              onClick={() => handleDuplicateInstance(instance)}
+                              disabled={Boolean(activeActionKey)}
+                            >
+                              <span className="diet-btn-txt__label body-m">{activeActionKey === duplicateActionKey ? 'Duplicating...' : 'Duplicate'}</span>
+                            </button>
+                            <button
+                              className="diet-btn-txt"
+                              data-size="md"
+                              data-variant="line2"
+                              type="button"
+                              onClick={() => handleDeleteInstance(instance)}
+                              disabled={Boolean(activeActionKey)}
+                            >
+                              <span className="diet-btn-txt__label body-m">{activeActionKey === deleteActionKey ? 'Deleting...' : 'Delete'}</span>
+                            </button>
+                          </>
                         ) : (
-                          <button className="diet-btn-txt" data-size="md" data-variant="line2" type="button" disabled>
-                            <span className="diet-btn-txt__label body-m">Edit</span>
-                          </button>
+                          <span className="body-s">View only</span>
                         )}
-                        {instance.status === 'published' && canUnpublish ? (
-                          <button
-                            className="diet-btn-txt"
-                            data-size="md"
-                            data-variant="secondary"
-                            type="button"
-                            onClick={() => void handleStatusChange(instance, 'unpublished')}
-                            disabled={Boolean(activeActionKey) || !canUnpublish}
-                          >
-                            <span className="diet-btn-txt__label body-m">{activeActionKey === unpublishActionKey ? 'Unpublishing...' : 'Unpublish'}</span>
-                          </button>
-                        ) : null}
-                        {instance.status === 'unpublished' && canPublish ? (
-                          <button
-                            className="diet-btn-txt"
-                            data-size="md"
-                            data-variant="primary"
-                            type="button"
-                            onClick={() => void handleStatusChange(instance, 'published')}
-                            disabled={Boolean(activeActionKey) || !canPublish}
-                          >
-                            <span className="diet-btn-txt__label body-m">{activeActionKey === publishActionKey ? 'Publishing...' : 'Publish'}</span>
-                          </button>
-                        ) : null}
-                        {canRename ? (
-                          <button
-                            className="diet-btn-txt"
-                            data-size="md"
-                            data-variant="secondary"
-                            type="button"
-                            onClick={() => startRename(instance)}
-                            disabled={Boolean(activeActionKey) || isRenaming}
-                          >
-                            <span className="diet-btn-txt__label body-m">Rename</span>
-                          </button>
-                        ) : null}
-                        <button
-                          className="diet-btn-txt"
-                          data-size="md"
-                          data-variant="secondary"
-                          type="button"
-                          onClick={() => handleDuplicateInstance(instance)}
-                          disabled={Boolean(activeActionKey) || !canDuplicate}
-                        >
-                          <span className="diet-btn-txt__label body-m">{activeActionKey === duplicateActionKey ? 'Duplicating...' : 'Duplicate'}</span>
-                        </button>
-                        <button
-                          className="diet-btn-txt"
-                          data-size="md"
-                          data-variant="line2"
-                          type="button"
-                          onClick={() => handleDeleteInstance(instance)}
-                          disabled={Boolean(activeActionKey) || !canDelete}
-                        >
-                          <span className="diet-btn-txt__label body-m">{activeActionKey === deleteActionKey ? 'Deleting...' : 'Delete'}</span>
-                        </button>
                       </td>
                     </tr>
                   );
@@ -522,6 +588,37 @@ export function WidgetsDomain() {
           </section>
         );
       })}
+      {upgradePrompt ? (
+        <div className="roma-modal-backdrop" role="presentation">
+          <div className="roma-modal" role="dialog" aria-modal="true" aria-labelledby="roma-widgets-upgrade-title">
+            <h2 id="roma-widgets-upgrade-title" className="heading-4">
+              {upgradePrompt.message}
+            </h2>
+            <p className="body-m">
+              You are using {upgradePrompt.current} of {upgradePrompt.limit}.
+            </p>
+            <div className="roma-modal__actions">
+              <button
+                className="diet-btn-txt"
+                data-size="md"
+                data-variant="neutral"
+                type="button"
+                onClick={() => setUpgradePrompt(null)}
+              >
+                <span className="diet-btn-txt__label body-m">Close</span>
+              </button>
+              <Link
+                href="/billing"
+                className="diet-btn-txt"
+                data-size="md"
+                data-variant="primary"
+              >
+                <span className="diet-btn-txt__label body-m">Upgrade</span>
+              </Link>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </>
   );
 }

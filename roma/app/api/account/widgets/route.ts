@@ -1,35 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { resolvePolicyFromEntitlementsSnapshot } from '@clickeen/ck-policy';
 import {
-  listAccountInstancesInTokyo,
+  loadAccountWidgetInstanceFacts,
   listTokyoWidgetDefinitions,
 } from '@roma/lib/account-instance-direct';
 import { resolveCurrentAccountRouteContext, withSession } from '../_lib/current-account-route';
 
 export const runtime = 'edge';
+const DEFAULT_INSTANCE_DISPLAY_NAME = 'Untitled widget';
 
 type WidgetInstance = {
   instanceId: string;
   widgetType: string;
   displayName: string;
   status: 'published' | 'unpublished';
-  actions: {
-    edit: boolean;
-    duplicate: boolean;
-    delete: boolean;
-    rename: boolean;
-    publish: boolean;
-    unpublish: boolean;
-  };
+  updatedAt: string;
 };
 
-type SystemWidgetOption = {
+type WidgetCatalogOption = {
   widgetType: string;
-  widgetCode: string;
-  label: string;
+  displayName: string;
   description: string;
-  canCreate: boolean;
-  disabledReasonKey: string | null;
 };
 
 function routeKind(status: number): 'AUTH' | 'DENY' | 'VALIDATION' | 'UPSTREAM_UNAVAILABLE' {
@@ -44,7 +34,7 @@ export async function GET(request: NextRequest) {
   if (!current.ok) return current.response;
 
   const accountId = current.value.authzPayload.accountPublicId;
-  const widgetInstances = await listAccountInstancesInTokyo({
+  const widgetInstances = await loadAccountWidgetInstanceFacts({
     accountId,
     accountCapsule: current.value.authzToken,
     requestId: current.value.requestId,
@@ -86,59 +76,29 @@ export async function GET(request: NextRequest) {
       current.value.setCookies,
     );
   }
-  const canMutate = current.value.authzPayload.role !== 'viewer';
-  const policy = resolvePolicyFromEntitlementsSnapshot({
-    profile: current.value.authzPayload.profile,
-    role: current.value.authzPayload.role,
-    entitlements: current.value.authzPayload.entitlements ?? null,
-  });
-  const widgetsTypesLimitRaw = policy.limits['widgets.types.max'];
-  const widgetTypesLimit =
-    typeof widgetsTypesLimitRaw === 'number' && Number.isFinite(widgetsTypesLimitRaw)
-      ? Math.max(0, Math.floor(widgetsTypesLimitRaw))
-      : null;
-  const usedWidgetTypes = new Set(widgetInstances.value.accountInstances.map((instance) => instance.widgetType));
-  const systemWidgets: SystemWidgetOption[] = widgetDefinitions.value.widgetDefinitions
+  const catalog: WidgetCatalogOption[] = widgetDefinitions.value.widgetDefinitions
     .map((entry) => {
-      const existingType = usedWidgetTypes.has(entry.widgetType);
-      const withinTypeLimit = widgetTypesLimit == null || existingType || usedWidgetTypes.size < widgetTypesLimit;
       return {
         widgetType: entry.widgetType,
-        widgetCode: entry.widgetCode,
-        label: entry.displayName,
+        displayName: entry.displayName,
         description: entry.description,
-        canCreate: canMutate && withinTypeLimit,
-        disabledReasonKey: canMutate
-          ? withinTypeLimit
-            ? null
-            : 'coreui.upsell.reason.limitReached'
-          : 'coreui.errors.auth.forbidden',
       };
     });
-  const accountInstances: WidgetInstance[] = widgetInstances.value.accountInstances.map((instance) => {
+  const accountInstances: WidgetInstance[] = widgetInstances.value.instances.map((instance) => {
     return {
       instanceId: instance.instanceId,
       widgetType: instance.widgetType,
-      displayName: instance.displayName,
+      displayName: instance.displayName ?? DEFAULT_INSTANCE_DISPLAY_NAME,
       status: instance.publishStatus,
-      actions: {
-        edit: canMutate,
-        duplicate: canMutate,
-        delete: canMutate,
-        rename: canMutate,
-        publish: canMutate,
-        unpublish: canMutate && instance.publishStatus === 'published',
-      },
+      updatedAt: instance.updatedAt,
     };
   });
 
   return withSession(
     request,
     NextResponse.json({
-      account: {
-        accountId,
-      },
-      systemWidgets,
+      accountId,
+      catalog,
       instances: accountInstances,
     }),
     current.value.setCookies,

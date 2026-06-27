@@ -195,8 +195,11 @@ If overlay follow-up fails after the settings write, Roma reports
 truth; the failed overlay operation is explicit follow-up failure.
 Generated locale package failures use the same explicit follow-up channel and
 include completed, skipped, and failed locale coordinates. `overlayUpdate.cost`
-records the synchronous coordinate surface as saved instance count times changed
-non-base locale count; it is command evidence, not a status ledger.
+records the synchronous coordinate surface as saved instance id count times
+changed non-base locale count; it is command evidence, not a status ledger.
+Roma gets that count from Tokyo-worker's account instance coordinate list. It
+does not open list-facts rows and does not call a separate account instance
+facts route for locale fan-out or base-locale lock.
 
 ## Runtime Dependencies
 

@@ -211,13 +211,40 @@ It owns:
 - unpublish
 - delete
 
-Create and duplicate mint the new instance id in Roma before calling
-Tokyo-worker so the generated browser package and the saved source use the same
-account instance identity from the start.
+`GET /api/account/widgets` returns the full widget catalog plus saved account
+instances:
 
-Publish and unpublish are account product actions. Roma applies account policy
-and sends the exact product transition to Tokyo-worker for R2 `serve-state.json`
-mutation.
+```text
+catalog[] + instances[]
+```
+
+The Widgets list payload does not carry Create, Duplicate, or Publish
+availability booleans. Tier limits do not hide catalog items and do not disable
+monetization controls in the list. Create, Duplicate, and Publish remain
+clickable user-intent actions.
+Role and instance-state rendering stay separate from tier monetization: Roma
+client code derives read-only versus mutable controls from the current account
+role and the instance publish state, while tier upgrade decisions happen only in
+command routes.
+
+Roma loads widget catalog definitions from Tokyo-worker and loads saved instance
+rows through the account instance coordinate/list-facts helpers. Tokyo-worker
+returns stored `displayName` as string or `null`; Roma applies the UI fallback
+label for product rendering.
+
+Create and duplicate enforce `widgets.instances.max` at command time before
+minting a new instance id, compiling package bytes, materializing source, or
+calling Tokyo-worker create/write routes. Publish enforces
+`instances.published.max` at command time from Roma-computed list-facts rows.
+Over-tier Create, Duplicate, and Publish return HTTP 402 `UPGRADE_REQUIRED`.
+Missing or malformed policy limits return a Roma policy contract failure, not
+unlimited usage and not a disabled list-time control.
+
+Create and duplicate mint the new instance id in Roma only after the command
+gate passes, so the generated browser package and the saved source use the same
+account instance identity from the start. Publish and unpublish are account
+product actions; Roma sends the exact product transition to Tokyo-worker for R2
+`serve-state.json` mutation.
 
 ## Assets Domain
 

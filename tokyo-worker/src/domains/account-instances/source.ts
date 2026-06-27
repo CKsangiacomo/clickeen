@@ -1,5 +1,6 @@
 import type { Env } from '../../types';
 import { normalizeLocale } from '../../asset-utils';
+import { isCompactInstanceId } from '@clickeen/ck-contracts/overlay-identity';
 import {
   accountInstanceConfigKey,
   accountInstanceContentKey,
@@ -19,7 +20,6 @@ import type {
   AccountInstanceConfigDocument,
   AccountInstanceContentDocument,
   AccountInstanceDocument,
-  AccountInstanceSummary,
   InstanceServeState,
   AccountInstanceSourceReadFailure,
   AccountInstanceSourceReadResult,
@@ -57,21 +57,6 @@ function normalizeMeta(value: unknown): Record<string, unknown> | null {
   throw new Error('coreui.errors.instance.invalidPayload');
 }
 
-function displayNameFromConfigDocument(configDoc: AccountInstanceConfigDocument): string {
-  const displayName = normalizeDisplayName(configDoc.displayName);
-  if (displayName) return displayName;
-  const meta =
-    configDoc.meta && typeof configDoc.meta === 'object' && !Array.isArray(configDoc.meta)
-      ? configDoc.meta
-      : null;
-  return (
-    normalizeDisplayName(meta?.styleName) ??
-    normalizeDisplayName(meta?.name) ??
-    normalizeDisplayName(meta?.title) ??
-    configDoc.id
-  );
-}
-
 export function buildLocaleOverlayFields(args: {
   configDoc: AccountInstanceConfigDocument;
   content: AccountInstanceContentDocument;
@@ -89,29 +74,21 @@ export function buildLocaleOverlayFields(args: {
   return { fields };
 }
 
-function summaryFromConfigDocument(args: {
-  configDoc: AccountInstanceConfigDocument;
-  publishStatus: InstanceServeState;
-  updatedAt: string;
-}): AccountInstanceSummary {
-  const { configDoc } = args;
-  return {
-    accountId: configDoc.accountId,
-    instanceId: configDoc.id,
-    widgetCode: configDoc.widgetCode,
-    widgetType: configDoc.widgetType,
-    displayName: displayNameFromConfigDocument(configDoc),
-    publishStatus: args.publishStatus,
-    updatedAt: args.updatedAt,
-  };
-}
-
 function hasOwnRecordValue(record: Record<string, unknown> | null, key: string): boolean {
   return Boolean(record && Object.prototype.hasOwnProperty.call(record, key));
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
+}
+
+export class AccountInstanceCoordinateError extends Error {
+  detail: string;
+
+  constructor(detail: string) {
+    super('tokyo.errors.instance.malformedCoordinate');
+    this.detail = detail;
+  }
 }
 
 export function savedTextFieldsFromContentDocument(
@@ -243,29 +220,6 @@ export async function updateContentDocumentByLocation(args: {
     if (written) return next;
   }
   throw new Error('tokyo.translation.content_write_conflict');
-}
-
-async function readAccountInstanceSummaryByLocation(args: {
-  env: Env;
-  accountId: string;
-  widgetCode: string;
-  instanceId: string;
-  publishStatus: InstanceServeState;
-  editedAt: string;
-}): Promise<AccountInstanceSummary | null> {
-  const configDoc = normalizeAccountInstanceConfigDocument(
-    await loadJson(
-      args.env,
-      accountInstanceConfigKey(args.accountId, args.widgetCode, args.instanceId),
-    ),
-  );
-  return configDoc
-    ? summaryFromConfigDocument({
-        configDoc,
-        publishStatus: args.publishStatus,
-        updatedAt: args.editedAt,
-      })
-    : null;
 }
 
 async function readStoredInstanceByLocation(args: {
@@ -484,51 +438,33 @@ export async function readAccountInstanceContentDocument(args: {
   return { ok: true, value: contentDoc };
 }
 
-export async function listAccountInstances(args: {
+export async function listAccountInstanceIds(args: {
   env: Env;
   accountId: string;
-}): Promise<AccountInstanceSummary[]> {
+}): Promise<string[]> {
   const accountId = normalizeStorageId(args.accountId);
   if (!accountId) throw new Error('coreui.errors.instance.invalidPayload');
-  const summaries: AccountInstanceSummary[] = [];
+  const prefix = `${accountInstancesRoot(accountId)}/`;
+  const instanceIds = new Set<string>();
   let cursor: string | undefined = undefined;
   do {
-    const listed = await args.env.TOKYO_R2.list({
-      prefix: `${accountInstancesRoot(accountId)}/`,
-      cursor,
-    });
+    const listed = await args.env.TOKYO_R2.list({ prefix, cursor });
     for (const object of listed.objects) {
-      if (!object.key.endsWith('/instance.config.json')) continue;
-      const instanceId = normalizeStorageId(object.key.split('/').at(-2));
-      if (!instanceId) throw new Error('coreui.errors.instance.config.invalid');
-      const configDoc = await readConfigDocumentByLocation({
-        env: args.env,
-        accountId,
-        widgetCode: '',
-        instanceId,
-      });
-      if (!configDoc) throw new Error('coreui.errors.instance.config.invalid');
-      const publishStatus = await readInstanceServeState({
-        env: args.env,
-        accountId,
-        instanceId,
-        widgetCode: configDoc.widgetCode,
-      });
-      const summary = await readAccountInstanceSummaryByLocation({
-        env: args.env,
-        accountId,
-        widgetCode: configDoc.widgetCode,
-        instanceId,
-        publishStatus,
-        editedAt: configDoc.updatedAt,
-      });
-      if (!summary) throw new Error('coreui.errors.instance.config.invalid');
-      summaries.push(summary);
+      const key = object.key;
+      const rest = key.startsWith(prefix) ? key.slice(prefix.length) : '';
+      const slashIndex = rest.indexOf('/');
+      if (slashIndex <= 0) {
+        throw new AccountInstanceCoordinateError(key || prefix);
+      }
+      const instanceId = rest.slice(0, slashIndex);
+      if (!isCompactInstanceId(instanceId)) {
+        throw new AccountInstanceCoordinateError(`${prefix}${instanceId}`);
+      }
+      instanceIds.add(instanceId);
     }
     cursor = listed.truncated ? listed.cursor : undefined;
   } while (cursor);
-  summaries.sort((left, right) => right.updatedAt.localeCompare(left.updatedAt) || left.instanceId.localeCompare(right.instanceId));
-  return summaries;
+  return [...instanceIds].sort();
 }
 
 export async function renameAccountInstanceDisplay(args: {

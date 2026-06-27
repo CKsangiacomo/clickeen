@@ -177,7 +177,8 @@ Operational examples:
 - instance save/duplicate applies widget `limits.json` through Roma save
   policy;
 - instance publish enforces `instances.published.max`;
-- widget create enforces `widgets.types.max`;
+- Create and duplicate enforce `widgets.instances.max` at command time;
+- Publish enforces `instances.published.max` at command time;
 - asset upload checks `uploads.size.max` and `storage.bytes.max` in Roma and
   Tokyo-worker;
 - Copilot grant issuance enforces `copilot.turns.monthly.max`.
@@ -214,11 +215,34 @@ Current entitlement keys:
 | `storage.bytes.max` | limit | Roma upload route and Tokyo-worker assets | enforced |
 | `views.monthly.max` | limit | clk.live public-serving telemetry | gap |
 | `instances.published.max` | limit | Roma publish route | enforced |
-| `widgets.types.max` | limit | Roma system widget/create routes | enforced |
+| `widgets.instances.max` | limit | Roma create and duplicate command routes | enforced |
 | `uploads.size.max` | limit | Roma upload route and Tokyo-worker assets | enforced |
 | `items.group.small.max` | limit | Roma save policy | enforced |
 | `items.group.medium.max` | limit | Roma save policy | enforced |
 | `items.group.large.max` | limit | Roma save policy | enforced |
+
+Current finite instance limits:
+
+| Tier | `widgets.instances.max` | `instances.published.max` |
+| --- | ---: | ---: |
+| `free` | 3 | 1 |
+| `tier1` | 10 | 1 |
+| `tier2` | 25 | 5 |
+| `tier3` | 100 | 25 |
+| `tier4` | 250 | 100 |
+
+Invariant:
+
+```text
+widgets.instances.max >= instances.published.max
+```
+
+The Widgets catalog is not tier-filtered. Tier limits do not hide widget types
+and do not create disabled Create/Duplicate controls in the Widgets list.
+Create and duplicate instance-count limits are enforced at command time. Publish
+limits are enforced at command time. Over-tier Create, Duplicate, and Publish
+return HTTP 402 `UPGRADE_REQUIRED`; missing or malformed policy limits are Roma
+policy contract failures, not unlimited usage.
 
 Tier values are read from the matrix. Do not restate commercial package prose
 here unless it maps to exact entitlement keys.

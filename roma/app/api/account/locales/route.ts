@@ -8,7 +8,7 @@ import {
 } from '@clickeen/ck-contracts';
 import { resolvePolicy } from '@clickeen/ck-policy';
 import { normalizeLocaleToken } from '@clickeen/l10n';
-import { listAccountInstancesInTokyo } from '@roma/lib/account-instance-direct';
+import { listAccountWidgetInstanceIds } from '@roma/lib/account-instance-direct';
 import {
   deleteAccountInstanceLocalePackageArtifact,
   materializeAccountInstanceLocalePackages,
@@ -244,7 +244,7 @@ async function reconcileAccountLocaleOverlays(args: {
     return { ok: true, value: emptyOverlayUpdate() };
   }
 
-  const instances = await listAccountInstancesInTokyo({
+  const instances = await listAccountWidgetInstanceIds({
     accountId: args.accountId,
     accountCapsule: args.accountCapsule,
     requestId: args.requestId,
@@ -252,9 +252,9 @@ async function reconcileAccountLocaleOverlays(args: {
   if (!instances.ok) return instances;
   const changedLocaleCount = addedLocales.length + removedLocales.length;
   const cost: LocaleOverlayUpdateValue['cost'] = {
-    instances: instances.value.accountInstances.length,
+    instances: instances.value.instanceIds.length,
     changedLocales: changedLocaleCount,
-    coordinates: instances.value.accountInstances.length * changedLocaleCount,
+    coordinates: instances.value.instanceIds.length * changedLocaleCount,
     configuredActiveLocaleCap: args.configuredActiveLocaleCap,
     hostCommandTimeoutMs: 120000,
   };
@@ -269,12 +269,12 @@ async function reconcileAccountLocaleOverlays(args: {
   };
   let instancesChecked = 0;
 
-  for (const instance of instances.value.accountInstances) {
+  for (const instanceId of instances.value.instanceIds) {
     instancesChecked += 1;
     for (const locale of removedLocales) {
       const result = await deleteAccountInstanceTranslationValues({
         accountId: args.accountId,
-        instanceId: instance.instanceId,
+        instanceId,
         locale,
         accountCapsule: args.accountCapsule,
         requestId: args.requestId,
@@ -284,7 +284,7 @@ async function reconcileAccountLocaleOverlays(args: {
           status: result.status,
           kind: result.error.kind,
           reasonKey: result.error.reasonKey,
-          detail: `delete:${instance.instanceId}:${locale}:${result.error.detail ?? result.error.reasonKey}`,
+          detail: `delete:${instanceId}:${locale}:${result.error.detail ?? result.error.reasonKey}`,
           value: {
             instancesChecked,
             cost,
@@ -294,7 +294,7 @@ async function reconcileAccountLocaleOverlays(args: {
             localePackages,
             failed: {
               accountId: args.accountId,
-              instanceId: instance.instanceId,
+              instanceId,
               locale,
               phase: 'translation-delete',
               reasonKey: result.error.reasonKey,
@@ -303,10 +303,10 @@ async function reconcileAccountLocaleOverlays(args: {
           },
         });
       }
-      deleted.push({ instanceId: instance.instanceId, locale });
+      deleted.push({ instanceId, locale });
       const packageDelete = await deleteAccountInstanceLocalePackageArtifact({
         accountId: args.accountId,
-        instanceId: instance.instanceId,
+        instanceId,
         locale,
         accountCapsule: args.accountCapsule,
         requestId: args.requestId,
@@ -314,7 +314,7 @@ async function reconcileAccountLocaleOverlays(args: {
       if (!packageDelete.ok) {
         const packageFailure = buildLocalePackageDeleteFailureCoordinate({
           accountId: args.accountId,
-          instanceId: instance.instanceId,
+          instanceId,
           locale,
           reasonKey: packageDelete.error.reasonKey,
           ...(packageDelete.error.detail ? { detail: packageDelete.error.detail } : {}),
@@ -323,7 +323,7 @@ async function reconcileAccountLocaleOverlays(args: {
           status: packageDelete.status,
           kind: packageDelete.error.kind,
           reasonKey: packageDelete.error.reasonKey,
-          detail: `locale-package-delete:${instance.instanceId}:${locale}:${packageDelete.error.detail ?? packageDelete.error.reasonKey}`,
+          detail: `locale-package-delete:${instanceId}:${locale}:${packageDelete.error.detail ?? packageDelete.error.reasonKey}`,
           value: {
             instancesChecked,
             cost,
@@ -336,7 +336,7 @@ async function reconcileAccountLocaleOverlays(args: {
             },
             failed: {
               accountId: args.accountId,
-              instanceId: instance.instanceId,
+              instanceId,
               locale,
               phase: packageFailure.phase,
               reasonKey: packageDelete.error.reasonKey,
@@ -353,7 +353,7 @@ async function reconcileAccountLocaleOverlays(args: {
     for (const locale of addedLocales) {
       const generation = await generateAccountInstanceTranslations({
         accountId: args.accountId,
-        instanceId: instance.instanceId,
+        instanceId,
         baseLocale: args.baseLocale,
         activeLocales: [locale],
         authz: args.authz,
@@ -363,7 +363,7 @@ async function reconcileAccountLocaleOverlays(args: {
       if (!generation.ok) {
         if (generation.error.detail === 'saved_instance_has_no_translatable_fields') {
           skipped.push({
-            instanceId: instance.instanceId,
+            instanceId,
             locales: [locale],
             reasonKey: generation.error.reasonKey,
             detail: generation.error.detail,
@@ -374,7 +374,7 @@ async function reconcileAccountLocaleOverlays(args: {
           status: generation.status,
           kind: generation.error.kind,
           reasonKey: generation.error.reasonKey,
-          detail: `generate:${instance.instanceId}:${locale}:${generation.error.detail ?? generation.error.reasonKey}`,
+          detail: `generate:${instanceId}:${locale}:${generation.error.detail ?? generation.error.reasonKey}`,
           value: {
             instancesChecked,
             cost,
@@ -384,7 +384,7 @@ async function reconcileAccountLocaleOverlays(args: {
             localePackages,
             failed: {
               accountId: args.accountId,
-              instanceId: instance.instanceId,
+              instanceId,
               locale,
               phase: 'translation-generation',
               reasonKey: generation.error.reasonKey,
@@ -395,7 +395,7 @@ async function reconcileAccountLocaleOverlays(args: {
       }
       if (!generation.value.translation.accepted) {
         skipped.push({
-          instanceId: instance.instanceId,
+          instanceId,
           locales: [locale],
           reasonKey: 'coreui.errors.translation.noActiveLocales',
           detail: 'not_accepted',
@@ -405,7 +405,7 @@ async function reconcileAccountLocaleOverlays(args: {
       const packageMaterialization = await materializeAccountInstanceLocalePackages({
         request: args.request,
         accountId: args.accountId,
-        instanceId: instance.instanceId,
+        instanceId,
         baseLocale: args.baseLocale,
         activeLocales: generation.value.translation.activeLocales,
         accountCapsule: args.accountCapsule ?? '',
@@ -418,7 +418,7 @@ async function reconcileAccountLocaleOverlays(args: {
           status: packageMaterialization.status,
           kind: packageMaterialization.error.kind,
           reasonKey: packageMaterialization.error.reasonKey,
-          detail: `locale-package-materialize:${packageMaterialization.value.failed?.instanceId ?? instance.instanceId}:${packageMaterialization.value.failed?.locale ?? locale}:${packageMaterialization.value.failed?.phase ?? 'unknown'}:${packageMaterialization.error.detail ?? packageMaterialization.error.reasonKey}`,
+          detail: `locale-package-materialize:${packageMaterialization.value.failed?.instanceId ?? instanceId}:${packageMaterialization.value.failed?.locale ?? locale}:${packageMaterialization.value.failed?.phase ?? 'unknown'}:${packageMaterialization.error.detail ?? packageMaterialization.error.reasonKey}`,
           value: {
             instancesChecked,
             cost,
@@ -431,7 +431,7 @@ async function reconcileAccountLocaleOverlays(args: {
             },
             failed: {
               accountId: args.accountId,
-              instanceId: instance.instanceId,
+              instanceId,
               locale: packageMaterialization.value.failed?.locale ?? locale,
               phase: packageMaterialization.value.failed?.phase ?? 'locale-package-materialize',
               reasonKey: packageMaterialization.error.reasonKey,
@@ -440,7 +440,7 @@ async function reconcileAccountLocaleOverlays(args: {
           },
         });
       }
-      generated.push({ instanceId: instance.instanceId, locales: generation.value.translation.activeLocales });
+      generated.push({ instanceId, locales: generation.value.translation.activeLocales });
     }
   }
 

@@ -253,14 +253,25 @@ Storage command routes cover:
 - account asset list/upload/resolve/delete
 - page source/package/serve-state operations
 
+Account instance inventory is split by authority:
+
+- `/__internal/accounts/{accountPublicId}/instances` returns only
+  `{ ok, accountId, instanceIds }`;
+- `/__internal/instances/{instanceId}/list-facts` returns exact stored row facts
+  for one instance: account id, instance id, widget type, stored display name
+  string or `null`, updated timestamp, and publish status;
+- Tokyo-worker does not return product availability, tier decisions, published
+  totals, fallback display labels, or account inventory rows from the account
+  list route.
+
 Current internal route families:
 
 | Route | Methods | Purpose |
 | --- | --- | --- |
 | `/__internal/widgets/definitions` | `GET` | list/read widget definition summaries |
-| `/__internal/accounts/{accountPublicId}/instances` | `GET` | list account instances |
-| `/__internal/accounts/{accountPublicId}/instances/facts` | `GET` | account instance facts used by Roma |
+| `/__internal/accounts/{accountPublicId}/instances` | `GET` | list account instance ids only |
 | `/__internal/instances` | `POST` | create saved account instance |
+| `/__internal/instances/{instanceId}/list-facts` | `GET` | exact minimal account instance row facts |
 | `/__internal/instances/{instanceId}` | `GET`, `PUT`, `DELETE` | open/save/delete one account instance |
 | `/__internal/instances/{instanceId}/rename` | `POST` | rename one account instance |
 | `/__internal/instances/{instanceId}/{publish|unpublish}` | `POST` | update widget serve state |
