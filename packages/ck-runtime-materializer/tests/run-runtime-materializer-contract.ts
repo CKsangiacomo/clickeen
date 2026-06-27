@@ -97,11 +97,20 @@ async function testBasePackageMatchesLegacyFixture(): Promise<void> {
 
 async function testStylesheetReferencesAreConsolidated(): Promise<void> {
   const result = await materializeBase();
-  assert.match(result.files.indexHtml, /<link rel="stylesheet" href="\.\/styles\.css" \/>/);
+  assert.match(result.files.indexHtml, /<link rel="stylesheet" href="\/CLICKEEN\/inst_contract\/styles\.css" \/>/);
+  assert.match(result.files.indexHtml, /<script src="\/CLICKEEN\/inst_contract\/runtime\.js" defer><\/script>/);
+  assert.doesNotMatch(result.files.indexHtml, /\.\/styles\.css|\.\/runtime\.js/);
   assert.doesNotMatch(result.files.indexHtml, /\/dieter\/tokens\/tokens\.css/);
   assert.doesNotMatch(result.files.indexHtml, /\.\/widget\.css/);
   assert.match(result.files.stylesCss, /@import "\/dieter\/tokens\/tokens\.css";/);
   assert.match(result.files.stylesCss, /\.contract-widget \{ color: var\(--ck-color-text\); \}/);
+}
+
+async function testLocaleSupportFilePathsUseLocaleCoordinate(): Promise<void> {
+  const result = await materializeFr();
+  assert.match(result.files.indexHtml, /<link rel="stylesheet" href="\/CLICKEEN\/inst_contract\/locales\/fr\/styles\.css" \/>/);
+  assert.match(result.files.indexHtml, /<script src="\/CLICKEEN\/inst_contract\/locales\/fr\/runtime\.js" defer><\/script>/);
+  assert.doesNotMatch(result.files.indexHtml, /\.\/styles\.css|\.\/runtime\.js/);
 }
 
 async function testBaseEvidenceFingerprintIsDeterministic(): Promise<void> {
@@ -277,6 +286,7 @@ async function testFingerprintContract(): Promise<void> {
 const testCases: Array<{ name: string; run: () => Promise<void> }> = [
   { name: 'base package matches legacy fixture', run: testBasePackageMatchesLegacyFixture },
   { name: 'stylesheet references are consolidated into package CSS', run: testStylesheetReferencesAreConsolidated },
+  { name: 'locale support file paths use locale coordinate', run: testLocaleSupportFilePathsUseLocaleCoordinate },
   { name: 'base evidence fingerprint is deterministic', run: testBaseEvidenceFingerprintIsDeterministic },
   { name: 'base evidence is complete', run: testBaseEvidenceIsComplete },
   { name: 'runtime bytes use artifact coordinate', run: testRuntimeBytesUseArtifactCoordinate },

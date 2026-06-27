@@ -192,6 +192,17 @@ Public support files are:
 - `styles.css`
 - `runtime.js`
 
+Generated `index.html` references support files by exact root-relative package
+paths, not `./` relative paths. The slashless public URL is the user-facing
+coordinate, and browser resolution must not depend on a trailing slash:
+
+```text
+/{accountPublicId}/{instanceId}/styles.css
+/{accountPublicId}/{instanceId}/runtime.js
+/{accountPublicId}/{instanceId}/locales/{locale}/styles.css
+/{accountPublicId}/{instanceId}/locales/{locale}/runtime.js
+```
+
 Private source and state files remain private account storage.
 
 Explicit public locale serving uses:

@@ -135,6 +135,17 @@ Public instance serving uses the environment public-serving host plus:
 /{accountPublicId}/{instanceId}/locales/{locale}
 ```
 
+The user-facing public URL is slashless. Generated `index.html` must reference
+support files with exact root-relative package coordinates, not `./` relative
+paths:
+
+```text
+/{accountPublicId}/{instanceId}/styles.css
+/{accountPublicId}/{instanceId}/runtime.js
+/{accountPublicId}/{instanceId}/locales/{locale}/styles.css
+/{accountPublicId}/{instanceId}/locales/{locale}/runtime.js
+```
+
 The base URL maps to generated browser files in the account instance folder.
 The locale URL maps to generated locale package files under
 `accounts/{accountPublicId}/instances/{instanceId}/locales/{locale}/`. Routes

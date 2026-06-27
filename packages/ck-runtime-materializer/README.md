@@ -22,6 +22,20 @@ Tokyo, Supabase, Cloudflare, Translation Agent, or any other service.
 Outputs are generated files plus inert evidence. Evidence persistence belongs
 to later Roma/Tokyo authority, not this package.
 
+Generated `index.html` uses the input artifact coordinate to write exact
+root-relative support-file paths:
+
+```text
+/{accountPublicId}/{instanceId}/styles.css
+/{accountPublicId}/{instanceId}/runtime.js
+/{accountPublicId}/{instanceId}/locales/{locale}/styles.css
+/{accountPublicId}/{instanceId}/locales/{locale}/runtime.js
+```
+
+It must not write `./styles.css` or `./runtime.js`; the public user-facing URL
+is slashless and browser resolution must not depend on trailing-slash
+canonicalization.
+
 ## Forbidden
 
 Package source must not import or depend on:

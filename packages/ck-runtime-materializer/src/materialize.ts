@@ -31,6 +31,16 @@ function validCoordinate(coordinate: RuntimeMaterializerArtifactCoordinate): boo
   );
 }
 
+function encodePathSegment(value: string): string {
+  return encodeURIComponent(value);
+}
+
+function publicPackagePath(coordinate: RuntimeMaterializerArtifactCoordinate): string {
+  const base = `/${encodePathSegment(coordinate.accountPublicId)}/${encodePathSegment(coordinate.instanceId)}`;
+  if (coordinate.requestedLocale === coordinate.baseLocale) return base;
+  return `${base}/locales/${encodePathSegment(coordinate.requestedLocale)}`;
+}
+
 function validCompiledWidget(compiled: RuntimeMaterializerCompiledWidget): boolean {
   return (
     isRecord(compiled) &&
@@ -43,6 +53,7 @@ function validCompiledWidget(compiled: RuntimeMaterializerCompiledWidget): boole
 
 function buildPackage(args: {
   compiled: RuntimeMaterializerCompiledWidget;
+  artifactCoordinate: RuntimeMaterializerArtifactCoordinate;
   instanceId: string;
   baseLocale: string;
   requestedLocale: string;
@@ -89,6 +100,7 @@ function buildPackage(args: {
         htmlLocale: args.requestedLocale,
         displayName: args.displayName,
         body: stripped.body,
+        publicPath: publicPackagePath(args.artifactCoordinate),
       }),
       stylesCss: styles.stylesCss,
       runtimeJs: runtime.runtimeJs,
@@ -126,6 +138,7 @@ export async function materializeRuntimePackage(input: RuntimeMaterializerInput)
 
   const built = buildPackage({
     compiled: input.compiled,
+    artifactCoordinate: input.artifactCoordinate,
     instanceId: input.artifactCoordinate.instanceId,
     baseLocale: input.artifactCoordinate.baseLocale,
     requestedLocale: input.artifactCoordinate.requestedLocale,

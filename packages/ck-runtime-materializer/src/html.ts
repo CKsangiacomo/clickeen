@@ -102,6 +102,7 @@ export function buildIndexHtml(args: {
   htmlLocale: string;
   displayName: string | null;
   body: string;
+  publicPath: string;
 }): string {
   return `<!doctype html>
 <html lang="${escapeAttribute(args.htmlLocale)}">
@@ -109,11 +110,11 @@ export function buildIndexHtml(args: {
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>${escapeHtml(args.displayName || `${args.compiled.displayName || args.compiled.widgetname} widget`)}</title>
-    <link rel="stylesheet" href="./styles.css" />
+    <link rel="stylesheet" href="${escapeAttribute(`${args.publicPath}/styles.css`)}" />
   </head>
   <body>
 ${args.body}
-    <script src="./runtime.js" defer></script>
+    <script src="${escapeAttribute(`${args.publicPath}/runtime.js`)}" defer></script>
   </body>
 </html>
 `;

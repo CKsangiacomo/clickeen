@@ -104,6 +104,14 @@ https://dev.clk.live/{accountPublicId}/{instanceId}
 ```
 
 Public serving reads `index.html`, `styles.css`, and `runtime.js` from the account instance folder only after `serve-state.json` says the instance is published and package fingerprint checks pass.
+The public instance URL is slashless. Generated entry HTML references support
+files by exact root-relative package paths so the browser does not depend on
+trailing-slash URL interpretation:
+
+```text
+/{accountPublicId}/{instanceId}/styles.css
+/{accountPublicId}/{instanceId}/runtime.js
+```
 
 Explicit locale serving uses:
 
@@ -118,6 +126,13 @@ the instance is published and `index.html`, `styles.css`, and `runtime.js` all
 carry matching locale package metadata. Public serving does not read overlay
 files, call a materializer, ask Roma, or fall back to base content for a locale
 URL.
+Generated locale entry HTML references locale support files by exact
+root-relative package paths:
+
+```text
+/{accountPublicId}/{instanceId}/locales/{locale}/styles.css
+/{accountPublicId}/{instanceId}/locales/{locale}/runtime.js
+```
 
 Current account page public serving returns `404` until Roma writes real page packages.
 

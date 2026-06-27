@@ -196,6 +196,20 @@ instance. It builds the public URL and iframe/script snippets from the current
 account public id, the exact instance id, the configured public-serving
 origin, and the publish status returned by the Builder-open envelope.
 Unpublished instances do not expose copyable public code.
+The copied public URL is slashless:
+
+```text
+{public-serving-origin}/{accountPublicId}/{instanceId}
+```
+
+Generated package HTML must not depend on that URL being folder-normalized. The
+runtime materializer writes exact root-relative support-file paths inside
+`index.html`:
+
+```text
+/{accountPublicId}/{instanceId}/styles.css
+/{accountPublicId}/{instanceId}/runtime.js
+```
 
 ## Widgets Domain
 
