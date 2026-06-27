@@ -72,6 +72,8 @@ reference chain from the center.
 
 ## 4. The law (binding rules) — DIRECTIONAL, to be grounded
 
+- **North stars: 2026 Material 3 (M3), Apple HIG, OpenAI UI.** "2026 best practice" is pinned to these three — token-first, accessible, *engineered* systems, not painted ones. Every audit's modern lens (loop step c, §9) measures clickeen against them, not against a vibe. clickeen's color is already world-class because it was seeded from Apple's source colors + OKLAB; the same sourcing discipline applies to every domain. They define the bar — 126 is converge-to-the-bar.
+- **Original source only — never Reddit, Stack Overflow, or "how to build X UI" blogposts.** Reference Google / Apple / OpenAI *directly*. Those secondhand sources are the old, over-upvoted, contaminated distribution that caused the dated-UI problem — lossy interpretations that teach the *look*, not the *system*. Reading them re-injects the median we're eradicating and produces cargo-cult UI: the appearance without the engineering, exactly Roma's parallel `.roma-*` failure. An AI or audit left to "research modern UI" drifts there by default; this tenet forces the harder, correct path — the actual source.
 - **Dieter is the only design system.** No parallel component system.
 - **Design freeze.** Current layouts are the frozen baseline; no new visual
   language; ported screens match what exists. *(Source: Migration PRD §3.6 +
