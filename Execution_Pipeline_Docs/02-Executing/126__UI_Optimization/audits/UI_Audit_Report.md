@@ -28,9 +28,31 @@ Read all four token files (`dieter-color-tokens.css`, `dieter-foundation-tokens.
 
 ---
 
-## Phase 2 — Components  ⏳ pending
+## Phase 2 — Components  ✅ audited (first pass: token usage + roles)
 
-25 components on disk (atoms, inputs, choosers, dropdowns, composites, activity displays). `registry.json` was dead cruft (already removed). Inventory of names done; **but I do not yet understand each component's real role in the product** (I wrongly called `repeater`/`object-manager` an overlap — they're not). Before auditing, I must learn what each is actually for (trace real usage). Known items so far: `textrename` is dead (removing it must also delete `admin/src/main.ts:23,258`); `command-activity` has no stencil (broken); `dropdown-border` has inline hex + inline style + inline handler. The rest must be opened one by one.
+25 components on disk (atoms, inputs, choosers, dropdowns, composites, activity). `registry.json` was dead cruft (removed). **Verdict: components are largely token-driven — PRESERVE the approach. Don't rewrite.**
+
+**Token usage (healthy):** ran hardcoded hex/px across all 25 component CSS files. The vast majority of `px` is legitimate — `1px` borders, `999px`/`9999px` pill radii, `2px` focus rings, shadow geometry, and color-picker intrinsic geometry (SV canvas / hue strip sizes). Colors come from `var(--color-system-*)` + `color-mix`; spacing/radius from tokens. **This is NOT a token-drift problem.**
+
+**Real drift (small):**
+- `dropdown-fill.css:603-610` — literal hex hue-rainbow (`#ff0000…#ff00c8`). Intrinsic to a color picker's spectrum; acceptable, but it's the only concentrated raw hex.
+- `textedit.css:167` — a raw `rgba(12,16,24,0.12)` fallback for `--shadow-floating` (should use the token / color-mix).
+- A few hardcoded modal/popover widths (`object-manager` 320/520px, `bulk-edit` 980/860px, `popaddlink` 360px, `popover` 320px) — intrinsic sizing; minor.
+
+**Code-quality:**
+- The dropdown stencils (`dropdown-border`/`-fill`/`-shadow`) carry inline `style="--value…"` and inline `oninput="…"` handlers in markup — behavior-in-markup smell (not token drift).
+- `segmented`/`menuactions`/`button`/`toggle` use **component-local tokens** (`--seg-*`, `--ma-*`, `--btn-*`, `--tog-*`) — a GOOD pattern. Preserve it.
+
+**Component roles (learned from usage trace):**
+- The composites (`repeater`, `object-manager`, `bulk-edit`, `tabs`, `popaddlink`, `menuactions`) are the **editor controls rendered in Bob's ToolDrawer** (`bob/components/ToolDrawer.tsx`, `bob/components/td-menu-content/*`) — they build the widget-config editing surface.
+- `agent-activity` renders agent status in Bob's `TranslationsPanel`.
+- **Honest gap:** I do **not** yet know the precise `repeater` vs `object-manager` distinction (both live in the tool drawer). I will not call them an overlap again — a read of their ToolDrawer usage is needed to state it.
+
+**Known issues (carry-over):**
+- `textrename` — dead (orphaned hydrate in `admin/src/main.ts:23,258`); removing it must delete those 2 lines too.
+- `command-activity` — no stencil; broken/incomplete.
+
+**Preserve:** token-driven approach + component-local token pattern. **Fix:** the small real drift above + the dead/broken components. **Honest limit:** this pass covered token usage + roles; a full per-CSS cleanliness read of all 25 is TBD during the Components phase.
 
 ---
 
@@ -45,6 +67,19 @@ Read all four token files (`dieter-color-tokens.css`, `dieter-foundation-tokens.
 
 ---
 
-## Phase 4 — Roma  ⏳ pending (baseline verified)
+## Phase 4 — Roma  ✅ baseline + preserve/fix
 
-**Baseline (verified):** Roma uses 0 Dieter form components; built its own parallel 762-line `.roma-*` system in `roma/app/roma.css`; 5 monolith domain files (pages 1106, builder 976, widget-defaults 718, widgets 527, assets 488); ~18 hardcoded inline-px values; leaked dev/stub copy. Tokens in `roma.css` are healthy (0 hex / 140 `var()`). Detailed preserve-vs-fix still to do.
+**Baseline (verified):** Roma uses 0 Dieter form components; built a parallel 762-line `.roma-*` system in `roma/app/roma.css`; 5 monolith domain files (pages 1106, builder 976, widget-defaults 718, widgets 527, assets 488); ~18 hardcoded inline-px in TSX; leaked dev/stub copy ("Page publishing is unavailable…", etc.).
+
+**Preserve (don't touch):**
+- The shell + nav + layout (`roma-shell`, `roma-nav`, `roma-layout`) — sound.
+- Token usage inside `roma.css` is healthy — 0 hex literals, ~140 `var()` uses. Keep.
+
+**Fix:**
+- Replace the parallel `.roma-*` component system (`.roma-input/table/modal/card/field/grid/toolbar`) with real Dieter components + a small shared primitive layer (`DataTable`, `PageHeader`, `EmptyState`, `FormField`, `Modal`, `Toast`).
+- Break the 5 monolith domain files into subcomponents.
+- Tokenize the ~18 inline-px values.
+- Map leaked dev/stub copy to real user copy; one honest "not available" treatment; add loading/empty/error states on every screen.
+- **No redesign** — visual parity with current Roma. No backend/route changes.
+
+**Honest limit:** per-screen preserve-vs-fix (which specific screens have good styling to keep) not yet itemized; do during Roma phase execution.
