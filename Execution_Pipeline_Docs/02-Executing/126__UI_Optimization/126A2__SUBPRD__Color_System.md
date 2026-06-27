@@ -157,7 +157,15 @@ median — and it is why any "modernize the palette" instinct must be rejected
   migration, are misuse at consumers — the system is sound. Owned by the
   sibling token-fix slice, not this PRD.
 
-## 7. Out of scope
+## 7. Graduation to living docs (`documentation/engineering/UI/color.md`)
+
+This PRD is the *working* reference. Its content graduates into a permanent,
+living doc at `documentation/engineering/UI/color.md` — the home established by
+the MAMA (§12). Once `color.md` exists, **it is canonical** and this PRD links
+to it rather than duplicating it (one source of truth — by-reference law). The
+graduation is part of this subPRD's "docs are part of done."
+
+## 8. Out of scope
 
 - Redesigning or re-deriving the color system.
 - Token authoring UI (DevStudio / 126C owns).

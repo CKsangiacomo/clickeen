@@ -140,7 +140,7 @@ outward on a rotten inner doll is thrown-away work.
 - One step at a time; green (named evidence) before the next.
 - **Splendid bar at each layer, verified, before the layer above may build on it.**
 - Proof is visual: before/after browser screenshots. Green lint is not enough.
-- Docs are part of done.
+- Docs are part of done — design-system truth lands in `documentation/engineering/UI/` (§12); service-level truth in `services/*.md`.
 - Every subPRD names exact files, shapes, invariants, a V1–V8 audit,
   verification, and a Done list — the 124/125 bar.
 - Start from clean git; commit doc work with explicit pathspecs.
@@ -178,7 +178,33 @@ audits/
 subPRDs (126A1, 126D1, …) created per track as audits reveal slices.
 ```
 
-## 12. Open preconditions (before this MAMA is binding)
+## 12. Permanent home for UI design-system truth (`documentation/engineering/UI/`)
+
+The execution-pipeline PRDs (this folder) are **temporary** — they get archived
+to `03-Executed/` when the program ends, and PRD history is not current docs
+(per PRD 125's docs-sync rule). The UI design-system truth they uncover needs a
+**permanent, living home**, and none exists today: `documentation/` has
+`architecture/`, `services/`, `capabilities/`, `engineering/`, but no home for
+the cross-cutting design system that DevStudio, Roma, and Bob all consume — it
+is not itself a service, not product law, not a product feature.
+
+This program establishes **`documentation/engineering/UI/`** as that home.
+
+- **Docs-sync target for every track.** Each track's "docs are part of done"
+  lands design-system truth here: color → `color.md`, later type / spacing /
+  components / screens as those tracks run. Service-level truth still lands in
+  `services/*.md`; `engineering/UI/` holds the cross-cutting design-system truth.
+- **Reference PRDs graduate into it.** A reference subPRD like `126A2` (color) is
+  the *working* version; its content becomes the canonical living doc
+  (`documentation/engineering/UI/color.md`), and the PRD then links to it.
+- **One source of truth (by-reference law).** The living doc is canonical; PRDs
+  link to it, they do not duplicate it — so the two cannot drift.
+- **Declared truth for an agent-operated system.** clickeen is agent-operated;
+  agents operate only declared truth. Undeclared UI truth is what lets every
+  future agent revert to the corpus median (hand-picked hex, parallel systems).
+  `engineering/UI/` is the declared-truth surface that prevents that recurrence.
+
+## 13. Open preconditions (before this MAMA is binding)
 
 1. Ground the law (§4) and authority (§5) from the TBD law sources listed above.
 2. Confirm design-freeze scope and the Appendix A hash-frozen baseline.
