@@ -101,7 +101,7 @@ jobs:
             workflow_changed=true
           fi
 
-          if [ "$workflow_changed" = "true" ] || path_changed '^(berlin/|scripts/infra/)'; then
+          if [ "$workflow_changed" = "true" ] || path_changed '^(berlin/|scripts/infra/|packages/(ck-policy|ck-contracts)/)'; then
             berlin=true
           fi
 
