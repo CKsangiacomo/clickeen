@@ -1,9 +1,18 @@
-# Planning PRD - Roma UI Refactor
+# 126D — Track PRD: Roma UI
 
-Status: EXECUTING
-Owner: Roma + Dieter
-Date: 2026-06-23
-Stage: 02-Executing
+Parent: `126__PRD__UI_Optimization_Program.md` (MAMA) — **track 4 of 4** (the
+outermost doll, and the largest surface). Roma consumes Dieter components + the
+tokenization guard from 126C; every screen must be built from components + one
+shared primitive set, with no parallel `.roma-*` system.
+
+Status: **DIRECTIONAL.** The body below is the prior draft (2026-06-23), kept in
+full as seed content; it is corrected and brought to the 124/125 bar during the
+Roma audit + fill (`audits/126D__Audit__Roma_UI.md`). Re-count the monolith
+baselines first — `builder-domain.tsx` has already grown to 976 lines since the
+draft was written.
+
+Prior title: *Planning PRD - Roma UI Refactor*.
+Prior status: EXECUTING · Owner: Roma + Dieter · 2026-06-23 · 02-Executing.
 Numbering: deliberately unnumbered per product owner.
 
 Related:

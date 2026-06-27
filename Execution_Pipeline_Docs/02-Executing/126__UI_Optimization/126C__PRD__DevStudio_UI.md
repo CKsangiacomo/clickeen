@@ -1,9 +1,21 @@
-# PRD - DevStudio as a Trustworthy Reveal Cockpit — Dieter Components
+# 126C — Track PRD: DevStudio UI
 
-Status: EXECUTING
-Owner: DevStudio + Dieter
-Date: 2026-06-23
-Stage: 02-Executing
+Parent: `126__PRD__UI_Optimization_Program.md` (MAMA) — **track 3 of 4.**
+DevStudio is the doll that *reveals* the token + component dolls beneath it; it
+must be splendid and structurally incapable of masquerading Dieter's state.
+
+Status: **DIRECTIONAL.** The body below is the prior draft (2026-06-23), kept in
+full as seed content; it is corrected and brought to the 124/125 bar during the
+DevStudio audit + fill (`audits/126C__Audit__DevStudio_UI.md`).
+
+**Known corrections to the body** (from `audits/DevStudio_Dieter_Sanity_Pass_Findings_June2026.md`):
+- **Strike** "kill ghost token `--radius-4`" — `--radius-3`/`--radius-4` are
+  intentional aliases; executing it is a visual regression.
+- **Amend** `textrename` removal to also delete `admin/src/main.ts:23,258`, or the
+  admin bundle breaks.
+
+Prior title: *DevStudio as a Trustworthy Reveal Cockpit — Dieter Components*.
+Prior status: EXECUTING · Owner: DevStudio + Dieter · 2026-06-23 · 02-Executing.
 Series: `Devstudio_as_a_trustworthy_Reveal_cockpit_<Domain>` — this is the
 **DieterComponents** PRD. DevStudio governs many domains (Dieter, models, agents,
 product state, content); each gets its own PRD in this series. Dieter components is
