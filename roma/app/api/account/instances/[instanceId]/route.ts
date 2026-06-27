@@ -36,6 +36,12 @@ type RouteFailureLike = {
   };
 };
 
+const ACCOUNT_INSTANCE_SAVE_BODY_KEYS = new Set(['widgetType', 'config', 'displayName']);
+
+function bodyHasOnlyKeys(value: Record<string, unknown>, keys: Set<string>): boolean {
+  return Object.keys(value).every((key) => keys.has(key));
+}
+
 function routeFailureResponse(
   request: NextRequest,
   failure: RouteFailureLike,
@@ -65,7 +71,6 @@ export async function PUT(request: NextRequest, context: RouteContext) {
     widgetType?: string;
     config?: Record<string, unknown>;
     displayName?: string | null;
-    meta?: Record<string, unknown> | null;
   } | null>(request);
   if (!bodyResult.ok) {
     return withSession(
@@ -75,6 +80,16 @@ export async function PUT(request: NextRequest, context: RouteContext) {
     );
   }
   const body = bodyResult.payload;
+  if (body && !bodyHasOnlyKeys(body, ACCOUNT_INSTANCE_SAVE_BODY_KEYS)) {
+    return withSession(
+      request,
+      NextResponse.json(
+        { error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.invalid' } },
+        { status: 422 },
+      ),
+      current.value.setCookies,
+    );
+  }
 
   const widgetType = typeof body?.widgetType === 'string' ? body.widgetType.trim() : '';
   const config = body?.config;
@@ -86,33 +101,12 @@ export async function PUT(request: NextRequest, context: RouteContext) {
           ? null
           : undefined
       : undefined;
-  const meta =
-    body && Object.prototype.hasOwnProperty.call(body, 'meta')
-      ? body.meta && typeof body.meta === 'object' && !Array.isArray(body.meta)
-        ? (body.meta as Record<string, unknown>)
-        : undefined
-      : undefined;
-  const hasMalformedMeta =
-    body &&
-    Object.prototype.hasOwnProperty.call(body, 'meta') &&
-    body.meta !== null &&
-    meta === undefined;
   if (
     !widgetType ||
     !config ||
     typeof config !== 'object' ||
     Array.isArray(config)
   ) {
-    return withSession(
-      request,
-      NextResponse.json(
-        { error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.invalid' } },
-        { status: 422 },
-      ),
-      current.value.setCookies,
-    );
-  }
-  if (hasMalformedMeta) {
     return withSession(
       request,
       NextResponse.json(
@@ -226,7 +220,6 @@ export async function PUT(request: NextRequest, context: RouteContext) {
     content: sourceArtifacts.value.content,
     publicPackage: publicPackage.value,
     ...(displayName !== undefined ? { displayName } : {}),
-    ...(meta !== undefined ? { meta } : {}),
     accountCapsule: current.value.authzToken,
     requestId: current.value.requestId,
   });

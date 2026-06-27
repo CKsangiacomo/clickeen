@@ -34,7 +34,6 @@ export type AccountInstanceCoreRow = {
   widgetType: string;
   baseLocale?: string;
   publishStatus?: AccountInstanceLiveStatus;
-  meta?: Record<string, unknown> | null;
 };
 
 export type AccountInstanceLiveStatus = 'published' | 'unpublished';
@@ -92,36 +91,6 @@ function invalidTokyoPayload(detail: string): RouteFailure {
   };
 }
 
-function normalizeInstanceMeta(value: unknown): Record<string, unknown> | null {
-  if (value == null) return null;
-  if (!isRecord(value)) return null;
-  const out: Record<string, unknown> = {};
-  const allowedKeys = new Set(['baseLocale', 'styleName', 'name', 'title']);
-  for (const key of Object.keys(value)) {
-    if (!allowedKeys.has(key)) return null;
-  }
-  for (const key of ['baseLocale', 'styleName', 'name', 'title']) {
-    const entry = value[key];
-    if (typeof entry === 'string' && entry.trim()) out[key] = entry.trim();
-  }
-  return out;
-}
-
-function normalizeCallerInstanceMeta(value: unknown): Record<string, unknown> | null {
-  if (value == null) return null;
-  if (!isRecord(value)) return null;
-  const out: Record<string, unknown> = {};
-  const allowedKeys = new Set(['styleName', 'name', 'title']);
-  for (const key of Object.keys(value)) {
-    if (!allowedKeys.has(key)) return null;
-  }
-  for (const key of ['styleName', 'name', 'title']) {
-    const entry = value[key];
-    if (typeof entry === 'string' && entry.trim()) out[key] = entry.trim();
-  }
-  return out;
-}
-
 function isAccountInstanceContentDocument(value: unknown): value is AccountInstanceContentDocument {
   if (!isRecord(value) || !isRecord(value.fields)) return false;
   return (
@@ -146,12 +115,10 @@ function notFoundFailure(args: { reasonKey: string; detail?: string }): RouteFai
 
 function resolveSavedInstanceDisplayName(args: {
   displayName: unknown;
-  meta: unknown;
 }): string | null {
   const displayName = asTrimmedString(args.displayName);
   if (displayName) return displayName;
-  if (!isRecord(args.meta)) return null;
-  return asTrimmedString(args.meta.styleName ?? args.meta.name ?? args.meta.title) ?? null;
+  return null;
 }
 
 function normalizeTokyoWidgetDefinition(raw: unknown): TokyoWidgetDefinition | null {
@@ -254,7 +221,6 @@ function normalizeAccountInstancePayload(payload: unknown): {
   const sourceConfig = isRecord(source?.config) ? source.config : null;
   const sourceContent = isAccountInstanceContentDocument(source?.content) ? source.content : null;
   if (!sourceConfig || !sourceContent) return null;
-  if (isRecord(payload.meta) && normalizeInstanceMeta(payload.meta) == null) return null;
   const instanceId = asTrimmedString(payload.instanceId ?? payload.id);
   const accountId = asTrimmedString(payload.accountId);
   const widgetType = asTrimmedString(payload.widgetType);
@@ -264,7 +230,6 @@ function normalizeAccountInstancePayload(payload: unknown): {
       instanceId,
       displayName: resolveSavedInstanceDisplayName({
         displayName: payload.displayName,
-        meta: payload.meta,
       }),
       updatedAt: asTrimmedString(payload.updatedAt),
       accountId,
@@ -276,7 +241,6 @@ function normalizeAccountInstancePayload(payload: unknown): {
           : payload.publishStatus === 'unpublished'
             ? 'unpublished'
             : undefined,
-      meta: normalizeInstanceMeta(payload.meta),
     },
     config: composeConfigWithInstanceContent({
       config: sourceConfig,
@@ -328,7 +292,6 @@ export async function createAccountInstanceInTokyo(args: {
     runtimeJs: string;
   };
   baseLocale: string;
-  meta?: Record<string, unknown> | null;
   internalServiceName?: string | null;
   requestId?: string | null;
 }): Promise<
@@ -347,18 +310,6 @@ export async function createAccountInstanceInTokyo(args: {
       },
     };
   }
-  const normalizedMeta = normalizeCallerInstanceMeta(args.meta);
-  if (args.meta != null && !normalizedMeta) {
-    return {
-      ok: false,
-      status: 422,
-      error: {
-        kind: 'VALIDATION',
-        reasonKey: 'coreui.errors.instance.invalidPayload',
-        detail: 'meta_invalid',
-      },
-    };
-  }
   const result = await callTokyo(tokyoCallContext(args), {
     path: '/__internal/instances',
     method: 'POST',
@@ -372,10 +323,6 @@ export async function createAccountInstanceInTokyo(args: {
       },
       publicPackage: args.publicPackage,
       baseLocale: args.baseLocale,
-      meta: {
-        ...(normalizedMeta ?? {}),
-        baseLocale: args.baseLocale,
-      },
     },
     decode: (payload) => payload,
     errorDetail: 'tokyo_instance_create_http_error',
@@ -402,7 +349,6 @@ export async function saveAccountInstanceInTokyo(args: {
     runtimeJs: string;
   };
   displayName?: string | null;
-  meta?: Record<string, unknown> | null;
   internalServiceName?: string | null;
   requestId?: string | null;
 }): Promise<
@@ -414,18 +360,6 @@ export async function saveAccountInstanceInTokyo(args: {
     }
   | RouteFailure
 > {
-  const normalizedMeta = normalizeCallerInstanceMeta(args.meta);
-  if (args.meta != null && !normalizedMeta) {
-    return {
-      ok: false,
-      status: 422,
-      error: {
-        kind: 'VALIDATION',
-        reasonKey: 'coreui.errors.instance.invalidPayload',
-        detail: 'meta_invalid',
-      },
-    };
-  }
   const result = await callTokyo(tokyoCallContext(args), {
     path: `/__internal/instances/${encodeURIComponent(args.instanceId)}`,
     method: 'PUT',
@@ -438,7 +372,6 @@ export async function saveAccountInstanceInTokyo(args: {
       },
       publicPackage: args.publicPackage,
       ...(args.displayName !== undefined ? { displayName: args.displayName } : {}),
-      ...(args.meta !== undefined ? { meta: normalizedMeta } : {}),
     },
     decode: (payload) => payload,
     errorDetail: 'tokyo_instance_save_http_error',

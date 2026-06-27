@@ -148,34 +148,6 @@ function normalizeDisplayName(value: unknown): string | null {
   return trimmed.length > 0 && trimmed.length <= 120 ? trimmed : null;
 }
 
-function normalizeSubmittedMeta(value: unknown): Record<string, unknown> | null {
-  if (value == null) return null;
-  if (typeof value === 'object' && !Array.isArray(value)) {
-    const meta = value as Record<string, unknown>;
-    const out: Record<string, unknown> = {};
-    const allowedKeys = new Set(['baseLocale', 'styleName', 'name', 'title']);
-    for (const key of Object.keys(meta)) {
-      if (!allowedKeys.has(key)) {
-        throw new AccountInstanceTransitionError({
-          status: 422,
-          kind: 'VALIDATION',
-          reasonKey: 'coreui.errors.instance.invalidPayload',
-        });
-      }
-    }
-    for (const key of ['baseLocale', 'styleName', 'name', 'title']) {
-      const entry = meta[key];
-      if (typeof entry === 'string' && entry.trim()) out[key] = entry.trim();
-    }
-    return out;
-  }
-  throw new AccountInstanceTransitionError({
-    status: 422,
-    kind: 'VALIDATION',
-    reasonKey: 'coreui.errors.instance.invalidPayload',
-  });
-}
-
 async function cleanupCreatedInstanceOrThrow(args: {
   env: Env;
   accountId: string;
@@ -209,7 +181,7 @@ export async function createAccountInstanceFromSubmittedSource(args: {
   displayName?: unknown;
   config: Record<string, unknown>;
   content: AccountInstanceContentDocument;
-  meta: Record<string, unknown>;
+  baseLocale: string;
   publicPackage: SubmittedInstancePublicPackage;
 }): Promise<{
   pointer: AccountInstanceSourcePointer;
@@ -262,7 +234,7 @@ export async function createAccountInstanceFromSubmittedSource(args: {
       config: args.config,
       content: args.content,
       displayName: normalizeDisplayName(args.displayName),
-      meta: args.meta,
+      baseLocale: args.baseLocale,
       publicPackageFingerprint: packaged.fingerprint,
     });
   } catch (error) {
@@ -287,8 +259,6 @@ export async function saveAccountInstanceTransition(args: {
   displayName?: unknown;
   baseLocale: string;
   hasDisplayName: boolean;
-  meta?: unknown;
-  hasMeta: boolean;
 }): Promise<{
   ok: true;
   pointer: AccountInstanceSourcePointer;
@@ -315,10 +285,6 @@ export async function saveAccountInstanceTransition(args: {
       detail: `submitted widgetType "${submittedWidgetType}" does not match Tokyo instance widgetType "${existingWidgetType}"`,
     });
   }
-  const nextMeta = {
-    ...(normalizeSubmittedMeta(args.hasMeta ? args.meta : existing.value.pointer.meta) ?? {}),
-    baseLocale: args.baseLocale,
-  };
   const packaged = await writeInstancePublicPackage({
     env: args.env,
     accountId,
@@ -341,7 +307,7 @@ export async function saveAccountInstanceTransition(args: {
     config: args.config,
     content: args.content,
     displayName: args.hasDisplayName ? args.displayName : existing.value.pointer.displayName,
-    meta: nextMeta,
+    baseLocale: args.baseLocale,
     publicPackageFingerprint: packaged.fingerprint,
   });
   const live = (await readInstanceServeState({

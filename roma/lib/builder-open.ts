@@ -8,7 +8,6 @@ export type BuilderOpenEnvelope = {
   widgetType: string;
   config: Record<string, unknown>;
   publishStatus?: 'published' | 'unpublished';
-  meta?: Record<string, unknown> | null;
 };
 
 export async function loadBuilderOpenEnvelope(args: {
@@ -55,7 +54,6 @@ export async function loadBuilderOpenEnvelope(args: {
       widgetType: instance.value.row.widgetType,
       config: instance.value.config,
       publishStatus: instance.value.row.publishStatus,
-      meta: instance.value.row.meta,
     },
   };
 }

@@ -98,9 +98,10 @@ accounts/{accountPublicId}/instances/{instanceId}/
   runtime.js
 ```
 
-`instance.config.json` carries non-text config, widget identity, display
-metadata, base locale, and timestamps. Account active locales are Roma account
-settings, not instance config.
+`instance.config.json` carries non-text config, widget identity, display name,
+base locale, package fingerprint when present, and timestamps. Account
+instances do not have a generic metadata field. Account active locales are Roma
+account settings, not instance config.
 
 `instance.content.json` carries base user-visible text values.
 

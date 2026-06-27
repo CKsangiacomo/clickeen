@@ -70,7 +70,6 @@ Roma opens Bob:
   "instanceId": "[instanceId]",
   "publishStatus": "[published|unpublished]",
   "label": "[displayName]",
-  "meta": "[metadata]",
   "copilot": "[copilotRuntimeUi]",
   "translationSetup": "[translationSetup]"
 }
@@ -126,11 +125,12 @@ Roma replies to account commands with:
 
 Save persists the one widget document currently open in Builder.
 
-Bob sends current document metadata and working config back to Roma:
+Bob sends the current working config and explicit instance coordinates back to
+Roma:
 
 - widget type
 - display name
-- source metadata
+- base locale
 - current config/content state
 
 Bob sends this as a `bob:account-command` with `command: "update-instance"`.

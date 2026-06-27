@@ -114,7 +114,7 @@ Builder opens one saved widget instance:
 3. Load the compiled widget payload.
 4. Wait for Bob `bob:session-ready`.
 5. Send `ck:open-editor` with compiled widget software, saved instance data,
-   policy, account public id, instance id, label, source, and metadata.
+   policy, account public id, instance id, label, and source.
 6. Receive `bob:open-editor-applied` or `bob:open-editor-failed`.
 
 `NEXT_PUBLIC_BOB_URL` is required and must be an `http` or `https` origin with

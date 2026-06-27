@@ -85,7 +85,6 @@ async function putPublishedSource(env: any, args: { publishStatus?: 'published' 
     widgetCode: 'FAQ',
     widgetType: 'faq',
     displayName: 'FAQ',
-    meta: { baseLocale: 'en' },
     config: {},
     baseLocale: 'en',
     publicPackageFingerprint: args.publicPackageFingerprint,

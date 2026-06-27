@@ -92,7 +92,6 @@ type BobOpenEditorMessage = {
   compiled: unknown;
   instanceData: Record<string, unknown>;
   publishStatus?: 'published' | 'unpublished';
-  meta?: Record<string, unknown> | null;
   policy?: unknown;
   copilot?: unknown;
   translationSetup?: {
@@ -110,7 +109,6 @@ type BuilderOpenResponse = {
   widgetType: string;
   config: Record<string, unknown>;
   publishStatus?: 'published' | 'unpublished';
-  meta?: Record<string, unknown> | null;
   copilot?: unknown;
 };
 
@@ -705,7 +703,6 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
         compiled,
         instanceData: config,
         publishStatus: builderOpen.publishStatus,
-        meta: builderOpen.meta ?? null,
         policy: accountPolicy,
         copilot: builderOpen.copilot ?? null,
         translationSetup,

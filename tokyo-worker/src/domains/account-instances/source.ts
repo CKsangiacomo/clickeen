@@ -39,24 +39,6 @@ function normalizeDisplayName(value: unknown): string | null {
   return typeof value === 'string' ? value.trim() || null : null;
 }
 
-function normalizeMeta(value: unknown): Record<string, unknown> | null {
-  if (value == null) return null;
-  if (value && typeof value === 'object' && !Array.isArray(value)) {
-    const meta = value as Record<string, unknown>;
-    const out: Record<string, unknown> = {};
-    const allowedKeys = new Set(['baseLocale', 'styleName', 'name', 'title']);
-    for (const key of Object.keys(meta)) {
-      if (!allowedKeys.has(key)) throw new Error('coreui.errors.instance.invalidPayload');
-    }
-    for (const key of ['baseLocale', 'styleName', 'name', 'title']) {
-      const entry = meta[key];
-      if (typeof entry === 'string' && entry.trim()) out[key] = entry.trim();
-    }
-    return out;
-  }
-  throw new Error('coreui.errors.instance.invalidPayload');
-}
-
 export function buildLocaleOverlayFields(args: {
   configDoc: AccountInstanceConfigDocument;
   content: AccountInstanceContentDocument;
@@ -72,10 +54,6 @@ export function buildLocaleOverlayFields(args: {
   }
   const fields = savedTextFieldsFromContentDocument(args.content, widgetDefinition.editableFields);
   return { fields };
-}
-
-function hasOwnRecordValue(record: Record<string, unknown> | null, key: string): boolean {
-  return Boolean(record && Object.prototype.hasOwnProperty.call(record, key));
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -113,17 +91,6 @@ export function savedTextFieldsFromContentDocument(
     .sort((left, right) => left.path.localeCompare(right.path));
 }
 
-function resolveBaseLocale(
-  meta: Record<string, unknown> | null,
-): string {
-  if (hasOwnRecordValue(meta, 'baseLocale')) {
-    const fromMeta = normalizeLocale(meta?.baseLocale);
-    if (!fromMeta) throw new Error('coreui.errors.instance.invalidPayload');
-    return fromMeta;
-  }
-  throw new Error('coreui.errors.instance.baseLocaleMissing');
-}
-
 function toAccountInstanceSourcePointer(args: {
   configDoc: AccountInstanceConfigDocument;
   publishStatus: InstanceServeState;
@@ -136,7 +103,6 @@ function toAccountInstanceSourcePointer(args: {
     widgetCode: configDoc.widgetCode,
     widgetType: configDoc.widgetType,
     displayName: configDoc.displayName,
-    meta: configDoc.meta ?? null,
     baseLocale: configDoc.baseLocale,
     publishStatus: args.publishStatus,
     ...(configDoc.publicPackageFingerprint
@@ -157,7 +123,6 @@ function instanceFromConfigAndContent(args: {
     widgetCode: args.configDoc.widgetCode,
     widgetType: args.configDoc.widgetType,
     displayName: args.configDoc.displayName,
-    meta: args.configDoc.meta ?? null,
     config: args.configDoc.config,
     baseLocale: args.configDoc.baseLocale,
     publishStatus: 'unpublished',
@@ -246,7 +211,7 @@ export async function writeAccountInstanceSource(args: {
   config: Record<string, unknown>;
   content: AccountInstanceContentDocument;
   displayName?: unknown;
-  meta?: unknown;
+  baseLocale: string;
   publicPackageFingerprint?: string | null;
 }): Promise<{ pointer: AccountInstanceSourcePointer }> {
   const instanceId = normalizeStorageId(args.instanceId);
@@ -267,8 +232,8 @@ export async function writeAccountInstanceSource(args: {
     widgetCode,
     instanceId,
   });
-  const meta = normalizeMeta(args.meta);
-  const baseLocale = resolveBaseLocale(meta);
+  const baseLocale = normalizeLocale(args.baseLocale);
+  if (!baseLocale) throw new Error('coreui.errors.instance.baseLocaleMissing');
   const content = args.content;
   if (
     content.id !== instanceId ||
@@ -283,7 +248,6 @@ export async function writeAccountInstanceSource(args: {
     widgetCode,
     widgetType,
     displayName: normalizeDisplayName(args.displayName),
-    meta,
     config: args.config,
     baseLocale,
     ...(args.publicPackageFingerprint

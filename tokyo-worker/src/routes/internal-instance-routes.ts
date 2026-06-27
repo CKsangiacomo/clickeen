@@ -39,19 +39,24 @@ import {
   transitionErrorResponse,
 } from './internal-product-route-utils';
 
-function normalizeSubmittedMeta(value: unknown): Record<string, unknown> | null {
-  if (value == null) return {};
-  if (!isRecord(value)) return null;
-  const out: Record<string, unknown> = {};
-  const allowedKeys = new Set(['baseLocale', 'styleName', 'name', 'title']);
-  for (const key of Object.keys(value)) {
-    if (!allowedKeys.has(key)) return null;
-  }
-  for (const key of ['baseLocale', 'styleName', 'name', 'title']) {
-    const entry = value[key];
-    if (typeof entry === 'string' && entry.trim()) out[key] = entry.trim();
-  }
-  return out;
+const INTERNAL_INSTANCE_CREATE_BODY_KEYS = new Set([
+  'instanceId',
+  'widgetType',
+  'displayName',
+  'source',
+  'publicPackage',
+  'baseLocale',
+]);
+const INTERNAL_INSTANCE_SAVE_BODY_KEYS = new Set([
+  'widgetType',
+  'displayName',
+  'source',
+  'publicPackage',
+  'baseLocale',
+]);
+
+function bodyHasOnlyKeys(value: Record<string, unknown>, keys: Set<string>): boolean {
+  return Object.keys(value).every((key) => keys.has(key));
 }
 
 async function purgePublishedLocalePackageCache(args: {
@@ -212,6 +217,8 @@ export async function tryHandleInternalInstanceRoutes(
     });
     if (!isRecord(rawBody))
       return respondValidation(respond, 'coreui.errors.instance.invalidPayload');
+    if (!bodyHasOnlyKeys(rawBody, INTERNAL_INSTANCE_CREATE_BODY_KEYS))
+      return respondValidation(respond, 'coreui.errors.instance.invalidPayload');
     const widgetType = typeof rawBody.widgetType === 'string' ? rawBody.widgetType.trim() : '';
     if (!widgetType) return respondValidation(respond, 'coreui.errors.instance.invalidPayload');
     const source = isRecord(rawBody.source) ? rawBody.source : null;
@@ -219,15 +226,9 @@ export async function tryHandleInternalInstanceRoutes(
     const content = normalizeAccountInstanceContentDocument(source?.content);
     const instanceId = normalizeStorageId(rawBody.instanceId);
     const publicPackage = readSubmittedInstancePublicPackage(rawBody.publicPackage);
-    const submittedMeta = normalizeSubmittedMeta(rawBody.meta);
-    if (!submittedMeta) return respondValidation(respond, 'coreui.errors.instance.invalidPayload');
     const baseLocale = normalizeLocale(rawBody.baseLocale);
     if (!instanceId || !config || !content || !publicPackage || !baseLocale)
       return respondValidation(respond, 'coreui.errors.instance.invalidPayload');
-    const meta = {
-      ...submittedMeta,
-      baseLocale,
-    };
 
     try {
       const created = await createAccountInstanceFromSubmittedSource({
@@ -238,7 +239,7 @@ export async function tryHandleInternalInstanceRoutes(
         displayName: rawBody.displayName,
         config,
         content,
-        meta,
+        baseLocale,
         publicPackage,
       });
       return respond(
@@ -569,7 +570,6 @@ export async function tryHandleInternalInstanceRoutes(
           publishStatus: pointer.publishStatus,
           updatedAt: pointer.updatedAt,
           baseLocale: pointer.baseLocale,
-          meta: pointer.meta ?? null,
           source: {
             config: source.value.config,
             content: source.value.content,
@@ -589,6 +589,9 @@ export async function tryHandleInternalInstanceRoutes(
         instanceId,
         accountId,
       })) as Record<string, unknown> | null;
+      if (!isRecord(body) || !bodyHasOnlyKeys(body, INTERNAL_INSTANCE_SAVE_BODY_KEYS)) {
+        return respondValidation(respond, 'coreui.errors.instance.invalidPayload');
+      }
       const source = isRecord(body?.source) ? body.source : null;
       const config = isRecord(source?.config) ? source.config : null;
       const content = normalizeAccountInstanceContentDocument(source?.content);
@@ -596,15 +599,11 @@ export async function tryHandleInternalInstanceRoutes(
         ? readSubmittedInstancePublicPackage(body.publicPackage)
         : null;
       const baseLocale = normalizeLocale(body?.baseLocale);
-      const hasMeta = isRecord(body) && Object.prototype.hasOwnProperty.call(body, 'meta');
-      const submittedMeta = hasMeta ? normalizeSubmittedMeta(body.meta) : {};
       if (
-        !isRecord(body) ||
         !config ||
         !content ||
         !publicPackage ||
-        !baseLocale ||
-        !submittedMeta
+        !baseLocale
       ) {
         return respondValidation(respond, 'coreui.errors.instance.invalidPayload');
       }
@@ -620,8 +619,6 @@ export async function tryHandleInternalInstanceRoutes(
           baseLocale,
           displayName: body.displayName,
           hasDisplayName: Object.prototype.hasOwnProperty.call(body, 'displayName'),
-          meta: submittedMeta,
-          hasMeta,
         });
         return respond(
           json({

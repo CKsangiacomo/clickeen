@@ -18,22 +18,6 @@ function asRecord(value: unknown): Record<string, unknown> | null {
     : null;
 }
 
-function normalizeInstanceMeta(value: unknown): Record<string, unknown> | null {
-  if (value == null) return null;
-  const meta = asRecord(value);
-  if (!meta) return null;
-  const out: Record<string, unknown> = {};
-  const allowedKeys = new Set(['baseLocale', 'styleName', 'name', 'title']);
-  for (const key of Object.keys(meta)) {
-    if (!allowedKeys.has(key)) return null;
-  }
-  for (const key of ['baseLocale', 'styleName', 'name', 'title']) {
-    const entry = meta[key];
-    if (typeof entry === 'string' && entry.trim()) out[key] = entry.trim();
-  }
-  return out;
-}
-
 export function normalizeAccountInstanceConfigDocument(
   raw: unknown,
 ): AccountInstanceConfigDocument | null {
@@ -59,8 +43,6 @@ export function normalizeAccountInstanceConfigDocument(
     !updatedAt
   )
     return null;
-  const meta = normalizeInstanceMeta(payload.meta);
-  if (asRecord(payload.meta) && !meta) return null;
   const publicPackageFingerprint = asTrimmedString(payload.publicPackageFingerprint);
   if (
     Object.prototype.hasOwnProperty.call(payload, 'publicPackageFingerprint') &&
@@ -75,7 +57,6 @@ export function normalizeAccountInstanceConfigDocument(
     widgetCode,
     widgetType,
     displayName,
-    meta,
     config,
     baseLocale,
     ...(publicPackageFingerprint ? { publicPackageFingerprint } : {}),

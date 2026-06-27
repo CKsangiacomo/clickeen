@@ -106,19 +106,33 @@ async function testCreateSaveDuplicateRoutePackageSubmission(): Promise<void> {
   assert.match(duplicateRoute, /instanceId,\n\s+baseLocale,/);
 }
 
-async function testSaveMetadataAbsenceContract(): Promise<void> {
+async function testInstanceMetaRemovedContract(): Promise<void> {
   const bobSaveSource = await readRouteSource('bob/lib/session/useSessionSaving.ts');
   assert.doesNotMatch(bobSaveSource, /meta:\s*meta\?\.meta\s*\?\?\s*null/);
   assert.doesNotMatch(bobSaveSource, /meta:\s*null/);
-  assert.match(bobSaveSource, /const saveBody: Record<string, unknown> = \{/);
-  assert.match(bobSaveSource, /saveBody\.meta = meta\.meta/);
+  assert.doesNotMatch(bobSaveSource, /saveBody\.meta/);
+
+  const bobSessionTypes = await readRouteSource('bob/lib/session/sessionTypes.ts');
+  assert.doesNotMatch(bobSessionTypes, /meta\?: Record<string, unknown> \| null/);
 
   const romaSaveRoute = await readRouteSource('roma/app/api/account/instances/[instanceId]/route.ts');
-  assert.match(romaSaveRoute, /body\.meta !== null/);
-  assert.match(romaSaveRoute, /\.\.\.\(meta !== undefined \? \{ meta \} : \{\}\)/);
+  assert.match(romaSaveRoute, /ACCOUNT_INSTANCE_SAVE_BODY_KEYS/);
+  assert.match(romaSaveRoute, /bodyHasOnlyKeys\(body, ACCOUNT_INSTANCE_SAVE_BODY_KEYS\)/);
+  assert.doesNotMatch(romaSaveRoute, /body\.meta/);
+  assert.doesNotMatch(romaSaveRoute, /\{ meta \}/);
 
   const duplicateRoute = await readRouteSource('roma/app/api/account/instances/[instanceId]/duplicate/route.ts');
   assert.doesNotMatch(duplicateRoute, /meta:\s*null/);
+
+  const tokyoRoutes = await readRouteSource('tokyo-worker/src/routes/internal-instance-routes.ts');
+  assert.match(tokyoRoutes, /INTERNAL_INSTANCE_CREATE_BODY_KEYS/);
+  assert.match(tokyoRoutes, /INTERNAL_INSTANCE_SAVE_BODY_KEYS/);
+  assert.match(tokyoRoutes, /bodyHasOnlyKeys\(rawBody, INTERNAL_INSTANCE_CREATE_BODY_KEYS\)/);
+  assert.match(tokyoRoutes, /bodyHasOnlyKeys\(body, INTERNAL_INSTANCE_SAVE_BODY_KEYS\)/);
+  assert.doesNotMatch(tokyoRoutes, /rawBody\.meta|body\.meta|pointer\.meta|normalizeSubmittedMeta/);
+
+  const tokyoTypes = await readRouteSource('tokyo-worker/src/domains/account-instances/types.ts');
+  assert.doesNotMatch(tokyoTypes, /meta\?: Record<string, unknown> \| null/);
 }
 
 async function testErrorMapping(): Promise<void> {
@@ -422,7 +436,7 @@ const tests: Array<{ name: string; run: () => Promise<void> }> = [
   { name: 'all-widget dual-build parity matrix', run: testAllWidgetDualBuildParity },
   { name: 'Roma adapter input contract', run: testAdapterInputContract },
   { name: 'create/save/duplicate route package submission', run: testCreateSaveDuplicateRoutePackageSubmission },
-  { name: 'save metadata absence contract', run: testSaveMetadataAbsenceContract },
+  { name: 'instance meta removed contract', run: testInstanceMetaRemovedContract },
   { name: 'error mapping', run: testErrorMapping },
   { name: 'byte-exact state serialization', run: testByteExactStateSerialization },
   { name: 'adapter evidence plumbing', run: testAdapterEvidencePlumbing },

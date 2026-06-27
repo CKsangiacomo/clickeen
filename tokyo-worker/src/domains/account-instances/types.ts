@@ -4,7 +4,6 @@ export type AccountInstanceDocument = {
   widgetCode: string;
   widgetType: string;
   displayName: string | null;
-  meta?: Record<string, unknown> | null;
   config: Record<string, unknown>;
   baseLocale: string;
   publishStatus: InstanceServeState;
@@ -18,7 +17,6 @@ export type AccountInstanceConfigDocument = {
   widgetCode: string;
   widgetType: string;
   displayName: string | null;
-  meta?: Record<string, unknown> | null;
   config: Record<string, unknown>;
   baseLocale: string;
   publicPackageFingerprint?: string;
@@ -64,7 +62,6 @@ export type AccountInstanceSourcePointer = {
   widgetCode: string;
   widgetType: string;
   displayName: string | null;
-  meta?: Record<string, unknown> | null;
   baseLocale: string;
   publishStatus: InstanceServeState;
   publicPackageFingerprint?: string;

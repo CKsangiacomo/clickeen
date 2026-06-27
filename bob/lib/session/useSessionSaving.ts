@@ -61,9 +61,6 @@ export function useSessionSaving(args: {
         baseLocale: meta?.baseLocale ?? null,
         displayName: meta?.label ?? null,
       };
-      if (meta?.meta && typeof meta.meta === 'object' && !Array.isArray(meta.meta)) {
-        saveBody.meta = meta.meta;
-      }
       const { ok, json } = await executeAccountCommand({
         command: 'update-instance',
         instanceId,

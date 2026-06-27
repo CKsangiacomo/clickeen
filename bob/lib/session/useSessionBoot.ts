@@ -70,7 +70,6 @@ export function useSessionBoot(args: {
           widgetname: compiled.widgetname,
           publishStatus: message.publishStatus,
           label: nextLabel,
-          meta: message.meta ?? null,
           translationSetup: message.translationSetup ?? null,
         };
         const nextState: SessionState = {

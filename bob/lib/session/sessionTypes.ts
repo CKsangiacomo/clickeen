@@ -39,7 +39,6 @@ export type SessionMeta = {
   widgetname?: string;
   publishStatus?: 'published' | 'unpublished';
   label?: string;
-  meta?: Record<string, unknown> | null;
   translationSetup?: TranslationSetup | null;
 } | null;
 
@@ -73,7 +72,6 @@ export type EditorOpenMessage = {
   instanceId?: string;
   publishStatus?: 'published' | 'unpublished';
   label?: string;
-  meta?: Record<string, unknown> | null;
   copilot?: CopilotRuntimeUi;
   translationSetup?: TranslationSetup | null;
 };
