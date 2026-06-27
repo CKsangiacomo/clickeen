@@ -39,26 +39,6 @@ import {
   transitionErrorResponse,
 } from './internal-product-route-utils';
 
-const INTERNAL_INSTANCE_CREATE_BODY_KEYS = new Set([
-  'instanceId',
-  'widgetType',
-  'displayName',
-  'source',
-  'publicPackage',
-  'baseLocale',
-]);
-const INTERNAL_INSTANCE_SAVE_BODY_KEYS = new Set([
-  'widgetType',
-  'displayName',
-  'source',
-  'publicPackage',
-  'baseLocale',
-]);
-
-function bodyHasOnlyKeys(value: Record<string, unknown>, keys: Set<string>): boolean {
-  return Object.keys(value).every((key) => keys.has(key));
-}
-
 async function purgePublishedLocalePackageCache(args: {
   env: TokyoRouteArgs['env'];
   accountId: string;
@@ -216,8 +196,6 @@ export async function tryHandleInternalInstanceRoutes(
       accountId,
     });
     if (!isRecord(rawBody))
-      return respondValidation(respond, 'coreui.errors.instance.invalidPayload');
-    if (!bodyHasOnlyKeys(rawBody, INTERNAL_INSTANCE_CREATE_BODY_KEYS))
       return respondValidation(respond, 'coreui.errors.instance.invalidPayload');
     const widgetType = typeof rawBody.widgetType === 'string' ? rawBody.widgetType.trim() : '';
     if (!widgetType) return respondValidation(respond, 'coreui.errors.instance.invalidPayload');
@@ -589,9 +567,6 @@ export async function tryHandleInternalInstanceRoutes(
         instanceId,
         accountId,
       })) as Record<string, unknown> | null;
-      if (!isRecord(body) || !bodyHasOnlyKeys(body, INTERNAL_INSTANCE_SAVE_BODY_KEYS)) {
-        return respondValidation(respond, 'coreui.errors.instance.invalidPayload');
-      }
       const source = isRecord(body?.source) ? body.source : null;
       const config = isRecord(source?.config) ? source.config : null;
       const content = normalizeAccountInstanceContentDocument(source?.content);
@@ -600,6 +575,7 @@ export async function tryHandleInternalInstanceRoutes(
         : null;
       const baseLocale = normalizeLocale(body?.baseLocale);
       if (
+        !isRecord(body) ||
         !config ||
         !content ||
         !publicPackage ||

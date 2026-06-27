@@ -36,12 +36,6 @@ type RouteFailureLike = {
   };
 };
 
-const ACCOUNT_INSTANCE_SAVE_BODY_KEYS = new Set(['widgetType', 'config', 'displayName']);
-
-function bodyHasOnlyKeys(value: Record<string, unknown>, keys: Set<string>): boolean {
-  return Object.keys(value).every((key) => keys.has(key));
-}
-
 function routeFailureResponse(
   request: NextRequest,
   failure: RouteFailureLike,
@@ -80,16 +74,6 @@ export async function PUT(request: NextRequest, context: RouteContext) {
     );
   }
   const body = bodyResult.payload;
-  if (body && !bodyHasOnlyKeys(body, ACCOUNT_INSTANCE_SAVE_BODY_KEYS)) {
-    return withSession(
-      request,
-      NextResponse.json(
-        { error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.invalid' } },
-        { status: 422 },
-      ),
-      current.value.setCookies,
-    );
-  }
 
   const widgetType = typeof body?.widgetType === 'string' ? body.widgetType.trim() : '';
   const config = body?.config;

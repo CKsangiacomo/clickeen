@@ -116,8 +116,6 @@ async function testInstanceMetaRemovedContract(): Promise<void> {
   assert.doesNotMatch(bobSessionTypes, /meta\?: Record<string, unknown> \| null/);
 
   const romaSaveRoute = await readRouteSource('roma/app/api/account/instances/[instanceId]/route.ts');
-  assert.match(romaSaveRoute, /ACCOUNT_INSTANCE_SAVE_BODY_KEYS/);
-  assert.match(romaSaveRoute, /bodyHasOnlyKeys\(body, ACCOUNT_INSTANCE_SAVE_BODY_KEYS\)/);
   assert.doesNotMatch(romaSaveRoute, /body\.meta/);
   assert.doesNotMatch(romaSaveRoute, /\{ meta \}/);
 
@@ -125,10 +123,6 @@ async function testInstanceMetaRemovedContract(): Promise<void> {
   assert.doesNotMatch(duplicateRoute, /meta:\s*null/);
 
   const tokyoRoutes = await readRouteSource('tokyo-worker/src/routes/internal-instance-routes.ts');
-  assert.match(tokyoRoutes, /INTERNAL_INSTANCE_CREATE_BODY_KEYS/);
-  assert.match(tokyoRoutes, /INTERNAL_INSTANCE_SAVE_BODY_KEYS/);
-  assert.match(tokyoRoutes, /bodyHasOnlyKeys\(rawBody, INTERNAL_INSTANCE_CREATE_BODY_KEYS\)/);
-  assert.match(tokyoRoutes, /bodyHasOnlyKeys\(body, INTERNAL_INSTANCE_SAVE_BODY_KEYS\)/);
   assert.doesNotMatch(tokyoRoutes, /rawBody\.meta|body\.meta|pointer\.meta|normalizeSubmittedMeta/);
 
   const tokyoTypes = await readRouteSource('tokyo-worker/src/domains/account-instances/types.ts');
