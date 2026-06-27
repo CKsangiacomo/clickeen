@@ -50,14 +50,6 @@ export type LocalePackageMaterializationResult =
   | { ok: true; value: LocalePackageMaterializationValue }
   | (RouteFailure & { value: LocalePackageMaterializationValue });
 
-export type LocalePackageActivityEvent = {
-  stage: 'package-materializing' | 'locale-completed';
-  locale: string;
-  completed: number;
-  total: number;
-  message: string;
-};
-
 export function buildLocalePackageMaterializationFailure(args: {
   status: number;
   kind: RouteFailure['error']['kind'];
@@ -119,7 +111,6 @@ export async function materializeAccountInstanceLocalePackages(args: {
   instanceId: string;
   baseLocale: string;
   activeLocales: string[];
-  onActivity?: (event: LocalePackageActivityEvent) => void;
 }): Promise<LocalePackageMaterializationResult> {
   const locales = uniqueNonBaseLocales(args.activeLocales, args.baseLocale);
   const completed: LocalePackageMaterializationValue['completed'] = [];
@@ -178,13 +169,6 @@ export async function materializeAccountInstanceLocalePackages(args: {
 
   for (const [index, locale] of locales.entries()) {
     const remainingLocales = locales.slice(index + 1);
-    args.onActivity?.({
-      stage: 'package-materializing',
-      locale,
-      completed: completed.length,
-      total: locales.length,
-      message: `Writing ${locale} package.`,
-    });
     const overlay = await readAccountInstanceTranslationValues({
       accountId: args.accountId,
       instanceId: args.instanceId,
@@ -279,13 +263,6 @@ export async function materializeAccountInstanceLocalePackages(args: {
       instanceId: args.instanceId,
       locale,
       publicPackageFingerprint: stored.value.publicPackageFingerprint,
-    });
-    args.onActivity?.({
-      stage: 'locale-completed',
-      locale,
-      completed: completed.length,
-      total: locales.length,
-      message: `${locale} complete.`,
     });
   }
 

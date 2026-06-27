@@ -5,6 +5,14 @@ async function readSource(path: string): Promise<string> {
   return readFile(new URL(`../../${path}`, import.meta.url), 'utf8');
 }
 
+function assertLocalePackageCallsDoNotStreamActivity(source: string): void {
+  const calls = source.match(/materializeAccountInstanceLocalePackages\(\{[\s\S]*?\n\s*\}\)/g) ?? [];
+  assert.ok(calls.length > 0, 'expected locale package materialization calls');
+  for (const call of calls) {
+    assert.doesNotMatch(call, /onActivity/);
+  }
+}
+
 async function testRomaSaveDoesNotRunLocalization(): Promise<void> {
   const routeSource = await readSource('roma/app/api/account/instances/[instanceId]/route.ts');
 
@@ -30,12 +38,16 @@ async function testExplicitTranslationRouteSurvives(): Promise<void> {
   const translationRouteSource = await readSource(
     'roma/app/api/account/instances/[instanceId]/translations/generate/route.ts',
   );
+  const localePackageSource = await readSource('roma/lib/account-instance-locale-package.ts');
   const panelSource = await readSource('bob/components/TranslationsPanel.tsx');
 
   assert.match(translationRouteSource, /generateAccountInstanceTranslations/);
   assert.match(translationRouteSource, /materializeAccountInstanceLocalePackages/);
   assert.match(translationRouteSource, /localePackages/);
   assert.match(translationRouteSource, /activeLocalesToGenerate/);
+  assert.match(translationRouteSource, /generateAccountInstanceTranslations\(\{[\s\S]*onActivity: activity/);
+  assertLocalePackageCallsDoNotStreamActivity(translationRouteSource);
+  assert.doesNotMatch(localePackageSource, /package-materializing|Writing \$\{locale\} package|locale-completed/);
   assert.match(panelSource, /Generate translations/);
   assert.match(panelSource, /generateTranslations/);
 }

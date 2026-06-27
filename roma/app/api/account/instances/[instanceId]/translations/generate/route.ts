@@ -88,7 +88,6 @@ function streamGenerateTranslations(args: {
           activeLocales: generated.value.translation.activeLocales,
           accountCapsule: args.accountCapsule,
           requestId: args.requestId,
-          onActivity: activity,
         });
         if (!packages.ok) {
           result(packages.status, {

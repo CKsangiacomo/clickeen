@@ -39,6 +39,14 @@ async function readRouteSource(relativePath: string): Promise<string> {
   return readFile(path.join(repoRoot, relativePath), 'utf8');
 }
 
+function assertLocalePackageCallsDoNotStreamActivity(source: string): void {
+  const calls = source.match(/materializeAccountInstanceLocalePackages\(\{[\s\S]*?\n\s*\}\)/g) ?? [];
+  assert.ok(calls.length > 0, 'expected locale package materialization calls');
+  for (const call of calls) {
+    assert.doesNotMatch(call, /onActivity/);
+  }
+}
+
 async function materializeForWidget(widgetType: PackageParityWidget) {
   const compiled = await buildCompiledWidgetFixture(widgetType);
   const state = await buildAccountDefaultStateFixture(widgetType);
@@ -289,6 +297,11 @@ async function testLocaleMaterializationRouteWiring(): Promise<void> {
   assert.match(generateRoute, /materializeAccountInstanceLocalePackages\(\{/);
   assert.match(generateRoute, /localePackages/);
   assert.match(generateRoute, /generateAccountInstanceTranslations\(\{/);
+  assert.match(generateRoute, /generateAccountInstanceTranslations\(\{[\s\S]*onActivity: activity/);
+  assertLocalePackageCallsDoNotStreamActivity(generateRoute);
+
+  const localePackageHelper = await readRouteSource('roma/lib/account-instance-locale-package.ts');
+  assert.doesNotMatch(localePackageHelper, /package-materializing|Writing \$\{locale\} package|locale-completed/);
 
   const settingsRoute = await readRouteSource('roma/app/api/account/locales/route.ts');
   assert.match(settingsRoute, /materializeAccountInstanceLocalePackages\(\{/);
