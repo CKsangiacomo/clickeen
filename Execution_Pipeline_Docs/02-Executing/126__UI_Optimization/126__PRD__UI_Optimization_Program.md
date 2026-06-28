@@ -227,7 +227,7 @@ Not a bug list — a quality bar. The program is done when:
 126M__PRD__Roma_UI.md                       (screen refactor — last)
 audits/
   README.md                                 (the audit bar)
-  126X__Audit__<domain>.md                  (one real audit per domain, in series order)
+  126X__Audit__<domain>.md                  (one real audit per domain, in dependency order)
 ```
 
 ## 12. Permanent home for UI design-system truth (`documentation/engineering/UI/`)
@@ -263,5 +263,6 @@ This program establishes **`documentation/engineering/UI/`** as that home.
 
 1. Ground the law (§4) and authority (§5) from the TBD law sources listed above.
 2. Confirm design-freeze scope and the Appendix A hash-frozen baseline.
-3. Then fill each domain PRD in audit → PRD order, in `engineering/UI/` folder
-   order (§7), starting with **126A (accessibility)**.
+3. Then run steps 1–8 (§9) for each domain in **dependency order** (§7), starting
+   with **126A (accessibility)**. Step 9 (execute) begins only after every domain
+   reaches step 8.
