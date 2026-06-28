@@ -175,28 +175,23 @@ Two phases. **Plan everything first; execute once at the end.**
   verification, and a Done list — the 124/125 bar.
 - Start from clean git; commit doc work with explicit pathspecs.
 
-### Per-domain method (A1–H) — Phase 1 runs A1–G for every domain; H runs once at the end
+### Per-domain method (steps 1–9) — Phase 1 runs steps 1–8 for every domain; step 9 runs once at the end
 
-Every domain (dependency order, §7) runs A1–G in Phase 1. Only after **every**
-domain reaches G does H (execute) begin — once, inside-out.
+Every domain (dependency order, §7) runs steps 1–8 in Phase 1. Only after **every** domain reaches step 8 does step 9 (execute) begin — once, inside-out. (Steps are numbered 1–9 so they never collide with the A–M subPRD letters.)
 
-- **A1. As-built audit.** Read the code; capture how it works now. (Anti-speculation floor — *code owns current reality*.)
-- **A2. Baseline / directional PRD.** Current reality + known gaps. **Not fixes** — fixes need the bar (B–D). Directional draft, not final.
-- **B. Source research.** GLM and Codex each fetch what M3, Apple HIG, and OpenUI do for this area, from the primary sources only (`research/126X_Research_*.md`). *Google/Apple/OpenAI own the external reference.*
-- **C. Compare research with the human.** Converge GLM vs Codex; the human decides how the sources apply to clickeen. Agents do **not** import M3/Apple/OpenAI as product law. *Human owns product judgment.*
-- **D. Consolidate into doctrine.** The approved research becomes clickeen UI doctrine, written into the kb doc (`engineering/UI/X.md`), current → target. *Dieter kb docs own clickeen UI truth.*
-- **E. Re-audit the code against the doctrine.** Gap audit — exact files/lines that must change. Lives in `audits/126X__Audit__*.md`.
-- **F. Final executable PRD.** From current state + doctrine + gaps — an executable plan, not vibes or research notes.
-- **G. Peer review.** Attack omissions.
-- **H. Execute** — once, after every domain has reached G. Inside-out and gated; splendid bar at each layer; visual before/after proof.
+- **1. As-built audit.** Read the code; capture how it works now. (Anti-speculation floor — *code owns current reality*.)
+- **2. Baseline / directional PRD.** Current reality + known gaps. **Not fixes** — fixes need the bar (steps 3–5). Directional draft, not final.
+- **3. Source research.** GLM and Codex each fetch what M3, Apple HIG, and OpenAI UI do for this area, from the primary sources only (`research/126X_Research_*.md`). *Google/Apple/OpenAI own the external reference.*
+- **4. Compare research with the human.** Converge GLM vs Codex; the human decides how the sources apply to clickeen. Agents do **not** import M3/Apple/OpenAI as product law. *Human owns product judgment.*
+- **5. Consolidate into doctrine.** The approved research becomes clickeen UI doctrine, written into the kb doc (`engineering/UI/X.md`), current → target. *Dieter kb docs own clickeen UI truth.*
+- **6. Re-audit the code against the doctrine.** Gap audit — exact files/lines that must change. Lives in `audits/126X__Audit__*.md`.
+- **7. Final executable PRD.** From current state + doctrine + gaps — an executable plan, not vibes or research notes.
+- **8. Peer review.** Attack omissions.
+- **9. Execute** — once, after every domain has reached step 8. Inside-out and gated; splendid bar at each layer; visual before/after proof.
 
-**Authority lanes (held through every step):** code → current reality (A1) ·
-Google/Apple/OpenAI → external reference (B) · human → product judgment (C) ·
-Dieter kb docs → clickeen UI truth (D) · final PRD → execution (F/H). Keeping each
-authority in its lane is the 124/125 discipline and the no-invented-machinery tenet.
+**Authority lanes (held through every step):** code → current reality (step 1) · Google/Apple/OpenAI → external reference (step 3) · human → product judgment (step 4) · Dieter kb docs → clickeen UI truth (step 5) · final PRD → execution (steps 7/9). Keeping each authority in its lane is the 124/125 discipline and the no-invented-machinery tenet.
 
-**The gate is absolute: no code before ALL domain PRDs (A1–G for every domain)
-are maniacal-detail and peer-reviewed.**
+**The gate is absolute: no code before ALL domain PRDs (steps 1–8 for every domain) are maniacal-detail and peer-reviewed.**
 
 ## 10. Parent acceptance — the splendid-bottom-up bar
 

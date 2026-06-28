@@ -1,7 +1,7 @@
 # 126 — research
 
 Per-domain, **multi-LLM, original-source** research. This is how each domain
-audit gets its "2026 best practice" bar (six-step loop step c, MAMA §9): two
+audit gets its "2026 best practice" bar (per-domain method step 3, MAMA §9): two
 independent LLMs read what M3, Apple HIG, and OpenAI actually do for that area,
 and the converged findings become the lens the audit measures clickeen against.
 
@@ -45,9 +45,10 @@ A single LLM's summary could be rot; two independently converging is trustworthy
 
 ## How it feeds the program
 
-Converged research **is** step (c) of the six-step loop — the modern lens. The
-domain audit (step e, in `../audits/`) then measures clickeen's code against it,
-and the PRD (step f) is written from the audit. **Research → audit → PRD.**
+Converged research **is** step 3 of the per-domain method — the modern lens. The
+doctrine (step 5) carries it into the kb doc; the gap audit (step 6, in
+`../audits/`) measures clickeen's code against that doctrine; and the final PRD
+(step 7) is written from the audit. **Research → doctrine → audit → PRD.**
 
 Research is done once per domain, in series order (§7), scoped to that domain's
 question — not a bulk summary of all three systems.
