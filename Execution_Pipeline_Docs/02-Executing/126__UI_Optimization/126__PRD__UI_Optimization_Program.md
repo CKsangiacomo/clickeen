@@ -179,7 +179,7 @@ Two phases. **Plan everything first; execute once at the end.**
 
 Every domain (dependency order, §7) runs steps 1–8 in Phase 1. Only after **every** domain reaches step 8 does step 9 (execute) begin — once, inside-out. (Steps are numbered 1–9 so they never collide with the A–M subPRD letters.)
 
-- **1. As-built audit.** Read the code; capture how it works now. (Anti-speculation floor — *code owns current reality*.)
+- **1. As-built audit (GLM + Codex, converged).** Two independent passes read the code and state current reality; converge them into the kb doc's current-state. Same two-LLM pattern as step 3 — the as-built is the foundation everything builds on, and "state what exists" is the top hallucination surface, so it's doubly-verified before anything builds on it. (*Code owns current reality*.)
 - **2. Baseline / directional PRD.** Current reality + known gaps. **Not fixes** — fixes need the bar (steps 3–5). Directional draft, not final.
 - **3. Source research.** GLM and Codex each fetch what M3, Apple HIG, and OpenAI UI do for this area, from the primary sources only (`research/126X_Research_*.md`). *Google/Apple/OpenAI own the external reference.*
 - **4. Compare research with the human.** Converge GLM vs Codex; the human decides how the sources apply to clickeen. Agents do **not** import M3/Apple/OpenAI as product law. *Human owns product judgment.*
