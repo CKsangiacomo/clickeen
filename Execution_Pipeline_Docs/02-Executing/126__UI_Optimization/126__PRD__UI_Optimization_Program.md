@@ -155,7 +155,18 @@ Roma: Roma consumes DevStudio's tokenization guard.
 
 ## 9. How we work (execution doctrine)
 
-- Within each domain: **per-domain audit → filled PRD → code.**
+Two phases. **Plan everything first; execute once at the end.**
+
+- **Phase 1 — Plan (every domain, A1–G).** All research, doctrine, gap-audits,
+  final PRDs, and peer reviews done for *every* domain in §7 before any code changes.
+- **Phase 2 — Execute (H), once.** Only when all PRDs are maniacal-detail and
+  peer-reviewed. Runs inside-out and gated (tokens → components → screens),
+  splendid bar at each layer.
+- Why plan-all-then-execute: planning is cheap and reversible; code is expensive
+  and forces rework when later planning changes it. The domains are a dependency
+  graph and the screen PRDs consume every domain — so resolving the whole graph on
+  paper first means execution never reworks settled ground, and the codebase shifts
+  old → new in one controlled pass, not a half-refactored intermediate.
 - One step at a time; green (named evidence) before the next.
 - **Splendid bar at each layer, verified, before the layer above may build on it.**
 - Proof is visual: before/after browser screenshots. Green lint is not enough.
@@ -164,36 +175,28 @@ Roma: Roma consumes DevStudio's tokenization guard.
   verification, and a Done list — the 124/125 bar.
 - Start from clean git; commit doc work with explicit pathspecs.
 
-### Per-domain method — the six-step loop (runs once per domain)
+### Per-domain method (A1–H) — Phase 1 runs A1–G for every domain; H runs once at the end
 
-Every domain (see the series in §7) is processed through the same loop, produced
-in dependency order, **in this order**. The order is evidence →
-judgment → target → code-gap → plan → review → execute; each step is impossible
-to do honestly without the one before it.
+Every domain (dependency order, §7) runs A1–G in Phase 1. Only after **every**
+domain reaches G does H (execute) begin — once, inside-out.
 
-- **a. Capture what exists.** Read the as-built system. Do not reinvent what works
-  or delete what is live. (Anti-speculation floor.)
-- **b. Write it as the knowledgebase doc** in `documentation/engineering/UI/` — a
-  precise dev entry. Writing it *is* the first audit: gaps surface when you try
-  to state the system exactly. The kb is also the stable baseline judged against next.
-- **c. Audit against 2026 best practice.** Judge what can be improved or is
-  missing, by today's bar — explicitly modern, not the 20-year-old patterns that
-  built the system. The system accreted through AI defaults that regress to old
-  patterns; an audit that isn't a deliberate modern lens inherits that median.
-- **d. Update the doc to drive the system.** The kb doc becomes the target of
-  truth; code conforms to the doc, not the reverse. Doc-led prevents drift and
-  stops agents regressing to stale truth.
-- **e. Audit the codebase against the target.** Expose exactly what must change
-  in code (files, lines). This is time-bound execution analysis — it lives in the
-  PRD series `audits/` folder, not the permanent kb.
-- **f. Write the PRD** in the 126 series from (a + c + e). The plan is downstream
-  of evidence, not the source of it.
-- **Then peer-review the PRDs** (attack omissions) before any execution.
+- **A1. As-built audit.** Read the code; capture how it works now. (Anti-speculation floor — *code owns current reality*.)
+- **A2. Baseline / directional PRD.** Current reality + known gaps. **Not fixes** — fixes need the bar (B–D). Directional draft, not final.
+- **B. Source research.** GLM and Codex each fetch what M3, Apple HIG, and OpenUI do for this area, from the primary sources only (`research/126X_Research_*.md`). *Google/Apple/OpenAI own the external reference.*
+- **C. Compare research with the human.** Converge GLM vs Codex; the human decides how the sources apply to clickeen. Agents do **not** import M3/Apple/OpenAI as product law. *Human owns product judgment.*
+- **D. Consolidate into doctrine.** The approved research becomes clickeen UI doctrine, written into the kb doc (`engineering/UI/X.md`), current → target. *Dieter kb docs own clickeen UI truth.*
+- **E. Re-audit the code against the doctrine.** Gap audit — exact files/lines that must change. Lives in `audits/126X__Audit__*.md`.
+- **F. Final executable PRD.** From current state + doctrine + gaps — an executable plan, not vibes or research notes.
+- **G. Peer review.** Attack omissions.
+- **H. Execute** — once, after every domain has reached G. Inside-out and gated; splendid bar at each layer; visual before/after proof.
 
-The ordering is non-negotiable. Reverse any pair and the failure it closes
-reopens: (a/b) close speculation, (c) closes the dated median, (d) closes doc-code
-drift, (e/f) close invented plans, review closes overclaim. This is why the
-program runs serially per domain, not as one pass.
+**Authority lanes (held through every step):** code → current reality (A1) ·
+Google/Apple/OpenAI → external reference (B) · human → product judgment (C) ·
+Dieter kb docs → clickeen UI truth (D) · final PRD → execution (F/H). Keeping each
+authority in its lane is the 124/125 discipline and the no-invented-machinery tenet.
+
+**The gate is absolute: no code before ALL domain PRDs (A1–G for every domain)
+are maniacal-detail and peer-reviewed.**
 
 ## 10. Parent acceptance — the splendid-bottom-up bar
 
