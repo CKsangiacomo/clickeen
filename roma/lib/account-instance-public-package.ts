@@ -10,6 +10,7 @@ import {
 } from '@clickeen/ck-runtime-materializer';
 import {
   getAccountFontRecord,
+  isAcceptedAccountFontUpload,
   isAccountFontFamily,
   type RuntimeTypographyData,
 } from '@clickeen/widget-shell';
@@ -340,6 +341,17 @@ async function resolveRuntimeTypographyData(args: {
     if (!resolvedAsset) {
       return validationFailure(
         'coreui.errors.typography.fontAsset.missing',
+        record.assetRef,
+        [`fontLibrary.fonts.${family}.assetRef`],
+      );
+    }
+    if (
+      resolvedAsset.assetType !== 'font' ||
+      resolvedAsset.contentType !== record.contentType ||
+      !isAcceptedAccountFontUpload(record.assetRef, resolvedAsset.contentType)
+    ) {
+      return validationFailure(
+        'coreui.errors.typography.fontAsset.invalid',
         record.assetRef,
         [`fontLibrary.fonts.${family}.assetRef`],
       );

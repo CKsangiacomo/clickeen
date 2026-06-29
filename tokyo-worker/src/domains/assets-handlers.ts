@@ -202,6 +202,8 @@ function serializeResolvedAccountAsset(
   return {
     assetRef: file.assetRef,
     url: `${origin}${buildAccountAssetPublicPath(file.key)}`,
+    assetType: file.assetType,
+    contentType: file.contentType,
   };
 }
 

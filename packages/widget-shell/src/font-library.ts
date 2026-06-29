@@ -290,7 +290,7 @@ function normalizeFontRecord(family: string, value: unknown): AccountFontRecord 
   if (source === 'account-asset') {
     const assetRef = normalizeNonEmptyString(value.assetRef);
     const contentType = normalizeNonEmptyString(value.contentType);
-    if (!assetRef || !contentType || hasForbiddenAccountAssetFields(value)) return null;
+    if (!assetRef || !contentType || !isAcceptedAccountFontUpload(assetRef, contentType) || hasForbiddenAccountAssetFields(value)) return null;
     return {
       ...base,
       source,

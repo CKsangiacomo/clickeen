@@ -101,6 +101,12 @@
       if (requireWidgetName && data.widgetname !== normalized) return;
       if (!requireWidgetName && data.widgetname && data.widgetname !== normalized) return;
       if (instanceId && typeof data.instanceId === 'string' && data.instanceId && data.instanceId !== instanceId) return;
+      if (data.typographyData && typeof data.typographyData === 'object') {
+        window.CK_WIDGET_TYPOGRAPHY_DATA = data.typographyData;
+        if (window.CKTypography && typeof window.CKTypography.setTypographyData === 'function') {
+          window.CKTypography.setTypographyData(data.typographyData);
+        }
+      }
       handler(data);
     });
   }

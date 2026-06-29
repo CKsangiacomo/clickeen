@@ -62,7 +62,7 @@ export function buildTypographyPanel(args: {
     { key: 'title', label: 'Title' },
     { key: 'body', label: 'Subtitle' },
     { key: 'eyebrow', label: 'Eyebrow' },
-    { key: 'section', label: 'Eyebrow' },
+    { key: 'section', label: 'Section' },
     { key: 'question', label: 'Question' },
     { key: 'answer', label: 'Answer' },
     { key: 'heading', label: 'Heading' },

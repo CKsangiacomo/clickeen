@@ -94,11 +94,24 @@
     }),
   });
 
-  const typographyData = window.CK_WIDGET_TYPOGRAPHY_DATA;
-  if (!typographyData || !typographyData.curatedFonts) {
+  function readCuratedFonts(data) {
+    if (!data || typeof data !== 'object' || !data.curatedFonts || typeof data.curatedFonts !== 'object') return null;
+    return data.curatedFonts;
+  }
+
+  let curatedFonts = readCuratedFonts(window.CK_WIDGET_TYPOGRAPHY_DATA);
+  if (!curatedFonts) {
     throw new Error('[Typography] Missing typography data');
   }
-  const curatedFonts = typographyData.curatedFonts;
+
+  function setTypographyData(data) {
+    const nextCuratedFonts = readCuratedFonts(data);
+    if (!nextCuratedFonts) {
+      throw new Error('[Typography] Missing typography data');
+    }
+    window.CK_WIDGET_TYPOGRAPHY_DATA = data;
+    curatedFonts = nextCuratedFonts;
+  }
 
   const scriptFonts = {
     'Noto Sans': 'Noto+Sans:wght@100..900',
@@ -832,5 +845,6 @@
 
   window.CKTypography = {
     applyTypography,
+    setTypographyData,
   };
 })();

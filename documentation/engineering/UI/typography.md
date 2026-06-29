@@ -139,9 +139,12 @@ account font library from account widget defaults to Bob.
 Bob behavior:
 
 - The typography panel font picker uses the account font library.
+- Bob preview resolves account-uploaded font `assetRef` values through the
+  current account asset route and posts runtime typography data into the widget
+  iframe with preview state.
 - Inter is always available when account data is valid.
 - Missing or malformed `fontLibrary` fails editor open explicitly.
-- Bob must not show font choices the runtime cannot load.
+- Bob must not show or preview font choices the runtime cannot load.
 
 Runtime package behavior:
 
@@ -152,6 +155,13 @@ Runtime package behavior:
 - Account-uploaded records emit `@font-face` from resolved account asset URLs.
 - Unknown font families, missing font records, or missing account font assets
   fail materialization. They are not silently replaced with Inter.
+
+Shared widget runtime behavior:
+
+- `CKTypography` reads `CK_WIDGET_TYPOGRAPHY_DATA`.
+- Public runtime packages inline that data during package materialization.
+- Bob preview supplies the same shape through `ck:state-update.typographyData`
+  before widget clients apply preview state.
 
 ## Font Uploads
 

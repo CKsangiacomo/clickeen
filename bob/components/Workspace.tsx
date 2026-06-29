@@ -5,11 +5,55 @@ import {
   resolveTranslatedValues,
   type ResolvedAccountAsset,
 } from '@clickeen/ck-contracts';
+import type { AccountFontLibrary, RuntimeTypographyData } from '@clickeen/widget-shell';
 import { getIcon } from '../lib/icons';
 import { useWidgetSession, useWidgetSessionChrome } from '../lib/session/useWidgetSession';
 
 const BLOCKED_SWITCHER_COPY =
   'Translations not available while in editing mode. Preview translations in Translations panel.';
+
+function collectFontAssetRefs(fontLibrary: AccountFontLibrary | null): string[] {
+  if (!fontLibrary) return [];
+  const refs = new Set<string>();
+  Object.values(fontLibrary.fonts).forEach((record) => {
+    if (record.source === 'account-asset') refs.add(record.assetRef);
+  });
+  return Array.from(refs);
+}
+
+function buildPreviewTypographyData(args: {
+  fontLibrary: AccountFontLibrary | null;
+  resolvedAssets: Map<string, ResolvedAccountAsset>;
+}): { ok: true; data: RuntimeTypographyData } | { ok: false; error: string | null } {
+  if (!args.fontLibrary) return { ok: false, error: 'Missing preview font library' };
+  const curatedFonts: RuntimeTypographyData['curatedFonts'] = {};
+  for (const [family, record] of Object.entries(args.fontLibrary.fonts)) {
+    if (record.source === 'google') {
+      curatedFonts[family] = {
+        source: 'google',
+        spec: record.spec,
+        familyClass: record.familyClass,
+        weights: record.weights,
+        styles: record.styles,
+      };
+      continue;
+    }
+    const resolved = args.resolvedAssets.get(record.assetRef);
+    if (!resolved) return { ok: false, error: null };
+    if (resolved.assetType !== 'font' || resolved.contentType !== record.contentType) {
+      return { ok: false, error: 'Failed to resolve preview font assets' };
+    }
+    curatedFonts[family] = {
+      source: 'account-asset',
+      url: resolved.url,
+      contentType: record.contentType,
+      familyClass: record.familyClass,
+      weights: record.weights,
+      styles: record.styles,
+    };
+  }
+  return { ok: true, data: { curatedFonts } };
+}
 
 export function Workspace({
   baseLocale,
@@ -28,7 +72,7 @@ export function Workspace({
 }) {
   const session = useWidgetSession();
   const chrome = useWidgetSessionChrome();
-  const { accountAssets, compiled, instanceData } = session;
+  const { accountAssets, compiled, fontLibrary, instanceData } = session;
   const { preview, setPreview } = chrome;
   const instanceId = chrome.meta?.instanceId ?? '';
   const device = preview.device;
@@ -53,9 +97,22 @@ export function Workspace({
     }
   }, [instanceData]);
   const mediaAssetRefs = useMemo(() => mediaAssets.ok ? mediaAssets.refs : [], [mediaAssets]);
+  const fontAssetRefs = useMemo(() => collectFontAssetRefs(fontLibrary), [fontLibrary]);
+  const accountAssetRefs = useMemo(
+    () => Array.from(new Set([...mediaAssetRefs, ...fontAssetRefs])),
+    [mediaAssetRefs, fontAssetRefs],
+  );
+  const unresolvedAccountAssetRefs = useMemo(
+    () => accountAssetRefs.filter((assetRef) => !resolvedAssets.has(assetRef)),
+    [accountAssetRefs, resolvedAssets],
+  );
   const unresolvedMediaAssetRefs = useMemo(
     () => mediaAssetRefs.filter((assetRef) => !resolvedAssets.has(assetRef)),
     [mediaAssetRefs, resolvedAssets],
+  );
+  const unresolvedFontAssetRefs = useMemo(
+    () => fontAssetRefs.filter((assetRef) => !resolvedAssets.has(assetRef)),
+    [fontAssetRefs, resolvedAssets],
   );
   const previewInstanceData = useMemo(() => {
     if (!mediaAssetRefs.length) return instanceData;
@@ -66,6 +123,11 @@ export function Workspace({
       : instanceData;
   }, [instanceData, mediaAssetRefs, resolvedAssets, unresolvedMediaAssetRefs]);
   const mediaPreviewStateReady = mediaAssets.ok && !unresolvedMediaAssetRefs.length;
+  const previewTypography = useMemo(
+    () => buildPreviewTypographyData({ fontLibrary, resolvedAssets }),
+    [fontLibrary, resolvedAssets],
+  );
+  const previewTypographyData = previewTypography.ok ? previewTypography.data : null;
   const effectivePreviewableLocales = useMemo(() => {
     const previewableLocales = Array.from(
       new Set(
@@ -92,7 +154,7 @@ export function Workspace({
     previewMode === 'translations' && effectivePreviewLocale !== baseLocale
       ? translationValuesByLanguage[effectivePreviewLocale] ?? null
       : null;
-  const previewStateReady = mediaPreviewStateReady;
+  const previewStateReady = mediaPreviewStateReady && previewTypography.ok && !unresolvedFontAssetRefs.length;
   const resolvedPreviewInstanceData = useMemo(() => {
     if (!selectedTranslationValues) return previewInstanceData;
     return resolveTranslatedValues(previewInstanceData, selectedTranslationValues);
@@ -108,6 +170,7 @@ export function Workspace({
     previewablePreviewLocales: effectivePreviewableLocales,
     device,
     theme,
+    typographyData: previewTypographyData,
   });
 
   useEffect(() => {
@@ -121,6 +184,7 @@ export function Workspace({
       previewablePreviewLocales: effectivePreviewableLocales,
       device,
       theme,
+      typographyData: previewTypographyData,
     };
   }, [
     compiled,
@@ -132,6 +196,7 @@ export function Workspace({
     effectivePreviewableLocales,
     device,
     theme,
+    previewTypographyData,
   ]);
 
   useEffect(() => {
@@ -140,13 +205,13 @@ export function Workspace({
       return;
     }
     let cancelled = false;
-    if (!mediaAssetRefs.length) {
+    if (!accountAssetRefs.length) {
       return () => {
         cancelled = true;
       };
     }
 
-    const missingAssetRefs = unresolvedMediaAssetRefs;
+    const missingAssetRefs = unresolvedAccountAssetRefs;
     if (!missingAssetRefs.length) {
       return () => {
         cancelled = true;
@@ -168,13 +233,18 @@ export function Workspace({
         });
       })
       .catch(() => {
-        if (!cancelled) setIframeLoadError('Failed to resolve preview media assets');
+        if (!cancelled) setIframeLoadError('Failed to resolve preview account assets');
       });
 
     return () => {
       cancelled = true;
     };
-  }, [accountAssets, mediaAssets, mediaAssetRefs, resolvedAssets, unresolvedMediaAssetRefs]);
+  }, [accountAssets, mediaAssets, accountAssetRefs, unresolvedAccountAssetRefs]);
+
+  useEffect(() => {
+    if (!hasWidget || previewTypography.ok || !previewTypography.error) return;
+    setIframeLoadError(previewTypography.error);
+  }, [hasWidget, previewTypography]);
 
   useEffect(() => {
     if (previewStateReady) return;
@@ -245,6 +315,7 @@ export function Workspace({
           previewMode: snapshot.previewMode,
           device: snapshot.device,
           theme: snapshot.theme,
+          ...(snapshot.typographyData ? { typographyData: snapshot.typographyData } : null),
         },
         '*',
       );
@@ -284,6 +355,7 @@ export function Workspace({
       previewMode,
       device,
       theme,
+      ...(previewTypographyData ? { typographyData: previewTypographyData } : null),
     };
 
     iframeWindow.postMessage(message, '*');
@@ -297,6 +369,7 @@ export function Workspace({
     baseLocale,
     device,
     theme,
+    previewTypographyData,
     iframeLoaded,
     previewStateReady,
   ]);

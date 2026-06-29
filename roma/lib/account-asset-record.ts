@@ -39,9 +39,13 @@ export function parseResolvedAccountAsset(raw: unknown): ResolvedAccountAsset | 
   if (!isRecord(raw)) return null;
   if (!isExactAccountAssetRef(raw.assetRef)) return null;
   if (!isNonEmptyTrimmedString(raw.url)) return null;
+  if (!isNonEmptyTrimmedString(raw.assetType)) return null;
+  if (!isNonEmptyTrimmedString(raw.contentType)) return null;
   return {
     assetRef: raw.assetRef,
     url: raw.url,
+    assetType: raw.assetType,
+    contentType: raw.contentType,
   };
 }
 

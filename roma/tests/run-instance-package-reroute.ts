@@ -4,7 +4,10 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { materializeRuntimePackage } from '@clickeen/ck-runtime-materializer';
 import { extractSavedTextFieldsForEditableFields } from '@clickeen/ck-contracts/translated-value-primitives';
-import { createDefaultAccountFontLibrary } from '@clickeen/widget-shell';
+import {
+  createDefaultAccountFontLibrary,
+  type AccountFontLibrary,
+} from '@clickeen/widget-shell';
 import {
   buildAccountDefaultStateFixture,
   buildCompiledWidgetFixture,
@@ -24,33 +27,66 @@ import { buildLocalePackageDeleteFailureCoordinate } from '../lib/account-locale
 
 const repoRoot = path.resolve(fileURLToPath(new URL('../..', import.meta.url)));
 const CLOUDFLARE_REQUEST_CONTEXT_SYMBOL = Symbol.for('__cloudflare-request-context__');
+const UPLOADED_FONT_FAMILY = 'Uploaded Font';
+const UPLOADED_FONT_ASSET_REF = 'UploadedFont.woff2';
+const UPLOADED_FONT_URL = `https://tokyo.dev.clickeen.com/assets/account/CLICKEEN/${UPLOADED_FONT_ASSET_REF}`;
+
+type ResolvedAssetFixture = {
+  assetRef: string;
+  url: string;
+  assetType: string;
+  contentType: string;
+};
+
+type TokyoControlFixtureOptions = {
+  fontLibrary?: AccountFontLibrary;
+  resolveAssets?: (assetRefs: string[]) => Promise<Response> | Response;
+};
 
 async function withTokyoProductControlDefaults<T>(
   accountId: string,
   run: () => Promise<T>,
+  options: TokyoControlFixtureOptions = {},
 ): Promise<T> {
   const globalRecord = globalThis as Record<PropertyKey, unknown>;
   const previous = globalRecord[CLOUDFLARE_REQUEST_CONTEXT_SYMBOL];
-  globalRecord[CLOUDFLARE_REQUEST_CONTEXT_SYMBOL] = {
-    env: {
-      TOKYO_PRODUCT_CONTROL: {
-        fetch: async () =>
-          new Response(
-            JSON.stringify({
+  const fontLibrary = options.fontLibrary ?? createDefaultAccountFontLibrary();
+  const env: {
+    TOKYO_PRODUCT_CONTROL: { fetch: () => Promise<Response> };
+    TOKYO_ASSET_CONTROL?: { fetch: (_input: RequestInfo | URL, init?: RequestInit) => Promise<Response> };
+  } = {
+    TOKYO_PRODUCT_CONTROL: {
+      fetch: async () =>
+        new Response(
+          JSON.stringify({
+            accountId,
+            widgetDefaults: {
               accountId,
-              widgetDefaults: {
-                accountId,
-                fontLibrary: createDefaultAccountFontLibrary(),
-                shell: {},
-                widgets: {},
-                seededAt: '2026-01-01T00:00:00.000Z',
-                updatedAt: '2026-01-01T00:00:00.000Z',
-              },
-            }),
-            { status: 200, headers: { 'content-type': 'application/json' } },
-          ),
-      },
+              fontLibrary,
+              shell: {},
+              widgets: {},
+              seededAt: '2026-01-01T00:00:00.000Z',
+              updatedAt: '2026-01-01T00:00:00.000Z',
+            },
+          }),
+          { status: 200, headers: { 'content-type': 'application/json' } },
+        ),
     },
+  };
+  if (options.resolveAssets) {
+    env.TOKYO_ASSET_CONTROL = {
+      fetch: async (_input, init) => {
+        const rawBody = typeof init?.body === 'string' ? init.body : '';
+        const payload = rawBody ? JSON.parse(rawBody) as { assetRefs?: unknown } : null;
+        const assetRefs = Array.isArray(payload?.assetRefs)
+          ? payload.assetRefs.filter((assetRef): assetRef is string => typeof assetRef === 'string')
+          : [];
+        return options.resolveAssets!(assetRefs);
+      },
+    };
+  }
+  globalRecord[CLOUDFLARE_REQUEST_CONTEXT_SYMBOL] = {
+    env,
   };
   try {
     return await run();
@@ -61,6 +97,61 @@ async function withTokyoProductControlDefaults<T>(
       globalRecord[CLOUDFLARE_REQUEST_CONTEXT_SYMBOL] = previous;
     }
   }
+}
+
+function jsonResponse(payload: unknown, status = 200): Response {
+  return new Response(JSON.stringify(payload), {
+    status,
+    headers: { 'content-type': 'application/json' },
+  });
+}
+
+function buildUploadedFontLibrary(): AccountFontLibrary {
+  const base = createDefaultAccountFontLibrary();
+  return {
+    ...base,
+    fonts: {
+      ...base.fonts,
+      [UPLOADED_FONT_FAMILY]: {
+        label: UPLOADED_FONT_FAMILY,
+        source: 'account-asset',
+        category: 'display',
+        familyClass: 'sans',
+        usage: 'heading-only',
+        weights: ['400'],
+        styles: ['normal'],
+        assetRef: UPLOADED_FONT_ASSET_REF,
+        contentType: 'font/woff2',
+      },
+    },
+  };
+}
+
+function setTitleFont(config: Record<string, unknown>, family: string): Record<string, unknown> {
+  const typography = config.typography;
+  if (!typography || typeof typography !== 'object' || Array.isArray(typography)) {
+    throw new Error('test typography fixture missing');
+  }
+  const roles = (typography as Record<string, unknown>).roles;
+  if (!roles || typeof roles !== 'object' || Array.isArray(roles)) {
+    throw new Error('test typography roles fixture missing');
+  }
+  const title = (roles as Record<string, unknown>).title;
+  if (!title || typeof title !== 'object' || Array.isArray(title)) {
+    throw new Error('test typography title role fixture missing');
+  }
+  (title as Record<string, unknown>).family = family;
+  return config;
+}
+
+function resolvedUploadedFontAsset(overrides: Partial<ResolvedAssetFixture> = {}): ResolvedAssetFixture {
+  return {
+    assetRef: UPLOADED_FONT_ASSET_REF,
+    url: UPLOADED_FONT_URL,
+    assetType: 'font',
+    contentType: 'font/woff2',
+    ...overrides,
+  };
 }
 
 async function assertRomaIsOnly124CCaller(): Promise<void> {
@@ -256,6 +347,99 @@ async function testRouteFacingMaterializerWrapper(): Promise<void> {
   assert.equal(typeof result.value.indexHtml, 'string');
   assert.equal(typeof result.value.stylesCss, 'string');
   assert.equal(typeof result.value.runtimeJs, 'string');
+}
+
+async function materializeCallToActionWithUploadedFont(args: {
+  resolveAssets: (assetRefs: string[]) => Promise<Response> | Response;
+}) {
+  const compiled = await buildCompiledWidgetFixture('calltoaction');
+  const config = setTitleFont(
+    await buildAccountDefaultStateFixture('calltoaction'),
+    UPLOADED_FONT_FAMILY,
+  );
+  const coordinate = widgetFixtureCoordinate('calltoaction');
+  return withTokyoProductControlDefaults(
+    coordinate.accountId,
+    () =>
+      materializeAccountInstancePublicPackage({
+        compiled,
+        accountId: coordinate.accountId,
+        accountCapsule: 'test-capsule',
+        requestId: 'test-request',
+        instanceId: coordinate.instanceId,
+        baseLocale: coordinate.baseLocale,
+        displayName: coordinate.displayName,
+        config,
+      }),
+    {
+      fontLibrary: buildUploadedFontLibrary(),
+      resolveAssets: args.resolveAssets,
+    },
+  );
+}
+
+async function testAccountAssetFontMaterialization(): Promise<void> {
+  const result = await materializeCallToActionWithUploadedFont({
+    resolveAssets: (assetRefs) => {
+      assert.deepEqual(assetRefs, [UPLOADED_FONT_ASSET_REF]);
+      return jsonResponse({
+        assets: [resolvedUploadedFontAsset()],
+      });
+    },
+  });
+  assert.equal(result.ok, true, JSON.stringify(result));
+  if (!result.ok) return;
+  assert.match(result.value.runtimeJs, /"Uploaded Font"/);
+  assert.match(result.value.runtimeJs, /"source":"account-asset"/);
+  assert.match(result.value.runtimeJs, /UploadedFont\.woff2/);
+  assert.match(result.value.runtimeJs, /"contentType":"font\/woff2"/);
+}
+
+async function testAccountAssetFontResolveFailures(): Promise<void> {
+  const wrongType = await materializeCallToActionWithUploadedFont({
+    resolveAssets: (assetRefs) =>
+      jsonResponse({
+        assets: [resolvedUploadedFontAsset({ assetRef: assetRefs[0]!, assetType: 'image' })],
+      }),
+  });
+  assert.equal(wrongType.ok, false, JSON.stringify(wrongType));
+  if (!wrongType.ok) {
+    assert.equal(wrongType.error.reasonKey, 'coreui.errors.typography.fontAsset.invalid');
+    assert.equal(wrongType.error.detail, UPLOADED_FONT_ASSET_REF);
+    assert.deepEqual(wrongType.error.paths, [`fontLibrary.fonts.${UPLOADED_FONT_FAMILY}.assetRef`]);
+  }
+
+  const wrongContentType = await materializeCallToActionWithUploadedFont({
+    resolveAssets: (assetRefs) =>
+      jsonResponse({
+        assets: [resolvedUploadedFontAsset({ assetRef: assetRefs[0]!, contentType: 'font/woff' })],
+      }),
+  });
+  assert.equal(wrongContentType.ok, false, JSON.stringify(wrongContentType));
+  if (!wrongContentType.ok) {
+    assert.equal(wrongContentType.error.reasonKey, 'coreui.errors.typography.fontAsset.invalid');
+    assert.equal(wrongContentType.error.detail, UPLOADED_FONT_ASSET_REF);
+    assert.deepEqual(wrongContentType.error.paths, [`fontLibrary.fonts.${UPLOADED_FONT_FAMILY}.assetRef`]);
+  }
+
+  const missing = await materializeCallToActionWithUploadedFont({
+    resolveAssets: () =>
+      jsonResponse(
+        {
+          error: {
+            kind: 'VALIDATION',
+            reasonKey: 'coreui.errors.assets.resolve.missing',
+            detail: UPLOADED_FONT_ASSET_REF,
+          },
+        },
+        422,
+      ),
+  });
+  assert.equal(missing.ok, false, JSON.stringify(missing));
+  if (!missing.ok) {
+    assert.equal(missing.error.reasonKey, 'coreui.errors.assets.resolve.missing');
+    assert.equal(missing.error.detail, UPLOADED_FONT_ASSET_REF);
+  }
 }
 
 async function testLocalePackageMaterializerWrapper(): Promise<void> {
@@ -492,6 +676,8 @@ const tests: Array<{ name: string; run: () => Promise<void> }> = [
   { name: 'byte-exact state serialization', run: testByteExactStateSerialization },
   { name: 'adapter evidence plumbing', run: testAdapterEvidencePlumbing },
   { name: 'route-facing materializer wrapper', run: testRouteFacingMaterializerWrapper },
+  { name: 'account-asset font materialization', run: testAccountAssetFontMaterialization },
+  { name: 'account-asset font resolve failures', run: testAccountAssetFontResolveFailures },
   { name: 'locale package materializer wrapper', run: testLocalePackageMaterializerWrapper },
   { name: 'locale package rejects base and inactive locales', run: testLocalePackageRejectsBaseAndInactiveLocales },
   { name: 'locale materialization route wiring', run: testLocaleMaterializationRouteWiring },

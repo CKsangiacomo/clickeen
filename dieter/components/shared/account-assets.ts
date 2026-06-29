@@ -94,7 +94,7 @@ export function createAccountAssetsClient(transport: AccountAssetsTransport): Ac
         throw new Error(resolveApiErrorReason(payload, response.status, 'coreui.errors.db.readFailed'));
       }
 
-      if (!isRecord(payload) || !hasOnlyKeys(payload, ['assets']) || !Array.isArray(payload.assets) || payload.assets.length !== assetRefsRaw.length || (payload.assets as unknown[]).some((asset) => !isRecord(asset) || !hasOnlyKeys(asset, ['assetRef', 'url']) || !isExactString(asset.assetRef) || !isExactString(asset.url) || !requested.delete(asset.assetRef))) throw new Error('coreui.errors.assets.payloadInvalid');
+      if (!isRecord(payload) || !hasOnlyKeys(payload, ['assets']) || !Array.isArray(payload.assets) || payload.assets.length !== assetRefsRaw.length || (payload.assets as unknown[]).some((asset) => !isRecord(asset) || !hasOnlyKeys(asset, ['assetRef', 'url', 'assetType', 'contentType']) || !isExactString(asset.assetRef) || !isExactString(asset.url) || !isExactString(asset.assetType) || !isExactString(asset.contentType) || !requested.delete(asset.assetRef))) throw new Error('coreui.errors.assets.payloadInvalid');
       return { assetsByRef: new Map((payload.assets as ResolvedAccountAsset[]).map((asset) => [asset.assetRef, asset])) };
     },
 

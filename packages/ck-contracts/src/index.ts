@@ -40,6 +40,8 @@ export type AccountAssetRecord = {
 export type ResolvedAccountAsset = {
   assetRef: string;
   url: string;
+  assetType: string;
+  contentType: string;
 };
 
 export type AccountAssetHostCommand = 'list-assets' | 'resolve-assets' | 'upload-asset';
@@ -311,7 +313,16 @@ function readResolvedAssetByRef(resolvedAssets: unknown, assetRefRaw: unknown): 
     : isRecord(resolvedAssets)
       ? resolvedAssets[assetRefRaw]
       : null;
-  if (!isRecord(entry) || entry.assetRef !== assetRefRaw || typeof entry.url !== 'string' || !entry.url) {
+  if (
+    !isRecord(entry) ||
+    entry.assetRef !== assetRefRaw ||
+    typeof entry.url !== 'string' ||
+    !entry.url ||
+    typeof entry.assetType !== 'string' ||
+    !entry.assetType ||
+    typeof entry.contentType !== 'string' ||
+    !entry.contentType
+  ) {
     throw new Error('ck.account_asset_resolved_invalid');
   }
   return entry as ResolvedAccountAsset;

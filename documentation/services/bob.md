@@ -76,6 +76,7 @@ Roma opens Bob:
   "baseLocale": "[baseLocale]",
   "compiled": "[compiledWidgetPayload]",
   "instanceData": "[savedInstanceData]",
+  "fontLibrary": "[accountFontLibrary]",
   "policy": "[policySnapshot]",
   "accountPublicId": "[accountPublicId]",
   "instanceId": "[instanceId]",
@@ -108,8 +109,9 @@ or:
 }
 ```
 
-Open succeeds only with explicit compiled widget software and explicit saved
-instance data from Roma.
+Open succeeds only with explicit compiled widget software, explicit saved
+instance data, and the current account font library from Roma. Missing or
+malformed `fontLibrary` fails open; Bob does not invent fallback font choices.
 
 Bob also notifies Roma when the browser-memory working copy changes:
 

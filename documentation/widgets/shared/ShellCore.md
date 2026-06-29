@@ -56,7 +56,7 @@ Widget clients call these shared globals from `tokyo/product/widgets/shared/`:
 | Global | Source file | Operator role |
 | --- | --- | --- |
 | `CKWidgetRuntime.register` | `runtime.js` | Registers the widget initializer and builds runtime context. |
-| `CKWidgetRuntime.bindStateUpdates` | `runtime.js` | Applies `ck:state-update` messages for the same widget/instance. |
+| `CKWidgetRuntime.bindStateUpdates` | `runtime.js` | Applies `ck:state-update` messages for the same widget/instance and refreshes preview typography data before the widget handler runs. |
 | `CKHeader.applyHeader` | `header.js` | Renders Header title, subtitle, Header CTA, and Header layout. |
 | `CKStagePod.applyStagePod` | `stagePod.js` | Applies Stage/Pod layout, background, padding, border, and sizing. |
 | `CKCoreSize.applyCoreSize` | `coreSize.js` | Applies Core width/height sizing variables. |
