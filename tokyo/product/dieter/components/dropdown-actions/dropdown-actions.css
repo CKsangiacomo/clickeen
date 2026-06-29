@@ -5,7 +5,7 @@
 .diet-dropdown-actions {
   position: relative;
   display: grid;
-  gap: var(--hspace-2, 0.1rem);
+  gap: var(--vertspace-2, 0.1rem);
   inline-size: 100%;
 }
 

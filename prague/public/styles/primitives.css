@@ -9,7 +9,7 @@
      while still being larger for marketing surfaces. */
   --ck-btn-px: var(--control-padding-inline);
   --ck-btn-radius: var(--control-radius-md);
-  --ck-btn-min-h: var(--min-touch-target);
+  --ck-btn-min-h: calc(var(--control-size-xl) + var(--space-3));
   --ck-btn-bg: var(--color-system-white);
   --ck-btn-color: var(--color-system-black);
   --ck-btn-border-w: 1px;
@@ -54,7 +54,7 @@
 .ck-btn--md {
   --ck-btn-px: var(--control-padding-inline);
   --ck-btn-radius: var(--control-radius-md);
-  --ck-btn-min-h: var(--min-touch-target); /* 44px */
+  --ck-btn-min-h: calc(var(--control-size-xl) + var(--space-3));
 }
 
 .ck-btn--lg {
@@ -137,8 +137,8 @@
 }
 
 .ck-btn:focus-visible {
-  outline: var(--focus-ring-width) solid var(--ck-btn-focus-ring);
-  outline-offset: var(--focus-ring-offset);
+  outline: 2px solid var(--ck-btn-focus-ring);
+  outline-offset: 2px;
 }
 
 
@@ -199,8 +199,8 @@
 }
 
 .selector-dropdown:focus-visible {
-  outline: var(--focus-ring-width) solid var(--color-system-blue);
-  outline-offset: var(--focus-ring-offset);
+  outline: 2px solid var(--color-system-blue);
+  outline-offset: 2px;
 }
 
 .selector-dropdown:active {

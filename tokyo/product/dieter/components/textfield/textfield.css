@@ -1,7 +1,7 @@
 /* Dieter Textfield — tokenized input control */
 .diet-textfield {
   display: grid;
-  gap: var(--hspace-2, 0.1rem);
+  gap: var(--vertspace-2, 0.1rem);
   color: var(--color-system-black);
   width: 100%;
 }

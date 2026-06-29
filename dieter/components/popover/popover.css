@@ -39,7 +39,7 @@
   padding: var(--popover-padding);
   background: var(--color-system-white);
   color: var(--color-text);
-  border-radius: var(--radius-4);
+  border-radius: var(--control-radius-lg);
   box-shadow: var(--shadow-floating);
 }
 

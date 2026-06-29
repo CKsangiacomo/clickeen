@@ -46,8 +46,8 @@
   min-height: var(--control-size-md, 1.5rem);
   /* Side padding scales by size (default md → --space-1) */
   padding-inline: var(--space-1, 0.25rem);
-  /* Vertical breathing room to baseline (default md → --hspace-3) */
-  padding-block-end: var(--hspace-3, 0.2rem);
+  /* Vertical breathing room to baseline. */
+  padding-block-end: var(--vertspace-3, 0.2rem);
   cursor: pointer;
   user-select: none;
 }
@@ -56,12 +56,12 @@
 .diet-tabs[data-size="sm"] .diet-tab {
   min-height: var(--control-size-sm, 1.25rem);
   padding-inline: var(--space-1, 0.25rem);
-  padding-block-end: var(--hspace-3, 0.2rem);
+  padding-block-end: var(--vertspace-3, 0.2rem);
 }
 .diet-tabs[data-size="lg"] .diet-tab {
   min-height: var(--control-size-lg, 1.75rem);
   padding-inline: var(--space-2, 0.5rem);
-  padding-block-end: var(--hspace-4, 0.3rem);
+  padding-block-end: var(--vertspace-4, 0.3rem);
 }
 
 /* Tab label relies on global .label-* typography; only color + behavior here */

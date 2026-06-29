@@ -77,7 +77,7 @@
   padding: var(--space-1);
   display: block;
   border: 1px solid var(--color-system-gray-6-step4);
-  border-radius: var(--radius-3);
+  border-radius: var(--control-radius-md);
   background: var(--color-system-gray-6-step4);
   transition:
     border-color var(--duration-base) var(--easing-standard),
@@ -165,7 +165,7 @@
 .diet-repeater__placeholder {
   border: 2px dashed var(--color-system-blue);
   background: color-mix(in oklab, var(--color-system-blue), transparent 92%);
-  border-radius: var(--radius-3);
+  border-radius: var(--control-radius-md);
   transition: height var(--duration-snap) var(--easing-standard), margin var(--duration-snap) var(--easing-standard);
 }
 

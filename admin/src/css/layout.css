@@ -180,14 +180,14 @@ body {
 
 .devstudio-page {
   border: none;
-  border-radius: var(--radius-4, 0.5rem);
+  border-radius: var(--control-radius-lg, 0.5rem);
   padding: var(--space-6, 1.5rem);
   background: var(--role-surface-bg);
 }
 
 .devstudio-page-layout {
   border: none;
-  border-radius: var(--radius-4, 0.5rem);
+  border-radius: var(--control-radius-lg, 0.5rem);
   padding: 32px;
   background: var(--color-system-white);
   min-height: 100vh;
@@ -219,7 +219,7 @@ body {
   margin-bottom: var(--space-6);
   background: var(--color-system-white);
   padding: 32px;
-  border-radius: var(--radius-4, 0.5rem);
+  border-radius: var(--control-radius-lg, 0.5rem);
 }
 
 .devstudio-page-section:last-child {

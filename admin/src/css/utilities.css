@@ -68,7 +68,7 @@
   gap: var(--space-4);
   width: min(420px, 100%);
   padding: var(--space-5);
-  border-radius: var(--radius-4);
+  border-radius: var(--control-radius-lg);
   background: var(--role-surface-bg, var(--color-system-white));
   border: 1px solid var(--role-border);
   box-shadow: var(--shadow-lg, 0 18px 48px color-mix(in oklab, var(--color-system-black), transparent 82%));
@@ -106,8 +106,8 @@
 
 .devstudio-token-editor__select:focus,
 .devstudio-token-editor__input:focus {
-  outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, var(--color-system-blue));
-  outline-offset: var(--focus-ring-offset, 2px);
+  outline: 2px solid var(--focus-ring-color, var(--color-system-blue));
+  outline-offset: 2px;
 }
 
 .devstudio-token-editor__diff {
@@ -132,7 +132,7 @@ code {
 
 pre {
   background: color-mix(in oklab, var(--role-surface-bg), var(--color-text) 8%);
-  border-radius: var(--radius-4, 0.5rem);
+  border-radius: var(--control-radius-lg, 0.5rem);
   padding: var(--space-4);
   overflow-x: auto;
 }

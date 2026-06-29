@@ -118,7 +118,7 @@ const localeHrefFor = (nextLocale: string) => {
        while still allowing their background to extend underneath it.
        Keep this token-driven (no magic pixels) so it stays correct as controls/tokens evolve. */
     --ck-siteNavPadBlock: var(--space-5);
-    --ck-siteNavControlMinH: var(--min-touch-target);
+    --ck-siteNavControlMinH: calc(var(--control-size-xl) + var(--space-3));
     --ck-siteNav-h: calc(var(--ck-siteNavPadBlock) * 2 + var(--ck-siteNavControlMinH));
   }
 

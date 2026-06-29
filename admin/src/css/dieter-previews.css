@@ -45,7 +45,7 @@
 
 .preview-specs {
   display: grid;
-  gap: var(--hspace-1, 0);
+  gap: var(--vertspace-1, 0);
   justify-self: start;
   min-inline-size: 0;
 }
@@ -103,7 +103,7 @@
   grid-template-columns: minmax(0, 240px) 280px;
   gap: var(--space-4);
   padding: 20px;
-  border-radius: var(--radius-4);
+  border-radius: var(--control-radius-lg);
   background: var(--role-surface-muted);
   margin-bottom: var(--space-6);
   break-inside: avoid;
@@ -143,7 +143,7 @@
   padding-inline: var(--space-2);
   width: 280px;
   background: var(--color-system-white);
-  border-radius: var(--radius-4);
+  border-radius: var(--control-radius-lg);
   border: none;
 }
 
@@ -162,7 +162,7 @@
   display: flex;
   gap: var(--space-4);
   padding: 16px;
-  border-radius: var(--radius-4);
+  border-radius: var(--control-radius-lg);
   background: var(--role-surface-muted);
   break-inside: avoid;
   -webkit-column-break-inside: avoid;
@@ -184,7 +184,7 @@
   padding-block: var(--space-5);
   padding-inline: var(--space-2);
   background: var(--color-system-white);
-  border-radius: var(--radius-4);
+  border-radius: var(--control-radius-lg);
   border: none;
   display: grid;
   gap: var(--space-3);

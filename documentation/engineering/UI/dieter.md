@@ -1,6 +1,6 @@
-# Dieter — the Clickeen design system
+# Dieter - The Clickeen Design System
 
-**Living, canonical reference — the system overview.**
+**Living, canonical reference - the system overview.**
 Seeded 2026-06-27 from the as-built tokens/code; improved in place as UI program 126 executes.
 
 - Authority (why this home exists): [`126__PRD__UI_Optimization_Program.md` §12](../../../Execution_Pipeline_Docs/02-Executing/126__UI_Optimization/126__PRD__UI_Optimization_Program.md).
@@ -32,7 +32,7 @@ program.
 - `dieter-typography.css` — type (see [`typography.md`](typography.md)).
 - `tokens.css` — `@import`s the three above.
 
-**Components (middle).** ~27 components under `dieter/components/*`, each
+**Components (middle).** 26 components under `dieter/components/*`, each
 `.css` + `.html` stencil + `.spec.json` + (usually) a `.ts` hydrate function.
 See [`components.md`](components.md) for the catalog and the hydration/spec model.
 
@@ -42,26 +42,31 @@ different depth. See [`surfaces.md`](surfaces.md).
 ## Foundation substrate (non-color, non-type)
 
 Everything that isn't color or type lives in `dieter-foundation-tokens.css`.
-Each scale below is a candidate for its own discipline doc where it merits one;
-the rest stay here as substrate.
+Each scale below is a current Dieter substrate decision. Color, typography,
+icon use, motion, interaction state, component behavior, and dialog/modal
+layering are owned by their own UI docs.
 
-- **Spacing** — `--space-0`…`--space-10` (2px→40px, 4px grid). The base length.
-- **Vertical rhythm** — `--vertspace-1`…`--vertspace-9` (0→0.8rem, 0.1rem steps).
-  Genuinely separate from `--space-*` (sub-2px rhythm, not aliases).
-- **Control sizing** — `--control-size-xs`…`--control-size-xl` (16→32px heights).
-- **Control geometry** — `--control-padding-inline` + `--control-inline-gap-xs…xl`
-  (internal gaps) + `--control-radius-none…10xl` (14-stop radius scale, 0→76px),
-  plus `--radius-3`/`--radius-4` surface aliases.
-- **Icon sizing** — `--icon-size-12`…`--icon-size-40` (8 stops).
-- **Elevation** — `--shadow-elevated` / `--shadow-floating` / `--shadow-inset-control`
-  (all `color-mix(in oklab, …)`, so elevation not color).
-- **Semantic utility** — `.sr-only` exposes text for assistive technology when
-  visible layout should not show it; 126A owns semantic truth, not focus or touch
-  target programs.
-- **Motion** — `--duration-snap`, `--duration-base`, and
-  `--easing-standard` — see [`motion.md`](motion.md).
-- **Utilities** — `.sr-only` (line 92) and `@media (prefers-reduced-motion: reduce)`
-  (line 99) ship here.
+- **Structural spacing** - `--space-0` through `--space-10`. Use this for
+  layout spacing, page/component gaps, padding, and structural rhythm.
+- **Vertical rhythm** - `--vertspace-1` through `--vertspace-9`. Use this for
+  compact vertical breathing room inside dense controls where structural
+  spacing is too coarse.
+- **Control sizing** - `--control-size-xs` through `--control-size-xl` define
+  visual control heights. They are not mobile/touch target doctrine.
+- **Control geometry** - `--control-padding-inline`,
+  `--control-inline-gap-xs` through `--control-inline-gap-xl`, and
+  `--control-radius-none` through `--control-radius-10xl`.
+- **Icon sizing** - `--icon-size-12` through `--icon-size-40`. Icon origination,
+  render, sizing consumption, color, and semantics are in
+  [`iconography.md`](iconography.md).
+- **Elevation** - `--shadow-elevated`, `--shadow-floating`, and
+  `--shadow-inset-control`. Do not expand these into an elevation scale here.
+- **Semantic utility** - `.sr-only` exposes text for assistive technology when
+  visible layout should not show it. 126A owns semantic truth.
+- **Motion bridge** - `--duration-snap`, `--duration-base`, and
+  `--easing-standard` are documented in [`motion.md`](motion.md).
+- **Reduced-motion guard** - the global
+  `@media (prefers-reduced-motion: reduce)` block ships in foundation source.
 
 ## How the component system works
 
@@ -76,11 +81,19 @@ the rest stay here as substrate.
   into `tokyo/product/dieter/**`, served from Tokyo R2 at `/dieter`. See
   [`ops.md`](ops.md).
 
-## Honest gaps (improved during the 126 series)
+## Current Boundaries
 
-- No z-index token system — raw `z-index` literals across component CSS.
-- Motion now has `--duration-snap`, `--duration-base`, and
-  `--easing-standard`; see [`motion.md`](motion.md).
-- Color: current Dieter color law is light-mode only; there is no current
-  dark-mode contract (see [`color.md`](color.md)).
-- `command-activity` is a dead/empty dir; `textrename` missing `.spec.json`.
+- `tokens.css` is the composed entrypoint. Foundation shadows reference color
+  tokens, so the foundation file is consumed through that composition.
+- Numeric radius aliases are not Dieter law. Use `--control-radius-*`.
+- Focus-ring width, focus-ring offset, and touch-target sizing are not Dieter
+  foundation doctrine. `--focus-ring-color` is a color token owned by
+  [`color.md`](color.md).
+- There is no z-index token family in Dieter. Component layering belongs to
+  [`components.md`](components.md) and dialog/modal behavior belongs to
+  [`dialogs-and-modals.md`](dialogs-and-modals.md).
+- Current Dieter color law is light-mode only; there is no current dark-mode
+  contract. See [`color.md`](color.md).
+- Component-specific raw shadows, raw z-index values, and component API cleanup
+  belong to [`components.md`](components.md) unless a more specific PRD owns the
+  surface.

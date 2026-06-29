@@ -8,7 +8,7 @@ Seeded 2026-06-27 from `dieter/components/*`; improved in place as UI program
 - **Source of truth:** `dieter/components/*` (each component's `.css`/`.html`/`.spec.json`/`.ts`) and `dieter/components/index.ts`.
 - System mechanics (hydration model, spec binding, build): see [`dieter.md`](dieter.md). This doc is the per-component lookup; that doc explains the system once.
 
-## Catalog (27 component dirs + shared)
+## Catalog (26 dirs including shared)
 
 Legend: ✅ exported from `index.ts` · ⚠️ has `.ts` but not exported · ⊘ CSS/HTML only · 💀 dead/broken.
 

@@ -132,7 +132,7 @@ async function generateColorsPage() {
   const html = `${GENERATED_HEADER}
 <div class="dieter-preview colors-page" data-governance-count="${tokens.length}">
   <style>
-    .colors-page .chip { display: block; inline-size: 72px; block-size: 56px; border-radius: var(--radius-4); border: 1px solid color-mix(in oklab, var(--role-border), transparent 35%); }
+    .colors-page .chip { display: block; inline-size: 72px; block-size: 56px; border-radius: var(--control-radius-lg); border: 1px solid color-mix(in oklab, var(--role-border), transparent 35%); }
     .colors-page .token-label { display: block; font: 600 var(--fs-11)/1.2 var(--font-ui); color: color-mix(in oklab, var(--color-text), transparent 30%); }
     .colors-page .token-value { display: block; margin-block-start: 2px; font: 500 var(--fs-10)/1.2 var(--font-ui); color: color-mix(in oklab, var(--color-text), transparent 48%); max-inline-size: 18ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .colors-page .row { display: flex; flex-wrap: nowrap; align-items: center; column-gap: clamp(4px, 2vw, 32px); row-gap: 0; width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
@@ -142,8 +142,8 @@ async function generateColorsPage() {
     .colors-page .preview-specs { width: clamp(120px, 18vw, 220px); text-align: right; overflow: hidden; text-overflow: ellipsis; }
     .colors-page .componentpreview { justify-content: flex-start; }
     .colors-page .token-readonly { display: inline-block; }
-    .colors-page .token-edit-trigger { border: 0; padding: 0; background: transparent; cursor: pointer; border-radius: var(--radius-4); }
-    .colors-page .token-edit-trigger:focus-visible { outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, var(--color-system-blue)); outline-offset: var(--focus-ring-offset, 2px); }
+    .colors-page .token-edit-trigger { border: 0; padding: 0; background: transparent; cursor: pointer; border-radius: var(--control-radius-lg); }
+    .colors-page .token-edit-trigger:focus-visible { outline: 2px solid var(--focus-ring-color, var(--color-system-blue)); outline-offset: 2px; }
   </style>
 ${renderColorRows(tokens)}
 </div>
@@ -196,7 +196,7 @@ async function generateIconsPage() {
     .icon-row { display: grid; grid-template-columns: 240px 1fr; gap: var(--space-4) var(--space-6); padding: 0; align-items: center; }
     .icon-row__header { font: 600 var(--fs-13)/1.3 var(--font-ui); color: var(--color-text); text-transform: capitalize; min-inline-size: 0; }
     .icon-row__cells { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: clamp(var(--space-2), 2vw, var(--space-4)); align-items: center; justify-items: center; }
-    .icon-card { display: flex; flex-direction: column; gap: var(--space-2); padding: var(--space-3) var(--space-4); border-radius: var(--radius-3); background: var(--color-system-white); border: 1px solid color-mix(in oklab, var(--role-border), transparent 35%); align-items: center; width: 100%; box-sizing: border-box; }
+    .icon-card { display: flex; flex-direction: column; gap: var(--space-2); padding: var(--space-3) var(--space-4); border-radius: var(--control-radius-md); background: var(--color-system-white); border: 1px solid color-mix(in oklab, var(--role-border), transparent 35%); align-items: center; width: 100%; box-sizing: border-box; }
     .icon-card__preview { display: inline-flex; align-items: center; justify-content: center; }
     .icon-card__label { font: 500 var(--fs-11)/1.3 var(--font-ui); color: color-mix(in oklab, var(--color-text), transparent 35%); white-space: nowrap; }
     @media (max-width: 720px) { .icon-row { grid-template-columns: 1fr; } .icon-row__cells { justify-content: flex-start; } }
@@ -224,8 +224,8 @@ async function generateTypographyPage() {
     .typography-page .specdpreview { display: inline-flex; align-items: center; gap: clamp(4px, 1vw, 12px); flex: 0 1 auto; min-width: 0; white-space: nowrap; }
     .typography-page .preview-specs { width: clamp(56px, 14vw, 160px); text-align: right; overflow: hidden; text-overflow: ellipsis; }
     .typography-page .componentpreview { justify-content: flex-start; }
-    .typography-page .token-edit-trigger { border: 0; padding: 0; background: transparent; color: inherit; text-align: left; cursor: pointer; border-radius: var(--radius-3); }
-    .typography-page .token-edit-trigger:focus-visible { outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, var(--color-system-blue)); outline-offset: var(--focus-ring-offset, 2px); }
+    .typography-page .token-edit-trigger { border: 0; padding: 0; background: transparent; color: inherit; text-align: left; cursor: pointer; border-radius: var(--control-radius-md); }
+    .typography-page .token-edit-trigger:focus-visible { outline: 2px solid var(--focus-ring-color, var(--color-system-blue)); outline-offset: 2px; }
   </style>
   <div class="typography-page__sections"></div>
 </div>
