@@ -17,7 +17,6 @@ function UpsellPopupHost() {
     <UpsellPopup
       open={Boolean(upsell)}
       reasonKey={upsell?.reasonKey ?? ''}
-      detail={upsell?.detail}
       cta={upsell?.cta ?? 'upgrade'}
       onClose={session.dismissUpsell}
     />

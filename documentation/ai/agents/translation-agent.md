@@ -75,9 +75,11 @@ renders it temporarily.
 | generate translations | `generate-translations` | `POST /api/account/instances/[instance id]/translations/generate` |
 
 Bob's current Translations panel shows the Generate translations operation and
-transient Translation Agent Activity while the agent operates. It does not show
-generated-count summaries, queue state, package/cache state, or user translation
-overrides. Activity rows are not stored status and do not come from polling.
+transient Translation Agent Activity while the agent operates. After the command
+returns, Bob shows durable result feedback from Roma's response: success, no
+accepted work, command failure, or partial locale-package failure/skips. Activity
+rows are not stored status and do not come from polling. Bob does not expose user
+translation overrides.
 
 ## Roma Public Translation API
 

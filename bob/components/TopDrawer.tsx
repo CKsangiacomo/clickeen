@@ -12,6 +12,7 @@ export function TopDrawer() {
   const currentInstanceId = typeof meta?.instanceId === 'string' ? meta.instanceId : '';
   const hasInstance = Boolean(currentInstanceId);
   const canSave = hasInstance && isDirty;
+  const showSaveAction = canSave || isSaving;
   const currentLabel = useMemo(
     () => {
       const label = typeof meta?.label === 'string' ? meta.label.trim() : '';
@@ -33,13 +34,13 @@ export function TopDrawer() {
       </div>
 
       <div className="topdrawer-actions">
-        {hasInstance ? (
+        {showSaveAction ? (
           <button
             className="diet-btn-txt"
             data-size="xl"
             data-variant="primary"
             type="button"
-            disabled={!canSave || isSaving}
+            disabled={isSaving}
             onClick={() => save()}
           >
             <span className="diet-btn-txt__label">{isSaving ? 'Saving…' : 'Save'}</span>

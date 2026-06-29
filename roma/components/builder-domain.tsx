@@ -59,6 +59,12 @@ type BobAccountCommandMessage = {
   body?: unknown;
 };
 
+type BobUpsellMessage = {
+  type: 'bob:upsell';
+  cta?: 'upgrade' | string | null;
+  reasonKey?: string | null;
+};
+
 type HostAccountCommandResultMessage = {
   type: 'host:account-command-result';
   requestId: string;
@@ -423,6 +429,11 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
     widgetPublicUrl ? buildWidgetScriptSnippet(widgetPublicUrl) : ''
   ), [widgetPublicUrl]);
 
+  const confirmDiscardBuilderEdits = useCallback(() => {
+    if (!bobIsDirtyRef.current) return true;
+    return window.confirm('You have unsaved Builder edits. Leave and discard them?');
+  }, []);
+
   useEffect(() => {
     activeInstanceIdRef.current = activeInstanceId;
   }, [activeInstanceId]);
@@ -753,7 +764,7 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
       if (event.origin !== bobBaseUrl) return;
       const source = iframeRef.current?.contentWindow;
       if (!source || event.source !== source) return;
-      const data = event.data as BobReadyMessage | BobDirtyStateChangedMessage | BobAccountCommandMessage | null;
+      const data = event.data as BobReadyMessage | BobDirtyStateChangedMessage | BobAccountCommandMessage | BobUpsellMessage | null;
       if (!data || typeof data !== 'object') return;
       if (data.type === 'bob:session-ready') {
         bobReadyRef.current = true;
@@ -764,6 +775,10 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
       }
       if (data.type === 'bob:dirty-state-changed') {
         bobIsDirtyRef.current = data.isDirty === true;
+        return;
+      }
+      if (data.type === 'bob:upsell') {
+        if (data.cta === 'upgrade' && confirmDiscardBuilderEdits()) router.push('/billing');
         return;
       }
       if (data.type === 'bob:account-command') {
@@ -787,7 +802,7 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
 
     window.addEventListener('message', listener);
     return () => window.removeEventListener('message', listener);
-  }, [activeInstanceId, bobBaseUrl, runBobAccountCommand]);
+  }, [activeInstanceId, bobBaseUrl, confirmDiscardBuilderEdits, router, runBobAccountCommand]);
 
   useEffect(() => {
     bobReadyRef.current = false;
@@ -833,11 +848,6 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
   }, [activeInstanceId, bobSrc]);
 
   useEffect(() => {
-    const confirmDiscard = () => {
-      if (!bobIsDirtyRef.current) return true;
-      return window.confirm('You have unsaved Builder edits. Leave and discard them?');
-    };
-
     const handleBeforeUnload = (event: BeforeUnloadEvent) => {
       if (!bobIsDirtyRef.current) return;
       event.preventDefault();
@@ -850,14 +860,14 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
       if (!(target instanceof Element)) return;
       const navigable = target.closest('a[href], button.roma-nav__signout');
       if (!navigable) return;
-      if (confirmDiscard()) return;
+      if (confirmDiscardBuilderEdits()) return;
       event.preventDefault();
       event.stopPropagation();
     };
 
     const handlePopState = () => {
       if (!bobIsDirtyRef.current) return;
-      if (confirmDiscard()) return;
+      if (confirmDiscardBuilderEdits()) return;
       const holdInstanceId = bobAppliedInstanceIdRef.current || activeInstanceIdRef.current;
       const holdRoute = holdInstanceId ? buildRomaBuilderRoute({ instanceId: holdInstanceId }) : '/builder';
       window.history.pushState(null, '', holdRoute);
@@ -874,7 +884,7 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
       window.removeEventListener('popstate', handlePopState);
       document.removeEventListener('click', handleClick, true);
     };
-  }, []);
+  }, [confirmDiscardBuilderEdits]);
 
   const builderOpenErrorCopy = resolveBuilderErrorCopy(openError || '', 'Builder could not open this widget. Please try again.');
 

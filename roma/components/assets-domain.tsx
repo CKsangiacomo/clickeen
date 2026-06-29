@@ -325,6 +325,22 @@ export function AssetsDomain() {
 
   const successfulBulkCount = bulkItems.filter((item) => item.status === 'success').length;
   const failedBulkCount = bulkItems.filter((item) => item.status === 'failed').length;
+  const completedBulkCount = successfulBulkCount + failedBulkCount;
+  const totalBulkCount = bulkItems.length;
+  const uploadingBulkCount = bulkItems.filter((item) => item.status === 'uploading').length;
+  const queuedBulkCount = bulkItems.filter((item) => item.status === 'queued').length;
+  const bulkProgressLabel =
+    totalBulkCount > 0
+      ? `${completedBulkCount} of ${totalBulkCount} files processed`
+      : 'No files selected';
+  const bulkResultLabel =
+    !bulkUploadBusy && totalBulkCount > 0
+      ? failedBulkCount > 0 && successfulBulkCount > 0
+        ? `Partial upload complete: ${successfulBulkCount} uploaded, ${failedBulkCount} failed.`
+        : failedBulkCount > 0
+          ? `Upload failed for ${failedBulkCount} file${failedBulkCount === 1 ? '' : 's'}.`
+          : `${successfulBulkCount} file${successfulBulkCount === 1 ? '' : 's'} uploaded.`
+      : null;
   const storedAssetsLabel = assets == null ? (loading ? 'Loading...' : 'Unavailable') : formatNumber(assets.length);
   const storageUsedLabel = storageBytesUsed == null ? (loading ? 'Loading...' : 'Unavailable') : formatBytes(storageBytesUsed);
   const assetRows = assets ?? [];
@@ -446,10 +462,12 @@ export function AssetsDomain() {
               Bulk upload
             </h2>
             <p className="body-m">Upload multiple files in one run. Each file is processed independently and failures do not block other files.</p>
-            <div className="roma-inline-stack" role="status">
+            <div className="roma-inline-stack" role={failedBulkCount > 0 && !bulkUploadBusy ? 'alert' : 'status'} aria-live="polite">
+              <p className="body-s">{bulkProgressLabel}</p>
               <p className="body-s">Success: {successfulBulkCount}</p>
               <p className="body-s">Failed: {failedBulkCount}</p>
-              {bulkUploadBusy ? <p className="body-s">Uploading…</p> : null}
+              {bulkUploadBusy ? <p className="body-s">Uploading: {uploadingBulkCount}; queued: {queuedBulkCount}</p> : null}
+              {bulkResultLabel ? <p className="body-s">{bulkResultLabel}</p> : null}
             </div>
             <table className="roma-table">
               <thead>

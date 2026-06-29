@@ -2,6 +2,8 @@
 
 Authority: 126K for dialog/modal behavior mechanics.
 Related authority: [`126A__PRD__Accessibility.md`](../../../Execution_Pipeline_Docs/02-Executing/126__UI_Optimization/126A__PRD__Accessibility.md) for honest naming and semantic state.
+Interaction authority: [`interactions.md`](interactions.md) for when product
+behavior needs blocking, entitlement, destructive, or account-notice feedback.
 
 This doc does not define a modal framework. It records the boundary agents must
 respect while the 126 UI program executes.

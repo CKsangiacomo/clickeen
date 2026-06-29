@@ -5,7 +5,6 @@ import { useEffect, useRef } from 'react';
 type UpsellPopupProps = {
   open: boolean;
   reasonKey: string;
-  detail?: string;
   cta: 'upgrade';
   onClose: () => void;
 };
@@ -16,7 +15,7 @@ function resolveUpsellReasonCopy(reasonKey: string): string {
   return 'This action requires a plan upgrade.';
 }
 
-export function UpsellPopup({ open, reasonKey, detail, cta, onClose }: UpsellPopupProps) {
+export function UpsellPopup({ open, reasonKey, cta, onClose }: UpsellPopupProps) {
   const closeButtonRef = useRef<HTMLButtonElement | null>(null);
 
   useEffect(() => {
@@ -53,7 +52,6 @@ export function UpsellPopup({ open, reasonKey, detail, cta, onClose }: UpsellPop
         <div className="ck-upsellModal__header">
           <div className="heading-3">{headline}</div>
           <div className="body-m ck-upsellModal__reason">{reasonCopy}</div>
-          {detail ? <div className="caption ck-upsellModal__detail">{detail}</div> : null}
         </div>
 
         <div className="ck-upsellModal__actions">

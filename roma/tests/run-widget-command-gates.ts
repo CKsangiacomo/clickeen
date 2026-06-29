@@ -65,6 +65,19 @@ async function testPublishGateBeforeTransition(): Promise<void> {
   assertBefore(source, gateBranch, 'publishAccountInstanceInTokyo({');
 }
 
+async function testBuilderHandlesBobUpsell(): Promise<void> {
+  const builderSource = await readRoute('components/builder-domain.tsx');
+  const bobDocs = await readFile(new URL('../../documentation/services/bob.md', import.meta.url), 'utf8');
+  const upsellPopup = await readFile(new URL('../../bob/components/UpsellPopup.tsx', import.meta.url), 'utf8');
+  assert.match(builderSource, /type BobUpsellMessage = \{\s+type: 'bob:upsell'/);
+  assert.match(builderSource, /const confirmDiscardBuilderEdits = useCallback/);
+  assert.match(builderSource, /if \(data\.type === 'bob:upsell'\) \{\s+if \(data\.cta === 'upgrade' && confirmDiscardBuilderEdits\(\)\) router\.push\('\/billing'\);/);
+  assert.match(bobDocs, /"type": "bob:upsell"/);
+  assert.match(bobDocs, /"payload": "\[commandPayload\]"/);
+  assert.doesNotMatch(bobDocs, /"result": "\[commandResult\]"/);
+  assert.doesNotMatch(upsellPopup, /ck-upsellModal__detail/);
+}
+
 async function run(): Promise<void> {
   await testCreateGateBeforeWork();
   console.log('PASS create gate runs before id/package/Tokyo write work');
@@ -72,6 +85,8 @@ async function run(): Promise<void> {
   console.log('PASS duplicate gate runs after source proof and before id/package/Tokyo write work');
   await testPublishGateBeforeTransition();
   console.log('PASS publish gate uses list-facts and runs before Tokyo publish transition');
+  await testBuilderHandlesBobUpsell();
+  console.log('PASS Bob upsell CTA routes to billing without raw detail copy');
 }
 
 run().catch((error) => {

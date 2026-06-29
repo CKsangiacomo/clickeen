@@ -130,9 +130,23 @@ Roma replies to account commands with:
   "requestId": "[requestId]",
   "ok": "[true|false]",
   "command": "[command]",
-  "result": "[commandResult]"
+  "status": "[httpStatus]",
+  "payload": "[commandPayload]"
 }
 ```
+
+Bob may also send an upgrade request from an upsell modal:
+
+```json
+{
+  "type": "bob:upsell",
+  "cta": "upgrade",
+  "reasonKey": "[reasonKey]"
+}
+```
+
+Roma owns that account-shell action and routes the user to Billing. Bob does
+not expose raw entitlement/detail strings inside the upsell modal.
 
 ## Save Contract
 
@@ -191,10 +205,12 @@ The panel sends one Generate translations command with the open `instanceId`.
 Roma resolves active locales and calls the Translation Agent Worker. While the
 operation is running, Bob disables the button and displays transient Agent
 Activity rows authored by the Translation Agent while overlays are written. When
-the operation returns, Bob refreshes the previewable translated locales from
-overlay truth and the transient Agent Activity UI disappears. Bob does not read or
-interpret locale package, materializer, or cache-refresh state as translation
-truth.
+the operation returns, the transient Agent Activity UI disappears and Bob shows
+durable command-result feedback from Roma's response: success, no accepted
+work, command failure, or partial locale-package failure/skips. If overlays were
+accepted, Bob refreshes the previewable translated locales from overlay truth.
+Bob reads `localePackages` only to explain package follow-up failure or skipped
+work; overlay source remains the translation truth.
 
 Bob does not create persistent translation jobs, poll operation status, or
 invent locale authority. Bob also does not expose user translation overrides or
