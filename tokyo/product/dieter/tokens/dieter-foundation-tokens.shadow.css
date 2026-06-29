@@ -79,7 +79,7 @@
   /* Motion */
   --duration-snap: 140ms;
   --duration-base: 160ms;
-  --duration-spin: 600ms;
+  --easing-standard: ease;
 
   /* Elevation */
   --shadow-elevated: 0 18px 36px color-mix(in oklab, var(--color-system-black), transparent 86%);

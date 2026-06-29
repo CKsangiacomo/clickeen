@@ -25,7 +25,7 @@
   color: inherit;
   font: inherit;
   box-sizing: border-box;
-  transition: background-color var(--duration-base, 160ms) ease, color var(--duration-base, 160ms) ease;
+  transition: background-color var(--duration-base) var(--easing-standard), color var(--duration-base) var(--easing-standard);
   cursor: pointer;
 }
 
@@ -270,7 +270,7 @@
 }
 
 .diet-textedit__linkoptions {
-  transition: opacity var(--duration-base) ease, transform var(--duration-base) ease, height var(--duration-base) ease, margin var(--duration-base) ease;
+  transition: opacity var(--duration-base) var(--easing-standard), transform var(--duration-base) var(--easing-standard), height var(--duration-base) var(--easing-standard), margin var(--duration-base) var(--easing-standard);
 }
 
 .diet-textedit__linkapply[disabled] {

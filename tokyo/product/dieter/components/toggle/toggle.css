@@ -65,7 +65,7 @@
   position: relative;
   border-radius: calc(var(--tog-h) / 2);
   background: var(--color-system-gray-6-step4);
-  transition: background-color var(--duration-base, 160ms) ease;
+  transition: background-color var(--duration-base) var(--easing-standard);
   cursor: pointer;
   flex: 0 0 var(--tog-w);
 }
@@ -97,7 +97,7 @@
   background: var(--color-system-white);
   box-shadow: 0 3px 8px color-mix(in oklab, var(--color-system-black), transparent 85%),
     0 3px 1px color-mix(in oklab, var(--color-system-black), transparent 94%);
-  transition: transform var(--duration-base, 160ms) ease;
+  transition: transform var(--duration-base) var(--easing-standard);
   will-change: transform;
 }
 

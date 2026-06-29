@@ -31,11 +31,11 @@
   white-space: nowrap;
   cursor: pointer;
   transition:
-    background-color 150ms ease,
-    color 150ms ease,
-    border-color 150ms ease,
-    box-shadow 150ms ease,
-    transform 150ms ease;
+    background-color var(--duration-base) var(--easing-standard),
+    color var(--duration-base) var(--easing-standard),
+    border-color var(--duration-base) var(--easing-standard),
+    box-shadow var(--duration-base) var(--easing-standard),
+    transform var(--duration-base) var(--easing-standard);
 }
 
 .diet-btn-ictxt > * { pointer-events: none; }
@@ -211,11 +211,11 @@
   white-space: nowrap;
   cursor: pointer;
   transition:
-    background-color 150ms ease,
-    color 150ms ease,
-    border-color 150ms ease,
-    box-shadow 150ms ease,
-    transform 150ms ease;
+    background-color var(--duration-base) var(--easing-standard),
+    color var(--duration-base) var(--easing-standard),
+    border-color var(--duration-base) var(--easing-standard),
+    box-shadow var(--duration-base) var(--easing-standard),
+    transform var(--duration-base) var(--easing-standard);
 }
 
 .diet-btn-txt > * { pointer-events: none; }
@@ -340,11 +340,11 @@
   color: var(--btn-color);
   cursor: pointer;
   transition:
-    background-color 150ms ease,
-    color 150ms ease,
-    border-color 150ms ease,
-    box-shadow 150ms ease,
-    transform 150ms ease;
+    background-color var(--duration-base) var(--easing-standard),
+    color var(--duration-base) var(--easing-standard),
+    border-color var(--duration-base) var(--easing-standard),
+    box-shadow var(--duration-base) var(--easing-standard),
+    transform var(--duration-base) var(--easing-standard);
 }
 
 .diet-btn-ic > * { pointer-events: none; }

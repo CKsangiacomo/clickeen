@@ -46,10 +46,10 @@
   outline: none;
   user-select: none;
   transition:
-    background-color 150ms ease,
-    color 150ms ease,
-    box-shadow 150ms ease,
-    transform 150ms ease;
+    background-color var(--duration-base) var(--easing-standard),
+    color var(--duration-base) var(--easing-standard),
+    box-shadow var(--duration-base) var(--easing-standard),
+    transform var(--duration-base) var(--easing-standard);
 }
 
 .diet-textrename__label {
@@ -94,9 +94,9 @@
   outline: none;
   caret-color: var(--rename-color);
   transition:
-    border-color 150ms ease,
-    background-color 150ms ease,
-    box-shadow 150ms ease;
+    border-color var(--duration-base) var(--easing-standard),
+    background-color var(--duration-base) var(--easing-standard),
+    box-shadow var(--duration-base) var(--easing-standard);
 }
 
 .diet-textrename__input::placeholder {

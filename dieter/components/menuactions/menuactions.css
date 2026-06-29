@@ -31,7 +31,7 @@
   color: var(--ma-color);
   text-decoration: none;
   cursor: pointer;
-  transition: background-color 150ms ease, color 150ms ease;
+  transition: background-color var(--duration-base) var(--easing-standard), color var(--duration-base) var(--easing-standard);
 }
 
 .diet-btn-menuactions:hover { background: var(--ma-hover-bg); }

@@ -68,7 +68,7 @@
 .diet-tab__label {
   color: var(--color-system-black);
   white-space: nowrap;
-  transition: opacity var(--duration-base, 160ms) ease;
+  transition: opacity var(--duration-base) var(--easing-standard);
 }
 
 /* Hidden radio (sr-only utility provided by tokens.css) */

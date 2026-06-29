@@ -58,7 +58,8 @@ the rest stay here as substrate.
 - **Semantic utility** — `.sr-only` exposes text for assistive technology when
   visible layout should not show it; 126A owns semantic truth, not focus or touch
   target programs.
-- **Motion** — `--duration-snap/base/spin` — see [`motion.md`](motion.md).
+- **Motion** — `--duration-snap`, `--duration-base`, and
+  `--easing-standard` — see [`motion.md`](motion.md).
 - **Utilities** — `.sr-only` (line 92) and `@media (prefers-reduced-motion: reduce)`
   (line 99) ship here.
 
@@ -78,7 +79,8 @@ the rest stay here as substrate.
 ## Honest gaps (improved during the 126 series)
 
 - No z-index token system — raw `z-index` literals across component CSS.
-- No easing-curve token — only durations (see [`motion.md`](motion.md)).
+- Motion now has `--duration-snap`, `--duration-base`, and
+  `--easing-standard`; see [`motion.md`](motion.md).
 - Color: current Dieter color law is light-mode only; there is no current
   dark-mode contract (see [`color.md`](color.md)).
 - `command-activity` is a dead/empty dir; `textrename` missing `.spec.json`.

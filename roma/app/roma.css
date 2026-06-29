@@ -375,7 +375,7 @@ a {
 }
 
 .widget-defaults-builder-fields .tdmenucontent__cluster-toggle .diet-btn-ic__icon {
-  transition: transform 150ms ease;
+  transition: transform var(--duration-base) var(--easing-standard);
 }
 
 .widget-defaults-builder-fields .tdmenucontent__cluster[data-collapsed='true'] .tdmenucontent__cluster-toggle .diet-btn-ic__icon {
@@ -442,7 +442,7 @@ a {
   border-radius: 999px;
   background: var(--color-system-white);
   box-shadow: 0 1px 3px color-mix(in oklab, var(--color-system-black), transparent 82%);
-  transition: transform 120ms ease;
+  transition: transform var(--duration-snap) var(--easing-standard);
 }
 
 .widget-defaults-field--toggle input[type='checkbox']:checked {

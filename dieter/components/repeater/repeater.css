@@ -80,9 +80,9 @@
   border-radius: var(--radius-3);
   background: var(--color-system-gray-6-step4);
   transition:
-    border-color var(--duration-base, 160ms) ease,
-    background-color var(--duration-base, 160ms) ease,
-    box-shadow var(--duration-base, 160ms) ease;
+    border-color var(--duration-base) var(--easing-standard),
+    background-color var(--duration-base) var(--easing-standard),
+    box-shadow var(--duration-base) var(--easing-standard);
 }
 
 .diet-repeater__item.is-dragging {
@@ -166,7 +166,7 @@
   border: 2px dashed var(--color-system-blue);
   background: color-mix(in oklab, var(--color-system-blue), transparent 92%);
   border-radius: var(--radius-3);
-  transition: height 140ms ease, margin 140ms ease;
+  transition: height var(--duration-snap) var(--easing-standard), margin var(--duration-snap) var(--easing-standard);
 }
 
 .diet-repeater__add {

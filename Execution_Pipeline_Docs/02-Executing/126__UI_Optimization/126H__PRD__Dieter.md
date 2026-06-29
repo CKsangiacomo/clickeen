@@ -318,7 +318,7 @@ Target law:
   gap.
 - Stale vertical-rhythm token spellings belong to this PRD's space/vertical-
   rhythm decision.
-- `--easing-standard`, `--duration-snap`, and `--duration-spin` belong to 126F.
+- `--easing-standard` and `--duration-snap` belong to 126F.
 - Icon component sizing variables and glyph ratio questions belong to 126C/126I.
 
 Execution gap targets:
@@ -395,7 +395,7 @@ Compliance reason:
 - Resolve `--radius-2` through the decided radius law, without silently adding
   compatibility aliases.
 - Route `--color-surface` to 126B.
-- Route `--duration-snap`, `--duration-spin`, and `--easing-standard` to 126F.
+- Route `--duration-snap` and `--easing-standard` to 126F.
 - Keep `--shadow-elevated` documented as current shared source because Roma and
   Prague consume it; route future component elevation cleanup to 126I and future
   Roma/Prague app changes to the owning PRD.
@@ -422,7 +422,7 @@ it alone.
 | Focus/touch token consumers | 126H routes app/runtime cleanup to owning PRDs before token deletion | Source tokens: `dieter/tokens/dieter-foundation-tokens.css`, `dieter/tokens/dieter-color-tokens.css`; generated mirrors in `tokyo/product/dieter/tokens/`; Admin/DevStudio consumers: `admin/src/css/utilities.css`, `admin/scripts/generate-foundation-pages.mjs`, `admin/src/html/foundations/colors.html`, `admin/src/html/foundations/typography.html`, `admin/src/html/tools/entitlements.html`; Roma consumers: `roma/app/roma.css`; Prague consumers: `prague/public/styles/primitives.css`, `prague/src/components/InstanceEmbed.astro`, `prague/src/blocks/site/nav/Nav.astro`; docs: `documentation/engineering/UI/dieter.md`, `documentation/engineering/UI/color.md` | Remove focus/touch from 126H doctrine. Before deleting token definitions, replace every consumer with the owning current value or route the consumer to its owning PRD. | Do not preserve these as Dieter law, add aliases, create focus/touch doctrine, or import 44px target law. |
 | Shadow/elevation substrate | 126H source, 126I/126L/126M app/component blast radius | `dieter/tokens/dieter-foundation-tokens.css`; generated token mirrors in `tokyo/product/dieter/tokens/`; Dieter component shadow consumers in `dieter/components/choice-tiles/choice-tiles.css`, `dieter/components/textedit/textedit.css`, `dieter/components/popover/popover.css`; raw-shadow Dieter components in `dieter/components/bulk-edit/bulk-edit.css`, `dieter/components/object-manager/object-manager.css`, `dieter/components/slider/slider.css`, `dieter/components/toggle/toggle.css`, `dieter/components/dropdown-fill/dropdown-fill.css`, `dieter/components/dropdown-border/dropdown-border.css`, `dieter/components/dropdown-shadow/dropdown-shadow.css`, `dieter/components/segmented/segmented.css`; real `--shadow-elevated` app consumers in `roma/app/roma.css`, `prague/src/components/StepsPrimitive.astro`, `prague/src/blocks/subpage-cards/subpage-cards.astro`, `prague/public/styles/primitives.css` | Keep `--shadow-elevated` as current shared source while Roma/Prague consume it. Route raw component shadow cleanup to 126I. Any shadow token rename/value/removal must include generated tokens plus Roma/Prague app consumers. | Do not remove a product-used token as "unused"; do not expand to an elevation system. |
 | Z-index/layering drift | 126I / 126K, recorded by 126H | `dieter/components/bulk-edit/bulk-edit.css`; `dieter/components/object-manager/object-manager.css`; `dieter/components/dropdown-fill/dropdown-fill.css`; `dieter/components/textedit/textedit.css`; `dieter/components/segmented/segmented.css`; `dieter/components/popover/popover.css`; `dieter/components/tabs/tabs.css` | Record raw layering reality for 126I/126K; do not invent `--z-*`. | Do not add a z-index token family in 126H. |
-| Motion boundary | 126F, not 126H | `dieter/tokens/dieter-foundation-tokens.css`; `dieter/components/dropdown-fill/dropdown-fill.css`; generated mirrors in `tokyo/product/dieter/` | Route `--duration-snap`, `--duration-spin`, and `--easing-standard` to 126F. | Do not decide motion/easing in 126H. |
+| Motion boundary | 126F, not 126H | `dieter/tokens/dieter-foundation-tokens.css`; `dieter/components/dropdown-fill/dropdown-fill.css`; generated mirrors in `tokyo/product/dieter/` | Route `--duration-snap` and `--easing-standard` to 126F. | Do not decide motion/easing in 126H. |
 | Icon boundary | 126C / 126I, not 126H | `dieter/tokens/dieter-foundation-tokens.css`; `dieter/components/icon/icon.css`; `dieter/components/button/button.css`; `dieter/components/menuactions/menuactions.css`; `dieter/components/textedit/textedit.css` | Keep `--icon-size-*` as substrate; route icon consumption/sizing/rendering details to 126C/126I. | Do not add icon origination or component icon rules in 126H. |
 | Screen-reader utility | 126A semantics + 126H utility source | `dieter/tokens/dieter-foundation-tokens.css`; `dieter/components/dropdown-shadow/dropdown-shadow.html`; `dieter/components/dropdown-border/dropdown-border.html`; `dieter/components/textedit/textedit.html`; `dieter/components/textedit/textedit-dom.ts`; `dieter/components/repeater/repeater.html`; `dieter/components/tabs/tabs.html`; `dieter/components/tabs/tabs.css`; `dieter/components/toggle/toggle.html`; `dieter/components/toggle/toggle.css` | Preserve `.sr-only` utility where semantics require hidden text/control labels. | Do not turn `.sr-only` into keyboard-support or focus doctrine. |
 | Package/artifact shape | 126G / 126H docs | `dieter/package.json`; `documentation/services/dieter.md`; `documentation/engineering/UI/dieter.md`; `tokyo/product/dieter/manifest.json` | Document current package/artifact shape honestly; generated/CDN artifacts are current consumer path. | Do not invent a new package registry or package entrypoint in 126H. |
@@ -482,8 +482,8 @@ Execution is not complete until these checks are run and reconciled:
 - Search UI docs for stale 126 track mapping and `dieter/icons/svg_new/`.
 - Search Roma/Prague for `--shadow-elevated` before changing/removing any
   shadow token.
-- Search Dieter source for `--color-surface`, `--duration-snap`,
-  `--duration-spin`, and `--easing-standard` and verify routing to owning PRDs.
+- Search Dieter source for `--color-surface`, `--duration-snap`, and
+  `--easing-standard` and verify routing to owning PRDs.
 - Run `pnpm build:dieter` after Dieter source changes.
 - Run `pnpm --filter @ck/dieter typecheck` after Dieter component/source
   changes.

@@ -277,7 +277,7 @@ body {
 }
 
 .tdmenucontent__cluster-toggle .diet-btn-ic__icon {
-  transition: transform 150ms ease;
+  transition: transform var(--duration-base) var(--easing-standard);
 }
 
 .tdmenucontent__cluster[data-collapsed='true'] .tdmenucontent__cluster-toggle .diet-btn-ic__icon {
@@ -459,7 +459,7 @@ body {
   background: transparent;
   display: block;
   opacity: 1;
-  transition: opacity 120ms ease;
+  transition: opacity var(--duration-snap) var(--easing-standard);
 }
 
 .workspace-status-overlay {

@@ -63,6 +63,10 @@ var __prevDieter = window.Dieter ? { ...window.Dieter } : {};
     return JSON.stringify(value);
   }
 
+  function prefersReducedMotion() {
+    return typeof window.matchMedia === "function" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  }
+
   function parseItemLimit(value) {
     const parsed = Number.parseInt(String(value || "").trim(), 10);
     return Number.isFinite(parsed) && parsed >= 0 ? parsed : null;
@@ -591,7 +595,9 @@ var __prevDieter = window.Dieter ? { ...window.Dieter } : {};
     item.style.borderStyle = "solid";
     item.style.borderWidth = "2px";
     item.style.boxShadow = "none";
-    item.style.transition = "border-color 140ms ease, background-color 140ms ease, box-shadow 140ms ease";
+    item.style.transition = prefersReducedMotion()
+      ? "none"
+      : "border-color var(--duration-snap) var(--easing-standard), background-color var(--duration-snap) var(--easing-standard), box-shadow var(--duration-snap) var(--easing-standard)";
     if (mode === "drag") {
       item.style.borderColor = "var(--color-system-green)";
       item.style.backgroundColor = "color-mix(in oklab, var(--color-system-green), var(--color-system-white) 85%)";
@@ -662,7 +668,7 @@ var __prevDieter = window.Dieter ? { ...window.Dieter } : {};
           item.style.left = `${startLeft}px`;
           item.style.top = `${startTop}px`;
           item.style.zIndex = "2";
-          item.style.transition = "transform 80ms ease";
+          item.style.transition = prefersReducedMotion() ? "none" : "transform var(--duration-snap) var(--easing-standard)";
           list.appendChild(item);
         }
 

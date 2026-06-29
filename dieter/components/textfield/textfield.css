@@ -35,7 +35,7 @@
   border: 1px solid transparent;
   background: var(--color-system-white);
   box-sizing: border-box;
-  transition: background-color var(--duration-base, 160ms) ease, border-color var(--duration-base, 160ms) ease;
+  transition: background-color var(--duration-base) var(--easing-standard), border-color var(--duration-base) var(--easing-standard);
   cursor: text;
 }
 
@@ -136,7 +136,10 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .diet-textfield__field { transition: none; }
+  .diet-textfield__control,
+  .diet-textfield__inner {
+    transition: none;
+  }
 }
 .diet-textfield__inner .diet-textfield__field,
 .diet-textfield__control .diet-textfield__field {

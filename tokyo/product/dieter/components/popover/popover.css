@@ -16,8 +16,8 @@
   z-index: 12;
   opacity: 0;
   transform: translateY(calc(-100% - var(--space-1, 0.5rem)));
-  transition: opacity var(--duration-base, 160ms) ease,
-    transform var(--duration-base, 160ms) ease;
+  transition: opacity var(--duration-base) var(--easing-standard),
+    transform var(--duration-base) var(--easing-standard);
   pointer-events: none;
 }
 

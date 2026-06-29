@@ -1,16 +1,24 @@
 # 126F - Pre-Execution Audit: Motion
 
-Status: CODEX PRE-EXECUTION AUDIT - three-lane review green.
+Status: FROZEN PRE-EXECUTION AUDIT - not current source truth after 126F execution.
 PRD: `../126F__PRD__Motion.md`.
 
 This audit hardens 126F for execution. It does not change runtime code. It
-records the exact blast radius, current source evidence, documentation work,
+records the exact blast radius, pre-execution source evidence, documentation work,
 verification gates, and V1-V8 controls needed before executing the motion
 cleanup.
 
+Post-execution current truth lives in `../126F__PRD__Motion.md`,
+`documentation/engineering/UI/motion.md`, `documentation/engineering/UI/dieter.md`,
+`documentation/services/dieter.md`, and runtime source. After execution,
+`--easing-standard` is defined as a foundation token, `--duration-spin` is
+removed from active source/living docs because no current consumer exists, and
+system motion literals were replaced by Dieter motion tokens. Do not use the
+pre-execution findings below as supported current behavior.
+
 ## Authority Gate
 
-| Authority | 126F current authority |
+| Authority | 126F execution authority |
 | --- | --- |
 | Product surface | Dieter/system motion in Dieter components, Bob chrome, Roma chrome, Admin/DevStudio chrome, and Prague token consumers when foundation duration tokens change. |
 | Product surface excluded | Public-widget runtime motion. Widgets own carousel, ticker, autoplay, countdown, RAF, and other widget-specific motion. |
@@ -32,7 +40,7 @@ Commands run during pre-execution audit:
 - `rg -n -- '@media \(prefers-reduced-motion: reduce\)' dieter admin bob roma tokyo/product/widgets`
 - `rg -n -- '--duration-snap|--duration-spin|--easing-standard' .`
 
-Current source findings:
+Pre-execution source findings:
 
 - `dieter/tokens/dieter-foundation-tokens.css:80-82` defines
   `--duration-snap`, `--duration-base`, and `--duration-spin`.
@@ -69,7 +77,7 @@ Correction to earlier evidence:
 - `--duration-snap` is not globally dead because Prague consumes it. Prague also
   consumes `--duration-base` outside `StepsPrimitive`. Execution must verify
   Prague duration-token consumers before changing/removing any duration token.
-- `--duration-spin` has no proven source consumer in the current sweep.
+- `--duration-spin` had no proven source consumer in the pre-execution sweep.
 - Component-local reduced-motion media blocks exist in Dieter components.
   Execution must verify selector alignment instead of claiming all component
   reduced-motion behavior is only global.
@@ -145,13 +153,15 @@ The three review agents must verify:
   V1-V8 controls are explicit, and docs/verification gates are sufficient for
   build, Bob/Roma/Prague/DevStudio Cloudflare Pages, and Tokyo R2 deploy reality.
 
-## Green Criteria
+## Pre-Execution Green Criteria
 
 126F is green for execution only when:
 
 - PRD and audit agree on Dieter/system scope and widget exclusion.
 - Prague `--duration-snap` and `--duration-base` consumption is acknowledged.
-- `--duration-spin` remains a named reconciliation target.
+- `--duration-spin` remains a named pre-execution reconciliation target. It was
+  resolved during execution by removal from active source/living docs because no
+  current consumer exists.
 - `--easing-standard: ease` is decided as current-behavior preservation.
 - Component-local reduced-motion blocks and JS-written transitions are both in
   blast radius.

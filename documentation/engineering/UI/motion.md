@@ -1,40 +1,56 @@
 # Motion in Clickeen
 
-**Living, canonical reference — motion.**
-Seeded 2026-06-27 from the as-built tokens; improved in place as UI program 126 executes.
+**Living, canonical reference - motion.**
 
-- Authority: [`126__PRD__UI_Optimization_Program.md` §12](../../../Execution_Pipeline_Docs/02-Executing/126__UI_Optimization/126__PRD__UI_Optimization_Program.md).
-- **Source of truth:** `dieter/tokens/dieter-foundation-tokens.css` (motion block, ~lines 79-82 and the reduced-motion guard at line 99).
+Authority: [`126F__PRD__Motion.md`](../../../Execution_Pipeline_Docs/02-Executing/126__UI_Optimization/126F__PRD__Motion.md).
 
-## What exists
+Source of truth: `dieter/tokens/dieter-foundation-tokens.css`, Dieter component
+CSS/JS, and system chrome CSS in Bob, Roma, and DevStudio/Admin.
+
+## Scope
+
+126F owns Dieter/system motion only:
+
+- Dieter components.
+- Bob/Roma operational chrome.
+- DevStudio/Admin operational chrome.
+
+Public-widget runtime motion is widget-owned product behavior. Carousel,
+ticker, autoplay, countdown, interpolation, and other widget-specific motion
+belong to the owning widget implementation and docs, not to Dieter motion law.
+
+## Tokens
 
 ```text
---duration-snap:  140ms   /* quick state snaps (toggle, segmented) */
---duration-base:  160ms   /* default transitions (hover, open) */
---duration-spin:  600ms   /* spinners / long loops */
+--duration-snap: 140ms
+--duration-base: 160ms
+--easing-standard: ease
 ```
 
-```css
-@media (prefers-reduced-motion: reduce) { /* guard: neuter non-essential motion */ }
-```
+Use `--duration-base` for ordinary operational UI transitions. Use
+`--duration-snap` for quick state snaps where the component already has a real
+state-change need.
 
-## Honest gaps (this is a thin layer today)
+System UI must not hardcode local `ms`, `s`, `ease`, or `cubic-bezier(...)`
+values for ordinary transitions. If a future component needs different motion,
+that need must be named by the owning product/component PRD first.
 
-- **No declared easing-curve token.** `--easing-standard` appears only as a
-  fallback argument in a few transition call sites. 126F owns whether that value
-  becomes a small system motion token.
-- **No duration scale beyond three stops** — no fast/medium/slow ramp, no
-  enter/exit pair tokens.
-- **Reduced-motion guard exists but its coverage is unverified** — which
-  transitions it actually neutralizes across components is TBD during the motion
-  pass.
+## Reduced Motion
 
-## Where motion shows up
+Dieter ships the global reduced-motion guard from
+`dieter/tokens/dieter-foundation-tokens.css`.
 
-- Control state transitions (hover/pressed via [`color.md`](color.md) state mixes).
-- Modal/popover enter-exit (see [`dialogs-and-modals.md`](dialogs-and-modals.md)).
-- Spinners / agent-activity (see [`interactions.md`](interactions.md)).
+Components may also carry local reduced-motion rules when they own the moving
+selector directly. If system JS writes inline transition or animation behavior,
+that JS must check `prefers-reduced-motion: reduce` directly and choose the
+reduced behavior at runtime.
 
-The motion discipline is the least-developed token layer; the 126 series is where
-it gets deliberately completed (durations scale + easing tokens + verified
-reduced-motion coverage), not invented from scratch.
+## Operating Rule
+
+Clickeen system motion stays small. Motion exists only to clarify state change,
+reveal or hide a component, communicate real progress/activity, or orient the
+user during simple UI changes.
+
+Do not create a motion framework, `MotionProvider`, choreography registry,
+animation runtime, enter/exit library, or imported Material/Apple/OpenAI motion
+system.

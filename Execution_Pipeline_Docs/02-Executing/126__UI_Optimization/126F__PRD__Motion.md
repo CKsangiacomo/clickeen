@@ -68,9 +68,8 @@ Clickeen has a real but thin motion substrate, plus many local motion decisions.
 
 The strong current evidence:
 
-- `dieter/tokens/dieter-foundation-tokens.css:79-82` defines exactly three
-  motion duration tokens: `--duration-snap`, `--duration-base`, and
-  `--duration-spin`.
+- `dieter/tokens/dieter-foundation-tokens.css` defines the active system-motion
+  token set: `--duration-snap`, `--duration-base`, and `--easing-standard`.
 - `dieter/tokens/dieter-foundation-tokens.css:98-106` defines the global
   reduced-motion guard.
 - `--duration-base` is consumed by many Dieter components, including
@@ -87,8 +86,6 @@ The strong current evidence:
 
 The split current reality:
 
-- No functional foundation easing token exists.
-- `--easing-standard` appears only as fallback references.
 - Button/menuactions/textrename/repeater/Bob/Roma/Admin CSS contain literal
   system motion values.
 - Segmented owns a component-local `180ms cubic-bezier(...)` transition variable.
@@ -99,13 +96,11 @@ The split current reality:
 
 The current weak evidence:
 
-- `--duration-spin` is not proven as an active consumer in inspected source.
 - `--duration-snap` has a Prague consumer and must be treated as a real blast
   radius before any repoint/removal decision.
 - Reduced-motion behavior is not proven for JS-written inline system
   transitions.
-- Motion docs describe intent more than source reality and mislabel the easing
-  gap as a 126A deliverable.
+- Motion docs must stay aligned to this 126F system-motion law.
 
 ## Human-Converged Product Reading
 
@@ -206,14 +201,13 @@ Target law:
 - Operational UI transition durations must reference Dieter `--duration-*`
   tokens. Do not use literal `ms`/`s` values in operational component CSS when
   the motion is ordinary UI transition behavior.
-- The current duration set remains small: `--duration-snap`,
-  `--duration-base`, and `--duration-spin`.
-- Do not expand the duration scale preemptively.
+- The current duration set remains small: `--duration-snap` and
+  `--duration-base`.
+- Do not add duration tokens preemptively.
 - A new duration token is allowed only when a real component/product motion
   need exists and the human accepts it as Clickeen law.
-- Existing dead or unproven duration tokens must be reconciled during execution:
-  wire them to a real named use or remove/repoint the stale token. Do not keep
-  dead tokens as supported doctrine.
+- Existing dead or unproven duration tokens must be removed during execution.
+  Do not keep dead tokens as supported doctrine.
 
 Execution gap targets:
 
@@ -223,11 +217,9 @@ Execution gap targets:
 - Tokenize the high-traffic button/menuactions/textrename/repeater/Bob/Roma/
   Admin operational UI transition literals against the decided Dieter duration
   law.
-- Reconcile `--duration-snap` and `--duration-spin` with actual consumers.
-  `--duration-snap` currently has a Prague consumer; execution must verify
-  whether that use remains legitimate before any repoint/removal. If any token
-  has no product/component use, execution must not preserve it as dead legacy
-  surface.
+- Reconcile `--duration-snap` with actual consumers. `--duration-snap`
+  currently has a Prague consumer; execution must verify whether that use
+  remains legitimate before any repoint/removal.
 
 Compliance reason:
 
@@ -379,7 +371,7 @@ it alone.
 
 | Area | Owner | Exact paths | Verify | Must not change |
 | --- | --- | --- | --- | --- |
-| Dieter foundation motion | 126F / Dieter source | `dieter/tokens/dieter-foundation-tokens.css`; `dieter/tokens/tokens.css` | Search for `--duration-*`, `--easing-standard`, and `prefers-reduced-motion`; run `pnpm build:dieter` after source changes. | Do not expand the duration scale preemptively or import an external easing taxonomy. |
+| Dieter foundation motion | 126F / Dieter source | `dieter/tokens/dieter-foundation-tokens.css`; `dieter/tokens/tokens.css` | Search for `--duration-*`, `--easing-standard`, and `prefers-reduced-motion`; run `pnpm build:dieter` after source changes. | Do not add duration tokens preemptively or import an external easing taxonomy. |
 | Generated Dieter token output | Generated from Dieter source | `tokyo/product/dieter/tokens/**` including `tokens.css`, `tokens.shadow.css`, per-token CSS, and matching `*.shadow.css` files | Confirm generated output changed only through `pnpm build:dieter`. | Do not hand-edit generated Tokyo Dieter output. |
 | Generated Dieter component output | Generated from Dieter source | `tokyo/product/dieter/components/button/button.css`; `tokyo/product/dieter/components/menuactions/menuactions.css`; `tokyo/product/dieter/components/textrename/textrename.css`; `tokyo/product/dieter/components/repeater/repeater.css`; `tokyo/product/dieter/components/repeater/repeater.js`; `tokyo/product/dieter/components/segmented/segmented.css`; `tokyo/product/dieter/components/dropdown-fill/dropdown-fill.css`; `tokyo/product/dieter/components/dropdown-border/dropdown-border.css`; `tokyo/product/dieter/components/dropdown-shadow/dropdown-shadow.css`; `tokyo/product/dieter/components/dropdown-edit/dropdown-edit.css`; `tokyo/product/dieter/components/dropdown-upload/dropdown-upload.css`; `tokyo/product/dieter/components/dropdown-actions/dropdown-actions.css`; `tokyo/product/dieter/components/textfield/textfield.css`; `tokyo/product/dieter/components/textedit/textedit.css`; `tokyo/product/dieter/components/valuefield/valuefield.css`; `tokyo/product/dieter/components/popover/popover.css`; `tokyo/product/dieter/components/toggle/toggle.css`; `tokyo/product/dieter/components/tabs/tabs.css` | Confirm generated output mirrors the edited Dieter source after build. | Do not hand-edit generated Tokyo Dieter output. |
 | Dieter tokenized component motion | 126F / Dieter components | `dieter/components/dropdown-fill/dropdown-fill.css`; `dieter/components/dropdown-border/dropdown-border.css`; `dieter/components/dropdown-shadow/dropdown-shadow.css`; `dieter/components/dropdown-edit/dropdown-edit.css`; `dieter/components/dropdown-upload/dropdown-upload.css`; `dieter/components/dropdown-actions/dropdown-actions.css`; `dieter/components/textfield/textfield.css`; `dieter/components/textedit/textedit.css`; `dieter/components/valuefield/valuefield.css`; `dieter/components/popover/popover.css`; `dieter/components/toggle/toggle.css`; `dieter/components/tabs/tabs.css`; `dieter/components/repeater/repeater.css` | Search these files for `transition`, bare `ease`, and `var(--duration-base`; verify ordinary transitions use decided Dieter motion law. | Do not create component-local motion systems. |
@@ -389,28 +381,21 @@ it alone.
 | Bob operational chrome | 126F / Bob chrome | `bob/app/bob_app.css` | Search for `transition`, `150ms`, `120ms`, and `ease`; route operational chrome motion through Dieter motion law. | Do not change Bob interaction semantics owned by 126E. |
 | Roma operational chrome | 126F / Roma chrome | `roma/app/roma.css` | Search for `transition`, `150ms`, `120ms`, and `ease`; route operational chrome motion through Dieter motion law. | Do not change Roma account/domain state semantics owned by 126E. |
 | Admin / DevStudio chrome | 126F / Admin chrome | `admin/src/css/layout.css`; `admin/src/css/utilities.css` | Search for `transition` and `prefers-reduced-motion`; reconcile sidebar motion and duplicate global reduced-motion guard. | Do not keep duplicate global reduced-motion rules or local motion drift as a separate doctrine. |
-| Prague Dieter token consumers | Prague / website consumer | `prague/src/components/StepsPrimitive.astro`; `prague/src/components/InstanceEmbed.astro`; `prague/public/styles/primitives.css` | Search for `--duration-snap`, `--duration-base`, and `--duration-spin`; if duration tokens are changed, verify Prague still uses the decided token law. | Do not treat Prague token consumption as proof that Dieter/system chrome needs extra motion doctrine. |
+| Prague Dieter token consumers | Prague / website consumer | `prague/src/components/StepsPrimitive.astro`; `prague/src/components/InstanceEmbed.astro`; `prague/public/styles/primitives.css` | Search for `--duration-snap` and `--duration-base`; if duration tokens are changed, verify Prague still uses the decided token law. | Do not treat Prague token consumption as proof that Dieter/system chrome needs extra motion doctrine. |
 | Public widget runtime inspect-only boundary | Widget PRDs / widget docs | `tokyo/product/widgets/logoshowcase/widget.css`; `tokyo/product/widgets/logoshowcase/widget.client.js`; `tokyo/product/widgets/logoshowcase/spec.json`; `tokyo/product/widgets/split-carousel-media/widget.client.js`; `tokyo/product/widgets/split-carousel-media/widget.css`; `tokyo/product/widgets/split-carousel-media/spec.json`; `tokyo/product/widgets/countdown/widget.client.js`; `tokyo/product/widgets/countdown/spec.json`; `tokyo/product/widgets/cards/widget.css`; `tokyo/product/widgets/shared/stagePod.js`; `tokyo/product/widgets/shared/socialShare.js`; `tokyo/product/widgets/shared/socialShare.css` | Inspect only to document that carousel/autoplay/RAF/countdown/social-share motion is widget-owned runtime behavior outside 126F. | Do not rewrite widget runtime motion to Dieter tokens in 126F. |
 | Public widget docs inspect-only boundary | Widget PRDs / widget docs | `documentation/widgets/widgets/logoshowcase.md`; `documentation/widgets/widgets/split-carousel-media.md`; `documentation/widgets/widgets/countdown.md`; `documentation/widgets/widgets/README.md`; `documentation/widgets/README.md`; `documentation/widgets/shared/ShellCore.md`; `documentation/widgets/authoring/ToolDrawerControls.md` | Verify docs do not imply Dieter/system motion governs independent widget runtime behavior. | Do not document widget runtime motion as Dieter/system doctrine. |
 | Living motion docs | 126F docs | `documentation/engineering/UI/README.md`; `documentation/engineering/UI/motion.md`; `documentation/engineering/UI/dieter.md`; `documentation/services/dieter.md`; `documentation/services/devstudio.md`; `documentation/engineering/UI/interactions.md`; `documentation/engineering/UI/components.md` | Search for stale `126A`, duration-scale expansion, missing widget/system boundary, and DevStudio/Admin authority drift. | Do not document removed or widget-owned behavior as Dieter/system doctrine. |
 
 ## Required Documentation Repairs
 
-Execution must repair these known doc falsehoods:
+Execution must keep living docs aligned to these current truths:
 
-- `documentation/engineering/UI/motion.md` currently says completing
-  `--easing-standard` is a 126A deliverable. Easing is 126F.
-- `documentation/engineering/UI/README.md` currently maps motion to 126A. Motion
-  is 126F.
-- `documentation/engineering/UI/motion.md` currently implies the 126 series will
-  complete a duration scale. 126F says the current duration set stays small and
-  must not expand preemptively.
-- `documentation/engineering/UI/motion.md` must distinguish Dieter/system motion
-  from public-widget runtime motion.
-- `documentation/services/devstudio.md` or related UI docs must not imply
-  DevStudio has a separate motion authority; Admin/DevStudio chrome source is
-  `admin/src/css/layout.css` and `admin/src/css/utilities.css` for the current
-  126F blast radius.
+- Motion is owned by 126F.
+- `--easing-standard` is a real Dieter foundation token.
+- The duration set stays small and is not expanded preemptively.
+- Dieter/system motion and public-widget runtime motion are separate lanes.
+- DevStudio/Admin chrome consumes Dieter/system motion tokens; it does not own a
+  separate motion authority.
 
 ## V1-V8 Pre-Execution Controls
 
@@ -418,7 +403,7 @@ Execution must repair these known doc falsehoods:
 | --- | --- | --- |
 | V1 Silent substitution | Dangling `--easing-standard` silently falls back to `ease` and masquerades as a real token. | Define `--easing-standard: ease` as current-behavior preservation, then replace fallback-only claims. |
 | V2 Silent healing | Motion cleanup normalizes local timing without exposing changed behavior. | Execution must name each changed motion site in the blast radius and verify visual ownership. |
-| V3 Silent omission | `--duration-spin`, the Prague `--duration-snap` consumer, or JS-driven motion gaps are ignored. | Reconcile dead/unproven tokens, current Prague token consumption, and JS motion explicitly. |
+| V3 Silent omission | The Prague `--duration-snap` consumer or JS-driven motion gaps are ignored. | Reconcile current Prague token consumption and JS motion explicitly. |
 | V4 Fail-open control | Reduced-motion behavior fails open for JS-written transitions or duplicate local guards. | JS-driven system motion must check `prefers-reduced-motion` directly; duplicate guards are reconciled. |
 | V5 Corruption-as-absence | Not applicable to persisted product data in 126F. | Do not touch product data. |
 | V6 Partial-success masquerade | Widget/system motion claims false progress, success, or activity. | Motion must reflect real state; widget motion docs must not claim fake progress/activity. |
@@ -431,7 +416,7 @@ Execution is not complete until these checks are run and reconciled:
 
 - Search Dieter source for operational `transition` literals in the blast radius.
 - Search Dieter source for `--easing-standard` references and definitions.
-- Search for active `--duration-snap` and `--duration-spin` consumers.
+- Search for active `--duration-snap` consumers.
 - Search `prague/src/components/StepsPrimitive.astro`,
   `prague/src/components/InstanceEmbed.astro`, and
   `prague/public/styles/primitives.css` for Dieter duration-token consumers
@@ -489,7 +474,7 @@ Compliance reason:
   library.
 - No imported Material/Apple/OpenAI motion system.
 - No broad animation redesign.
-- No new duration scale unless later execution proves and human accepts a real
+- No additional duration tokens unless later execution proves and human accepts a real
   component/product need.
 - No visual primitive decisions owned by 126I.
 - No interaction-state decisions owned by 126E.
@@ -512,9 +497,9 @@ shaped the final product law.
    but under-specifies consumer reality. The pre-execution sweep found `--duration-snap`
    consumers in `prague/src/components/StepsPrimitive.astro` and additional
    `--duration-base` consumers in Prague `InstanceEmbed` and `primitives.css`, so Prague is
-   part of the duration-token blast radius. `--duration-spin` still has no proven source
-   consumer. A "complete the easing scale" deliverable that adds more tokens without first
-   reconciling current token usage would make this worse.
+   part of the duration-token blast radius. A "complete the easing scale"
+   deliverable that adds more tokens without first reconciling current token
+   usage would make this worse.
 2. **The button — the highest-traffic component — is not tokenized at all.** Codex's
    "several Dieter components consume `--duration-base`" is true but masks that `button.css`
    uses literal `150ms ease` in three identical five-property blocks (`:34-39`, `:215-219`,
@@ -557,8 +542,6 @@ shaped the final product law.
   (`repeater.js`) is not verified in either pass. Flagged, not asserted.
 - No Dieter/Bob/Roma/Admin system `@keyframes`/`animation` was found in the inspected system
   source. Public widgets do have animation/RAF/ticker behavior, and that remains outside 126F.
-  There is no system spinner/entrance/exit animation to audit despite the `--duration-spin`
-  token implying one was intended.
 
 ### Net
 Codex's baseline direction (easing is the gap; literals remain; reduced-motion

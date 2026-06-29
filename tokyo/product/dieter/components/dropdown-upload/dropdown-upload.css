@@ -24,7 +24,7 @@
   border: 1px solid transparent;
   background: var(--color-system-white);
   box-sizing: border-box;
-  transition: background-color var(--duration-base, 160ms) ease, border-color var(--duration-base, 160ms) ease;
+  transition: background-color var(--duration-base) var(--easing-standard), border-color var(--duration-base) var(--easing-standard);
   cursor: pointer;
 }
 
