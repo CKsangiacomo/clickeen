@@ -258,6 +258,22 @@ POST /api/account/instances/{instanceId}/translations/generate
 6. If the response has `accepted: false`, there was no non-base active locale
    to generate.
 
+### Refresh Locale Packages For Existing Translations
+
+1. Confirm the user is in Roma current account context.
+2. Confirm the instance exists under the current account.
+3. Call:
+
+```text
+POST /api/account/instances/{instanceId}/translations/packages
+```
+
+4. Roma reads current active non-base locales, saved source, and existing
+   translation overlays.
+5. Roma materializes locale package bytes and writes them through Tokyo-worker.
+6. This operation does not call the Translation Agent and does not generate,
+   regenerate, or rewrite translated text.
+
 ### Inspect Stored Translation Values
 
 1. List summaries:
@@ -320,6 +336,7 @@ Generation routes:
 | List instance translations | `GET /api/account/instances/{instanceId}/translations` | `viewer` |
 | Read one translation | `GET /api/account/instances/{instanceId}/translations/{locale}` | `viewer` |
 | Generate active non-base translations | `POST /api/account/instances/{instanceId}/translations/generate` | `editor` |
+| Refresh generated packages from existing translations | `POST /api/account/instances/{instanceId}/translations/packages` | `editor` |
 | Agent execution | `POST /translate-instance` | Translation Agent Worker |
 | List stored overlays | `GET /__internal/instances/{instanceId}/translations` | `viewer` internal |
 | Read/write/delete overlay | `GET/PUT/DELETE /__internal/instances/{instanceId}/translations/{locale}` | viewer / grant / admin |
@@ -421,6 +438,12 @@ stale-translation attention only from exact stale-translation evidence; it must
 not infer that state from runtime package probes, active locale count alone, or
 hidden UI-authored status. No background job, status ledger, public runtime
 repair, or base-content fallback completes translation work later.
+
+Locale package refresh from existing overlays is separate from translation
+generation. It rematerializes package bytes when saved source, widget runtime
+software, or runtime materializer behavior changes. It preserves translated
+overlay values and reports package/cache failures as locale package failures,
+not as translation generation failures.
 
 ## Prague Boundary
 
