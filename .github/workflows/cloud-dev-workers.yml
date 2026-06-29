@@ -10,7 +10,6 @@ on:
       - "sanfrancisco/**"
       - "tokyo-worker/**"
       - "tokyo/product/widgets/**"
-      - "tokyo/product/themes/**"
       - "tokyo/product/dieter/**"
       - "tokyo/roma/**"
       - "dieter/**"
@@ -123,7 +122,7 @@ jobs:
             dieter_artifacts=true
           fi
 
-          if [ "$dieter_artifacts" = "true" ] || path_changed '^(tokyo/product/widgets/|tokyo/product/themes/|tokyo/product/dieter/|tokyo/roma/|scripts/tokyo-r2-deploy-sync\.mjs)'; then
+          if [ "$dieter_artifacts" = "true" ] || path_changed '^(tokyo/product/widgets/|tokyo/product/dieter/|tokyo/roma/|scripts/tokyo-r2-deploy-sync\.mjs)'; then
             tokyo_assets=true
           fi
 

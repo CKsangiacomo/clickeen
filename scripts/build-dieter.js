@@ -2,11 +2,11 @@
 /*
  Build @ck/dieter artifacts directly into tokyo/product/dieter:
  - Verify SVGs (scripts/verify-svgs.js)
- - Copy tokens/* -> dist/tokens/*
- - Copy icons/icons.json -> dist/icons/icons.json
- - Copy icons/svg/* -> dist/icons/svg/*
+ - Copy tokens/* -> tokyo/product/dieter/tokens/*
+ - Copy icons/icons.json -> tokyo/product/dieter/icons/icons.json
+ - Copy icons/svg/* -> tokyo/product/dieter/icons/svg/*
  - Copy component/foundation CSS
- - Bundle component JS per control + aggregate components.js
+ - Bundle component JS per control
 */
 
 const fs = require('node:fs');
@@ -15,7 +15,7 @@ const { spawnSync } = require('node:child_process');
 const esbuild = require('esbuild');
 const { glob } = require('glob');
 
-function tryGetGitSha(repoRoot) {
+function getGitSha(repoRoot) {
   const fromEnv =
     process.env.CF_PAGES_COMMIT_SHA ||
     process.env.GITHUB_SHA ||
@@ -23,19 +23,27 @@ function tryGetGitSha(repoRoot) {
     process.env.COMMIT_SHA;
   if (fromEnv && String(fromEnv).trim()) return String(fromEnv).trim();
 
-  try {
-    // Prefer a commit SHA that changes only when Dieter inputs change, so local installs/builds
-    // don't dirty `tokyo/product/dieter/manifest.json` on every unrelated commit.
-    const res = spawnSync('git', ['rev-list', '-1', 'HEAD', '--', 'dieter', 'scripts/build-dieter.js'], {
+  // Prefer a commit SHA that changes only when Dieter inputs change, so local installs/builds
+  // don't dirty `tokyo/product/dieter/manifest.json` on every unrelated commit.
+  const res = spawnSync(
+    'git',
+    ['rev-list', '-1', 'HEAD', '--', 'dieter', 'scripts/build-dieter.js', 'scripts/verify-svgs.js'],
+    {
       cwd: repoRoot,
       encoding: 'utf8',
-    });
-    if (res.status === 0) {
-      const sha = String(res.stdout || '').trim();
-      if (sha) return sha;
-    }
-  } catch (_) {}
-  return 'unknown';
+    },
+  );
+
+  if (res.status !== 0) {
+    const detail = String(res.stderr || res.stdout || '').trim() || `git exited ${res.status}`;
+    throw new Error(`[build-dieter] Failed to resolve Dieter manifest gitSha: ${detail}`);
+  }
+
+  const sha = String(res.stdout || '').trim();
+  if (!sha) {
+    throw new Error('[build-dieter] Failed to resolve Dieter manifest gitSha: git returned an empty SHA');
+  }
+  return sha;
 }
 
 function listComponentBundles(dist) {
@@ -85,16 +93,19 @@ function writeDieterManifest({ dist, repoRoot }) {
   const validateName = (name) => typeof name === 'string' && name.length > 0 && components.includes(name);
   for (const [name, list] of Object.entries(deps)) {
     if (!validateName(name)) {
-      console.warn(`[build-dieter] manifest deps references unknown component "${name}"`);
-      continue;
+      throw new Error(`[build-dieter] manifest deps references unknown component "${name}"`);
     }
-    if (!Array.isArray(list) || list.some((d) => !validateName(d))) {
-      console.warn(`[build-dieter] manifest deps for "${name}" contains unknown component(s): ${JSON.stringify(list)}`);
+    if (!Array.isArray(list)) {
+      throw new Error(`[build-dieter] manifest deps for "${name}" must be an array`);
+    }
+    const unknownDeps = list.filter((d) => !validateName(d));
+    if (unknownDeps.length) {
+      throw new Error(`[build-dieter] manifest deps for "${name}" contains unknown component(s): ${JSON.stringify(unknownDeps)}`);
     }
   }
 
   const manifest = {
-        gitSha: tryGetGitSha(repoRoot),
+    gitSha: getGitSha(repoRoot),
     components,
     componentsWithJs,
     aliases,
@@ -283,7 +294,7 @@ async function main() {
     copyCssOnly(foundationsSrc, foundationsDst);
   }
 
-  // 6) Bundle component JS per control and aggregate components.js
+  // 6) Bundle component JS per control
   await bundleComponentScripts({ componentsSrc, dist });
 
   // 7) Build verification (fail fast if outputs are missing)

@@ -31,11 +31,6 @@ tokyo/roma/**             -> product/roma/**
 tokyo/prague/**           -> prague/**
 ```
 
-`tokyo/product/themes/**` exists in the repo and is watched by the worker deploy
-workflow, but the current R2 deploy sync script does not map it to an R2 root.
-Do not claim theme artifacts are deployed until `scripts/tokyo-r2-deploy-sync.mjs`
-maps that source.
-
 Operator script:
 
 ```text
@@ -155,16 +150,11 @@ external delivery references served from their owning roots. Tokyo public
 serving does not recompute widget source, Dieter state, font state, or asset
 freshness on visitor requests.
 
-## Forbidden Storage Roots
+## Storage Boundaries
 
-Do not create or deploy:
-
-```text
-widgets/
-l10n/
-public/
-published/
-```
+Git-authored product media deploys only through the current source-to-R2 roots
+documented in `documentation/engineering/CloudflareOperations.md`. Friendly
+paths are serving routes, not storage authority.
 
 Do not create account-instance trees outside:
 
@@ -199,7 +189,8 @@ Stop if a change would:
 
 - write product deploy artifacts into `accounts/`
 - write account runtime artifacts into `dieter/`, `product/`, or `prague/`
-- publish root `widgets/`, `l10n/`, `public/`, or `published/`
+- publish git-authored product media outside the current source-to-R2 roots
+  documented in `documentation/engineering/CloudflareOperations.md`
 - use UUID account folders
 - treat Prague page translations as account instance overlays
 - treat Tokyo static paths as account or policy authority

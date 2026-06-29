@@ -16,11 +16,6 @@ const publishRemote = args.has('--remote');
 const dryRun = args.has('--dry-run') || !publishRemote;
 const jsonOutput = args.has('--json');
 
-if (args.has('--local')) {
-  console.error('[tokyo-r2-deploy-sync] Local R2 sync has been retired. Use --dry-run or --remote.');
-  process.exit(1);
-}
-
 const bucket = process.env.TOKYO_R2_BUCKET || 'tokyo-assets-dev';
 const concurrency = Number.parseInt(process.env.TOKYO_R2_DEPLOY_SYNC_CONCURRENCY || '3', 10);
 const maxUploadAttempts = Number.parseInt(process.env.TOKYO_R2_DEPLOY_SYNC_ATTEMPTS || '4', 10);
@@ -90,15 +85,12 @@ async function walkFiles(root) {
 }
 
 function assertCanonicalKey(key) {
-  const [root] = key.split('/');
-  if (!allowedRoots.has(root)) {
-    throw new Error(`[tokyo-r2-deploy-sync] Refusing non-canonical deploy root for key "${key}"`);
-  }
   if (key.startsWith('accounts/')) {
     throw new Error(`[tokyo-r2-deploy-sync] Refusing to write account runtime key "${key}"`);
   }
-  if (/^(l10n|public|published|widgets)\//.test(key)) {
-    throw new Error(`[tokyo-r2-deploy-sync] Refusing stale root key "${key}"`);
+  const [root] = key.split('/');
+  if (!allowedRoots.has(root)) {
+    throw new Error(`[tokyo-r2-deploy-sync] Refusing deploy key outside current roots for key "${key}"`);
   }
 }
 
@@ -111,9 +103,6 @@ async function buildBulkEntries() {
 
     for (const file of files) {
       const rel = path.relative(sourceRoot, file).replace(/\\/g, '/');
-      if (rel.split('/').includes('.locales')) {
-        throw new Error(`[tokyo-r2-deploy-sync] Refusing stale Prague .locales deploy metadata: ${file}`);
-      }
       const key = path.posix.join(mapping.target, rel);
       assertCanonicalKey(key);
       entries.push({ key, file, contentType: deployContentType(file) });

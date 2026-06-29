@@ -43,7 +43,7 @@ DevStudio UI product workflow; 126L owns DevStudio. 126G does not own Roma UI;
 126M owns Roma. 126G does not own account product data.
 
 126G is about simplification and clarity. Success means fewer active paths,
-fewer stale root/deploy concepts, and docs that match current Cloudflare
+fewer obsolete deploy concepts, and docs that match current Cloudflare
 reality. It is not a governance-platform PRD.
 
 ## Pre-GA Cleanup Tenet
@@ -108,18 +108,17 @@ these active parts:
 - DevStudio token editing is a Berlin-authenticated Pages Functions lane that
   reads and writes selected Dieter token CSS files through GitHub Contents API.
 - Cloud-dev CI runs `pnpm build:dieter` and then
-  `scripts/tokyo-r2-deploy-sync.mjs --remote` when Dieter/product roots change.
+  `scripts/tokyo-r2-deploy-sync.mjs --remote` when Dieter source/build-script
+  changes. Generated Tokyo product-root changes run upload-only R2 sync; they
+  do not by themselves run `build:dieter`.
 - Product account runtime data is outside UI ops. Account data belongs to
   product routes/workers and `accounts/{accountPublicId}/...`.
 
-Known current gaps:
+Pre-execution gaps targeted by this slice:
 
 - Active docs contain stale build-script path references.
-- `scripts/build-dieter.js` contains stale icon override behavior.
-- SVG normalization mutates source SVG files during build.
 - Manifest dependency validation is warning-only.
 - Manifest provenance can become `unknown`.
-- SVG manifest/SVG count mismatch is warning-only.
 - DevStudio token validation is regex/value-shape validation only.
 - DevStudio token commit evidence is not visible enough for the operation lane.
 - DevStudio direct token commits are not automatically covered by the PR-only
@@ -127,7 +126,7 @@ Known current gaps:
 - Governance guard coverage is generated Admin/DevStudio HTML, not every
   downstream runtime consumer.
 - Tokyo/R2 deploy sync is an active Cloudflare deploy step, but it still carries
-  stale root deploy concepts.
+  stale local/deploy concepts.
 - Tokyo/R2 deploy sync uploads current local entries; it does not reconcile
   remote deletions/orphans.
 
@@ -135,7 +134,7 @@ Known current gaps:
 
 The 126G problem is not "add governance." The current system already has a
 working build/generate/commit/deploy path. The problem is that the path still
-carries stale local/root deploy concepts and docs do not explain the current
+carries obsolete deploy concepts and docs do not explain the current
 authority chain simply enough for agents.
 
 For Clickeen this matters because:
@@ -162,8 +161,8 @@ Target law:
 - Generated repo artifact authority: `tokyo/product/dieter/**` and generated
   DevStudio/Admin artifacts written by the generators.
 - Deployed runtime authority: Cloudflare Pages, Workers, and R2 deployed
-  objects such as `dieter/**`, `fonts/**`, `product/widgets/**`,
-  `product/roma/**`, and `prague/**`.
+  objects such as `dieter/**`, `product/widgets/**`, `product/roma/**`, and
+  `prague/**`.
 - Product data authority: account/runtime product data under
   `accounts/{accountPublicId}/...` and product routes/workers. Product data is
   not UI ops source and is not mutated by Dieter build/generation.
@@ -185,19 +184,20 @@ Target law:
   current Cloudflare path, not stale local deploy states.
 - `scripts/tokyo-r2-deploy-sync.mjs` is active only as the current git-authored
   product-root deploy sync into Cloudflare R2.
-- The script must not preserve stale root deploy concepts as architecture.
+- The script must not preserve stale deploy concepts as architecture.
 - Localization/l10n remains a real product/domain concept and may grow. 126G
   must not delete real localization tooling, locale overlay docs, Prague l10n
   tooling, San Francisco l10n execution, or future l10n product direction.
-- Root R2 `l10n/**` is not current UI ops storage law. Only stale assumptions
-  that treat root `l10n/**` as a current Tokyo/R2 deploy root should be removed.
+- Root l10n storage is not current UI ops storage law. Only stale assumptions
+  that treat l10n as a Tokyo/R2 product-root deploy destination should be
+  removed.
 - Public runtime concepts must be expressed through current product
-  routes/storage, not through stale root deploy paths.
+  routes/storage, not through obsolete deploy paths.
 
 Execution gap targets:
 
 - Remove stale local deploy wording from UI ops docs.
-- Remove stale-root concepts from the deploy sync and docs unless a root is
+- Remove stale deploy concepts from the deploy sync and docs unless a root is
   proven current by product law.
 - Keep the current Cloudflare deploy path documented plainly if the script
   remains active.
@@ -231,7 +231,7 @@ Compliance reason:
 Target law:
 
 - The active Dieter build path is root `scripts/build-dieter.js`.
-- Docs must not name `dieter/scripts/build-dieter.js` as the active build path.
+- Docs must not name obsolete build-script locations as the active build path.
 - A build produces generated output. A build must not silently rewrite source
   inputs.
 - Generated files must be reproducible from source and scripts.
@@ -241,9 +241,8 @@ Target law:
 Execution gap targets:
 
 - Fix stale build path docs in UI ops, Dieter, iconography, and related docs.
-- Stop SVG normalization from mutating `dieter/icons/svg/**` as a build side
-  effect, unless that behavior is explicitly moved into the human-owned icon
-  authoring flow.
+- Verify SVG build checks do not mutate `dieter/icons/svg/**`; source icon
+  changes belong to the human-owned icon authoring flow.
 - Remove inactive override behavior if it is not current icon-authoring law.
 - Clean stale build comments that describe old output shapes.
 
@@ -326,7 +325,7 @@ Execution gap targets:
 
 - Rename/reword docs so the script reads as current Cloudflare product-root
   deploy sync, not stale local deploy sync.
-- Remove stale local/root concepts from the script and docs.
+- Remove obsolete local/deploy concepts from the script and docs.
 - Keep account/runtime product data outside the deploy sync.
 
 Compliance reason:
@@ -343,40 +342,36 @@ it alone.
 | Area | Owner | Exact files / path shapes | Verify | Must not change |
 | --- | --- | --- | --- | --- |
 | Build command entrypoints | 126G / repo scripts | `package.json`; `dieter/package.json`; `admin/package.json` | Verify `pnpm build:dieter`, `@ck/dieter build`, and DevStudio/Admin generate/build commands are documented from current package scripts. | Do not document invented build commands or stale script paths. |
-| Dieter build source | 126G / Dieter ops | `scripts/build-dieter.js`; `scripts/process-svgs.js`; `scripts/verify-svgs.js` | Search for `svg_new`, source-mutating SVG steps, stale output comments, `unknown` git SHA fallback, local SHA lookup scope, and manifest dependency warnings. | Do not create compatibility branches or guards for inactive local override concepts. |
-| SVG processing and verification | 126C icon law + 126G build behavior | `scripts/process-svgs.js`; `scripts/verify-svgs.js`; `dieter/icons/icons.json`; `dieter/icons/svg/` | Verify build execution no longer mutates source SVGs unless 126C explicitly owns that action in human icon authoring. | Do not let build-time normalization silently rewrite committed icon source. |
+| Dieter build source | 126G / Dieter ops | `scripts/build-dieter.js`; `scripts/verify-svgs.js` | Remove stale output comments, remove `unknown` git SHA fallback, include build-affecting verifier source in local SHA lookup, and make manifest dependency failures fail-visible. | Do not create compatibility branches or guards for inactive local override concepts. |
+| SVG processing and verification | 126C icon law + 126G build behavior | `scripts/verify-svgs.js`; `dieter/icons/icons.json`; `dieter/icons/svg/` | Verify build execution reads/verifies source SVGs and does not mutate committed source. | Do not let build-time verification silently rewrite committed icon source. |
 | Generated Dieter artifacts | Generated from Dieter source | `tokyo/product/dieter/manifest.json`; `tokyo/product/dieter/tokens/tokens.css`; `tokyo/product/dieter/icons/icons.json`; `tokyo/product/dieter/icons/svg/` | Generated artifacts change only through `pnpm build:dieter`; manifest provenance and dependencies are fail-visible. | Do not hand-edit generated output as source truth. |
 | DevStudio generation | 126G / DevStudio generation, 126L for DevStudio product workflow | `admin/scripts/generate-typography-json.cjs`; `admin/scripts/generate-foundation-pages.mjs`; `admin/scripts/generate-component-pages.ts`; `admin/scripts/generate-static-registries.mjs`; `admin/scripts/build-static.mjs`; `admin/src/data/typography.generated.json`; `admin/src/html/` | Generated DevStudio/Admin artifacts must reflect source generators; governance scope must be described honestly. | Do not claim generated Admin checks prove Bob/Roma/widget runtime correctness. |
 | DevStudio token edit lane | 126L DevStudio execution target, 126G documents lane | `admin/functions/_shared/dieter-tokens.js`; `admin/functions/_shared/berlin.js`; `admin/functions/_middleware.js`; `admin/functions/api/dieter/tokens/colors.js`; `admin/functions/api/dieter/tokens/colors/value.js`; `admin/functions/api/dieter/tokens/typography.js`; `admin/functions/api/dieter/tokens/typography/value.js`; `admin/src/main.ts` | Token write response and visible operation evidence expose token, value change, commit SHA, and available authenticated actor/session context where 126L implements it; client binding and auth boundary are in scope for inspection. | Do not add approval workflow, contrast enforcement, semantic validator, or PR bureaucracy in 126G. |
 | Governance guard scope | 126G / generated Admin guard | `scripts/dieter/governance-guards.mjs`; `.github/workflows/devstudio-verify.yml` | Guard docs state exact scope: generated Admin/DevStudio artifacts only. | Do not expand into a universal UI scanner in 126G. |
-| Cloud-dev deploy path | DevOps / Cloudflare deploy | `.github/workflows/cloud-dev-workers.yml`; `.github/workflows/cloud-dev-runtime-verify.yml`; `.github/workflows/cloud-dev-roma-app.yml`; `.github/workflows/cloud-dev-prague-app.yml`; `.github/workflows/cloud-dev-prague-content.yml` | Document current deploy path and where `pnpm build:dieter` plus Tokyo/R2 sync happen. | Do not create new deploy gates or runtime validation rituals in 126G. |
-| Tokyo/R2 deploy sync | 126G / Cloudflare product-root deploy sync | `scripts/tokyo-r2-deploy-sync.mjs`; `documentation/services/tokyo.md`; `documentation/services/tokyo-worker.md`; `documentation/engineering/CloudflareOperations.md` | Remove stale local/root deploy concepts; specifically inspect `--local`, `svg_new` handoff references, stale root-prefix guards, and stale Prague `.locales` rejection. Preserve the generic canonical-root allowlist and account-runtime refusal if still current product protection. Document upload-only behavior honestly. | Do not add R2 reconciliation, orphan cleanup, rollback, or stale-root refusal guards in 126G. |
-| Localization/l10n authority boundary | Babel/Prague/San Francisco/localization owners, not 126G | `documentation/architecture/BabelProtocol.md`; `documentation/architecture/OverlayArchitecture.md`; `documentation/strategy/Clickeen-Babel.md`; `documentation/capabilities/localization.md`; `documentation/services/prague/prague-overview.md`; `documentation/ai/sanfrancisco.md`; `packages/l10n/**`; `packages/l10n/locales.json`; `scripts/i18n/build.mjs`; `scripts/i18n/extract-keys.mjs`; `scripts/i18n/validate.mjs`; `scripts/l10n/build.mjs`; `scripts/l10n/validate.mjs`; `scripts/prague-l10n/lib.mjs`; `scripts/prague-l10n/translate.mjs`; `scripts/prague-l10n/verify.mjs` | Verify real localization tooling remains intact; remove only stale root R2 `l10n/**` deploy assumptions if present in UI ops/deploy docs. | Do not delete real localization tooling, locale overlays, Prague l10n, San Francisco l10n, or future localization product direction. |
+| Cloud-dev deploy path | DevOps / Cloudflare deploy | `.github/workflows/cloud-dev-workers.yml`; `.github/workflows/cloud-dev-runtime-verify.yml`; `.github/workflows/cloud-dev-roma-app.yml`; `.github/workflows/cloud-dev-prague-app.yml`; `.github/workflows/cloud-dev-prague-content.yml` | Document current deploy path, including that Dieter source/build-script changes run `pnpm build:dieter` plus Tokyo/R2 sync while generated product-root-only changes run upload-only sync. | Do not create new deploy gates or runtime validation rituals in 126G. |
+| Tokyo/R2 deploy sync | 126G / Cloudflare product-root deploy sync | `scripts/tokyo-r2-deploy-sync.mjs`; `documentation/services/tokyo.md`; `documentation/services/tokyo-worker.md`; `documentation/engineering/CloudflareOperations.md` | Remove stale local/deploy concepts while preserving the current root allowlist and account-runtime refusal. Document upload-only behavior honestly. | Do not add R2 reconciliation, orphan cleanup, rollback, or refusal guards around dead concepts in 126G. |
+| Localization/l10n authority boundary | Babel/Prague/San Francisco/localization owners, not 126G | `documentation/architecture/BabelProtocol.md`; `documentation/architecture/OverlayArchitecture.md`; `documentation/strategy/Clickeen-Babel.md`; `documentation/capabilities/localization.md`; `documentation/services/prague/prague-overview.md`; `documentation/ai/sanfrancisco.md`; `packages/l10n/**`; `packages/l10n/locales.json`; `scripts/i18n/build.mjs`; `scripts/i18n/extract-keys.mjs`; `scripts/i18n/validate.mjs`; `scripts/l10n/build.mjs`; `scripts/l10n/validate.mjs`; `scripts/prague-l10n/lib.mjs`; `scripts/prague-l10n/translate.mjs`; `scripts/prague-l10n/verify.mjs` | Verify real localization tooling remains intact; remove only stale deploy-root assumptions from UI ops/deploy docs. | Do not delete real localization tooling, locale overlays, Prague l10n, San Francisco l10n, or future localization product direction. |
 | Product data boundary | Product routes/workers, not 126G | `documentation/services/tokyo.md`; `documentation/services/tokyo-worker.md`; `documentation/services/roma.md`; `documentation/services/bob.md`; account runtime paths `accounts/{accountPublicId}/...` in docs | Docs must state account/runtime product data is outside UI ops source/build/deploy roots. | Do not mutate product data or treat `accounts/**` as a UI deploy root. |
-| UI ops living docs | 126G docs | `documentation/engineering/UI/README.md`; `documentation/engineering/UI/ops.md`; `documentation/engineering/UI/dieter.md`; `documentation/engineering/UI/iconography.md`; `documentation/engineering/UI/components.md`; `documentation/engineering/UI/surfaces.md`; `documentation/services/dieter.md`; `documentation/services/devstudio.md`; `documentation/services/tokyo.md`; `documentation/services/tokyo-worker.md` | Fix stale build path, stale `build-icons`/`dist/icons` pipeline claims, wrong 126C ownership for ops gaps, Cloudflare-centered authority, icon-authoring exception, and generated/deployed/product-data separation. | Do not document removed local deploy behavior as current doctrine. |
+| UI ops living docs | 126G docs | `documentation/engineering/UI/README.md`; `documentation/engineering/UI/ops.md`; `documentation/engineering/UI/dieter.md`; `documentation/engineering/UI/iconography.md`; `documentation/engineering/UI/components.md`; `documentation/engineering/UI/surfaces.md`; `documentation/services/dieter.md`; `documentation/services/devstudio.md`; `documentation/services/tokyo.md`; `documentation/services/tokyo-worker.md` | Fix stale build path, old icon-registry pipeline claims, wrong 126C ownership for ops gaps, Cloudflare-centered authority, icon-authoring exception, and generated/deployed/product-data separation. | Do not document removed local deploy behavior as current doctrine. |
 
 ## Required Documentation Repairs
 
 Execution must repair these known doc falsehoods:
 
-- `documentation/engineering/UI/ops.md` currently names
-  `dieter/scripts/build-dieter.js`; the active build is root
-  `scripts/build-dieter.js`.
-- `documentation/engineering/UI/ops.md` currently repeats the stale
-  `build-icons.mjs` -> `dist/icons/` registry pipeline; 126C owns icon
-  consumption and human-owned icon origination.
+- `documentation/engineering/UI/ops.md` must name root `scripts/build-dieter.js`
+  as the active Dieter build path.
+- `documentation/engineering/UI/ops.md` must not repeat old generated
+  icon-registry pipeline claims; 126C owns icon consumption and human-owned icon
+  origination.
 - `documentation/engineering/UI/ops.md` currently says ops gaps are 126C's job;
   UI ops gaps are 126G.
 - `documentation/engineering/UI/dieter.md`,
   `documentation/engineering/UI/iconography.md`, and
   `documentation/services/dieter.md` must not repeat stale build path or old
   generated-output shape claims.
-- `documentation/services/dieter.md` currently describes `dieter/icons/svg_new/`
-  as an optional icon override input. 126G execution must remove that doc claim
-  unless 126C explicitly keeps it as current human-owned icon authoring law.
 - `documentation/services/tokyo.md` and `documentation/services/tokyo-worker.md`
   must separate current product roots, product data roots, and real
-  localization paths from stale local/root deploy assumptions.
+  localization paths from stale deploy assumptions.
 - `documentation/engineering/UI/README.md` must map ops to 126G, components to
   126I, DevStudio to 126L, and Roma to 126M.
 
@@ -385,35 +380,31 @@ Execution must repair these known doc falsehoods:
 | ID | 126G risk | Required control |
 | --- | --- | --- |
 | V1 Silent substitution | `manifest.json` substitutes `unknown` for traceable provenance. | Remove or fail-visible the `unknown` provenance fallback. |
-| V2 Silent healing | SVG normalization rewrites committed source during build. | Build must not mutate source SVGs; icon source changes belong to human icon authoring / 126C. |
-| V3 Silent omission | Stale roots/docs or generated artifacts are dropped without checking real localization/product authority. | Check localization and product-data authorities before removing root assumptions; preserve real l10n tooling. |
+| V2 Silent healing | SVG verification rewrites committed source during build. | Build must not mutate source SVGs; icon source changes belong to human icon authoring / 126C. |
+| V3 Silent omission | Stale deploy docs or generated artifacts are dropped without checking real localization/product authority. | Check localization and product-data authorities before removing deploy assumptions; preserve real l10n tooling. |
 | V4 Fail-open control | Manifest dependency validation warns and ships unresolved dependencies. | Unresolved declared dependencies fail the build/operation. |
 | V5 Corruption-as-absence | Product data or account roots are treated as deploy artifacts and overwritten/ignored. | Keep account/runtime data outside UI ops deploy roots. |
 | V6 Partial-success masquerade | R2 upload-only sync is described as reconciliation, orphan cleanup, or rollback. | Document upload-only truth; do not claim remote-state proof. |
-| V7 Masquerade/redress | Stale local/root deploy paths or refusal guards are renamed as current Cloudflare law. | Delete dead concepts instead of preserving them behind guards. |
+| V7 Masquerade/redress | Stale deploy paths or refusal guards are renamed as current Cloudflare law. | Delete dead concepts instead of preserving them behind guards. |
 | V8 Runtime test dependency | Normal UI ops depends on governance scans or validation rituals as runtime truth. | Source/build/deploy authorities carry truth; checks only verify their scoped outputs. |
 
 ## Verification Checklist
 
 Execution is not complete until these checks are run and reconciled:
 
-- Search docs for stale `dieter/scripts/build-dieter.js` references.
-- Search docs for stale `build-icons.mjs`, `dist/icons`, and wrong 126C ops
-  ownership claims.
-- Search `scripts/build-dieter.js` for `svg_new`, `unknown`, and warning-only
+- Search docs for stale build-script locations, old icon-registry pipeline
+  claims, and wrong 126C ops ownership claims.
+- Search `scripts/build-dieter.js` for `unknown`, and warning-only
   manifest dependency behavior; verify provenance covers all build-affecting
   source/scripts or uses the full commit SHA.
 - Search `package.json`, `dieter/package.json`, and `admin/package.json` for
   build/generate entrypoints before updating build docs.
-- Search `scripts/process-svgs.js` and `scripts/verify-svgs.js` for source
-  mutation and warning-only manifest/SVG count behavior; route icon-specific
+- Search `scripts/verify-svgs.js` for source mutation; route icon-specific
   decisions through 126C.
-- Search `scripts/tokyo-r2-deploy-sync.mjs` and Tokyo docs for stale root deploy
-  concepts and stale refusal guards.
-- Search `scripts/tokyo-r2-deploy-sync.mjs` specifically for `--local`,
-  stale root-prefix guards, `.locales`, and canonical-root allowlist behavior;
-  remove dead concept guards while preserving current generic product
-  protection.
+- Search `scripts/tokyo-r2-deploy-sync.mjs` and Tokyo docs for stale deploy
+  concepts and dead-concept refusal guards.
+- Verify `scripts/tokyo-r2-deploy-sync.mjs` keeps the current root allowlist and
+  account-runtime refusal while removing dead-concept guards.
 - Verify localization tooling/docs listed in the blast radius are preserved,
   including Babel/overlay architecture docs, `packages/l10n/**`, and
   `packages/l10n/locales.json`.
@@ -450,19 +441,16 @@ Compliance reason:
 
 126G execution must fix source/docs against this standard:
 
-- Remove stale local/root deploy concepts from UI ops docs.
-- Fix stale `dieter/scripts/build-dieter.js` references to root
-  `scripts/build-dieter.js`.
+- Remove obsolete deploy concepts from UI ops docs.
+- Fix stale build-script location references to root `scripts/build-dieter.js`.
 - Fix stale 126 doc references in UI docs: DevStudio/Roma are 126L/126M;
   components are 126I.
-- Remove inactive override build behavior unless 126C explicitly keeps it as
-  current icon-authoring law.
-- Stop build-time SVG source mutation unless 126C explicitly moves that action
-  into human-owned icon authoring.
-- Remove stale root deploy concepts from `scripts/tokyo-r2-deploy-sync.mjs` and
+- Verify no inactive override build behavior remains in active source/docs.
+- Verify build-time SVG verification does not mutate source.
+- Remove stale deploy concepts from `scripts/tokyo-r2-deploy-sync.mjs` and
   docs unless a root is proven current by product law before execution.
 - For localization, first check Babel/localization authority docs and current
-  localization product law. Remove only stale root deploy assumptions. Do not
+  localization product law. Remove only stale deploy assumptions. Do not
   delete real localization tooling, docs, locale overlays, Prague localization,
   San Francisco localization, or future localization product direction.
 - Remove or rewrite stale local deploy wording around Tokyo/R2 deploy sync.
@@ -497,11 +485,11 @@ shaped the final product law.
 
 Confirmed GLM findings:
 
-- The active build is root `scripts/build-dieter.js`, not
-  `dieter/scripts/build-dieter.js`.
+- The active build is root `scripts/build-dieter.js`.
 - An inactive override path is referenced but does not exist in the inspected
   source state.
-- SVG normalization writes back to source files.
+- SVG verification in current source reads source and fails on invalid icon
+  color/manifest state; it does not rewrite committed source.
 - `cloud-dev-workers.yml` is the main push deploy lane; `devstudio-verify.yml`
   is PR-only.
 - Tokyo/R2 deploy sync is upload-only.

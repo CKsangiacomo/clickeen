@@ -14,8 +14,8 @@ Rules:
   Tokyo-owned static product roots. It must not become a second authority for
   product widget software, Dieter media, product media, or Prague
   content.
-- Widget software is served from canonical R2 `product/widgets/**`. Friendly `/widgets/**` routes must resolve there, not to root `widgets/**` or stale static output.
-- Prague page translations deploy beside page JSON under `prague/pages/{widget}/{page}.translations/{locale}.json`, never under root `l10n/**`.
+- Widget software is served from canonical R2 `product/widgets/**`. Friendly `/widgets/**` routes must resolve there.
+- Prague page translations deploy beside page JSON under `prague/pages/{widget}/{page}.translations/{locale}.json`.
 - GitHub Actions must not create Pages projects or sync Pages secrets.
 - Each app builds from its own root and writes only to its own output directory.
 - Bob and Roma must use custom `*.dev.clickeen.com` hosts for authenticated Builder flows. `*.pages.dev` is not a valid public runtime host for those apps.
@@ -328,14 +328,8 @@ These roots are deployed from git-authored repo sources into R2. They are not mu
 | `tokyo/roma/**` | `product/roma/**` | Product app/static support media. |
 | `tokyo/prague/**` | `prague/**` | Prague page/content/GTM media, including page-local translation sidecars. |
 
-Forbidden deploy targets for these git-authored media:
-- root `widgets/**`
-- root `l10n/**`
-- root `public/**`
-- root `published/**`
-
-`published/**`, if present, is runtime/public projection state and must not be
-normalized as a deploy destination for git-authored media.
+Do not add deploy targets outside the current source-to-R2 roots above unless a
+new product law explicitly creates that root and its owning operation path.
 
 Prague R2 sync note:
 - `tokyo/prague/**` is supported by `pnpm tokyo:r2:sync:check` and `pnpm tokyo:r2:sync:remote`.

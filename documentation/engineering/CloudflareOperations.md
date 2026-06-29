@@ -183,8 +183,9 @@ pnpm tokyo:r2:sync:check
 pnpm tokyo:r2:sync:remote
 ```
 
-The sync refuses account runtime keys and non-canonical roots such as
-`widgets/**`, `l10n/**`, `public/**`, and `published/**`.
+The sync is scoped to the current git-authored roots above and rejects account
+runtime keys. It is upload-only: it writes current local entries and does not
+prove remote reconciliation, orphan cleanup, or rollback.
 
 Worker/R2 deploy automation is evidenced by GitHub Actions
 `cloud-dev workers deploy`. If a product-root sync is run manually, use
@@ -195,8 +196,9 @@ Auth boundary: the GitHub Actions sync path may use the workflow
 helper commands must not use that ambiguous token name; local R2 commands use
 the typed env names above.
 
-Current workflow caveat: `cloud-dev workers deploy` triggers the R2 product-root
-sync for `tokyo/product/widgets/**`, `tokyo/product/themes/**`,
+Current workflow caveat: `cloud-dev workers deploy` runs `pnpm build:dieter`
+only for Dieter source/build-script changes. It runs the R2 product-root sync
+for Dieter source/build-script changes, `tokyo/product/widgets/**`,
 `tokyo/product/dieter/**`, `tokyo/roma/**`, and the sync script itself. It does
 not currently trigger for `tokyo/prague/**` only.
 If Prague R2 content changes and no other sync-triggering root changed, run the
