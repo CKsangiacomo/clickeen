@@ -159,15 +159,6 @@ matching locale package bytes for the generated locales through the locale
 package helper. If locale package materialization or public cache refresh fails,
 the translation command reports the exact `localePackages` failure coordinates
 instead of claiming full localization success.
-Locale package refresh is a separate explicit operation:
-`POST /api/account/instances/:instanceId/translations/packages`. It reads the
-current saved source and existing translation overlays, materializes generated
-locale package bytes for active non-base locales, writes them through
-Tokyo-worker, and refreshes locale public cache when required. It does not call
-the Translation Agent, does not generate or regenerate translated text, and is
-not part of save. The optional body `{ "locales": ["es"] }` limits the same
-operation to named active non-base locales; it is an explicit coordinate subset,
-not background batching or a status system.
 When the command is invoked through hosted Bob, Translation Agent may stream
 Agent Activity while it operates. Roma forwards that activity to Bob; Roma does
 not author it, summarize it, poll for it, persist it, or convert it into product

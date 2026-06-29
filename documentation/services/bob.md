@@ -420,10 +420,10 @@ rows. Tokyo-worker stores translated locale values under:
 accounts/{accountPublicId}/instances/{instanceId}/overlays/locales/{locale}.json
 ```
 
-Translation generation and locale package refresh remain explicit operations
-from the Translations panel. When translations need update after source edits,
-126E owns the feedback behavior and the Bob/Roma UI refactor lane owns the
-placement that points the user to Generate translations.
+Translation generation remains an explicit operation from the Translations
+panel. When translations need update after source edits, 126E owns the feedback
+behavior and the Bob/Roma UI refactor lane owns the placement that points the
+user to Generate translations.
 
 ## Copilot
 

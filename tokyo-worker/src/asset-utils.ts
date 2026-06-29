@@ -77,15 +77,6 @@ export function buildAccountAssetPublicPath(assetKey: string): string {
   return publicPath;
 }
 
-function normalizeTokyoFontKey(pathname: string): string | null {
-  const normalized = String(pathname || '').replace(/^\/+/, '');
-  if (!normalized.startsWith('fonts/')) return null;
-  const segments = normalized.split('/');
-  if (segments.length < 2) return null;
-  if (segments.some((segment) => !segment || segment === '.' || segment === '..')) return null;
-  return normalized;
-}
-
 const TOKYO_DEPLOY_ASSET_ROUTES: ReadonlyArray<{ prefix: string; keyPrefix: string }> = [
   { prefix: '/widgets/', keyPrefix: 'product/widgets/' },
   { prefix: '/dieter/', keyPrefix: 'dieter/' },
@@ -140,22 +131,6 @@ export async function handleGetTokyoDeployAsset(env: Env, pathname: string): Pro
   headers.set('cache-control', cacheControl);
   headers.set('cdn-cache-control', cacheControl);
   headers.set('cloudflare-cdn-cache-control', cacheControl);
-  return new Response(obj.body, { status: 200, headers });
-}
-
-export async function handleGetTokyoFontAsset(env: Env, pathname: string): Promise<Response> {
-  const key = normalizeTokyoFontKey(pathname);
-  if (!key) return new Response('Not found', { status: 404 });
-  const obj = await env.TOKYO_R2.get(key);
-  if (!obj) return new Response('Not found', { status: 404 });
-
-  const contentType = obj.httpMetadata?.contentType;
-  if (!contentType) return new Response('Invalid asset metadata', { status: 500 });
-  const headers = new Headers();
-  headers.set('content-type', contentType);
-  headers.set('cache-control', 'public, max-age=3600, stale-while-revalidate=86400');
-  headers.set('cdn-cache-control', 'public, max-age=3600, stale-while-revalidate=86400');
-  headers.set('cloudflare-cdn-cache-control', 'public, max-age=3600, stale-while-revalidate=86400');
   return new Response(obj.body, { status: 200, headers });
 }
 
