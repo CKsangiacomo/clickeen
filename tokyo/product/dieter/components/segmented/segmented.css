@@ -261,23 +261,3 @@
     transition: none;
   }
 }
-
-/* Dark mode */
-@media (prefers-color-scheme: dark) {
-  .diet-segmented-ic,
-  .diet-segmented-txt,
-  .diet-segmented-ictxt {
-    --seg-rail-bg: color-mix(in oklab, var(--color-system-black) 8%, transparent);
-    --seg-surface-bg: var(--color-system-white);
-  }
-}
-
-:root[data-theme="dark"] .diet-segmented-ic,
-:root[data-theme="dark"] .diet-segmented-txt,
-:root[data-theme="dark"] .diet-segmented-ictxt,
-[data-theme="dark"] .diet-segmented-ic,
-[data-theme="dark"] .diet-segmented-txt,
-[data-theme="dark"] .diet-segmented-ictxt {
-  --seg-rail-bg: color-mix(in oklab, var(--color-system-black) 8%, transparent);
-  --seg-surface-bg: var(--color-system-white);
-}

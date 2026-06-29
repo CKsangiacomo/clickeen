@@ -271,5 +271,5 @@
 }
 
 .diet-dropdown-shadow[data-shadow-enabled='false'] .diet-dropdown-shadow__shadow-controls > :not(:first-child) {
-  opacity: var(--state-muted-opacity, 0.45);
+  opacity: 0.45;
 }

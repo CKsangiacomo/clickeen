@@ -1,6 +1,7 @@
 'use client';
 
 import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import type { AccountFontLibrary } from '@clickeen/widget-shell';
 import { createInitialSessionState, type SessionState } from './sessionTypes';
 import { useSessionTransport } from './sessionTransport';
 import { useSessionEditing } from './useSessionEditing';
@@ -19,6 +20,7 @@ export type WidgetDocumentSessionValue = {
   isSaving: SessionState['isSaving'];
   lastUpdate: SessionState['lastUpdate'];
   error: SessionState['error'];
+  fontLibrary: AccountFontLibrary | null;
   accountAssets: AccountAssetsClient;
   apiFetch: ReturnType<typeof useSessionTransport>['fetchApi'];
   applyOps: ReturnType<typeof useSessionEditing>['applyOps'];
@@ -113,6 +115,7 @@ export function WidgetDocumentSessionProvider({ children }: { children: ReactNod
       isSaving: state.isSaving,
       lastUpdate: state.lastUpdate,
       error: state.error,
+      fontLibrary: chrome.meta?.fontLibrary ?? null,
       accountAssets,
       apiFetch: transport.fetchApi,
       applyOps: editing.applyOps,
@@ -127,6 +130,7 @@ export function WidgetDocumentSessionProvider({ children }: { children: ReactNod
       editing.setInstanceLabel,
       saving.save,
       state,
+      chrome.meta,
       transport.fetchApi,
     ],
   );

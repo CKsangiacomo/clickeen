@@ -20,9 +20,9 @@ Seeded 2026-06-27 from the as-built tokens; improved in place as UI program 126 
 
 ## Honest gaps (this is a thin layer today)
 
-- **No easing-curve token.** `--easing-standard` appears only as a *fallback arg*
-  in a few `color-mix`/transition call sites — it is never declared. There is no
-  easing scale. This is the headline gap; completing it is a 126A deliverable.
+- **No declared easing-curve token.** `--easing-standard` appears only as a
+  fallback argument in a few transition call sites. 126F owns whether that value
+  becomes a small system motion token.
 - **No duration scale beyond three stops** — no fast/medium/slow ramp, no
   enter/exit pair tokens.
 - **Reduced-motion guard exists but its coverage is unverified** — which

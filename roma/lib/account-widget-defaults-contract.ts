@@ -2,6 +2,7 @@ import { isRecord } from '@clickeen/ck-contracts';
 import {
   listWidgetShellAccountDefaultMetadataPaths,
   listWidgetShellControlPaths,
+  normalizeAccountFontLibrary,
   pathBelongsToShell,
 } from '@clickeen/widget-shell';
 import type { NextRequest } from 'next/server';
@@ -50,6 +51,9 @@ export async function validateAccountWidgetDefaultsContract(args: {
   widgetDefaults: AccountWidgetDefaultsDocument;
   widgetTypes?: string[];
 }): Promise<{ ok: true } | InstancePackageFailure> {
+  if (!normalizeAccountFontLibrary(args.widgetDefaults.fontLibrary)) {
+    return validationFailure(['fontLibrary']);
+  }
   const widgetTypes = args.widgetTypes ?? Object.keys(args.widgetDefaults.widgets);
   const unmappedPaths: string[] = collectDefaultPaths(args.widgetDefaults.shell)
     .filter((path) => !pathIsCovered(path, listWidgetShellControlPaths()))

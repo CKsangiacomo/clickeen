@@ -29,7 +29,7 @@ function resolveErrorMessage(reasonKey: string | null): string {
   if (reasonKey === 'coreui.errors.db.writeFailed') return 'Account setup could not be saved. Please try again.';
   if (reasonKey === 'coreui.errors.db.readFailed') return 'Account setup could not be loaded. Please try again.';
   if (reasonKey === 'coreui.errors.auth.login_failed') return 'Sign in failed. Try again.';
-  if (reasonKey) return reasonKey;
+  if (reasonKey) return 'Sign in failed. Try again.';
   return 'Sign in failed. Try again.';
 }
 
@@ -38,12 +38,10 @@ export default function RomaLoginPage() {
   const nextPath = useMemo(() => resolveNextPath(searchParams.get('next')), [searchParams]);
   const intent = useMemo(() => String(searchParams.get('intent') || '').trim(), [searchParams]);
   const [error, setError] = useState<string | null>(null);
-  const [errorReason, setErrorReason] = useState<string | null>(null);
 
   useEffect(() => {
     const reason = searchParams.get('error');
     if (!reason) return;
-    setErrorReason(reason);
     setError(resolveErrorMessage(reason));
   }, [searchParams]);
 
@@ -65,7 +63,6 @@ export default function RomaLoginPage() {
           {error ? (
             <div className="body-s" role="alert">
               <p style={{ margin: 0 }}>{error}</p>
-              {errorReason ? <p style={{ margin: '6px 0 0' }}>Error code: {errorReason}</p> : null}
             </div>
           ) : null}
         </article>

@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 /*
  Build @ck/dieter artifacts directly into tokyo/product/dieter:
- - Normalize SVGs to fill="currentColor" (scripts/process-svgs.js)
  - Verify SVGs (scripts/verify-svgs.js)
  - Copy tokens/* -> dist/tokens/*
  - Copy icons/icons.json -> dist/icons/icons.json
@@ -241,21 +240,7 @@ async function main() {
   const componentsSrc = path.join(dieterRoot, 'components');
   const foundationsSrc = path.join(dieterRoot, 'foundations');
 
-  // 1) Normalize and verify SVGs in-place under dieter/icons/svg
-  // If a curated svg_new override folder exists, copy it over the base source first
-  let usingOverrides = false;
-  try {
-    const svgNew = path.join(dieterRoot, 'icons', 'svg_new');
-    const svgBase = path.join(dieterRoot, 'icons', 'svg');
-    if (fs.existsSync(svgNew)) {
-      console.log('[build-dieter] Using curated overrides from icons/svg_new (designer-authoritative)');
-      copyRecursiveSync(svgNew, svgBase);
-      usingOverrides = true;
-    }
-  } catch (_) {}
-
-  // Always enforce currentColor fills
-  runNodeScript('process-svgs.js');
+  // 1) Verify committed icon source without mutating it.
   runNodeScript('verify-svgs.js');
 
   // 2) Recreate output
@@ -310,7 +295,7 @@ async function main() {
   writeDieterManifest({ dist, repoRoot });
   assertExists('manifest.json', path.join(dist, 'manifest.json'));
 
-  console.log(`[build-dieter] Built Dieter media into ${dist}${usingOverrides ? ' (with svg_new overrides)' : ''}`);
+  console.log(`[build-dieter] Built Dieter media into ${dist}`);
 }
 
 main().catch((err) => {

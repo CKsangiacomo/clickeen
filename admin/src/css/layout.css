@@ -152,7 +152,7 @@ body {
     max-width: 320px;
     transform: translateX(-100%);
     transition: transform 220ms ease;
-    box-shadow: 0 24px 32px rgba(12, 16, 24, 0.28);
+    box-shadow: 0 24px 32px color-mix(in oklab, var(--color-system-black), transparent 72%);
   }
 
   .docs-shell:not([data-sidebar='collapsed']) .docs-shell__sidebar[data-state="open"] {
@@ -182,7 +182,7 @@ body {
   border: none;
   border-radius: var(--radius-4, 0.5rem);
   padding: var(--space-6, 1.5rem);
-  background: var(--color-bg);
+  background: var(--role-surface-bg);
 }
 
 .devstudio-page-layout {

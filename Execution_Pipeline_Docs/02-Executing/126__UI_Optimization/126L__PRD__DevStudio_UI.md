@@ -1,254 +1,252 @@
-# 126L — PRD: DevStudio UI
+# 126L - PRD: DevStudio UI
 
-Parent: `126__PRD__UI_Optimization_Program.md` (MAMA) — **track 3 of 4.**
-DevStudio is the doll that *reveals* the token + component dolls beneath it; it
-must be splendid and structurally incapable of masquerading Dieter's state.
+Status: CODEX BASELINE - Phase 1 step 2.
+Parent: `126__PRD__UI_Optimization_Program.md`.
+Audit input: `audits/126L__AsBuilt_Codex.md`.
+Service doc: `documentation/services/devstudio.md`.
 
-Status: **DIRECTIONAL.** The body below is the prior draft (2026-06-23), kept in
-full as seed content; it is corrected and brought to the 124/125 bar during the
-DevStudio audit + fill (`audits/126C__Audit__DevStudio_UI.md`).
+This is Codex baseline only. It is not final doctrine, does not converge with
+GLM, does not select fixes, and does not run step 4+.
 
-**Known corrections to the body** (from `audits/DevStudio_Dieter_Sanity_Pass_Findings_June2026.md`):
-- **Strike** "kill ghost token `--radius-4`" — `--radius-3`/`--radius-4` are
-  intentional aliases; executing it is a visual regression.
-- **Amend** `textrename` removal to also delete `admin/src/main.ts:23,258`, or the
-  admin bundle breaks.
+## Role
 
-Prior title: *DevStudio as a Trustworthy Reveal Cockpit — Dieter Components*.
-Prior status: EXECUTING · Owner: DevStudio + Dieter · 2026-06-23 · 02-Executing.
-Series: `Devstudio_as_a_trustworthy_Reveal_cockpit_<Domain>` — this is the
-**DieterComponents** PRD. DevStudio governs many domains (Dieter, models, agents,
-product state, content); each gets its own PRD in this series. Dieter components is
-first because it is the safest: it is the showcase only — if the loop is wrong,
-nothing customer-facing breaks.
+126L is the DevStudio UI screen-refactor planning domain. DevStudio is the
+human cockpit for the AI-operated company and the reveal/governance surface for
+Dieter and related source-controlled policy surfaces.
 
-DevStudio tenet (authoritative): `documentation/services/devstudio.md` —
-*"DevStudio is the one human's cockpit for governing an AI-operated company."*
+The current role is:
 
-Related:
+- reveal source-controlled truth;
+- steer only through named validated Pages Functions;
+- keep Dieter/source truth visible rather than dressed up;
+- remain separate from Roma, Bob, and customer account operations.
 
-- `documentation/services/devstudio.md` (DevStudio tenet)
-- `dieter/components/*` (stencil + spec + CSS — component truth)
-- `dieter/tokens/*` (`dieter-color-tokens.css`, `dieter-typography.css`,
-  `dieter-foundation-tokens.css`, `tokens.css` — token truth)
-- `dieter/icons/icons.json` + `dieter/icons/svg/*` (icon source truth; Tokyo is
-  build/deploy output)
-- `tokyo/product/dieter/**` (Dieter build output synced to Tokyo R2 `dieter/**`)
-- `admin/scripts/generate-foundation-pages.mjs`, `generate-component-pages.ts`,
-  `generate-typography-json.cjs`, `generate-static-registries.mjs` (the generation
-  pipeline — already in place; verify + keep guarded)
-- `Execution_Pipeline_Docs/03-Executed/PRD__DevStudio_Cloudflare_Migration.md`
-  (§3.5 write path — reused here; §3.6 design freeze — binding here; Appendix A
-  hash-frozen pages — the visual baseline)
+## 126 Pre-GA No Legacy Compatibility Tenet
 
-## Tenets
+Clickeen is pre-GA. This PRD must not preserve old UI drift through
+compatibility shims, temporary aliases, parallel legacy paths, or "support both
+old and new" transitions unless the human explicitly makes that behavior product
+law in this PRD.
 
-- Execute one step at a time. Step N green before Step N+1.
-- Green requires named completion evidence. A blocker report stops execution; it
-  does not unlock the next step.
-- Do not solve missing decisions by inventing product behavior.
-- If existing code contradicts this PRD, delete it, fence it, or stop; do not
-  preserve it and work around it.
-- **Design freeze applies (Migration PRD §3.6):** the showcase page layouts are
-  the frozen templates. Generation changes *where content comes from*, never
-  *how it looks*.
+Once the 126L DevStudio UI standard is decided:
 
-## Authority
+- Fix source and docs to the standard.
+- Remove old drift and stale paths.
+- Do not leave legacy names, classes, render paths, token aliases, wrappers, or
+  local one-offs as supported alternatives.
+- Do not add guard/check machinery to enforce this tenet. The PRD is the
+  authority; execution must clean the code/doc surface instead of preserving bad
+  paths behind validation.
 
-| Concern | Authority |
-| --- | --- |
-| Page layout / visual design | Product owner; frozen templates from the migrated pages |
-| Component truth | `dieter/components/*` (stencil + spec + CSS) |
-| Token truth | `dieter/tokens/*` |
-| Icon truth | `dieter/icons/icons.json` + `dieter/icons/svg/*`; Tokyo output is not source truth |
-| Served page artifacts | Generated static HTML under `admin/src/html/**` (derived, guarded) |
-| Token deployment | Source token commit → CI `pnpm build:dieter` → `tokyo-r2-deploy-sync --remote` |
-| Write-path mechanics | Migration PRD §3.5 (Pages Functions + GitHub commits + validators) |
-| What is editable from DevStudio | Values-only (token values); contract changes are code |
+## Phase 1 Step 2 Boundary
 
----
+MAMA says step 2 is baseline/directional PRD: current reality plus known gaps,
+no fixes. Therefore this document:
 
-## 0. What this PRD is really about
+- records what the Codex as-built audit found;
+- names known gaps;
+- avoids implementation prescriptions;
+- does not update code;
+- does not update generated pages;
+- does not update product data;
+- does not update living docs yet.
 
-DevStudio **reveals** Dieter. It never masquerades.
+## Current DevStudio UI Baseline
 
-Dieter is token-first atomic — tokens → semantic tokens → components, composing
-upward. So a break at any level propagates through everything that consumes it,
-and a fix at the root propagates everywhere downstream for free. That is why
-DevStudio must show the real state — broken or not — and never dress it up.
+### Service And Authority Baseline
 
-- A break **revealed** is the system working: it rang the alarm; you fix it at
-  the root (the token / semantic token / component source), and the atomic design
-  makes that fix reach everything.
-- A break **masqueraded** (the showcase patched to look right) is the system
-  failing: it hides rot radiating through the whole system, fakes the one human's
-  only reliable view, creates a second lying source of truth, and trains
-  surface-patching over root-fixing.
+Current reality:
 
-So this PRD is not "make the Dieter showcase nice." It is: **make DevStudio
-structurally incapable of masquerading** — by generating everything it shows from
-the same Dieter source the product consumes. When the window can only derive, it
-can only reveal.
+- DevStudio source lives under `admin/`.
+- DevStudio is a Cloudflare Pages app with output at `admin/dist`.
+- Canonical host is `https://devstudio.clickeen.com`.
+- Auth/session resolves through Berlin and the Clickeen admin account coordinate
+  `CLICKEEN`.
+- Write paths are Pages Functions under `admin/functions/**`.
+- DevStudio is not Roma, Bob, a customer account shell, or a general admin
+  bypass.
+- DevStudio current sections are Foundations, Dieter Components, Entitlements,
+  and LLM Management.
 
-This is the cockpit's core loop — **SEE derived truth, STEER through a validated
-commit** — proven on Dieter components first, the safest domain.
+Known gaps:
 
-## 1. Trust is the look, not a gate
+- This PRD must preserve DevStudio's cockpit/reveal role and not turn it into a
+  broader product admin app.
 
-Trust does **not** come from CI guards. That is the old-SaaS model ("the merge is
-safe because CI was green" — a pre-merge rule-gate that assumes a controlled
-PR→CI→merge flow). Two reasons it fails here:
+### App Shell And Navigation
 
-1. Agents commit directly. The PR→CI→merge gate is leaky; it is not the trust layer.
-2. CI checks **rules** (is it tokenized? does it conform?). It cannot check
-   **outcome or taste** — *did the agent do the right thing? does this look right?*
+Current reality:
 
-Trust in the cockpit = the human **looks at derived truth and judges**. It rests
-on the window being **derived** (it cannot lie) + the human's judgment. CI guards
-are a **backstop** — catch a stray raw hex before the human's eye — not a pillar.
-(An earlier draft of this PRD called this "TRUST via CI guards." That framing is
-rejected.)
+- DevStudio is a static/hash-routed app.
+- `admin/index.html` only provides the app mount; the visible shell is
+  constructed at runtime by `admin/src/main.ts`.
+- Route data is generated from `admin/src/html/**` through
+  `admin/src/data/routes.ts`.
+- Current route groups are Foundations, Dieter Components, and Policy.
+- Current local count: 27 HTML pages total, 22 component pages, 3 foundation
+  pages, 2 tool pages.
+- Shell chrome uses local `.docs-shell`, sidebar, nav, page, and preview CSS.
+- Shell CSS imports Dieter tokens but still defines local layout tokens and raw
+  constants.
+- Active nav state uses `aria-current="page"`.
 
-## 2. Current state (audited 2026-06-23) — the loop is mostly built
+Known gaps:
 
-An earlier draft of this PRD leaned on a 2026-06-09 audit that described a showcase
-mostly hand-authored and lying. A direct re-audit against today's code shows that
-masquerade is largely already gone — **the reveal loop is built.** What remains is
-small and specific.
+- DevStudio chrome is not purely Dieter-component-built.
+- Local CSS includes raw px and hex values in layout/preview surfaces.
+- Current counts must be reverified in later human convergence because old PRD
+  and living-doc counts drift.
+- The current route-contract e2e fixture is stale against generated component
+  and tool counts.
 
-| Surface | Audited today | Status |
+### Source-Derived Reveal
+
+Current reality:
+
+- DevStudio imports Dieter tokens and selected component CSS.
+- Static page fragments are imported from generated registries.
+- Page rendering hydrates icons, executes embedded fragment scripts, injects
+  page CSS, and runs Dieter hydrators.
+- Component pages are generated from Dieter component specs/templates/CSS.
+- Component generation fails governed components missing required assets,
+  unresolved stencil markers, or no rendered page.
+- Component renderer checks that enumerated attribute values render.
+- Foundation pages are generated from Dieter token/icon source.
+- Color and icon foundation pages carry generated governance counts.
+- `--radius-4` is a real current surface-radius alias, not a ghost token.
+- Typography page content is built from generated typography JSON.
+
+Known gaps:
+
+- DevStudio reveal is strong but not equivalent to complete screen-system
+  convergence.
+- `textrename` remains imported/hydrated and present in the Tokyo manifest, but
+  current generated counts show no spec-backed generated component page.
+- `textrename` has generated template/CSS imports without matching generated
+  spec coverage.
+- Generated HTML drift detection is still listed as an ops gap.
+
+### Token Editor UI
+
+Current reality:
+
+- DevStudio has a color/typography token value editor.
+- The editor opens from `[data-token-edit]` triggers.
+- It creates a local `devstudio-token-editor` overlay and appends it to
+  `document.body`.
+- The overlay contains a form with token selector, value input, live diff, cancel,
+  and confirm commit actions.
+- Token reads and writes route through `admin/functions/_shared/dieter-tokens.js`
+  and source-controlled Dieter token files.
+- Token editing is values-only for color and typography values.
+- Token value writes validate editable token names and values before replacing
+  CSS declarations.
+- Token value writes use GitHub file SHA and return conflict state on upstream
+  SHA conflict.
+
+Known gaps:
+
+- The token editor overlay is local DevStudio UI, not a Dieter modal.
+- Its injected panel has no inspected `role="dialog"` or `aria-modal`.
+- It is not a token/schema/component editor.
+
+### Policy Tool Pages
+
+Current reality:
+
+- DevStudio has two tool pages: Entitlements and LLM Management.
+- Entitlements fetches and saves entitlement and AI runtime matrices through
+  local API routes.
+- LLM Management reads configured model/provider capability data from
+  `window.__CK_LLM_MANAGEMENT__` and `window.__CK_AI_ACCESS__`.
+- Both pages carry local inline CSS and are part of the DevStudio UI surface.
+
+Known gaps:
+
+- These tool pages are not Dieter component source.
+- Their inline styling and governance behavior must be classified during later
+  convergence instead of omitted from the DevStudio UI domain.
+
+### Build And Static Output
+
+Current reality:
+
+- `admin/scripts/build-static.mjs` runs generated static registries, bundles
+  `src/main.ts` with esbuild, resolves `@dieter/*` aliases, handles raw imports,
+  and writes `admin/dist/index.html`.
+- DevStudio build output is static app assets plus Pages Functions.
+
+Known gaps:
+
+- Build/static generation is part of the DevStudio UI surface and must be
+  included in later screen planning.
+- No code/build changes happen in this Step 2 baseline.
+
+## Known Stale Prior-PRD Content
+
+The previous 126L body was an older DevStudio/Dieter cleanup seed and contained
+executable steps such as removing `textrename`, changing radius references, and
+tokenizing inline values.
+
+Current baseline corrections:
+
+- Those steps are not executable in Phase 1 Step 2.
+- The old "ghost token `--radius-4`" claim is stale against current 126H
+  foundation/radius alias findings.
+- `textrename` is current drift evidence, not a Step 2 deletion decision.
+- Old page/component counts are stale and must not be reused without re-audit.
+
+## Comparative Baseline
+
+| Area | Current Strength | Current Gap |
 | --- | --- | --- |
-| Colors | 132 declarations; **128 chips GENERATED** by `generate-foundation-pages.mjs` (not 216 hand-authored); 134 unique `var()` refs | Derived ✓ |
-| Typography | **DERIVED** from `typography.generated.json`, **33 roles** (not hand-frozen, not 30) | Derived ✓ |
-| Icons | **157, GENERATED, complete** (`data-governance-count="157"`) | Derived ✓ |
-| Components | **21 specs / 21 pages** (textedit page now exists); generator **HAS guards** — throws on unresolved `{{...}}` and on a component that renders no page | Derived ✓ |
-| Deploy chain | a `dieter/tokens/**` commit **DOES** trigger `pnpm build:dieter` + Tokyo R2 sync (via `cloud-dev-workers.yml`) | Real ✓ — token editor unblocked |
-| Chrome CSS | 0 hex in `roma.css` + `bob_app.css` | Clean ✓ |
+| Service authority | Clear cockpit role and Berlin/CLICKEEN boundary | Must not expand into admin bypass |
+| Hash routes | Generated from static HTML modules | Static counts drift and need recheck |
+| Component reveal | Spec/template/CSS-derived with guards | Some dirs/components outside spec-backed pages |
+| Foundation reveal | Token/icon/typography-source-derived | Prior radius/ghost-token language stale |
+| Token editor | Values-only source commit lane | Local overlay, limited token kinds, no inspected dialog ARIA |
+| Policy tools | Entitlements/LLM Management expose governance data | Inline local CSS and mixed read/write behavior |
+| Shell chrome | Uses Dieter tokens and local responsive shell | Local raw constants and not fully component-built |
+| Build/tests | Static registries and Dieter alias build path | Generated drift detection and stale route fixture remain ops gaps |
 
-The real remainder — three gaps, each still a place DevStudio can lie or drift:
+## Compliance To Architecture, Product, And Product Law
 
-1. **One ghost token: `--radius-4`** — referenced on the colors page (chip
-   `border-radius`, inline style) but **never defined** anywhere; the radius scale
-   is `--control-radius-*`, not `--radius-*`. Chips render with no border-radius
-   today. (The earlier "`--neutral-base`" ghost is not real — it is referenced
-   nowhere.) A live bug, not doc drift.
-2. **`textrename` is dead** — exported (`hydrateTextrename`) and registered, but
-   **no consumer imports it**; it has no spec, so it is the one component the
-   generator skips. Dead weight in the component set.
-3. **~20 inline-px values** in components (Roma 16, Bob 4) — real tokenization
-   drift a guard would catch (the CSS is clean; the inline TSX is not).
+Architecture:
 
-## 2.1 The real fix targets
+- Keeps DevStudio in its named authority lane.
+- Keeps Dieter source truth as the inner system.
+- Keeps DevStudio write behavior tied to Pages Functions and source files.
+- Keeps screen planning separate from source code execution.
 
-| Area | Action |
-| --- | --- |
-| Ghost token `--radius-4` | Resolve at source: the chips want the real radius token (`--control-radius-md`); delete the `--radius-4` reference. |
-| `textrename` component | Delete everywhere: `dieter/components/textrename/`, the `registry.json` entry, the `hydrateTextrename` export in `index.ts`, the built `tokyo/product/dieter/components/textrename/` + manifest entries, the `Overview.md` row. No consumer imports it. |
-| Inline-px in components | Tokenize the ~20 sites (Roma 16, Bob 4) to `--space-*`. |
-| Derived showcase | Already generated + guarded — keep; verify the guards stay green. |
+Product:
 
-## 3. The fix — close the real remainder (the loop is already built)
+- No redesign.
+- No behavior change.
+- No generated output change.
+- No account/customer data operation.
 
-The earlier draft treated "derive every page from source" as the work. The audit
-shows that is already done — colors/typography/icons are generated, the component
-generator is guarded, the deploy chain is real. So the fix is small: close the three
-gaps from §2.1 and verify the loop holds.
+Product law:
 
-### 3.1 SEE — derived, and verified to stay derived
-The showcase pages are already generated from source (`generate-foundation-pages.mjs`
-for colors/icons; `generate-component-pages.ts` for components — which throws on
-unresolved `{{...}}` and on a component that renders no page; typography from
-`typography.generated.json`). Keep them derived; verify the guards stay green so the
-window can only reveal.
+- No code changes.
+- No Step 4+ convergence.
+- No AI convergence of Codex and GLM.
+- No new enforcement machinery.
+- No reinterpretation into an ideal DevStudio system.
 
-### 3.2 STEER — the token editor is unblocked
-The deploy chain is real: a `dieter/tokens/**` commit triggers `pnpm build:dieter`
-and the Tokyo R2 sync (`cloud-dev-workers.yml`). So the values-only token editor
-(reusing the Migration PRD §3.5 commit lane — Berlin-session → validate → commit →
-propagate) is not blocked. Values-only (a color, a font size); add/remove/rename
-tokens stays code work. (An earlier draft's "Step 0 dependency: R2 sync does not
-trigger on `dieter/tokens/**`" is wrong — it does.)
+## Out Of Scope For This Step
 
-### 3.3 TRUST — the look + judgment (guards as backstop)
-Guards are a backstop, not the trust: a tokenization guard (no raw hex/font-size in
-chrome CSS **or inline TSX**) catches the inline-px drift (§2.1 #3) before the
-human's eye. Trust itself = the human looks at the derived result and judges. (An
-earlier draft called this "TRUST via CI guards." That framing is rejected.)
+- Removing `textrename`.
+- Changing radius tokens.
+- Tokenizing CSS.
+- Rebuilding generated pages.
+- Changing token editor behavior.
+- Updating `documentation/services/devstudio.md` or `documentation/engineering/UI/*`.
+- Running DevStudio deploy/build changes.
+- Any runtime code change.
 
-## 4. Boundary
+## Codex Baseline Done
 
-- DevStudio reveals + steers through named authorities. It is **not** a second
-  Roma, a second account/auth model, or a raw superadmin panel. Reuse the Berlin
-  session + `CLICKEEN` admin account + the existing commit lane.
-- Cloudflare Access is not the DevStudio auth boundary.
-
-## Coordination + execution rules (cross-PRD)
-
-- **Ownership split.** This PRD owns Dieter itself (derived pages, `textrename`
-  cleanup, ghost token, tokenization guard, token editor). The sibling
-  `UI_PRD__Roma_UI_Refactor.md` consumes Dieter and makes Roma launch-grade — a
-  different job; don't blur it.
-- **Inline-px is owned here.** This PRD owns the tokenization guard *and* cleaning
-  the ~20 inline-px sites in Roma/Bob (Step 3). The Roma PRD's matching step is
-  **verification only** — it must not re-edit the same lines.
-- **Sequence.** DevStudio goes first — its guard + Dieter cleanup are the foundation
-  the Roma PRD leans on.
-- **Start from clean git.** Commit in-flight doc/taxonomy cleanup before code work —
-  don't mix doc churn into code commits.
-- **Re-audit Step 0.** The §2 counts are a baseline; recount on the real code first.
-- **Proof is visual.** UI changes need before/after browser screenshots — lint green
-  is not sufficient.
-- **Docs are part of done.** `devstudio.md` must match the executed behavior.
-- **No new framework.** This is cleanup/convergence onto existing Dieter + current
-  product law — not a build.
-
-## 5. Steps
-
-| Step | Action | Completion evidence | NOT_ALLOWED |
-| --- | --- | --- | --- |
-| 1 | **Kill the ghost token:** replace the `--radius-4` reference on the colors page (chip `border-radius`) with `--control-radius-md`; confirm no `--radius-4` anywhere; chips render the correct radius. | `grep --radius-4` → 0; chips render radius; visual parity. | Silently defining `--radius-4`; leaving the reference. |
-| 2 | **Remove dead `textrename`:** delete `dieter/components/textrename/`; remove the `registry.json` entry and the `hydrateTextrename` export in `index.ts`; rebuild (`pnpm build:dieter`) so the manifest + `tokyo/product/dieter/components/textrename/` drop it; remove the `Overview.md` component-table row. | `grep textrename` → only the historical 112B record; `build:dieter` green; typecheck green (no consumer broke). | Keeping it "just in case"; breaking the export surface without confirming no consumer. |
-| 3 | **Tokenize inline-px (this PRD owns it; Roma verifies):** replace the ~20 hardcoded px values in Roma (16) + Bob (4) components with `--space-*` tokens + stand up the tokenization guard. The Roma PRD's Step 6 is verification-only — it must not re-edit these lines. | 0 inline `style={{...px}}` bypassing tokens in Roma/Bob components; tokenization guard green. | Reinventing the guard; scoping it to pass dirty code. |
-| 4 | **Verify the loop + editor:** confirm derived pages stay guarded (coverage/stencil/ghost guards green); confirm the values-only token editor round-trips on `devstudio.clickeen.com` (edit → commit → `build:dieter` → Tokyo R2 → product chrome reflects it). | Guards green; editor round-trip proven; invalid value → typed 422; conflict → typed 409. | Shipping the editor before Step 3 (tokenization) is clean. |
-| 5 | **Docs sync:** confirm this PRD's §2 matches the audited numbers; `devstudio.md` already carries the reveal-cockpit tenet. | Docs match runtime. | Deferring docs. |
-
-## 6. Acceptance criteria
-
-- **Zero masquerade, verified:** colors/typography/icons/component pages are all
-  generated from source and guarded; a missing/broken token or component shows as
-  missing/broken — never patched to look right. (Audit: already true; keep it true.)
-- **Ghost token gone:** no `--radius-4` anywhere; chips render the real radius.
-- **Dead component gone:** `textrename` removed everywhere; no broken export.
-- **Inline-px tokenized:** 0 hardcoded px in Roma/Bob component inline styles.
-- **Steering works end-to-end:** a token-value edit → attributed commit → Dieter
-  build → Tokyo R2 sync → product chrome reflects it (deploy chain is real).
-- **Guards are a backstop** (green), not the trust. Trust = the derived look + human
-  judgment.
-- **Dieter components proven first**; the reveal/steer loop then extends to other
-  DevStudio domains via their own series PRDs.
-
-## 7. Out of scope
-
-- Other DevStudio domains (models / AI-plane, agents, product runtime, content) —
-  each gets its own `Devstudio_as_a_trustworthy_Reveal_cockpit_<Domain>` PRD.
-- Adding/removing/renaming tokens from the UI (values-only here).
-- Editing component code (stencils/specs/CSS) from DevStudio — components are
-  code; governance is reveal + enforce, not UI-edit.
-- Any redesign of the showcase pages (freeze — the layout is the design).
-- Widget-level token compliance (widget configs allow user HEX overrides by
-  design — customer content, not chrome).
-- Turning DevStudio into a generic platform. This is the reveal/steer loop proven
-  on one domain.
-
-## 8. Planning review
-
-1. **Elegant, scales?** Yes — deriving pages abolishes masquerade; every future
-   token/icon/component is revealed for free. O(1) per addition.
-2. **Compliant with architecture / tenets?** Yes — kills a duplicate-truth
-   violation (hand-authored showcase vs real source); reuses the ratified write
-   lane; stays inside DevStudio's boundary.
-3. **Avoids over-architecture?** Yes — values-only editor, no new visual language,
-  guards as backstop (not trust), no generic platform.
-4. **Moves toward intended architecture?** Directly — makes the cockpit's
-   reveal/steer loop real, starting with the safest domain, so one human can govern
-   by looking and steering instead of by reading code.
+- Step 1 input exists: `audits/126L__AsBuilt_Codex.md`.
+- Step 2 baseline exists in this file.
+- Step 3 source research exists: `research/126L_Research_Codex.md`.
+- This file remains directional and non-binding until human convergence.

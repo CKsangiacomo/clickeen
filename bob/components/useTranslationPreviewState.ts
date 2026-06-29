@@ -23,7 +23,8 @@ function resolveRouteErrorReason(payload: unknown): string | null {
   const errorPayload = payload as ErrorPayload;
   const reasonKey =
     typeof errorPayload.error?.reasonKey === 'string' ? errorPayload.error.reasonKey.trim() : '';
-  if (reasonKey) return reasonKey;
+  if (reasonKey === 'coreui.errors.payload.invalid') return reasonKey;
+  if (reasonKey.startsWith('coreui.') || reasonKey.startsWith('HTTP_')) return null;
   const detail =
     typeof errorPayload.error?.detail === 'string' ? errorPayload.error.detail.trim() : '';
   return detail || null;

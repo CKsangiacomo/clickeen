@@ -2,6 +2,7 @@
 
 import { parseAccountLocaleListStrict, parseAccountLocalePolicyStrict } from '@clickeen/ck-contracts';
 import type { AccountAssetHostCommand } from '@clickeen/ck-contracts';
+import type { AccountFontLibrary } from '@clickeen/widget-shell';
 import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -91,6 +92,7 @@ type BobOpenEditorMessage = {
   widgetname: string;
   compiled: unknown;
   instanceData: Record<string, unknown>;
+  fontLibrary: AccountFontLibrary;
   publishStatus?: 'published' | 'unpublished';
   policy?: unknown;
   copilot?: unknown;
@@ -108,6 +110,7 @@ type BuilderOpenResponse = {
   displayName: string;
   widgetType: string;
   config: Record<string, unknown>;
+  fontLibrary: AccountFontLibrary;
   publishStatus?: 'published' | 'unpublished';
   copilot?: unknown;
 };
@@ -702,6 +705,7 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
         widgetname: widgetType,
         compiled,
         instanceData: config,
+        fontLibrary: builderOpen.fontLibrary,
         publishStatus: builderOpen.publishStatus,
         policy: accountPolicy,
         copilot: builderOpen.copilot ?? null,

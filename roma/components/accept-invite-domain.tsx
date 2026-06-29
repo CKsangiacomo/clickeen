@@ -32,7 +32,7 @@ function resolveAcceptInviteErrorCopy(reason: unknown, fallback: string): string
   const mapped = ACCEPT_INVITE_REASON_COPY[normalized];
   if (mapped) return mapped;
   if (normalized.startsWith('HTTP_') || normalized.startsWith('coreui.')) return fallback;
-  return normalized;
+  return fallback;
 }
 
 export function AcceptInviteDomain({ token }: AcceptInviteDomainProps) {
@@ -69,7 +69,7 @@ export function AcceptInviteDomain({ token }: AcceptInviteDomainProps) {
   if (!isUuid(token)) {
     return (
       <main className="rd-canvas" style={{ padding: '32px' }}>
-        <section className="rd-canvas-module body-m">Invitation link is invalid.</section>
+        <section className="rd-canvas-module body-m" role="alert">Invitation link is invalid.</section>
       </main>
     );
   }
@@ -77,7 +77,7 @@ export function AcceptInviteDomain({ token }: AcceptInviteDomainProps) {
   if (me.loading) {
     return (
       <main className="rd-canvas" style={{ padding: '32px' }}>
-        <section className="rd-canvas-module body-m">Loading invitation context...</section>
+        <section className="rd-canvas-module body-m" role="status">Loading invitation context...</section>
       </main>
     );
   }
@@ -86,7 +86,7 @@ export function AcceptInviteDomain({ token }: AcceptInviteDomainProps) {
     return (
       <main className="rd-canvas" style={{ padding: '32px' }}>
         <section className="rd-canvas-module">
-          <h1 className="heading-h3">Accept invitation</h1>
+          <h1 className="heading-3">Accept invitation</h1>
           <p className="body-m">Sign in with the invited email address before accepting this account invitation.</p>
           <div className="rd-canvas-module__actions" style={{ justifyContent: 'flex-start' }}>
             <Link className="diet-btn-txt" data-size="md" data-variant="solid" href={`/login?next=${encodeURIComponent(nextPath)}`}>
@@ -101,10 +101,10 @@ export function AcceptInviteDomain({ token }: AcceptInviteDomainProps) {
   return (
     <main className="rd-canvas" style={{ padding: '32px' }}>
       <section className="rd-canvas-module">
-        <h1 className="heading-h3">Accept invitation</h1>
+        <h1 className="heading-3">Accept invitation</h1>
         <p className="body-m">Signed in as {me.data.user.email ?? 'unknown email'}.</p>
-        <p className="body-s">Berlin will only accept this invitation if the signed-in email matches the invited email.</p>
-        {error ? <p className="body-m">{error}</p> : null}
+        <p className="body-s">The signed-in email must match the invited email.</p>
+        {error ? <p className="body-m" role="alert">{error}</p> : null}
         <div className="rd-canvas-module__actions" style={{ justifyContent: 'flex-start' }}>
           <button
             className="diet-btn-txt"

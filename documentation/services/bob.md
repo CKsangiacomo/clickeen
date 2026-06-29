@@ -45,6 +45,17 @@ The active account authoring flow is:
 
 Between open and save, Bob writes no account persistence.
 
+## Dieter Icons
+
+Bob consumes Dieter operational icons in two lanes:
+
+- compiler output replaces Dieter `data-icon` slots from
+  `tokyo/product/dieter/icons/icons.json`;
+- named Bob chrome files may call `bob/lib/icons.ts` directly for chrome icons.
+
+Generated inline SVG is decorative by default (`aria-hidden="true"` and
+`focusable="false"`). Icon-only controls keep the accessible name on the control.
+
 ## Open Contract
 
 Bob announces readiness:
@@ -148,10 +159,11 @@ locale follow-up coordinates from the `update-instance` command. Bob treats the
 save response as source/base persistence truth only.
 
 When translations need update, that attention belongs to the Translations panel.
-PRD 126D owns the Builder UI treatment: a top-of-builder toast/banner points the
-user to the Translations panel and the explicit Generate translations action
-when exact stale-translation evidence exists. Bob must not infer that state from
-runtime package probes, active locale count alone, or hidden UI-authored status.
+126E owns interaction feedback behavior. The Bob/Roma UI refactor lane owns any
+future top-of-builder attention surface that points the user to the Translations
+panel and the explicit Generate translations action when exact stale-translation
+evidence exists. Bob must not infer that state from runtime package probes,
+active locale count alone, or hidden UI-authored status.
 
 Bob account commands currently include:
 
@@ -244,7 +256,6 @@ Bob also has same-origin static proxy routes for editor/runtime resources:
 ```text
 GET /widgets/**
 GET /dieter/**
-GET /fonts/**
 GET /l10n/**
 ```
 
@@ -411,8 +422,8 @@ accounts/{accountPublicId}/instances/{instanceId}/overlays/locales/{locale}.json
 
 Translation generation and locale package refresh remain explicit operations
 from the Translations panel. When translations need update after source edits,
-PRD 126D owns the Builder UI treatment that points the user to Generate
-translations.
+126E owns the feedback behavior and the Bob/Roma UI refactor lane owns the
+placement that points the user to Generate translations.
 
 ## Copilot
 

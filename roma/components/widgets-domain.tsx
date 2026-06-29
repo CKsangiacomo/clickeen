@@ -45,10 +45,10 @@ function normalizeUpgradePrompt(payload: unknown): WidgetUpgradePrompt | null {
     : null;
   if (current == null || limit == null) return null;
   if (action === 'create_instance' || action === 'duplicate_instance') {
-    return { message: 'Upgrade to create more widgets.', current, limit };
+    return { message: 'Upgrade to create more widget instances.', current, limit };
   }
   if (action === 'publish_instance') {
-    return { message: 'Upgrade to publish more widgets.', current, limit };
+    return { message: 'Upgrade to publish more widget instances.', current, limit };
   }
   return null;
 }
@@ -381,7 +381,7 @@ export function WidgetsDomain() {
   return (
     <>
       {widgetDataError || mutationError || renameError || (domainLoading && groupedInstances.length === 0) ? (
-        <section className="rd-canvas-module">
+        <section className="rd-canvas-module" role={widgetDataError || mutationError || renameError ? 'alert' : 'status'}>
           {widgetDataError ? (
             <div className="roma-inline-stack">
               <p className="body-m">{widgetDataError}</p>
@@ -446,7 +446,7 @@ export function WidgetsDomain() {
                   const renameActionKey = `rename:${instance.instanceId}`;
                   const isRenaming = renamingInstanceId === instance.instanceId;
                   return (
-                    <tr key={instance.instanceId} data-selected={isSelected ? 'true' : undefined}>
+                    <tr key={instance.instanceId} data-selected={isSelected ? 'true' : undefined} aria-current={isSelected ? 'true' : undefined}>
                       <td className="body-s">
                         {isRenaming ? (
                           <div className="roma-instance-rename">
@@ -595,7 +595,7 @@ export function WidgetsDomain() {
               {upgradePrompt.message}
             </h2>
             <p className="body-m">
-              You are using {upgradePrompt.current} of {upgradePrompt.limit}.
+              You are using {upgradePrompt.current} of {upgradePrompt.limit} widget instances.
             </p>
             <div className="roma-modal__actions">
               <button

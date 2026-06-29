@@ -185,23 +185,23 @@
       "context": {
         "variant": "ic",
         "size": "md",
-        "ariaLabel": "Theme selection",
-        "groupName": "theme-{{size}}",
+        "ariaLabel": "View selection",
+        "groupName": "view-{{size}}",
         "buttonLayout": "ic",
         "buttonClass": "diet-btn-{{buttonLayout}}",
         "buttonSize": "{{size}}",
         "buttonVariant": "neutral",
         "segments": [
           {
-            "value": "light",
-            "icon": "sun.max",
-            "srLabel": "Light",
+            "value": "grid",
+            "icon": "circle.grid.2x2",
+            "srLabel": "Grid",
             "checked": true
           },
           {
-            "value": "dark",
-            "icon": "moon.fill",
-            "srLabel": "Dark"
+            "value": "list",
+            "icon": "line.3.horizontal.decrease.circle",
+            "srLabel": "List"
           }
         ]
       },
@@ -261,7 +261,7 @@
     },
     {
       "description": "Icon-only segmented control",
-      "code": "<div class=\"diet-segmented-ic\" role=\"radiogroup\" data-size=\"sm\" aria-label=\"Theme\"><label class=\"diet-segment\"><input class=\"diet-segment__input\" type=\"radio\" name=\"theme\" value=\"light\" checked><span class=\"diet-segment__surface\"></span><button class=\"diet-btn-ic\" data-size=\"xs\" data-variant=\"neutral\" tabindex=\"-1\" type=\"button\"><span class=\"diet-btn-ic__icon\" data-icon=\"sun\"></span></button><span class=\"diet-segment__sr\">Light</span></label><label class=\"diet-segment\"><input class=\"diet-segment__input\" type=\"radio\" name=\"theme\" value=\"dark\"><span class=\"diet-segment__surface\"></span><button class=\"diet-btn-ic\" data-size=\"xs\" data-variant=\"neutral\" tabindex=\"-1\" type=\"button\"><span class=\"diet-btn-ic__icon\" data-icon=\"moon\"></span></button><span class=\"diet-segment__sr\">Dark</span></label></div>"
+      "code": "<div class=\"diet-segmented-ic\" role=\"radiogroup\" data-size=\"sm\" aria-label=\"View\"><label class=\"diet-segment\"><input class=\"diet-segment__input\" type=\"radio\" name=\"view\" value=\"grid\" checked><span class=\"diet-segment__surface\"></span><button class=\"diet-btn-ic\" data-size=\"xs\" data-variant=\"neutral\" tabindex=\"-1\" type=\"button\"><span class=\"diet-btn-ic__icon\" data-icon=\"circle.grid.2x2\"></span></button><span class=\"diet-segment__sr\">Grid</span></label><label class=\"diet-segment\"><input class=\"diet-segment__input\" type=\"radio\" name=\"view\" value=\"list\"><span class=\"diet-segment__surface\"></span><button class=\"diet-btn-ic\" data-size=\"xs\" data-variant=\"neutral\" tabindex=\"-1\" type=\"button\"><span class=\"diet-btn-ic__icon\" data-icon=\"line.3.horizontal.decrease.circle\"></span></button><span class=\"diet-segment__sr\">List</span></label></div>"
     }
   ]
 }

@@ -4,6 +4,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { materializeRuntimePackage } from '@clickeen/ck-runtime-materializer';
 import { extractSavedTextFieldsForEditableFields } from '@clickeen/ck-contracts/translated-value-primitives';
+import { createDefaultAccountFontLibrary } from '@clickeen/widget-shell';
 import {
   buildAccountDefaultStateFixture,
   buildCompiledWidgetFixture,
@@ -22,6 +23,45 @@ import { buildLocalePackageMaterializationFailure } from '../lib/account-instanc
 import { buildLocalePackageDeleteFailureCoordinate } from '../lib/account-locale-overlay-update';
 
 const repoRoot = path.resolve(fileURLToPath(new URL('../..', import.meta.url)));
+const CLOUDFLARE_REQUEST_CONTEXT_SYMBOL = Symbol.for('__cloudflare-request-context__');
+
+async function withTokyoProductControlDefaults<T>(
+  accountId: string,
+  run: () => Promise<T>,
+): Promise<T> {
+  const globalRecord = globalThis as Record<PropertyKey, unknown>;
+  const previous = globalRecord[CLOUDFLARE_REQUEST_CONTEXT_SYMBOL];
+  globalRecord[CLOUDFLARE_REQUEST_CONTEXT_SYMBOL] = {
+    env: {
+      TOKYO_PRODUCT_CONTROL: {
+        fetch: async () =>
+          new Response(
+            JSON.stringify({
+              accountId,
+              widgetDefaults: {
+                accountId,
+                fontLibrary: createDefaultAccountFontLibrary(),
+                shell: {},
+                widgets: {},
+                seededAt: '2026-01-01T00:00:00.000Z',
+                updatedAt: '2026-01-01T00:00:00.000Z',
+              },
+            }),
+            { status: 200, headers: { 'content-type': 'application/json' } },
+          ),
+      },
+    },
+  };
+  try {
+    return await run();
+  } finally {
+    if (typeof previous === 'undefined') {
+      delete globalRecord[CLOUDFLARE_REQUEST_CONTEXT_SYMBOL];
+    } else {
+      globalRecord[CLOUDFLARE_REQUEST_CONTEXT_SYMBOL] = previous;
+    }
+  }
+}
 
 async function assertRomaIsOnly124CCaller(): Promise<void> {
   const files = [
@@ -199,16 +239,18 @@ async function testRouteFacingMaterializerWrapper(): Promise<void> {
   const compiled = await buildCompiledWidgetFixture('calltoaction');
   const config = await buildAccountDefaultStateFixture('calltoaction');
   const coordinate = widgetFixtureCoordinate('calltoaction');
-  const result = await materializeAccountInstancePublicPackage({
-    compiled,
-    accountId: coordinate.accountId,
-    accountCapsule: 'test-capsule',
-    requestId: 'test-request',
-    instanceId: coordinate.instanceId,
-    baseLocale: coordinate.baseLocale,
-    displayName: coordinate.displayName,
-    config,
-  });
+  const result = await withTokyoProductControlDefaults(coordinate.accountId, () =>
+    materializeAccountInstancePublicPackage({
+      compiled,
+      accountId: coordinate.accountId,
+      accountCapsule: 'test-capsule',
+      requestId: 'test-request',
+      instanceId: coordinate.instanceId,
+      baseLocale: coordinate.baseLocale,
+      displayName: coordinate.displayName,
+      config,
+    }),
+  );
   assert.equal(result.ok, true, JSON.stringify(result));
   if (!result.ok) return;
   assert.equal(typeof result.value.indexHtml, 'string');
@@ -225,19 +267,21 @@ async function testLocalePackageMaterializerWrapper(): Promise<void> {
     config,
   });
   const overlayValues = Object.fromEntries(fields.map((field) => [field.path, `fr:${field.baseText}`]));
-  const result = await materializeAccountInstanceLocalePublicPackage({
-    compiled,
-    accountId: coordinate.accountId,
-    accountCapsule: 'test-capsule',
-    requestId: 'test-request',
-    instanceId: coordinate.instanceId,
-    baseLocale: coordinate.baseLocale,
-    requestedLocale: 'fr',
-    activeLocales: ['fr'],
-    displayName: coordinate.displayName,
-    config,
-    overlayValues,
-  });
+  const result = await withTokyoProductControlDefaults(coordinate.accountId, () =>
+    materializeAccountInstanceLocalePublicPackage({
+      compiled,
+      accountId: coordinate.accountId,
+      accountCapsule: 'test-capsule',
+      requestId: 'test-request',
+      instanceId: coordinate.instanceId,
+      baseLocale: coordinate.baseLocale,
+      requestedLocale: 'fr',
+      activeLocales: ['fr'],
+      displayName: coordinate.displayName,
+      config,
+      overlayValues,
+    }),
+  );
   assert.equal(result.ok, true, JSON.stringify(result));
   if (!result.ok) return;
   assert.match(result.value.package.indexHtml, /<html lang="fr">/);

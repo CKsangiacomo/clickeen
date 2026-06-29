@@ -172,7 +172,7 @@ export function TeamDomain() {
         <p className="body-m">Account: {accountContext.accountLabel}</p>
 
         {error ? (
-          <div className="roma-inline-stack">
+          <div className="roma-inline-stack" role="alert">
             <p className="body-m">{error}</p>
             <button className="diet-btn-txt" data-size="md" data-variant="line2" type="button" onClick={() => void refreshMembers()} disabled={loading}>
               <span className="diet-btn-txt__label body-m">Retry</span>
@@ -181,7 +181,7 @@ export function TeamDomain() {
         ) : null}
       </section>
 
-      {loading && !members && !error ? <section className="rd-canvas-module body-m">Loading team members...</section> : null}
+      {loading && !members && !error ? <section className="rd-canvas-module body-m" role="status">Loading team members...</section> : null}
 
       {members ? (
         <section className="rd-canvas-module">
@@ -221,9 +221,9 @@ export function TeamDomain() {
       {canManage ? (
         <>
           <section className="rd-canvas-module">
-            <h2 className="heading-h4">Invite people</h2>
-            <p className="body-s">Invitations are Berlin-owned. Team shows pending invitations here until the Berlin acceptance flow is completed.</p>
-            {inviteError ? <p className="body-m">{inviteError}</p> : null}
+            <h2 className="heading-4">Invite people</h2>
+            <p className="body-s">Pending invitations appear here until they are accepted.</p>
+            {inviteError ? <p className="body-m" role="alert">{inviteError}</p> : null}
             <div className="roma-form-grid">
               <label className="roma-field">
                 <span className="label-s">Email</span>
@@ -253,8 +253,8 @@ export function TeamDomain() {
           </section>
 
           <section className="rd-canvas-module">
-            <h2 className="heading-h4">Pending invitations</h2>
-            {inviteError && !invitations ? <p className="body-m">{inviteError}</p> : null}
+            <h2 className="heading-4">Pending invitations</h2>
+            {inviteError && !invitations ? <p className="body-m" role="alert">{inviteError}</p> : null}
             <table className="roma-table">
               <thead>
                 <tr>
@@ -287,7 +287,7 @@ export function TeamDomain() {
                 {!invitations ? (
                   <tr>
                     <td colSpan={4} className="body-s">
-                      Loading invitations...
+                      <span role="status">Loading invitations...</span>
                     </td>
                   </tr>
                 ) : invitations.invitations.length === 0 ? (

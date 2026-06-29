@@ -35,7 +35,7 @@
 
   <template data-objects-item>{{template}}</template>
 
-  <div class="diet-object-manager__modal" hidden>
+  <div class="diet-object-manager__modal" role="dialog" aria-label="{{reorderTitle}}" hidden>
     <div class="diet-object-manager__modal-body">
       <div
         class="diet-object-manager__modal-title"
@@ -59,13 +59,13 @@
       <div class="diet-object-manager__modal-label" data-objects-label></div>
       <div class="diet-object-manager__modal-controls">
         <button type="button" class="diet-btn-ic" data-size="sm" data-variant="neutral" data-objects-up>
-          <span class="diet-btn-ic__icon" data-icon="chevron.up"></span>
+          <span class="diet-btn-ic__icon" aria-hidden="true" data-icon="chevron.up"></span>
         </button>
         <button type="button" class="diet-btn-ic" data-size="sm" data-variant="neutral" data-objects-down>
-          <span class="diet-btn-ic__icon" data-icon="chevron.down"></span>
+          <span class="diet-btn-ic__icon" aria-hidden="true" data-icon="chevron.down"></span>
         </button>
         <button type="button" class="diet-btn-ic" data-size="sm" data-variant="neutral" data-objects-delete>
-          <span class="diet-btn-ic__icon" data-icon="trash"></span>
+          <span class="diet-btn-ic__icon" aria-hidden="true" data-icon="trash"></span>
         </button>
       </div>
     </div>

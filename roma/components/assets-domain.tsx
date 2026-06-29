@@ -56,8 +56,7 @@ function resolveAssetErrorCopy(reason: string, fallback: string): string {
   if (!normalized) return fallback;
   const mapped = ASSET_REASON_COPY[normalized];
   if (mapped) return mapped;
-  if (normalized.startsWith('HTTP_') || normalized.startsWith('coreui.')) return fallback;
-  return normalized;
+  return fallback;
 }
 
 function resolveDeleteErrorCopy(reason: string): string {
@@ -66,6 +65,21 @@ function resolveDeleteErrorCopy(reason: string): string {
   const mapped = DELETE_REASON_COPY[normalized];
   if (mapped) return mapped;
   return resolveAssetErrorCopy(normalized, 'Asset delete failed. Please try again.');
+}
+
+function formatBulkItemStatus(status: BulkItemStatus): string {
+  switch (status) {
+    case 'queued':
+      return 'Queued';
+    case 'uploading':
+      return 'Uploading';
+    case 'success':
+      return 'Uploaded';
+    case 'failed':
+      return 'Failed';
+    default:
+      return 'Unavailable';
+  }
 }
 
 async function requestDeleteAsset(
@@ -321,7 +335,7 @@ export function AssetsDomain() {
         <p className="body-m">Account: {accountContext.accountLabel}</p>
 
         {error ? (
-          <div className="roma-inline-stack">
+          <div className="roma-inline-stack" role="alert">
             <p className="body-m">{error}</p>
             <button className="diet-btn-txt" data-size="md" data-variant="line2" type="button" onClick={() => void refreshAssets()} disabled={loading}>
               <span className="diet-btn-txt__label body-m">Retry</span>
@@ -370,8 +384,8 @@ export function AssetsDomain() {
         <input ref={singleUploadInputRef} type="file" hidden onChange={handleSingleFileChange} aria-label="Upload single asset" />
         <input ref={bulkUploadInputRef} type="file" multiple hidden onChange={handleBulkFileChange} aria-label="Upload multiple assets" />
 
-        {singleUploadError ? <p className="body-m">Upload failed: {singleUploadError}</p> : null}
-        {deleteError ? <p className="body-m">Failed to delete asset: {deleteError}</p> : null}
+        {singleUploadError ? <p className="body-m" role="alert">Upload failed: {singleUploadError}</p> : null}
+        {deleteError ? <p className="body-m" role="alert">Failed to delete asset: {deleteError}</p> : null}
       </section>
 
       <section className="rd-canvas-module">
@@ -409,7 +423,9 @@ export function AssetsDomain() {
             {assets == null ? (
               <tr>
                 <td colSpan={5} className="body-s">
-                  {loading ? 'Loading assets...' : 'Assets are unavailable right now.'}
+                  <span role={loading ? 'status' : 'alert'}>
+                    {loading ? 'Loading assets...' : 'Assets are unavailable right now.'}
+                  </span>
                 </td>
               </tr>
             ) : assets.length === 0 ? (
@@ -430,7 +446,7 @@ export function AssetsDomain() {
               Bulk upload
             </h2>
             <p className="body-m">Upload multiple files in one run. Each file is processed independently and failures do not block other files.</p>
-            <div className="roma-inline-stack">
+            <div className="roma-inline-stack" role="status">
               <p className="body-s">Success: {successfulBulkCount}</p>
               <p className="body-s">Failed: {failedBulkCount}</p>
               {bulkUploadBusy ? <p className="body-s">Uploading…</p> : null}
@@ -451,8 +467,10 @@ export function AssetsDomain() {
                     <td className="body-s">{item.contentType}</td>
                     <td className="body-s">{formatBytes(item.sizeBytes)}</td>
                     <td className="body-s">
-                      {item.status}
-                      {item.error ? ` - ${item.error}` : ''}
+                      <span role={item.status === 'failed' ? 'alert' : item.status === 'uploading' ? 'status' : undefined}>
+                        {formatBulkItemStatus(item.status)}
+                        {item.error ? ` - ${item.error}` : ''}
+                      </span>
                     </td>
                   </tr>
                 ))}

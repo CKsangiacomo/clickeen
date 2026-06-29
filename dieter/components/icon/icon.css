@@ -14,42 +14,42 @@
   block-size: 100%;
 }
 
-.diet-icon[data-size="xxs"] {
+.diet-icon[data-size="12"] {
   inline-size: var(--icon-size-12, 0.75rem);
   block-size: var(--icon-size-12, 0.75rem);
 }
 
-.diet-icon[data-size="xs"] {
+.diet-icon[data-size="16"] {
   inline-size: var(--icon-size-16, 1rem);
   block-size: var(--icon-size-16, 1rem);
 }
 
-.diet-icon[data-size="sm"] {
-  inline-size: var(--icon-size-16, 1rem);
-  block-size: var(--icon-size-16, 1rem);
-}
-
-.diet-icon[data-size="md"] {
-  inline-size: var(--icon-size-16, 1rem);
-  block-size: var(--icon-size-16, 1rem);
-}
-
-.diet-icon[data-size="lg"] {
-  inline-size: var(--icon-size-16, 1rem);
-  block-size: var(--icon-size-16, 1rem);
-}
-
-.diet-icon[data-size="xl"] {
+.diet-icon[data-size="20"] {
   inline-size: var(--icon-size-20, 1.25rem);
   block-size: var(--icon-size-20, 1.25rem);
 }
 
-.diet-icon[data-size="2xl"] {
+.diet-icon[data-size="24"] {
+  inline-size: var(--icon-size-24, 1.5rem);
+  block-size: var(--icon-size-24, 1.5rem);
+}
+
+.diet-icon[data-size="28"] {
+  inline-size: var(--icon-size-28, 1.75rem);
+  block-size: var(--icon-size-28, 1.75rem);
+}
+
+.diet-icon[data-size="32"] {
+  inline-size: var(--icon-size-32, 2rem);
+  block-size: var(--icon-size-32, 2rem);
+}
+
+.diet-icon[data-size="36"] {
   inline-size: var(--icon-size-36, 2.25rem);
   block-size: var(--icon-size-36, 2.25rem);
 }
 
-.diet-icon[data-size="3xl"] {
+.diet-icon[data-size="40"] {
   inline-size: var(--icon-size-40, 2.5rem);
   block-size: var(--icon-size-40, 2.5rem);
 }

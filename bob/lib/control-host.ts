@@ -34,4 +34,5 @@ export {
   resolvePathFromTarget,
   serializeBobJsonFieldValue,
 } from '../components/td-menu-content/fieldValue';
+export { applyAccountFontLibraryToTypographyMenus } from '../components/td-menu-content/accountFonts';
 export type { AccountAssetsClient };

@@ -1,9 +1,14 @@
 import { isRecord } from '@clickeen/ck-contracts';
+import {
+  normalizeAccountFontLibrary,
+  type AccountFontLibrary,
+} from '@clickeen/widget-shell';
 import type { Env } from '../types';
 import { putJson } from './storage';
 
 export type AccountWidgetDefaultsDocument = {
   accountId: string;
+  fontLibrary: AccountFontLibrary;
   shell: Record<string, unknown>;
   widgets: Record<
     string,
@@ -44,6 +49,8 @@ export function normalizeAccountWidgetDefaultsDocument(
   if (!isRecord(value.shell) || !isRecord(value.widgets)) return null;
   if (typeof value.seededAt !== 'string' || !value.seededAt.trim()) return null;
   if (typeof value.updatedAt !== 'string' || !value.updatedAt.trim()) return null;
+  const fontLibrary = normalizeAccountFontLibrary(value.fontLibrary);
+  if (!fontLibrary) return null;
 
   const shell = cloneRecord(value.shell);
   const widgets: AccountWidgetDefaultsDocument['widgets'] = {};
@@ -57,6 +64,7 @@ export function normalizeAccountWidgetDefaultsDocument(
 
   return {
     accountId,
+    fontLibrary,
     shell,
     widgets,
     seededAt: value.seededAt,

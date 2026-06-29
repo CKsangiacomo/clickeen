@@ -40,7 +40,6 @@
   user-select: none;
   gap: var(--control-inline-gap-md);
   white-space: nowrap;
-  letter-spacing: -0.02em;
   transition: background-color var(--duration-base, 160ms), border-color var(--duration-base, 160ms),
     color var(--duration-base, 160ms), box-shadow var(--duration-base, 160ms), transform var(--duration-base, 160ms);
 }

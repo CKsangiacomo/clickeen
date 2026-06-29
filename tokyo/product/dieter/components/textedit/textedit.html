@@ -15,12 +15,12 @@
       <span class="diet-popover__title label-m">{{label}}</span>
       <div class="diet-popover__actions">
         <button class="diet-btn-ic" data-size="sm" data-variant="neutral" type="button" aria-label="Delete">
-          <span class="diet-btn-ic__icon" data-icon="trash"></span>
+          <span class="diet-btn-ic__icon" aria-hidden="true" data-icon="trash"></span>
         </button>
       </div>
     </div>
     <div class="diet-popover__body">
-      <div class="diet-textedit__editor body-xsmall" contenteditable="true">{{placeholder}}</div>
+      <div class="diet-textedit__editor body-xs" contenteditable="true">{{placeholder}}</div>
       <div class="diet-textedit__linkform is-hidden" data-validity="empty">
         <div class="diet-textedit__linkinner">
           <div class="diet-textedit__linkheader">
@@ -31,6 +31,7 @@
           </div>
           <div class="diet-textfield" data-size="md">
             <label class="diet-textfield__control">
+              <span class="diet-textfield__display-label label-xs">Link URL</span>
               <input type="text" class="diet-textfield__field diet-textedit__linkinput" placeholder="link url" />
             </label>
           </div>

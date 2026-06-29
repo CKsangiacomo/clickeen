@@ -1,289 +1,411 @@
-# 126M — PRD: Roma UI
+# 126M - PRD: Roma UI
 
-Parent: `126__PRD__UI_Optimization_Program.md` (MAMA) — **track 4 of 4** (the
-outermost doll, and the largest surface). Roma consumes Dieter components + the
-tokenization guard from 126C; every screen must be built from components + one
-shared primitive set, with no parallel `.roma-*` system.
+Parent: `126__PRD__UI_Optimization_Program.md` (MAMA).
 
-Status: **DIRECTIONAL.** The body below is the prior draft (2026-06-23), kept in
-full as seed content; it is corrected and brought to the 124/125 bar during the
-Roma audit + fill (`audits/126D__Audit__Roma_UI.md`). Re-count the monolith
-baselines first — `builder-domain.tsx` has already grown to 976 lines since the
-draft was written.
+Status: CODEX BASELINE ONLY - Phase 1 Step 2.
 
-Prior title: *Planning PRD - Roma UI Refactor*.
-Prior status: EXECUTING · Owner: Roma + Dieter · 2026-06-23 · 02-Executing.
-Numbering: deliberately unnumbered per product owner.
+This is current reality plus known gaps only. It is not final doctrine, does not
+converge with GLM, does not select fixes, and does not authorize Step 4+
+execution. The old executable draft was seed material and is not preserved as
+Codex doctrine in this baseline.
 
-Related:
+Primary Step 1 evidence:
 
-- `Execution_Pipeline_Docs/02-Executing/UI_PRD__Devstudio_as_a_trustworthy_Reveal_cockpit_DieterComponents.md`
-  (owns Dieter token/showcase governance + the tokenization CI guard that already
-  covers `roma/app` and `roma/components` incl. inline TSX styles — Step 5 there.
-  This PRD **consumes** that guard; it does not reinvent it.)
-- `dieter/components/*` (component truth: `diet-textfield`, `diet-toggle`,
-  `diet-segmented`, `diet-popover`, `diet-button`, …)
-- `dieter/tokens/*` (token truth — already adopted by Roma chrome; out of scope here)
-- `documentation/architecture/CONTEXT.md`, `AGENTS.md` (product law: Roma owns
-  account authority/routes/save; Dieter-reuse mandate; design-freeze mandate)
-- `documentation/services/roma.md` (Roma surface truth)
+- `audits/126M__AsBuilt_Codex.md`
+- `audits/126M__AsBuilt_GLM.md`
 
-## PRD Tenets
+Primary Step 3 evidence:
 
-- Execute one step at a time. Do not start Step N+1 until Step N is green.
-- Green requires named completion evidence. A blocker report stops execution; it
-  does not unlock the next step.
-- Do not solve missing decisions by inventing product behavior.
-- If existing code contradicts this PRD, delete it, fence it, or stop; do not
-  preserve it and work around it.
-- **Design freeze applies:** this is convergence onto the EXISTING Dieter system
-  and the EXISTING Roma layout — not a new visual language. No new styles without
-  explicit product-owner approval. Ported screens match their current visual intent.
-- **Tokens are already healthy; the gap is components.** Roma chrome is tokenized
-  (`roma.css`: 0 hex literals / 140 `var()` uses per the DevStudio audit). This is
-  NOT a token exercise. The work is: stop using the parallel `.roma-*` component
-  set; use Dieter components + one shared React primitive layer.
-- No new product features and no product-law changes. Roma keeps owning exactly
-  what it owns. Backend/route changes remain out of scope except the mandatory
-  source-save/localization boundary correction in the addendum below.
+- `research/126M_Research_Codex.md`
+- `research/126M_Research_GLM.md`
 
-## Mandatory addendum: save is not translation
+## Phase 1 Step 2 Boundary
 
-This PRD must correct the source-save/localization UX boundary during execution.
-The current behavior where Roma source save can run translation or locale package
-follow-up inside the same save request is not product-correct and must not
-survive the Roma UI refactor.
+This baseline may describe:
 
-The product law is:
+- current Roma UI reality;
+- current route/product authority boundaries;
+- known gaps;
+- stale prior-draft/count warnings;
+- non-decisions before Step 4 human convergence.
 
-```text
-Save = persist widget source truth and the base runtime package.
-Generate/regenerate translations = explicit localization operation.
-Locale packages = derivative runtime artifacts from current source + current overlays.
-```
+This baseline must not:
 
-Therefore, the Roma/Bob authoring save path must be restored to the save
-authority only: save the source/base package, then return the source save result.
-It must not generate translations, regenerate translations, materialize locale
-packages, refresh locale public cache, or make the authoring save wait on any
-locale follow-up. A translation, package, or locale-cache failure is a
-localization failure, not a source-save failure.
+- implement shared primitives;
+- delete `.roma-*`, `.rd-*`, or `widget-defaults*` CSS;
+- split domain components;
+- change copy;
+- change save/translation behavior;
+- implement the stale-translation banner;
+- update living service docs;
+- edit GLM artifacts;
+- start Step 4+ convergence.
 
-The UI obligation for 126D is to surface this honestly instead of hiding it in
-save. When a saved widget has translations that need update, Bob/Roma must show
-a top-of-builder toast/banner that tells the user to open the Translations panel
-and click "Generate translations". The banner is a product signal and navigation
-aid. It must not auto-run translation generation, create a background queue,
-invent readiness state, poll/probe runtime packages, or reinterpret save as a
-localization command.
+## Product Role
 
-This is required because save and translation have different product intent,
-authority, cost, and failure semantics:
+Roma is the authenticated current-account product app and Builder host.
 
-- Source save is the user/agent persistence boundary for the widget being edited.
-- Translation generation is AI-generated derivative content and requires explicit
-  localization intent.
-- Locale package materialization follows the localization operation that changed
-  overlays; it is not part of authoring save.
-- More active locales or slower model/cache work must not make Save slower,
-  ambiguous, or falsely failed.
-- Bob must tell the truth: saved source remains saved even when translations need
-  attention.
+## 126 Pre-GA No Legacy Compatibility Tenet
 
-Execution compliance for this addendum:
+Clickeen is pre-GA. This PRD must not preserve old UI drift through
+compatibility shims, temporary aliases, parallel legacy paths, or "support both
+old and new" transitions unless the human explicitly makes that behavior product
+law in this PRD.
 
-- Roma account instance save route returns source/base save success or failure
-  only.
-- Translation generation/regeneration remains owned by the translation route and
-  the Translations panel action.
-- The top banner/toast appears only as a stale-translation attention signal and
-  points to the Translations panel.
-- If the codebase lacks exact persisted/evaluable stale-translation evidence, the
-  execution pass must stop and name the missing authority; it must not infer
-  staleness from runtime package probes or invented UI state.
-- `documentation/services/roma.md` and the relevant Bob/Roma detail docs must be
-  updated in the same PR to reflect the restored boundary.
+Once the 126M Roma UI standard is decided:
 
-## Authority
+- Fix source and docs to the standard.
+- Remove old drift and stale paths.
+- Do not leave legacy names, classes, render paths, token aliases, wrappers, or
+  local one-offs as supported alternatives.
+- Do not add guard/check machinery to enforce this tenet. The PRD is the
+  authority; execution must clean the code/doc surface instead of preserving bad
+  paths behind validation.
 
-| Concern                              | Authority                                                                      |
-| ------------------------------------ | ------------------------------------------------------------------------------ |
-| Visual design / layout               | Product owner; current Roma layout is the frozen baseline                      |
-| Component truth                      | `dieter/components/*` (`diet-textfield`, `diet-toggle`, `diet-segmented`, …)   |
-| Token truth                          | `dieter/tokens/*` (already adopted — out of scope)                             |
-| Tokenization CI guard                | DevStudio Design Governance PRD §3.6 / Step 5 (consumed here, not reinvented)  |
-| Roma product surfaces / routes / save| Roma (product law unchanged; save/localization boundary corrected by addendum) |
-| What the "shared Roma primitive" set is | This PRD, Step 0 decision                                                     |
+Current reality:
 
-## 1. Why (product truth)
+- Roma bootstraps current-account context from Berlin through `/api/bootstrap`.
+- Roma browser code calls same-origin Roma APIs.
+- Roma routes account widget, page, asset, team, usage, locale, Builder, Copilot,
+  and translation operations through named server routes.
+- Bob is the editor. Tokyo-worker is the account storage boundary. Berlin owns
+  auth/account identity. San Francisco owns governed AI execution.
+- Roma Builder hosts Bob and maps Bob account commands to same-origin Roma
+  routes.
 
-Roma is the account app the human and the AI workforce operate. Its UI currently
-feels subpar / prototype-y. Root cause, verified against the repo: Roma is
-unfinished scaffolding built function-first that stopped one layer short of its
-own design system. Specifically:
+Known gaps:
 
-- Roma loads Dieter components from CDN but uses almost none. Verified usages:
-  `diet-textfield` 0, `diet-toggle` 0, `diet-segmented` 0, `diet-popover` 0,
-  `diet-button` 0; only `diet-btn-txt` is used (158×), plus Dieter typography /
-  token CSS.
-- Roma built a parallel 72-class component system (`.roma-input`, `.roma-table`,
-  `.roma-modal`, `.roma-card`, `.roma-field`, `.roma-grid`, `.roma-toolbar`) in
-  one 762-line `roma/app/roma.css`.
-- Roma has no shared React primitive layer, so every domain screen is a one-off
-  that drifts (different table shapes, empty-state copy, toolbars, modals).
-- Five monolith domain components can't be polished: `pages-domain.tsx` 1,106
-  lines, `builder-domain.tsx` 869, `widget-defaults-domain.tsx` 719,
-  `widgets-domain.tsx` 527, `assets-domain.tsx` 488.
-- Several surfaces leak dev/stub copy and lack loading/empty/error states.
+- UI convergence must preserve current-account authority and must not turn Roma
+  into a generic admin app.
+- Product mutations must remain route-owned and must not become direct UI
+  storage writes.
 
-Bob (the editor) uses Dieter properly and sets the bar. Roma must converge to the
-same bar so the product reads as one designed system, not "backend with a UI." The
-human supervises the UI layer by looking at rendered truth — a Roma that drifts
-from Dieter is a supervision blind spot, the same failure mode the DevStudio
-Design Governance PRD names.
+## App Shell And Navigation
 
-## 2. Verified current state (the baseline this PRD fixes)
+Current reality:
 
-- **Component adoption:** `diet-textfield` 0, `diet-toggle` 0, `diet-segmented`
-  0, `diet-popover` 0, `diet-button` 0; `diet-btn-txt` 158.
-- **Parallel system:** 72 `.roma-*` / `.rd-*` classes in `roma/app/roma.css`
-  (762 lines).
-- **Tokens:** HEALTHY — 0 hex literals / 140 `var()` uses. Not a token problem.
-- **Monoliths:** pages 1,106; builder 869; widget-defaults 719; widgets 527;
-  assets 488.
-- **Inline ad-hoc styles:** 12 `style={{…}}` with hardcoded px, bypassing
-  `--space-*` tokens.
-- **Leaked stub / dev copy:** `pagePublishingUnavailable = true` + "Page
-  publishing is unavailable until page package generation is enabled"
-  (`pages-domain.tsx:316,786`); disabled IP-localization checkbox
-  `checked={false} disabled readOnly` (`pages-domain.tsx:829`); "Billing
-  provider integration is not connected" (`billing-domain.tsx:12`); "Broader
-  usage reporting is not connected in Roma yet" (`usage-domain.tsx:56`);
-  "Invitations are Berlin-owned… Berlin acceptance flow" (`team-domain.tsx:225`);
-  raw error keys in user-facing strings.
-- **Weak states:** `home`, `ai`, `billing` have no loading/empty/error handling.
+- Roma loads `roma/app/roma.css` plus Dieter token/component CSS from Tokyo.
+- Dieter CSS available in Roma includes tokens, segmented, button, textfield,
+  toggle, and popover.
+- Authed domain pages are thin wrappers over `DomainPageShell`.
+- `DomainPageShell` renders `RomaShell`, the account notice modal, Suspense
+  fallback, and the domain error boundary.
+- `RomaShell` renders the local `.roma-layout`, `.rd-domain`, `.rd-header`, and
+  `.rd-canvas` shell.
+- `RomaNav` renders 12 domain keys, active `aria-current`, and nested Settings
+  domains.
+- Main domain keys are Home, Widgets, Pages, Builder, Assets, and Settings.
+- Settings domains include Account, User Settings, Team, Billing, Usage, AI, and
+  Widget Defaults.
 
-## 2.1 Surviving authorities and deletion targets
+Known gaps:
 
-| Area                 | Survives                                 | Delete / replace                                                                                                          |
-| -------------------- | ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| Shell + layout       | `roma-shell`, `roma-nav`, `roma-layout`  | keep                                                                                                                      |
-| Token usage          | `var(--*)` in `roma.css`                 | keep (healthy)                                                                                                            |
-| Parallel components  | —                                        | `.roma-input` / `.roma-table` / `.roma-modal` / `.roma-card` / `.roma-field` → Dieter components + shared primitives; CSS deleted as replaced |
-| Dieter components loaded but unused | —                          | adopt `diet-textfield` / `diet-toggle` / `diet-segmented` / `diet-popover` where the `.roma-*` equivalents are            |
-| Domain monoliths     | behavior                                 | split into subcomponents (list / editor / placements / settings / forms)                                                  |
-| Leaked dev / stub copy | —                                      | map to user copy; one honest "not available" treatment for genuinely-unbuilt features                                     |
+- The shell is structured and shared, but it is local `.roma-*` / `.rd-*` UI,
+  not a Dieter primitive shell.
+- Current mobile nav/table behavior is local CSS and must be audited before any
+  later implementation step changes it.
 
-## 3. The fix, per surface
+## Dieter Consumption
 
-### 3.1 Shared Roma primitive layer (the keystone)
+Current reality:
 
-One small set of React primitives under `roma/components/ui/`, built on Dieter:
-`DataTable`, `PageHeader`, `EmptyState`, `FormField`, `Modal`, `Toast`. Domains
-consume these instead of improvising. This is what makes screens converge.
+- Roma is token-aware and loads Dieter CSS.
+- Dieter usage in inspected Roma UI is concentrated in `diet-btn-txt` and
+  `diet-btn-txt__label`.
+- Current scan found no `diet-textfield`, `diet-toggle`, `diet-segmented`,
+  `diet-popover`, or `diet-button` class hits in `roma/app` or
+  `roma/components`.
+- Current Dieter adoption in Roma is CSS/class-based. The inspected shell and
+  domain files do not import Dieter React components.
 
-### 3.2 Adopt Dieter components for real
+Known gaps:
 
-Replace `.roma-input` → `diet-textfield`; `.roma-modal` → a `Modal` primitive on
-Dieter; `.roma-field` → `FormField`; toggles → `diet-toggle`; segmented choices →
-`diet-segmented`. Delete the replaced `.roma-*` CSS. No new visual language —
-Dieter is the design.
+- Roma's forms, tables, cards, modals, grids, locale controls, and most domain
+  states remain outside a Dieter-backed shared primitive layer.
+- Later convergence must be class/markup-aware instead of assuming custom Dieter
+  elements exist.
 
-### 3.3 Break the monoliths
+## Local UI Layer
 
-Split each >~400-line domain into subcomponents (list view / editor / placements /
-settings / forms). Behavior unchanged; structure refinable.
+Current reality:
 
-### 3.4 Fix leaked copy + states
+- `roma/app/roma.css` is 762 lines.
+- It defines layout, nav, headers, canvas modules, module surfaces, cards,
+  code blocks, toolbar, account locale settings, inputs, form grids, fields,
+  tables, cell actions, modals, Builder iframe, and mobile behavior.
+- The `widget-defaults` block is a dense second local form/control system inside
+  the Roma local layer.
+- CSS-side raw pixel values still exist in Roma CSS.
 
-Map raw reason keys to user copy; one honest "not available" treatment for
-genuinely-unbuilt features (no scattered hardcoded feature-off booleans); add
-loading/empty/error to every domain.
+Known gaps:
 
-### 3.5 Tokenize the last mile (coordinate with DevStudio)
+- `.roma-*`, `.rd-*`, and `widget-defaults*` are current local UI truth, not a
+  converged system.
+- The `widget-defaults` subsystem must be tracked separately from the general
+  shell/table/form layer because it owns local toggle/input/textarea behavior.
 
-DevStudio owns the tokenization guard **and** cleaning the ~12 inline-px sites. Roma's
-role here is **verification** (Step 6): confirm 0 remain after DevStudio's pass; clean
-only residual Roma-only sites DevStudio didn't reach. Do not re-edit the same lines.
+## Shared Primitive Layer
 
-## Coordination + execution rules (cross-PRD)
+Current reality:
 
-- **Ownership split.** This PRD makes Roma *consume* Dieter. The sibling
-  `UI_PRD__Devstudio_as_a_trustworthy_Reveal_cockpit_DieterComponents.md` owns Dieter
-  itself (derived pages, `textrename` cleanup, ghost token, tokenization guard, token
-  editor) — don't duplicate that work here.
-- **Inline-px is owned by DevStudio.** DevStudio owns the tokenization guard *and*
-  cleaning the ~20 inline-px sites in Roma/Bob. Roma's Step 6 is **verification only**
-  if DevStudio already cleaned them — do not re-edit the same lines.
-- **Sequence.** Roma starts after DevStudio's guard + Dieter cleanup are live (Roma
-  consumes Dieter; the guard is what keeps Roma honest).
-- **Start from clean git.** Commit any in-flight doc/taxonomy cleanup before code
-  work — don't mix doc churn into code commits.
-- **Honest stubs, not invented behavior.** When Roma hits a stub surface
-  (billing/usage/pages "not available"), clean the UI state honestly; do not build
-  the feature behind it.
-- **Re-audit Step 0.** The §2 counts are a baseline; recount on the real code first.
-- **Proof is visual.** UI changes need before/after browser screenshots — lint/typecheck
-  green is not sufficient.
-- **Docs are part of done.** `roma.md` must match the executed behavior.
-- **No new framework.** The shared primitive layer is a small set on Dieter, not a
-  component framework. This is cleanup/convergence.
-- **Save/localization boundary is mandatory.** The addendum above is an execution
-  requirement for this PRD even though the old draft said no route changes and
-  listed Bob out of scope. That old scope language cannot be used to preserve the
-  current save-time translation cascade.
+- No `roma/components/ui` shared primitive folder exists in the current working
+  tree.
+- No current `DataTable`, `PageHeader`, `EmptyState`, `FormField`, `Modal`, or
+  `Toast` primitive implementation was found.
+- Domains consume local classes and local markup directly.
 
-## 4. Steps
+Known gaps:
 
-| Step | Action                                                                                                                                                       | Completion evidence                                                                                                                       | NOT_ALLOWED                                                                                          |
-| ---- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| 0    | **Preflight / baseline:** record exact counts (component usages, `.roma-*` class list, monolith line counts, leaked-copy inventory, missing-states inventory); pick the reference domain (propose `widgets`); confirm a Dieter component exists for every `.roma-*` being replaced; lock the shared-primitive list. | This PRD updated with the baseline table + reference-domain + primitive-list decision.                                                    | Starting porting from stale counts; inventing primitives with no Dieter backing.                     |
-| 1    | **Shared primitive layer:** `DataTable`, `PageHeader`, `EmptyState`, `FormField`, `Modal`, `Toast` built on Dieter under `roma/components/ui/`.             | Primitives exist, typed, used by at least one fixture; no new visual language.                                                            | A framework; primitives that bypass Dieter; styling that isn't tokens.                               |
-| 2    | **Reference domain (`widgets`) ported** onto primitives + Dieter components; `.roma-*` classes used there deleted.                                           | `widgets-domain.tsx` uses the primitive layer + Dieter components; replaced `.roma-*` CSS gone; visual parity vs current.                 | Redesigning widgets; leaving replaced classes "as backup".                                           |
-| 3    | **Port remaining domains** (`pages`, `assets`, `team`, `profile`, `settings`, `usage`, `billing`, `ai`, `home`) onto the same primitives + Dieter components. | Each domain built from the primitive layer; tables/empty-states/modals no longer one-offs; parallel `.roma-*` CSS retired.                | Per-domain forks of the primitives; new visual language on any screen.                               |
-| 4    | **Break the 5 monoliths** into subcomponents.                                                                                                                | Each former monolith under a named subcomponent structure (<~400 lines each, or justified); behavior unchanged.                           | Behavior changes; logic moved across ownership boundaries.                                           |
-| 5    | **Copy + states pass:** reason-key → user copy map; one honest unavailable treatment; loading/empty/error on every domain.                                   | No raw reason keys or dev/internal copy in the UI; every domain has the three states.                                                     | Hiding unbuilt features silently; inventing product behavior to fill gaps.                           |
-| 6    | **Verify inline-px tokenization** (DevStudio owns the cleanup + guard): if DevStudio already cleaned the sites, Roma *verifies* 0 remain and cleans only residual Roma-only sites DevStudio didn't reach; do not re-edit sites DevStudio fixed.                                            | 0 inline `style={{px}}` bypassing tokens in Roma components; guard green.                                                                 | Reinventing the guard; scoping it down to pass dirty code.                                           |
-| 7    | **Docs sync:** `roma.md` gains "Roma uses Dieter + the shared primitive layer; no parallel component system."                                                | Docs diff in the same PR as the final code step.                                                                                          | Deferring docs; leaving `roma.md` describing the parallel system as current.                         |
+- The shared primitive layer described in old seed text is not current runtime.
+- Step 2 does not choose whether that old primitive list is correct.
 
-## 5. Out of scope
+## Domain Size And Shape
 
-- A new visual language / redesign (design freeze; Dieter is the design).
-- Token authoring / governance (DevStudio Design Governance PRD owns).
-- Roma product-law changes, new features, backend / route changes beyond the
-  mandatory source-save/localization boundary correction in this PRD.
-- Bob, Prague, DevStudio, widget-software surfaces, except the top-of-builder
-  stale-translation attention banner required by the addendum.
-- The tokenization CI guard itself (DevStudio PRD Step 5 owns; this PRD consumes it).
+Current line counts:
 
-## 6. Acceptance criteria
+- `pages-domain.tsx`: 1106 lines.
+- `builder-domain.tsx`: 973 lines.
+- `widget-defaults-domain.tsx`: 718 lines.
+- `widgets-domain.tsx`: 624 lines.
+- `assets-domain.tsx`: 488 lines.
+- `account-locale-settings-card.tsx`: 334 lines.
+- `team-domain.tsx`: 311 lines.
+- `team-member-domain.tsx`: 303 lines.
+- `profile-domain.tsx`: 289 lines.
+- `settings-domain.tsx`: 190 lines.
+- Smaller domains include accept invite, account notice modal, usage, nav,
+  shell, home, AI, and billing.
 
-- Zero parallel component system: no hand-rolled `.roma-input` / `.roma-table` /
-  `.roma-modal` / `.roma-card` / `.roma-field` components; Dieter components +
-  shared primitives used instead (`roma.css` shrinks materially).
-- Dieter components actually used: `diet-textfield` / `toggle` / `segmented` /
-  `popover` present where forms / choices / overlays are.
-- Every domain screen built from the shared primitive layer; no one-off tables /
-  empty-states / modals.
-- The 5 monoliths each under a named subcomponent structure.
-- No raw reason keys or dev/internal copy in the UI; one honest unavailable
-  treatment; every domain has loading / empty / error states.
-- Visual parity with current Roma (no redesign); DevStudio tokenization guard
-  green on Roma incl. inline TSX.
-- Roma product law remains unchanged. Save behavior is corrected to the product
-  law above: source/base save does not run translation generation/regeneration or
-  locale package follow-up, and stale translations are surfaced as an explicit
-  Translations-panel action.
+Known gaps:
 
-## 7. Planning review (per pipeline README)
+- Old 126M seed counts are stale and must not be reused as current truth.
+- Pages, Builder, Widget Defaults, Widgets, and Assets remain large/high-risk
+  domains for later UI work.
 
-1. **Elegant, scales?** Yes — one primitive layer + Dieter adoption abolishes the
-   parallel system; every future domain gets consistency for free. O(1) per addition.
-2. **Compliant with architecture / tenets?** Yes — kills a duplicate-truth
-   violation (a parallel component system); reuses Dieter (the ratified design
-   system); stays inside Roma's boundary (no product-data or product-law changes).
-3. **Avoids over-architecture?** Yes — a small primitive set, not a framework; no
-   new visual language; consumes the existing DevStudio guard instead of building one.
-4. **Moves toward intended architecture?** Directly — Roma converges to the one
-   design system the rest of the product already runs on, closing a supervision
-   blind spot for the one human who steers the UI.
+## Domain Patterns
+
+Current reality:
+
+- Widgets uses local table, inline rename, row actions, loading/error/empty
+  branches, and an upgrade modal.
+- Pages uses local page list/source forms/localization tables/placement tables,
+  add-instance modal, publish/copy controls, and unavailable package copy.
+- Assets uses local table, storage labels, upload/delete state, and bulk upload
+  modal.
+- Builder hosts Bob in an iframe, sends `ck:open-editor`, maps Bob commands to
+  same-origin Roma routes, and renders local copy/open/error status.
+- Settings renders account language settings and owner-transfer controls.
+- Account language settings save active locales and report overlay-update
+  follow-up through success copy.
+- Profile, Team, and Team Member use local forms and tables.
+- Home, Billing, and AI are mostly static card surfaces.
+- Usage has live storage usage state and broader-reporting unavailable copy.
+
+Known gaps:
+
+- Tables, forms, modals, empty states, errors, and status messages are repeated
+  by domain rather than expressed through one current primitive system.
+- State handling is uneven by domain.
+- Billing, usage, team, and pages expose implementation/environment copy that
+  must be classified before later copy work.
+
+## Save And Localization Boundary
+
+Current reality:
+
+- `PUT /api/account/instances/:instanceId` saves widget source/content and the
+  base public package through Tokyo.
+- Explicit translation generation is routed through
+  `/api/account/instances/:instanceId/translations/generate`.
+- The translation route calls Translation Agent and materializes locale packages
+  after accepted translation generation.
+- Bob's Translations panel has an explicit "Generate translations" action.
+- Bob disables translation generation while the widget is dirty/saving or has no
+  translation fields.
+- Current audit found no top-of-builder stale-translation attention banner in
+  Roma Builder UI.
+
+Known gaps:
+
+- Backend route separation is not the same as complete UI fulfillment.
+- A missing stale-translation banner is a current UI gap only; Step 2 does not
+  choose stale evidence, copy, persistence, or implementation mechanics.
+- Save/translation product law must remain separated in later work.
+
+## State And Feedback
+
+Current reality:
+
+- Account boundary has loading/auth/unavailable/reload states.
+- Domain error boundary has a rendering error surface.
+- Widgets, pages, assets, team, team member, profile, settings, and usage have
+  some loading/error/empty/success handling.
+- Home, billing, and AI are static card domains without domain-level
+  loading/error/empty branches.
+- Local modal/status patterns exist in widgets, assets, pages, Builder,
+  profile, and account notices.
+- Builder uses browser `window.confirm` for unsaved navigation.
+
+Known gaps:
+
+- Feedback surfaces are not centralized.
+- Modal, toast/banner, inline error, loading, success, destructive confirmation,
+  and attention-state semantics need later classification.
+
+## Comparative Baseline
+
+| Area | Current Strength | Current Gap |
+| --- | --- | --- |
+| Account authority | Same-origin Roma routes and current-account shell | UI work must not bypass product routes |
+| Shell | Shared `RomaShell`/`RomaNav` structure | Local `.roma-*`/`.rd-*` shell primitives |
+| Dieter | Tokens and button CSS loaded/used | Forms/toggles/popovers/tables/modals not broadly Dieter-class-based |
+| Domains | Clear account product surfaces | Large domain files and repeated local markup |
+| Widget Defaults | Rich account default editing surface | Dense second local form/control system |
+| Builder | Explicit Bob host and command bridge | No found stale-translation attention banner |
+| Save/localization | Separate save and translation routes | UI attention state for stale translations not present |
+| State | Many domains have some state handling | Uneven loading/empty/error/success model |
+| Copy | Some product-law copy is explicit | Some implementation/environment copy remains visible |
+
+## Known Stale Prior-Draft Content
+
+- Prior references to `audits/126D__Audit__Roma_UI.md` are stale for this 126M
+  Phase 1 audit. Codex Step 1 output is `audits/126M__AsBuilt_Codex.md`.
+- Prior executable steps for shared primitives, domain porting, CSS deletion,
+  monolith splitting, copy/state pass, docs sync, and acceptance criteria are
+  not Step 2 doctrine.
+- Prior save/localization addendum language describes product behavior and later
+  UI obligations, but Step 2 does not execute route changes or the banner.
+- Prior quantity claims must be replaced by current audit counts before any
+  later executable PRD.
+
+## Compliance To Architecture, Product, And Product Law
+
+Architecture:
+
+- Keeps Roma in the current-account app lane.
+- Keeps Bob as editor and Tokyo/Berlin/San Francisco as named authorities.
+- Records Dieter consumption without inventing a new component/runtime model.
+
+Product:
+
+- Describes current user-facing domains and current gaps.
+- Does not change product behavior.
+- Does not decide copy, component, or layout changes before convergence.
+
+Product law:
+
+- Keeps source/base save separate from explicit translation generation.
+- Does not turn missing banner evidence into an invented state.
+- Does not treat old seed material as executable truth.
+
+## Explicit Non-Decisions
+
+- No code changes.
+- No Roma redesign.
+- No shared primitive list decision.
+- No Dieter migration decision.
+- No CSS deletion.
+- No domain splitting.
+- No save/translation route change.
+- No stale-translation banner implementation.
+- No final doctrine.
+- No Step 4+ convergence.
+
+---
+
+## GLM Addendum - Phase 1 Step 2 (feedback, preserved)
+
+Adversarial critique of the two Codex Baseline sections from the earlier seed
+against the GLM independent as-built pass (`audits/126M__AsBuilt_GLM.md`). Not
+converged. GLM's pass was Bash-blocked this session, so GLM-verified evidence
+covers `roma/app/layout.tsx` and `roma/app/roma.css` in full; the per-domain
+TSX counts and `diet-*` usage counts remain PRD-claimed and are tagged as such
+in the as-built. That limitation is stated up front so Codex's claims and GLM's
+critique are read at the right confidence.
+
+### What Codex gets right
+
+- **"Roma loads Dieter tokens/component CSS and uses Dieter text buttons
+  heavily, but still owns a parallel `.roma-*` / `.rd-*` screen/component
+  layer."** GLM-verified. `layout.tsx:13-18` loads tokens + 5 component
+  stylesheets, and `roma.css` is a 762-line parallel system
+  (`roma.css:1-762`, GLM full read). Codex's framing is accurate.
+- **"Inline/ad-hoc TSX styles ... are still present."** Plausible and
+  consistent with the CSS-side inline-px escapes GLM did verify
+  (`roma.css:190,194,202,675,684,711`). The TSX-side count from the old seed is
+  PRD-claimed, not GLM-verified, but the phenomenon is real.
+- **"Compliance reason: this frames Roma as the convergence target without
+  changing account/product routes ... or save/translation behavior."** As a
+  *framing* this is fine - and it is correctly labeled "not final doctrine."
+  GLM agrees convergence is the right direction.
+
+### What Codex misses or under-specifies
+
+1. **Dieter is CSS-only here, not web components.** Codex's baseline reads as
+   if `diet-textfield` / `diet-toggle` / `diet-segmented` / `diet-popover` are
+   components to "adopt." In this codebase they are **class-name patterns**
+   backed by globally-loaded CSS (`layout.tsx:14-18`); there are no custom
+   elements imported. "Adopt Dieter components" therefore means "use Dieter
+   class names + the loaded CSS," which materially changes what Step 2/3 port
+   work looks like (markup + class swap, not `<diet-textfield>` element
+   adoption). The baseline should state this so the steps don't over-promise an
+   element migration that the codebase doesn't support.
+
+2. **The `widget-defaults` subsystem is a *second* parallel form system inside
+   the first, and Codex doesn't call it out separately.** GLM verified a 240+-
+   line dedicated block (`roma.css:257-499`) with its own hand-rolled switch
+   (`.widget-defaults-field--toggle input[type=checkbox]` styled as a toggle,
+   `roma.css:419-461`), its own input (`roma.css:463`), its own textarea
+   (`roma.css:475`), error styles, and a collapsible-cluster system that already
+   references Dieter classes (`.tdmenucontent__cluster*`, `roma.css:350-403`;
+   `.diet-btn-ic__icon`, `roma.css:377`). This is the densest hand-rolled
+   control styling in the file and the strongest single site for `diet-toggle` /
+   `diet-textfield` adoption. Codex's "parallel `.roma-*` / `.rd-*` layer"
+   lumps it in; the convergence plan should enumerate it explicitly because it
+   is where the most real toggle/textfield replacement work is.
+
+3. **Inline-px escapes exist *inside `roma.css` itself***, not only in TSX. GLM
+   verified six CSS-side hardcoded-px sites
+   (`roma.css:190,194,202,675,684,711`). Codex's baseline and the prior draft
+   both locate inline-px only in TSX. The tokenization guard's scope must
+   include the CSS file, or these sites survive the TSX-only pass. This is a
+   concrete gap.
+
+4. **The single 980px breakpoint and its table-reflow behavior must be
+   preserved by any `DataTable` primitive.** GLM verified (`roma.css:724-760`):
+   below 980px the layout collapses, nav hides behind a drawer, and `.roma-table`
+   becomes `display:block; overflow-x:auto; white-space:nowrap`. Codex's
+   baseline doesn't mention responsive behavior; a naive `DataTable` primitive
+   that doesn't replicate the horizontal-scroll reflow would regress mobile.
+   Worth naming as a later acceptance detail.
+
+5. **The header inconsistency on `builder-domain.tsx` (869 vs 976 lines).** The
+   prior PRD body said 869; the prior header note said it grew to 976. GLM could
+   not reconcile. Step 0 recount must resolve this, and the baseline should say
+   so rather than inherit the ambiguity.
+
+### Where Codex over-claims or evidence is thin
+
+- **"broad Dieter button usage" and "existing state branches in
+  widgets/assets/pages" (old Codex Second Pass bullet 1).** "Broad" is a
+  quantity claim that GLM did not re-verify and Codex's old baseline stated
+  without its own count. "Existing state branches" was asserted without naming
+  which states in which file. Both are directionally believable but
+  under-evidenced in the baseline text itself.
+- **"uneven states, local modals, and implementation-facing copy" as
+  weakest-evidence (old Second Pass bullet 2).** Agree on direction; the
+  as-built shows the *copy* and *modal* sites are concrete. "Uneven states" was
+  the least grounded and needed a per-domain state matrix.
+
+### Net
+
+Codex's earlier baseline was a correct *directional* frame (parallel system
+exists, Dieter is under-adopted, convergence not redesign). It was
+**under-specified on three things that change execution**: (a) Dieter here is
+class-name CSS, not custom elements; (b) the `widget-defaults` second form
+system is the single biggest adoption site and should be named; (c) inline-px
+escapes live in `roma.css` too, so the tokenization guard must cover the CSS
+file. It also **inherited an unflagged number inconsistency** and made
+**quantity claims** it did not independently back. None of this is a wrong
+direction; it is thin where the as-built can now be specific. A later recount
+must close the verified-counts gap before any baseline hardens into doctrine.

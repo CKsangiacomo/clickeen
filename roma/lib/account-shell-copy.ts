@@ -23,8 +23,5 @@ export function resolveAccountShellErrorCopy(reason: string, fallback: string): 
   if (!normalized) return fallback;
   const mapped = ACCOUNT_SHELL_REASON_COPY[normalized];
   if (mapped) return mapped;
-  if (normalized.startsWith('HTTP_') || normalized.startsWith('coreui.') || normalized.startsWith('roma.')) {
-    return fallback;
-  }
-  return normalized;
+  return fallback;
 }

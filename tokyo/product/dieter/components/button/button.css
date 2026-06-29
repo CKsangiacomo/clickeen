@@ -5,7 +5,7 @@
 
 /* Icon + Text Button */
 .diet-btn-ictxt {
-  --btn-bg: var(--color-surface);
+  --btn-bg: var(--role-surface);
   --btn-color: var(--color-text);
   --btn-border-color: transparent;
   --btn-border-width: 0px;
@@ -27,7 +27,6 @@
   border: var(--btn-border-width) solid var(--btn-border-color);
   background: var(--btn-bg);
   color: var(--btn-color);
-  letter-spacing: -0.02em;
   text-decoration: none;
   white-space: nowrap;
   cursor: pointer;
@@ -187,7 +186,7 @@
 
 /* Text Only Button */
 .diet-btn-txt {
-  --btn-bg: var(--color-surface);
+  --btn-bg: var(--role-surface);
   --btn-color: var(--color-text);
   --btn-border-color: transparent;
   --btn-border-width: 0px;
@@ -208,7 +207,6 @@
   border: var(--btn-border-width) solid var(--btn-border-color);
   background: var(--btn-bg);
   color: var(--btn-color);
-  letter-spacing: -0.02em;
   text-decoration: none;
   white-space: nowrap;
   cursor: pointer;
@@ -318,7 +316,7 @@
 
 /* Icon Only Button */
 .diet-btn-ic {
-  --btn-bg: var(--color-surface);
+  --btn-bg: var(--role-surface);
   --btn-color: var(--color-text);
   --btn-border-color: transparent;
   --btn-border-width: 0px;

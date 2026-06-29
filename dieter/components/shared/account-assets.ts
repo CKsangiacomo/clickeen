@@ -13,6 +13,19 @@ const ACCOUNT_ASSET_UPSELL_REASONS = new Set([
   'coreui.upsell.reason.platform.uploads',
 ]);
 
+const ACCOUNT_ASSET_ERROR_COPY: Record<string, string> = {
+  'coreui.upsell.reason.limitReached': 'This exceeds your current plan limit.',
+  'coreui.upsell.reason.platform.uploads': 'Uploads are not available for this account plan.',
+  'coreui.errors.auth.required': 'You need to sign in again to manage assets.',
+  'coreui.errors.auth.forbidden': 'You do not have permission to manage assets in this account.',
+  'coreui.errors.assets.uploadFailed': 'Asset upload failed. Please try again.',
+  'coreui.errors.assets.payloadInvalid': 'Asset data could not be read. Please try again.',
+  'coreui.errors.db.readFailed': 'Failed to load assets. Please try again.',
+  'coreui.errors.db.writeFailed': 'Asset update failed on the server. Please try again.',
+  'coreui.errors.network.timeout': 'The request timed out. Please try again.',
+  'coreui.errors.payload.empty': 'Choose a file before uploading.',
+};
+
 export type AccountAssetsClient = {
   listAssets: () => Promise<AccountAssetRecord[]>;
   resolveAssets: (assetRefsRaw: string[]) => Promise<{
@@ -33,10 +46,17 @@ function resolveApiErrorReason(payload: unknown, status: number, fallback: strin
   if (isRecord(payload) && isRecord(payload.error)) {
     const reasonKey = typeof payload.error.reasonKey === 'string' ? payload.error.reasonKey : '';
     if (reasonKey) return reasonKey;
-    const detail = typeof payload.error.detail === 'string' ? payload.error.detail : '';
-    if (detail) return detail;
   }
   return fallback || `HTTP_${status}`;
+}
+
+export function resolveAccountAssetErrorCopy(reason: unknown, fallback: string): string {
+  const normalized = typeof reason === 'string' ? reason.trim() : '';
+  if (!normalized) return fallback;
+  const mapped = ACCOUNT_ASSET_ERROR_COPY[normalized];
+  if (mapped) return mapped;
+  if (normalized.startsWith('HTTP_') || normalized.startsWith('coreui.')) return fallback;
+  return fallback;
 }
 
 export function dispatchAccountAssetUpsell(root: HTMLElement, reasonKey: unknown): boolean {

@@ -54,6 +54,23 @@ Hash routes are generated from `admin/src/html/**` and route data in `admin/src/
 
 Every write uses GitHub SHA conflict checks. A stale write fails; it does not overwrite current `main`.
 
+## Color Reveal And Write Truth
+
+DevStudio reveals Dieter color source truth. Current color writes are intentionally
+narrow: only `--color-*` tokens with literal hex values are editable through the
+color token write lane.
+
+Role, focus, state, and derived `color-mix(...)` rows are displayed as read-only
+truth. They are not hidden, but they do not masquerade as writable DevStudio
+controls.
+
+## Icon Reveal Truth
+
+DevStudio/Admin uses generated raw Dieter SVG imports for tooling and reveal.
+That path is not a product runtime icon system. Missing `[data-icon]` truth is
+rendered visibly as `[missing icon: name]` with `data-icon-missing`, not silently
+omitted or replaced.
+
 ## Auth And Safety Gates
 
 DevStudio APIs stop on:

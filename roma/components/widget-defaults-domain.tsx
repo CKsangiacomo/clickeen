@@ -1,7 +1,10 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { listWidgetShellAccountDefaultMetadataPaths } from '@clickeen/widget-shell';
+import {
+  listWidgetShellAccountDefaultMetadataPaths,
+  type AccountFontLibrary,
+} from '@clickeen/widget-shell';
 import { useRomaAccountApi } from './account-api';
 import { getCompiledWidget } from './compiled-widget-cache';
 import {
@@ -10,7 +13,8 @@ import {
 } from './widget-defaults-builder-controls';
 
 type AccountWidgetDefaultsDocument = {
-    accountId: string;
+  accountId: string;
+  fontLibrary: AccountFontLibrary;
   shell: Record<string, unknown>;
   widgets: Record<
     string,
@@ -58,6 +62,9 @@ const SHELL_TOP_LEVEL_PATHS = new Set([
 const SHELL_TYPOGRAPHY_ROLES = new Set(['title', 'body', 'button', 'localeSwitcher']);
 const SHELL_SOFTWARE_METADATA_PATHS = new Set(listWidgetShellAccountDefaultMetadataPaths());
 const CORE_SOFTWARE_METADATA_PATHS = new Set(['uiLabels.core', 'typography.roleScales']);
+const WIDGET_DEFAULTS_LOAD_ERROR_COPY = 'Widget defaults could not be loaded. Please try again.';
+const WIDGET_CONTROLS_LOAD_ERROR_COPY = 'Builder controls could not be loaded. Please try again.';
+const WIDGET_DEFAULTS_SAVE_ERROR_COPY = 'Widget defaults could not be saved. Please try again.';
 
 function stableJson(value: unknown): string {
   return JSON.stringify(value);
@@ -248,11 +255,12 @@ function collectDefaultPaths(value: unknown, prefix = ''): string[] {
 
 function WidgetDefaultsCoreSection(args: {
   entry: WidgetDefaultsEntry;
+  fontLibrary: AccountFontLibrary;
   onChange: (widgetType: string, path: string, value: unknown) => void;
   onContractError: (widgetType: string, message: string) => void;
   onReadyChange: (widgetType: string, ready: boolean) => void;
 }) {
-  const { entry, onChange, onContractError, onReadyChange } = args;
+  const { entry, fontLibrary, onChange, onContractError, onReadyChange } = args;
   const handleChange = useCallback(
     (path: string, value: unknown) => onChange(entry.widgetType, path, value),
     [entry.widgetType, onChange],
@@ -272,6 +280,7 @@ function WidgetDefaultsCoreSection(args: {
       <WidgetDefaultsBuilderControls
         controls={entry.controls}
         payloads={entry.payload ? [entry.payload] : []}
+        fontLibrary={fontLibrary}
         scopeLabel={`${entry.label} Core`}
         values={entry.core}
         onChange={handleChange}
@@ -334,8 +343,8 @@ export function WidgetDefaultsDomain() {
       );
       setBaseline(cloneDefaults(payload.widgetDefaults));
       setDraft(cloneDefaults(payload.widgetDefaults));
-    } catch (error) {
-      setError(error instanceof Error ? error.message : 'Loading widget defaults failed.');
+    } catch {
+      setError(WIDGET_DEFAULTS_LOAD_ERROR_COPY);
     } finally {
       setLoading(false);
     }
@@ -381,9 +390,9 @@ export function WidgetDefaultsDomain() {
         setCoreControlsReady(Object.fromEntries(entries.map(([widgetType]) => [widgetType, false])));
         setCoreContractErrors({});
       })
-      .catch((error) => {
+      .catch(() => {
         if (cancelled) return;
-        setError(error instanceof Error ? error.message : 'Loading Builder controls failed.');
+        setError(WIDGET_CONTROLS_LOAD_ERROR_COPY);
       })
       .finally(() => {
         if (!cancelled) setCompiledLoading(false);
@@ -481,8 +490,8 @@ export function WidgetDefaultsDomain() {
   }, [compiledControls, compiledWidgetLabels, controlsLoaded, draft, widgetTypes]);
 
   const updateShellPath = useCallback((path: string, value: unknown) => {
-    setDraft((current) =>
-      current ? { ...current, shell: setPathValue(current.shell, path, value) } : current,
+        setDraft((current) =>
+          current ? { ...current, shell: setPathValue(current.shell, path, value) } : current,
     );
   }, []);
 
@@ -524,6 +533,7 @@ export function WidgetDefaultsDomain() {
         widgets: {
           ...current.widgets,
           [widgetType]: {
+            ...existing,
             core: setPathValue(existing.core, path, value),
           },
         },
@@ -556,20 +566,20 @@ export function WidgetDefaultsDomain() {
       setDraft((current) =>
         current && stableJson(current) !== snapshot ? current : cloneDefaults(saved),
       );
-    } catch (error) {
-      setError(error instanceof Error ? error.message : 'Saving widget defaults failed.');
+    } catch {
+      setError(WIDGET_DEFAULTS_SAVE_ERROR_COPY);
     } finally {
       setSaving(false);
     }
   }, [accountApi, draft, saveBlocked, saving]);
 
   if (loading) {
-    return <section className="roma-module-surface body-m">Loading widget defaults...</section>;
+    return <section className="roma-module-surface body-m" role="status">Loading widget defaults...</section>;
   }
 
   if (!draft) {
     return (
-      <section className="roma-module-surface">
+      <section className="roma-module-surface" role="alert">
         <p className="body-m">{error || 'Widget defaults are unavailable.'}</p>
         <div className="rd-canvas-module__actions">
           <button
@@ -589,7 +599,7 @@ export function WidgetDefaultsDomain() {
   if (compiledLoading || !controlsLoaded) {
     if (error && !compiledLoading) {
       return (
-        <section className="roma-module-surface widget-defaults-contract-error">
+        <section className="roma-module-surface widget-defaults-contract-error" role="alert">
           <div>
             <h2 className="heading-4">Widget Defaults Contract Error</h2>
             <p className="body-s widget-defaults-error">{error}</p>
@@ -601,12 +611,12 @@ export function WidgetDefaultsDomain() {
         </section>
       );
     }
-    return <section className="roma-module-surface body-m">Loading Builder controls...</section>;
+    return <section className="roma-module-surface body-m" role="status">Loading Builder controls...</section>;
   }
 
   if (unmappedDefaultPaths.length > 0) {
     return (
-      <section className="roma-module-surface widget-defaults-contract-error">
+      <section className="roma-module-surface widget-defaults-contract-error" role="alert">
         <div>
           <h2 className="heading-4">Widget Defaults Contract Error</h2>
           {error ? <p className="body-s widget-defaults-error">{error}</p> : null}
@@ -624,7 +634,7 @@ export function WidgetDefaultsDomain() {
 
   if (shellContractError) {
     return (
-      <section className="roma-module-surface widget-defaults-contract-error">
+      <section className="roma-module-surface widget-defaults-contract-error" role="alert">
         <div>
           <h2 className="heading-4">Widget Defaults Contract Error</h2>
           <p className="body-s widget-defaults-error">{shellContractError}</p>
@@ -639,7 +649,7 @@ export function WidgetDefaultsDomain() {
 
   if (coreContractErrorEntries.length > 0) {
     return (
-      <section className="roma-module-surface widget-defaults-contract-error">
+      <section className="roma-module-surface widget-defaults-contract-error" role="alert">
         <div>
           <h2 className="heading-4">Widget Defaults Contract Error</h2>
           <pre className="widget-defaults-contract-error__paths">
@@ -660,8 +670,8 @@ export function WidgetDefaultsDomain() {
     <section className="widget-defaults">
       <div className="widget-defaults-toolbar">
         <div>
-          {compiledLoading ? <p className="body-s">Loading Builder controls...</p> : null}
-          {error ? <p className="body-s widget-defaults-error">{error}</p> : null}
+          {compiledLoading ? <p className="body-s" role="status">Loading Builder controls...</p> : null}
+          {error ? <p className="body-s widget-defaults-error" role="alert">{error}</p> : null}
         </div>
         <div className="widget-defaults-actions">
           <button
@@ -691,6 +701,7 @@ export function WidgetDefaultsDomain() {
         <WidgetDefaultsBuilderControls
           controls={shellControls}
           payloads={widgetTypes.map((widgetType) => compiledPayloads[widgetType]).filter(Boolean)}
+          fontLibrary={draft.fontLibrary}
           scopeLabel="Shell"
           values={draft.shell}
           onChange={updateShellPath}
@@ -707,6 +718,7 @@ export function WidgetDefaultsDomain() {
           <WidgetDefaultsCoreSection
             key={entry.widgetType}
             entry={entry}
+            fontLibrary={draft.fontLibrary}
             onChange={updateWidgetPath}
             onContractError={reportCoreContractError}
             onReadyChange={setCoreReady}

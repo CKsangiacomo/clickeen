@@ -8,6 +8,11 @@ import {
   type RuntimeMaterializerEvidence,
   type RuntimeMaterializerErrorReason,
 } from '@clickeen/ck-runtime-materializer';
+import {
+  getAccountFontRecord,
+  isAccountFontFamily,
+  type RuntimeTypographyData,
+} from '@clickeen/widget-shell';
 import type { LimitsSpec } from '@clickeen/ck-policy';
 import {
   widgetEditableFieldsContractHash,
@@ -19,6 +24,7 @@ import {
   buildTokyoAssetControlHeaders,
   fetchTokyoAssetControl,
 } from './tokyo-asset-control';
+import { loadAccountWidgetDefaultsInTokyo } from './account-widget-defaults-direct';
 
 type WidgetPackageFileContext = {
   mediaType: 'application/json' | 'text/html' | 'text/css' | 'text/javascript';
@@ -65,6 +71,7 @@ type PackageBuildArgs = {
   baseLocale: string;
   displayName: string | null;
   state: Record<string, unknown>;
+  typographyData?: RuntimeTypographyData;
 };
 
 type LocalePackageBuildArgs = PackageBuildArgs & {
@@ -172,6 +179,7 @@ function materializerFailureToInstancePackageFailure(args: {
     case 'locale_overlay_key_unexpected':
     case 'locale_overlay_value_invalid':
     case 'locale_overlay_scope_unsupported':
+    case 'typography_data_invalid':
       return validationFailure('coreui.errors.instance.content.invalid', args.reasonKey, args.paths);
     default:
       return assertNever(args.reason);
@@ -212,6 +220,148 @@ function buildSchemaWidgetContractFingerprint(compiled: CompiledWidgetForPublicP
   return `widget-controls:${compiled.widgetname}:${JSON.stringify(compiled.controls ?? [])}`;
 }
 
+function collectTypographyFamilies(state: Record<string, unknown>): string[] {
+  const families = new Set<string>(['Inter']);
+  const typography = isRecord(state.typography) ? state.typography : null;
+  if (!typography) return Array.from(families);
+  if (typeof typography.globalFamily === 'string' && typography.globalFamily.trim()) {
+    families.add(typography.globalFamily.trim());
+  }
+  const roles = isRecord(typography.roles) ? typography.roles : null;
+  if (!roles) return Array.from(families);
+  Object.values(roles).forEach((role) => {
+    if (!isRecord(role)) return;
+    if (typeof role.family === 'string' && role.family.trim()) families.add(role.family.trim());
+  });
+  return Array.from(families);
+}
+
+async function resolveRuntimeTypographyData(args: {
+  accountId: string;
+  accountCapsule: string;
+  requestId: string;
+  state: Record<string, unknown>;
+}): Promise<{ ok: true; typographyData: RuntimeTypographyData } | InstancePackageFailure> {
+  const defaults = await loadAccountWidgetDefaultsInTokyo({
+    accountId: args.accountId,
+    accountCapsule: args.accountCapsule,
+    requestId: args.requestId,
+  });
+  if (!defaults.ok) {
+    if (defaults.status === 422) return validationFailure(defaults.error.reasonKey, defaults.error.detail);
+    return {
+      ok: false,
+      status: 502,
+      error: {
+        kind: 'UPSTREAM_UNAVAILABLE',
+        reasonKey: defaults.error.reasonKey,
+        detail: defaults.error.detail,
+      },
+    };
+  }
+
+  const fontLibrary = defaults.value.widgetDefaults.fontLibrary;
+  const families = collectTypographyFamilies(args.state);
+  const missing = families.filter((family) => !isAccountFontFamily(fontLibrary, family));
+  if (missing.length) {
+    return validationFailure(
+      'coreui.errors.typography.fontFamily.unknown',
+      missing.join(','),
+      missing.map((family) => `typography.fonts.${family}`),
+    );
+  }
+
+  const assetRefs = Array.from(
+    new Set(
+      families.flatMap((family) => {
+        const record = getAccountFontRecord(fontLibrary, family);
+        return record?.source === 'account-asset' ? [record.assetRef] : [];
+      }),
+    ),
+  );
+  let assetsByRef: Record<string, unknown> = {};
+  if (assetRefs.length) {
+    let upstream: Response;
+    try {
+      upstream = await fetchTokyoAssetControl({
+        path: `/__internal/assets/account/${encodeURIComponent(args.accountId)}/resolve`,
+        method: 'POST',
+        headers: buildTokyoAssetControlHeaders({
+          accountId: args.accountId,
+          accountCapsule: args.accountCapsule,
+          contentType: 'application/json',
+          requestId: args.requestId,
+        }),
+        body: JSON.stringify({ assetRefs }),
+      });
+    } catch (error) {
+      return {
+        ok: false,
+        status: 502,
+        error: {
+          kind: 'UPSTREAM_UNAVAILABLE',
+          reasonKey: 'roma.errors.proxy.tokyo_unavailable',
+          detail: error instanceof Error ? error.message : String(error),
+        },
+      };
+    }
+    const payload = await upstream.json().catch(() => null);
+    if (!upstream.ok) {
+      if (upstream.status === 422) return validationFailureFromPayload(payload, 'coreui.errors.assets.resolve.failed');
+      return {
+        ok: false,
+        status: 502,
+        error: {
+          kind: 'UPSTREAM_UNAVAILABLE',
+          reasonKey: 'coreui.errors.assets.resolve.failed',
+        },
+      };
+    }
+    const resolved = parseExactResolvedAssetPayload({ payload, requestedAssetRefs: assetRefs });
+    if (!resolved.ok) return resolved;
+    assetsByRef = resolved.assetsByRef;
+  }
+
+  const curatedFonts: RuntimeTypographyData['curatedFonts'] = {};
+  for (const family of families) {
+    const record = getAccountFontRecord(fontLibrary, family);
+    if (!record) return validationFailure('coreui.errors.typography.fontFamily.unknown', family);
+    if (record.source === 'google') {
+      curatedFonts[family] = {
+        source: 'google',
+        spec: record.spec,
+        familyClass: record.familyClass,
+        weights: record.weights,
+        styles: record.styles,
+      };
+      continue;
+    }
+    const resolvedAsset = parseResolvedAccountAsset(assetsByRef[record.assetRef]);
+    if (!resolvedAsset) {
+      return validationFailure(
+        'coreui.errors.typography.fontAsset.missing',
+        record.assetRef,
+        [`fontLibrary.fonts.${family}.assetRef`],
+      );
+    }
+    curatedFonts[family] = {
+      source: 'account-asset',
+      url: resolvedAsset.url,
+      contentType: record.contentType,
+      familyClass: record.familyClass,
+      weights: record.weights,
+      styles: record.styles,
+    };
+  }
+
+  return {
+    ok: true,
+    typographyData: {
+      curatedFonts,
+    },
+  };
+}
+
 export async function buildSavedWidgetPublicPackageResult(args: PackageBuildArgs): Promise<
   | { ok: true; value: SavedWidgetPublicPackageBuildResult }
   | InstancePackageFailure
@@ -235,6 +385,7 @@ export async function buildSavedWidgetPublicPackageResult(args: PackageBuildArgs
     },
     displayName: args.displayName,
     state: args.state,
+    ...(args.typographyData ? { typographyData: args.typographyData } : {}),
     evidence: {
       sourceReference: `accounts/${args.accountId}/instances/${args.instanceId}/base`,
       sourceFingerprint: await buildMaterializerSourceFingerprint(args),
@@ -280,6 +431,7 @@ export async function buildSavedWidgetLocalePackageResult(args: LocalePackageBui
     },
     displayName: args.displayName,
     state: args.state,
+    ...(args.typographyData ? { typographyData: args.typographyData } : {}),
     localeOverlay: {
       locale: args.requestedLocale,
       keyKind: 'current_saved_content_concrete_path',
@@ -423,6 +575,13 @@ export async function materializeAccountInstancePublicPackage(args: {
     config: args.config,
   });
   if (!materializedMedia.ok) return materializedMedia;
+  const typographyData = await resolveRuntimeTypographyData({
+    accountId: args.accountId,
+    accountCapsule: args.accountCapsule,
+    requestId: args.requestId,
+    state: materializedMedia.state,
+  });
+  if (!typographyData.ok) return typographyData;
 
   return buildSavedWidgetPublicPackage({
     compiled: args.compiled,
@@ -431,6 +590,7 @@ export async function materializeAccountInstancePublicPackage(args: {
     baseLocale: args.baseLocale,
     displayName: args.displayName,
     state: materializedMedia.state,
+    typographyData: typographyData.typographyData,
   });
 }
 
@@ -463,6 +623,13 @@ export async function materializeAccountInstanceLocalePublicPackage(args: {
     config: args.config,
   });
   if (!materializedMedia.ok) return materializedMedia;
+  const typographyData = await resolveRuntimeTypographyData({
+    accountId: args.accountId,
+    accountCapsule: args.accountCapsule,
+    requestId: args.requestId,
+    state: materializedMedia.state,
+  });
+  if (!typographyData.ok) return typographyData;
 
   return buildSavedWidgetLocalePackageResult({
     compiled: args.compiled,
@@ -472,6 +639,7 @@ export async function materializeAccountInstanceLocalePublicPackage(args: {
     requestedLocale: args.requestedLocale,
     displayName: args.displayName,
     state: materializedMedia.state,
+    typographyData: typographyData.typographyData,
     overlayValues: args.overlayValues,
   });
 }

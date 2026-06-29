@@ -67,9 +67,9 @@ serving requires publish state and package/source agreement.
 Current package materialization seals widget-local `widget.css`,
 `widget.client.js`, and selected shared widget modules into generated
 `styles.css` and `runtime.js`. `/dieter/**` stylesheet links are kept as
-external `@import` references; account assets and fonts also remain external
-delivery references. Changing sealed source files after an account package is
-written does not rewrite that stored package.
+external `@import` references; account assets remain external delivery
+references. Changing sealed source files after an account package is written
+does not rewrite that stored package.
 
 ## Runtime Path
 

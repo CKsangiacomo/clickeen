@@ -118,7 +118,6 @@ Tokyo R2 has these current roots:
 ```text
 accounts/
 dieter/
-fonts/
 product/
 prague/
 ```
@@ -154,7 +153,6 @@ The non-account roots are git-authored deploy artifacts:
 - `product/widgets/**` for widget software;
 - `product/roma/**` for Roma public i18n/static support artifacts;
 - `dieter/**` for design-system artifacts;
-- `fonts/**` for global font media;
 - `prague/**` for Prague content/media.
 
 Root `widgets/`, `public/`, `published/`, and `l10n/` are not storage

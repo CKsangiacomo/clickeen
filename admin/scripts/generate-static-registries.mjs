@@ -8,6 +8,8 @@ const scriptPath = fileURLToPath(import.meta.url);
 const adminRoot = path.resolve(path.dirname(scriptPath), '..');
 const repoRoot = path.resolve(adminRoot, '..');
 const dataRoot = path.join(adminRoot, 'src', 'data');
+const iconsManifestPath = path.join(repoRoot, 'dieter', 'icons', 'icons.json');
+const iconsSvgRoot = path.join(repoRoot, 'dieter', 'icons', 'svg');
 
 const toPosix = (value) => value.replace(/\\/g, '/');
 
@@ -44,6 +46,23 @@ async function writeFileIfChanged(filePath, contents) {
   await fs.writeFile(filePath, contents, 'utf8');
 }
 
+async function loadVerifiedIconNames() {
+  const manifest = JSON.parse(await fs.readFile(iconsManifestPath, 'utf8'));
+  const manifestNames = Object.keys(manifest.symbols ?? {}).sort((a, b) => a.localeCompare(b));
+  const sourceFiles = (await fs.readdir(iconsSvgRoot)).filter((name) => name.endsWith('.svg')).sort((a, b) => a.localeCompare(b));
+  const sourceNames = sourceFiles.map((name) => path.basename(name, '.svg')).sort((a, b) => a.localeCompare(b));
+  const missingSource = manifestNames.filter((name) => !sourceNames.includes(name));
+  const missingManifest = sourceNames.filter((name) => !manifestNames.includes(name));
+  if (missingSource.length || missingManifest.length) {
+    const detail = [
+      missingSource.length ? `missing source SVGs: ${missingSource.join(', ')}` : '',
+      missingManifest.length ? `source SVGs missing manifest symbols: ${missingManifest.join(', ')}` : '',
+    ].filter(Boolean).join('; ');
+    throw new Error(`Dieter icon manifest/source mismatch: ${detail}`);
+  }
+  return manifestNames;
+}
+
 async function generateShowcaseRegistry() {
   const files = await walkFiles(path.join(adminRoot, 'src', 'html'), (filePath) => filePath.endsWith('.html'));
   const imports = [];
@@ -71,11 +90,12 @@ async function generateShowcaseRegistry() {
 }
 
 async function generateIconRegistry() {
-  const files = await walkFiles(path.join(repoRoot, 'dieter', 'icons', 'svg'), (filePath) => filePath.endsWith('.svg'));
+  const names = await loadVerifiedIconNames();
   const imports = [];
   const entries = [];
 
-  files.forEach((filePath, index) => {
+  names.forEach((name, index) => {
+    const filePath = path.join(iconsSvgRoot, `${name}.svg`);
     const binding = `icon${index}`;
     const importPath = modulePathFromData(filePath);
     imports.push(`import ${binding} from ${jsString(`${importPath}?raw`)};`);

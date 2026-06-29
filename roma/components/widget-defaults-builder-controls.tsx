@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
+  applyAccountFontLibraryToTypographyMenus,
   applyGroupHeaders,
   applyShowIfVisibility,
   buildShowIfEntries,
@@ -15,6 +16,7 @@ import {
   type DieterMedia,
   type ShowIfEntry,
 } from '@clickeen/bob/control-host';
+import type { AccountFontLibrary } from '@clickeen/widget-shell';
 
 type BuilderControlPanel = {
   id?: string;
@@ -40,6 +42,7 @@ type BuilderDefaultsControlsProps = {
   controls: BuilderDefaultsControl[];
   payloads: BuilderControlPayload[];
   values: Record<string, unknown>;
+  fontLibrary: AccountFontLibrary;
   scopeLabel: string;
   onContractError: (message: string) => void;
   onChange: (path: string, value: unknown) => void;
@@ -47,6 +50,7 @@ type BuilderDefaultsControlsProps = {
 };
 
 const PANEL_ORDER = ['content', 'layout', 'appearance', 'typography', 'settings'];
+const BUILDER_CONTROLS_LOAD_ERROR_COPY = 'Builder controls could not be loaded. Please try again.';
 
 const stubAccountAssets: AccountAssetsClient = {
   listAssets: async () => [],
@@ -245,6 +249,7 @@ function valueFromField(target: HTMLElement, values: Record<string, unknown>): u
 
 export function WidgetDefaultsBuilderControls({
   controls,
+  fontLibrary,
   onContractError,
   onChange,
   onReadyChange,
@@ -311,6 +316,7 @@ export function WidgetDefaultsBuilderControls({
     ensureMedia(payload?.media?.dieter)
       .then(() => {
         if (cancelled) return;
+        applyAccountFontLibraryToTypographyMenus({ container, fontLibrary });
         runHydrators(container, { accountAssets: stubAccountAssets });
         showIfEntriesRef.current = buildShowIfEntries(container);
         syncControlValues(container, valuesRef.current, showIfEntriesRef.current);
@@ -326,9 +332,9 @@ export function WidgetDefaultsBuilderControls({
         container.dataset.ready = 'true';
         onReadyChange(true);
       })
-      .catch((error) => {
+      .catch(() => {
         if (cancelled) return;
-        const message = error instanceof Error ? error.message : 'Builder controls failed to load.';
+        const message = BUILDER_CONTROLS_LOAD_ERROR_COPY;
         setContractError(message);
         onContractError(message);
         container.innerHTML = '';
@@ -381,6 +387,7 @@ export function WidgetDefaultsBuilderControls({
     onReadyChange,
     panelBuild.missingPaths,
     panelHtml,
+    fontLibrary,
     payload?.media?.dieter,
     scopeLabel,
   ]);

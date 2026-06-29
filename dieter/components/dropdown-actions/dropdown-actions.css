@@ -136,17 +136,3 @@
 .diet-dropdown-actions__menuaction.is-selected .diet-dropdown-actions__check {
   opacity: 1;
 }
-
-@media (prefers-color-scheme: dark) {
-  .diet-dropdown-actions .diet-dropdown-header {
-    background: var(--color-system-gray-5);
-  }
-
-  .diet-dropdown-actions .diet-dropdown-header:hover {
-    background: color-mix(in oklab, var(--color-system-gray-5), var(--color-system-black) 6%);
-  }
-
-  .diet-dropdown-actions[data-state='open'] .diet-dropdown-header {
-    background: color-mix(in oklab, var(--color-system-gray-5), var(--color-system-blue) 3%);
-  }
-}

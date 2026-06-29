@@ -435,27 +435,13 @@
     loadedFonts.add(family);
   }
 
-  function resolveTokyoFontUrl(filePath) {
-    const normalizedPath = String(filePath || '').trim();
-    if (!normalizedPath) return '';
-    const absoluteLike = /^https?:\/\//i.test(normalizedPath);
-    if (absoluteLike) return normalizedPath;
-    const rootedPath = normalizedPath.startsWith('/') ? normalizedPath : `/${normalizedPath}`;
-    try {
-      const baseEl = document.querySelector('base[href]');
-      if (baseEl && typeof baseEl.href === 'string' && baseEl.href.trim()) {
-        return new URL(rootedPath, baseEl.href).toString();
-      }
-    } catch {}
-    try {
-      return new URL(rootedPath, window.location.origin).toString();
-    } catch {
-      return rootedPath;
-    }
-  }
-
-  function resolveFontFormat(filePath) {
-    const extMatch = String(filePath || '').toLowerCase().match(/\.([a-z0-9]+)(?:$|\?)/);
+  function resolveFontFormat(url, contentType) {
+    const mime = String(contentType || '').split(';')[0].trim().toLowerCase();
+    if (mime === 'font/woff2') return 'woff2';
+    if (mime === 'font/woff' || mime === 'application/font-woff' || mime === 'application/x-font-woff') return 'woff';
+    if (mime === 'font/ttf' || mime === 'application/x-font-ttf') return 'truetype';
+    if (mime === 'font/otf' || mime === 'application/x-font-otf') return 'opentype';
+    const extMatch = String(url || '').toLowerCase().match(/\.([a-z0-9]+)(?:$|\?)/);
     const ext = extMatch ? extMatch[1] : '';
     if (ext === 'woff2') return 'woff2';
     if (ext === 'woff') return 'woff';
@@ -464,8 +450,8 @@
     return '';
   }
 
-  function ensureTokyoFontLoaded(family, filePath) {
-    const url = resolveTokyoFontUrl(filePath);
+  function ensureAccountAssetFontLoaded(family, meta) {
+    const url = String(meta && meta.url ? meta.url : '').trim();
     if (!url) return;
     if (loadedFonts.has(family)) return;
     const id = `ck-font-face-${String(family).replace(/\s+/g, '-').toLowerCase()}`;
@@ -479,9 +465,17 @@
     const nonce =
       window.CK_CSP_NONCE && typeof window.CK_CSP_NONCE === 'string' ? window.CK_CSP_NONCE.trim() : '';
     if (nonce) style.setAttribute('nonce', nonce);
-    const format = resolveFontFormat(url);
+    const format = resolveFontFormat(url, meta.contentType);
     const src = format ? `url("${url}") format("${format}")` : `url("${url}")`;
-    style.textContent = `@font-face{font-family:${toFontFamilyToken(family)};src:${src};font-style:normal;font-weight:400;font-display:swap;}`;
+    const weights = Array.isArray(meta.weights) && meta.weights.length ? meta.weights : ['400'];
+    const styles = Array.isArray(meta.styles) && meta.styles.length ? meta.styles : ['normal'];
+    style.textContent = styles
+      .flatMap((fontStyle) =>
+        weights.map((fontWeight) =>
+          `@font-face{font-family:${toFontFamilyToken(family)};src:${src};font-style:${fontStyle};font-weight:${fontWeight};font-display:swap;}`,
+        ),
+      )
+      .join('');
     document.head.appendChild(style);
     loadedFonts.add(family);
   }
@@ -491,11 +485,11 @@
     if (!meta) {
       throw new Error(`[CKTypography] Unknown font family "${family}"`);
     }
-    if (meta.source === 'tokyo') {
-      if (!meta.filePath) {
-        throw new Error(`[CKTypography] Missing Tokyo font filePath for family "${family}"`);
+    if (meta.source === 'account-asset') {
+      if (!meta.url) {
+        throw new Error(`[CKTypography] Missing account asset font URL for family "${family}"`);
       }
-      ensureTokyoFontLoaded(family, meta.filePath);
+      ensureAccountAssetFontLoaded(family, meta);
       return;
     }
     ensureGoogleFontLoaded(family, meta.spec);

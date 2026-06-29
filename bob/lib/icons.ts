@@ -16,5 +16,5 @@ export function getIcon(name: string): string {
   const vbW = (bounds.x2 - bounds.x1).toFixed(2);
   const vbH = (bounds.y2 - bounds.y1).toFixed(2);
   const viewBox = `${bounds.x1} ${bounds.y1} ${vbW} ${vbH}`;
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${viewBox}" width="${width}" height="${height}" fill="currentColor"><path d="${path}" /></svg>`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${viewBox}" width="${width}" height="${height}" fill="currentColor" aria-hidden="true" focusable="false"><path d="${path}" /></svg>`;
 }

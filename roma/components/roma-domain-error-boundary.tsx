@@ -51,7 +51,7 @@ export class RomaDomainErrorBoundary extends Component<
 
     const label = this.props.domainLabel || 'This page';
     return (
-      <section className="rd-canvas-module">
+      <section className="rd-canvas-module" role="alert">
         <p className="body-m">{label} hit a rendering error.</p>
         <p className="body-s">
           Retry the view first. If it fails again, reload the page.

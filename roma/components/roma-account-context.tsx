@@ -72,16 +72,16 @@ export function RomaAccountBoundary({ children }: { children: ReactNode }) {
   }, [me.data, me.reload]);
 
   if (me.loading) {
-    return <section className="roma-module-surface body-m">Loading account context...</section>;
+    return <section className="roma-module-surface body-m" role="status">Loading account context...</section>;
   }
 
   if (me.error === AUTH_REQUIRED_REASON_KEY) {
-    return <section className="roma-module-surface body-m">Redirecting to sign in...</section>;
+    return <section className="roma-module-surface body-m" role="status">Redirecting to sign in...</section>;
   }
 
   if (me.error || !me.data) {
     return (
-      <section className="roma-module-surface">
+      <section className="roma-module-surface" role="alert">
         <p className="body-m">
           {resolveAccountShellErrorCopy(me.error ?? 'coreui.errors.auth.contextUnavailable', 'Account context is unavailable right now. Please try again.')}
         </p>
@@ -96,7 +96,7 @@ export function RomaAccountBoundary({ children }: { children: ReactNode }) {
 
   if (!value) {
     return (
-      <section className="roma-module-surface">
+      <section className="roma-module-surface" role="alert">
         <p className="body-m">No account context is available.</p>
         <div className="rd-canvas-module__actions">
           <button className="diet-btn-txt" data-size="md" data-variant="primary" type="button" onClick={() => void me.reload()}>

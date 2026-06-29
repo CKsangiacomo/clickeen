@@ -1,44 +1,99 @@
-# Accessibility in Clickeen
+# Accessibility In Clickeen
 
-**Living, canonical reference — the a11y contract.**
-Seeded 2026-06-27 from the as-built tokens/code; improved in place as UI program 126 executes. This doc is the single owner of the cross-cutting a11y guarantee (it touches [`color.md`](color.md), [`dieter.md`](dieter.md), [`components.md`](components.md), [`motion.md`](motion.md), [`dialogs-and-modals.md`](dialogs-and-modals.md)).
+Living reference for 126A accessibility doctrine.
 
-- Authority: [`126__PRD__UI_Optimization_Program.md` §12](../../../Execution_Pipeline_Docs/02-Executing/126__UI_Optimization/126__PRD__UI_Optimization_Program.md).
-- **Sources:** `dieter/tokens/dieter-foundation-tokens.css` (focus/ergonomics, `.sr-only`, reduced-motion) + component `.html`/`.ts` (ARIA).
+- Authority: [`126A__PRD__Accessibility.md`](../../../Execution_Pipeline_Docs/02-Executing/126__UI_Optimization/126A__PRD__Accessibility.md).
+- Related docs: [`components.md`](components.md), [`dialogs-and-modals.md`](dialogs-and-modals.md), [`interactions.md`](interactions.md), [`motion.md`](motion.md), [`color.md`](color.md).
 
-## What is tokenized today
+126A is not a generic accessibility program. It owns semantic product truth:
+state, names, status, errors, dialog/popover/status honesty, and text
+inspectability.
 
-```text
---focus-ring-width:   2px
---focus-ring-offset:  2px
---focus-ring-color:   var(--color-system-blue)   /* from color.md */
---min-touch-target:   44px
-```
-- `.sr-only` utility (foundation:92) — screen-reader-only content.
-- `@media (prefers-reduced-motion: reduce)` guard (foundation:99) — see [`motion.md`](motion.md).
-- Per-hue `-contrast` variants in [`color.md`](color.md) — intended for accessible text-on-tint.
+## What 126A Owns
 
-## ARIA semantics already in the components (verified)
+- Expose real selected/current/expanded/disabled/invalid/loading/error state when
+  the UI already communicates that state visually and a truthful semantic
+  mapping exists.
+- Prefer native controls where they directly represent the action or input.
+- Give icon-only actions an accessible name.
+- Hide decorative icons and decorative media from semantic output.
+- Name dialog, popover, sheet, banner, and status surfaces honestly.
+- Keep operation status and error feedback visible and semantically honest.
+- Keep generated, translated, and user-authored text inspectable.
+- Route motion-only state-signal problems to 126F or the owning component/screen
+  PRD.
 
-Real semantics ship in several components — this is a strength to preserve:
-- `tabs` — `role="tablist"`, `role="tab"`, `aria-selected`, `aria-label`.
-- `dropdown-shadow` (and family) — `role="button"`/`role="listbox"`, `aria-haspopup`, `aria-expanded`, `aria-pressed`, `aria-hidden`, `aria-labelledby`/`aria-label`.
-- `bulk-edit` modal — `role="dialog" aria-modal="true"` (the gold-standard pattern).
-- `textedit` / `dropdown-edit` — `aria-haspopup="dialog"` + `role="dialog"` popovers.
+## What 126A Does Not Own
 
-## Honest gaps (verification items for the a11y pass — do not claim conformance yet)
+- WCAG certification.
+- Custom keyboard support.
+- Keyboard-complete component behavior.
+- Focus-trap implementation.
+- Focus-ring rollout or component-wide focus redesign.
+- Mobile/touch target sizing.
+- AI-enforced contrast/color changes.
+- Accessibility validator/check suites.
+- Modal/dialog framework behavior.
+- Visual redesign.
 
-- **No formal WCAG audit.** Contrast `-contrast` tokens exist but whether every
-  pair passes AA/AAA is unverified.
-- **Modal ARIA is inconsistent.** `bulk-edit`'s modal is correct
-  (`role=dialog aria-modal=true`); `object-manager`'s modal is **not** — it lacks
-  `role=dialog`/`aria-modal`. See [`dialogs-and-modals.md`](dialogs-and-modals.md).
-- **Focus-trap / return-focus / scroll-lock** for overlays are not verified
-  implemented anywhere — likely missing (the corpus-median failure).
-- **Keyboard navigation per component** (arrow keys in `tabs`/`segmented`/listboxes,
-  escape in overlays) is largely unverified.
-- `--min-touch-target: 44px` is defined; whether every interactive control honors
-  it is unverified.
+## Current Useful Substrate
 
-The a11y pass's job is to make each of these either green or an explicit, owned
-gap — not to assert conformance that hasn't been measured.
+- `.sr-only` exists in Dieter foundation tokens.
+- Global reduced-motion foundation exists and is owned by [`motion.md`](motion.md)
+  / 126F.
+- Dieter tabs and choice tiles expose useful existing semantics.
+- Bulk edit has dialog semantics as current component evidence.
+- Bob Workspace and TranslationsPanel include live/status/error semantics.
+- Roma nav includes current-page/nav labeling.
+- DevStudio token editor diff uses `aria-live`.
+
+These are current strengths, not proof that every surface follows 126A.
+
+## Routed Non-126A Work
+
+126A does not leave a generic accessibility backlog. If a future agent finds a
+semantic or copy issue, it must name the exact file/path and route it to the
+owning PRD before changing it.
+
+- Native-control conversion for Dieter pseudo triggers belongs to 126I
+  Components. Current known source families are `dropdown-actions`,
+  `dropdown-fill`, `dropdown-border`, `dropdown-shadow`, `dropdown-upload`,
+  `dropdown-edit`, and `textrename`.
+- Dialog/popover mechanics belong to 126K Dialogs and Modals. 126A only names
+  existing surfaces and exposes truthful status/error state.
+- Text resizing and long-string proof belongs to 126I for reusable components,
+  126L for DevStudio screens, and 126M for Roma screens.
+- Contrast/readability evidence belongs to 126B. Human design decides colors;
+  agents do not enforce contrast doctrine.
+- Public widget accessibility belongs to the owning widget runtime/docs unless a
+  widget PRD explicitly brings that behavior into system scope.
+
+Icon semantics follow 126C: decorative icons are hidden, icon-only controls put
+the name on the control, and meaningful standalone icons need an explicit label
+rule in the owning consumer.
+
+## Rules For Agents
+
+Use native controls where practical:
+
+- `button` for actions;
+- `a` for navigation;
+- `input`, `select`, `textarea`, `checkbox`, and `radio` for form controls.
+
+Do not use ARIA to invent behavior. ARIA must name or expose real Clickeen
+product state.
+
+Do not communicate state only through color, icon, spinner motion, or hidden
+implementation state. If the user needs to know an operation is saving,
+generating, failed, blocked, or complete, the surface needs visible status/error
+truth.
+
+Do not turn this doc into keyboard, focus, touch-target, contrast, modal, or
+validator work. Those are explicitly outside 126A unless a later human-owned PRD
+changes that scope.
+
+## Public Widgets
+
+System/account/admin UI follows 126A. Public widget runtime accessibility belongs
+to the owning widget runtime/docs unless a widget PRD explicitly brings that
+behavior into system scope.

@@ -65,70 +65,66 @@
 .body-website-large { font: 400 var(--fs-24)/var(--lh-body-ui) var(--font-ui); }
 .body-website-xlarge { font: 400 var(--fs-32)/var(--lh-body-ui) var(--font-ui); }
 
-p, .body, .body-xl { font: 400 var(--fs-16)/var(--lh-body-ui) var(--font-ui); }
-.body-small, .body-m { font: 400 var(--fs-14)/var(--lh-body-ui) var(--font-ui); }
-.body-large, .body-xxl { font: 400 var(--fs-18)/var(--lh-body-ui) var(--font-ui); }
+.body { font: 400 var(--fs-16)/var(--lh-body-ui) var(--font-ui); }
 
 /* Headings */
-h1, .heading-1 {
+.heading-1 {
   font: 700 var(--fs-32)/var(--lh-tight) var(--font-ui);
   letter-spacing: -0.01em;
   color: inherit;
 }
 
-h2, .heading-2 {
+.heading-2 {
   font: 600 var(--fs-24)/var(--lh-tight) var(--font-ui);
   letter-spacing: -0.01em;
   color: inherit;
 }
 
-h3, .heading-3 {
+.heading-3 {
   font: 600 var(--fs-20)/var(--lh-tight) var(--font-ui);
   letter-spacing: -0.01em;
   color: inherit;
 }
 
-h4, .heading-4 {
+.heading-4 {
   font: 500 var(--fs-18)/var(--lh-tight) var(--font-ui);
   letter-spacing: -0.005em;
   color: inherit;
 }
 
-h5, .heading-5 {
+.heading-5 {
   font: 500 var(--fs-16)/var(--lh-tight) var(--font-ui);
   letter-spacing: -0.005em;
   color: inherit;
 }
 
-h6, .heading-6 {
+.heading-6 {
   font: 500 var(--fs-14)/var(--lh-tight) var(--font-ui);
   letter-spacing: -0.005em;
   color: inherit;
 }
 
 /* UI Labels & Captions */
-.label-xxs { font: 500 var(--fs-10)/var(--lh-tight) var(--font-ui); letter-spacing: -0.02em; color: var(--color-system-black); }
-.label-xs { font: 500 var(--fs-11)/var(--lh-tight) var(--font-ui); letter-spacing: -0.02em; color: var(--color-system-black); }
-.label-s { font: 500 var(--fs-13)/var(--lh-tight) var(--font-ui); letter-spacing: -0.02em; color: var(--color-system-black); }
-.label-m { font: 500 var(--fs-14)/var(--lh-tight) var(--font-ui); letter-spacing: -0.02em; color: var(--color-system-black); }
-.label-l { font: 500 var(--fs-15)/var(--lh-tight) var(--font-ui); letter-spacing: -0.02em; color: var(--color-system-black); }
-.label-xl { font: 500 var(--fs-16)/var(--lh-tight) var(--font-ui); letter-spacing: -0.02em; color: var(--color-system-black); }
-.label-xxl { font: 500 var(--fs-18)/var(--lh-tight) var(--font-ui); letter-spacing: -0.02em; color: var(--color-system-black); }
+.label-xxs { font: 500 var(--fs-10)/var(--lh-tight) var(--font-ui); letter-spacing: -0.02em; }
+.label-xs { font: 500 var(--fs-11)/var(--lh-tight) var(--font-ui); letter-spacing: -0.02em; }
+.label-s { font: 500 var(--fs-13)/var(--lh-tight) var(--font-ui); letter-spacing: -0.02em; }
+.label-m { font: 500 var(--fs-14)/var(--lh-tight) var(--font-ui); letter-spacing: -0.02em; }
+.label-l { font: 500 var(--fs-15)/var(--lh-tight) var(--font-ui); letter-spacing: -0.02em; }
+.label-xl { font: 500 var(--fs-16)/var(--lh-tight) var(--font-ui); letter-spacing: -0.02em; }
+.label-xxl { font: 500 var(--fs-18)/var(--lh-tight) var(--font-ui); letter-spacing: -0.02em; }
 
-.caption { font: 500 var(--fs-11)/var(--lh-tight) var(--font-ui); color: color-mix(in oklab, var(--color-system-black), transparent 55%); }
-.caption-small { font: 500 var(--fs-10)/1.1 var(--font-ui); color: color-mix(in oklab, var(--color-system-black), transparent 55%); }
+.caption { font: 500 var(--fs-11)/var(--lh-tight) var(--font-ui); }
+.caption-small { font: 500 var(--fs-10)/1.1 var(--font-ui); }
 
 /* Overline/Eyebrow */
 .overline {
   font: 700 var(--fs-10)/1 var(--font-ui);
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: var(--color-system-gray);
 }
 
 .overline-small {
   font: 600 var(--fs-10)/1.1 var(--font-ui);
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: color-mix(in oklab, var(--color-system-black), transparent 45%);
 }

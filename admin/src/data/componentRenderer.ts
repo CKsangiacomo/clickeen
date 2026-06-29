@@ -127,7 +127,7 @@ const renderVariantTiles = (
           if (!rendered) return null;
 
           const specHtml = specLines
-            .map((line) => `<span class="spec-line body-xsmall">${line}</span>`)
+            .map((line) => `<span class="spec-line body-xs">${line}</span>`)
             .join('');
 
           const wrapperClass = wrapPreviewComponents.has(componentName)

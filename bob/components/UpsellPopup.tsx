@@ -10,6 +10,12 @@ type UpsellPopupProps = {
   onClose: () => void;
 };
 
+function resolveUpsellReasonCopy(reasonKey: string): string {
+  if (reasonKey === 'coreui.upsell.reason.limitReached') return "You've reached your plan limit.";
+  if (reasonKey === 'coreui.upsell.reason.flagBlocked') return 'This option is not available on your current plan.';
+  return 'This action requires a plan upgrade.';
+}
+
 export function UpsellPopup({ open, reasonKey, detail, cta, onClose }: UpsellPopupProps) {
   const closeButtonRef = useRef<HTMLButtonElement | null>(null);
 
@@ -33,6 +39,7 @@ export function UpsellPopup({ open, reasonKey, detail, cta, onClose }: UpsellPop
 
   const headline = 'Upgrade to continue';
   const primaryLabel = 'Upgrade plan';
+  const reasonCopy = resolveUpsellReasonCopy(reasonKey);
 
   return (
     <div className="ck-upsellOverlay" role="presentation" onMouseDown={onClose}>
@@ -45,7 +52,7 @@ export function UpsellPopup({ open, reasonKey, detail, cta, onClose }: UpsellPop
       >
         <div className="ck-upsellModal__header">
           <div className="heading-3">{headline}</div>
-          <div className="body-m ck-upsellModal__reason">{reasonKey}</div>
+          <div className="body-m ck-upsellModal__reason">{reasonCopy}</div>
           {detail ? <div className="caption ck-upsellModal__detail">{detail}</div> : null}
         </div>
 

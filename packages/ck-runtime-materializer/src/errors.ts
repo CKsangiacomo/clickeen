@@ -13,6 +13,7 @@ const REASON_KEYS: Record<RuntimeMaterializerErrorReason, string> = {
   locale_overlay_key_unexpected: 'tokyo.translation.value_unexpected',
   locale_overlay_value_invalid: 'coreui.errors.instance.invalidPayload',
   locale_overlay_scope_unsupported: 'locale_overlay_scope_unsupported',
+  typography_data_invalid: 'coreui.errors.typography.fontLibrary.invalid',
   source_state_invalid: 'coreui.errors.instance.content.invalid',
 };
 

@@ -4,7 +4,10 @@
 Seeded 2026-06-27 from the as-built tokens/code; improved in place as UI program 126 executes.
 
 - Authority (why this home exists): [`126__PRD__UI_Optimization_Program.md` §12](../../../Execution_Pipeline_Docs/02-Executing/126__UI_Optimization/126__PRD__UI_Optimization_Program.md).
-- **Source of truth:** `dieter/tokens/*`, `dieter/components/*`, `dieter/icons/*`, `dieter/scripts/*`. The code is authoritative; this doc explains it.
+- **Source of truth:** `dieter/tokens/*`, `dieter/components/*`,
+  `dieter/icons/icons.json`, and `dieter/icons/svg/*`. Root
+  `scripts/build-dieter.js` propagates Dieter output. The code is authoritative;
+  this doc explains it.
 - Sibling references: [`color.md`](color.md), [`typography.md`](typography.md), [`motion.md`](motion.md), [`iconography.md`](iconography.md), [`components.md`](components.md).
 
 ## What Dieter is
@@ -52,8 +55,9 @@ the rest stay here as substrate.
 - **Icon sizing** — `--icon-size-12`…`--icon-size-40` (8 stops).
 - **Elevation** — `--shadow-elevated` / `--shadow-floating` / `--shadow-inset-control`
   (all `color-mix(in oklab, …)`, so elevation not color).
-- **Focus & ergonomics** — `--focus-ring-width` (2px), `--focus-ring-offset` (2px),
-  `--min-touch-target` (44px) — see [`accessibility.md`](accessibility.md).
+- **Semantic utility** — `.sr-only` exposes text for assistive technology when
+  visible layout should not show it; 126A owns semantic truth, not focus or touch
+  target programs.
 - **Motion** — `--duration-snap/base/spin` — see [`motion.md`](motion.md).
 - **Utilities** — `.sr-only` (line 92) and `@media (prefers-reduced-motion: reduce)`
   (line 99) ship here.
@@ -67,7 +71,7 @@ the rest stay here as substrate.
   `dieter/components/index.ts`. Exceptions: `icon`, `slider`, `popover`,
   `agent-activity` are CSS/HTML only; `object-manager` and `repeater` ship
   hand-written `.js` IIFEs (not in `index.ts`). See [`components.md`](components.md).
-- **Build.** `dieter/scripts/build-dieter.js` bundles tokens + components + icons
+- **Build.** Root `scripts/build-dieter.js` bundles tokens + components + icons
   into `tokyo/product/dieter/**`, served from Tokyo R2 at `/dieter`. See
   [`ops.md`](ops.md).
 
@@ -75,5 +79,6 @@ the rest stay here as substrate.
 
 - No z-index token system — raw `z-index` literals across component CSS.
 - No easing-curve token — only durations (see [`motion.md`](motion.md)).
-- Dark mode: engine is dark-ready, dark palette not shipped (see [`color.md`](color.md)).
+- Color: current Dieter color law is light-mode only; there is no current
+  dark-mode contract (see [`color.md`](color.md)).
 - `command-activity` is a dead/empty dir; `textrename` missing `.spec.json`.

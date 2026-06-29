@@ -353,6 +353,9 @@
             const up = row.querySelector("[data-objects-up]");
             const down = row.querySelector("[data-objects-down]");
             const del = row.querySelector("[data-objects-delete]");
+            up?.setAttribute("aria-label", `Move ${labelVal} up`);
+            down?.setAttribute("aria-label", `Move ${labelVal} down`);
+            del?.setAttribute("aria-label", `Delete ${labelVal}`);
             if (del) {
               del.disabled = minItems != null && working.length <= minItems;
             }

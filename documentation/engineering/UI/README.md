@@ -16,26 +16,30 @@ once, then improved during the matching 126 track — never duplicated across PR
 
 **System**
 - [`dieter.md`](dieter.md) — the design system: matrioska law, foundation substrate,
-  composition, component-system mechanics. *(track 126A)*
+  composition, component-system mechanics. *(126H)*
 
 **Disciplines (tokens)**
-- [`color.md`](color.md) — Apple system colors + OKLAB derivation engine *(126A)*
-- [`typography.md`](typography.md) — families, size scale, fluid display, line-height,
-  utility classes *(126A)*
-- [`motion.md`](motion.md) — durations, reduced-motion (+ easing gap) *(126A)*
-- [`iconography.md`](iconography.md) — the 157-icon SF-Symbols-style set + pipeline *(126B)*
-- [`accessibility.md`](accessibility.md) — the cross-cutting a11y contract *(all tracks)*
+- [`accessibility.md`](accessibility.md) — semantic product truth: names, roles,
+  visible state, status, and error honesty *(126A)*
+- [`color.md`](color.md) — light-mode color roles, tokens, state color mechanics,
+  DevStudio reveal truth, and human-owned contrast decisions *(126B)*
+- [`iconography.md`](iconography.md) — Dieter icon consumption, rendering,
+  sizing, color, and semantics *(126C)*
+- [`typography.md`](typography.md) — Google fonts, account-uploaded fonts,
+  typography tokens, and text rendering rules *(126D)*
+- [`interactions.md`](interactions.md) — states, command flows, feedback, save,
+  Agent Activity, upsell, and bulk progress patterns *(126E)*
+- [`motion.md`](motion.md) — small system motion law, duration/easing tokens,
+  and reduced-motion behavior for Dieter/system UI *(126F)*
+- [`ops.md`](ops.md) — current UI build/serve/govern runbook *(126G)*
 
 **Components**
-- [`components.md`](components.md) — the library reference: per-component usage specs *(126B)*
-- [`dialogs-and-modals.md`](dialogs-and-modals.md) — the overlay system (modal/popover rules) *(126B/126D)*
-
-**Behavior & operations**
-- [`interactions.md`](interactions.md) — states, command flows, feedback *(126C/126D)*
-- [`ops.md`](ops.md) — build / serve / govern / freeze runbook *(126C)*
+- [`components.md`](components.md) — the library reference: per-component usage specs *(126I)*
+- [`dialogs-and-modals.md`](dialogs-and-modals.md) — dialog/modal mechanics and
+  overlay behavior boundaries *(126K)*
 
 **Consumption**
-- [`surfaces.md`](surfaces.md) — how Bob (bar), DevStudio (reveal), Roma (converge) consume Dieter *(126C/126D)*
+- [`surfaces.md`](surfaces.md) — surface containers and planes used by layouts *(126J)*
 
 ## Conventions
 

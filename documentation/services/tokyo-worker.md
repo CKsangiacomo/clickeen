@@ -353,7 +353,7 @@ requires all three locale package files to exist and carry matching metadata for
 the requested coordinate.
 
 Tokyo-worker serves stored package bytes. It does not compare stored packages to
-current widget source, shared widget runtime, Dieter files, fonts, materializer
+current widget source, shared widget runtime, Dieter files, materializer
 code, or account assets on public requests. Broad dependency movement requires a
 named Roma/operator command or future broad re-resolution authority; it is not a
 Tokyo visitor-time lookup.
@@ -390,7 +390,6 @@ routes:
   tokyo.dev.clickeen.com/prague/l10n/*
   tokyo.dev.clickeen.com/prague/assets/*
   tokyo.dev.clickeen.com/assets/account/*
-  tokyo.dev.clickeen.com/fonts/*
 R2 binding: TOKYO_R2
 ```
 

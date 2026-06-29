@@ -4,18 +4,22 @@
 Seeded 2026-06-27 from the as-built pipeline; improved in place as UI program 126 executes. This doc owns "how the system runs"; [`dieter.md`](dieter.md) owns "what the system is."
 
 - Authority: [`126__PRD__UI_Optimization_Program.md` §12](../../../Execution_Pipeline_Docs/02-Executing/126__UI_Optimization/126__PRD__UI_Optimization_Program.md).
-- **Sources:** `dieter/scripts/*`, `admin/scripts/*`, `.github/workflows/*`, `Execution_Pipeline_Docs/03-Executed/PRD__DevStudio_Cloudflare_Migration.md` (§3.5 write path, §3.6 design freeze, Appendix A hash baseline).
+- **Sources:** `scripts/build-dieter.js`, `scripts/verify-svgs.js`,
+  `admin/scripts/*`, `.github/workflows/*`,
+  `Execution_Pipeline_Docs/03-Executed/PRD__DevStudio_Cloudflare_Migration.md`
+  (§3.5 write path, §3.6 design freeze, Appendix A hash baseline).
 
 ## Build
 
-- `dieter/scripts/build-dieter.js` bundles tokens + components + icons into
+- `scripts/build-dieter.js` bundles tokens + components + icons into
   `tokyo/product/dieter/**`.
+- Icon propagation verifies `dieter/icons/icons.json` and `dieter/icons/svg/*`
+  parity/currentColor, then copies them to Tokyo output. The build does not
+  mutate committed icon source.
 - Generators (in `admin/scripts/`): `generate-foundation-pages.mjs` (colors/icons/
   typography from token source), `generate-component-pages.ts` (**guarded**: throws
   on unresolved `{{...}}` stencils and on a component that renders no page),
   `generate-typography-json.cjs`, `generate-static-registries.mjs`.
-- `build-icons.mjs` (svgo → `dist/icons/` + `icons.js`/`.d.ts` registry) — see
-  [`iconography.md`](iconography.md).
 
 ## Serve
 
@@ -39,15 +43,15 @@ Seeded 2026-06-27 from the as-built pipeline; improved in place as UI program 12
   visual baseline. Generation changes *where content comes from*, never *how it
   looks* — a frozen page that drifts is a regression, not an improvement.
 
-## Honest gaps (audit Phase 3 "Ops" findings — to verify/fix during 126C)
+## Honest gaps (126G ops findings)
 
 - Governance commits have **no actor attribution** and go **straight to `main`**,
   skipping the governance/lint gates that run on PRs only.
 - Color validation is **regex-only**.
 - R2 sync is **fire-and-forget** (no rollback, no orphan cleanup).
-- `build-dieter` **silently overwrites committed source SVGs**.
 - No visible CI drift-detection on the generated committed HTML (a hand-edit could
   slip through).
 
-126C's job is to close these without inventing new machinery — make the existing
-loop attributable, gated, and drift-detected.
+126G owns these without inventing new machinery: simplify current UI ops, remove
+dead pre-Cloudflare paths, keep icon authoring as the only local authoring
+exception, and document the current build/serve/govern loop honestly.

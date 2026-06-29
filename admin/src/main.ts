@@ -241,10 +241,14 @@ function setActive(path: string) {
 
 function hydrateIcons(scope: ParentNode) {
   scope.querySelectorAll<HTMLElement>('[data-icon]').forEach((node) => {
-    const name = node.getAttribute('data-icon');
-    if (!name) return;
+    const name = node.getAttribute('data-icon') ?? '';
     const markup = getIcon(name);
-    if (!markup) return;
+    if (!markup) {
+      node.textContent = `[missing icon: ${name}]`;
+      node.setAttribute('data-icon-missing', name);
+      node.removeAttribute('data-icon');
+      return;
+    }
     node.innerHTML = markup;
     node.removeAttribute('data-icon');
   });
@@ -289,6 +293,9 @@ type DieterToken = {
 const tokenCache = new Map<DieterTokenKind, DieterToken[]>();
 let tokenEditor: HTMLElement | null = null;
 
+const DIETER_TOKEN_LOAD_ERROR_COPY = 'Dieter tokens could not be loaded. Please try again.';
+const DIETER_TOKEN_SAVE_ERROR_COPY = 'Dieter token could not be saved. Please try again.';
+
 async function fetchDieterTokens(kind: DieterTokenKind): Promise<DieterToken[]> {
   const cached = tokenCache.get(kind);
   if (cached) return cached;
@@ -298,8 +305,7 @@ async function fetchDieterTokens(kind: DieterTokenKind): Promise<DieterToken[]> 
   });
   const payload = await res.json().catch(() => null);
   if (!res.ok || !payload?.ok || !Array.isArray(payload.tokens)) {
-    const message = payload?.error?.detail || payload?.error?.reasonKey || `HTTP_${res.status}`;
-    throw new Error(message);
+    throw new Error(DIETER_TOKEN_LOAD_ERROR_COPY);
   }
   tokenCache.set(kind, payload.tokens);
   return payload.tokens;
@@ -313,8 +319,7 @@ async function saveDieterToken(kind: DieterTokenKind, token: string, value: stri
   });
   const payload = await res.json().catch(() => null);
   if (!res.ok || !payload?.ok || !Array.isArray(payload.tokens)) {
-    const message = payload?.error?.detail || payload?.error?.reasonKey || `HTTP_${res.status}`;
-    throw new Error(message);
+    throw new Error(DIETER_TOKEN_SAVE_ERROR_COPY);
   }
   tokenCache.set(kind, payload.tokens);
   return payload.tokens;
@@ -340,11 +345,11 @@ async function openTokenEditor(kind: DieterTokenKind, preferredToken?: string) {
   const overlay = document.createElement('div');
   overlay.className = 'devstudio-token-editor';
   overlay.innerHTML = `
-    <form class="devstudio-token-editor__panel" data-state="loading">
+    <form class="devstudio-token-editor__panel" data-state="loading" role="dialog" aria-modal="true" aria-labelledby="devstudio-token-editor-title">
       <div class="devstudio-token-editor__header">
-        <h2 class="heading-4">Edit Token</h2>
+        <h2 class="heading-4" id="devstudio-token-editor-title">Edit Token</h2>
         <button class="diet-btn-ic" data-size="sm" data-variant="neutral" type="button" data-token-editor-close aria-label="Close">
-          <span class="diet-btn-ic__icon" data-icon="multiply"></span>
+          <span class="diet-btn-ic__icon" aria-hidden="true" data-icon="multiply"></span>
         </button>
       </div>
       <label class="devstudio-token-editor__field">
@@ -440,12 +445,12 @@ async function openTokenEditor(kind: DieterTokenKind, preferredToken?: string) {
         const next = nextTokens.find((entry) => entry.token === token);
         if (next) updateVisibleTokenValue(token, next.value);
         setStatus(`${token}: committed. CI will rebuild Dieter artifacts.`, 'saved');
-      } catch (error) {
-        setStatus(error instanceof Error ? error.message : String(error), 'error');
+      } catch {
+        setStatus(DIETER_TOKEN_SAVE_ERROR_COPY, 'error');
       }
     });
-  } catch (error) {
-    setStatus(error instanceof Error ? error.message : String(error), 'error');
+  } catch {
+    setStatus(DIETER_TOKEN_LOAD_ERROR_COPY, 'error');
   }
 }
 

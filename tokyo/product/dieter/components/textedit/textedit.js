@@ -155,10 +155,19 @@ var Dieter = (() => {
   };
 
   // components/textedit/textedit-dom.ts
+  var COMMAND_LABELS = {
+    [Command.Bold]: "Bold",
+    [Command.Italic]: "Italic",
+    [Command.Underline]: "Underline",
+    [Command.Strike]: "Strikethrough",
+    [Command.Link]: "Link",
+    [Command.ClearFormat]: "Clear formatting",
+    [Command.ClearLinks]: "Clear links"
+  };
   function buttonHTML(command, icon) {
     return `
-    <button type="button" class="diet-btn-ic" data-size="sm" data-variant="neutral" data-command="${command}">
-      <span class="diet-btn-ic__icon" data-icon="${icon}"></span>
+    <button type="button" class="diet-btn-ic" data-size="sm" data-variant="neutral" data-command="${command}" aria-label="${COMMAND_LABELS[command]}">
+      <span class="diet-btn-ic__icon" aria-hidden="true" data-icon="${icon}"></span>
     </button>
   `;
   }
@@ -199,17 +208,18 @@ var Dieter = (() => {
         </div>
         <div class="diet-textfield" data-size="md">
           <label class="diet-textfield__control">
+            <span class="diet-textfield__display-label label-xs">Link URL</span>
             <input type="text" class="diet-textfield__field diet-textedit__linkinput" placeholder="link url" />
           </label>
         </div>
         <div class="diet-textedit__linkoptions">
           <label class="diet-toggle diet-toggle--split" data-size="sm">
-            <span class="diet-toggle__label label-small">Open link in a new tab</span>
+            <span class="diet-toggle__label label-s">Open link in a new tab</span>
             <input class="diet-toggle__input sr-only diet-textedit__linknewtab" type="checkbox" />
             <span class="diet-toggle__switch"><span class="diet-toggle__knob"></span></span>
           </label>
           <label class="diet-toggle diet-toggle--split" data-size="sm">
-            <span class="diet-toggle__label label-small">Add "no follow" to link</span>
+            <span class="diet-toggle__label label-s">Add "no follow" to link</span>
             <input class="diet-toggle__input sr-only diet-textedit__linknofollow" type="checkbox" />
             <span class="diet-toggle__switch"><span class="diet-toggle__knob"></span></span>
           </label>

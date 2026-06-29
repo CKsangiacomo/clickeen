@@ -314,7 +314,9 @@ function updatePaletteActiveStates(state: DropdownEditState) {
     if (command === Command.Underline) tag = 'U';
     if (command === Command.Strike) tag = 'S';
     if (!tag) return;
-    btn.classList.toggle('is-active', tags.has(tag));
+    const isActive = tags.has(tag);
+    btn.classList.toggle('is-active', isActive);
+    btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
   });
   updateClearButtons(state);
 }

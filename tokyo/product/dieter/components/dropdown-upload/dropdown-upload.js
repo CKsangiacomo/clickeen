@@ -101,6 +101,26 @@ var Dieter = (() => {
     "coreui.upsell.reason.limitReached",
     "coreui.upsell.reason.platform.uploads"
   ]);
+  var ACCOUNT_ASSET_ERROR_COPY = {
+    "coreui.upsell.reason.limitReached": "This exceeds your current plan limit.",
+    "coreui.upsell.reason.platform.uploads": "Uploads are not available for this account plan.",
+    "coreui.errors.auth.required": "You need to sign in again to manage assets.",
+    "coreui.errors.auth.forbidden": "You do not have permission to manage assets in this account.",
+    "coreui.errors.assets.uploadFailed": "Asset upload failed. Please try again.",
+    "coreui.errors.assets.payloadInvalid": "Asset data could not be read. Please try again.",
+    "coreui.errors.db.readFailed": "Failed to load assets. Please try again.",
+    "coreui.errors.db.writeFailed": "Asset update failed on the server. Please try again.",
+    "coreui.errors.network.timeout": "The request timed out. Please try again.",
+    "coreui.errors.payload.empty": "Choose a file before uploading."
+  };
+  function resolveAccountAssetErrorCopy(reason, fallback) {
+    const normalized = typeof reason === "string" ? reason.trim() : "";
+    if (!normalized) return fallback;
+    const mapped = ACCOUNT_ASSET_ERROR_COPY[normalized];
+    if (mapped) return mapped;
+    if (normalized.startsWith("HTTP_") || normalized.startsWith("coreui.")) return fallback;
+    return fallback;
+  }
   function dispatchAccountAssetUpsell(root, reasonKey) {
     const normalizedReasonKey = typeof reasonKey === "string" ? reasonKey : "";
     if (!ACCOUNT_ASSET_UPSELL_REASONS.has(normalizedReasonKey)) return false;
@@ -127,7 +147,8 @@ var Dieter = (() => {
       args.onResolved(asset);
     } catch (error) {
       if (!args.isCurrent(requestId, assetRef)) return;
-      args.onError(error instanceof Error ? error.message : "coreui.errors.db.readFailed");
+      const message = error instanceof Error ? error.message : "coreui.errors.db.readFailed";
+      args.onError(resolveAccountAssetErrorCopy(message, "Asset preview could not be loaded."));
     }
   }
 
@@ -295,7 +316,7 @@ var Dieter = (() => {
         const message = error instanceof Error ? error.message : "coreui.errors.assets.uploadFailed";
         if (dispatchAccountAssetUpsell(state.root, message)) {
         } else {
-          setError(state, message);
+          setError(state, resolveAccountAssetErrorCopy(message, "Asset upload failed. Please try again."));
         }
       } finally {
         setUploadingState(state, false);

@@ -1,5 +1,6 @@
 import type { RomaAccountAuthzCapsulePayload } from '@clickeen/ck-policy';
 import { parseAccountAssetKey } from '@clickeen/ck-contracts';
+import { isAcceptedAccountFontUpload } from '@clickeen/widget-shell';
 import {
   buildAccountAssetKey,
   buildAccountAssetPublicPath,
@@ -42,6 +43,7 @@ const SCRIPTABLE_OR_EXECUTABLE_EXTENSIONS = new Set([
   'ts',
   'tsx',
   'jsx',
+  'css',
   'xml',
   'xhtml',
   'wasm',
@@ -120,7 +122,7 @@ function assertAcceptedUpload(args: {
     };
   }
   const allowedMime = ALLOWED_EXACT_MIME_TYPES.has(mime) || ALLOWED_MIME_PREFIXES.some((prefix) => mime.startsWith(prefix));
-  if (!allowedMime) {
+  if (!allowedMime && !isAcceptedAccountFontUpload(args.filename, mime)) {
     return {
       ok: false,
       reasonKey: 'coreui.errors.assets.typeRejected',

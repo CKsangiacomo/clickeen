@@ -99,7 +99,7 @@ a.ck-cards__card:hover {
 
 .ck-cards__title {
   color: var(--typo-card-title-color, currentColor);
-  font-family: var(--typo-card-title-family, var(--font-display));
+  font-family: var(--typo-card-title-family, var(--font-ui));
   font-size: var(--typo-card-title-size, 24px);
   font-style: var(--typo-card-title-style, normal);
   font-weight: var(--typo-card-title-weight, 700);

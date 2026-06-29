@@ -104,7 +104,7 @@ function resolveAccountLocalesErrorCopy(reason: unknown, fallback: string): stri
   const mapped = ACCOUNT_LOCALES_REASON_COPY[normalized];
   if (mapped) return mapped;
   if (normalized.startsWith('HTTP_') || normalized.startsWith('coreui.')) return fallback;
-  return normalized;
+  return fallback;
 }
 
 function resolveAccountLocalesSuccessCopy(payload: AccountLocalesSaveResponse): string {
@@ -233,12 +233,12 @@ export function AccountLocaleSettingsCard(args: {
         starts, changing it becomes a support/migration operation.
       </p>
       {!args.canEdit ? <p className="body-s">Read-only mode: language settings are disabled.</p> : null}
-      {error ? <p className="body-m">{error}</p> : null}
-      {success ? <p className="body-s">{success}</p> : null}
+      {error ? <p className="body-m" role="alert">{error}</p> : null}
+      {success ? <p className="body-s" role="status">{success}</p> : null}
 
       {!settingsReady ? (
         <div className="roma-inline-stack">
-          {!error ? <p className="body-m">Loading account languages...</p> : null}
+          {!error ? <p className="body-m" role="status">Loading account languages...</p> : null}
           <div className="rd-canvas-module__actions">
             <button className="diet-btn-txt" data-size="md" data-variant="line2" type="button" disabled={loading || saving} onClick={() => void loadSettings()}>
               <span className="diet-btn-txt__label body-m">{loading ? 'Refreshing…' : 'Refresh'}</span>

@@ -3,6 +3,7 @@ import type { WidgetOpError } from '../ops';
 import type { Policy } from '@clickeen/ck-policy';
 import type { AccountAssetHostCommand } from '@clickeen/ck-contracts';
 import type { TranslationSetup } from '../translations-preview';
+import type { AccountFontLibrary } from '@clickeen/widget-shell';
 
 export type UpdateMeta = {
   source: 'field' | 'load' | 'external' | 'ops' | 'unknown';
@@ -39,6 +40,7 @@ export type SessionMeta = {
   widgetname?: string;
   publishStatus?: 'published' | 'unpublished';
   label?: string;
+  fontLibrary: AccountFontLibrary;
   translationSetup?: TranslationSetup | null;
 } | null;
 
@@ -67,6 +69,7 @@ export type EditorOpenMessage = {
   baseLocale: string;
   compiled: CompiledWidget;
   instanceData?: Record<string, unknown> | null;
+  fontLibrary?: AccountFontLibrary | null;
   policy?: Policy;
   accountPublicId?: string;
   instanceId?: string;

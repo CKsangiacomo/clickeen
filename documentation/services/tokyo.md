@@ -16,7 +16,6 @@ Tokyo R2 has one runtime-managed account root plus git-authored deploy roots:
 ```text
 accounts/   runtime-managed account storage
 dieter/     git-authored shared design-system media
-fonts/      git-authored global Clickeen font media
 product/    git-authored product software and media
 prague/     git-authored marketing/site/GTM content
 ```
@@ -28,7 +27,6 @@ Git-authored deploy mapping:
 ```text
 tokyo/product/widgets/**  -> product/widgets/**
 tokyo/product/dieter/**   -> dieter/**
-tokyo/product/fonts/**    -> fonts/**
 tokyo/roma/**             -> product/roma/**
 tokyo/prague/**           -> prague/**
 ```
@@ -144,7 +142,6 @@ Friendly public paths map to canonical roots:
 | --- | --- |
 | `/widgets/**` | `product/widgets/**` |
 | `/dieter/**` | `dieter/**` |
-| `/fonts/**` | `fonts/**` |
 | `/i18n/**` | `product/roma/i18n/public/**` |
 | `/assets/account/**` | account asset reads allowed by Tokyo-worker |
 | `/prague/l10n/**` | Prague l10n static path |
@@ -153,7 +150,7 @@ Friendly public paths map to canonical roots:
 Friendly paths are serving paths, not storage roots.
 
 Account instance package files are stored bytes, not live views over
-`product/widgets/**`. `/dieter/**`, `/fonts/**`, and account asset paths are
+`product/widgets/**`. `/dieter/**` and account asset paths are
 external delivery references served from their owning roots. Tokyo public
 serving does not recompute widget source, Dieter state, font state, or asset
 freshness on visitor requests.
@@ -201,7 +198,7 @@ documentation/engineering/CloudflareOperations.md
 Stop if a change would:
 
 - write product deploy artifacts into `accounts/`
-- write account runtime artifacts into `dieter/`, `fonts/`, `product/`, or `prague/`
+- write account runtime artifacts into `dieter/`, `product/`, or `prague/`
 - publish root `widgets/`, `l10n/`, `public/`, or `published/`
 - use UUID account folders
 - treat Prague page translations as account instance overlays

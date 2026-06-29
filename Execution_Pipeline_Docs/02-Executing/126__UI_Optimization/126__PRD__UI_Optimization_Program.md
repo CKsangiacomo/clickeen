@@ -35,6 +35,43 @@ after it accreted through many incremental passes. This is convergence and
 governance — **not a redesign**. We pause the accretion, go bottom-up, and make
 each layer splendid so the layers above inherit that splendor for free.
 
+The 126 program exists to make UI deterministic for an AI-operated codebase.
+For every UI domain, 126 must do four things:
+
+1. **Decide the Clickeen standard.** The standard is product-owned and
+   Clickeen-specific. Material, Apple, and OpenAI are source references; they do
+   not override human product authority.
+2. **Identify gaps in the codebase.** The audit names current code reality
+   against the decided standard: missing tokens, undefined references, local
+   one-offs, fake capabilities, stale docs, and places where previous agents
+   invented behavior.
+3. **Fix gaps in the codebase.** Execution changes only the proven mismatch
+   between Clickeen UI law and current runtime/source. It does not redesign,
+   introduce new frameworks, or reinterpret a domain into an ideal system.
+4. **Write deterministic docs for future agents.** The final living docs tell
+   agents exactly how to code the UI domain: allowed patterns, forbidden
+   patterns, source authority, human-owned decisions, and out-of-scope drift.
+
+Anything less leaves interpretation space for future agents; anything more
+turns 126 into invented machinery.
+
+### Pre-GA No Legacy Compatibility Tenet
+
+Clickeen is pre-GA. The 126 program does not preserve old UI drift through
+compatibility shims, temporary aliases, parallel legacy paths, or "support both
+old and new" transitions unless the human explicitly makes that behavior product
+law in the relevant PRD.
+
+For every 126 domain, once the standard is decided:
+
+- Fix source and docs to the standard.
+- Remove old drift and stale paths.
+- Do not leave legacy names, classes, render paths, token aliases, wrappers, or
+  local one-offs as supported alternatives.
+- Do not add guard/check machinery to enforce this tenet. The PRD is the
+  authority; execution must clean the code/doc surface instead of preserving bad
+  paths behind validation.
+
 ## 2. Core concept — the matrioska
 
 The UI is a Brad-Frost atomic / nesting-doll system. Three dolls:
@@ -180,12 +217,12 @@ Two phases. **Plan everything first; execute once at the end.**
 Every domain (dependency order, §7) runs steps 1–8 in Phase 1. Only after **every** domain reaches step 8 does step 9 (execute) begin — once, inside-out. (Steps are numbered 1–9 so they never collide with the A–M subPRD letters.)
 
 - **1. As-built audit — Codex + GLM each write their own (independent).** Two independent passes read the code and state current reality. They stay separate; **no AI converges them.** Factual gathering → independent dual-pass for coverage and hallucination-catch (the as-built is the foundation everything builds on, and "state what exists" is the top hallucination surface). (*Code owns current reality*.)
-- **2. Baseline / directional PRD — Codex authors; GLM appends a feedback addendum.** Codex writes the baseline PRD (current reality + known gaps, **no fixes** — fixes need the bar, steps 3–5); GLM reads it and writes a critique addendum at the bottom. One coherent PRD + its adversarial review, not two competing drafts. Sequences **Codex-author → GLM-review.** (*Directional draft, not final*.)
+- **2. Baseline / directional PRD — Codex authors; GLM appends a feedback addendum.** Codex writes the baseline PRD (current reality + known gaps + proposed Clickeen standard where human direction is already known). GLM reads it and writes a critique addendum. One coherent PRD + its adversarial review, not two competing drafts. Sequences **Codex-author → GLM-review.** (*Directional draft, not final execution authority*.)
 - **3. Source research — Codex + GLM each write their own (independent).** Two independent passes fetch what M3, Apple HIG, and OpenAI UI do for this area, from the primary sources only (`research/126X_Research_*.md`). They stay separate; **no AI converges them.** (*Google/Apple/OpenAI own the external reference*.)
-- **4. Human converges 1/2/3.** The human reconciles the two as-builts, the baseline PRD + its addendum, and the two research passes into the agreed current-state, baseline, and bar. **AIs never converge — this is product judgment, human lane only.** Steps 5+ run only after this.
-- **5. Consolidate into doctrine.** The approved research becomes clickeen UI doctrine, written into the kb doc (`engineering/UI/X.md`), current → target. *Dieter kb docs own clickeen UI truth.*
-- **6. Re-audit the code against the doctrine.** Gap audit — exact files/lines that must change. Lives in `audits/126X__Audit__*.md`.
-- **7. Final executable PRD.** From current state + doctrine + gaps — an executable plan, not vibes or research notes.
+- **4. Human converges 1/2/3 into the Clickeen standard.** The human reconciles the two as-builts, the baseline PRD + its addendum, and the two research passes into the decided Clickeen law for that UI domain. **AIs never converge — this is product judgment, human lane only.** The output is not a vague decision surface; it is the standard agents must later code against.
+- **5. Consolidate into doctrine.** The decided standard becomes Clickeen UI doctrine, written into the kb doc (`engineering/UI/X.md`), current → target. *Dieter kb docs own Clickeen UI truth.*
+- **6. Re-audit the code against the doctrine.** Gap audit — exact files/lines that violate or fail to implement the standard. Lives in `audits/126X__Audit__*.md`.
+- **7. Final executable PRD.** From current state + doctrine + gaps — an executable gap-fix plan, not vibes, research notes, or an ideal-system rewrite.
 - **8. Peer review.** Attack omissions.
 - **9. Execute** — once, after every domain has reached step 8. Inside-out and gated; splendid bar at each layer; visual before/after proof.
 
@@ -193,20 +230,41 @@ Every domain (dependency order, §7) runs steps 1–8 in Phase 1. Only after **e
 
 **The gate is absolute: no code before ALL domain PRDs (steps 1–8 for every domain) are maniacal-detail and peer-reviewed.**
 
-## 10. Parent acceptance — the splendid-bottom-up bar
+Every domain PRD must be judged against the four-part 126 loop: standard
+decided, codebase gaps identified, fix categories mapped, deterministic agent
+docs specified. A PRD that only says "later decide" is not done once human
+direction is known.
 
-Not a bug list — a quality bar. The program is done when:
+## 10. Parent acceptance — the deterministic-bottom-up bar
 
-- Every **token** is splendid: complete, consistent, intentional; nothing
-  undefined referenced; nothing dead; no duplicates.
-- Every **component** is splendid and built purely from tokens; no hardcoded
-  values; no dead components.
-- **DevStudio UI** cannot masquerade; every part built from the component doll;
-  the reveal/steer loop is trustworthy.
-- **Roma UI**: zero parallel component system; every screen built from Dieter
-  components + one shared primitive set; the monoliths broken up; no raw dev
-  copy; every screen has loading/empty/error states.
-- Visual parity held throughout (no redesign); V1–V8 green on every subPRD.
+This is not a taste bar. In 126, "splendid" means deterministic, source-owned,
+gap-fixed, and documented so future agents know exactly how to code UI without
+inventing.
+
+The program is done when:
+
+- Every domain has a decided Clickeen standard, owned by human product judgment
+  and grounded in the correct source authorities.
+- Every gap between the decided standard and the codebase is identified by file,
+  line, behavior, and owning layer.
+- Every approved gap is fixed in the correct inner-doll layer: tokens before
+  components, components before screens.
+- Every **token** is complete, intentional, referenced by name, and free of
+  undefined/dead/duplicate contract drift.
+- Every **component** consumes tokens and documented component contracts; no
+  local hardcoded values, state recipes, or parallel behavior when Dieter owns
+  the rule.
+- **DevStudio UI** reveals true Dieter state and write authority; it cannot
+  masquerade as editing or supporting UI truth it does not own.
+- **Roma UI** has no parallel component system; screens consume Dieter
+  components/shared primitives and expose loading/empty/error/status states
+  through the decided standards.
+- The living docs in `documentation/engineering/UI/` tell future agents the
+  deterministic rules: allowed patterns, forbidden patterns, source authority,
+  human-owned decisions, and out-of-scope drift.
+- Visual parity is held throughout unless the human explicitly approves a
+  visual change. This is not a redesign.
+- V1–V8 is green on every subPRD and final execution pass.
 
 ## 11. Doc tree (structure to work on)
 

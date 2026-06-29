@@ -42,7 +42,7 @@ function resolveUserSettingsErrorCopy(reason: string, fallback: string): string 
   const mapped = USER_SETTINGS_REASON_COPY[normalized];
   if (mapped) return mapped;
   if (normalized.startsWith('HTTP_') || normalized.startsWith('coreui.')) return fallback;
-  return normalized;
+  return fallback;
 }
 
 function resolveErrorReason(payload: unknown, fallback: string): string {
@@ -273,13 +273,13 @@ export function ProfileDomain() {
       </section>
 
       {saveError ? (
-        <section className="rd-canvas-module">
+        <section className="rd-canvas-module" role="alert">
           <p className="body-m">{saveError}</p>
         </section>
       ) : null}
 
       {saveNotice ? (
-        <section className="rd-canvas-module">
+        <section className="rd-canvas-module" role="status">
           <p className="body-m">{saveNotice}</p>
         </section>
       ) : null}

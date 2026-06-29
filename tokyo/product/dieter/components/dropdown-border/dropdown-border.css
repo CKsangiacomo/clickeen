@@ -270,5 +270,5 @@
 }
 
 .diet-dropdown-border[data-border-enabled='false'] .diet-dropdown-border__border-controls > :not(:first-child) {
-  opacity: var(--state-muted-opacity, 0.45);
+  opacity: 0.45;
 }

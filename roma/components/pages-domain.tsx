@@ -33,13 +33,14 @@ import {
 const CANONICAL_LOCALES = normalizeCanonicalLocalesFile(localesJson);
 
 function resolveLocaleUiLabel(code: string): string {
-  const normalized = normalizeLocaleToken(code) ?? code;
+  const normalized = normalizeLocaleToken(code);
+  if (!normalized) return 'Language unavailable';
   const label = resolveLocaleLabel({
     locales: CANONICAL_LOCALES,
     uiLocale: 'en',
     locale: normalized,
   });
-  return `${label} (${normalized})`;
+  return label || 'Language unavailable';
 }
 
 function reorderPlacement<T>(placements: T[], index: number, direction: -1 | 1): T[] {
@@ -587,7 +588,11 @@ export function PagesDomain() {
           <p className="body-m roma-toolbar-count">
             {pages.length} {pages.length === 1 ? 'page' : 'pages'}
           </p>
-          {domainRefreshing ? <p className="body-m roma-toolbar-count">Refreshing...</p> : null}
+          {domainRefreshing ? (
+            <p className="body-m roma-toolbar-count" role="status">
+              Refreshing...
+            </p>
+          ) : null}
         </div>
         <div className="rd-canvas-module__actions">
           <button
@@ -611,9 +616,9 @@ export function PagesDomain() {
             <span className="diet-btn-txt__label body-m">Refresh</span>
           </button>
         </div>
-        {dataError ? <p className="body-m">{dataError}</p> : null}
-        {mutationError ? <p className="body-m">{mutationError}</p> : null}
-        {domainLoading && pages.length === 0 ? <p className="body-m">Loading pages...</p> : null}
+        {dataError ? <p className="body-m" role="alert">{dataError}</p> : null}
+        {mutationError ? <p className="body-m" role="alert">{mutationError}</p> : null}
+        {domainLoading && pages.length === 0 ? <p className="body-m" role="status">Loading pages...</p> : null}
         {!domainLoading && pages.length === 0 ? <p className="body-m">No pages yet.</p> : null}
         {pages.length ? (
           <table className="roma-table">
@@ -630,7 +635,7 @@ export function PagesDomain() {
                 const isActive = page.pageId === activePageId;
                 const deleteActionKey = `delete-page:${page.pageId}`;
                 return (
-                  <tr key={page.pageId} data-selected={isActive ? 'true' : undefined}>
+                  <tr key={page.pageId} data-selected={isActive ? 'true' : undefined} aria-current={isActive ? 'true' : undefined}>
                     <td className="body-s">{page.title}</td>
                     <td className="body-s">{page.pageId}</td>
                     <td className="body-s">{page.placementCount}</td>
@@ -657,7 +662,7 @@ export function PagesDomain() {
         ) : null}
       </section>
 
-      {sourceLoading ? <section className="rd-canvas-module body-m">Loading page source...</section> : null}
+      {sourceLoading ? <section className="rd-canvas-module body-m" role="status">Loading page source...</section> : null}
 
       {pageSource ? (
         <section className="rd-canvas-module">
@@ -775,17 +780,17 @@ export function PagesDomain() {
               </a>
             ) : null}
           </div>
-          {copyStatus ? <p className="body-s">{copyStatus}</p> : null}
-          {pageSource.placements.length === 0 ? <p className="body-s">Add at least one instance before publishing this page.</p> : null}
+          {copyStatus ? <p className="body-s" role="status">{copyStatus}</p> : null}
+          {pageSource.placements.length === 0 ? <p className="body-s" role="status">Add at least one instance before publishing this page.</p> : null}
           {publishBlockers.length > 0 ? (
-            <p className="body-s">
+            <p className="body-s" role="alert">
               Publish is blocked by unpublished or unavailable instances: {publishBlockers.join(', ')}.
             </p>
           ) : null}
-          {ipLocalizationBlocksPublish ? <p className="body-s">Publish is blocked while IP localization is unavailable.</p> : null}
-          {pagePublishingUnavailable ? <p className="body-s">Page publishing is unavailable until page package generation is enabled.</p> : null}
-          {pageSourceLocked ? <p className="body-s">Unpublish this page before editing source.</p> : null}
-          {pagePublishStatus !== 'published' ? <p className="body-s">Publish this page before copying public code.</p> : null}
+          {ipLocalizationBlocksPublish ? <p className="body-s" role="alert">Publish is blocked while IP localization is unavailable.</p> : null}
+          {pagePublishingUnavailable ? <p className="body-s" role="status">Publishing is not available yet.</p> : null}
+          {pageSourceLocked ? <p className="body-s" role="status">Unpublish this page before editing source.</p> : null}
+          {pagePublishStatus !== 'published' ? <p className="body-s" role="status">Publish this page before copying public code.</p> : null}
         </section>
       ) : null}
 

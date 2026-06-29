@@ -3,6 +3,11 @@
 import { useCallback, useEffect, type Dispatch, type MutableRefObject, type SetStateAction } from 'react';
 import type { Policy } from '@clickeen/ck-policy';
 import {
+  isAccountFontFamily,
+  normalizeAccountFontLibrary,
+  type AccountFontLibrary,
+} from '@clickeen/widget-shell';
+import {
   type BobOpenEditorAppliedMessage,
   type BobOpenEditorFailedMessage,
   type BobSessionReadyMessage,
@@ -13,6 +18,37 @@ import {
   serializeInstanceDataSignature,
 } from './sessionTypes';
 import { assertSessionConfigContract } from './sessionConfig';
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
+}
+
+function collectTypographyFontFamilies(instanceData: Record<string, unknown>): string[] {
+  const families = new Set<string>();
+  const typography = isRecord(instanceData.typography) ? instanceData.typography : null;
+  if (!typography) return [];
+  if (typeof typography.globalFamily === 'string' && typography.globalFamily.trim()) {
+    families.add(typography.globalFamily.trim());
+  }
+  const roles = isRecord(typography.roles) ? typography.roles : null;
+  if (!roles) return Array.from(families);
+  Object.values(roles).forEach((role) => {
+    if (!isRecord(role)) return;
+    if (typeof role.family === 'string' && role.family.trim()) families.add(role.family.trim());
+  });
+  return Array.from(families);
+}
+
+function assertTypographyFontsInLibrary(args: {
+  instanceData: Record<string, unknown>;
+  fontLibrary: AccountFontLibrary;
+}) {
+  const missing = collectTypographyFontFamilies(args.instanceData)
+    .filter((family) => !isAccountFontFamily(args.fontLibrary, family));
+  if (missing.length) {
+    throw new Error(`coreui.errors.typography.fontFamily.unknown:${missing.join(',')}`);
+  }
+}
 
 export function useSessionBoot(args: {
   stateRef: MutableRefObject<SessionState>;
@@ -55,6 +91,14 @@ export function useSessionBoot(args: {
         }
         const instanceData = rawInstanceData as Record<string, unknown>;
         assertSessionConfigContract(instanceData, compiled);
+        const fontLibrary = normalizeAccountFontLibrary(message.fontLibrary);
+        if (!fontLibrary) {
+          return {
+            ok: false,
+            error: 'coreui.errors.typography.fontLibrary.invalid',
+          };
+        }
+        assertTypographyFontsInLibrary({ instanceData, fontLibrary });
         const savedInstanceDataSignature = serializeInstanceDataSignature(instanceData);
         const nextPolicy = (message.policy as Policy | null | undefined) ?? null;
         const nextCopilot = (message.copilot as CopilotRuntimeUi | undefined) ?? null;
@@ -70,6 +114,7 @@ export function useSessionBoot(args: {
           widgetname: compiled.widgetname,
           publishStatus: message.publishStatus,
           label: nextLabel,
+          fontLibrary,
           translationSetup: message.translationSetup ?? null,
         };
         const nextState: SessionState = {

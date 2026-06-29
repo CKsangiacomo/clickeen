@@ -27,7 +27,7 @@
         "labelClass": "label-s",
         "bodyClass": "body-s",
         "headerLabel": "Border",
-        "headerIcon": "square",
+        "headerIcon": "square.dashed",
         "headerLabelClass": "label-s"
       },
       "sizeContext": {
@@ -38,4 +38,3 @@
     }
   ]
 }
-

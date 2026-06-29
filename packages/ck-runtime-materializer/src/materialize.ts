@@ -60,6 +60,7 @@ function buildPackage(args: {
   displayName: string | null;
   baseState: Record<string, unknown>;
   requestedState: Record<string, unknown>;
+  typographyData: RuntimeMaterializerInput['typographyData'];
 }): { ok: true; files: RuntimeMaterializerFileSet } | RuntimeMaterializerResult {
   const widgetHtml = packageSource({ compiled: args.compiled, key: 'widget.html' });
   if (!widgetHtml) return materializerFailure('widget_package_missing');
@@ -89,6 +90,7 @@ function buildPackage(args: {
     baseLocale: args.baseLocale,
     requestedLocale: args.requestedLocale,
     locales,
+    ...(args.typographyData ? { typographyData: args.typographyData } : {}),
   });
   if (!runtime.ok) return runtime;
 
@@ -145,6 +147,7 @@ export async function materializeRuntimePackage(input: RuntimeMaterializerInput)
     displayName: input.displayName,
     baseState: input.state,
     requestedState,
+    typographyData: input.typographyData,
   });
   if (!built.ok) return built;
 

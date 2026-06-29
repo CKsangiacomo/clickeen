@@ -16,6 +16,7 @@ export function UsageDomain() {
   const entitlements = data.authz?.entitlements ?? null;
   const [storageBytesUsed, setStorageBytesUsed] = useState<number | null>(null);
   const [storageLoading, setStorageLoading] = useState(true);
+  const [storageError, setStorageError] = useState(false);
 
   const storageLimit = entitlements?.limits?.['storage.bytes.max'] ?? null;
   const storageLimitLabel =
@@ -26,6 +27,7 @@ export function UsageDomain() {
     let cancelled = false;
     async function loadStorageUsage() {
       setStorageLoading(true);
+      setStorageError(false);
       try {
         const response = await accountApi.fetchRaw(`/api/account/usage`, {
           method: 'GET',
@@ -36,9 +38,15 @@ export function UsageDomain() {
           payload && typeof payload === 'object' && 'storageBytesUsed' in payload && typeof payload.storageBytesUsed === 'number'
             ? Math.max(0, Math.trunc(payload.storageBytesUsed))
             : null;
-        if (!cancelled) setStorageBytesUsed(next);
+        if (!cancelled) {
+          setStorageBytesUsed(next);
+          setStorageError(false);
+        }
       } catch {
-        if (!cancelled) setStorageBytesUsed(null);
+        if (!cancelled) {
+          setStorageBytesUsed(null);
+          setStorageError(true);
+        }
       } finally {
         if (!cancelled) setStorageLoading(false);
       }
@@ -54,6 +62,11 @@ export function UsageDomain() {
       <section className="rd-canvas-module">
         <p className="body-m">Account: {accountContext.accountLabel}</p>
         <p className="body-m">Storage usage is live. Broader usage reporting is not connected in Roma yet.</p>
+        {storageError ? (
+          <p className="body-m" role="alert">
+            Storage usage could not be loaded.
+          </p>
+        ) : null}
       </section>
 
       <section className="rd-canvas-module">

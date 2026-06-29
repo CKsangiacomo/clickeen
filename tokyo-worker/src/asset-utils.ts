@@ -4,6 +4,7 @@ import {
 } from '@clickeen/ck-contracts';
 import { sha256Hex as computeSha256Hex } from '@clickeen/ck-contracts/security';
 import { normalizeLocaleToken } from '@clickeen/l10n';
+import { accountFontContentTypeExtension } from '@clickeen/widget-shell';
 import type { Env } from './types';
 
 function extFromMime(mime: string): string | null {
@@ -16,6 +17,8 @@ function extFromMime(mime: string): string | null {
   if (mt === 'video/mp4') return 'mp4';
   if (mt === 'video/webm') return 'webm';
   if (mt === 'application/pdf') return 'pdf';
+  const fontExt = accountFontContentTypeExtension(mt);
+  if (fontExt) return fontExt;
   return null;
 }
 
@@ -23,7 +26,7 @@ function normalizeMimeType(raw: string): string {
   return String(raw || '').split(';')[0].trim().toLowerCase();
 }
 
-export type AccountAssetType = 'image' | 'vector' | 'video' | 'audio' | 'document' | 'other';
+export type AccountAssetType = 'image' | 'vector' | 'video' | 'audio' | 'document' | 'font' | 'other';
 
 export function classifyAccountAssetType(contentType: string | null, ext: string | null): AccountAssetType {
   const mime = normalizeMimeType(String(contentType || '').trim());
@@ -34,6 +37,7 @@ export function classifyAccountAssetType(contentType: string | null, ext: string
   if (mime.startsWith('video/')) return 'video';
   if (mime.startsWith('audio/')) return 'audio';
   if (mime === 'application/pdf') return 'document';
+  if (accountFontContentTypeExtension(mime)) return 'font';
   return 'other';
 }
 

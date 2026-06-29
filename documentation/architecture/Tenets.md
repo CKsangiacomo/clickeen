@@ -190,7 +190,6 @@ Tokyo R2 roots encode ownership and deploy boundaries:
 ```text
 accounts/
 dieter/
-fonts/
 product/
 prague/
 ```

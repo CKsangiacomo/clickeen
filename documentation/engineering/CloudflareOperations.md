@@ -173,7 +173,6 @@ Git-authored Tokyo product roots sync to canonical R2 roots:
 | --- | --- |
 | `tokyo/product/widgets/**` | `product/widgets/**` |
 | `tokyo/product/dieter/**` | `dieter/**` |
-| `tokyo/product/fonts/**` | `fonts/**` |
 | `tokyo/roma/**` | `product/roma/**` |
 | `tokyo/prague/**` | `prague/**` |
 
@@ -197,9 +196,9 @@ helper commands must not use that ambiguous token name; local R2 commands use
 the typed env names above.
 
 Current workflow caveat: `cloud-dev workers deploy` triggers the R2 product-root
-sync for `tokyo/product/widgets/**`, `tokyo/product/fonts/**`,
-`tokyo/product/themes/**`, `tokyo/product/dieter/**`, `tokyo/roma/**`, and the
-sync script itself. It does not currently trigger for `tokyo/prague/**` only.
+sync for `tokyo/product/widgets/**`, `tokyo/product/themes/**`,
+`tokyo/product/dieter/**`, `tokyo/roma/**`, and the sync script itself. It does
+not currently trigger for `tokyo/prague/**` only.
 If Prague R2 content changes and no other sync-triggering root changed, run the
 manual sync path deliberately:
 

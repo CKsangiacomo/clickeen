@@ -971,6 +971,26 @@ var Dieter = (() => {
     "coreui.upsell.reason.limitReached",
     "coreui.upsell.reason.platform.uploads"
   ]);
+  var ACCOUNT_ASSET_ERROR_COPY = {
+    "coreui.upsell.reason.limitReached": "This exceeds your current plan limit.",
+    "coreui.upsell.reason.platform.uploads": "Uploads are not available for this account plan.",
+    "coreui.errors.auth.required": "You need to sign in again to manage assets.",
+    "coreui.errors.auth.forbidden": "You do not have permission to manage assets in this account.",
+    "coreui.errors.assets.uploadFailed": "Asset upload failed. Please try again.",
+    "coreui.errors.assets.payloadInvalid": "Asset data could not be read. Please try again.",
+    "coreui.errors.db.readFailed": "Failed to load assets. Please try again.",
+    "coreui.errors.db.writeFailed": "Asset update failed on the server. Please try again.",
+    "coreui.errors.network.timeout": "The request timed out. Please try again.",
+    "coreui.errors.payload.empty": "Choose a file before uploading."
+  };
+  function resolveAccountAssetErrorCopy(reason, fallback) {
+    const normalized = typeof reason === "string" ? reason.trim() : "";
+    if (!normalized) return fallback;
+    const mapped = ACCOUNT_ASSET_ERROR_COPY[normalized];
+    if (mapped) return mapped;
+    if (normalized.startsWith("HTTP_") || normalized.startsWith("coreui.")) return fallback;
+    return fallback;
+  }
   function dispatchAccountAssetUpsell(root, reasonKey) {
     const normalizedReasonKey = typeof reasonKey === "string" ? reasonKey : "";
     if (!ACCOUNT_ASSET_UPSELL_REASONS.has(normalizedReasonKey)) return false;
@@ -997,7 +1017,8 @@ var Dieter = (() => {
       args.onResolved(asset);
     } catch (error) {
       if (!args.isCurrent(requestId, assetRef)) return;
-      args.onError(error instanceof Error ? error.message : "coreui.errors.db.readFailed");
+      const message = error instanceof Error ? error.message : "coreui.errors.db.readFailed";
+      args.onError(resolveAccountAssetErrorCopy(message, "Asset preview could not be loaded."));
     }
   }
 
@@ -1211,10 +1232,12 @@ var Dieter = (() => {
     setBrowserOpen(oppositeBrowser, oppositeButton, false);
     setBrowserOpen(browser, button, true);
     setFillUploadingState(args.state, true);
+    browserMessage?.setAttribute("role", "status");
     setAssetPanelMessage(browserMessage, "Loading assets\u2026");
     clearAssetBrowser(browserList);
     try {
       const assets = filterAssetsForKind(await args.state.accountAssets.listAssets(), args.kind);
+      browserMessage?.setAttribute("role", "status");
       setAssetPanelMessage(browserMessage, assets.length ? "" : "No assets available yet.");
       renderAssetBrowserRows({
         state: args.state,
@@ -1223,9 +1246,11 @@ var Dieter = (() => {
         deps: args.deps
       });
     } catch (error) {
+      browserMessage?.setAttribute("role", "alert");
+      const message = error instanceof Error ? error.message : "coreui.errors.db.readFailed";
       setAssetPanelMessage(
         browserMessage,
-        error instanceof Error ? error.message : "coreui.errors.db.readFailed"
+        resolveAccountAssetErrorCopy(message, "Failed to load assets. Please try again.")
       );
       clearAssetBrowser(browserList);
     } finally {
@@ -1249,7 +1274,10 @@ var Dieter = (() => {
       if (dispatchAccountAssetUpsell(args.state.root, message)) {
         return;
       }
-      setAssetPanelMessage(args.kind === "image" ? args.state.imageMessage : args.state.videoMessage, message);
+      setAssetPanelMessage(
+        args.kind === "image" ? args.state.imageMessage : args.state.videoMessage,
+        resolveAccountAssetErrorCopy(message, "Asset upload failed. Please try again.")
+      );
     } finally {
       setFillUploadingState(args.state, false);
     }
@@ -1506,6 +1534,7 @@ var Dieter = (() => {
     swatches.forEach((swatch) => {
       const color = swatch.dataset.color || "";
       swatch.style.setProperty("--swatch-color", color);
+      if (color) swatch.setAttribute("aria-label", `Color ${color}`);
     });
     return {
       root,
@@ -1764,12 +1793,12 @@ var Dieter = (() => {
     const rawValue = String(raw ?? "");
     const fill = rawValue === "" ? { type: "none" } : parseFillValue(rawValue, state.root);
     if (!fill) {
-      state.root.dataset.invalid = "true";
+      setInvalidFillState(state, true);
       updateHeader(state, { text: "Invalid", muted: false, chipColor: null, noneChip: true });
       setRemoveFillState(state, true);
       return;
     }
-    delete state.root.dataset.invalid;
+    setInvalidFillState(state, false);
     const nextMode = resolveModeFromFill(state.mode, state.allowedModes, fill);
     setMode(state, nextMode);
     if (fill.type === "none") {
@@ -1802,7 +1831,7 @@ var Dieter = (() => {
     if (fill.type === "color") {
       const parsed = parseColor(fill.color || "", state.root);
       if (!parsed) {
-        state.root.dataset.invalid = "true";
+        setInvalidFillState(state, true);
         state.hsv = { h: 0, s: 0, v: 0, a: 0 };
         syncColorUI(state, { commit: false });
         return;
@@ -1913,6 +1942,20 @@ var Dieter = (() => {
         headerValueChip.classList.remove("is-white");
       }
     }
+  }
+  function setInvalidFillState(state, invalid) {
+    const control = state.root.querySelector(".diet-dropdown-fill__control");
+    if (invalid) {
+      state.root.dataset.invalid = "true";
+      control?.setAttribute("aria-invalid", "true");
+      state.headerValueLabel?.setAttribute("role", "alert");
+      state.headerValueLabel?.setAttribute("aria-live", "assertive");
+      return;
+    }
+    delete state.root.dataset.invalid;
+    control?.removeAttribute("aria-invalid");
+    state.headerValueLabel?.removeAttribute("role");
+    state.headerValueLabel?.removeAttribute("aria-live");
   }
   function setMode(state, mode) {
     const next = state.allowedModes.includes(mode) ? mode : state.allowedModes[0] || "color";

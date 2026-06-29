@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, type MutableRefObject } from 'react';
+import type { AccountFontLibrary } from '@clickeen/widget-shell';
 import type { ApplyWidgetOpsResult, WidgetOp } from '../../lib/ops';
 import type { CompiledWidget } from '../../lib/types';
 import { getAt } from '../../lib/utils/paths';
@@ -30,6 +31,7 @@ export function useTdMenuBindings(args: {
   panelHtml: string;
   renderKey: number;
   compiled: CompiledWidget | null;
+  fontLibrary: AccountFontLibrary | null;
   requestUpsell: (reasonKey: string, detail?: string) => void;
   lastUpdateRef: MutableRefObject<LastUpdate>;
   activePathRef: MutableRefObject<string | null>;
@@ -40,6 +42,7 @@ export function useTdMenuBindings(args: {
     applyOps,
     compiled,
     containerRef,
+    fontLibrary,
     instanceData,
     instanceDataRef,
     lastUpdateRef,
@@ -55,7 +58,7 @@ export function useTdMenuBindings(args: {
 
     const readInstanceData = () => instanceDataRef.current;
     const applyExpandedOps = (ops: WidgetOp[]) => {
-      const applied = applyOps(expandLinkedOps({ compiled, instanceData: readInstanceData(), ops }));
+      const applied = applyOps(expandLinkedOps({ compiled, fontLibrary, instanceData: readInstanceData(), ops }));
       if (applied.ok) {
         instanceDataRef.current = applied.data;
         applyShowIfVisibility(showIfEntriesRef.current, applied.data);
@@ -279,6 +282,7 @@ export function useTdMenuBindings(args: {
     applyOps,
     compiled,
     containerRef,
+    fontLibrary,
     instanceData,
     instanceDataRef,
     lastUpdateRef,

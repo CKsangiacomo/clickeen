@@ -11,6 +11,8 @@ import {
   type DieterMedia,
 } from './dom';
 import type { AccountAssetsClient } from '../../../dieter/components/shared/account-assets';
+import type { AccountFontLibrary } from '@clickeen/widget-shell';
+import { applyAccountFontLibraryToTypographyMenus } from './accountFonts';
 import { applyShowIfVisibility, buildShowIfEntries, type ShowIfEntry } from './showIf';
 
 export function useTdMenuHydration(args: {
@@ -18,6 +20,7 @@ export function useTdMenuHydration(args: {
   panelHtml: string;
   widgetName: string | null;
   accountAssets: AccountAssetsClient;
+  fontLibrary: AccountFontLibrary | null;
   dieterMedia?: DieterMedia;
   instanceDataRef: MutableRefObject<Record<string, unknown>>;
   showIfEntriesRef: MutableRefObject<ShowIfEntry[]>;
@@ -27,6 +30,7 @@ export function useTdMenuHydration(args: {
     accountAssets,
     containerRef,
     dieterMedia,
+    fontLibrary,
     instanceDataRef,
     panelHtml,
     setRenderKey,
@@ -64,6 +68,7 @@ export function useTdMenuHydration(args: {
     ensureMedia(dieterMedia)
       .then(async () => {
         if (cancelled) return;
+        applyAccountFontLibraryToTypographyMenus({ container, fontLibrary });
         runHydrators(container, { accountAssets });
         await applyI18nToDom(container, widgetName);
         if (cancelled) return;
@@ -90,6 +95,7 @@ export function useTdMenuHydration(args: {
     accountAssets,
     containerRef,
     dieterMedia,
+    fontLibrary,
     instanceDataRef,
     panelHtml,
     setRenderKey,

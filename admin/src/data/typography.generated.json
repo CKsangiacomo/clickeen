@@ -83,14 +83,6 @@
     {
       "className": "body",
       "sample": "The quick brown fox jumps over the lazy dog"
-    },
-    {
-      "className": "body-small",
-      "sample": "The quick brown fox jumps over the lazy dog"
-    },
-    {
-      "className": "body-large",
-      "sample": "The quick brown fox jumps over the lazy dog"
     }
   ],
   "Labels & Captions": [

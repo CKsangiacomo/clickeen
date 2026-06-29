@@ -90,7 +90,7 @@ function assertFoundationCounts() {
 
   const typography = JSON.parse(read(typographyJsonPath));
   const typographyCount = Object.values(typography).flat().length;
-  if (typographyCount !== 33) fail(`typography source count changed from locked Step 0 count 33 to ${typographyCount}`);
+  if (typographyCount !== 31) fail(`typography source count changed from locked Step 0 count 31 to ${typographyCount}`);
 
   const icons = JSON.parse(read(iconsManifestPath));
   const iconCount = Object.keys(icons.symbols ?? {}).length;

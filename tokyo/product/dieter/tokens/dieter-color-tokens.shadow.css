@@ -1,21 +1,39 @@
-/* Dieter Color Tokens — AI READ THIS FIRST
- * 1. Never invent colors. Always use these tokens or mix with the state helpers.
- * 2. Surfaces & text: choose from the neutral ladder or tone ramps below; do not rely on browser defaults.
- * 3. Accents/status colors: var(--color-system-{red|orange|…|brown}), add depth via -contrast or -1…-5 ramps.
- * 4. Neutral UI chrome: var(--color-system-gray[-n]) and matching -step1…-step5 tones.
- * 5. Hover/pressed/muted/inactive: color-mix(in oklab, var(--your-token),
- *      var(--state-{hover|pressed|muted|inactive}-target) var(--state-*-mix)).
- * 6. Do not edit anything below 
-
-/* Dieter Color Tokens */
+/* Dieter Color Tokens
+ * Current law: light-mode source tokens only. Do not invent colors, dark token
+ * pairs, contrast gates, or compatibility aliases. Use role tokens for
+ * structural chrome and the state mix controls for hover/pressed/muted/inactive
+ * colors.
+ */
 :host {
   /* Text color tokens */
   --color-text: var(--color-system-black);
   --color-text-secondary: color-mix(in oklab, var(--color-system-black), transparent 45%);
   --role-surface: var(--color-system-white);
+  --role-on-surface: var(--color-system-black);
   --role-surface-bg: var(--color-system-white);
+  --role-surface-muted: var(--color-system-gray-6-step4);
   --role-border: var(--color-system-gray-5);
+  --role-text: var(--color-text);
+  --role-text-secondary: var(--color-text-secondary);
   --focus-ring-color: var(--color-system-blue);
+  --role-focus: var(--focus-ring-color);
+  --role-primary-action: var(--color-system-blue);
+  --role-on-primary-action: var(--color-system-white);
+  --role-error: var(--color-system-red);
+  --role-on-error: var(--color-system-white);
+  --role-success: var(--color-system-green);
+  --role-on-success: var(--color-system-white);
+  --role-warning: var(--color-system-orange);
+  --role-on-warning: var(--color-system-white);
+  --role-info: var(--color-system-blue);
+  --role-on-info: var(--color-system-white);
+  --role-muted: var(--color-text-secondary);
+  --role-selected-fill: var(--color-system-blue-5);
+  --role-selected-text: var(--color-system-blue);
+  --role-selected-border: var(--color-system-blue);
+  --role-disabled-fill: var(--color-system-gray-6-step5);
+  --role-disabled-text: color-mix(in oklab, var(--color-system-black), transparent 60%);
+  --role-disabled-border: var(--color-system-gray-6);
 
   /* Global state mix controls */
   --state-darken-target: black;

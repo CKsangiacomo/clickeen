@@ -1,5 +1,9 @@
 import { createDropdownHydrator } from '../shared/dropdownToggle';
-import { dispatchAccountAssetUpsell, type AccountAssetsClient } from '../shared/account-assets';
+import {
+  dispatchAccountAssetUpsell,
+  resolveAccountAssetErrorCopy,
+  type AccountAssetsClient,
+} from '../shared/account-assets';
 import { resolveSingleAccountAsset } from '../shared/account-asset-resolve';
 
 type Kind = 'empty' | 'image' | 'video' | 'doc' | 'unknown';
@@ -239,7 +243,7 @@ function installHandlers(state: DropdownUploadState) {
       const message = error instanceof Error ? error.message : 'coreui.errors.assets.uploadFailed';
       if (dispatchAccountAssetUpsell(state.root, message)) {
       } else {
-        setError(state, message);
+        setError(state, resolveAccountAssetErrorCopy(message, 'Asset upload failed. Please try again.'));
       }
     } finally {
       setUploadingState(state, false);

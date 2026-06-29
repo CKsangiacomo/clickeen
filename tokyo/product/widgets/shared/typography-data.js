@@ -22,13 +22,6 @@
       'Homemade Apple': font({ source: 'google', spec: 'Homemade+Apple', familyClass: 'sans' }),
       'Permanent Marker': font({ source: 'google', spec: 'Permanent+Marker', familyClass: 'sans' }),
       'Shadows Into Light': font({ source: 'google', spec: 'Shadows+Into+Light', familyClass: 'sans' }),
-      Frari: font({ source: 'tokyo', filePath: '/fonts/special/Frari.woff2', weights: freeze(['400']), styles: freeze(['normal']), familyClass: 'serif' }),
-      Giudecca: font({ source: 'tokyo', filePath: '/fonts/special/Giudecca.woff', weights: freeze(['400']), styles: freeze(['normal']), familyClass: 'serif' }),
-      Marin: font({ source: 'tokyo', filePath: '/fonts/special/Marin.woff', weights: freeze(['400']), styles: freeze(['normal']), familyClass: 'serif' }),
-      Orio: font({ source: 'tokyo', filePath: '/fonts/special/Orio.woff', weights: freeze(['400']), styles: freeze(['normal']), familyClass: 'serif' }),
-      Pachuka: font({ source: 'tokyo', filePath: '/fonts/special/Pachuka.woff2', weights: freeze(['400']), styles: freeze(['normal']), familyClass: 'serif' }),
-      'Pachuka Line': font({ source: 'tokyo', filePath: '/fonts/special/Pachuka_line.woff2', weights: freeze(['400']), styles: freeze(['normal']), familyClass: 'serif' }),
-      Rialto: font({ source: 'tokyo', filePath: '/fonts/special/Rialto.woff2', weights: freeze(['400']), styles: freeze(['normal']), familyClass: 'serif' }),
     }),
   });
 })();

@@ -29,7 +29,6 @@ tokyo/product/dieter/manifest.json
 | `dieter/tokens/` | Canonical token source. |
 | `dieter/components/{component}/` | Component CSS, snippet, spec, and optional JS. |
 | `dieter/icons/svg/` | Source SVG icons. |
-| `dieter/icons/svg_new/` | Optional icon override input; build copies it over `dieter/icons/svg/` before normalization when present. |
 | `dieter/icons/icons.json` | Generated/source icon registry used by build output. |
 | `tokyo/product/dieter/` | Generated deploy artifacts. |
 
@@ -111,7 +110,7 @@ The Dieter build fails or must be stopped when:
 
 - `dieter/tokens/tokens.css` is missing
 - the icon SVG directory is missing
-- SVG normalization or verification fails
+- icon manifest/source verification fails
 - a component has unsupported artifact shape
 - generated `manifest.json` is missing or inconsistent
 - generated output would write outside `tokyo/product/dieter/**`
@@ -122,5 +121,7 @@ The Dieter build fails or must be stopped when:
 - Do not hand-edit generated artifacts without the source change that produces them.
 - Do not add external vertical margins to reusable controls; host layout owns outside spacing.
 - Do not use `@import` for fonts in generated widget packages.
-- Public widget artifacts inline required SVG markup during package generation; they do not fetch icon bundles at runtime.
+- Public widget code may use approved Dieter operational icons as CSS masks or
+  static `/dieter/icons/svg/{name}.svg` URLs. It does not fetch an icon bundle
+  or turn widget/account SVGs into Dieter icons.
 - Do not claim accessibility, privacy, retention, or compliance guarantees here unless backed by current source and tests.

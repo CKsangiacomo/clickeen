@@ -45,7 +45,7 @@ function resolveBuilderErrorCopy(reason: string, fallback: string): string {
   if (normalized.startsWith('coreui.') || normalized.startsWith('HTTP_') || normalized.startsWith('[useWidgetSession]')) {
     return fallback;
   }
-  return normalized;
+  return fallback;
 }
 
 function resolveSessionErrorTitle(error: NonNullable<ReturnType<typeof useWidgetSession>['error']>): string {

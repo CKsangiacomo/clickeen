@@ -1,39 +1,45 @@
-# Dialogs and modals in Clickeen
+# Dialogs And Modals In Clickeen
 
-**Living, canonical reference — the overlay system.**
-Seeded 2026-06-27 from the as-built code; improved in place as UI program 126 executes. Owns the overlay *system* (modal/dialog/popover rules); the per-component API is in [`components.md`](components.md), the a11y contract in [`accessibility.md`](accessibility.md), flow triggers in [`interactions.md`](interactions.md).
+Authority: 126K for dialog/modal behavior mechanics.
+Related authority: [`126A__PRD__Accessibility.md`](../../../Execution_Pipeline_Docs/02-Executing/126__UI_Optimization/126A__PRD__Accessibility.md) for honest naming and semantic state.
 
-- Authority: [`126__PRD__UI_Optimization_Program.md` §12](../../../Execution_Pipeline_Docs/02-Executing/126__UI_Optimization/126__PRD__UI_Optimization_Program.md).
+This doc does not define a modal framework. It records the boundary agents must
+respect while the 126 UI program executes.
 
-## What exists today
+## 126A Boundary
 
-- **`bulk-edit` modal** — the correct pattern: `role="dialog" aria-modal="true"`,
-  `[hidden]`-toggled, with header/body structure. The reference to converge toward.
-- **`object-manager` modal** — `[hidden]`-toggled, but **missing** `role=dialog` /
-  `aria-modal`. (a11y gap — see [`accessibility.md`](accessibility.md).)
-- **`textedit` / `dropdown-edit`** — `aria-haspopup="dialog"` trigger + a
-  `.diet-popover` `role="dialog"` panel.
-- **`popover`** — CSS/HTML/spec container; the shared overlay substrate.
-- **`popaddlink`** — a popover-based link adder.
-- **Roma parallel** — `.roma-modal` / `.roma-modal-backdrop` in `roma.css` (the
-  system 126D retires in favor of a shared `Modal` primitive).
-- **Upgrade popup** — the PRD 125 monetization modal (click → 402 → popup).
+126A owns whether a surface is named truthfully:
 
-## The system rules (the layer this doc must declare — largely TBD today)
+- dialog/modal;
+- popover/dropdown;
+- sheet/panel;
+- banner/status.
 
-A correct overlay in clickeen must: trap focus while open, return focus on close,
-close on escape + backdrop click, scroll-lock the page behind, manage stacking
-order, announce via `aria-modal`/`role=dialog`, and honor `prefers-reduced-motion`
-for enter/exit. **Most of these are not verified implemented** — the 126 series is
-where they become declared, owned rules, not assumed.
+126A does not require:
 
-## Honest gaps
+- focus traps;
+- return-focus behavior;
+- scroll lock;
+- z-index systems;
+- keyboard-complete modal behavior;
+- shared modal framework behavior.
 
-- **No focus-trap / return-focus / scroll-lock verified** anywhere — likely the
-  biggest overlay gap (the canonical corpus-median failure).
-- **No z-index system** — raw `z-index` literals (1, 2, 3, 12, 1000) across
-  component CSS; stacking is ad-hoc, which is exactly what breaks overlays. A
-  stacking-order scale is a candidate 126A deliverable.
-- **Modal ARIA inconsistent** — `bulk-edit` correct, `object-manager` not.
-- **Roma convergence** — retire `.roma-modal` onto the shared `Modal` primitive
-  (one modal system, not `.roma-modal` + `diet-modal` + ad-hoc).
+Those mechanics belong to 126K and the owning component/screen PRD.
+
+## Product Distinctions
+
+- **Dialog/modal:** interruptive contained surface that asks the user to act
+  before returning to the previous workflow.
+- **Popover/dropdown:** local contextual surface attached to a trigger.
+- **Sheet/panel:** larger surface that edits or inspects context without
+  necessarily being modal.
+- **Banner/status:** feedback surface for operation state or guidance.
+
+Do not call a surface a modal/dialog unless the product behavior is actually
+dialog-like. Do not make a non-modal popover pretend to be a modal dialog.
+
+## Execution Rule
+
+When dialog/modal behavior is implemented or changed, execute under 126K or the
+owning component/screen PRD. 126A may require truthful semantics and naming, but
+it must not be used to introduce overlay machinery.

@@ -35,8 +35,8 @@ accounts/{accountPublicId}/assets/
 ```
 
 Use `media` for Clickeen-owned product files used by Prague, Roma, Bob, Dieter,
-widget software, marketing surfaces, app UI, screenshots, icons, fonts, and
-other product-owned files.
+widget software, marketing surfaces, app UI, screenshots, icons, and other
+product-owned files.
 
 ## Authority Chain
 
@@ -111,6 +111,20 @@ Accepted files satisfy:
 SVG is accepted as `image/svg+xml` and classified as a vector asset. SVG safety
 checks happen before Tokyo-worker writes the object.
 
+Uploaded fonts are account assets, not product-root media. The accepted font
+upload pairs are exact:
+
+- `.woff2` with `font/woff2`;
+- `.woff` with `font/woff`, `application/font-woff`, or
+  `application/x-font-woff`;
+- `.ttf` with `font/ttf` or `application/x-font-ttf`;
+- `.otf` with `font/otf` or `application/x-font-otf`.
+
+Do not accept broad `font/*`. SVG fonts, CSS, JavaScript, HTML, XML, WASM, and
+scriptable/executable extensions are rejected. Accepted uploaded fonts are
+classified as `assetType: "font"` and served through the same account asset CDN
+path as other account assets.
+
 ## Operator Routes
 
 | Product operation | Roma route | Min role | Tokyo-worker route | Success payload |
@@ -158,6 +172,7 @@ Upload type rules:
 
 - accepted MIME families are `image/*`, `video/*`, and `audio/*`;
 - `application/pdf` is accepted;
+- accepted font uploads must match the exact font extension/MIME pairs above;
 - scriptable/executable extensions are rejected;
 - SVG-like uploads pass SVG safety checks before write.
 

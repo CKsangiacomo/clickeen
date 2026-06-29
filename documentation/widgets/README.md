@@ -61,7 +61,7 @@ account package files. They require a named account command or a future broad
 re-resolution command with exact coordinates. Public serving must not compare
 stored account package bytes to current widget source on visitor requests.
 
-`/dieter/**`, `/fonts/**`, and account asset references remain external
+`/dieter/**` and account asset references remain external
 delivery references owned by their own roots.
 
 Truth order follows `documentation/architecture/CONTEXT.md`: runtime code and

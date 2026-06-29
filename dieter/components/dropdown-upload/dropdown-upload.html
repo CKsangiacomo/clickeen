@@ -54,8 +54,8 @@
 
     <div class="diet-popover__body">
       <div class="diet-dropdown-upload__panel body-xs" data-has-file="false" data-kind="empty">
-        <div class="diet-dropdown-upload__preview" aria-hidden="true">
-          <div class="diet-dropdown-upload__preview-frame">
+        <div class="diet-dropdown-upload__preview">
+          <div class="diet-dropdown-upload__preview-frame" aria-hidden="true">
             <img class="diet-dropdown-upload__preview-img" data-role="img" alt="" />
             <div class="diet-dropdown-upload__preview-video" data-role="video">
               <video
@@ -81,12 +81,12 @@
               <div class="diet-dropdown-upload__preview-doc-ext label-s" data-role="ext"></div>
             </div>
             <div class="diet-dropdown-upload__preview-empty" data-role="empty">
-              <span class="diet-dropdown-upload__preview-empty-icon" data-icon="photo"></span>
+              <span class="diet-dropdown-upload__preview-empty-icon" data-icon="photo" aria-hidden="true"></span>
             </div>
           </div>
           <div class="diet-dropdown-upload__preview-meta">
-            <div class="diet-dropdown-upload__preview-name label-s" data-role="name"></div>
-            <div class="diet-dropdown-upload__preview-error label-xs" data-role="error"></div>
+            <div class="diet-dropdown-upload__preview-name label-s" data-role="name" role="status"></div>
+            <div class="diet-dropdown-upload__preview-error label-xs" data-role="error" role="alert"></div>
           </div>
         </div>
 

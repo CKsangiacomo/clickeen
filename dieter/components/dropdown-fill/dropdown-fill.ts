@@ -167,6 +167,7 @@ function createState(root: HTMLElement, accountAssets: AccountAssetsClient): Dro
   swatches.forEach((swatch) => {
     const color = swatch.dataset.color || '';
     swatch.style.setProperty('--swatch-color', color);
+    if (color) swatch.setAttribute('aria-label', `Color ${color}`);
   });
 
   return {
@@ -455,13 +456,13 @@ function syncFromValue(state: DropdownFillState, raw: string) {
   const rawValue = String(raw ?? '');
   const fill = rawValue === '' ? { type: 'none' as const } : parseFillValue(rawValue, state.root);
   if (!fill) {
-    state.root.dataset.invalid = 'true';
+    setInvalidFillState(state, true);
     updateHeader(state, { text: 'Invalid', muted: false, chipColor: null, noneChip: true });
     setRemoveFillState(state, true);
     return;
   }
 
-  delete state.root.dataset.invalid;
+  setInvalidFillState(state, false);
   const nextMode = resolveModeFromFill(state.mode, state.allowedModes, fill);
   setMode(state, nextMode);
 
@@ -496,7 +497,7 @@ function syncFromValue(state: DropdownFillState, raw: string) {
   if (fill.type === 'color') {
     const parsed = parseColor(fill.color || '', state.root);
     if (!parsed) {
-      state.root.dataset.invalid = 'true';
+      setInvalidFillState(state, true);
       state.hsv = { h: 0, s: 0, v: 0, a: 0 };
       syncColorUI(state, { commit: false });
       return;
@@ -624,6 +625,21 @@ function updateHeader(
       headerValueChip.classList.remove('is-white');
     }
   }
+}
+
+function setInvalidFillState(state: DropdownFillState, invalid: boolean): void {
+  const control = state.root.querySelector<HTMLElement>('.diet-dropdown-fill__control');
+  if (invalid) {
+    state.root.dataset.invalid = 'true';
+    control?.setAttribute('aria-invalid', 'true');
+    state.headerValueLabel?.setAttribute('role', 'alert');
+    state.headerValueLabel?.setAttribute('aria-live', 'assertive');
+    return;
+  }
+  delete state.root.dataset.invalid;
+  control?.removeAttribute('aria-invalid');
+  state.headerValueLabel?.removeAttribute('role');
+  state.headerValueLabel?.removeAttribute('aria-live');
 }
 
 function setMode(state: DropdownFillState, mode: FillMode) {

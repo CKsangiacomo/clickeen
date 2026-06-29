@@ -220,13 +220,3 @@
   color: inherit;
   text-decoration: none;
 }
-
-@media (prefers-color-scheme: dark) {
-  .diet-dropdown-header,
-  .diet-dropdown-edit__editor {
-    background: var(--color-system-gray-5);
-  }
-  .diet-dropdown-edit__palette .diet-btn-ic {
-    background: var(--color-system-gray-6);
-  }
-}

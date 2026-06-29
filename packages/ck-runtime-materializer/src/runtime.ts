@@ -14,6 +14,7 @@ import {
 } from './files';
 import { materializerFailure } from './errors';
 import type { RuntimeMaterializerCompiledWidget, RuntimeMaterializerFailure } from './types';
+import type { RuntimeTypographyData } from '@clickeen/widget-shell';
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
@@ -68,6 +69,7 @@ export function buildRuntime(args: {
   baseLocale: string;
   requestedLocale: string;
   locales: Record<string, Record<string, unknown>>;
+  typographyData?: RuntimeTypographyData;
 }): { ok: true; runtimeJs: string } | RuntimeMaterializerFailure {
   const localePolicy = {
     baseLocale: args.baseLocale,
@@ -96,11 +98,21 @@ export function buildRuntime(args: {
 ${WIDGET_SHELL_RUNTIME_PAYLOAD_END}`;
 
   const chunks = [payload];
+  if (args.typographyData) {
+    chunks.push(runtimeModuleChunk(
+      'shared/accountTypographyData.js',
+      `(function () {
+  if (typeof window === 'undefined') return;
+  window.CK_WIDGET_TYPOGRAPHY_DATA = Object.freeze(${JSON.stringify(args.typographyData)});
+})();`,
+    ));
+  }
   let widgetClientChunk: string | null = null;
   const includedRuntimeKeys = new Set<string>();
   for (const src of args.scriptSources) {
     const key = resolveProductPath(args.compiled.widgetname, src);
     if (!key || !key.endsWith('.js')) continue;
+    if (args.typographyData && key === 'product/widgets/shared/typography-data.js') continue;
     const source = packageSource({ compiled: args.compiled, key });
     if (!source) return materializerFailure('widget_package_file_missing', key, [key]);
     const chunk = runtimeModuleChunk(key, source);

@@ -40,12 +40,12 @@ function safeJsonParse(text: string): unknown {
 function normalizeAssistantText(text: string): string {
   const candidate = (text || '').trim();
   if (!candidate) return '';
-  if (looksLikeHtmlErrorPage(candidate)) return 'Copilot is temporarily unavailable (received an HTML error page). Please try again in a moment.';
-  if (candidate === 'Unhandled error') return 'Copilot hit a backend timeout. Please try again (or ask for a smaller, single change).';
+  if (looksLikeHtmlErrorPage(candidate)) return 'Copilot is temporarily unavailable. Please try again in a moment.';
+  if (candidate === 'Unhandled error') return 'Copilot could not complete the request. Please try again with a smaller change.';
   if (candidate.toLowerCase().includes('empty model response')) {
-    return 'Copilot got an empty response. Please try again with a smaller, more specific request.';
+    return 'Copilot did not return an edit. Please try again with a smaller, more specific request.';
   }
-  if (candidate.toLowerCase().includes('execution timeout')) return 'Copilot timed out. Please try again (or ask for a smaller, single change).';
+  if (candidate.toLowerCase().includes('execution timeout')) return 'Copilot timed out. Please try again with a smaller change.';
   return candidate;
 }
 
@@ -82,7 +82,6 @@ function formatIssueSummary(issues: unknown): string {
 }
 
 function normalizeErrorMessage(args: { resStatus?: number; parsed?: any; bodyText?: string; fallback?: string }): string {
-  const bodyText = args.bodyText || '';
   const parsed = args.parsed || null;
   const reasonKey =
     typeof parsed?.reasonKey === 'string'
@@ -91,12 +90,6 @@ function normalizeErrorMessage(args: { resStatus?: number; parsed?: any; bodyTex
         ? parsed.error.reasonKey
         : '';
   const issueSummary = formatIssueSummary(parsed?.issues ?? parsed?.error?.issues);
-  const detail =
-    typeof parsed?.detail === 'string'
-      ? parsed.detail
-      : typeof parsed?.error?.detail === 'string'
-        ? parsed.error.detail
-        : '';
   const reasonKeyMessage = reasonKey ? copilotReasonKeyMessage(reasonKey) : null;
   if (reasonKey === 'coreui.errors.copilot.invalidContext' && reasonKeyMessage) {
     return `${reasonKeyMessage}${issueSummary}`;
@@ -104,20 +97,7 @@ function normalizeErrorMessage(args: { resStatus?: number; parsed?: any; bodyTex
   // Surface the actual failing field(s) instead of hiding every rejection behind a
   // blanket "Refresh Builder" (121C §8.2 visible-failure taxonomy).
   if (reasonKeyMessage) return `${reasonKeyMessage}${issueSummary}`;
-  if (detail.trim()) return normalizeAssistantText(`${detail.trim()}${issueSummary}`);
-
-  const parsedMessage =
-    typeof parsed?.message === 'string'
-      ? parsed.message
-      : typeof parsed?.error?.message === 'string'
-        ? parsed.error.message
-        : typeof parsed?.error === 'string'
-          ? parsed.error
-          : '';
-
-  const candidate = (`${parsedMessage || (parsed === null ? bodyText : '') || args.fallback || ''}${issueSummary}`).trim();
-  if (!candidate) return 'Copilot failed unexpectedly. Please try again.';
-  return normalizeAssistantText(candidate);
+  return args.fallback || 'Copilot failed unexpectedly. Please try again.';
 }
 
 function newId(): string {
@@ -493,8 +473,7 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
           normalizeErrorMessage({
             resStatus: res.status,
             parsed,
-            bodyText: text,
-            fallback: `Copilot request failed (${res.status}).`,
+            fallback: 'Copilot could not complete the request. Please try again with a smaller change.',
           }),
         );
       }
@@ -720,7 +699,7 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
             }}
             disabled={status === 'loading' || Boolean(uiDisabledReason) || !draft.trim()}
           >
-            <span className="diet-btn-txt__label">{status === 'loading' ? '...' : 'Send'}</span>
+            <span className="diet-btn-txt__label">{status === 'loading' ? 'Sending...' : 'Send'}</span>
           </button>
         </div>
       </div>

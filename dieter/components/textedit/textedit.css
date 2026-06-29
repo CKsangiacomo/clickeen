@@ -290,17 +290,3 @@
   color: inherit;
   text-decoration: none;
 }
-
-/* Dark mode tweaks */
-@media (prefers-color-scheme: dark) {
-  .diet-textedit__control,
-  .diet-textedit__editor {
-    background: var(--color-system-gray-5);
-  }
-  .diet-textedit__palette .diet-btn-ic {
-    background: var(--color-system-gray-6);
-  }
-  .diet-textedit__linkpopover {
-    background: var(--color-system-gray-6);
-  }
-}

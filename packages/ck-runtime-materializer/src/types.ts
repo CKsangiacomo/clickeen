@@ -1,4 +1,5 @@
 import type { WidgetEditableFieldsContract } from '@clickeen/ck-contracts/translated-value-primitives';
+import type { RuntimeTypographyData } from '@clickeen/widget-shell';
 
 export const RUNTIME_MATERIALIZER_CONTRACT_VERSION = 'ck-runtime-materializer:124B';
 
@@ -43,6 +44,7 @@ export type RuntimeMaterializerInput = {
   artifactCoordinate: RuntimeMaterializerArtifactCoordinate;
   displayName: string | null;
   state: Record<string, unknown>;
+  typographyData?: RuntimeTypographyData;
   localeOverlay?: RuntimeMaterializerLocaleOverlay;
   evidence: RuntimeMaterializerEvidenceInput;
 };
@@ -80,6 +82,7 @@ export type RuntimeMaterializerErrorReason =
   | 'locale_overlay_key_unexpected'
   | 'locale_overlay_value_invalid'
   | 'locale_overlay_scope_unsupported'
+  | 'typography_data_invalid'
   | 'source_state_invalid';
 
 export type RuntimeMaterializerFailure = {

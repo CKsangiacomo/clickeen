@@ -37,10 +37,27 @@ function tierRank(tier: AccountTier): number {
   }
 }
 
+function formatTierLabel(tier: AccountTier): string {
+  switch (tier) {
+    case 'free':
+      return 'Free';
+    case 'tier1':
+      return 'Tier 1';
+    case 'tier2':
+      return 'Tier 2';
+    case 'tier3':
+      return 'Tier 3';
+    case 'tier4':
+      return 'Tier 4';
+    default:
+      return tier;
+  }
+}
+
 function summarizeTierDrop(fromTier: AccountTier, toTier: AccountTier): { title: string; lines: string[] } {
   return {
     title: 'Plan update',
-    lines: [`Your plan changed from ${fromTier} -> ${toTier}.`, 'Review your account to see what stays live.'],
+    lines: [`Your plan changed from ${formatTierLabel(fromTier)} to ${formatTierLabel(toTier)}.`, 'Review your account to see what stays live.'],
   };
 }
 
@@ -70,9 +87,8 @@ export function RomaAccountNoticeModal() {
         method: 'POST',
       });
       await reload();
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      setDismissError(message);
+    } catch {
+      setDismissError('Could not dismiss this notice. Please try again.');
     } finally {
       setDismissLoading(false);
     }
@@ -95,7 +111,7 @@ export function RomaAccountNoticeModal() {
             </p>
           ))}
         </div>
-        {dismissError ? <p className="body-m">Notice action failed: {dismissError}</p> : null}
+        {dismissError ? <p className="body-m" role="alert">{dismissError}</p> : null}
         <div className="roma-modal__actions">
           <Link className="diet-btn-txt" data-size="md" data-variant="line2" href="/settings">
             <span className="diet-btn-txt__label body-m">Open settings</span>

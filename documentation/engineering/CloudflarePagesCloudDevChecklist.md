@@ -9,10 +9,10 @@ secrets.
 
 Rules:
 - Cloudflare Pages Git build is the deploy plane for Bob, Roma, and Prague.
-- Tokyo/R2 git-authored deploy roots are `dieter/`, `fonts/`, `product/`, and `prague/`; only `accounts/` is runtime-managed account storage.
+- Tokyo/R2 git-authored deploy roots are `dieter/`, `product/`, and `prague/`; only `accounts/` is runtime-managed account storage.
 - Tokyo-worker/R2 is the source/deploy and friendly-serving boundary for
   Tokyo-owned static product roots. It must not become a second authority for
-  product widget software, Dieter media, fonts, product media, or Prague
+  product widget software, Dieter media, product media, or Prague
   content.
 - Widget software is served from canonical R2 `product/widgets/**`. Friendly `/widgets/**` routes must resolve there, not to root `widgets/**` or stale static output.
 - Prague page translations deploy beside page JSON under `prague/pages/{widget}/{page}.translations/{locale}.json`, never under root `l10n/**`.
@@ -324,7 +324,6 @@ These roots are deployed from git-authored repo sources into R2. They are not mu
 | Repo source | Canonical R2 root | Notes |
 | --- | --- | --- |
 | `tokyo/product/dieter/**` | `dieter/**` | Built Dieter manifest, tokens, components, and icons. |
-| `tokyo/product/fonts/**` | `fonts/**` | Global Clickeen font CDN media. Account-uploaded fonts stay under `accounts/{accountPublicId}/...`. |
 | `tokyo/product/widgets/**` | `product/widgets/**` | Widget software. Friendly `/widgets/**` routes must serve these objects. |
 | `tokyo/roma/**` | `product/roma/**` | Product app/static support media. |
 | `tokyo/prague/**` | `prague/**` | Prague page/content/GTM media, including page-local translation sidecars. |

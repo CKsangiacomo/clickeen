@@ -42,7 +42,7 @@ function resolveSettingsErrorCopy(reason: string, fallback: string): string {
   const mapped = SETTINGS_REASON_COPY[normalized];
   if (mapped) return mapped;
   if (normalized.startsWith('HTTP_') || normalized.startsWith('coreui.')) return fallback;
-  return normalized;
+  return fallback;
 }
 
 export function SettingsDomain() {
@@ -154,7 +154,7 @@ export function SettingsDomain() {
         <h2 className="heading-6">Ownership</h2>
         <p className="body-m">Owner transfer is the only way to change who the account belongs to.</p>
         {!canManageAccount ? <p className="body-s">Only the current owner can transfer ownership.</p> : null}
-        {membersError ? <p className="body-m">{membersError}</p> : null}
+        {membersError ? <p className="body-m" role="alert">{membersError}</p> : null}
         <div className="roma-toolbar">
           <select
             className="roma-select"
@@ -181,8 +181,9 @@ export function SettingsDomain() {
             <span className="diet-btn-txt__label body-m">{ownerTransferLoading ? 'Transferring…' : 'Transfer ownership'}</span>
           </button>
         </div>
-        {ownerCandidates.length === 0 && canManageAccount ? <p className="body-s">Add another member before transferring ownership.</p> : null}
-        {ownerTransferError ? <p className="body-m">{ownerTransferError}</p> : null}
+        {ownerTransferLoading ? <p className="body-s" role="status">Transferring ownership...</p> : null}
+        {ownerCandidates.length === 0 && canManageAccount ? <p className="body-s" role="status">Add another member before transferring ownership.</p> : null}
+        {ownerTransferError ? <p className="body-m" role="alert">{ownerTransferError}</p> : null}
       </section>
 
     </>

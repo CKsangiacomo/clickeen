@@ -491,7 +491,7 @@ a {
   overflow: auto;
   margin: 0;
   border-radius: var(--control-radius-lg);
-  background: var(--color-system-gray-7);
+  background: var(--role-surface-muted);
   padding: var(--space-3);
   color: var(--color-system-black);
   font: 400 var(--fs-13) / var(--lh-body-ui) var(--font-mono);

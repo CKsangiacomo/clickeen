@@ -26,13 +26,13 @@ type TranslationActivityRow = {
 
 function resolveLocaleLabel(locale: string): string {
   const normalized = normalizeLocaleToken(locale) ?? '';
-  if (!normalized) return '';
+  if (!normalized) return 'Language unavailable';
   return (
     resolveCanonicalLocaleLabel({
       locales: CANONICAL_LOCALES,
       uiLocale: BUILDER_UI_LOCALE,
       locale: normalized,
-    }) || normalized
+    }) || 'Language unavailable'
   );
 }
 
@@ -106,6 +106,8 @@ function AgentActivity({
   );
 }
 
+const TRANSLATION_GENERATION_FAILED_COPY = 'Translation generation failed. Please try again.';
+
 export function TranslationsPanel({
   translationPreviewLocale,
   onTranslationPreviewLocaleChange,
@@ -125,6 +127,7 @@ export function TranslationsPanel({
   const [isStartingTranslations, setIsStartingTranslations] = useState(false);
   const [isGeneratingTranslations, setIsGeneratingTranslations] = useState(false);
   const [activityEvents, setActivityEvents] = useState<AgentActivityEvent[]>([]);
+  const [generationError, setGenerationError] = useState<string | null>(null);
   const instanceId = chrome.meta?.instanceId ?? '';
   const baseLocale = translationSetup?.baseLocale || translatedLocales?.baseLocale || '';
   const planTranslationsCopy =
@@ -179,6 +182,7 @@ export function TranslationsPanel({
   const runGenerateTranslations = async () => {
     if (generateButton.disabled || !instanceId) return;
     setActivityEvents([]);
+    setGenerationError(null);
     setIsStartingTranslations(true);
     setIsGeneratingTranslations(true);
     try {
@@ -188,12 +192,17 @@ export function TranslationsPanel({
           setActivityEvents((current) => [...current, event].slice(-12));
         },
       });
-      if (response.ok) onRequestTranslationsRefresh();
+      if (response.ok) {
+        onRequestTranslationsRefresh();
+      } else {
+        setGenerationError(TRANSLATION_GENERATION_FAILED_COPY);
+      }
       setIsGeneratingTranslations(false);
       setActivityEvents([]);
     } catch {
       setIsGeneratingTranslations(false);
       setActivityEvents([]);
+      setGenerationError(TRANSLATION_GENERATION_FAILED_COPY);
     } finally {
       setIsStartingTranslations(false);
     }
@@ -201,6 +210,7 @@ export function TranslationsPanel({
   useEffect(() => {
     setIsGeneratingTranslations(false);
     setActivityEvents([]);
+    setGenerationError(null);
   }, [instanceId]);
   if (!session.compiled) {
     return (
@@ -239,6 +249,11 @@ export function TranslationsPanel({
           ) : null}
           {isGeneratingTranslations ? (
             <AgentActivity title="Translation Agent" rows={activityRows} />
+          ) : null}
+          {generationError ? (
+            <div className="body-s" role="alert">
+              {generationError}
+            </div>
           ) : null}
         </div>
         <SelectField

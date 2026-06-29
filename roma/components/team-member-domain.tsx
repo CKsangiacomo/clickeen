@@ -48,7 +48,7 @@ function resolveTeamMemberErrorCopy(reason: string, fallback: string): string {
   const mapped = TEAM_MEMBER_REASON_COPY[normalized];
   if (mapped) return mapped;
   if (normalized.startsWith('HTTP_') || normalized.startsWith('coreui.')) return fallback;
-  return normalized;
+  return fallback;
 }
 
 function resolveErrorReason(payload: unknown, fallback: string): string {
@@ -192,7 +192,7 @@ export function TeamMemberDomain({ memberId }: TeamMemberDomainProps) {
       </section>
 
       {error ? (
-        <section className="rd-canvas-module">
+        <section className="rd-canvas-module" role="alert">
           <p className="body-m">{error}</p>
           <button className="diet-btn-txt" data-size="md" data-variant="line2" type="button" onClick={() => void refreshMember()} disabled={loading}>
             <span className="diet-btn-txt__label body-m">Retry</span>
@@ -200,14 +200,14 @@ export function TeamMemberDomain({ memberId }: TeamMemberDomainProps) {
         </section>
       ) : null}
 
-      {loading && !member && !error ? <section className="rd-canvas-module body-m">Loading team member...</section> : null}
+      {loading && !member && !error ? <section className="rd-canvas-module body-m" role="status">Loading team member...</section> : null}
 
       {member ? (
         <>
           <section className="rd-canvas-module">
             <div className="roma-inline-stack" style={{ justifyContent: 'space-between', gap: '12px' }}>
               <div>
-                <h2 className="heading-h3">{resolveMemberDisplayName(member.member.profile, member.member.userId)}</h2>
+                <h2 className="heading-3">{resolveMemberDisplayName(member.member.profile, member.member.userId)}</h2>
                 <p className="body-s">{member.member.profile?.primaryEmail ?? 'No primary email recorded'}</p>
               </div>
               <div>
@@ -219,7 +219,7 @@ export function TeamMemberDomain({ memberId }: TeamMemberDomainProps) {
           </section>
 
           <section className="rd-canvas-module">
-            <h3 className="heading-h4">Membership</h3>
+            <h3 className="heading-4">Membership</h3>
             {member.member.role === 'owner' ? (
               <p className="body-s">Owner role is final account-holder authority. Ownership transfer stays on a dedicated flow.</p>
             ) : null}
@@ -261,7 +261,7 @@ export function TeamMemberDomain({ memberId }: TeamMemberDomainProps) {
           </section>
 
           <section className="rd-canvas-module">
-            <h3 className="heading-h4">Person</h3>
+            <h3 className="heading-4">Person</h3>
             <p className="body-s">Personal details are read-only here. The member manages them in User Settings.</p>
             <div className="roma-form-grid">
               <div className="roma-field">
@@ -292,7 +292,7 @@ export function TeamMemberDomain({ memberId }: TeamMemberDomainProps) {
           </section>
 
           {mutationError ? (
-            <section className="rd-canvas-module">
+            <section className="rd-canvas-module" role="alert">
               <p className="body-m">{mutationError}</p>
             </section>
           ) : null}

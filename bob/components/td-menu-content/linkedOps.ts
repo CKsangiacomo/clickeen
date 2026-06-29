@@ -1,9 +1,13 @@
 import { isRecord as isPlainRecord } from '@clickeen/ck-contracts';
 import type { CompiledWidget } from '../../lib/types';
 import type { WidgetOp } from '../../lib/ops';
+import type { AccountFontLibrary } from '@clickeen/widget-shell';
+import {
+  getAccountFontAllowedStyles,
+  getAccountFontAllowedWeights,
+} from '@clickeen/widget-shell';
 import { getAt } from '../../lib/utils/paths';
 import { buildControlMatchers, findBestControlForPath } from '../../lib/edit/controls';
-import { getCkTypographyAllowedStyles, getCkTypographyAllowedWeights } from '../../lib/edit/typography-fonts';
 
 type PresetSpec = {
   customValue?: string;
@@ -115,6 +119,7 @@ export function expandLinkedOps(args: {
   compiled: CompiledWidget | null;
   instanceData: Record<string, unknown>;
   ops: WidgetOp[];
+  fontLibrary: AccountFontLibrary | null;
 }): WidgetOp[] {
   const setOp = (path: string, value: unknown): WidgetOp => ({ op: 'set', path, value });
   const presetEntries = buildPresetEntries(args.compiled?.presets);
@@ -199,8 +204,9 @@ export function expandLinkedOps(args: {
           if (presetPath === 'typography.globalFamily') {
             const familyValue = typeof presetValue === 'string' ? presetValue : '';
             if (!familyValue) throw new Error(`[BobLinkedOps] preset "${op.value}" has an invalid typography.globalFamily value`);
-            const allowedWeights = getCkTypographyAllowedWeights(familyValue);
-            const allowedStyles = getCkTypographyAllowedStyles(familyValue);
+            if (!args.fontLibrary) throw new Error('[BobLinkedOps] missing account font library');
+            const allowedWeights = getAccountFontAllowedWeights(args.fontLibrary, familyValue);
+            const allowedStyles = getAccountFontAllowedStyles(args.fontLibrary, familyValue);
             typographyFamilyPaths.forEach((familyPath) => {
               if (isAllowedPath(familyPath)) {
                 expanded.push(setOp(familyPath, familyValue));

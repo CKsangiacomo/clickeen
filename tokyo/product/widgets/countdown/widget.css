@@ -1,6 +1,6 @@
 .ck-countdown-widget {
   --countdown-text-color: var(--color-system-black);
-  --countdown-item-bg: var(--color-system-gray-10);
+  --countdown-item-bg: var(--color-system-gray-6-step5);
   --countdown-cta-bg: var(--color-system-blue);
   --countdown-cta-bg-hover: color-mix(
     in oklab,

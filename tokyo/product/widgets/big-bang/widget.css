@@ -35,7 +35,7 @@
 
 .ck-bigBang__statement {
   color: var(--typo-bigBang-color, var(--color-system-black));
-  font-family: var(--typo-bigBang-family, var(--font-display));
+  font-family: var(--typo-bigBang-family, var(--font-ui));
   font-size: var(--typo-bigBang-size, 84px);
   font-style: var(--typo-bigBang-style, normal);
   font-weight: var(--typo-bigBang-weight, 800);

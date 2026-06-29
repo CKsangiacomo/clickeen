@@ -235,7 +235,6 @@ storage:
 ```text
 product/widgets/{widgetType}/
 dieter/
-fonts/
 prague/
 ```
 

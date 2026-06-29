@@ -1,8 +1,13 @@
 import { isRecord } from '@clickeen/ck-contracts';
+import {
+  normalizeAccountFontLibrary,
+  type AccountFontLibrary,
+} from '@clickeen/widget-shell';
 import { callTokyo, type TokyoCallContext } from './tokyo-client';
 
 export type AccountWidgetDefaultsDocument = {
   accountId: string;
+  fontLibrary: AccountFontLibrary;
   shell: Record<string, unknown>;
   widgets: Record<string, {
     core: Record<string, unknown>;
@@ -14,6 +19,8 @@ export type AccountWidgetDefaultsDocument = {
 function normalizeAccountWidgetDefaults(raw: unknown): AccountWidgetDefaultsDocument | null {
   if (!isRecord(raw)) return null;
   if (typeof raw.accountId !== 'string' || !isRecord(raw.shell) || !isRecord(raw.widgets)) return null;
+  const fontLibrary = normalizeAccountFontLibrary(raw.fontLibrary);
+  if (!fontLibrary) return null;
   const widgets: AccountWidgetDefaultsDocument['widgets'] = {};
   for (const [widgetType, widgetDefaults] of Object.entries(raw.widgets)) {
     if (!isRecord(widgetDefaults) || !isRecord(widgetDefaults.core)) return null;
@@ -23,6 +30,7 @@ function normalizeAccountWidgetDefaults(raw: unknown): AccountWidgetDefaultsDocu
   }
   return {
     accountId: raw.accountId,
+    fontLibrary,
     shell: raw.shell,
     widgets,
     seededAt: typeof raw.seededAt === 'string' ? raw.seededAt : '',

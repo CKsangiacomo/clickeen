@@ -3,6 +3,7 @@ import type { DropdownFillHeaderUpdate, DropdownFillState } from './dropdown-fil
 import type { FillValue } from './fill-types';
 import {
   dispatchAccountAssetUpsell,
+  resolveAccountAssetErrorCopy,
   type AccountAssetRecord,
 } from '../shared/account-assets';
 import { resolveSingleAccountAsset } from '../shared/account-asset-resolve';
@@ -285,11 +286,13 @@ async function openAssetBrowser(args: {
   setBrowserOpen(oppositeBrowser, oppositeButton, false);
   setBrowserOpen(browser, button, true);
   setFillUploadingState(args.state, true);
+  browserMessage?.setAttribute('role', 'status');
   setAssetPanelMessage(browserMessage, 'Loading assets…');
   clearAssetBrowser(browserList);
 
   try {
     const assets = filterAssetsForKind(await args.state.accountAssets.listAssets(), args.kind);
+    browserMessage?.setAttribute('role', 'status');
     setAssetPanelMessage(browserMessage, assets.length ? '' : 'No assets available yet.');
     renderAssetBrowserRows({
       state: args.state,
@@ -298,9 +301,11 @@ async function openAssetBrowser(args: {
       deps: args.deps,
     });
   } catch (error) {
+    browserMessage?.setAttribute('role', 'alert');
+    const message = error instanceof Error ? error.message : 'coreui.errors.db.readFailed';
     setAssetPanelMessage(
       browserMessage,
-      error instanceof Error ? error.message : 'coreui.errors.db.readFailed',
+      resolveAccountAssetErrorCopy(message, 'Failed to load assets. Please try again.'),
     );
     clearAssetBrowser(browserList);
   } finally {
@@ -331,7 +336,10 @@ async function handleAssetUpload(args: {
     if (dispatchAccountAssetUpsell(args.state.root, message)) {
       return;
     }
-    setAssetPanelMessage(args.kind === 'image' ? args.state.imageMessage : args.state.videoMessage, message);
+    setAssetPanelMessage(
+      args.kind === 'image' ? args.state.imageMessage : args.state.videoMessage,
+      resolveAccountAssetErrorCopy(message, 'Asset upload failed. Please try again.'),
+    );
   } finally {
     setFillUploadingState(args.state, false);
   }

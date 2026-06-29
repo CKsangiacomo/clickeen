@@ -111,7 +111,6 @@ Tokyo R2 is an ownership model, not a URL map. The only canonical roots are:
 ```text
 accounts/
 dieter/
-fonts/
 product/
 prague/
 ```
@@ -121,7 +120,6 @@ Only `accounts/` is runtime-managed by account/product operations. It stores acc
 The other roots are git-authored deploy artifacts synced to R2:
 
 - `dieter/` for shared design-system media
-- `fonts/` for global Clickeen-provided fonts
 - `product/` for logged-in product media and widget software
 - `prague/` for marketing/site/GTM content; Prague page translations stay beside each page JSON as `{page}.translations/{locale}.json`
 
@@ -220,7 +218,7 @@ If you change runtime behavior, update docs in the same PR/commit:
   - Update `documentation/capabilities/localization.md` + `documentation/services/tokyo-worker.md` (and `documentation/capabilities/seo-geo.md` when schema/excerpt behavior changes)
 - **Tokyo R2 root/storage changes**
   - Update `documentation/architecture/Overview.md`, `documentation/architecture/Tenets.md`, and the owning system docs
-  - Re-check that only `accounts/` is runtime-managed and that `dieter/`, `fonts/`, `product/`, and `prague/` remain deploy-managed roots
+  - Re-check that only `accounts/` is runtime-managed and that `dieter/`, `product/`, and `prague/` remain deploy-managed roots
 
 ---
 
