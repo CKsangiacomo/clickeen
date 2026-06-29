@@ -71,7 +71,33 @@ export async function POST(request: NextRequest, context: RouteContext) {
     activeLocales: activeLocalesToMaterialize,
     accountCapsule: current.value.authzToken,
     requestId: current.value.requestId,
-  });
+  }).catch((error): Awaited<ReturnType<typeof materializeAccountInstanceLocalePackages>> => ({
+    ok: false,
+    status: 502,
+    error: {
+      kind: 'UPSTREAM_UNAVAILABLE',
+      reasonKey: 'coreui.errors.instance.embedNotReady',
+      detail: error instanceof Error ? error.message : String(error),
+    },
+    value: {
+      ok: false,
+      completed: [],
+      skipped: activeLocalesToMaterialize.map((locale) => ({
+        accountId,
+        instanceId,
+        locale,
+        phase: 'not-attempted-after-failure',
+      })),
+      failed: {
+        accountId,
+        instanceId,
+        locale: activeLocalesToMaterialize[0] ?? '',
+        phase: 'materializer',
+        reasonKey: 'coreui.errors.instance.embedNotReady',
+        detail: error instanceof Error ? error.message : String(error),
+      },
+    },
+  }));
   if (!packages.ok) {
     return withSession(
       request,
