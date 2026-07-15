@@ -1,6 +1,6 @@
 # 126A - PRD: Accessibility
 
-Status: PRE-EXECUTION STEP 7 AMENDED AFTER PEER-REVIEW FINDINGS - final executable plan records six direct semantic/copy-gap groups; step 8 exact-tree re-review and all step-9 implementation remain pending.
+Status: PRE-EXECUTION STEP 8 COMPLETE - three independent lenses are green at exact tree `c06fa7db`; all step-9 implementation remains gated on 126B-126M completing Step 8.
 Parent: `126__PRD__UI_Optimization_Program.md` (MAMA).
 Series order: 126A of 126A-126M.
 KB doc target: `documentation/engineering/UI/accessibility.md`.
@@ -21,6 +21,7 @@ contrast enforcement, modal machinery, or UI redesign.
 - Codex research: `research/126A_Research_Codex.md`.
 - GLM research: `research/126A_Research_GLM.md`.
 - GLM peer review: `PRs/126A__GLM_PR.md`.
+- Exact-tree Step-8 review: `PRs/126A__Step8_Review.md`.
 - Codex step-6 gap audit: `audits/126A__Audit__Accessibility.md`.
 - Living docs: `documentation/engineering/UI/**`, `documentation/services/bob.md`.
 
@@ -508,13 +509,14 @@ next slice.
   confirmed contract mismatch; record execution evidence in this PRD without
   duplicating doctrine.
 
-### Step-8 Handoff
+### Step-8 Outcome
 
-Step 8 must review this exact file map and the exact recorded Git tree before
-any 126A code change. It must attack omitted consumers, generated-file drift,
-raw-copy escape paths, test-only behavior, 126I/126K scope theft, and accidental
-backend/data/deploy-configuration changes. Step 7 completion is not Step 8
-approval and grants no implementation credit.
+Three independent lenses reviewed this exact file map green at tree `c06fa7db`.
+The review attacked omitted consumers, generated-file drift, raw-copy escape
+paths, request concurrency, partial-success truth, test-only behavior,
+126I/126K scope theft, and accidental backend/data/deploy-configuration changes.
+Evidence is recorded in `PRs/126A__Step8_Review.md`. This grants no Step-9
+implementation credit.
 
 ## Verification
 

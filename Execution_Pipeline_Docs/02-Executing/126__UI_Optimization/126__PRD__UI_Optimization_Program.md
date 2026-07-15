@@ -1,6 +1,6 @@
 # PRD 126 — MAMA: UI Optimization Program
 
-Status: PRE-EXECUTION STEPS 6-7 IN PROGRESS - 126A current-source gap audit and final executable PRD complete; 126A step 8, 126B-126M steps 6-8, and all step-9 execution remain pending.
+Status: PRE-EXECUTION STEPS 6-8 IN PROGRESS - 126A Steps 6-8 complete at reviewed tree `c06fa7db`; 126B-126M Steps 6-8 and all Step-9 execution remain pending.
 Owner: Clickeen product architecture + UI
 Date: 2026-06-26
 Stage: 02-Executing
@@ -355,5 +355,6 @@ current authority; it does not invent a second documentation surface.
 3. In progress: 126A has a current gap audit; 126B-126M still need exact
    code/doc mismatch and deletion maps (step 6).
 4. In progress: 126A has a final executable PRD; 126B-126M remain (step 7).
-5. Every final PRD is peer-reviewed at an exact recorded commit/tree (step 8).
+5. In progress: 126A is peer-reviewed green at exact tree `c06fa7db`;
+   126B-126M remain (step 8).
 6. Step 9 begins once, in dependency order, only after the remaining gates are green.

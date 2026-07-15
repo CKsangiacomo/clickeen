@@ -1,6 +1,6 @@
 # 126A Accessibility - Step 6 Current Gap Audit
 
-Status: STEP 6 RECONCILED AFTER STEP-8 FINDINGS - six current-source gap groups and owner routing recorded; Step 8 must review the amended exact tree and all step-9 implementation remains pending.
+Status: STEP 6 COMPLETE - six current-source gap groups and owner routing reconciled; Step 8 is green at exact tree `c06fa7db` and all Step-9 implementation remains pending.
 Parent PRD: `../126A__PRD__Accessibility.md`.
 Audit date: 2026-07-15.
 
@@ -164,5 +164,5 @@ authorized.
 
 126A Step 6 is reconciled as a pre-execution audit. Step 7 now carries all six
 direct gap groups into the exact change/test checklist in the parent 126A PRD.
-The domain is not implementation-ready until Step 8 independently reviews that
-amended checklist at an exact recorded tree. No step-9 execution has begun.
+Step 8 independently reviewed that checklist green at exact tree `c06fa7db`.
+No Step-9 execution has begun.
