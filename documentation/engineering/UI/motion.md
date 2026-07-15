@@ -2,14 +2,15 @@
 
 **Living, canonical reference - motion.**
 
-Authority: [`126F__PRD__Motion.md`](../../../Execution_Pipeline_Docs/02-Executing/126__UI_Optimization/126F__PRD__Motion.md).
+Canonical doctrine: this document.
+Execution PRD: [`126F__PRD__Motion.md`](../../../Execution_Pipeline_Docs/02-Executing/126__UI_Optimization/126F__PRD__Motion.md).
 
 Source of truth: `dieter/tokens/dieter-foundation-tokens.css`, Dieter component
 CSS/JS, and system chrome CSS in Bob, Roma, and DevStudio/Admin.
 
 ## Scope
 
-126F owns Dieter/system motion only:
+This document owns Dieter/system motion only:
 
 - Dieter components.
 - Bob/Roma operational chrome.
@@ -18,6 +19,11 @@ CSS/JS, and system chrome CSS in Bob, Roma, and DevStudio/Admin.
 Public-widget runtime motion is widget-owned product behavior. Carousel,
 ticker, autoplay, countdown, interpolation, and other widget-specific motion
 belong to the owning widget implementation and docs, not to Dieter motion law.
+That widget-owned boundary includes each widget's reduced-motion behavior.
+
+Prague consumes Dieter duration tokens in current static-site primitives. Any
+future change to a foundation duration token must verify those Prague consumers;
+their consumption does not make Prague motion a second Dieter authority.
 
 ## Tokens
 
@@ -50,6 +56,9 @@ reduced behavior at runtime.
 Clickeen system motion stays small. Motion exists only to clarify state change,
 reveal or hide a component, communicate real progress/activity, or orient the
 user during simple UI changes.
+
+Motion must not imply progress, activity, success, or completion that the
+owning product state has not actually reached.
 
 Do not create a motion framework, `MotionProvider`, choreography registry,
 animation runtime, enter/exit library, or imported Material/Apple/OpenAI motion

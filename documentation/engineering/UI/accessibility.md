@@ -1,29 +1,33 @@
 # Accessibility In Clickeen
 
-Living reference for 126A accessibility doctrine.
+Living reference for accessibility doctrine.
 
-- Authority: [`126A__PRD__Accessibility.md`](../../../Execution_Pipeline_Docs/02-Executing/126__UI_Optimization/126A__PRD__Accessibility.md).
+- Canonical doctrine: this document.
+- Execution PRD: [`126A__PRD__Accessibility.md`](../../../Execution_Pipeline_Docs/02-Executing/126__UI_Optimization/126A__PRD__Accessibility.md).
 - Related docs: [`components.md`](components.md), [`dialogs-and-modals.md`](dialogs-and-modals.md), [`interactions.md`](interactions.md), [`motion.md`](motion.md), [`color.md`](color.md).
 
-126A is not a generic accessibility program. It owns semantic product truth:
+This document is not a generic accessibility program. It owns semantic product truth:
 state, names, status, errors, dialog/popover/status honesty, and text
 inspectability.
 
-## What 126A Owns
+## What This Document Owns
 
-- Expose real selected/current/expanded/disabled/invalid/loading/error state when
-  the UI already communicates that state visually and a truthful semantic
-  mapping exists.
+- Expose real selected/current/expanded/disabled/invalid/loading/saving/
+  uploading/generating/success/failure/partial-success state when the UI already
+  communicates that state visually and a truthful semantic mapping exists.
 - Prefer native controls where they directly represent the action or input.
 - Give icon-only actions an accessible name.
 - Hide decorative icons and decorative media from semantic output.
 - Name dialog, popover, sheet, banner, and status surfaces honestly.
 - Keep operation status and error feedback visible and semantically honest.
 - Keep generated, translated, and user-authored text inspectable.
-- Route motion-only state-signal problems to 126F or the owning component/screen
-  PRD.
+- Resolve backend/service errors and reason keys to product copy before display.
+  Raw reason keys and locale/tier tokens are not user copy unless the product
+  explicitly presents them as operator coordinates.
+- Route motion-only state-signal problems to [`motion.md`](motion.md) or the
+  owning component/screen execution PRD.
 
-## What 126A Does Not Own
+## What This Document Does Not Own
 
 - WCAG certification.
 - Custom keyboard support.
@@ -39,36 +43,38 @@ inspectability.
 ## Current Useful Substrate
 
 - `.sr-only` exists in Dieter foundation tokens.
-- Global reduced-motion foundation exists and is owned by [`motion.md`](motion.md)
-  / 126F.
+- Global reduced-motion foundation exists and is owned by [`motion.md`](motion.md).
 - Dieter tabs and choice tiles expose useful existing semantics.
 - Bulk edit has dialog semantics as current component evidence.
 - Bob Workspace and TranslationsPanel include live/status/error semantics.
 - Roma nav includes current-page/nav labeling.
 - DevStudio token editor diff uses `aria-live`.
 
-These are current strengths, not proof that every surface follows 126A.
+These are current strengths, not proof that every surface follows this doctrine.
 
-## Routed Non-126A Work
+## Routed Work
 
-126A does not leave a generic accessibility backlog. If a future agent finds a
+This document does not leave a generic accessibility backlog. If a future agent finds a
 semantic or copy issue, it must name the exact file/path and route it to the
 owning PRD before changing it.
 
-- Native-control conversion for Dieter pseudo triggers belongs to 126I
-  Components. Current known source families are `dropdown-actions`,
-  `dropdown-fill`, `dropdown-border`, `dropdown-shadow`, `dropdown-upload`,
-  `dropdown-edit`, and `textrename`.
-- Dialog/popover mechanics belong to 126K Dialogs and Modals. 126A only names
-  existing surfaces and exposes truthful status/error state.
-- Text resizing and long-string proof belongs to 126I for reusable components,
-  126L for DevStudio screens, and 126M for Roma screens.
-- Contrast/readability evidence belongs to 126B. Human design decides colors;
+- Native-control conversion for Dieter pseudo triggers belongs to the component
+  doctrine and its execution PRD. The six current source families are
+  `dropdown-actions`, `dropdown-fill`, `dropdown-border`, `dropdown-shadow`,
+  `dropdown-upload`, and `dropdown-edit`. The independently generated upload
+  control inside `bulk-edit` must move with the `dropdown-upload` contract.
+  Unconsumed `textrename` is deleted rather than converted or preserved.
+- Dialog/popover mechanics belong to [`dialogs-and-modals.md`](dialogs-and-modals.md).
+  This document only names existing surfaces and exposes truthful status/error
+  state.
+- Text resizing and long-string proof belongs to the component, DevStudio, and
+  Roma execution PRDs.
+- Contrast/readability evidence belongs to [`color.md`](color.md). Human design decides colors;
   agents do not enforce contrast doctrine.
 - Public widget accessibility belongs to the owning widget runtime/docs unless a
   widget PRD explicitly brings that behavior into system scope.
 
-Icon semantics follow 126C: decorative icons are hidden, icon-only controls put
+Icon semantics follow [`iconography.md`](iconography.md): decorative icons are hidden, icon-only controls put
 the name on the control, and meaningful standalone icons need an explicit label
 rule in the owning consumer.
 
@@ -89,11 +95,11 @@ generating, failed, blocked, or complete, the surface needs visible status/error
 truth.
 
 Do not turn this doc into keyboard, focus, touch-target, contrast, modal, or
-validator work. Those are explicitly outside 126A unless a later human-owned PRD
+validator work. Those are explicitly outside this doctrine unless a later human-owned PRD
 changes that scope.
 
 ## Public Widgets
 
-System/account/admin UI follows 126A. Public widget runtime accessibility belongs
+System/account/admin UI follows this doctrine. Public widget runtime accessibility belongs
 to the owning widget runtime/docs unless a widget PRD explicitly brings that
 behavior into system scope.

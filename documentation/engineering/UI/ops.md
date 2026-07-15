@@ -1,14 +1,14 @@
 # UI Ops - How Dieter Is Built, Served, And Steered
 
 **Living, canonical reference — the UI runbook.**
-Seeded 2026-06-27 from the as-built pipeline; improved in place as UI program 126 executes. This doc owns "how the system runs"; [`dieter.md`](dieter.md) owns "what the system is."
+This doc owns "how the system runs"; [`dieter.md`](dieter.md) owns "what the system is."
 
-- Authority: [`126__PRD__UI_Optimization_Program.md` §12](../../../Execution_Pipeline_Docs/02-Executing/126__UI_Optimization/126__PRD__UI_Optimization_Program.md).
+- Canonical doctrine: this document.
+- Execution PRD: [`126G__PRD__Ops.md`](../../../Execution_Pipeline_Docs/02-Executing/126__UI_Optimization/126G__PRD__Ops.md).
 - **Sources:** `scripts/build-dieter.js`, `scripts/verify-svgs.js`,
   `admin/scripts/*`, `.github/workflows/*`,
-  `documentation/engineering/CloudflareOperations.md`, and
-  `Execution_Pipeline_Docs/03-Executed/PRD__DevStudio_Cloudflare_Migration.md`
-  (section 3.5 write path, section 3.6 design freeze, Appendix A hash baseline).
+  `documentation/engineering/CloudflareOperations.md`, and the current service
+  documentation for Dieter, DevStudio, Tokyo, and Tokyo-worker.
 
 ## Authority Lanes
 
@@ -47,6 +47,10 @@ Seeded 2026-06-27 from the as-built pipeline; improved in place as UI program 12
   changes run upload-only sync; they do not by themselves run `build:dieter`.
 - Tokyo/R2 sync uploads current git-authored product roots. It is not remote
   reconciliation, orphan cleanup, rollback, or product-data mutation.
+- Localization remains a real product domain, but root l10n storage is not a UI
+  deploy-root authority. UI ops must not delete real locale overlays, Prague
+  localization, San Francisco localization execution, or localization tooling
+  while removing stale deploy-root assumptions.
 
 ## Govern (DevStudio reveal/steer loop)
 
@@ -67,15 +71,22 @@ Seeded 2026-06-27 from the as-built pipeline; improved in place as UI program 12
 
 - Governance guards cover generated Admin/DevStudio artifacts. They do not prove
   Bob, Roma, Prague, widget runtime, or account-runtime behavior.
-- DevStudio token edits are a product workflow owned by 126L. 126G documents the
-  lane; it does not add approval workflow, semantic token validation, contrast
-  enforcement, or PR bureaucracy.
+- DevStudio token edits are a DevStudio product workflow. This document records
+  the ops lane; the 126L execution PRD owns implementation. Neither adds an
+  approval workflow, semantic token validation, contrast enforcement, or PR
+  bureaucracy.
+- DevStudio writes selected token values to source through the authenticated
+  GitHub Contents lane. Direct token commits are not automatically covered by
+  the PR-only `devstudio-verify` workflow; the 126L execution PRD owns visible
+  mutation evidence and closure of that verification gap.
 - Color, typography, icon, motion, component, layout, and surface semantics are
-  owned by their UI PRD slices and living docs. Ops records how artifacts move.
+  owned by their living UI docs. Their execution PRDs map gaps and sequencing;
+  this document records how artifacts move.
 - Icon origination remains human-owned local authoring through the icon tooling
   documented in `iconography.md`. Agents consume approved Dieter icons; they do
   not originate new ones.
 
-126G owns these without inventing new machinery: simplify current UI ops, remove
-obsolete deploy paths, keep icon authoring as the only local authoring
-exception, and document the current build/serve/govern loop honestly.
+This document owns the current build/serve/govern doctrine. The 126G execution
+PRD may simplify current UI ops and remove obsolete deploy paths without
+inventing new machinery; icon authoring remains the only local authoring
+exception.

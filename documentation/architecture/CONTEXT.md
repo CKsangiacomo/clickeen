@@ -133,6 +133,12 @@ Clickeen is a simple account product.
 - Tokyo stores and serves account runtime data through Tokyo-worker and R2.
 - Berlin owns authentication and account session bootstrap.
 - Clickeen admin work uses the normal admin account.
+- UI capability follows one forward-looking rule: resolution determines
+  sharpness, available workspace determines layout, and form factor determines
+  the expected product experience. Operational editors and dashboards preserve
+  the desktop workspace on tablets in both orientations, use a compact
+  workspace on mobile landscape, and do not pretend mobile portrait can carry
+  the authoring/operations product.
 
 The active cloud-dev admin account coordinate is:
 

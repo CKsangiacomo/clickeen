@@ -1,7 +1,7 @@
 # 126G Ops — GLM Pre-Execution Peer Review
 
-Status: PRE-EXECUTION peer review (main-thread, 3 lenses: Staff Engineer, Senior PM,
-Principal TPM). Subject: `126G__PRD__Ops.md` (Status: HUMAN-CONVERGED PRODUCT STANDARD),
+Status: FROZEN POINT-IN-TIME PRE-EXECUTION REVIEW - reviewed tree unrecorded; current readiness not established; no step-9 execution credit.
+Subject: `126G__PRD__Ops.md` (then labeled HUMAN-CONVERGED PRODUCT STANDARD),
 read fresh this pass. Grounded in `audits/126G__AsBuilt_{Codex,GLM}.md`, `research/126G_Research_{Codex,GLM}.md`,
 `documentation/engineering/UI/ops.md`, and verified file/path checks. **Verified this
 pass:** the Migration doc `PRD__DevStudio_Cloudflare_Migration.md` **exists** (ops.md ref

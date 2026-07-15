@@ -1,5 +1,7 @@
 # 126H — As-built audit: Dieter system + foundation (GLM, Phase-1 step 1)
 
+Status: FROZEN POINT-IN-TIME PRE-EXECUTION AS-BUILT - code changed afterward; exact working-tree provenance may be unrecorded; no step-9 execution credit.
+
 > GLM independent pass. **Not converged.** Source: `dieter/tokens/dieter-foundation-tokens.css` (107 lines) read in full + consumer greps.
 
 ---

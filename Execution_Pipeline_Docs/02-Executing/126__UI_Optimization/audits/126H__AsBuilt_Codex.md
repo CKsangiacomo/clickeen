@@ -1,6 +1,6 @@
 # 126H Dieter - As-Built Audit - Codex
 
-Status: CODEX ONLY - Phase 1 Step 1.
+Status: FROZEN POINT-IN-TIME PRE-EXECUTION AS-BUILT - code changed afterward; exact working-tree provenance may be unrecorded; no step-9 execution credit.
 Scope: Dieter design-system substrate: token files, foundation substrate, component consumption of foundation tokens, generated artifacts, manifest evidence, and known code/docs drift.
 
 No code changes, no runtime operations, no product data changes, no Cloudflare/R2 preflight.

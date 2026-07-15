@@ -1,6 +1,6 @@
 # 126F - Pre-Execution Audit: Motion
 
-Status: FROZEN PRE-EXECUTION AUDIT - not current source truth after 126F execution.
+Status: FROZEN POINT-IN-TIME PRE-EXECUTION AUDIT - code changed afterward; no step-9 execution credit.
 PRD: `../126F__PRD__Motion.md`.
 
 This audit hardens 126F for execution. It does not change runtime code. It

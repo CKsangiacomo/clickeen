@@ -1,6 +1,6 @@
 # 126B - PRD: Color
 
-Status: PRE-EXECUTION READY - three-lane review green.
+Status: PRE-EXECUTION DOCTRINE RECORDED - step-5 living doctrine reconciled; step-6/7/8 artifacts pending; no step-9 execution credit.
 Parent: `126__PRD__UI_Optimization_Program.md` (MAMA).
 Series order: 126B of 126A-126M.
 KB doc target: `documentation/engineering/UI/color.md`.
@@ -109,20 +109,12 @@ Clickeen has a strong color system already:
 - The palette has structure: Apple-like base hues, neutral ladders, OKLAB ramps,
   state mix controls, contrast sibling tokens, and a small semantic role layer.
 
-The current system is not execution-clean:
-
-- Some components bypass semantic roles and use primitive `--color-system-*`
-  tokens directly.
-- Some color/state token references are undefined.
-- Some hardcoded structural chrome colors remain.
-- Public widget runtime contains raw default/fallback colors that must be
-  classified separately from app chrome.
-- DevStudio reveals color/role/state rows that its write path cannot fully edit.
-- Current docs contain stale, imprecise, or overclaiming color language.
-- Dark-mode artifacts exist, but dark mode is not a supported product
-  capability.
-- Contrast findings are evidence for human design review, not AI-enforced
-  doctrine.
+Premature A-H changes already closed the exact token-integrity, named hardcode,
+DevStudio reveal, unsupported dark-artifact, and living-document defects. Those
+changes are current as-built input, not step-9 execution credit. The remaining
+real gap is consumer adoption: some components and surfaces still bypass the
+existing semantic role/state layer and consume primitive colors directly.
+Contrast remains evidence for human review, not AI-enforced doctrine.
 
 ## Resolved Audit Correction
 
@@ -134,9 +126,8 @@ That is resolved: the `*/` on line 10 closes the opening CSS comment, and
 `:root` plus `--color-text`, `--role-surface`, `--focus-ring-color`, and the
 state controls are active CSS.
 
-The remaining issue is AI-legibility, not runtime validity: the header/comment
-shape was confusing enough for an agent to misread. 126B execution cleans that
-header so the color source is unambiguous to agents.
+The header and role/state source are now AI-legible. Step 6 verifies current
+source and must not schedule that completed cleanup again.
 
 ## Required Direction
 
@@ -297,16 +288,13 @@ Legitimate user/content color includes:
 Structural chrome hardcodes are different and must be tokenized or explicitly
 resolved to a Dieter role/primitive.
 
-Current structural chrome hardcodes to fix:
+Completed structural chrome cleanup, retained as regression evidence:
 
-- `admin/src/css/dieter-previews.css:107` uses `#f4f5f7`; replace with
-  `var(--role-surface-muted)`.
-- `admin/src/css/dieter-previews.css:166` uses `#f4f5f7`; replace with
-  `var(--role-surface-muted)`.
-- `admin/src/css/layout.css:155` uses `rgba(12,16,24,0.28)`; replace the
-  shadow color with
-  `color-mix(in oklab, var(--color-system-black), transparent 72%)` while
-  keeping the existing `0 24px 32px` shadow geometry.
+- `admin/src/css/dieter-previews.css` uses `var(--role-surface-muted)` at the
+  two former structural-gray sites.
+- `admin/src/css/layout.css` keeps the existing `0 24px 32px` shadow geometry
+  and sources its shadow color through
+  `color-mix(in oklab, var(--color-system-black), transparent 72%)`.
 
 Widget runtime defaults/fallbacks must be documented separately as
 user/content defaults or runtime fallbacks, not mixed with chrome violations.
@@ -330,20 +318,19 @@ verification that no new structural hardcodes were introduced.
 Why this is compliant: Clickeen serves user-authored content and widgets.
 Product/user content color is not the same authority as application chrome.
 
-### 7. Exact Undefined Color/State Token Cleanup
+### 7. Resolved Undefined Color/State Integrity Defects
 
-Undefined references are integrity bugs. 126B owns these color/state references:
+Undefined references are integrity bugs. Current source contains zero references
+to the resolved names below. Preserve that absence; do not restore aliases.
 
-| Token | Current owner path | Required 126B action |
+| Historical token | Historical owner path | Current requirement |
 | --- | --- | --- |
-| `--color-surface` | `dieter/components/button/button.css:8,190,321` | replace with `--role-surface`; do not preserve as alias |
-| `--color-bg` | `admin/src/css/layout.css:185` | replace with `--role-surface-bg`; do not preserve as alias |
-| `--color-system-gray-7` | `roma/app/roma.css:494` | replace with `--role-surface-muted`; do not extend the gray ladder |
-| `--color-system-gray-10` | `tokyo/product/widgets/countdown/widget.css:3` | replace with `--color-system-gray-6-step5`; classify as widget product default cleanup, not widget color doctrine |
-| `--color-system-gray-10` generated fixture mirror | `roma/tests/fixtures/124c-base-package-expected.json` | update only if the Countdown source change changes the expected generated package |
-| `--state-muted-opacity` | `dieter/components/dropdown-border/dropdown-border.css:273` | replace with `opacity: 0.45;` to preserve current rendered behavior while deleting the undefined token |
-| `--state-muted-opacity` | `dieter/components/dropdown-shadow/dropdown-shadow.css:274` | replace with `opacity: 0.45;` to preserve current rendered behavior while deleting the undefined token |
-| `--state-hover-target` doc example | `documentation/engineering/UI/color.md:84` | replace with `--state-darken-target`; do not document nonexistent state-target names |
+| `--color-surface` | `dieter/components/button/button.css` | Resolved to `--role-surface`; keep the old name absent. |
+| `--color-bg` | `admin/src/css/layout.css` | Resolved to `--role-surface-bg`; keep the old name absent. |
+| `--color-system-gray-7` | `roma/app/roma.css` | Resolved to `--role-surface-muted`; do not extend the gray ladder. |
+| `--color-system-gray-10` | Countdown source/generated fixture | Resolved to `--color-system-gray-6-step5`; keep the old name absent. |
+| `--state-muted-opacity` | dropdown border/shadow | Resolved to the preserved literal `0.45`; do not invent an alias. |
+| `--state-hover-target` | living color doc | Resolved to `--state-darken-target`; do not document nonexistent state-target names. |
 
 Non-color token spelling issues belong to their owning PRDs and must not be
 preserved in color docs.
@@ -387,17 +374,17 @@ Current baseline:
 - `admin/scripts/generate-foundation-pages.mjs` reads
   `dieter/tokens/dieter-color-tokens.css`, parses custom properties, and reveals
   `--color-*`, `--role-*`, `--focus-*`, and selected `--state-*` rows.
-- The same generator currently emits `data-token-edit="color"` controls for
-  rows the write lane cannot edit.
+- The generator renders non-writable role/focus/state/non-hex rows as static
+  source truth rather than editable controls.
 - `admin/functions/_shared/dieter-tokens.js` accepts only `^--color-` tokens
   with hex values.
 
-Execution target:
+Completed baseline to preserve:
 
 - Preserve the narrow write lane.
-- Update the generator so non-`^--color-` rows and non-hex rows do not render
+- Non-`^--color-` rows and non-hex rows do not render
   `data-token-edit="color"`.
-- Regenerate `admin/src/html/foundations/colors.html`.
+- `admin/src/html/foundations/colors.html` reflects the corrected generator.
 - Do not hand-edit generated reveal output.
 
 Why this is compliant: this prevents masquerade and partial-success claims
@@ -488,7 +475,9 @@ human product authority.
 
 ## Detailed Blast Radius
 
-126B execution may touch only the color-related truth surface below.
+126B step-6 audit may inspect only the color-related truth surface below.
+Completed cleanup entries are regression evidence; remaining implementation is
+limited to role/state adoption proven by the final gap audit.
 
 | Area | May change | Must not change |
 | --- | --- | --- |
@@ -512,62 +501,58 @@ human product authority.
 | `documentation/engineering/UI/ops.md` | only if build/generated-output wording changes | new ops governance system |
 | `documentation/services/devstudio.md` | only if DevStudio reveal/read-only behavior changes | DevStudio product/write-lane expansion |
 
-Known documentation repairs:
+Current documentation reconciliation:
 
-- `documentation/engineering/UI/color.md` must cite this PRD,
-  `126B__PRD__Color.md`, as the driving color PRD.
-- `documentation/engineering/UI/color.md` must not cite non-existent
-  `126A2__SUBPRD__Color_System.md`.
-- `documentation/engineering/UI/color.md` must route `--color-surface` and
-  `--color-bg` cleanup to 126B, not to an unnamed sibling slice.
+- `documentation/engineering/UI/color.md` now cites the correct 126B authority
+  and records current role/state, light-mode, contrast, and undefined-token law.
 - Non-color token issues such as `--radius-*` and `--hspace-*` remain routed to
   their owning PRDs and must not become 126B work.
 
-### File-Level Execution Blast Radius
+### Completed File-Level Cleanup Baseline
 
-This table is the executable 126B file list. The broader table above explains
-ownership boundaries; this table says what the later implementation pass is
-allowed to change for current known gaps.
+Every row in this table describes cleanup already present in current source.
+It is preserved as regression evidence only. The final executable PRD must not
+repeat these actions unless step 6 proves a new current mismatch.
 
-| File | Required action | Why 126B owns it |
+| File | Completed baseline action | Why 126B owns it |
 | --- | --- | --- |
-| `dieter/tokens/dieter-color-tokens.css` | Clean header; add exact role tokens and values from this PRD. | Source color authority. |
-| `dieter/components/button/button.css` | Replace `--color-surface` at lines 8, 190, 321 with `--role-surface`; use 126B state formula only where current button state color is touched by this cleanup. | Dieter component consumes undefined color token. |
-| `dieter/components/dropdown-border/dropdown-border.css` | Replace `opacity: var(--state-muted-opacity, 0.45);` with `opacity: 0.45;`. | Deletes undefined state token without inventing a new disabled-state framework. |
-| `dieter/components/dropdown-shadow/dropdown-shadow.css` | Replace `opacity: var(--state-muted-opacity, 0.45);` with `opacity: 0.45;`. | Deletes undefined state token without redesigning dropdown behavior. |
-| `admin/src/css/layout.css` | Replace `--color-bg` at line 185 with `--role-surface-bg`; keep the line 155 `0 24px 32px` shadow geometry and replace only `rgba(12, 16, 24, 0.28)` with `color-mix(in oklab, var(--color-system-black), transparent 72%)`. | DevStudio chrome consumes undefined/hardcoded structural color. |
-| `admin/src/css/dieter-previews.css` | Replace `#f4f5f7` at lines 107 and 166 with `var(--role-surface-muted)`. | DevStudio preview chrome uses raw structural color. |
-| `admin/scripts/generate-foundation-pages.mjs` | Stop rendering non-writable role/focus/state/non-hex color rows as `data-token-edit="color"` controls. | Generated DevStudio reveal currently masquerades write authority. |
-| `admin/src/html/foundations/colors.html` | Regenerate from the fixed generator only. | Generated reveal output; no hand edits. |
-| `roma/app/roma.css` | Replace `--color-system-gray-7` at line 494 with `--role-surface-muted`. | Roma chrome consumes undefined color token. |
-| `tokyo/product/widgets/countdown/widget.css` | Replace `--color-system-gray-10` at line 3 with `--color-system-gray-6-step5`. | Countdown widget default consumes undefined color token. |
-| `roma/tests/fixtures/124c-base-package-expected.json` | Update only if Countdown generated package output changes. | Test fixture mirrors bundled widget CSS. |
-| `dieter/components/valuefield/valuefield.css` | Remove the `@media (prefers-color-scheme: dark)` block. | Unsupported Dieter dark behavior must not survive as product behavior. |
-| `dieter/components/segmented/segmented.css` | Remove the `@media (prefers-color-scheme: dark)` block and `[data-theme="dark"]` selector block. | Unsupported Dieter dark behavior must not survive as product behavior. |
-| `dieter/components/dropdown-actions/dropdown-actions.css` | Remove the `@media (prefers-color-scheme: dark)` block. | Unsupported Dieter dark behavior must not survive as product behavior. |
-| `dieter/components/dropdown-edit/dropdown-edit.css` | Remove the `@media (prefers-color-scheme: dark)` block. | Unsupported Dieter dark behavior must not survive as product behavior. |
-| `dieter/components/textfield/textfield.css` | Remove the `@media (prefers-color-scheme: dark)` block. | Unsupported Dieter dark behavior must not survive as product behavior. |
-| `dieter/components/textedit/textedit.css` | Remove the `@media (prefers-color-scheme: dark)` block. | Unsupported Dieter dark behavior must not survive as product behavior. |
-| `dieter/components/segmented/segmented.spec.json` | Replace the icon-only `Theme/Light/Dark` example with `View/Grid/List`, using `circle.grid.2x2` for Grid and `line.3.horizontal.decrease.circle` for List. | DevStudio component examples must not expose a dark-mode affordance. |
-| `admin/src/html/components/segmented.html` | Regenerate from the fixed segmented spec only. | Generated component output; no hand edits. |
-| `tokyo/product/dieter/components/segmented/segmented.spec.json` | Regenerate from the fixed Dieter segmented spec only. | Generated component spec output; no hand edits. |
-| `tokyo/product/dieter/tokens/*` | Regenerate from Dieter source with `pnpm build:dieter`. | Generated token output. |
-| `tokyo/product/dieter/components/button/button.css` | Regenerate from Dieter source. | Generated component output. |
-| `tokyo/product/dieter/components/dropdown-border/dropdown-border.css` | Regenerate from Dieter source. | Generated component output. |
-| `tokyo/product/dieter/components/dropdown-shadow/dropdown-shadow.css` | Regenerate from Dieter source. | Generated component output. |
-| `tokyo/product/dieter/components/valuefield/valuefield.css` | Regenerate from Dieter source. | Generated component output. |
-| `tokyo/product/dieter/components/segmented/segmented.css` | Regenerate from Dieter source. | Generated component output. |
-| `tokyo/product/dieter/components/dropdown-actions/dropdown-actions.css` | Regenerate from Dieter source. | Generated component output. |
-| `tokyo/product/dieter/components/dropdown-edit/dropdown-edit.css` | Regenerate from Dieter source. | Generated component output. |
-| `tokyo/product/dieter/components/textfield/textfield.css` | Regenerate from Dieter source. | Generated component output. |
-| `tokyo/product/dieter/components/textedit/textedit.css` | Regenerate from Dieter source. | Generated component output. |
-| `documentation/engineering/UI/color.md` | Rewrite to current 126B law, including correct PRD link, exact role/state rules, no dark-ready claim, contrast human-owned, and 126B ownership of color undefined-token cleanup. | Living color doc. |
-| `documentation/engineering/UI/dieter.md` | Remove/narrow dark-ready color claim. | Current Dieter doc contradicts 126B dark-mode law. |
-| `documentation/engineering/UI/components.md` | Cross-reference 126B role/state color consumption without expanding component APIs. | Components consume color roles/states. |
-| `documentation/engineering/UI/interactions.md` | State that 126E owns what interaction state happened and 126B owns how state is colored. | Prevents state/color ownership drift. |
-| `documentation/engineering/UI/accessibility.md` | Keep contrast as human design review evidence, no contrast gate. | Prevents 126B from becoming AI contrast enforcement. |
-| `documentation/engineering/UI/ops.md` | Update only if build/generated-output wording changes. | Source/generated authority accuracy. |
-| `documentation/services/devstudio.md` | Update only if DevStudio reveal wording changes. | DevStudio reveal/write truth. |
+| `dieter/tokens/dieter-color-tokens.css` | Header and exact role tokens are current source truth. | Source color authority. |
+| `dieter/components/button/button.css` | Button surfaces use `--role-surface`; no undefined `--color-surface` remains. | Dieter component consumes the defined semantic role. |
+| `dieter/components/dropdown-border/dropdown-border.css` | Disabled opacity is explicit `0.45`; no undefined state token remains. | Avoids inventing a disabled-state framework. |
+| `dieter/components/dropdown-shadow/dropdown-shadow.css` | Disabled opacity is explicit `0.45`; no undefined state token remains. | Avoids redesigning dropdown behavior. |
+| `admin/src/css/layout.css` | DevStudio uses `--role-surface-bg`; the existing shadow geometry uses the token-derived black mix. | DevStudio chrome has no undefined/hardcoded structural color at these sites. |
+| `admin/src/css/dieter-previews.css` | Both former raw gray sites use `var(--role-surface-muted)`. | DevStudio preview chrome consumes the semantic role. |
+| `admin/scripts/generate-foundation-pages.mjs` | Non-writable role/focus/state/non-hex rows no longer render as editable color controls. | Generated reveal does not masquerade write authority. |
+| `admin/src/html/foundations/colors.html` | Generated output reflects the corrected generator. | Generated reveal output; no hand edits. |
+| `roma/app/roma.css` | The former undefined gray site uses `--role-surface-muted`. | Roma chrome consumes a defined role token. |
+| `tokyo/product/widgets/countdown/widget.css` | Countdown uses defined `--color-system-gray-6-step5`. | Widget default no longer consumes an undefined token. |
+| `roma/tests/fixtures/124c-base-package-expected.json` | Fixture reflects current bundled widget CSS. | Test fixture mirrors package output. |
+| `dieter/components/valuefield/valuefield.css` | Unsupported dark-scheme behavior is absent. | Unsupported Dieter dark behavior does not survive. |
+| `dieter/components/segmented/segmented.css` | Unsupported dark-scheme and `data-theme="dark"` behavior is absent. | Unsupported Dieter dark behavior does not survive. |
+| `dieter/components/dropdown-actions/dropdown-actions.css` | Unsupported dark-scheme behavior is absent. | Unsupported Dieter dark behavior does not survive. |
+| `dieter/components/dropdown-edit/dropdown-edit.css` | Unsupported dark-scheme behavior is absent. | Unsupported Dieter dark behavior does not survive. |
+| `dieter/components/textfield/textfield.css` | Unsupported dark-scheme behavior is absent. | Unsupported Dieter dark behavior does not survive. |
+| `dieter/components/textedit/textedit.css` | Unsupported dark-scheme behavior is absent. | Unsupported Dieter dark behavior does not survive. |
+| `dieter/components/segmented/segmented.spec.json` | The example is `View/Grid/List` with approved operational icons. | DevStudio examples expose no dark-mode affordance. |
+| `admin/src/html/components/segmented.html` | Generated output reflects the current segmented spec. | Generated component output; no hand edits. |
+| `tokyo/product/dieter/components/segmented/segmented.spec.json` | Generated output reflects the current Dieter spec. | Generated component spec output; no hand edits. |
+| `tokyo/product/dieter/tokens/*` | Generated token output reflects Dieter source. | Generated output remains source-derived. |
+| `tokyo/product/dieter/components/button/button.css` | Generated button CSS reflects Dieter source. | Generated output remains source-derived. |
+| `tokyo/product/dieter/components/dropdown-border/dropdown-border.css` | Generated dropdown CSS reflects Dieter source. | Generated output remains source-derived. |
+| `tokyo/product/dieter/components/dropdown-shadow/dropdown-shadow.css` | Generated dropdown CSS reflects Dieter source. | Generated output remains source-derived. |
+| `tokyo/product/dieter/components/valuefield/valuefield.css` | Generated output reflects Dieter source and contains no unsupported dark behavior. | Generated component output. |
+| `tokyo/product/dieter/components/segmented/segmented.css` | Generated output reflects Dieter source and contains no unsupported dark behavior. | Generated component output. |
+| `tokyo/product/dieter/components/dropdown-actions/dropdown-actions.css` | Generated output reflects Dieter source and contains no unsupported dark behavior. | Generated component output. |
+| `tokyo/product/dieter/components/dropdown-edit/dropdown-edit.css` | Generated output reflects Dieter source and contains no unsupported dark behavior. | Generated component output. |
+| `tokyo/product/dieter/components/textfield/textfield.css` | Generated output reflects Dieter source and contains no unsupported dark behavior. | Generated component output. |
+| `tokyo/product/dieter/components/textedit/textedit.css` | Generated output reflects Dieter source and contains no unsupported dark behavior. | Generated component output. |
+| `documentation/engineering/UI/color.md` | Living law records the correct PRD, role/state rules, light-mode boundary, human-owned contrast evidence, and 126B undefined-token ownership. | Living color doc. |
+| `documentation/engineering/UI/dieter.md` | Living law makes no dark-ready color claim. | Dieter documentation matches 126B. |
+| `documentation/engineering/UI/components.md` | Living law cross-references role/state color consumption without expanding component APIs. | Components consume color roles/states. |
+| `documentation/engineering/UI/interactions.md` | Living law separates 126E interaction meaning from 126B state color. | Prevents state/color ownership drift. |
+| `documentation/engineering/UI/accessibility.md` | Living law keeps contrast as human design evidence, not a gate. | Prevents AI contrast enforcement. |
+| `documentation/engineering/UI/ops.md` | Source/generated authority wording is current. | Source/generated authority accuracy. |
+| `documentation/services/devstudio.md` | DevStudio reveal/write wording is current. | DevStudio reveal/write truth. |
 
 The following current raw-color hits are explicitly not 126B implementation
 changes: Dieter color picker swatches and gradients, user-selected border/fill/
@@ -593,42 +578,27 @@ Roma, and Bob UI execution to consume with the 126B standard.
 | Bob UI | `bob/app/bob_app.css`, `bob/components/Workspace.tsx`, `bob/components/ToolDrawer.tsx`, `bob/components/CopilotPane.tsx` | Bob UI work must use 126B roles/states without changing save, translation, preview, or product data flows. |
 | Roma UI | `roma/app/roma.css` | 126B fixes the exact undefined token; 126M applies broader Roma UI color adoption. |
 
-## Gap-To-Close Categories
+## Verified Baseline And Remaining Gap
 
-126B execution maps color gaps into these categories:
+Current baseline includes the cleaned token header, generated-output parity,
+the exact role/state definitions, resolved undefined names, named structural
+hardcode cleanup, widget/runtime color classification, truthful DevStudio
+reveal, removed dark artifacts, and current living docs.
 
-1. token source/header AI-legibility cleanup;
-2. generated Tokyo output verification against Dieter source;
-3. exact semantic role token definitions;
-4. component role/primitive-consumption standard plus adoption inventory;
-5. state-color recipe standard plus adoption inventory;
-6. selected/disabled semantic state role creation in source tokens;
-7. exact undefined color/state token cleanup;
-8. structural chrome hardcode cleanup;
-9. widget runtime default/fallback classification;
-10. contrast/readability evidence for human review;
-11. DevStudio static/read-only reveal truth for non-writable rows;
-12. color living-doc update.
+The remaining gap is semantic role/state adoption in the exact 126I, 126L, and
+126M consumers proven by step 6, plus human review of contrast evidence. This is
+not permission for a whole-product color rewrite.
 
 These are execution categories, not a license to build a resolver, validator,
 registry, governance platform, theme system, or dark-mode scaffold.
 
 ## Known Gaps To Close
 
-1. The color token header/comment shape must be cleaned for AI-legibility.
-2. Role/state tokens are active, but role consumption is thin and bypassed; the
-   adoption blast radius is listed in this PRD and the audit.
-3. State color mechanics need adoption for hover, pressed, muted, inactive,
-   selected, and disabled states through the owning component/surface slices.
-4. The semantic role layer is too small for deterministic agent operation.
-5. Color/state undefined token references listed in this PRD must be resolved.
-6. Structural chrome still has a few raw hardcoded colors.
-7. Widget runtime has raw defaults/fallbacks that need separate classification.
-8. `-contrast` sibling tokens exist but many are unused.
-9. Contrast pair findings need human review, not AI enforcement.
-10. Dark-mode artifacts exist but do not form a supported capability.
-11. DevStudio reveal/write scope must stop masquerading writable truth.
-12. Docs contain stale or imprecise color claims.
+1. Role/state consumption remains thin in some component and surface consumers;
+   step 6 must name exact current files/lines.
+2. State color mechanics need adoption only through the owning 126I/126L/126M
+   slices where current bypass is proven.
+3. Contrast pair findings remain human review evidence, not AI enforcement.
 
 ## Out Of Scope For 126B Implementation
 
@@ -663,7 +633,8 @@ registry, governance platform, theme system, or dark-mode scaffold.
 
 ## Execution Checklist
 
-126B execution is green only when:
+The final 126B execution/check slice is green only when it preserves the
+completed baseline and closes only the current adoption gaps proven by step 6:
 
 1. `dieter/tokens/dieter-color-tokens.css` is AI-legible and contains the exact
    role/state tokens required by this PRD.
@@ -673,13 +644,14 @@ registry, governance platform, theme system, or dark-mode scaffold.
    when DevStudio generated color/foundation/component pages change.
 5. `pnpm --filter @clickeen/roma test:instance-package` runs if
    `roma/tests/fixtures/124c-base-package-expected.json` changes.
-6. Color/state undefined references owned by 126B are removed or replaced.
-7. Structural chrome hardcoded colors are replaced with the exact values listed
-   in the file-level execution table.
+6. The already-removed 126B undefined references remain absent; step 9 changes
+   only newly proven semantic-role adoption gaps.
+7. The completed structural-chrome replacements remain present; no duplicate
+   cleanup is scheduled.
 8. User-authored/widget runtime colors are classified separately from structural
    chrome and not purged.
-9. DevStudio reveal renders non-writable role/focus/state/non-hex rows as
-   static/read-only source truth and stops implying writable authority.
+9. DevStudio reveal continues rendering non-writable role/focus/state/non-hex
+   rows as static/read-only source truth.
 10. Contrast evidence remains evidence only; no AI-owned palette changes or
    gates are introduced.
 11. Dieter source dark CSS blocks and dark-mode component examples listed in the

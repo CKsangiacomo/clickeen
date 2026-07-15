@@ -26,6 +26,28 @@ accountPublicId: CLICKEEN
 
 Non-canonical Pages origins redirect or block through `admin/functions/_middleware.js` unless Cloudflare project health behavior requires otherwise.
 
+## Workspace Capability
+
+DevStudio follows the global operational-workspace tenet in
+`documentation/engineering/UI/surfaces.md`: full desktop workspace on desktop
+and tablets in either orientation; compact drawer navigation on mobile
+landscape; explicit unsupported boundary on mobile portrait. Retina/4K density
+governs sharpness, not layout class. The current unwired generic `960px`
+off-canvas state is a 126L execution gap, not product law. DevStudio keeps one
+simple shell: persistent narrow left navigation plus a flexible work area in
+full mode, and the same navigation as an overlay drawer plus a full-width work
+area in compact mode. Reveal and policy pages are not rebuilt as mobile
+variants.
+
+## Token Editor Dialog
+
+The token editor follows accepted D1 dismissal law. Escape closes only when the
+editor is unchanged. Dirty dismissal opens discard confirmation, backdrop
+dismissal is disabled, Cancel follows the same dirty rule, and Confirm Commit
+persists through the existing validated write lane. Native `beforeunload`, where
+needed at the browser boundary, is not replaced by an in-product dialog helper.
+Any current token-editor behavior that differs is a 126L execution gap.
+
 ## Current Sections
 
 | Section | Runtime source |

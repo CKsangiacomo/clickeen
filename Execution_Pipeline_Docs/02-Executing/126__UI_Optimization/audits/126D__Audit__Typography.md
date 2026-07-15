@@ -1,6 +1,6 @@
 # 126D - Pre-Execution Audit: Typography
 
-Status: CODEX PRE-EXECUTION AUDIT - three-lane review green.
+Status: FROZEN POINT-IN-TIME PRE-EXECUTION AUDIT - code and remote font state changed or may have changed; no step-9 execution credit.
 PRD: `../126D__PRD__Typography.md`.
 
 This audit binds 126D implementation to concrete files and product authorities.

@@ -1,9 +1,19 @@
 # 126I Components - As-Built Audit - Codex
 
-Status: CODEX ONLY - Phase 1 Step 1.
+Status: FROZEN POINT-IN-TIME PRE-EXECUTION AS-BUILT - exact working-tree provenance may be unrecorded; current source has 25 directories including `shared`, no `command-activity`, and no step-9 execution credit.
 Scope: Dieter component library contracts: source inventory, runtime manifest, DevStudio registry/showcase, Bob compiler/ToolDrawer consumption, hydration paths, and known component contract gaps.
 
 No code changes, no runtime operations, no product data changes, no Cloudflare/R2 preflight.
+
+Current-source correction: the 26-directory count and `command-activity`
+observation below are preserved only as historical evidence from the inspected
+tree. They are not current inventory. Current tracked/worktree truth is 25
+directories including `shared`; `command-activity` is absent.
+
+The `--color-surface`, `--radius-2`, and `--hspace-*` component findings below
+are also historical and resolved. Current source has zero such component
+references. Raw user-authored values and component-local overlay geometry remain
+separate, current observations.
 
 ## Authority Boundary
 
@@ -13,13 +23,15 @@ No code changes, no runtime operations, no product data changes, no Cloudflare/R
 - Bob component consumption authority is the compiler/ToolDrawer path under `bob/lib/compiler/**` and Builder runtime hydration under `bob/components/td-menu-content/**`.
 - This audit treats those as different component contracts. It does not collapse them into one count.
 
-## Inventory Counts Must Be Qualified
+## Inspected-Tree Inventory Counts Must Be Qualified
 
 There is no single honest component count without naming the inventory being counted:
 
-- Source folder inventory: 26 directories under `dieter/components`, including `shared` and empty `command-activity`.
-- Renderable source component folders excluding `shared`: 25 folder names.
-- Empty/dead source directory: `command-activity`.
+- Inspected source folder inventory: 26 directories under `dieter/components`,
+  including `shared` and empty `command-activity`; current source has 25
+  including `shared`.
+- Inspected renderable source folders excluding `shared`: 25 names.
+- Historical empty/dead source directory, absent now: `command-activity`.
 - Manifest component inventory: 24 components with generated CSS output.
 - Manifest JS inventory: 20 components with JS bundles.
 - DevStudio generated spec inventory: 22 spec imports.
@@ -41,16 +53,16 @@ Evidence:
 - `admin/src/data/componentRegistry.generated.ts:48`
 - `admin/src/data/componentRegistry.generated.ts:71`
 
-## Source File Shape
+## Inspected-Tree Source File Shape
 
-Current source folders show these contract shapes:
+The source folders in the inspected tree showed these contract shapes:
 
 - Spec + HTML + CSS only: `agent-activity`, `popover`, `slider`.
 - Spec + HTML + CSS + TS: most interactive TypeScript components.
 - Spec + HTML + CSS + hand-written JS: `object-manager`, `repeater`.
 - CSS only: `icon`.
 - HTML + CSS + TS without spec: `textrename`.
-- Empty directory: `command-activity`.
+- Historical empty directory, absent now: `command-activity`.
 - Shared helper directory: `shared`.
 
 The source shape matters because generators and consumers use different rules for spec, template, CSS, and runtime hydration.
@@ -309,13 +321,14 @@ Evidence:
 - `bob/components/TranslationsPanel.tsx:94`
 - `bob/components/TranslationsPanel.tsx:101`
 
-## Dead Empty Directory
+## Historical Dead Empty Directory
 
-- `dieter/components/command-activity/` exists as an empty directory.
-- It has no CSS, HTML, spec, TS, or JS files.
-- It is absent from manifest components.
-- It is absent from generated DevStudio spec/template/CSS registries.
-- It cannot be a shipped runtime component through the current build path because the manifest lists CSS-backed output component folders.
+- `dieter/components/command-activity/` existed as an empty directory in the
+  inspected tree and is absent from current source.
+- It had no CSS, HTML, spec, TS, or JS files and was absent from manifest and
+  generated DevStudio registries.
+- It could not be a shipped runtime component through that build path because
+  the manifest listed CSS-backed output component folders.
 
 Evidence:
 
@@ -324,11 +337,12 @@ Evidence:
 - `tokyo/product/dieter/manifest.json:3`
 - `tokyo/product/dieter/manifest.json:28`
 
-## Component-Local Styling Contract Gaps
+## Historical Component-Local Styling Findings
 
-- `button` references undefined `--color-surface` for background.
-- `bulk-edit` references undefined `--radius-2` without fallback.
-- Several dropdown/text controls still reference fallback-masked `--hspace-*`.
+- Resolved after this audit: `button` referenced undefined `--color-surface`.
+- Resolved after this audit: `bulk-edit` referenced undefined `--radius-2`.
+- Resolved after this audit: several dropdown/text controls referenced
+  fallback-masked `--hspace-*`.
 - `dropdown-fill` contains raw hue gradient stops.
 - `bulk-edit` and `object-manager` both hardcode `z-index: 1000` and duplicate modal-like shadows.
 - `popover` and `textedit` both use raw `z-index: 12`.
@@ -357,7 +371,9 @@ Evidence:
 
 ## Docs Drift Found During Audit
 
-- `documentation/engineering/UI/components.md` says "27 component dirs + shared", but current source folder count observed by Codex is 26 directories including `shared` and empty `command-activity`.
+- At audit time, `documentation/engineering/UI/components.md` said "27 component
+  dirs + shared", while the inspected tree contained 26 directories including
+  `shared` and empty `command-activity`. Current source has 25 including `shared`.
 - The same doc still says "track 126B" and "to be filled during 126B"; the current program track for components is 126I.
 - The 126I PRD previously referenced `audits/126I__Audit__Components.md`; this Codex artifact is `audits/126I__AsBuilt_Codex.md`.
 
@@ -368,7 +384,7 @@ Evidence:
 - `documentation/engineering/UI/components.md:43`
 - `Execution_Pipeline_Docs/02-Executing/126__UI_Optimization/126I__PRD__Components.md:3`
 
-## Known Current Gaps
+## Point-In-Time Gaps And Current Corrections
 
 - Component counts differ across source folders, runtime manifest, DevStudio specs, templates, CSS registries, and JS bundles.
 - `textrename` is shipped/hydrated but not spec-governed.
@@ -376,15 +392,18 @@ Evidence:
 - `toggle` is shipped with JS but not exported through `dieter/components/index.ts` and not hydrated in DevStudio.
 - `object-manager` and `repeater` ship through Bob runtime but are static in DevStudio showcase.
 - Manifest deps do not fully describe composite dependencies for `object-manager` and `repeater`.
-- `command-activity` is an empty dead directory.
+- Resolved after this audit: the empty `command-activity` directory is absent.
 - `icon` is CSS-only and should not be counted as a spec-backed component.
 - `agent-activity` is consumed in Bob manual React markup, not through the ToolDrawer compiler path.
-- Component-local raw values and undefined/fallback token references remain.
-- Existing docs have stale component-track and count language.
+- Component-local raw user/content values and overlay geometry remain; the
+  undefined/fallback token findings above are resolved.
+- Existing docs had stale component-track and count language at audit time;
+  current living docs are reconciled separately.
 
 ## Compliance Notes
 
-- This audit records current component contracts only.
+- This frozen audit records the component contracts of its inspected tree; the
+  corrections at the top state current source truth.
 - This audit does not remove, rename, consolidate, or rewrite any component.
 - This audit does not turn screen-local UI into Dieter components.
 - This audit does not decide whether styling gaps are fixed in component, token, motion, color, or later convergence tracks.

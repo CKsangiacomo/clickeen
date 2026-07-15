@@ -1,7 +1,7 @@
 # 126F Motion — GLM Pre-Execution Peer Review
 
-Status: PRE-EXECUTION peer review (main-thread, 3 lenses: Staff Engineer, Senior PM,
-Principal TPM). Subject: `126F__PRD__Motion.md` (Status: HUMAN-CONVERGED PRODUCT STANDARD),
+Status: FROZEN POINT-IN-TIME PRE-EXECUTION REVIEW - reviewed tree unrecorded; current readiness not established; no step-9 execution credit.
+Subject: `126F__PRD__Motion.md` (then labeled HUMAN-CONVERGED PRODUCT STANDARD),
 read this session. Grounded in `audits/126F__AsBuilt_{Codex,GLM}.md`, `research/126F_Research_{Codex,GLM}.md`,
 `documentation/engineering/UI/motion.md`, `dieter/tokens/dieter-foundation-tokens.css`.
 This review checks execution-readiness; it does not change the PRD.

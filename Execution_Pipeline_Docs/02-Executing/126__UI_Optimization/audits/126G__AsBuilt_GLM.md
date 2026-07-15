@@ -1,5 +1,7 @@
 # 126G — As-built audit: Ops (GLM, Phase-1 step 1)
 
+Status: FROZEN POINT-IN-TIME PRE-EXECUTION AS-BUILT - code changed afterward; exact working-tree provenance may be unrecorded; no step-9 execution credit.
+
 > GLM independent pass. Codex writes its own; **not converged**. Verified via `ls` + `grep` across `scripts/`, `admin/scripts/`, `.github/workflows/`, `admin/src/`.
 
 ---

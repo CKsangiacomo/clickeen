@@ -1,5 +1,7 @@
 # 126E — As-built audit: Interactions (GLM, Phase-1 step 1)
 
+Status: FROZEN POINT-IN-TIME PRE-EXECUTION AS-BUILT - code changed afterward; exact working-tree provenance may be unrecorded; no step-9 execution credit.
+
 > GLM independent pass. Codex writes its own; **not converged**. Evidence from `grep` across `roma/components/*-domain.tsx`, `bob/components/*.tsx`, `roma/app/api/**`.
 
 ---

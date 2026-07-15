@@ -1,6 +1,6 @@
 # 126G - Pre-Execution Audit: Ops
 
-Status: CODEX PRE-EXECUTION AUDIT - current execution map.
+Status: FROZEN POINT-IN-TIME PRE-EXECUTION AUDIT - code changed afterward; no step-9 execution credit.
 PRD: `../126G__PRD__Ops.md`.
 
 This audit hardens 126G for execution. It records the exact ops blast radius,

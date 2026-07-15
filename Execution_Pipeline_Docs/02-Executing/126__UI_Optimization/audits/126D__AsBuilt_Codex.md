@@ -1,6 +1,6 @@
 # 126D Typography - Codex As-Built Audit
 
-Status: CODEX ONLY - Phase 1 Step 1 as-built audit.
+Status: FROZEN POINT-IN-TIME PRE-EXECUTION AS-BUILT - code and remote font state changed or may have changed; exact working-tree provenance may be unrecorded; no step-9 execution credit.
 
 Scope: current Clickeen typography implementation across Dieter typography
 tokens/classes, generated DevStudio typography data, Bob/Roma shell typography,

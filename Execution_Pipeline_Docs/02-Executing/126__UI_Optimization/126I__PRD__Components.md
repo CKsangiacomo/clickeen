@@ -1,6 +1,6 @@
 # 126I - PRD: Components
 
-Status: DIRECTIONAL - Phase 1 Step 2 baseline from Codex audit (`audits/126I__AsBuilt_Codex.md`).
+Status: PRE-EXECUTION DOCTRINE RECORDED - step-5 living doctrine reconciled; mandatory component law and D1 blocking-dialog dismissal propagated; steps 6-8 remain pending.
 Parent: `126__PRD__UI_Optimization_Program.md` (MAMA). Series order: dependency order (MAMA §7); DevStudio UI + Roma UI last.
 KB doc: `documentation/engineering/UI/components.md` (canonical reference; this PRD drives it).
 
@@ -27,9 +27,25 @@ Once the 126I components standard is decided:
 ## Precondition
 Run the real components audit first (six-step loop, MAMA §9). This PRD is filled from verified, `file:line`-cited findings — not assumptions.
 
-## Codex Baseline - Phase 1 Step 2
+## Current Mandatory Law
 
-This is Codex baseline only. It is not final doctrine, not a fix plan, and not Step 4 convergence.
+The owner register is the consolidated authority. For 126I it requires one
+inspectable contract per ToolDrawer field type; deletion of unconsumed
+`textrename`; native Toggle behavior with the unused custom hydrator deleted;
+distinct `repeater` and `object-manager` contracts with declared dependencies;
+native buttons for the six fake dropdown triggers; deletion of the dead
+`dropdown-actions` footer branch; and removal of the accumulating Object Manager
+backdrop listener. These are settled execution requirements, not owner choices.
+Under accepted D1 law, Bulk Edit and Object Manager close on Escape only when
+unchanged; dirty dismissal opens discard confirmation, backdrop dismissal is
+disabled, Cancel follows the same dirty rule, and Save applies the local edits
+to Bob's working state. Account persistence remains Bob's separate Save command.
+
+## Frozen Phase 1 Evidence
+
+The inventory in this section is the point-in-time Codex Step-2 baseline. It is
+evidence, not current doctrine. Mandatory component and D1 dismissal law is now
+settled in this PRD and the product-owner decision register.
 
 ### Current Reality
 
@@ -39,7 +55,7 @@ This is Codex baseline only. It is not final doctrine, not a fix plan, and not S
 - DevStudio component truth is a generated showcase/governance view; it is primarily spec-backed and does not equal runtime manifest truth.
 - Bob consumes components through compiled ToolDrawer fields, stencil HTML, optional component specs, manifest media, and runtime hydrators.
 - Component counts must be qualified by inventory:
-  - source folders: 26 directories including `shared` and empty `command-activity`
+  - source folders: 25 directories including non-rendered `shared`
   - runtime manifest components: 24 CSS-backed components
   - manifest JS components: 20 JS-backed components
   - DevStudio spec imports: 22
@@ -54,7 +70,7 @@ This is Codex baseline only. It is not final doctrine, not a fix plan, and not S
 - Spec + HTML + CSS + hand-written JS components can ship through manifest runtime media without being TypeScript-exported.
 - CSS-only components such as `icon` can be runtime CSS artifacts without being spec-backed ToolDrawer controls.
 - HTML + CSS + TS without spec, currently `textrename`, can ship and hydrate but miss spec governance.
-- Empty directories such as `command-activity` are source inventory noise and not shipped manifest components.
+- `shared/` is helper source and is not a shipped manifest component.
 
 ### Bob And Runtime Baseline
 
@@ -78,34 +94,42 @@ This is Codex baseline only. It is not final doctrine, not a fix plan, and not S
 - Existing component docs contain stale track/count language.
 - `textrename` is shipped, exported, and hydrated, but not spec-governed.
 - Bob can render no-spec component stencils when the spec is a 404.
-- `toggle` has runtime JS but is not exported through `dieter/components/index.ts` and is not hydrated by DevStudio.
+- `toggle` has a spec, template, CSS, and generated runtime JS, but its unused
+  custom Enter-key hydrator is not exported or hydrated. Native checkbox
+  behavior is the supported contract; the custom hydrator is a deletion target,
+  not an owner decision.
 - `object-manager` and `repeater` ship and hydrate through Bob runtime scripts, but are static in DevStudio showcase.
 - `object-manager` and `repeater` are distinct contracts and must not be consolidated in Step 2.
 - Manifest dependency coverage is incomplete for composites such as `object-manager` and `repeater`.
-- `command-activity` is an empty dead directory.
 - `icon` is CSS-only and should not be counted like a spec-backed ToolDrawer component.
 - `agent-activity` is consumed by manual Bob React markup rather than the ToolDrawer compiler path.
-- Component-local raw values remain, including raw hue stops, raw z-index/shadows, hardcoded modal widths, undefined `--radius-2`, undefined `--color-surface`, and fallback-masked `--hspace-*`.
+- Component-local raw values remain, including intentional color-picker hue
+  stops, raw z-index/shadows, and hardcoded modal widths. Historical
+  `--radius-2`, `--color-surface`, and `--hspace-*` findings are fixed in current
+  source and are not current 126I gaps.
 
 ### Compliance Reason
 
-- This baseline audits component contracts as they exist.
-- This baseline does not add a component framework.
-- This baseline does not remove, rename, or consolidate components.
-- This baseline does not masquerade local screen UI as Dieter.
-- This baseline does not decide fixes for token, color, motion, accessibility, or screen concerns before human convergence.
+- The frozen baseline audited component contracts as they existed.
+- It added no component framework and performed no removal, rename, or
+  consolidation.
+- It did not masquerade local screen UI as Dieter.
+- Its then-open decisions are now resolved by the mandatory law in this PRD and
+  the owner register.
 
 ## Scope (filled from the audit)
 - Component inventories by source folder, manifest component, manifest JS bundle, DevStudio spec/template/CSS registry, and Bob runtime usage.
 - Hydration + spec-binding model.
 - Component-local token/variant/state/data-attribute patterns.
 - Drift: raw hue stops, raw z-index/shadow values, hardcoded modal widths, undefined/fallback token references, export/spec/manifest mismatches.
-- Dead/empty: `command-activity`.
-- Spec gap: `textrename`.
-- Open: `repeater` vs `object-manager` distinction remains preserved until human convergence.
+- `textrename` has no current product consumer and is a deletion target rather
+  than a spec-governance project.
+- `repeater` and `object-manager` are proven distinct and actively consumed;
+  preserve both and declare their exact component dependencies.
 
 ## Out of scope
 - Redesign / new visual language (design freeze, MAMA §4).
 - Token changes (126B/126D/126F/126H own).
 - Screens (126L/126M).
-- Component removal, consolidation, or migration before Step 4+ convergence.
+- Any step-9 component removal, consolidation, or migration before steps 4-8
+  are green. The settled deletion targets above are not reopened as decisions.

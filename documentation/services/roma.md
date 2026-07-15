@@ -29,6 +29,47 @@ Roma owns the current-account product shell:
 Bob is the editor. Tokyo-worker is the R2 boundary. Berlin owns auth and account
 identity. San Francisco owns AI execution.
 
+## Workspace Capability
+
+Roma follows the global operational-workspace tenet in
+`documentation/engineering/UI/surfaces.md`: full desktop workspace on desktop
+and tablets in either orientation; compact navigation/workspace on mobile
+landscape; explicit unsupported boundary on mobile portrait. Retina/4K density
+governs sharpness, not layout class. The current generic `980px` navigation
+collapse is a 126M execution gap, not product law. Roma keeps one simple shell:
+persistent narrow left navigation plus a flexible work area in full mode, and
+the same navigation as an overlay drawer plus a full-width work area in compact
+mode. Domain screens are not replaced by mobile variants.
+
+## Accepted Dialog And Upsell Law
+
+Under accepted 126 law, Roma follows the dismissal matrix in
+`documentation/engineering/UI/dialogs-and-modals.md`. Add Instances discards its
+temporary selection on Escape/Cancel and never closes by backdrop. Bulk Upload
+cannot dismiss while work is active. The tier-drop notice resolves only through
+Open settings or persisted Dismiss. A plan-limit prompt may close through
+Escape, backdrop, or its explicit Close action because no work is lost. Unsaved
+Builder/defaults confirmation treats Escape as Keep editing and requires
+explicit Discard. Native `beforeunload` remains only at the browser boundary;
+in-app `window.confirm` is a 126 execution gap.
+
+Legitimate Upgrade controls remain during pre-GA upsell development. Roma owns
+one small reusable account upsell scaffold: Roma-native Upgrade actions open it,
+and Bob's typed `bob:upsell` intent opens the same component. Roma does not route
+Upgrade to inactive Billing or add a global upsell store/framework. The scaffold
+performs no purchase, plan mutation, provider call, fake success, or invented
+contact operation. When the intent starts in a plan-limit prompt, Roma replaces
+that prompt instead of stacking dialogs. Ordinary Billing navigation remains
+valid for inspecting the current plan. Current Upgrade-to-`/billing` routing is
+a 126M execution gap. The current `bob:upsell` branch also invokes the Builder
+discard guard; execution removes that invocation from this in-place transition
+while preserving discard protection for real navigation.
+
+The paragraphs above are accepted product behavior, not a claim that every
+current Roma modal already implements it. Current lifecycle mismatches across
+the named dialogs, plus the two in-app `window.confirm` guards, are 126K/126M
+execution gaps; native browser `beforeunload` remains.
+
 ## Runtime Routes
 
 Roma account-shell routes include:

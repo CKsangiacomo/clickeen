@@ -1,12 +1,14 @@
 # 126L - PRD: DevStudio UI
 
-Status: CODEX BASELINE - Phase 1 step 2.
+Status: PRE-EXECUTION DOCTRINE RECORDED - step-5 living doctrine reconciled; shared-control, D1 dismissal, and D2 global workspace-capability law propagated; steps 6-8 remain pending.
 Parent: `126__PRD__UI_Optimization_Program.md`.
 Audit input: `audits/126L__AsBuilt_Codex.md`.
 Service doc: `documentation/services/devstudio.md`.
 
-This is Codex baseline only. It is not final doctrine, does not converge with
-GLM, does not select fixes, and does not run step 4+.
+The baseline/addendum sections below are frozen Phase-1 evidence. Mandatory
+DevStudio shared-control, source-authority, D1 dismissal, and D2 workspace law
+is now settled in this PRD and the product-owner decision register. No execution
+is authorized yet.
 
 ## Role
 
@@ -20,6 +22,24 @@ The current role is:
 - steer only through named validated Pages Functions;
 - keep Dieter/source truth visible rather than dressed up;
 - remain separate from Roma, Bob, and customer account operations.
+
+## Current Mandatory Law
+
+DevStudio remains a source-derived reveal/governance cockpit, not a customer
+product runtime. It consumes the accepted Dieter native field, table visual,
+tooltip, and dialog mechanics without moving policy or source authority into
+shared UI. The duplicate token import and stale generated route fixtures are
+cleanup targets; the current single token-editor listener is not. Token mutation
+must expose truthful operation evidence. Under accepted D1 law, Escape closes
+the token editor only when unchanged; dirty dismissal opens discard
+confirmation, backdrop dismissal is disabled, Cancel follows the same dirty
+rule, and Confirm Commit persists. D2 is decided global law: DevStudio preserves
+the desktop workspace on tablets in both orientations, uses compact drawer
+navigation on mobile landscape, and presents the explicit unsupported boundary
+on mobile portrait. Its one shell remains narrow persistent left navigation plus
+flexible work area in full mode, and the same navigation as an overlay drawer
+plus full-width work area in compact mode. DevStudio pages are not redesigned
+into mobile variants.
 
 ## 126 Pre-GA No Legacy Compatibility Tenet
 
@@ -38,7 +58,7 @@ Once the 126L DevStudio UI standard is decided:
   authority; execution must clean the code/doc surface instead of preserving bad
   paths behind validation.
 
-## Phase 1 Step 2 Boundary
+## Frozen Phase 1 Step 2 Boundary
 
 MAMA says step 2 is baseline/directional PRD: current reality plus known gaps,
 no fixes. Therefore this document:
@@ -92,10 +112,14 @@ Current reality:
 
 Known gaps:
 
-- DevStudio chrome is not purely Dieter-component-built.
-- Local CSS includes raw px and hex values in layout/preview surfaces.
-- Current counts must be reverified in later human convergence because old PRD
-  and living-doc counts drift.
+- App-specific shell/layout CSS is legitimate. Shared operational-field/table
+  appearance and dialog mechanics are Dieter-owned; accepted D1 law governs
+  token-editor dismissal. D2 workspace-capability behavior is settled.
+- Local layout constants remain, but the current inspected DevStudio CSS has no
+  raw hex color finding.
+- Below `960px`, the sidebar is moved off-screen without a working open trigger.
+  That generic breakpoint and half-state must be replaced by accepted D2 law.
+- Current counts are verified above; old PRD/living-doc counts must not survive.
 - The current route-contract e2e fixture is stale against generated component
   and tool counts.
 
@@ -105,6 +129,8 @@ Current reality:
 
 - DevStudio imports Dieter tokens and selected component CSS.
 - Static page fragments are imported from generated registries.
+- Dieter tokens are currently imported both directly in `main.ts` and through
+  local `tokens.css`; one import authority should survive.
 - Page rendering hydrates icons, executes embedded fragment scripts, injects
   page CSS, and runs Dieter hydrators.
 - Component pages are generated from Dieter component specs/templates/CSS.
@@ -113,7 +139,8 @@ Current reality:
 - Component renderer checks that enumerated attribute values render.
 - Foundation pages are generated from Dieter token/icon source.
 - Color and icon foundation pages carry generated governance counts.
-- `--radius-4` is a real current surface-radius alias, not a ghost token.
+- Historical source used `--radius-4`; current source uses
+  `--control-radius-*` and contains no numeric radius alias.
 - Typography page content is built from generated typography JSON.
 
 Known gaps:
@@ -147,8 +174,17 @@ Current reality:
 Known gaps:
 
 - The token editor overlay is local DevStudio UI, not a Dieter modal.
-- Its injected panel has no inspected `role="dialog"` or `aria-modal`.
+- Its injected panel now has `role="dialog"`, `aria-modal="true"`, and an
+  accessible title. Complete blocking-dialog lifecycle behavior remains a 126K
+  decision/gap.
 - It is not a token/schema/component editor.
+
+Current shell correction:
+
+- Below `960px`, CSS moves the sidebar off-screen but no current trigger/state
+  opens it. The collapsed-sidebar/menu selectors are unwired. D2 now requires
+  desktop workspace on tablets, compact drawer navigation on mobile landscape,
+  and an explicit mobile-portrait boundary.
 
 ### Policy Tool Pages
 
@@ -164,8 +200,9 @@ Current reality:
 Known gaps:
 
 - These tool pages are not Dieter component source.
-- Their inline styling and governance behavior must be classified during later
-  convergence instead of omitted from the DevStudio UI domain.
+- Their app-specific composition may remain local, but their independently
+  styled operational tables must consume the mandatory small Dieter visual base
+  while keeping policy-specific composition local.
 
 ### Build And Static Output
 
@@ -191,9 +228,10 @@ tokenizing inline values.
 Current baseline corrections:
 
 - Those steps are not executable in Phase 1 Step 2.
-- The old "ghost token `--radius-4`" claim is stale against current 126H
-  foundation/radius alias findings.
-- `textrename` is current drift evidence, not a Step 2 deletion decision.
+- The old `--radius-4` discussion is historical. Current source contains no
+  numeric radius alias; step 6 must verify it stays on `--control-radius-*`.
+- `textrename` was drift evidence at Step 2 and is now a settled deletion target;
+  no deletion occurs before steps 4-8 are green.
 - Old page/component counts are stale and must not be reused without re-audit.
 
 ## Comparative Baseline
@@ -225,11 +263,10 @@ Product:
 - No generated output change.
 - No account/customer data operation.
 
-Product law:
+Frozen Step-2 collection boundary:
 
 - No code changes.
-- No Step 4+ convergence.
-- No AI convergence of Codex and GLM.
+- At collection time, no Step 4+ or Codex/GLM convergence had occurred.
 - No new enforcement machinery.
 - No reinterpretation into an ideal DevStudio system.
 
@@ -249,4 +286,5 @@ Product law:
 - Step 1 input exists: `audits/126L__AsBuilt_Codex.md`.
 - Step 2 baseline exists in this file.
 - Step 3 source research exists: `research/126L_Research_Codex.md`.
-- This file remains directional and non-binding until human convergence.
+- At the end of Step 2 this file was directional and non-binding. Current
+  mandatory D1/D2 law is settled above.

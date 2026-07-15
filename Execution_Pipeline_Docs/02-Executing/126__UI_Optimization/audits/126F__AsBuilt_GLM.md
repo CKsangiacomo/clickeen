@@ -1,5 +1,7 @@
 # 126F — As-built audit: Motion (GLM, Phase-1 step 1)
 
+Status: FROZEN POINT-IN-TIME PRE-EXECUTION AS-BUILT - code changed afterward; exact working-tree provenance may be unrecorded; no step-9 execution credit.
+
 > GLM independent pass. Codex writes its own; **not converged**. Source: `dieter/tokens/dieter-foundation-tokens.css:79–82, 99–106` + component CSS greps.
 
 ---

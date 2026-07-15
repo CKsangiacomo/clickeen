@@ -1,6 +1,6 @@
 # 126G Ops - As-Built Audit - Codex
 
-Status: CODEX ONLY - Phase 1 Step 1.
+Status: FROZEN POINT-IN-TIME PRE-EXECUTION AS-BUILT - code changed afterward; exact working-tree provenance may be unrecorded; no step-9 execution credit.
 Scope: Current UI ops system: Dieter build, generated artifacts, DevStudio generation/governance, token edit lane, CI deploy trigger, and Tokyo R2 sync.
 
 No code changes, no runtime operations, no product data changes, no Cloudflare/R2 preflight.

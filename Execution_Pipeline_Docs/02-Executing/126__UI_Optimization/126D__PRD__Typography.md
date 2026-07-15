@@ -1,6 +1,6 @@
 # 126D - PRD: Typography
 
-Status: PRE-EXECUTION READY - three-lane review green.
+Status: PRE-EXECUTION DOCTRINE RECORDED - step-5 living doctrine reconciled; account-font migration proven complete; step-6/7/8 artifacts pending; no step-9 execution credit.
 Parent: `126__PRD__UI_Optimization_Program.md` (MAMA).
 Series order: 126D of 126A-126M.
 KB doc: `documentation/engineering/UI/typography.md`.
@@ -76,7 +76,7 @@ Strong current substrate:
 - DevStudio generates typography preview data from Dieter CSS and can currently
   edit only a subset of typography tokens.
 
-Current gaps:
+Current remaining typography gaps:
 
 - Dieter operational UI and widget runtime typography are both real, but their
   ownership boundaries are underdocumented.
@@ -86,22 +86,16 @@ Current gaps:
 - Public widgets have richer typography mechanics than the public Dieter doc
   explains: tracking presets, line-height presets, container-query fluid sizing,
   script fallback, and locale/script-aware line-height behavior.
-- `--font-display` is referenced by widget CSS but has no source definition in
-  the inspected state.
-- Bob font data and widget runtime font data still expose fixed
-  `source: 'tokyo'` / `/fonts/special/*` records. The decided product law is
-  account font libraries, not a global custom-font bucket.
-- The account font library is not yet represented as a concrete account data
-  contract. Bob currently builds options from static source metadata, and the
-  runtime currently accepts only static `CK_WIDGET_TYPOGRAPHY_DATA.curatedFonts`.
-- Account assets do not yet accept/list fonts as `assetType: "font"`.
-- Root `/fonts/**` routing still exists in Tokyo-worker/Cloudflare/Bob proxy
-  paths and must be removed only after account-font migration and package
-  inventory prove the root font path is no longer live product data.
 - Bob editor fields, widget-shell defaults, and runtime-applied fields do not
   fully line up.
-- Existing docs understate Bob, widget runtime, account fonts, and generated
-  class-count reality.
+
+The account-font architecture is current and closed: `fontLibrary` and normal
+account assets represent fonts; Bob and materialization consume that authority;
+the former Tokyo special-font records, active `--font-display` references, and
+root `/fonts/**` route are absent. Authenticated Roma evidence confirms all
+seven custom fonts as `CLICKEEN` account assets, and public runtime evidence
+confirms Orio and Pachuka Line load through account-asset URLs. Living docs
+describe this current architecture.
 
 ## Human-Decided Product Standard
 
@@ -215,15 +209,10 @@ Target law:
   is one smooth picker, not confusing product categories.
 - Runtime loading preserves source authority underneath: Google Fonts from
   Google, uploaded fonts from Clickeen account asset URLs.
-- The fixed `source: 'tokyo'` / `/fonts/special/*` custom-font path is not the
-  target product model. Current Frari, Giudecca, Marin, Orio, Pachuka,
-  Pachuka Line, and Rialto availability is treated as intended admin-account
-  custom font availability in the target model. Execution migrates those font
-  bytes to the normal `CLICKEEN` account asset authority before removing the
-  fixed product-font path from active source.
-- `--font-display` must not remain referenced. Execution target is no active
-  `--font-display` references unless the human explicitly creates that token as
-  product law in a later PRD.
+- Frari, Giudecca, Marin, Orio, Pachuka, Pachuka Line, and Rialto are normal
+  `CLICKEEN` account assets. The former fixed product-font path is absent.
+- `--font-display` has no active reference and must not be restored unless the
+  human explicitly creates that token as product law in a later PRD.
 
 Compliance reason: this is the actual Clickeen moat for typography. Customers
 get Google Fonts and uploaded custom fonts in one portable widget font library,
@@ -239,7 +228,7 @@ library metadata extends the existing account widget defaults document:
 accounts/{accountPublicId}/widget-defaults.json
 ```
 
-Target document addition:
+Current document contract:
 
 ```text
 fontLibrary: {
@@ -281,13 +270,10 @@ Field law:
 - Uploaded font records carry `assetRef` and `contentType`; they do not persist
   a public CDN URL or root `/fonts/**` URL.
 - Inter is present as a locked `google` record in every account font library.
-- Current system Google font choices become account-selected Google font
-  records in this same `fontLibrary.fonts` map. Future account customization
-  adds/removes Google records here, except Inter.
-- Current Frari, Giudecca, Marin, Orio, Pachuka, Pachuka Line, and Rialto
-  records become `account-asset` records only for the `CLICKEEN` account unless
-  product-data inventory proves another account currently owns a saved use that
-  must be explicitly migrated.
+- Current Google and `CLICKEEN` account-asset records coexist in this
+  `fontLibrary.fonts` map. Future account customization adds/removes Google
+  records here, except Inter. Authenticated product evidence confirms the seven
+  custom fonts belong to `CLICKEEN`.
 
 This metadata is account product data. It is not a shell control, not a
 per-widget visual field, and not a new subsystem.
@@ -301,8 +287,8 @@ account asset authority.
 
 ## Font Upload Allowlist
 
-Execution must add exact font upload acceptance to the existing account asset
-route. Do not accept a broad `font/*` prefix.
+Existing account-asset upload validation accepts only the exact font pairs
+below. It does not accept a broad `font/*` prefix.
 
 Allowed font pairs:
 
@@ -320,17 +306,15 @@ validation into a fail-open file bucket.
 
 ## Bob Authoring And Runtime Delivery
 
-Bob opens through Roma, and Roma is the current-account authority. Execution
-must make Roma include the account font library in the `ck:open-editor` payload
-from the existing account widget defaults authority, or make Bob fetch it
-through an existing Roma-hosted account command. Pick the narrowest code path
-that preserves this authority chain:
+Bob opens through Roma, and Roma is the current-account authority. Current
+source carries the account font library into the Bob session through this
+authority chain:
 
 ```text
 Roma current account -> account widget defaults -> Bob session -> typography panel
 ```
 
-Bob target behavior:
+Current Bob behavior:
 
 - The Typography panel font picker uses the account font library, not
   `CK_TYPOGRAPHY_FONT_META` as final source truth.
@@ -345,7 +329,7 @@ Bob target behavior:
   widget/compiler. Generic labels such as "Subtitle" or "Eyebrow" must not be
   shown when the active widget role means something else.
 
-Runtime/materialization target behavior:
+Current runtime/materialization behavior:
 
 - Save/package materialization reads the account font library and the saved
   widget typography state together.
@@ -367,36 +351,13 @@ Runtime/materialization target behavior:
 Compliance reason: authoring and runtime share the same account font authority,
 which prevents Bob from offering fonts that public widgets cannot load.
 
-## Font Migration And Deploy Sequence
+## Font Migration Closure
 
-Font migration is cross-system product-data work. Execution order is binding:
-
-1. Add source support for `assetType: "font"`, exact font MIME/extension
-   acceptance, account font library metadata, Bob account-font consumption, and
-   runtime account-font materialization.
-2. Deploy the font-capable account asset/runtime path through the normal
-   Cloudflare/Git path before moving existing font bytes. This is migration
-   sequencing, not a compatibility lane.
-3. Inventory source, account widget defaults, saved account instances, generated
-   public packages, and R2 package bytes for the seven current special font
-   families and for `/fonts/special/*` or root `/fonts/**` references.
-4. Migrate current `CLICKEEN` special font bytes through Roma/Tokyo-worker
-   account asset authority into `accounts/CLICKEEN/assets/...`.
-5. If inventory finds non-`CLICKEEN` accounts or published packages using the
-   special families, do not silently drop them. Execution must either migrate
-   those account uses by explicit product-data authority or stop before route
-   removal with the exact account/package evidence.
-6. Rematerialize any affected public packages so runtime font data points to
-   account asset URLs.
-7. Remove `source: 'tokyo'`, `/fonts/special/*`, root `/fonts/**`
-   Tokyo-worker route/proxy/config/docs, and special font files from active
-   source after migration and package evidence are green.
-
-Final green state has no active `/fonts/special/*` source, no root font route
-kept as a guard, and no docs describing root product fonts as current.
-
-Compliance reason: the sequence avoids V3/V6/V7 without preserving the old font
-path as a permanent concept.
+Font support, account-library wiring, asset migration, package materialization,
+old-route removal, and public runtime delivery are complete. Authenticated Roma
+and public-runtime evidence is recorded in `126_DevQA.md`. No remote font
+migration remains. The seven untracked local copies under
+`tokyo/product/fonts/special/` are non-deployed residue for step-9 deletion only.
 
 ## Widget Fallback Baseline
 
@@ -446,73 +407,76 @@ avoids a fake design-token console.
 
 ## Detailed Execution Blast Radius
 
-Execution must use `audits/126D__Audit__Typography.md` as the binding
-file-level audit. The table below is the allowed 126D blast radius. It is not a
-permission to redesign typography; it is the exact scope needed to make the
-current codebase match this PRD.
+The table below is the full historical/current 126D blast radius. Every code
+row is verified current baseline and regression evidence. The only scheduled
+step-9 change is deletion of the seven proven local font copies. The final
+step-6 audit must not reopen completed typography or font migration work unless
+it proves a new current-source mismatch.
 
 | Area | Paths | Execution concern |
 | --- | --- | --- |
-| Dieter source typography | `dieter/tokens/dieter-typography.css` | Remove raw `h1`-`h6` selectors; keep `.heading-1`-`.heading-6`; remove `.body-small` and `.body-large`; remove typography-owned `color:` from `.label-*`, `.caption*`, `.overline*`. |
-| Generated Dieter typography output | `tokyo/product/dieter/tokens/dieter-typography.css`, `tokyo/product/dieter/tokens/dieter-typography.shadow.css` | Regenerate only from Dieter source. No hand edits. |
-| Generated count governance | `scripts/dieter/governance-guards.mjs` | Reconcile the locked generated typography count after source class cleanup; the count must reflect current source truth. |
-| DevStudio typography generation | `admin/scripts/generate-typography-json.cjs`, `admin/src/data/typography.generated.json`, `admin/src/data/typography.ts`, `admin/src/main.ts`, `admin/functions/_shared/dieter-tokens.js`, `admin/src/css/dieter-previews.css` | Reveal/write must remain honest; generated preview rows come from current visual classes only; remove undefined `--font-body-xsmall`; partial token editing must not masquerade as full typography authority. |
-| Admin component example generation | `admin/src/data/componentRenderer.ts`, `admin/src/html/components/**` | Replace generated `body-xsmall` spec-line class with current `body-xs`; regenerate component HTML. |
-| Dieter component stale class cleanup | `dieter/components/textedit/textedit.html`, `dieter/components/textedit/textedit-dom.ts`, `dieter/components/dropdown-edit/dropdown-edit.html`, `dieter/components/textrename/textrename.css` | Replace `body-xsmall` with `body-xs`, `label-small` with `label-s`, and remove comments that preserve removed class names. |
-| Dieter component tracking cleanup | `dieter/components/button/button.css`, `dieter/components/textfield/textfield.css`, `dieter/components/valuefield/valuefield.css`, `dieter/components/textrename/textrename.css` | Local non-zero tracking must either move to explicit Dieter visual text classes or be removed. No component-local copied tracking values. |
-| Generated Dieter component output | `tokyo/product/dieter/components/**` | Regenerate from Dieter component source after source fixes. |
-| Bob shell typography | `bob/app/bob_app.css` | Replace `.settings-panel__code code` hardcoded mono stack with `var(--font-mono)`. |
-| Account font library document | `roma/lib/account-widget-defaults-direct.ts`, `roma/lib/account-widget-defaults-contract.ts`, `roma/lib/account-widget-defaults-materialization.ts`, `roma/components/widget-defaults-domain.tsx`, `roma/app/api/account/widget-defaults/route.ts`, `tokyo-worker/src/domains/account-widget-defaults.ts`, `tokyo-worker/src/routes/internal-widget-default-routes.ts` | Extend the existing account widget defaults authority with top-level `fontLibrary` metadata through both Roma and Tokyo-worker storage ownership. Do not put font library under shell controls or create a new font service. |
-| Bob open/session font payload | `roma/components/builder-domain.tsx`, `bob/lib/session/sessionTypes.ts`, `bob/lib/session/useSessionBoot.ts`, `bob/lib/session/WidgetDocumentSession.tsx` | Carry the account font library from Roma/current account into Bob session or through an existing Roma account command. Missing/malformed font library fails open-editor explicitly. |
-| Bob widget typography authoring | `bob/lib/edit/typography-fonts.ts`, `bob/lib/compiler/modules/typography.ts`, `bob/components/td-menu-content/linkedOps.ts`, `bob/components/td-menu-content/useTdMenuBindings.ts` | Remove `source: 'tokyo'` / `/fonts/special/*`; font options come from account font library; controls remain aligned with runtime-applied fields; role labels must match widget semantics. |
+| Dieter source typography | `dieter/tokens/dieter-typography.css` | Verified current: raw heading selectors, removed body aliases, and typography-owned label/caption/overline colors are absent; current visual classes remain. |
+| Generated Dieter typography output | `tokyo/product/dieter/tokens/dieter-typography.css`, `tokyo/product/dieter/tokens/dieter-typography.shadow.css` | Verified current: generated only from Dieter source; no hand-edit lane. |
+| Generated count governance | `scripts/dieter/governance-guards.mjs` | Verified current: locked generated count reflects current source truth. |
+| DevStudio typography generation | `admin/scripts/generate-typography-json.cjs`, `admin/src/data/typography.generated.json`, `admin/src/data/typography.ts`, `admin/src/main.ts`, `admin/functions/_shared/dieter-tokens.js`, `admin/src/css/dieter-previews.css` | Verified current: reveal/write is bounded to real authority, preview rows use current classes, and `--font-body-xsmall` is absent. |
+| Admin component example generation | `admin/src/data/componentRenderer.ts`, `admin/src/html/components/**` | Verified current: generated examples use `body-xs`. |
+| Dieter component stale class cleanup | `dieter/components/textedit/textedit.html`, `dieter/components/textedit/textedit-dom.ts`, `dieter/components/dropdown-edit/dropdown-edit.html`, `dieter/components/textrename/textrename.css` | Verified current: removed `body-xsmall`/`label-small` names and preserving comments are absent. |
+| Dieter component tracking cleanup | `dieter/components/button/button.css`, `dieter/components/textfield/textfield.css`, `dieter/components/valuefield/valuefield.css`, `dieter/components/textrename/textrename.css` | Verified current: component-local copied tracking values are absent. |
+| Generated Dieter component output | `tokyo/product/dieter/components/**` | Verified current: output reflects Dieter component source. |
+| Bob shell typography | `bob/app/bob_app.css` | Verified current: the code block uses `var(--font-mono)`. |
+| Account font library document | `roma/lib/account-widget-defaults-direct.ts`, `roma/lib/account-widget-defaults-contract.ts`, `roma/lib/account-widget-defaults-materialization.ts`, `roma/components/widget-defaults-domain.tsx`, `roma/app/api/account/widget-defaults/route.ts`, `tokyo-worker/src/domains/account-widget-defaults.ts`, `tokyo-worker/src/routes/internal-widget-default-routes.ts` | Verified current: top-level `fontLibrary` flows through the existing account widget-defaults authority. |
+| Bob open/session font payload | `roma/components/builder-domain.tsx`, `bob/lib/session/sessionTypes.ts`, `bob/lib/session/useSessionBoot.ts`, `bob/lib/session/WidgetDocumentSession.tsx` | Verified current: Bob receives the account font library and rejects missing/malformed data. |
+| Bob widget typography authoring | `bob/lib/edit/typography-fonts.ts`, `bob/lib/compiler/modules/typography.ts`, `bob/components/td-menu-content/linkedOps.ts`, `bob/components/td-menu-content/useTdMenuBindings.ts` | Verified current: font options come from the account library; fixed Tokyo font records are absent. |
 | Widget shell contract | `packages/widget-shell/src/defaults.ts`, `packages/widget-shell/src/contract.ts`, `packages/widget-shell/src/controls.ts` | Defaults/controls/schema must not imply custom values are active unless their preset is `custom`; shell paths must map to runtime apply behavior. |
-| Runtime package materialization | `roma/lib/account-instance-public-package.ts`, `roma/lib/account-instance-locale-package.ts`, `packages/ck-runtime-materializer/src/**` | Materialized packages must include account font runtime data for saved typography families and fail when referenced account font data/assets are missing. |
-| Widget runtime typography | `tokyo/product/widgets/shared/typography.js`, `tokyo/product/widgets/shared/typography-data.js`, `packages/widget-shell/src/modules.ts` | Remove Tokyo special-font source logic; preserve Google Fonts loading and script fallback; uploaded fonts resolve through account asset URLs; package data replaces static special-font data. |
-| Widget CSS consumers | `tokyo/product/widgets/cards/widget.css`, `tokyo/product/widgets/big-bang/widget.css` | Replace undefined `--font-display` fallback with defined `var(--font-ui)` fallback. |
-| Widget specs/runtime invalid class cleanup | `tokyo/product/widgets/faq/spec.json` | Replace `body-xsmall` with current `body-xs` where widget editor specs embed Dieter component classes. |
-| Special font product files | `tokyo/product/fonts/special/Frari.woff2`, `tokyo/product/fonts/special/Giudecca.woff`, `tokyo/product/fonts/special/Marin.woff`, `tokyo/product/fonts/special/Orio.woff`, `tokyo/product/fonts/special/Pachuka.woff2`, `tokyo/product/fonts/special/Pachuka_line.woff2`, `tokyo/product/fonts/special/Rialto.woff2` | Migrate bytes to `accounts/CLICKEEN/assets/...` through account asset authority, then remove these stale product-font files from active source. |
-| Account asset font support | `tokyo-worker/src/domains/assets-handlers.ts`, `tokyo-worker/src/asset-utils.ts`, `tokyo-worker/src/domains/assets.ts`, `roma/app/api/account/assets/upload/route.ts`, `roma/components/assets-domain.tsx`, `dieter/components/shared/account-assets.ts`, `roma/lib/account-asset-record.ts` | Account assets must accept/list/resolve uploaded fonts as normal account assets with truthful `assetType: "font"` metadata and the exact MIME/extension allowlist in this PRD; no separate font asset subsystem. |
-| Root font route/proxy cleanup | `tokyo-worker/src/routes/asset-routes.ts`, `tokyo-worker/src/asset-utils.ts`, `tokyo-worker/wrangler.toml`, `bob/app/fonts/[...path]/route.ts`, `bob/lib/tokyo-static-proxy.ts` | Remove `/fonts/special/*` and broader root `/fonts/**` route/proxy/config/docs after source + R2/package/account-instance inventory and migration are green; do not keep a guard for the deleted special-font concept. |
-| Roma typography consumers | `roma/components/team-domain.tsx`, `roma/components/team-member-domain.tsx`, `roma/components/accept-invite-domain.tsx` | Replace `heading-h3` / `heading-h4` with current `heading-3` / `heading-4`. |
-| Prague typography consumers | `prague/src/pages/[market]/[locale]/create/index.astro`, `prague/src/pages/[market]/[locale]/index.astro`, `prague/src/pages/[market]/[locale]/privacy/index.astro` | Replace local page font stack/inline sizes with Dieter classes/tokens in create page; remove duplicate inline heading tracking from index/privacy pages. |
+| Runtime package materialization | `roma/lib/account-instance-public-package.ts`, `roma/lib/account-instance-locale-package.ts`, `packages/ck-runtime-materializer/src/**` | Verified current: packages include required account-font data and fail on missing referenced font truth. |
+| Widget runtime typography | `tokyo/product/widgets/shared/typography.js`, `tokyo/product/widgets/shared/typography-data.js`, `packages/widget-shell/src/modules.ts` | Verified current: Google and account-asset fonts retain their separate source authorities; Tokyo special-font logic is absent. |
+| Widget CSS consumers | `tokyo/product/widgets/cards/widget.css`, `tokyo/product/widgets/big-bang/widget.css` | Verified current: no active `--font-display` fallback remains. |
+| Widget specs/runtime invalid class cleanup | `tokyo/product/widgets/faq/spec.json` | Verified current: embedded editor classes use `body-xs`. |
+| Local special-font residue | untracked `tokyo/product/fonts/special/*` files | The seven account assets are proven current; delete these non-deployed local copies mechanically in step 9. |
+| Account asset font support | `tokyo-worker/src/domains/assets-handlers.ts`, `tokyo-worker/src/asset-utils.ts`, `tokyo-worker/src/domains/assets.ts`, `roma/app/api/account/assets/upload/route.ts`, `roma/components/assets-domain.tsx`, `dieter/components/shared/account-assets.ts`, `roma/lib/account-asset-record.ts` | Verified current: normal account assets accept/list/resolve fonts with truthful metadata and the exact allowlist. |
+| Root font route/proxy cleanup | `tokyo-worker/src/routes/asset-routes.ts`, `tokyo-worker/src/asset-utils.ts`, `tokyo-worker/wrangler.toml`, `bob/lib/tokyo-static-proxy.ts` | Verified current: no root product-font route/proxy/config remains. |
+| Roma typography consumers | `roma/components/team-domain.tsx`, `roma/components/team-member-domain.tsx`, `roma/components/accept-invite-domain.tsx` | Verified current: consumers use `heading-3` / `heading-4`. |
+| Prague typography consumers | `prague/src/pages/[market]/[locale]/create/index.astro`, `prague/src/pages/[market]/[locale]/index.astro`, `prague/src/pages/[market]/[locale]/privacy/index.astro` | Verified current: pages use Dieter classes/tokens and duplicate inline heading tracking is absent. |
 | Prague tracking inventory | `prague/src/blocks/site/nav/Nav.astro`, `prague/src/blocks/split/split.astro`, `prague/src/blocks/split-carousel/SplitCarousel.astro`, `prague/public/styles/primitives.css` | Named for blast-radius awareness only; leave to Prague/surface execution unless 126D creates a direct Dieter tracking token replacement. |
 | Documentation | `documentation/engineering/UI/typography.md`, `documentation/engineering/UI/dieter.md`, `documentation/architecture/AssetManagement.md`, `documentation/services/bob.md`, `documentation/services/tokyo-worker.md`, `documentation/engineering/CloudflareOperations.md`, `documentation/widgets/shared/ShellCore.md`, `documentation/widgets/shared/ShellUtilities.md`, `documentation/widgets/authoring/ToolDrawerControls.md`, `documentation/widgets/widgets/*.md` | Living docs must state the two lanes, account font library, account asset/CDN font serving, exact author/runtime ownership, and must not describe removed patterns as current. |
 
-Known documentation repairs:
+Current documentation reconciliation:
 
-- `documentation/engineering/UI/typography.md` must cover both typography lanes:
+- `documentation/engineering/UI/typography.md` now covers both typography lanes:
   Dieter operational UI typography and public-widget runtime content
   typography.
-- `documentation/engineering/UI/typography.md` must document the account font
+- It documents the account font
   library: Inter baseline, account-selected Google Fonts, and account-uploaded
   custom fonts served through Clickeen account asset CDN URLs.
-- `documentation/engineering/UI/typography.md` must document the
+- It documents the
   `fontLibrary` record shape in account widget defaults and state that public
   URLs are materialized runtime data, not persisted account font source truth.
-- `documentation/engineering/UI/typography.md` must state the Inter/Inter Tight
+- It states the Inter/Inter Tight
   distinction: widget/content baseline Inter is required in every account font
   library; operational UI `--font-ui` is the Dieter chrome stack.
-- `documentation/engineering/UI/typography.md` must cover current
+- It covers current
   `CKTypography` behavior, `--font-display` cleanup, and the viewport-fluid
   versus container-query-fluid split.
-- `documentation/architecture/AssetManagement.md` must state that uploaded
+- `documentation/architecture/AssetManagement.md` states that uploaded
   fonts are account assets, including accepted font MIME/extensions,
   `assetType: "font"`, admin account `CLICKEEN`, and account asset CDN
   delivery.
-- `documentation/services/bob.md` must state that Roma supplies account font
+- `documentation/services/bob.md` states that Roma supplies account font
   library data to Bob and Bob must fail open-editor if account font data is
   missing or malformed.
 - `documentation/services/tokyo-worker.md` and
-  `documentation/engineering/CloudflareOperations.md` must document final root
-  font route removal if `/fonts/**` is deleted from Worker routing/config.
+  `documentation/engineering/CloudflareOperations.md` record current route
+  authority without a root product-font path.
 - `documentation/widgets/shared/ShellCore.md` and
-  `documentation/widgets/shared/ShellUtilities.md` must document widget runtime
+  `documentation/widgets/shared/ShellUtilities.md` document widget runtime
   typography as `CKTypography` behavior, not Dieter chrome typography.
 - Removed paths and class names must not remain documented as current behavior.
 
 ## Execution Gap Targets
 
-126D execution must complete these source/doc changes:
+126D step 6 must verify current source/docs and retain only proven remaining
+typography mismatches. The font-specific items below are already closed and are
+regression checks, not execution scope:
 
 - Remove raw `h1` through `h6` visual styling from Dieter typography source.
 - Keep visual heading classes only as explicit visual text classes.
@@ -521,31 +485,26 @@ Known documentation repairs:
 - Remove typography-owned color from Dieter label/caption/overline utility
   classes or route the color to the consuming component/context/widget content
   authority.
-- Remove active `--font-display` references.
+- Verify active `--font-display` references remain absent.
 - Replace Bob local monospace/font-stack bypasses with `--font-mono` /
   `--font-ui`.
-- Remove current fixed `source: 'tokyo'` custom font records from Bob and
-  widget runtime font data.
-- Add account font library metadata to the existing account widget defaults
-  document as top-level account metadata.
-- Migrate intended admin-account font availability to `accounts/CLICKEEN/assets`
-  through the account asset authority.
-- Add account asset support for uploaded font files and truthful
-  `assetType: "font"` metadata using the exact font MIME/extension allowlist in
-  this PRD.
+- Verify fixed `source: 'tokyo'` records remain absent and account
+  `fontLibrary` metadata remains authoritative.
+- Verify the seven admin fonts remain normal `CLICKEEN` account assets and font
+  upload continues to use the exact allowlist.
 - Align Bob font selection, saved widget typography, widget-shell defaults, and
   widget runtime loading.
 - Ensure account-uploaded fonts resolve through Clickeen account asset CDN
   serving in public widgets.
-- Inventory saved account instances, account widget defaults, public packages,
-  and R2 package bytes before deleting root font routes.
+- Do not reopen remote inventory or route deletion; those migration gates are
+  closed.
 - Update living docs listed in the blast-radius table.
 
-## Product Data Authority For Font Migration
+## Closed Product Data Authority Evidence
 
-Current special font files are intended admin-account custom font availability
-in the target model. Migrating them is product data work as well as code/doc
-work.
+The seven fonts are verified `CLICKEEN` account assets. This section records the
+authority used for that completed migration; it does not authorize new product
+data work.
 
 Authority chain:
 
@@ -553,20 +512,15 @@ Authority chain:
 Roma current account -> accountPublicId CLICKEEN -> Roma account asset route -> Tokyo-worker -> accounts/CLICKEEN/assets/{filename}
 ```
 
-Verification:
+Closed evidence:
 
-- Account asset font upload support is deployed before migration starts.
-- Roma account asset route or Assets UI shows the font assets for `CLICKEEN`.
-- R2 evidence confirms bytes/metadata under `accounts/CLICKEEN/assets/...`
-  after `pnpm cf:preflight`.
-- Cloudflare API/route verification passes after `pnpm cf:api:preflight` when
-  the root `/fonts/**` route/config is removed.
-- GitHub Actions/Cloudflare evidence confirms the Worker deploy that contains
-  the final font route state.
-- Account widget defaults, saved account instances, generated public packages,
-  and R2 package bytes are inventoried for the seven special font families and
-  for `/fonts/special/*` or root `/fonts/**` references before route removal.
-- Public widget runtime uses account asset URLs, not root product-font URLs.
+- Authenticated Roma account routes show all seven fonts as `CLICKEEN` account
+  assets and expose the current `fontLibrary`.
+- Current source contains no root product-font route or fixed Tokyo font record.
+- Public widget runtime uses account-asset URLs, not root product-font URLs.
+- Direct R2/API preflight is unavailable on this machine because
+  `CLOUDFLARE_ACCOUNT_ID` is absent; this register makes no direct-storage
+  claim.
 
 Compliance reason: the admin account is not a special global asset class.
 
@@ -597,18 +551,19 @@ authority instead of replacing Clickeen with another company's type system.
 
 | ID | 126D risk | Required control |
 | --- | --- | --- |
-| V1 Silent substitution | Undefined `--font-display` or fake font fallback substitutes an invented font truth. | Remove active `--font-display` references; account font records are explicit product data, not inferred from static maps. |
+| V1 Silent substitution | A future change restores undefined `--font-display` or invents font truth. | Verified: no active `--font-display` reference; account font records are explicit product data. |
 | V2 Silent healing | Runtime coerces invalid font config into a different persisted font without surfacing failure. | Preserve runtime validation semantics; do not normalize stored user typography into false success. |
-| V3 Silent omission | Removing fixed font paths drops intended admin-account font availability or published package references. | Deploy font asset support, inventory source/product data/R2 packages, migrate intended fonts, rematerialize affected packages, then remove old source path. |
+| V3 Silent omission | A future cleanup drops account font availability or package references. | Verified: fonts are migrated, packages use account assets, and the old route is removed. |
 | V4 Fail-open control | Missing font/source data falls back to unowned typography behavior. | Missing account font library/record/asset fails Bob open or save/materialization explicitly; upload acceptance uses exact MIME/extension pairs. |
 | V5 Corruption-as-absence | Bad stored typography becomes treated as empty/default and overwritten. | Do not rewrite persisted typography state as part of code cleanup. |
 | V6 Partial-success masquerade | Bob shows fields/fonts/runtime roles that public widgets ignore. | Bob font picker, saved typography, account font library, package data, and runtime apply path must agree. |
-| V7 Masquerade/redress | `/fonts/special/*` remains while being renamed "account fonts." | Migrate to account assets, then remove the old source path; do not keep it under a new label. |
+| V7 Masquerade/redress | A deleted special-font concept is restored under a new label. | Verified: `/fonts/special/*` and the root font route are absent. |
 | V8 Runtime test dependency | Normal font behavior depends on validation scripts/check rituals. | Fix source/docs/runtime authority; checks only verify execution. |
 
 ## Verification Checklist
 
-Execution is not complete until these checks are run and reconciled:
+These are regression checks for any later typography change. They do not reopen
+font migration or authorize remote product-data work:
 
 - `pnpm build:dieter`
 - Regenerate/verify DevStudio typography data if affected.
@@ -626,14 +581,10 @@ Execution is not complete until these checks are run and reconciled:
 - Verify Bob font options are sourced from the account font library model.
 - Verify widget runtime font loading uses Google Fonts or account asset URLs as
   appropriate.
-- Verify migrated font assets through Roma/Tokyo-worker/R2 account asset
-  authority.
-- Run `pnpm cf:preflight` before R2 font migration/verification.
-- Run `pnpm cf:api:preflight` before Cloudflare route/config verification.
-- Verify Worker deploy evidence when Tokyo-worker route/config changes.
-- Inventory account widget defaults, saved account instances, public packages,
-  and R2 package bytes for special font family/root path references before
-  root font route removal.
+- Verify account-font state through Roma/Tokyo product routes and public
+  runtime if later typography execution touches that path. Direct Cloudflare
+  checks require the documented preflight and credentials; no migration is
+  reopened here.
 - Update docs listed in the blast-radius table.
 
 ## Out Of Scope
@@ -649,17 +600,16 @@ Execution is not complete until these checks are run and reconciled:
 
 ## GLM Input Integrated
 
-GLM's independent as-built and research passes are integrated into the
-standard above. The high-signal findings are:
+GLM's independent input is frozen historical provenance. Current source
+overrides stale present-tense claims below:
 
 - Dieter has no tracking token layer and currently inlines letter-spacing in
   utility classes.
 - Dieter fluid display is viewport-clamp; widget runtime fluid type is
   container-query clamp.
 - Typography utilities currently carry some color behavior.
-- Widget typography runtime is richer than the Dieter typography doc currently
-  explains.
-- `--font-display` is referenced but not defined.
+- Living typography documentation now explains the richer widget runtime.
+- `--font-display` is absent from active source.
 - Dieter source and generated Tokyo Dieter output duplicate because generated
   output mirrors source.
 - Bob editor role coverage, widget-shell defaults, and runtime-applied custom

@@ -1,5 +1,7 @@
 # 126B — As-built audit: Color (GLM, Phase-1 step 1)
 
+Status: FROZEN POINT-IN-TIME PRE-EXECUTION AS-BUILT - code changed afterward; exact working-tree provenance may be unrecorded; no step-9 execution credit.
+
 > GLM independent pass — 3 facets (token definitions · consumers + hex violations · integrity/gaps). Codex writes its own; **not converged** — human reconciles at step 4. Every finding cited `file:line`. Current reality only.
 
 **Sources read exhaustively:** `dieter/tokens/dieter-color-tokens.css` (174 lines, 143 custom properties), `dieter/tokens/dieter-foundation-tokens.css` (color-adjacent parts: 75–77, 84–87). Consumers audited: 31 CSS files across `dieter/components/*`, `roma/*`, `bob/*`, `admin/src/*`.

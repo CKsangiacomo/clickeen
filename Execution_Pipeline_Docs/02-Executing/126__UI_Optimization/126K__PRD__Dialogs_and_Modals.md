@@ -1,17 +1,50 @@
 # 126K - PRD: Dialogs And Modals
 
-Status: CODEX BASELINE - Phase 1 step 2.
+Status: PRE-EXECUTION DOCTRINE RECORDED - step-5 living doctrine reconciled; lifecycle, semantic, D1 dismissal, and D3 upsell-transition law propagated; steps 6-8 remain pending.
 Parent: `126__PRD__UI_Optimization_Program.md`.
 Audit input: `audits/126K__AsBuilt_Codex.md`.
 KB doc: `documentation/engineering/UI/dialogs-and-modals.md`.
 
-This is Codex baseline only. It is not final doctrine, does not converge with
-GLM, does not select fixes, and does not run step 4+.
+The baseline/addendum sections below are frozen Phase-1 evidence. Mandatory
+lifecycle, semantic, D1 dismissal, and D3 upsell-transition law is now settled
+in this PRD and the product-owner decision register. No execution is authorized
+yet.
 
 ## Role
 
 126K owns the overlay system domain: modal, dialog, popover, confirmation,
 backdrop, focus/dismissal, stacking, scroll, and overlay motion mechanics.
+
+## Current Mandatory Law
+
+Choice popovers are listboxes, editing popovers are non-modal dialogs, and
+full-screen work plus account/product prompts are blocking dialogs. Blocking
+dialogs require truthful naming, initial focus, focus containment, return focus,
+parent inertness, scroll control, and dismissal disabled while work cannot be
+safely interrupted. A small Dieter lifecycle helper may own mechanics; product
+state remains with the screen. Roma's two in-app `window.confirm` calls move to
+that contract, while native `beforeunload` remains at the browser boundary.
+Accepted D1 law defines the workflow-specific dismissal matrix:
+
+| Dialog/workflow | Escape | Backdrop | Explicit action and protection |
+|---|---|---|---|
+| Dieter Bulk Edit | Close if unchanged; dirty opens discard confirmation | Never | Cancel follows the dirty rule; Save applies edits to Bob's working state |
+| Dieter Object Manager | Close if unchanged; dirty opens discard confirmation | Never | Cancel follows the dirty rule; Save applies reorder/delete to Bob's working state |
+| Roma Add Instances | Close and discard temporary selection | Never | Cancel discards; Add selected persists |
+| Roma Bulk Upload | Disabled while an upload is active; close after terminal | Never | Close exists only after terminal state |
+| Roma account tier-drop notice | Never | Never | Open settings or persisted Dismiss resolves it |
+| Roma plan-limit prompt | Close | Close | No work is lost; enforcement and Upgrade meaning are outside D1 |
+| Bob plan-limit/upsell prompt | Close | Close | No work is lost; enforcement and Upgrade meaning are outside D1 |
+| Roma upsell scaffold | Close | Close | No work is lost; no commercial operation has started |
+| DevStudio token editor | Close if unchanged; dirty opens discard confirmation | Never | Cancel follows the dirty rule; Confirm Commit persists |
+| Roma unsaved Builder/defaults confirmation | Keep editing | Never | Keep editing is safe; Discard is explicit |
+
+Accepted D3 law keeps legitimate Upgrade entry points and transitions the
+plan-limit prompt into one upsell dialog scaffold. It must replace the prompt,
+not stack on top of it, and must not imply a billing operation that does not
+exist. Dieter owns reusable lifecycle mechanics; the upsell surface owns product
+content and state. Opening the scaffold preserves unsaved Builder work and does
+not invoke discard confirmation.
 
 This PRD must not reinterpret the task into "build one ideal modal system" in
 Phase 1. It records current reality and known gaps only.
@@ -33,7 +66,7 @@ Once the 126K dialogs-and-modals standard is decided:
   authority; execution must clean the code/doc surface instead of preserving bad
   paths behind validation.
 
-## Phase 1 Step 2 Boundary
+## Frozen Phase 1 Step 2 Boundary
 
 MAMA says step 2 is baseline/directional PRD: current reality plus known gaps,
 no fixes. Therefore this document:
@@ -58,8 +91,9 @@ Current reality:
   and first-input focus on open.
 - `bulk-edit` still lacks verified focus trap, return focus, and scroll-lock.
 - `object-manager` has modal markup and CSS similar to `bulk-edit`.
-- `object-manager` source markup lacks `role`, `aria-modal`, and accessible
-  panel naming on the modal body.
+- `object-manager` source now puts `role="dialog"` and an accessible label on
+  the modal host. It still lacks `aria-modal="true"` and complete blocking
+  lifecycle behavior.
 - `object-manager` JS opens/closes the modal and closes on backdrop click, but
   inspected code does not show Escape close, initial focus, focus trap, return
   focus, or scroll-lock.
@@ -86,8 +120,11 @@ Current reality:
   editor on open.
 - `dropdown-upload` is a dialog popover using `dropdownToggle`; it syncs state
   on open.
-- `dropdown-actions`, `dropdown-fill`, `dropdown-border`, and related controls
-  are listbox popovers, not dialogs.
+- `dropdown-actions` currently compiles only as a listbox/choice popover.
+  Bob sets `applyActions` to empty and the spec exposes no footer variant; the
+  dead Apply/Cancel-in-listbox branch must be deleted rather than preserved.
+- Fill, border, and shadow overlays contain editing controls and therefore need
+  non-modal dialog-popover semantics even where current markup says listbox.
 - `textedit` is its own overlay lifecycle. It has dialog popover markup and
   initial editor focus, but uses a separate outside-click engine and the
   inspected code only handles Escape inside the nested link input, not at the
@@ -146,14 +183,14 @@ Current reality:
   not modal dialogs.
 - Bob ToolDrawer detects transient upload/bulk-edit/object-manager modal work
   and blocks panel switching with inline `role="alert"` feedback.
-- Bob CSS defines `.ck-publishOverlay` / `.ck-publishModal`; current runtime
-  usage was not verified in the Codex audit.
+- Bob CSS defines `.ck-publish*` and `.ck-website*` modal families with no
+  current runtime consumers; they are dead CSS deletion targets.
 
 Known gaps:
 
 - Bob upsell is another local modal family, not shared Dieter/Roma doctrine.
 - Focus trap, return focus, and scroll-lock are not verified in Bob upsell.
-- Publish modal CSS usage remains an evidence gap.
+- Dead publish/website modal CSS must be removed during step 9.
 
 ### DevStudio Token Editor Overlay
 
@@ -162,16 +199,16 @@ Current reality:
 - DevStudio creates a token editor overlay imperatively in `admin/src/main.ts`.
 - The overlay appends to `document.body`, closes on backdrop/close controls,
   includes a live diff region, and has local CSS.
-- Its injected panel does not include inspected `role="dialog"` or
-  `aria-modal`.
+- Its injected panel now includes `role="dialog"`, `aria-modal="true"`, and an
+  accessible title.
 - It uses `z-index: 40`, separate from Dieter/Roma/Bob modal literals.
 - DevStudio utilities CSS includes a global reduced-motion override.
 
 Known gaps:
 
 - DevStudio token editor overlay is not governed by the Dieter overlay family.
-- Dialog ARIA, Escape close, focus trap, return focus, and scroll-lock are not
-  verified for this overlay.
+- Escape close, focus containment, return focus, and scroll-lock are not
+  implemented or verified for this overlay.
 
 ### Widget Runtime Layered Menus And Status
 
@@ -198,23 +235,23 @@ Known gaps:
 | Family | Current Strength | Current Gap |
 | --- | --- | --- |
 | Dieter `bulk-edit` | Best modal ARIA and dismissal baseline | No verified trap/return/scroll-lock |
-| Dieter `object-manager` | Similar fixed modal surface | Missing panel dialog ARIA; lifecycle gaps |
+| Dieter `object-manager` | Dialog role and accessible name on fixed modal host | Missing `aria-modal` and complete lifecycle mechanics |
 | Dieter `dropdownToggle` popovers | Shared outside/Escape mechanics | Not a full modal system |
 | Dieter `textedit` | Dialog popover with initial editor focus | Separate outside engine; no host Escape found |
-| Dieter listbox popovers | Correctly not dialog semantics | Still share overlay mechanics without system doctrine |
+| Dieter choice popover | `dropdown-actions` surviving variant is a listbox | Dead Apply/Cancel footer branch must be deleted |
+| Dieter editing popovers | Shared visual/popover mechanics | Fill/border/shadow current listbox roles are incorrect for embedded form controls |
 | Roma `.roma-modal` | Dialog ARIA in local product modals | Parallel family, no shared lifecycle |
 | Bob upsell | Dialog ARIA, initial focus, Escape, backdrop close | Local family, no verified trap/return/scroll-lock |
-| DevStudio token editor | Working governance overlay | No inspected dialog ARIA or modal lifecycle |
+| DevStudio token editor | Working governance dialog with role/name | Complete focus, dismissal, return-focus, and scroll lifecycle missing |
 | Browser `window.confirm` | Native unsaved-work confirmation | Outside Clickeen/Dieter UI system |
 | Widget runtime layers | Share menu/status and fixed runtime surfaces | Raw stacking values outside current overlay doc snapshot |
 
-## Known Documentation Drift / Clarifications
+## Documentation Reconciliation / Clarifications
 
-- The living doc's Roma modal claim is now verified by current code.
-- The living doc's Roma convergence reference says 126D, but current MAMA maps
-  126D to typography and 126K to dialogs-and-modals.
-- The UI README labels dialogs-and-modals as `(126B/126D)`, stale against
-  current MAMA.
+- The living doc's Roma modal claim is verified by current code.
+- `documentation/engineering/UI/dialogs-and-modals.md` now names 126K as the
+  mechanics authority and records accepted D1/D3 law.
+- The UI README now maps dialogs-and-modals to 126K.
 - `popaddlink` should be treated as nested form/popover content, not an
   independent overlay host.
 - A "single overlay system" cannot flatten dialog popovers and listbox popovers
@@ -239,11 +276,10 @@ Product:
 - No save, translation, account, deploy, or product-data changes.
 - Upgrade and unsaved-work flows are recorded, not changed.
 
-Product law:
+Frozen Step-2 collection boundary:
 
 - No code changes.
-- No Step 4+ convergence.
-- No AI convergence of Codex and GLM.
+- At collection time, no Step 4+ or Codex/GLM convergence had occurred.
 - No new enforcement machinery.
 - No reinterpretation into an ideal system.
 
@@ -263,11 +299,14 @@ Product law:
 - Step 1 input exists: `audits/126K__AsBuilt_Codex.md`.
 - Step 2 baseline exists in this file.
 - Step 3 source research exists: `research/126K_Research_Codex.md`.
-- This file remains directional and non-binding until human convergence.
+- At the end of Step 2 this file was directional and non-binding. Current
+  mandatory D1/D3 law is settled above.
 
-## GLM Addendum — Phase 1 Step 2 (feedback)
+## Frozen GLM Addendum — Phase 1 Step 2 (feedback)
 
 > GLM's adversarial critique of the Codex Baseline above. This is feedback only;
+> it is point-in-time evidence and may describe source that has since changed;
+> settled law earlier in this PRD controls.
 > it does not merge, override, or rewrite Codex's text. Every charge is backed by
 > a `file:line` GLM read independently for its own as-built
 > (`audits/126K__AsBuilt_GLM.md`). Where Codex over-claims, GLM says so; where
@@ -293,12 +332,10 @@ Product law:
 
 ### Where Codex under-claims or misses (omissions to add)
 
-1. **`object-manager`'s ARIA gap is markup-verifiable now, not speculative.**
-   Codex says it "lacks verified dialog ARIA." GLM read the markup: the panel
-   `.diet-object-manager__modal-body` has NO `role`, NO `aria-modal`, and NO
-   accessible name (`object-manager.html:39-54`). This is no longer "lacks
-   verified" — it is positively missing. The baseline should state the defect,
-   not hedge it.
+1. **Historical `object-manager` ARIA finding, now closed in current source.**
+   The GLM read found no role or accessible name in its reviewed tree. Current
+   markup has dialog semantics and an accessible name. Keep this paragraph only
+   as provenance for the correction; it is not an execution target.
 2. **`object-manager` has NO Dieter hydrator at all.** It is not exported from
    `dieter/components/index.ts:1-19` and has no `.ts` in
    `dieter/components/object-manager/`. Its runtime behavior (Escape, focus,
@@ -384,10 +421,7 @@ Product law:
 
 ### Net assessment of the Codex Baseline
 
-Directionally correct and safe (it does not invent fixes, consistent with
-MAMA §9 step 2). But it is **under-specified** where the code is already
-decisive: the object-manager ARIA defect is markup-positive, the textedit
-Escape defect is code-positive, and the two-engine outside-click duplication is
-structural. Before human convergence (step 4), Codex's baseline should be
-tightened to state these as findings rather than "not yet verified," and the
-Roma item should be flagged as evidence-thin on both sides.
+At the time of review, GLM judged the baseline directionally safe but
+under-specified. Current source has since closed the object-manager ARIA finding;
+the remaining lifecycle gaps are governed by the settled D1/D3 law above. This
+paragraph is review provenance, not current execution instruction.

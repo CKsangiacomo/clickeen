@@ -1,6 +1,6 @@
 # 126H - Dieter Pre-Execution Audit
 
-Status: CODEX PRE-EXECUTION AUDIT - three-lane review green.
+Status: FROZEN POINT-IN-TIME PRE-EXECUTION AUDIT - code changed afterward; no step-9 execution credit.
 PRD: `../126H__PRD__Dieter.md`.
 Scope: Dieter foundation substrate, generated Dieter artifacts, Dieter docs, and
 known app/runtime consumers of Dieter foundation tokens.

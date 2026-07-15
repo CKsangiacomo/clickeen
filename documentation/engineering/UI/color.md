@@ -1,12 +1,13 @@
 # Color In Clickeen
 
-Living reference for 126B color doctrine.
+Living reference for color doctrine.
 
-- Authority: [`126B__PRD__Color.md`](../../../Execution_Pipeline_Docs/02-Executing/126__UI_Optimization/126B__PRD__Color.md).
+- Canonical doctrine: this document.
+- Execution PRD: [`126B__PRD__Color.md`](../../../Execution_Pipeline_Docs/02-Executing/126__UI_Optimization/126B__PRD__Color.md).
 - Source of truth: `dieter/tokens/dieter-color-tokens.css`.
 - Generated output: `tokyo/product/dieter/tokens/**`.
 
-126B is not a palette redesign, dark-mode rollout, contrast gate, theme platform,
+This document is not a palette redesign, dark-mode rollout, contrast gate, theme platform,
 resolver, registry, or validation framework. It defines current light-mode color
 truth so agents can code UI deterministically.
 
@@ -95,7 +96,7 @@ User-authored and widget-authored colors are legal product data:
 - serialized widget appearance;
 - widget runtime defaults.
 
-These are not structural chrome violations. 126B only fixes undefined widget
+These are not structural chrome violations. This doctrine only fixes undefined widget
 token references explicitly listed in the PRD.
 
 ## DevStudio Reveal
@@ -107,7 +108,7 @@ Therefore:
 
 - writable `--color-*` hex rows render edit controls;
 - role, focus, state, and derived `color-mix(...)` rows render read-only chips;
-- 126B does not expand DevStudio write authority.
+- This doctrine does not expand DevStudio write authority.
 
 ## Contrast
 
@@ -117,8 +118,8 @@ contrast gates.
 
 ## Dark Mode
 
-Clickeen does not ship dark mode today. 126B removes listed dark-mode artifacts
-and does not create dark-mode scaffolding, dark token pairs, future theme claims,
-toggles, or theme support.
+Clickeen does not ship dark mode today. Listed dark-mode artifacts are deletion
+gaps. They do not authorize dark-mode scaffolding, dark token pairs, future
+theme claims, toggles, or theme support.
 
 If dark mode is desired later, it needs its own PRD.

@@ -28,6 +28,23 @@ Bob owns:
 Roma owns the current account, policy, account routes, and save/upload commands.
 Tokyo-worker owns R2 storage. Widget software lives in the system product tree.
 
+## Workspace Capability
+
+Under accepted 126 law, Bob follows the global operational-workspace tenet in
+`documentation/engineering/UI/surfaces.md`. As Roma's editor, its ToolDrawer,
+workspace, preview, and dialogs must remain fully operable on desktop and
+tablets in either orientation and recompose for mobile landscape. Mobile
+portrait does not receive a broken editing approximation. Pixel density affects
+rendering fidelity, not workspace classification. Bob keeps one editor model:
+`ToolDrawer | preview/workspace` when the full composition fits, and an explicit
+ToolDrawer button/drawer plus full preview/workspace in compact mobile landscape.
+No editor operation disappears and no separate mobile Builder is created.
+
+Current Bob does not yet provide the explicit mobile-landscape ToolDrawer
+drawer composition. That is a 126J/126M execution gap across the Builder shell,
+`bob/components/ToolDrawer.tsx`, and `bob/app/bob_app.css`, not current runtime
+behavior to preserve.
+
 ## Authoring Flow
 
 The active account authoring flow is:
@@ -135,7 +152,12 @@ Roma replies to account commands with:
 }
 ```
 
-Bob may also send an upgrade request from an upsell modal:
+Bob's plan-limit/upsell prompt may close through Escape, backdrop, or its
+explicit Not now/Close action because dismissal loses no work. That D1 dismissal
+rule does not weaken route/policy enforcement and does not decide what Upgrade
+does.
+
+Bob may also send an Upgrade intent from a plan-limit/upsell surface:
 
 ```json
 {
@@ -145,8 +167,17 @@ Bob may also send an upgrade request from an upsell modal:
 }
 ```
 
-Roma owns that account-shell action and routes the user to Billing. Bob does
-not expose raw entitlement/detail strings inside the upsell modal.
+Roma owns the account-shell transition and opens its one reusable pre-GA upsell
+dialog scaffold. It does not route the user to inactive Billing or duplicate
+the scaffold inside Bob. Bob does not expose raw entitlement/detail strings
+inside the upsell surface, and Bob/Roma must not stack the scaffold over an
+existing plan-limit modal.
+
+The scaffold is a real UI destination for developing the upsell experience; it
+does not purchase, mutate a plan, call a billing provider, or claim commercial
+success. Opening it preserves Bob's unsaved working state and must not invoke a
+discard confirmation. Current code that guards and routes this intent to
+`/billing` is a 126E/126K/126M execution gap, not product law.
 
 ## Save Contract
 
@@ -175,11 +206,12 @@ locale follow-up coordinates from the `update-instance` command. Bob treats the
 save response as source/base persistence truth only.
 
 When translations need update, that attention belongs to the Translations panel.
-126E owns interaction feedback behavior. The Bob/Roma UI refactor lane owns any
-future top-of-builder attention surface that points the user to the Translations
-panel and the explicit Generate translations action when exact stale-translation
-evidence exists. Bob must not infer that state from runtime package probes,
-active locale count alone, or hidden UI-authored status.
+[`interactions.md`](../engineering/UI/interactions.md) owns interaction feedback
+behavior. The Bob/Roma UI execution PRDs own any future top-of-builder attention
+surface that points the user to the Translations panel and the explicit Generate
+translations action when exact stale-translation evidence exists. Bob must not
+infer that state from runtime package probes, active locale count alone, or
+hidden UI-authored status.
 
 Bob account commands currently include:
 
@@ -439,9 +471,10 @@ accounts/{accountPublicId}/instances/{instanceId}/overlays/locales/{locale}.json
 ```
 
 Translation generation remains an explicit operation from the Translations
-panel. When translations need update after source edits, 126E owns the feedback
-behavior and the Bob/Roma UI refactor lane owns the placement that points the
-user to Generate translations.
+panel. When translations need update after source edits,
+[`interactions.md`](../engineering/UI/interactions.md) owns the feedback behavior
+and the Bob/Roma UI execution PRDs own the placement that points the user to
+Generate translations.
 
 ## Copilot
 

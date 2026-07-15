@@ -1,6 +1,6 @@
 # 126E - Pre-Execution Audit: Interactions
 
-Status: CODEX PRE-EXECUTION AUDIT - three-lane review green.
+Status: FROZEN POINT-IN-TIME PRE-EXECUTION AUDIT - code changed afterward; no step-9 execution credit.
 PRD: `../126E__PRD__Interactions.md`.
 
 This audit binds 126E implementation to concrete files and product

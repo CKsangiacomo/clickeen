@@ -1,16 +1,21 @@
 # Iconography In Clickeen
 
-Living reference for 126C iconography doctrine.
+Living reference for iconography doctrine.
 
-- Authority: [`126C__PRD__Iconography.md`](../../../Execution_Pipeline_Docs/02-Executing/126__UI_Optimization/126C__PRD__Iconography.md).
+- Canonical doctrine: this document.
+- Execution PRD: [`126C__PRD__Iconography.md`](../../../Execution_Pipeline_Docs/02-Executing/126__UI_Optimization/126C__PRD__Iconography.md).
 - Source artifact pair: `dieter/icons/icons.json` and `dieter/icons/svg/*`.
 - Human origination tool: `tooling/sf-symbols`.
 - Deploy propagation: root `scripts/build-dieter.js` copies verified source icons
   to `tokyo/product/dieter/icons/**`.
 
-126C is not an icon-redesign program. The current 157 Dieter icons are the
+This document is not an icon-redesign program. The current 157 Dieter icons are the
 approved operational icon set. Agents consume existing icons; they do not add,
 rename, reshape, replace, or originate icons.
+
+The approved set is the current SF Symbols port. Its dot-notation names and
+manifest geometry format are product source truth; agents do not rename,
+reshape, or reinterpret that format.
 
 ## Source And Build
 
@@ -42,6 +47,7 @@ Agents must use the lane that owns the UI they are editing:
 | Bob compiler/output | Bob compiler replaces Dieter `data-icon` slots from `tokyo/product/dieter/icons/icons.json`. |
 | Bob app chrome | Only named Bob chrome files use `bob/lib/icons.ts` directly; icons stay decorative and control names live on controls. |
 | DevStudio/Admin | Generated raw SVG imports are Admin tooling/reveal only, not product runtime doctrine. Missing icons render an explicit `[missing icon: name]` marker. |
+| Roma product UI | Use the same Dieter operational-icon contract through the implementation lane specified by the 126M execution PRD; do not create a Roma-only icon system. |
 | Prague static site | `DieterIcon.astro` renders approved Dieter icon names from Tokyo `/dieter/icons/svg/name.svg`; Prague validates rendered Dieter names against the manifest. |
 | Public widgets | Widget-owned code may use approved Dieter names as CSS masks/static URLs where that widget schema exposes operational Dieter icons. Do not create a shared widget icon service. |
 | Account assets | SVG assets uploaded by accounts, including the admin account, are account assets. They are not Dieter icons. |
@@ -68,7 +74,7 @@ icon glyph sizing and stay with their owning component PRDs.
 Dieter source SVGs and rendered operational icons use `currentColor`.
 
 Icon hover, active, selected, disabled, and pressed appearance comes from the
-owning parent/control state. 126C does not create icon-specific color variants,
+owning parent/control state. This doctrine does not create icon-specific color variants,
 filled/outlined variants, optical sizes, weights, or scales.
 
 ## Semantics

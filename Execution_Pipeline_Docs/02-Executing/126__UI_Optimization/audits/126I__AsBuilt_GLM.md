@@ -1,10 +1,18 @@
 # 126I — As-built audit: Components (GLM, Phase-1 step 1)
 
+Status: FROZEN POINT-IN-TIME PRE-EXECUTION AS-BUILT - exact working-tree provenance may be unrecorded; current source has 25 directories including `shared`, no `command-activity`, and no step-9 execution credit.
+
 > GLM independent pass. **Not converged.** Verified via `ls`, `grep`, and earlier session-wide component inventories.
+
+Current-source correction: the directory count, `command-activity`, and removed
+token references below are historical observations, not current inventory.
+Current tracked/worktree truth is 25 directories including `shared`, no
+`command-activity`, and no current `--color-surface`, `--radius-2`, or
+`--hspace-*` component references.
 
 ---
 
-## Component inventory — 27 directories
+## Historical Inspected-Tree Component Inventory — 27 Directories
 
 | Group | Component | Files | Hydration | Spec | Status |
 |---|---|---|---|---|---|
@@ -32,10 +40,13 @@
 | dropdowns | popaddlink | css/html/spec/ts | `hydratePopAddLink` (index.ts:16) | ✅ | active |
 | composites | popover | css/html/spec | — (CSS/HTML only, no .ts) | ✅ | active (container) |
 | activity | agent-activity | css/html/spec | — (CSS/HTML only, no .ts) | ✅ | active |
-| activity | command-activity | **EMPTY DIR** | — | — | **DEAD** (zero refs) |
+| activity | command-activity | **EMPTY DIR IN INSPECTED TREE; ABSENT NOW** | — | — | **HISTORICAL/RESOLVED** |
 | other | shared/ | 3 helper .ts | — (not rendered) | — | utility (account-asset-resolve, account-assets, dropdownToggle) |
 
-**Counts:** 27 dirs. ~24 spec-backed. ~20 TS-exported (index.ts). 2 hand-written JS IIFEs. 3 CSS-only. 1 dead. 1 missing spec. 1 not exported (toggle).
+**Historical inspected-tree counts:** 27 dirs. ~24 spec-backed. ~20
+TS-exported (index.ts). 2 hand-written JS IIFEs. 3 CSS-only. 1 dead. 1 missing
+spec. 1 not exported (toggle). Current source has 25 directories including
+`shared` and no `command-activity`.
 
 ## Contract shapes (4 patterns)
 1. **Spec + HTML + CSS + TS** — the full pattern (button, textfield, dropdown-*, etc.). Governed by DevStudio + hydrated via index.ts.
@@ -57,9 +68,9 @@
 - **Roma:** **ZERO** Dieter form components consumed (diet-textfield/toggle/segmented/popover absent). Only `diet-btn-txt` (~160×) + 4 strays. Runs parallel `.roma-*` system.
 - **Admin/DevStudio:** renders all spec-backed components from CDN in generated showcase pages.
 
-## Honest gaps
+## Point-In-Time Gaps And Current Corrections
 - `textrename` dead weight (missing spec, orphaned hydrate at admin/src/main.ts:23,258).
-- `command-activity` empty dir (zero refs).
+- Resolved after this audit: `command-activity` is absent from current source.
 - `toggle` has .ts but not exported from index.ts (export gap).
 - `object-manager` vs `repeater` distinction not fully documented (both in tool drawer).
 - No shared Modal/DataTable/EmptyState primitive — each screen improvises.

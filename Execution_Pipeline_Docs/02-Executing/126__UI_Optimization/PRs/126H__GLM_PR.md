@@ -1,11 +1,13 @@
 # 126H Dieter — GLM Pre-Execution Peer Review
 
-Status: PRE-EXECUTION peer review (main-thread, 3 lenses: Staff Engineer, Senior PM,
-Principal TPM). Subject: `126H__PRD__Dieter.md` (Status: HUMAN-CONVERGED PRODUCT STANDARD),
+Status: FROZEN POINT-IN-TIME PRE-EXECUTION REVIEW - reviewed tree unrecorded; current readiness not established; no step-9 execution credit.
+Subject: `126H__PRD__Dieter.md` (then labeled HUMAN-CONVERGED PRODUCT STANDARD),
 read fresh this pass. Grounded in `audits/126H__AsBuilt_{Codex,GLM}.md`, `research/126H_Research_{Codex,GLM}.md`,
 `documentation/engineering/UI/dieter.md`, `dieter/tokens/dieter-foundation-tokens.css`.
-**Verified earlier this session:** `dieter/scripts/build-dieter.js` does not exist; active
-build is root `scripts/build-dieter.js`; `dieter/components/` has 26 dirs.
+**Historical tree note:** `dieter/scripts/build-dieter.js` did not exist and the
+active build was root `scripts/build-dieter.js`. The recorded 26-directory count
+belongs to that point-in-time review; current source has 25 directories including
+`shared`.
 
 Note: this PRD has been strengthened since GLM's earlier review — the Focus/Touch reversal
 (de-scope, not wire) is now explicit, the `--vertspace-*` "intentionally separate" hedge is

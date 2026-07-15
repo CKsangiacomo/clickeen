@@ -1,6 +1,6 @@
 # 126C - PRD: Iconography
 
-Status: PRE-EXECUTION READY - three-lane review green.
+Status: PRE-EXECUTION DOCTRINE RECORDED - step-5 living doctrine reconciled; step-6/7/8 artifacts pending; no step-9 execution credit.
 Parent: `126__PRD__UI_Optimization_Program.md` (MAMA).
 Series order: 126C of 126A-126M.
 KB doc target: `documentation/engineering/UI/iconography.md`.
@@ -124,17 +124,11 @@ The current implementation has multiple active consumer representations:
 - Public widgets use CSS mask/static URLs when runtime delivery requires it.
 - `diet-icon` is CSS-only presentation, not a runtime icon component.
 
-Current gaps:
-
-- Agents do not have deterministic instructions for consuming approved icons in
-  each product lane.
-- Injection rules differ between `data-icon`, manifest geometry, generated
-  reveal imports, CSS mask URLs, and widget-local inline SVGs.
-- Sizing/scaling rules are incomplete.
-- Accessibility semantics are consumer-dependent.
-- DevStudio preview labels drift from `.diet-icon` CSS mapping.
-- Docs and PRD baselines have confused icon origination, committed source
-  artifacts, deploy artifact propagation, and runtime consumption.
+Current source has closed source parity, numeric sizing, DevStudio preview
+labels, explicit Admin missing-icon handling, Cards approved-name validation,
+and deterministic living documentation. Premature A-H changes are current
+as-built input, not step-9 execution credit. Remaining pre-execution work is
+limited to verifying consumer-level semantics across every named lane.
 
 ## Product Reading
 
@@ -227,10 +221,9 @@ Public widget decision:
 - `tokyo/product/widgets/cards/widget.client.js`,
   `tokyo/product/widgets/cards/widget.css`, and
   `tokyo/product/widgets/cards/spec.json`: Cards media icons and between-card
-  icons are Dieter operational icon consumers. Execution must replace
-  regex-only icon-name acceptance with a Cards-local approved Dieter icon-name
-  set based on the current 157-icon source. Do not create a shared widget icon
-  service.
+  icons are Dieter operational icon consumers. Cards currently validates names
+  against its local approved Dieter icon-name set. No Cards icon-validation
+  implementation remains. Do not create a shared widget icon service.
 - `tokyo/product/widgets/faq/widget.client.js`,
   `tokyo/product/widgets/faq/widget.css`, and
   `tokyo/product/widgets/faq/spec.json`: FAQ accordion icon pairs remain
@@ -250,7 +243,7 @@ Public widget decision:
 
 ### 3. Active Build Path
 
-Execution law:
+Current build law:
 
 - `scripts/build-dieter.js` is active as the Dieter deploy artifact builder.
 - It is still called by `pnpm build:dieter` through `dieter/package.json`.
@@ -262,23 +255,13 @@ Execution law:
 - Ordinary deploy build may copy/verify outputs.
 - Ordinary deploy build must not mutate committed Dieter icon source.
 - Docs must describe only current live product paths.
-- `scripts/build-dieter.js` must remove the inactive `icons/svg_new` override
-  lane. There is no current `dieter/icons/svg_new/` product concept to guard.
-- `scripts/build-dieter.js` must stop calling the source-mutating
-  `scripts/process-svgs.js` path during ordinary deploy build.
-- `scripts/process-svgs.js` must be deleted once the active build no longer
-  calls it. Source healing during deploy build is not a supported Clickeen
-  operation.
-- `.github/workflows/cloud-dev-workers.yml` must remove `scripts/process-svgs.js`
-  from path triggers and Dieter artifact change detection when the script is
-  deleted.
+- The former `icons/svg_new`, `scripts/process-svgs.js`, and
+  `dieter/scripts/build-icons.mjs` paths are absent from current source and
+  workflow configuration.
 - `scripts/verify-svgs.js` remains a non-mutating build verification script for
   the committed source artifact pair. It must fail on icon source/manifest
   name-count mismatch and non-`currentColor` source, and it must not rewrite
   source.
-- `dieter/scripts/build-icons.mjs` is inactive dead code. Current audit found no
-  live caller and no `dieter/dist/icons.js` / `dieter/dist/icons.d.ts` outputs.
-  Execution removes it and removes all docs that present it as current.
 
 ### 4. Presentation Wrapper
 
@@ -315,8 +298,8 @@ Rules:
   belongs to the owning component CSS.
 - Interactive control size is not icon size and is not 126C touch-target
   doctrine.
-- Non-numeric `.diet-icon` glyph size references must be removed from
-  source/docs.
+- Non-numeric `.diet-icon` glyph size references are absent from current
+  source/docs and must not return.
 - This does not rename unrelated component/control `data-size="sm|md|lg"`
   values. Those are component size APIs owned by component PRDs, not icon glyph
   sizing.
@@ -331,8 +314,7 @@ Rules:
   `[data-size="40"] -> --icon-size-40`.
 - `xxs`, `xs`, `sm`, `md`, `lg`, `xl`, `2xl`, and `3xl` are removed from
   `.diet-icon` source/docs. They are not aliases.
-- DevStudio preview labels must match actual CSS after numeric sizing is
-  applied.
+- DevStudio preview labels currently match the numeric CSS mapping.
 - Clickeen currently carries one regular monochrome path per icon. It must not
   pretend to support optical icon variants by size until those variants actually
   exist in the Dieter icon source model.
@@ -374,40 +356,43 @@ Execution law:
 
 ## Detailed Blast Radius
 
-126C execution may touch only the icon-related truth surface below.
+126C step-6 audit may inspect only the icon-related truth surface below.
+Rows describing build cleanup, sizing, parity, missing-icon handling, Prague
+validation, Cards validation, Bob SVG semantics, and living docs are completed
+current baseline and regression-check only.
 
-| Area | May change | Must not change |
+| Area | Verified current implementation | Must preserve / must not change |
 | --- | --- | --- |
 | `tooling/sf-symbols/**` | no 126C code changes; docs may identify it as human-owned origination | agent-driven icon origination, automated icon addition |
 | `dieter/icons/icons.json` | no 126C code changes; parity verification only | agent-authored icon additions/renames/geometry edits |
 | `dieter/icons/svg/**` | source parity/currentColor verification; no ordinary-build mutation | source mutation during deploy build, random SVG imports |
-| `scripts/build-dieter.js` | remove `icons/svg_new` override, remove `process-svgs.js` call, keep non-mutating verify/copy propagation | icon origination, source mutation, new icon pipeline, governance framework |
-| `.github/workflows/cloud-dev-workers.yml` | remove `scripts/process-svgs.js` path trigger and change-detection reference | deleted script still affecting deploy workflow |
-| `dieter/scripts/build-icons.mjs` | delete inactive script | preserving stale generated-registry pipeline claims or nonexistent `dist/icons.js` / `dist/icons.d.ts` output |
-| `scripts/process-svgs.js` | delete after removing active caller | source healing during deploy build |
+| `scripts/build-dieter.js` | The inactive `icons/svg_new` override and `process-svgs.js` call are absent; build verification/copy is non-mutating. | icon origination, source mutation, new icon pipeline, governance framework |
+| `.github/workflows/cloud-dev-workers.yml` | Deleted `process-svgs.js` paths no longer trigger or affect change detection. | deleted script affecting deploy workflow |
+| `dieter/scripts/build-icons.mjs` | The inactive script is absent. | stale generated-registry claims or nonexistent `dist/icons.js` / `dist/icons.d.ts` output |
+| `scripts/process-svgs.js` | The source-healing script and its callers are absent. | source healing during deploy build |
 | `scripts/verify-svgs.js` | keep non-mutating build verification; fail on source/manifest name-count mismatch and non-`currentColor` source | source mutation, new validation platform, runtime dependency |
 | `tokyo/product/dieter/icons/**` | generated output from build | hand edits to generated output |
-| `dieter/components/icon/icon.css` | replace `.diet-icon` fake size aliases with numeric `12/16/20/24/28/32/36/40` mapping | runtime icon component creation, fake size aliases |
+| `dieter/components/icon/icon.css` | `.diet-icon` uses numeric `12/16/20/24/28/32/36/40` sizing. | runtime icon component creation, fake size aliases |
 | `dieter/components/**` | `data-icon` slots, numeric icon sizes, decorative/icon-only semantics | raw SVG drops, account asset icon refs, behavior rewrites outside owning component scope |
-| `bob/lib/icons.ts` | add decorative SVG attributes to compiler-emitted inline SVG (`aria-hidden="true" focusable="false"`) while preserving manifest geometry | new Bob icon registry, icon origination |
+| `bob/lib/icons.ts` | Compiler-emitted inline SVG preserves manifest geometry and carries decorative semantics. | new Bob icon registry, icon origination |
 | `bob/lib/compiler/stencils.ts` | compiler-owned `data-icon` replacement path only | scattered icon replacement outside compiler/chrome lanes |
 | `bob/components/Workspace.tsx` | named Bob app chrome direct manifest-adapter consumer; verify decorative wrapper/control semantics | new icon component, raw SVG, preview behavior changes |
 | `bob/components/ToolDrawer.tsx` | named Bob app chrome direct manifest-adapter consumer; verify decorative wrapper/control semantics | new icon component, raw SVG, mode behavior changes |
 | `bob/components/TdMenu.tsx` | named Bob app chrome `data-icon` insertion consumer; verify missing icon behavior remains explicit through `bob/lib/icons.ts` throw | new icon component, raw SVG, menu behavior changes |
-| `admin/scripts/generate-static-registries.mjs` | generate icon registry from manifest names and hard-fail manifest/source mismatch before writing | product runtime icon system, source mutation |
+| `admin/scripts/generate-static-registries.mjs` | Registry generation uses manifest names and fails before writing on manifest/source mismatch. | product runtime icon system, source mutation |
 | `admin/src/data/icons.generated.ts` | generated reveal/docs registry output | hand edits |
 | `admin/src/data/icons.ts` | preserve generated raw import normalization for Admin tooling only | Admin product runtime icon system |
-| `admin/src/main.ts` | global Admin `hydrateIcons` missing icon marker: `[missing icon: ${name}]` plus `data-icon-missing`, never silent skip | product runtime icon doctrine |
-| `admin/scripts/generate-foundation-pages.mjs` | hard-fail manifest/source icon mismatch and switch preview sizes to numeric `12/16/20/24/28/32/36/40` labels/data-size | source icon authority change |
+| `admin/src/main.ts` | Global Admin `hydrateIcons` renders `[missing icon: ${name}]` plus `data-icon-missing`; missing icons never silently skip. | product runtime icon doctrine |
+| `admin/scripts/generate-foundation-pages.mjs` | Generation fails on manifest/source mismatch and preview sizes use numeric `12/16/20/24/28/32/36/40` labels/data-size. | source icon authority change |
 | `admin/src/html/foundations/icons.html` | generated output only after foundation page regeneration | hand-editing generated reveal truth |
 | `prague/src/components/DieterIcon.astro` | keep Prague static Dieter URL consumer; no registry/platform | account/brand/channel icon conversion |
 | `prague/src/components/StepsPrimitive.astro` | approved Dieter names only for `DieterIcon` blocks | layout/content rewrite |
 | `prague/src/blocks/global-moat/global-moat.astro` | approved Dieter names only for `DieterIcon` blocks | layout/content rewrite |
 | `prague/src/blocks/subpage-cards/subpage-cards.astro` | approved Dieter names only for `DieterIcon` blocks | layout/content rewrite |
-| `prague/src/lib/blockRegistry.ts` | validate `iconName` values against the approved Dieter manifest for Prague blocks that render `DieterIcon` | Prague icon registry/platform |
+| `prague/src/lib/blockRegistry.ts` | `iconName` values are validated against the approved Dieter manifest for Prague blocks that render `DieterIcon`. | Prague icon registry/platform |
 | `tokyo/product/widgets/shared/header.js` / `.css` | keep header CTA allowlist/mask Dieter consumption; verify names exist | account/brand/content SVG conversion |
 | `tokyo/product/widgets/calltoaction/widget.client.js` / `.css` / `spec.json` | keep CTA allowlist/mask Dieter consumption; verify names exist | universal widget icon system |
-| `tokyo/product/widgets/cards/widget.client.js` / `.css` / `spec.json` | replace regex-only Dieter icon acceptance with Cards-local approved-name set; keep mask delivery | universal widget icon system |
+| `tokyo/product/widgets/cards/widget.client.js` / `.css` / `spec.json` | Cards uses its local approved-name set and preserves mask delivery. | universal widget icon system |
 | `tokyo/product/widgets/faq/widget.client.js` / `.css` / `spec.json` | keep enum-to-Dieter-pair mask delivery; verify names exist | universal widget icon system |
 | `tokyo/product/widgets/logoshowcase/widget.client.js` / `.css` | keep fixed chevron masks; verify names exist | universal widget icon system |
 | `tokyo/product/widgets/split-media/widget.css` | keep fixed `photo` mask; verify name exists | widget behavior rewrite |
@@ -415,8 +400,8 @@ Execution law:
 | `tokyo/product/widgets/shared/localeSwitcher.js` | keep fixed `chevron.down` mask; verify name exists | widget behavior rewrite |
 | `tokyo/product/widgets/shared/socialShare.js` / `.css` | classify as widget-owned product/channel icons; no 126C Dieter conversion | masquerading channel glyphs as Dieter operational icons |
 | `roma/**` | only if 126M/owning path consumes Dieter operational icons | parallel Roma icon doctrine or account asset mixing |
-| `documentation/engineering/UI/iconography.md` | rewrite to current 126C law | stale inactive paths, agent origination, fake size labels |
-| `documentation/engineering/UI/README.md` | fix UI doc/track mappings | stale PRD mappings |
+| `documentation/engineering/UI/iconography.md` | Living documentation records current 126C law. | stale inactive paths, agent origination, fake size labels |
+| `documentation/engineering/UI/README.md` | UI document/track mappings are current. | stale PRD mappings |
 | `documentation/engineering/UI/components.md` | cross-reference component icon slot/semantics rules | component API expansion not decided by 126I |
 | `documentation/engineering/UI/dieter.md` | remove stale `dieter/scripts/*` source-truth/build path claims and point build to root `scripts/build-dieter.js` | stale build path truth |
 | `documentation/engineering/UI/ops.md` | align active build path with 126G/126C | stale generated-registry/source-truth claims |
@@ -426,28 +411,19 @@ Execution law:
 | `documentation/services/devstudio.md` | document Admin tooling missing-icon marker if Admin behavior changes | DevStudio write/runtime expansion |
 | widget docs | only where widget operational icons are changed | broad widget runtime icon doctrine |
 
-Known documentation repairs:
+Current documentation reconciliation:
 
-- `documentation/engineering/UI/iconography.md` must describe the active path:
+- `documentation/engineering/UI/iconography.md` now describes the active path:
   human origination through `tooling/sf-symbols`, committed Dieter source
   artifacts in `dieter/icons/**`, and deploy propagation through root
   `scripts/build-dieter.js`.
-- `documentation/engineering/UI/iconography.md` must not describe
-  `dieter/scripts/build-icons.mjs` as the active icon build path.
-- `documentation/engineering/UI/iconography.md` must not claim current
-  `dieter/dist/icons.js`, `dist/icons.d.ts`, `IconName`, or `iconPath()`
-  registry output when those artifacts do not exist.
-- `documentation/engineering/UI/ops.md` must not describe
-  `dieter/scripts/build-icons.mjs` as the active icon pipeline.
-- `documentation/engineering/UI/dieter.md` must not describe `dieter/scripts/*`
-  as icon source truth or `dieter/scripts/build-dieter.js` as the active build
-  path. The active build path is root `scripts/build-dieter.js`.
-- `documentation/services/dieter.md` must remove the `dieter/icons/svg_new/`
-  override row. After execution, the dead path is not documented at all.
+- Living iconography, Dieter, operations, Bob, and DevStudio documentation now
+  contain no `build-icons`, `svg_new`, `dist/icons`, fake size alias, or obsolete
+  icon-pipeline claims. Recheck only if later 126C execution changes them.
 
-File-level execution targets:
+Completed baseline and remaining audit targets:
 
-| File | Exact 126C target |
+| File | Current baseline / remaining verification |
 | --- | --- |
 | `dieter/components/icon/icon.css` | `.diet-icon` supports default `20` plus numeric `12/16/20/24/28/32/36/40`; non-numeric icon glyph aliases removed. |
 | `admin/scripts/generate-static-registries.mjs` | Icon registry generation reads manifest names, verifies source SVG parity both ways, and fails before writing on mismatch. |
@@ -476,9 +452,16 @@ File-level execution targets:
 | `documentation/services/bob.md` | Documents Bob compiler icon consumption only if `bob/lib/icons.ts`/compiler behavior changes. |
 | `documentation/services/devstudio.md` | Documents Admin tooling missing-icon marker only if `admin/src/main.ts` behavior changes. |
 
-## Gap-To-Fix Categories
+## Verified Baseline And Remaining Audit
 
-126C execution maps icon gaps into these categories:
+Source/build cleanup, numeric icon sizing, Bob SVG semantics, Admin parity and
+missing-icon behavior, Prague manifest validation, Cards approved-name
+validation, and living docs are established current baseline. Final
+pre-execution review verifies consumer-level icon semantics across the exact
+named consumers; it must not schedule completed work again.
+
+126C uses these categories for regression review. They do not imply that each
+category still contains implementation work:
 
 1. human-owned source artifact parity;
 2. ordinary build must not mutate icon source;

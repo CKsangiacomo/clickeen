@@ -1,6 +1,6 @@
 # 126B Color - Pre-Execution Gap Audit
 
-Status: CODEX PRE-EXECUTION AUDIT - three-lane review green.
+Status: FROZEN POINT-IN-TIME PRE-EXECUTION AUDIT - code changed afterward; no step-9 execution credit.
 Parent PRD: `../126B__PRD__Color.md`.
 Audit date: 2026-06-28.
 

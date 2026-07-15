@@ -1,5 +1,7 @@
 # 126C — As-built audit: Iconography (GLM, Phase-1 step 1)
 
+Status: FROZEN POINT-IN-TIME PRE-EXECUTION AS-BUILT - code changed afterward; exact working-tree provenance may be unrecorded; no step-9 execution credit.
+
 > GLM independent pass. Codex writes its own; **not converged** — human reconciles at step 4. Every finding cited `file:line`.
 
 ---

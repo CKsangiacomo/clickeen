@@ -1,7 +1,7 @@
 # 126C Iconography — GLM Pre-Execution Peer Review
 
-Status: PRE-EXECUTION peer review (main-thread, 3 lenses: Staff Engineer, Senior PM,
-Principal TPM). Subject: `126C__PRD__Iconography.md` (Status: PRE-EXECUTION REVIEW REDRAFT).
+Status: FROZEN POINT-IN-TIME PRE-EXECUTION REVIEW - reviewed tree unrecorded; current readiness not established; no step-9 execution credit.
+Subject: `126C__PRD__Iconography.md` (then labeled PRE-EXECUTION REVIEW REDRAFT).
 Grounded in `audits/126C__AsBuilt_{Codex,GLM}.md`, `research/126C_Research_{Codex,GLM}.md`,
 `documentation/engineering/UI/iconography.md`, and code/file checks. **Verified this
 pass:** `dieter/scripts/build-icons.mjs` exists but is **orphaned** (not wired into any

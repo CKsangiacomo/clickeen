@@ -1,9 +1,9 @@
 # Dieter - The Clickeen Design System
 
 **Living, canonical reference - the system overview.**
-Seeded 2026-06-27 from the as-built tokens/code; improved in place as UI program 126 executes.
 
-- Authority (why this home exists): [`126__PRD__UI_Optimization_Program.md` §12](../../../Execution_Pipeline_Docs/02-Executing/126__UI_Optimization/126__PRD__UI_Optimization_Program.md).
+- Canonical doctrine: this document.
+- Execution PRD: [`126H__PRD__Dieter.md`](../../../Execution_Pipeline_Docs/02-Executing/126__UI_Optimization/126H__PRD__Dieter.md).
 - **Source of truth:** `dieter/tokens/*`, `dieter/components/*`,
   `dieter/icons/icons.json`, and `dieter/icons/svg/*`. Root
   `scripts/build-dieter.js` propagates Dieter output. The code is authoritative;
@@ -12,7 +12,7 @@ Seeded 2026-06-27 from the as-built tokens/code; improved in place as UI program
 
 ## What Dieter is
 
-Dieter is clickeen's design system — token-first and atomic (Brad-Frost / matrioska).
+Dieter is Clickeen's token-first design system.
 The whole UI composes upward by **reference**, never by copy:
 
 ```text
@@ -32,9 +32,11 @@ program.
 - `dieter-typography.css` — type (see [`typography.md`](typography.md)).
 - `tokens.css` — `@import`s the three above.
 
-**Components (middle).** 26 components under `dieter/components/*`, each
-`.css` + `.html` stencil + `.spec.json` + (usually) a `.ts` hydrate function.
-See [`components.md`](components.md) for the catalog and the hydration/spec model.
+**Components (middle).** 25 source directories under `dieter/components/*`,
+including the non-rendered `shared/` helper directory. The generated manifest
+currently contains 24 CSS-backed runtime components. Component source shape
+varies by contract; see [`components.md`](components.md) for the exact catalog
+and hydration/spec model.
 
 **Screens (outermost).** DevStudio, Roma, Bob — each consumes Dieter at a
 different depth. See [`surfaces.md`](surfaces.md).
@@ -60,9 +62,12 @@ layering are owned by their own UI docs.
   render, sizing consumption, color, and semantics are in
   [`iconography.md`](iconography.md).
 - **Elevation** - `--shadow-elevated`, `--shadow-floating`, and
-  `--shadow-inset-control`. Do not expand these into an elevation scale here.
+  `--shadow-inset-control`. `--shadow-elevated` has real Roma and Prague
+  consumers, so any change must include them in its blast radius. Do not expand
+  these three roles into a larger elevation scale here.
 - **Semantic utility** - `.sr-only` exposes text for assistive technology when
-  visible layout should not show it. 126A owns semantic truth.
+  visible layout should not show it. [`accessibility.md`](accessibility.md) owns
+  semantic truth.
 - **Motion bridge** - `--duration-snap`, `--duration-base`, and
   `--easing-standard` are documented in [`motion.md`](motion.md).
 - **Reduced-motion guard** - the global
@@ -70,9 +75,11 @@ layering are owned by their own UI docs.
 
 ## How the component system works
 
-- **Stencil + spec.** Each component has an `.html` stencil with `{{mustache}}`
-  slots and a `.spec.json` that declares the binding model (e.g. `string`,
-  `no-binding`, `row-path`) and the `tooldrawer-field` type for editor fields.
+- **Stencil + spec where the component is field-rendered.** Rendered editor
+  components normally pair an `.html` stencil with a `.spec.json` binding
+  model. CSS-only primitives and specialized components may intentionally have
+  a smaller source shape; the exact exceptions and deletion targets are listed
+  in [`components.md`](components.md).
 - **Hydration.** Most components export a `hydrate*` function re-exported from
   `dieter/components/index.ts`. Exceptions: `icon`, `slider`, `popover`,
   `agent-activity` are CSS/HTML only; `object-manager` and `repeater` ship
@@ -80,6 +87,18 @@ layering are owned by their own UI docs.
 - **Build.** Root `scripts/build-dieter.js` bundles tokens + components + icons
   into `tokyo/product/dieter/**`, served from Tokyo R2 at `/dieter`. See
   [`ops.md`](ops.md).
+
+## Package And Artifact Boundary
+
+Generated Dieter files and `manifest.json` are build/runtime outputs, not source
+truth. App runtimes consume those generated/CDN artifacts; they do not redefine
+Dieter source.
+
+`@ck/dieter` is not currently a general programmatic JS/CSS package entrypoint
+while its package entry resolves to `index.html`. Consumers use the current
+generated/CDN artifact path unless the UI ops or component doctrine explicitly
+changes that contract through its execution PRD. Do not invent a second package
+or registry to hide the current shape.
 
 ## Current Boundaries
 
@@ -95,5 +114,5 @@ layering are owned by their own UI docs.
 - Current Dieter color law is light-mode only; there is no current dark-mode
   contract. See [`color.md`](color.md).
 - Component-specific raw shadows, raw z-index values, and component API cleanup
-  belong to [`components.md`](components.md) unless a more specific PRD owns the
-  surface.
+  belong to [`components.md`](components.md) unless a more specific living
+  doctrine owns the surface.

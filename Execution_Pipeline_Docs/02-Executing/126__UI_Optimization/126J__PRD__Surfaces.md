@@ -1,6 +1,6 @@
 # 126J - PRD: Surfaces
 
-Status: CODEX REDRAFT - corrected 126J domain.
+Status: PRE-EXECUTION DOCTRINE RECORDED - step-5 living doctrine reconciled; D2 workspace capability and surface ownership propagated; step-6/7/8 artifacts pending.
 Parent: `126__PRD__UI_Optimization_Program.md`.
 Audit input: `audits/126J__AsBuilt_Codex.md`.
 Research input: `research/126J_Research_Codex.md`.
@@ -22,6 +22,7 @@ Definitions:
 
 - A surface is a visual plane or container that holds content, controls, or
   rendered product output.
+- The app background is the non-surface backdrop behind those planes.
 - A layout organizes surfaces.
 - A screen/page composes one or more layouts.
 - Bob, DevStudio, and Roma consume the surface system. They are not themselves
@@ -162,7 +163,7 @@ Current gap:
 126J defines the following primitive meanings. These are product/design-system
 words, not a mandate to build a framework.
 
-### 5.1 App Background
+### 5.1 Non-Surface App Backdrop
 
 The app background is the environment behind work surfaces.
 
@@ -174,7 +175,7 @@ Use for:
 
 Rules:
 
-- It is not a content container.
+- It is not a surface or content container.
 - Do not put page content directly on a decorative background when it needs a
   content plane.
 - Use Dieter color tokens by reference.
@@ -443,9 +444,9 @@ Product law:
 - No reinterpretation of "surfaces" into app/service taxonomy.
 - No step 4+ execution in this PRD.
 
-## 11. Human Convergence Decision
+## 11. Human-Converged Surface Law
 
-The core decision for the human is whether to accept this 126J definition:
+The product owner decision register accepts this 126J definition:
 
 ```text
 surface primitives -> layouts -> screens/pages
@@ -453,7 +454,6 @@ surface primitives -> layouts -> screens/pages
 
 and the primitive set:
 
-- app background;
 - navigation plane;
 - header/action band;
 - canvas/work area;
@@ -464,10 +464,30 @@ and the primitive set:
 - overlay/dialog plane;
 - layout helpers as non-surface organizers.
 
-If accepted, there are no open conceptual questions. The remaining work is
-execution in the owning PRDs and living docs.
+The app background is the non-surface backdrop behind that set.
 
-## GLM Addendum — Phase 1 Step 2 (independent pass, correct layer)
+Operational layouts also follow the accepted global workspace-capability law:
+resolution governs sharpness, usable workspace governs composition, and form
+factor governs the expected experience. Desktop and full-screen tablets in
+either orientation retain the desktop workspace; mobile landscape uses compact
+composition; mobile portrait receives an explicit orientation/size boundary.
+This is capability-based layout law, not a universal pixel breakpoint or device
+registry.
+
+The accepted composition remains intentionally simple: full mode is persistent
+left navigation plus a flexible work area; compact mode is a menu button plus a
+full-width work area with the same navigation in an overlay drawer. Bob nests
+the same pattern as ToolDrawer plus preview/workspace. D2 does not authorize new
+domain layouts, mobile screen variants, or a shared shell framework.
+
+There is no open 126J conceptual decision. D2 doctrine is now propagated. The
+remaining work is the exact step-6 gap audit, the step-7 executable PRD, and
+step-8 peer review before any step-9 execution.
+
+## Frozen GLM Addendum — Phase 1 Step 2 (independent pass, correct layer)
+
+This addendum is point-in-time review evidence. Its proposals and counts are not
+current doctrine; the settled surface law earlier in this PRD controls.
 
 GLM's independent as-built (`audits/126J__AsBuilt_GLM.md`, redone at the correct
 layer) and research (`research/126J_Research_GLM.md`, redone at the correct
@@ -497,7 +517,8 @@ artifacts — the Dieter-consumption comparison — are superseded on both sides
 
 ### Independent file:line evidence for §4/§5 (GLM grep, this pass)
 
-- **No Dieter surface primitive:** `dieter/components/` has 26 component dirs;
+- **No Dieter surface primitive:** the reviewed tree now has 25 component
+  directories including non-rendered `shared`;
   none is `surface`/`card`/`panel`/`page`/`layout`. Confirms §4 "Dieter does not
   currently have a dedicated surface component."
 - **Surface color role is flat:** `dieter-color-tokens.css:15-16` —

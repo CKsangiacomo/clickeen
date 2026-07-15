@@ -1,7 +1,7 @@
 # 126A Accessibility — GLM Pre-Execution Peer Review
 
-Status: PRE-EXECUTION peer review (main-thread, 3 lenses: Staff Engineer, Senior PM,
-Principal TPM). Subject: `126A__PRD__Accessibility.md` (Status: PRE-EXECUTION READY).
+Status: FROZEN POINT-IN-TIME PRE-EXECUTION REVIEW - reviewed tree unrecorded; current readiness not established; no step-9 execution credit.
+Subject: `126A__PRD__Accessibility.md` (then labeled PRE-EXECUTION READY).
 Grounded in `audits/126A__AsBuilt_{Codex,GLM}.md`, `research/126A_Research_{Codex,GLM}.md`,
 `documentation/engineering/UI/accessibility.md`, and code grep across `dieter/`,
 `bob/`, `roma/`, `admin/` (2213 aria/role usages verified; aria-live/role=dialog

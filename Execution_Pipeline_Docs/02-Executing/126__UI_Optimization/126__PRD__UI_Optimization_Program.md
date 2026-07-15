@@ -1,11 +1,15 @@
 # PRD 126 — MAMA: UI Optimization Program
 
-Status: DRAFT — DIRECTIONAL SKELETON (structure to work on; the law/authority sections are marked TBD and must be grounded before this is binding)
+Status: PRE-EXECUTION STEPS 6-7 IN PROGRESS - 126A current-source gap audit and final executable PRD complete; 126A step 8, 126B-126M steps 6-8, and all step-9 execution remain pending.
 Owner: Clickeen product architecture + UI
 Date: 2026-06-26
 Stage: 02-Executing
 
-This is the parent program PRD (MAMA). Execution flows through the domain PRDs
+`02-Executing` is the repository pipeline folder for an active program. It does
+not mean step-9 execution has begun. This program remains in Phase 1 pre-execution
+until every A–M domain completes steps 1–8.
+
+This is the parent program PRD (MAMA). Planning and eventual execution flow through the domain PRDs
 **126A–126K** in dependency order (§7) plus the two
 screen refactors **126L DevStudio UI** and **126M Roma UI** last. Each domain PRD
 is filled from its real audit. If a PRD conflicts with this MAMA, execution
@@ -22,11 +26,14 @@ Related:
   for the bar.
 - Structural templates / granularity bar: `../../03-Executed/124__Overlay_Aware_Runtime_Materializer/124__MAMA__*.md`,
   `../../03-Executed/125__Roma_Tokyo_Product_Authority_And_Inventory_Boundary/125__PRD__*.md`.
-- **TBD law sources (must read before §4/§5 are binding):**
-  `documentation/architecture/CONTEXT.md`, `documentation/AGENTS.md`,
+- **Law sources read and reconciled on 2026-07-14:**
+  `documentation/architecture/CONTEXT.md`, root `AGENTS.md`,
   `documentation/services/devstudio.md`, `documentation/services/roma.md`,
   `documentation/services/bob.md`,
-  `../03-Executed/PRD__DevStudio_Cloudflare_Migration.md` (§3.5 write path, §3.6 design freeze, Appendix A hash-frozen baseline).
+  `../../03-Executed/PRD__DevStudio_Cloudflare_Migration.md` (§3.5 write path,
+  §3.6 design freeze, Appendix A hash-frozen baseline).
+- Human decision register:
+  `126__Product_Owner_Execution_Decisions.md`.
 
 ## 1. Purpose
 
@@ -107,14 +114,17 @@ someone was standing in. Drift now sits at **every** layer. Another pass on top
 adds accretion; it does not clean the chain. So we stop, uplevel, and rebuild the
 reference chain from the center.
 
-## 4. The law (binding rules) — DIRECTIONAL, to be grounded
+## 4. The law (binding rules)
 
 - **North stars: 2026 Material 3 (M3), Apple HIG, OpenAI UI.** "2026 best practice" is pinned to these three — token-first, accessible, *engineered* systems, not painted ones. Every audit's modern lens (loop step c, §9) measures clickeen against them, not against a vibe. clickeen's color is already world-class because it was seeded from Apple's source colors + OKLAB; the same sourcing discipline applies to every domain. They define the bar — 126 is converge-to-the-bar.
 - **Original source only — never Reddit, Stack Overflow, or "how to build X UI" blogposts.** Reference Google / Apple / OpenAI *directly*. Those secondhand sources are the old, over-upvoted, contaminated distribution that caused the dated-UI problem — lossy interpretations that teach the *look*, not the *system*. Reading them re-injects the median we're eradicating and produces cargo-cult UI: the appearance without the engineering, exactly Roma's parallel `.roma-*` failure. An AI or audit left to "research modern UI" drifts there by default; this tenet forces the harder, correct path — the actual source.
 - **Dieter is the only design system.** No parallel component system.
 - **Design freeze.** Current layouts are the frozen baseline; no new visual
-  language; ported screens match what exists. *(Source: Migration PRD §3.6 +
-  Appendix A hash-frozen baseline — verify exact wording.)*
+  language; ported screens match what exists. DevStudio's migrated page
+  fragments and dependent CSS are the Appendix A hash-frozen baseline. A 126
+  execution change requires an exact accepted gap, visual evidence, and product
+  owner approval; the migration freeze is not permission for an unreviewed
+  redesign. *(Source: Migration PRD §3.6 + Appendix A.)*
 - **Reveal, never masquerade.** DevStudio shows Dieter's true state; it must be
   structurally incapable of dressing it up.
 - **By reference, not copy.** Every doll points inward; nothing hardcodes a value
@@ -122,12 +132,14 @@ reference chain from the center.
 - **No new framework.** We converge; we don't rebuild.
 - **No invented product behavior** to fill a UI gap.
 
-> **NOTE:** these are the agreed rules. Their exact legal authority MUST be
-> grounded from `CONTEXT.md`, `AGENTS.md`, the service tenets, and Migration
-> §3.5/§3.6/Appendix A before this section is binding. Do not execute against
-> un-grounded wording.
+The authority grounding and product-owner convergence are complete. D1 defines
+dialog dismissal, D2 defines global operational workspace capability, and D3
+keeps Upgrade entry points connected to one honest pre-GA upsell dialog
+scaffold. These accepted decisions in
+`126__Product_Owner_Execution_Decisions.md` now govern domain doctrine and the
+remaining pre-execution passes.
 
-## 5. Authority (who owns what) — DIRECTIONAL, to be grounded
+## 5. Authority (who owns what)
 
 | Concern | Owner | Verify |
 | --- | --- | --- |
@@ -137,8 +149,11 @@ reference chain from the center.
 | Roma screens / routes / save | `roma/*` | Roma product law unchanged |
 | Visual design / layout | Product owner (frozen) | — |
 
-Authority chains (Roma/Tokyo/Berlin per PRD 125; DevStudio write-lane per
-Migration §3.5) to be confirmed against the law docs.
+Authority chains are confirmed against current architecture/service docs and
+runtime code: Roma owns current-account application routes, Berlin owns
+session/account context, Tokyo owns account product operations, Dieter source
+owns design-system truth, and DevStudio's token write lane remains the
+Berlin-session/account-verified GitHub commit path from Migration §3.5.
 
 ## 6. Scope
 
@@ -173,30 +188,46 @@ table; **execution stays inside-out and gated** (§9).
 **126I components is the pivot.** Domains 126A–126H feed the library; 126J surfaces
 and 126K dialogs-and-modals are built on / consume it. Then the screens.
 
-**DevStudio UI (126L) and Roma UI (126M) are last** because they're the outermost
-doll — they consume every domain beneath, so their PRDs are written once, against
-final upstream truth (no rework cascade). Within the last two, DevStudio before
-Roma: Roma consumes DevStudio's tokenization guard.
+**DevStudio UI (126L) and Roma UI (126M) are last** because they are the
+outermost consumers of Dieter and the UI doctrine beneath them. DevStudio and
+Roma are sibling consumers; neither is the other's runtime dependency.
+DevStudio is planned first because it reveals and governs Dieter source, then
+Roma consumes the same settled Dieter contracts as the customer account shell.
 
 ## 8. What must not happen
 
 - No redesign or new visual language.
-- No parallel component system left behind (`.roma-*` must go).
+- No parallel component system left behind. App-specific layout/composition
+  classes may remain; local classes that duplicate Dieter-owned controls,
+  reusable table appearance, or shared dialog mechanics must go. Do not rename
+  legitimate `.roma-*`/`.rd-*` layout classes merely to satisfy a grep count.
 - No masquerade in DevStudio.
 - No invented product behavior.
-- **No "fix" that silently changes the look.** The ghost-token lesson:
-  `--radius-3`/`--radius-4` are intentional aliases; "killing" them would have
-  been a visual regression. Every visual change needs explicit approval + a
-  before/after screenshot.
+- **No "fix" that silently changes the look.** Historical numeric radius
+  aliases were already removed in premature code changes. Current law is
+  `--control-radius-*`; do not restore aliases from stale audit text. Every
+  visual change still needs explicit approval and before/after evidence.
 - No one-pass or parallelized execution across layers.
 
-## 9. How we work (execution doctrine)
+## 9. Pre-Execution And Execution Process
+
+**Human-confirmed process authority (2026-07-14):** steps 1–8 for every A–M
+domain are pre-execution. Auditing code, verifying remote state, researching,
+converging product law, updating doctrine, writing final PRDs, and peer-reviewing
+those exact PRDs are all pre-execution. Step 9 is the only execution phase.
+
+Code or product-data changes that land before every A–M domain reaches step 8 do
+not become execution retroactively. They become current as-built input that
+pre-execution must re-audit against the final human-approved program. Verification
+of those premature changes is also pre-execution and gives them no completion
+credit.
 
 Two phases. **Plan everything first; execute once at the end.**
 
-- **Phase 1 — Plan (every domain, A1–G).** All research, doctrine, gap-audits,
+- **Phase 1 — Pre-execution (steps 1–8 for every A–M domain).** All audits,
+  remote-state verification, research, human convergence, doctrine, gap-audits,
   final PRDs, and peer reviews done for *every* domain in §7 before any code changes.
-- **Phase 2 — Execute (H), once.** Only when all PRDs are maniacal-detail and
+- **Phase 2 — Execute (step 9), once.** Only when all PRDs are maniacal-detail and
   peer-reviewed. Runs inside-out and gated (tokens → components → screens),
   splendid bar at each layer.
 - Why plan-all-then-execute: planning is cheap and reversible; code is expensive
@@ -228,7 +259,9 @@ Every domain (dependency order, §7) runs steps 1–8 in Phase 1. Only after **e
 
 **Authority lanes (held through every step):** code → current reality (step 1) · Google/Apple/OpenAI → external reference (step 3) · human → product judgment (step 4) · Dieter kb docs → clickeen UI truth (step 5) · final PRD → execution (steps 7/9). Keeping each authority in its lane is the 124/125 discipline and the no-invented-machinery tenet.
 
-**The gate is absolute: no code before ALL domain PRDs (steps 1–8 for every domain) are maniacal-detail and peer-reviewed.**
+**The gate is absolute: no code or product-data mutation before ALL domain PRDs
+(steps 1–8 for every domain) are human-converged, maniacal-detail, and peer-reviewed
+at an exact recorded commit/tree. Read-only verification remains pre-execution.**
 
 Every domain PRD must be judged against the four-part 126 loop: standard
 decided, codebase gaps identified, fix categories mapped, deterministic agent
@@ -292,13 +325,9 @@ audits/
 
 The execution-pipeline PRDs (this folder) are **temporary** — they get archived
 to `03-Executed/` when the program ends, and PRD history is not current docs
-(per PRD 125's docs-sync rule). The UI design-system truth they uncover needs a
-**permanent, living home**, and none exists today: `documentation/` has
-`architecture/`, `services/`, `capabilities/`, `engineering/`, but no home for
-the cross-cutting design system that DevStudio, Roma, and Bob all consume — it
-is not itself a service, not product law, not a product feature.
-
-This program establishes **`documentation/engineering/UI/`** as that home.
+(per PRD 125's docs-sync rule). The permanent living home already exists at
+**`documentation/engineering/UI/`**. This program corrects and completes that
+current authority; it does not invent a second documentation surface.
 
 - **Docs-sync target for every domain.** Each domain's "docs are part of done"
   lands design-system truth here. The locked set (seeded 2026-06-27, each driven
@@ -317,10 +346,14 @@ This program establishes **`documentation/engineering/UI/`** as that home.
   future agent revert to the corpus median (hand-picked hex, parallel systems).
   `engineering/UI/` is the declared-truth surface that prevents that recurrence.
 
-## 13. Open preconditions (before this MAMA is binding)
+## 13. Remaining Pre-Execution Gates
 
-1. Ground the law (§4) and authority (§5) from the TBD law sources listed above.
-2. Confirm design-freeze scope and the Appendix A hash-frozen baseline.
-3. Then run steps 1–8 (§9) for each domain in **dependency order** (§7), starting
-   with **126A (accessibility)**. Step 9 (execute) begins only after every domain
-   reaches step 8.
+1. Complete: D1/D2/D3 are accepted in
+   `126__Product_Owner_Execution_Decisions.md` (step 4).
+2. Complete: every A-M domain has reconciled its settled product law into the
+   owning living doctrine (step 5).
+3. In progress: 126A has a current gap audit; 126B-126M still need exact
+   code/doc mismatch and deletion maps (step 6).
+4. In progress: 126A has a final executable PRD; 126B-126M remain (step 7).
+5. Every final PRD is peer-reviewed at an exact recorded commit/tree (step 8).
+6. Step 9 begins once, in dependency order, only after the remaining gates are green.

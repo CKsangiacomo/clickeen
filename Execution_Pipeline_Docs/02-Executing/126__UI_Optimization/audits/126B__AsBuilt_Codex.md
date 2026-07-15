@@ -1,6 +1,6 @@
 # 126B Color - Codex As-Built Audit
 
-Status: CODEX ONLY - Phase 1 Step 1 as-built audit.
+Status: FROZEN POINT-IN-TIME PRE-EXECUTION AS-BUILT - code changed afterward; exact working-tree provenance may be unrecorded; no step-9 execution credit.
 
 Scope: current Clickeen color implementation across Dieter tokens, generated
 Tokyo output, Dieter components, DevStudio reveal/edit surfaces, Bob/Roma

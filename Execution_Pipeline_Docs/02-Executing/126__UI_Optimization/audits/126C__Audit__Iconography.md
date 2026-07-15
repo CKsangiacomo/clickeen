@@ -1,6 +1,6 @@
 # 126C - Pre-Execution Audit: Iconography
 
-Status: PRE-EXECUTION READY - three-lane review green.
+Status: FROZEN POINT-IN-TIME PRE-EXECUTION AUDIT - code changed afterward; no step-9 execution credit.
 PRD: `../126C__PRD__Iconography.md`.
 
 This audit binds 126C implementation to concrete files. It does not authorize

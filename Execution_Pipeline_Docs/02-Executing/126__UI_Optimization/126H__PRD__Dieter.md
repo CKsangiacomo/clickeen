@@ -1,6 +1,6 @@
 # 126H - PRD: Dieter
 
-Status: PRE-EXECUTION READY - three-lane review green.
+Status: PRE-EXECUTION DOCTRINE RECORDED - step-5 living doctrine reconciled; step-6/7/8 artifacts pending; no step-9 execution credit.
 Parent: `126__PRD__UI_Optimization_Program.md` (MAMA).
 Series order: 126H of 126A-126M.
 KB doc: `documentation/engineering/UI/dieter.md`.
@@ -63,15 +63,18 @@ names alive in docs or aliases gives agents leeway to reintroduce them.
 
 ## Current Reality Summary
 
-Dieter is a real substrate, not a placeholder. Both as-built passes agree that
-`dieter/tokens/dieter-foundation-tokens.css` defines a broad foundation:
+Dieter is a real substrate, not a placeholder. The renewed current-source read
+shows that `dieter/tokens/dieter-foundation-tokens.css` defines a broad
+foundation. Frozen as-builts describe the earlier pre-cleanup tree where noted:
 
 - structural spacing: `--space-*`;
 - vertical rhythm: `--vertspace-*`;
 - control sizes and control gaps;
-- control radii and the consumed `--radius-3` / `--radius-4` aliases;
+- the `--control-radius-*` scale; numeric `--radius-*` aliases are absent from
+  current source after premature cleanup and receive no execution credit;
 - icon size tokens;
-- focus/touch tokens;
+- no foundation focus-width/offset or touch-target tokens; those historical
+  names are absent from current source;
 - motion duration tokens;
 - shadow tokens;
 - `.sr-only`;
@@ -88,7 +91,7 @@ are consumption and drift:
 - Dieter is token-defined but only partially token-consumed.
 - Components still use local raw values for motion, elevation, and z-index.
 - Several defined tokens are unused or not current product law.
-- Several consumers reference undefined or stale token names.
+- Known stale and undefined substrate names are absent from current source.
 - Some current scales overlap in unclear ways.
 - `--shadow-elevated` is not consumed by Dieter components, but it is consumed
   by Roma and Prague. It is therefore real product blast radius, not a token
@@ -151,8 +154,8 @@ Target law:
   authority only; it must not collapse current token authorities just because
   values overlap.
 - `--control-radius-*` is the primary radius scale.
-- Numeric `--radius-*` aliases are drift to remove. Callers move to
-  `--control-radius-*`.
+- Numeric `--radius-*` aliases are absent. Callers use
+  `--control-radius-*`; step 6 verifies they stay absent.
 - `--icon-size-*` defines system icon dimensions. Icon use rules remain 126C.
 - `--shadow-*` defines shared elevation values only if actually consumed.
 - Duration token decisions bridge to 126F.
@@ -171,18 +174,15 @@ Target law:
 - `--vertspace-*` is for compact vertical rhythm inside dense UI where the
   design needs finer rhythm than the structural grid. It is current law.
 
-Execution gap targets:
+Current verification targets:
 
-- Replace stale vertical-rhythm token spellings, including `--hspace-*` and any
-  discovered `--vspace-*`, with matching `--vertspace-*` tokens or the correct
-  owning spacing token.
-- Current stale vertical-rhythm consumers include Dieter component CSS,
-  generated Dieter mirrors, and Admin/DevStudio preview CSS.
-- Remove stale vertical-rhythm token spellings from source and docs.
-- Document when agents use `--space-*` versus `--vertspace-*`.
+- Numeric radius aliases and stale `--hspace-*` / `--vspace-*` vertical-rhythm
+  spellings are absent from Dieter source, generated mirrors, Admin/DevStudio,
+  and living docs. Step 6 verifies they stay absent.
+- Current docs explain when agents use `--space-*` versus `--vertspace-*`.
 - Do not reshape `--space-*`, `--vertspace-*`, or `--control-inline-gap-*`
   value scales in 126H unless the exact token/value change is named before
-  execution. The current known execution target is stale spelling cleanup.
+  execution. No spacing migration is currently scheduled.
 
 Compliance reason:
 
@@ -195,15 +195,13 @@ Target law:
 
 - `--control-radius-*` is the main Dieter radius scale.
 - Numeric `--radius-*` aliases are not current Dieter law.
-- The current alias state is inconsistent: `--radius-3` and `--radius-4` exist
-  and are consumed, while `--radius-2` is referenced without definition. That
-  is drift to clean, not an alias family to complete.
-- Numeric radius aliases are also consumed by Admin/DevStudio generator and
-  generated foundation pages. Those consumers are part of the removal blast
-  radius; generator source must change before regenerated DevStudio HTML.
-- Do not silently add `--radius-2` just to satisfy a stale caller.
-- Execution must remove the numeric alias concept and move callers to
-  `--control-radius-*`.
+- Historical audits found `--radius-3` and `--radius-4` aliases plus an
+  undefined `--radius-2` consumer. Current source contains none of those names;
+  that premature cleanup is current as-built input, not completed execution.
+- Do not silently restore `--radius-2`, `--radius-3`, or `--radius-4` to satisfy
+  a stale caller or historical document.
+- Step 6 must verify all current callers use `--control-radius-*`; it must not
+  recreate the already-removed numeric alias concept.
 - Do not add compatibility aliases for `--radius-2`, `--radius-3`, or
   `--radius-4`.
 
@@ -216,8 +214,9 @@ Compliance reason:
 
 Target law:
 
-- Focus and touch-target tokens exist in the foundation source, but they are not
-  current 126H product doctrine.
+- Historical foundation source defined focus-ring width/offset and a minimum
+  touch-target token. Current source contains none of them after premature
+  cleanup; they are not 126H product doctrine and must not return.
 - Clickeen is not a mobile app or touch-first native app.
 - 126H must not import Material/Apple 44px target doctrine as Clickeen law.
 - 126H must not create a focus framework, keyboard-support project, focus-trap
@@ -225,28 +224,24 @@ Target law:
 - 126A owns accessibility boundaries. 126A does not authorize custom keyboard
   support, keyboard-complete parity, or AI-owned accessibility compliance
   projects.
-- The current Dieter foundation tokens `--focus-ring-width`,
-  `--focus-ring-offset`, and `--min-touch-target` are removed from current
-  Dieter foundation law during 126H execution.
+- `--focus-ring-width`, `--focus-ring-offset`, and `--min-touch-target` are
+  absent from current Dieter foundation source and current non-fixture app,
+  generated-Dieter, and living-doc consumers.
 - `--focus-ring-color` is a color token and remains a 126B color-boundary
   decision, not a 126H foundation decision.
 - Do not document removed foundation focus/touch tokens as reserved,
   deprecated, legacy, non-current, or future options.
-- Admin/DevStudio, Roma, and Prague currently consume the foundation focus/touch
-  tokens. Those references are blast radius, not product-law proof. Token
-  deletion must either clean those app/runtime consumers in the same execution
-  path or explicitly route the consumer to its owning PRD before deletion.
-  No alias, fallback doctrine, or 44px/touch law survives.
+- Historical Admin/DevStudio, Roma, and Prague consumers were part of the
+  cleanup blast radius. Current non-fixture source contains no consumer. Step 6
+  verifies that absence rather than planning another migration. No alias,
+  fallback doctrine, or 44px/touch law survives.
 
-Execution gap targets:
+Regression verification:
 
 - Do not wire `--min-touch-target` as a 44px mobile/touch standard in 126H.
 - Do not wire focus-ring tokens as a keyboard-support doctrine in 126H.
-- Remove focus/touch target token claims from source/docs unless an owning PRD
-  has current product law for a specific surviving token.
-- Replace Admin/DevStudio, Roma, and Prague app/runtime consumer references
-  before removing Dieter token definitions, or route the exact consumer file to
-  its owning PRD before token deletion.
+- Verify removed focus/touch target token names remain absent from source,
+  generated output, app consumers, and living docs.
 
 Compliance reason:
 
@@ -270,11 +265,11 @@ Target law:
 - Raw repeated modal/popover-like shadows are drift unless a component PRD owns
   them.
 
-Execution gap targets:
+Remaining routing targets:
 
-- Document `--shadow-elevated` as current shared source because Roma/Prague
-  consume it. Any rename, value change, or removal must include those consumers
-  in the execution blast radius.
+- Keep `--shadow-elevated` documented as current shared source because
+  Roma/Prague consume it. Any rename, value change, or removal must include
+  those consumers in the execution blast radius.
 - Route repeated raw shadow values that clearly duplicate a shared Dieter
   elevation role to 126I.
 - Leave component-specific shadows to 126I when the component owns a real
@@ -295,7 +290,7 @@ Target law:
 - Dialog/modal/popover layering belongs to 126K and component implementation
   details belong to 126I.
 
-Execution gap targets:
+Remaining routing targets:
 
 - Do not add a z-index scale in 126H.
 - Record current z-index/layering drift for 126I/126K execution.
@@ -314,21 +309,19 @@ Target law:
 - Do not add aliases by default to make stale names survive.
 - `--color-surface` belongs to 126B because it is a color naming split between
   component caller and role color tokens.
-- `--radius-2` belongs to this PRD's radius decision because it is a shape alias
-  gap.
+- Historical `--radius-2` belonged to this PRD's radius decision; current source
+  no longer contains it and must not recreate it.
 - Stale vertical-rhythm token spellings belong to this PRD's space/vertical-
   rhythm decision.
 - `--easing-standard` and `--duration-snap` belong to 126F.
 - Icon component sizing variables and glyph ratio questions belong to 126C/126I.
 
-Execution gap targets:
+Current verification targets:
 
-- Route `--color-surface` to 126B color convergence; do not solve it in 126H.
-- Resolve `--radius-2` through the radius law; do not silently add a
-  compatibility alias.
-- Complete stale vertical-rhythm token spelling cleanup because `--vertspace-*`
-  is current law.
-- Remove fallback-masked stale names once callers are fixed.
+- Verify historical `--color-surface`, numeric radius aliases, and stale
+  vertical-rhythm spellings remain absent; do not add compatibility aliases.
+- Route any newly discovered drift to its owning PRD rather than creating a
+  126H catch-all alias layer.
 
 Compliance reason:
 
@@ -379,22 +372,17 @@ Compliance reason:
 
 ## Execution Gap Targets
 
-126H execution must fix source/docs against this standard:
+Step 6 verifies the renewed source and living-doc contract. Current docs already
+record `tokens.css`, the by-reference shadow/color dependency, and the
+foundation map. Remaining 126H work is package-shape documentation and routing
+raw component shadow/layering drift to 126I/126K:
 
-- Rewrite `documentation/engineering/UI/dieter.md` around the converged Dieter
-  substrate contract.
-- Document `tokens.css` as the composed entrypoint and document the foundation
-  file's by-reference dependency on color tokens for shadows.
-- Document the foundation token map plainly: `--space-*`, `--vertspace-*`,
-  control sizes/gaps, radii, icon sizes, shadows, duration bridge, `.sr-only`.
-- Remove focus/touch target token claims from current Dieter source/docs unless
-  another owning PRD already has current product law for a specific surviving
-  token.
+- Verify removed focus/touch target token claims remain absent from current
+  Dieter source/docs.
 - Do not wire 44px touch targets or keyboard/focus doctrine in 126H.
-- Remove stale vertical-rhythm token spellings from source and docs.
-- Resolve `--radius-2` through the decided radius law, without silently adding
-  compatibility aliases.
-- Route `--color-surface` to 126B.
+- Verify stale vertical-rhythm token spellings remain absent.
+- Verify historical `--radius-2` and `--color-surface` references remain absent;
+  do not restore them through compatibility aliases.
 - Route `--duration-snap` and `--easing-standard` to 126F.
 - Keep `--shadow-elevated` documented as current shared source because Roma and
   Prague consume it; route future component elevation cleanup to 126I and future
@@ -403,8 +391,6 @@ Compliance reason:
   token family in 126H.
 - Record package/generated artifact shape honestly, including the current
   `@ck/dieter` package entrypoint limitation.
-- Remove duplicate GLM/Codex addendum layering from the PRD; keep findings
-  integrated into the standard.
 
 ## Detailed Execution Blast Radius
 
@@ -414,55 +400,41 @@ it alone.
 
 | Area | Owner | Exact files / path shapes | Verify | Must not change |
 | --- | --- | --- | --- | --- |
-| Dieter foundation source | 126H / Dieter substrate | `dieter/tokens/dieter-foundation-tokens.css`; `dieter/tokens/tokens.css` | Verify `--space-*`, `--vertspace-*`, control sizes/gaps, `--control-radius-*`, icon sizes, shadows, `.sr-only`, and reduced-motion import shape. Remove numeric radius aliases and focus/touch target tokens from current 126H law. | Do not add token families, compatibility aliases, focus systems, mobile/touch doctrine, or z-index tokens. |
-| Color token boundary | 126B, not 126H | `dieter/tokens/dieter-color-tokens.css`; `dieter/components/button/button.css`; generated mirrors in `tokyo/product/dieter/tokens/` and `tokyo/product/dieter/components/button/button.css` | Route `--color-surface` and focus-ring color decisions to 126B; do not solve color naming in 126H. | Do not add color aliases or contrast/color doctrine in 126H. |
+| Dieter foundation source | 126H / Dieter substrate | `dieter/tokens/dieter-foundation-tokens.css`; `dieter/tokens/tokens.css` | Verify `--space-*`, `--vertspace-*`, control sizes/gaps, `--control-radius-*`, icon sizes, shadows, `.sr-only`, and reduced-motion import shape. Verify numeric radius aliases and historical focus/touch target tokens remain absent. | Do not add token families, compatibility aliases, focus systems, mobile/touch doctrine, or z-index tokens. |
+| Color token boundary | 126B, not 126H | `dieter/tokens/dieter-color-tokens.css`; `dieter/components/button/button.css`; generated mirrors in `tokyo/product/dieter/tokens/` and `tokyo/product/dieter/components/button/button.css` | Verify historical `--color-surface` remains absent and `--focus-ring-color` remains 126B-owned; do not solve color naming in 126H. | Do not add color aliases or contrast/color doctrine in 126H. |
 | Generated Dieter token output | Generated from Dieter source | `tokyo/product/dieter/tokens/dieter-foundation-tokens.css`; `tokyo/product/dieter/tokens/dieter-foundation-tokens.shadow.css`; `tokyo/product/dieter/tokens/tokens.css`; `tokyo/product/dieter/tokens/tokens.shadow.css` | Generated output changes only through `pnpm build:dieter`. | Do not hand-edit generated output. |
-| Vertical rhythm consumers | 126H / Dieter substrate | `dieter/components/dropdown-upload/dropdown-upload.css`; `dieter/components/dropdown-edit/dropdown-edit.css`; `dieter/components/textfield/textfield.css`; `dieter/components/dropdown-fill/dropdown-fill.css`; `dieter/components/dropdown-actions/dropdown-actions.css`; `dieter/components/textedit/textedit.css`; `dieter/components/dropdown-shadow/dropdown-shadow.css`; `dieter/components/dropdown-border/dropdown-border.css`; `dieter/components/tabs/tabs.css`; generated mirrors in `tokyo/product/dieter/components/`; Admin/DevStudio consumer `admin/src/css/dieter-previews.css` | Replace stale `--hspace-*` references, and any discovered `--vspace-*` references, with current `--vertspace-*` or the correct owning spacing token. | Do not document stale spelling as a supported or prohibited pattern after cleanup. |
-| Radius consumers | 126H / Dieter substrate | `dieter/components/bulk-edit/bulk-edit.css`; `dieter/components/object-manager/object-manager.css`; `dieter/components/popover/popover.css`; `dieter/components/repeater/repeater.css`; generated mirrors in `tokyo/product/dieter/components/`; DevStudio/Admin generator and consumers: `admin/scripts/generate-foundation-pages.mjs`, `admin/src/html/foundations/colors.html`, `admin/src/html/foundations/icons.html`, `admin/src/html/foundations/typography.html`, `admin/src/css/utilities.css`, `admin/src/css/layout.css`, `admin/src/css/dieter-previews.css` | Replace `--radius-2`, `--radius-3`, and `--radius-4` consumers with `--control-radius-*`. Update generator source before regenerated DevStudio HTML. Move all consumers before removing aliases. | Do not define or preserve numeric radius aliases. |
-| Focus/touch token consumers | 126H routes app/runtime cleanup to owning PRDs before token deletion | Source tokens: `dieter/tokens/dieter-foundation-tokens.css`, `dieter/tokens/dieter-color-tokens.css`; generated mirrors in `tokyo/product/dieter/tokens/`; Admin/DevStudio consumers: `admin/src/css/utilities.css`, `admin/scripts/generate-foundation-pages.mjs`, `admin/src/html/foundations/colors.html`, `admin/src/html/foundations/typography.html`, `admin/src/html/tools/entitlements.html`; Roma consumers: `roma/app/roma.css`; Prague consumers: `prague/public/styles/primitives.css`, `prague/src/components/InstanceEmbed.astro`, `prague/src/blocks/site/nav/Nav.astro`; docs: `documentation/engineering/UI/dieter.md`, `documentation/engineering/UI/color.md` | Remove focus/touch from 126H doctrine. Before deleting token definitions, replace every consumer with the owning current value or route the consumer to its owning PRD. | Do not preserve these as Dieter law, add aliases, create focus/touch doctrine, or import 44px target law. |
+| Vertical rhythm consumers | 126H / Dieter substrate | `dieter/components/dropdown-upload/dropdown-upload.css`; `dieter/components/dropdown-edit/dropdown-edit.css`; `dieter/components/textfield/textfield.css`; `dieter/components/dropdown-fill/dropdown-fill.css`; `dieter/components/dropdown-actions/dropdown-actions.css`; `dieter/components/textedit/textedit.css`; `dieter/components/dropdown-shadow/dropdown-shadow.css`; `dieter/components/dropdown-border/dropdown-border.css`; `dieter/components/tabs/tabs.css`; generated mirrors in `tokyo/product/dieter/components/`; Admin/DevStudio consumer `admin/src/css/dieter-previews.css` | Verify all current consumers use `--vertspace-*` or the correct owning spacing token and stale spellings remain absent. | Do not document stale spelling as a supported or prohibited pattern. |
+| Radius consumers | 126H / Dieter substrate | `dieter/components/bulk-edit/bulk-edit.css`; `dieter/components/object-manager/object-manager.css`; `dieter/components/popover/popover.css`; `dieter/components/repeater/repeater.css`; generated mirrors in `tokyo/product/dieter/components/`; DevStudio/Admin generator and consumers: `admin/scripts/generate-foundation-pages.mjs`, `admin/src/html/foundations/colors.html`, `admin/src/html/foundations/icons.html`, `admin/src/html/foundations/typography.html`, `admin/src/css/utilities.css`, `admin/src/css/layout.css`, `admin/src/css/dieter-previews.css` | Verify current source/generated consumers use `--control-radius-*` and contain no numeric aliases. Record premature cleanup as current input only. | Do not define or preserve numeric radius aliases. |
+| Historical focus/touch token blast radius | 126H verification | Foundation/color source and generated mirrors; Admin/DevStudio, Roma, Prague, and living-doc paths named by frozen audits | Verify `--focus-ring-width`, `--focus-ring-offset`, and `--min-touch-target` remain absent from current non-fixture source and generated output. | Do not preserve these as Dieter law, add aliases, create focus/touch doctrine, or import 44px target law. |
 | Shadow/elevation substrate | 126H source, 126I/126L/126M app/component blast radius | `dieter/tokens/dieter-foundation-tokens.css`; generated token mirrors in `tokyo/product/dieter/tokens/`; Dieter component shadow consumers in `dieter/components/choice-tiles/choice-tiles.css`, `dieter/components/textedit/textedit.css`, `dieter/components/popover/popover.css`; raw-shadow Dieter components in `dieter/components/bulk-edit/bulk-edit.css`, `dieter/components/object-manager/object-manager.css`, `dieter/components/slider/slider.css`, `dieter/components/toggle/toggle.css`, `dieter/components/dropdown-fill/dropdown-fill.css`, `dieter/components/dropdown-border/dropdown-border.css`, `dieter/components/dropdown-shadow/dropdown-shadow.css`, `dieter/components/segmented/segmented.css`; real `--shadow-elevated` app consumers in `roma/app/roma.css`, `prague/src/components/StepsPrimitive.astro`, `prague/src/blocks/subpage-cards/subpage-cards.astro`, `prague/public/styles/primitives.css` | Keep `--shadow-elevated` as current shared source while Roma/Prague consume it. Route raw component shadow cleanup to 126I. Any shadow token rename/value/removal must include generated tokens plus Roma/Prague app consumers. | Do not remove a product-used token as "unused"; do not expand to an elevation system. |
 | Z-index/layering drift | 126I / 126K, recorded by 126H | `dieter/components/bulk-edit/bulk-edit.css`; `dieter/components/object-manager/object-manager.css`; `dieter/components/dropdown-fill/dropdown-fill.css`; `dieter/components/textedit/textedit.css`; `dieter/components/segmented/segmented.css`; `dieter/components/popover/popover.css`; `dieter/components/tabs/tabs.css` | Record raw layering reality for 126I/126K; do not invent `--z-*`. | Do not add a z-index token family in 126H. |
 | Motion boundary | 126F, not 126H | `dieter/tokens/dieter-foundation-tokens.css`; `dieter/components/dropdown-fill/dropdown-fill.css`; generated mirrors in `tokyo/product/dieter/` | Route `--duration-snap` and `--easing-standard` to 126F. | Do not decide motion/easing in 126H. |
 | Icon boundary | 126C / 126I, not 126H | `dieter/tokens/dieter-foundation-tokens.css`; `dieter/components/icon/icon.css`; `dieter/components/button/button.css`; `dieter/components/menuactions/menuactions.css`; `dieter/components/textedit/textedit.css` | Keep `--icon-size-*` as substrate; route icon consumption/sizing/rendering details to 126C/126I. | Do not add icon origination or component icon rules in 126H. |
 | Screen-reader utility | 126A semantics + 126H utility source | `dieter/tokens/dieter-foundation-tokens.css`; `dieter/components/dropdown-shadow/dropdown-shadow.html`; `dieter/components/dropdown-border/dropdown-border.html`; `dieter/components/textedit/textedit.html`; `dieter/components/textedit/textedit-dom.ts`; `dieter/components/repeater/repeater.html`; `dieter/components/tabs/tabs.html`; `dieter/components/tabs/tabs.css`; `dieter/components/toggle/toggle.html`; `dieter/components/toggle/toggle.css` | Preserve `.sr-only` utility where semantics require hidden text/control labels. | Do not turn `.sr-only` into keyboard-support or focus doctrine. |
 | Package/artifact shape | 126G / 126H docs | `dieter/package.json`; `documentation/services/dieter.md`; `documentation/engineering/UI/dieter.md`; `tokyo/product/dieter/manifest.json` | Document current package/artifact shape honestly; generated/CDN artifacts are current consumer path. | Do not invent a new package registry or package entrypoint in 126H. |
-| Living Dieter docs | 126H docs | `documentation/engineering/UI/README.md`; `documentation/engineering/UI/dieter.md`; `documentation/services/dieter.md`; `documentation/engineering/UI/ops.md`; `documentation/engineering/UI/color.md`; `documentation/engineering/UI/iconography.md`; `documentation/engineering/UI/typography.md`; `documentation/engineering/UI/motion.md`; `documentation/engineering/UI/components.md`; `documentation/engineering/UI/dialogs-and-modals.md`; `documentation/engineering/UI/surfaces.md` | Rewrite Dieter docs around the current substrate contract; fix stale track mapping, stale build path, source-of-truth path, component count, dark-ready language, focus/touch claims, `svg_new` source-layout claim, and radius/vertspace law. | Do not document removed token names or dead patterns as current doctrine. |
+| Living Dieter docs | 126H docs | `documentation/engineering/UI/README.md`; `documentation/engineering/UI/dieter.md`; `documentation/services/dieter.md`; `documentation/engineering/UI/ops.md`; `documentation/engineering/UI/color.md`; `documentation/engineering/UI/iconography.md`; `documentation/engineering/UI/typography.md`; `documentation/engineering/UI/motion.md`; `documentation/engineering/UI/components.md`; `documentation/engineering/UI/dialogs-and-modals.md`; `documentation/engineering/UI/surfaces.md` | Verify the renewed current contract remains consistent: current track mapping, root build path, source authority, 25/24 counts, light-mode boundary, no foundation focus/touch or numeric-radius aliases, no `svg_new` source lane, and current vertspace law. | Do not document removed token names or dead patterns as current doctrine. |
 | Product data and deploy boundary | Not 126H | `documentation/services/tokyo.md`; `documentation/services/tokyo-worker.md`; account runtime paths `accounts/{accountPublicId}/...` in docs | State that Dieter substrate execution does not mutate account/runtime product data or deploy state. | Do not touch product data or deploy artifacts outside generated Dieter output from build. |
 
-## Required Documentation Repairs
+## Current Documentation Reconciliation
 
-Execution must repair these known doc falsehoods:
-
-- `documentation/engineering/UI/dieter.md` currently lists `dieter/scripts/*`
-  as source of truth; root `scripts/build-dieter.js` is the active build
-  script and `dieter/scripts/` must not be presented as active UI ops truth.
-- `documentation/engineering/UI/dieter.md` currently says there are about 27
-  components; the current component folder count is 26.
-- `documentation/engineering/UI/dieter.md` currently says the build path is
-  `dieter/scripts/build-dieter.js`; active build is root `scripts/build-dieter.js`.
-- `documentation/engineering/UI/dieter.md` currently says the engine is
-  dark-ready. 126B says no dark mode and no dark-ready scaffolding.
-- `documentation/engineering/UI/dieter.md` currently lists focus/touch target
-  tokens as foundation doctrine. 126H removes them from current Dieter law.
-- `documentation/engineering/UI/README.md` currently maps Dieter/color/type/
-  motion/icon/component tracks to stale 126 letters. It must map Dieter to 126H
-  and keep the remaining track references aligned to the current PRD series.
-- `documentation/services/dieter.md` currently lists `dieter/icons/svg_new/` as
-  an optional icon override input. 126C and 126G say that lane is not current
-  product law; living Dieter docs must remove it as source truth. The
-  `scripts/build-dieter.js` `svg_new` block is a blocking stale-concept cleanup
-  routed to 126C/126G execution, not a living Dieter source path for 126H docs.
+The renewed pass corrected the formerly stale living-doc claims: root
+`scripts/build-dieter.js` is the build authority; current counts are 25 source
+directories including `shared` and 24 runtime components; the system is
+light-mode only; numeric radius and foundation focus/touch aliases are not
+current law; track letters match 126; and `svg_new` is not documented as a
+source lane. Step 6 verifies those facts and maps any remaining exact mismatch;
+it must not plan already-completed documentation repairs again.
 
 ## V1-V8 Pre-Execution Controls
 
 | ID | 126H risk | Required control |
 | --- | --- | --- |
 | V1 Silent substitution | Undefined tokens like `--radius-2` or `--color-surface` get invented aliases. | Route to owning PRD or replace callers with current tokens; do not silently add aliases. |
-| V2 Silent healing | Stale `--hspace-*` / `--vspace-*` / numeric radius aliases are normalized into compatibility paths. | Remove stale names from source/docs after callers are updated. |
-| V3 Silent omission | A substrate gap or app/runtime consumer is dropped because it belongs to another PRD. | Route each gap explicitly to 126B/126C/126F/126I/126K/126L/126M as applicable; include Admin/DevStudio, Roma, and Prague consumers before token deletion. |
-| V4 Fail-open control | Fallback-masked stale references keep working and hide bad substrate truth. | Remove fallback-masked stale names once callers are fixed. |
+| V2 Silent healing | Stale `--hspace-*` / `--vspace-*` / numeric radius aliases return as compatibility paths. | Preserve their verified absence; do not add aliases. |
+| V3 Silent omission | A substrate gap or current/historical blast-radius consumer is dropped because it belongs to another PRD. | Route each remaining gap explicitly to 126B/126C/126F/126I/126K/126L/126M and verify the already-cleaned Admin/DevStudio, Roma, and Prague references remain absent. |
+| V4 Fail-open control | Fallback-masked stale references return and hide bad substrate truth. | Verify removed names remain absent and route any new defect to its owner. |
 | V5 Corruption-as-absence | Broken token references are treated as missing/no-op and left in source. | Undefined no-fallback references and would-be deleted token consumers are bugs/blast radius and must be fixed or routed. |
-| V6 Partial-success masquerade | `--shadow-elevated` is treated as unused because Dieter components do not consume it, while Roma/Prague still do; focus/touch or radius cleanup is called complete while app/runtime consumers still reference removed names. | App/runtime consumers count as real blast radius; do not remove/de-scope product-used tokens as fake doctrine or call cleanup complete ahead of consumers. |
+| V6 Partial-success masquerade | `--shadow-elevated` is treated as unused because Dieter components do not consume it, or the historical focus/touch/radius cleanup is credited as execution. | App/runtime consumers count as real blast radius; preserve product-used tokens and record the cleaned names only as current input until step-9 verification. |
 | V7 Masquerade/redress | Numeric radius aliases, focus/touch tokens, or old spacing spellings are renamed as current law. | Delete/remove drift instead of redressing it as current doctrine. |
 | V8 Runtime test dependency | Dieter correctness depends on tests/probes instead of source/doc truth. | Source/docs carry the substrate law; checks only verify execution. |
 
@@ -529,10 +501,12 @@ Confirmed GLM findings:
 
 - The foundation substrate is broad and useful.
 - `--vertspace-*` is a distinct Clickeen vertical-rhythm idea, not an M3 copy.
-- `--radius-3` and `--radius-4` are consumed aliases, not ghost tokens.
+- Historical source consumed `--radius-3` and `--radius-4`; current source has
+  removed them in favor of `--control-radius-*`.
 - Dieter is token-defined but only partially token-consumed.
-- `--color-surface` and `--radius-2` are undefined no-fallback references.
-- Stale vertical-rhythm token spellings must be removed, not preserved as
+- Historical source contained undefined no-fallback `--color-surface` and
+  `--radius-2` references; current source contains neither.
+- Stale vertical-rhythm token spellings are absent and must not be restored as
   documented concepts.
 - Some defined tokens are unused or not current product law.
 - Elevation is partially tokenized and partially raw/ad hoc.

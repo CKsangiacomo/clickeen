@@ -1,5 +1,7 @@
 # 126D — As-built audit: Typography (GLM, Phase-1 step 1)
 
+Status: FROZEN POINT-IN-TIME PRE-EXECUTION AS-BUILT - code and remote font state changed or may have changed; exact working-tree provenance may be unrecorded; no step-9 execution credit.
+
 > GLM independent pass. Codex writes its own; **not converged**. Source: `dieter/tokens/dieter-typography.css` (134 lines) read in full.
 
 ---

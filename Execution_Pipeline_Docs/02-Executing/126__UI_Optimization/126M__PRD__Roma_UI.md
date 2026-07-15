@@ -2,12 +2,13 @@
 
 Parent: `126__PRD__UI_Optimization_Program.md` (MAMA).
 
-Status: CODEX BASELINE ONLY - Phase 1 Step 2.
+Status: PRE-EXECUTION DOCTRINE RECORDED - step-5 living doctrine reconciled; shared-control, translation, D1 dismissal, D2 workspace, and D3 upsell boundaries propagated; steps 6-8 remain pending.
 
-This is current reality plus known gaps only. It is not final doctrine, does not
-converge with GLM, does not select fixes, and does not authorize Step 4+
-execution. The old executable draft was seed material and is not preserved as
-Codex doctrine in this baseline.
+The Phase-1 baseline/addendum sections below are frozen evidence. Mandatory Roma
+shared-control, translation-boundary, and product-state law is now settled in
+this PRD and the product-owner decision register, including D1/D2/D3. No
+execution is authorized yet. The old executable draft was seed material and is
+not preserved as current doctrine.
 
 Primary Step 1 evidence:
 
@@ -19,17 +20,17 @@ Primary Step 3 evidence:
 - `research/126M_Research_Codex.md`
 - `research/126M_Research_GLM.md`
 
-## Phase 1 Step 2 Boundary
+## Frozen Phase 1 Step 2 Boundary
 
-This baseline may describe:
+This point-in-time baseline described:
 
 - current Roma UI reality;
 - current route/product authority boundaries;
 - known gaps;
 - stale prior-draft/count warnings;
-- non-decisions before Step 4 human convergence.
+- the decisions that were still open before Step 4 human convergence.
 
-This baseline must not:
+It did not:
 
 - implement shared primitives;
 - delete `.roma-*`, `.rd-*`, or `widget-defaults*` CSS;
@@ -44,6 +45,45 @@ This baseline must not:
 ## Product Role
 
 Roma is the authenticated current-account product app and Builder host.
+
+## Current Mandatory Law
+
+Roma consumes the accepted Dieter native field, table visual, tooltip, and
+dialog mechanics while retaining account/domain state, labels, validation,
+layout, behavior, and specialized tables. Dead Widget Defaults control CSS is
+deleted without replacing active Bob/Dieter control behavior. Translation sync
+attention stays in Bob beside Tokyo's authoritative summary; Roma must not infer
+a second translation state. Accepted D1 law governs Roma dismissal behavior:
+Add Instances discards temporary selection on Escape/Cancel and never closes by
+backdrop; Bulk Upload cannot dismiss while active; the tier-drop notice requires
+Open settings or persisted Dismiss; plan-limit prompts may close because no work
+is lost; unsaved Builder/defaults prompts treat Escape as Keep editing and
+require explicit Discard.
+
+Accepted D3 law keeps legitimate Upgrade entry points. They open or transition
+to the shared pre-GA upsell dialog scaffold instead of navigating to `/billing`.
+The scaffold is a real, dismissible UI destination for developing plan
+comparison, benefits, pricing, and future checkout, but it performs no purchase,
+plan mutation, provider call, fake success, or invented contact operation. A
+plan-limit prompt is replaced by the scaffold rather than stacked beneath it.
+Roma owns one small reusable scaffold component: Roma-native Upgrade actions
+open it directly, while Bob keeps the typed `bob:upsell` intent and Roma opens
+the same component. Ordinary Billing navigation remains valid for current-plan
+inspection. No global upsell store, billing adapter, or dialog framework is
+authorized. Opening the scaffold preserves unsaved Builder work; the current
+`confirmDiscardBuilderEdits()` call is removed from only the `bob:upsell`
+branch, not from real navigation guards.
+
+D2 is decided global law. Roma preserves its desktop dashboard workspace on
+tablets in both orientations, including touch operation. Mobile landscape uses
+compact drawer navigation; mobile portrait presents the explicit unsupported
+orientation/size boundary. The current generic `980px` collapse and inline
+`details` navigation are current-source gaps, not product doctrine.
+
+Roma's one shell remains narrow persistent left navigation plus flexible work
+area in full mode, and the same navigation as an overlay drawer plus full-width
+work area in compact mode. Roma domains are not rebuilt as separate mobile
+screens. Bob uses the same nested rule for ToolDrawer plus preview/workspace.
 
 ## 126 Pre-GA No Legacy Compatibility Tenet
 
@@ -120,8 +160,10 @@ Current reality:
 
 Known gaps:
 
-- Roma's forms, tables, cards, modals, grids, locale controls, and most domain
-  states remain outside a Dieter-backed shared primitive layer.
+- Roma's repeated inputs, tables, and modal behavior remain outside a
+  Dieter-backed shared contract. App shell, domain layout, grids, locale
+  composition, toolbars, and Builder hosting are legitimate Roma composition
+  unless a current gap proves otherwise.
 - Later convergence must be class/markup-aware instead of assuming custom Dieter
   elements exist.
 
@@ -133,16 +175,19 @@ Current reality:
 - It defines layout, nav, headers, canvas modules, module surfaces, cards,
   code blocks, toolbar, account locale settings, inputs, form grids, fields,
   tables, cell actions, modals, Builder iframe, and mobile behavior.
-- The `widget-defaults` block is a dense second local form/control system inside
-  the Roma local layer.
+- The `widget-defaults` CSS still contains an old local toggle/input/textarea
+  control system, but current Widget Defaults runtime renders compiled
+  Bob/Dieter controls through `@clickeen/bob/control-host`. The old control CSS
+  is dead; active `widget-defaults-builder-fields` rules are host composition.
 - CSS-side raw pixel values still exist in Roma CSS.
 
 Known gaps:
 
-- `.roma-*`, `.rd-*`, and `widget-defaults*` are current local UI truth, not a
-  converged system.
-- The `widget-defaults` subsystem must be tracked separately from the general
-  shell/table/form layer because it owns local toggle/input/textarea behavior.
+- `.roma-*`, `.rd-*`, and `widget-defaults*` mix legitimate app composition,
+  repeated component styling, and dead CSS. They must be classified, not
+  deleted or renamed as one namespace.
+- The dead Widget Defaults toggle/input/textarea rules are deletion targets;
+  current compiled control behavior remains Bob/Dieter-owned.
 
 ## Shared Primitive Layer
 
@@ -157,17 +202,20 @@ Current reality:
 Known gaps:
 
 - The shared primitive layer described in old seed text is not current runtime.
-- Step 2 does not choose whether that old primitive list is correct.
+- Renewed human convergence rejects that old generic primitive list. Current
+  mandatory law adds only the proven shared operational field and table visual
+  contracts; Roma keeps domain state, labels, validation, layout, behavior, and
+  specialized composition.
 
 ## Domain Size And Shape
 
 Current line counts:
 
-- `pages-domain.tsx`: 1106 lines.
-- `builder-domain.tsx`: 973 lines.
-- `widget-defaults-domain.tsx`: 718 lines.
+- `pages-domain.tsx`: 1111 lines.
+- `builder-domain.tsx`: 987 lines.
+- `widget-defaults-domain.tsx`: 730 lines.
 - `widgets-domain.tsx`: 624 lines.
-- `assets-domain.tsx`: 488 lines.
+- `assets-domain.tsx`: 524 lines.
 - `account-locale-settings-card.tsx`: 334 lines.
 - `team-domain.tsx`: 311 lines.
 - `team-member-domain.tsx`: 303 lines.
@@ -200,6 +248,10 @@ Current reality:
 - Profile, Team, and Team Member use local forms and tables.
 - Home, Billing, and AI are mostly static card surfaces.
 - Usage has live storage usage state and broader-reporting unavailable copy.
+- Upgrade actions currently route to `/billing`, while Billing says its provider
+  is not connected. This is an execution gap: accepted D3 law keeps the actions
+  but changes their destination to the shared upsell scaffold without claiming
+  commercial success.
 
 Known gaps:
 
@@ -225,11 +277,12 @@ Current reality:
 - Current audit found no top-of-builder stale-translation attention banner in
   Roma Builder UI.
 
-Known gaps:
+Settled boundary:
 
-- Backend route separation is not the same as complete UI fulfillment.
-- A missing stale-translation banner is a current UI gap only; Step 2 does not
-  choose stale evidence, copy, persistence, or implementation mechanics.
+- Translation attention already exists in Bob's Translations panel beside the
+  authoritative summary and Generate action. Roma has no independent stale
+  signal and must not invent one. The single owner is settled product law, not
+  an open 126 decision.
 - Save/translation product law must remain separated in later work.
 
 ## State And Feedback
@@ -244,7 +297,8 @@ Current reality:
   loading/error/empty branches.
 - Local modal/status patterns exist in widgets, assets, pages, Builder,
   profile, and account notices.
-- Builder uses browser `window.confirm` for unsaved navigation.
+- Builder and Widget Defaults use browser `window.confirm` for in-app unsaved
+  navigation. Browser/tab `beforeunload` is a separate browser-owned boundary.
 
 Known gaps:
 
@@ -257,12 +311,12 @@ Known gaps:
 | Area | Current Strength | Current Gap |
 | --- | --- | --- |
 | Account authority | Same-origin Roma routes and current-account shell | UI work must not bypass product routes |
-| Shell | Shared `RomaShell`/`RomaNav` structure | Local `.roma-*`/`.rd-*` shell primitives |
+| Shell | Shared `RomaShell`/`RomaNav` structure | Preserve legitimate app composition; remove only dead or accepted Dieter-duplicate controls |
 | Dieter | Tokens and button CSS loaded/used | Forms/toggles/popovers/tables/modals not broadly Dieter-class-based |
 | Domains | Clear account product surfaces | Large domain files and repeated local markup |
-| Widget Defaults | Rich account default editing surface | Dense second local form/control system |
-| Builder | Explicit Bob host and command bridge | No found stale-translation attention banner |
-| Save/localization | Separate save and translation routes | UI attention state for stale translations not present |
+| Widget Defaults | Compiled Bob/Dieter controls in the account-default host | Dead old local control CSS remains beside legitimate host layout |
+| Builder | Explicit Bob host and command bridge | Translation attention remains Bob-owned; no Roma-owned signal is permitted |
+| Save/localization | Separate save and translation routes; attention lives in Bob panel | Remove the invented Roma-banner gap from final doctrine |
 | State | Many domains have some state handling | Uneven loading/empty/error/success model |
 | Copy | Some product-law copy is explicit | Some implementation/environment copy remains visible |
 
@@ -298,22 +352,31 @@ Product law:
 - Does not turn missing banner evidence into an invented state.
 - Does not treat old seed material as executable truth.
 
-## Explicit Non-Decisions
+## Original Step-2 Non-Decisions And Current Resolution
 
 - No code changes.
 - No Roma redesign.
-- No shared primitive list decision.
-- No Dieter migration decision.
-- No CSS deletion.
+- The old generic shared primitive list is rejected; only the two proven Dieter
+  contracts in the decision register survive.
+- Dieter adoption is bounded to accepted reusable controls/visual contracts;
+  Roma shell and domain composition remain Roma-owned.
+- CSS deletion is limited to proven dead or accepted duplicated contract CSS.
 - No domain splitting.
 - No save/translation route change.
 - No stale-translation banner implementation.
-- No final doctrine.
-- No Step 4+ convergence.
+- D1/D2/D3 doctrine is propagated. Exact gap, execution, and peer-review scope
+  remain steps 6-8.
 
 ---
 
-## GLM Addendum - Phase 1 Step 2 (feedback, preserved)
+## Frozen GLM Addendum - Point-In-Time Phase 1 Step 2 Feedback
+
+Status: FROZEN HISTORICAL INPUT - not current source truth and not executable
+guidance. The renewed current baseline above overrides every conflicting claim.
+In particular, the old Widget Defaults control block described below is dead
+CSS around a current compiled Bob/Dieter runtime; execution deletes the dead
+rules and preserves only legitimate host layout. This addendum remains solely
+as provenance for what the earlier reviewer observed.
 
 Adversarial critique of the two Codex Baseline sections from the earlier seed
 against the GLM independent as-built pass (`audits/126M__AsBuilt_GLM.md`). Not
@@ -371,13 +434,12 @@ critique are read at the right confidence.
    include the CSS file, or these sites survive the TSX-only pass. This is a
    concrete gap.
 
-4. **The single 980px breakpoint and its table-reflow behavior must be
-   preserved by any `DataTable` primitive.** GLM verified (`roma.css:724-760`):
-   below 980px the layout collapses, nav hides behind a drawer, and `.roma-table`
-   becomes `display:block; overflow-x:auto; white-space:nowrap`. Codex's
-   baseline doesn't mention responsive behavior; a naive `DataTable` primitive
-   that doesn't replicate the horizontal-scroll reflow would regress mobile.
-   Worth naming as a later acceptance detail.
+4. **Historical responsive recommendation, superseded by D2.** GLM verified
+   (`roma.css:724-760`) that the inspected implementation combined navigation
+   collapse and table overflow at one `980px` breakpoint. Current law preserves
+   truthful table overflow where the workspace needs it but explicitly rejects
+   that breakpoint as device/product classification. Tablet keeps the desktop
+   workspace; mobile landscape receives compact composition.
 
 5. **The header inconsistency on `builder-domain.tsx` (869 vs 976 lines).** The
    prior PRD body said 869; the prior header note said it grew to 976. GLM could

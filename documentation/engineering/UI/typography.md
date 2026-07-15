@@ -2,10 +2,12 @@
 
 STATUS: CURRENT SYSTEM OPERATOR SPEC
 
-Authority: 126D, Dieter typography source, account widget defaults, and widget
-runtime typography.
+Canonical doctrine: this document.
+Execution PRD: [`126D__PRD__Typography.md`](../../../Execution_Pipeline_Docs/02-Executing/126__UI_Optimization/126D__PRD__Typography.md).
+Current source authorities are Dieter typography source, account widget
+defaults, and widget runtime typography.
 
-126D defines two typography lanes:
+This document defines two typography lanes:
 
 - Operational UI typography: Dieter owns Bob, Roma, DevStudio, Admin chrome, and
   Dieter components.
@@ -40,6 +42,9 @@ Rules:
 - Do not style raw `h1` through `h6` globally in Dieter typography.
 - Use `.heading-1` through `.heading-6` as visual text classes only.
 - Typography utilities own text mechanics, not color semantics.
+- Operational UI letter spacing defaults to `0`. Non-zero tracking belongs only
+  to an explicit, human-decided Dieter visual text class, never a copied local
+  component value.
 - Use only utility names declared in the current Dieter typography source.
 
 Raw semantic headings remain HTML semantics. Visual scale is explicit through
@@ -73,6 +78,10 @@ behavior. That is widget content authority, not Dieter chrome authority.
 Widget content may use container-query fluid sizing because widgets run inside
 variable embed containers. Operational UI chrome must not use viewport-fluid
 type.
+
+Roma and Admin consume this operational UI typography. DevStudio may reveal or
+edit only typography values whose real Dieter source authority it can govern;
+its preview data is not a second typography authority.
 
 ## Account Font Library
 
@@ -162,6 +171,14 @@ Shared widget runtime behavior:
 - Public runtime packages inline that data during package materialization.
 - Bob preview supplies the same shape through `ck:state-update.typographyData`
   before widget clients apply preview state.
+
+## Fallback Truth
+
+A widget CSS fallback to `var(--font-ui)` is only the static baseline before
+widget typography data is applied. It must not turn missing
+`CKTypography.applyTypography`, malformed account font data, or a missing font
+asset into apparent success. Those failures surface through the owning editor
+or materialization path.
 
 ## Font Uploads
 

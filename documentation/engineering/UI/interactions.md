@@ -1,6 +1,7 @@
 # Interactions In Clickeen
 
-Authority: 126E Interactions.
+Canonical doctrine: this document.
+Execution PRD: [`126E__PRD__Interactions.md`](../../../Execution_Pipeline_Docs/02-Executing/126__UI_Optimization/126E__PRD__Interactions.md).
 Related docs: [`color.md`](color.md), [`components.md`](components.md),
 [`dialogs-and-modals.md`](dialogs-and-modals.md), [`motion.md`](motion.md),
 [`accessibility.md`](accessibility.md).
@@ -39,7 +40,8 @@ Roma account shell is the account-boundary reference: loading, auth redirect,
 recoverable error with retry, no-context reload, then account render. Roma
 domains may be simpler only when their product work is actually simpler.
 
-126E says what state happened. 126B says how visual state colors render.
+This document says what state happened. [`color.md`](color.md) says how visual
+state colors render.
 
 ## Command Lifecycle
 
@@ -89,7 +91,7 @@ interaction system.
 
 Dialogs and modals are used for blocking, entitlement, account notice,
 destructive, or high-importance decisions. `dialogs-and-modals.md` owns overlay
-mechanics; 126E owns when the product behavior needs a blocking or notice
+mechanics; this document owns when product behavior needs a blocking or notice
 surface.
 
 ## Monetization
@@ -98,13 +100,30 @@ Product policy and routes enforce entitlement. UI prechecks can guide the user,
 but they are not the control.
 
 Entitlement failures must be visible, actionable, and consistent with the
-command surface. User-triggered monetization gates that can route to upgrade use
-clear upgrade copy and an upgrade action. Roma widget 402 responses, Bob upsell
-modal events, and asset limit/upsell inline copy share one product meaning:
-the account tried an action the current tier does not allow.
+command surface. Legitimate user-triggered monetization gates keep clear Upgrade
+copy and an Upgrade action. Roma widget 402 responses, Bob upsell events, and
+asset limit/upsell inline copy share one product meaning: the account tried an
+action the current tier does not allow.
+
+During pre-GA, every legitimate Upgrade entry point opens or transitions to one
+coherent upsell dialog scaffold. This is a stable product surface for developing
+plan comparison, benefits, pricing, and future checkout. It is not a billing
+operation: it does not navigate to inactive Billing, mutate a plan, call a
+provider, claim success, or invent a sales/contact destination. A plan-limit
+prompt transitions into the scaffold instead of stacking another modal.
+The transition is in-place and preserves unsaved Builder work; it does not run
+a discard guard intended for navigation away from Builder.
+
+Roma owns one small reusable account upsell scaffold component. Roma-native
+Upgrade entry points open it; Bob keeps the typed `bob:upsell` intent and Roma
+opens the same component. Do not add a global upsell store or duplicate the
+scaffold in Bob. Ordinary navigation to Billing remains valid for inspecting
+the current plan; Upgrade must not masquerade that read-only surface as a
+plan-change flow.
 
 Inline monetization copy is allowed only when the product situation is genuinely
-inline and the user has a clear next action.
+inline and the user has a clear next action. Dieter owns dialog mechanics; the
+upsell surface owns its content/state; future billing owns commercial execution.
 
 ## Agent Activity
 
@@ -116,6 +135,10 @@ Translation generation currently uses Agent Activity. The activity rows narrate
 the operation while it runs; they are not the durable command result. After the
 operation ends, Bob shows durable feedback for command failure, no accepted
 work, partial locale-package failure/skips, or success.
+
+Translation-sync attention stays in Bob's Translations panel beside Tokyo's
+authoritative summary and Generate action. Roma must not derive or display a
+second translation-sync state.
 
 Copilot currently uses conversational feedback, confirmed apply, and undo for
 single-step chat/edit operations. Do not convert current Copilot into fake
@@ -152,12 +175,13 @@ Fallback posture:
 
 ## Ownership Boundaries
 
-- 126E owns interaction semantics.
-- 126B owns state color mechanics.
-- 126I owns component primitives and loading visuals.
-- 126K owns dialog/modal mechanics.
-- 126F owns motion timing and animation.
-- 126A owns semantic truth and bounded accessibility lanes.
+- This document owns interaction semantics.
+- [`color.md`](color.md) owns state color mechanics.
+- [`components.md`](components.md) owns component primitives and loading visuals.
+- [`dialogs-and-modals.md`](dialogs-and-modals.md) owns dialog/modal mechanics.
+- [`motion.md`](motion.md) owns motion timing and animation.
+- [`accessibility.md`](accessibility.md) owns semantic truth and bounded
+  accessibility lanes.
 
 Agents must use these boundaries instead of moving behavior into a new cross-
 surface subsystem.

@@ -1,5 +1,7 @@
 # 126A — As-built audit: Accessibility (GLM, Phase-1 step 1)
 
+Status: FROZEN POINT-IN-TIME PRE-EXECUTION AS-BUILT - code changed afterward; exact working-tree provenance may be unrecorded; no step-9 execution credit.
+
 > GLM independent pass — 3 facets (focus + keyboard · ARIA + semantics · contrast + touch-target + motion + sr-only). Codex writes its own; **not converged** — the human reconciles at step 4. Every finding cited `file:line`. Contrast ratios computed with the WCAG 2.1 relative-luminance formula (AA body = 4.5:1, AA large = 3:1, AAA = 7:1/4.5:1). Current reality only — no recommendations, no convergence.
 
 ---

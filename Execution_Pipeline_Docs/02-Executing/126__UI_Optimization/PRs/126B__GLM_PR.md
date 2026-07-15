@@ -1,7 +1,7 @@
 # 126B Color — GLM Pre-Execution Peer Review
 
-Status: PRE-EXECUTION peer review (main-thread, 3 lenses: Staff Engineer, Senior PM,
-Principal TPM). Subject: `126B__PRD__Color.md` (Status: PRE-EXECUTION REVIEW REDRAFT).
+Status: FROZEN POINT-IN-TIME PRE-EXECUTION REVIEW - reviewed tree unrecorded; current readiness not established; no step-9 execution credit.
+Subject: `126B__PRD__Color.md` (then labeled PRE-EXECUTION REVIEW REDRAFT).
 Grounded in `audits/126B__AsBuilt_{Codex,GLM}.md`, `research/126B_Research_{Codex,GLM}.md`,
 `documentation/engineering/UI/color.md`, `dieter/tokens/dieter-color-tokens.css`, and
 code/file checks (incl. verified that the kb doc's cited "Driving PRD"
