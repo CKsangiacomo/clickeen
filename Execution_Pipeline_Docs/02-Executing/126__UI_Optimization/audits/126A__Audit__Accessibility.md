@@ -1,6 +1,6 @@
 # 126A Accessibility - Step 6 Current Gap Audit
 
-Status: STEP 6 COMPLETE - current-source gaps and owner routing recorded; the Step-7 final PRD now consumes this audit; Step 8 and all step-9 implementation remain pending.
+Status: STEP 6 RECONCILED AFTER STEP-8 FINDINGS - six current-source gap groups and owner routing recorded; Step 8 must review the amended exact tree and all step-9 implementation remains pending.
 Parent PRD: `../126A__PRD__Accessibility.md`.
 Audit date: 2026-07-15.
 
@@ -39,8 +39,9 @@ pushes, deploys, Cloudflare operations, or Supabase operations were run.
 
 ## Verdict
 
-Current source leaves four direct 126A code-gap groups: one Dieter decorative-
-icon path, two Bob error-copy paths, and one repeated Roma product-label path.
+Current source leaves six direct 126A code-gap groups: one Dieter decorative-
+icon/name path, three Bob error-copy/state paths, one repeated Roma product-label
+path, and one DevStudio operation-state path.
 The other semantic/copy repairs
 previously listed for Dieter, Roma, and DevStudio are present and become
 preservation requirements. Component and overlay mechanics remain real work,
@@ -51,10 +52,12 @@ implementation.
 
 | Path | Current evidence | Required result | Preserve / do not change |
 | --- | --- | --- | --- |
-| `dieter/components/repeater/repeater.html:26-29` | The reorder button is truthfully named and exposes pressed state, but its two mutually exclusive decorative icon spans are not hidden from semantic output. | Add `aria-hidden="true"` to both reorder icon spans. | No reorder state, label, button, hydration, or visual behavior change. Regenerate mirrors from source; do not hand-edit them. |
+| `dieter/components/repeater/repeater.html:26-29`; `dieter/components/repeater/repeater.spec.json:20-34` | The reorder button exposes pressed state, but its two mutually exclusive decorative icon spans are not hidden from semantic output. The default showcase context omits `reorderLabel`, so generated DevStudio examples render an empty accessible name. | Add `aria-hidden="true"` to both reorder icon spans and add the default source context `"reorderLabel": "Reorder items"`. | No reorder state, button, hydration, or visual behavior change. Regenerate mirrors from source; do not hand-edit them. |
 | `bob/components/ToolDrawer.tsx:58-72`; producer: `bob/lib/session/useSessionSaving.ts:69-99` | The primary save reason is mapped to product copy, but `error.detail` is appended verbatim to the visible alert. `error.paths` are separately and explicitly presented as Builder field coordinates. | Stop rendering arbitrary save `detail`. Keep mapped save copy and keep exact validation paths as operator coordinates when supplied. | No save request, validation, session, or persistence behavior change. Do not hide the save failure or the failing paths. |
-| `bob/components/CopilotPane.tsx:456-486,541-545` | Known HTTP/contract failures are normalized, but the outer catch renders any thrown `Error.message`; a network/runtime exception can therefore become assistant copy. | Unknown request/runtime exceptions use stable Copilot recovery copy. Preserve known normalized reason copy, validation issue paths/messages as Builder coordinates, and successful agent-authored response text. | No Copilot request, response, model, edit, undo, or timeout behavior change. Do not replace valid agent output with a generic message. |
-| `roma/lib/format.ts`; `roma/components/ai-domain.tsx:9-13,22-30`; `billing-domain.tsx:15-20`; `usage-domain.tsx:72-80`; `settings-domain.tsx:124-149`; `team-domain.tsx:185-271`; `team-member-domain.tsx:205-238`; existing label source `roma-account-notice-modal.tsx:40-60` | Customer-facing Roma cards render raw plan/profile tokens such as `tier1`; Settings, Team, and Team Member also render raw lowercase role tokens, including visible select-option labels. The tier-drop notice already owns the correct tier labels in a duplicate local formatter. | Move the existing tier labels into one Roma-owned pure formatter; use `Free`, `Tier 1`, `Tier 2`, `Tier 3`, `Tier 4` everywhere plan/profile truth is shown and `Viewer`, `Editor`, `Admin`, `Owner` everywhere Roma displays or selects a role; use exact `Invalid plan` / `Invalid role` copy for present non-contract values while absent AI profile remains `Not assigned`; migrate the notice and delete its duplicate local formatter. | Keep stored/API enum and select-option values plus all entitlement, role, membership, invitation, billing, usage, notice lifecycle, and account behavior unchanged. DevStudio operator token displays are not part of this change. |
+| `bob/components/CopilotPane.tsx:58-100,456-486,541-545`; producer: `roma/app/api/account/instances/[instanceId]/copilot/route.ts:127-135,153-160` | Known HTTP/contract failures are normalized, but the outer catch renders any thrown `Error.message`; a network/runtime exception can therefore become assistant copy. Roma's real validation response can be `{ error: "VALIDATION", issues }` with no recognized reason key, and Bob currently drops those issue coordinates when it selects generic fallback copy. | Unknown request/runtime exceptions use stable Copilot recovery copy. Generic normalized HTTP fallback retains the validated issue summary even when no reason key maps. Preserve known normalized reason copy, validation issue paths/messages as Builder coordinates, and successful agent-authored response text. | No Copilot request, response, model, edit, undo, timeout, or Roma route behavior change. Do not replace valid agent output with a generic message. |
+| `bob/components/useTranslationPreviewState.ts:24-42,88-111,147-171`; `bob/components/BuilderApp.tsx:35-79`; `bob/components/ToolDrawer.tsx:104-215`; `bob/components/TranslationsPanel.tsx:277-443` | Saved-translation list/read failures are calculated in the hook but `BuilderApp` drops `error`, so the panel renders the same apparent empty/base-only state for a failed read. The list catch also writes a synthetic empty translation inventory for every failure. | Treat list `404` as honest absence with an empty list and no failure. For every other list failure, and every selected-locale read failure including `404`, keep the state failed rather than inventing empty truth; pass the existing `Saved translations could not be read.` copy through BuilderApp and ToolDrawer and render it as a visible panel alert. Clear that alert after a successful read/retry. | No translation list/read route, Generate translations, locale overlay, preview materialization, refresh trigger, or polling behavior change. |
+| `roma/lib/format.ts`; `roma/components/ai-domain.tsx:9-30`; `billing-domain.tsx:15-20`; `usage-domain.tsx:72-80`; `settings-domain.tsx:124-149`; `team-domain.tsx:185-271`; `team-member-domain.tsx:108-114,205-238`; existing label source `roma-account-notice-modal.tsx:40-60`; bootstrap authority `roma/components/use-roma-me.ts:153-194`; `roma/components/roma-account-context.tsx:74-106` | Customer-facing Roma cards render raw valid plan/profile tokens such as `tier1`; Settings, Team, and Team Member render raw lowercase role tokens, including visible select-option labels. The tier-drop notice owns correct tier labels in a duplicate local formatter. Active-account tier/role values are already validated fail-closed before these screens render, while the Team Member route payload remains string-typed and can put an invalid role into a select with no matching option. | Move the existing tier labels into one Roma-owned pure formatter and use `Free`, `Tier 1`, `Tier 2`, `Tier 3`, `Tier 4` for valid plan/profile display plus `Viewer`, `Editor`, `Admin`, `Owner` for valid role display/options. Keep invalid active-account tier/role fail-closed as `Account context is unavailable...`; do not weaken bootstrap to manufacture `Invalid plan` or `Invalid role` cards. For a malformed Team Member role, preserve the raw draft value internally, render a disabled selected `Invalid role` option, and keep Save disabled until the user deliberately selects a valid role. A genuinely absent AI profile remains `Not assigned`. Migrate the notice and delete its duplicate formatter. | Keep stored/API enum and valid select-option values plus all entitlement, role, membership, invitation, billing, usage, notice lifecycle, bootstrap, and account behavior unchanged. Never rewrite a malformed role on read. DevStudio operator token displays are not part of this change. |
+| `admin/src/html/tools/entitlements.html:263-352,410-438,1294-1385` | Entitlement and AI-policy load/save/reload catches store raw backend detail in `lastError`, but `render()` never displays it. Initial load failure therefore remains `Loading entitlements...` forever; save/reload failure returns to an apparently ready editor. Saving counters and `lastSavedAt` also have no visible status. | Render one stable operation state: initial loading, reloading, saving, saved, or a user-facing load/save alert. Never render raw detail, reason keys, or HTTP codes. Initial/reload failure uses `Policy data could not be loaded. Try again.`; entitlement-save failure uses `Entitlement changes could not be saved. Try again.`; AI-policy save failure uses `AI policy changes could not be saved. Try again.`. Existing data stays visible after a save/reload failure; initial failure must not masquerade as loading. | No entitlement/AI runtime API, matrix shape, cell write, tier, policy, auth, or DevStudio route behavior change. No retry framework; the existing Reload command remains the recovery action. |
 
 There are no other direct 126A code changes authorized by this audit.
 
@@ -99,19 +102,20 @@ or expanded during its direct slice:
 
 | Surface | Current evidence |
 | --- | --- |
-| Dieter semantic substrate | `.sr-only`; Agent Activity live status; decorative base-button icons; named Object Manager row actions; named swatches; invalid fill state; upload/media status and errors; named/pressed formatting commands; text-link labeling; tabs, choice tiles, toggle, repeater state, and Bulk Edit semantics are present in the source paths named by the PRD. The two Repeater reorder icons above are the only direct Dieter exception found. |
-| Bob status/state | Workspace loading/error/status overlays, Assist-mode radio truth, selected ToolDrawer tabs, translation locale labels, terminal translation failure, Agent Activity status, upsell reason mapping, `Sending...`, TopDrawer saving truth, and saved-translation read fallbacks are present. |
+| Dieter semantic substrate | `.sr-only`; Agent Activity live status; decorative base-button icons; named Object Manager row actions; named swatches; invalid fill state; upload/media status and errors; named/pressed formatting commands; text-link labeling; tabs, choice tiles, toggle, repeater state, and Bulk Edit semantics are present in the source paths named by the PRD. The Repeater icon/name path above is the only direct Dieter exception found. |
+| Bob status/state | Workspace loading/error/status overlays, Assist-mode radio truth, selected ToolDrawer tabs, translation locale labels, terminal translation-generation failure, Agent Activity status, upsell reason mapping, `Sending...`, and TopDrawer saving truth are present. Saved-translation read failure propagation is the direct exception named above. |
 | Roma account/product UI | Current-page nav, sign-out busy state, account/error/loading status, usage failure versus unavailable, asset partial success, page/widget selected rows, user-facing locale labels, publishing-unavailable copy, widget-limit copy, widget-defaults failures, team/invite/profile/settings/locale status and fallback copy, tier-drop notice labels, dismiss failure, and login fallback are present. The repeated raw plan/profile/role labels above are the only direct Roma exception found. |
-| DevStudio | Current nav state, fixed Dieter token load/save copy, named token-editor dialog, decorative close icon hiding, native named token-edit triggers, normalized decorative SVGs, and existing tool live regions are present. DevStudio token identifiers remain legitimate operator coordinates. |
+| DevStudio | Current nav state, fixed Dieter token load/save copy, named token-editor dialog, decorative close icon hiding, native named token-edit triggers, normalized decorative SVGs, and existing tool live regions are present. DevStudio token identifiers remain legitimate operator coordinates. Policy Editor operation-state rendering is the direct exception named above. |
 | Living docs | Current UI doctrine and Bob/Roma/DevStudio service docs use living-doc authority and current A-M ownership. No Step-6 code gap requires a living-doc behavior rewrite. |
 
 ## Deletion And No-Change Map
 
-Direct 126A file-deletion count is zero. Its implementation slice hides two
-decorative Repeater icons, removes two raw Bob error-render paths, replaces
-repeated raw Roma product-token rendering inside retained components, and
-deletes the notice's duplicate local tier-label formatter; it does not delete
-product components or files.
+Direct 126A file-deletion count is zero. Its implementation slices hide two
+decorative Repeater icons and supply their missing generated name, remove two
+raw Bob error-render paths, expose saved-translation read failure, replace
+repeated raw Roma product-token rendering inside retained components, expose
+DevStudio Policy Editor operation failures, and delete the notice's duplicate
+local tier-label formatter; they do not delete product components or files.
 
 Deletion routed to 126I:
 
@@ -120,9 +124,9 @@ Deletion routed to 126I:
 
 Do not touch during direct 126A implementation:
 
-- Roma/DevStudio behavior and Dieter component behavior; generated Dieter
-  mirrors are regenerated only from the Repeater source change and are never
-  hand-edited;
+- Roma account/bootstrap behavior, DevStudio policy operations, and Dieter
+  component behavior; generated Dieter mirrors are regenerated only from the
+  Repeater source/spec change and are never hand-edited;
 - `bob/app/api/**`, `roma/app/api/**`, `admin/functions/**`, or route clients;
 - `tokyo-worker/**`, `tokyo/product/widgets/**`, account runtime data, R2,
   Cloudflare, Supabase, migrations, or deploy configuration;
@@ -133,13 +137,15 @@ Do not touch during direct 126A implementation:
 
 ## Step 7 Input (Consumed)
 
-Step 7 must convert only the four direct rows above into a small implementation
+Step 7 must convert only the six direct rows above into a small implementation
 and verification plan. It must also preserve the 126I/126K routing as
 dependencies, not pull those changes into 126A. The minimum verification
-surface is the Dieter build/typecheck plus Bob and Roma lint/typecheck, with
-focused proof for Repeater icon hiding, safe save-error, Copilot-exception, and
-plan/profile/role copy. No generic accessibility validator or new runtime
-dependency is authorized.
+surface is the Dieter build/typecheck plus Bob and Roma lint/typecheck and the
+existing DevStudio route-contract surface, with focused proof for Repeater icon
+hiding/naming, safe save-error, Copilot exception and issue-only payload,
+saved-translation failure, plan/profile/role copy, and Policy Editor operation
+state. No generic accessibility validator or new runtime dependency is
+authorized.
 
 ## V1-V8 Audit
 
@@ -147,16 +153,16 @@ dependency is authorized.
 | --- | --- | --- |
 | V1 Silent substitution | PASS | The audit distinguishes stable product fallback copy from valid Builder coordinates and valid agent-authored output. |
 | V2 Silent healing | PASS | No persisted, invalid, or failed state is rewritten or normalized. |
-| V3 Silent omission | PASS | The Repeater icon gap, two Bob gaps, repeated Roma product-label gap, `bulk-edit` duplicate trigger, `textrename` deletion, and every current dialog/popover family are named. |
+| V3 Silent omission | PASS | The Repeater icon/name gap, three Bob paths, repeated Roma product-label gap, DevStudio Policy Editor gap, `bulk-edit` duplicate trigger, `textrename` deletion, and every current dialog/popover family are named. |
 | V4 Fail-open control | PASS | No scanner, validator, or optional dependency becomes product truth. |
-| V5 Corruption-as-absence | PASS | Existing error, invalid, unavailable, empty, and partial-success distinctions are preserved. |
+| V5 Corruption-as-absence | PASS | Saved-translation failure is separated from list `404` absence; malformed Team Member role remains invalid instead of blank/healed; Policy Editor failure is separated from loading/ready. |
 | V6 Partial-success masquerade | PASS | Roma bulk-upload and Bob terminal translation truth remain explicit preservation requirements. |
 | V7 Masquerade/redress | PASS | Component and overlay work is routed to 126I/126K instead of being renamed as 126A completion. |
 | V8 Runtime test dependency | PASS | Proposed checks verify later implementation only; runtime behavior gains no test dependency. |
 
 ## Step 6 Closure
 
-126A Step 6 is green as a pre-execution audit. Step 7 has turned the four direct
-gap groups into the exact change/test checklist in the parent 126A PRD. The
-domain is not implementation-ready until Step 8 independently reviews that
-checklist at an exact recorded tree. No step-9 execution has begun.
+126A Step 6 is reconciled as a pre-execution audit. Step 7 now carries all six
+direct gap groups into the exact change/test checklist in the parent 126A PRD.
+The domain is not implementation-ready until Step 8 independently reviews that
+amended checklist at an exact recorded tree. No step-9 execution has begun.
