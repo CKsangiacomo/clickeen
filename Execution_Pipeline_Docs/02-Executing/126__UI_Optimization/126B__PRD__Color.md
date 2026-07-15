@@ -429,11 +429,11 @@ Change only:
   default;
 - `bob/components/Workspace.tsx`: delete unused theme reads, refs, message
   properties, dependencies, and reset dependency;
-- `bob/app/bob_app.css`: replace the exact rename and settings status primitive
-  references with existing status roles while preserving geometry and mix
-  percentages;
-- `bob/components/ToolDrawer.tsx`: replace the exact inline session-error red
-  primitives with `--role-error`;
+- `bob/app/bob_app.css`: replace only value-equivalent base status primitives
+  with existing status roles; preserve pale `*-5` backgrounds,
+  `--color-system-orange-contrast`, geometry, and mix percentages exactly;
+- `bob/components/ToolDrawer.tsx`: replace only value-equivalent session-error
+  border/text red with `--role-error`; preserve its pale background;
 - `documentation/services/bob.md`: remove `theme` from the documented preview
   message.
 
@@ -443,11 +443,13 @@ save, translation, Copilot, account, or product-data behavior.
 Green gate:
 
 1. Local scans, Bob typecheck/lint/build, and relevant focused tests are green.
-2. Local browser proof covers preview device switching, iframe updates, and
-   status/error rendering.
+2. Local browser proof covers preview device switching and iframe updates;
+   intercepted failure proof exercises rename/session error presentation without
+   remote product-data mutation.
 3. Commit and push occur before cloud proof.
-4. Bob and Roma Pages builds are green; cloud-dev Roma Builder proves deployed
-   preview behavior and a captured `ck:state-update` has no `theme` property.
+4. `pnpm cf:api:preflight` and the Bob and Roma Pages builds are green;
+   cloud-dev Roma Builder proves deployed preview behavior and a captured
+   `ck:state-update` has no `theme` property.
 
 ### Slice B2 - Logo Showcase Focus Role
 
@@ -457,12 +459,16 @@ product default.
 
 Green gate:
 
-1. Widget validation/build, Logo Showcase package fixture, and keyboard focus
-   browser proof are green.
+1. Widget validation/build, `pnpm --filter @clickeen/roma
+   test:instance-package`, and keyboard focus browser proof are green. Only the
+   Logo Showcase CSS expectation changes in the package fixture.
 2. Commit and push occur before cloud proof.
-3. `cloud-dev workers deploy` and Tokyo product-root sync are green.
-4. The owning cloud-dev Logo Showcase surface serves the changed package and
-   the focused link resolves its outline from `--role-focus`.
+3. `pnpm cf:preflight`, `cloud-dev workers deploy`, and Tokyo product-root sync
+   are green.
+4. R2 read-back proves the synced product-root `logoshowcase/widget.css`
+   contains `--role-focus`; cloud-dev Roma Builder instance `8FMVZFFPJV` loads
+   that package and the focused link resolves its outline from the role. Do not
+   rematerialize or edit the published account instance for this proof.
 
 ### Slice B3 - DevStudio Reveal/Write Predicate Parity
 
@@ -476,12 +482,13 @@ produce no generated diff.
 
 Green gate:
 
-1. Source-level proof covers accepted 3/6-digit and rejected 4/5/7/8-digit hex
-   forms; `pnpm build:devstudio` is green; generated output is unchanged.
+1. Source comparison proves generator and backend use the same 3/6-digit value
+   shape; `pnpm build:devstudio` is green; generated output is unchanged.
 2. Commit and push occur before cloud proof.
-3. DevStudio Pages build is green.
-4. Deployed color foundations reveal current source and expose edit controls
-   only for values accepted by the write API.
+3. `pnpm cf:api:preflight` and the DevStudio Pages build are green.
+4. Deployed color foundations reveal current source colors as editable and
+   role/focus/state rows as read-only. Current product tokens contain no invalid
+   hex shapes, so source comparison plus the build owns invalid-shape parity.
 
 ## Exact Blast Radius
 
@@ -493,6 +500,7 @@ Green gate:
 | `bob/components/ToolDrawer.tsx` | `tokyo/product/widgets/shared/socialShare.js` | Bob-wide visual refactor -> requires a later Bob-owned PRD |
 | `documentation/services/bob.md` | `admin/functions/_shared/dieter-tokens.js` | Prague marketing copy -> Prague content authority |
 | `tokyo/product/widgets/logoshowcase/widget.css` | `documentation/engineering/UI/color.md` | User-authored/widget appearance color -> unchanged |
+| `roma/tests/fixtures/124c-base-package-expected.json` | `roma/tests/instance-package-fixtures.ts` | Published account instance rematerialization -> forbidden proof mutation |
 | `admin/scripts/generate-foundation-pages.mjs` | `documentation/engineering/CloudflareOperations.md` | |
 | `admin/src/html/foundations/colors.html` only if generation changes it | GitHub Actions and Pages runtime evidence | |
 

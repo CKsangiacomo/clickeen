@@ -54,8 +54,8 @@ messages; none reads the posted `theme` property.
 | `bob/lib/session/sessionTypes.ts` | `PreviewSettings.theme` advertises unsupported light/dark behavior and `DEFAULT_PREVIEW` manufactures `light`. | Delete the field and default. Do not replace it with another mode/theme field. |
 | `bob/components/Workspace.tsx` | Reads, memoizes, posts, and uses the unused theme only as an effect dependency. No widget receiver consumes it. | Delete all theme plumbing while preserving device, host, preview state, locale, and typography behavior. |
 | `documentation/services/bob.md` | Documents `"theme": "[light|dark]"` in `ck:state-update`. | Delete the field from the documented message. |
-| `bob/app/bob_app.css` | Instance rename and settings error/warning/info/success chrome consumes direct system primitives despite exact roles existing. | Replace only those status references with `--role-error`, `--role-warning`, `--role-info`, and `--role-success`; preserve the existing mix percentages and geometry. |
-| `bob/components/ToolDrawer.tsx` | Inline session-error colors repeat direct red primitives. | Use `--role-error` in the existing border/background/text formulas; do not change error content or control flow. |
+| `bob/app/bob_app.css` | Instance rename and settings error/warning/info/success chrome uses direct base primitives where value-equivalent roles exist. Pale `*-5` backgrounds and `--color-system-orange-contrast` have no value-equivalent current role. | Replace only value-equivalent base references with `--role-error`, `--role-warning`, `--role-info`, and `--role-success`. Preserve pale ramp backgrounds, warning contrast text, mix percentages, and geometry exactly. |
+| `bob/components/ToolDrawer.tsx` | Inline session-error border/text repeat direct base red; its pale background uses `--color-system-red-5`. | Use `--role-error` only for the value-equivalent border/text references. Preserve the pale background, error content, and control flow. |
 
 This slice changes no save, translation, Copilot, preview data, iframe loading,
 or account behavior. Removing a message property that no receiver reads is a
@@ -66,6 +66,7 @@ deletion, not a compatibility project.
 | File | Current evidence | Later Step-9 change |
 | --- | --- | --- |
 | `tokyo/product/widgets/logoshowcase/widget.css` | Link focus uses `--color-system-blue` directly. | Change only the focus outline to `--role-focus`. Keep active carousel-dot blue because it is a widget product default, not structural focus chrome. |
+| `roma/tests/fixtures/124c-base-package-expected.json` | The Logo Showcase expected public package embeds `widget.css`. | Update only the generated Logo Showcase package expectation produced by the source change. |
 
 This is widget package source. It must flow through the existing Tokyo product-
 root Git deploy/sync path. No account instance or product data is edited.
@@ -115,28 +116,35 @@ an unbounded whole-product rewrite. Every later owner must consume the current
 
 - `rg` proves no Bob preview `theme` field or message property remains.
 - Bob typecheck, lint, build, and focused relevant tests are green.
-- Browser proof shows Builder desktop/mobile preview switching, iframe state
-  updates, status messages, and rename/session errors remain coherent.
+- Browser proof shows Builder desktop/mobile preview switching and iframe state
+  updates. Intercepted failure proof exercises rename/session error presentation
+  without mutating remote product data.
 
 ### B1 deploy proof
 
 - Commit and push precede runtime proof.
+- `pnpm cf:api:preflight` is green before Pages inspection.
 - Bob and Roma Git-connected Cloudflare Pages builds are green.
 - Cloud-dev Roma Builder proves the deployed Bob behavior; browser message
   capture confirms `ck:state-update` has no theme property.
 
 ### B2 local proof
 
-- Widget validation/build and the Logo Showcase package fixture are green.
+- Widget validation/build and `pnpm --filter @clickeen/roma
+  test:instance-package` are green; the expected fixture changes only in the
+  Logo Showcase CSS package.
 - Browser focus proof confirms a visible focus outline sourced from
   `--role-focus`, with no layout or product-color change.
 
 ### B2 deploy proof
 
 - Commit and push precede runtime proof.
+- `pnpm cf:preflight` is green before product-root R2 read-back.
 - `cloud-dev workers deploy` and its Tokyo product-root R2 sync are green.
-- The owning cloud-dev Logo Showcase surface serves the changed package and a
-  keyboard-focused logo link uses the role-backed focus color.
+- R2 read-back proves the synced product-root `logoshowcase/widget.css` contains
+  `--role-focus`. Cloud-dev Roma Builder instance `8FMVZFFPJV` loads that package
+  and a keyboard-focused logo link resolves its outline from `--role-focus`.
+  Do not rematerialize or edit the published account instance for this proof.
 
 ### B3 local proof
 
@@ -149,9 +157,12 @@ an unbounded whole-product rewrite. Every later owner must consume the current
 ### B3 deploy proof
 
 - Commit and push precede runtime proof.
+- `pnpm cf:api:preflight` is green before Pages inspection.
 - DevStudio Git-connected Cloudflare Pages build is green.
-- The deployed color foundation still reveals current tokens and exposes edit
-  controls only for values accepted by the existing write API.
+- The deployed color foundation still reveals current source colors as editable
+  and role/focus/state rows as read-only. The build plus source comparison owns
+  invalid-shape parity because current product tokens contain no invalid shapes
+  to exercise in deployed UI.
 
 ## V1-V8 Audit
 
