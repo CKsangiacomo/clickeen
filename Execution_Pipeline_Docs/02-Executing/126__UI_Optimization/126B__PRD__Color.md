@@ -1,6 +1,6 @@
 # 126B - PRD: Color
 
-Status: STEP 7 COMPLETE - current-source audit and final executable plan written; Step-8 exact-tree review pending; no Step-9 execution credit.
+Status: PRE-EXECUTION READY - Steps 6-8 green at reviewed tree `4b480e50`; no Step-9 execution credit.
 Parent: `126__PRD__UI_Optimization_Program.md` (MAMA).
 Series order: 126B of 126A-126M.
 KB doc target: `documentation/engineering/UI/color.md`.
