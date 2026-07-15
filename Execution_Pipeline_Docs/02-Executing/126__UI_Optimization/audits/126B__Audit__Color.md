@@ -5,174 +5,176 @@ Parent PRD: `../126B__PRD__Color.md`.
 Audit date: 2026-07-15.
 Audited tree: `503fe5a7` (`docs(126A): record exact-tree review green`).
 
-This audit replaces the frozen June snapshot with current source truth. It
-separates work already present from the small remaining 126B implementation
-surface. It authorizes no product-code, generated-output, deploy, or product-
-data mutation.
+This audit replaces the frozen June snapshot. Every current finding below cites
+the audited source location. It authorizes no product-code, generated-output,
+deploy, or product-data mutation.
 
-## Authorities
+## Read-Only Commands
 
-| Concern | Authority |
-| --- | --- |
-| Color values and semantic roles | `dieter/tokens/dieter-color-tokens.css` |
-| Generated Dieter product output | `scripts/build-dieter.js` -> `tokyo/product/dieter/**` |
-| Bob preview session/message shape | `bob/lib/session/sessionTypes.ts`, `bob/components/Workspace.tsx` |
-| DevStudio color reveal | `admin/scripts/generate-foundation-pages.mjs` |
-| DevStudio color write contract | `admin/functions/_shared/dieter-tokens.js` |
-| Widget package source | `tokyo/product/widgets/{widgetType}/**` |
-| Living color law | `documentation/engineering/UI/color.md` |
-
-## Current Baseline Already Present
-
-Current source already has the exact light-mode semantic role layer, state mix
-controls, resolved historical undefined references, truthful read-only
-DevStudio role/focus/state rows, generated Dieter parity, and no Dieter dark
-selectors or dark examples. These are regression evidence, not Step-9 work.
-
-The following stale names are absent from active source:
-
-```text
---color-surface
---color-bg
---color-system-gray-7
---color-system-gray-10
---state-muted-opacity
---state-hover-target
+```bash
+rg -n "instance-rename__error|settings-panel__error|settings-panel__warning|settings-panel__note|settings-panel__success|topdrawer-instance-title-input|topdrawer-instance-title--editable" . --glob '!**/node_modules/**' --glob '!Execution_Pipeline_Docs/**'
+rg -n "theme: 'light' \| 'dark'|prefers-color-scheme|data-theme=[\"']dark" bob dieter admin roma tokyo/product/widgets documentation/engineering/UI documentation/services
+rg -n -e "--color-surface\\b|--color-bg\\b|--color-system-gray-(7|10)\\b|--state-muted-opacity\\b|--state-hover-target\\b" dieter bob roma admin tokyo/product/widgets documentation/engineering/UI
+rg -n "color-system-(red|orange|green|blue)(-5|-contrast)?\\b" bob --glob '*.{ts,tsx,css}'
 ```
 
-The only current internal dark-mode fiction found by the source scan is Bob's
-unused `theme: 'light' | 'dark'` preview field. Widget message receivers consume
-state, locale, typography, device-independent widget behavior, and resize
-messages; none reads the posted `theme` property.
+These scans establish current presence/absence and consumer liveness. No test,
+build, preflight, deploy, or remote mutation was part of Step 6.
 
-## Exact Remaining 126B Work
+## Authorities And Current Baseline
 
-### B1 - Delete Bob's Dormant Theme Shape And Use Status Roles
+| Evidence | Current truth |
+| --- | --- |
+| `dieter/tokens/dieter-color-tokens.css:1-44` | Dieter owns the light-mode role layer and state mix controls. |
+| `scripts/build-dieter.js:1-120` | Tokyo Dieter files are generated output, not an edit authority. |
+| `documentation/engineering/UI/color.md:1-122` | Living law already records light-mode, role/state, user-color, and human-owned contrast decisions. |
+| `admin/scripts/generate-foundation-pages.mjs:64-66` | DevStudio reveal decides whether a color row appears writable. |
+| `admin/functions/_shared/dieter-tokens.js:5-11` | DevStudio write authority accepts only `--color-*` values with exactly three or six hex digits. |
+| `scripts/tokyo-r2-deploy-sync.mjs:24` | Widget package source syncs from `tokyo/product/widgets/**` to R2 `product/widgets/**`. |
+| `.github/workflows/cloud-dev-workers.yml:5-15,125-129` | Widget package changes trigger worker deploy and Tokyo product-root sync. |
+| `.github/workflows/cloud-dev-roma-app.yml:5-14` | Widget package and Bob changes trigger Roma cloud-dev verification. |
 
-| File | Current evidence | Later Step-9 change |
+Current source contains the exact semantic roles, resolved historical undefined
+tokens, truthful read-only role/focus/state reveal, generated Dieter parity, and
+no active Dieter dark selector/example. These are regression evidence, not new
+Step-9 work.
+
+## B1 - Bob Theme Fiction And Dead/Live Status CSS
+
+### Dormant theme path to delete
+
+| Evidence | Finding | Step-9 action |
 | --- | --- | --- |
-| `bob/lib/session/sessionTypes.ts` | `PreviewSettings.theme` advertises unsupported light/dark behavior and `DEFAULT_PREVIEW` manufactures `light`. | Delete the field and default. Do not replace it with another mode/theme field. |
-| `bob/components/Workspace.tsx` | Reads, memoizes, posts, and uses the unused theme only as an effect dependency. No widget receiver consumes it. | Delete all theme plumbing while preserving device, host, preview state, locale, and typography behavior. |
-| `documentation/services/bob.md` | Documents `"theme": "[light|dark]"` in `ck:state-update`. | Delete the field from the documented message. |
-| `bob/app/bob_app.css` | Instance rename and settings error/warning/info/success chrome uses direct base primitives where value-equivalent roles exist. Pale `*-5` backgrounds and `--color-system-orange-contrast` have no value-equivalent current role. | Replace only value-equivalent base references with `--role-error`, `--role-warning`, `--role-info`, and `--role-success`. Preserve pale ramp backgrounds, warning contrast text, mix percentages, and geometry exactly. |
-| `bob/components/ToolDrawer.tsx` | Inline session-error border/text repeat direct base red; its pale background uses `--color-system-red-5`. | Use `--role-error` only for the value-equivalent border/text references. Preserve the pale background, error content, and control flow. |
+| `bob/lib/session/sessionTypes.ts:20-24,146-150` | `PreviewSettings.theme` advertises `light|dark` and the default manufactures `light`. | Delete the field and default. |
+| `bob/components/Workspace.tsx:79,164-201,309-373,423` | Workspace reads, stores, posts, and tracks the theme property. | Delete only that plumbing. Preserve device, host, state, locale, typography, and iframe lifecycle. |
+| `tokyo/product/widgets/shared/runtime.js:91-113` | Shared widget receiver ignores `theme`. | Read-only proof; no receiver change. |
+| `tokyo/product/widgets/shared/branding.js:188-202` | Branding receiver ignores `theme`. | Read-only proof. |
+| `tokyo/product/widgets/shared/socialShare.js:534-550` | Social receiver ignores `theme`. | Read-only proof. |
+| `documentation/services/bob.md:389-404` | Documented `ck:state-update` falsely includes `[light|dark]`. | Delete the field from the documented message. |
 
-This slice changes no save, translation, Copilot, preview data, iframe loading,
-or account behavior. Removing a message property that no receiver reads is a
-deletion, not a compatibility project.
+### Dead Bob CSS to delete
 
-### B2 - Use The Existing Focus Role In Logo Showcase
+Whole-repo consumer search proves the following selectors have no producer:
 
-| File | Current evidence | Later Step-9 change |
+| Evidence | Step-9 action |
+| --- | --- |
+| `bob/app/bob_app.css:88-99` | Delete unused editable-title selectors. |
+| `bob/app/bob_app.css:110-144` | Delete unused title-input/focus/active/disabled and rename-error selectors. Bob title is read-only at `bob/components/TopDrawer.tsx:24-31`. |
+| `bob/app/bob_app.css:391-418` | Delete unused warning, note, upsell-note, and note/fullwidth selectors. |
+| `bob/app/bob_app.css:434-441` | Delete unused success selector. |
+
+Do not recolor dead paths or create browser proof for nonexistent rename/status
+UX. Roma rename at `roma/components/widgets-domain.tsx:337-380` is a different
+surface and is not Bob proof.
+
+### Live Bob status paths to keep truthful
+
+| Evidence | Finding | Step-9 action |
 | --- | --- | --- |
-| `tokyo/product/widgets/logoshowcase/widget.css` | Link focus uses `--color-system-blue` directly. | Change only the focus outline to `--role-focus`. Keep active carousel-dot blue because it is a widget product default, not structural focus chrome. |
-| `roma/tests/fixtures/124c-base-package-expected.json` | The Logo Showcase expected public package embeds `widget.css`. | Update only the generated Logo Showcase package expectation produced by the source change. |
+| `bob/components/td-menu-content/useTdMenuHydration.ts:75-83` | Failed control hydration renders `.settings-panel__error`. | Keep the selector; replace only value-equivalent base red border/text references with `--role-error`. Preserve its pale `--color-system-red-5` background and geometry. |
+| `bob/app/bob_app.css:382-389` | The live settings error uses base red plus a pale ramp. | Same exact change; no visual redesign. |
+| `bob/components/ToolDrawer.tsx:181-183,275-310` | Session and blocked-editor errors use inline base-red border/text plus pale background. | Replace only value-equivalent base red with `--role-error`; preserve pale background and behavior. |
+| `bob/components/Workspace.tsx:465-478` and `bob/app/bob_app.css:465-477` | Preview loading/error overlays are live; the error surface is a pale ramp with no value-equivalent current semantic surface role. | No change. Classify the pale ramp as a legal semantic-status modifier; do not invent a container-role family. |
 
-This is widget package source. It must flow through the existing Tokyo product-
-root Git deploy/sync path. No account instance or product data is edited.
+The 126B law permits a palette ramp or contrast sibling only as a modifier on an
+explicit semantic status where no value-equivalent role exists. The status base
+meaning must still use the semantic role. This is narrower than adding eight
+unused status-container tokens and preserves the current visual result.
 
-### B3 - Align DevStudio Reveal With Its Write Predicate
+### User-authored transparent preview classification
 
-| File | Current evidence | Later Step-9 change |
+`stage.background` is user-authored at
+`bob/lib/compiler/modules/stagePod.ts:263-280`. Workspace posts the unchanged
+state at `bob/components/Workspace.tsx:349-360`, while
+`bob/components/Workspace.tsx:265-290` paints the
+iframe host backdrop white when that authored background is transparent. This
+does not rewrite or normalize source state; it provides a neutral editor host
+behind a transparent iframe. It is explicitly no-change for 126B and therefore
+does not violate V1/V2.
+
+## B2 - Logo Showcase Focus Role
+
+| Evidence | Finding | Step-9 action |
 | --- | --- | --- |
-| `admin/scripts/generate-foundation-pages.mjs` | Writable color reveal accepts any 3-8 hex digits. | Use the exact write contract: 3 or 6 hex digits only. |
-| `admin/functions/_shared/dieter-tokens.js` | Write authority accepts `^#[0-9a-fA-F]{3}(?:[0-9a-fA-F]{3})?$`. | Read-only evidence; do not broaden or otherwise edit the API. |
-| `admin/src/html/foundations/colors.html` | Generated from current six-digit source colors. | Regenerate and prove zero output diff is expected for current source values. Do not hand-edit. |
+| `tokyo/product/widgets/logoshowcase/widget.css:206-213` | Logo-link focus uses base blue directly. | Change only the outline to value-equivalent `--role-focus`. |
+| `tokyo/product/widgets/logoshowcase/widget.css:311-313` | Active carousel dot uses blue as a widget product default. | No change; this is not focus chrome. |
+| `roma/tests/instance-package-fixtures.ts:16-25,49-75` | Roma parity packages embed each widget's source CSS. | Read-only fixture authority. |
+| `roma/tests/fixtures/124c-base-package-expected.json:28` | Logo Showcase expected package embeds current CSS. | Update only the exact Logo Showcase focus-token substring. |
 
-This closes a reveal/write truth mismatch without adding a shared validator,
-registry, parser, or token API.
+The cloud gate must not depend on a saved account instance. The repository's
+`8FMVZFFPJV` fixture at
+`e2e/widgets/prd106f-builder-certification.spec.ts:37-43` is test input, not a
+cloud-liveness authority. Rematerializing product data is forbidden for this UI
+token change. The owning remote truth is the synced R2 product-root object
+`product/widgets/logoshowcase/widget.css`.
 
-## Routed Work
+## B3 - DevStudio Reveal/Write Predicate Parity
 
-| Current inventory | Owner | 126B boundary |
+| Evidence | Finding | Step-9 action |
 | --- | --- | --- |
-| Dieter component-wide role/state adoption | 126I | Apply 126B law when each component is executed; no broad recolor in 126B. |
-| Broad DevStudio chrome adoption | 126L | 126B changes only the generator predicate. |
-| Broad Roma chrome adoption and dead CSS cleanup | 126M | No Roma implementation in 126B. |
-| Bob structural colors outside the exact status sites above | No current 126 Step-9 owner authorizes a Bob-wide visual refactor | Keep as observed inventory; do not manufacture scope. A later Bob-owned PRD must name exact changes. |
-| Prague FAQ marketing copy mentioning dark mode | Prague content authority/product-owner decision | Human-authored marketing content is not changed by a color-system implementation PRD. |
+| `admin/scripts/generate-foundation-pages.mjs:64-66` | Reveal accepts any 3-8 hex digits. | Use the exact backend 3/6-digit predicate. |
+| `admin/functions/_shared/dieter-tokens.js:5-11,97-119` | Write API accepts exactly 3/6 digits and applies that predicate on read and write. | Read-only authority; do not broaden or otherwise edit. |
+| `admin/src/html/foundations/colors.html:1` | Generated reveal uses current six-digit token values. | Regenerate; zero output diff is expected. Never hand-edit. |
+| `documentation/engineering/UI/color.md:102-111` | Living law says only "literal hex," which incorrectly includes valid CSS 4/8-digit forms. | State exact 3/6-digit write truth. |
+| `documentation/services/devstudio.md:79-87` | Service doc has the same imprecision. | State exact 3/6-digit write truth. |
 
-Routing is not approval of legacy. It prevents a domain PRD from expanding into
-an unbounded whole-product rewrite. Every later owner must consume the current
-126B color law when it changes the named component or surface.
+No shared predicate helper, validator, registry, or token platform is justified
+for one source regex aligned to its existing write authority.
 
-## Explicit No-Change Surface
+## Routed And No-Change Work
 
-- No Dieter token value, palette, role name, or state percentage change.
-- No `tokyo/product/dieter/**` generated change is expected.
-- No Roma implementation change.
-- No DevStudio write API change.
-- No theme provider, dark-mode toggle, dark-mode token pair, or readiness claim.
-- No contrast gate or automated palette decision.
-- No purge of user-authored colors, widget appearance values, gradients,
-  shadows, swatches, or serialized color data.
-- No Tokyo-worker, San Francisco, Berlin, Supabase, account instance, overlay,
-  translation, publish, or R2 account-data change.
-- No generated file is hand-edited.
+| Evidence/inventory | Owner | 126B boundary |
+| --- | --- | --- |
+| Direct primitive/state consumption under `dieter/components/**` | 126I | Apply 126B law when the named component is executed. |
+| Broad DevStudio chrome under `admin/src/css/**` | 126L | B3 owns only generator predicate and exact docs. |
+| Broad Roma chrome under `roma/app/roma.css` | 126M | No Roma implementation in 126B. |
+| Bob controls and hosted ToolDrawer/preview chrome outside exact B1 sites (`126I__PRD__Components.md:120-133`; `126M__PRD__Roma_UI.md:77-86,172-190`) | 126I for Dieter/component patterns; 126M for the nested hosted screen | Apply 126B law only while those owners execute their exact component/screen blast radius; no Bob-wide rewrite in 126B. |
+| `tokyo/prague/pages/faq/features.json:133-135` marketing copy | Prague human-content authority | No AI edit under color-system scope. |
+
+No Dieter token value or generated Tokyo Dieter file, palette, state percentage,
+user-authored color, widget appearance value, account instance, overlay,
+translation, Supabase, Tokyo-worker, San Francisco, Berlin, or R2 account data is
+in scope.
 
 ## Later Verification Contract
 
-### B1 local proof
+### B1
 
-- `rg` proves no Bob preview `theme` field or message property remains.
-- Bob typecheck, lint, build, and focused relevant tests are green.
-- Browser proof shows Builder desktop/mobile preview switching and iframe state
-  updates. Intercepted failure proof exercises rename/session error presentation
-  without mutating remote product data.
+- Local: dead-selector and theme scans; Bob typecheck/lint/build and relevant
+  tests; browser device switching and `ck:state-update` capture; intercepted
+  failed save exercises the live ToolDrawer error without a remote write.
+- Deploy: commit/push first; `pnpm cf:api:preflight`; Bob and Roma Pages latest
+  deployment commit hashes equal the B1 commit; Roma cloud-dev workflow
+  `head_sha` equals B1; deployed Builder message capture has no `theme`.
 
-### B1 deploy proof
+### B2
 
-- Commit and push precede runtime proof.
-- `pnpm cf:api:preflight` is green before Pages inspection.
-- Bob and Roma Git-connected Cloudflare Pages builds are green.
-- Cloud-dev Roma Builder proves the deployed Bob behavior; browser message
-  capture confirms `ck:state-update` has no theme property.
+- Local: widget validation/build and `pnpm tokyo:r2:sync:check`; Roma instance-
+  package parity; fixture diff is only the Logo Showcase focus token; keyboard
+  focus proof is green.
+- Deploy: commit/push first; `pnpm cf:preflight`; worker and Roma workflow
+  `head_sha` values equal B2; R2 read-back of
+  `product/widgets/logoshowcase/widget.css` contains `--role-focus` and not the
+  old focus declaration. No account instance is read, written, or rematerialized.
 
-### B2 local proof
+### B3
 
-- Widget validation/build and `pnpm --filter @clickeen/roma
-  test:instance-package` are green; the expected fixture changes only in the
-  Logo Showcase CSS package.
-- Browser focus proof confirms a visible focus outline sourced from
-  `--role-focus`, with no layout or product-color change.
-
-### B2 deploy proof
-
-- Commit and push precede runtime proof.
-- `pnpm cf:preflight` is green before product-root R2 read-back.
-- `cloud-dev workers deploy` and its Tokyo product-root R2 sync are green.
-- R2 read-back proves the synced product-root `logoshowcase/widget.css` contains
-  `--role-focus`. Cloud-dev Roma Builder instance `8FMVZFFPJV` loads that package
-  and a keyboard-focused logo link resolves its outline from `--role-focus`.
-  Do not rematerialize or edit the published account instance for this proof.
-
-### B3 local proof
-
-- `pnpm build:devstudio` is green.
-- Regeneration leaves `admin/src/html/foundations/colors.html` unchanged for the
-  current six-digit source values.
-- A source-level check proves 3/6-digit hex is writable while 4/5/7/8-digit hex
-  is read-only, matching the backend contract.
-
-### B3 deploy proof
-
-- Commit and push precede runtime proof.
-- `pnpm cf:api:preflight` is green before Pages inspection.
-- DevStudio Git-connected Cloudflare Pages build is green.
-- The deployed color foundation still reveals current source colors as editable
-  and role/focus/state rows as read-only. The build plus source comparison owns
-  invalid-shape parity because current product tokens contain no invalid shapes
-  to exercise in deployed UI.
+- Local: source comparison proves identical 3/6-digit generator/backend value
+  shapes; DevStudio build/checks are green; generated colors HTML has zero diff;
+  both living docs say 3/6 digits.
+- Deploy: commit/push first; `pnpm cf:api:preflight`; DevStudio Pages latest
+  deployment commit hash equals B3; deployed foundation shows current source
+  colors editable and role/focus/state rows read-only.
 
 ## V1-V8 Audit
 
-| ID | Result | Reason |
+| ID | Result | Evidence |
 | --- | --- | --- |
-| V1 | PASS | No missing truth is replaced with an invented token or theme value. |
-| V2 | PASS | The unused theme shape is deleted; no compatibility alias silently heals it. |
-| V3 | PASS | Source, consumer, generated, docs, deploy, and runtime proof surfaces are named. |
-| V4 | PASS | DevStudio cannot reveal an invalid value as writable when the write API rejects it. |
-| V5 | PASS | Invalid reveal/write truth remains invalid rather than being treated as an absent capability. |
-| V6 | PASS | Each slice has distinct local, deploy, and cloud proof before it can be called green. |
-| V7 | PASS | Dark-mode fiction is deleted rather than renamed or preserved as readiness. |
-| V8 | PASS | Tests and browser captures prove behavior; normal product work does not depend on them. |
+| V1 | PASS | Theme fiction is deleted; authored transparent state remains unchanged and only the editor host backdrop is neutral (`Workspace.tsx:265-290`). |
+| V2 | PASS | No theme alias or color normalization is introduced. |
+| V3 | PASS | Live/dead consumers, fixture, generated output, docs, workflows, R2 key, and deployment SHAs are named. |
+| V4 | PASS | Reveal uses the same accepted shape as write authority. |
+| V5 | PASS | Invalid color forms stay visible read-only rather than becoming absent or rewritten. |
+| V6 | PASS | Each slice distinguishes local, pushed deploy, and owner-surface evidence. |
+| V7 | PASS | Dead CSS and dark-theme fiction are deleted, not renamed. |
+| V8 | PASS | Checks prove behavior and are not product runtime dependencies. |

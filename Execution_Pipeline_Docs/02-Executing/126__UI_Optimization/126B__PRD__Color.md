@@ -217,7 +217,11 @@ Allowed primitive-use cases:
 - color picker swatches and color-system reveal rows;
 - DevStudio/source-inspection UI that is explicitly showing a primitive token;
 - component plumbing that immediately resolves into an allowed role/state
-  formula.
+  formula;
+- a palette ramp or contrast sibling used only as a modifier on an explicitly
+  named semantic status when the current role layer has no value-equivalent
+  surface/contrast role. The status base meaning must still use its semantic
+  role.
 
 The default direction is role-based consumption.
 
@@ -429,9 +433,11 @@ Change only:
   default;
 - `bob/components/Workspace.tsx`: delete unused theme reads, refs, message
   properties, dependencies, and reset dependency;
-- `bob/app/bob_app.css`: replace only value-equivalent base status primitives
-  with existing status roles; preserve pale `*-5` backgrounds,
-  `--color-system-orange-contrast`, geometry, and mix percentages exactly;
+- `bob/app/bob_app.css`: delete the audited unused editable-title, title-input,
+  rename-error, warning, note, upsell-note, and success selectors; keep the live
+  `.settings-panel__error`, replace only its value-equivalent base red
+  border/text references with `--role-error`, and preserve its pale background
+  and geometry;
 - `bob/components/ToolDrawer.tsx`: replace only value-equivalent session-error
   border/text red with `--role-error`; preserve its pale background;
 - `documentation/services/bob.md`: remove `theme` from the documented preview
@@ -442,13 +448,15 @@ save, translation, Copilot, account, or product-data behavior.
 
 Green gate:
 
-1. Local scans, Bob typecheck/lint/build, and relevant focused tests are green.
+1. Local scans prove the named dead selectors and theme path are absent; Bob
+   typecheck/lint/build and relevant focused tests are green.
 2. Local browser proof covers preview device switching and iframe updates;
-   intercepted failure proof exercises rename/session error presentation without
-   remote product-data mutation.
+   intercepted failed save exercises the live ToolDrawer session error without
+   a remote product write.
 3. Commit and push occur before cloud proof.
-4. `pnpm cf:api:preflight` and the Bob and Roma Pages builds are green;
-   cloud-dev Roma Builder proves deployed preview behavior and a captured
+4. `pnpm cf:api:preflight` is green. Bob and Roma Pages latest deployment commit
+   hashes and the Roma cloud-dev workflow `head_sha` equal the B1 commit.
+   Deployed Roma Builder proves preview behavior and a captured
    `ck:state-update` has no `theme` property.
 
 ### Slice B2 - Logo Showcase Focus Role
@@ -459,22 +467,27 @@ product default.
 
 Green gate:
 
-1. Widget validation/build, `pnpm --filter @clickeen/roma
-   test:instance-package`, and keyboard focus browser proof are green. Only the
-   Logo Showcase CSS expectation changes in the package fixture.
+1. Widget validation/build, `pnpm tokyo:r2:sync:check`,
+   `pnpm --filter @clickeen/roma test:instance-package`, and keyboard focus
+   browser proof are green. Only the Logo Showcase CSS expectation changes in
+   the package fixture.
 2. Commit and push occur before cloud proof.
-3. `pnpm cf:preflight`, `cloud-dev workers deploy`, and Tokyo product-root sync
-   are green.
-4. R2 read-back proves the synced product-root `logoshowcase/widget.css`
-   contains `--role-focus`; cloud-dev Roma Builder instance `8FMVZFFPJV` loads
-   that package and the focused link resolves its outline from the role. Do not
-   rematerialize or edit the published account instance for this proof.
+3. `pnpm cf:preflight` is green. The `cloud-dev workers deploy` and Roma
+   cloud-dev workflow `head_sha` values equal the B2 commit and are green.
+4. R2 read-back proves
+   `product/widgets/logoshowcase/widget.css` contains `--role-focus` and no
+   longer contains the old focus declaration. Do not read, rematerialize, or
+   edit a published account instance for this proof.
 
 ### Slice B3 - DevStudio Reveal/Write Predicate Parity
 
 Change only `admin/scripts/generate-foundation-pages.mjs`: writable color rows
 accept exactly three- or six-digit hex values, matching the existing backend
 contract in `admin/functions/_shared/dieter-tokens.js`.
+
+Update `documentation/engineering/UI/color.md` and
+`documentation/services/devstudio.md` from ambiguous "literal hex" wording to
+the exact three- or six-digit write contract.
 
 `admin/functions/_shared/dieter-tokens.js` is read-only evidence. Regenerate
 `admin/src/html/foundations/colors.html`; current six-digit source data should
@@ -485,7 +498,8 @@ Green gate:
 1. Source comparison proves generator and backend use the same 3/6-digit value
    shape; `pnpm build:devstudio` is green; generated output is unchanged.
 2. Commit and push occur before cloud proof.
-3. `pnpm cf:api:preflight` and the DevStudio Pages build are green.
+3. `pnpm cf:api:preflight` is green and the DevStudio Pages latest deployment
+   commit hash equals the B3 commit.
 4. Deployed color foundations reveal current source colors as editable and
    role/focus/state rows as read-only. Current product tokens contain no invalid
    hex shapes, so source comparison plus the build owns invalid-shape parity.
@@ -497,11 +511,14 @@ Green gate:
 | `bob/lib/session/sessionTypes.ts` | `dieter/tokens/dieter-color-tokens.css` | Dieter component-wide adoption -> 126I |
 | `bob/components/Workspace.tsx` | `tokyo/product/widgets/shared/runtime.js` | Broad DevStudio chrome -> 126L |
 | `bob/app/bob_app.css` | `tokyo/product/widgets/shared/branding.js` | Broad Roma chrome -> 126M |
-| `bob/components/ToolDrawer.tsx` | `tokyo/product/widgets/shared/socialShare.js` | Bob-wide visual refactor -> requires a later Bob-owned PRD |
+| `bob/components/ToolDrawer.tsx` | `tokyo/product/widgets/shared/socialShare.js` | Other Bob controls -> 126I; hosted ToolDrawer/workspace screen -> 126M |
+| | `bob/components/TopDrawer.tsx` and `bob/components/td-menu-content/useTdMenuHydration.ts` | |
 | `documentation/services/bob.md` | `admin/functions/_shared/dieter-tokens.js` | Prague marketing copy -> Prague content authority |
-| `tokyo/product/widgets/logoshowcase/widget.css` | `documentation/engineering/UI/color.md` | User-authored/widget appearance color -> unchanged |
+| `tokyo/product/widgets/logoshowcase/widget.css` | `dieter/tokens/dieter-color-tokens.css` | User-authored/widget appearance color -> unchanged |
 | `roma/tests/fixtures/124c-base-package-expected.json` | `roma/tests/instance-package-fixtures.ts` | Published account instance rematerialization -> forbidden proof mutation |
 | `admin/scripts/generate-foundation-pages.mjs` | `documentation/engineering/CloudflareOperations.md` | |
+| `documentation/engineering/UI/color.md` | `.github/workflows/cloud-dev-workers.yml` | |
+| `documentation/services/devstudio.md` | `.github/workflows/cloud-dev-roma-app.yml` | |
 | `admin/src/html/foundations/colors.html` only if generation changes it | GitHub Actions and Pages runtime evidence | |
 
 No Dieter token or generated Tokyo Dieter file should change. No R2 account
