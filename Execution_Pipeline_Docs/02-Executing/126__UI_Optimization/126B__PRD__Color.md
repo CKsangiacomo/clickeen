@@ -125,7 +125,7 @@ The Codex as-built audit incorrectly claimed that
 `dieter/tokens/dieter-color-tokens.css` was malformed at the opening comment and
 that early role/state tokens might be inactive CSS.
 
-That is resolved: the `*/` on line 10 closes the opening CSS comment, and
+That is resolved: the opening CSS comment closes before `:root`, and
 `:root` plus `--color-text`, `--role-surface`, `--focus-ring-color`, and the
 state controls are active CSS.
 
@@ -434,22 +434,26 @@ Change only:
 - `bob/components/Workspace.tsx`: delete unused theme reads, refs, message
   properties, dependencies, and reset dependency;
 - `bob/app/bob_app.css`: delete the audited unused editable-title, title-input,
-  rename-error, warning, note, upsell-note, and success selectors; keep the live
+  rename-error, and every dead `.settings-panel__*` selector; keep the only live
   `.settings-panel__error`, replace only its value-equivalent base red
   border/text references with `--role-error`, and preserve its pale background
   and geometry;
 - `bob/components/ToolDrawer.tsx`: replace only value-equivalent session-error
   border/text red with `--role-error`; preserve its pale background;
 - `documentation/services/bob.md`: remove `theme` from the documented preview
-  message.
+  message;
+- `documentation/engineering/UI/color.md`: record the narrow legal use of a
+  palette ramp/contrast sibling as a modifier only when a semantic status base
+  is already role-backed and no value-equivalent modifier role exists.
 
 Do not change widget state, locale, typography, device, host, iframe lifecycle,
 save, translation, Copilot, account, or product-data behavior.
 
 Green gate:
 
-1. Local scans prove the named dead selectors and theme path are absent; Bob
-   typecheck/lint/build and relevant focused tests are green.
+1. Local scans prove all audited dead selectors and the theme path are absent;
+   Bob typecheck/lint/build and relevant focused tests are green; living color
+   doctrine matches the modifier rule.
 2. Local browser proof covers preview device switching and iframe updates;
    intercepted failed save exercises the live ToolDrawer session error without
    a remote product write.

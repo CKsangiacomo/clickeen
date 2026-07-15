@@ -12,7 +12,7 @@ deploy, or product-data mutation.
 ## Read-Only Commands
 
 ```bash
-rg -n "instance-rename__error|settings-panel__error|settings-panel__warning|settings-panel__note|settings-panel__success|topdrawer-instance-title-input|topdrawer-instance-title--editable" . --glob '!**/node_modules/**' --glob '!Execution_Pipeline_Docs/**'
+rg -n "instance-rename__error|settings-panel__|topdrawer-instance-title-input|topdrawer-instance-title--editable" . --glob '!**/node_modules/**' --glob '!Execution_Pipeline_Docs/**'
 rg -n "theme: 'light' \| 'dark'|prefers-color-scheme|data-theme=[\"']dark" bob dieter admin roma tokyo/product/widgets documentation/engineering/UI documentation/services
 rg -n -e "--color-surface\\b|--color-bg\\b|--color-system-gray-(7|10)\\b|--state-muted-opacity\\b|--state-hover-target\\b" dieter bob roma admin tokyo/product/widgets documentation/engineering/UI
 rg -n "color-system-(red|orange|green|blue)(-5|-contrast)?\\b" bob --glob '*.{ts,tsx,css}'
@@ -60,6 +60,7 @@ Whole-repo consumer search proves the following selectors have no producer:
 | --- | --- |
 | `bob/app/bob_app.css:88-99` | Delete unused editable-title selectors. |
 | `bob/app/bob_app.css:110-144` | Delete unused title-input/focus/active/disabled and rename-error selectors. Bob title is read-only at `bob/components/TopDrawer.tsx:24-31`. |
+| `bob/app/bob_app.css:326-380` | Delete unused actions, actions-inline, row, fullwidth/button-child, code/code-child, and status selectors. |
 | `bob/app/bob_app.css:391-418` | Delete unused warning, note, upsell-note, and note/fullwidth selectors. |
 | `bob/app/bob_app.css:434-441` | Delete unused success selector. |
 
@@ -74,12 +75,14 @@ surface and is not Bob proof.
 | `bob/components/td-menu-content/useTdMenuHydration.ts:75-83` | Failed control hydration renders `.settings-panel__error`. | Keep the selector; replace only value-equivalent base red border/text references with `--role-error`. Preserve its pale `--color-system-red-5` background and geometry. |
 | `bob/app/bob_app.css:382-389` | The live settings error uses base red plus a pale ramp. | Same exact change; no visual redesign. |
 | `bob/components/ToolDrawer.tsx:181-183,275-310` | Session and blocked-editor errors use inline base-red border/text plus pale background. | Replace only value-equivalent base red with `--role-error`; preserve pale background and behavior. |
-| `bob/components/Workspace.tsx:465-478` and `bob/app/bob_app.css:465-477` | Preview loading/error overlays are live; the error surface is a pale ramp with no value-equivalent current semantic surface role. | No change. Classify the pale ramp as a legal semantic-status modifier; do not invent a container-role family. |
+| `bob/components/Workspace.tsx:465-478` and `bob/app/bob_app.css:465-477` | Preview loading/error overlays are live; the error surface uses only a pale primitive and therefore does not yet satisfy the status-base role rule. | Route this exact hosted workspace adoption to 126M; do not bless it or expand B1 into workspace redesign. |
 
 The 126B law permits a palette ramp or contrast sibling only as a modifier on an
 explicit semantic status where no value-equivalent role exists. The status base
 meaning must still use the semantic role. This is narrower than adding eight
 unused status-container tokens and preserves the current visual result.
+`documentation/engineering/UI/color.md:49-51` must record the same narrow rule
+in B1 so the living doctrine and implementation never diverge.
 
 ### User-authored transparent preview classification
 
