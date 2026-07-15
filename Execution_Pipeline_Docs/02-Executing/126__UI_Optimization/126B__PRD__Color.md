@@ -476,8 +476,9 @@ Green gate:
    browser proof are green. Only the Logo Showcase CSS expectation changes in
    the package fixture.
 2. Commit and push occur before cloud proof.
-3. `pnpm cf:preflight` is green. The `cloud-dev workers deploy` and Roma
-   cloud-dev workflow `head_sha` values equal the B2 commit and are green.
+3. `pnpm cf:preflight` is green. The `cloud-dev workers deploy`, Roma
+   cloud-dev, and Prague cloud-dev workflow `head_sha` values equal the B2
+   commit and are green.
 4. R2 read-back proves
    `product/widgets/logoshowcase/widget.css` contains `--role-focus` and no
    longer contains the old focus declaration. Do not read, rematerialize, or
@@ -523,6 +524,7 @@ Green gate:
 | `admin/scripts/generate-foundation-pages.mjs` | `documentation/engineering/CloudflareOperations.md` | |
 | `documentation/engineering/UI/color.md` | `.github/workflows/cloud-dev-workers.yml` | |
 | `documentation/services/devstudio.md` | `.github/workflows/cloud-dev-roma-app.yml` | |
+| | `.github/workflows/cloud-dev-prague-app.yml` | |
 | `admin/src/html/foundations/colors.html` only if generation changes it | GitHub Actions and Pages runtime evidence | |
 
 No Dieter token or generated Tokyo Dieter file should change. No R2 account

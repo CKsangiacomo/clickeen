@@ -33,6 +33,7 @@ build, preflight, deploy, or remote mutation was part of Step 6.
 | `scripts/tokyo-r2-deploy-sync.mjs:24` | Widget package source syncs from `tokyo/product/widgets/**` to R2 `product/widgets/**`. |
 | `.github/workflows/cloud-dev-workers.yml:5-15,125-129` | Widget package changes trigger worker deploy and Tokyo product-root sync. |
 | `.github/workflows/cloud-dev-roma-app.yml:5-14` | Widget package and Bob changes trigger Roma cloud-dev verification. |
+| `.github/workflows/cloud-dev-prague-app.yml:5-14` | Widget package changes also trigger Prague cloud-dev verification. |
 
 Current source contains the exact semantic roles, resolved historical undefined
 tokens, truthful read-only role/focus/state reveal, generated Dieter parity, and
@@ -155,8 +156,8 @@ in scope.
 - Local: widget validation/build and `pnpm tokyo:r2:sync:check`; Roma instance-
   package parity; fixture diff is only the Logo Showcase focus token; keyboard
   focus proof is green.
-- Deploy: commit/push first; `pnpm cf:preflight`; worker and Roma workflow
-  `head_sha` values equal B2; R2 read-back of
+- Deploy: commit/push first; `pnpm cf:preflight`; worker, Roma, and Prague
+  workflow `head_sha` values equal B2; R2 read-back of
   `product/widgets/logoshowcase/widget.css` contains `--role-focus` and not the
   old focus declaration. No account instance is read, written, or rematerialized.
 
