@@ -1,6 +1,6 @@
 # 126D - PRD: Typography
 
-Status: PRE-EXECUTION DOCTRINE RECORDED - step-5 living doctrine reconciled; account-font migration proven complete; step-6/7/8 artifacts pending; no step-9 execution credit.
+Status: PRE-EXECUTION STEP 7 COMPLETE - current-source audit and final executable plan recorded; Step 8 exact-tree review pending; no Step-9 execution credit.
 Parent: `126__PRD__UI_Optimization_Program.md` (MAMA).
 Series order: 126D of 126A-126M.
 KB doc: `documentation/engineering/UI/typography.md`.
@@ -407,11 +407,11 @@ avoids a fake design-token console.
 
 ## Detailed Execution Blast Radius
 
-The table below is the full historical/current 126D blast radius. Every code
-row is verified current baseline and regression evidence. The only scheduled
-step-9 change is deletion of the seven proven local font copies. The final
-step-6 audit must not reopen completed typography or font migration work unless
-it proves a new current-source mismatch.
+The table below reconciles the historical 126D blast radius with current
+source. Closed rows remain regression evidence. Step 9 is limited to the
+current-source compiler/session font-authority defect and widget-role label
+ownership proven by Step 6. It must not reopen completed typography or font
+migration work.
 
 | Area | Paths | Execution concern |
 | --- | --- | --- |
@@ -426,13 +426,13 @@ it proves a new current-source mismatch.
 | Bob shell typography | `bob/app/bob_app.css` | Verified current: the code block uses `var(--font-mono)`. |
 | Account font library document | `roma/lib/account-widget-defaults-direct.ts`, `roma/lib/account-widget-defaults-contract.ts`, `roma/lib/account-widget-defaults-materialization.ts`, `roma/components/widget-defaults-domain.tsx`, `roma/app/api/account/widget-defaults/route.ts`, `tokyo-worker/src/domains/account-widget-defaults.ts`, `tokyo-worker/src/routes/internal-widget-default-routes.ts` | Verified current: top-level `fontLibrary` flows through the existing account widget-defaults authority. |
 | Bob open/session font payload | `roma/components/builder-domain.tsx`, `bob/lib/session/sessionTypes.ts`, `bob/lib/session/useSessionBoot.ts`, `bob/lib/session/WidgetDocumentSession.tsx` | Verified current: Bob receives the account font library and rejects missing/malformed data. |
-| Bob widget typography authoring | `bob/lib/edit/typography-fonts.ts`, `bob/lib/compiler/modules/typography.ts`, `bob/components/td-menu-content/linkedOps.ts`, `bob/components/td-menu-content/useTdMenuBindings.ts` | Verified current: font options come from the account library; fixed Tokyo font records are absent. |
+| Bob widget typography authoring | `bob/lib/edit/typography-fonts.ts`, `bob/lib/compiler/modules/typography.ts`, `bob/lib/compiler/editor-contract.ts`, `bob/lib/session/{sessionConfig,useSessionBoot,useSessionEditing,useSessionSaving,WidgetDocumentSession}.ts*`, `bob/components/CopilotPane.tsx`, `bob/components/td-menu-content/{accountFonts,linkedOps,useTdMenuBindings}.ts` | Step-6 defect: the visible menu uses the account library, but account-independent compilation still bakes the default Google library into a fixed enum and generic weight/style choices. Bind family controls and typography validation to the current account library at session open; move widget-specific role labels into widget specs. |
 | Widget shell contract | `packages/widget-shell/src/defaults.ts`, `packages/widget-shell/src/contract.ts`, `packages/widget-shell/src/controls.ts` | Defaults/controls/schema must not imply custom values are active unless their preset is `custom`; shell paths must map to runtime apply behavior. |
 | Runtime package materialization | `roma/lib/account-instance-public-package.ts`, `roma/lib/account-instance-locale-package.ts`, `packages/ck-runtime-materializer/src/**` | Verified current: packages include required account-font data and fail on missing referenced font truth. |
-| Widget runtime typography | `tokyo/product/widgets/shared/typography.js`, `tokyo/product/widgets/shared/typography-data.js`, `packages/widget-shell/src/modules.ts` | Verified current: Google and account-asset fonts retain their separate source authorities; Tokyo special-font logic is absent. |
+| Widget runtime typography | `tokyo/product/widgets/shared/typography.js`, `tokyo/product/widgets/shared/typography-data.js`, `packages/widget-shell/src/modules.ts` | Google and account-asset font authorities are current and stay unchanged. Step 9 adds exact saved-role/roleConfig key parity so runtime cannot silently ignore an authored role. |
 | Widget CSS consumers | `tokyo/product/widgets/cards/widget.css`, `tokyo/product/widgets/big-bang/widget.css` | Verified current: no active `--font-display` fallback remains. |
 | Widget specs/runtime invalid class cleanup | `tokyo/product/widgets/faq/spec.json` | Verified current: embedded editor classes use `body-xs`. |
-| Local special-font residue | untracked `tokyo/product/fonts/special/*` files | The seven account assets are proven current; delete these non-deployed local copies mechanically in step 9. |
+| Local special-font residue | untracked `tokyo/product/fonts/special/*` files | The seven account assets are proven current. These files are non-deployed workspace residue, not a Git execution slice or product-data task. Leave them outside Step-9 credit. |
 | Account asset font support | `tokyo-worker/src/domains/assets-handlers.ts`, `tokyo-worker/src/asset-utils.ts`, `tokyo-worker/src/domains/assets.ts`, `roma/app/api/account/assets/upload/route.ts`, `roma/components/assets-domain.tsx`, `dieter/components/shared/account-assets.ts`, `roma/lib/account-asset-record.ts` | Verified current: normal account assets accept/list/resolve fonts with truthful metadata and the exact allowlist. |
 | Root font route/proxy cleanup | `tokyo-worker/src/routes/asset-routes.ts`, `tokyo-worker/src/asset-utils.ts`, `tokyo-worker/wrangler.toml`, `bob/lib/tokyo-static-proxy.ts` | Verified current: no root product-font route/proxy/config remains. |
 | Roma typography consumers | `roma/components/team-domain.tsx`, `roma/components/team-member-domain.tsx`, `roma/components/accept-invite-domain.tsx` | Verified current: consumers use `heading-3` / `heading-4`. |
@@ -474,31 +474,163 @@ Current documentation reconciliation:
 
 ## Execution Gap Targets
 
-126D step 6 must verify current source/docs and retain only proven remaining
-typography mismatches. The font-specific items below are already closed and are
-regression checks, not execution scope:
+Step 6 is complete in `audits/126D__Audit__Typography.md`. It proved two
+remaining mismatches:
 
-- Remove raw `h1` through `h6` visual styling from Dieter typography source.
-- Keep visual heading classes only as explicit visual text classes.
-- Replace current consumers of stale visual heading names with current visual
-  class names.
-- Remove typography-owned color from Dieter label/caption/overline utility
-  classes or route the color to the consuming component/context/widget content
-  authority.
-- Verify active `--font-display` references remain absent.
-- Replace Bob local monospace/font-stack bypasses with `--font-mono` /
-  `--font-ui`.
-- Verify fixed `source: 'tokyo'` records remain absent and account
-  `fontLibrary` metadata remains authoritative.
-- Verify the seven admin fonts remain normal `CLICKEEN` account assets and font
-  upload continues to use the exact allowlist.
-- Align Bob font selection, saved widget typography, widget-shell defaults, and
-  widget runtime loading.
-- Ensure account-uploaded fonts resolve through Clickeen account asset CDN
-  serving in public widgets.
-- Do not reopen remote inventory or route deletion; those migration gates are
-  closed.
-- Update living docs listed in the blast-radius table.
+1. Bob replaces the visible family menu with the current account library but
+   still validates edits, Copilot controls, config, and save against the
+   account-independent compiler's fixed default-Google-family enum. A visible
+   account font such as Orio is rejected. Its visible menu also filters
+   weights/styles by family while session/Copilot validation accepts generic
+   combinations that public runtime can reject later.
+2. Bob's compiler silently filters composed typography roles through a fixed
+   14-role list. Current role keys happen to align across all eight widgets,
+   but a future widget role can disappear from Bob without compile failure.
+   Some current generic labels also understate widget semantics.
+
+All font migration, Dieter class cleanup, account-asset delivery, root-route
+deletion, public package materialization, and remote product-data work are
+closed regression evidence, not Step-9 scope.
+
+## Step 7 Final Executable Plan
+
+This plan is the complete 126D execution authority. Step 9 must implement this
+one atomic authority move after Step 8 is green for the exact committed plan
+tree. It must not deploy a midpoint where account family controls accept any
+string without account binding.
+
+### Product Result
+
+- A user can select any font in the current account font library, including an
+  uploaded font such as Orio, and Bob accepts, previews, saves, and exposes the
+  same choice to Copilot.
+- A family absent from the current account library is rejected.
+- A weight or style absent from the selected family record is rejected during
+  open, editing, and save instead of failing later in public runtime.
+- Bob shows every composed typography role for every widget.
+- Shared shell roles retain shared default labels. Widgets declare labels for
+  their own roles and may override a shared label when that role has broader
+  widget meaning.
+- Adding a widget role without a product-readable label fails widget
+  compilation; it is never silently omitted.
+- Public runtime fails explicitly when saved typography role keys and the
+  widget's role map differ; it never ignores an authored role.
+
+### Authority Design
+
+The account-independent compiler emits a family control as a string control
+with no font options or enum values. The current account's normalized
+`fontLibrary` is bound to those controls once, during Bob session open. The
+bound session controls contain the exact flat family choices and enum values
+for that account. Those same controls drive session config validation, direct
+edits, Copilot, and save validation. One account-aware session assertion also
+checks each role's weight/style against its selected family record after open,
+after edits, and before save. The visible grouped menu continues to be rendered
+from the same `fontLibrary`.
+
+This is one account authority used in two presentations, not two font models:
+
+```text
+Roma current account fontLibrary
+  -> Bob session control binding
+     -> config/edit/Copilot/save validation
+     -> visible grouped family menus
+```
+
+Widget role labels use the existing structured typography panel declaration:
+
+```json
+{
+  "id": "typography",
+  "shared": {
+    "id": "typography",
+    "roleLabels": {
+      "widgetRole": "Product-readable label"
+    }
+  }
+}
+```
+
+The four shell defaults remain `Title`, `Subtitle`, `Button text`, and
+`Locale switcher`. Widget declarations own their additional labels and any
+needed shared-role override. No global role registry is added.
+
+### Atomic Source Slice 126D.1
+
+| File | Exact change | Preserve |
+| --- | --- | --- |
+| `bob/lib/compiler/modules/typography.ts` | Delete default-account family options and the hardcoded 14-role candidate table. Render empty family options so compiled family controls infer `string`. Own the generic 100-900 weight labels locally. Enumerate every composed role. Resolve labels from four shell defaults plus the widget declaration; reject missing, unknown, or unused widget label entries. Keep generic style/size/tracking/line-height controls. | Current control paths, conditional custom fields, and visible control order. |
+| `bob/lib/compiler/editor-contract.ts` | Parse `shared.roleLabels` as a non-empty string map and pass it to `buildTypographyPanel`. Reject malformed metadata. | Existing shared panel shape and all non-typography editor rendering. |
+| `bob/lib/edit/typography-fonts.ts` | Delete the file. Every export is either dead, default-account authority, or a wrapper around `@clickeen/widget-shell`; no compatibility re-export remains. | Account font types/helpers stay in `@clickeen/widget-shell`. |
+| `bob/lib/session/sessionConfig.ts` | Add the pure binder that copies compiled family controls with exact current-account options/enums. Add one account-aware typography assertion: global/role families must exist and each role's weight/style must be allowed by its selected family record. | Existing generic compiled-control and config-shape validation. |
+| `bob/lib/session/useSessionBoot.ts` | Normalize `fontLibrary` before config validation; bind typography family controls to it; validate config and account typography selections against the bound compiled widget; store the bound compiled widget in session state. | Existing explicit missing/malformed library failure, unsaved-open protection, policy, Copilot, translations, and session coordinates. |
+| `bob/lib/session/useSessionEditing.ts` | After generic op/config validation, run the account-aware typography assertion before accepting state. | Existing operation errors, dirty-state calculation, and update metadata. |
+| `bob/lib/session/useSessionSaving.ts` | Run the same account-aware assertion before issuing save. | Existing save command, error mapping, and dirty-state behavior. |
+| `bob/lib/session/WidgetDocumentSession.tsx` | Pass the existing `metaRef` to editing so it reads the normalized session font library; add no new state store. | Existing session composition. |
+| `bob/components/CopilotPane.tsx` | Keep family choices from the bound compiled controls. Filter each role's weight/style options and enum values from that role's currently selected family in the existing session `fontLibrary`; final session validation remains authoritative. | Existing Copilot envelope, outcome reporting, apply/undo, and all non-typography controls. |
+| `tokyo/product/widgets/big-bang/spec.json` | Declare `bigBang: "Big Bang statement"` and override `body` as `Subtitle and supporting copy`. | Widget defaults, runtime, content, layout, and all non-label editor metadata. |
+| `tokyo/product/widgets/calltoaction/spec.json` | Declare `eyebrow: "Eyebrow"`; override `title` as `Title and action headline` and `body` as `Subtitle and supporting text`. | Widget behavior and all non-label editor metadata. |
+| `tokyo/product/widgets/cards/spec.json` | Declare `cardTitle: "Card title"` and `cardCopy: "Card copy"`. | Widget behavior and shared role labels. |
+| `tokyo/product/widgets/countdown/spec.json` | Declare `timer: "Timer"` and `label: "Labels"`. | Widget behavior and shared role labels. |
+| `tokyo/product/widgets/faq/spec.json` | Declare `section: "Section title"`, `question: "Question"`, and `answer: "Answer"`. | Widget behavior and shared role labels. |
+| `tokyo/product/widgets/shared/typography.js` | Before applying roles, require exact key parity between saved `typography.roles` and the widget's `roleConfig`; throw a specific missing/extra-role error. | Existing font loading, script fallback, size/tracking/line-height resolution, and CSS variable application. |
+| `bob/tests/run-typography-contract.ts` | Compile all eight widget specs; prove all composed roles have family controls and exact labels; prove compiler family controls are account-independent strings; bind a library containing Orio and prove Orio plus an allowed weight/style are accepted while unknown families and disallowed weight/styles are rejected; prove malformed/missing/unused role labels fail compilation; execute the shared runtime parity assertion for matching, missing, and extra role keys. | Test-only proof; no runtime dependency. |
+| `bob/package.json` | Add `test:typography-contract`. | Existing scripts. |
+| `documentation/engineering/UI/typography.md` | Document compiler/session font authority and role-label ownership. | Two-lane typography doctrine and closed migration truth. |
+| `documentation/services/bob.md` | Document account-bound family controls and absence of a compiler default font catalog. | Existing Builder/session/product boundary. |
+| `documentation/widgets/authoring/ToolDrawerControls.md` | Document widget-specific `shared.roleLabels` and compile failure on omissions. | Existing authoring contract. |
+
+### Explicit Deletions
+
+- Static compiler family options from the default account library.
+- `bob/lib/edit/typography-fonts.ts` in full; its dead wrappers and default
+  catalog authority are not preserved under a new name.
+- The fixed 14-role candidate list, including dead `heading` candidature.
+- Any stale living-doc statement that says the compiler supplies final account
+  font options or silently discovers widget role labels.
+
+Do not delete account font records, account assets, public packages, widget
+runtime role maps, or the untracked local font copies as part of this Git slice.
+
+### Verification Gate
+
+Local source gate:
+
+```bash
+pnpm --filter @clickeen/bob test:typography-contract
+pnpm validate:widgets
+pnpm --filter @clickeen/widget-shell typecheck
+pnpm --filter @clickeen/bob typecheck
+pnpm --filter @clickeen/roma typecheck
+pnpm --filter @clickeen/roma test:instance-package
+rg -n "DEFAULT_ACCOUNT_FONT_LIBRARY|CK_TYPOGRAPHY_FONTS|CK_GOOGLE_FONT_SPECS|buildCkTypographyFamilyOptions" bob
+git diff --check
+```
+
+The negative source search must return no active Bob default-family authority.
+
+Deploy/runtime gate:
+
+1. Commit and push the exact green source tree through normal Git deployment.
+2. Verify the Tokyo product-root Worker/R2 sync GitHub Action is green for that
+   exact commit SHA.
+3. Verify the Bob Cloudflare Pages deployment is green for the same SHA.
+4. Open an existing `CLICKEEN` widget in Bob through Roma.
+5. Select an uploaded account font, observe the preview, save, reopen, and
+   verify the selected family persists.
+6. Verify Bob Copilot's font-family control choices equal the current account
+   library rather than the default Google catalog.
+7. Verify an unknown family and a disallowed weight/style are rejected and do
+   not dirty or save the instance.
+
+No direct R2/Supabase mutation or font-data migration is permitted.
+
+### Step-9 Green Bar
+
+126D is green only when the source, focused tests, eight-widget validation,
+docs, exact-SHA deploys, and real account-font edit/save/reopen proof all agree.
+Deleting untracked workspace residue, passing typecheck alone, or showing the
+font in the menu is not 126D execution proof.
 
 ## Closed Product Data Authority Evidence
 
