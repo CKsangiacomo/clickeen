@@ -1,7 +1,7 @@
 # 126C - PRD: Iconography
 
-Status: PRE-EXECUTION STEP 7 COMPLETE - executable plan written from current
-source; exact-tree Step-8 review pending; no Step-9 execution credit.
+Status: PRE-EXECUTION STEPS 6-8 COMPLETE - exact-tree review green at
+`b5efaefc`; no Step-9 execution credit.
 Parent: `126__PRD__UI_Optimization_Program.md`.
 Series order: 126C of 126A-126M.
 Step-6 authority: `audits/126C__Audit__Iconography.md`.
