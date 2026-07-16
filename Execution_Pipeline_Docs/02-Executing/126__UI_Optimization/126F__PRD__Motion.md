@@ -93,10 +93,16 @@ The strong current evidence:
 - Current living motion doctrine records the exact system/widget boundary and
   token law.
 
-Step 6 found no remaining implementation gap. Selector-level reduced-motion
-behavior and current consumption are source-true; Prague remains a real blast
-radius before any future duration-token change. Step 7 therefore defines a
-preservation and regression-verification slice, not another motion migration.
+Step 6 found one remaining implementation deletion: Bob and Dieter still
+declare `gsap` even though current source has no GSAP import or runtime use.
+It also found one reduced-motion selector gap: Roma's Widget Defaults toggle
+animates its knob through `::after`, while the foundation guard currently
+targets only real elements. The generated Dieter manifest still records the
+older `de408dda` input SHA even though `c299c783` is the latest committed
+Dieter/build input. Current token consumption is otherwise source-true; Prague
+remains real blast radius before any future duration-token change. Step 7 fixes
+these exact gaps, deletes the unused dependency, and then acts as a
+preservation/regression gate rather than repeating the motion migration.
 
 ## Human-Converged Product Reading
 
@@ -352,6 +358,7 @@ it alone.
 
 | Area | Owner | Exact paths | Verify | Must not change |
 | --- | --- | --- | --- | --- |
+| Unused motion dependency | 126F / package graph | `bob/package.json`; `dieter/package.json`; `pnpm-lock.yaml` | Verify zero active GSAP references; remove both declarations through pnpm and confirm frozen-lockfile install succeeds. | Do not replace GSAP, preserve a compatibility lane, or edit unrelated dependency versions. |
 | Dieter foundation motion | 126F / Dieter source | `dieter/tokens/dieter-foundation-tokens.css`; `dieter/tokens/tokens.css` | Search for `--duration-*`, `--easing-standard`, and `prefers-reduced-motion`; run `pnpm build:dieter` after source changes. | Do not add duration tokens preemptively or import an external easing taxonomy. |
 | Generated Dieter token output | Generated from Dieter source | `tokyo/product/dieter/tokens/**` including `tokens.css`, `tokens.shadow.css`, per-token CSS, and matching `*.shadow.css` files | Confirm generated output changed only through `pnpm build:dieter`. | Do not hand-edit generated Tokyo Dieter output. |
 | Generated Dieter component output | Generated from Dieter source | `tokyo/product/dieter/components/button/button.css`; `tokyo/product/dieter/components/menuactions/menuactions.css`; `tokyo/product/dieter/components/textrename/textrename.css`; `tokyo/product/dieter/components/repeater/repeater.css`; `tokyo/product/dieter/components/repeater/repeater.js`; `tokyo/product/dieter/components/segmented/segmented.css`; `tokyo/product/dieter/components/dropdown-fill/dropdown-fill.css`; `tokyo/product/dieter/components/dropdown-border/dropdown-border.css`; `tokyo/product/dieter/components/dropdown-shadow/dropdown-shadow.css`; `tokyo/product/dieter/components/dropdown-edit/dropdown-edit.css`; `tokyo/product/dieter/components/dropdown-upload/dropdown-upload.css`; `tokyo/product/dieter/components/dropdown-actions/dropdown-actions.css`; `tokyo/product/dieter/components/textfield/textfield.css`; `tokyo/product/dieter/components/textedit/textedit.css`; `tokyo/product/dieter/components/valuefield/valuefield.css`; `tokyo/product/dieter/components/popover/popover.css`; `tokyo/product/dieter/components/toggle/toggle.css`; `tokyo/product/dieter/components/tabs/tabs.css` | Confirm generated output mirrors the edited Dieter source after build. | Do not hand-edit generated Tokyo Dieter output. |
@@ -381,26 +388,63 @@ verifies them rather than scheduling another rewrite:
 
 ## Final Step-7 Execution Disposition
 
-126F has no standalone product-code, product-data, managed-service, or deploy
-write set at the current tree. The premature motion migration is current
-as-built input but receives no Step-9 execution credit. The final integrated
-Step-9 plan carries 126F as a preservation gate:
+126F has one small standalone cleanup slice and no product-data,
+managed-service configuration, route, or deploy-path code write set. The
+existing Git-connected deploy path will publish changed Dieter output and must
+be verified through its existing GitHub/R2 authorities. The premature motion
+migration is current as-built input but receives no Step-9 execution credit.
+The final integrated Step-9 plan carries this exact slice:
 
-1. Re-run the source and documentation checks against the execution-start
+1. Remove unused `gsap` dependencies from `bob/package.json` and
+   `dieter/package.json`; regenerate `pnpm-lock.yaml` through pnpm so all GSAP
+   importer and package/snapshot entries disappear.
+2. Prove no active source imports or references GSAP, then run Bob typecheck,
+   Dieter typecheck/build, Dieter governance, and the repo frozen-lockfile
+   install check required by CI.
+3. Update the one foundation reduced-motion selector in
+   `dieter/tokens/dieter-foundation-tokens.css` from `*` to
+   `*, *::before, *::after`. Do not add a Roma-local guard. Verify the Roma
+   Widget Defaults toggle becomes immediate under reduced motion while its
+   checked/unchecked product state still changes.
+4. Commit the Dieter source/package changes, then run `pnpm build:dieter` so
+   `tokyo/product/dieter/**` is generated from that committed input. Commit the
+   generated output separately and prove `manifest.json.gitSha` equals the
+   latest commit affecting `dieter/`, `scripts/build-dieter.js`, or
+   `scripts/verify-svgs.js`.
+5. Re-run the source and documentation checks against the execution-start
    tree.
-2. If later 126 domains introduce or alter system motion, require those exact
+6. If later 126 domains introduce or alter system motion, require those exact
    files to use the existing two durations, standard easing, and reduced-motion
    law before the owning slice can close.
-3. Run `pnpm dieter:governance:check` and `pnpm build:dieter` only when Dieter
-   source changes. Generated Tokyo Dieter output must match source and must not
-   be hand-edited.
-4. Verify browser behavior only for Bob, Roma, Prague, or DevStudio/Admin
-   surfaces actually changed by another Step-9 slice. Do not create a deploy or
-   visual ceremony solely to manufacture 126F work.
+7. Run `pnpm dieter:governance:check` and `pnpm build:dieter` after the Dieter
+   dependency change and whenever Dieter source changes later. Generated Tokyo
+   Dieter output must match source and must not be hand-edited.
+8. Verify browser behavior for the Roma Widget Defaults toggle in normal and
+   reduced-motion modes. Other Bob, Roma, Prague, or DevStudio/Admin surfaces
+   need browser evidence only when another Step-9 slice changes them.
+   Do not create unrelated visual ceremony.
+9. After push, verify the existing `cloud-dev workers deploy` run at the exact
+   generated-output commit and read back the generated foundation token file
+   plus manifest from canonical R2 `dieter/**`. Do not perform a manual R2
+   mutation.
 
-Exact current deletion map: none. Current source contains no stale system
-duration token, component-local operational timing/easing path, duplicate
-Admin reduced-motion doctrine, or unguarded JS transition to delete.
+Exact current deletion map:
+
+- `bob/package.json`: delete the unused `gsap` dependency.
+- `dieter/package.json`: delete the unused `gsap` dependency.
+- `pnpm-lock.yaml`: mechanically remove both importer entries and the now
+  unreachable `gsap` package/snapshot entries through pnpm.
+- `dieter/tokens/dieter-foundation-tokens.css`: expand the global reduced-motion
+  selector to cover `::before` and `::after`.
+- `tokyo/product/dieter/tokens/dieter-foundation-tokens.css` and matching
+  `.shadow.css`: regenerate from source; do not hand-edit.
+- `tokyo/product/dieter/manifest.json`: regenerate after the source commit so
+  its scoped provenance names the actual latest Dieter input commit.
+
+No GSAP compatibility wrapper, substitute animation package, or replacement
+motion abstraction is permitted. Current source otherwise contains no stale
+system duration token, component-local operational timing/easing path,
+duplicate Admin reduced-motion doctrine, or unguarded JS transition to delete.
 
 Exact no-touch boundary:
 
@@ -421,8 +465,8 @@ not authorization for a new motion abstraction.
 | --- | --- | --- |
 | V1 Silent substitution | A consumer reintroduces bare easing or a fallback-masked undefined token. | Verify every system transition resolves through current foundation tokens. |
 | V2 Silent healing | Motion cleanup normalizes local timing without exposing changed behavior. | Execution must name each changed motion site in the blast radius and verify visual ownership. |
-| V3 Silent omission | The Prague `--duration-snap` consumer or JS-driven motion gaps are ignored. | Reconcile current Prague token consumption and JS motion explicitly. |
-| V4 Fail-open control | Reduced-motion behavior fails open for JS-written transitions or duplicate local guards. | JS-driven system motion must check `prefers-reduced-motion` directly; duplicate guards are reconciled. |
+| V3 Silent omission | The unused GSAP dependency, Prague consumers, pseudo-element motion, or JS-driven motion is ignored. | Execute the exact package/selector/generated-output map and retain Prague/JS coverage. |
+| V4 Fail-open control | Reduced-motion behavior fails open for pseudo-elements or JS-written transitions. | Foundation CSS covers real elements plus both pseudo-elements; JS-driven system motion checks `prefers-reduced-motion` directly. |
 | V5 Corruption-as-absence | Not applicable to persisted product data in 126F. | Do not touch product data. |
 | V6 Partial-success masquerade | Widget/system motion claims false progress, success, or activity. | Motion must reflect real state; widget motion docs must not claim fake progress/activity. |
 | V7 Masquerade/redress | Local literals or widget runtime motion are renamed as Dieter doctrine. | Replace/remove local system literals; keep widget runtime motion outside 126F. |
@@ -432,7 +476,15 @@ not authorization for a new motion abstraction.
 
 Execution is not complete until these checks are run and reconciled:
 
+- Search active source for GSAP imports/references before deletion and confirm
+  only package/lockfile entries existed.
+- Confirm `rg -n 'gsap' bob/package.json dieter/package.json pnpm-lock.yaml`
+  returns no hits after deletion and `pnpm install --frozen-lockfile` succeeds.
+- Run `pnpm --filter @clickeen/bob typecheck` and
+  `pnpm --filter @ck/dieter typecheck` after the dependency deletion.
 - Search Dieter source for operational `transition` literals in the blast radius.
+- Verify the foundation reduced-motion selector covers `*`, `*::before`, and
+  `*::after`; test the Roma Widget Defaults toggle with reduced motion enabled.
 - Search Dieter source for `--easing-standard` references and definitions.
 - Search for active `--duration-snap` consumers.
 - Search `prague/src/components/StepsPrimitive.astro`,
@@ -447,7 +499,9 @@ Execution is not complete until these checks are run and reconciled:
 - Search `documentation/engineering/UI/README.md` and
   `documentation/engineering/UI/motion.md` for stale `126A`, duration-scale
   expansion, and widget/system boundary errors.
-- Run `pnpm build:dieter` after source motion changes.
+- After committing Dieter source changes, run `pnpm build:dieter`; verify no
+  generated diff remains uncommitted and manifest provenance equals the latest
+  committed Dieter/build input SHA.
 - Run focused lint/type checks for changed Dieter/Bob/Roma/Admin files if code
   changes occur in execution.
 - After merged code changes that affect Bob, Roma, Prague, DevStudio/Admin app

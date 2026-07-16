@@ -37,6 +37,10 @@ rg -n -C 5 -- '@media \\(prefers-reduced-motion: reduce\\)' \
   dieter/components
 rg -n -C 3 -- 'prefers-reduced-motion|style\\.transition' \
   dieter/components/repeater dieter/tokens admin/src/css bob/app roma/app
+rg -n '"gsap"|\\bgsap\\b|GreenSock' \
+  --glob '!node_modules/**' --glob '!Execution_Pipeline_Docs/**' \
+  --glob '!documentation/**' .
+pnpm why gsap -r
 cmp dieter/tokens/dieter-foundation-tokens.css \
   tokyo/product/dieter/tokens/dieter-foundation-tokens.css
 cmp dieter/components/repeater/repeater.js \
@@ -45,7 +49,9 @@ pnpm dieter:governance:check
 pnpm build:dieter
 ```
 
-All checks passed. `pnpm build:dieter` produced no tracked diff. The only
+All commands completed, but the build exposed a tracked manifest provenance
+delta described below. The pre-execution pass restored that generated artifact
+after recording the gap; source/product state was not mutated. The only other
 workspace residue remains the pre-existing untracked `tokyo/product/fonts/`,
 which this pass did not touch.
 
@@ -60,6 +66,13 @@ which this pass did not touch.
 - Dieter source and inspected Tokyo generated token/component output match.
 - Dieter governance and build are green.
 
+`tokyo/product/dieter/manifest.json` is not current: it records `de408dda`,
+while `git rev-list -1 HEAD -- dieter scripts/build-dieter.js
+scripts/verify-svgs.js` returns `c299c783`. Running `pnpm build:dieter` changes
+only that provenance value at the audited tree. Because 126F must already change
+Dieter source, its Step-9 slice commits source first, rebuilds, and commits the
+generated output with provenance pointing to the actual source commit.
+
 ### Operational consumers are clean
 
 - Dieter operational transitions use the foundation duration/easing tokens.
@@ -69,6 +82,28 @@ which this pass did not touch.
 - Segmented uses the foundation tokens rather than a local curve.
 - Component-local reduced-motion selectors remain where a component owns the
   moving selector directly.
+
+The foundation `@media (prefers-reduced-motion: reduce)` selector currently
+targets `*` only. CSS pseudo-elements are not descendants matched by `*`.
+`roma/app/roma.css` animates the Widget Defaults toggle knob on
+`input[type='checkbox']::after`, so that transform transition remains active in
+reduced-motion mode. The repo-wide pseudo-element motion scan found no other
+system spatial pseudo-element transition; Dieter's swatch pseudo-element only
+transitions border color. Step 9 fixes the authoritative foundation selector
+once with `*, *::before, *::after` rather than adding a Roma-local exception.
+
+### One unused framework dependency remains
+
+- `bob/package.json` declares `gsap: ^3.13.0`.
+- `dieter/package.json` declares `gsap: ^3.12.5`.
+- `pnpm-lock.yaml` carries both importer entries and `gsap@3.13.0`.
+- A repository source scan found no GSAP import, require, dynamic import,
+  global access, or runtime use. `pnpm why gsap -r` reports only those direct
+  declarations and Roma's transitive link through Bob.
+
+Keeping an unused animation framework contradicts the lean motion law and
+creates false architecture for future agents. Step 9 deletes the two
+dependencies and regenerates the lockfile. It does not replace GSAP.
 
 ### JS reduced motion is source-true
 
@@ -99,10 +134,14 @@ direct manipulation remains functional under reduced motion.
 
 ## Exact Step-7 Disposition
 
-There is no current standalone implementation write set for 126F.
+There is one exact standalone cleanup set: unused dependency deletion, one
+authoritative reduced-motion selector correction, and regenerated output.
 
 | Area | Step-9 disposition | Must not do |
 | --- | --- | --- |
+| Unused GSAP declarations | Delete from `bob/package.json` and `dieter/package.json`; regenerate `pnpm-lock.yaml`. | No replacement library, wrapper, or compatibility path. |
+| Foundation reduced-motion selector | Add `*::before` and `*::after` beside `*`; regenerate Tokyo token output. | No Roma-local reduced-motion exception or broad motion rewrite. |
+| Generated manifest | Build after the Dieter source commit and commit the resulting scoped input SHA. | No hand-authored or stale provenance. |
 | Dieter foundation/components | Preserve and regression-check if another domain changes them. | No new token, curve, framework, or repeated migration. |
 | Generated Tokyo Dieter output | Regenerate only after source changes and verify parity. | No hand edits. |
 | Bob/Roma/Admin chrome | Verify only if an owning later slice changes relevant files. | No interaction or layout redesign under 126F. |
@@ -110,8 +149,10 @@ There is no current standalone implementation write set for 126F.
 | Public widgets | No touch. | No universal widget-motion doctrine. |
 | Product data/services | No touch. | No R2, DB, route, queue, policy, or deploy work. |
 
-Exact deletion map: none. Current source contains none of the stale behavior
-the old point-in-time audit described.
+Exact deletion/change map: the two package declarations and their mechanically
+unreachable lockfile entries; one foundation selector; generated source parity;
+and generated manifest provenance. Current source contains none of the other
+stale motion behavior the old point-in-time audit described.
 
 ## V1-V8 Pre-Execution Result
 
@@ -119,19 +160,22 @@ the old point-in-time audit described.
 | --- | --- | --- |
 | V1 Silent substitution | PASS | Easing resolves through the defined foundation token; no fallback masquerade remains. |
 | V2 Silent healing | PASS | No runtime or persisted state is normalized; Step 7 records current behavior exactly. |
-| V3 Silent omission | PASS | Prague consumers, component-local selectors, and JS-written transitions are explicitly covered. |
-| V4 Fail-open control | PASS | Repeater implements its own runtime reduced-motion branch; tests are not the control. |
+| V3 Silent omission | PASS | Prague consumers, pseudo-elements, component-local selectors, JS-written transitions, GSAP declarations, and manifest provenance are explicitly covered. |
+| V4 Fail-open control | PASS after planned fix | Foundation selector will cover real and pseudo-elements; repeater keeps its direct runtime branch. |
 | V5 Corruption-as-absence | PASS / N/A | 126F touches no persisted product data. |
-| V6 Partial-success masquerade | PASS | No fake motion execution is claimed; the remaining slice is explicitly verification-only. |
-| V7 Masquerade/redress | PASS | Completed migration is not renamed or repeated; widget motion stays outside Dieter law. |
+| V6 Partial-success masquerade | PASS | The exact remaining dependency deletion is named; completed motion migration receives no execution credit. |
+| V7 Masquerade/redress | PASS | GSAP is deleted without a replacement wrapper; completed migration is not repeated; widget motion stays outside Dieter law. |
 | V8 Runtime test dependency | PASS | CSS/JS carries behavior; checks only verify it. |
 
 ## Step-8 Review Questions
 
 1. Does the product law preserve immediate direct manipulation while removing
    animated interpolation under reduced motion?
-2. Is a no-code preservation gate honest, or is any current source violation
-   missing from the audit?
-3. Are Prague and public-widget boundaries exact?
-4. Does the final plan avoid fake deploy/visual work while still catching drift
+2. Is the exact GSAP deletion complete, with no active consumer or required
+   package surface omitted?
+3. Does `*, *::before, *::after` fix the one real pseudo-element gap without
+   creating local exceptions or changing direct manipulation?
+4. Is generated manifest provenance repaired in the correct commit/build order?
+5. Are Prague and public-widget boundaries exact?
+6. Does the final plan avoid fake deploy/visual work while still catching drift
    introduced by later 126 slices?

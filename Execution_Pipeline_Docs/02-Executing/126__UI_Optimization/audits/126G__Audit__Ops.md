@@ -7,8 +7,8 @@ PRD: `../126G__PRD__Ops.md`.
 ## Audit Question
 
 Does current UI ops still contain an incorrect source/build/deploy path that
-126G must change, or is the remaining work a clean handoff to the DevStudio UI
-slice?
+126G must change, or can the exact remaining gaps be assigned once to the
+owning Dieter and DevStudio slices?
 
 ## Authority Gate
 
@@ -39,9 +39,11 @@ rg -n -i \
   documentation/services/tokyo.md documentation/services/tokyo-worker.md
 ```
 
-All checks passed. Dieter and DevStudio generation produced no tracked diff.
-The dry-run enumerated 680 files under only `dieter/`, `product/`, and
-`prague/`. The pre-existing untracked `tokyo/product/fonts/` was not touched.
+All commands completed successfully. DevStudio generation produced no tracked
+diff. Dieter generation exposed the stale manifest provenance delta assigned
+below to 126F; that generated test delta was restored after inspection. The
+dry-run enumerated 680 files under only `dieter/`, `product/`, and `prague/`.
+The pre-existing untracked `tokyo/product/fonts/` was not touched.
 
 ## Proven Current State
 
@@ -58,7 +60,13 @@ The dry-run enumerated 680 files under only `dieter/`, `product/`, and
 - Every declared manifest dependency is validated; unknown components or
   dependencies throw instead of warning and shipping.
 - Generated output is not source authority and inspected generated/source
-  parity is current.
+  token/component bytes are current.
+
+The generated manifest provenance is stale: it records `de408dda`, while the
+latest committed Dieter/build input is `c299c783`. A local build exposes exactly
+that generated delta. 126F already owns a Dieter source change, so its exact
+source-commit -> build -> generated-commit sequence repairs provenance once.
+126G must not hand-edit or separately regenerate the same artifact.
 
 `scripts/verify-svgs.js` also contains a non-triggering stroke advisory owned by
 126C icon authoring. Current 126C evidence reports no stroke warning. It is not
@@ -106,18 +114,21 @@ required by 126G.
 
 ## Exact Step-7 Disposition
 
-There is no standalone 126G implementation write set.
+There is no standalone 126G implementation write set after the generated
+manifest mismatch is assigned to 126F and the product UX gap to 126L.
 
 | Area | Integrated Step-9 disposition | Must not do |
 | --- | --- | --- |
 | Dieter build/generation | Preserve; re-run checks only if another slice changes it. | No second builder, manifest service, or generated-source authority. |
+| Current manifest provenance mismatch | 126F regenerates after its committed Dieter source change and proves exact scoped SHA. | No 126G hand edit or duplicate regeneration. |
 | Cloudflare/R2 workflows | Preserve; owning changed slice supplies existing deploy proof. | No reconciliation engine, rollback engine, or fake remote proof. |
 | Product data/localization | No touch. | No account-data deploy mapping or deletion of real l10n tooling. |
 | DevStudio token operation | Hand exact UI/evidence gap to 126L. | No 126G screen patch, approval flow, or new backend. |
 | Documentation | Preserve unless a later execution changes an authority. | No past-state narrative as current doctrine. |
 
-Exact deletion map: none. The stale paths described by the old audit are
-absent from current source.
+Exact deletion map: none in 126G. The stale paths described by the old audit are
+absent from current source; the one stale generated value is changed once by
+126F.
 
 ## V1-V8 Pre-Execution Result
 

@@ -46,6 +46,9 @@ that need must be named by the owning product/component PRD first.
 Dieter ships the global reduced-motion guard from
 `dieter/tokens/dieter-foundation-tokens.css`.
 
+That guard governs real elements plus `::before` and `::after`; system UI must
+not leave animated pseudo-elements outside reduced-motion behavior.
+
 Components may also carry local reduced-motion rules when they own the moving
 selector directly. If system JS writes inline transition or animation behavior,
 that JS must check `prefers-reduced-motion: reduce` directly and choose the

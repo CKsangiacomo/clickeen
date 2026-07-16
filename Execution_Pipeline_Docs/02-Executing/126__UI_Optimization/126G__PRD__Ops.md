@@ -357,9 +357,10 @@ another documentation rewrite.
 ## Final Step-7 Execution Disposition
 
 126G has no standalone product-code, product-data, managed-service, deploy, or
-documentation write set at the current tree. The active source/build/generated/
-deployed/product-data lanes already match current doctrine. Premature cleanup is
-current as-built input but receives no Step-9 execution credit.
+documentation write set after routing one current generated-artifact mismatch
+to the owning 126F Dieter slice. The active source/build/deployed/product-data
+lanes otherwise match current doctrine. Premature cleanup is current as-built
+input but receives no Step-9 execution credit.
 
 The final integrated Step-9 plan carries 126G as two precise responsibilities:
 
@@ -372,11 +373,17 @@ The final integrated Step-9 plan carries 126G as two precise responsibilities:
    authenticated session context where the server records operation evidence.
    126L also closes the direct-commit verification visibility gap. 126G does not
    implement that screen workflow or add an ops service.
+3. **126F handoff:** current `tokyo/product/dieter/manifest.json` provenance is
+   stale relative to the latest committed Dieter input. 126F already changes
+   Dieter source, so it owns commit-source -> build -> commit-generated-output
+   ordering and exact manifest input-SHA proof. 126G does not create a second
+   cleanup commit or hand-edit the generated file.
 
-Exact current deletion map: none. Current source has no `unknown` provenance
-fallback, warning-and-ship manifest dependency path, source-mutating SVG build,
-stale UI deploy root, account-data deploy mapping, or claim that upload-only R2
-sync performs reconciliation.
+Exact current deletion map: none in 126G. Current source has no `unknown`
+provenance fallback, warning-and-ship manifest dependency path, source-mutating
+SVG build, stale UI deploy root, account-data deploy mapping, or claim that
+upload-only R2 sync performs reconciliation. The stale generated manifest value
+is assigned once to 126F's already-required Dieter regeneration.
 
 Exact no-touch boundary:
 
