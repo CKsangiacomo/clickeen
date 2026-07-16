@@ -78,6 +78,11 @@ The pre-GA Upgrade action still performs the behavior the product owner rejected
 6. Ordinary `Open billing` navigation in `settings-domain.tsx` is truthful
    current-plan navigation and remains.
 
+Assets is not a third D3 entry point. Its current limit/failure surface has no
+user-triggered `Upgrade` command. This audit therefore preserves its explicit
+inline result and does not authorize an invented Assets command or scaffold
+transition.
+
 The target is one in-place Roma scaffold with no commercial operation. The
 Widgets prompt transitions to it in the same dialog layer. Bob's intent opens
 the same scaffold without discard confirmation or navigation. Route/policy 402
@@ -128,6 +133,8 @@ consumer gap is assigned once to 126M after 126K settles dialog mechanics.
 - Bob translation generation and preview files.
 - Copilot operation files.
 - Asset upload implementation.
+- Assets limit/failure copy and command surface; a future Assets Upgrade command
+  requires separate product law.
 - Roma account command routes, policy, entitlements, and 402 payloads.
 - Tokyo, Berlin, San Francisco, R2, Supabase, widget source, and public runtime.
 - `tokyo/product/widgets/shared/socialShare.js` local copy status.

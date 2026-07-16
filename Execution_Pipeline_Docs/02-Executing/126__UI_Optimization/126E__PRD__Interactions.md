@@ -84,7 +84,8 @@ The split current reality:
 - Widgets/assets/pages/settings/team/profile/usage each use local state fields.
 - Roma widget monetization uses HTTP 402 `UPGRADE_REQUIRED` into a Roma modal.
 - Bob entitlement upsell uses a separate `ck-upsellModal`.
-- Asset upload/limit upsells render inline error copy.
+- Asset upload/limit failures render inline error copy. Assets currently has no
+  user-triggered `Upgrade` command, so it is not a D3 entry point.
 - Translation generation has streamed activity; Copilot does not.
 - Feedback is inline, modal, conversational, button-label mutation, or local
   timed copy/status; no shared toast/snackbar layer is proven in current code.
@@ -264,10 +265,12 @@ Target law:
   policy enforcement with disabled precheck UI.
 - Entitlement failures must be visible, actionable, and consistent with the
   command surface.
-- User-triggered monetization gates that can route to upgrade should present a
-  clear upgrade action.
-- Roma widget 402 modal, Bob upsell modal, and asset inline upsell copy are
-  current fragmentation. Execution must converge their product meaning.
+- Existing user-triggered `Upgrade` commands must present one clear, honest
+  destination.
+- D3 applies to the two existing Upgrade commands: the Roma Widgets plan-limit
+  prompt and Bob's typed `bob:upsell` intent. Asset limit/error copy is not an
+  Upgrade command and does not authorize 126E to invent a new Assets entry
+  point.
 - Accepted D3 law keeps legitimate Upgrade entry points and gives them one
   honest destination: the shared pre-GA upsell dialog scaffold. The scaffold is
   a stable UI surface for developing plan comparison, benefits, pricing, and
@@ -466,11 +469,11 @@ changes interaction law.
 | --- | --- | --- |
 | V1 Silent substitution | UI substitutes invented success, generic unavailable copy, or fake progress for actual command result. | Feedback must come from product route/session result or real agent activity. |
 | V2 Silent healing | UI rewrites failed/invalid state into a clean/default state without surfacing failure. | Durable failures and validation failures remain visible until understood or recovered. |
-| V3 Silent omission | A relevant loading/error/empty/partial-success/upgrade state is dropped. | Each async surface classifies applicable states and fixes silent omissions. |
+| V3 Silent omission | A relevant loading/error/empty/partial-success state or an existing Upgrade command is dropped. | Each async surface classifies applicable states; the two proven Upgrade commands reach the shared scaffold. Assets retains its current explicit limit/error result without inventing a new command. |
 | V4 Fail-open control | UI prechecks replace route/policy enforcement or enforcement disappears when data is missing. | Enforcement stays with product policy/routes; disabled UI is not the control. |
 | V5 Corruption-as-absence | Corrupt persisted state is treated as empty/new/unavailable and overwritten. | Interaction cleanup must not rewrite persisted state; corrupt state remains explicit failure. |
 | V6 Partial-success masquerade | Multi-file upload, save follow-up, translation, or command result claims full success after dropped work. | Partial success is visible when remaining work, failed items, or changed state matters. |
-| V7 Masquerade/redress | Existing fragmented feedback is renamed as doctrine instead of converged. | Widget 402, Bob upsell, and asset upsell must converge in product meaning, not labels. |
+| V7 Masquerade/redress | The two existing Upgrade commands keep the old Billing route under a new label, or Assets error copy is relabeled as an Upgrade flow. | Widgets and Bob converge on one Roma scaffold; Assets remains explicit inline result copy until separate product law creates an Assets Upgrade command. |
 | V8 Runtime test dependency | Normal product interaction depends on validation scripts, probes, or test rituals. | Source/docs/runtime behavior carry the truth; checks only verify execution. |
 
 ## Step 7 Executable Gates
@@ -597,9 +600,10 @@ Confirmed findings:
 - Codex's broad audit found the real cross-surface shape: Roma account shell,
   widgets/assets/pages local state, Bob save, Translation Agent activity,
   Copilot apply/undo, and fragmented monetization/copy behavior.
-- GLM correctly sharpened the fragmentation: two upgrade modals, assets inline
-  upsell, multiple reason-key copy maps, no shared toast/snackbar layer, and no
-  Copilot activity feed.
+- GLM correctly found two Upgrade paths, Assets inline limit/error copy,
+  multiple reason-key copy maps, no shared toast/snackbar layer, and no Copilot
+  activity feed. Human D3 convergence applies only to the two existing Upgrade
+  paths; the Assets observation does not create a new command.
 - The account shell is a reusable reference grammar that other surfaces do not
   consistently reuse.
 - Bob save is confirmed persistence, while Bob editing/preview is browser-memory
