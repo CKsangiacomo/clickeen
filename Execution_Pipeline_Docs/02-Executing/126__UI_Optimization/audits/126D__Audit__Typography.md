@@ -150,11 +150,15 @@ stable shell roles. It must enumerate actual composed roles and fail compilation
 when a widget-specific role lacks an explicit label; it must never silently
 omit a role.
 
-The shared public runtime currently iterates `roleConfig` but does not reject an
-extra saved role absent from that map. It must compare the saved role-key set
-with the widget role-config key set and fail explicitly on any missing or extra
-key before applying typography. This is product contract enforcement, not a
-test dependency or a new registry.
+The current runtime role maps are behaviorally correct for all eight widgets.
+They must not be changed merely to add a second runtime validator. Instead,
+`pnpm validate:widgets` must inspect the actual role map passed to
+`CKTypography.applyTypography` in each `widget.client.js` and compare its exact
+key set with the composed spec roles. The validator uses the TypeScript AST,
+supports the current inline-object and local-object-plus-static-assignment
+shapes, and fails on unsupported dynamic construction rather than guessing.
+This proves the real runtime source without adding a role registry, runtime
+branch, or rematerialization requirement.
 
 Current generic labels also need three product-accuracy corrections:
 
@@ -173,6 +177,7 @@ and improves current UX without adding a registry.
 
 | Path | Planned change |
 | --- | --- |
+| `packages/widget-shell/src/controls.ts` | Export the existing four shell typography role keys with their product labels so shell ownership is shared by compiler and validation code. |
 | `bob/lib/compiler/modules/typography.ts` | Stop embedding default-account family options. Enumerate actual composed roles. Use four shell labels plus explicit widget role labels; fail on missing/extra widget role metadata. |
 | `bob/lib/compiler/editor-contract.ts` | Accept and validate `shared.roleLabels` for the shared typography panel and pass it to the typography renderer. |
 | `bob/lib/edit/typography-fonts.ts` | Delete the file. Its default-account catalog and re-exports have no remaining authority or consumers once generic weight labels live with the compiler. |
@@ -181,10 +186,11 @@ and improves current UX without adding a registry.
 | `bob/lib/session/useSessionEditing.ts` | Run the account-aware typography assertion after generic op/config validation and before accepting edited state. |
 | `bob/lib/session/useSessionSaving.ts` | Run the same account-aware assertion before sending save. |
 | `bob/lib/session/WidgetDocumentSession.tsx` | Pass the existing session metadata reference into editing so it uses the already-normalized current account library. |
-| `bob/components/CopilotPane.tsx` | Build family options from the bound controls and filter each role's weight/style choices from the selected current-account family record. Keep final session validation authoritative. |
+| `bob/components/td-menu-content/linkedOps.ts` | Make a family change one explicit family/weight/style operation set against the target account font record. Preserve an explicitly requested allowed companion value; otherwise preserve the current value when allowed, then prefer `400`/`normal`, then the first allowed value. Reject an explicit disallowed companion value. |
+| `bob/components/CopilotPane.tsx` | Pass Copilot draft ops through the same `expandLinkedOps` product operation used by manual authoring before building undo/applying/reporting. Use expanded ops for inverse, apply, and outcome metadata. Keep generic weight/style controls; final target-family validation stays authoritative. |
 | `tokyo/product/widgets/{big-bang,calltoaction,cards,countdown,faq}/spec.json` | Declare labels for widget-specific typography roles and the proven Big Bang/Call to Action shared-role overrides. Use `Section title` for FAQ `section`. |
-| `tokyo/product/widgets/shared/typography.js` | Require exact saved-role/roleConfig key parity before applying role typography; keep existing role application and font loading. |
-| `bob/tests/run-typography-contract.ts` | Add deterministic current-product proof for all eight widgets, account-independent compilation, account-bound custom-font acceptance, unknown-font rejection, allowed/disallowed weight/style validation, role-label completeness, and shared-runtime missing/extra-role rejection. |
+| `scripts/widgets/compile-all.ts` | Inspect each actual widget client's `CKTypography.applyTypography` role map with the TypeScript AST and require exact key parity with that widget's composed spec roles. Fail unsupported/dynamic role-map construction. Add no registry. |
+| `bob/tests/run-typography-contract.ts` | Add deterministic current-product proof for all eight widgets, account-independent compilation, account-bound custom-font acceptance, unknown-font rejection, target-family operation expansion in both directions, explicit invalid companion rejection, allowed/disallowed weight/style validation, and role-label completeness. |
 | `bob/package.json` | Add the focused typography contract test command. |
 
 ### Documentation
@@ -194,6 +200,7 @@ and improves current UX without adding a registry.
 | `documentation/engineering/UI/typography.md` | State compiler/session font authority and explicit widget-role label ownership. |
 | `documentation/services/bob.md` | Document account-bound compiled controls and the absence of a compiler default font catalog. |
 | `documentation/widgets/authoring/ToolDrawerControls.md` | Document `shared.roleLabels` for widget-specific typography roles and compile failure on omission. |
+| `documentation/widgets/shared/ShellUtilities.md` | Document shell-owned role labels and build-time parity between composed roles and each actual widget client map. |
 
 ### Generated, Product Data, And Deploy Surfaces
 
@@ -201,6 +208,7 @@ and improves current UX without adding a registry.
 - No R2 or Supabase mutation.
 - No account font data repair.
 - No public package or instance regeneration.
+- No widget runtime-source or materialized-runtime byte change.
 - Widget `spec.json` changes deploy through the existing Tokyo product-root
   Git/Worker workflow.
 - Bob changes deploy through the existing Git-connected Bob Pages workflow.
@@ -217,8 +225,9 @@ and improves current UX without adding a registry.
 - San Francisco and translation state.
 - Dieter tracking values, Admin local tracking, and Prague page typography;
   those remain with their named visual/surface owners.
-- Widget-specific runtime role maps, because current role-key parity is proven;
-  only the shared runtime's explicit parity assertion changes.
+- `tokyo/product/widgets/shared/typography.js` and every widget
+  `widget.client.js`; current behavior stays unchanged and build validation
+  verifies those actual role maps.
 
 ## Step-6 Verdict
 
