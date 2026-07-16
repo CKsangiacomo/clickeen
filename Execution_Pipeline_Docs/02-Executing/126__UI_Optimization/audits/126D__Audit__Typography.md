@@ -118,6 +118,12 @@ The compiled family controls are different:
 10. Typography cluster labels are visible in the panel but are not carried into
     compiled control `groupLabel`; Copilot sees generic labels such as `Font
     family` without the role they belong to.
+11. Bob's existing ToolDrawer does not map the new typography reason key, and
+    Copilot's generic invalid-edit copy differs from the decided typography
+    copy. The copy authority must be explicit in both surfaces.
+12. Roma package construction validates family/asset presence but not each
+    role's allowed weight/style. A direct or replayed save can bypass client
+    validation and reach runtime materialization with an invalid combination.
 
 This is V6 partial-success masquerade: the product offers a choice that its
 own editing contract refuses.
@@ -216,12 +222,14 @@ and improves current UX without adding a registry.
 | `bob/lib/session/useSessionEditing.ts`, `bob/lib/session/WidgetDocumentSession.tsx`, `bob/lib/session/sessionTypes.ts` | Run account-aware validation before accepting edited state and expose one explicit edit-rejection method so control-host failures become existing `ops` error state without changing instance data or dirty state. |
 | `bob/lib/session/useSessionSaving.ts` | Run the same account-aware assertion before sending save. |
 | `bob/lib/edit/typography-family-ops.ts`, `bob/components/TdMenuContent.tsx`, `bob/components/td-menu-content/useTdMenuBindings.ts`, `bob/components/td-menu-content/linkedOps.ts` | Own the narrow host path adapter around the widget-shell resolver; Bob delegates family expansion to it, catches structured rejection, restores family/weight/style fields from unchanged session data, and reports mapped edit failure. Keep all other linked operations unchanged. |
-| `bob/components/CopilotPane.tsx` | Carry role `groupLabel` into the AI capsule. Expand Copilot draft ops before inverse/apply/metadata. On rejection show `COPILOT_INVALID_EDIT_MESSAGE`; create no Undo token and emit no `edit_applied` outcome. |
+| `bob/components/ToolDrawer.tsx`, `bob/components/CopilotPane.tsx` | Map structured typography rejection to the same exact product copy in manual and Copilot paths. Copilot carries role `groupLabel`, expands before inverse/apply/metadata, creates no Undo, and emits no `edit_applied` on rejection. |
 | `bob/lib/control-host.ts` | Export the narrow typography family-op expansion adapter needed by Bob and Roma; keep session and persistence ownership out of this seam. |
 | `dieter/components/dropdown-actions/dropdown-actions.ts`, `tokyo/product/dieter/components/dropdown-actions/dropdown-actions.js` | Delete Dieter's typography companion-selection branch. A family click emits only raw family intent; generated output must match source. Keep option filtering and normal dropdown lifecycle. |
 | `roma/components/widget-defaults-builder-controls.tsx`, `roma/components/widget-defaults-domain.tsx` | Expand family intent through the shared control-host adapter, apply the resulting triple to shell/core draft state in one update, restore controls and show product copy on rejection, and keep the draft clean. |
 | `roma/lib/account-widget-defaults-contract.ts` | Validate shell and every widget-core typography selection with the widget-shell validator on GET and PUT; return exact invalid paths. |
 | `roma/tests/run-widget-defaults-typography.ts`, `roma/package.json` | Prove current-account custom-font transitions and rejection/unchanged-state/server-contract behavior for shell and widget-core defaults. |
+| `roma/lib/account-instance-public-package.ts` | Validate materialized instance/locale typography against the current account library before font asset resolution and package materialization; return 422, stable reason, and exact paths. |
+| `roma/tests/run-instance-package-reroute.ts`, `roma/tests/run-instance-save-boundary.ts` | Prove invalid weight/style prevents both package construction and any Tokyo save/package update. |
 | `tokyo/product/widgets/{big-bang,calltoaction,cards,countdown,faq}/spec.json` | Declare labels for widget-specific typography roles and the proven Big Bang/Call to Action shared-role overrides. Use `Section title` for FAQ `section`. |
 | `scripts/widgets/compile-all.ts` | Inspect each actual widget client's `CKTypography.applyTypography` role map with the TypeScript AST and require exact key parity with that widget's composed spec roles. Fail unsupported/dynamic role-map construction. Add no registry. |
 | `bob/tests/run-typography-contract.ts` | Prove all eight widgets, account-independent compilation, account-bound custom-font acceptance, transition/rejection rules, unchanged state on manual/Copilot rejection, no false Undo/outcome, role-label completeness, and role-aware Copilot metadata. |

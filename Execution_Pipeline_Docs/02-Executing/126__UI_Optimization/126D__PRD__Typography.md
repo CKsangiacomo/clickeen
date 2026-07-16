@@ -426,11 +426,11 @@ migration work.
 | Bob shell typography | `bob/app/bob_app.css` | Verified current: the code block uses `var(--font-mono)`. |
 | Account font library document | `roma/lib/account-widget-defaults-direct.ts`, `roma/lib/account-widget-defaults-contract.ts`, `roma/lib/account-widget-defaults-materialization.ts`, `roma/components/widget-defaults-domain.tsx`, `roma/app/api/account/widget-defaults/route.ts`, `tokyo-worker/src/domains/account-widget-defaults.ts`, `tokyo-worker/src/routes/internal-widget-default-routes.ts` | Verified current: top-level `fontLibrary` flows through the existing account widget-defaults authority. |
 | Bob open/session font payload | `roma/components/builder-domain.tsx`, `bob/lib/session/sessionTypes.ts`, `bob/lib/session/useSessionBoot.ts`, `bob/lib/session/WidgetDocumentSession.tsx` | Verified current: Bob receives the account font library and rejects missing/malformed data. |
-| Bob widget typography authoring | `bob/lib/edit/typography-fonts.ts`, `bob/lib/compiler/{controls,editor-contract}.ts`, `bob/lib/compiler/modules/typography.ts`, `bob/lib/session/{sessionConfig,sessionTypes,useSessionBoot,useSessionEditing,useSessionSaving,WidgetDocumentSession}.ts*`, `bob/components/{CopilotPane,TdMenuContent}.tsx`, `bob/components/td-menu-content/{accountFonts,linkedOps,useTdMenuBindings}.ts`, `bob/lib/control-host.ts` | Step-6 defect: visible account fonts and fixed compiler/session validation disagree; family transitions and Copilot labels are incomplete. Bind one account contract and one explicit transition operation to all Bob edit paths. |
+| Bob widget typography authoring | `bob/lib/edit/typography-fonts.ts`, `bob/lib/compiler/{controls,editor-contract}.ts`, `bob/lib/compiler/modules/typography.ts`, `bob/lib/session/{sessionConfig,sessionTypes,useSessionBoot,useSessionEditing,useSessionSaving,WidgetDocumentSession}.ts*`, `bob/components/{CopilotPane,TdMenuContent,ToolDrawer}.tsx`, `bob/components/td-menu-content/{accountFonts,linkedOps,useTdMenuBindings}.ts`, `bob/lib/control-host.ts` | Step-6 defect: visible account fonts and fixed compiler/session validation disagree; family transitions, Copilot labels, and mapped rejection copy are incomplete. Bind one account contract and one explicit transition operation to all Bob edit paths. |
 | Roma Widget Defaults typography | `roma/components/widget-defaults-{builder-controls,domain}.tsx`, `roma/lib/account-widget-defaults-contract.ts`, `roma/app/api/account/widget-defaults/route.ts` | Step-8 defect: Roma is a second account-bound editor host and currently lacks relational account-font validation. Use the same resolver/validator for shell and widget core on edit, GET, and PUT. |
 | Dieter family intent | `dieter/components/dropdown-actions/dropdown-actions.ts`, `tokyo/product/dieter/components/dropdown-actions/dropdown-actions.js` | Step-8 defect: Dieter currently owns companion selection and emits three ops. Reduce it to raw family intent; host/product contract owns transition semantics. |
 | Widget shell contract | `packages/widget-shell/src/defaults.ts`, `packages/widget-shell/src/contract.ts`, `packages/widget-shell/src/{controls,font-library}.ts` | Defaults/controls/schema must not imply custom values are active unless their preset is `custom`; shell role labels and account-font relation law have one shared owner. |
-| Runtime package materialization | `roma/lib/account-instance-public-package.ts`, `roma/lib/account-instance-locale-package.ts`, `packages/ck-runtime-materializer/src/**` | Verified current: packages include required account-font data and fail on missing referenced font truth. |
+| Runtime package materialization | `roma/lib/account-instance-public-package.ts`, `roma/lib/account-instance-locale-package.ts`, `packages/ck-runtime-materializer/src/**` | Step-8 defect: package creation checks family/asset presence but not each role's allowed weight/style. Run the shared relational validator before asset resolution/materialization so direct/replayed saves fail before Tokyo write. |
 | Widget runtime typography | `tokyo/product/widgets/shared/typography.js`, `tokyo/product/widgets/shared/typography-data.js`, `packages/widget-shell/src/modules.ts`, `scripts/widgets/compile-all.ts`, `tokyo/product/widgets/*/widget.client.js` | Google and account-asset font authorities and current runtime behavior stay unchanged. Step 9 makes widget validation compare each actual client role map with its composed spec roles. |
 | Widget CSS consumers | `tokyo/product/widgets/cards/widget.css`, `tokyo/product/widgets/big-bang/widget.css` | Verified current: no active `--font-display` fallback remains. |
 | Widget specs/runtime invalid class cleanup | `tokyo/product/widgets/faq/spec.json` | Verified current: embedded editor classes use `body-xs`. |
@@ -606,19 +606,22 @@ bytes do not change for this proof.
 | `bob/lib/session/useSessionSaving.ts` | Run the same account-aware assertion before issuing save. | Existing save command, error mapping, and dirty-state behavior. |
 | `bob/lib/edit/typography-family-ops.ts`, `bob/components/td-menu-content/linkedOps.ts`, `bob/lib/control-host.ts` | Add one narrow path adapter around the widget-shell resolver and export it for Roma. It consumes current document, font library, and raw set ops, then returns explicit ops or structured rejection. Bob's full linked-op expansion delegates all family changes to it. | Existing preset, radius, shadow, padding, and all non-typography linked operations; no session/persistence code enters `control-host`. |
 | `bob/components/TdMenuContent.tsx`, `bob/components/td-menu-content/useTdMenuBindings.ts` | Catch structured family rejection, resync family/weight/style fields from unchanged session data, and call `reportEditRejection`. Successful operations clear the existing ops error. | Existing field event wiring, hydration, show-if, and upsell behavior. |
-| `bob/components/CopilotPane.tsx` | Pass draft ops through the shared expansion before inverse/apply/metadata and use expanded ops everywhere. Role-aware `groupLabel` stays in the AI capsule. On rejection show `COPILOT_INVALID_EDIT_MESSAGE`, create no Undo token, and emit no `edit_applied` outcome. | Existing request envelope, concurrency signature, conversation UX, successful outcome reporting, and undo semantics. |
+| `bob/components/ToolDrawer.tsx` | Map `coreui.errors.typography.selection.invalid` to the exact shared product copy for manual edit rejection. | Existing load/save/translation/other operation mappings. |
+| `bob/components/CopilotPane.tsx` | Pass draft ops through the shared expansion before inverse/apply/metadata and use expanded ops everywhere. Role-aware `groupLabel` stays in the AI capsule. On structured typography rejection show the same exact typography product copy; reserve `COPILOT_INVALID_EDIT_MESSAGE` for unrelated invalid edits. Create no Undo token and emit no `edit_applied` outcome. | Existing request envelope, concurrency signature, conversation UX, successful outcome reporting, and undo semantics. |
 | `dieter/components/dropdown-actions/dropdown-actions.ts` | Delete the typography family branch that chooses companions, mutates three inputs, and emits three ops. A family choice follows normal dropdown behavior and emits only family intent. Keep weight/style option filtering as presentation. | Normal dropdown lifecycle, pending/apply behavior, focus, external sync, and non-typography actions. |
 | `tokyo/product/dieter/components/dropdown-actions/dropdown-actions.js` | Regenerate from Dieter source; prove generated behavior emits raw family intent. | Generated-only authority. |
 | `roma/components/widget-defaults-builder-controls.tsx`, `roma/components/widget-defaults-domain.tsx` | Expand raw family intent through the shared adapter and apply the returned triple to shell/core draft state in one functional update. On rejection restore fields, show the stable product error, and leave draft/dirty state unchanged. | Existing compiled-control reuse, readiness/contract errors, discard, and save UX. |
 | `roma/lib/account-widget-defaults-contract.ts` | After library/path validation, run the widget-shell validator against shell typography and every widget-core typography document on GET and PUT; return all exact invalid paths. | Existing account coordinate, compiled control coverage, and software metadata allowances. |
 | `roma/tests/run-widget-defaults-typography.ts`, `roma/package.json` | Add focused shell/core transition and route-contract proof, including uploaded family, both transition directions, explicit invalid companion, unchanged rejection state, and exact invalid paths. | Existing test commands. |
+| `roma/lib/account-instance-public-package.ts` | Immediately after loading the normalized account `fontLibrary`, validate the instance/locale materialized state with the same widget-shell typography validator before font asset resolution or runtime materialization. Return `422`, `coreui.errors.typography.selection.invalid`, and exact paths. | Existing account-font asset resolution, runtime typography data, package bytes, and materializer mapping. |
+| `roma/tests/run-instance-package-reroute.ts`, `roma/tests/run-instance-save-boundary.ts` | Prove disallowed weight/style fails before package construction and that an invalid direct/replayed save reaches neither `saveAccountInstanceInTokyo` nor package update. | Existing package and source-save boundaries. |
 | `tokyo/product/widgets/big-bang/spec.json` | Declare `bigBang: "Big Bang statement"` and override `body` as `Subtitle and supporting copy`. | Widget defaults, runtime, content, layout, and all non-label editor metadata. |
 | `tokyo/product/widgets/calltoaction/spec.json` | Declare `eyebrow: "Eyebrow"`; override `title` as `Title and action headline` and `body` as `Subtitle and supporting text`. | Widget behavior and all non-label editor metadata. |
 | `tokyo/product/widgets/cards/spec.json` | Declare `cardTitle: "Card title"` and `cardCopy: "Card copy"`. | Widget behavior and shared role labels. |
 | `tokyo/product/widgets/countdown/spec.json` | Declare `timer: "Timer"` and `label: "Labels"`. | Widget behavior and shared role labels. |
 | `tokyo/product/widgets/faq/spec.json` | Declare `section: "Section title"`, `question: "Question"`, and `answer: "Answer"`. | Widget behavior and shared role labels. |
 | `scripts/widgets/compile-all.ts` | Parse every actual widget client's `CKTypography.applyTypography` third-argument role map with the TypeScript AST. Collect inline object keys or local-object keys plus static property assignments; reject unsupported/dynamic forms. Compare the exact key set with `compiled.defaults.typography.roles`. | Existing widget discovery and product-readable control validation; no role registry. |
-| `bob/tests/run-typography-contract.ts` | Compile all eight specs; prove exact roles/labels, account-independent family controls, account-bound Orio acceptance, transition rules in both directions, explicit invalid companion rejection, unchanged manual/Copilot rejection state, no false Undo/outcome, malformed/missing/unused label failure, and role-aware Copilot metadata. | Test-only proof; no runtime dependency. |
+| `bob/tests/run-typography-contract.ts` | Compile all eight specs; prove exact roles/labels, account-independent family controls, account-bound Orio acceptance, transition rules in both directions, exact shared rejection copy in ToolDrawer/Copilot, unchanged manual/Copilot rejection state, no false Undo/outcome, malformed/missing/unused label failure, and role-aware Copilot metadata. | Test-only proof; no runtime dependency. |
 | `bob/package.json` | Add `test:typography-contract`. | Existing scripts. |
 | `documentation/engineering/UI/typography.md` | Document compiler/session font authority and role-label ownership. | Two-lane typography doctrine and closed migration truth. |
 | `documentation/engineering/UI/dieter.md` | Document that Dieter emits control intent and does not own account-font transition policy. | Existing Dieter source/generated authority. |
@@ -660,6 +663,7 @@ pnpm --filter @clickeen/widget-shell typecheck
 pnpm --filter @clickeen/bob typecheck
 pnpm --filter @clickeen/roma typecheck
 pnpm --filter @clickeen/roma test:instance-package
+pnpm --filter @clickeen/roma test:instance-save-boundary
 rg -n "DEFAULT_ACCOUNT_FONT_LIBRARY|CK_TYPOGRAPHY_FONTS|CK_GOOGLE_FONT_SPECS|buildCkTypographyFamilyOptions" bob
 rg -n "dataset\.weights|dataset\.styles" dieter/components/dropdown-actions/dropdown-actions.ts
 git diff --check
@@ -679,10 +683,13 @@ Deploy/runtime gate:
    keys with the committed source. Missing credentials or any mismatch keeps
    the gate red:
    `product/widgets/{big-bang,calltoaction,cards,countdown,faq}/spec.json` and
-   `product/dieter/components/dropdown-actions/dropdown-actions.js`.
-4. Verify both `bob-dev` and `roma-dev` Cloudflare Pages deployments are green
+   `dieter/components/dropdown-actions/dropdown-actions.js` (compared with
+   committed `tokyo/product/dieter/components/dropdown-actions/dropdown-actions.js`).
+4. Run `pnpm cf:api:preflight`; stop on failure. Then verify both `bob-dev` and
+   `roma-dev` Cloudflare Pages deployments are green
    for the exact commit SHA; workflow success without Pages SHA evidence is not
-   sufficient.
+   sufficient. Verify both canonical runtime hosts respond through the current
+   deployment.
 5. Through authenticated Roma Widget Defaults, switch one shell role and one
    widget-core role into and out of the uploaded account font. Verify each
    transition changes family/weight/style together, Save succeeds, and reload
@@ -703,9 +710,12 @@ Deploy/runtime gate:
 11. Verify Bob Copilot identifies the intended typography role, and its family
     choices equal the current account library rather than the default Google
     catalog.
-12. In manual Bob and Copilot, verify an unknown family and an explicitly
-    disallowed companion show mapped product copy, leave controls/config/dirty
-    state unchanged, create no Undo token, and emit no `edit_applied` outcome.
+12. In manual Bob, Copilot, and Roma, verify an unknown family and an explicitly
+    disallowed companion show exactly `That font choice is not available.
+    Choose another font, weight, or style.`, leave controls/config/dirty state
+    unchanged, create no Undo token, and emit no `edit_applied` outcome.
+13. Submit an invalid direct/replayed instance save and prove the 422 reason/path
+    response occurs before any Tokyo instance write or public-package update.
 
 No direct R2/Supabase mutation or font-data migration is permitted.
 
