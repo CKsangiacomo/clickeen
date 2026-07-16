@@ -63,9 +63,11 @@ kept.
 
 Step-9 target: keep the same Tokyo URL and component boundary, but render the
 URL through a CSS mask whose painted value is `currentColor`. Preserve width,
-height, decorative behavior by default, and explicit accessible naming when a
-title is supplied. Do not fetch SVGs, inline source geometry, create a registry,
-or add a second Prague icon component.
+height, and inline-block display; use both `mask` and `-webkit-mask` with
+`center / contain no-repeat`. Untitled output remains decorative with
+`aria-hidden="true"` and `role="presentation"`; titled output uses `role="img"`
+and explicit `aria-label={title}`. Do not fetch SVGs, inline source geometry,
+create a registry, or add a second Prague icon component.
 
 ### C2 - Unsupported 44px Glyph Size
 
@@ -93,6 +95,7 @@ Step-9 candidate edits:
 
 - `prague/src/components/DieterIcon.astro`
 - `prague/src/components/StepsPrimitive.astro`
+- `.github/workflows/cloud-dev-prague-app.yml`
 - `documentation/engineering/UI/iconography.md`
 
 Regression-only reads, not candidate edits unless the exact-tree review proves a
@@ -120,10 +123,12 @@ Explicit no-touch paths:
 
 ## Deploy And Verification Boundary
 
-The code slice changes `prague/src/**`, so it triggers
-`.github/workflows/cloud-dev-prague-app.yml` and the Git-connected Prague Pages
-build. It does not change Tokyo product roots or Workers and requires no R2
-mutation.
+The code slice changes `prague/src/**` and the existing Prague verification
+workflow. Add `pnpm -C prague typecheck` before its existing build. Do not add a
+new workflow or SHA helper: GitHub Actions already exposes the run `head_sha`,
+and `pnpm cf:pages:project prague-dev` already returns Cloudflare Pages
+`latest_deployment.commit_hash`. The slice does not change Tokyo product roots
+or Workers and requires no R2 mutation.
 
 Green evidence for the eventual slice:
 
@@ -134,8 +139,12 @@ Green evidence for the eventual slice:
    intended inherited gray and no layout shift.
 5. Keyboard/semantic inspection proves decorative instances stay hidden and a
    titled instance exposes its accessible name.
-6. The `cloud-dev prague app verify` run and Cloudflare Pages deployment both
-   report the exact slice commit SHA before public proof is accepted.
+6. After commit and push, the successful `cloud-dev prague app verify` run has
+   `head_sha` equal to the slice commit.
+7. `pnpm cf:api:preflight` passes and
+   `pnpm cf:pages:project prague-dev` reports a successful latest deployment
+   whose `commit_hash` equals the same slice commit before public proof is
+   accepted.
 
 ## V1-V8 Audit
 

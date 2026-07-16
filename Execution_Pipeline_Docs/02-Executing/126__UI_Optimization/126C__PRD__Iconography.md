@@ -61,15 +61,23 @@ This slice may begin only after every 126A-126M PRD is Step-8 green.
      `/dieter/icons/svg/{name}.svg` coordinate;
    - replace the external `<img>` paint path with one CSS-mask element using
      that URL and `background-color: currentColor`;
+   - set both `mask` and `-webkit-mask` to `center / contain no-repeat` so the
+     approved glyph neither repeats nor changes its fit or alignment;
    - change the default glyph size from `44` to `40`;
-   - preserve explicit width and height;
-   - keep untitled icons decorative;
-   - when `title` exists, expose `role="img"` and the title as the accessible
-     name;
+   - preserve inline-block display plus explicit width and height;
+   - keep untitled icons decorative with `aria-hidden="true"` and
+     `role="presentation"`;
+   - when `title` exists, expose `role="img"` and `aria-label={title}`; do not
+     assume the former `<img alt>` semantics survive the element change;
    - do not fetch or inline SVG source and do not create another component.
 2. Edit `prague/src/components/StepsPrimitive.astro`:
    - change the explicit Dieter size from `44` to `40`;
    - do not change the card layout, spacing, color, content, or interaction.
+3. Edit `.github/workflows/cloud-dev-prague-app.yml`:
+   - add `pnpm -C prague typecheck` before the existing Prague build;
+   - do not add a new workflow, deploy command, or SHA helper. The GitHub Actions
+     run already owns `head_sha`, and the existing Cloudflare Pages project read
+     already returns `latest_deployment.commit_hash`.
 
 ### Documentation change
 
@@ -123,9 +131,12 @@ Then prove:
    the supplied accessible name;
 4. desktop and mobile screenshots of the FAQ overview icon cards show inherited
    gray icons with no layout shift;
-5. the exact slice commit is the SHA reported by `cloud-dev prague app verify`
-   and by the Git-connected Cloudflare Pages deployment before public runtime
-   evidence is accepted.
+5. after commit and push, the successful `cloud-dev prague app verify` run has
+   `head_sha` equal to the slice commit;
+6. `pnpm cf:api:preflight` passes and
+   `pnpm cf:pages:project prague-dev` reports
+   `latest_deployment.commit_hash` equal to that same slice commit with a
+   successful latest stage before public runtime evidence is accepted.
 
 The slice does not touch Workers or R2 product roots, so Worker/R2 deploy proof
 is neither required nor allowed as substitute evidence.
