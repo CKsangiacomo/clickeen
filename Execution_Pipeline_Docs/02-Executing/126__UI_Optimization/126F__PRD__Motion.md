@@ -1,6 +1,8 @@
 # 126F - PRD: Motion
 
-Status: PRE-EXECUTION DOCTRINE RECORDED - step-5 living doctrine reconciled; step-6/7/8 artifacts pending; no step-9 execution credit.
+Status: PRE-EXECUTION STEPS 6-7 COMPLETE - current-source audit and executable
+preservation plan recorded; exact-tree Step-8 review pending; no Step-9
+execution credit.
 Parent: `126__PRD__UI_Optimization_Program.md` (MAMA).
 Series order: 126F of 126A-126M.
 KB doc: `documentation/engineering/UI/motion.md`.
@@ -91,9 +93,10 @@ The strong current evidence:
 - Current living motion doctrine records the exact system/widget boundary and
   token law.
 
-The remaining pre-execution work is narrow: step 6 verifies selector-level
-reduced-motion behavior and current consumption, treats Prague as real blast
-radius before changing a duration token, and records any actual regression.
+Step 6 found no remaining implementation gap. Selector-level reduced-motion
+behavior and current consumption are source-true; Prague remains a real blast
+radius before any future duration-token change. Step 7 therefore defines a
+preservation and regression-verification slice, not another motion migration.
 
 ## Human-Converged Product Reading
 
@@ -259,8 +262,11 @@ Target law:
 
 - Reduced motion is a real system motion-behavior requirement for the Dieter/
   system motion Clickeen actually has.
-- Reduced motion must remove or neutralize movement, translation, scale,
-  and JS-driven system animation where those create moving behavior.
+- Reduced motion must remove or neutralize non-essential animated movement,
+  translation, scale, and JS-driven system animation.
+- Direct manipulation remains functional and immediate. For example, a dragged
+  repeater item must still follow the pointer; reduced motion removes its
+  interpolation/transitions, not the user's positional control.
 - Simple opacity fades may remain when they clarify state and do not create
   spatial movement.
 - CSS global reduced-motion rules are not enough when system motion is written
@@ -372,6 +378,42 @@ verifies them rather than scheduling another rewrite:
 - Dieter/system motion and public-widget runtime motion are separate lanes.
 - DevStudio/Admin chrome consumes Dieter/system motion tokens; it does not own a
   separate motion authority.
+
+## Final Step-7 Execution Disposition
+
+126F has no standalone product-code, product-data, managed-service, or deploy
+write set at the current tree. The premature motion migration is current
+as-built input but receives no Step-9 execution credit. The final integrated
+Step-9 plan carries 126F as a preservation gate:
+
+1. Re-run the source and documentation checks against the execution-start
+   tree.
+2. If later 126 domains introduce or alter system motion, require those exact
+   files to use the existing two durations, standard easing, and reduced-motion
+   law before the owning slice can close.
+3. Run `pnpm dieter:governance:check` and `pnpm build:dieter` only when Dieter
+   source changes. Generated Tokyo Dieter output must match source and must not
+   be hand-edited.
+4. Verify browser behavior only for Bob, Roma, Prague, or DevStudio/Admin
+   surfaces actually changed by another Step-9 slice. Do not create a deploy or
+   visual ceremony solely to manufacture 126F work.
+
+Exact current deletion map: none. Current source contains no stale system
+duration token, component-local operational timing/easing path, duplicate
+Admin reduced-motion doctrine, or unguarded JS transition to delete.
+
+Exact no-touch boundary:
+
+- public-widget runtime motion and widget docs;
+- Prague local/site motion while foundation token values remain unchanged;
+- interaction semantics owned by 126E;
+- visual primitives owned by 126I;
+- product data, routes, policy, R2, Supabase, Berlin, San Francisco, and Tokyo
+  operation code.
+
+If execution-start drift introduces a concrete violation, the owning changed
+file is added to the integrated plan and fixed directly. That is drift repair,
+not authorization for a new motion abstraction.
 
 ## V1-V8 Pre-Execution Controls
 

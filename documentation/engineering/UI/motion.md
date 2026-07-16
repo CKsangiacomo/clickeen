@@ -51,6 +51,10 @@ selector directly. If system JS writes inline transition or animation behavior,
 that JS must check `prefers-reduced-motion: reduce` directly and choose the
 reduced behavior at runtime.
 
+Direct manipulation remains functional and immediate under reduced motion. A
+dragged item still follows the pointer; reduced motion removes interpolation
+and animated transitions, not the user's positional control.
+
 ## Operating Rule
 
 Clickeen system motion stays small. Motion exists only to clarify state change,

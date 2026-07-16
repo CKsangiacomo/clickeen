@@ -1,172 +1,137 @@
-# 126F - Pre-Execution Audit: Motion
+# 126F - Current-Source Pre-Execution Audit: Motion
 
-Status: FROZEN POINT-IN-TIME PRE-EXECUTION AUDIT - code changed afterward; no step-9 execution credit.
+Status: STEP 6 COMPLETE - current source audited at tree `8c450c07`; Step 7 is
+defined in `../126F__PRD__Motion.md`; no Step-9 execution credit.
 PRD: `../126F__PRD__Motion.md`.
 
-This audit hardens 126F for execution. It does not change runtime code. It
-records the exact blast radius, pre-execution source evidence, documentation work,
-verification gates, and V1-V8 controls needed before executing the motion
-cleanup.
+## Audit Question
 
-Post-execution current truth lives in `../126F__PRD__Motion.md`,
-`documentation/engineering/UI/motion.md`, `documentation/engineering/UI/dieter.md`,
-`documentation/services/dieter.md`, and runtime source. After execution,
-`--easing-standard` is defined as a foundation token, `--duration-spin` is
-removed from active source/living docs because no current consumer exists, and
-system motion literals were replaced by Dieter motion tokens. Do not use the
-pre-execution findings below as supported current behavior.
+What motion work remains after the premature 126F source changes, and what
+must the final integrated execution preserve without inventing another motion
+system or repeating completed work?
 
 ## Authority Gate
 
-| Authority | 126F execution authority |
+| Authority | Current owner |
 | --- | --- |
-| Product surface | Dieter/system motion in Dieter components, Bob chrome, Roma chrome, Admin/DevStudio chrome, and Prague token consumers when foundation duration tokens change. |
-| Product surface excluded | Public-widget runtime motion. Widgets own carousel, ticker, autoplay, countdown, RAF, and other widget-specific motion. |
-| Account/session coordinate | Not touched in 126F motion execution. |
-| Storage coordinate | Not touched. Generated Tokyo Dieter output is deploy output from Dieter source, not a storage authority. |
-| Route/API boundary | Not touched. |
-| Runtime/deploy surface | Dieter source build output, Bob/Roma/Prague/DevStudio Pages only if source files change. |
-| Verification surface | Source grep, Dieter build, focused app checks for changed surfaces, docs grep, and post-merge Cloudflare/runtime evidence when changed files affect deployed Pages or Tokyo R2 surfaces. |
+| Product surface | Dieter/system motion in Dieter, Bob, Roma, and DevStudio/Admin operational chrome. |
+| Product surface excluded | Public-widget runtime motion. Each widget owns its carousel, ticker, autoplay, countdown, RAF, and other behavior. |
+| Token source | `dieter/tokens/dieter-foundation-tokens.css`. |
+| Generated deploy output | `tokyo/product/dieter/**`, generated from Dieter source. |
+| Prague boundary | Consumer of foundation duration tokens; blast radius only if those token values/names change. |
+| Account/session, route, storage, product data | Not touched. |
+| Verification | Current source grep, generated/source parity, Dieter governance/build, focused owning-surface browser evidence only when a later slice changes that surface. |
 
-Compliance reason: this keeps 126F inside the actual Dieter/system motion
-authority and prevents the recurring AI failure of turning widget runtime
-behavior into a universal system doctrine.
+## Commands And Checks
 
-## Source Evidence Snapshot
+The Step-6 pass read current source and ran:
 
-Commands run during pre-execution audit:
+```bash
+rg -n -- '--duration-(snap|base|spin)|--easing-standard' \
+  dieter bob roma admin prague tokyo/product/dieter \
+  documentation/engineering/UI documentation/services
+rg -n --glob '*.{css,js,ts,tsx}' \
+  '(transition[^;]*[0-9.]+m?s|transition[^;]*\\bease\\b|cubic-bezier\\()' \
+  dieter bob roma admin
+rg -n -C 5 -- '@media \\(prefers-reduced-motion: reduce\\)' \
+  dieter/components
+rg -n -C 3 -- 'prefers-reduced-motion|style\\.transition' \
+  dieter/components/repeater dieter/tokens admin/src/css bob/app roma/app
+cmp dieter/tokens/dieter-foundation-tokens.css \
+  tokyo/product/dieter/tokens/dieter-foundation-tokens.css
+cmp dieter/components/repeater/repeater.js \
+  tokyo/product/dieter/components/repeater/repeater.js
+pnpm dieter:governance:check
+pnpm build:dieter
+```
 
-- `rg -n -- '--duration-(snap|base|spin)|--easing-standard|prefers-reduced-motion|transition:|animation:|@keyframes|style\.transition|requestAnimationFrame' dieter/tokens dieter/components bob/app roma/app admin/src/css tokyo/product/widgets documentation/engineering/UI/README.md documentation/engineering/UI/motion.md documentation/engineering/UI/dieter.md documentation/services/dieter.md documentation/services/devstudio.md documentation/engineering/UI/interactions.md documentation/engineering/UI/components.md`
-- `rg -n -- '@media \(prefers-reduced-motion: reduce\)' dieter admin bob roma tokyo/product/widgets`
-- `rg -n -- '--duration-snap|--duration-spin|--easing-standard' .`
+All checks passed. `pnpm build:dieter` produced no tracked diff. The only
+workspace residue remains the pre-existing untracked `tokyo/product/fonts/`,
+which this pass did not touch.
 
-Pre-execution source findings:
+## Proven Current State
 
-- `dieter/tokens/dieter-foundation-tokens.css:80-82` defines
-  `--duration-snap`, `--duration-base`, and `--duration-spin`.
-- `dieter/tokens/dieter-foundation-tokens.css:99` defines the global
-  reduced-motion media query.
-- `admin/src/css/utilities.css:140` duplicates a global reduced-motion rule.
-- `dieter/components/dropdown-fill/dropdown-fill.css:254,287` references
-  `--easing-standard` as a fallback-only token. No foundation definition exists.
-- `dieter/components/button/button.css:34,215,344`,
-  `dieter/components/menuactions/menuactions.css:34`,
-  `dieter/components/textrename/textrename.css:48,100`, and
-  `dieter/components/repeater/repeater.css:169` contain Dieter component
-  literal durations/easing.
-- `dieter/components/segmented/segmented.css:17,67,105,178` owns a
-  component-local `180ms cubic-bezier(...)` transition variable.
-- `dieter/components/repeater/repeater.js:594,665,707` writes inline
-  `style.transition` at runtime.
-- `bob/app/bob_app.css:280,463` and `roma/app/roma.css:378,445` contain
-  literal operational chrome motion.
-- `admin/src/css/layout.css:154` contains local sidebar motion.
-- `prague/src/components/StepsPrimitive.astro:266,282,407` consumes
-  `--duration-snap`; `prague/src/components/StepsPrimitive.astro:291` consumes
-  `--duration-base`.
-- `prague/src/components/InstanceEmbed.astro:220,357` and
-  `prague/public/styles/primitives.css:44,193` also consume `--duration-base`.
-- Public widget motion exists in widget-owned code, for example
-  `tokyo/product/widgets/logoshowcase/widget.css:147,180`,
-  `tokyo/product/widgets/logoshowcase/widget.client.js:609,613`,
-  `tokyo/product/widgets/split-carousel-media/widget.css:67`, and
-  `tokyo/product/widgets/countdown/widget.client.js:848`.
+### Foundation and generated output are clean
 
-Correction to earlier evidence:
+- The only active foundation durations are `--duration-snap: 140ms` and
+  `--duration-base: 160ms`.
+- `--easing-standard: ease` is defined once in the foundation source.
+- `--duration-spin` is absent from active source and living documentation.
+- Dieter source and inspected Tokyo generated token/component output match.
+- Dieter governance and build are green.
 
-- `--duration-snap` is not globally dead because Prague consumes it. Prague also
-  consumes `--duration-base` outside `StepsPrimitive`. Execution must verify
-  Prague duration-token consumers before changing/removing any duration token.
-- `--duration-spin` had no proven source consumer in the pre-execution sweep.
-- Component-local reduced-motion media blocks exist in Dieter components.
-  Execution must verify selector alignment instead of claiming all component
-  reduced-motion behavior is only global.
+### Operational consumers are clean
 
-## Execution Blast Radius
+- Dieter operational transitions use the foundation duration/easing tokens.
+- The inspected Bob, Roma, and Admin operational chrome has no local literal
+  timing, bare easing, or custom curve.
+- The old duplicate Admin global reduced-motion rule is absent.
+- Segmented uses the foundation tokens rather than a local curve.
+- Component-local reduced-motion selectors remain where a component owns the
+  moving selector directly.
 
-| Area | Exact paths | Execution requirement | Must not do |
-| --- | --- | --- | --- |
-| Dieter foundation motion | `dieter/tokens/dieter-foundation-tokens.css`; `dieter/tokens/tokens.css` | Define `--easing-standard: ease`; reconcile only the decided motion tokens; keep duration set small unless a real product/component need is accepted. | Do not import Material/Apple/OpenAI token tables or create a motion scale because the sources have one. |
-| Generated Dieter output | `tokyo/product/dieter/tokens/**` including `tokens.css`, `tokens.shadow.css`, per-token CSS, and matching `*.shadow.css`; `tokyo/product/dieter/components/**` | Update only through `pnpm build:dieter` after Dieter source edits. | Do not hand-edit generated Tokyo Dieter files. |
-| Dieter component CSS | `dieter/components/button/button.css`; `menuactions/menuactions.css`; `textrename/textrename.css`; `repeater/repeater.css`; `segmented/segmented.css`; dropdown/textfield/textedit/valuefield/popover/toggle/tabs files | Replace ordinary system UI literals with the decided Dieter token law; replace segmented local curve with the standard easing token. | Do not leave old literal paths as supported alternatives. |
-| Dieter JS motion | `dieter/components/repeater/repeater.js`; inspect `dieter/components/textedit/textedit.ts` RAF usage | If JS writes visual transition behavior, it must handle reduced motion directly. | Do not rely on a test/probe or broad CSS claim as runtime behavior. |
-| Bob chrome | `bob/app/bob_app.css` | Tokenize/reconcile operational chrome motion without changing 126E save/interaction semantics. | Do not redesign Bob or change interaction state ownership. |
-| Roma chrome | `roma/app/roma.css` | Tokenize/reconcile operational chrome motion without changing account/domain state behavior. | Do not change Roma route/session/account authority. |
-| Admin/DevStudio chrome | `admin/src/css/layout.css`; `admin/src/css/utilities.css` | Reconcile local sidebar motion and duplicate reduced-motion guard against Dieter/system authority. | Do not preserve duplicate global guard as a separate Admin doctrine. |
-| Prague token consumers | `prague/src/components/StepsPrimitive.astro`; `prague/src/components/InstanceEmbed.astro`; `prague/public/styles/primitives.css` | If `--duration-snap` or `--duration-base` changes, verify Prague still follows decided token law. | Do not misclassify Prague consumption as public-widget runtime motion. |
-| Public widgets | `tokyo/product/widgets/logoshowcase/widget.css`; `tokyo/product/widgets/logoshowcase/widget.client.js`; `tokyo/product/widgets/logoshowcase/spec.json`; `tokyo/product/widgets/split-carousel-media/widget.client.js`; `tokyo/product/widgets/split-carousel-media/widget.css`; `tokyo/product/widgets/split-carousel-media/spec.json`; `tokyo/product/widgets/countdown/widget.client.js`; `tokyo/product/widgets/countdown/spec.json`; `tokyo/product/widgets/cards/widget.css`; `tokyo/product/widgets/shared/stagePod.js`; `tokyo/product/widgets/shared/socialShare.js`; `tokyo/product/widgets/shared/socialShare.css`; `documentation/widgets/**` | Inspect only to maintain the system/widget boundary. Widget motion remains widget-owned. | Do not rewrite widget ticker/carousel/autoplay/countdown motion to Dieter tokens in 126F. |
-| UI documentation | `documentation/engineering/UI/README.md`; `documentation/engineering/UI/motion.md`; `documentation/engineering/UI/dieter.md`; `documentation/services/dieter.md`; `documentation/services/devstudio.md`; `documentation/engineering/UI/interactions.md`; `documentation/engineering/UI/components.md` | Replace false or stale motion claims with current 126F law and required handoffs. | Do not document removed behavior, old paths, or widget runtime motion as Dieter/system doctrine. |
+### JS reduced motion is source-true
 
-## Required Documentation Updates
+`dieter/components/repeater/repeater.js` checks
+`prefers-reduced-motion: reduce` before assigning either visual-state or drag
+transitions. Reduced mode uses `transition: none`.
 
-Execution must update `documentation/engineering/UI/motion.md` so it says:
+The drag transform itself remains because it is direct pointer manipulation,
+not autonomous animation. Disabling it would break the product control. The
+correct law is: preserve immediate manipulation; remove interpolation and
+animated transition under reduced motion.
 
-- Motion is intentionally small and Dieter/system-owned.
-- Easing belongs to 126F, not 126A.
-- `--easing-standard` is standardized as `ease` to preserve current behavior
-  while removing fallback-only masquerade.
-- Clickeen is not completing a broad duration scale preemptively.
-- `--duration-snap` has a Prague consumer, Prague has additional
-  `--duration-base` consumers, and `--duration-spin` must be reconciled by
-  actual use, not preserved as an assumed spinner token.
-- Public-widget runtime motion is widget-owned and outside 126F.
-- Reduced-motion coverage must be described by actual source behavior, including
-  JS-written system motion.
+### Prague and widgets are correctly bounded
 
-Execution must check related UI docs for:
+- Prague consumes `--duration-snap` and `--duration-base`; it must be verified
+  before a future foundation token rename/value change.
+- No foundation token change is planned in 126F, so Prague site-local motion is
+  inspect-only and not a cleanup target.
+- Public widgets own their runtime motion and reduced-motion decisions. 126F
+  must not rewrite widget runtime JS/CSS into Dieter motion doctrine.
 
-- stale DevStudio/Admin authority claims;
-- stale UI index claims, including motion mapped to 126A;
-- motion responsibility incorrectly assigned to 126A, 126E, 126I, or widget docs;
-- public widget motion described as system doctrine;
-- removed behavior documented as a living option.
+### Documentation is current
 
-Compliance reason: future agents read `documentation/engineering/UI/**` during
-implementation. Leaving false docs creates the same drift 126 is meant to
-remove.
+`documentation/engineering/UI/motion.md`, Dieter docs, and DevStudio/Admin
+docs carry the current two-token law, standard easing, reduced-motion runtime
+rule, and widget/system boundary. The only precision added by Step 7 is that
+direct manipulation remains functional under reduced motion.
 
-## V1-V8 Pre-Execution Audit
+## Exact Step-7 Disposition
 
-| ID | Risk | 126F control |
+There is no current standalone implementation write set for 126F.
+
+| Area | Step-9 disposition | Must not do |
 | --- | --- | --- |
-| V1 Silent substitution | `--easing-standard` silently falls back to `ease` and masquerades as a real token. | Define `--easing-standard: ease` as current-behavior preservation, then replace fallback-only claims. |
-| V2 Silent healing | Literal timings are normalized without naming changed behavior. | Each changed site must be listed in execution notes and verified against owning surface behavior. |
-| V3 Silent omission | `--duration-spin`, Prague `--duration-snap`, component reduced-motion selector drift, or JS inline transitions are skipped. | Execution checklist must cover all listed paths before marking 126F done. |
-| V4 Fail-open control | Reduced motion fails open for JS-written transitions or duplicated guards. | Runtime code/CSS must carry the behavior directly; JS visual motion must check reduced motion directly. |
-| V5 Corruption-as-absence | Not applicable to persisted product data. | Do not touch product data. |
-| V6 Partial-success masquerade | Motion implies progress/activity that is not real. | System and widget docs must say motion reflects actual state only. |
-| V7 Masquerade/redress | Local literals or widget runtime motion are renamed as Dieter doctrine. | Replace/remove local system literals; keep widgets outside 126F system law. |
-| V8 Runtime test dependency | Reduced motion works only when a test/probe is run. | Tests verify behavior; runtime CSS/JS implements behavior. |
+| Dieter foundation/components | Preserve and regression-check if another domain changes them. | No new token, curve, framework, or repeated migration. |
+| Generated Tokyo Dieter output | Regenerate only after source changes and verify parity. | No hand edits. |
+| Bob/Roma/Admin chrome | Verify only if an owning later slice changes relevant files. | No interaction or layout redesign under 126F. |
+| Prague | Verify if a foundation duration token changes. | No cleanup of site-local motion in 126F. |
+| Public widgets | No touch. | No universal widget-motion doctrine. |
+| Product data/services | No touch. | No R2, DB, route, queue, policy, or deploy work. |
 
-## Three-Lane Review Inputs
+Exact deletion map: none. Current source contains none of the stale behavior
+the old point-in-time audit described.
 
-The three review agents must verify:
+## V1-V8 Pre-Execution Result
 
-- Staff Engineer: file-level blast radius is complete, no motion framework or
-  imported taxonomy is implied, generated output ownership including shadow
-  token outputs is clear, and `--duration-snap`/`--duration-spin` handling is
-  source-true.
-- Senior PM: system motion remains minimal and purposeful, public widgets keep
-  product-owned runtime motion, and docs explain the product reason without
-  creating user-facing copy work.
-- Principal TPM: execution is cohesive/cost-effective, no subsystem is invented,
-  V1-V8 controls are explicit, and docs/verification gates are sufficient for
-  build, Bob/Roma/Prague/DevStudio Cloudflare Pages, and Tokyo R2 deploy reality.
+| ID | Result | Evidence/control |
+| --- | --- | --- |
+| V1 Silent substitution | PASS | Easing resolves through the defined foundation token; no fallback masquerade remains. |
+| V2 Silent healing | PASS | No runtime or persisted state is normalized; Step 7 records current behavior exactly. |
+| V3 Silent omission | PASS | Prague consumers, component-local selectors, and JS-written transitions are explicitly covered. |
+| V4 Fail-open control | PASS | Repeater implements its own runtime reduced-motion branch; tests are not the control. |
+| V5 Corruption-as-absence | PASS / N/A | 126F touches no persisted product data. |
+| V6 Partial-success masquerade | PASS | No fake motion execution is claimed; the remaining slice is explicitly verification-only. |
+| V7 Masquerade/redress | PASS | Completed migration is not renamed or repeated; widget motion stays outside Dieter law. |
+| V8 Runtime test dependency | PASS | CSS/JS carries behavior; checks only verify it. |
 
-## Pre-Execution Green Criteria
+## Step-8 Review Questions
 
-126F is green for execution only when:
-
-- PRD and audit agree on Dieter/system scope and widget exclusion.
-- Prague `--duration-snap` and `--duration-base` consumption is acknowledged.
-- `--duration-spin` remains a named pre-execution reconciliation target. It was
-  resolved during execution by removal from active source/living docs because no
-  current consumer exists.
-- `--easing-standard: ease` is decided as current-behavior preservation.
-- Component-local reduced-motion blocks and JS-written transitions are both in
-  blast radius.
-- Documentation updates in `documentation/engineering/UI/**` and
-  `documentation/services/**` are named.
-- Post-merge Bob/Roma/Prague/DevStudio Cloudflare Pages and Tokyo R2
-  verification gates are named for changed deployed surfaces.
-- All three review lanes return green with no blocking gaps.
+1. Does the product law preserve immediate direct manipulation while removing
+   animated interpolation under reduced motion?
+2. Is a no-code preservation gate honest, or is any current source violation
+   missing from the audit?
+3. Are Prague and public-widget boundaries exact?
+4. Does the final plan avoid fake deploy/visual work while still catching drift
+   introduced by later 126 slices?
