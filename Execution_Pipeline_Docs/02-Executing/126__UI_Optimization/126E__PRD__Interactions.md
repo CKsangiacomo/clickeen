@@ -1,6 +1,6 @@
 # 126E - PRD: Interactions
 
-Status: PRE-EXECUTION DOCTRINE RECORDED - step-5 living doctrine reconciled; D3 monetization doctrine propagated; step-6/7/8 artifacts pending; no step-9 execution credit.
+Status: PRE-EXECUTION STEPS 6-7 COMPLETE - current-source gap audit and final executable ownership plan recorded; exact-tree step-8 review pending; no step-9 execution credit.
 Parent: `126__PRD__UI_Optimization_Program.md` (MAMA).
 Series order: 126E of 126A-126M.
 KB doc: `documentation/engineering/UI/interactions.md`.
@@ -379,63 +379,79 @@ Compliance reason:
 - It gives agents a deterministic bridge: 126E says what state happened; 126B
   says how that state is colored.
 
-## Execution Gap Targets
+## Step 6 Current-Source Result
 
-126E step 6 must verify the current baseline and identify only real remaining
-gaps. Living doctrine, Bob Save visibility, durable translation feedback, and
-multi-item upload progress are implemented current behavior and must not be
-scheduled again:
+The current-source audit at tree `cd3324dfe220ee4af80061d6e3a98ce15490dbdc`
+is `audits/126E__Audit__Interactions.md`.
 
-- Preserve the current living interaction doctrine and update it only if later
-  execution changes interaction law.
-- Make Roma account shell the documented reference grammar for account-boundary
-  state.
-- Audit each Roma domain and classify applicable states; fix silent omissions
-  where a relevant state currently collapses into unavailable or nothing.
-- Preserve Bob save as confirmed persistence and Bob edit/preview as
-  browser-memory optimism.
-- Preserve current Bob behavior: Save is hidden while clean, visible while
-  dirty, reads `Saving...` during persistence, and hides after reconciliation.
-- Preserve Copilot confirmed-before-apply and undoable edit behavior.
-- Preserve immediate browser-memory edit/preview while keeping account
-  persistence at explicit save.
-- Preserve and regression-test current durable translation result feedback.
-- Converge monetization product meaning across Roma widget upgrade modal, Bob
-  upsell modal, and asset limit/upsell inline copy. Upgrade opens or transitions
-  to the shared upsell scaffold; it does not route to inactive Billing.
-- Preserve current per-item bulk-upload rows, aggregate progress, visible
-  failures, partial-success result, and independent continuation.
-- Consolidate reason-key copy posture across account shell, Builder, assets,
-  ToolDrawer, Copilot, and account notice paths.
-- Document Copilot's interaction law: conversational feedback for single-step
-  chat/edit operations, Agent Activity for future longer or multi-phase agent
-  operations with meaningful phases.
-- Remove any drift that treats toast/snackbar as required product doctrine.
-- Cross-reference 126B for hover/pressed/disabled/state color mechanics.
-- Keep execution scoped to source/docs and existing product surfaces. Do not add
-  generic framework machinery.
+It proves that the broad interaction cleanup described by the earlier frozen
+audit is no longer current work:
 
-## Detailed Execution Blast Radius
+- Bob Save visibility and confirmed persistence are correct.
+- Translation Agent Activity and durable terminal feedback are correct.
+- Copilot's conversational apply/undo behavior is correct.
+- Assets already expose per-item and aggregate partial-success truth.
+- Roma domain states already distinguish the states relevant to their actual
+  work; static domains do not need invented local state.
+- Current user-facing copy maps or suppresses implementation reason keys.
+- Living interaction doctrine already reflects the accepted product law.
 
-Execution must inspect and update this blast radius as needed. If a listed path
-does not contain a current hit, execution records that it was checked and leaves
-it alone.
+These paths are regression evidence, not a license to rewrite them.
 
-| Area | Paths | Execution concern | Must not change |
+The one proven remaining interaction gap is D3: both current Upgrade paths still
+route to `/billing`, and the Bob-host path additionally asks the user to discard
+unsaved Builder work. No Roma-owned upsell scaffold exists.
+
+## Final Execution Ownership
+
+126E owns interaction meaning; it does not own all components that consume that
+meaning. The final Step-9 plan must use this non-overlapping assignment:
+
+| Concern | Execution owner | Required result |
+| --- | --- | --- |
+| Interaction vocabulary, feedback durability, D3 meaning, and acceptance assertions | 126E | One product law; no generic framework and no product-code write set. |
+| Dialog lifecycle and same-layer transition mechanics | 126K | Escape/backdrop/focus/return-focus/no-stacking behavior follows the accepted D1/D3 matrix. |
+| Roma upsell scaffold and the two current host transitions | 126M | One Roma component; Widgets and Bob intent open it in place; no `/billing` Upgrade route and no Builder discard prompt. |
+| Route/policy enforcement | Existing route owners | Preserve 402 and entitlement enforcement unchanged. |
+
+This is deliberate inside-out execution. 126E must not build a temporary Roma
+modal that 126K or 126M would immediately replace.
+
+## Detailed Blast Radius And Deletion Map
+
+| Area | Current files | Final disposition | Must not change |
 | --- | --- | --- | --- |
-| Roma account boundary | `roma/components/roma-account-context.tsx`, `roma/components/use-roma-me.ts`, `roma/components/roma-domain-error-boundary.tsx`, `roma/app/(authed)/domain-page-shell.tsx` | Account-shell state remains the reference grammar: loading, auth redirect, recoverable error/retry, no-context/reload, render. | Do not replace account shell with a global state framework. |
-| Roma domain states | `roma/components/home-domain.tsx`, `ai-domain.tsx`, `billing-domain.tsx`, `widgets-domain.tsx`, `assets-domain.tsx`, `pages-domain.tsx`, `settings-domain.tsx`, `team-domain.tsx`, `team-member-domain.tsx`, `profile-domain.tsx`, `usage-domain.tsx`, `widget-defaults-domain.tsx`, `accept-invite-domain.tsx` | Classify each domain's applicable loading/refreshing/empty/unavailable/unauthorized/error/success states; fix silent omissions where product truth is currently hidden. | Do not force every domain to render every state; state must match actual product work. |
-| Roma policy and monetization routes | `roma/app/api/account/instances/route.ts`, `roma/app/api/account/instances/[instanceId]/duplicate/route.ts`, `roma/app/api/account/instances/[instanceId]/publish/route.ts`, `roma/app/api/account/assets/upload/route.ts`, `roma/app/api/account/assets/route.ts`, `roma/app/api/account/usage/route.ts`, `documentation/capabilities/multitenancy.md` | Preserve route/policy enforcement and converge user-facing upgrade meaning across widget 402, Bob upsell, and asset limit/upsell feedback. | Do not replace product-policy enforcement with UI-only disabled prechecks. |
-| Upsell scaffold and hosts | `roma/components/widgets-domain.tsx`, `roma/components/builder-domain.tsx`, the one small reusable Roma upsell scaffold component, `bob/components/UpsellPopup.tsx`, `bob/lib/session/sessionTypes.ts`, `bob/lib/session/WidgetSessionChrome.tsx`, `roma/tests/run-widget-command-gates.ts` | Replace both Upgrade-to-`/billing` branches with the same Roma-owned scaffold; preserve Bob's typed intent bridge; remove `confirmDiscardBuilderEdits()` from only the `bob:upsell` branch so the in-place transition preserves working state; update the test that currently requires discard plus `router.push('/billing')`. | Do not remove legitimate Upgrade actions, weaken discard protection for real Builder navigation, duplicate the scaffold in Bob, add a global upsell store/framework, or change command-route enforcement. |
-| Billing/current-plan navigation | `roma/components/settings-domain.tsx`, `roma/components/billing-domain.tsx`, `roma/lib/domains.ts` | Preserve ordinary Billing navigation and truthful current-plan copy while separating it from Upgrade. | Do not imply plan changes or remove the legitimate read-only Billing surface. |
-| Bob save and session truth | `bob/components/TopDrawer.tsx`, `bob/lib/session/useSessionSaving.ts`, `bob/lib/session/sessionTypes.ts`, `bob/lib/session/WidgetDocumentSession.tsx`, `bob/lib/session/WidgetSessionChrome.tsx`, `bob/lib/session/sessionTransport.ts` | Verified current baseline; regression-check only. | Do not clear dirty state optimistically before save result and reconciliation. |
-| Bob error and reason-key copy | `bob/components/ToolDrawer.tsx`, `bob/components/useTranslationPreviewState.ts`, `bob/lib/session/useSessionBoot.ts`, `bob/lib/session/sessionTransport.ts`, `roma/lib/route-helpers.ts`, `roma/lib/tokyo-client.ts`, `roma/lib/account-authz-capsule.ts` | Align reason-key copy posture and durable error display. Raw implementation keys must not leak to users. | Do not introduce one mega-map unless surfaces genuinely share implementation ownership. |
-| Agent Activity and translation result truth | `bob/components/TranslationsPanel.tsx`, `bob/lib/session/sessionTransport.ts`, `roma/components/builder-domain.tsx`, `roma/app/api/account/instances/[instanceId]/translations/generate/route.ts`, `bob/tests/run-translations-panel.ts`, `documentation/ai/agents/translation-agent.md`, `documentation/capabilities/localization.md` | Verified current baseline; preserve and regression-test Agent Activity plus durable result/failure/partial feedback. | Do not use Agent Activity as generic loading, polling, spinner replacement, or success substitute. Do not route translation generation back into save. |
-| Copilot interaction law | `bob/components/CopilotPane.tsx`, `bob/lib/session/useSessionCopilot.ts`, `bob/lib/session/WidgetSessionCopilot.tsx`, `roma/app/api/account/instances/[instanceId]/copilot/route.ts`, `roma/app/api/account/instances/[instanceId]/copilot/outcome/route.ts`, `documentation/ai/README.md` | Preserve conversational feedback for single-step chat/edit, confirmed apply, and undo. Add Agent Activity only for future longer/multi-phase Copilot operations with real phases. | Do not convert current Copilot into fake streamed activity. |
-| Bulk asset upload progress | `roma/components/assets-domain.tsx`, `roma/app/api/account/assets/upload/route.ts`, `roma/app/api/account/assets/resolve/route.ts`, `roma/app/api/account/assets/[assetRef]/route.ts`, `documentation/architecture/AssetManagement.md` | Verified current baseline; preserve per-item status, aggregate progress, visible failures, and partial-success honesty. | Do not collapse multi-file results into one success/failure message. |
-| Dialogs/notices used by interaction semantics | `roma/components/roma-account-notice-modal.tsx`, `bob/components/UpsellPopup.tsx`, `documentation/engineering/UI/dialogs-and-modals.md` | Keep blocking/entitlement/account-notice/destructive decisions on explicit dialog/notice surfaces. | 126E does not create a new dialog framework; 126K/dialog docs own overlay mechanics. |
-| 126B state bridge | `documentation/engineering/UI/color.md`, `documentation/engineering/UI/interactions.md`, component files touched by interaction states | 126E says what happened; 126B says how visual state color is rendered. | Do not add color formulas to 126E. |
-| Living interaction docs | `documentation/engineering/UI/README.md`, `documentation/engineering/UI/interactions.md`, `documentation/services/bob.md`, `documentation/services/roma.md`, `documentation/engineering/UI/components.md`, `documentation/engineering/UI/dialogs-and-modals.md`, `documentation/engineering/UI/motion.md` | Verified current baseline: stale toast doctrine, keyboard/focus ownership, 126D state ownership, "to-be-declared" framing, and old UI track mappings are absent. Revisit only when a real execution change alters interaction law. | Do not document removed behavior as current doctrine. |
+| Bob Save | `bob/components/TopDrawer.tsx`, `bob/lib/session/useSessionSaving.ts`, session types/transport | Preserve and regression-test only. | Dirty state must clear only after confirmed save and signature reconciliation. |
+| Translation feedback | `bob/components/TranslationsPanel.tsx`, `bob/tests/run-translations-panel.ts`, translation docs | Preserve and regression-test only. | No Save coupling, polling theater, queue copy, or invented progress. |
+| Copilot | `bob/components/CopilotPane.tsx`, Copilot session/route files | Preserve current conversation, confirmed apply, and undo. | No fake Agent Activity. |
+| Bulk assets | `roma/components/assets-domain.tsx` and account asset routes | Preserve current rows, aggregate progress, terminal result, and visible failures. | No new upload subsystem or added Upgrade entry point without separate product law. |
+| Roma state surfaces | account shell plus Roma domain components named in the Step-6 audit | Preserve current applicable-state behavior. | No global store/state machine and no fake states for static domains. |
+| Widgets Upgrade | `roma/components/widgets-domain.tsx` | 126M replaces the `/billing` link with same-layer transition to the one scaffold. | Route/policy 402 and prompt facts remain unchanged. |
+| Bob Upgrade host | `roma/components/builder-domain.tsx` | 126M opens the same scaffold from `bob:upsell`. Delete discard guard and `/billing` route from this branch only. | Real Builder navigation retains discard protection; Bob intent type remains. |
+| Upsell component | one new Roma-owned component, exact name finalized by 126M | Render honest pre-GA content with no commercial operation. | No Bob duplicate, global store, billing adapter, fake checkout, or sales/contact flow. |
+| Tests | `roma/tests/run-widget-command-gates.ts` | 126M deletes the old discard-and-route assertion and proves both entries reach one scaffold. | Route enforcement assertions remain. |
+| Billing | `roma/components/settings-domain.tsx`, `billing-domain.tsx`, `roma/lib/domains.ts` | Preserve ordinary current-plan navigation. | Do not remove Billing or imply it changes plan. |
+| Docs | interaction/dialog/Bob/Roma living docs | Already correct; update only if final component naming changes wording. | Do not restore toast doctrine or give 126E dialog-mechanics ownership. |
+
+### Exact 126E product-code write set
+
+None.
+
+### Exact behavior deleted later by 126M because of 126E law
+
+- Widgets `Upgrade -> /billing`.
+- `confirmDiscardBuilderEdits()` inside the `bob:upsell` branch only.
+- `router.push('/billing')` inside the `bob:upsell` branch only.
+- The test assertion that requires those old behaviors.
+
+### Explicit no-touch set
+
+- Bob Save, translation, preview, Copilot, and account-command transport.
+- Roma account routes, policy, entitlements, and 402 payloads.
+- Asset upload behavior.
+- Tokyo, Berlin, San Francisco, Supabase, R2, widget source, and public runtime.
+- Public widget social-share copy status.
+- Ordinary Billing navigation.
 
 ## Documentation Baseline
 
@@ -457,37 +473,78 @@ changes interaction law.
 | V7 Masquerade/redress | Existing fragmented feedback is renamed as doctrine instead of converged. | Widget 402, Bob upsell, and asset upsell must converge in product meaning, not labels. |
 | V8 Runtime test dependency | Normal product interaction depends on validation scripts, probes, or test rituals. | Source/docs/runtime behavior carry the truth; checks only verify execution. |
 
-## Post-Execution Regression Checks
+## Step 7 Executable Gates
 
-Execution is not complete until these checks are run and reconciled:
+126E has no standalone product-code mutation. Its Step-9 gate is the
+inside-out behavioral checkpoint that later consumer slices must satisfy.
 
-- Search `documentation/engineering/UI/interactions.md` for stale toast,
-  keyboard/focus, 126D state, and to-be-declared claims.
-- Search `documentation/services/bob.md` for stale PRD 126D toast/banner
-  translation language.
-- Verify Bob save action visibility and `Saving...` behavior in
-  `bob/components/TopDrawer.tsx` and save confirmation in
-  `bob/lib/session/useSessionSaving.ts`.
-- Verify Bob edit/preview remains browser-memory optimistic while persistence
-  remains explicit save.
-- Verify Translation Agent Activity remains a real `aria-live` activity surface.
-- Verify Translation generation displays durable result/failure/partial
-  feedback for command failure, `translation.accepted: false`,
-  `localePackages.failed`, skipped locales, and partial package coordinates
-  after activity ends.
-- Verify Copilot confirmed apply plus undo remains intact.
-- Verify Roma monetization still comes from route/policy enforcement and 402
-  product responses where applicable.
-- Verify bulk upload surfaces expose per-item and partial-success truth where
-  changed.
-- Verify no new toast/snackbar framework, global interaction store, or generic
-  state machine was added.
-- If search finds `tokyo/product/widgets/shared/socialShare.js`
-  `ck-socialShare__toast` / `showToast`, record it as widget-owned local
-  social-share copy status. It is not the shared Clickeen toast/snackbar system
-  and is not deleted by 126E.
-- Run focused lint/type checks for changed Bob/Roma/docs tooling files if code
-  changes occur in execution.
+### Gate E1 - Preserve current interaction truth
+
+1. Re-read the Step-6 audit against the execution-start tree.
+2. Confirm Save, translation terminal feedback, Copilot apply/undo, assets bulk
+   progress, domain state classification, and copy fallback behavior have not
+   regressed in earlier A-D execution.
+3. Run:
+
+```bash
+pnpm --filter @clickeen/bob test:translations-panel
+pnpm --filter @clickeen/bob typecheck
+pnpm --filter @clickeen/roma typecheck
+```
+
+4. Search for a new toast/snackbar framework, global interaction store, generic
+   command state machine, Save-triggered translation, or raw reason-key JSX.
+
+Green means current correct behavior is preserved. No source edit is required
+or authorized merely to make this gate produce a commit.
+
+### Gate E2 - Carry exact outer-layer requirements forward
+
+Before 126E closes, the integrated plan must carry these exact requirements:
+
+- 126K owns dialog mechanics and same-layer transition behavior.
+- 126M owns the one Roma scaffold and both current Upgrade transitions.
+- 126M deletes the two `/billing` Upgrade paths and the Bob-branch discard
+  invocation while preserving real navigation guards.
+- 126M updates `run-widget-command-gates.ts` to prove both entries open one
+  scaffold and that route/policy 402 enforcement remains intact.
+- 126M browser evidence proves Bob unsaved edits survive opening and closing the
+  scaffold.
+
+Green means those requirements appear once in the final integrated Step-9 plan,
+not copied as competing implementations across 126E, 126K, and 126M.
+
+### Final cross-slice acceptance after 126M
+
+```bash
+pnpm --filter @clickeen/roma test:widget-command-gates
+pnpm --filter @clickeen/roma typecheck
+pnpm --filter @clickeen/bob typecheck
+```
+
+Browser evidence must prove:
+
+1. Widgets plan-limit `Upgrade` transitions to the Roma scaffold without modal
+   stacking.
+2. Bob plan-limit `Upgrade` opens the same scaffold and preserves dirty Builder
+   state without a discard prompt.
+3. Closing the scaffold returns to the same work.
+4. No purchase, plan mutation, provider request, fake success, or invented
+   contact operation occurs.
+5. Ordinary `Open billing` navigation still opens the current-plan surface.
+6. Route/policy enforcement still returns the product's 402 response.
+
+## Step-7 Done List
+
+- Current Step-6 audit is bound to an exact source tree.
+- Already-correct behavior is named as preserve/regression-only.
+- The only proven remaining interaction gap is named.
+- 126E, 126K, and 126M ownership does not overlap.
+- Exact later deletions and no-touch paths are recorded.
+- No product code, product data, deploy state, or managed-service state changed
+  during pre-execution.
+- Exact-tree Step-8 product, architecture/V1-V8, and code/blast-radius reviews
+  are still required before this PRD is execution-ready.
 
 ## Source Research Bar
 

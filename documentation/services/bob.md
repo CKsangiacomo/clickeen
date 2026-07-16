@@ -177,7 +177,9 @@ The scaffold is a real UI destination for developing the upsell experience; it
 does not purchase, mutate a plan, call a billing provider, or claim commercial
 success. Opening it preserves Bob's unsaved working state and must not invoke a
 discard confirmation. Current code that guards and routes this intent to
-`/billing` is a 126E/126K/126M execution gap, not product law.
+`/billing` is a 126M Roma-consumer execution gap governed by 126E interaction
+meaning and 126K dialog mechanics, not three competing implementations and not
+product law.
 
 ## Save Contract
 
