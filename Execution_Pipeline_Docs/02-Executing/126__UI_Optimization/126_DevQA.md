@@ -1,6 +1,6 @@
 # 126 — DevQA: Where We Actually Stand
 
-Status: PRE-EXECUTION STEPS 6-8 IN PROGRESS - 126A and 126B Steps 6-8 complete at reviewed trees `c06fa7db` and `4b480e50`; 126C-126M Steps 6-8 and all Step-9 execution remain pending.
+Status: PRE-EXECUTION STEPS 6-8 IN PROGRESS - 126A and 126B Steps 6-8 complete at reviewed trees `c06fa7db` and `4b480e50`; 126C Steps 6-7 complete with Step 8 pending; 126D-126M Steps 6-8 and all Step-9 execution remain pending.
 This document reconciles PRD claims with Git and current source evidence. It does
 not define product law, approve unresolved architecture choices, prove that every
 intermediate commit deployed, or close any PRD whose required verification is
@@ -28,8 +28,9 @@ shows that A-H product decisions remain valid and most named code gaps are alrea
 closed in current source. This still grants no execution credit: 126A now has its
 current gap map, final executable PRD, and exact-tree three-lens review; 126B
 now has the same three artifacts at reviewed tree `4b480e50`;
-126C-126M gap maps/final PRDs/reviews and all visual Step-9 evidence do not yet
-exist.
+126C now has its current gap map and final executable PRD; its exact-tree review
+does not yet exist. 126D-126M gap maps/final PRDs/reviews and all visual Step-9
+evidence remain open.
 
 1. **The 126 process was not followed.** The human has now confirmed that every A–M
    domain completes steps 1–8 before step 9 begins. A–H code changes landed while
@@ -43,8 +44,8 @@ exist.
    `PRE-EXECUTION READY`, but their as-builts predated later code changes. A renewed
    current-source read is now complete. D1/D2/D3 and all remaining per-domain
    doctrine are now propagated. 126A Steps 6-8 are complete at exact reviewed
-   tree `c06fa7db`; 126B is green at `4b480e50`; 126C-126M Step-6/7/8 artifacts
-   remain open.
+   tree `c06fa7db`; 126B is green at `4b480e50`; 126C Steps 6-7 are complete;
+   126C Step 8 and 126D-126M Steps 6-8 remain open.
 4. **The 126I pivot-layer input errors are now proven and corrected in active
    decision docs:** current source has 25 directories including `shared`, no
    `command-activity`, and no current `--color-surface`, `--radius-2`, or
@@ -183,7 +184,8 @@ The status lines keep all A-H slices in pre-execution. Code changes exist, but
 they landed before the all-domain gate and receive no step-9 credit. The renewed
 current-source pass and human convergence are complete, and Step-5 doctrine is
 reconciled across A-M. 126A and 126B Steps 6-8 are complete at exact reviewed
-trees `c06fa7db` and `4b480e50`; 126C-126M Steps 6-8 remain open. A public read on 2026-07-14 confirmed
+trees `c06fa7db` and `4b480e50`; 126C Steps 6-7 are complete, while 126C Step 8
+and 126D-126M Steps 6-8 remain open. A public read on 2026-07-14 confirmed
 `https://tokyo.dev.clickeen.com/dieter/manifest.json` reports Git SHA `c299c783`,
 which proves that the currently deployed Dieter bytes are observable at the public
 Tokyo product root. The corresponding GitHub Actions deploy run has not been verified on this
@@ -477,7 +479,8 @@ The remaining constraints are concrete:
    `126__Product_Owner_Execution_Decisions.md`.
 3. **Completed in this convergence:** reconcile settled product law into the
    owning living doctrine for every A-M domain (step 5). 126A and 126B Steps 6-8
-   are now complete; 126C-126M Steps 6-8 remain next.
+   are now complete; 126C Steps 6-7 are complete; 126C Step 8 and 126D-126M
+   Steps 6-8 remain next.
 4. Complete final executable PRDs and exact-tree peer reviews for every A-M domain.
 5. Reconcile all A-M final PRDs into one complete inside-out step-9 plan. Premature
    A–H changes may be kept, changed, or deleted only according to that final plan.
@@ -502,7 +505,7 @@ the recommendations and authority corrections it makes:
 | V3 Silent omission | Does this doc drop a required input/artifact/operation? | No. It retains the all-A-M pre-execution gate, complete Roma inventory, review-provenance gap, closed read-only font evidence, mandatory execution law, and accepted D1/D2/D3 decisions. |
 | V4 Fail-open control | Does enforcement turn off when a dependency is missing? | N/A — no enforcement added. |
 | V5 Corruption-as-absence | Does this doc treat corrupt state as missing/new/empty? | No. The stale status lines are named as drift, not ignored. |
-| V6 Partial-success masquerade | Does this doc claim full success after some work was dropped? | No. 126A and 126B Steps 6-8 are complete, while 126C-126M Steps 6-8 and all Step 9 work remain pending; no premature change is called execution or completion. |
+| V6 Partial-success masquerade | Does this doc claim full success after some work was dropped? | No. 126A and 126B Steps 6-8 and 126C Steps 6-7 are complete, while 126C Step 8, 126D-126M Steps 6-8, and all Step 9 work remain pending; no premature change is called execution or completion. |
 | V7 Masquerade/redress | Does the same failing workflow continue under a different wrapper? | No. Verification cannot mutate code/product data or grant execution credit; exact reviewed-tree provenance is mandatory before step 9. |
 | V8 Runtime test dependency | Does normal product work start depending on tests/probes? | No. |
 
