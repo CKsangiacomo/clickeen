@@ -1,6 +1,8 @@
 # 126G - PRD: Ops
 
-Status: PRE-EXECUTION DOCTRINE RECORDED - step-5 living doctrine reconciled; step-6/7/8 artifacts pending; no step-9 execution credit.
+Status: PRE-EXECUTION STEPS 6-7 COMPLETE - current-source audit and executable
+preservation/handoff plan recorded; exact-tree Step-8 review pending; no
+Step-9 execution credit.
 Parent: `126__PRD__UI_Optimization_Program.md` (MAMA).
 Series order: 126G of 126A-126M.
 KB doc: `documentation/engineering/UI/ops.md`.
@@ -351,6 +353,44 @@ Tokyo, Tokyo-worker, and UI-index docs now record the current authority lanes,
 root build, generated/deployed separation, localization boundary, and upload-
 only Cloudflare path. Step 6 verifies that baseline rather than scheduling
 another documentation rewrite.
+
+## Final Step-7 Execution Disposition
+
+126G has no standalone product-code, product-data, managed-service, deploy, or
+documentation write set at the current tree. The active source/build/generated/
+deployed/product-data lanes already match current doctrine. Premature cleanup is
+current as-built input but receives no Step-9 execution credit.
+
+The final integrated Step-9 plan carries 126G as two precise responsibilities:
+
+1. **Preservation gate:** if another 126 slice changes Dieter source, build or
+   generator scripts, generated Tokyo output, DevStudio functions, or deploy
+   workflows, re-run the owning source/build checks and verify the exact
+   deployed surface through its existing GitHub/Cloudflare authority.
+2. **126L handoff:** DevStudio must display the token, old value, new value, and
+   returned commit SHA after a successful direct token commit, using available
+   authenticated session context where the server records operation evidence.
+   126L also closes the direct-commit verification visibility gap. 126G does not
+   implement that screen workflow or add an ops service.
+
+Exact current deletion map: none. Current source has no `unknown` provenance
+fallback, warning-and-ship manifest dependency path, source-mutating SVG build,
+stale UI deploy root, account-data deploy mapping, or claim that upload-only R2
+sync performs reconciliation.
+
+Exact no-touch boundary:
+
+- account/runtime product data and product routes;
+- real Babel, Prague, San Francisco, i18n, and l10n tooling;
+- 126C human-owned icon authoring and icon policy;
+- 126L DevStudio screen and direct-commit UX until that slice executes;
+- 126I component behavior and 126M Roma UI;
+- R2 reconciliation, orphan cleanup, rollback, governance platform, approval
+  workflow, or universal UI scanner.
+
+Do not run a remote sync or deploy solely to manufacture 126G execution. A
+later slice that changes a deployed authority owns its normal deployment and
+read-back proof.
 
 ## V1-V8 Pre-Execution Controls
 
