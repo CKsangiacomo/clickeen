@@ -1,6 +1,7 @@
 # 126D - PRD: Typography
 
-Status: PRE-EXECUTION STEP 7 COMPLETE - current-source audit and final executable plan recorded; Step 8 exact-tree review pending; no Step-9 execution credit.
+Status: PRE-EXECUTION STEPS 6-8 COMPLETE - exact-tree review green at
+`31b81152`; no Step-9 execution credit.
 Parent: `126__PRD__UI_Optimization_Program.md` (MAMA).
 Series order: 126D of 126A-126M.
 KB doc: `documentation/engineering/UI/typography.md`.
