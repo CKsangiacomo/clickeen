@@ -1,6 +1,6 @@
 # PRD 126 — MAMA: UI Optimization Program
 
-Status: PRE-EXECUTION STEPS 6-8 IN PROGRESS - 126A-126C Steps 6-8 complete at reviewed trees `c06fa7db`, `4b480e50`, and `b5efaefc`; 126D-126M Steps 6-8 and all Step-9 execution remain pending.
+Status: PRE-EXECUTION STEPS 6-8 IN PROGRESS - 126A-126E Steps 6-8 complete at reviewed trees `c06fa7db`, `4b480e50`, `b5efaefc`, `31b81152`, and `ec1ed486`; 126F-126M Steps 6-8 and all Step-9 execution remain pending.
 Owner: Clickeen product architecture + UI
 Date: 2026-06-26
 Stage: 02-Executing
@@ -352,10 +352,11 @@ current authority; it does not invent a second documentation surface.
    `126__Product_Owner_Execution_Decisions.md` (step 4).
 2. Complete: every A-M domain has reconciled its settled product law into the
    owning living doctrine (step 5).
-3. In progress: 126A-126C have current gap audits; 126D-126M still need exact
+3. In progress: 126A-126E have current gap audits; 126F-126M still need exact
    code/doc mismatch and deletion maps (step 6).
-4. In progress: 126A-126C have final executable PRDs; 126D-126M remain
+4. In progress: 126A-126E have final executable PRDs; 126F-126M remain
    (step 7).
-5. In progress: 126A-126C are peer-reviewed green at exact trees `c06fa7db`,
-   `4b480e50`, and `b5efaefc`; 126D-126M remain (step 8).
+5. In progress: 126A-126E are peer-reviewed green at exact trees `c06fa7db`,
+   `4b480e50`, `b5efaefc`, `31b81152`, and `ec1ed486`; 126F-126M remain
+   (step 8).
 6. Step 9 begins once, in dependency order, only after the remaining gates are green.

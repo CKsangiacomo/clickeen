@@ -1,6 +1,7 @@
 # 126E - PRD: Interactions
 
-Status: PRE-EXECUTION STEPS 6-7 COMPLETE - current-source gap audit and final executable ownership plan recorded; exact-tree step-8 review pending; no step-9 execution credit.
+Status: PRE-EXECUTION STEPS 6-8 COMPLETE - exact-tree review green at
+`ec1ed486`; no Step-9 execution credit.
 Parent: `126__PRD__UI_Optimization_Program.md` (MAMA).
 Series order: 126E of 126A-126M.
 KB doc: `documentation/engineering/UI/interactions.md`.

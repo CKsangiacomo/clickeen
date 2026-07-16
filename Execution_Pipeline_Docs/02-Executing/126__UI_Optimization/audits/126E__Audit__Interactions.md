@@ -1,6 +1,7 @@
 # 126E - Current-Source Gap Audit: Interactions
 
-Status: STEP 6 COMPLETE - current source audited at tree `cd3324dfe220ee4af80061d6e3a98ce15490dbdc`; no step-9 execution credit.
+Status: STEP 6 COMPLETE - current-source audit finalized and Step-7 plan
+reviewed at exact tree `ec1ed486`; no Step-9 execution credit.
 PRD: `../126E__PRD__Interactions.md`.
 
 This audit replaces the frozen point-in-time 126E audit. It separates behavior
