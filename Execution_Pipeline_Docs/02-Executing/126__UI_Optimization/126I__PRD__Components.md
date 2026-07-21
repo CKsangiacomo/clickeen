@@ -150,6 +150,15 @@ No second variant or compatibility branch survives.
 - `tooltip`: a short label from `data-tooltip`, visible on hover and
   `:focus-visible`, while `aria-label` remains the accessible name.
 
+The public selectors are fixed:
+
+- `.diet-operational-field` goes directly on an ordinary operational `input`,
+  `select`, or `textarea`;
+- `.diet-operational-table` is the horizontal-overflow wrapper and
+  `.diet-operational-table__table` goes on its semantic `<table>`;
+- `.diet-tooltip` goes on the positioned icon-action control and reads its
+  visual label from `data-tooltip`.
+
 Contract rules:
 
 - no React/Vue component;

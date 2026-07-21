@@ -1,290 +1,217 @@
 # 126L - PRD: DevStudio UI
 
-Status: PRE-EXECUTION DOCTRINE RECORDED - step-5 living doctrine reconciled; shared-control, D1 dismissal, and D2 global workspace-capability law propagated; steps 6-8 remain pending.
+Status: PRE-EXECUTION STEPS 6-7 COMPLETE - current DevStudio shell, source
+reveal, token editor, policy pages, generated routes, and build boundary are
+audited; exact execution scope is pinned; Step-8 review pending; no Step-9
+execution credit.
 Parent: `126__PRD__UI_Optimization_Program.md`.
-Audit input: `audits/126L__AsBuilt_Codex.md`.
-Service doc: `documentation/services/devstudio.md`.
+Audit: `audits/126L__Audit__DevStudio_UI.md`.
+Service authority: `documentation/services/devstudio.md`.
 
-The baseline/addendum sections below are frozen Phase-1 evidence. Mandatory
-DevStudio shared-control, source-authority, D1 dismissal, and D2 workspace law
-is now settled in this PRD and the product-owner decision register. No execution
-is authorized yet.
+## Purpose
 
-## Role
+Make DevStudio a complete operational cockpit across supported workspaces while
+preserving its current source-derived governance model. DevStudio keeps one
+narrow left navigation and one flexible work area. It adopts only the small
+Dieter field/table contracts and the completed 126K dialog lifecycle.
 
-126L is the DevStudio UI screen-refactor planning domain. DevStudio is the
-human cockpit for the AI-operated company and the reveal/governance surface for
-Dieter and related source-controlled policy surfaces.
+This is not a redesign, customer admin app, shared shell framework, policy
+rewrite, or new token-management system.
 
-The current role is:
+## Dependencies
 
-- reveal source-controlled truth;
-- steer only through named validated Pages Functions;
-- keep Dieter/source truth visible rather than dressed up;
-- remain separate from Roma, Bob, and customer account operations.
+- 126I supplies `operational-field`, `operational-table`, and `tooltip` CSS.
+- 126J pins the global Full/Compact/unsupported workspace classifier.
+- 126K supplies native dialog lifecycle and has already migrated the token
+  editor behavior before 126L changes its visual classes.
+- The execution order is I -> J -> K -> L.
 
-## Current Mandatory Law
+## Authority Map
 
-DevStudio remains a source-derived reveal/governance cockpit, not a customer
-product runtime. It consumes the accepted Dieter native field, table visual,
-tooltip, and dialog mechanics without moving policy or source authority into
-shared UI. The duplicate token import and stale generated route fixtures are
-cleanup targets; the current single token-editor listener is not. Token mutation
-must expose truthful operation evidence. Under accepted D1 law, Escape closes
-the token editor only when unchanged; dirty dismissal opens discard
-confirmation, backdrop dismissal is disabled, Cancel follows the same dirty
-rule, and Confirm Commit persists. D2 is decided global law: DevStudio preserves
-the desktop workspace on tablets in both orientations, uses compact drawer
-navigation on mobile landscape, and presents the explicit unsupported boundary
-on mobile portrait. Its one shell remains narrow persistent left navigation plus
-flexible work area in full mode, and the same navigation as an overlay drawer
-plus full-width work area in compact mode. DevStudio pages are not redesigned
-into mobile variants.
+| Concern | Authority |
+| --- | --- |
+| DevStudio shell/navigation/workspace | `admin/src/main.ts` and local CSS |
+| Generated route inventory | `admin/src/html/**`, generators, and `routes.ts` |
+| Current generated truth | 3 foundation / 22 component / 2 Policy routes |
+| Token reads/writes | Existing validated Pages Functions |
+| Policy reads/writes | Existing Entitlements/LLM Pages Functions and contracts |
+| Reusable visual fields/tables | Dieter 126I CSS contracts |
+| Token-editor dialog mechanics | 126K helper; DevStudio retains dirty/source-commit state |
+| Auth | Berlin -> DevStudio session finish |
 
-## 126 Pre-GA No Legacy Compatibility Tenet
+## Product Contract
 
-Clickeen is pre-GA. This PRD must not preserve old UI drift through
-compatibility shims, temporary aliases, parallel legacy paths, or "support both
-old and new" transitions unless the human explicitly makes that behavior product
-law in this PRD.
+- Full mode: persistent `220px` sidebar and flexible work area.
+- Tablet portrait and landscape remain Full and touch-operable.
+- Compact mode: one menu icon button opens the same sidebar as an overlay
+  drawer over a full-width work area.
+- Unsupported mobile portrait: explicit `Rotate your device or use a larger
+  screen` boundary.
+- Mode changes occur without reload and preserve the current hash route.
+- All 3/22/2 routes, policy operations, token commit behavior, and generated
+  source relationships remain unchanged.
 
-Once the 126L DevStudio UI standard is decided:
+Use 126J's classifier exactly: Full is default at at least `600px` usable inline
+and block size; Compact below either dimension; coarse-pointer portrait below
+`600px` shows the unsupported boundary. Use dynamic viewport units and safe
+areas. Do not add UA sniffing or a device registry.
 
-- Fix source and docs to the standard.
-- Remove old drift and stale paths.
-- Do not leave legacy names, classes, render paths, token aliases, wrappers, or
-  local one-offs as supported alternatives.
-- Do not add guard/check machinery to enforce this tenet. The PRD is the
-  authority; execution must clean the code/doc surface instead of preserving bad
-  paths behind validation.
+## Current Source Truth
 
-## Frozen Phase 1 Step 2 Boundary
+- `main.ts` builds the static/hash shell and its navigation at runtime.
+- `layout.css` moves the sidebar off-screen below `960px` but no current trigger
+  or state can open it.
+- Dead collapsed-sidebar selectors and width tokens survive without runtime
+  ownership.
+- `tokens.css`, `main.ts`, and `index.html` duplicate token/font delivery.
+- `main.ts` and `tokens.css` currently import Dieter tokens twice; `index.html`
+  already owns the Google font link.
+- Token-editor input/select appearance is local duplication and utilities use
+  an undefined `--shadow-lg` with fallback.
+- Entitlements and LLM Management duplicate table base CSS while needing their
+  policy-specific widths, density, sticky behavior, and cell composition.
+- Entitlements retains a raw orange fallback even though the Dieter token
+  exists.
+- 126I owns the stale 20/1 route test correction; 126L does not create another
+  route inventory.
 
-MAMA says step 2 is baseline/directional PRD: current reality plus known gaps,
-no fixes. Therefore this document:
+## Execution Slices
 
-- records what the Codex as-built audit found;
-- names known gaps;
-- avoids implementation prescriptions;
-- does not update code;
-- does not update generated pages;
-- does not update product data;
-- does not update living docs yet.
+### L1 - One Complete DevStudio Shell
 
-## Current DevStudio UI Baseline
+1. Add a stable sidebar id, compact menu button, scrim, open state, Escape
+   close, link-selection close, initial drawer focus, and opener focus return in
+   `main.ts`.
+2. Render the portrait boundary once at shell construction.
+3. Replace the generic `960px`/`640px` branches with 126J's Full/Compact/
+   unsupported predicates.
+4. Preserve the sidebar at `220px` in Full mode. Compact mode overlays that same
+   navigation; it does not create another nav tree.
+5. Use `100dvh`, overflow ownership, and safe-area padding.
+6. Add `viewport-fit=cover` to the existing viewport metadata.
 
-### Service And Authority Baseline
+Green gate: all routes and active-nav state survive mode/orientation changes;
+there is no hidden tablet sidebar or unreachable compact navigation.
 
-Current reality:
+### L2 - Small Dieter Contract Adoption And Deletion
 
-- DevStudio source lives under `admin/`.
-- DevStudio is a Cloudflare Pages app with output at `admin/dist`.
-- Canonical host is `https://devstudio.clickeen.com`.
-- Auth/session resolves through Berlin and the Clickeen admin account coordinate
-  `CLICKEEN`.
-- Write paths are Pages Functions under `admin/functions/**`.
-- DevStudio is not Roma, Bob, a customer account shell, or a general admin
-  bypass.
-- DevStudio current sections are Foundations, Dieter Components, Entitlements,
-  and LLM Management.
+1. Import 126I's operational-field and operational-table CSS directly in
+   `main.ts` using the existing `@dieter/*` source alias.
+2. Apply operational-field to token-editor `select`/`input` while preserving
+   DevStudio labels, validation, values, and commit state.
+3. Apply operational-table to Entitlements and LLM Management tables while
+   preserving all policy-specific composition.
+4. Delete the duplicate Dieter token import and duplicate Google-font import
+   from `tokens.css`; `main.ts` remains token CSS authority and `index.html`
+   remains font-link authority.
+5. Delete local field appearance now owned by operational-field, duplicated
+   table base declarations, dead collapsed-sidebar/menu selectors, dead
+   `#root`, `--sidebar-width-collapsed`, and unused `--content-max-width`.
+6. Replace the undefined `--shadow-lg` fallback with the existing
+   `--shadow-elevated` token.
+7. Remove the raw orange fallback and use the existing orange token.
 
-Known gaps:
+Green gate: no policy semantics or source mutation path moves into Dieter; no
+old visual rules survive beside the accepted contracts.
 
-- This PRD must preserve DevStudio's cockpit/reveal role and not turn it into a
-  broader product admin app.
+### L3 - Authenticated Proof And Documentation
 
-### App Shell And Navigation
+1. Run generation, typecheck, build, route-contract, and focused UI tests.
+2. Use a real `e2e/.auth/devstudio.json` produced by Berlin -> DevStudio login/
+   session finish. Roma auth is not valid for this host.
+3. Prove all workspace modes, orientation change, keyboard/touch drawer use,
+   current route preservation, token-editor D1 behavior, table overflow, and no
+   console errors.
+4. Verify the Git-connected DevStudio Pages deployment at the exact source SHA.
+5. Update the DevStudio service doc and affected UI docs.
 
-Current reality:
+## Exact Blast Radius
 
-- DevStudio is a static/hash-routed app.
-- `admin/index.html` only provides the app mount; the visible shell is
-  constructed at runtime by `admin/src/main.ts`.
-- Route data is generated from `admin/src/html/**` through
-  `admin/src/data/routes.ts`.
-- Current route groups are Foundations, Dieter Components, and Policy.
-- Current local count: 27 HTML pages total, 22 component pages, 3 foundation
-  pages, 2 tool pages.
-- Shell chrome uses local `.docs-shell`, sidebar, nav, page, and preview CSS.
-- Shell CSS imports Dieter tokens but still defines local layout tokens and raw
-  constants.
-- Active nav state uses `aria-current="page"`.
+### Edit
 
-Known gaps:
+| File | Change |
+| --- | --- |
+| `admin/src/main.ts` | Compact drawer, portrait boundary, operational CSS imports/classes; preserve K dialog lifecycle. |
+| `admin/src/css/layout.css` | Full/Compact/unsupported shell, dynamic viewport, safe areas; delete dead responsive/collapsed branches. |
+| `admin/src/css/tokens.css` | Keep shell variables only; remove duplicate Dieter/font imports and dead variables. |
+| `admin/src/css/utilities.css` | Delete local field appearance and invalid shadow fallback; preserve DevStudio-specific dialog composition. |
+| `admin/src/html/tools/entitlements.html` | Adopt operational-table; preserve policy composition; remove raw color fallback. |
+| `admin/src/html/tools/llm-management.html` | Adopt operational-table; preserve policy composition. |
+| `admin/index.html` | Add `viewport-fit=cover` to the existing viewport metadata. |
+| `documentation/services/devstudio.md` | Record delivered shell and shared-contract behavior. |
+| `documentation/engineering/UI/{surfaces,components,dialogs-and-modals}.md` | Reconcile only behavior proven by execution. |
 
-- App-specific shell/layout CSS is legitimate. Shared operational-field/table
-  appearance and dialog mechanics are Dieter-owned; accepted D1 law governs
-  token-editor dismissal. D2 workspace-capability behavior is settled.
-- Local layout constants remain, but the current inspected DevStudio CSS has no
-  raw hex color finding.
-- Below `960px`, the sidebar is moved off-screen without a working open trigger.
-  That generic breakpoint and half-state must be replaced by accepted D2 law.
-- Current counts are verified above; old PRD/living-doc counts must not survive.
-- The current route-contract e2e fixture is stale against generated component
-  and tool counts.
+### Add
 
-### Source-Derived Reveal
+- `e2e/devstudio/ui-contract.spec.ts` for D1/D2 and operational table/field
+  proof. It complements, rather than duplicates, 126I's route-contract suite.
 
-Current reality:
+### Delete In Place
 
-- DevStudio imports Dieter tokens and selected component CSS.
-- Static page fragments are imported from generated registries.
-- Dieter tokens are currently imported both directly in `main.ts` and through
-  local `tokens.css`; one import authority should survive.
-- Page rendering hydrates icons, executes embedded fragment scripts, injects
-  page CSS, and runs Dieter hydrators.
-- Component pages are generated from Dieter component specs/templates/CSS.
-- Component generation fails governed components missing required assets,
-  unresolved stencil markers, or no rendered page.
-- Component renderer checks that enumerated attribute values render.
-- Foundation pages are generated from Dieter token/icon source.
-- Color and icon foundation pages carry generated governance counts.
-- Historical source used `--radius-4`; current source uses
-  `--control-radius-*` and contains no numeric radius alias.
-- Typography page content is built from generated typography JSON.
+- `#root` layout selector;
+- `.sidebar-toggle*`, `.docs-shell__menu-toggle`, `data-sidebar='collapsed'`,
+  and `data-sidebar-state` selector families;
+- entire generic `960px` and `640px` responsive branches;
+- `--sidebar-width-collapsed` and `--content-max-width`;
+- duplicate token/font imports;
+- token-editor local input/select appearance and `--shadow-lg` fallback;
+- table base declarations replaced by operational-table;
+- raw orange fallback.
 
-Known gaps:
+### Do Not Touch
 
-- DevStudio reveal is strong but not equivalent to complete screen-system
-  convergence.
-- `textrename` remains imported/hydrated and present in the Tokyo manifest, but
-  current generated counts show no spec-backed generated component page.
-- `textrename` has generated template/CSS imports without matching generated
-  spec coverage.
-- Generated HTML drift detection is still listed as an ops gap.
+- `admin/functions/**` token/policy/auth behavior;
+- generated route registries or generated component/foundation pages except
+  output already changed by preceding 126I/K builds;
+- route count, route paths, policy data, account data, Roma, Bob, Tokyo, R2, or
+  Supabase;
+- token-editor persistence semantics established by existing Pages Functions;
+- 126K dialog lifecycle code.
 
-### Token Editor UI
+## Verification
 
-Current reality:
+```bash
+pnpm build:dieter
+pnpm --filter @clickeen/devstudio typecheck
+pnpm --filter @clickeen/devstudio lint
+pnpm --filter @clickeen/devstudio check:functions
+pnpm --filter @clickeen/devstudio build
+E2E_BASE_URL=https://devstudio.clickeen.com E2E_AUTH_STATE=e2e/.auth/devstudio.json pnpm exec playwright test e2e/devstudio/route-contract.spec.ts e2e/devstudio/dialog-contracts.spec.ts e2e/devstudio/ui-contract.spec.ts
+```
 
-- DevStudio has a color/typography token value editor.
-- The editor opens from `[data-token-edit]` triggers.
-- It creates a local `devstudio-token-editor` overlay and appends it to
-  `document.body`.
-- The overlay contains a form with token selector, value input, live diff, cancel,
-  and confirm commit actions.
-- Token reads and writes route through `admin/functions/_shared/dieter-tokens.js`
-  and source-controlled Dieter token files.
-- Token editing is values-only for color and typography values.
-- Token value writes validate editable token names and values before replacing
-  CSS declarations.
-- Token value writes use GitHub file SHA and return conflict state on upstream
-  SHA conflict.
+Browser matrix:
 
-Known gaps:
+| Viewport | Expected |
+| --- | --- |
+| `1440x900` | Full persistent sidebar. |
+| `768x1024` | Full tablet portrait cockpit. |
+| `1024x768` | Full tablet landscape cockpit. |
+| `844x390` | Compact overlay drawer and full work area. |
+| `390x844` | Unsupported portrait boundary. |
+| `600x960` | Full boundary behavior. |
 
-- The token editor overlay is local DevStudio UI, not a Dieter modal.
-- Its injected panel now has `role="dialog"`, `aria-modal="true"`, and an
-  accessible title. Complete blocking-dialog lifecycle behavior remains a 126K
-  decision/gap.
-- It is not a token/schema/component editor.
+Deploy proof is the Git-connected DevStudio Pages build at the exact source SHA
+and authenticated canonical-host evidence. No Worker, R2, Supabase, or product
+data mutation belongs to 126L.
 
-Current shell correction:
+## Non-Scope
 
-- Below `960px`, CSS moves the sidebar off-screen but no current trigger/state
-  opens it. The collapsed-sidebar/menu selectors are unwired. D2 now requires
-  desktop workspace on tablets, compact drawer navigation on mobile landscape,
-  and an explicit mobile-portrait boundary.
+- New DevStudio routes or navigation groups.
+- Token schema/editor expansion.
+- Policy or Pages Function changes.
+- Shared shell framework or generic responsive utility.
+- Mobile-specific versions of pages.
+- Domain/table data redesign.
 
-### Policy Tool Pages
+## V1-V8 Pre-Execution Audit
 
-Current reality:
-
-- DevStudio has two tool pages: Entitlements and LLM Management.
-- Entitlements fetches and saves entitlement and AI runtime matrices through
-  local API routes.
-- LLM Management reads configured model/provider capability data from
-  `window.__CK_LLM_MANAGEMENT__` and `window.__CK_AI_ACCESS__`.
-- Both pages carry local inline CSS and are part of the DevStudio UI surface.
-
-Known gaps:
-
-- These tool pages are not Dieter component source.
-- Their app-specific composition may remain local, but their independently
-  styled operational tables must consume the mandatory small Dieter visual base
-  while keeping policy-specific composition local.
-
-### Build And Static Output
-
-Current reality:
-
-- `admin/scripts/build-static.mjs` runs generated static registries, bundles
-  `src/main.ts` with esbuild, resolves `@dieter/*` aliases, handles raw imports,
-  and writes `admin/dist/index.html`.
-- DevStudio build output is static app assets plus Pages Functions.
-
-Known gaps:
-
-- Build/static generation is part of the DevStudio UI surface and must be
-  included in later screen planning.
-- No code/build changes happen in this Step 2 baseline.
-
-## Known Stale Prior-PRD Content
-
-The previous 126L body was an older DevStudio/Dieter cleanup seed and contained
-executable steps such as removing `textrename`, changing radius references, and
-tokenizing inline values.
-
-Current baseline corrections:
-
-- Those steps are not executable in Phase 1 Step 2.
-- The old `--radius-4` discussion is historical. Current source contains no
-  numeric radius alias; step 6 must verify it stays on `--control-radius-*`.
-- `textrename` was drift evidence at Step 2 and is now a settled deletion target;
-  no deletion occurs before steps 4-8 are green.
-- Old page/component counts are stale and must not be reused without re-audit.
-
-## Comparative Baseline
-
-| Area | Current Strength | Current Gap |
+| ID | Result | Reason |
 | --- | --- | --- |
-| Service authority | Clear cockpit role and Berlin/CLICKEEN boundary | Must not expand into admin bypass |
-| Hash routes | Generated from static HTML modules | Static counts drift and need recheck |
-| Component reveal | Spec/template/CSS-derived with guards | Some dirs/components outside spec-backed pages |
-| Foundation reveal | Token/icon/typography-source-derived | Prior radius/ghost-token language stale |
-| Token editor | Values-only source commit lane | Local overlay, limited token kinds, no inspected dialog ARIA |
-| Policy tools | Entitlements/LLM Management expose governance data | Inline local CSS and mixed read/write behavior |
-| Shell chrome | Uses Dieter tokens and local responsive shell | Local raw constants and not fully component-built |
-| Build/tests | Static registries and Dieter alias build path | Generated drift detection and stale route fixture remain ops gaps |
-
-## Compliance To Architecture, Product, And Product Law
-
-Architecture:
-
-- Keeps DevStudio in its named authority lane.
-- Keeps Dieter source truth as the inner system.
-- Keeps DevStudio write behavior tied to Pages Functions and source files.
-- Keeps screen planning separate from source code execution.
-
-Product:
-
-- No redesign.
-- No behavior change.
-- No generated output change.
-- No account/customer data operation.
-
-Frozen Step-2 collection boundary:
-
-- No code changes.
-- At collection time, no Step 4+ or Codex/GLM convergence had occurred.
-- No new enforcement machinery.
-- No reinterpretation into an ideal DevStudio system.
-
-## Out Of Scope For This Step
-
-- Removing `textrename`.
-- Changing radius tokens.
-- Tokenizing CSS.
-- Rebuilding generated pages.
-- Changing token editor behavior.
-- Updating `documentation/services/devstudio.md` or `documentation/engineering/UI/*`.
-- Running DevStudio deploy/build changes.
-- Any runtime code change.
-
-## Codex Baseline Done
-
-- Step 1 input exists: `audits/126L__AsBuilt_Codex.md`.
-- Step 2 baseline exists in this file.
-- Step 3 source research exists: `research/126L_Research_Codex.md`.
-- At the end of Step 2 this file was directional and non-binding. Current
-  mandatory D1/D2 law is settled above.
+| V1 | PASS | Route, policy, and token truth remain source-derived. |
+| V2 | PASS | No source token or policy value is silently rewritten. |
+| V3 | OPEN UNTIL STEP 9 | All modes, 3/22/2 routes, token editor, tables, auth, deploy, and docs need proof. |
+| V4 | OPEN UNTIL STEP 9 | Compact navigation and token mutation must remain fail-closed and reachable. |
+| V5 | PASS | No stored account/product data is handled. |
+| V6 | OPEN UNTIL STEP 9 | Local build without authenticated deployed proof is partial. |
+| V7 | OPEN UNTIL STEP 9 | Dead sidebar/import/field/table branches must be deleted, not renamed. |
+| V8 | PASS | Runtime source owns behavior; tests only verify. |
