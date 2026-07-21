@@ -44,5 +44,6 @@ domain files are not split for aesthetics.
 - Roma lint/typecheck/Cloudflare build and widget-command gates;
 - authenticated Roma shell/field/table tests;
 - final Roma/Bob/DevStudio viewport matrix and D1/D3 regressions;
-- final exact-SHA Pages reconciliation and Dieter manifest readback;
+- final exact-SHA Pages reconciliation plus Dieter owning-commit ancestry,
+  manifest, and artifact readback;
 - living service/UI documentation reconciliation.

@@ -157,7 +157,9 @@ control; no deleted selector has a source consumer.
 4. Regress 126K's plan-prompt-to-upsell and real Bob `bob:upsell` bridge without
    `/billing` navigation or discard confirmation.
 5. Verify Git-connected Roma, `bob-dev`, and DevStudio Pages at the final source
-   SHA. Verify the Dieter manifest still records the final deployed source SHA.
+   SHA. Verify the Dieter manifest records the latest commit that affected
+   Dieter/build inputs, that commit is an ancestor of final `main`, and the
+   manifest/artifact bytes are the ones consumed by the final app deployments.
 6. Reconcile Roma/Bob/DevStudio and UI living docs.
 
 ## Exact Blast Radius
@@ -232,8 +234,9 @@ Browser matrix:
 | `600x960` | Full boundary behavior. |
 
 Deploy evidence requires Roma, `bob-dev`, and DevStudio Pages at the final source
-SHA plus Dieter manifest readback. No direct product-data mutation belongs to
-126M.
+SHA. Dieter evidence uses its latest owning commit, proves ancestry to final
+`main`, and reads back the manifest/artifacts consumed by the apps. No direct
+product-data mutation belongs to 126M.
 
 ## Non-Scope
 
