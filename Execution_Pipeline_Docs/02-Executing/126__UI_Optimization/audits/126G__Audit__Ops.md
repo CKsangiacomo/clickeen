@@ -91,11 +91,12 @@ ops architecture.
 
 ### Cloudflare/R2 path is correct but lacks generated parity enforcement
 
-- `.github/workflows/cloud-dev-workers.yml` rebuilds Dieter when Dieter source
-  or its two build/verifier scripts change, but currently does not prove the
-  rebuilt generated tree equals git before Tokyo R2 product-root sync.
-- A generated Tokyo product-root-only change runs upload-only sync and does not
-  pretend to rebuild source.
+- `.github/workflows/cloud-dev-workers.yml` rebuilds Dieter only when Dieter
+  source or its two build/verifier scripts change. The broader `tokyo_assets`
+  path can still sync generated Dieter-only changes, widget/other product-root
+  changes, and workflow dispatch without rebuilding or proving parity.
+- Because the sync script uploads the Dieter root on every invocation, every
+  `tokyo_assets=true` path must build and verify Dieter before sync.
 - `scripts/tokyo-r2-deploy-sync.mjs` maps only current git-authored roots:
   `tokyo/product/widgets -> product/widgets`,
   `tokyo/product/dieter -> dieter`, `tokyo/roma -> product/roma`, and
@@ -140,7 +141,7 @@ DevStudio product UX gap remains assigned to 126L.
 | Dieter package metadata | Remove false `main`, install-time `prepare`, and the unused Dieter GSAP declaration in one edit. | No install-time generation, false program entrypoint, or duplicate edit from 126F/126H. |
 | Dieter build provenance | Remove deployment-environment SHA precedence; always derive the latest scoped Dieter/build input commit. | No second builder, manifest service, or dual provenance identity. |
 | Current manifest provenance mismatch | 126F regenerates after its committed Dieter source change and proves exact scoped SHA. | No 126G hand edit or duplicate regeneration. |
-| Cloudflare/R2 workflow | After build, fail on any tracked/untracked `tokyo/product/dieter/**` delta before R2 sync. | No reconciliation engine, rollback engine, or upload of uncommitted build output. |
+| Cloudflare/R2 workflow | Whenever `tokyo_assets=true`, build Dieter, fail on any tracked/untracked `tokyo/product/dieter/**` delta, then sync R2. | No unverified generated-only/widget/Roma/manual-dispatch sync, reconciliation engine, or rollback engine. |
 | Product data/localization | No touch. | No account-data deploy mapping or deletion of real l10n tooling. |
 | DevStudio token operation | Hand exact UI/evidence gap to 126L. | No 126G screen patch, approval flow, or new backend. |
 | Documentation | Preserve unless a later execution changes an authority. | No past-state narrative as current doctrine. |
@@ -166,7 +167,8 @@ step; it does not gain a service or new deploy lane.
 ## Step-8 Review Questions
 
 1. Is any active build/deploy/source path missing from this authority map?
-2. Is the no-code 126G disposition honest at current source?
+2. Does the package/build/workflow write set cover every current R2 sync path
+   without creating a second deploy lane?
 3. Is the DevStudio commit-evidence gap assigned precisely enough to 126L
    without creating a second ops subsystem?
 4. Does the plan preserve real l10n and product data while keeping R2 sync

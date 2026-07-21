@@ -418,9 +418,11 @@ The final integrated Step-9 plan carries this exact slice:
 4. Through 126G, make `scripts/build-dieter.js` derive manifest provenance from
    the latest commit affecting the scoped Dieter/build inputs in every
    environment; CI-provided deployment SHAs must not replace that identity.
-   Add a fail-closed workflow step after `pnpm build:dieter` and before R2 sync
-   that requires `tokyo/product/dieter/**` to have zero tracked or untracked
-   delta.
+   Whenever the existing workflow sets `tokyo_assets=true`, run
+   `pnpm build:dieter`, then a fail-closed parity step, then R2 sync. The parity
+   step must require `tokyo/product/dieter/**` to have zero tracked or untracked
+   delta. This covers generated-only, widget/other product-root, and manual
+   dispatch syncs because every sync invocation uploads the Dieter root.
 5. Commit the Dieter source/package/build changes, then run `pnpm build:dieter` so
    `tokyo/product/dieter/**` is generated from that committed input. Commit the
    generated output separately and prove `manifest.json.gitSha` equals the
@@ -460,8 +462,9 @@ Exact current deletion map:
   its scoped provenance names the actual latest Dieter input commit.
 - `scripts/build-dieter.js`: 126G removes environment deployment-SHA precedence
   so local and CI builds use the same scoped input identity.
-- `.github/workflows/cloud-dev-workers.yml`: 126G adds the generated-output
-  parity gate before R2 sync.
+- `.github/workflows/cloud-dev-workers.yml`: 126G makes every
+  `tokyo_assets=true` path build Dieter and pass the generated-output parity
+  gate before R2 sync.
 
 No GSAP compatibility wrapper, substitute animation package, or replacement
 motion abstraction is permitted. Current source otherwise contains no stale

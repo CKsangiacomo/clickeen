@@ -1,251 +1,160 @@
-# 126H - Dieter Pre-Execution Audit
+# 126H - Current-Source Pre-Execution Audit: Dieter
 
-Status: FROZEN POINT-IN-TIME PRE-EXECUTION AUDIT - code changed afterward; no step-9 execution credit.
+Status: STEP 6 COMPLETE - current source audited through commit `a687e2f7`;
+Step 7 is defined in `../126H__PRD__Dieter.md`; no Step-9 execution credit.
 PRD: `../126H__PRD__Dieter.md`.
-Scope: Dieter foundation substrate, generated Dieter artifacts, Dieter docs, and
-known app/runtime consumers of Dieter foundation tokens.
 
-No runtime code changes, product data changes, Cloudflare operations, R2 writes,
-or generated artifact edits were performed by this audit.
+## Audit Question
+
+What Dieter substrate work is still real in current source, and which findings
+belong to another 126 owner instead of becoming a new token system or catch-all
+refactor?
 
 ## Authority Gate
 
 | Authority | Current owner |
 | --- | --- |
-| Product surface authority | Dieter system UI substrate, consumed by Bob/Roma/Prague/DevStudio/Admin and product packages |
-| Source coordinate | `dieter/**`, especially `dieter/tokens/**` and `dieter/components/**` |
-| Generated coordinate | `tokyo/product/dieter/**`, produced by `pnpm build:dieter` / `scripts/build-dieter.js` |
-| Route/API boundary | None for this audit; 126H does not mutate account routes or product APIs |
-| Runtime/deploy surface | None touched; post-execution deploy verification belongs to the normal Cloudflare path only after code changes |
-| Verification surface | Source search, docs search, `pnpm build:dieter` after future Dieter source changes |
+| Dieter source | `dieter/tokens/**`, `dieter/components/**`, `dieter/icons/**`. |
+| Generated Dieter output | `tokyo/product/dieter/**`, produced only by `scripts/build-dieter.js`. |
+| Public widget package source | `tokyo/product/widgets/**`; shared shell source is git-authored product source, not generated Dieter output. |
+| Package/build operations | 126G for `dieter/package.json`, build provenance, workflow parity, and R2 sync ordering. |
+| DevStudio product surface | 126L for `admin/**` visual and interaction changes. |
+| Component/layer behavior | 126I and 126K for component shadows and layering. |
+| Product data | Account instance packages and `accounts/**`; not mutated by 126H. |
+| Verification | Source search, Dieter typecheck, Roma byte-exact package test, normal Git deploy, and R2 product-source read-back when Step 9 changes deployed source. |
 
-Compliance reason: 126H is a substrate-source and documentation pass. It must
-not turn into a runtime repair, product-data edit, or deploy operation.
+## Commands And Checks
 
-## Source Evidence Snapshot
+The current-source pass inspected the package, component catalog, source and
+generated token consumers, shared widget source, Admin/DevStudio consumers,
+living docs, and current workflow/build ownership. It ran:
 
-- Active token entrypoint is `dieter/tokens/tokens.css`, importing foundation,
-  color, and typography in that order.
-- Active foundation source is `dieter/tokens/dieter-foundation-tokens.css`.
-- Active build script is root `scripts/build-dieter.js`; the old
-  `dieter/scripts/build-dieter.js` path is not current.
-- `@ck/dieter` currently has `"main": "index.html"`, so it is not a normal
-  programmatic package entrypoint.
-- `dieter/components/` currently has 26 component directories.
-- `--vspace-*` has no current source/doc hits in the checked Dieter/UI-doc
-  paths; `--hspace-*` does.
-- `--shadow-elevated` is not consumed by Dieter components, but it is consumed
-  by Roma and Prague app/runtime code:
-  `roma/app/roma.css`, `prague/src/components/StepsPrimitive.astro`,
-  `prague/src/blocks/subpage-cards/subpage-cards.astro`, and
-  `prague/public/styles/primitives.css`.
-- Focus/touch foundation tokens are consumed by Admin/DevStudio, Roma, and
-  Prague app/runtime code, so deleting token definitions requires consumer
-  cleanup or explicit routing before deletion.
-- Numeric radius aliases are consumed by Admin/DevStudio generator and generated
-  foundation pages, not only Dieter components.
-
-Compliance reason: the PRD must be grounded in current files, not inferred
-from earlier audit text.
-
-## As-Built Findings To Carry Into Execution
-
-### Foundation Entrypoint
-
-`dieter/tokens/tokens.css` is the composed source entrypoint:
-
-```css
-@import url('./dieter-foundation-tokens.css');
-@import url('./dieter-color-tokens.css');
-@import url('./dieter-typography.css');
+```bash
+find dieter/components -mindepth 1 -maxdepth 1 -type d
+node -e "const m=require('./tokyo/product/dieter/manifest.json'); console.log(m.components.length)"
+rg -n -- '--hspace-|--vspace-|--radius-[234]|--focus-ring-width|--focus-ring-offset|--min-touch-target|--color-surface|--shadow-lg' \
+  dieter admin roma prague bob tokyo/product/dieter tokyo/product/widgets
+rg -n "@clickeen/ck-contracts|tldts|gsap" dieter bob
+pnpm --filter @ck/dieter typecheck
+pnpm --filter @clickeen/roma test:instance-package
 ```
 
-The foundation file is not fully standalone because shadow tokens reference
-color tokens. This is current architecture and must be documented as by-reference
-composition, not treated as a broken import.
+Dieter typecheck passed. Roma's byte-exact package matrix passed for all eight
+current widget packages. The pre-existing untracked `tokyo/product/fonts/` was
+not touched.
 
-### Space And Vertical Rhythm
+## Proven Current State
 
-Current source has real `--vertspace-*` tokens. That scale stays.
+### Foundation and catalog are already converged
 
-Current source still has stale `--hspace-*` references in Dieter component CSS
-and generated mirrors:
+- `dieter/components/` has 25 source directories including non-rendered
+  `shared/`; the generated manifest has 24 CSS-backed runtime components.
+- Current foundation source has the real `--space-*`, `--vertspace-*`, control
+  size/gap/radius, icon size, three shadow, two duration, easing, `.sr-only`, and
+  reduced-motion substrate described by the living docs.
+- Numeric radius aliases, stale `--hspace-*`/`--vspace-*`,
+  `--color-surface`, foundation focus width/offset, and touch-target tokens are
+  absent from Dieter, generated Dieter, Admin/DevStudio, Roma, and Prague active
+  source.
+- `--shadow-elevated` has real Roma/Prague consumers and remains current law.
+- Raw component shadows and raw z-index values remain real, but their behavior
+  belongs to 126I/126K. 126H must not invent elevation levels or `--z-*` tokens.
 
-- `dieter/components/dropdown-fill/dropdown-fill.css`
-- `dieter/components/dropdown-actions/dropdown-actions.css`
-- `dieter/components/dropdown-edit/dropdown-edit.css`
-- `dieter/components/dropdown-upload/dropdown-upload.css`
-- `dieter/components/dropdown-border/dropdown-border.css`
-- `dieter/components/dropdown-shadow/dropdown-shadow.css`
-- `dieter/components/textfield/textfield.css`
-- `dieter/components/textedit/textedit.css`
-- `dieter/components/tabs/tabs.css`
-- `tokyo/product/dieter/components/**` generated mirrors
-- `admin/src/css/dieter-previews.css`
+No Dieter foundation-token source change remains for 126H itself. Premature
+cleanup is current input, not Step-9 execution credit.
 
-Execution must remove stale spellings after moving callers to the decided
-current token. It must not document stale names as legacy, prohibited, or future
-options after removal.
+### One live stale focus-width consumer remains
 
-### Radius
+`tokyo/product/widgets/shared/socialShare.css` still contains:
 
-Current foundation defines `--control-radius-*` plus numeric aliases
-`--radius-3` and `--radius-4`. Component source also references undefined
-`--radius-2` in `dieter/components/bulk-edit/bulk-edit.css`.
+```css
+outline: var(--focus-ring-width, 2px) solid ...;
+```
 
-Current numeric radius consumers:
+The Dieter token no longer exists and is not product doctrine. The fallback
+already makes effective runtime width `2px`, so Step 9 replaces only the stale
+reference with literal `2px`. This is vocabulary cleanup with no visual or
+interaction change. The byte-exact fixture
+`roma/tests/fixtures/124c-base-package-expected.json` contains the materialized
+shared CSS and must be updated mechanically, then the all-widget package test
+must remain green.
 
-- `dieter/components/bulk-edit/bulk-edit.css`
-- `dieter/components/object-manager/object-manager.css`
-- `dieter/components/popover/popover.css`
-- `dieter/components/repeater/repeater.css`
-- generated mirrors in `tokyo/product/dieter/components/**`
-- `admin/scripts/generate-foundation-pages.mjs`
-- `admin/src/html/foundations/colors.html`
-- `admin/src/html/foundations/icons.html`
-- `admin/src/html/foundations/typography.html`
-- `admin/src/css/utilities.css`
-- `admin/src/css/layout.css`
-- `admin/src/css/dieter-previews.css`
+This does not authorize a focus framework or removal of visible focus. The
+widget keeps its existing visible `:focus-visible` outline.
 
-Execution must move callers to `--control-radius-*` and remove numeric aliases.
-It must not add `--radius-2` or keep `--radius-3` / `--radius-4` as compatibility.
-Generator source changes must precede regenerated DevStudio HTML.
+### One DevStudio fallback masks an undefined shadow token
 
-### Focus And Touch
+`admin/src/css/utilities.css` styles the token editor panel with
+`var(--shadow-lg, <raw shadow>)`. `--shadow-lg` does not exist. The raw fallback
+hides the broken substrate name.
 
-Current foundation/source docs mention:
+The token editor is a 126L-owned DevStudio surface and `--shadow-elevated` is the
+current shared role for an elevated panel. 126L must replace the masked name
+with `var(--shadow-elevated)` and browser-verify the token editor. 126H records
+and routes the defect; it does not edit the DevStudio surface twice.
 
-- `--focus-ring-width`
-- `--focus-ring-offset`
-- `--focus-ring-color`
-- `--min-touch-target`
+### Dieter package metadata has three false surfaces, owned once by 126G
 
-Human direction and 126A bound this clearly: Clickeen is not a mobile app, 126H
-does not import 44px target doctrine, and 126H does not create keyboard/focus
-support machinery. Execution removes these from current Dieter law unless
-another owning PRD explicitly preserves a specific token for current product
-behavior.
+Current `dieter/package.json`:
 
-Current app/runtime consumers that must be cleaned or routed before token
-definition deletion:
+- declares unused `gsap`;
+- declares `main: index.html`, but `dieter/index.html` does not exist;
+- runs `prepare: pnpm run build`, which regenerates deployed product output
+  during dependency installation.
 
-- `admin/src/css/utilities.css`
-- `admin/scripts/generate-foundation-pages.mjs`
-- `admin/src/html/foundations/colors.html`
-- `admin/src/html/foundations/typography.html`
-- `admin/src/html/tools/entitlements.html`
-- `roma/app/roma.css`
-- `prague/public/styles/primitives.css`
-- `prague/src/components/InstanceEmbed.astro`
-- `prague/src/blocks/site/nav/Nav.astro`
+`@clickeen/ck-contracts` and `tldts` are real dependencies with current source
+imports and must stay. 126G owns one package edit that removes GSAP, false
+`main`, and install-time `prepare` while preserving explicit `build` and
+`typecheck`. 126F owns the motion reason for GSAP deletion; 126H owns the honest
+package-shape finding; neither edits the same file again.
 
-`--focus-ring-color` is a 126B color-boundary token. 126H records it because
-consumers reference it, but 126H does not decide color law.
+The target package is a build/typecheck task package with no claimed
+programmatic entrypoint. No replacement registry or entrypoint is needed.
 
-### Shadows And Elevation
+### Generated/deployed boundaries remain simple
 
-Dieter has three foundation shadow tokens:
+- Dieter source changes produce `tokyo/product/dieter/**` only through the root
+  builder.
+- The shared social-share CSS is git-authored widget package source under the
+  existing Tokyo product root; it is not generated Dieter output.
+- 126G's every-`tokyo_assets` build/parity rule must be green before this widget
+  source can sync to R2, because every product-root sync also uploads Dieter.
+- Existing published account instance packages are product snapshots. The
+  stale variable currently resolves to the same `2px` value, so 126H does not
+  silently rematerialize account product data for a no-behavior source cleanup.
 
-- `--shadow-elevated`
-- `--shadow-floating`
-- `--shadow-inset-control`
+## Exact Step-7 Disposition
 
-`--shadow-floating` and `--shadow-inset-control` have Dieter component
-consumers. `--shadow-elevated` has app/runtime consumers in Roma and Prague.
-Therefore `--shadow-elevated` cannot be removed as "unused" during 126H.
+| Area | Integrated Step-9 disposition | Must not do |
+| --- | --- | --- |
+| Shared widget focus width | In `tokyo/product/widgets/shared/socialShare.css`, replace `var(--focus-ring-width, 2px)` with literal `2px`; update the byte-exact Roma fixture; run the all-widget package matrix. | Do not restore the deleted Dieter token, remove visible focus, or add focus machinery. |
+| DevStudio token-editor elevation | 126L replaces undefined `--shadow-lg` plus raw fallback with current `--shadow-elevated` and browser-verifies the panel. | No new shadow token, local alias, or duplicate 126H edit. |
+| Dieter package metadata | 126G performs the one package edit removing Dieter GSAP, false `main`, and install-time `prepare`; real dependencies and explicit scripts stay. | No second package edit in 126F/126H and no new entrypoint/registry. |
+| Foundation/tokens | Preserve and verify current source truth. | No new scale, alias, focus/touch doctrine, or repeated cleanup. |
+| Component shadows/layering | Route exact current files to 126I/126K. | No elevation system or `--z-*` family in 126H. |
+| Generated Dieter output | Changes only when an owning source slice changes and runs the builder. | No hand edit or duplicate H-only rebuild. |
+| Product data | No mutation. | No direct R2 account edit or silent rematerialization of published snapshots. |
 
-Execution must keep it as current shared source while those consumers exist.
-Raw repeated Dieter component shadows are a 126I component cleanup target, not a
-reason for 126H to create a Material-style elevation system.
+## V1-V8 Pre-Execution Result
 
-### Layering
+| ID | Result | Evidence/control |
+| --- | --- | --- |
+| V1 Silent substitution | OPEN UNTIL STEP 9 | Delete the stale focus variable reference directly; do not invent a replacement token. |
+| V2 Silent healing | PASS | Existing effective `2px` behavior is named; no persisted state is normalized. |
+| V3 Silent omission | OPEN UNTIL STEP 9 | Shared widget source, byte-exact fixture, DevStudio fallback, package metadata, generated boundary, and owning handoffs are all mapped. |
+| V4 Fail-open control | OPEN UNTIL STEP 9 | Remove fallback-masked `--shadow-lg`; 126L must consume the real current token. |
+| V5 Corruption-as-absence | PASS | Broken token names are treated as defects, not ignored as missing. |
+| V6 Partial-success masquerade | PASS | Premature token cleanup receives no execution credit; 25/24 counts and real token consumers are explicit. |
+| V7 Masquerade/redress | PASS | No compatibility aliases, renamed focus token, package wrapper, or new elevation system is allowed. |
+| V8 Runtime test dependency | PASS | Source carries behavior; byte-exact and browser checks only verify it. |
 
-Current Dieter component CSS uses raw `z-index` literals in:
+## Step-8 Review Questions
 
-- `dieter/components/dropdown-fill/dropdown-fill.css`
-- `dieter/components/popover/popover.css`
-- `dieter/components/object-manager/object-manager.css`
-- `dieter/components/bulk-edit/bulk-edit.css`
-- `dieter/components/textedit/textedit.css`
-- `dieter/components/tabs/tabs.css`
-- `dieter/components/segmented/segmented.css`
-
-126H records the drift only. It must not add a `--z-*` token family. Layering
-behavior belongs to 126I components and 126K dialogs/modals.
-
-### Motion Boundary
-
-Foundation defines duration tokens, but 126F owns motion law. `--duration-snap`,
-`--duration-spin`, and `--easing-standard` are routed to 126F. 126H must not
-decide motion/easing values or create choreography.
-
-### Icon Boundary
-
-Foundation owns `--icon-size-*` as substrate tokens. Icon origination,
-consumption, sizing rules, render paths, and account-asset separation belong to
-126C and 126I. 126H must not reopen icon origination.
-
-### Documentation Drift
-
-Known current docs requiring repair during execution:
-
-- `documentation/engineering/UI/dieter.md` lists `dieter/scripts/*` as source
-  truth even though active build is root `scripts/build-dieter.js`.
-- `documentation/engineering/UI/dieter.md` says about 27 components; current
-  count is 26.
-- `documentation/engineering/UI/dieter.md` says build path is
-  `dieter/scripts/build-dieter.js`; active build is `scripts/build-dieter.js`.
-- `documentation/engineering/UI/dieter.md` says dark-ready; 126B says no dark
-  mode and no dark-ready scaffolding.
-- `documentation/engineering/UI/dieter.md` lists focus/touch tokens as current
-  doctrine.
-- `documentation/engineering/UI/README.md` maps UI docs to stale 126 letters.
-- `documentation/services/dieter.md` lists `dieter/icons/svg_new/` as a current
-  optional icon override input. 126C and 126G say that lane is not current
-  product law; living Dieter docs must remove it as source truth.
-- `scripts/build-dieter.js` still contains the `svg_new` copy block. That stale
-  source cleanup is routed to 126C/126G execution and must not be represented in
-  126H docs as current Dieter source law.
-
-## Detailed Blast Radius
-
-| Slice | Files / paths | Execution requirement | Must not do |
-| --- | --- | --- | --- |
-| Foundation source | `dieter/tokens/dieter-foundation-tokens.css`; `dieter/tokens/tokens.css` | Keep the current substrate map where decided; remove stale aliases/tokens only when callers are updated or routed. | No new token taxonomy, focus system, z-index system, or compatibility aliases. |
-| Generated Dieter output | `tokyo/product/dieter/tokens/**`; `tokyo/product/dieter/components/**`; `tokyo/product/dieter/manifest.json` | Update only through `pnpm build:dieter` after source changes. | No hand-editing generated output. |
-| Vertical rhythm | Listed `dieter/components/**` files with `--hspace-*`; generated mirrors; `admin/src/css/dieter-previews.css` | Move stale spellings to `--vertspace-*` or correct owning token. | Do not document removed names as living patterns. |
-| Radius | `bulk-edit`, `object-manager`, `popover`, `repeater`; generated mirrors; `admin/scripts/generate-foundation-pages.mjs`; `admin/src/html/foundations/colors.html`; `admin/src/html/foundations/icons.html`; `admin/src/html/foundations/typography.html`; `admin/src/css/utilities.css`; `admin/src/css/layout.css`; `admin/src/css/dieter-previews.css` | Move numeric aliases to `--control-radius-*`; update generator source before generated DevStudio pages. | Do not add `--radius-2`; do not preserve numeric alias family. |
-| Focus/touch | foundation/color token files; generated mirrors; `admin/src/css/utilities.css`; `admin/scripts/generate-foundation-pages.mjs`; `admin/src/html/foundations/colors.html`; `admin/src/html/foundations/typography.html`; `admin/src/html/tools/entitlements.html`; `roma/app/roma.css`; `prague/public/styles/primitives.css`; `prague/src/components/InstanceEmbed.astro`; `prague/src/blocks/site/nav/Nav.astro`; `documentation/engineering/UI/dieter.md`; `documentation/engineering/UI/color.md` | Remove from current 126H law only after consumer cleanup or explicit routing to an owning PRD; keep `--focus-ring-color` routed to 126B. | No mobile/touch doctrine; no keyboard/focus framework; no aliases. |
-| Shadows | foundation token files; Dieter shadow consumers; Roma/Prague `--shadow-elevated` app consumers | Preserve product-used `--shadow-elevated`; route raw component shadow cleanup to 126I. | Do not remove a product-used token as unused; do not add elevation levels. |
-| Layering | raw `z-index` Dieter components | Record for 126I/126K. | No `--z-*` token family. |
-| Package/artifact docs | `dieter/package.json`; `documentation/services/dieter.md`; `documentation/engineering/UI/dieter.md` | State current artifact shape honestly. | No invented package registry/entrypoint. |
-| Living UI docs | `documentation/engineering/UI/README.md`; UI detail docs listed in PRD | Align doc ownership, track mapping, and current substrate claims. | No legacy behavior documentation after removal. |
-| Product data/deploy | account runtime paths; Cloudflare/R2 | No change in 126H pre-execution audit. | No product mutation, no deploy claim. |
-
-## V1-V8 Audit
-
-| ID | Audit result |
-| --- | --- |
-| V1 Silent substitution | Controlled: undefined `--radius-2` / `--color-surface` must not become invented aliases. |
-| V2 Silent healing | Controlled: stale `--hspace-*`, any `--vspace-*`, and numeric radius aliases are removed after caller cleanup, not normalized into compatibility. |
-| V3 Silent omission | Controlled: each non-126H concern is routed to 126B/126C/126F/126I/126K/126L/126M instead of dropped; Admin/DevStudio, Roma, and Prague token consumers are included before token deletion. |
-| V4 Fail-open control | Controlled: fallback-masked stale names are not treated as valid law. |
-| V5 Corruption-as-absence | Controlled: broken token references and would-be deleted token consumers are explicit bugs/blast radius, not absence. |
-| V6 Partial-success masquerade | Controlled: `--shadow-elevated` has Roma/Prague consumers and cannot be called unused; focus/touch and radius token removal cannot be called complete while app/runtime consumers still reference the removed names. |
-| V7 Masquerade/redress | Controlled: no alias layer, no legacy docs, no redressed old names. |
-| V8 Runtime test dependency | Controlled: checks verify source/doc truth; they do not become product runtime gates. |
-
-## Green Criteria
-
-126H is pre-execution ready only when all three review lanes confirm:
-
-- file-level blast radius is concrete enough for execution;
-- no stale/legacy behavior is preserved as current doctrine;
-- no new framework, registry, scanner, validator, focus system, touch doctrine,
-  z-index family, or elevation expansion is introduced;
-- docs updates are named, including `documentation/engineering/UI/README.md`,
-  `documentation/engineering/UI/dieter.md`, and `documentation/services/dieter.md`;
-- verification includes build/typecheck/governance checks for touched source and
-  before/after visual evidence for affected Dieter/Admin/Roma/Prague UI;
-- V1-V8 risks are explicitly controlled.
+1. Is replacing the stale widget focus-width reference with its current `2px`
+   fallback the complete behavior-preserving cleanup?
+2. Does the byte-exact fixture/test blast radius cover every current widget
+   package that embeds shared social-share CSS?
+3. Are the `--shadow-lg` and Dieter package findings assigned once to 126L and
+   126G without leaving another active legacy path?
+4. Does the plan preserve real `@clickeen/ck-contracts`, `tldts`,
+   `--shadow-elevated`, `.sr-only`, and published product-data authority?

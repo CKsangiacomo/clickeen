@@ -153,21 +153,22 @@ authoritative reduced-motion selector correction, and regenerated output.
 
 | Area | Step-9 disposition | Must not do |
 | --- | --- | --- |
-| Unused GSAP declarations | Delete from `bob/package.json` and `dieter/package.json`; regenerate `pnpm-lock.yaml`. | No replacement library, wrapper, or compatibility path. |
+| Unused GSAP declarations | Delete Bob's declaration; 126G removes Dieter's declaration in its single package edit; regenerate `pnpm-lock.yaml`. | No duplicate Dieter package edit, replacement library, wrapper, or compatibility path. |
 | Foundation reduced-motion selector | Add `*::before` and `*::after` beside `*`; regenerate Tokyo token output; browser-verify Roma, Prague, and one public widget consumer. | No Roma/Prague/widget-local duplicate guard or broad motion rewrite. |
 | Generated manifest | Build after the Dieter source commit and commit the resulting scoped input SHA. | No hand-authored or stale provenance. |
 | Deterministic build/deploy gate | 126G removes CI deployment-SHA precedence and requires zero generated tree delta before R2 sync. | No second manifest identity or upload of uncommitted rebuild output. |
 | Dieter foundation/components | Preserve and regression-check if another domain changes them. | No new token, curve, framework, or repeated migration. |
 | Generated Tokyo Dieter output | Regenerate only after source changes and verify parity. | No hand edits. |
 | Bob/Roma/Admin chrome | Verify only if an owning later slice changes relevant files. | No interaction or layout redesign under 126F. |
-| Prague | Verify if a foundation duration token changes. | No cleanup of site-local motion in 126F. |
-| Public widgets | No touch. | No universal widget-motion doctrine. |
+| Prague | Source no edit; browser verification required for `StepsPrimitive` under normal/reduced motion. | No cleanup of site-local motion in 126F. |
+| Public widgets | Source no edit; browser verification required for one current CSS-motion widget. | Widget-specific JS choreography stays widget-owned; no universal widget-motion doctrine. |
 | Product data/services | No touch. | No R2, DB, route, queue, policy, or deploy work. |
 
-Exact deletion/change map: the two package declarations and their mechanically
-unreachable lockfile entries; one foundation selector; generated source parity;
-and generated manifest provenance. Current source contains none of the other
-stale motion behavior the old point-in-time audit described.
+Exact deletion/change map: Bob's package declaration, Dieter's declaration in
+the 126G-owned combined package edit, their mechanically unreachable lockfile
+entries, one foundation selector, generated source parity, and generated
+manifest provenance. Current source contains none of the other stale motion
+behavior the old point-in-time audit described.
 
 ## V1-V8 Pre-Execution Result
 

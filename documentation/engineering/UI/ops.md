@@ -44,10 +44,12 @@ This doc owns "how the system runs"; [`dieter.md`](dieter.md) owns "what the sys
 
 - Deployed to **Tokyo R2** at `dieter/**`; surfaces load it from `/dieter`
   (Bob via CDN, Bob/Roma via the `/dieter` edge proxy).
-- Deploy chain is real: Dieter source/build-script changes trigger
-  `build:dieter` plus `tokyo-r2-deploy-sync`
-  (`.github/workflows/cloud-dev-workers.yml`). Generated Tokyo product-root
-  changes run upload-only sync; they do not by themselves run `build:dieter`.
+- Current deploy chain rebuilds Dieter for Dieter source/build-script changes,
+  but generated-only and other Tokyo product-root syncs can upload the Dieter
+  root without rebuilding. PRD 126G changes the single existing workflow so
+  every `tokyo_assets=true` path runs `build:dieter`, proves zero tracked or
+  untracked generated Dieter delta, and only then runs
+  `tokyo-r2-deploy-sync`.
 - Tokyo/R2 sync uploads current git-authored product roots. It is not remote
   reconciliation, orphan cleanup, rollback, or product-data mutation.
 - Localization remains a real product domain, but root l10n storage is not a UI

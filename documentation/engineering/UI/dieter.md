@@ -94,11 +94,12 @@ Generated Dieter files and `manifest.json` are build/runtime outputs, not source
 truth. App runtimes consume those generated/CDN artifacts; they do not redefine
 Dieter source.
 
-`@ck/dieter` is not currently a general programmatic JS/CSS package entrypoint
-while its package entry resolves to `index.html`. Consumers use the current
-generated/CDN artifact path unless the UI ops or component doctrine explicitly
-changes that contract through its execution PRD. Do not invent a second package
-or registry to hide the current shape.
+`@ck/dieter` is a build/typecheck task package, not a general programmatic
+JS/CSS entrypoint. Current package metadata still points `main` at missing
+`index.html` and runs output generation through install-time `prepare`; PRD 126G
+removes those false surfaces together with unused Dieter GSAP. Consumers use the
+generated/CDN artifact path. Do not invent a second package, registry, or
+entrypoint.
 
 ## Current Boundaries
 
@@ -106,8 +107,13 @@ or registry to hide the current shape.
   tokens, so the foundation file is consumed through that composition.
 - Numeric radius aliases are not Dieter law. Use `--control-radius-*`.
 - Focus-ring width, focus-ring offset, and touch-target sizing are not Dieter
-  foundation doctrine. `--focus-ring-color` is a color token owned by
-  [`color.md`](color.md).
+  foundation doctrine. One shared widget source still references the removed
+  width token behind an effective `2px` fallback; 126H replaces that spelling
+  with literal `2px` without changing visible focus. `--focus-ring-color` is a
+  color token owned by [`color.md`](color.md).
+- `--shadow-lg` is not a Dieter token. The current DevStudio token-editor
+  fallback is a 126L cleanup target; it must consume `--shadow-elevated`
+  directly rather than preserve a dead alias.
 - There is no z-index token family in Dieter. Component layering belongs to
   [`components.md`](components.md) and dialog/modal behavior belongs to
   [`dialogs-and-modals.md`](dialogs-and-modals.md).

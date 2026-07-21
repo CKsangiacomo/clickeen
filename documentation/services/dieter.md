@@ -119,8 +119,9 @@ The Dieter build fails or must be stopped when:
 
 - Update source first, then rebuild generated Tokyo artifacts.
 - Dieter/system motion uses `--duration-snap`, `--duration-base`, and
-  `--easing-standard` from the foundation token source. Public-widget runtime
-  motion is widget-owned behavior, not Dieter motion doctrine.
+  `--easing-standard` from the foundation token source. Public widgets load the
+  Dieter token entrypoint and inherit its global CSS reduced-motion baseline;
+  independent widget choreography and JS-driven behavior remain widget-owned.
 - Do not hand-edit generated artifacts without the source change that produces them.
 - Do not add external vertical margins to reusable controls; host layout owns outside spacing.
 - Do not use `@import` for fonts in generated widget packages.
