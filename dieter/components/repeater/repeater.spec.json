@@ -21,6 +21,7 @@
       "context": {
         "label": "Items",
         "addLabel": "Add item",
+        "reorderLabel": "Reorder items",
         "moveLabel": "Move item {index}",
         "size": "md",
         "labelInputLabel": "Title",
