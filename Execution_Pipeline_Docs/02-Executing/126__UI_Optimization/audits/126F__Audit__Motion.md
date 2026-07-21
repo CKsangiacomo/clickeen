@@ -1,9 +1,7 @@
 # 126F - Current-Source Pre-Execution Audit: Motion
 
-Status: STEP 6 CORRECTED AFTER RED EXACT-TREE STEP-8 REVIEW - current source,
-the public Dieter read boundary, and the 126G generated/deploy handoff are
-re-audited through reviewed tree `85013bc4`; Step 7 is defined in
-`../126F__PRD__Motion.md`; no Step-9 execution credit.
+Status: STEP 6 COMPLETE - current-source audit and Step-7 plan independently
+reviewed green at exact tree `4c5458b4`; no Step-9 execution credit.
 PRD: `../126F__PRD__Motion.md`.
 
 ## Audit Question

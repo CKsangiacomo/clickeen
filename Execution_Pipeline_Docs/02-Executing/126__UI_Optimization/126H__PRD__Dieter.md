@@ -1,8 +1,7 @@
 # 126H - PRD: Dieter
 
-Status: PRE-EXECUTION STEPS 6-7 CORRECTED AFTER 126F RED STEP-8 REVIEW - the
-126G generated/deploy handoff is exact; fresh exact-tree Step-8 review pending;
-no Step-9 execution credit.
+Status: PRE-EXECUTION STEPS 6-8 COMPLETE - exact-tree review green at
+`4c5458b4`; no Step-9 execution credit.
 Parent: `126__PRD__UI_Optimization_Program.md` (MAMA).
 Series order: 126H of 126A-126M.
 KB doc: `documentation/engineering/UI/dieter.md`.

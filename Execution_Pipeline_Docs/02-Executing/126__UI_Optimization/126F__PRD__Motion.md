@@ -1,8 +1,7 @@
 # 126F - PRD: Motion
 
-Status: PRE-EXECUTION STEPS 6-7 CORRECTED AFTER RED STEP-8 REVIEW - mandatory
-consumer verification and the 126G generated/deploy handoff are exact; fresh
-exact-tree Step-8 review pending; no Step-9 execution credit.
+Status: PRE-EXECUTION STEPS 6-8 COMPLETE - exact-tree review green at
+`4c5458b4`; no Step-9 execution credit.
 Parent: `126__PRD__UI_Optimization_Program.md` (MAMA).
 Series order: 126F of 126A-126M.
 KB doc: `documentation/engineering/UI/motion.md`.
