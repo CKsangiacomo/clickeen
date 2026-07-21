@@ -460,7 +460,10 @@ handoffs. It does not change Dieter token source or account product data.
    widget package parity cases to pass.
 3. Let 126G make the only `dieter/package.json` edit: remove Dieter GSAP, false
    `main`, and install-time `prepare`; preserve explicit `build`/`typecheck` and
-   real `@clickeen/ck-contracts`/`tldts` dependencies.
+   real `@clickeen/ck-contracts`/`tldts` dependencies. 126G also owns complete
+   build provenance across Dieter source, both build scripts, root
+   `package.json`, and `pnpm-lock.yaml`, plus the scoped clean-tree requirement
+   for any manual remote sync. 126H adds no parallel package/deploy rule.
 4. Let 126L replace DevStudio's fallback-masked `--shadow-lg` declaration with
    `var(--shadow-elevated)` and browser-verify the token editor.
 5. Let 126I/126K own exact component shadow/layering behavior; 126H adds no

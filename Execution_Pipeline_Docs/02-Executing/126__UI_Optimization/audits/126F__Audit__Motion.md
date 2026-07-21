@@ -69,12 +69,14 @@ which this pass did not touch.
 - Dieter governance and build are green.
 
 `tokyo/product/dieter/manifest.json` is not current: it records `de408dda`,
-while `git rev-list -1 HEAD -- dieter scripts/build-dieter.js
-scripts/verify-svgs.js` returns `c299c783`. Running `pnpm build:dieter` changes
-only that provenance value at the audited tree. 126G removes this generated tree
-from Git tracking. Because 126F changes Dieter source, its Step-9 slice commits
-source first, rebuilds ignored deploy output, and verifies provenance against
-that source commit locally and in R2.
+while the current builder's incomplete scoped query over `dieter`,
+`scripts/build-dieter.js`, and `scripts/verify-svgs.js` returns `c299c783`.
+Running `pnpm build:dieter` changes only that provenance value at the audited
+tree. 126G removes this generated tree from Git tracking and expands provenance
+to include root `package.json` and `pnpm-lock.yaml`, which also determine built
+bytes. Because 126F changes Dieter source, its Step-9 slice commits source first,
+rebuilds ignored deploy output, and verifies provenance against that complete
+input scope locally and in R2.
 
 The build is not deterministic between local and GitHub execution. Current
 `scripts/build-dieter.js` prefers `GITHUB_SHA` over the scoped Dieter-input
@@ -162,8 +164,8 @@ authoritative reduced-motion selector correction, and regenerated output.
 | Roma chrome | Mandatory browser verification of the Widget Defaults toggle in normal and reduced-motion modes because the global Dieter selector changes its runtime behavior. | No Roma-local guard or layout redesign. |
 | Bob/Admin chrome | Source regression-check; browser-verify only if an owning later slice changes those files. | No interaction or layout redesign under 126F. |
 | Prague | Source no edit; browser verification required for `StepsPrimitive` under normal/reduced motion. | No cleanup of site-local motion in 126F. |
-| Public widgets | Source no edit; browser verification required for one current CSS-motion widget. | Widget-specific JS choreography stays widget-owned; no universal widget-motion doctrine. |
-| Product data/services | No touch. | No R2, DB, route, queue, policy, or deploy work. |
+| Public widgets | Source no edit; after exact-SHA deploy and R2 read-back, browser verification is required for the current public Cards widget. | Widget-specific JS choreography stays widget-owned; no universal widget-motion doctrine. If no public Cards instance exists, fail the gate rather than silently substituting or creating product data. |
+| Product data/services | No product-data or service mutation. Normal Git deployment, exact-SHA workflow verification, R2 read-back, and post-deploy browser evidence are mandatory verification. | No direct R2 mutation, DB/route/queue/policy change, or deploy-path implementation outside 126G. |
 
 Exact deletion/change map: Bob's package declaration, Dieter's declaration in
 the 126G-owned combined package edit, their mechanically unreachable lockfile

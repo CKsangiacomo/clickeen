@@ -18,7 +18,7 @@ refactor?
 | Dieter source | `dieter/tokens/**`, `dieter/components/**`, `dieter/icons/**`. |
 | Generated Dieter output | `tokyo/product/dieter/**`, produced only by `scripts/build-dieter.js`. |
 | Public widget package source | `tokyo/product/widgets/**`; shared shell source is git-authored product source, not generated Dieter output. |
-| Package/build operations | 126G for `dieter/package.json`, deterministic provenance, ignored generated output, and build-before-R2-sync ordering. |
+| Package/build operations | 126G for `dieter/package.json`, complete source/package/lockfile provenance, ignored generated output, scoped clean-tree manual remote sync, and build-before-R2-sync ordering. |
 | DevStudio product surface | 126L for `admin/**` visual and interaction changes. |
 | Component/layer behavior | 126I and 126K for component shadows and layering. |
 | Product data | Account instance packages and `accounts/**`; not mutated by 126H. |
