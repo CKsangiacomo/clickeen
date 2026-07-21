@@ -72,6 +72,9 @@ The Step-6 audit proves:
   or invent an optional field lane;
 - six dropdown templates use `div role="button"` and Bulk Edit creates a seventh
   copy dynamically;
+- DevStudio currently exposes 22 generated component routes, while its route
+  contract test still asserts a stale 20-route list that omits `agent-activity`
+  and `textedit`;
 - dropdown-actions has an unreachable apply/cancel workflow;
 - Repeater and Object Manager are active, distinct workflows whose static
   dependencies are missing from the manifest;
@@ -87,7 +90,8 @@ Expected inventory after 126I source changes:
 - 26 CSS-backed manifest components;
 - 18 JS-backed manifest components;
 - 22 DevStudio specs, 22 templates, and 26 CSS sources;
-- 20 DevStudio component routes, unchanged.
+- 22 DevStudio component routes, unchanged. The stale 20-route test fixture is
+  corrected to the generated source truth; no route is added or deleted.
 
 These counts describe different inventories and must stay qualified.
 
@@ -258,7 +262,8 @@ Green gate:
 
 1. Run the 126G builder. Its source-derived parity assertion must confirm the
    complete ignored Dieter output before sync.
-2. Regenerate DevStudio static registries/pages through the existing generator.
+2. Regenerate DevStudio static registries/pages through the existing generator,
+   including Repeater's page after its tooltip markup changes.
 3. Update living documentation counts and contract descriptions.
 4. Commit source and generated Admin files, not ignored Dieter output.
 5. Push the exact commit only after all local gates pass.
@@ -297,8 +302,8 @@ Green gate:
 | Dependencies/build | `scripts/build-dieter.js` | Add exact Object Manager/Repeater deps; use 126G builder law. |
 | CSS contracts | `dieter/components/operational-field/operational-field.css`; `dieter/components/operational-table/operational-table.css`; `dieter/components/tooltip/tooltip.css` | Add three CSS-only primitives. |
 | Tooltip adoption | `bob/components/TdMenu.tsx`; `bob/app/layout.tsx`; `dieter/components/repeater/repeater.{html,js}` | Replace native title/ad hoc names with shared hover/focus visual contract while keeping ARIA names. |
-| Generated Admin inventories/pages | `admin/src/data/componentRegistry.generated.ts`; `admin/src/data/showcase.generated.ts` only if generator output changes it; `admin/src/html/components/dropdown-{actions,border,edit,fill,shadow,upload}.html` | Regenerate from source, never hand-edit. |
-| E2E | `e2e/devstudio/route-contract.spec.ts`; `e2e/widgets/prd106f-builder-certification.spec.ts`; new `e2e/widgets/component-contracts.spec.ts` | Preserve 20 DevStudio routes; replace stale fake-button assertions in the broad suite; add focused native activation/immediate-action/tooltip checks in a read-only Builder spec. |
+| Generated Admin inventories/pages | `admin/src/data/componentRegistry.generated.ts`; `admin/src/data/showcase.generated.ts` only if generator output changes it; `admin/src/html/components/dropdown-{actions,border,edit,fill,shadow,upload}.html`; `admin/src/html/components/repeater.html` | Regenerate from source, never hand-edit. |
+| E2E | `e2e/devstudio/route-contract.spec.ts`; `e2e/widgets/prd106f-builder-certification.spec.ts`; new `e2e/widgets/component-contracts.spec.ts` | Correct the stale DevStudio fixture to all 22 generated component routes by adding `agent-activity` and `textedit`; replace stale fake-button assertions in the broad suite; add focused native activation/immediate-action/tooltip checks in a read-only Builder spec. |
 | Living docs | `documentation/engineering/UI/components.md`; `documentation/engineering/UI/dieter.md`; `documentation/engineering/UI/accessibility.md`; `documentation/widgets/authoring/ToolDrawerControls.md`; `documentation/services/bob.md`; `documentation/services/devstudio.md` | Record qualified inventories, required spec law, native trigger/Toggle law, one dropdown-actions workflow, exact dependencies, and 126K/L/M handoffs. |
 
 Execution-start grep must confirm each generated/doc file before edit. Files with
@@ -316,6 +321,8 @@ no current affected statement are recorded as checked and left unchanged.
 
 - adoption of operational-field/table/tooltip in matching DevStudio operational
   screens;
+- all later DevStudio visual work inherits 126I's corrected 22-route generated
+  baseline; 126L does not create a second route inventory;
 - no duplicate DevStudio-only version of those visual contracts.
 
 126M owns:
@@ -362,7 +369,8 @@ contract test.
 
 ### Browser Proof
 
-- DevStudio's 20 existing component routes remain live with no console errors;
+- DevStudio's 22 generated component routes, including `agent-activity` and
+  `textedit`, remain live with no console errors;
 - all six native dropdown triggers activate through click, Enter, and Space;
 - dropdown-actions commits immediately and renders no footer;
 - native Toggle changes through pointer and Space without generated Toggle JS;

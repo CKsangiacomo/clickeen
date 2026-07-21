@@ -32,7 +32,9 @@ slices?
 Current source has 25 directories under `dieter/components/**`, including the
 non-rendered `shared/` helper directory. The current generated manifest has 24
 CSS-backed components and 20 JS-backed components. DevStudio's generated
-registry has 22 specs, 23 templates, and 24 CSS sources. These are different
+registry has 22 specs, 23 templates, and 24 CSS sources. Its generator emits 22
+component pages and routing exposes all 22, but the route-contract test still
+lists only 20 and omits `agent-activity` and `textedit`. These are different
 inventories and must never be reported as one unqualified component count.
 
 After the accepted deletion/addition work, the expected inventories are:
@@ -42,8 +44,9 @@ After the accepted deletion/addition work, the expected inventories are:
 - 26 CSS-backed manifest components;
 - 18 JS-backed manifest components: `textrename` is gone and Toggle is native;
 - 22 DevStudio specs, 22 templates, and 26 CSS sources;
-- the DevStudio route count remains 20 because the three new visual primitives
-  are named CSS-only contracts rather than ToolDrawer showcases.
+- the DevStudio route count remains 22 because the three new visual primitives
+  are named CSS-only contracts rather than ToolDrawer showcases. Execution
+  corrects the stale 20-route test fixture without changing product routes.
 
 ## Proven Gaps
 
@@ -171,7 +174,8 @@ table framework is introduced.
 | Dropdown triggers | Native buttons in six templates and Bulk Edit's dynamic upload markup; preserve appearance and current popover semantics. | 126I direct. 126K later corrects listbox/dialog semantics. |
 | `dropdown-actions` | Delete footer markup/CSS, pending state/functions, and Bob's empty compiler fields. | 126I direct. |
 | Manifest deps | Add exact Object Manager/Repeater dependencies. | 126I direct in `scripts/build-dieter.js`. |
-| Field/table/tooltip | Add three CSS-only Dieter contracts; apply tooltip to Bob TdMenu and Dieter Repeater icon actions. | 126I source; 126K owns Object Manager adoption with its dialog rewrite; 126L/126M own app adoption. |
+| Field/table/tooltip | Add three CSS-only Dieter contracts; apply tooltip to Bob TdMenu and Dieter Repeater icon actions; regenerate Repeater's Admin page. | 126I source; 126K owns Object Manager adoption with its dialog rewrite; 126L/126M own app adoption. |
+| DevStudio route baseline | Update the stale route-contract fixture from 20 to all 22 generated component routes by adding `agent-activity` and `textedit`. | 126I verification correction; no product route change and no second inventory in 126L. |
 | Bulk Edit/Object Manager lifecycle | Delete listener accumulation and implement D1 lifecycle once. | 126K exclusive write owner. |
 | Dialog shadow/z-index/width | Preserve until 126K resolves the exact blocking-dialog layer. | No 126I token or visual redesign. |
 
@@ -181,7 +185,7 @@ table framework is introduced.
 | --- | --- | --- |
 | V1 Silent substitution | OPEN UNTIL STEP 9 | Required ToolDrawer spec absence must throw; no default context may substitute for a missing contract. |
 | V2 Silent healing | PASS | No persisted data is normalized or rewritten by 126I. |
-| V3 Silent omission | OPEN UNTIL STEP 9 | Dynamic Bulk Edit markup, all-widget fail-closed compilation, generated Admin registry/pages, exact deps, four stale R2 objects, and all living-doc counts are explicitly included. |
+| V3 Silent omission | OPEN UNTIL STEP 9 | Dynamic Bulk Edit markup, all-widget fail-closed compilation, Repeater's generated page, the 22-route fixture, generated Admin registries/pages, exact deps, four stale R2 objects, and all living-doc counts are explicitly included. |
 | V4 Fail-open control | OPEN UNTIL STEP 9 | Compiler spec 404 and manifest dependency failures must remain fail-closed. |
 | V5 Corruption-as-absence | PASS | 126I does not read or mutate persisted product data. |
 | V6 Partial-success masquerade | OPEN UNTIL STEP 9 | Dieter source, generated output, Bob/DevStudio consumers, deploy, and browser behavior all have named evidence. |
