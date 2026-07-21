@@ -1,7 +1,8 @@
 # 126F - Current-Source Pre-Execution Audit: Motion
 
-Status: STEP 6 COMPLETE - current source audited at tree `8c450c07`; Step 7 is
-defined in `../126F__PRD__Motion.md`; no Step-9 execution credit.
+Status: STEP 6 CORRECTED AFTER STEP-8 REVIEW - current source re-audited through
+tree `bccd4785`; Step 7 is defined in `../126F__PRD__Motion.md`; no Step-9
+execution credit.
 PRD: `../126F__PRD__Motion.md`.
 
 ## Audit Question
@@ -15,10 +16,11 @@ system or repeating completed work?
 | Authority | Current owner |
 | --- | --- |
 | Product surface | Dieter/system motion in Dieter, Bob, Roma, and DevStudio/Admin operational chrome. |
-| Product surface excluded | Public-widget runtime motion. Each widget owns its carousel, ticker, autoplay, countdown, RAF, and other behavior. |
+| Shared baseline consumers | Bob, Roma, DevStudio/Admin, Prague, and public widgets load the Dieter token entrypoint and inherit its global CSS reduced-motion guard. |
+| Product surface excluded | Widget-specific choreography and JS-driven runtime motion beyond the shared CSS baseline. |
 | Token source | `dieter/tokens/dieter-foundation-tokens.css`. |
 | Generated deploy output | `tokyo/product/dieter/**`, generated from Dieter source. |
-| Prague boundary | Consumer of foundation duration tokens; blast radius only if those token values/names change. |
+| Prague boundary | Consumer of the global token entrypoint and animated pseudo-elements; verification blast radius for the selector correction. |
 | Account/session, route, storage, product data | Not touched. |
 | Verification | Current source grep, generated/source parity, Dieter governance/build, focused owning-surface browser evidence only when a later slice changes that surface. |
 
@@ -73,6 +75,15 @@ only that provenance value at the audited tree. Because 126F must already change
 Dieter source, its Step-9 slice commits source first, rebuilds, and commits the
 generated output with provenance pointing to the actual source commit.
 
+The build is not deterministic between local and GitHub execution. Current
+`scripts/build-dieter.js` prefers `GITHUB_SHA` over the scoped Dieter-input
+commit. GitHub then rebuilds immediately before R2 sync without requiring the
+generated tree to match git. A local build can therefore stamp source-input
+commit A while CI stamps deployment commit B and uploads different bytes. 126G
+owns removal of that environment-SHA precedence plus a fail-closed generated
+tree parity check before R2 sync. 126F cannot deploy its regenerated output
+until that 126G operation gate is in place.
+
 ### Operational consumers are clean
 
 - Dieter operational transitions use the foundation duration/easing tokens.
@@ -116,21 +127,24 @@ not autonomous animation. Disabling it would break the product control. The
 correct law is: preserve immediate manipulation; remove interpolation and
 animated transition under reduced motion.
 
-### Prague and widgets are correctly bounded
+### Prague and widgets share the baseline but keep source ownership
 
-- Prague consumes `--duration-snap` and `--duration-base`; it must be verified
-  before a future foundation token rename/value change.
-- No foundation token change is planned in 126F, so Prague site-local motion is
-  inspect-only and not a cleanup target.
-- Public widgets own their runtime motion and reduced-motion decisions. 126F
-  must not rewrite widget runtime JS/CSS into Dieter motion doctrine.
+- Prague loads the Dieter token entrypoint. `StepsPrimitive` animates
+  `::before` and `::after`, so the global selector correction changes Prague
+  runtime behavior even though no Prague source file is edited.
+- Current public widget templates load `/dieter/tokens/tokens.css`; materialized
+  widgets preserve that link. The global CSS guard is therefore a shared
+  baseline for widget CSS motion.
+- Prague source and widget source remain no-edit surfaces in 126F. Execution
+  verifies normal/reduced behavior on Prague and one current widget. Widget JS
+  and independent choreography beyond the baseline remain widget-owned.
 
-### Documentation is current
+### Living documentation records current versus target truth
 
-`documentation/engineering/UI/motion.md`, Dieter docs, and DevStudio/Admin
-docs carry the current two-token law, standard easing, reduced-motion runtime
-rule, and widget/system boundary. The only precision added by Step 7 is that
-direct manipulation remains functional under reduced motion.
+`documentation/engineering/UI/motion.md` records the current two-token law,
+standard easing, direct-manipulation rule, and the shared-baseline/widget-owned
+boundary. It states that pseudo-element coverage is a pending 126F execution
+target until the source selector actually changes.
 
 ## Exact Step-7 Disposition
 
@@ -140,8 +154,9 @@ authoritative reduced-motion selector correction, and regenerated output.
 | Area | Step-9 disposition | Must not do |
 | --- | --- | --- |
 | Unused GSAP declarations | Delete from `bob/package.json` and `dieter/package.json`; regenerate `pnpm-lock.yaml`. | No replacement library, wrapper, or compatibility path. |
-| Foundation reduced-motion selector | Add `*::before` and `*::after` beside `*`; regenerate Tokyo token output. | No Roma-local reduced-motion exception or broad motion rewrite. |
+| Foundation reduced-motion selector | Add `*::before` and `*::after` beside `*`; regenerate Tokyo token output; browser-verify Roma, Prague, and one public widget consumer. | No Roma/Prague/widget-local duplicate guard or broad motion rewrite. |
 | Generated manifest | Build after the Dieter source commit and commit the resulting scoped input SHA. | No hand-authored or stale provenance. |
+| Deterministic build/deploy gate | 126G removes CI deployment-SHA precedence and requires zero generated tree delta before R2 sync. | No second manifest identity or upload of uncommitted rebuild output. |
 | Dieter foundation/components | Preserve and regression-check if another domain changes them. | No new token, curve, framework, or repeated migration. |
 | Generated Tokyo Dieter output | Regenerate only after source changes and verify parity. | No hand edits. |
 | Bob/Roma/Admin chrome | Verify only if an owning later slice changes relevant files. | No interaction or layout redesign under 126F. |

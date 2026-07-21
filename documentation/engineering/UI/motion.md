@@ -18,12 +18,16 @@ This document owns Dieter/system motion only:
 
 Public-widget runtime motion is widget-owned product behavior. Carousel,
 ticker, autoplay, countdown, interpolation, and other widget-specific motion
-belong to the owning widget implementation and docs, not to Dieter motion law.
-That widget-owned boundary includes each widget's reduced-motion behavior.
+belong to the owning widget implementation and docs, not to Dieter duration or
+easing law. Every public widget template also loads Dieter's token entrypoint,
+so Dieter's global CSS reduced-motion guard is the shared baseline for CSS
+motion. Widget-owned CSS/JS may add behavior beyond that baseline, especially
+for JS-driven motion, but must not bypass it.
 
-Prague consumes Dieter duration tokens in current static-site primitives. Any
-future change to a foundation duration token must verify those Prague consumers;
-their consumption does not make Prague motion a second Dieter authority.
+Prague loads Dieter's token entrypoint and consumes Dieter duration tokens in
+current static-site primitives. Any change to the global reduced-motion guard
+or a foundation duration token must verify those Prague consumers; their
+consumption does not make Prague motion a second Dieter authority.
 
 ## Tokens
 
@@ -44,10 +48,10 @@ that need must be named by the owning product/component PRD first.
 ## Reduced Motion
 
 Dieter ships the global reduced-motion guard from
-`dieter/tokens/dieter-foundation-tokens.css`.
-
-That guard governs real elements plus `::before` and `::after`; system UI must
-not leave animated pseudo-elements outside reduced-motion behavior.
+`dieter/tokens/dieter-foundation-tokens.css`. Current source covers real
+elements only. PRD 126F execution must extend that one authoritative selector
+to `::before` and `::after`; until then pseudo-elements are a known uncovered
+case, not completed product behavior.
 
 Components may also carry local reduced-motion rules when they own the moving
 selector directly. If system JS writes inline transition or animation behavior,

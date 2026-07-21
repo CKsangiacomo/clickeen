@@ -30,8 +30,11 @@ This doc owns "how the system runs"; [`dieter.md`](dieter.md) owns "what the sys
 - Icon propagation verifies `dieter/icons/icons.json` and `dieter/icons/svg/*`
   parity/currentColor, then copies them to Tokyo output. The build does not
   mutate committed icon source.
-- The Dieter manifest records traceable provenance. Missing git provenance or
-  unresolved component dependencies fail the build.
+- The Dieter manifest must record the latest commit affecting Dieter/build
+  inputs in every environment. Current source still lets deployment environment
+  SHAs override that scoped identity; PRD 126G removes the override and adds a
+  generated-tree parity gate before R2 sync. Missing git provenance or
+  unresolved component dependencies already fail the build.
 - Generators (in `admin/scripts/`): `generate-foundation-pages.mjs` (colors/icons/
   typography from token source), `generate-component-pages.ts` (**guarded**: throws
   on unresolved `{{...}}` stencils and on a component that renders no page),

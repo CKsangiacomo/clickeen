@@ -119,6 +119,12 @@ these active parts:
 Current pre-execution boundary:
 
 - Build provenance and declared dependencies fail closed.
+- Current local and GitHub builds can stamp different provenance because
+  deployment environment SHAs override the scoped Dieter-input identity.
+- Current CI rebuilds before R2 sync but does not fail when rebuilt generated
+  output differs from committed `tokyo/product/dieter/**`.
+- `dieter/package.json` exposes a missing `main` entrypoint and regenerates
+  product output through `prepare` during install; both are false ops surfaces.
 - SVG verification is non-mutating.
 - Current living docs describe the root build path, generated/deployed
   authority, product-data exclusion, and upload-only Cloudflare sync.
@@ -133,9 +139,10 @@ Current pre-execution boundary:
 
 ## Human-Converged Product Reading
 
-The 126G problem is not "add governance." The active build/deploy path is now
-structurally clean and documented. Remaining work is exact-tree regression
-verification plus the DevStudio mutation-evidence gap owned by 126L.
+The 126G problem is not "add governance." The active build/deploy path is
+structurally small, but its manifest identity and pre-sync parity are not yet
+deterministic. Remaining work is one package/build/workflow integrity slice plus
+the DevStudio mutation-evidence gap owned by 126L.
 
 For Clickeen this matters because:
 
@@ -251,11 +258,12 @@ Compliance reason:
 
 Target law:
 
-- `manifest.json` provenance must be traceable. Unknown provenance is not a
-  valid current ops result.
-- Manifest provenance must cover the build-affecting source/scripts or use the
-  full commit SHA. A local scoped SHA that omits build-affecting scripts is not
-  traceable enough for 126G.
+- `manifest.json` provenance must be one deterministic identity: the latest
+  commit affecting `dieter/`, `scripts/build-dieter.js`, or
+  `scripts/verify-svgs.js`, locally and in CI. Deployment environment SHAs must
+  not substitute a second identity.
+- CI must rebuild from committed source and require zero tracked or untracked
+  delta under `tokyo/product/dieter/**` before R2 sync.
 - Manifest dependencies must resolve. Warning-and-ship is not a valid standard
   for broken declared dependencies.
 - Warning-only behavior is allowed only where warning is explicitly product law.
@@ -267,8 +275,10 @@ Current verification targets:
 
 - The build must continue failing when provenance is unavailable or declared
   dependencies are unresolved.
-- Verify provenance remains traceable, SVG verification remains 126C-owned,
-  and governance scope remains documented honestly.
+- Verify local and CI builds resolve the same scoped input SHA; verify the
+  workflow fails before R2 sync when generated output differs from git.
+- Verify SVG verification remains 126C-owned and governance scope remains
+  documented honestly.
 
 Compliance reason:
 
@@ -333,14 +343,14 @@ it alone.
 
 | Area | Owner | Exact files / path shapes | Verify | Must not change |
 | --- | --- | --- | --- | --- |
-| Build command entrypoints | 126G / repo scripts | `package.json`; `dieter/package.json`; `admin/package.json` | Verify `pnpm build:dieter`, `@ck/dieter build`, and DevStudio/Admin generate/build commands are documented from current package scripts. | Do not document invented build commands or stale script paths. |
-| Dieter build source | 126G / Dieter ops | `scripts/build-dieter.js`; `scripts/verify-svgs.js` | Verify provenance/dependency failures remain fail-closed and source verification remains non-mutating. | Do not create compatibility branches or guards for inactive local override concepts. |
+| Build command entrypoints | 126G / repo scripts | `package.json`; `dieter/package.json`; `admin/package.json` | Remove Dieter's false `main`, install-time `prepare`, and 126F-assigned unused GSAP declaration in one package edit; preserve explicit build/typecheck and real dependencies. | Do not generate deploy output during install or edit `dieter/package.json` again in 126F/126H. |
+| Dieter build source | 126G / Dieter ops | `scripts/build-dieter.js`; `scripts/verify-svgs.js` | Remove deployment-SHA precedence; verify the scoped input SHA and dependency failures remain fail-closed and source verification remains non-mutating. | Do not create a second builder, compatibility branch, or dual manifest identity. |
 | SVG processing and verification | 126C icon law + 126G build behavior | `scripts/verify-svgs.js`; `dieter/icons/icons.json`; `dieter/icons/svg/` | Verify build execution reads/verifies source SVGs and does not mutate committed source. | Do not let build-time verification silently rewrite committed icon source. |
 | Generated Dieter artifacts | Generated from Dieter source | `tokyo/product/dieter/manifest.json`; `tokyo/product/dieter/tokens/tokens.css`; `tokyo/product/dieter/icons/icons.json`; `tokyo/product/dieter/icons/svg/` | Generated artifacts change only through `pnpm build:dieter`; manifest provenance and dependencies are fail-visible. | Do not hand-edit generated output as source truth. |
 | DevStudio generation | 126G / DevStudio generation, 126L for DevStudio product workflow | `admin/scripts/generate-typography-json.cjs`; `admin/scripts/generate-foundation-pages.mjs`; `admin/scripts/generate-component-pages.ts`; `admin/scripts/generate-static-registries.mjs`; `admin/scripts/build-static.mjs`; `admin/src/data/typography.generated.json`; `admin/src/html/` | Generated DevStudio/Admin artifacts must reflect source generators; governance scope must be described honestly. | Do not claim generated Admin checks prove Bob/Roma/widget runtime correctness. |
 | DevStudio token edit lane | 126L DevStudio execution target, 126G documents lane | `admin/functions/_shared/dieter-tokens.js`; `admin/functions/_shared/berlin.js`; `admin/functions/_middleware.js`; `admin/functions/api/dieter/tokens/colors.js`; `admin/functions/api/dieter/tokens/colors/value.js`; `admin/functions/api/dieter/tokens/typography.js`; `admin/functions/api/dieter/tokens/typography/value.js`; `admin/src/main.ts` | Token write response and visible operation evidence expose token, value change, commit SHA, and available authenticated actor/session context where 126L implements it; client binding and auth boundary are in scope for inspection. | Do not add approval workflow, contrast enforcement, semantic validator, or PR bureaucracy in 126G. |
 | Governance guard scope | 126G / generated Admin guard | `scripts/dieter/governance-guards.mjs`; `.github/workflows/devstudio-verify.yml` | Guard docs state exact scope: generated Admin/DevStudio artifacts only. | Do not expand into a universal UI scanner in 126G. |
-| Cloud-dev deploy path | DevOps / Cloudflare deploy | `.github/workflows/cloud-dev-workers.yml`; `.github/workflows/cloud-dev-runtime-verify.yml`; `.github/workflows/cloud-dev-roma-app.yml`; `.github/workflows/cloud-dev-prague-app.yml`; `.github/workflows/cloud-dev-prague-content.yml` | Document current deploy path, including that Dieter source/build-script changes run `pnpm build:dieter` plus Tokyo/R2 sync while generated product-root-only changes run upload-only sync. | Do not create new deploy gates or runtime validation rituals in 126G. |
+| Cloud-dev deploy path | DevOps / Cloudflare deploy | `.github/workflows/cloud-dev-workers.yml`; `.github/workflows/cloud-dev-runtime-verify.yml`; `.github/workflows/cloud-dev-roma-app.yml`; `.github/workflows/cloud-dev-prague-app.yml`; `.github/workflows/cloud-dev-prague-content.yml` | Add one fail-closed generated-tree parity step after `pnpm build:dieter` and before R2 sync; preserve the existing deploy lane. | Do not create a new deploy service, reconciliation engine, or validation ritual outside this build boundary. |
 | Tokyo/R2 deploy sync | 126G / Cloudflare product-root deploy sync | `scripts/tokyo-r2-deploy-sync.mjs`; `documentation/services/tokyo.md`; `documentation/services/tokyo-worker.md`; `documentation/engineering/CloudflareOperations.md` | Verify the current root allowlist, account-runtime exclusion, and upload-only description; stale local/deploy concepts are absent. | Do not add R2 reconciliation, orphan cleanup, rollback, or refusal guards around dead concepts in 126G. |
 | Localization/l10n authority boundary | Babel/Prague/San Francisco/localization owners, not 126G | `documentation/architecture/BabelProtocol.md`; `documentation/architecture/OverlayArchitecture.md`; `documentation/strategy/Clickeen-Babel.md`; `documentation/capabilities/localization.md`; `documentation/services/prague/prague-overview.md`; `documentation/ai/sanfrancisco.md`; `packages/l10n/**`; `packages/l10n/locales.json`; `scripts/i18n/build.mjs`; `scripts/i18n/extract-keys.mjs`; `scripts/i18n/validate.mjs`; `scripts/l10n/build.mjs`; `scripts/l10n/validate.mjs`; `scripts/prague-l10n/lib.mjs`; `scripts/prague-l10n/translate.mjs`; `scripts/prague-l10n/verify.mjs` | Verify real localization tooling remains intact; remove only stale deploy-root assumptions from UI ops/deploy docs. | Do not delete real localization tooling, locale overlays, Prague l10n, San Francisco l10n, or future localization product direction. |
 | Product data boundary | Product routes/workers, not 126G | `documentation/services/tokyo.md`; `documentation/services/tokyo-worker.md`; `documentation/services/roma.md`; `documentation/services/bob.md`; account runtime paths `accounts/{accountPublicId}/...` in docs | Docs must state account/runtime product data is outside UI ops source/build/deploy roots. | Do not mutate product data or treat `accounts/**` as a UI deploy root. |
@@ -349,41 +359,56 @@ it alone.
 ## Current Documentation Reconciliation
 
 `documentation/engineering/UI/ops.md` and the related Dieter, iconography,
-Tokyo, Tokyo-worker, and UI-index docs now record the current authority lanes,
-root build, generated/deployed separation, localization boundary, and upload-
-only Cloudflare path. Step 6 verifies that baseline rather than scheduling
-another documentation rewrite.
+Tokyo, Tokyo-worker, and UI-index docs record the current authority lanes, root
+build, generated/deployed separation, localization boundary, and upload-only
+Cloudflare path. 126G execution adds the one-identity provenance rule,
+install-side-effect deletion, and pre-sync generated parity rule.
 
 ## Final Step-7 Execution Disposition
 
-126G has no standalone product-code, product-data, managed-service, deploy, or
-documentation write set after routing one current generated-artifact mismatch
-to the owning 126F Dieter slice. The active source/build/deployed/product-data
-lanes otherwise match current doctrine. Premature cleanup is current as-built
-input but receives no Step-9 execution credit.
+126G has one small standalone package/build/workflow integrity slice and no
+product-data or managed-service mutation. The generated-artifact refresh remains
+with 126F and the DevStudio screen work remains with 126L. Premature cleanup is
+current as-built input but receives no Step-9 execution credit.
 
-The final integrated Step-9 plan carries 126G as two precise responsibilities:
+The final integrated Step-9 plan carries these precise responsibilities:
 
-1. **Preservation gate:** if another 126 slice changes Dieter source, build or
+1. **Single Dieter package cleanup:** remove false `main`, install-time
+   `prepare`, and Dieter's unused GSAP declaration assigned by 126F in one edit;
+   preserve explicit `build`/`typecheck`, `@clickeen/ck-contracts`, and `tldts`.
+2. **Deterministic provenance:** make `scripts/build-dieter.js` always derive
+   the latest scoped Dieter/build-input commit; remove deployment-environment
+   SHA precedence.
+3. **Pre-sync parity:** after GitHub runs `pnpm build:dieter`, fail before R2
+   sync if `tokyo/product/dieter/**` has any tracked or untracked delta.
+4. **Preservation gate:** if another 126 slice changes Dieter source, build or
    generator scripts, generated Tokyo output, DevStudio functions, or deploy
    workflows, re-run the owning source/build checks and verify the exact
    deployed surface through its existing GitHub/Cloudflare authority.
-2. **126L handoff:** DevStudio must display the token, old value, new value, and
+5. **126L handoff:** DevStudio must display the token, old value, new value, and
    returned commit SHA after a successful direct token commit, using available
    authenticated session context where the server records operation evidence.
    126L also closes the direct-commit verification visibility gap. 126G does not
    implement that screen workflow or add an ops service.
-3. **126F handoff:** current `tokyo/product/dieter/manifest.json` provenance is
+6. **126F handoff:** current `tokyo/product/dieter/manifest.json` provenance is
    stale relative to the latest committed Dieter input. 126F already changes
    Dieter source, so it owns commit-source -> build -> commit-generated-output
    ordering and exact manifest input-SHA proof. 126G does not create a second
    cleanup commit or hand-edit the generated file.
 
-Exact current deletion map: none in 126G. Current source has no `unknown`
-provenance fallback, warning-and-ship manifest dependency path, source-mutating
-SVG build, stale UI deploy root, account-data deploy mapping, or claim that
-upload-only R2 sync performs reconciliation. The stale generated manifest value
-is assigned once to 126F's already-required Dieter regeneration.
+Exact current deletion map:
+
+- `dieter/package.json`: delete false `main`, install-time `prepare`, and the
+  unused Dieter GSAP declaration assigned by 126F.
+- `scripts/build-dieter.js`: delete deployment-environment SHA precedence.
+- `.github/workflows/cloud-dev-workers.yml`: add one fail-closed generated-tree
+  parity step before R2 sync.
+
+Current source otherwise has no `unknown` provenance fallback,
+warning-and-ship manifest dependency path, source-mutating SVG build, stale UI
+deploy root, account-data deploy mapping, or claim that upload-only R2 sync
+performs reconciliation. The stale generated manifest value is changed once by
+126F's required Dieter regeneration.
 
 Exact no-touch boundary:
 
@@ -403,12 +428,12 @@ read-back proof.
 
 | ID | 126G risk | Required control |
 | --- | --- | --- |
-| V1 Silent substitution | Build provenance regresses to an invented or missing value. | The build must continue failing when provenance is unavailable. |
+| V1 Silent substitution | CI deployment SHA substitutes for scoped source-input identity. | Local and CI builds derive the same latest scoped Dieter/build input commit and fail when it is unavailable. |
 | V2 Silent healing | SVG verification rewrites committed source during build. | Build must not mutate source SVGs; icon source changes belong to human icon authoring / 126C. |
-| V3 Silent omission | Stale deploy docs or generated artifacts are dropped without checking real localization/product authority. | Check localization and product-data authorities before removing deploy assumptions; preserve real l10n tooling. |
+| V3 Silent omission | Install-time generation or an uncommitted CI rebuild bypasses the explicit source/generated lane. | Delete `prepare`; require zero generated-tree delta before R2 sync. |
 | V4 Fail-open control | Manifest dependency validation regresses to warning-and-ship. | Unresolved declared dependencies must continue failing the build. |
 | V5 Corruption-as-absence | Product data or account roots are treated as deploy artifacts and overwritten/ignored. | Keep account/runtime data outside UI ops deploy roots. |
-| V6 Partial-success masquerade | R2 upload-only sync is described as reconciliation, orphan cleanup, or rollback. | Document upload-only truth; do not claim remote-state proof. |
+| V6 Partial-success masquerade | Deploy succeeds after CI produced bytes different from committed generated output. | Fail before R2 sync on any tracked or untracked generated delta. |
 | V7 Masquerade/redress | Stale deploy paths or refusal guards are renamed as current Cloudflare law. | Delete dead concepts instead of preserving them behind guards. |
 | V8 Runtime test dependency | Normal UI ops depends on governance scans or validation rituals as runtime truth. | Source/build/deploy authorities carry truth; checks only verify their scoped outputs. |
 
@@ -419,10 +444,14 @@ Execution is not complete until these checks are run and reconciled:
 - Search docs for stale build-script locations, old icon-registry pipeline
   claims, and wrong 126C ops ownership claims.
 - Search `scripts/build-dieter.js` for `unknown`, and warning-only
-  manifest dependency behavior; verify provenance covers all build-affecting
-  source/scripts or uses the full commit SHA.
+  manifest dependency behavior; verify local and CI provenance always resolves
+  the latest scoped Dieter/build input SHA.
 - Search `package.json`, `dieter/package.json`, and `admin/package.json` for
-  build/generate entrypoints before updating build docs.
+  build/generate entrypoints; verify Dieter has no false `main`, install-time
+  `prepare`, or unused GSAP declaration after the single package cleanup.
+- Intentionally dirty or alter generated Dieter output in a workflow-equivalent
+  check and prove the pre-sync parity step fails; restore it and prove the step
+  passes before any R2 operation.
 - Search `scripts/verify-svgs.js` for source mutation; route icon-specific
   decisions through 126C.
 - Search `scripts/tokyo-r2-deploy-sync.mjs` and Tokyo docs for stale deploy
@@ -463,12 +492,13 @@ Compliance reason:
 
 ## Execution Gap Targets
 
-Step 6 verifies current build/deploy/docs consistency: fail-closed provenance
-and dependencies, non-mutating SVG verification, current root allowlist,
-account-data exclusion, real localization preservation, and upload-only sync.
-The only unresolved product work is DevStudio direct-commit verification and
-token-edit evidence, owned by 126L. No R2 reconciliation, orphan cleanup,
-rollback, or new governance machinery enters 126G.
+Step 6 found one deterministic-build gap and two false Dieter package surfaces.
+126G removes the environment-SHA override, install-time generation, and missing
+entrypoint claim; adds a pre-sync generated parity gate; and preserves
+fail-closed dependencies, non-mutating SVG verification, current root allowlist,
+account-data exclusion, real localization, and upload-only sync. DevStudio
+direct-commit evidence remains owned by 126L. No R2 reconciliation, orphan
+cleanup, rollback, or new governance machinery enters 126G.
 
 ## Out Of Scope For This PRD
 

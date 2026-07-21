@@ -37,11 +37,13 @@ host-compatible motion constraints for future agent-hosted UI.
 126F does not own every interaction state; those belong to 126E. It owns the
 motion behavior used to express those states.
 
-126F does not own public-widget runtime motion. Public widgets are independent
-product software with widget-specific JS/CSS/runtime behavior. A widget may
-implement ticker, carousel, countdown, animation, interpolation, or any other
-motion its product behavior needs. That motion is widget-owned behavior, not
-Dieter/system motion doctrine.
+126F does not own public-widget runtime choreography. Public widgets are
+independent product software with widget-specific JS/CSS/runtime behavior. A
+widget may implement ticker, carousel, countdown, animation, interpolation, or
+other motion its product behavior needs. Every current widget template also
+loads Dieter's token entrypoint, so the Dieter global CSS reduced-motion guard
+is a shared baseline. Widget-specific behavior beyond that baseline remains
+widget-owned, especially JS-driven motion.
 
 126F is intentionally small. Clickeen does not need a motion engine, animation
 framework, choreography library, or imported Material/Apple motion system.
@@ -89,7 +91,9 @@ The strong current evidence:
 - Repeater still writes inline JS `style.transition` shorthands, but it checks
   `prefers-reduced-motion` directly before enabling them.
 - Public widgets include separate carousel/ticker/autoplay/RAF/countdown motion,
-  but that is widget-owned runtime behavior, not Dieter/system motion.
+  but all current widget templates load the Dieter token entrypoint and inherit
+  its global CSS reduced-motion baseline. Independent widget choreography and
+  JS behavior remain widget-owned.
 - Current living motion doctrine records the exact system/widget boundary and
   token law.
 
@@ -115,10 +119,11 @@ not cleanly governed. Current source and living documentation now carry one
 deterministic Clickeen rule. The final gap audit must verify that convergence
 and must not schedule the completed migration again.
 
-Public widgets are not the same problem. A widget is independent product
-software. Its runtime JS can be different per widget because each widget has its
-own product behavior. Widget motion belongs to that widget's implementation and
-documentation, not to 126F Dieter/system motion doctrine.
+Public widgets are not the same product-motion problem. A widget is independent
+product software and its runtime JS can differ because each widget has its own
+behavior. Dieter still supplies the shared CSS reduced-motion baseline because
+the widget templates load `dieter/tokens/tokens.css`; widget implementation and
+documentation own behavior beyond that baseline.
 
 For Clickeen this matters because:
 
@@ -176,14 +181,14 @@ Target law:
 - Public-widget runtime motion means customer-facing widget behavior such as
   carousel, ticker, autoplay, count interpolation, or other widget-owned runtime
   motion.
-- Public-widget runtime motion is outside Dieter/system motion doctrine. Widgets
-  can use whatever motion their product behavior needs through their own JS/CSS
-  runtime.
-- A widget may deliberately consume Dieter tokens for shared shell styling, but
-  that does not make the widget's independent runtime behavior subject to
-  Dieter motion tokens.
-- Widget motion requirements, including any reduced-motion behavior, belong to
-  the owning widget implementation/docs or widget PRD.
+- Public-widget runtime choreography is outside Dieter duration/easing doctrine.
+  Widgets can use the motion their product behavior needs through their own
+  JS/CSS runtime.
+- Current widget templates load Dieter's token entrypoint. Its global CSS
+  reduced-motion guard is therefore a shared runtime baseline, including for
+  widget pseudo-elements after 126F execution.
+- Widget JS and any behavior beyond that CSS baseline belong to the owning
+  widget implementation/docs or widget PRD and must not bypass reduced motion.
 - Generated Tokyo Dieter files are deploy output, not a second motion source
   authority.
 - Account content/assets are not Dieter motion. If a future account-authored
@@ -279,8 +284,9 @@ Target law:
   by JS.
 - Any system JS that writes inline transitions or drives animation must check
   `prefers-reduced-motion: reduce` and choose the reduced behavior directly.
-- Public-widget reduced-motion behavior is widget-owned. It must be specified
-  by the owning widget runtime/docs, not by Dieter motion tokens.
+- Dieter's global CSS guard is the baseline for every current token-consuming
+  widget. Widget-owned JS or additional motion must handle reduced motion at the
+  behavior site when the CSS baseline cannot govern it.
 
 Current verification targets:
 
@@ -369,8 +375,9 @@ it alone.
 | Bob operational chrome | 126F / Bob chrome | `bob/app/bob_app.css` | Verify operational chrome continues to consume Dieter motion tokens. | Do not change Bob interaction semantics owned by 126E. |
 | Roma operational chrome | 126F / Roma chrome | `roma/app/roma.css` | Verify operational chrome continues to consume Dieter motion tokens. | Do not change Roma account/domain state semantics owned by 126E. |
 | Admin / DevStudio chrome | 126F / Admin chrome | `admin/src/css/layout.css`; `admin/src/css/utilities.css` | Verify operational chrome continues to consume Dieter motion tokens and no duplicate global reduced-motion rule returns. | Do not keep duplicate global reduced-motion rules or local motion drift as a separate doctrine. |
-| Prague Dieter token consumers | Prague / website consumer | `prague/src/components/StepsPrimitive.astro`; `prague/src/components/InstanceEmbed.astro`; `prague/public/styles/primitives.css` | Search for `--duration-snap` and `--duration-base`; if duration tokens are changed, verify Prague still uses the decided token law. | Do not treat Prague token consumption as proof that Dieter/system chrome needs extra motion doctrine. |
-| Public widget runtime inspect-only boundary | Widget PRDs / widget docs | `tokyo/product/widgets/logoshowcase/widget.css`; `tokyo/product/widgets/logoshowcase/widget.client.js`; `tokyo/product/widgets/logoshowcase/spec.json`; `tokyo/product/widgets/split-carousel-media/widget.client.js`; `tokyo/product/widgets/split-carousel-media/widget.css`; `tokyo/product/widgets/split-carousel-media/spec.json`; `tokyo/product/widgets/countdown/widget.client.js`; `tokyo/product/widgets/countdown/spec.json`; `tokyo/product/widgets/cards/widget.css`; `tokyo/product/widgets/shared/stagePod.js`; `tokyo/product/widgets/shared/socialShare.js`; `tokyo/product/widgets/shared/socialShare.css` | Inspect only to document that carousel/autoplay/RAF/countdown/social-share motion is widget-owned runtime behavior outside 126F. | Do not rewrite widget runtime motion to Dieter tokens in 126F. |
+| Prague Dieter consumer | Prague / website consumer | `prague/src/layouts/Base.astro`; `prague/src/components/StepsPrimitive.astro`; `prague/src/components/InstanceEmbed.astro`; `prague/public/styles/primitives.css` | Verify the global selector change makes `StepsPrimitive` pseudo-element transitions immediate under reduced motion and preserves normal mode. | Do not edit Prague source or treat Prague consumption as a second motion authority. |
+| Public widget baseline consumer | Widget PRDs / widget docs | `tokyo/product/widgets/*/widget.html`; `tokyo/product/widgets/cards/widget.css`; materializer contract/fixture proving the token link survives materialization | Verify a current public widget with an existing CSS transition inherits the global guard in normal and reduced-motion modes. | Do not rewrite widget runtime CSS/JS or force widget choreography onto Dieter durations/easing. |
+| Public widget runtime inspect-only boundary | Widget PRDs / widget docs | `tokyo/product/widgets/logoshowcase/widget.css`; `tokyo/product/widgets/logoshowcase/widget.client.js`; `tokyo/product/widgets/split-carousel-media/widget.client.js`; `tokyo/product/widgets/countdown/widget.client.js`; `tokyo/product/widgets/shared/stagePod.js`; `tokyo/product/widgets/shared/socialShare.js`; `tokyo/product/widgets/shared/socialShare.css` | Preserve widget ownership beyond the shared CSS guard, especially JS-driven motion. | Do not rewrite independent widget behavior in 126F. |
 | Public widget docs inspect-only boundary | Widget PRDs / widget docs | `documentation/widgets/widgets/logoshowcase.md`; `documentation/widgets/widgets/split-carousel-media.md`; `documentation/widgets/widgets/countdown.md`; `documentation/widgets/widgets/README.md`; `documentation/widgets/README.md`; `documentation/widgets/shared/ShellCore.md`; `documentation/widgets/authoring/ToolDrawerControls.md` | Verify docs do not imply Dieter/system motion governs independent widget runtime behavior. | Do not document widget runtime motion as Dieter/system doctrine. |
 | Living motion docs | 126F docs | `documentation/engineering/UI/README.md`; `documentation/engineering/UI/motion.md`; `documentation/engineering/UI/dieter.md`; `documentation/services/dieter.md`; `documentation/services/devstudio.md`; `documentation/engineering/UI/interactions.md`; `documentation/engineering/UI/components.md` | Search for stale `126A`, duration-scale expansion, missing widget/system boundary, and DevStudio/Admin authority drift. | Do not document removed or widget-owned behavior as Dieter/system doctrine. |
 
@@ -395,9 +402,11 @@ be verified through its existing GitHub/R2 authorities. The premature motion
 migration is current as-built input but receives no Step-9 execution credit.
 The final integrated Step-9 plan carries this exact slice:
 
-1. Remove unused `gsap` dependencies from `bob/package.json` and
-   `dieter/package.json`; regenerate `pnpm-lock.yaml` through pnpm so all GSAP
-   importer and package/snapshot entries disappear.
+1. Remove the unused `gsap` dependency from `bob/package.json`. The single
+   126G-owned Dieter package cleanup removes Dieter's unused `gsap` declaration
+   together with its false `main` and install-time `prepare` metadata; regenerate
+   `pnpm-lock.yaml` through pnpm so all GSAP importer and package/snapshot
+   entries disappear without editing `dieter/package.json` twice.
 2. Prove no active source imports or references GSAP, then run Bob typecheck,
    Dieter typecheck/build, Dieter governance, and the repo frozen-lockfile
    install check required by CI.
@@ -406,24 +415,31 @@ The final integrated Step-9 plan carries this exact slice:
    `*, *::before, *::after`. Do not add a Roma-local guard. Verify the Roma
    Widget Defaults toggle becomes immediate under reduced motion while its
    checked/unchecked product state still changes.
-4. Commit the Dieter source/package changes, then run `pnpm build:dieter` so
+4. Through 126G, make `scripts/build-dieter.js` derive manifest provenance from
+   the latest commit affecting the scoped Dieter/build inputs in every
+   environment; CI-provided deployment SHAs must not replace that identity.
+   Add a fail-closed workflow step after `pnpm build:dieter` and before R2 sync
+   that requires `tokyo/product/dieter/**` to have zero tracked or untracked
+   delta.
+5. Commit the Dieter source/package/build changes, then run `pnpm build:dieter` so
    `tokyo/product/dieter/**` is generated from that committed input. Commit the
    generated output separately and prove `manifest.json.gitSha` equals the
    latest commit affecting `dieter/`, `scripts/build-dieter.js`, or
    `scripts/verify-svgs.js`.
-5. Re-run the source and documentation checks against the execution-start
+6. Re-run the source and documentation checks against the execution-start
    tree.
-6. If later 126 domains introduce or alter system motion, require those exact
+7. If later 126 domains introduce or alter system motion, require those exact
    files to use the existing two durations, standard easing, and reduced-motion
    law before the owning slice can close.
-7. Run `pnpm dieter:governance:check` and `pnpm build:dieter` after the Dieter
+8. Run `pnpm dieter:governance:check` and `pnpm build:dieter` after the Dieter
    dependency change and whenever Dieter source changes later. Generated Tokyo
    Dieter output must match source and must not be hand-edited.
-8. Verify browser behavior for the Roma Widget Defaults toggle in normal and
-   reduced-motion modes. Other Bob, Roma, Prague, or DevStudio/Admin surfaces
-   need browser evidence only when another Step-9 slice changes them.
-   Do not create unrelated visual ceremony.
-9. After push, verify the existing `cloud-dev workers deploy` run at the exact
+9. Verify browser behavior in normal and reduced-motion modes for the Roma
+   Widget Defaults toggle, Prague `StepsPrimitive` pseudo-elements, and one
+   current public widget with an existing CSS transition. These are consumers
+   of the changed global selector even though their source files remain
+   unedited. Do not create unrelated visual ceremony.
+10. After push, verify the existing `cloud-dev workers deploy` run at the exact
    generated-output commit and read back the generated foundation token file
    plus manifest from canonical R2 `dieter/**`. Do not perform a manual R2
    mutation.
@@ -431,7 +447,9 @@ The final integrated Step-9 plan carries this exact slice:
 Exact current deletion map:
 
 - `bob/package.json`: delete the unused `gsap` dependency.
-- `dieter/package.json`: delete the unused `gsap` dependency.
+- `dieter/package.json`: 126G owns one combined cleanup that deletes the unused
+  `gsap` dependency plus false `main` and install-time `prepare`; 126F must not
+  make a second edit to the same file.
 - `pnpm-lock.yaml`: mechanically remove both importer entries and the now
   unreachable `gsap` package/snapshot entries through pnpm.
 - `dieter/tokens/dieter-foundation-tokens.css`: expand the global reduced-motion
@@ -440,16 +458,22 @@ Exact current deletion map:
   `.shadow.css`: regenerate from source; do not hand-edit.
 - `tokyo/product/dieter/manifest.json`: regenerate after the source commit so
   its scoped provenance names the actual latest Dieter input commit.
+- `scripts/build-dieter.js`: 126G removes environment deployment-SHA precedence
+  so local and CI builds use the same scoped input identity.
+- `.github/workflows/cloud-dev-workers.yml`: 126G adds the generated-output
+  parity gate before R2 sync.
 
 No GSAP compatibility wrapper, substitute animation package, or replacement
 motion abstraction is permitted. Current source otherwise contains no stale
 system duration token, component-local operational timing/easing path,
 duplicate Admin reduced-motion doctrine, or unguarded JS transition to delete.
 
-Exact no-touch boundary:
+Exact source no-touch but verification boundary:
 
-- public-widget runtime motion and widget docs;
-- Prague local/site motion while foundation token values remain unchanged;
+- public-widget runtime source/docs remain unedited, but one current widget is
+  browser-verified because it loads the changed global guard;
+- Prague source remains unedited, but `StepsPrimitive` is browser-verified
+  because its pseudo-elements consume the changed global guard;
 - interaction semantics owned by 126E;
 - visual primitives owned by 126I;
 - product data, routes, policy, R2, Supabase, Berlin, San Francisco, and Tokyo
@@ -468,7 +492,7 @@ not authorization for a new motion abstraction.
 | V3 Silent omission | The unused GSAP dependency, Prague consumers, pseudo-element motion, or JS-driven motion is ignored. | Execute the exact package/selector/generated-output map and retain Prague/JS coverage. |
 | V4 Fail-open control | Reduced-motion behavior fails open for pseudo-elements or JS-written transitions. | Foundation CSS covers real elements plus both pseudo-elements; JS-driven system motion checks `prefers-reduced-motion` directly. |
 | V5 Corruption-as-absence | Not applicable to persisted product data in 126F. | Do not touch product data. |
-| V6 Partial-success masquerade | Widget/system motion claims false progress, success, or activity. | Motion must reflect real state; widget motion docs must not claim fake progress/activity. |
+| V6 Partial-success masquerade | Git, CI, or R2 claims current Dieter output while generated bytes/provenance differ. | CI rebuilds deterministically, fails on any generated-output delta, and only then syncs R2. |
 | V7 Masquerade/redress | Local literals or widget runtime motion are renamed as Dieter doctrine. | Replace/remove local system literals; keep widget runtime motion outside 126F. |
 | V8 Runtime test dependency | Normal reduced-motion behavior depends on tests/probes instead of runtime code. | Runtime code/CSS carries the reduced-motion behavior; checks only verify execution. |
 
@@ -484,7 +508,8 @@ Execution is not complete until these checks are run and reconciled:
   `pnpm --filter @ck/dieter typecheck` after the dependency deletion.
 - Search Dieter source for operational `transition` literals in the blast radius.
 - Verify the foundation reduced-motion selector covers `*`, `*::before`, and
-  `*::after`; test the Roma Widget Defaults toggle with reduced motion enabled.
+  `*::after`; test the Roma Widget Defaults toggle, Prague `StepsPrimitive`, and
+  one current public widget transition with reduced motion enabled.
 - Search Dieter source for `--easing-standard` references and definitions.
 - Search for active `--duration-snap` consumers.
 - Search `prague/src/components/StepsPrimitive.astro`,
@@ -499,9 +524,9 @@ Execution is not complete until these checks are run and reconciled:
 - Search `documentation/engineering/UI/README.md` and
   `documentation/engineering/UI/motion.md` for stale `126A`, duration-scale
   expansion, and widget/system boundary errors.
-- After committing Dieter source changes, run `pnpm build:dieter`; verify no
-  generated diff remains uncommitted and manifest provenance equals the latest
-  committed Dieter/build input SHA.
+- After committing Dieter source/build changes, run `pnpm build:dieter`; verify
+  no tracked or untracked generated delta remains and manifest provenance equals
+  the latest committed Dieter/build input SHA locally and under GitHub Actions.
 - Run focused lint/type checks for changed Dieter/Bob/Roma/Admin files if code
   changes occur in execution.
 - After merged code changes that affect Bob, Roma, Prague, DevStudio/Admin app
