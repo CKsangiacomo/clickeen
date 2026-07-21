@@ -1,7 +1,8 @@
 # 126H - Current-Source Pre-Execution Audit: Dieter
 
 Status: STEP 6 CORRECTED AFTER RED EXACT-TREE STEP-8 REVIEW - current source and
-the 126G generated-artifact handoff are audited through tree `d6449165`; Step 7
+the 126G generated-artifact handoff are audited through reviewed tree
+`85013bc4`; Step 7
 is defined in `../126H__PRD__Dieter.md`; no Step-9 execution credit.
 PRD: `../126H__PRD__Dieter.md`.
 

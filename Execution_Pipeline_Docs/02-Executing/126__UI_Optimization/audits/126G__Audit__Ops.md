@@ -1,8 +1,8 @@
 # 126G - Current-Source Pre-Execution Audit: UI Ops
 
 Status: STEP 6 CORRECTED AFTER RED EXACT-TREE STEP-8 REVIEW - current source and
-the manual/DevStudio/Prague deploy paths are re-audited through tree
-`d6449165`; Step 7 is defined in `../126G__PRD__Ops.md`; no Step-9 execution
+the manual/DevStudio/Prague deploy paths are re-audited through reviewed tree
+`85013bc4`; Step 7 is defined in `../126G__PRD__Ops.md`; no Step-9 execution
 credit.
 PRD: `../126G__PRD__Ops.md`.
 
@@ -91,8 +91,9 @@ generated-file commit.
 missing `index.html`, and `prepare` regenerates deployed product output during
 dependency installation. The package does have real `@clickeen/ck-contracts`
 and `tldts` consumers, so those stay. 126G owns one package cleanup that removes
-false `main`, install-time `prepare`, and the unused Dieter GSAP declaration
-assigned by 126F.
+false `main`, install-time `prepare`, both unused Bob and Dieter GSAP
+declarations, and regenerates the shared lockfile once. 126F only verifies that
+result.
 
 `scripts/verify-svgs.js` also contains a non-triggering stroke advisory owned by
 126C icon authoring. Current 126C evidence reports no stroke warning. It is not
@@ -163,16 +164,17 @@ DevStudio product UX gap remains assigned to 126L.
 | --- | --- | --- |
 | Dieter package metadata | Remove false `main`, install-time `prepare`, and the unused Dieter GSAP declaration in one edit. | No install-time generation, false program entrypoint, or duplicate edit from 126F/126H. |
 | Dieter build provenance | Remove deployment-environment SHA precedence; always derive the latest commit affecting `dieter/**`, both build scripts, root `package.json`, `pnpm-workspace.yaml`, or `pnpm-lock.yaml`. | No second builder, dependency registry, manifest service, or dual provenance identity. |
-| Generated-output completeness | Derive the expected path set from actual source transforms; compare expected and generated sets exactly and byte-compare copied artifacts before manifest/sync. | No second output manifest, hand-maintained registry, or warning-and-ship path. |
+| Generated-output completeness | Emit all artifacts and manifest first; then derive the expected path set from actual source transforms, compare expected and generated sets exactly, and byte-compare copied artifacts before success/sync. | No second output manifest, hand-maintained registry, or warning-and-ship path. |
 | Generated Dieter output | Remove `tokyo/product/dieter/**` from Git tracking and ignore it; keep it as the builder's ephemeral deploy output. Make Bob import the source icon registry. | No generated-file commit protocol, compatibility copy, or hand edit. |
-| Cloudflare/R2 path | Make the sync script build before enumeration in dry-run and remote modes; preserve JSON stdout under `pnpm --silent`; reject dirty scoped manual remote input; add `tokyo/prague/**`, root `package.json`, `pnpm-workspace.yaml`, and `pnpm-lock.yaml` to workflow trigger/detection; delete `dieter_artifacts`; remove generated paths from workflow triggers. Prove a clean remote run through exact-SHA Actions, not a manual test upload. | No manual bypass, second deploy lane, reconciliation engine, rollback engine, or successful manual remote probe. |
+| Cloudflare/R2 path | Make the sync script build before enumeration in dry-run and remote modes; preserve JSON stdout under `pnpm --silent`; reject tracked and untracked scoped manual remote input through scoped porcelain status while permitting unrelated/ignored files; add `tokyo/prague/**`, root `package.json`, `pnpm-workspace.yaml`, and `pnpm-lock.yaml` to workflow trigger/detection; delete `dieter_artifacts`; remove generated paths from workflow triggers. Prove a clean remote run through exact-SHA Actions, not a manual test upload. | No manual bypass, untracked-byte gap, second deploy lane, reconciliation engine, rollback engine, or successful manual remote probe. |
 | Product data/localization | No touch. | No account-data deploy mapping or deletion of real l10n tooling. |
 | DevStudio token operation | Hand exact UI/evidence gap to 126L. | No 126G screen patch, approval flow, or new backend. |
 | Documentation | Preserve unless a later execution changes an authority. | No past-state narrative as current doctrine. |
 
 Exact deletion map: environment-SHA precedence in `scripts/build-dieter.js`;
-false `main` and install-time `prepare` in `dieter/package.json`; the Dieter
-GSAP declaration assigned by 126F; all tracked `tokyo/product/dieter/**` files;
+false `main` and install-time `prepare` in `dieter/package.json`; the Bob and
+Dieter GSAP declarations in 126G's one package-graph edit; all tracked
+`tokyo/product/dieter/**` files;
 generated-path workflow triggers; and the `dieter_artifacts` workflow variable.
 The existing builder gains one source-derived completeness assertion and the
 existing sync entrypoint gains one build call; no service, registry, or deploy
@@ -182,10 +184,10 @@ lane is added.
 
 | ID | Result | Evidence/control |
 | --- | --- | --- |
-| V1 Silent substitution | OPEN UNTIL STEP 9 | Local and CI must derive the same complete scoped input SHA; deployment SHA and dirty manual bytes may not substitute for committed source identity. |
+| V1 Silent substitution | OPEN UNTIL STEP 9 | Local and CI must derive the same complete scoped input SHA; deployment SHA plus tracked or untracked manual bytes may not substitute for committed source identity. |
 | V2 Silent healing | PASS | SVG verification reads source and never rewrites it. |
 | V3 Silent omission | OPEN UNTIL STEP 9 | Complete package/workspace/lock inputs, source-derived output parity, manual dry-run, Prague-only, DevStudio, and workflow paths must all reach the sole sync entrypoint; package install must not regenerate output implicitly. |
-| V4 Fail-open control | OPEN UNTIL STEP 9 | Unknown manifest dependencies already throw; missing/unexpected output, build bypass, and dirty-source manual remote upload must also fail. |
+| V4 Fail-open control | OPEN UNTIL STEP 9 | Unknown manifest dependencies already throw; missing/unexpected output, build bypass, and tracked/untracked scoped manual remote upload must also fail. |
 | V5 Corruption-as-absence | PASS | Product/account data remains outside UI deploy roots and is not treated as generated absence. |
 | V6 Partial-success masquerade | OPEN UNTIL STEP 9 | A DevStudio source commit cannot be called successful deployment until its build/sync run reaches R2; 126L exposes that evidence. |
 | V7 Masquerade/redress | OPEN UNTIL STEP 9 | Delete committed generated-tree and `dieter_artifacts` vocabulary rather than preserving them under another wrapper. |

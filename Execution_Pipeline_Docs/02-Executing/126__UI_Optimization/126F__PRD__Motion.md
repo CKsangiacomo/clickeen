@@ -369,7 +369,7 @@ it alone.
 
 | Area | Owner | Exact paths | Verify | Must not change |
 | --- | --- | --- | --- | --- |
-| Unused motion dependency | 126F / package graph | `bob/package.json`; `dieter/package.json`; `pnpm-lock.yaml` | Verify zero active GSAP references; remove both declarations through pnpm and confirm frozen-lockfile install succeeds. | Do not replace GSAP, preserve a compatibility lane, or edit unrelated dependency versions. |
+| Unused motion dependency | 126G / one package-graph edit, verified by 126F | `bob/package.json`; `dieter/package.json`; `pnpm-lock.yaml` | 126G removes both declarations and regenerates the lockfile once; 126F verifies zero active GSAP references and frozen-lockfile install. | Do not split package/lock ownership, replace GSAP, preserve a compatibility lane, or edit unrelated dependency versions. |
 | Dieter foundation motion | 126F / Dieter source | `dieter/tokens/dieter-foundation-tokens.css`; `dieter/tokens/tokens.css` | Search for `--duration-*`, `--easing-standard`, and `prefers-reduced-motion`; run `pnpm build:dieter` after source changes. | Do not add duration tokens preemptively or import an external easing taxonomy. |
 | Generated Dieter token output | Generated from Dieter source | `tokyo/product/dieter/tokens/**` including `tokens.css`, `tokens.shadow.css`, per-token CSS, and matching `*.shadow.css` files | Confirm generated output changed only through `pnpm build:dieter`. | Do not hand-edit generated Tokyo Dieter output. |
 | Generated Dieter component output | Generated from Dieter source | `tokyo/product/dieter/components/button/button.css`; `tokyo/product/dieter/components/menuactions/menuactions.css`; `tokyo/product/dieter/components/textrename/textrename.css`; `tokyo/product/dieter/components/repeater/repeater.css`; `tokyo/product/dieter/components/repeater/repeater.js`; `tokyo/product/dieter/components/segmented/segmented.css`; `tokyo/product/dieter/components/dropdown-fill/dropdown-fill.css`; `tokyo/product/dieter/components/dropdown-border/dropdown-border.css`; `tokyo/product/dieter/components/dropdown-shadow/dropdown-shadow.css`; `tokyo/product/dieter/components/dropdown-edit/dropdown-edit.css`; `tokyo/product/dieter/components/dropdown-upload/dropdown-upload.css`; `tokyo/product/dieter/components/dropdown-actions/dropdown-actions.css`; `tokyo/product/dieter/components/textfield/textfield.css`; `tokyo/product/dieter/components/textedit/textedit.css`; `tokyo/product/dieter/components/valuefield/valuefield.css`; `tokyo/product/dieter/components/popover/popover.css`; `tokyo/product/dieter/components/toggle/toggle.css`; `tokyo/product/dieter/components/tabs/tabs.css` | Confirm generated output mirrors the edited Dieter source after build. | Do not hand-edit generated Tokyo Dieter output. |
@@ -382,12 +382,13 @@ it alone.
 | Admin / DevStudio chrome | 126F / Admin chrome | `admin/src/css/layout.css`; `admin/src/css/utilities.css` | Verify operational chrome continues to consume Dieter motion tokens and no duplicate global reduced-motion rule returns. | Do not keep duplicate global reduced-motion rules or local motion drift as a separate doctrine. |
 | Live Dieter pseudo-element consumer | 126F / Dieter and DevStudio | `dieter/components/dropdown-fill/dropdown-fill.css`; `admin/src/html/components/dropdown-fill.html`; `admin/src/main.ts` | On `https://devstudio.clickeen.com/#/dieter/dropdown-fill`, verify `.diet-dropdown-fill__swatch::after` keeps its ordinary transition and becomes immediate under reduced motion. | Do not use Roma's dead Widget Defaults selector as evidence or add a component-local duplicate guard. |
 | Prague Dieter consumer | Prague / website consumer | `prague/src/layouts/Base.astro`; `prague/src/components/StepsPrimitive.astro`; `prague/src/components/InstanceEmbed.astro`; `prague/public/styles/primitives.css` | Verify the global selector change makes `StepsPrimitive` pseudo-element transitions immediate under reduced motion and preserves normal mode. | Do not edit Prague source or treat Prague consumption as a second motion authority. |
-| Public Dieter read boundary | 126F / Tokyo public serving | `tokyo-worker/src/route-dispatch.ts`; `tokyo-worker/src/routes/asset-routes.ts`; `tokyo-worker/tests/run-clk-live-locale-serving.ts` | Serve existing Git-deployed `/dieter/**` objects on `clk.live`/`dev.clk.live` before instance-package parsing; prove GET/HEAD, content type, CORS/final response behavior, missing-object 404, and no account/internal asset exposure. | Do not duplicate Dieter bytes into instance folders, add an alias route, broaden public access to account/internal objects, or alter instance identity parsing. |
-| Public widget baseline consumer | Widget PRDs / widget docs | `tokyo/product/widgets/*/widget.html`; `tokyo/product/widgets/cards/widget.css`; materializer contract/fixture proving the token link survives materialization | After the public Dieter read boundary is green, discover a published `cards` instance for `CLICKEEN` through authenticated Roma `GET /api/account/widgets`, record its exact `https://dev.clk.live/CLICKEEN/{instanceId}` URL, and verify `.ck-cards__card` in normal and reduced-motion modes. | Do not rewrite widget runtime CSS/JS, force widget choreography onto Dieter durations/easing, substitute another widget, or create product data. |
+| Public Dieter read boundary | 126F / Tokyo public serving | `tokyo-worker/src/route-dispatch.ts`; `tokyo-worker/src/routes/asset-routes.ts`; `tokyo-worker/src/routes/clk-live-routes.ts`; `tokyo-worker/src/asset-utils.ts`; `tokyo-worker/tests/run-clk-live-locale-serving.ts` | At dispatch level: preserve HTTP-to-HTTPS redirect first; for HTTPS only, gate on `pathname.startsWith('/dieter/')` before calling the existing deploy-asset reader; otherwise continue to instance parsing. Prove GET/HEAD, content type, final CORS, missing-object 404, and explicit 404 for `/widgets/**`, `/i18n/**`, `/prague/**`, account-asset, and internal paths on the public host. | Do not expose the reader's other deploy roots, duplicate Dieter bytes into instances, add an alias, broaden account/internal access, or alter instance identity parsing. |
+| Public widget baseline consumer | Widget PRDs / widget docs | `tokyo/product/widgets/*/widget.html`; `tokyo/product/widgets/cards/widget.css`; `roma/app/api/account/widgets/route.ts`; materializer contract/fixture proving the token link survives materialization | After the public Dieter read boundary is green, use authenticated Roma `GET /api/account/widgets`; require response `accountId === 'CLICKEEN'` and an instance with `widgetType === 'cards'` and `status === 'published'`; record its exact `https://dev.clk.live/CLICKEEN/{instanceId}` URL; verify `.ck-cards__card` in normal and reduced-motion modes. | Do not use a nonexistent `type` field, rewrite widget runtime, substitute another widget, or create product data. |
 | Dieter build/deploy authority handoff | 126G | `scripts/build-dieter.js`; `scripts/verify-svgs.js`; `scripts/tokyo-r2-deploy-sync.mjs`; `package.json`; `pnpm-workspace.yaml`; `pnpm-lock.yaml`; `.gitignore`; `bob/lib/icons.ts`; `.github/workflows/cloud-dev-workers.yml`; `.github/workflows/cloud-dev-roma-app.yml`; `.github/workflows/cloud-dev-prague-app.yml`; `.github/workflows/cloud-dev-prague-content.yml` | Use 126G's one source-to-output parity, provenance, build-before-sync, trigger, and exact-SHA deploy authority. | Do not create a second 126F builder, sync path, generated import, or deployment rule. |
 | Public widget runtime inspect-only boundary | Widget PRDs / widget docs | `tokyo/product/widgets/logoshowcase/widget.css`; `tokyo/product/widgets/logoshowcase/widget.client.js`; `tokyo/product/widgets/split-carousel-media/widget.client.js`; `tokyo/product/widgets/countdown/widget.client.js`; `tokyo/product/widgets/shared/stagePod.js`; `tokyo/product/widgets/shared/socialShare.js`; `tokyo/product/widgets/shared/socialShare.css` | Preserve widget ownership beyond the shared CSS guard, especially JS-driven motion. | Do not rewrite independent widget behavior in 126F. |
 | Public widget docs inspect-only boundary | Widget PRDs / widget docs | `documentation/widgets/widgets/logoshowcase.md`; `documentation/widgets/widgets/split-carousel-media.md`; `documentation/widgets/widgets/countdown.md`; `documentation/widgets/widgets/README.md`; `documentation/widgets/README.md`; `documentation/widgets/shared/ShellCore.md`; `documentation/widgets/authoring/ToolDrawerControls.md` | Verify docs do not imply Dieter/system motion governs independent widget runtime behavior. | Do not document widget runtime motion as Dieter/system doctrine. |
 | Living motion docs | 126F docs | `documentation/engineering/UI/README.md`; `documentation/engineering/UI/motion.md`; `documentation/engineering/UI/dieter.md`; `documentation/services/dieter.md`; `documentation/services/devstudio.md`; `documentation/engineering/UI/interactions.md`; `documentation/engineering/UI/components.md` | Search for stale `126A`, duration-scale expansion, missing widget/system boundary, and DevStudio/Admin authority drift. | Do not document removed or widget-owned behavior as Dieter/system doctrine. |
+| Public serving docs | 126F / Tokyo docs | `documentation/services/tokyo.md`; `documentation/services/tokyo-worker.md` | Document the exact public-host order and the sole `/dieter/**` deploy-root exception after execution. | Do not describe all Tokyo deploy roots as public on `clk.live` or turn UI docs into route authority. |
 
 ## Current Documentation Reconciliation
 
@@ -410,11 +411,12 @@ must be verified through its existing GitHub/R2 authorities. The premature motio
 migration is current as-built input but receives no Step-9 execution credit.
 The final integrated Step-9 plan carries this exact slice:
 
-1. Remove the unused `gsap` dependency from `bob/package.json`. The single
-   126G-owned Dieter package cleanup removes Dieter's unused `gsap` declaration
-   together with its false `main` and install-time `prepare` metadata; regenerate
-   `pnpm-lock.yaml` through pnpm so all GSAP importer and package/snapshot
-   entries disappear without editing `dieter/package.json` twice.
+1. Through one 126G-owned package-graph edit, remove the unused `gsap`
+   declarations from both `bob/package.json` and `dieter/package.json`; combine
+   Dieter's false `main` and install-time `prepare` deletion in that same edit;
+   regenerate `pnpm-lock.yaml` once through pnpm so all GSAP importer and
+   package/snapshot entries disappear. 126F verifies the result and never owns a
+   second package or lockfile edit.
 2. Prove no active source imports or references GSAP, then run Bob typecheck,
    Dieter typecheck/build, Dieter governance, and the repo frozen-lockfile
    install check required by CI.
@@ -444,12 +446,13 @@ The final integrated Step-9 plan carries this exact slice:
 8. Run `pnpm dieter:governance:check` and `pnpm build:dieter` after the Dieter
    dependency change and whenever Dieter source changes later. Generated Tokyo
    Dieter output must match source and must not be hand-edited.
-9. Before public-widget browser proof, expose the already-deployed public
-   `/dieter/**` root on `clk.live` and `dev.clk.live`: public-host dispatch must
-   try only the existing deploy-asset reader before instance-package parsing.
-   Extend Tokyo-worker's current clk.live test command to prove GET/HEAD and
-   fail-closed scope. Do not call the full internal/account asset router from
-   the public-host branch.
+9. Before public-widget browser proof, repair public-host dispatch in this exact
+   order: HTTP-to-HTTPS redirect; HTTPS `pathname.startsWith('/dieter/')` gate
+   invoking the existing deploy-asset reader; instance-package parsing. Add
+   dispatch-level tests, not only direct helper tests, and prove `/widgets/**`,
+   `/i18n/**`, `/prague/**`, account assets, and internal paths remain 404 on
+   `clk.live`. Update Tokyo and Tokyo-worker service docs. Do not call the full
+   internal/account router or expose sibling deploy roots.
 10. Push the exact source commit, verify the existing
    `cloud-dev workers deploy` run at that SHA, and read back the generated
    regular and shadow foundation token files plus manifest from canonical R2
@@ -461,19 +464,18 @@ The final integrated Step-9 plan carries this exact slice:
    `https://prague.dev.clickeen.com/us/en/widgets/faq/` selector
    `.ck-stepsCanvas[data-variant='value-props'] .ck-steps__tile::before`, and a
    current public Cards widget. Discover Cards through authenticated Roma
-   `GET /api/account/widgets`, require `type=cards` and `status=published` for
-   account `CLICKEEN`, record the exact `dev.clk.live` URL, and test
+   `GET /api/account/widgets`, require response `accountId === 'CLICKEEN'` and
+   an instance with `widgetType === 'cards'` and `status === 'published'`,
+   record the exact `dev.clk.live` URL, and test
    `.ck-cards__card`. Record computed transition durations. If no such Cards
    instance exists, this gate is RED; do not substitute or create product data.
 
 Exact current deletion map:
 
-- `bob/package.json`: delete the unused `gsap` dependency.
-- `dieter/package.json`: 126G owns one combined cleanup that deletes the unused
-  `gsap` dependency plus false `main` and install-time `prepare`; 126F must not
-  make a second edit to the same file.
-- `pnpm-lock.yaml`: mechanically remove both importer entries and the now
-  unreachable `gsap` package/snapshot entries through pnpm.
+- `bob/package.json`, `dieter/package.json`, and `pnpm-lock.yaml`: 126G owns one
+  combined package-graph edit that deletes both unused GSAP declarations,
+  Dieter's false `main`/install-time `prepare`, and mechanically regenerates the
+  lockfile; 126F only verifies.
 - `dieter/tokens/dieter-foundation-tokens.css`: expand the global reduced-motion
   selector to cover `::before` and `::after`.
 - `tokyo/product/dieter/**`: 126G removes the generated tree from Git tracking
@@ -495,10 +497,13 @@ Exact current deletion map:
 - `.github/workflows/cloud-dev-roma-app.yml`: 126G removes the ignored generated
   Dieter path and watches the authoritative source needed by Bob/Roma.
 - `tokyo-worker/src/route-dispatch.ts`,
-  `tokyo-worker/src/routes/asset-routes.ts`, and
-  `tokyo-worker/tests/run-clk-live-locale-serving.ts`: expose only the existing
-  deploy-asset reader for public `/dieter/**` GET/HEAD before instance parsing
-  and prove the scope fails closed.
+  `tokyo-worker/src/routes/asset-routes.ts`,
+  `tokyo-worker/src/routes/clk-live-routes.ts`, `tokyo-worker/src/asset-utils.ts`,
+  and `tokyo-worker/tests/run-clk-live-locale-serving.ts`: preserve redirect
+  first, expose the existing reader only behind `/dieter/`, continue to instance
+  parsing, and prove sibling deploy/account/internal roots remain unavailable.
+- `documentation/services/tokyo.md` and
+  `documentation/services/tokyo-worker.md`: record that exact public contract.
 
 No GSAP compatibility wrapper, substitute animation package, or replacement
 motion abstraction is permitted. Current source otherwise contains no stale

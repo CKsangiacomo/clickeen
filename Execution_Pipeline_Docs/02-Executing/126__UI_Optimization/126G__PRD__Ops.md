@@ -287,8 +287,12 @@ Target law:
 - Manual dry-run may inspect local changes. Manual `--remote` must fail before
   build/upload when any mapped source root or Dieter build input differs from
   committed `HEAD`; uncommitted local bytes can never be stamped with committed
-  provenance and uploaded. This is one scoped Git-clean check in the existing
-  script, not a second deployment system.
+  provenance and uploaded. The check must include tracked modifications and
+  untracked files through `git status --porcelain=v1 --untracked-files=all --
+  <scoped paths>` or equivalent, while excluding ignored generated
+  `tokyo/product/dieter/**`. Unrelated untracked paths outside the deploy scope
+  remain permitted. This is one scoped Git-clean check in the existing script,
+  not a second deployment system.
 - Under `--json`, build diagnostics must not contaminate stdout. Stdout remains
   one directly parseable JSON document; build progress may be captured or sent
   to stderr. The executable acceptance command is
@@ -302,7 +306,8 @@ Target law:
   `dieter_artifacts` condition is deleted.
 - Manifest dependencies must resolve. Warning-and-ship is not a valid standard
   for broken declared dependencies.
-- Before manifest emission or sync, the builder must derive the complete
+- After all artifacts and `manifest.json` are emitted, but before build success
+  or sync, the builder must derive the complete
   expected output path set from the actual source transformation rules and
   compare it with the generated tree: copied tokens/icons/component statics and
   foundation CSS, generated shadow token files, eligible TypeScript component
@@ -388,7 +393,7 @@ it alone.
 
 | Area | Owner | Exact files / path shapes | Verify | Must not change |
 | --- | --- | --- | --- | --- |
-| Build command entrypoints | 126G / repo scripts | `package.json`; `pnpm-workspace.yaml`; `dieter/package.json`; `admin/package.json` | Remove Dieter's false `main`, install-time `prepare`, and 126F-assigned unused GSAP declaration in one package edit; preserve workspace membership, explicit build/typecheck, and real dependencies. | Do not generate deploy output during install or edit `dieter/package.json` again in 126F/126H. |
+| Build command entrypoints | 126G / repo scripts | `package.json`; `pnpm-workspace.yaml`; `bob/package.json`; `dieter/package.json`; `admin/package.json`; `pnpm-lock.yaml` | Remove both Bob and Dieter unused GSAP declarations, Dieter's false `main`/install-time `prepare`, and regenerate the lockfile once; preserve workspace membership, explicit build/typecheck, real dependencies, and unrelated versions. | Do not split package/lock ownership across 126F/126G or generate deploy output during install. |
 | Dieter build source | 126G / Dieter ops | `dieter/**`; `scripts/build-dieter.js`; `scripts/verify-svgs.js`; root `package.json`; `pnpm-workspace.yaml`; `pnpm-lock.yaml` | Remove deployment-SHA precedence; derive provenance from every listed source/build input; add fail-closed source-derived output-path and copied-byte parity; verify dependency failures remain fail-closed and source verification remains non-mutating. | Do not create a second builder, dependency registry, compatibility branch, output manifest, or dual provenance identity. |
 | SVG processing and verification | 126C icon law + 126G build behavior | `scripts/verify-svgs.js`; `dieter/icons/icons.json`; `dieter/icons/svg/` | Verify build execution reads/verifies source SVGs and does not mutate committed source. | Do not let build-time verification silently rewrite committed icon source. |
 | Generated Dieter artifacts | Generated from Dieter source | `tokyo/product/dieter/**`; `.gitignore` | Remove the generated tree from Git tracking, ignore it, and recreate it before every R2 sync; manifest provenance and dependencies remain fail-visible. | Do not hand-edit, commit, or treat generated output as source. |
@@ -421,21 +426,25 @@ credit.
 
 The final integrated Step-9 plan carries these precise responsibilities:
 
-1. **Single Dieter package cleanup:** remove false `main`, install-time
-   `prepare`, and Dieter's unused GSAP declaration assigned by 126F in one edit;
-   preserve explicit `build`/`typecheck`, `@clickeen/ck-contracts`, and `tldts`.
+1. **Single package-graph cleanup:** remove unused GSAP declarations from
+   `bob/package.json` and `dieter/package.json`, delete Dieter's false `main` and
+   install-time `prepare`, and regenerate `pnpm-lock.yaml` once through pnpm;
+   preserve explicit `build`/`typecheck`, `@clickeen/ck-contracts`, `tldts`, and
+   unrelated dependency versions. 126F verifies but does not edit this graph.
 2. **Deterministic provenance:** make `scripts/build-dieter.js` always derive
    the latest commit affecting `dieter/**`, `scripts/build-dieter.js`,
    `scripts/verify-svgs.js`, root `package.json`, `pnpm-workspace.yaml`, or
    `pnpm-lock.yaml`; remove deployment-environment SHA precedence. Add all
    three root package-graph files to the worker trigger and `tokyo_assets`
    detection because they determine build resolution or generated Dieter bytes.
-3. **Fail-closed generated completeness:** in `scripts/build-dieter.js`, derive
-   expected output paths from the builder's actual source transformation rules,
-   compare the expected and generated path sets exactly, and byte-compare every
-   copied source artifact. Include token shadows, eligible component bundles,
-   icons, component statics/CSS, foundation CSS, and manifest. Fail on missing
-   or unexpected output. Do not add a second manifest or registry.
+3. **Fail-closed generated completeness:** in `scripts/build-dieter.js`, first
+   generate all outputs and emit `manifest.json`; then derive expected output
+   paths from the builder's actual source transformation rules, compare the
+   expected and generated path sets exactly, and byte-compare every copied
+   source artifact before returning success. Include token shadows, eligible
+   component bundles, icons, component statics/CSS, foundation CSS, and
+   manifest. Fail on missing or unexpected output. Do not add a second manifest
+   or registry.
 4. **One generated-artifact model:** remove all currently tracked
    `tokyo/product/dieter/**` files from Git and ignore that directory. The build
    continues to recreate the same local path as ephemeral deploy input. Change
@@ -450,7 +459,9 @@ The final integrated Step-9 plan carries these precise responsibilities:
    `pnpm-workspace.yaml`, `pnpm-lock.yaml`, `tokyo/product/widgets/**`,
    `tokyo/roma/**`, and `tokyo/prague/**`, plus
    `scripts/tokyo-r2-deploy-sync.mjs` itself match
-   committed `HEAD`. Remove the separate workflow build step and the
+   committed `HEAD`. Use scoped porcelain status including untracked files;
+   exclude ignored generated Dieter output and permit unrelated untracked paths.
+   Remove the separate workflow build step and the
    `dieter_artifacts` variable. Add `tokyo/prague/**`, root
    `package.json`, `pnpm-workspace.yaml`, and `pnpm-lock.yaml` to the workflow
    trigger and `tokyo_assets` detection. Remove generated Dieter paths from workflow
@@ -470,8 +481,11 @@ The final integrated Step-9 plan carries these precise responsibilities:
 
 Exact current deletion map:
 
+- `bob/package.json`: delete unused GSAP in the same package-graph edit.
 - `dieter/package.json`: delete false `main`, install-time `prepare`, and the
-  unused Dieter GSAP declaration assigned by 126F.
+  unused Dieter GSAP declaration.
+- `pnpm-lock.yaml`: regenerate once through pnpm after both declarations are
+  removed; 126F makes no separate lockfile edit.
 - `scripts/build-dieter.js`: delete deployment-environment SHA precedence and
   add the one source-derived generated-path/copied-byte parity assertion.
 - `tokyo/product/dieter/**`: delete all generated files from Git tracking;
@@ -546,8 +560,10 @@ Execution is not complete until these checks are run and reconciled:
 - Prove `pnpm --silent tokyo:r2:sync:check` stdout is directly `JSON.parse`-able and build
   diagnostics do not precede or follow the JSON document.
 - Prove manual dry-run accepts scoped local changes while manual `--remote`
-  rejects them before build/upload. Use the exact-SHA Actions deployment as the
-  clean committed remote-path proof.
+  rejects both a tracked scoped modification and an untracked scoped file before
+  build/upload; prove an unrelated untracked file outside scope is permitted
+  and ignored `tokyo/product/dieter/**` does not trigger refusal. Use the
+  exact-SHA Actions deployment as the clean committed remote-path proof.
 - Build Bob from a clean generated-output state and prove its icon registry
   resolves from `dieter/icons/icons.json`.
 - Search `scripts/verify-svgs.js` for source mutation; route icon-specific

@@ -2,7 +2,7 @@
 
 Status: STEP 6 CORRECTED AFTER RED EXACT-TREE STEP-8 REVIEW - current source,
 the public Dieter read boundary, and the 126G generated/deploy handoff are
-re-audited through tree `d6449165`; Step 7 is defined in
+re-audited through reviewed tree `85013bc4`; Step 7 is defined in
 `../126F__PRD__Motion.md`; no Step-9 execution credit.
 PRD: `../126F__PRD__Motion.md`.
 
@@ -23,7 +23,7 @@ system or repeating completed work?
 | Generated deploy output | `tokyo/product/dieter/**`, generated from Dieter source. |
 | Prague boundary | Consumer of the global token entrypoint and animated pseudo-elements; verification blast radius for the selector correction. |
 | Account/session, storage, product data | Not touched. |
-| Route/API boundary | Tokyo-worker public-host dispatch gains one read-only `/dieter/**` deploy-asset branch before instance parsing; no account/internal route is exposed. |
+| Route/API boundary | Tokyo-worker public-host dispatch preserves HTTP redirect first, then allows only HTTPS `/dieter/**` through the existing deploy-asset reader before instance parsing; sibling deploy, account, and internal roots remain unavailable. |
 | Verification | Current source grep, Dieter governance/build, Tokyo public-route tests, mandatory DevStudio/Prague/widget browser evidence for the shared selector change, and owning-surface evidence for any later edits. |
 
 ## Commands And Checks
@@ -161,7 +161,7 @@ authoritative reduced-motion selector correction, and regenerated output.
 
 | Area | Step-9 disposition | Must not do |
 | --- | --- | --- |
-| Unused GSAP declarations | Delete Bob's declaration; 126G removes Dieter's declaration in its single package edit; regenerate `pnpm-lock.yaml`. | No duplicate Dieter package edit, replacement library, wrapper, or compatibility path. |
+| Unused GSAP declarations | 126G deletes both Bob and Dieter declarations and regenerates `pnpm-lock.yaml` once in its single package-graph edit; 126F verifies. | No split package/lock ownership, replacement library, wrapper, or compatibility path. |
 | Foundation reduced-motion selector | Add `*::before` and `*::after` beside `*`; regenerate Tokyo token output; browser-verify the live DevStudio dropdown-fill swatch, Prague, and one public widget consumer. | No local duplicate guard or broad motion rewrite. |
 | Generated manifest | Build after the Dieter source commit and inspect the ignored deploy output plus R2 read-back. | No hand-authored, committed, or stale generated provenance. |
 | Deterministic build/deploy path | 126G removes CI deployment-SHA precedence, removes generated output from Git, and makes the sole sync entrypoint build first. | No second manifest identity, manual bypass, or generated-file commit protocol. |
@@ -171,8 +171,9 @@ authoritative reduced-motion selector correction, and regenerated output.
 | Live Dieter pseudo-element | On `https://devstudio.clickeen.com/#/dieter/dropdown-fill`, verify `.diet-dropdown-fill__swatch::after` has ordinary transition behavior and immediate reduced-motion behavior while swatch selection still works. | No showcase-only substitute markup or component-local duplicate guard. |
 | Bob/Admin chrome | Source regression-check; browser-verify only if an owning later slice changes those files. | No interaction or layout redesign under 126F. |
 | Prague | Source no edit; browser verification required for `StepsPrimitive` under normal/reduced motion. | No cleanup of site-local motion in 126F. |
-| Public Dieter route | Make public-host dispatch try only the existing deploy-asset reader before instance-package parsing; extend the current clk.live Tokyo-worker test for GET/HEAD, content type, missing object, and fail-closed scope. | No duplicate instance asset, alias, full internal/account asset router, or identity change. |
-| Public widgets | Source no edit; after exact-SHA deploy and R2 read-back, discover a published `cards` instance for `CLICKEEN` through authenticated Roma `GET /api/account/widgets`, record its exact `dev.clk.live` URL, and verify `.ck-cards__card`. | Widget-specific JS choreography stays widget-owned; no universal widget-motion doctrine. If no public Cards instance exists, fail rather than substitute or create product data. |
+| Public Dieter route | At dispatch level preserve HTTP redirect first; on HTTPS require `pathname.startsWith('/dieter/')` before using the existing reader; otherwise continue to instance parsing. Test GET/HEAD/CORS and explicit denial of sibling deploy, account, and internal roots. | No duplicate instance asset, sibling-root exposure, alias, full internal/account router, or identity change. |
+| Public widgets | Source no edit; after exact-SHA deploy and R2 read-back, use authenticated Roma `GET /api/account/widgets`, require `accountId === 'CLICKEEN'` plus `instance.widgetType === 'cards'` and `instance.status === 'published'`, record its exact `dev.clk.live` URL, and verify `.ck-cards__card`. | Widget-specific JS choreography stays widget-owned; no nonexistent `type` field, substitute, or product-data creation. |
+| Public serving docs | Update `documentation/services/tokyo.md` and `documentation/services/tokyo-worker.md` with the exact redirect -> `/dieter/**` -> instance dispatch order. | No UI-only documentation of route authority or claim that all deploy roots are public on clk.live. |
 | Product data/services | No product-data mutation. Normal Git deployment, exact-SHA workflow verification, R2 read-back, public Dieter route proof, and post-deploy browser evidence are mandatory. | No direct R2 mutation, DB/queue/policy change, or deploy-path implementation outside 126G. |
 
 Exact deletion/change map: Bob's package declaration, Dieter's declaration in
