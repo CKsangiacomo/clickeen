@@ -1,8 +1,8 @@
 # 126F - Current-Source Pre-Execution Audit: Motion
 
-Status: STEP 6 CORRECTED AFTER STEP-8 REVIEW - current source re-audited through
-tree `bccd4785`; Step 7 is defined in `../126F__PRD__Motion.md`; no Step-9
-execution credit.
+Status: STEP 6 CORRECTED AFTER RED EXACT-TREE STEP-8 REVIEW - current source and
+the 126G generated/deploy handoff are re-audited through tree `61e5dbbf`; Step 7
+is defined in `../126F__PRD__Motion.md`; no Step-9 execution credit.
 PRD: `../126F__PRD__Motion.md`.
 
 ## Audit Question
@@ -22,7 +22,7 @@ system or repeating completed work?
 | Generated deploy output | `tokyo/product/dieter/**`, generated from Dieter source. |
 | Prague boundary | Consumer of the global token entrypoint and animated pseudo-elements; verification blast radius for the selector correction. |
 | Account/session, route, storage, product data | Not touched. |
-| Verification | Current source grep, generated/source parity, Dieter governance/build, focused owning-surface browser evidence only when a later slice changes that surface. |
+| Verification | Current source grep, Dieter governance/build, mandatory Roma/Prague/widget browser evidence for the shared selector change, and owning-surface evidence for any later edits. |
 
 ## Commands And Checks
 
@@ -71,18 +71,18 @@ which this pass did not touch.
 `tokyo/product/dieter/manifest.json` is not current: it records `de408dda`,
 while `git rev-list -1 HEAD -- dieter scripts/build-dieter.js
 scripts/verify-svgs.js` returns `c299c783`. Running `pnpm build:dieter` changes
-only that provenance value at the audited tree. Because 126F must already change
-Dieter source, its Step-9 slice commits source first, rebuilds, and commits the
-generated output with provenance pointing to the actual source commit.
+only that provenance value at the audited tree. 126G removes this generated tree
+from Git tracking. Because 126F changes Dieter source, its Step-9 slice commits
+source first, rebuilds ignored deploy output, and verifies provenance against
+that source commit locally and in R2.
 
 The build is not deterministic between local and GitHub execution. Current
 `scripts/build-dieter.js` prefers `GITHUB_SHA` over the scoped Dieter-input
-commit. GitHub then rebuilds immediately before R2 sync without requiring the
-generated tree to match git. A local build can therefore stamp source-input
-commit A while CI stamps deployment commit B and uploads different bytes. 126G
-owns removal of that environment-SHA precedence plus a fail-closed generated
-tree parity check before R2 sync. 126F cannot deploy its regenerated output
-until that 126G operation gate is in place.
+commit. A local build can therefore stamp source-input commit A while CI stamps
+deployment commit B and uploads different bytes. 126G owns removal of that
+environment-SHA precedence, deletion of generated output from Git, and the one
+build-before-sync entrypoint. 126F cannot deploy its regenerated output until
+that 126G operation path is in place.
 
 ### Operational consumers are clean
 
@@ -155,18 +155,19 @@ authoritative reduced-motion selector correction, and regenerated output.
 | --- | --- | --- |
 | Unused GSAP declarations | Delete Bob's declaration; 126G removes Dieter's declaration in its single package edit; regenerate `pnpm-lock.yaml`. | No duplicate Dieter package edit, replacement library, wrapper, or compatibility path. |
 | Foundation reduced-motion selector | Add `*::before` and `*::after` beside `*`; regenerate Tokyo token output; browser-verify Roma, Prague, and one public widget consumer. | No Roma/Prague/widget-local duplicate guard or broad motion rewrite. |
-| Generated manifest | Build after the Dieter source commit and commit the resulting scoped input SHA. | No hand-authored or stale provenance. |
-| Deterministic build/deploy gate | 126G removes CI deployment-SHA precedence and requires zero generated tree delta before R2 sync. | No second manifest identity or upload of uncommitted rebuild output. |
+| Generated manifest | Build after the Dieter source commit and inspect the ignored deploy output plus R2 read-back. | No hand-authored, committed, or stale generated provenance. |
+| Deterministic build/deploy path | 126G removes CI deployment-SHA precedence, removes generated output from Git, and makes the sole sync entrypoint build first. | No second manifest identity, manual bypass, or generated-file commit protocol. |
 | Dieter foundation/components | Preserve and regression-check if another domain changes them. | No new token, curve, framework, or repeated migration. |
-| Generated Tokyo Dieter output | Regenerate only after source changes and verify parity. | No hand edits. |
-| Bob/Roma/Admin chrome | Verify only if an owning later slice changes relevant files. | No interaction or layout redesign under 126F. |
+| Generated Tokyo Dieter output | Regenerate after source changes; inspect local output and deployed R2 bytes. | No Git tracking or hand edits. |
+| Roma chrome | Mandatory browser verification of the Widget Defaults toggle in normal and reduced-motion modes because the global Dieter selector changes its runtime behavior. | No Roma-local guard or layout redesign. |
+| Bob/Admin chrome | Source regression-check; browser-verify only if an owning later slice changes those files. | No interaction or layout redesign under 126F. |
 | Prague | Source no edit; browser verification required for `StepsPrimitive` under normal/reduced motion. | No cleanup of site-local motion in 126F. |
 | Public widgets | Source no edit; browser verification required for one current CSS-motion widget. | Widget-specific JS choreography stays widget-owned; no universal widget-motion doctrine. |
 | Product data/services | No touch. | No R2, DB, route, queue, policy, or deploy work. |
 
 Exact deletion/change map: Bob's package declaration, Dieter's declaration in
 the 126G-owned combined package edit, their mechanically unreachable lockfile
-entries, one foundation selector, generated source parity, and generated
+entries, one foundation selector, tracked generated Dieter output, and stale
 manifest provenance. Current source contains none of the other stale motion
 behavior the old point-in-time audit described.
 
@@ -177,9 +178,9 @@ behavior the old point-in-time audit described.
 | V1 Silent substitution | PASS | Easing resolves through the defined foundation token; no fallback masquerade remains. |
 | V2 Silent healing | PASS | No runtime or persisted state is normalized; Step 7 records current behavior exactly. |
 | V3 Silent omission | PASS | Prague consumers, pseudo-elements, component-local selectors, JS-written transitions, GSAP declarations, and manifest provenance are explicitly covered. |
-| V4 Fail-open control | PASS after planned fix | Foundation selector will cover real and pseudo-elements; repeater keeps its direct runtime branch. |
+| V4 Fail-open control | OPEN UNTIL STEP 9 | Foundation selector must cover real and pseudo-elements; the manual sync build bypass must be removed; repeater keeps its direct runtime branch. |
 | V5 Corruption-as-absence | PASS / N/A | 126F touches no persisted product data. |
-| V6 Partial-success masquerade | PASS | The exact remaining dependency deletion is named; completed motion migration receives no execution credit. |
+| V6 Partial-success masquerade | OPEN UNTIL STEP 9 | The exact deletion and browser/deploy evidence are named; no source change may be called deployed before the build/sync and R2 read-back succeed. |
 | V7 Masquerade/redress | PASS | GSAP is deleted without a replacement wrapper; completed migration is not repeated; widget motion stays outside Dieter law. |
 | V8 Runtime test dependency | PASS | CSS/JS carries behavior; checks only verify it. |
 

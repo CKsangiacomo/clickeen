@@ -1,7 +1,8 @@
 # 126H - Current-Source Pre-Execution Audit: Dieter
 
-Status: STEP 6 COMPLETE - current source audited through commit `a687e2f7`;
-Step 7 is defined in `../126H__PRD__Dieter.md`; no Step-9 execution credit.
+Status: STEP 6 CORRECTED AFTER 126F EXACT-TREE REVIEW - current source and the
+126G generated-artifact handoff are audited through tree `61e5dbbf`; Step 7 is
+defined in `../126H__PRD__Dieter.md`; no Step-9 execution credit.
 PRD: `../126H__PRD__Dieter.md`.
 
 ## Audit Question
@@ -17,7 +18,7 @@ refactor?
 | Dieter source | `dieter/tokens/**`, `dieter/components/**`, `dieter/icons/**`. |
 | Generated Dieter output | `tokyo/product/dieter/**`, produced only by `scripts/build-dieter.js`. |
 | Public widget package source | `tokyo/product/widgets/**`; shared shell source is git-authored product source, not generated Dieter output. |
-| Package/build operations | 126G for `dieter/package.json`, build provenance, workflow parity, and R2 sync ordering. |
+| Package/build operations | 126G for `dieter/package.json`, deterministic provenance, ignored generated output, and build-before-R2-sync ordering. |
 | DevStudio product surface | 126L for `admin/**` visual and interaction changes. |
 | Component/layer behavior | 126I and 126K for component shadows and layering. |
 | Product data | Account instance packages and `accounts/**`; not mutated by 126H. |
@@ -117,8 +118,9 @@ programmatic entrypoint. No replacement registry or entrypoint is needed.
   builder.
 - The shared social-share CSS is git-authored widget package source under the
   existing Tokyo product root; it is not generated Dieter output.
-- 126G's every-`tokyo_assets` build/parity rule must be green before this widget
-  source can sync to R2, because every product-root sync also uploads Dieter.
+- 126G's ignored generated-output and single build-before-sync path must be green
+  before this widget source can sync to R2, because every product-root sync also
+  uploads Dieter.
 - Existing published account instance packages are product snapshots. The
   stale variable currently resolves to the same `2px` value, so 126H does not
   silently rematerialize account product data for a no-behavior source cleanup.

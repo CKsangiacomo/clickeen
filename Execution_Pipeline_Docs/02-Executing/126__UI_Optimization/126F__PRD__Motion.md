@@ -1,8 +1,8 @@
 # 126F - PRD: Motion
 
-Status: PRE-EXECUTION STEPS 6-7 COMPLETE - current-source audit and executable
-preservation plan recorded; exact-tree Step-8 review pending; no Step-9
-execution credit.
+Status: PRE-EXECUTION STEPS 6-7 CORRECTED AFTER RED STEP-8 REVIEW - mandatory
+consumer verification and the 126G generated/deploy handoff are exact; fresh
+exact-tree Step-8 review pending; no Step-9 execution credit.
 Parent: `126__PRD__UI_Optimization_Program.md` (MAMA).
 Series order: 126F of 126A-126M.
 KB doc: `documentation/engineering/UI/motion.md`.
@@ -418,16 +418,14 @@ The final integrated Step-9 plan carries this exact slice:
 4. Through 126G, make `scripts/build-dieter.js` derive manifest provenance from
    the latest commit affecting the scoped Dieter/build inputs in every
    environment; CI-provided deployment SHAs must not replace that identity.
-   Whenever the existing workflow sets `tokyo_assets=true`, run
-   `pnpm build:dieter`, then a fail-closed parity step, then R2 sync. The parity
-   step must require `tokyo/product/dieter/**` to have zero tracked or untracked
-   delta. This covers generated-only, widget/other product-root, and manual
-   dispatch syncs because every sync invocation uploads the Dieter root.
-5. Commit the Dieter source/package/build changes, then run `pnpm build:dieter` so
-   `tokyo/product/dieter/**` is generated from that committed input. Commit the
-   generated output separately and prove `manifest.json.gitSha` equals the
-   latest commit affecting `dieter/`, `scripts/build-dieter.js`, or
-   `scripts/verify-svgs.js`.
+   Remove `tokyo/product/dieter/**` from Git tracking and ignore it. Make the
+   single R2 sync entrypoint run `pnpm build:dieter` before file enumeration in
+   both workflow and documented manual use.
+5. Commit the Dieter source/package/build changes, then run `pnpm build:dieter`
+   and prove the ignored output is generated from that committed input and
+   `manifest.json.gitSha` equals the latest commit affecting `dieter/`,
+   `scripts/build-dieter.js`, or `scripts/verify-svgs.js`. Do not commit generated
+   Dieter output.
 6. Re-run the source and documentation checks against the execution-start
    tree.
 7. If later 126 domains introduce or alter system motion, require those exact
@@ -442,9 +440,8 @@ The final integrated Step-9 plan carries this exact slice:
    of the changed global selector even though their source files remain
    unedited. Do not create unrelated visual ceremony.
 10. After push, verify the existing `cloud-dev workers deploy` run at the exact
-   generated-output commit and read back the generated foundation token file
-   plus manifest from canonical R2 `dieter/**`. Do not perform a manual R2
-   mutation.
+   source commit and read back the generated foundation token file plus manifest
+   from canonical R2 `dieter/**`. Do not perform a manual R2 mutation.
 
 Exact current deletion map:
 
@@ -456,15 +453,14 @@ Exact current deletion map:
   unreachable `gsap` package/snapshot entries through pnpm.
 - `dieter/tokens/dieter-foundation-tokens.css`: expand the global reduced-motion
   selector to cover `::before` and `::after`.
-- `tokyo/product/dieter/tokens/dieter-foundation-tokens.css` and matching
-  `.shadow.css`: regenerate from source; do not hand-edit.
-- `tokyo/product/dieter/manifest.json`: regenerate after the source commit so
-  its scoped provenance names the actual latest Dieter input commit.
+- `tokyo/product/dieter/**`: 126G removes the generated tree from Git tracking
+  and ignores it; `pnpm build:dieter` still recreates it as deploy input.
 - `scripts/build-dieter.js`: 126G removes environment deployment-SHA precedence
   so local and CI builds use the same scoped input identity.
-- `.github/workflows/cloud-dev-workers.yml`: 126G makes every
-  `tokyo_assets=true` path build Dieter and pass the generated-output parity
-  gate before R2 sync.
+- `scripts/tokyo-r2-deploy-sync.mjs`: 126G makes the one sync entrypoint build
+  Dieter before enumeration for CI and manual use.
+- `.github/workflows/cloud-dev-workers.yml`: 126G watches all four sync roots,
+  deletes `dieter_artifacts`, and uses the one build-before-sync entrypoint.
 
 No GSAP compatibility wrapper, substitute animation package, or replacement
 motion abstraction is permitted. Current source otherwise contains no stale
@@ -528,8 +524,8 @@ Execution is not complete until these checks are run and reconciled:
   `documentation/engineering/UI/motion.md` for stale `126A`, duration-scale
   expansion, and widget/system boundary errors.
 - After committing Dieter source/build changes, run `pnpm build:dieter`; verify
-  no tracked or untracked generated delta remains and manifest provenance equals
-  the latest committed Dieter/build input SHA locally and under GitHub Actions.
+  the ignored output is complete and manifest provenance equals the latest
+  committed Dieter/build input SHA locally and under GitHub Actions.
 - Run focused lint/type checks for changed Dieter/Bob/Roma/Admin files if code
   changes occur in execution.
 - After merged code changes that affect Bob, Roma, Prague, DevStudio/Admin app

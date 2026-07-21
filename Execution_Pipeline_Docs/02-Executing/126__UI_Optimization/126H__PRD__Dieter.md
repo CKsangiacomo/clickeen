@@ -1,8 +1,8 @@
 # 126H - PRD: Dieter
 
-Status: PRE-EXECUTION STEPS 6-7 COMPLETE - current-source audit and exact
-execution/handoff plan recorded; exact-tree Step-8 review pending; no Step-9
-execution credit.
+Status: PRE-EXECUTION STEPS 6-7 CORRECTED AFTER 126F RED STEP-8 REVIEW - the
+126G generated/deploy handoff is exact; fresh exact-tree Step-8 review pending;
+no Step-9 execution credit.
 Parent: `126__PRD__UI_Optimization_Program.md` (MAMA).
 Series order: 126H of 126A-126M.
 KB doc: `documentation/engineering/UI/dieter.md`.
@@ -431,9 +431,9 @@ it alone.
 | Motion boundary | 126F, not 126H | `dieter/tokens/dieter-foundation-tokens.css`; `dieter/components/dropdown-fill/dropdown-fill.css`; generated mirrors in `tokyo/product/dieter/` | Route `--duration-snap` and `--easing-standard` to 126F. | Do not decide motion/easing in 126H. |
 | Icon boundary | 126C / 126I, not 126H | `dieter/tokens/dieter-foundation-tokens.css`; `dieter/components/icon/icon.css`; `dieter/components/button/button.css`; `dieter/components/menuactions/menuactions.css`; `dieter/components/textedit/textedit.css` | Keep `--icon-size-*` as substrate; route icon consumption/sizing/rendering details to 126C/126I. | Do not add icon origination or component icon rules in 126H. |
 | Screen-reader utility | 126A semantics + 126H utility source | `dieter/tokens/dieter-foundation-tokens.css`; `dieter/components/dropdown-shadow/dropdown-shadow.html`; `dieter/components/dropdown-border/dropdown-border.html`; `dieter/components/textedit/textedit.html`; `dieter/components/textedit/textedit-dom.ts`; `dieter/components/repeater/repeater.html`; `dieter/components/tabs/tabs.html`; `dieter/components/tabs/tabs.css`; `dieter/components/toggle/toggle.html`; `dieter/components/toggle/toggle.css` | Preserve `.sr-only` utility where semantics require hidden text/control labels. | Do not turn `.sr-only` into keyboard-support or focus doctrine. |
-| Package/artifact shape | 126G implementation / 126H docs | `dieter/package.json`; `pnpm-lock.yaml`; `documentation/services/dieter.md`; `documentation/engineering/UI/dieter.md`; `tokyo/product/dieter/manifest.json` | 126G removes false `main`, install-time `prepare`, and unused Dieter GSAP once; preserve explicit scripts, real dependencies, and generated/CDN consumer path. | Do not invent a package registry/entrypoint or edit the package again in 126F/126H. |
+| Package/artifact shape | 126G implementation / 126H docs | `dieter/package.json`; `pnpm-lock.yaml`; `.gitignore`; `documentation/services/dieter.md`; `documentation/engineering/UI/dieter.md`; `tokyo/product/dieter/**` | 126G removes false `main`, install-time `prepare`, unused Dieter GSAP, and tracked generated output once; preserve explicit scripts, real dependencies, ignored build output, and the CDN consumer path. | Do not invent a package registry/entrypoint, generated-file commit protocol, or second edit in 126F/126H. |
 | Living Dieter docs | 126H docs | `documentation/engineering/UI/README.md`; `documentation/engineering/UI/dieter.md`; `documentation/services/dieter.md`; `documentation/engineering/UI/ops.md`; `documentation/engineering/UI/color.md`; `documentation/engineering/UI/iconography.md`; `documentation/engineering/UI/typography.md`; `documentation/engineering/UI/motion.md`; `documentation/engineering/UI/components.md`; `documentation/engineering/UI/dialogs-and-modals.md`; `documentation/engineering/UI/surfaces.md` | Verify the renewed current contract remains consistent: current track mapping, root build path, source authority, 25/24 counts, light-mode boundary, no foundation focus/touch or numeric-radius aliases, no `svg_new` source lane, and current vertspace law. | Do not document removed token names or dead patterns as current doctrine. |
-| Product data and deploy boundary | 126H source deploy / account data excluded | `tokyo/product/widgets/shared/socialShare.css`; canonical R2 `product/widgets/shared/socialShare.css`; account runtime paths `accounts/{accountPublicId}/...` | Deploy the one git-authored widget-source cleanup through the normal workflow after 126G parity is green; read back the source object. | Do not mutate account product data, published instance snapshots, or R2 directly. |
+| Product data and deploy boundary | 126H source deploy / account data excluded | `tokyo/product/widgets/shared/socialShare.css`; canonical R2 `product/widgets/shared/socialShare.css`; account runtime paths `accounts/{accountPublicId}/...` | Deploy the one git-authored widget-source cleanup through the normal workflow after 126G build-before-sync is green; read back the source object. | Do not mutate account product data, published instance snapshots, or R2 directly. |
 
 ## Current Documentation Reconciliation
 
@@ -468,7 +468,7 @@ handoffs. It does not change Dieter token source or account product data.
 6. Update living Dieter docs with current-versus-target package and stale-token
    truth. Do not state pending deletions as completed before Step 9.
 7. After normal Git deployment, verify the existing workers workflow used the
-   126G build/parity gate and read back
+   126G build-before-sync path and read back
    `product/widgets/shared/socialShare.css` from canonical R2. Do not mutate
    `accounts/**` or silently rematerialize published instance snapshots.
 
