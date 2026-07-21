@@ -1,6 +1,7 @@
 # 126 - Product Owner Execution Decisions
 
-Status: PRODUCT-OWNER CONVERGENCE COMPLETE - D1/D2/D3 accepted; no step-9 execution is authorized.
+Status: PRE-EXECUTION STEPS 1-8 COMPLETE - D1/D2/D3 accepted and propagated;
+Step 9 has not started.
 Owner: Clickeen product owner
 Date: 2026-07-14
 Parent: `126__PRD__UI_Optimization_Program.md`
@@ -12,11 +13,10 @@ pre-execution passes. It records the accepted choices that required product or
 architecture judgment. Correctness requirements, proven dead code, and current
 product law are recorded separately and are not presented as optional choices.
 
-These accepted decisions do not start implementation. They complete Phase 1
-step 4. This convergence pass completes their step-5 doctrine propagation;
-steps 6-8 must still produce exact gap/deletion maps, write final executable
-PRDs, and peer-review the exact recorded tree for every A-M domain. Step 9 starts
-only after all of those gates are green.
+These accepted decisions do not start implementation. They completed Phase 1
+step 4. Their doctrine propagation, exact gap/deletion maps, final executable
+PRDs, and exact-tree peer reviews are now complete for every A-M domain. Step 9
+remains a separate execution phase and has not started.
 
 No product code, product data, Cloudflare state, or Supabase state was changed
 to produce this register.
@@ -312,19 +312,26 @@ route, or execution choice is delegated to step-9 implementation.
    living UI/service docs (step 5).
 2. Completed: verify no active decision document retains a contradictory
    recommendation or an open D1/D2/D3 decision.
-3. Produce current step-6 gap audits with exact files, lines, and deletion maps.
-4. Write final step-7 executable PRDs with visual before/after routes.
-5. Peer-review the exact recorded commit/tree for product, architecture,
-   codebase coverage, system cohesion, and V1-V8 (step 8).
-6. Reconcile one inside-out step-9 plan: A-H verification/cleanup -> I
-   components -> J surfaces -> K dialogs -> L DevStudio -> M Roma.
-7. Only then execute one green slice at a time.
+3. Completed: current step-6 gap audits name exact files, lines, and deletion
+   maps for every A-M domain.
+4. Completed: final step-7 executable PRDs name visual before/after routes and
+   verification surfaces.
+5. Completed: exact recorded trees were peer-reviewed for product,
+   architecture, codebase coverage, system cohesion, and V1-V8 (step 8):
+   A `c06fa7db`; B `4b480e50`; C `b5efaefc`; D `31b81152`; E `ec1ed486`;
+   F/G/H `4c5458b4`; I/J/K/L/M `22a92ec9`.
+6. Completed: the final inside-out Step-9 sequence is A-H
+   verification/cleanup -> I components -> J surfaces -> K dialogs -> L
+   DevStudio -> M Roma.
+7. Next: execute 126A, one green slice at a time. Do not advance until that
+   slice's implementation, verification, documentation, deploy/runtime, and
+   V1-V8 gates are green.
 
 ## V1-V8 Pre-Execution Check
 
-Final independent exact-tree re-audit on 2026-07-15: **PASS**. The reviewer
-verified the Step-5 doctrine coverage and authority-direction findings closed
-before the result below was recorded.
+Final independent exact-tree re-audit completed on 2026-07-21: **PASS**. The
+reviewers verified all Step-5 doctrine, Step-6 blast radius, Step-7 execution
+contracts, and Step-8 authority findings before the result below was recorded.
 
 | ID | Result | Reason |
 |---|---|---|
@@ -333,6 +340,6 @@ before the result below was recorded.
 | V3 Silent omission | PASS | A-M, mandatory cleanup, deferred residue, and all accepted D1/D2/D3 decisions are represented. |
 | V4 Fail-open control | PASS | No control or enforcement behavior changes in this pre-execution pass. |
 | V5 Corruption-as-absence | PASS | Stale planning input is frozen/corrected, not treated as missing or clean. |
-| V6 Partial-success masquerade | PASS | D1/D2/D3 propagation and all per-domain step-5 doctrine are complete; steps 6-8 and all step-9 execution remain explicitly pending. |
+| V6 Partial-success masquerade | PASS | Steps 1-8 are complete for every A-M domain; all Step-9 implementation, deploy, product-data, and runtime work remains explicitly unstarted. |
 | V7 Masquerade/redress | PASS | Landed work is not rewrapped as new execution; legacy replacements are not preserved under new names. |
 | V8 Runtime test dependency | PASS | Evidence and review gates verify work; normal product operation does not depend on them. |

@@ -1,8 +1,8 @@
 # 126J - Current-Source Pre-Execution Audit: Surfaces And Bob Workspace
 
-Status: STEP 6 COMPLETE - current surface doctrine and Bob, Roma, and DevStudio
-shell source audited; Step 7 is defined in `../126J__PRD__Surfaces.md`; no
-Step-9 execution credit.
+Status: PRE-EXECUTION STEPS 6-8 COMPLETE - current surface doctrine and Bob,
+Roma, and DevStudio shell source audited; exact PRD reviewed GREEN at
+`22a92ec9`; no Step-9 execution credit.
 
 ## Audit Result
 

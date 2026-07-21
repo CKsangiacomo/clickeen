@@ -1,8 +1,8 @@
 # 126K - Current-Source Pre-Execution Audit: Dialogs And Modals
 
-Status: STEP 6 COMPLETE - current blocking dialogs, popovers, browser guards,
-and Upgrade paths audited; Step 7 is defined in
-`../126K__PRD__Dialogs_and_Modals.md`; no Step-9 execution credit.
+Status: PRE-EXECUTION STEPS 6-8 COMPLETE - current blocking dialogs, popovers,
+browser guards, and Upgrade paths audited; exact PRD reviewed GREEN at
+`22a92ec9`; no Step-9 execution credit.
 
 ## Audit Result
 

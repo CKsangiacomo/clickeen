@@ -1,8 +1,8 @@
 # 126L - Current-Source Pre-Execution Audit: DevStudio UI
 
-Status: STEP 6 COMPLETE - DevStudio shell, route generation, token editor,
-policy pages, CSS, auth, and build boundary audited; Step 7 is defined in
-`../126L__PRD__DevStudio_UI.md`; no Step-9 execution credit.
+Status: PRE-EXECUTION STEPS 6-8 COMPLETE - DevStudio shell, route generation,
+token editor, policy pages, CSS, auth, and build boundary audited; exact PRD
+reviewed GREEN at `22a92ec9`; no Step-9 execution credit.
 
 ## Audit Result
 

@@ -1,9 +1,7 @@
 # 126L - PRD: DevStudio UI
 
-Status: PRE-EXECUTION STEPS 6-7 COMPLETE - current DevStudio shell, source
-reveal, token editor, policy pages, generated routes, and build boundary are
-audited; exact execution scope is pinned; Step-8 review pending; no Step-9
-execution credit.
+Status: PRE-EXECUTION STEPS 6-8 COMPLETE - exact-tree three-lens review GREEN at
+`22a92ec9`; no Step-9 execution credit.
 Parent: `126__PRD__UI_Optimization_Program.md`.
 Audit: `audits/126L__Audit__DevStudio_UI.md`.
 Service authority: `documentation/services/devstudio.md`.

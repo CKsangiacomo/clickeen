@@ -1,15 +1,16 @@
 # 126 — DevQA: Where We Actually Stand
 
-Status: PRE-EXECUTION STEPS 6-8 IN PROGRESS - 126A-126E Steps 6-8 complete at reviewed trees `c06fa7db`, `4b480e50`, `b5efaefc`, `31b81152`, and `ec1ed486`; 126F-126M Steps 6-8 and all Step-9 execution remain pending.
+Status: PRE-EXECUTION STEPS 1-8 COMPLETE - every 126A-126M execution contract
+is frozen and exact-tree peer-reviewed; Step 9 has not started.
 This document reconciles PRD claims with Git and current source evidence. It does
 not define product law, approve unresolved architecture choices, prove that every
 intermediate commit deployed, or close any PRD whose required verification is
 still missing.
 
 Date: 2026-07-14
-Last reconciled: 2026-07-15
-Scope: premature A-H code-change reality, the peer-review gate, renewed A-M
-current-source inputs, and the product-owner decision boundary.
+Last reconciled: 2026-07-21
+Scope: premature A-H code-change reality, final A-M current-source audits,
+executable PRDs, exact-tree peer reviews, and the Step-9 starting boundary.
 Parent: `126__PRD__UI_Optimization_Program.md` (MAMA).
 
 Read-order note: this is a pre-execution correction ledger, not runtime or
@@ -22,17 +23,14 @@ that folder name does not make this work execution.
 
 ## 1. Headline
 
-Substantial A-H foundation code changes landed prematurely during Phase 1. They are
-current as-built input, not completed execution slices. The renewed read-only pass now
-shows that A-H product decisions remain valid and most named code gaps are already
-closed in current source. This still grants no execution credit: 126A now has its
-current gap map, final executable PRD, and exact-tree three-lens review; 126B
-now has the same three artifacts at reviewed tree `4b480e50`;
-126C now has its current gap map, final executable PRD, and exact-tree review at
-`b5efaefc`; 126D has the same three artifacts at reviewed tree `31b81152`.
-126E now has the same three artifacts at reviewed tree `ec1ed486`.
-126F-126M gap maps/final PRDs/reviews and all visual Step-9 evidence
-remain open.
+Substantial A-H foundation code changes landed prematurely during Phase 1. They
+remain current as-built input, not completed execution slices. The renewed
+read-only pass is now complete across A-M: every domain has a current gap and
+deletion map, a final executable PRD, and an exact-tree three-lens GREEN review.
+Reviewed trees are A `c06fa7db`; B `4b480e50`; C `b5efaefc`; D `31b81152`;
+E `ec1ed486`; F/G/H `4c5458b4`; I/J/K/L/M `22a92ec9`. This grants no execution
+credit. All Step-9 implementation, product-data, deploy, and visual/runtime
+evidence remains open.
 
 1. **The 126 process was not followed.** The human has now confirmed that every A–M
    domain completes steps 1–8 before step 9 begins. A–H code changes landed while
@@ -42,13 +40,10 @@ remain open.
    GREEN while naming code that the accepted PRD is explicitly designed to change.
    It should not be GREEN while a required human decision, mandated blast-radius
    coverage, or required execution precondition remains unresolved.
-3. **The 126 status docs were stale before this realignment.** Every A–H PRD said
-   `PRE-EXECUTION READY`, but their as-builts predated later code changes. A renewed
-   current-source read is now complete. D1/D2/D3 and all remaining per-domain
-   doctrine are now propagated. 126A Steps 6-8 are complete at exact reviewed
-   tree `c06fa7db`; 126B is green at `4b480e50`; 126C is green at `b5efaefc`;
-   126D is green at `31b81152`; 126E is green at `ec1ed486`; 126F-126M
-   Steps 6-8 remain open.
+3. **The 126 status docs were stale before this realignment.** Every A-H PRD said
+   `PRE-EXECUTION READY`, but their as-builts predated later code changes. The
+   renewed current-source read, D1/D2/D3 propagation, exact gap maps, final PRDs,
+   and exact-tree reviews are now complete across A-M. Step 9 remains unstarted.
 4. **The 126I pivot-layer input errors are now proven and corrected in active
    decision docs:** current source has 25 directories including `shared`, no
    `command-activity`, and no current `--color-surface`, `--radius-2`, or
@@ -178,17 +173,15 @@ variant. Slice-related code changes had landed after those status lines were wri
 `--duration-snap`, `--duration-base`, and `--easing-standard: ease` are all defined.
 Motion-related code changes landed. **Neither old status was correct: the PRD was
 not pre-execution-ready, and the audit could not call the changes execution. The
-fresh current-source pass required by that finding is now complete; later
-pre-execution gates remain open.**
+fresh current-source pass and every later pre-execution gate required by that
+finding are now complete; Step 9 remains unstarted.**
 
 ### Corrections applied
 
 The status lines keep all A-H slices in pre-execution. Code changes exist, but
-they landed before the all-domain gate and receive no step-9 credit. The renewed
-current-source pass and human convergence are complete, and Step-5 doctrine is
-reconciled across A-M. 126A-126E Steps 6-8 are complete at exact reviewed
-trees `c06fa7db`, `4b480e50`, `b5efaefc`, `31b81152`, and `ec1ed486`;
-126F-126M Steps 6-8 remain open.
+they landed before the all-domain gate and receive no Step-9 credit. Human
+convergence and Steps 5-8 are complete across A-M at the reviewed trees recorded
+in §1. Step 9 remains unstarted.
 A public read on 2026-07-14 confirmed
 `https://tokyo.dev.clickeen.com/dieter/manifest.json` reports Git SHA `c299c783`,
 which proves that the currently deployed Dieter bytes are observable at the public
@@ -462,53 +455,50 @@ route is fully gone from code and config.
 
 ---
 
-## 9. What Happens Next - Doctrine And Final PRDs
+## 9. What Happens Next - Step 9
 
-The remaining constraints are concrete:
+The execution boundary is now concrete:
 
-1. **The human-confirmed process must be restored in every active document.** Steps
-   1–8 for all A–M domains are pre-execution. Each final peer review records the exact
-   reviewed commit/tree. Step 9 starts once, only after all domains are green.
-2. **Renewed current-source evidence is complete enough for human convergence.**
-   A-H need no new product decision; I-M choices are collected in the owner register.
-3. **Active 126I/L/M inputs and living component counts have been corrected.**
-   Historical audits remain frozen point-in-time evidence.
-4. **Font migration is closed.** Only local untracked-file cleanup remains for the
-   eventual step-9 plan.
+1. **Steps 1-8 are complete for all A-M domains.** Each final peer review records
+   the exact reviewed commit/tree; no review grants runtime execution credit.
+2. **There is no remaining product-owner decision.** D1/D2/D3 and all A-M
+   authority, scope, deletion, and verification choices are frozen.
+3. **Historical audits remain evidence, not current authority.** The final PRDs,
+   current audits, owner register, and this ledger define the Step-9 boundary.
+4. **Font migration is closed.** Only the explicitly named local untracked-file
+   cleanup remains in its owning Step-9 slice.
 
 ### Recommended order
-1. **Completed in this realignment:** apply the §3 pre-execution statuses and freeze
-   old audits, as-builts, and peer reviews as point-in-time evidence.
-2. **Completed in this convergence:** D1/D2/D3 are accepted in
-   `126__Product_Owner_Execution_Decisions.md`.
-3. **Completed in this convergence:** reconcile settled product law into the
-   owning living doctrine for every A-M domain (step 5). 126A-126E Steps 6-8
-   are now complete; 126F-126M Steps 6-8 remain next.
-4. Complete final executable PRDs and exact-tree peer reviews for every A-M domain.
-5. Reconcile all A-M final PRDs into one complete inside-out step-9 plan. Premature
-   A–H changes may be kept, changed, or deleted only according to that final plan.
-6. Only then begin execution once. Product code and product data remain untouched
-   until that gate is green.
+1. Completed: statuses, frozen historical evidence, and product-owner decisions
+   are reconciled.
+2. Completed: settled law, current-source gap maps, deletion maps, final PRDs,
+   and exact-tree peer reviews cover every A-M domain.
+3. Next: begin Step 9 with 126A. Continue in dependency order through 126M,
+   one PRD and one slice at a time.
+4. Do not advance a slice until its implementation, focused checks, visual proof,
+   docs, deploy/runtime evidence, product-data reconciliation where applicable,
+   and independent V1-V8 audit are GREEN.
+5. Premature A-H changes may be kept, changed, or deleted only according to their
+   frozen final PRDs; their presence does not count as prior execution.
 
 ---
 
-## 10. Provisional V1–V8 self-audit
+## 10. Final Pre-Execution V1-V8 Audit
 
-This table is the authoring pass's self-audit, not the independent final PASS.
-The decision register records the independent result only after all blockers
-are closed. This doc is a QA/process artifact. The current pre-execution pass also corrects
-shared architecture/doctrine inputs, but changes no runtime product behavior,
-product data, managed-service state, or deployed architecture. V1-V8 applied to
-the recommendations and authority corrections it makes:
+The independent exact-tree review is GREEN. This document is a QA/process
+artifact. The completed pre-execution work corrects shared architecture and
+doctrine inputs but changes no runtime product behavior, product data,
+managed-service state, or deployed architecture. V1-V8 applied to the final
+pre-execution corpus:
 
 | ID | Question | Result |
 |---|---|---|
-| V1 Silent substitution | Does this doc replace missing/invalid truth with an invented value? | No. Status corrections record A-H as current-source re-audited while keeping later pre-execution gates open and granting premature code changes no step-9 credit. |
+| V1 Silent substitution | Does this doc replace missing/invalid truth with an invented value? | No. Every completion claim points to a current audit, executable PRD, and exact reviewed tree; premature code changes receive no Step-9 credit. |
 | V2 Silent healing | Does this doc normalize/coerce invalid state without failure? | No. Historical audits remain point-in-time evidence with recoverable provenance or an explicit unknown-tree note; only active decision inputs are updated. |
 | V3 Silent omission | Does this doc drop a required input/artifact/operation? | No. It retains the all-A-M pre-execution gate, complete Roma inventory, review-provenance gap, closed read-only font evidence, mandatory execution law, and accepted D1/D2/D3 decisions. |
 | V4 Fail-open control | Does enforcement turn off when a dependency is missing? | N/A — no enforcement added. |
 | V5 Corruption-as-absence | Does this doc treat corrupt state as missing/new/empty? | No. The stale status lines are named as drift, not ignored. |
-| V6 Partial-success masquerade | Does this doc claim full success after some work was dropped? | No. 126A-126E Steps 6-8 are complete, while 126F-126M Steps 6-8 and all Step 9 work remain pending; no premature change is called execution or completion. |
+| V6 Partial-success masquerade | Does this doc claim full success after some work was dropped? | No. Steps 1-8 are complete for A-M; all Step-9 implementation, deploy, product-data, and runtime work is explicitly unstarted. |
 | V7 Masquerade/redress | Does the same failing workflow continue under a different wrapper? | No. Verification cannot mutate code/product data or grant execution credit; exact reviewed-tree provenance is mandatory before step 9. |
 | V8 Runtime test dependency | Does normal product work start depending on tests/probes? | No. |
 
@@ -516,7 +506,8 @@ the recommendations and authority corrections it makes:
 
 ## 11. Evidence index
 
-Key claims were checked against current source and Git history on 2026-07-14.
+Key claims were checked against current source and Git history through
+2026-07-21.
 Runtime/deploy claims are bounded as stated above:
 
 - `--easing-standard` defined: `dieter/tokens/dieter-foundation-tokens.css:71-73`

@@ -1,8 +1,7 @@
 # 126K - PRD: Dialogs And Modals
 
-Status: PRE-EXECUTION STEPS 6-7 COMPLETE - exact dialog inventory, lifecycle,
-ownership, deletion map, and proof matrix are pinned; Step-8 review pending; no
-Step-9 execution credit.
+Status: PRE-EXECUTION STEPS 6-8 COMPLETE - exact-tree three-lens review GREEN at
+`22a92ec9`; no Step-9 execution credit.
 Parent: `126__PRD__UI_Optimization_Program.md`.
 Audit: `audits/126K__Audit__Dialogs_and_Modals.md`.
 Living doctrine: `documentation/engineering/UI/dialogs-and-modals.md`.

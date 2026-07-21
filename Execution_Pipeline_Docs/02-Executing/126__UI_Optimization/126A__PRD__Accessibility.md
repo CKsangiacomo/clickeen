@@ -1,6 +1,7 @@
 # 126A - PRD: Accessibility
 
-Status: PRE-EXECUTION STEP 8 COMPLETE - three independent lenses are green at exact tree `c06fa7db`; all step-9 implementation remains gated on 126B-126M completing Step 8.
+Status: PRE-EXECUTION STEPS 6-8 COMPLETE - exact-tree review green at
+`c06fa7db`; no Step-9 execution credit.
 Parent: `126__PRD__UI_Optimization_Program.md` (MAMA).
 Series order: 126A of 126A-126M.
 KB doc target: `documentation/engineering/UI/accessibility.md`.

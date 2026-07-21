@@ -1,6 +1,7 @@
 # PRD 126 — MAMA: UI Optimization Program
 
-Status: PRE-EXECUTION STEPS 6-8 IN PROGRESS - 126A-126E Steps 6-8 complete at reviewed trees `c06fa7db`, `4b480e50`, `b5efaefc`, `31b81152`, and `ec1ed486`; 126F-126M Steps 6-8 and all Step-9 execution remain pending.
+Status: PRE-EXECUTION STEPS 1-8 COMPLETE - all 126A-126M plans are frozen and
+peer-reviewed at exact recorded trees; Step 9 has not started.
 Owner: Clickeen product architecture + UI
 Date: 2026-06-26
 Stage: 02-Executing
@@ -137,7 +138,7 @@ dialog dismissal, D2 defines global operational workspace capability, and D3
 keeps Upgrade entry points connected to one honest pre-GA upsell dialog
 scaffold. These accepted decisions in
 `126__Product_Owner_Execution_Decisions.md` now govern domain doctrine and the
-remaining pre-execution passes.
+frozen execution contracts.
 
 ## 5. Authority (who owns what)
 
@@ -346,17 +347,19 @@ current authority; it does not invent a second documentation surface.
   future agent revert to the corpus median (hand-picked hex, parallel systems).
   `engineering/UI/` is the declared-truth surface that prevents that recurrence.
 
-## 13. Remaining Pre-Execution Gates
+## 13. Pre-Execution Closure And Step-9 Start
 
 1. Complete: D1/D2/D3 are accepted in
    `126__Product_Owner_Execution_Decisions.md` (step 4).
 2. Complete: every A-M domain has reconciled its settled product law into the
    owning living doctrine (step 5).
-3. In progress: 126A-126E have current gap audits; 126F-126M still need exact
-   code/doc mismatch and deletion maps (step 6).
-4. In progress: 126A-126E have final executable PRDs; 126F-126M remain
-   (step 7).
-5. In progress: 126A-126E are peer-reviewed green at exact trees `c06fa7db`,
-   `4b480e50`, `b5efaefc`, `31b81152`, and `ec1ed486`; 126F-126M remain
-   (step 8).
-6. Step 9 begins once, in dependency order, only after the remaining gates are green.
+3. Complete: every A-M domain has a current-source audit with exact mismatch,
+   blast-radius, and deletion ownership (step 6).
+4. Complete: every A-M domain has a final executable PRD with bounded files,
+   checks, proof, and non-scope (step 7).
+5. Complete: every A-M domain is peer-reviewed GREEN at an exact tree (step 8):
+   A `c06fa7db`; B `4b480e50`; C `b5efaefc`; D `31b81152`; E `ec1ed486`;
+   F/G/H `4c5458b4`; I/J/K/L/M `22a92ec9`.
+6. Next: begin Step 9 with 126A, then proceed once in dependency order. Execute
+   one PRD and one slice at a time; a slice does not advance until its code,
+   product-data, deploy/runtime, documentation, and V1-V8 gates are GREEN.

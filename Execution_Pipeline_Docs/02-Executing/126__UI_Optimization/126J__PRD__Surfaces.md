@@ -1,8 +1,7 @@
 # 126J - PRD: Surfaces And Bob Workspace
 
-Status: PRE-EXECUTION STEPS 6-7 COMPLETE - current surfaces and Bob workspace
-source are audited; exact execution scope is pinned; Step-8 review pending; no
-Step-9 execution credit.
+Status: PRE-EXECUTION STEPS 6-8 COMPLETE - exact-tree three-lens review GREEN at
+`22a92ec9`; no Step-9 execution credit.
 Parent: `126__PRD__UI_Optimization_Program.md`.
 Audit: `audits/126J__Audit__Surfaces.md`.
 Living doctrine: `documentation/engineering/UI/surfaces.md`.

@@ -1,9 +1,7 @@
 # 126M - PRD: Roma UI And Final Workspace Integration
 
-Status: PRE-EXECUTION STEPS 6-7 COMPLETE - current Roma shell, fields, nine
-tables, dead Widget Defaults CSS, Builder boundary, and cross-app handoffs are
-audited; exact execution scope is pinned; Step-8 review pending; no Step-9
-execution credit.
+Status: PRE-EXECUTION STEPS 6-8 COMPLETE - exact-tree three-lens review GREEN at
+`22a92ec9`; no Step-9 execution credit.
 Parent: `126__PRD__UI_Optimization_Program.md`.
 Audit: `audits/126M__Audit__Roma_UI.md`.
 Service authority: `documentation/services/roma.md`.
