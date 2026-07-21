@@ -100,8 +100,9 @@ these active parts:
 - Build entrypoints and dependency resolution are source truth too: root `package.json` defines
   `build:dieter`, `dieter/package.json` defines the package build command, and
   `admin/package.json` defines DevStudio/Admin generation/build commands. Root
-  `package.json` and `pnpm-lock.yaml` also determine the `esbuild`, `glob`, and
-  bundled runtime dependency graph used by the builder.
+  `package.json`, `pnpm-workspace.yaml`, and `pnpm-lock.yaml` also determine
+  workspace resolution, permitted native build dependencies, `esbuild`, `glob`,
+  and the bundled runtime dependency graph used by the builder.
 - Generated Dieter repo output is currently tracked at
   `tokyo/product/dieter/**`; this is the source/deploy ambiguity 126G removes.
 - Remote Dieter runtime output is R2 `dieter/**`.
@@ -275,8 +276,10 @@ Target law:
 
 - `manifest.json` provenance must be one deterministic identity: the latest
   commit affecting `dieter/**`, `scripts/build-dieter.js`,
-  `scripts/verify-svgs.js`, root `package.json`, or `pnpm-lock.yaml`, locally
-  and in CI. Those are the complete current Dieter source/build inputs.
+  `scripts/verify-svgs.js`, root `package.json`, `pnpm-workspace.yaml`, or
+  `pnpm-lock.yaml`, locally and in CI. Those are the complete current Dieter
+  source/build inputs: the workspace file determines package membership and
+  permitted native build dependencies.
   Deployment environment SHAs must not substitute a second identity.
 - `scripts/tokyo-r2-deploy-sync.mjs` is the one local/CI R2 sync entrypoint. It
   must run `pnpm build:dieter` successfully before it enumerates or uploads any
@@ -288,7 +291,9 @@ Target law:
   script, not a second deployment system.
 - Under `--json`, build diagnostics must not contaminate stdout. Stdout remains
   one directly parseable JSON document; build progress may be captured or sent
-  to stderr.
+  to stderr. The executable acceptance command is
+  `pnpm --silent tokyo:r2:sync:check`; ordinary pnpm lifecycle banners are not
+  part of the script's JSON contract.
 - `tokyo/product/dieter/**` is ignored build output, so DevStudio may commit one
   source file and CI may build/deploy it without requiring an impossible second
   generated-file commit.
@@ -297,6 +302,13 @@ Target law:
   `dieter_artifacts` condition is deleted.
 - Manifest dependencies must resolve. Warning-and-ship is not a valid standard
   for broken declared dependencies.
+- Before manifest emission or sync, the builder must derive the complete
+  expected output path set from the actual source transformation rules and
+  compare it with the generated tree: copied tokens/icons/component statics and
+  foundation CSS, generated shadow token files, eligible TypeScript component
+  bundles, and the manifest. Missing and unexpected output both fail. Copied
+  source artifacts must also be byte-equal. This is one assertion in the
+  existing builder, not a second manifest or test-only source of truth.
 - Warning-only behavior is allowed only where warning is explicitly product law.
 - Existing governance checks should stay scoped to the generated artifacts they
   actually inspect. Do not claim they prove Bob/Roma/widget runtime consumer
@@ -376,14 +388,14 @@ it alone.
 
 | Area | Owner | Exact files / path shapes | Verify | Must not change |
 | --- | --- | --- | --- | --- |
-| Build command entrypoints | 126G / repo scripts | `package.json`; `dieter/package.json`; `admin/package.json` | Remove Dieter's false `main`, install-time `prepare`, and 126F-assigned unused GSAP declaration in one package edit; preserve explicit build/typecheck and real dependencies. | Do not generate deploy output during install or edit `dieter/package.json` again in 126F/126H. |
-| Dieter build source | 126G / Dieter ops | `dieter/**`; `scripts/build-dieter.js`; `scripts/verify-svgs.js`; root `package.json`; `pnpm-lock.yaml` | Remove deployment-SHA precedence; derive provenance from every listed source/build input; verify dependency failures remain fail-closed and source verification remains non-mutating. | Do not create a second builder, dependency registry, compatibility branch, or dual manifest identity. |
+| Build command entrypoints | 126G / repo scripts | `package.json`; `pnpm-workspace.yaml`; `dieter/package.json`; `admin/package.json` | Remove Dieter's false `main`, install-time `prepare`, and 126F-assigned unused GSAP declaration in one package edit; preserve workspace membership, explicit build/typecheck, and real dependencies. | Do not generate deploy output during install or edit `dieter/package.json` again in 126F/126H. |
+| Dieter build source | 126G / Dieter ops | `dieter/**`; `scripts/build-dieter.js`; `scripts/verify-svgs.js`; root `package.json`; `pnpm-workspace.yaml`; `pnpm-lock.yaml` | Remove deployment-SHA precedence; derive provenance from every listed source/build input; add fail-closed source-derived output-path and copied-byte parity; verify dependency failures remain fail-closed and source verification remains non-mutating. | Do not create a second builder, dependency registry, compatibility branch, output manifest, or dual provenance identity. |
 | SVG processing and verification | 126C icon law + 126G build behavior | `scripts/verify-svgs.js`; `dieter/icons/icons.json`; `dieter/icons/svg/` | Verify build execution reads/verifies source SVGs and does not mutate committed source. | Do not let build-time verification silently rewrite committed icon source. |
 | Generated Dieter artifacts | Generated from Dieter source | `tokyo/product/dieter/**`; `.gitignore` | Remove the generated tree from Git tracking, ignore it, and recreate it before every R2 sync; manifest provenance and dependencies remain fail-visible. | Do not hand-edit, commit, or treat generated output as source. |
 | DevStudio generation | 126G / DevStudio generation, 126L for DevStudio product workflow | `admin/scripts/generate-typography-json.cjs`; `admin/scripts/generate-foundation-pages.mjs`; `admin/scripts/generate-component-pages.ts`; `admin/scripts/generate-static-registries.mjs`; `admin/scripts/build-static.mjs`; `admin/src/data/typography.generated.json`; `admin/src/html/` | Generated DevStudio/Admin artifacts must reflect source generators; governance scope must be described honestly. | Do not claim generated Admin checks prove Bob/Roma/widget runtime correctness. |
 | DevStudio token edit lane | 126L DevStudio execution target, 126G documents lane | `admin/functions/_shared/dieter-tokens.js`; `admin/functions/_shared/berlin.js`; `admin/functions/_middleware.js`; `admin/functions/api/dieter/tokens/colors.js`; `admin/functions/api/dieter/tokens/colors/value.js`; `admin/functions/api/dieter/tokens/typography.js`; `admin/functions/api/dieter/tokens/typography/value.js`; `admin/src/main.ts` | Token write response and visible operation evidence expose token, value change, commit SHA, and available authenticated actor/session context where 126L implements it; client binding and auth boundary are in scope for inspection. | Do not add approval workflow, contrast enforcement, semantic validator, or PR bureaucracy in 126G. |
 | Governance guard scope | 126G / generated Admin guard | `scripts/dieter/governance-guards.mjs`; `.github/workflows/devstudio-verify.yml` | Guard docs state exact scope: generated Admin/DevStudio artifacts only. | Do not expand into a universal UI scanner in 126G. |
-| Cloud-dev deploy path | DevOps / Cloudflare deploy | `.github/workflows/cloud-dev-workers.yml`; `.github/workflows/cloud-dev-runtime-verify.yml`; `.github/workflows/cloud-dev-roma-app.yml`; `.github/workflows/cloud-dev-prague-app.yml`; `.github/workflows/cloud-dev-prague-content.yml` | Watch all four sync source roots, including `tokyo/prague/**`, plus root `package.json` and `pnpm-lock.yaml` as Dieter build inputs; delete `dieter_artifacts`; route every `tokyo_assets=true` sync through the sole build-before-sync entrypoint. | Do not preserve a generated-only trigger, narrower build condition, dependency registry, or second deploy service. |
+| Cloud-dev deploy path | DevOps / Cloudflare deploy | `.github/workflows/cloud-dev-workers.yml`; `.github/workflows/cloud-dev-runtime-verify.yml`; `.github/workflows/cloud-dev-roma-app.yml`; `.github/workflows/cloud-dev-prague-app.yml`; `.github/workflows/cloud-dev-prague-content.yml` | Watch all four sync source roots, including `tokyo/prague/**`, plus root `package.json`, `pnpm-workspace.yaml`, and `pnpm-lock.yaml` as Dieter build inputs; delete `dieter_artifacts`; route every `tokyo_assets=true` sync through the sole build-before-sync entrypoint. | Do not preserve a generated-only trigger, narrower build condition, dependency registry, or second deploy service. |
 | Tokyo/R2 deploy sync | 126G / Cloudflare product-root deploy sync | `scripts/tokyo-r2-deploy-sync.mjs`; `package.json`; `documentation/services/tokyo.md`; `documentation/services/tokyo-worker.md`; `documentation/engineering/CloudflareOperations.md` | Build Dieter before enumeration in dry-run and remote modes; preserve directly parseable stdout for `--json`; make manual `--remote` fail on scoped uncommitted inputs; then preserve the current root allowlist, account-runtime exclusion, and upload-only behavior. | Do not permit a manual build/source-authority bypass; do not add R2 reconciliation, orphan cleanup, rollback, or another deploy lane. |
 | Bob source dependency | Bob compile/build | `bob/lib/icons.ts`; `.github/workflows/cloud-dev-roma-app.yml` | Read the icon registry from authoritative `dieter/icons/icons.json` so Bob builds do not require a committed generated tree; remove the generated-tree workflow trigger. | Do not duplicate the registry or add a copy step. |
 | Localization/l10n authority boundary | Babel/Prague/San Francisco/localization owners, not 126G | `documentation/architecture/BabelProtocol.md`; `documentation/architecture/OverlayArchitecture.md`; `documentation/strategy/Clickeen-Babel.md`; `documentation/capabilities/localization.md`; `documentation/services/prague/prague-overview.md`; `documentation/ai/sanfrancisco.md`; `packages/l10n/**`; `packages/l10n/locales.json`; `scripts/i18n/build.mjs`; `scripts/i18n/extract-keys.mjs`; `scripts/i18n/validate.mjs`; `scripts/l10n/build.mjs`; `scripts/l10n/validate.mjs`; `scripts/prague-l10n/lib.mjs`; `scripts/prague-l10n/translate.mjs`; `scripts/prague-l10n/verify.mjs` | Verify real localization tooling remains intact; remove only stale deploy-root assumptions from UI ops/deploy docs. | Do not delete real localization tooling, locale overlays, Prague l10n, San Francisco l10n, or future localization product direction. |
@@ -414,33 +426,40 @@ The final integrated Step-9 plan carries these precise responsibilities:
    preserve explicit `build`/`typecheck`, `@clickeen/ck-contracts`, and `tldts`.
 2. **Deterministic provenance:** make `scripts/build-dieter.js` always derive
    the latest commit affecting `dieter/**`, `scripts/build-dieter.js`,
-   `scripts/verify-svgs.js`, root `package.json`, or `pnpm-lock.yaml`; remove
-   deployment-environment SHA precedence. Add root `package.json` and
-   `pnpm-lock.yaml` to the worker trigger and `tokyo_assets` detection because
-   they determine generated Dieter bytes.
-3. **One generated-artifact model:** remove all currently tracked
+   `scripts/verify-svgs.js`, root `package.json`, `pnpm-workspace.yaml`, or
+   `pnpm-lock.yaml`; remove deployment-environment SHA precedence. Add all
+   three root package-graph files to the worker trigger and `tokyo_assets`
+   detection because they determine build resolution or generated Dieter bytes.
+3. **Fail-closed generated completeness:** in `scripts/build-dieter.js`, derive
+   expected output paths from the builder's actual source transformation rules,
+   compare the expected and generated path sets exactly, and byte-compare every
+   copied source artifact. Include token shadows, eligible component bundles,
+   icons, component statics/CSS, foundation CSS, and manifest. Fail on missing
+   or unexpected output. Do not add a second manifest or registry.
+4. **One generated-artifact model:** remove all currently tracked
    `tokyo/product/dieter/**` files from Git and ignore that directory. The build
    continues to recreate the same local path as ephemeral deploy input. Change
    `bob/lib/icons.ts` to import authoritative `dieter/icons/icons.json` directly,
    so a clean clone does not need generated files to build Bob.
-4. **One build-before-sync entrypoint:** make
+5. **One build-before-sync entrypoint:** make
    `scripts/tokyo-r2-deploy-sync.mjs` run `pnpm build:dieter` successfully before
    it enumerates files in both dry-run and remote modes. Package commands and CI
    invoke this same script. Preserve clean JSON stdout when `--json` is used.
    Keep manual dry-run available with local changes, but make manual `--remote`
    fail unless `dieter/**`, both build scripts, root `package.json`,
-   `pnpm-lock.yaml`, `tokyo/product/widgets/**`, `tokyo/roma/**`, and
-   `tokyo/prague/**`, plus `scripts/tokyo-r2-deploy-sync.mjs` itself match
+   `pnpm-workspace.yaml`, `pnpm-lock.yaml`, `tokyo/product/widgets/**`,
+   `tokyo/roma/**`, and `tokyo/prague/**`, plus
+   `scripts/tokyo-r2-deploy-sync.mjs` itself match
    committed `HEAD`. Remove the separate workflow build step and the
    `dieter_artifacts` variable. Add `tokyo/prague/**`, root
-   `package.json`, and `pnpm-lock.yaml` to the workflow trigger and
-   `tokyo_assets` detection. Remove generated Dieter paths from workflow
+   `package.json`, `pnpm-workspace.yaml`, and `pnpm-lock.yaml` to the workflow
+   trigger and `tokyo_assets` detection. Remove generated Dieter paths from workflow
    triggers because they no longer exist in Git.
-5. **Preservation gate:** if another 126 slice changes Dieter source, build or
+6. **Preservation gate:** if another 126 slice changes Dieter source, build or
    generator scripts, DevStudio functions, or deploy
    workflows, re-run the owning source/build checks and verify the exact
    deployed surface through its existing GitHub/Cloudflare authority.
-6. **126L handoff:** DevStudio must display the token, old value, new value, and
+7. **126L handoff:** DevStudio must display the token, old value, new value, and
    returned commit SHA after a successful direct token commit, using available
    authenticated session context where the server records operation evidence.
    126L also closes the direct-commit verification visibility gap. 126G does not
@@ -453,7 +472,8 @@ Exact current deletion map:
 
 - `dieter/package.json`: delete false `main`, install-time `prepare`, and the
   unused Dieter GSAP declaration assigned by 126F.
-- `scripts/build-dieter.js`: delete deployment-environment SHA precedence.
+- `scripts/build-dieter.js`: delete deployment-environment SHA precedence and
+  add the one source-derived generated-path/copied-byte parity assertion.
 - `tokyo/product/dieter/**`: delete all generated files from Git tracking;
   retain the path only as ignored build output.
 - `.gitignore`: ignore `tokyo/product/dieter/**`.
@@ -462,7 +482,8 @@ Exact current deletion map:
 - `scripts/tokyo-r2-deploy-sync.mjs`: build Dieter before enumerating uploads in
   dry-run and remote modes; preserve JSON-only stdout; reject manual remote
   upload when scoped source/build inputs differ from committed `HEAD`.
-- `.github/workflows/cloud-dev-workers.yml`: watch `tokyo/prague/**`, collapse
+- `.github/workflows/cloud-dev-workers.yml`: watch `tokyo/prague/**` and the
+  complete root package graph including `pnpm-workspace.yaml`, collapse
   `dieter_artifacts` into `tokyo_assets`, remove generated-output triggers, and
   use the sole sync entrypoint.
 - `.github/workflows/cloud-dev-roma-app.yml`: remove the generated Dieter path
@@ -510,20 +531,23 @@ Execution is not complete until these checks are run and reconciled:
 - Search `scripts/build-dieter.js` for `unknown`, and warning-only
   manifest dependency behavior; verify local and CI provenance always resolves
   the latest scoped Dieter/build input SHA across `dieter/**`, both build
-  scripts, root `package.json`, and `pnpm-lock.yaml`.
+  scripts, root `package.json`, `pnpm-workspace.yaml`, and `pnpm-lock.yaml`.
 - Search `package.json`, `dieter/package.json`, and `admin/package.json` for
   build/generate entrypoints; verify Dieter has no false `main`, install-time
   `prepare`, or unused GSAP declaration after the single package cleanup.
 - Prove `tokyo/product/dieter/**` has no tracked files and is ignored, while
-  `pnpm build:dieter` recreates the full output and current manifest.
+  `pnpm build:dieter` recreates output whose source-derived expected path set
+  exactly matches the generated set and whose copied artifacts are byte-equal.
 - Exercise Dieter source, widget-only, Roma-only, Prague-only, manual dry-run,
-  manual remote, workflow dispatch, and DevStudio token-source paths; prove each
-  reaches the same build-before-enumeration sync entrypoint.
-- Prove `pnpm tokyo:r2:sync:check` stdout is directly `JSON.parse`-able and build
+  workflow dispatch, and DevStudio token-source paths; prove each reaches the
+  same build-before-enumeration sync entrypoint. Prove the successful remote
+  path only through the exact-SHA GitHub Actions run; do not run a successful
+  manual remote upload as a test.
+- Prove `pnpm --silent tokyo:r2:sync:check` stdout is directly `JSON.parse`-able and build
   diagnostics do not precede or follow the JSON document.
 - Prove manual dry-run accepts scoped local changes while manual `--remote`
-  rejects them before build/upload; prove a clean committed tree reaches the
-  normal remote path.
+  rejects them before build/upload. Use the exact-SHA Actions deployment as the
+  clean committed remote-path proof.
 - Build Bob from a clean generated-output state and prove its icon registry
   resolves from `dieter/icons/icons.json`.
 - Search `scripts/verify-svgs.js` for source mutation; route icon-specific

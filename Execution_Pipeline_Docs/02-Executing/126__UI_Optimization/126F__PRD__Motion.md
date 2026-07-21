@@ -90,18 +90,23 @@ The strong current evidence:
   consumes `--duration-base`, `--duration-snap`, and `--easing-standard`.
 - Repeater still writes inline JS `style.transition` shorthands, but it checks
   `prefers-reduced-motion` directly before enabling them.
-- Public widgets include separate carousel/ticker/autoplay/RAF/countdown motion,
-  but all current widget templates load the Dieter token entrypoint and inherit
-  its global CSS reduced-motion baseline. Independent widget choreography and
-  JS behavior remain widget-owned.
+- Public widgets include separate carousel/ticker/autoplay/RAF/countdown motion.
+  All current widget templates declare the Dieter token entrypoint, but the
+  public `clk.live` host currently short-circuits to instance-package routes and
+  returns 404 for `/dieter/**`. Materialized widgets therefore do **not** inherit
+  that shared CSS baseline today. Step 9 repairs this existing public read
+  boundary before claiming widget reduced-motion behavior. Independent widget
+  choreography and JS behavior remain widget-owned.
 - Current living motion doctrine records the exact system/widget boundary and
   token law.
 
 Step 6 found one remaining implementation deletion: Bob and Dieter still
 declare `gsap` even though current source has no GSAP import or runtime use.
-It also found one reduced-motion selector gap: Roma's Widget Defaults toggle
-animates its knob through `::after`, while the foundation guard currently
-targets only real elements. The generated Dieter manifest still records the
+It also found one reduced-motion selector gap: the live Dieter dropdown-fill
+swatch animates `::after`, while the foundation guard currently targets only
+real elements. Roma's historical `.widget-defaults-field--toggle` CSS has no
+runtime markup consumer and is a 126M deletion target, not motion evidence. The
+generated Dieter manifest still records the
 older `de408dda` input SHA even though `c299c783` is the latest committed
 Dieter/build input. Current token consumption is otherwise source-true; Prague
 remains real blast radius before any future duration-token change. Step 7 fixes
@@ -375,8 +380,11 @@ it alone.
 | Bob operational chrome | 126F / Bob chrome | `bob/app/bob_app.css` | Verify operational chrome continues to consume Dieter motion tokens. | Do not change Bob interaction semantics owned by 126E. |
 | Roma operational chrome | 126F / Roma chrome | `roma/app/roma.css` | Verify operational chrome continues to consume Dieter motion tokens. | Do not change Roma account/domain state semantics owned by 126E. |
 | Admin / DevStudio chrome | 126F / Admin chrome | `admin/src/css/layout.css`; `admin/src/css/utilities.css` | Verify operational chrome continues to consume Dieter motion tokens and no duplicate global reduced-motion rule returns. | Do not keep duplicate global reduced-motion rules or local motion drift as a separate doctrine. |
+| Live Dieter pseudo-element consumer | 126F / Dieter and DevStudio | `dieter/components/dropdown-fill/dropdown-fill.css`; `admin/src/html/components/dropdown-fill.html`; `admin/src/main.ts` | On `https://devstudio.clickeen.com/#/dieter/dropdown-fill`, verify `.diet-dropdown-fill__swatch::after` keeps its ordinary transition and becomes immediate under reduced motion. | Do not use Roma's dead Widget Defaults selector as evidence or add a component-local duplicate guard. |
 | Prague Dieter consumer | Prague / website consumer | `prague/src/layouts/Base.astro`; `prague/src/components/StepsPrimitive.astro`; `prague/src/components/InstanceEmbed.astro`; `prague/public/styles/primitives.css` | Verify the global selector change makes `StepsPrimitive` pseudo-element transitions immediate under reduced motion and preserves normal mode. | Do not edit Prague source or treat Prague consumption as a second motion authority. |
-| Public widget baseline consumer | Widget PRDs / widget docs | `tokyo/product/widgets/*/widget.html`; `tokyo/product/widgets/cards/widget.css`; materializer contract/fixture proving the token link survives materialization | Verify a current public widget with an existing CSS transition inherits the global guard in normal and reduced-motion modes. | Do not rewrite widget runtime CSS/JS or force widget choreography onto Dieter durations/easing. |
+| Public Dieter read boundary | 126F / Tokyo public serving | `tokyo-worker/src/route-dispatch.ts`; `tokyo-worker/src/routes/asset-routes.ts`; `tokyo-worker/tests/run-clk-live-locale-serving.ts` | Serve existing Git-deployed `/dieter/**` objects on `clk.live`/`dev.clk.live` before instance-package parsing; prove GET/HEAD, content type, CORS/final response behavior, missing-object 404, and no account/internal asset exposure. | Do not duplicate Dieter bytes into instance folders, add an alias route, broaden public access to account/internal objects, or alter instance identity parsing. |
+| Public widget baseline consumer | Widget PRDs / widget docs | `tokyo/product/widgets/*/widget.html`; `tokyo/product/widgets/cards/widget.css`; materializer contract/fixture proving the token link survives materialization | After the public Dieter read boundary is green, discover a published `cards` instance for `CLICKEEN` through authenticated Roma `GET /api/account/widgets`, record its exact `https://dev.clk.live/CLICKEEN/{instanceId}` URL, and verify `.ck-cards__card` in normal and reduced-motion modes. | Do not rewrite widget runtime CSS/JS, force widget choreography onto Dieter durations/easing, substitute another widget, or create product data. |
+| Dieter build/deploy authority handoff | 126G | `scripts/build-dieter.js`; `scripts/verify-svgs.js`; `scripts/tokyo-r2-deploy-sync.mjs`; `package.json`; `pnpm-workspace.yaml`; `pnpm-lock.yaml`; `.gitignore`; `bob/lib/icons.ts`; `.github/workflows/cloud-dev-workers.yml`; `.github/workflows/cloud-dev-roma-app.yml`; `.github/workflows/cloud-dev-prague-app.yml`; `.github/workflows/cloud-dev-prague-content.yml` | Use 126G's one source-to-output parity, provenance, build-before-sync, trigger, and exact-SHA deploy authority. | Do not create a second 126F builder, sync path, generated import, or deployment rule. |
 | Public widget runtime inspect-only boundary | Widget PRDs / widget docs | `tokyo/product/widgets/logoshowcase/widget.css`; `tokyo/product/widgets/logoshowcase/widget.client.js`; `tokyo/product/widgets/split-carousel-media/widget.client.js`; `tokyo/product/widgets/countdown/widget.client.js`; `tokyo/product/widgets/shared/stagePod.js`; `tokyo/product/widgets/shared/socialShare.js`; `tokyo/product/widgets/shared/socialShare.css` | Preserve widget ownership beyond the shared CSS guard, especially JS-driven motion. | Do not rewrite independent widget behavior in 126F. |
 | Public widget docs inspect-only boundary | Widget PRDs / widget docs | `documentation/widgets/widgets/logoshowcase.md`; `documentation/widgets/widgets/split-carousel-media.md`; `documentation/widgets/widgets/countdown.md`; `documentation/widgets/widgets/README.md`; `documentation/widgets/README.md`; `documentation/widgets/shared/ShellCore.md`; `documentation/widgets/authoring/ToolDrawerControls.md` | Verify docs do not imply Dieter/system motion governs independent widget runtime behavior. | Do not document widget runtime motion as Dieter/system doctrine. |
 | Living motion docs | 126F docs | `documentation/engineering/UI/README.md`; `documentation/engineering/UI/motion.md`; `documentation/engineering/UI/dieter.md`; `documentation/services/dieter.md`; `documentation/services/devstudio.md`; `documentation/engineering/UI/interactions.md`; `documentation/engineering/UI/components.md` | Search for stale `126A`, duration-scale expansion, missing widget/system boundary, and DevStudio/Admin authority drift. | Do not document removed or widget-owned behavior as Dieter/system doctrine. |
@@ -395,10 +403,10 @@ verifies them rather than scheduling another rewrite:
 
 ## Final Step-7 Execution Disposition
 
-126F has one small standalone cleanup slice and no product-data,
-managed-service configuration, route, or deploy-path code write set. The
-existing Git-connected deploy path will publish changed Dieter output and must
-be verified through its existing GitHub/R2 authorities. The premature motion
+126F has one small motion cleanup plus one existing public-read-boundary repair.
+It has no product-data or managed-service configuration write set. The existing
+Git-connected deploy path will publish the Tokyo-worker and Dieter changes and
+must be verified through its existing GitHub/R2 authorities. The premature motion
 migration is current as-built input but receives no Step-9 execution credit.
 The final integrated Step-9 plan carries this exact slice:
 
@@ -412,22 +420,22 @@ The final integrated Step-9 plan carries this exact slice:
    install check required by CI.
 3. Update the one foundation reduced-motion selector in
    `dieter/tokens/dieter-foundation-tokens.css` from `*` to
-   `*, *::before, *::after`. Do not add a Roma-local guard. Verify the Roma
-   Widget Defaults toggle becomes immediate under reduced motion while its
-   checked/unchecked product state still changes.
+   `*, *::before, *::after`. Do not add a local guard. Verify the live
+   `.diet-dropdown-fill__swatch::after` transition in DevStudio becomes
+   immediate under reduced motion while swatch selection still changes.
 4. Through 126G, make `scripts/build-dieter.js` derive manifest provenance from
    the latest commit affecting the complete scoped Dieter/build inputs in every
    environment: `dieter/**`, `scripts/build-dieter.js`,
-   `scripts/verify-svgs.js`, root `package.json`, and `pnpm-lock.yaml`.
+   `scripts/verify-svgs.js`, root `package.json`, `pnpm-workspace.yaml`, and
+   `pnpm-lock.yaml`.
    CI-provided deployment SHAs must not replace that identity.
    Remove `tokyo/product/dieter/**` from Git tracking and ignore it. Make the
    single R2 sync entrypoint run `pnpm build:dieter` before file enumeration in
    both workflow and documented manual use.
 5. Commit the Dieter source/package/build changes, then run `pnpm build:dieter`
-   and prove the ignored output is generated from that committed input and
-   `manifest.json.gitSha` equals the latest commit affecting `dieter/`,
-   `scripts/build-dieter.js`, or `scripts/verify-svgs.js`. Do not commit generated
-   Dieter output.
+   and prove the ignored output is complete and generated from that committed
+   input. `manifest.json.gitSha` must equal the latest commit affecting the one
+   complete input set from step 4. Do not commit generated Dieter output.
 6. Re-run the source and documentation checks against the execution-start
    tree.
 7. If later 126 domains introduce or alter system motion, require those exact
@@ -436,16 +444,27 @@ The final integrated Step-9 plan carries this exact slice:
 8. Run `pnpm dieter:governance:check` and `pnpm build:dieter` after the Dieter
    dependency change and whenever Dieter source changes later. Generated Tokyo
    Dieter output must match source and must not be hand-edited.
-9. Push the exact source commit, verify the existing
+9. Before public-widget browser proof, expose the already-deployed public
+   `/dieter/**` root on `clk.live` and `dev.clk.live`: public-host dispatch must
+   try only the existing deploy-asset reader before instance-package parsing.
+   Extend Tokyo-worker's current clk.live test command to prove GET/HEAD and
+   fail-closed scope. Do not call the full internal/account asset router from
+   the public-host branch.
+10. Push the exact source commit, verify the existing
    `cloud-dev workers deploy` run at that SHA, and read back the generated
-   foundation token file plus manifest from canonical R2 `dieter/**`. Do not
-   perform a manual R2 mutation.
-10. Only after that deployed-byte proof, verify browser behavior in normal and
-   reduced-motion modes for the Roma Widget Defaults toggle, Prague
-   `StepsPrimitive` pseudo-elements, and the current public Cards widget. Record
-   the tested selectors and computed transition durations. If cloud-dev has no
-   current public Cards instance, this gate is RED; do not silently substitute
-   another widget or create product data under 126F.
+   regular and shadow foundation token files plus manifest from canonical R2
+   `dieter/**`. Prove `https://dev.clk.live/dieter/tokens/tokens.css` serves the
+   deployed object. Do not perform a manual R2 mutation.
+11. Only after that deployed-byte proof, verify browser behavior in normal and
+   reduced-motion modes for DevStudio
+   `.diet-dropdown-fill__swatch::after`, Prague route
+   `https://prague.dev.clickeen.com/us/en/widgets/faq/` selector
+   `.ck-stepsCanvas[data-variant='value-props'] .ck-steps__tile::before`, and a
+   current public Cards widget. Discover Cards through authenticated Roma
+   `GET /api/account/widgets`, require `type=cards` and `status=published` for
+   account `CLICKEEN`, record the exact `dev.clk.live` URL, and test
+   `.ck-cards__card`. Record computed transition durations. If no such Cards
+   instance exists, this gate is RED; do not substitute or create product data.
 
 Exact current deletion map:
 
@@ -460,11 +479,26 @@ Exact current deletion map:
 - `tokyo/product/dieter/**`: 126G removes the generated tree from Git tracking
   and ignores it; `pnpm build:dieter` still recreates it as deploy input.
 - `scripts/build-dieter.js`: 126G removes environment deployment-SHA precedence
-  so local and CI builds use the same scoped input identity.
+  so local and CI builds use the same complete scoped input identity and adds a
+  fail-closed source-to-generated-output parity assertion.
 - `scripts/tokyo-r2-deploy-sync.mjs`: 126G makes the one sync entrypoint build
   Dieter before enumeration for CI and manual use.
+- `pnpm-workspace.yaml`: remains source truth and is included in provenance,
+  workflow triggers, and scoped dirty-tree refusal; it is not edited unless
+  execution-start source proves an actual required package-graph correction.
+- `.gitignore`: 126G ignores the ephemeral generated Dieter tree.
+- `bob/lib/icons.ts`: 126G replaces the generated-tree import with the
+  authoritative source icon registry.
 - `.github/workflows/cloud-dev-workers.yml`: 126G watches all four sync roots,
-  deletes `dieter_artifacts`, and uses the one build-before-sync entrypoint.
+  all complete Dieter inputs including `pnpm-workspace.yaml`, deletes
+  `dieter_artifacts`, and uses the one build-before-sync entrypoint.
+- `.github/workflows/cloud-dev-roma-app.yml`: 126G removes the ignored generated
+  Dieter path and watches the authoritative source needed by Bob/Roma.
+- `tokyo-worker/src/route-dispatch.ts`,
+  `tokyo-worker/src/routes/asset-routes.ts`, and
+  `tokyo-worker/tests/run-clk-live-locale-serving.ts`: expose only the existing
+  deploy-asset reader for public `/dieter/**` GET/HEAD before instance parsing
+  and prove the scope fails closed.
 
 No GSAP compatibility wrapper, substitute animation package, or replacement
 motion abstraction is permitted. Current source otherwise contains no stale
@@ -473,14 +507,16 @@ duplicate Admin reduced-motion doctrine, or unguarded JS transition to delete.
 
 Exact source no-touch but verification boundary:
 
-- public-widget runtime source/docs remain unedited, but one current widget is
-  browser-verified because it loads the changed global guard;
+- public-widget source/docs remain unedited; the Tokyo public serving boundary
+  is repaired, then one current widget is browser-verified because it loads the
+  changed global guard;
 - Prague source remains unedited, but `StepsPrimitive` is browser-verified
   because its pseudo-elements consume the changed global guard;
 - interaction semantics owned by 126E;
 - visual primitives owned by 126I;
-- product data, routes, policy, R2, Supabase, Berlin, San Francisco, and Tokyo
-  operation code.
+- product data, policy, direct R2 mutation, Supabase, Berlin, San Francisco, and
+  Tokyo operation code. The one named Tokyo public read route is the only route
+  change.
 
 If execution-start drift introduces a concrete violation, the owning changed
 file is added to the integrated plan and fixed directly. That is drift repair,
@@ -511,9 +547,10 @@ Execution is not complete until these checks are run and reconciled:
   `pnpm --filter @ck/dieter typecheck` after the dependency deletion.
 - Search Dieter source for operational `transition` literals in the blast radius.
 - Verify the foundation reduced-motion selector covers `*`, `*::before`, and
-  `*::after`; test the Roma Widget Defaults toggle, Prague `StepsPrimitive`, and
-  the current public Cards widget transition with reduced motion enabled, only
-  after the exact-SHA deploy and R2 read-back are green.
+  `*::after`; test DevStudio `.diet-dropdown-fill__swatch::after`, the exact
+  Prague selector, and the discovered current public Cards `.ck-cards__card`
+  transition with reduced motion enabled, only after the exact-SHA deploy and
+  R2 read-back are green.
 - Search Dieter source for `--easing-standard` references and definitions.
 - Search for active `--duration-snap` consumers.
 - Search `prague/src/components/StepsPrimitive.astro`,
@@ -531,9 +568,12 @@ Execution is not complete until these checks are run and reconciled:
 - After committing Dieter source/build changes, run `pnpm build:dieter`; verify
   the ignored output is complete and manifest provenance equals the latest
   committed Dieter/build input SHA across `dieter/**`, both build scripts, root
-  `package.json`, and `pnpm-lock.yaml`, locally and under GitHub Actions.
-- Verify the exact source commit deploys successfully and canonical R2 bytes
-  are read back before running the Roma, Prague, and public Cards browser checks.
+  `package.json`, `pnpm-workspace.yaml`, and `pnpm-lock.yaml`, locally and under
+  GitHub Actions. Verify source-derived expected output and generated output
+  have exact path parity before sync.
+- Verify the exact source commit deploys successfully; read back and compare
+  regular foundation CSS, shadow foundation CSS, and manifest; verify public
+  `dev.clk.live/dieter/**` serving before DevStudio, Prague, and Cards checks.
 - Run focused lint/type checks for changed Dieter/Bob/Roma/Admin files if code
   changes occur in execution.
 - After merged code changes that affect Bob, Roma, Prague, DevStudio/Admin app

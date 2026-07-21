@@ -431,7 +431,7 @@ it alone.
 | Motion boundary | 126F, not 126H | `dieter/tokens/dieter-foundation-tokens.css`; `dieter/components/dropdown-fill/dropdown-fill.css`; generated mirrors in `tokyo/product/dieter/` | Route `--duration-snap` and `--easing-standard` to 126F. | Do not decide motion/easing in 126H. |
 | Icon boundary | 126C / 126I, not 126H | `dieter/tokens/dieter-foundation-tokens.css`; `dieter/components/icon/icon.css`; `dieter/components/button/button.css`; `dieter/components/menuactions/menuactions.css`; `dieter/components/textedit/textedit.css` | Keep `--icon-size-*` as substrate; route icon consumption/sizing/rendering details to 126C/126I. | Do not add icon origination or component icon rules in 126H. |
 | Screen-reader utility | 126A semantics + 126H utility source | `dieter/tokens/dieter-foundation-tokens.css`; `dieter/components/dropdown-shadow/dropdown-shadow.html`; `dieter/components/dropdown-border/dropdown-border.html`; `dieter/components/textedit/textedit.html`; `dieter/components/textedit/textedit-dom.ts`; `dieter/components/repeater/repeater.html`; `dieter/components/tabs/tabs.html`; `dieter/components/tabs/tabs.css`; `dieter/components/toggle/toggle.html`; `dieter/components/toggle/toggle.css` | Preserve `.sr-only` utility where semantics require hidden text/control labels. | Do not turn `.sr-only` into keyboard-support or focus doctrine. |
-| Package/artifact shape | 126G implementation / 126H docs | `dieter/package.json`; `pnpm-lock.yaml`; `.gitignore`; `documentation/services/dieter.md`; `documentation/engineering/UI/dieter.md`; `tokyo/product/dieter/**` | 126G removes false `main`, install-time `prepare`, unused Dieter GSAP, and tracked generated output once; preserve explicit scripts, real dependencies, ignored build output, and the CDN consumer path. | Do not invent a package registry/entrypoint, generated-file commit protocol, or second edit in 126F/126H. |
+| Package/artifact shape | 126G implementation / 126H docs | `dieter/package.json`; root `package.json`; `pnpm-workspace.yaml`; `pnpm-lock.yaml`; `scripts/build-dieter.js`; `.gitignore`; `documentation/services/dieter.md`; `documentation/engineering/UI/dieter.md`; `tokyo/product/dieter/**` | 126G removes false `main`, install-time `prepare`, unused Dieter GSAP, and tracked generated output once; preserves explicit scripts/real dependencies; includes the complete package graph in provenance/triggers; and adds fail-closed source-to-output path/byte parity before sync. | Do not invent a package registry/entrypoint, second manifest, generated-file commit protocol, or second edit in 126F/126H. |
 | Living Dieter docs | 126H docs | `documentation/engineering/UI/README.md`; `documentation/engineering/UI/dieter.md`; `documentation/services/dieter.md`; `documentation/engineering/UI/ops.md`; `documentation/engineering/UI/color.md`; `documentation/engineering/UI/iconography.md`; `documentation/engineering/UI/typography.md`; `documentation/engineering/UI/motion.md`; `documentation/engineering/UI/components.md`; `documentation/engineering/UI/dialogs-and-modals.md`; `documentation/engineering/UI/surfaces.md` | Verify the renewed current contract remains consistent: current track mapping, root build path, source authority, 25/24 counts, light-mode boundary, no foundation focus/touch or numeric-radius aliases, no `svg_new` source lane, and current vertspace law. | Do not document removed token names or dead patterns as current doctrine. |
 | Product data and deploy boundary | 126H source deploy / account data excluded | `tokyo/product/widgets/shared/socialShare.css`; canonical R2 `product/widgets/shared/socialShare.css`; account runtime paths `accounts/{accountPublicId}/...` | Deploy the one git-authored widget-source cleanup through the normal workflow after 126G build-before-sync is green; read back the source object. | Do not mutate account product data, published instance snapshots, or R2 directly. |
 
@@ -462,8 +462,10 @@ handoffs. It does not change Dieter token source or account product data.
    `main`, and install-time `prepare`; preserve explicit `build`/`typecheck` and
    real `@clickeen/ck-contracts`/`tldts` dependencies. 126G also owns complete
    build provenance across Dieter source, both build scripts, root
-   `package.json`, and `pnpm-lock.yaml`, plus the scoped clean-tree requirement
-   for any manual remote sync. 126H adds no parallel package/deploy rule.
+   `package.json`, `pnpm-workspace.yaml`, and `pnpm-lock.yaml`;
+   source-derived output-path and copied-byte parity; and the scoped dirty-tree
+   refusal for manual remote sync. A clean remote path is proved only through
+   exact-SHA Actions. 126H adds no parallel package/deploy rule.
 4. Let 126L replace DevStudio's fallback-masked `--shadow-lg` declaration with
    `var(--shadow-elevated)` and browser-verify the token editor.
 5. Let 126I/126K own exact component shadow/layering behavior; 126H adds no
@@ -545,7 +547,9 @@ Execution is not complete until these checks are run and reconciled:
 - Capture before/after visual evidence for affected Dieter previews/components
   and any touched Admin/DevStudio, Roma, or Prague consumers. Visual parity is
   required unless the human explicitly approves a visual change.
-- Verify generated `tokyo/product/dieter/**` changes come from build only.
+- Verify generated `tokyo/product/dieter/**` changes come from build only and
+  the source-derived expected path set exactly matches generated output with
+  byte parity for copied artifacts.
 - Verify the normal Git workflow deploys/read-backs only the changed product
   widget source (plus other owning 126 outputs); no direct R2 write or account
   product-data mutation is performed by 126H.

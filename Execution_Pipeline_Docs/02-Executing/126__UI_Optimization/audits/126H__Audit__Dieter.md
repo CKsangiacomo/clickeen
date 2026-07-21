@@ -1,8 +1,8 @@
 # 126H - Current-Source Pre-Execution Audit: Dieter
 
-Status: STEP 6 CORRECTED AFTER 126F EXACT-TREE REVIEW - current source and the
-126G generated-artifact handoff are audited through tree `61e5dbbf`; Step 7 is
-defined in `../126H__PRD__Dieter.md`; no Step-9 execution credit.
+Status: STEP 6 CORRECTED AFTER RED EXACT-TREE STEP-8 REVIEW - current source and
+the 126G generated-artifact handoff are audited through tree `d6449165`; Step 7
+is defined in `../126H__PRD__Dieter.md`; no Step-9 execution credit.
 PRD: `../126H__PRD__Dieter.md`.
 
 ## Audit Question
@@ -18,7 +18,7 @@ refactor?
 | Dieter source | `dieter/tokens/**`, `dieter/components/**`, `dieter/icons/**`. |
 | Generated Dieter output | `tokyo/product/dieter/**`, produced only by `scripts/build-dieter.js`. |
 | Public widget package source | `tokyo/product/widgets/**`; shared shell source is git-authored product source, not generated Dieter output. |
-| Package/build operations | 126G for `dieter/package.json`, complete source/package/lockfile provenance, ignored generated output, scoped clean-tree manual remote sync, and build-before-R2-sync ordering. |
+| Package/build operations | 126G for `dieter/package.json`, complete source/package/workspace/lockfile provenance, source-derived generated-output parity, ignored generated output, scoped dirty-tree manual remote refusal, and build-before-R2-sync ordering. |
 | DevStudio product surface | 126L for `admin/**` visual and interaction changes. |
 | Component/layer behavior | 126I and 126K for component shadows and layering. |
 | Product data | Account instance packages and `accounts/**`; not mutated by 126H. |
@@ -116,6 +116,10 @@ programmatic entrypoint. No replacement registry or entrypoint is needed.
 
 - Dieter source changes produce `tokyo/product/dieter/**` only through the root
   builder.
+- 126G includes `pnpm-workspace.yaml` beside root package/lock inputs in
+  provenance, workflow triggers, and dirty-tree refusal, and fails when the
+  source-derived expected output set or copied bytes differ from generated
+  output.
 - The shared social-share CSS is git-authored widget package source under the
   existing Tokyo product root; it is not generated Dieter output.
 - 126G's ignored generated-output and single build-before-sync path must be green
@@ -131,7 +135,7 @@ programmatic entrypoint. No replacement registry or entrypoint is needed.
 | --- | --- | --- |
 | Shared widget focus width | In `tokyo/product/widgets/shared/socialShare.css`, replace `var(--focus-ring-width, 2px)` with literal `2px`; update the byte-exact Roma fixture; run the all-widget package matrix. | Do not restore the deleted Dieter token, remove visible focus, or add focus machinery. |
 | DevStudio token-editor elevation | 126L replaces undefined `--shadow-lg` plus raw fallback with current `--shadow-elevated` and browser-verifies the panel. | No new shadow token, local alias, or duplicate 126H edit. |
-| Dieter package metadata | 126G performs the one package edit removing Dieter GSAP, false `main`, and install-time `prepare`; real dependencies and explicit scripts stay. | No second package edit in 126F/126H and no new entrypoint/registry. |
+| Dieter package metadata and output | 126G performs the one package edit removing Dieter GSAP, false `main`, and install-time `prepare`; real dependencies and explicit scripts stay. It owns complete package/workspace/lock provenance and the one source-derived output parity assertion. | No second package edit in 126F/126H and no new entrypoint, registry, or manifest. |
 | Foundation/tokens | Preserve and verify current source truth. | No new scale, alias, focus/touch doctrine, or repeated cleanup. |
 | Component shadows/layering | Route exact current files to 126I/126K. | No elevation system or `--z-*` family in 126H. |
 | Generated Dieter output | Changes only when an owning source slice changes and runs the builder. | No hand edit or duplicate H-only rebuild. |
