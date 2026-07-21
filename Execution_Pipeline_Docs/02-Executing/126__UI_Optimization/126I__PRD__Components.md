@@ -72,9 +72,9 @@ The Step-6 audit proves:
   or invent an optional field lane;
 - six dropdown templates use `div role="button"` and Bulk Edit creates a seventh
   copy dynamically;
-- DevStudio currently exposes 22 generated component routes, while its route
-  contract test still asserts a stale 20-route list that omits `agent-activity`
-  and `textedit`;
+- DevStudio currently exposes 3 foundation, 22 component, and 2 Policy routes,
+  while its route contract test still asserts 20 component and 1 Policy route;
+  the fixture omits `agent-activity`, `textedit`, and `llm-management`;
 - dropdown-actions has an unreachable apply/cancel workflow;
 - Repeater and Object Manager are active, distinct workflows whose static
   dependencies are missing from the manifest;
@@ -91,7 +91,9 @@ Expected inventory after 126I source changes:
 - 18 JS-backed manifest components;
 - 22 DevStudio specs, 22 templates, and 26 CSS sources;
 - 22 DevStudio component routes, unchanged. The stale 20-route test fixture is
-  corrected to the generated source truth; no route is added or deleted.
+  corrected to the generated source truth together with the stale 1-route
+  Policy fixture; the resulting inventory remains 3 foundation, 22 component,
+  and 2 Policy routes. No route is added or deleted.
 
 These counts describe different inventories and must stay qualified.
 
@@ -276,8 +278,10 @@ Green gate:
    `dieter/components/textrename/textrename.js`, and
    `dieter/components/toggle/toggle.js`. Verify each exact key is absent. This
    is one product-root cleanup, not a general reconciliation service.
-8. Verify the Roma Pages build for Bob changes and the DevStudio Pages build for
-   Admin changes at the same source SHA.
+8. Verify the Git-connected `bob-dev` Pages deployment for the Bob source
+   changes, the Roma Pages deployment because Roma consumes the Bob workspace
+   package, and the DevStudio Pages deployment for Admin changes at the same
+   source SHA.
 9. Run browser evidence on DevStudio dropdown routes and authenticated Roma
    Builder without mutating account product data.
 
@@ -303,7 +307,7 @@ Green gate:
 | CSS contracts | `dieter/components/operational-field/operational-field.css`; `dieter/components/operational-table/operational-table.css`; `dieter/components/tooltip/tooltip.css` | Add three CSS-only primitives. |
 | Tooltip adoption | `bob/components/TdMenu.tsx`; `bob/app/layout.tsx`; `dieter/components/repeater/repeater.{html,js}` | Replace native title/ad hoc names with shared hover/focus visual contract while keeping ARIA names. |
 | Generated Admin inventories/pages | `admin/src/data/componentRegistry.generated.ts`; `admin/src/data/showcase.generated.ts` only if generator output changes it; `admin/src/html/components/dropdown-{actions,border,edit,fill,shadow,upload}.html`; `admin/src/html/components/repeater.html` | Regenerate from source, never hand-edit. |
-| E2E | `e2e/devstudio/route-contract.spec.ts`; `e2e/widgets/prd106f-builder-certification.spec.ts`; new `e2e/widgets/component-contracts.spec.ts` | Correct the stale DevStudio fixture to all 22 generated component routes by adding `agent-activity` and `textedit`; replace stale fake-button assertions in the broad suite; add focused native activation/immediate-action/tooltip checks in a read-only Builder spec. |
+| E2E | `e2e/devstudio/route-contract.spec.ts`; `e2e/widgets/prd106f-builder-certification.spec.ts`; new `e2e/widgets/component-contracts.spec.ts` | Correct the stale DevStudio fixture to 3 foundation, 22 component, and 2 Policy routes by adding `agent-activity`, `textedit`, and `/#/policy/llm-management` with exact heading `LLM Management`; replace stale fake-button assertions in the broad suite; add focused native activation/immediate-action/tooltip checks in a read-only Builder spec. |
 | Living docs | `documentation/engineering/UI/components.md`; `documentation/engineering/UI/dieter.md`; `documentation/engineering/UI/accessibility.md`; `documentation/widgets/authoring/ToolDrawerControls.md`; `documentation/services/bob.md`; `documentation/services/devstudio.md` | Record qualified inventories, required spec law, native trigger/Toggle law, one dropdown-actions workflow, exact dependencies, and 126K/L/M handoffs. |
 
 Execution-start grep must confirm each generated/doc file before edit. Files with
@@ -322,7 +326,8 @@ no current affected statement are recorded as checked and left unchanged.
 - adoption of operational-field/table/tooltip in matching DevStudio operational
   screens;
 - all later DevStudio visual work inherits 126I's corrected 22-route generated
-  baseline; 126L does not create a second route inventory;
+  component baseline and complete 3/22/2 generated route inventory; 126L does
+  not create a second route inventory;
 - no duplicate DevStudio-only version of those visual contracts.
 
 126M owns:
@@ -346,13 +351,18 @@ pnpm build:dieter
 pnpm --filter @clickeen/devstudio typecheck
 pnpm --filter @clickeen/devstudio build
 pnpm --filter @clickeen/roma lint
-E2E_BASE_URL=https://devstudio.clickeen.com pnpm exec playwright test e2e/devstudio/route-contract.spec.ts
+E2E_BASE_URL=https://devstudio.clickeen.com E2E_AUTH_STATE=e2e/.auth/devstudio.json pnpm exec playwright test e2e/devstudio/route-contract.spec.ts
 E2E_BASE_URL=https://roma.dev.clickeen.com pnpm exec playwright test e2e/widgets/component-contracts.spec.ts
 ```
 
 Use the exact package script name created in Slice I1. If an existing command
 supersedes it before execution, update this PRD first; do not silently skip the
 contract test.
+
+The DevStudio command requires a valid `e2e/.auth/devstudio.json` produced by
+the real Berlin -> DevStudio login/session-finish path. Roma's
+`e2e/.auth/roma-dev.json` is host-scoped to `.dev.clickeen.com` and must not be
+substituted. Missing or expired DevStudio auth keeps the browser gate RED.
 
 ### Static Proof
 
@@ -369,8 +379,9 @@ contract test.
 
 ### Browser Proof
 
-- DevStudio's 22 generated component routes, including `agent-activity` and
-  `textedit`, remain live with no console errors;
+- DevStudio's generated 3 foundation, 22 component, and 2 Policy routes,
+  including `agent-activity`, `textedit`, and `llm-management`, remain live with
+  no console errors;
 - all six native dropdown triggers activate through click, Enter, and Space;
 - dropdown-actions commits immediately and renders no footer;
 - native Toggle changes through pointer and Space without generated Toggle JS;
@@ -386,7 +397,8 @@ contract test.
 - exact source SHA recorded;
 - Workers/R2 sync run at that SHA recorded;
 - canonical R2 manifest and changed component objects read back;
-- Roma and DevStudio Pages builds reconciled to that source SHA;
+- `bob-dev`, Roma, and DevStudio Pages deployments reconciled to that source
+  SHA;
 - after the upload-only deploy is green, the four exact stale product-root keys
   are deleted through the approved repo Cloudflare command and verified absent;
   do not treat source absence as remote absence or add remote reconciliation.
