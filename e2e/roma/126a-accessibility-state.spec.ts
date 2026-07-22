@@ -72,7 +72,7 @@ test.describe('PRD 126A.3 Roma account labels', () => {
     await expect(page.getByRole('heading', { name: 'Current plan' }).locator('..').getByText(PLAN_LABEL)).toBeVisible();
     await capture(page, testInfo, 'usage');
 
-    await openSurface(page, '/settings', 'Settings');
+    await openSurface(page, '/settings', 'Account');
     await expect(page.getByText(/Plan: (Free|Tier [1-4]) \| Your role: (Viewer|Editor|Admin|Owner)/)).toBeVisible();
     await expect(page.getByText(/Current plan: (Free|Tier [1-4])/)).toBeVisible();
     await capture(page, testInfo, 'settings');
@@ -126,7 +126,7 @@ test.describe('PRD 126A.3 Roma account labels', () => {
     const roleSelect = page.getByLabel('Role');
     await expect(roleSelect).toBeDisabled();
     await expect(roleSelect.locator('option:checked')).toHaveText('Owner');
-    await expect(roleSelect.locator('option:checked')).toBeDisabled();
+    await expect(roleSelect.locator('option:checked')).toHaveAttribute('disabled', '');
     await expect(page.getByRole('button', { name: 'Save role' })).toBeDisabled();
     await expect(page.getByRole('button', { name: 'Remove member' })).toBeDisabled();
     await expect(page.getByText('owner', { exact: true })).toHaveCount(0);
@@ -147,8 +147,8 @@ test.describe('PRD 126A.3 Roma account labels', () => {
     const saveRole = page.getByRole('button', { name: 'Save role' });
     await expect(roleSelect).toBeEnabled();
     await expect(roleSelect.locator('option:checked')).toHaveText('Invalid role');
-    await expect(roleSelect.locator('option:checked')).toBeDisabled();
-    await expect(page.getByText('Invalid role', { exact: true })).toBeVisible();
+    await expect(roleSelect.locator('option:checked')).toHaveAttribute('disabled', '');
+    await expect(page.getByRole('paragraph').filter({ hasText: /^Invalid role$/ })).toBeVisible();
     await expect(page.getByText(malformedRole, { exact: true })).toHaveCount(0);
     await expect(saveRole).toBeDisabled();
 
