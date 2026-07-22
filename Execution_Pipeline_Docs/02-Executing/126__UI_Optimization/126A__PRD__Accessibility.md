@@ -533,11 +533,12 @@ implementation credit.
 
 ### Step-9 Execution Record
 
-Status on 2026-07-22: **126A.1 BLOCKED; 126A.2 not started.**
+Status on 2026-07-22: **126A.1 GREEN; 126A.2 not started.**
 
 - Source and generated implementation landed in `035ded97` and build
-  provenance landed in `b94f2343`; local `HEAD` and `github/main` both resolve
-  to `b94f23433229a576606a050cccdefb15f28596bf`.
+  provenance landed in `b94f2343`. The blocked-evidence record landed in
+  `f12b60d7`; local `HEAD` and `github/main` both resolve to
+  `f12b60d76f4edb7a91761f7fab87b440b24d69fc` before this closure update.
 - The local gate is green: Dieter build/typecheck, DevStudio generation and
   typecheck, deterministic generated parity, and the six-file blast radius all
   passed. The pre-existing untracked `tokyo/product/fonts/` directory was not
@@ -547,15 +548,23 @@ Status on 2026-07-22: **126A.1 BLOCKED; 126A.2 not started.**
   run `29828305913` completed successfully. Cloudflare Pages project
   `devstudio` reports production deployment
   `3cc60292-9686-41da-88f7-b50ae57a8654` at the same SHA.
-- Both exact R2 keys were read with `pnpm cf:r2:get`; after removing pnpm's
-  command preamble, both response bodies are byte-identical to their committed
-  Tokyo mirrors and contain the two hidden decorative icons plus the default
-  `Reorder items` label. This is supporting object evidence only: the required
-  `pnpm cf:preflight` remains red after supplying the verified account and
-  bucket coordinates because `CLOUDFLARE_R2_REST_API_TOKEN` is missing. The
-  separate `pnpm cf:api:preflight` remains red because
-  `CLOUDFLARE_REST_API_TOKEN` is missing. Wrangler OAuth is not accepted as a
-  replacement by `documentation/engineering/CloudflareOperations.md`.
+- Both typed Cloudflare preflights pass from the documented repo command path:
+  `pnpm cf:preflight` lists `accounts/` and reads
+  `product/widgets/faq/spec.json` from `tokyo-assets-dev`, while
+  `pnpm cf:api:preflight` verifies the active token, account, Pages projects,
+  DevStudio domain, zone, and DNS record. Both exact R2 keys were then read
+  with `pnpm cf:r2:get`. Their response bodies are byte-identical to their
+  committed Tokyo mirrors: `repeater.html` SHA-256
+  `897d291958a0ebb3387729f56ef8fb0e22d394126c029791683247a1e8887a59` and
+  `repeater.spec.json` SHA-256
+  `3d8105009cf1a78e0c3e3d98eef2a81c45ad408fadc804d8113f8bbe270b5de2`.
+  The deployed HTML contains both hidden decorative icons and the spec carries
+  the default `Reorder items` label.
+- Cloudflare Pages project `devstudio` remains Git-connected to
+  `CKsangiacomo/clickeen` on `main` with the required `admin` root, `pnpm
+  build`, `dist` output, canonical domain, and required environment entries.
+  Its latest successful production deployment is
+  `84768c7e-fd0f-42b2-a058-7a6f7b654ae3` at current commit `f12b60d7`.
 - DevStudio auth was created through the documented Berlin dev-admin provider
   and DevStudio `/api/session/finish`; Google OAuth was not automated. The
   deployed Repeater route loaded with no console/page error. Removing only the
@@ -583,10 +592,10 @@ Status on 2026-07-22: **126A.1 BLOCKED; 126A.2 not started.**
 - Product-data reconciliation: no account, R2, Supabase, policy, or widget data
   was written. The Bob reorder remained browser-memory state and the page was
   closed without Save.
-- Independent review accepts the corrected DevStudio/Bob ownership and runtime
-  proof. V1, V2, V4, V5, V7, and V8 pass. V3 and V6 remain red until the typed
-  Cloudflare R2 preflight passes; 126A.1 must not be called green and 126A.2
-  must not begin before then.
+- Independent review accepted the corrected DevStudio/Bob ownership and
+  runtime proof. The previously missing typed Cloudflare evidence is now green,
+  so V1-V8 all pass for 126A.1. No product data or remote configuration was
+  mutated while closing the gate.
 
 ## Verification
 
