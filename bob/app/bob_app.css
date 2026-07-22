@@ -85,19 +85,6 @@ body {
   line-height: 1.2;
 }
 
-.topdrawer-instance-title--editable {
-  appearance: none;
-  border: none;
-  background: transparent;
-  padding: 0;
-  cursor: text;
-  text-align: left;
-}
-
-.topdrawer-instance-title--editable:hover {
-  opacity: 0.8;
-}
-
 .topdrawer-instance-title--readonly {
   appearance: none;
   border: none;
@@ -105,42 +92,6 @@ body {
   padding: 0;
   cursor: pointer;
   text-align: left;
-}
-
-.topdrawer-instance-title-input {
-  appearance: none;
-  -webkit-appearance: none;
-  min-height: var(--control-size-md);
-  min-width: 240px;
-  max-width: 440px;
-  border: 1px solid var(--color-system-blue);
-  border-radius: var(--control-radius-md);
-  background: var(--role-surface-bg);
-  color: var(--color-text);
-  padding: 0 var(--space-2);
-  outline: none;
-  box-shadow: none;
-}
-
-.topdrawer-instance-title-input:focus,
-.topdrawer-instance-title-input:focus-visible {
-  border-color: var(--color-system-blue);
-  background: var(--color-system-white);
-  outline: none;
-  box-shadow: none;
-}
-
-.topdrawer-instance-title-input:active {
-  background: var(--color-system-white);
-}
-
-.topdrawer-instance-title-input:disabled {
-  opacity: 0.7;
-}
-
-.instance-rename__error {
-  margin-top: var(--space-1);
-  color: var(--color-system-red-5);
 }
 
 .tooldrawer {
@@ -323,97 +274,13 @@ body {
   overflow: hidden;
 }
 
-.settings-panel__actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-  margin-top: var(--space-1);
-}
-
-.settings-panel__actions-inline {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-}
-
-.settings-panel__row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-2);
-}
-
-.settings-panel__fullwidth {
-  padding-inline-start: var(--control-padding-inline);
-  padding-inline-end: var(--control-padding-inline);
-}
-
-.settings-panel__fullwidth .diet-btn-txt {
-  width: 100%;
-  justify-content: center;
-}
-
-.settings-panel__code {
-  margin-top: var(--space-1);
-  padding: var(--space-1) var(--space-2);
-  border-radius: var(--control-radius-md);
-  border: 1px solid color-mix(in oklab, var(--color-system-black), transparent 90%);
-  background: color-mix(in oklab, var(--color-system-gray-6), transparent 75%);
-  overflow-x: auto;
-  white-space: pre;
-}
-
-.settings-panel__code code {
-  font: 500 var(--fs-12, 12px) / var(--lh-tight, 1.35) var(--font-mono);
-  color: var(--color-system-black);
-}
-
-.settings-panel__status {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: var(--space-1) var(--space-2);
-  border-radius: var(--control-radius-md);
-  border: 1px solid color-mix(in oklab, var(--color-system-black), transparent 90%);
-  background: color-mix(in oklab, var(--color-system-gray-6), transparent 70%);
-}
-
 .settings-panel__error {
   margin-top: var(--space-1);
   padding: var(--space-1) var(--space-2);
   border-radius: var(--control-radius-md);
-  border: 1px solid color-mix(in oklab, var(--color-system-red), transparent 60%);
+  border: 1px solid color-mix(in oklab, var(--role-error), transparent 60%);
   background: color-mix(in oklab, var(--color-system-red-5), transparent 85%);
-  color: var(--color-system-red);
-}
-
-.settings-panel__warning {
-  margin-top: var(--space-1);
-  padding: var(--space-1) var(--space-2);
-  border-radius: var(--control-radius-md);
-  border: 1px solid color-mix(in oklab, var(--color-system-orange), transparent 60%);
-  background: color-mix(in oklab, var(--color-system-orange-5), transparent 85%);
-  color: var(--color-system-orange-contrast);
-}
-
-.settings-panel__note {
-  margin-top: var(--space-1);
-  padding: var(--space-1) var(--space-2);
-  border-radius: var(--control-radius-md);
-  border: 1px solid color-mix(in oklab, var(--color-system-blue), transparent 60%);
-  background: color-mix(in oklab, var(--color-system-blue-5), transparent 85%);
-  color: var(--color-system-blue);
-}
-
-.settings-panel__note--upsell {
-  display: grid;
-  gap: var(--space-2);
-}
-
-.settings-panel__note .settings-panel__fullwidth {
-  padding-inline-start: 0;
-  padding-inline-end: 0;
+  color: var(--role-error);
 }
 
 .translations-panel__locale-list {
@@ -429,15 +296,6 @@ body {
   justify-content: space-between;
   gap: var(--space-2);
   min-height: 24px;
-}
-
-.settings-panel__success {
-  margin-top: var(--space-1);
-  padding: var(--space-1) var(--space-2);
-  border-radius: var(--control-radius-md);
-  border: 1px solid color-mix(in oklab, var(--color-system-green), transparent 60%);
-  background: color-mix(in oklab, var(--color-system-green-5), transparent 85%);
-  color: var(--color-system-green);
 }
 
 .workspace {

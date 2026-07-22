@@ -50,6 +50,11 @@ Use primitive `--color-system-*` tokens only when the primitive itself is the
 product truth: color picker swatches, token reveal UI, serialized user-authored
 color, or a widget product default explicitly owned by that widget.
 
+A palette ramp or contrast sibling may modify a named semantic status only
+when its base meaning already uses the corresponding semantic role and no
+value-equivalent modifier role exists. The modifier does not become status
+authority.
+
 ## State Color
 
 State color uses Dieter state controls:

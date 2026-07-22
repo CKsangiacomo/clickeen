@@ -397,8 +397,7 @@ state updates:
   "type": "ck:state-update",
   "widgetname": "[widgetType]",
   "state": "[workingState]",
-  "device": "[desktop|mobile]",
-  "theme": "[light|dark]"
+  "device": "[desktop|mobile]"
 }
 ```
 

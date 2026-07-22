@@ -93,7 +93,6 @@ export function Workspace({
   const { preview, setPreview } = chrome;
   const instanceId = chrome.meta?.instanceId ?? '';
   const device = preview.device;
-  const theme = preview.theme;
   const host = preview.host;
   const hasWidget = Boolean(compiled);
   const stageCanvas = (instanceData as { stage?: { canvas?: { mode?: unknown; width?: unknown; height?: unknown } } }).stage?.canvas;
@@ -197,7 +196,6 @@ export function Workspace({
     effectivePreviewLocale,
     previewablePreviewLocales: effectivePreviewableLocales,
     device,
-    theme,
     typographyData: previewTypographyData,
     canSendState: previewMessageReady,
   });
@@ -212,7 +210,6 @@ export function Workspace({
       effectivePreviewLocale,
       previewablePreviewLocales: effectivePreviewableLocales,
       device,
-      theme,
       typographyData: previewTypographyData,
       canSendState: previewMessageReady,
     };
@@ -225,7 +222,6 @@ export function Workspace({
     effectivePreviewLocale,
     effectivePreviewableLocales,
     device,
-    theme,
     previewTypographyData,
     previewMessageReady,
   ]);
@@ -345,7 +341,6 @@ export function Workspace({
           locale: snapshot.effectivePreviewLocale,
           previewMode: snapshot.previewMode,
           device: snapshot.device,
-          theme: snapshot.theme,
           ...(snapshot.typographyData ? { typographyData: snapshot.typographyData } : null),
         },
         '*',
@@ -385,7 +380,6 @@ export function Workspace({
       locale: effectivePreviewLocale,
       previewMode,
       device,
-      theme,
       ...(previewTypographyData ? { typographyData: previewTypographyData } : null),
     };
 
@@ -399,7 +393,6 @@ export function Workspace({
     previewMode,
     baseLocale,
     device,
-    theme,
     previewTypographyData,
     iframeLoaded,
     previewMessageReady,
@@ -451,7 +444,7 @@ export function Workspace({
   useEffect(() => {
     // When switching instances/devices/modes, allow the iframe to re-measure.
     setMeasuredHeight(null);
-  }, [device, theme, host]);
+  }, [device, host]);
 
   const isDesktopCanvas = host === 'canvas' && device === 'desktop';
   const shouldResizeCanvas = isDesktopCanvas && (stageMode === 'wrap' || stageMode === 'fixed');

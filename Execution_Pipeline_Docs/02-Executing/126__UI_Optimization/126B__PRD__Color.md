@@ -439,13 +439,19 @@ Change only:
   `.settings-panel__error`, replace only its value-equivalent base red
   border/text references with `--role-error`, and preserve its pale background
   and geometry;
-- `bob/components/ToolDrawer.tsx`: replace only value-equivalent session-error
-  border/text red with `--role-error`; preserve its pale background;
+- `bob/components/ToolDrawer.tsx`: replace only value-equivalent border/text
+  red shared by the session-error and blocked-editor error surfaces with
+  `--role-error`; preserve their pale background and behavior;
 - `documentation/services/bob.md`: remove `theme` from the documented preview
   message;
 - `documentation/engineering/UI/color.md`: record the narrow legal use of a
   palette ramp/contrast sibling as a modifier only when a semantic status base
-  is already role-backed and no value-equivalent modifier role exists.
+  is already role-backed and no value-equivalent modifier role exists;
+- `e2e/widgets/126b-color-state.spec.ts`: add the focused B1 proof. Capture
+  `ck:state-update`, switch desktop/mobile, assert the device update survives
+  and no message owns a `theme` property, intercept the instance-save `PUT`
+  with a non-OK response, and prove the live ToolDrawer error without allowing
+  any account-instance mutation to reach Roma.
 
 Do not change widget state, locale, typography, device, host, iframe lifecycle,
 save, translation, Copilot, account, or product-data behavior.
@@ -455,9 +461,10 @@ Green gate:
 1. Local scans prove all audited dead selectors and the theme path are absent;
    Bob typecheck/lint/build and relevant focused tests are green; living color
    doctrine matches the modifier rule.
-2. Local browser proof covers preview device switching and iframe updates;
-   intercepted failed save exercises the live ToolDrawer session error without
-   a remote product write.
+2. The focused browser proof covers preview device switching and iframe
+   updates; intercepted failed save exercises the live ToolDrawer session error
+   without a remote product write. Every non-read account-instance request is
+   intercepted or aborted and the unexpected-mutation list remains empty.
 3. Commit and push occur before cloud proof.
 4. `pnpm cf:api:preflight` is green. Bob and Roma Pages latest deployment commit
    hashes and the Roma cloud-dev workflow `head_sha` equal the B1 commit.
@@ -520,6 +527,7 @@ Green gate:
 | `bob/components/ToolDrawer.tsx` | `tokyo/product/widgets/shared/socialShare.js` | Other Bob controls -> 126I; hosted ToolDrawer/workspace screen -> 126M |
 | | `bob/components/TopDrawer.tsx` and `bob/components/td-menu-content/useTdMenuHydration.ts` | |
 | `documentation/services/bob.md` | `admin/functions/_shared/dieter-tokens.js` | Prague marketing copy -> Prague content authority |
+| `e2e/widgets/126b-color-state.spec.ts` | | |
 | `tokyo/product/widgets/logoshowcase/widget.css` | `dieter/tokens/dieter-color-tokens.css` | User-authored/widget appearance color -> unchanged |
 | `roma/tests/fixtures/124c-base-package-expected.json` | `roma/tests/instance-package-fixtures.ts` | Published account instance rematerialization -> forbidden proof mutation |
 | `admin/scripts/generate-foundation-pages.mjs` | `documentation/engineering/CloudflareOperations.md` | |

@@ -181,9 +181,9 @@ export function ToolDrawer({
     });
   }, [compiled?.panels]);
   const activePanelHtml = panelsById[activePanel]?.html ?? null;
-  const alertBorderColor = '1px solid color-mix(in oklab, var(--color-system-red), transparent 55%)';
+  const alertBorderColor = '1px solid color-mix(in oklab, var(--role-error), transparent 55%)';
   const alertBackground = 'color-mix(in oklab, var(--color-system-red-5), transparent 85%)';
-  const alertLabelColor = 'var(--color-system-red)';
+  const alertLabelColor = 'var(--role-error)';
   const sessionErrorLines = sessionError ? resolveSessionErrorLines(sessionError) : [];
   const activePanelNode = !compiled ? (
     <div className="tdmenucontent">

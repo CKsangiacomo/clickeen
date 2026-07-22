@@ -19,7 +19,6 @@ export type SessionError =
 
 export type PreviewSettings = {
   device: 'desktop' | 'mobile';
-  theme: 'light' | 'dark';
   host: 'canvas' | 'column' | 'banner' | 'floating';
 };
 
@@ -145,7 +144,6 @@ export type HostAccountCommandResultMessage = {
 
 export const DEFAULT_PREVIEW: PreviewSettings = {
   device: 'desktop',
-  theme: 'light',
   host: 'canvas',
 };
 
