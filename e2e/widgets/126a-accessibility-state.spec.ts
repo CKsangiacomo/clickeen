@@ -166,6 +166,20 @@ test.describe("PRD 126A.2 Bob failure-state truth", () => {
     const forbiddenMutations = await guardInstanceMutations(page);
 
     const bobFrame = await openBuilder(page);
+    await expect(
+      bobFrame.locator('section.workspace[data-widget-ready="true"]'),
+    ).toBeVisible({ timeout: 30_000 });
+    const previewIframe = bobFrame.locator('iframe[title="Widget preview"]');
+    const previewIframeHandle = await previewIframe.elementHandle();
+    const previewRuntimeFrame = await previewIframeHandle?.contentFrame();
+    expect(
+      previewRuntimeFrame,
+      "preview runtime frame should exist",
+    ).not.toBeNull();
+    let previewNavigations = 0;
+    page.on("framenavigated", (frame) => {
+      if (frame === previewRuntimeFrame) previewNavigations += 1;
+    });
     const previewFrame = bobFrame.frameLocator(
       'iframe[title="Widget preview"]',
     );
@@ -225,6 +239,7 @@ test.describe("PRD 126A.2 Bob failure-state truth", () => {
         };
       }, targetLocale!),
     ).toEqual({ installed: true, count: 0 });
+    expect(previewNavigations).toBe(0);
 
     releaseLocale();
 
@@ -251,6 +266,7 @@ test.describe("PRD 126A.2 Bob failure-state truth", () => {
         };
       }, targetLocale!),
     ).toEqual({ installed: true, count: 0 });
+    expect(previewNavigations).toBe(0);
     expect(localeRequests).toBe(1);
     expect(forbiddenMutations).toEqual([]);
   });
@@ -275,7 +291,9 @@ test.describe("PRD 126A.2 Bob failure-state truth", () => {
     const forbiddenMutations = await guardInstanceMutations(page, true);
 
     const bobFrame = await openBuilder(page);
-    await bobFrame.getByRole("button", { name: "Copilot" }).click();
+    await bobFrame
+      .locator('input[name="assist-mode"][value="copilot"]')
+      .check();
     const prompt = bobFrame.getByRole("textbox", { name: "Copilot prompt" });
     await expect(prompt).toBeEnabled();
     await prompt.fill("Change the title");
