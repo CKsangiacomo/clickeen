@@ -418,9 +418,12 @@ are limited to the two Repeater mirrors plus the manifest `gitSha`.
 
 **126A.1 cloud gate:** commit and push only the green slice; wait for the
 `cloud-dev workers deploy` Dieter sync and DevStudio Pages Git build; verify the
-two exact R2 objects; and use before/after
-`https://devstudio.clickeen.com/#/dieter/repeater` screenshots plus reorder
-interaction to prove no visual or behavior change.
+two exact R2 objects; use the authenticated static showcase at
+`https://devstudio.clickeen.com/#/dieter/repeater` to prove the deployed
+semantics and pixel-identical appearance against the exact pre-change semantic
+state; and use the authenticated Roma -> Bob Builder Repeater to prove reorder
+mode and item-order behavior remain unchanged. DevStudio does not hydrate the
+hand-written Repeater runtime and is not a valid Repeater interaction surface.
 
 **126A.2 local gate:** the focused test proves arbitrary save detail and
 unknown Copilot exception text never render, mapped save copy/path coordinates
@@ -432,7 +435,7 @@ lint/typecheck pass.
 
 **126A.2 cloud gate:** commit and push only the green slice; wait for the Bob
 Pages Git build; run the authenticated intercepted Builder spec at
-`/builder/QD1G068MX7`; prove list/locale loading, list/read alerts,
+`/builder/VUWUJ7OQ0Y`; prove list/locale loading, list/read alerts,
 translated-preview blocking, issue-only Copilot coordinates, and raw-sentinel
 suppression. No real Copilot request is allowed because it reserves account
 usage.
@@ -471,23 +474,32 @@ next slice.
   `e2e/.auth/roma-dev.json`, created by `pnpm e2e:auth:roma-dev`, must resolve to
   the normal `CLICKEEN` account. Missing auth is a failed gate, not a skipped
   proof.
-- **Bob through Roma:** `https://roma.dev.clickeen.com/builder/QD1G068MX7`.
-  The fixed instance is the current cloud-dev proof fixture. Assert Builder
-  opens, Content and Translations panels render, delayed/failed list and selected-
-  locale reads expose status/alert, translated preview never substitutes base
-  content, and raw response sentinels are absent. Intercept the Copilot POST to
-  return Roma's issue-only response and assert fallback plus issue coordinates.
-  Do not run the real Copilot smoke: it reserves account usage and is outside
-  this no-product-data slice.
+- **DevStudio session:** create the ignored host-specific state through the
+  same Berlin dev-admin provider and DevStudio finish route:
+  `E2E_BASE_URL=https://devstudio.clickeen.com
+  E2E_AUTH_STATE=e2e/.auth/devstudio.json pnpm e2e:auth:roma-dev`. Never
+  automate Google OAuth.
+- **Bob through Roma:** `https://roma.dev.clickeen.com/builder/VUWUJ7OQ0Y`.
+  The fixed `FAQ example` instance is the current cloud-dev proof fixture.
+  Assert Builder
+  opens and its real Repeater can enter reorder mode, reorder two existing
+  items in browser memory, and return to its resting state without Save. For
+  126A.2, also assert Content and Translations panels render, delayed/failed
+  list and selected-locale reads expose status/alert, translated preview never
+  substitutes base content, and raw response sentinels are absent. Intercept
+  the Copilot POST to return Roma's issue-only response and assert fallback plus
+  issue coordinates. Do not run the real Copilot smoke: it reserves account
+  usage and is outside this no-product-data slice.
 - **Roma labels:** `https://roma.dev.clickeen.com/ai`, `/billing`, `/usage`,
   `/settings`, `/team`, and `/team/{memberId}` for a member id read from the
   authenticated Team surface. Assert only human-readable valid labels. The
   malformed-role state uses the intercepted `126a-invalid-role` fixture and
   performs no write.
 - **DevStudio:** `https://devstudio.clickeen.com/#/dieter/repeater` and
-  `https://devstudio.clickeen.com/#/policy/entitlements`. Error-state proof uses
-  Playwright request interception with unique raw sentinels; it never changes
-  remote policy data.
+  `https://devstudio.clickeen.com/#/policy/entitlements`. The Repeater route is
+  static generated-markup and visual proof, not runtime reorder proof.
+  Error-state proof uses Playwright request interception with unique raw
+  sentinels; it never changes remote policy data.
 
 ### Code, Data, Deploy, And Documentation Reconciliation
 
@@ -519,9 +531,66 @@ paths, request concurrency, partial-success truth, test-only behavior,
 Evidence is recorded in `PRs/126A__Step8_Review.md`. This grants no Step-9
 implementation credit.
 
+### Step-9 Execution Record
+
+Status on 2026-07-22: **126A.1 BLOCKED; 126A.2 not started.**
+
+- Source and generated implementation landed in `035ded97` and build
+  provenance landed in `b94f2343`; local `HEAD` and `github/main` both resolve
+  to `b94f23433229a576606a050cccdefb15f28596bf`.
+- The local gate is green: Dieter build/typecheck, DevStudio generation and
+  typecheck, deterministic generated parity, and the six-file blast radius all
+  passed. The pre-existing untracked `tokyo/product/fonts/` directory was not
+  touched.
+- Exact-SHA GitHub Actions evidence is green: `cloud-dev workers deploy` run
+  `29828137682`, Roma verification run `29828137556`, and surface reachability
+  run `29828305913` completed successfully. Cloudflare Pages project
+  `devstudio` reports production deployment
+  `3cc60292-9686-41da-88f7-b50ae57a8654` at the same SHA.
+- Both exact R2 keys were read with `pnpm cf:r2:get`; after removing pnpm's
+  command preamble, both response bodies are byte-identical to their committed
+  Tokyo mirrors and contain the two hidden decorative icons plus the default
+  `Reorder items` label. This is supporting object evidence only: the required
+  `pnpm cf:preflight` remains red after supplying the verified account and
+  bucket coordinates because `CLOUDFLARE_R2_REST_API_TOKEN` is missing. The
+  separate `pnpm cf:api:preflight` remains red because
+  `CLOUDFLARE_REST_API_TOKEN` is missing. Wrangler OAuth is not accepted as a
+  replacement by `documentation/engineering/CloudflareOperations.md`.
+- DevStudio auth was created through the documented Berlin dev-admin provider
+  and DevStudio `/api/session/finish`; Google OAuth was not automated. The
+  deployed Repeater route loaded with no console/page error. Removing only the
+  two new `aria-hidden` attributes reconstructed the exact pre-change semantic
+  state; its screenshot is pixel-identical to the current screenshot (both
+  SHA-256 `4330dc534677e231b202818d9e4ef94d57100da97ca175ca7973a4a12cb344fa`).
+- Runtime inspection confirmed DevStudio does not import or call the
+  hand-written Repeater hydrator. The original DevStudio interaction gate was
+  therefore corrected to keep static visual/semantic proof in DevStudio and
+  move runtime reorder proof to Bob, the actual Repeater consumer.
+- Roma account truth showed the old `QD1G068MX7` coordinate is a `big-bang`
+  instance with invalid saved typography data. The proof coordinate is now the
+  published FAQ instance `VUWUJ7OQ0Y`, which contains one live Repeater.
+- Authenticated Roma -> Bob proof loaded four FAQ items, verified the resting
+  `off`/`false`/`neutral` state, entered `on`/`true`/`secondary`, reordered
+  `q1,q2` to `q2,q1`, and returned to the resting state. No Save or forbidden
+  mutation occurred; the only POST was the read-only account asset resolver.
+  Console and page errors were empty.
+- Durable browser evidence is under `evidence/126A.1/`: the static DevStudio
+  pair, Bob resting/reordered screenshots, and structured Bob proof JSON.
+- The current DevStudio route-contract run authenticated correctly and passed
+  all 26 route/policy checks. Its one shell-inventory failure is the already
+  documented 126I fixture gap (`20` expected component links versus `22`
+  rendered); it is not patched in 126A.
+- Product-data reconciliation: no account, R2, Supabase, policy, or widget data
+  was written. The Bob reorder remained browser-memory state and the page was
+  closed without Save.
+- Independent review accepts the corrected DevStudio/Bob ownership and runtime
+  proof. V1, V2, V4, V5, V7, and V8 pass. V3 and V6 remain red until the typed
+  Cloudflare R2 preflight passes; 126A.1 must not be called green and 126A.2
+  must not begin before then.
+
 ## Verification
 
-Before the eventual 126A Step-9 slice starts, verify scope with:
+Before each remaining 126A Step-9 slice starts, verify scope with:
 
 ```bash
 test -f Execution_Pipeline_Docs/02-Executing/126__UI_Optimization/audits/126A__Audit__Accessibility.md
@@ -544,7 +613,7 @@ pnpm --filter @clickeen/roma test:ui-copy
 pnpm --filter @clickeen/roma lint
 pnpm --filter @clickeen/roma typecheck
 pnpm exec playwright test e2e/widgets/126a-accessibility-state.spec.ts e2e/roma/126a-accessibility-state.spec.ts
-E2E_BASE_URL=https://devstudio.clickeen.com pnpm exec playwright test e2e/devstudio/route-contract.spec.ts
+E2E_BASE_URL=https://devstudio.clickeen.com E2E_AUTH_STATE=e2e/.auth/devstudio.json pnpm exec playwright test e2e/devstudio/route-contract.spec.ts
 ```
 
 The two test commands are created by the exact package-script edits above. Do

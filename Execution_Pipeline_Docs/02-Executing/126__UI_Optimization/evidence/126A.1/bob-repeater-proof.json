@@ -1,0 +1,55 @@
+{
+  "url": "https://roma.dev.clickeen.com/builder/VUWUJ7OQ0Y",
+  "resting": {
+    "label": "Reorder items",
+    "hidden": [
+      "true",
+      "true"
+    ],
+    "root": "off",
+    "pressed": "false",
+    "variant": "neutral",
+    "count": 4
+  },
+  "active": {
+    "root": "on",
+    "pressed": "true",
+    "variant": "secondary"
+  },
+  "initialOrder": [
+    "q1",
+    "q2",
+    "q3",
+    "89cc1b7e-73b8-44ac-aeb3-7a6667387e94"
+  ],
+  "reorderedOrder": [
+    "q2",
+    "q1",
+    "q3",
+    "89cc1b7e-73b8-44ac-aeb3-7a6667387e94"
+  ],
+  "expectedOrder": [
+    "q2",
+    "q1",
+    "q3",
+    "89cc1b7e-73b8-44ac-aeb3-7a6667387e94"
+  ],
+  "restored": {
+    "root": "off",
+    "pressed": "false",
+    "variant": "neutral"
+  },
+  "consoleErrors": [],
+  "pageErrors": [],
+  "screenshots": [
+    "evidence/126A.1/bob-repeater-resting.png",
+    "evidence/126A.1/bob-repeater-reordered.png"
+  ],
+  "allowedReadOnlyPosts": [
+    {
+      "method": "POST",
+      "url": "https://roma.dev.clickeen.com/api/account/assets/resolve"
+    }
+  ],
+  "forbiddenMutations": []
+}
