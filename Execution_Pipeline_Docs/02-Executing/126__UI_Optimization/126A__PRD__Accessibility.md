@@ -533,7 +533,7 @@ implementation credit.
 
 ### Step-9 Execution Record
 
-Status on 2026-07-22: **126A.1 and 126A.2 GREEN; 126A.3 not started.**
+Status on 2026-07-22: **126A.1, 126A.2, and 126A.3 GREEN; 126A.4 not started.**
 
 - Source and generated implementation landed in `035ded97` and build
   provenance landed in `b94f2343`. The blocked-evidence record landed in
@@ -631,6 +631,44 @@ Status on 2026-07-22: **126A.1 and 126A.2 GREEN; 126A.3 not started.**
   mutation, or Cloudflare configuration mutation occurred. The independent
   post-cloud audit reports no blocking findings and V1-V8 green. This closes
   126A.2 and makes 126A.3 eligible to begin.
+- The 126A.3 product implementation landed in `9c3d99f0`, and the cloud-test
+  assertion correction landed in `0fd02199`. One Roma-owned formatter now maps
+  account plans and roles to readable labels without changing stored enum
+  values, permission comparisons, bootstrap validation, or request payloads.
+  Team Member preserves malformed role truth as `Invalid role`, keeps Save
+  disabled until a deliberate valid selection, and enforces owner immutability
+  inside the save handler as well as in the disabled controls.
+- The 126A.3 local gate is green: `test:ui-copy`, all four existing Roma focused
+  test commands, Roma lint, Roma typecheck, the production Cloudflare build,
+  Playwright discovery, and `git diff --check` passed. Independent review first
+  rejected a handler-level owner fail-open and duplicate role authorities; the
+  corrected implementation uses one role-label map for display and validation
+  and rejects a loaded owner inside `saveRole()`.
+- Cloudflare Pages project `roma-dev` deployed production deployment
+  `ed91b885-4154-4b8c-970c-38207caca320` from Git-connected `main` at exact
+  commit `0fd021996b2e2c89845fd4337b932c75551a6df4`. Authentication used the
+  documented Berlin dev-admin to Roma session-finish path; Google OAuth was not
+  automated.
+- The deployed `e2e/roma/126a-accessibility-state.spec.ts` run passed all three
+  cases. It proves readable labels on `/ai`, `/billing`, `/usage`, `/settings`,
+  `/team`, and a real `/team/{memberId}`; deterministic invitation-row labels;
+  truthful disabled Owner state; malformed-role preservation; and deliberate
+  `Viewer` selection without clicking Save. Every non-read `/api/account/**`
+  request was trapped and the recorded mutation-attempt list remained empty.
+- The first cloud run exposed two assertion errors only: the Settings route's
+  real heading is `Account`, and Playwright's disabled matcher does not report a
+  disabled option inside an enabled select. The test-only follow-up uses the
+  real heading and asserts the option's `disabled` attribute. No product patch
+  was made in response to either test-harness error.
+- Authenticated before/after screenshots for all six required surfaces are
+  preserved under `evidence/126A.3/`. Visual inspection confirms the intended
+  label-only delta (`Tier 3`, `Admin`, `Owner`, and readable select labels) with
+  no layout or account-operation change.
+- Product-data reconciliation for 126A.3 is clean: no member, invitation,
+  account, policy, Supabase, R2, or Cloudflare configuration mutation occurred.
+  Independent post-cloud review matched local `HEAD`, `github/main`, and Roma
+  production to the exact commit and reports no findings; V1-V8 all pass. This
+  closes 126A.3 and makes 126A.4 eligible to begin.
 
 ## Verification
 
