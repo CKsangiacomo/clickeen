@@ -1,7 +1,6 @@
 # 126A - PRD: Accessibility
 
-Status: PRE-EXECUTION STEPS 6-8 COMPLETE - exact-tree review green at
-`c06fa7db`; no Step-9 execution credit.
+Status: STEP 9 COMPLETE - 126A.1 through 126A.4 GREEN.
 Parent: `126__PRD__UI_Optimization_Program.md` (MAMA).
 Series order: 126A of 126A-126M.
 KB doc target: `documentation/engineering/UI/accessibility.md`.
@@ -89,6 +88,20 @@ future execution targets.
 | `roma/components/accept-invite-domain.tsx` | Invite mismatch says `The signed-in email must match the invited email.` |
 | `roma/components/roma-account-notice-modal.tsx` | Plan changes use product labels and dismiss failure uses stable recovery copy; raw tier ids/errors do not render. |
 | `roma/app/login/page.tsx` | Unknown sign-in failure uses `Sign in failed. Try again.` and does not render raw reason-key/error-code text. |
+
+126A.4 uses this exact Policy Editor operation copy:
+
+| Operation state | Exact visible copy |
+| --- | --- |
+| Initial load | `Loading policy data...` |
+| Explicit reload | `Reloading policy data...` |
+| Entitlement or AI-policy save | `Saving policy changes...` |
+| Successful save with usable committed matrix | `Policy changes saved.` |
+| Initial load or reload failure | `Policy data could not be loaded. Try again.` |
+| Non-OK entitlement save | `Entitlement changes could not be saved. Try again.` |
+| Non-OK AI-policy save | `AI policy changes could not be saved. Try again.` |
+| Successful entitlement save with unreadable, missing, or unusable committed matrix | `Entitlement changes were saved, but the latest policy could not be shown. Reload policy data.` |
+| Successful AI-policy save with unreadable, missing, or unusable committed matrix | `AI policy changes were saved, but the latest policy could not be shown. Reload policy data.` |
 
 ## Hard Exclusions
 
@@ -364,7 +377,7 @@ mechanics, any screen redesign, or any backend/product operation.
 | 126A.3 | `roma/tests/run-ui-copy.ts` | Assert every known tier/role label, exact formatter fallbacks, and the role-value guard. | No component source-text assertions and no runtime test branch. |
 | 126A.3 | `roma/package.json` | Add only `test:ui-copy` for the focused test file. | Existing scripts and dependencies. |
 | 126A.3 | `e2e/roma/126a-accessibility-state.spec.ts` | Intercept Team Member reads for `126a-owner-role` and `126a-invalid-role`. Assert owner renders selected disabled `Owner` with disabled Save. Assert malformed role renders selected disabled `Invalid role`, Save stays disabled, then selecting `Viewer` enables Save without clicking it. | Real account context and UI; no member write or remote product-data mutation. |
-| 126A.4 | `admin/src/html/tools/entitlements.html` | Replace raw hidden `lastError` with stable visible operation copy. Serialize reload/save in the UI: while one is active, Reload and every editable entitlement/AI-policy control are disabled. Initial load/reload/save/saved copy remains as named above. On successful entitlement POST, use `json.matrix` directly and remove its follow-up GET. A successful POST missing a usable matrix renders `Entitlement changes were saved, but the latest policy could not be shown. Reload policy data.` or `AI policy changes were saved, but the latest policy could not be shown. Reload policy data.`. Non-OK uses the exact save-failure copy. Explicit successful Reload clears prior feedback. | Both API endpoints, request bodies, matrix schema, tier/value editing, and `lastSavedAt`. No queue, retry framework, or backend change. |
+| 126A.4 | `admin/src/html/tools/entitlements.html` | Replace raw hidden `lastError` with the exact visible Policy Editor operation copy in "Exact Copy And State Targets." Serialize reload/save in the UI: while one is active, Reload and every editable entitlement/AI-policy control are disabled. On successful entitlement POST, use `json.matrix` directly and remove its follow-up GET. A successful POST with an unreadable, missing, or unusable matrix renders the exact partial-success copy. Non-OK uses the exact save-failure copy. Explicit successful Reload clears prior feedback. | Both API endpoints, request bodies, matrix schema, tier/value editing, and `lastSavedAt`. No queue, retry framework, or backend change. |
 | 126A.4 | `e2e/devstudio/route-contract.spec.ts` | Extend the Policy Editor contract with interception for initial/reload/non-OK save failures, successful POST with missing matrix, and a delayed save. Assert stable/partial-success copy, no raw detail, and global editor controls disabled during the delayed operation. Every POST is intercepted, so no policy mutation occurs. | Existing route/read assertions and remote policy data. |
 
 The Copilot discriminator is not a general error framework. It is a local trust
@@ -533,7 +546,7 @@ implementation credit.
 
 ### Step-9 Execution Record
 
-Status on 2026-07-22: **126A.1, 126A.2, and 126A.3 GREEN; 126A.4 not started.**
+Status on 2026-07-22: **126A.1 through 126A.4 GREEN; 126A complete.**
 
 - Source and generated implementation landed in `035ded97` and build
   provenance landed in `b94f2343`. The blocked-evidence record landed in
@@ -669,6 +682,44 @@ Status on 2026-07-22: **126A.1, 126A.2, and 126A.3 GREEN; 126A.4 not started.**
   Independent post-cloud review matched local `HEAD`, `github/main`, and Roma
   production to the exact commit and reports no findings; V1-V8 all pass. This
   closes 126A.3 and makes 126A.4 eligible to begin.
+- The 126A.4 product implementation and focused cloud contract tests landed in
+  `6d4ad32c`. The Policy Editor now exposes exact loading, reloading, saving,
+  saved, failure, and successful-commit/unreadable-response truth; one busy
+  state serializes Reload and both save families; successful POST responses
+  apply their committed matrices directly; and entitlement save no longer
+  performs a follow-up GET.
+- The 126A.4 local gate is green: DevStudio generation, typecheck, Functions
+  check, production build, embedded-module syntax, focused Playwright discovery,
+  and `git diff --check` passed. Generated files produced no committed diff.
+  Scope remained limited to `admin/src/html/tools/entitlements.html` and
+  `e2e/devstudio/route-contract.spec.ts`; `tokyo/product/fonts/` was not touched.
+- Pre-implementation review rejected treating an HTTP `2xx` response with an
+  unreadable body as save failure. Implementation review then rejected a
+  vacuous returned-matrix proof and an ambiguous locator. All three issues were
+  corrected before the source/test commit: confirmed HTTP success with an
+  unusable matrix is partial success, returned matrices visibly change the UI
+  without a GET, and the entitlement token assertion is unique.
+- Cloudflare Pages project `devstudio` deployed production deployment
+  `df8d3850-0541-4d23-9e93-dda09ab03084` from Git-connected `main` at exact
+  commit `6d4ad32cc6d235c9425901e574a3f5e75f7d7f54`. Authentication used the
+  documented Berlin dev-admin to DevStudio session-finish path; Google OAuth
+  was not automated.
+- The deployed focused Policy Editor run passed all three cases. It proves
+  initial and reload failure truth, both non-OK save failures, both partial-
+  success paths, direct use of both committed matrices, global busy-state
+  serialization, preservation of prior matrices after failure, and suppression
+  of raw backend sentinels. All six expected policy POSTs were fulfilled inside
+  Playwright; every other non-read `/api/**` request was guarded and the
+  unexpected-mutation arrays remained empty.
+- Authenticated before/after screenshots are preserved under
+  `evidence/126A.4/`. Both have SHA-256
+  `07e433caff9c49687371f13aab2847d8916d05e417a789bece0ea32b892b491f`,
+  proving the steady-state editor layout and policy values are pixel-identical.
+- Product-data reconciliation for 126A.4 is clean: no policy, account,
+  Supabase, R2, GitHub, or Cloudflare configuration data changed. Independent
+  post-cloud review matched local `HEAD`, freshly fetched `github/main`, and
+  DevStudio production to the exact commit, reran the three tests green, and
+  reports no findings; V1-V8 all pass. This closes 126A.4 and 126A.
 
 ## Verification
 
