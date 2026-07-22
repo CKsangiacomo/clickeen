@@ -1,7 +1,6 @@
 # 126B - PRD: Color
 
-Status: PRE-EXECUTION STEPS 6-8 COMPLETE - exact-tree review green at
-`4b480e50`; no Step-9 execution credit.
+Status: STEP 9 IN PROGRESS - B1 GREEN; B2 is next.
 Parent: `126__PRD__UI_Optimization_Program.md` (MAMA).
 Series order: 126B of 126A-126M.
 KB doc target: `documentation/engineering/UI/color.md`.
@@ -553,6 +552,46 @@ Roma source, or product data is in scope.
   evidence.
 - **V7:** unsupported dark behavior is deleted, not renamed as readiness.
 - **V8:** checks prove the product but do not become product runtime dependencies.
+
+## Step-9 Execution Record
+
+Status on 2026-07-22: **B1 GREEN; B2 and B3 not started.**
+
+- B1 implementation, focused browser proof, and the pre-execution test-file
+  blast-radius correction landed in `b97b135a`. Bob no longer carries or sends
+  the unused `theme` field, the false theme claim is gone from the Bob service
+  contract, all audited dead selectors are deleted, and the two live error
+  surfaces use `--role-error` for their base meaning while preserving their
+  existing pale background and behavior.
+- The local gate is green: targeted theme and dead-selector scans return zero;
+  Bob accessibility-copy and translation-panel tests, lint, typecheck,
+  production build, focused Playwright discovery, and `git diff --check` pass.
+  A local self-hosted Bob runtime received mobile and desktop state updates with
+  no `theme`, rendered one intercepted save failure, and sent no product write
+  to Roma.
+- The focused test first ran against the old cloud build and failed because the
+  captured mobile update still owned `theme`. This proves the test detects the
+  removed behavior. After deployment, the same test passed against Roma in
+  15.9 seconds.
+- Cloudflare Pages project `bob-dev` deployed production deployment
+  `4c8bcf02-349d-47ed-b20f-5a7a8424bdfe` and `roma-dev` deployed
+  `56c74b66-e3c5-41d5-864a-0ce14c0168a1`, both from exact commit
+  `b97b135af497824fdf8cd3cb5e095d19a22534e4`. GitHub Actions Roma verification
+  run `29917783833` and surface reachability run `29917973444` completed
+  successfully at the same SHA.
+- The cloud proof captured both device updates without a `theme` property,
+  intercepted the one expected instance-save `PUT`, rejected any other
+  non-read instance request, rendered stable save-failure copy, and kept raw
+  response detail hidden. No instance mutation reached Roma.
+- Authenticated before/after Builder screenshots are preserved under
+  `evidence/126B.1/`. Both have SHA-256
+  `80695e1bcf0ffcff2ca91bad957253b4e66a326d610fd78d43f5772bc7b1c632`,
+  proving the steady-state product is pixel-identical.
+- Product-data reconciliation is clean: no account, instance, policy,
+  Supabase, R2, GitHub policy, or Cloudflare configuration data changed. The
+  ignored Roma auth state was refreshed through the documented Berlin
+  dev-admin path. Independent pre-commit and post-cloud reviews found no
+  blocking issue; V1-V8 all pass. This closes B1 and makes B2 eligible.
 
 ## Done For 126B
 
