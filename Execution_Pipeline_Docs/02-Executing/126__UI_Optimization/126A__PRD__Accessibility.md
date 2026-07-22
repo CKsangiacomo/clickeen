@@ -533,7 +533,7 @@ implementation credit.
 
 ### Step-9 Execution Record
 
-Status on 2026-07-22: **126A.1 GREEN; 126A.2 not started.**
+Status on 2026-07-22: **126A.1 and 126A.2 GREEN; 126A.3 not started.**
 
 - Source and generated implementation landed in `035ded97` and build
   provenance landed in `b94f2343`. The blocked-evidence record landed in
@@ -596,6 +596,41 @@ Status on 2026-07-22: **126A.1 GREEN; 126A.2 not started.**
   runtime proof. The previously missing typed Cloudflare evidence is now green,
   so V1-V8 all pass for 126A.1. No product data or remote configuration was
   mutated while closing the gate.
+- The 126A.2 product implementation landed in `e3c0c294`. It removes arbitrary
+  save detail and unknown Copilot exception copy, preserves mapped save paths
+  and issue-only Copilot coordinates, separates saved-translation list and
+  selected-locale read state, and prevents base content from being delivered as
+  a loading or failed non-base translation preview. The focused test and
+  authenticated intercepted browser spec were added in the same slice.
+- The 126A.2 local gate is green: `test:accessibility-copy`, the existing
+  `test:translations-panel`, Bob lint, Bob typecheck, Playwright spec discovery,
+  and `git diff --check` pass. Independent review first found and rejected an
+  iframe-reload coupling and a vacuous observer assertion. The corrected source
+  keeps iframe initialization tied only to actual preview dependencies, blocks
+  only unsafe translated-state delivery, uses effective locale truth, rejects
+  stale locale completion, and gives failure precedence over loading.
+- The first cloud test run correctly remained red because its observer was
+  installed before the preview declared readiness and its Copilot action
+  clicked a decorative nested button. Commit `5854e01d` corrected only the test:
+  it waits for `data-widget-ready="true"`, proves the same runtime frame does not
+  navigate, requires the observer to remain installed, and selects the native
+  Copilot radio. No product patch was made in response to a test-harness error.
+- Cloudflare Pages project `bob-dev` deployed production deployment
+  `fd0513dc-b4d2-43d5-8468-ced39a595621` from Git-connected `main` at
+  `5854e01d4d14b0123a201b16a64be6141b5da1ff`. A fresh normal `CLICKEEN`
+  session was created through Berlin dev-admin and Roma session finish.
+- The deployed `e2e/widgets/126a-accessibility-state.spec.ts` run passed all
+  three cases. It proves delayed/failed list reads remain failure rather than
+  absence; a selected non-base locale sends no state update and does not reload
+  the preview while loading or failed; issue-only Copilot coordinates remain
+  visible; response sentinels remain hidden; and every unexpected account-
+  instance mutation is aborted and recorded. The allowed Copilot POST was
+  intercepted before Roma could reserve usage.
+- Product-data reconciliation for 126A.2 is clean: no Save, Generate,
+  translation write, Copilot outcome, account-instance mutation, Supabase/R2
+  mutation, or Cloudflare configuration mutation occurred. The independent
+  post-cloud audit reports no blocking findings and V1-V8 green. This closes
+  126A.2 and makes 126A.3 eligible to begin.
 
 ## Verification
 
