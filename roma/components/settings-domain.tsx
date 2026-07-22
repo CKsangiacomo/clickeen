@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useCallback, useEffect, useState } from 'react';
+import { formatAccountRoleLabel, formatAccountTierLabel } from '../lib/format';
 import { resolvePersonLabel } from '../lib/person-profile';
 import { useRomaAccountApi } from './account-api';
 import { AccountLocaleSettingsCard } from './account-locale-settings-card';
@@ -126,7 +127,7 @@ export function SettingsDomain() {
           Account: {accountContext.accountLabel}
         </p>
         <p className="body-s">
-          Plan: {activeAccount.tier} | Your role: {activeAccount.role}
+          Plan: {formatAccountTierLabel(activeAccount.tier)} | Your role: {formatAccountRoleLabel(activeAccount.role)}
         </p>
         {activeAccount.websiteUrl ? <p className="body-s">Website: {activeAccount.websiteUrl}</p> : null}
         <div className="rd-canvas-module__actions">
@@ -144,7 +145,7 @@ export function SettingsDomain() {
 
       <section className="rd-canvas-module">
         <h2 className="heading-6">Plan</h2>
-        <p className="body-m">Current plan: {activeAccount.tier}</p>
+        <p className="body-m">Current plan: {formatAccountTierLabel(activeAccount.tier)}</p>
         <p className="body-s">Plan changes are handled outside Roma until the billing provider integration is connected.</p>
       </section>
 

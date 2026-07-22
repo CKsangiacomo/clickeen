@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useCallback, useEffect, useState } from 'react';
+import { formatAccountRoleLabel } from '../lib/format';
 import { resolvePersonLabel } from '../lib/person-profile';
 import { resolveAccountShellErrorCopy, resolveAccountShellReason } from '../lib/account-shell-copy';
 import { useRomaAccountApi } from './account-api';
@@ -202,7 +203,7 @@ export function TeamDomain() {
                     </Link>
                     <div className="body-s">{member.profile?.primaryEmail ?? 'No primary email recorded'}</div>
                   </td>
-                  <td className="body-s">{member.role}</td>
+                  <td className="body-s">{formatAccountRoleLabel(member.role)}</td>
                   <td className="body-s">{member.createdAt ?? 'unknown'}</td>
                 </tr>
               ))}
@@ -232,9 +233,9 @@ export function TeamDomain() {
               <label className="roma-field">
                 <span className="label-s">Role</span>
                 <select className="roma-input body-m" value={inviteRole} onChange={(event) => setInviteRole(event.target.value)} disabled={inviteLoading}>
-                  <option value="viewer">viewer</option>
-                  <option value="editor">editor</option>
-                  <option value="admin">admin</option>
+                  <option value="viewer">{formatAccountRoleLabel('viewer')}</option>
+                  <option value="editor">{formatAccountRoleLabel('editor')}</option>
+                  <option value="admin">{formatAccountRoleLabel('admin')}</option>
                 </select>
               </label>
             </div>
@@ -268,7 +269,7 @@ export function TeamDomain() {
                 {invitations?.invitations.map((invitation) => (
                   <tr key={invitation.invitationId}>
                     <td className="body-s">{invitation.email}</td>
-                    <td className="body-s">{invitation.role}</td>
+                    <td className="body-s">{formatAccountRoleLabel(invitation.role)}</td>
                     <td className="body-s">{invitation.expiresAt}</td>
                     <td className="body-s">
                       <button

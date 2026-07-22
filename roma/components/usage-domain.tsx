@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { formatBytes } from '../lib/format';
+import { formatAccountTierLabel, formatBytes } from '../lib/format';
 import { useRomaAccountApi } from './account-api';
 import { useRomaAccountContext } from './roma-account-context';
 
@@ -73,7 +73,7 @@ export function UsageDomain() {
         <div className="roma-grid roma-grid--three">
           <article className="roma-card">
             <h2 className="heading-6">Current plan</h2>
-            <p className="body-s">{activeAccount.tier}</p>
+            <p className="body-s">{formatAccountTierLabel(activeAccount.tier)}</p>
           </article>
           <article className="roma-card">
             <h2 className="heading-6">Storage used</h2>

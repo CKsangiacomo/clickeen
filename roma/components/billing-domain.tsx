@@ -1,5 +1,6 @@
 'use client';
 
+import { formatAccountTierLabel } from '../lib/format';
 import { useRomaAccountContext } from './roma-account-context';
 
 export function BillingDomain() {
@@ -16,7 +17,7 @@ export function BillingDomain() {
         <div className="roma-grid roma-grid--three">
           <article className="roma-card">
             <h2 className="heading-6">Current plan</h2>
-            <p className="body-s">{activeAccount.tier}</p>
+            <p className="body-s">{formatAccountTierLabel(activeAccount.tier)}</p>
           </article>
           <article className="roma-card">
             <h2 className="heading-6">Billing operations</h2>

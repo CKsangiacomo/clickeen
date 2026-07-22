@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
+import { formatAccountTierLabel } from '../lib/format';
 import { useRomaAccountApi } from './account-api';
 import { useRomaAccountContext } from './roma-account-context';
 
@@ -37,27 +38,10 @@ function tierRank(tier: AccountTier): number {
   }
 }
 
-function formatTierLabel(tier: AccountTier): string {
-  switch (tier) {
-    case 'free':
-      return 'Free';
-    case 'tier1':
-      return 'Tier 1';
-    case 'tier2':
-      return 'Tier 2';
-    case 'tier3':
-      return 'Tier 3';
-    case 'tier4':
-      return 'Tier 4';
-    default:
-      return tier;
-  }
-}
-
 function summarizeTierDrop(fromTier: AccountTier, toTier: AccountTier): { title: string; lines: string[] } {
   return {
     title: 'Plan update',
-    lines: [`Your plan changed from ${formatTierLabel(fromTier)} to ${formatTierLabel(toTier)}.`, 'Review your account to see what stays live.'],
+    lines: [`Your plan changed from ${formatAccountTierLabel(fromTier)} to ${formatAccountTierLabel(toTier)}.`, 'Review your account to see what stays live.'],
   };
 }
 

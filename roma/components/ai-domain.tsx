@@ -1,16 +1,14 @@
 'use client';
 
+import { formatAccountTierLabel } from '../lib/format';
 import { useRomaAccountContext } from './roma-account-context';
 
 export function AiDomain() {
-  const { accountContext, activeAccount, data } = useRomaAccountContext();
+  const { accountContext, activeAccount, accountPolicy, data } = useRomaAccountContext();
 
-  const authz = data.authz ?? null;
-  const profile = authz?.profile ?? null;
-  const entitlements = authz?.entitlements ?? null;
+  const entitlements = data.authz?.entitlements ?? null;
   const copilotTurnLimit = entitlements?.limits?.['copilot.turns.monthly.max'] ?? null;
   const copilotTurnsLabel = typeof copilotTurnLimit === 'number' && Number.isFinite(copilotTurnLimit) ? `${copilotTurnLimit}` : 'Unlimited';
-  const profileLabel = profile && profile.trim() ? profile : 'Not assigned';
 
   return (
     <>
@@ -23,11 +21,11 @@ export function AiDomain() {
         <div className="roma-grid roma-grid--three">
           <article className="roma-card">
             <h2 className="heading-6">Current plan</h2>
-            <p className="body-s">{activeAccount.tier}</p>
+            <p className="body-s">{formatAccountTierLabel(activeAccount.tier)}</p>
           </article>
           <article className="roma-card">
             <h2 className="heading-6">AI profile</h2>
-            <p className="body-s">{profileLabel}</p>
+            <p className="body-s">{formatAccountTierLabel(accountPolicy.profile)}</p>
           </article>
           <article className="roma-card">
             <h2 className="heading-6">Copilot monthly turn limit</h2>

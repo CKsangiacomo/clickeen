@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { formatAccountRoleLabel, isAccountRoleValue } from '../lib/format';
 import { resolvePersonLabel } from '../lib/person-profile';
 import { useRomaAccountApi } from './account-api';
 import { useRomaAccountContext } from './roma-account-context';
@@ -126,7 +127,7 @@ export function TeamMemberDomain({ memberId }: TeamMemberDomainProps) {
   }, [refreshMember]);
 
   const saveRole = useCallback(async () => {
-    if (!accountId || !canManage) return;
+    if (!accountId || !canManage || !member || member.member.role === 'owner' || !isAccountRoleValue(roleDraft) || roleDraft === 'owner') return;
     setSavingRole(true);
     setMutationError(null);
     try {
@@ -152,7 +153,7 @@ export function TeamMemberDomain({ memberId }: TeamMemberDomainProps) {
     } finally {
       setSavingRole(false);
     }
-  }, [accountApi, accountId, canManage, memberId, reload, roleDraft]);
+  }, [accountApi, accountId, canManage, member, memberId, reload, roleDraft]);
 
   const removeMember = useCallback(async () => {
     if (!accountId || !canManage || !member || member.member.role === 'owner') return;
@@ -212,7 +213,7 @@ export function TeamMemberDomain({ memberId }: TeamMemberDomainProps) {
               </div>
               <div>
                 <p className="label-s">Role</p>
-                <p className="body-m">{member.member.role}</p>
+                <p className="body-m">{formatAccountRoleLabel(member.member.role)}</p>
                 <p className="body-s">Joined: {member.member.createdAt ?? 'unknown'}</p>
               </div>
             </div>
@@ -232,9 +233,11 @@ export function TeamMemberDomain({ memberId }: TeamMemberDomainProps) {
                   onChange={(event) => setRoleDraft(event.target.value)}
                   disabled={!canManage || member.member.role === 'owner' || savingRole}
                 >
-                  <option value="viewer">viewer</option>
-                  <option value="editor">editor</option>
-                  <option value="admin">admin</option>
+                  {roleDraft === 'owner' ? <option value="owner" disabled>{formatAccountRoleLabel('owner')}</option> : null}
+                  {!isAccountRoleValue(roleDraft) ? <option value={roleDraft} disabled>{formatAccountRoleLabel(roleDraft)}</option> : null}
+                  <option value="viewer">{formatAccountRoleLabel('viewer')}</option>
+                  <option value="editor">{formatAccountRoleLabel('editor')}</option>
+                  <option value="admin">{formatAccountRoleLabel('admin')}</option>
                 </select>
               </label>
               <button
@@ -243,7 +246,7 @@ export function TeamMemberDomain({ memberId }: TeamMemberDomainProps) {
                 data-variant="solid"
                 type="button"
                 onClick={() => void saveRole()}
-                disabled={!canManage || member.member.role === 'owner' || savingRole || roleDraft === member.member.role}
+                disabled={!canManage || member.member.role === 'owner' || savingRole || !isAccountRoleValue(roleDraft) || roleDraft === member.member.role}
               >
                 <span className="diet-btn-txt__label body-m">{savingRole ? 'Saving...' : 'Save role'}</span>
               </button>
