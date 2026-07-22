@@ -260,15 +260,26 @@
   const aiCopilots = Array.isArray(aiAccess?.copilots) ? aiAccess.copilots : aiAgents.filter((agent) => agent?.category === 'copilot');
   const aiSystemAgents = Array.isArray(aiAccess?.systemAgents) ? aiAccess.systemAgents : aiAgents.filter((agent) => agent?.category === 'system_agent');
 
+  const POLICY_COPY = Object.freeze({
+    loading: 'Loading policy data...',
+    reloading: 'Reloading policy data...',
+    saving: 'Saving policy changes...',
+    saved: 'Policy changes saved.',
+    loadFailed: 'Policy data could not be loaded. Try again.',
+    entitlementSaveFailed: 'Entitlement changes could not be saved. Try again.',
+    aiSaveFailed: 'AI policy changes could not be saved. Try again.',
+    entitlementSavedUnreadable: 'Entitlement changes were saved, but the latest policy could not be shown. Reload policy data.',
+    aiSavedUnreadable: 'AI policy changes were saved, but the latest policy could not be shown. Reload policy data.',
+  });
+
   const state = {
     matrix: null,
     matrixPath: null,
     aiRuntimeMatrix: null,
     aiRuntimePath: null,
-    savingCount: 0,
-    aiSavingCount: 0,
+    busy: true,
+    feedback: { kind: 'status', message: POLICY_COPY.loading },
     lastSavedAt: null,
-    lastError: null,
     filter: '',
     unitsByEntitlementKey: {},
   };
@@ -278,21 +289,23 @@
     render();
   };
 
+  const isRecord = (value) => Boolean(value) && typeof value === 'object' && !Array.isArray(value);
+  const isUsableEntitlementMatrix = (value) => isRecord(value) && Array.isArray(value.tiers) && isRecord(value.entitlements);
+  const isUsableAiRuntimeMatrix = (value) => isRecord(value) && isRecord(value.agents);
+
   async function fetchMatrix() {
     const res = await fetch('/api/entitlements/matrix', {
       method: 'GET',
       headers: { 'Accept': 'application/json' },
     });
     const json = await res.json().catch(() => null);
-    if (!res.ok || !json?.ok) {
-      const message = json?.error?.detail || json?.error?.reasonKey || `HTTP_${res.status}`;
-      throw new Error(message);
-    }
+    if (!res.ok || !json?.ok || !isUsableEntitlementMatrix(json.matrix)) throw new Error('POLICY_READ_FAILED');
     return { matrix: json.matrix, path: json.path || null };
   }
 
   async function saveCell({ entitlementKey, tier, value }) {
-    setStatus({ savingCount: state.savingCount + 1, lastError: null });
+    if (state.busy) return;
+    setStatus({ busy: true, feedback: { kind: 'status', message: POLICY_COPY.saving } });
     try {
       const res = await fetch('/api/entitlements/matrix/cell', {
         method: 'POST',
@@ -300,17 +313,26 @@
         body: JSON.stringify({ entitlementKey, tier, value }),
       });
       const json = await res.json().catch(() => null);
-      if (!res.ok || !json?.ok) {
-        const message = json?.error?.detail || json?.error?.reasonKey || `HTTP_${res.status}`;
-        throw new Error(message);
+      if (!res.ok) throw new Error('ENTITLEMENT_SAVE_FAILED');
+      const savedAt = new Date();
+      if (!json?.ok || !isUsableEntitlementMatrix(json.matrix)) {
+        setStatus({
+          busy: false,
+          lastSavedAt: savedAt,
+          feedback: { kind: 'alert', message: POLICY_COPY.entitlementSavedUnreadable },
+        });
+        return;
       }
-      const next = await fetchMatrix();
-      setStatus({ matrix: next.matrix, matrixPath: next.path, lastSavedAt: new Date(), lastError: null });
-    } catch (err) {
-      setStatus({ lastError: err instanceof Error ? err.message : String(err) });
-      throw err;
-    } finally {
-      setStatus({ savingCount: Math.max(0, state.savingCount - 1) });
+      setStatus({
+        matrix: json.matrix,
+        matrixPath: json.path || state.matrixPath,
+        busy: false,
+        lastSavedAt: savedAt,
+        feedback: { kind: 'status', message: POLICY_COPY.saved },
+      });
+    } catch (_err) {
+      setStatus({ busy: false, feedback: { kind: 'alert', message: POLICY_COPY.entitlementSaveFailed } });
+      throw new Error('ENTITLEMENT_SAVE_FAILED');
     }
   }
 
@@ -320,15 +342,13 @@
       headers: { 'Accept': 'application/json' },
     });
     const json = await res.json().catch(() => null);
-    if (!res.ok || !json?.ok) {
-      const message = json?.error?.detail || json?.error?.reasonKey || `HTTP_${res.status}`;
-      throw new Error(message);
-    }
+    if (!res.ok || !json?.ok || !isUsableAiRuntimeMatrix(json.matrix)) throw new Error('POLICY_READ_FAILED');
     return { matrix: json.matrix, path: json.path || null };
   }
 
   async function saveAiRuntimeCell(payload) {
-    setStatus({ aiSavingCount: state.aiSavingCount + 1, lastError: null });
+    if (state.busy) return;
+    setStatus({ busy: true, feedback: { kind: 'status', message: POLICY_COPY.saving } });
     try {
       const res = await fetch('/api/ai-runtime/matrix/cell', {
         method: 'POST',
@@ -336,20 +356,26 @@
         body: JSON.stringify(payload),
       });
       const json = await res.json().catch(() => null);
-      if (!res.ok || !json?.ok) {
-        const message = json?.error?.detail || json?.error?.reasonKey || `HTTP_${res.status}`;
-        throw new Error(message);
+      if (!res.ok) throw new Error('AI_POLICY_SAVE_FAILED');
+      const savedAt = new Date();
+      if (!json?.ok || !isUsableAiRuntimeMatrix(json.matrix)) {
+        setStatus({
+          busy: false,
+          lastSavedAt: savedAt,
+          feedback: { kind: 'alert', message: POLICY_COPY.aiSavedUnreadable },
+        });
+        return;
       }
       setStatus({
-        aiRuntimeMatrix: json.matrix || state.aiRuntimeMatrix,
-        lastSavedAt: new Date(),
-        lastError: null,
+        aiRuntimeMatrix: json.matrix,
+        aiRuntimePath: json.path || state.aiRuntimePath,
+        busy: false,
+        lastSavedAt: savedAt,
+        feedback: { kind: 'status', message: POLICY_COPY.saved },
       });
-    } catch (err) {
-      setStatus({ lastError: err instanceof Error ? err.message : String(err) });
-      throw err;
-    } finally {
-      setStatus({ aiSavingCount: Math.max(0, state.aiSavingCount - 1) });
+    } catch (_err) {
+      setStatus({ busy: false, feedback: { kind: 'alert', message: POLICY_COPY.aiSaveFailed } });
+      throw new Error('AI_POLICY_SAVE_FAILED');
     }
   }
 
@@ -420,7 +446,10 @@
     reloadBtn.setAttribute('data-variant', 'secondary');
     reloadBtn.type = 'button';
     reloadBtn.innerHTML = '<span class="diet-btn-txt__label">Reload</span>';
+    reloadBtn.disabled = state.busy;
     reloadBtn.addEventListener('click', async () => {
+      if (state.busy) return;
+      setStatus({ busy: true, feedback: { kind: 'status', message: POLICY_COPY.reloading } });
       try {
         const [next, nextAiRuntime] = await Promise.all([fetchMatrix(), fetchAiRuntimeMatrix()]);
         setStatus({
@@ -428,10 +457,11 @@
           matrixPath: next.path,
           aiRuntimeMatrix: nextAiRuntime.matrix,
           aiRuntimePath: nextAiRuntime.path,
-          lastError: null,
+          busy: false,
+          feedback: null,
         });
-      } catch (err) {
-        setStatus({ lastError: err instanceof Error ? err.message : String(err) });
+      } catch (_err) {
+        setStatus({ busy: false, feedback: { kind: 'alert', message: POLICY_COPY.loadFailed } });
       }
     });
 
@@ -446,7 +476,7 @@
     td.className = 'body-s entitlements-table__value';
 
     const value = entitlement.values?.[tier];
-    const disabled = state.savingCount > 0;
+    const disabled = state.busy;
 
     const safeId = `ent_${String(key)}_${String(tier)}`.replace(/[^a-zA-Z0-9_-]+/g, '_');
 
@@ -906,7 +936,7 @@
     const td = renderReadonlyToggleCell({ id, checked, label });
     const input = td.querySelector('input');
     if (input) {
-      input.disabled = state.aiSavingCount > 0;
+      input.disabled = state.busy;
       input.tabIndex = 0;
       input.addEventListener('change', async () => {
         try {
@@ -934,7 +964,7 @@
     input.className = 'diet-valuefield__field';
     input.type = 'text';
     input.inputMode = 'decimal';
-    input.disabled = state.aiSavingCount > 0;
+    input.disabled = state.busy;
     input.placeholder = allowNull ? 'none' : '0';
     input.value = value === null || typeof value === 'undefined' ? '' : String(value);
     input.setAttribute('aria-label', `${agentId} ${tier} ${field}`);
@@ -977,7 +1007,7 @@
 
     const select = document.createElement('select');
     select.className = 'entitlements-unit';
-    select.disabled = state.aiSavingCount > 0;
+    select.disabled = state.busy;
     select.setAttribute('aria-label', `${agent.agentId} ${tier} default model`);
 
     Object.entries(config?.modelsByProvider || {}).forEach(([provider, policy]) => {
@@ -1291,6 +1321,15 @@
     return section;
   }
 
+  function renderOperationFeedback(container) {
+    if (!state.feedback) return;
+    const feedback = document.createElement('p');
+    feedback.className = 'body-s entitlements-operation-feedback';
+    feedback.setAttribute('role', state.feedback.kind === 'alert' ? 'alert' : 'status');
+    feedback.textContent = state.feedback.message;
+    container.appendChild(feedback);
+  }
+
   function render() {
     if (!root) return;
     root.innerHTML = '';
@@ -1303,12 +1342,9 @@
     }
 
     renderToolbar(root);
+    renderOperationFeedback(root);
 
     if (!state.matrix) {
-      const loading = document.createElement('p');
-      loading.className = 'body-s';
-      loading.textContent = 'Loading entitlements…';
-      root.appendChild(loading);
       return;
     }
 
@@ -1378,10 +1414,11 @@
         matrixPath: next.path,
         aiRuntimeMatrix: nextAiRuntime.matrix,
         aiRuntimePath: nextAiRuntime.path,
-        lastError: null,
+        busy: false,
+        feedback: null,
       });
     })
-    .catch((err) => {
-      setStatus({ lastError: err instanceof Error ? err.message : String(err) });
+    .catch((_err) => {
+      setStatus({ busy: false, feedback: { kind: 'alert', message: POLICY_COPY.loadFailed } });
     });
 </script>
