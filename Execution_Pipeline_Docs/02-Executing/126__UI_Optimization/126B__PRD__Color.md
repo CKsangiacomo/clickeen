@@ -472,16 +472,26 @@ Green gate:
 
 ### Slice B2 - Logo Showcase Focus Role
 
-Change only `tokyo/product/widgets/logoshowcase/widget.css`: the logo-link focus
-outline uses `--role-focus`. The active carousel dot remains the widget's blue
-product default.
+The only product-source change is
+`tokyo/product/widgets/logoshowcase/widget.css`: the logo-link focus outline
+uses `--role-focus`. The active carousel dot remains the widget's blue product
+default.
+
+Verification artifacts change with that source:
+
+- `roma/tests/fixtures/124c-base-package-expected.json`: update only the Logo
+  Showcase focus-outline substring in the generated package expectation;
+- `e2e/widgets/126b-color-state.spec.ts`: add a no-network static browser proof
+  that loads the real local token and widget CSS, reaches a Logo Showcase link
+  by keyboard, and proves the 2px focus-visible outline resolves to the existing
+  blue focus value. The test does not authenticate or open a saved instance.
 
 Green gate:
 
 1. Widget validation/build, `pnpm tokyo:r2:sync:check`,
-   `pnpm --filter @clickeen/roma test:instance-package`, and keyboard focus
-   browser proof are green. Only the Logo Showcase CSS expectation changes in
-   the package fixture.
+   `pnpm --filter @clickeen/roma test:instance-package`, and the focused
+   no-network keyboard proof are green. Only the Logo Showcase focus substring
+   changes in the package fixture; the active-dot blue declaration remains.
 2. Commit and push occur before cloud proof.
 3. `pnpm cf:preflight` is green. The `cloud-dev workers deploy`, Roma
    cloud-dev, and Prague cloud-dev workflow `head_sha` values equal the B2

@@ -208,7 +208,7 @@ a.ck-logoshowcase__logo {
 }
 
 .ck-logoshowcase__logo:focus-visible {
-  outline: 2px solid var(--color-system-blue);
+  outline: 2px solid var(--role-focus);
   outline-offset: 2px;
 }
 

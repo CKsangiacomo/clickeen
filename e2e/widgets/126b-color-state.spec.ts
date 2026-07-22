@@ -1,3 +1,5 @@
+import { readFile } from "node:fs/promises";
+import { resolve } from "node:path";
 import { expect, test, type FrameLocator, type Page } from "@playwright/test";
 import { hasAuthCookies } from "../helpers/auth-state";
 
@@ -146,4 +148,42 @@ test.describe("PRD 126B.1 Bob color truth and theme deletion", () => {
     expect(interceptedSavePuts).toBe(1);
     expect(unexpectedInstanceMutations).toEqual([]);
   });
+});
+
+test("PRD 126B.2 Logo Showcase uses the semantic keyboard focus role", async ({
+  page,
+}) => {
+  const [tokensCss, widgetCss] = await Promise.all([
+    readFile(resolve("dieter/tokens/dieter-color-tokens.css"), "utf8"),
+    readFile(resolve("tokyo/product/widgets/logoshowcase/widget.css"), "utf8"),
+  ]);
+  const networkRequests: string[] = [];
+
+  await page.route("**/*", async (route) => {
+    const url = route.request().url();
+    if (/^https?:/u.test(url)) networkRequests.push(url);
+    await route.abort("blockedbyclient");
+  });
+  await page.setContent(
+    '<a class="ck-logoshowcase__logo" href="#target">Example logo</a>',
+  );
+  await page.addStyleTag({ content: `${tokensCss}\n${widgetCss}` });
+
+  await page.keyboard.press("Tab");
+  const logoLink = page.getByRole("link", { name: "Example logo" });
+  await expect(logoLink).toBeFocused();
+  await expect(logoLink).toHaveCSS("outline-style", "solid");
+  await expect(logoLink).toHaveCSS("outline-width", "2px");
+  await expect(logoLink).toHaveCSS("outline-color", "rgb(0, 122, 255)");
+  expect(
+    await logoLink.evaluate((element) => element.matches(":focus-visible")),
+  ).toBe(true);
+
+  expect(widgetCss).toMatch(
+    /\.ck-logoshowcase__logo:focus-visible\s*\{[^}]*outline:\s*2px solid var\(--role-focus\);/u,
+  );
+  expect(widgetCss).toMatch(
+    /\.ck-logoshowcase__dot\[data-active='true'\]\s*\{[^}]*background:\s*var\(--color-system-blue\);/u,
+  );
+  expect(networkRequests).toEqual([]);
 });
