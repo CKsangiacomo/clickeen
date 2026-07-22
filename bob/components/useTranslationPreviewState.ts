@@ -11,32 +11,45 @@ import {
 
 export type { TranslatedLocalesData, TranslationSetup } from '../lib/translations-preview';
 
-type ErrorPayload = {
-  error?: {
-    reasonKey?: unknown;
-    detail?: unknown;
-  };
+export type SavedTranslationReadChannel = {
+  loading: boolean;
+  error: string | null;
 };
 
-function resolveRouteErrorReason(payload: unknown): string | null {
-  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) return null;
-  const errorPayload = payload as ErrorPayload;
-  const reasonKey =
-    typeof errorPayload.error?.reasonKey === 'string' ? errorPayload.error.reasonKey.trim() : '';
-  if (reasonKey === 'coreui.errors.payload.invalid') return reasonKey;
-  if (reasonKey.startsWith('coreui.') || reasonKey.startsWith('HTTP_')) return null;
-  const detail =
-    typeof errorPayload.error?.detail === 'string' ? errorPayload.error.detail.trim() : '';
-  return detail || null;
+export type SavedTranslationLocaleReadChannel = SavedTranslationReadChannel & {
+  locale: string;
+};
+
+const SAVED_TRANSLATIONS_READ_FAILURE = 'Saved translations could not be read.';
+const EMPTY_READ_CHANNEL: SavedTranslationReadChannel = { loading: false, error: null };
+const EMPTY_LOCALE_READ_CHANNEL: SavedTranslationLocaleReadChannel = {
+  locale: '',
+  ...EMPTY_READ_CHANNEL,
+};
+
+export function resolveSavedTranslationReadFailure(response: { ok: boolean; status?: number }): string | null {
+  return response.ok ? null : SAVED_TRANSLATIONS_READ_FAILURE;
 }
 
-function resolveStorageReadError(args: {
-  status?: number;
-  reasonKey?: string | null;
-}): string {
-  if (args.status === 404) return 'No saved translations yet.';
-  if (args.reasonKey === 'coreui.errors.payload.invalid') return 'Saved translations could not be read.';
-  return 'Saved translations could not be read.';
+export function resolveSavedTranslationReadState(args: {
+  list: SavedTranslationReadChannel;
+  locale: SavedTranslationReadChannel;
+}): SavedTranslationReadChannel {
+  const error = args.list.error || args.locale.error;
+  return {
+    loading: !error && (args.list.loading || args.locale.loading),
+    error,
+  };
+}
+
+export function resolveSavedTranslationLocaleReadResult(args: {
+  current: SavedTranslationLocaleReadChannel;
+  requestedLocale: string;
+  error: string | null;
+}): SavedTranslationLocaleReadChannel {
+  return args.current.locale === args.requestedLocale
+    ? { locale: args.requestedLocale, loading: false, error: args.error }
+    : args.current;
 }
 
 export function useTranslationPreviewState(args: {
@@ -49,32 +62,30 @@ export function useTranslationPreviewState(args: {
   const { listTranslations, readTranslation } = useWidgetSessionTransport();
   const [translatedLocales, setTranslatedLocales] = useState<TranslatedLocalesData | null>(null);
   const [valuesByLocale, setValuesByLocale] = useState<Record<string, Record<string, string>>>({});
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [listState, setListState] = useState<SavedTranslationReadChannel>(EMPTY_READ_CHANNEL);
+  const [localeState, setLocaleState] = useState<SavedTranslationLocaleReadChannel>(EMPTY_LOCALE_READ_CHANNEL);
 
   useEffect(() => {
     setTranslatedLocales(null);
     setValuesByLocale({});
-    setLoading(false);
-    setError(null);
+    setListState(EMPTY_READ_CHANNEL);
+    setLocaleState(EMPTY_LOCALE_READ_CHANNEL);
   }, [args.instanceId]);
 
   useEffect(() => {
     if (!args.instanceId || !args.baseLocale) {
       setTranslatedLocales(null);
       setValuesByLocale({});
-      setLoading(false);
-      setError(null);
+      setListState(EMPTY_READ_CHANNEL);
       return;
     }
     if (!args.enabled) {
-      setLoading(false);
+      setListState((current) => ({ ...current, loading: false }));
       return;
     }
 
     let cancelled = false;
-    setLoading(true);
-    setError(null);
+    setListState({ loading: true, error: null });
 
     listTranslations({
       instanceId: args.instanceId,
@@ -82,35 +93,18 @@ export function useTranslationPreviewState(args: {
     })
       .then((response) => {
         if (cancelled) return;
-        if (!response.ok) {
-          throw {
-            status: response.status,
-            reasonKey: resolveRouteErrorReason(response.json),
-          };
-        }
+        const readFailure = resolveSavedTranslationReadFailure(response);
+        if (readFailure) throw new Error(readFailure);
         const payload = normalizeTranslatedLocales(response.json);
         if (!payload) throw new Error('coreui.errors.payload.invalid');
         if (payload.baseLocale !== args.baseLocale) throw new Error('coreui.errors.payload.invalid');
         setValuesByLocale((current) => retainTranslatedLocaleValues(current, payload));
         setTranslatedLocales(payload);
+        setListState(EMPTY_READ_CHANNEL);
       })
-      .catch((caught) => {
+      .catch(() => {
         if (cancelled) return;
-        setTranslatedLocales({ baseLocale: args.baseLocale, translations: [] });
-        const status =
-          typeof (caught as { status?: unknown } | null | undefined)?.status === 'number'
-            ? (caught as { status: number }).status
-            : undefined;
-        const reasonKey =
-          caught instanceof Error
-            ? caught.message
-            : typeof (caught as { reasonKey?: unknown } | null | undefined)?.reasonKey === 'string'
-              ? ((caught as { reasonKey: string }).reasonKey || null)
-              : null;
-        setError(resolveStorageReadError({ status, reasonKey }));
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
+        setListState({ loading: false, error: SAVED_TRANSLATIONS_READ_FAILURE });
       });
 
     return () => {
@@ -131,44 +125,53 @@ export function useTranslationPreviewState(args: {
   }, [args.selectedLocale, translatedLocales]);
 
   const selectedTranslationLocale = selectedTranslation?.locale ?? '';
+  const selectedLocaleState = selectedTranslationLocale
+    ? localeState.locale === selectedTranslationLocale
+      ? localeState
+      : { locale: selectedTranslationLocale, loading: true, error: null }
+    : EMPTY_LOCALE_READ_CHANNEL;
+  const combinedState = resolveSavedTranslationReadState({
+    list: listState,
+    locale: selectedLocaleState,
+  });
 
   useEffect(() => {
-    if (!args.enabled || !args.instanceId || !selectedTranslationLocale) return;
+    if (!args.enabled || !args.instanceId || !selectedTranslationLocale) {
+      setLocaleState(EMPTY_LOCALE_READ_CHANNEL);
+      return;
+    }
     let cancelled = false;
+    const requestedLocale = selectedTranslationLocale;
+    setLocaleState({ locale: requestedLocale, loading: true, error: null });
     readTranslation({
       instanceId: args.instanceId,
-      locale: selectedTranslationLocale,
+      locale: requestedLocale,
     })
       .then((response) => {
         if (cancelled) return;
-        if (!response.ok) {
-          throw {
-            status: response.status,
-            reasonKey: resolveRouteErrorReason(response.json),
-          };
-        }
+        const readFailure = resolveSavedTranslationReadFailure(response);
+        if (readFailure) throw new Error(readFailure);
         const payload = normalizeTranslatedLocaleValues(response.json);
-        if (!payload || payload.locale !== selectedTranslationLocale) {
+        if (!payload || payload.locale !== requestedLocale) {
           throw new Error('coreui.errors.payload.invalid');
         }
         setValuesByLocale((current) => ({
           ...current,
-          [selectedTranslationLocale]: payload.values,
+          [requestedLocale]: payload.values,
+        }));
+        setLocaleState((current) => resolveSavedTranslationLocaleReadResult({
+          current,
+          requestedLocale,
+          error: null,
         }));
       })
-      .catch((caught) => {
+      .catch(() => {
         if (cancelled) return;
-        const status =
-          typeof (caught as { status?: unknown } | null | undefined)?.status === 'number'
-            ? (caught as { status: number }).status
-            : undefined;
-        const reasonKey =
-          caught instanceof Error
-            ? caught.message
-            : typeof (caught as { reasonKey?: unknown } | null | undefined)?.reasonKey === 'string'
-              ? ((caught as { reasonKey: string }).reasonKey || null)
-              : null;
-        setError(resolveStorageReadError({ status, reasonKey }));
+        setLocaleState((current) => resolveSavedTranslationLocaleReadResult({
+          current,
+          requestedLocale,
+          error: SAVED_TRANSLATIONS_READ_FAILURE,
+        }));
       });
 
     return () => {
@@ -185,7 +188,9 @@ export function useTranslationPreviewState(args: {
   return {
     translatedLocales,
     valuesByLocale,
-    loading,
-    error,
+    listState,
+    localeState: selectedLocaleState,
+    loading: combinedState.loading,
+    error: combinedState.error,
   };
 }

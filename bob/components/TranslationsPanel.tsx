@@ -280,12 +280,16 @@ export function TranslationsPanel({
   onRequestTranslationsRefresh,
   translationSetup,
   translatedLocales,
+  savedTranslationsLoading,
+  savedTranslationsError,
 }: {
   translationPreviewLocale: string;
   onTranslationPreviewLocaleChange: (locale: string) => void;
   onRequestTranslationsRefresh: () => void;
   translationSetup: TranslationSetup | null;
   translatedLocales: TranslatedLocalesData | null;
+  savedTranslationsLoading: boolean;
+  savedTranslationsError: string | null;
 }) {
   const session = useWidgetSession();
   const chrome = useWidgetSessionChrome();
@@ -439,6 +443,16 @@ export function TranslationsPanel({
             </div>
           ) : null}
         </div>
+        {savedTranslationsLoading && !savedTranslationsError ? (
+          <div className="body-s" role="status" aria-live="polite">
+            Loading saved translations...
+          </div>
+        ) : null}
+        {savedTranslationsError ? (
+          <div className="body-s" role="alert">
+            {savedTranslationsError}
+          </div>
+        ) : null}
         <SelectField
           label="Preview locale"
           value={localeValue}

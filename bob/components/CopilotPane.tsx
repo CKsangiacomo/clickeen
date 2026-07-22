@@ -50,6 +50,20 @@ function normalizeAssistantText(text: string): string {
 }
 
 const COPILOT_INVALID_EDIT_MESSAGE = "Copilot couldn't produce a valid edit for this widget. Nothing was changed.";
+const COPILOT_UNEXPECTED_FAILURE_MESSAGE = 'Copilot failed unexpectedly. Please try again.';
+
+export class CopilotUserFacingError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'CopilotUserFacingError';
+  }
+}
+
+export function resolveCopilotCaughtError(caught: unknown): string {
+  return caught instanceof CopilotUserFacingError && caught.message.trim()
+    ? caught.message
+    : COPILOT_UNEXPECTED_FAILURE_MESSAGE;
+}
 
 function copilotModelKey(model: { provider: string; model: string }): string {
   return `${model.provider}:${model.model}`;
@@ -81,7 +95,7 @@ function formatIssueSummary(issues: unknown): string {
   return lines.length ? ` (${lines.join('; ')})` : '';
 }
 
-function normalizeErrorMessage(args: { resStatus?: number; parsed?: any; bodyText?: string; fallback?: string }): string {
+export function normalizeErrorMessage(args: { resStatus?: number; parsed?: any; bodyText?: string; fallback?: string }): string {
   const parsed = args.parsed || null;
   const reasonKey =
     typeof parsed?.reasonKey === 'string'
@@ -97,7 +111,7 @@ function normalizeErrorMessage(args: { resStatus?: number; parsed?: any; bodyTex
   // Surface the actual failing field(s) instead of hiding every rejection behind a
   // blanket "Refresh Builder" (121C §8.2 visible-failure taxonomy).
   if (reasonKeyMessage) return `${reasonKeyMessage}${issueSummary}`;
-  return args.fallback || 'Copilot failed unexpectedly. Please try again.';
+  return `${args.fallback || COPILOT_UNEXPECTED_FAILURE_MESSAGE}${issueSummary}`;
 }
 
 function newId(): string {
@@ -465,11 +479,11 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
 
       const text = await res.text();
       if (looksLikeHtmlErrorPage(text)) {
-        throw new Error(normalizeAssistantText(text));
+        throw new CopilotUserFacingError(normalizeAssistantText(text));
       }
       const parsed = safeJsonParse(text) as any;
       if (!res.ok) {
-        throw new Error(
+        throw new CopilotUserFacingError(
           normalizeErrorMessage({
             resStatus: res.status,
             parsed,
@@ -483,7 +497,7 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
       const ops = Array.isArray(response?.draftEdit?.ops) ? (response.draftEdit.ops as WidgetOp[]) : null;
       const requestId = asTrimmedString(parsed?.meta?.requestId) || asTrimmedString(parsed?.requestId);
       if (!response || !asTrimmedString(response.kind) || (!message && (!ops || ops.length === 0))) {
-        throw new Error(COPILOT_INVALID_EDIT_MESSAGE);
+        throw new CopilotUserFacingError(COPILOT_INVALID_EDIT_MESSAGE);
       }
 
       if (response.kind === 'draft_edit' && ops && ops.length > 0) {
@@ -540,8 +554,7 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
       setStatus('idle');
     } catch (err) {
       setStatus('idle');
-      const msg = err instanceof Error ? err.message : String(err);
-      pushMessage({ role: 'assistant', text: msg || 'Copilot failed unexpectedly. Please try again.' });
+      pushMessage({ role: 'assistant', text: resolveCopilotCaughtError(err) });
     }
   };
 

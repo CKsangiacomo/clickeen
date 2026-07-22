@@ -12,6 +12,19 @@ import { useWidgetSession, useWidgetSessionChrome } from '../lib/session/useWidg
 const BLOCKED_SWITCHER_COPY =
   'Translations not available while in editing mode. Preview translations in Translations panel.';
 
+export function shouldBlockSavedTranslationPreview(args: {
+  previewMode: 'editing' | 'translations';
+  requestedLocale: string;
+  baseLocale: string;
+  loading: boolean;
+  error: string | null;
+}): boolean {
+  return args.previewMode === 'translations' &&
+    Boolean(args.requestedLocale) &&
+    args.requestedLocale !== args.baseLocale &&
+    (args.loading || Boolean(args.error));
+}
+
 function collectFontAssetRefs(fontLibrary: AccountFontLibrary | null): string[] {
   if (!fontLibrary) return [];
   const refs = new Set<string>();
@@ -62,6 +75,8 @@ export function Workspace({
   onTranslationPreviewLocaleChange,
   previewablePreviewLocales,
   translationValuesByLanguage,
+  savedTranslationsLoading,
+  savedTranslationsError,
 }: {
   baseLocale: string;
   previewMode: 'editing' | 'translations';
@@ -69,6 +84,8 @@ export function Workspace({
   onTranslationPreviewLocaleChange: (locale: string) => void;
   previewablePreviewLocales: string[];
   translationValuesByLanguage: Record<string, Record<string, string>>;
+  savedTranslationsLoading: boolean;
+  savedTranslationsError: string | null;
 }) {
   const session = useWidgetSession();
   const chrome = useWidgetSessionChrome();
@@ -154,7 +171,18 @@ export function Workspace({
     previewMode === 'translations' && effectivePreviewLocale !== baseLocale
       ? translationValuesByLanguage[effectivePreviewLocale] ?? null
       : null;
-  const previewStateReady = mediaPreviewStateReady && previewTypography.ok && !unresolvedFontAssetRefs.length;
+  const savedTranslationPreviewBlocked = shouldBlockSavedTranslationPreview({
+    previewMode,
+    requestedLocale: effectivePreviewLocale,
+    baseLocale,
+    loading: savedTranslationsLoading,
+    error: savedTranslationsError,
+  });
+  const previewDependenciesReady =
+    mediaPreviewStateReady &&
+    previewTypography.ok &&
+    !unresolvedFontAssetRefs.length;
+  const previewMessageReady = previewDependenciesReady && !savedTranslationPreviewBlocked;
   const resolvedPreviewInstanceData = useMemo(() => {
     if (!selectedTranslationValues) return previewInstanceData;
     return resolveTranslatedValues(previewInstanceData, selectedTranslationValues);
@@ -171,6 +199,7 @@ export function Workspace({
     device,
     theme,
     typographyData: previewTypographyData,
+    canSendState: previewMessageReady,
   });
 
   useEffect(() => {
@@ -185,6 +214,7 @@ export function Workspace({
       device,
       theme,
       typographyData: previewTypographyData,
+      canSendState: previewMessageReady,
     };
   }, [
     compiled,
@@ -197,6 +227,7 @@ export function Workspace({
     device,
     theme,
     previewTypographyData,
+    previewMessageReady,
   ]);
 
   useEffect(() => {
@@ -247,9 +278,9 @@ export function Workspace({
   }, [hasWidget, previewTypography]);
 
   useEffect(() => {
-    if (previewStateReady) return;
+    if (previewDependenciesReady) return;
     setIframeHasState(false);
-  }, [previewStateReady]);
+  }, [previewDependenciesReady]);
 
   useEffect(() => {
     if (!switcherNotice) return undefined;
@@ -302,7 +333,7 @@ export function Workspace({
       const nextCompiled = snapshot.compiled;
       const iframeWindow = iframe.contentWindow;
       if (!iframeWindow || !nextCompiled) return;
-      if (!previewStateReady) return;
+      if (!snapshot.canSendState) return;
       setIframeLoadError(null);
       iframeWindow.postMessage(
         {
@@ -336,11 +367,11 @@ export function Workspace({
       iframe.removeEventListener('load', handleLoad);
       iframe.removeEventListener('error', handleError);
     };
-  }, [iframeSrc, previewStateReady]);
+  }, [iframeSrc, previewDependenciesReady]);
 
   useEffect(() => {
     if (!hasWidget || !compiled) return;
-    if (!previewStateReady) return;
+    if (!previewMessageReady) return;
     const iframeWindow = iframeRef.current?.contentWindow;
     if (!iframeWindow) return;
     if (!iframeLoaded) return;
@@ -371,7 +402,7 @@ export function Workspace({
     theme,
     previewTypographyData,
     iframeLoaded,
-    previewStateReady,
+    previewMessageReady,
   ]);
 
   useEffect(() => {
@@ -465,9 +496,19 @@ export function Workspace({
         sandbox="allow-scripts allow-same-origin"
         style={iframeBackdrop ? ({ background: iframeBackdrop } as any) : undefined}
       />
-      {hasWidget && !iframeHasState ? (
+      {hasWidget && !iframeHasState && !savedTranslationPreviewBlocked ? (
         <div className="workspace-status-overlay" role="status" aria-live="polite">
           <span className="label-s">Loading preview...</span>
+        </div>
+      ) : null}
+      {hasWidget && savedTranslationPreviewBlocked && savedTranslationsLoading && !savedTranslationsError ? (
+        <div className="workspace-status-overlay" role="status" aria-live="polite">
+          <span className="label-s">Loading saved translation...</span>
+        </div>
+      ) : null}
+      {hasWidget && savedTranslationPreviewBlocked && savedTranslationsError ? (
+        <div className="workspace-status-overlay workspace-status-overlay--error" role="alert">
+          <span className="label-s">{savedTranslationsError}</span>
         </div>
       ) : null}
       {hasWidget && iframeLoadError ? (

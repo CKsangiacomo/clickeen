@@ -13,6 +13,7 @@
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test:accessibility-copy": "tsx tests/run-accessibility-copy.ts",
     "test:translations-panel": "tsx tests/run-translations-panel.ts"
   },
   "dependencies": {

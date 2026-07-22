@@ -7,7 +7,10 @@ import { UpsellPopup } from './UpsellPopup';
 import { Workspace } from './Workspace';
 import { WidgetSessionProvider } from '../lib/session/useWidgetSession';
 import { useWidgetSession, useWidgetSessionChrome } from '../lib/session/useWidgetSession';
-import { useTranslationPreviewState } from './useTranslationPreviewState';
+import {
+  resolveSavedTranslationReadState,
+  useTranslationPreviewState,
+} from './useTranslationPreviewState';
 import { listPreviewableLocales } from '../lib/translations-preview';
 
 function UpsellPopupHost() {
@@ -41,6 +44,8 @@ function BuilderShell() {
   const {
     translatedLocales,
     valuesByLocale: translationValuesByLocale,
+    listState: savedTranslationListState,
+    localeState: savedTranslationLocaleState,
   } = useTranslationPreviewState({
     instanceId,
     baseLocale,
@@ -62,6 +67,10 @@ function BuilderShell() {
   const previewableTranslationLocales = useMemo(() => {
     return listPreviewableLocales(translatedLocales);
   }, [translatedLocales]);
+  const savedTranslationReadState = resolveSavedTranslationReadState({
+    list: savedTranslationListState,
+    locale: savedTranslationLocaleState,
+  });
 
   return (
     <>
@@ -76,6 +85,8 @@ function BuilderShell() {
             onPreviewModeChange={setPreviewMode}
             translationSetup={translationSetup}
             translatedLocales={translatedLocales}
+            savedTranslationsLoading={savedTranslationReadState.loading}
+            savedTranslationsError={savedTranslationReadState.error}
           />
           <Workspace
             baseLocale={baseLocale}
@@ -84,6 +95,8 @@ function BuilderShell() {
             onTranslationPreviewLocaleChange={setTranslationPreviewLocale}
             previewablePreviewLocales={previewableTranslationLocales}
             translationValuesByLanguage={translationValuesByLocale}
+            savedTranslationsLoading={savedTranslationReadState.loading}
+            savedTranslationsError={savedTranslationReadState.error}
           />
         </div>
       </div>

@@ -55,7 +55,7 @@ function resolveSessionErrorTitle(error: NonNullable<ReturnType<typeof useWidget
   return 'Edit blocked';
 }
 
-function resolveSessionErrorLines(error: NonNullable<ReturnType<typeof useWidgetSession>['error']>): string[] {
+export function resolveSessionErrorLines(error: NonNullable<ReturnType<typeof useWidgetSession>['error']>): string[] {
   if (error.source === 'load') {
     return [resolveBuilderErrorCopy(error.message, 'Builder could not load this widget. Please try again.')];
   }
@@ -67,7 +67,6 @@ function resolveSessionErrorLines(error: NonNullable<ReturnType<typeof useWidget
         'Saving changes failed. Please try again.',
       ),
     ];
-    if (error.detail) lines.push(error.detail);
     if (error.paths?.length) lines.push(`Paths: ${error.paths.join(', ')}`);
     return lines;
   }
@@ -110,6 +109,8 @@ export function ToolDrawer({
   onPreviewModeChange,
   translationSetup,
   translatedLocales,
+  savedTranslationsLoading,
+  savedTranslationsError,
 }: {
   translationPreviewLocale: string;
   onTranslationPreviewLocaleChange: (locale: string) => void;
@@ -117,6 +118,8 @@ export function ToolDrawer({
   onPreviewModeChange: (mode: 'editing' | 'translations') => void;
   translationSetup: TranslationSetup | null;
   translatedLocales: TranslatedLocalesData | null;
+  savedTranslationsLoading: boolean;
+  savedTranslationsError: string | null;
 }) {
   const session = useWidgetSession();
   const compiled = session.compiled;
@@ -196,6 +199,8 @@ export function ToolDrawer({
       onRequestTranslationsRefresh={onRequestTranslationsRefresh}
       translationSetup={translationSetup}
       translatedLocales={translatedLocales}
+      savedTranslationsLoading={savedTranslationsLoading}
+      savedTranslationsError={savedTranslationsError}
     />
   ) : (
     <TdMenuContent
