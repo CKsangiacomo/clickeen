@@ -503,9 +503,10 @@ Green gate:
 
 ### Slice B3 - DevStudio Reveal/Write Predicate Parity
 
-Change only `admin/scripts/generate-foundation-pages.mjs`: writable color rows
-accept exactly three- or six-digit hex values, matching the existing backend
-contract in `admin/functions/_shared/dieter-tokens.js`.
+The only product-source change is
+`admin/scripts/generate-foundation-pages.mjs`: writable color rows accept
+exactly three- or six-digit hex values, matching the existing backend contract
+in `admin/functions/_shared/dieter-tokens.js`.
 
 Update `documentation/engineering/UI/color.md` and
 `documentation/services/devstudio.md` from ambiguous "literal hex" wording to
@@ -515,16 +516,25 @@ the exact three- or six-digit write contract.
 `admin/src/html/foundations/colors.html`; current six-digit source data should
 produce no generated diff.
 
+Add `e2e/devstudio/126b-color-reveal.spec.ts` as the focused parity proof. Its
+source check compares the generator and backend predicates and exercises valid
+three- and six-digit examples plus invalid four-, five-, seven-, and
+eight-digit examples. Its cloud check loads the deployed Colors foundation,
+compares editable DOM rows with the backend `GET /api/dieter/tokens/colors`
+response, proves role/focus/state rows remain read-only, aborts every token
+write, and asserts zero POST requests.
+
 Green gate:
 
-1. Source comparison proves generator and backend use the same 3/6-digit value
-   shape; `pnpm build:devstudio` is green; generated output is unchanged.
+1. The focused parity proof, source comparison, and truth table prove generator
+   and backend use the same 3/6-digit value shape; `pnpm build:devstudio` is
+   green; generated output is unchanged.
 2. Commit and push occur before cloud proof.
 3. `pnpm cf:api:preflight` is green and the DevStudio Pages latest deployment
    commit hash equals the B3 commit.
 4. Deployed color foundations reveal current source colors as editable and
-   role/focus/state rows as read-only. Current product tokens contain no invalid
-   hex shapes, so source comparison plus the build owns invalid-shape parity.
+   role/focus/state rows as read-only. The test aborts and records every token
+   POST; no write may reach DevStudio.
 
 ## Exact Blast Radius
 
@@ -540,6 +550,7 @@ Green gate:
 | `tokyo/product/widgets/logoshowcase/widget.css` | `dieter/tokens/dieter-color-tokens.css` | User-authored/widget appearance color -> unchanged |
 | `roma/tests/fixtures/124c-base-package-expected.json` | `roma/tests/instance-package-fixtures.ts` | Published account instance rematerialization -> forbidden proof mutation |
 | `admin/scripts/generate-foundation-pages.mjs` | `documentation/engineering/CloudflareOperations.md` | |
+| `e2e/devstudio/126b-color-reveal.spec.ts` | | |
 | `documentation/engineering/UI/color.md` | `.github/workflows/cloud-dev-workers.yml` | |
 | `documentation/services/devstudio.md` | `.github/workflows/cloud-dev-roma-app.yml` | |
 | | `.github/workflows/cloud-dev-prague-app.yml` | |

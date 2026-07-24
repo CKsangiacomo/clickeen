@@ -107,11 +107,11 @@ token references explicitly listed in the PRD.
 ## DevStudio Reveal
 
 DevStudio reveals color source truth. Its current write lane accepts only
-`--color-*` token edits with literal hex values.
+`--color-*` token edits with literal three- or six-digit hex values.
 
 Therefore:
 
-- writable `--color-*` hex rows render edit controls;
+- writable `--color-*` three- or six-digit hex rows render edit controls;
 - role, focus, state, and derived `color-mix(...)` rows render read-only chips;
 - This doctrine does not expand DevStudio write authority.
 

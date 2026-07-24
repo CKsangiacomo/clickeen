@@ -79,8 +79,8 @@ Every write uses GitHub SHA conflict checks. A stale write fails; it does not ov
 ## Color Reveal And Write Truth
 
 DevStudio reveals Dieter color source truth. Current color writes are intentionally
-narrow: only `--color-*` tokens with literal hex values are editable through the
-color token write lane.
+narrow: only `--color-*` tokens with literal three- or six-digit hex values are
+editable through the color token write lane.
 
 Role, focus, state, and derived `color-mix(...)` rows are displayed as read-only
 truth. They are not hidden, but they do not masquerade as writable DevStudio

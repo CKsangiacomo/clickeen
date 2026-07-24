@@ -62,7 +62,7 @@ function displayName(token) {
 }
 
 function isWritableColorToken(token) {
-  return token.name.startsWith('--color-') && /^#[0-9a-fA-F]{3,8}$/.test(token.value);
+  return token.name.startsWith('--color-') && /^#[0-9a-fA-F]{3}(?:[0-9a-fA-F]{3})?$/.test(token.value);
 }
 
 function renderColorChip(entry) {
