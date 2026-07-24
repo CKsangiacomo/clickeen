@@ -1,0 +1,204 @@
+{
+  "route": "https://prague.dev.clickeen.com/us/en/widgets/faq/",
+  "capturedAt": "2026-07-24T06:53:16.432Z",
+  "viewports": {
+    "desktop": {
+      "viewport": {
+        "width": 1440,
+        "height": 1100
+      },
+      "cards": [
+        {
+          "tile": {
+            "x": 24,
+            "y": 1557.828125,
+            "width": 448,
+            "height": 321.9375
+          },
+          "iconContainer": {
+            "x": 64,
+            "y": 1597.828125,
+            "width": 40,
+            "height": 40
+          },
+          "glyph": {
+            "x": 64,
+            "y": 1597.828125,
+            "width": 40,
+            "height": 40
+          },
+          "glyphPaint": {
+            "tag": "IMG",
+            "src": "https://tokyo.dev.clickeen.com/dieter/icons/svg/square.on.square.svg",
+            "color": "rgb(112, 112, 117)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "maskImage": "none",
+            "webkitMaskImage": "none",
+            "role": "presentation",
+            "ariaHidden": "true"
+          }
+        },
+        {
+          "tile": {
+            "x": 496,
+            "y": 1557.828125,
+            "width": 448,
+            "height": 321.9375
+          },
+          "iconContainer": {
+            "x": 536,
+            "y": 1597.828125,
+            "width": 40,
+            "height": 40
+          },
+          "glyph": {
+            "x": 536,
+            "y": 1597.828125,
+            "width": 40,
+            "height": 40
+          },
+          "glyphPaint": {
+            "tag": "IMG",
+            "src": "https://tokyo.dev.clickeen.com/dieter/icons/svg/square.stack.3d.up.svg",
+            "color": "rgb(112, 112, 117)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "maskImage": "none",
+            "webkitMaskImage": "none",
+            "role": "presentation",
+            "ariaHidden": "true"
+          }
+        },
+        {
+          "tile": {
+            "x": 968,
+            "y": 1557.828125,
+            "width": 448,
+            "height": 321.9375
+          },
+          "iconContainer": {
+            "x": 1008,
+            "y": 1597.828125,
+            "width": 40,
+            "height": 40
+          },
+          "glyph": {
+            "x": 1008,
+            "y": 1597.828125,
+            "width": 40,
+            "height": 40
+          },
+          "glyphPaint": {
+            "tag": "IMG",
+            "src": "https://tokyo.dev.clickeen.com/dieter/icons/svg/gear.svg",
+            "color": "rgb(112, 112, 117)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "maskImage": "none",
+            "webkitMaskImage": "none",
+            "role": "presentation",
+            "ariaHidden": "true"
+          }
+        }
+      ],
+      "nonReadRequests": []
+    },
+    "mobile": {
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "cards": [
+        {
+          "tile": {
+            "x": 20,
+            "y": 1865.921875,
+            "width": 350,
+            "height": 342.1875
+          },
+          "iconContainer": {
+            "x": 60,
+            "y": 1905.921875,
+            "width": 40,
+            "height": 40
+          },
+          "glyph": {
+            "x": 60,
+            "y": 1905.921875,
+            "width": 40,
+            "height": 40
+          },
+          "glyphPaint": {
+            "tag": "IMG",
+            "src": "https://tokyo.dev.clickeen.com/dieter/icons/svg/square.on.square.svg",
+            "color": "rgb(112, 112, 117)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "maskImage": "none",
+            "webkitMaskImage": "none",
+            "role": "presentation",
+            "ariaHidden": "true"
+          }
+        },
+        {
+          "tile": {
+            "x": 20,
+            "y": 2232.109375,
+            "width": 350,
+            "height": 342.1875
+          },
+          "iconContainer": {
+            "x": 60,
+            "y": 2272.109375,
+            "width": 40,
+            "height": 40
+          },
+          "glyph": {
+            "x": 60,
+            "y": 2272.109375,
+            "width": 40,
+            "height": 40
+          },
+          "glyphPaint": {
+            "tag": "IMG",
+            "src": "https://tokyo.dev.clickeen.com/dieter/icons/svg/square.stack.3d.up.svg",
+            "color": "rgb(112, 112, 117)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "maskImage": "none",
+            "webkitMaskImage": "none",
+            "role": "presentation",
+            "ariaHidden": "true"
+          }
+        },
+        {
+          "tile": {
+            "x": 20,
+            "y": 2598.296875,
+            "width": 350,
+            "height": 321.9375
+          },
+          "iconContainer": {
+            "x": 60,
+            "y": 2638.296875,
+            "width": 40,
+            "height": 40
+          },
+          "glyph": {
+            "x": 60,
+            "y": 2638.296875,
+            "width": 40,
+            "height": 40
+          },
+          "glyphPaint": {
+            "tag": "IMG",
+            "src": "https://tokyo.dev.clickeen.com/dieter/icons/svg/gear.svg",
+            "color": "rgb(112, 112, 117)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "maskImage": "none",
+            "webkitMaskImage": "none",
+            "role": "presentation",
+            "ariaHidden": "true"
+          }
+        }
+      ],
+      "nonReadRequests": []
+    }
+  }
+}

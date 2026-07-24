@@ -48,7 +48,7 @@ Agents must use the lane that owns the UI they are editing:
 | Bob app chrome | Only named Bob chrome files use `bob/lib/icons.ts` directly; icons stay decorative and control names live on controls. |
 | DevStudio/Admin | Generated raw SVG imports are Admin tooling/reveal only, not product runtime doctrine. Missing icons render an explicit `[missing icon: name]` marker. |
 | Roma product UI | Use the same Dieter operational-icon contract through the implementation lane specified by the 126M execution PRD; do not create a Roma-only icon system. |
-| Prague static site | `DieterIcon.astro` renders approved Dieter icon names from Tokyo `/dieter/icons/svg/name.svg`; Prague validates rendered Dieter names against the manifest. |
+| Prague static site | `DieterIcon.astro` paints approved Tokyo `/dieter/icons/svg/name.svg` URLs through a CSS mask so icons inherit `currentColor`; Prague validates rendered Dieter names against the manifest and uses numeric Dieter sizes only. |
 | Public widgets | Widget-owned code may use approved Dieter names as CSS masks/static URLs where that widget schema exposes operational Dieter icons. Do not create a shared widget icon service. |
 | Account assets | SVG assets uploaded by accounts, including the admin account, are account assets. They are not Dieter icons. |
 

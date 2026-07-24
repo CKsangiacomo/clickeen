@@ -65,10 +65,12 @@ This slice may begin only after every 126A-126M PRD is Step-8 green.
      approved glyph neither repeats nor changes its fit or alignment;
    - change the default glyph size from `44` to `40`;
    - preserve inline-block display plus explicit width and height;
-   - keep untitled icons decorative with `aria-hidden="true"` and
-     `role="presentation"`;
-   - when `title` exists, expose `role="img"` and `aria-label={title}`; do not
-     assume the former `<img alt>` semantics survive the element change;
+   - delete the unused `title` prop and branch. No current Prague call site
+     supplies it, and every current use is decorative inside an already-named
+     card, link, or section;
+   - keep every current icon decorative with `aria-hidden="true"` and
+     `role="presentation"`. A meaningful standalone icon requires a real
+     product use and an explicit future consumer contract, not scaffolding here;
    - do not fetch or inline SVG source and do not create another component.
 2. Edit `prague/src/components/StepsPrimitive.astro`:
    - change the explicit Dieter size from `44` to `40`;
@@ -84,6 +86,30 @@ This slice may begin only after every 126A-126M PRD is Step-8 green.
 Update `documentation/engineering/UI/iconography.md` so the Prague lane states
 that the public Tokyo SVG URL is painted through a CSS mask to preserve
 `currentColor`, with numeric Dieter sizes only.
+
+### Proof artifacts
+
+Add `e2e/prague/126c-iconography.spec.ts` as the focused source and public
+runtime proof. It must:
+
+- statically prove `DieterIcon` has no `44` default and no Prague call site
+  passes `size={44}`;
+- load `https://prague.dev.clickeen.com/us/en/widgets/faq/` without auth;
+- prove the three FAQ subpage-card glyphs remain 40 by 40, use the existing
+  Tokyo Dieter SVG URLs as centered/contained/non-repeating CSS masks, inherit
+  `rgb(112, 112, 117)` through `currentColor`, and remain decorative outside
+  the accessibility tree;
+- allow only read requests and assert zero non-read requests.
+
+Preserve visual evidence under `evidence/126C.1/`:
+
+- `before-desktop.png` and `after-desktop.png` at 1440 by 1100;
+- `before-mobile.png` and `after-mobile.png` at 390 by 844;
+- `before-geometry.json` and `after-geometry.json` recording the three card and
+  icon bounding boxes at both viewports.
+
+Before/after geometry must match. The intended paint change is external-image
+black to inherited Dieter gray; card layout and icon dimensions do not move.
 
 ### No-touch boundary
 
@@ -127,10 +153,10 @@ Then prove:
 
 1. no Prague Dieter default or call site uses `44`;
 2. the built component still uses the Tokyo Dieter SVG coordinate;
-3. decorative output is hidden from accessibility APIs and titled output has
-   the supplied accessible name;
+3. decorative output is hidden from accessibility APIs and the component has
+   no speculative meaningful-icon branch;
 4. desktop and mobile screenshots of the FAQ overview icon cards show inherited
-   gray icons with no layout shift;
+   gray icons, and before/after geometry evidence proves no layout shift;
 5. after commit and push, the successful `cloud-dev prague app verify` run has
    `head_sha` equal to the slice commit;
 6. `pnpm cf:api:preflight` passes and
@@ -156,9 +182,10 @@ is neither required nor allowed as substitute evidence.
 
 ## Done
 
-126C Step 9 is done only when the two-file Prague correction and living-doc
-update are committed, locally green, deployed from that exact commit, visually
-and semantically verified on Prague, and independently audited against V1-V8.
+126C Step 9 is done only when the Prague correction, workflow check, living-doc
+update, and focused proof are committed, locally green, deployed from that
+exact commit, visually and semantically verified on Prague, and independently
+audited against V1-V8.
 
 No icon-source, Bob, Admin, Roma, widget, product-data, R2, or Supabase change is
 part of this PRD.

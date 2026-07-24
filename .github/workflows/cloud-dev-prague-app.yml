@@ -44,5 +44,8 @@ jobs:
       - name: Install deps
         run: pnpm install --frozen-lockfile
 
+      - name: Typecheck Prague Pages contract
+        run: pnpm -C prague typecheck
+
       - name: Build Prague Pages contract
         run: pnpm -C prague build

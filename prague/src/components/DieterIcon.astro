@@ -2,10 +2,9 @@
 type Props = {
   name: string;
   size?: number;
-  title?: string;
 };
 
-const { name, size = 44, title } = Astro.props;
+const { name, size = 40 } = Astro.props;
 const TOKYO_URL = import.meta.env.PUBLIC_TOKYO_URL;
 
 if (!TOKYO_URL) {
@@ -13,16 +12,12 @@ if (!TOKYO_URL) {
 }
 
 const iconUrl = `${TOKYO_URL.replace(/\/$/, '')}/dieter/icons/svg/${name}.svg`;
-const ariaHidden = title ? undefined : 'true';
-const role = title ? 'img' : 'presentation';
+const maskUrl = `url(${JSON.stringify(iconUrl)})`;
 ---
 
-<img
-  src={iconUrl}
-  width={size}
-  height={size}
-  aria-hidden={ariaHidden}
-  role={role}
-  alt={title || ''}
-  style="display: inline-block; color: currentColor;"
+<span
+  data-dieter-icon={name}
+  aria-hidden="true"
+  role="presentation"
+  style={`display: inline-block; width: ${size}px; height: ${size}px; background-color: currentColor; -webkit-mask: ${maskUrl} center / contain no-repeat; mask: ${maskUrl} center / contain no-repeat;`}
 />
