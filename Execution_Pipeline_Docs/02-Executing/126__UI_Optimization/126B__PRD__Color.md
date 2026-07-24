@@ -1,6 +1,6 @@
 # 126B - PRD: Color
 
-Status: STEP 9 IN PROGRESS - B1 GREEN; B2 is next.
+Status: STEP 9 IN PROGRESS - B1 AND B2 GREEN; B3 is next.
 Parent: `126__PRD__UI_Optimization_Program.md` (MAMA).
 Series order: 126B of 126A-126M.
 KB doc target: `documentation/engineering/UI/color.md`.
@@ -565,7 +565,7 @@ Roma source, or product data is in scope.
 
 ## Step-9 Execution Record
 
-Status on 2026-07-22: **B1 GREEN; B2 and B3 not started.**
+Status on 2026-07-24: **B1 and B2 GREEN; B3 not started.**
 
 - B1 implementation, focused browser proof, and the pre-execution test-file
   blast-radius correction landed in `b97b135a`. Bob no longer carries or sends
@@ -602,6 +602,31 @@ Status on 2026-07-22: **B1 GREEN; B2 and B3 not started.**
   ignored Roma auth state was refreshed through the documented Berlin
   dev-admin path. Independent pre-commit and post-cloud reviews found no
   blocking issue; V1-V8 all pass. This closes B1 and makes B2 eligible.
+- B2 landed in `d573e2bc`. The only product-source change moves the Logo
+  Showcase keyboard-focus outline from the direct system-blue primitive to
+  `--role-focus`. The Roma package fixture changes the same single substring,
+  and the active carousel dot remains the widget's blue product default.
+- The local B2 gate is green: widget compilation, Tokyo product-root R2 sync
+  planning, the full Roma instance-package parity suite, `git diff --check`,
+  and the focused Chromium proof pass. The browser proof reaches the link by
+  keyboard, confirms `:focus-visible`, a 2px solid `rgb(0, 122, 255)` outline,
+  and zero network requests.
+- GitHub Actions workers deployment `29957604715`, Roma verification
+  `29957604702`, and Prague verification `29957604775` completed successfully
+  at exact SHA `d573e2bccff455b12fe52abe1605d05d61cc953b`. The worker and agent deploy
+  jobs were not needed; the workers workflow performed the expected Tokyo
+  product-root sync.
+- Cloudflare R2 preflight is green. Remote
+  `product/widgets/logoshowcase/widget.css` is byte-identical to the committed
+  source: both are 8,155 bytes with SHA-256
+  `79fd56f3c4dfe09d27ac1f81b43ea89fc0e754ba6bea0b75febf0297d466ccc1`.
+  The remote focus block uses `--role-focus`, does not use the direct blue
+  primitive, and the active-dot block still uses `--color-system-blue`.
+- B2 did not read or write `accounts/**`, an instance, Supabase, policy, or
+  customer product data. Its only remote mutation was the expected
+  Git-authored Tokyo product-root deployment. Independent pre-commit and
+  post-cloud reviews found no blocking issue; V1-V8 all pass. This closes B2
+  and makes B3 eligible.
 
 ## Done For 126B
 
