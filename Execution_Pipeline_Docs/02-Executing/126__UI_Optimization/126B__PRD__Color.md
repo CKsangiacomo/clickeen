@@ -1,6 +1,6 @@
 # 126B - PRD: Color
 
-Status: STEP 9 IN PROGRESS - B1 AND B2 GREEN; B3 is next.
+Status: STEP 9 COMPLETE - B1 THROUGH B3 GREEN.
 Parent: `126__PRD__UI_Optimization_Program.md` (MAMA).
 Series order: 126B of 126A-126M.
 KB doc target: `documentation/engineering/UI/color.md`.
@@ -576,7 +576,7 @@ Roma source, or product data is in scope.
 
 ## Step-9 Execution Record
 
-Status on 2026-07-24: **B1 and B2 GREEN; B3 not started.**
+Status on 2026-07-24: **B1 through B3 GREEN; 126B complete.**
 
 - B1 implementation, focused browser proof, and the pre-execution test-file
   blast-radius correction landed in `b97b135a`. Bob no longer carries or sends
@@ -638,6 +638,31 @@ Status on 2026-07-24: **B1 and B2 GREEN; B3 not started.**
   Git-authored Tokyo product-root deployment. Independent pre-commit and
   post-cloud reviews found no blocking issue; V1-V8 all pass. This closes B2
   and makes B3 eligible.
+- B3 landed in `33fffdd7`. DevStudio's generated reveal predicate now accepts
+  exactly the same `--color-*` three- or six-digit hex shape as the existing
+  backend write authority. The living color and DevStudio service docs state
+  that exact contract.
+- The focused B3 proof compares both source predicates, exercises valid 3/6
+  digit values and invalid 4/5/7/8 digit values, and checks the `--color-`
+  token-name boundary against role, focus, and state names. DevStudio build,
+  lint, typecheck, Functions syntax checks, and `git diff --check` are green.
+  Regenerated `colors.html` remains byte-identical at 105,216 bytes with
+  SHA-256 `1eb324abf83583e96e0fdc36453e9b1cb3bfb91f359cf2d5d01a7e83385c54f5`.
+- Cloudflare API preflight is green. DevStudio production deployment
+  `812e67c1-5733-408a-83fc-cfc3ad206d48` completed queued, initialize,
+  clone-repository, build, and deploy stages successfully at exact commit
+  `33fffdd7ae5b4b16f33c998128a03da50e427f49`.
+- The post-deploy proof passed 2/2. All 34 editable DOM rows equal backend GET
+  truth; `--role-focus`, `--focus-ring-color`, and
+  `--state-darken-target` remain read-only. The proof allowed only read
+  requests, aborted every non-read DevStudio API request, and observed zero
+  POSTs. The ignored DevStudio auth state was refreshed through Berlin's
+  documented cloud-dev `dev-admin` provider and DevStudio's normal session
+  finish route; Google OAuth was not automated.
+- B3 changed no Dieter token value, generated page byte, policy, account,
+  instance, Supabase row, customer product data, or Cloudflare configuration.
+  Independent pre-commit and post-cloud reviews found no blocking issue;
+  V1-V8 all pass. This closes B3 and 126B.
 
 ## Done For 126B
 
