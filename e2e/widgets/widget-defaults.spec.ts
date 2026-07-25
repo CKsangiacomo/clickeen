@@ -60,8 +60,8 @@ test.describe('Widget Defaults', () => {
     await expect(page.getByRole('heading', { name: 'Widget Defaults' })).toBeVisible();
     await expect(page.getByText('Widget Defaults Contract Error')).toHaveCount(0);
     await expect(page.getByText(/tokyo\.widgetDefaults\.unmappedPaths/)).toHaveCount(0);
-    await expect(page.getByRole('heading', { name: 'Global Shell Defaults' })).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'Call to Action' })).toBeVisible();
+    await expect(page.locator('[data-bob-path="header.enabled"]')).toBeVisible();
+    await expect(page.locator('[data-bob-path="headerCta.label"]')).toBeVisible();
 
     expectNoCollectedErrors('Widget Defaults', collector);
   });
