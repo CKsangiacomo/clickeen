@@ -81,7 +81,6 @@ function streamGenerateTranslations(args: {
         }
 
         const packages = await materializeAccountInstanceLocalePackages({
-          request: args.request,
           accountId: args.accountId,
           instanceId: args.instanceId,
           baseLocale: args.baseLocale,
@@ -211,7 +210,6 @@ export async function POST(request: NextRequest, context: RouteContext) {
   }
 
   const packages = await materializeAccountInstanceLocalePackages({
-    request,
     accountId,
     instanceId,
     baseLocale,

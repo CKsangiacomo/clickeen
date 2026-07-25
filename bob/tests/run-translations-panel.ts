@@ -33,7 +33,7 @@ const success = buildTranslationGenerationFeedback({
     localePackages: {
       ok: true,
       completed: [{ locale: 'fr' }, { locale: 'de' }],
-      skipped: [],
+      failed: [],
     },
   },
 });
@@ -78,12 +78,13 @@ const packageFailurePayload = {
   localePackages: {
     ok: false,
     completed: [{ locale: 'fr' }],
-    skipped: [{ locale: 'de' }],
-    failed: {
-      locale: 'fr',
-      phase: 'package-write',
-      reasonKey: 'coreui.errors.instance.embedNotReady',
-    },
+    failed: [
+      {
+        locale: 'de',
+        phase: 'package-write',
+        reasonKey: 'coreui.errors.instance.embedNotReady',
+      },
+    ],
   },
 };
 const packageFailure = buildTranslationGenerationFeedback({
@@ -93,7 +94,7 @@ const packageFailure = buildTranslationGenerationFeedback({
 });
 assert.equal(packageFailure.tone, 'warning');
 assert.equal(packageFailure.title, 'Translations need attention');
-assert.match(packageFailure.lines.join(' '), /French/);
+assert.match(packageFailure.lines.join(' '), /German/);
 assert.doesNotMatch(packageFailure.lines.join(' '), /coreui\.errors/);
 
 const commandFailure = buildTranslationGenerationFeedback({

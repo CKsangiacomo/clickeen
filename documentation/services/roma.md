@@ -203,8 +203,10 @@ Tokyo-worker, mints a Translation Agent grant, and calls the Translation Agent
 Worker. Translation Agent calls San Francisco `/model/chat` and writes overlays
 via Tokyo-worker. After accepted overlay generation, Roma materializes the
 matching locale package bytes for the generated locales through the locale
-package helper. If locale package materialization or public cache refresh fails,
-the translation command reports the exact `localePackages` failure coordinates
+package helper. Shared media and typography are resolved once per instance and
+up to four locale packages are materialized concurrently. If locale package
+materialization or public cache refresh fails, the translation command reports
+every exact `localePackages.failed` coordinate
 instead of claiming full localization success.
 When the command is invoked through hosted Bob, Translation Agent may stream
 Agent Activity while it operates. Roma forwards that activity to Bob; Roma does

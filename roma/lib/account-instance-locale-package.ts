@@ -1,5 +1,5 @@
-import type { NextRequest } from 'next/server';
 import {
+  prepareAccountInstancePublicPackage,
   readWidgetForInstancePackage,
   materializeAccountInstanceLocalePublicPackage,
 } from './account-instance-public-package';
@@ -9,6 +9,8 @@ import {
   writeAccountInstanceLocalePackageInTokyo,
 } from './account-instance-direct';
 import { readAccountInstanceTranslationValues } from './account-instance-translations';
+
+const LOCALE_PACKAGE_CONCURRENCY = 4;
 
 type RouteFailure = {
   ok: false;
@@ -38,12 +40,11 @@ export type LocalePackageCoordinate = {
 export type LocalePackageMaterializationValue = {
   ok: boolean;
   completed: Array<LocalePackageCoordinate & { publicPackageFingerprint: string }>;
-  skipped: Array<LocalePackageCoordinate & { phase: 'not-attempted-after-failure' }>;
-  failed?: LocalePackageCoordinate & {
+  failed: Array<LocalePackageCoordinate & {
     phase: LocalePackagePhase;
     reasonKey: string;
     detail?: string;
-  };
+  }>;
 };
 
 export type LocalePackageMaterializationResult =
@@ -55,21 +56,11 @@ export function buildLocalePackageMaterializationFailure(args: {
   kind: RouteFailure['error']['kind'];
   reasonKey: string;
   detail?: string;
-  completed: LocalePackageMaterializationValue['completed'];
-  remainingLocales: string[];
+  locales: string[];
   accountId: string;
   instanceId: string;
-  locale: string;
   phase: LocalePackagePhase;
 }): LocalePackageMaterializationResult {
-  const failed = {
-    accountId: args.accountId,
-    instanceId: args.instanceId,
-    locale: args.locale,
-    phase: args.phase,
-    reasonKey: args.reasonKey,
-    ...(args.detail ? { detail: args.detail } : {}),
-  };
   return {
     ok: false,
     status: args.status,
@@ -80,20 +71,44 @@ export function buildLocalePackageMaterializationFailure(args: {
     },
     value: {
       ok: false,
-      completed: args.completed,
-      skipped: args.remainingLocales.map((locale) => ({
+      completed: [],
+      failed: args.locales.map((locale) => ({
         accountId: args.accountId,
         instanceId: args.instanceId,
         locale,
-        phase: 'not-attempted-after-failure',
+        phase: args.phase,
+        reasonKey: args.reasonKey,
+        ...(args.detail ? { detail: args.detail } : {}),
       })),
-      failed,
     },
   };
 }
 
 function uniqueNonBaseLocales(locales: string[], baseLocale: string): string[] {
   return Array.from(new Set(locales.filter((locale) => locale && locale !== baseLocale)));
+}
+
+export async function runLocalePackagePool<T>(args: {
+  locales: string[];
+  run: (locale: string) => Promise<T>;
+  onUnexpectedError: (locale: string, error: unknown) => T;
+}): Promise<T[]> {
+  const results = new Array<T>(args.locales.length);
+  let nextLocaleIndex = 0;
+  await Promise.all(
+    Array.from({ length: Math.min(LOCALE_PACKAGE_CONCURRENCY, args.locales.length) }, async () => {
+      while (nextLocaleIndex < args.locales.length) {
+        const index = nextLocaleIndex++;
+        const locale = args.locales[index]!;
+        try {
+          results[index] = await args.run(locale);
+        } catch (error) {
+          results[index] = args.onUnexpectedError(locale, error);
+        }
+      }
+    }),
+  );
+  return results;
 }
 
 export function localePackagePhaseFromRouteFailure(
@@ -104,7 +119,6 @@ export function localePackagePhaseFromRouteFailure(
 }
 
 export async function materializeAccountInstanceLocalePackages(args: {
-  request: NextRequest;
   accountId: string;
   accountCapsule: string;
   requestId: string;
@@ -113,8 +127,7 @@ export async function materializeAccountInstanceLocalePackages(args: {
   activeLocales: string[];
 }): Promise<LocalePackageMaterializationResult> {
   const locales = uniqueNonBaseLocales(args.activeLocales, args.baseLocale);
-  const completed: LocalePackageMaterializationValue['completed'] = [];
-  if (!locales.length) return { ok: true, value: { ok: true, completed, skipped: [] } };
+  if (!locales.length) return { ok: true, value: { ok: true, completed: [], failed: [] } };
 
   const saved = await loadTokyoAccountInstanceDocument({
     accountId: args.accountId,
@@ -128,11 +141,9 @@ export async function materializeAccountInstanceLocalePackages(args: {
       kind: saved.error.kind,
       reasonKey: saved.error.reasonKey,
       detail: saved.error.detail,
-      completed,
-      remainingLocales: locales.slice(1),
+      locales,
       accountId: args.accountId,
       instanceId: args.instanceId,
-      locale: locales[0]!,
       phase: 'source-read',
     });
   }
@@ -142,11 +153,9 @@ export async function materializeAccountInstanceLocalePackages(args: {
       kind: 'VALIDATION',
       reasonKey: 'coreui.errors.translations.baseLocaleMismatch',
       detail: `saved:${saved.value.row.baseLocale}:account:${args.baseLocale}`,
-      completed,
-      remainingLocales: locales.slice(1),
+      locales,
       accountId: args.accountId,
       instanceId: args.instanceId,
-      locale: locales[0]!,
       phase: 'source-read',
     });
   }
@@ -158,17 +167,63 @@ export async function materializeAccountInstanceLocalePackages(args: {
       kind: compiled.error.kind,
       reasonKey: compiled.error.reasonKey,
       detail: compiled.error.detail,
-      completed,
-      remainingLocales: locales.slice(1),
+      locales,
       accountId: args.accountId,
       instanceId: args.instanceId,
-      locale: locales[0]!,
       phase: 'compile',
     });
   }
 
-  for (const [index, locale] of locales.entries()) {
-    const remainingLocales = locales.slice(index + 1);
+  const prepared = await prepareAccountInstancePublicPackage({
+    accountId: args.accountId,
+    accountCapsule: args.accountCapsule,
+    requestId: args.requestId,
+    config: saved.value.config,
+  });
+  if (!prepared.ok) {
+    return buildLocalePackageMaterializationFailure({
+      status: prepared.status,
+      kind: prepared.error.kind,
+      reasonKey: prepared.error.reasonKey,
+      detail: prepared.error.detail,
+      locales,
+      accountId: args.accountId,
+      instanceId: args.instanceId,
+      phase: 'materializer',
+    });
+  }
+
+  type LocaleResult =
+    | {
+        ok: true;
+        completed: LocalePackageMaterializationValue['completed'][number];
+      }
+    | {
+        ok: false;
+        status: number;
+        error: RouteFailure['error'];
+        failed: LocalePackageMaterializationValue['failed'][number];
+      };
+
+  const failLocale = (locale: string, result: {
+    status: number;
+    error: RouteFailure['error'];
+    phase: LocalePackagePhase;
+  }): LocaleResult => ({
+    ok: false,
+    status: result.status,
+    error: result.error,
+    failed: {
+      accountId: args.accountId,
+      instanceId: args.instanceId,
+      locale,
+      phase: result.phase,
+      reasonKey: result.error.reasonKey,
+      ...(result.error.detail ? { detail: result.error.detail } : {}),
+    },
+  });
+
+  const materializeLocale = async (locale: string): Promise<LocaleResult> => {
     const overlay = await readAccountInstanceTranslationValues({
       accountId: args.accountId,
       instanceId: args.instanceId,
@@ -177,16 +232,9 @@ export async function materializeAccountInstanceLocalePackages(args: {
       requestId: args.requestId,
     });
     if (!overlay.ok) {
-      return buildLocalePackageMaterializationFailure({
+      return failLocale(locale, {
         status: overlay.status,
-        kind: overlay.error.kind,
-        reasonKey: overlay.error.reasonKey,
-        detail: overlay.error.detail,
-        completed,
-        remainingLocales,
-        accountId: args.accountId,
-        instanceId: args.instanceId,
-        locale,
+        error: overlay.error,
         phase: 'overlay-read',
       });
     }
@@ -203,18 +251,12 @@ export async function materializeAccountInstanceLocalePackages(args: {
       displayName: saved.value.row.displayName,
       config: saved.value.config,
       overlayValues: overlay.value.values,
+      prepared: prepared.value,
     });
     if (!materialized.ok) {
-      return buildLocalePackageMaterializationFailure({
+      return failLocale(locale, {
         status: materialized.status,
-        kind: materialized.error.kind,
-        reasonKey: materialized.error.reasonKey,
-        detail: materialized.error.detail,
-        completed,
-        remainingLocales,
-        accountId: args.accountId,
-        instanceId: args.instanceId,
-        locale,
+        error: materialized.error,
         phase: 'materializer',
       });
     }
@@ -231,42 +273,63 @@ export async function materializeAccountInstanceLocalePackages(args: {
       requestId: args.requestId,
     });
     if (!stored.ok) {
-      return buildLocalePackageMaterializationFailure({
+      return failLocale(locale, {
         status: stored.status,
-        kind: stored.error.kind,
-        reasonKey: stored.error.reasonKey,
-        detail: stored.error.detail,
-        completed,
-        remainingLocales,
-        accountId: args.accountId,
-        instanceId: args.instanceId,
-        locale,
+        error: stored.error,
         phase: localePackagePhaseFromRouteFailure(stored.error, 'package-write'),
       });
     }
     if (stored.value.publicPackageFingerprint !== materialized.value.evidence.generatedPackageFingerprint) {
-      return buildLocalePackageMaterializationFailure({
+      return failLocale(locale, {
         status: 409,
-        kind: 'VALIDATION',
-        reasonKey: 'coreui.errors.instance.embedNotReady',
-        detail: 'locale_package_fingerprint_mismatch',
-        completed,
-        remainingLocales,
-        accountId: args.accountId,
-        instanceId: args.instanceId,
-        locale,
+        error: {
+          kind: 'VALIDATION',
+          reasonKey: 'coreui.errors.instance.embedNotReady',
+          detail: 'locale_package_fingerprint_mismatch',
+        },
         phase: 'package-write',
       });
     }
-    completed.push({
-      accountId: args.accountId,
-      instanceId: args.instanceId,
-      locale,
-      publicPackageFingerprint: stored.value.publicPackageFingerprint,
-    });
+    return {
+      ok: true,
+      completed: {
+        accountId: args.accountId,
+        instanceId: args.instanceId,
+        locale,
+        publicPackageFingerprint: stored.value.publicPackageFingerprint,
+      },
+    };
+  };
+
+  const results = await runLocalePackagePool({
+    locales,
+    run: materializeLocale,
+    onUnexpectedError: (locale, error) =>
+      failLocale(locale, {
+        status: 502,
+        error: {
+          kind: 'UPSTREAM_UNAVAILABLE',
+          reasonKey: 'coreui.errors.instance.embedNotReady',
+          detail: error instanceof Error ? error.message : String(error),
+        },
+        phase: 'materializer',
+      }),
+  });
+
+  const completed = results.flatMap((result) => (result.ok ? [result.completed] : []));
+  const failures = results.flatMap((result) => (result.ok ? [] : [result]));
+  const failed = failures.map((result) => result.failed);
+  if (failures.length) {
+    const first = failures[0]!;
+    return {
+      ok: false,
+      status: first.status,
+      error: first.error,
+      value: { ok: false, completed, failed },
+    };
   }
 
-  return { ok: true, value: { ok: true, completed, skipped: [] } };
+  return { ok: true, value: { ok: true, completed, failed: [] } };
 }
 
 export async function deleteAccountInstanceLocalePackageArtifact(args: {

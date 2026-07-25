@@ -68,8 +68,7 @@ type LocaleOverlayUpdateValue = {
   localePackages: {
     deleted: Array<{ accountId: string; instanceId: string; locale: string }>;
     generated: LocalePackageMaterializationValue['completed'];
-    skipped: LocalePackageMaterializationValue['skipped'];
-    failed?: NonNullable<LocalePackageMaterializationValue['failed']>;
+    failed: LocalePackageMaterializationValue['failed'];
   };
   failed?: {
     accountId: string;
@@ -163,7 +162,7 @@ function emptyOverlayUpdate(): LocaleOverlayUpdateValue {
     localePackages: {
       deleted: [],
       generated: [],
-      skipped: [],
+      failed: [],
     },
   };
 }
@@ -208,12 +207,7 @@ function mergeOverlayUpdates(left: LocaleOverlayUpdateValue, right: LocaleOverla
     localePackages: {
       deleted: [...left.localePackages.deleted, ...right.localePackages.deleted],
       generated: [...left.localePackages.generated, ...right.localePackages.generated],
-      skipped: [...left.localePackages.skipped, ...right.localePackages.skipped],
-      ...(right.localePackages.failed
-        ? { failed: right.localePackages.failed }
-        : left.localePackages.failed
-          ? { failed: left.localePackages.failed }
-          : {}),
+      failed: [...left.localePackages.failed, ...right.localePackages.failed],
     },
     ok: left.ok && right.ok,
     ...(right.error ? { error: right.error } : left.error ? { error: left.error } : {}),
@@ -265,7 +259,7 @@ async function reconcileAccountLocaleOverlays(args: {
   const localePackages: LocaleOverlayUpdateValue['localePackages'] = {
     deleted: [],
     generated: [],
-    skipped: [],
+    failed: [],
   };
   let instancesChecked = 0;
 
@@ -332,7 +326,7 @@ async function reconcileAccountLocaleOverlays(args: {
             skipped,
             localePackages: {
               ...localePackages,
-              failed: packageFailure,
+              failed: [...localePackages.failed, packageFailure],
             },
             failed: {
               accountId: args.accountId,
@@ -403,7 +397,6 @@ async function reconcileAccountLocaleOverlays(args: {
         continue;
       }
       const packageMaterialization = await materializeAccountInstanceLocalePackages({
-        request: args.request,
         accountId: args.accountId,
         instanceId,
         baseLocale: args.baseLocale,
@@ -412,13 +405,14 @@ async function reconcileAccountLocaleOverlays(args: {
         requestId: args.requestId ?? '',
       });
       localePackages.generated.push(...packageMaterialization.value.completed);
-      localePackages.skipped.push(...packageMaterialization.value.skipped);
+      localePackages.failed.push(...packageMaterialization.value.failed);
       if (!packageMaterialization.ok) {
+        const firstPackageFailure = packageMaterialization.value.failed[0];
         return localeOverlayFailure({
           status: packageMaterialization.status,
           kind: packageMaterialization.error.kind,
           reasonKey: packageMaterialization.error.reasonKey,
-          detail: `locale-package-materialize:${packageMaterialization.value.failed?.instanceId ?? instanceId}:${packageMaterialization.value.failed?.locale ?? locale}:${packageMaterialization.value.failed?.phase ?? 'unknown'}:${packageMaterialization.error.detail ?? packageMaterialization.error.reasonKey}`,
+          detail: `locale-package-materialize:${firstPackageFailure?.instanceId ?? instanceId}:${firstPackageFailure?.locale ?? locale}:${firstPackageFailure?.phase ?? 'unknown'}:${packageMaterialization.error.detail ?? packageMaterialization.error.reasonKey}`,
           value: {
             instancesChecked,
             cost,
@@ -427,13 +421,12 @@ async function reconcileAccountLocaleOverlays(args: {
             skipped,
             localePackages: {
               ...localePackages,
-              ...(packageMaterialization.value.failed ? { failed: packageMaterialization.value.failed } : {}),
             },
             failed: {
               accountId: args.accountId,
               instanceId,
-              locale: packageMaterialization.value.failed?.locale ?? locale,
-              phase: packageMaterialization.value.failed?.phase ?? 'locale-package-materialize',
+              locale: firstPackageFailure?.locale ?? locale,
+              phase: firstPackageFailure?.phase ?? 'locale-package-materialize',
               reasonKey: packageMaterialization.error.reasonKey,
               ...(packageMaterialization.error.detail ? { detail: packageMaterialization.error.detail } : {}),
             },

@@ -84,6 +84,11 @@ export type SavedWidgetPublicPackageBuildResult = {
   evidence: RuntimeMaterializerEvidence;
 };
 
+export type PreparedAccountInstancePublicPackage = {
+  state: Record<string, unknown>;
+  typographyData?: RuntimeTypographyData;
+};
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
 }
@@ -541,12 +546,35 @@ export async function materializeAccountInstancePublicPackage(args: {
   | { ok: true; value: SavedWidgetPublicPackage }
   | InstancePackageFailure
 > {
-  const materializedMedia = await materializePublicPackageMedia({
+  const prepared = await prepareAccountInstancePublicPackage({
     accountId: args.accountId,
     accountCapsule: args.accountCapsule,
     requestId: args.requestId,
     config: args.config,
   });
+  if (!prepared.ok) return prepared;
+
+  return buildSavedWidgetPublicPackage({
+    compiled: args.compiled,
+    accountId: args.accountId,
+    instanceId: args.instanceId,
+    baseLocale: args.baseLocale,
+    displayName: args.displayName,
+    state: prepared.value.state,
+    typographyData: prepared.value.typographyData,
+  });
+}
+
+export async function prepareAccountInstancePublicPackage(args: {
+  accountId: string;
+  accountCapsule: string;
+  requestId: string;
+  config: Record<string, unknown>;
+}): Promise<
+  | { ok: true; value: PreparedAccountInstancePublicPackage }
+  | InstancePackageFailure
+> {
+  const materializedMedia = await materializePublicPackageMedia(args);
   if (!materializedMedia.ok) return materializedMedia;
   const typographyData = await resolveRuntimeTypographyData({
     accountId: args.accountId,
@@ -555,16 +583,13 @@ export async function materializeAccountInstancePublicPackage(args: {
     state: materializedMedia.state,
   });
   if (!typographyData.ok) return typographyData;
-
-  return buildSavedWidgetPublicPackage({
-    compiled: args.compiled,
-    accountId: args.accountId,
-    instanceId: args.instanceId,
-    baseLocale: args.baseLocale,
-    displayName: args.displayName,
-    state: materializedMedia.state,
-    typographyData: typographyData.typographyData,
-  });
+  return {
+    ok: true,
+    value: {
+      state: materializedMedia.state,
+      typographyData: typographyData.typographyData,
+    },
+  };
 }
 
 export async function materializeAccountInstanceLocalePublicPackage(args: {
@@ -579,6 +604,7 @@ export async function materializeAccountInstanceLocalePublicPackage(args: {
   displayName: string | null;
   config: Record<string, unknown>;
   overlayValues: Record<string, string>;
+  prepared?: PreparedAccountInstancePublicPackage;
 }): Promise<
   | { ok: true; value: SavedWidgetPublicPackageBuildResult }
   | InstancePackageFailure
@@ -589,20 +615,15 @@ export async function materializeAccountInstanceLocalePublicPackage(args: {
   if (!args.activeLocales.includes(args.requestedLocale)) {
     return validationFailure('coreui.errors.instance.content.invalid', 'locale_package_inactive_locale');
   }
-  const materializedMedia = await materializePublicPackageMedia({
-    accountId: args.accountId,
-    accountCapsule: args.accountCapsule,
-    requestId: args.requestId,
-    config: args.config,
-  });
-  if (!materializedMedia.ok) return materializedMedia;
-  const typographyData = await resolveRuntimeTypographyData({
-    accountId: args.accountId,
-    accountCapsule: args.accountCapsule,
-    requestId: args.requestId,
-    state: materializedMedia.state,
-  });
-  if (!typographyData.ok) return typographyData;
+  const prepared = args.prepared
+    ? { ok: true as const, value: args.prepared }
+    : await prepareAccountInstancePublicPackage({
+        accountId: args.accountId,
+        accountCapsule: args.accountCapsule,
+        requestId: args.requestId,
+        config: args.config,
+      });
+  if (!prepared.ok) return prepared;
 
   return buildSavedWidgetLocalePackageResult({
     compiled: args.compiled,
@@ -611,8 +632,8 @@ export async function materializeAccountInstanceLocalePublicPackage(args: {
     baseLocale: args.baseLocale,
     requestedLocale: args.requestedLocale,
     displayName: args.displayName,
-    state: materializedMedia.state,
-    typographyData: typographyData.typographyData,
+    state: prepared.value.state,
+    typographyData: prepared.value.typographyData,
     overlayValues: args.overlayValues,
   });
 }

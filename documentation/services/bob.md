@@ -248,10 +248,10 @@ operation is running, Bob disables the button and displays transient Agent
 Activity rows authored by the Translation Agent while overlays are written. When
 the operation returns, the transient Agent Activity UI disappears and Bob shows
 durable command-result feedback from Roma's response: success, no accepted
-work, command failure, or partial locale-package failure/skips. If overlays were
+work, command failure, or exact locale-package failures. If overlays were
 accepted, Bob refreshes the previewable translated locales from overlay truth.
-Bob reads `localePackages` only to explain package follow-up failure or skipped
-work; overlay source remains the translation truth.
+Bob reads `localePackages` only to explain package follow-up failures; overlay
+source remains the translation truth.
 
 Bob does not create persistent translation jobs, poll operation status, or
 invent locale authority. Bob also does not expose user translation overrides or

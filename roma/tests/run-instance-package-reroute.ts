@@ -24,7 +24,10 @@ import {
   materializeAccountInstancePublicPackage,
   readWidgetForInstancePackage,
 } from '../lib/account-instance-public-package';
-import { buildLocalePackageMaterializationFailure } from '../lib/account-instance-locale-package';
+import {
+  buildLocalePackageMaterializationFailure,
+  runLocalePackagePool,
+} from '../lib/account-instance-locale-package';
 import { buildLocalePackageDeleteFailureCoordinate } from '../lib/account-locale-overlay-update';
 
 const repoRoot = path.resolve(fileURLToPath(new URL('../..', import.meta.url)));
@@ -567,6 +570,12 @@ async function testLocaleMaterializationRouteWiring(): Promise<void> {
 
   const localePackageHelper = await readRouteSource('roma/lib/account-instance-locale-package.ts');
   assert.doesNotMatch(localePackageHelper, /package-materializing|Writing \$\{locale\} package|locale-completed/);
+  assert.equal(
+    localePackageHelper.match(/const prepared = await prepareAccountInstancePublicPackage\(/g)?.length,
+    1,
+    'shared package inputs must be prepared once per locale batch',
+  );
+  assert.match(localePackageHelper, /prepared: prepared\.value/);
 
   const settingsRoute = await readRouteSource('roma/app/api/account/locales/route.ts');
   assert.match(settingsRoute, /materializeAccountInstanceLocalePackages\(\{/);
@@ -575,58 +584,79 @@ async function testLocaleMaterializationRouteWiring(): Promise<void> {
   assert.match(settingsRoute, /locale-package-materialize/);
 }
 
+async function testLocalePackagePool(): Promise<void> {
+  let active = 0;
+  let maxActive = 0;
+  const locales = ['fr', 'de', 'it', 'es', 'pt', 'nl', 'sv', 'da'];
+  const results = await runLocalePackagePool({
+    locales,
+    run: async (locale) => {
+      active += 1;
+      maxActive = Math.max(maxActive, active);
+      try {
+        await new Promise((resolve) => setTimeout(resolve, 5));
+        if (locale === 'it') throw new Error('unexpected_it_failure');
+        return `completed:${locale}`;
+      } finally {
+        active -= 1;
+      }
+    },
+    onUnexpectedError: (locale, error) =>
+      `failed:${locale}:${error instanceof Error ? error.message : String(error)}`,
+  });
+  assert.equal(maxActive, 4);
+  assert.deepEqual(results, [
+    'completed:fr',
+    'completed:de',
+    'failed:it:unexpected_it_failure',
+    'completed:es',
+    'completed:pt',
+    'completed:nl',
+    'completed:sv',
+    'completed:da',
+  ]);
+}
+
 async function testLocalePackageFailureCoordinates(): Promise<void> {
   const result = buildLocalePackageMaterializationFailure({
     status: 409,
     kind: 'VALIDATION',
     reasonKey: 'coreui.errors.instance.embedNotReady',
     detail: 'write_failed',
-    completed: [
-      {
-        accountId: 'CLICKEEN',
-        instanceId: 'inst_faq',
-        locale: 'fr',
-        publicPackageFingerprint: 'sha256:stored',
-      },
-    ],
-    remainingLocales: ['it', 'de'],
+    locales: ['es', 'it', 'de'],
     accountId: 'CLICKEEN',
     instanceId: 'inst_faq',
-    locale: 'es',
     phase: 'package-write',
   });
   assert.equal(result.ok, false);
   assert.equal(result.value.ok, false);
-  assert.deepEqual(result.value.completed, [
+  assert.deepEqual(result.value.completed, []);
+  assert.deepEqual(result.value.failed, [
     {
       accountId: 'CLICKEEN',
       instanceId: 'inst_faq',
-      locale: 'fr',
-      publicPackageFingerprint: 'sha256:stored',
+      locale: 'es',
+      phase: 'package-write',
+      reasonKey: 'coreui.errors.instance.embedNotReady',
+      detail: 'write_failed',
     },
-  ]);
-  assert.deepEqual(result.value.skipped, [
     {
       accountId: 'CLICKEEN',
       instanceId: 'inst_faq',
       locale: 'it',
-      phase: 'not-attempted-after-failure',
+      phase: 'package-write',
+      reasonKey: 'coreui.errors.instance.embedNotReady',
+      detail: 'write_failed',
     },
     {
       accountId: 'CLICKEEN',
       instanceId: 'inst_faq',
       locale: 'de',
-      phase: 'not-attempted-after-failure',
+      phase: 'package-write',
+      reasonKey: 'coreui.errors.instance.embedNotReady',
+      detail: 'write_failed',
     },
   ]);
-  assert.deepEqual(result.value.failed, {
-    accountId: 'CLICKEEN',
-    instanceId: 'inst_faq',
-    locale: 'es',
-    phase: 'package-write',
-    reasonKey: 'coreui.errors.instance.embedNotReady',
-    detail: 'write_failed',
-  });
 
   assert.deepEqual(
     buildLocalePackageDeleteFailureCoordinate({
@@ -719,6 +749,7 @@ const tests: Array<{ name: string; run: () => Promise<void> }> = [
   { name: 'locale package materializer wrapper', run: testLocalePackageMaterializerWrapper },
   { name: 'locale package rejects base and inactive locales', run: testLocalePackageRejectsBaseAndInactiveLocales },
   { name: 'locale materialization route wiring', run: testLocaleMaterializationRouteWiring },
+  { name: 'locale package bounded pool', run: testLocalePackagePool },
   { name: 'locale package failure coordinates', run: testLocalePackageFailureCoordinates },
   { name: 'Tokyo locale package storage wiring', run: testTokyoLocalePackageStorageWiring },
   { name: 'base rejects overlay', run: testMaterializerRejectsOverlayAtBase },

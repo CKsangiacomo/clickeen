@@ -134,8 +134,7 @@ export function buildTranslationGenerationFeedback(response: TranslationCommandR
   const activeLocales = readStringArray(translation?.activeLocales);
   const skippedLocales = readStringArray(translation?.skippedLocales);
   const packageCompleted = readObjectArray(localePackages?.completed);
-  const packageSkipped = readObjectArray(localePackages?.skipped);
-  const packageFailed = isRecord(localePackages?.failed) ? localePackages.failed : null;
+  const packageFailures = readObjectArray(localePackages?.failed);
 
   if (!response.ok && !accepted) {
     return {
@@ -164,17 +163,20 @@ export function buildTranslationGenerationFeedback(response: TranslationCommandR
         ? `Generated translations for ${formatCount(activeLocales.length, 'language')}.`
         : 'Generated translations.';
 
-  if (packageFailed) {
-    const failedLocale =
-      typeof packageFailed.locale === 'string' && packageFailed.locale.trim()
-        ? resolveLocaleLabel(packageFailed.locale)
-        : 'one language';
+  if (packageFailures.length > 0) {
+    const failedLocales = packageFailures.flatMap((failure) =>
+      typeof failure.locale === 'string' && failure.locale.trim() ? [failure.locale] : [],
+    );
+    const failedLocaleCopy = summarizeLocaleList(failedLocales);
+    const firstFailure = packageFailures[0]!;
     const lines = [
       generatedCopy,
-      `The public package for ${failedLocale} failed while ${resolvePackagePhaseCopy(packageFailed.phase)}.`,
+      failedLocaleCopy
+        ? `Public packages failed for ${failedLocaleCopy}.`
+        : `${formatCount(packageFailures.length, 'public package')} failed.`,
     ];
-    if (packageSkipped.length > 0) {
-      lines.push(`${formatCount(packageSkipped.length, 'remaining language')} not attempted after that failure.`);
+    if (packageFailures.length === 1) {
+      lines.push(`The failure happened while ${resolvePackagePhaseCopy(firstFailure.phase)}.`);
     }
     return {
       tone: 'warning',
@@ -183,11 +185,11 @@ export function buildTranslationGenerationFeedback(response: TranslationCommandR
     };
   }
 
-  if (packageSkipped.length > 0 || skippedLocales.length > 0) {
+  if (skippedLocales.length > 0) {
     const skippedLabels = summarizeLocaleList(skippedLocales);
     const skippedCopy = skippedLabels
       ? `Skipped ${skippedLabels}.`
-      : `${formatCount(packageSkipped.length || skippedLocales.length, 'language')} skipped.`;
+      : `${formatCount(skippedLocales.length, 'language')} skipped.`;
     return {
       tone: 'warning',
       title: 'Translations partially generated',

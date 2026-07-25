@@ -144,7 +144,7 @@ Save response:
           "publicPackageFingerprint": "sha256:[fingerprint]"
         }
       ],
-      "skipped": []
+      "failed": []
     }
   }
 }
@@ -171,7 +171,15 @@ If overlay follow-up fails after the setting is saved, the same response uses
     "localePackages": {
       "deleted": [],
       "generated": [],
-      "skipped": []
+      "failed": [
+        {
+          "accountId": "[account public id]",
+          "instanceId": "[instance id]",
+          "locale": "[failed locale]",
+          "phase": "[failure phase]",
+          "reasonKey": "[reason key]"
+        }
+      ]
     },
     "error": {
       "kind": "UPSTREAM_UNAVAILABLE",
@@ -186,8 +194,9 @@ When active locales shrink, Roma saves the account setting first and then asks
 Tokyo-worker to delete exact overlay files and generated locale package files
 for removed locales. When active locales expand, Roma saves the account setting
 first, asks the Translation Agent to generate overlays for added locales one
-locale at a time, then materializes generated locale package bytes for those
-same locales. Per-locale execution prevents a batch failure from being assigned
+locale at a time, then prepares shared package inputs once and materializes the
+generated locale package bytes with bounded concurrency. Exact per-locale
+completion and failure coordinates prevent a batch failure from being assigned
 to an inferred locale.
 
 If overlay follow-up fails after the settings write, Roma reports
@@ -418,7 +427,9 @@ save persists the source and base package, then returns source-save truth.
 Translation update remains an explicit operation from Bob's Translations panel
 through Roma's translation route and the Translation Agent. After accepted
 overlay generation, the translation route materializes matching locale package
-bytes for the generated locales and reports exact `localePackages` coordinates
+bytes for the generated locales. Roma resolves shared media and typography once,
+then materializes up to four locale packages concurrently and reports exact
+`localePackages.completed` and `localePackages.failed` coordinates
 if package write or public cache refresh fails. Bob may surface
 stale-translation attention only from exact stale-translation evidence; it must
 not infer that state from runtime package probes, active locale count alone, or
