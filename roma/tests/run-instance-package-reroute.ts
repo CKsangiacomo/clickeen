@@ -269,6 +269,17 @@ async function testBuilderUsesSavedInstancePackage(): Promise<void> {
     existsSync(path.join(repoRoot, 'bob/app/widgets/[...path]/route.ts')),
     false,
   );
+
+  const sourceStorage = await readRouteSource(
+    'tokyo-worker/src/domains/account-instances/source.ts',
+  );
+  const contentWrite = sourceStorage.indexOf(
+    'putJson(args.env, accountInstanceContentKey(accountId, widgetCode, instanceId), content)',
+  );
+  const configWrite = sourceStorage.indexOf(
+    'putJson(args.env, accountInstanceConfigKey(accountId, widgetCode, instanceId), configDoc)',
+  );
+  assert.ok(contentWrite >= 0 && configWrite > contentWrite);
 }
 
 async function testInstanceMetaRemovedContract(): Promise<void> {

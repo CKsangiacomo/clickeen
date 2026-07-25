@@ -256,8 +256,8 @@ export async function writeAccountInstanceSource(args: {
     createdAt: existingConfig?.createdAt ?? now,
     updatedAt: now,
   };
-  await putJson(args.env, accountInstanceConfigKey(accountId, widgetCode, instanceId), configDoc);
   await putJson(args.env, accountInstanceContentKey(accountId, widgetCode, instanceId), content);
+  await putJson(args.env, accountInstanceConfigKey(accountId, widgetCode, instanceId), configDoc);
   if (!existingConfig) {
     await createInstanceServeState({
       env: args.env,

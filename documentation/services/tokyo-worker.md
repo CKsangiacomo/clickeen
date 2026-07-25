@@ -134,6 +134,11 @@ and package agreement. Existing unmarked source and unmarked package files remai
 readable until the instance is saved again; any marked/unmarked mix fails closed.
 Tokyo-worker does not rebuild or restore package bytes.
 
+On source save, Tokyo-worker writes `instance.content.json` before
+`instance.config.json`. The config document carries the package fingerprint and
+is the source commit marker, so readers cannot accept a new package with
+partially written source.
+
 The stable public coordinate is:
 
 ```text
