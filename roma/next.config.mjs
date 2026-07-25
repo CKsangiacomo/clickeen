@@ -31,19 +31,6 @@ const nextConfig = {
   },
   outputFileTracingRoot: repoRoot,
   distDir: isDev ? '.next-dev' : '.next',
-  async headers() {
-    return [
-      {
-        source: '/widget-editors/:path*',
-        headers: [
-          {
-            key: 'Cache-Control',
-            value: 'public, max-age=300, s-maxage=3600, stale-while-revalidate=86400',
-          },
-        ],
-      },
-    ];
-  },
   async rewrites() {
     if (!tokyoBase) return [];
     return [
