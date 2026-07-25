@@ -202,15 +202,19 @@ async function putInstancePublicPackageFiles(args: {
   customMetadata?: Record<string, string>;
 }): Promise<void> {
   const root = instanceRoot(args.accountId, args.instanceId);
-  for (const file of filesFromSubmittedPackage(args.publicPackage)) {
-    await args.env.TOKYO_R2.put(args.keyForFile ? args.keyForFile(file.name) : `${root}/${file.name}`, file.body, {
-      httpMetadata: { contentType: file.contentType },
-      customMetadata: {
-        [PUBLIC_PACKAGE_FINGERPRINT_METADATA_KEY]: args.fingerprint,
-        ...(args.customMetadata ?? {}),
-      },
-    });
-  }
+  const writes = await Promise.allSettled(
+    filesFromSubmittedPackage(args.publicPackage).map((file) =>
+      args.env.TOKYO_R2.put(args.keyForFile ? args.keyForFile(file.name) : `${root}/${file.name}`, file.body, {
+        httpMetadata: { contentType: file.contentType },
+        customMetadata: {
+          [PUBLIC_PACKAGE_FINGERPRINT_METADATA_KEY]: args.fingerprint,
+          ...(args.customMetadata ?? {}),
+        },
+      }),
+    ),
+  );
+  const failed = writes.find((write): write is PromiseRejectedResult => write.status === 'rejected');
+  if (failed) throw failed.reason;
 }
 
 export async function writeInstancePublicPackage(args: {

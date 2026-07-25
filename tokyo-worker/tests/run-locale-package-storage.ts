@@ -5,6 +5,7 @@ import {
 import {
   deleteInstanceLocalePackage,
   writeInstanceLocalePackage,
+  writeInstancePublicPackage,
 } from '../src/domains/account-instances/package-files';
 
 type StoredObject = {
@@ -13,19 +14,37 @@ type StoredObject = {
   customMetadata?: Record<string, string>;
 };
 
-function createEnv() {
+function createEnv(config: { putDelayMs?: number; failFileName?: string } = {}) {
   const objects = new Map<string, StoredObject>();
+  let activePuts = 0;
+  let maxConcurrentPuts = 0;
+  let settledPuts = 0;
   return {
     objects,
+    getMaxConcurrentPuts: () => maxConcurrentPuts,
+    getSettledPuts: () => settledPuts,
     env: {
       TOKYO_R2: {
         async put(key: string, body: string, options?: { httpMetadata?: { contentType?: string }; customMetadata?: Record<string, string> }) {
-          objects.set(key, {
-            body,
-            httpMetadata: options?.httpMetadata,
-            customMetadata: options?.customMetadata,
-          });
-          return {};
+          activePuts += 1;
+          maxConcurrentPuts = Math.max(maxConcurrentPuts, activePuts);
+          try {
+            if (config.putDelayMs) {
+              await new Promise((resolve) => setTimeout(resolve, config.putDelayMs));
+            }
+            if (config.failFileName && key.endsWith(`/${config.failFileName}`)) {
+              throw new Error(`forced_${config.failFileName}_failure`);
+            }
+            objects.set(key, {
+              body,
+              httpMetadata: options?.httpMetadata,
+              customMetadata: options?.customMetadata,
+            });
+            return {};
+          } finally {
+            activePuts -= 1;
+            settledPuts += 1;
+          }
         },
         async get(key: string) {
           const object = objects.get(key);
@@ -97,6 +116,78 @@ async function testLocalePackageWriteMetadataAndDelete(): Promise<void> {
   assert.equal(objects.size, 0);
 }
 
+async function testLocalePackageWritesFilesConcurrently(): Promise<void> {
+  const { env, objects, getMaxConcurrentPuts } = createEnv({ putDelayMs: 5 });
+  const result = await writeInstanceLocalePackage({
+    env: env as never,
+    accountId: 'CLICKEEN',
+    instanceId: 'inst_concurrent_storage',
+    baseLocale: 'en',
+    locale: 'fr',
+    sourceUpdatedAt: '2026-06-25T00:00:00.000Z',
+    materializerContractVersion: 'ck-runtime-materializer:124B',
+    publicPackage: {
+      indexHtml: '<!doctype html><html lang="fr"></html>',
+      stylesCss: '.root{}',
+      runtimeJs: 'var selectedLocale = "fr";',
+    },
+  });
+  assert.equal(result.ok, true, JSON.stringify(result));
+  assert.equal(getMaxConcurrentPuts(), 3);
+  assert.equal(objects.size, 3);
+}
+
+async function testBasePackageWritesFilesConcurrently(): Promise<void> {
+  const { env, objects, getMaxConcurrentPuts } = createEnv({ putDelayMs: 5 });
+  const result = await writeInstancePublicPackage({
+    env: env as never,
+    accountId: 'CLICKEEN',
+    instanceId: 'inst_concurrent_base',
+    publicPackage: {
+      indexHtml: '<!doctype html><html lang="en"></html>',
+      stylesCss: '.root{}',
+      runtimeJs: 'var selectedLocale = "en";',
+    },
+  });
+  assert.equal(result.ok, true, JSON.stringify(result));
+  assert.equal(getMaxConcurrentPuts(), 3);
+  assert.equal(objects.size, 3);
+}
+
+async function testPackageWriteFailureWaitsForAllFiles(): Promise<void> {
+  const { env, objects, getMaxConcurrentPuts, getSettledPuts } = createEnv({
+    putDelayMs: 5,
+    failFileName: 'styles.css',
+  });
+  const result = await writeInstanceLocalePackage({
+    env: env as never,
+    accountId: 'CLICKEEN',
+    instanceId: 'inst_failed_storage',
+    baseLocale: 'en',
+    locale: 'fr',
+    sourceUpdatedAt: '2026-06-25T00:00:00.000Z',
+    materializerContractVersion: 'ck-runtime-materializer:124B',
+    publicPackage: {
+      indexHtml: '<!doctype html><html lang="fr"></html>',
+      stylesCss: '.root{}',
+      runtimeJs: 'var selectedLocale = "fr";',
+    },
+  });
+  assert.equal(result.ok, false, JSON.stringify(result));
+  if (result.ok) return;
+  assert.equal(result.reasonKey, 'artifact.package_write_failed');
+  assert.equal(result.detail, 'forced_styles.css_failure');
+  assert.equal(getMaxConcurrentPuts(), 3);
+  assert.equal(getSettledPuts(), 3);
+  assert.deepEqual(
+    [...objects.keys()].map((key) => key.split('/').at(-1)).sort(),
+    ['index.html', 'runtime.js'],
+  );
+  await new Promise((resolve) => setTimeout(resolve, 10));
+  assert.equal(getSettledPuts(), 3);
+  assert.equal(objects.size, 2);
+}
+
 async function testBaseLocalePackageWriteRejected(): Promise<void> {
   const { env, objects } = createEnv();
   const result = await writeInstanceLocalePackage({
@@ -147,6 +238,9 @@ function testLocalePurgeFilesIncludeEntryAndSupportFiles(): void {
 
 const tests: Array<{ name: string; run: () => Promise<void> }> = [
   { name: 'locale package write metadata and delete', run: testLocalePackageWriteMetadataAndDelete },
+  { name: 'locale package writes files concurrently', run: testLocalePackageWritesFilesConcurrently },
+  { name: 'base package writes files concurrently', run: testBasePackageWritesFilesConcurrently },
+  { name: 'package write failure waits for all files', run: testPackageWriteFailureWaitsForAllFiles },
   { name: 'base locale package write rejected', run: testBaseLocalePackageWriteRejected },
   { name: 'locale purge files include entry and support files', run: async () => testLocalePurgeFilesIncludeEntryAndSupportFiles() },
 ];

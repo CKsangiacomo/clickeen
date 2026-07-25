@@ -114,7 +114,8 @@ Tokyo-worker stores these bytes and their locale package metadata; it does not
 generate them. Public `clk.live` locale URLs serve these stored bytes only when
 the instance is published and all three locale package files carry matching
 coordinate, source timestamp, package fingerprint, and materializer contract
-metadata.
+metadata. Tokyo writes the three independent package files concurrently; the
+matching metadata remains the fail-closed package boundary.
 
 Translation Agent writes translated locale values through Tokyo-worker with the
 Roma-issued Translation Agent grant. Tokyo-worker verifies that the grant names
