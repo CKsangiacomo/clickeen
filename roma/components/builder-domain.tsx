@@ -98,6 +98,11 @@ type BobOpenEditorMessage = {
   widgetname: string;
   compiled: unknown;
   instanceData: Record<string, unknown>;
+  publicPackage: {
+    indexHtml: string;
+    stylesCss: string;
+    runtimeJs: string;
+  };
   fontLibrary: AccountFontLibrary;
   publishStatus?: 'published' | 'unpublished';
   policy?: unknown;
@@ -116,6 +121,11 @@ type BuilderOpenResponse = {
   displayName: string;
   widgetType: string;
   config: Record<string, unknown>;
+  publicPackage: {
+    indexHtml: string;
+    stylesCss: string;
+    runtimeJs: string;
+  };
   fontLibrary: AccountFontLibrary;
   publishStatus?: 'published' | 'unpublished';
   copilot?: unknown;
@@ -716,6 +726,7 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
         widgetname: widgetType,
         compiled,
         instanceData: config,
+        publicPackage: builderOpen.publicPackage,
         fontLibrary: builderOpen.fontLibrary,
         publishStatus: builderOpen.publishStatus,
         policy: accountPolicy,

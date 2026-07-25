@@ -33,10 +33,22 @@ export type AccountInstanceCoreRow = {
   accountId: string;
   widgetType: string;
   baseLocale?: string;
+  publicPackageFingerprint: string;
   publishStatus?: AccountInstanceLiveStatus;
 };
 
 export type AccountInstanceLiveStatus = 'published' | 'unpublished';
+
+export type AccountInstancePublicPackage = {
+  indexHtml: string;
+  stylesCss: string;
+  runtimeJs: string;
+};
+
+export type AccountInstancePublicPackageRead = {
+  publicPackageFingerprint: string;
+  publicPackage: AccountInstancePublicPackage;
+};
 
 export type AccountWidgetInstanceListFact = {
   accountId: string;
@@ -224,7 +236,8 @@ function normalizeAccountInstancePayload(payload: unknown): {
   const instanceId = asTrimmedString(payload.instanceId ?? payload.id);
   const accountId = asTrimmedString(payload.accountId);
   const widgetType = asTrimmedString(payload.widgetType);
-  if (!instanceId || !accountId || !widgetType) return null;
+  const publicPackageFingerprint = asTrimmedString(payload.publicPackageFingerprint);
+  if (!instanceId || !accountId || !widgetType || !publicPackageFingerprint) return null;
   return {
     row: {
       instanceId,
@@ -235,6 +248,7 @@ function normalizeAccountInstancePayload(payload: unknown): {
       accountId,
       widgetType,
       baseLocale: asTrimmedString(payload.baseLocale) ?? undefined,
+      publicPackageFingerprint,
       publishStatus:
         payload.publishStatus === 'published'
           ? 'published'
@@ -246,6 +260,35 @@ function normalizeAccountInstancePayload(payload: unknown): {
       config: sourceConfig,
       content: sourceContent,
     }),
+  };
+}
+
+function normalizeAccountInstancePublicPackagePayload(
+  payload: unknown,
+  expectedAccountId: string,
+  expectedInstanceId: string,
+): AccountInstancePublicPackageRead | null {
+  if (!isRecord(payload) || payload.ok !== true) return null;
+  if (
+    asTrimmedString(payload.accountId) !== expectedAccountId ||
+    asTrimmedString(payload.instanceId) !== expectedInstanceId ||
+    !isRecord(payload.publicPackage)
+  ) {
+    return null;
+  }
+  const { indexHtml, stylesCss, runtimeJs } = payload.publicPackage;
+  const publicPackageFingerprint = asTrimmedString(payload.publicPackageFingerprint);
+  if (
+    !publicPackageFingerprint ||
+    typeof indexHtml !== 'string' ||
+    typeof stylesCss !== 'string' ||
+    typeof runtimeJs !== 'string'
+  ) {
+    return null;
+  }
+  return {
+    publicPackageFingerprint,
+    publicPackage: { indexHtml, stylesCss, runtimeJs },
   };
 }
 
@@ -615,6 +658,30 @@ export async function loadTokyoAccountInstanceDocument<TRow extends AccountInsta
       config: saved.value.config,
     },
   };
+}
+
+export async function loadTokyoAccountInstancePublicPackage(args: {
+  accountId: string;
+  instanceId: string;
+  accountCapsule?: string | null;
+  internalServiceName?: string | null;
+  requestId?: string | null;
+}): Promise<{ ok: true; value: AccountInstancePublicPackageRead } | RouteFailure> {
+  const result = await callTokyo(tokyoCallContext(args), {
+    path: `/__internal/instances/${encodeURIComponent(args.instanceId)}/package`,
+    method: 'GET',
+    decode: (payload) => payload,
+    errorDetail: 'tokyo_instance_package_read_http_error',
+    errorKey: 'coreui.errors.db.readFailed',
+  });
+  if (!result.ok) return result;
+  const publicPackage = normalizeAccountInstancePublicPackagePayload(
+    result.value,
+    args.accountId,
+    args.instanceId,
+  );
+  if (!publicPackage) return invalidTokyoPayload('invalid Tokyo account instance package payload');
+  return { ok: true, value: publicPackage };
 }
 
 export async function listAccountWidgetInstanceIds(args: {

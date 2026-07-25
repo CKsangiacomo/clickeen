@@ -231,6 +231,7 @@ export async function tryHandleInternalInstanceRoutes(
             displayName: created.pointer.displayName,
             publishStatus: created.pointer.publishStatus,
             updatedAt: created.pointer.updatedAt,
+            publicPackageFingerprint: created.pointer.publicPackageFingerprint,
             source: {
               config: created.config,
               content: created.content,
@@ -401,7 +402,15 @@ export async function tryHandleInternalInstanceRoutes(
           ),
         );
       }
-      return respond(json({ ok: true, accountId, instanceId, publicPackage }));
+      return respond(
+        json({
+          ok: true,
+          accountId,
+          instanceId,
+          publicPackageFingerprint: pointer.value.publicPackageFingerprint,
+          publicPackage,
+        }),
+      );
     } catch (error) {
       const detail = error instanceof Error ? error.message : String(error);
       return respond(
@@ -548,6 +557,7 @@ export async function tryHandleInternalInstanceRoutes(
           publishStatus: pointer.publishStatus,
           updatedAt: pointer.updatedAt,
           baseLocale: pointer.baseLocale,
+          publicPackageFingerprint: pointer.publicPackageFingerprint,
           source: {
             config: source.value.config,
             content: source.value.content,

@@ -6,6 +6,7 @@ import {
   type ResolvedAccountAsset,
 } from '@clickeen/ck-contracts';
 import type { AccountFontLibrary, RuntimeTypographyData } from '@clickeen/widget-shell';
+import type { InstancePublicPackage } from '../lib/session/sessionTypes';
 import { useWidgetSession, useWidgetSessionChrome } from '../lib/session/useWidgetSession';
 
 const BLOCKED_SWITCHER_COPY =
@@ -67,6 +68,23 @@ function buildPreviewTypographyData(args: {
   return { ok: true, data: { curatedFonts } };
 }
 
+function buildPreviewDocument(
+  publicPackage: InstancePublicPackage,
+  runtimeUrl: string,
+): string {
+  const document = new DOMParser().parseFromString(publicPackage.indexHtml, 'text/html');
+  const stylesheet = document.querySelector('link[rel="stylesheet"]');
+  const runtime = document.querySelector('script[src]');
+  if (!stylesheet || !runtime) {
+    throw new Error('coreui.errors.instance.publicPackageNotFound');
+  }
+  const style = document.createElement('style');
+  style.textContent = publicPackage.stylesCss;
+  stylesheet.replaceWith(style);
+  runtime.setAttribute('src', runtimeUrl);
+  return `<!doctype html>\n${document.documentElement.outerHTML}`;
+}
+
 export function Workspace({
   baseLocale,
   previewMode,
@@ -88,12 +106,12 @@ export function Workspace({
 }) {
   const session = useWidgetSession();
   const chrome = useWidgetSessionChrome();
-  const { accountAssets, compiled, fontLibrary, instanceData } = session;
+  const { accountAssets, compiled, fontLibrary, instanceData, publicPackage } = session;
   const { preview, setPreview } = chrome;
   const instanceId = chrome.meta?.instanceId ?? '';
   const device = preview.device;
   const host = preview.host;
-  const hasWidget = Boolean(compiled);
+  const hasWidget = Boolean(compiled && publicPackage);
   const stageCanvas = (instanceData as { stage?: { canvas?: { mode?: unknown; width?: unknown; height?: unknown } } }).stage?.canvas;
   const stageMode = stageCanvas?.mode === 'wrap' || stageCanvas?.mode === 'fixed' ? stageCanvas.mode : null;
   const [stageFixedWidth, stageFixedHeight] = [stageCanvas?.width, stageCanvas?.height].map((value) => typeof value === 'number' && Number.isFinite(value) ? value : Number.NaN);
@@ -283,11 +301,6 @@ export function Workspace({
     return () => window.clearTimeout(timer);
   }, [switcherNotice]);
 
-  const iframeSrc = useMemo(() => {
-    if (!hasWidget || !compiled) return 'about:blank';
-    return compiled.media.htmlUrl;
-  }, [hasWidget, compiled]);
-
   const iframeBackdrop = (() => {
     const raw = (previewInstanceData as any)?.stage?.background;
     if (typeof raw !== 'string') return undefined;
@@ -320,7 +333,18 @@ export function Workspace({
 
   useEffect(() => {
     const iframe = iframeRef.current;
-    if (!iframe) return;
+    if (!iframe || !publicPackage) return;
+    const runtimeUrl = URL.createObjectURL(
+      new Blob([publicPackage.runtimeJs], { type: 'text/javascript' }),
+    );
+    let previewDocument: string;
+    try {
+      previewDocument = buildPreviewDocument(publicPackage, runtimeUrl);
+    } catch (error) {
+      URL.revokeObjectURL(runtimeUrl);
+      setIframeLoadError(error instanceof Error ? error.message : String(error));
+      return;
+    }
 
     const handleLoad = () => {
       setIframeLoaded(true);
@@ -355,13 +379,14 @@ export function Workspace({
     setIframeLoaded(false);
     setIframeHasState(false);
     setIframeLoadError(null);
-    iframe.src = iframeSrc;
+    iframe.srcdoc = previewDocument;
 
     return () => {
       iframe.removeEventListener('load', handleLoad);
       iframe.removeEventListener('error', handleError);
+      URL.revokeObjectURL(runtimeUrl);
     };
-  }, [iframeSrc, previewDependenciesReady]);
+  }, [publicPackage]);
 
   useEffect(() => {
     if (!hasWidget || !compiled) return;

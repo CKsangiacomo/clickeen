@@ -151,12 +151,13 @@ Current account-governance routes include:
 Builder opens one saved widget instance:
 
 1. Resolve the current Roma account and `instanceId`.
-2. Load the Builder-open envelope through `GET /api/builder/:instanceId/open`.
+2. Load the saved instance source, saved public package, and account font
+   library in parallel through `GET /api/builder/:instanceId/open`.
 3. Load the deploy-built widget editor artifact.
 4. Wait for Bob `bob:session-ready`.
 5. Send `ck:open-editor` with deploy-built editor software, saved instance data,
-   account font library, policy, account public id, instance id, label, and
-   source.
+   the exact saved `index.html`, `styles.css`, and `runtime.js` package, account
+   font library, policy, account public id, instance id, label, and source.
 6. Receive `bob:open-editor-applied` or `bob:open-editor-failed`.
 
 `NEXT_PUBLIC_BOB_URL` is required and must be an `http` or `https` origin with
@@ -170,6 +171,9 @@ saved source plus generated package under:
 ```text
 accounts/{accountPublicId}/instances/{instanceId}/
 ```
+
+The Builder preview uses that same saved package as its runtime base. Roma does
+not provide a second source-widget preview package.
 
 Create, save, and duplicate all use the same package contract: Roma reads the
 server-only materializer artifact generated from canonical widget source at

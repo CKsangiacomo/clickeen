@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { existsSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -245,6 +246,29 @@ async function testCreateSaveDuplicateRoutePackageSubmission(): Promise<void> {
   const duplicateRoute = await readRouteSource('roma/app/api/account/instances/[instanceId]/duplicate/route.ts');
   assert.match(duplicateRoute, /const instanceId = createCompactInstanceId\(\);/);
   assert.match(duplicateRoute, /instanceId,\n\s+baseLocale,/);
+}
+
+async function testBuilderUsesSavedInstancePackage(): Promise<void> {
+  const builderOpen = await readRouteSource('roma/lib/builder-open.ts');
+  assert.match(builderOpen, /Promise\.all\(\[/);
+  assert.match(builderOpen, /loadTokyoAccountInstancePublicPackage\(\{/);
+  assert.match(builderOpen, /publicPackageFingerprint/);
+  assert.match(builderOpen, /publicPackage: publicPackage\.value\.publicPackage/);
+
+  const builderHost = await readRouteSource('roma/components/builder-domain.tsx');
+  assert.match(builderHost, /publicPackage: builderOpen\.publicPackage/);
+
+  const workspace = await readRouteSource('bob/components/Workspace.tsx');
+  assert.match(workspace, /buildPreviewDocument\(publicPackage, runtimeUrl\)/);
+  assert.match(workspace, /iframe\.srcdoc = previewDocument/);
+  assert.doesNotMatch(workspace, /compiled\.media|\/widgets\//);
+
+  const compiler = await readRouteSource('bob/lib/compiler.server.ts');
+  assert.doesNotMatch(compiler, /htmlUrl|cssUrl|jsUrl/);
+  assert.equal(
+    existsSync(path.join(repoRoot, 'bob/app/widgets/[...path]/route.ts')),
+    false,
+  );
 }
 
 async function testInstanceMetaRemovedContract(): Promise<void> {
@@ -673,6 +697,7 @@ const tests: Array<{ name: string; run: () => Promise<void> }> = [
   { name: 'all-widget dual-build parity matrix', run: testAllWidgetDualBuildParity },
   { name: 'Roma adapter input contract', run: testAdapterInputContract },
   { name: 'create/save/duplicate route package submission', run: testCreateSaveDuplicateRoutePackageSubmission },
+  { name: 'Builder uses saved instance package', run: testBuilderUsesSavedInstancePackage },
   { name: 'instance meta removed contract', run: testInstanceMetaRemovedContract },
   { name: 'error mapping', run: testErrorMapping },
   { name: 'byte-exact state serialization', run: testByteExactStateSerialization },

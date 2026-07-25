@@ -77,6 +77,7 @@ export function useSessionBoot(args: {
         const baseLocale = typeof message.baseLocale === 'string' ? message.baseLocale.trim() : '';
         let nextLabel = typeof message.label === 'string' && message.label.trim() ? message.label.trim() : '';
         const rawInstanceData = message.instanceData;
+        const publicPackage = message.publicPackage;
         if (!baseLocale) {
           return {
             ok: false,
@@ -87,6 +88,17 @@ export function useSessionBoot(args: {
           return {
             ok: false,
             error: 'coreui.errors.instance.config.invalid',
+          };
+        }
+        if (
+          !publicPackage ||
+          typeof publicPackage.indexHtml !== 'string' ||
+          typeof publicPackage.stylesCss !== 'string' ||
+          typeof publicPackage.runtimeJs !== 'string'
+        ) {
+          return {
+            ok: false,
+            error: 'coreui.errors.instance.publicPackageNotFound',
           };
         }
         const instanceData = rawInstanceData as Record<string, unknown>;
@@ -121,6 +133,7 @@ export function useSessionBoot(args: {
           ...current,
           compiled,
           instanceData,
+          publicPackage,
           savedInstanceDataSignature,
           isDirty: false,
           error: null,
@@ -155,6 +168,7 @@ export function useSessionBoot(args: {
           ...stateRef.current,
           compiled: null,
           instanceData: {},
+          publicPackage: null,
           savedInstanceDataSignature: serializeInstanceDataSignature({}),
           isDirty: false,
           error: { source: 'load', message: messageText },

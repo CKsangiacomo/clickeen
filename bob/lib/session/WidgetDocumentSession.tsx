@@ -16,6 +16,7 @@ import {
 export type WidgetDocumentSessionValue = {
   compiled: SessionState['compiled'];
   instanceData: SessionState['instanceData'];
+  publicPackage: SessionState['publicPackage'];
   isDirty: SessionState['isDirty'];
   isSaving: SessionState['isSaving'];
   lastUpdate: SessionState['lastUpdate'];
@@ -111,6 +112,7 @@ export function WidgetDocumentSessionProvider({ children }: { children: ReactNod
     () => ({
       compiled: state.compiled,
       instanceData: state.instanceData,
+      publicPackage: state.publicPackage,
       isDirty: state.isDirty,
       isSaving: state.isSaving,
       lastUpdate: state.lastUpdate,

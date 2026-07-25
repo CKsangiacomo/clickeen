@@ -25,11 +25,18 @@ export type PreviewSettings = {
 export type SessionState = {
   compiled: CompiledWidget | null;
   instanceData: Record<string, unknown>;
+  publicPackage: InstancePublicPackage | null;
   savedInstanceDataSignature: string;
   isDirty: boolean;
   isSaving: boolean;
   lastUpdate: UpdateMeta | null;
   error: SessionError | null;
+};
+
+export type InstancePublicPackage = {
+  indexHtml: string;
+  stylesCss: string;
+  runtimeJs: string;
 };
 
 export type SessionMeta = {
@@ -68,6 +75,7 @@ export type EditorOpenMessage = {
   baseLocale: string;
   compiled: CompiledWidget;
   instanceData?: Record<string, unknown> | null;
+  publicPackage?: InstancePublicPackage | null;
   fontLibrary?: AccountFontLibrary | null;
   policy?: Policy;
   accountPublicId?: string;
@@ -157,6 +165,7 @@ export function createInitialSessionState(): SessionState {
   return {
     compiled: null,
     instanceData: {},
+    publicPackage: null,
     savedInstanceDataSignature: serializeInstanceDataSignature({}),
     isDirty: false,
     isSaving: false,

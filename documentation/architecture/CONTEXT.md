@@ -258,8 +258,10 @@ route. They are classified as vector assets by Tokyo-worker.
 ### Builder
 
 1. Roma resolves the current account from the signed session/bootstrap context.
-2. Roma opens one account instance from Tokyo-worker.
-3. Roma hosts Bob and sends one editor-open payload.
+2. Roma opens one account instance and its saved browser package from
+   Tokyo-worker.
+3. Roma hosts Bob and sends one editor-open payload containing the saved source
+   and exact saved package.
 4. Bob edits the active instance in browser memory.
 5. Roma saves the submitted instance package to Tokyo-worker.
 6. Tokyo-worker stores the account instance source and exact package files that

@@ -290,7 +290,6 @@ The widget build compiles each canonical `spec.json` once into:
 
 - `compiled.panels[]`
 - `compiled.controls[]`
-- runtime media URLs
 - editor binding metadata
 - AI context metadata
 
@@ -308,13 +307,17 @@ The editor artifact API is:
 GET /widget-editors/{widgetname}.json
 ```
 
-Bob also has same-origin static proxy routes for editor/runtime resources:
+Bob has same-origin static proxy routes for shared editor/runtime resources:
 
 ```text
-GET /widgets/**
 GET /dieter/**
 GET /l10n/**
 ```
+
+Builder preview does not load widget source through a Bob `/widgets/**` proxy.
+Roma opens the instance with its saved `index.html`, `styles.css`, and
+`runtime.js` package. Bob boots that exact package in the sandboxed iframe, then
+streams unsaved browser-memory state into the running instance runtime.
 
 The Bob-local AI API routes are guard routes only:
 
@@ -395,8 +398,8 @@ no item identity.
 
 ## Preview
 
-Bob preview loads the widget runtime in a sandboxed iframe and streams working
-state updates:
+Bob preview loads the saved instance package in a sandboxed iframe and streams
+working state updates into its runtime:
 
 ```json
 {

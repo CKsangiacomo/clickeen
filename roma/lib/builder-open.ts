@@ -1,5 +1,7 @@
 import {
   loadTokyoAccountInstanceDocument,
+  loadTokyoAccountInstancePublicPackage,
+  type AccountInstancePublicPackage,
 } from './account-instance-direct';
 import {
   loadAccountWidgetDefaultsInTokyo,
@@ -11,6 +13,7 @@ export type BuilderOpenEnvelope = {
   displayName: string;
   widgetType: string;
   config: Record<string, unknown>;
+  publicPackage: AccountInstancePublicPackage;
   fontLibrary: AccountWidgetDefaultsDocument['fontLibrary'];
   publishStatus?: 'published' | 'unpublished';
 };
@@ -32,12 +35,25 @@ export async function loadBuilderOpenEnvelope(args: {
       };
     }
 > {
-  const instance = await loadTokyoAccountInstanceDocument({
-    accountId: args.accountId,
-    instanceId: args.instanceId,
-    accountCapsule: args.accountCapsule,
-    requestId: args.requestId,
-  });
+  const [instance, publicPackage, widgetDefaults] = await Promise.all([
+    loadTokyoAccountInstanceDocument({
+      accountId: args.accountId,
+      instanceId: args.instanceId,
+      accountCapsule: args.accountCapsule,
+      requestId: args.requestId,
+    }),
+    loadTokyoAccountInstancePublicPackage({
+      accountId: args.accountId,
+      instanceId: args.instanceId,
+      accountCapsule: args.accountCapsule,
+      requestId: args.requestId,
+    }),
+    loadAccountWidgetDefaultsInTokyo({
+      accountId: args.accountId,
+      accountCapsule: args.accountCapsule,
+      requestId: args.requestId,
+    }),
+  ]);
   if (!instance.ok) {
     console.error(
       JSON.stringify({
@@ -51,11 +67,34 @@ export async function loadBuilderOpenEnvelope(args: {
     return instance;
   }
 
-  const widgetDefaults = await loadAccountWidgetDefaultsInTokyo({
-    accountId: args.accountId,
-    accountCapsule: args.accountCapsule,
-    requestId: args.requestId,
-  });
+  if (!publicPackage.ok) {
+    console.error(
+      JSON.stringify({
+        event: 'builder.open.public_package_read_failed',
+        accountId: args.accountId,
+        instanceId: args.instanceId,
+        status: publicPackage.status,
+        error: publicPackage.error,
+      }),
+    );
+    return publicPackage;
+  }
+
+  if (
+    instance.value.row.publicPackageFingerprint !==
+    publicPackage.value.publicPackageFingerprint
+  ) {
+    return {
+      ok: false,
+      status: 409,
+      error: {
+        kind: 'VALIDATION',
+        reasonKey: 'coreui.errors.instance.embedNotReady',
+        detail: 'saved source and public package fingerprints do not match',
+      },
+    };
+  }
+
   if (!widgetDefaults.ok) {
     console.error(
       JSON.stringify({
@@ -76,6 +115,7 @@ export async function loadBuilderOpenEnvelope(args: {
       displayName: instance.value.row.displayName || 'Untitled widget',
       widgetType: instance.value.row.widgetType,
       config: instance.value.config,
+      publicPackage: publicPackage.value.publicPackage,
       fontLibrary: widgetDefaults.value.widgetDefaults.fontLibrary,
       publishStatus: instance.value.row.publishStatus,
     },

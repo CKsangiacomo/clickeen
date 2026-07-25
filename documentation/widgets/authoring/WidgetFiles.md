@@ -35,9 +35,9 @@ Shared runtime utilities live in `tokyo/product/widgets/shared/`.
 | `spec.json` | Bob compiler, Roma package materialization, widget default composition. |
 | `editable-fields.json` | Bob copy-edit surfaces and Translation Agent field selection. |
 | `limits.json` | Roma account policy and publish/save enforcement. |
-| `widget.html` | Bob preview, Roma package materialization, public `clk.live` package. |
-| `widget.css` | Bob preview and public package. |
-| `widget.client.js` | Bob preview and public package runtime. |
+| `widget.html` | Roma package materialization for Builder preview and public serving. |
+| `widget.css` | Roma package materialization into generated `styles.css`. |
+| `widget.client.js` | Roma package materialization into generated `runtime.js`. |
 
 Operators must keep the six files internally consistent. A new Core path in
 `spec.json.defaults` is not enough: if it is customer-visible text it also needs
@@ -75,7 +75,8 @@ does not rewrite that stored package.
 
 ```text
 Roma loads compiled widget software
-  -> Roma opens Bob with saved instance data
+  -> Roma opens Bob with saved instance data and the saved instance package
+  -> Bob previews that package and applies browser-memory edits to its runtime
   -> user edits one browser-memory instance
   -> Bob sends save intent to Roma
   -> Roma materializes package files

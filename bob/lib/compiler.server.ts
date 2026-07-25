@@ -329,10 +329,5 @@ export async function compileWidgetServer(
     controls,
     ...(presets ? { presets } : {}),
     ...(normalization ? { normalization } : {}),
-    media: {
-      htmlUrl: `/widgets/${widgetname}/widget.html`,
-      cssUrl: `/widgets/${widgetname}/widget.css`,
-      jsUrl: `/widgets/${widgetname}/widget.client.js`,
-    },
   };
 }
