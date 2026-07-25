@@ -2,7 +2,6 @@ import { isRecord as isPlainObject } from '@clickeen/ck-contracts';
 import { WIDGET_SHELL_FACTORY_DEFAULTS } from '@clickeen/widget-shell';
 import type { CompiledPanel, CompiledWidgetCore, WidgetPresets } from './types';
 import { RawWidget, decodeHtmlEntities, parseTooldrawerAttributes, parsePanels } from './compiler.shared';
-import type { WidgetMediaBuilder } from './compiler/media';
 import { compileControlsFromPanels, expandTooldrawerClusters, groupKeyToLabel } from './compiler/controls';
 import { buildEditorHtmlLines } from './compiler/editor-contract';
 import { buildContext, renderComponentStencil } from './compiler/stencils';
@@ -189,7 +188,6 @@ export async function compileWidgetServer(
   widgetJson: RawWidget,
   sources: {
     loadComponentStencil: ComponentStencilLoader;
-    buildWidgetMedia: WidgetMediaBuilder;
     tokyoBaseUrl?: string;
   },
 ): Promise<CompiledWidgetCore> {
@@ -220,9 +218,8 @@ export async function compileWidgetServer(
 
   const tokyoBase = sources.tokyoBaseUrl ?? '';
   const stencilLoader = sources.loadComponentStencil;
-  const mediaBuilder = sources.buildWidgetMedia;
   const editorHtml = buildEditorHtmlLines(widgetJson.editor, defaults, widgetname);
-  const parsed = parsePanels(editorHtml);
+  const parsedPanels = parsePanels(editorHtml);
   const defaultsWithAssets = rewriteAssetUrlsInDefaults(defaults, tokyoBase);
 
   const hasHeader = defaults.header != null;
@@ -241,12 +238,12 @@ export async function compileWidgetServer(
 
   const controls = [
     ...compileControlsFromPanels({
-      panels: parsed.panels,
+      panels: parsedPanels,
       defaults: defaultsWithAssets,
     }),
   ];
 
-  const panels: CompiledPanel[] = parsed.panels.map((panel) => {
+  const panels: CompiledPanel[] = parsedPanels.map((panel) => {
     return panel;
   });
 
@@ -324,11 +321,6 @@ export async function compileWidgetServer(
     }),
   );
 
-  const media = await mediaBuilder({
-    widgetname,
-    requiredUsages: parsed.usages,
-  });
-
   return {
     widgetname,
     displayName,
@@ -337,6 +329,10 @@ export async function compileWidgetServer(
     controls,
     ...(presets ? { presets } : {}),
     ...(normalization ? { normalization } : {}),
-    media,
+    media: {
+      htmlUrl: `/widgets/${widgetname}/widget.html`,
+      cssUrl: `/widgets/${widgetname}/widget.css`,
+      jsUrl: `/widgets/${widgetname}/widget.client.js`,
+    },
   };
 }

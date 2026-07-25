@@ -3,7 +3,6 @@ import type { ReactNode } from 'react';
 import type { PanelId } from '../lib/types';
 import type { ApplyWidgetOpsResult, WidgetOp } from '../lib/ops';
 import { useWidgetSession, useWidgetSessionChrome } from '../lib/session/useWidgetSession';
-import { type DieterMedia } from './td-menu-content/dom';
 import { resolvePathFromTarget } from './td-menu-content/fieldValue';
 import { type ShowIfEntry } from './td-menu-content/showIf';
 import { useTdMenuBindings } from './td-menu-content/useTdMenuBindings';
@@ -15,7 +14,6 @@ type TdMenuContentProps = {
   instanceData: Record<string, unknown>;
   applyOps: (ops: WidgetOp[]) => ApplyWidgetOpsResult;
   lastUpdate?: { source: 'field' | 'load' | 'external' | 'ops' | 'unknown'; path: string; ts: number } | null;
-  dieterMedia?: DieterMedia;
   header?: ReactNode;
   footer?: ReactNode;
 };
@@ -25,7 +23,6 @@ export function TdMenuContent({
   panelHtml,
   instanceData,
   applyOps,
-  dieterMedia,
   lastUpdate,
   header,
   footer,
@@ -76,7 +73,6 @@ export function TdMenuContent({
     widgetName: session.compiled?.widgetname ?? null,
     accountAssets: session.accountAssets,
     fontLibrary: session.fontLibrary,
-    dieterMedia,
     instanceDataRef,
     showIfEntriesRef,
     setRenderKey,

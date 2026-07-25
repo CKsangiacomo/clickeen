@@ -11,7 +11,6 @@ import {
   WIDGET_SHELL_RUNTIME_MODULE_KEYS,
 } from '../../packages/widget-shell/src';
 import { compileWidgetServer } from '../../bob/lib/compiler.server';
-import { buildWidgetMediaFromManifest } from '../../bob/lib/compiler/media';
 import type { RawWidget } from '../../bob/lib/compiler.shared';
 import type {
   ComponentStencil,
@@ -188,12 +187,8 @@ async function buildArtifacts(widgetType: string): Promise<{
   const spec = JSON.parse(specSource) as RawWidget;
   const editableFields = readWidgetEditableFieldsContract(JSON.parse(editableFieldsSource));
   const limits = parseLimitsSpec(JSON.parse(readText(`${widgetRoot}/limits.json`)));
-  const manifest = JSON.parse(readText('tokyo/product/dieter/manifest.json')) as Parameters<
-    typeof buildWidgetMediaFromManifest
-  >[0]['manifest'];
   const compiled = await compileWidgetServer(spec, {
     loadComponentStencil: loadLocalStencil,
-    buildWidgetMedia: async (args) => buildWidgetMediaFromManifest({ ...args, manifest }),
     tokyoBaseUrl: '',
   });
   assertProductReadableControls(widgetType, compiled.controls);

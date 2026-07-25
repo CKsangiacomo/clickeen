@@ -5,9 +5,8 @@
  * do not hand-code a Roma-only control model).
  *
  * This exports ONLY the presentation/hydration atoms:
- *   - ensureMedia: load Dieter component styles/scripts (populates window.Dieter)
  *   - runHydrators: activate Dieter controls inside a rendered container
- *   - DieterMedia / DieterHydratorDeps / AccountAssetsClient types
+ *   - DieterHydratorDeps / AccountAssetsClient types
  *
  * It deliberately does NOT export Bob's session, applyOps, preview, or upsell
  * machinery. Consumers bind values to their own document by `data-bob-path`.
@@ -19,11 +18,10 @@ import type { AccountAssetsClient } from '../../dieter/components/shared/account
 
 export {
   applyGroupHeaders,
-  ensureMedia,
   installClusterCollapseBehavior,
   runHydrators,
 } from '../components/td-menu-content/dom';
-export type { DieterMedia, DieterHydratorDeps } from '../components/td-menu-content/dom';
+export type { DieterHydratorDeps } from '../components/td-menu-content/dom';
 export {
   applyShowIfVisibility,
   buildShowIfEntries,

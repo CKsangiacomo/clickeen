@@ -32,30 +32,12 @@ export function parseTooldrawerAttributes(tag: string): TooldrawerAttrs {
   return attrs;
 }
 
-export function collectTooldrawerTypes(markup: string, usages: Set<string>) {
-  // Allow '>' inside quoted attribute values (e.g., template strings) and match both self-closing and open/close.
-  const tdRegex =
-    /<tooldrawer-field(?:-[a-z0-9-]+)?((?:[^>"']|"[^"]*"|'[^']*')*)(?:\/>|>([\s\S]*?)<\/tooldrawer-field>)/gi;
-  let m: RegExpExecArray | null;
-  while ((m = tdRegex.exec(markup)) !== null) {
-    const attrs = parseTooldrawerAttributes(m[1]);
-    if (attrs.type) usages.add(attrs.type);
-    if (attrs.template) {
-      const decoded = decodeHtmlEntities(attrs.template);
-      collectTooldrawerTypes(decoded, usages);
-    }
-  }
-}
-
 export function formatPanelLabel(id: string): string {
   if (!id) return 'Panel';
   return id.charAt(0).toUpperCase() + id.slice(1);
 }
 
-export function parsePanels(htmlLines: unknown): {
-  panels: CompiledPanel[];
-  usages: Set<string>;
-} {
+export function parsePanels(htmlLines: unknown): CompiledPanel[] {
   if (!Array.isArray(htmlLines)) {
     throw new Error('[BobCompiler] compiler expected generated editor HTML lines');
   }
@@ -63,14 +45,11 @@ export function parsePanels(htmlLines: unknown): {
   const html = htmlLines.join('\n');
   const panelRegex = /<bob-panel\s+id='([^']+)'[^>]*>([\s\S]*?)<\/bob-panel>/gi;
   const panels: CompiledPanel[] = [];
-  const usages = new Set<string>();
   let match: RegExpExecArray | null;
 
   while ((match = panelRegex.exec(html)) !== null) {
     const id = match[1];
     const panelMarkup = match[2];
-
-    collectTooldrawerTypes(panelMarkup, usages);
 
     panels.push({
       id,
@@ -83,5 +62,5 @@ export function parsePanels(htmlLines: unknown): {
     throw new Error('[BobCompiler] No <bob-panel> definitions found in generated editor HTML');
   }
 
-  return { panels, usages };
+  return panels;
 }

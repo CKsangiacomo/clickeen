@@ -65,10 +65,12 @@ Between open and save, Bob writes no account persistence.
 ## Dieter Icons
 
 Bob preserves Dieter `data-icon` names in compiled controls and application
-chrome. Generated Dieter `icon.css` renders those names as CSS masks backed by
-`/dieter/icons/svg/{name}.svg`. Bob does not import the icon registry or inline
-SVG source. Decorative icons use `aria-hidden="true"`; icon-only controls keep
-the accessible name on the control.
+chrome. Bob loads the build-generated `/dieter/editor/editor.css` and
+`/dieter/editor/editor.js` once; the CSS renders icons as masks backed by
+`/dieter/icons/svg/{name}.svg`. Bob does not import the icon registry, inline
+SVG source, or load Dieter files per panel. Decorative icons use
+`aria-hidden="true"`; icon-only controls keep the accessible name on the
+control.
 
 ## Open Contract
 
@@ -342,7 +344,7 @@ current in-memory instance state.
 
 Bob also exposes a narrow `@clickeen/bob/control-host` module for non-editor
 surfaces that must reuse Builder control presentation. That export is limited to
-compiled-control DOM helpers, Dieter media loading, Dieter hydrator execution,
+compiled-control DOM helpers, Dieter hydrator execution,
 show-if visibility, and field value serialization/parsing. It does not export
 Bob session state, live edit application, preview binding, save behavior, or
 account persistence. Roma Widget Defaults uses this presentation seam to bind

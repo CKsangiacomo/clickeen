@@ -7,6 +7,7 @@
  - Copy icons/svg/* -> tokyo/product/dieter/icons/svg/*
  - Copy component/foundation CSS
  - Bundle component JS per control
+ - Emit one editor.css and one editor.js for Bob/Roma
 */
 
 const fs = require('node:fs');
@@ -14,37 +15,6 @@ const path = require('node:path');
 const { spawnSync } = require('node:child_process');
 const esbuild = require('esbuild');
 const { glob } = require('glob');
-
-function getGitSha(repoRoot) {
-  const fromEnv =
-    process.env.CF_PAGES_COMMIT_SHA ||
-    process.env.GITHUB_SHA ||
-    process.env.VERCEL_GIT_COMMIT_SHA ||
-    process.env.COMMIT_SHA;
-  if (fromEnv && String(fromEnv).trim()) return String(fromEnv).trim();
-
-  // Prefer a commit SHA that changes only when Dieter inputs change, so local installs/builds
-  // don't dirty `tokyo/product/dieter/manifest.json` on every unrelated commit.
-  const res = spawnSync(
-    'git',
-    ['rev-list', '-1', 'HEAD', '--', 'dieter', 'scripts/build-dieter.js', 'scripts/verify-svgs.js'],
-    {
-      cwd: repoRoot,
-      encoding: 'utf8',
-    },
-  );
-
-  if (res.status !== 0) {
-    const detail = String(res.stderr || res.stdout || '').trim() || `git exited ${res.status}`;
-    throw new Error(`[build-dieter] Failed to resolve Dieter manifest gitSha: ${detail}`);
-  }
-
-  const sha = String(res.stdout || '').trim();
-  if (!sha) {
-    throw new Error('[build-dieter] Failed to resolve Dieter manifest gitSha: git returned an empty SHA');
-  }
-  return sha;
-}
 
 function listComponentBundles(dist) {
   const componentsDir = path.join(dist, 'components');
@@ -62,55 +32,13 @@ function listComponentBundlesWithJs(dist, componentNames) {
   return componentNames.filter((name) => fs.existsSync(path.join(componentsDir, name, `${name}.js`)));
 }
 
-function writeDieterManifest({ dist, repoRoot }) {
+function writeDieterManifest({ dist }) {
   const components = listComponentBundles(dist);
   const componentsWithJs = listComponentBundlesWithJs(dist, components);
 
-  const aliases = {
-    btn: 'button',
-    'btn-ic': 'button',
-    'btn-txt': 'button',
-    'btn-ictxt': 'button',
-    'btn-menuactions': 'menuactions',
-    'popover-host': 'popover',
-  };
-
-  const helpers = ['dropdown-header', 'dropdown-header-label', 'dropdown-header-value', 'dropdown-header-icon'];
-
-  // Explicit dependencies between Dieter bundles (keeps Bob compilation deterministic).
-  // Keep this list small and expand only when a component truly depends on others.
-  const deps = {
-    'bulk-edit': ['button', 'dropdown-upload'],
-    'dropdown-actions': ['popover', 'button'],
-    'dropdown-border': ['popover', 'button', 'textfield', 'slider', 'toggle'],
-    'dropdown-edit': ['popover', 'button', 'popaddlink', 'textfield'],
-    'dropdown-fill': ['popover', 'button', 'textfield'],
-    'dropdown-shadow': ['popover', 'button', 'textfield', 'slider', 'toggle', 'menuactions'],
-    'dropdown-upload': ['popover', 'button', 'textfield'],
-    popaddlink: ['popover', 'button', 'textfield'],
-  };
-
-  const validateName = (name) => typeof name === 'string' && name.length > 0 && components.includes(name);
-  for (const [name, list] of Object.entries(deps)) {
-    if (!validateName(name)) {
-      throw new Error(`[build-dieter] manifest deps references unknown component "${name}"`);
-    }
-    if (!Array.isArray(list)) {
-      throw new Error(`[build-dieter] manifest deps for "${name}" must be an array`);
-    }
-    const unknownDeps = list.filter((d) => !validateName(d));
-    if (unknownDeps.length) {
-      throw new Error(`[build-dieter] manifest deps for "${name}" contains unknown component(s): ${JSON.stringify(unknownDeps)}`);
-    }
-  }
-
   const manifest = {
-    gitSha: getGitSha(repoRoot),
     components,
     componentsWithJs,
-    aliases,
-    helpers,
-    deps,
   };
 
   fs.writeFileSync(path.join(dist, 'manifest.json'), JSON.stringify(manifest, null, 2));
@@ -250,6 +178,41 @@ async function bundleComponentScripts({ componentsSrc, dist }) {
   }
 }
 
+async function bundleEditorMedia({ dist }) {
+  const editorDir = path.join(dist, 'editor');
+  fs.mkdirSync(editorDir, { recursive: true });
+
+  const cssFiles = (
+    await glob(path.join(dist, 'components', '**/*.css').replace(/\\/g, '/'))
+  ).sort();
+  const cssImports = [
+    `@import ${JSON.stringify(path.join(dist, 'tokens', 'tokens.css'))};`,
+    ...cssFiles.map((filePath) => `@import ${JSON.stringify(filePath)};`),
+  ].join('\n');
+  await esbuild.build({
+    stdin: {
+      contents: cssImports,
+      loader: 'css',
+      resolveDir: dist,
+    },
+    bundle: true,
+    external: ['/dieter/icons/*'],
+    minify: true,
+    outfile: path.join(editorDir, 'editor.css'),
+  });
+
+  const jsFiles = (
+    await glob(path.join(dist, 'components', '**/*.js').replace(/\\/g, '/'))
+  ).sort();
+  const jsSource = jsFiles.map((filePath) => fs.readFileSync(filePath, 'utf8')).join('\n');
+  const editorJs = await esbuild.transform(jsSource, {
+    loader: 'js',
+    minify: true,
+    target: ['es2020'],
+  });
+  fs.writeFileSync(path.join(editorDir, 'editor.js'), editorJs.code);
+}
+
 function assertExists(label, filePath) {
   if (!fs.existsSync(filePath)) {
     console.error(`[build-dieter] Missing expected output (${label}): ${filePath}`);
@@ -311,13 +274,18 @@ async function main() {
   // 6) Bundle component JS per control
   await bundleComponentScripts({ componentsSrc, dist });
 
-  // 7) Build verification (fail fast if outputs are missing)
+  // 7) Emit the single editor bundle consumed by Bob and Roma.
+  await bundleEditorMedia({ dist });
+
+  // 8) Build verification (fail fast if outputs are missing)
   assertExists('tokens/tokens.css', path.join(dist, 'tokens', 'tokens.css'));
   assertExists('icons.json', path.join(dist, 'icons', 'icons.json'));
   assertExists('icons/svg', path.join(dist, 'icons', 'svg'));
+  assertExists('editor/editor.css', path.join(dist, 'editor', 'editor.css'));
+  assertExists('editor/editor.js', path.join(dist, 'editor', 'editor.js'));
 
-  // 8) Emit bundling manifest consumed by Bob/compiler.
-  writeDieterManifest({ dist, repoRoot });
+  // 9) Emit the Dieter product manifest.
+  writeDieterManifest({ dist });
   assertExists('manifest.json', path.join(dist, 'manifest.json'));
 
   console.log(`[build-dieter] Built Dieter media into ${dist}`);

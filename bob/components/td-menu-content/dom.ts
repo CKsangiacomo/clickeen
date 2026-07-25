@@ -8,10 +8,6 @@ declare global {
   }
 }
 
-const loadedStyles = new Set<string>();
-const loadedScripts = new Map<string, Promise<void>>();
-const stylePromises = new Map<string, Promise<void>>();
-
 const GROUP_LABELS: Record<string, string> = {
   wgtappearance: 'Widget appearance',
   wgtlayout: 'Widget layout',
@@ -19,60 +15,13 @@ const GROUP_LABELS: Record<string, string> = {
   podstagelayout: 'Stage/Pod layout',
 };
 
-export type DieterMedia = {
-  styles?: string[];
-  scripts?: string[];
-};
-
 export type DieterHydratorDeps = {
   accountAssets: AccountAssetsClient;
 };
 
-function loadStyle(href: string): Promise<void> {
-  if (!href) return Promise.resolve();
-  if (loadedStyles.has(href)) return Promise.resolve();
-  const existing = stylePromises.get(href);
-  if (existing) return existing;
-  const head = document.head;
-  const link = document.createElement('link');
-  link.rel = 'stylesheet';
-  link.href = href;
-  const promise = new Promise<void>((resolve, reject) => {
-    link.onload = () => {
-      loadedStyles.add(href);
-      resolve();
-    };
-    link.onerror = () => reject(new Error(`Failed to load style ${href}`));
-  });
-  stylePromises.set(href, promise);
-  head.appendChild(link);
-  return promise;
-}
-
-function loadScript(src: string): Promise<void> {
-  if (!src) return Promise.resolve();
-  const existing = loadedScripts.get(src);
-  if (existing) return existing;
-  const promise = new Promise<void>((resolve, reject) => {
-    const script = document.createElement('script');
-    script.src = src;
-    script.async = false;
-    script.onload = () => resolve();
-    script.onerror = () => reject(new Error(`Failed to load script ${src}`));
-    document.head.appendChild(script);
-  });
-  loadedScripts.set(src, promise);
-  return promise;
-}
-
 function labelForGroup(key: string | null): string {
   if (!key) return '';
   return GROUP_LABELS[key] || key.replace(/-/g, ' ');
-}
-
-export async function ensureMedia(dieterMedia: DieterMedia | undefined): Promise<void> {
-  for (const href of dieterMedia?.styles || []) await loadStyle(href);
-  for (const src of dieterMedia?.scripts || []) await loadScript(src);
 }
 
 export function runHydrators(scope: HTMLElement, deps?: DieterHydratorDeps) {

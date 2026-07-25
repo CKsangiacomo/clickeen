@@ -1,5 +1,4 @@
 {
-  "gitSha": "035ded97616a7d678e5400f2376aaf16cbc358f0",
   "components": [
     "agent-activity",
     "bulk-edit",
@@ -47,65 +46,5 @@
     "textrename",
     "toggle",
     "valuefield"
-  ],
-  "aliases": {
-    "btn": "button",
-    "btn-ic": "button",
-    "btn-txt": "button",
-    "btn-ictxt": "button",
-    "btn-menuactions": "menuactions",
-    "popover-host": "popover"
-  },
-  "helpers": [
-    "dropdown-header",
-    "dropdown-header-label",
-    "dropdown-header-value",
-    "dropdown-header-icon"
-  ],
-  "deps": {
-    "bulk-edit": [
-      "button",
-      "dropdown-upload"
-    ],
-    "dropdown-actions": [
-      "popover",
-      "button"
-    ],
-    "dropdown-border": [
-      "popover",
-      "button",
-      "textfield",
-      "slider",
-      "toggle"
-    ],
-    "dropdown-edit": [
-      "popover",
-      "button",
-      "popaddlink",
-      "textfield"
-    ],
-    "dropdown-fill": [
-      "popover",
-      "button",
-      "textfield"
-    ],
-    "dropdown-shadow": [
-      "popover",
-      "button",
-      "textfield",
-      "slider",
-      "toggle",
-      "menuactions"
-    ],
-    "dropdown-upload": [
-      "popover",
-      "button",
-      "textfield"
-    ],
-    "popaddlink": [
-      "popover",
-      "button",
-      "textfield"
-    ]
-  }
+  ]
 }

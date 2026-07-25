@@ -50,13 +50,17 @@ The Dieter build emits:
 - component CSS
 - component snippets/specs needed by consumers
 - optional JS hydrators
+- `editor/editor.css` with all editor control styles
+- `editor/editor.js` with all editor control hydrators
 - icons and icon registry
 - `manifest.json`
 
 Token outputs include `tokens.css`, `tokens.shadow.css`, and per-token CSS
 files with matching `*.shadow.css` variants where the build creates them.
 
-The manifest tells consumers which components have JS and which dependency bundles are required. Component CSS class names do not add JS bundles by themselves.
+The manifest inventories Dieter components. Bob and Roma do not resolve
+component dependencies at runtime: they load the two editor bundle files once,
+and compiled widget artifacts carry no Dieter media URLs.
 
 ### Icon Delivery
 

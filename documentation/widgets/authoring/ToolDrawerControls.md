@@ -152,16 +152,18 @@ dieter/components/{type}/{type}.html
 dieter/components/{type}/{type}.spec.json
 ```
 
-Runtime component CSS/JS comes from the generated artifact manifest:
+The widget artifact generator reads those stencils at build time. Bob and Roma
+load Dieter's generated editor media once per app:
 
 ```text
-tokyo/product/dieter/manifest.json
+/dieter/editor/editor.css
+/dieter/editor/editor.js
 ```
 
-The generated manifest is the deploy artifact contract.
+Compiled widget artifacts do not contain per-control Dieter media lists.
 
 Dieter stencil icon names remain `data-icon` references in compiled panel HTML.
-Generated Dieter `icon.css` renders them as CDN-backed CSS masks from
+Generated `editor.css` renders them as CDN-backed CSS masks from
 `/dieter/icons/svg/{name}.svg`. Bob must not replace those references with
 literal SVG markup.
 

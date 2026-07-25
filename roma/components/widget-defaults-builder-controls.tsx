@@ -6,14 +6,12 @@ import {
   applyGroupHeaders,
   applyShowIfVisibility,
   buildShowIfEntries,
-  ensureMedia,
   installClusterCollapseBehavior,
   parseBobJsonValue,
   resolvePathFromTarget,
   runHydrators,
   serializeBobJsonFieldValue,
   type AccountAssetsClient,
-  type DieterMedia,
   type ShowIfEntry,
 } from '@clickeen/bob/control-host';
 import type { AccountFontLibrary } from '@clickeen/widget-shell';
@@ -28,9 +26,6 @@ export type BuilderControlPayload = {
   widgetname?: string;
   displayName?: string;
   panels?: BuilderControlPanel[];
-  media?: {
-    dieter?: DieterMedia;
-  };
 };
 
 export type BuilderDefaultsControl = {
@@ -289,7 +284,6 @@ export function WidgetDefaultsBuilderControls({
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
-    let cancelled = false;
     let cleanupListeners: (() => void) | null = null;
     setContractError('');
     onReadyChange(false);
@@ -312,36 +306,6 @@ export function WidgetDefaultsBuilderControls({
     });
     const cleanupCollapse = installClusterCollapseBehavior(container);
     showIfEntriesRef.current = buildShowIfEntries(container);
-
-    ensureMedia(payload?.media?.dieter)
-      .then(() => {
-        if (cancelled) return;
-        applyAccountFontLibraryToTypographyMenus({ container, fontLibrary });
-        runHydrators(container, { accountAssets: stubAccountAssets });
-        showIfEntriesRef.current = buildShowIfEntries(container);
-        syncControlValues(container, valuesRef.current, showIfEntriesRef.current);
-        container.addEventListener('bob-ops', handleBobOps as EventListener, true);
-        container.addEventListener('input', handleInput, true);
-        container.addEventListener('change', handleInput, true);
-        cleanupListeners = () => {
-          container.removeEventListener('bob-ops', handleBobOps as EventListener, true);
-          container.removeEventListener('input', handleInput, true);
-          container.removeEventListener('change', handleInput, true);
-        };
-        container.hidden = false;
-        container.dataset.ready = 'true';
-        onReadyChange(true);
-      })
-      .catch(() => {
-        if (cancelled) return;
-        const message = BUILDER_CONTROLS_LOAD_ERROR_COPY;
-        setContractError(message);
-        onContractError(message);
-        container.innerHTML = '';
-        container.hidden = false;
-        container.dataset.ready = 'false';
-        onReadyChange(false);
-      });
 
     const handleBobOps = (event: Event) => {
       const detail = (event as CustomEvent<{ ops?: unknown }>).detail;
@@ -372,10 +336,33 @@ export function WidgetDefaultsBuilderControls({
       onChange(path, valueFromField(target, valuesRef.current));
     };
 
-    syncControlValues(container, valuesRef.current, showIfEntriesRef.current);
+    try {
+      applyAccountFontLibraryToTypographyMenus({ container, fontLibrary });
+      runHydrators(container, { accountAssets: stubAccountAssets });
+      showIfEntriesRef.current = buildShowIfEntries(container);
+      syncControlValues(container, valuesRef.current, showIfEntriesRef.current);
+      container.addEventListener('bob-ops', handleBobOps as EventListener, true);
+      container.addEventListener('input', handleInput, true);
+      container.addEventListener('change', handleInput, true);
+      cleanupListeners = () => {
+        container.removeEventListener('bob-ops', handleBobOps as EventListener, true);
+        container.removeEventListener('input', handleInput, true);
+        container.removeEventListener('change', handleInput, true);
+      };
+      container.hidden = false;
+      container.dataset.ready = 'true';
+      onReadyChange(true);
+    } catch {
+      const message = BUILDER_CONTROLS_LOAD_ERROR_COPY;
+      setContractError(message);
+      onContractError(message);
+      container.innerHTML = '';
+      container.hidden = false;
+      container.dataset.ready = 'false';
+      onReadyChange(false);
+    }
 
     return () => {
-      cancelled = true;
       onReadyChange(false);
       cleanupListeners?.();
       cleanupCollapse();
@@ -388,7 +375,6 @@ export function WidgetDefaultsBuilderControls({
     panelBuild.missingPaths,
     panelHtml,
     fontLibrary,
-    payload?.media?.dieter,
     scopeLabel,
   ]);
 

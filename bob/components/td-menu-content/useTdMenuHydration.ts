@@ -4,11 +4,9 @@ import { useEffect, type Dispatch, type MutableRefObject, type SetStateAction } 
 import { applyI18nToDom } from '../../lib/i18n/dom';
 import {
   applyGroupHeaders,
-  ensureMedia,
   getClusterBody,
   installClusterCollapseBehavior,
   runHydrators,
-  type DieterMedia,
 } from './dom';
 import type { AccountAssetsClient } from '../../../dieter/components/shared/account-assets';
 import type { AccountFontLibrary } from '@clickeen/widget-shell';
@@ -21,7 +19,6 @@ export function useTdMenuHydration(args: {
   widgetName: string | null;
   accountAssets: AccountAssetsClient;
   fontLibrary: AccountFontLibrary | null;
-  dieterMedia?: DieterMedia;
   instanceDataRef: MutableRefObject<Record<string, unknown>>;
   showIfEntriesRef: MutableRefObject<ShowIfEntry[]>;
   setRenderKey: Dispatch<SetStateAction<number>>;
@@ -29,7 +26,6 @@ export function useTdMenuHydration(args: {
   const {
     accountAssets,
     containerRef,
-    dieterMedia,
     fontLibrary,
     instanceDataRef,
     panelHtml,
@@ -65,8 +61,8 @@ export function useTdMenuHydration(args: {
     };
     container.addEventListener('dieter-controls-rendered', handleControlsRendered);
 
-    ensureMedia(dieterMedia)
-      .then(async () => {
+    const hydrate = async () => {
+      try {
         if (cancelled) return;
         applyAccountFontLibraryToTypographyMenus({ container, fontLibrary });
         runHydrators(container, { accountAssets });
@@ -75,13 +71,14 @@ export function useTdMenuHydration(args: {
         showIfEntriesRef.current = buildShowIfEntries(container);
         applyShowIfVisibility(showIfEntriesRef.current, instanceDataRef.current);
         setRenderKey((current) => current + 1);
-      })
-      .catch(() => {
+      } catch {
         if (cancelled) return;
         container.innerHTML = '<div class="settings-panel__error" role="alert">Builder controls failed to load.</div>';
         showIfEntriesRef.current = [];
         setRenderKey((current) => current + 1);
-      });
+      }
+    };
+    void hydrate();
 
     return () => {
       cancelled = true;
@@ -94,7 +91,6 @@ export function useTdMenuHydration(args: {
   }, [
     accountAssets,
     containerRef,
-    dieterMedia,
     fontLibrary,
     instanceDataRef,
     panelHtml,

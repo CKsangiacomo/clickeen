@@ -96,10 +96,6 @@ export interface CompiledWidgetCore {
     htmlUrl: string;
     cssUrl: string;
     jsUrl: string;
-    dieter?: {
-      styles: string[];
-      scripts: string[];
-    };
   };
 }
 

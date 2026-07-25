@@ -24,7 +24,6 @@ export function SettingsPanel() {
       instanceData={session.instanceData}
       applyOps={session.applyOps}
       lastUpdate={session.lastUpdate}
-      dieterMedia={compiled.media.dieter}
     />
   );
 }
