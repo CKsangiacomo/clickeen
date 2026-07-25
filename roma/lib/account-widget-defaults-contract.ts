@@ -7,7 +7,7 @@ import {
 } from '@clickeen/widget-shell';
 import type { NextRequest } from 'next/server';
 import {
-  compileWidgetForInstancePackage,
+  readWidgetForInstancePackage,
   type InstancePackageFailure,
 } from './account-instance-public-package';
 import type { AccountWidgetDefaultsDocument } from './account-widget-defaults-direct';
@@ -66,7 +66,7 @@ export async function validateAccountWidgetDefaultsContract(args: {
       unmappedPaths.push(`${widgetType}:core`);
       continue;
     }
-    const compiled = await compileWidgetForInstancePackage(args.request, widgetType);
+    const compiled = readWidgetForInstancePackage(widgetType);
     if (!compiled.ok) return compiled;
     const controlPaths = compiledCoreDefaultControlPaths(compiled.value.controls);
     unmappedPaths.push(

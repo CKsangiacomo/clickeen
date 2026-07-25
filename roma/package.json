@@ -4,15 +4,18 @@
   "version": "0.0.0",
   "scripts": {
     "dev": "next dev",
+    "prebuild": "node ../scripts/widgets/generate-artifacts.mjs",
     "build": "next build",
     "build:cf": "node ../scripts/build-roma-cf.mjs",
     "start": "next start",
     "lint": "next lint",
     "test:account-page-source": "tsx tests/run-account-page-source.ts",
+    "pretest:instance-package": "node ../scripts/widgets/generate-artifacts.mjs",
     "test:instance-package": "tsx tests/run-instance-package-reroute.ts",
     "test:instance-save-boundary": "tsx tests/run-instance-save-boundary.ts",
     "test:ui-copy": "tsx tests/run-ui-copy.ts",
     "test:widget-command-gates": "tsx tests/run-widget-command-gates.ts",
+    "pretypecheck": "node ../scripts/widgets/generate-artifacts.mjs",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {

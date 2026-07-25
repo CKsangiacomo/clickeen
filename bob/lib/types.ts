@@ -92,7 +92,6 @@ export interface CompiledWidgetCore {
   presets?: WidgetPresets;
   normalization?: WidgetNormalizationSpec;
   editableFields?: WidgetEditableFieldsContract;
-  widgetPackage?: WidgetPackageContext;
   media: {
     htmlUrl: string;
     cssUrl: string;

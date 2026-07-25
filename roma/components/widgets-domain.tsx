@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { resolveAccountShellErrorCopy, resolveAccountShellReason } from '../lib/account-shell-copy';
 import { useRomaAccountApi } from './account-api';
-import { prefetchCompiledWidget } from './compiled-widget-cache';
+import { prefetchWidgetEditorArtifact } from './widget-editor-artifact';
 import { useRomaAccountContext } from './roma-account-context';
 import {
   buildBuilderRoute,
@@ -177,7 +177,7 @@ export function WidgetsDomain() {
   useEffect(() => {
     const candidates = instanceWidgetTypes.slice(0, 8);
     candidates.forEach((widgetType) => {
-      void prefetchCompiledWidget(widgetType);
+      void prefetchWidgetEditorArtifact(widgetType);
     });
   }, [instanceWidgetTypes]);
 

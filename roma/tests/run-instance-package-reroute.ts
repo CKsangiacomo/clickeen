@@ -21,6 +21,7 @@ import {
   buildSavedWidgetPublicPackage,
   materializeAccountInstanceLocalePublicPackage,
   materializeAccountInstancePublicPackage,
+  readWidgetForInstancePackage,
 } from '../lib/account-instance-public-package';
 import { buildLocalePackageMaterializationFailure } from '../lib/account-instance-locale-package';
 import { buildLocalePackageDeleteFailureCoordinate } from '../lib/account-locale-overlay-update';
@@ -179,11 +180,12 @@ function assertLocalePackageCallsDoNotStreamActivity(source: string): void {
 }
 
 async function materializeForWidget(widgetType: PackageParityWidget) {
-  const compiled = await buildCompiledWidgetFixture(widgetType);
+  const compiled = readWidgetForInstancePackage(widgetType);
+  if (!compiled.ok) assert.fail(JSON.stringify(compiled));
   const state = await buildAccountDefaultStateFixture(widgetType);
   const coordinate = widgetFixtureCoordinate(widgetType);
   return buildSavedWidgetPublicPackage({
-    compiled,
+    compiled: compiled.value,
     accountId: coordinate.accountId,
     instanceId: coordinate.instanceId,
     baseLocale: coordinate.baseLocale,

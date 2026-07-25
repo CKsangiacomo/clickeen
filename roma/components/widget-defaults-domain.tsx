@@ -6,7 +6,7 @@ import {
   type AccountFontLibrary,
 } from '@clickeen/widget-shell';
 import { useRomaAccountApi } from './account-api';
-import { getCompiledWidget } from './compiled-widget-cache';
+import { getWidgetEditorArtifact } from './widget-editor-artifact';
 import {
   WidgetDefaultsBuilderControls,
   type BuilderControlPayload,
@@ -362,7 +362,7 @@ export function WidgetDefaultsDomain() {
     setError('');
     Promise.all(
       requestedWidgetTypes.map(async (widgetType) => {
-        const { payload } = await getCompiledWidget(widgetType);
+        const payload = await getWidgetEditorArtifact(widgetType);
         const displayName = compiledDisplayNameFromPayload(payload);
         if (!displayName)
           throw new Error(`Compiled widget metadata missing displayName: ${widgetType}`);

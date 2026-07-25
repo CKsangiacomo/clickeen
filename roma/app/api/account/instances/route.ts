@@ -11,7 +11,7 @@ import { loadCurrentAccountLocalesState } from '@roma/lib/account-locales-state'
 import { loadAccountWidgetDefaultsInTokyo } from '@roma/lib/account-widget-defaults-direct';
 import { validateAccountWidgetDefaultsContract } from '@roma/lib/account-widget-defaults-contract';
 import {
-  compileWidgetForInstancePackage,
+  readWidgetForInstancePackage,
   materializeAccountInstancePublicPackage,
 } from '@roma/lib/account-instance-public-package';
 import { materializeAccountInstanceSourceArtifacts } from '@roma/lib/account-instance-source-artifacts';
@@ -279,7 +279,7 @@ export async function POST(request: NextRequest) {
   }
   const baseLocale = accountLocales.localePolicy.baseLocale;
   const instanceId = createCompactInstanceId();
-  const compiled = await compileWidgetForInstancePackage(request, widgetType);
+  const compiled = readWidgetForInstancePackage(widgetType);
   if (!compiled.ok) {
     return withSession(
       request,

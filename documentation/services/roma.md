@@ -131,7 +131,7 @@ service:
 | `/api/account/usage`        | Tokyo-worker storage facts plus account policy context |
 | `/api/account/widget-defaults` | Roma defaults document backed by Tokyo-worker        |
 | `/api/builder/:instanceId/open` | Roma Builder-open envelope backed by Tokyo-worker    |
-| `/api/widgets/:widgetname/compiled` | Bob compiler payload proxy/read route          |
+| `/widget-editors/:widgetname.json` | Deploy-built static Bob editor artifact       |
 | `/api/account/instances/:instanceId/copilot` | San Francisco through Roma grants       |
 | `/api/account/instances/:instanceId/copilot/outcome` | San Francisco outcome/linkage path |
 
@@ -152,9 +152,9 @@ Builder opens one saved widget instance:
 
 1. Resolve the current Roma account and `instanceId`.
 2. Load the Builder-open envelope through `GET /api/builder/:instanceId/open`.
-3. Load the compiled widget payload.
+3. Load the deploy-built widget editor artifact.
 4. Wait for Bob `bob:session-ready`.
-5. Send `ck:open-editor` with compiled widget software, saved instance data,
+5. Send `ck:open-editor` with deploy-built editor software, saved instance data,
    account font library, policy, account public id, instance id, label, and
    source.
 6. Receive `bob:open-editor-applied` or `bob:open-editor-failed`.
@@ -171,8 +171,9 @@ saved source plus generated package under:
 accounts/{accountPublicId}/instances/{instanceId}/
 ```
 
-Create, save, and duplicate all use the same package contract: Roma compiles the
-widget software, materializes account asset references in the current account
+Create, save, and duplicate all use the same package contract: Roma reads the
+server-only materializer artifact generated from canonical widget source at
+deploy time, materializes account asset references in the current account
 config, then delegates deterministic base byte generation to
 `@clickeen/ck-runtime-materializer` for `index.html`, `styles.css`, and
 `runtime.js`. Roma submits those exact files with the source to Tokyo-worker.
@@ -356,7 +357,7 @@ through same-origin routes backed by Berlin.
 Roma owns Settings > Widget Defaults. That surface edits only the current
 account defaults document through `/api/account/widget-defaults`; it does not
 open a Bob editing session and does not save widget instances. The UI consumes
-compiled Builder panel HTML and Dieter media, binds controls to the Roma draft
+deploy-built Builder panel HTML and Dieter media, binds controls to the Roma draft
 defaults document, and saves the full document back through the same Roma route.
 
 Widget Defaults must fail closed when compiled Builder controls are unavailable,

@@ -1,6 +1,6 @@
 import type { NextRequest } from 'next/server';
 import {
-  compileWidgetForInstancePackage,
+  readWidgetForInstancePackage,
   materializeAccountInstanceLocalePublicPackage,
 } from './account-instance-public-package';
 import {
@@ -151,7 +151,7 @@ export async function materializeAccountInstanceLocalePackages(args: {
     });
   }
 
-  const compiled = await compileWidgetForInstancePackage(args.request, saved.value.row.widgetType);
+  const compiled = readWidgetForInstancePackage(saved.value.row.widgetType);
   if (!compiled.ok) {
     return buildLocalePackageMaterializationFailure({
       status: compiled.status,

@@ -5,7 +5,7 @@ import {
 } from '@clickeen/widget-shell';
 import type { NextRequest } from 'next/server';
 import {
-  compileWidgetForInstancePackage,
+  readWidgetForInstancePackage,
   type InstancePackageFailure,
 } from './account-instance-public-package';
 import { validateAccountWidgetDefaultsContract } from './account-widget-defaults-contract';
@@ -45,7 +45,7 @@ export async function materializeInitialAccountWidgetDefaults(args: {
   const now = args.now ?? new Date().toISOString();
   const widgets: AccountWidgetDefaultsDocument['widgets'] = {};
   for (const widgetType of args.widgetTypes) {
-    const compiled = await compileWidgetForInstancePackage(args.request, widgetType);
+    const compiled = readWidgetForInstancePackage(widgetType);
     if (!compiled.ok) return compiled;
     const specSource = compiled.value.widgetPackage?.files['spec.json']?.source;
     if (typeof specSource !== 'string' || !specSource.trim()) {

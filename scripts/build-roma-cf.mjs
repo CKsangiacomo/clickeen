@@ -50,6 +50,10 @@ async function main() {
   const buildEnv = { ...process.env, ...wranglerVars };
   let previousProjectJson = null;
 
+  run(process.execPath, [path.join(repoRoot, 'scripts/widgets/generate-artifacts.mjs')], {
+    cwd: repoRoot,
+  });
+
   // Roma's Pages artifact contract is app-local, but Vercel's monorepo Next.js
   // builder still requires repo-root project metadata to resolve `rootDirectory`.
   try {

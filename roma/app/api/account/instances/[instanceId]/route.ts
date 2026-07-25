@@ -6,7 +6,7 @@ import {
 import { listAccountPageSourcesInTokyo } from '@roma/lib/account-page-direct';
 import { pageIdsPlacingInstance } from '@roma/lib/account-page-source';
 import {
-  compileWidgetForInstancePackage,
+  readWidgetForInstancePackage,
   materializeAccountInstancePublicPackage,
 } from '@roma/lib/account-instance-public-package';
 import { materializeAccountInstanceSourceArtifacts } from '@roma/lib/account-instance-source-artifacts';
@@ -139,7 +139,7 @@ export async function PUT(request: NextRequest, context: RouteContext) {
   }
   const baseLocale = accountLocales.localePolicy.baseLocale;
 
-  const compiled = await compileWidgetForInstancePackage(request, widgetType);
+  const compiled = readWidgetForInstancePackage(widgetType);
   if (!compiled.ok) {
     return withSession(
       request,

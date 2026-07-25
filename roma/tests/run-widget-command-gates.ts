@@ -29,7 +29,7 @@ async function testCreateGateBeforeWork(): Promise<void> {
   assertNoOldUpgradePath(source);
   assertBefore(source, gateBranch, 'listTokyoWidgetDefinitions({');
   assertBefore(source, gateBranch, 'createCompactInstanceId()');
-  assertBefore(source, gateBranch, 'compileWidgetForInstancePackage(');
+  assertBefore(source, gateBranch, 'readWidgetForInstancePackage(');
   assertBefore(source, gateBranch, 'materializeAccountInstancePublicPackage({');
   assertBefore(source, gateBranch, 'createAccountInstanceInTokyo({');
 }
@@ -45,7 +45,7 @@ async function testDuplicateGateBeforeWorkAfterSourceProof(): Promise<void> {
   assertNoOldUpgradePath(source);
   assertBefore(source, 'loadTokyoAccountInstanceDocument({', 'listAccountWidgetInstanceIds({');
   assertBefore(source, gateBranch, 'createCompactInstanceId()');
-  assertBefore(source, gateBranch, 'compileWidgetForInstancePackage(');
+  assertBefore(source, gateBranch, 'readWidgetForInstancePackage(');
   assertBefore(source, gateBranch, 'materializeAccountInstancePublicPackage({');
   assertBefore(source, gateBranch, 'createAccountInstanceInTokyo({');
 }

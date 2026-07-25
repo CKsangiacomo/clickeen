@@ -1,9 +1,4 @@
 import type { CompiledWidgetCore } from '../types';
-import { resolveTokyoBaseUrl } from '../env/tokyo';
-
-export function requireTokyoUrl(): string {
-  return resolveTokyoBaseUrl();
-}
 
 type DieterManifest = {
   gitSha: string;
@@ -15,31 +10,10 @@ type DieterManifest = {
   deps?: Record<string, string[]>;
 };
 
-const dieterManifestCache = new Map<string, Promise<DieterManifest>>();
-
-async function loadDieterManifest(tokyoRoot: string): Promise<DieterManifest> {
-  const url = `${tokyoRoot.replace(/\/+$/, '')}/dieter/manifest.json`;
-  const shouldCache = process.env.NODE_ENV !== 'development';
-  if (shouldCache) {
-    const cached = dieterManifestCache.get(url);
-    if (cached) return cached;
-  }
-
-  const promise = (async () => {
-    const res = await fetch(url, { cache: 'no-store' });
-    if (!res.ok) {
-      throw new Error(`[BobCompiler] Failed to load Dieter manifest (${res.status}) ${url}`);
-    }
-    const json = (await res.json()) as DieterManifest;
-    if (!json || typeof json !== 'object' || !Array.isArray(json.components)) {
-      throw new Error(`[BobCompiler] Invalid Dieter manifest ${url}`);
-    }
-    return json;
-  })();
-
-  if (shouldCache) dieterManifestCache.set(url, promise);
-  return promise;
-}
+export type WidgetMediaBuilder = (args: {
+  widgetname: string;
+  requiredUsages: Set<string>;
+}) => Promise<CompiledWidgetCore['media']>;
 
 function resolveUsageToBundleName(manifest: DieterManifest, usage: string): string | null {
   const trimmed = usage.trim();
@@ -74,47 +48,37 @@ function expandBundleDeps(manifest: DieterManifest, roots: Set<string>): Set<str
   return out;
 }
 
-export async function buildWidgetMedia(args: {
+export function buildWidgetMediaFromManifest(args: {
   widgetname: string;
   requiredUsages: Set<string>;
-}): Promise<CompiledWidgetCore['media']> {
-  const tokyoRoot = requireTokyoUrl().replace(/\/+$/, '');
-  // Serve widget + Dieter media through Bob so the preview iframe runs same-origin.
-  const dieterBase = `/dieter`;
+  manifest: DieterManifest;
+}): CompiledWidgetCore['media'] {
+  const dieterBase = '/dieter';
   const mediaBase = `/widgets/${args.widgetname}`;
-
-  const manifest = await loadDieterManifest(tokyoRoot);
-  const cacheBust = manifest.gitSha && manifest.gitSha !== 'unknown' ? `?v=${encodeURIComponent(manifest.gitSha)}` : '';
-
+  const cacheBust =
+    args.manifest.gitSha && args.manifest.gitSha !== 'unknown'
+      ? `?v=${encodeURIComponent(args.manifest.gitSha)}`
+      : '';
   const requiredBundles = new Set<string>();
   for (const usage of args.requiredUsages) {
-    const resolved = resolveUsageToBundleName(manifest, usage);
-    if (!resolved) {
-      throw new Error(`[BobCompiler] Unknown Dieter component bundle "${usage}" (see ${tokyoRoot}/dieter/manifest.json)`);
-    }
+    const resolved = resolveUsageToBundleName(args.manifest, usage);
+    if (!resolved) throw new Error(`[BobCompiler] Unknown Dieter component bundle "${usage}"`);
     requiredBundles.add(resolved);
   }
-
-  const bundlesWithDeps = expandBundleDeps(manifest, requiredBundles);
-  bundlesWithDeps.add('icon');
-
-  const orderedNames = Array.from(bundlesWithDeps).sort();
-  const jsSet = new Set(manifest.componentsWithJs ?? []);
-
-  const componentStyles = orderedNames.map((name) => `${dieterBase}/components/${name}/${name}.css${cacheBust}`);
-  const componentScripts = orderedNames
-    .filter((name) => jsSet.has(name))
-    .map((name) => `${dieterBase}/components/${name}/${name}.js${cacheBust}`);
-
-  const dieterMedia = {
-    styles: [`${dieterBase}/tokens/tokens.css${cacheBust}`, ...componentStyles],
-    scripts: componentScripts,
-  };
-
+  const orderedNames = Array.from(expandBundleDeps(args.manifest, requiredBundles).add('icon')).sort();
+  const jsSet = new Set(args.manifest.componentsWithJs ?? []);
   return {
     htmlUrl: `${mediaBase}/widget.html`,
     cssUrl: `${mediaBase}/widget.css`,
     jsUrl: `${mediaBase}/widget.client.js`,
-    dieter: dieterMedia,
+    dieter: {
+      styles: [
+        `${dieterBase}/tokens/tokens.css${cacheBust}`,
+        ...orderedNames.map((name) => `${dieterBase}/components/${name}/${name}.css${cacheBust}`),
+      ],
+      scripts: orderedNames
+        .filter((name) => jsSet.has(name))
+        .map((name) => `${dieterBase}/components/${name}/${name}.js${cacheBust}`),
+    },
   };
 }

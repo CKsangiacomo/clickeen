@@ -7,7 +7,7 @@ import {
   loadTokyoAccountInstanceDocument,
 } from '@roma/lib/account-instance-direct';
 import {
-  compileWidgetForInstancePackage,
+  readWidgetForInstancePackage,
   materializeAccountInstancePublicPackage,
 } from '@roma/lib/account-instance-public-package';
 import { materializeAccountInstanceSourceArtifacts } from '@roma/lib/account-instance-source-artifacts';
@@ -153,7 +153,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
   const baseLocale = accountLocales.localePolicy.baseLocale;
 
   const instanceId = createCompactInstanceId();
-  const compiled = await compileWidgetForInstancePackage(request, widgetType);
+  const compiled = readWidgetForInstancePackage(widgetType);
   if (!compiled.ok) {
     return withSession(
       request,

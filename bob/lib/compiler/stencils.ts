@@ -1,6 +1,5 @@
 import type { TooldrawerAttrs } from '../compiler.shared';
 import { parseTooldrawerAttributes } from '../compiler.shared';
-import { requireTokyoUrl } from './media';
 import { interpolateStencilContext, renderStencil } from './stencil-renderer';
 import { validateShowIfExpression } from '../../components/td-menu-content/showIf';
 
@@ -14,6 +13,9 @@ type ComponentSpec = {
 type WidgetI18nContext = {
   itemKey?: string | null;
 };
+
+export type ComponentStencil = { stencil: string; spec?: ComponentSpec };
+export type ComponentStencilLoader = (type: string) => Promise<ComponentStencil>;
 
 function decodeHtmlEntities(value: string): string {
   return value
@@ -61,44 +63,6 @@ function parseFillModes(value: string | undefined): string[] | null {
   return modes.length ? modes : null;
 }
 
-const stencilCache = new Map<string, Promise<{ stencil: string; spec?: ComponentSpec }>>();
-
-export async function loadComponentStencil(type: string): Promise<{ stencil: string; spec?: ComponentSpec }> {
-  const name = type.trim();
-  if (!name) throw new Error('[BobCompiler] Missing component type for stencil load');
-
-  const cached = stencilCache.get(name);
-  if (cached) return cached;
-
-  const promise = (async () => {
-    const tokyoRoot = requireTokyoUrl().replace(/\/+$/, '');
-    const base = `${tokyoRoot}/dieter/components/${encodeURIComponent(name)}`;
-    const htmlUrl = `${base}/${encodeURIComponent(name)}.html`;
-    const specUrl = `${base}/${encodeURIComponent(name)}.spec.json`;
-
-    const stencilRes = await fetch(htmlUrl, { cache: 'no-store' });
-    if (!stencilRes.ok) {
-      throw new Error(`[BobCompiler] Missing stencil for component "${name}" (${stencilRes.status} ${stencilRes.statusText})`);
-    }
-    const stencil = await stencilRes.text();
-
-    let spec: ComponentSpec | undefined;
-    const specRes = await fetch(specUrl, { cache: 'no-store' });
-    if (specRes.ok) {
-      spec = (await specRes.json()) as ComponentSpec;
-    } else if (specRes.status !== 404) {
-      throw new Error(
-        `[BobCompiler] Failed to load component spec "${name}" (${specRes.status} ${specRes.statusText})`,
-      );
-    }
-
-    return { stencil, spec };
-  })();
-
-  stencilCache.set(name, promise);
-  return promise;
-}
-
 export function renderComponentStencil(stencil: string, context: Record<string, unknown>): string {
   return renderStencil(stencil, context);
 }
@@ -110,7 +74,9 @@ function sanitizeId(input: string): string {
 async function renderNestedTooldrawerFields(
   markup: string,
   widgetContext?: WidgetI18nContext,
+  loadStencil?: ComponentStencilLoader,
 ): Promise<string> {
+  if (!loadStencil) throw new Error('[BobCompiler] Missing component stencil loader');
   // Allow '>' inside quoted values and handle both self-closing and open/close forms.
   const tdRegex =
     /<tooldrawer-field(?:-([a-z0-9-]+))?((?:[^>"']|"[^"]*"|'[^']*')*)(?:\/>|>([\s\S]*?)<\/tooldrawer-field>)/gi;
@@ -141,8 +107,8 @@ async function renderNestedTooldrawerFields(
       continue;
     }
 
-    const { stencil: nestedStencil, spec: nestedSpec } = await loadComponentStencil(typeInner);
-    const nestedContext = await buildContext(typeInner, attrsInner, nestedSpec, widgetContext);
+    const { stencil: nestedStencil, spec: nestedSpec } = await loadStencil(typeInner);
+    const nestedContext = await buildContext(typeInner, attrsInner, nestedSpec, widgetContext, loadStencil);
     let rendered = renderComponentStencil(nestedStencil, nestedContext);
     rendered = coerceRenderedToBobPaths(rendered, (nestedContext as Record<string, unknown>).path);
     if (attrsInner.template) {
@@ -165,6 +131,7 @@ export async function buildContext(
   attrs: TooldrawerAttrs,
   spec?: ComponentSpec,
   widgetContext?: WidgetI18nContext,
+  loadStencil?: ComponentStencilLoader,
 ): Promise<Record<string, unknown>> {
   const defaults = spec?.defaults?.[0];
   const size = attrs.size || (defaults?.context?.size as string) || 'md';
@@ -289,7 +256,7 @@ export async function buildContext(
 
   let templateValue = attrs.template ? decodeHtmlEntities(attrs.template) : (merged.template as string) || '';
   if (templateValue) {
-    templateValue = await renderNestedTooldrawerFields(templateValue, widgetContext);
+    templateValue = await renderNestedTooldrawerFields(templateValue, widgetContext, loadStencil);
   }
 
   const itemKey = typeof widgetContext?.itemKey === 'string' ? widgetContext.itemKey.trim() : '';

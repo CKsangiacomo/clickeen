@@ -67,6 +67,8 @@ tooling/whisper/
 .cache/
 .tmp/
 artifacts/
+roma/generated/
+roma/public/widget-editors/
 playwright-report/
 test-results/
 e2e/.auth/

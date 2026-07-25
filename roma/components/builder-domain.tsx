@@ -9,7 +9,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { resolveBobBaseUrl } from '../lib/env/bob';
 import { resolvePublicServingBaseUrl } from '../lib/env/public-serving';
 import { useRomaAccountApi } from './account-api';
-import { getCompiledWidget } from './compiled-widget-cache';
+import { getWidgetEditorArtifact } from './widget-editor-artifact';
 import { useRomaAccountContext } from './roma-account-context';
 
 type BuilderDomainProps = {
@@ -688,7 +688,7 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
     try {
       const builderOpen = await accountApi.fetchJson<BuilderOpenResponse>(`/api/builder/${encodeURIComponent(activeInstanceId)}/open`);
       const widgetType = builderOpen.widgetType;
-      const { payload: compiled } = await getCompiledWidget(widgetType);
+      const compiled = await getWidgetEditorArtifact(widgetType);
 
       if (openSeq !== openDispatchSeqRef.current) return;
 

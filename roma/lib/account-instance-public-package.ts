@@ -1,4 +1,4 @@
-import { getCompiledWidgetRouteResponse } from '@clickeen/bob/compiled-widget-route';
+import { readWidgetMaterializerArtifact } from '@roma/generated/widget-materializer-artifacts';
 import {
   collectConfigMediaAssetRefs,
   materializeConfigMedia,
@@ -19,7 +19,6 @@ import {
   widgetEditableFieldsContractHash,
   type WidgetEditableFieldsContract,
 } from '@clickeen/ck-contracts/translated-value-primitives';
-import { NextRequest } from 'next/server';
 import { parseResolvedAccountAsset } from './account-asset-record';
 import {
   buildTokyoAssetControlHeaders,
@@ -89,56 +88,18 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
 }
 
-function isCompiledWidgetForPublicPackage(value: unknown): value is CompiledWidgetForPublicPackage {
-  if (!isRecord(value)) return false;
-  const widgetPackage = value.widgetPackage;
-  return (
-    typeof value.widgetname === 'string' &&
-    (typeof value.displayName === 'undefined' || typeof value.displayName === 'string') &&
-    isRecord(value.limits) &&
-    isRecord(widgetPackage)
-  );
-}
-
-function compileFailureFromPayload(payload: unknown): InstancePackageFailure {
-  const error = isRecord(payload) ? payload.error : null;
-  if (isRecord(error) && typeof error.reasonKey === 'string') {
-    const paths = Array.isArray(error.paths)
-      ? error.paths.filter((path): path is string => typeof path === 'string')
-      : undefined;
-    return {
-      ok: false,
-      status: 422,
-      error: {
-        kind: 'VALIDATION',
-        reasonKey: error.reasonKey,
-        ...(paths?.length ? { paths } : {}),
-      },
-    };
-  }
+export function readWidgetForInstancePackage(
+  widgetType: string,
+):
+  | { ok: true; value: CompiledWidgetForPublicPackage }
+  | InstancePackageFailure {
+  const artifact = readWidgetMaterializerArtifact(widgetType);
+  if (artifact) return { ok: true, value: artifact };
   return {
     ok: false,
     status: 422,
-    error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.widget.compiled.invalid' },
+    error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.widgetType.invalid' },
   };
-}
-
-export async function compileWidgetForInstancePackage(
-  request: NextRequest,
-  widgetType: string,
-): Promise<
-  | { ok: true; value: CompiledWidgetForPublicPackage }
-  | InstancePackageFailure
-> {
-  const response = await getCompiledWidgetRouteResponse(
-    new NextRequest(new URL(`/api/widgets/${encodeURIComponent(widgetType)}/compiled`, request.url)),
-    { params: Promise.resolve({ widgetname: widgetType }) },
-  );
-  const payload = await response.json().catch(() => null);
-  if (response.ok && isCompiledWidgetForPublicPackage(payload)) {
-    return { ok: true, value: payload };
-  }
-  return compileFailureFromPayload(payload);
 }
 
 function validationFailure(reasonKey: string, detail?: string, paths?: string[]): InstancePackageFailure {

@@ -2,13 +2,13 @@ import { isRecord as isPlainObject } from '@clickeen/ck-contracts';
 import { WIDGET_SHELL_FACTORY_DEFAULTS } from '@clickeen/widget-shell';
 import type { CompiledPanel, CompiledWidgetCore, WidgetPresets } from './types';
 import { RawWidget, decodeHtmlEntities, parseTooldrawerAttributes, parsePanels } from './compiler.shared';
-import { buildWidgetMedia } from './compiler/media';
+import type { WidgetMediaBuilder } from './compiler/media';
 import { compileControlsFromPanels, expandTooldrawerClusters, groupKeyToLabel } from './compiler/controls';
 import { buildEditorHtmlLines } from './compiler/editor-contract';
-import { buildContext, loadComponentStencil, renderComponentStencil } from './compiler/stencils';
+import { buildContext, renderComponentStencil } from './compiler/stencils';
+import type { ComponentStencilLoader } from './compiler/stencils';
 import { normalizeWidgetNormalizationSpec } from './compiler/modules/normalization';
 import { buildHeaderPresets } from './compiler/modules/header';
-import { resolveTokyoBaseUrl } from './env/tokyo';
 import { validateShowIfExpression } from '../components/td-menu-content/showIf';
 
 function findTagEnd(source: string, startIndex: number): number {
@@ -185,7 +185,14 @@ function normalizePresets(raw: unknown): WidgetPresets | undefined {
   return Object.keys(normalized).length ? normalized : undefined;
 }
 
-export async function compileWidgetServer(widgetJson: RawWidget): Promise<CompiledWidgetCore> {
+export async function compileWidgetServer(
+  widgetJson: RawWidget,
+  sources: {
+    loadComponentStencil: ComponentStencilLoader;
+    buildWidgetMedia: WidgetMediaBuilder;
+    tokyoBaseUrl?: string;
+  },
+): Promise<CompiledWidgetCore> {
   if (!widgetJson || typeof widgetJson !== 'object') {
     throw new Error('[BobCompiler] Invalid widget JSON payload');
   }
@@ -211,7 +218,9 @@ export async function compileWidgetServer(widgetJson: RawWidget): Promise<Compil
 
   const defaults = composeWidgetFactoryDefaults(coreDefaults as Record<string, unknown>);
 
-  const tokyoBase = resolveTokyoBaseUrl();
+  const tokyoBase = sources.tokyoBaseUrl ?? '';
+  const stencilLoader = sources.loadComponentStencil;
+  const mediaBuilder = sources.buildWidgetMedia;
   const editorHtml = buildEditorHtmlLines(widgetJson.editor, defaults, widgetname);
   const parsed = parsePanels(editorHtml);
   const defaultsWithAssets = rewriteAssetUrlsInDefaults(defaults, tokyoBase);
@@ -283,8 +292,8 @@ export async function compileWidgetServer(widgetJson: RawWidget): Promise<Compil
           continue;
         }
 
-        const { stencil, spec } = await loadComponentStencil(type);
-        const context = await buildContext(type, attrs, spec, widgetContext);
+        const { stencil, spec } = await stencilLoader(type);
+        const context = await buildContext(type, attrs, spec, widgetContext, stencilLoader);
         let rendered = renderComponentStencil(stencil, context);
         if (context.path) {
           rendered = rendered.replace(/data-path="/g, 'data-bob-path="');
@@ -315,7 +324,7 @@ export async function compileWidgetServer(widgetJson: RawWidget): Promise<Compil
     }),
   );
 
-  const media = await buildWidgetMedia({
+  const media = await mediaBuilder({
     widgetname,
     requiredUsages: parsed.usages,
   });

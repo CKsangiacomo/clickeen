@@ -4,8 +4,8 @@
   "version": "1.0.0",
   "packageManager": "pnpm@10.15.1",
   "scripts": {
-    "generate:widgets": "node scripts/generate-widget-definition-sources.mjs",
-    "validate:widgets": "node scripts/generate-widget-definition-sources.mjs --check && node scripts/widgets/compile-all.mjs",
+    "generate:widgets": "node scripts/generate-widget-definition-sources.mjs && node scripts/widgets/generate-artifacts.mjs",
+    "validate:widgets": "node scripts/generate-widget-definition-sources.mjs --check && node scripts/widgets/generate-artifacts.mjs && node scripts/widgets/generate-artifacts.mjs --check",
     "build:i18n": "node scripts/i18n/build.mjs && node scripts/i18n/validate.mjs",
     "build:l10n": "node scripts/l10n/build.mjs && node scripts/l10n/validate.mjs",
     "build": "pnpm validate:widgets && pnpm build:i18n && pnpm build:l10n && turbo build",

@@ -51,7 +51,7 @@ The active account authoring flow is:
 
 1. Roma resolves the current account and opened `instanceId`.
 2. Roma opens one saved widget document.
-3. Roma loads the compiled widget software.
+3. Roma loads the deploy-built widget editor artifact.
 4. Roma sends Bob a `ck:open-editor` message.
 5. Bob validates the open payload and stores `{ compiled, instanceData }` in
    React state.
@@ -123,7 +123,7 @@ or:
 }
 ```
 
-Open succeeds only with explicit compiled widget software, explicit saved
+Open succeeds only with explicit deploy-built widget editor software, explicit saved
 instance data, and the current account font library from Roma. Missing or
 malformed `fontLibrary` fails open; Bob does not invent fallback font choices.
 
@@ -191,8 +191,9 @@ Roma:
 - current config/content state
 
 Bob sends this as a `bob:account-command` with `command: "update-instance"`.
-Roma compiles/materializes the browser package files and performs the account
-save command. Tokyo-worker stores the saved source and package under:
+Roma reads the deploy-built materializer artifact, materializes the browser
+package files, and performs the account save command. Tokyo-worker stores the
+saved source and package under:
 
 ```text
 accounts/{accountPublicId}/instances/{instanceId}/
@@ -281,9 +282,9 @@ declared support files
 carries editable/translatable field contracts. `limits.json` carries widget
 capability context.
 
-## Compiler
+## Editor Artifact Build
 
-Bob compiles widget `spec.json` into:
+The widget build compiles each canonical `spec.json` once into:
 
 - `compiled.panels[]`
 - `compiled.controls[]`
@@ -291,13 +292,18 @@ Bob compiles widget `spec.json` into:
 - editor binding metadata
 - AI context metadata
 
-Compiler source lives under `bob/lib/compiler*` and the compiled-widget API
-helpers under `bob/lib/api/compiled-widget-route.ts`.
+Compiler source lives under `bob/lib/compiler*`.
+`scripts/widgets/generate-artifacts.ts` reads widget and Dieter source directly
+from the repo and emits ignored editor artifacts under
+`roma/public/widget-editors/` plus server-only materializer artifacts under
+`roma/generated/`.
+Normal product requests do not fetch Tokyo source, fetch Dieter stencils, or
+compile controls.
 
-The compile API is:
+The editor artifact API is:
 
 ```text
-GET /api/widgets/{widgetname}/compiled
+GET /widget-editors/{widgetname}.json
 ```
 
 Bob also has same-origin static proxy routes for editor/runtime resources:
@@ -317,7 +323,8 @@ POST /api/ai/outcome -> 409
 
 Copilot traffic must run through Roma account routes.
 
-Compiled payloads are consumed by Roma Builder and Bob session state.
+Editor artifacts contain no raw widget HTML, CSS, JavaScript, or materializer
+package. Roma's server-only materializer reads a separate build artifact.
 
 ## Controls
 
