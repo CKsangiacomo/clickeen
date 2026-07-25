@@ -44,8 +44,8 @@ Agents must use the lane that owns the UI they are editing:
 | Lane | Consumption rule |
 | --- | --- |
 | Dieter component source | Use approved icon slots such as `data-icon="approved.name"`; no raw SVG drops. |
-| Bob compiler/output | Bob compiler replaces Dieter `data-icon` slots from `tokyo/product/dieter/icons/icons.json`. |
-| Bob app chrome | Only named Bob chrome files use `bob/lib/icons.ts` directly; icons stay decorative and control names live on controls. |
+| Bob compiler/output | Bob preserves Dieter `data-icon` slots; generated `icon.css` paints them from `/dieter/icons/svg/{name}.svg`. |
+| Bob app chrome | Use the same Dieter `data-icon` contract; icons stay decorative and control names live on controls. |
 | DevStudio/Admin | Generated raw SVG imports are Admin tooling/reveal only, not product runtime doctrine. Missing icons render an explicit `[missing icon: name]` marker. |
 | Roma product UI | Use the same Dieter operational-icon contract through the implementation lane specified by the 126M execution PRD; do not create a Roma-only icon system. |
 | Prague static site | `DieterIcon.astro` paints approved Tokyo `/dieter/icons/svg/name.svg` URLs through a CSS mask so icons inherit `currentColor`; Prague validates rendered Dieter names against the manifest and uses numeric Dieter sizes only. |
@@ -54,7 +54,8 @@ Agents must use the lane that owns the UI they are editing:
 
 ## Sizing
 
-`diet-icon` is a CSS-only presentation wrapper. It is not a runtime component.
+`diet-icon` and `[data-icon]` are CSS-only presentation primitives. There is no
+browser icon runtime.
 
 Allowed glyph sizes are numeric only:
 

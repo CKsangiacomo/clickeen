@@ -58,6 +58,20 @@ files with matching `*.shadow.css` variants where the build creates them.
 
 The manifest tells consumers which components have JS and which dependency bundles are required. Component CSS class names do not add JS bundles by themselves.
 
+### Icon Delivery
+
+Dieter icon source is deployed once under:
+
+```text
+/dieter/icons/svg/{name}.svg
+```
+
+Dieter component snippets declare icons with `data-icon="{name}"`. The Dieter
+build writes the matching CDN mask rules into `icon.css`. CSS therefore renders
+icons already present or inserted later without a browser icon runtime.
+Consumers must not copy SVG markup from `icons.json` into compiled panels,
+widget packages, or application chrome.
+
 ## Consumer Boundaries
 
 Bob, Roma, Prague, DevStudio, and generated public widget packages may consume Dieter artifacts. They do not own Dieter source truth.
@@ -128,4 +142,7 @@ The Dieter build fails or must be stopped when:
 - Public widget code may use approved Dieter operational icons as CSS masks or
   static `/dieter/icons/svg/{name}.svg` URLs. It does not fetch an icon bundle
   or turn widget/account SVGs into Dieter icons.
+- Bob compiler output preserves Dieter `data-icon` references. Dieter's
+  generated `icon.css` renders them from `/dieter/icons/svg/{name}.svg`; Bob
+  does not inline SVG source.
 - Do not claim accessibility, privacy, retention, or compliance guarantees here unless backed by current source and tests.

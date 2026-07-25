@@ -194,6 +194,19 @@ function generateShadowTokenCss(distTokensDir) {
   }
 }
 
+function appendIconCss({ dist, iconsJsonPath }) {
+  const iconCssPath = path.join(dist, 'components', 'icon', 'icon.css');
+  const iconManifest = JSON.parse(fs.readFileSync(iconsJsonPath, 'utf8'));
+  const iconNames = Object.keys(iconManifest.symbols ?? {}).sort();
+  const mappings = iconNames
+    .map(
+      (name) =>
+        `[data-icon="${name}"] { --diet-icon-source: url("/dieter/icons/svg/${name}.svg"); }`,
+    )
+    .join('\n');
+  fs.appendFileSync(iconCssPath, `\n${mappings}\n`);
+}
+
 function runNodeScript(scriptRelPath) {
   const p = path.resolve(__dirname, scriptRelPath);
   const res = spawnSync(process.execPath, [p], { stdio: 'inherit' });
@@ -288,6 +301,7 @@ async function main() {
     copyCssOnly(componentsSrc, componentsDst);
     copyComponentStatics(componentsSrc, componentsDst);
   }
+  appendIconCss({ dist, iconsJsonPath: iconsJsonSrc });
 
   const foundationsDst = path.join(dist, 'foundations');
   if (fs.existsSync(foundationsSrc)) {

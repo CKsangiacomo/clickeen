@@ -7,6 +7,15 @@
   line-height: 1;
 }
 
+.diet-icon-mask,
+[data-icon] {
+  display: inline-block;
+  flex: none;
+  background-color: currentColor;
+  -webkit-mask: var(--diet-icon-source) center / contain no-repeat;
+  mask: var(--diet-icon-source) center / contain no-repeat;
+}
+
 .diet-icon svg,
 .diet-icon img {
   display: block;
