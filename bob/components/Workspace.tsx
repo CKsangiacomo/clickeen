@@ -6,7 +6,6 @@ import {
   type ResolvedAccountAsset,
 } from '@clickeen/ck-contracts';
 import type { AccountFontLibrary, RuntimeTypographyData } from '@clickeen/widget-shell';
-import { getIcon } from '../lib/icons';
 import { useWidgetSession, useWidgetSessionChrome } from '../lib/session/useWidgetSession';
 
 const BLOCKED_SWITCHER_COPY =
@@ -540,11 +539,7 @@ export function Workspace({
               type="button"
               aria-pressed={device === 'desktop'}
             >
-              <span
-                className="diet-btn-ic__icon"
-                aria-hidden="true"
-                dangerouslySetInnerHTML={{ __html: getIcon('desktopcomputer') }}
-              />
+              <span className="diet-btn-ic__icon" data-icon="desktopcomputer" aria-hidden="true" />
             </button>
             <span className="diet-segment__sr">Desktop</span>
           </label>
@@ -566,11 +561,7 @@ export function Workspace({
               type="button"
               aria-pressed={device === 'mobile'}
             >
-              <span
-                className="diet-btn-ic__icon"
-                aria-hidden="true"
-                dangerouslySetInnerHTML={{ __html: getIcon('iphone') }}
-              />
+              <span className="diet-btn-ic__icon" data-icon="iphone" aria-hidden="true" />
             </button>
             <span className="diet-segment__sr">Mobile</span>
           </label>

@@ -1,6 +1,5 @@
 import type { CompiledControl, CompiledControlOption, CompiledPanel, ControlKind } from '../types';
 import { decodeHtmlEntities, parseTooldrawerAttributes } from '../compiler.shared';
-import { getIcon } from '../icons';
 import { getAt } from '../utils/paths';
 import { validateShowIfExpression } from '../../components/td-menu-content/showIf';
 
@@ -111,10 +110,9 @@ export function expandTooldrawerClusters(html: string): string {
           if (labelParams) labelAttrs.push(`data-i18n-params="${labelParams}"`);
           if (labelCount) labelAttrs.push(`data-i18n-count="${encodeHtmlEntities(labelCount)}"`);
 
-          const toggleIcon = getIcon('chevron.up');
           const toggleMarkup = [
             `<button type="button" class="diet-btn-ic tdmenucontent__cluster-toggle" data-size="xs" data-variant="neutral" aria-label="Toggle section" aria-expanded="true" aria-controls="${bodyId}">`,
-            `  <span class="diet-btn-ic__icon" aria-hidden="true">${toggleIcon}</span>`,
+            `  <span class="diet-btn-ic__icon" data-icon="chevron.up" aria-hidden="true"></span>`,
             `</button>`,
           ].join('');
 

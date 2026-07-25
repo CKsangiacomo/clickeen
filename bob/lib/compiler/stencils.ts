@@ -1,6 +1,5 @@
 import type { TooldrawerAttrs } from '../compiler.shared';
 import { parseTooldrawerAttributes } from '../compiler.shared';
-import { getIcon } from '../icons';
 import { requireTokyoUrl } from './media';
 import { interpolateStencilContext, renderStencil } from './stencil-renderer';
 import { validateShowIfExpression } from '../../components/td-menu-content/showIf';
@@ -100,19 +99,8 @@ export async function loadComponentStencil(type: string): Promise<{ stencil: str
   return promise;
 }
 
-function inlineDieterIcons(html: string): string {
-  return html.replace(
-    /<([a-z0-9-]+)([^>]*?)\sdata-icon="([^"]+)"([^>]*)>([\s\S]*?)<\/\1>/gi,
-    (_match, tag, before, iconName, after) => {
-      const svg = getIcon(iconName);
-      const attrs = `${before}${after}`.replace(/\sdata-icon="[^"]*"/i, '');
-      return `<${tag}${attrs}>${svg}</${tag}>`;
-    },
-  );
-}
-
 export function renderComponentStencil(stencil: string, context: Record<string, unknown>): string {
-  return inlineDieterIcons(renderStencil(stencil, context));
+  return renderStencil(stencil, context);
 }
 
 function sanitizeId(input: string): string {
@@ -301,15 +289,6 @@ export async function buildContext(
 
   let templateValue = attrs.template ? decodeHtmlEntities(attrs.template) : (merged.template as string) || '';
   if (templateValue) {
-    templateValue = templateValue.replace(
-      /<([a-z0-9-]+)([^>]*?)\sdata-icon="([^"]+)"([^>]*)>([\s\S]*?)<\/\1>/gi,
-      (_match, tag, before, iconName, after) => {
-        const svg = getIcon(iconName);
-        const attrsValue = `${before}${after}`.replace(/\sdata-icon="[^"]*"/i, '');
-        return `<${tag}${attrsValue}>${svg}</${tag}>`;
-      },
-    );
-
     templateValue = await renderNestedTooldrawerFields(templateValue, widgetContext);
   }
 

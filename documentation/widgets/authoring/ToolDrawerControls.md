@@ -160,6 +160,11 @@ tokyo/product/dieter/manifest.json
 
 The generated manifest is the deploy artifact contract.
 
+Dieter stencil icon names remain `data-icon` references in compiled panel HTML.
+Generated Dieter `icon.css` renders them as CDN-backed CSS masks from
+`/dieter/icons/svg/{name}.svg`. Bob must not replace those references with
+literal SVG markup.
+
 ## Hard Stops
 
 - Do not create new panel ids.

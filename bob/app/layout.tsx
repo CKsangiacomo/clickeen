@@ -13,6 +13,7 @@ export default function RootLayout({
     <html lang="en">
       <head>
         <link rel="stylesheet" href={`${DIETER_BASE}/tokens/tokens.css`} />
+        <link rel="stylesheet" href={`${DIETER_BASE}/components/icon/icon.css`} />
         <link rel="stylesheet" href={`${DIETER_BASE}/components/segmented/segmented.css`} />
         <link rel="stylesheet" href={`${DIETER_BASE}/components/button/button.css`} />
         <link rel="stylesheet" href={`${DIETER_BASE}/components/toggle/toggle.css`} />

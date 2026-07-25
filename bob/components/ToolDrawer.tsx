@@ -3,7 +3,6 @@ import type { CompiledPanel, PanelId } from '../lib/types';
 import { DEFAULT_PANELS, TdMenu } from './TdMenu';
 import { TdMenuContent } from './TdMenuContent';
 import { AccountCopilotPane } from './CopilotPane';
-import { getIcon } from '../lib/icons';
 import { useWidgetSession } from '../lib/session/useWidgetSession';
 import { TdHeader } from '../bob_native_ui/tdheader/TdHeader';
 import { SettingsPanel } from './SettingsPanel';
@@ -236,11 +235,7 @@ export function ToolDrawer({
               type="button"
               aria-pressed={mode === 'manual'}
             >
-              <span
-                className="diet-btn-ictxt__icon"
-                aria-hidden="true"
-                dangerouslySetInnerHTML={{ __html: getIcon('pencil') }}
-              />
+              <span className="diet-btn-ictxt__icon" data-icon="pencil" aria-hidden="true" />
               <span className="diet-btn-ictxt__label body-s">Manual</span>
             </button>
           </label>
@@ -262,11 +257,7 @@ export function ToolDrawer({
               type="button"
               aria-pressed={mode === 'copilot'}
             >
-              <span
-                className="diet-btn-ictxt__icon"
-                aria-hidden="true"
-                dangerouslySetInnerHTML={{ __html: getIcon('sparkles') }}
-              />
+              <span className="diet-btn-ictxt__icon" data-icon="sparkles" aria-hidden="true" />
               <span className="diet-btn-ictxt__label body-s">Copilot</span>
             </button>
           </label>

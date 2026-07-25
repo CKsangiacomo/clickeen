@@ -64,14 +64,11 @@ Between open and save, Bob writes no account persistence.
 
 ## Dieter Icons
 
-Bob consumes Dieter operational icons in two lanes:
-
-- compiler output replaces Dieter `data-icon` slots from
-  `tokyo/product/dieter/icons/icons.json`;
-- named Bob chrome files may call `bob/lib/icons.ts` directly for chrome icons.
-
-Generated inline SVG is decorative by default (`aria-hidden="true"` and
-`focusable="false"`). Icon-only controls keep the accessible name on the control.
+Bob preserves Dieter `data-icon` names in compiled controls and application
+chrome. Generated Dieter `icon.css` renders those names as CSS masks backed by
+`/dieter/icons/svg/{name}.svg`. Bob does not import the icon registry or inline
+SVG source. Decorative icons use `aria-hidden="true"`; icon-only controls keep
+the accessible name on the control.
 
 ## Open Contract
 

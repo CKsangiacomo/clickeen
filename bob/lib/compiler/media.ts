@@ -96,6 +96,7 @@ export async function buildWidgetMedia(args: {
   }
 
   const bundlesWithDeps = expandBundleDeps(manifest, requiredBundles);
+  bundlesWithDeps.add('icon');
 
   const orderedNames = Array.from(bundlesWithDeps).sort();
   const jsSet = new Set(manifest.componentsWithJs ?? []);
