@@ -8,6 +8,7 @@ import type { AccountFontLibrary } from '@clickeen/widget-shell';
 export type UpdateMeta = {
   source: 'field' | 'load' | 'external' | 'ops' | 'unknown';
   path: string;
+  paths: string[];
   ts: number;
 };
 

@@ -7,7 +7,7 @@ import {
   getAccountFontAllowedWeights,
 } from '@clickeen/widget-shell';
 import { getAt } from '../../lib/utils/paths';
-import { buildControlMatchers, findBestControlForPath } from '../../lib/edit/controls';
+import { findBestControlForPath } from '../../lib/edit/controls';
 
 type PresetSpec = {
   customValue?: string;
@@ -123,7 +123,7 @@ export function expandLinkedOps(args: {
 }): WidgetOp[] {
   const setOp = (path: string, value: unknown): WidgetOp => ({ op: 'set', path, value });
   const presetEntries = buildPresetEntries(args.compiled?.presets);
-  const controlMatchers = buildControlMatchers(args.compiled?.controls ?? []);
+  const controls = args.compiled?.controls ?? [];
   const typographyFamilyPaths = Array.from(
     new Set(
       (args.compiled?.controls ?? [])
@@ -131,7 +131,7 @@ export function expandLinkedOps(args: {
         .filter((path) => /^typography\.roles\.[^.]+\.family$/.test(path)),
     ),
   );
-  const isAllowedPath = (path: string) => Boolean(findBestControlForPath(controlMatchers, path));
+  const isAllowedPath = (path: string) => Boolean(findBestControlForPath(controls, path));
 
   const expanded: WidgetOp[] = [];
   const presetByPath = new Map(presetEntries.map((entry) => [entry.sourcePath, entry]));

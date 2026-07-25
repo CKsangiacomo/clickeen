@@ -45,14 +45,16 @@ export function useSessionEditing(args: {
         setState(nextState);
         return applied;
       }
-      try {
-        assertSessionConfigContract(applied.data, compiled);
-      } catch (err) {
-        const message = err instanceof Error ? err.message : String(err);
-        const result: ApplyWidgetOpsResult = { ok: false, errors: [{ opIndex: 0, message }] };
-        stateRef.current = { ...stateRef.current, error: { source: 'ops', errors: result.errors } };
-        setState(stateRef.current);
-        return result;
+      if (applied.requiresDocumentValidation) {
+        try {
+          assertSessionConfigContract(applied.data, compiled);
+        } catch (err) {
+          const message = err instanceof Error ? err.message : String(err);
+          const result: ApplyWidgetOpsResult = { ok: false, errors: [{ opIndex: 0, message }] };
+          stateRef.current = { ...stateRef.current, error: { source: 'ops', errors: result.errors } };
+          setState(stateRef.current);
+          return result;
+        }
       }
 
       const latest = stateRef.current;
@@ -63,14 +65,15 @@ export function useSessionEditing(args: {
         error: null,
         lastUpdate: {
           source: 'ops',
-          path: ops[0]?.path || '',
+          path: applied.changedPaths[0] || '',
+          paths: applied.changedPaths,
           ts: Date.now(),
         },
       };
       stateRef.current = nextState;
       setState(nextState);
 
-      return { ok: true, data: applied.data };
+      return applied;
     },
     [setState, stateRef],
   );

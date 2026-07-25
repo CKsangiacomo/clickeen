@@ -20,6 +20,7 @@ import { applyShowIfVisibility, type ShowIfEntry } from './showIf';
 type LastUpdate = {
   source: 'field' | 'load' | 'external' | 'ops' | 'unknown';
   path: string;
+  paths: string[];
   ts: number;
 } | null;
 
@@ -61,7 +62,6 @@ export function useTdMenuBindings(args: {
       const applied = applyOps(expandLinkedOps({ compiled, fontLibrary, instanceData: readInstanceData(), ops }));
       if (applied.ok) {
         instanceDataRef.current = applied.data;
-        applyShowIfVisibility(showIfEntriesRef.current, applied.data);
       }
       return applied;
     };
@@ -183,8 +183,38 @@ export function useTdMenuBindings(args: {
     container.addEventListener('input', handleContainerEvent, true);
     container.addEventListener('change', handleContainerEvent, true);
 
-    const fields = Array.from(container.querySelectorAll<HTMLElement>('[data-bob-path]'));
+    return () => {
+      container.removeEventListener('bob-ops', handleBobOpsEvent as EventListener, true);
+      container.removeEventListener('bob-upsell', handleUpsellEvent as EventListener, true);
+      container.removeEventListener('input', handleContainerEvent, true);
+      container.removeEventListener('change', handleContainerEvent, true);
+    };
+  }, [
+    applyOps,
+    compiled,
+    containerRef,
+    fontLibrary,
+    instanceDataRef,
+    requestUpsell,
+  ]);
+
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
     applyShowIfVisibility(showIfEntriesRef.current, instanceData);
+    const lastUpdate = lastUpdateRef.current;
+    const changedPaths = lastUpdate?.source === 'ops' ? lastUpdate.paths : [];
+    if (changedPaths.length === 1 && activePathRef.current === changedPaths[0]) return;
+
+    const fields = changedPaths.length
+      ? changedPaths.flatMap((path) => {
+          const escapedPath = path.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+          return Array.from(
+            container.querySelectorAll<HTMLElement>(`[data-bob-path="${escapedPath}"]`),
+          );
+        })
+      : Array.from(container.querySelectorAll<HTMLElement>('[data-bob-path]'));
 
     fields.forEach((field) => {
       const path = field.getAttribute('data-bob-path');
@@ -193,7 +223,6 @@ export function useTdMenuBindings(args: {
       const value = getAt(instanceData, path);
 
       const isActive = activePathRef.current === path;
-      const lastUpdate = lastUpdateRef.current;
 
       if (field instanceof HTMLInputElement && field.type === 'radio') {
         const nextChecked = value != null && String(value) === field.value;
@@ -248,8 +277,7 @@ export function useTdMenuBindings(args: {
 
       const currentValue = field.value;
       const unchanged = currentValue === nextValue;
-      const isEcho = lastUpdate && lastUpdate.source === 'ops' && lastUpdate.path === path;
-      if (isActive || unchanged || isEcho) return;
+      if (isActive || unchanged) return;
 
       field.value = nextValue;
       if (!(field instanceof HTMLInputElement)) return;
@@ -270,25 +298,13 @@ export function useTdMenuBindings(args: {
         field.dispatchEvent(new CustomEvent('external-sync', { detail: { value: nextValue } }));
       }
     });
-
-    return () => {
-      container.removeEventListener('bob-ops', handleBobOpsEvent as EventListener, true);
-      container.removeEventListener('bob-upsell', handleUpsellEvent as EventListener, true);
-      container.removeEventListener('input', handleContainerEvent, true);
-      container.removeEventListener('change', handleContainerEvent, true);
-    };
   }, [
     activePathRef,
-    applyOps,
-    compiled,
     containerRef,
-    fontLibrary,
     instanceData,
-    instanceDataRef,
     lastUpdateRef,
     panelHtml,
     renderKey,
-    requestUpsell,
     showIfEntriesRef,
   ]);
 }

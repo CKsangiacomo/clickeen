@@ -1,56 +1,32 @@
 import type { CompiledControl } from '../types';
 
-export type ControlMatcher = {
-  control: CompiledControl;
-  regex: RegExp;
-  optionValues?: Set<string | number | boolean>;
-  score: number;
-};
-
 const TOKEN_SEGMENT = /^__[^.]+__$/;
-
-function escapeRegex(value: string) {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-}
-
-function compileControlPattern(pathPattern: string): RegExp {
-  const segments = pathPattern.split('.').filter(Boolean);
-  const regexSegments = segments.map((segment) => {
-    if (TOKEN_SEGMENT.test(segment)) return '\\d+';
-    return escapeRegex(segment);
-  });
-  return new RegExp(`^${regexSegments.join('\\.')}$`);
-}
 
 function scoreControl(control: CompiledControl) {
   return (control.options && control.options.length ? 100 : 0) + (control.type === 'field' ? 0 : 10) + (control.label ? 1 : 0);
 }
 
-export function buildControlMatchers(controls: CompiledControl[]): ControlMatcher[] {
-  return controls
-    .filter((c) => typeof c.path === 'string' && c.path.trim().length > 0)
-    .map((control) => {
-      const optionValues = control.options?.length
-        ? new Set(control.options.map((o) => o.value))
-        : undefined;
-      return {
-        control,
-        regex: compileControlPattern(control.path),
-        optionValues,
-        score: scoreControl(control),
-      };
-    });
+function controlPathMatches(pattern: string, path: string): boolean {
+  const patternSegments = pattern.split('.');
+  const pathSegments = path.split('.');
+  if (patternSegments.length !== pathSegments.length) return false;
+  return patternSegments.every((segment, index) => (
+    TOKEN_SEGMENT.test(segment) ? /^\d+$/.test(pathSegments[index]) : segment === pathSegments[index]
+  ));
 }
 
-export function findBestControlForPath(matchers: ControlMatcher[], path: string): CompiledControl | null {
-  let best: ControlMatcher | null = null;
-  for (const matcher of matchers) {
-    if (!matcher.regex.test(path)) continue;
-    if (!best || matcher.score > best.score) {
-      best = matcher;
+export function findBestControlForPath(controls: CompiledControl[], path: string): CompiledControl | null {
+  let best: CompiledControl | null = null;
+  let bestScore = -1;
+  for (const control of controls) {
+    if (typeof control.path !== 'string' || !control.path || !controlPathMatches(control.path, path)) continue;
+    const score = scoreControl(control);
+    if (score > bestScore) {
+      best = control;
+      bestScore = score;
     }
   }
-  return best?.control ?? null;
+  return best;
 }
 
 export type ValidateValueResult =

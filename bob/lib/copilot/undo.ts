@@ -1,6 +1,6 @@
 import type { CompiledControl } from '../types';
 import type { WidgetOp } from '../ops';
-import { buildControlMatchers, findBestControlForPath } from '../edit/controls';
+import { findBestControlForPath } from '../edit/controls';
 import { getAt } from '../utils/paths';
 
 function itemIdFromValue(value: unknown, itemIdPath: string): string | null {
@@ -19,9 +19,8 @@ export function buildCopilotUndoOps(args: {
   controls: CompiledControl[];
 }): WidgetOp[] | null {
   const inverse: WidgetOp[] = [];
-  const matchers = buildControlMatchers(args.controls);
   for (const op of args.ops) {
-    const control = findBestControlForPath(matchers, op.path);
+    const control = findBestControlForPath(args.controls, op.path);
     if (!control) return null;
     if (op.op === 'set') {
       const previousValue = getAt(args.before, op.path);

@@ -62,6 +62,13 @@ The active account authoring flow is:
 
 Between open and save, Bob writes no account persistence.
 
+Ordinary control edits are path operations against the already validated open
+document. Bob applies the compiled control allowlist and value contract to the
+changed path, updates only affected panel controls, and sends the resulting
+working state to the preview. Object, JSON, array, insert, remove, and move
+operations revalidate the complete document because they can change its shape.
+Bob also validates the complete document when opening and before saving.
+
 ## Dieter Icons
 
 Bob preserves Dieter `data-icon` names in compiled controls and application

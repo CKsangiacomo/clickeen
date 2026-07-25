@@ -140,6 +140,7 @@ export function useSessionBoot(args: {
           lastUpdate: {
             source: 'load',
             path: '',
+            paths: [],
             ts: Date.now(),
           },
         };

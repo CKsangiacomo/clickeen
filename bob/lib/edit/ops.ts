@@ -1,5 +1,5 @@
 import type { CompiledControl } from '../types';
-import { buildControlMatchers, findBestControlForPath, validateValueStrict } from './controls';
+import { findBestControlForPath, validateValueStrict } from './controls';
 import { getAt, setAt } from '../utils/paths';
 
 export type WidgetOp =
@@ -16,7 +16,12 @@ export type WidgetOpError = {
 };
 
 export type ApplyWidgetOpsResult =
-  | { ok: true; data: Record<string, unknown> }
+  | {
+      ok: true;
+      data: Record<string, unknown>;
+      changedPaths: string[];
+      requiresDocumentValidation: boolean;
+    }
   | { ok: false; errors: WidgetOpError[] };
 
 const PROHIBITED_SEGMENTS = new Set(['__proto__', 'prototype', 'constructor']);
@@ -98,12 +103,13 @@ export function applyWidgetOps(args: {
     return { ok: false, errors: [{ opIndex: 0, message: 'Compiled controls are required to apply ops' }] };
   }
 
-  const matchers = buildControlMatchers(controls);
-  if (matchers.length === 0) {
+  if (!controls.some((control) => typeof control.path === 'string' && control.path.trim())) {
     return { ok: false, errors: [{ opIndex: 0, message: 'Compiled controls are missing valid paths' }] };
   }
 
   let working = data;
+  const changedPaths = new Set<string>();
+  let requiresDocumentValidation = false;
 
   for (let idx = 0; idx < ops.length; idx += 1) {
     const op = ops[idx];
@@ -126,7 +132,7 @@ export function applyWidgetOps(args: {
       return { ok: false, errors: [{ opIndex: idx, path, message: 'Path contains a prohibited segment' }] };
     }
 
-    const control = findBestControlForPath(matchers, path);
+    const control = findBestControlForPath(controls, path);
     if (!control) {
       return { ok: false, errors: [{ opIndex: idx, path, message: 'Path is not allowlisted by compiled controls' }] };
     }
@@ -145,6 +151,16 @@ export function applyWidgetOps(args: {
       }
       const next = setAt(working, path, raw.value) as Record<string, unknown>;
       working = next;
+      changedPaths.add(path);
+      if (
+        control.kind === 'json' ||
+        control.kind === 'array' ||
+        control.kind === 'object' ||
+        control.type === 'dropdown-fill' ||
+        control.type === 'dropdown-upload-meta'
+      ) {
+        requiresDocumentValidation = true;
+      }
       continue;
     }
 
@@ -174,6 +190,8 @@ export function applyWidgetOps(args: {
       }
       const next = insertAtPath(working, path, raw.index, raw.value);
       working = next;
+      changedPaths.add(path);
+      requiresDocumentValidation = true;
       continue;
     }
 
@@ -208,6 +226,8 @@ export function applyWidgetOps(args: {
       }
       const next = removeAtPath(working, path, removeIndex);
       working = next;
+      changedPaths.add(path);
+      requiresDocumentValidation = true;
       continue;
     }
 
@@ -234,11 +254,18 @@ export function applyWidgetOps(args: {
       }
       const next = moveAtPath(working, path, raw.from, raw.to);
       working = next;
+      changedPaths.add(path);
+      requiresDocumentValidation = true;
       continue;
     }
 
     return { ok: false, errors: [{ opIndex: idx, path, message: `Unknown op "${opType}"` }] };
   }
 
-  return { ok: true, data: working };
+  return {
+    ok: true,
+    data: working,
+    changedPaths: Array.from(changedPaths),
+    requiresDocumentValidation,
+  };
 }

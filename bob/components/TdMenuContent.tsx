@@ -13,7 +13,12 @@ type TdMenuContentProps = {
   panelHtml: string;
   instanceData: Record<string, unknown>;
   applyOps: (ops: WidgetOp[]) => ApplyWidgetOpsResult;
-  lastUpdate?: { source: 'field' | 'load' | 'external' | 'ops' | 'unknown'; path: string; ts: number } | null;
+  lastUpdate?: {
+    source: 'field' | 'load' | 'external' | 'ops' | 'unknown';
+    path: string;
+    paths: string[];
+    ts: number;
+  } | null;
   header?: ReactNode;
   footer?: ReactNode;
 };
