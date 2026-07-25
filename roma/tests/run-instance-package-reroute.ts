@@ -28,7 +28,7 @@ import {
   buildLocalePackageMaterializationFailure,
   runLocalePackagePool,
 } from '../lib/account-instance-locale-package';
-import { buildLocalePackageDeleteFailureCoordinate } from '../lib/account-locale-overlay-update';
+import { runRemovedLocaleCleanup } from '../lib/account-locale-cleanup';
 
 const repoRoot = path.resolve(fileURLToPath(new URL('../..', import.meta.url)));
 const CLOUDFLARE_REQUEST_CONTEXT_SYMBOL = Symbol.for('__cloudflare-request-context__');
@@ -578,10 +578,11 @@ async function testLocaleMaterializationRouteWiring(): Promise<void> {
   assert.match(localePackageHelper, /prepared: prepared\.value/);
 
   const settingsRoute = await readRouteSource('roma/app/api/account/locales/route.ts');
-  assert.match(settingsRoute, /materializeAccountInstanceLocalePackages\(\{/);
   assert.match(settingsRoute, /deleteAccountInstanceLocalePackageArtifact\(\{/);
-  assert.match(settingsRoute, /locale-package-delete/);
-  assert.match(settingsRoute, /locale-package-materialize/);
+  assert.doesNotMatch(settingsRoute, /generateAccountInstanceTranslations/);
+  assert.doesNotMatch(settingsRoute, /materializeAccountInstanceLocalePackages/);
+  const localeCleanup = await readRouteSource('roma/lib/account-locale-cleanup.ts');
+  assert.match(localeCleanup, /locale-package-delete/);
 }
 
 async function testLocalePackagePool(): Promise<void> {
@@ -614,6 +615,69 @@ async function testLocalePackagePool(): Promise<void> {
     'completed:nl',
     'completed:sv',
     'completed:da',
+  ]);
+}
+
+async function testRemovedLocaleCleanupAttemptsEveryCoordinate(): Promise<void> {
+  const calls: string[] = [];
+  const result = await runRemovedLocaleCleanup({
+    accountId: 'CLICKEEN',
+    instanceIds: ['inst_one', 'inst_two'],
+    removedLocales: ['fr', 'de'],
+    deleteTranslation: async (instanceId, locale) => {
+      calls.push(`translation:${instanceId}:${locale}`);
+      if (instanceId === 'inst_two' && locale === 'fr') {
+        throw new Error('translation_transport_failed');
+      }
+      if (instanceId === 'inst_one' && locale === 'fr') {
+        return {
+          ok: false as const,
+          error: {
+            kind: 'UPSTREAM_UNAVAILABLE' as const,
+            reasonKey: 'translation_delete_failed',
+          },
+        };
+      }
+      return { ok: true as const };
+    },
+    deletePackage: async (instanceId, locale) => {
+      calls.push(`package:${instanceId}:${locale}`);
+      if (instanceId === 'inst_two' && locale === 'de') {
+        return {
+          ok: false as const,
+          error: {
+            kind: 'UPSTREAM_UNAVAILABLE' as const,
+            reasonKey: 'tokyo.errors.publicCache.purgeFailed',
+          },
+        };
+      }
+      return {
+        ok: true as const,
+        value: { accountId: 'CLICKEEN', instanceId, locale },
+      };
+    },
+  });
+  assert.equal(result.ok, false);
+  assert.equal(result.instancesChecked, 2);
+  assert.equal(result.deleted.length, 2);
+  assert.equal(result.deletedPackages.length, 3);
+  assert.deepEqual(
+    result.failed.map(({ instanceId, locale, phase }) => ({ instanceId, locale, phase })),
+    [
+      { instanceId: 'inst_one', locale: 'fr', phase: 'translation-delete' },
+      { instanceId: 'inst_two', locale: 'fr', phase: 'translation-delete' },
+      { instanceId: 'inst_two', locale: 'de', phase: 'cache-refresh' },
+    ],
+  );
+  assert.deepEqual(calls, [
+    'translation:inst_one:fr',
+    'package:inst_one:fr',
+    'translation:inst_one:de',
+    'package:inst_one:de',
+    'translation:inst_two:fr',
+    'package:inst_two:fr',
+    'translation:inst_two:de',
+    'package:inst_two:de',
   ]);
 }
 
@@ -658,23 +722,6 @@ async function testLocalePackageFailureCoordinates(): Promise<void> {
     },
   ]);
 
-  assert.deepEqual(
-    buildLocalePackageDeleteFailureCoordinate({
-      accountId: 'CLICKEEN',
-      instanceId: 'inst_faq',
-      locale: 'fr',
-      reasonKey: 'coreui.errors.db.writeFailed',
-      detail: 'delete_failed',
-    }),
-    {
-      accountId: 'CLICKEEN',
-      instanceId: 'inst_faq',
-      locale: 'fr',
-      phase: 'locale-package-delete',
-      reasonKey: 'coreui.errors.db.writeFailed',
-      detail: 'delete_failed',
-    },
-  );
 }
 
 async function testTokyoLocalePackageStorageWiring(): Promise<void> {
@@ -750,6 +797,7 @@ const tests: Array<{ name: string; run: () => Promise<void> }> = [
   { name: 'locale package rejects base and inactive locales', run: testLocalePackageRejectsBaseAndInactiveLocales },
   { name: 'locale materialization route wiring', run: testLocaleMaterializationRouteWiring },
   { name: 'locale package bounded pool', run: testLocalePackagePool },
+  { name: 'removed locale cleanup attempts every coordinate', run: testRemovedLocaleCleanupAttemptsEveryCoordinate },
   { name: 'locale package failure coordinates', run: testLocalePackageFailureCoordinates },
   { name: 'Tokyo locale package storage wiring', run: testTokyoLocalePackageStorageWiring },
   { name: 'base rejects overlay', run: testMaterializerRejectsOverlayAtBase },

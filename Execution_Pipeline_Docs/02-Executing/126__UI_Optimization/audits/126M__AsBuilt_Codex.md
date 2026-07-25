@@ -575,8 +575,10 @@ As-built reading:
 
 ## 13. Account Locale Settings UI
 
-Roma Settings has account language UI that saves active locales and reports
-overlay follow-up state.
+Roma Settings has account language UI that saves active locales. Added
+languages remain missing on each widget until generated from that widget's
+Translations panel. Removed-language cleanup reports exact `localeCleanup`
+results.
 
 Evidence:
 
@@ -585,7 +587,7 @@ Evidence:
   `AccountLocaleSettingsCard`.
 - `roma/components/account-locale-settings-card.tsx:110` through
   `roma/components/account-locale-settings-card.tsx:123` resolve success copy
-  from `overlayUpdate`.
+  from `localeCleanup`.
 - `roma/components/account-locale-settings-card.tsx:185` starts `saveSettings`.
 - `roma/components/account-locale-settings-card.tsx:196` through
   `roma/components/account-locale-settings-card.tsx:208` build active locale

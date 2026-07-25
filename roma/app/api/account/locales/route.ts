@@ -11,15 +11,13 @@ import { normalizeLocaleToken } from '@clickeen/l10n';
 import { listAccountWidgetInstanceIds } from '@roma/lib/account-instance-direct';
 import {
   deleteAccountInstanceLocalePackageArtifact,
-  materializeAccountInstanceLocalePackages,
-  type LocalePackagePhase,
-  type LocalePackageMaterializationValue,
 } from '@roma/lib/account-instance-locale-package';
-import { buildLocalePackageDeleteFailureCoordinate } from '@roma/lib/account-locale-overlay-update';
+import { deleteAccountInstanceTranslationValues } from '@roma/lib/account-instance-translations';
 import {
-  deleteAccountInstanceTranslationValues,
-  generateAccountInstanceTranslations,
-} from '@roma/lib/account-instance-translations';
+  emptyRemovedLocaleCleanup,
+  runRemovedLocaleCleanup,
+  type RemovedLocaleCleanup,
+} from '@roma/lib/account-locale-cleanup';
 import { loadAccountBaseLocaleLockState } from '@roma/lib/account-base-locale-lock';
 import {
   ACCOUNT_ACTIVE_LOCALES_PATCH_SELECT,
@@ -37,52 +35,6 @@ export const runtime = 'edge';
 type AccountLocalesWritePayload = {
   activeLocales?: unknown;
   localePolicy?: unknown;
-};
-
-type LocaleOverlayUpdateError = {
-  kind: 'VALIDATION' | 'AUTH' | 'DENY' | 'NOT_FOUND' | 'UPSTREAM_UNAVAILABLE';
-  reasonKey: string;
-  detail?: string;
-};
-
-type LocaleOverlayUpdateFailure = {
-  ok: false;
-  status: number;
-  error: LocaleOverlayUpdateError;
-  value?: LocaleOverlayUpdateValue;
-};
-
-type LocaleOverlayUpdateValue = {
-  ok: boolean;
-  instancesChecked: number;
-  cost: {
-    instances: number;
-    changedLocales: number;
-    coordinates: number;
-    configuredActiveLocaleCap: number | null;
-    hostCommandTimeoutMs: 120000;
-  };
-  deleted: Array<{ instanceId: string; locale: string }>;
-  generated: Array<{ instanceId: string; locales: string[] }>;
-  skipped: Array<{ instanceId: string; locales: string[]; reasonKey: string; detail?: string }>;
-  localePackages: {
-    deleted: Array<{ accountId: string; instanceId: string; locale: string }>;
-    generated: LocalePackageMaterializationValue['completed'];
-    failed: LocalePackageMaterializationValue['failed'];
-  };
-  failed?: {
-    accountId: string;
-    instanceId: string;
-    locale: string;
-    phase:
-      | 'translation-delete'
-      | 'translation-generation'
-      | 'locale-package-materialize'
-      | LocalePackagePhase;
-    reasonKey: string;
-    detail?: string;
-  };
-  error?: LocaleOverlayUpdateError;
 };
 
 function resolveSupabaseAdminConfig(): { baseUrl: string; serviceRoleKey: string } {
@@ -125,48 +77,6 @@ function resolveDbErrorDetail(payload: unknown, fallback: string): string {
   return typeof message === 'string' && message.trim() ? message.trim() : fallback;
 }
 
-function localeOverlayFailure(args: {
-  status: number;
-  kind: LocaleOverlayUpdateError['kind'];
-  reasonKey: string;
-  detail: string;
-  value?: Omit<LocaleOverlayUpdateValue, 'ok' | 'error'>;
-}): LocaleOverlayUpdateFailure {
-  const error: LocaleOverlayUpdateError = {
-    kind: args.kind,
-    reasonKey: args.reasonKey,
-    detail: args.detail,
-  };
-  return {
-    ok: false,
-    status: args.status,
-    error,
-    ...(args.value ? { value: { ...args.value, ok: false, error } } : {}),
-  };
-}
-
-function emptyOverlayUpdate(): LocaleOverlayUpdateValue {
-  return {
-    ok: true,
-    instancesChecked: 0,
-    cost: {
-      instances: 0,
-      changedLocales: 0,
-      coordinates: 0,
-      configuredActiveLocaleCap: null,
-      hostCommandTimeoutMs: 120000,
-    },
-    deleted: [],
-    generated: [],
-    skipped: [],
-    localePackages: {
-      deleted: [],
-      generated: [],
-      failed: [],
-    },
-  };
-}
-
 function sameJson(left: unknown, right: unknown): boolean {
   return JSON.stringify(left) === JSON.stringify(right);
 }
@@ -191,264 +101,47 @@ function resolveActiveLocaleDelta(args: {
   };
 }
 
-function mergeOverlayUpdates(left: LocaleOverlayUpdateValue, right: LocaleOverlayUpdateValue): LocaleOverlayUpdateValue {
-  return {
-    instancesChecked: Math.max(left.instancesChecked, right.instancesChecked),
-    cost: {
-      instances: Math.max(left.cost.instances, right.cost.instances),
-      changedLocales: Math.max(left.cost.changedLocales, right.cost.changedLocales),
-      coordinates: left.cost.coordinates + right.cost.coordinates,
-      configuredActiveLocaleCap: right.cost.configuredActiveLocaleCap ?? left.cost.configuredActiveLocaleCap,
-      hostCommandTimeoutMs: 120000,
-    },
-    deleted: [...left.deleted, ...right.deleted],
-    generated: [...left.generated, ...right.generated],
-    skipped: [...left.skipped, ...right.skipped],
-    localePackages: {
-      deleted: [...left.localePackages.deleted, ...right.localePackages.deleted],
-      generated: [...left.localePackages.generated, ...right.localePackages.generated],
-      failed: [...left.localePackages.failed, ...right.localePackages.failed],
-    },
-    ok: left.ok && right.ok,
-    ...(right.error ? { error: right.error } : left.error ? { error: left.error } : {}),
-  };
-}
-
-async function reconcileAccountLocaleOverlays(args: {
-  request: NextRequest;
+async function cleanupRemovedAccountLocales(args: {
   accountId: string;
   accountCapsule?: string | null;
   requestId?: string | null;
-  addedLocales: string[];
   removedLocales: string[];
-  baseLocale: string;
-  configuredActiveLocaleCap: number | null;
-  authz: Parameters<typeof generateAccountInstanceTranslations>[0]['authz'];
-}): Promise<
-  | {
-      ok: true;
-      value: LocaleOverlayUpdateValue;
-    }
-  | LocaleOverlayUpdateFailure
-> {
-  const removedLocales = Array.from(new Set(args.removedLocales.filter((locale) => locale !== args.baseLocale)));
-  const addedLocales = Array.from(new Set(args.addedLocales.filter((locale) => locale !== args.baseLocale)));
-
-  if (removedLocales.length === 0 && addedLocales.length === 0) {
-    return { ok: true, value: emptyOverlayUpdate() };
-  }
-
+}): Promise<RemovedLocaleCleanup> {
+  const removedLocales = Array.from(new Set(args.removedLocales));
+  if (removedLocales.length === 0) return emptyRemovedLocaleCleanup();
   const instances = await listAccountWidgetInstanceIds({
     accountId: args.accountId,
     accountCapsule: args.accountCapsule,
     requestId: args.requestId,
   });
-  if (!instances.ok) return instances;
-  const changedLocaleCount = addedLocales.length + removedLocales.length;
-  const cost: LocaleOverlayUpdateValue['cost'] = {
-    instances: instances.value.instanceIds.length,
-    changedLocales: changedLocaleCount,
-    coordinates: instances.value.instanceIds.length * changedLocaleCount,
-    configuredActiveLocaleCap: args.configuredActiveLocaleCap,
-    hostCommandTimeoutMs: 120000,
-  };
-
-  const deleted: Array<{ instanceId: string; locale: string }> = [];
-  const generated: Array<{ instanceId: string; locales: string[] }> = [];
-  const skipped: Array<{ instanceId: string; locales: string[]; reasonKey: string; detail?: string }> = [];
-  const localePackages: LocaleOverlayUpdateValue['localePackages'] = {
-    deleted: [],
-    generated: [],
-    failed: [],
-  };
-  let instancesChecked = 0;
-
-  for (const instanceId of instances.value.instanceIds) {
-    instancesChecked += 1;
-    for (const locale of removedLocales) {
-      const result = await deleteAccountInstanceTranslationValues({
-        accountId: args.accountId,
-        instanceId,
-        locale,
-        accountCapsule: args.accountCapsule,
-        requestId: args.requestId,
-      });
-      if (!result.ok) {
-        return localeOverlayFailure({
-          status: result.status,
-          kind: result.error.kind,
-          reasonKey: result.error.reasonKey,
-          detail: `delete:${instanceId}:${locale}:${result.error.detail ?? result.error.reasonKey}`,
-          value: {
-            instancesChecked,
-            cost,
-            deleted,
-            generated,
-            skipped,
-            localePackages,
-            failed: {
-              accountId: args.accountId,
-              instanceId,
-              locale,
-              phase: 'translation-delete',
-              reasonKey: result.error.reasonKey,
-              ...(result.error.detail ? { detail: result.error.detail } : {}),
-            },
-          },
-        });
-      }
-      deleted.push({ instanceId, locale });
-      const packageDelete = await deleteAccountInstanceLocalePackageArtifact({
-        accountId: args.accountId,
-        instanceId,
-        locale,
-        accountCapsule: args.accountCapsule,
-        requestId: args.requestId,
-      });
-      if (!packageDelete.ok) {
-        const packageFailure = buildLocalePackageDeleteFailureCoordinate({
-          accountId: args.accountId,
-          instanceId,
-          locale,
-          reasonKey: packageDelete.error.reasonKey,
-          ...(packageDelete.error.detail ? { detail: packageDelete.error.detail } : {}),
-        });
-        return localeOverlayFailure({
-          status: packageDelete.status,
-          kind: packageDelete.error.kind,
-          reasonKey: packageDelete.error.reasonKey,
-          detail: `locale-package-delete:${instanceId}:${locale}:${packageDelete.error.detail ?? packageDelete.error.reasonKey}`,
-          value: {
-            instancesChecked,
-            cost,
-            deleted,
-            generated,
-            skipped,
-            localePackages: {
-              ...localePackages,
-              failed: [...localePackages.failed, packageFailure],
-            },
-            failed: {
-              accountId: args.accountId,
-              instanceId,
-              locale,
-              phase: packageFailure.phase,
-              reasonKey: packageDelete.error.reasonKey,
-              ...(packageDelete.error.detail ? { detail: packageDelete.error.detail } : {}),
-            },
-          },
-        });
-      }
-      localePackages.deleted.push(packageDelete.value);
-    }
-
-    if (addedLocales.length === 0) continue;
-
-    for (const locale of addedLocales) {
-      const generation = await generateAccountInstanceTranslations({
-        accountId: args.accountId,
-        instanceId,
-        baseLocale: args.baseLocale,
-        activeLocales: [locale],
-        authz: args.authz,
-        accountCapsule: args.accountCapsule,
-        requestId: args.requestId,
-      });
-      if (!generation.ok) {
-        if (generation.error.detail === 'saved_instance_has_no_translatable_fields') {
-          skipped.push({
-            instanceId,
-            locales: [locale],
-            reasonKey: generation.error.reasonKey,
-            detail: generation.error.detail,
-          });
-          continue;
-        }
-        return localeOverlayFailure({
-          status: generation.status,
-          kind: generation.error.kind,
-          reasonKey: generation.error.reasonKey,
-          detail: `generate:${instanceId}:${locale}:${generation.error.detail ?? generation.error.reasonKey}`,
-          value: {
-            instancesChecked,
-            cost,
-            deleted,
-            generated,
-            skipped,
-            localePackages,
-            failed: {
-              accountId: args.accountId,
-              instanceId,
-              locale,
-              phase: 'translation-generation',
-              reasonKey: generation.error.reasonKey,
-              ...(generation.error.detail ? { detail: generation.error.detail } : {}),
-            },
-          },
-        });
-      }
-      if (!generation.value.translation.accepted) {
-        skipped.push({
-          instanceId,
-          locales: [locale],
-          reasonKey: 'coreui.errors.translation.noActiveLocales',
-          detail: 'not_accepted',
-        });
-        continue;
-      }
-      const packageMaterialization = await materializeAccountInstanceLocalePackages({
-        accountId: args.accountId,
-        instanceId,
-        baseLocale: args.baseLocale,
-        activeLocales: generation.value.translation.activeLocales,
-        accountCapsule: args.accountCapsule ?? '',
-        requestId: args.requestId ?? '',
-      });
-      localePackages.generated.push(...packageMaterialization.value.completed);
-      localePackages.failed.push(...packageMaterialization.value.failed);
-      if (!packageMaterialization.ok) {
-        const firstPackageFailure = packageMaterialization.value.failed[0];
-        return localeOverlayFailure({
-          status: packageMaterialization.status,
-          kind: packageMaterialization.error.kind,
-          reasonKey: packageMaterialization.error.reasonKey,
-          detail: `locale-package-materialize:${firstPackageFailure?.instanceId ?? instanceId}:${firstPackageFailure?.locale ?? locale}:${firstPackageFailure?.phase ?? 'unknown'}:${packageMaterialization.error.detail ?? packageMaterialization.error.reasonKey}`,
-          value: {
-            instancesChecked,
-            cost,
-            deleted,
-            generated,
-            skipped,
-            localePackages: {
-              ...localePackages,
-            },
-            failed: {
-              accountId: args.accountId,
-              instanceId,
-              locale: firstPackageFailure?.locale ?? locale,
-              phase: firstPackageFailure?.phase ?? 'locale-package-materialize',
-              reasonKey: packageMaterialization.error.reasonKey,
-              ...(packageMaterialization.error.detail ? { detail: packageMaterialization.error.detail } : {}),
-            },
-          },
-        });
-      }
-      generated.push({ instanceId, locales: generation.value.translation.activeLocales });
-    }
+  if (!instances.ok) {
+    return {
+      ...emptyRemovedLocaleCleanup(),
+      ok: false,
+      error: instances.error,
+    };
   }
-
-  return {
-    ok: true,
-    value: {
-      ok: true,
-      instancesChecked,
-      cost,
-      deleted,
-      generated,
-      skipped,
-      localePackages,
-    },
-  };
+  return runRemovedLocaleCleanup({
+    accountId: args.accountId,
+    instanceIds: instances.value.instanceIds,
+    removedLocales,
+    deleteTranslation: (instanceId, locale) =>
+      deleteAccountInstanceTranslationValues({
+        accountId: args.accountId,
+        instanceId,
+        locale,
+        accountCapsule: args.accountCapsule,
+        requestId: args.requestId,
+      }),
+    deletePackage: (instanceId, locale) =>
+      deleteAccountInstanceLocalePackageArtifact({
+        accountId: args.accountId,
+        instanceId,
+        locale,
+        accountCapsule: args.accountCapsule,
+        requestId: args.requestId,
+      }),
+  });
 }
 
 export async function GET(request: NextRequest) {
@@ -588,11 +281,6 @@ export async function PUT(request: NextRequest) {
       profile: current.value.authzPayload.profile,
       role: current.value.authzPayload.role,
     });
-    const activeLocaleCapRaw = policy.limits['l10n.locales.max'];
-    const activeLocaleCap =
-      typeof activeLocaleCapRaw === 'number' && Number.isFinite(activeLocaleCapRaw)
-        ? Math.max(0, Math.floor(activeLocaleCapRaw))
-        : null;
     const entitlementGate = enforceActiveLocaleEntitlement(policy, activeLocales);
     if (entitlementGate) return withSession(request, entitlementGate, current.value.setCookies);
 
@@ -677,7 +365,7 @@ export async function PUT(request: NextRequest) {
           accountId: current.value.authzPayload.accountId,
           activeLocales: accountState.activeLocales,
           localePolicy: accountState.localePolicy,
-          overlayUpdate: emptyOverlayUpdate(),
+          localeCleanup: emptyRemovedLocaleCleanup(),
         }),
         current.value.setCookies,
       );
@@ -738,36 +426,22 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    let overlayUpdate = emptyOverlayUpdate();
-    if (activeDelta.addedLocales.length > 0 || activeDelta.removedLocales.length > 0) {
-      const pendingOverlayUpdate = await reconcileAccountLocaleOverlays({
-        request,
+    const localeCleanup =
+      activeDelta.removedLocales.length > 0
+        ? await cleanupRemovedAccountLocales({
         accountId: current.value.authzPayload.accountPublicId,
         accountCapsule: current.value.authzToken,
         requestId: current.value.requestId,
-        addedLocales: activeDelta.addedLocales,
         removedLocales: activeDelta.removedLocales,
-        baseLocale,
-        configuredActiveLocaleCap: activeLocaleCap,
-        authz: current.value.authzPayload,
-      });
-      if (pendingOverlayUpdate.ok) {
-        overlayUpdate = mergeOverlayUpdates(overlayUpdate, pendingOverlayUpdate.value);
-      } else {
-        overlayUpdate = pendingOverlayUpdate.value ?? {
-          ...emptyOverlayUpdate(),
-          ok: false,
-          error: pendingOverlayUpdate.error,
-        };
-      }
-    }
+          })
+        : emptyRemovedLocaleCleanup();
 
     return withSession(
       request,
       NextResponse.json({
         accountId: current.value.authzPayload.accountId,
         ...readAccountActiveLocalesPatch(patchedRow),
-        overlayUpdate,
+        localeCleanup,
       }),
       current.value.setCookies,
     );

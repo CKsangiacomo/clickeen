@@ -322,14 +322,14 @@ Behavior:
 - computes added/removed active locales against current account state;
 - patches account locale settings in Supabase as the account truth;
 - for removed locales, deletes exact instance overlay files through Tokyo-worker;
-- for added locales, calls Translation Agent generation for each saved instance;
-- returns `overlayUpdate` with `ok`, checked/deleted/generated/skipped summary,
-  and an explicit error when overlay follow-up does not fully complete.
+- for added locales, performs no widget translation work;
+- returns `localeCleanup` with exact removed-locale deletion results.
 
-Account active locales are the saved account decision. Overlay follow-up does
-not veto that decision. If overlay follow-up fails after the settings write,
-Roma returns the saved settings with `overlayUpdate.ok: false`; Bob/runtime
-surfaces must not claim overlay work fully completed from that response.
+Account active locales are the saved account decision. Added languages become
+available in each widget's Translations panel and remain missing until that
+widget explicitly generates translations. Removed-locale cleanup does not veto
+the saved setting; an exact cleanup failure returns as
+`localeCleanup.ok: false`.
 
 This is an operator fact, not a desired future abstraction.
 

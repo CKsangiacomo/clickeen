@@ -213,23 +213,16 @@ Agent Activity while it operates. Roma forwards that activity to Bob; Roma does
 not author it, summarize it, poll for it, persist it, or convert it into product
 status.
 
-Account language settings are also an overlay operation. When the user saves
-active locales in Roma Settings, Roma compares the previous active locales to
-the new active locales, writes the account locale settings to Supabase, then
-runs overlay follow-up for saved account instances. Removed active locales
-delete exact overlay files and generated locale package files through
-Tokyo-worker. Added active locales are generated through the same Translation
-Agent Worker path and then materialized into generated locale package bytes. If
-overlay or locale-package follow-up fails after the settings write, Roma returns
-the saved settings with `overlayUpdate.ok: false`; it does not pretend follow-up
-work fully completed.
-For published instances, locale package delete/write follow-up includes Tokyo
-public cache refresh; a refresh failure is reported as phase `cache-refresh`.
-If active locales and locale policy are unchanged, Roma returns no overlay
-work. Roma does not ask Bob and does not create a background locale job; saving
-settings is the user decision. `overlayUpdate.cost` records the direct
-synchronous surface as saved instance count times changed non-base locale count,
-using the current `l10n.locales.max` cap for reference.
+Account language settings choose which languages are available to widgets. Roma
+writes that account configuration to Supabase. Adding a language does not call
+the Translation Agent or materialize any widget; each widget remains missing
+that translation until its Translations panel explicitly generates it.
+
+Removing a language deletes its exact overlay and generated locale package from
+saved account instances through Tokyo-worker. If deletion or public cache
+refresh fails after the settings write, Roma returns the saved settings with
+`localeCleanup.ok: false` and the exact failed coordinate. The account setting
+remains the user decision and account truth.
 
 Roma Builder owns public widget copy actions for the current account and opened
 instance. It builds the public URL and iframe/script snippets from the current

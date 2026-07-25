@@ -114,73 +114,36 @@ Save response:
       }
     }
   },
-  "overlayUpdate": {
+  "localeCleanup": {
     "ok": true,
     "instancesChecked": 0,
-    "cost": {
-      "instances": 0,
-      "changedLocales": 0,
-      "coordinates": 0,
-      "configuredActiveLocaleCap": 3,
-      "hostCommandTimeoutMs": 120000
-    },
     "deleted": [{ "instanceId": "[instance id]", "locale": "[removed locale]" }],
-    "generated": [{ "instanceId": "[instance id]", "locales": ["[added locale]"] }],
-    "skipped": [
-      {
-        "instanceId": "[instance id]",
-        "locales": ["[added locale]"],
-        "reasonKey": "[reason key]",
-        "detail": "[detail]"
-      }
-    ],
-    "localePackages": {
-      "deleted": [{ "accountId": "[account public id]", "instanceId": "[instance id]", "locale": "[removed locale]" }],
-      "generated": [
-        {
-          "accountId": "[account public id]",
-          "instanceId": "[instance id]",
-          "locale": "[added locale]",
-          "publicPackageFingerprint": "sha256:[fingerprint]"
-        }
-      ],
-      "failed": []
-    }
+    "deletedPackages": [
+      { "accountId": "[account public id]", "instanceId": "[instance id]", "locale": "[removed locale]" }
+    ]
   }
 }
 ```
 
-If overlay follow-up fails after the setting is saved, the same response uses
-`overlayUpdate.ok: false` and includes the explicit failure:
+If removed-language cleanup fails after the setting is saved, the same response
+uses `localeCleanup.ok: false` and includes the exact failure:
 
 ```json
 {
-  "overlayUpdate": {
+  "localeCleanup": {
     "ok": false,
     "instancesChecked": 1,
-    "cost": {
-      "instances": 1,
-      "changedLocales": 1,
-      "coordinates": 1,
-      "configuredActiveLocaleCap": 3,
-      "hostCommandTimeoutMs": 120000
-    },
     "deleted": [],
-    "generated": [],
-    "skipped": [],
-    "localePackages": {
-      "deleted": [],
-      "generated": [],
-      "failed": [
-        {
-          "accountId": "[account public id]",
-          "instanceId": "[instance id]",
-          "locale": "[failed locale]",
-          "phase": "[failure phase]",
-          "reasonKey": "[reason key]"
-        }
-      ]
-    },
+    "deletedPackages": [],
+    "failed": [
+      {
+        "instanceId": "[instance id]",
+        "locale": "[removed locale]",
+        "phase": "[translation-delete | locale-package-delete | cache-refresh]",
+        "reasonKey": "[reason key]",
+        "detail": "[detail]"
+      }
+    ],
     "error": {
       "kind": "UPSTREAM_UNAVAILABLE",
       "reasonKey": "[reason key]",
@@ -192,23 +155,15 @@ If overlay follow-up fails after the setting is saved, the same response uses
 
 When active locales shrink, Roma saves the account setting first and then asks
 Tokyo-worker to delete exact overlay files and generated locale package files
-for removed locales. When active locales expand, Roma saves the account setting
-first, asks the Translation Agent to generate overlays for added locales one
-locale at a time, then prepares shared package inputs once and materializes the
-generated locale package bytes with bounded concurrency. Exact per-locale
-completion and failure coordinates prevent a batch failure from being assigned
-to an inferred locale.
+for removed locales. When active locales expand, Roma only saves the account
+setting. The added language then appears in each widget's Translations panel as
+available but missing until the user explicitly generates that widget's
+translations. Account settings never call the Translation Agent or materialize
+widget packages.
 
-If overlay follow-up fails after the settings write, Roma reports
-`overlayUpdate.ok: false`. The saved account locale setting remains the account
-truth; the failed overlay operation is explicit follow-up failure.
-Generated locale package failures use the same explicit follow-up channel and
-include completed, skipped, and failed locale coordinates. `overlayUpdate.cost`
-records the synchronous coordinate surface as saved instance id count times
-changed non-base locale count; it is command evidence, not a status ledger.
-Roma gets that count from Tokyo-worker's account instance coordinate list. It
-does not open list-facts rows and does not call a separate account instance
-facts route for locale fan-out or base-locale lock.
+If removed-language cleanup fails after the settings write, Roma reports
+`localeCleanup.ok: false`. The saved account locale setting remains the account
+truth; the exact cleanup failure remains visible.
 
 ## Runtime Dependencies
 
@@ -304,9 +259,9 @@ PUT /api/account/locales
 
 2. Roma writes account settings first.
 3. Removed active locales delete exact overlay files through Tokyo-worker.
-4. Added active locales generate overlays through the Translation Agent for
-   saved account instances.
-5. A follow-up failure returns `overlayUpdate.ok: false`; the account locale
+4. Added active locales remain missing on each widget until generated from that
+   widget's Translations panel.
+5. A removed-language cleanup failure returns `localeCleanup.ok: false`; the account locale
    setting remains saved and is the account truth.
 
 ## Translation Generation
@@ -382,7 +337,7 @@ on write, read, and list. Missing paths and unexpected paths fail.
 | Missing overlay | read returns `404` |
 | Failure after earlier locale writes | prior files remain; full success must not be claimed |
 | Source save with stale translations | source/base save remains save truth; translation update is an explicit Translations panel operation |
-| Account locale follow-up failure | settings save remains; response reports `overlayUpdate.ok: false` |
+| Removed account locale cleanup failure | settings save remains; response reports `localeCleanup.ok: false` |
 | Translation Agent binding missing | Roma returns explicit upstream failure |
 | San Francisco/model failure | Translation Agent/Roma return explicit failure; no full success |
 | Tokyo write rejection | Translation Agent/Roma return explicit failure; no full success |

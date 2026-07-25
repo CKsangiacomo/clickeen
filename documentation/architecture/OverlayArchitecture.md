@@ -129,17 +129,16 @@ When active locales expand:
 
 ```text
 Roma saves activeLocales first
--> Roma asks Translation Agent to generate overlays for added locales
--> Translation Agent writes exact files through Tokyo-worker
--> Roma materializes generated locale package files for the same added locales
+-> added languages become available to widget Translation panels
+-> each widget remains missing that locale until its Generate action runs
 ```
 
 Tokyo-worker does not infer why a locale was added or removed. It stores,
 reads, and deletes exact files.
 
-If overlay follow-up fails after the settings write, Roma reports
-`overlayUpdate.ok: false`. The account active locale setting remains the saved
-account setting; the failed overlay operation is explicit follow-up failure.
+If removed-locale cleanup fails after the settings write, Roma reports
+`localeCleanup.ok: false`. The account active locale setting remains the saved
+account setting; the exact cleanup failure remains visible.
 
 ## Failure Semantics
 
@@ -151,7 +150,7 @@ account setting; the failed overlay operation is explicit follow-up failure.
 | No active non-base locales | generation returns `accepted: false` |
 | Invalid Translation Agent grant | write fails |
 | Tokyo write rejection | generation fails for that locale |
-| Locale package write rejection | localization/settings package response includes completed/skipped/failed package coordinates and full success is not claimed |
+| Locale package write rejection | widget generation response includes exact completed/failed package coordinates and full success is not claimed |
 | Source save with stale overlays | source/base save remains save truth; translation update is explicit localization work |
 | Failure after earlier locale writes | prior files remain; full success must not be claimed |
 

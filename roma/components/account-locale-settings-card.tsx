@@ -14,9 +14,8 @@ type AccountLocalesPayload = {
 };
 
 type AccountLocalesSaveResponse = {
-  overlayUpdate?: {
+  localeCleanup?: {
     ok?: unknown;
-    skipped?: unknown[];
     error?: {
       reasonKey?: unknown;
       detail?: unknown;
@@ -107,19 +106,10 @@ function resolveAccountLocalesErrorCopy(reason: unknown, fallback: string): stri
   return fallback;
 }
 
-function resolveAccountLocalesSuccessCopy(payload: AccountLocalesSaveResponse): string {
-  const overlayUpdate = payload.overlayUpdate;
-  if (!overlayUpdate || overlayUpdate.ok === true) {
-    const skipped = Array.isArray(overlayUpdate?.skipped) ? overlayUpdate.skipped.length : 0;
-    return skipped > 0
-      ? `Saved languages. Translation updates skipped ${skipped} widget${skipped === 1 ? '' : 's'} with no translation fields.`
-      : 'Saved languages.';
-  }
-  const reason = resolveAccountLocalesErrorCopy(
-    overlayUpdate.error?.reasonKey ?? overlayUpdate.error?.detail,
-    'Translation updates did not fully complete.',
-  );
-  return `Saved languages. ${reason}`;
+export function resolveAccountLocalesSuccessCopy(payload: AccountLocalesSaveResponse): string {
+  const localeCleanup = payload.localeCleanup;
+  if (!localeCleanup || localeCleanup.ok === true) return 'Saved languages.';
+  return 'Saved languages. Removed language content could not be fully deleted.';
 }
 
 export function AccountLocaleSettingsCard(args: {

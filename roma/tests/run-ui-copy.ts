@@ -4,6 +4,7 @@ import {
   formatAccountTierLabel,
   isAccountRoleValue,
 } from '../lib/format';
+import { resolveAccountLocalesSuccessCopy } from '../components/account-locale-settings-card';
 
 const tierLabels = [
   ['free', 'Free'],
@@ -35,5 +36,15 @@ assert.equal(formatAccountRoleLabel('superadmin'), 'Invalid role');
 assert.equal(formatAccountRoleLabel(undefined), 'Invalid role');
 assert.equal(isAccountRoleValue('superadmin'), false);
 assert.equal(isAccountRoleValue(null), false);
+assert.equal(resolveAccountLocalesSuccessCopy({}), 'Saved languages.');
+assert.equal(
+  resolveAccountLocalesSuccessCopy({
+    localeCleanup: {
+      ok: false,
+      error: { reasonKey: 'coreui.errors.db.writeFailed' },
+    },
+  }),
+  'Saved languages. Removed language content could not be fully deleted.',
+);
 
-console.log('PASS account plan and role display labels');
+console.log('PASS account plan, role, and locale cleanup display labels');
