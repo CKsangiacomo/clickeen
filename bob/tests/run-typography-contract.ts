@@ -129,7 +129,14 @@ async function testAccountFontBindingAndChange(): Promise<void> {
     }),
     null,
   );
-
+  assert.equal(
+    expandTypographyFamilyOps({
+      instanceData: structuredClone(raw.defaults),
+      fontLibrary: null,
+      ops: [{ op: 'set', path: 'typography.roles.title.family', value: 'Orio' }],
+    }),
+    null,
+  );
 }
 
 async function main(): Promise<void> {

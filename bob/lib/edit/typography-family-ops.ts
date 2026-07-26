@@ -12,15 +12,15 @@ export function expandTypographyFamilyOps(args: {
   fontLibrary: AccountFontLibrary | null;
   ops: WidgetOp[];
 }): WidgetOp[] | null {
-  if (!args.fontLibrary) return args.ops;
   const familyOps = args.ops.filter(
     (op): op is Extract<WidgetOp, { op: 'set' }> =>
       op.op === 'set' && FAMILY_PATH.test(op.path),
   );
+  if (!familyOps.length) return args.ops;
+  if (!args.fontLibrary) return null;
   const familyBases = new Set(
     familyOps.map((op) => op.path.match(FAMILY_PATH)![1]!),
   );
-  if (!familyBases.size) return args.ops;
   if (familyBases.size !== familyOps.length) return null;
 
   const expanded: WidgetOp[] = [];
