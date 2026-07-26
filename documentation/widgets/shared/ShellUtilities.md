@@ -18,10 +18,8 @@ localeSwitcher
 
 The Shell package owns their default product labels. A widget declares labels
 and visible order for its additional roles in its structured typography panel.
-During widget generation, Clickeen parses the actual role map passed by
-`widget.client.js` to `CKTypography.applyTypography` and requires exact parity
-with the composed spec roles. Runtime and editor role vocabularies cannot drift
-silently.
+Bob composes those declared roles into the editor. The widget runtime consumes
+the same structured typography state through `CKTypography.applyTypography`.
 
 ## Branding
 

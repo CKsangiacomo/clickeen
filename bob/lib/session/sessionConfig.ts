@@ -1,7 +1,6 @@
 import type { CompiledControl, CompiledWidget } from '../types';
 import {
   accountFontLibraryToFamilyOptions,
-  validateAccountTypographyFontSelections,
   type AccountFontLibrary,
 } from '@clickeen/widget-shell';
 const TOKEN_SEGMENT = /^__[^.]+__$/;
@@ -164,15 +163,4 @@ export function bindSessionTypographyControls(
         : control,
     ),
   };
-}
-
-export function assertAccountTypographySelections(
-  config: Record<string, unknown>,
-  fontLibrary: AccountFontLibrary,
-): void {
-  const [invalidPath] = validateAccountTypographyFontSelections({
-    fontLibrary,
-    typography: config.typography,
-  });
-  if (invalidPath) invalid(invalidPath);
 }

@@ -12,8 +12,6 @@ import {
   runHydrators,
   serializeBobJsonFieldValue,
   expandTypographyFamilyOps,
-  isTypographyFamilySelectionError,
-  TYPOGRAPHY_SELECTION_INVALID_COPY,
   type AccountAssetsClient,
   type ShowIfEntry,
 } from '@clickeen/bob/control-host';
@@ -43,7 +41,6 @@ type BuilderDefaultsControlsProps = {
   fontLibrary: AccountFontLibrary;
   scopeLabel: string;
   onContractError: (message: string) => void;
-  onEditError: (message: string) => void;
   onOps: (ops: Array<{ path: string; value: unknown }>) => void;
   onReadyChange: (ready: boolean) => void;
 };
@@ -250,7 +247,6 @@ export function WidgetDefaultsBuilderControls({
   controls,
   fontLibrary,
   onContractError,
-  onEditError,
   onOps,
   onReadyChange,
   payloads,
@@ -322,20 +318,17 @@ export function WidgetDefaultsBuilderControls({
           isRecord(op) && op.op === 'set' && typeof op.path === 'string',
       );
       if (!setOps.length) return;
-      try {
-        const expanded = expandTypographyFamilyOps({
-          instanceData: valuesRef.current,
-          fontLibrary,
-          ops: setOps,
-        }).filter(
-          (op): op is { op: 'set'; path: string; value: unknown } => op.op === 'set',
+      const expanded = expandTypographyFamilyOps({
+        instanceData: valuesRef.current,
+        fontLibrary,
+        ops: setOps,
+      });
+      if (expanded) {
+        onOps(
+          expanded.filter(
+            (op): op is { op: 'set'; path: string; value: unknown } => op.op === 'set',
+          ),
         );
-        onEditError('');
-        onOps(expanded);
-      } catch (error) {
-        if (!isTypographyFamilySelectionError(error)) throw error;
-        syncControlValues(container, valuesRef.current, showIfEntriesRef.current);
-        onEditError(TYPOGRAPHY_SELECTION_INVALID_COPY);
       }
     };
 
@@ -354,20 +347,17 @@ export function WidgetDefaultsBuilderControls({
       if (target instanceof HTMLInputElement && target.type === 'radio' && !target.checked) return;
       const path = resolvePathFromTarget(target);
       if (!path) return;
-      try {
-        const expanded = expandTypographyFamilyOps({
-          instanceData: valuesRef.current,
-          fontLibrary,
-          ops: [{ op: 'set', path, value: valueFromField(target, valuesRef.current) }],
-        }).filter(
-          (op): op is { op: 'set'; path: string; value: unknown } => op.op === 'set',
+      const expanded = expandTypographyFamilyOps({
+        instanceData: valuesRef.current,
+        fontLibrary,
+        ops: [{ op: 'set', path, value: valueFromField(target, valuesRef.current) }],
+      });
+      if (expanded) {
+        onOps(
+          expanded.filter(
+            (op): op is { op: 'set'; path: string; value: unknown } => op.op === 'set',
+          ),
         );
-        onEditError('');
-        onOps(expanded);
-      } catch (error) {
-        if (!isTypographyFamilySelectionError(error)) throw error;
-        syncControlValues(container, valuesRef.current, showIfEntriesRef.current);
-        onEditError(TYPOGRAPHY_SELECTION_INVALID_COPY);
       }
     };
 
@@ -405,7 +395,6 @@ export function WidgetDefaultsBuilderControls({
     };
   }, [
     onContractError,
-    onEditError,
     onOps,
     onReadyChange,
     panelBuild.missingPaths,

@@ -15,8 +15,6 @@ import { getAt } from '../lib/utils/paths';
 import { evaluateShowIfExpression } from './td-menu-content/showIf';
 import {
   expandTypographyFamilyOps,
-  isTypographyFamilySelectionError,
-  TYPOGRAPHY_SELECTION_INVALID_COPY,
 } from '../lib/edit/typography-family-ops';
 
 type WidgetSessionValue = ReturnType<typeof useWidgetSession>;
@@ -511,17 +509,13 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
           setStatus('idle');
           return;
         }
-        let expandedOps: WidgetOp[];
-        try {
-          expandedOps = expandTypographyFamilyOps({
-            instanceData: requestBaseData,
-            fontLibrary: session.fontLibrary,
-            ops,
-          });
-        } catch (error) {
-          if (!isTypographyFamilySelectionError(error)) throw error;
-          session.reportEditRejection(error.reasonKey);
-          pushMessage({ role: 'assistant', text: TYPOGRAPHY_SELECTION_INVALID_COPY });
+        const expandedOps = expandTypographyFamilyOps({
+          instanceData: requestBaseData,
+          fontLibrary: session.fontLibrary,
+          ops,
+        });
+        if (!expandedOps) {
+          pushMessage({ role: 'assistant', text: COPILOT_INVALID_EDIT_MESSAGE });
           setStatus('idle');
           return;
         }

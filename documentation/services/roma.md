@@ -375,9 +375,7 @@ same current account `fontLibrary`, family transition resolver, and relational
 family/weight/style validator as Bob for both Shell and Widget Core defaults.
 Each accepted family transition updates all three values in one draft-state
 update. GET and PUT reject exact invalid typography paths before Tokyo
-persistence. Unknown, malformed, or explicitly disallowed selections leave the
-draft and dirty state unchanged and restore family, weight, and style controls
-from the current defaults document.
+persistence. The account-backed controls expose only available choices.
 
 Account instance create, save, and duplicate materialize the candidate public
 package before the Tokyo write. Package materialization applies the same

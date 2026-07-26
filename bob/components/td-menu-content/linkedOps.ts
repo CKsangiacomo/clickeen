@@ -457,9 +457,13 @@ export function expandLinkedOps(args: {
     expanded.push(op);
   }
 
-  return expandTypographyFamilyOps({
+  const typographyOps = expandTypographyFamilyOps({
     instanceData: args.instanceData,
     fontLibrary: args.fontLibrary,
     ops: expanded,
   });
+  if (!typographyOps) {
+    throw new Error('coreui.errors.typography.selection.invalid');
+  }
+  return typographyOps;
 }

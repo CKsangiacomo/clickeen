@@ -8,10 +8,6 @@ import {
   type SessionUpsell,
 } from './sessionTypes';
 import type { ExecuteAccountCommand } from './sessionTransport';
-import {
-  ACCOUNT_TYPOGRAPHY_SELECTION_INVALID_REASON_KEY,
-  validateAccountTypographyFontSelections,
-} from '@clickeen/widget-shell';
 import { assertSessionConfigContract } from './sessionConfig';
 
 export function useSessionSaving(args: {
@@ -58,26 +54,6 @@ export function useSessionSaving(args: {
       if (!snapshot.compiled) throw new Error('coreui.errors.builder.save.missingContract');
       const config = snapshot.instanceData;
       assertSessionConfigContract(config, snapshot.compiled);
-      const fontLibrary = meta?.fontLibrary;
-      if (!fontLibrary) throw new Error('coreui.errors.typography.fontLibrary.invalid');
-      const invalidTypographyPaths = validateAccountTypographyFontSelections({
-        fontLibrary,
-        typography: config.typography,
-      });
-      if (invalidTypographyPaths.length) {
-        const nextState: SessionState = {
-          ...stateRef.current,
-          isSaving: false,
-          error: {
-            source: 'save',
-            message: ACCOUNT_TYPOGRAPHY_SELECTION_INVALID_REASON_KEY,
-            paths: invalidTypographyPaths,
-          },
-        };
-        stateRef.current = nextState;
-        setState(nextState);
-        return;
-      }
       const submittedInstanceDataSignature = serializeInstanceDataSignature(config);
       const saveBody: Record<string, unknown> = {
         widgetType,

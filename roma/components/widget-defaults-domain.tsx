@@ -256,7 +256,6 @@ function collectDefaultPaths(value: unknown, prefix = ''): string[] {
 function WidgetDefaultsCoreSection(args: {
   entry: WidgetDefaultsEntry;
   fontLibrary: AccountFontLibrary;
-  onEditError: (message: string) => void;
   onOps: (
     widgetType: string,
     ops: Array<{ path: string; value: unknown }>,
@@ -264,7 +263,7 @@ function WidgetDefaultsCoreSection(args: {
   onContractError: (widgetType: string, message: string) => void;
   onReadyChange: (widgetType: string, ready: boolean) => void;
 }) {
-  const { entry, fontLibrary, onEditError, onOps, onContractError, onReadyChange } = args;
+  const { entry, fontLibrary, onOps, onContractError, onReadyChange } = args;
   const handleOps = useCallback(
     (ops: Array<{ path: string; value: unknown }>) => onOps(entry.widgetType, ops),
     [entry.widgetType, onOps],
@@ -287,7 +286,6 @@ function WidgetDefaultsCoreSection(args: {
         fontLibrary={fontLibrary}
         scopeLabel={`${entry.label} Core`}
         values={entry.core}
-        onEditError={onEditError}
         onOps={handleOps}
         onContractError={handleContractError}
         onReadyChange={handleReadyChange}
@@ -723,7 +721,6 @@ export function WidgetDefaultsDomain() {
           fontLibrary={draft.fontLibrary}
           scopeLabel="Shell"
           values={draft.shell}
-          onEditError={setError}
           onOps={updateShellOps}
           onContractError={reportShellContractError}
           onReadyChange={setShellReady}
@@ -739,7 +736,6 @@ export function WidgetDefaultsDomain() {
             key={entry.widgetType}
             entry={entry}
             fontLibrary={draft.fontLibrary}
-            onEditError={setError}
             onOps={updateWidgetOps}
             onContractError={reportCoreContractError}
             onReadyChange={setCoreReady}

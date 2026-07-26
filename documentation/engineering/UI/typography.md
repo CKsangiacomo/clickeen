@@ -151,15 +151,13 @@ Bob behavior:
   strings without a default font catalog.
 - On editor open, Bob binds those family controls to the normalized current
   account font library. The bound controls govern manual edits, Copilot context,
-  config validation, and save.
+  and normal config validation.
 - Family changes are one product operation: the requested family plus a
   compatible weight and style are applied together. Dieter emits the requested
   family only; it does not choose companion values.
-- Unknown families and disallowed family/weight/style combinations are rejected
-  before state changes. Selection values are exact; the editor does not trim or
-  otherwise repair malformed persisted or submitted values. Rejection restores
-  the visible family, weight, and style controls from unchanged document truth,
-  does not dirty the document, and does not create Undo.
+- The account-backed controls do not offer unavailable choices. Direct or
+  malformed saved family/weight/style combinations are rejected by package
+  materialization; they are not trimmed, repaired, or replaced.
 - Bob preview resolves account-uploaded font `assetRef` values through the
   current account asset route and posts runtime typography data into the widget
   iframe with preview state.
@@ -184,8 +182,6 @@ Shared widget runtime behavior:
 - Shell typography labels are owned by `@clickeen/widget-shell`. Widgets declare
   labels and display order for widget-specific roles in
   `editor.panels[].shared.roleLabels`.
-- Widget generation compares each real `widget.client.js` typography role map
-  with the composed spec roles and fails on any mismatch.
 - `CKTypography` reads `CK_WIDGET_TYPOGRAPHY_DATA`.
 - Public runtime packages inline that data during package materialization.
 - Bob preview supplies the same shape through `ck:state-update.typographyData`

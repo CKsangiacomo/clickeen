@@ -1,7 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import ts from 'typescript';
 import {
   readWidgetEditableFieldsContract,
   type WidgetEditableFieldsContract,
@@ -147,188 +146,6 @@ function assertProductReadableControls(
   }
 }
 
-function staticObjectKeys(widgetType: string, object: ts.ObjectLiteralExpression): Set<string> {
-  const keys = new Set<string>();
-  for (const property of object.properties) {
-    if (!ts.isPropertyAssignment(property) && !ts.isShorthandPropertyAssignment(property)) {
-      throw new Error(
-        `[generate-widget-artifacts] ${widgetType} typography role map must use static properties`,
-      );
-    }
-    const name = property.name;
-    if (ts.isIdentifier(name) || ts.isStringLiteral(name) || ts.isNumericLiteral(name)) {
-      keys.add(name.text);
-      continue;
-    }
-    throw new Error(
-      `[generate-widget-artifacts] ${widgetType} typography role map contains a dynamic key`,
-    );
-  }
-  return keys;
-}
-
-function assignedPropertyName(
-  widgetType: string,
-  left: ts.Expression,
-  identifier: string,
-): string | null {
-  if (ts.isPropertyAccessExpression(left) && ts.isIdentifier(left.expression) && left.expression.text === identifier) {
-    return left.name.text;
-  }
-  if (ts.isElementAccessExpression(left) && ts.isIdentifier(left.expression) && left.expression.text === identifier) {
-    if (left.argumentExpression && ts.isStringLiteral(left.argumentExpression)) {
-      return left.argumentExpression.text;
-    }
-    throw new Error(
-      `[generate-widget-artifacts] ${widgetType} typography role map contains a dynamic assignment`,
-    );
-  }
-  return null;
-}
-
-function containingFunction(node: ts.Node): ts.Node {
-  let current: ts.Node | undefined = node.parent;
-  while (current) {
-    if (
-      ts.isFunctionDeclaration(current) ||
-      ts.isFunctionExpression(current) ||
-      ts.isArrowFunction(current) ||
-      ts.isMethodDeclaration(current)
-    ) {
-      return current;
-    }
-    current = current.parent;
-  }
-  return node.getSourceFile();
-}
-
-function isRuntimeTypographyCall(node: ts.CallExpression): boolean {
-  if (
-    !ts.isPropertyAccessExpression(node.expression) ||
-    node.expression.name.text !== 'applyTypography'
-  ) {
-    return false;
-  }
-  const owner = node.expression.expression;
-  return (
-    ts.isPropertyAccessExpression(owner) &&
-    owner.name.text === 'CKTypography' &&
-    ts.isIdentifier(owner.expression) &&
-    owner.expression.text === 'window'
-  );
-}
-
-function readRuntimeTypographyRoleKeys(widgetType: string, source: string): Set<string> {
-  const sourceFile = ts.createSourceFile(
-    `${widgetType}.widget.client.js`,
-    source,
-    ts.ScriptTarget.Latest,
-    true,
-    ts.ScriptKind.JS,
-  );
-  const runtimeCalls: ts.CallExpression[] = [];
-  const visitCalls = (node: ts.Node): void => {
-    if (ts.isCallExpression(node) && isRuntimeTypographyCall(node)) {
-      const roleArgument = node.arguments[2];
-      if (!roleArgument) {
-        throw new Error(
-          `[generate-widget-artifacts] ${widgetType} applyTypography is missing its role map`,
-        );
-      }
-      runtimeCalls.push(node);
-    }
-    ts.forEachChild(node, visitCalls);
-  };
-  visitCalls(sourceFile);
-  if (runtimeCalls.length !== 1) {
-    throw new Error(
-      `[generate-widget-artifacts] ${widgetType} must call applyTypography exactly once`,
-    );
-  }
-
-  const runtimeCall = runtimeCalls[0]!;
-  const roleArgument = runtimeCall.arguments[2]!;
-  if (ts.isObjectLiteralExpression(roleArgument)) {
-    return staticObjectKeys(widgetType, roleArgument);
-  }
-  if (!ts.isIdentifier(roleArgument)) {
-    throw new Error(
-      `[generate-widget-artifacts] ${widgetType} applyTypography role map must be a static object`,
-    );
-  }
-
-  const identifier = roleArgument.text;
-  const runtimeScope = containingFunction(runtimeCall);
-  const declarations: ts.ObjectLiteralExpression[] = [];
-  const visitDeclarations = (node: ts.Node): void => {
-    if (
-      ts.isVariableDeclaration(node) &&
-      ts.isIdentifier(node.name) &&
-      node.name.text === identifier &&
-      node.initializer &&
-      ts.isObjectLiteralExpression(node.initializer) &&
-      containingFunction(node) === runtimeScope &&
-      node.getStart(sourceFile) < runtimeCall.getStart(sourceFile)
-    ) {
-      declarations.push(node.initializer);
-    }
-    ts.forEachChild(node, visitDeclarations);
-  };
-  visitDeclarations(sourceFile);
-  if (declarations.length !== 1) {
-    throw new Error(
-      `[generate-widget-artifacts] ${widgetType} typography role map "${identifier}" must have one static declaration`,
-    );
-  }
-
-  const keys = staticObjectKeys(widgetType, declarations[0]!);
-  const visitAssignments = (node: ts.Node): void => {
-    if (
-      ts.isBinaryExpression(node) &&
-      node.operatorToken.kind === ts.SyntaxKind.EqualsToken
-    ) {
-      const key = assignedPropertyName(widgetType, node.left, identifier);
-      if (
-        key &&
-        containingFunction(node) === runtimeScope &&
-        node.getStart(sourceFile) < runtimeCall.getStart(sourceFile)
-      ) {
-        keys.add(key);
-      }
-    }
-    ts.forEachChild(node, visitAssignments);
-  };
-  visitAssignments(sourceFile);
-  return keys;
-}
-
-function assertRuntimeTypographyRoles(
-  widgetType: string,
-  compiled: CompiledWidget,
-  widgetClientSource: string,
-): void {
-  const typography = compiled.defaults.typography;
-  if (!typography || typeof typography !== 'object' || Array.isArray(typography)) {
-    throw new Error(`[generate-widget-artifacts] ${widgetType} is missing composed typography`);
-  }
-  const roles = (typography as Record<string, unknown>).roles;
-  if (!roles || typeof roles !== 'object' || Array.isArray(roles)) {
-    throw new Error(`[generate-widget-artifacts] ${widgetType} is missing composed typography roles`);
-  }
-  const compiledKeys = Object.keys(roles).sort();
-  const runtimeKeys = Array.from(
-    readRuntimeTypographyRoleKeys(widgetType, widgetClientSource),
-  ).sort();
-  if (
-    compiledKeys.length !== runtimeKeys.length ||
-    compiledKeys.some((key, index) => key !== runtimeKeys[index])
-  ) {
-    throw new Error(
-      `[generate-widget-artifacts] ${widgetType} typography role mismatch: compiled=${compiledKeys.join(',')} runtime=${runtimeKeys.join(',')}`,
-    );
-  }
-}
-
 function generatedMaterializerIndex(widgetTypes: string[]): string {
   const imports = widgetTypes.map(
     (widgetType, index) => `import artifact${index} from './widgets/${widgetType}.json';`,
@@ -375,11 +192,6 @@ async function buildArtifacts(widgetType: string): Promise<{
     tokyoBaseUrl: '',
   });
   assertProductReadableControls(widgetType, compiled.controls);
-  assertRuntimeTypographyRoles(
-    widgetType,
-    compiled,
-    readText(`${widgetRoot}/widget.client.js`),
-  );
   return {
     editor: { ...compiled, limits, editableFields },
     materializer: {

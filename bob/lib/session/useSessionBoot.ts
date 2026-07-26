@@ -16,7 +16,6 @@ import {
   serializeInstanceDataSignature,
 } from './sessionTypes';
 import {
-  assertAccountTypographySelections,
   assertSessionConfigContract,
   bindSessionTypographyControls,
 } from './sessionConfig';
@@ -82,7 +81,6 @@ export function useSessionBoot(args: {
         const compiled = bindSessionTypographyControls(rawCompiled, fontLibrary);
         const instanceData = rawInstanceData as Record<string, unknown>;
         assertSessionConfigContract(instanceData, compiled);
-        assertAccountTypographySelections(instanceData, fontLibrary);
         const savedInstanceDataSignature = serializeInstanceDataSignature(instanceData);
         const nextPolicy = (message.policy as Policy | null | undefined) ?? null;
         const nextCopilot = (message.copilot as CopilotRuntimeUi | undefined) ?? null;

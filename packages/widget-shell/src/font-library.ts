@@ -75,13 +75,6 @@ export type AccountTypographyFamilySelection = {
   fontStyle: AccountFontStyle;
 };
 
-export type AccountTypographyFamilySelectionResult =
-  | { ok: true; value: AccountTypographyFamilySelection }
-  | {
-      ok: false;
-      reasonKey: typeof ACCOUNT_TYPOGRAPHY_SELECTION_INVALID_REASON_KEY;
-    };
-
 export const ACCOUNT_FONT_CATEGORY_LABELS: Record<AccountFontCategory, string> = {
   sans: 'Sans',
   serif: 'Serif',
@@ -380,15 +373,10 @@ export function resolveAccountTypographyFamilySelection(args: {
   currentFontStyle: unknown;
   requestedWeight?: unknown;
   requestedFontStyle?: unknown;
-}): AccountTypographyFamilySelectionResult {
+}): AccountTypographyFamilySelection | null {
   const family = readExactNonEmptyString(args.requestedFamily);
   const record = family ? getAccountFontRecord(args.fontLibrary, family) : null;
-  if (!family || !record) {
-    return {
-      ok: false,
-      reasonKey: ACCOUNT_TYPOGRAPHY_SELECTION_INVALID_REASON_KEY,
-    };
-  }
+  if (!family || !record) return null;
   const weight = resolveAllowedCompanion({
     allowed: record.weights,
     current: args.currentWeight,
@@ -401,19 +389,11 @@ export function resolveAccountTypographyFamilySelection(args: {
     requested: args.requestedFontStyle,
     preferred: 'normal',
   });
-  if (!weight || !fontStyle) {
-    return {
-      ok: false,
-      reasonKey: ACCOUNT_TYPOGRAPHY_SELECTION_INVALID_REASON_KEY,
-    };
-  }
+  if (!weight || !fontStyle) return null;
   return {
-    ok: true,
-    value: {
-      family,
-      weight,
-      fontStyle: fontStyle as AccountFontStyle,
-    },
+    family,
+    weight,
+    fontStyle: fontStyle as AccountFontStyle,
   };
 }
 
@@ -421,35 +401,15 @@ export function validateAccountTypographyFontSelections(args: {
   fontLibrary: AccountFontLibrary;
   typography: unknown;
   pathPrefix?: string;
-  requireGlobalFamily?: boolean;
-  requiredRoleKeys?: readonly string[];
 }): string[] {
   const pathPrefix = args.pathPrefix ?? 'typography';
   if (!isRecord(args.typography)) return [pathPrefix];
+  if (!isRecord(args.typography.roles)) return [`${pathPrefix}.roles`];
   const invalidPaths: string[] = [];
-  const globalFamily = readExactNonEmptyString(args.typography.globalFamily);
-  if (
-    args.requireGlobalFamily !== false &&
-    (!globalFamily || !isAccountFontFamily(args.fontLibrary, globalFamily))
-  ) {
-    invalidPaths.push(`${pathPrefix}.globalFamily`);
-  }
-  if (!isRecord(args.typography.roles)) {
-    invalidPaths.push(`${pathPrefix}.roles`);
-    return invalidPaths;
-  }
-  if (Object.keys(args.typography.roles).length === 0) {
-    const requiredRoleKeys = args.requiredRoleKeys ?? [];
-    invalidPaths.push(
-      ...(requiredRoleKeys.length
-        ? requiredRoleKeys.map((roleKey) => `${pathPrefix}.roles.${roleKey}`)
-        : [`${pathPrefix}.roles`]),
-    );
-    return invalidPaths;
-  }
-  for (const roleKey of args.requiredRoleKeys ?? []) {
-    if (!Object.prototype.hasOwnProperty.call(args.typography.roles, roleKey)) {
-      invalidPaths.push(`${pathPrefix}.roles.${roleKey}`);
+  if (args.typography.globalFamily !== undefined) {
+    const family = readExactNonEmptyString(args.typography.globalFamily);
+    if (!family || !isAccountFontFamily(args.fontLibrary, family)) {
+      invalidPaths.push(`${pathPrefix}.globalFamily`);
     }
   }
   for (const [roleKey, rawRole] of Object.entries(args.typography.roles)) {

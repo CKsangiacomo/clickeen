@@ -16,10 +16,6 @@ import {
   serializeBobJsonFieldValue,
 } from './fieldValue';
 import { applyShowIfVisibility, type ShowIfEntry } from './showIf';
-import {
-  isTypographyFamilySelectionError,
-  typographySelectionRoleBase,
-} from '../../lib/edit/typography-family-ops';
 
 type LastUpdate = {
   source: 'field' | 'load' | 'external' | 'ops' | 'unknown';
@@ -33,7 +29,6 @@ export function useTdMenuBindings(args: {
   instanceData: Record<string, unknown>;
   instanceDataRef: MutableRefObject<Record<string, unknown>>;
   applyOps: (ops: WidgetOp[]) => ApplyWidgetOpsResult;
-  reportEditRejection: (reasonKey: string) => void;
   panelHtml: string;
   renderKey: number;
   compiled: CompiledWidget | null;
@@ -54,7 +49,6 @@ export function useTdMenuBindings(args: {
     lastUpdateRef,
     panelHtml,
     renderKey,
-    reportEditRejection,
     requestUpsell,
     showIfEntriesRef,
   } = args;
@@ -64,45 +58,15 @@ export function useTdMenuBindings(args: {
     if (!container) return;
 
     const readInstanceData = () => instanceDataRef.current;
-    const resyncTypographyRole = (roleBase: string) => {
-      [`${roleBase}.family`, `${roleBase}.weight`, `${roleBase}.fontStyle`].forEach((path) => {
-        const escapedPath = path.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
-        const field = container.querySelector<HTMLInputElement>(
-          `[data-bob-path="${escapedPath}"]`,
-        );
-        if (!field) return;
-        const value = getAt(readInstanceData(), path);
-        const nextValue = value == null ? '' : String(value);
-        field.value = nextValue;
-        field.dispatchEvent(
-          new CustomEvent('external-sync', {
-            detail: { value: nextValue, source: 'bob-deny', bobIgnore: true },
-          }),
-        );
-      });
-    };
     const applyExpandedOps = (ops: WidgetOp[]) => {
-      let expandedOps: WidgetOp[];
-      try {
-        expandedOps = expandLinkedOps({
+      const applied = applyOps(
+        expandLinkedOps({
           compiled,
           fontLibrary,
           instanceData: readInstanceData(),
           ops,
-        });
-      } catch (error) {
-        if (!isTypographyFamilySelectionError(error)) throw error;
-        const roleBase = ops
-          .map((op) => (op.op === 'set' ? typographySelectionRoleBase(op.path) : null))
-          .find((value): value is string => Boolean(value));
-        if (roleBase) resyncTypographyRole(roleBase);
-        reportEditRejection(error.reasonKey);
-        return {
-          ok: false,
-          errors: [{ opIndex: 0, message: error.reasonKey }],
-        } satisfies ApplyWidgetOpsResult;
-      }
-      const applied = applyOps(expandedOps);
+        }),
+      );
       if (applied.ok) {
         instanceDataRef.current = applied.data;
       }
@@ -238,7 +202,6 @@ export function useTdMenuBindings(args: {
     containerRef,
     fontLibrary,
     instanceDataRef,
-    reportEditRejection,
     requestUpsell,
   ]);
 

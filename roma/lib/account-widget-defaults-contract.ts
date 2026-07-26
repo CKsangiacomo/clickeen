@@ -1,7 +1,6 @@
 import { isRecord } from '@clickeen/ck-contracts';
 import {
   ACCOUNT_TYPOGRAPHY_SELECTION_INVALID_REASON_KEY,
-  WIDGET_SHELL_TYPOGRAPHY_ROLE_LABELS,
   listWidgetShellAccountDefaultMetadataPaths,
   listWidgetShellControlPaths,
   normalizeAccountFontLibrary,
@@ -61,16 +60,6 @@ function compiledCoreDefaultControlPaths(controls: Array<{ path?: string }> | un
     .sort((left, right) => left.localeCompare(right));
 }
 
-function typographyRoleKeys(controlPaths: readonly string[]): string[] {
-  return Array.from(
-    new Set(
-      controlPaths
-        .map((path) => path.match(/^typography\.roles\.([^.]+)\.family$/)?.[1] ?? '')
-        .filter(Boolean),
-    ),
-  );
-}
-
 export async function validateAccountWidgetDefaultsContract(args: {
   request: NextRequest;
   widgetDefaults: AccountWidgetDefaultsDocument;
@@ -84,7 +73,6 @@ export async function validateAccountWidgetDefaultsContract(args: {
   const invalidTypographyPaths = validateAccountTypographyFontSelections({
     fontLibrary,
     typography: args.widgetDefaults.shell.typography,
-    requiredRoleKeys: Object.keys(WIDGET_SHELL_TYPOGRAPHY_ROLE_LABELS),
   }).map((path) => `shell:${path}`);
   const unmappedPaths: string[] = collectDefaultPaths(args.widgetDefaults.shell)
     .filter((path) => !pathIsCovered(path, listWidgetShellControlPaths()))
@@ -100,17 +88,12 @@ export async function validateAccountWidgetDefaultsContract(args: {
     const compiled = readWidgetForInstancePackage(widgetType);
     if (!compiled.ok) return compiled;
     const controlPaths = compiledCoreDefaultControlPaths(compiled.value.controls);
-    const requiredRoleKeys = typographyRoleKeys(controlPaths);
-    if (requiredRoleKeys.length) {
-      invalidTypographyPaths.push(
-        ...validateAccountTypographyFontSelections({
-          fontLibrary,
-          typography: widgetDefaults.core.typography,
-          requireGlobalFamily: false,
-          requiredRoleKeys,
-        }).map((path) => `${widgetType}:${path}`),
-      );
-    }
+    invalidTypographyPaths.push(
+      ...validateAccountTypographyFontSelections({
+        fontLibrary,
+        typography: widgetDefaults.core.typography,
+      }).map((path) => `${widgetType}:${path}`),
+    );
     unmappedPaths.push(
       ...collectDefaultPaths(widgetDefaults.core)
         .filter((path) => !pathIsCovered(path, controlPaths))

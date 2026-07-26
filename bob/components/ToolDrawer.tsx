@@ -8,7 +8,6 @@ import { TdHeader } from '../bob_native_ui/tdheader/TdHeader';
 import { SettingsPanel } from './SettingsPanel';
 import { TranslationsPanel } from './TranslationsPanel';
 import type { TranslatedLocalesData, TranslationSetup } from './useTranslationPreviewState';
-import { TYPOGRAPHY_SELECTION_INVALID_COPY } from '../lib/edit/typography-family-ops';
 import { ACCOUNT_TYPOGRAPHY_SELECTION_INVALID_REASON_KEY } from '@clickeen/widget-shell';
 
 const BUILDER_ERROR_COPY: Record<string, string> = {
@@ -29,7 +28,8 @@ const BUILDER_ERROR_COPY: Record<string, string> = {
   'coreui.errors.instance.widgetMissing': 'This widget is missing required data and cannot load right now.',
   'coreui.errors.translations.acceptanceFailed':
     'Changes were saved, but translations could not start. Try saving again.',
-  [ACCOUNT_TYPOGRAPHY_SELECTION_INVALID_REASON_KEY]: TYPOGRAPHY_SELECTION_INVALID_COPY,
+  [ACCOUNT_TYPOGRAPHY_SELECTION_INVALID_REASON_KEY]:
+    'That font choice is not available. Choose another font, weight, or style.',
 };
 
 function resolveBuilderErrorCopy(reason: string, fallback: string): string {

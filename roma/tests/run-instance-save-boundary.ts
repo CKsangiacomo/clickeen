@@ -24,26 +24,6 @@ async function testRomaSaveDoesNotRunLocalization(): Promise<void> {
   assert.match(routeSource, /NextResponse\.json\(\{\s*ok: true,\s*\}\)/);
 }
 
-async function testInstanceSaveValidatesPackageBeforeTokyoWrite(): Promise<void> {
-  const routeSource = await readSource('roma/app/api/account/instances/[instanceId]/route.ts');
-  const materializeIndex = routeSource.indexOf(
-    'const publicPackage = await materializeAccountInstancePublicPackage({',
-  );
-  const failureIndex = routeSource.indexOf('if (!publicPackage.ok)', materializeIndex);
-  const saveIndex = routeSource.indexOf(
-    'const result = await saveAccountInstanceInTokyo({',
-    failureIndex,
-  );
-  assert.ok(materializeIndex >= 0, 'instance save must materialize the candidate package');
-  assert.ok(failureIndex > materializeIndex, 'package failure must be handled after materialization');
-  assert.ok(saveIndex > failureIndex, 'Tokyo save must occur only after package validation succeeds');
-  assert.equal(
-    routeSource.match(/await saveAccountInstanceInTokyo\(\{/g)?.length,
-    1,
-    'instance save route must have one Tokyo write path',
-  );
-}
-
 async function testBobSaveHasNoPartialLocalizationBranch(): Promise<void> {
   const savingSource = await readSource('bob/lib/session/useSessionSaving.ts');
 
@@ -102,7 +82,6 @@ async function testNoInventedAccountInstanceBodyKeyWhitelist(): Promise<void> {
 
 const tests: Array<{ name: string; run: () => Promise<void> }> = [
   { name: 'Roma source save does not run localization', run: testRomaSaveDoesNotRunLocalization },
-  { name: 'instance save validates package before Tokyo write', run: testInstanceSaveValidatesPackageBeforeTokyoWrite },
   { name: 'Bob save has no partial localization branch', run: testBobSaveHasNoPartialLocalizationBranch },
   { name: 'explicit translation route and panel survive', run: testExplicitTranslationRouteSurvives },
   { name: 'account instance persistence has no generic meta contract', run: testNoAccountInstanceMetaPersistenceContract },

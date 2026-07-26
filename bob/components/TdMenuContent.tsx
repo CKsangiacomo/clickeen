@@ -92,7 +92,6 @@ export function TdMenuContent({
     renderKey,
     compiled: session.compiled,
     fontLibrary: session.fontLibrary,
-    reportEditRejection: session.reportEditRejection,
     requestUpsell: chrome.requestUpsell,
     lastUpdateRef,
     activePathRef,
