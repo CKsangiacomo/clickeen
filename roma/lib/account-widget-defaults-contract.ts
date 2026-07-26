@@ -100,14 +100,17 @@ export async function validateAccountWidgetDefaultsContract(args: {
     const compiled = readWidgetForInstancePackage(widgetType);
     if (!compiled.ok) return compiled;
     const controlPaths = compiledCoreDefaultControlPaths(compiled.value.controls);
-    invalidTypographyPaths.push(
-      ...validateAccountTypographyFontSelections({
-        fontLibrary,
-        typography: widgetDefaults.core.typography,
-        requireGlobalFamily: false,
-        requiredRoleKeys: typographyRoleKeys(controlPaths),
-      }).map((path) => `${widgetType}:${path}`),
-    );
+    const requiredRoleKeys = typographyRoleKeys(controlPaths);
+    if (requiredRoleKeys.length) {
+      invalidTypographyPaths.push(
+        ...validateAccountTypographyFontSelections({
+          fontLibrary,
+          typography: widgetDefaults.core.typography,
+          requireGlobalFamily: false,
+          requiredRoleKeys,
+        }).map((path) => `${widgetType}:${path}`),
+      );
+    }
     unmappedPaths.push(
       ...collectDefaultPaths(widgetDefaults.core)
         .filter((path) => !pathIsCovered(path, controlPaths))

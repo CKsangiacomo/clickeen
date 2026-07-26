@@ -76,6 +76,16 @@ async function buildDocument(): Promise<AccountWidgetDefaultsDocument> {
   };
 }
 
+async function readWidgetDefaults(widgetType: string): Promise<Record<string, unknown>> {
+  const spec = JSON.parse(
+    await readFile(
+      new URL(`../../tokyo/product/widgets/${widgetType}/spec.json`, import.meta.url),
+      'utf8',
+    ),
+  ) as { defaults: Record<string, unknown> };
+  return structuredClone(spec.defaults);
+}
+
 function testTransitionLaw(): void {
   const fontLibrary = buildFontLibrary();
   const toUploaded = resolveAccountTypographyFamilySelection({
@@ -200,6 +210,18 @@ async function testRouteContractPaths(): Promise<void> {
   const valid = await buildDocument();
   assert.deepEqual(
     await validateAccountWidgetDefaultsContract({ request, widgetDefaults: valid }),
+    { ok: true },
+  );
+
+  const shellTypographyOnly = structuredClone(valid);
+  shellTypographyOnly.widgets = {
+    logoshowcase: { core: await readWidgetDefaults('logoshowcase') },
+  };
+  assert.deepEqual(
+    await validateAccountWidgetDefaultsContract({
+      request,
+      widgetDefaults: shellTypographyOnly,
+    }),
     { ok: true },
   );
 
