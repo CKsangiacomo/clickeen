@@ -408,7 +408,7 @@ Worker env and bindings:
 | `TOKYO_PUBLIC_BASE_URL` | yes | Public Tokyo static/resource origin. |
 | `PUBLIC_SERVING_BASE_URL` | yes | Public `clk.live`/`dev.clk.live` serving origin. |
 | `BERLIN_JWKS_URL` | no | Explicit JWKS URL when not derived from Berlin base URL. |
-| `AI_GRANT_HMAC_SECRET` | no | HMAC secret for AI grant verification where grant path uses it. |
+| `AI_GRANT_HMAC_SECRET` | yes for Translation Agent writes | HMAC secret that verifies Translation Agent overlay-write grants. |
 | `CLOUDFLARE_ZONE_ID` | yes for published public-byte mutations | Cloudflare zone for public cache refresh. |
 | `CLOUDFLARE_API_TOKEN` | yes for published public-byte mutations | Cloudflare API token allowed to purge the public zone. |
 

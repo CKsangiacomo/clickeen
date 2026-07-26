@@ -52,14 +52,70 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value && typeof value === 'object' && !Array.isArray(value));
 }
 
-function readStringArray(value: unknown): string[] {
-  if (!Array.isArray(value)) return [];
-  return value.filter((entry): entry is string => typeof entry === 'string' && entry.trim().length > 0);
+function readStringArray(value: unknown): string[] | null {
+  if (
+    !Array.isArray(value) ||
+    value.some((entry) => typeof entry !== 'string' || !entry || entry !== entry.trim())
+  ) {
+    return null;
+  }
+  const values = value as string[];
+  return new Set(values).size === values.length ? values : null;
 }
 
-function readObjectArray(value: unknown): Array<Record<string, unknown>> {
-  if (!Array.isArray(value)) return [];
-  return value.filter(isRecord);
+function readObjectArray(value: unknown): Array<Record<string, unknown>> | null {
+  return Array.isArray(value) && value.every(isRecord)
+    ? value
+    : null;
+}
+
+function readLocaleCoordinates(entries: Array<Record<string, unknown>>): string[] | null {
+  const locales = entries.map((entry) => entry.locale);
+  return readStringArray(locales);
+}
+
+function sameStringSet(left: string[], right: string[]): boolean {
+  return left.length === right.length && left.every((value) => right.includes(value));
+}
+
+type TranslationOutcome = {
+  accepted: boolean;
+  requestedLocales: string[];
+  translatedLocales: string[];
+  failures: Array<Record<string, unknown>>;
+  failedLocales: string[];
+};
+
+function readTranslationOutcome(raw: unknown): TranslationOutcome | null {
+  if (!isRecord(raw) || typeof raw.ok !== 'boolean' || typeof raw.accepted !== 'boolean') return null;
+  const requestedLocales = readStringArray(raw.requestedLocales);
+  const translatedLocales = readStringArray(raw.translatedLocales);
+  const failures = readObjectArray(raw.failedLocales);
+  const failedLocales = failures ? readLocaleCoordinates(failures) : null;
+  if (!requestedLocales || !translatedLocales || !failures || !failedLocales) return null;
+  if (
+    failures.some(
+      (failure) =>
+        typeof failure.reasonKey !== 'string' ||
+        !failure.reasonKey ||
+        failure.reasonKey !== failure.reasonKey.trim(),
+    )
+  ) {
+    return null;
+  }
+  if (!raw.accepted) {
+    return raw.ok && requestedLocales.length === 0 && translatedLocales.length === 0 && failedLocales.length === 0
+      ? { accepted: false, requestedLocales, translatedLocales, failures, failedLocales }
+      : null;
+  }
+  if (
+    requestedLocales.length === 0 ||
+    !sameStringSet(requestedLocales, [...translatedLocales, ...failedLocales]) ||
+    raw.ok !== (failedLocales.length === 0)
+  ) {
+    return null;
+  }
+  return { accepted: true, requestedLocales, translatedLocales, failures, failedLocales };
 }
 
 function formatCount(count: number, singular: string, plural = `${singular}s`): string {
@@ -122,21 +178,17 @@ function resolveTranslationErrorCopy(payload: Record<string, unknown> | null, st
 
 export function shouldRefreshTranslationsAfterGeneration(payload: unknown): boolean {
   const record = isRecord(payload) ? payload : null;
-  const translation = isRecord(record?.translation) ? record.translation : null;
-  return translation?.accepted === true;
+  const outcome = readTranslationOutcome(record?.translation);
+  return Boolean(outcome?.accepted && outcome.translatedLocales.length);
 }
 
 export function buildTranslationGenerationFeedback(response: TranslationCommandResponse): TranslationGenerationFeedback {
   const payload = isRecord(response.json) ? response.json : null;
-  const translation = isRecord(payload?.translation) ? payload.translation : null;
+  const hasTranslation = isRecord(payload?.translation);
+  const outcome = readTranslationOutcome(payload?.translation);
   const localePackages = isRecord(payload?.localePackages) ? payload.localePackages : null;
-  const accepted = translation?.accepted === true;
-  const activeLocales = readStringArray(translation?.activeLocales);
-  const skippedLocales = readStringArray(translation?.skippedLocales);
-  const packageCompleted = readObjectArray(localePackages?.completed);
-  const packageFailures = readObjectArray(localePackages?.failed);
 
-  if (!response.ok && !accepted) {
+  if (!response.ok && !hasTranslation) {
     return {
       tone: 'error',
       title: 'Translation generation failed',
@@ -144,14 +196,67 @@ export function buildTranslationGenerationFeedback(response: TranslationCommandR
     };
   }
 
-  if (!accepted) {
+  if (!outcome) {
+    return {
+      tone: 'error',
+      title: 'Translation generation failed',
+      lines: ['The translation result was incomplete. Refresh Builder and try again.'],
+    };
+  }
+
+  if (!outcome.accepted) {
     return {
       tone: 'warning',
       title: 'No translations generated',
+      lines: ['No translation languages are available for this widget.'],
+    };
+  }
+
+  const translatedLocales = outcome.translatedLocales;
+  const translationFailures = outcome.failures;
+  const failedTranslationLocales = outcome.failedLocales;
+  const failedTranslationCopy = summarizeLocaleList(failedTranslationLocales);
+  if (translatedLocales.length === 0) {
+    return {
+      tone: 'error',
+      title: 'Translation generation failed',
       lines: [
-        activeLocales.length
-          ? 'The translation operation completed, but no translation work was accepted.'
-          : 'No active translation languages are available for this widget.',
+        failedTranslationCopy
+          ? `Translation failed for ${failedTranslationCopy}.`
+          : 'No requested language was translated.',
+      ],
+    };
+  }
+
+  const packageCompleted = readObjectArray(localePackages?.completed);
+  const packageFailures = readObjectArray(localePackages?.failed);
+  const completedPackageLocales = packageCompleted
+    ? readLocaleCoordinates(packageCompleted)
+    : null;
+  const failedPackageLocales = packageFailures
+    ? readLocaleCoordinates(packageFailures)
+    : null;
+  const packageResultIsComplete =
+    Boolean(
+      localePackages &&
+      packageCompleted &&
+      packageFailures &&
+      completedPackageLocales &&
+      failedPackageLocales &&
+      sameStringSet(
+        translatedLocales,
+        [...completedPackageLocales, ...failedPackageLocales],
+      ) &&
+      localePackages.ok === (failedPackageLocales.length === 0),
+    );
+  if (!packageResultIsComplete || !packageCompleted || !packageFailures || !failedPackageLocales) {
+    return {
+      tone: 'warning',
+      title: 'Translations need attention',
+      lines: [
+        `Generated translations for ${summarizeLocaleList(translatedLocales)}.`,
+        ...(failedTranslationCopy ? [`Translation failed for ${failedTranslationCopy}.`] : []),
+        'Localized package results were incomplete.',
       ],
     };
   }
@@ -159,18 +264,14 @@ export function buildTranslationGenerationFeedback(response: TranslationCommandR
   const generatedCopy =
     packageCompleted.length > 0
       ? `Generated ${formatCount(packageCompleted.length, 'localized package')}.`
-      : activeLocales.length > 0
-        ? `Generated translations for ${formatCount(activeLocales.length, 'language')}.`
-        : 'Generated translations.';
+      : `Generated translations for ${summarizeLocaleList(translatedLocales)}.`;
 
   if (packageFailures.length > 0) {
-    const failedLocales = packageFailures.flatMap((failure) =>
-      typeof failure.locale === 'string' && failure.locale.trim() ? [failure.locale] : [],
-    );
-    const failedLocaleCopy = summarizeLocaleList(failedLocales);
+    const failedLocaleCopy = summarizeLocaleList(failedPackageLocales);
     const firstFailure = packageFailures[0]!;
     const lines = [
       generatedCopy,
+      ...(failedTranslationCopy ? [`Translation failed for ${failedTranslationCopy}.`] : []),
       failedLocaleCopy
         ? `Public packages failed for ${failedLocaleCopy}.`
         : `${formatCount(packageFailures.length, 'public package')} failed.`,
@@ -185,15 +286,16 @@ export function buildTranslationGenerationFeedback(response: TranslationCommandR
     };
   }
 
-  if (skippedLocales.length > 0) {
-    const skippedLabels = summarizeLocaleList(skippedLocales);
-    const skippedCopy = skippedLabels
-      ? `Skipped ${skippedLabels}.`
-      : `${formatCount(skippedLocales.length, 'language')} skipped.`;
+  if (translationFailures.length > 0) {
     return {
       tone: 'warning',
       title: 'Translations partially generated',
-      lines: [generatedCopy, skippedCopy],
+      lines: [
+        generatedCopy,
+        failedTranslationCopy
+          ? `Translation failed for ${failedTranslationCopy}.`
+          : `${formatCount(translationFailures.length, 'language')} failed.`,
+      ],
     };
   }
 

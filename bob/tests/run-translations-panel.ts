@@ -27,8 +27,9 @@ const success = buildTranslationGenerationFeedback({
       ok: true,
       accepted: true,
       baseLocale: 'en',
-      activeLocales: ['fr', 'de'],
-      skippedLocales: [],
+      requestedLocales: ['fr', 'de'],
+      translatedLocales: ['fr', 'de'],
+      failedLocales: [],
     },
     localePackages: {
       ok: true,
@@ -50,8 +51,9 @@ const notAccepted = buildTranslationGenerationFeedback({
       ok: true,
       accepted: false,
       baseLocale: 'en',
-      activeLocales: [],
-      skippedLocales: [],
+      requestedLocales: [],
+      translatedLocales: [],
+      failedLocales: [],
     },
   },
 });
@@ -69,8 +71,9 @@ const packageFailurePayload = {
     ok: true,
     accepted: true,
     baseLocale: 'en',
-    activeLocales: ['fr', 'de'],
-    skippedLocales: [],
+    requestedLocales: ['fr', 'de'],
+    translatedLocales: ['fr', 'de'],
+    failedLocales: [],
   },
   error: {
     reasonKey: 'coreui.errors.instance.embedNotReady',
@@ -115,7 +118,138 @@ assert.equal(shouldRefreshTranslationsAfterGeneration(packageFailure.lines), fal
 assert.equal(shouldRefreshTranslationsAfterGeneration({
   translation: {
     accepted: true,
+    translatedLocales: [],
+  },
+}), false);
+
+const partial = buildTranslationGenerationFeedback({
+  ok: true,
+  status: 200,
+  json: {
+    ok: false,
+    translation: {
+      ok: false,
+      accepted: true,
+      baseLocale: 'en',
+      requestedLocales: ['fr', 'de', 'it'],
+      translatedLocales: ['fr', 'it'],
+      failedLocales: [
+        {
+          locale: 'de',
+          reasonKey: 'coreui.errors.translation.providerFailed',
+          detail: 'Provider failure',
+        },
+      ],
+    },
+    localePackages: {
+      ok: true,
+      completed: [{ locale: 'fr' }, { locale: 'it' }],
+      failed: [],
+    },
+  },
+});
+assert.equal(partial.tone, 'warning');
+assert.equal(partial.title, 'Translations partially generated');
+assert.match(partial.lines.join(' '), /German/);
+assert.doesNotMatch(partial.lines.join(' '), /providerFailed|Provider failure/);
+assert.equal(shouldRefreshTranslationsAfterGeneration({
+  translation: {
+    ok: false,
+    accepted: true,
+    requestedLocales: ['fr', 'de', 'it'],
+    translatedLocales: ['fr', 'it'],
+    failedLocales: [{ locale: 'de', reasonKey: 'coreui.errors.translation.providerFailed' }],
   },
 }), true);
+
+const allFailedPayload = {
+  ok: false,
+  translation: {
+    ok: false,
+    accepted: true,
+    baseLocale: 'en',
+    requestedLocales: ['fr', 'de'],
+    translatedLocales: [],
+    failedLocales: [
+      { locale: 'fr', reasonKey: 'coreui.errors.translation.providerFailed' },
+      { locale: 'de', reasonKey: 'coreui.errors.translation.providerFailed' },
+    ],
+  },
+};
+const allFailed = buildTranslationGenerationFeedback({
+  ok: true,
+  status: 200,
+  json: allFailedPayload,
+});
+assert.equal(allFailed.tone, 'error');
+assert.equal(allFailed.title, 'Translation generation failed');
+assert.match(allFailed.lines.join(' '), /French, German/);
+assert.equal(shouldRefreshTranslationsAfterGeneration(allFailedPayload), false);
+
+const malformedPartial = buildTranslationGenerationFeedback({
+  ok: true,
+  status: 200,
+  json: {
+    ok: true,
+    translation: {
+      ok: true,
+      accepted: true,
+      baseLocale: 'en',
+      requestedLocales: ['fr', 'de'],
+      translatedLocales: ['fr'],
+      failedLocales: [],
+    },
+  },
+});
+assert.equal(malformedPartial.tone, 'error');
+assert.match(malformedPartial.lines.join(' '), /result was incomplete/);
+assert.equal(shouldRefreshTranslationsAfterGeneration({
+  translation: {
+    ok: true,
+    accepted: true,
+    requestedLocales: ['fr', 'de'],
+    translatedLocales: ['fr'],
+    failedLocales: [],
+  },
+}), false);
+
+const missingAccepted = buildTranslationGenerationFeedback({
+  ok: true,
+  status: 200,
+  json: {
+    translation: {
+      ok: true,
+      requestedLocales: [],
+      translatedLocales: [],
+      failedLocales: [],
+    },
+  },
+});
+assert.equal(missingAccepted.tone, 'error');
+assert.match(missingAccepted.lines.join(' '), /result was incomplete/);
+
+const incompletePackages = buildTranslationGenerationFeedback({
+  ok: true,
+  status: 200,
+  json: {
+    ok: true,
+    translation: {
+      ok: true,
+      accepted: true,
+      baseLocale: 'en',
+      requestedLocales: ['fr', 'de'],
+      translatedLocales: ['fr', 'de'],
+      failedLocales: [],
+    },
+    localePackages: {
+      ok: true,
+      completed: [{ locale: 'fr' }],
+      failed: [],
+    },
+  },
+});
+assert.equal(incompletePackages.tone, 'warning');
+assert.equal(incompletePackages.title, 'Translations need attention');
+assert.match(incompletePackages.lines.join(' '), /package results were incomplete/);
 
 console.log('translations panel tests passed');

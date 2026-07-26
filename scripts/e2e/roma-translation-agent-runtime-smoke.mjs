@@ -43,6 +43,10 @@ function sameStringSet(left, right) {
   return Array.from(leftSet).every((value) => rightSet.has(value));
 }
 
+function sameStringArray(left, right) {
+  return left.length === right.length && left.every((value, index) => value === right[index]);
+}
+
 async function fetchRomaJson(romaBase, cookies, path, init = {}) {
   const response = await fetch(new URL(path, romaBase), {
     ...init,
@@ -93,8 +97,9 @@ async function loadActiveLocaleState(romaBase, cookies) {
 
 function assertGenerationPayload(status, payload, expected) {
   const translation = payload?.translation;
-  const activeLocales = assertStringArray(translation?.activeLocales, 'translation.activeLocales');
-  const skippedLocales = assertStringArray(translation?.skippedLocales, 'translation.skippedLocales');
+  const requestedLocales = assertStringArray(translation?.requestedLocales, 'translation.requestedLocales');
+  const translatedLocales = assertStringArray(translation?.translatedLocales, 'translation.translatedLocales');
+  const failedLocales = Array.isArray(translation?.failedLocales) ? translation.failedLocales : null;
   if (
     status < 200 ||
     status >= 300 ||
@@ -102,12 +107,14 @@ function assertGenerationPayload(status, payload, expected) {
     translation?.ok !== true ||
     translation?.accepted !== true ||
     translation?.baseLocale !== expected.baseLocale ||
-    !sameStringSet(activeLocales, expected.translationLocales) ||
-    skippedLocales.length !== 0
+    !sameStringArray(requestedLocales, expected.translationLocales) ||
+    !sameStringArray(translatedLocales, expected.translationLocales) ||
+    !failedLocales ||
+    failedLocales.length !== 0
   ) {
     throw new Error(`Translation Agent generation failed exact shape: HTTP ${status}`);
   }
-  return activeLocales;
+  return translatedLocales;
 }
 
 async function readTranslationInventory(romaBase, cookies, instanceId, expected) {

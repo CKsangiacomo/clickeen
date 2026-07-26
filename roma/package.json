@@ -13,6 +13,7 @@
     "pretest:instance-package": "node ../scripts/widgets/generate-artifacts.mjs",
     "test:instance-package": "tsx tests/run-instance-package-reroute.ts",
     "test:instance-save-boundary": "tsx tests/run-instance-save-boundary.ts",
+    "test:translation-outcomes": "tsx tests/run-translation-outcomes.ts",
     "test:ui-copy": "tsx tests/run-ui-copy.ts",
     "test:widget-command-gates": "tsx tests/run-widget-command-gates.ts",
     "pretypecheck": "node ../scripts/widgets/generate-artifacts.mjs",

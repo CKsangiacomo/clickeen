@@ -248,8 +248,9 @@ operation is running, Bob disables the button and displays transient Agent
 Activity rows authored by the Translation Agent while overlays are written. When
 the operation returns, the transient Agent Activity UI disappears and Bob shows
 durable command-result feedback from Roma's response: success, no accepted
-work, command failure, or exact locale-package failures. If overlays were
-accepted, Bob refreshes the previewable translated locales from overlay truth.
+work, command failure, exact per-locale translation failures, or exact
+locale-package failures. Bob refreshes previewable translated locales only when
+Roma reports at least one `translatedLocales` result.
 Bob reads `localePackages` only to explain package follow-up failures; overlay
 source remains the translation truth.
 
@@ -478,8 +479,9 @@ translations, regenerate translations, materialize locale packages, refresh
 locale public cache, or return locale follow-up coordinates from save. Bob
 treats the save response as source/base persistence truth.
 
-After Roma returns, Bob refreshes the overlay list and lets the user preview
-active locales that have saved overlay values in the actual widget preview.
+After Roma returns, Bob refreshes the overlay list only when at least one locale
+translated and lets the user preview active locales that have saved overlay
+values in the actual widget preview.
 Bob does not render the overlay value map as editable fields or inspection
 rows. Tokyo-worker stores translated locale values under:
 

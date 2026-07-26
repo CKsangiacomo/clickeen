@@ -26,6 +26,7 @@ import {
 } from '../lib/account-instance-public-package';
 import {
   buildLocalePackageMaterializationFailure,
+  materializeAccountInstanceLocalePackages,
   runLocalePackagePool,
 } from '../lib/account-instance-locale-package';
 import { runRemovedLocaleCleanup } from '../lib/account-locale-cleanup';
@@ -500,7 +501,7 @@ async function testLocalePackageMaterializerWrapper(): Promise<void> {
       instanceId: coordinate.instanceId,
       baseLocale: coordinate.baseLocale,
       requestedLocale: 'fr',
-      activeLocales: ['fr'],
+      targetLocales: ['fr'],
       displayName: coordinate.displayName,
       config,
       overlayValues,
@@ -518,7 +519,7 @@ async function testLocalePackageMaterializerWrapper(): Promise<void> {
   assert.equal(result.value.evidence.materializerContractVersion, 'ck-runtime-materializer:124B');
 }
 
-async function testLocalePackageRejectsBaseAndInactiveLocales(): Promise<void> {
+async function testLocalePackageRejectsBaseAndUnrequestedLocales(): Promise<void> {
   const compiled = await buildCompiledWidgetFixture('faq');
   const config = await buildAccountDefaultStateFixture('faq');
   const coordinate = widgetFixtureCoordinate('faq');
@@ -535,7 +536,7 @@ async function testLocalePackageRejectsBaseAndInactiveLocales(): Promise<void> {
     instanceId: coordinate.instanceId,
     baseLocale: coordinate.baseLocale,
     requestedLocale: coordinate.baseLocale,
-    activeLocales: ['fr'],
+    targetLocales: ['fr'],
     displayName: coordinate.displayName,
     config,
     overlayValues,
@@ -551,18 +552,36 @@ async function testLocalePackageRejectsBaseAndInactiveLocales(): Promise<void> {
     instanceId: coordinate.instanceId,
     baseLocale: coordinate.baseLocale,
     requestedLocale: 'fr',
-    activeLocales: ['de'],
+    targetLocales: ['de'],
     displayName: coordinate.displayName,
     config,
     overlayValues,
   });
   assert.equal(inactiveResult.ok, false, JSON.stringify(inactiveResult));
-  if (!inactiveResult.ok) assert.equal(inactiveResult.error.detail, 'locale_package_inactive_locale');
+  if (!inactiveResult.ok) assert.equal(inactiveResult.error.detail, 'locale_package_unrequested_locale');
+}
+
+async function testLocalePackageRejectsMalformedTargets(): Promise<void> {
+  const result = await materializeAccountInstanceLocalePackages({
+    accountId: 'CLICKEEN',
+    accountCapsule: 'test-capsule',
+    requestId: 'test-request',
+    instanceId: 'UZ3JEJSHII',
+    baseLocale: 'en',
+    targetLocales: ['fr', 'fr'],
+  });
+  assert.equal(result.ok, false, JSON.stringify(result));
+  if (!result.ok) {
+    assert.equal(result.status, 422);
+    assert.equal(result.error.detail, 'targetLocales_invalid');
+    assert.equal(result.value.failed.length, 2);
+  }
 }
 
 async function testLocaleMaterializationRouteWiring(): Promise<void> {
   const generateRoute = await readRouteSource('roma/app/api/account/instances/[instanceId]/translations/generate/route.ts');
   assert.match(generateRoute, /materializeAccountInstanceLocalePackages\(\{/);
+  assert.match(generateRoute, /targetLocales: generated\.value\.translation\.translatedLocales/);
   assert.match(generateRoute, /localePackages/);
   assert.match(generateRoute, /generateAccountInstanceTranslations\(\{/);
   assert.match(generateRoute, /generateAccountInstanceTranslations\(\{[\s\S]*onActivity: activity/);
@@ -794,7 +813,8 @@ const tests: Array<{ name: string; run: () => Promise<void> }> = [
   { name: 'account-asset font materialization', run: testAccountAssetFontMaterialization },
   { name: 'account-asset font resolve failures', run: testAccountAssetFontResolveFailures },
   { name: 'locale package materializer wrapper', run: testLocalePackageMaterializerWrapper },
-  { name: 'locale package rejects base and inactive locales', run: testLocalePackageRejectsBaseAndInactiveLocales },
+  { name: 'locale package rejects base and unrequested locales', run: testLocalePackageRejectsBaseAndUnrequestedLocales },
+  { name: 'locale package rejects malformed targets', run: testLocalePackageRejectsMalformedTargets },
   { name: 'locale materialization route wiring', run: testLocaleMaterializationRouteWiring },
   { name: 'locale package bounded pool', run: testLocalePackagePool },
   { name: 'removed locale cleanup attempts every coordinate', run: testRemovedLocaleCleanupAttemptsEveryCoordinate },

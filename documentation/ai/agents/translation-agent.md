@@ -77,9 +77,9 @@ renders it temporarily.
 Bob's current Translations panel shows the Generate translations operation and
 transient Translation Agent Activity while the agent operates. After the command
 returns, Bob shows durable result feedback from Roma's response: success, no
-accepted work, command failure, or partial locale-package failure/skips. Activity
-rows are not stored status and do not come from polling. Bob does not expose user
-translation overrides.
+accepted work, command failure, per-locale translation failure, or
+locale-package failure. Activity rows are not stored status and do not come
+from polling. Bob does not expose user translation overrides.
 
 ## Roma Public Translation API
 
@@ -99,8 +99,9 @@ response:
     "ok": true,
     "accepted": true,
     "baseLocale": "[base locale]",
-    "activeLocales": ["[active locale]"],
-    "skippedLocales": []
+    "requestedLocales": ["[requested locale]"],
+    "translatedLocales": ["[translated locale]"],
+    "failedLocales": []
   }
 }
 ```
@@ -157,7 +158,7 @@ Request:
   "instanceId": "[instance id]",
   "widgetType": "[widget type]",
   "baseLocale": "[base locale]",
-  "activeLocales": ["[active locale]"],
+  "requestedLocales": ["[requested locale]"],
   "items": [
     {
       "path": "[field path]",
@@ -180,7 +181,7 @@ Required fields:
 - `grant`
 - `accountPublicId`
 - `instanceId`
-- `activeLocales`
+- `requestedLocales`
 - `items`
 
 Optional fields:
@@ -200,19 +201,24 @@ Response:
   "translation": {
     "ok": true,
     "baseLocale": "[base locale]",
-    "activeLocales": ["[active locale]"],
+    "requestedLocales": ["[requested locale]"],
     "results": [
-      { "locale": "[active locale]", "ok": true, "count": "[translated item count]" }
+      { "locale": "[requested locale]", "ok": true, "count": "[translated item count]" },
+      {
+        "locale": "[requested locale]",
+        "ok": false,
+        "reasonKey": "[stable reason key]",
+        "detail": "[optional detail]"
+      }
     ]
   }
 }
 ```
 
 Locale execution is bounded concurrency: up to 6 locales run concurrently, and
-the worker awaits the locale workers with `Promise.all`. Current code does not
-catch per-locale exceptions into `{ ok: false }` result rows. An exception aborts
-the request and returns the thrown error payload. Overlay files written before
-the failure are not rolled back.
+the worker awaits every locale worker. Each requested locale produces one
+ordered terminal result. One locale failure does not abort the remaining
+locales, and only successful locale values are written to Tokyo-worker.
 
 ## Grant And Write Authorization
 
@@ -226,7 +232,7 @@ Required grant facts:
 - `ai.agentId = "widget.instance.translator"`;
 - `trace.accountPublicId` equals request `accountPublicId`;
 - `trace.instanceId` equals request `instanceId`;
-- `trace.activeLocales` is the same set as request `activeLocales`;
+- `trace.activeLocales` is the same set as request `requestedLocales`;
 - `exp` is greater than current time.
 
 Tokyo-worker verifies the same grant on each write using the `x-ck-ai-grant`
@@ -354,15 +360,15 @@ This is an operator fact, not a desired future abstraction.
 | invalid or expired grant | `401 GRANT_INVALID` or `401 GRANT_EXPIRED` |
 | grant/request mismatch | `403 CAPABILITY_DENIED` |
 | missing `AI_GRANT_HMAC_SECRET` | `500 PROVIDER_ERROR` from Translation Agent |
-| missing `SANFRANCISCO_AI_ENGINE` | `500 PROVIDER_ERROR` |
-| San Francisco provider/model failure | forwarded explicit error |
-| malformed model output | explicit Translation Agent error |
-| missing requested path | `502 PROVIDER_ERROR` |
-| unexpected translated path | `502 PROVIDER_ERROR` |
-| missing `TOKYO_PRODUCT_CONTROL` | `500 PROVIDER_ERROR` |
-| Tokyo-worker missing write grant secret | `503` with `tokyo.translation.writeGrantSecretMissing` |
-| Tokyo write rejection | worker forwards explicit error; Roma may remap non-400/401/403/422 Translation Agent failures to `502 UPSTREAM_UNAVAILABLE` |
-| failure after prior locale writes | request fails; prior written overlay files remain |
+| missing `SANFRANCISCO_AI_ENGINE` | HTTP `200` with an explicit failed result for every requested locale |
+| San Francisco provider/model failure | exact failed-locale result; remaining locales continue |
+| malformed model output | exact failed-locale result; remaining locales continue |
+| missing requested path | exact failed-locale result |
+| unexpected translated path | exact failed-locale result |
+| missing `TOKYO_PRODUCT_CONTROL` | HTTP `200` with an explicit failed result for every requested locale |
+| Tokyo-worker missing write grant secret | HTTP `200` with explicit failed-locale outcomes carrying `tokyo.translation.writeGrantSecretMissing` |
+| Tokyo write rejection | exact failed-locale result; remaining locales continue |
+| failure after prior locale writes | complete ordered result set reports written and failed locales separately |
 
 No full-success response may be returned unless every requested active locale has
 a successful overlay write.
@@ -423,12 +429,14 @@ and to `tokyo-assets-dev` when required.
 3. Confirm the saved instance has translatable `source.content.fields`.
 4. If generation returns `accepted: false`, there were no active non-base
    locales to generate.
-5. If Translation Agent returns `401` or `403`, inspect the Roma grant trace:
+5. If `failedLocales` is non-empty, inspect those exact locale outcomes; other
+   requested locales may still have translated and materialized successfully.
+6. If Translation Agent returns `401` or `403`, inspect the Roma grant trace:
    `accountPublicId`, `instanceId`, and `activeLocales`.
-6. If model execution fails, inspect San Francisco health, grant model policy,
+7. If model execution fails, inspect San Francisco health, grant model policy,
    and selected provider secret.
-7. If Tokyo write fails, inspect `TOKYO_PRODUCT_CONTROL`, `x-account-id`,
+8. If Tokyo write fails, inspect `TOKYO_PRODUCT_CONTROL`, `x-account-id`,
    `x-ck-internal-service`, `x-ck-ai-grant`, and Tokyo-worker
    `AI_GRANT_HMAC_SECRET`.
-8. If Bob shows only a generic failure, inspect the Roma response body and then
+9. If Bob shows only a generic failure, inspect the Roma response body and then
    the Translation Agent/San Francisco/Tokyo request id chain.

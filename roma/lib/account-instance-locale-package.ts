@@ -84,8 +84,14 @@ export function buildLocalePackageMaterializationFailure(args: {
   };
 }
 
-function uniqueNonBaseLocales(locales: string[], baseLocale: string): string[] {
-  return Array.from(new Set(locales.filter((locale) => locale && locale !== baseLocale)));
+function validateTargetLocales(locales: string[], baseLocale: string): string[] | null {
+  if (
+    locales.some((locale) => !locale || locale !== locale.trim() || locale === baseLocale) ||
+    new Set(locales).size !== locales.length
+  ) {
+    return null;
+  }
+  return locales;
 }
 
 export async function runLocalePackagePool<T>(args: {
@@ -124,10 +130,22 @@ export async function materializeAccountInstanceLocalePackages(args: {
   requestId: string;
   instanceId: string;
   baseLocale: string;
-  activeLocales: string[];
+  targetLocales: string[];
 }): Promise<LocalePackageMaterializationResult> {
-  const locales = uniqueNonBaseLocales(args.activeLocales, args.baseLocale);
-  if (!locales.length) return { ok: true, value: { ok: true, completed: [], failed: [] } };
+  if (!args.targetLocales.length) return { ok: true, value: { ok: true, completed: [], failed: [] } };
+  const locales = validateTargetLocales(args.targetLocales, args.baseLocale);
+  if (!locales) {
+    return buildLocalePackageMaterializationFailure({
+      status: 422,
+      kind: 'VALIDATION',
+      reasonKey: 'coreui.errors.payload.invalid',
+      detail: 'targetLocales_invalid',
+      locales: args.targetLocales,
+      accountId: args.accountId,
+      instanceId: args.instanceId,
+      phase: 'materializer',
+    });
+  }
 
   const saved = await loadTokyoAccountInstanceDocument({
     accountId: args.accountId,
@@ -247,7 +265,7 @@ export async function materializeAccountInstanceLocalePackages(args: {
       instanceId: args.instanceId,
       baseLocale: args.baseLocale,
       requestedLocale: locale,
-      activeLocales: locales,
+      targetLocales: locales,
       displayName: saved.value.row.displayName,
       config: saved.value.config,
       overlayValues: overlay.value.values,

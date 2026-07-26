@@ -63,7 +63,7 @@ type TranslationAgentResponse = {
   translation: {
     ok: boolean;
     baseLocale?: string | null;
-    activeLocales: string[];
+    requestedLocales: string[];
     results: TranslationAgentLocaleResult[];
   };
 };
@@ -83,13 +83,14 @@ export type InstanceTranslationValuesPayload = {
 };
 
 export type InstanceTranslationsGeneratePayload = {
-  ok: true;
+  ok: boolean;
   translation: {
-    ok: true;
+    ok: boolean;
     accepted: boolean;
     baseLocale: string;
-    activeLocales: string[];
-    skippedLocales: string[];
+    requestedLocales: string[];
+    translatedLocales: string[];
+    failedLocales: Array<{ locale: string; reasonKey: string; detail?: string }>;
   };
 };
 
@@ -144,9 +145,9 @@ function normalizeTranslationValuesPayload(payload: unknown): InstanceTranslatio
 
 function normalizeStringArray(raw: unknown): string[] | null {
   if (!Array.isArray(raw)) return null;
-  const values = raw.map((entry) => asTrimmedString(entry));
-  if (values.some((entry) => !entry)) return null;
-  return values as string[];
+  if (raw.some((entry) => typeof entry !== 'string' || !entry || entry !== entry.trim())) return null;
+  const values = raw as string[];
+  return new Set(values).size === values.length ? values : null;
 }
 
 function normalizeSavedInstanceSourcePayload(raw: unknown): SavedInstanceSourcePayload | null {
@@ -184,11 +185,13 @@ function buildTranslationAgentItems(content: SavedInstanceSourcePayload['source'
 
 function normalizeLocaleResult(raw: unknown): TranslationAgentLocaleResult | null {
   if (!isRecord(raw)) return null;
-  const locale = asTrimmedString(raw.locale);
+  const locale = typeof raw.locale === 'string' && raw.locale && raw.locale === raw.locale.trim()
+    ? raw.locale
+    : null;
   if (!locale || typeof raw.ok !== 'boolean') return null;
   if (raw.ok) {
-    return typeof raw.count === 'number' && Number.isFinite(raw.count)
-      ? { locale, ok: true, count: Math.max(0, Math.floor(raw.count)) }
+    return typeof raw.count === 'number' && Number.isInteger(raw.count) && raw.count >= 0
+      ? { locale, ok: true, count: raw.count }
       : null;
   }
   const reasonKey = asTrimmedString(raw.reasonKey);
@@ -202,7 +205,7 @@ function normalizeTranslationAgentResponse(raw: unknown): TranslationAgentRespon
   const requestId = asTrimmedString(raw.requestId);
   const agentId = asTrimmedString(raw.agentId);
   const translation = isRecord(raw.translation) ? raw.translation : null;
-  const activeLocales = normalizeStringArray(translation?.activeLocales);
+  const requestedLocales = normalizeStringArray(translation?.requestedLocales);
   const resultsRaw = Array.isArray(translation?.results) ? translation.results : null;
   const results = resultsRaw
     ? resultsRaw.map((entry) => normalizeLocaleResult(entry)).filter((entry): entry is TranslationAgentLocaleResult => Boolean(entry))
@@ -212,7 +215,7 @@ function normalizeTranslationAgentResponse(raw: unknown): TranslationAgentRespon
     agentId !== TRANSLATION_AGENT_ID ||
     !translation ||
     typeof translation.ok !== 'boolean' ||
-    !activeLocales ||
+    !requestedLocales ||
     !results ||
     results.length !== resultsRaw?.length
   ) {
@@ -224,7 +227,7 @@ function normalizeTranslationAgentResponse(raw: unknown): TranslationAgentRespon
     translation: {
       ok: translation.ok,
       baseLocale: asTrimmedString(translation.baseLocale),
-      activeLocales,
+      requestedLocales,
       results,
     },
   };
@@ -275,7 +278,13 @@ async function readTranslationAgentResponse(args: {
     const parsed = safeJsonParse(dataLines.join('\n'));
     if (eventName === 'activity' && isRecord(parsed)) {
       const message = parsed.message;
-      if (typeof message === 'string') args.onActivity?.({ message });
+      if (typeof message === 'string') {
+        try {
+          args.onActivity?.({ message });
+        } catch {
+          // Activity transport is not translation truth.
+        }
+      }
       return;
     }
     if (eventName === 'result') finalPayload = parsed;
@@ -300,12 +309,8 @@ async function readTranslationAgentResponse(args: {
   return { status: finalPayload.status, payload: finalPayload.payload, text: JSON.stringify(finalPayload.payload) };
 }
 
-function sameStringSet(left: string[], right: string[]): boolean {
-  const leftSet = new Set(left);
-  const rightSet = new Set(right);
-  if (leftSet.size !== left.length || rightSet.size !== right.length) return false;
-  if (leftSet.size !== rightSet.size) return false;
-  return Array.from(leftSet).every((value) => rightSet.has(value));
+function sameStringArray(left: string[], right: string[]): boolean {
+  return left.length === right.length && left.every((value, index) => value === right[index]);
 }
 
 async function loadSavedInstanceSource(args: {
@@ -442,8 +447,9 @@ export async function generateAccountInstanceTranslations(args: {
           ok: true,
           accepted: false,
           baseLocale,
-          activeLocales,
-          skippedLocales: [],
+          requestedLocales: [],
+          translatedLocales: [],
+          failedLocales: [],
         },
       },
     };
@@ -492,7 +498,7 @@ export async function generateAccountInstanceTranslations(args: {
         instanceId: args.instanceId,
         widgetType: saved.value.widgetType,
         baseLocale,
-        activeLocales,
+        requestedLocales: activeLocales,
         items,
         trace: { client: 'roma', requestId: args.requestId ?? undefined },
       },
@@ -520,26 +526,40 @@ export async function generateAccountInstanceTranslations(args: {
     );
   }
   const translated = normalizeTranslationAgentResponse(agentResult.payload);
+  if (!translated) {
+    return invalidPayload('translation_agent_invalid_payload');
+  }
+  const resultLocales = translated.translation.results.map((result) => result.locale);
+  const allResultsSucceeded = translated.translation.results.every((result) => result.ok);
   if (
-    !translated ||
-    !translated.translation.ok ||
-    !sameStringSet(translated.translation.activeLocales, activeLocales) ||
-    !translated.translation.results.every((result) => result.ok) ||
-    !sameStringSet(translated.translation.results.map((result) => result.locale), activeLocales)
+    !sameStringArray(translated.translation.requestedLocales, activeLocales) ||
+    !sameStringArray(resultLocales, activeLocales) ||
+    translated.translation.ok !== allResultsSucceeded
   ) {
     return invalidPayload('translation_agent_invalid_payload');
   }
+  const translatedLocales = translated.translation.results.flatMap((result) => (result.ok ? [result.locale] : []));
+  const failedLocales = translated.translation.results.flatMap((result) =>
+    result.ok
+      ? []
+      : [{
+          locale: result.locale,
+          reasonKey: result.reasonKey,
+          ...(result.detail ? { detail: result.detail } : {}),
+        }],
+  );
   return {
     ok: true,
     status: 200,
     value: {
-      ok: true,
+      ok: failedLocales.length === 0,
       translation: {
-        ok: true,
+        ok: failedLocales.length === 0,
         accepted: true,
         baseLocale,
-        activeLocales: translated.translation.activeLocales,
-        skippedLocales: [],
+        requestedLocales: translated.translation.requestedLocales,
+        translatedLocales,
+        failedLocales,
       },
     },
   };

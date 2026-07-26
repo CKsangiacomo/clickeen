@@ -41,7 +41,7 @@ type TranslationAgentWorkerRequest = {
   instanceId: string;
   widgetType?: string | null;
   baseLocale?: string | null;
-  activeLocales: string[];
+  requestedLocales: string[];
   items: TranslationItem[];
   trace?: {
     requestId?: string;
@@ -58,7 +58,19 @@ type AgentActivityEvent = {
 };
 
 function sendStreamEvent(controller: ReadableStreamDefaultController<Uint8Array>, event: string, payload: unknown) {
-  controller.enqueue(new TextEncoder().encode(`event: ${event}\ndata: ${JSON.stringify(payload)}\n\n`));
+  try {
+    controller.enqueue(new TextEncoder().encode(`event: ${event}\ndata: ${JSON.stringify(payload)}\n\n`));
+  } catch {
+    // Activity transport is not translation truth.
+  }
+}
+
+function closeStream(controller: ReadableStreamDefaultController<Uint8Array>) {
+  try {
+    controller.close();
+  } catch {
+    // The client may have already closed the activity stream.
+  }
 }
 
 class HttpError extends Error {
@@ -98,9 +110,14 @@ async function readJson(request: Request): Promise<unknown> {
 
 function normalizeStringArray(raw: unknown): string[] | null {
   if (!Array.isArray(raw)) return null;
-  const values = raw.map((entry) => asTrimmedString(entry));
-  if (values.some((entry) => !entry) || values.length === 0) return null;
-  return Array.from(new Set(values as string[]));
+  if (
+    raw.length === 0 ||
+    raw.some((entry) => typeof entry !== 'string' || !entry || entry !== entry.trim())
+  ) {
+    return null;
+  }
+  const normalized = raw as string[];
+  return new Set(normalized).size === normalized.length ? normalized : null;
 }
 
 function base64UrlToBytes(input: string): Uint8Array {
@@ -136,7 +153,7 @@ async function verifyRomaTranslationGrant(args: {
   secret: string;
   accountPublicId: string;
   instanceId: string;
-  activeLocales: string[];
+  requestedLocales: string[];
 }): Promise<VerifiedTranslationGrant> {
   if (!args.secret) {
     throw new HttpError(500, { error: { code: 'PROVIDER_ERROR', provider: 'translation-agent', message: 'Missing AI_GRANT_HMAC_SECRET' } });
@@ -169,7 +186,7 @@ async function verifyRomaTranslationGrant(args: {
     traceAccountPublicId !== args.accountPublicId ||
     traceInstanceId !== args.instanceId ||
     !traceActiveLocales ||
-    !sameStringSet(traceActiveLocales, args.activeLocales)
+    !sameStringSet(traceActiveLocales, args.requestedLocales)
   ) {
     throw new HttpError(403, {
       error: {
@@ -233,9 +250,9 @@ function normalizeWorkerRequest(raw: unknown): TranslationAgentWorkerRequest | n
   const grant = asTrimmedString(raw.grant);
   const accountPublicId = asTrimmedString(raw.accountPublicId);
   const instanceId = asTrimmedString(raw.instanceId);
-  const activeLocales = normalizeStringArray(raw.activeLocales);
+  const requestedLocales = normalizeStringArray(raw.requestedLocales);
   const items = normalizeTranslationItems(raw.items);
-  if (!grant || !accountPublicId || !instanceId || !activeLocales || !items) return null;
+  if (!grant || !accountPublicId || !instanceId || !requestedLocales || !items) return null;
   if (raw.agentId !== undefined && raw.agentId !== TRANSLATION_AGENT_ID) return null;
   return {
     grant,
@@ -243,7 +260,7 @@ function normalizeWorkerRequest(raw: unknown): TranslationAgentWorkerRequest | n
     instanceId,
     widgetType: asTrimmedString(raw.widgetType) ?? null,
     baseLocale: asTrimmedString(raw.baseLocale) ?? null,
-    activeLocales,
+    requestedLocales,
     items,
     trace: isRecord(raw.trace)
       ? {
@@ -469,40 +486,51 @@ async function executeTranslationRun(args: {
   request: TranslationAgentWorkerRequest;
   onActivity?: (event: AgentActivityEvent) => void;
 }): Promise<TranslationLocaleResult[]> {
-  const results = new Array<TranslationLocaleResult>(args.request.activeLocales.length);
+  const results = new Array<TranslationLocaleResult>(args.request.requestedLocales.length);
   let nextLocaleIndex = 0;
   const runNext = async (): Promise<void> => {
-    const localeIndex = nextLocaleIndex;
-    nextLocaleIndex += 1;
-    const locale = args.request.activeLocales[localeIndex];
-    if (!locale) return;
-    const localeLabel = resolveLocaleLabel(locale);
-    args.onActivity?.({
-      message: `Writing ${localeLabel}`,
-    });
-    const values = await translateLocale({
-      env: args.env,
-      requestId: args.requestId,
-      request: args.request,
-      locale,
-    });
-    await writeTokyoOverlayValues({
-      env: args.env,
-      requestId: args.requestId,
-      grant: args.request.grant,
-      accountPublicId: args.request.accountPublicId,
-      instanceId: args.request.instanceId,
-      locale,
-      values,
-    });
-    args.onActivity?.({
-      message: `${localeLabel} written`,
-    });
-    results[localeIndex] = { locale, ok: true, count: Object.keys(values).length };
-    await runNext();
+    while (nextLocaleIndex < args.request.requestedLocales.length) {
+      const localeIndex = nextLocaleIndex++;
+      const locale = args.request.requestedLocales[localeIndex]!;
+      const localeLabel = resolveLocaleLabel(locale);
+      args.onActivity?.({ message: `Writing ${localeLabel}` });
+      try {
+        const values = await translateLocale({
+          env: args.env,
+          requestId: args.requestId,
+          request: args.request,
+          locale,
+        });
+        await writeTokyoOverlayValues({
+          env: args.env,
+          requestId: args.requestId,
+          grant: args.request.grant,
+          accountPublicId: args.request.accountPublicId,
+          instanceId: args.request.instanceId,
+          locale,
+          values,
+        });
+        args.onActivity?.({ message: `${localeLabel} written` });
+        results[localeIndex] = { locale, ok: true, count: Object.keys(values).length };
+      } catch (error) {
+        const payload = error instanceof HttpError && isRecord(error.payload) ? error.payload : null;
+        const errorPayload = isRecord(payload?.error) ? payload.error : null;
+        const reasonKey =
+          asTrimmedString(errorPayload?.reasonKey) ??
+          asTrimmedString(errorPayload?.code) ??
+          (error instanceof TranslationAgentError ? error.code : null) ??
+          'coreui.errors.translation.failed';
+        const detail =
+          asTrimmedString(errorPayload?.message) ??
+          asTrimmedString(errorPayload?.detail) ??
+          (error instanceof Error ? error.message : String(error));
+        args.onActivity?.({ message: `${localeLabel} failed` });
+        results[localeIndex] = { locale, ok: false, reasonKey, ...(detail ? { detail } : {}) };
+      }
+    }
   };
   const workers = Array.from(
-    { length: Math.min(LOCALE_TRANSLATION_CONCURRENCY, args.request.activeLocales.length) },
+    { length: Math.min(LOCALE_TRANSLATION_CONCURRENCY, args.request.requestedLocales.length) },
     () => runNext(),
   );
   await Promise.all(workers);
@@ -521,7 +549,7 @@ async function handleTranslateInstance(args: {
         code: 'BAD_REQUEST',
         reasonKey: 'coreui.errors.translation.invalidRequest',
         message: 'Invalid Translation Agent worker request',
-        issues: [{ path: '', message: 'Expected { grant, accountPublicId, instanceId, activeLocales, items }' }],
+        issues: [{ path: '', message: 'Expected { grant, accountPublicId, instanceId, requestedLocales, items }' }],
       },
     });
   }
@@ -531,7 +559,7 @@ async function handleTranslateInstance(args: {
     secret: args.env.AI_GRANT_HMAC_SECRET,
     accountPublicId: body.accountPublicId,
     instanceId: body.instanceId,
-    activeLocales: body.activeLocales,
+    requestedLocales: body.requestedLocales,
   });
 
   const run = async (onActivity?: (event: AgentActivityEvent) => void) => {
@@ -546,14 +574,14 @@ async function handleTranslateInstance(args: {
     });
     const failed = results.filter((result) => !result.ok);
     return {
-      status: failed.length ? 424 : 200,
+      status: 200,
       payload: {
         requestId,
         agentId: TRANSLATION_AGENT_ID,
         translation: {
           ok: failed.length === 0,
           baseLocale: body.baseLocale,
-          activeLocales: body.activeLocales,
+          requestedLocales: body.requestedLocales,
           results,
         },
       },
@@ -570,7 +598,7 @@ async function handleTranslateInstance(args: {
       try {
         const result = await run((event) => sendStreamEvent(controller, 'activity', event));
         sendStreamEvent(controller, 'result', result);
-        controller.close();
+        closeStream(controller);
       } catch (error) {
         const status =
           error instanceof HttpError ? error.status : error instanceof TranslationAgentError ? error.status : 500;
@@ -592,7 +620,7 @@ async function handleTranslateInstance(args: {
                 },
               };
         sendStreamEvent(controller, 'result', { status, payload });
-        controller.close();
+        closeStream(controller);
       }
     },
   });

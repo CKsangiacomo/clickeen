@@ -331,9 +331,10 @@ Bob Translations panel -> Roma -> Translation Agent Worker -> San Francisco -> T
 
 The command clicks Bob's real `Generate translations` button, waits for the Roma
 generation response, requires the exact success shape with non-empty
-`activeLocales` and empty `skippedLocales`, observes transient Translation Agent
-Activity when available, then reads the generated overlay list and one locale
-overlay through Roma and renders translated overlay values in Bob.
+`requestedLocales`, matching `translatedLocales`, and empty `failedLocales`,
+observes transient Translation Agent Activity when available, then reads the
+generated overlay list and one locale overlay through Roma and renders
+translated overlay values in Bob.
 
 Pass evidence is the command exiting `0` and printing JSON with:
 
@@ -378,7 +379,7 @@ Agent call and call the product path verified.
 | Roma session finish fails | auth-state writer fails |
 | Deployed app route fails | Playwright spec fails against owning deployed surface |
 | Copilot unmanaged model accepted | Copilot smoke fails; no-substitution law violated |
-| Translation generation partial/skipped | Translation smoke fails |
+| Translation generation partial/failed | Translation smoke fails |
 
 ## Verification Evidence
 

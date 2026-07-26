@@ -217,9 +217,11 @@ POST /api/account/instances/{instanceId}/translations/generate
 
 4. Roma loads current active locales, excludes the base locale, and calls the
    Translation Agent only when non-base active locales remain.
-5. Success means every requested active locale was translated and written by
-   Tokyo-worker.
-6. If the response has `accepted: false`, there was no non-base active locale
+5. Roma returns `requestedLocales`, `translatedLocales`, and exact
+   `failedLocales`. A valid partial result remains HTTP `200`; it is not
+   misreported as a failed command.
+6. Roma materializes packages only for `translatedLocales`.
+7. If the response has `accepted: false`, there was no non-base active locale
    to generate.
 
 ### Inspect Stored Translation Values
@@ -300,9 +302,10 @@ Bob's current Translations panel displays request state and transient Agent
 Activity rows authored by Translation Agent while it writes overlays. The rows
 are live narration from the agent to the user. They are not stored status,
 polling, or Roma/Bob-authored progress. After the command returns, Bob shows
-durable result feedback from Roma's response: success, no accepted work, command
-failure, or partial locale-package failure/skips. Bob refreshes previewable
-locales only when the response says translation work was accepted. Bob can
+durable result feedback from Roma's response: success, no accepted work,
+command failure, per-locale translation failure, or locale-package failure.
+Bob refreshes previewable locales only when at least one locale was translated.
+Bob can
 preview a selected generated locale in the widget preview, but it does not
 expose user translation overrides, a field-level overlay editor, or a read-only
 overlay value dump. Overlay values remain generated artifacts owned by
@@ -380,9 +383,10 @@ URLs.
 Saved source changes do not generate or regenerate translations. Roma source
 save persists the source and base package, then returns source-save truth.
 Translation update remains an explicit operation from Bob's Translations panel
-through Roma's translation route and the Translation Agent. After accepted
-overlay generation, the translation route materializes matching locale package
-bytes for the generated locales. Roma resolves shared media and typography once,
+through Roma's translation route and the Translation Agent. After overlay
+generation, the translation route materializes matching locale package bytes
+only for locales that translated successfully. Roma resolves shared media and
+typography once,
 then materializes up to four locale packages concurrently and reports exact
 `localePackages.completed` and `localePackages.failed` coordinates
 if package write or public cache refresh fails. Bob may surface

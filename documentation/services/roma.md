@@ -201,9 +201,12 @@ panel. Roma resolves the current account active locales for that command,
 applies the current tier limit, loads the saved instance source from
 Tokyo-worker, mints a Translation Agent grant, and calls the Translation Agent
 Worker. Translation Agent calls San Francisco `/model/chat` and writes overlays
-via Tokyo-worker. After accepted overlay generation, Roma materializes the
-matching locale package bytes for the generated locales through the locale
-package helper. Shared media and typography are resolved once per instance and
+via Tokyo-worker. Translation Agent returns one ordered terminal result for
+every requested locale. Roma validates that complete result set and returns
+`requestedLocales`, `translatedLocales`, and exact `failedLocales`; a valid
+partial result remains an HTTP `200` product result. Roma materializes matching
+locale package bytes only for `translatedLocales` through the locale package
+helper. Shared media and typography are resolved once per instance and
 up to four locale packages are materialized concurrently. If locale package
 materialization or public cache refresh fails, the translation command reports
 every exact `localePackages.failed` coordinate

@@ -17,7 +17,19 @@ export const runtime = 'edge';
 
 type RouteContext = { params: Promise<{ instanceId: string }> };
 function sendEvent(controller: ReadableStreamDefaultController<Uint8Array>, event: string, payload: unknown) {
-  controller.enqueue(new TextEncoder().encode(`event: ${event}\ndata: ${JSON.stringify(payload)}\n\n`));
+  try {
+    controller.enqueue(new TextEncoder().encode(`event: ${event}\ndata: ${JSON.stringify(payload)}\n\n`));
+  } catch {
+    // Activity transport is not translation truth.
+  }
+}
+
+function closeStream(controller: ReadableStreamDefaultController<Uint8Array>) {
+  try {
+    controller.close();
+  } catch {
+    // The client may have already closed the activity stream.
+  }
 }
 
 function streamGenerateTranslations(args: {
@@ -39,7 +51,7 @@ function streamGenerateTranslations(args: {
         if (settled) return;
         settled = true;
         sendEvent(controller, 'result', { status, payload });
-        controller.close();
+        closeStream(controller);
       };
 
       try {
@@ -50,8 +62,9 @@ function streamGenerateTranslations(args: {
               ok: true,
               accepted: false,
               baseLocale: args.baseLocale,
-              activeLocales: [],
-              skippedLocales: [],
+              requestedLocales: [],
+              translatedLocales: [],
+              failedLocales: [],
             },
           });
           return;
@@ -75,7 +88,10 @@ function streamGenerateTranslations(args: {
           return;
         }
 
-        if (!generated.value.translation.accepted) {
+        if (
+          !generated.value.translation.accepted ||
+          generated.value.translation.translatedLocales.length === 0
+        ) {
           result(200, generated.value);
           return;
         }
@@ -84,7 +100,7 @@ function streamGenerateTranslations(args: {
           accountId: args.accountId,
           instanceId: args.instanceId,
           baseLocale: args.baseLocale,
-          activeLocales: generated.value.translation.activeLocales,
+          targetLocales: generated.value.translation.translatedLocales,
           accountCapsule: args.accountCapsule,
           requestId: args.requestId,
         });
@@ -205,7 +221,10 @@ export async function POST(request: NextRequest, context: RouteContext) {
       current.value.setCookies,
     );
   }
-  if (!generated.value.translation.accepted) {
+  if (
+    !generated.value.translation.accepted ||
+    generated.value.translation.translatedLocales.length === 0
+  ) {
     return withSession(request, NextResponse.json(generated.value, { status: generated.status }), current.value.setCookies);
   }
 
@@ -213,7 +232,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
     accountId,
     instanceId,
     baseLocale,
-    activeLocales: generated.value.translation.activeLocales,
+    targetLocales: generated.value.translation.translatedLocales,
     accountCapsule: current.value.authzToken,
     requestId: current.value.requestId,
   });

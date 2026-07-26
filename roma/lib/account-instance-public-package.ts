@@ -600,7 +600,7 @@ export async function materializeAccountInstanceLocalePublicPackage(args: {
   instanceId: string;
   baseLocale: string;
   requestedLocale: string;
-  activeLocales: string[];
+  targetLocales: string[];
   displayName: string | null;
   config: Record<string, unknown>;
   overlayValues: Record<string, string>;
@@ -612,8 +612,14 @@ export async function materializeAccountInstanceLocalePublicPackage(args: {
   if (args.requestedLocale === args.baseLocale) {
     return validationFailure('coreui.errors.instance.content.invalid', 'locale_package_base_locale_requested');
   }
-  if (!args.activeLocales.includes(args.requestedLocale)) {
-    return validationFailure('coreui.errors.instance.content.invalid', 'locale_package_inactive_locale');
+  if (
+    args.targetLocales.some((locale) => !locale || locale !== locale.trim() || locale === args.baseLocale) ||
+    new Set(args.targetLocales).size !== args.targetLocales.length
+  ) {
+    return validationFailure('coreui.errors.instance.content.invalid', 'locale_package_target_locales_invalid');
+  }
+  if (!args.targetLocales.includes(args.requestedLocale)) {
+    return validationFailure('coreui.errors.instance.content.invalid', 'locale_package_unrequested_locale');
   }
   const prepared = args.prepared
     ? { ok: true as const, value: args.prepared }
