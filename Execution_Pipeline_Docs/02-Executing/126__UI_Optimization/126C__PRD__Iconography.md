@@ -1,7 +1,6 @@
 # 126C - PRD: Iconography
 
-Status: PRE-EXECUTION STEPS 6-8 COMPLETE - exact-tree review green at
-`b5efaefc`; no Step-9 execution credit.
+Status: STEP 9 COMPLETE - C1 GREEN.
 Parent: `126__PRD__UI_Optimization_Program.md`.
 Series order: 126C of 126A-126M.
 Step-6 authority: `audits/126C__Audit__Iconography.md`.
@@ -43,12 +42,14 @@ healthy. The Step-6 audit proves exact 157/157/157 parity and zero unknown
 static references. Obsolete icon scripts and fake size aliases are already
 gone.
 
-Only these two mismatches remain:
+The Step-6 audit found these two mismatches:
 
 - `prague/src/components/DieterIcon.astro` renders the Tokyo SVG as an external
   `<img>`, which cannot inherit its parent's `currentColor`.
 - the same component defaults to `44`, and `StepsPrimitive.astro` explicitly
   requests `44`, outside the approved ladder.
+
+Slice C1 corrected both mismatches. The execution record below owns the proof.
 
 ## Step-9 Execution Slice C1 - Prague Dieter Rendering
 
@@ -179,6 +180,37 @@ is neither required nor allowed as substitute evidence.
 | V6 | Require rendered color, semantics, and exact-SHA deploy proof, not source parity alone. |
 | V7 | Add no renderer service, registry, compatibility wrapper, or second icon language. |
 | V8 | Tests observe output; runtime rendering does not depend on tests or probes. |
+
+## Step-9 Execution Record
+
+Status on 2026-07-26: **C1 GREEN; 126C complete.**
+
+- The product implementation landed in `2a71da65`. Prague now paints the
+  existing Tokyo Dieter SVG coordinate through one `currentColor` CSS mask,
+  uses the approved `40px` size, and keeps the three current uses decorative.
+  The focused test, Prague workflow typecheck, and living iconography doctrine
+  landed with the same change.
+- `pnpm -C prague typecheck` completed with zero errors, `pnpm -C prague build`
+  passed, and `cloud-dev prague app verify` run `30074306448` passed for the
+  implementation SHA. The current focused Playwright proof passes 2/2 against
+  public Prague.
+- Cloudflare initially skipped the implementation deployment with
+  `skip_reason: path_config`; live Prague correctly remained red and no
+  completion credit was claimed. Empty Git commit `475c829d` retriggered the
+  existing Git-connected Pages build without changing product source or
+  Cloudflare configuration.
+- Cloudflare Pages production deployment
+  `66502f7e-b78a-4061-b413-f414b08620d4` completed every stage successfully at
+  exact SHA `475c829d1cf167be1a88631d949f964487238078`. The four 126C
+  implementation/proof source files remained unchanged from `2a71da65`.
+- Live evidence is preserved under `evidence/126C.1/`. Desktop `1440x1100` and
+  mobile `390x844` captures show the inherited gray Dieter masks. Every
+  before/after tile, icon-container, and glyph `x`, `y`, `width`, and `height`
+  delta is exactly zero. Both captures observed zero non-read requests.
+- The independent post-deploy audit found no product, code, architecture, or
+  no-touch-boundary drift. V1-V8 all pass. No Dieter icon source, Bob, Roma,
+  DevStudio, widget, account data, R2, Supabase, or translation behavior
+  changed.
 
 ## Done
 

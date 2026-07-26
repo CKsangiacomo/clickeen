@@ -1,16 +1,15 @@
 # 126 — DevQA: Where We Actually Stand
 
-Status: PRE-EXECUTION STEPS 1-8 COMPLETE - every 126A-126M execution contract
-is frozen and exact-tree peer-reviewed; Step 9 has not started.
+Status: STEP 9 IN PROGRESS - 126A, 126B, AND 126C GREEN; 126D is next.
 This document reconciles PRD claims with Git and current source evidence. It does
 not define product law, approve unresolved architecture choices, prove that every
 intermediate commit deployed, or close any PRD whose required verification is
 still missing.
 
 Date: 2026-07-14
-Last reconciled: 2026-07-21
+Last reconciled: 2026-07-26
 Scope: premature A-H code-change reality, final A-M current-source audits,
-executable PRDs, exact-tree peer reviews, and the Step-9 starting boundary.
+executable PRDs, exact-tree peer reviews, and current Step-9 execution state.
 Parent: `126__PRD__UI_Optimization_Program.md` (MAMA).
 
 Read-order note: this is a pre-execution correction ledger, not runtime or
@@ -23,14 +22,17 @@ that folder name does not make this work execution.
 
 ## 1. Headline
 
-Substantial A-H foundation code changes landed prematurely during Phase 1. They
-remain current as-built input, not completed execution slices. The renewed
-read-only pass is now complete across A-M: every domain has a current gap and
-deletion map, a final executable PRD, and an exact-tree three-lens GREEN review.
-Reviewed trees are A `c06fa7db`; B `4b480e50`; C `b5efaefc`; D `31b81152`;
-E `ec1ed486`; F/G/H `4c5458b4`; I/J/K/L/M `22a92ec9`. This grants no execution
-credit. All Step-9 implementation, product-data, deploy, and visual/runtime
-evidence remains open.
+Substantial A-H foundation code changes landed prematurely during Phase 1. The
+renewed read-only pass then completed across A-M: every domain has a current gap
+and deletion map, a final executable PRD, and an exact-tree three-lens GREEN
+review. Reviewed trees are A `c06fa7db`; B `4b480e50`; C `b5efaefc`; D
+`31b81152`; E `ec1ed486`; F/G/H `4c5458b4`; I/J/K/L/M `22a92ec9`.
+
+Step 9 subsequently began through the accepted one-domain-at-a-time process.
+126A, 126B, and 126C are now independently implemented, deployed, verified,
+documented, and GREEN. 126D is the next execution domain. The historical
+pre-execution findings below remain the record of why earlier code changes did
+not receive execution credit before that formal pass.
 
 1. **The 126 process was not followed.** The human has now confirmed that every A–M
    domain completes steps 1–8 before step 9 begins. A–H code changes landed while
@@ -43,7 +45,7 @@ evidence remains open.
 3. **The 126 status docs were stale before this realignment.** Every A-H PRD said
    `PRE-EXECUTION READY`, but their as-builts predated later code changes. The
    renewed current-source read, D1/D2/D3 propagation, exact gap maps, final PRDs,
-   and exact-tree reviews are now complete across A-M. Step 9 remains unstarted.
+   and exact-tree reviews completed across A-M before formal Step 9 began.
 4. **The 126I pivot-layer input errors are now proven and corrected in active
    decision docs:** current source has 25 directories including `shared`, no
    `command-activity`, and no current `--color-surface`, `--radius-2`, or
@@ -174,14 +176,15 @@ variant. Slice-related code changes had landed after those status lines were wri
 Motion-related code changes landed. **Neither old status was correct: the PRD was
 not pre-execution-ready, and the audit could not call the changes execution. The
 fresh current-source pass and every later pre-execution gate required by that
-finding are now complete; Step 9 remains unstarted.**
+finding were completed before formal Step 9 began.**
 
 ### Corrections applied
 
-The status lines keep all A-H slices in pre-execution. Code changes exist, but
-they landed before the all-domain gate and receive no Step-9 credit. Human
-convergence and Steps 5-8 are complete across A-M at the reviewed trees recorded
-in §1. Step 9 remains unstarted.
+The realignment status lines kept all A-H slices in pre-execution. Code changes
+existed, but they landed before the all-domain gate and received no Step-9
+credit. Human convergence and Steps 5-8 completed across A-M at the reviewed
+trees recorded in §1 before formal Step 9 began. The current execution status
+is owned by the document header and §1.
 A public read on 2026-07-14 confirmed
 `https://tokyo.dev.clickeen.com/dieter/manifest.json` reports Git SHA `c299c783`,
 which proves that the currently deployed Dieter bytes are observable at the public
