@@ -73,6 +73,7 @@ export async function validateAccountWidgetDefaultsContract(args: {
   const invalidTypographyPaths = validateAccountTypographyFontSelections({
     fontLibrary,
     typography: args.widgetDefaults.shell.typography,
+    required: true,
   }).map((path) => `shell:${path}`);
   const unmappedPaths: string[] = collectDefaultPaths(args.widgetDefaults.shell)
     .filter((path) => !pathIsCovered(path, listWidgetShellControlPaths()))

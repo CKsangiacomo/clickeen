@@ -401,8 +401,10 @@ export function validateAccountTypographyFontSelections(args: {
   fontLibrary: AccountFontLibrary;
   typography: unknown;
   pathPrefix?: string;
+  required?: boolean;
 }): string[] {
   const pathPrefix = args.pathPrefix ?? 'typography';
+  if (args.typography === undefined) return args.required ? [pathPrefix] : [];
   if (!isRecord(args.typography)) return [pathPrefix];
   if (!isRecord(args.typography.roles)) return [`${pathPrefix}.roles`];
   const invalidPaths: string[] = [];

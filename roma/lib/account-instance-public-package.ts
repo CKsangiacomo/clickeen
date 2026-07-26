@@ -233,6 +233,7 @@ async function resolveRuntimeTypographyData(args: {
   const invalidTypographyPaths = validateAccountTypographyFontSelections({
     fontLibrary,
     typography: args.state.typography,
+    required: true,
   });
   if (invalidTypographyPaths.length) {
     return validationFailure(

@@ -3,6 +3,7 @@ import { readFile } from 'node:fs/promises';
 import { NextRequest } from 'next/server';
 import {
   createDefaultAccountFontLibrary,
+  validateAccountTypographyFontSelections,
   WIDGET_SHELL_FACTORY_DEFAULTS,
   type AccountFontLibrary,
 } from '@clickeen/widget-shell';
@@ -63,6 +64,13 @@ async function document(): Promise<AccountWidgetDefaultsDocument> {
 async function main(): Promise<void> {
   const request = new NextRequest('https://roma.test/api/account/widget-defaults');
   const valid = await document();
+  assert.deepEqual(
+    validateAccountTypographyFontSelections({
+      fontLibrary: valid.fontLibrary,
+      typography: undefined,
+    }),
+    [],
+  );
   setRoleFont(valid.shell, 'title', 'Orio', '400');
   assert.deepEqual(
     await validateAccountWidgetDefaultsContract({ request, widgetDefaults: valid }),

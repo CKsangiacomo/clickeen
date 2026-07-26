@@ -170,7 +170,8 @@ Runtime package behavior:
 - Save/package materialization reads saved typography and account font library
   together.
 - Materialization validates every role's family, weight, and style before asset
-  resolution. Missing or malformed typography fails closed.
+  resolution. Instance typography and Shell defaults are required. A widget
+  with no widget-core typography roles does not invent a core typography block.
 - Packages include only the font records used by the saved instance plus Inter.
 - Google records load from Google.
 - Account-uploaded records emit `@font-face` from resolved account asset URLs.
