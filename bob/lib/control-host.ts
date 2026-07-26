@@ -33,4 +33,10 @@ export {
   serializeBobJsonFieldValue,
 } from '../components/td-menu-content/fieldValue';
 export { applyAccountFontLibraryToTypographyMenus } from '../components/td-menu-content/accountFonts';
+export {
+  expandTypographyFamilyOps,
+  isTypographyFamilySelectionError,
+  TYPOGRAPHY_SELECTION_INVALID_COPY,
+  TypographyFamilySelectionError,
+} from './edit/typography-family-ops';
 export type { AccountAssetsClient };

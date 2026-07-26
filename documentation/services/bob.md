@@ -353,14 +353,24 @@ Common primitives include:
 Controls emit edit operations. The edit engine applies those operations to the
 current in-memory instance state.
 
+Typography family controls are account-independent in compiled widget
+artifacts. Session open binds them to the current account `fontLibrary`; that
+bound contract drives manual controls, Copilot choices, edit validation, and
+save validation. Bob contains no default-account font catalog. A family change
+is expanded through the shared account-font resolver into one atomic
+family/weight/style edit.
+
 Bob also exposes a narrow `@clickeen/bob/control-host` module for non-editor
 surfaces that must reuse Builder control presentation. That export is limited to
 compiled-control DOM helpers, Dieter hydrator execution,
-show-if visibility, and field value serialization/parsing. It does not export
+show-if visibility, field value serialization/parsing, and the pure
+account-font family transition adapter. It does not export
 Bob session state, live edit application, preview binding, save behavior, or
 account persistence. Roma Widget Defaults uses this presentation seam to bind
 compiled controls to the account defaults draft document while Roma remains the
-save authority.
+document and save authority. The adapter rejects unknown or malformed family,
+weight, and style values without trimming or repairing them; Bob restores all
+three role controls from unchanged session state after rejection.
 
 ## Builder Copilot
 

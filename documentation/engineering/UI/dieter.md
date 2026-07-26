@@ -94,6 +94,12 @@ Generated Dieter files and `manifest.json` are build/runtime outputs, not source
 truth. App runtimes consume those generated/CDN artifacts; they do not redefine
 Dieter source.
 
+For account-font controls, Dieter owns dropdown presentation and emits the
+selected family as raw control intent. It may filter visible weight/style
+options from supplied metadata, but it does not choose companion values or emit
+a three-field typography operation. Bob and Roma resolve the family transition
+through the shared account-font product law.
+
 `@ck/dieter` is a build/typecheck task package, not a general programmatic
 JS/CSS entrypoint. Current package metadata still points `main` at missing
 `index.html` and runs output generation through install-time `prepare`; PRD 126G

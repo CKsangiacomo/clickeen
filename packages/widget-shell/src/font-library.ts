@@ -66,6 +66,22 @@ export type AccountFontFamilyOption = {
   isGroupHeader?: boolean;
 };
 
+export const ACCOUNT_TYPOGRAPHY_SELECTION_INVALID_REASON_KEY =
+  'coreui.errors.typography.selection.invalid';
+
+export type AccountTypographyFamilySelection = {
+  family: string;
+  weight: string;
+  fontStyle: AccountFontStyle;
+};
+
+export type AccountTypographyFamilySelectionResult =
+  | { ok: true; value: AccountTypographyFamilySelection }
+  | {
+      ok: false;
+      reasonKey: typeof ACCOUNT_TYPOGRAPHY_SELECTION_INVALID_REASON_KEY;
+    };
+
 export const ACCOUNT_FONT_CATEGORY_LABELS: Record<AccountFontCategory, string> = {
   sans: 'Sans',
   serif: 'Serif',
@@ -106,6 +122,11 @@ function normalizeNonEmptyString(value: unknown): string | null {
   if (typeof value !== 'string') return null;
   const normalized = value.trim();
   return normalized ? normalized : null;
+}
+
+function readExactNonEmptyString(value: unknown): string | null {
+  if (typeof value !== 'string' || !value || value !== value.trim()) return null;
+  return value;
 }
 
 function normalizeWeight(value: unknown): string | null {
@@ -333,6 +354,124 @@ export function getAccountFontAllowedWeights(fontLibrary: AccountFontLibrary, fa
 
 export function getAccountFontAllowedStyles(fontLibrary: AccountFontLibrary, family: string): AccountFontStyle[] {
   return getAccountFontRecord(fontLibrary, family)?.styles ?? [];
+}
+
+function resolveAllowedCompanion(args: {
+  allowed: readonly string[];
+  current: unknown;
+  requested?: unknown;
+  preferred: string;
+}): string | null {
+  if (args.requested !== undefined) {
+    const requested = readExactNonEmptyString(args.requested);
+    return requested && args.allowed.includes(requested) ? requested : null;
+  }
+  const current = readExactNonEmptyString(args.current);
+  if (args.current !== undefined && !current) return null;
+  if (current && args.allowed.includes(current)) return current;
+  if (args.allowed.includes(args.preferred)) return args.preferred;
+  return args.allowed[0] ?? null;
+}
+
+export function resolveAccountTypographyFamilySelection(args: {
+  fontLibrary: AccountFontLibrary;
+  requestedFamily: unknown;
+  currentWeight: unknown;
+  currentFontStyle: unknown;
+  requestedWeight?: unknown;
+  requestedFontStyle?: unknown;
+}): AccountTypographyFamilySelectionResult {
+  const family = readExactNonEmptyString(args.requestedFamily);
+  const record = family ? getAccountFontRecord(args.fontLibrary, family) : null;
+  if (!family || !record) {
+    return {
+      ok: false,
+      reasonKey: ACCOUNT_TYPOGRAPHY_SELECTION_INVALID_REASON_KEY,
+    };
+  }
+  const weight = resolveAllowedCompanion({
+    allowed: record.weights,
+    current: args.currentWeight,
+    requested: args.requestedWeight,
+    preferred: '400',
+  });
+  const fontStyle = resolveAllowedCompanion({
+    allowed: record.styles,
+    current: args.currentFontStyle,
+    requested: args.requestedFontStyle,
+    preferred: 'normal',
+  });
+  if (!weight || !fontStyle) {
+    return {
+      ok: false,
+      reasonKey: ACCOUNT_TYPOGRAPHY_SELECTION_INVALID_REASON_KEY,
+    };
+  }
+  return {
+    ok: true,
+    value: {
+      family,
+      weight,
+      fontStyle: fontStyle as AccountFontStyle,
+    },
+  };
+}
+
+export function validateAccountTypographyFontSelections(args: {
+  fontLibrary: AccountFontLibrary;
+  typography: unknown;
+  pathPrefix?: string;
+  requireGlobalFamily?: boolean;
+  requiredRoleKeys?: readonly string[];
+}): string[] {
+  const pathPrefix = args.pathPrefix ?? 'typography';
+  if (!isRecord(args.typography)) return [pathPrefix];
+  const invalidPaths: string[] = [];
+  const globalFamily = readExactNonEmptyString(args.typography.globalFamily);
+  if (
+    args.requireGlobalFamily !== false &&
+    (!globalFamily || !isAccountFontFamily(args.fontLibrary, globalFamily))
+  ) {
+    invalidPaths.push(`${pathPrefix}.globalFamily`);
+  }
+  if (!isRecord(args.typography.roles)) {
+    invalidPaths.push(`${pathPrefix}.roles`);
+    return invalidPaths;
+  }
+  if (Object.keys(args.typography.roles).length === 0) {
+    const requiredRoleKeys = args.requiredRoleKeys ?? [];
+    invalidPaths.push(
+      ...(requiredRoleKeys.length
+        ? requiredRoleKeys.map((roleKey) => `${pathPrefix}.roles.${roleKey}`)
+        : [`${pathPrefix}.roles`]),
+    );
+    return invalidPaths;
+  }
+  for (const roleKey of args.requiredRoleKeys ?? []) {
+    if (!Object.prototype.hasOwnProperty.call(args.typography.roles, roleKey)) {
+      invalidPaths.push(`${pathPrefix}.roles.${roleKey}`);
+    }
+  }
+  for (const [roleKey, rawRole] of Object.entries(args.typography.roles)) {
+    const rolePath = `${pathPrefix}.roles.${roleKey}`;
+    if (!isRecord(rawRole)) {
+      invalidPaths.push(rolePath);
+      continue;
+    }
+    const family = readExactNonEmptyString(rawRole.family);
+    const record = family ? getAccountFontRecord(args.fontLibrary, family) : null;
+    if (!family || !record) {
+      invalidPaths.push(`${rolePath}.family`);
+      continue;
+    }
+    const weight = readExactNonEmptyString(rawRole.weight);
+    if (!weight || !record.weights.includes(weight)) invalidPaths.push(`${rolePath}.weight`);
+    const fontStyle = readExactNonEmptyString(rawRole.fontStyle);
+    if (!fontStyle || !record.styles.includes(fontStyle as AccountFontStyle)) {
+      invalidPaths.push(`${rolePath}.fontStyle`);
+    }
+  }
+  return invalidPaths;
 }
 
 export function accountFontLibraryToFamilyOptions(fontLibrary: AccountFontLibrary): AccountFontFamilyOption[] {

@@ -16,6 +16,7 @@ try {
     entryPoints: [path.join(repoRoot, 'scripts/widgets/generate-artifacts.ts')],
     outfile: tempFile,
     bundle: true,
+    external: ['typescript'],
     platform: 'node',
     format: 'esm',
     target: 'node20',

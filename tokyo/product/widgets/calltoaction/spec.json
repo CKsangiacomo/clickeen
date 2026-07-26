@@ -331,7 +331,12 @@
       {
         "id": "typography",
         "shared": {
-          "id": "typography"
+          "id": "typography",
+          "roleLabels": {
+            "body": "Subtitle and supporting text",
+            "eyebrow": "Eyebrow",
+            "title": "Title and action headline"
+          }
         }
       },
       {

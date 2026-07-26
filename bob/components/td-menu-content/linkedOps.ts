@@ -2,12 +2,9 @@ import { isRecord as isPlainRecord } from '@clickeen/ck-contracts';
 import type { CompiledWidget } from '../../lib/types';
 import type { WidgetOp } from '../../lib/ops';
 import type { AccountFontLibrary } from '@clickeen/widget-shell';
-import {
-  getAccountFontAllowedStyles,
-  getAccountFontAllowedWeights,
-} from '@clickeen/widget-shell';
 import { getAt } from '../../lib/utils/paths';
 import { findBestControlForPath } from '../../lib/edit/controls';
+import { expandTypographyFamilyOps } from '../../lib/edit/typography-family-ops';
 
 type PresetSpec = {
   customValue?: string;
@@ -81,12 +78,6 @@ function buildPresetEntries(raw: unknown): PresetEntry[] {
 
 function pathMatchesTarget(path: string, target: string): boolean {
   return path === target || path.startsWith(`${target}.`);
-}
-
-function pickAllowedValue(current: unknown, allowed: string[], path: string): string {
-  const trimmed = typeof current === 'string' ? current.trim() : '';
-  if (trimmed && allowed.includes(trimmed)) return trimmed;
-  throw new Error(`[BobLinkedOps] current value for "${path}" is not allowed by the selected typography family`);
 }
 
 function requireBoolean(value: unknown, path: string): boolean {
@@ -205,25 +196,9 @@ export function expandLinkedOps(args: {
             const familyValue = typeof presetValue === 'string' ? presetValue : '';
             if (!familyValue) throw new Error(`[BobLinkedOps] preset "${op.value}" has an invalid typography.globalFamily value`);
             if (!args.fontLibrary) throw new Error('[BobLinkedOps] missing account font library');
-            const allowedWeights = getAccountFontAllowedWeights(args.fontLibrary, familyValue);
-            const allowedStyles = getAccountFontAllowedStyles(args.fontLibrary, familyValue);
             typographyFamilyPaths.forEach((familyPath) => {
               if (isAllowedPath(familyPath)) {
                 expanded.push(setOp(familyPath, familyValue));
-              }
-
-              const roleBase = familyPath.replace(/\.family$/, '');
-              const weightPath = `${roleBase}.weight`;
-              const stylePath = `${roleBase}.fontStyle`;
-
-              if (allowedWeights.length > 0 && isAllowedPath(weightPath)) {
-                const currentWeight = getAt<unknown>(args.instanceData, weightPath);
-                expanded.push(setOp(weightPath, pickAllowedValue(currentWeight, allowedWeights, weightPath)));
-              }
-
-              if (allowedStyles.length > 0 && isAllowedPath(stylePath)) {
-                const currentStyle = getAt<unknown>(args.instanceData, stylePath);
-                expanded.push(setOp(stylePath, pickAllowedValue(currentStyle, allowedStyles, stylePath)));
               }
             });
             continue;
@@ -482,5 +457,9 @@ export function expandLinkedOps(args: {
     expanded.push(op);
   }
 
-  return expanded;
+  return expandTypographyFamilyOps({
+    instanceData: args.instanceData,
+    fontLibrary: args.fontLibrary,
+    ops: expanded,
+  });
 }

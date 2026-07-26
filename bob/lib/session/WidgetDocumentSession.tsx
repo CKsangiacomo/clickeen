@@ -25,6 +25,7 @@ export type WidgetDocumentSessionValue = {
   accountAssets: AccountAssetsClient;
   apiFetch: ReturnType<typeof useSessionTransport>['fetchApi'];
   applyOps: ReturnType<typeof useSessionEditing>['applyOps'];
+  reportEditRejection: ReturnType<typeof useSessionEditing>['reportEditRejection'];
   save: ReturnType<typeof useSessionSaving>['save'];
   setInstanceLabel: ReturnType<typeof useSessionEditing>['setInstanceLabel'];
   loadInstance: ReturnType<typeof useSessionBoot>['loadInstance'];
@@ -51,6 +52,7 @@ export function WidgetDocumentSessionProvider({ children }: { children: ReactNod
   const transport = useSessionTransport({ metaRef });
   const editing = useSessionEditing({
     stateRef,
+    metaRef,
     setState,
     setMeta: chrome.setMeta,
   });
@@ -121,6 +123,7 @@ export function WidgetDocumentSessionProvider({ children }: { children: ReactNod
       accountAssets,
       apiFetch: transport.fetchApi,
       applyOps: editing.applyOps,
+      reportEditRejection: editing.reportEditRejection,
       save: saving.save,
       setInstanceLabel: editing.setInstanceLabel,
       loadInstance: boot.loadInstance,
@@ -129,6 +132,7 @@ export function WidgetDocumentSessionProvider({ children }: { children: ReactNod
       accountAssets,
       boot.loadInstance,
       editing.applyOps,
+      editing.reportEditRejection,
       editing.setInstanceLabel,
       saving.save,
       state,

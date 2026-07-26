@@ -370,6 +370,20 @@ Roma loads Tokyo's `/dieter/editor/editor.css` and
 `/dieter/editor/editor.js` once at the app root; compiled widget artifacts do
 not carry per-control Dieter media lists.
 
+Widget Defaults is the second account-bound typography editor host. It uses the
+same current account `fontLibrary`, family transition resolver, and relational
+family/weight/style validator as Bob for both Shell and Widget Core defaults.
+Each accepted family transition updates all three values in one draft-state
+update. GET and PUT reject exact invalid typography paths before Tokyo
+persistence. Unknown, malformed, or explicitly disallowed selections leave the
+draft and dirty state unchanged and restore family, weight, and style controls
+from the current defaults document.
+
+Account instance create, save, and duplicate materialize the candidate public
+package before the Tokyo write. Package materialization applies the same
+account-font validator before font asset resolution, so direct or replayed
+invalid typography cannot reach source persistence or public package bytes.
+
 Account deletion is disabled in the current runtime. Roma does not offer the
 delete-account settings action and `DELETE /api/account` returns an explicit
 conflict until one account-root deletion operation owns both Berlin DB cleanup

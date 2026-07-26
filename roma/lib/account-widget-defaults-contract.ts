@@ -1,9 +1,12 @@
 import { isRecord } from '@clickeen/ck-contracts';
 import {
+  ACCOUNT_TYPOGRAPHY_SELECTION_INVALID_REASON_KEY,
+  WIDGET_SHELL_TYPOGRAPHY_ROLE_LABELS,
   listWidgetShellAccountDefaultMetadataPaths,
   listWidgetShellControlPaths,
   normalizeAccountFontLibrary,
   pathBelongsToShell,
+  validateAccountTypographyFontSelections,
 } from '@clickeen/widget-shell';
 import type { NextRequest } from 'next/server';
 import {
@@ -39,6 +42,18 @@ function validationFailure(paths: string[]): InstancePackageFailure {
   };
 }
 
+function typographyValidationFailure(paths: string[]): InstancePackageFailure {
+  return {
+    ok: false,
+    status: 422,
+    error: {
+      kind: 'VALIDATION',
+      reasonKey: ACCOUNT_TYPOGRAPHY_SELECTION_INVALID_REASON_KEY,
+      paths,
+    },
+  };
+}
+
 function compiledCoreDefaultControlPaths(controls: Array<{ path?: string }> | undefined): string[] {
   return (controls ?? [])
     .map((control) => (typeof control.path === 'string' ? control.path.trim() : ''))
@@ -46,15 +61,31 @@ function compiledCoreDefaultControlPaths(controls: Array<{ path?: string }> | un
     .sort((left, right) => left.localeCompare(right));
 }
 
+function typographyRoleKeys(controlPaths: readonly string[]): string[] {
+  return Array.from(
+    new Set(
+      controlPaths
+        .map((path) => path.match(/^typography\.roles\.([^.]+)\.family$/)?.[1] ?? '')
+        .filter(Boolean),
+    ),
+  );
+}
+
 export async function validateAccountWidgetDefaultsContract(args: {
   request: NextRequest;
   widgetDefaults: AccountWidgetDefaultsDocument;
   widgetTypes?: string[];
 }): Promise<{ ok: true } | InstancePackageFailure> {
-  if (!normalizeAccountFontLibrary(args.widgetDefaults.fontLibrary)) {
+  const fontLibrary = normalizeAccountFontLibrary(args.widgetDefaults.fontLibrary);
+  if (!fontLibrary) {
     return validationFailure(['fontLibrary']);
   }
   const widgetTypes = args.widgetTypes ?? Object.keys(args.widgetDefaults.widgets);
+  const invalidTypographyPaths = validateAccountTypographyFontSelections({
+    fontLibrary,
+    typography: args.widgetDefaults.shell.typography,
+    requiredRoleKeys: Object.keys(WIDGET_SHELL_TYPOGRAPHY_ROLE_LABELS),
+  }).map((path) => `shell:${path}`);
   const unmappedPaths: string[] = collectDefaultPaths(args.widgetDefaults.shell)
     .filter((path) => !pathIsCovered(path, listWidgetShellControlPaths()))
     .filter((path) => !pathIsCovered(path, listWidgetShellAccountDefaultMetadataPaths()))
@@ -69,6 +100,14 @@ export async function validateAccountWidgetDefaultsContract(args: {
     const compiled = readWidgetForInstancePackage(widgetType);
     if (!compiled.ok) return compiled;
     const controlPaths = compiledCoreDefaultControlPaths(compiled.value.controls);
+    invalidTypographyPaths.push(
+      ...validateAccountTypographyFontSelections({
+        fontLibrary,
+        typography: widgetDefaults.core.typography,
+        requireGlobalFamily: false,
+        requiredRoleKeys: typographyRoleKeys(controlPaths),
+      }).map((path) => `${widgetType}:${path}`),
+    );
     unmappedPaths.push(
       ...collectDefaultPaths(widgetDefaults.core)
         .filter((path) => !pathIsCovered(path, controlPaths))
@@ -77,5 +116,9 @@ export async function validateAccountWidgetDefaultsContract(args: {
     );
   }
 
-  return unmappedPaths.length ? validationFailure(unmappedPaths) : { ok: true };
+  if (invalidTypographyPaths.length) {
+    return typographyValidationFailure(invalidTypographyPaths);
+  }
+  if (unmappedPaths.length) return validationFailure(unmappedPaths);
+  return { ok: true };
 }

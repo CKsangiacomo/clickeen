@@ -147,7 +147,19 @@ account font library from account widget defaults to Bob.
 
 Bob behavior:
 
-- The typography panel font picker uses the account font library.
+- The account-independent widget compiler emits typography family controls as
+  strings without a default font catalog.
+- On editor open, Bob binds those family controls to the normalized current
+  account font library. The bound controls govern manual edits, Copilot context,
+  config validation, and save.
+- Family changes are one product operation: the requested family plus a
+  compatible weight and style are applied together. Dieter emits the requested
+  family only; it does not choose companion values.
+- Unknown families and disallowed family/weight/style combinations are rejected
+  before state changes. Selection values are exact; the editor does not trim or
+  otherwise repair malformed persisted or submitted values. Rejection restores
+  the visible family, weight, and style controls from unchanged document truth,
+  does not dirty the document, and does not create Undo.
 - Bob preview resolves account-uploaded font `assetRef` values through the
   current account asset route and posts runtime typography data into the widget
   iframe with preview state.
@@ -159,6 +171,8 @@ Runtime package behavior:
 
 - Save/package materialization reads saved typography and account font library
   together.
+- Materialization validates every role's family, weight, and style before asset
+  resolution. Missing or malformed typography fails closed.
 - Packages include only the font records used by the saved instance plus Inter.
 - Google records load from Google.
 - Account-uploaded records emit `@font-face` from resolved account asset URLs.
@@ -167,6 +181,11 @@ Runtime package behavior:
 
 Shared widget runtime behavior:
 
+- Shell typography labels are owned by `@clickeen/widget-shell`. Widgets declare
+  labels and display order for widget-specific roles in
+  `editor.panels[].shared.roleLabels`.
+- Widget generation compares each real `widget.client.js` typography role map
+  with the composed spec roles and fails on any mismatch.
 - `CKTypography` reads `CK_WIDGET_TYPOGRAPHY_DATA`.
 - Public runtime packages inline that data during package materialization.
 - Bob preview supplies the same shape through `ck:state-update.typographyData`

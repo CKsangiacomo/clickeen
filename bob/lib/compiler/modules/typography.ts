@@ -1,10 +1,7 @@
 // Bob module: builds standardized Typography panel markup for widgets that declare typography roles.
 // Specs declare the shared typography panel explicitly in spec.json.editor; this helper renders that declared panel.
 
-import {
-  CK_TYPOGRAPHY_WEIGHT_OPTIONS,
-  buildCkTypographyFamilyOptions,
-} from '../../edit/typography-fonts';
+import { WIDGET_SHELL_TYPOGRAPHY_ROLE_LABELS } from '@clickeen/widget-shell';
 
 export const TYPOGRAPHY_SIZE_OPTIONS = [
   { label: 'X-Small', value: 'xs' },
@@ -19,6 +16,22 @@ export const TYPOGRAPHY_STYLE_OPTIONS = [
   { label: 'Normal', value: 'normal' },
   { label: 'Italic', value: 'italic' },
 ];
+
+const TYPOGRAPHY_WEIGHT_LABELS: Record<string, string> = {
+  '100': 'Thin',
+  '200': 'Extra light',
+  '300': 'Light',
+  '400': 'Regular',
+  '500': 'Medium',
+  '600': 'Semi-bold',
+  '700': 'Bold',
+  '800': 'Extra bold',
+  '900': 'Black',
+};
+
+export const TYPOGRAPHY_WEIGHT_OPTIONS = Object.entries(TYPOGRAPHY_WEIGHT_LABELS).map(
+  ([value, label]) => ({ label: `${label} (${value})`, value }),
+);
 
 export const TYPOGRAPHY_TRACKING_OPTIONS = [
   { label: 'Tighter', value: 'tighter' },
@@ -42,48 +55,72 @@ function encodeOptions(options: unknown[]): string {
   return JSON.stringify(options).replace(/"/g, '&quot;');
 }
 
+function encodeAttribute(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/'/g, '&apos;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
 export function buildTypographyPanel(args: {
   roles: Record<string, unknown>;
   roleScales?: Record<string, Record<string, string>>;
+  roleLabels?: Record<string, string>;
 }): string[] {
-  const fontsOptions = encodeOptions(buildCkTypographyFamilyOptions());
+  const fontsOptions = encodeOptions([]);
   const sizeOptions = encodeOptions(TYPOGRAPHY_SIZE_OPTIONS);
   const styleOptions = encodeOptions(TYPOGRAPHY_STYLE_OPTIONS);
-  const weightOptions = encodeOptions(CK_TYPOGRAPHY_WEIGHT_OPTIONS);
+  const weightOptions = encodeOptions(TYPOGRAPHY_WEIGHT_OPTIONS);
   const trackingOptions = encodeOptions(TYPOGRAPHY_TRACKING_OPTIONS);
   const lineHeightOptions = encodeOptions(TYPOGRAPHY_LINE_HEIGHT_OPTIONS);
-  const hasRole = (roleKey: string) => {
-    if (!args.roles || !Object.prototype.hasOwnProperty.call(args.roles, roleKey)) return false;
-    const value = (args.roles as Record<string, unknown>)[roleKey];
-    return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
-  };
-
-  const roleEntries: Array<{ key: string; label: string }> = [
-    { key: 'title', label: 'Title' },
-    { key: 'body', label: 'Subtitle' },
-    { key: 'eyebrow', label: 'Eyebrow' },
-    { key: 'section', label: 'Section' },
-    { key: 'question', label: 'Question' },
-    { key: 'answer', label: 'Answer' },
-    { key: 'heading', label: 'Heading' },
-    { key: 'timer', label: 'Timer' },
-    { key: 'label', label: 'Labels' },
-    { key: 'button', label: 'Button text' },
-    { key: 'localeSwitcher', label: 'Locale switcher' },
-    { key: 'bigBang', label: 'Big Bang statement' },
-    { key: 'cardTitle', label: 'Card title' },
-    { key: 'cardCopy', label: 'Card copy' },
-  ].filter((entry) => hasRole(entry.key));
+  const suppliedRoleLabels = args.roleLabels ?? {};
+  for (const roleKey of Object.keys(suppliedRoleLabels)) {
+    if (!Object.prototype.hasOwnProperty.call(args.roles, roleKey)) {
+      throw new Error(`[BobCompiler] typography role label "${roleKey}" has no composed role`);
+    }
+  }
+  const composedRoleKeys = Object.keys(args.roles);
+  const composedWidgetRoleKeys = composedRoleKeys.filter(
+    (key) => !Object.prototype.hasOwnProperty.call(WIDGET_SHELL_TYPOGRAPHY_ROLE_LABELS, key),
+  );
+  const declaredWidgetRoleKeys = Object.keys(suppliedRoleLabels).filter(
+    (key) => composedWidgetRoleKeys.includes(key),
+  );
+  const widgetRoleKeys = [
+    ...declaredWidgetRoleKeys,
+    ...composedWidgetRoleKeys.filter((key) => !declaredWidgetRoleKeys.includes(key)),
+  ];
+  const orderedRoleKeys = ['title', 'body', ...widgetRoleKeys, 'button', 'localeSwitcher'].filter(
+    (key, index, keys) => composedRoleKeys.includes(key) && keys.indexOf(key) === index,
+  );
+  const roleEntries: Array<{ key: string; label: string }> = orderedRoleKeys.map(
+    (key) => {
+      const value = args.roles[key];
+      if (!value || typeof value !== 'object' || Array.isArray(value)) {
+        throw new Error(`[BobCompiler] typography role "${key}" must be an object`);
+      }
+      const label =
+        suppliedRoleLabels[key] ??
+        WIDGET_SHELL_TYPOGRAPHY_ROLE_LABELS[
+          key as keyof typeof WIDGET_SHELL_TYPOGRAPHY_ROLE_LABELS
+        ];
+      if (!label) {
+        throw new Error(`[BobCompiler] typography role "${key}" requires a product label`);
+      }
+      return { key, label };
+    },
+  );
 
   if (roleEntries.length === 0) return [];
 
   const lines: string[] = ["<bob-panel id='typography'>"];
-  const groupAttr = "group-label=''";
   lines.push(
-    `  <tooldrawer-field-typofields ${groupAttr} type='textfield' size='md' path='typography.globalFamily' label='Global font family' value='{{typography.globalFamily}}' show-if="false" />`,
+    `  <tooldrawer-field-typofields group-label='Typography' type='textfield' size='md' path='typography.globalFamily' label='Global font family' value='{{typography.globalFamily}}' show-if="false" />`,
   );
   roleEntries.forEach((role) => {
-    const roleLabel = role.label;
+    const roleLabel = encodeAttribute(role.label);
+    const groupAttr = `group-label='${roleLabel}'`;
     lines.push(`  <tooldrawer-cluster label='${roleLabel}'>`);
     lines.push(
       `    <tooldrawer-field-typofields ${groupAttr} type='dropdown-actions' size='md' path='typography.roles.${role.key}.family' label='Font family' placeholder='Choose font' value='{{typography.roles.${role.key}.family}}' options='${fontsOptions}' />`,

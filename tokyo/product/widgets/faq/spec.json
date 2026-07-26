@@ -1388,7 +1388,12 @@
       {
         "id": "typography",
         "shared": {
-          "id": "typography"
+          "id": "typography",
+          "roleLabels": {
+            "section": "Section title",
+            "question": "Question",
+            "answer": "Answer"
+          }
         }
       },
       {

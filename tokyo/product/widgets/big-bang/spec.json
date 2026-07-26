@@ -103,7 +103,11 @@
       {
         "id": "typography",
         "shared": {
-          "id": "typography"
+          "id": "typography",
+          "roleLabels": {
+            "bigBang": "Big Bang statement",
+            "body": "Subtitle and supporting copy"
+          }
         }
       },
       {

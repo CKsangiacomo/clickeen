@@ -9,9 +9,11 @@ import {
   type RuntimeMaterializerErrorReason,
 } from '@clickeen/ck-runtime-materializer';
 import {
+  ACCOUNT_TYPOGRAPHY_SELECTION_INVALID_REASON_KEY,
   getAccountFontRecord,
   isAcceptedAccountFontUpload,
   isAccountFontFamily,
+  validateAccountTypographyFontSelections,
   type RuntimeTypographyData,
 } from '@clickeen/widget-shell';
 import type { LimitsSpec } from '@clickeen/ck-policy';
@@ -228,6 +230,17 @@ async function resolveRuntimeTypographyData(args: {
   }
 
   const fontLibrary = defaults.value.widgetDefaults.fontLibrary;
+  const invalidTypographyPaths = validateAccountTypographyFontSelections({
+    fontLibrary,
+    typography: args.state.typography,
+  });
+  if (invalidTypographyPaths.length) {
+    return validationFailure(
+      ACCOUNT_TYPOGRAPHY_SELECTION_INVALID_REASON_KEY,
+      undefined,
+      invalidTypographyPaths,
+    );
+  }
   const families = collectTypographyFamilies(args.state);
   const missing = families.filter((family) => !isAccountFontFamily(fontLibrary, family));
   if (missing.length) {

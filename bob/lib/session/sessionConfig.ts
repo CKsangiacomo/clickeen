@@ -1,4 +1,9 @@
 import type { CompiledControl, CompiledWidget } from '../types';
+import {
+  accountFontLibraryToFamilyOptions,
+  validateAccountTypographyFontSelections,
+  type AccountFontLibrary,
+} from '@clickeen/widget-shell';
 const TOKEN_SEGMENT = /^__[^.]+__$/;
 function isPlainRecord(value: unknown): value is Record<string, unknown> { return Boolean(value) && typeof value === 'object' && !Array.isArray(value); }
 function invalid(path: string): never { throw new Error(`coreui.errors.instance.config.invalid:${path}`); }
@@ -136,4 +141,38 @@ export function assertSessionConfigContract(config: Record<string, unknown>, com
       seen.add(id);
     });
   }));
+}
+
+export function bindSessionTypographyControls(
+  compiled: CompiledWidget,
+  fontLibrary: AccountFontLibrary,
+): CompiledWidget {
+  const options = accountFontLibraryToFamilyOptions(fontLibrary)
+    .filter((option) => typeof option.value === 'string' && option.value)
+    .map((option) => ({ label: option.label, value: option.value! }));
+  const enumValues = options.map((option) => option.value);
+  return {
+    ...compiled,
+    controls: compiled.controls.map((control) =>
+      /^typography\.roles\.[^.]+\.family$/.test(control.path)
+        ? {
+            ...control,
+            options,
+            kind: 'enum' as const,
+            enumValues,
+          }
+        : control,
+    ),
+  };
+}
+
+export function assertAccountTypographySelections(
+  config: Record<string, unknown>,
+  fontLibrary: AccountFontLibrary,
+): void {
+  const [invalidPath] = validateAccountTypographyFontSelections({
+    fontLibrary,
+    typography: config.typography,
+  });
+  if (invalidPath) invalid(invalidPath);
 }

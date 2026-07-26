@@ -109,6 +109,26 @@ stagepod-corners
 settings-behavior
 ```
 
+The shared typography panel uses:
+
+```json
+{
+  "id": "typography",
+  "shared": {
+    "id": "typography",
+    "roleLabels": {
+      "widgetRole": "Product-readable label"
+    }
+  }
+}
+```
+
+Widget Shell owns labels for `title`, `body`, `button`, and
+`localeSwitcher`. Widgets declare labels, in visible order, for every
+widget-specific typography role and may override a Shell label when its product
+meaning is broader. Missing, malformed, unknown, or unused labels fail widget
+compilation; roles are never silently omitted.
+
 ## Structured Field Types
 
 Current widget specs and Dieter components use these field families:

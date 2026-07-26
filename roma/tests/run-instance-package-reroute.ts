@@ -147,7 +147,51 @@ function setTitleFont(config: Record<string, unknown>, family: string): Record<s
     throw new Error('test typography title role fixture missing');
   }
   (title as Record<string, unknown>).family = family;
+  (title as Record<string, unknown>).weight = '400';
+  (title as Record<string, unknown>).fontStyle = 'normal';
   return config;
+}
+
+async function testAccountFontSelectionFailsBeforeAssetResolution(): Promise<void> {
+  const compiled = await buildCompiledWidgetFixture('calltoaction');
+  const config = setTitleFont(
+    await buildAccountDefaultStateFixture('calltoaction'),
+    UPLOADED_FONT_FAMILY,
+  );
+  const title = (
+    ((config.typography as Record<string, unknown>).roles as Record<string, unknown>)
+      .title as Record<string, unknown>
+  );
+  title.weight = '700';
+  const coordinate = widgetFixtureCoordinate('calltoaction');
+  let resolvedAssets = false;
+  const result = await withTokyoProductControlDefaults(
+    coordinate.accountId,
+    () =>
+      materializeAccountInstancePublicPackage({
+        compiled,
+        accountId: coordinate.accountId,
+        accountCapsule: 'test-capsule',
+        requestId: 'test-request',
+        instanceId: coordinate.instanceId,
+        baseLocale: coordinate.baseLocale,
+        displayName: coordinate.displayName,
+        config,
+      }),
+    {
+      fontLibrary: buildUploadedFontLibrary(),
+      resolveAssets: () => {
+        resolvedAssets = true;
+        return jsonResponse({ assets: [] });
+      },
+    },
+  );
+  assert.equal(result.ok, false, JSON.stringify(result));
+  assert.equal(resolvedAssets, false);
+  if (!result.ok) {
+    assert.equal(result.error.reasonKey, 'coreui.errors.typography.selection.invalid');
+    assert.deepEqual(result.error.paths, ['typography.roles.title.weight']);
+  }
 }
 
 function resolvedUploadedFontAsset(overrides: Partial<ResolvedAssetFixture> = {}): ResolvedAssetFixture {
@@ -811,6 +855,7 @@ const tests: Array<{ name: string; run: () => Promise<void> }> = [
   { name: 'adapter evidence plumbing', run: testAdapterEvidencePlumbing },
   { name: 'route-facing materializer wrapper', run: testRouteFacingMaterializerWrapper },
   { name: 'account-asset font materialization', run: testAccountAssetFontMaterialization },
+  { name: 'account font selection fails before asset resolution', run: testAccountFontSelectionFailsBeforeAssetResolution },
   { name: 'account-asset font resolve failures', run: testAccountAssetFontResolveFailures },
   { name: 'locale package materializer wrapper', run: testLocalePackageMaterializerWrapper },
   { name: 'locale package rejects base and unrequested locales', run: testLocalePackageRejectsBaseAndUnrequestedLocales },

@@ -421,7 +421,11 @@
       {
         "id": "typography",
         "shared": {
-          "id": "typography"
+          "id": "typography",
+          "roleLabels": {
+            "cardTitle": "Card title",
+            "cardCopy": "Card copy"
+          }
         }
       },
       {

@@ -530,7 +530,11 @@
       {
         "id": "typography",
         "shared": {
-          "id": "typography"
+          "id": "typography",
+          "roleLabels": {
+            "timer": "Timer",
+            "label": "Labels"
+          }
         }
       },
       {

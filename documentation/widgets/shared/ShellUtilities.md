@@ -5,6 +5,24 @@ STATUS: CURRENT SYSTEM OPERATOR SPEC
 Branding, social share, and locale switching are shared Shell utilities.
 Widget Core consumes them; Widget Core does not reimplement them.
 
+## Typography Roles
+
+Widget Shell owns the shared runtime/editor typography roles:
+
+```text
+title
+body
+button
+localeSwitcher
+```
+
+The Shell package owns their default product labels. A widget declares labels
+and visible order for its additional roles in its structured typography panel.
+During widget generation, Clickeen parses the actual role map passed by
+`widget.client.js` to `CKTypography.applyTypography` and requires exact parity
+with the composed spec roles. Runtime and editor role vocabularies cannot drift
+silently.
+
 ## Branding
 
 State:

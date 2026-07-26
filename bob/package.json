@@ -13,7 +13,8 @@
     "lint": "next lint",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test:accessibility-copy": "tsx tests/run-accessibility-copy.ts",
-    "test:translations-panel": "tsx tests/run-translations-panel.ts"
+    "test:translations-panel": "tsx tests/run-translations-panel.ts",
+    "test:typography-contract": "tsx tests/run-typography-contract.ts"
   },
   "dependencies": {
     "@clickeen/ck-contracts": "workspace:*",

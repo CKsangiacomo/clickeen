@@ -23,7 +23,16 @@ const TYPOGRAPHY_CONTROL_LEAVES = [
   'trackingCustom',
 ] as const;
 
-const SHELL_TYPOGRAPHY_ROLES = ['title', 'body', 'button', 'localeSwitcher'] as const;
+export const WIDGET_SHELL_TYPOGRAPHY_ROLE_LABELS = {
+  title: 'Title',
+  body: 'Subtitle',
+  button: 'Button text',
+  localeSwitcher: 'Locale switcher',
+} as const;
+
+const SHELL_TYPOGRAPHY_ROLES = Object.keys(
+  WIDGET_SHELL_TYPOGRAPHY_ROLE_LABELS,
+) as Array<keyof typeof WIDGET_SHELL_TYPOGRAPHY_ROLE_LABELS>;
 
 function control(
   clusterId: WidgetShellControlCluster,

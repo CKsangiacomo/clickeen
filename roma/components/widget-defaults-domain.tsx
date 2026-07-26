@@ -256,14 +256,18 @@ function collectDefaultPaths(value: unknown, prefix = ''): string[] {
 function WidgetDefaultsCoreSection(args: {
   entry: WidgetDefaultsEntry;
   fontLibrary: AccountFontLibrary;
-  onChange: (widgetType: string, path: string, value: unknown) => void;
+  onEditError: (message: string) => void;
+  onOps: (
+    widgetType: string,
+    ops: Array<{ path: string; value: unknown }>,
+  ) => void;
   onContractError: (widgetType: string, message: string) => void;
   onReadyChange: (widgetType: string, ready: boolean) => void;
 }) {
-  const { entry, fontLibrary, onChange, onContractError, onReadyChange } = args;
-  const handleChange = useCallback(
-    (path: string, value: unknown) => onChange(entry.widgetType, path, value),
-    [entry.widgetType, onChange],
+  const { entry, fontLibrary, onEditError, onOps, onContractError, onReadyChange } = args;
+  const handleOps = useCallback(
+    (ops: Array<{ path: string; value: unknown }>) => onOps(entry.widgetType, ops),
+    [entry.widgetType, onOps],
   );
   const handleContractError = useCallback(
     (message: string) => onContractError(entry.widgetType, message),
@@ -283,7 +287,8 @@ function WidgetDefaultsCoreSection(args: {
         fontLibrary={fontLibrary}
         scopeLabel={`${entry.label} Core`}
         values={entry.core}
-        onChange={handleChange}
+        onEditError={onEditError}
+        onOps={handleOps}
         onContractError={handleContractError}
         onReadyChange={handleReadyChange}
       />
@@ -489,9 +494,17 @@ export function WidgetDefaultsDomain() {
     return [...shellPaths, ...corePaths].sort((left, right) => left.localeCompare(right));
   }, [compiledControls, compiledWidgetLabels, controlsLoaded, draft, widgetTypes]);
 
-  const updateShellPath = useCallback((path: string, value: unknown) => {
+  const updateShellOps = useCallback((ops: Array<{ path: string; value: unknown }>) => {
         setDraft((current) =>
-          current ? { ...current, shell: setPathValue(current.shell, path, value) } : current,
+          current
+            ? {
+                ...current,
+                shell: ops.reduce(
+                  (shell, op) => setPathValue(shell, op.path, op.value),
+                  current.shell,
+                ),
+              }
+            : current,
     );
   }, []);
 
@@ -523,7 +536,10 @@ export function WidgetDefaultsDomain() {
     }
   }, []);
 
-  const updateWidgetPath = useCallback((widgetType: string, path: string, value: unknown) => {
+  const updateWidgetOps = useCallback((
+    widgetType: string,
+    ops: Array<{ path: string; value: unknown }>,
+  ) => {
     setDraft((current) => {
       if (!current) return current;
       const existing = current.widgets[widgetType];
@@ -534,7 +550,10 @@ export function WidgetDefaultsDomain() {
           ...current.widgets,
           [widgetType]: {
             ...existing,
-            core: setPathValue(existing.core, path, value),
+            core: ops.reduce(
+              (core, op) => setPathValue(core, op.path, op.value),
+              existing.core,
+            ),
           },
         },
       };
@@ -704,7 +723,8 @@ export function WidgetDefaultsDomain() {
           fontLibrary={draft.fontLibrary}
           scopeLabel="Shell"
           values={draft.shell}
-          onChange={updateShellPath}
+          onEditError={setError}
+          onOps={updateShellOps}
           onContractError={reportShellContractError}
           onReadyChange={setShellReady}
         />
@@ -719,7 +739,8 @@ export function WidgetDefaultsDomain() {
             key={entry.widgetType}
             entry={entry}
             fontLibrary={draft.fontLibrary}
-            onChange={updateWidgetPath}
+            onEditError={setError}
+            onOps={updateWidgetOps}
             onContractError={reportCoreContractError}
             onReadyChange={setCoreReady}
           />

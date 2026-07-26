@@ -303,11 +303,15 @@ function collectControlsFromMarkup(markup: string, panelId: string, controls: Co
       const allowImage =
         type === 'dropdown-fill' ? (allowImageOverride ?? allowImageFromModes ?? inferredAllowsImage) : undefined;
       const showIf = attrs['show-if'] ? decodeHtmlEntities(attrs['show-if']) : undefined;
+      const explicitGroupLabel =
+        typeof (attrs.groupLabel || attrs['group-label']) === 'string'
+          ? decodeHtmlEntities(attrs.groupLabel || attrs['group-label']).trim()
+          : '';
       if (showIf) validateShowIfExpression(showIf);
       controls.push({
         panelId,
         groupId,
-        groupLabel: groupId ? groupKeyToLabel(groupId) : undefined,
+        groupLabel: explicitGroupLabel || (groupId ? groupKeyToLabel(groupId) : undefined),
         type,
         path,
         label: attrs.label ? decodeHtmlEntities(attrs.label) : undefined,

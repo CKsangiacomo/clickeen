@@ -111,69 +111,6 @@ function installHandlers(state: DropdownActionsState): void {
         setPendingSelection(state, value, label);
         return;
       }
-      const path = input.dataset.bobPath;
-      if (path && /^typography\.roles\.[^.]+\.family$/.test(path)) {
-        const roleRoot = path.slice(0, -'.family'.length);
-        const weightPath = `${roleRoot}.weight`;
-        const stylePath = `${roleRoot}.fontStyle`;
-        const weightInput = state.scope.querySelector<HTMLInputElement>(`[data-bob-path="${weightPath}"]`);
-        const styleInput = state.scope.querySelector<HTMLInputElement>(`[data-bob-path="${stylePath}"]`);
-
-        const allowedWeights = (action.dataset.weights ?? '')
-          .split(',')
-          .map((w) => w.trim())
-          .filter(Boolean);
-        const allowedStyles = (action.dataset.styles ?? '')
-          .split(',')
-          .map((s) => s.trim())
-          .filter(Boolean);
-
-        const pick = (current: string | undefined, allowed: string[], preferred: string) => {
-          const trimmed = String(current ?? '').trim();
-          if (trimmed && allowed.includes(trimmed)) return trimmed;
-          if (allowed.includes(preferred)) return preferred;
-          return allowed[0] ?? '';
-        };
-
-        const nextWeight = allowedWeights.length
-          ? pick(weightInput?.value, allowedWeights, '400')
-          : '';
-        const nextStyle = allowedStyles.length
-          ? pick(styleInput?.value, allowedStyles, 'normal')
-          : '';
-
-        // Update UI values without emitting state ops via normal 'input' events.
-        input.value = value;
-        if (weightInput && nextWeight) weightInput.value = nextWeight;
-        if (styleInput && nextStyle) styleInput.value = nextStyle;
-
-        input.dispatchEvent(
-          new CustomEvent('bob-ops', {
-            bubbles: true,
-            detail: {
-              ops: [
-                { op: 'set', path, value },
-                ...(nextWeight ? [{ op: 'set', path: weightPath, value: nextWeight }] : []),
-                ...(nextStyle ? [{ op: 'set', path: stylePath, value: nextStyle }] : []),
-              ],
-            },
-          }),
-        );
-
-        // Notify dependent typography controls to refresh their allowed options,
-        // while allowing Bob to ignore this UI-only event.
-        input.dispatchEvent(
-          new CustomEvent('input', {
-            bubbles: true,
-            detail: { bobIgnore: true },
-          }),
-        );
-
-        trigger.focus();
-        trigger.click();
-        return;
-      }
-
       setSelection(state, value, label);
       trigger.focus();
       // Closing via trigger click keeps shared dropdown lifecycle consistent.

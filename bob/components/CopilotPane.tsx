@@ -13,6 +13,11 @@ import { serializeInstanceDataSignature } from '../lib/session/sessionTypes';
 import type { CompiledControl } from '../lib/types';
 import { getAt } from '../lib/utils/paths';
 import { evaluateShowIfExpression } from './td-menu-content/showIf';
+import {
+  expandTypographyFamilyOps,
+  isTypographyFamilySelectionError,
+  TYPOGRAPHY_SELECTION_INVALID_COPY,
+} from '../lib/edit/typography-family-ops';
 
 type WidgetSessionValue = ReturnType<typeof useWidgetSession>;
 
@@ -506,20 +511,38 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
           setStatus('idle');
           return;
         }
-        const inverseOps = buildCopilotUndoOps({ before: requestBaseData, ops, controls: activeCompiled.controls });
+        let expandedOps: WidgetOp[];
+        try {
+          expandedOps = expandTypographyFamilyOps({
+            instanceData: requestBaseData,
+            fontLibrary: session.fontLibrary,
+            ops,
+          });
+        } catch (error) {
+          if (!isTypographyFamilySelectionError(error)) throw error;
+          session.reportEditRejection(error.reasonKey);
+          pushMessage({ role: 'assistant', text: TYPOGRAPHY_SELECTION_INVALID_COPY });
+          setStatus('idle');
+          return;
+        }
+        const inverseOps = buildCopilotUndoOps({
+          before: requestBaseData,
+          ops: expandedOps,
+          controls: activeCompiled.controls,
+        });
         if (!inverseOps) {
           pushMessage({ role: 'assistant', text: COPILOT_INVALID_EDIT_MESSAGE });
           setStatus('idle');
           return;
         }
-        const applied = session.applyOps(ops);
+        const applied = session.applyOps(expandedOps);
         if (!applied.ok) {
           pushMessage({ role: 'assistant', text: COPILOT_INVALID_EDIT_MESSAGE });
           setStatus('idle');
           return;
         }
         const postApplySignature = serializeInstanceDataSignature(applied.data);
-        const metadata = buildOutcomeMetadata(ops, controlsForAi);
+        const metadata = buildOutcomeMetadata(expandedOps, controlsForAi);
         const appliedAtMs = Date.now();
         const undoToken = crypto.randomUUID();
         undoRef.current = {
@@ -538,7 +561,7 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
           sessionId,
           metadata,
         });
-        const appliedText = summarizeAppliedOps(ops, controlsForAi);
+        const appliedText = summarizeAppliedOps(expandedOps, controlsForAi);
         pushMessage({
           role: 'assistant',
           text: `${appliedText} ${message}`.trim(),

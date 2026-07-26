@@ -75,7 +75,7 @@ type EditorPanelItem = EditorCluster | EditorSharedNode;
 type EditorPanel = {
   id: string;
   label?: string;
-  shared?: { id: 'typography' };
+  shared?: { id: 'typography'; roleLabels?: Record<string, string> };
   clusters?: EditorPanelItem[];
 };
 
@@ -371,7 +371,22 @@ function renderPanel(
       typography && isPlainObject(typography.roleScales)
         ? (typography.roleScales as any)
         : undefined;
-    const rendered = buildTypographyPanel({ roles, roleScales });
+    let roleLabels: Record<string, string> | undefined;
+    if (panel.shared.roleLabels !== undefined) {
+      if (!isPlainObject(panel.shared.roleLabels)) {
+        throw new Error(`[BobCompiler] ${widgetname} typography roleLabels must be an object`);
+      }
+      roleLabels = {};
+      for (const [roleKey, label] of Object.entries(panel.shared.roleLabels)) {
+        if (!roleKey.trim() || typeof label !== 'string' || !label.trim()) {
+          throw new Error(
+            `[BobCompiler] ${widgetname} typography roleLabels must contain non-empty strings`,
+          );
+        }
+        roleLabels[roleKey] = label.trim();
+      }
+    }
+    const rendered = buildTypographyPanel({ roles, roleScales, roleLabels });
     if (rendered.length === 0)
       throw new Error(`[BobCompiler] ${widgetname} typography panel produced no controls`);
     return rendered;

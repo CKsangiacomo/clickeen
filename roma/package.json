@@ -15,6 +15,8 @@
     "test:instance-save-boundary": "tsx tests/run-instance-save-boundary.ts",
     "test:translation-outcomes": "tsx tests/run-translation-outcomes.ts",
     "test:ui-copy": "tsx tests/run-ui-copy.ts",
+    "pretest:widget-defaults-typography": "node ../scripts/widgets/generate-artifacts.mjs",
+    "test:widget-defaults-typography": "tsx tests/run-widget-defaults-typography.ts",
     "test:widget-command-gates": "tsx tests/run-widget-command-gates.ts",
     "pretypecheck": "node ../scripts/widgets/generate-artifacts.mjs",
     "typecheck": "tsc -p tsconfig.json --noEmit"
