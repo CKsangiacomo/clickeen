@@ -16,7 +16,12 @@ type HostRecord = {
   onClose?: (root: HTMLElement, popover: HTMLElement, trigger: HTMLElement) => void;
 };
 
-export function createDropdownHydrator(config: DropdownHydrateConfig) {
+export type DropdownHydrator = {
+  (scope: Element | DocumentFragment): void;
+  setOpen: (root: HTMLElement, open: boolean) => void;
+};
+
+export function createDropdownHydrator(config: DropdownHydrateConfig): DropdownHydrator {
   const {
     rootSelector,
     triggerSelector,
@@ -39,10 +44,11 @@ export function createDropdownHydrator(config: DropdownHydrateConfig) {
       record.onOpen?.(root, popover, trigger);
     } else {
       record.onClose?.(root, popover, trigger);
+      trigger.focus();
     }
   };
 
-  return function hydrate(scope: Element | DocumentFragment): void {
+  const hydrate = (scope: Element | DocumentFragment): void => {
     const roots = Array.from(scope.querySelectorAll<HTMLElement>(rootSelector));
     if (!roots.length) return;
 
@@ -95,4 +101,11 @@ export function createDropdownHydrator(config: DropdownHydrateConfig) {
       });
     }
   };
+
+  hydrate.setOpen = (root: HTMLElement, open: boolean) => {
+    const record = hostRegistry.get(root);
+    if (record) setOpen(record, open);
+  };
+
+  return hydrate;
 }

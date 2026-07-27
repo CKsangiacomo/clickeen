@@ -10,6 +10,7 @@ import './css/utilities.css';
 import { navGroups, showcaseIndex, showcaseModules } from './data/routes';
 import { getIcon } from './data/icons';
 import {
+  hydrateBulkEdit,
   hydrateChoiceTiles,
   hydrateDropdownActions,
   hydrateDropdownBorder,
@@ -25,6 +26,7 @@ import {
   hydrateTextfield,
   hydrateValuefield,
 } from '@dieter/components';
+import { hydrateObjectManager } from '@dieter/components/object-manager/object-manager';
 import dietIconCss from '@dieter/components/icon/icon.css?raw';
 import { typographySections, typographyRoleCount, getTypographySampleText } from './data/typography';
 import {
@@ -255,7 +257,9 @@ function hydrateIcons(scope: ParentNode) {
 }
 
 function hydrateDieterComponents(scope: Element | DocumentFragment): void {
+  hydrateBulkEdit(scope, { accountAssets: showcaseAccountAssets });
   hydrateChoiceTiles(scope);
+  hydrateObjectManager(scope);
   hydrateTextfield(scope);
   hydrateValuefield(scope);
   hydrateTextedit(scope);

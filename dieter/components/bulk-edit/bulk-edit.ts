@@ -1,3 +1,6 @@
+import type { AccountAssetsClient } from '../shared/account-assets';
+import { createDialogLifecycle } from '../shared/dialog-lifecycle';
+
 type BulkColumn = {
   label?: string;
   path?: string;
@@ -306,14 +309,28 @@ export function hydrateBulkEdit(
     root.dataset.bulkEditHydrated = 'true';
 
     const openBtn = root.querySelector<HTMLButtonElement>('[data-bulk-open]');
-    const modal = root.querySelector<HTMLElement>('[data-bulk-modal]');
+    const modal = root.querySelector<HTMLDialogElement>('[data-bulk-modal]');
     const tableWrap = root.querySelector<HTMLElement>('[data-bulk-table]');
     const closeBtn = root.querySelector<HTMLButtonElement>('[data-bulk-close]');
     const cancelBtn = root.querySelector<HTMLButtonElement>('[data-bulk-cancel]');
     const saveBtn = root.querySelector<HTMLButtonElement>('[data-bulk-save]');
+    const editor = root.querySelector<HTMLElement>('[data-bulk-editor]');
+    const discard = root.querySelector<HTMLElement>('[data-bulk-discard]');
+    const keepEditingBtn = root.querySelector<HTMLButtonElement>('[data-bulk-keep-editing]');
+    const discardBtn = root.querySelector<HTMLButtonElement>('[data-bulk-discard-changes]');
     const hidden = root.querySelector<HTMLInputElement>('.diet-bulk-edit__field');
 
-    if (!openBtn || !modal || !tableWrap || !saveBtn || !hidden) return;
+    if (
+      !openBtn ||
+      !modal ||
+      !tableWrap ||
+      !saveBtn ||
+      !editor ||
+      !discard ||
+      !keepEditingBtn ||
+      !discardBtn ||
+      !hidden
+    ) return;
 
     const columns = parseColumns(root.getAttribute('data-columns'));
     const rowPath = root.getAttribute('data-row-path') || '';
@@ -328,23 +345,47 @@ export function hydrateBulkEdit(
       options?.hydrateChildren?.(tableWrap);
     };
 
+    const captureWorkingState = () =>
+      JSON.stringify(
+        Array.from(modal.querySelectorAll<HTMLInputElement>('[data-bulk-path]')).map((input) => [
+          input.getAttribute('data-bulk-path'),
+          input.type === 'checkbox' ? input.checked : input.value,
+        ]),
+      );
+    let openedState = '';
+
+    const showEditor = () => {
+      editor.hidden = false;
+      discard.hidden = true;
+    };
+
+    const showDiscard = () => {
+      editor.hidden = true;
+      discard.hidden = false;
+      keepEditingBtn.focus();
+    };
+
+    const isDirty = () => captureWorkingState() !== openedState;
+    const lifecycle = createDialogLifecycle({
+      dialog: modal,
+      initialFocus: () => modal.querySelector<HTMLElement>('[data-bulk-path]') ?? cancelBtn,
+      requestDismiss(reason) {
+        if (reason === 'backdrop') return;
+        if (isDirty()) showDiscard();
+        else lifecycle.close();
+      },
+    });
+
+    const requestClose = () => {
+      if (isDirty()) showDiscard();
+      else lifecycle.close();
+    };
+
     const openModal = () => {
       render();
-      modal.hidden = false;
-      const firstInput = modal.querySelector<HTMLInputElement>('input');
-      if (firstInput) firstInput.focus({ preventScroll: true });
-      document.addEventListener('keydown', handleKeydown);
-    };
-
-    const closeModal = () => {
-      modal.hidden = true;
-      document.removeEventListener('keydown', handleKeydown);
-    };
-
-    const handleKeydown = (event: KeyboardEvent) => {
-      if (event.key !== 'Escape') return;
-      event.preventDefault();
-      closeModal();
+      openedState = captureWorkingState();
+      showEditor();
+      lifecycle.open(openBtn);
     };
 
     const save = () => {
@@ -366,15 +407,18 @@ export function hydrateBulkEdit(
           })
         );
       }
-      closeModal();
+      openedState = captureWorkingState();
+      lifecycle.close();
     };
 
     openBtn.addEventListener('click', openModal);
-    closeBtn?.addEventListener('click', closeModal);
-    cancelBtn?.addEventListener('click', closeModal);
-    modal.addEventListener('click', (event) => {
-      if (event.target === modal) closeModal();
+    closeBtn?.addEventListener('click', requestClose);
+    cancelBtn?.addEventListener('click', requestClose);
+    keepEditingBtn.addEventListener('click', () => {
+      showEditor();
+      (modal.querySelector<HTMLElement>('[data-bulk-path]') ?? cancelBtn)?.focus();
     });
+    discardBtn.addEventListener('click', () => lifecycle.close());
     saveBtn.addEventListener('click', save);
   });
 }
@@ -509,4 +553,3 @@ function buildUploadControl(args: {
 
   return root;
 }
-import type { AccountAssetsClient } from '../shared/account-assets';

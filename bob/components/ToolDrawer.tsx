@@ -98,8 +98,8 @@ function hasTransientEditorWork(): boolean {
     drawer?.querySelector(
       [
         '[data-uploading="true"]',
-        '[data-bulk-modal]:not([hidden])',
-        '.diet-object-manager__modal:not([hidden])',
+        'dialog[data-bulk-modal][open]',
+        'dialog.diet-object-manager__modal[open]',
       ].join(', '),
     ),
   );

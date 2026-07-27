@@ -12,7 +12,7 @@
   <button
     type="button"
     class="diet-dropdown-header diet-dropdown-border__control"
-    aria-haspopup="listbox"
+    aria-haspopup="dialog"
     aria-expanded="false"
     {{#if label}}aria-labelledby="{{id}}-label"{{/if}}
   >
@@ -32,7 +32,7 @@
 
   <div
     class="diet-popover diet-dropdown-border__popover"
-    role="listbox"
+    role="dialog"
     aria-label="{{popoverLabel}}"
     data-state="closed"
   >

@@ -12,29 +12,37 @@
 }
 
 .diet-bulk-edit__modal {
-  position: fixed;
-  inset: 0;
-  background: color-mix(in oklab, var(--color-system-black), transparent 55%);
-  display: grid;
-  place-items: center;
-  z-index: 1000;
+  width: min(96vw, 980px);
+  max-width: none;
+  max-height: min(88dvh, 860px);
+  padding: 0;
+  border: 0;
+  border-radius: var(--control-radius-lg);
+  background: var(--color-system-white);
+  color: var(--color-system-black);
+  box-shadow: var(--shadow-elevated);
 }
 
-.diet-bulk-edit__modal[hidden] {
-  display: none;
+.diet-bulk-edit__modal::backdrop {
+  background: color-mix(in oklab, var(--color-system-black), transparent 55%);
 }
 
 .diet-bulk-edit__modal-body {
-  background: var(--color-system-white);
-  color: var(--color-system-black);
-  border-radius: var(--control-radius-lg);
   padding: var(--space-5);
-  width: min(96vw, 980px);
-  max-height: min(88vh, 860px);
+  max-height: min(88dvh, 860px);
   display: grid;
   gap: var(--space-4);
-  box-shadow: 0 18px 60px color-mix(in oklab, var(--color-system-black), transparent 76%);
   overflow: hidden;
+}
+
+.diet-bulk-edit__discard {
+  padding: var(--space-5);
+  display: grid;
+  gap: var(--space-4);
+}
+
+.diet-bulk-edit__discard[hidden] {
+  display: none;
 }
 
 .diet-bulk-edit__modal-header {

@@ -19,10 +19,36 @@ import {
 import { createState } from './textedit-dom';
 import { applyLink, closeLinkForm, removeLink, toggleLinkForm } from './textedit-links';
 import { Command, type TexteditState } from './textedit-types';
+import { createDropdownHydrator } from '../shared/dropdownToggle';
 
 const states = new Map<HTMLElement, TexteditState>();
 let activeState: TexteditState | null = null;
 let globalBindings = false;
+
+const hydrateHost = createDropdownHydrator({
+  rootSelector: '.diet-textedit',
+  triggerSelector: '.diet-textedit__control',
+  onOpen(root) {
+    states.forEach((_, stateRoot) => {
+      if (stateRoot !== root) hydrateHost.setOpen(stateRoot, false);
+    });
+    const state = states.get(root);
+    if (!state) return;
+    setActiveState(state);
+    state.editor.focus({ preventScroll: true });
+    state.hasInteracted = true;
+    state.pointerDown = false;
+    preselectInitialText(state);
+    closePalette(state);
+  },
+  onClose(root) {
+    const state = states.get(root);
+    if (!state) return;
+    closePalette(state);
+    closeLinkForm(state);
+    if (activeState === state) activeState = null;
+  },
+});
 
 export function hydrateTextedit(scope: Element | DocumentFragment): void {
   const roots = scope.querySelectorAll<HTMLElement>('.diet-textedit');
@@ -45,22 +71,18 @@ export function hydrateTextedit(scope: Element | DocumentFragment): void {
     });
   });
 
+  hydrateHost(scope);
+
   if (!globalBindings) {
     globalBindings = true;
     document.addEventListener('selectionchange', handleSelectionChange, true);
-    document.addEventListener('pointerdown', handleDocumentPointer, true);
     window.addEventListener('resize', handleViewportChange, { passive: true });
     window.addEventListener('scroll', handleViewportChange, { passive: true });
   }
 }
 
 function installHandlers(state: TexteditState): void {
-  const { control, editor, palette, linkApply, linkRemove, clearFormatButton, clearLinksButton } = state;
-
-  control.addEventListener('click', (ev) => {
-    ev.stopPropagation();
-    togglePopover(state, true);
-  });
+  const { editor, palette, linkApply, linkRemove, clearFormatButton, clearLinksButton } = state;
 
   palette.addEventListener('pointerdown', (ev) => ev.preventDefault());
   palette.addEventListener('click', (ev) => {
@@ -122,6 +144,7 @@ function installHandlers(state: TexteditState): void {
       applyLink(state, { restoreSelection, schedulePaletteUpdate, updatePalettePosition });
     } else if (ev.key === 'Escape') {
       ev.preventDefault();
+      ev.stopPropagation();
       closeLinkForm(state);
     }
   });
@@ -155,36 +178,6 @@ function preselectInitialText(state: TexteditState): void {
   updatePalettePosition(state, range);
   updatePaletteActiveStates(state);
   showPalette(state);
-}
-
-function togglePopover(state: TexteditState, force?: boolean): void {
-  const shouldOpen = force ?? state.root.dataset.state !== 'open';
-  if (shouldOpen) {
-    closeAll();
-    state.root.dataset.state = 'open';
-    state.control.setAttribute('aria-expanded', 'true');
-    setActiveState(state);
-    state.editor.focus({ preventScroll: true });
-    state.hasInteracted = true;
-    state.pointerDown = false;
-    preselectInitialText(state);
-    closePalette(state);
-    return;
-  }
-
-  state.root.dataset.state = 'closed';
-  state.control.setAttribute('aria-expanded', 'false');
-  closePalette(state);
-  closeLinkForm(state);
-}
-
-function closeAll(): void {
-  states.forEach((state) => {
-    state.root.dataset.state = 'closed';
-    state.control.setAttribute('aria-expanded', 'false');
-    closePalette(state);
-    closeLinkForm(state);
-  });
 }
 
 function handleCommand(state: TexteditState, command: Command): void {
@@ -350,15 +343,6 @@ function surroundSelection(state: TexteditState, tag: 'strong' | 'em' | 'u' | 's
   selection.removeAllRanges();
   selection.addRange(nextRange);
   state.selection = nextRange.cloneRange();
-}
-
-function handleDocumentPointer(ev: Event): void {
-  if (!activeState) return;
-  const target = ev.target as Node;
-  if (!activeState.root.contains(target)) {
-    togglePopover(activeState, false);
-    activeState = null;
-  }
 }
 
 function handleViewportChange(): void {

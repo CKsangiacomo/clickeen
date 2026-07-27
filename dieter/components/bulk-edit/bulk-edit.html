@@ -14,8 +14,8 @@
 
   <input type="hidden" class="diet-bulk-edit__field" value="[]" {{#if path}}data-bob-path="{{path}}"{{/if}} data-bob-json />
 
-  <div class="diet-bulk-edit__modal" hidden data-bulk-modal>
-    <div class="diet-bulk-edit__modal-body" role="dialog" aria-modal="true" aria-label="{{title}}">
+  <dialog class="diet-bulk-edit__modal" aria-label="{{title}}" data-bulk-modal>
+    <div class="diet-bulk-edit__modal-body" data-bulk-editor>
       <div class="diet-bulk-edit__modal-header">
         <div class="diet-bulk-edit__title">{{title}}</div>
         <button class="diet-btn-txt" type="button" data-size="sm" data-variant="neutral" data-bulk-close>
@@ -32,5 +32,17 @@
         </button>
       </div>
     </div>
-  </div>
+    <div class="diet-bulk-edit__discard" data-bulk-discard hidden>
+      <div class="diet-bulk-edit__title">Discard changes?</div>
+      <p class="body-s">Your bulk edits have not been saved.</p>
+      <div class="diet-bulk-edit__actions">
+        <button class="diet-btn-txt" type="button" data-size="md" data-variant="secondary" data-bulk-keep-editing>
+          <span class="diet-btn-txt__label">Keep editing</span>
+        </button>
+        <button class="diet-btn-txt" type="button" data-size="md" data-variant="primary" data-bulk-discard-changes>
+          <span class="diet-btn-txt__label">Discard</span>
+        </button>
+      </div>
+    </div>
+  </dialog>
 </div>
