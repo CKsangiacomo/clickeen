@@ -33,10 +33,10 @@ program.
 - `tokens.css` — `@import`s the three above.
 
 **Components (middle).** 25 source directories under `dieter/components/*`,
-including the non-rendered `shared/` helper directory. The generated manifest
-currently contains 24 CSS-backed runtime components. Component source shape
-varies by contract; see [`components.md`](components.md) for the exact catalog
-and hydration/spec model.
+comprising 24 component directories plus the non-rendered `shared/` helper
+directory. Component source shape varies by contract; see
+[`components.md`](components.md) for the exact catalog and hydration/spec
+model.
 
 **Screens (outermost).** DevStudio, Roma, Bob — each consumes Dieter at a
 different depth. See [`surfaces.md`](surfaces.md).
