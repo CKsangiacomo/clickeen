@@ -22,20 +22,34 @@ body {
 .builder-app {
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  height: 100dvh;
   gap: var(--space-2);
-  padding: var(--space-2);
+  padding-block: max(var(--space-2), env(safe-area-inset-top))
+    max(var(--space-2), env(safe-area-inset-bottom));
+  padding-inline: max(var(--space-2), env(safe-area-inset-left))
+    max(var(--space-2), env(safe-area-inset-right));
   overflow: hidden;
   background: var(--color-system-gray-6-step3);
 }
 
 .builder-app__content {
+  position: relative;
   display: grid;
   grid-template-columns: 340px 1fr;
   gap: var(--space-2);
   flex: 1;
   min-height: 0;
   overflow: hidden;
+}
+
+.builder-unsupported,
+.tooldrawer-scrim {
+  display: none;
+}
+
+.topdrawer .tooldrawer-open,
+.tooldrawer .tooldrawer-close {
+  display: none;
 }
 
 .label-muted {
@@ -65,6 +79,68 @@ body {
   gap: var(--space-1);
   min-width: 0;
   flex: 1;
+}
+
+@media (max-width: 599px), (max-height: 599px) {
+  .builder-app__content {
+    display: block;
+  }
+
+  .topdrawer .tooldrawer-open,
+  .tooldrawer .tooldrawer-close {
+    display: inline-flex;
+    flex: none;
+  }
+
+  .tooldrawer {
+    position: absolute;
+    z-index: 2;
+    inset-block: 0;
+    inset-inline-start: 0;
+    inline-size: min(340px, calc(100% - var(--space-10)));
+    box-shadow: var(--shadow-elevated);
+  }
+
+  .tooldrawer[data-compact-open='false'] {
+    display: none;
+  }
+
+  .tooldrawer-scrim {
+    position: absolute;
+    z-index: 1;
+    inset: 0;
+    display: block;
+    border: 0;
+    background: color-mix(in oklab, var(--color-system-black), transparent 70%);
+  }
+
+  .workspace {
+    block-size: 100%;
+  }
+
+  .topdrawer-instance-title {
+    min-width: 0;
+  }
+}
+
+@media (max-width: 599px) and (orientation: portrait) and (pointer: coarse) {
+  .builder-app {
+    display: none;
+  }
+
+  .builder-unsupported {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-block-size: 100dvh;
+    padding-block: max(var(--space-4), env(safe-area-inset-top))
+      max(var(--space-4), env(safe-area-inset-bottom));
+    padding-inline: max(var(--space-4), env(safe-area-inset-left))
+      max(var(--space-4), env(safe-area-inset-right));
+    background: var(--color-system-gray-6-step3);
+    color: var(--color-text);
+    text-align: center;
+  }
 }
 
 .topdrawer-context {

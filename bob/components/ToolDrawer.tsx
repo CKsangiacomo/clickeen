@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type RefObject } from 'react';
 import type { CompiledPanel, PanelId } from '../lib/types';
 import { DEFAULT_PANELS, TdMenu } from './TdMenu';
 import { TdMenuContent } from './TdMenuContent';
@@ -106,6 +106,10 @@ function hasTransientEditorWork(): boolean {
 }
 
 export function ToolDrawer({
+  id,
+  compactOpen,
+  closeButtonRef,
+  onCompactClose,
   translationPreviewLocale,
   onTranslationPreviewLocaleChange,
   onRequestTranslationsRefresh,
@@ -115,6 +119,10 @@ export function ToolDrawer({
   savedTranslationsLoading,
   savedTranslationsError,
 }: {
+  id: string;
+  compactOpen: boolean;
+  closeButtonRef: RefObject<HTMLButtonElement>;
+  onCompactClose: () => void;
   translationPreviewLocale: string;
   onTranslationPreviewLocaleChange: (locale: string) => void;
   onRequestTranslationsRefresh: () => void;
@@ -216,7 +224,11 @@ export function ToolDrawer({
   );
 
   return (
-    <aside className="tooldrawer">
+    <aside
+      id={id}
+      className="tooldrawer"
+      data-compact-open={compactOpen ? 'true' : 'false'}
+    >
       {/* Segmented control in the header */}
       <TdHeader>
         <div className="diet-segmented diet-segmented-ictxt tdheader-mode-switch" role="radiogroup" aria-label="Assist mode" data-size="lg">
@@ -275,6 +287,22 @@ export function ToolDrawer({
             </button>
           </label>
         </div>
+        <button
+          ref={closeButtonRef}
+          className="tooldrawer-close diet-btn-ic"
+          data-size="lg"
+          data-variant="neutral"
+          type="button"
+          aria-label="Close tools"
+          onClick={onCompactClose}
+        >
+          <span
+            className="diet-btn-ic__icon"
+            data-icon="multiply"
+            style={dieterIconStyle('multiply')}
+            aria-hidden="true"
+          />
+        </button>
       </TdHeader>
 
       {/* Drawer body switches between Manual and Copilot */}
