@@ -8,6 +8,7 @@ import {
   writeInstanceLocalePackage,
   writeInstancePublicPackage,
 } from '../src/domains/account-instances/package-files';
+import { dispatchTokyoRoute } from '../src/route-dispatch';
 import { tryHandleClkLiveStaticRoutes } from '../src/routes/clk-live-routes';
 
 type StoredObject = {
@@ -134,6 +135,32 @@ async function request(pathname: string, env: any, method = 'GET'): Promise<Resp
   });
 }
 
+async function dispatchPublicRequest(pathname: string, env: any, method = 'GET'): Promise<Response> {
+  const url = new URL(`https://dev.clk.live${pathname}`);
+  return dispatchTokyoRoute({
+    req: new Request(url, { method }),
+    env,
+    pathname: url.pathname,
+    url,
+    respond: (response) => response,
+  });
+}
+
+async function testPublicDieterIconServing(): Promise<void> {
+  const { env } = createEnv();
+  await env.TOKYO_R2.put('dieter/icons/svg/globe.svg', '<svg></svg>', {
+    httpMetadata: { contentType: 'image/svg+xml' },
+  });
+
+  const icon = await dispatchPublicRequest('/dieter/icons/svg/globe.svg', env);
+  assert.equal(icon.status, 200);
+  assert.equal(icon.headers.get('content-type'), 'image/svg+xml');
+  assert.equal(await icon.text(), '<svg></svg>');
+
+  const removedRuntime = await dispatchPublicRequest('/dieter/editor/editor.js', env);
+  assert.equal(removedRuntime.status, 404);
+}
+
 async function testBaseAndLocaleStoredBytes(): Promise<void> {
   const { env } = createEnv();
   await putBaseAndLocale(env);
@@ -227,6 +254,7 @@ async function testNoForbiddenServingImports(): Promise<void> {
 }
 
 const tests: Array<{ name: string; run: () => Promise<void> }> = [
+  { name: 'clk.live serves Dieter SVGs and no removed Dieter runtime', run: testPublicDieterIconServing },
   { name: 'base and locale routes serve stored bytes', run: testBaseAndLocaleStoredBytes },
   { name: 'missing locale artifact is explicit unavailable with no base fallback', run: testLocaleUnavailableAndNoBaseFallback },
   { name: 'locale metadata mismatch fails closed', run: testLocaleMetadataMismatchFailsClosed },

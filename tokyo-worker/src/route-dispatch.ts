@@ -10,6 +10,10 @@ function isPublicServingHost(hostname: string): boolean {
 
 export async function dispatchTokyoRoute(args: TokyoRouteArgs): Promise<Response> {
   if (isPublicServingHost(args.url.hostname)) {
+    if (args.pathname.startsWith('/dieter/icons/svg/')) {
+      const assetResponse = await tryHandleAssetRoutes(args);
+      if (assetResponse) return assetResponse;
+    }
     const response = await tryHandleClkLiveStaticRoutes(args);
     return response ?? args.respond(new Response('Not found', { status: 404 }));
   }
