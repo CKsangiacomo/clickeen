@@ -48,10 +48,9 @@ that need must be named by the owning product/component PRD first.
 ## Reduced Motion
 
 Dieter ships the global reduced-motion guard from
-`dieter/tokens/dieter-foundation-tokens.css`. Current source covers real
-elements only. PRD 126F execution must extend that one authoritative selector
-to `::before` and `::after`; until then pseudo-elements are a known uncovered
-case, not completed product behavior.
+`dieter/tokens/dieter-foundation-tokens.css`. The one authoritative selector
+covers real elements, `::before`, and `::after`, so the baseline applies to
+component and public-widget CSS pseudo-elements as well as ordinary elements.
 
 Components may also carry local reduced-motion rules when they own the moving
 selector directly. If system JS writes inline transition or animation behavior,
