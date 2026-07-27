@@ -11,7 +11,6 @@ import { RomaSignOutButton } from './roma-sign-out-button';
 
 type RomaNavProps = {
   activeDomain: RomaDomainKey;
-  compact?: boolean;
 };
 
 function RomaNavLink({ domain, active }: { domain: RomaDomainDefinition; active: boolean }) {
@@ -39,24 +38,22 @@ function RomaNavLink({ domain, active }: { domain: RomaDomainDefinition; active:
   );
 }
 
-export function RomaNav({ activeDomain, compact = false }: RomaNavProps) {
+export function RomaNav({ activeDomain }: RomaNavProps) {
   const settingsActive = ROMA_SETTINGS_DOMAIN_KEYS.includes(activeDomain);
   return (
-    <nav aria-label="Roma nav" className={compact ? 'roma-nav roma-nav--compact' : 'roma-nav'}>
-      {!compact ? (
-        <div className="roma-nav__brand">
-          <Link href="/home" className="roma-nav__brand-link" aria-label="Clickeen home">
-            <Image
-              src="/brand/clickeen-logo-full.svg"
-              alt="Clickeen"
-              width={3060}
-              height={557}
-              className="roma-nav__brand-logo"
-              priority
-            />
-          </Link>
-        </div>
-      ) : null}
+    <nav aria-label="Roma nav" className="roma-nav">
+      <div className="roma-nav__brand">
+        <Link href="/home" className="roma-nav__brand-link" aria-label="Clickeen home">
+          <Image
+            src="/brand/clickeen-logo-full.svg"
+            alt="Clickeen"
+            width={3060}
+            height={557}
+            className="roma-nav__brand-logo"
+            priority
+          />
+        </Link>
+      </div>
       {ROMA_MAIN_DOMAINS.filter((domain) => domain.key !== 'settings').map((domain) => (
         <RomaNavLink key={domain.key} domain={domain} active={domain.key === activeDomain} />
       ))}
