@@ -221,13 +221,16 @@ Green gate:
    preserving size, typography, alignment, and visual state.
 4. Convert Bulk Edit's dynamically created dropdown-upload trigger in
    `bulk-edit.ts` to the same native markup. Do not edit dialog lifecycle.
-5. Delete dropdown-actions footer markup/CSS, `data-apply-actions`, pending
+5. Convert the two FAQ nested editor-template copies of the dropdown-edit
+   trigger in `tokyo/product/widgets/faq/spec.json`; this file is their source
+   authority.
+6. Delete dropdown-actions footer markup/CSS, `data-apply-actions`, pending
    state, apply/cancel handlers, preview/revert functions, and dead branches.
-6. Delete `applyActions`, `applyLabel`, and `cancelLabel` from Bob compiler
+7. Delete `applyActions`, `applyLabel`, and `cancelLabel` from Bob compiler
    context construction.
-7. Update `e2e/widgets/prd106f-builder-certification.spec.ts` so it asserts
+8. Update `e2e/widgets/prd106f-builder-certification.spec.ts` so it asserts
    native button elements rather than the legacy `role="button"` contract.
-8. Use direct read-only browser verification for the changed controls. Do not
+9. Use direct read-only browser verification for the changed controls. Do not
    add another E2E suite or package command. Browser verification may change
    local unsaved UI state but must not click Bob Save, publish, or call a
    product mutation route.
@@ -294,6 +297,7 @@ Green gate:
 | Native Toggle | `dieter/components/toggle/toggle.ts` | Delete custom hydrator only. |
 | Six dropdown templates/CSS | `dieter/components/dropdown-{actions,border,edit,fill,shadow,upload}/` owning `.html` and `.css` | Use native buttons and preserve appearance. |
 | Bulk Edit copied trigger | `dieter/components/bulk-edit/bulk-edit.ts` | Change only dynamically created upload trigger markup. |
+| FAQ nested copies | `tokyo/product/widgets/faq/spec.json` | Use native dropdown-edit buttons in both nested editor templates; regenerate widget artifacts. |
 | Dropdown Actions dead branch | `dieter/components/dropdown-actions/dropdown-actions.{html,css,ts}`; `bob/lib/compiler/stencils.ts` | Delete apply/cancel/footer/pending workflow completely. |
 | Source consumption | `dieter/styles.css`; Bob source hydration | Ensure new component CSS and behavior are consumed directly; do not add a manifest. |
 | CSS contracts | `dieter/components/operational-field/operational-field.css`; `dieter/components/operational-table/operational-table.css`; `dieter/components/tooltip/tooltip.css` | Add three CSS-only primitives. |

@@ -1,4 +1,4 @@
-<div class="diet-dropdown-actions diet-popover-host" data-size="{{size}}" data-state="closed" {{#if applyActions}}data-apply-actions="true"{{/if}}>
+<div class="diet-dropdown-actions diet-popover-host" data-size="{{size}}" data-state="closed">
   <input
     id="{{id}}"
     type="hidden"
@@ -8,9 +8,9 @@
     data-placeholder="{{placeholder}}"
   />
 
-  <div
+  <button
+    type="button"
     class="diet-dropdown-header diet-dropdown-actions__control"
-    role="button"
     aria-haspopup="listbox"
     aria-expanded="false"
     {{#if label}}aria-labelledby="{{id}}-label"{{/if}}
@@ -24,7 +24,7 @@
       >{{label}}</span>
     {{/if}}
     <span class="diet-dropdown-header-value {{bodyClass}}" data-muted="true" data-placeholder="{{placeholder}}">{{placeholder}}</span>
-  </div>
+  </button>
 
   <div
     class="diet-popover diet-dropdown-actions__popover"
@@ -74,25 +74,5 @@
       {{/if}}
       {{/each}}
     </div>
-    {{#if applyActions}}
-    <div class="diet-dropdown-actions__footer">
-      <button
-        type="button"
-        class="diet-btn-txt diet-dropdown-actions__apply"
-        data-size="md"
-        data-variant="primary"
-      >
-        <span class="diet-btn-txt__label">{{applyLabel}}</span>
-      </button>
-      <button
-        type="button"
-        class="diet-btn-txt diet-dropdown-actions__cancel"
-        data-size="md"
-        data-variant="neutral"
-      >
-        <span class="diet-btn-txt__label">{{cancelLabel}}</span>
-      </button>
-    </div>
-    {{/if}}
   </div>
 </div>

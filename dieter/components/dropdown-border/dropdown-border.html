@@ -9,9 +9,9 @@
     data-placeholder="{{placeholder}}"
   />
 
-  <div
+  <button
+    type="button"
     class="diet-dropdown-header diet-dropdown-border__control"
-    role="button"
     aria-haspopup="listbox"
     aria-expanded="false"
     {{#if label}}aria-labelledby="{{id}}-label"{{/if}}
@@ -28,7 +28,7 @@
       <span class="diet-dropdown-border__chip" aria-hidden="true"></span>
       <span class="diet-dropdown-border__label">{{placeholder}}</span>
     </span>
-  </div>
+  </button>
 
   <div
     class="diet-popover diet-dropdown-border__popover"

@@ -1,8 +1,8 @@
   <div class="diet-dropdown-edit diet-popover-host" data-size="{{size}}" data-state="closed" data-allow-links="{{allowLinks}}">
-  <div class="diet-dropdown-header diet-dropdown-edit__control" role="button" aria-haspopup="dialog" aria-expanded="false">
+  <button type="button" class="diet-dropdown-header diet-dropdown-edit__control" aria-haspopup="dialog" aria-expanded="false">
     <span class="diet-dropdown-header-label {{#if labelClass}}{{labelClass}}{{else}}label-s{{/if}}">{{label}}:</span>
     <span class="diet-dropdown-header-value {{#if bodyClass}}{{bodyClass}}{{else}}body-s{{/if}}" data-muted="true" data-placeholder="{{placeholder}}">{{placeholder}}</span>
-  </div>
+  </button>
 
   <div class="diet-popover" role="dialog" aria-label="{{label}}">
     <div class="diet-popover__header">

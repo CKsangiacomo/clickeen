@@ -299,10 +299,10 @@
                             "children": [
                               {
                                 "kind": "element",
-                                "tag": "div",
+                                "tag": "button",
                                 "attrs": {
                                   "class": "diet-dropdown-header diet-dropdown-edit__control",
-                                  "role": "button",
+                                  "type": "button",
                                   "aria-haspopup": "dialog",
                                   "aria-expanded": false
                                 },
@@ -804,10 +804,10 @@
                                 "children": [
                                   {
                                     "kind": "element",
-                                    "tag": "div",
+                                    "tag": "button",
                                     "attrs": {
                                       "class": "diet-dropdown-header diet-dropdown-edit__control",
-                                      "role": "button",
+                                      "type": "button",
                                       "aria-haspopup": "dialog",
                                       "aria-expanded": false
                                     },

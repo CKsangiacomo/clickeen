@@ -5,12 +5,6 @@ const states = new Map<HTMLElement, DropdownActionsState>();
 const hydrateHost = createDropdownHydrator({
   rootSelector: '.diet-dropdown-actions',
   triggerSelector: '.diet-dropdown-actions__control',
-  onClose: (root) => {
-    const state = states.get(root);
-    if (state && state.applyActions) {
-      cancelPending(state, { close: false });
-    }
-  },
 });
 
 interface DropdownActionsState {
@@ -20,11 +14,6 @@ interface DropdownActionsState {
   display: HTMLElement;
   trigger: HTMLElement;
   menuActions: HTMLButtonElement[];
-  applyActions: boolean;
-  applyButton: HTMLButtonElement | null;
-  cancelButton: HTMLButtonElement | null;
-  committedValue: string;
-  pendingValue: string | null;
   nativeValue?: { get: () => string; set: (next: string) => void };
 }
 
@@ -53,9 +42,6 @@ function createState(root: HTMLElement, scope: Element | DocumentFragment): Drop
   const menuActions = Array.from(
     root.querySelectorAll<HTMLButtonElement>('.diet-dropdown-actions__menuaction'),
   );
-  const applyButton = root.querySelector<HTMLButtonElement>('.diet-dropdown-actions__apply');
-  const cancelButton = root.querySelector<HTMLButtonElement>('.diet-dropdown-actions__cancel');
-  const applyActions = root.dataset.applyActions === 'true';
 
   if (!input || !display || !trigger || menuActions.length === 0) {
     return null;
@@ -70,11 +56,6 @@ function createState(root: HTMLElement, scope: Element | DocumentFragment): Drop
     display,
     trigger,
     menuActions,
-    applyActions,
-    applyButton,
-    cancelButton,
-    committedValue: input.value,
-    pendingValue: null,
     nativeValue,
   };
 }
@@ -94,8 +75,6 @@ function installHandlers(state: DropdownActionsState): void {
   }
 
   const syncCommitted = () => {
-    state.committedValue = input.value;
-    state.pendingValue = null;
     syncFromValue(state, input.value);
   };
   input.addEventListener('external-sync', syncCommitted);
@@ -107,29 +86,12 @@ function installHandlers(state: DropdownActionsState): void {
       event.preventDefault();
       const value = action.dataset.value ?? '';
       const label = action.dataset.label ?? value;
-      if (state.applyActions) {
-        setPendingSelection(state, value, label);
-        return;
-      }
       setSelection(state, value, label);
       trigger.focus();
       // Closing via trigger click keeps shared dropdown lifecycle consistent.
       trigger.click();
     });
   });
-
-  if (state.applyActions && state.applyButton && state.cancelButton) {
-    state.applyButton.addEventListener('click', (event) => {
-      event.stopPropagation();
-      event.preventDefault();
-      commitPending(state);
-    });
-    state.cancelButton.addEventListener('click', (event) => {
-      event.stopPropagation();
-      event.preventDefault();
-      cancelPending(state, { close: true });
-    });
-  }
 }
 
 function initialize(state: DropdownActionsState): void {
@@ -142,67 +104,10 @@ function updateDisplay(state: DropdownActionsState, label: string | null): void 
   state.display.dataset.muted = label ? 'false' : 'true';
 }
 
-function dispatchPreview(_state: DropdownActionsState, _value: string | null): void {
-  // Dropdown actions currently commit directly through bob-ops/input events.
-  // There is no surviving preview-only channel for pending action values here.
-}
-
 function setSelection(state: DropdownActionsState, value: string, label: string | null): void {
   state.input.value = value;
   if (!state.nativeValue) syncFromValue(state, value, label);
   state.input.dispatchEvent(new Event('input', { bubbles: true }));
-}
-
-function setPendingSelection(state: DropdownActionsState, value: string, label: string | null): void {
-  state.pendingValue = value;
-  syncFromValue(state, value, label);
-}
-
-function commitPending(state: DropdownActionsState): void {
-  if (!state.pendingValue) {
-    state.trigger.focus();
-    state.trigger.click();
-    return;
-  }
-  dispatchPreview(state, null);
-  const next = state.pendingValue;
-  state.pendingValue = null;
-  state.committedValue = next;
-  state.input.value = next;
-  if (!state.nativeValue) syncFromValue(state, next);
-
-  const path = state.input.dataset.bobPath;
-  if (path) {
-    state.input.dispatchEvent(
-      new CustomEvent('bob-ops', {
-        bubbles: true,
-        detail: {
-          ops: [{ op: 'set', path, value: next }],
-        },
-      }),
-    );
-  } else {
-    state.input.dispatchEvent(new Event('input', { bubbles: true }));
-  }
-  state.trigger.focus();
-  state.trigger.click();
-}
-
-function cancelPending(state: DropdownActionsState, opts: { close: boolean }): void {
-  if (!state.pendingValue) {
-    if (opts.close) {
-      state.trigger.focus();
-      state.trigger.click();
-    }
-    return;
-  }
-  state.pendingValue = null;
-  syncFromValue(state, state.committedValue);
-  dispatchPreview(state, null);
-  if (opts.close) {
-    state.trigger.focus();
-    state.trigger.click();
-  }
 }
 
 function captureNativeValue(input: HTMLInputElement): DropdownActionsState['nativeValue'] {

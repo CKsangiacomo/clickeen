@@ -181,7 +181,7 @@ async function expectNearestUploadOpenIfPresent(field: Locator) {
   await expect(uploadRoot).toBeVisible({ timeout: 20_000 });
   const trigger = uploadRoot.locator('.diet-dropdown-upload__control').first();
   await expect(trigger).toBeVisible({ timeout: 20_000 });
-  await expect(trigger).toHaveAttribute('role', 'button');
+  await expect(trigger).toHaveJSProperty('tagName', 'BUTTON');
   if ((await trigger.getAttribute('aria-expanded')) !== 'true') {
     await trigger.click();
   }
@@ -204,7 +204,7 @@ async function expectDropdownEditUsable(
   await expect(trigger, `${control.label} dropdown trigger should be visible`).toBeVisible({
     timeout: 20_000,
   });
-  await expect(trigger).toHaveAttribute('role', 'button');
+  await expect(trigger).toHaveJSProperty('tagName', 'BUTTON');
   if ((await trigger.getAttribute('aria-expanded')) !== 'true') {
     await trigger.click();
   }

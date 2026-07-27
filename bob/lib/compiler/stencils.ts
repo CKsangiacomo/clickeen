@@ -235,9 +235,6 @@ export async function buildContext(
   const allowLinks =
     attrs.allowLinks ?? attrs['allow-links'] ?? (merged.allowLinks as string | undefined) ?? 'true';
 
-  const applyActions = '';
-  const applyLabel = '';
-  const cancelLabel = '';
 
   const min = attrs.min || (merged.min as string) || '';
   const max = attrs.max || (merged.max as string) || '';
@@ -318,9 +315,6 @@ export async function buildContext(
     headerIcon,
     allowImage,
     allowLinks,
-    applyActions,
-    applyLabel,
-    cancelLabel,
     fillModes: component === 'dropdown-fill' ? fillModes : undefined,
     min,
     max,
