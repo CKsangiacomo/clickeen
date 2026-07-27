@@ -110,10 +110,9 @@ second package, registry, generated bundle, or browser entrypoint.
   tokens, so the foundation file is consumed through that composition.
 - Numeric radius aliases are not Dieter law. Use `--control-radius-*`.
 - Focus-ring width, focus-ring offset, and touch-target sizing are not Dieter
-  foundation doctrine. One shared widget source still references the removed
-  width token behind an effective `2px` fallback; 126H replaces that spelling
-  with literal `2px` without changing visible focus. `--focus-ring-color` is a
-  color token owned by [`color.md`](color.md).
+  foundation doctrine. Shared widget focus width is the explicit literal
+  `2px`; `--focus-ring-color` is a color token owned by
+  [`color.md`](color.md).
 - `--shadow-lg` is not a Dieter token. The current DevStudio token-editor
   fallback is a 126L cleanup target; it must consume `--shadow-elevated`
   directly rather than preserve a dead alias.

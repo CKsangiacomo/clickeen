@@ -163,7 +163,7 @@
 
 .ck-socialShare__button:focus-visible,
 .ck-socialShare__card:focus-visible {
-  outline: var(--focus-ring-width, 2px) solid var(--color-system-blue, #1c7cff);
+  outline: 2px solid var(--color-system-blue, #1c7cff);
   outline-offset: 2px;
 }
 
