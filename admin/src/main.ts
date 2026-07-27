@@ -1,5 +1,7 @@
 import '@dieter/tokens/tokens.css';
 import '@dieter/components/popover/popover.css';
+import '@dieter/components/operational-field/operational-field.css';
+import '@dieter/components/operational-table/operational-table.css';
 import '@dieter/components/tooltip/tooltip.css';
 import '@dieter/components/valuefield/valuefield.css';
 import '@dieter/components/toggle/toggle.css';
@@ -443,11 +445,11 @@ async function openTokenEditor(kind: DieterTokenKind, preferredToken?: string) {
         </div>
         <label class="devstudio-token-editor__field">
           <span class="label-xs">Token</span>
-          <select class="devstudio-token-editor__select" name="token"></select>
+          <select class="diet-operational-field devstudio-token-editor__select" name="token"></select>
         </label>
         <label class="devstudio-token-editor__field">
           <span class="label-xs">Value</span>
-          <input class="devstudio-token-editor__input" name="value" type="text" autocomplete="off" />
+          <input class="diet-operational-field devstudio-token-editor__input" name="value" type="text" autocomplete="off" />
         </label>
         <div class="devstudio-token-editor__diff body-xs" aria-live="polite"></div>
         <div class="devstudio-token-editor__actions">

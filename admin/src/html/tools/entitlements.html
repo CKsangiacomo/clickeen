@@ -18,12 +18,7 @@
   }
 
   .entitlements-table {
-    width: 100%;
-    border-collapse: collapse;
     table-layout: fixed;
-    border-radius: var(--control-radius-lg);
-    overflow: hidden;
-    background: var(--color-system-white);
   }
 
   .entitlements-table__tier {
@@ -40,18 +35,6 @@
 
   .entitlements-table__desc-col {
     width: 320px;
-  }
-
-  .entitlements-table th,
-  .entitlements-table td {
-    text-align: left;
-    vertical-align: middle;
-    padding: 8px 10px;
-    border-bottom: 1px solid var(--role-border);
-  }
-
-  .entitlements-table tbody td {
-    border-bottom: 1px solid var(--color-system-gray-5);
   }
 
   .entitlements-table thead th.entitlements-table__tier-head {
@@ -196,8 +179,8 @@
   }
 
   .entitlements-table__badge[data-status='gap'] {
-    color: var(--color-system-orange-contrast, var(--color-text));
-    background: color-mix(in oklab, var(--color-system-orange, #ff9500), transparent 84%);
+    color: var(--color-system-orange-contrast);
+    background: color-mix(in oklab, var(--color-system-orange), transparent 84%);
   }
 
   .entitlements-table__owner {
@@ -271,6 +254,14 @@
     entitlementSavedUnreadable: 'Entitlement changes were saved, but the latest policy could not be shown. Reload policy data.',
     aiSavedUnreadable: 'AI policy changes were saved, but the latest policy could not be shown. Reload policy data.',
   });
+
+  function appendOperationalTable(section, table) {
+    const frame = document.createElement('div');
+    frame.className = 'diet-operational-table';
+    table.classList.add('diet-operational-table__table');
+    frame.appendChild(table);
+    section.appendChild(frame);
+  }
 
   const state = {
     matrix: null,
@@ -801,7 +792,7 @@
     });
 
     table.appendChild(tbody);
-    section.appendChild(table);
+    appendOperationalTable(section, table);
     return section;
   }
 
@@ -928,7 +919,7 @@
       });
 
     table.appendChild(tbody);
-    section.appendChild(table);
+    appendOperationalTable(section, table);
     return section;
   }
 
@@ -1216,7 +1207,7 @@
     });
 
     table.appendChild(tbody);
-    section.appendChild(table);
+    appendOperationalTable(section, table);
     return section;
   }
 
@@ -1317,7 +1308,7 @@
     });
 
     table.appendChild(tbody);
-    section.appendChild(table);
+    appendOperationalTable(section, table);
     return section;
   }
 

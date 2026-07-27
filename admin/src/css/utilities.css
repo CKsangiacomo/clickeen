@@ -101,25 +101,6 @@
   gap: var(--space-2);
 }
 
-.devstudio-token-editor__select,
-.devstudio-token-editor__input {
-  width: 100%;
-  box-sizing: border-box;
-  min-height: var(--control-size-md);
-  padding-inline: var(--space-3);
-  border-radius: var(--control-radius-md);
-  border: 1px solid var(--role-border);
-  background: var(--color-system-white);
-  color: var(--color-text);
-  font: 500 var(--fs-13)/var(--lh-body-ui) var(--font-ui);
-}
-
-.devstudio-token-editor__select:focus,
-.devstudio-token-editor__input:focus {
-  outline: 2px solid var(--focus-ring-color, var(--color-system-blue));
-  outline-offset: 2px;
-}
-
 .devstudio-token-editor__diff {
   min-height: 1.4em;
   color: color-mix(in oklab, var(--color-text), transparent 35%);
