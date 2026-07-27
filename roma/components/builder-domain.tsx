@@ -11,6 +11,8 @@ import { resolvePublicServingBaseUrl } from '../lib/env/public-serving';
 import { useRomaAccountApi } from './account-api';
 import { getWidgetEditorArtifact } from './widget-editor-artifact';
 import { useRomaAccountContext } from './roma-account-context';
+import { RomaUnsavedChangesDialog } from './roma-unsaved-changes-dialog';
+import { RomaUpsellDialog } from './roma-upsell-dialog';
 
 type BuilderDomainProps = {
   initialInstanceId?: string;
@@ -64,6 +66,12 @@ type BobUpsellMessage = {
   cta?: 'upgrade' | string | null;
   reasonKey?: string | null;
 };
+
+function resolveBobUpsellReason(reasonKey: string | null | undefined): string {
+  if (reasonKey === 'coreui.upsell.reason.limitReached') return "You've reached your plan limit.";
+  if (reasonKey === 'coreui.upsell.reason.flagBlocked') return 'This option is not available on your current plan.';
+  return 'This action requires a plan upgrade.';
+}
 
 type HostAccountCommandResultMessage = {
   type: 'host:account-command-result';
@@ -414,6 +422,9 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
   const bobAppliedInstanceIdRef = useRef('');
   const bobIsDirtyRef = useRef(false);
   const activeInstanceIdRef = useRef('');
+  const pendingDiscardActionRef = useRef<(() => void) | null>(null);
+  const allowNavigationRef = useRef(false);
+  const allowPopStateRef = useRef(false);
   const [activeInstanceId, setActiveInstanceId] = useState(() => {
     const fromPath = decodeBuilderPathInstanceId(pathname);
     if (fromPath) return fromPath;
@@ -423,6 +434,8 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
   const [openError, setOpenError] = useState<string | null>(null);
   const [activePublishStatus, setActivePublishStatus] = useState<'published' | 'unpublished' | null>(null);
   const [copyStatus, setCopyStatus] = useState<string | null>(null);
+  const [unsavedDialogOpen, setUnsavedDialogOpen] = useState(false);
+  const [upsellReason, setUpsellReason] = useState<string | null>(null);
 
   const bobBaseUrl = useMemo(() => resolveBobBaseUrl(), []);
   const currentUrl = pathname;
@@ -439,9 +452,16 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
     widgetPublicUrl ? buildWidgetScriptSnippet(widgetPublicUrl) : ''
   ), [widgetPublicUrl]);
 
-  const confirmDiscardBuilderEdits = useCallback(() => {
-    if (!bobIsDirtyRef.current) return true;
-    return window.confirm('You have unsaved Builder edits. Leave and discard them?');
+  const keepEditing = useCallback(() => {
+    pendingDiscardActionRef.current = null;
+    setUnsavedDialogOpen(false);
+  }, []);
+
+  const discardAndContinue = useCallback(() => {
+    const action = pendingDiscardActionRef.current;
+    pendingDiscardActionRef.current = null;
+    setUnsavedDialogOpen(false);
+    if (action) window.requestAnimationFrame(action);
   }, []);
 
   useEffect(() => {
@@ -789,7 +809,7 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
         return;
       }
       if (data.type === 'bob:upsell') {
-        if (data.cta === 'upgrade' && confirmDiscardBuilderEdits()) router.push('/billing');
+        if (data.cta === 'upgrade') setUpsellReason(resolveBobUpsellReason(data.reasonKey));
         return;
       }
       if (data.type === 'bob:account-command') {
@@ -813,7 +833,7 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
 
     window.addEventListener('message', listener);
     return () => window.removeEventListener('message', listener);
-  }, [activeInstanceId, bobBaseUrl, confirmDiscardBuilderEdits, router, runBobAccountCommand]);
+  }, [activeInstanceId, bobBaseUrl, runBobAccountCommand]);
 
   useEffect(() => {
     bobReadyRef.current = false;
@@ -871,20 +891,36 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
       if (!(target instanceof Element)) return;
       const navigable = target.closest('a[href], button.roma-nav__signout');
       if (!navigable) return;
-      if (confirmDiscardBuilderEdits()) return;
+      if (allowNavigationRef.current) {
+        allowNavigationRef.current = false;
+        return;
+      }
       event.preventDefault();
       event.stopPropagation();
+      pendingDiscardActionRef.current = () => {
+        allowNavigationRef.current = true;
+        (navigable as HTMLElement).click();
+      };
+      setUnsavedDialogOpen(true);
     };
 
     const handlePopState = () => {
       if (!bobIsDirtyRef.current) return;
-      if (confirmDiscardBuilderEdits()) return;
+      if (allowPopStateRef.current) {
+        allowPopStateRef.current = false;
+        return;
+      }
       const holdInstanceId = bobAppliedInstanceIdRef.current || activeInstanceIdRef.current;
       const holdRoute = holdInstanceId ? buildRomaBuilderRoute({ instanceId: holdInstanceId }) : '/builder';
       window.history.pushState(null, '', holdRoute);
       if (holdInstanceId) {
         setActiveInstanceId(holdInstanceId);
       }
+      pendingDiscardActionRef.current = () => {
+        allowPopStateRef.current = true;
+        window.history.back();
+      };
+      setUnsavedDialogOpen(true);
     };
 
     window.addEventListener('beforeunload', handleBeforeUnload);
@@ -895,7 +931,7 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
       window.removeEventListener('popstate', handlePopState);
       document.removeEventListener('click', handleClick, true);
     };
-  }, [confirmDiscardBuilderEdits]);
+  }, []);
 
   const builderOpenErrorCopy = resolveBuilderErrorCopy(openError || '', 'Builder could not open this widget. Please try again.');
 
@@ -992,6 +1028,17 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
         className="roma-builder__iframe"
         title="Bob Builder"
         onLoad={handleBobIframeLoad}
+      />
+      <RomaUnsavedChangesDialog
+        open={unsavedDialogOpen}
+        message="You have unsaved Builder edits."
+        onKeepEditing={keepEditing}
+        onDiscard={discardAndContinue}
+      />
+      <RomaUpsellDialog
+        open={Boolean(upsellReason)}
+        reason={upsellReason ?? undefined}
+        onClose={() => setUpsellReason(null)}
       />
     </>
   );

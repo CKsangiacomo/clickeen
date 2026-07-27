@@ -2,9 +2,10 @@
 
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { normalizeCanonicalLocalesFile, normalizeLocaleToken, resolveLocaleLabel } from '@clickeen/l10n';
 import localesJson from '@clickeen/l10n/locales.json';
+import { createDialogLifecycle } from '../../dieter/components/shared/dialog-lifecycle';
 import { resolveAccountShellErrorCopy } from '../lib/account-shell-copy';
 import { resolvePublicServingBaseUrl } from '../lib/env/public-serving';
 import { useRomaAccountApi } from './account-api';
@@ -143,6 +144,7 @@ export function PagesDomain() {
   const [dataError, setDataError] = useState<string | null>(null);
   const [mutationError, setMutationError] = useState<string | null>(null);
   const [copyStatus, setCopyStatus] = useState<string | null>(null);
+  const addInstancesDialogRef = useRef<HTMLDialogElement>(null);
 
   const selectedPageId = useMemo(() => searchParams.get('page') || '', [searchParams]);
   const activePageId = selectedPageId || pages[0]?.pageId || '';
@@ -528,6 +530,26 @@ export function PagesDomain() {
     setPickerVisibleLimit(50);
     setAddInstancesOpen(true);
   }, []);
+
+  const closeAddInstances = useCallback(() => {
+    setCheckedInstanceIds([]);
+    setAddInstancesOpen(false);
+  }, []);
+
+  useEffect(() => {
+    if (!addInstancesOpen) return;
+    const dialog = addInstancesDialogRef.current;
+    if (!dialog) return;
+    const dialogLifecycle = createDialogLifecycle({
+      dialog,
+      initialFocus: 'input[type="checkbox"]:not([disabled])',
+      requestDismiss(reason) {
+        if (reason === 'escape') closeAddInstances();
+      },
+    });
+    dialogLifecycle.open();
+    return () => dialogLifecycle.destroy();
+  }, [addInstancesOpen, closeAddInstances]);
 
   const toggleCheckedInstance = useCallback((instanceId: string) => {
     setCheckedInstanceIds((current) => (
@@ -943,8 +965,7 @@ export function PagesDomain() {
           </div>
 
           {addInstancesOpen ? (
-            <div className="roma-modal-backdrop" role="presentation">
-              <div className="roma-modal" role="dialog" aria-modal="true" aria-labelledby="roma-pages-add-instances-title">
+            <dialog ref={addInstancesDialogRef} className="roma-modal" aria-labelledby="roma-pages-add-instances-title">
                 <h2 id="roma-pages-add-instances-title" className="heading-6">
                   Add instances
                 </h2>
@@ -1009,7 +1030,7 @@ export function PagesDomain() {
                     data-size="md"
                     data-variant="line2"
                     type="button"
-                    onClick={() => setAddInstancesOpen(false)}
+                    onClick={closeAddInstances}
                     disabled={Boolean(activeActionKey)}
                   >
                     <span className="diet-btn-txt__label body-m">Cancel</span>
@@ -1027,8 +1048,7 @@ export function PagesDomain() {
                     </span>
                   </button>
                 </div>
-              </div>
-            </div>
+            </dialog>
           ) : null}
 
           {pageSource.placements.length ? (

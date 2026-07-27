@@ -54,24 +54,34 @@
 }
 
 .devstudio-token-editor {
-  position: fixed;
-  inset: 0;
-  z-index: 40;
-  display: grid;
-  place-items: center;
-  padding: var(--space-6);
+  box-sizing: border-box;
+  width: min(420px, calc(100% - (var(--space-6) * 2)));
+  max-width: none;
+  max-height: calc(100dvh - (var(--space-6) * 2));
+  padding: var(--space-5);
+  overflow: auto;
+  border: 1px solid var(--role-border);
+  border-radius: var(--control-radius-lg);
+  background: var(--role-surface-bg, var(--color-system-white));
+  color: var(--color-text);
+  box-shadow: var(--shadow-elevated);
+}
+
+.devstudio-token-editor::backdrop {
   background: color-mix(in oklab, var(--color-system-black), transparent 64%);
 }
 
 .devstudio-token-editor__panel {
+  margin: 0;
+}
+
+.devstudio-token-editor__view {
   display: grid;
   gap: var(--space-4);
-  width: min(420px, 100%);
-  padding: var(--space-5);
-  border-radius: var(--control-radius-lg);
-  background: var(--role-surface-bg, var(--color-system-white));
-  border: 1px solid var(--role-border);
-  box-shadow: var(--shadow-lg, 0 18px 48px color-mix(in oklab, var(--color-system-black), transparent 82%));
+}
+
+.devstudio-token-editor__view p {
+  margin: 0;
 }
 
 .devstudio-token-editor__header,

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react';
 import type { AccountAssetRecord } from '@clickeen/ck-contracts';
+import { createDialogLifecycle } from '../../dieter/components/shared/dialog-lifecycle';
 import { parseAccountAssetRecord } from '../lib/account-asset-record';
 import { formatBytes, formatNumber } from '../lib/format';
 import { useRomaAccountApi, type RomaAccountApi } from './account-api';
@@ -132,6 +133,9 @@ export function AssetsDomain() {
   const accountApi = useRomaAccountApi();
   const singleUploadInputRef = useRef<HTMLInputElement | null>(null);
   const bulkUploadInputRef = useRef<HTMLInputElement | null>(null);
+  const bulkUploadDialogRef = useRef<HTMLDialogElement | null>(null);
+  const bulkUploadCloseRef = useRef<HTMLButtonElement | null>(null);
+  const bulkUploadBusyRef = useRef(false);
 
   const accountId = accountContext.accountId;
   const accountPublicId = accountContext.accountPublicId;
@@ -153,6 +157,25 @@ export function AssetsDomain() {
   const [bulkUploadOpen, setBulkUploadOpen] = useState(false);
   const [bulkUploadBusy, setBulkUploadBusy] = useState(false);
   const [bulkItems, setBulkItems] = useState<BulkUploadItem[]>([]);
+
+  useEffect(() => {
+    bulkUploadBusyRef.current = bulkUploadBusy;
+  }, [bulkUploadBusy]);
+
+  useEffect(() => {
+    if (!bulkUploadOpen) return;
+    const dialog = bulkUploadDialogRef.current;
+    if (!dialog) return;
+    const dialogLifecycle = createDialogLifecycle({
+      dialog,
+      initialFocus: () => (bulkUploadCloseRef.current?.disabled ? dialog : bulkUploadCloseRef.current),
+      requestDismiss(reason) {
+        if (reason === 'escape' && !bulkUploadBusyRef.current) setBulkUploadOpen(false);
+      },
+    });
+    dialogLifecycle.open();
+    return () => dialogLifecycle.destroy();
+  }, [bulkUploadOpen]);
 
   const refreshAssets = useCallback(async () => {
     setLoading(true);
@@ -456,8 +479,7 @@ export function AssetsDomain() {
       </section>
 
       {bulkUploadOpen ? (
-        <div className="roma-modal-backdrop" role="presentation">
-          <div className="roma-modal" role="dialog" aria-modal="true" aria-labelledby="roma-assets-bulk-title">
+        <dialog ref={bulkUploadDialogRef} className="roma-modal" aria-labelledby="roma-assets-bulk-title" tabIndex={-1}>
             <h2 id="roma-assets-bulk-title" className="heading-6">
               Bulk upload
             </h2>
@@ -496,6 +518,7 @@ export function AssetsDomain() {
             </table>
             <div className="roma-modal__actions">
               <button
+                ref={bulkUploadCloseRef}
                 className="diet-btn-txt"
                 data-size="md"
                 data-variant="line2"
@@ -516,8 +539,7 @@ export function AssetsDomain() {
                 <span className="diet-btn-txt__label body-m">Close</span>
               </button>
             </div>
-          </div>
-        </div>
+        </dialog>
       ) : null}
     </>
   );

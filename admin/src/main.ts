@@ -27,6 +27,7 @@ import {
   hydrateValuefield,
 } from '@dieter/components';
 import { hydrateObjectManager } from '@dieter/components/object-manager/object-manager';
+import { createDialogLifecycle } from '@dieter/components/shared/dialog-lifecycle';
 import dietIconCss from '@dieter/components/icon/icon.css?raw';
 import { typographySections, typographyRoleCount, getTypographySampleText } from './data/typography';
 import {
@@ -294,7 +295,8 @@ type DieterToken = {
 };
 
 const tokenCache = new Map<DieterTokenKind, DieterToken[]>();
-let tokenEditor: HTMLElement | null = null;
+let tokenEditor: HTMLDialogElement | null = null;
+let tokenEditorLifecycle: ReturnType<typeof createDialogLifecycle> | null = null;
 
 const DIETER_TOKEN_LOAD_ERROR_COPY = 'Dieter tokens could not be loaded. Please try again.';
 const DIETER_TOKEN_SAVE_ERROR_COPY = 'Dieter token could not be saved. Please try again.';
@@ -329,8 +331,10 @@ async function saveDieterToken(kind: DieterTokenKind, token: string, value: stri
 }
 
 function closeTokenEditor() {
+  tokenEditorLifecycle?.destroy();
   tokenEditor?.remove();
   tokenEditor = null;
+  tokenEditorLifecycle = null;
 }
 
 function updateVisibleTokenValue(token: string, value: string) {
@@ -345,60 +349,132 @@ function updateVisibleTokenValue(token: string, value: string) {
 async function openTokenEditor(kind: DieterTokenKind, preferredToken?: string) {
   closeTokenEditor();
 
-  const overlay = document.createElement('div');
-  overlay.className = 'devstudio-token-editor';
-  overlay.innerHTML = `
-    <form class="devstudio-token-editor__panel" data-state="loading" role="dialog" aria-modal="true" aria-labelledby="devstudio-token-editor-title">
-      <div class="devstudio-token-editor__header">
-        <h2 class="heading-4" id="devstudio-token-editor-title">Edit Token</h2>
-        <button class="diet-btn-ic" data-size="sm" data-variant="neutral" type="button" data-token-editor-close aria-label="Close">
-          <span class="diet-btn-ic__icon" aria-hidden="true" data-icon="multiply"></span>
-        </button>
+  const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+  const dialog = document.createElement('dialog');
+  dialog.className = 'devstudio-token-editor';
+  dialog.setAttribute('closedby', 'closerequest');
+  dialog.setAttribute('aria-labelledby', 'devstudio-token-editor-title');
+  dialog.innerHTML = `
+    <form class="devstudio-token-editor__panel" data-state="loading">
+      <div class="devstudio-token-editor__view" data-token-editor-work>
+        <div class="devstudio-token-editor__header">
+          <h2 class="heading-4" id="devstudio-token-editor-title">Edit Token</h2>
+          <button class="diet-btn-ic" data-size="sm" data-variant="neutral" type="button" data-token-editor-close aria-label="Close">
+            <span class="diet-btn-ic__icon" aria-hidden="true" data-icon="multiply"></span>
+          </button>
+        </div>
+        <label class="devstudio-token-editor__field">
+          <span class="label-xs">Token</span>
+          <select class="devstudio-token-editor__select" name="token"></select>
+        </label>
+        <label class="devstudio-token-editor__field">
+          <span class="label-xs">Value</span>
+          <input class="devstudio-token-editor__input" name="value" type="text" autocomplete="off" />
+        </label>
+        <div class="devstudio-token-editor__diff body-xs" aria-live="polite"></div>
+        <div class="devstudio-token-editor__actions">
+          <button class="diet-btn-txt" data-size="md" data-variant="secondary" type="button" data-token-editor-close>
+            <span class="diet-btn-txt__label">Cancel</span>
+          </button>
+          <button class="diet-btn-txt" data-size="md" data-variant="primary" type="submit">
+            <span class="diet-btn-txt__label">Confirm Commit</span>
+          </button>
+        </div>
       </div>
-      <label class="devstudio-token-editor__field">
-        <span class="label-xs">Token</span>
-        <select class="devstudio-token-editor__select" name="token"></select>
-      </label>
-      <label class="devstudio-token-editor__field">
-        <span class="label-xs">Value</span>
-        <input class="devstudio-token-editor__input" name="value" type="text" autocomplete="off" />
-      </label>
-      <div class="devstudio-token-editor__diff body-xs" aria-live="polite"></div>
-      <div class="devstudio-token-editor__actions">
-        <button class="diet-btn-txt" data-size="md" data-variant="secondary" type="button" data-token-editor-close>
-          <span class="diet-btn-txt__label">Cancel</span>
-        </button>
-        <button class="diet-btn-txt" data-size="md" data-variant="primary" type="submit">
-          <span class="diet-btn-txt__label">Confirm Commit</span>
-        </button>
+      <div class="devstudio-token-editor__view" data-token-editor-discard-view hidden>
+        <div class="devstudio-token-editor__header">
+          <h2 class="heading-4" id="devstudio-token-editor-discard-title">Discard changes?</h2>
+        </div>
+        <p class="body-sm">Your uncommitted token value will be lost.</p>
+        <div class="devstudio-token-editor__actions">
+          <button class="diet-btn-txt" data-size="md" data-variant="secondary" type="button" data-token-editor-keep>
+            <span class="diet-btn-txt__label">Keep editing</span>
+          </button>
+          <button class="diet-btn-txt" data-size="md" data-variant="primary" type="button" data-token-editor-discard>
+            <span class="diet-btn-txt__label">Discard</span>
+          </button>
+        </div>
       </div>
     </form>
   `;
-  document.body.append(overlay);
-  tokenEditor = overlay;
-  hydrateIcons(overlay);
+  document.body.append(dialog);
+  tokenEditor = dialog;
+  hydrateIcons(dialog);
 
-  const form = overlay.querySelector<HTMLFormElement>('form');
-  const select = overlay.querySelector<HTMLSelectElement>('select[name="token"]');
-  const input = overlay.querySelector<HTMLInputElement>('input[name="value"]');
-  const diff = overlay.querySelector<HTMLElement>('.devstudio-token-editor__diff');
-  if (!form || !select || !input || !diff) return;
-
-  overlay.addEventListener('click', (event) => {
-    const target = event.target;
-    if (target === overlay || (target instanceof Element && target.closest('[data-token-editor-close]'))) {
-      event.preventDefault();
-      closeTokenEditor();
-    }
-  });
+  const form = dialog.querySelector<HTMLFormElement>('form');
+  const editorView = dialog.querySelector<HTMLElement>('[data-token-editor-work]');
+  const discardView = dialog.querySelector<HTMLElement>('[data-token-editor-discard-view]');
+  const select = dialog.querySelector<HTMLSelectElement>('select[name="token"]');
+  const input = dialog.querySelector<HTMLInputElement>('input[name="value"]');
+  const diff = dialog.querySelector<HTMLElement>('.devstudio-token-editor__diff');
+  const keepEditingButton = dialog.querySelector<HTMLButtonElement>('[data-token-editor-keep]');
+  const discardButton = dialog.querySelector<HTMLButtonElement>('[data-token-editor-discard]');
+  if (!form || !editorView || !discardView || !select || !input || !diff || !keepEditingButton || !discardButton) {
+    closeTokenEditor();
+    return;
+  }
 
   const setStatus = (message: string, state = 'ready') => {
     form.dataset.state = state;
     diff.textContent = message;
   };
 
+  let tokens: DieterToken[] = [];
+  let editorFocus: HTMLElement | null = null;
+  const isDirty = () => {
+    const current = tokens.find((entry) => entry.token === select.value);
+    return Boolean(current && input.value.trim() !== current.value);
+  };
+  const showEditor = (restoreFocus = false) => {
+    discardView.hidden = true;
+    editorView.hidden = false;
+    dialog.setAttribute('aria-labelledby', 'devstudio-token-editor-title');
+    if (restoreFocus) (editorFocus?.isConnected ? editorFocus : input).focus({ preventScroll: true });
+  };
+  const showDiscardConfirmation = () => {
+    editorFocus =
+      document.activeElement instanceof HTMLElement && editorView.contains(document.activeElement)
+        ? document.activeElement
+        : input;
+    editorView.hidden = true;
+    discardView.hidden = false;
+    dialog.setAttribute('aria-labelledby', 'devstudio-token-editor-discard-title');
+    keepEditingButton.focus({ preventScroll: true });
+  };
+  const requestClose = () => {
+    if (isDirty()) {
+      showDiscardConfirmation();
+      return;
+    }
+    closeTokenEditor();
+  };
+  const lifecycle = createDialogLifecycle({
+    dialog,
+    initialFocus: select,
+    requestDismiss(reason) {
+      if (reason === 'backdrop') return;
+      if (!discardView.hidden) {
+        showEditor(true);
+        return;
+      }
+      requestClose();
+    },
+  });
+  tokenEditorLifecycle = lifecycle;
+  lifecycle.open(opener);
+
+  dialog.addEventListener('click', (event) => {
+    const target = event.target;
+    if (target instanceof Element && target.closest('[data-token-editor-close]')) {
+      event.preventDefault();
+      requestClose();
+    }
+  });
+  keepEditingButton.addEventListener('click', () => showEditor(true));
+  discardButton.addEventListener('click', closeTokenEditor);
+
   try {
-    const tokens = (await fetchDieterTokens(kind)).filter((token) => token.editable);
+    tokens = (await fetchDieterTokens(kind)).filter((token) => token.editable);
     select.replaceChildren(
       ...tokens.map((entry) => {
         const option = document.createElement('option');
@@ -446,7 +522,11 @@ async function openTokenEditor(kind: DieterTokenKind, preferredToken?: string) {
       try {
         const nextTokens = await saveDieterToken(kind, token, value);
         const next = nextTokens.find((entry) => entry.token === token);
-        if (next) updateVisibleTokenValue(token, next.value);
+        if (next) {
+          tokens = nextTokens.filter((entry) => entry.editable);
+          input.value = next.value;
+          updateVisibleTokenValue(token, next.value);
+        }
         setStatus(`${token}: committed. CI will rebuild Dieter artifacts.`, 'saved');
       } catch {
         setStatus(DIETER_TOKEN_SAVE_ERROR_COPY, 'error');

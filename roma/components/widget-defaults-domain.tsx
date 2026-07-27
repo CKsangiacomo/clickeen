@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   listWidgetShellAccountDefaultMetadataPaths,
   type AccountFontLibrary,
@@ -11,6 +11,7 @@ import {
   WidgetDefaultsBuilderControls,
   type BuilderControlPayload,
 } from './widget-defaults-builder-controls';
+import { RomaUnsavedChangesDialog } from './roma-unsaved-changes-dialog';
 
 type AccountWidgetDefaultsDocument = {
   accountId: string;
@@ -309,6 +310,9 @@ export function WidgetDefaultsDomain() {
   const [compiledLoading, setCompiledLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [unsavedDialogOpen, setUnsavedDialogOpen] = useState(false);
+  const pendingNavigationRef = useRef<(() => void) | null>(null);
+  const allowNavigationRef = useRef(false);
 
   const widgetTypes = useMemo(
     () =>
@@ -419,15 +423,35 @@ export function WidgetDefaultsDomain() {
     if (!dirty) return;
     const onClick = (event: MouseEvent) => {
       const target = event.target instanceof HTMLElement ? event.target : null;
-      const link = target?.closest('a[href]');
+      const link = target?.closest<HTMLAnchorElement>('a[href]');
       if (!link) return;
-      if (window.confirm('You have unsaved widget defaults. Leave and discard them?')) return;
+      if (allowNavigationRef.current) {
+        allowNavigationRef.current = false;
+        return;
+      }
       event.preventDefault();
       event.stopPropagation();
+      pendingNavigationRef.current = () => {
+        allowNavigationRef.current = true;
+        link.click();
+      };
+      setUnsavedDialogOpen(true);
     };
     document.addEventListener('click', onClick, true);
     return () => document.removeEventListener('click', onClick, true);
   }, [dirty]);
+
+  const keepEditing = useCallback(() => {
+    pendingNavigationRef.current = null;
+    setUnsavedDialogOpen(false);
+  }, []);
+
+  const discardAndContinue = useCallback(() => {
+    const action = pendingNavigationRef.current;
+    pendingNavigationRef.current = null;
+    setUnsavedDialogOpen(false);
+    if (action) window.requestAnimationFrame(action);
+  }, []);
 
   const shellControls = useMemo(() => {
     if (!draft) return [];
@@ -684,64 +708,72 @@ export function WidgetDefaultsDomain() {
   }
 
   return (
-    <section className="widget-defaults">
-      <div className="widget-defaults-toolbar">
-        <div>
-          {compiledLoading ? <p className="body-s" role="status">Loading Builder controls...</p> : null}
-          {error ? <p className="body-s widget-defaults-error" role="alert">{error}</p> : null}
+    <>
+      <section className="widget-defaults">
+        <div className="widget-defaults-toolbar">
+          <div>
+            {compiledLoading ? <p className="body-s" role="status">Loading Builder controls...</p> : null}
+            {error ? <p className="body-s widget-defaults-error" role="alert">{error}</p> : null}
+          </div>
+          <div className="widget-defaults-actions">
+            <button
+              className="diet-btn-txt"
+              data-size="md"
+              data-variant="line2"
+              type="button"
+              disabled={!dirty || saving}
+              onClick={discard}
+            >
+              <span className="diet-btn-txt__label body-m">Discard</span>
+            </button>
+            <button
+              className="diet-btn-txt"
+              data-size="md"
+              data-variant="primary"
+              type="button"
+              disabled={!dirty || saving || saveBlocked}
+              onClick={() => void save()}
+            >
+              <span className="diet-btn-txt__label body-m">{saving ? 'Saving...' : 'Save'}</span>
+            </button>
+          </div>
         </div>
-        <div className="widget-defaults-actions">
-          <button
-            className="diet-btn-txt"
-            data-size="md"
-            data-variant="line2"
-            type="button"
-            disabled={!dirty || saving}
-            onClick={discard}
-          >
-            <span className="diet-btn-txt__label body-m">Discard</span>
-          </button>
-          <button
-            className="diet-btn-txt"
-            data-size="md"
-            data-variant="primary"
-            type="button"
-            disabled={!dirty || saving || saveBlocked}
-            onClick={() => void save()}
-          >
-            <span className="diet-btn-txt__label body-m">{saving ? 'Saving...' : 'Save'}</span>
-          </button>
-        </div>
-      </div>
 
-      <div className="widget-defaults-section">
-        <WidgetDefaultsBuilderControls
-          controls={shellControls}
-          payloads={widgetTypes.map((widgetType) => compiledPayloads[widgetType]).filter(Boolean)}
-          fontLibrary={draft.fontLibrary}
-          scopeLabel="Shell"
-          values={draft.shell}
-          onOps={updateShellOps}
-          onContractError={reportShellContractError}
-          onReadyChange={setShellReady}
-        />
-      </div>
-
-      <div className="widget-defaults-toolbar widget-defaults-toolbar--secondary">
-        <h2 className="heading-4">Widget Defaults</h2>
-      </div>
-      <div className="widget-defaults-widgets">
-        {widgetEntries.map((entry) => (
-          <WidgetDefaultsCoreSection
-            key={entry.widgetType}
-            entry={entry}
+        <div className="widget-defaults-section">
+          <WidgetDefaultsBuilderControls
+            controls={shellControls}
+            payloads={widgetTypes.map((widgetType) => compiledPayloads[widgetType]).filter(Boolean)}
             fontLibrary={draft.fontLibrary}
-            onOps={updateWidgetOps}
-            onContractError={reportCoreContractError}
-            onReadyChange={setCoreReady}
+            scopeLabel="Shell"
+            values={draft.shell}
+            onOps={updateShellOps}
+            onContractError={reportShellContractError}
+            onReadyChange={setShellReady}
           />
-        ))}
-      </div>
-    </section>
+        </div>
+
+        <div className="widget-defaults-toolbar widget-defaults-toolbar--secondary">
+          <h2 className="heading-4">Widget Defaults</h2>
+        </div>
+        <div className="widget-defaults-widgets">
+          {widgetEntries.map((entry) => (
+            <WidgetDefaultsCoreSection
+              key={entry.widgetType}
+              entry={entry}
+              fontLibrary={draft.fontLibrary}
+              onOps={updateWidgetOps}
+              onContractError={reportCoreContractError}
+              onReadyChange={setCoreReady}
+            />
+          ))}
+        </div>
+      </section>
+      <RomaUnsavedChangesDialog
+        open={unsavedDialogOpen}
+        message="You have unsaved widget defaults."
+        onKeepEditing={keepEditing}
+        onDiscard={discardAndContinue}
+      />
+    </>
   );
 }

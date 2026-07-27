@@ -675,25 +675,26 @@ a {
   gap: 8px;
 }
 
-.roma-modal-backdrop {
-  position: fixed;
-  inset: 0;
-  z-index: 1000;
-  display: grid;
-  place-items: center;
-  padding: 20px;
-  background: color-mix(in oklab, var(--color-system-black), transparent 65%);
-}
-
 .roma-modal {
-  width: min(520px, 100%);
+  width: min(520px, calc(100vw - (2 * var(--space-4))));
+  max-width: none;
+  max-height: calc(100dvh - (2 * var(--space-4)));
+  overflow: auto;
   border-radius: var(--control-radius-2xl);
   border: 1px solid var(--color-system-gray-5);
   background: var(--color-system-white);
+  color: var(--color-text);
   box-shadow: var(--shadow-elevated);
   padding: var(--space-4);
-  display: grid;
   gap: var(--space-3);
+}
+
+.roma-modal[open] {
+  display: grid;
+}
+
+.roma-modal::backdrop {
+  background: color-mix(in oklab, var(--color-system-black), transparent 65%);
 }
 
 .roma-modal h2 {
@@ -709,6 +710,10 @@ a {
   justify-content: flex-end;
   gap: var(--space-3);
   margin-top: 4px;
+}
+
+.roma-upsell-dialog__content {
+  min-height: 96px;
 }
 
 .roma-builder__iframe {

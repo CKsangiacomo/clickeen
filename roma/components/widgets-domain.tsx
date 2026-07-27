@@ -2,11 +2,13 @@
 
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { createDialogLifecycle, type DialogLifecycle } from '../../dieter/components/shared/dialog-lifecycle';
 import { resolveAccountShellErrorCopy, resolveAccountShellReason } from '../lib/account-shell-copy';
 import { useRomaAccountApi } from './account-api';
 import { prefetchWidgetEditorArtifact } from './widget-editor-artifact';
 import { useRomaAccountContext } from './roma-account-context';
+import { RomaUpsellDialog } from './roma-upsell-dialog';
 import {
   buildBuilderRoute,
   DEFAULT_INSTANCE_DISPLAY_NAME,
@@ -28,6 +30,78 @@ type WidgetUpgradePrompt = {
   current: number;
   limit: number;
 };
+
+function WidgetUpgradePromptDialog({
+  prompt,
+  onClose,
+  onUpgrade,
+}: {
+  prompt: WidgetUpgradePrompt | null;
+  onClose: () => void;
+  onUpgrade: (reason: string) => void;
+}) {
+  const dialogRef = useRef<HTMLDialogElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const lifecycleRef = useRef<DialogLifecycle | null>(null);
+  const onCloseRef = useRef(onClose);
+
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
+
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    if (!dialog) return;
+    const lifecycle = createDialogLifecycle({
+      dialog,
+      initialFocus: () => closeButtonRef.current,
+      requestDismiss: () => onCloseRef.current(),
+    });
+    lifecycleRef.current = lifecycle;
+    return () => lifecycle.destroy();
+  }, []);
+
+  useEffect(() => {
+    const lifecycle = lifecycleRef.current;
+    if (!lifecycle) return;
+    if (prompt) lifecycle.open();
+    else lifecycle.close();
+  }, [prompt]);
+
+  return (
+    <dialog ref={dialogRef} className="roma-modal" aria-labelledby="roma-widgets-upgrade-title">
+      <h2 id="roma-widgets-upgrade-title" className="heading-4">
+        {prompt?.message}
+      </h2>
+      {prompt ? (
+        <p className="body-m">
+          You are using {prompt.current} of {prompt.limit} widget instances.
+        </p>
+      ) : null}
+      <div className="roma-modal__actions">
+        <button
+          ref={closeButtonRef}
+          className="diet-btn-txt"
+          data-size="md"
+          data-variant="neutral"
+          type="button"
+          onClick={onClose}
+        >
+          <span className="diet-btn-txt__label body-m">Close</span>
+        </button>
+        <button
+          className="diet-btn-txt"
+          data-size="md"
+          data-variant="primary"
+          type="button"
+          onClick={() => prompt && onUpgrade(prompt.message)}
+        >
+          <span className="diet-btn-txt__label body-m">Upgrade</span>
+        </button>
+      </div>
+    </dialog>
+  );
+}
 
 function normalizeUpgradePrompt(payload: unknown): WidgetUpgradePrompt | null {
   if (!payload || typeof payload !== 'object' || Array.isArray(payload)) return null;
@@ -73,6 +147,7 @@ export function WidgetsDomain() {
   const [activeActionKey, setActiveActionKey] = useState<string | null>(null);
   const [mutationError, setMutationError] = useState<string | null>(null);
   const [upgradePrompt, setUpgradePrompt] = useState<WidgetUpgradePrompt | null>(null);
+  const [upsellReason, setUpsellReason] = useState<string | null>(null);
   const [widgetInstances, setWidgetInstances] = useState<WidgetInstance[]>(() => cachedWidgets?.data.instances ?? []);
   const [catalog, setCatalog] = useState<WidgetCatalogOption[]>(() => cachedWidgets?.data.catalog ?? []);
   const [domainLoading, setDomainLoading] = useState(() => !cachedWidgets);
@@ -588,37 +663,19 @@ export function WidgetsDomain() {
           </section>
         );
       })}
-      {upgradePrompt ? (
-        <div className="roma-modal-backdrop" role="presentation">
-          <div className="roma-modal" role="dialog" aria-modal="true" aria-labelledby="roma-widgets-upgrade-title">
-            <h2 id="roma-widgets-upgrade-title" className="heading-4">
-              {upgradePrompt.message}
-            </h2>
-            <p className="body-m">
-              You are using {upgradePrompt.current} of {upgradePrompt.limit} widget instances.
-            </p>
-            <div className="roma-modal__actions">
-              <button
-                className="diet-btn-txt"
-                data-size="md"
-                data-variant="neutral"
-                type="button"
-                onClick={() => setUpgradePrompt(null)}
-              >
-                <span className="diet-btn-txt__label body-m">Close</span>
-              </button>
-              <Link
-                href="/billing"
-                className="diet-btn-txt"
-                data-size="md"
-                data-variant="primary"
-              >
-                <span className="diet-btn-txt__label body-m">Upgrade</span>
-              </Link>
-            </div>
-          </div>
-        </div>
-      ) : null}
+      <WidgetUpgradePromptDialog
+        prompt={upgradePrompt}
+        onClose={() => setUpgradePrompt(null)}
+        onUpgrade={(reason) => {
+          setUpgradePrompt(null);
+          setUpsellReason(reason);
+        }}
+      />
+      <RomaUpsellDialog
+        open={Boolean(upsellReason)}
+        reason={upsellReason ?? undefined}
+        onClose={() => setUpsellReason(null)}
+      />
     </>
   );
 }

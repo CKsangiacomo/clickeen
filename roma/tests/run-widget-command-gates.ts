@@ -70,8 +70,10 @@ async function testBuilderHandlesBobUpsell(): Promise<void> {
   const bobDocs = await readFile(new URL('../../documentation/services/bob.md', import.meta.url), 'utf8');
   const upsellPopup = await readFile(new URL('../../bob/components/UpsellPopup.tsx', import.meta.url), 'utf8');
   assert.match(builderSource, /type BobUpsellMessage = \{\s+type: 'bob:upsell'/);
-  assert.match(builderSource, /const confirmDiscardBuilderEdits = useCallback/);
-  assert.match(builderSource, /if \(data\.type === 'bob:upsell'\) \{\s+if \(data\.cta === 'upgrade' && confirmDiscardBuilderEdits\(\)\) router\.push\('\/billing'\);/);
+  assert.match(builderSource, /if \(data\.type === 'bob:upsell'\) \{\s+if \(data\.cta === 'upgrade'\) setUpsellReason/);
+  assert.match(builderSource, /<RomaUpsellDialog/);
+  assert.doesNotMatch(builderSource, /confirmDiscardBuilderEdits/);
+  assert.doesNotMatch(builderSource, /router\.push\('\/billing'\)/);
   assert.match(bobDocs, /"type": "bob:upsell"/);
   assert.match(bobDocs, /"payload": "\[commandPayload\]"/);
   assert.doesNotMatch(bobDocs, /"result": "\[commandResult\]"/);
@@ -86,7 +88,7 @@ async function run(): Promise<void> {
   await testPublishGateBeforeTransition();
   console.log('PASS publish gate uses list-facts and runs before Tokyo publish transition');
   await testBuilderHandlesBobUpsell();
-  console.log('PASS Bob upsell CTA routes to billing without raw detail copy');
+  console.log('PASS Bob upsell CTA opens the Roma scaffold without discarding Builder work');
 }
 
 run().catch((error) => {

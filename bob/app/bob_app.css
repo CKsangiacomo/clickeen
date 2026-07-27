@@ -490,27 +490,38 @@ body {
   pointer-events: auto;
 }
 
-.ck-upsellOverlay {
-  position: fixed;
-  inset: 0;
-  z-index: 1000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: var(--space-6);
-  background: color-mix(in oklab, var(--color-system-black), transparent 70%);
-}
-
 .ck-upsellModal {
-  width: min(520px, 100%);
+  width: min(
+    520px,
+    calc(
+      100vw - max(var(--space-4), env(safe-area-inset-left)) -
+        max(var(--space-4), env(safe-area-inset-right))
+    )
+  );
+  max-width: none;
+  max-height: calc(
+    100dvh - max(var(--space-4), env(safe-area-inset-top)) -
+      max(var(--space-4), env(safe-area-inset-bottom))
+  );
+  margin: auto;
+  box-sizing: border-box;
+  overflow: auto;
   border-radius: var(--control-radius-lg);
   background: var(--color-system-white);
+  color: var(--color-system-black);
   border: 1px solid color-mix(in oklab, var(--color-system-black), transparent 88%);
   box-shadow: 0 24px 72px color-mix(in oklab, var(--color-system-black), transparent 82%);
   padding: var(--space-5);
+}
+
+.ck-upsellModal[open] {
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
+}
+
+.ck-upsellModal::backdrop {
+  background: color-mix(in oklab, var(--color-system-black), transparent 70%);
 }
 
 .ck-upsellModal__header {
@@ -523,93 +534,8 @@ body {
   opacity: 0.7;
 }
 
-.ck-upsellModal__detail {
-  opacity: 0.65;
-}
-
 .ck-upsellModal__actions {
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
-}
-
-.ck-publishOverlay {
-  position: fixed;
-  inset: 0;
-  z-index: 1000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: var(--space-6);
-  background: color-mix(in oklab, var(--color-system-black), transparent 70%);
-}
-
-.ck-publishModal {
-  width: min(720px, 100%);
-  max-height: min(780px, 100%);
-  overflow: auto;
-  border-radius: var(--control-radius-lg);
-  background: var(--color-system-white);
-  border: 1px solid color-mix(in oklab, var(--color-system-black), transparent 88%);
-  box-shadow: 0 24px 72px color-mix(in oklab, var(--color-system-black), transparent 82%);
-  padding: var(--space-5);
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-4);
-}
-
-.ck-publishModal__header {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-}
-
-.ck-publishModal__content {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-4);
-}
-
-.ck-publishModal__actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: var(--space-2);
-}
-
-.ck-websiteOverlay {
-  position: fixed;
-  inset: 0;
-  z-index: 1000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: var(--space-6);
-  background: color-mix(in oklab, var(--color-system-black), transparent 70%);
-}
-
-.ck-websiteModal {
-  width: min(520px, 100%);
-  max-height: min(640px, 100%);
-  overflow: auto;
-  border-radius: var(--control-radius-lg);
-  background: var(--color-system-white);
-  border: 1px solid color-mix(in oklab, var(--color-system-black), transparent 88%);
-  box-shadow: 0 24px 72px color-mix(in oklab, var(--color-system-black), transparent 82%);
-  padding: var(--space-5);
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-4);
-}
-
-.ck-websiteModal__header {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-}
-
-.ck-websiteModal__actions {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-end;
   gap: var(--space-2);
 }

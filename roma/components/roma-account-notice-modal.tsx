@@ -1,7 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { createDialogLifecycle } from '../../dieter/components/shared/dialog-lifecycle';
 import { formatAccountTierLabel } from '../lib/format';
 import { useRomaAccountApi } from './account-api';
 import { useRomaAccountContext } from './roma-account-context';
@@ -61,6 +62,20 @@ export function RomaAccountNoticeModal() {
 
   const [dismissError, setDismissError] = useState<string | null>(null);
   const [dismissLoading, setDismissLoading] = useState(false);
+  const dialogRef = useRef<HTMLDialogElement>(null);
+
+  useEffect(() => {
+    if (!noticeOpen) return;
+    const dialog = dialogRef.current;
+    if (!dialog) return;
+    const dialogLifecycle = createDialogLifecycle({
+      dialog,
+      initialFocus: '[href="/settings"]',
+      requestDismiss: () => {},
+    });
+    dialogLifecycle.open();
+    return () => dialogLifecycle.destroy();
+  }, [noticeOpen]);
 
   const dismiss = async () => {
     if (!accountId || !noticeOpen) return;
@@ -83,28 +98,26 @@ export function RomaAccountNoticeModal() {
   const summary = summarizeTierDrop(fromTier, toTier);
 
   return (
-    <div className="roma-modal-backdrop" role="presentation">
-      <div className="roma-modal" role="dialog" aria-modal="true" aria-labelledby="roma-notice-title">
-        <h2 className="heading-5" id="roma-notice-title">
-          {summary.title}
-        </h2>
-        <div className="roma-inline-stack">
-          {summary.lines.map((line) => (
-            <p className="body-m" key={line}>
-              {line}
-            </p>
-          ))}
-        </div>
-        {dismissError ? <p className="body-m" role="alert">{dismissError}</p> : null}
-        <div className="roma-modal__actions">
-          <Link className="diet-btn-txt" data-size="md" data-variant="line2" href="/settings">
-            <span className="diet-btn-txt__label body-m">Open settings</span>
-          </Link>
-          <button className="diet-btn-txt" data-size="md" data-variant="primary" type="button" onClick={() => void dismiss()} disabled={dismissLoading}>
-            <span className="diet-btn-txt__label body-m">{dismissLoading ? 'Dismissing...' : 'Dismiss'}</span>
-          </button>
-        </div>
+    <dialog ref={dialogRef} className="roma-modal" aria-labelledby="roma-notice-title">
+      <h2 className="heading-5" id="roma-notice-title">
+        {summary.title}
+      </h2>
+      <div className="roma-inline-stack">
+        {summary.lines.map((line) => (
+          <p className="body-m" key={line}>
+            {line}
+          </p>
+        ))}
       </div>
-    </div>
+      {dismissError ? <p className="body-m" role="alert">{dismissError}</p> : null}
+      <div className="roma-modal__actions">
+        <Link className="diet-btn-txt" data-size="md" data-variant="line2" href="/settings">
+          <span className="diet-btn-txt__label body-m">Open settings</span>
+        </Link>
+        <button className="diet-btn-txt" data-size="md" data-variant="primary" type="button" onClick={() => void dismiss()} disabled={dismissLoading}>
+          <span className="diet-btn-txt__label body-m">{dismissLoading ? 'Dismissing...' : 'Dismiss'}</span>
+        </button>
+      </div>
+    </dialog>
   );
 }
