@@ -1,7 +1,6 @@
 # 126E - PRD: Interactions
 
-Status: PRE-EXECUTION STEPS 6-8 COMPLETE - exact-tree review green at
-`ec1ed486`; no Step-9 execution credit.
+Status: STEP 9 GREEN - EXECUTED AND VERIFIED.
 Parent: `126__PRD__UI_Optimization_Program.md` (MAMA).
 Series order: 126E of 126A-126M.
 KB doc: `documentation/engineering/UI/interactions.md`.
@@ -415,11 +414,12 @@ meaning. The final Step-9 plan must use this non-overlapping assignment:
 | --- | --- | --- |
 | Interaction vocabulary, feedback durability, D3 meaning, and acceptance assertions | 126E | One product law; no generic framework and no product-code write set. |
 | Dialog lifecycle and same-layer transition mechanics | 126K | Escape/backdrop/focus/return-focus/no-stacking behavior follows the accepted D1/D3 matrix. |
-| Roma upsell scaffold and the two current host transitions | 126M | One Roma component; Widgets and Bob intent open it in place; no `/billing` Upgrade route and no Builder discard prompt. |
+| Roma upsell scaffold and the two current host transitions | 126K | One Roma component; Widgets and Bob intent open it in place; no `/billing` Upgrade route and no Builder discard prompt. |
+| Final Roma and cross-surface regression | 126M | Preserve and verify the completed 126K interaction behavior while finishing Roma UI integration. |
 | Route/policy enforcement | Existing route owners | Preserve 402 and entitlement enforcement unchanged. |
 
 This is deliberate inside-out execution. 126E must not build a temporary Roma
-modal that 126K or 126M would immediately replace.
+modal that 126K would immediately replace.
 
 ## Detailed Blast Radius And Deletion Map
 
@@ -430,10 +430,10 @@ modal that 126K or 126M would immediately replace.
 | Copilot | `bob/components/CopilotPane.tsx`, Copilot session/route files | Preserve current conversation, confirmed apply, and undo. | No fake Agent Activity. |
 | Bulk assets | `roma/components/assets-domain.tsx` and account asset routes | Preserve current rows, aggregate progress, terminal result, and visible failures. | No new upload subsystem or added Upgrade entry point without separate product law. |
 | Roma state surfaces | account shell plus Roma domain components named in the Step-6 audit | Preserve current applicable-state behavior. | No global store/state machine and no fake states for static domains. |
-| Widgets Upgrade | `roma/components/widgets-domain.tsx` | 126M replaces the `/billing` link with same-layer transition to the one scaffold. | Route/policy 402 and prompt facts remain unchanged. |
-| Bob Upgrade host | `roma/components/builder-domain.tsx` | 126M opens the same scaffold from `bob:upsell`. Delete discard guard and `/billing` route from this branch only. | Real Builder navigation retains discard protection; Bob intent type remains. |
-| Upsell component | one new Roma-owned component, exact name finalized by 126M | Render honest pre-GA content with no commercial operation. | No Bob duplicate, global store, billing adapter, fake checkout, or sales/contact flow. |
-| Tests | `roma/tests/run-widget-command-gates.ts` | 126M deletes the old discard-and-route assertion and proves both entries reach one scaffold. | Route enforcement assertions remain. |
+| Widgets Upgrade | `roma/components/widgets-domain.tsx` | 126K replaces the `/billing` link with same-layer transition to the one scaffold. | Route/policy 402 and prompt facts remain unchanged. |
+| Bob Upgrade host | `roma/components/builder-domain.tsx` | 126K opens the same scaffold from `bob:upsell`. Delete discard guard and `/billing` route from this branch only. | Real Builder navigation retains discard protection; Bob intent type remains. |
+| Upsell component | `roma/components/roma-upsell-dialog.tsx` | 126K renders honest pre-GA content with no commercial operation. | No Bob duplicate, global store, billing adapter, fake checkout, or sales/contact flow. |
+| Tests | `roma/tests/run-widget-command-gates.ts`, `e2e/widgets/dialog-contracts.spec.ts` | 126K deletes the old discard-and-route assertion and proves both entries reach one scaffold; 126M reruns the integrated regression. | Route enforcement assertions remain. |
 | Billing | `roma/components/settings-domain.tsx`, `billing-domain.tsx`, `roma/lib/domains.ts` | Preserve ordinary current-plan navigation. | Do not remove Billing or imply it changes plan. |
 | Docs | interaction/dialog/Bob/Roma living docs | Already correct; update only if final component naming changes wording. | Do not restore toast doctrine or give 126E dialog-mechanics ownership. |
 
@@ -441,7 +441,7 @@ modal that 126K or 126M would immediately replace.
 
 None.
 
-### Exact behavior deleted later by 126M because of 126E law
+### Exact behavior deleted later by 126K because of 126E law
 
 - Widgets `Upgrade -> /billing`.
 - `confirmDiscardBuilderEdits()` inside the `bob:upsell` branch only.
@@ -506,19 +506,22 @@ or authorized merely to make this gate produce a commit.
 
 Before 126E closes, the integrated plan must carry these exact requirements:
 
-- 126K owns dialog mechanics and same-layer transition behavior.
-- 126M owns the one Roma scaffold and both current Upgrade transitions.
-- 126M deletes the two `/billing` Upgrade paths and the Bob-branch discard
+- 126K owns dialog mechanics, the one Roma scaffold, and both current Upgrade
+  transitions.
+- 126K deletes the two `/billing` Upgrade paths and the Bob-branch discard
   invocation while preserving real navigation guards.
-- 126M updates `run-widget-command-gates.ts` to prove both entries open one
-  scaffold and that route/policy 402 enforcement remains intact.
-- 126M browser evidence proves Bob unsaved edits survive opening and closing the
+- 126K updates `run-widget-command-gates.ts` and adds focused dialog browser
+  coverage to prove both entries open one scaffold and that route/policy 402
+  enforcement remains intact.
+- 126K browser evidence proves Bob unsaved edits survive opening and closing the
   scaffold.
+- 126M reruns that completed behavior as part of final Roma and cross-surface
+  integration proof; it does not implement a second scaffold or transition.
 
 Green means those requirements appear once in the final integrated Step-9 plan,
 not copied as competing implementations across 126E, 126K, and 126M.
 
-### Final cross-slice acceptance after 126M
+### Final cross-slice acceptance after 126K, regressed by 126M
 
 ```bash
 pnpm --filter @clickeen/roma test:widget-command-gates
@@ -537,6 +540,26 @@ Browser evidence must prove:
    contact operation occurs.
 5. Ordinary `Open billing` navigation still opens the current-plan surface.
 6. Route/policy enforcement still returns the product's 402 response.
+
+## Step-9 Execution Record
+
+Step 9 is green on unchanged product source at
+`a26e2d200616eb144cdaf95a670928e005003dd4`.
+
+- 126E added no product code, framework, state store, command state machine,
+  toast/snackbar system, product data, or managed-service mutation.
+- Bob translation-panel regression, Bob typecheck, and Roma typecheck passed.
+- Current source contains no new shared toast/snackbar dependency, interaction
+  store, generic command state machine, Save-triggered translation path, or raw
+  reason-key JSX.
+- Current Save, translation terminal feedback, Copilot apply/undo, assets bulk
+  results, Roma domain state, and bounded copy behavior remain owned by their
+  existing workflows.
+- The pre-execution ownership mismatch was corrected: 126K implements the one
+  Roma upsell scaffold and both Upgrade transitions; 126M only regresses that
+  completed behavior during final Roma integration.
+- No deploy was required because 126E changed no product source, generated
+  artifact, product data, or managed-service state.
 
 ## Step-7 Done List
 

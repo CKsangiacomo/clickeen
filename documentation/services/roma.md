@@ -61,14 +61,15 @@ performs no purchase, plan mutation, provider call, fake success, or invented
 contact operation. When the intent starts in a plan-limit prompt, Roma replaces
 that prompt instead of stacking dialogs. Ordinary Billing navigation remains
 valid for inspecting the current plan. Current Upgrade-to-`/billing` routing is
-a 126M execution gap. The current `bob:upsell` branch also invokes the Builder
+a 126K execution gap. The current `bob:upsell` branch also invokes the Builder
 discard guard; execution removes that invocation from this in-place transition
 while preserving discard protection for real navigation.
 
 The paragraphs above are accepted product behavior, not a claim that every
 current Roma modal already implements it. Current lifecycle mismatches across
-the named dialogs, plus the two in-app `window.confirm` guards, are 126K/126M
-execution gaps; native browser `beforeunload` remains.
+the named dialogs, the upsell transitions, and the two in-app `window.confirm`
+guards are 126K execution gaps. 126M later verifies the completed behavior
+during final Roma integration; native browser `beforeunload` remains.
 
 ## Runtime Routes
 

@@ -4,6 +4,10 @@ Status: GREEN.
 Reviewed tree: `ec1ed486` (`docs(126E): limit D3 to existing upgrade commands`).
 Review date: 2026-07-15.
 
+Execution correction: the reviewed behavior remains accepted, but final
+implementation ownership moved from 126M to 126K so the scaffold and its dialog
+mechanics are implemented once. 126M performs final integration regression.
+
 This is pre-execution evidence only. It approves the 126E Step-7 plan for later
 Step-9 execution after every 126A-126M domain completes Step 8. It grants no
 product-code, deploy, managed-service, or product-data execution credit.
@@ -30,7 +34,8 @@ entry requires separate product law.
 
 - 126E owns interaction meaning and has no product-code write set.
 - 126K owns dialog lifecycle and same-layer transition mechanics.
-- 126M owns one Roma scaffold plus the Widgets and Bob-host transitions.
+- 126K owns one Roma scaffold plus the Widgets and Bob-host transitions.
+- 126M verifies that completed behavior during final Roma integration.
 - Widgets stops linking its Upgrade action to `/billing`.
 - The `bob:upsell` branch stops invoking the discard guard and stops navigating
   to `/billing`; real navigation retains discard protection.

@@ -1,7 +1,7 @@
 # 126E - Current-Source Gap Audit: Interactions
 
-Status: STEP 6 COMPLETE - current-source audit finalized and Step-7 plan
-reviewed at exact tree `ec1ed486`; no Step-9 execution credit.
+Status: FROZEN STEP-6 PRE-EXECUTION AUDIT - Step-9 ownership was reconciled to
+126K before 126E closed; see the PRD execution record.
 PRD: `../126E__PRD__Interactions.md`.
 
 This audit replaces the frozen point-in-time 126E audit. It separates behavior
@@ -95,13 +95,15 @@ enforcement remains unchanged.
 | --- | --- | --- |
 | Interaction meaning: Upgrade opens one honest pre-GA destination and preserves work | 126E doctrine | Defines acceptance only. |
 | Dialog lifecycle, Escape/backdrop, focus containment, return focus, and no modal stacking | 126K | 126E does not implement dialog mechanics. |
-| `RomaUpsellScaffold`, Widgets prompt transition, Bob host-intent transition, and Roma tests | 126M | 126E supplies exact product assertions; 126M edits the screen files once. |
-| Bob local plan-limit prompt and typed `bob:upsell` message | Preserve in Bob; 126K may adjust mechanics only if its final audit proves a gap | No duplicate scaffold and no change to command transport. |
+| `RomaUpsellDialog`, Widgets prompt transition, Bob host-intent transition, and Roma tests | 126K | 126E supplies exact product assertions; 126K implements the dialog and transitions once. |
+| Bob local plan-limit prompt and typed `bob:upsell` message | Preserve in Bob; 126K migrates only its dialog mechanics | No duplicate scaffold and no change to command transport. |
+| Final Roma and cross-surface regression | 126M | Verify completed 126K behavior survives Roma integration; do not reimplement it. |
 | Route/policy enforcement and 402 payloads | Existing product routes | No route or policy edits. |
 
 This assignment prevents 126E from building a temporary screen/modal that 126K
-or 126M would immediately rewrite. The final integrated Step-9 plan must carry
-the D3 assertions into 126M and leave the files below out of the 126E write set.
+would immediately rewrite. The final integrated Step-9 plan must carry the D3
+implementation into 126K, then regress it in 126M, and leave the files below
+out of the 126E write set.
 
 ## Exact 126E Write And Delete Map
 
@@ -111,9 +113,9 @@ None.
 
 126E is a behavioral authority layer. Current Save, translation, Copilot, bulk
 upload, state, and reason-copy behavior already satisfy it. The one remaining
-consumer gap is assigned once to 126M after 126K settles dialog mechanics.
+consumer gap is assigned once to 126K with the dialog mechanics it requires.
 
-### Later 126M write set required by this audit
+### Later 126K write set required by this audit
 
 - `roma/components/widgets-domain.tsx`
 - `roma/components/builder-domain.tsx`
@@ -121,7 +123,7 @@ consumer gap is assigned once to 126M after 126K settles dialog mechanics.
 - `roma/tests/run-widget-command-gates.ts`
 - Roma/UI service docs only if final component naming changes current doctrine
 
-### Exact behavioral deletions in 126M
+### Exact behavioral deletions in 126K
 
 - Delete the Widgets `Upgrade` link to `/billing`.
 - Delete `confirmDiscardBuilderEdits()` from the `bob:upsell` branch only.
@@ -171,6 +173,6 @@ A shared mega-map would increase coupling without solving a current failure.
 ## Step-6 Verdict
 
 GREEN for Step 6. Current source proves that 126E does not need a broad
-interaction refactor. It needs a narrow ownership correction in the final plan:
-preserve already-correct interaction behavior, and execute the one D3 consumer
-change once in 126M using 126K mechanics.
+interaction refactor. Step 9 corrected the pre-execution ownership split:
+preserve already-correct interaction behavior, execute the one D3 consumer
+change once in 126K, and regress it during 126M integration.
