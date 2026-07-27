@@ -15,5 +15,3 @@ export { hydrateTabs } from './tabs/tabs';
 export { hydrateSegmented } from './segmented/segmented';
 export { hydratePopAddLink } from './popaddlink/popaddlink';
 export { hydrateChoiceTiles } from './choice-tiles/choice-tiles';
-export { hydrateTextrename } from './textrename/textrename';
-export { hydrateToggle } from './toggle/toggle';

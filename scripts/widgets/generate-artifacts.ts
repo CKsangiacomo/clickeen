@@ -78,9 +78,7 @@ const loadLocalStencil: ComponentStencilLoader = async (type): Promise<Component
   const specPath = path.join(componentRoot, `${component}.spec.json`);
   return {
     stencil: fs.readFileSync(stencilPath, 'utf8'),
-    ...(fs.existsSync(specPath)
-      ? { spec: JSON.parse(fs.readFileSync(specPath, 'utf8')) as ComponentStencil['spec'] }
-      : {}),
+    spec: JSON.parse(fs.readFileSync(specPath, 'utf8')) as ComponentStencil['spec'],
   };
 };
 

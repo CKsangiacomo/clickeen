@@ -42,9 +42,8 @@ import template16 from "../../../dieter/components/slider/slider.html?raw";
 import template17 from "../../../dieter/components/tabs/tabs.html?raw";
 import template18 from "../../../dieter/components/textedit/textedit.html?raw";
 import template19 from "../../../dieter/components/textfield/textfield.html?raw";
-import template20 from "../../../dieter/components/textrename/textrename.html?raw";
-import template21 from "../../../dieter/components/toggle/toggle.html?raw";
-import template22 from "../../../dieter/components/valuefield/valuefield.html?raw";
+import template20 from "../../../dieter/components/toggle/toggle.html?raw";
+import template21 from "../../../dieter/components/valuefield/valuefield.html?raw";
 import css0 from "../../../dieter/components/agent-activity/agent-activity.css?raw";
 import css1 from "../../../dieter/components/bulk-edit/bulk-edit.css?raw";
 import css2 from "../../../dieter/components/button/button.css?raw";
@@ -66,9 +65,8 @@ import css17 from "../../../dieter/components/slider/slider.css?raw";
 import css18 from "../../../dieter/components/tabs/tabs.css?raw";
 import css19 from "../../../dieter/components/textedit/textedit.css?raw";
 import css20 from "../../../dieter/components/textfield/textfield.css?raw";
-import css21 from "../../../dieter/components/textrename/textrename.css?raw";
-import css22 from "../../../dieter/components/toggle/toggle.css?raw";
-import css23 from "../../../dieter/components/valuefield/valuefield.css?raw";
+import css21 from "../../../dieter/components/toggle/toggle.css?raw";
+import css22 from "../../../dieter/components/valuefield/valuefield.css?raw";
 
 export const specModules: Record<string, ComponentSpec> = {
   "../../../dieter/components/agent-activity/agent-activity.spec.json": spec0 as ComponentSpec,
@@ -116,9 +114,8 @@ export const templateModules: Record<string, string> = {
   "../../../dieter/components/tabs/tabs.html": template17,
   "../../../dieter/components/textedit/textedit.html": template18,
   "../../../dieter/components/textfield/textfield.html": template19,
-  "../../../dieter/components/textrename/textrename.html": template20,
-  "../../../dieter/components/toggle/toggle.html": template21,
-  "../../../dieter/components/valuefield/valuefield.html": template22,
+  "../../../dieter/components/toggle/toggle.html": template20,
+  "../../../dieter/components/valuefield/valuefield.html": template21,
 };
 
 export const cssModules: Record<string, string> = {
@@ -143,7 +140,6 @@ export const cssModules: Record<string, string> = {
   "../../../dieter/components/tabs/tabs.css": css18,
   "../../../dieter/components/textedit/textedit.css": css19,
   "../../../dieter/components/textfield/textfield.css": css20,
-  "../../../dieter/components/textrename/textrename.css": css21,
-  "../../../dieter/components/toggle/toggle.css": css22,
-  "../../../dieter/components/valuefield/valuefield.css": css23,
+  "../../../dieter/components/toggle/toggle.css": css21,
+  "../../../dieter/components/valuefield/valuefield.css": css22,
 };

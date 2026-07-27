@@ -15,8 +15,6 @@ import {
   hydrateTabs,
   hydrateTextedit,
   hydrateTextfield,
-  hydrateTextrename,
-  hydrateToggle,
   hydrateValuefield,
 } from '../../../dieter/components';
 import { hydrateObjectManager } from '../../../dieter/components/object-manager/object-manager';
@@ -70,8 +68,6 @@ export function runHydrators(scope: HTMLElement, deps: DieterHydratorDeps): void
   hydrateTabs(scope);
   hydrateTextedit(scope);
   hydrateTextfield(scope);
-  hydrateTextrename(scope);
-  hydrateToggle(scope);
   hydrateValuefield(scope);
   hydrateIcons(scope);
 }

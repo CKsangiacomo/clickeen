@@ -20,7 +20,6 @@ import {
   hydratePopAddLink,
   hydrateSegmented,
   hydrateTabs,
-  hydrateTextrename,
   hydrateTextedit,
   hydrateTextfield,
   hydrateValuefield,
@@ -259,7 +258,6 @@ function hydrateDieterComponents(scope: Element | DocumentFragment): void {
   hydrateTextfield(scope);
   hydrateValuefield(scope);
   hydrateTextedit(scope);
-  hydrateTextrename(scope);
   hydrateDropdownActions(scope);
   hydrateDropdownBorder(scope);
   hydrateDropdownFill(scope, { accountAssets: showcaseAccountAssets });

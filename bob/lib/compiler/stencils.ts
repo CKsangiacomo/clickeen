@@ -14,7 +14,7 @@ type WidgetI18nContext = {
   itemKey?: string | null;
 };
 
-export type ComponentStencil = { stencil: string; spec?: ComponentSpec };
+export type ComponentStencil = { stencil: string; spec: ComponentSpec };
 export type ComponentStencilLoader = (type: string) => Promise<ComponentStencil>;
 
 function decodeHtmlEntities(value: string): string {
@@ -129,11 +129,11 @@ async function renderNestedTooldrawerFields(
 export async function buildContext(
   component: string,
   attrs: TooldrawerAttrs,
-  spec?: ComponentSpec,
+  spec: ComponentSpec,
   widgetContext?: WidgetI18nContext,
   loadStencil?: ComponentStencilLoader,
 ): Promise<Record<string, unknown>> {
-  const defaults = spec?.defaults?.[0];
+  const defaults = spec.defaults?.[0];
   const size = attrs.size || (defaults?.context?.size as string) || 'md';
   const indexToken = attrs.indexToken || attrs['index-token'] || attrs['data-index-token'] || '__INDEX__';
 

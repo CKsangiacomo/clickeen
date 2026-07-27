@@ -38,9 +38,7 @@ const loadStencil: ComponentStencilLoader = async (type): Promise<ComponentStenc
   const specPath = path.join(root, `${type}.spec.json`);
   return {
     stencil: fs.readFileSync(path.join(root, `${type}.html`), 'utf8'),
-    ...(fs.existsSync(specPath)
-      ? { spec: JSON.parse(fs.readFileSync(specPath, 'utf8')) as ComponentStencil['spec'] }
-      : {}),
+    spec: JSON.parse(fs.readFileSync(specPath, 'utf8')) as ComponentStencil['spec'],
   };
 };
 

@@ -65,8 +65,8 @@ The Step-6 audit proves:
 - `textrename` has no product consumer;
 - `toggle.ts` ships custom Enter behavior for a native checkbox but is not an
   active exported/hydrated product contract;
-- `loadComponentStencil()` treats spec 404 as optional although every caller is
-  a ToolDrawer field;
+- the local component loader can return no spec although every caller is a
+  ToolDrawer field;
 - all component-typed fields currently used by the eight widget specs resolve
   to existing Dieter specs, so making spec loading fail closed does not preserve
   or invent an optional field lane;
@@ -104,8 +104,8 @@ These counts describe different inventories and must stay qualified.
 its spec is incomplete. HTML failure and spec failure therefore use the same
 fail-closed rule:
 
-- non-2xx stencil response throws;
-- non-2xx spec response, including 404, throws;
+- missing stencil source throws;
+- missing spec source throws;
 - no empty/default context substitutes for a missing spec;
 - CSS-only presentation primitives do not call this loader and do not need fake
   specs.
@@ -191,20 +191,19 @@ Execute in order. A slice does not advance until its focused checks are green.
 
 ### Slice I1 - Fail Closed And Delete Dead Surface
 
-1. Change `bob/lib/compiler/stencils.ts` so any failed spec response, including
-   404, throws a component-spec error.
-2. Add `bob/tests/run-component-contracts.ts` and a focused Bob package command
-   proving successful HTML+spec load and fail-closed spec 404.
-3. Delete `dieter/components/textrename/`.
-4. Delete its export from `dieter/components/index.ts`.
-5. Delete its import and hydration call from `admin/src/main.ts`.
-6. Regenerate DevStudio registries; do not hand-edit generated inventories.
-7. Delete `dieter/components/toggle/toggle.ts`; keep Toggle HTML/CSS/spec.
+1. Make `ComponentStencil.spec` required and have the existing local artifact
+   generator read it directly. Missing source then fails the existing build
+   through normal filesystem behavior; do not add another validator.
+2. Delete `dieter/components/textrename/`.
+3. Delete all active exports, imports, hydration calls, and style imports for
+   `textrename`.
+4. Regenerate DevStudio registries; do not hand-edit generated inventories.
+5. Delete `dieter/components/toggle/toggle.ts` and all custom Toggle hydration
+   exports/calls; keep Toggle HTML/CSS/spec.
 
 Green gate:
 
 - missing ToolDrawer spec throws;
-- the focused Bob contract test passes;
 - `pnpm validate:widgets` compiles all eight current widget contracts with the
   fail-closed spec rule;
 - repository search finds no `textrename` or `hydrateTextrename` in active
@@ -228,10 +227,10 @@ Green gate:
    context construction.
 7. Update `e2e/widgets/prd106f-builder-certification.spec.ts` so it asserts
    native button elements rather than the legacy `role="button"` contract.
-8. Add `e2e/widgets/component-contracts.spec.ts` as the focused read-only
-   authenticated Builder proof. It may open existing controls and change local
-   unsaved UI state, but it must not click Bob Save, publish, or call a product
-   mutation route.
+8. Use direct read-only browser verification for the changed controls. Do not
+   add another E2E suite or package command. Browser verification may change
+   local unsaved UI state but must not click Bob Save, publish, or call a
+   product mutation route.
 
 Green gate:
 
@@ -290,7 +289,7 @@ Green gate:
 
 | Area | Exact files | Required change |
 | --- | --- | --- |
-| Bob spec authority | `bob/lib/compiler/stencils.ts`; `bob/tests/run-component-contracts.ts`; `bob/package.json` | Fail spec 404; add focused test command; delete empty dropdown-actions context fields. |
+| Component spec authority | `bob/lib/compiler/stencils.ts`; `scripts/widgets/generate-artifacts.ts` | Require the spec in the existing type/loader; delete empty dropdown-actions context fields. |
 | Dead component | `dieter/components/textrename/textrename.css`; `.html`; `.ts`; `dieter/components/index.ts`; `admin/src/main.ts` | Delete component, export, import, and hydration. |
 | Native Toggle | `dieter/components/toggle/toggle.ts` | Delete custom hydrator only. |
 | Six dropdown templates/CSS | `dieter/components/dropdown-{actions,border,edit,fill,shadow,upload}/` owning `.html` and `.css` | Use native buttons and preserve appearance. |
@@ -300,7 +299,7 @@ Green gate:
 | CSS contracts | `dieter/components/operational-field/operational-field.css`; `dieter/components/operational-table/operational-table.css`; `dieter/components/tooltip/tooltip.css` | Add three CSS-only primitives. |
 | Tooltip adoption | `bob/components/TdMenu.tsx`; `bob/app/layout.tsx`; `dieter/components/repeater/repeater.{html,js}` | Replace native title/ad hoc names with shared hover/focus visual contract while keeping ARIA names. |
 | Generated Admin inventories/pages | `admin/src/data/componentRegistry.generated.ts`; `admin/src/data/showcase.generated.ts` only if generator output changes it; `admin/src/html/components/dropdown-{actions,border,edit,fill,shadow,upload}.html`; `admin/src/html/components/repeater.html` | Regenerate from source, never hand-edit. |
-| E2E | `e2e/devstudio/route-contract.spec.ts`; `e2e/widgets/prd106f-builder-certification.spec.ts`; new `e2e/widgets/component-contracts.spec.ts` | Correct the stale DevStudio fixture to 3 foundation, 22 component, and 2 Policy routes by adding `agent-activity`, `textedit`, and `/#/policy/llm-management` with exact heading `LLM Management`; replace stale fake-button assertions in the broad suite; add focused native activation/immediate-action/tooltip checks in a read-only Builder spec. |
+| E2E/browser | `e2e/devstudio/route-contract.spec.ts`; `e2e/widgets/prd106f-builder-certification.spec.ts`; direct read-only browser evidence | Correct the stale DevStudio fixture to 3 foundation, 22 component, and 2 Policy routes by adding `agent-activity`, `textedit`, and `/#/policy/llm-management` with exact heading `LLM Management`; replace stale fake-button assertions in the broad suite; do not add another E2E suite. |
 | Living docs | `documentation/engineering/UI/components.md`; `documentation/engineering/UI/dieter.md`; `documentation/engineering/UI/accessibility.md`; `documentation/widgets/authoring/ToolDrawerControls.md`; `documentation/services/bob.md`; `documentation/services/devstudio.md` | Record qualified inventories, required spec law, native trigger/Toggle law, one dropdown-actions workflow, exact dependencies, and 126K/L/M handoffs. |
 
 Execution-start grep must confirm each generated/doc file before edit. Files with
@@ -335,7 +334,6 @@ no current affected statement are recorded as checked and left unchanged.
 ### Focused Commands
 
 ```bash
-pnpm --filter @clickeen/bob test:component-contracts
 pnpm --filter @clickeen/bob typecheck
 pnpm validate:widgets
 pnpm --filter @ck/dieter typecheck
@@ -344,12 +342,7 @@ pnpm --filter @clickeen/devstudio typecheck
 pnpm --filter @clickeen/devstudio build
 pnpm --filter @clickeen/roma lint
 E2E_BASE_URL=https://devstudio.clickeen.com E2E_AUTH_STATE=e2e/.auth/devstudio.json pnpm exec playwright test e2e/devstudio/route-contract.spec.ts
-E2E_BASE_URL=https://roma.dev.clickeen.com pnpm exec playwright test e2e/widgets/component-contracts.spec.ts
 ```
-
-Use the exact package script name created in Slice I1. If an existing command
-supersedes it before execution, update this PRD first; do not silently skip the
-contract test.
 
 The DevStudio command requires a valid `e2e/.auth/devstudio.json` produced by
 the real Berlin -> DevStudio login/session-finish path. Roma's
@@ -395,12 +388,12 @@ substituted. Missing or expired DevStudio auth keeps the browser gate RED.
 
 | ID | Failure mode | Required control |
 | --- | --- | --- |
-| V1 Silent substitution | Missing spec becomes empty defaults. | Any non-2xx ToolDrawer spec response throws. |
+| V1 Silent substitution | Missing spec becomes empty defaults. | Missing local ToolDrawer spec source throws. |
 | V2 Silent healing | Native values/labels are normalized while changing controls. | Preserve current authored values and labels; change semantics only where named. |
-| V3 Silent omission | Bulk Edit's copied trigger, generated registries, e2e assumptions, or four remote stale objects are missed. | Execute the exact map and reconcile source, generated, deployed, and browser inventories. |
+| V3 Silent omission | Bulk Edit's copied trigger, generated registries, or browser assumptions are missed. | Execute the exact map and reconcile source, generated, deployed, and browser inventories. |
 | V4 Fail-open control | Missing spec or hydrator silently produces an incomplete control. | Bob compiler fails missing required specs and explicit hydration remains complete. |
 | V5 Corruption-as-absence | Invalid component data is treated as missing/default. | No persisted data path changes; existing component validation remains. |
-| V6 Partial-success masquerade | Local deletion is called complete while old R2 files or app builds remain. | Require exact-SHA R2 and Pages evidence. |
+| V6 Partial-success masquerade | Local deletion is called complete while affected app builds remain unverified. | Require exact-SHA Pages evidence; 126G already deleted the old R2 component-delivery lane. |
 | V7 Masquerade/redress | Dead code survives behind a rename, wrapper, or compatibility branch. | Delete textrename, Toggle JS, fake triggers, and dead action workflow outright. |
 | V8 Runtime test dependency | Product behavior depends on the tests. | Native HTML/CSS/runtime source owns behavior; checks only verify it. |
 
