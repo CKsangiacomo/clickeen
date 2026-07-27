@@ -1,7 +1,7 @@
 # 126J - PRD: Surfaces And Bob Workspace
 
-Status: PRE-EXECUTION STEPS 6-8 COMPLETE - exact-tree three-lens review GREEN at
-`22a92ec9`; no Step-9 execution credit.
+Status: STEP 9 COMPLETE - implementation `5f5dd5d0`; local and deployed product
+proof GREEN; independent V1-V8 audit GREEN.
 Parent: `126__PRD__UI_Optimization_Program.md`.
 Audit: `audits/126J__Audit__Surfaces.md`.
 Living doctrine: `documentation/engineering/UI/surfaces.md`.
@@ -80,18 +80,19 @@ The frozen geometry is:
 Representative acceptance viewports are `1440x900`, `768x1024`, `1024x768`,
 `844x390`, and `390x844`. These are proof fixtures, not a device registry.
 
-## Current Source Truth
+## Delivered Source Truth
 
-- Bob renders a fixed `340px 1fr` ToolDrawer/workspace grid.
-- `BuilderApp` always renders ToolDrawer and Workspace side by side.
-- Bob has no compact ToolDrawer opener, drawer state, close command, or mobile
-  portrait boundary.
-- Bob uses `100vh` and has no safe-area handling.
+- Bob keeps the existing `340px 1fr` ToolDrawer/workspace grid in Full mode.
+- Bob keeps one ToolDrawer DOM and overlays it in Compact mode.
+- The compact opener, explicit close command, Escape, and scrim close preserve
+  the current editor session and return focus to the opener.
+- Unsupported coarse-pointer mobile portrait shows the explicit
+  `Rotate your device or use a larger screen` boundary.
+- Bob uses dynamic viewport sizing and safe-area insets.
 - Roma's current `<980px` inline `<details>` path is owned and deleted by 126M.
 - DevStudio's current unwired `<960px` sidebar path is owned and deleted by
   126L.
-- The living surface doctrine is already correct. 126J does not rewrite it
-  unless execution exposes a concrete mismatch.
+- The living surface doctrine remains the authority and required no correction.
 
 ## Execution Slices
 
@@ -123,8 +124,8 @@ Green gate:
 
 ### J2 - Bob Proof And Documentation Reconciliation
 
-1. Add focused Playwright coverage through authenticated Roma Builder so the
-   real hosted Bob iframe is exercised.
+1. Exercise the real hosted Bob iframe through authenticated Roma Builder using
+   existing browser tooling; add no permanent test or runtime-check machinery.
 2. Prove pointer and keyboard open/close, focus return, no overlap, no clipped
    primary actions, and a nonblank preview.
 3. Capture screenshots at all five representative viewports plus portrait to
@@ -150,7 +151,7 @@ Green gate:
 
 ### Add
 
-- `e2e/widgets/bob-workspace-capability.spec.ts`.
+- No source, test, or runtime-check file.
 
 ### Delete
 
@@ -171,7 +172,6 @@ Green gate:
 pnpm --filter @clickeen/bob lint
 pnpm --filter @clickeen/bob typecheck
 pnpm --filter @clickeen/bob build
-E2E_BASE_URL=https://roma.dev.clickeen.com pnpm exec playwright test e2e/widgets/bob-workspace-capability.spec.ts
 ```
 
 Browser evidence must cover:
@@ -186,6 +186,20 @@ Browser evidence must cover:
 
 Deploy evidence: `bob-dev` and Roma Pages builds at the exact source SHA. No
 Worker, R2, Supabase, or product-data operation belongs to 126J.
+
+## Execution Evidence
+
+- Implementation commit: `5f5dd5d0`.
+- Bob lint, typecheck, build, and diff checks: GREEN.
+- Local viewport/interaction matrix: GREEN.
+- Exact-SHA `bob-dev` and `roma-dev` Git-connected Pages deployments observed.
+- GitHub Roma app verification run `30277300050`: GREEN.
+- GitHub cloud-dev reachability run `30277549378`: GREEN.
+- Authenticated deployed Roma Builder smoke: GREEN.
+- Deployed hosted-Bob proof: desktop and tablet Full, mobile landscape Compact,
+  coarse-pointer mobile portrait unsupported, one ToolDrawer DOM, focus entry
+  and return, Escape, scrim close, and orientation recovery all GREEN.
+- Independent execution audit: GREEN; V1-V8 all GREEN.
 
 ## Handoffs
 
@@ -208,15 +222,15 @@ Worker, R2, Supabase, or product-data operation belongs to 126J.
 - Table-to-card rewrites.
 - Product route, persistence, translation, or public-widget changes.
 
-## V1-V8 Pre-Execution Audit
+## V1-V8 Execution Audit
 
 | ID | Result | Reason |
 | --- | --- | --- |
 | V1 | PASS | No device or runtime truth is invented; classification uses explicit CSS geometry. |
 | V2 | PASS | No persisted state is normalized or rewritten. |
-| V3 | OPEN UNTIL STEP 9 | Full, Compact, portrait boundary, orientation change, focus, preview, docs, and both Pages surfaces require proof. |
-| V4 | OPEN UNTIL STEP 9 | Compact navigation and unsupported portrait must remain explicit and operable. |
+| V3 | PASS | Full, Compact, portrait boundary, orientation change, focus, preview, docs, and both Pages surfaces are proven. |
+| V4 | PASS | Compact navigation and unsupported portrait remain explicit and operable. |
 | V5 | PASS | No stored product data is read or mutated. |
-| V6 | OPEN UNTIL STEP 9 | Local tests without Bob/ Roma deployed proof cannot claim completion. |
-| V7 | OPEN UNTIL STEP 9 | Fixed-only behavior must be replaced, not wrapped by a second shell. |
+| V6 | PASS | Exact-SHA deployed proof and authenticated product-path evidence are green. |
+| V7 | PASS | Fixed-only behavior was replaced in place; no second shell or classifier was added. |
 | V8 | PASS | Runtime CSS and controls own behavior; tests only verify it. |

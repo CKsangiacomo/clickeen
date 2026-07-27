@@ -40,10 +40,13 @@ rendering fidelity, not workspace classification. Bob keeps one editor model:
 ToolDrawer button/drawer plus full preview/workspace in compact mobile landscape.
 No editor operation disappears and no separate mobile Builder is created.
 
-Current Bob does not yet provide the explicit mobile-landscape ToolDrawer
-drawer composition. That is a 126J/126M execution gap across the Builder shell,
-`bob/components/ToolDrawer.tsx`, and `bob/app/bob_app.css`, not current runtime
-behavior to preserve.
+Bob provides that composition directly. Full mode keeps the persistent
+ToolDrawer when both usable dimensions are at least `600px`. Compact mode uses
+the same ToolDrawer as an overlay when either usable dimension is smaller.
+Coarse-pointer mobile portrait below `600px` shows the explicit
+`Rotate your device or use a larger screen` boundary. The compact drawer opens
+and closes without remounting the editor session or replacing any ToolDrawer
+operation.
 
 ## Authoring Flow
 
