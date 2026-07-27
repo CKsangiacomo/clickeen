@@ -86,7 +86,8 @@ Dieter also owns one small operational-table visual base: width, alignment,
 borders, base spacing, and horizontal overflow. Roma owns table data and state.
 DevStudio retains policy-specific density, sticky headers, token columns, and
 editable-cell composition. Dieter does not own sorting, pagination, data policy,
-or a React table abstraction.
+or a React table abstraction. DevStudio's token editor consumes
+`operational-field`; its Policy Editor tables consume `operational-table`.
 
 ## Tooltip Contract
 

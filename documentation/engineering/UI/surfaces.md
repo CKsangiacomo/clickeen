@@ -37,10 +37,10 @@ density, and composition.
 
 ## Current Direction
 
-Bob is the strongest current directional reference because it already uses a
-clear editor shell, tool drawer, toolbar, canvas, and preview plane hierarchy.
-Roma and DevStudio still have surface/layout drift that their execution PRDs
-must converge through their own refactors.
+Bob is the strongest directional editor reference because it uses a clear tool
+drawer, toolbar, canvas, and preview plane hierarchy. DevStudio now implements
+the accepted Full/Compact/unsupported operational shell with one navigation
+tree. Roma remains the final shell/layout convergence owned by 126M.
 
 ## Global Workspace Capability Tenet
 

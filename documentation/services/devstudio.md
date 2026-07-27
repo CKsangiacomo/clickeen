@@ -32,12 +32,12 @@ DevStudio follows the global operational-workspace tenet in
 `documentation/engineering/UI/surfaces.md`: full desktop workspace on desktop
 and tablets in either orientation; compact drawer navigation on mobile
 landscape; explicit unsupported boundary on mobile portrait. Retina/4K density
-governs sharpness, not layout class. The current unwired generic `960px`
-off-canvas state is a 126L execution gap, not product law. DevStudio keeps one
-simple shell: persistent narrow left navigation plus a flexible work area in
-full mode, and the same navigation as an overlay drawer plus a full-width work
-area in compact mode. Reveal and policy pages are not rebuilt as mobile
-variants.
+governs sharpness, not layout class. DevStudio has one simple shell: persistent
+`220px` left navigation plus a flexible work area in Full mode, and the same
+navigation as an accessible overlay drawer plus a full-width work area in
+Compact mode. The shell uses the shared `600px` usable-width-and-height
+capability boundary, dynamic viewport units, and safe areas. Reveal and policy
+pages are not rebuilt as mobile variants.
 
 ## Token Editor Dialog
 
@@ -47,7 +47,8 @@ dismissal is disabled, Cancel follows the same dirty rule, and Confirm Commit
 persists through the existing validated write lane. Native `beforeunload`, where
 needed at the browser boundary, is not replaced by an in-product dialog helper.
 The editor uses the shared native-dialog lifecycle while keeping token state and
-source commit behavior in DevStudio.
+source commit behavior in DevStudio. Its native select and input use Dieter's
+small operational-field appearance contract.
 
 ## Current Sections
 
@@ -57,6 +58,10 @@ source commit behavior in DevStudio.
 | Dieter Components | Generated/static component showcase pages from Dieter component specs and snippets. |
 | Entitlements | Pages Functions read/write entitlement policy files through GitHub. The same tool also renders AI runtime policy editing backed by `/api/ai-runtime/*`. |
 | LLM Management | Read-only generated visibility into managed model configuration. It is not a runtime API-backed editor. |
+
+Policy Editor tables use Dieter's small operational-table visual/overflow base.
+DevStudio still owns their policy-specific columns, density, sticky headers,
+editable cells, data, and mutation behavior.
 
 Hash routes are generated from `admin/src/html/**` and route data in
 `admin/src/data/routes.ts`. There is no separate design-system admin app. The

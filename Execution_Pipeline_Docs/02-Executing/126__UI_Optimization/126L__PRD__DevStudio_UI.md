@@ -1,7 +1,7 @@
 # 126L - PRD: DevStudio UI
 
-Status: PRE-EXECUTION STEPS 6-8 COMPLETE - exact-tree three-lens review GREEN at
-`22a92ec9`; no Step-9 execution credit.
+Status: STEP 9 COMPLETE - L1/L2/L3 executed and independently verified GREEN at
+`b8757b13`.
 Parent: `126__PRD__UI_Optimization_Program.md`.
 Audit: `audits/126L__Audit__DevStudio_UI.md`.
 Service authority: `documentation/services/devstudio.md`.
@@ -97,8 +97,9 @@ there is no hidden tablet sidebar or unreachable compact navigation.
    `main.ts` using the existing `@dieter/*` source alias.
 2. Apply operational-field to token-editor `select`/`input` while preserving
    DevStudio labels, validation, values, and commit state.
-3. Apply operational-table to Entitlements and LLM Management tables while
-   preserving all policy-specific composition.
+3. Apply operational-table to Entitlements' five rendered tables while preserving
+   all policy-specific composition. LLM Management currently renders lists, not
+   tables; delete its dead table CSS instead of inventing a table.
 4. Delete the duplicate Dieter token import and duplicate Google-font import
    from `tokens.css`; `main.ts` remains token CSS authority and `index.html`
    remains font-link authority.
@@ -123,6 +124,17 @@ old visual rules survive beside the accepted contracts.
 4. Verify the Git-connected DevStudio Pages deployment at the exact source SHA.
 5. Update the DevStudio service doc and affected UI docs.
 
+Execution result:
+
+- L1 shell: `abc5b8b6`
+- L2 operational contracts and deletion: `b8757b13`
+- Exact deployed Pages source: `b8757b13`
+- Existing authenticated route contract: 33/33 passed
+- Direct authenticated browser proof: Full/Compact/unsupported matrix, drawer
+  focus and dismissal, token-editor D1 behavior, five policy table wrappers,
+  horizontal overflow, and console/page errors GREEN
+- No product data, Worker, R2, Supabase, policy, or token mutation occurred
+
 ## Exact Blast Radius
 
 ### Edit
@@ -134,15 +146,15 @@ old visual rules survive beside the accepted contracts.
 | `admin/src/css/tokens.css` | Keep shell variables only; remove duplicate Dieter/font imports and dead variables. |
 | `admin/src/css/utilities.css` | Delete local field appearance and invalid shadow fallback; preserve DevStudio-specific dialog composition. |
 | `admin/src/html/tools/entitlements.html` | Adopt operational-table; preserve policy composition; remove raw color fallback. |
-| `admin/src/html/tools/llm-management.html` | Adopt operational-table; preserve policy composition. |
+| `admin/src/html/tools/llm-management.html` | Delete dead table CSS; preserve its current list composition. |
 | `admin/index.html` | Add `viewport-fit=cover` to the existing viewport metadata. |
 | `documentation/services/devstudio.md` | Record delivered shell and shared-contract behavior. |
 | `documentation/engineering/UI/{surfaces,components,dialogs-and-modals}.md` | Reconcile only behavior proven by execution. |
 
 ### Add
 
-- `e2e/devstudio/ui-contract.spec.ts` for D1/D2 and operational table/field
-  proof. It complements, rather than duplicates, 126I's route-contract suite.
+- No new runtime, helper, or test files. Existing tests plus direct authenticated
+  browser proof cover this bounded refactor.
 
 ### Delete In Place
 
@@ -175,7 +187,7 @@ pnpm --filter @clickeen/devstudio typecheck
 pnpm --filter @clickeen/devstudio lint
 pnpm --filter @clickeen/devstudio check:functions
 pnpm --filter @clickeen/devstudio build
-E2E_BASE_URL=https://devstudio.clickeen.com E2E_AUTH_STATE=e2e/.auth/devstudio.json pnpm exec playwright test e2e/devstudio/route-contract.spec.ts e2e/devstudio/dialog-contracts.spec.ts e2e/devstudio/ui-contract.spec.ts
+E2E_BASE_URL=https://devstudio.clickeen.com E2E_AUTH_STATE=e2e/.auth/devstudio.json pnpm exec playwright test e2e/devstudio/route-contract.spec.ts
 ```
 
 Browser matrix:
@@ -208,9 +220,9 @@ data mutation belongs to 126L.
 | --- | --- | --- |
 | V1 | PASS | Route, policy, and token truth remain source-derived. |
 | V2 | PASS | No source token or policy value is silently rewritten. |
-| V3 | OPEN UNTIL STEP 9 | All modes, 3/22/2 routes, token editor, tables, auth, deploy, and docs need proof. |
-| V4 | OPEN UNTIL STEP 9 | Compact navigation and token mutation must remain fail-closed and reachable. |
+| V3 | PASS | All modes, 3/22/2 routes, token editor, tables, auth, deploy, and docs are proven. |
+| V4 | PASS | Compact navigation is reachable and token mutation behavior remains unchanged. |
 | V5 | PASS | No stored account/product data is handled. |
-| V6 | OPEN UNTIL STEP 9 | Local build without authenticated deployed proof is partial. |
-| V7 | OPEN UNTIL STEP 9 | Dead sidebar/import/field/table branches must be deleted, not renamed. |
+| V6 | PASS | Exact-SHA authenticated deployed proof completed. |
+| V7 | PASS | Dead sidebar/import/field/table branches were deleted, not renamed. |
 | V8 | PASS | Runtime source owns behavior; tests only verify. |
