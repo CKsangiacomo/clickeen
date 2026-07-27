@@ -643,13 +643,14 @@ export function PagesDomain() {
         {domainLoading && pages.length === 0 ? <p className="body-m" role="status">Loading pages...</p> : null}
         {!domainLoading && pages.length === 0 ? <p className="body-m">No pages yet.</p> : null}
         {pages.length ? (
-          <table className="roma-table">
+          <div className="diet-operational-table">
+          <table className="diet-operational-table__table">
             <thead>
               <tr>
-                <th className="table-header label-s">Page</th>
-                <th className="table-header label-s">Page ID</th>
-                <th className="table-header label-s">Placements</th>
-                <th className="table-header label-s">Actions</th>
+                <th className="label-s">Page</th>
+                <th className="label-s">Page ID</th>
+                <th className="label-s">Placements</th>
+                <th className="label-s">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -681,6 +682,7 @@ export function PagesDomain() {
               })}
             </tbody>
           </table>
+          </div>
         ) : null}
       </section>
 
@@ -697,7 +699,7 @@ export function PagesDomain() {
             <label className="roma-field">
               <span className="label-s">Title</span>
               <input
-                className="roma-input"
+                className="diet-operational-field"
                 type="text"
                 value={pageSource.metadata.title}
                 maxLength={160}
@@ -708,7 +710,7 @@ export function PagesDomain() {
             <label className="roma-field">
               <span className="label-s">Description</span>
               <input
-                className="roma-input"
+                className="diet-operational-field"
                 type="text"
                 value={pageSource.metadata.description}
                 maxLength={300}
@@ -719,7 +721,7 @@ export function PagesDomain() {
             <label className="roma-field">
               <span className="label-s">Robots</span>
               <select
-                className="roma-input"
+                className="diet-operational-field"
                 value={pageSource.metadata.robots}
                 disabled={pageSourceLocked}
                 onChange={(event) => updateMetadata({ robots: event.target.value as PageRobots })}
@@ -731,7 +733,7 @@ export function PagesDomain() {
             <label className="roma-field">
               <span className="label-s">Hosted URL</span>
               <input
-                className="roma-input"
+                className="diet-operational-field"
                 type="text"
                 value={hostedPageUrl}
                 readOnly
@@ -825,7 +827,7 @@ export function PagesDomain() {
             <label className="roma-field">
               <span className="label-s">Default locale</span>
               <select
-                className="roma-input"
+                className="diet-operational-field"
                 value={pageSource.localization.defaultLocale}
                 disabled={pageSourceLocked}
                 onChange={(event) => {
@@ -863,12 +865,13 @@ export function PagesDomain() {
             <h3 className="heading-6">Country rules</h3>
           </div>
           {pageSource.localization.countryLocaleRules.length ? (
-            <table className="roma-table">
+            <div className="diet-operational-table">
+            <table className="diet-operational-table__table">
               <thead>
                 <tr>
-                  <th className="table-header label-s">Country</th>
-                  <th className="table-header label-s">Locale</th>
-                  <th className="table-header label-s">Actions</th>
+                  <th className="label-s">Country</th>
+                  <th className="label-s">Locale</th>
+                  <th className="label-s">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -876,7 +879,7 @@ export function PagesDomain() {
                   <tr key={`${rule.country}:${index}`}>
                     <td className="body-s">
                       <input
-                        className="roma-input"
+                        className="diet-operational-field"
                         type="text"
                         value={rule.country}
                         maxLength={2}
@@ -886,7 +889,7 @@ export function PagesDomain() {
                     </td>
                     <td className="body-s">
                       <select
-                        className="roma-input"
+                        className="diet-operational-field"
                         value={rule.locale}
                         disabled={pageSourceLocked}
                         onChange={(event) => updateCountryLocaleRule(index, { locale: event.target.value })}
@@ -914,6 +917,7 @@ export function PagesDomain() {
                 ))}
               </tbody>
             </table>
+            </div>
           ) : null}
           <div className="rd-canvas-module__actions">
             <button
@@ -973,13 +977,14 @@ export function PagesDomain() {
                   {checkedInstanceIds.length} selected
                 </p>
                 {widgetInstances.length ? (
-                  <table className="roma-table">
+                  <div className="diet-operational-table">
+                  <table className="diet-operational-table__table">
                     <thead>
                       <tr>
-                        <th className="table-header label-s">Select</th>
-                        <th className="table-header label-s">Instance</th>
-                        <th className="table-header label-s">Widget</th>
-                        <th className="table-header label-s">Status</th>
+                        <th className="label-s">Select</th>
+                        <th className="label-s">Instance</th>
+                        <th className="label-s">Widget</th>
+                        <th className="label-s">Status</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -1007,6 +1012,7 @@ export function PagesDomain() {
                       })}
                     </tbody>
                   </table>
+                  </div>
                 ) : (
                   <p className="body-m">No saved instances yet.</p>
                 )}
@@ -1052,14 +1058,15 @@ export function PagesDomain() {
           ) : null}
 
           {pageSource.placements.length ? (
-            <table className="roma-table">
+            <div className="diet-operational-table">
+            <table className="diet-operational-table__table">
               <thead>
                 <tr>
-                  <th className="table-header label-s">Order</th>
-                  <th className="table-header label-s">Widget</th>
-                  <th className="table-header label-s">Instance ID</th>
-                  <th className="table-header label-s">Status</th>
-                  <th className="table-header label-s">Actions</th>
+                  <th className="label-s">Order</th>
+                  <th className="label-s">Widget</th>
+                  <th className="label-s">Instance ID</th>
+                  <th className="label-s">Status</th>
+                  <th className="label-s">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -1121,6 +1128,7 @@ export function PagesDomain() {
                 })}
               </tbody>
             </table>
+            </div>
           ) : (
             <p className="body-m">No widgets placed yet.</p>
           )}

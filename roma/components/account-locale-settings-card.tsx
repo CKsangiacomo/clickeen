@@ -243,7 +243,7 @@ export function AccountLocaleSettingsCard(args: {
             <span className="label-s">Base language</span>
             <select
               id="roma-settings-base-locale"
-              className="roma-select"
+              className="diet-operational-field"
               value={baseLocale}
               disabled={loading || saving || !args.canEdit || baseLocaleLocked}
               onChange={(event) => {

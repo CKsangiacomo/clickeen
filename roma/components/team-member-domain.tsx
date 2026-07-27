@@ -228,7 +228,7 @@ export function TeamMemberDomain({ memberId }: TeamMemberDomainProps) {
               <label className="roma-field">
                 <span className="label-s">Role</span>
                 <select
-                  className="roma-input body-m"
+                  className="diet-operational-field body-m"
                   value={roleDraft}
                   onChange={(event) => setRoleDraft(event.target.value)}
                   disabled={!canManage || member.member.role === 'owner' || savingRole}

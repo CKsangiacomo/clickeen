@@ -162,7 +162,7 @@ export function ProfileDomain() {
           <label className="roma-field">
             <span className="label-s">First name</span>
             <input
-              className="roma-input body-m"
+              className="diet-operational-field body-m"
               value={draft.firstName}
               onChange={(event) =>
                 setDraft((current) => ({
@@ -176,7 +176,7 @@ export function ProfileDomain() {
           <label className="roma-field">
             <span className="label-s">Last name</span>
             <input
-              className="roma-input body-m"
+              className="diet-operational-field body-m"
               value={draft.lastName}
               onChange={(event) =>
                 setDraft((current) => ({
@@ -190,7 +190,7 @@ export function ProfileDomain() {
           <label className="roma-field">
             <span className="label-s">Primary Language</span>
             <input
-              className="roma-input body-m"
+              className="diet-operational-field body-m"
               value={draft.primaryLanguage}
               onChange={(event) =>
                 setDraft((current) => ({
@@ -204,7 +204,7 @@ export function ProfileDomain() {
           <label className="roma-field">
             <span className="label-s">Country</span>
             <select
-              className="roma-input body-m"
+              className="diet-operational-field body-m"
               value={draft.country}
               onChange={(event) => {
                 const nextCountry = event.target.value;
@@ -228,7 +228,7 @@ export function ProfileDomain() {
             <span className="label-s">Timezone</span>
             {requiresTimezoneChoice ? (
               <select
-                className="roma-input body-m"
+                className="diet-operational-field body-m"
                 value={draft.timezone}
                 onChange={(event) =>
                   setDraft((current) => ({
@@ -246,7 +246,7 @@ export function ProfileDomain() {
               </select>
             ) : (
               <input
-                className="roma-input body-m"
+                className="diet-operational-field body-m"
                 value={derivedTimezone ? formatTimezoneLabel(derivedTimezone) : ''}
                 placeholder={draft.country ? '' : 'Select a country first'}
                 disabled

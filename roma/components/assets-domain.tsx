@@ -428,14 +428,15 @@ export function AssetsDomain() {
       </section>
 
       <section className="rd-canvas-module">
-        <table className="roma-table">
+        <div className="diet-operational-table">
+        <table className="diet-operational-table__table">
           <thead>
             <tr>
-              <th className="table-header label-s">Asset</th>
-              <th className="table-header label-s">Type</th>
-              <th className="table-header label-s">MIME</th>
-              <th className="table-header label-s">Size</th>
-              <th className="table-header label-s">Actions</th>
+              <th className="label-s">Asset</th>
+              <th className="label-s">Type</th>
+              <th className="label-s">MIME</th>
+              <th className="label-s">Size</th>
+              <th className="label-s">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -476,6 +477,7 @@ export function AssetsDomain() {
             ) : null}
           </tbody>
         </table>
+        </div>
       </section>
 
       {bulkUploadOpen ? (
@@ -491,13 +493,14 @@ export function AssetsDomain() {
               {bulkUploadBusy ? <p className="body-s">Uploading: {uploadingBulkCount}; queued: {queuedBulkCount}</p> : null}
               {bulkResultLabel ? <p className="body-s">{bulkResultLabel}</p> : null}
             </div>
-            <table className="roma-table">
+            <div className="diet-operational-table">
+            <table className="diet-operational-table__table">
               <thead>
                 <tr>
-                  <th className="table-header label-s">File</th>
-                  <th className="table-header label-s">Type</th>
-                  <th className="table-header label-s">Size</th>
-                  <th className="table-header label-s">Status</th>
+                  <th className="label-s">File</th>
+                  <th className="label-s">Type</th>
+                  <th className="label-s">Size</th>
+                  <th className="label-s">Status</th>
                 </tr>
               </thead>
               <tbody>
@@ -516,6 +519,7 @@ export function AssetsDomain() {
                 ))}
               </tbody>
             </table>
+            </div>
             <div className="roma-modal__actions">
               <button
                 ref={bulkUploadCloseRef}

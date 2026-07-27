@@ -502,13 +502,14 @@ export function WidgetsDomain() {
               ) : null}
             </div>
 
-            <table className="roma-table">
+            <div className="diet-operational-table">
+            <table className="diet-operational-table__table">
               <thead>
                 <tr>
-                  <th className="table-header label-s">Instance</th>
-                  <th className="table-header label-s">Instance ID</th>
-                  <th className="table-header label-s">Status</th>
-                  <th className="table-header label-s">Actions</th>
+                  <th className="label-s">Instance</th>
+                  <th className="label-s">Instance ID</th>
+                  <th className="label-s">Status</th>
+                  <th className="label-s">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -526,7 +527,7 @@ export function WidgetsDomain() {
                         {isRenaming ? (
                           <div className="roma-instance-rename">
                             <input
-                              className="roma-instance-rename__input body-s"
+                              className="diet-operational-field roma-instance-rename__input body-s"
                               type="text"
                               value={renameDraft}
                               maxLength={120}
@@ -660,6 +661,7 @@ export function WidgetsDomain() {
                 ) : null}
               </tbody>
             </table>
+            </div>
           </section>
         );
       })}

@@ -158,7 +158,7 @@ export function SettingsDomain() {
         {membersError ? <p className="body-m" role="alert">{membersError}</p> : null}
         <div className="roma-toolbar">
           <select
-            className="roma-select"
+            className="diet-operational-field"
             value={nextOwnerUserId}
             onChange={(event) => setNextOwnerUserId(event.target.value)}
             aria-label="Select next owner"

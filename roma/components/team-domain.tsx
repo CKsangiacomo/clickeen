@@ -186,12 +186,13 @@ export function TeamDomain() {
 
       {members ? (
         <section className="rd-canvas-module">
-          <table className="roma-table">
+          <div className="diet-operational-table">
+          <table className="diet-operational-table__table">
             <thead>
               <tr>
-                <th className="table-header label-s">Member</th>
-                <th className="table-header label-s">Role</th>
-                <th className="table-header label-s">Joined</th>
+                <th className="label-s">Member</th>
+                <th className="label-s">Role</th>
+                <th className="label-s">Joined</th>
               </tr>
             </thead>
             <tbody>
@@ -216,6 +217,7 @@ export function TeamDomain() {
               ) : null}
             </tbody>
           </table>
+          </div>
         </section>
       ) : null}
 
@@ -228,11 +230,11 @@ export function TeamDomain() {
             <div className="roma-form-grid">
               <label className="roma-field">
                 <span className="label-s">Email</span>
-                <input className="roma-input body-m" value={inviteEmail} onChange={(event) => setInviteEmail(event.target.value)} disabled={inviteLoading} />
+                <input className="diet-operational-field body-m" value={inviteEmail} onChange={(event) => setInviteEmail(event.target.value)} disabled={inviteLoading} />
               </label>
               <label className="roma-field">
                 <span className="label-s">Role</span>
-                <select className="roma-input body-m" value={inviteRole} onChange={(event) => setInviteRole(event.target.value)} disabled={inviteLoading}>
+                <select className="diet-operational-field body-m" value={inviteRole} onChange={(event) => setInviteRole(event.target.value)} disabled={inviteLoading}>
                   <option value="viewer">{formatAccountRoleLabel('viewer')}</option>
                   <option value="editor">{formatAccountRoleLabel('editor')}</option>
                   <option value="admin">{formatAccountRoleLabel('admin')}</option>
@@ -256,13 +258,14 @@ export function TeamDomain() {
           <section className="rd-canvas-module">
             <h2 className="heading-4">Pending invitations</h2>
             {inviteError && !invitations ? <p className="body-m" role="alert">{inviteError}</p> : null}
-            <table className="roma-table">
+            <div className="diet-operational-table">
+            <table className="diet-operational-table__table">
               <thead>
                 <tr>
-                  <th className="table-header label-s">Email</th>
-                  <th className="table-header label-s">Role</th>
-                  <th className="table-header label-s">Expires</th>
-                  <th className="table-header label-s">Action</th>
+                  <th className="label-s">Email</th>
+                  <th className="label-s">Role</th>
+                  <th className="label-s">Expires</th>
+                  <th className="label-s">Action</th>
                 </tr>
               </thead>
               <tbody>
@@ -300,6 +303,7 @@ export function TeamDomain() {
                 ) : null}
               </tbody>
             </table>
+            </div>
           </section>
         </>
       ) : (
