@@ -320,13 +320,6 @@ a {
   display: none;
 }
 
-.widget-defaults-fields {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: var(--space-2) var(--space-3);
-  padding-block: var(--space-1) var(--space-3);
-}
-
 .widget-defaults-builder-fields {
   display: flex;
   flex-direction: column;
@@ -387,81 +380,6 @@ a {
 
 .widget-defaults-builder-fields .tdmenucontent__cluster-label {
   margin: 0;
-}
-
-.widget-defaults-field {
-  display: grid;
-  grid-template-columns: minmax(120px, 1fr) minmax(0, 1.35fr);
-  align-items: center;
-  gap: var(--space-2);
-  min-width: 0;
-}
-
-.widget-defaults-field > span {
-  min-width: 0;
-  color: var(--color-system-black);
-  overflow-wrap: anywhere;
-}
-
-.widget-defaults-field--toggle {
-  grid-template-columns: minmax(120px, 1fr) auto;
-}
-
-.widget-defaults-field--toggle input[type='checkbox'] {
-  appearance: none;
-  width: 34px;
-  height: 20px;
-  margin: 0;
-  border-radius: 999px;
-  background: var(--color-system-gray-6);
-  box-shadow: inset 0 0 0 1px var(--color-system-gray-5);
-  cursor: pointer;
-  position: relative;
-}
-
-.widget-defaults-field--toggle input[type='checkbox']::after {
-  content: '';
-  position: absolute;
-  width: 16px;
-  height: 16px;
-  top: 2px;
-  left: 2px;
-  border-radius: 999px;
-  background: var(--color-system-white);
-  box-shadow: 0 1px 3px color-mix(in oklab, var(--color-system-black), transparent 82%);
-  transition: transform var(--duration-snap) var(--easing-standard);
-}
-
-.widget-defaults-field--toggle input[type='checkbox']:checked {
-  background: var(--color-system-green);
-  box-shadow: none;
-}
-
-.widget-defaults-field--toggle input[type='checkbox']:checked::after {
-  transform: translateX(14px);
-}
-
-.widget-defaults-field--toggle input[type='checkbox']:focus-visible,
-.widget-defaults-input:focus-visible {
-  outline: 2px solid var(--color-system-blue-3);
-  outline-offset: 1px;
-}
-
-.widget-defaults-input {
-  width: 100%;
-  min-width: 0;
-  min-height: var(--control-size-md);
-  border-radius: var(--control-radius-lg);
-  border: 1px solid var(--color-system-gray-5);
-  background: var(--color-system-white);
-  padding: var(--space-2) var(--space-3);
-  color: var(--color-system-black);
-  font: 400 var(--fs-13) / var(--lh-body-ui) var(--font-ui);
-}
-
-.widget-defaults-textarea {
-  min-height: 92px;
-  resize: vertical;
 }
 
 .widget-defaults-error {
