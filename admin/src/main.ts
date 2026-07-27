@@ -168,12 +168,43 @@ shell.className = 'docs-shell';
 
 const sidebar = document.createElement('aside');
 sidebar.className = 'docs-shell__sidebar';
+sidebar.id = 'devstudio-navigation';
 
 const main = document.createElement('main');
 main.className = 'docs-shell__main devstudio-page-layout';
 
-shell.append(sidebar, main);
+const menuButton = document.createElement('button');
+menuButton.className = 'docs-shell__menu-toggle diet-btn-ic';
+menuButton.type = 'button';
+menuButton.dataset.size = 'md';
+menuButton.dataset.variant = 'neutral';
+menuButton.setAttribute('aria-label', 'Open navigation');
+menuButton.setAttribute('aria-controls', sidebar.id);
+menuButton.setAttribute('aria-expanded', 'false');
+menuButton.innerHTML =
+  '<span class="diet-btn-ic__icon" aria-hidden="true" data-icon="line.3.horizontal.decrease.circle"></span>';
+
+const compactBar = document.createElement('header');
+compactBar.className = 'docs-shell__compact-bar';
+compactBar.append(menuButton);
+
+const scrim = document.createElement('button');
+scrim.className = 'docs-shell__scrim';
+scrim.type = 'button';
+scrim.tabIndex = -1;
+scrim.setAttribute('aria-label', 'Close navigation');
+
+const portraitBoundary = document.createElement('section');
+portraitBoundary.className = 'devstudio-portrait-boundary';
+portraitBoundary.setAttribute('aria-label', 'Unsupported workspace');
+portraitBoundary.innerHTML = `
+  <h1 class="heading-3">Rotate your device or use a larger screen</h1>
+  <p class="body-sm">DevStudio needs a wider workspace.</p>
+`;
+
+shell.append(sidebar, scrim, compactBar, main);
 appRoot.append(shell);
+appRoot.append(portraitBoundary);
 
 const navHeader = document.createElement('header');
 navHeader.className = 'docs-shell__brand';
@@ -185,6 +216,52 @@ nav.className = 'docs-shell__nav';
 sidebar.append(nav);
 
 const links = new Map<string, HTMLAnchorElement>();
+const fullWorkspace = window.matchMedia('(min-width: 600px) and (min-height: 600px)');
+
+function closeCompactNavigation(returnFocus: boolean) {
+  const wasOpen = shell.dataset.navigationOpen === 'true';
+  delete shell.dataset.navigationOpen;
+  menuButton.setAttribute('aria-expanded', 'false');
+  menuButton.setAttribute('aria-label', 'Open navigation');
+  if (!fullWorkspace.matches) sidebar.inert = true;
+  if (wasOpen && returnFocus) menuButton.focus({ preventScroll: true });
+}
+
+function openCompactNavigation() {
+  if (fullWorkspace.matches) return;
+  shell.dataset.navigationOpen = 'true';
+  menuButton.setAttribute('aria-expanded', 'true');
+  menuButton.setAttribute('aria-label', 'Close navigation');
+  sidebar.inert = false;
+  requestAnimationFrame(() => {
+    sidebar.querySelector<HTMLAnchorElement>('.nav-link')?.focus({ preventScroll: true });
+  });
+}
+
+function syncNavigationMode() {
+  if (fullWorkspace.matches) {
+    delete shell.dataset.navigationOpen;
+    sidebar.inert = false;
+    menuButton.setAttribute('aria-expanded', 'false');
+    menuButton.setAttribute('aria-label', 'Open navigation');
+    return;
+  }
+  sidebar.inert = shell.dataset.navigationOpen !== 'true';
+}
+
+menuButton.addEventListener('click', () => {
+  if (shell.dataset.navigationOpen === 'true') closeCompactNavigation(true);
+  else openCompactNavigation();
+});
+scrim.addEventListener('click', () => closeCompactNavigation(true));
+document.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape' && shell.dataset.navigationOpen === 'true') {
+    event.preventDefault();
+    closeCompactNavigation(true);
+  }
+});
+fullWorkspace.addEventListener('change', syncNavigationMode);
+syncNavigationMode();
 
 navGroups.forEach((group) => {
   if (!group.items.length) return;
@@ -210,6 +287,7 @@ navGroups.forEach((group) => {
     link.textContent = item.title;
     link.addEventListener('click', (event) => {
       event.preventDefault();
+      closeCompactNavigation(false);
       navigateTo(item.path);
     });
     li.append(link);
@@ -751,4 +829,5 @@ function renderFromHash() {
 }
 
 window.addEventListener('hashchange', renderFromHash);
+hydrateIcons(compactBar);
 renderFromHash();
