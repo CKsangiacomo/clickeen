@@ -154,6 +154,10 @@ valuefield
 
 Bob compiles structured field nodes into Dieter-backed controls.
 Widgets do not paste Dieter component markup directly.
+Every structured field type requires both its Dieter stencil and spec; missing
+source fails widget generation. Toggle uses its native checkbox behavior.
+Dropdown triggers are native buttons, and `dropdown-actions` applies the
+selected value immediately.
 
 `dropdown-fill` uses explicit fill modes in field attrs. Use the hyphenated
 attribute name `fill-modes` in authored specs. `dropdown-upload` requires a

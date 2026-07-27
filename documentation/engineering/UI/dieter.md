@@ -32,8 +32,8 @@ program.
 - `dieter-typography.css` — type (see [`typography.md`](typography.md)).
 - `tokens.css` — `@import`s the three above.
 
-**Components (middle).** 25 source directories under `dieter/components/*`,
-comprising 24 component directories plus the non-rendered `shared/` helper
+**Components (middle).** 27 source directories under `dieter/components/*`,
+comprising 26 component directories plus the non-rendered `shared/` helper
 directory. Component source shape varies by contract; see
 [`components.md`](components.md) for the exact catalog and hydration/spec
 model.

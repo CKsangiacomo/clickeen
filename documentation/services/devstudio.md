@@ -57,7 +57,11 @@ Any current token-editor behavior that differs is a 126L execution gap.
 | Entitlements | Pages Functions read/write entitlement policy files through GitHub. The same tool also renders AI runtime policy editing backed by `/api/ai-runtime/*`. |
 | LLM Management | Read-only generated visibility into managed model configuration. It is not a runtime API-backed editor. |
 
-Hash routes are generated from `admin/src/html/**` and route data in `admin/src/data/routes.ts`. There is no separate design-system admin app.
+Hash routes are generated from `admin/src/html/**` and route data in
+`admin/src/data/routes.ts`. There is no separate design-system admin app. The
+current generated inventory is 3 Foundation routes, 22 Dieter Component routes,
+and 2 Policy routes. CSS-only Dieter contracts do not create empty showcase
+routes.
 
 ## Pages Functions
 

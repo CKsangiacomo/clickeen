@@ -9,9 +9,9 @@
   `dieter/components/index.ts`.
 - System mechanics (hydration model, spec binding, build): see [`dieter.md`](dieter.md). This doc is the per-component lookup; that doc explains the system once.
 
-## Catalog (25 source directories including `shared`)
+## Catalog (27 source directories including `shared`)
 
-Legend: ✅ exported from `index.ts` · ⚠️ has `.ts` but not exported · ⊘ CSS/HTML only · 💀 dead/broken.
+Legend: ✅ exported from `index.ts` · Direct host import · ⊘ CSS/HTML only.
 
 | Group | Component | Hydrate / binding | Status |
 | --- | --- | --- | --- |
@@ -19,12 +19,11 @@ Legend: ✅ exported from `index.ts` · ⚠️ has `.ts` but not exported · ⊘
 | atoms | `icon` | — (CSS-only wrapper) | ⊘ |
 | atoms | `tabs` | `hydrateTabs`, `no-binding`, `role=tablist` | ✅ |
 | atoms | `segmented` | `hydrateSegmented`, `no-binding` | ✅ |
-| atoms | `toggle` | `hydrateToggle` | ⚠️ not in `index.ts` |
+| atoms | `toggle` | native checkbox behavior | ⊘ |
 | atoms | `slider` | — (no `.ts`) | ⊘ |
 | inputs | `textfield` | `hydrateTextfield` | ✅ |
 | inputs | `valuefield` | `hydrateValuefield` | ✅ |
 | inputs | `textedit` | `hydrateTextedit` (largest; 7 `.ts` modules) | ✅ |
-| inputs | `textrename` | `hydrateTextrename` — **missing `.spec.json`** | ✅ (spec gap) |
 | choosers | `choice-tiles` | `hydrateChoiceTiles`, `string` | ✅ |
 | choosers | `object-manager` | direct ESM `hydrateObjectManager`, array add/reorder/delete | Direct host import |
 | choosers | `repeater` | direct ESM `hydrateRepeater` | Direct host import |
@@ -39,6 +38,9 @@ Legend: ✅ exported from `index.ts` · ⚠️ has `.ts` but not exported · ⊘
 | dropdowns | `popaddlink` | `hydratePopAddLink` | ✅ |
 | composites | `popover` | — (CSS/HTML/spec; container) | ⊘ |
 | activity | `agent-activity` | — (transient narration strip) | ⊘ |
+| operational | `operational-field` | ordinary app field visual base | ⊘ |
+| operational | `operational-table` | semantic table visual base and overflow shell | ⊘ |
+| operational | `tooltip` | CSS label from `data-tooltip` | ⊘ |
 | other | `shared/` | helpers (`account-assets`, `dropdownToggle`) — not rendered | — |
 
 ## Component Contract
@@ -48,21 +50,19 @@ CSS, and behavior source only when native behavior is insufficient. A missing
 required spec is a failure, not optional success. Explicit presentation-only
 primitives such as `icon` are named exceptions, not a second contract.
 
-The component-level product law is settled:
+The component-level product law is implemented:
 
-- Delete `textrename`; it has no current product consumer.
-- Keep Toggle as a native checkbox HTML/CSS/spec contract and delete its unused
-  custom Enter-key hydrator.
+- `textrename` is deleted because it had no product consumer.
+- Toggle is a native checkbox HTML/CSS/spec contract with no custom hydrator.
 - Keep `repeater` and `object-manager` distinct. Repeater edits nested items
   inline; Object Manager reorders/deletes top-level objects in a dialog. Their
   real component dependencies must be declared. A JS-to-TS rewrite requires a
   behavior reason.
-- Convert the six fake dropdown triggers to native buttons while preserving
-  their product behavior.
-- `dropdown-actions` survives as a choice/listbox popover. Delete its dead
-  footer/apply-action branch; do not keep invalid interactive buttons inside a
-  listbox for hypothetical compatibility.
-- Remove Object Manager's accumulating backdrop listener.
+- The six dropdown triggers and Bulk Edit's copied upload trigger are native
+  buttons.
+- `dropdown-actions` is one immediate-choice listbox workflow; its dead
+  footer/apply branch is gone.
+- Object Manager dialog lifecycle remains owned by the dialog contract.
 
 Bulk Edit and Object Manager follow the exact dismissal contract in
 [`dialogs-and-modals.md`](dialogs-and-modals.md). Saving either dialog applies
@@ -112,25 +112,9 @@ The `icon` component is a CSS-only `diet-icon` wrapper with numeric glyph sizes.
 The 126I execution PRD owns component-by-component API cleanup beyond those
 iconography rules.
 
-## Honest gaps
-
-- `textrename` has no current product consumer and is an execution deletion target;
-  do not add a spec to preserve it.
-- `object-manager` and `repeater` are proven distinct active workflows: the
-  former manages top-level object reorder/delete in a dialog, while the latter
-  edits nested items inline. The 126I execution PRD must map their exact
-  dependencies rather than merging them.
-- Toggle's unused custom Enter-key hydrator is a deletion target; native
-  checkbox behavior survives.
-- Six fake dropdown triggers must become native buttons.
-- The dead `dropdown-actions` footer/apply branch must be deleted.
-- Object Manager's accumulating backdrop listener must be removed.
-- Native operational fields, the operational-table visual base, and the tooltip
-  contract must be added without creating generic form, table, or overlay
-  frameworks.
-
 Current inventory detail: Dieter components are source modules consumed directly
 by Bob and Roma; there is no runtime component manifest. `shared/` contains
 helpers and is not a rendered component. `command-activity` is absent from
-current and tracked source. Historical 126 audits that mention a manifest or
-that directory remain point-in-time evidence, not current catalog truth.
+current and tracked source. The current inventory is 27 source directories, 26
+CSS files, 22 templates, 22 specs, and 18 source hydrators including direct host
+imports. Historical 126 audits remain point-in-time evidence.

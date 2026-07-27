@@ -67,8 +67,9 @@ const navGroups = [
   },
   {
     title: 'Dieter Components',
-    count: 20,
+    count: 22,
     routes: [
+      { path: '/#/dieter/agent-activity', title: 'Agent Activity' },
       { path: '/#/dieter/bulk-edit', title: 'Bulk Edit' },
       { path: '/#/dieter/button', title: 'Button' },
       { path: '/#/dieter/choice-tiles', title: 'Choice Tiles' },
@@ -86,6 +87,7 @@ const navGroups = [
       { path: '/#/dieter/segmented', title: 'Segmented' },
       { path: '/#/dieter/slider', title: 'Slider' },
       { path: '/#/dieter/tabs', title: 'Tabs' },
+      { path: '/#/dieter/textedit', title: 'Textedit' },
       { path: '/#/dieter/textfield', title: 'Textfield' },
       { path: '/#/dieter/toggle', title: 'Toggle' },
       { path: '/#/dieter/valuefield', title: 'Valuefield' },
@@ -93,8 +95,11 @@ const navGroups = [
   },
   {
     title: 'Policy',
-    count: 1,
-    routes: [{ path: '/#/policy/entitlements', title: 'Policy Editor' }],
+    count: 2,
+    routes: [
+      { path: '/#/policy/entitlements', title: 'Policy Editor' },
+      { path: '/#/policy/llm-management', title: 'LLM Management' },
+    ],
   },
 ] as const;
 

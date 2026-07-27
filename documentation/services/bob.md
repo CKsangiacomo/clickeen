@@ -76,7 +76,8 @@ chrome. Bob compiles Dieter CSS and hydrators from source. Hydration points each
 approved icon slot at `/dieter/icons/svg/{name}.svg`; Bob does not import the
 icon registry at runtime or inline SVG source. Decorative icons use
 `aria-hidden="true"`; icon-only controls keep the accessible name on the
-control.
+control. Unfamiliar ToolDrawer icon actions use the Dieter CSS tooltip contract
+on hover and keyboard focus without changing their command behavior.
 
 ## Open Contract
 

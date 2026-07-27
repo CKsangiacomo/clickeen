@@ -58,12 +58,12 @@ This document does not leave a generic accessibility backlog. If a future agent 
 semantic or copy issue, it must name the exact file/path and route it to the
 owning PRD before changing it.
 
-- Native-control conversion for Dieter pseudo triggers belongs to the component
-  doctrine and its execution PRD. The six current source families are
+- Dieter dropdown actions use native controls. The six current source families
+  are
   `dropdown-actions`, `dropdown-fill`, `dropdown-border`, `dropdown-shadow`,
   `dropdown-upload`, and `dropdown-edit`. The independently generated upload
-  control inside `bulk-edit` must move with the `dropdown-upload` contract.
-  Unconsumed `textrename` is deleted rather than converted or preserved.
+  control inside `bulk-edit` follows the same contract. Unconsumed
+  `textrename` is deleted.
 - Dialog/popover mechanics belong to [`dialogs-and-modals.md`](dialogs-and-modals.md).
   This document only names existing surfaces and exposes truthful status/error
   state.
