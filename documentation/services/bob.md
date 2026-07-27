@@ -186,7 +186,8 @@ The scaffold is a real UI destination for developing the upsell experience; it
 does not purchase, mutate a plan, call a billing provider, or claim commercial
 success. Opening it preserves Bob's unsaved working state and must not invoke a
 discard confirmation. Bob uses the shared native-dialog lifecycle for this
-prompt, and 126M preserves the completed behavior during final Roma integration.
+prompt. Final 126M integration re-verified this completed behavior through the
+deployed Bob-to-Roma path.
 
 ## Save Contract
 

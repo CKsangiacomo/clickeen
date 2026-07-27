@@ -1,6 +1,6 @@
 # 126 — DevQA: Where We Actually Stand
 
-Status: STEP 9 IN PROGRESS - 126A THROUGH 126L GREEN; 126M is next.
+Status: STEP 9 COMPLETE - 126A THROUGH 126M GREEN.
 This document reconciles PRD claims with Git and current source evidence. It does
 not define product law, approve unresolved architecture choices, prove that every
 intermediate commit deployed, or close any PRD whose required verification is
@@ -36,7 +36,7 @@ review. Reviewed trees are A `c06fa7db`; B `4b480e50`; C `b5efaefc`; D
 `31b81152`; E `ec1ed486`; F/G/H `4c5458b4`; I/J/K/L/M `22a92ec9`.
 
 Step 9 subsequently began through the accepted one-domain-at-a-time process.
-126A through 126L are now independently executed, verified,
+126A through 126M are now independently executed, verified,
 documented, and GREEN. 126E was intentionally a no-product-code preservation
 and ownership checkpoint. 126G deleted the legacy generated Dieter delivery
 system and established direct source consumption plus icon-only R2 delivery.
@@ -51,7 +51,9 @@ local modal wrappers and in-app confirms with native dialogs, preserved each
 workflow's exact dismissal law, and connected Upgrade to one honest Roma
 scaffold. 126L completed the DevStudio Full/Compact/unsupported shell and
 adopted the small operational field/table contracts without adding a shell
-framework or new test machinery. 126M is next. The historical pre-execution
+framework or new test machinery. 126M then completed Roma's matching one-tree
+shell, adopted the same small field/table contracts, deleted dead local control
+CSS, and closed the deployed Roma/Bob/DevStudio workspace matrix. The historical pre-execution
 findings below remain the record of why earlier code changes did not receive
 execution credit before that formal pass.
 
@@ -500,22 +502,20 @@ The execution boundary is now concrete:
    are reconciled.
 2. Completed: settled law, current-source gap maps, deletion maps, final PRDs,
    and exact-tree peer reviews cover every A-M domain.
-3. Completed: 126A through 126L. Next: execute 126M, one slice at a time.
-4. Do not advance a slice until its implementation, focused checks, visual proof,
-   docs, deploy/runtime evidence, product-data reconciliation where applicable,
-   and independent V1-V8 audit are GREEN.
+3. Completed: 126A through 126M, one slice at a time.
+4. Every slice advanced only after its implementation, focused checks, visual
+   proof, docs, deploy/runtime evidence, product-data reconciliation where
+   applicable, and independent V1-V8 audit were GREEN.
 5. Premature A-H changes may be kept, changed, or deleted only according to their
    frozen final PRDs; their presence does not count as prior execution.
 
 ---
 
-## 10. Final Pre-Execution V1-V8 Audit
+## 10. Final Program V1-V8 Reconciliation
 
-The independent exact-tree review is GREEN. This document is a QA/process
-artifact. The completed pre-execution work corrects shared architecture and
-doctrine inputs but changes no runtime product behavior, product data,
-managed-service state, or deployed architecture. V1-V8 applied to the final
-pre-execution corpus:
+The independent exact-tree pre-execution review and the completed Step-9
+execution audits are GREEN. This document remains a QA/process artifact; runtime
+and deployed evidence live in each executed PRD.
 
 | ID | Question | Result |
 |---|---|---|
@@ -524,7 +524,7 @@ pre-execution corpus:
 | V3 Silent omission | Does this doc drop a required input/artifact/operation? | No. It retains the all-A-M pre-execution gate, complete Roma inventory, review-provenance gap, closed read-only font evidence, mandatory execution law, and accepted D1/D2/D3 decisions. |
 | V4 Fail-open control | Does enforcement turn off when a dependency is missing? | N/A — no enforcement added. |
 | V5 Corruption-as-absence | Does this doc treat corrupt state as missing/new/empty? | No. The stale status lines are named as drift, not ignored. |
-| V6 Partial-success masquerade | Does this doc claim full success after some work was dropped? | No. Steps 1-8 are complete for A-M; 126A through 126L are executed and verified, while 126M remains pending in dependency order. |
+| V6 Partial-success masquerade | Does this doc claim full success after some work was dropped? | No. Steps 1-8 and Step 9 are complete for A-M; 126A through 126M are executed and verified. |
 | V7 Masquerade/redress | Does the same failing workflow continue under a different wrapper? | No. Verification cannot mutate code/product data or grant execution credit; exact reviewed-tree provenance is mandatory before step 9. |
 | V8 Runtime test dependency | Does normal product work start depending on tests/probes? | No. |
 

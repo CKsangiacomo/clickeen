@@ -40,7 +40,8 @@ density, and composition.
 Bob is the strongest directional editor reference because it uses a clear tool
 drawer, toolbar, canvas, and preview plane hierarchy. DevStudio now implements
 the accepted Full/Compact/unsupported operational shell with one navigation
-tree. Roma remains the final shell/layout convergence owned by 126M.
+tree. Roma implements the same capability contract with one navigation tree,
+while retaining its own simple account-app shell and domain composition.
 
 ## Global Workspace Capability Tenet
 

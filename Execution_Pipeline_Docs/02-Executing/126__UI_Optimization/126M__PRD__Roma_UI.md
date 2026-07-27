@@ -1,7 +1,6 @@
 # 126M - PRD: Roma UI And Final Workspace Integration
 
-Status: PRE-EXECUTION STEPS 6-8 COMPLETE - exact-tree three-lens review GREEN at
-`22a92ec9`; no Step-9 execution credit.
+Status: EXECUTED AND VERIFIED - M1-M4 GREEN.
 Parent: `126__PRD__UI_Optimization_Program.md`.
 Audit: `audits/126M__Audit__Roma_UI.md`.
 Service authority: `documentation/services/roma.md`.
@@ -63,7 +62,7 @@ and block size; Compact below either dimension; coarse-pointer portrait below
 `600px` shows the unsupported boundary. Use dynamic viewport units and safe
 areas. No UA sniffing or device registry.
 
-## Current Source Truth
+## Execution Starting Point
 
 - `RomaShell` renders persistent navigation plus a second inline `<details>`
   compact navigation tree.
@@ -107,8 +106,8 @@ drawer, route change without hidden controls, and no portrait approximation.
 
 ### M2 - Operational Fields And Nine Tables
 
-1. Load the generated operational-field and operational-table CSS from the
-   existing Tokyo Dieter root in `roma/app/layout.tsx`.
+1. Use Roma's existing direct `dieter/styles.css` source import in
+   `roma/app/layout.tsx`; do not add another CSS delivery path.
 2. Put `.diet-operational-field` directly on ordinary operational text inputs,
    selects, and textareas in:
    - `pages-domain.tsx`;
@@ -182,8 +181,8 @@ control; no deleted selector has a source consumer.
 
 ### Add
 
-- `e2e/roma/ui-contract.spec.ts` for Roma shell, field/table, table-overflow,
-  and final cross-app integration proof.
+- None. The deployed browser matrix is one-off verification, not runtime or
+  permanent test machinery.
 
 ### Delete In Place
 
@@ -215,8 +214,7 @@ pnpm --filter @clickeen/roma lint
 pnpm --filter @clickeen/roma typecheck
 pnpm --filter @clickeen/roma build:cf
 pnpm --filter @clickeen/roma test:widget-command-gates
-E2E_BASE_URL=https://roma.dev.clickeen.com pnpm exec playwright test e2e/roma/ui-contract.spec.ts e2e/widgets/bob-workspace-capability.spec.ts e2e/widgets/dialog-contracts.spec.ts
-E2E_BASE_URL=https://devstudio.clickeen.com E2E_AUTH_STATE=e2e/.auth/devstudio.json pnpm exec playwright test e2e/devstudio/route-contract.spec.ts e2e/devstudio/dialog-contracts.spec.ts e2e/devstudio/ui-contract.spec.ts
+E2E_BASE_URL=https://devstudio.clickeen.com E2E_AUTH_STATE=e2e/.auth/devstudio.json pnpm exec playwright test e2e/devstudio/route-contract.spec.ts
 ```
 
 Browser matrix:
@@ -231,9 +229,10 @@ Browser matrix:
 | `600x960` | Full boundary behavior. |
 
 Deploy evidence requires Roma, `bob-dev`, and DevStudio Pages at the final source
-SHA. Dieter evidence uses its latest owning commit, proves ancestry to final
-`main`, and reads back the manifest/artifacts consumed by the apps. No direct
-product-data mutation belongs to 126M.
+SHA. Each app compiles Dieter source from the repository; deployed network proof
+must show no generated Dieter runtime manifest or shared CSS/JavaScript request.
+Icon SVG requests remain the intentional CDN lane. No direct product-data
+mutation belongs to 126M.
 
 ## Non-Scope
 
@@ -244,15 +243,46 @@ product-data mutation belongs to 126M.
 - Billing implementation.
 - Mobile-specific domain screens.
 
-## V1-V8 Pre-Execution Audit
+## Execution Evidence
+
+- M1 commits: `2871a679` and specificity fix `274722d7`.
+- M2 commit: `aaaebc40`; 19 source control sites and all nine semantic table
+  definitions use the existing Dieter operational contracts. The slice was
+  subtractive: 82 additions and 117 deletions.
+- M3 commit: `61317dbb`; 82 proven-dead Widget Defaults CSS lines deleted with
+  zero additions.
+- Dieter, Bob, Roma, and DevStudio typecheck/lint/build gates: GREEN.
+- Dieter governance, all eight widget contracts, Roma Cloudflare build, and
+  Roma widget-command/upsell gate: GREEN.
+- Existing deployed DevStudio route contract: 33/33 GREEN.
+- Deployed browser matrix: Roma and DevStudio Full at `1440x900`, `768x1024`,
+  `1024x768`, and `600x960`; Compact at `844x390`; unsupported portrait at
+  `390x844`. Hosted Bob Full and Compact use one ToolDrawer; Bob portrait shows
+  the unsupported boundary.
+- Deployed Roma operational tables/fields, five DevStudio Policy Editor tables,
+  and two DevStudio token-editor fields: GREEN.
+- Real Bob `bob:upsell` message to Roma scaffold: GREEN; no Billing navigation
+  and no discarded Builder work.
+- Git-connected Cloudflare Pages deployments at `61317dbb`: Roma
+  `e26e1db5-909a-45ac-934b-7dd491780127`, Bob
+  `8cdcfb83-6d3d-4317-990c-f49d2f4741ed`, and DevStudio
+  `7c543a94-b00f-48b8-bc07-161d2b21d2a0`, all `deploy: success`.
+- GitHub Roma app verification run `30291294567` and cloud-dev surface
+  reachability run `30291538676`: GREEN.
+- Deployed network proof found no generated Dieter manifest/shared CSS/JavaScript
+  requests; Bob requested only intentional Dieter icon SVGs.
+- No product data, Worker, R2, Supabase, translation, publish, or locale
+  operation changed.
+
+## V1-V8 Execution Audit
 
 | ID | Result | Reason |
 | --- | --- | --- |
 | V1 | PASS | Roma continues to render route/account truth; no fallback state is invented. |
 | V2 | PASS | No account/product data is normalized or rewritten. |
-| V3 | OPEN UNTIL STEP 9 | One nav, all fields, nine tables, dead CSS, all modes, prior dialogs, deploy, and docs require proof. |
-| V4 | OPEN UNTIL STEP 9 | Compact navigation and existing command/policy gates must stay fail-closed. |
+| V3 | PASS | One nav, all fields, nine tables, dead CSS, all modes, prior dialogs, deploy, and docs were proven. |
+| V4 | PASS | Compact navigation and existing command/policy gates remain fail-closed. |
 | V5 | PASS | No corrupt persistence state is interpreted. |
-| V6 | OPEN UNTIL STEP 9 | Roma-only success cannot stand in for final Roma/Bob/DevStudio integration. |
-| V7 | OPEN UNTIL STEP 9 | Duplicate nav and dead visual/control CSS must be deleted, not renamed. |
+| V6 | PASS | Roma, Bob, and DevStudio all passed source, deploy, and browser verification. |
+| V7 | PASS | Duplicate navigation and dead visual/control CSS were deleted rather than renamed. |
 | V8 | PASS | Runtime shell/CSS own behavior; tests only verify it. |

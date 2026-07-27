@@ -35,11 +35,21 @@ Roma follows the global operational-workspace tenet in
 `documentation/engineering/UI/surfaces.md`: full desktop workspace on desktop
 and tablets in either orientation; compact navigation/workspace on mobile
 landscape; explicit unsupported boundary on mobile portrait. Retina/4K density
-governs sharpness, not layout class. The current generic `980px` navigation
-collapse is a 126M execution gap, not product law. Roma keeps one simple shell:
+governs sharpness, not layout class. Roma keeps one simple shell:
 persistent narrow left navigation plus a flexible work area in full mode, and
 the same navigation as an overlay drawer plus a full-width work area in compact
-mode. Domain screens are not replaced by mobile variants.
+mode. The same navigation DOM owns both modes, with Escape/scrim close and
+focus return in Compact mode. At least `600px` of usable width and height is
+Full; a smaller dimension is Compact; coarse-pointer mobile portrait below
+`600px` shows the explicit unsupported boundary. Domain screens are not
+replaced by mobile variants.
+
+Roma's ordinary operational text/select controls and nine semantic table
+definitions use Dieter's small operational field/table visual contracts.
+Roma retains their values, labels, validation, data, actions, and layout.
+Tables preserve every column and own horizontal overflow through the Dieter
+wrapper. Checkboxes, hidden file inputs, modules, toolbars, and specialized
+composition remain locally owned.
 
 ## Accepted Dialog And Upsell Law
 
@@ -62,8 +72,8 @@ contact operation. When the intent starts in a plan-limit prompt, Roma replaces
 that prompt instead of stacking dialogs. Ordinary Billing navigation remains
 valid for inspecting the current plan. Roma's native dialogs and Bob's typed
 intent implement this behavior directly. The Builder discard guard remains on
-real navigation only. 126M preserves and re-verifies this completed behavior
-during final Roma integration.
+real navigation only. Final 126M integration re-verified this behavior through
+the deployed Bob-to-Roma intent path.
 
 ## Runtime Routes
 
