@@ -26,8 +26,8 @@ Legend: ✅ exported from `index.ts` · ⚠️ has `.ts` but not exported · ⊘
 | inputs | `textedit` | `hydrateTextedit` (largest; 7 `.ts` modules) | ✅ |
 | inputs | `textrename` | `hydrateTextrename` — **missing `.spec.json`** | ✅ (spec gap) |
 | choosers | `choice-tiles` | `hydrateChoiceTiles`, `string` | ✅ |
-| choosers | `object-manager` | hand-written `.js` IIFE, array add/reorder/delete | ⊘ not in `index.ts` |
-| choosers | `repeater` | hand-written `.js` IIFE (`window.Dieter`) | ⊘ not in `index.ts` |
+| choosers | `object-manager` | direct ESM `hydrateObjectManager`, array add/reorder/delete | Direct host import |
+| choosers | `repeater` | direct ESM `hydrateRepeater` | Direct host import |
 | choosers | `bulk-edit` | `hydrateBulkEdit`, `row-path` | ✅ |
 | dropdowns | `dropdown-fill` | `hydrateDropdownFill` (color/fill; largest dropdown) | ✅ |
 | dropdowns | `dropdown-actions` | `hydrateDropdownActions`, `string` | ✅ |
@@ -129,7 +129,8 @@ iconography rules.
   contract must be added without creating generic form, table, or overlay
   frameworks.
 
-Current inventory detail: 24 CSS-backed runtime components are emitted in the
-Dieter manifest; `shared/` contains helpers and is not a rendered component.
-`command-activity` is absent from current and tracked source. Historical 126
-audits that mention it remain point-in-time evidence, not current catalog truth.
+Current inventory detail: Dieter components are source modules consumed directly
+by Bob and Roma; there is no runtime component manifest. `shared/` contains
+helpers and is not a rendered component. `command-activity` is absent from
+current and tracked source. Historical 126 audits that mention a manifest or
+that directory remain point-in-time evidence, not current catalog truth.

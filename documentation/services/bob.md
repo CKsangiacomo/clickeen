@@ -72,10 +72,9 @@ Bob also validates the complete document when opening and before saving.
 ## Dieter Icons
 
 Bob preserves Dieter `data-icon` names in compiled controls and application
-chrome. Bob loads the build-generated `/dieter/editor/editor.css` and
-`/dieter/editor/editor.js` once; the CSS renders icons as masks backed by
-`/dieter/icons/svg/{name}.svg`. Bob does not import the icon registry, inline
-SVG source, or load Dieter files per panel. Decorative icons use
+chrome. Bob compiles Dieter CSS and hydrators from source. Hydration points each
+approved icon slot at `/dieter/icons/svg/{name}.svg`; Bob does not import the
+icon registry at runtime or inline SVG source. Decorative icons use
 `aria-hidden="true"`; icon-only controls keep the accessible name on the
 control.
 
@@ -315,10 +314,10 @@ The editor artifact API is:
 GET /widget-editors/{widgetname}.json
 ```
 
-Bob has same-origin static proxy routes for shared editor/runtime resources:
+Bob has same-origin static proxy routes for shared runtime resources:
 
 ```text
-GET /dieter/**
+GET /dieter/icons/svg/{icon}
 GET /l10n/**
 ```
 

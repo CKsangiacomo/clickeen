@@ -67,6 +67,11 @@ export const baseCompiledWidget = {
 <script src="./widget.client.js" defer></script>
 </body>`,
       },
+      '/dieter/tokens/tokens.css': {
+        mediaType: 'text/css',
+        source: `:root { --ck-color-text: #111; }
+`,
+      },
       'product/widgets/contract-widget/widget.css': {
         mediaType: 'text/css',
         source: `.contract-widget { color: var(--ck-color-text); }
@@ -109,4 +114,3 @@ export const baseMaterializerInput = {
     overlayFingerprint: null,
   },
 } satisfies RuntimeMaterializerInput;
-

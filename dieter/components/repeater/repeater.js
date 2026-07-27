@@ -1,6 +1,4 @@
-var __prevDieter = window.Dieter ? { ...window.Dieter } : {};
-(function () {
-  const registry = new WeakMap();
+const registry = new WeakMap();
 
   function createId() {
     if (typeof crypto === "undefined" || !crypto) {
@@ -236,7 +234,7 @@ var __prevDieter = window.Dieter ? { ...window.Dieter } : {};
     return icon ? icon.cloneNode(true) : null;
   }
 
-  function hydrateRepeater(scope, options) {
+  export function hydrateRepeater(scope, options) {
     const roots = scope.querySelectorAll(".diet-repeater");
     roots.forEach((root) => {
       if (registry.has(root)) return;
@@ -734,27 +732,5 @@ var __prevDieter = window.Dieter ? { ...window.Dieter } : {};
   }
 
   function runChildHydrators(scope, options) {
-    if (typeof window === "undefined" || !window.Dieter) return;
-    const entries = Object.entries(window.Dieter).filter(
-      ([name, fn]) =>
-        typeof fn === "function" &&
-        name.toLowerCase().startsWith("hydrate") &&
-        name.toLowerCase() !== "hydrateall" &&
-        name.toLowerCase() !== "hydraterepeater"
-    );
-    entries.forEach(([, fn]) => {
-      try {
-        fn(scope, options);
-      } catch (err) {
-        if (window.__CK_DEV__ === true) {
-          console.warn("[repeater] child hydrator error", err);
-        }
-      }
-    });
+    options?.hydrateChildren?.(scope);
   }
-
-  window.Dieter = {
-    ...__prevDieter,
-    hydrateRepeater,
-  };
-})();

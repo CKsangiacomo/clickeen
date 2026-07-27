@@ -1,5 +1,3 @@
-@import '../button/button.css';
-
 .diet-choice-tiles {
   display: grid;
   inline-size: 100%;

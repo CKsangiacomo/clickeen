@@ -9,6 +9,7 @@ import { SettingsPanel } from './SettingsPanel';
 import { TranslationsPanel } from './TranslationsPanel';
 import type { TranslatedLocalesData, TranslationSetup } from './useTranslationPreviewState';
 import { ACCOUNT_TYPOGRAPHY_SELECTION_INVALID_REASON_KEY } from '@clickeen/widget-shell';
+import { dieterIconStyle } from './dieterIcon';
 
 const BUILDER_ERROR_COPY: Record<string, string> = {
   'coreui.errors.auth.required': 'You need to sign in again to keep editing this widget.',
@@ -237,7 +238,12 @@ export function ToolDrawer({
               type="button"
               aria-pressed={mode === 'manual'}
             >
-              <span className="diet-btn-ictxt__icon" data-icon="pencil" aria-hidden="true" />
+              <span
+                className="diet-btn-ictxt__icon"
+                data-icon="pencil"
+                style={dieterIconStyle('pencil')}
+                aria-hidden="true"
+              />
               <span className="diet-btn-ictxt__label body-s">Manual</span>
             </button>
           </label>
@@ -259,7 +265,12 @@ export function ToolDrawer({
               type="button"
               aria-pressed={mode === 'copilot'}
             >
-              <span className="diet-btn-ictxt__icon" data-icon="sparkles" aria-hidden="true" />
+              <span
+                className="diet-btn-ictxt__icon"
+                data-icon="sparkles"
+                style={dieterIconStyle('sparkles')}
+                aria-hidden="true"
+              />
               <span className="diet-btn-ictxt__label body-s">Copilot</span>
             </button>
           </label>

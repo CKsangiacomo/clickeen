@@ -102,7 +102,8 @@ async function testStylesheetReferencesAreConsolidated(): Promise<void> {
   assert.doesNotMatch(result.files.indexHtml, /\.\/styles\.css|\.\/runtime\.js/);
   assert.doesNotMatch(result.files.indexHtml, /\/dieter\/tokens\/tokens\.css/);
   assert.doesNotMatch(result.files.indexHtml, /\.\/widget\.css/);
-  assert.match(result.files.stylesCss, /@import "\/dieter\/tokens\/tokens\.css";/);
+  assert.match(result.files.stylesCss, /--ck-color-text: #111/);
+  assert.doesNotMatch(result.files.stylesCss, /@import/);
   assert.match(result.files.stylesCss, /\.contract-widget \{ color: var\(--ck-color-text\); \}/);
 }
 

@@ -1,6 +1,12 @@
 # 126A - PRD: Accessibility
 
 Status: STEP 9 COMPLETE - 126A.1 through 126A.4 GREEN.
+
+Post-126G delivery note: references below to `pnpm build:dieter`,
+`scripts/build-dieter.js`, `tokyo/product/dieter/**`, or a deployed Dieter
+manifest describe the historical execution environment. They are not current
+instructions. Dieter source is now compiled/materialized directly and only SVG
+icon bytes are deployed.
 Parent: `126__PRD__UI_Optimization_Program.md` (MAMA).
 Series order: 126A of 126A-126M.
 KB doc target: `documentation/engineering/UI/accessibility.md`.
@@ -297,13 +303,12 @@ remain blast radius only if later 126 execution changes the documented behavior.
 Compliance reason: docs are part of done. Future agents operate from living docs;
 stale ownership labels are execution hazards.
 
-### Baseline 6 - Generated Artifacts
+### Baseline 6 - Generated DevStudio Artifacts
 
 Do not hand-edit generated artifacts.
 
 | Generated path | Rule |
 | --- | --- |
-| `tokyo/product/dieter/**` | Regenerate from source with `pnpm build:dieter` after Dieter source changes. |
 | `admin/src/html/components/*.html` | Regenerate through DevStudio/Dieter generators after component source changes. |
 | `admin/src/html/foundations/{colors,icons,typography}.html` | Regenerate from source/generators. |
 | `admin/src/data/{componentRegistry.generated.ts,icons.generated.ts,showcase.generated.ts,typography.generated.json}` | Regenerate from source/generators. |
@@ -392,7 +397,6 @@ Repeater source/spec edit:
 
 | Generator | Expected generated change | Stop condition |
 | --- | --- | --- |
-| `pnpm build:dieter` | `tokyo/product/dieter/components/repeater/repeater.html` contains the two hidden decorative spans; `tokyo/product/dieter/components/repeater/repeater.spec.json` contains the default name; `tokyo/product/dieter/manifest.json` may change only its generator-owned `gitSha` because the committed manifest currently predates the latest Dieter source commit. | Stop if the build fails, if any other manifest field changes, or if any other Dieter output differs. |
 | `pnpm --filter @clickeen/devstudio generate` | Every rendered Repeater example in `admin/src/html/components/repeater.html` contains the two hidden decorative spans and the non-empty `Reorder items` name. | Stop if generation fails or produces any other DevStudio diff. |
 
 Do not hand-edit any generated file. No other generated file is an accepted
@@ -424,14 +428,12 @@ slice until both gates are green. This authorizes no deployment during Steps
 1-8; it defines the later Step-9 order.
 
 **126A.1 local gate:** source and generated markup contain
-`aria-hidden="true"` on both reorder icons and every source/generated Repeater
-example has a non-empty `Reorder items` name; `pnpm build:dieter`, Dieter
-typecheck, DevStudio generation, and DevStudio typecheck pass; generated diffs
-are limited to the two Repeater mirrors plus the manifest `gitSha`.
+`aria-hidden="true"` on both reorder icons and every source/DevStudio-generated
+Repeater example has a non-empty `Reorder items` name; Dieter typecheck,
+DevStudio generation, and DevStudio typecheck pass.
 
 **126A.1 cloud gate:** commit and push only the green slice; wait for the
-`cloud-dev workers deploy` Dieter sync and DevStudio Pages Git build; verify the
-two exact R2 objects; use the authenticated static showcase at
+Bob and DevStudio Pages Git builds; use the authenticated static showcase at
 `https://devstudio.clickeen.com/#/dieter/repeater` to prove the deployed
 semantics and pixel-identical appearance against the exact pre-change semantic
 state; and use the authenticated Roma -> Bob Builder Repeater to prove reorder
@@ -735,8 +737,8 @@ rg -n "coreui\\.|HTTP_|backend|Berlin|page package generation|\\.\\.\\.|tier[0-9
 After implementation, run the exact focused checks:
 
 ```bash
-pnpm build:dieter              # if Dieter source changed
 pnpm --filter @ck/dieter typecheck
+pnpm dieter:governance:check
 pnpm --filter @clickeen/devstudio generate
 pnpm --filter @clickeen/devstudio typecheck
 pnpm --filter @clickeen/bob test:accessibility-copy

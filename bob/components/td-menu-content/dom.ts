@@ -1,12 +1,26 @@
 import type { AccountAssetsClient } from '../../../dieter/components/shared/account-assets';
-
-declare global {
-  interface Window {
-    Dieter?: {
-      hydrateAll?: (scope?: HTMLElement, deps?: DieterHydratorDeps) => void;
-    };
-  }
-}
+import {
+  hydrateBulkEdit,
+  hydrateButton,
+  hydrateChoiceTiles,
+  hydrateDropdownActions,
+  hydrateDropdownBorder,
+  hydrateDropdownEdit,
+  hydrateDropdownFill,
+  hydrateDropdownShadow,
+  hydrateDropdownUpload,
+  hydrateMenuactions,
+  hydratePopAddLink,
+  hydrateSegmented,
+  hydrateTabs,
+  hydrateTextedit,
+  hydrateTextfield,
+  hydrateTextrename,
+  hydrateToggle,
+  hydrateValuefield,
+} from '../../../dieter/components';
+import { hydrateObjectManager } from '../../../dieter/components/object-manager/object-manager';
+import { hydrateRepeater } from '../../../dieter/components/repeater/repeater';
 
 const GROUP_LABELS: Record<string, string> = {
   wgtappearance: 'Widget appearance',
@@ -19,22 +33,47 @@ export type DieterHydratorDeps = {
   accountAssets: AccountAssetsClient;
 };
 
+function hydrateIcons(scope: Element | DocumentFragment): void {
+  scope.querySelectorAll<HTMLElement>('[data-icon]').forEach((icon) => {
+    const name = icon.dataset.icon?.trim() ?? '';
+    if (!/^[a-z0-9.-]+$/i.test(name)) return;
+    icon.style.setProperty('--diet-icon-source', `url("/dieter/icons/svg/${name}.svg")`);
+  });
+}
+
 function labelForGroup(key: string | null): string {
   if (!key) return '';
   return GROUP_LABELS[key] || key.replace(/-/g, ' ');
 }
 
-export function runHydrators(scope: HTMLElement, deps?: DieterHydratorDeps) {
-  if (typeof window === 'undefined' || !window.Dieter) throw new Error('coreui.errors.builder.controls.runtimeMissing');
-  const entries = Object.entries(window.Dieter).filter(
-    ([name, fn]) =>
-      typeof fn === 'function' &&
-      name.toLowerCase().startsWith('hydrate') &&
-      name.toLowerCase() !== 'hydrateall',
-  );
-  for (const [, fn] of entries) {
-    (fn as (el?: HTMLElement, deps?: DieterHydratorDeps) => void)(scope, deps);
-  }
+export function runHydrators(scope: HTMLElement, deps: DieterHydratorDeps): void {
+  const nestedDeps = {
+    ...deps,
+    hydrateChildren: (childScope: HTMLElement) => runHydrators(childScope, deps),
+  };
+
+  hydrateIcons(scope);
+  hydrateBulkEdit(scope, nestedDeps);
+  hydrateButton(scope);
+  hydrateChoiceTiles(scope);
+  hydrateDropdownActions(scope);
+  hydrateDropdownBorder(scope);
+  hydrateDropdownEdit(scope);
+  hydrateDropdownFill(scope, deps);
+  hydrateDropdownShadow(scope);
+  hydrateDropdownUpload(scope, deps);
+  hydrateMenuactions(scope);
+  hydrateObjectManager(scope, nestedDeps);
+  hydratePopAddLink(scope);
+  hydrateRepeater(scope, nestedDeps);
+  hydrateSegmented(scope);
+  hydrateTabs(scope);
+  hydrateTextedit(scope);
+  hydrateTextfield(scope);
+  hydrateTextrename(scope);
+  hydrateToggle(scope);
+  hydrateValuefield(scope);
+  hydrateIcons(scope);
 }
 
 export function syncSegmentedPressedState(input: HTMLInputElement) {

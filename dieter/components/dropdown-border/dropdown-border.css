@@ -1,9 +1,3 @@
-@import '../button/button.css';
-@import '../popover/popover.css';
-@import '../slider/slider.css';
-@import '../textfield/textfield.css';
-@import '../toggle/toggle.css';
-
 .diet-dropdown-border {
   position: relative;
   display: grid;

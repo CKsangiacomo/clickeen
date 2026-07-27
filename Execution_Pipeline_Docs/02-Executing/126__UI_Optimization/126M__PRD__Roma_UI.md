@@ -155,9 +155,8 @@ control; no deleted selector has a source consumer.
 4. Regress 126K's plan-prompt-to-upsell and real Bob `bob:upsell` bridge without
    `/billing` navigation or discard confirmation.
 5. Verify Git-connected Roma, `bob-dev`, and DevStudio Pages at the final source
-   SHA. Verify the Dieter manifest records the latest commit that affected
-   Dieter/build inputs, that commit is an ancestor of final `main`, and the
-   manifest/artifact bytes are the ones consumed by the final app deployments.
+   SHA. Verify each app deployment compiles the Dieter source from that commit
+   and no generated Dieter runtime or shared CSS/JavaScript request returns.
 6. Reconcile Roma/Bob/DevStudio and UI living docs.
 
 ## Exact Blast Radius
@@ -169,7 +168,7 @@ control; no deleted selector has a source consumer.
 | `roma/components/roma-shell.tsx` | One drawer state/trigger/scrim and portrait boundary. |
 | `roma/components/roma-nav.tsx` | Delete compact duplicate-tree branch; keep one nav. |
 | `roma/app/roma.css` | Full/Compact/unsupported shell; operational-class adoption cleanup; dead Widget Defaults deletion. |
-| `roma/app/layout.tsx` | Load two generated Dieter CSS contracts and add viewport-fit support. |
+| `roma/app/layout.tsx` | Preserve direct `dieter/styles.css` source compilation and add viewport-fit support. |
 | `roma/components/pages-domain.tsx` | Operational fields; wrap four tables. Preserve K dialog changes. |
 | `roma/components/widgets-domain.tsx` | Rename field; wrap one table. Preserve K upsell/dialog changes. |
 | `roma/components/assets-domain.tsx` | Wrap two tables. Preserve K upload dialog behavior. |

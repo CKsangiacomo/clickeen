@@ -6,8 +6,8 @@ Living reference for iconography doctrine.
 - Execution PRD: [`126C__PRD__Iconography.md`](../../../Execution_Pipeline_Docs/02-Executing/126__UI_Optimization/126C__PRD__Iconography.md).
 - Source artifact pair: `dieter/icons/icons.json` and `dieter/icons/svg/*`.
 - Human origination tool: `tooling/sf-symbols`.
-- Deploy propagation: root `scripts/build-dieter.js` copies verified source icons
-  to `tokyo/product/dieter/icons/**`.
+- Deploy propagation: the Tokyo product-root sync copies
+  `dieter/icons/svg/**` directly to R2 `dieter/icons/svg/**`.
 
 This document is not an icon-redesign program. The current 157 Dieter icons are the
 approved operational icon set. Agents consume existing icons; they do not add,
@@ -17,7 +17,7 @@ The approved set is the current SF Symbols port. Its dot-notation names and
 manifest geometry format are product source truth; agents do not rename,
 reshape, or reinterpret that format.
 
-## Source And Build
+## Source And Delivery
 
 New Dieter icons are human-originated through `tooling/sf-symbols`, then
 committed as the source artifact pair:
@@ -27,15 +27,9 @@ dieter/icons/icons.json
 dieter/icons/svg/{icon.name}.svg
 ```
 
-The ordinary Dieter build is propagation only:
-
-```bash
-pnpm build:dieter
-```
-
-That build verifies manifest/source parity and `currentColor` source SVGs, then
-copies the artifacts into `tokyo/product/dieter/icons/**`. It does not mutate
-committed source SVGs and is not an icon authoring path.
+There is no Dieter icon build or generated Tokyo copy. The GitHub product-root
+deployment copies committed SVG source bytes directly to R2. `icons.json`
+remains source/compile-time data and is not deployed.
 
 ## Consumer Lanes
 
@@ -44,7 +38,7 @@ Agents must use the lane that owns the UI they are editing:
 | Lane | Consumption rule |
 | --- | --- |
 | Dieter component source | Use approved icon slots such as `data-icon="approved.name"`; no raw SVG drops. |
-| Bob compiler/output | Bob preserves Dieter `data-icon` slots; generated `icon.css` paints them from `/dieter/icons/svg/{name}.svg`. |
+| Bob compiler/output | Bob preserves Dieter `data-icon` slots; source hydration points them at `/dieter/icons/svg/{name}.svg`. |
 | Bob app chrome | Use the same Dieter `data-icon` contract; icons stay decorative and control names live on controls. |
 | DevStudio/Admin | Generated raw SVG imports are Admin tooling/reveal only, not product runtime doctrine. Missing icons render an explicit `[missing icon: name]` marker. |
 | Roma product UI | Use the same Dieter operational-icon contract through the implementation lane specified by the 126M execution PRD; do not create a Roma-only icon system. |

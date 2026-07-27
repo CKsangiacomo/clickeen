@@ -321,9 +321,9 @@ Policy API:
 
 These roots are deployed from git-authored repo sources into R2. They are not mutated by account runtime operations.
 
-| Repo source | Canonical R2 root | Notes |
+| Repo input | Canonical R2 root | Notes |
 | --- | --- | --- |
-| `tokyo/product/dieter/**` | `dieter/**` | Built Dieter manifest, tokens, components, and icons. |
+| `dieter/icons/svg/**` | `dieter/icons/svg/**` | Approved shared SVG icon bytes only. |
 | `tokyo/product/widgets/**` | `product/widgets/**` | Widget software. Friendly `/widgets/**` routes must serve these objects. |
 | `tokyo/roma/**` | `product/roma/**` | Product app/static support media. |
 | `tokyo/prague/**` | `prague/**` | Prague page/content/GTM media, including page-local translation sidecars. |
@@ -331,13 +331,9 @@ These roots are deployed from git-authored repo sources into R2. They are not mu
 Do not add deploy targets outside the current source-to-R2 roots above unless a
 new product law explicitly creates that root and its owning operation path.
 
-Prague R2 sync note:
-- `tokyo/prague/**` is supported by `pnpm tokyo:r2:sync:check` and `pnpm tokyo:r2:sync:remote`.
-- Current `cloud-dev workers deploy` R2 sync trigger does not automatically run for `tokyo/prague/**` changes.
-- Current `cloud-dev prague content release` validates/builds Prague content and does not sync `tokyo/prague/**` to R2.
-- If Prague R2 content must be updated before the workflow trigger includes it,
-  run the Tokyo product-root sync path deliberately and verify exact `prague/**`
-  keys in R2.
+`tokyo/prague/**` changes trigger the GitHub Actions `cloud-dev workers deploy`
+product-root sync. `cloud-dev prague content release` still owns Prague content
+validation/build; it is not a second R2 deployment path.
 
 ## Live-Only Secrets And External State
 

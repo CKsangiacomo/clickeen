@@ -286,7 +286,6 @@ pnpm install
 Build:
 
 ```bash
-pnpm build:dieter
 pnpm build
 ```
 

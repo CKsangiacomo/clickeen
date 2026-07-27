@@ -83,7 +83,7 @@ CLICKEEN
 | Model execution | San Francisco | `sanfrancisco/` |
 | Product Copilot brain | Product Copilot Worker | `agents/product-copilot/` |
 | Translation brain | Translation Agent Worker | `agents/translation-agent/` |
-| Design system | Dieter | `dieter/`, `tokyo/product/dieter/`, `dieter/` R2 root |
+| Design system | Dieter | `dieter/` source; only `dieter/icons/svg/**` is deployed to the R2 `dieter/` root |
 | Marketing/demo pages | Prague | `prague/` and `prague/` R2 root |
 | Internal cockpit | DevStudio | `admin/` |
 

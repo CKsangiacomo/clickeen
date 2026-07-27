@@ -15,7 +15,7 @@ Tokyo R2 has one runtime-managed account root plus git-authored deploy roots:
 
 ```text
 accounts/   runtime-managed account storage
-dieter/     git-authored shared design-system media
+dieter/     git-authored shared SVG icon media
 product/    git-authored product software and media
 prague/     git-authored marketing/site/GTM content
 ```
@@ -26,7 +26,7 @@ Git-authored deploy mapping:
 
 ```text
 tokyo/product/widgets/**  -> product/widgets/**
-tokyo/product/dieter/**   -> dieter/**
+dieter/icons/svg/**       -> dieter/icons/svg/**
 tokyo/roma/**             -> product/roma/**
 tokyo/prague/**           -> prague/**
 ```
@@ -136,7 +136,7 @@ Friendly public paths map to canonical roots:
 | Friendly path | Canonical R2 root |
 | --- | --- |
 | `/widgets/**` | `product/widgets/**` |
-| `/dieter/**` | `dieter/**` |
+| `/dieter/icons/svg/**` | `dieter/icons/svg/**` |
 | `/i18n/**` | `product/roma/i18n/public/**` |
 | `/assets/account/**` | account asset reads allowed by Tokyo-worker |
 | `/prague/l10n/**` | Prague l10n static path |
@@ -145,10 +145,10 @@ Friendly public paths map to canonical roots:
 Friendly paths are serving paths, not storage roots.
 
 Account instance package files are stored bytes, not live views over
-`product/widgets/**`. `/dieter/**` and account asset paths are
-external delivery references served from their owning roots. Tokyo public
-serving does not recompute widget source, Dieter state, font state, or asset
-freshness on visitor requests.
+`product/widgets/**`. Dieter icon and account asset paths are external delivery
+references served from their owning roots. Tokyo public serving does not
+recompute widget source, design-system state, font state, or asset freshness on
+visitor requests.
 
 ## Storage Boundaries
 
@@ -170,12 +170,8 @@ Dry-run deploy sync:
 pnpm tokyo:r2:sync:check
 ```
 
-Remote deploy sync:
-
-```bash
-pnpm cf:preflight
-pnpm tokyo:r2:sync:remote
-```
+Remote product-root deployment runs through GitHub Actions
+`cloud-dev workers deploy` after a push to `main`.
 
 Remote R2 reads/writes must use the repo commands documented in:
 

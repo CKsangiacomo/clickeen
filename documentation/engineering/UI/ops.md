@@ -1,97 +1,75 @@
-# UI Ops - How Dieter Is Built, Served, And Steered
+# UI Ops - How Dieter Is Consumed And Delivered
 
-**Living, canonical reference — the UI runbook.**
-This doc owns "how the system runs"; [`dieter.md`](dieter.md) owns "what the system is."
+**Living, canonical reference.**
 
-- Canonical doctrine: this document.
-- Execution PRD: [`126G__PRD__Ops.md`](../../../Execution_Pipeline_Docs/02-Executing/126__UI_Optimization/126G__PRD__Ops.md).
-- **Sources:** `scripts/build-dieter.js`, `scripts/verify-svgs.js`,
-  `admin/scripts/*`, `.github/workflows/*`,
-  `documentation/engineering/CloudflareOperations.md`, and the current service
-  documentation for Dieter, DevStudio, Tokyo, and Tokyo-worker.
+This doc owns how Dieter moves through the system.
+[`dieter.md`](dieter.md) owns what the design system is.
 
-## Authority Lanes
+- Canonical source: `dieter/**`.
+- Execution PRD:
+  [`126G__PRD__Ops.md`](../../../Execution_Pipeline_Docs/02-Executing/126__UI_Optimization/126G__PRD__Ops.md).
+- Manual icon authoring: `tooling/sf-symbols/**`.
 
-- **Source:** `dieter/**`, build scripts, generator scripts, and approved UI
-  source in git.
-- **Generated repo artifacts:** `tokyo/product/dieter/**` and generated
-  DevStudio/Admin artifacts written by generators. They are regenerated from
-  source and are not hand-edited as source truth.
-- **Deployed runtime:** Cloudflare Pages, Workers, and R2 product roots such as
-  `dieter/**`, `product/widgets/**`, `product/roma/**`, and `prague/**`.
-- **Product data:** account/runtime data under
-  `accounts/{accountPublicId}/...` and product routes/workers. Dieter build
-  and UI ops do not mutate it.
+## Source And Consumers
 
-## Build
+There is one Dieter source tree and no generated Dieter runtime tree.
 
-- `scripts/build-dieter.js` bundles tokens, components, component JS, and icons
-  into `tokyo/product/dieter/**`.
-- Icon propagation verifies `dieter/icons/icons.json` and `dieter/icons/svg/*`
-  parity/currentColor, then copies them to Tokyo output. The build does not
-  mutate committed icon source.
-- The Dieter manifest must record the latest commit affecting Dieter/build
-  inputs in every environment. Current source still lets deployment environment
-  SHAs override that scoped identity; PRD 126G removes the override and adds a
-  generated-tree parity gate before R2 sync. Missing git provenance or
-  unresolved component dependencies already fail the build.
-- Generators (in `admin/scripts/`): `generate-foundation-pages.mjs` (colors/icons/
-  typography from token source), `generate-component-pages.ts` (**guarded**: throws
-  on unresolved `{{...}}` stencils and on a component that renders no page),
-  `generate-typography-json.cjs`, `generate-static-registries.mjs`.
+- Bob and Roma compile `dieter/styles.css` and source hydrators.
+- Prague compiles canonical token CSS.
+- DevStudio generates its reveal pages from source.
+- Widget package generation reads canonical token/component CSS.
+- Instance materialization writes required Dieter CSS into instance
+  `styles.css`.
 
-## Serve
+The applications and widget packages do not fetch shared Dieter CSS or
+JavaScript at runtime.
 
-- Deployed to **Tokyo R2** at `dieter/**`; surfaces load it from `/dieter`
-  (Bob via CDN, Bob/Roma via the `/dieter` edge proxy).
-- Current deploy chain rebuilds Dieter for Dieter source/build-script changes,
-  but generated-only and other Tokyo product-root syncs can upload the Dieter
-  root without rebuilding. PRD 126G changes the single existing workflow so
-  every `tokyo_assets=true` path runs `build:dieter`, proves zero tracked or
-  untracked generated Dieter delta, and only then runs
-  `tokyo-r2-deploy-sync`.
-- Tokyo/R2 sync uploads current git-authored product roots. It is not remote
-  reconciliation, orphan cleanup, rollback, or product-data mutation.
-- Localization remains a real product domain, but root l10n storage is not a UI
-  deploy-root authority. UI ops must not delete real locale overlays, Prague
-  localization, San Francisco localization execution, or localization tooling
-  while removing stale deploy-root assumptions.
+## Icon Delivery
 
-## Govern (DevStudio reveal/steer loop)
+Icons are the only Dieter files delivered as shared CDN objects:
 
-- DevStudio is the cockpit: it **reveals** Dieter (generated, guarded pages) and
-  **steers** through a values-only token editor on the ratified commit lane
-  (Migration §3.5: Berlin-session → validate → commit → propagate). Adding /
-  removing / renaming tokens stays code work; the UI edits values only.
-- Trust = the human looks at derived truth and judges; guards are a backstop, not
-  the trust layer.
+```text
+dieter/icons/svg/** -> R2 dieter/icons/svg/**
+```
 
-## Design freeze + hash baseline
+The Tokyo product-root sync deploys the committed SVG files directly.
+`dieter/icons/icons.json` remains source/compile-time data. There is no deployed
+manifest, editor bundle, component tree, or token tree.
 
-- Migration §3.6 freezes the showcase layouts; Appendix A holds the hash-frozen
-  visual baseline. Generation changes *where content comes from*, never *how it
-  looks* — a frozen page that drifts is a regression, not an improvement.
+The `cloud-dev workers deploy` workflow watches Dieter source because the root
+checks regenerate widget product packages before the product-root sync. Tokyo
+Worker deployment itself remains selected by the workflow's changed-surface
+logic.
 
-## Current Boundaries
+## Product/Data Boundary
 
-- Governance guards cover generated Admin/DevStudio artifacts. They do not prove
-  Bob, Roma, Prague, widget runtime, or account-runtime behavior.
-- DevStudio token edits are a DevStudio product workflow. This document records
-  the ops lane; the 126L execution PRD owns implementation. Neither adds an
-  approval workflow, semantic token validation, contrast enforcement, or PR
-  bureaucracy.
-- DevStudio writes selected token values to source through the authenticated
-  GitHub Contents lane. Direct token commits are not automatically covered by
-  the PR-only `devstudio-verify` workflow; the 126L execution PRD owns visible
-  mutation evidence and closure of that verification gap.
-- Color, typography, icon, motion, component, layout, and surface semantics are
-  owned by their living UI docs. Their execution PRDs map gaps and sequencing;
-  this document records how artifacts move.
-- Icon origination remains human-owned local authoring through the icon tooling
-  documented in `iconography.md`. Agents consume approved Dieter icons; they do
-  not originate new ones.
+Dieter source and deployment never mutate account product data.
 
-This document owns the current build/serve/govern doctrine. The 126G execution
-PRD may simplify current UI ops and remove obsolete deploy paths without
-inventing new machinery; icon authoring remains the only local authoring
-exception.
+- Design-system source lives in git.
+- Public icon bytes live under the root R2 `dieter/icons/svg/**` path.
+- Account/runtime data lives under
+  `accounts/{accountPublicId}/...` and moves through its product routes.
+- Account SVGs are account assets, not Dieter icons.
+
+## Verification
+
+```bash
+pnpm --filter @ck/dieter typecheck
+pnpm dieter:governance:check
+pnpm validate:widgets
+pnpm tokyo:r2:sync:check
+```
+
+The sync dry run must contain only SVG files under its Dieter root. Consumer
+changes also require the focused Bob, Roma, Prague, DevStudio, or widget
+package build.
+
+## Operator Rules
+
+- Do not recreate `scripts/build-dieter.js`, `scripts/verify-svgs.js`, or
+  `tokyo/product/dieter/**`.
+- Do not add browser globals, manifests, registries, compatibility bundles, or
+  a second Dieter edit path.
+- Keep icon origination human-owned through `tooling/sf-symbols/**`.
+- Agents consume approved icons; they do not originate or silently substitute
+  them.

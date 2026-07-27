@@ -1,6 +1,6 @@
 # PRD 126 — MAMA: UI Optimization Program
 
-Status: STEP 9 IN PROGRESS - 126A THROUGH 126E GREEN; 126F is the next execution domain.
+Status: STEP 9 IN PROGRESS - 126A THROUGH 126E GREEN; 126G is next, then 126F.
 Owner: Clickeen product architecture + UI
 Date: 2026-06-26
 Stage: 02-Executing
@@ -19,7 +19,7 @@ Related:
 
 - Domain PRDs **126A–126K** (one per `engineering/UI/` kb doc, in dependency order):
   126A accessibility, 126B color, 126C iconography, 126D typography,
-  126E interactions, 126F motion, 126G ops, 126H dieter, 126I components,
+  126E interactions, 126G ops, 126F motion, 126H dieter, 126I components,
   126J surfaces, 126K dialogs-and-modals.
 - Screen refactors (last): `126L__PRD__DevStudio_UI.md`, `126M__PRD__Roma_UI.md`.
 - `audits/` — real per-domain audits (`126X__Audit__*.md`); see `audits/README.md`
@@ -143,7 +143,7 @@ frozen execution contracts.
 
 | Concern | Owner | Verify |
 | --- | --- | --- |
-| Tokens | `dieter/tokens/*` | deploy chain: `build:dieter` → Tokyo R2 |
+| Tokens | `dieter/tokens/*` | compiled/materialized directly by each consumer |
 | Components | `dieter/components/*` | stencil + spec + CSS |
 | DevStudio reveal + token guard | `admin/*` | write lane: Migration §3.5 |
 | Roma screens / routes / save | `roma/*` | Roma product law unchanged |
@@ -176,8 +176,8 @@ table; **execution stays inside-out and gated** (§9).
 | 126C | iconography |
 | 126D | typography |
 | 126E | interactions |
-| 126F | motion |
 | 126G | ops |
+| 126F | motion |
 | 126H | dieter (system + foundation) |
 | 126I | components (the pivot) |
 | 126J | surfaces |
@@ -359,7 +359,9 @@ current authority; it does not invent a second documentation surface.
 5. Complete: every A-M domain is peer-reviewed GREEN at an exact tree (step 8):
    A `c06fa7db`; B `4b480e50`; C `b5efaefc`; D `31b81152`; E `ec1ed486`;
    F/G/H `4c5458b4`; I/J/K/L/M `22a92ec9`.
-6. In progress: 126A through 126E completed Step 9. Continue with 126F, then
+6. In progress: 126A through 126E completed Step 9. Continue with 126G, then
+   126F, because 126G owns the package/build/deploy authority that 126F must
+   consume and verify. Then
    proceed once in dependency order. Execute one PRD and one slice at a time; a slice
    does not advance until its code, product-data, deploy/runtime,
    documentation, and V1-V8 gates are GREEN.

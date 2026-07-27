@@ -42,7 +42,7 @@ Shell utilities live under `tokyo/product/widgets/shared/`.
 | Shell state/default/control contracts | `packages/widget-shell/src/` |
 | Shared Shell utilities | `tokyo/product/widgets/shared/` |
 | Bob editor panels and controls | `spec.json.editor.panels[]`, `bob/lib/compiler*` |
-| Shipped Dieter controls | `tokyo/product/dieter/manifest.json` |
+| Dieter controls | `dieter/components/**` source |
 | Customer-visible text paths | `editable-fields.json` |
 | Account entitlement limits | `limits.json` |
 | Saved package materialization | Roma account instance package builder/save policy |
@@ -61,8 +61,8 @@ account package files. They require a named account command or a future broad
 re-resolution command with exact coordinates. Public serving must not compare
 stored account package bytes to current widget source on visitor requests.
 
-`/dieter/**` and account asset references remain external
-delivery references owned by their own roots.
+Dieter icon URLs and account asset references remain external delivery
+references owned by their own roots. Dieter CSS and JavaScript do not.
 
 Truth order follows `documentation/architecture/CONTEXT.md`: runtime code and
 migrations, deployed Cloudflare configuration/bindings, service and widget docs,

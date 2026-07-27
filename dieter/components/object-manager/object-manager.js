@@ -1,7 +1,5 @@
 // Object manager: array-only controller (add + modal reorder/delete).
 // Slot any per-item editor inside via the template (__INDEX__ replaced).
-(function () {
-  if (typeof window === "undefined" || typeof document === "undefined") return;
 
   function createId() {
     if (typeof crypto === "undefined" || !crypto) {
@@ -113,23 +111,7 @@
   }
 
   function runChildHydrators(scope, options) {
-    if (typeof window === "undefined" || !window.Dieter) return;
-    const entries = Object.entries(window.Dieter).filter(
-      ([name, fn]) =>
-        typeof fn === "function" &&
-        name.toLowerCase().startsWith("hydrate") &&
-        name.toLowerCase() !== "hydrateall" &&
-        name.toLowerCase() !== "hydrateobjectmanager"
-    );
-    entries.forEach(([, fn]) => {
-      try {
-        fn(scope, options);
-      } catch (err) {
-        if (window.__CK_DEV__ === true) {
-          console.warn("[object-manager] child hydrator error", err);
-        }
-      }
-    });
+    options?.hydrateChildren?.(scope);
   }
 
   function dispatchControlsRendered(root, source) {
@@ -142,7 +124,7 @@
     );
   }
 
-  function hydrateObjectManager(scope, options) {
+  export function hydrateObjectManager(scope, options) {
     const roots = scope.querySelectorAll(".diet-object-manager");
     roots.forEach((root) => {
       if (root.dataset.hydrated === "true") return;
@@ -401,9 +383,3 @@
       render();
     });
   }
-
-  window.Dieter = {
-    ...(window.Dieter || {}),
-    hydrateObjectManager,
-  };
-})();

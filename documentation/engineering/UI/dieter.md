@@ -5,9 +5,9 @@
 - Canonical doctrine: this document.
 - Execution PRD: [`126H__PRD__Dieter.md`](../../../Execution_Pipeline_Docs/02-Executing/126__UI_Optimization/126H__PRD__Dieter.md).
 - **Source of truth:** `dieter/tokens/*`, `dieter/components/*`,
-  `dieter/icons/icons.json`, and `dieter/icons/svg/*`. Root
-  `scripts/build-dieter.js` propagates Dieter output. The code is authoritative;
-  this doc explains it.
+  `dieter/icons/icons.json`, and `dieter/icons/svg/*`. Consumers compile or
+  materialize this source directly. Only the SVG icon bytes are deployed as
+  shared CDN files. The code is authoritative; this doc explains it.
 - Sibling references: [`color.md`](color.md), [`typography.md`](typography.md), [`motion.md`](motion.md), [`iconography.md`](iconography.md), [`components.md`](components.md).
 
 ## What Dieter is
@@ -80,19 +80,19 @@ layering are owned by their own UI docs.
   model. CSS-only primitives and specialized components may intentionally have
   a smaller source shape; the exact exceptions and deletion targets are listed
   in [`components.md`](components.md).
-- **Hydration.** Most components export a `hydrate*` function re-exported from
-  `dieter/components/index.ts`. Exceptions: `icon`, `slider`, `popover`,
-  `agent-activity` are CSS/HTML only; `object-manager` and `repeater` ship
-  hand-written `.js` IIFEs (not in `index.ts`). See [`components.md`](components.md).
-- **Build.** Root `scripts/build-dieter.js` bundles tokens + components + icons
-  into `tokyo/product/dieter/**`, served from Tokyo R2 at `/dieter`. See
+- **Hydration.** Interactive components export source `hydrate*` functions.
+  Bob imports the hydrators it uses and calls them explicitly. CSS/HTML-only
+  components need no browser runtime.
+- **Consumption.** Bob and Roma compile `dieter/styles.css`; Prague compiles
+  token source; widget materialization folds required Dieter CSS into instance
+  `styles.css`. Only `dieter/icons/svg/**` is deployed to Tokyo R2. See
   [`ops.md`](ops.md).
 
 ## Package And Artifact Boundary
 
-Generated Dieter files and `manifest.json` are build/runtime outputs, not source
-truth. App runtimes consume those generated/CDN artifacts; they do not redefine
-Dieter source.
+Dieter has no generated runtime mirror or browser manifest. App builds consume
+source, and public widget packages contain the CSS they require. The CDN is
+used only for approved SVG icon bytes.
 
 For account-font controls, Dieter owns dropdown presentation and emits the
 selected family as raw control intent. It may filter visible weight/style
@@ -100,12 +100,9 @@ options from supplied metadata, but it does not choose companion values or emit
 a three-field typography operation. Bob and Roma resolve the family transition
 through the shared account-font product law.
 
-`@ck/dieter` is a build/typecheck task package, not a general programmatic
-JS/CSS entrypoint. Current package metadata still points `main` at missing
-`index.html` and runs output generation through install-time `prepare`; PRD 126G
-removes those false surfaces together with unused Dieter GSAP. Consumers use the
-generated/CDN artifact path. Do not invent a second package, registry, or
-entrypoint.
+`@ck/dieter` is a source/typecheck task package, not a separately shipped
+runtime. Consumers use the source entrypoints named above. Do not invent a
+second package, registry, generated bundle, or browser entrypoint.
 
 ## Current Boundaries
 

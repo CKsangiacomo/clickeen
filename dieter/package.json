@@ -5,13 +5,9 @@
   "packageManager": "pnpm@10.15.1",
   "dependencies": {
     "@clickeen/ck-contracts": "workspace:*",
-    "gsap": "^3.12.5",
     "tldts": "^6.1.86"
   },
-  "main": "index.html",
   "scripts": {
-    "build": "node ../scripts/build-dieter.js",
-    "typecheck": "tsc -p tsconfig.json --noEmit",
-    "prepare": "pnpm run build"
+    "typecheck": "tsc -p tsconfig.json --noEmit"
   }
 }

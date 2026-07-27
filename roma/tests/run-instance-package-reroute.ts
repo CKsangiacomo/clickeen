@@ -253,6 +253,7 @@ async function testAllWidgetDualBuildParity(): Promise<void> {
       ...expected[widgetType],
       dependencies: { instanceIds: [] },
     });
+    assert.doesNotMatch(result.value.stylesCss, /@import\b/);
     console.log(`PASS all-widget dual-build parity ${widgetType}`);
   }
 }

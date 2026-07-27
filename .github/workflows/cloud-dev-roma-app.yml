@@ -7,7 +7,6 @@ on:
       - "roma/**"
       - "bob/**"
       - "tokyo/product/widgets/**"
-      - "tokyo/product/dieter/**"
       - "tokyo/product/themes/**"
       - "tokyo/roma/**"
       - "dieter/**"

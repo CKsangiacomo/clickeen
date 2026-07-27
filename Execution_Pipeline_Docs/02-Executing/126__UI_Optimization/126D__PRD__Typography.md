@@ -1,6 +1,12 @@
 # 126D - PRD: Typography
 
 Status: STEP 9 GREEN - EXECUTED AND VERIFIED.
+
+Post-126G delivery note: references below to `pnpm build:dieter`, generated
+editor bundles, generated token/component mirrors, or
+`tokyo/product/dieter/**` describe the historical execution environment. They
+are not current instructions. Current consumers compile/materialize Dieter
+source directly.
 Parent: `126__PRD__UI_Optimization_Program.md` (MAMA).
 Series order: 126D of 126A-126M.
 KB doc: `documentation/engineering/UI/typography.md`.
@@ -417,19 +423,17 @@ migration work.
 | Area | Paths | Execution concern |
 | --- | --- | --- |
 | Dieter source typography | `dieter/tokens/dieter-typography.css` | Verified current: raw heading selectors, removed body aliases, and typography-owned label/caption/overline colors are absent; current visual classes remain. |
-| Generated Dieter typography output | `tokyo/product/dieter/tokens/dieter-typography.css`, `tokyo/product/dieter/tokens/dieter-typography.shadow.css` | Verified current: generated only from Dieter source; no hand-edit lane. |
 | Generated count governance | `scripts/dieter/governance-guards.mjs` | Verified current: locked generated count reflects current source truth. |
 | DevStudio typography generation | `admin/scripts/generate-typography-json.cjs`, `admin/src/data/typography.generated.json`, `admin/src/data/typography.ts`, `admin/src/main.ts`, `admin/functions/_shared/dieter-tokens.js`, `admin/src/css/dieter-previews.css` | Verified current: reveal/write is bounded to real authority, preview rows use current classes, and `--font-body-xsmall` is absent. |
 | Admin component example generation | `admin/src/data/componentRenderer.ts`, `admin/src/html/components/**` | Verified current: generated examples use `body-xs`. |
 | Dieter component stale class cleanup | `dieter/components/textedit/textedit.html`, `dieter/components/textedit/textedit-dom.ts`, `dieter/components/dropdown-edit/dropdown-edit.html`, `dieter/components/textrename/textrename.css` | Verified current: removed `body-xsmall`/`label-small` names and preserving comments are absent. |
 | Dieter component tracking cleanup | `dieter/components/button/button.css`, `dieter/components/textfield/textfield.css`, `dieter/components/valuefield/valuefield.css`, `dieter/components/textrename/textrename.css` | Verified current: component-local copied tracking values are absent. |
-| Generated Dieter component output | `tokyo/product/dieter/components/**` | Verified current: output reflects Dieter component source. |
 | Bob shell typography | `bob/app/bob_app.css` | Verified current: the code block uses `var(--font-mono)`. |
 | Account font library document | `roma/lib/account-widget-defaults-direct.ts`, `roma/lib/account-widget-defaults-contract.ts`, `roma/lib/account-widget-defaults-materialization.ts`, `roma/components/widget-defaults-domain.tsx`, `roma/app/api/account/widget-defaults/route.ts`, `tokyo-worker/src/domains/account-widget-defaults.ts`, `tokyo-worker/src/routes/internal-widget-default-routes.ts` | Verified current: top-level `fontLibrary` flows through the existing account widget-defaults authority. |
 | Bob open/session font payload | `roma/components/builder-domain.tsx`, `bob/lib/session/sessionTypes.ts`, `bob/lib/session/useSessionBoot.ts`, `bob/lib/session/WidgetDocumentSession.tsx` | Verified current: Bob receives the account font library and rejects missing/malformed data. |
 | Bob widget typography authoring | `bob/lib/edit/typography-fonts.ts`, `bob/lib/compiler/{controls,editor-contract}.ts`, `bob/lib/compiler/modules/typography.ts`, `bob/lib/session/{sessionConfig,sessionTypes,useSessionBoot,useSessionEditing,useSessionSaving,WidgetDocumentSession}.ts*`, `bob/components/{CopilotPane,TdMenuContent,ToolDrawer}.tsx`, `bob/components/td-menu-content/{accountFonts,linkedOps,useTdMenuBindings}.ts`, `bob/lib/control-host.ts` | Closed in Step 9: the compiler is account-neutral, session binding supplies the exact account library, one transition operation serves manual and Copilot edits, and the obsolete Bob font authority is deleted. |
 | Roma Widget Defaults typography | `roma/components/widget-defaults-{builder-controls,domain}.tsx`, `roma/lib/account-widget-defaults-contract.ts`, `roma/app/api/account/widget-defaults/route.ts` | Closed in Step 9: Roma uses the same account-font transition and validates shell/widget-core typography at the product boundary. |
-| Dieter family intent | `dieter/components/dropdown-actions/dropdown-actions.ts`, `tokyo/product/dieter/components/dropdown-actions/dropdown-actions.js`, `tokyo/product/dieter/editor/editor.js` | Closed in Step 9: Dieter emits raw family intent; the host/product contract owns companion selection. Generated output matches source. |
+| Dieter family intent | `dieter/components/dropdown-actions/dropdown-actions.ts`; direct Bob/Roma source consumers | Closed in Step 9: Dieter emits raw family intent; the host/product contract owns companion selection. |
 | Widget shell contract | `packages/widget-shell/src/defaults.ts`, `packages/widget-shell/src/contract.ts`, `packages/widget-shell/src/{controls,font-library}.ts` | Defaults/controls/schema must not imply custom values are active unless their preset is `custom`; shell role labels and account-font relation law have one shared owner. |
 | Runtime package materialization | `roma/lib/account-instance-public-package.ts`, `roma/lib/account-instance-locale-package.ts`, `packages/ck-runtime-materializer/src/**` | Closed in Step 9: shared relational validation runs before asset resolution/materialization, so invalid family/weight/style combinations fail before Tokyo write. |
 | Widget runtime typography | `tokyo/product/widgets/shared/typography.js`, `tokyo/product/widgets/shared/typography-data.js`, `packages/widget-shell/src/modules.ts`, `tokyo/product/widgets/*/widget.client.js` | Google and account-asset font authorities and current runtime behavior stay unchanged. No runtime parser or second role registry is added. |
@@ -592,7 +596,6 @@ roles rather than generic `Font family` controls.
 | `bob/lib/edit/typography-family-ops.ts`, `bob/components/td-menu-content/linkedOps.ts`, `bob/lib/control-host.ts` | Add one small path adapter around the widget-shell resolver and export it for Roma. A family intent becomes one family/weight/style edit. | Existing preset, radius, shadow, padding, and all non-typography linked operations; no session/persistence code enters `control-host`. |
 | `bob/components/CopilotPane.tsx` | Expand family intent before inverse/apply/metadata so successful Copilot edits use the same transition as manual controls. | Existing request envelope, concurrency signature, conversation UX, outcome reporting, and undo semantics. |
 | `dieter/components/dropdown-actions/dropdown-actions.ts` | Delete the typography family branch that chooses companions, mutates three inputs, and emits three ops. A family choice follows normal dropdown behavior and emits only family intent. Keep weight/style option filtering as presentation. | Normal dropdown lifecycle, pending/apply behavior, focus, external sync, and non-typography actions. |
-| `tokyo/product/dieter/components/dropdown-actions/dropdown-actions.js`, `tokyo/product/dieter/editor/editor.js` | Regenerate from Dieter source; prove direct and composed generated behavior emits raw family intent. | Generated-only authority. |
 | `roma/components/widget-defaults-builder-controls.tsx`, `roma/components/widget-defaults-domain.tsx` | Expand raw family intent through the shared adapter and apply the returned triple to shell/core draft state in one functional update. | Existing compiled-control reuse, readiness/contract errors, discard, and save UX. |
 | `roma/lib/account-widget-defaults-contract.ts` | After library/path validation, run the widget-shell validator against shell typography and every widget-core typography document on GET and PUT; return all exact invalid paths. | Existing account coordinate, compiled control coverage, and software metadata allowances. |
 | `roma/tests/run-widget-defaults-typography.ts`, `roma/package.json` | Add focused proof that Widget Defaults accepts an uploaded account font and rejects one invalid saved combination with the exact path. | Existing test commands. |
@@ -636,8 +639,8 @@ instance.
 Local source gate:
 
 ```bash
-pnpm build:dieter
 pnpm --filter @ck/dieter typecheck
+pnpm dieter:governance:check
 pnpm --filter @clickeen/bob test:typography-contract
 pnpm --filter @clickeen/roma test:widget-defaults-typography
 pnpm validate:widgets
@@ -653,8 +656,8 @@ git diff --check
 
 The Bob negative search must return no active default-family authority. The
 Dieter search may find only the two option-filtering readers; no family-click
-companion selection or multi-op emission may remain. Generated Dieter output
-must match source after `pnpm build:dieter`.
+companion selection or multi-op emission may remain. Bob and Roma compile the
+current Dieter source directly; there is no generated Dieter output to compare.
 
 Deploy/runtime gate:
 
@@ -664,9 +667,9 @@ Deploy/runtime gate:
 3. Run `pnpm cf:preflight`, then read back and byte/hash-compare these exact R2
    keys with the committed source. Missing credentials or any mismatch keeps
    the gate red:
-   `product/widgets/{big-bang,calltoaction,cards,countdown,faq}/spec.json` and
-   `dieter/components/dropdown-actions/dropdown-actions.js` (compared with
-   committed `tokyo/product/dieter/components/dropdown-actions/dropdown-actions.js`).
+   `product/widgets/{big-bang,calltoaction,cards,countdown,faq}/spec.json`.
+   Dieter component source is compiled directly into Bob and Roma and has no
+   corresponding R2 component object.
 4. Run `pnpm cf:api:preflight`; stop on failure. Then verify both `bob-dev` and
    `roma-dev` Cloudflare Pages deployments are green
    for the exact commit SHA; workflow success without Pages SHA evidence is not
@@ -810,7 +813,8 @@ authority instead of replacing Clickeen with another company's type system.
 These are regression checks for any later typography change. They do not reopen
 font migration or authorize remote product-data work:
 
-- `pnpm build:dieter`
+- `pnpm --filter @ck/dieter typecheck`
+- `pnpm dieter:governance:check`
 - Regenerate/verify DevStudio typography data if affected.
 - Search Dieter typography source for raw global `h1` through `h6` visual
   styling.

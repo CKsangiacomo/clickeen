@@ -8,6 +8,7 @@ import {
 import type { AccountFontLibrary, RuntimeTypographyData } from '@clickeen/widget-shell';
 import type { InstancePublicPackage } from '../lib/session/sessionTypes';
 import { useWidgetSession, useWidgetSessionChrome } from '../lib/session/useWidgetSession';
+import { dieterIconStyle } from './dieterIcon';
 
 const BLOCKED_SWITCHER_COPY =
   'Translations not available while in editing mode. Preview translations in Translations panel.';
@@ -564,7 +565,12 @@ export function Workspace({
               type="button"
               aria-pressed={device === 'desktop'}
             >
-              <span className="diet-btn-ic__icon" data-icon="desktopcomputer" aria-hidden="true" />
+              <span
+                className="diet-btn-ic__icon"
+                data-icon="desktopcomputer"
+                style={dieterIconStyle('desktopcomputer')}
+                aria-hidden="true"
+              />
             </button>
             <span className="diet-segment__sr">Desktop</span>
           </label>
@@ -586,7 +592,12 @@ export function Workspace({
               type="button"
               aria-pressed={device === 'mobile'}
             >
-              <span className="diet-btn-ic__icon" data-icon="iphone" aria-hidden="true" />
+              <span
+                className="diet-btn-ic__icon"
+                data-icon="iphone"
+                style={dieterIconStyle('iphone')}
+                aria-hidden="true"
+              />
             </button>
             <span className="diet-segment__sr">Mobile</span>
           </label>

@@ -1,4 +1,6 @@
 ---
+import '../../../dieter/tokens/tokens.css';
+
 type Props = {
   title: string;
   description?: string;
@@ -9,12 +11,6 @@ type Props = {
 };
 
 const { title, description, locale, robots, canonicalPath, alternates } = Astro.props;
-
-const TOKYO_URL = import.meta.env.PUBLIC_TOKYO_URL;
-if (!TOKYO_URL) {
-  throw new Error('[prague] PUBLIC_TOKYO_URL is required (e.g. https://tokyo.dev.clickeen.com)');
-}
-const TOKENS_HREF = `${TOKYO_URL.replace(/\/$/, '')}/dieter/tokens/tokens.css`;
 
 const isDevProject = (process.env.CF_PAGES_PROJECT_NAME || '').endsWith('-dev');
 const resolvedRobots = robots ?? (isDevProject ? 'noindex,nofollow' : null);
@@ -51,7 +47,6 @@ function toAbsoluteUrl(href: string): string {
           <link rel="alternate" hreflang={alt.hreflang} href={toAbsoluteUrl(alt.href)} />
         ))
       : null}
-    <link rel="stylesheet" href={TOKENS_HREF} />
     <link rel="stylesheet" href="/styles/layout.css" />
     <link rel="stylesheet" href="/styles/primitives.css" />
     <link rel="stylesheet" href="/styles/elements.css" />

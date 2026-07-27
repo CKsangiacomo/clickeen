@@ -5,7 +5,8 @@ Living reference for color doctrine.
 - Canonical doctrine: this document.
 - Execution PRD: [`126B__PRD__Color.md`](../../../Execution_Pipeline_Docs/02-Executing/126__UI_Optimization/126B__PRD__Color.md).
 - Source of truth: `dieter/tokens/dieter-color-tokens.css`.
-- Generated output: `tokyo/product/dieter/tokens/**`.
+- Consumers compile or materialize this source directly; there is no generated
+  Tokyo token mirror.
 
 This document is not a palette redesign, dark-mode rollout, contrast gate, theme platform,
 resolver, registry, or validation framework. It defines current light-mode color

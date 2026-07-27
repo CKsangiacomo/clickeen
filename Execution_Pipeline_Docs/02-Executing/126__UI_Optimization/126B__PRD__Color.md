@@ -1,6 +1,11 @@
 # 126B - PRD: Color
 
 Status: STEP 9 COMPLETE - B1 THROUGH B3 GREEN.
+
+Post-126G delivery note: references below to `pnpm build:dieter`,
+`scripts/build-dieter.js`, or `tokyo/product/dieter/**` describe the historical
+execution environment. They are not current instructions. Token source is now
+compiled/materialized directly by its consumers.
 Parent: `126__PRD__UI_Optimization_Program.md` (MAMA).
 Series order: 126B of 126A-126M.
 KB doc target: `documentation/engineering/UI/color.md`.
@@ -24,7 +29,7 @@ UI agent-operable.
 - Codex step-6 execution audit: `audits/126B__Audit__Color.md`.
 - Current living doc: `documentation/engineering/UI/color.md`.
 - Source token authority: `dieter/tokens/dieter-color-tokens.css`.
-- Generated runtime output: `tokyo/product/dieter/tokens/*`.
+- Runtime consumption: direct app compilation and widget materialization.
 
 The step-6 audit is binding for execution scope. If a path is not in this PRD
 or in `audits/126B__Audit__Color.md`, it is outside 126B unless the human
@@ -104,8 +109,8 @@ Clickeen has a strong color system already:
 
 - Dieter owns color tokens in `dieter/tokens/dieter-color-tokens.css`.
 - `dieter/tokens/tokens.css` imports foundation, color, and typography.
-- `scripts/build-dieter.js` copies Dieter tokens into Tokyo product output.
-- Roma, Bob, DevStudio, and public widgets consume Dieter/Tokyo token output.
+- Roma, Bob, Prague, and DevStudio compile Dieter source; public widget
+  materialization seals required token CSS into instance `styles.css`.
 - The palette has structure: Apple-like base hues, neutral ladders, OKLAB ramps,
   state mix controls, contrast sibling tokens, and a small semantic role layer.
 
@@ -136,13 +141,13 @@ source and must not schedule that completed cleanup again.
 
 ### 1. Color Source Truth
 
-Dieter color tokens are the source authority. Tokyo output is generated product
-output. Roma, Bob, DevStudio, and widgets are consumers, not color authorities.
+Dieter color tokens are the source authority. Roma, Bob, Prague, DevStudio, and
+widgets are consumers, not color authorities.
 
 Execution rules:
 
 - Color values originate in Dieter source tokens.
-- Generated output must match source after `pnpm build:dieter`.
+- Affected apps and widget packages must compile/materialize current source.
 - Consumers must not define competing structural color truth.
 - Docs explain the model but do not override source.
 
@@ -672,8 +677,9 @@ final exact tree proves:
 - Bob no longer carries or documents an unused theme capability;
 - Bob's named status chrome and Logo Showcase focus use existing semantic roles;
 - DevStudio reveal and write authority accept the same color value shapes;
-- the palette, token source, generated Dieter product output, user-authored
-  colors, product data, and unrelated runtime behavior did not change;
+- the palette, token source, user-authored colors, product data, and unrelated
+  runtime behavior did not change during 126B; the then-current generated
+  Dieter output was later deleted by 126G;
 - living docs remain accurate; and
 - the final V1-V8 audit is green.
 

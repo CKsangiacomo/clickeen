@@ -1,9 +1,3 @@
-@import '../button/button.css';
-@import '../textfield/textfield.css';
-@import '../toggle/toggle.css';
-@import '../popover/popover.css';
-@import '../popaddlink/popaddlink.css';
-
 /* Base layout (mirrors diet-textfield) */
 .diet-dropdown-edit {
   position: relative;

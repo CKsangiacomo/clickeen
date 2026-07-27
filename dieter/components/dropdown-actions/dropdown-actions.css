@@ -1,7 +1,3 @@
-@import '../button/button.css';
-@import '../menuactions/menuactions.css';
-@import '../popover/popover.css';
-
 .diet-dropdown-actions {
   position: relative;
   display: grid;

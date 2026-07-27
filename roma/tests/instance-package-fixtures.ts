@@ -9,6 +9,7 @@ import {
   WIDGET_SHELL_RUNTIME_MODULE_KEYS,
 } from '@clickeen/widget-shell';
 import type { CompiledWidgetForPublicPackage } from '../lib/account-instance-public-package';
+import { extractStylesheetSources } from '../../packages/ck-runtime-materializer/src/html';
 
 export const PACKAGE_PARITY_WIDGETS = [
   'big-bang',
@@ -61,6 +62,15 @@ async function readText(relativePath: string): Promise<string> {
   return readFile(diskPath, 'utf8');
 }
 
+async function readCssEntry(relativePath: string): Promise<string> {
+  let source = await readText(relativePath);
+  for (const match of source.matchAll(/@import\s+url\(["']?([^"')]+)["']?\);?/g)) {
+    const importedPath = path.posix.join(path.posix.dirname(relativePath), match[1]);
+    source = source.replace(match[0], await readCssEntry(importedPath));
+  }
+  return source;
+}
+
 function mediaTypeForPath(filePath: string): 'application/json' | 'text/html' | 'text/css' | 'text/javascript' {
   if (filePath.endsWith('.json')) return 'application/json';
   if (filePath.endsWith('.html')) return 'text/html';
@@ -81,6 +91,14 @@ async function readWidgetPackageFiles(widgetType: PackageParityWidget) {
     files['editable-fields.json'] = {
       mediaType: 'application/json',
       source: editableFieldsSource,
+    };
+  }
+  const widgetHtml = files['widget.html'];
+  if (!widgetHtml) throw new Error(`missing widget.html fixture:${widgetType}`);
+  for (const href of extractStylesheetSources(widgetHtml.source).filter((source) => source.startsWith('/dieter/'))) {
+    files[href] = {
+      mediaType: 'text/css',
+      source: await readCssEntry(href.slice(1)),
     };
   }
   const supportKeys = new Set<string>([...WIDGET_SHELL_CSS_MODULE_KEYS, ...WIDGET_SHELL_RUNTIME_MODULE_KEYS]);

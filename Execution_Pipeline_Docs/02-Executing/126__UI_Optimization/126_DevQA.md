@@ -1,6 +1,6 @@
 # 126 — DevQA: Where We Actually Stand
 
-Status: STEP 9 IN PROGRESS - 126A THROUGH 126E GREEN; 126F is next.
+Status: STEP 9 IN PROGRESS - 126A THROUGH 126E GREEN; 126G is next, then 126F.
 This document reconciles PRD claims with Git and current source evidence. It does
 not define product law, approve unresolved architecture choices, prove that every
 intermediate commit deployed, or close any PRD whose required verification is
@@ -11,6 +11,13 @@ Last reconciled: 2026-07-26
 Scope: premature A-H code-change reality, final A-M current-source audits,
 executable PRDs, exact-tree peer reviews, and current Step-9 execution state.
 Parent: `126__PRD__UI_Optimization_Program.md` (MAMA).
+
+Current 126G correction: the historical Dieter builder, generated
+`tokyo/product/dieter/**` mirror, manifest, editor bundle, and shared CDN
+token/component files are being removed. Current source consumers compile or
+materialize Dieter directly; only `dieter/icons/svg/**` is deployed. Historical
+evidence below remains point-in-time evidence and is not current execution
+authority.
 
 Read-order note: this is a pre-execution correction ledger, not runtime or
 product authority. Runtime code remains behavior truth; the human product owner
@@ -31,7 +38,8 @@ review. Reviewed trees are A `c06fa7db`; B `4b480e50`; C `b5efaefc`; D
 Step 9 subsequently began through the accepted one-domain-at-a-time process.
 126A through 126E are now independently executed, verified, documented, and
 GREEN. 126E was intentionally a no-product-code preservation and ownership
-checkpoint; 126F is the next execution domain. The historical
+checkpoint. 126G is the next execution domain because it owns the
+package/build/deploy authority that 126F must consume; 126F follows. The historical
 pre-execution findings below remain the record of why earlier code changes did
 not receive execution credit before that formal pass.
 
@@ -289,17 +297,20 @@ did not see an empty local directory.
 | `audits/126I__AsBuilt_Codex.md` | Preserve the observation; annotate that exact working-tree provenance is unknown and current/tracked source has no directory. |
 | `audits/126I__AsBuilt_GLM.md` | Preserve and annotate using the same provenance rule. |
 
-### Current input 2: component count is 25 now
+### Historical input 2: pre-126G component count evidence
 
-The current active decision documents must use 25. Historical counts may include an
-untracked empty directory, so preserve them as point-in-time observations with unknown
-exact worktree provenance rather than silently rewriting history.
+This table records the pre-126G generated-tree audit. The generated manifest and
+Tokyo Dieter mirror no longer exist and are not current authorities. Current
+active decision documents use the 25 source directories directly. Historical
+counts may include an untracked empty directory, so preserve them as
+point-in-time observations with unknown exact worktree provenance rather than
+silently rewriting history.
 
 | Inventory | Codex claim | GLM claim | Code truth | Evidence |
 |---|---|---|---|---|
 | Source dirs under `dieter/components/` | 26 (incl. `shared` + empty `command-activity`) | 27 | **25** | `ls -d dieter/components/*/` → 25 entries |
-| `manifest.json components` | 24 | — | 24 ✓ | `tokyo/product/dieter/manifest.json:3-28` |
-| `manifest.json componentsWithJs` | 20 | ~20 | 20 ✓ | `tokyo/product/dieter/manifest.json:29-49` |
+| Historical `manifest.json components` | 24 | — | 24 at audit time | Deleted by 126G |
+| Historical `manifest.json componentsWithJs` | 20 | ~20 | 20 at audit time | Deleted by 126G |
 | DevStudio `specModules` | 22 | ~24 | 22 ✓ | `admin/src/data/componentRegistry.generated.ts:73-96` |
 | DevStudio `templateModules` | 23 | — | 23 ✓ | `componentRegistry.generated.ts:98-122` |
 | DevStudio `cssModules` | 24 | — | 24 ✓ | `componentRegistry.generated.ts:124-149` |
@@ -420,7 +431,7 @@ route is fully gone from code and config.
    commit record says remote inventory still used Orio and Pachuka Line. Copies are
    present untracked on this machine. `b132dfde` later removed the route.
    - **Not in the deploy-sync roots:** `scripts/tokyo-r2-deploy-sync.mjs:24-27`
-     syncs only `tokyo/product/widgets`, `tokyo/product/dieter`, `tokyo/roma`,
+     syncs only `tokyo/product/widgets`, `dieter/icons/svg`, `tokyo/roma`, and
      `tokyo/prague`. There is no `tokyo/product/fonts` root. These files do not
      deploy to R2 through the current sync.
    - **Not referenced in live source:** a scoped grep for the font names
@@ -477,7 +488,7 @@ The execution boundary is now concrete:
    are reconciled.
 2. Completed: settled law, current-source gap maps, deletion maps, final PRDs,
    and exact-tree peer reviews cover every A-M domain.
-3. Completed: 126A through 126E. Next: execute 126F, then continue in dependency
+3. Completed: 126A through 126E. Next: execute 126G, then 126F, then continue in dependency
    order through 126M, one PRD and one slice at a time.
 4. Do not advance a slice until its implementation, focused checks, visual proof,
    docs, deploy/runtime evidence, product-data reconciliation where applicable,

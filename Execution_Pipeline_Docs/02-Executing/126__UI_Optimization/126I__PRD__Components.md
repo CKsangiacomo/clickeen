@@ -44,14 +44,15 @@ than producing an incomplete Builder.
 | Concern | Authority |
 | --- | --- |
 | Component source | `dieter/components/**` |
-| Component build and dependency manifest | `scripts/build-dieter.js`, under 126G build/deploy law |
+| Shared component CSS | `dieter/styles.css` compiled by Bob/Roma |
+| Component hydration | Explicit source hydrators called by Bob |
 | ToolDrawer stencil/spec loading | `bob/lib/compiler/stencils.ts` |
-| Bob component media expansion | `bob/lib/compiler/media.ts` plus generated Dieter manifest |
+| Bob compiled panel HTML | Widget artifact generator plus Bob compiler |
 | DevStudio component inventory | `admin/scripts/generate-static-registries.mjs` and generated `admin/src/data/**` |
 | Blocking dialog lifecycle | 126K exclusively |
 | DevStudio adoption | 126L |
 | Roma field/table adoption | 126M |
-| Runtime/deploy | Git-connected Pages and the 126G exact-SHA Worker/R2 path |
+| Runtime/deploy | Git-connected Bob, Roma, and DevStudio Pages builds |
 | Product data | Out of scope; no account instance is mutated |
 
 ## Current Source Proof
@@ -59,7 +60,7 @@ than producing an incomplete Builder.
 The Step-6 audit proves:
 
 - 25 source directories including `shared`;
-- 24 CSS-backed manifest components and 20 JS-backed components;
+- 24 CSS-backed source components and 20 source hydrators;
 - 22 DevStudio specs, 23 templates, and 24 CSS sources;
 - `textrename` has no product consumer;
 - `toggle.ts` ships custom Enter behavior for a native checkbox but is not an
@@ -75,8 +76,7 @@ The Step-6 audit proves:
   while its route contract test still asserts 20 component and 1 Policy route;
   the fixture omits `agent-activity`, `textedit`, and `llm-management`;
 - dropdown-actions has an unreachable apply/cancel workflow;
-- Repeater and Object Manager are active, distinct workflows whose static
-  dependencies are missing from the manifest;
+- Repeater and Object Manager are active, distinct workflows;
 - Object Manager accumulates backdrop listeners, but 126K owns that lifecycle
   repair;
 - Roma repeats native-field/table appearance and current icon-only actions lack
@@ -86,8 +86,8 @@ Expected inventory after 126I source changes:
 
 - 27 source directories including `shared`: delete `textrename`; add
   `operational-field`, `operational-table`, and `tooltip`;
-- 26 CSS-backed manifest components;
-- 18 JS-backed manifest components;
+- 26 CSS-backed source components;
+- 18 source hydrators;
 - 22 DevStudio specs, 22 templates, and 26 CSS sources;
 - 22 DevStudio component routes, unchanged. The stale 20-route test fixture is
   corrected to the generated source truth together with the stale 1-route
@@ -130,13 +130,12 @@ No second variant or compatibility branch survives.
 
 - Object Manager manages top-level objects in a blocking dialog.
 - Repeater edits nested collection items inline and supports reorder/remove.
-- Object Manager's 126I static dependency is `button`.
-- Repeater's 126I static dependencies are `button`, `textfield`, `toggle`, and
-  `tooltip`.
-- nested ToolDrawer fields continue to be collected recursively by Bob; the
-  manifest does not guess every possible nested field.
-- 126K adds Object Manager's `tooltip` dependency when it applies tooltip
-  markup during the one dialog rewrite.
+- Shared CSS comes from `dieter/styles.css`.
+- Nested controls are hydrated through Bob's explicit source-hydration
+  callback.
+- Nested ToolDrawer fields continue to be collected recursively by Bob; no
+  manifest guesses possible nested fields.
+- 126K applies Object Manager tooltip markup during the one dialog rewrite.
 
 ### Three Small CSS Contracts
 
@@ -211,7 +210,7 @@ Green gate:
 - repository search finds no `textrename` or `hydrateTextrename` in active
   source/generated registries;
 - Toggle remains visible and toggles with native pointer and Space behavior;
-- build manifest contains Toggle CSS but no Toggle JS.
+- source contains Toggle CSS but no custom Toggle hydrator.
 
 ### Slice I2 - Native Dropdowns And One Action Workflow
 
@@ -243,63 +242,49 @@ Green gate:
   pending path;
 - current Builder certification no longer tests the deleted fake-button shape.
 
-### Slice I3 - Exact Dependencies And Small Shared Visual Contracts
+### Slice I3 - Small Shared Visual Contracts
 
-1. Add exact manifest dependencies in `scripts/build-dieter.js`:
-   Object Manager -> `button`; Repeater -> `button`, `textfield`, `toggle`,
-   `tooltip`.
-2. Add the three CSS-only component directories and files.
-3. Adopt tooltip on `bob/components/TdMenu.tsx`: keep `aria-label`, add the
+1. Add the three CSS-only component directories and files.
+2. Adopt tooltip on `bob/components/TdMenu.tsx`: keep `aria-label`, add the
    tooltip class/data, and remove native `title`.
-4. Adopt tooltip on Repeater reorder, move, and remove icon buttons in
+3. Adopt tooltip on Repeater reorder, move, and remove icon buttons in
    `repeater.html` and `repeater.js`; keep the accessible label and update the
    tooltip whenever a dynamic label changes.
-5. Do not edit Object Manager tooltip markup here. 126K owns it with the dialog
-   rewrite and adds the corresponding manifest dependency then.
-6. Add Tooltip as a Bob layout dependency and Repeater manifest dependency so
-   the CSS is present where the markup is emitted.
+4. Do not edit Object Manager tooltip markup here. 126K owns it with the dialog
+   rewrite.
+5. Confirm the source CSS entrypoint and explicit Bob hydration cover the new
+   markup. Do not add a dependency manifest or per-control media list.
 
 Green gate:
 
-- manifest dependencies are exact and all resolve;
-- no guessed recursive field dependency is added;
+- source CSS and explicit hydration cover each adopted component;
+- no dependency manifest or recursive media resolver is added;
 - TdMenu and Repeater tooltips appear on hover and keyboard focus without a
   native `title`, preserve the same `aria-label`, and do not capture clicks;
 - operational-field/table CSS contains visual rules only;
 - no tooltip runtime, form framework, or table framework exists.
 
-### Slice I4 - Regenerate, Reconcile, Deploy, Verify
+### Slice I4 - Reconcile, Deploy, Verify
 
-1. Run the 126G builder. Its source-derived parity assertion must confirm the
-   complete ignored Dieter output before sync.
-2. Regenerate DevStudio static registries/pages through the existing generator,
+1. Regenerate DevStudio static registries/pages through the existing generator,
    including Repeater's page after its tooltip markup changes.
-3. Update living documentation counts and contract descriptions.
-4. Commit source and generated Admin files, not ignored Dieter output.
+2. Update living documentation counts and contract descriptions.
+3. Run source checks and focused Bob, Roma, and DevStudio builds.
+4. Commit source and generated Admin files.
 5. Push the exact commit only after all local gates pass.
-6. Verify the exact-SHA Workers run rebuilt/synced Dieter and read back changed
-   manifest/component CSS/JS objects from canonical R2 `dieter/**`.
-7. After source and manifest prove the deleted artifacts cannot be regenerated,
-   run `pnpm cf:preflight` and use the approved repo R2 delete command for only:
-   `dieter/components/textrename/textrename.css`,
-   `dieter/components/textrename/textrename.html`,
-   `dieter/components/textrename/textrename.js`, and
-   `dieter/components/toggle/toggle.js`. Verify each exact key is absent. This
-   is one product-root cleanup, not a general reconciliation service.
-8. Verify the Git-connected `bob-dev` Pages deployment for the Bob source
+6. Verify the Git-connected `bob-dev` Pages deployment for the Bob source
    changes, the Roma Pages deployment because Roma consumes the Bob workspace
    package, and the DevStudio Pages deployment for Admin changes at the same
    source SHA.
-9. Run browser evidence on DevStudio dropdown routes and authenticated Roma
+7. Run browser evidence on DevStudio dropdown routes and authenticated Roma
    Builder without mutating account product data.
 
 Green gate:
 
-- local, generated, deployed, and browser evidence reconcile;
-- deleted source does not appear in manifest or R2 output;
+- source, generated DevStudio pages, deployed apps, and browser evidence
+  reconcile;
 - no legacy trigger/footer/hydrator path survives;
-- no account mutation or alternate deploy path was used; the only direct R2
-  mutation is the four-key, preflighted stale product-root deletion above.
+- no account or R2 mutation and no alternate deploy path was used.
 
 ## Exact Edit And Deletion Map
 
@@ -311,7 +296,7 @@ Green gate:
 | Six dropdown templates/CSS | `dieter/components/dropdown-{actions,border,edit,fill,shadow,upload}/` owning `.html` and `.css` | Use native buttons and preserve appearance. |
 | Bulk Edit copied trigger | `dieter/components/bulk-edit/bulk-edit.ts` | Change only dynamically created upload trigger markup. |
 | Dropdown Actions dead branch | `dieter/components/dropdown-actions/dropdown-actions.{html,css,ts}`; `bob/lib/compiler/stencils.ts` | Delete apply/cancel/footer/pending workflow completely. |
-| Dependencies/build | `scripts/build-dieter.js` | Add exact Object Manager/Repeater deps; use 126G builder law. |
+| Source consumption | `dieter/styles.css`; Bob source hydration | Ensure new component CSS and behavior are consumed directly; do not add a manifest. |
 | CSS contracts | `dieter/components/operational-field/operational-field.css`; `dieter/components/operational-table/operational-table.css`; `dieter/components/tooltip/tooltip.css` | Add three CSS-only primitives. |
 | Tooltip adoption | `bob/components/TdMenu.tsx`; `bob/app/layout.tsx`; `dieter/components/repeater/repeater.{html,js}` | Replace native title/ad hoc names with shared hover/focus visual contract while keeping ARIA names. |
 | Generated Admin inventories/pages | `admin/src/data/componentRegistry.generated.ts`; `admin/src/data/showcase.generated.ts` only if generator output changes it; `admin/src/html/components/dropdown-{actions,border,edit,fill,shadow,upload}.html`; `admin/src/html/components/repeater.html` | Regenerate from source, never hand-edit. |
@@ -326,7 +311,7 @@ no current affected statement are recorded as checked and left unchanged.
 126K owns:
 
 - all Bulk Edit/Object Manager dialog lifecycle and listener cleanup;
-- Object Manager icon tooltip markup and its `tooltip` manifest dependency;
+- Object Manager icon tooltip markup;
 - blocking-dialog shadow/layer/width decisions and dialog browser tests.
 
 126L owns:
@@ -355,7 +340,6 @@ pnpm --filter @clickeen/bob typecheck
 pnpm validate:widgets
 pnpm --filter @ck/dieter typecheck
 pnpm dieter:governance:check
-pnpm build:dieter
 pnpm --filter @clickeen/devstudio typecheck
 pnpm --filter @clickeen/devstudio build
 pnpm --filter @clickeen/roma lint
@@ -377,10 +361,10 @@ substituted. Missing or expired DevStudio auth keeps the browser gate RED.
 - no active `textrename`/`hydrateTextrename`;
 - all eight current widget contracts compile with every component-typed field
   resolving both stencil and spec;
-- no generated Toggle JS;
+- no custom Toggle hydrator;
 - no targeted `role="button"` trigger;
 - no dropdown-actions apply/cancel/pending path;
-- manifest counts/dependencies match the qualified expected inventory;
+- source and DevStudio inventories match the qualified expected counts;
 - three new contracts contain CSS only;
 - no tooltip `title` remains on adopted actions;
 - 126K-owned dialog lifecycle remains untouched in 126I.
@@ -392,7 +376,7 @@ substituted. Missing or expired DevStudio auth keeps the browser gate RED.
   no console errors;
 - all six native dropdown triggers activate through click, Enter, and Space;
 - dropdown-actions commits immediately and renders no footer;
-- native Toggle changes through pointer and Space without generated Toggle JS;
+- native Toggle changes through pointer and Space without custom Toggle JS;
 - TdMenu and Repeater tooltips appear on hover and focus, retain accessible
   names, fit their container, and do not intercept commands;
 - authenticated Roma Builder opens its existing instances and exercises the
@@ -403,13 +387,9 @@ substituted. Missing or expired DevStudio auth keeps the browser gate RED.
 ### Deploy Proof
 
 - exact source SHA recorded;
-- Workers/R2 sync run at that SHA recorded;
-- canonical R2 manifest and changed component objects read back;
 - `bob-dev`, Roma, and DevStudio Pages deployments reconciled to that source
   SHA;
-- after the upload-only deploy is green, the four exact stale product-root keys
-  are deleted through the approved repo Cloudflare command and verified absent;
-  do not treat source absence as remote absence or add remote reconciliation.
+- no Dieter component/token/editor objects are deployed or mutated in R2.
 
 ## V1-V8 Controls
 
@@ -418,7 +398,7 @@ substituted. Missing or expired DevStudio auth keeps the browser gate RED.
 | V1 Silent substitution | Missing spec becomes empty defaults. | Any non-2xx ToolDrawer spec response throws. |
 | V2 Silent healing | Native values/labels are normalized while changing controls. | Preserve current authored values and labels; change semantics only where named. |
 | V3 Silent omission | Bulk Edit's copied trigger, generated registries, e2e assumptions, or four remote stale objects are missed. | Execute the exact map and reconcile source, generated, deployed, and browser inventories. |
-| V4 Fail-open control | Missing spec/dependency/output warns and ships. | Bob compiler and 126G builder fail closed. |
+| V4 Fail-open control | Missing spec or hydrator silently produces an incomplete control. | Bob compiler fails missing required specs and explicit hydration remains complete. |
 | V5 Corruption-as-absence | Invalid component data is treated as missing/default. | No persisted data path changes; existing component validation remains. |
 | V6 Partial-success masquerade | Local deletion is called complete while old R2 files or app builds remain. | Require exact-SHA R2 and Pages evidence. |
 | V7 Masquerade/redress | Dead code survives behind a rename, wrapper, or compatibility branch. | Delete textrename, Toggle JS, fake triggers, and dead action workflow outright. |
@@ -431,8 +411,7 @@ substituted. Missing or expired DevStudio auth keeps the browser gate RED.
   entitlement change;
 - no dialog lifecycle edit outside 126K;
 - no Roma/DevStudio screen adoption outside 126L/126M;
-- no direct edit of ignored `tokyo/product/dieter/**` output; only the four
-  named obsolete remote objects may be deleted after preflight;
+- no generated Dieter output, manifest, or compatibility bundle;
 - no component framework, form engine, table engine, tooltip runtime, modal
   registry, JS-to-TS migration, compatibility path, or new deploy lane.
 

@@ -142,7 +142,6 @@ Before changing product-path code or data:
 
 ```bash
 pnpm install
-pnpm build:dieter
 pnpm build
 pnpm lint
 pnpm typecheck

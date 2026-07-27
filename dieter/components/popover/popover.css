@@ -1,6 +1,3 @@
-@import '../button/button.css';
-@import '../textfield/textfield.css';
-
 .diet-popover-host {
   position: relative;
   inline-size: 100%;

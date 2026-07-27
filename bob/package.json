@@ -21,7 +21,6 @@
     "@clickeen/ck-policy": "workspace:*",
     "@clickeen/l10n": "workspace:*",
     "@clickeen/widget-shell": "workspace:*",
-    "gsap": "^3.13.0",
     "next": "15.5.2",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",

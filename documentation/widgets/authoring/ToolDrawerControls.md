@@ -165,25 +165,18 @@ template behavior.
 
 ## Dieter Mapping
 
-Bob loads Dieter stencils from the Tokyo product root:
+The widget artifact generator reads Dieter stencils from source:
 
 ```text
 dieter/components/{type}/{type}.html
 dieter/components/{type}/{type}.spec.json
 ```
 
-The widget artifact generator reads those stencils at build time. Bob and Roma
-load Dieter's generated editor media once per app:
-
-```text
-/dieter/editor/editor.css
-/dieter/editor/editor.js
-```
-
-Compiled widget artifacts do not contain per-control Dieter media lists.
+Bob and Roma compile Dieter CSS and hydrators from source. Compiled widget
+artifacts contain panel HTML and do not contain per-control Dieter media lists.
 
 Dieter stencil icon names remain `data-icon` references in compiled panel HTML.
-Generated `editor.css` renders them as CDN-backed CSS masks from
+Source hydration renders them as CDN-backed CSS masks from
 `/dieter/icons/svg/{name}.svg`. Bob must not replace those references with
 literal SVG markup.
 

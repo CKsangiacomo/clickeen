@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import type { PanelId } from '../lib/types';
+import { dieterIconStyle } from './dieterIcon';
 
 export type Panel = { id: PanelId; label: string; icon?: string };
 
@@ -55,7 +56,12 @@ export function TdMenu({ active, onSelect, panels }: TdMenuProps) {
             data-panel={panel.id}
           >
             {panel.icon ? (
-              <span className="diet-btn-ic__icon" data-icon={panel.icon} aria-hidden="true" />
+              <span
+                className="diet-btn-ic__icon"
+                data-icon={panel.icon}
+                style={dieterIconStyle(panel.icon)}
+                aria-hidden="true"
+              />
             ) : null}
           </button>
         );

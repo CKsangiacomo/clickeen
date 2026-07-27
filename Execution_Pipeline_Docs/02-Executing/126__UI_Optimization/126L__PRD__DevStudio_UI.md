@@ -169,7 +169,8 @@ old visual rules survive beside the accepted contracts.
 ## Verification
 
 ```bash
-pnpm build:dieter
+pnpm --filter @ck/dieter typecheck
+pnpm dieter:governance:check
 pnpm --filter @clickeen/devstudio typecheck
 pnpm --filter @clickeen/devstudio lint
 pnpm --filter @clickeen/devstudio check:functions

@@ -123,7 +123,7 @@ product/widgets/
 Generated account widget packages are stored runtime artifacts under the
 account instance coordinate. Widget source and selected shared widget runtime
 files are sealed into those stored package files at materialization time.
-`/dieter/**` and account asset references remain external
+Dieter icon URLs and account asset references remain external
 delivery dependencies. Public serving reads stored package bytes; it does not
 re-resolve product roots on visitor requests.
 

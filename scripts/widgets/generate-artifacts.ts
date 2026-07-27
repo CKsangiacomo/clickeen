@@ -10,6 +10,7 @@ import {
   WIDGET_SHELL_CSS_MODULE_KEYS,
   WIDGET_SHELL_RUNTIME_MODULE_KEYS,
 } from '../../packages/widget-shell/src';
+import { extractStylesheetSources } from '../../packages/ck-runtime-materializer/src/html';
 import { compileWidgetServer } from '../../bob/lib/compiler.server';
 import type { RawWidget } from '../../bob/lib/compiler.shared';
 import type {
@@ -24,7 +25,8 @@ import type {
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const widgetsRoot = path.join(repoRoot, 'tokyo/product/widgets');
-const dieterRoot = path.join(repoRoot, 'dieter/components');
+const dieterRoot = path.join(repoRoot, 'dieter');
+const dieterComponentsRoot = path.join(dieterRoot, 'components');
 const editorOutputRoot = path.join(repoRoot, 'roma/public/widget-editors');
 const materializerOutputRoot = path.join(repoRoot, 'roma/generated/widgets');
 const checkOnly = process.argv.includes('--check');
@@ -51,6 +53,14 @@ function readText(relativePath: string): string {
   return fs.readFileSync(path.join(repoRoot, relativePath), 'utf8');
 }
 
+function readCssEntry(relativePath: string): string {
+  const entryDir = path.posix.dirname(relativePath);
+  return readText(relativePath).replace(
+    /^@import url\(['"](.+?)['"]\);\s*$/gm,
+    (_match, importPath: string) => readCssEntry(path.posix.join(entryDir, importPath)),
+  );
+}
+
 function mediaTypeForPath(filePath: string): WidgetPackageFileContext['mediaType'] {
   if (filePath.endsWith('.json')) return 'application/json';
   if (filePath.endsWith('.html')) return 'text/html';
@@ -60,7 +70,7 @@ function mediaTypeForPath(filePath: string): WidgetPackageFileContext['mediaType
 
 const loadLocalStencil: ComponentStencilLoader = async (type): Promise<ComponentStencil> => {
   const component = type.trim();
-  const componentRoot = path.join(dieterRoot, component);
+  const componentRoot = path.join(dieterComponentsRoot, component);
   const stencilPath = path.join(componentRoot, `${component}.html`);
   if (!component || !fs.existsSync(stencilPath)) {
     throw new Error(`[generate-widget-artifacts] missing Dieter stencil: ${component}`);
@@ -81,16 +91,28 @@ function buildWidgetPackage(args: {
 }): WidgetPackageContext {
   const files: WidgetPackageContext['files'] = {};
   const widgetRoot = `tokyo/product/widgets/${args.widgetType}`;
+  const widgetHtml = readText(`${widgetRoot}/widget.html`);
   for (const filename of ['spec.json', 'widget.html', 'widget.css', 'widget.client.js'] as const) {
     files[filename] = {
       mediaType: mediaTypeForPath(filename),
-      source: filename === 'spec.json' ? args.specSource : readText(`${widgetRoot}/${filename}`),
+      source:
+        filename === 'spec.json'
+          ? args.specSource
+          : filename === 'widget.html'
+            ? widgetHtml
+            : readText(`${widgetRoot}/${filename}`),
     };
   }
   files['editable-fields.json'] = {
     mediaType: 'application/json',
     source: args.editableFieldsSource,
   };
+  for (const href of extractStylesheetSources(widgetHtml).filter((source) => source.startsWith('/dieter/'))) {
+    files[href] = {
+      mediaType: 'text/css',
+      source: readCssEntry(href.slice(1)),
+    };
+  }
 
   const supportKeys = new Set<string>([
     ...WIDGET_SHELL_CSS_MODULE_KEYS,

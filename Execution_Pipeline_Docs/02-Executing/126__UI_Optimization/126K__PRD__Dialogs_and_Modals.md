@@ -165,12 +165,12 @@ upsell scaffold; no product route or persistence behavior changes.
 ### K4 - Deploy And Browser Proof
 
 1. Run all local gates and focused dialog suites.
-2. Deploy through Git-connected Bob, Roma, and DevStudio Pages plus the normal
-   Worker/R2 Dieter sync at one source SHA.
-3. Read back the Dieter manifest at that SHA.
-4. Run authenticated Roma and DevStudio browser tests. Missing DevStudio auth
+2. Deploy through Git-connected Bob, Roma, and DevStudio Pages at one source
+   SHA. Dieter component source is compiled into those apps; no Dieter R2 sync
+   or manifest exists.
+3. Run authenticated Roma and DevStudio browser tests. Missing DevStudio auth
    remains RED; Roma auth must not substitute.
-5. Reconcile living dialog, interaction, component, and service docs.
+4. Reconcile living dialog, interaction, component, and service docs.
 
 ## Exact Blast Radius
 
@@ -187,13 +187,13 @@ upsell scaffold; no product route or persistence behavior changes.
 
 | Area | Files |
 | --- | --- |
-| Dieter build contract | `scripts/build-dieter.js` only for Object Manager tooltip dependency |
+| Dieter source consumption | `dieter/styles.css`; Bob/Admin source imports for Object Manager and tooltip |
 | Bulk Edit | `dieter/components/bulk-edit/bulk-edit.{html,css,ts}` |
 | Object Manager | `dieter/components/object-manager/object-manager.{html,css,spec.json}` plus new `.ts` |
 | Popovers | `dieter/components/shared/dropdownToggle.ts`; `dieter/components/textedit/textedit.ts`; `dieter/components/dropdown-{fill,border,shadow}/*.html` |
 | Bob | `bob/components/UpsellPopup.tsx`; `bob/app/bob_app.css` |
 | Roma | `roma/components/pages-domain.tsx`; `assets-domain.tsx`; `roma-account-notice-modal.tsx`; `widgets-domain.tsx`; `builder-domain.tsx`; `widget-defaults-domain.tsx`; `roma/app/roma.css` |
-| DevStudio | `admin/src/main.ts`; `admin/src/css/utilities.css`; generated registries/pages produced by the Dieter build |
+| DevStudio | `admin/src/main.ts`; `admin/src/css/utilities.css`; generated registries/pages produced by the DevStudio generators |
 | Tests | `roma/tests/run-widget-command-gates.ts` plus the new focused suites |
 | Docs | `documentation/engineering/UI/{dialogs-and-modals,interactions,components}.md`; `documentation/services/{bob,roma,devstudio}.md` |
 
@@ -202,8 +202,8 @@ If a named generated file has moved, update this PRD before editing.
 
 ### Delete
 
-- `dieter/components/object-manager/object-manager.js` after the TypeScript
-  replacement builds the same public `object-manager.js` artifact;
+- `dieter/components/object-manager/object-manager.js` after all source
+  consumers import the TypeScript replacement directly;
 - both in-app `window.confirm` calls;
 - migrated `.roma-modal-backdrop` wrappers and CSS;
 - dead `.ck-upsellModal__detail`, `.ck-publish*`, and `.ck-website*` CSS;
@@ -223,8 +223,8 @@ If a named generated file has moved, update this PRD before editing.
 ## Verification
 
 ```bash
-pnpm build:dieter
 pnpm --filter @ck/dieter typecheck
+pnpm dieter:governance:check
 pnpm --filter @clickeen/bob lint
 pnpm --filter @clickeen/bob typecheck
 pnpm --filter @clickeen/bob build

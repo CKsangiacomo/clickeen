@@ -43,7 +43,9 @@ export function buildStyles(args: {
   const includedStyleKeys = new Set<string>();
   for (const href of extractStylesheetSources(args.widgetHtml)) {
     if (href.startsWith('/dieter/')) {
-      chunks.push(styleChunk(href, `@import "${href}";`));
+      const source = packageSource({ compiled: args.compiled, key: href });
+      if (!source) return materializerFailure('widget_package_file_missing', href, [href]);
+      chunks.push(styleChunk(href, source));
       includedStyleKeys.add(href);
       continue;
     }

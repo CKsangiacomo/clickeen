@@ -1,6 +1,11 @@
 # 126C - PRD: Iconography
 
 Status: STEP 9 COMPLETE - C1 GREEN.
+
+Post-126G delivery note: icon authoring remains the manual
+`tooling/sf-symbols/**` lane. References below to `scripts/build-dieter.js` or
+`tokyo/product/dieter/**` describe the historical execution environment. The
+committed SVG source is now deployed directly to R2.
 Parent: `126__PRD__UI_Optimization_Program.md`.
 Series order: 126C of 126A-126M.
 Step-6 authority: `audits/126C__Audit__Iconography.md`.
@@ -22,8 +27,9 @@ replay icon cleanup that is already in current source.
    source pair.
 2. New icons are human-originated through `tooling/sf-symbols`; agents consume
    the approved set and do not add, rename, reshape, or reinterpret it.
-3. `scripts/build-dieter.js` verifies and propagates committed source to
-   `tokyo/product/dieter/icons/**`; generated output is not source authority.
+3. The Tokyo product-root sync deploys committed
+   `dieter/icons/svg/**` directly to R2 `dieter/icons/svg/**`. The registry
+   remains source/compile-time data and is not deployed.
 4. Runtime-specific delivery forms are valid when they preserve the one Dieter
    name/geometry authority: Bob inline geometry, Admin tooling imports, widget
    masks, and Prague public Tokyo URLs.

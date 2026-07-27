@@ -169,50 +169,38 @@ agent path unless the task explicitly names remote data repair.
 
 Git-authored Tokyo product roots sync to canonical R2 roots:
 
-| Repo source | Canonical R2 root |
+| Repo input | Canonical R2 root |
 | --- | --- |
 | `tokyo/product/widgets/**` | `product/widgets/**` |
-| `tokyo/product/dieter/**` | `dieter/**` |
+| `dieter/icons/svg/**` | `dieter/icons/svg/**` |
 | `tokyo/roma/**` | `product/roma/**` |
 | `tokyo/prague/**` | `prague/**` |
 
-Commands:
+Local inspection command:
 
 ```bash
 pnpm tokyo:r2:sync:check
-pnpm tokyo:r2:sync:remote
 ```
 
-The sync is scoped to the current git-authored roots above and rejects account
-runtime keys. It is upload-only: it writes current local entries and does not
-prove remote reconciliation, orphan cleanup, or rollback.
+The sync reads these inputs directly and rejects account runtime keys. It is
+upload-only: it writes current entries and does not perform remote
+reconciliation, orphan cleanup, or rollback.
 
-Worker/R2 deploy automation is evidenced by GitHub Actions
-`cloud-dev workers deploy`. If a product-root sync is run manually, use
-`pnpm cf:preflight` first and verify the exact R2 keys afterward.
+Remote product-root deployment runs only through GitHub Actions
+`cloud-dev workers deploy` after a push to `main`. That workflow runs the repo
+checks, which regenerate widget product packages from current source, then
+syncs all four roots. The workflow run is the deployment evidence.
 
 Auth boundary: the GitHub Actions sync path may use the workflow
 `CLOUDFLARE_API_TOKEN` because it is a CI/Wrangler deploy workflow. Local repo
 helper commands must not use that ambiguous token name; local R2 commands use
 the typed env names above.
 
-Current workflow caveat: `cloud-dev workers deploy` runs `pnpm build:dieter`
-only for Dieter source/build-script changes. It runs the R2 product-root sync
-for Dieter source/build-script changes, `tokyo/product/widgets/**`,
-`tokyo/product/dieter/**`, `tokyo/roma/**`, and the sync script itself. It does
-not currently trigger for `tokyo/prague/**` only.
-If Prague R2 content changes and no other sync-triggering root changed, run the
-manual sync path deliberately:
-
-```bash
-pnpm cf:preflight
-pnpm tokyo:r2:sync:check
-pnpm tokyo:r2:sync:remote
-pnpm cf:r2:get prague/[exact-key]
-```
-
-Do not rely on implicit bucket defaults for manual sync. Record the
-`TOKYO_R2_BUCKET` confirmed by preflight before writing.
+Changes to Dieter source, widget product source, Roma product media, Prague
+product media, or the sync workflow trigger that product-root path. Dieter
+source is watched because widget product packages consume its token/component
+CSS; only SVG icon bytes are written under the R2 `dieter/` root. Use the repo
+R2 read commands after deployment when an exact remote key must be verified.
 
 ## Pages/DNS REST Commands
 

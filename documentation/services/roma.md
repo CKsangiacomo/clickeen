@@ -364,12 +364,11 @@ deploy-built Builder panel HTML, binds controls to the Roma draft defaults
 document, and saves the full document back through the same Roma route.
 
 Widget Defaults must fail closed when compiled Builder controls are unavailable,
-when the shared Dieter editor bundle or hydration fails, or when the rendered
-controls do not cover every requested Shell/Core default path. Metadata coverage
-alone is not enough: the rendered `[data-bob-path]` set is the editable surface.
-Roma loads Tokyo's `/dieter/editor/editor.css` and
-`/dieter/editor/editor.js` once at the app root; compiled widget artifacts do
-not carry per-control Dieter media lists.
+when Dieter source hydration fails, or when the rendered controls do not cover
+every requested Shell/Core default path. Metadata coverage alone is not enough:
+the rendered `[data-bob-path]` set is the editable surface. Roma compiles the
+shared Dieter CSS and hydrators from source; compiled widget artifacts do not
+carry per-control Dieter media lists.
 
 Widget Defaults is the second account-bound typography editor host. It uses the
 same current account `fontLibrary`, family transition resolver, and relational

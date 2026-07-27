@@ -1,10 +1,3 @@
-@import '../button/button.css';
-@import '../menuactions/menuactions.css';
-@import '../popover/popover.css';
-@import '../slider/slider.css';
-@import '../textfield/textfield.css';
-@import '../toggle/toggle.css';
-
 .diet-dropdown-shadow {
   position: relative;
   display: grid;

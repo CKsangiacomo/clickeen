@@ -183,7 +183,6 @@ function renderTable(
   columns: BulkColumn[],
   flags: Record<string, boolean> | null,
   emptyLabel: string | null,
-  accountAssets: AccountAssetsClient | null,
 ) {
   tableWrap.innerHTML = '';
   if (rows.length === 0) {
@@ -293,12 +292,14 @@ function renderTable(
 
   table.appendChild(tbody);
   tableWrap.appendChild(table);
-  hydrateUploadControls(tableWrap, accountAssets);
 }
 
 export function hydrateBulkEdit(
   scope: Element | DocumentFragment,
-  options?: { accountAssets?: AccountAssetsClient },
+  options?: {
+    accountAssets?: AccountAssetsClient;
+    hydrateChildren?: (scope: HTMLElement) => void;
+  },
 ): void {
   scope.querySelectorAll<HTMLElement>('.diet-bulk-edit').forEach((root) => {
     if (root.dataset.bulkEditHydrated === 'true') return;
@@ -323,7 +324,8 @@ export function hydrateBulkEdit(
       const rows = buildRows(path, rowPath, strips);
       const flags = readPolicyFlags(root);
       const emptyLabel = root.getAttribute('data-empty-label');
-      renderTable(tableWrap, rows, columns, flags, emptyLabel, options?.accountAssets ?? null);
+      renderTable(tableWrap, rows, columns, flags, emptyLabel);
+      options?.hydrateChildren?.(tableWrap);
     };
 
     const openModal = () => {
@@ -375,20 +377,6 @@ export function hydrateBulkEdit(
     });
     saveBtn.addEventListener('click', save);
   });
-}
-
-function hydrateUploadControls(scope: HTMLElement, accountAssets: AccountAssetsClient | null) {
-  const anyWindow = window as unknown as {
-    Dieter?: { hydrateDropdownUpload?: (scope: Element, options: { accountAssets: AccountAssetsClient }) => void };
-  };
-  const hydrate = anyWindow?.Dieter?.hydrateDropdownUpload;
-  const hasUploadControls = Boolean(scope.querySelector('.diet-dropdown-upload'));
-  if (hasUploadControls && !accountAssets) {
-    throw new Error('diet-bulk-edit upload controls require an explicit account asset client');
-  }
-  if (typeof hydrate === 'function') {
-    hydrate(scope, { accountAssets: accountAssets as AccountAssetsClient });
-  }
 }
 
 function buildUploadControl(args: {
