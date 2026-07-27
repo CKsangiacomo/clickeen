@@ -1,6 +1,6 @@
 # 126 — DevQA: Where We Actually Stand
 
-Status: STEP 9 IN PROGRESS - 126A, 126B, AND 126C GREEN; 126D is next.
+Status: STEP 9 IN PROGRESS - 126A THROUGH 126D GREEN; 126E is next.
 This document reconciles PRD claims with Git and current source evidence. It does
 not define product law, approve unresolved architecture choices, prove that every
 intermediate commit deployed, or close any PRD whose required verification is
@@ -29,8 +29,8 @@ review. Reviewed trees are A `c06fa7db`; B `4b480e50`; C `b5efaefc`; D
 `31b81152`; E `ec1ed486`; F/G/H `4c5458b4`; I/J/K/L/M `22a92ec9`.
 
 Step 9 subsequently began through the accepted one-domain-at-a-time process.
-126A, 126B, and 126C are now independently implemented, deployed, verified,
-documented, and GREEN. 126D is the next execution domain. The historical
+126A through 126D are now independently implemented, deployed, verified,
+documented, and GREEN. 126E is the next execution domain. The historical
 pre-execution findings below remain the record of why earlier code changes did
 not receive execution credit before that formal pass.
 
@@ -53,7 +53,8 @@ not receive execution credit before that formal pass.
 5. **The font-migration evidence question is closed.** Authenticated Roma routes show
    all seven fonts as `CLICKEEN` account assets; widget defaults expose the account
    font library; `QD1G068MX7` and its public runtime use account-asset URLs. The
-   untracked local copies are mechanical future cleanup, not migration input.
+   untracked local copies are non-deployed workspace residue outside 126 execution,
+   not migration input or a pending product task.
 6. **Product-owner convergence is complete.** D1 defines dialog dismissal, D2
    defines global workspace capability, and D3 keeps Upgrade connected to one
    honest pre-GA upsell scaffold. No new A-H product decision is open.
@@ -452,9 +453,8 @@ route is fully gone from code and config.
   authenticated product lane.
 - `QD1G068MX7` uses Orio and Pachuka Line; its public runtime embeds the account
   asset URLs.
-- No font product-data migration remains. Step 9 may delete the seven untracked
-  local copies after the final plan records this evidence. No remote mutation is
-  required.
+- No font product-data migration remains. The seven untracked local copies are
+  non-deployed workspace residue outside 126D execution and remain untouched.
 
 ---
 
@@ -468,16 +468,16 @@ The execution boundary is now concrete:
    authority, scope, deletion, and verification choices are frozen.
 3. **Historical audits remain evidence, not current authority.** The final PRDs,
    current audits, owner register, and this ledger define the Step-9 boundary.
-4. **Font migration is closed.** Only the explicitly named local untracked-file
-   cleanup remains in its owning Step-9 slice.
+4. **Font migration is closed.** The untracked local copies remain untouched
+   outside the 126 execution scope.
 
 ### Recommended order
 1. Completed: statuses, frozen historical evidence, and product-owner decisions
    are reconciled.
 2. Completed: settled law, current-source gap maps, deletion maps, final PRDs,
    and exact-tree peer reviews cover every A-M domain.
-3. Next: begin Step 9 with 126A. Continue in dependency order through 126M,
-   one PRD and one slice at a time.
+3. Completed: 126A through 126D. Next: execute 126E, then continue in dependency
+   order through 126M, one PRD and one slice at a time.
 4. Do not advance a slice until its implementation, focused checks, visual proof,
    docs, deploy/runtime evidence, product-data reconciliation where applicable,
    and independent V1-V8 audit are GREEN.
@@ -501,7 +501,7 @@ pre-execution corpus:
 | V3 Silent omission | Does this doc drop a required input/artifact/operation? | No. It retains the all-A-M pre-execution gate, complete Roma inventory, review-provenance gap, closed read-only font evidence, mandatory execution law, and accepted D1/D2/D3 decisions. |
 | V4 Fail-open control | Does enforcement turn off when a dependency is missing? | N/A — no enforcement added. |
 | V5 Corruption-as-absence | Does this doc treat corrupt state as missing/new/empty? | No. The stale status lines are named as drift, not ignored. |
-| V6 Partial-success masquerade | Does this doc claim full success after some work was dropped? | No. Steps 1-8 are complete for A-M; all Step-9 implementation, deploy, product-data, and runtime work is explicitly unstarted. |
+| V6 Partial-success masquerade | Does this doc claim full success after some work was dropped? | No. Steps 1-8 are complete for A-M; 126A through 126D are executed and verified, while 126E through 126M remain pending in dependency order. |
 | V7 Masquerade/redress | Does the same failing workflow continue under a different wrapper? | No. Verification cannot mutate code/product data or grant execution credit; exact reviewed-tree provenance is mandatory before step 9. |
 | V8 Runtime test dependency | Does normal product work start depending on tests/probes? | No. |
 
@@ -509,8 +509,8 @@ pre-execution corpus:
 
 ## 11. Evidence index
 
-Key claims were checked against current source and Git history through
-2026-07-21.
+Key claims were checked against current source, Git history, cloud-dev runtime,
+and R2 read-back through 2026-07-26.
 Runtime/deploy claims are bounded as stated above:
 
 - `--easing-standard` defined: `dieter/tokens/dieter-foundation-tokens.css:71-73`

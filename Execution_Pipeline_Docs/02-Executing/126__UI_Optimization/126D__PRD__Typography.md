@@ -1,6 +1,6 @@
 # 126D - PRD: Typography
 
-Status: STEP 9 SOURCE GREEN - DEPLOY AND PRODUCT VERIFICATION PENDING.
+Status: STEP 9 GREEN - EXECUTED AND VERIFIED.
 Parent: `126__PRD__UI_Optimization_Program.md` (MAMA).
 Series order: 126D of 126A-126M.
 KB doc: `documentation/engineering/UI/typography.md`.
@@ -76,17 +76,17 @@ Strong current substrate:
 - DevStudio generates typography preview data from Dieter CSS and can currently
   edit only a subset of typography tokens.
 
-Current remaining typography gaps:
+Pre-execution typography gaps, closed by Step 9:
 
-- Dieter operational UI and widget runtime typography are both real, but their
-  ownership boundaries are underdocumented.
+- Dieter operational UI and widget runtime typography were both real, but their
+  ownership boundaries were underdocumented.
 - Dieter has no tracking token layer; tracking appears as utility-local values.
-- Dieter utility classes currently carry some color behavior that belongs to
+- Dieter utility classes carried color behavior that belongs to
   126B/component context/widget content authority.
-- Public widgets have richer typography mechanics than the public Dieter doc
-  explains: tracking presets, line-height presets, container-query fluid sizing,
+- Public widgets had richer typography mechanics than the public Dieter doc
+  explained: tracking presets, line-height presets, container-query fluid sizing,
   script fallback, and locale/script-aware line-height behavior.
-- Bob editor fields, widget-shell defaults, and runtime-applied fields do not
+- Bob editor fields, widget-shell defaults, and runtime-applied fields did not
   fully line up.
 
 The account-font architecture is current and closed: `fontLibrary` and normal
@@ -357,7 +357,8 @@ Font support, account-library wiring, asset migration, package materialization,
 old-route removal, and public runtime delivery are complete. Authenticated Roma
 and public-runtime evidence is recorded in `126_DevQA.md`. No remote font
 migration remains. The seven untracked local copies under
-`tokyo/product/fonts/special/` are non-deployed residue for step-9 deletion only.
+`tokyo/product/fonts/special/` are non-deployed workspace residue outside this
+Git execution. They remain untouched and receive no Step-9 credit.
 
 ## Widget Fallback Baseline
 
@@ -426,11 +427,11 @@ migration work.
 | Bob shell typography | `bob/app/bob_app.css` | Verified current: the code block uses `var(--font-mono)`. |
 | Account font library document | `roma/lib/account-widget-defaults-direct.ts`, `roma/lib/account-widget-defaults-contract.ts`, `roma/lib/account-widget-defaults-materialization.ts`, `roma/components/widget-defaults-domain.tsx`, `roma/app/api/account/widget-defaults/route.ts`, `tokyo-worker/src/domains/account-widget-defaults.ts`, `tokyo-worker/src/routes/internal-widget-default-routes.ts` | Verified current: top-level `fontLibrary` flows through the existing account widget-defaults authority. |
 | Bob open/session font payload | `roma/components/builder-domain.tsx`, `bob/lib/session/sessionTypes.ts`, `bob/lib/session/useSessionBoot.ts`, `bob/lib/session/WidgetDocumentSession.tsx` | Verified current: Bob receives the account font library and rejects missing/malformed data. |
-| Bob widget typography authoring | `bob/lib/edit/typography-fonts.ts`, `bob/lib/compiler/{controls,editor-contract}.ts`, `bob/lib/compiler/modules/typography.ts`, `bob/lib/session/{sessionConfig,sessionTypes,useSessionBoot,useSessionEditing,useSessionSaving,WidgetDocumentSession}.ts*`, `bob/components/{CopilotPane,TdMenuContent,ToolDrawer}.tsx`, `bob/components/td-menu-content/{accountFonts,linkedOps,useTdMenuBindings}.ts`, `bob/lib/control-host.ts` | Step-6 defect: visible account fonts and fixed compiler/session validation disagree; family transitions, Copilot labels, and mapped rejection copy are incomplete. Bind one account contract and one explicit transition operation to all Bob edit paths. |
-| Roma Widget Defaults typography | `roma/components/widget-defaults-{builder-controls,domain}.tsx`, `roma/lib/account-widget-defaults-contract.ts`, `roma/app/api/account/widget-defaults/route.ts` | Step-8 defect: Roma is a second account-bound editor host and currently lacks relational account-font validation. Use the same resolver/validator for shell and widget core on edit, GET, and PUT. |
-| Dieter family intent | `dieter/components/dropdown-actions/dropdown-actions.ts`, `tokyo/product/dieter/components/dropdown-actions/dropdown-actions.js`, `tokyo/product/dieter/editor/editor.js` | Step-8 defect: Dieter currently owns companion selection and emits three ops. Reduce it to raw family intent; host/product contract owns transition semantics. Regenerate both direct component output and the composed editor bundle. |
+| Bob widget typography authoring | `bob/lib/edit/typography-fonts.ts`, `bob/lib/compiler/{controls,editor-contract}.ts`, `bob/lib/compiler/modules/typography.ts`, `bob/lib/session/{sessionConfig,sessionTypes,useSessionBoot,useSessionEditing,useSessionSaving,WidgetDocumentSession}.ts*`, `bob/components/{CopilotPane,TdMenuContent,ToolDrawer}.tsx`, `bob/components/td-menu-content/{accountFonts,linkedOps,useTdMenuBindings}.ts`, `bob/lib/control-host.ts` | Closed in Step 9: the compiler is account-neutral, session binding supplies the exact account library, one transition operation serves manual and Copilot edits, and the obsolete Bob font authority is deleted. |
+| Roma Widget Defaults typography | `roma/components/widget-defaults-{builder-controls,domain}.tsx`, `roma/lib/account-widget-defaults-contract.ts`, `roma/app/api/account/widget-defaults/route.ts` | Closed in Step 9: Roma uses the same account-font transition and validates shell/widget-core typography at the product boundary. |
+| Dieter family intent | `dieter/components/dropdown-actions/dropdown-actions.ts`, `tokyo/product/dieter/components/dropdown-actions/dropdown-actions.js`, `tokyo/product/dieter/editor/editor.js` | Closed in Step 9: Dieter emits raw family intent; the host/product contract owns companion selection. Generated output matches source. |
 | Widget shell contract | `packages/widget-shell/src/defaults.ts`, `packages/widget-shell/src/contract.ts`, `packages/widget-shell/src/{controls,font-library}.ts` | Defaults/controls/schema must not imply custom values are active unless their preset is `custom`; shell role labels and account-font relation law have one shared owner. |
-| Runtime package materialization | `roma/lib/account-instance-public-package.ts`, `roma/lib/account-instance-locale-package.ts`, `packages/ck-runtime-materializer/src/**` | Step-8 defect: package creation checks family/asset presence but not each role's allowed weight/style. Run the shared relational validator before asset resolution/materialization so direct/replayed saves fail before Tokyo write. |
+| Runtime package materialization | `roma/lib/account-instance-public-package.ts`, `roma/lib/account-instance-locale-package.ts`, `packages/ck-runtime-materializer/src/**` | Closed in Step 9: shared relational validation runs before asset resolution/materialization, so invalid family/weight/style combinations fail before Tokyo write. |
 | Widget runtime typography | `tokyo/product/widgets/shared/typography.js`, `tokyo/product/widgets/shared/typography-data.js`, `packages/widget-shell/src/modules.ts`, `tokyo/product/widgets/*/widget.client.js` | Google and account-asset font authorities and current runtime behavior stay unchanged. No runtime parser or second role registry is added. |
 | Widget CSS consumers | `tokyo/product/widgets/cards/widget.css`, `tokyo/product/widgets/big-bang/widget.css` | Verified current: no active `--font-display` fallback remains. |
 | Widget specs/runtime invalid class cleanup | `tokyo/product/widgets/faq/spec.json` | Verified current: embedded editor classes use `body-xs`. |
@@ -476,8 +477,8 @@ Current documentation reconciliation:
 
 ## Execution Gap Targets
 
-Step 6 is complete in `audits/126D__Audit__Typography.md`. It proved two
-remaining mismatches:
+Step 6 in `audits/126D__Audit__Typography.md` proved the two mismatches that
+Step 9 closed:
 
 1. Bob replaces the visible family menu with the current account library but
    still validates edits, Copilot controls, config, and save against the
@@ -698,6 +699,53 @@ docs, exact-SHA deploys, and real account-font edit/save/reopen proof all agree.
 Deleting untracked workspace residue, passing typecheck alone, or showing the
 font in the menu is not 126D execution proof.
 
+### Step-9 Execution Record
+
+Step 9 is green on source commit
+`0e0de068fa3c0ff7732401c91d14542cd0a90a97`.
+
+- The corrective implementation pass was a reduction refactor. That source
+  slice removed 1,094 lines and added 217 lines, including deletion of the
+  TypeScript source parser, duplicate Bob typography validation, manual DOM
+  rollback behavior, and redundant typography test machinery.
+- All local source-gate commands in this PRD passed, including Dieter
+  generation/typecheck, Bob and Roma focused typography tests, widget
+  validation, package/save boundary tests, Bob/Roma/Widget Shell typechecks,
+  Bob/Roma lint, and `git diff --check`.
+- Product-root deployment passed at `1304e507` in `cloud-dev workers deploy`
+  run `30216556294`. The final Bob source commit passed
+  `cloud-dev roma app verify` run `30224544063` and
+  `cloud-dev surface reachability` run `30224650102`.
+- `pnpm cf:preflight` passed against `tokyo-assets-dev`. The deployed R2 bytes
+  for the five changed widget specs and
+  `dieter/components/dropdown-actions/dropdown-actions.js` match committed
+  source exactly.
+- Cloudflare Pages deployed exact commit `0e0de068` for Roma
+  (`ce4d16fa-67cd-436e-907f-7bb8a905d415`) and Bob
+  (`f71ef28b-c732-4575-9c6e-d7d84d61cfc0`). The canonical Roma and Bob
+  cloud-dev hosts responded, and the authenticated Builder-open and Widget
+  Defaults browser tests passed together.
+- Roma Widget Defaults changed the shared `Title` role and FAQ `Question` role
+  from `Inter` to the uploaded `Orio` account font. Both transitions selected
+  `400/normal`, saved successfully, survived reload, and were restored to their
+  exact original values through the same UI.
+- Bob changed the published `QD1G068MX7` instance from its saved
+  `Pachuka Line/400/normal` title typography to `Orio/400/normal`, saved through
+  the normal account-instance route, survived reopen, and was restored exactly.
+  Bob preview and the public embed both rendered `Orio, serif` at weight `400`;
+  the real `CLICKEEN/Orio.woff` account asset returned HTTP 200.
+- R2 contained 625 account-instance keys before and after the save. Exactly
+  five keys changed, all under `QD1G068MX7`: `instance.config.json`,
+  `instance.content.json`, `index.html`, `styles.css`, and `runtime.js`. No
+  other instance, locale package, or locale overlay changed.
+- Bob Copilot changed `Title` from `Pachuka Line` to `Orio` and back through
+  two family intents. Bob expanded each through the same account-font
+  transition, and a separate Undo proof restored the complete original triple.
+  The account library, Bob picker, and Copilot control each exposed the same 25
+  families. No Copilot edit was saved.
+- No direct R2 or Supabase mutation was used for product edits. The only R2
+  operation in verification was an exact read-back.
+
 ## Closed Product Data Authority Evidence
 
 The seven fonts are verified `CLICKEEN` account assets. This section records the
@@ -716,9 +764,8 @@ Closed evidence:
   assets and expose the current `fontLibrary`.
 - Current source contains no root product-font route or fixed Tokyo font record.
 - Public widget runtime uses account-asset URLs, not root product-font URLs.
-- Direct R2/API preflight is unavailable on this machine because
-  `CLOUDFLARE_ACCOUNT_ID` is absent; this register makes no direct-storage
-  claim.
+- Direct R2 preflight and exact object read-back passed on this machine against
+  `tokyo-assets-dev`.
 
 Compliance reason: the admin account is not a special global asset class.
 
