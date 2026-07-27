@@ -379,7 +379,7 @@ it alone.
 | Live Dieter pseudo-element consumer | 126F / Dieter and DevStudio | `dieter/components/dropdown-fill/dropdown-fill.css`; `admin/src/html/components/dropdown-fill.html`; `admin/src/main.ts` | On `https://devstudio.clickeen.com/#/dieter/dropdown-fill`, verify `.diet-dropdown-fill__swatch::after` keeps its ordinary transition and becomes immediate under reduced motion. | Do not use Roma's dead Widget Defaults selector as evidence or add a component-local duplicate guard. |
 | Prague Dieter consumer | Prague / website consumer | `prague/src/layouts/Base.astro`; `prague/src/components/StepsPrimitive.astro`; `prague/src/components/InstanceEmbed.astro`; `prague/public/styles/primitives.css` | Verify the global selector change makes `StepsPrimitive` pseudo-element transitions immediate under reduced motion and preserves normal mode. | Do not edit Prague source or treat Prague consumption as a second motion authority. |
 | Dieter icon read boundary | 126G / Tokyo public serving | `tokyo-worker/src/asset-utils.ts`; Bob/Roma icon-only routes | Verify the existing public Dieter surface remains limited to `/dieter/icons/svg/**`; 126F does not alter it. | Do not expose token/component/editor files or broaden account/internal access. |
-| Public widget baseline consumer | Widget PRDs / widget docs | `tokyo/product/widgets/*/widget.html`; `tokyo/product/widgets/cards/widget.css`; materializer contract/fixture proving required Dieter CSS is sealed into `styles.css`; `roma/app/api/account/widgets/route.ts` | Use authenticated Roma `GET /api/account/widgets`; require response `accountId === 'CLICKEEN'` and a published Cards instance; verify `.ck-cards__card` in normal and reduced-motion modes. | Do not restore a public token stylesheet, rewrite widget runtime, substitute another widget, or create product data. |
+| Public widget baseline consumer | Widget PRDs / widget docs | `tokyo/product/widgets/*/widget.html`; `tokyo/product/widgets/cards/widget.css`; materializer contract/fixture proving required Dieter CSS is sealed into `styles.css` | Verify the generated Cards package `.ck-cards__card` in normal and reduced-motion modes, then smoke the current public instance routes for serving regressions. Existing pre-GA instance packages are disposable output and are not a verification dependency. | Do not restore a public token stylesheet, rewrite widget runtime, create product data, or rematerialize existing instances for this check. |
 | Dieter source/deploy authority handoff | 126G | `dieter/**`; `scripts/tokyo-r2-deploy-sync.mjs`; package files; GitHub workflows | Consume 126G's direct-source app/widget compilation and SVG-only CDN delivery. | Do not recreate a Dieter builder, generated tree, manifest, shared CSS/JS runtime, or second deployment rule. |
 | Public widget runtime inspect-only boundary | Widget PRDs / widget docs | `tokyo/product/widgets/logoshowcase/widget.css`; `tokyo/product/widgets/logoshowcase/widget.client.js`; `tokyo/product/widgets/split-carousel-media/widget.client.js`; `tokyo/product/widgets/countdown/widget.client.js`; `tokyo/product/widgets/shared/stagePod.js`; `tokyo/product/widgets/shared/socialShare.js`; `tokyo/product/widgets/shared/socialShare.css` | Preserve widget ownership beyond the shared CSS guard, especially JS-driven motion. | Do not rewrite independent widget behavior in 126F. |
 | Public widget docs inspect-only boundary | Widget PRDs / widget docs | `documentation/widgets/widgets/logoshowcase.md`; `documentation/widgets/widgets/split-carousel-media.md`; `documentation/widgets/widgets/countdown.md`; `documentation/widgets/widgets/README.md`; `documentation/widgets/README.md`; `documentation/widgets/shared/ShellCore.md`; `documentation/widgets/authoring/ToolDrawerControls.md` | Verify docs do not imply Dieter/system motion governs independent widget runtime behavior. | Do not document widget runtime motion as Dieter/system doctrine. |
@@ -438,17 +438,14 @@ The final integrated Step-9 plan carries this exact slice:
    focused consumer builds after Dieter source changes.
 9. Push the exact source commit and verify the Git-connected deployments at
    that SHA. Do not perform a manual R2 mutation.
-10. Verify browser behavior in normal and
-   reduced-motion modes for DevStudio
+10. Verify browser behavior in normal and reduced-motion modes for DevStudio
    `.diet-dropdown-fill__swatch::after`, Prague route
    `https://prague.dev.clickeen.com/us/en/widgets/faq/` selector
-   `.ck-stepsCanvas[data-variant='value-props'] .ck-steps__tile::before`, and a
-   current public Cards widget. Discover Cards through authenticated Roma
-   `GET /api/account/widgets`, require response `accountId === 'CLICKEEN'` and
-   an instance with `widgetType === 'cards'` and `status === 'published'`,
-   record the exact `dev.clk.live` URL, and test
-   `.ck-cards__card`. Record computed transition durations. If no such Cards
-   instance exists, this gate is RED; do not substitute or create product data.
+   `.ck-stepsCanvas[data-variant='value-props'] .ck-steps__tile::before`, and
+   the generated Cards package `.ck-cards__card`. Record computed transition
+   durations. Smoke the current public instance routes for serving regressions,
+   but do not create, save, rematerialize, or require a particular pre-GA
+   instance as test infrastructure.
 
 Exact current deletion map:
 
@@ -520,9 +517,9 @@ Execution is not complete until these checks are run and reconciled:
 - Search Dieter source for operational `transition` literals in the blast radius.
 - Verify the foundation reduced-motion selector covers `*`, `*::before`, and
   `*::after`; test DevStudio `.diet-dropdown-fill__swatch::after`, the exact
-  Prague selector, and the discovered current public Cards `.ck-cards__card`
-  transition with reduced motion enabled, only after the exact-SHA deploy and
-  R2 read-back are green.
+  Prague selector, and generated Cards `.ck-cards__card` with reduced motion
+  enabled. After the exact-SHA deploy is green, smoke current public instance
+  routes without making their pre-existing generated bytes a 126F dependency.
 - Search Dieter source for `--easing-standard` references and definitions.
 - Search for active `--duration-snap` consumers.
 - Search `prague/src/components/StepsPrimitive.astro`,
