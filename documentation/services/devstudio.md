@@ -46,7 +46,8 @@ editor is unchanged. Dirty dismissal opens discard confirmation, backdrop
 dismissal is disabled, Cancel follows the same dirty rule, and Confirm Commit
 persists through the existing validated write lane. Native `beforeunload`, where
 needed at the browser boundary, is not replaced by an in-product dialog helper.
-Any current token-editor behavior that differs is a 126L execution gap.
+The editor uses the shared native-dialog lifecycle while keeping token state and
+source commit behavior in DevStudio.
 
 ## Current Sections
 

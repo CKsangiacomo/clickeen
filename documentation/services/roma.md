@@ -51,7 +51,7 @@ Open settings or persisted Dismiss. A plan-limit prompt may close through
 Escape, backdrop, or its explicit Close action because no work is lost. Unsaved
 Builder/defaults confirmation treats Escape as Keep editing and requires
 explicit Discard. Native `beforeunload` remains only at the browser boundary;
-in-app `window.confirm` is a 126 execution gap.
+in-app navigation uses the Roma unsaved-changes dialog.
 
 Legitimate Upgrade controls remain during pre-GA upsell development. Roma owns
 one small reusable account upsell scaffold: Roma-native Upgrade actions open it,
@@ -60,16 +60,10 @@ Upgrade to inactive Billing or add a global upsell store/framework. The scaffold
 performs no purchase, plan mutation, provider call, fake success, or invented
 contact operation. When the intent starts in a plan-limit prompt, Roma replaces
 that prompt instead of stacking dialogs. Ordinary Billing navigation remains
-valid for inspecting the current plan. Current Upgrade-to-`/billing` routing is
-a 126K execution gap. The current `bob:upsell` branch also invokes the Builder
-discard guard; execution removes that invocation from this in-place transition
-while preserving discard protection for real navigation.
-
-The paragraphs above are accepted product behavior, not a claim that every
-current Roma modal already implements it. Current lifecycle mismatches across
-the named dialogs, the upsell transitions, and the two in-app `window.confirm`
-guards are 126K execution gaps. 126M later verifies the completed behavior
-during final Roma integration; native browser `beforeunload` remains.
+valid for inspecting the current plan. Roma's native dialogs and Bob's typed
+intent implement this behavior directly. The Builder discard guard remains on
+real navigation only. 126M preserves and re-verifies this completed behavior
+during final Roma integration.
 
 ## Runtime Routes
 

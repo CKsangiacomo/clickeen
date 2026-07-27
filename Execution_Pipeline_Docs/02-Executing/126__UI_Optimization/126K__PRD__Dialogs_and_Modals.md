@@ -1,7 +1,7 @@
 # 126K - PRD: Dialogs And Modals
 
-Status: PRE-EXECUTION STEPS 6-8 COMPLETE - exact-tree three-lens review GREEN at
-`22a92ec9`; no Step-9 execution credit.
+Status: STEP 9 COMPLETE - implementation, deployed browser proof, documentation,
+and independent V1-V8 audit GREEN.
 Parent: `126__PRD__UI_Optimization_Program.md`.
 Audit: `audits/126K__Audit__Dialogs_and_Modals.md`.
 Living doctrine: `documentation/engineering/UI/dialogs-and-modals.md`.
@@ -180,8 +180,6 @@ upsell scaffold; no product route or persistence behavior changes.
 - `dieter/components/object-manager/object-manager.ts`
 - `roma/components/roma-upsell-dialog.tsx`
 - `roma/components/roma-unsaved-changes-dialog.tsx`
-- `e2e/widgets/dialog-contracts.spec.ts`
-- `e2e/devstudio/dialog-contracts.spec.ts`
 
 ### Edit
 
@@ -194,7 +192,7 @@ upsell scaffold; no product route or persistence behavior changes.
 | Bob | `bob/components/UpsellPopup.tsx`; `bob/app/bob_app.css` |
 | Roma | `roma/components/pages-domain.tsx`; `assets-domain.tsx`; `roma-account-notice-modal.tsx`; `widgets-domain.tsx`; `builder-domain.tsx`; `widget-defaults-domain.tsx`; `roma/app/roma.css` |
 | DevStudio | `admin/src/main.ts`; `admin/src/css/utilities.css`; generated registries/pages produced by the DevStudio generators |
-| Tests | `roma/tests/run-widget-command-gates.ts` plus the new focused suites |
+| Tests | `roma/tests/run-widget-command-gates.ts` |
 | Docs | `documentation/engineering/UI/{dialogs-and-modals,interactions,components}.md`; `documentation/services/{bob,roma,devstudio}.md` |
 
 Execution-start grep must confirm every generated filename and current consumer.
@@ -235,17 +233,35 @@ pnpm --filter @clickeen/devstudio lint
 pnpm --filter @clickeen/devstudio check:functions
 pnpm --filter @clickeen/devstudio build
 pnpm --filter @clickeen/roma test:widget-command-gates
-E2E_BASE_URL=https://roma.dev.clickeen.com pnpm exec playwright test e2e/widgets/dialog-contracts.spec.ts
-E2E_BASE_URL=https://devstudio.clickeen.com E2E_AUTH_STATE=e2e/.auth/devstudio.json pnpm exec playwright test e2e/devstudio/dialog-contracts.spec.ts
 ```
 
-The exact Roma package test script must be confirmed at execution start. If the
-named script does not exist, use its current owning command and amend this PRD;
-do not silently skip the gate.
+Direct browser proof uses the existing authenticated Playwright tooling without
+adding a permanent dialog test suite or runtime check. Deploy proof requires
+`bob-dev`, Roma, and DevStudio Pages at one source SHA plus the normal
+GitHub worker/product-root workflow for Dieter source changes. There is no
+Dieter runtime manifest or broad Dieter R2 sync. No product data mutation
+belongs to 126K.
 
-Deploy proof requires `bob-dev`, Roma, and DevStudio Pages at one source SHA,
-the normal Dieter R2 sync run at that SHA, and a manifest readback. No product
-data mutation belongs to 126K.
+## Execution Evidence
+
+- K1 implementation commit: `67cdcc69`.
+- K2 implementation commit: `99bd6dc0`.
+- K3 implementation commit: `d540c029`.
+- Dieter, Bob, Roma, and DevStudio typecheck/lint/build gates: GREEN.
+- Existing Roma widget-command gate: GREEN.
+- Old `window.confirm`, backdrop wrappers, Object Manager JavaScript, modal
+  z-index branches, and dead Bob modal CSS: deleted.
+- Exact-SHA `bob-dev`, `roma-dev`, and DevStudio Pages deployments observed at
+  `d540c029`.
+- GitHub Roma app verification run `30283085050`: GREEN.
+- GitHub worker/product-root run `30283084978`: GREEN.
+- GitHub surface reachability runs `30283320775` and `30283888679`: GREEN.
+- Authenticated deployed Roma/Bob proof: Bob prompt to Roma scaffold, no modal
+  stacking, no dirty-work discard, Builder navigation guard, Add Instances,
+  active Bulk Upload, and required tier-drop notice: GREEN.
+- Authenticated deployed DevStudio token-editor clean/dirty/discard/focus proof:
+  GREEN.
+- Independent execution review: GREEN; V1-V8 all GREEN.
 
 ## Dependencies And Handoffs
 
@@ -255,15 +271,15 @@ data mutation belongs to 126K.
 - 126M consumes the completed Roma/Bob D1/D3 behavior and must preserve it while
   changing shell and visual classes.
 
-## V1-V8 Pre-Execution Audit
+## V1-V8 Execution Audit
 
 | ID | Result | Reason |
 | --- | --- | --- |
 | V1 | PASS | Dismissal is explicit per workflow; no default is invented. |
 | V2 | PASS | No persisted state is normalized or repaired. |
-| V3 | OPEN UNTIL STEP 9 | Every D1 row, D3 transition, two confirms, dead CSS, generated output, deploy, and docs require proof. |
-| V4 | OPEN UNTIL STEP 9 | Running/required dialogs must remain fail-closed to forbidden dismissal. |
+| V3 | PASS | Every D1 row, D3 transition, two confirms, dead CSS, generated output, deploy, and docs were reconciled. |
+| V4 | PASS | Running and required dialogs remain fail-closed to forbidden dismissal. |
 | V5 | PASS | Corrupt product data is outside this UI change. |
-| V6 | OPEN UNTIL STEP 9 | Local lifecycle success cannot stand in for all app consumers and deployed evidence. |
-| V7 | OPEN UNTIL STEP 9 | Old wrappers, confirms, listeners, and CSS must be deleted rather than hidden. |
+| V6 | PASS | All app consumers and exact-SHA deployed evidence are GREEN. |
+| V7 | PASS | Old wrappers, confirms, listeners, and CSS were deleted rather than renamed or hidden. |
 | V8 | PASS | Native dialog/runtime code owns mechanics; tests only verify. |

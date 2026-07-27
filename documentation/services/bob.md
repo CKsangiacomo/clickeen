@@ -185,10 +185,8 @@ existing plan-limit modal.
 The scaffold is a real UI destination for developing the upsell experience; it
 does not purchase, mutate a plan, call a billing provider, or claim commercial
 success. Opening it preserves Bob's unsaved working state and must not invoke a
-discard confirmation. Current code that guards and routes this intent to
-`/billing` is a 126K dialog-consumer execution gap governed by 126E interaction
-meaning, not a second 126M implementation and not product law. 126M later
-regresses the completed behavior during final Roma integration.
+discard confirmation. Bob uses the shared native-dialog lifecycle for this
+prompt, and 126M preserves the completed behavior during final Roma integration.
 
 ## Save Contract
 

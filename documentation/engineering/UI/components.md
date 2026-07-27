@@ -41,7 +41,7 @@ Legend: ✅ exported from `index.ts` · Direct host import · ⊘ CSS/HTML only.
 | operational | `operational-field` | ordinary app field visual base | ⊘ |
 | operational | `operational-table` | semantic table visual base and overflow shell | ⊘ |
 | operational | `tooltip` | CSS label from `data-tooltip` | ⊘ |
-| other | `shared/` | helpers (`account-assets`, `dropdownToggle`) — not rendered | — |
+| other | `shared/` | helpers (`account-assets`, `dialog-lifecycle`, `dropdownToggle`) — not rendered | — |
 
 ## Component Contract
 
