@@ -1,6 +1,6 @@
 # 126 — DevQA: Where We Actually Stand
 
-Status: STEP 9 IN PROGRESS - 126A THROUGH 126G GREEN; 126H is next.
+Status: STEP 9 IN PROGRESS - 126A THROUGH 126H GREEN; 126I is next.
 This document reconciles PRD claims with Git and current source evidence. It does
 not define product law, approve unresolved architecture choices, prove that every
 intermediate commit deployed, or close any PRD whose required verification is
@@ -36,12 +36,13 @@ review. Reviewed trees are A `c06fa7db`; B `4b480e50`; C `b5efaefc`; D
 `31b81152`; E `ec1ed486`; F/G/H `4c5458b4`; I/J/K/L/M `22a92ec9`.
 
 Step 9 subsequently began through the accepted one-domain-at-a-time process.
-126A through 126G are now independently executed, verified,
+126A through 126H are now independently executed, verified,
 documented, and GREEN. 126E was intentionally a no-product-code preservation
 and ownership checkpoint. 126G deleted the legacy generated Dieter delivery
 system and established direct source consumption plus icon-only R2 delivery.
 126F then closed the remaining reduced-motion pseudo-element gap without adding
-motion machinery. 126H is next. The historical pre-execution
+motion machinery. 126H removed the final dead focus-width token reference and
+stale manifest count without changing visible focus. 126I is next. The historical pre-execution
 findings below remain the record of why earlier code changes did not receive
 execution credit before that formal pass.
 
@@ -490,7 +491,7 @@ The execution boundary is now concrete:
    are reconciled.
 2. Completed: settled law, current-source gap maps, deletion maps, final PRDs,
    and exact-tree peer reviews cover every A-M domain.
-3. Completed: 126A through 126G. Next: execute 126H, then continue in dependency
+3. Completed: 126A through 126H. Next: execute 126I, then continue in dependency
    order through 126M, one PRD and one slice at a time.
 4. Do not advance a slice until its implementation, focused checks, visual proof,
    docs, deploy/runtime evidence, product-data reconciliation where applicable,
@@ -515,7 +516,7 @@ pre-execution corpus:
 | V3 Silent omission | Does this doc drop a required input/artifact/operation? | No. It retains the all-A-M pre-execution gate, complete Roma inventory, review-provenance gap, closed read-only font evidence, mandatory execution law, and accepted D1/D2/D3 decisions. |
 | V4 Fail-open control | Does enforcement turn off when a dependency is missing? | N/A — no enforcement added. |
 | V5 Corruption-as-absence | Does this doc treat corrupt state as missing/new/empty? | No. The stale status lines are named as drift, not ignored. |
-| V6 Partial-success masquerade | Does this doc claim full success after some work was dropped? | No. Steps 1-8 are complete for A-M; 126A through 126G are executed and verified, while 126H through 126M remain pending in dependency order. |
+| V6 Partial-success masquerade | Does this doc claim full success after some work was dropped? | No. Steps 1-8 are complete for A-M; 126A through 126H are executed and verified, while 126I through 126M remain pending in dependency order. |
 | V7 Masquerade/redress | Does the same failing workflow continue under a different wrapper? | No. Verification cannot mutate code/product data or grant execution credit; exact reviewed-tree provenance is mandatory before step 9. |
 | V8 Runtime test dependency | Does normal product work start depending on tests/probes? | No. |
 

@@ -1,7 +1,6 @@
 # 126H - PRD: Dieter
 
-Status: PRE-EXECUTION STEPS 6-8 COMPLETE - exact-tree review green at
-`4c5458b4`; no Step-9 execution credit.
+Status: STEP 9 COMPLETE - 126H GREEN.
 Parent: `126__PRD__UI_Optimization_Program.md` (MAMA).
 Series order: 126H of 126A-126M.
 KB doc: `documentation/engineering/UI/dieter.md`.
@@ -484,6 +483,30 @@ Exact no-touch boundary: Dieter foundation token values/scales, visible focus
 semantics, account/runtime product data, published instance snapshots,
 Cloudflare configuration, Roma/Tokyo routes, Berlin, San Francisco, and Babel
 operation state.
+
+## Step-9 Execution Record
+
+Status on 2026-07-27: **126H GREEN; complete.**
+
+- `4c25be29` replaced the dead shared-widget
+  `var(--focus-ring-width, 2px)` reference with its effective literal `2px`
+  while preserving outline color, offset, selectors, and behavior. All eight
+  byte-exact widget-package fixtures received the same mechanical replacement.
+- `7f221199` removed the last living-doc claim that Dieter component counts came
+  from the 126G-deleted manifest. Counts now come directly from the 25 source
+  directories: 24 components plus `shared/`.
+- Dieter governance/typecheck, static stale-token searches, and the full
+  eight-widget Roma instance-package parity matrix completed successfully.
+- Exact-SHA GitHub Actions completed successfully for `4c25be29`: workers/R2
+  run `30260038353`, Roma app run `30260038377`, Prague app run `30260038375`,
+  and reachability run `30260206025`.
+- Approved Cloudflare preflight completed successfully. Canonical R2 object
+  `product/widgets/shared/socialShare.css` reads back the literal `2px`
+  declaration.
+- No account data, instance data, published snapshot, route, configuration,
+  Supabase state, translation behavior, or new machinery changed.
+- Independent review passed V1-V8 after the stale manifest sentence was
+  corrected.
 
 ## V1-V8 Pre-Execution Controls
 
