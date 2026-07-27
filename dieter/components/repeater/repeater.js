@@ -249,7 +249,7 @@ const registry = new WeakMap();
         reorderBtn.setAttribute("aria-pressed", state.reorder ? "true" : "false");
         reorderBtn.setAttribute("data-variant", state.reorder ? "secondary" : "neutral");
         reorderBtn.setAttribute("aria-label", state.reorderLabel);
-        reorderBtn.setAttribute("title", state.reorderLabel);
+        reorderBtn.setAttribute("data-tooltip", state.reorderLabel);
       };
 
       const state = {
@@ -405,11 +405,12 @@ const registry = new WeakMap();
 
       const handle = document.createElement("button");
       handle.type = "button";
-      handle.className = "diet-btn-ic diet-repeater__item-handle";
+      handle.className = "diet-btn-ic diet-tooltip diet-repeater__item-handle";
       handle.setAttribute("data-size", "sm");
       handle.setAttribute("data-variant", "neutral");
       handle.setAttribute("aria-label", labelWithIndex(state.moveLabel, index));
-      handle.setAttribute("title", labelWithIndex(state.moveLabel, index));
+      handle.setAttribute("data-tooltip", labelWithIndex(state.moveLabel, index));
+      handle.setAttribute("data-tooltip-placement", "right");
       const handleIcon = state.iconHandle ? state.iconHandle.cloneNode(true) : null;
       if (handleIcon) {
         handle.appendChild(handleIcon);
@@ -421,11 +422,12 @@ const registry = new WeakMap();
 
       const remove = document.createElement("button");
       remove.type = "button";
-      remove.className = "diet-btn-ic diet-repeater__item-remove";
+      remove.className = "diet-btn-ic diet-tooltip diet-repeater__item-remove";
       remove.setAttribute("data-size", "sm");
       remove.setAttribute("data-variant", "neutral");
       remove.setAttribute("aria-label", labelWithIndex(state.removeLabel, index));
-      remove.setAttribute("title", labelWithIndex(state.removeLabel, index));
+      remove.setAttribute("data-tooltip", labelWithIndex(state.removeLabel, index));
+      remove.setAttribute("data-tooltip-placement", "left");
       const removeIcon = state.iconTrash ? state.iconTrash.cloneNode(true) : null;
       if (removeIcon) {
         remove.appendChild(removeIcon);

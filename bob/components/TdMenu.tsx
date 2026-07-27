@@ -48,9 +48,10 @@ export function TdMenu({ active, onSelect, panels }: TdMenuProps) {
             role="tab"
             aria-selected={isActive}
             aria-label={panel.label}
-            title={panel.label}
+            data-tooltip={panel.label}
+            data-tooltip-placement="right"
             onClick={() => handleSelect(panel.id)}
-            className="diet-btn-ic"
+            className="diet-btn-ic diet-tooltip"
             data-size="lg"
             data-variant={isActive ? 'primary' : 'neutral'}
             data-panel={panel.id}

@@ -1,0 +1,31 @@
+.diet-operational-table {
+  max-inline-size: 100%;
+  overflow-x: auto;
+  border: 1px solid var(--role-border);
+  border-radius: var(--control-radius-md);
+  background: var(--role-surface);
+}
+
+.diet-operational-table__table {
+  inline-size: 100%;
+  border-collapse: collapse;
+  color: var(--color-text);
+  font: 400 var(--fs-13) / var(--lh-body-ui) var(--font-ui);
+}
+
+.diet-operational-table__table th,
+.diet-operational-table__table td {
+  padding: var(--space-2) var(--space-3);
+  border-block-end: 1px solid var(--role-border);
+  text-align: start;
+  vertical-align: middle;
+}
+
+.diet-operational-table__table th {
+  background: var(--role-surface-muted);
+  font-weight: 600;
+}
+
+.diet-operational-table__table tr:last-child > * {
+  border-block-end: 0;
+}

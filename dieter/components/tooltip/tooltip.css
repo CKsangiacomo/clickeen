@@ -1,0 +1,43 @@
+.diet-tooltip {
+  position: relative;
+}
+
+.diet-tooltip::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  z-index: 1;
+  inset-block-end: calc(100% + var(--space-1));
+  inset-inline-start: 50%;
+  max-inline-size: min(15rem, calc(100vw - var(--space-4)));
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--control-radius-sm);
+  background: var(--color-system-black);
+  color: var(--color-system-white);
+  font: 500 var(--fs-11) / var(--lh-tight) var(--font-ui);
+  opacity: 0;
+  pointer-events: none;
+  text-align: center;
+  transform: translateX(-50%);
+  visibility: hidden;
+  white-space: nowrap;
+}
+
+.diet-tooltip:hover::after,
+.diet-tooltip:focus-visible::after {
+  opacity: 1;
+  visibility: visible;
+}
+
+.diet-tooltip[data-tooltip-placement="right"]::after {
+  inset-block-end: auto;
+  inset-block-start: 50%;
+  inset-inline-start: calc(100% + var(--space-1));
+  transform: translateY(-50%);
+}
+
+.diet-tooltip[data-tooltip-placement="left"]::after {
+  inset-block-end: auto;
+  inset-block-start: 50%;
+  inset-inline: auto calc(100% + var(--space-1));
+  transform: translateY(-50%);
+}
