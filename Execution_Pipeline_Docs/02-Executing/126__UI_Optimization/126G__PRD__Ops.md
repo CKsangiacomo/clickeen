@@ -1,6 +1,6 @@
 # 126G - PRD: UI Source And Delivery Cleanup
 
-Status: STEP 9 IN PROGRESS - product authority corrected before commit.
+Status: STEP 9 COMPLETE - G1 through G4 GREEN.
 Parent: `126__PRD__UI_Optimization_Program.md`.
 Execution dependency: 126A through 126E are GREEN. Complete 126G before 126F.
 Living docs: `documentation/engineering/UI/ops.md` and
@@ -232,6 +232,41 @@ Packages/deletions/docs:
 - No compatibility aliases for removed Dieter routes.
 - No new R2 cleanup, reconciliation, rollback, ledger, or controller.
 - No CI execution of the human SF Symbols authoring tool.
+
+## Step-9 Execution Record
+
+Status on 2026-07-27: **G1 through G4 GREEN; 126G complete.**
+
+- Source cleanup landed in `971b4b16`. It deleted the legacy Dieter builder,
+  SVG verifier, generated `tokyo/product/dieter/**` tree, editor bundle,
+  `window.Dieter` discovery, broad proxies, obsolete package hooks, and unused
+  dependencies. Bob, Roma, Prague, DevStudio, widgets, and the existing
+  materializer now consume Dieter source directly.
+- Public-host icon routing was corrected in `295e2232`. Tokyo serves only
+  `/dieter/icons/svg/*.svg` on the public host.
+- Root lint and typecheck, Dieter governance, runtime-materializer tests,
+  all-widget Roma instance-package tests, Tokyo public-serving tests, and
+  Bob/Roma/Prague production builds completed successfully.
+- Exact-SHA GitHub Actions completed successfully for `971b4b16`: workers/R2
+  run `30251895264`, Prague run `30251895299`, Roma run `30251896133`, and
+  reachability runs `30252088472` and `30252506146`. Exact-SHA worker and
+  reachability runs `30253524082` and `30253634499` completed successfully for
+  `295e2232`.
+- Approved Cloudflare preflight completed successfully. R2 `dieter/` contains
+  exactly the 157 authoritative `dieter/icons/svg/**` objects and no editor,
+  component, token, manifest, or icon-registry objects.
+- Live public evidence: `globe.svg` returns `200`; removed editor, token,
+  manifest, and icon-registry paths return `404`. Authenticated read-only
+  Builder smoke passed, and the three current published pre-GA base packages
+  return `200` for `index.html`, `styles.css`, and `runtime.js`.
+- Existing pre-GA instances do not require compatibility repair or migration
+  for 126G. They may be deleted/recreated or have translations regenerated
+  through the product when useful. No translation, Supabase, or instance
+  repair is a 126G completion dependency.
+- Independent review passed V1-V8: the legacy delivery system was deleted
+  rather than wrapped or renamed, required hydrators and widget behavior remain,
+  missing package inputs still fail visibly, and runtime behavior does not
+  depend on verification machinery.
 
 ## Final Verification
 
