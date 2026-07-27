@@ -1,6 +1,6 @@
 # PRD 126 — MAMA: UI Optimization Program
 
-Status: STEP 9 IN PROGRESS - 126A THROUGH 126E AND 126G GREEN; 126F is next.
+Status: STEP 9 IN PROGRESS - 126A THROUGH 126G GREEN; 126H is next.
 Owner: Clickeen product architecture + UI
 Date: 2026-06-26
 Stage: 02-Executing
@@ -359,8 +359,8 @@ current authority; it does not invent a second documentation surface.
 5. Complete: every A-M domain is peer-reviewed GREEN at an exact tree (step 8):
    A `c06fa7db`; B `4b480e50`; C `b5efaefc`; D `31b81152`; E `ec1ed486`;
    F/G/H `4c5458b4`; I/J/K/L/M `22a92ec9`.
-6. In progress: 126A through 126E and 126G completed Step 9. Continue with
-   126F, which now consumes the completed 126G package/build/deploy authority.
-   Then proceed once in dependency order. Execute one PRD and one slice at a time; a slice
+6. In progress: 126A through 126G completed Step 9 in the accepted dependency
+   order, including 126G before 126F. Continue with 126H, then proceed once in
+   dependency order. Execute one PRD and one slice at a time; a slice
    does not advance until its code, product-data, deploy/runtime,
    documentation, and V1-V8 gates are GREEN.

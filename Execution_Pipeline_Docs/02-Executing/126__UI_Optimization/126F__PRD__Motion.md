@@ -1,7 +1,6 @@
 # 126F - PRD: Motion
 
-Status: PRE-EXECUTION STEPS 6-8 COMPLETE - exact-tree review green at
-`4c5458b4`; no Step-9 execution credit.
+Status: STEP 9 COMPLETE - 126F GREEN.
 Parent: `126__PRD__UI_Optimization_Program.md` (MAMA).
 Series order: 126F of 126A-126M.
 Execution dependency: 126G must be Step-9 GREEN before 126F begins.
@@ -587,6 +586,28 @@ Compliance reason:
   component/product need.
 - No visual primitive decisions owned by 126I.
 - No interaction-state decisions owned by 126E.
+
+## Step-9 Execution Record
+
+Status on 2026-07-27: **126F GREEN; complete.**
+
+- `faa3f6a0` extended the Dieter reduced-motion baseline to real elements and
+  both pseudo-elements. The same source bytes were updated mechanically in all
+  eight widget-package parity fixtures.
+- `0ab66012` reconciled the living motion doctrine with the implemented
+  pseudo-element behavior.
+- Frozen-lockfile installation, Dieter governance/typecheck, widget validation,
+  runtime-materializer tests, all-widget package parity, root lint/typecheck,
+  and Bob/Roma/Prague/DevStudio builds completed successfully.
+- Computed browser proof confirmed generated Cards transition duration and the
+  Dieter dropdown-fill swatch pseudo-element both resolve to `1e-06s` under
+  reduced motion while retaining their normal durations otherwise.
+- Exact-SHA GitHub Actions completed successfully for `faa3f6a0`: workers/R2
+  run `30256699987` and Roma app verification run `30256699990`.
+- No account data, instance data, translation behavior, Supabase state, or
+  Cloudflare configuration changed.
+- Independent review passed V1-V8. The runtime CSS owns the behavior; no motion
+  framework, compatibility path, probe, or test-dependent runtime was added.
 
 ## GLM Input Integrated
 
