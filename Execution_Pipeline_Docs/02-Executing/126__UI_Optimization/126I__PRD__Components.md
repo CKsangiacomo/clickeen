@@ -1,7 +1,6 @@
 # 126I - PRD: Components
 
-Status: PRE-EXECUTION STEPS 6-8 COMPLETE - exact-tree three-lens review GREEN at
-`22a92ec9`; no Step-9 execution credit.
+Status: STEP 9 COMPLETE - 126I GREEN.
 Parent: `126__PRD__UI_Optimization_Program.md` (MAMA).
 Series order: 126I of 126A-126M.
 KB doc: `documentation/engineering/UI/components.md`.
@@ -411,6 +410,38 @@ substituted. Missing or expired DevStudio auth keeps the browser gate RED.
 - no generated Dieter output, manifest, or compatibility bundle;
 - no component framework, form engine, table engine, tooltip runtime, modal
   registry, JS-to-TS migration, compatibility path, or new deploy lane.
+
+## Step-9 Execution Evidence
+
+- Source commits: `e40f565d`, `0a96cbf9`, `3062671a`, and `fda75fc4`.
+- Net 126I source/documentation result: 322 additions and 655 deletions.
+- `textrename`, custom Toggle hydration, fake dropdown triggers, and the dead
+  dropdown-actions apply/cancel workflow are deleted.
+- The only new contracts are CSS-only operational field, operational table,
+  and tooltip source. No test, validator, manifest, probe, framework, portal,
+  observer, timer, or runtime subsystem was added.
+- Widget validation, Dieter governance/typecheck, Bob lint/typecheck/build,
+  Roma lint/typecheck/Cloudflare build, and DevStudio
+  lint/typecheck/functions/build are GREEN.
+- DevStudio local route proof passed 26 of 27 routes; the sole local failure was
+  the temporary static server lacking `/dieter/icons/svg/photo.svg`, not a
+  component failure.
+- Exact source SHA `fda75fc4e1e3af023e4dfb0fddc486312c9d3fd0`
+  deployed successfully to `bob-dev`, `roma-dev`, and `devstudio`.
+  Cloudflare Pages deployment ids are
+  `caa8f645-0450-487b-a073-c92a0513c9ac`,
+  `0bb6e0d2-bbbf-4aa2-b423-778cef8f6ab0`, and
+  `ffee3b0d-bace-4ad3-bbb1-54dd026ef0b1`.
+- GitHub Actions runs `30264274921`, `30264274951`, and `30264848542`
+  completed successfully for Roma verification, Worker/product-root deploy,
+  and final surface reachability.
+- Deployed read-only browser proof used Berlin dev-admin -> DevStudio
+  session-finish, traversed the generated 3 Foundation, 22 Component, and 2
+  Policy routes in one live session, and verified tooltip name, focus/hover
+  visibility, absent native title, and `pointer-events: none`.
+- No account instance, account asset, translation, policy, entitlement,
+  Supabase, or direct R2 product data mutation occurred.
+- Independent slice and whole-PRD reviews passed V1-V8.
 
 ## Step-8 Review Questions
 
