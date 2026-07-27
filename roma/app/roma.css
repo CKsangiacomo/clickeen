@@ -175,7 +175,7 @@ a {
   min-width: 0;
 }
 
-.roma-nav-trigger,
+.roma-nav-trigger.diet-btn-ic,
 .roma-layout__scrim,
 .roma-portrait-boundary {
   display: none;
@@ -733,7 +733,7 @@ a {
     transform: translateX(0);
   }
 
-  .roma-nav-trigger {
+  .roma-nav-trigger.diet-btn-ic {
     display: inline-flex;
   }
 
