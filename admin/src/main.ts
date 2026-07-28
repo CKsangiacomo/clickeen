@@ -1,4 +1,6 @@
 import '@dieter/tokens/tokens.css';
+import '@dieter/components/shared/property-row.css';
+import '@dieter/components/shared/authoring-focus.css';
 import '@dieter/components/popover/popover.css';
 import '@dieter/components/operational-field/operational-field.css';
 import '@dieter/components/operational-table/operational-table.css';

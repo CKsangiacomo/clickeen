@@ -27,6 +27,7 @@ There is no Dieter build bundle, generated Tokyo mirror, browser manifest, or
 | --- | --- |
 | `dieter/tokens/` | Canonical token CSS. |
 | `dieter/components/{component}/` | Component CSS, stencil, spec, and optional hydrator. |
+| `dieter/components/shared/` | Small source helpers shared by existing components, including compact property-row geometry. |
 | `dieter/components/index.ts` | Explicit component-hydrator exports. |
 | `dieter/icons/svg/` | Approved SVG icon bytes deployed to R2. |
 | `dieter/icons/icons.json` | Source registry used by authoring and compile-time consumers. |
@@ -57,6 +58,10 @@ JavaScript.
 
 DevStudio reads Dieter source through its existing source generators. Its
 generated reveal pages are tooling output, not a deployable Dieter runtime.
+
+Compact property controls share row geometry through
+`dieter/components/shared/property-row.css`. Components continue to own their
+specific input, switch, dropdown, popover, hover, focus, and disabled behavior.
 
 ## Icon Delivery
 

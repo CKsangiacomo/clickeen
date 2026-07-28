@@ -10,20 +10,12 @@
 .diet-dropdown-shadow .diet-dropdown-header {
   appearance: none;
   position: relative;
-  display: flex;
-  align-items: center;
-  gap: var(--space-1);
-  inline-size: 100%;
-  min-inline-size: 0;
-  min-block-size: var(--control-size-md, 1.5rem);
-  padding-inline: var(--control-padding-inline);
-  border-radius: var(--control-radius-md, 0.375rem);
   border: 1px solid transparent;
+  border-radius: var(--control-radius-md, 0.375rem);
   background: var(--color-system-white);
   color: inherit;
   font: inherit;
   text-align: inherit;
-  box-sizing: border-box;
   transition: background-color var(--duration-base) var(--easing-standard), border-color var(--duration-base) var(--easing-standard);
   cursor: pointer;
 }
@@ -38,20 +30,7 @@
   border-color: var(--color-system-blue);
 }
 
-.diet-dropdown-shadow .diet-dropdown-header-label {
-  flex: 0 0 auto;
-}
-
 .diet-dropdown-shadow .diet-dropdown-header-value {
-  flex: 1 1 auto;
-  min-inline-size: 0;
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-1);
-  justify-content: flex-start;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
   color: var(--color-system-black);
 }
 

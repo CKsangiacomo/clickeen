@@ -81,7 +81,7 @@
         <div class="diet-dropdown-border__inputs">
           <div class="diet-textfield" data-size="md" data-role="hex">
             <label class="diet-textfield__control">
-              <span class="diet-textfield__display-label label-s">Hex:</span>
+              <span class="diet-textfield__display-label label-s">Hex</span>
               <input
                 type="text"
                 class="diet-textfield__field body-s diet-dropdown-border__hex"
@@ -162,7 +162,7 @@
         </div>
 
         <div class="diet-dropdown-border__border-controls">
-          <div class="diet-toggle diet-toggle--block" data-size="sm">
+          <label class="diet-toggle diet-toggle--block" data-size="sm">
             <span class="diet-toggle__label label-s" id="{{id}}-enabled-label">Enabled</span>
             <input
               id="{{id}}-enabled"
@@ -171,10 +171,10 @@
               role="switch"
               aria-labelledby="{{id}}-enabled-label"
             />
-            <label class="diet-toggle__switch" for="{{id}}-enabled" aria-hidden="true">
+            <span class="diet-toggle__switch" aria-hidden="true">
               <span class="diet-toggle__knob"></span>
-            </label>
-          </div>
+            </span>
+          </label>
 
           <div class="diet-dropdown-border__slider diet-dropdown-border__slider--width diet-slider" data-size="md">
             <span class="diet-slider__label">Width</span>

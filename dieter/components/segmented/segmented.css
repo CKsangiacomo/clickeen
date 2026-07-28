@@ -223,7 +223,9 @@
   color: var(--seg-active-fg);
 }
 
-/* Focus state removed per design: no focus visuals */
+.diet-segment__input:focus-visible ~ .diet-segment__surface {
+  box-shadow: 0 0 0 2px var(--color-system-blue);
+}
 
 /* Disabled state */
 .diet-segment__input:disabled ~ .diet-segment__surface {

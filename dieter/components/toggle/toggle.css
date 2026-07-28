@@ -4,7 +4,7 @@
    - Size: data-size="sm|md|lg" → 16/20/24px rails (independent of row height)
    - Label: .diet-toggle__label (leading text, may be visually hidden by .sr-only)
    - Input: .diet-toggle__input.sr-only[type=checkbox][role=switch]
-   - Switch (visible control): .diet-toggle__switch[for]
+   - Switch (visible control): .diet-toggle__switch
      • Knob: .diet-toggle__knob
    - Alignment (component-level helpers):
      • .diet-toggle--block → inline-size: 100%
@@ -14,15 +14,13 @@
 */
 
 .diet-toggle {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--control-inline-gap-sm, 0.375rem);
   justify-content: space-between;
-  inline-size: 100%;
-  min-block-size: var(--control-size-md, 1.5rem);
-  padding-inline: var(--control-padding-inline);
-  box-sizing: border-box;
   letter-spacing: var(--control-letter-spacing, 0);
+  border: 1px solid transparent;
+  border-radius: var(--control-radius-md, 0.375rem);
+  background: var(--color-system-white);
+  transition: background-color var(--duration-base) var(--easing-standard), border-color var(--duration-base) var(--easing-standard);
+  cursor: pointer;
 }
 
 /* Alignment helpers (component-scoped) */
@@ -114,7 +112,14 @@
   color: var(--color-system-black);
 }
 
-/* Focus visuals removed per design */
+.diet-toggle:hover:not(:has(.diet-toggle__input:disabled)) {
+  background: color-mix(in oklab, var(--color-system-white), var(--color-system-black) 6%);
+}
+
+.diet-toggle:focus-within {
+  background: var(--color-system-white);
+  border-color: var(--color-system-blue);
+}
 
 /* Disabled */
 .diet-toggle__input:disabled + .diet-toggle__switch {

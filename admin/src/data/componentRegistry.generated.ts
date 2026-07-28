@@ -63,13 +63,15 @@ import css15 from "../../../dieter/components/popaddlink/popaddlink.css?raw";
 import css16 from "../../../dieter/components/popover/popover.css?raw";
 import css17 from "../../../dieter/components/repeater/repeater.css?raw";
 import css18 from "../../../dieter/components/segmented/segmented.css?raw";
-import css19 from "../../../dieter/components/slider/slider.css?raw";
-import css20 from "../../../dieter/components/tabs/tabs.css?raw";
-import css21 from "../../../dieter/components/textedit/textedit.css?raw";
-import css22 from "../../../dieter/components/textfield/textfield.css?raw";
-import css23 from "../../../dieter/components/toggle/toggle.css?raw";
-import css24 from "../../../dieter/components/tooltip/tooltip.css?raw";
-import css25 from "../../../dieter/components/valuefield/valuefield.css?raw";
+import css19 from "../../../dieter/components/shared/authoring-focus.css?raw";
+import css20 from "../../../dieter/components/shared/property-row.css?raw";
+import css21 from "../../../dieter/components/slider/slider.css?raw";
+import css22 from "../../../dieter/components/tabs/tabs.css?raw";
+import css23 from "../../../dieter/components/textedit/textedit.css?raw";
+import css24 from "../../../dieter/components/textfield/textfield.css?raw";
+import css25 from "../../../dieter/components/toggle/toggle.css?raw";
+import css26 from "../../../dieter/components/tooltip/tooltip.css?raw";
+import css27 from "../../../dieter/components/valuefield/valuefield.css?raw";
 
 export const specModules: Record<string, ComponentSpec> = {
   "../../../dieter/components/agent-activity/agent-activity.spec.json": spec0 as ComponentSpec,
@@ -141,11 +143,13 @@ export const cssModules: Record<string, string> = {
   "../../../dieter/components/popover/popover.css": css16,
   "../../../dieter/components/repeater/repeater.css": css17,
   "../../../dieter/components/segmented/segmented.css": css18,
-  "../../../dieter/components/slider/slider.css": css19,
-  "../../../dieter/components/tabs/tabs.css": css20,
-  "../../../dieter/components/textedit/textedit.css": css21,
-  "../../../dieter/components/textfield/textfield.css": css22,
-  "../../../dieter/components/toggle/toggle.css": css23,
-  "../../../dieter/components/tooltip/tooltip.css": css24,
-  "../../../dieter/components/valuefield/valuefield.css": css25,
+  "../../../dieter/components/shared/authoring-focus.css": css19,
+  "../../../dieter/components/shared/property-row.css": css20,
+  "../../../dieter/components/slider/slider.css": css21,
+  "../../../dieter/components/tabs/tabs.css": css22,
+  "../../../dieter/components/textedit/textedit.css": css23,
+  "../../../dieter/components/textfield/textfield.css": css24,
+  "../../../dieter/components/toggle/toggle.css": css25,
+  "../../../dieter/components/tooltip/tooltip.css": css26,
+  "../../../dieter/components/valuefield/valuefield.css": css27,
 };

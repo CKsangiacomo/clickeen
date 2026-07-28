@@ -159,6 +159,13 @@ source fails widget generation. Toggle uses its native checkbox behavior.
 Dropdown triggers are native buttons, and `dropdown-actions` applies the
 selected value immediately.
 
+Compact property rows use one Dieter geometry contract: labels occupy the
+leading side and dropdown values, switches, text fields, and numeric fields
+terminate on the same trailing rail. Numeric fields use stable slots rather
+than content-measured widths. Toggle rows are native labels, so the complete
+visible row activates the checkbox. Component stencils render labels exactly
+as authored and do not inject punctuation.
+
 `dropdown-fill` uses explicit fill modes in field attrs. Use the hyphenated
 attribute name `fill-modes` in authored specs. `dropdown-upload` requires a
 `meta-path`; the compiler rejects missing upload metadata paths.

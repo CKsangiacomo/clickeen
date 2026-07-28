@@ -476,15 +476,15 @@
     td.appendChild(cell);
 
     if (entitlement.kind === 'flag') {
-      const wrapper = document.createElement('div');
+      const wrapper = document.createElement('label');
       wrapper.className = 'diet-toggle';
       wrapper.setAttribute('data-size', 'md');
       wrapper.innerHTML = `
         <span class="diet-toggle__label sr-only" id="${safeId}-label">Enabled</span>
         <input id="${safeId}" class="diet-toggle__input sr-only" type="checkbox" role="switch" aria-labelledby="${safeId}-label" />
-        <label class="diet-toggle__switch" for="${safeId}" aria-hidden="true">
+        <span class="diet-toggle__switch" aria-hidden="true">
           <span class="diet-toggle__knob"></span>
-        </label>
+        </span>
       `;
 
       const input = wrapper.querySelector('input');
@@ -529,8 +529,6 @@
     const displayNumber = isBytes ? bytesToUnitValue(rawNumber, selectedUnit) : rawNumber;
     const displayText = displayNumber === null ? '' : formatNumberDisplay(displayNumber);
     const rawText = displayNumber === null ? '' : String(displayNumber);
-    const widthCh = Math.max(1, displayText.length || 1);
-    wrapper.style.setProperty('--valuefield-ch', `${Math.min(12, Math.max(4, widthCh))}ch`);
     wrapper.innerHTML = `
       <label class="diet-valuefield__control">
         <span class="diet-valuefield__label is-hidden">Value</span>
@@ -601,7 +599,6 @@
         const currentNum = typeof currentRaw === 'number' && Number.isFinite(currentRaw) ? currentRaw : null;
         const rawForEdit = isBytes ? bytesToUnitValue(currentNum, unit) : currentNum;
         setRaw(rawForEdit);
-        wrapper.style.setProperty('--valuefield-ch', `${Math.min(12, Math.max(4, String(input.value || '').length || 1))}ch`);
       });
 
       const commit = async () => {
@@ -628,10 +625,6 @@
         wrapper.classList.remove('is-editing');
         commit();
       });
-      input.addEventListener('input', () => {
-        const txt = String(input.value ?? '');
-        wrapper.style.setProperty('--valuefield-ch', `${Math.min(12, Math.max(4, txt.length || 1))}ch`);
-      });
       input.addEventListener('keydown', (e) => {
         if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
           e.preventDefault();
@@ -641,7 +634,6 @@
           const step = e.shiftKey ? baseStep * 10 : baseStep;
           const next = (current ?? 0) + (e.key === 'ArrowUp' ? step : -step);
           setRaw(next);
-          wrapper.style.setProperty('--valuefield-ch', `${Math.min(12, Math.max(4, String(input.value || '').length || 1))}ch`);
           return;
         }
         if (e.key === 'Enter') {
@@ -806,16 +798,16 @@
     cell.className = 'entitlements-cell entitlements-cell--flag';
     td.appendChild(cell);
 
-    const wrapper = document.createElement('div');
+    const wrapper = document.createElement('label');
     wrapper.className = 'diet-toggle';
     wrapper.setAttribute('data-size', 'md');
     if (title) wrapper.title = title;
     wrapper.innerHTML = `
       <span class="diet-toggle__label sr-only" id="${safeId}-label">${String(label || 'Enabled')}</span>
       <input id="${safeId}" class="diet-toggle__input sr-only" type="checkbox" role="switch" aria-labelledby="${safeId}-label" />
-      <label class="diet-toggle__switch" for="${safeId}" aria-hidden="true">
+      <span class="diet-toggle__switch" aria-hidden="true">
         <span class="diet-toggle__knob"></span>
-      </label>
+      </span>
     `;
 
     const input = wrapper.querySelector('input');
