@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, type MutableRefObject } from 'react';
+import { useEffect, useLayoutEffect, type MutableRefObject } from 'react';
 import type { AccountFontLibrary } from '@clickeen/widget-shell';
 import type { ApplyWidgetOpsResult, WidgetOp } from '../../lib/ops';
 import type { CompiledWidget } from '../../lib/types';
@@ -205,7 +205,7 @@ export function useTdMenuBindings(args: {
     requestUpsell,
   ]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const container = containerRef.current;
     if (!container) return;
 

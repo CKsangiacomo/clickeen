@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, type Dispatch, type MutableRefObject, type SetStateAction } from 'react';
+import { useLayoutEffect, type Dispatch, type MutableRefObject, type SetStateAction } from 'react';
 import { applyI18nToDom } from '../../lib/i18n/dom';
 import {
   applyGroupHeaders,
@@ -34,7 +34,7 @@ export function useTdMenuHydration(args: {
     widgetName,
   } = args;
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const container = containerRef.current;
     if (!container) return;
 

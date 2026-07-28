@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import type { PanelId } from '../lib/types';
 import type { ApplyWidgetOpsResult, WidgetOp } from '../lib/ops';
@@ -45,7 +45,7 @@ export function TdMenuContent({
     lastUpdateRef.current = lastUpdate ?? null;
   }, [lastUpdate]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     instanceDataRef.current = instanceData;
   }, [instanceData]);
 
