@@ -11,8 +11,6 @@
   border: 1px solid transparent;
   border-radius: var(--control-radius-md, 0.375rem);
   background: var(--color-system-white);
-  transition: background-color var(--duration-base) var(--easing-standard), border-color var(--duration-base) var(--easing-standard);
-  cursor: text;
 }
 
 .diet-valuefield__label {
@@ -32,23 +30,26 @@
 .diet-valuefield__input {
   display: inline-flex;
   align-items: center;
+  align-self: stretch;
   font: 400 var(--fs-13)/var(--lh-tight) var(--font-ui);
   flex: 0 0 var(--valuefield-input-width);
   inline-size: var(--valuefield-input-width);
   min-inline-size: 0;
-  min-block-size: var(--control-size-md, 1.5rem);
   padding-inline-start: var(--control-padding-inline);
   padding-inline-end: 0;
+  background: transparent;
   box-sizing: border-box;
+  cursor: text;
+  transition: background-color var(--duration-base) var(--easing-standard), box-shadow var(--duration-base) var(--easing-standard);
 }
 
-.diet-valuefield__control:hover:not(:focus-within) {
+.diet-valuefield__input:hover {
   background: color-mix(in oklab, var(--color-system-white), var(--color-system-black) 6%);
 }
 
-.diet-valuefield__control:focus-within {
+.diet-valuefield__control:focus-within .diet-valuefield__input {
   background: var(--color-system-white);
-  border-color: var(--color-system-blue);
+  box-shadow: inset 0 0 0 1px var(--color-system-blue);
 }
 
 .diet-valuefield__field {
@@ -107,7 +108,6 @@
 }
 
 .diet-valuefield[data-size="sm"] .diet-valuefield__input {
-  min-block-size: var(--control-size-sm, 1.25rem);
   border-radius: var(--control-radius-sm, 0.25rem);
   font: 400 var(--fs-11)/var(--lh-tight) var(--font-ui);
 }
@@ -117,7 +117,6 @@
 }
 
 .diet-valuefield[data-size="md"] .diet-valuefield__input {
-  min-block-size: var(--control-size-md, 1.5rem);
   border-radius: var(--control-radius-md, 0.25rem);
 }
 
@@ -126,7 +125,6 @@
 }
 
 .diet-valuefield[data-size="lg"] .diet-valuefield__input {
-  min-block-size: var(--control-size-lg, 1.75rem);
   border-radius: var(--control-radius-lg, 0.3125rem);
   font: 400 var(--fs-14)/var(--lh-tight) var(--font-ui);
 }
@@ -136,7 +134,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .diet-valuefield__control {
+  .diet-valuefield__input {
     transition: none;
   }
 }

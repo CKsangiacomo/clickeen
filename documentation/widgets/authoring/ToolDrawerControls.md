@@ -164,7 +164,10 @@ leading side and dropdown values, switches, text fields, and numeric fields
 terminate on the same trailing rail. Numeric fields use stable slots rather
 than content-measured widths. Toggle rows are native labels, so the complete
 visible row activates the checkbox. Component stencils render labels exactly
-as authored and do not inject punctuation.
+as authored and do not inject punctuation. Text fields and numeric fields share
+the same resting row geometry; text fields use the row as their editing surface,
+while numeric fields keep hover, focus, and editing inside the compact trailing
+value slot.
 
 `dropdown-fill` uses explicit fill modes in field attrs. Use the hyphenated
 attribute name `fill-modes` in authored specs. `dropdown-upload` requires a
