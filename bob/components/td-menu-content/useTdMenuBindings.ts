@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useLayoutEffect, type MutableRefObject } from 'react';
+import { useEffect, useLayoutEffect, useRef, type MutableRefObject } from 'react';
 import type { AccountFontLibrary } from '@clickeen/widget-shell';
 import type { ApplyWidgetOpsResult, WidgetOp } from '../../lib/ops';
 import type { CompiledWidget } from '../../lib/types';
@@ -34,7 +34,7 @@ export function useTdMenuBindings(args: {
   compiled: CompiledWidget | null;
   fontLibrary: AccountFontLibrary | null;
   requestUpsell: (reasonKey: string, detail?: string) => void;
-  lastUpdateRef: MutableRefObject<LastUpdate>;
+  lastUpdate: LastUpdate;
   activePathRef: MutableRefObject<string | null>;
   showIfEntriesRef: MutableRefObject<ShowIfEntry[]>;
 }) {
@@ -46,12 +46,13 @@ export function useTdMenuBindings(args: {
     fontLibrary,
     instanceData,
     instanceDataRef,
-    lastUpdateRef,
+    lastUpdate,
     panelHtml,
     renderKey,
     requestUpsell,
     showIfEntriesRef,
   } = args;
+  const boundSurfaceRef = useRef<{ panelHtml: string; renderKey: number } | null>(null);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -210,8 +211,15 @@ export function useTdMenuBindings(args: {
     if (!container) return;
 
     applyShowIfVisibility(showIfEntriesRef.current, instanceData);
-    const lastUpdate = lastUpdateRef.current;
-    const changedPaths = lastUpdate?.source === 'ops' ? lastUpdate.paths : [];
+    const previousSurface = boundSurfaceRef.current;
+    const isNewSurface =
+      previousSurface == null ||
+      previousSurface.panelHtml !== panelHtml ||
+      previousSurface.renderKey !== renderKey;
+    boundSurfaceRef.current = { panelHtml, renderKey };
+
+    const changedPaths =
+      !isNewSurface && lastUpdate?.source === 'ops' ? lastUpdate.paths : [];
     if (changedPaths.length === 1 && activePathRef.current === changedPaths[0]) return;
 
     const fields = changedPaths.length
@@ -229,7 +237,7 @@ export function useTdMenuBindings(args: {
 
       const value = getAt(instanceData, path);
 
-      const isActive = activePathRef.current === path;
+      const isActive = !isNewSurface && activePathRef.current === path;
 
       if (field instanceof HTMLInputElement && field.type === 'radio') {
         const nextChecked = value != null && String(value) === field.value;
@@ -309,7 +317,7 @@ export function useTdMenuBindings(args: {
     activePathRef,
     containerRef,
     instanceData,
-    lastUpdateRef,
+    lastUpdate,
     panelHtml,
     renderKey,
     showIfEntriesRef,

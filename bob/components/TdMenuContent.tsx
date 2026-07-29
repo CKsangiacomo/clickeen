@@ -39,11 +39,6 @@ export function TdMenuContent({
   const showIfEntriesRef = useRef<ShowIfEntry[]>([]);
   const instanceDataRef = useRef(instanceData);
   const activePathRef = useRef<string | null>(null);
-  const lastUpdateRef = useRef<NonNullable<TdMenuContentProps['lastUpdate']> | null>(null);
-
-  useEffect(() => {
-    lastUpdateRef.current = lastUpdate ?? null;
-  }, [lastUpdate]);
 
   useLayoutEffect(() => {
     instanceDataRef.current = instanceData;
@@ -93,7 +88,7 @@ export function TdMenuContent({
     compiled: session.compiled,
     fontLibrary: session.fontLibrary,
     requestUpsell: chrome.requestUpsell,
-    lastUpdateRef,
+    lastUpdate: lastUpdate ?? null,
     activePathRef,
     showIfEntriesRef,
   });
