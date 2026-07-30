@@ -118,7 +118,7 @@ TOKYO_R2_BUCKET=[Tokyo R2 bucket name]
 CLOUDFLARE_R2_ACCESS_KEY_ID=[R2 signed access key id]
 CLOUDFLARE_R2_SECRET_ACCESS_KEY=[R2 signed secret access key]
 CLOUDFLARE_R2_ENDPOINT=[R2 endpoint URL]
-CLOUDFLARE_R2_REST_API_TOKEN=[R2 REST token for read/list/get verification]
+CLOUDFLARE_R2_REST_API_TOKEN=[R2 REST token for object access; writes require Workers R2 Storage Write]
 CLOUDFLARE_REST_API_TOKEN=[Cloudflare REST token for Pages/DNS/config]
 ```
 
@@ -128,8 +128,9 @@ variables:
 
 - `CLOUDFLARE_R2_ACCESS_KEY_ID` + `CLOUDFLARE_R2_SECRET_ACCESS_KEY` for signed
   R2 object work.
-- `CLOUDFLARE_R2_REST_API_TOKEN` for explicit R2 REST read/list/get
-  verification when signed R2 credentials are not present.
+- `CLOUDFLARE_R2_REST_API_TOKEN` for explicit R2 REST object access when signed
+  R2 credentials are absent or deny a requested operation. Delete requires the
+  token's `Workers R2 Storage Write` permission.
 - `CLOUDFLARE_REST_API_TOKEN` for Pages projects, Pages env/secrets, Pages
   domains, and DNS records.
 

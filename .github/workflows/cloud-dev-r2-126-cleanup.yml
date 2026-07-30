@@ -1,0 +1,28 @@
+name: cloud-dev R2 126 locale cleanup
+
+on:
+  workflow_dispatch: {}
+
+jobs:
+  delete-exact-obsolete-objects:
+    runs-on: ubuntu-latest
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      TOKYO_R2_BUCKET: tokyo-assets-dev
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with: {}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Delete exact obsolete locale runtime objects
+        run: node scripts/cloudflare/delete-126-locale-runtime-artifacts.mjs
