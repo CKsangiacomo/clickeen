@@ -1,5 +1,8 @@
 # PRD 124G - Broad Dependency Cascade Audit
 
+> **Corrected (2026-07-30):** Historical PRD only. It must not be read as
+> authority for locale-derived runtime artifacts.
+
 Status: EXECUTED
 Parent: `124__MAMA__Overlay_Aware_Runtime_Materializer_Program.md`
 Depends on: 124A GREEN, 124B GREEN, 124C GREEN, 124D GREEN, 124E GREEN, 124F GREEN

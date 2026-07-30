@@ -1,5 +1,8 @@
 # 124E Implementation Note - Tokyo Stored-Byte Locale Serving
 
+> **Revoked (2026-07-30):** The stored per-locale delivery behavior below was
+> deleted. Tokyo now serves the one root runtime with an exact validated overlay.
+
 Status: EXECUTED
 
 ## Implemented Surface

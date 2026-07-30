@@ -1,9 +1,28 @@
 # PRD 126 — MAMA: UI Optimization Program
 
-Status: STEP 9 COMPLETE - 126A THROUGH 126M GREEN.
+Status: REOPENED — LOCALIZATION ARCHITECTURE CORRECTION IN EXECUTION.
 Owner: Clickeen product architecture + UI
 Date: 2026-06-26
 Stage: 02-Executing
+
+## 2026-07-30 Reopening
+
+126 closure missed a cross-system localization violation. During 126-era work,
+explicit Generate Translations was coupled to per-locale runtime-file creation,
+and Bob exposed those derivative outcomes as if they were part of translation
+truth.
+
+The accepted invariant is:
+
+```text
+Translation may create or update only overlays/locales/{locale}.json.
+It must never create locale-specific HTML, CSS, JavaScript, publication state,
+fingerprints, or derivative result types.
+```
+
+Closure is blocked until active code/routes/docs are corrected, affected root
+runtimes are rematerialized, cloud-dev is verified, obsolete R2 objects are
+deleted by exact-key manifest, and the independent V1–V8 audit is green.
 
 `02-Executing` is the repository pipeline folder for this active program.
 Steps 1-8 are complete for every A-M domain. Step 9 executes one domain and one

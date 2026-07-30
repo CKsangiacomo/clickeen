@@ -215,9 +215,8 @@ accounts/{accountPublicId}/instances/{instanceId}/
 
 Save is separate from manual translation generation, publish, unpublish, rename,
 duplicate, and delete. Roma does not generate translations, regenerate
-translations, materialize locale packages, refresh locale public cache, or return
-locale follow-up coordinates from the `update-instance` command. Bob treats the
-save response as source/base persistence truth only.
+translations, or mutate locale overlays from the `update-instance` command.
+Bob treats the save response as source/root persistence truth only.
 
 When translations need update, that attention belongs to the Translations panel.
 [`interactions.md`](../engineering/UI/interactions.md) owns interaction feedback
@@ -253,11 +252,9 @@ operation is running, Bob disables the button and displays transient Agent
 Activity rows authored by the Translation Agent while overlays are written. When
 the operation returns, the transient Agent Activity UI disappears and Bob shows
 durable command-result feedback from Roma's response: success, no accepted
-work, command failure, exact per-locale translation failures, or exact
-locale-package failures. Bob refreshes previewable translated locales only when
+work, command failure, or exact per-locale translation failures. Bob refreshes
+previewable translated locales only when
 Roma reports at least one `translatedLocales` result.
-Bob reads `localePackages` only to explain package follow-up failures; overlay
-source remains the translation truth.
 
 Bob does not create persistent translation jobs, poll operation status, or
 invent locale authority. Bob also does not expose user translation overrides or
@@ -490,9 +487,8 @@ active locales, tier, saved instance source, and Translation Agent grant. Bob
 does not send locale authority for generation.
 
 The normal save command is source/base persistence only. Roma does not generate
-translations, regenerate translations, materialize locale packages, refresh
-locale public cache, or return locale follow-up coordinates from save. Bob
-treats the save response as source/base persistence truth.
+translations, regenerate translations, or mutate locale overlays. Bob treats
+the save response as source/root persistence truth.
 
 After Roma returns, Bob refreshes the overlay list only when at least one locale
 translated and lets the user preview active locales that have saved overlay

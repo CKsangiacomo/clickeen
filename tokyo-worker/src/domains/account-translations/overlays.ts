@@ -146,6 +146,38 @@ export async function listLocaleOverlays(args: {
   return overlays.sort((left, right) => left.locale.localeCompare(right.locale));
 }
 
+export async function listLocaleOverlayCoordinates(args: {
+  env: Env;
+  accountId: string;
+  widgetCode: string;
+  instanceId: string;
+}): Promise<string[]> {
+  const prefix = accountInstanceLocaleOverlaysPrefix(
+    args.accountId,
+    args.widgetCode,
+    args.instanceId,
+  );
+  const locales: string[] = [];
+  let cursor: string | undefined;
+  do {
+    const listed = await args.env.TOKYO_R2.list({ prefix, cursor } as R2ListOptions);
+    for (const object of listed.objects) {
+      const relative = object.key.slice(prefix.length);
+      if (!relative.endsWith('.json') || relative.includes('/')) {
+        throw new Error(`coreui.errors.instance.overlay.invalid:${object.key}`);
+      }
+      const rawLocale = relative.slice(0, -'.json'.length);
+      const locale = normalizeLocale(rawLocale);
+      if (!locale || locale !== rawLocale) {
+        throw new Error(`coreui.errors.instance.overlay.invalid:${object.key}`);
+      }
+      locales.push(locale);
+    }
+    cursor = listed.truncated ? listed.cursor : undefined;
+  } while (cursor);
+  return Array.from(new Set(locales)).sort((left, right) => left.localeCompare(right));
+}
+
 export async function listLocaleOverlaysStrict(args: {
   env: Env;
   accountId: string;

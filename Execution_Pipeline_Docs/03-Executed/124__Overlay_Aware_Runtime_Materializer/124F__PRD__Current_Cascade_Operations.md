@@ -1,5 +1,8 @@
 # PRD 124F - Current Cascade Operations
 
+> **Revoked (2026-07-30):** Historical PRD only. Locale artifact and cache
+> cascades were removed from the system.
+
 Status: SUPERSEDED / HISTORICAL
 Parent: `124__MAMA__Overlay_Aware_Runtime_Materializer_Program.md`
 Owner: Roma account commands

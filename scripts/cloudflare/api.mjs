@@ -251,6 +251,7 @@ function summarizeLatestDeployment(deployment) {
     url: deployment.url,
     created_on: deployment.created_on,
     latest_stage: deployment.latest_stage?.name,
+    latest_stage_status: deployment.latest_stage?.status,
     branch: metadata.branch,
     commit_hash: metadata.commit_hash,
     commit_message: metadata.commit_message,

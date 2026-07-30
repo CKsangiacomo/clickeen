@@ -11,9 +11,10 @@ import {
 } from '../domains/account-instances/package-file-names';
 import {
   publicPackageObjectMatchesExpectedFingerprint,
-  readInstanceLocalePackageObject,
   verifyInstancePublicPackageReady,
 } from '../domains/account-instances/package-files';
+import { readAccountInstanceTranslatedLocaleValues } from '../domains/account-translations/values';
+import { listLocaleOverlayCoordinates } from '../domains/account-translations/overlays';
 import { respondMethodNotAllowed, type TokyoRouteArgs } from '../route-helpers';
 
 function notFound(): Response {
@@ -31,6 +32,17 @@ function localeNotAvailable(): Response {
   });
 }
 
+function localeDataInvalid(): Response {
+  return new Response('Locale data invalid', {
+    status: 500,
+    headers: {
+      'cache-control': 'no-store',
+      'cdn-cache-control': 'no-store',
+      'cloudflare-cdn-cache-control': 'no-store',
+    },
+  });
+}
+
 function isPageDeliveryFile(file: string): file is PublicPackageFile {
   return isPublicPackageFile(file);
 }
@@ -39,12 +51,6 @@ function parseClkLivePath(pathname: string): {
   kind: 'instance';
   accountId: string;
   instanceId: string;
-  file: PublicPackageFile;
-} | {
-  kind: 'instance-locale';
-  accountId: string;
-  instanceId: string;
-  locale: string;
   file: PublicPackageFile;
 } | {
   kind: 'page';
@@ -69,18 +75,6 @@ function parseClkLivePath(pathname: string): {
       const file = requestedFile ?? PUBLIC_INDEX_FILE;
       if (!isPageDeliveryFile(file)) return null;
       return { kind: 'page', accountId, pageId, file };
-    }
-  }
-
-  if (segments.length === 4 || segments.length === 5) {
-    const [accountId, instanceId, localeSegment, rawLocale, requestedFile] = segments;
-    if (localeSegment === 'locales') {
-      if (!isCompactAccountPublicId(accountId) || !isCompactInstanceId(instanceId)) return null;
-      const locale = normalizeLocale(rawLocale);
-      if (!locale || locale !== rawLocale) return null;
-      const file = requestedFile ?? PUBLIC_INDEX_FILE;
-      if (!isPublicPackageFile(file)) return null;
-      return { kind: 'instance-locale', accountId, instanceId, locale, file };
     }
   }
 
@@ -122,6 +116,50 @@ function responseForObject(
   return new Response(headOnly ? null : obj.body, { status: 200, headers });
 }
 
+const LOCALE_CONTEXT_MARKER = 'window.CK_LOCALE_CONTEXT = null;';
+
+function inlineJson(value: unknown): string {
+  return JSON.stringify(value)
+    .replace(/</g, '\\u003c')
+    .replace(/\u2028/g, '\\u2028')
+    .replace(/\u2029/g, '\\u2029');
+}
+
+function indexHtmlWithLocaleContext(args: {
+  html: string;
+  locale: string;
+  baseLocale: string;
+  values: Record<string, string> | null;
+  languages: string[];
+}): string | null {
+  const markerStart = args.html.indexOf(LOCALE_CONTEXT_MARKER);
+  if (markerStart < 0 || markerStart !== args.html.lastIndexOf(LOCALE_CONTEXT_MARKER)) return null;
+  const htmlTag = /<html lang="[^"]*">/;
+  if (!htmlTag.test(args.html)) return null;
+  return args.html
+    .replace(htmlTag, `<html lang="${args.locale}">`)
+    .replace(
+      LOCALE_CONTEXT_MARKER,
+      `window.CK_LOCALE_CONTEXT = ${inlineJson({
+        locale: args.locale,
+        baseLocale: args.baseLocale,
+        values: args.values,
+        languages: args.languages,
+      })};`,
+    );
+}
+
+function responseForLocalizedIndex(html: string, headOnly: boolean): Response {
+  const headers = new Headers();
+  headers.set('content-type', 'text/html; charset=utf-8');
+  headers.set('cache-control', 'no-store');
+  headers.set('cdn-cache-control', 'no-store');
+  headers.set('cloudflare-cdn-cache-control', 'no-store');
+  headers.set('access-control-allow-origin', '*');
+  headers.set('x-content-type-options', 'nosniff');
+  return new Response(headOnly ? null : html, { status: 200, headers });
+}
+
 export async function tryHandleClkLiveStaticRoutes(
   args: TokyoRouteArgs,
 ): Promise<Response | null> {
@@ -147,28 +185,6 @@ export async function tryHandleClkLiveStaticRoutes(
   });
   if (!pointer.ok || pointer.value.publishStatus !== 'published') return respond(notFound());
 
-  if (parsed.kind === 'instance-locale') {
-    const localePackage = await readInstanceLocalePackageObject({
-      env,
-      accountId: parsed.accountId,
-      instanceId: parsed.instanceId,
-      baseLocale: pointer.value.baseLocale,
-      locale: parsed.locale,
-      sourceUpdatedAt: pointer.value.updatedAt,
-      file: parsed.file,
-    });
-    return respond(
-      localePackage.ok
-        ? responseForObject(
-            `accounts/${parsed.accountId}/instances/${parsed.instanceId}/locales/${parsed.locale}/${parsed.file}`,
-            parsed.file,
-            localePackage.object,
-            req.method === 'HEAD',
-          )
-        : localeNotAvailable(),
-    );
-  }
-
   const ready = await verifyInstancePublicPackageReady({
     env,
     accountId: parsed.accountId,
@@ -181,6 +197,56 @@ export async function tryHandleClkLiveStaticRoutes(
   const obj = await env.TOKYO_R2.get(key);
   if (obj && !publicPackageObjectMatchesExpectedFingerprint(obj, pointer.value.publicPackageFingerprint ?? null)) {
     return respond(notFound());
+  }
+
+  if (parsed.file === PUBLIC_INDEX_FILE) {
+    const localeParams = url.searchParams.getAll('locale');
+    if (localeParams.length > 1) return respond(localeNotAvailable());
+    const rawLocale = localeParams[0];
+    let overlayLocales: string[];
+    try {
+      overlayLocales = await listLocaleOverlayCoordinates({
+        env,
+        accountId: parsed.accountId,
+        widgetCode: pointer.value.widgetCode,
+        instanceId: parsed.instanceId,
+      });
+    } catch {
+      return respond(localeDataInvalid());
+    }
+    if (overlayLocales.includes(pointer.value.baseLocale)) return respond(localeDataInvalid());
+    const languages = [pointer.value.baseLocale, ...overlayLocales];
+    const locale = typeof rawLocale === 'string' ? normalizeLocale(rawLocale) : pointer.value.baseLocale;
+    if (!locale || (typeof rawLocale === 'string' && locale !== rawLocale)) return respond(localeNotAvailable());
+    let values: Record<string, string> | null = null;
+    if (locale !== pointer.value.baseLocale) {
+      if (!obj) return respond(localeNotAvailable());
+      let translated:
+        | Awaited<ReturnType<typeof readAccountInstanceTranslatedLocaleValues>>
+        | null = null;
+      try {
+        translated = await readAccountInstanceTranslatedLocaleValues({
+          env,
+          accountId: parsed.accountId,
+          instanceId: parsed.instanceId,
+          widgetType: pointer.value.widgetType,
+          locale,
+        });
+      } catch {
+        return respond(localeDataInvalid());
+      }
+      if (!translated.ok) return respond(localeNotAvailable());
+      values = translated.value.values;
+    }
+    if (!obj) return respond(notFound());
+    const localized = indexHtmlWithLocaleContext({
+      html: await obj.text(),
+      locale,
+      baseLocale: pointer.value.baseLocale,
+      values,
+      languages,
+    });
+    return respond(localized ? responseForLocalizedIndex(localized, req.method === 'HEAD') : localeDataInvalid());
   }
   return respond(obj ? responseForObject(key, parsed.file, obj, req.method === 'HEAD') : notFound());
 }

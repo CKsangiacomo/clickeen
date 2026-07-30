@@ -1,5 +1,8 @@
 # 124G Implementation Note - Broad Dependency Cascade Audit
 
+> **Corrected (2026-07-30):** Any locale-derived runtime cascade described
+> below is revoked. One root runtime and exact overlays are current authority.
+
 Status: EXECUTED
 
 124G adds no broad re-resolution executor. It records the current dependency

@@ -1,5 +1,9 @@
 # 124D Implementation Note - Locale Artifact Materialization
 
+> **Revoked (2026-07-30):** The behavior recorded below was removed completely.
+> Translation writes exact overlay JSON only; no locale-derived runtime artifact
+> exists.
+
 Status: EXECUTED
 Parent: `124__MAMA__Overlay_Aware_Runtime_Materializer_Program.md`
 

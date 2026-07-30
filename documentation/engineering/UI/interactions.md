@@ -74,7 +74,7 @@ is an explicit action:
 - confirmed clean state: no save action.
 
 Save is source/base persistence only. It does not generate translations,
-regenerate translations, materialize locale packages, publish, unpublish,
+regenerate translations, mutate locale overlays, publish, unpublish,
 rename, duplicate, or delete.
 
 ## Feedback Durability
@@ -134,7 +134,7 @@ spinner theater.
 Translation generation currently uses Agent Activity. The activity rows narrate
 the operation while it runs; they are not the durable command result. After the
 operation ends, Bob shows durable feedback for command failure, no accepted
-work, partial locale-package failure/skips, or success.
+work, partial per-locale translation failures, or success.
 
 Translation-sync attention stays in Bob's Translations panel beside Tokyo's
 authoritative summary and Generate action. Roma must not derive or display a

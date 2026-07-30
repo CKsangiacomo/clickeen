@@ -1,5 +1,8 @@
 # PRD 124D - Locale Artifact Materialization
 
+> **Revoked (2026-07-30):** Historical PRD only. Its per-locale runtime
+> artifact contract is not product truth. See the current Overlay Architecture.
+
 Status: EXECUTED
 Parent: `124__MAMA__Overlay_Aware_Runtime_Materializer_Program.md`
 Depends on: 124A GREEN, 124B CODE-DELIVERED, 124C CODE-DELIVERED

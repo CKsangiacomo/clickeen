@@ -2,16 +2,16 @@
 
 STATUS: CURRENT SYSTEM OPERATOR SPEC
 
-Tokyo is the storage and static-serving plane. Tokyo is not an editor, account authority, page builder, translation authority, or AI runtime.
+Tokyo is the storage and static-serving plane. Tokyo is not an editor, account
+authority, page builder, translation authority, or AI runtime.
 
 Tokyo has two forms:
 
-- `tokyo/` repo folders: git-authored source/deploy artifacts.
-- `tokyo-worker/`: Cloudflare Worker that reads, writes, and serves Tokyo R2.
+- `tokyo/`: git-authored product/static artifacts;
+- `tokyo-worker/`: Cloudflare Worker controlling account R2 operations and
+  public reads.
 
 ## R2 Root Contract
-
-Tokyo R2 has one runtime-managed account root plus git-authored deploy roots:
 
 ```text
 accounts/   runtime-managed account storage
@@ -20,118 +20,67 @@ product/    git-authored product software and media
 prague/     git-authored marketing/site/GTM content
 ```
 
-Only `accounts/` is runtime-managed by product/account operations.
-
-Git-authored deploy mapping:
-
-```text
-tokyo/product/widgets/**  -> product/widgets/**
-dieter/icons/svg/**       -> dieter/icons/svg/**
-tokyo/roma/**             -> product/roma/**
-tokyo/prague/**           -> prague/**
-```
-
-Operator script:
-
-```text
-scripts/tokyo-r2-deploy-sync.mjs
-```
+Only `accounts/` is product-runtime-managed.
 
 ## Account Runtime Shape
 
-Account-owned payloads live under:
-
 ```text
 accounts/{accountPublicId}/
-  assets/
-    {assetRef}
-  instances/
-    {instanceId}/
-      instance.config.json
-      instance.content.json
-      overlays/
-        locales/
-          {locale}.json
-      locales/
-        {locale}/
-          index.html
-          styles.css
-          runtime.js
-      serve-state.json
-      index.html
-      styles.css
-      runtime.js
-  pages/
-    {pageId}/
-      source.json
-      serve-state.json
-      index.html
-      styles.css
-      runtime.js
+  assets/{assetRef}
+  instances/{instanceId}/
+    instance.config.json
+    instance.content.json
+    overlays/locales/{locale}.json
+    serve-state.json
+    index.html
+    styles.css
+    runtime.js
+  pages/{pageId}/
+    source.json
+    serve-state.json
+    index.html
+    styles.css
+    runtime.js
 ```
 
 Rules:
 
-- `accountPublicId` is the compact public account storage coordinate.
-- `instanceId` is the stable compact widget instance coordinate.
-- Instance labels are not storage keys.
-- Widget codes are metadata, not storage folders.
-- Overlay files are durable translated values for an active account locale.
-- Browser package files are public artifacts saved by Roma through Tokyo-worker.
-- Locale package files are generated public artifacts derived from saved source
-  plus one exact locale overlay.
-- Tokyo-worker stores exact submitted bytes. It does not compile, translate, or infer product meaning.
+- `accountPublicId` and `instanceId` are stable compact coordinates.
+- Widget codes and display names are metadata, not folders.
+- Overlay JSON is durable translated value truth.
+- Each instance has one root browser artifact.
+- Tokyo-worker stores exact submitted root bytes. It does not compile,
+  translate, infer, or repair them.
+- A locale never owns HTML, CSS, JavaScript, publication state, or another
+  artifact root.
 
 ## Public Serving
 
-Production:
-
 ```text
 https://clk.live/{accountPublicId}/{instanceId}
+https://clk.live/{accountPublicId}/{instanceId}?locale={locale}
 ```
 
-Cloud-dev:
+Cloud-dev uses `https://dev.clk.live`.
 
-```text
-https://dev.clk.live/{accountPublicId}/{instanceId}
-```
-
-Public serving reads `index.html`, `styles.css`, and `runtime.js` from the account instance folder only after `serve-state.json` says the instance is published and package fingerprint checks pass.
-The public instance URL is slashless. Generated entry HTML references support
-files by exact root-relative package paths so the browser does not depend on
-trailing-slash URL interpretation:
+Tokyo-worker serves a published instance only after root artifact fingerprint
+checks pass. Root HTML references:
 
 ```text
 /{accountPublicId}/{instanceId}/styles.css
 /{accountPublicId}/{instanceId}/runtime.js
 ```
 
-Explicit locale serving uses:
+For `?locale=`, Tokyo-worker reads and validates the exact overlay against
+saved instance content, injects it into the root index response, and uses
+`no-store`. The root runtime resolves the overlay before widget modules start.
+Missing locale truth is `404`; corrupt locale truth is `500`; neither falls
+back to base content.
 
-```text
-https://clk.live/{accountPublicId}/{instanceId}/locales/{locale}
-https://dev.clk.live/{accountPublicId}/{instanceId}/locales/{locale}
-```
-
-Locale serving reads stored bytes from
-`accounts/{accountPublicId}/instances/{instanceId}/locales/{locale}/` only when
-the instance is published and `index.html`, `styles.css`, and `runtime.js` all
-carry matching locale package metadata. Public serving does not read overlay
-files, call a materializer, ask Roma, or fall back to base content for a locale
-URL.
-Generated locale entry HTML references locale support files by exact
-root-relative package paths:
-
-```text
-/{accountPublicId}/{instanceId}/locales/{locale}/styles.css
-/{accountPublicId}/{instanceId}/locales/{locale}/runtime.js
-```
-
-Current account page public serving returns `404` until Roma writes real page packages.
+Public account page serving remains `404` until Roma writes real page
+artifacts.
 
 ## Static Read Paths
-
-Friendly public paths map to canonical roots:
 
 | Friendly path | Canonical R2 root |
 | --- | --- |
@@ -142,51 +91,27 @@ Friendly public paths map to canonical roots:
 | `/prague/l10n/**` | Prague l10n static path |
 | `/prague/assets/**` | Prague static assets |
 
-Friendly paths are serving paths, not storage roots.
-
-Account instance package files are stored bytes, not live views over
-`product/widgets/**`. Dieter icon and account asset paths are external delivery
-references served from their owning roots. Tokyo public serving does not
-recompute widget source, design-system state, font state, or asset freshness on
-visitor requests.
-
-## Storage Boundaries
-
-Git-authored product media deploys only through the current source-to-R2 roots
-documented in `documentation/engineering/CloudflareOperations.md`. Friendly
-paths are serving routes, not storage authority.
-
-Do not create account-instance trees outside:
-
-```text
-accounts/{accountPublicId}/instances/{instanceId}/
-```
+Friendly paths are routes, not storage roots.
 
 ## Operator Commands
 
-Dry-run deploy sync:
-
 ```bash
 pnpm tokyo:r2:sync:check
+pnpm cf:preflight
 ```
 
-Remote product-root deployment runs through GitHub Actions
-`cloud-dev workers deploy` after a push to `main`.
-
-Remote R2 reads/writes must use the repo commands documented in:
-
-```text
-documentation/engineering/CloudflareOperations.md
-```
+Product-root deployment runs through GitHub Actions `cloud-dev workers deploy`.
+Remote R2 operations must use the repo paths documented in
+`documentation/engineering/CloudflareOperations.md`.
 
 ## Hard Stops
 
 Stop if a change would:
 
-- write product deploy artifacts into `accounts/`
-- write account runtime artifacts into `dieter/`, `product/`, or `prague/`
-- publish git-authored product media outside the current source-to-R2 roots
-  documented in `documentation/engineering/CloudflareOperations.md`
-- use UUID account folders
-- treat Prague page translations as account instance overlays
-- treat Tokyo static paths as account or policy authority
+- write git-authored product artifacts into `accounts/`;
+- write account runtime artifacts into `dieter/`, `product/`, or `prague/`;
+- introduce a second artifact root for one instance;
+- use UUID account folders;
+- treat Prague translations as account instance overlays;
+- treat Tokyo storage/serving as account-policy authority;
+- substitute base content for requested translated content.

@@ -78,7 +78,6 @@ export function buildClkLiveEntryCachePurgeFiles(args: {
   publicServingBase: string;
   accountId: string;
   instanceId: string;
-  locales?: string[];
 }): string[] {
   const base = `${args.publicServingBase.replace(/\/+$/, '')}/${args.accountId}/${args.instanceId}`;
   const files = new Set([
@@ -88,15 +87,6 @@ export function buildClkLiveEntryCachePurgeFiles(args: {
     `${base}/${PUBLIC_STYLES_FILE}`,
     `${base}/${PUBLIC_RUNTIME_FILE}`,
   ]);
-  for (const locale of args.locales ?? []) {
-    const encodedLocale = encodeURIComponent(locale);
-    const localeBase = `${base}/locales/${encodedLocale}`;
-    files.add(localeBase);
-    files.add(`${localeBase}/`);
-    files.add(`${localeBase}/${PUBLIC_INDEX_FILE}`);
-    files.add(`${localeBase}/${PUBLIC_STYLES_FILE}`);
-    files.add(`${localeBase}/${PUBLIC_RUNTIME_FILE}`);
-  }
   return [...files];
 }
 
@@ -104,7 +94,6 @@ export async function purgeClkLiveEntryCache(args: {
   env: Env;
   accountId: string;
   instanceId: string;
-  locales?: string[];
 }): Promise<void> {
   const zoneId = String(args.env.CLOUDFLARE_ZONE_ID || '').trim();
   const token = String(args.env.CLOUDFLARE_API_TOKEN || '').trim();
@@ -127,7 +116,6 @@ export async function purgeClkLiveEntryCache(args: {
         publicServingBase,
         accountId: args.accountId,
         instanceId: args.instanceId,
-        locales: args.locales,
       }),
     }),
   });

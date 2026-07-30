@@ -122,8 +122,8 @@ Rules:
 - Available locales come from the account tier.
 - Active locales are the account language selection in Roma Settings.
 - Rendered switcher options come from delivered `window.CK_LOCALE_POLICY.languages`.
-- The current public package builder delivers base locale only unless package
-  generation adds more locale values.
+- The current public root runtime receives the exact stored overlay coordinates
+  and the requested overlay through Tokyo-worker's index response.
 - The switcher switches delivered locale values.
 - The switcher removes itself when disabled or when delivered languages length
   is `<= 1`.

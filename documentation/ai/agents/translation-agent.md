@@ -78,7 +78,7 @@ Bob's current Translations panel shows the Generate translations operation and
 transient Translation Agent Activity while the agent operates. After the command
 returns, Bob shows durable result feedback from Roma's response: success, no
 accepted work, command failure, per-locale translation failure, or
-locale-package failure. Activity rows are not stored status and do not come
+partial per-locale success. Activity rows are not stored status and do not come
 from polling. Bob does not expose user translation overrides.
 
 ## Roma Public Translation API

@@ -4,17 +4,14 @@ import {
   AccountInstanceTransitionError,
   createAccountInstanceFromSubmittedSource,
   publishAccountInstanceTransition,
-  purgeClkLiveEntryCache,
   saveAccountInstanceTransition,
   unpublishAccountInstanceTransition,
 } from '../domains/account-instances/operations';
 import { deleteAccountInstanceSubtree } from '../domains/account-instances/delete';
 import {
-  deleteInstanceLocalePackage,
   readInstancePublicPackage,
   readSubmittedInstancePublicPackage,
   verifyInstancePublicPackageReady,
-  writeInstanceLocalePackage,
 } from '../domains/account-instances/package-files';
 import {
   AccountInstanceCoordinateError,
@@ -38,33 +35,6 @@ import {
   readInternalProductJsonBody,
   transitionErrorResponse,
 } from './internal-product-route-utils';
-
-async function purgePublishedLocalePackageCache(args: {
-  env: TokyoRouteArgs['env'];
-  accountId: string;
-  instanceId: string;
-  locale: string;
-}): Promise<void> {
-  const pointer = await readAccountInstanceSourcePointer({
-    env: args.env,
-    accountId: args.accountId,
-    instanceId: args.instanceId,
-  });
-  if (!pointer.ok) {
-    throw new AccountInstanceTransitionError({
-      status: pointer.kind === 'NOT_FOUND' ? 404 : 422,
-      kind: pointer.kind,
-      reasonKey: pointer.kind === 'NOT_FOUND' ? 'coreui.errors.instance.notFound' : pointer.reasonKey,
-    });
-  }
-  if (pointer.value.publishStatus !== 'published') return;
-  await purgeClkLiveEntryCache({
-    env: args.env,
-    accountId: args.accountId,
-    instanceId: args.instanceId,
-    locales: [args.locale],
-  });
-}
 
 export async function tryHandleInternalInstanceRoutes(
   args: TokyoRouteArgs,
@@ -426,94 +396,6 @@ export async function tryHandleInternalInstanceRoutes(
         ),
       );
     }
-  }
-
-  const internalInstanceLocalePackageMatch = pathname.match(
-    /^\/__internal\/instances\/([^/]+)\/locales\/([^/]+)\/package$/,
-  );
-  if (internalInstanceLocalePackageMatch) {
-    const instanceId = normalizeStorageId(
-      decodeURIComponent(internalInstanceLocalePackageMatch[1] || ''),
-    );
-    const locale = normalizeLocale(decodeURIComponent(internalInstanceLocalePackageMatch[2] || ''));
-    const accountId = normalizeAccountPublicId(req.headers.get('x-account-id'));
-    if (!accountId || !instanceId || !locale || !isValidScopedInstance(instanceId, accountId)) {
-      return respondValidation(
-        respond,
-        'coreui.errors.instance.invalidPayload',
-        accountId ? 403 : 422,
-      );
-    }
-    const auth = await authorizeRomaEditorTransition({ req, env, accountId });
-    if (!auth.ok) return respond(auth.response);
-
-    if (req.method === 'PUT') {
-      const body = (await readInternalProductJsonBody({
-        req,
-        env,
-        boundary: 'internal.instance.localePackage.body',
-        accountId,
-        instanceId,
-      })) as Record<string, unknown> | null;
-      const publicPackage = isRecord(body)
-        ? readSubmittedInstancePublicPackage(body.publicPackage)
-        : null;
-      const baseLocale = normalizeLocale(body?.baseLocale);
-      const sourceUpdatedAt = typeof body?.sourceUpdatedAt === 'string' ? body.sourceUpdatedAt.trim() : '';
-      const materializerContractVersion =
-        typeof body?.materializerContractVersion === 'string'
-          ? body.materializerContractVersion.trim()
-          : '';
-      if (!publicPackage || !baseLocale || !sourceUpdatedAt || !materializerContractVersion) {
-        return respondValidation(respond, 'coreui.errors.instance.invalidPayload');
-      }
-      if (locale === baseLocale) {
-        return respondValidation(respond, 'coreui.errors.instance.invalidPayload');
-      }
-
-      const stored = await writeInstanceLocalePackage({
-        env,
-        accountId,
-        instanceId,
-        baseLocale,
-        locale,
-        sourceUpdatedAt,
-        materializerContractVersion,
-        publicPackage,
-      });
-      if (!stored.ok) {
-        return respond(
-          json(
-            {
-              error: {
-                kind: 'VALIDATION',
-                reasonKey: 'coreui.errors.instance.embedNotReady',
-                detail: stored.detail,
-              },
-            },
-            { status: 409 },
-          ),
-        );
-      }
-      try {
-        await purgePublishedLocalePackageCache({ env, accountId, instanceId, locale });
-      } catch (error) {
-        return respond(transitionErrorResponse(error));
-      }
-      return respond(json({ ok: true, accountId, instanceId, locale, publicPackageFingerprint: stored.fingerprint }));
-    }
-
-    if (req.method === 'DELETE') {
-      try {
-        const deleted = await deleteInstanceLocalePackage({ env, accountId, instanceId, locale });
-        await purgePublishedLocalePackageCache({ env, accountId, instanceId, locale });
-        return respond(json({ ok: true, accountId, instanceId, locale: deleted.locale }));
-      } catch (error) {
-        return respond(transitionErrorResponse(error));
-      }
-    }
-
-    return respondMethodNotAllowed(respond);
   }
 
   const internalInstanceMatch = pathname.match(/^\/__internal\/instances\/([^/]+)$/);

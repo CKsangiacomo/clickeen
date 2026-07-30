@@ -1,5 +1,9 @@
 # PRD 124 — Execution Audit Report
 
+> **Post-audit correction (2026-07-30):** Historical evidence only. The
+> per-locale runtime-artifact design audited below is revoked. Current authority
+> is one root runtime plus exact locale overlay JSON.
+
 **Date:** June 25, 2026
 **Subject:** Verify execution of the 124 series (MAMA + 124A–124H) — does the shipped code do what each PRD requires?
 **Audit commit:** `dd4063f1` ("Execute PRD 124 runtime materializer series") + the `packages/ck-runtime-materializer` keystone.

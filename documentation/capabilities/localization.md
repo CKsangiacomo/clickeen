@@ -1,438 +1,181 @@
 # Localization Capability
 
-STATUS: CURRENT SYSTEM OPERATOR SPEC
+Last updated: 2026-07-30
 
-Localization is the account capability that turns saved source text into Babel
-locale overlays through the Translation Agent.
+## Product Contract
 
-Core contract:
+Clickeen localization is overlay-native:
 
 ```text
-source artifact + locale value overlay = localized artifact
+one saved base source
++ one exact overlay per translated locale
++ one published root runtime
+= localized public widget
 ```
 
-Babel owns the translated-locale value protocol. Overlay Architecture owns the
-account-instance overlay storage and operation rules. This page explains how the
-capability is operated.
-
-References:
-
-- `documentation/architecture/BabelProtocol.md`
-- `documentation/architecture/OverlayArchitecture.md`
-- `documentation/ai/agents/translation-agent.md`
-- `documentation/ai/sanfrancisco.md`
+Translation is content work. It does not create another widget artifact,
+publication state, delivery file, or cache lifecycle.
 
 ## Code Authority
 
-| Concern | File |
+| Concern | Authority |
 | --- | --- |
-| Account locale settings route | `roma/app/api/account/locales/route.ts` |
-| Account locale entitlement helper | `roma/lib/account-locale-entitlements.ts` |
-| Account locale state loader | `roma/lib/account-locales-state.ts` |
-| Account active-locale storage helper | `roma/lib/account-active-locales-storage.ts` |
-| Account base-locale lock helper | `roma/lib/account-base-locale-lock.ts` |
-| Roma translation routes | `roma/app/api/account/instances/[instanceId]/translations/**` |
-| Roma translation helpers | `roma/lib/account-instance-translations.ts` |
-| Roma locale package materialization | `roma/lib/account-instance-locale-package.ts` |
-| Roma Translation Agent binding helper | `roma/lib/translation-agent-control.ts` |
-| Bob user panel | `bob/components/TranslationsPanel.tsx` |
-| Translation Agent Worker | `agents/translation-agent/src/worker.ts` |
-| Translation Agent planning/safety | `agents/translation-agent/src/index.ts` |
-| Tokyo internal translation route | `tokyo-worker/src/routes/internal-translation-routes.ts` |
-| Tokyo overlay value storage | `tokyo-worker/src/domains/account-translations/values.ts` |
-| Tokyo overlay document helpers | `tokyo-worker/src/domains/account-translations/overlays.ts` |
-| Tokyo generated locale package storage | `tokyo-worker/src/domains/account-instances/package-files.ts` |
-| Locale registry/helpers | `packages/l10n/` |
+| Account locale policy | Roma account locale routes and account storage |
+| Translation command | Bob `TranslationsPanel` -> Roma translation route |
+| Translation operation | Translation Agent -> San Francisco |
+| Saved text extraction and exact overlay validation | Tokyo-worker account translation domain |
+| Overlay storage | Tokyo R2 `overlays/locales/{locale}.json` |
+| Bob translated preview | translated-value primitives over saved base state |
+| Public localized serving | Tokyo-worker root index response plus root runtime |
+| Root artifact construction | `@clickeen/ck-runtime-materializer` |
 
 ## Authority Chain
 
-| Concern | Authority |
-| --- | --- |
-| Current account and active locale settings | Roma |
-| Available locale cap | account tier through `l10n.locales.max` |
-| Source text field map | saved account instance content |
-| Translation reasoning | Translation Agent Worker |
-| Model execution | San Francisco `/model/chat` |
-| Overlay storage | Tokyo-worker over Tokyo R2 |
-| Generated locale package storage | Tokyo-worker over Tokyo R2 |
-| Builder display/action | Bob Translations panel |
-| Public static serving | Tokyo-worker generated package serving |
+```text
+Roma current account/session
+-> accountPublicId
+-> saved account instance
+-> exact locale coordinate
+-> Tokyo-worker
+-> accounts/{accountPublicId}/instances/{instanceId}/overlays/locales/{locale}.json
+```
 
-The available locale catalog comes from `@clickeen/l10n` and
-`packages/l10n/locales.json`. Account policy caps how many translated locales
-the account may activate. Active locales are the locales the user selected in
-account settings. The base locale is not generated as an overlay.
+Public serving adds the single publication coordinate:
+
+```text
+serve-state.json
+-> root index/styles/runtime fingerprint
+-> exact requested overlay
+-> injected locale context
+```
 
 ## Locale Policy
 
-The current locale entitlement key is:
-
-```text
-l10n.locales.max
-```
-
-The base locale is implied and not counted against this limit. Roma rejects
-active translated locales above the account plan limit before saving account
-locale settings.
-
-Account locale settings are read and written through:
-
-| Operation | Route | Role |
-| --- | --- | --- |
-| Read account locale settings | `GET /api/account/locales` | `viewer` |
-| Save account locale settings | `PUT /api/account/locales` | `admin` |
-
-Read response:
-
-```json
-{
-  "accountId": "[account id]",
-  "activeLocales": ["[active locale]"],
-  "localePolicy": {
-    "baseLocale": "[base locale]",
-    "ip": {
-      "countryToLocale": {
-        "[country code]": "[locale]"
-      }
-    }
-  },
-  "baseLocaleLocked": true
-}
-```
-
-Save response:
-
-```json
-{
-  "accountId": "[account id]",
-  "activeLocales": ["[active locale]"],
-  "localePolicy": {
-    "baseLocale": "[base locale]",
-    "ip": {
-      "countryToLocale": {
-        "[country code]": "[locale]"
-      }
-    }
-  },
-  "localeCleanup": {
-    "ok": true,
-    "instancesChecked": 0,
-    "deleted": [{ "instanceId": "[instance id]", "locale": "[removed locale]" }],
-    "deletedPackages": [
-      { "accountId": "[account public id]", "instanceId": "[instance id]", "locale": "[removed locale]" }
-    ]
-  }
-}
-```
-
-If removed-language cleanup fails after the setting is saved, the same response
-uses `localeCleanup.ok: false` and includes the exact failure:
-
-```json
-{
-  "localeCleanup": {
-    "ok": false,
-    "instancesChecked": 1,
-    "deleted": [],
-    "deletedPackages": [],
-    "failed": [
-      {
-        "instanceId": "[instance id]",
-        "locale": "[removed locale]",
-        "phase": "[translation-delete | locale-package-delete | cache-refresh]",
-        "reasonKey": "[reason key]",
-        "detail": "[detail]"
-      }
-    ],
-    "error": {
-      "kind": "UPSTREAM_UNAVAILABLE",
-      "reasonKey": "[reason key]",
-      "detail": "[detail]"
-    }
-  }
-}
-```
-
-When active locales shrink, Roma saves the account setting first and then asks
-Tokyo-worker to delete exact overlay files and generated locale package files
-for removed locales. When active locales expand, Roma only saves the account
-setting. The added language then appears in each widget's Translations panel as
-available but missing until the user explicitly generates that widget's
-translations. Account settings never call the Translation Agent or materialize
-widget packages.
-
-If removed-language cleanup fails after the settings write, Roma reports
-`localeCleanup.ok: false`. The saved account locale setting remains the account
-truth; the exact cleanup failure remains visible.
-
-## Runtime Dependencies
-
-| Surface | Required binding/secret/env | Purpose |
-| --- | --- | --- |
-| Roma | `TRANSLATION_AGENT` service binding | calls Translation Agent `/translate-instance` |
-| Roma | `TOKYO_PRODUCT_CONTROL` service binding | reads source and lists/reads/deletes overlays |
-| Roma | `AI_GRANT_HMAC_SECRET` | mints Translation Agent grant |
-| Roma | `SUPABASE_SERVICE_ROLE_KEY` | saves account locale settings |
-| Translation Agent | `AI_GRANT_HMAC_SECRET` | verifies Roma grant |
-| Translation Agent | `SANFRANCISCO_AI_ENGINE` service binding | calls San Francisco `/model/chat` |
-| Translation Agent | `TOKYO_PRODUCT_CONTROL` service binding | writes overlay value files |
-| Tokyo-worker | `AI_GRANT_HMAC_SECRET` | verifies `x-ck-ai-grant` on Translation Agent writes |
+- The account base locale is source authority.
+- Active non-base locales are translation targets allowed by account policy.
+- Generate Translations requests every currently active non-base locale.
+- Removing an active locale deletes its exact overlay from every account
+  instance. Each completed and failed deletion coordinate remains visible.
+- Changing locale settings never creates or rebuilds public runtime files.
 
 ## Source Text
 
-Widget software declares translatable fields in:
+`instance.content.json` owns the current saved translatable field set. Fields
+are concrete saved paths, including concrete array indexes. Translation
+responses must return one string for every current path and no other path.
 
-```text
-tokyo/product/widgets/{widgetType}/editable-fields.json
-```
+Human-authored base text remains human source authority. Agents translate it;
+they do not silently rewrite the base source.
 
-Saved account instance content provides the current source field map:
+## Generate Translations
 
-```text
-accounts/{accountPublicId}/instances/{instanceId}/instance.content.json
-source.content.fields
-```
+1. Bob requires a saved, clean instance and at least one active non-base locale.
+2. Roma resolves current account/session and entitlement truth.
+3. Roma asks the Translation Agent for exact requested locale results.
+4. San Francisco translates the supplied saved text items.
+5. Tokyo-worker accepts only complete exact overlay value maps and writes each
+   overlay.
+6. Roma returns:
 
-Repeatable field declarations expand before translation work. Producers receive
-exact field paths such as:
+   ```text
+   requestedLocales
+   translatedLocales
+   failedLocales
+   ```
 
-```text
-sections.0.faqs.0.question
-sections.0.faqs.0.answer
-```
+7. Bob reports those outcomes and refreshes translated preview state.
 
-No producer receives wildcard, glob, template, storage path, or sidecar paths.
+No later artifact step exists.
 
-## Operator Recipes
+## Overlay Contract
 
-### Generate Translations For One Saved Instance
-
-1. Confirm the user is in Roma current account context.
-2. Confirm the instance exists under the current account.
-3. Call:
-
-```text
-POST /api/account/instances/{instanceId}/translations/generate
-```
-
-4. Roma loads current active locales, excludes the base locale, and calls the
-   Translation Agent only when non-base active locales remain.
-5. Roma returns `requestedLocales`, `translatedLocales`, and exact
-   `failedLocales`. A valid partial result remains HTTP `200`; it is not
-   misreported as a failed command.
-6. Roma materializes packages only for `translatedLocales`.
-7. If the response has `accepted: false`, there was no non-base active locale
-   to generate.
-
-### Inspect Stored Translation Values
-
-1. List summaries:
-
-```text
-GET /api/account/instances/{instanceId}/translations
-```
-
-2. Read one overlay:
-
-```text
-GET /api/account/instances/{instanceId}/translations/{locale}
-```
-
-3. For raw storage evidence, use R2 after `pnpm cf:preflight` and inspect:
+Storage:
 
 ```text
 accounts/{accountPublicId}/instances/{instanceId}/overlays/locales/{locale}.json
 ```
 
-Command path:
-
-```bash
-pnpm cf:preflight
-pnpm cf:r2:get accounts/{accountPublicId}/instances/{instanceId}/overlays/locales/{locale}.json
-```
-
-### Change Account Active Locales
-
-1. User saves active locales in Roma Settings:
-
-```text
-PUT /api/account/locales
-```
-
-2. Roma writes account settings first.
-3. Removed active locales delete exact overlay files through Tokyo-worker.
-4. Added active locales remain missing on each widget until generated from that
-   widget's Translations panel.
-5. A removed-language cleanup failure returns `localeCleanup.ok: false`; the account locale
-   setting remains saved and is the account truth.
-
-## Translation Generation
-
-User flow:
-
-```text
-Bob Translations panel
--> Roma account translation route
--> Translation Agent Worker /translate-instance
--> San Francisco /model/chat
--> Tokyo-worker internal overlay write
--> accounts/{accountPublicId}/instances/{instanceId}/overlays/locales/{locale}.json
-```
-
-Generation routes:
-
-| Operation | Route | Role/boundary |
-| --- | --- | --- |
-| List instance translations | `GET /api/account/instances/{instanceId}/translations` | `viewer` |
-| Read one translation | `GET /api/account/instances/{instanceId}/translations/{locale}` | `viewer` |
-| Generate active non-base translations | `POST /api/account/instances/{instanceId}/translations/generate` | `editor` |
-| Agent execution | `POST /translate-instance` | Translation Agent Worker |
-| List stored overlays | `GET /__internal/instances/{instanceId}/translations` | `viewer` internal |
-| Read/write/delete overlay | `GET/PUT/DELETE /__internal/instances/{instanceId}/translations/{locale}` | viewer / grant / admin |
-
-Write boundary:
-
-- Roma mints the Translation Agent grant.
-- Translation Agent verifies the grant.
-- Translation Agent calls San Francisco for governed model execution.
-- Translation Agent writes through Tokyo-worker with `x-ck-ai-grant`.
-- Tokyo-worker verifies the grant and accepts only locales carried by the grant.
-
-Bob's current Translations panel displays request state and transient Agent
-Activity rows authored by Translation Agent while it writes overlays. The rows
-are live narration from the agent to the user. They are not stored status,
-polling, or Roma/Bob-authored progress. After the command returns, Bob shows
-durable result feedback from Roma's response: success, no accepted work,
-command failure, per-locale translation failure, or locale-package failure.
-Bob refreshes previewable locales only when at least one locale was translated.
-Bob can
-preview a selected generated locale in the widget preview, but it does not
-expose user translation overrides, a field-level overlay editor, or a read-only
-overlay value dump. Overlay values remain generated artifacts owned by
-Translation Agent and Tokyo-worker authority.
-
-## Overlay Contract
-
-The durable overlay body is:
+Body:
 
 ```json
 {
   "values": {
-    "[field path]": "[translated value]"
+    "header.title": "Translated title"
   }
 }
 ```
 
-The account, instance, and locale coordinates come from the operation/path. They
-are not repeated inside the file body.
+Validation is exact against current saved content. Missing paths, unexpected
+paths, non-string values, malformed documents, and invalid locale coordinates
+fail. Stored corruption is not normalized or treated as missing.
 
-Tokyo-worker validates overlay values against the saved instance text field set
-on write, read, and list. Missing paths and unexpected paths fail.
+## Bob Preview
+
+Bob reads saved overlays through Roma and resolves them over the current saved
+base state with `resolveTranslatedValues`. Preview state is not public artifact
+truth and never writes storage.
+
+## Public Serving
+
+Canonical URLs:
+
+```text
+https://clk.live/{accountPublicId}/{instanceId}
+https://clk.live/{accountPublicId}/{instanceId}?locale={locale}
+```
+
+For an index request, Tokyo-worker verifies the published instance and one root
+artifact. It lists overlay coordinates, reads and validates the exact requested
+overlay, injects a locale context into the stored root index, and returns HTML
+with `no-store`. That HTML references only root `styles.css` and `runtime.js`.
+
+The root runtime applies injected values synchronously before widget modules
+initialize. A missing requested overlay returns `404 Locale not available`. A
+corrupt overlay returns `500 Locale data invalid`. Base content is never
+presented as a requested non-base locale.
+
+## Operator Recipes
+
+### Generate one instance
+
+Use Bob’s Generate Translations command or the authenticated Roma instance
+translation route. Confirm the returned requested/translated/failed sets
+reconcile exactly.
+
+### Inspect overlay truth
+
+1. Run `pnpm cf:preflight`.
+2. Read the exact `overlays/locales/{locale}.json` object.
+3. Compare its path set with `instance.content.json`.
+4. Confirm no root source or artifact object changed unless a separate instance
+   save occurred.
+
+### Verify public localization
+
+1. Confirm the instance is published.
+2. Open the base URL and the same URL with `?locale={locale}`.
+3. Confirm translated text and `<html lang>` on the locale response.
+4. Confirm both responses reference identical root stylesheet/runtime URLs.
+5. Confirm missing and corrupt overlays fail explicitly.
 
 ## Failure Semantics
 
-| Case | Result |
+- Requested locale outcomes are exhaustive.
+- Partial translation success is reported as partial.
+- Activity transport is never result truth.
+- Missing overlay and corrupt overlay are distinct.
+- No generated value substitutes for missing source truth.
+- Public reads never write, heal, regenerate, or call an agent.
+
+## Verification Matrix
+
+| Concern | Proof |
 | --- | --- |
-| Base locale requested for generation | not generated as overlay |
-| No active non-base locales | generation returns `accepted: false` |
-| Invalid Translation Agent grant | write fails |
-| Missing or unexpected overlay keys | validation fails |
-| Missing overlay | read returns `404` |
-| Failure after earlier locale writes | prior files remain; full success must not be claimed |
-| Source save with stale translations | source/base save remains save truth; translation update is an explicit Translations panel operation |
-| Removed account locale cleanup failure | settings save remains; response reports `localeCleanup.ok: false` |
-| Translation Agent binding missing | Roma returns explicit upstream failure |
-| San Francisco/model failure | Translation Agent/Roma return explicit failure; no full success |
-| Tokyo write rejection | Translation Agent/Roma return explicit failure; no full success |
-
-## Public Serving Boundary
-
-Current public widget serving is generated static artifact delivery. Public
-visitor requests do not read locale overlay files and do not compose
-translations at request time.
-
-Public coordinates:
-
-```text
-https://dev.clk.live/{accountPublicId}/{instanceId}
-https://clk.live/{accountPublicId}/{instanceId}
-https://dev.clk.live/{accountPublicId}/{instanceId}/locales/{locale}
-https://clk.live/{accountPublicId}/{instanceId}/locales/{locale}
-```
-
-Public serving reads generated package files such as:
-
-```text
-accounts/{accountPublicId}/instances/{instanceId}/index.html
-accounts/{accountPublicId}/instances/{instanceId}/styles.css
-accounts/{accountPublicId}/instances/{instanceId}/runtime.js
-accounts/{accountPublicId}/instances/{instanceId}/locales/{locale}/index.html
-accounts/{accountPublicId}/instances/{instanceId}/locales/{locale}/styles.css
-accounts/{accountPublicId}/instances/{instanceId}/locales/{locale}/runtime.js
-```
-
-Locale overlays are private translated value source for account operations.
-They are not visitor files. Explicit locale public URLs serve generated locale
-package bytes only after Tokyo-worker verifies the instance is published and all
-three locale package files carry matching coordinate, source timestamp, package
-fingerprint, and materializer contract metadata. Missing, stale, malformed, or
-mismatched locale packages return `404 Locale not available` with `no-store`
-cache headers. Public serving does not fall back to base content for locale
-URLs.
-
-Saved source changes do not generate or regenerate translations. Roma source
-save persists the source and base package, then returns source-save truth.
-Translation update remains an explicit operation from Bob's Translations panel
-through Roma's translation route and the Translation Agent. After overlay
-generation, the translation route materializes matching locale package bytes
-only for locales that translated successfully. Roma resolves shared media and
-typography once,
-then materializes up to four locale packages concurrently and reports exact
-`localePackages.completed` and `localePackages.failed` coordinates
-if package write or public cache refresh fails. Bob may surface
-stale-translation attention only from exact stale-translation evidence; it must
-not infer that state from runtime package probes, active locale count alone, or
-hidden UI-authored status. No background job, status ledger, public runtime
-repair, or base-content fallback completes translation work later.
-
-## Prague Boundary
-
-Prague page translations are page-owned content beside Prague page JSON. They
-are separate from account instance Babel overlays.
-
-Current Prague translation file shape:
-
-```text
-tokyo/prague/pages/{widget}/{page}.translations/{locale}.json
-```
-
-Prague embeds account widgets only through public published artifact URLs.
-
-Operator caveat: current Cloudflare worker deploy does not automatically sync
-`tokyo/prague/**` changes by default. See
-`documentation/engineering/CloudflarePagesCloudDevChecklist.md` before relying
-on Prague translation file changes in cloud-dev.
-
-## Verification
-
-| Concern | Verification |
-| --- | --- |
-| Account locale settings | `GET /api/account/locales` |
-| Product-visible translations | Roma translation routes or Bob Translations panel |
-| Stored overlay bytes | `pnpm cf:preflight` then `pnpm cf:r2:get accounts/{accountPublicId}/instances/{instanceId}/overlays/locales/{locale}.json` |
-| Generated locale package bytes | `pnpm cf:preflight` then R2 evidence at `accounts/{accountPublicId}/instances/{instanceId}/locales/{locale}/index.html`, `styles.css`, and `runtime.js` |
-| Translation Agent runtime | `pnpm e2e:smoke:translation-agent-runtime` |
-| Public static serving | `https://dev.clk.live/{accountPublicId}/{instanceId}` and explicit `/locales/{locale}` URL |
-| Worker deploy evidence | GitHub Actions `cloud-dev workers deploy` |
-
-## Not Current Product Truth
-
-- Public request-time translation composition.
-- Fallback locale serving as if the requested locale existed.
-- Translation lifecycle metadata inside overlay bodies.
-- Selected-locale or selected-overlay pointers as product truth.
-- Widget `localization.json`.
-- `textPack`.
-- `L10nOp`.
-- Root `published/`, root `public/`, or root `l10n/` lookup folders as
-  localization authority.
+| Account policy | Roma locale route response |
+| Saved text set | Tokyo instance content |
+| Overlay bytes | exact R2 read after `pnpm cf:preflight` |
+| Translation outcome | Roma requested/translated/failed sets |
+| Bob preview | exact overlay values displayed over saved source |
+| Root artifact | root R2 index/styles/runtime fingerprint |
+| Localized runtime | root URL with `?locale=` and translated output |
+| Negative storage invariant | no instance locale-derived HTML/CSS/JS objects |

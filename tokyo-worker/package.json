@@ -6,7 +6,6 @@
   "scripts": {
     "deploy": "wrangler deploy --routes \"\"",
     "test:clk-live": "tsx tests/run-clk-live-locale-serving.ts",
-    "test:locale-package": "tsx tests/run-locale-package-storage.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {

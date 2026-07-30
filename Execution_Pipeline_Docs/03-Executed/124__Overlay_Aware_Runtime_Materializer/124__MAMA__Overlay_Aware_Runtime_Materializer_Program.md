@@ -1,5 +1,11 @@
 # PRD 124 - Mama PRD - Overlay-Aware Runtime Materializer Program
 
+> **Superseded architecture (2026-07-30):** This is historical execution
+> evidence, not current authority. The per-locale runtime-artifact contract
+> introduced here is revoked. Current truth is one root instance runtime plus
+> exact `overlays/locales/{locale}.json`; translation creates no HTML, CSS, or
+> JavaScript. See `documentation/architecture/OverlayArchitecture.md`.
+
 Status: EXECUTED - HISTORICAL PARENT CONTRACT
 Owner: Roma + Tokyo-worker + Babel
 Date: 2026-06-25

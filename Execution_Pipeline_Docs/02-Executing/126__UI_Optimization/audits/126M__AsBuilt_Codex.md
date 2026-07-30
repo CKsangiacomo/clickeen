@@ -2,6 +2,12 @@
 
 Status: CODEX ONLY - Phase 1 Step 1 as-built audit.
 
+> **Post-audit correction (2026-07-30):** This audit observed Roma locale
+> artifact materialization but failed to escalate it against the one-root-runtime
+> overlay architecture. That omission contributed to a false 126 closure. The
+> behavior is revoked; current authority is
+> `documentation/architecture/OverlayArchitecture.md`.
+
 Scope: Roma UI current system only. This audit records current runtime/docs/code
 truth before convergence. It does not execute Step 4+, does not select fixes,
 does not change source code, and does not edit GLM artifacts.

@@ -235,6 +235,11 @@ accounts/{accountPublicId}/
       runtime.js                    # when submitted
 ```
 
+Each instance has one root runtime. Translation generation writes only
+`overlays/locales/{locale}.json`; public locale selection combines the one root
+runtime with the exact requested overlay and never creates locale-derived HTML,
+CSS, or JavaScript.
+
 Product software and product-owned static resources live outside account runtime
 storage:
 

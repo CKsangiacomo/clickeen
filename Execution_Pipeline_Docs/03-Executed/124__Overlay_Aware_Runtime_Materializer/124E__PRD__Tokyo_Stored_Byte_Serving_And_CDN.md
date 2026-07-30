@@ -1,5 +1,8 @@
 # PRD 124E - Tokyo Stored-Byte Serving And CDN
 
+> **Revoked (2026-07-30):** Historical PRD only. A locale has no separate
+> delivery files or cache lifecycle.
+
 Status: EXECUTED
 Parent: `124__MAMA__Overlay_Aware_Runtime_Materializer_Program.md`
 Depends on: 124A GREEN, 124B CODE-DELIVERED, 124C CODE-DELIVERED, 124D CODE-DELIVERED

@@ -1,5 +1,8 @@
 # 124F Implementation Note - Superseded Cascade Operations
 
+> **Revoked (2026-07-30):** Locale artifact cascades are not current behavior.
+> Translation and active-language removal mutate exact overlay JSON only.
+
 Status: superseded by the PRD 126M Roma UI save/localization boundary correction.
 
 This file is retained as historical context for the 124 runtime materializer

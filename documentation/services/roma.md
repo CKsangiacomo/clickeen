@@ -195,11 +195,11 @@ and public serving can reject mixed package state deterministically.
 
 When the existing source-save command changes a saved instance, Roma saves the
 source and base package only. It does not generate translations, regenerate
-translations, materialize locale packages, refresh locale public cache, or make
-the authoring save wait on locale follow-up. Save returns source/base save truth:
+translations, mutate locale overlays, or make the authoring save wait on
+localization. Save returns source/root save truth:
 `ok: true` when the source/base package was saved, or the exact source-save
-failure when it was not. A translation, locale package, or locale-cache failure
-is localization failure, not source-save failure.
+failure when it was not. Translation failure is localization failure, not
+source-save failure.
 
 Translation generation is a separate explicit operation from the Translations
 panel. Roma resolves the current account active locales for that command,
@@ -209,13 +209,9 @@ Worker. Translation Agent calls San Francisco `/model/chat` and writes overlays
 via Tokyo-worker. Translation Agent returns one ordered terminal result for
 every requested locale. Roma validates that complete result set and returns
 `requestedLocales`, `translatedLocales`, and exact `failedLocales`; a valid
-partial result remains an HTTP `200` product result. Roma materializes matching
-locale package bytes only for `translatedLocales` through the locale package
-helper. Shared media and typography are resolved once per instance and
-up to four locale packages are materialized concurrently. If locale package
-materialization or public cache refresh fails, the translation command reports
-every exact `localePackages.failed` coordinate
-instead of claiming full localization success.
+partial result remains an HTTP `200` product result. The command ends after
+those exact overlay outcomes; it does not create, publish, or cache runtime
+files.
 When the command is invoked through hosted Bob, Translation Agent may stream
 Agent Activity while it operates. Roma forwards that activity to Bob; Roma does
 not author it, summarize it, poll for it, persist it, or convert it into product
@@ -226,11 +222,10 @@ writes that account configuration to Supabase. Adding a language does not call
 the Translation Agent or materialize any widget; each widget remains missing
 that translation until its Translations panel explicitly generates it.
 
-Removing a language deletes its exact overlay and generated locale package from
-saved account instances through Tokyo-worker. If deletion or public cache
-refresh fails after the settings write, Roma returns the saved settings with
-`localeCleanup.ok: false` and the exact failed coordinate. The account setting
-remains the user decision and account truth.
+Removing a language deletes its exact overlay from saved account instances
+through Tokyo-worker. If deletion fails after the settings write, Roma returns
+the saved settings with `localeCleanup.ok: false` and the exact failed
+coordinate. The account setting remains the user decision and account truth.
 
 Roma Builder owns public widget copy actions for the current account and opened
 instance. It builds the public URL and iframe/script snippets from the current

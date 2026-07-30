@@ -1,6 +1,6 @@
 # 126 — DevQA: Where We Actually Stand
 
-Status: STEP 9 COMPLETE - 126A THROUGH 126M GREEN.
+Status: REOPENED — LOCALIZATION ARCHITECTURE CORRECTION IN EXECUTION.
 This document reconciles PRD claims with Git and current source evidence. It does
 not define product law, approve unresolved architecture choices, prove that every
 intermediate commit deployed, or close any PRD whose required verification is
@@ -11,6 +11,32 @@ Last reconciled: 2026-07-27
 Scope: premature A-H code-change reality, final A-M current-source audits,
 executable PRDs, exact-tree peer reviews, and current Step-9 execution state.
 Parent: `126__PRD__UI_Optimization_Program.md` (MAMA).
+
+## 2026-07-30 Localization Closure Correction
+
+The earlier GREEN claim was incomplete. PRD 124 introduced per-locale runtime
+artifacts. Commit `dfc4311e` briefly made translation generation overlay-only,
+but 126-era commit `183ef046` coupled artifact construction back to Generate
+Translations; `d91923fd` optimized that fan-out; `8f8bd76c` exposed its outcomes
+in Bob. Commit `3cd86f49` closed 126 without reconciling the violation.
+
+Current R2 pre-cleanup truth from a complete paginated inventory:
+
+- 400 obsolete HTML/CSS/JS objects;
+- 134 instance/locale coordinates;
+- 5 affected instances;
+- one incomplete coordinate (`0NP67CGKVQ`, `hu`, index only);
+- 144 legitimate overlays across 9 instances, all to be preserved.
+
+Required closure:
+
+1. translation writes exact overlays only;
+2. one root runtime consumes the exact requested overlay;
+3. no active mutation/read route can address locale-derived runtime files;
+4. all 9 overlay-bearing root runtimes are rematerialized;
+5. cloud-dev base and `?locale=` responses are proven fail-closed;
+6. exact obsolete R2 keys are deleted and recount is zero;
+7. overlay/root preservation and independent V1–V8 are recorded.
 
 Current 126G correction: the historical Dieter builder, generated
 `tokyo/product/dieter/**` mirror, manifest, editor bundle, and shared CDN
