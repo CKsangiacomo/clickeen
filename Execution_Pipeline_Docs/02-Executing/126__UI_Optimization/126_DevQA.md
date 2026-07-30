@@ -1,6 +1,7 @@
 # 126 — DevQA: Where We Actually Stand
 
-Status: REOPENED — LOCALIZATION ARCHITECTURE CORRECTION IMPLEMENTED; FINAL QA IN PROGRESS.
+Status: LOCALIZATION ARCHITECTURE CORRECTION GREEN — independent V1–V8 complete;
+the rest of the 126 program record is unchanged below.
 This document reconciles PRD claims with Git and current source evidence. It does
 not define product law, approve unresolved architecture choices, prove that every
 intermediate commit deployed, or close any PRD whose required verification is
@@ -72,14 +73,47 @@ an old base-only runtime as a requested translation.
    changed 598 objects to 198, left 144 overlays, left zero instance
    `locales/` objects, and showed all 198 preserved key/size/timestamp records
    identical to the pre-delete inventory.
+7. Final Git-connected Bob and Roma Pages deployments both completed
+   successfully at `d82dd9ec`. The deployed product code was unchanged from the
+   already-green `95c2a269` product cutover; the final SHA removed the one-use
+   cleanup machinery and recorded its evidence.
+8. The cloud-dev translation smoke was brought into line with the current Bob
+   entry point and Roma event-stream result contract. Its final run generated
+   all 28 active non-base locales for `QD1G068MX7`, read the exact saved
+   inventory and Japanese overlay through Roma, selected Japanese in Bob, and
+   proved an exact Japanese overlay value rendered in the widget preview.
+9. The pre/post-smoke R2 keyset was identical: 198 instance objects, 144
+   overlays, and zero retired instance `locales/` objects. Exactly 28 object
+   records changed, all and only
+   `QD1G068MX7/overlays/locales/{locale}.json`; no root, config, content,
+   publication, support, or other instance object changed.
+10. A fresh independent agent re-read R2, active code/docs, focused tests,
+    Worker deploys, and both cleanup runs. It returned GREEN for V1–V8 and found
+    no active locale-package authority. Its one wording finding
+    (`translated and materialized`) was removed from the living Translation
+    Agent operator doc before closure.
 
 The old public responses were generated directly by the Worker from its R2
 binding; the route never used `fetch()` or the Cache API. Repeated retired URL
-reads have no `CF-Cache-Status` or `Age` and return 404 from the deployed Worker.
-Two explicit purge attempts were rejected by the available token scopes and
-changed nothing. There is no CDN-cached locale-package layer to preserve or
-purge; the one-use cleanup workflow and script are removed after the successful
-R2 operation.
+reads have no `CF-Cache-Status` or `Age`, carry `cache-control: no-store`, and
+return 404 from the deployed Worker. A local purge request and the later
+purge-only GitHub Actions run `30568327401` were rejected with HTTP 401 before
+mutation. That failed run deleted nothing and changed no product data. There is
+no CDN-cached locale-package layer to preserve or purge; the one-use cleanup
+workflow and script are removed after the successful R2 operation.
+
+### Independent core-violation result
+
+| ID | Result | Reconciliation |
+| --- | --- | --- |
+| V1 Silent substitution | GREEN | Exact requested overlay or explicit failure; no invented locale state. |
+| V2 Silent healing | GREEN | Transitional overlay bodies were repaired only through the named exact write authority with value hashes preserved. |
+| V3 Silent omission | GREEN | All 400 manifest keys were deleted; all 144 legitimate overlays and 9 root packages were reconciled. |
+| V4 Fail-open control | GREEN | Missing overlay is 404 and corrupt overlay is 500; neither falls back to base. |
+| V5 Corruption-as-absence | GREEN | Invalid stored locale state is not treated as missing or replaced. |
+| V6 Partial-success masquerade | GREEN | Generation reports exact translated/failed locale outcomes; cleanup and smoke evidence name their complete scope. |
+| V7 Masquerade/redress | GREEN | Locale-package routes, helpers, result types, workflow, and script are removed rather than renamed or wrapped. |
+| V8 Runtime test dependency | GREEN | Normal delivery uses root runtime plus exact overlay; tests and inventory probes remain verification only. |
 
 Current 126G correction: the historical Dieter builder, generated
 `tokyo/product/dieter/**` mirror, manifest, editor bundle, and shared CDN

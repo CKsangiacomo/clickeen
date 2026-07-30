@@ -430,7 +430,7 @@ and to `tokyo-assets-dev` when required.
 4. If generation returns `accepted: false`, there were no active non-base
    locales to generate.
 5. If `failedLocales` is non-empty, inspect those exact locale outcomes; other
-   requested locales may still have translated and materialized successfully.
+   requested locales may still have translated and written successfully.
 6. If Translation Agent returns `401` or `403`, inspect the Roma grant trace:
    `accountPublicId`, `instanceId`, and `activeLocales`.
 7. If model execution fails, inspect San Francisco health, grant model policy,

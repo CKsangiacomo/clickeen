@@ -1,6 +1,7 @@
 # PRD 126 — MAMA: UI Optimization Program
 
-Status: REOPENED — LOCALIZATION ARCHITECTURE CORRECTION IN EXECUTION.
+Status: LOCALIZATION ARCHITECTURE CORRECTION CLOSED — independent V1–V8 GREEN;
+A–M program status otherwise unchanged.
 Owner: Clickeen product architecture + UI
 Date: 2026-06-26
 Stage: 02-Executing
@@ -20,9 +21,13 @@ It must never create locale-specific HTML, CSS, JavaScript, publication state,
 fingerprints, or derivative result types.
 ```
 
-Closure is blocked until active code/routes/docs are corrected, affected root
-runtimes are rematerialized, cloud-dev is verified, obsolete R2 objects are
-deleted by exact-key manifest, and the independent V1–V8 audit is green.
+Closure completed on 2026-07-30: active code/routes/docs are overlay-only, all
+affected root runtimes were rematerialized, cloud-dev base/translated/failure
+paths were verified, the exact 400 obsolete R2 objects were deleted, a final
+Generate Translations smoke preserved the 198-object keyset while changing only
+the expected 28 overlays, and the independent V1–V8 audit returned GREEN.
+`126_DevQA.md` owns the exact commit, deploy, R2, smoke, and failed purge-only
+run reconciliation.
 
 `02-Executing` is the repository pipeline folder for this active program.
 Steps 1-8 are complete for every A-M domain. Step 9 executes one domain and one

@@ -47,6 +47,42 @@ function sameStringArray(left, right) {
   return left.length === right.length && left.every((value, index) => value === right[index]);
 }
 
+async function readGenerationResponse(response) {
+  const contentType = response.headers()['content-type'] || '';
+  if (!contentType.includes('text/event-stream')) {
+    return {
+      status: response.status(),
+      payload: await response.json().catch(() => null),
+    };
+  }
+
+  const text = await response.text();
+  for (const rawEvent of text.split(/\r?\n\r?\n/)) {
+    const lines = rawEvent.split(/\r?\n/);
+    const eventName = lines
+      .find((line) => line.startsWith('event:'))
+      ?.slice('event:'.length)
+      .trim();
+    if (eventName !== 'result') continue;
+    const data = lines
+      .filter((line) => line.startsWith('data:'))
+      .map((line) => line.slice('data:'.length).trimStart())
+      .join('\n');
+    if (!data) break;
+    const result = JSON.parse(data);
+    if (
+      result &&
+      typeof result === 'object' &&
+      Number.isFinite(result.status) &&
+      Object.prototype.hasOwnProperty.call(result, 'payload')
+    ) {
+      return { status: result.status, payload: result.payload };
+    }
+    break;
+  }
+  throw new Error('Translation generation stream did not include a valid result event');
+}
+
 async function fetchRomaJson(romaBase, cookies, path, init = {}) {
   const response = await fetch(new URL(path, romaBase), {
     ...init,
@@ -166,7 +202,10 @@ async function runBobGenerationSmoke(romaBase, authStatePath, instanceId, expect
       waitUntil: 'domcontentloaded',
     });
     const frame = page.frameLocator('iframe[title="Bob Builder"]');
-    await frame.getByRole('button', { name: /Manual/i }).waitFor({ timeout: 30_000 });
+    const openTools = frame.getByRole('button', { name: 'Open tools' });
+    await openTools.waitFor({ timeout: 30_000 });
+    await page.waitForTimeout(1_500);
+    await openTools.click();
     await frame.getByRole('tab', { name: 'Translations' }).click();
     const generateButton = frame.getByRole('button', { name: 'Generate translations' });
     await generateButton.waitFor({ timeout: 30_000 });
@@ -181,8 +220,8 @@ async function runBobGenerationSmoke(romaBase, authStatePath, instanceId, expect
     await frame.getByText('Translation Agent').waitFor({ timeout: 30_000 });
     await frame.getByText(/Writing (translations|[A-Z][A-Za-z ]+)/).first().waitFor({ timeout: 30_000 });
     const response = await responsePromise;
-    const payload = await response.json().catch(() => null);
-    const generatedLocales = assertGenerationPayload(response.status(), payload, expected);
+    const result = await readGenerationResponse(response);
+    const generatedLocales = assertGenerationPayload(result.status, result.payload, expected);
     await frame.getByRole('button', { name: 'Generate translations' }).waitFor({ timeout: 30_000 });
     return { builderUrl: page.url(), generatedLocales };
   } finally {
@@ -190,7 +229,7 @@ async function runBobGenerationSmoke(romaBase, authStatePath, instanceId, expect
   }
 }
 
-async function runBobOverlaySmoke(romaBase, authStatePath, instanceId, locale) {
+async function runBobOverlaySmoke(romaBase, authStatePath, instanceId, locale, values) {
   const browser = await chromium.launch({ headless: true });
   try {
     const context = await browser.newContext({ storageState: authStatePath });
@@ -199,15 +238,28 @@ async function runBobOverlaySmoke(romaBase, authStatePath, instanceId, locale) {
       waitUntil: 'domcontentloaded',
     });
     const frame = page.frameLocator('iframe[title="Bob Builder"]');
-    await frame.getByRole('button', { name: /Manual/i }).waitFor({ timeout: 30_000 });
+    const openTools = frame.getByRole('button', { name: 'Open tools' });
+    await openTools.waitFor({ timeout: 30_000 });
+    await page.waitForTimeout(1_500);
+    await openTools.click();
     await frame.getByRole('tab', { name: 'Translations' }).click();
     await frame.getByRole('button', { name: 'Generate translations' }).waitFor({ timeout: 30_000 });
-    await frame.getByLabel('Preview locale').selectOption(locale);
-    const rows = frame.getByTestId('translation-overlay-rows');
-    await rows.waitFor({ timeout: 30_000 });
-    const rowText = (await rows.textContent({ timeout: 30_000 }))?.trim() || '';
-    if (!rowText) throw new Error('Bob translation overlay rows rendered empty text');
-    return { builderUrl: page.url(), rowTextLength: rowText.length };
+    const previewLocale = frame.getByLabel('Preview locale');
+    await previewLocale.locator(`option[value="${locale}"]`).waitFor({
+      state: 'attached',
+      timeout: 30_000,
+    });
+    await previewLocale.selectOption(locale);
+    if ((await previewLocale.inputValue()) !== locale) {
+      throw new Error(`Bob did not select the ${locale} translation preview`);
+    }
+    const primaryValue = Object.values(values)[0];
+    if (typeof primaryValue !== 'string' || !primaryValue.trim()) {
+      throw new Error(`Translation overlay for ${locale} has no previewable value`);
+    }
+    const preview = frame.frameLocator('iframe[title="Widget preview"]');
+    await preview.getByText(primaryValue, { exact: false }).first().waitFor({ timeout: 30_000 });
+    return { builderUrl: page.url(), renderedValue: primaryValue };
   } finally {
     await browser.close();
   }
@@ -225,7 +277,13 @@ async function main() {
   const sampledLocale =
     inventoryLocales.includes('ja') ? 'ja' : inventoryLocales.includes('fr') ? 'fr' : inventoryLocales[0];
   const values = await readLocaleOverlay(romaBase, cookies, instance.instanceId, sampledLocale);
-  const bob = await runBobOverlaySmoke(romaBase, authStatePath, instance.instanceId, sampledLocale);
+  const bob = await runBobOverlaySmoke(
+    romaBase,
+    authStatePath,
+    instance.instanceId,
+    sampledLocale,
+    values,
+  );
 
   console.log(JSON.stringify({
     ok: true,
