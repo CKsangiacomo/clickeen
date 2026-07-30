@@ -1,10 +1,95 @@
 # 126K - PRD: Dialogs And Modals
 
-Status: STEP 9 COMPLETE - implementation, deployed browser proof, documentation,
-and independent V1-V8 audit GREEN.
+Status: ORIGINAL STEP 9 COMPLETE; POPUP VISUAL-CONTRACT CORRECTION IMPLEMENTED
+LOCALLY; FINAL DEPLOYED/PRODUCT-OWNER VERIFICATION PENDING.
 Parent: `126__PRD__UI_Optimization_Program.md`.
 Audit: `audits/126K__Audit__Dialogs_and_Modals.md`.
 Living doctrine: `documentation/engineering/UI/dialogs-and-modals.md`.
+
+## 2026-07-30 Popup Visual-Contract Correction
+
+The original 126K native-dialog lifecycle execution and its evidence remain
+valid. The missing contract is visual: the helper standardized mechanics while
+DevStudio, Roma, Bob, Bulk Edit, and Object Manager retained separately invented
+blocking-dialog appearance.
+
+Final source authority:
+
+```text
+dieter/components/popup/
+  popup.css
+  popup.html
+  popup.spec.json
+```
+
+Public selectors are `.diet-popup`, `.diet-popup__header`,
+`.diet-popup__body`, `.diet-popup__footer`, and `.diet-popup__actions`.
+`.diet-popup` goes on a native `<dialog>`.
+
+Popup has three fixed semantic size names with these initial source values:
+
+- Small: `[data-size="small"]`, `30rem` maximum — DevStudio token editor.
+- Medium/default: no attribute or `[data-size="medium"]`, `32.5rem` maximum —
+  Roma, Bob Upsell, and Object Manager.
+- Large: `[data-size="large"]`, `61.25rem` maximum — Bulk Edit.
+
+Every size is capped at the viewport minus `2 * var(--space-4)` and at
+`100dvh - 2 * var(--space-4)`. Popup owns
+`border: 1px solid var(--role-border)`,
+`border-radius: var(--control-radius-2xl)`,
+`background: var(--role-surface)`, `color: var(--color-text)`,
+`box-shadow: var(--shadow-elevated)`, `padding: 0`, and a
+`color-mix(in oklab, var(--color-system-black), transparent 65%)` backdrop.
+`[open]` is a three-row grid. Header/body/footer each use
+`var(--space-5)`; header/footer dividers are
+`1px solid var(--role-border)`; the body owns overflow; actions are end-aligned,
+wrapping, with `var(--space-3)` gap. Consumers must not restate popup widths or
+base frame/backdrop geometry.
+
+Dieter Popup owns the shared visual structure: top-layer dialog surface,
+backdrop, width/compact fit, border, radius, shadow, internal spacing,
+header/body/footer/action layout, and overflow. The existing
+`dieter/components/shared/dialog-lifecycle.ts` remains the only shared mechanics
+helper and continues to own the bounded focus/Escape/scroll-lock lifecycle
+already accepted by D1.
+
+Consumers continue to own copy, form controls, dirty/running state, validation,
+persistence, action meaning, and the accepted per-workflow dismissal policy.
+Popup adds no React library, modal registry, global state, portal, route, or
+generic product workflow.
+
+`popover` remains the non-modal anchored component. It is neither renamed nor
+used as a compatibility path for Popup.
+
+The source-derived DevStudio Popup page must render actual source examples for:
+
+- a plain informational popup;
+- a popup containing a form;
+- an explicit confirmation;
+- a visual dirty-edit/discard composition.
+
+These are presentation examples, not lifecycle tests, new product workflows,
+or copy authority. Existing consuming workflows prove lifecycle behavior.
+The generated route is exactly `#/dieter/popup`.
+
+Hard-cut migration:
+
+1. add Popup source HTML/CSS/spec and its generated DevStudio component page;
+2. keep the lifecycle helper; do not fork it into Popup;
+3. migrate the DevStudio token editor, Roma `.roma-modal*` dialogs, Bob
+   `UpsellPopup`, and Dieter Bulk Edit/Object Manager to the Popup selectors;
+4. preserve every workflow's current behavior and D1/D3 decisions;
+5. delete the replaced local base dialog/backdrop/size/border/radius/shadow/
+   header/body/footer/action styling;
+6. retain only truly workflow-specific composition;
+7. verify no old local visual base or second shared popup survives.
+
+This correction does not authorize broader keyboard support. Native `<dialog>`
+behavior and the already accepted lifecycle remain; no synthetic keyboard
+framework or new keyboard contract is added.
+
+Correction acceptance is the complete consumer/deletion/deployed-browser matrix
+in `126_DevQA.md`, not the original lifecycle evidence alone.
 
 ## Purpose
 

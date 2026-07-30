@@ -1,0 +1,16 @@
+<dialog class="diet-popup" data-size="{{size}}" aria-labelledby="{{id}}-title" open>
+  <header class="diet-popup__header">
+    <h2 id="{{id}}-title">{{title}}</h2>
+  </header>
+  <div class="diet-popup__body">{{body}}</div>
+  <footer class="diet-popup__footer">
+    <div class="diet-popup__actions">
+      <button class="diet-btn-txt" type="button" data-size="md" data-variant="secondary">
+        <span class="diet-btn-txt__label">{{secondaryAction}}</span>
+      </button>
+      <button class="diet-btn-txt" type="button" data-size="md" data-variant="primary">
+        <span class="diet-btn-txt__label">{{primaryAction}}</span>
+      </button>
+    </div>
+  </footer>
+</dialog>

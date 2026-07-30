@@ -1,0 +1,35 @@
+{
+  "component": "table",
+  "syntax": "<div class='diet-table'><table class='diet-table__table'>…</table></div>",
+  "attributes": {},
+  "defaults": [
+    {
+      "id": "ordinary",
+      "title": "Ordinary",
+      "spec": ["Semantic rows and columns"],
+      "html": "<div class='diet-table' data-table-composition='ordinary'><table class='diet-table__table'><caption class='sr-only'>Ordinary content records</caption><thead><tr><th scope='col'>Name</th><th scope='col'>Status</th></tr></thead><tbody><tr><th scope='row'>Homepage notice</th><td>Active</td></tr><tr><th scope='row'>Product recommendation</th><td>Draft</td></tr></tbody></table></div>",
+      "context": {}
+    },
+    {
+      "id": "horizontal-overflow",
+      "title": "Horizontal overflow",
+      "spec": ["The table wrapper owns horizontal scrolling when space is constrained"],
+      "html": "<div class='diet-table' data-table-composition='horizontal-overflow' style='max-inline-size: 24rem'><table class='diet-table__table'><caption class='sr-only'>Content records with horizontally overflowing columns</caption><thead><tr><th scope='col'>Name</th><th scope='col'>Status</th><th scope='col'>Owner</th><th scope='col'>Last updated</th><th scope='col'>Distribution channel</th></tr></thead><tbody><tr><th scope='row'>Seasonal homepage announcement</th><td>Active</td><td>Merchandising team</td><td>30 July 2026</td><td>Website and storefront applications</td></tr></tbody></table></div>",
+      "context": {}
+    },
+    {
+      "id": "row-action",
+      "title": "Row action",
+      "spec": ["Actions remain in the row they affect"],
+      "html": "<div class='diet-table' data-table-composition='row-action'><table class='diet-table__table'><caption class='sr-only'>Content records with row actions</caption><thead><tr><th scope='col'>Name</th><th scope='col'>Status</th><th scope='col'>Action</th></tr></thead><tbody><tr><th scope='row'>Homepage notice</th><td>Active</td><td><button class='diet-btn-txt' type='button' data-size='sm' data-variant='secondary'><span class='diet-btn-txt__label'>Edit</span></button></td></tr><tr><th scope='row'>Product recommendation</th><td>Draft</td><td><button class='diet-btn-txt' type='button' data-size='sm' data-variant='secondary'><span class='diet-btn-txt__label'>Edit</span></button></td></tr></tbody></table></div>",
+      "context": {}
+    },
+    {
+      "id": "editable-cell",
+      "title": "Editable cell",
+      "spec": ["Inputs use the shared operational field inside table cells"],
+      "html": "<div class='diet-table' data-table-composition='editable-cell'><table class='diet-table__table'><caption class='sr-only'>Content records with editable cells</caption><thead><tr><th scope='col'>Name</th><th scope='col'>Value</th></tr></thead><tbody><tr><th scope='row'>Homepage notice</th><td><input class='diet-operational-field' type='text' value='Free shipping' aria-label='Homepage notice value' /></td></tr><tr><th scope='row'>Product recommendation</th><td><input class='diet-operational-field' type='text' value='Recommended for you' aria-label='Product recommendation value' /></td></tr></tbody></table></div>",
+      "context": {}
+    }
+  ]
+}

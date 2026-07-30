@@ -14,7 +14,7 @@ export default async function BuilderPage({ params }: BuilderPageProps) {
     <RomaShell
       activeDomain="builder"
       title="Builder"
-      canvasClassName="rd-canvas rd-canvas--builder"
+      canvasClassName="rd-canvas--builder"
       headerRight={<RomaShellDefaultActions />}
     >
       <RomaDomainErrorBoundary

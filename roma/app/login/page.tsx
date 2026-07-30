@@ -46,8 +46,8 @@ export default function RomaLoginPage() {
   }, [searchParams]);
 
   return (
-    <main className="rd-domain">
-      <section className="rd-canvas">
+    <main className="page roma-standalone-page">
+      <section className="page__content">
         <article className="rd-canvas-module" style={{ maxWidth: 520 }}>
           <h1 className="heading-2" style={{ margin: 0 }}>Sign in to Roma</h1>
           <p className="body-m">Use your Google account to sign in.</p>

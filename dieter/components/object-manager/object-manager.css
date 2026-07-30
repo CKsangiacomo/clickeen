@@ -16,45 +16,22 @@
   gap: var(--space-2);
 }
 
-.diet-object-manager__modal {
-  width: min(520px, calc(100vw - (2 * var(--space-4))));
-  max-width: none;
-  max-height: calc(100dvh - (2 * var(--space-4)));
-  margin: auto;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  color: inherit;
-  overflow: visible;
+.diet-object-manager__editor {
+  display: contents;
 }
 
-.diet-object-manager__modal::backdrop {
-  background: color-mix(in oklab, var(--color-system-black), transparent 55%);
-}
-
-.diet-object-manager__modal-body {
-  background: var(--color-system-white);
-  color: var(--color-system-black);
-  border-radius: var(--control-radius-lg);
-  width: 100%;
-  box-sizing: border-box;
-  padding: var(--space-5);
-  display: grid;
-  gap: var(--space-4);
-  box-shadow: 0 18px 60px color-mix(in oklab, var(--color-system-black), transparent 76%);
-}
-
-.diet-object-manager__modal-body[hidden] {
+.diet-object-manager__editor[hidden] {
   display: none;
 }
 
-.diet-object-manager__modal-title {
-  font: 600 var(--fs-16)/var(--lh-tight) var(--font-ui);
+.diet-object-manager__title {
+  margin: 0;
+  font: 600 var(--fs-16) / var(--lh-tight) var(--font-ui);
 }
 
 .diet-object-manager__modal-message {
   margin: 0;
-  font: 400 var(--fs-14)/var(--lh-normal) var(--font-ui);
+  font: 400 var(--fs-14) / var(--lh-normal) var(--font-ui);
 }
 
 .diet-object-manager__modal-list {
@@ -74,7 +51,7 @@
 }
 
 .diet-object-manager__modal-label {
-  font: 500 var(--fs-14)/var(--lh-tight) var(--font-ui);
+  font: 500 var(--fs-14) / var(--lh-tight) var(--font-ui);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -83,10 +60,4 @@
 .diet-object-manager__modal-controls {
   display: inline-flex;
   gap: var(--space-1);
-}
-
-.diet-object-manager__modal-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: var(--space-2);
 }

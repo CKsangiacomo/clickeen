@@ -9,7 +9,7 @@
   `dieter/components/index.ts`.
 - System mechanics (hydration model, spec binding, build): see [`dieter.md`](dieter.md). This doc is the per-component lookup; that doc explains the system once.
 
-## Catalog (27 source directories including `shared`)
+## Catalog (28 non-empty source directories including `shared`)
 
 Legend: ✅ exported from `index.ts` · Direct host import · ⊘ CSS/HTML only.
 
@@ -37,9 +37,10 @@ Legend: ✅ exported from `index.ts` · Direct host import · ⊘ CSS/HTML only.
 | dropdowns | `menuactions` | `hydrateMenuactions`, `string` | ✅ |
 | dropdowns | `popaddlink` | `hydratePopAddLink` | ✅ |
 | composites | `popover` | — (CSS/HTML/spec; container) | ⊘ |
+| structural | `table` | semantic table visual base and overflow shell | ⊘ |
+| structural | `popup` | blocking native-dialog visual structure | ⊘ |
 | activity | `agent-activity` | — (transient narration strip) | ⊘ |
 | operational | `operational-field` | ordinary app field visual base | ⊘ |
-| operational | `operational-table` | semantic table visual base and overflow shell | ⊘ |
 | operational | `tooltip` | CSS label from `data-tooltip` | ⊘ |
 | other | `shared/` | helpers (`account-assets`, `dialog-lifecycle`, `dropdownToggle`) — not rendered | — |
 
@@ -82,12 +83,19 @@ layout, and behavior. This contract preserves Roma's current bordered-field
 appearance and does not turn Bob's compact ToolDrawer `textfield` into a generic
 application form.
 
-Dieter also owns one small operational-table visual base: width, alignment,
-borders, base spacing, and horizontal overflow. Roma owns table data and state.
-DevStudio retains policy-specific density, sticky headers, token columns, and
-editable-cell composition. Dieter does not own sorting, pagination, data policy,
-or a React table abstraction. DevStudio's token editor consumes
-`operational-field`; its Policy Editor tables consume `operational-table`.
+Dieter Table owns width, alignment, borders, base spacing, and horizontal
+overflow. Roma owns table data and state. DevStudio retains policy-specific
+columns, editable-cell composition, data, and mutation behavior. Dieter does
+not own sorting, pagination, data policy, or a React table abstraction.
+DevStudio's token editor consumes `operational-field`; Dieter, Roma, and
+DevStudio tables consume `table`.
+
+Dieter Popup owns the blocking native `<dialog>` appearance and structural
+slots: header, body, footer, and actions, with small, medium, and large sizes.
+Product owners keep workflow state, copy, validation, persistence, and the
+accepted dismissal behavior. Bulk Edit, Object Manager, DevStudio token
+editing, Roma blocking dialogs, and Bob's plan-limit prompt consume Popup
+without adding a second modal framework.
 
 ## Tooltip Contract
 
@@ -113,9 +121,9 @@ The `icon` component is a CSS-only `diet-icon` wrapper with numeric glyph sizes.
 The 126I execution PRD owns component-by-component API cleanup beyond those
 iconography rules.
 
-Current inventory detail: Dieter components are source modules consumed directly
-by Bob and Roma; there is no runtime component manifest. `shared/` contains
-helpers and is not a rendered component. `command-activity` is absent from
-current and tracked source. The current inventory is 27 source directories, 26
-CSS files, 22 templates, 22 specs, and 18 source hydrators including direct host
-imports. Historical 126 audits remain point-in-time evidence.
+Current inventory detail: Dieter components are source modules consumed
+directly by Bob, Roma, and DevStudio; there is no runtime component manifest.
+`shared/` contains helpers and is not a rendered component.
+`command-activity` and `operational-table` are absent from current tracked
+source. DevStudio generates 24 source-backed component pages. Historical 126
+audits remain point-in-time evidence.

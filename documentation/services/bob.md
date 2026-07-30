@@ -40,6 +40,12 @@ rendering fidelity, not workspace classification. Bob keeps one editor model:
 ToolDrawer button/drawer plus full preview/workspace in compact mobile landscape.
 No editor operation disappears and no separate mobile Builder is created.
 
+Bob does not consume Dieter's application Layout/Page contract. Its
+`ToolDrawer | Workspace` structure is a distinct editor composition and remains
+locally owned. Bob consumes applicable shared component contracts, including
+Popup for its plan-limit prompt; Table remains available where a semantic table
+is needed.
+
 Bob provides that composition directly. Full mode keeps the persistent
 ToolDrawer when both usable dimensions are at least `600px`. Compact mode uses
 the same ToolDrawer as an overlay when either usable dimension is smaller.

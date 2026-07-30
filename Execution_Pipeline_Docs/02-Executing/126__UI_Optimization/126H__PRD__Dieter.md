@@ -1,9 +1,103 @@
 # 126H - PRD: Dieter
 
-Status: STEP 9 COMPLETE - 126H GREEN.
+Status: ORIGINAL STEP 9 COMPLETE; LAYOUT CONVERGENCE IMPLEMENTED LOCALLY;
+FINAL DEPLOYED/PRODUCT-OWNER VERIFICATION PENDING.
 Parent: `126__PRD__UI_Optimization_Program.md` (MAMA).
 Series order: 126H of 126A-126M.
 KB doc: `documentation/engineering/UI/dieter.md`.
+
+## 2026-07-30 Layout Convergence Correction
+
+The original 126H substrate execution record below remains valid for its token
+scope. Its prohibition on creating a layout system is superseded for one exact
+missing Dieter authority: the Roma/DevStudio high-level application layout
+contract decided by the product owner. Its ownership, taxonomy, and edit path
+are fixed; initial visual values remain refinable.
+
+126H now owns this source:
+
+```text
+dieter/layouts/main-container/
+  main-container.css
+  main-container.html
+  main-container.spec.json
+```
+
+The only public layout taxonomy is:
+
+```text
+main-container
+├── left-nav
+└── page
+```
+
+The corresponding selectors are `.main-container`, `.left-nav`, and `.page`.
+The HTML source must put `aside.left-nav` and `main.page` directly inside
+`div.main-container`; `data-navigation-open="true"` is the only shared open
+visual-state hook.
+
+Inside `.page`, the only shared Page composition selectors are
+`.page__header`, `.page__actions`, and `.page__content`. They live in this
+same Layout source. No separate Page framework or generic section/surface
+taxonomy is added.
+
+Layout source owns:
+
+- Full and Compact composition;
+- navigation/page sizing and overflow ownership;
+- persistent versus overlay navigation presentation;
+- scrim and navigation-open visual state;
+- dynamic viewport and safe-area layout treatment already accepted by 126J.
+
+The initial visual values are the parent correction's `13.75rem` Full nav,
+`100dvh` root, nav-owned scrolling and `var(--space-6)` safe-area padding,
+page-owned scrolling and `var(--space-8)` safe-area padding, and the existing
+`600px` Full/Compact classifier. Compact initially uses the `20rem`/`3rem`
+off-canvas geometry and shared scrim visual. Consumer JavaScript owns state.
+Selectors are structurally scoped through `.main-container > .left-nav` and
+`.main-container > .page`.
+
+The adjustable values are authored as `--layout-left-nav-width`,
+`--layout-left-nav-padding`, `--layout-page-padding`, and
+`--layout-compact-left-nav-width` in Dieter foundation token source.
+`main-container.spec.json` exposes them under one `editableTokens` list for
+DevStudio; the spec never becomes a second value store.
+
+Consumers own nav items, routes, current-route state, page content, the
+navigation-open state machine, and domain operations. The source contract adds
+no React shell, device registry, route registry, runtime service, generic
+Surface component, or application behavior.
+
+`dieter/layouts/**` is a first-class Dieter source category. Existing Dieter
+source import/governance and the existing DevStudio foundation generator must
+be extended to recognize it. Do not create a generated Dieter runtime tree,
+manifest, second package, compatibility wrapper, or new generator script.
+Do not add Layout to broad `dieter/styles.css`; Roma and DevStudio import the
+exact Layout CSS directly so Bob's existing `.page`/Workspace world cannot be
+affected.
+
+DevStudio's `Layouts` Foundation page must read this exact HTML/CSS/spec and
+render the actual contract in Full, Compact-closed, and Compact-open examples.
+Roma and DevStudio compile the same CSS source. Bob does not consume this layout
+because its existing `Workspace` name and `ToolDrawer | Workspace` composition
+are product-specific.
+
+The Layouts page also renders Page header/actions/content and sends Edit
+requests for the spec's token names through the existing DevStudio token editor
+and GitHub source-commit route. Layout structure remains visible but is not
+arbitrarily mutable through a CSS/HTML editor.
+
+Correction acceptance:
+
+- one Dieter source contract exists at the exact path above;
+- no alternate shared layout name or alias exists;
+- DevStudio examples and both real consumers use the exact source;
+- replaced `.docs-shell*`, `.devstudio-page-layout`, and `.roma-layout*` base
+  layout CSS is deleted in the owning L/M slices;
+- source/governance/build/deployed evidence is recorded in `126_DevQA.md`.
+
+The correction does not reopen the original token cleanup and does not change
+token values, product data, routes, storage, or deployment architecture.
 
 This PRD is the execution authority for the Dieter substrate. It is filled from
 Codex and GLM Step 1 as-built evidence, Step 3 official-source research, and

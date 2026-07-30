@@ -1,10 +1,72 @@
 # 126I - PRD: Components
 
-Status: STEP 9 COMPLETE - 126I GREEN.
+Status: ORIGINAL STEP 9 COMPLETE; TABLE/POPUP CONVERGENCE IMPLEMENTED LOCALLY;
+FINAL DEPLOYED/PRODUCT-OWNER VERIFICATION PENDING.
 Parent: `126__PRD__UI_Optimization_Program.md` (MAMA).
 Series order: 126I of 126A-126M.
 KB doc: `documentation/engineering/UI/components.md`.
 Audit: `audits/126I__Audit__Components.md`.
+
+## 2026-07-30 Table Convergence Correction
+
+The original 126I execution evidence remains valid except that its CSS-only
+`operational-table` was too narrow to be the final Dieter Table contract. The
+correction replaces it; it does not add a second table abstraction.
+
+Final source authority:
+
+```text
+dieter/components/table/
+  table.css
+  table.html
+  table.spec.json
+```
+
+Public selectors:
+
+- `.diet-table` on the horizontal-overflow frame;
+- `.diet-table__table` on the semantic `<table>`.
+
+Dieter Table owns table width, overflow, outer border and radius, header
+surface, row/cell dividers, cell spacing/alignment, typography, and shared
+base appearance. Each consumer owns its columns, records, labels, actions,
+selection/editing, sorting, pagination, hover/selected/editable/loading/error
+meaning and presentation, and policy. No shared Table state layer is added.
+Table adds no React component, data model, state manager, grid engine, or API.
+The base cell padding is exactly
+`var(--space-2) var(--space-3)`; app-specific sticky/editable composition may
+extend it without restating the base border/header/row/overflow contract.
+
+The source HTML/spec is a real, source-derived DevStudio example, so Table is a
+visible Dieter component route at `#/dieter/table` rather than a hidden CSS
+primitive. The example
+uses semantic `table`, `thead`, `tbody`, `tr`, `th`, and `td` markup. Generated
+DevStudio output comes only from the existing component generator and registry.
+It demonstrates ordinary, horizontal-overflow, row-action, and editable-cell
+compositions. These are static contract examples, not product data or table
+behavior.
+
+Hard-cut migration:
+
+1. add `table/{table.css,table.html,table.spec.json}`;
+2. add Table to `dieter/styles.css` and existing component exports/registries;
+3. replace every `.diet-operational-table` and
+   `.diet-operational-table__table` consumer in DevStudio and Roma with the
+   final selectors;
+4. migrate any applicable Bob semantic table;
+5. delete `dieter/components/operational-table/`, its imports, generated
+   registry entries, selectors, documentation, and tests;
+6. delete consumer-local base border/header/row/cell/overflow styling now owned
+   by Table while retaining domain-specific composition.
+
+No alias, dual selector, wrapper, or compatibility branch may keep
+`operational-table` alive. No new generator script or runtime delivery path is
+permitted.
+
+Correction acceptance requires source, generated DevStudio example, every
+consumer, deletion searches, local checks, exact-SHA deployments, deployed
+browser evidence, current docs, and independent V1–V8 to reconcile in
+`126_DevQA.md`.
 
 ## Purpose
 

@@ -33,19 +33,23 @@ authority and creates no implementation work until promoted into `02-Executing/`
 
 ## 2. Why execution follows 126M
 
-PRD 126M is executed and verified. That sequencing matters because it removed
-the old Roma UI foundation this feature must not restore:
+The original PRD 126M scope executed and remains historical evidence. The
+reopened 126 convergence correction must close before this planning PRD is
+promoted. That sequencing matters because it removes the old Roma UI foundation
+this feature must not restore:
 
 - **126M deleted the `.roma-input` and `.roma-table` visual bases** that would
   have forced the folder UI onto a parallel component family.
-- **126M adopted the shared operational-field/operational-table contracts** that
-  the folder UI should use from day one (folder rename input, folder-aware table
+- **126M adopted the shared operational-field and Table contracts** that the
+  folder UI should use from day one (folder rename input, folder-aware table
   rows, move dialog form controls).
-- **The 126 foundation is green** (`126_DevQA.md`). Asset folders can now be
-  designed against the converged Roma shell instead of carrying pre-126 drift.
+- **The reopened 126 convergence gate is still authoritative**
+  (`126_DevQA.md`). Asset folders must be designed against the converged Roma
+  shell rather than carrying pre-126 drift.
 
-The 126M dependency is satisfied. Promotion to `02-Executing/` now depends only
-on the remaining decisions and pre-execution proof in §12.
+The original 126M dependency is satisfied. Promotion to `02-Executing/` also
+depends on closing the reopened 126 convergence gate and the remaining
+decisions and pre-execution proof in §12.
 
 ## 3. Product law (what cannot change)
 
@@ -283,7 +287,7 @@ the default.
 | **Move/rename handler (Option A)** | **Hard** | Per §6: R2 put+delete + scan referencing instances + rewrite all refs all-or-nothing, with rollback. This is the most complex single piece. |
 | **Folder cascade-delete (Option A)** | **Med–Hard** | Per §8: bulk integrity check + rewrite + R2 prefix delete, all-or-nothing. Shares machinery with move. |
 | Empty-folder create/delete (markers) | Low–Med | Marker object write/delete; consistency rules from §7. |
-| Roma folder UI (Drive-style) | Med | Bulk of visible work; ~400-600 lines: breadcrumb, tree, create-folder, move modal, drag-drop, folder-scoped list. Must use `.diet-operational-*`. |
+| Roma folder UI (Drive-style) | Med | Bulk of visible work; ~400-600 lines: breadcrumb, tree, create-folder, move modal, drag-drop, folder-scoped list. Must use Dieter operational-field, Table, and Popup contracts where applicable. |
 | E2E tests | Med | Folder CRUD, move with instance-ref integrity, nested navigation, search scope, empty folders, cascade-delete confirmation. |
 
 **Rough total: 2-3 weeks for one engineer.** Option A's reference-rewriting
@@ -292,9 +296,10 @@ cascade-delete reuse it.
 
 ## 12. Remaining preconditions before promotion to `02-Executing/`
 
-Satisfied foundation: **126M is executed and verified.** The folder UI will be
-built on `.diet-operational-*`, not the deleted `.roma-input`/`.roma-table`
-families.
+Historical foundation: **the original 126M scope executed and remains
+evidence.** Promotion still waits for the reopened 126 convergence gate. The
+folder UI will use Dieter operational-field, Table, and Popup contracts where
+applicable, not the deleted `.roma-input`/`.roma-table` families.
 
 This PRD cannot move to execution until:
 

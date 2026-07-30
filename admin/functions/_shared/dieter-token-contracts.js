@@ -2,10 +2,10 @@ const COLOR_LITERAL_PATTERN = /^#[0-9a-fA-F]{3}(?:[0-9a-fA-F]{3})?$/;
 const TYPOGRAPHY_VALUE_PATTERN =
   /^(?:-?\d+(?:\.\d+)?(?:rem|em|px|%)?|-?\d+(?:\.\d+)?|clamp\(-?\d+(?:\.\d+)?(?:rem|em|px|%)?,\s*-?\d+(?:\.\d+)?(?:rem|em|px|%)?\s*\+\s*-?\d+(?:\.\d+)?vw,\s*-?\d+(?:\.\d+)?(?:rem|em|px|%)?\))$/;
 const FOUNDATION_TOKEN_PATTERN =
-  /^--(?:space-\d+|vertspace-\d+|control-size-[a-z0-9-]+|control-padding-inline|control-inline-gap-[a-z0-9-]+|control-radius-[a-z0-9-]+|shadow-[a-z0-9-]+|duration-[a-z0-9-]+|easing-standard)$/;
+  /^--(?:space-\d+|vertspace-\d+|layout-(?:left-nav-width|left-nav-padding|page-padding|compact-left-nav-width)|control-size-[a-z0-9-]+|control-padding-inline|control-inline-gap-[a-z0-9-]+|control-radius-[a-z0-9-]+|shadow-[a-z0-9-]+|duration-[a-z0-9-]+|easing-standard)$/;
 const LENGTH_VALUE_PATTERN = /^(?:0|(?:\d+(?:\.\d+)?|\.\d+)(?:rem|em|px))$/;
 const LENGTH_TOKEN_REFERENCE_PATTERN =
-  /^var\((--(?:space-\d+|vertspace-\d+|control-size-[a-z0-9-]+|control-padding-inline|control-inline-gap-[a-z0-9-]+|control-radius-[a-z0-9-]+|icon-size-\d+))\)$/;
+  /^var\((--(?:space-\d+|vertspace-\d+|layout-(?:left-nav-width|left-nav-padding|page-padding|compact-left-nav-width)|control-size-[a-z0-9-]+|control-padding-inline|control-inline-gap-[a-z0-9-]+|control-radius-[a-z0-9-]+|icon-size-\d+))\)$/;
 const DURATION_VALUE_PATTERN = /^(?:0|(?:\d+(?:\.\d+)?|\.\d+)(?:ms|s))$/;
 const EASING_KEYWORD_PATTERN = /^(?:linear|ease|ease-in|ease-out|ease-in-out)$/;
 const CUBIC_BEZIER_PATTERN =

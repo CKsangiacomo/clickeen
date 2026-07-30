@@ -36,13 +36,12 @@ test("Core styles source, generated page, and write contract stay in exact parit
     [colors],
   );
 
-  expect(tokens).toHaveLength(53);
+  expect(tokens).toHaveLength(57);
+  expect(tokens.filter((token) => !token.token.startsWith("--layout-"))).toHaveLength(53);
   expect(tokens.every((token) => token.editable)).toBe(true);
-  expect(
-    coreStyles.includes(`data-governance-count="${tokens.length}"`),
-  ).toBe(true);
+  expect(coreStyles.includes('data-governance-count="53"')).toBe(true);
 
-  for (const token of tokens) {
+  for (const token of tokens.filter((entry) => !entry.token.startsWith("--layout-"))) {
     expect(
       coreStyles.includes(
         `data-token-edit="foundation" data-token="${token.token}"`,
@@ -51,7 +50,7 @@ test("Core styles source, generated page, and write contract stay in exact parit
     ).toBe(true);
     expect(
       coreStyles.includes(
-        `data-token-value="${token.token}">${token.value}</span>`,
+        `data-token-value="${token.token}">${token.value}</code>`,
       ),
       token.token,
     ).toBe(true);

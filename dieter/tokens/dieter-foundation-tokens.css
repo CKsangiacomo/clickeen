@@ -13,6 +13,12 @@
   --space-9: 2.25rem;   /* 36px */
   --space-10: 2.5rem;   /* 40px */
 
+  /* Shared application layout */
+  --layout-left-nav-width: 13.75rem;
+  --layout-left-nav-padding: var(--space-6);
+  --layout-page-padding: var(--space-8);
+  --layout-compact-left-nav-width: 20rem;
+
   /* Vertical spacing (tight line rhythm) */
   --vertspace-1: 0rem;
   --vertspace-2: 0.1rem;

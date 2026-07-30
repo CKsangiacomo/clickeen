@@ -58,17 +58,18 @@ async function expectPolicyEditorBusy(page: Page) {
 const navGroups = [
   {
     title: 'Foundations',
-    count: 4,
+    count: 5,
     routes: [
       { path: '/#/dieter/core-styles', title: 'Core styles' },
       { path: '/#/dieter/colors', title: 'Colors' },
       { path: '/#/dieter/icons', title: 'Icons' },
       { path: '/#/dieter/typography', title: 'Typography' },
+      { path: '/#/dieter/layouts', title: 'Layouts' },
     ],
   },
   {
     title: 'Dieter Components',
-    count: 22,
+    count: 24,
     routes: [
       { path: '/#/dieter/agent-activity', title: 'Agent Activity' },
       { path: '/#/dieter/bulk-edit', title: 'Bulk Edit' },
@@ -84,9 +85,11 @@ const navGroups = [
       { path: '/#/dieter/object-manager', title: 'Object Manager' },
       { path: '/#/dieter/popaddlink', title: 'Popaddlink' },
       { path: '/#/dieter/popover', title: 'Popover' },
+      { path: '/#/dieter/popup', title: 'Popup' },
       { path: '/#/dieter/repeater', title: 'Repeater' },
       { path: '/#/dieter/segmented', title: 'Segmented' },
       { path: '/#/dieter/slider', title: 'Slider' },
+      { path: '/#/dieter/table', title: 'Table' },
       { path: '/#/dieter/tabs', title: 'Tabs' },
       { path: '/#/dieter/textedit', title: 'Textedit' },
       { path: '/#/dieter/textfield', title: 'Textfield' },
@@ -107,9 +110,14 @@ const navGroups = [
 const expectedRoutes = navGroups.flatMap((group) => group.routes);
 
 test.describe('DevStudio route contract', () => {
-  test('renders the three-section authenticated shell', async ({ page }) => {
+  test('renders the three-section authenticated main-container', async ({ page }) => {
     await page.goto('/');
     await expect(page.getByRole('heading', { name: 'DevStudio' })).toBeVisible();
+    await expect(page.locator('.main-container')).toHaveCount(1);
+    await expect(page.locator('.main-container > .left-nav')).toHaveCount(1);
+    await expect(page.locator('.main-container > .page')).toHaveCount(1);
+    await expect(page.locator('.main-container').locator(':scope > *')).toHaveCount(2);
+    await expect(page.locator('.page > [data-navigation-scrim]')).toHaveCount(1);
 
     const groups = page.locator('.nav-group');
     await expect(groups).toHaveCount(navGroups.length);
@@ -125,6 +133,31 @@ test.describe('DevStudio route contract', () => {
     await expect(page.locator('.nav-link[href="#/policy/entitlements"]')).toHaveCount(1);
   });
 
+  test('actual DevStudio main-container uses the shared Compact navigation state', async ({ page }) => {
+    await page.setViewportSize({ width: 560, height: 640 });
+    await page.goto('/#/dieter/core-styles');
+
+    const mainContainer = page.locator('.main-container');
+    const navigation = page.locator('.main-container > .left-nav');
+    const trigger = page.locator('[data-navigation-trigger]');
+    const scrim = page.locator('.page > [data-navigation-scrim]');
+
+    await expect(trigger).toBeVisible();
+    await expect(navigation).toHaveJSProperty('inert', true);
+    await expect(mainContainer).not.toHaveAttribute('data-navigation-open', 'true');
+
+    await trigger.click();
+    await expect(mainContainer).toHaveAttribute('data-navigation-open', 'true');
+    await expect(trigger).toHaveAttribute('aria-expanded', 'true');
+    await expect(navigation).toHaveJSProperty('inert', false);
+    await expect(scrim).toBeVisible();
+
+    await scrim.click({ position: { x: 500, y: 300 } });
+    await expect(mainContainer).not.toHaveAttribute('data-navigation-open', 'true');
+    await expect(trigger).toHaveAttribute('aria-expanded', 'false');
+    await expect(navigation).toHaveJSProperty('inert', true);
+  });
+
   for (const route of expectedRoutes) {
     test(`loads ${route.path}`, async ({ page }) => {
       const consoleErrors: string[] = [];
@@ -135,7 +168,9 @@ test.describe('DevStudio route contract', () => {
       page.on('pageerror', (error) => pageErrors.push(error.message));
 
       await page.goto(route.path);
-      await expect(page.locator('.devstudio-page')).toBeVisible();
+      await expect(page.locator('.page__header')).toBeVisible();
+      await expect(page.locator('.page__actions')).toHaveCount(1);
+      await expect(page.locator('.page__content')).toBeVisible();
       await expect(page.getByRole('heading', { name: route.title, exact: true })).toBeVisible();
       await expect(page.locator('.nav-link[aria-current="page"]')).toHaveAttribute(
         'href',
@@ -146,6 +181,80 @@ test.describe('DevStudio route contract', () => {
       expect(consoleErrors).toEqual([]);
     });
   }
+
+  test('Policy exposes its real Reload action in the Page actions region', async ({ page }) => {
+    await page.goto('/#/policy/entitlements');
+    const actions = page.locator('.page__header > .page__actions');
+    await expect(actions).toBeVisible();
+    await expect(actions.getByRole('button', { name: 'Reload' })).toHaveCount(1);
+    await expect(page.locator('.page__content').getByRole('button', { name: 'Reload' })).toHaveCount(0);
+  });
+
+  test('Table exposes the four governed compositions including real horizontal overflow', async ({ page }) => {
+    await page.goto('/#/dieter/table');
+    const compositions = page.locator('[data-table-composition]');
+    await expect(compositions).toHaveCount(4);
+    await expect(page.getByText('Ordinary', { exact: true })).toBeVisible();
+    await expect(page.getByText('Horizontal overflow', { exact: true })).toBeVisible();
+    await expect(page.getByText('Row action', { exact: true })).toBeVisible();
+    await expect(page.getByText('Editable cell', { exact: true })).toBeVisible();
+    const overflow = await page
+      .locator('[data-table-composition="horizontal-overflow"]')
+      .evaluate((element) => element.scrollWidth > element.clientWidth);
+    expect(overflow).toBe(true);
+  });
+
+  test('Layouts reveals the exact source contract and edits its four tokens through the foundation path', async ({ page }) => {
+    await page.route('**/api/dieter/tokens/foundation', async (route) => {
+      if (route.request().method() !== 'GET') return route.fallback();
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          ok: true,
+          path: 'dieter/tokens/dieter-foundation-tokens.css',
+          sha: 'test-sha',
+          tokens: [
+            { token: '--layout-left-nav-width', value: '13.75rem', editable: true },
+            { token: '--layout-left-nav-padding', value: 'var(--space-6)', editable: true },
+            { token: '--layout-page-padding', value: 'var(--space-8)', editable: true },
+            { token: '--layout-compact-left-nav-width', value: '20rem', editable: true },
+            { token: '--space-0', value: '0.125rem', editable: true },
+          ],
+        }),
+      });
+    });
+
+    await page.goto('/#/dieter/layouts');
+    await expect(page.locator('[data-layout-source="dieter/layouts/main-container"]')).toBeVisible();
+    await expect(page.locator('[data-layout-example]')).toHaveCount(3);
+    await expect(page.locator('[data-token-edit="foundation"]')).toHaveCount(4);
+    const sectionOrder = await page.locator('.layouts-page > :is(p, details, section)').evaluateAll((nodes) =>
+      nodes.map((node) => {
+        if (node.tagName === 'P') return 'explanation';
+        if (node.tagName === 'DETAILS') return 'source';
+        return node.id || node.querySelector('h2')?.id || '';
+      }),
+    );
+    expect(sectionOrder).toEqual(['explanation', 'source', 'layout-examples', 'layout-properties']);
+
+    for (const frame of await page.locator('[data-layout-example] iframe').all()) {
+      const content = frame.contentFrame();
+      await expect(content.locator('.main-container > .left-nav')).toHaveCount(1);
+      await expect(content.locator('.main-container > .page')).toHaveCount(1);
+      await expect(content.locator('.page__header')).toHaveCount(1);
+      await expect(content.locator('.page__actions')).toHaveCount(1);
+      await expect(content.locator('.page__content')).toHaveCount(1);
+    }
+
+    const openFrame = page.locator('[data-layout-example="compact-open"] iframe').contentFrame();
+    await expect(openFrame.locator('.main-container')).toHaveAttribute('data-navigation-open', 'true');
+
+    await page.getByRole('button', { name: 'Edit --layout-page-padding' }).click();
+    const layoutTokenSelect = page.getByRole('dialog').locator('select[name="token"]');
+    await expect(layoutTokenSelect).toHaveValue('--layout-page-padding');
+    await expect(layoutTokenSelect.locator('option')).toHaveCount(4);
+  });
 
   test('Core styles uses an explicit edit action and one token-dialog state at a time', async ({ page }) => {
     const unexpectedMutations = await guardUnexpectedApiMutations(page);
@@ -161,6 +270,7 @@ test.describe('DevStudio route contract', () => {
           tokens: [
             { token: '--space-0', value: '0.125rem', editable: true },
             { token: '--space-1', value: '0.25rem', editable: true },
+            { token: '--layout-page-padding', value: 'var(--space-8)', editable: true },
           ],
         }),
       });
@@ -176,6 +286,7 @@ test.describe('DevStudio route contract', () => {
 
     await page.getByRole('button', { name: 'Edit --space-0' }).click();
     const dialog = page.getByRole('dialog');
+    await expect(dialog.locator('select[name="token"] option')).toHaveCount(2);
     const editor = dialog.locator('[data-token-editor-work]');
     const discard = dialog.locator('[data-token-editor-discard-view]');
     await expect(dialog.getByRole('heading', { name: 'Edit token' })).toBeVisible();

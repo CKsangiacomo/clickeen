@@ -79,10 +79,10 @@ export function RomaShell({
 
   return (
     <>
-      <div className="roma-layout" data-navigation-open={navigationOpen ? 'true' : undefined}>
+      <div className="main-container" data-navigation-open={navigationOpen ? 'true' : undefined}>
         <aside
           ref={navigationRef}
-          className="roma-layout__nav"
+          className="left-nav"
           id="roma-primary-navigation"
           inert={compact && !navigationOpen ? true : undefined}
           onClick={(event) => {
@@ -93,46 +93,44 @@ export function RomaShell({
         >
           <RomaNav activeDomain={activeDomain} />
         </aside>
-        <button
-          className="roma-layout__scrim"
-          type="button"
-          tabIndex={-1}
-          aria-label="Close navigation"
-          onClick={() => closeNavigation(true)}
-        />
-        <main className="roma-layout__main">
-          <div className="rd-domain">
-            <header className="rd-header">
-              <div className="rd-header-left">
-                <button
-                  ref={openerRef}
-                  className="roma-nav-trigger diet-btn-ic"
-                  data-size="md"
-                  data-variant="neutral"
-                  type="button"
-                  aria-label={navigationOpen ? 'Close navigation' : 'Open navigation'}
-                  aria-controls="roma-primary-navigation"
-                  aria-expanded={navigationOpen}
-                  onClick={() => {
-                    if (navigationOpen) closeNavigation(true);
-                    else setNavigationOpen(true);
-                  }}
-                >
-                  <Image
-                    src="/dieter/icons/svg/line.3.horizontal.decrease.circle.svg"
-                    alt=""
-                    width={20}
-                    height={20}
-                  />
-                </button>
-                <h1 className="heading-2 rd-header-title">{title}</h1>
-              </div>
-              <div className="rd-header-right">
-                {headerRight}
-              </div>
-            </header>
-            <section className={canvasClassName || 'rd-canvas'}>{children}</section>
-          </div>
+        <main className={`page${canvasClassName === 'rd-canvas--builder' ? ' roma-builder-page' : ''}`}>
+          <button
+            type="button"
+            data-navigation-scrim
+            tabIndex={-1}
+            aria-label="Close navigation"
+            onClick={() => closeNavigation(true)}
+          />
+          <header className="page__header">
+            <div className="roma-page-heading">
+              <button
+                ref={openerRef}
+                className="roma-nav-trigger diet-btn-ic"
+                data-size="md"
+                data-variant="neutral"
+                type="button"
+                aria-label={navigationOpen ? 'Close navigation' : 'Open navigation'}
+                aria-controls="roma-primary-navigation"
+                aria-expanded={navigationOpen}
+                onClick={() => {
+                  if (navigationOpen) closeNavigation(true);
+                  else setNavigationOpen(true);
+                }}
+              >
+                <Image
+                  src="/dieter/icons/svg/line.3.horizontal.decrease.circle.svg"
+                  alt=""
+                  width={20}
+                  height={20}
+                />
+              </button>
+              <h1 className="heading-2">{title}</h1>
+            </div>
+            <div className="page__actions">
+              {headerRight}
+            </div>
+          </header>
+          <section className={`page__content${canvasClassName ? ` ${canvasClassName}` : ''}`}>{children}</section>
         </main>
       </div>
       <section className="roma-portrait-boundary" aria-label="Unsupported workspace">

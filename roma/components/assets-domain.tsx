@@ -428,8 +428,8 @@ export function AssetsDomain() {
       </section>
 
       <section className="rd-canvas-module">
-        <div className="diet-operational-table">
-        <table className="diet-operational-table__table">
+        <div className="diet-table">
+        <table className="diet-table__table">
           <thead>
             <tr>
               <th className="label-s">Asset</th>
@@ -481,11 +481,16 @@ export function AssetsDomain() {
       </section>
 
       {bulkUploadOpen ? (
-        <dialog ref={bulkUploadDialogRef} className="roma-modal" aria-labelledby="roma-assets-bulk-title" tabIndex={-1}>
-            <h2 id="roma-assets-bulk-title" className="heading-6">
-              Bulk upload
-            </h2>
-            <p className="body-m">Upload multiple files in one run. Each file is processed independently and failures do not block other files.</p>
+        <dialog ref={bulkUploadDialogRef} className="diet-popup" data-size="medium" aria-labelledby="roma-assets-bulk-title" tabIndex={-1}>
+          <header className="diet-popup__header">
+            <div className="roma-inline-stack">
+              <h2 id="roma-assets-bulk-title" className="heading-6">
+                Bulk upload
+              </h2>
+              <p className="body-m">Upload multiple files in one run. Each file is processed independently and failures do not block other files.</p>
+            </div>
+          </header>
+          <div className="diet-popup__body">
             <div className="roma-inline-stack" role={failedBulkCount > 0 && !bulkUploadBusy ? 'alert' : 'status'} aria-live="polite">
               <p className="body-s">{bulkProgressLabel}</p>
               <p className="body-s">Success: {successfulBulkCount}</p>
@@ -493,34 +498,36 @@ export function AssetsDomain() {
               {bulkUploadBusy ? <p className="body-s">Uploading: {uploadingBulkCount}; queued: {queuedBulkCount}</p> : null}
               {bulkResultLabel ? <p className="body-s">{bulkResultLabel}</p> : null}
             </div>
-            <div className="diet-operational-table">
-            <table className="diet-operational-table__table">
-              <thead>
-                <tr>
-                  <th className="label-s">File</th>
-                  <th className="label-s">Type</th>
-                  <th className="label-s">Size</th>
-                  <th className="label-s">Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {bulkItems.map((item) => (
-                  <tr key={item.id}>
-                    <td className="body-s">{item.name}</td>
-                    <td className="body-s">{item.contentType}</td>
-                    <td className="body-s">{formatBytes(item.sizeBytes)}</td>
-                    <td className="body-s">
-                      <span role={item.status === 'failed' ? 'alert' : item.status === 'uploading' ? 'status' : undefined}>
-                        {formatBulkItemStatus(item.status)}
-                        {item.error ? ` - ${item.error}` : ''}
-                      </span>
-                    </td>
+            <div className="diet-table">
+              <table className="diet-table__table">
+                <thead>
+                  <tr>
+                    <th className="label-s">File</th>
+                    <th className="label-s">Type</th>
+                    <th className="label-s">Size</th>
+                    <th className="label-s">Status</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {bulkItems.map((item) => (
+                    <tr key={item.id}>
+                      <td className="body-s">{item.name}</td>
+                      <td className="body-s">{item.contentType}</td>
+                      <td className="body-s">{formatBytes(item.sizeBytes)}</td>
+                      <td className="body-s">
+                        <span role={item.status === 'failed' ? 'alert' : item.status === 'uploading' ? 'status' : undefined}>
+                          {formatBulkItemStatus(item.status)}
+                          {item.error ? ` - ${item.error}` : ''}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
-            <div className="roma-modal__actions">
+          </div>
+          <footer className="diet-popup__footer">
+            <div className="diet-popup__actions">
               <button
                 ref={bulkUploadCloseRef}
                 className="diet-btn-txt"
@@ -543,6 +550,7 @@ export function AssetsDomain() {
                 <span className="diet-btn-txt__label body-m">Close</span>
               </button>
             </div>
+          </footer>
         </dialog>
       ) : null}
     </>

@@ -118,7 +118,9 @@ function parseColumns(raw: string | null): BulkColumn[] {
   try {
     const parsed = JSON.parse(decoded);
     if (!Array.isArray(parsed)) return [];
-    return parsed.filter((entry): entry is BulkColumn => Boolean(entry && typeof entry === 'object'));
+    return parsed.filter((entry): entry is BulkColumn =>
+      Boolean(entry && typeof entry === 'object'),
+    );
   } catch {
     return [];
   }
@@ -204,7 +206,7 @@ function renderTable(
   }
 
   const table = document.createElement('table');
-  table.className = 'diet-bulk-edit__table';
+  table.className = 'diet-table__table diet-bulk-edit__table';
 
   const thead = document.createElement('thead');
   const headRow = document.createElement('tr');
@@ -330,7 +332,8 @@ export function hydrateBulkEdit(
       !keepEditingBtn ||
       !discardBtn ||
       !hidden
-    ) return;
+    )
+      return;
 
     const columns = parseColumns(root.getAttribute('data-columns'));
     const rowPath = root.getAttribute('data-row-path') || '';
@@ -404,7 +407,7 @@ export function hydrateBulkEdit(
           new CustomEvent('bob-ops', {
             detail: { ops },
             bubbles: true,
-          })
+          }),
         );
       }
       openedState = captureWorkingState();

@@ -44,24 +44,30 @@ export function RomaUpsellDialog({
   }, [open]);
 
   return (
-    <dialog ref={dialogRef} className="roma-modal" aria-labelledby="roma-upsell-title">
-      <h2 id="roma-upsell-title" className="heading-4">
-        Upgrade Clickeen
-      </h2>
-      {reason ? <p className="body-m">{reason}</p> : null}
-      <div className="roma-upsell-dialog__content" data-upsell-content />
-      <div className="roma-modal__actions">
-        <button
-          ref={closeButtonRef}
-          className="diet-btn-txt"
-          data-size="md"
-          data-variant="primary"
-          type="button"
-          onClick={onClose}
-        >
-          <span className="diet-btn-txt__label body-m">Close</span>
-        </button>
+    <dialog ref={dialogRef} className="diet-popup" data-size="medium" aria-labelledby="roma-upsell-title">
+      <header className="diet-popup__header">
+        <h2 id="roma-upsell-title" className="heading-4">
+          Upgrade Clickeen
+        </h2>
+      </header>
+      <div className="diet-popup__body">
+        {reason ? <p className="body-m">{reason}</p> : null}
+        <div className="roma-upsell-dialog__content" data-upsell-content />
       </div>
+      <footer className="diet-popup__footer">
+        <div className="diet-popup__actions">
+          <button
+            ref={closeButtonRef}
+            className="diet-btn-txt"
+            data-size="md"
+            data-variant="primary"
+            type="button"
+            onClick={onClose}
+          >
+            <span className="diet-btn-txt__label body-m">Close</span>
+          </button>
+        </div>
+      </footer>
     </dialog>
   );
 }

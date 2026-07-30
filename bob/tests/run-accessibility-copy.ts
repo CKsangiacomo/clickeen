@@ -1,10 +1,21 @@
 import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
 import { createRequire } from "node:module";
 
 const runtimeRequire = createRequire(import.meta.url);
 runtimeRequire.extensions[".css"] = () => undefined;
 
 async function run() {
+  const toolDrawerSource = await readFile(
+    new URL("../components/ToolDrawer.tsx", import.meta.url),
+    "utf8",
+  );
+  assert.match(
+    toolDrawerSource,
+    /dialog\.diet-popup\[data-objects-modal\]\[open\]/,
+  );
+  assert.doesNotMatch(toolDrawerSource, /diet-object-manager__modal/);
+
   const {
     CopilotUserFacingError,
     normalizeErrorMessage,

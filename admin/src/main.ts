@@ -1,14 +1,15 @@
 import '@dieter/tokens/tokens.css';
+import '@dieter/layouts/main-container/main-container.css';
 import '@dieter/components/button/button.css';
+import '@dieter/components/popup/popup.css';
 import '@dieter/components/shared/property-row.css';
 import '@dieter/components/shared/authoring-focus.css';
 import '@dieter/components/popover/popover.css';
 import '@dieter/components/operational-field/operational-field.css';
-import '@dieter/components/operational-table/operational-table.css';
+import '@dieter/components/table/table.css';
 import '@dieter/components/tooltip/tooltip.css';
 import '@dieter/components/valuefield/valuefield.css';
 import '@dieter/components/toggle/toggle.css';
-import './css/tokens.css';
 import './css/layout.css';
 import './css/dieter-previews.css';
 import './css/utilities.css';
@@ -169,18 +170,19 @@ if (!appRoot) {
 }
 
 const shell = document.createElement('div');
-shell.className = 'docs-shell';
+shell.className = 'main-container';
 
 const sidebar = document.createElement('aside');
-sidebar.className = 'docs-shell__sidebar';
+sidebar.className = 'left-nav';
 sidebar.id = 'devstudio-navigation';
 
 const main = document.createElement('main');
-main.className = 'docs-shell__main devstudio-page-layout';
+main.className = 'page';
 
 const menuButton = document.createElement('button');
-menuButton.className = 'docs-shell__menu-toggle diet-btn-ic';
+menuButton.className = 'devstudio-navigation-trigger diet-btn-ic';
 menuButton.type = 'button';
+menuButton.dataset.navigationTrigger = '';
 menuButton.dataset.size = 'md';
 menuButton.dataset.variant = 'neutral';
 menuButton.setAttribute('aria-label', 'Open navigation');
@@ -190,12 +192,12 @@ menuButton.innerHTML =
   '<span class="diet-btn-ic__icon" aria-hidden="true" data-icon="line.3.horizontal.decrease.circle"></span>';
 
 const compactBar = document.createElement('header');
-compactBar.className = 'docs-shell__compact-bar';
+compactBar.className = 'devstudio-compact-bar';
 compactBar.append(menuButton);
 
 const scrim = document.createElement('button');
-scrim.className = 'docs-shell__scrim';
 scrim.type = 'button';
+scrim.dataset.navigationScrim = '';
 scrim.tabIndex = -1;
 scrim.setAttribute('aria-label', 'Close navigation');
 
@@ -207,18 +209,21 @@ portraitBoundary.innerHTML = `
   <p class="body-sm">DevStudio needs a wider workspace.</p>
 `;
 
-shell.append(sidebar, scrim, compactBar, main);
+shell.append(sidebar, main);
+main.append(compactBar, scrim);
 appRoot.append(shell);
 appRoot.append(portraitBoundary);
 
 const navHeader = document.createElement('header');
-navHeader.className = 'docs-shell__brand';
-navHeader.innerHTML = '<h2 class="heading-2 docs-shell__brand-title">DevStudio</h2>';
-sidebar.append(navHeader);
+navHeader.className = 'devstudio-nav__brand';
+navHeader.innerHTML = '<h2 class="heading-2 devstudio-nav__title">DevStudio</h2>';
 
 const nav = document.createElement('nav');
-nav.className = 'docs-shell__nav';
-sidebar.append(nav);
+nav.className = 'devstudio-nav__content';
+const navLayout = document.createElement('div');
+navLayout.className = 'devstudio-nav';
+navLayout.append(navHeader, nav);
+sidebar.append(navLayout);
 
 const links = new Map<string, HTMLAnchorElement>();
 const fullWorkspace = window.matchMedia('(min-width: 600px) and (min-height: 600px)');
@@ -429,18 +434,23 @@ function updateVisibleTokenValue(token: string, value: string) {
   });
 }
 
-async function openTokenEditor(kind: DieterTokenKind, preferredToken?: string) {
+async function openTokenEditor(
+  kind: DieterTokenKind,
+  preferredToken?: string,
+  visibleTokens?: ReadonlySet<string>,
+) {
   closeTokenEditor();
 
   const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
   const dialog = document.createElement('dialog');
-  dialog.className = 'devstudio-token-editor';
+  dialog.className = 'diet-popup devstudio-token-editor';
+  dialog.dataset.size = 'small';
   dialog.setAttribute('closedby', 'closerequest');
   dialog.setAttribute('aria-labelledby', 'devstudio-token-editor-title');
   dialog.innerHTML = `
     <form class="devstudio-token-editor__panel" data-state="loading">
       <div class="devstudio-token-editor__view" data-token-editor-work>
-        <header class="devstudio-token-editor__header">
+        <header class="diet-popup__header">
           <div class="devstudio-token-editor__heading">
             <h2 class="heading-4" id="devstudio-token-editor-title">Edit token</h2>
             <p class="body-xs">Update the source-controlled Dieter value.</p>
@@ -449,7 +459,7 @@ async function openTokenEditor(kind: DieterTokenKind, preferredToken?: string) {
             <span class="diet-btn-ic__icon" aria-hidden="true" data-icon="multiply"></span>
           </button>
         </header>
-        <div class="devstudio-token-editor__body">
+        <div class="diet-popup__body devstudio-token-editor__body">
           <label class="devstudio-token-editor__field">
             <span class="label-xs">Token</span>
             <select class="diet-operational-field devstudio-token-editor__select" name="token" disabled></select>
@@ -460,29 +470,33 @@ async function openTokenEditor(kind: DieterTokenKind, preferredToken?: string) {
           </label>
           <div class="devstudio-token-editor__diff body-xs" id="devstudio-token-editor-status" aria-live="polite">Loading token source…</div>
         </div>
-        <footer class="devstudio-token-editor__actions">
-          <button class="diet-btn-txt" data-size="md" data-variant="secondary" type="button" data-token-editor-close>
-            <span class="diet-btn-txt__label">Cancel</span>
-          </button>
-          <button class="diet-btn-txt" data-size="md" data-variant="primary" type="submit" data-token-editor-commit disabled>
-            <span class="diet-btn-txt__label">Confirm commit</span>
-          </button>
+        <footer class="diet-popup__footer">
+          <div class="diet-popup__actions">
+            <button class="diet-btn-txt" data-size="md" data-variant="secondary" type="button" data-token-editor-close>
+              <span class="diet-btn-txt__label">Cancel</span>
+            </button>
+            <button class="diet-btn-txt" data-size="md" data-variant="primary" type="submit" data-token-editor-commit disabled>
+              <span class="diet-btn-txt__label">Confirm commit</span>
+            </button>
+          </div>
         </footer>
       </div>
       <div class="devstudio-token-editor__view" data-token-editor-discard-view hidden>
-        <header class="devstudio-token-editor__header">
+        <header class="diet-popup__header">
           <h2 class="heading-4" id="devstudio-token-editor-discard-title">Discard changes?</h2>
         </header>
-        <div class="devstudio-token-editor__body">
+        <div class="diet-popup__body devstudio-token-editor__body">
           <p class="body-sm">Your uncommitted token value will be lost.</p>
         </div>
-        <footer class="devstudio-token-editor__actions">
-          <button class="diet-btn-txt" data-size="md" data-variant="secondary" type="button" data-token-editor-keep>
-            <span class="diet-btn-txt__label">Keep editing</span>
-          </button>
-          <button class="diet-btn-txt" data-size="md" data-variant="primary" type="button" data-token-editor-discard>
-            <span class="diet-btn-txt__label">Discard</span>
-          </button>
+        <footer class="diet-popup__footer">
+          <div class="diet-popup__actions">
+            <button class="diet-btn-txt" data-size="md" data-variant="secondary" type="button" data-token-editor-keep>
+              <span class="diet-btn-txt__label">Keep editing</span>
+            </button>
+            <button class="diet-btn-txt" data-size="md" data-variant="primary" type="button" data-token-editor-discard>
+              <span class="diet-btn-txt__label">Discard</span>
+            </button>
+          </div>
         </footer>
       </div>
     </form>
@@ -582,7 +596,9 @@ async function openTokenEditor(kind: DieterTokenKind, preferredToken?: string) {
   discardButton.addEventListener('click', closeTokenEditor);
 
   try {
-    tokens = (await fetchDieterTokens(kind)).filter((token) => token.editable);
+    tokens = (await fetchDieterTokens(kind)).filter(
+      (token) => token.editable && (!visibleTokens || visibleTokens.has(token.token)),
+    );
     select.replaceChildren(
       ...tokens.map((entry) => {
         const option = document.createElement('option');
@@ -636,7 +652,9 @@ async function openTokenEditor(kind: DieterTokenKind, preferredToken?: string) {
         const nextTokens = await saveDieterToken(kind, token, value);
         const next = nextTokens.find((entry) => entry.token === token);
         if (!next) throw new Error(DIETER_TOKEN_SAVE_ERROR_COPY);
-        tokens = nextTokens.filter((entry) => entry.editable);
+        tokens = nextTokens.filter(
+          (entry) => entry.editable && (!visibleTokens || visibleTokens.has(entry.token)),
+        );
         input.value = next.value;
         updateVisibleTokenValue(token, next.value);
         setSaving(false);
@@ -680,13 +698,11 @@ function renderNotFound(slug: string): DocumentFragment {
 }
 
 function wrapWithPageChrome(fragment: DocumentFragment, title: string): DocumentFragment {
-  if (fragment.querySelector('.devstudio-page')) {
+  if (fragment.querySelector('.page__content')) {
     return fragment;
   }
 
   const nodes = Array.from(fragment.childNodes);
-  const container = document.createElement('div');
-  container.className = 'devstudio-page';
   let headingElement: Element | null = null;
   const skipNodes = new Set<Node>();
 
@@ -710,7 +726,7 @@ function wrapWithPageChrome(fragment: DocumentFragment, title: string): Document
   }
 
   const header = document.createElement('header');
-  header.className = 'devstudio-page__header';
+  header.className = 'page__header';
 
   if (headingElement) {
     headingElement.parentElement?.removeChild(headingElement);
@@ -721,11 +737,23 @@ function wrapWithPageChrome(fragment: DocumentFragment, title: string): Document
     heading.textContent = title;
     header.append(heading);
   }
+  const declaredActions = nodes.find(
+    (node): node is HTMLElement =>
+      node instanceof HTMLElement && node.hasAttribute('data-page-actions'),
+  );
+  const actions = declaredActions ?? document.createElement('div');
+  if (declaredActions) {
+    declaredActions.classList.add('page__actions');
+    declaredActions.hidden = false;
+    skipNodes.add(declaredActions);
+  } else {
+    actions.className = 'page__actions';
+    actions.hidden = true;
+  }
+  header.append(actions);
 
-  const defaultSection = document.createElement('div');
-  defaultSection.className = 'devstudio-page-section';
-  let hasDefaultContent = false;
-  const sections: Element[] = [];
+  const content = document.createElement('div');
+  content.className = 'page__content';
 
   nodes.forEach((node) => {
     if (node.nodeType === Node.TEXT_NODE && !(node.textContent ?? '').trim()) {
@@ -737,31 +765,15 @@ function wrapWithPageChrome(fragment: DocumentFragment, title: string): Document
   }
 
     if (node instanceof HTMLStyleElement) {
-      container.append(node);
+      content.append(node);
       return;
     }
 
-    if (node instanceof Element && node.classList.contains('devstudio-page-section')) {
-      if (defaultSection.childNodes.length) {
-        sections.push(defaultSection.cloneNode(true) as Element);
-        defaultSection.replaceChildren();
-      }
-      sections.push(node);
-      return;
-    }
-
-    defaultSection.append(node);
-    hasDefaultContent = true;
+    content.append(node);
   });
 
-  container.append(header);
-  sections.forEach((section) => container.append(section));
-  if (hasDefaultContent) {
-    container.append(defaultSection);
-  }
-
   const wrapped = document.createDocumentFragment();
-  wrapped.append(container);
+  wrapped.append(header, content);
   return wrapped;
 }
 
@@ -774,57 +786,70 @@ function hydrateTypographyPage(scope: ParentNode) {
   const doc = container.ownerDocument;
 
   typographySections.forEach(({ title, samples }) => {
-    const header = doc.createElement('h3');
+    const section = doc.createElement('section');
+    section.className = 'foundation-section';
+
+    const header = doc.createElement('h2');
+    header.className = 'heading-4';
     header.textContent = title;
-    container.appendChild(header);
+    section.appendChild(header);
+
+    const frame = doc.createElement('div');
+    frame.className = 'diet-table';
+    const table = doc.createElement('table');
+    table.className = 'diet-table__table';
+    table.innerHTML = `
+      <thead>
+        <tr>
+          <th scope="col">Role</th>
+          <th scope="col">Source class</th>
+          <th scope="col">Preview</th>
+          <th scope="col">Action</th>
+        </tr>
+      </thead>
+    `;
+    const body = doc.createElement('tbody');
 
     samples.forEach((sample) => {
-      const row = doc.createElement('div');
-      row.className = 'row';
-      row.setAttribute('data-cols', '1');
+      const row = doc.createElement('tr');
 
-      const rowHeader = doc.createElement('div');
-      rowHeader.className = 'row-header';
+      const rowHeader = doc.createElement('th');
+      rowHeader.scope = 'row';
       rowHeader.textContent = sample.name;
       row.appendChild(rowHeader);
 
-      const specWrapper = doc.createElement('div');
-      specWrapper.className = 'specdpreview';
+      const sourceCell = doc.createElement('td');
+      const sourceCode = doc.createElement('code');
+      sourceCode.textContent = `.${sample.className}`;
+      sourceCell.appendChild(sourceCode);
+      row.appendChild(sourceCell);
 
-      const specs = doc.createElement('div');
-      specs.className = 'preview-specs';
-
-      const specRow = doc.createElement('div');
-      specRow.className = 'preview-specs__row';
-
-      const specDetail = doc.createElement('span');
-      specDetail.className = 'preview-specs__detail';
-      specDetail.textContent = `.${sample.className}`;
-
-      specRow.appendChild(specDetail);
-      specs.appendChild(specRow);
-      specWrapper.appendChild(specs);
-
-      const previewWrapper = doc.createElement('div');
-      previewWrapper.className = 'componentpreview';
-
+      const previewCell = doc.createElement('td');
       const sampleElement = doc.createElement('div');
       sampleElement.className = sample.className;
       sampleElement.textContent = getTypographySampleText(sample.sample);
+      previewCell.appendChild(sampleElement);
+      row.appendChild(previewCell);
 
+      const actionCell = doc.createElement('td');
       const editButton = doc.createElement('button');
-      editButton.className = 'token-edit-trigger';
+      editButton.className = 'diet-btn-txt';
       editButton.type = 'button';
+      editButton.dataset.size = 'md';
+      editButton.dataset.variant = 'secondary';
       editButton.setAttribute('data-token-edit', 'typography');
       editButton.setAttribute('aria-label', `Edit typography tokens for ${sample.name}`);
-      editButton.appendChild(sampleElement);
+      editButton.innerHTML = '<span class="diet-btn-txt__label">Edit</span>';
+      actionCell.appendChild(editButton);
+      row.appendChild(actionCell);
 
-      previewWrapper.appendChild(editButton);
-      specWrapper.appendChild(previewWrapper);
-
-      row.appendChild(specWrapper);
-      container.appendChild(row);
+      body.appendChild(row);
     });
+
+    table.appendChild(body);
+    frame.appendChild(table);
+    section.appendChild(frame);
+    container.appendChild(section);
   });
 }
 
@@ -838,7 +863,7 @@ function renderFromHash() {
 
   const page = showcaseIndex.get(pagePath);
   if (!page) {
-    main.replaceChildren(renderNotFound(pagePath));
+    main.replaceChildren(compactBar, scrim, renderNotFound(pagePath));
     return;
   }
 
@@ -852,16 +877,26 @@ function renderFromHash() {
   const wrapped = wrapWithPageChrome(content, page.title);
   setActive(page.path);
   document.title = `DevStudio · ${page.title}`;
-  main.replaceChildren(wrapped);
+  main.replaceChildren(compactBar, scrim, wrapped);
   hydrateDieterComponents(main);
   hydrateTypographyPage(main);
   main.querySelectorAll<HTMLElement>('[data-token-edit]').forEach((node) => {
     node.addEventListener('click', () => {
       const editKind = node.getAttribute('data-token-edit');
       if (editKind !== 'color' && editKind !== 'foundation' && editKind !== 'typography') return;
+      const tokensOnPage = new Set(
+        Array.from(
+          main.querySelectorAll<HTMLElement>(
+            `[data-token-edit="${editKind}"][data-token]`,
+          ),
+        )
+          .map((trigger) => trigger.getAttribute('data-token'))
+          .filter((token): token is string => Boolean(token)),
+      );
       openTokenEditor(
         editKind === 'color' ? 'colors' : editKind,
         node.getAttribute('data-token') ?? undefined,
+        tokensOnPage.size ? tokensOnPage : undefined,
       );
     });
   });

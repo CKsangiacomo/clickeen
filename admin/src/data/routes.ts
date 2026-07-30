@@ -87,7 +87,7 @@ const pageToNav = (page: ShowcasePage): NavItem => ({
   kind: 'showcase' as const,
 });
 
-const foundationOrder = ['core-styles', 'colors', 'icons', 'typography'];
+const foundationOrder = ['core-styles', 'colors', 'icons', 'typography', 'layouts'];
 const foundationRank = (slug: string) => {
   const index = foundationOrder.indexOf(slug);
   return index === -1 ? foundationOrder.length : index;

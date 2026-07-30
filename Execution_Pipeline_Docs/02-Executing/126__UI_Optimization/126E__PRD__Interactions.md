@@ -83,7 +83,7 @@ The split current reality:
   screen-level async state model.
 - Widgets/assets/pages/settings/team/profile/usage each use local state fields.
 - Roma widget monetization uses HTTP 402 `UPGRADE_REQUIRED` into a Roma modal.
-- Bob entitlement upsell uses a separate `ck-upsellModal`.
+- Bob entitlement upsell consumes the shared Dieter Popup visual contract.
 - Asset upload/limit failures render inline error copy. Assets currently has no
   user-triggered `Upgrade` command, so it is not a D3 entry point.
 - Translation generation has streamed activity; Copilot does not.

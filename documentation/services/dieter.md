@@ -2,9 +2,10 @@
 
 STATUS: CURRENT SYSTEM OPERATOR SPEC
 
-Dieter is Clickeen's shared design-system source. It owns tokens, component
-CSS, component specs, component snippets, icons, and component hydrators.
-Account data never lives in Dieter.
+Dieter is Clickeen's shared design-system source. It owns tokens, the
+high-level application Layout/Page contract, component CSS, component specs,
+component snippets, icons, and component hydrators. Account data never lives
+in Dieter.
 
 ## Authority
 
@@ -26,6 +27,7 @@ There is no Dieter build bundle, generated Tokyo mirror, browser manifest, or
 | Path | Purpose |
 | --- | --- |
 | `dieter/tokens/` | Canonical token CSS. |
+| `dieter/layouts/main-container/` | Canonical `main-container > left-nav + page` layout CSS, example HTML, and spec. |
 | `dieter/components/{component}/` | Component CSS, stencil, spec, and optional hydrator. |
 | `dieter/components/shared/` | Small source helpers shared by existing components, including compact property-row geometry. |
 | `dieter/components/index.ts` | Explicit component-hydrator exports. |
@@ -45,9 +47,12 @@ Component folders normally contain:
 
 ## Consumer Boundaries
 
-Bob and Roma import `dieter/styles.css` in their application builds. Bob imports
-the source hydrators it uses and calls them explicitly; Dieter does not install
-a browser global.
+Bob and Roma import `dieter/styles.css` in their application builds. Roma and
+DevStudio directly import
+`dieter/layouts/main-container/main-container.css`; that layout is deliberately
+not in the broad stylesheet because Bob retains its ToolDrawer/Workspace
+composition. Bob imports the source hydrators it uses and calls them
+explicitly; Dieter does not install a browser global.
 
 Prague imports the canonical token entrypoint in its application build.
 
@@ -59,9 +64,10 @@ JavaScript.
 DevStudio reads Dieter source through its existing source generators. Its
 generated reveal pages are tooling output, not a deployable Dieter runtime.
 The generated Core styles page reads spacing, control geometry, radius, shadow,
-and motion values from `dieter-foundation-tokens.css`; authenticated edits
-commit back to that same source file through DevStudio's validated GitHub write
-path.
+and motion values from `dieter-foundation-tokens.css`. The separate Layouts
+page reads the real layout HTML/CSS/spec and exposes its four source tokens.
+Authenticated edits commit back to that same foundation token file through
+DevStudio's validated GitHub write path.
 
 Compact property controls share row geometry through
 `dieter/components/shared/property-row.css`. Components continue to own their

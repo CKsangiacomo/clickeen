@@ -186,8 +186,8 @@ export function TeamDomain() {
 
       {members ? (
         <section className="rd-canvas-module">
-          <div className="diet-operational-table">
-          <table className="diet-operational-table__table">
+          <div className="diet-table">
+          <table className="diet-table__table">
             <thead>
               <tr>
                 <th className="label-s">Member</th>
@@ -258,8 +258,8 @@ export function TeamDomain() {
           <section className="rd-canvas-module">
             <h2 className="heading-4">Pending invitations</h2>
             {inviteError && !invitations ? <p className="body-m" role="alert">{inviteError}</p> : null}
-            <div className="diet-operational-table">
-            <table className="diet-operational-table__table">
+            <div className="diet-table">
+            <table className="diet-table__table">
               <thead>
                 <tr>
                   <th className="label-s">Email</th>

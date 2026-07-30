@@ -11,10 +11,15 @@ is a Step 6 gap, not permission to reinterpret either authority.
 
 ## The model
 
-The UI composes by reference: **tokens -> components -> screens**. Every doc
-points inward at its owning source and outward to the consumers in its blast
-radius. Product law lives in the domain doctrine; current runtime behavior lives
-in source.
+The UI composes by reference:
+
+```text
+tokens -> layouts + components -> screens
+```
+
+Every doc points inward at its owning source and outward to the consumers in
+its blast radius. Product law lives in the domain doctrine; current runtime
+behavior lives in source.
 
 ## The docs
 
@@ -43,8 +48,9 @@ in source.
   exact dismissal policy, and upsell transition behavior *(126K)*
 
 **Consumption**
-- [`surfaces.md`](surfaces.md) — surface containers, layout planes, and the
-  global workspace-capability tenet for operational applications *(126J)*
+- [`surfaces.md`](surfaces.md) — the shared Layout/Page contract, surface
+  containers, and the global workspace-capability tenet for operational
+  applications *(126J)*
 
 ## Conventions
 

@@ -21,19 +21,37 @@ compose layouts.
 
 ## Ownership
 
-Dieter owns reusable tokens, controls, visual contracts, and shared dialog
-mechanics. Roma and DevStudio own their shell, navigation, workspace, domain
-layout, responsive composition, and host-layout CSS. Delete app-local CSS only
-when it is dead or duplicates an accepted Dieter-owned contract; do not mass
-rename app layout classes to satisfy a taxonomy.
+Dieter owns reusable tokens, controls, visual contracts, shared dialog
+mechanics, and one high-level application Layout/Page contract. DevStudio and
+Roma consume that contract directly while owning their routes, navigation
+content, open state, page content, commands, domain composition, and product
+behavior. Bob retains its distinct `ToolDrawer | Workspace` editor layout.
+
+The shared application taxonomy is:
+
+```text
+main-container
+├── left-nav
+└── page
+    ├── page__header
+    │   └── page__actions
+    └── page__content
+```
+
+`left-nav` and `page` are the only direct children of `main-container`. A
+compact-navigation scrim is a control inside `page`, not a third layout child.
+The source contract is
+`dieter/layouts/main-container/main-container.{html,css,spec.json}`. DevStudio
+reveals its Full, Compact-closed, and Compact-open examples and edits its four
+layout tokens through the existing foundation-token write path.
 
 Preserve the existing backdrop, white/muted surfaces, borders, and shadows. This
 program does not create a new depth or tonal ramp.
 
-Native operational fields and tables use the small Dieter contracts defined in
-[`components.md`](components.md). Dieter owns their shared appearance and state
-mechanics. Apps retain labels, validation, values, data, policy, behavior,
-density, and composition.
+Native operational fields, Table, and Popup use the small Dieter contracts
+defined in [`components.md`](components.md). Dieter owns their shared
+appearance and structural mechanics. Apps retain labels, validation, values,
+data, policy, behavior, and composition.
 
 ## Current Direction
 
@@ -97,9 +115,10 @@ following the same distinction between rendering resolution and usable layout
 space.
 
 World-class execution means predictable allocation and complete operability,
-not more layout machinery. Roma, Bob, and DevStudio retain local shell code; no
-shared shell framework, device registry, or domain-by-domain mobile redesign is
-part of this law.
+not more layout machinery. Dieter supplies CSS/HTML/spec source, not a shell
+framework or runtime controller. Roma and DevStudio retain small local shell
+code for product state; Bob retains its editor layout. No device registry or
+domain-by-domain mobile redesign is part of this law.
 
 ## Rules For Agents
 

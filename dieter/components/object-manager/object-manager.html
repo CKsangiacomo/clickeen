@@ -35,34 +35,46 @@
 
   <template data-objects-item>{{template}}</template>
 
-  <dialog class="diet-object-manager__modal" aria-label="{{reorderTitle}}">
-    <div class="diet-object-manager__modal-body" data-objects-editor>
-      <div
-        class="diet-object-manager__modal-title"
-        {{#if reorderTitleKey}} data-i18n-key="{{reorderTitleKey}}"{{/if}}
-        {{#if reorderTitleParams}} data-i18n-params="{{reorderTitleParams}}"{{/if}}
-      >{{reorderTitle}}</div>
-      <div class="diet-object-manager__modal-list" data-objects-modal-list></div>
-      <div class="diet-object-manager__modal-actions">
-        <button type="button" class="diet-btn-txt" data-size="md" data-variant="secondary" data-objects-cancel>
-          <span class="diet-btn-txt__label" data-i18n-key="coreui.actions.cancel">Cancel</span>
-        </button>
-        <button type="button" class="diet-btn-txt" data-size="md" data-variant="primary" data-objects-save>
-          <span class="diet-btn-txt__label" data-i18n-key="coreui.actions.save">Save</span>
-        </button>
+  <dialog class="diet-popup" data-size="medium" aria-label="{{reorderTitle}}" data-objects-modal>
+    <div class="diet-object-manager__editor" data-objects-editor>
+      <header class="diet-popup__header">
+        <h2
+          class="diet-object-manager__title"
+          {{#if reorderTitleKey}} data-i18n-key="{{reorderTitleKey}}"{{/if}}
+          {{#if reorderTitleParams}} data-i18n-params="{{reorderTitleParams}}"{{/if}}
+        >{{reorderTitle}}</h2>
+      </header>
+      <div class="diet-popup__body">
+        <div class="diet-object-manager__modal-list" data-objects-modal-list></div>
       </div>
+      <footer class="diet-popup__footer">
+        <div class="diet-popup__actions">
+          <button type="button" class="diet-btn-txt" data-size="md" data-variant="secondary" data-objects-cancel>
+            <span class="diet-btn-txt__label" data-i18n-key="coreui.actions.cancel">Cancel</span>
+          </button>
+          <button type="button" class="diet-btn-txt" data-size="md" data-variant="primary" data-objects-save>
+            <span class="diet-btn-txt__label" data-i18n-key="coreui.actions.save">Save</span>
+          </button>
+        </div>
+      </footer>
     </div>
-    <div class="diet-object-manager__modal-body" data-objects-discard-panel hidden>
-      <div class="diet-object-manager__modal-title">Discard changes?</div>
-      <p class="diet-object-manager__modal-message">Your reorder and delete changes have not been saved.</p>
-      <div class="diet-object-manager__modal-actions">
-        <button type="button" class="diet-btn-txt" data-size="md" data-variant="secondary" data-objects-keep-editing>
-          <span class="diet-btn-txt__label">Keep editing</span>
-        </button>
-        <button type="button" class="diet-btn-txt" data-size="md" data-variant="primary" data-objects-discard>
-          <span class="diet-btn-txt__label">Discard</span>
-        </button>
+    <div class="diet-object-manager__editor" data-objects-discard-panel hidden>
+      <header class="diet-popup__header">
+        <h2 class="diet-object-manager__title">Discard changes?</h2>
+      </header>
+      <div class="diet-popup__body">
+        <p class="diet-object-manager__modal-message">Your reorder and delete changes have not been saved.</p>
       </div>
+      <footer class="diet-popup__footer">
+        <div class="diet-popup__actions">
+          <button type="button" class="diet-btn-txt" data-size="md" data-variant="secondary" data-objects-keep-editing>
+            <span class="diet-btn-txt__label">Keep editing</span>
+          </button>
+          <button type="button" class="diet-btn-txt" data-size="md" data-variant="primary" data-objects-discard>
+            <span class="diet-btn-txt__label">Discard</span>
+          </button>
+        </div>
+      </footer>
     </div>
   </dialog>
 

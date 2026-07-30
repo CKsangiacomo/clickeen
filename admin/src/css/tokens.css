@@ -1,5 +1,0 @@
-/* Shell-specific layout tokens only */
-:root {
-  --sidebar-width: 220px;
-  --shell-padding: var(--space-6, 1.5rem);
-}

@@ -11,84 +11,27 @@
   display: none;
 }
 
-.diet-bulk-edit__modal {
-  width: min(96vw, 980px);
-  max-width: none;
-  max-height: min(88dvh, 860px);
-  padding: 0;
-  border: 0;
-  border-radius: var(--control-radius-lg);
-  background: var(--color-system-white);
-  color: var(--color-system-black);
-  box-shadow: var(--shadow-elevated);
+.diet-bulk-edit__editor {
+  display: contents;
 }
 
-.diet-bulk-edit__modal::backdrop {
-  background: color-mix(in oklab, var(--color-system-black), transparent 55%);
-}
-
-.diet-bulk-edit__modal-body {
-  padding: var(--space-5);
-  max-height: min(88dvh, 860px);
-  display: grid;
-  gap: var(--space-4);
-  overflow: hidden;
-}
-
-.diet-bulk-edit__discard {
-  padding: var(--space-5);
-  display: grid;
-  gap: var(--space-4);
-}
-
-.diet-bulk-edit__discard[hidden] {
+.diet-bulk-edit__editor[hidden] {
   display: none;
 }
 
-.diet-bulk-edit__modal-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-3);
-}
-
 .diet-bulk-edit__title {
+  margin: 0;
   font: 600 var(--fs-16) / var(--lh-tight) var(--font-ui);
 }
 
-.diet-bulk-edit__table-wrap {
-  border: 1px solid var(--color-system-gray-5);
-  border-radius: var(--control-radius-md);
-  background: var(--color-system-white);
-  overflow: auto;
-}
-
 .diet-bulk-edit__table {
-  width: 100%;
-  border-collapse: collapse;
-  font: 500 var(--fs-13) / var(--lh-tight) var(--font-ui);
+  min-inline-size: max-content;
 }
 
 .diet-bulk-edit__table thead th {
   position: sticky;
   top: 0;
-  background: var(--color-system-gray-6-step5);
-  text-align: left;
-  padding: var(--space-2) var(--space-3);
-  font: 600 var(--fs-12) / var(--lh-tight) var(--font-ui);
-  color: color-mix(in oklab, var(--color-system-black), transparent 35%);
-  border-bottom: 1px solid var(--color-system-gray-5);
   white-space: nowrap;
-}
-
-.diet-bulk-edit__table tbody td {
-  padding: var(--space-2) var(--space-3);
-  border-bottom: 1px solid var(--color-system-gray-6-step5);
-  vertical-align: middle;
-}
-
-.diet-bulk-edit__table tbody tr:last-child td {
-  border-bottom: none;
 }
 
 .diet-bulk-edit__logo {
@@ -139,12 +82,6 @@
   padding: var(--space-4);
   font: 500 var(--fs-13) / var(--lh-tight) var(--font-ui);
   color: color-mix(in oklab, var(--color-system-black), transparent 40%);
-}
-
-.diet-bulk-edit__actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: var(--space-2);
 }
 
 .diet-bulk-edit__upload {

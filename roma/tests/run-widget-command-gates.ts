@@ -77,7 +77,55 @@ async function testBuilderHandlesBobUpsell(): Promise<void> {
   assert.match(bobDocs, /"type": "bob:upsell"/);
   assert.match(bobDocs, /"payload": "\[commandPayload\]"/);
   assert.doesNotMatch(bobDocs, /"result": "\[commandResult\]"/);
-  assert.doesNotMatch(upsellPopup, /ck-upsellModal__detail/);
+  assert.match(upsellPopup, /className="diet-popup"/);
+  assert.match(upsellPopup, /className="diet-popup__header"/);
+  assert.match(upsellPopup, /className="diet-popup__body"/);
+  assert.match(upsellPopup, /className="diet-popup__footer"/);
+  assert.doesNotMatch(upsellPopup, /ck-upsellModal/);
+}
+
+async function testDieterLayoutTableAndPopupConsumption(): Promise<void> {
+  const shell = await readRoute('components/roma-shell.tsx');
+  const layout = await readRoute('app/layout.tsx');
+  const romaCss = await readRoute('app/roma.css');
+
+  assert.match(layout, /dieter\/layouts\/main-container\/main-container\.css/);
+  assert.match(shell, /className="main-container"/);
+  assert.match(shell, /className="left-nav"/);
+  assert.match(shell, /className=\{`page/);
+  assert.match(shell, /className="page__header"/);
+  assert.match(shell, /className="page__actions"/);
+  assert.match(shell, /className=\{`page__content/);
+  assert.doesNotMatch(shell, /roma-layout|rd-domain|rd-header/);
+  assert.doesNotMatch(romaCss, /\.roma-layout|\.roma-modal|\.rd-header|\.rd-domain/);
+
+  for (const relativePath of [
+    'components/pages-domain.tsx',
+    'components/assets-domain.tsx',
+    'components/widgets-domain.tsx',
+    'components/team-domain.tsx',
+  ]) {
+    const source = await readRoute(relativePath);
+    assert.match(source, /className="diet-table"/, `${relativePath} must consume Dieter Table`);
+    assert.match(source, /className="diet-table__table"/, `${relativePath} must use the semantic Dieter Table`);
+    assert.doesNotMatch(source, /diet-operational-table/, `${relativePath} must not retain operational-table`);
+  }
+
+  for (const relativePath of [
+    'components/roma-account-notice-modal.tsx',
+    'components/roma-unsaved-changes-dialog.tsx',
+    'components/roma-upsell-dialog.tsx',
+    'components/pages-domain.tsx',
+    'components/assets-domain.tsx',
+    'components/widgets-domain.tsx',
+  ]) {
+    const source = await readRoute(relativePath);
+    assert.match(source, /className="diet-popup"/, `${relativePath} must consume Dieter Popup`);
+    assert.match(source, /className="diet-popup__header"/, `${relativePath} must use the Popup header`);
+    assert.match(source, /className="diet-popup__body"/, `${relativePath} must use the Popup body`);
+    assert.match(source, /className="diet-popup__footer"/, `${relativePath} must use the Popup footer`);
+    assert.doesNotMatch(source, /roma-modal/, `${relativePath} must not retain the Roma modal base`);
+  }
 }
 
 async function run(): Promise<void> {
@@ -89,6 +137,8 @@ async function run(): Promise<void> {
   console.log('PASS publish gate uses list-facts and runs before Tokyo publish transition');
   await testBuilderHandlesBobUpsell();
   console.log('PASS Bob upsell CTA opens the Roma scaffold without discarding Builder work');
+  await testDieterLayoutTableAndPopupConsumption();
+  console.log('PASS Roma and Bob consume the final Dieter Layout, Table, and Popup contracts');
 }
 
 run().catch((error) => {

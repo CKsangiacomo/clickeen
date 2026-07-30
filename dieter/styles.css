@@ -15,13 +15,14 @@
 @import url('./components/menuactions/menuactions.css');
 @import url('./components/object-manager/object-manager.css');
 @import url('./components/operational-field/operational-field.css');
-@import url('./components/operational-table/operational-table.css');
+@import url('./components/popup/popup.css');
 @import url('./components/popaddlink/popaddlink.css');
 @import url('./components/popover/popover.css');
 @import url('./components/repeater/repeater.css');
 @import url('./components/segmented/segmented.css');
 @import url('./components/slider/slider.css');
 @import url('./components/tabs/tabs.css');
+@import url('./components/table/table.css');
 @import url('./components/textedit/textedit.css');
 @import url('./components/textfield/textfield.css');
 @import url('./components/toggle/toggle.css');

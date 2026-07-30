@@ -1,9 +1,87 @@
 # 126M - PRD: Roma UI And Final Workspace Integration
 
-Status: EXECUTED AND VERIFIED - M1-M4 GREEN.
+Status: ORIGINAL M1-M4 COMPLETE; ROMA CONVERGENCE IMPLEMENTED LOCALLY; FINAL
+DEPLOYED/PRODUCT-OWNER VERIFICATION PENDING.
 Parent: `126__PRD__UI_Optimization_Program.md`.
 Audit: `audits/126M__Audit__Roma_UI.md`.
 Service authority: `documentation/services/roma.md`.
+
+## 2026-07-30 Roma Convergence Correction
+
+The original M1-M4 evidence remains valid for its executed scope. At correction
+start, Roma still owned hardcoded `.roma-layout*` and `.roma-modal*` visual
+bases and used `operational-table`. The local D4 implementation now replaces
+those bases with final Dieter Layout, Page, Table, and Popup contracts; deployed
+and product-owner verification remain pending.
+
+### Exact Adoption
+
+`RomaShell` must render:
+
+```html
+<div class="main-container" data-navigation-open="true|absent">
+  <aside class="left-nav">the existing one RomaNav tree</aside>
+  <main class="page">current Roma route content</main>
+</div>
+```
+
+Roma compiles the exact Dieter
+`layouts/main-container/main-container.css` source. Roma retains its one-nav
+state, route tree, current-route behavior, headers, domain content, and product
+operations. Dieter owns the three layout classes and visual composition.
+
+Roma routes adopt the same Page foundation:
+
+- the domain title/description/action band becomes `.page__header`;
+- the action container becomes `.page__actions`;
+- the route body becomes `.page__content`;
+- `.page` remains the single outer padding/scroll owner.
+
+Roma may retain domain-specific `rd-*` classes inside `.page__content`, but
+they must not restate the shared outer header/content/padding/scroll contract.
+
+Roma adopts the shared initial `13.75rem | minmax(0, 1fr)` Full geometry, `100dvh`,
+nav-owned scrolling/padding, page-owned outer scrolling/padding, and shared
+Compact presentation from the parent contract. It does not retain its current
+`clamp(232px, 16vw, 264px)` width. Domain-owned `rd-*` composition remains
+unless a named rule is proven to duplicate the new page's outer padding or
+scroll ownership.
+
+All semantic Roma tables replace `.diet-operational-table*` with
+`.diet-table`/`.diet-table__table`. Columns, data, actions, editing, selection,
+loading/error meaning, and policy stay with their domains.
+
+All blocking Roma dialogs replace `.roma-modal*` base presentation with
+`.diet-popup*`. The existing shared lifecycle and every accepted workflow
+dismissal/persistence rule remain unchanged.
+
+### Deletion Boundary
+
+In the same migration:
+
+- delete `.roma-layout*` base layout selectors/declarations replaced by Dieter;
+- delete `.roma-modal*` base visual selectors/declarations replaced by Popup;
+- delete every operational-table selector/import;
+- delete local table/popup/layout base rules now owned by Dieter;
+- retain only domain-specific composition that is not covered by the shared
+  contracts;
+- replace outer `.rd-domain`, `.rd-header`, and `.rd-canvas` responsibilities
+  with the shared Page selectors while retaining only proven domain-specific
+  descendant composition;
+- do not leave aliases, dual classes, wrappers, or old/new media branches.
+
+Bob remains `ToolDrawer | Workspace`; Roma must not rename or restyle Bob's
+`Workspace` through this layout correction. Applicable Bob Table/Popup
+consumption is verified as a separate consumer boundary.
+
+No Roma API, Berlin session, Tokyo operation, account/product data, route,
+translation, locale, save, publish, policy, entitlement, or Builder command
+behavior changes. No R2 or Supabase mutation belongs to this correction.
+
+Correction acceptance requires focused checks plus exact-SHA deployed browser
+proof for every affected Roma route and applicable Bob path, preservation of
+all domain operations, zero replaced selector hits, current-doc reconciliation,
+and independent V1–V8 recorded in `126_DevQA.md`.
 
 ## Purpose
 

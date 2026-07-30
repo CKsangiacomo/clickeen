@@ -50,6 +50,13 @@ return focus, parent inertness, scroll control, and keyboard-complete dismissal.
 Reusable Dieter code may own those mechanics. The owning product surface keeps
 workflow state, copy, validation, and persistence.
 
+Dieter Popup is the shared visual and structural contract for blocking native
+`<dialog>` elements. It owns the backdrop, frame, viewport fit, border, radius,
+shadow, small/medium/large size, and header/body/footer/action slots. It does
+not choose dismissal policy or persist work. Those remain governed by the
+matrix below and implemented by the owning workflow with the existing shared
+dialog lifecycle.
+
 Native browser `beforeunload` remains the browser-boundary guard. In-product
 unsaved-work decisions use the product dialog contract; they do not use
 `window.confirm`.

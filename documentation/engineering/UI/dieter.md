@@ -4,10 +4,11 @@
 
 - Canonical doctrine: this document.
 - Execution PRD: [`126H__PRD__Dieter.md`](../../../Execution_Pipeline_Docs/02-Executing/126__UI_Optimization/126H__PRD__Dieter.md).
-- **Source of truth:** `dieter/tokens/*`, `dieter/components/*`,
-  `dieter/icons/icons.json`, and `dieter/icons/svg/*`. Consumers compile or
-  materialize this source directly. Only the SVG icon bytes are deployed as
-  shared CDN files. The code is authoritative; this doc explains it.
+- **Source of truth:** `dieter/tokens/*`, `dieter/layouts/*`,
+  `dieter/components/*`, `dieter/icons/icons.json`, and
+  `dieter/icons/svg/*`. Consumers compile or materialize this source directly.
+  Only the SVG icon bytes are deployed as shared CDN files. The code is
+  authoritative; this doc explains it.
 - Sibling references: [`color.md`](color.md), [`typography.md`](typography.md), [`motion.md`](motion.md), [`iconography.md`](iconography.md), [`components.md`](components.md).
 
 ## What Dieter is
@@ -16,7 +17,7 @@ Dieter is Clickeen's token-first design system.
 The whole UI composes upward by **reference**, never by copy:
 
 ```text
-tokens  ->  components  ->  screens
+tokens  ->  layouts + components  ->  screens
 ```
 
 A change at an inner doll rolls outward to everything that consumes it, for free.
@@ -32,11 +33,12 @@ program.
 - `dieter-typography.css` — type (see [`typography.md`](typography.md)).
 - `tokens.css` — `@import`s the three above.
 
-**Components (middle).** 27 source directories under `dieter/components/*`,
-comprising 26 component directories plus the non-rendered `shared/` helper
-directory. Component source shape varies by contract; see
-[`components.md`](components.md) for the exact catalog and hydration/spec
-model.
+**Layouts and components (middle).** `dieter/layouts/main-container/*` owns the
+shared application Layout/Page structure. The 28 non-empty source directories
+under `dieter/components/*` comprise 27 component directories plus the
+non-rendered `shared/` helper directory. Component source shape varies by
+contract; see [`components.md`](components.md) for the exact catalog and
+hydration/spec model.
 
 **Screens (outermost).** DevStudio, Roma, Bob — each consumes Dieter at a
 different depth. See [`surfaces.md`](surfaces.md).
@@ -50,6 +52,10 @@ layering are owned by their own UI docs.
 
 - **Structural spacing** - `--space-0` through `--space-10`. Use this for
   layout spacing, page/component gaps, padding, and structural rhythm.
+- **Application layout** - `--layout-left-nav-width`,
+  `--layout-left-nav-padding`, `--layout-page-padding`, and
+  `--layout-compact-left-nav-width` are the editable values used by the
+  `main-container` layout.
 - **Vertical rhythm** - `--vertspace-1` through `--vertspace-9`. Use this for
   compact vertical breathing room inside dense controls where structural
   spacing is too coarse.
@@ -85,8 +91,9 @@ layering are owned by their own UI docs.
   components need no browser runtime.
 - **Consumption.** Bob and Roma compile `dieter/styles.css`; Prague compiles
   token source; widget materialization folds required Dieter CSS into instance
-  `styles.css`. Only `dieter/icons/svg/**` is deployed to Tokyo R2. See
-  [`ops.md`](ops.md).
+  `styles.css`. Roma and DevStudio also import the shared application layout
+  directly; Bob retains its ToolDrawer/Workspace layout. Only
+  `dieter/icons/svg/**` is deployed to Tokyo R2. See [`ops.md`](ops.md).
 
 ## Package And Artifact Boundary
 

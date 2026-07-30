@@ -1,7 +1,7 @@
 # 126 - Product Owner Execution Decisions
 
-Status: PRE-EXECUTION STEPS 1-8 COMPLETE - D1/D2/D3 accepted and propagated;
-Step 9 has not started.
+Status: D1/D2/D3 ORIGINAL EXECUTION EVIDENCE PRESERVED; D4 ACCEPTED AND
+IMPLEMENTED LOCALLY; FINAL DEPLOYED/PRODUCT-OWNER VERIFICATION PENDING.
 Owner: Clickeen product owner
 Date: 2026-07-14
 Parent: `126__PRD__UI_Optimization_Program.md`
@@ -17,6 +17,12 @@ These accepted decisions do not start implementation. They completed Phase 1
 step 4. Their doctrine propagation, exact gap/deletion maps, final executable
 PRDs, and exact-tree peer reviews are now complete for every A-M domain. Step 9
 remains a separate execution phase and has not started.
+
+The statement above is the original pre-execution record for D1/D2/D3. The
+original A-M Step-9 work subsequently executed. On 2026-07-30 the product owner
+reopened 126 for the bounded D4 convergence correction below. Original
+execution evidence remains historical evidence and does not count as D4
+execution.
 
 No product code, product data, Cloudflare state, or Supabase state was changed
 to produce this register.
@@ -293,6 +299,129 @@ monetization tests, and service/UI docs.
 
 Owner decision: `DECIDED - KEEP UPGRADE AND OPEN SHARED UPSELL SCAFFOLD`
 
+### D4 - Dieter Layout, Table, Popup, And Consumer Convergence
+
+**Status: DECIDED by the product owner on 2026-07-30.** The earlier approach
+left layout, table, and blocking-dialog appearance hardcoded in consumers. D4
+supersedes D2's local Roma/DevStudio shell-appearance ownership and the narrow
+`operational-table` decision. It preserves D2's workspace behavior and all
+route/data/workflow ownership.
+
+The exact Roma/DevStudio taxonomy is:
+
+```text
+main-container
+├── left-nav
+└── page
+```
+
+- `main-container` is the root application layout.
+- `left-nav` and `page` are its direct children.
+- Public selectors are `.main-container`, `.left-nav`, and `.page`.
+- `workspace` is not a synonym because Bob already owns `Workspace` and
+  `.workspace` for widget preview.
+- Bob retains `ToolDrawer | Workspace` and does not adopt this layout.
+
+The ownership chain is:
+
+```text
+Dieter defines
+→ DevStudio demonstrates the real source
+→ DevStudio and Roma consume it by reference
+→ Bob consumes Table and Popup only where applicable
+```
+
+Dieter adds three source contracts:
+
+```text
+dieter/layouts/main-container/
+  main-container.css
+  main-container.html
+  main-container.spec.json
+
+dieter/components/table/
+  table.css
+  table.html
+  table.spec.json
+
+dieter/components/popup/
+  popup.css
+  popup.html
+  popup.spec.json
+```
+
+Layout owns the shared Full/Compact visual composition, sizing, scrolling,
+overflow, safe-area treatment, and navigation-open presentation. Apps own
+routes, nav items, active route, open state, page content, and commands.
+The Layout ownership, taxonomy, and source/edit path are decided. Initial source
+defaults are `13.75rem | minmax(0, 1fr)` at `100dvh`; the nav owns its
+scrolling and `var(--space-6)` safe-area padding; the page owns outer
+route-content scrolling and `var(--space-8)` safe-area padding. Compact below
+`600px` width or height initially uses
+`min(20rem, calc(100vw - 3rem))` off-canvas nav and shared scrim visual. These
+values are not final visual approval: the four named Layout tokens can be
+refined later through DevStudio without changing the shared contract.
+Layout CSS is imported directly by Roma and DevStudio, not through Bob's broad
+`dieter/styles.css`.
+
+Inside the shared `.page`, Dieter owns only `.page__header`,
+`.page__actions`, and `.page__content`. Apps own their semantic content and
+behavior. The editable Layout/Page source values are the four Dieter foundation
+tokens `--layout-left-nav-width`, `--layout-left-nav-padding`,
+`--layout-page-padding`, and `--layout-compact-left-nav-width`.
+
+Table owns semantic table border, radius, header, row/cell spacing/alignment,
+typography, and horizontal overflow. Apps own columns, records, editing,
+sorting, pagination, operations, policy, and hover/selected/editable/error/
+loading meaning and presentation. No shared state layer is added. Final
+selectors are `.diet-table` and `.diet-table__table`.
+
+Popup is a blocking native `<dialog>` visual contract. It owns backdrop, frame,
+viewport fit, border, radius, shadow, and header/body/footer/action layout.
+The existing shared lifecycle remains the only mechanics helper. Workflows own
+copy, state, validation, persistence, actions, and D1 dismissal policy. Final
+selectors are `.diet-popup`, `.diet-popup__header`, `.diet-popup__body`,
+`.diet-popup__footer`, and `.diet-popup__actions`. Non-modal Popover remains
+distinct.
+Its initial size values are Small `30rem`, Medium/default `32.5rem`, and Large
+`61.25rem`, each capped to the viewport minus `2 * var(--space-4)`. Small is
+the token editor; Medium is Roma/Bob/Object Manager; Large is Bulk Edit.
+
+DevStudio adds `Layouts` to Foundations and demonstrates actual Dieter Layout
+source in isolated Full, Compact-closed, and Compact-open examples. Table and
+Popup receive real source-derived component pages. The target generated
+inventory is 5 Foundations, 24 Components, and 2 Policy routes.
+
+Layouts also shows the real Page foundation and exposes the four spec-declared
+tokens through the existing DevStudio token editor and source-commit authority.
+Visual values are editable there; structural topology remains reviewed Dieter
+source. No CSS editor or second write path is authorized.
+
+`operational-table`, `.docs-shell*`, replaced `.devstudio-page*` layout chrome,
+`.roma-layout*`, `.roma-modal*`, and other consumer-local base rules duplicated
+by these contracts are deleted in the same migration. No aliases or dual
+old/new branches remain.
+
+This decision does not authorize:
+
+- a shared React shell, runtime design-system service, generic Surface
+  component, device registry, table engine, popup manager, or global dialog
+  store;
+- a generated Dieter runtime mirror, manifest, second package, new generator
+  script, or copied Dieter CSS;
+- new route/API/service boundaries, account/session, product-data,
+  translation, locale, policy, persistence, R2, Worker, or Supabase changes.
+  The existing DevStudio foundation-token GET/POST contract is explicitly
+  extended to recognize only the four named Layout tokens so the approved
+  Layouts editor can use the existing write authority;
+- a new keyboard-support project or synthetic keyboard machinery.
+
+Existing generation scripts may be extended to expose the source; generated
+files remain outputs. Current living docs stay as-built truth until code lands.
+
+Owner decision:
+`DECIDED - DIETER DEFINES LAYOUT/TABLE/POPUP; DEVSTUDIO REVEALS; CONSUMERS ADOPT`
+
 ## Product Owner Response
 
 The recorded decisions are:
@@ -301,37 +430,40 @@ The recorded decisions are:
 D1: Decided - dismissal matrix accepted
 D2: Decided - global workspace capability tenet
 D3: Decided - keep Upgrade and open the shared upsell dialog scaffold
+D4: Decided - Dieter Layout/Table/Popup consumer convergence
 ```
 
 No other architecture, cleanup, component, surface, translation, storage,
-route, or execution choice is delegated to step-9 implementation.
+route, or execution choice is delegated to implementation.
 
-## After Product Convergence
+## After D4 Product Convergence
 
-1. Completed: write the accepted D1/D2/D3 law into the affected A-M PRDs and
-   living UI/service docs (step 5).
-2. Completed: verify no active decision document retains a contradictory
-   recommendation or an open D1/D2/D3 decision.
-3. Completed: current step-6 gap audits name exact files, lines, and deletion
-   maps for every A-M domain.
-4. Completed: final step-7 executable PRDs name visual before/after routes and
-   verification surfaces.
-5. Completed: exact recorded trees were peer-reviewed for product,
-   architecture, codebase coverage, system cohesion, and V1-V8 (step 8):
-   A `c06fa7db`; B `4b480e50`; C `b5efaefc`; D `31b81152`; E `ec1ed486`;
-   F/G/H `4c5458b4`; I/J/K/L/M `22a92ec9`.
-6. Completed: the final inside-out Step-9 sequence is A-H
-   verification/cleanup -> I components -> J surfaces -> K dialogs -> L
-   DevStudio -> M Roma.
-7. Next: execute 126A, one green slice at a time. Do not advance until that
-   slice's implementation, verification, documentation, deploy/runtime, and
-   V1-V8 gates are green.
+The original D1–D3/A–M sequence completed and remains recorded in the PRDs and
+DevQA. It is not a current instruction to restart at 126A.
 
-## V1-V8 Pre-Execution Check
+D4 proceeds only through the reopened correction order:
+
+1. complete and independently audit the corrected parent, owner register,
+   H/I/J/K/L/M, and DevQA;
+2. Dieter Layout;
+3. DevStudio Layouts reveal and real shell adoption;
+4. Dieter Table and Popup;
+5. all DevStudio Foundation/component presentation and consumer adoption;
+6. product-owner approval of the deployed DevStudio reference;
+7. Roma adoption;
+8. applicable Bob adoption with Workspace preserved;
+9. exact-SHA Pages/browser verification, living-doc reconciliation, and final
+   independent V1–V8.
+
+No product code, product data, or remote state changes before item 1 is GREEN.
+No later item advances while its acceptance row in `126_DevQA.md` is OPEN.
+
+## Historical D1-D3 Pre-Execution Check
 
 Final independent exact-tree re-audit completed on 2026-07-21: **PASS**. The
 reviewers verified all Step-5 doctrine, Step-6 blast radius, Step-7 execution
 contracts, and Step-8 authority findings before the result below was recorded.
+This table is historical D1–D3 evidence only. It does not audit or close D4.
 
 | ID | Result | Reason |
 |---|---|---|

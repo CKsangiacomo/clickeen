@@ -1,0 +1,64 @@
+{
+  "component": "popup",
+  "syntax": "<dialog class='diet-popup' data-size='{{size}}'>…</dialog>",
+  "attributes": {
+    "size": {
+      "enum": ["small", "medium", "large"],
+      "default": "medium"
+    }
+  },
+  "defaults": [
+    {
+      "id": "popup-information",
+      "title": "Information",
+      "spec": ["diet-popup", "data-size='{{size}}'", "native dialog"],
+      "context": {
+        "id": "popup-information",
+        "size": "small",
+        "title": "Information",
+        "body": "<p>The requested operation is ready.</p>",
+        "secondaryAction": "Close",
+        "primaryAction": "Continue"
+      }
+    },
+    {
+      "id": "popup-form",
+      "title": "Form",
+      "spec": ["diet-popup", "data-size='{{size}}'", "native dialog with form"],
+      "context": {
+        "id": "popup-form",
+        "size": "medium",
+        "title": "Edit details",
+        "body": "<label>Name <input class='diet-operational-field' type='text' value='Example' /></label>",
+        "secondaryAction": "Cancel",
+        "primaryAction": "Save"
+      }
+    },
+    {
+      "id": "popup-confirmation",
+      "title": "Confirmation",
+      "spec": ["diet-popup", "data-size='{{size}}'", "native confirmation dialog"],
+      "context": {
+        "id": "popup-confirmation",
+        "size": "medium",
+        "title": "Confirm action",
+        "body": "<p>Confirm this operation before continuing.</p>",
+        "secondaryAction": "Cancel",
+        "primaryAction": "Confirm"
+      }
+    },
+    {
+      "id": "popup-dirty",
+      "title": "Dirty edit",
+      "spec": ["diet-popup", "data-size='{{size}}'", "native dirty-edit dialog"],
+      "context": {
+        "id": "popup-dirty",
+        "size": "large",
+        "title": "Discard changes?",
+        "body": "<p>Your uncommitted changes will be lost.</p>",
+        "secondaryAction": "Keep editing",
+        "primaryAction": "Discard"
+      }
+    }
+  ]
+}

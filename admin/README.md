@@ -10,12 +10,16 @@ superadmin account browser.
 
 ## Current Surface
 
-- Foundations: Core styles, Colors, Icons, Typography. Core styles is generated
+- Foundations: Core styles, Colors, Icons, Typography, Layouts. Core styles is generated
   from Dieter foundation source and manages spacing, control geometry, radii,
   shadows, and motion through the existing validated GitHub token write path.
   Decorative samples remain previews; named Edit actions open the shared
   native-dialog lifecycle with mutually exclusive work/discard states.
-- Dieter Components: generated/static component showcase pages.
+- Layouts reads Dieter's actual `main-container` HTML, CSS, and spec; renders
+  isolated Full, Compact-closed, and Compact-open examples; and exposes the four
+  layout tokens through that same validated token write path.
+- Dieter Components: 24 generated component pages, including the shared Table
+  and blocking Popup contracts.
 - Policy: entitlements + AI runtime Policy Editor at `/#/policy/entitlements`.
 - LLM Management: read-only managed model configuration
   at `/#/policy/llm-management`.
@@ -24,6 +28,9 @@ The Bob UI Native husk and the local widget-authoring workspace are removed.
 
 ## Runtime Layout
 
+- The actual app uses Dieter's
+  `main-container > left-nav + page` source directly. Route content uses
+  `page__header`, `page__actions`, and `page__content`.
 - `src/html/` contains static HTML fragments bundled into the static Pages app.
 - `src/data/routes.ts` owns DevStudio section and hash-route discovery.
 - `functions/` owns Cloudflare Pages auth/session middleware and policy API routes.
@@ -54,5 +61,6 @@ Berlin/Google auth, not from a local dev server.
 DevStudio generates Dieter/component showcase pages before build:
 
 - `scripts/generate-component-pages.ts`
+- `scripts/generate-foundation-pages.mjs`
 - `scripts/generate-typography-json.cjs`
 - `scripts/generate-static-registries.mjs`

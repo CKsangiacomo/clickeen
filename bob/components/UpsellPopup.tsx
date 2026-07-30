@@ -65,41 +65,45 @@ export function UpsellPopup({ open, reasonKey, cta, onClose }: UpsellPopupProps)
   return (
     <dialog
       ref={dialogRef}
-      className="ck-upsellModal"
+      className="diet-popup"
+      data-size="medium"
       aria-label="Upgrade required"
       tabIndex={-1}
     >
-      <div className="ck-upsellModal__header">
+      <header className="diet-popup__header">
         <div className="heading-3">{headline}</div>
-        <div className="body-m ck-upsellModal__reason">{reasonCopy}</div>
+      </header>
+      <div className="diet-popup__body">
+        <div className="body-m">{reasonCopy}</div>
       </div>
-
-      <div className="ck-upsellModal__actions">
-        <button
-          className="diet-btn-txt"
-          data-size="lg"
-          data-variant="primary"
-          type="button"
-          onClick={() => {
-            if (typeof window !== 'undefined' && window.parent) {
-              window.parent.postMessage({ type: 'bob:upsell', cta, reasonKey }, '*');
-            }
-            close();
-          }}
-        >
-          <span className="diet-btn-txt__label">{primaryLabel}</span>
-        </button>
-        <button
-          ref={closeButtonRef}
-          className="diet-btn-txt"
-          data-size="lg"
-          data-variant="neutral"
-          type="button"
-          onClick={close}
-        >
-          <span className="diet-btn-txt__label">Not now</span>
-        </button>
-      </div>
+      <footer className="diet-popup__footer">
+        <div className="diet-popup__actions">
+          <button
+            className="diet-btn-txt"
+            data-size="lg"
+            data-variant="primary"
+            type="button"
+            onClick={() => {
+              if (typeof window !== 'undefined' && window.parent) {
+                window.parent.postMessage({ type: 'bob:upsell', cta, reasonKey }, '*');
+              }
+              close();
+            }}
+          >
+            <span className="diet-btn-txt__label">{primaryLabel}</span>
+          </button>
+          <button
+            ref={closeButtonRef}
+            className="diet-btn-txt"
+            data-size="lg"
+            data-variant="neutral"
+            type="button"
+            onClick={close}
+          >
+            <span className="diet-btn-txt__label">Not now</span>
+          </button>
+        </div>
+      </footer>
     </dialog>
   );
 }

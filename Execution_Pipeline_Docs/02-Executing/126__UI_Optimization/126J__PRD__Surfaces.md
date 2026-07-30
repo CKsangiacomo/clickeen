@@ -1,10 +1,29 @@
 # 126J - PRD: Surfaces And Bob Workspace
 
-Status: STEP 9 COMPLETE - implementation `5f5dd5d0`; local and deployed product
-proof GREEN; independent V1-V8 audit GREEN.
+Status: ORIGINAL STEP 9 COMPLETE — implementation `5f5dd5d0`; D4 SHARED
+LAYOUT/PAGE CORRECTION IMPLEMENTED LOCALLY; FINAL DEPLOYED/PRODUCT-OWNER
+VERIFICATION PENDING.
 Parent: `126__PRD__UI_Optimization_Program.md`.
 Audit: `audits/126J__Audit__Surfaces.md`.
 Living doctrine: `documentation/engineering/UI/surfaces.md`.
+
+## 2026-07-30 D4 Ownership Clarification
+
+The original 126J Bob execution remains complete. Bob keeps its
+`ToolDrawer | Workspace` composition, `Workspace` React component, and
+`.workspace` widget-preview class. It does not adopt
+`.main-container > .left-nav + .page`.
+
+D4 supersedes only the earlier claim that Roma and DevStudio must each own
+their base shell appearance locally. They now consume the one Dieter Layout CSS
+source while retaining routes, nav content/state, page content, and commands.
+This is a shared source contract, not a shared React shell or runtime
+classifier.
+
+126J itself has no new Bob layout implementation. Applicable Bob semantic
+tables and blocking dialogs adopt the D4 Table/Popup contracts through 126I/K;
+Bob's preview/workspace layout must remain unchanged and is a required
+non-regression.
 
 ## Purpose
 
@@ -63,7 +82,8 @@ portrait boundary. No user-agent sniffing is allowed.
 Each app implements the same law locally with CSS media features; no shared
 runtime classifier is added.
 
-The frozen geometry is:
+The shared geometry starts from these source defaults; ownership and taxonomy
+are fixed, while the four named layout values remain editable:
 
 - Full is the default when usable inline and block size are each at least
   `600px`.

@@ -53,33 +53,13 @@
   padding: 0;
 }
 
-.devstudio-token-editor {
-  box-sizing: border-box;
-  width: min(480px, calc(100% - (var(--space-6) * 2)));
-  max-width: none;
-  max-height: calc(100dvh - (var(--space-6) * 2));
-  padding: 0;
-  overflow: visible;
-  border: 0;
-  background: transparent;
-  color: var(--color-text);
-}
-
-.devstudio-token-editor::backdrop {
-  background: color-mix(in oklab, var(--color-system-black), transparent 68%);
-}
-
 .devstudio-token-editor__panel {
-  overflow: hidden;
+  display: contents;
   margin: 0;
-  border: 1px solid color-mix(in oklab, var(--role-border), transparent 20%);
-  border-radius: var(--control-radius-2xl);
-  background: var(--role-surface);
-  box-shadow: var(--shadow-elevated);
 }
 
 .devstudio-token-editor__view {
-  display: grid;
+  display: contents;
 }
 
 .devstudio-token-editor__view[hidden] {
@@ -90,16 +70,7 @@
   margin: 0;
 }
 
-.devstudio-token-editor__header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: var(--space-4);
-  padding: var(--space-5);
-  border-block-end: 1px solid color-mix(in oklab, var(--role-border), transparent 28%);
-}
-
-.devstudio-token-editor__header h2 {
+.devstudio-token-editor .diet-popup__header h2 {
   margin: 0;
 }
 
@@ -115,7 +86,6 @@
 .devstudio-token-editor__body {
   display: grid;
   gap: var(--space-4);
-  padding: var(--space-5);
 }
 
 .devstudio-token-editor__field {
@@ -132,16 +102,6 @@
   overflow-wrap: anywhere;
 }
 
-.devstudio-token-editor__actions {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: var(--space-2);
-  padding: var(--space-4) var(--space-5);
-  border-block-start: 1px solid color-mix(in oklab, var(--role-border), transparent 28%);
-  background: color-mix(in oklab, var(--role-surface-muted), transparent 28%);
-}
-
 .devstudio-token-editor__panel[data-state="error"] .devstudio-token-editor__diff {
   color: var(--color-system-red);
   background: color-mix(in oklab, var(--color-system-red), transparent 92%);
@@ -150,22 +110,6 @@
 .devstudio-token-editor__panel[data-state="saved"] .devstudio-token-editor__diff {
   color: var(--color-system-green);
   background: color-mix(in oklab, var(--color-system-green), transparent 92%);
-}
-
-@media (max-width: 599px), (max-height: 599px) {
-  .devstudio-token-editor {
-    width: min(480px, calc(100% - (var(--space-4) * 2)));
-    max-height: calc(100dvh - (var(--space-4) * 2));
-  }
-
-  .devstudio-token-editor__header,
-  .devstudio-token-editor__body {
-    padding: var(--space-4);
-  }
-
-  .devstudio-token-editor__actions {
-    padding: var(--space-3) var(--space-4);
-  }
 }
 
 /* Remove default gray background on inline code elements in some browsers */

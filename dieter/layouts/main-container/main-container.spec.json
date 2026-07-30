@@ -1,0 +1,43 @@
+{
+  "layout": "main-container",
+  "source": {
+    "html": "main-container.html",
+    "css": "main-container.css"
+  },
+  "taxonomy": {
+    "root": "main-container",
+    "directChildren": ["left-nav", "page"],
+    "pageParts": ["page__header", "page__actions", "page__content"]
+  },
+  "state": {
+    "navigationOpen": {
+      "attribute": "data-navigation-open",
+      "openValue": "true",
+      "scrim": "[data-navigation-scrim]",
+      "owner": "consumer"
+    }
+  },
+  "editableTokens": [
+    "--layout-left-nav-width",
+    "--layout-left-nav-padding",
+    "--layout-page-padding",
+    "--layout-compact-left-nav-width"
+  ],
+  "examples": [
+    {
+      "id": "full",
+      "label": "Full"
+    },
+    {
+      "id": "compact-closed",
+      "label": "Compact closed"
+    },
+    {
+      "id": "compact-open",
+      "label": "Compact open",
+      "attributes": {
+        "data-navigation-open": "true"
+      }
+    }
+  ]
+}

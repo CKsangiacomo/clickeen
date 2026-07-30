@@ -68,59 +68,67 @@ export function AcceptInviteDomain({ token }: AcceptInviteDomainProps) {
 
   if (!isUuid(token)) {
     return (
-      <main className="rd-canvas" style={{ padding: '32px' }}>
-        <section className="rd-canvas-module body-m" role="alert">Invitation link is invalid.</section>
+      <main className="page roma-standalone-page">
+        <div className="page__content">
+          <section className="rd-canvas-module body-m" role="alert">Invitation link is invalid.</section>
+        </div>
       </main>
     );
   }
 
   if (me.loading) {
     return (
-      <main className="rd-canvas" style={{ padding: '32px' }}>
-        <section className="rd-canvas-module body-m" role="status">Loading invitation context...</section>
+      <main className="page roma-standalone-page">
+        <div className="page__content">
+          <section className="rd-canvas-module body-m" role="status">Loading invitation context...</section>
+        </div>
       </main>
     );
   }
 
   if (!me.data) {
     return (
-      <main className="rd-canvas" style={{ padding: '32px' }}>
-        <section className="rd-canvas-module">
-          <h1 className="heading-3">Accept invitation</h1>
-          <p className="body-m">Sign in with the invited email address before accepting this account invitation.</p>
-          <div className="rd-canvas-module__actions" style={{ justifyContent: 'flex-start' }}>
-            <Link className="diet-btn-txt" data-size="md" data-variant="solid" href={`/login?next=${encodeURIComponent(nextPath)}`}>
-              <span className="diet-btn-txt__label body-m">Go to login</span>
-            </Link>
-          </div>
-        </section>
+      <main className="page roma-standalone-page">
+        <div className="page__content">
+          <section className="rd-canvas-module">
+            <h1 className="heading-3">Accept invitation</h1>
+            <p className="body-m">Sign in with the invited email address before accepting this account invitation.</p>
+            <div className="rd-canvas-module__actions" style={{ justifyContent: 'flex-start' }}>
+              <Link className="diet-btn-txt" data-size="md" data-variant="solid" href={`/login?next=${encodeURIComponent(nextPath)}`}>
+                <span className="diet-btn-txt__label body-m">Go to login</span>
+              </Link>
+            </div>
+          </section>
+        </div>
       </main>
     );
   }
 
   return (
-    <main className="rd-canvas" style={{ padding: '32px' }}>
-      <section className="rd-canvas-module">
-        <h1 className="heading-3">Accept invitation</h1>
-        <p className="body-m">Signed in as {me.data.user.email ?? 'unknown email'}.</p>
-        <p className="body-s">The signed-in email must match the invited email.</p>
-        {error ? <p className="body-m" role="alert">{error}</p> : null}
-        <div className="rd-canvas-module__actions" style={{ justifyContent: 'flex-start' }}>
-          <button
-            className="diet-btn-txt"
-            data-size="md"
-            data-variant="solid"
-            type="button"
-            onClick={() => void acceptInvitation()}
-            disabled={loading}
-          >
-            <span className="diet-btn-txt__label body-m">{loading ? 'Accepting...' : 'Accept invitation'}</span>
-          </button>
-          <Link className="diet-btn-txt" data-size="md" data-variant="line2" href="/home">
-            <span className="diet-btn-txt__label body-m">Cancel</span>
-          </Link>
-        </div>
-      </section>
+    <main className="page roma-standalone-page">
+      <div className="page__content">
+        <section className="rd-canvas-module">
+          <h1 className="heading-3">Accept invitation</h1>
+          <p className="body-m">Signed in as {me.data.user.email ?? 'unknown email'}.</p>
+          <p className="body-s">The signed-in email must match the invited email.</p>
+          {error ? <p className="body-m" role="alert">{error}</p> : null}
+          <div className="rd-canvas-module__actions" style={{ justifyContent: 'flex-start' }}>
+            <button
+              className="diet-btn-txt"
+              data-size="md"
+              data-variant="solid"
+              type="button"
+              onClick={() => void acceptInvitation()}
+              disabled={loading}
+            >
+              <span className="diet-btn-txt__label body-m">{loading ? 'Accepting...' : 'Accept invitation'}</span>
+            </button>
+            <Link className="diet-btn-txt" data-size="md" data-variant="line2" href="/home">
+              <span className="diet-btn-txt__label body-m">Cancel</span>
+            </Link>
+          </div>
+        </section>
+      </div>
     </main>
   );
 }

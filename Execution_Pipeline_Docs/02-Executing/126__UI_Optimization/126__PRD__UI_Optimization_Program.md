@@ -1,10 +1,516 @@
 # PRD 126 — MAMA: UI Optimization Program
 
-Status: LOCALIZATION ARCHITECTURE CORRECTION CLOSED — independent V1–V8 GREEN;
-A–M program status otherwise unchanged.
+Status: REOPENED — ORIGINAL A–M STEP-9 AND LOCALIZATION-CORRECTION EVIDENCE
+PRESERVED; D4 CONVERGENCE IMPLEMENTED LOCALLY AND UNDER FINAL
+DEPLOYED/PRODUCT-OWNER VERIFICATION.
 Owner: Clickeen product architecture + UI
 Date: 2026-06-26
 Stage: 02-Executing
+
+## 2026-07-30 UI Convergence Correction
+
+The original A–M Step-9 work and the localization correction remain historical
+GREEN evidence for the scopes they actually executed. They did not establish
+one Dieter-owned layout, Table, and Popup contract and then make DevStudio,
+Roma, and applicable Bob UI consume those contracts. Post-closure DevStudio
+commits `2a070120`, `5e7c0266`, and `2b013925` are current-source input only;
+they are not convergence execution credit.
+
+The program is therefore reopened. No product code may be changed for this
+correction until the corrected H/I/K/L/M contracts and the acceptance matrix in
+`126_DevQA.md` are the agreed execution authority.
+
+### Frozen Taxonomy And Composition
+
+Roma and DevStudio use exactly this high-level composition:
+
+```text
+main-container
+├── left-nav
+└── page
+```
+
+- `main-container` is the root layout and direct parent of the other two.
+- `left-nav` is the one navigation region.
+- `page` is the right-side route content region.
+- Public CSS selectors are `.main-container`, `.left-nav`, and `.page`.
+- The shared source markup is:
+
+```html
+<div class="main-container" data-navigation-open="true|absent">
+  <aside class="left-nav">consumer navigation</aside>
+  <main class="page">consumer route content</main>
+</div>
+```
+
+No second shell vocabulary is authorized. Do not introduce `workspace`,
+`appframe`, `navstack`, `workarea`, `routeview`, `viewhead`, `contentflow`,
+`contentgroup`, `recordset`, `dialogframe`, `specimenboard`, generic `surface`
+wrappers, or aliases for the three names above. `workspace` is deliberately
+excluded because Bob already owns `Workspace` and `.workspace` for widget
+preview. Bob keeps its product-specific `ToolDrawer | Workspace` composition
+and does not adopt the Roma/DevStudio layout taxonomy.
+
+### Frozen Ownership
+
+```text
+Dieter defines -> DevStudio demonstrates -> Roma and DevStudio consume
+```
+
+Applicable Bob UI consumes Dieter Table and Popup; Bob's product layout remains
+Bob-owned.
+
+| Contract | Dieter owns | Consumer owns |
+| --- | --- | --- |
+| Layout | `.main-container`, `.left-nav`, `.page`; Full/Compact composition, sizing, overflow, and navigation-open visual state | route list, labels, route state, page content, navigation-open state, and domain behavior |
+| Table | semantic table visual contract: wrapper overflow, border, header, row/cell spacing, and typography | columns, data, editing, sorting, pagination, operations, policy, loading/error/selected/hover meaning |
+| Popup | native `<dialog>` visual structure: backdrop, size, border, radius, shadow, header/body/footer/actions, and compact fit; existing lifecycle helper retains mechanics | copy, fields, dirty/running state, validation, persistence, action meaning, and accepted dismissal policy |
+
+Non-modal anchored `popover` remains a distinct Dieter component. Popup must
+not be implemented as, renamed to, or routed through Popover.
+
+The Layout ownership, taxonomy, and source/edit path are frozen. The following
+values are initial shared source defaults carried forward from the current
+apps; they are not final product-owner visual approval. The four named layout
+values can be refined later through DevStudio without changing the contract:
+
+- Full: `13.75rem` left navigation and `minmax(0, 1fr)` page;
+- root: `100dvh`, one grid row, hidden root overflow;
+- left navigation: its own vertical scrolling, `var(--space-6)` padding plus
+  safe-area insets, and
+  `color-mix(in oklab, var(--color-system-gray-5), white 40%)`;
+- page: the only outer route-content scrolling owner, `var(--space-8)` padding
+  plus safe-area insets, and
+  `color-mix(in oklab, var(--color-system-gray-6), white 40%)`;
+- Compact below `600px` usable width or height: one-column page, fixed
+  navigation `min(20rem, calc(100vw - 3rem))`, off-canvas when closed,
+  `var(--shadow-elevated)` when open, and the existing `64%` black-mix scrim;
+- apps render their trigger and a `button[data-navigation-scrim]` inside
+  `main.page`; Dieter styles the scrim/open presentation, while apps own click,
+  open/close, and focus behavior;
+- the existing coarse-pointer portrait unsupported boundary remains app-owned
+  126J behavior, not a fourth layout class or a Dieter runtime classifier.
+
+The three structural selectors must be scoped as
+`.main-container`, `.main-container > .left-nav`, and
+`.main-container > .page`. Layout CSS is imported directly by Roma and
+DevStudio only. It must not be added to the broad `dieter/styles.css` import
+used by Bob.
+
+The Page foundation is part of the same Layout source:
+
+```html
+<main class="page">
+  <header class="page__header">
+    <div>
+      <h1>Consumer title</h1>
+      <p>Consumer description</p>
+    </div>
+    <div class="page__actions">consumer actions</div>
+  </header>
+  <div class="page__content">consumer content</div>
+</main>
+```
+
+The only shared Page subparts are `.page__header`, `.page__actions`, and
+`.page__content`. Dieter owns their layout, spacing, and outer scrolling
+relationship. Consumers own their content and behavior. Do not add generic
+section, card, module, panel, surface, canvas, or workspace taxonomy.
+
+Adjustable Layout/Page values are four Dieter foundation tokens:
+
+```text
+--layout-left-nav-width
+--layout-left-nav-padding
+--layout-page-padding
+--layout-compact-left-nav-width
+```
+
+Layout CSS consumes those tokens without raw fallbacks.
+`main-container.spec.json` lists the exact editable token names; it does not
+duplicate their values. Existing Dieter role-color, radius, shadow, and motion
+tokens remain authoritative for the other visual values.
+
+### Exact Dieter Source Contract
+
+Execution creates these source authorities:
+
+```text
+dieter/layouts/main-container/
+  main-container.css
+  main-container.html
+  main-container.spec.json
+
+dieter/components/table/
+  table.css
+  table.html
+  table.spec.json
+
+dieter/components/popup/
+  popup.css
+  popup.html
+  popup.spec.json
+```
+
+The public component selectors are `.diet-table`,
+`.diet-table__table`, `.diet-popup`, `.diet-popup__header`,
+`.diet-popup__body`, `.diet-popup__footer`, and
+`.diet-popup__actions`. The layout selectors are the three unprefixed names
+defined above.
+
+Popup has exactly three semantic size states. Their initial shared source
+values are:
+
+| State | Selector | Inline size |
+| --- | --- | --- |
+| Small | `.diet-popup[data-size="small"]` | `min(30rem, calc(100vw - (2 * var(--space-4))))` |
+| Medium/default | `.diet-popup` / `[data-size="medium"]` | `min(32.5rem, calc(100vw - (2 * var(--space-4))))` |
+| Large | `.diet-popup[data-size="large"]` | `min(61.25rem, calc(100vw - (2 * var(--space-4))))` |
+
+All sizes use `max-height: calc(100dvh - (2 * var(--space-4)))`,
+`border: 1px solid var(--role-border)`,
+`border-radius: var(--control-radius-2xl)`,
+`background: var(--role-surface)`, `color: var(--color-text)`,
+`box-shadow: var(--shadow-elevated)`, `padding: 0`, and
+`color-mix(in oklab, var(--color-system-black), transparent 65%)` for the
+backdrop. `[open]` is a three-row grid. Header/body/footer each use
+`var(--space-5)`; header and footer use
+`1px solid var(--role-border)` dividers. Header aligns title/close at opposite
+ends, body owns `overflow: auto`, and actions are end-aligned, wrapping, with
+`var(--space-3)` gap.
+Small maps to DevStudio token editing, Medium to Roma/Bob/Object Manager, and
+Large to Bulk Edit. Consumers may not restate these widths locally.
+
+Table initially has one base density: `var(--space-2) var(--space-3)` cell
+padding. Its source-derived DevStudio page must demonstrate ordinary,
+horizontal-overflow, row-action, and editable-cell compositions without adding
+a data/table engine.
+Its initial base carries forward the current `operational-table` visual source:
+`1px solid var(--role-border)`, `var(--control-radius-md)`,
+`var(--role-surface)` wrapper, collapsed borders,
+`var(--color-text)`, `400 var(--fs-13) / var(--lh-body-ui) var(--font-ui)`,
+row/cell bottom borders using `var(--role-border)`, start/middle alignment,
+`var(--role-surface-muted)` and weight `600` for headers, and no final-row
+border. No shared hover, selected, editable, error, or loading state is added;
+those remain consumer-owned.
+
+`operational-table` is replaced by Table in the same migration. Its directory,
+imports, selectors, generated registry entries, and consumer markup are
+deleted; it must not survive beside Table as a compatibility path. The existing
+`shared/dialog-lifecycle.ts` remains the single native-dialog mechanics helper.
+Popup consumes that lifecycle where behavior is required; it does not duplicate
+or replace it.
+
+`dieter/layouts/**` becomes an explicit Dieter source category recognized by
+the existing source import, governance, and DevStudio generation paths. This
+does not authorize a generated runtime mirror, browser manifest, shared runtime
+service, new package, new generator script, or compatibility wrapper.
+
+### DevStudio Contract
+
+DevStudio adds `Layouts` under Foundations:
+
+```text
+Foundations
+  Core styles
+  Colors
+  Icons
+  Typography
+  Layouts
+```
+
+`Layouts` is generated from the real
+`dieter/layouts/main-container/{html,css,spec.json}` source and shows:
+
+1. one short title and explanation;
+2. the source structure/markup;
+3. an actual Full rendering;
+4. an actual Compact rendering with navigation closed;
+5. an actual Compact rendering with navigation open.
+
+Examples use the production markup and CSS. DevStudio may supply example nav
+items/content. Each example runs in an isolated iframe sized to the applicable
+real viewport so production media queries execute. DevStudio controls only the
+iframe dimensions, clipping, and label. It must not copy, override, or restyle
+the inner layout.
+
+The Layouts page also renders the real Page header/actions/content composition
+and an editable-property table derived from `editableTokens` in the Dieter
+spec. Each Edit action opens the existing DevStudio token editor for that exact
+token. Reads, validation, confirmation, dirty-state protection, and source
+commit use the existing token route and Pages Functions. No raw CSS editor,
+layout-specific write API, second source writer, or structural editor is added.
+Structure is visible but changes only through reviewed Dieter source.
+
+All Foundations and component pages follow one restrained documentation-page
+composition: title/short explanation, simple semantic sections, semantic tables
+where rows and columns are real, an icon grid for Icons, actual source-derived
+component examples, and explicit Edit actions where editing exists. Generated
+pages must not use fake `div` tables, giant token rows, nested decorative white
+containers, or a DevStudio-only imitation of Dieter.
+
+### Consumer Migration And Deletion
+
+Execution is a hard cut:
+
+1. Add the Dieter Layout source contract.
+2. Generate the DevStudio Layouts/Page page from that source, expose its
+   `editableTokens` through the existing token editor, and verify its production
+   examples.
+3. Migrate DevStudio's actual shell to
+   `.main-container > .left-nav + .page`.
+4. Delete replaced DevStudio shell/page layout selectors and declarations,
+   including `.docs-shell*`, `.devstudio-page-layout`, and redundant
+   `.devstudio-page*` layout wrappers; retain only page-domain styling that
+   Dieter does not own.
+5. Add final Dieter Table and Popup source contracts and their source-derived
+   DevStudio examples.
+6. Replace `operational-table` everywhere and delete it.
+7. Migrate all Roma shell markup from `.roma-layout*` to the exact shared layout
+   classes and delete the replaced Roma layout base CSS.
+8. Migrate Roma dialogs from `.roma-modal*` to Popup and delete replaced local
+   popup visual CSS while preserving each workflow's behavior.
+9. Migrate applicable Bob dialogs and semantic tables to Popup/Table and delete
+   replaced local base visuals. Bob's `Workspace` layout is untouched.
+10. Regenerate with the existing generators, then update current living docs
+    only after source behavior exists.
+
+No new generator script is permitted. Modify the existing foundation/component
+generation and static-registry machinery only where required to consume the new
+Dieter sources. Generated files are outputs and must never be hand-authored.
+
+### Exact Correction File Map
+
+Add:
+
+- `dieter/layouts/main-container/{main-container.css,main-container.html,main-container.spec.json}`;
+- `dieter/components/table/{table.css,table.html,table.spec.json}`;
+- `dieter/components/popup/{popup.css,popup.html,popup.spec.json}`.
+
+Edit Dieter/build:
+
+- `dieter/tokens/dieter-foundation-tokens.css` for the exact four editable
+  Layout values;
+- `dieter/styles.css` for Table/Popup only;
+- existing Dieter exports/governance, including
+  `scripts/dieter/governance-guards.mjs` where its current inventory requires
+  the new governed sources;
+- `dieter/components/bulk-edit/{bulk-edit.html,bulk-edit.css,bulk-edit.ts}`;
+- `dieter/components/object-manager/{object-manager.html,object-manager.css,object-manager.ts}`.
+
+Edit DevStudio:
+
+- `admin/README.md`;
+- `admin/src/main.ts`;
+- `admin/functions/_shared/dieter-token-contracts.js`, extending the existing
+  foundation-token validation authority to the exact four Layout tokens;
+- `admin/src/css/{layout.css,utilities.css,dieter-previews.css}` and deletion of
+  the replaced `admin/src/css/tokens.css` shell values;
+- `admin/scripts/generate-foundation-pages.mjs`;
+- `admin/src/data/{componentRenderer.ts,routes.ts}`;
+- `admin/src/html/tools/{entitlements,llm-management}.html`;
+- `e2e/devstudio/{route-contract,core-styles-contract}.spec.ts`.
+
+The existing component-page and static-registry generators remain unchanged;
+their current source-driven discovery emits the new Table and Popup outputs
+without a second generator or registry path.
+
+Regenerate, never hand-edit:
+
+- `admin/src/html/foundations/**`;
+- `admin/src/html/components/**`;
+- `admin/src/data/{showcase,componentRegistry}.generated.ts`.
+
+Edit Roma:
+
+- `roma/app/layout.tsx`;
+- `roma/app/login/page.tsx`;
+- `roma/app/(authed)/builder/page.tsx`;
+- `roma/app/(authed)/builder/[instanceId]/page.tsx`;
+- `roma/components/roma-shell.tsx`;
+- `roma/components/accept-invite-domain.tsx`;
+- `roma/app/roma.css`;
+- Table sites in
+  `roma/components/{pages-domain,assets-domain,team-domain,widgets-domain}.tsx`;
+- Popup sites in
+  `roma/components/{assets-domain,pages-domain,roma-account-notice-modal,roma-unsaved-changes-dialog,roma-upsell-dialog,widgets-domain}.tsx`.
+- `roma/tests/run-widget-command-gates.ts`.
+
+Edit Bob only where applicable:
+
+- `bob/components/UpsellPopup.tsx`;
+- `bob/components/ToolDrawer.tsx`, replacing its Object Manager transient-work
+  guard selector with the final Popup marker;
+- `bob/app/bob_app.css`;
+- `bob/tests/run-accessibility-copy.ts`.
+
+Do not edit Bob `Workspace.tsx`, ToolDrawer composition, preview sizing/session,
+or save behavior. The one ToolDrawer transient-work selector above is a
+required hard-cut guard repair, not a layout/composition change. Do not
+mass-rename Roma `rd-*`/module selectors; remove one
+only when the source diff proves it is solely replaced base page chrome.
+
+Delete:
+
+- `dieter/components/operational-table/**`;
+- all active `.diet-operational-table*` imports/selectors/markup;
+- DevStudio layout selectors `.docs-shell`, `.docs-shell__sidebar`,
+  `.docs-shell__main`, `.docs-shell__compact-bar`,
+  `.docs-shell__menu-toggle`, and `.docs-shell__scrim`, including their Full/
+  Compact media declarations;
+- DevStudio `.devstudio-page-layout` and its direct-child header/div rules;
+  `.devstudio-page` border/radius/background/padding; and
+  `.devstudio-page-section` generic margin/background/padding/radius. Route
+  markup is remapped to semantic headings/sections rather than renamed wrapper
+  chrome;
+- DevStudio token-editor frame/backdrop/header/body/footer/actions base visuals;
+- replaced Roma `.roma-layout*` and `.roma-modal*` base visuals;
+- Bob `.ck-upsellModal*` base visuals;
+- Bulk Edit/Object Manager popup frame/backdrop/width/base structure duplicated
+  by Popup.
+
+Reconcile active doctrine and planning references:
+
+- `documentation/engineering/UI/{README,dieter,components,surfaces,dialogs-and-modals}.md`;
+- `documentation/services/{dieter,devstudio,roma,bob}.md`;
+- this parent, the product-owner register, H/I/J/K/L/M, DevQA, the active 126E
+  interaction statement, and the active Account Asset Folders planning
+  dependency.
+
+Retain/remap:
+
+- DevStudio brand and nav-content rules currently under
+  `.docs-shell__brand`, `.docs-shell__brand-title`, and `.docs-shell__nav`
+  are retained with their class names changed to
+  `.devstudio-nav__brand`, `.devstudio-nav__title`, and
+  `.devstudio-nav__content`; they are app-local nav content and do not restate
+  Layout geometry or expand the shared taxonomy;
+- `.devstudio-page__header` becomes `.page__header`; route actions and route
+  bodies use `.page__actions` and `.page__content`;
+- route-specific section classes such as Entitlements/LLM/token editor state
+  remain, but the generic `.devstudio-page-section` class and chrome do not;
+- Roma `.roma-nav*`, `.rd-header*`, and domain/module rules remain unless the
+  exact declaration duplicates `.page` outer scrolling/padding; only that
+  duplicated declaration is deleted, not the domain selector.
+
+Living docs are execution outputs, not pre-execution target claims:
+
+- `documentation/engineering/UI/{README,dieter,components,dialogs-and-modals,surfaces}.md`;
+- `documentation/services/{dieter,devstudio,roma,bob}.md`.
+
+Do not rename `surfaces.md`; no such rename was approved.
+
+### Correction Boundaries
+
+- No new transport/service route and no account/session, storage, translation,
+  locale, publication, policy, entitlement, or product-data behavior changes.
+  The existing authenticated foundation-token GET/POST validation authority
+  recognizes exactly the four approved Layout tokens so DevStudio can show and
+  edit their real Dieter source values.
+- No R2 product-data operation or Worker change.
+- No shared React shell, table engine, modal framework, design-system runtime
+  service, generic Surface component, device registry, or second package.
+- No compatibility aliases or old/new parallel paths.
+- No new keyboard-support program. Native semantic controls keep browser-native
+  behavior, and the already accepted dialog lifecycle keeps its bounded
+  Escape/focus behavior; the correction adds no synthetic keyboard machinery.
+- The visual correction is intentional: it replaces hardcoded app-local layout,
+  table, and popup appearance with the agreed Dieter contracts. Earlier
+  “no redesign,” “local shell,” and “do not touch generated pages” boundaries
+  are superseded only for this exact correction.
+
+### Execution And Closure Order
+
+The correction executes only after H/I/K/L/M and `126_DevQA.md` agree with this
+section:
+
+1. Dieter Layout;
+2. DevStudio Layouts reveal;
+3. actual DevStudio layout migration and deletion;
+4. Dieter Table and Popup;
+5. DevStudio Foundations/component-page convergence;
+6. Roma Layout/Table/Popup migration and deletion;
+7. applicable Bob Table/Popup migration and deletion;
+8. focused source/build checks;
+9. exact-SHA Git-connected Pages deployment verification;
+10. deployed browser QA for every DevStudio tab, all affected Roma routes, and
+    every affected Bob path;
+11. living-doc reconciliation and independent V1–V8 audit.
+
+126 cannot close while any correction row in `126_DevQA.md` is open. Historical
+Step-9 and localization evidence remains valid but cannot substitute for this
+new evidence.
+
+Focused local gates:
+
+```bash
+pnpm --filter @ck/dieter typecheck
+pnpm dieter:governance:check
+pnpm validate:widgets
+pnpm --filter @clickeen/devstudio generate
+pnpm --filter @clickeen/devstudio typecheck
+pnpm --filter @clickeen/devstudio lint
+pnpm --filter @clickeen/devstudio check:functions
+pnpm --filter @clickeen/devstudio build
+pnpm --filter @clickeen/roma lint
+pnpm --filter @clickeen/roma typecheck
+pnpm --filter @clickeen/roma build:cf
+pnpm --filter @clickeen/roma test:widget-command-gates
+pnpm --filter @clickeen/bob lint
+pnpm --filter @clickeen/bob typecheck
+pnpm --filter @clickeen/bob build:cf
+pnpm --filter @clickeen/bob test:accessibility-copy
+pnpm tokyo:r2:sync:check
+```
+
+Update existing tests; do not add a second framework. Deployed layout proof uses
+`1440x900`, `768x1024`, `1024x768`, `844x390`, `390x844`, and
+`600x960`.
+
+Exact existing verification files:
+
+- `e2e/devstudio/route-contract.spec.ts`;
+- `e2e/devstudio/core-styles-contract.spec.ts`;
+- `e2e/devstudio/126b-color-reveal.spec.ts`;
+- `roma/tests/run-widget-command-gates.ts`;
+- `bob/tests/run-accessibility-copy.ts`.
+
+The exact authenticated DevStudio command is:
+
+```bash
+E2E_BASE_URL=https://devstudio.clickeen.com \
+E2E_AUTH_STATE=e2e/.auth/devstudio.json \
+pnpm exec playwright test \
+  e2e/devstudio/route-contract.spec.ts \
+  e2e/devstudio/core-styles-contract.spec.ts \
+  e2e/devstudio/126b-color-reveal.spec.ts
+```
+
+The auth state must come from the existing Berlin-to-DevStudio session-finish
+path and be valid for `devstudio.clickeen.com`; missing/expired auth keeps this
+gate RED.
+
+Authenticated Roma browser coverage is:
+`/home`, `/profile`, `/widgets`, `/pages`, `/builder`, `/assets`, `/team`,
+`/billing`, `/usage`, `/ai`, `/settings`, and the existing
+`/settings/widget-defaults` rewrite. Table operations are exercised on
+`/widgets`, `/pages`, `/assets`, and `/team`; all Roma Popup workflows listed
+in 126K are exercised on their owning routes. Bob proof runs through
+`/builder` with an existing instance and covers Upsell, Bulk Edit, and Object
+Manager; `Workspace` preview is a non-regression.
+
+Before remote Pages inspection:
+
+```bash
+pnpm cf:api:preflight
+pnpm cf:pages:project devstudio
+pnpm cf:pages:project roma-dev
+pnpm cf:pages:project bob-dev
+```
+
+The returned `latest_deployment` for projects `devstudio`, `roma-dev`, and
+`bob-dev` must be `success` at the same exact source SHA before browser proof.
+No Pages config/env mutation is part of this correction.
 
 ## 2026-07-30 Reopening
 

@@ -163,7 +163,7 @@ export function hydrateObjectManager(
     const addBtn = root.querySelector<HTMLButtonElement>('[data-objects-add]');
     const manageBtn = root.querySelector<HTMLButtonElement>('[data-objects-manage]');
     const itemTemplate = root.querySelector<HTMLTemplateElement>('template[data-objects-item]');
-    const dialog = root.querySelector<HTMLDialogElement>('.diet-object-manager__modal');
+    const dialog = root.querySelector<HTMLDialogElement>('[data-objects-modal]');
     const editor = root.querySelector<HTMLElement>('[data-objects-editor]');
     const modalList = root.querySelector<HTMLElement>('[data-objects-modal-list]');
     const rowTemplate = root.querySelector<HTMLTemplateElement>('template[data-objects-row]');
@@ -366,8 +366,7 @@ export function hydrateObjectManager(
     let editorFocus: HTMLElement | null = null;
 
     const isDirty = (): boolean =>
-      original.length !== working.length ||
-      original.some((item, index) => item !== working[index]);
+      original.length !== working.length || original.some((item, index) => item !== working[index]);
 
     const showEditor = (restoreFocus: boolean): void => {
       discardPanel.hidden = true;

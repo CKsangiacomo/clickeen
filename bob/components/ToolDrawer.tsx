@@ -99,7 +99,7 @@ function hasTransientEditorWork(): boolean {
       [
         '[data-uploading="true"]',
         'dialog[data-bulk-modal][open]',
-        'dialog.diet-object-manager__modal[open]',
+        'dialog.diet-popup[data-objects-modal][open]',
       ].join(', '),
     ),
   );

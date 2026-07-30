@@ -1,7 +1,8 @@
 # 126 — DevQA: Where We Actually Stand
 
-Status: LOCALIZATION ARCHITECTURE CORRECTION GREEN — independent V1–V8 complete;
-the rest of the 126 program record is unchanged below.
+Status: REOPENED — LOCALIZATION CORRECTION REMAINS GREEN; UI CONVERGENCE
+IMPLEMENTED LOCALLY AND UNDER FINAL DEPLOYED/PRODUCT-OWNER VERIFICATION; NO
+CLOSURE CREDIT YET.
 This document reconciles PRD claims with Git and current source evidence. It does
 not define product law, approve unresolved architecture choices, prove that every
 intermediate commit deployed, or close any PRD whose required verification is
@@ -12,6 +13,85 @@ Last reconciled: 2026-07-30
 Scope: premature A-H code-change reality, final A-M current-source audits,
 executable PRDs, exact-tree peer reviews, and current Step-9 execution state.
 Parent: `126__PRD__UI_Optimization_Program.md` (MAMA).
+
+## 2026-07-30 UI Convergence Acceptance Matrix
+
+Original A–M execution and localization-correction evidence below remains
+point-in-time evidence. It cannot close this correction. Commits `2a070120`,
+`5e7c0266`, and `2b013925` are current DevStudio source input, not convergence
+execution.
+
+The correction starts only from the frozen parent/H/I/K/L/M contract. Product
+code, product data, and deployment state have not been changed by that
+documentation correction.
+
+### Authority Gate
+
+| Concern | Authority for correction |
+| --- | --- |
+| Product surface | Dieter source defines; DevStudio demonstrates; DevStudio/Roma consume; applicable Bob consumes Table/Popup |
+| Account/session coordinate | Unchanged; no account/session mutation |
+| Storage coordinate | Unchanged; no R2/product-data mutation |
+| Route/API boundary | No new service route or transport. One new generated DevStudio hash route, `#/dieter/layouts`; the existing foundation-token GET/POST validator recognizes exactly the four approved Layout tokens through the existing source-write authority. |
+| Runtime/deploy | Existing Git-connected DevStudio, Roma, and `bob-dev` Pages builds |
+| Verification | Source/deletion searches, generated inventories, exact-SHA Pages status, and deployed browser evidence |
+
+### Work Separation
+
+| Lane | Correction requirement |
+| --- | --- |
+| Code | Dieter Layout/Table/Popup; existing generator changes; DevStudio/Roma/applicable Bob adoption; duplicate deletion |
+| Product data | None |
+| Deploy/runtime | Git-connected Pages only after local checks; verify exact source SHA |
+| Documentation | Correct living Dieter/UI/DevStudio/Roma/Bob docs after implementation proves current behavior |
+
+### Required Order And Evidence
+
+| Gate | Required result | Status |
+| --- | --- | --- |
+| C1 Dieter Layout/Page | Exact `dieter/layouts/main-container/{css,html,spec.json}`; `.main-container > .left-nav + .page`; Page header/actions/content; four exact editable Dieter tokens; existing governance recognizes layouts | OPEN |
+| C2 DevStudio Layouts/Edit | `#/dieter/layouts` generated from C1; isolated real-viewport examples plus Page composition use exact production source; spec tokens open the existing authenticated token editor/commit path | OPEN |
+| C3 DevStudio consumer | Actual shell and every route consume C1 Page composition; replaced `.docs-shell*`/generic page layout bases deleted | OPEN |
+| C4 Dieter Table | Exact `table/{css,html,spec.json}`; semantic source example at `#/dieter/table`; final selectors | OPEN |
+| C5 Table hard cut | Every consumer migrated; `operational-table` directory/imports/selectors/docs/tests have zero active hits | OPEN |
+| C6 Dieter Popup | Exact `popup/{css,html,spec.json}` around native `<dialog>` at `#/dieter/popup`; existing lifecycle remains sole mechanics helper; Popover distinct | OPEN |
+| C7 Popup hard cut | DevStudio, Roma, Bob Upsell, Bulk Edit, Object Manager migrated; replaced local visual bases deleted; behaviors unchanged | OPEN |
+| C8 DevStudio presentation | Core/Colors/Icons/Typography/Layouts and all components use restrained semantic, source-derived presentation | OPEN |
+| C9 Roma migration | Exact shared Layout/Page plus Table/Popup; `.roma-layout*`, outer `rd-*` duplication, and `.roma-modal*` replaced bases deleted; routes/operations unchanged | OPEN |
+| C10 Bob boundary | Bob keeps `ToolDrawer | Workspace`; only applicable Table/Popup adoption; widget-preview layout unchanged | OPEN |
+| C11 Local gates | Parent's exact commands and exact five existing verification files GREEN | OPEN |
+| C12 Generated inventory | Exactly 5 Foundation, 24 component, and 2 Policy DevStudio routes generated from source | OPEN |
+| C13 Deploy proof | `pnpm cf:api:preflight` then project reads for `devstudio`, `roma-dev`, and `bob-dev`; each `latest_deployment` succeeds at the same exact source SHA | OPEN |
+| C14 Browser proof | All 31 DevStudio routes; the 12 exact Roma route paths and route-specific Table/Popup workflows named by the parent; Bob Upsell/Bulk Edit/Object Manager through `/builder`; no console/page errors; product owner accepts deployed DevStudio visual set | OPEN |
+| C15 Deletion proof | No compatibility aliases, copied Dieter CSS, second generators, parallel old/new selectors, runtime manifest/service, or generated Dieter mirror | OPEN |
+| C16 Docs + V1–V8 | Living docs match delivered source; independent audit GREEN | OPEN |
+
+### Browser Evidence Detail
+
+DevStudio proof is exhaustive, not sampled:
+
+- 5 Foundation routes: Core styles, Colors, Icons, Typography, Layouts;
+- 24 generated component routes, including Table and Popup;
+- 2 Policy routes;
+- Layouts Full, Compact-closed, and Compact-open;
+- token edit/confirm/discard behavior;
+- Table overflow and Popup visual/lifecycle behavior.
+
+Roma proof covers every route whose shell, table, or popup markup changed and
+replays its current operations without changing product truth. Bob proof covers
+Upsell, Bulk Edit, Object Manager, and any semantic Table consumer changed by
+the correction; `Workspace` preview behavior is a required non-regression.
+
+Click/touch and native semantic behavior are verified. This matrix does not
+authorize or claim a broad keyboard-support program. Only the existing accepted
+native-dialog lifecycle is preserved.
+
+### Closure Rule
+
+126 remains open until C1–C16 are GREEN with exact file/deletion evidence,
+generated counts, exact-SHA deployed evidence, browser evidence, and independent
+V1–V8. A local build, a screenshot of one page, the original Step-9 evidence,
+or the earlier localization closure cannot substitute for any open row.
 
 ## 2026-07-30 Localization Closure Correction
 

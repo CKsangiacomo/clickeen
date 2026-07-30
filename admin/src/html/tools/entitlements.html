@@ -3,20 +3,6 @@
     margin-top: var(--space-2);
   }
 
-  .entitlements-toolbar {
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    padding: 0;
-    margin: 8px 0 12px;
-  }
-
-  .entitlements-actions {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
   .entitlements-table {
     table-layout: fixed;
   }
@@ -231,7 +217,8 @@
 
 <h1 class="heading-2">Policy Editor</h1>
 
-<section class="devstudio-page-section" id="entitlements-root" aria-live="polite"></section>
+<div data-page-actions></div>
+<section id="entitlements-root" aria-live="polite"></section>
 
 <script type="module">
   const root = document.getElementById('entitlements-root');
@@ -255,10 +242,10 @@
     aiSavedUnreadable: 'AI policy changes were saved, but the latest policy could not be shown. Reload policy data.',
   });
 
-  function appendOperationalTable(section, table) {
+  function appendTable(section, table) {
     const frame = document.createElement('div');
-    frame.className = 'diet-operational-table';
-    table.classList.add('diet-operational-table__table');
+    frame.className = 'diet-table';
+    table.classList.add('diet-table__table');
     frame.appendChild(table);
     section.appendChild(frame);
   }
@@ -424,13 +411,9 @@
     return Math.round(value * getByteFactor(unit));
   }
 
-  function renderToolbar(container) {
-    const toolbar = document.createElement('div');
-    toolbar.className = 'entitlements-toolbar';
-
-    const actions = document.createElement('div');
-    actions.className = 'entitlements-actions';
-
+  function renderToolbar() {
+    const actions = document.querySelector('[data-page-actions]');
+    if (!actions) return;
     const reloadBtn = document.createElement('button');
     reloadBtn.className = 'diet-btn-txt';
     reloadBtn.setAttribute('data-size', 'md');
@@ -456,10 +439,7 @@
       }
     });
 
-    actions.appendChild(reloadBtn);
-
-    toolbar.append(actions);
-    container.appendChild(toolbar);
+    actions.replaceChildren(reloadBtn);
   }
 
   function createEditableValueCell({ key, entitlement, tier }) {
@@ -658,7 +638,7 @@
 
   function renderTable({ title, entries, tiers }) {
     const section = document.createElement('section');
-    section.className = 'devstudio-page-section entitlements-section';
+    section.className = 'entitlements-section';
 
     const heading = document.createElement('h2');
     heading.className = 'heading-3';
@@ -784,7 +764,7 @@
     });
 
     table.appendChild(tbody);
-    appendOperationalTable(section, table);
+    appendTable(section, table);
     return section;
   }
 
@@ -862,7 +842,7 @@
     if (!aiModels.length) return null;
 
     const section = document.createElement('section');
-    section.className = 'devstudio-page-section entitlements-section';
+    section.className = 'entitlements-section';
 
     const heading = document.createElement('h2');
     heading.className = 'heading-3';
@@ -911,7 +891,7 @@
       });
 
     table.appendChild(tbody);
-    appendOperationalTable(section, table);
+    appendTable(section, table);
     return section;
   }
 
@@ -1019,7 +999,7 @@
     if (!Array.isArray(agents) || !agents.length || !tiers.length) return null;
 
     const section = document.createElement('section');
-    section.className = 'devstudio-page-section entitlements-section';
+    section.className = 'entitlements-section';
 
     const heading = document.createElement('h2');
     heading.className = 'heading-3';
@@ -1199,7 +1179,7 @@
     });
 
     table.appendChild(tbody);
-    appendOperationalTable(section, table);
+    appendTable(section, table);
     return section;
   }
 
@@ -1207,7 +1187,7 @@
     if (!Array.isArray(agents) || !agents.length || !tiers.length) return null;
 
     const section = document.createElement('section');
-    section.className = 'devstudio-page-section entitlements-section';
+    section.className = 'entitlements-section';
 
     const heading = document.createElement('h2');
     heading.className = 'heading-3';
@@ -1300,7 +1280,7 @@
     });
 
     table.appendChild(tbody);
-    appendOperationalTable(section, table);
+    appendTable(section, table);
     return section;
   }
 
@@ -1324,7 +1304,7 @@
       root.appendChild(warn);
     }
 
-    renderToolbar(root);
+    renderToolbar();
     renderOperationFeedback(root);
 
     if (!state.matrix) {

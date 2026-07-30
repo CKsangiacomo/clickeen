@@ -1,5 +1,6 @@
-import './roma.css';
 import '../../dieter/styles.css';
+import '../../dieter/layouts/main-container/main-container.css';
+import './roma.css';
 import { Inter_Tight } from 'next/font/google';
 import type { Viewport } from 'next';
 

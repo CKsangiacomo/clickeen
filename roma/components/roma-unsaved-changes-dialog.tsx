@@ -48,32 +48,38 @@ export function RomaUnsavedChangesDialog({
   }, [open]);
 
   return (
-    <dialog ref={dialogRef} className="roma-modal" aria-labelledby="roma-unsaved-title">
-      <h2 id="roma-unsaved-title" className="heading-4">
-        Unsaved changes
-      </h2>
-      <p className="body-m">{message}</p>
-      <div className="roma-modal__actions">
-        <button
-          ref={keepButtonRef}
-          className="diet-btn-txt"
-          data-size="md"
-          data-variant="secondary"
-          type="button"
-          onClick={onKeepEditing}
-        >
-          <span className="diet-btn-txt__label body-m">Keep editing</span>
-        </button>
-        <button
-          className="diet-btn-txt"
-          data-size="md"
-          data-variant="primary"
-          type="button"
-          onClick={onDiscard}
-        >
-          <span className="diet-btn-txt__label body-m">Discard</span>
-        </button>
+    <dialog ref={dialogRef} className="diet-popup" data-size="medium" aria-labelledby="roma-unsaved-title">
+      <header className="diet-popup__header">
+        <h2 id="roma-unsaved-title" className="heading-4">
+          Unsaved changes
+        </h2>
+      </header>
+      <div className="diet-popup__body">
+        <p className="body-m">{message}</p>
       </div>
+      <footer className="diet-popup__footer">
+        <div className="diet-popup__actions">
+          <button
+            ref={keepButtonRef}
+            className="diet-btn-txt"
+            data-size="md"
+            data-variant="secondary"
+            type="button"
+            onClick={onKeepEditing}
+          >
+            <span className="diet-btn-txt__label body-m">Keep editing</span>
+          </button>
+          <button
+            className="diet-btn-txt"
+            data-size="md"
+            data-variant="primary"
+            type="button"
+            onClick={onDiscard}
+          >
+            <span className="diet-btn-txt__label body-m">Discard</span>
+          </button>
+        </div>
+      </footer>
     </dialog>
   );
 }

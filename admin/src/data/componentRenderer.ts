@@ -129,20 +129,27 @@ const renderVariantTiles = (
           const specHtml = specLines
             .map((line) => `<span class="spec-line body-xs">${line}</span>`)
             .join('');
+          const previewTitle =
+            typeof preview.title === 'string'
+              ? `<strong class="body-s">${preview.title}</strong>`
+              : '';
 
-          const wrapperClass = wrapPreviewComponents.has(componentName)
-            ? 'dieter-component-preview-wrap-wrapper'
-            : 'dieter-component-preview-280-wrapper';
+          const wrapperClass = ['table', 'popup'].includes(componentName)
+            ? 'dieter-component-preview-full-wrapper'
+            : wrapPreviewComponents.has(componentName)
+              ? 'dieter-component-preview-wrap-wrapper'
+              : 'dieter-component-preview-280-wrapper';
 
           return `
-    <div class="${wrapperClass}">
-      <div class="spec-wrapper dieter-spec-wrapper">
+    <figure class="${wrapperClass}">
+      <figcaption class="spec-wrapper dieter-spec-wrapper">
+        ${previewTitle}
         ${specHtml}
-      </div>
+      </figcaption>
       <div class="dieter-preview">
         ${rendered}
       </div>
-    </div>`;
+    </figure>`;
         })
         .filter((html): html is string => Boolean(html))
         .join('');
@@ -223,12 +230,10 @@ export const renderComponentDoc = (source: ComponentSource): ComponentDoc | null
   }
 
   const pageHtml = `
-<div>
-  <h1 class="heading-2" style="margin:0">${source.title}</h1>
-</div>
-<div class="devstudio-page-section">
+<h1 class="heading-2">${source.title}</h1>
+<section aria-label="${source.title} examples">
   ${variantsHtml.join('\n')}
-</div>
+</section>
 `;
 
   return {

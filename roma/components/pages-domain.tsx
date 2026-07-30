@@ -643,8 +643,8 @@ export function PagesDomain() {
         {domainLoading && pages.length === 0 ? <p className="body-m" role="status">Loading pages...</p> : null}
         {!domainLoading && pages.length === 0 ? <p className="body-m">No pages yet.</p> : null}
         {pages.length ? (
-          <div className="diet-operational-table">
-          <table className="diet-operational-table__table">
+          <div className="diet-table">
+          <table className="diet-table__table">
             <thead>
               <tr>
                 <th className="label-s">Page</th>
@@ -865,8 +865,8 @@ export function PagesDomain() {
             <h3 className="heading-6">Country rules</h3>
           </div>
           {pageSource.localization.countryLocaleRules.length ? (
-            <div className="diet-operational-table">
-            <table className="diet-operational-table__table">
+            <div className="diet-table">
+            <table className="diet-table__table">
               <thead>
                 <tr>
                   <th className="label-s">Country</th>
@@ -969,49 +969,52 @@ export function PagesDomain() {
           </div>
 
           {addInstancesOpen ? (
-            <dialog ref={addInstancesDialogRef} className="roma-modal" aria-labelledby="roma-pages-add-instances-title">
+            <dialog ref={addInstancesDialogRef} className="diet-popup" data-size="medium" aria-labelledby="roma-pages-add-instances-title">
+              <header className="diet-popup__header">
                 <h2 id="roma-pages-add-instances-title" className="heading-6">
                   Add instances
                 </h2>
                 <p className="body-s">
                   {checkedInstanceIds.length} selected
                 </p>
+              </header>
+              <div className="diet-popup__body">
                 {widgetInstances.length ? (
-                  <div className="diet-operational-table">
-                  <table className="diet-operational-table__table">
-                    <thead>
-                      <tr>
-                        <th className="label-s">Select</th>
-                        <th className="label-s">Instance</th>
-                        <th className="label-s">Widget</th>
-                        <th className="label-s">Status</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {visiblePickerInstances.map((instance) => {
-                        const alreadyPlaced = placedInstanceIds.has(instance.instanceId);
-                        const checked = checkedInstanceIds.includes(instance.instanceId);
-                        return (
-                          <tr key={instance.instanceId}>
-                            <td className="body-s">
-                              <input
-                                type="checkbox"
-                                checked={alreadyPlaced || checked}
-                                disabled={alreadyPlaced || Boolean(activeActionKey) || pageSourceLocked}
-                                aria-label={`Select ${instance.displayName || DEFAULT_INSTANCE_DISPLAY_NAME}`}
-                                onChange={() => toggleCheckedInstance(instance.instanceId)}
-                              />
-                            </td>
-                            <td className="body-s">{instance.displayName || DEFAULT_INSTANCE_DISPLAY_NAME}</td>
-                            <td className="body-s">{instance.widgetType}</td>
-                            <td className="body-s">
-                              {alreadyPlaced ? 'Already placed' : instance.status === 'published' ? 'Published' : 'Unpublished, blocks publish'}
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
+                  <div className="diet-table">
+                    <table className="diet-table__table">
+                      <thead>
+                        <tr>
+                          <th className="label-s">Select</th>
+                          <th className="label-s">Instance</th>
+                          <th className="label-s">Widget</th>
+                          <th className="label-s">Status</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {visiblePickerInstances.map((instance) => {
+                          const alreadyPlaced = placedInstanceIds.has(instance.instanceId);
+                          const checked = checkedInstanceIds.includes(instance.instanceId);
+                          return (
+                            <tr key={instance.instanceId}>
+                              <td className="body-s">
+                                <input
+                                  type="checkbox"
+                                  checked={alreadyPlaced || checked}
+                                  disabled={alreadyPlaced || Boolean(activeActionKey) || pageSourceLocked}
+                                  aria-label={`Select ${instance.displayName || DEFAULT_INSTANCE_DISPLAY_NAME}`}
+                                  onChange={() => toggleCheckedInstance(instance.instanceId)}
+                                />
+                              </td>
+                              <td className="body-s">{instance.displayName || DEFAULT_INSTANCE_DISPLAY_NAME}</td>
+                              <td className="body-s">{instance.widgetType}</td>
+                              <td className="body-s">
+                                {alreadyPlaced ? 'Already placed' : instance.status === 'published' ? 'Published' : 'Unpublished, blocks publish'}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
                   </div>
                 ) : (
                   <p className="body-m">No saved instances yet.</p>
@@ -1030,7 +1033,9 @@ export function PagesDomain() {
                     </button>
                   </div>
                 ) : null}
-                <div className="roma-modal__actions">
+              </div>
+              <footer className="diet-popup__footer">
+                <div className="diet-popup__actions">
                   <button
                     className="diet-btn-txt"
                     data-size="md"
@@ -1054,12 +1059,13 @@ export function PagesDomain() {
                     </span>
                   </button>
                 </div>
+              </footer>
             </dialog>
           ) : null}
 
           {pageSource.placements.length ? (
-            <div className="diet-operational-table">
-            <table className="diet-operational-table__table">
+            <div className="diet-table">
+            <table className="diet-table__table">
               <thead>
                 <tr>
                   <th className="label-s">Order</th>

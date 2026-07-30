@@ -16,24 +16,6 @@ a {
   text-decoration: none;
 }
 
-.roma-layout {
-  --roma-nav-width: clamp(232px, 16vw, 264px);
-  display: grid;
-  grid-template-columns: var(--roma-nav-width) minmax(0, 1fr);
-  height: 100dvh;
-  overflow: hidden;
-}
-
-.roma-layout__nav {
-  background: var(--color-system-gray-6-step4);
-  padding:
-    max(var(--space-4), env(safe-area-inset-top))
-    var(--space-4)
-    max(var(--space-4), env(safe-area-inset-bottom))
-    max(var(--space-4), env(safe-area-inset-left));
-  overflow: auto;
-}
-
 .roma-nav {
   display: flex;
   flex-direction: column;
@@ -131,38 +113,7 @@ a {
   opacity: 0.7;
 }
 
-.roma-layout__main {
-  min-width: 0;
-  min-height: 0;
-  overflow: hidden;
-}
-
-.rd-domain {
-  --rd-inline-pad: var(--space-2);
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-  height: 100%;
-  min-height: 0;
-  padding:
-    max(var(--space-2), env(safe-area-inset-top))
-    max(var(--space-2), env(safe-area-inset-right))
-    max(var(--space-2), env(safe-area-inset-bottom))
-    var(--space-2);
-}
-
-.rd-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-3);
-  padding-block: var(--space-4);
-  padding-inline: var(--rd-inline-pad);
-  border-bottom: none;
-  background: transparent;
-}
-
-.rd-header-left {
+.roma-page-heading {
   display: flex;
   align-items: center;
   gap: var(--space-3);
@@ -170,42 +121,29 @@ a {
   flex: 1;
 }
 
-.rd-header-title {
-  margin: 0;
-  min-width: 0;
-}
-
 .roma-nav-trigger.diet-btn-ic,
-.roma-layout__scrim,
 .roma-portrait-boundary {
   display: none;
 }
 
-.rd-header-right {
+.roma-builder-page {
   display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 8px;
-  flex-wrap: wrap;
+  flex-direction: column;
+  overflow: hidden;
 }
 
-.rd-canvas {
-  display: grid;
-  align-content: start;
-  gap: var(--space-3);
-  padding-block: 0;
-  padding-inline: var(--rd-inline-pad);
-  flex: 1;
-  min-height: 0;
-  overflow: auto;
-  background: transparent;
+.roma-standalone-page {
+  box-sizing: border-box;
+  display: block;
+  min-height: 100dvh;
+  padding: var(--layout-page-padding);
+  background: var(--role-surface);
 }
 
 .rd-canvas--builder {
-  padding-block: 0;
-  padding-inline: var(--rd-inline-pad);
   display: flex;
   flex-direction: column;
+  flex: 1;
   min-height: 0;
   overflow: hidden;
 }
@@ -527,43 +465,6 @@ a {
   gap: 8px;
 }
 
-.roma-modal {
-  width: min(520px, calc(100vw - (2 * var(--space-4))));
-  max-width: none;
-  max-height: calc(100dvh - (2 * var(--space-4)));
-  overflow: auto;
-  border-radius: var(--control-radius-2xl);
-  border: 1px solid var(--color-system-gray-5);
-  background: var(--color-system-white);
-  color: var(--color-text);
-  box-shadow: var(--shadow-elevated);
-  padding: var(--space-4);
-  gap: var(--space-3);
-}
-
-.roma-modal[open] {
-  display: grid;
-}
-
-.roma-modal::backdrop {
-  background: color-mix(in oklab, var(--color-system-black), transparent 65%);
-}
-
-.roma-modal h2 {
-  margin: 0;
-}
-
-.roma-modal p {
-  margin: 0;
-}
-
-.roma-modal__actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: var(--space-3);
-  margin-top: 4px;
-}
-
 .roma-upsell-dialog__content {
   min-height: 96px;
 }
@@ -579,53 +480,13 @@ a {
 }
 
 @media (max-width: 599px), (max-height: 599px) {
-  .roma-layout {
-    grid-template-columns: 1fr;
-  }
-
-  .roma-layout__nav {
-    position: fixed;
-    inset: 0 auto 0 0;
-    width: min(320px, calc(100vw - 48px));
-    height: 100dvh;
-    transform: translateX(-100%);
-    transition: transform var(--duration-base) var(--easing-standard);
-    box-shadow: var(--shadow-elevated);
-    z-index: 30;
-  }
-
-  .roma-layout[data-navigation-open='true'] .roma-layout__nav {
-    transform: translateX(0);
-  }
-
   .roma-nav-trigger.diet-btn-ic {
     display: inline-flex;
-  }
-
-  .roma-layout__scrim {
-    position: fixed;
-    inset: 0;
-    z-index: 20;
-    border: 0;
-    padding: 0;
-    background: color-mix(in oklab, var(--color-system-black), transparent 64%);
-  }
-
-  .roma-layout[data-navigation-open='true'] .roma-layout__scrim {
-    display: block;
-  }
-
-  .rd-header {
-    flex-wrap: wrap;
-  }
-
-  .rd-domain {
-    padding-left: max(var(--space-2), env(safe-area-inset-left));
   }
 }
 
 @media (pointer: coarse) and (orientation: portrait) and (max-width: 599px) {
-  .roma-layout {
+  .main-container {
     display: none;
   }
 

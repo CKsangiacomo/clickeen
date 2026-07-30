@@ -98,26 +98,32 @@ export function RomaAccountNoticeModal() {
   const summary = summarizeTierDrop(fromTier, toTier);
 
   return (
-    <dialog ref={dialogRef} className="roma-modal" aria-labelledby="roma-notice-title">
-      <h2 className="heading-5" id="roma-notice-title">
-        {summary.title}
-      </h2>
-      <div className="roma-inline-stack">
-        {summary.lines.map((line) => (
-          <p className="body-m" key={line}>
-            {line}
-          </p>
-        ))}
+    <dialog ref={dialogRef} className="diet-popup" data-size="medium" aria-labelledby="roma-notice-title">
+      <header className="diet-popup__header">
+        <h2 className="heading-5" id="roma-notice-title">
+          {summary.title}
+        </h2>
+      </header>
+      <div className="diet-popup__body">
+        <div className="roma-inline-stack">
+          {summary.lines.map((line) => (
+            <p className="body-m" key={line}>
+              {line}
+            </p>
+          ))}
+        </div>
+        {dismissError ? <p className="body-m" role="alert">{dismissError}</p> : null}
       </div>
-      {dismissError ? <p className="body-m" role="alert">{dismissError}</p> : null}
-      <div className="roma-modal__actions">
-        <Link className="diet-btn-txt" data-size="md" data-variant="line2" href="/settings">
-          <span className="diet-btn-txt__label body-m">Open settings</span>
-        </Link>
-        <button className="diet-btn-txt" data-size="md" data-variant="primary" type="button" onClick={() => void dismiss()} disabled={dismissLoading}>
-          <span className="diet-btn-txt__label body-m">{dismissLoading ? 'Dismissing...' : 'Dismiss'}</span>
-        </button>
-      </div>
+      <footer className="diet-popup__footer">
+        <div className="diet-popup__actions">
+          <Link className="diet-btn-txt" data-size="md" data-variant="line2" href="/settings">
+            <span className="diet-btn-txt__label body-m">Open settings</span>
+          </Link>
+          <button className="diet-btn-txt" data-size="md" data-variant="primary" type="button" onClick={() => void dismiss()} disabled={dismissLoading}>
+            <span className="diet-btn-txt__label body-m">{dismissLoading ? 'Dismissing...' : 'Dismiss'}</span>
+          </button>
+        </div>
+      </footer>
     </dialog>
   );
 }

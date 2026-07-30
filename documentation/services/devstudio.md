@@ -32,12 +32,11 @@ DevStudio follows the global operational-workspace tenet in
 `documentation/engineering/UI/surfaces.md`: full desktop workspace on desktop
 and tablets in either orientation; compact drawer navigation on mobile
 landscape; explicit unsupported boundary on mobile portrait. Retina/4K density
-governs sharpness, not layout class. DevStudio has one simple shell: persistent
-`220px` left navigation plus a flexible work area in Full mode, and the same
-navigation as an accessible overlay drawer plus a full-width work area in
-Compact mode. The shell uses the shared `600px` usable-width-and-height
-capability boundary, dynamic viewport units, and safe areas. Reveal and policy
-pages are not rebuilt as mobile variants.
+governs sharpness, not layout class. DevStudio consumes Dieter's
+`main-container > left-nav + page` source directly. Its four layout values are
+source tokens rather than DevStudio shell constants. The shell uses the shared
+`600px` usable-width-and-height capability boundary, dynamic viewport units,
+and safe areas. Reveal and policy pages are not rebuilt as mobile variants.
 
 ## Token Editor Dialog
 
@@ -55,29 +54,31 @@ Token fields remain disabled until source truth loads, and every editor and
 dismissal control remains disabled while a commit is in flight.
 
 The editor has three source-file lanes: foundation, color, and typography.
-Foundation edits are exposed from the generated Core styles page and commit
-only recognized spacing, control geometry, radius, shadow, duration, and easing
-tokens in `dieter-foundation-tokens.css`. The validation contract used to
-generate editable rows is the same contract enforced by the Pages Function.
-Core styles samples are decorative. Each editable row exposes a separate,
-named Edit action so the preview itself does not masquerade as a control.
+Foundation edits are exposed from the generated Core styles and Layouts pages
+and commit only recognized spacing, layout, control geometry, radius, shadow,
+duration, and easing tokens in `dieter-foundation-tokens.css`. Each page scopes
+the editor dropdown to the tokens visible on that page. The validation contract
+used to generate editable rows is the same contract enforced by the Pages
+Function. Samples are decorative. Each editable row exposes a separate, named
+Edit action so the preview itself does not masquerade as a control.
 
 ## Current Sections
 
 | Section | Runtime source |
 | --- | --- |
-| Foundations: Core styles, Colors, Icons, Typography | Generated from Dieter token and icon source through DevStudio static page generation. Core styles groups spacing, control sizes/gaps, radii, shadows, and motion from `dieter-foundation-tokens.css`. |
+| Foundations: Core styles, Colors, Icons, Typography, Layouts | Generated from Dieter token, icon, and layout source through DevStudio static page generation. Core styles groups 53 non-layout foundation tokens. Layouts reveals the real `main-container` contract, three source-derived examples, and its four editable properties. |
 | Dieter Components | Generated/static component showcase pages from Dieter component specs and snippets. |
 | Entitlements | Pages Functions read/write entitlement policy files through GitHub. The same tool also renders AI runtime policy editing backed by `/api/ai-runtime/*`. |
 | LLM Management | Read-only generated visibility into managed model configuration. It is not a runtime API-backed editor. |
 
-Policy Editor tables use Dieter's small operational-table visual/overflow base.
-DevStudio still owns their policy-specific columns, density, sticky headers,
-editable cells, data, and mutation behavior.
+Foundation and Policy Editor tables use Dieter Table. DevStudio still owns
+their columns, editable cells, data, and mutation behavior. The token editor
+uses Dieter Popup while retaining DevStudio's source-write workflow and
+dismissal state.
 
 Hash routes are generated from `admin/src/html/**` and route data in
 `admin/src/data/routes.ts`. There is no separate design-system admin app. The
-current generated inventory is 4 Foundation routes, 22 Dieter Component routes,
+current generated inventory is 5 Foundation routes, 24 Dieter Component routes,
 and 2 Policy routes. CSS-only Dieter contracts do not create empty showcase
 routes.
 
@@ -112,12 +113,14 @@ families in one route:
 - shared shadows;
 - motion durations and easing.
 
-The page does not store overrides or introduce another token file. Editable
-rows, source parsing, and POST validation share one token contract. Foundation
-writes reject duplicate live declarations, negative geometry, unresolved,
-self-referential, or cyclic token references, invalid easing bounds, unknown
-shadow color references, unsafe CSS syntax, and unsupported value shapes. A
-rejected value never reaches the GitHub commit operation.
+Layout properties are intentionally absent from Core styles. The Layouts page
+owns their reveal and editing context. Neither page stores overrides or
+introduces another token file. Editable rows, source parsing, and POST
+validation share one token contract. Foundation writes reject duplicate live
+declarations, negative geometry, unresolved, self-referential, or cyclic token
+references, invalid easing bounds, unknown shadow color references, unsafe CSS
+syntax, and unsupported value shapes. A rejected value never reaches the
+GitHub commit operation.
 
 ## Color Reveal And Write Truth
 

@@ -158,48 +158,70 @@
   width: 100%;
 }
 .dieter-component-preview-280-wrapper,
-.dieter-component-preview-wrap-wrapper {
-  display: flex;
+.dieter-component-preview-wrap-wrapper,
+.dieter-component-preview-full-wrapper {
+  display: grid;
+  grid-template-columns: minmax(8rem, 12rem) minmax(0, 1fr);
+  align-items: start;
   gap: var(--space-4);
-  padding: 16px;
-  border-radius: var(--control-radius-lg);
-  background: var(--role-surface-muted);
+  margin: 0;
+  padding-block: var(--space-4);
+  border-block-end: 1px solid var(--role-border);
   break-inside: avoid;
   -webkit-column-break-inside: avoid;
   page-break-inside: avoid;
-  width: auto;
-  max-width: min(520px, 100%);
+  width: 100%;
+  max-width: 100%;
   box-sizing: border-box;
 }
 
 .dieter-component-preview-280-wrapper .spec-wrapper,
-.dieter-component-preview-wrap-wrapper .spec-wrapper {
-  flex: 0 1 160px;
-  max-width: 200px;
+.dieter-component-preview-wrap-wrapper .spec-wrapper,
+.dieter-component-preview-full-wrapper .spec-wrapper {
   min-width: 96px;
 }
 
 .dieter-component-preview-280-wrapper .dieter-preview,
-.dieter-component-preview-wrap-wrapper .dieter-preview {
-  padding-block: var(--space-5);
-  padding-inline: var(--space-2);
-  background: var(--color-system-white);
-  border-radius: var(--control-radius-lg);
-  border: none;
+.dieter-component-preview-wrap-wrapper .dieter-preview,
+.dieter-component-preview-full-wrapper .dieter-preview {
+  padding: 0;
+  background: transparent;
   display: grid;
   gap: var(--space-3);
+}
+
+.dieter-component-preview-full-wrapper {
+  inline-size: 100%;
+  max-inline-size: 100%;
+}
+
+.dieter-component-preview-full-wrapper .dieter-preview {
+  min-inline-size: 0;
+}
+
+.dieter-component-preview-full-wrapper .dieter-preview > .diet-popup[open]:not(:modal) {
+  position: relative;
+  inset: auto;
+  margin: 0;
+}
+
+.foundation-section {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.foundation-section > :is(h2, h3) {
+  margin: 0;
 }
 
 .dieter-component-preview-280-wrapper .dieter-preview {
   width: 280px;
   max-width: 280px;
-  flex: 0 0 280px;
   place-items: stretch;
 }
 
 .dieter-component-preview-wrap-wrapper {
   align-items: center;
-  max-width: min(420px, 100%);
 }
 
 .dieter-component-preview-wrap-wrapper .dieter-preview {
@@ -208,5 +230,12 @@
   width: auto;
   min-width: 180px;
   max-width: min(320px, 100%);
-  flex: 0 1 auto;
+}
+
+@media (max-width: 720px) {
+  .dieter-component-preview-280-wrapper,
+  .dieter-component-preview-wrap-wrapper,
+  .dieter-component-preview-full-wrapper {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
