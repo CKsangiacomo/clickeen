@@ -103,7 +103,6 @@ export const baseMaterializerInput = {
     accountPublicId: 'CLICKEEN',
     instanceId: 'inst_contract',
     baseLocale: 'en',
-    requestedLocale: 'en',
   },
   displayName: 'Contract Widget',
   state: baseState,
@@ -111,6 +110,5 @@ export const baseMaterializerInput = {
     schemaWidgetContractFingerprint: 'schema:fingerprint',
     sourceFingerprint: 'source:fingerprint',
     sourceReference: 'accounts/CLICKEEN/instances/inst_contract/source.json',
-    overlayFingerprint: null,
   },
 } satisfies RuntimeMaterializerInput;

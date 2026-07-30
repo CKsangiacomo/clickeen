@@ -9,9 +9,6 @@ import {
 import { resolvePolicy } from '@clickeen/ck-policy';
 import { normalizeLocaleToken } from '@clickeen/l10n';
 import { listAccountWidgetInstanceIds } from '@roma/lib/account-instance-direct';
-import {
-  deleteAccountInstanceLocalePackageArtifact,
-} from '@roma/lib/account-instance-locale-package';
 import { deleteAccountInstanceTranslationValues } from '@roma/lib/account-instance-translations';
 import {
   emptyRemovedLocaleCleanup,
@@ -127,14 +124,6 @@ async function cleanupRemovedAccountLocales(args: {
     removedLocales,
     deleteTranslation: (instanceId, locale) =>
       deleteAccountInstanceTranslationValues({
-        accountId: args.accountId,
-        instanceId,
-        locale,
-        accountCapsule: args.accountCapsule,
-        requestId: args.requestId,
-      }),
-    deletePackage: (instanceId, locale) =>
-      deleteAccountInstanceLocalePackageArtifact({
         accountId: args.accountId,
         instanceId,
         locale,

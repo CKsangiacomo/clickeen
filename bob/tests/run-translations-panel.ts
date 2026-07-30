@@ -31,16 +31,11 @@ const success = buildTranslationGenerationFeedback({
       translatedLocales: ['fr', 'de'],
       failedLocales: [],
     },
-    localePackages: {
-      ok: true,
-      completed: [{ locale: 'fr' }, { locale: 'de' }],
-      failed: [],
-    },
   },
 });
 assert.equal(success.tone, 'success');
 assert.equal(success.title, 'Translations generated');
-assert.deepEqual(success.lines, ['Generated 2 localized packages.', 'Preview translations have been refreshed.']);
+assert.deepEqual(success.lines, ['Generated translations for French, German.', 'Preview translations have been refreshed.']);
 
 const notAccepted = buildTranslationGenerationFeedback({
   ok: true,
@@ -65,41 +60,6 @@ assert.equal(shouldRefreshTranslationsAfterGeneration({
   },
 }), false);
 
-const packageFailurePayload = {
-  ok: false,
-  translation: {
-    ok: true,
-    accepted: true,
-    baseLocale: 'en',
-    requestedLocales: ['fr', 'de'],
-    translatedLocales: ['fr', 'de'],
-    failedLocales: [],
-  },
-  error: {
-    reasonKey: 'coreui.errors.instance.embedNotReady',
-  },
-  localePackages: {
-    ok: false,
-    completed: [{ locale: 'fr' }],
-    failed: [
-      {
-        locale: 'de',
-        phase: 'package-write',
-        reasonKey: 'coreui.errors.instance.embedNotReady',
-      },
-    ],
-  },
-};
-const packageFailure = buildTranslationGenerationFeedback({
-  ok: false,
-  status: 502,
-  json: packageFailurePayload,
-});
-assert.equal(packageFailure.tone, 'warning');
-assert.equal(packageFailure.title, 'Translations need attention');
-assert.match(packageFailure.lines.join(' '), /German/);
-assert.doesNotMatch(packageFailure.lines.join(' '), /coreui\.errors/);
-
 const commandFailure = buildTranslationGenerationFeedback({
   ok: false,
   status: 403,
@@ -113,8 +73,6 @@ assert.equal(commandFailure.tone, 'error');
 assert.equal(commandFailure.title, 'Translation generation failed');
 assert.deepEqual(commandFailure.lines, ['You do not have permission to generate translations for this account.']);
 
-assert.equal(shouldRefreshTranslationsAfterGeneration(packageFailurePayload), true);
-assert.equal(shouldRefreshTranslationsAfterGeneration(packageFailure.lines), false);
 assert.equal(shouldRefreshTranslationsAfterGeneration({
   translation: {
     accepted: true,
@@ -140,11 +98,6 @@ const partial = buildTranslationGenerationFeedback({
           detail: 'Provider failure',
         },
       ],
-    },
-    localePackages: {
-      ok: true,
-      completed: [{ locale: 'fr' }, { locale: 'it' }],
-      failed: [],
     },
   },
 });
@@ -227,29 +180,5 @@ const missingAccepted = buildTranslationGenerationFeedback({
 });
 assert.equal(missingAccepted.tone, 'error');
 assert.match(missingAccepted.lines.join(' '), /result was incomplete/);
-
-const incompletePackages = buildTranslationGenerationFeedback({
-  ok: true,
-  status: 200,
-  json: {
-    ok: true,
-    translation: {
-      ok: true,
-      accepted: true,
-      baseLocale: 'en',
-      requestedLocales: ['fr', 'de'],
-      translatedLocales: ['fr', 'de'],
-      failedLocales: [],
-    },
-    localePackages: {
-      ok: true,
-      completed: [{ locale: 'fr' }],
-      failed: [],
-    },
-  },
-});
-assert.equal(incompletePackages.tone, 'warning');
-assert.equal(incompletePackages.title, 'Translations need attention');
-assert.match(incompletePackages.lines.join(' '), /package results were incomplete/);
 
 console.log('translations panel tests passed');

@@ -69,32 +69,114 @@ export function buildRuntime(args: {
   includeSocialShare: boolean;
   instanceId: string;
   baseLocale: string;
-  requestedLocale: string;
-  locales: Record<string, Record<string, unknown>>;
+  publicPath: string;
+  baseState: Record<string, unknown>;
   typographyData?: RuntimeTypographyData;
 }): { ok: true; runtimeJs: string } | RuntimeMaterializerFailure {
-  const localePolicy = {
-    baseLocale: args.baseLocale,
-    languages: Object.keys(args.locales),
-  };
-  const selectedLocaleExpression =
-    args.requestedLocale === args.baseLocale ? 'payload.baseLocale' : JSON.stringify(args.requestedLocale);
   const payload = `${WIDGET_SHELL_RUNTIME_PAYLOAD_START}
 (function () {
-  var payload = ${JSON.stringify({ instanceId: args.instanceId, baseLocale: args.baseLocale, locales: args.locales })};
-  var selectedLocale = ${selectedLocaleExpression};
-  var selectedState = payload.locales[selectedLocale];
-  if (!selectedState || typeof selectedState !== 'object') {
-    throw new Error('[Clickeen] Missing saved widget state for ' + payload.instanceId + ' / ' + selectedLocale);
+  var payload = ${JSON.stringify({
+    instanceId: args.instanceId,
+    baseLocale: args.baseLocale,
+    baseState: args.baseState,
+  })};
+
+  function isRecord(value) {
+    return Boolean(value && typeof value === 'object' && !Array.isArray(value));
   }
-  window.CK_LOCALE_POLICY = Object.assign({}, window.CK_LOCALE_POLICY || {}, ${JSON.stringify(localePolicy)});
+
+  function applyExactOverlay(baseState, values) {
+    if (!isRecord(values)) throw new Error('[Clickeen] Invalid locale overlay values');
+    var state = JSON.parse(JSON.stringify(baseState));
+    Object.entries(values).forEach(function (entry) {
+      var path = entry[0];
+      var value = entry[1];
+      if (typeof value !== 'string' || !path || path.includes('[') || path.includes(']') || path.includes('*')) {
+        throw new Error('[Clickeen] Invalid locale overlay value at ' + path);
+      }
+      var parts = path.split('.');
+      if (
+        parts.some(function (part) {
+          return !part || part === '__proto__' || part === 'prototype' || part === 'constructor';
+        })
+      ) {
+        throw new Error('[Clickeen] Invalid locale overlay path ' + path);
+      }
+      var current = state;
+      for (var index = 0; index < parts.length - 1; index += 1) {
+        var part = parts[index];
+        if (/^[0-9]+$/.test(part)) {
+          if (!Array.isArray(current) || Number(part) >= current.length) {
+            throw new Error('[Clickeen] Locale overlay path does not exist: ' + path);
+          }
+          current = current[Number(part)];
+        } else {
+          if (!isRecord(current) || !Object.prototype.hasOwnProperty.call(current, part)) {
+            throw new Error('[Clickeen] Locale overlay path does not exist: ' + path);
+          }
+          current = current[part];
+        }
+      }
+      var leaf = parts[parts.length - 1];
+      if (/^[0-9]+$/.test(leaf)) {
+        if (!Array.isArray(current) || typeof current[Number(leaf)] !== 'string') {
+          throw new Error('[Clickeen] Locale overlay target is not text: ' + path);
+        }
+        current[Number(leaf)] = value;
+      } else {
+        if (!isRecord(current) || !Object.prototype.hasOwnProperty.call(current, leaf) || typeof current[leaf] !== 'string') {
+          throw new Error('[Clickeen] Locale overlay target is not text: ' + path);
+        }
+        current[leaf] = value;
+      }
+    });
+    return state;
+  }
+
+  var localeContext = window.CK_LOCALE_CONTEXT;
+  var selectedLocale = payload.baseLocale;
+  var selectedState = payload.baseState;
+  var locales = { [payload.baseLocale]: payload.baseState };
+  var languages = [payload.baseLocale];
+  if (localeContext !== null && typeof localeContext !== 'undefined') {
+    if (
+      !isRecord(localeContext) ||
+      typeof localeContext.locale !== 'string' ||
+      localeContext.baseLocale !== payload.baseLocale ||
+      !Array.isArray(localeContext.languages) ||
+      localeContext.languages.some(function (locale) { return typeof locale !== 'string' || !locale; })
+    ) {
+      throw new Error('[Clickeen] Invalid public locale context');
+    }
+    selectedLocale = localeContext.locale;
+    languages = Array.from(new Set(localeContext.languages));
+    if (!selectedLocale || languages.indexOf(selectedLocale) < 0 || languages.indexOf(payload.baseLocale) < 0) {
+      throw new Error('[Clickeen] Invalid public locale context coordinate');
+    }
+    if (selectedLocale === payload.baseLocale) {
+      if (localeContext.values !== null) {
+        throw new Error('[Clickeen] Base locale context must not contain overlay values');
+      }
+    } else {
+      if (!isRecord(localeContext.values)) {
+        throw new Error('[Clickeen] Requested locale context is missing overlay values');
+      }
+      selectedState = applyExactOverlay(payload.baseState, localeContext.values);
+      locales[selectedLocale] = selectedState;
+    }
+  }
+  document.documentElement.lang = selectedLocale;
+  window.CK_LOCALE_POLICY = Object.assign({}, window.CK_LOCALE_POLICY || {}, {
+    baseLocale: payload.baseLocale,
+    languages: languages
+  });
   window.CK_WIDGETS = Object.assign({}, window.CK_WIDGETS || {});
   window.CK_WIDGETS[payload.instanceId] = {
     instanceId: payload.instanceId,
     locale: selectedLocale,
     baseLocale: payload.baseLocale,
     state: selectedState,
-    locales: payload.locales
+    locales: locales
   };
 })();
 ${WIDGET_SHELL_RUNTIME_PAYLOAD_END}`;

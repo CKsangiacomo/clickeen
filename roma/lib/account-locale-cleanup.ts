@@ -8,11 +8,10 @@ export type RemovedLocaleCleanup = {
   ok: boolean;
   instancesChecked: number;
   deleted: Array<{ instanceId: string; locale: string }>;
-  deletedPackages: Array<{ accountId: string; instanceId: string; locale: string }>;
   failed: Array<{
     instanceId: string;
     locale: string;
-    phase: 'translation-delete' | 'locale-package-delete' | 'cache-refresh';
+    phase: 'translation-delete';
     reasonKey: string;
     detail?: string;
   }>;
@@ -24,7 +23,6 @@ export function emptyRemovedLocaleCleanup(): RemovedLocaleCleanup {
     ok: true,
     instancesChecked: 0,
     deleted: [],
-    deletedPackages: [],
     failed: [],
   };
 }
@@ -44,16 +42,11 @@ export async function runRemovedLocaleCleanup(args: {
   deleteTranslation: (instanceId: string, locale: string) => Promise<
     { ok: true } | { ok: false; error: RemovedLocaleCleanupError }
   >;
-  deletePackage: (instanceId: string, locale: string) => Promise<
-    | { ok: true; value: { accountId: string; instanceId: string; locale: string } }
-    | { ok: false; error: RemovedLocaleCleanupError }
-  >;
 }): Promise<RemovedLocaleCleanup> {
   const removedLocales = Array.from(new Set(args.removedLocales));
   if (removedLocales.length === 0) return emptyRemovedLocaleCleanup();
 
   const deleted: RemovedLocaleCleanup['deleted'] = [];
-  const deletedPackages: RemovedLocaleCleanup['deletedPackages'] = [];
   const failed: RemovedLocaleCleanup['failed'] = [];
   let firstError: RemovedLocaleCleanupError | null = null;
   let instancesChecked = 0;
@@ -82,30 +75,6 @@ export async function runRemovedLocaleCleanup(args: {
       } else {
         deleted.push({ instanceId, locale });
       }
-
-      const packageDelete = await args.deletePackage(instanceId, locale).catch((error) => ({
-        ok: false as const,
-        error: unexpectedCleanupError(error),
-      }));
-      if (!packageDelete.ok) {
-        const detail = `locale-package-delete:${instanceId}:${locale}:${packageDelete.error.detail ?? packageDelete.error.reasonKey}`;
-        firstError ??= {
-          kind: packageDelete.error.kind,
-          reasonKey: packageDelete.error.reasonKey,
-          detail,
-        };
-        failed.push({
-          instanceId,
-          locale,
-          phase: packageDelete.error.reasonKey.startsWith('tokyo.errors.publicCache.')
-            ? 'cache-refresh'
-            : 'locale-package-delete',
-          reasonKey: packageDelete.error.reasonKey,
-          detail,
-        });
-      } else {
-        deletedPackages.push(packageDelete.value);
-      }
     }
   }
 
@@ -113,7 +82,6 @@ export async function runRemovedLocaleCleanup(args: {
     ok: failed.length === 0,
     instancesChecked,
     deleted,
-    deletedPackages,
     failed,
     ...(firstError ? { error: firstError } : {}),
   };

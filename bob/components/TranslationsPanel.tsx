@@ -129,27 +129,6 @@ function summarizeLocaleList(locales: string[]): string {
   return `${labels.slice(0, 3).join(', ')} and ${formatCount(labels.length - 3, 'more language')}`;
 }
 
-function resolvePackagePhaseCopy(phase: unknown): string {
-  switch (phase) {
-    case 'source-read':
-      return 'reading the saved widget';
-    case 'compile':
-      return 'preparing the widget package';
-    case 'overlay-read':
-      return 'reading generated translations';
-    case 'materializer':
-      return 'building the localized package';
-    case 'package-write':
-      return 'saving the localized package';
-    case 'cache-refresh':
-      return 'refreshing the public package cache';
-    case 'locale-package-delete':
-      return 'removing a localized package';
-    default:
-      return 'preparing the localized package';
-  }
-}
-
 function resolveTranslationErrorCopy(payload: Record<string, unknown> | null, status: number): string {
   const error = isRecord(payload?.error) ? payload.error : null;
   const reasonKey = typeof error?.reasonKey === 'string' ? error.reasonKey.trim() : '';
@@ -166,8 +145,6 @@ function resolveTranslationErrorCopy(payload: Record<string, unknown> | null, st
       return 'Translation generation failed. Please try again.';
     case 'coreui.errors.translations.baseLocaleMismatch':
       return 'The saved widget language changed. Refresh Builder and try again.';
-    case 'coreui.errors.instance.embedNotReady':
-      return 'The localized package could not be confirmed. Try generating translations again.';
     default:
       if (status === 401) return 'You need to sign in again before generating translations.';
       if (status === 403 || status === 402) return 'Your account cannot generate these translations right now.';
@@ -186,7 +163,6 @@ export function buildTranslationGenerationFeedback(response: TranslationCommandR
   const payload = isRecord(response.json) ? response.json : null;
   const hasTranslation = isRecord(payload?.translation);
   const outcome = readTranslationOutcome(payload?.translation);
-  const localePackages = isRecord(payload?.localePackages) ? payload.localePackages : null;
 
   if (!response.ok && !hasTranslation) {
     return {
@@ -228,63 +204,7 @@ export function buildTranslationGenerationFeedback(response: TranslationCommandR
     };
   }
 
-  const packageCompleted = readObjectArray(localePackages?.completed);
-  const packageFailures = readObjectArray(localePackages?.failed);
-  const completedPackageLocales = packageCompleted
-    ? readLocaleCoordinates(packageCompleted)
-    : null;
-  const failedPackageLocales = packageFailures
-    ? readLocaleCoordinates(packageFailures)
-    : null;
-  const packageResultIsComplete =
-    Boolean(
-      localePackages &&
-      packageCompleted &&
-      packageFailures &&
-      completedPackageLocales &&
-      failedPackageLocales &&
-      sameStringSet(
-        translatedLocales,
-        [...completedPackageLocales, ...failedPackageLocales],
-      ) &&
-      localePackages.ok === (failedPackageLocales.length === 0),
-    );
-  if (!packageResultIsComplete || !packageCompleted || !packageFailures || !failedPackageLocales) {
-    return {
-      tone: 'warning',
-      title: 'Translations need attention',
-      lines: [
-        `Generated translations for ${summarizeLocaleList(translatedLocales)}.`,
-        ...(failedTranslationCopy ? [`Translation failed for ${failedTranslationCopy}.`] : []),
-        'Localized package results were incomplete.',
-      ],
-    };
-  }
-
-  const generatedCopy =
-    packageCompleted.length > 0
-      ? `Generated ${formatCount(packageCompleted.length, 'localized package')}.`
-      : `Generated translations for ${summarizeLocaleList(translatedLocales)}.`;
-
-  if (packageFailures.length > 0) {
-    const failedLocaleCopy = summarizeLocaleList(failedPackageLocales);
-    const firstFailure = packageFailures[0]!;
-    const lines = [
-      generatedCopy,
-      ...(failedTranslationCopy ? [`Translation failed for ${failedTranslationCopy}.`] : []),
-      failedLocaleCopy
-        ? `Public packages failed for ${failedLocaleCopy}.`
-        : `${formatCount(packageFailures.length, 'public package')} failed.`,
-    ];
-    if (packageFailures.length === 1) {
-      lines.push(`The failure happened while ${resolvePackagePhaseCopy(firstFailure.phase)}.`);
-    }
-    return {
-      tone: 'warning',
-      title: 'Translations need attention',
-      lines,
-    };
-  }
+  const generatedCopy = `Generated translations for ${summarizeLocaleList(translatedLocales)}.`;
 
   if (translationFailures.length > 0) {
     return {

@@ -1,7 +1,6 @@
 import { buildRuntimePackageFingerprint } from './fingerprint';
 import { packageSource } from './files';
 import { buildIndexHtml, extractBody, stampPackageRoot, stripScripts, stripStylesheetLinks } from './html';
-import { applyLocaleOverlayToState } from './overlay';
 import { buildRuntime, buildStyles, socialShareEnabled } from './runtime';
 import { materializerFailure } from './errors';
 import {
@@ -26,8 +25,7 @@ function validCoordinate(coordinate: RuntimeMaterializerArtifactCoordinate): boo
     coordinate.kind === 'account-instance-widget' &&
     validString(coordinate.accountPublicId) &&
     validString(coordinate.instanceId) &&
-    validString(coordinate.baseLocale) &&
-    validString(coordinate.requestedLocale)
+    validString(coordinate.baseLocale)
   );
 }
 
@@ -36,9 +34,7 @@ function encodePathSegment(value: string): string {
 }
 
 function publicPackagePath(coordinate: RuntimeMaterializerArtifactCoordinate): string {
-  const base = `/${encodePathSegment(coordinate.accountPublicId)}/${encodePathSegment(coordinate.instanceId)}`;
-  if (coordinate.requestedLocale === coordinate.baseLocale) return base;
-  return `${base}/locales/${encodePathSegment(coordinate.requestedLocale)}`;
+  return `/${encodePathSegment(coordinate.accountPublicId)}/${encodePathSegment(coordinate.instanceId)}`;
 }
 
 function validCompiledWidget(compiled: RuntimeMaterializerCompiledWidget): boolean {
@@ -56,10 +52,8 @@ function buildPackage(args: {
   artifactCoordinate: RuntimeMaterializerArtifactCoordinate;
   instanceId: string;
   baseLocale: string;
-  requestedLocale: string;
   displayName: string | null;
   baseState: Record<string, unknown>;
-  requestedState: Record<string, unknown>;
   typographyData: RuntimeMaterializerInput['typographyData'];
 }): { ok: true; files: RuntimeMaterializerFileSet } | RuntimeMaterializerResult {
   const widgetHtml = packageSource({ compiled: args.compiled, key: 'widget.html' });
@@ -78,18 +72,14 @@ function buildPackage(args: {
   const styles = buildStyles({ compiled: args.compiled, widgetHtml, includeSocialShare });
   if (!styles.ok) return styles;
 
-  const locales =
-    args.requestedLocale === args.baseLocale
-      ? { [args.baseLocale]: args.baseState }
-      : { [args.baseLocale]: args.baseState, [args.requestedLocale]: args.requestedState };
   const runtime = buildRuntime({
     compiled: args.compiled,
     scriptSources: stripped.scriptSources,
     includeSocialShare,
     instanceId: args.instanceId,
     baseLocale: args.baseLocale,
-    requestedLocale: args.requestedLocale,
-    locales,
+    publicPath: publicPackagePath(args.artifactCoordinate),
+    baseState: args.baseState,
     ...(args.typographyData ? { typographyData: args.typographyData } : {}),
   });
   if (!runtime.ok) return runtime;
@@ -99,7 +89,7 @@ function buildPackage(args: {
     files: {
       indexHtml: buildIndexHtml({
         compiled: args.compiled,
-        htmlLocale: args.requestedLocale,
+        htmlLocale: args.baseLocale,
         displayName: args.displayName,
         body: stripped.body,
         publicPath: publicPackagePath(args.artifactCoordinate),
@@ -112,41 +102,17 @@ function buildPackage(args: {
 }
 
 export async function materializeRuntimePackage(input: RuntimeMaterializerInput): Promise<RuntimeMaterializerResult> {
-  if (!validCoordinate(input.artifactCoordinate)) return materializerFailure('locale_coordinate_invalid');
+  if (!validCoordinate(input.artifactCoordinate)) return materializerFailure('artifact_coordinate_invalid');
   if (!validCompiledWidget(input.compiled)) return materializerFailure('compiled_widget_invalid');
   if (!isRecord(input.state)) return materializerFailure('source_state_invalid');
-
-  const base = input.artifactCoordinate.requestedLocale === input.artifactCoordinate.baseLocale;
-  if (base && input.localeOverlay) return materializerFailure('locale_overlay_unexpected_for_base');
-  if (base && input.evidence.overlayFingerprint !== null) return materializerFailure('source_state_invalid', 'base_overlay_fingerprint_unexpected');
-  if (!base && !input.localeOverlay) return materializerFailure('locale_overlay_missing');
-  if (!base && input.localeOverlay?.locale !== input.artifactCoordinate.requestedLocale) {
-    return materializerFailure('locale_overlay_locale_mismatch');
-  }
-  if (!base && (!input.evidence.overlayFingerprint || typeof input.evidence.overlayFingerprint !== 'string')) {
-    return materializerFailure('source_state_invalid', 'non_base_overlay_fingerprint_missing');
-  }
-
-  let requestedState = input.state;
-  if (!base && input.localeOverlay) {
-    const overlay = applyLocaleOverlayToState({
-      compiled: input.compiled,
-      state: input.state,
-      localeOverlay: input.localeOverlay,
-    });
-    if (!overlay.ok) return overlay;
-    requestedState = overlay.state;
-  }
 
   const built = buildPackage({
     compiled: input.compiled,
     artifactCoordinate: input.artifactCoordinate,
     instanceId: input.artifactCoordinate.instanceId,
     baseLocale: input.artifactCoordinate.baseLocale,
-    requestedLocale: input.artifactCoordinate.requestedLocale,
     displayName: input.displayName,
     baseState: input.state,
-    requestedState,
     typographyData: input.typographyData,
   });
   if (!built.ok) return built;
@@ -159,8 +125,7 @@ export async function materializeRuntimePackage(input: RuntimeMaterializerInput)
       schemaWidgetContractFingerprint: input.evidence.schemaWidgetContractFingerprint,
       sourceFingerprint: input.evidence.sourceFingerprint,
       sourceReference: input.evidence.sourceReference,
-      localeCoordinate: input.artifactCoordinate,
-      overlayFingerprint: input.evidence.overlayFingerprint,
+      artifactCoordinate: input.artifactCoordinate,
       materializerContractVersion: RUNTIME_MATERIALIZER_CONTRACT_VERSION,
       generatedPackageFingerprint,
       supportFileFingerprints: [],

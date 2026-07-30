@@ -4,7 +4,6 @@ import {
   generateAccountInstanceTranslations,
   type TranslationAgentActivityEvent,
 } from '@roma/lib/account-instance-translations';
-import { materializeAccountInstanceLocalePackages } from '@roma/lib/account-instance-locale-package';
 import { enforceActiveLocaleEntitlement } from '@roma/lib/account-locale-entitlements';
 import { loadCurrentAccountLocalesState } from '@roma/lib/account-locales-state';
 import { requireInstanceIdParam } from '@roma/lib/route-helpers';
@@ -88,36 +87,7 @@ function streamGenerateTranslations(args: {
           return;
         }
 
-        if (
-          !generated.value.translation.accepted ||
-          generated.value.translation.translatedLocales.length === 0
-        ) {
-          result(200, generated.value);
-          return;
-        }
-
-        const packages = await materializeAccountInstanceLocalePackages({
-          accountId: args.accountId,
-          instanceId: args.instanceId,
-          baseLocale: args.baseLocale,
-          targetLocales: generated.value.translation.translatedLocales,
-          accountCapsule: args.accountCapsule,
-          requestId: args.requestId,
-        });
-        if (!packages.ok) {
-          result(packages.status, {
-            ok: false,
-            translation: generated.value.translation,
-            error: packages.error,
-            localePackages: packages.value,
-          });
-          return;
-        }
-
-        result(200, {
-          ...generated.value,
-          localePackages: packages.value,
-        });
+        result(200, generated.value);
       } catch (error) {
         result(500, {
           error: {
@@ -221,46 +191,9 @@ export async function POST(request: NextRequest, context: RouteContext) {
       current.value.setCookies,
     );
   }
-  if (
-    !generated.value.translation.accepted ||
-    generated.value.translation.translatedLocales.length === 0
-  ) {
-    return withSession(request, NextResponse.json(generated.value, { status: generated.status }), current.value.setCookies);
-  }
-
-  const packages = await materializeAccountInstanceLocalePackages({
-    accountId,
-    instanceId,
-    baseLocale,
-    targetLocales: generated.value.translation.translatedLocales,
-    accountCapsule: current.value.authzToken,
-    requestId: current.value.requestId,
-  });
-  if (!packages.ok) {
-    return withSession(
-      request,
-      NextResponse.json(
-        {
-          ok: false,
-          translation: generated.value.translation,
-          error: packages.error,
-          localePackages: packages.value,
-        },
-        { status: packages.status },
-      ),
-      current.value.setCookies,
-    );
-  }
-
   return withSession(
     request,
-    NextResponse.json(
-      {
-        ...generated.value,
-        localePackages: packages.value,
-      },
-      { status: generated.status },
-    ),
+    NextResponse.json(generated.value, { status: generated.status }),
     current.value.setCookies,
   );
 }

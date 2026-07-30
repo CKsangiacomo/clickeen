@@ -110,6 +110,7 @@ export function buildIndexHtml(args: {
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>${escapeHtml(args.displayName || `${args.compiled.displayName || args.compiled.widgetname} widget`)}</title>
+    <script>window.CK_LOCALE_CONTEXT = null;</script>
     <link rel="stylesheet" href="${escapeAttribute(`${args.publicPath}/styles.css`)}" />
   </head>
   <body>

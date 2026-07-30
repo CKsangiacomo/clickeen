@@ -76,11 +76,6 @@ type PackageBuildArgs = {
   typographyData?: RuntimeTypographyData;
 };
 
-type LocalePackageBuildArgs = PackageBuildArgs & {
-  requestedLocale: string;
-  overlayValues: Record<string, string>;
-};
-
 export type SavedWidgetPublicPackageBuildResult = {
   package: SavedWidgetPublicPackage;
   evidence: RuntimeMaterializerEvidence;
@@ -140,14 +135,7 @@ function materializerFailureToInstancePackageFailure(args: {
     case 'widget_package_root_invalid':
     case 'source_state_invalid':
       return validationFailure(args.reasonKey, args.detail, args.paths);
-    case 'locale_coordinate_invalid':
-    case 'locale_overlay_missing':
-    case 'locale_overlay_unexpected_for_base':
-    case 'locale_overlay_locale_mismatch':
-    case 'locale_overlay_key_missing':
-    case 'locale_overlay_key_unexpected':
-    case 'locale_overlay_value_invalid':
-    case 'locale_overlay_scope_unsupported':
+    case 'artifact_coordinate_invalid':
     case 'typography_data_invalid':
       return validationFailure('coreui.errors.instance.content.invalid', args.reasonKey, args.paths);
     default:
@@ -169,16 +157,6 @@ async function buildMaterializerSourceFingerprint(args: PackageBuildArgs): Promi
     baseLocale: args.baseLocale,
     displayName: args.displayName,
     state: args.state,
-  });
-}
-
-async function buildLocaleOverlayFingerprint(args: LocalePackageBuildArgs): Promise<string> {
-  return sha256Fingerprint('roma.account-instance.locale-overlay', {
-    accountId: args.accountId,
-    instanceId: args.instanceId,
-    baseLocale: args.baseLocale,
-    locale: args.requestedLocale,
-    values: args.overlayValues,
   });
 }
 
@@ -373,7 +351,6 @@ export async function buildSavedWidgetPublicPackageResult(args: PackageBuildArgs
       accountPublicId: args.accountId,
       instanceId: args.instanceId,
       baseLocale: args.baseLocale,
-      requestedLocale: args.baseLocale,
     },
     displayName: args.displayName,
     state: args.state,
@@ -382,7 +359,6 @@ export async function buildSavedWidgetPublicPackageResult(args: PackageBuildArgs
       sourceReference: `accounts/${args.accountId}/instances/${args.instanceId}/base`,
       sourceFingerprint: await buildMaterializerSourceFingerprint(args),
       schemaWidgetContractFingerprint: buildSchemaWidgetContractFingerprint(args.compiled),
-      overlayFingerprint: null,
     },
   });
   if (!result.ok) {
@@ -398,48 +374,6 @@ export async function buildSavedWidgetPublicPackage(args: PackageBuildArgs): Pro
   const result = await buildSavedWidgetPublicPackageResult(args);
   if (!result.ok) return result;
   return { ok: true, value: result.value.package };
-}
-
-export async function buildSavedWidgetLocalePackageResult(args: LocalePackageBuildArgs): Promise<
-  | { ok: true; value: SavedWidgetPublicPackageBuildResult }
-  | InstancePackageFailure
-> {
-  const result = await materializeRuntimePackage({
-    compiled: {
-      widgetname: args.compiled.widgetname,
-      ...(typeof args.compiled.displayName === 'string' ? { displayName: args.compiled.displayName } : {}),
-      ...(args.compiled.editableFields ? { editableFields: args.compiled.editableFields } : {}),
-      ...(args.compiled.controls ? { controls: args.compiled.controls } : {}),
-      widgetPackage: {
-        files: args.compiled.widgetPackage?.files ?? {},
-      },
-    },
-    artifactCoordinate: {
-      kind: 'account-instance-widget',
-      accountPublicId: args.accountId,
-      instanceId: args.instanceId,
-      baseLocale: args.baseLocale,
-      requestedLocale: args.requestedLocale,
-    },
-    displayName: args.displayName,
-    state: args.state,
-    ...(args.typographyData ? { typographyData: args.typographyData } : {}),
-    localeOverlay: {
-      locale: args.requestedLocale,
-      keyKind: 'current_saved_content_concrete_path',
-      values: args.overlayValues,
-    },
-    evidence: {
-      sourceReference: `accounts/${args.accountId}/instances/${args.instanceId}/base`,
-      sourceFingerprint: await buildMaterializerSourceFingerprint(args),
-      schemaWidgetContractFingerprint: buildSchemaWidgetContractFingerprint(args.compiled),
-      overlayFingerprint: await buildLocaleOverlayFingerprint(args),
-    },
-  });
-  if (!result.ok) {
-    return materializerFailureToInstancePackageFailure(result.error);
-  }
-  return { ok: true, value: { package: result.files, evidence: result.evidence } };
 }
 
 function validationFailureFromPayload(payload: unknown, fallbackReasonKey: string): InstancePackageFailure {
@@ -604,56 +538,4 @@ export async function prepareAccountInstancePublicPackage(args: {
       typographyData: typographyData.typographyData,
     },
   };
-}
-
-export async function materializeAccountInstanceLocalePublicPackage(args: {
-  compiled: CompiledWidgetForPublicPackage;
-  accountId: string;
-  accountCapsule: string;
-  requestId: string;
-  instanceId: string;
-  baseLocale: string;
-  requestedLocale: string;
-  targetLocales: string[];
-  displayName: string | null;
-  config: Record<string, unknown>;
-  overlayValues: Record<string, string>;
-  prepared?: PreparedAccountInstancePublicPackage;
-}): Promise<
-  | { ok: true; value: SavedWidgetPublicPackageBuildResult }
-  | InstancePackageFailure
-> {
-  if (args.requestedLocale === args.baseLocale) {
-    return validationFailure('coreui.errors.instance.content.invalid', 'locale_package_base_locale_requested');
-  }
-  if (
-    args.targetLocales.some((locale) => !locale || locale !== locale.trim() || locale === args.baseLocale) ||
-    new Set(args.targetLocales).size !== args.targetLocales.length
-  ) {
-    return validationFailure('coreui.errors.instance.content.invalid', 'locale_package_target_locales_invalid');
-  }
-  if (!args.targetLocales.includes(args.requestedLocale)) {
-    return validationFailure('coreui.errors.instance.content.invalid', 'locale_package_unrequested_locale');
-  }
-  const prepared = args.prepared
-    ? { ok: true as const, value: args.prepared }
-    : await prepareAccountInstancePublicPackage({
-        accountId: args.accountId,
-        accountCapsule: args.accountCapsule,
-        requestId: args.requestId,
-        config: args.config,
-      });
-  if (!prepared.ok) return prepared;
-
-  return buildSavedWidgetLocalePackageResult({
-    compiled: args.compiled,
-    accountId: args.accountId,
-    instanceId: args.instanceId,
-    baseLocale: args.baseLocale,
-    requestedLocale: args.requestedLocale,
-    displayName: args.displayName,
-    state: prepared.value.state,
-    typographyData: prepared.value.typographyData,
-    overlayValues: args.overlayValues,
-  });
 }
