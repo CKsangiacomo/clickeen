@@ -58,6 +58,10 @@ JavaScript.
 
 DevStudio reads Dieter source through its existing source generators. Its
 generated reveal pages are tooling output, not a deployable Dieter runtime.
+The generated Core styles page reads spacing, control geometry, radius, shadow,
+and motion values from `dieter-foundation-tokens.css`; authenticated edits
+commit back to that same source file through DevStudio's validated GitHub write
+path.
 
 Compact property controls share row geometry through
 `dieter/components/shared/property-row.css`. Components continue to own their

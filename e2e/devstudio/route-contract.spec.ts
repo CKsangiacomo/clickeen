@@ -58,8 +58,9 @@ async function expectPolicyEditorBusy(page: Page) {
 const navGroups = [
   {
     title: 'Foundations',
-    count: 3,
+    count: 4,
     routes: [
+      { path: '/#/dieter/core-styles', title: 'Core styles' },
       { path: '/#/dieter/colors', title: 'Colors' },
       { path: '/#/dieter/icons', title: 'Icons' },
       { path: '/#/dieter/typography', title: 'Typography' },
@@ -178,8 +179,8 @@ test.describe('DevStudio route contract', () => {
   test('deleted tool routes fall back to the first live page', async ({ page }) => {
     for (const deletedRoute of ['/#/tools/bob-ui-native', '/#/tools/entitlements']) {
       await page.goto(deletedRoute);
-      await expect(page).toHaveURL(/#\/dieter\/colors$/);
-      await expect(page.getByRole('heading', { name: 'Colors' })).toBeVisible();
+      await expect(page).toHaveURL(/#\/dieter\/core-styles$/);
+      await expect(page.getByRole('heading', { name: 'Core styles' })).toBeVisible();
       await expect(page.getByText('Bob UI Native')).toHaveCount(0);
     }
   });

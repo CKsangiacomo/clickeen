@@ -30,6 +30,7 @@ const toSlug = (path: string) => path.split('/').pop()?.replace(/\.html$/, '') ?
 
 const toTitle = (slug: string) => {
   if (slug === 'llm-management') return 'LLM Management';
+  if (slug === 'core-styles') return 'Core styles';
   return slug.replace(/[-_]/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase());
 };
 
@@ -86,6 +87,12 @@ const pageToNav = (page: ShowcasePage): NavItem => ({
   kind: 'showcase' as const,
 });
 
+const foundationOrder = ['core-styles', 'colors', 'icons', 'typography'];
+const foundationRank = (slug: string) => {
+  const index = foundationOrder.indexOf(slug);
+  return index === -1 ? foundationOrder.length : index;
+};
+
 // Auto-generate nav groups from folder structure
 const buildShowcaseGroups = (): NavGroup[] => {
   const folderMap = new Map<string, ShowcasePage[]>();
@@ -103,7 +110,11 @@ const buildShowcaseGroups = (): NavGroup[] => {
     {
       id: 'foundations',
       title: getFolderTitle('foundations'),
-      items: (folderMap.get('foundations') ?? []).map(pageToNav),
+      items: (folderMap.get('foundations') ?? [])
+        .sort(
+          (a, b) => foundationRank(a.slug) - foundationRank(b.slug),
+        )
+        .map(pageToNav),
     },
     {
       id: 'dieter-components',

@@ -113,9 +113,8 @@ second package, registry, generated bundle, or browser entrypoint.
   foundation doctrine. Shared widget focus width is the explicit literal
   `2px`; `--focus-ring-color` is a color token owned by
   [`color.md`](color.md).
-- `--shadow-lg` is not a Dieter token. The current DevStudio token-editor
-  fallback is a 126L cleanup target; it must consume `--shadow-elevated`
-  directly rather than preserve a dead alias.
+- `--shadow-lg` is not a Dieter token. DevStudio consumes
+  `--shadow-elevated` directly and does not preserve the old dead alias.
 - There is no z-index token family in Dieter. Component layering belongs to
   [`components.md`](components.md) and dialog/modal behavior belongs to
   [`dialogs-and-modals.md`](dialogs-and-modals.md).

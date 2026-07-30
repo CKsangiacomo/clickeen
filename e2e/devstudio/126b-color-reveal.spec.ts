@@ -45,8 +45,9 @@ function extractBackendColorsBlock(source: string): string {
 }
 
 function extractBackendColorPattern(source: string): string {
-  const colorsBlock = extractBackendColorsBlock(source);
-  const match = colorsBlock?.match(/valuePattern:\s*\/(\^#[^/]+)\//u);
+  const match = source.match(
+    /const COLOR_LITERAL_PATTERN\s*=\s*\/(\^#[^/]+)\//u,
+  );
   if (!match?.[1]) throw new Error("Backend color predicate not found.");
   return match[1];
 }
@@ -77,7 +78,10 @@ async function guardUnexpectedApiMutations(page: Page): Promise<string[]> {
 test("generator reveal and backend write use the same 3/6-digit predicate", async () => {
   const [generatorSource, backendSource] = await Promise.all([
     readFile(resolve("admin/scripts/generate-foundation-pages.mjs"), "utf8"),
-    readFile(resolve("admin/functions/_shared/dieter-tokens.js"), "utf8"),
+    readFile(
+      resolve("admin/functions/_shared/dieter-token-contracts.js"),
+      "utf8",
+    ),
   ]);
   const generatorPattern = extractGeneratorColorPattern(generatorSource);
   const backendPattern = extractBackendColorPattern(backendSource);

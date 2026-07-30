@@ -3,11 +3,16 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import {
+  parseEditableDieterTokens,
+  TOKEN_FILES,
+} from '../../admin/functions/_shared/dieter-token-contracts.js';
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 const adminHtmlRoot = path.join(repoRoot, 'admin', 'src', 'html');
 const componentsRoot = path.join(repoRoot, 'dieter', 'components');
 const colorTokenPath = path.join(repoRoot, 'dieter', 'tokens', 'dieter-color-tokens.css');
+const foundationTokenPath = path.join(repoRoot, TOKEN_FILES.foundation.path);
 const typographyJsonPath = path.join(repoRoot, 'admin', 'src', 'data', 'typography.generated.json');
 const iconsManifestPath = path.join(repoRoot, 'dieter', 'icons', 'icons.json');
 const iconsSvgRoot = path.join(repoRoot, 'dieter', 'icons', 'svg');
@@ -82,6 +87,25 @@ function assertGeneratedHeaders() {
 }
 
 function assertFoundationCounts() {
+  const foundationTokens = parseEditableDieterTokens(
+    read(foundationTokenPath),
+    TOKEN_FILES.foundation,
+    [read(colorTokenPath)],
+  );
+  const coreStylesHtml = read(path.join(adminHtmlRoot, 'foundations', 'core-styles.html'));
+  if (!coreStylesHtml.includes(`data-governance-count="${foundationTokens.length}"`)) {
+    fail(`core styles page count does not match source foundation token count (${foundationTokens.length})`);
+  }
+  for (const token of foundationTokens) {
+    const editMarker = `data-token-edit="foundation" data-token="${token.token}"`;
+    if (token.editable && !coreStylesHtml.includes(editMarker)) {
+      fail(`core styles page does not expose editable source token ${token.token}`);
+    }
+    if (!token.editable && coreStylesHtml.includes(editMarker)) {
+      fail(`core styles page exposes non-editable source token ${token.token}`);
+    }
+  }
+
   const colorCount = parseCustomProperties(read(colorTokenPath)).filter(isColorToken).length;
   const colorsHtml = read(path.join(adminHtmlRoot, 'foundations', 'colors.html'));
   if (!colorsHtml.includes(`data-governance-count="${colorCount}"`)) {

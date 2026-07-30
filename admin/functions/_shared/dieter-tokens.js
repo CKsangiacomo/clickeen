@@ -1,22 +1,11 @@
 import { resolveDevstudioOrigin } from './env.js';
 import { cloneResponseWithCookies, json, methodNotAllowed } from './http.js';
 import { resolveDevstudioSession } from './session.js';
-
-const TOKEN_FILES = {
-  colors: {
-    path: 'dieter/tokens/dieter-color-tokens.css',
-    tokenPattern: /^--color-/,
-    valuePattern: /^#[0-9a-fA-F]{3}(?:[0-9a-fA-F]{3})?$/,
-    reasonKey: 'devstudio.errors.dieterTokens.colorInvalid',
-  },
-  typography: {
-    path: 'dieter/tokens/dieter-typography.css',
-    tokenPattern: /^--(?:fs|lh)-/,
-    valuePattern:
-      /^(?:-?\d+(?:\.\d+)?(?:rem|em|px|%)?|-?\d+(?:\.\d+)?|clamp\(-?\d+(?:\.\d+)?(?:rem|em|px|%)?,\s*-?\d+(?:\.\d+)?(?:rem|em|px|%)?\s*\+\s*-?\d+(?:\.\d+)?vw,\s*-?\d+(?:\.\d+)?(?:rem|em|px|%)?\))$/,
-    reasonKey: 'devstudio.errors.dieterTokens.typographyInvalid',
-  },
-};
+import {
+  parseEditableDieterTokens,
+  replaceDieterTokenValue,
+  TOKEN_FILES,
+} from './dieter-token-contracts.js';
 
 function stringValue(value) {
   return typeof value === 'string' ? value.trim() : '';
@@ -77,49 +66,7 @@ function encodeBase64Utf8(input) {
   return btoa(binary);
 }
 
-function parseTokens(raw, file) {
-  const declarationRegex = /(^|\n)([ \t]*)(--[a-zA-Z0-9_-]+)\s*:\s*([^;]+);/g;
-  const tokens = [];
-  let match;
-  while ((match = declarationRegex.exec(raw))) {
-    const token = match[3];
-    const value = match[4].trim();
-    if (!file.tokenPattern.test(token)) continue;
-    tokens.push({
-      token,
-      value,
-      editable: file.valuePattern.test(value),
-    });
-  }
-  return tokens;
-}
-
-function replaceTokenValue(raw, file, token, value) {
-  if (!file.tokenPattern.test(token)) {
-    return { ok: false, reasonKey: 'devstudio.errors.dieterTokens.tokenNotEditable' };
-  }
-  if (!file.valuePattern.test(value)) {
-    return { ok: false, reasonKey: file.reasonKey };
-  }
-
-  let replaced = false;
-  const escaped = token.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  const tokenRegex = new RegExp(`(^|\\n)([ \\t]*)(${escaped})\\s*:\\s*([^;]+);`, 'g');
-  const nextRaw = raw.replace(tokenRegex, (match, lineStart, indent, matchedToken, currentValue) => {
-    if (replaced) return match;
-    const current = String(currentValue).trim();
-    if (!file.valuePattern.test(current)) return match;
-    replaced = true;
-    return `${lineStart}${indent}${matchedToken}: ${value};`;
-  });
-
-  if (!replaced) {
-    return { ok: false, reasonKey: 'devstudio.errors.dieterTokens.tokenNotFound' };
-  }
-  return { ok: true, raw: nextRaw };
-}
-
-async function readGithubCssFile(env, file) {
+async function readGithubCssFile(env, file, dependencySources = []) {
   const url = new URL(githubContentsUrl(env, file.path));
   url.searchParams.set('ref', resolveBranch(env));
   const response = await fetch(url.toString(), {
@@ -143,8 +90,15 @@ async function readGithubCssFile(env, file) {
     raw,
     sha: stringValue(payload.sha),
     path: file.path,
-    tokens: parseTokens(raw, file),
+    tokens: parseEditableDieterTokens(raw, file, dependencySources),
   };
+}
+
+async function readTokenDependencySources(env, kind) {
+  if (kind !== 'foundation') return { ok: true, sources: [] };
+  const colors = await readGithubCssFile(env, TOKEN_FILES.colors);
+  if (!colors.ok) return colors;
+  return { ok: true, sources: [colors.raw] };
 }
 
 async function commitGithubCssFile(env, file, args) {
@@ -252,7 +206,9 @@ export async function handleDieterTokensRequest(context, kind) {
   if (!file) return json({ error: { kind: 'NOT_FOUND', reasonKey: 'coreui.errors.route.notFound' } }, 404);
 
   return withDieterTokenSession(context, async () => {
-    const current = await readGithubCssFile(context.env, file);
+    const dependencies = await readTokenDependencySources(context.env, kind);
+    if (!dependencies.ok) return dependencies.response;
+    const current = await readGithubCssFile(context.env, file, dependencies.sources);
     if (!current.ok) return current.response;
     return json({ ok: true, path: current.path, sha: current.sha, tokens: current.tokens });
   });
@@ -274,9 +230,17 @@ export async function handleDieterTokenValueRequest(context, kind) {
       return json({ error: { kind: 'VALIDATION', reasonKey: 'devstudio.errors.dieterTokens.required' } }, 422);
     }
 
-    const current = await readGithubCssFile(context.env, file);
+    const dependencies = await readTokenDependencySources(context.env, kind);
+    if (!dependencies.ok) return dependencies.response;
+    const current = await readGithubCssFile(context.env, file, dependencies.sources);
     if (!current.ok) return current.response;
-    const replaced = replaceTokenValue(current.raw, file, token, value);
+    const replaced = replaceDieterTokenValue(
+      current.raw,
+      file,
+      token,
+      value,
+      dependencies.sources,
+    );
     if (!replaced.ok) {
       return json({ error: { kind: 'VALIDATION', reasonKey: replaced.reasonKey } }, 422);
     }
@@ -288,7 +252,7 @@ export async function handleDieterTokenValueRequest(context, kind) {
     });
     if (!committed.ok) return committed.response;
 
-    const tokens = parseTokens(replaced.raw, file);
+    const tokens = parseEditableDieterTokens(replaced.raw, file, dependencies.sources);
     return json({
       ok: true,
       path: file.path,

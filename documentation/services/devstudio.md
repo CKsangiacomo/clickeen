@@ -50,11 +50,17 @@ The editor uses the shared native-dialog lifecycle while keeping token state and
 source commit behavior in DevStudio. Its native select and input use Dieter's
 small operational-field appearance contract.
 
+The editor has three source-file lanes: foundation, color, and typography.
+Foundation edits are exposed from the generated Core styles page and commit
+only recognized spacing, control geometry, radius, shadow, duration, and easing
+tokens in `dieter-foundation-tokens.css`. The validation contract used to
+generate editable rows is the same contract enforced by the Pages Function.
+
 ## Current Sections
 
 | Section | Runtime source |
 | --- | --- |
-| Foundations: Colors, Typography, Icons | Generated from Dieter source and DevStudio static page generation. |
+| Foundations: Core styles, Colors, Icons, Typography | Generated from Dieter token and icon source through DevStudio static page generation. Core styles groups spacing, control sizes/gaps, radii, shadows, and motion from `dieter-foundation-tokens.css`. |
 | Dieter Components | Generated/static component showcase pages from Dieter component specs and snippets. |
 | Entitlements | Pages Functions read/write entitlement policy files through GitHub. The same tool also renders AI runtime policy editing backed by `/api/ai-runtime/*`. |
 | LLM Management | Read-only generated visibility into managed model configuration. It is not a runtime API-backed editor. |
@@ -65,7 +71,7 @@ editable cells, data, and mutation behavior.
 
 Hash routes are generated from `admin/src/html/**` and route data in
 `admin/src/data/routes.ts`. There is no separate design-system admin app. The
-current generated inventory is 3 Foundation routes, 22 Dieter Component routes,
+current generated inventory is 4 Foundation routes, 22 Dieter Component routes,
 and 2 Policy routes. CSS-only Dieter contracts do not create empty showcase
 routes.
 
@@ -81,10 +87,31 @@ routes.
 | `GET /api/session/finish` | Redeem Berlin finish transaction and set DevStudio session cookie. |
 | `GET /api/dieter/tokens/colors` | Read source-controlled Dieter color tokens. |
 | `POST /api/dieter/tokens/colors/value` | Validate and commit one Dieter color token edit. |
+| `GET /api/dieter/tokens/foundation` | Read recognized source-controlled Dieter foundation tokens. |
+| `POST /api/dieter/tokens/foundation/value` | Validate and commit one recognized Dieter foundation token edit. |
 | `GET /api/dieter/tokens/typography` | Read source-controlled Dieter typography tokens. |
 | `POST /api/dieter/tokens/typography/value` | Validate and commit one Dieter typography token edit. |
 
 Every write uses GitHub SHA conflict checks. A stale write fails; it does not overwrite current `main`.
+
+## Core Styles Reveal And Write Truth
+
+The Core styles page is generated directly from
+`dieter/tokens/dieter-foundation-tokens.css`. It exposes these existing source
+families in one route:
+
+- structural and vertical spacing;
+- control sizes, inline padding, and inline gaps;
+- control radii;
+- shared shadows;
+- motion durations and easing.
+
+The page does not store overrides or introduce another token file. Editable
+rows, source parsing, and POST validation share one token contract. Foundation
+writes reject duplicate live declarations, negative geometry, unresolved,
+self-referential, or cyclic token references, invalid easing bounds, unknown
+shadow color references, unsafe CSS syntax, and unsupported value shapes. A
+rejected value never reaches the GitHub commit operation.
 
 ## Color Reveal And Write Truth
 

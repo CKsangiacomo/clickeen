@@ -10,7 +10,9 @@ superadmin account browser.
 
 ## Current Surface
 
-- Foundations: Colors, Typography, Icons.
+- Foundations: Core styles, Colors, Icons, Typography. Core styles is generated
+  from Dieter foundation source and manages spacing, control geometry, radii,
+  shadows, and motion through the existing validated GitHub token write path.
 - Dieter Components: generated/static component showcase pages.
 - Policy: entitlements + AI runtime Policy Editor at `/#/policy/entitlements`.
 - LLM Management: read-only managed model configuration

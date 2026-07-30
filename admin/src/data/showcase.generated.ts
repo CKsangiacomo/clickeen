@@ -22,10 +22,11 @@ import html19 from "../html/components/textfield.html?raw";
 import html20 from "../html/components/toggle.html?raw";
 import html21 from "../html/components/valuefield.html?raw";
 import html22 from "../html/foundations/colors.html?raw";
-import html23 from "../html/foundations/icons.html?raw";
-import html24 from "../html/foundations/typography.html?raw";
-import html25 from "../html/tools/entitlements.html?raw";
-import html26 from "../html/tools/llm-management.html?raw";
+import html23 from "../html/foundations/core-styles.html?raw";
+import html24 from "../html/foundations/icons.html?raw";
+import html25 from "../html/foundations/typography.html?raw";
+import html26 from "../html/tools/entitlements.html?raw";
+import html27 from "../html/tools/llm-management.html?raw";
 
 export const staticShowcaseModules: Record<string, string> = {
   "../html/components/agent-activity.html": html0,
@@ -51,8 +52,9 @@ export const staticShowcaseModules: Record<string, string> = {
   "../html/components/toggle.html": html20,
   "../html/components/valuefield.html": html21,
   "../html/foundations/colors.html": html22,
-  "../html/foundations/icons.html": html23,
-  "../html/foundations/typography.html": html24,
-  "../html/tools/entitlements.html": html25,
-  "../html/tools/llm-management.html": html26,
+  "../html/foundations/core-styles.html": html23,
+  "../html/foundations/icons.html": html24,
+  "../html/foundations/typography.html": html25,
+  "../html/tools/entitlements.html": html26,
+  "../html/tools/llm-management.html": html27,
 };

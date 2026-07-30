@@ -369,7 +369,7 @@ function executeScripts(scope: DocumentFragment | Element) {
   });
 }
 
-type DieterTokenKind = 'colors' | 'typography';
+type DieterTokenKind = 'colors' | 'foundation' | 'typography';
 type DieterToken = {
   token: string;
   value: string;
@@ -826,8 +826,11 @@ function renderFromHash() {
   main.querySelectorAll<HTMLElement>('[data-token-edit]').forEach((node) => {
     node.addEventListener('click', () => {
       const editKind = node.getAttribute('data-token-edit');
-      if (editKind !== 'color' && editKind !== 'typography') return;
-      openTokenEditor(editKind === 'color' ? 'colors' : 'typography', node.getAttribute('data-token') ?? undefined);
+      if (editKind !== 'color' && editKind !== 'foundation' && editKind !== 'typography') return;
+      openTokenEditor(
+        editKind === 'color' ? 'colors' : editKind,
+        node.getAttribute('data-token') ?? undefined,
+      );
     });
   });
 }
