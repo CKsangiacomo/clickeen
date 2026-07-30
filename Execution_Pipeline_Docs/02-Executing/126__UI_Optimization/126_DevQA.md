@@ -1,13 +1,13 @@
 # 126 — DevQA: Where We Actually Stand
 
-Status: REOPENED — LOCALIZATION ARCHITECTURE CORRECTION IN EXECUTION.
+Status: REOPENED — LOCALIZATION ARCHITECTURE CORRECTION IMPLEMENTED; FINAL QA IN PROGRESS.
 This document reconciles PRD claims with Git and current source evidence. It does
 not define product law, approve unresolved architecture choices, prove that every
 intermediate commit deployed, or close any PRD whose required verification is
 still missing.
 
 Date: 2026-07-14
-Last reconciled: 2026-07-27
+Last reconciled: 2026-07-30
 Scope: premature A-H code-change reality, final A-M current-source audits,
 executable PRDs, exact-tree peer reviews, and current Step-9 execution state.
 Parent: `126__PRD__UI_Optimization_Program.md` (MAMA).
@@ -37,6 +37,49 @@ Required closure:
 5. cloud-dev base and `?locale=` responses are proven fail-closed;
 6. exact obsolete R2 keys are deleted and recount is zero;
 7. overlay/root preservation and independent V1–V8 are recorded.
+
+### Implementation and remote-data evidence
+
+The correction used a two-stage cutover so a new Tokyo route could never serve
+an old base-only runtime as a requested translation.
+
+1. `7fa262b4` removed locale-package generation from Bob/Roma and made the
+   materializer root-only and overlay-aware. Bob Pages deployment
+   `157557a0-ded8-48c6-85da-5b52d7eab862` and Roma Pages deployment
+   `207d881f-5c6d-4ef1-8ef0-459d5690c4f7` both completed successfully at that
+   SHA.
+2. All 9 CLICKEEN instances were resaved through Roma using their exact existing
+   `widgetType` and `config`. Each before/after config SHA-256 matched; the 3
+   published and 6 unpublished states were unchanged. R2 read-back proved every
+   root index has exactly one locale-context marker and root-only CSS/JS URLs,
+   and every root runtime has the exact overlay boot contract.
+3. `e59ba3e7` removed Tokyo locale-package storage/read/delete/public routes and
+   installed root `?locale=` delivery. GitHub Actions run `30566585467` deployed
+   Tokyo-worker successfully.
+4. Four pre-existing Bengali overlays still used the revoked transitional
+   `{v:1, values}` body while the other 140 used canonical `{values}`. Commit
+   `95c2a269` added the exact editor-authorized Roma overlay PUT boundary and a
+   Tokyo base-locale rejection. All four documents were rewritten through that
+   route; their `values` hashes were identical before and after. All 144 overlays
+   then passed the one canonical exact-schema audit.
+5. Browser verification of
+   `https://dev.clk.live/CLICKEEN/I5918UU0IA?locale=bn` proved Bengali DOM text,
+   `<html lang="bn">`, and the same root `styles.css` and `runtime.js` URLs as
+   base. Missing `?locale=fr` and retired `/locales/bn` both returned 404.
+6. The exact 400-key deletion manifest is
+   `evidence/126-localization-cleanup-manifest.txt`. GitHub Actions run
+   `30567827936` deleted every key successfully. Complete R2 reconciliation
+   changed 598 objects to 198, left 144 overlays, left zero instance
+   `locales/` objects, and showed all 198 preserved key/size/timestamp records
+   identical to the pre-delete inventory.
+
+The old public responses were generated directly by the Worker from its R2
+binding; the route never used `fetch()` or the Cache API. Repeated retired URL
+reads have no `CF-Cache-Status` or `Age` and return 404 from the deployed Worker.
+Two explicit purge attempts were rejected by the available token scopes and
+changed nothing. There is no CDN-cached locale-package layer to preserve or
+purge; the one-use cleanup workflow and script are removed after the successful
+R2 operation.
 
 Current 126G correction: the historical Dieter builder, generated
 `tokyo/product/dieter/**` mirror, manifest, editor bundle, and shared CDN

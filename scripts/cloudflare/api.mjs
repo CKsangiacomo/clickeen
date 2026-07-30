@@ -561,47 +561,6 @@ async function preflight(config) {
   return result;
 }
 
-async function purgeFiles(config, zoneName, filePath) {
-  const zone = await findZone(config, zoneName);
-  if (!zone) throw new Error(`Cloudflare zone not found: ${zoneName}`);
-  const absolutePath = path.resolve(process.cwd(), filePath);
-  const urls = [
-    ...new Set(
-      fs
-        .readFileSync(absolutePath, 'utf8')
-        .split(/\r?\n/)
-        .map((line) => line.trim())
-        .filter(Boolean),
-    ),
-  ];
-  if (!urls.length) throw new Error('Purge file contains no URLs.');
-  for (const value of urls) {
-    const url = new URL(value);
-    if (
-      url.protocol !== 'https:' ||
-      (url.hostname !== zoneName && !url.hostname.endsWith(`.${zoneName}`)) ||
-      url.username ||
-      url.password ||
-      url.hash
-    ) {
-      throw new Error(`Purge file contains an invalid URL for ${zoneName}: ${value}`);
-    }
-  }
-  const batchSize = 100;
-  for (let index = 0; index < urls.length; index += batchSize) {
-    const files = urls.slice(index, index + batchSize);
-    await cf(config, `/zones/${zone.id}/purge_cache`, {
-      method: 'POST',
-      body: JSON.stringify({ files }),
-    });
-  }
-  return {
-    zone: zone.name,
-    purgedUrls: urls.length,
-    requests: Math.ceil(urls.length / batchSize),
-  };
-}
-
 function usage() {
   console.error(`Usage:
   pnpm cf:api:preflight
@@ -614,7 +573,6 @@ function usage() {
   pnpm cf:pages:domains <project-name>
   pnpm cf:dns:records <zone-name> [record-name]
   pnpm cf:dns:upsert-cname <zone-name> <record-name> <target>
-  pnpm cf:cache:purge-files <zone-name> <url-list-file>
 
 Required env in root .env.local:
   CLOUDFLARE_ACCOUNT_ID
@@ -691,13 +649,6 @@ async function main() {
     if (!zone) throw new Error(`Cloudflare zone not found: ${zoneName}`);
     const result = await upsertCname(config, zone.id, recordName, target);
     printJson({ action: result.action, record: summarizeRecord(result.record) });
-    return;
-  }
-
-  if (command === 'cache:purge-files') {
-    const [zoneName, filePath] = args;
-    if (!zoneName || !filePath) throw new Error('Missing zone name or URL list file.');
-    printJson(await purgeFiles(config, zoneName, filePath));
     return;
   }
 

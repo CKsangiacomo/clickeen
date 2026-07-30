@@ -35,7 +35,6 @@ pnpm cf:pages:list
 pnpm cf:pages:project <project-name>
 pnpm cf:pages:domains <project-name>
 pnpm cf:dns:records <zone-name> [record-name]
-pnpm cf:cache:purge-files <zone-name> <url-list-file>
 ```
 
 For DevStudio Pages env/config:
@@ -71,7 +70,6 @@ object keys, zones, project names, or bindings.
 | Sync DevStudio Pages env/project | dry-run command, then same command with `--apply` | read-back command output |
 | Write a Pages secret | `pnpm cf:api:preflight`, then `pnpm cf:pages:put-secret ... --apply` | Pages env verification shows secret present |
 | Inspect/upsert DNS | `pnpm cf:api:preflight`, then `pnpm cf:dns:*` | read-back of the DNS record |
-| Purge exact CDN URLs | `pnpm cf:api:preflight`, then `pnpm cf:cache:purge-files <zone> <url-list-file>` | returned exact URL/request counts plus owning runtime reads |
 | Prove Pages deploy | Cloudflare Pages Git build state plus runtime response | owning app URL responds |
 | Prove Worker deploy | GitHub Actions `cloud-dev workers deploy` plus runtime response | owning Worker URL/route responds |
 
@@ -120,7 +118,7 @@ TOKYO_R2_BUCKET=[Tokyo R2 bucket name]
 CLOUDFLARE_R2_ACCESS_KEY_ID=[R2 signed access key id]
 CLOUDFLARE_R2_SECRET_ACCESS_KEY=[R2 signed secret access key]
 CLOUDFLARE_R2_ENDPOINT=[R2 endpoint URL]
-CLOUDFLARE_R2_REST_API_TOKEN=[R2 REST token for object access; writes require Workers R2 Storage Write]
+CLOUDFLARE_R2_REST_API_TOKEN=[R2 REST token for read/list/get verification]
 CLOUDFLARE_REST_API_TOKEN=[Cloudflare REST token for Pages/DNS/config]
 ```
 
@@ -130,9 +128,8 @@ variables:
 
 - `CLOUDFLARE_R2_ACCESS_KEY_ID` + `CLOUDFLARE_R2_SECRET_ACCESS_KEY` for signed
   R2 object work.
-- `CLOUDFLARE_R2_REST_API_TOKEN` for explicit R2 REST object access when signed
-  R2 credentials are absent or deny a requested operation. Delete requires the
-  token's `Workers R2 Storage Write` permission.
+- `CLOUDFLARE_R2_REST_API_TOKEN` for explicit R2 REST read/list/get
+  verification when signed R2 credentials are not present.
 - `CLOUDFLARE_REST_API_TOKEN` for Pages projects, Pages env/secrets, Pages
   domains, and DNS records.
 

@@ -253,32 +253,8 @@ async function putObjectRest() {
   throw new Error('R2 REST put is not supported by this helper. Add CLOUDFLARE_R2_ACCESS_KEY_ID and CLOUDFLARE_R2_SECRET_ACCESS_KEY.');
 }
 
-async function deleteObjectRest(config, key) {
-  if (!config.token) {
-    throw new Error('Missing CLOUDFLARE_R2_REST_API_TOKEN for REST R2 delete.');
-  }
-  const url = `https://api.cloudflare.com/client/v4/accounts/${config.accountId}/r2/buckets/${config.bucket}/objects/${encodeKeyPath(key)}`;
-  const response = await fetch(url, {
-    method: 'DELETE',
-    headers: {
-      Authorization: `Bearer ${config.token}`,
-    },
-  });
-  const text = await response.text();
-  let body = null;
-  try {
-    body = text ? JSON.parse(text) : null;
-  } catch {
-    body = null;
-  }
-  if (!response.ok || body?.success === false) {
-    const errors = Array.isArray(body?.errors) ? body.errors : [];
-    const detail =
-      errors.map((entry) => entry.message || JSON.stringify(entry)).join('; ') ||
-      text ||
-      response.statusText;
-    throw new Error(`Cloudflare R2 delete failed ${response.status}: ${detail}`);
-  }
+async function deleteObjectRest() {
+  throw new Error('R2 REST delete is not supported by this helper. Add CLOUDFLARE_R2_ACCESS_KEY_ID and CLOUDFLARE_R2_SECRET_ACCESS_KEY.');
 }
 
 function putObjectWrangler(config, key, body, contentType) {
@@ -375,21 +351,12 @@ async function deleteObject(config, key) {
       return;
     } catch (error) {
       if (!isR2SignedDeleteDenied(error)) throw error;
-      if (config.token) {
-        console.error('[cf:r2] R2 signed delete denied; falling back to R2 REST delete.');
-        await deleteObjectRest(config, key);
-        return;
-      }
       console.error('[cf:r2] R2 signed delete denied; falling back to remote Wrangler R2 object delete.');
       deleteObjectWrangler(config, key);
       return;
     }
   }
-  if (config.token) {
-    await deleteObjectRest(config, key);
-    return;
-  }
-  if (!hasR2SignedCredentials(config)) {
+  if (config.token || !hasR2SignedCredentials(config)) {
     deleteObjectWrangler(config, key);
     return;
   }
