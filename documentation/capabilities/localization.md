@@ -105,6 +105,12 @@ Body:
 }
 ```
 
+An editor-authorized exact-value write uses
+`PUT /api/account/instances/{instanceId}/translations/{locale}`. The body must
+contain the complete `values` map for current saved text fields. Base-locale
+overlays, missing paths, and extra paths fail; the write has no runtime-artifact
+side effect.
+
 Validation is exact against current saved content. Missing paths, unexpected
 paths, non-string values, malformed documents, and invalid locale coordinates
 fail. Stored corruption is not normalized or treated as missing.

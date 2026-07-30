@@ -30,6 +30,12 @@ async function testExplicitTranslationRouteSurvives(): Promise<void> {
   const translationRouteSource = await readSource(
     'roma/app/api/account/instances/[instanceId]/translations/generate/route.ts',
   );
+  const translationValuesRouteSource = await readSource(
+    'roma/app/api/account/instances/[instanceId]/translations/[locale]/route.ts',
+  );
+  const tokyoTranslationValuesSource = await readSource(
+    'tokyo-worker/src/domains/account-translations/values.ts',
+  );
   const panelSource = await readSource('bob/components/TranslationsPanel.tsx');
 
   assert.match(translationRouteSource, /generateAccountInstanceTranslations/);
@@ -39,6 +45,10 @@ async function testExplicitTranslationRouteSurvives(): Promise<void> {
   assert.match(panelSource, /Generate translations/);
   assert.match(panelSource, /generateTranslations/);
   assert.doesNotMatch(panelSource, /localePackages|localized package|public package/i);
+  assert.match(translationValuesRouteSource, /export async function PUT/);
+  assert.match(translationValuesRouteSource, /writeAccountInstanceTranslationValues/);
+  assert.match(tokyoTranslationValuesSource, /locale === stored\.configDoc\.baseLocale/);
+  assert.match(tokyoTranslationValuesSource, /tokyo\.translation\.locale\.base_forbidden/);
 }
 
 async function testNoAccountInstanceMetaPersistenceContract(): Promise<void> {

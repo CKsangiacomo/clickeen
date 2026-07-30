@@ -115,6 +115,9 @@ export async function writeAccountInstanceTranslatedLocaleValues(args: {
     widgetType: args.widgetType,
   });
   if (!stored) throw new Error('coreui.errors.instance.notFound');
+  if (locale === stored.configDoc.baseLocale) {
+    throw new Error('tokyo.translation.locale.base_forbidden');
+  }
   const fields = savedContentOverlayFields(stored.content);
   assertLocaleOverlayValuesMatchSavedTextFields({ fields, values: args.values });
   await writeLocaleOverlay({

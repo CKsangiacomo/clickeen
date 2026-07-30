@@ -212,6 +212,10 @@ every requested locale. Roma validates that complete result set and returns
 partial result remains an HTTP `200` product result. The command ends after
 those exact overlay outcomes; it does not create, publish, or cache runtime
 files.
+`PUT /api/account/instances/{instanceId}/translations/{locale}` is the exact
+editor-authorized overlay-value mutation boundary. It accepts one complete
+saved-field value map and delegates it to Tokyo-worker; Tokyo rejects base-locale
+overlays, missing paths, and extra paths. It does not materialize runtime files.
 When the command is invoked through hosted Bob, Translation Agent may stream
 Agent Activity while it operates. Roma forwards that activity to Bob; Roma does
 not author it, summarize it, poll for it, persist it, or convert it into product
