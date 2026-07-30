@@ -121,11 +121,15 @@ function renderCoreStyleSample(entry) {
             <span class="core-style-sample__part"${partStyle ? ` style="${partStyle}"` : ''}></span>
             ${previewKind === 'control-gap' ? '<span class="core-style-sample__part"></span>' : ''}
           </span>`;
+  return `<span class="core-style-sample-frame" aria-hidden="true">${sample}</span>`;
+}
+
+function renderCoreStyleAction(entry) {
   if (!entry.editable) {
-    return `<span class="token-readonly" aria-label="Read-only ${escapeHtml(entry.name)}">${sample}</span>`;
+    return '<span class="core-style-readonly label-xs">Read only</span>';
   }
-  return `<button class="token-edit-trigger" type="button" data-token-edit="foundation" data-token="${escapeHtml(entry.name)}" data-value="${escapeHtml(entry.value)}" aria-label="Edit ${escapeHtml(entry.name)}">
-          ${sample}
+  return `<button class="diet-btn-txt core-style-edit" data-size="md" data-variant="secondary" type="button" data-token-edit="foundation" data-token="${escapeHtml(entry.name)}" data-value="${escapeHtml(entry.value)}" aria-label="Edit ${escapeHtml(entry.name)}">
+          <span class="diet-btn-txt__label">Edit</span>
         </button>`;
 }
 
@@ -147,6 +151,7 @@ ${entries
       </div>
       <div class="core-styles-row__preview">
         ${renderCoreStyleSample(entry)}
+        ${renderCoreStyleAction(entry)}
       </div>
     </div>`,
   )
@@ -267,16 +272,15 @@ async function generateCoreStylesPage() {
 <div class="dieter-preview core-styles-page" data-governance-count="${tokens.length}">
   <style>
     .core-styles-page { display: grid; gap: var(--space-8); }
-    .core-styles-section { display: grid; gap: var(--space-2); }
-    .core-styles-section > h3 { margin: 0 0 var(--space-2); }
-    .core-styles-row { display: grid; grid-template-columns: minmax(240px, 1fr) minmax(180px, 1fr); align-items: center; gap: var(--space-6); min-block-size: 72px; padding-block: var(--space-2); border-block-end: 1px solid var(--role-border); }
+    .core-styles-section { display: grid; overflow: hidden; border: 1px solid color-mix(in oklab, var(--role-border), transparent 24%); border-radius: var(--control-radius-lg); background: var(--role-surface); }
+    .core-styles-section > h3 { margin: 0; padding: var(--space-4); border-block-end: 1px solid color-mix(in oklab, var(--role-border), transparent 24%); background: var(--role-surface-muted); }
+    .core-styles-row { display: grid; grid-template-columns: minmax(220px, 1fr) minmax(260px, 0.8fr); align-items: center; gap: var(--space-6); min-block-size: 64px; padding: var(--space-3) var(--space-4); border-block-end: 1px solid color-mix(in oklab, var(--role-border), transparent 38%); }
     .core-styles-row:last-child { border-block-end: 0; }
     .core-styles-row__identity { display: grid; gap: var(--space-1); min-inline-size: 0; }
-    .core-styles-row__preview { display: flex; align-items: center; justify-content: flex-start; min-inline-size: 0; }
+    .core-styles-row__preview { display: grid; grid-template-columns: minmax(140px, 1fr) auto; align-items: center; justify-items: start; gap: var(--space-4); min-inline-size: 0; }
     .core-styles-page .token-label { font: 600 var(--fs-13)/1.2 var(--font-ui); }
     .core-styles-page .token-value { font: 500 var(--fs-11)/1.2 var(--font-ui); color: var(--color-text-secondary); overflow-wrap: anywhere; }
-    .core-styles-page .token-edit-trigger { display: inline-flex; border: 0; padding: var(--space-2); background: transparent; color: inherit; cursor: pointer; border-radius: var(--control-radius-md); }
-    .core-styles-page .token-edit-trigger:focus-visible { outline: 2px solid var(--focus-ring-color); outline-offset: 2px; }
+    .core-style-sample-frame { display: inline-flex; }
     .core-style-sample { display: inline-flex; align-items: center; justify-content: center; min-inline-size: 120px; min-block-size: 48px; }
     .core-style-sample__part { display: block; background: var(--role-primary-action); }
     .core-style-sample[data-preview='spacing'] { justify-content: flex-start; }
@@ -288,8 +292,9 @@ async function generateCoreStylesPage() {
     .core-style-sample[data-preview='radius'] .core-style-sample__part { inline-size: 88px; block-size: 48px; }
     .core-style-sample[data-preview='shadow'] .core-style-sample__part { inline-size: 88px; block-size: 48px; border-radius: var(--control-radius-md); background: var(--role-surface); }
     .core-style-sample[data-preview='motion'] .core-style-sample__part { inline-size: 36px; block-size: 36px; border-radius: var(--control-radius-6xl); transition-property: transform; transition-duration: var(--duration-base); transition-timing-function: var(--easing-standard); }
-    .core-style-sample[data-preview='motion']:is(:hover, :focus-within) .core-style-sample__part { transform: translateX(56px); }
-    @media (max-width: 720px) { .core-styles-row { grid-template-columns: 1fr; gap: var(--space-2); } }
+    .core-styles-row:hover .core-style-sample[data-preview='motion'] .core-style-sample__part { transform: translateX(56px); }
+    .core-style-readonly { color: var(--color-text-secondary); }
+    @media (max-width: 720px) { .core-styles-row { grid-template-columns: 1fr; gap: var(--space-2); } .core-styles-row__preview { grid-template-columns: 1fr auto; } }
   </style>
 ${renderCoreStyleRows(tokens)}
 </div>

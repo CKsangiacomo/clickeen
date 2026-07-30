@@ -1,4 +1,5 @@
 import '@dieter/tokens/tokens.css';
+import '@dieter/components/button/button.css';
 import '@dieter/components/shared/property-row.css';
 import '@dieter/components/shared/authoring-focus.css';
 import '@dieter/components/popover/popover.css';
@@ -439,43 +440,50 @@ async function openTokenEditor(kind: DieterTokenKind, preferredToken?: string) {
   dialog.innerHTML = `
     <form class="devstudio-token-editor__panel" data-state="loading">
       <div class="devstudio-token-editor__view" data-token-editor-work>
-        <div class="devstudio-token-editor__header">
-          <h2 class="heading-4" id="devstudio-token-editor-title">Edit Token</h2>
+        <header class="devstudio-token-editor__header">
+          <div class="devstudio-token-editor__heading">
+            <h2 class="heading-4" id="devstudio-token-editor-title">Edit token</h2>
+            <p class="body-xs">Update the source-controlled Dieter value.</p>
+          </div>
           <button class="diet-btn-ic" data-size="sm" data-variant="neutral" type="button" data-token-editor-close aria-label="Close">
             <span class="diet-btn-ic__icon" aria-hidden="true" data-icon="multiply"></span>
           </button>
+        </header>
+        <div class="devstudio-token-editor__body">
+          <label class="devstudio-token-editor__field">
+            <span class="label-xs">Token</span>
+            <select class="diet-operational-field devstudio-token-editor__select" name="token"></select>
+          </label>
+          <label class="devstudio-token-editor__field">
+            <span class="label-xs">Value</span>
+            <input class="diet-operational-field devstudio-token-editor__input" name="value" type="text" autocomplete="off" autocapitalize="none" spellcheck="false" aria-describedby="devstudio-token-editor-status" />
+          </label>
+          <div class="devstudio-token-editor__diff body-xs" id="devstudio-token-editor-status" aria-live="polite">Loading token source…</div>
         </div>
-        <label class="devstudio-token-editor__field">
-          <span class="label-xs">Token</span>
-          <select class="diet-operational-field devstudio-token-editor__select" name="token"></select>
-        </label>
-        <label class="devstudio-token-editor__field">
-          <span class="label-xs">Value</span>
-          <input class="diet-operational-field devstudio-token-editor__input" name="value" type="text" autocomplete="off" />
-        </label>
-        <div class="devstudio-token-editor__diff body-xs" aria-live="polite"></div>
-        <div class="devstudio-token-editor__actions">
+        <footer class="devstudio-token-editor__actions">
           <button class="diet-btn-txt" data-size="md" data-variant="secondary" type="button" data-token-editor-close>
             <span class="diet-btn-txt__label">Cancel</span>
           </button>
-          <button class="diet-btn-txt" data-size="md" data-variant="primary" type="submit">
-            <span class="diet-btn-txt__label">Confirm Commit</span>
+          <button class="diet-btn-txt" data-size="md" data-variant="primary" type="submit" data-token-editor-commit disabled>
+            <span class="diet-btn-txt__label">Confirm commit</span>
           </button>
-        </div>
+        </footer>
       </div>
       <div class="devstudio-token-editor__view" data-token-editor-discard-view hidden>
-        <div class="devstudio-token-editor__header">
+        <header class="devstudio-token-editor__header">
           <h2 class="heading-4" id="devstudio-token-editor-discard-title">Discard changes?</h2>
+        </header>
+        <div class="devstudio-token-editor__body">
+          <p class="body-sm">Your uncommitted token value will be lost.</p>
         </div>
-        <p class="body-sm">Your uncommitted token value will be lost.</p>
-        <div class="devstudio-token-editor__actions">
+        <footer class="devstudio-token-editor__actions">
           <button class="diet-btn-txt" data-size="md" data-variant="secondary" type="button" data-token-editor-keep>
             <span class="diet-btn-txt__label">Keep editing</span>
           </button>
           <button class="diet-btn-txt" data-size="md" data-variant="primary" type="button" data-token-editor-discard>
             <span class="diet-btn-txt__label">Discard</span>
           </button>
-        </div>
+        </footer>
       </div>
     </form>
   `;
@@ -489,9 +497,13 @@ async function openTokenEditor(kind: DieterTokenKind, preferredToken?: string) {
   const select = dialog.querySelector<HTMLSelectElement>('select[name="token"]');
   const input = dialog.querySelector<HTMLInputElement>('input[name="value"]');
   const diff = dialog.querySelector<HTMLElement>('.devstudio-token-editor__diff');
+  const commitButton = dialog.querySelector<HTMLButtonElement>('[data-token-editor-commit]');
   const keepEditingButton = dialog.querySelector<HTMLButtonElement>('[data-token-editor-keep]');
   const discardButton = dialog.querySelector<HTMLButtonElement>('[data-token-editor-discard]');
-  if (!form || !editorView || !discardView || !select || !input || !diff || !keepEditingButton || !discardButton) {
+  const closeButtons = Array.from(
+    dialog.querySelectorAll<HTMLButtonElement>('[data-token-editor-close]'),
+  );
+  if (!form || !editorView || !discardView || !select || !input || !diff || !commitButton || !keepEditingButton || !discardButton) {
     closeTokenEditor();
     return;
   }
@@ -502,10 +514,22 @@ async function openTokenEditor(kind: DieterTokenKind, preferredToken?: string) {
   };
 
   let tokens: DieterToken[] = [];
+  let saving = false;
   let editorFocus: HTMLElement | null = null;
   const isDirty = () => {
     const current = tokens.find((entry) => entry.token === select.value);
     return Boolean(current && input.value.trim() !== current.value);
+  };
+  const setSaving = (next: boolean) => {
+    saving = next;
+    select.disabled = next;
+    input.disabled = next;
+    closeButtons.forEach((button) => {
+      button.disabled = next;
+    });
+    keepEditingButton.disabled = next;
+    discardButton.disabled = next;
+    commitButton.disabled = next || !isDirty();
   };
   const showEditor = (restoreFocus = false) => {
     discardView.hidden = true;
@@ -514,6 +538,7 @@ async function openTokenEditor(kind: DieterTokenKind, preferredToken?: string) {
     if (restoreFocus) (editorFocus?.isConnected ? editorFocus : input).focus({ preventScroll: true });
   };
   const showDiscardConfirmation = () => {
+    if (saving) return;
     editorFocus =
       document.activeElement instanceof HTMLElement && editorView.contains(document.activeElement)
         ? document.activeElement
@@ -524,6 +549,7 @@ async function openTokenEditor(kind: DieterTokenKind, preferredToken?: string) {
     keepEditingButton.focus({ preventScroll: true });
   };
   const requestClose = () => {
+    if (saving) return;
     if (isDirty()) {
       showDiscardConfirmation();
       return;
@@ -577,10 +603,11 @@ async function openTokenEditor(kind: DieterTokenKind, preferredToken?: string) {
       const current = tokens.find((entry) => entry.token === select.value);
       if (!current) return;
       if (input.value.trim() === current.value) {
-        setStatus(`${current.token}: unchanged`);
+        setStatus('No changes to commit.');
       } else {
-        setStatus(`${current.token}: ${current.value} -> ${input.value.trim()}`);
+        setStatus(`${current.value} → ${input.value.trim()}`);
       }
+      commitButton.disabled = saving || !isDirty();
     };
 
     select.addEventListener('change', () => {
@@ -593,6 +620,7 @@ async function openTokenEditor(kind: DieterTokenKind, preferredToken?: string) {
 
     form.addEventListener('submit', async (event) => {
       event.preventDefault();
+      if (saving) return;
       const token = select.value;
       const value = input.value.trim();
       const current = tokens.find((entry) => entry.token === token);
@@ -600,17 +628,19 @@ async function openTokenEditor(kind: DieterTokenKind, preferredToken?: string) {
         syncDiff();
         return;
       }
-      setStatus(`${token}: committing ${current.value} -> ${value}`, 'saving');
+      setSaving(true);
+      setStatus(`Committing ${current.value} → ${value}…`, 'saving');
       try {
         const nextTokens = await saveDieterToken(kind, token, value);
         const next = nextTokens.find((entry) => entry.token === token);
-        if (next) {
-          tokens = nextTokens.filter((entry) => entry.editable);
-          input.value = next.value;
-          updateVisibleTokenValue(token, next.value);
-        }
-        setStatus(`${token}: committed. CI will rebuild Dieter artifacts.`, 'saved');
+        if (!next) throw new Error(DIETER_TOKEN_SAVE_ERROR_COPY);
+        tokens = nextTokens.filter((entry) => entry.editable);
+        input.value = next.value;
+        updateVisibleTokenValue(token, next.value);
+        setSaving(false);
+        setStatus('Committed. CI will rebuild Dieter artifacts.', 'saved');
       } catch {
+        setSaving(false);
         setStatus(DIETER_TOKEN_SAVE_ERROR_COPY, 'error');
       }
     });

@@ -147,6 +147,172 @@ test.describe('DevStudio route contract', () => {
     });
   }
 
+  test('Core styles uses an explicit edit action and one token-dialog state at a time', async ({ page }) => {
+    const unexpectedMutations = await guardUnexpectedApiMutations(page);
+    await page.route('**/api/dieter/tokens/foundation', async (route) => {
+      if (route.request().method() !== 'GET') return route.fallback();
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          ok: true,
+          path: 'dieter/tokens/dieter-foundation-tokens.css',
+          sha: 'test-sha',
+          tokens: [
+            { token: '--space-0', value: '0.125rem', editable: true },
+            { token: '--space-1', value: '0.25rem', editable: true },
+          ],
+        }),
+      });
+    });
+
+    await page.goto('/#/dieter/core-styles');
+    await expect(page.locator('.core-style-sample-frame')).toHaveCount(53);
+    await expect(page.locator('.core-style-sample-frame').first()).not.toHaveJSProperty(
+      'tagName',
+      'BUTTON',
+    );
+    await expect(page.locator('[data-token-edit="foundation"]')).toHaveCount(53);
+
+    await page.getByRole('button', { name: 'Edit --space-0' }).click();
+    const dialog = page.getByRole('dialog');
+    const editor = dialog.locator('[data-token-editor-work]');
+    const discard = dialog.locator('[data-token-editor-discard-view]');
+    await expect(dialog.getByRole('heading', { name: 'Edit token' })).toBeVisible();
+    await expect(editor).toBeVisible();
+    await expect(discard).toBeHidden();
+    await expect(dialog.locator('.devstudio-token-editor__view:visible')).toHaveCount(1);
+    await page.mouse.click(5, 5);
+    await expect(dialog).toBeVisible();
+
+    const primaryDisplay = await dialog
+      .getByRole('button', { name: 'Confirm commit' })
+      .evaluate((element) => getComputedStyle(element).display);
+    expect(['flex', 'inline-flex']).toContain(primaryDisplay);
+
+    const value = dialog.getByRole('textbox', { name: 'Value' });
+    await value.fill('0.5rem');
+    await expect(dialog.getByText('0.125rem → 0.5rem')).toBeVisible();
+    await dialog.getByRole('button', { name: 'Cancel' }).click();
+    await expect(editor).toBeHidden();
+    await expect(discard).toBeVisible();
+    await expect(dialog.locator('.devstudio-token-editor__view:visible')).toHaveCount(1);
+
+    await dialog.getByRole('button', { name: 'Keep editing' }).click();
+    await expect(editor).toBeVisible();
+    await expect(discard).toBeHidden();
+    await page.keyboard.press('Escape');
+    await expect(editor).toBeHidden();
+    await expect(discard).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(editor).toBeVisible();
+    await expect(discard).toBeHidden();
+
+    await value.fill('0.125rem');
+    await page.keyboard.press('Escape');
+    await expect(dialog).toHaveCount(0);
+    expect(unexpectedMutations).toEqual([]);
+  });
+
+  test('Core styles keeps an in-flight token commit singular and truthful', async ({ page }) => {
+    const mutations: Array<{ method: string; path: string; body: unknown }> = [];
+    let releaseSave: (() => void) | undefined;
+    const saveReleased = new Promise<void>((resolve) => {
+      releaseSave = resolve;
+    });
+
+    await page.route('**/api/dieter/tokens/foundation**', async (route) => {
+      const request = route.request();
+      const path = new URL(request.url()).pathname;
+      if (request.method() === 'GET' && path === '/api/dieter/tokens/foundation') {
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            ok: true,
+            path: 'dieter/tokens/dieter-foundation-tokens.css',
+            sha: 'test-sha',
+            tokens: [
+              { token: '--space-0', value: '0.125rem', editable: true },
+              { token: '--space-1', value: '0.25rem', editable: true },
+            ],
+          }),
+        });
+        return;
+      }
+      if (request.method() === 'POST' && path === '/api/dieter/tokens/foundation/value') {
+        mutations.push({
+          method: request.method(),
+          path,
+          body: request.postDataJSON(),
+        });
+        await saveReleased;
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            ok: true,
+            path: 'dieter/tokens/dieter-foundation-tokens.css',
+            sha: 'next-test-sha',
+            tokens: [
+              { token: '--space-0', value: '0.5rem', editable: true },
+              { token: '--space-1', value: '0.25rem', editable: true },
+            ],
+          }),
+        });
+        return;
+      }
+      await route.abort('blockedbyclient');
+    });
+
+    await page.goto('/#/dieter/core-styles');
+    await page.getByRole('button', { name: 'Edit --space-0' }).click();
+    const dialog = page.getByRole('dialog');
+    const form = dialog.locator('form');
+    const editor = dialog.locator('[data-token-editor-work]');
+    const discard = dialog.locator('[data-token-editor-discard-view]');
+    const tokenSelect = dialog.getByRole('combobox', { name: 'Token' });
+    const value = dialog.getByRole('textbox', { name: 'Value' });
+    const close = dialog.getByRole('button', { name: 'Close' });
+    const cancel = dialog.getByRole('button', { name: 'Cancel' });
+    const commit = dialog.getByRole('button', { name: 'Confirm commit' });
+
+    await value.fill('0.5rem');
+    await commit.click();
+    await expect.poll(() => mutations.length).toBe(1);
+    await expect(dialog.getByText('Committing 0.125rem → 0.5rem…')).toBeVisible();
+    await expect(tokenSelect).toBeDisabled();
+    await expect(value).toBeDisabled();
+    await expect(close).toBeDisabled();
+    await expect(cancel).toBeDisabled();
+    await expect(commit).toBeDisabled();
+
+    await page.keyboard.press('Escape');
+    await expect(dialog).toBeVisible();
+    await expect(editor).toBeVisible();
+    await expect(discard).toBeHidden();
+    await form.evaluate((element: HTMLFormElement) => element.requestSubmit());
+    expect(mutations).toHaveLength(1);
+
+    releaseSave?.();
+    await expect(dialog.getByText('Committed. CI will rebuild Dieter artifacts.')).toBeVisible();
+    await expect(tokenSelect).toBeEnabled();
+    await expect(value).toBeEnabled();
+    await expect(close).toBeEnabled();
+    await expect(cancel).toBeEnabled();
+    await expect(commit).toBeDisabled();
+    await expect(value).toHaveValue('0.5rem');
+    await cancel.click();
+    await expect(dialog).toHaveCount(0);
+    expect(mutations).toEqual([
+      {
+        method: 'POST',
+        path: '/api/dieter/tokens/foundation/value',
+        body: { token: '--space-0', value: '0.5rem' },
+      },
+    ]);
+  });
+
   test('renders the policy read lane without mutating policy', async ({ page }) => {
     const entitlements = page.waitForResponse(
       (response) =>

@@ -48,13 +48,17 @@ persists through the existing validated write lane. Native `beforeunload`, where
 needed at the browser boundary, is not replaced by an in-product dialog helper.
 The editor uses the shared native-dialog lifecycle while keeping token state and
 source commit behavior in DevStudio. Its native select and input use Dieter's
-small operational-field appearance contract.
+small operational-field appearance contract, and every action uses the Dieter
+button contract loaded by the DevStudio shell. The work body and dirty-discard
+body are mutually exclusive states in the same native dialog; they never stack.
 
 The editor has three source-file lanes: foundation, color, and typography.
 Foundation edits are exposed from the generated Core styles page and commit
 only recognized spacing, control geometry, radius, shadow, duration, and easing
 tokens in `dieter-foundation-tokens.css`. The validation contract used to
 generate editable rows is the same contract enforced by the Pages Function.
+Core styles samples are decorative. Each editable row exposes a separate,
+named Edit action so the preview itself does not masquerade as a control.
 
 ## Current Sections
 
