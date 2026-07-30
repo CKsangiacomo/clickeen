@@ -1,7 +1,7 @@
 # 126K - PRD: Dialogs And Modals
 
 Status: ORIGINAL STEP 9 COMPLETE; POPUP VISUAL-CONTRACT CORRECTION IMPLEMENTED
-LOCALLY; FINAL DEPLOYED/PRODUCT-OWNER VERIFICATION PENDING.
+AND DEPLOYED; FINAL POPUP-WORKFLOW QA AND PRODUCT-OWNER ACCEPTANCE PENDING.
 Parent: `126__PRD__UI_Optimization_Program.md`.
 Audit: `audits/126K__Audit__Dialogs_and_Modals.md`.
 Living doctrine: `documentation/engineering/UI/dialogs-and-modals.md`.

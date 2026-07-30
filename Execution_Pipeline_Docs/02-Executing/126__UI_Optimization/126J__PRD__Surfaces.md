@@ -1,8 +1,8 @@
 # 126J - PRD: Surfaces And Bob Workspace
 
 Status: ORIGINAL STEP 9 COMPLETE — implementation `5f5dd5d0`; D4 SHARED
-LAYOUT/PAGE CORRECTION IMPLEMENTED LOCALLY; FINAL DEPLOYED/PRODUCT-OWNER
-VERIFICATION PENDING.
+LAYOUT/PAGE CORRECTION IMPLEMENTED AND DEPLOYED; FINAL BOB POPUP-WORKFLOW QA
+AND PRODUCT-OWNER ACCEPTANCE PENDING.
 Parent: `126__PRD__UI_Optimization_Program.md`.
 Audit: `audits/126J__Audit__Surfaces.md`.
 Living doctrine: `documentation/engineering/UI/surfaces.md`.

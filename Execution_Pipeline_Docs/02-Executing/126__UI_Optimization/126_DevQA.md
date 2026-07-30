@@ -1,8 +1,8 @@
 # 126 — DevQA: Where We Actually Stand
 
 Status: REOPENED — LOCALIZATION CORRECTION REMAINS GREEN; UI CONVERGENCE
-IMPLEMENTED LOCALLY AND UNDER FINAL DEPLOYED/PRODUCT-OWNER VERIFICATION; NO
-CLOSURE CREDIT YET.
+IMPLEMENTED AND DEPLOYED; AUTOMATED ROUTE/LAYOUT COVERAGE GREEN; POPUP
+WORKFLOW COVERAGE AND PRODUCT-OWNER ACCEPTANCE PENDING; NO CLOSURE CREDIT YET.
 This document reconciles PRD claims with Git and current source evidence. It does
 not define product law, approve unresolved architecture choices, prove that every
 intermediate commit deployed, or close any PRD whose required verification is
@@ -18,12 +18,13 @@ Parent: `126__PRD__UI_Optimization_Program.md` (MAMA).
 
 Original A–M execution and localization-correction evidence below remains
 point-in-time evidence. It cannot close this correction. Commits `2a070120`,
-`5e7c0266`, and `2b013925` are current DevStudio source input, not convergence
-execution.
+`5e7c0266`, and `2b013925` are pre-convergence source history. D4 convergence
+implementation is `db8589f3`.
 
-The correction starts only from the frozen parent/H/I/K/L/M contract. Product
-code, product data, and deployment state have not been changed by that
-documentation correction.
+The correction started only from the frozen parent/H/I/K/L/M contract. It
+changed product UI code, Git-connected Pages deployment state, and the standard
+Tokyo static deploy roots in R2. It did not change account product data,
+Workers, or Supabase.
 
 ### Authority Gate
 
@@ -31,10 +32,10 @@ documentation correction.
 | --- | --- |
 | Product surface | Dieter source defines; DevStudio demonstrates; DevStudio/Roma consume; applicable Bob consumes Table/Popup |
 | Account/session coordinate | Unchanged; no account/session mutation |
-| Storage coordinate | Unchanged; no R2/product-data mutation |
+| Storage coordinate | Standard `tokyo-assets-dev` static deploy roots `dieter/`, `prague/`, and `product/`; no `accounts/` product-data coordinate |
 | Route/API boundary | No new service route or transport. One new generated DevStudio hash route, `#/dieter/layouts`; the existing foundation-token GET/POST validator recognizes exactly the four approved Layout tokens through the existing source-write authority. |
-| Runtime/deploy | Existing Git-connected DevStudio, Roma, and `bob-dev` Pages builds |
-| Verification | Source/deletion searches, generated inventories, exact-SHA Pages status, and deployed browser evidence |
+| Runtime/deploy | Existing Git-connected DevStudio, Roma, and `bob-dev` Pages builds plus the standard `cloud-dev workers deploy` static-root R2 sync; Worker deploy steps remain change-gated |
+| Verification | Source/deletion searches, generated inventories, exact-SHA Pages status, GitHub Actions R2-sync status, and deployed browser evidence |
 
 ### Work Separation
 
@@ -42,29 +43,70 @@ documentation correction.
 | --- | --- |
 | Code | Dieter Layout/Table/Popup; existing generator changes; DevStudio/Roma/applicable Bob adoption; duplicate deletion |
 | Product data | None |
-| Deploy/runtime | Git-connected Pages only after local checks; verify exact source SHA |
+| Deploy/runtime | Git-connected Pages and change-gated `cloud-dev workers deploy`; verify exact source SHA and the static-root R2 sync |
 | Documentation | Correct living Dieter/UI/DevStudio/Roma/Bob docs after implementation proves current behavior |
 
 ### Required Order And Evidence
 
 | Gate | Required result | Status |
 | --- | --- | --- |
-| C1 Dieter Layout/Page | Exact `dieter/layouts/main-container/{css,html,spec.json}`; `.main-container > .left-nav + .page`; Page header/actions/content; four exact editable Dieter tokens; existing governance recognizes layouts | OPEN |
-| C2 DevStudio Layouts/Edit | `#/dieter/layouts` generated from C1; isolated real-viewport examples plus Page composition use exact production source; spec tokens open the existing authenticated token editor/commit path | OPEN |
-| C3 DevStudio consumer | Actual shell and every route consume C1 Page composition; replaced `.docs-shell*`/generic page layout bases deleted | OPEN |
-| C4 Dieter Table | Exact `table/{css,html,spec.json}`; semantic source example at `#/dieter/table`; final selectors | OPEN |
-| C5 Table hard cut | Every consumer migrated; `operational-table` directory/imports/selectors/docs/tests have zero active hits | OPEN |
-| C6 Dieter Popup | Exact `popup/{css,html,spec.json}` around native `<dialog>` at `#/dieter/popup`; existing lifecycle remains sole mechanics helper; Popover distinct | OPEN |
-| C7 Popup hard cut | DevStudio, Roma, Bob Upsell, Bulk Edit, Object Manager migrated; replaced local visual bases deleted; behaviors unchanged | OPEN |
-| C8 DevStudio presentation | Core/Colors/Icons/Typography/Layouts and all components use restrained semantic, source-derived presentation | OPEN |
-| C9 Roma migration | Exact shared Layout/Page plus Table/Popup; `.roma-layout*`, outer `rd-*` duplication, and `.roma-modal*` replaced bases deleted; routes/operations unchanged | OPEN |
-| C10 Bob boundary | Bob keeps `ToolDrawer | Workspace`; only applicable Table/Popup adoption; widget-preview layout unchanged | OPEN |
-| C11 Local gates | Parent's exact commands and exact five existing verification files GREEN | OPEN |
-| C12 Generated inventory | Exactly 5 Foundation, 24 component, and 2 Policy DevStudio routes generated from source | OPEN |
-| C13 Deploy proof | `pnpm cf:api:preflight` then project reads for `devstudio`, `roma-dev`, and `bob-dev`; each `latest_deployment` succeeds at the same exact source SHA | OPEN |
+| C1 Dieter Layout/Page | Exact `dieter/layouts/main-container/{css,html,spec.json}`; `.main-container > .left-nav + .page`; Page header/actions/content; four exact editable Dieter tokens; existing governance recognizes layouts | GREEN |
+| C2 DevStudio Layouts/Edit | `#/dieter/layouts` generated from C1; isolated real-viewport examples plus Page composition use exact production source; spec tokens open the existing authenticated token editor/commit path | GREEN |
+| C3 DevStudio consumer | Actual shell and every route consume C1 Page composition; replaced `.docs-shell*`/generic page layout bases deleted | GREEN |
+| C4 Dieter Table | Exact `table/{css,html,spec.json}`; semantic source example at `#/dieter/table`; final selectors | GREEN |
+| C5 Table hard cut | Every consumer migrated; `operational-table` directory/imports/selectors/docs/tests have zero active hits | GREEN |
+| C6 Dieter Popup | Exact `popup/{css,html,spec.json}` around native `<dialog>` at `#/dieter/popup`; existing lifecycle remains sole mechanics helper; Popover distinct | GREEN |
+| C7 Popup hard cut | DevStudio, Roma, Bob Upsell, Bulk Edit, Object Manager migrated; replaced local visual bases deleted; behaviors unchanged | GREEN |
+| C8 DevStudio presentation | Core/Colors/Icons/Typography/Layouts and all components use restrained semantic, source-derived presentation | GREEN |
+| C9 Roma migration | Exact shared Layout/Page plus Table/Popup; `.roma-layout*`, outer `rd-*` duplication, and `.roma-modal*` replaced bases deleted; routes/operations unchanged | GREEN |
+| C10 Bob boundary | Bob keeps `ToolDrawer | Workspace`; only applicable Table/Popup adoption; widget-preview layout unchanged | GREEN |
+| C11 Local gates | Parent's exact commands and exact five existing verification files GREEN | GREEN |
+| C12 Generated inventory | Exactly 5 Foundation, 24 component, and 2 Policy DevStudio routes generated from source | GREEN |
+| C13 Deploy proof | `pnpm cf:api:preflight`; project reads for `devstudio`, `roma-dev`, and `bob-dev` at one successful exact SHA; successful change-gated static-root R2 sync with Worker deploy steps skipped | GREEN — `db8589f3` |
 | C14 Browser proof | All 31 DevStudio routes; the 12 exact Roma route paths and route-specific Table/Popup workflows named by the parent; Bob Upsell/Bulk Edit/Object Manager through `/builder`; no console/page errors; product owner accepts deployed DevStudio visual set | OPEN |
-| C15 Deletion proof | No compatibility aliases, copied Dieter CSS, second generators, parallel old/new selectors, runtime manifest/service, or generated Dieter mirror | OPEN |
-| C16 Docs + V1–V8 | Living docs match delivered source; independent audit GREEN | OPEN |
+| C15 Deletion proof | No compatibility aliases, copied Dieter CSS, second generators, parallel old/new selectors, runtime manifest/service, or generated Dieter mirror | GREEN |
+| C16 Docs + V1–V8 | Living docs match delivered source; independent audit GREEN | GREEN |
+
+### Convergence Execution Evidence
+
+Implementation commit `db8589f3ecb9f4ffb779a0da413bd3b81b899be0`
+was pushed to `github/main`. Cloudflare API preflight passed, then all three
+Git-connected production Pages projects completed successfully at that exact
+SHA:
+
+- DevStudio deployment `004c6133-d6cb-416c-a6ec-47a45a94cb4f`;
+- Roma deployment `ce24d49a-89fa-42ed-bce6-15fab9dfe302`;
+- Bob deployment `3a6e0cb2-8e23-49c6-9e62-10df3a98f2bf`.
+
+Every focused local command in the parent passed. The five named verification
+files passed through their owning commands. DevStudio generated exactly 5
+Foundation, 24 component, and 2 Policy routes. Its authenticated deployed suite
+passed all 50 tests: all 31 routes, exact Layout source/edit behavior, real
+Table overflow, Popup/token-editor behavior, Policy action placement, token
+validation, and read-only backend-truth checks.
+
+Deployed Roma passed all 12 named routes. `/widgets`, `/pages`, `/assets`, and
+`/team` rendered the final shared Table contract. Roma and DevStudio both
+passed Full `1440x900`, `768x1024`, `1024x768`, and `600x960`; Compact
+`844x390`; unsupported portrait `390x844`; and landscape/portrait orientation
+return. Bob loaded through Roma at `/builder/QD1G068MX7` and passed Full
+`ToolDrawer | Workspace`, Compact one-ToolDrawer behavior, shared Popup markup,
+and absence of the retired upsell base.
+
+The independent implementation V1–V8 re-audit returned PASS for all eight
+violations. Final documentation reconciliation remains C16.
+Push-triggered GitHub Actions run `30588134245` completed successfully at the
+same SHA. Every Worker deployment step was skipped by its change gate. Its
+standard static-root step ran
+`node scripts/tokyo-r2-deploy-sync.mjs --remote` and uploaded 581 files to
+`tokyo-assets-dev`: `dieter/` 157, `prague/` 348, and `product/` 76. It did
+not address `accounts/` or mutate account product data. No Worker code or
+Supabase state changed. The verification login commands refreshed only the
+ignored cloud-dev browser session files.
+
+C14 remains OPEN because automated coverage did not execute every named Roma
+and Bob Popup workflow and the product owner has not accepted the deployed
+visual set. No agent may convert that missing acceptance into closure credit.
 
 ### Browser Evidence Detail
 
@@ -77,14 +119,16 @@ DevStudio proof is exhaustive, not sampled:
 - token edit/confirm/discard behavior;
 - Table overflow and Popup visual/lifecycle behavior.
 
-Roma proof covers every route whose shell, table, or popup markup changed and
-replays its current operations without changing product truth. Bob proof covers
-Upsell, Bulk Edit, Object Manager, and any semantic Table consumer changed by
-the correction; `Workspace` preview behavior is a required non-regression.
+Completed Roma proof covers all 12 named routes, shared shell structure, shared
+Table markup on the four owning routes, and the viewport/orientation matrix.
+Completed Bob proof covers Full and Compact `ToolDrawer | Workspace`, shared
+Popup markup, retired-upsell-base absence, and preview visibility. Executing
+every Roma/Bob Popup workflow, including Upsell, Bulk Edit, and Object Manager,
+remains required C14 coverage.
 
-Click/touch and native semantic behavior are verified. This matrix does not
-authorize or claim a broad keyboard-support program. Only the existing accepted
-native-dialog lifecycle is preserved.
+The exercised click/touch and native semantic behavior is verified. This
+matrix does not authorize or claim a broad keyboard-support program. Only the
+existing accepted native-dialog lifecycle is preserved.
 
 ### Closure Rule
 

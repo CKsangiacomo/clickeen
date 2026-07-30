@@ -1,7 +1,7 @@
 # 126M - PRD: Roma UI And Final Workspace Integration
 
-Status: ORIGINAL M1-M4 COMPLETE; ROMA CONVERGENCE IMPLEMENTED LOCALLY; FINAL
-DEPLOYED/PRODUCT-OWNER VERIFICATION PENDING.
+Status: ORIGINAL M1-M4 COMPLETE; ROMA CONVERGENCE IMPLEMENTED AND DEPLOYED;
+FINAL ROMA/BOB POPUP-WORKFLOW QA AND PRODUCT-OWNER ACCEPTANCE PENDING.
 Parent: `126__PRD__UI_Optimization_Program.md`.
 Audit: `audits/126M__Audit__Roma_UI.md`.
 Service authority: `documentation/services/roma.md`.
@@ -10,9 +10,11 @@ Service authority: `documentation/services/roma.md`.
 
 The original M1-M4 evidence remains valid for its executed scope. At correction
 start, Roma still owned hardcoded `.roma-layout*` and `.roma-modal*` visual
-bases and used `operational-table`. The local D4 implementation now replaces
-those bases with final Dieter Layout, Page, Table, and Popup contracts; deployed
-and product-owner verification remain pending.
+bases and used `operational-table`. D4 implementation `db8589f3` replaces those
+bases with final Dieter Layout, Page, Table, and Popup contracts. Exact-SHA
+deployment, route/layout coverage, and shared Table/Popup markup verification
+are complete. Executing every named Roma/Bob Popup workflow and product-owner
+acceptance remain pending.
 
 ### Exact Adoption
 
