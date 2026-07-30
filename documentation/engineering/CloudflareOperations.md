@@ -35,6 +35,7 @@ pnpm cf:pages:list
 pnpm cf:pages:project <project-name>
 pnpm cf:pages:domains <project-name>
 pnpm cf:dns:records <zone-name> [record-name]
+pnpm cf:cache:purge-files <zone-name> <url-list-file>
 ```
 
 For DevStudio Pages env/config:
@@ -70,6 +71,7 @@ object keys, zones, project names, or bindings.
 | Sync DevStudio Pages env/project | dry-run command, then same command with `--apply` | read-back command output |
 | Write a Pages secret | `pnpm cf:api:preflight`, then `pnpm cf:pages:put-secret ... --apply` | Pages env verification shows secret present |
 | Inspect/upsert DNS | `pnpm cf:api:preflight`, then `pnpm cf:dns:*` | read-back of the DNS record |
+| Purge exact CDN URLs | `pnpm cf:api:preflight`, then `pnpm cf:cache:purge-files <zone> <url-list-file>` | returned exact URL/request counts plus owning runtime reads |
 | Prove Pages deploy | Cloudflare Pages Git build state plus runtime response | owning app URL responds |
 | Prove Worker deploy | GitHub Actions `cloud-dev workers deploy` plus runtime response | owning Worker URL/route responds |
 

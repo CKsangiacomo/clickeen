@@ -9,6 +9,7 @@ jobs:
     env:
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      CLOUDFLARE_ZONE_ID: baceb66ba550ebfb73dc4003a6f5ec5b
       TOKYO_R2_BUCKET: tokyo-assets-dev
     steps:
       - uses: actions/checkout@v4
@@ -25,4 +26,4 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Delete exact obsolete locale runtime objects
-        run: node scripts/cloudflare/delete-126-locale-runtime-artifacts.mjs
+        run: node scripts/cloudflare/delete-126-locale-runtime-artifacts.mjs --purge-only

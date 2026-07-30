@@ -26,6 +26,7 @@
     "cf:pages:domains": "node scripts/cloudflare/api.mjs pages:domains",
     "cf:dns:records": "node scripts/cloudflare/api.mjs dns:records",
     "cf:dns:upsert-cname": "node scripts/cloudflare/api.mjs dns:upsert-cname",
+    "cf:cache:purge-files": "node scripts/cloudflare/api.mjs cache:purge-files",
     "e2e": "playwright test",
     "e2e:auth:roma-dev": "node scripts/e2e/roma-dev-auth.mjs",
     "e2e:smoke:copilot-runtime": "node scripts/e2e/roma-copilot-runtime-smoke.mjs",
