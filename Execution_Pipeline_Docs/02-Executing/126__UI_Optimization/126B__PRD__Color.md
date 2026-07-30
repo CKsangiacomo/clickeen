@@ -1,6 +1,7 @@
 # 126B - PRD: Color
 
-Status: STEP 9 COMPLETE - B1 THROUGH B3 GREEN.
+Status: ORIGINAL STEP 9 COMPLETE; 2026-07-30 ROLE-CONTRACT CORRECTION
+IMPLEMENTED — DEPLOYED QA PENDING.
 
 Post-126G delivery note: references below to `pnpm build:dieter`,
 `scripts/build-dieter.js`, or `tokyo/product/dieter/**` describe the historical
@@ -14,6 +15,30 @@ Step 6 audit: `audits/126B__Audit__Color.md`.
 This PRD is the execution-grade color-system authority for the 126 UI
 Optimization Program after pre-execution review. It is filled from Codex and
 GLM as-built audits, official-source research, and human product decisions.
+
+## 2026-07-30 Human Role-Contract Correction
+
+The original 25-token `--role-*` family was broader than the product actually
+consumed. The human product owner replaced it with four structural roles plus
+the actually consumed error role:
+
+```text
+--role-surface-bg
+--role-surface
+--role-surface-muted
+--role-border
+--role-error
+```
+
+Text remains owned by `--color-text` and `--color-text-secondary`; focus
+remains owned by `--focus-ring-color`. Dieter component source owns action,
+feedback, selected, and disabled presentation until a real shared consumer
+contract requires another role. No compatibility aliases remain.
+
+This correction supersedes the original role table, state-role requirements,
+and instructions to consume `--role-focus` later in this PRD. The B1-B3
+execution evidence remains historical evidence of what those commits did; it
+is not current implementation direction.
 
 126B does not authorize a palette redesign, dark-mode rollout, contrast gate,
 theme platform, resolver, registry, or governance framework. It defines the
@@ -42,8 +67,7 @@ to search the whole codebase and make new color decisions in flight.
 
 - Dieter color source authority;
 - generated Tokyo color output truth;
-- semantic color role names;
-- foreground/background relationships;
+- the four structural color role names plus the error role;
 - state color mechanics;
 - status color semantics;
 - brand/accent boundaries;
@@ -175,35 +199,17 @@ are not dark-mode scaffolding and they are not contrast doctrine.
 
 | Token | Value | Meaning |
 | --- | --- | --- |
-| `--role-surface` | `var(--color-system-white)` | foreground content surface |
-| `--role-on-surface` | `var(--color-system-black)` | primary content on a foreground surface |
 | `--role-surface-bg` | `var(--color-system-white)` | app/page/workspace background surface |
-| `--role-surface-muted` | `var(--color-system-gray-6-step4)` | subdued panel, preview, and code/path surface |
+| `--role-surface` | `var(--color-system-white)` | contained surface such as a table, popup, field, or neutral control |
+| `--role-surface-muted` | `var(--color-system-gray-6-step4)` | secondary chrome such as navigation planes and table headers |
 | `--role-border` | `var(--color-system-gray-5)` | standard structural border |
-| `--role-text` | `var(--color-text)` | primary text |
-| `--role-text-secondary` | `var(--color-text-secondary)` | supporting text |
-| `--role-focus` | `var(--focus-ring-color)` | focus indicator color when focus is styled |
-| `--role-primary-action` | `var(--color-system-blue)` | primary action fill/accent |
-| `--role-on-primary-action` | `var(--color-system-white)` | content on primary action fill |
-| `--role-error` | `var(--color-system-red)` | error/destructive status color |
-| `--role-on-error` | `var(--color-system-white)` | content on error fill when needed |
-| `--role-success` | `var(--color-system-green)` | success status color |
-| `--role-on-success` | `var(--color-system-white)` | content on success fill when needed |
-| `--role-warning` | `var(--color-system-orange)` | warning status color |
-| `--role-on-warning` | `var(--color-system-white)` | content on warning fill when needed |
-| `--role-info` | `var(--color-system-blue)` | informational status color |
-| `--role-on-info` | `var(--color-system-white)` | content on info fill when needed |
-| `--role-muted` | `var(--color-text-secondary)` | low-emphasis text/icon/border color |
-| `--role-selected-fill` | `var(--color-system-blue-5)` | selected/current item fill |
-| `--role-selected-text` | `var(--color-system-blue)` | text/icon on selected fill |
-| `--role-selected-border` | `var(--color-system-blue)` | selected/current border |
-| `--role-disabled-fill` | `var(--color-system-gray-6-step5)` | unavailable control fill |
-| `--role-disabled-text` | `color-mix(in oklab, var(--color-system-black), transparent 60%)` | unavailable text/icon |
-| `--role-disabled-border` | `var(--color-system-gray-6)` | unavailable border |
+| `--role-error` | `var(--color-system-red)` | error text and error boundary color, not an error-fill contract |
 
 Existing `--color-text`, `--color-text-secondary`, and `--focus-ring-color`
-remain as current source tokens. 126B adds role aliases for deterministic
-consumption; it does not create compatibility aliases for undefined names.
+remain their own current source authorities. Do not duplicate them behind role
+aliases. Action, feedback, selected, and disabled colors remain in the Dieter
+component contract that actually consumes them. Do not create a global role
+before there is a shared consumer contract.
 
 Do not import the full M3 taxonomy. Do not create a role resolver, registry, or
 theme platform.
@@ -213,25 +219,22 @@ the UI by product meaning instead of inventing color choices.
 
 ### 4. Role And Primitive Consumption
 
-Structural UI chrome should use Dieter tokens and roles. Components may use
-primitive color tokens only for named cases where the primitive itself is the
-product truth.
+Structural UI chrome should use the four structural Dieter roles. Error
+presentation uses `--role-error`. Components may use primitive color tokens
+only for named cases where the primitive itself is the product truth or the
+existing Dieter component owns that presentation.
 
 Allowed primitive-use cases:
 
 - color picker swatches and color-system reveal rows;
 - DevStudio/source-inspection UI that is explicitly showing a primitive token;
-- component plumbing that immediately resolves into an allowed role/state
-  formula;
-- a palette ramp or contrast sibling used only as a modifier on an explicitly
-  named semantic status when the current role layer has no value-equivalent
-  surface/contrast role. The status base meaning must still use its semantic
-  role.
+- component plumbing that resolves into an allowed role, existing component
+  color, or state formula;
+- a palette ramp or contrast sibling used as a modifier on an existing
+  component-owned status color.
 
-The default direction is role-based consumption.
-
-Focus indicator color uses `--role-focus`; it is not a primitive-color
-exception.
+The default direction for structural chrome is role-based consumption. Focus
+indicators use `--focus-ring-color`.
 
 Execution rules:
 
@@ -265,20 +268,20 @@ Required formula:
 | Default | normal enabled component state | use the base semantic role or allowed primitive token unchanged |
 | Hover | pointer/intent preview on enabled interactive controls | `color-mix(in oklab, <base>, var(--state-darken-target) var(--state-hover-mix))` |
 | Pressed | active mouse/touch press on enabled interactive controls | `color-mix(in oklab, <base>, var(--state-darken-target) var(--state-pressed-mix))` |
-| Muted | lower-emphasis text, icon, border, or supporting chrome | `color-mix(in oklab, <base>, var(--state-lighten-target) var(--state-muted-mix))` or `--role-muted` |
+| Muted | lower-emphasis text, icon, border, or supporting chrome | `color-mix(in oklab, <base>, var(--state-lighten-target) var(--state-muted-mix))` |
 | Inactive | present but not currently active/current | `color-mix(in oklab, <base>, var(--state-lighten-target) var(--state-inactive-mix))` |
-| Selected | chosen/current item | use `--role-selected-fill`, `--role-selected-text`, and `--role-selected-border`; selected hover/pressed derive from selected fill using the same hover/pressed formulas |
-| Disabled | unavailable control or action | use `--role-disabled-fill`, `--role-disabled-text`, and `--role-disabled-border`; disabled controls do not receive hover/pressed state colors |
-| Focus | focus indicator where focus is styled | use `--role-focus`; focus does not replace hover/pressed/selected color |
+| Selected | chosen/current item | use the owning Dieter component's selected presentation; selected hover/pressed derive from its base through the same formulas |
+| Disabled | unavailable control or action | use the owning Dieter component's disabled presentation; disabled controls do not receive hover/pressed state colors |
+| Focus | focus indicator where focus is styled | use `--focus-ring-color`; focus does not replace hover/pressed/selected color |
 
 Forbidden state-color patterns:
 
 - hardcoded hover/pressed/selected/disabled hex values in component chrome;
 - custom per-component state percentages;
 - direct raw `black`/`white` state mixes instead of Dieter state target tokens;
-- opacity-only disabled styling unless backed by an explicit Dieter disabled
-  state role;
-- one-off selected blue tints outside selected semantic roles;
+- opacity-only disabled styling unless it is the explicit owning component
+  contract;
+- one-off selected blue tints outside the owning Dieter component;
 - hover/pressed effects on disabled controls;
 - undefined state references such as `--state-muted-opacity`.
 

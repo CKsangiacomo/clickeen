@@ -154,40 +154,24 @@
 
 /* Dieter Color Tokens
  * Current law: light-mode source tokens only. Do not invent colors, dark token
- * pairs, contrast gates, or compatibility aliases. Use role tokens for
- * structural chrome and the state mix controls for hover/pressed/muted/inactive
- * colors.
+ * pairs, contrast gates, or compatibility aliases. The shared contract has
+ * four structural roles plus error. Text, focus, component state, and product
+ * color keep their existing Dieter authorities instead of duplicate aliases.
  */
 :root {
   /* Text color tokens */
   --color-text: var(--color-system-black);
   --color-text-secondary: color-mix(in oklab, var(--color-system-black), transparent 45%);
-  --role-surface: var(--color-system-white);
-  --role-on-surface: var(--color-system-black);
+
+  /* Shared roles: four structural roles plus error */
   --role-surface-bg: var(--color-system-white);
+  --role-surface: var(--color-system-white);
   --role-surface-muted: var(--color-system-gray-6-step4);
   --role-border: var(--color-system-gray-5);
-  --role-text: var(--color-text);
-  --role-text-secondary: var(--color-text-secondary);
-  --focus-ring-color: var(--color-system-blue);
-  --role-focus: var(--focus-ring-color);
-  --role-primary-action: var(--color-system-blue);
-  --role-on-primary-action: var(--color-system-white);
   --role-error: var(--color-system-red);
-  --role-on-error: var(--color-system-white);
-  --role-success: var(--color-system-green);
-  --role-on-success: var(--color-system-white);
-  --role-warning: var(--color-system-orange);
-  --role-on-warning: var(--color-system-white);
-  --role-info: var(--color-system-blue);
-  --role-on-info: var(--color-system-white);
-  --role-muted: var(--color-text-secondary);
-  --role-selected-fill: var(--color-system-blue-5);
-  --role-selected-text: var(--color-system-blue);
-  --role-selected-border: var(--color-system-blue);
-  --role-disabled-fill: var(--color-system-gray-6-step5);
-  --role-disabled-text: color-mix(in oklab, var(--color-system-black), transparent 60%);
-  --role-disabled-border: var(--color-system-gray-6);
+
+  /* Focus */
+  --focus-ring-color: var(--color-system-blue);
 
   /* Global state mix controls */
   --state-darken-target: black;
@@ -950,7 +934,7 @@
   min-inline-size: 0;
   block-size: 100dvh;
   overflow: hidden;
-  background: color-mix(in oklab, var(--color-system-gray-6), white 40%);
+  background: var(--role-surface-bg);
   color: var(--color-text);
   font: 400 var(--fs-13) / var(--lh-body-ui) var(--font-ui);
 }
@@ -979,7 +963,7 @@
     max(var(--layout-left-nav-padding), env(safe-area-inset-right))
     max(var(--layout-left-nav-padding), env(safe-area-inset-bottom))
     max(var(--layout-left-nav-padding), env(safe-area-inset-left));
-  background: color-mix(in oklab, var(--color-system-gray-5), white 40%);
+  background: var(--role-surface-muted);
 }
 
 .main-container &gt; .page {
@@ -988,7 +972,7 @@
     max(var(--layout-page-padding), env(safe-area-inset-right))
     max(var(--layout-page-padding), env(safe-area-inset-bottom))
     max(var(--layout-page-padding), env(safe-area-inset-left));
-  background: color-mix(in oklab, var(--color-system-gray-6), white 40%);
+  background: var(--role-surface-bg);
 }
 
 .page__header {
@@ -1205,40 +1189,24 @@
 
 /* Dieter Color Tokens
  * Current law: light-mode source tokens only. Do not invent colors, dark token
- * pairs, contrast gates, or compatibility aliases. Use role tokens for
- * structural chrome and the state mix controls for hover/pressed/muted/inactive
- * colors.
+ * pairs, contrast gates, or compatibility aliases. The shared contract has
+ * four structural roles plus error. Text, focus, component state, and product
+ * color keep their existing Dieter authorities instead of duplicate aliases.
  */
 :root {
   /* Text color tokens */
   --color-text: var(--color-system-black);
   --color-text-secondary: color-mix(in oklab, var(--color-system-black), transparent 45%);
-  --role-surface: var(--color-system-white);
-  --role-on-surface: var(--color-system-black);
+
+  /* Shared roles: four structural roles plus error */
   --role-surface-bg: var(--color-system-white);
+  --role-surface: var(--color-system-white);
   --role-surface-muted: var(--color-system-gray-6-step4);
   --role-border: var(--color-system-gray-5);
-  --role-text: var(--color-text);
-  --role-text-secondary: var(--color-text-secondary);
-  --focus-ring-color: var(--color-system-blue);
-  --role-focus: var(--focus-ring-color);
-  --role-primary-action: var(--color-system-blue);
-  --role-on-primary-action: var(--color-system-white);
   --role-error: var(--color-system-red);
-  --role-on-error: var(--color-system-white);
-  --role-success: var(--color-system-green);
-  --role-on-success: var(--color-system-white);
-  --role-warning: var(--color-system-orange);
-  --role-on-warning: var(--color-system-white);
-  --role-info: var(--color-system-blue);
-  --role-on-info: var(--color-system-white);
-  --role-muted: var(--color-text-secondary);
-  --role-selected-fill: var(--color-system-blue-5);
-  --role-selected-text: var(--color-system-blue);
-  --role-selected-border: var(--color-system-blue);
-  --role-disabled-fill: var(--color-system-gray-6-step5);
-  --role-disabled-text: color-mix(in oklab, var(--color-system-black), transparent 60%);
-  --role-disabled-border: var(--color-system-gray-6);
+
+  /* Focus */
+  --focus-ring-color: var(--color-system-blue);
 
   /* Global state mix controls */
   --state-darken-target: black;
@@ -2001,7 +1969,7 @@
   min-inline-size: 0;
   block-size: 100dvh;
   overflow: hidden;
-  background: color-mix(in oklab, var(--color-system-gray-6), white 40%);
+  background: var(--role-surface-bg);
   color: var(--color-text);
   font: 400 var(--fs-13) / var(--lh-body-ui) var(--font-ui);
 }
@@ -2030,7 +1998,7 @@
     max(var(--layout-left-nav-padding), env(safe-area-inset-right))
     max(var(--layout-left-nav-padding), env(safe-area-inset-bottom))
     max(var(--layout-left-nav-padding), env(safe-area-inset-left));
-  background: color-mix(in oklab, var(--color-system-gray-5), white 40%);
+  background: var(--role-surface-muted);
 }
 
 .main-container &gt; .page {
@@ -2039,7 +2007,7 @@
     max(var(--layout-page-padding), env(safe-area-inset-right))
     max(var(--layout-page-padding), env(safe-area-inset-bottom))
     max(var(--layout-page-padding), env(safe-area-inset-left));
-  background: color-mix(in oklab, var(--color-system-gray-6), white 40%);
+  background: var(--role-surface-bg);
 }
 
 .page__header {
@@ -2256,40 +2224,24 @@
 
 /* Dieter Color Tokens
  * Current law: light-mode source tokens only. Do not invent colors, dark token
- * pairs, contrast gates, or compatibility aliases. Use role tokens for
- * structural chrome and the state mix controls for hover/pressed/muted/inactive
- * colors.
+ * pairs, contrast gates, or compatibility aliases. The shared contract has
+ * four structural roles plus error. Text, focus, component state, and product
+ * color keep their existing Dieter authorities instead of duplicate aliases.
  */
 :root {
   /* Text color tokens */
   --color-text: var(--color-system-black);
   --color-text-secondary: color-mix(in oklab, var(--color-system-black), transparent 45%);
-  --role-surface: var(--color-system-white);
-  --role-on-surface: var(--color-system-black);
+
+  /* Shared roles: four structural roles plus error */
   --role-surface-bg: var(--color-system-white);
+  --role-surface: var(--color-system-white);
   --role-surface-muted: var(--color-system-gray-6-step4);
   --role-border: var(--color-system-gray-5);
-  --role-text: var(--color-text);
-  --role-text-secondary: var(--color-text-secondary);
-  --focus-ring-color: var(--color-system-blue);
-  --role-focus: var(--focus-ring-color);
-  --role-primary-action: var(--color-system-blue);
-  --role-on-primary-action: var(--color-system-white);
   --role-error: var(--color-system-red);
-  --role-on-error: var(--color-system-white);
-  --role-success: var(--color-system-green);
-  --role-on-success: var(--color-system-white);
-  --role-warning: var(--color-system-orange);
-  --role-on-warning: var(--color-system-white);
-  --role-info: var(--color-system-blue);
-  --role-on-info: var(--color-system-white);
-  --role-muted: var(--color-text-secondary);
-  --role-selected-fill: var(--color-system-blue-5);
-  --role-selected-text: var(--color-system-blue);
-  --role-selected-border: var(--color-system-blue);
-  --role-disabled-fill: var(--color-system-gray-6-step5);
-  --role-disabled-text: color-mix(in oklab, var(--color-system-black), transparent 60%);
-  --role-disabled-border: var(--color-system-gray-6);
+
+  /* Focus */
+  --focus-ring-color: var(--color-system-blue);
 
   /* Global state mix controls */
   --state-darken-target: black;
@@ -3052,7 +3004,7 @@
   min-inline-size: 0;
   block-size: 100dvh;
   overflow: hidden;
-  background: color-mix(in oklab, var(--color-system-gray-6), white 40%);
+  background: var(--role-surface-bg);
   color: var(--color-text);
   font: 400 var(--fs-13) / var(--lh-body-ui) var(--font-ui);
 }
@@ -3081,7 +3033,7 @@
     max(var(--layout-left-nav-padding), env(safe-area-inset-right))
     max(var(--layout-left-nav-padding), env(safe-area-inset-bottom))
     max(var(--layout-left-nav-padding), env(safe-area-inset-left));
-  background: color-mix(in oklab, var(--color-system-gray-5), white 40%);
+  background: var(--role-surface-muted);
 }
 
 .main-container &gt; .page {
@@ -3090,7 +3042,7 @@
     max(var(--layout-page-padding), env(safe-area-inset-right))
     max(var(--layout-page-padding), env(safe-area-inset-bottom))
     max(var(--layout-page-padding), env(safe-area-inset-left));
-  background: color-mix(in oklab, var(--color-system-gray-6), white 40%);
+  background: var(--role-surface-bg);
 }
 
 .page__header {

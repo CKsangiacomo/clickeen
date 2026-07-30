@@ -6,7 +6,7 @@
   min-inline-size: 0;
   block-size: 100dvh;
   overflow: hidden;
-  background: color-mix(in oklab, var(--color-system-gray-6), white 40%);
+  background: var(--role-surface-bg);
   color: var(--color-text);
   font: 400 var(--fs-13) / var(--lh-body-ui) var(--font-ui);
 }
@@ -35,7 +35,7 @@
     max(var(--layout-left-nav-padding), env(safe-area-inset-right))
     max(var(--layout-left-nav-padding), env(safe-area-inset-bottom))
     max(var(--layout-left-nav-padding), env(safe-area-inset-left));
-  background: color-mix(in oklab, var(--color-system-gray-5), white 40%);
+  background: var(--role-surface-muted);
 }
 
 .main-container > .page {
@@ -44,7 +44,7 @@
     max(var(--layout-page-padding), env(safe-area-inset-right))
     max(var(--layout-page-padding), env(safe-area-inset-bottom))
     max(var(--layout-page-padding), env(safe-area-inset-left));
-  background: color-mix(in oklab, var(--color-system-gray-6), white 40%);
+  background: var(--role-surface-bg);
 }
 
 .page__header {

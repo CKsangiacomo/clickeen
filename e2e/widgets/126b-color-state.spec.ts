@@ -150,7 +150,7 @@ test.describe("PRD 126B.1 Bob color truth and theme deletion", () => {
   });
 });
 
-test("PRD 126B.2 Logo Showcase uses the semantic keyboard focus role", async ({
+test("PRD 126B.2 Logo Showcase uses the shared keyboard focus color", async ({
   page,
 }) => {
   const [tokensCss, widgetCss] = await Promise.all([
@@ -180,7 +180,7 @@ test("PRD 126B.2 Logo Showcase uses the semantic keyboard focus role", async ({
   ).toBe(true);
 
   expect(widgetCss).toMatch(
-    /\.ck-logoshowcase__logo:focus-visible\s*\{[^}]*outline:\s*2px solid var\(--role-focus\);/u,
+    /\.ck-logoshowcase__logo:focus-visible\s*\{[^}]*outline:\s*2px solid var\(--focus-ring-color\);/u,
   );
   expect(widgetCss).toMatch(
     /\.ck-logoshowcase__dot\[data-active='true'\]\s*\{[^}]*background:\s*var\(--color-system-blue\);/u,

@@ -113,6 +113,7 @@ Runtime invariants:
   `/widgets/logoshowcase/media/` references.
 - Logo links are normalized as `http(s)` URLs.
 - Card wrapper styling uses shared `CKSurface.applyCardWrapper`.
+- Keyboard focus uses Dieter's shared `--focus-ring-color`.
 - `logoshowcase.behavior.randomOrder` is deterministic from strip/logo ids; it
   is not nondeterministic shuffle.
 

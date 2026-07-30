@@ -44,6 +44,9 @@ The source contract is
 `dieter/layouts/main-container/main-container.{html,css,spec.json}`. DevStudio
 reveals its Full, Compact-closed, and Compact-open examples and edits its four
 layout tokens through the existing foundation-token write path.
+`main-container` and `page` use `--role-surface-bg`; `left-nav` uses
+`--role-surface-muted`. Consumer content uses `--role-surface` only for
+contained surfaces rather than the page canvas.
 
 Preserve the existing backdrop, white/muted surfaces, borders, and shadows. This
 program does not create a new depth or tonal ramp.

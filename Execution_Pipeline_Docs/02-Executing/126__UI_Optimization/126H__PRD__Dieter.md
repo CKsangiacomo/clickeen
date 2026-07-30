@@ -6,6 +6,15 @@ Parent: `126__PRD__UI_Optimization_Program.md` (MAMA).
 Series order: 126H of 126A-126M.
 KB doc: `documentation/engineering/UI/dieter.md`.
 
+Post-execution correction (2026-07-30): the
+`roma/tests/fixtures/124c-base-package-expected.json` byte fixture and its
+orphaned `readExpectedPackageFixture` reader were removed after source
+inspection proved that the test suite had no caller for the reader. Historical
+steps below accurately describe the earlier execution, but the deleted fixture
+is not a current verification authority. Current instance-package verification
+builds every widget package from source through
+`pnpm --filter @clickeen/roma test:instance-package`.
+
 ## 2026-07-30 Layout Convergence Correction
 
 The original 126H substrate execution record below remains valid for its token

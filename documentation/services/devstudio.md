@@ -128,9 +128,9 @@ DevStudio reveals Dieter color source truth. Current color writes are intentiona
 narrow: only `--color-*` tokens with literal three- or six-digit hex values are
 editable through the color token write lane.
 
-Role, focus, state, and derived `color-mix(...)` rows are displayed as read-only
-truth. They are not hidden, but they do not masquerade as writable DevStudio
-controls.
+The five shared role rows plus focus, state, and derived `color-mix(...)` rows
+are displayed as read-only truth. They are not hidden, but they do not
+masquerade as writable DevStudio controls.
 
 ## Icon Reveal Truth
 

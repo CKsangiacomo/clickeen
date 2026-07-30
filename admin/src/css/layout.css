@@ -7,7 +7,7 @@ body,
 body {
   margin: 0;
   overflow: hidden;
-  background: color-mix(in oklab, var(--color-system-gray-6), white 40%);
+  background: var(--role-surface-bg);
   color: var(--color-system-black);
   font: 400 var(--fs-13, 0.8125rem)/var(--lh-body, 1.5) var(--font-ui);
 }

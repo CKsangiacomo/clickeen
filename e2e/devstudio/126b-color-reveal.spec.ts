@@ -157,7 +157,7 @@ test("deployed editable color rows equal backend truth without writes", async ({
   expect(revealedEditable).toEqual(backendEditable);
   expect(revealedEditable.length).toBeGreaterThan(0);
   for (const token of [
-    "--role-focus",
+    "--role-surface",
     "--focus-ring-color",
     "--state-darken-target",
   ]) {

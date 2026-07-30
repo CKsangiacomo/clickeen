@@ -17,44 +17,39 @@ truth so agents can code UI deterministically.
 Dieter owns color values. Tokyo output is generated from Dieter. Roma, Bob,
 DevStudio, and widgets consume the token contract.
 
-Structural chrome uses semantic roles:
+The shared role contract contains four structural roles plus error:
 
 ```text
---role-surface
---role-on-surface
 --role-surface-bg
+--role-surface
 --role-surface-muted
 --role-border
---role-text
---role-text-secondary
---role-focus
---role-primary-action
---role-on-primary-action
 --role-error
---role-on-error
---role-success
---role-on-success
---role-warning
---role-on-warning
---role-info
---role-on-info
---role-muted
---role-selected-fill
---role-selected-text
---role-selected-border
---role-disabled-fill
---role-disabled-text
---role-disabled-border
 ```
+
+Their exact meanings are:
+
+| Token | Meaning |
+| --- | --- |
+| `--role-surface-bg` | Outer application and page canvas. |
+| `--role-surface` | Contained surfaces such as tables, popups, fields, and neutral controls. |
+| `--role-surface-muted` | Secondary chrome such as navigation planes and table headers. |
+| `--role-border` | Structural and control boundaries. |
+| `--role-error` | Error text and error boundaries; it is not structural chrome or an error-fill contract. |
+
+Text uses `--color-text` and `--color-text-secondary`. Focus indicators use
+`--focus-ring-color`. Dieter components own their selected, disabled, action,
+and feedback presentation through their existing component CSS and the palette
+or state controls below. Do not add a semantic role until a real shared
+consumer contract requires one.
 
 Use primitive `--color-system-*` tokens only when the primitive itself is the
 product truth: color picker swatches, token reveal UI, serialized user-authored
-color, or a widget product default explicitly owned by that widget.
+color, a widget product default explicitly owned by that widget, or an existing
+Dieter component contract.
 
-A palette ramp or contrast sibling may modify a named semantic status only
-when its base meaning already uses the corresponding semantic role and no
-value-equivalent modifier role exists. The modifier does not become status
-authority.
+A palette ramp or contrast sibling may modify an existing component-owned
+status color. The modifier does not become a new cross-system status authority.
 
 ## State Color
 
@@ -85,9 +80,9 @@ color-mix(in oklab, var(--base-token), var(--state-lighten-target) var(--state-m
 color-mix(in oklab, var(--base-token), var(--state-lighten-target) var(--state-inactive-mix))
 ```
 
-Selected state uses `--role-selected-fill`, `--role-selected-text`, and
-`--role-selected-border`. Disabled state uses `--role-disabled-fill`,
-`--role-disabled-text`, and `--role-disabled-border`.
+Selected and disabled presentation remains owned by each Dieter component's
+source contract. Reuse the state controls above where that component derives
+state color; do not create speculative global selected or disabled roles.
 
 Do not invent component-local state percentages, undefined state names, or
 opacity-only disabled behavior as color doctrine.
@@ -113,7 +108,8 @@ DevStudio reveals color source truth. Its current write lane accepts only
 Therefore:
 
 - writable `--color-*` three- or six-digit hex rows render edit controls;
-- role, focus, state, and derived `color-mix(...)` rows render read-only chips;
+- the five role rows plus focus, state, and derived `color-mix(...)` rows
+  render read-only chips;
 - This doctrine does not expand DevStudio write authority.
 
 ## Contrast

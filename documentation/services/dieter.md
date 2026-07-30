@@ -73,6 +73,13 @@ Compact property controls share row geometry through
 `dieter/components/shared/property-row.css`. Components continue to own their
 specific input, switch, dropdown, popover, hover, focus, and disabled behavior.
 
+Color source keeps one small shared role layer:
+`--role-surface-bg`, `--role-surface`, `--role-surface-muted`,
+`--role-border`, and `--role-error`. Text and focus retain their existing
+`--color-text`, `--color-text-secondary`, and `--focus-ring-color`
+authorities. Dieter does not carry unused action, feedback, selected,
+disabled, or `on-*` role families.
+
 ## Icon Delivery
 
 New or changed icons are generated manually with `tooling/sf-symbols/**`, then

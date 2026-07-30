@@ -24,12 +24,6 @@ export const PACKAGE_PARITY_WIDGETS = [
 
 export type PackageParityWidget = (typeof PACKAGE_PARITY_WIDGETS)[number];
 
-export type ExpectedPublicPackage = {
-  indexHtml: string;
-  stylesCss: string;
-  runtimeJs: string;
-};
-
 const repoRoot = path.resolve(fileURLToPath(new URL('../..', import.meta.url)));
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -151,10 +145,4 @@ export function widgetFixtureCoordinate(widgetType: PackageParityWidget) {
     baseLocale: 'en',
     displayName: `${widgetType} parity`,
   };
-}
-
-export async function readExpectedPackageFixture(): Promise<Record<PackageParityWidget, ExpectedPublicPackage>> {
-  return JSON.parse(
-    await readFile(path.join(repoRoot, 'roma/tests/fixtures/124c-base-package-expected.json'), 'utf8'),
-  ) as Record<PackageParityWidget, ExpectedPublicPackage>;
 }

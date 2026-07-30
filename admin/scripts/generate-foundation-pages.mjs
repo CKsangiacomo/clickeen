@@ -281,7 +281,7 @@ async function generateCoreStylesPage() {
   <style>
     .core-style-sample-frame { display: inline-flex; vertical-align: middle; }
     .core-style-sample { display: inline-flex; align-items: center; justify-content: center; min-inline-size: 96px; min-block-size: 32px; }
-    .core-style-sample__part { display: block; background: var(--role-primary-action); }
+    .core-style-sample__part { display: block; background: var(--color-system-blue); }
     .core-style-sample[data-preview='spacing'] { justify-content: flex-start; }
     .core-style-sample[data-preview='spacing'] .core-style-sample__part { min-inline-size: 2px; block-size: 12px; }
     .core-style-sample[data-preview='control-size'] .core-style-sample__part { inline-size: 72px; border-radius: var(--control-radius-sm); }
