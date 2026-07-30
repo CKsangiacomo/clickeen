@@ -1,7 +1,8 @@
 # 126B - PRD: Color
 
 Status: ORIGINAL STEP 9 COMPLETE; 2026-07-30 ROLE-CONTRACT CORRECTION
-IMPLEMENTED — DEPLOYED QA PENDING.
+IMPLEMENTED; DEVSTUDIO, ROMA, BOB, AND TOKYO DEPLOYED QA GREEN; PRAGUE
+GIT-CONNECTED PAGES DEPLOYMENT QUEUED.
 
 Post-126G delivery note: references below to `pnpm build:dieter`,
 `scripts/build-dieter.js`, or `tokyo/product/dieter/**` describe the historical
@@ -671,6 +672,55 @@ Status on 2026-07-24: **B1 through B3 GREEN; 126B complete.**
   instance, Supabase row, customer product data, or Cloudflare configuration.
   Independent pre-commit and post-cloud reviews found no blocking issue;
   V1-V8 all pass. This closes B3 and 126B.
+
+## 2026-07-30 Role-Contract Correction Execution Record
+
+- The correction landed and was pushed to `main` in
+  `0db6f2418d67b36779a586b17a8dcb935df0073a`. Dieter now declares exactly the
+  five roles named by the human correction. Active source and generated
+  DevStudio output contain no removed role except the deliberate
+  `--role-example` negative test.
+- `--color-text`, `--color-text-secondary`, and `--focus-ring-color` remain
+  their existing text and focus authorities. Logo Showcase now consumes
+  `--focus-ring-color` directly. No compatibility alias, resolver, registry,
+  theme scaffold, or new generator was added.
+- `main-container`, `left-nav`, and `page` now consume the shared Dieter
+  structural roles. DevStudio and Roma consume the same page-background
+  authority. Generated DevStudio Colors exposes exactly the five current roles;
+  Layouts, Table, and Popup continue to reveal the shared Dieter source rather
+  than page-local presentation.
+- The obsolete `124c-base-package-expected.json` fixture and its reader were
+  deleted after repository history and whole-tree call-site inspection proved
+  that localization's overlay-only correction had left them with no caller.
+  The current source-built instance-package parity suite remains green.
+- Local generation, Dieter governance, widget validation, Tokyo sync planning,
+  DevStudio/Bob/Roma/Prague builds and checks, root lint/typecheck, focused
+  browser proofs, and `git diff --check` are green. Deployed authenticated
+  DevStudio proof passed 2/2 without a write request.
+- Cloudflare Pages production deployments are green at the exact implementation
+  SHA for DevStudio `ff512b98-60c7-42e6-8ac7-e426f9f0c439`, Roma
+  `9e9b3612-7e51-468c-87b9-170672957102`, and Bob
+  `43cca8a1-869c-4405-9ae1-791b4a160ee0`. GitHub Actions Roma verification
+  `30591042234`, Prague source verification `30591042211`, workers/R2
+  deployment `30591042249`, and post-deploy surface reachability
+  `30591554098` are green at that SHA.
+- The workers deployment synced the Tokyo product roots. Remote
+  `product/widgets/logoshowcase/widget.css` is byte-identical to committed
+  source: both are 8,161 bytes with SHA-256
+  `d1e11f86ba381cdcf0265af38b523ae5ec8e7f288f8e214363bb90b6273485a2`.
+  The remote focus block uses `--focus-ring-color` and contains no
+  `--role-focus`.
+- Prague Pages deployment `f580978e-9c8b-4915-891d-70c2cbe720f1` exists at
+  the exact implementation SHA but remains `queued/idle`. This is part of an
+  existing Prague Pages queue: the six preceding Git-connected deployments are
+  also `queued/idle`, while the Prague source build and verification workflow
+  is green. No queue deletion, manual upload, config mutation, or undocumented
+  deployment bypass was performed.
+- No account, instance, overlay, translation, Supabase row, policy, or customer
+  product data changed. The expected Git-authored Tokyo product-root sync is the
+  only product-root mutation. Independent blast-radius and final V1-V8 audits
+  found no blocking implementation issue; V1-V8 all pass. Prague's external
+  Pages queue is the only remaining deployment hold.
 
 ## Done For 126B
 
