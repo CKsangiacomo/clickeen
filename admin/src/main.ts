@@ -452,11 +452,11 @@ async function openTokenEditor(kind: DieterTokenKind, preferredToken?: string) {
         <div class="devstudio-token-editor__body">
           <label class="devstudio-token-editor__field">
             <span class="label-xs">Token</span>
-            <select class="diet-operational-field devstudio-token-editor__select" name="token"></select>
+            <select class="diet-operational-field devstudio-token-editor__select" name="token" disabled></select>
           </label>
           <label class="devstudio-token-editor__field">
             <span class="label-xs">Value</span>
-            <input class="diet-operational-field devstudio-token-editor__input" name="value" type="text" autocomplete="off" autocapitalize="none" spellcheck="false" aria-describedby="devstudio-token-editor-status" />
+            <input class="diet-operational-field devstudio-token-editor__input" name="value" type="text" autocomplete="off" autocapitalize="none" spellcheck="false" aria-describedby="devstudio-token-editor-status" disabled />
           </label>
           <div class="devstudio-token-editor__diff body-xs" id="devstudio-token-editor-status" aria-live="polite">Loading token source…</div>
         </div>
@@ -598,6 +598,8 @@ async function openTokenEditor(kind: DieterTokenKind, preferredToken?: string) {
     }
     select.value = selected.token;
     input.value = selected.value;
+    select.disabled = false;
+    input.disabled = false;
 
     const syncDiff = () => {
       const current = tokens.find((entry) => entry.token === select.value);

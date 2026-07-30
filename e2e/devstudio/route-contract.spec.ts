@@ -214,8 +214,12 @@ test.describe('DevStudio route contract', () => {
     expect(unexpectedMutations).toEqual([]);
   });
 
-  test('Core styles keeps an in-flight token commit singular and truthful', async ({ page }) => {
+  test('Core styles keeps loading and commit states singular and truthful', async ({ page }) => {
     const mutations: Array<{ method: string; path: string; body: unknown }> = [];
+    let releaseLoad: (() => void) | undefined;
+    const loadReleased = new Promise<void>((resolve) => {
+      releaseLoad = resolve;
+    });
     let releaseSave: (() => void) | undefined;
     const saveReleased = new Promise<void>((resolve) => {
       releaseSave = resolve;
@@ -225,6 +229,7 @@ test.describe('DevStudio route contract', () => {
       const request = route.request();
       const path = new URL(request.url()).pathname;
       if (request.method() === 'GET' && path === '/api/dieter/tokens/foundation') {
+        await loadReleased;
         await route.fulfill({
           status: 200,
           contentType: 'application/json',
@@ -276,6 +281,14 @@ test.describe('DevStudio route contract', () => {
     const close = dialog.getByRole('button', { name: 'Close' });
     const cancel = dialog.getByRole('button', { name: 'Cancel' });
     const commit = dialog.getByRole('button', { name: 'Confirm commit' });
+
+    await expect(dialog.getByText('Loading token source…')).toBeVisible();
+    await expect(tokenSelect).toBeDisabled();
+    await expect(value).toBeDisabled();
+    releaseLoad?.();
+    await expect(value).toHaveValue('0.125rem');
+    await expect(tokenSelect).toBeEnabled();
+    await expect(value).toBeEnabled();
 
     await value.fill('0.5rem');
     await commit.click();

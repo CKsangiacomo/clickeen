@@ -51,6 +51,8 @@ source commit behavior in DevStudio. Its native select and input use Dieter's
 small operational-field appearance contract, and every action uses the Dieter
 button contract loaded by the DevStudio shell. The work body and dirty-discard
 body are mutually exclusive states in the same native dialog; they never stack.
+Token fields remain disabled until source truth loads, and every editor and
+dismissal control remains disabled while a commit is in flight.
 
 The editor has three source-file lanes: foundation, color, and typography.
 Foundation edits are exposed from the generated Core styles page and commit
