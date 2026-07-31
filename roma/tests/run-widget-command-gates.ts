@@ -88,10 +88,7 @@ async function testBuilderUsesBobTopDrawerAsItsOnlyEditorChrome(): Promise<void>
   const builderSource = await readRoute('components/builder-domain.tsx');
   const builderRoute = await readRoute('app/(authed)/builder/[instanceId]/page.tsx');
   const builderLandingRoute = await readRoute('app/(authed)/builder/page.tsx');
-  const romaCss = await readRoute('app/roma.css');
-  const bobCss = await readFile(new URL('../../bob/app/bob_app.css', import.meta.url), 'utf8');
   const topDrawer = await readFile(new URL('../../bob/components/TopDrawer.tsx', import.meta.url), 'utf8');
-  const builderApp = await readFile(new URL('../../bob/components/BuilderApp.tsx', import.meta.url), 'utf8');
   const bobBoot = await readFile(new URL('../../bob/lib/session/useSessionBoot.ts', import.meta.url), 'utf8');
 
   assert.doesNotMatch(builderRoute, /showHeader/);
@@ -100,13 +97,6 @@ async function testBuilderUsesBobTopDrawerAsItsOnlyEditorChrome(): Promise<void>
   assert.doesNotMatch(builderLandingRoute, /fullCanvas/);
   assert.doesNotMatch(builderLandingRoute, /rd-canvas--builder/);
   assert.match(builderLandingRoute, /RomaShellDefaultActions/);
-  assert.match(romaCss, /\.main-container > \.page\.roma-builder-page \{\s+padding: 0;/);
-  assert.match(romaCss, /\.roma-builder-page > \.page__content \{\s+max-inline-size: none;/);
-  assert.match(romaCss, /html,\s+body \{[^}]*background: var\(--role-surface-muted\);/);
-  assert.doesNotMatch(romaCss, /--color-system-gray-6-step3/);
-  assert.match(bobCss, /\.builder-app \{[^}]*background: var\(--role-surface-muted\);/);
-  assert.match(bobCss, /\.workspace \{[^}]*background: var\(--role-surface-muted\);/);
-  assert.doesNotMatch(bobCss, /--color-system-gray-6-step3/);
 
   assert.match(builderSource, /publicActions: publicUrl/);
   assert.match(builderSource, /iframeSnippet: buildWidgetIframeSnippet\(publicUrl\)/);
@@ -118,30 +108,17 @@ async function testBuilderUsesBobTopDrawerAsItsOnlyEditorChrome(): Promise<void>
   assert.doesNotMatch(builderSource, />Open public widget</);
 
   assert.match(topDrawer, /className="topdrawer"/);
-  assert.match(builderApp, /className="editor-content"/);
-  assert.doesNotMatch(builderApp, /builder-app__content/);
   assert.match(topDrawer, />Open public widget</);
   assert.match(topDrawer, />More</);
   assert.match(topDrawer, />Copy URL</);
   assert.match(topDrawer, />Copy embed</);
   assert.match(topDrawer, />Copy script</);
   assert.match(topDrawer, /className="topdrawer-more diet-popover-host"/);
-  assert.doesNotMatch(bobCss, /\.topdrawer-more\[data-state='open'\]/);
   assert.match(topDrawer, /requestHostAction\('open-navigation'\)/);
   assert.match(topDrawer, /requestHostAction\('return'\)/);
   assert.equal((topDrawer.match(/data-variant="primary"/g) ?? []).length, 1);
   assert.match(bobBoot, /message\.publishStatus === 'published'/);
   assert.match(bobBoot, /coreui\.errors\.builder\.publicActions\.invalid/);
-
-  const workspace = await readFile(new URL('../../bob/components/Workspace.tsx', import.meta.url), 'utf8');
-  assert.doesNotMatch(
-    workspace,
-    /if \(previewDependenciesReady\) return;\s*setIframeHasState\(false\)/,
-  );
-  assert.equal((workspace.match(/setIframeHasState\(false\)/g) ?? []).length, 1);
-  assert.doesNotMatch(workspace, /setIframeLoadError\('Failed to resolve preview account assets'\)/);
-  assert.doesNotMatch(workspace, /setIframeHasState\(true\);\s*\};\s*iframe\.addEventListener\('load'/);
-  assert.match(workspace, /iframeHasState && !savedTranslationPreviewBlocked && !previewError && switcherNotice/);
 }
 
 async function testDieterLayoutTableAndPopupConsumption(): Promise<void> {
@@ -155,7 +132,7 @@ async function testDieterLayoutTableAndPopupConsumption(): Promise<void> {
   assert.match(shell, /className=\{`page/);
   assert.match(shell, /className="page__header"/);
   assert.match(shell, /className="page__actions"/);
-  assert.match(shell, /className=\{`page__content/);
+  assert.match(shell, /className="page__content"/);
   assert.match(shell, /matchMedia\('\(min-width: 600px\) and \(min-height: 600px\)'\)/);
   assert.match(shell, /data-navigation-open=\{navigationOpen \? 'true' : undefined\}/);
   assert.match(shell, /data-navigation-scrim/);

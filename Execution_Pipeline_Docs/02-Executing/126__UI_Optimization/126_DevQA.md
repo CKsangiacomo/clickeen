@@ -1259,9 +1259,10 @@ Runtime/deploy claims are bounded as stated above:
 
 ## 12. Post-Execution Builder Preview And Residue Correction - 2026-07-31
 
-The post-execution audit found one real preview lifecycle regression and a
-bounded set of additive Builder-shell residue. It did not find wholesale CSS or
-runtime sprawl.
+The post-execution audit covered the UI implementation commits from `c57f2d90`
+through `8c4a493b` and the preview lifecycle introduced by `aba451ee`. It found
+one real preview lifecycle regression, live architecture that must remain, and
+208 net lines of duplicate, dead, one-use, or test-only residue to remove.
 
 ### Cause and correction
 
@@ -1281,26 +1282,32 @@ runtime sprawl.
   exclusive. Iframe/package failure no longer masquerades as
   `data-widget-ready="true"`.
 
-### Bounded cleanup
+### Consolidation result
 
 - `/builder` is restored as an ordinary Roma Page; only
   `/builder/{instanceId}` uses the full-canvas editor composition.
 - Roma's independent `showHeader` and `fullCanvas` flags are reduced to the one
-  valid `fullCanvas` mode, which owns header suppression.
+  valid `fullCanvas` mode, which owns header suppression and full Page-content
+  composition without a second `canvasClassName` switch.
 - Bob TopDrawer consumes Dieter's existing `diet-popover-host` state behavior;
   copied open/closed CSS and obsolete readonly-span styling are deleted.
-- The duplicated Bob public-action type and small status/style duplications are
-  consolidated. Exact Roma-to-Bob public action values, fail-closed validation,
-  host actions, focus return, and More dismissal behavior remain intact.
-- Point-in-time structure/conformance audit `6974b75b` was published before the
-  implementation. Its historical source findings remain evidence rather than
-  current runtime law.
+- Roma's duplicate `.roma-module-surface` is merged into the existing
+  `.rd-canvas-module`; 96 additional lines of selector-only dead Bob/Roma CSS
+  are deleted after repo-wide caller checks.
+- Workspace has one state-update sender and one mutually exclusive status
+  renderer. Redundant async cleanup branches are removed.
+- Implementation-detail lifecycle/CSS assertions duplicated by deployed browser
+  behavior are deleted. The stale DevStudio Full-navigation expectation is
+  corrected from `320px` to the governed `256px` token value.
+- Exact Roma-to-Bob public action values, fail-closed validation, host actions,
+  focus return, More dismissal, shared Dieter layout/Table contracts, and the
+  persistent iframe architecture remain intact.
 
 ### Verification
 
-- Local GREEN: Bob and Roma lint, typecheck, production builds, Bob
-  accessibility/translation/typography tests, Roma widget-command gates,
-  Playwright discovery, and `git diff --check`.
+- Local GREEN: Dieter typecheck; DevStudio build/lint/typecheck/Functions; Bob
+  and Roma lint/typecheck/production builds; Bob accessibility, translation,
+  and typography tests; Roma widget-command gates; and `git diff --check`.
 - Independent post-implementation review found and caused correction of the
   Dieter popover width-specificity issue and the stale-ready package-failure
   path. The final independent V1-V8 review is GREEN.

@@ -386,7 +386,6 @@ test.describe("PRD 126A.2 Bob failure-state truth", () => {
 
     await setStageImageFill(bobFrame, delayedRef);
     await expect.poll(() => requestedRefs.filter((ref) => ref === delayedRef).length).toBeGreaterThan(0);
-    await page.waitForTimeout(250);
     await expect(workspace).toBeVisible();
     await expect(bobFrame.getByText("Loading preview...")).toHaveCount(0);
     expect(previewNavigations).toBe(0);

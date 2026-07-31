@@ -176,15 +176,15 @@ test.describe('DevStudio route contract', () => {
     expect(wideShell.navigation).toMatchObject({
       x: 8,
       y: 8,
-      width: 320,
+      width: 256,
       height: 884,
       borderWidth: '0px',
       borderRadius: '20px',
     });
     expect(wideShell.navigation.boxShadow).not.toBe('none');
     expect(wideShell.workspace).toEqual({
-      x: 336,
-      width: 1104,
+      x: 272,
+      width: 1168,
       paddingBlockStart: '24px',
       headerSeparation: '16px',
       contentGap: '16px',

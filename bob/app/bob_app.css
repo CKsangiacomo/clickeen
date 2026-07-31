@@ -179,7 +179,6 @@ body {
   inset-block-start: calc(100% + var(--space-1));
   inset-inline-end: 0;
   inline-size: 12rem;
-  margin-inline: 0;
 }
 
 .topdrawer-instance-title {
@@ -257,44 +256,10 @@ body {
   padding-inline-start: var(--control-padding-inline);
 }
 
-.tdmenucontent__mode {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-}
-
-.tdmenucontent__mode-switch {
-  display: flex;
-  width: 100%;
-}
-
-.tdmenucontent__mode-switch .diet-segment {
-  flex: 1;
-}
-
-.tdmenucontent__translate {
-  gap: var(--space-2);
-}
-
-.tdmenucontent__translate-top {
-  margin-top: 0;
-}
-
-.tdmenucontent__footer {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-  margin-top: var(--space-2);
-}
-
 .tdmenucontent__fields {
   display: flex;
   flex-direction: column;
   gap: var(--space-0);
-}
-
-.tdmenucontent__fields .td-eyebrow {
-  margin-block-end: var(--space-1);
 }
 
 .tdmenucontent__cluster {
@@ -357,14 +322,6 @@ body {
   margin: 0;
 }
 
-.tdmenu-empty {
-  grid-column: 1 / span 2;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--color-system-gray-3);
-}
-
 .tooldrawer-copilot {
   grid-column: 1 / span 2;
   min-height: 0;
@@ -378,21 +335,6 @@ body {
   border: 1px solid color-mix(in oklab, var(--role-error), transparent 60%);
   background: color-mix(in oklab, var(--color-system-red-5), transparent 85%);
   color: var(--role-error);
-}
-
-.translations-panel__locale-list {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
-  padding-inline: var(--control-padding-inline);
-}
-
-.translations-panel__locale-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-2);
-  min-height: 24px;
 }
 
 .workspace {

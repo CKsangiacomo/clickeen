@@ -19,7 +19,6 @@ type RomaShellProps = {
   activeDomain: RomaDomainKey;
   title: string;
   children: ReactNode;
-  canvasClassName?: string;
   headerRight?: ReactNode;
   fullCanvas?: boolean;
 };
@@ -53,7 +52,6 @@ export function RomaShell({
   activeDomain,
   title,
   children,
-  canvasClassName,
   headerRight,
   fullCanvas = false,
 }: RomaShellProps) {
@@ -163,9 +161,7 @@ export function RomaShell({
               <div className="page__actions">{headerRight}</div>
             </header>
           ) : null}
-          <section className={`page__content${canvasClassName ? ` ${canvasClassName}` : ''}`}>
-            {children}
-          </section>
+          <section className="page__content">{children}</section>
         </main>
       </div>
     </RomaShellActionsContext.Provider>

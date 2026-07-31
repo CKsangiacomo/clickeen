@@ -196,11 +196,11 @@ export function Workspace({
     loading: savedTranslationsLoading,
     error: savedTranslationsError,
   });
-  const previewDependenciesReady =
+  const previewMessageReady =
     mediaPreviewStateReady &&
     previewTypography.ok &&
-    !unresolvedFontAssetRefs.length;
-  const previewMessageReady = previewDependenciesReady && !savedTranslationPreviewBlocked;
+    !unresolvedFontAssetRefs.length &&
+    !savedTranslationPreviewBlocked;
   const previewDependencyError = !mediaAssets.ok
     ? 'Failed to resolve preview media assets'
     : assetResolutionError ?? (!previewTypography.ok ? previewTypography.error : null);
@@ -210,72 +210,40 @@ export function Workspace({
     return resolveTranslatedValues(previewInstanceData, selectedTranslationValues);
   }, [previewInstanceData, selectedTranslationValues]);
 
-  const latestRef = useRef({
-    compiled,
-    instanceData: resolvedPreviewInstanceData,
-    instanceId,
-    baseLocale,
+  const latestPreviewSelectionRef = useRef({
     previewMode,
-    effectivePreviewLocale,
     previewablePreviewLocales: effectivePreviewableLocales,
-    device,
-    typographyData: previewTypographyData,
-    canSendState: previewMessageReady,
   });
 
   useEffect(() => {
-    latestRef.current = {
-      compiled,
-      instanceData: resolvedPreviewInstanceData,
-      instanceId,
-      baseLocale,
+    latestPreviewSelectionRef.current = {
       previewMode,
-      effectivePreviewLocale,
       previewablePreviewLocales: effectivePreviewableLocales,
-      device,
-      typographyData: previewTypographyData,
-      canSendState: previewMessageReady,
     };
-  }, [
-    compiled,
-    resolvedPreviewInstanceData,
-    instanceId,
-    baseLocale,
-    previewMode,
-    effectivePreviewLocale,
-    effectivePreviewableLocales,
-    device,
-    previewTypographyData,
-    previewMessageReady,
-  ]);
+  }, [previewMode, effectivePreviewableLocales]);
 
   useEffect(() => {
     if (!mediaAssets.ok) {
       setAssetResolutionError(null);
       return;
     }
-    let cancelled = false;
     if (!accountAssetRefs.length) {
       setAssetResolutionError(null);
-      return () => {
-        cancelled = true;
-      };
+      return;
     }
 
     const missingAssetRefs = unresolvedAccountAssetRefs;
     if (!missingAssetRefs.length) {
       setAssetResolutionError(null);
-      return () => {
-        cancelled = true;
-      };
+      return;
     }
 
+    let cancelled = false;
     setAssetResolutionError(null);
     void accountAssets
       .resolveAssets(missingAssetRefs)
       .then(({ assetsByRef }) => {
         if (cancelled) return;
-        setAssetResolutionError(null);
         setResolvedAssets((current) => {
           let changed = false;
           const next = new Map(current);
@@ -354,27 +322,8 @@ export function Workspace({
     }
 
     const handleLoad = () => {
-      setIframeLoaded(true);
-      const snapshot = latestRef.current;
-      const nextCompiled = snapshot.compiled;
-      const iframeWindow = iframe.contentWindow;
-      if (!iframeWindow || !nextCompiled) return;
-      if (!snapshot.canSendState) return;
       setIframeLoadError(null);
-      iframeWindow.postMessage(
-        {
-          type: 'ck:state-update',
-          widgetname: nextCompiled.widgetname,
-          instanceId: snapshot.instanceId,
-          baseLocale: snapshot.baseLocale,
-          state: snapshot.instanceData,
-          locale: snapshot.effectivePreviewLocale,
-          previewMode: snapshot.previewMode,
-          device: snapshot.device,
-          ...(snapshot.typographyData ? { typographyData: snapshot.typographyData } : null),
-        },
-        '*',
-      );
+      setIframeLoaded(true);
     };
     const handleError = () => {
       setIframeLoadError('Failed to load preview runtime');
@@ -445,11 +394,11 @@ export function Workspace({
         const requestedLocale =
           typeof data.locale === 'string' ? data.locale.trim() : '';
         if (!requestedLocale) return;
-        if (latestRef.current.previewMode !== 'translations') {
+        if (latestPreviewSelectionRef.current.previewMode !== 'translations') {
           setSwitcherNotice(BLOCKED_SWITCHER_COPY);
           return;
         }
-        if (!latestRef.current.previewablePreviewLocales.includes(requestedLocale)) {
+        if (!latestPreviewSelectionRef.current.previewablePreviewLocales.includes(requestedLocale)) {
           return;
         }
         onTranslationPreviewLocaleChange(requestedLocale);
@@ -492,6 +441,20 @@ export function Workspace({
       ? `${stageFixedWidth}px`
       : null;
   const shouldRenderCanvasCard = Boolean(shouldResizeCanvas && (canvasHeightPx || canvasWidthPx));
+  const previewStatus = !hasWidget
+    ? null
+    : savedTranslationPreviewBlocked
+      ? {
+          error: Boolean(savedTranslationsError),
+          text: savedTranslationsError || 'Loading saved translation...',
+        }
+      : previewError
+        ? { error: true, text: previewError }
+        : !iframeHasState
+          ? { error: false, text: 'Loading preview...' }
+          : switcherNotice
+            ? { error: false, text: switcherNotice }
+            : null;
 
   return (
     <section
@@ -516,29 +479,13 @@ export function Workspace({
         sandbox="allow-scripts allow-same-origin"
         style={iframeBackdrop ? ({ background: iframeBackdrop } as any) : undefined}
       />
-      {hasWidget && !iframeHasState && !savedTranslationPreviewBlocked && !previewError ? (
-        <div className="workspace-status-overlay" role="status" aria-live="polite">
-          <span className="label-s">Loading preview...</span>
-        </div>
-      ) : null}
-      {hasWidget && savedTranslationPreviewBlocked && savedTranslationsLoading && !savedTranslationsError ? (
-        <div className="workspace-status-overlay" role="status" aria-live="polite">
-          <span className="label-s">Loading saved translation...</span>
-        </div>
-      ) : null}
-      {hasWidget && savedTranslationPreviewBlocked && savedTranslationsError ? (
-        <div className="workspace-status-overlay workspace-status-overlay--error" role="alert">
-          <span className="label-s">{savedTranslationsError}</span>
-        </div>
-      ) : null}
-      {hasWidget && !savedTranslationPreviewBlocked && previewError ? (
-        <div className="workspace-status-overlay workspace-status-overlay--error" role="alert">
-          <span className="label-s">{previewError}</span>
-        </div>
-      ) : null}
-      {hasWidget && iframeHasState && !savedTranslationPreviewBlocked && !previewError && switcherNotice ? (
-        <div className="workspace-status-overlay" role="status" aria-live="polite">
-          <span className="label-s">{switcherNotice}</span>
+      {previewStatus ? (
+        <div
+          className={`workspace-status-overlay${previewStatus.error ? ' workspace-status-overlay--error' : ''}`}
+          role={previewStatus.error ? 'alert' : 'status'}
+          aria-live={previewStatus.error ? undefined : 'polite'}
+        >
+          <span className="label-s">{previewStatus.text}</span>
         </div>
       ) : null}
 

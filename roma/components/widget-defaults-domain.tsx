@@ -615,12 +615,12 @@ export function WidgetDefaultsDomain() {
   }, [accountApi, draft, saveBlocked, saving]);
 
   if (loading) {
-    return <section className="roma-module-surface body-m" role="status">Loading widget defaults...</section>;
+    return <section className="rd-canvas-module body-m" role="status">Loading widget defaults...</section>;
   }
 
   if (!draft) {
     return (
-      <section className="roma-module-surface" role="alert">
+      <section className="rd-canvas-module" role="alert">
         <p className="body-m">{error || 'Widget defaults are unavailable.'}</p>
         <div className="rd-canvas-module__actions">
           <button
@@ -640,7 +640,7 @@ export function WidgetDefaultsDomain() {
   if (compiledLoading || !controlsLoaded) {
     if (error && !compiledLoading) {
       return (
-        <section className="roma-module-surface widget-defaults-contract-error" role="alert">
+        <section className="rd-canvas-module widget-defaults-contract-error" role="alert">
           <div>
             <h2 className="heading-4">Widget Defaults Contract Error</h2>
             <p className="body-s widget-defaults-error">{error}</p>
@@ -652,12 +652,12 @@ export function WidgetDefaultsDomain() {
         </section>
       );
     }
-    return <section className="roma-module-surface body-m" role="status">Loading Builder controls...</section>;
+    return <section className="rd-canvas-module body-m" role="status">Loading Builder controls...</section>;
   }
 
   if (unmappedDefaultPaths.length > 0) {
     return (
-      <section className="roma-module-surface widget-defaults-contract-error" role="alert">
+      <section className="rd-canvas-module widget-defaults-contract-error" role="alert">
         <div>
           <h2 className="heading-4">Widget Defaults Contract Error</h2>
           {error ? <p className="body-s widget-defaults-error">{error}</p> : null}
@@ -675,7 +675,7 @@ export function WidgetDefaultsDomain() {
 
   if (shellContractError) {
     return (
-      <section className="roma-module-surface widget-defaults-contract-error" role="alert">
+      <section className="rd-canvas-module widget-defaults-contract-error" role="alert">
         <div>
           <h2 className="heading-4">Widget Defaults Contract Error</h2>
           <p className="body-s widget-defaults-error">{shellContractError}</p>
@@ -690,7 +690,7 @@ export function WidgetDefaultsDomain() {
 
   if (coreContractErrorEntries.length > 0) {
     return (
-      <section className="roma-module-surface widget-defaults-contract-error" role="alert">
+      <section className="rd-canvas-module widget-defaults-contract-error" role="alert">
         <div>
           <h2 className="heading-4">Widget Defaults Contract Error</h2>
           <pre className="widget-defaults-contract-error__paths body-s">

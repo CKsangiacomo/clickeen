@@ -15,7 +15,7 @@ export function DomainPageShell({ activeDomain, title, Component }: DomainPageSh
   return (
     <RomaShell activeDomain={activeDomain} title={title} headerRight={<RomaShellDefaultActions />}>
       <RomaAccountNoticeModal />
-      <Suspense fallback={<section className="roma-module-surface">Loading domain...</section>}>
+      <Suspense fallback={<section className="rd-canvas-module">Loading domain...</section>}>
         <RomaDomainErrorBoundary domainLabel={title} resetKey={activeDomain}>
           <Component />
         </RomaDomainErrorBoundary>
