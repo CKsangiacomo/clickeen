@@ -55,9 +55,34 @@ radius, and elevation reference existing Dieter foundations directly.
 - Dieter typecheck, governance, generated Layouts examples, and source diff
   checks are GREEN.
 
-Commit, exact-SHA Pages deployments, deployed browser evidence, and the
-independent final V1-V8 audit are recorded after those gates complete. This
-correction does not close the broader C14 visual-acceptance boundary.
+### Exact deployed evidence
+
+- Implementation commit `ed837250` is on `github/main`.
+- Exact-SHA Git-connected Pages deployments are GREEN:
+  - DevStudio `d0a796fb-4302-436d-94b8-f45bc05b7a3f`;
+  - Roma `266563eb-10a3-4ad3-9886-f0230818621a`.
+- GitHub Roma/Bob app verification run `30596614966` is GREEN.
+- GitHub Worker/R2 run `30596614985` is GREEN on attempt 2. Attempt 1 stopped
+  after Cloudflare R2 returned an internal HTTP 500 for one existing Dieter
+  icon after the command's three retries. The unchanged failed-job rerun
+  completed the canonical 581-object sync (`dieter=157`, `prague=348`,
+  `product=76`). No Worker surface changed or deployed.
+- Authenticated deployed DevStudio `/#/dieter/layouts` and Roma `/widgets`
+  both prove the same geometry:
+  - `1440x900`: navigation rect `8,8,220,884`; page `x=236`, width `1204`;
+  - touch portrait `390x844`: open navigation rect `8,8,320,828`; page `x=0`,
+    width `390`;
+  - both use a one-pixel direct role border, 16px radius, Dieter elevation,
+    contain no retired portrait boundary, and emitted no console/page errors.
+
+The independent final audit found and blocked two pre-commit mismatches: an
+invented 55% border mix instead of the direct Dieter border role, and one stale
+current `126M` portrait-matrix row. Both were corrected before `ed837250`. The
+final V1-V8 audit is GREEN for every violation: no substitution, healing,
+omission, fail-open control, corruption-as-absence, partial-success claim,
+renamed failing workflow, or runtime test dependency was introduced.
+
+This correction does not close the broader C14 visual-acceptance boundary.
 
 ## 2026-07-30 Operational Typography And Table Correction
 
