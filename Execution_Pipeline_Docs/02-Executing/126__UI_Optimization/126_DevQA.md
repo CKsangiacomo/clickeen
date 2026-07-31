@@ -14,6 +14,56 @@ Scope: premature A-H code-change reality, final A-M current-source audits,
 executable PRDs, exact-tree peer reviews, and current Step-9 execution state.
 Parent: `126__PRD__UI_Optimization_Program.md` (MAMA).
 
+## 2026-07-31 Active Builder Composition Correction
+
+The product owner selected Builder as the first Roma domain to converge before
+changing the other domain pages. The active `/builder/:instanceId` route now
+omits Roma's ordinary Page header and separate action strip. Its padding-free,
+unconstrained Page body is filled by Bob's existing editor composition:
+`TopDrawer` above `EditorContent`, with `ToolDrawer | Workspace` inside
+`EditorContent`. The no-instance `/builder` landing remains an ordinary Roma
+Page.
+
+Bob TopDrawer now owns editor action presentation. Save is the only primary
+action; Open public widget is the applicable secondary action; Copy URL, Copy
+embed, and Copy script are under More. Roma remains authority for the exact
+published URL/snippet values and for guarded host navigation. Bob receives the
+complete set or `null` and fails a malformed published envelope instead of
+reconstructing or partially accepting it.
+
+### Verification and deployment evidence
+
+- Implementation commit `d6f88b2896341ef732750f9fba4eb6025b4de0ec`
+  is on `github/main`.
+- Bob lint, typecheck, accessibility-copy, typography-contract, and serialized
+  Cloudflare build are GREEN. Roma lint, typecheck, widget-command gates, and
+  serialized Cloudflare build are GREEN. The route gate distinguishes active
+  Builder full-canvas composition from the unchanged `/builder` landing.
+- Exact-SHA Pages deployments are GREEN: Bob
+  `cfe1d421-a4fa-42d2-9724-cd46c7c8467a` and Roma
+  `6cb33b92-7954-435a-b8a7-d56027890966`.
+- GitHub Roma/Bob verification run `30657991949` is GREEN.
+- The authenticated deployed Roma -> Bob smoke is GREEN. It requires no Roma
+  Page header, a visible Bob TopDrawer, the selected instance title, a ready
+  Workspace, and a Bob iframe wider than `900px` and taller than `600px` in the
+  `1280x720` desktop run. It also opens More and proves all three copy actions,
+  then switches to `844x390`, opens Roma navigation from Bob, proves focus moved
+  to Roma's first navigation link, and closes the drawer with Escape.
+- Deployed visual evidence shows Roma left-nav beside a full remaining Bob
+  canvas containing TopDrawer, ToolDrawer, and Workspace. No Roma title bar,
+  duplicate action band, padded module frame, or dark outer editor gutter
+  remains.
+- Independent audit is GREEN after correcting one caught regression: only the
+  active instance route opts into `fullCanvas`; `/builder` does not. V1 through
+  V8 are GREEN. The audit confirms exact-value authority remains in Roma,
+  malformed public actions fail closed, duplicate Roma controls were deleted,
+  and the runtime does not depend on tests.
+- No product data, account/session coordinate, API route, storage object,
+  Tokyo/R2 state, publish state, or save model changed.
+
+Other Roma domains remain outside this slice. They advance only after product
+owner review and adjustment of this deployed Builder composition.
+
 ## 2026-07-31 Full Navigation Width Correction
 
 The product owner rejected the shared Full navigation as too wide for the

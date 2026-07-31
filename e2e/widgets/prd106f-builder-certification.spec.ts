@@ -516,12 +516,13 @@ test.describe('PRD106F authenticated Builder browser certification', () => {
 
       const collector = collectPageErrors(page);
       await openBuilderFrame(page, instance.instanceId);
-      await expect(page.getByRole('heading', { name: 'Builder' })).toBeVisible();
+      await expect(page.locator('.page__header')).toHaveCount(0);
       await expect(
         page.getByText('Builder could not open this widget. Please try again.'),
       ).toHaveCount(0);
 
       const bobFrame = page.frameLocator('iframe[title="Bob Builder"]');
+      await expect(bobFrame.locator('.topdrawer')).toBeVisible();
 
       for (const panelName of MIXED_BUILDER_PANELS) {
         await expectBuilderPanelReady(bobFrame, panelName);

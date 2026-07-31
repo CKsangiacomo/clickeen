@@ -39,8 +39,9 @@ async function guardInstanceMutations(
 async function openBuilder(page: Page): Promise<FrameLocator> {
   await page.goto(BUILDER_PATH, { waitUntil: "domcontentloaded" });
   await expect(page).toHaveURL(new RegExp(`${BUILDER_PATH}$`));
-  await expect(page.getByRole("heading", { name: "Builder" })).toBeVisible();
+  await expect(page.locator(".page__header")).toHaveCount(0);
   const bobFrame = page.frameLocator('iframe[title="Bob Builder"]');
+  await expect(bobFrame.locator(".topdrawer")).toBeVisible({ timeout: 30_000 });
   await expect(bobFrame.getByRole("button", { name: "Manual" })).toBeVisible({
     timeout: 30_000,
   });
