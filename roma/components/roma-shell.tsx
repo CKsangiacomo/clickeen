@@ -13,6 +13,7 @@ import {
   type ReactNode,
 } from 'react';
 import type { RomaDomainKey } from '../lib/domains';
+import { RomaAccountBoundary } from './roma-account-context';
 import { RomaNav } from './roma-nav';
 
 type RomaShellProps = {
@@ -161,7 +162,9 @@ export function RomaShell({
               <div className="page__actions">{headerRight}</div>
             </header>
           ) : null}
-          <section className="page__content">{children}</section>
+          <section className="page__content">
+            <RomaAccountBoundary>{children}</RomaAccountBoundary>
+          </section>
         </main>
       </div>
     </RomaShellActionsContext.Provider>

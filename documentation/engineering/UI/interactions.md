@@ -36,9 +36,13 @@ states to static pages. They must also not collapse different product meanings:
 `empty`, `unavailable`, `unauthorized`, and `error` are separate states when the
 user can act or the reason matters.
 
-Roma account shell is the account-boundary reference: loading, auth redirect,
-recoverable error with retry, no-context reload, then account render. Roma
-domains may be simpler only when their product work is actually simpler.
+Roma account shell is the account-boundary reference. Its navigation and page
+frame remain visible while the first validated account context resolves; only
+the page content shows a skeleton. Reconciliation keeps validated content
+mounted while the owning command shows pending feedback. Terminal auth or
+invalid context fails closed, and a recoverable account error stays in the page
+content with Retry. Roma domains may be simpler only when their product work is
+actually simpler.
 
 This document says what state happened. [`color.md`](color.md) says how visual
 state colors render.

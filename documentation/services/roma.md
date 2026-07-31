@@ -142,6 +142,20 @@ Roma uses the Berlin-issued current account as the product account context.
 Browser code uses same-origin Roma APIs. Shared httpOnly cookies carry session
 truth across Roma and Bob on the custom `*.clickeen.com` domain.
 
+The authenticated layout keeps one bootstrap provider mounted across Roma
+route transitions. The shared `main-container`, `left-nav`, and page frame render
+immediately; only `page__content` waits for the first complete, internally
+consistent account and authz payload. That first wait uses a content skeleton,
+not implementation-status copy or a blank replacement screen.
+
+Account mutations explicitly reconcile through the same bootstrap authority.
+While that request is pending, Roma retains the already validated page and the
+owning control shows its local pending state. A background refresh may retain
+the current page only for a transient network or upstream failure and only
+until the current authz safety boundary. Missing, malformed, mismatched,
+near-expired, expired, auth-required, and forbidden bootstrap results are never
+accepted or preserved as usable context.
+
 ## Same-Origin API Model
 
 Browser code calls Roma same-origin routes. Roma server routes call the owning

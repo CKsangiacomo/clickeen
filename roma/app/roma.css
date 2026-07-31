@@ -179,6 +179,31 @@ a {
   gap: var(--space-2);
 }
 
+.roma-account-loading {
+  align-content: start;
+  min-height: 8rem;
+}
+
+.roma-account-loading > span {
+  display: block;
+  width: 75%;
+  height: var(--control-size-sm);
+  border-radius: var(--control-radius-xl);
+  background: var(--role-surface-muted);
+}
+
+.roma-account-loading > span:first-child {
+  width: 35%;
+}
+
+.roma-account-loading > span:last-child {
+  width: 55%;
+}
+
+.roma-builder-page .roma-account-loading {
+  margin: var(--space-6);
+}
+
 .widget-defaults {
   display: grid;
   gap: var(--space-3);
