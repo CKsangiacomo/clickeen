@@ -19,14 +19,14 @@ a {
 .roma-nav {
   display: flex;
   flex-direction: column;
-  gap: var(--space-1);
+  gap: var(--space-2);
   min-height: 100%;
 }
 
 .roma-nav__brand {
-  margin-bottom: var(--space-1);
-  padding-bottom: var(--space-3);
-  border-bottom: 1px solid var(--color-system-gray-6);
+  margin-bottom: var(--space-2);
+  padding: var(--space-2) var(--space-2) var(--space-4);
+  border-bottom: 1px solid var(--role-border);
 }
 
 .roma-nav__brand-link {
@@ -46,23 +46,29 @@ a {
   display: inline-flex;
   align-items: center;
   width: 100%;
-  min-height: 36px;
+  min-height: calc(var(--control-size-xl) + var(--space-1));
   border-radius: var(--control-radius-xl);
   padding: var(--space-2) var(--space-3);
   border: 1px solid transparent;
+  transition:
+    background-color var(--duration-base) var(--easing-standard),
+    border-color var(--duration-base) var(--easing-standard);
 }
 
 .roma-nav__link:hover {
-  background: var(--color-system-gray-step5);
+  background: var(--role-surface-muted);
 }
 
 .roma-nav__link--active {
-  background: var(--color-system-gray-step4);
-  border-color: var(--color-system-gray-5);
+  background: var(--role-surface-muted);
+  border-color: transparent;
 }
 
 .roma-nav__settings {
   display: block;
+  margin-top: var(--space-2);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--role-border);
 }
 
 .roma-nav__settings > summary {
@@ -78,8 +84,10 @@ a {
   display: flex;
   flex-direction: column;
   gap: var(--space-1);
-  padding-top: var(--space-1);
+  margin-left: var(--space-3);
+  padding-top: var(--space-2);
   padding-left: var(--space-3);
+  border-left: 1px solid var(--role-border);
 }
 
 .roma-nav__subnav .roma-nav__link {
@@ -88,24 +96,25 @@ a {
 
 .roma-nav__footer {
   margin-top: auto;
-  padding-top: var(--space-3);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--role-border);
 }
 
 .roma-nav__signout {
   display: inline-flex;
   align-items: center;
   width: 100%;
-  min-height: 36px;
+  min-height: calc(var(--control-size-xl) + var(--space-1));
   border-radius: var(--control-radius-xl);
   padding: var(--space-2) var(--space-3);
-  border: 1px solid var(--color-system-gray-5);
-  background: var(--color-system-white);
-  color: var(--color-system-black);
+  border: 0;
+  background: var(--role-surface-muted);
+  color: var(--color-text);
   cursor: pointer;
 }
 
 .roma-nav__signout:hover:not(:disabled) {
-  background: var(--color-system-gray-step5);
+  background: var(--role-surface-muted);
 }
 
 .roma-nav__signout:disabled {
@@ -148,34 +157,41 @@ a {
 }
 
 .rd-canvas-module {
-  --rd-module-pad-inline: var(--space-4);
-  --rd-module-pad-block: var(--space-4);
-  border: none;
+  --rd-module-pad-inline: var(--space-6);
+  --rd-module-pad-block: var(--space-6);
+  border: 0;
   border-radius: var(--control-radius-2xl);
-  background: var(--color-system-white);
+  background: var(--role-surface);
+  box-shadow: var(--shadow-floating);
   padding-block: var(--rd-module-pad-block);
   padding-inline: var(--rd-module-pad-inline);
   display: grid;
-  gap: var(--space-4);
+  gap: var(--space-5);
+  min-width: 0;
 }
 
+.rd-canvas-module h2,
+.rd-canvas-module h3,
 .rd-canvas-module p {
   margin: 0;
 }
 
 .rd-canvas-module__actions {
   display: flex;
+  align-items: center;
   flex-wrap: wrap;
-  gap: var(--space-3);
+  gap: var(--space-2);
 }
 
 .roma-module-surface {
-  border: none;
+  border: 0;
   border-radius: var(--control-radius-2xl);
-  background: var(--color-system-white);
-  padding: var(--space-4);
+  background: var(--role-surface);
+  box-shadow: var(--shadow-floating);
+  padding: var(--space-6);
   display: grid;
-  gap: var(--space-3);
+  gap: var(--space-4);
+  min-width: 0;
 }
 
 .widget-defaults {
@@ -362,20 +378,22 @@ a {
 
 .roma-grid {
   display: grid;
-  gap: var(--space-3);
+  gap: var(--space-4);
 }
 
 .roma-grid--three {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
 }
 
 .roma-card {
-  border-radius: var(--control-radius-xl);
-  border: 1px solid var(--color-system-gray-6);
-  background: var(--color-system-white);
-  padding: var(--space-3);
+  border-radius: var(--control-radius-2xl);
+  border: 0;
+  background: var(--role-surface-muted);
+  padding: var(--space-4);
   display: grid;
-  gap: var(--space-2);
+  align-content: start;
+  gap: var(--space-3);
+  min-width: 0;
 }
 
 .roma-card h2 {
@@ -386,11 +404,16 @@ a {
   margin: 0;
 }
 
+.roma-card .rd-canvas-module__actions {
+  margin-top: auto;
+}
+
 .roma-codeblock {
   border-radius: var(--control-radius-xl);
-  border: 1px solid var(--color-system-gray-6);
-  background: var(--color-system-white);
-  padding: var(--space-3);
+  border: 0;
+  background: var(--role-surface-muted);
+  box-shadow: var(--shadow-inset-control);
+  padding: var(--space-4);
 }
 
 .roma-codeblock strong {
@@ -405,9 +428,10 @@ a {
 
 .roma-toolbar {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   gap: var(--space-3);
   flex-wrap: wrap;
+  min-width: 0;
 }
 
 .roma-toolbar > * {
@@ -420,7 +444,7 @@ a {
 
 .roma-locale-settings__list {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr));
   gap: var(--space-2);
 }
 
@@ -428,10 +452,10 @@ a {
   display: flex;
   align-items: flex-start;
   gap: var(--space-2);
-  border: 1px solid var(--color-system-gray-6);
+  border: 0;
   border-radius: var(--control-radius-xl);
-  background: var(--color-system-white);
-  padding: var(--space-2) var(--space-3);
+  background: var(--role-surface-muted);
+  padding: var(--space-3);
 }
 
 .roma-locale-settings__option input {
@@ -445,8 +469,8 @@ a {
 
 .roma-form-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: var(--space-3);
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
+  gap: var(--space-4);
   align-items: start;
 }
 
@@ -460,7 +484,7 @@ a {
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 8px;
+  gap: var(--space-2);
 }
 
 .roma-upsell-dialog__content {
@@ -480,5 +504,14 @@ a {
 @media (max-width: 599px), (max-height: 599px) {
   .roma-nav-trigger.diet-btn-ic {
     display: inline-flex;
+  }
+
+  .rd-canvas-module,
+  .roma-module-surface {
+    padding: var(--space-4);
+  }
+
+  .roma-grid--three {
+    grid-template-columns: minmax(0, 1fr);
   }
 }

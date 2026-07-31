@@ -43,14 +43,19 @@ navigation DOM owns Full and Compact modes, with Escape/scrim close and focus
 return in Compact mode. At least `600px` of usable width and height is Full; a
 smaller dimension is Compact. Full presents the navigation as an 8px-inset
 foreground panel; Compact presents that same panel as an 8px-inset overlay over
-the full-width page. Domain screens are not replaced by mobile variants.
+the full-width page. The shared panel is `20rem` wide, borderless, and uses the
+shared surface, `3xl` radius, and Dieter elevation. Page headers and domain
+content align to the same centered `80rem` maximum width. Domain screens are
+not replaced by mobile variants.
 
 Roma's ordinary operational text/select controls and nine semantic table
 definitions use Dieter's operational-field and Table visual contracts.
 Roma retains their values, labels, validation, data, actions, and layout.
 Tables preserve every column and own horizontal overflow through the Dieter
 wrapper. Checkboxes, hidden file inputs, modules, toolbars, and specialized
-composition remain locally owned.
+composition remain locally owned. Primary Roma modules use the shared surface,
+radius, spacing, and floating elevation; secondary cards use the existing
+muted surface without rebuilding another card system.
 
 Roma operational text selects only the complete Dieter visual typography
 classes revealed by DevStudio. It does not assemble local typography from font

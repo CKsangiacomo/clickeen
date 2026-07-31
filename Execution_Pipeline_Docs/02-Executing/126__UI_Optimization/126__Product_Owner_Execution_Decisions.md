@@ -354,14 +354,15 @@ dieter/components/popup/
 Layout owns the shared Full/Compact visual composition, sizing, scrolling,
 overflow, safe-area treatment, and navigation-open presentation. Apps own
 routes, nav items, active route, open state, page content, and commands.
-The Layout ownership, taxonomy, and source/edit path are decided. Initial source
-defaults are `13.75rem | minmax(0, 1fr)` at `100dvh`; the nav owns its
+The Layout ownership, taxonomy, and source/edit path are decided. D4's initial
+source defaults were `13.75rem | minmax(0, 1fr)` at `100dvh`; the nav owns its
 scrolling and `var(--space-6)` safe-area padding; the page owns outer
 route-content scrolling and `var(--space-8)` safe-area padding. Compact below
 `600px` width or height initially uses
 `min(20rem, calc(100vw - 3rem))` off-canvas nav and shared scrim visual. These
-values are not final visual approval: the four named Layout tokens can be
-refined later through DevStudio without changing the shared contract.
+values were not final visual approval and are superseded by D5. The four named
+Layout tokens remain refinable through DevStudio without changing the shared
+contract.
 Layout CSS is imported directly by Roma and DevStudio, not through Bob's broad
 `dieter/styles.css`.
 
@@ -423,6 +424,33 @@ files remain outputs. Current living docs stay as-built truth until code lands.
 Owner decision:
 `DECIDED - DIETER DEFINES LAYOUT/TABLE/POPUP; DEVSTUDIO REVEALS; CONSUMERS ADOPT`
 
+### D5 - Shared Visual Composition Acceptance Target
+
+**Status: DECIDED by the product owner on 2026-07-30.** The first D4 result
+proved shared-source consumption but failed the visual target because it
+preserved the old dense composition inside a newly outlined shell. D5
+supersedes D4's explicitly provisional visual defaults while preserving its
+taxonomy, authority, behavior, and deletion rules.
+
+- `main-container` and `page` use the muted application backdrop.
+- `left-nav` is a `20rem` shared-surface panel, inset by `--space-2`, with no
+  border, `--control-radius-3xl`, and existing Dieter elevation.
+- Compact uses the same `20rem` panel as an inset overlay; it is not another
+  navigation tree.
+- `.page__header` and `.page__content` align to one centered `80rem` maximum
+  width.
+- Dieter Table is a borderless `2xl` shared-surface card with floating
+  elevation, muted header band, direct role-border row separators, and
+  `--space-3`/`--space-4` cell padding.
+- DevStudio and Roma consume those rules by reference and own only their
+  navigation content, route content, operations, and domain composition.
+- DevStudio's examples and Roma's modules use existing Dieter tokens and roles;
+  there is no new token family, role family, card system, framework, component,
+  generator, or runtime service.
+
+Owner decision:
+`DECIDED - CORRECT THE SHARED VISUAL COMPOSITION WITHOUT CHANGING D4 OWNERSHIP`
+
 ## Product Owner Response
 
 The recorded decisions are:
@@ -432,6 +460,7 @@ D1: Decided - dismissal matrix accepted
 D2: Decided - global workspace capability tenet
 D3: Decided - keep Upgrade and open the shared upsell dialog scaffold
 D4: Decided - Dieter Layout/Table/Popup consumer convergence
+D5: Decided - shared visual composition acceptance target
 ```
 
 No other architecture, cleanup, component, surface, translation, storage,

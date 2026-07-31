@@ -14,6 +14,51 @@ Scope: premature A-H code-change reality, final A-M current-source audits,
 executable PRDs, exact-tree peer reviews, and current Step-9 execution state.
 Parent: `126__PRD__UI_Optimization_Program.md` (MAMA).
 
+## 2026-07-30 Shared Visual Composition Correction
+
+The product owner rejected the first D4 visual result. It was structurally
+shared but visually preserved the old dense shell and table behind a border and
+radius. This correction keeps the approved
+`main-container > left-nav + page` authority and makes the visual system itself
+shared and inspectable in Dieter.
+
+### Authority and work separation
+
+| Concern | Authority/result |
+| --- | --- |
+| Shell and Page presentation | `dieter/layouts/main-container/main-container.{css,html,spec.json}` |
+| Table presentation | `dieter/components/table/table.{css,html,spec.json}` |
+| DevStudio | Consumes the shared shell/Table and composes source-derived examples |
+| Roma | Consumes the shared shell/Table and composes domain modules with existing Dieter values |
+| Product data/routes/APIs | Unchanged |
+| New machinery | None: no new token, role, component, generator, framework, alias, or runtime service |
+
+### Local evidence
+
+- Full at `1440x1000`: navigation `8,8,320,984`; Page begins at `x=336`.
+- Compact at `390x844`: the same navigation opens at `8,8,320,828` over the
+  full-width Page.
+- Page header/content share one centered `80rem` maximum width.
+- The application canvas is muted; navigation is a borderless shared surface
+  with `20px` radius and Dieter elevation.
+- Table is a borderless `16px` shared surface with floating elevation, muted
+  header, direct role-border separators, and `12px`/`16px` cell padding.
+- DevStudio Core styles keeps all four columns/actions visible. DevStudio
+  component examples, Roma Home, Roma Widgets, and Compact open/closed states
+  were inspected from current source at real viewport sizes.
+- Dieter typecheck/governance, DevStudio generation/typecheck/lint/build/
+  Functions checks, Roma contract/typecheck/lint/Cloudflare build, and source
+  diff checks are GREEN.
+
+The independent pre-commit audit blocked one unauthorized scrim-opacity change;
+the shared Compact scrim was restored to its existing `64%` black-mix value and
+the generated Layout reveal was regenerated. The final independent V1-V8 audit
+is GREEN: no substitution, healing, omission, fail-open control,
+corruption-as-absence, partial-success claim, renamed failing workflow, or
+runtime test dependency remains. Deployment evidence is recorded only after
+the implementation reaches the owning Cloudflare surfaces. Product-owner
+visual acceptance remains open.
+
 ## 2026-07-30 Inset Shared Shell And Portrait Correction
 
 The human product owner selected one cohesive shell for DevStudio and Roma:

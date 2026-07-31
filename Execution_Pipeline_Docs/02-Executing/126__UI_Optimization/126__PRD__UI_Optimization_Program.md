@@ -20,6 +20,33 @@ The program is therefore reopened. No product code may be changed for this
 correction until the corrected H/I/K/L/M contracts and the acceptance matrix in
 `126_DevQA.md` are the agreed execution authority.
 
+### 2026-07-30 Visual Acceptance Correction
+
+The first D4 deployment proved structural convergence but failed visual
+acceptance: it put a border and radius around the previous dense application
+layout without establishing the intended canvas, navigation, page-width, table,
+and module hierarchy. Automated structural checks did not constitute visual
+acceptance.
+
+The following presentation now supersedes D4's explicitly provisional initial
+values without changing its taxonomy or ownership:
+
+- the application canvas and Page use `--role-surface-muted`;
+- Full and Compact navigation use the shared surface, no border,
+  `--control-radius-3xl`, and the existing floating/elevated shadows;
+- the navigation is `20rem` wide and remains inset by `--space-2`;
+- Page header and content align to one centered `80rem` maximum width;
+- wide Page rhythm is `--layout-page-padding`, `--space-10`, and `--space-8`;
+  Compact rhythm is `--space-4`, `--space-6`, and `--space-4`;
+- Table is a borderless `2xl` shared surface with floating elevation, muted
+  header band, direct role-border row separators, and
+  `--space-3`/`--space-4` cell padding;
+- DevStudio and Roma own content composition only and must not restate the
+  shared shell, Page-width, or Table presentation.
+
+No new token family, color role, component, layout name, framework, generator,
+or runtime service is authorized by this correction.
+
 ### Frozen Taxonomy And Composition
 
 Roma and DevStudio use exactly this high-level composition:
@@ -69,25 +96,24 @@ Bob-owned.
 Non-modal anchored `popover` remains a distinct Dieter component. Popup must
 not be implemented as, renamed to, or routed through Popover.
 
-The Layout ownership, taxonomy, and source/edit path are frozen. The following
-values are initial shared source defaults carried forward from the current
-apps; they are not final product-owner visual approval. The four named layout
-values can be refined later through DevStudio without changing the contract:
+The Layout ownership, taxonomy, and source/edit path are frozen. D5 corrected
+the initial values after visual review. The four named layout values can still
+be refined later through DevStudio without changing the contract:
 
-- Full: `13.75rem` left navigation and `minmax(0, 1fr)` page;
+- Full: `20rem` left navigation and `minmax(0, 1fr)` page;
 - root: `100dvh`, one grid row, hidden root overflow;
-- left navigation: a `13.75rem` foreground panel inside a track widened by
+- left navigation: a `20rem` foreground panel inside a track widened by
   `var(--space-4)`, inset by `var(--space-2)` on all sides, with its own
   vertical scrolling, `var(--space-6)` padding plus safe-area insets,
-  `var(--role-surface-muted)`, the existing role border,
-  `var(--control-radius-2xl)`, and `var(--shadow-floating)`;
+  `var(--role-surface)`, no border, `var(--control-radius-3xl)`, and
+  `var(--shadow-floating)`;
 - page: the only outer route-content scrolling owner, `var(--space-8)` padding
-  plus safe-area insets and `var(--role-surface-bg)`;
+  plus safe-area insets and `var(--role-surface-muted)`;
 - Compact below `600px` usable width or height: one-column page, fixed
   navigation inset by `var(--space-2)` with
   `min(20rem, calc(100vw - var(--space-4)))` width, off-canvas and
   non-interactive when closed, `var(--shadow-elevated)` when open, and the
-  existing `64%` black-mix scrim;
+  shared scrim;
 - apps render their trigger and a `button[data-navigation-scrim]` inside
   `main.page`; Dieter styles the scrim/open presentation, while apps own click,
   open/close, and focus behavior;

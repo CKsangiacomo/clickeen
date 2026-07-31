@@ -8,7 +8,7 @@
   min-inline-size: 0;
   block-size: 100dvh;
   overflow: hidden;
-  background: var(--role-surface-bg);
+  background: var(--role-surface-muted);
   color: var(--color-text);
 }
 
@@ -38,9 +38,9 @@
     max(var(--layout-left-nav-padding), env(safe-area-inset-right))
     max(var(--layout-left-nav-padding), env(safe-area-inset-bottom))
     max(var(--layout-left-nav-padding), env(safe-area-inset-left));
-  border: 1px solid var(--role-border);
-  border-radius: var(--control-radius-2xl);
-  background: var(--role-surface-muted);
+  border: 0;
+  border-radius: var(--control-radius-3xl);
+  background: var(--role-surface);
   box-shadow: var(--shadow-floating);
 }
 
@@ -51,15 +51,22 @@
     max(var(--layout-page-padding), env(safe-area-inset-right))
     max(var(--layout-page-padding), env(safe-area-inset-bottom))
     max(var(--layout-page-padding), env(safe-area-inset-left));
-  background: var(--role-surface-bg);
+  background: var(--role-surface-muted);
 }
 
 .page__header {
   display: flex;
-  align-items: flex-end;
+  align-items: flex-start;
   justify-content: space-between;
-  gap: var(--space-4);
-  margin-block-end: var(--space-8);
+  gap: var(--space-6);
+  margin-block-end: var(--space-10);
+}
+
+.page__header,
+.page__content {
+  inline-size: 100%;
+  max-inline-size: 80rem;
+  margin-inline: auto;
 }
 
 .page__header h1,
@@ -82,7 +89,7 @@
 
 .page__content {
   display: grid;
-  gap: var(--space-6);
+  gap: var(--space-8);
   min-inline-size: 0;
 }
 
@@ -109,6 +116,10 @@
 
   .main-container > .page {
     grid-column: 1;
+    padding: max(var(--space-4), env(safe-area-inset-top))
+      max(var(--space-4), env(safe-area-inset-right))
+      max(var(--space-4), env(safe-area-inset-bottom))
+      max(var(--space-4), env(safe-area-inset-left));
   }
 
   .main-container[data-navigation-open='true'] > .page > [data-navigation-scrim] {
@@ -125,9 +136,15 @@
   .page__header {
     align-items: flex-start;
     flex-direction: column;
+    gap: var(--space-4);
+    margin-block-end: var(--space-6);
   }
 
   .page__actions {
     justify-content: flex-start;
+  }
+
+  .page__content {
+    gap: var(--space-4);
   }
 }

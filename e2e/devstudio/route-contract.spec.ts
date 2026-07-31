@@ -159,13 +159,13 @@ test.describe('DevStudio route contract', () => {
     expect(wideShell.navigation).toMatchObject({
       x: 8,
       y: 8,
-      width: 220,
+      width: 320,
       height: 884,
-      borderWidth: '1px',
-      borderRadius: '16px',
+      borderWidth: '0px',
+      borderRadius: '20px',
     });
     expect(wideShell.navigation.boxShadow).not.toBe('none');
-    expect(wideShell.workspace).toEqual({ x: 236, width: 1204 });
+    expect(wideShell.workspace).toEqual({ x: 336, width: 1104 });
   });
 
   test('actual DevStudio main-container uses the shared Compact navigation state', async ({ page }) => {
@@ -217,7 +217,7 @@ test.describe('DevStudio route contract', () => {
       y: 8,
       width: 320,
       height: 624,
-      borderRadius: '16px',
+      borderRadius: '20px',
     });
     expect(compactShell.workspace).toEqual({ x: 0, width: 560 });
 
@@ -280,16 +280,28 @@ test.describe('DevStudio route contract', () => {
       const rowHeader = element.querySelector<HTMLElement>('tbody th');
       const bodyCell = element.querySelector<HTMLElement>('tbody td');
       if (!header || !rowHeader || !bodyCell) throw new Error('Table example is incomplete.');
+      const frameStyle = getComputedStyle(element);
+      const bodyStyle = getComputedStyle(bodyCell);
       return {
+        frameBorderWidth: frameStyle.borderWidth,
+        frameBorderRadius: frameStyle.borderRadius,
+        frameBoxShadow: frameStyle.boxShadow,
         headerBackground: getComputedStyle(header).backgroundColor,
         rowHeaderBackground: getComputedStyle(rowHeader).backgroundColor,
-        bodyBackground: getComputedStyle(bodyCell).backgroundColor,
-        bodyInlineStartBorder: getComputedStyle(bodyCell).borderInlineStartWidth,
-        bodyInlineEndBorder: getComputedStyle(bodyCell).borderInlineEndWidth,
+        bodyBackground: bodyStyle.backgroundColor,
+        bodyPaddingBlockStart: bodyStyle.paddingBlockStart,
+        bodyPaddingInlineStart: bodyStyle.paddingInlineStart,
+        bodyInlineStartBorder: bodyStyle.borderInlineStartWidth,
+        bodyInlineEndBorder: bodyStyle.borderInlineEndWidth,
       };
     });
+    expect(ordinaryPresentation.frameBorderWidth).toBe('0px');
+    expect(ordinaryPresentation.frameBorderRadius).toBe('16px');
+    expect(ordinaryPresentation.frameBoxShadow).not.toBe('none');
     expect(ordinaryPresentation.headerBackground).not.toBe(ordinaryPresentation.bodyBackground);
     expect(ordinaryPresentation.rowHeaderBackground).toBe(ordinaryPresentation.bodyBackground);
+    expect(ordinaryPresentation.bodyPaddingBlockStart).toBe('12px');
+    expect(ordinaryPresentation.bodyPaddingInlineStart).toBe('16px');
     expect(ordinaryPresentation.bodyInlineStartBorder).toBe('0px');
     expect(ordinaryPresentation.bodyInlineEndBorder).toBe('0px');
 
@@ -312,7 +324,7 @@ test.describe('DevStudio route contract', () => {
           path: 'dieter/tokens/dieter-foundation-tokens.css',
           sha: 'test-sha',
           tokens: [
-            { token: '--layout-left-nav-width', value: '13.75rem', editable: true },
+            { token: '--layout-left-nav-width', value: '20rem', editable: true },
             { token: '--layout-left-nav-padding', value: 'var(--space-6)', editable: true },
             { token: '--layout-page-padding', value: 'var(--space-8)', editable: true },
             { token: '--layout-compact-left-nav-width', value: '20rem', editable: true },

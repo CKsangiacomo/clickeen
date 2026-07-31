@@ -231,7 +231,7 @@ export const renderComponentDoc = (source: ComponentSource): ComponentDoc | null
 
   const pageHtml = `
 <h1 class="heading-2">${source.title}</h1>
-<section aria-label="${source.title} examples">
+<section class="component-page" aria-label="${source.title} examples">
   ${variantsHtml.join('\n')}
 </section>
 `;

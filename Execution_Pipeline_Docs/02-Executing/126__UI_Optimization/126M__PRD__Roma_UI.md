@@ -16,6 +16,14 @@ deployment, route/layout coverage, and shared Table/Popup markup verification
 are complete. Executing every named Roma/Bob Popup workflow and product-owner
 acceptance remain pending.
 
+The first D4 shell values failed visual acceptance. Roma must now consume the
+corrected Dieter muted canvas, borderless `20rem` inset navigation, centered
+`80rem` Page column, and borderless elevated Table without restating them.
+Roma may compose primary modules with existing shared surface/radius/spacing/
+elevation values and secondary cards with the existing muted surface. It must
+not add another card system, shell contract, Page-width rule, Table
+presentation, token family, or color role.
+
 ### Exact Adoption
 
 `RomaShell` must render:
@@ -42,9 +50,10 @@ Roma routes adopt the same Page foundation:
 Roma may retain domain-specific `rd-*` classes inside `.page__content`, but
 they must not restate the shared outer header/content/padding/scroll contract.
 
-Roma adopts the shared initial `13.75rem | minmax(0, 1fr)` Full geometry, `100dvh`,
+Roma adopts the shared `20rem | minmax(0, 1fr)` Full geometry, `100dvh`,
 nav-owned scrolling/padding, page-owned outer scrolling/padding, and shared
-Compact presentation from the parent contract. It does not retain its current
+Compact presentation from the parent contract. Page header/content use the
+shared centered `80rem` maximum width. Roma does not retain its former
 `clamp(232px, 16vw, 264px)` width. Domain-owned `rd-*` composition remains
 unless a named rule is proven to duplicate the new page's outer padding or
 scroll ownership.

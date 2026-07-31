@@ -2,6 +2,17 @@
   "component": "table",
   "syntax": "<div class='diet-table'><table class='diet-table__table'>…</table></div>",
   "attributes": {},
+  "presentation": {
+    "surface": "--role-surface",
+    "headerSurface": "--role-surface-muted",
+    "border": "none",
+    "radius": "--control-radius-2xl",
+    "elevation": "--shadow-floating",
+    "cellPadding": "--space-3 / --space-4",
+    "separatorSource": "--role-border",
+    "previewWidth": "24%, minimum 8rem",
+    "actionWidth": "content"
+  },
   "defaults": [
     {
       "id": "ordinary",

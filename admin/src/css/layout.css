@@ -17,14 +17,14 @@ body {
 
 .devstudio-nav {
   display: grid;
-  grid-template-rows: auto 1fr auto;
-  gap: var(--space-6);
+  grid-template-rows: auto 1fr;
+  align-content: start;
+  gap: var(--space-8);
   min-block-size: 100%;
 }
 
 .devstudio-nav__brand {
   display: grid;
-  gap: var(--space-2);
   justify-items: start;
 }
 
@@ -35,20 +35,20 @@ body {
 .devstudio-nav__content {
   display: flex;
   flex-direction: column;
-  gap: var(--space-5);
+  gap: var(--space-6);
   align-items: stretch;
 }
 
 .nav-group {
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
+  gap: var(--space-1);
 }
 
 .nav-group__title {
-  color: color-mix(in oklab, var(--color-text), transparent 45%);
+  color: var(--color-text-secondary);
   margin: 0;
-  padding: 0 0 var(--space-2) 0;
+  padding: 0 0 var(--space-2);
   min-height: auto;
   height: auto;
 }
@@ -59,26 +59,33 @@ body {
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
+  gap: var(--space-1);
 }
 
 .nav-link {
   display: inline-flex;
-  width: 100%;
+  align-items: center;
+  inline-size: calc(100% + var(--space-4));
+  min-block-size: var(--control-size-xl);
+  margin-inline: calc(var(--space-2) * -1);
+  padding-inline: var(--space-2);
+  border-radius: var(--control-radius-md);
   text-decoration: none;
   color: inherit;
+  transition:
+    color var(--duration-base) var(--easing-standard),
+    background-color var(--duration-base) var(--easing-standard),
+    box-shadow var(--duration-base) var(--easing-standard);
 }
 
-.nav-link.diet-btn {
-  justify-content: flex-start;
-  align-items: center;
-  text-align: left;
+.nav-link:hover {
+  background: var(--role-surface);
 }
 
 .nav-link[aria-current="page"] {
-  --btn-bg: color-mix(in oklab, var(--color-system-blue), transparent 84%);
-  --btn-color: var(--color-system-blue);
-  justify-content: flex-start;
+  color: var(--color-system-blue);
+  background: var(--role-surface);
+  box-shadow: var(--shadow-inset-control);
 }
 
 .nav-link:focus-visible {
@@ -94,7 +101,7 @@ body {
     display: flex;
     align-items: center;
     min-height: var(--control-size-lg);
-    margin-block-end: var(--space-4);
+    margin-block-end: var(--space-5);
   }
 
   .devstudio-navigation-trigger {

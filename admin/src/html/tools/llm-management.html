@@ -13,8 +13,8 @@
 
   .llm-management__meta {
     display: grid;
-    gap: 4px;
-    color: color-mix(in oklab, var(--color-text), transparent 38%);
+    gap: var(--space-1);
+    color: var(--color-text-secondary);
   }
 
   .llm-management__grid {
@@ -25,11 +25,13 @@
 
   .llm-management__panel {
     display: grid;
-    gap: var(--space-3);
-    padding: var(--space-4);
-    border: 1px solid var(--color-system-gray-5);
-    border-radius: var(--control-radius-lg);
-    background: var(--color-system-white);
+    align-content: start;
+    gap: var(--space-4);
+    padding: var(--space-5);
+    border: 1px solid var(--role-border);
+    border-radius: var(--control-radius-xl);
+    background: var(--role-surface);
+    box-shadow: var(--shadow-floating);
   }
 
   .llm-management__panel h2,
@@ -39,7 +41,7 @@
 
   .llm-management__list {
     display: grid;
-    gap: 8px;
+    gap: var(--space-2);
     margin: 0;
     padding: 0;
     list-style: none;
@@ -50,15 +52,15 @@
     grid-template-columns: minmax(0, 1fr) auto;
     gap: var(--space-3);
     align-items: center;
-    min-height: 32px;
-    padding: 8px 10px;
+    min-height: var(--control-size-xl);
+    padding: var(--space-3);
     border-radius: var(--control-radius-md);
-    background: color-mix(in oklab, var(--color-system-gray-6), white 54%);
+    background: var(--role-surface-muted);
   }
 
   .llm-management__row-main {
     display: grid;
-    gap: 2px;
+    gap: var(--space-1);
     min-width: 0;
   }
 
@@ -70,8 +72,8 @@
   .llm-management__badge {
     display: inline-flex;
     align-items: center;
-    min-height: 20px;
-    padding-inline: 8px;
+    min-height: var(--control-size-sm);
+    padding-inline: var(--space-2);
     border-radius: var(--control-radius-sm);
     color: var(--color-system-green-contrast);
     background: color-mix(in oklab, var(--color-system-green), transparent 84%);

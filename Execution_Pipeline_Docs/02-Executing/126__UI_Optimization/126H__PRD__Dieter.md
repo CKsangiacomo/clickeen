@@ -23,6 +23,16 @@ missing Dieter authority: the Roma/DevStudio high-level application layout
 contract decided by the product owner. Its ownership, taxonomy, and edit path
 are fixed; initial visual values remain refinable.
 
+The first deployed values failed visual acceptance. The corrected Dieter
+presentation keeps the same authority and topology but makes the application
+canvas muted, the `20rem` navigation a borderless shared-surface panel inset by
+`--space-2` with `3xl` radius, and the Page header/content one centered
+`80rem` column. The same navigation becomes the existing Compact overlay.
+Dieter Table is a borderless `2xl` surface with floating elevation, a muted
+header, direct role-border row separators, and
+`--space-3`/`--space-4` cell padding. These values use the existing token and
+role vocabulary; no new aliases or presentation layer are authorized.
+
 126H now owns this source:
 
 ```text
@@ -58,15 +68,16 @@ Layout source owns:
 - scrim and navigation-open visual state;
 - dynamic viewport and safe-area layout treatment already accepted by 126J.
 
-The visual contract uses the parent's `13.75rem` Full navigation inside a track
+The visual contract uses the parent's `20rem` Full navigation inside a track
 widened by `var(--space-4)`, `100dvh` root, nav-owned scrolling and
 `var(--space-6)` safe-area padding, page-owned scrolling and
 `var(--space-8)` safe-area padding, and the existing `600px` Full/Compact
-classifier. The navigation is inset by `var(--space-2)` and uses existing
-Dieter surface, border, `2xl` radius, and floating shadow authorities. Compact
-uses the same inset panel with `20rem` maximum width, elevated shadow, and the
-shared scrim over a full-width page. Consumer JavaScript owns state. Selectors
-are structurally scoped through `.main-container > .left-nav` and
+classifier. The navigation is inset by `var(--space-2)` and uses the shared
+Dieter surface, no border, `3xl` radius, and floating shadow. Compact uses the
+same inset panel with `20rem` maximum width, elevated shadow, and the shared
+scrim over a full-width page. Page header and content align to one centered
+`80rem` maximum width. Consumer JavaScript owns state. Selectors are
+structurally scoped through `.main-container > .left-nav` and
 `.main-container > .page`.
 
 The adjustable values are authored as `--layout-left-nav-width`,

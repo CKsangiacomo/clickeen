@@ -14,6 +14,14 @@ complete Dieter design system. The current hardcoded `.docs-shell*`,
 `.devstudio-page*`, custom Core styles rows, and app-local popup presentation
 are correction inputs.
 
+The first D4 deployment also failed visual acceptance after structural
+convergence. DevStudio must consume the corrected Dieter muted canvas,
+borderless `20rem` inset navigation, centered `80rem` Page column, and
+borderless elevated Table without local restatement. DevStudio-specific CSS may
+compose navigation content and source-derived component examples, but it must
+use existing Dieter tokens and roles and must not add another shell, Table,
+token family, role family, or generator.
+
 DevStudio must become both:
 
 1. the real consumer of Dieter's Layout, Table, and Popup contracts; and
@@ -35,10 +43,11 @@ The markup/classes and CSS come from
 navigation items, route state, page content, and navigation-open state; it does
 not own a parallel shell appearance.
 
-The Dieter visual contract is `13.75rem | minmax(0, 1fr)` in Full, `100dvh`,
+The Dieter visual contract is `20rem | minmax(0, 1fr)` in Full, `100dvh`,
 nav-owned scrolling/padding, and page-owned scrolling with `var(--space-8)`
 safe-area padding. The Full navigation is an 8px-inset foreground panel using
-existing Dieter surface, border, radius, and floating-shadow authorities.
+the shared Dieter surface, no border, `3xl` radius, and floating-shadow
+authority. Page header and content align to one centered `80rem` maximum width.
 Compact geometry, the inset overlay, scrim visual, and the `600px` classifier
 come from the same source. DevStudio owns only trigger/scrim click state and
 navigation/page content; narrow portrait uses Compact rather than a replacement
@@ -210,7 +219,7 @@ rewrite, or new token-management system.
 
 ## Product Contract
 
-- Full mode: persistent `220px` sidebar and flexible work area.
+- Full mode: persistent `320px` sidebar and flexible work area.
 - Tablet portrait and landscape remain Full and touch-operable.
 - Compact mode: one menu icon button opens the same sidebar as an overlay
   drawer over a full-width work area in narrow landscape and portrait.
@@ -252,7 +261,7 @@ registry.
 2. Delete the obsolete portrait replacement; the shared shell remains mounted.
 3. Replace the generic `960px`/`640px` branches with 126J's Full/Compact
    predicates.
-4. Preserve the sidebar at `220px` in Full mode with Dieter's shared inset
+4. Preserve the sidebar at `320px` in Full mode with Dieter's shared inset
    panel treatment. Compact mode overlays that same
    navigation; it does not create another nav tree.
 5. Use `100dvh`, overflow ownership, and safe-area padding.

@@ -44,12 +44,13 @@ The source contract is
 `dieter/layouts/main-container/main-container.{html,css,spec.json}`. DevStudio
 reveals its Full, Compact-closed, and Compact-open examples and edits its four
 layout tokens through the existing foundation-token write path.
-`main-container` and `page` use `--role-surface-bg`; `left-nav` uses
-`--role-surface-muted`. In Full mode `left-nav` is inset by `--space-2` on all
-four sides and uses the existing role border, `2xl` radius, and floating
-shadow. In Compact mode the same inset panel overlays the full-width page and
-uses the existing elevated shadow. Consumer content uses `--role-surface` only
-for contained surfaces rather than the page canvas.
+`main-container` and `page` use `--role-surface-muted`; `left-nav` uses
+`--role-surface`. In Full mode `left-nav` is `20rem` wide, inset by
+`--space-2` on all four sides, borderless, and uses `3xl` radius plus the
+floating shadow. The Page header and content share one centered `80rem`
+maximum width. In Compact mode the same `20rem` inset panel overlays the
+full-width page and uses the existing elevated shadow. Consumer content uses
+`--role-surface` for contained primary surfaces.
 
 Preserve the existing backdrop, white/muted surfaces, borders, and shadows. This
 program does not create a new depth or tonal ramp.
@@ -101,7 +102,7 @@ full workspace:    persistent left navigation | flexible work area
 compact workspace: menu button                | full-width work area
 ```
 
-Navigation remains narrow and the work area receives all remaining space.
+Navigation remains fixed and the work area receives all remaining space.
 Compact mode overlays the same navigation as an accessible drawer; it does not
 introduce different routes, operations, or domain layouts. Tables retain their
 information and may scroll instead of becoming unrelated mobile card feeds.

@@ -19,11 +19,17 @@
   },
   "presentation": {
     "inset": "--space-2",
-    "surface": "--role-surface-muted",
-    "border": "--role-border",
-    "radius": "--control-radius-2xl",
+    "canvas": "--role-surface-muted",
+    "navigationSurface": "--role-surface",
+    "border": "none",
+    "radius": "--control-radius-3xl",
+    "widePanelWidth": "--layout-left-nav-width",
+    "compactPanelWidth": "min(--layout-compact-left-nav-width, calc(100vw - --space-4))",
     "wideElevation": "--shadow-floating",
     "compactElevation": "--shadow-elevated",
+    "pageContentMaxWidth": "80rem",
+    "widePageRhythm": "--layout-page-padding / --space-10 / --space-8",
+    "compactPageRhythm": "--space-4 / --space-6 / --space-4",
     "compactQuery": "(max-width: 599px), (max-height: 599px)"
   },
   "editableTokens": [
