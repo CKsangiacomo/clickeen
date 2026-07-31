@@ -27,9 +27,33 @@ remain unchanged. Compact retains its separate
 Local built-browser evidence at `1440x1000` measures a `256px` Full panel at
 `x=8`, a `272px` first grid track (`8 + 256 + 8`), and zero document overflow.
 At `390x844`, Compact retains a `320px` panel and zero document overflow. The
-Layouts browser contract asserts both computed widths and is GREEN. Exact-SHA
-deployment and remote owning-surface evidence are recorded after this
-implementation reaches `main`.
+Layouts browser contract asserts both computed widths and is GREEN.
+
+### Verification and deployment evidence
+
+- Implementation commit `6eae8f4e9922ad6183404726d9fb77ef50a3c4e8`
+  is on `github/main`.
+- Dieter governance/typecheck, DevStudio deterministic generation/lint/
+  typecheck/build/Functions checks, Roma and Bob lint/typecheck/builds, root
+  lint/typecheck/build, the R2 dry run, and the focused Layouts browser contract
+  are GREEN.
+- Exact-SHA Pages deployments are GREEN: DevStudio
+  `e1f0d1f9-9e37-4e35-bcab-ef8c485f2164`, Roma
+  `eecfed7a-59c6-4a5a-9be5-dead1858e44b`, and Bob
+  `b8f47107-4756-4ec2-8e15-5b1d5d82fd6b`.
+- GitHub Roma/Bob verification run `30654116654` is GREEN.
+- GitHub Worker/R2 run `30654118206` is GREEN. Every Worker and secret-sync
+  step was correctly skipped; the canonical R2 operation uploaded all 581
+  objects (`dieter=157`, `prague=348`, `product=76`).
+- Authenticated deployed DevStudio and Roma both compute a `256px` Full panel
+  at `x=8` inside a `272px` first grid track and retain a `320px` Compact panel.
+  Both widths have zero document overflow and zero console or page errors.
+- The deployed DevStudio Layouts contract is GREEN. The independent final
+  audit confirms Dieter-only width ownership, no consumer overrides,
+  deterministic generation, current/historical documentation integrity, and
+  V1 through V8 GREEN.
+- No product data, route, API, account/session authority, Worker runtime,
+  breakpoint, or navigation behavior changed.
 
 ## 2026-07-31 Rendered Vertical Rhythm Correction
 
