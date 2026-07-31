@@ -33,8 +33,35 @@ composition consumers.
 
 All values come from the existing `--space-*` scale. No density token, new
 spacing scale, typography change, route/API/data change, or new component is
-part of this correction. Deployment and owning-surface evidence are recorded
-after the exact implementation commit is verified.
+part of this correction.
+
+### Verification and deployment evidence
+
+- Implementation commit `b63ff9cf82d82df4de95f456c896724fbbeafafb`
+  is on `github/main`.
+- Dieter governance/typecheck, DevStudio generation/lint/typecheck/build/
+  Functions checks, Roma lint/typecheck/Cloudflare build, root lint/typecheck/
+  build, the R2 dry run, and five focused DevStudio browser contracts are
+  GREEN.
+- DevStudio exact-SHA Pages deployment
+  `6fe946e3-0ce6-48b7-b0ad-77c31fe36b0f` and Roma exact-SHA Pages deployment
+  `5be169f7-593f-4669-8f26-d94dab7ed587` are GREEN.
+- GitHub Roma/Bob verification run `30646043248` is GREEN.
+- GitHub Worker/R2 run `30646043182` is GREEN. Every Worker and secret-sync
+  step was correctly skipped; the canonical R2 operation uploaded all 581
+  objects (`dieter=157`, `prague=348`, `product=76`).
+- Authenticated deployed DevStudio computes to `24/24/20px` Full Page rhythm,
+  `16/16/16px` Compact Page rhythm, `24/16px` navigation gaps, and `8/16px`
+  Table cell padding.
+- Authenticated deployed Roma computes to the same Page rhythm, `4px`
+  navigation stack gap, `32px` navigation rows, `16/24px` primary-module
+  padding with `12px` gaps, and `12/16px` card padding with `8px` gaps.
+  Compact primary modules remain `16px` on both axes.
+- Both deployed browser checks emitted zero console or page errors. No product
+  data, route, API, account/session authority, or Worker runtime changed.
+- The independent final audit is GREEN for shared-authority ownership,
+  deterministic generation, current/historical documentation integrity, and
+  V1 through V8.
 
 ## 2026-07-30 Shared Visual Composition Correction
 
