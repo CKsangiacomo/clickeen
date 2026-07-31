@@ -22,6 +22,87 @@ date renders authored content only.
 
 ---
 
+## 0.1) Types available (core framework)
+
+Calculator ships **one Type: Standard** — a single form, one result panel, live
+recomputation.
+
+Why this matters:
+
+- With one Type, the state model is fixed: `fields[] → calculations[] → results`.
+- The variation axes inside the Type are **layout** (`side-by-side` / `stacked`)
+  and **content** (which fields and formulas the author configures).
+- A mortgage calculator and a tip calculator are the **same Type with different
+  content**. They use identical controls and identical runtime. They are not
+  Types, and they must not be modelled as an enum.
+
+Named future Types, each requiring its own PRD because each changes the state
+model rather than the data:
+
+| Type | Why it is structurally different |
+| --- | --- |
+| `comparison` | Two parallel input sets and paired results — needs a second field collection and result pairing, not just a layout change |
+| `stepped` | Fields revealed in stages with navigation — needs step grouping, progress state, and per-step validation |
+
+Do not add `calculator.type` to state in scope one. A single-Type widget declares
+no type enum, per FAQ's precedent.
+
+---
+
+## 0.2) How a user gets a working calculator
+
+This is the product question, and it has three answers. The engine in §5 is only
+one of them, and it is the one fewest users will touch.
+
+### Path 1 — Start from a template (primary)
+
+The user opens the gallery, picks **Mortgage Calculator**, and gets a working
+calculator with fields, ranges, formulas, formatting, and captions already
+correct. They then change labels, ranges, branding, and the CTA.
+
+Mechanism is the existing Clickeen-Owned Examples flow — no new machinery:
+
+```text
+Clickeen authors each starter through Builder under the admin account CLICKEEN
+-> product-owned files reference it as accountPublicId + instanceId
+-> user copy creates a normal instance in the destination account
+```
+
+Per `FAQ_competitoranalysis.md`: *"Starter designs are just Clickeen-owned
+instances users can clone (no separate preset system)."* There is no preset
+system, no template registry, and no per-type defaults tree. A starter is an
+ordinary saved instance.
+
+**This is the path the product is sold on.** Nobody buys a calculator widget to
+write an amortization formula.
+
+### Path 2 — Describe it and let an agent build it
+
+The user types "monthly payment on a car loan with trade-in value" and an agent
+produces the field set, formulas, formatting, and captions.
+
+This is not a nice-to-have deferred feature — it is the second of three primary
+entry points, and it is Elfsight's *first*. It is also the path Clickeen is best
+positioned for: generating a `calculator.fields[]` + `calculator.calculations[]`
+structure is a structured-output task against a schema this PRD already defines,
+executed through San Francisco under an agent home.
+
+It depends on §4 and §5 existing first. It does not depend on anything else.
+
+### Path 3 — Build from scratch (escape hatch)
+
+Add fields, name them, write formulas. This is §5 through §7. It is what makes
+Paths 1 and 2 possible, and it is what covers the calculator Clickeen never
+shipped a starter for.
+
+### What this means for delivery
+
+Path 3 is built first because the other two stand on it. But a release that ships
+only Path 3 is not a product — it is a formula editor. The starter library (§14.1)
+is part of scope one, not a follow-up.
+
+---
+
 ## 1) Non-negotiables (architecture)
 
 1. **Shell + Core.** Calculator is `Widget Shell + Widget Core`. `spec.json.defaults`
@@ -148,12 +229,12 @@ Saved instance compatibility:
 | --- | --- | --- |
 | `.id` | string | stable, required, unique |
 | `.token` | string | `^[a-z][a-z0-9_]{0,39}$` — the formula reference name |
-| `.type` | enum | `slider` \| `number` \| `dropdown` \| `choice` \| `heading` |
+| `.type` | enum | `slider` \| `number` \| `dropdown` \| `choice` \| `image-choice` \| `heading` |
 | `.label` | string | translatable |
 | `.helpText` | string (inline HTML) | translatable, sanitized |
 | `.defaultValue` | number | seeds the visitor's initial value |
 | `.min` / `.max` / `.step` | number | `slider`, `number` |
-| `.options[]` | array | `dropdown`, `choice`: `{ id, label, value }` — `label` translatable |
+| `.options[]` | array | `dropdown`, `choice`, `image-choice`: `{ id, label, value, imageFill? }` — `label` translatable; `imageFill` is a fill (`image` mode) required when type is `image-choice` |
 | `.format` | enum | `number` \| `currency` \| `percent` |
 | `.currencyCode` | string | ISO 4217, when `format == currency` |
 | `.decimals` | number | 0–6 |
@@ -700,17 +781,42 @@ Preview localization through `CK_PREVIEW_L10N`.
 
 ## 14) Scope
 
-**In.** Six field types (slider, number, dropdown, choice, heading — five input
-plus one structural); calculations with the §5.4 function set; primary/secondary
-result ranking; number/currency/percent formatting; results title, footer, reset;
-one Core action; side-by-side and stacked arrangement; the full Shell surface.
+**In.** One Type (Standard). Six field types (slider, number, dropdown, choice,
+image-choice, heading — five input plus one structural); calculations with the
+§5.4 function set; primary/secondary result ranking; number/currency/percent
+formatting; results title, footer, reset; one Core action; side-by-side and
+stacked arrangement; the full Shell surface; **and the starter library in §14.1**.
+
+### 14.1 Starter library (in scope one)
+
+Eight Clickeen-owned instances authored under `CLICKEEN`, each a complete working
+calculator. Every one uses only the §5.4 function set and the six field types —
+no starter requires capability beyond what this PRD ships. That constraint is the
+point: if a starter needs a function we do not have, either the function set or
+the starter list is wrong, and it is better to find that out while writing them.
+
+| Starter | Fields | Calculations | Exercises |
+| --- | --- | --- | --- |
+| Mortgage payment | loan amount (slider), rate (slider), term (slider) | monthly payment, total interest | `pow`, nested arithmetic, currency |
+| Loan repayment | amount, rate, months | monthly payment, total repaid | same engine, simpler shape |
+| Savings growth | initial (number), monthly (number), rate, years | final balance, total contributed, interest earned | three calculations, one referencing another |
+| ROI | investment, return | ROI %, net gain | percent formatting |
+| Tip | bill (number), tip % (choice), split (number) | tip amount, total, per person | `choice` field, division |
+| Discount | price, discount % (slider) | sale price, you save | simplest possible starter |
+| Profit margin | revenue, cost | margin %, markup %, profit | percent + currency in one result set |
+| Project quote | hourly rate, hours, package (image-choice) | subtotal, total | `image-choice`, `IF`, and a strong CTA |
+
+Each starter also ships: a title, per-field help text, result captions, and a
+configured Core action. A starter with unlabelled fields and no captions teaches
+the user nothing about what good looks like.
 
 **Out of scope one, with reasoning.**
 
 | Item | Why |
 | --- | --- |
+| `comparison` and `stepped` Types | change the state model, not the data; own PRDs (§0.1) |
 | Formula insert menus | needs a `formula-field` Dieter component; own PRD |
-| AI calculator generation | needs the schema to exist first; agent-plane work under its own PRD |
+| AI calculator generation (Path 2) | depends on §4 and §5 shipping first. Named as a primary entry point in §0.2, not a nice-to-have — it should follow immediately, under an agent-plane PRD |
 | Conditional field/result visibility | second dependency graph on top of §5; land the evaluator first |
 | Print / Download result | export surface; no contract covers it |
 | Lead-capture form | a network action inside a widget; nothing authorizes it and `applyState` determinism forbids fetching |
@@ -734,7 +840,13 @@ Gated. Do not start a step until the previous one has its named evidence.
 | 6 | `editable-fields.json` + `limits.json` | validate:widgets; entitlement rejection verified at free tier **on save**, per §11.1 |
 | 7 | Save-time formula validation in Roma | invalid formula rejected with exact error; valid AST stored |
 | 8 | Registration (§2.1) | overlay code added; `calculator.json` i18n source with plural forms; `widget-definition-sources.ts` regenerated and committed; tokyo-worker boots |
-| 9 | Verification | full Step 8 battery from `WidgetComplianceSteps.md`, plus `pnpm build:i18n` |
+| 9 | **Starter library (§14.1)** | all eight authored through Builder under `CLICKEEN`, published, and copy-tested into a second account; each renders correct results against hand-checked figures |
+| 10 | Verification | full Step 8 battery from `WidgetComplianceSteps.md`, plus `pnpm build:i18n` |
+
+Step 9 is a real gate, not a content chore. Authoring eight calculators through
+the Builder is the first honest test of whether the authoring surface works —
+if writing the mortgage formula in a `textfield` is painful for us, §17.1 is
+answered, and it is answered before a customer finds out.
 
 Step 8 is called out separately because two of its three items are silent
 failures — the overlay code stops tokyo-worker from booting, and a missing i18n
@@ -762,10 +874,16 @@ exists.
 
 Two, both genuine forks rather than deferred work.
 
+### 17.1
+
 1. **Does `formula-field` get built as a Dieter component in scope one?** §5.5
    recommends no, and recommends shipping with `textfield` plus save-time
    validation. Building it in scope one is defensible if authoring quality is the
    priority over shipping the engine.
+
+   Step 9 answers this empirically. If authoring the eight starters in a plain
+   `textfield` is painful for the team that wrote the parser, it will be worse
+   for a customer, and the recommendation flips.
 2. **Does `resultValue` get fluid display sizing?** Countdown's `timer` role has
    it. It matters if the primary result is intended to be the visual anchor of
    the widget, which §7's `primary`/`secondary` ranking implies.
