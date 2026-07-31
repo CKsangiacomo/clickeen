@@ -157,7 +157,7 @@ const renderVariantTiles = (
       if (!tiles) return null;
 
       return `
-    <div class="dieter-component-row" style="margin-bottom:var(--space-4)">
+    <div class="dieter-component-row">
       ${tiles}
     </div>`;
     })

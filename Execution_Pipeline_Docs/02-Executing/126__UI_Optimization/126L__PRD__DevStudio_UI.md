@@ -22,11 +22,14 @@ compose navigation content and source-derived component examples, but it must
 use existing Dieter tokens and roles and must not add another shell, Table,
 token family, role family, or generator.
 
-The accepted rhythm correction uses only existing structural spacing tokens:
-shared Full Page `24/24/20px`, Compact Page `16/16/16px`, `8/16px` Table cell
-padding, `24px` brand-to-navigation separation, `16px` between navigation
-groups, and tighter source-example block spacing. It adds no density token or
-DevStudio-owned restatement of Dieter Page/Table rules.
+D6's first rhythm correction used only existing structural spacing tokens but
+left the repeated rendered geometry too loose. D7 supersedes those values with
+shared Full Page `24/16/16px`, Compact Page `16/12/12px`, `4/16px` Table cell
+padding, `28px` navigation rows, `16px` brand-to-navigation separation, `12px`
+between navigation groups, and a `24px` generic source-preview minimum. It
+also removes the generated component row's inline margin so CSS has one
+spacing owner. D7 adds no density token or DevStudio-owned restatement of
+Dieter Page/Table rules.
 
 DevStudio must become both:
 

@@ -58,8 +58,8 @@
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: var(--space-6);
-  margin-block-end: var(--space-6);
+  gap: var(--space-4);
+  margin-block-end: var(--space-4);
 }
 
 .page__header,
@@ -89,7 +89,7 @@
 
 .page__content {
   display: grid;
-  gap: var(--space-5);
+  gap: var(--space-4);
   min-inline-size: 0;
 }
 
@@ -136,8 +136,8 @@
   .page__header {
     align-items: flex-start;
     flex-direction: column;
-    gap: var(--space-4);
-    margin-block-end: var(--space-4);
+    gap: var(--space-3);
+    margin-block-end: var(--space-3);
   }
 
   .page__actions {
@@ -145,6 +145,6 @@
   }
 
   .page__content {
-    gap: var(--space-4);
+    gap: var(--space-3);
   }
 }

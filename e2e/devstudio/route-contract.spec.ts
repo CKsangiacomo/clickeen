@@ -140,6 +140,15 @@ test.describe('DevStudio route contract', () => {
       const navigationRect = navigation.getBoundingClientRect();
       const workspaceRect = workspace.getBoundingClientRect();
       const navigationStyle = getComputedStyle(navigation);
+      const workspaceStyle = getComputedStyle(workspace);
+      const header = document.querySelector<HTMLElement>('.page__header');
+      const content = document.querySelector<HTMLElement>('.page__content');
+      const navigationLayout = document.querySelector<HTMLElement>('.devstudio-nav');
+      const navigationContent = document.querySelector<HTMLElement>('.devstudio-nav__content');
+      const navigationLink = document.querySelector<HTMLElement>('.nav-link');
+      if (!header || !content || !navigationLayout || !navigationContent || !navigationLink) {
+        throw new Error('DevStudio rhythm contract is missing');
+      }
       return {
         navigation: {
           x: navigationRect.x,
@@ -153,6 +162,14 @@ test.describe('DevStudio route contract', () => {
         workspace: {
           x: workspaceRect.x,
           width: workspaceRect.width,
+          paddingBlockStart: workspaceStyle.paddingBlockStart,
+          headerSeparation: getComputedStyle(header).marginBlockEnd,
+          contentGap: getComputedStyle(content).gap,
+        },
+        navigationRhythm: {
+          rowHeight: navigationLink.getBoundingClientRect().height,
+          brandGap: getComputedStyle(navigationLayout).gap,
+          groupGap: getComputedStyle(navigationContent).gap,
         },
       };
     });
@@ -165,7 +182,18 @@ test.describe('DevStudio route contract', () => {
       borderRadius: '20px',
     });
     expect(wideShell.navigation.boxShadow).not.toBe('none');
-    expect(wideShell.workspace).toEqual({ x: 336, width: 1104 });
+    expect(wideShell.workspace).toEqual({
+      x: 336,
+      width: 1104,
+      paddingBlockStart: '24px',
+      headerSeparation: '16px',
+      contentGap: '16px',
+    });
+    expect(wideShell.navigationRhythm).toEqual({
+      rowHeight: 28,
+      brandGap: '16px',
+      groupGap: '12px',
+    });
   });
 
   test('actual DevStudio main-container uses the shared Compact navigation state', async ({ page }) => {
@@ -198,6 +226,9 @@ test.describe('DevStudio route contract', () => {
       if (!navigationElement || !workspace) throw new Error('Shared shell is missing');
       const navigationRect = navigationElement.getBoundingClientRect();
       const workspaceRect = workspace.getBoundingClientRect();
+      const header = document.querySelector<HTMLElement>('.page__header');
+      const content = document.querySelector<HTMLElement>('.page__content');
+      if (!header || !content) throw new Error('Compact Page rhythm is missing');
       return {
         navigation: {
           x: navigationRect.x,
@@ -209,6 +240,10 @@ test.describe('DevStudio route contract', () => {
         workspace: {
           x: workspaceRect.x,
           width: workspaceRect.width,
+          paddingBlockStart: getComputedStyle(workspace).paddingBlockStart,
+          headerGap: getComputedStyle(header).gap,
+          headerSeparation: getComputedStyle(header).marginBlockEnd,
+          contentGap: getComputedStyle(content).gap,
         },
       };
     });
@@ -219,7 +254,14 @@ test.describe('DevStudio route contract', () => {
       height: 624,
       borderRadius: '20px',
     });
-    expect(compactShell.workspace).toEqual({ x: 0, width: 560 });
+    expect(compactShell.workspace).toEqual({
+      x: 0,
+      width: 560,
+      paddingBlockStart: '16px',
+      headerGap: '12px',
+      headerSeparation: '12px',
+      contentGap: '12px',
+    });
 
     await scrim.click({ position: { x: 500, y: 300 } });
     await expect(mainContainer).not.toHaveAttribute('data-navigation-open', 'true');
@@ -300,7 +342,7 @@ test.describe('DevStudio route contract', () => {
     expect(ordinaryPresentation.frameBoxShadow).not.toBe('none');
     expect(ordinaryPresentation.headerBackground).not.toBe(ordinaryPresentation.bodyBackground);
     expect(ordinaryPresentation.rowHeaderBackground).toBe(ordinaryPresentation.bodyBackground);
-    expect(ordinaryPresentation.bodyPaddingBlockStart).toBe('8px');
+    expect(ordinaryPresentation.bodyPaddingBlockStart).toBe('4px');
     expect(ordinaryPresentation.bodyPaddingInlineStart).toBe('16px');
     expect(ordinaryPresentation.bodyInlineStartBorder).toBe('0px');
     expect(ordinaryPresentation.bodyInlineEndBorder).toBe('0px');
@@ -387,6 +429,9 @@ test.describe('DevStudio route contract', () => {
 
     await page.goto('/#/dieter/core-styles');
     await expect(page.locator('.core-style-sample-frame')).toHaveCount(53);
+    await expect(page.locator('.core-style-sample').first()).toHaveCSS('min-block-size', '24px');
+    await expect(page.locator('.dieter-preview')).toHaveCSS('gap', '16px');
+    await expect(page.locator('.foundation-section').first()).toHaveCSS('gap', '12px');
     await expect(page.locator('.core-style-sample-frame').first()).not.toHaveJSProperty(
       'tagName',
       'BUTTON',
@@ -432,6 +477,15 @@ test.describe('DevStudio route contract', () => {
     await page.keyboard.press('Escape');
     await expect(dialog).toHaveCount(0);
     expect(unexpectedMutations).toEqual([]);
+  });
+
+  test('component pages use one generated-row spacing owner', async ({ page }) => {
+    await page.goto('/#/dieter/button');
+    const componentPage = page.locator('.component-page');
+    const componentRow = componentPage.locator('.dieter-component-row').first();
+    await expect(componentPage).toHaveCSS('gap', '12px');
+    await expect(componentRow).toHaveCSS('margin-block-end', '0px');
+    await expect(componentRow).not.toHaveAttribute('style');
   });
 
   test('Core styles keeps loading and commit states singular and truthful', async ({ page }) => {

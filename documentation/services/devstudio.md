@@ -42,8 +42,12 @@ and policy pages are not rebuilt as mobile variants. The shared navigation is
 `20rem` wide, uses the shared surface without a border, and has the Dieter
 `3xl` radius and floating shadow. Page headers and route content align to the
 same centered `80rem` maximum width. DevStudio uses the Dieter Page rhythm
-directly, then composes its navigation groups and source-derived previews from
-smaller existing `--space-*` steps; it does not introduce a density scale.
+directly. Its navigation rows use `--control-size-lg`; brand-to-navigation and
+navigation-group separation use `--space-4` and `--space-3`. Source-derived
+previews use one token-owned compact composition: generic preview height uses
+`--control-size-md`, component rows have one CSS spacing owner, and generated
+markup carries no inline vertical margin. DevStudio does not introduce a
+density scale.
 
 ## Token Editor Dialog
 

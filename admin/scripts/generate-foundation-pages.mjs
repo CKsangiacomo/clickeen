@@ -251,7 +251,7 @@ async function generateColorsPage() {
   const html = `${GENERATED_HEADER}
 <div class="dieter-preview colors-page" data-governance-count="${tokens.length}">
   <style>
-    .colors-page .chip { display: block; inline-size: 48px; block-size: 32px; border-radius: var(--control-radius-md); border: 1px solid var(--role-border); }
+    .colors-page .chip { display: block; inline-size: 48px; block-size: var(--control-size-md); border-radius: var(--control-radius-md); border: 1px solid var(--role-border); }
     .colors-page .token-readonly { display: inline-block; border-radius: var(--control-radius-md); }
   </style>
 ${renderColorRows(tokens)}
@@ -280,17 +280,17 @@ async function generateCoreStylesPage() {
 <div class="dieter-preview core-styles-page" data-governance-count="${tokens.length}">
   <style>
     .core-style-sample-frame { display: inline-flex; vertical-align: middle; }
-    .core-style-sample { display: inline-flex; align-items: center; justify-content: center; min-inline-size: 96px; min-block-size: 32px; }
+    .core-style-sample { display: inline-flex; align-items: center; justify-content: center; min-inline-size: 96px; min-block-size: var(--control-size-md); }
     .core-style-sample__part { display: block; background: var(--color-system-blue); }
     .core-style-sample[data-preview='spacing'] { justify-content: flex-start; }
-    .core-style-sample[data-preview='spacing'] .core-style-sample__part { min-inline-size: 2px; block-size: 12px; }
+    .core-style-sample[data-preview='spacing'] .core-style-sample__part { min-inline-size: 2px; block-size: var(--icon-size-12); }
     .core-style-sample[data-preview='control-size'] .core-style-sample__part { inline-size: 72px; border-radius: var(--control-radius-sm); }
     .core-style-sample[data-preview='control-padding'] { border: 1px solid var(--role-border); border-radius: var(--control-radius-md); }
-    .core-style-sample[data-preview='control-padding'] .core-style-sample__part { inline-size: 56px; block-size: 24px; border-radius: var(--control-radius-sm); }
-    .core-style-sample[data-preview='control-gap'] .core-style-sample__part { inline-size: 28px; block-size: 28px; border-radius: var(--control-radius-sm); }
-    .core-style-sample[data-preview='radius'] .core-style-sample__part { inline-size: 72px; block-size: 32px; }
-    .core-style-sample[data-preview='shadow'] .core-style-sample__part { inline-size: 72px; block-size: 32px; border-radius: var(--control-radius-md); background: var(--role-surface); }
-    .core-style-sample[data-preview='motion'] .core-style-sample__part { inline-size: 24px; block-size: 24px; border-radius: var(--control-radius-6xl); transition-property: transform; transition-duration: var(--duration-base); transition-timing-function: var(--easing-standard); }
+    .core-style-sample[data-preview='control-padding'] .core-style-sample__part { inline-size: 56px; block-size: var(--control-size-md); border-radius: var(--control-radius-sm); }
+    .core-style-sample[data-preview='control-gap'] .core-style-sample__part { inline-size: var(--control-size-md); block-size: var(--control-size-md); border-radius: var(--control-radius-sm); }
+    .core-style-sample[data-preview='radius'] .core-style-sample__part { inline-size: 72px; block-size: var(--control-size-md); }
+    .core-style-sample[data-preview='shadow'] .core-style-sample__part { inline-size: 72px; block-size: var(--control-size-md); border-radius: var(--control-radius-md); background: var(--role-surface); }
+    .core-style-sample[data-preview='motion'] .core-style-sample__part { inline-size: var(--control-size-md); block-size: var(--control-size-md); border-radius: var(--control-radius-6xl); transition-property: transform; transition-duration: var(--duration-base); transition-timing-function: var(--easing-standard); }
     tr:hover .core-style-sample[data-preview='motion'] .core-style-sample__part { transform: translateX(40px); }
     .core-style-readonly { color: var(--color-text-secondary); }
   </style>

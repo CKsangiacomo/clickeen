@@ -25,14 +25,14 @@ a {
 
 .roma-nav__brand {
   margin-bottom: var(--space-2);
-  padding: var(--space-2) var(--space-2) var(--space-4);
+  padding: var(--space-1) var(--space-2) var(--space-3);
   border-bottom: 1px solid var(--role-border);
 }
 
 .roma-nav__brand-link {
   display: inline-flex;
   align-items: center;
-  min-height: 28px;
+  min-height: var(--control-size-lg);
 }
 
 .roma-nav__brand-logo {
@@ -46,7 +46,7 @@ a {
   display: inline-flex;
   align-items: center;
   width: 100%;
-  min-height: var(--control-size-xl);
+  min-height: var(--control-size-lg);
   border-radius: var(--control-radius-xl);
   padding: var(--space-1) var(--space-3);
   border: 1px solid transparent;
@@ -66,8 +66,8 @@ a {
 
 .roma-nav__settings {
   display: block;
-  margin-top: var(--space-2);
-  padding-top: var(--space-3);
+  margin-top: var(--space-1);
+  padding-top: var(--space-2);
   border-top: 1px solid var(--role-border);
 }
 
@@ -91,12 +91,12 @@ a {
 }
 
 .roma-nav__subnav .roma-nav__link {
-  min-height: 32px;
+  min-height: var(--control-size-lg);
 }
 
 .roma-nav__footer {
   margin-top: auto;
-  padding-top: var(--space-4);
+  padding-top: var(--space-3);
   border-top: 1px solid var(--role-border);
 }
 
@@ -104,7 +104,7 @@ a {
   display: inline-flex;
   align-items: center;
   width: 100%;
-  min-height: var(--control-size-xl);
+  min-height: var(--control-size-lg);
   border-radius: var(--control-radius-xl);
   padding: var(--space-1) var(--space-3);
   border: 0;
@@ -158,7 +158,7 @@ a {
 
 .rd-canvas-module {
   --rd-module-pad-inline: var(--space-6);
-  --rd-module-pad-block: var(--space-4);
+  --rd-module-pad-block: var(--space-3);
   border: 0;
   border-radius: var(--control-radius-2xl);
   background: var(--role-surface);
@@ -166,7 +166,7 @@ a {
   padding-block: var(--rd-module-pad-block);
   padding-inline: var(--rd-module-pad-inline);
   display: grid;
-  gap: var(--space-3);
+  gap: var(--space-2);
   min-width: 0;
 }
 
@@ -188,10 +188,10 @@ a {
   border-radius: var(--control-radius-2xl);
   background: var(--role-surface);
   box-shadow: var(--shadow-floating);
-  padding-block: var(--space-4);
+  padding-block: var(--space-3);
   padding-inline: var(--space-6);
   display: grid;
-  gap: var(--space-3);
+  gap: var(--space-2);
   min-width: 0;
 }
 
@@ -380,7 +380,7 @@ a {
 
 .roma-grid {
   display: grid;
-  gap: var(--space-3);
+  gap: var(--space-2);
 }
 
 .roma-grid--three {
@@ -391,7 +391,7 @@ a {
   border-radius: var(--control-radius-2xl);
   border: 0;
   background: var(--role-surface-muted);
-  padding-block: var(--space-3);
+  padding-block: var(--space-2);
   padding-inline: var(--space-4);
   display: grid;
   align-content: start;
@@ -433,7 +433,7 @@ a {
 .roma-toolbar {
   display: flex;
   align-items: center;
-  gap: var(--space-3);
+  gap: var(--space-2);
   flex-wrap: wrap;
   min-width: 0;
 }
@@ -513,7 +513,7 @@ a {
 
   .rd-canvas-module,
   .roma-module-surface {
-    padding-block: var(--space-4);
+    padding-block: var(--space-3);
     padding-inline: var(--space-4);
   }
 

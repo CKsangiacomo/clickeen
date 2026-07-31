@@ -8,7 +8,7 @@
     "border": "none",
     "radius": "--control-radius-2xl",
     "elevation": "--shadow-floating",
-    "cellPadding": "--space-2 / --space-4",
+    "cellPadding": "--space-1 / --space-4",
     "separatorSource": "--role-border",
     "previewWidth": "24%, minimum 8rem",
     "actionWidth": "content"

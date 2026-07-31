@@ -39,6 +39,13 @@ Full Page rhythm becomes `--space-6`/`--space-6`/`--space-5`, Compact becomes
 `--space-2`/`--space-4`. The source authority and token vocabulary do not
 change.
 
+The subsequent D7 rendered-rhythm correction supersedes D6's values after the
+deployed result remained visually too loose. Current Full Page rhythm is
+`--space-6`/`--space-4`/`--space-4`; Compact is
+`--space-4`/`--space-3`/`--space-3`; Table cell padding is
+`--space-1`/`--space-4`. D7 selects smaller existing tokens at the owning
+selectors and does not alter the spacing or control-size scales.
+
 126H now owns this source:
 
 ```text

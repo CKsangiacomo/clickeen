@@ -465,6 +465,22 @@ density mode, typography rule, component, or architecture is authorized.
 Owner decision:
 `DECIDED - TIGHTEN RHYTHM WITH EXISTING STRUCTURAL SPACING VALUES`
 
+### D7 - Correct The Rendered Vertical Rhythm
+
+**Status: DECIDED by the product owner on 2026-07-31.** D6's declaration
+changes did not make the repeated rendered geometry materially tighter. Keep
+the same Dieter authorities and existing token scales, but use smaller existing
+tokens at the owning selectors. Full Page rhythm is `24/16/16px`; Compact Page
+rhythm is `16/12/12px`; Table cells are `4px` block by `16px` inline.
+DevStudio and Roma navigation rows are `28px`. DevStudio uses `16/12px`
+navigation separations, a `24px` generic preview minimum, and one CSS owner for
+generated component-row spacing. Roma uses `12px` primary-module block padding
+with `8px` gaps and `8px` secondary-card block padding with `8px` gaps. Do not
+change base token values, typography, behavior, routes, data, or architecture.
+
+Owner decision:
+`DECIDED - MAKE THE RENDERED RHYTHM MATERIALLY TIGHTER THROUGH EXISTING TOKENS`
+
 ## Product Owner Response
 
 The recorded decisions are:
@@ -476,6 +492,7 @@ D3: Decided - keep Upgrade and open the shared upsell dialog scaffold
 D4: Decided - Dieter Layout/Table/Popup consumer convergence
 D5: Decided - shared visual composition acceptance target
 D6: Decided - tighter shared vertical rhythm using the existing spacing scale
+D7: Decided - materially tighter rendered rhythm through existing tokens
 ```
 
 No other architecture, cleanup, component, surface, translation, storage,

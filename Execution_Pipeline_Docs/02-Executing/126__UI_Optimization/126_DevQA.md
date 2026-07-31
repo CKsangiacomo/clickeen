@@ -14,6 +14,32 @@ Scope: premature A-H code-change reality, final A-M current-source audits,
 executable PRDs, exact-tree peer reviews, and current Step-9 execution state.
 Parent: `126__PRD__UI_Optimization_Program.md` (MAMA).
 
+## 2026-07-31 Rendered Vertical Rhythm Correction
+
+The product owner rejected D6's rendered result as visually unchanged. D7
+preserves D6 as historical deployment evidence but supersedes its values at the
+same owning Dieter and consumer selectors. Base token values are unchanged.
+
+| Level | D7 current value |
+| --- | --- |
+| Full Page | `24px` outer padding, `16px` header separation, `16px` content gap |
+| Compact Page | `16px` outer padding, `12px` header separation, `12px` content gap |
+| Table | `4px` block and `16px` inline cell padding |
+| DevStudio navigation | `28px` rows, `16px` brand gap, `12px` group gap |
+| DevStudio previews | `24px` generic minimum, `12px` section gap, one CSS component-row spacing owner |
+| Roma navigation | `28px` rows with `4px` stack gap; `45px` brand block |
+| Roma primary modules | `12px` block padding, `24px` wide/`16px` compact inline padding, `8px` internal gap |
+| Roma secondary cards | `8px` block padding, `16px` inline padding, `8px` internal gap |
+
+Local built-browser measurement confirms that DevStudio Core styles now renders
+`23.44px` Table headers and `33px` repeated preview rows instead of the D6
+`31.44px` and `49px`; navigation rows render at `28px`. A representative Roma
+composition renders `23.44px` headers, `32.5px` action rows, `28px` navigation
+rows, and the exact module/card values above without page overflow. Compact
+DevStudio retains Table-owned horizontal overflow. Exact-SHA deployment and
+remote owning-surface evidence are recorded after the implementation reaches
+`main`.
+
 ## 2026-07-31 Shared Vertical Rhythm Correction
 
 The product owner accepted the shared shell direction and requested a tighter

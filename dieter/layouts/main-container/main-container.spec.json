@@ -28,8 +28,8 @@
     "wideElevation": "--shadow-floating",
     "compactElevation": "--shadow-elevated",
     "pageContentMaxWidth": "80rem",
-    "widePageRhythm": "--layout-page-padding / --space-6 / --space-5",
-    "compactPageRhythm": "--space-4 / --space-4 / --space-4",
+    "widePageRhythm": "--layout-page-padding / --space-4 / --space-4",
+    "compactPageRhythm": "--space-4 / --space-3 / --space-3",
     "compactQuery": "(max-width: 599px), (max-height: 599px)"
   },
   "editableTokens": [

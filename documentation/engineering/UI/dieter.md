@@ -59,9 +59,10 @@ layering are owned by their own UI docs.
   for its fixed presentation: `--space-2` inset, muted application backdrop,
   shared navigation surface, no border, `--control-radius-3xl`, and
   floating/elevated shadows. Header and content align to one centered `80rem`
-  maximum width. Full Page rhythm is `--space-6` outer padding,
-  `--space-6` header separation, and `--space-5` content separation; Compact
-  uses `--space-4` for all three. These are not duplicated as layout aliases.
+  maximum width. Full Page rhythm is `--space-6` outer padding with
+  `--space-4` header and content separation. Compact uses `--space-4` outer
+  padding with `--space-3` header and content separation. These are not
+  duplicated as layout aliases.
 - **Vertical rhythm** - `--vertspace-1` through `--vertspace-9`. Use this for
   compact vertical breathing room inside dense controls where structural
   spacing is too coarse.

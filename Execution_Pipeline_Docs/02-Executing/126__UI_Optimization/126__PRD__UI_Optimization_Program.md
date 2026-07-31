@@ -56,6 +56,21 @@ rhythm is `--space-4` for all three levels. Table cell padding is
 spacing with smaller existing `--space-*` values. No density token, new scale,
 typography change, component, or architecture is authorized.
 
+### 2026-07-31 Rendered Rhythm Correction
+
+D7 records that D6 changed spacing declarations without sufficiently changing
+the repeated rendered geometry. D7 supersedes only D6's values: Wide Page
+rhythm is `--layout-page-padding` (`--space-6`) with `--space-4` header and
+content separation; Compact uses `--space-4` outer padding with `--space-3`
+header and content separation. Table cells use `--space-1` block and
+`--space-4` inline padding. DevStudio and Roma navigation rows use
+`--control-size-lg`. Generic DevStudio source previews use
+`--control-size-md`, and generated component rows have one CSS spacing owner
+instead of an additional inline margin. Roma primary modules use
+`--space-3` block padding and `--space-2` gaps; secondary cards use
+`--space-2` for both. Base token values, typography, behavior, routes, data,
+and architecture do not change.
+
 ### Frozen Taxonomy And Composition
 
 Roma and DevStudio use exactly this high-level composition:
