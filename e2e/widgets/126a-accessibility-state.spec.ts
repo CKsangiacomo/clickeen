@@ -309,6 +309,7 @@ test.describe("PRD 126A.2 Bob failure-state truth", () => {
     const delayedRef = "prd126-preview-delayed.png";
     const failedRef = "prd126-preview-failed.png";
     const recoveredRef = "prd126-preview-recovered.png";
+    const testRefs = new Set([delayedRef, failedRef, recoveredRef]);
     let releaseDelayed!: () => void;
     const delayedGate = new Promise<void>((resolve) => {
       releaseDelayed = resolve;
@@ -337,9 +338,27 @@ test.describe("PRD 126A.2 Bob failure-state truth", () => {
       const refs = Array.isArray(payload.assetRefs)
         ? payload.assetRefs.filter((value): value is string => typeof value === "string")
         : [];
-      requestedRefs.push(...refs);
-      if (refs.includes(delayedRef)) await delayedGate;
-      if (refs.includes(failedRef)) {
+      const syntheticRefs = refs.filter((assetRef) => testRefs.has(assetRef));
+      if (!syntheticRefs.length) {
+        await route.fallback();
+        return;
+      }
+      const realRefs = refs.filter((assetRef) => !testRefs.has(assetRef));
+      let realAssets: unknown[] = [];
+      if (realRefs.length) {
+        const realResponse = await route.fetch({
+          postData: JSON.stringify({ assetRefs: realRefs }),
+        });
+        const realPayload = await realResponse.json() as { assets?: unknown };
+        if (!realResponse.ok() || !Array.isArray(realPayload.assets)) {
+          await route.fulfill({ response: realResponse });
+          return;
+        }
+        realAssets = realPayload.assets;
+      }
+      requestedRefs.push(...syntheticRefs);
+      if (syntheticRefs.includes(delayedRef)) await delayedGate;
+      if (syntheticRefs.includes(failedRef)) {
         await route.fulfill({
           status: 503,
           contentType: "application/json",
@@ -347,22 +366,22 @@ test.describe("PRD 126A.2 Bob failure-state truth", () => {
             error: { reasonKey: "coreui.errors.db.readFailed" },
           }),
         });
-        completedRefs.push(...refs);
+        completedRefs.push(...syntheticRefs);
         return;
       }
       await route.fulfill({
         status: 200,
         contentType: "application/json",
         body: JSON.stringify({
-          assets: refs.map((assetRef) => ({
+          assets: [...realAssets, ...syntheticRefs.map((assetRef) => ({
             assetRef,
             url: `https://assets.invalid/${encodeURIComponent(assetRef)}`,
             assetType: "image",
             contentType: "image/png",
-          })),
+          }))],
         }),
       });
-      completedRefs.push(...refs);
+      completedRefs.push(...syntheticRefs);
     });
 
     await setStageImageFill(bobFrame, delayedRef);

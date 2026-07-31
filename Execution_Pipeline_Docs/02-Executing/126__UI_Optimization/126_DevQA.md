@@ -1254,3 +1254,78 @@ Runtime/deploy claims are bounded as stated above:
   URLs for Orio and Pachuka Line.
 - Human decision boundary:
   `126__Product_Owner_Execution_Decisions.md`; D1/D2/D3 accepted.
+
+---
+
+## 12. Post-Execution Builder Preview And Residue Correction - 2026-07-31
+
+The post-execution audit found one real preview lifecycle regression and a
+bounded set of additive Builder-shell residue. It did not find wholesale CSS or
+runtime sprawl.
+
+### Cause and correction
+
+- Commit `aba451ee` correctly changed Builder preview to retain one iframe
+  document while streaming in-memory updates, but an older effect still reset
+  `iframeHasState` whenever media or font dependencies became temporarily
+  unresolved.
+- Shared widget runtime emits `ck:ready` only for the first applied state in one
+  iframe document. The obsolete reset therefore had no matching terminal event;
+  a later resolved image could render successfully while `Loading preview...`
+  remained permanently above it.
+- Implementation commit `8c4a493b` removes that obsolete reset. Preview
+  readiness now resets only when the saved public package recreates the iframe.
+  Dependency resolution retains the last valid preview, failure is explicit,
+  and successful recovery clears only the dependency error it owns.
+- Loading, translation, preview-error, and locale-switch notices are mutually
+  exclusive. Iframe/package failure no longer masquerades as
+  `data-widget-ready="true"`.
+
+### Bounded cleanup
+
+- `/builder` is restored as an ordinary Roma Page; only
+  `/builder/{instanceId}` uses the full-canvas editor composition.
+- Roma's independent `showHeader` and `fullCanvas` flags are reduced to the one
+  valid `fullCanvas` mode, which owns header suppression.
+- Bob TopDrawer consumes Dieter's existing `diet-popover-host` state behavior;
+  copied open/closed CSS and obsolete readonly-span styling are deleted.
+- The duplicated Bob public-action type and small status/style duplications are
+  consolidated. Exact Roma-to-Bob public action values, fail-closed validation,
+  host actions, focus return, and More dismissal behavior remain intact.
+- Point-in-time structure/conformance audit `6974b75b` was published before the
+  implementation. Its historical source findings remain evidence rather than
+  current runtime law.
+
+### Verification
+
+- Local GREEN: Bob and Roma lint, typecheck, production builds, Bob
+  accessibility/translation/typography tests, Roma widget-command gates,
+  Playwright discovery, and `git diff --check`.
+- Independent post-implementation review found and caused correction of the
+  Dieter popover width-specificity issue and the stale-ready package-failure
+  path. The final independent V1-V8 review is GREEN.
+- Cloudflare API preflight passed. Git-connected production Pages deployments
+  for implementation `8c4a493b` succeeded:
+  - Bob `e3c87263-085c-4920-97d7-6cbae9ecd441`
+  - Roma `77e00b87-2371-4b30-a1a1-364c56021d58`
+- The authenticated, mutation-blocked deployed run passed all five cases in
+  `e2e/widgets/{126a-accessibility-state,builder-open}.spec.ts`. The new case
+  uses synthetic image refs, preserves real account-font resolution, never
+  saves, and proves delayed resolution, explicit failure, successful recovery,
+  retained iframe identity, and absence of generic Loading-preview regression.
+- Product-data reconciliation: no instance, account asset, translation, R2,
+  Supabase, policy, or widget product data was written. Only a normal cloud-dev
+  test session was refreshed.
+
+### V1-V8
+
+| ID | Result | Evidence |
+|---|---|---|
+| V1 Silent substitution | PASS | The prior valid preview remains visible; unresolved state is not replaced with invented data. |
+| V2 Silent healing | PASS | Invalid media/font/package state remains an explicit owned error. |
+| V3 Silent omission | PASS | The resolved latest state is still sent to the existing iframe. |
+| V4 Fail-open control | PASS | Dependency and package failures do not claim ready state. |
+| V5 Corruption-as-absence | PASS | Malformed dependencies remain errors rather than missing/empty state. |
+| V6 Partial-success masquerade | PASS | Loading, error, and ready states are exclusive and evidence-backed. |
+| V7 Masquerade/redress | PASS | The obsolete reset was deleted; no reload, timeout, retry wrapper, or repeated-ready protocol replaces it. |
+| V8 Runtime test dependency | PASS | Runtime behavior has no dependency on the regression probes. |
