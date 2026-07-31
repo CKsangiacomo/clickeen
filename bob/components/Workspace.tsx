@@ -120,6 +120,7 @@ export function Workspace({
   const [iframeLoaded, setIframeLoaded] = useState(false);
   const [iframeHasState, setIframeHasState] = useState(false);
   const [iframeLoadError, setIframeLoadError] = useState<string | null>(null);
+  const [assetResolutionError, setAssetResolutionError] = useState<string | null>(null);
   const [measuredHeight, setMeasuredHeight] = useState<number | null>(null);
   const [switcherNotice, setSwitcherNotice] = useState<string | null>(null);
   const [resolvedAssets, setResolvedAssets] = useState<Map<string, ResolvedAccountAsset>>(() => new Map());
@@ -200,6 +201,10 @@ export function Workspace({
     previewTypography.ok &&
     !unresolvedFontAssetRefs.length;
   const previewMessageReady = previewDependenciesReady && !savedTranslationPreviewBlocked;
+  const previewDependencyError = !mediaAssets.ok
+    ? 'Failed to resolve preview media assets'
+    : assetResolutionError ?? (!previewTypography.ok ? previewTypography.error : null);
+  const previewError = iframeLoadError ?? previewDependencyError;
   const resolvedPreviewInstanceData = useMemo(() => {
     if (!selectedTranslationValues) return previewInstanceData;
     return resolveTranslatedValues(previewInstanceData, selectedTranslationValues);
@@ -246,11 +251,12 @@ export function Workspace({
 
   useEffect(() => {
     if (!mediaAssets.ok) {
-      setIframeLoadError('Failed to resolve preview media assets');
+      setAssetResolutionError(null);
       return;
     }
     let cancelled = false;
     if (!accountAssetRefs.length) {
+      setAssetResolutionError(null);
       return () => {
         cancelled = true;
       };
@@ -258,15 +264,18 @@ export function Workspace({
 
     const missingAssetRefs = unresolvedAccountAssetRefs;
     if (!missingAssetRefs.length) {
+      setAssetResolutionError(null);
       return () => {
         cancelled = true;
       };
     }
 
+    setAssetResolutionError(null);
     void accountAssets
       .resolveAssets(missingAssetRefs)
       .then(({ assetsByRef }) => {
         if (cancelled) return;
+        setAssetResolutionError(null);
         setResolvedAssets((current) => {
           let changed = false;
           const next = new Map(current);
@@ -278,23 +287,13 @@ export function Workspace({
         });
       })
       .catch(() => {
-        if (!cancelled) setIframeLoadError('Failed to resolve preview account assets');
+        if (!cancelled) setAssetResolutionError('Failed to resolve preview account assets');
       });
 
     return () => {
       cancelled = true;
     };
   }, [accountAssets, mediaAssets, accountAssetRefs, unresolvedAccountAssetRefs]);
-
-  useEffect(() => {
-    if (!hasWidget || previewTypography.ok || !previewTypography.error) return;
-    setIframeLoadError(previewTypography.error);
-  }, [hasWidget, previewTypography]);
-
-  useEffect(() => {
-    if (previewDependenciesReady) return;
-    setIframeHasState(false);
-  }, [previewDependenciesReady]);
 
   useEffect(() => {
     if (!switcherNotice) return undefined;
@@ -334,7 +333,14 @@ export function Workspace({
 
   useEffect(() => {
     const iframe = iframeRef.current;
-    if (!iframe || !publicPackage) return;
+    if (!iframe) return;
+    setIframeLoaded(false);
+    setIframeHasState(false);
+    setIframeLoadError(null);
+    if (!publicPackage) {
+      iframe.srcdoc = '';
+      return;
+    }
     const runtimeUrl = URL.createObjectURL(
       new Blob([publicPackage.runtimeJs], { type: 'text/javascript' }),
     );
@@ -372,14 +378,10 @@ export function Workspace({
     };
     const handleError = () => {
       setIframeLoadError('Failed to load preview runtime');
-      setIframeHasState(true);
     };
 
     iframe.addEventListener('load', handleLoad);
     iframe.addEventListener('error', handleError);
-    setIframeLoaded(false);
-    setIframeHasState(false);
-    setIframeLoadError(null);
     iframe.srcdoc = previewDocument;
 
     return () => {
@@ -514,7 +516,7 @@ export function Workspace({
         sandbox="allow-scripts allow-same-origin"
         style={iframeBackdrop ? ({ background: iframeBackdrop } as any) : undefined}
       />
-      {hasWidget && !iframeHasState && !savedTranslationPreviewBlocked ? (
+      {hasWidget && !iframeHasState && !savedTranslationPreviewBlocked && !previewError ? (
         <div className="workspace-status-overlay" role="status" aria-live="polite">
           <span className="label-s">Loading preview...</span>
         </div>
@@ -529,12 +531,12 @@ export function Workspace({
           <span className="label-s">{savedTranslationsError}</span>
         </div>
       ) : null}
-      {hasWidget && iframeLoadError ? (
+      {hasWidget && !savedTranslationPreviewBlocked && previewError ? (
         <div className="workspace-status-overlay workspace-status-overlay--error" role="alert">
-          <span className="label-s">{iframeLoadError}</span>
+          <span className="label-s">{previewError}</span>
         </div>
       ) : null}
-      {hasWidget && switcherNotice ? (
+      {hasWidget && iframeHasState && !savedTranslationPreviewBlocked && !previewError && switcherNotice ? (
         <div className="workspace-status-overlay" role="status" aria-live="polite">
           <span className="label-s">{switcherNotice}</span>
         </div>

@@ -40,6 +40,12 @@ export type InstancePublicPackage = {
   runtimeJs: string;
 };
 
+type PublicActions = {
+  publicUrl: string;
+  iframeSnippet: string;
+  scriptSnippet: string;
+};
+
 export type SessionMeta = {
   accountPublicId?: string;
   instanceId?: string;
@@ -48,11 +54,7 @@ export type SessionMeta = {
   publishStatus?: 'published' | 'unpublished';
   label?: string;
   returnLabel?: string;
-  publicActions: {
-    publicUrl: string;
-    iframeSnippet: string;
-    scriptSnippet: string;
-  } | null;
+  publicActions: PublicActions | null;
   fontLibrary: AccountFontLibrary;
   translationSetup?: TranslationSetup | null;
 } | null;
@@ -90,11 +92,7 @@ export type EditorOpenMessage = {
   publishStatus?: 'published' | 'unpublished';
   label?: string;
   returnLabel?: string;
-  publicActions?: {
-    publicUrl: string;
-    iframeSnippet: string;
-    scriptSnippet: string;
-  } | null;
+  publicActions?: PublicActions | null;
   copilot?: CopilotRuntimeUi;
   translationSetup?: TranslationSetup | null;
 };

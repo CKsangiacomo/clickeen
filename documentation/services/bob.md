@@ -495,6 +495,19 @@ Widget runtime sends:
 }
 ```
 
+`ck:ready` acknowledges the first state applied by one iframe document. Bob's
+generic `Loading preview...` status therefore belongs only to that initial
+iframe boot and resets only when a different saved public package recreates the
+iframe document. It is not an edit-progress signal.
+
+When an in-memory edit introduces an unresolved account media or font
+reference, Bob keeps the last successfully rendered preview visible, resolves
+the dependency through Roma, materializes the resolved URL, and sends the
+updated state to the existing iframe. Resolution failure is an explicit preview
+error. A later valid dependency resolution clears that dependency error; Bob
+does not reload the iframe, repeat `ck:ready`, or present an iframe failure as a
+ready preview.
+
 Preview represents the in-memory working copy. Public snippets point at the
 published static URL:
 

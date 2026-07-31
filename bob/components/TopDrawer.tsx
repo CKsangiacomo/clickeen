@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState, type RefObject } from 'react';
+import { useEffect, useRef, useState, type RefObject } from 'react';
 import { useWidgetSession, useWidgetSessionChrome } from '../lib/session/useWidgetSession';
 import type { BobHostActionMessage } from '../lib/session/sessionTypes';
 import { dieterIconStyle } from './dieterIcon';
@@ -33,10 +33,8 @@ export function TopDrawer({
   const hasInstance = Boolean(currentInstanceId);
   const canSave = hasInstance && isDirty;
   const showSaveAction = canSave || isSaving;
-  const currentLabel = useMemo(() => {
-    const label = typeof meta?.label === 'string' ? meta.label.trim() : '';
-    return label || currentInstanceId;
-  }, [currentInstanceId, meta?.label]);
+  const instanceLabel = typeof meta?.label === 'string' ? meta.label.trim() : '';
+  const currentLabel = instanceLabel || currentInstanceId;
   const publicActions = meta?.publicActions ?? null;
 
   useEffect(() => {
@@ -136,7 +134,7 @@ export function TopDrawer({
             </button>
           ) : null}
           {hasInstance ? (
-            <span className="topdrawer-instance-title topdrawer-instance-title--readonly heading-3">
+            <span className="topdrawer-instance-title heading-3">
               {currentLabel}
             </span>
           ) : null}
@@ -155,64 +153,68 @@ export function TopDrawer({
 
       <div className="topdrawer-actions">
         {publicActions ? (
-          <a
-            className="diet-btn-txt"
-            data-size="lg"
-            data-variant="line2"
-            href={publicActions.publicUrl}
-            target="_blank"
-            rel="noreferrer"
-          >
-            <span className="diet-btn-txt__label body-s">Open public widget</span>
-          </a>
-        ) : null}
-        {publicActions ? (
-          <div className="topdrawer-more" ref={moreRef} data-state={moreOpen ? 'open' : 'closed'}>
-            <button
-              ref={moreButtonRef}
+          <>
+            <a
               className="diet-btn-txt"
               data-size="lg"
               data-variant="line2"
-              type="button"
-              aria-haspopup="menu"
-              aria-expanded={moreOpen}
-              onClick={() => setMoreOpen((open) => !open)}
+              href={publicActions.publicUrl}
+              target="_blank"
+              rel="noreferrer"
             >
-              <span className="diet-btn-txt__label body-s">More</span>
-            </button>
-            <div className="topdrawer-more__menu diet-popover" role="menu">
+              <span className="diet-btn-txt__label body-s">Open public widget</span>
+            </a>
+            <div
+              className="topdrawer-more diet-popover-host"
+              ref={moreRef}
+              data-state={moreOpen ? 'open' : 'closed'}
+            >
               <button
-                className="diet-btn-menuactions"
-                data-size="md"
-                data-variant="neutral"
+                ref={moreButtonRef}
+                className="diet-btn-txt"
+                data-size="lg"
+                data-variant="line2"
                 type="button"
-                role="menuitem"
-                onClick={() => void copyArtifact('Widget URL', publicActions.publicUrl)}
+                aria-haspopup="menu"
+                aria-expanded={moreOpen}
+                onClick={() => setMoreOpen((open) => !open)}
               >
-                <span className="diet-btn-menuactions__label body-s">Copy URL</span>
+                <span className="diet-btn-txt__label body-s">More</span>
               </button>
-              <button
-                className="diet-btn-menuactions"
-                data-size="md"
-                data-variant="neutral"
-                type="button"
-                role="menuitem"
-                onClick={() => void copyArtifact('Embed code', publicActions.iframeSnippet)}
-              >
-                <span className="diet-btn-menuactions__label body-s">Copy embed</span>
-              </button>
-              <button
-                className="diet-btn-menuactions"
-                data-size="md"
-                data-variant="neutral"
-                type="button"
-                role="menuitem"
-                onClick={() => void copyArtifact('Script code', publicActions.scriptSnippet)}
-              >
-                <span className="diet-btn-menuactions__label body-s">Copy script</span>
-              </button>
+              <div className="topdrawer-more__menu diet-popover" role="menu">
+                <button
+                  className="diet-btn-menuactions"
+                  data-size="md"
+                  data-variant="neutral"
+                  type="button"
+                  role="menuitem"
+                  onClick={() => void copyArtifact('Widget URL', publicActions.publicUrl)}
+                >
+                  <span className="diet-btn-menuactions__label body-s">Copy URL</span>
+                </button>
+                <button
+                  className="diet-btn-menuactions"
+                  data-size="md"
+                  data-variant="neutral"
+                  type="button"
+                  role="menuitem"
+                  onClick={() => void copyArtifact('Embed code', publicActions.iframeSnippet)}
+                >
+                  <span className="diet-btn-menuactions__label body-s">Copy embed</span>
+                </button>
+                <button
+                  className="diet-btn-menuactions"
+                  data-size="md"
+                  data-variant="neutral"
+                  type="button"
+                  role="menuitem"
+                  onClick={() => void copyArtifact('Script code', publicActions.scriptSnippet)}
+                >
+                  <span className="diet-btn-menuactions__label body-s">Copy script</span>
+                </button>
+              </div>
             </div>
-          </div>
+          </>
         ) : null}
         {showSaveAction ? (
           <button

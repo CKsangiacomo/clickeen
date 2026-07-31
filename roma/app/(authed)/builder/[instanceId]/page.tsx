@@ -15,7 +15,6 @@ export default async function BuilderPage({ params }: BuilderPageProps) {
       activeDomain="builder"
       title="Builder"
       canvasClassName="rd-canvas--builder"
-      showHeader={false}
       fullCanvas
     >
       <RomaDomainErrorBoundary

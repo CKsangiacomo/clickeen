@@ -21,7 +21,6 @@ type RomaShellProps = {
   children: ReactNode;
   canvasClassName?: string;
   headerRight?: ReactNode;
-  showHeader?: boolean;
   fullCanvas?: boolean;
 };
 
@@ -56,7 +55,6 @@ export function RomaShell({
   children,
   canvasClassName,
   headerRight,
-  showHeader = true,
   fullCanvas = false,
 }: RomaShellProps) {
   const [compact, setCompact] = useState(false);
@@ -136,7 +134,7 @@ export function RomaShell({
             aria-label="Close navigation"
             onClick={() => closeNavigation(true)}
           />
-          {showHeader ? (
+          {!fullCanvas ? (
             <header className="page__header">
               <div className="roma-page-heading">
                 <button

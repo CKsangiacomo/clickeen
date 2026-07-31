@@ -94,26 +94,18 @@ async function testBuilderUsesBobTopDrawerAsItsOnlyEditorChrome(): Promise<void>
   const builderApp = await readFile(new URL('../../bob/components/BuilderApp.tsx', import.meta.url), 'utf8');
   const bobBoot = await readFile(new URL('../../bob/lib/session/useSessionBoot.ts', import.meta.url), 'utf8');
 
-  assert.match(builderRoute, /showHeader=\{false\}/);
+  assert.doesNotMatch(builderRoute, /showHeader/);
   assert.match(builderRoute, /fullCanvas/);
   assert.doesNotMatch(builderRoute, /RomaShellDefaultActions/);
   assert.doesNotMatch(builderLandingRoute, /fullCanvas/);
+  assert.doesNotMatch(builderLandingRoute, /rd-canvas--builder/);
   assert.match(builderLandingRoute, /RomaShellDefaultActions/);
   assert.match(romaCss, /\.main-container > \.page\.roma-builder-page \{\s+padding: 0;/);
   assert.match(romaCss, /\.roma-builder-page > \.page__content \{\s+max-inline-size: none;/);
   assert.match(romaCss, /html,\s+body \{[^}]*background: var\(--role-surface-muted\);/);
   assert.doesNotMatch(romaCss, /--color-system-gray-6-step3/);
   assert.match(bobCss, /\.builder-app \{[^}]*background: var\(--role-surface-muted\);/);
-  assert.match(bobCss, /\.builder-unsupported \{[^}]*background: var\(--role-surface-muted\);/);
   assert.match(bobCss, /\.workspace \{[^}]*background: var\(--role-surface-muted\);/);
-  assert.match(
-    bobCss,
-    /\.workspace-status-overlay \{[^}]*background: color-mix\(in oklab, var\(--role-surface-muted\), transparent 20%\);/,
-  );
-  assert.match(
-    bobCss,
-    /\.workspace\[data-host='canvas'\]\[data-canvas-resize='true'\] \.workspace-iframe \{[^}]*background: var\(--role-surface-muted\);/,
-  );
   assert.doesNotMatch(bobCss, /--color-system-gray-6-step3/);
 
   assert.match(builderSource, /publicActions: publicUrl/);
@@ -133,11 +125,23 @@ async function testBuilderUsesBobTopDrawerAsItsOnlyEditorChrome(): Promise<void>
   assert.match(topDrawer, />Copy URL</);
   assert.match(topDrawer, />Copy embed</);
   assert.match(topDrawer, />Copy script</);
+  assert.match(topDrawer, /className="topdrawer-more diet-popover-host"/);
+  assert.doesNotMatch(bobCss, /\.topdrawer-more\[data-state='open'\]/);
   assert.match(topDrawer, /requestHostAction\('open-navigation'\)/);
   assert.match(topDrawer, /requestHostAction\('return'\)/);
   assert.equal((topDrawer.match(/data-variant="primary"/g) ?? []).length, 1);
   assert.match(bobBoot, /message\.publishStatus === 'published'/);
   assert.match(bobBoot, /coreui\.errors\.builder\.publicActions\.invalid/);
+
+  const workspace = await readFile(new URL('../../bob/components/Workspace.tsx', import.meta.url), 'utf8');
+  assert.doesNotMatch(
+    workspace,
+    /if \(previewDependenciesReady\) return;\s*setIframeHasState\(false\)/,
+  );
+  assert.equal((workspace.match(/setIframeHasState\(false\)/g) ?? []).length, 1);
+  assert.doesNotMatch(workspace, /setIframeLoadError\('Failed to resolve preview account assets'\)/);
+  assert.doesNotMatch(workspace, /setIframeHasState\(true\);\s*\};\s*iframe\.addEventListener\('load'/);
+  assert.match(workspace, /iframeHasState && !savedTranslationPreviewBlocked && !previewError && switcherNotice/);
 }
 
 async function testDieterLayoutTableAndPopupConsumption(): Promise<void> {
@@ -202,7 +206,7 @@ async function run(): Promise<void> {
   await testBuilderHandlesBobUpsell();
   console.log('PASS Bob upsell CTA opens the Roma scaffold without discarding Builder work');
   await testBuilderUsesBobTopDrawerAsItsOnlyEditorChrome();
-  console.log('PASS active Builder gives all editor chrome to Bob TopDrawer and full-canvas page body');
+  console.log('PASS active Builder owns full-canvas chrome and preserves initial-only preview readiness');
   await testDieterLayoutTableAndPopupConsumption();
   console.log('PASS Roma and Bob consume the final Dieter Layout, Table, and Popup contracts');
 }

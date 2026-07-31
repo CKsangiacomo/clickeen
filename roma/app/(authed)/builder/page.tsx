@@ -7,7 +7,6 @@ export default function BuilderLandingPage() {
     <RomaShell
       activeDomain="builder"
       title="Builder"
-      canvasClassName="rd-canvas--builder"
       headerRight={<RomaShellDefaultActions />}
     >
       <RomaDomainErrorBoundary domainLabel="Builder" resetKey="builder">

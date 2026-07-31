@@ -12,6 +12,7 @@ const READ_TRANSLATION_PATH = new RegExp(
 const COPILOT_PATH = new RegExp(
   `/api/account/instances/${INSTANCE_ID}/copilot(?:\\?.*)?$`,
 );
+const RESOLVE_ASSETS_PATH = /\/api\/account\/assets\/resolve(?:\?.*)?$/;
 
 async function guardInstanceMutations(
   page: Page,
@@ -58,6 +59,36 @@ async function openTranslations(bobFrame: FrameLocator) {
   await expect(bobFrame.locator(".tdmenucontent > .heading-3")).toHaveText(
     "Translations",
   );
+}
+
+async function setStageImageFill(bobFrame: FrameLocator, assetRef: string) {
+  const fieldSurface = bobFrame.locator(".tdmenucontent__fields");
+  await expect(fieldSurface).toHaveCount(1);
+  await fieldSurface.evaluate((surface, nextAssetRef) => {
+    surface.dispatchEvent(
+      new CustomEvent("bob-ops", {
+        bubbles: true,
+        detail: {
+          ops: [
+            {
+              op: "set",
+              path: "stage.background",
+              value: {
+                type: "image",
+                image: {
+                  assetRef: nextAssetRef,
+                  name: nextAssetRef,
+                  fit: "cover",
+                  position: "center",
+                  repeat: "no-repeat",
+                },
+              },
+            },
+          ],
+        },
+      }),
+    );
+  }, assetRef);
 }
 
 test.describe("PRD 126A.2 Bob failure-state truth", () => {
@@ -269,6 +300,96 @@ test.describe("PRD 126A.2 Bob failure-state truth", () => {
     ).toEqual({ installed: true, count: 0 });
     expect(previewNavigations).toBe(0);
     expect(localeRequests).toBe(1);
+    expect(forbiddenMutations).toEqual([]);
+  });
+
+  test("keeps a ready preview visible while account media resolves and recovers from failure", async ({
+    page,
+  }) => {
+    const delayedRef = "prd126-preview-delayed.png";
+    const failedRef = "prd126-preview-failed.png";
+    const recoveredRef = "prd126-preview-recovered.png";
+    let releaseDelayed!: () => void;
+    const delayedGate = new Promise<void>((resolve) => {
+      releaseDelayed = resolve;
+    });
+    const requestedRefs: string[] = [];
+    const completedRefs: string[] = [];
+
+    const forbiddenMutations = await guardInstanceMutations(page);
+    const bobFrame = await openBuilder(page);
+    const workspace = bobFrame.locator(
+      'section.workspace[data-widget-ready="true"]',
+    );
+    await expect(workspace).toBeVisible({ timeout: 30_000 });
+    const previewIframe = bobFrame.locator('iframe[title="Widget preview"]');
+    const previewIframeHandle = await previewIframe.elementHandle();
+    const previewRuntimeFrame = await previewIframeHandle?.contentFrame();
+    expect(previewRuntimeFrame, "preview runtime frame should exist").not.toBeNull();
+    let previewNavigations = 0;
+    page.on("framenavigated", (frame) => {
+      if (frame === previewRuntimeFrame) previewNavigations += 1;
+    });
+
+    await page.route(RESOLVE_ASSETS_PATH, async (route) => {
+      if (route.request().method() !== "POST") return route.fallback();
+      const payload = route.request().postDataJSON() as { assetRefs?: unknown };
+      const refs = Array.isArray(payload.assetRefs)
+        ? payload.assetRefs.filter((value): value is string => typeof value === "string")
+        : [];
+      requestedRefs.push(...refs);
+      if (refs.includes(delayedRef)) await delayedGate;
+      if (refs.includes(failedRef)) {
+        await route.fulfill({
+          status: 503,
+          contentType: "application/json",
+          body: JSON.stringify({
+            error: { reasonKey: "coreui.errors.db.readFailed" },
+          }),
+        });
+        completedRefs.push(...refs);
+        return;
+      }
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          assets: refs.map((assetRef) => ({
+            assetRef,
+            url: `https://assets.invalid/${encodeURIComponent(assetRef)}`,
+            assetType: "image",
+            contentType: "image/png",
+          })),
+        }),
+      });
+      completedRefs.push(...refs);
+    });
+
+    await setStageImageFill(bobFrame, delayedRef);
+    await expect.poll(() => requestedRefs.filter((ref) => ref === delayedRef).length).toBeGreaterThan(0);
+    await page.waitForTimeout(250);
+    await expect(workspace).toBeVisible();
+    await expect(bobFrame.getByText("Loading preview...")).toHaveCount(0);
+    expect(previewNavigations).toBe(0);
+    releaseDelayed();
+    await expect.poll(() => completedRefs.includes(delayedRef)).toBe(true);
+    await expect(workspace).toBeVisible();
+    await expect(bobFrame.getByText("Loading preview...")).toHaveCount(0);
+
+    await setStageImageFill(bobFrame, failedRef);
+    await expect(
+      bobFrame.locator(".workspace-status-overlay--error"),
+    ).toHaveText("Failed to resolve preview account assets");
+    await expect(bobFrame.getByText("Loading preview...")).toHaveCount(0);
+
+    await setStageImageFill(bobFrame, recoveredRef);
+    await expect.poll(() => completedRefs.includes(recoveredRef)).toBe(true);
+    await expect(
+      bobFrame.locator(".workspace-status-overlay--error"),
+    ).toHaveCount(0);
+    await expect(workspace).toBeVisible();
+    await expect(bobFrame.getByText("Loading preview...")).toHaveCount(0);
+    expect(previewNavigations).toBe(0);
     expect(forbiddenMutations).toEqual([]);
   });
 
