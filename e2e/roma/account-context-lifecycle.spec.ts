@@ -19,6 +19,8 @@ type BootstrapPayload = {
   [key: string]: unknown;
 };
 
+let baselineBootstrap: BootstrapPayload | null = null;
+
 function deferred() {
   let resolve!: () => void;
   const promise = new Promise<void>((next) => {
@@ -40,6 +42,22 @@ async function loadBilling(page: Page) {
   await expect(page.getByRole('heading', { name: 'Billing', exact: true })).toBeVisible();
 }
 
+function accountUnavailable(page: Page) {
+  return page.getByRole('alert').filter({ hasText: 'This account is unavailable right now. Please try again.' });
+}
+
+function createBootstrap(expiresInMs = 10 * 60_000): BootstrapPayload {
+  if (!baselineBootstrap) throw new Error('Roma bootstrap fixture is unavailable');
+  const payload = structuredClone(baselineBootstrap);
+  const now = Date.now();
+  payload.authz = {
+    ...payload.authz,
+    issuedAt: new Date(now - 1_000).toISOString(),
+    expiresAt: new Date(now + expiresInMs).toISOString(),
+  };
+  return payload;
+}
+
 async function mockProfileSave(page: Page) {
   await page.route('**/api/me', async (route) => {
     if (route.request().method() !== 'PUT') return route.fallback();
@@ -58,6 +76,13 @@ async function mockProfileSave(page: Page) {
 }
 
 test.describe('Roma account context lifecycle', () => {
+  test.beforeAll(async ({ request }) => {
+    if (!hasAuthCookies()) return;
+    const response = await request.get('/api/bootstrap');
+    expect(response.ok()).toBeTruthy();
+    baselineBootstrap = (await response.json()) as BootstrapPayload;
+  });
+
   test.beforeEach(() => {
     test.skip(!hasAuthCookies(), 'No Roma cloud-dev auth state found.');
   });
@@ -68,9 +93,8 @@ test.describe('Roma account context lifecycle', () => {
     await page.route('**/api/bootstrap', async (route) => {
       requests += 1;
       if (requests > 1) return route.fallback();
-      const response = await route.fetch();
       await releaseBootstrap.promise;
-      await route.fulfill({ response });
+      await fulfillJson(route, 200, createBootstrap());
     });
 
     await loadBilling(page);
@@ -89,25 +113,24 @@ test.describe('Roma account context lifecycle', () => {
   });
 
   test('preserves the mounted page while an account mutation reconciles bootstrap truth', async ({ page }) => {
+    const releaseBootstrap = deferred();
+    const refreshStarted = deferred();
+    let requests = 0;
+    await page.route('**/api/bootstrap', async (route) => {
+      requests += 1;
+      if (requests === 1) return fulfillJson(route, 200, createBootstrap());
+      refreshStarted.resolve();
+      await releaseBootstrap.promise;
+      await fulfillJson(route, 200, createBootstrap());
+    });
+    await mockProfileSave(page);
+
     await page.goto('/profile', { waitUntil: 'domcontentloaded' });
     await expect(page.getByRole('heading', { name: 'User Settings', exact: true })).toBeVisible();
     await expect(page.getByRole('button', { name: 'Save settings' })).toBeVisible();
     await page.locator('.main-container').evaluate((element) => {
       element.setAttribute('data-e2e-shell', 'persistent');
     });
-
-    const releaseBootstrap = deferred();
-    const refreshStarted = deferred();
-    let intercepted = false;
-    await page.route('**/api/bootstrap', async (route) => {
-      if (intercepted) return route.fallback();
-      intercepted = true;
-      const response = await route.fetch();
-      refreshStarted.resolve();
-      await releaseBootstrap.promise;
-      await route.fulfill({ response });
-    });
-    await mockProfileSave(page);
 
     await page.getByRole('button', { name: 'Save settings' }).click();
     await refreshStarted.promise;
@@ -129,14 +152,7 @@ test.describe('Roma account context lifecycle', () => {
     await page.route('**/api/bootstrap', async (route) => {
       requests += 1;
       if (requests === 1) {
-        const response = await route.fetch();
-        bootstrapPayload = (await response.json()) as BootstrapPayload;
-        const now = Date.now();
-        bootstrapPayload.authz = {
-          ...bootstrapPayload.authz,
-          issuedAt: new Date(now - 1_000).toISOString(),
-          expiresAt: new Date(now + 60_000).toISOString(),
-        };
+        bootstrapPayload = createBootstrap(60_000);
         return fulfillJson(route, 200, bootstrapPayload);
       }
       if (requests === 2) {
@@ -176,49 +192,45 @@ test.describe('Roma account context lifecycle', () => {
   });
 
   test('does not preserve a terminal auth result from a background refresh', async ({ page }) => {
+    const refreshStarted = deferred();
+    const releaseTerminal = deferred();
     let requests = 0;
     await page.route('**/api/bootstrap', async (route) => {
       requests += 1;
       if (requests === 1) {
-        const response = await route.fetch();
-        const payload = (await response.json()) as BootstrapPayload;
-        const now = Date.now();
-        payload.authz = {
-          ...payload.authz,
-          issuedAt: new Date(now - 1_000).toISOString(),
-          expiresAt: new Date(now + 60_000).toISOString(),
-        };
-        return fulfillJson(route, 200, payload);
+        return fulfillJson(route, 200, createBootstrap(60_000));
       }
+      refreshStarted.resolve();
+      await releaseTerminal.promise;
       return fulfillJson(route, 503, { error: { reasonKey: 'coreui.errors.auth.required' } });
     });
 
     await loadBilling(page);
     await expect(page.getByRole('heading', { name: 'Current plan' })).toBeVisible();
+    await refreshStarted.promise;
+    releaseTerminal.resolve();
     await expect(page).toHaveURL(/\/login\?error=coreui\.errors\.auth\.required/);
   });
 
   test('stops transient preservation before the authz safety boundary', async ({ page }) => {
+    const refreshStarted = deferred();
+    const releaseFailure = deferred();
     let requests = 0;
     await page.route('**/api/bootstrap', async (route) => {
       requests += 1;
       if (requests === 1) {
-        const response = await route.fetch();
-        const payload = (await response.json()) as BootstrapPayload;
-        const now = Date.now();
-        payload.authz = {
-          ...payload.authz,
-          issuedAt: new Date(now - 1_000).toISOString(),
-          expiresAt: new Date(now + 38_000).toISOString(),
-        };
-        return fulfillJson(route, 200, payload);
+        return fulfillJson(route, 200, createBootstrap(38_000));
       }
+      refreshStarted.resolve();
+      await releaseFailure.promise;
       return fulfillJson(route, 503, { error: { reasonKey: 'coreui.errors.service.unavailable' } });
     });
 
     await loadBilling(page);
     await expect(page.getByRole('heading', { name: 'Current plan' })).toBeVisible();
-    await expect(page.getByRole('alert')).toContainText('This account is unavailable right now. Please try again.');
+    await refreshStarted.promise;
+    releaseFailure.resolve();
+    await expect(accountUnavailable(page)).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Current plan' })).toHaveCount(0);
   });
 
@@ -229,15 +241,7 @@ test.describe('Roma account context lifecycle', () => {
     await page.route('**/api/bootstrap', async (route) => {
       requests += 1;
       if (requests === 1) {
-        const response = await route.fetch();
-        const payload = (await response.json()) as BootstrapPayload;
-        const now = Date.now();
-        payload.authz = {
-          ...payload.authz,
-          issuedAt: new Date(now - 1_000).toISOString(),
-          expiresAt: new Date(now + 60_000).toISOString(),
-        };
-        return fulfillJson(route, 200, payload);
+        return fulfillJson(route, 200, createBootstrap(60_000));
       }
       backgroundStarted.resolve();
       await releaseFailure.promise;
@@ -251,7 +255,7 @@ test.describe('Roma account context lifecycle', () => {
     await page.getByRole('button', { name: 'Save settings' }).click();
     await expect(page.getByRole('button', { name: 'Saving...' })).toBeVisible();
     releaseFailure.resolve();
-    await expect(page.getByRole('alert')).toContainText('This account is unavailable right now. Please try again.');
+    await expect(accountUnavailable(page)).toBeVisible();
     await expect(page.getByRole('button', { name: 'Saving...' })).toHaveCount(0);
   });
 
@@ -264,14 +268,7 @@ test.describe('Roma account context lifecycle', () => {
     await page.route('**/api/bootstrap', async (route) => {
       requests += 1;
       if (requests === 1) {
-        const response = await route.fetch();
-        bootstrapPayload = (await response.json()) as BootstrapPayload;
-        const now = Date.now();
-        bootstrapPayload.authz = {
-          ...bootstrapPayload.authz,
-          issuedAt: new Date(now - 1_000).toISOString(),
-          expiresAt: new Date(now + 60_000).toISOString(),
-        };
+        bootstrapPayload = createBootstrap(60_000);
         return fulfillJson(route, 200, bootstrapPayload);
       }
       if (requests === 2) {
@@ -319,8 +316,7 @@ test.describe('Roma account context lifecycle', () => {
     ];
     let currentCase = cases[0];
     await page.route('**/api/bootstrap', async (route) => {
-      const response = await route.fetch();
-      const payload = (await response.json()) as BootstrapPayload;
+      const payload = createBootstrap();
       currentCase.mutate(payload);
       await fulfillJson(route, 200, payload);
     });
@@ -329,7 +325,7 @@ test.describe('Roma account context lifecycle', () => {
       currentCase = invalidCase;
       if (index === 0) await loadBilling(page);
       else await page.reload({ waitUntil: 'domcontentloaded' });
-      await expect(page.getByRole('alert'), invalidCase.name).toContainText('This account is unavailable right now. Please try again.');
+      await expect(accountUnavailable(page), invalidCase.name).toBeVisible();
       await expect(page.getByRole('heading', { name: 'Current plan' }), invalidCase.name).toHaveCount(0);
     }
   });
