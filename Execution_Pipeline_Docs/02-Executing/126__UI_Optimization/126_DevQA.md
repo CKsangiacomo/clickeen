@@ -36,9 +36,41 @@ Local built-browser measurement confirms that DevStudio Core styles now renders
 `31.44px` and `49px`; navigation rows render at `28px`. A representative Roma
 composition renders `23.44px` headers, `32.5px` action rows, `28px` navigation
 rows, and the exact module/card values above without page overflow. Compact
-DevStudio retains Table-owned horizontal overflow. Exact-SHA deployment and
-remote owning-surface evidence are recorded after the implementation reaches
-`main`.
+DevStudio retains Table-owned horizontal overflow.
+
+### Verification and deployment evidence
+
+- Implementation commit `101156c037be4e7c6bfef93d1135d118c46e9608`
+  is on `github/main`.
+- Dieter governance/typecheck, DevStudio deterministic generation/lint/
+  typecheck/build/Functions checks, Roma widget command gates/lint/typecheck/
+  Cloudflare build, Bob lint/typecheck/build, root lint/typecheck/build, the R2
+  dry run, and six focused DevStudio browser contracts are GREEN.
+- Exact-SHA Pages deployments are GREEN: DevStudio
+  `1199e493-f390-434f-ac8b-0c831ae09011`, Roma
+  `1f15e090-1690-4955-a5f9-a6bf416d23c3`, and Bob
+  `ffa57de8-9d6b-4340-86c7-2b26dc2bbe27`.
+- GitHub Roma/Bob verification run `30648980105` is GREEN.
+- GitHub Worker/R2 run `30648980048` is GREEN. Every Worker and secret-sync
+  step was correctly skipped; the canonical R2 operation uploaded all 581
+  objects (`dieter=157`, `prague=348`, `product=76`).
+- Authenticated deployed DevStudio computes to `24/16/16px` Full Page rhythm
+  and `16/12/12px` Compact Page rhythm (padding/header/content), `16/12px`
+  navigation gaps, `28px` navigation rows, `16px` preview gaps, `12px` section
+  gaps, and `4/16px` Table cell padding. Core styles renders `23.44px` Table
+  headers and `33px` body rows. Compact overflow remains owned by Table while
+  document overflow is zero.
+- Authenticated deployed Roma computes to the same Full and Compact Page
+  rhythm, `4px` navigation stack gaps, `28px` navigation rows, a `45px` brand
+  block, `12/24px` wide and `12/16px` compact primary-module padding with `8px`
+  gaps, and `8/16px` secondary-card padding with `8px` gaps. Document overflow
+  is zero at both widths.
+- The six focused contracts pass against deployed DevStudio, and both deployed
+  browser measurements emitted zero console or page errors. No product data,
+  route, API, account/session authority, or Worker runtime changed.
+- Independent consumer reviews and the final audit are GREEN for shared
+  ownership, deterministic generation, current/historical documentation
+  integrity, and V1 through V8.
 
 ## 2026-07-31 Shared Vertical Rhythm Correction
 
