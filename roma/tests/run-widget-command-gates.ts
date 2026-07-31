@@ -84,6 +84,47 @@ async function testBuilderHandlesBobUpsell(): Promise<void> {
   assert.doesNotMatch(upsellPopup, /ck-upsellModal/);
 }
 
+async function testBuilderUsesBobTopDrawerAsItsOnlyEditorChrome(): Promise<void> {
+  const builderSource = await readRoute('components/builder-domain.tsx');
+  const builderRoute = await readRoute('app/(authed)/builder/[instanceId]/page.tsx');
+  const builderLandingRoute = await readRoute('app/(authed)/builder/page.tsx');
+  const romaCss = await readRoute('app/roma.css');
+  const topDrawer = await readFile(new URL('../../bob/components/TopDrawer.tsx', import.meta.url), 'utf8');
+  const builderApp = await readFile(new URL('../../bob/components/BuilderApp.tsx', import.meta.url), 'utf8');
+  const bobBoot = await readFile(new URL('../../bob/lib/session/useSessionBoot.ts', import.meta.url), 'utf8');
+
+  assert.match(builderRoute, /showHeader=\{false\}/);
+  assert.match(builderRoute, /fullCanvas/);
+  assert.doesNotMatch(builderRoute, /RomaShellDefaultActions/);
+  assert.doesNotMatch(builderLandingRoute, /fullCanvas/);
+  assert.match(builderLandingRoute, /RomaShellDefaultActions/);
+  assert.match(romaCss, /\.main-container > \.page\.roma-builder-page \{\s+padding: 0;/);
+  assert.match(romaCss, /\.roma-builder-page > \.page__content \{\s+max-inline-size: none;/);
+
+  assert.match(builderSource, /publicActions: publicUrl/);
+  assert.match(builderSource, /iframeSnippet: buildWidgetIframeSnippet\(publicUrl\)/);
+  assert.match(builderSource, /scriptSnippet: buildWidgetScriptSnippet\(publicUrl\)/);
+  assert.match(builderSource, /data\.type === 'bob:host-action'/);
+  assert.doesNotMatch(builderSource, />Copy URL</);
+  assert.doesNotMatch(builderSource, />Copy embed</);
+  assert.doesNotMatch(builderSource, />Copy script</);
+  assert.doesNotMatch(builderSource, />Open public widget</);
+
+  assert.match(topDrawer, /className="topdrawer"/);
+  assert.match(builderApp, /className="editor-content"/);
+  assert.doesNotMatch(builderApp, /builder-app__content/);
+  assert.match(topDrawer, />Open public widget</);
+  assert.match(topDrawer, />More</);
+  assert.match(topDrawer, />Copy URL</);
+  assert.match(topDrawer, />Copy embed</);
+  assert.match(topDrawer, />Copy script</);
+  assert.match(topDrawer, /requestHostAction\('open-navigation'\)/);
+  assert.match(topDrawer, /requestHostAction\('return'\)/);
+  assert.equal((topDrawer.match(/data-variant="primary"/g) ?? []).length, 1);
+  assert.match(bobBoot, /message\.publishStatus === 'published'/);
+  assert.match(bobBoot, /coreui\.errors\.builder\.publicActions\.invalid/);
+}
+
 async function testDieterLayoutTableAndPopupConsumption(): Promise<void> {
   const shell = await readRoute('components/roma-shell.tsx');
   const layout = await readRoute('app/layout.tsx');
@@ -145,6 +186,8 @@ async function run(): Promise<void> {
   console.log('PASS publish gate uses list-facts and runs before Tokyo publish transition');
   await testBuilderHandlesBobUpsell();
   console.log('PASS Bob upsell CTA opens the Roma scaffold without discarding Builder work');
+  await testBuilderUsesBobTopDrawerAsItsOnlyEditorChrome();
+  console.log('PASS active Builder gives all editor chrome to Bob TopDrawer and full-canvas page body');
   await testDieterLayoutTableAndPopupConsumption();
   console.log('PASS Roma and Bob consume the final Dieter Layout, Table, and Popup contracts');
 }

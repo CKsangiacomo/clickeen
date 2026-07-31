@@ -36,9 +36,26 @@ workspace, preview, and dialogs must remain fully operable on desktop and
 tablets in either orientation and recompose for mobile landscape. Mobile
 portrait does not receive a broken editing approximation. Pixel density affects
 rendering fidelity, not workspace classification. Bob keeps one editor model:
-`ToolDrawer | preview/workspace` when the full composition fits, and an explicit
-ToolDrawer button/drawer plus full preview/workspace in compact mobile landscape.
-No editor operation disappears and no separate mobile Builder is created.
+
+```text
+Bob
+├── TopDrawer
+│   ├── host/editor context
+│   └── editor actions
+└── EditorContent
+    ├── ToolDrawer
+    │   ├── ToolDrawerHeader
+    │   └── ToolDrawerContent
+    └── Workspace
+        ├── Preview
+        ├── StatusOverlay
+        └── WorkspaceControls
+```
+
+Full mode presents `ToolDrawer | Workspace` inside `EditorContent`. Compact
+mobile landscape presents the same ToolDrawer as an explicit drawer over the
+full Workspace. No editor operation disappears and no separate mobile Builder
+is created.
 
 Bob does not consume Dieter's application Layout/Page contract. Its
 `ToolDrawer | Workspace` structure is a distinct editor composition and remains
@@ -59,6 +76,15 @@ Coarse-pointer mobile portrait below `600px` shows the explicit
 `Rotate your device or use a larger screen` boundary. The compact drawer opens
 and closes without remounting the editor session or replacing any ToolDrawer
 operation.
+
+When Roma hosts an active Bob session, Roma's `page` contains only the
+full-canvas Builder body. Roma does not place a Page header, generic action
+band, padding, or module frame around Bob. `TopDrawer` is Bob-owned editor
+chrome, not a Roma Page header. It holds the instance label and publish state,
+Save as the primary editor action, Open public widget as the applicable
+secondary action, and public copy operations under More. A return control is
+context navigation rather than another CTA. In Compact mode TopDrawer also
+exposes the control that opens Roma's existing navigation drawer.
 
 ## Authoring Flow
 
@@ -123,6 +149,12 @@ Roma opens Bob:
   "instanceId": "[instanceId]",
   "publishStatus": "[published|unpublished]",
   "label": "[displayName]",
+  "returnLabel": "[optional host return label]",
+  "publicActions": {
+    "publicUrl": "[exact published URL]",
+    "iframeSnippet": "[exact iframe snippet]",
+    "scriptSnippet": "[exact script snippet]"
+  },
   "copilot": "[copilotRuntimeUi]",
   "translationSetup": "[translationSetup]"
 }
@@ -162,6 +194,19 @@ Bob also notifies Roma when the browser-memory working copy changes:
   "isDirty": "[true|false]"
 }
 ```
+
+Bob sends host navigation intents without owning Roma routes:
+
+```json
+{
+  "type": "bob:host-action",
+  "action": "[open-navigation|return]"
+}
+```
+
+Roma validates the Bob origin and frame source. `open-navigation` opens the
+existing Roma navigation drawer. `return` follows Roma's sanitized return
+coordinate and existing unsaved-work guard.
 
 Roma replies to account commands with:
 
@@ -457,9 +502,13 @@ published static URL:
 https://clk.live/{accountPublicId}/{instanceId}
 ```
 
-Roma Builder owns public widget copy actions for the current account and opened
-instance. Bob does not construct public URLs, iframe snippets, or script embed
-snippets from editor state. Unpublished instances expose no live snippets.
+Roma owns public-widget action truth for the current account and opened
+instance. It constructs the exact public URL and iframe/script snippets and
+sends either that complete set or `null` in the Builder-open envelope. Bob
+fails a published open when that set is incomplete, presents the supplied
+actions in TopDrawer, and performs the user-requested browser copy. Bob never
+constructs those values from editor state. Unpublished instances expose no
+live actions.
 
 ## Account Assets
 

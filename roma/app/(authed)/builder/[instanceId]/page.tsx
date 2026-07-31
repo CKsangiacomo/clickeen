@@ -1,6 +1,6 @@
 import { BuilderDomain } from '../../../../components/builder-domain';
 import { RomaDomainErrorBoundary } from '../../../../components/roma-domain-error-boundary';
-import { RomaShell, RomaShellDefaultActions } from '../../../../components/roma-shell';
+import { RomaShell } from '../../../../components/roma-shell';
 
 type BuilderPageProps = {
   params: Promise<{ instanceId: string }>;
@@ -15,7 +15,8 @@ export default async function BuilderPage({ params }: BuilderPageProps) {
       activeDomain="builder"
       title="Builder"
       canvasClassName="rd-canvas--builder"
-      headerRight={<RomaShellDefaultActions />}
+      showHeader={false}
+      fullCanvas
     >
       <RomaDomainErrorBoundary
         domainLabel="Builder"

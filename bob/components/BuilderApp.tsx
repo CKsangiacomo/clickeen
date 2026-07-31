@@ -111,7 +111,7 @@ function BuilderShell() {
           toolsButtonRef={toolsButtonRef}
         />
 
-        <div className="builder-app__content">
+        <div className="editor-content">
           <ToolDrawer
             id="builder-tool-drawer"
             compactOpen={toolsOpen}

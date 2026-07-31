@@ -48,6 +48,7 @@ export function useSessionBoot(args: {
         let nextLabel = typeof message.label === 'string' && message.label.trim() ? message.label.trim() : '';
         const rawInstanceData = message.instanceData;
         const publicPackage = message.publicPackage;
+        const publicActions = message.publicActions ?? null;
         if (!baseLocale) {
           return {
             ok: false,
@@ -69,6 +70,27 @@ export function useSessionBoot(args: {
           return {
             ok: false,
             error: 'coreui.errors.instance.publicPackageNotFound',
+          };
+        }
+        if (
+          message.publishStatus === 'published' &&
+          (!publicActions ||
+            typeof publicActions.publicUrl !== 'string' ||
+            !publicActions.publicUrl.trim() ||
+            typeof publicActions.iframeSnippet !== 'string' ||
+            !publicActions.iframeSnippet.trim() ||
+            typeof publicActions.scriptSnippet !== 'string' ||
+            !publicActions.scriptSnippet.trim())
+        ) {
+          return {
+            ok: false,
+            error: 'coreui.errors.builder.publicActions.invalid',
+          };
+        }
+        if (message.publishStatus !== 'published' && publicActions !== null) {
+          return {
+            ok: false,
+            error: 'coreui.errors.builder.publicActions.invalid',
           };
         }
         const fontLibrary = normalizeAccountFontLibrary(message.fontLibrary);
@@ -96,6 +118,11 @@ export function useSessionBoot(args: {
           widgetname: compiled.widgetname,
           publishStatus: message.publishStatus,
           label: nextLabel,
+          returnLabel:
+            typeof message.returnLabel === 'string' && message.returnLabel.trim()
+              ? message.returnLabel.trim()
+              : undefined,
+          publicActions,
           fontLibrary,
           translationSetup: message.translationSetup ?? null,
         };

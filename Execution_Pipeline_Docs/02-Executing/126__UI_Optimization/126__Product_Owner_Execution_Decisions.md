@@ -494,6 +494,21 @@ token, taxonomy, breakpoint, or behavior.
 Owner decision:
 `DECIDED - USE A 16REM SHARED FULL NAVIGATION AND RETAIN THE 20REM COMPACT MAXIMUM`
 
+### D9 - Bob Owns The Active Builder Composition
+
+**Status: DECIDED by the product owner on 2026-07-31.** The active Roma Builder
+route has no Roma Page header or separate action band. Its Page body is
+padding-free, unconstrained, and filled by Bob. Bob retains TopDrawer above
+EditorContent, with ToolDrawer and Workspace inside EditorContent. TopDrawer
+owns editor action presentation: Save is primary, Open public widget is the
+applicable secondary action, and public copy actions are under More. Roma still
+constructs the exact public URL/snippets and owns navigation routes and the
+unsaved-work guard. Bob receives exact values and sends only typed host
+navigation intents. The no-instance Builder landing remains an ordinary Page.
+
+Owner decision:
+`DECIDED - ACTIVE BUILDER IS A FULL-CANVAS BOB EDITOR WITH BOB-OWNED TOPDRAWER`
+
 ## Product Owner Response
 
 The recorded decisions are:
@@ -507,6 +522,7 @@ D5: Decided - shared visual composition acceptance target
 D6: Decided - tighter shared vertical rhythm using the existing spacing scale
 D7: Decided - materially tighter rendered rhythm through existing tokens
 D8: Decided - 16rem shared Full navigation with the existing 20rem Compact maximum
+D9: Decided - active Builder is a full-canvas Bob editor with Bob-owned TopDrawer
 ```
 
 No other architecture, cleanup, component, surface, translation, storage,

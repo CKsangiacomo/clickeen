@@ -53,6 +53,12 @@ block padding and `--space-2` internal gaps, while secondary cards use
 remains roomier. These are direct uses of the
 existing structural spacing scale, not a second density system.
 
+The active `/builder/:instanceId` route is the explicit editor exception. Its
+`page` omits the Roma Page header and gives its padding-free, unconstrained
+body entirely to Bob. Bob's own TopDrawer supplies editor context and actions;
+Roma does not add another title or action band above the iframe. The `/builder`
+landing route remains an ordinary Roma page because no editor is open there.
+
 Roma's ordinary operational text/select controls and nine semantic table
 definitions use Dieter's operational-field and Table visual contracts.
 Roma retains their values, labels, validation, data, actions, and layout.
@@ -180,7 +186,8 @@ Builder opens one saved widget instance:
 4. Wait for Bob `bob:session-ready`.
 5. Send `ck:open-editor` with deploy-built editor software, saved instance data,
    the exact saved `index.html`, `styles.css`, and `runtime.js` package, account
-   font library, policy, account public id, instance id, label, and source.
+   font library, policy, account public id, instance id, label, publish state,
+   exact public-action values or `null`, and optional return label.
 6. Receive `bob:open-editor-applied` or `bob:open-editor-failed`.
 
 `NEXT_PUBLIC_BOB_URL` is required and must be an `http` or `https` origin with
@@ -249,11 +256,15 @@ through Tokyo-worker. If deletion fails after the settings write, Roma returns
 the saved settings with `localeCleanup.ok: false` and the exact failed
 coordinate. The account setting remains the user decision and account truth.
 
-Roma Builder owns public widget copy actions for the current account and opened
+Roma owns public widget action truth for the current account and opened
 instance. It builds the public URL and iframe/script snippets from the current
 account public id, the exact instance id, the configured public-serving
 origin, and the publish status returned by the Builder-open envelope.
-Unpublished instances do not expose copyable public code.
+It sends that exact complete set to Bob, where TopDrawer presents Open public
+widget and the three copy operations. Bob does not reconstruct the values.
+Unpublished instances receive `publicActions: null` and expose no public action.
+Bob's `bob:host-action` message carries only `open-navigation` or `return`
+intent; Roma retains navigation routes and the unsaved-work guard.
 The copied public URL is slashless:
 
 ```text

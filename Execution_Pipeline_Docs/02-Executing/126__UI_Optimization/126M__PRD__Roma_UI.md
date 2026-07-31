@@ -119,6 +119,39 @@ header only, shared horizontal dividers, and compact end-aligned action columns
 where applicable. Roma and Bob retain domain data and behavior but do not
 restate shared Table typography or presentation.
 
+### 2026-07-31 Active Builder Composition Correction
+
+The active `/builder/:instanceId` route is a full editor, not an ordinary Roma
+content page. It keeps the shared `main-container > left-nav + page` boundary,
+but the Page omits Roma's header and gives one padding-free, unconstrained body
+to Bob. Roma deletes the separate return/public-action modules above the iframe.
+
+Bob retains and documents its complete local composition:
+
+```text
+TopDrawer
+EditorContent
+├── ToolDrawer
+│   ├── ToolDrawerHeader
+│   └── ToolDrawerContent
+└── Workspace
+    ├── Preview
+    ├── StatusOverlay
+    └── WorkspaceControls
+```
+
+TopDrawer owns editor presentation. Save is the one primary action; Open public
+widget is the applicable secondary action; Copy URL, Copy embed, and Copy script
+live under More. Roma remains authority for the exact URL/snippet values and
+sends the complete set or `null` in `ck:open-editor`; Bob must not reconstruct
+them. The optional return control and Compact Roma-navigation control send only
+typed host intents. Roma retains route ownership and the unsaved-work guard.
+
+This correction changes no account/session coordinate, product data, API route,
+save/publish/translation operation, Tokyo/R2 state, or Bob working-state model.
+The `/builder` landing route remains an ordinary Roma Page because no Bob editor
+is open.
+
 ## Purpose
 
 Finish Roma's simple operational shell and adopt the small shared field/table

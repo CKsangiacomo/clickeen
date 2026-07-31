@@ -140,6 +140,15 @@ a {
   overflow: hidden;
 }
 
+.main-container > .page.roma-builder-page {
+  padding: 0;
+}
+
+.roma-builder-page > .page__content {
+  max-inline-size: none;
+  margin: 0;
+}
+
 .roma-standalone-page {
   box-sizing: border-box;
   display: block;
@@ -149,11 +158,20 @@ a {
 }
 
 .rd-canvas--builder {
+  position: relative;
   display: flex;
   flex-direction: column;
   flex: 1;
+  gap: 0;
   min-height: 0;
   overflow: hidden;
+}
+
+.roma-builder-error {
+  position: absolute;
+  z-index: 2;
+  inset-block-start: var(--space-4);
+  inset-inline: var(--space-4);
 }
 
 .rd-canvas-module {

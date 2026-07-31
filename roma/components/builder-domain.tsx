@@ -13,6 +13,7 @@ import { getWidgetEditorArtifact } from './widget-editor-artifact';
 import { useRomaAccountContext } from './roma-account-context';
 import { RomaUnsavedChangesDialog } from './roma-unsaved-changes-dialog';
 import { RomaUpsellDialog } from './roma-upsell-dialog';
+import { useRomaShellActions } from './roma-shell';
 
 type BuilderDomainProps = {
   initialInstanceId?: string;
@@ -67,6 +68,11 @@ type BobUpsellMessage = {
   reasonKey?: string | null;
 };
 
+type BobHostActionMessage = {
+  type: 'bob:host-action';
+  action?: 'open-navigation' | 'return' | string | null;
+};
+
 function resolveBobUpsellReason(reasonKey: string | null | undefined): string {
   if (reasonKey === 'coreui.upsell.reason.limitReached') return "You've reached your plan limit.";
   if (reasonKey === 'coreui.upsell.reason.flagBlocked') return 'This option is not available on your current plan.';
@@ -113,6 +119,12 @@ type BobOpenEditorMessage = {
   };
   fontLibrary: AccountFontLibrary;
   publishStatus?: 'published' | 'unpublished';
+  returnLabel?: string;
+  publicActions: {
+    publicUrl: string;
+    iframeSnippet: string;
+    scriptSnippet: string;
+  } | null;
   policy?: unknown;
   copilot?: unknown;
   translationSetup?: {
@@ -386,36 +398,13 @@ function buildWidgetScriptSnippet(publicUrl: string): string {
   return `<script src="${publicUrl}/runtime.js" async></script>`;
 }
 
-async function copyToClipboard(text: string): Promise<boolean> {
-  if (!text) return false;
-  try {
-    await navigator.clipboard.writeText(text);
-    return true;
-  } catch {}
-
-  try {
-    const el = document.createElement('textarea');
-    el.value = text;
-    el.setAttribute('readonly', 'true');
-    el.style.position = 'fixed';
-    el.style.top = '-1000px';
-    el.style.left = '-1000px';
-    document.body.appendChild(el);
-    el.select();
-    const ok = document.execCommand('copy');
-    document.body.removeChild(el);
-    return ok;
-  } catch {
-    return false;
-  }
-}
-
 export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
   const { activeAccount, accountPolicy } = useRomaAccountContext();
   const accountApi = useRomaAccountApi();
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const { openNavigation } = useRomaShellActions();
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
   const bobReadyRef = useRef(false);
   const openDispatchSeqRef = useRef(0);
@@ -430,10 +419,7 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
     if (fromPath) return fromPath;
     return String(initialInstanceId || '').trim();
   });
-  const [openedInstanceId, setOpenedInstanceId] = useState('');
   const [openError, setOpenError] = useState<string | null>(null);
-  const [activePublishStatus, setActivePublishStatus] = useState<'published' | 'unpublished' | null>(null);
-  const [copyStatus, setCopyStatus] = useState<string | null>(null);
   const [unsavedDialogOpen, setUnsavedDialogOpen] = useState(false);
   const [upsellReason, setUpsellReason] = useState<string | null>(null);
 
@@ -441,16 +427,6 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
   const currentUrl = pathname;
   const pathInstanceId = useMemo(() => decodeBuilderPathInstanceId(pathname), [pathname]);
   const returnTo = useMemo(() => normalizeReturnTo(searchParams.get('returnTo')), [searchParams]);
-  const widgetPublicUrl = useMemo(() => {
-    if (!openedInstanceId || activePublishStatus !== 'published') return '';
-    return buildWidgetPublicUrl(activeAccount.accountPublicId, openedInstanceId);
-  }, [activeAccount.accountPublicId, activePublishStatus, openedInstanceId]);
-  const widgetIframeSnippet = useMemo(() => (
-    widgetPublicUrl ? buildWidgetIframeSnippet(widgetPublicUrl) : ''
-  ), [widgetPublicUrl]);
-  const widgetScriptSnippet = useMemo(() => (
-    widgetPublicUrl ? buildWidgetScriptSnippet(widgetPublicUrl) : ''
-  ), [widgetPublicUrl]);
 
   const keepEditing = useCallback(() => {
     pendingDiscardActionRef.current = null;
@@ -462,6 +438,15 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
     pendingDiscardActionRef.current = null;
     setUnsavedDialogOpen(false);
     if (action) window.requestAnimationFrame(action);
+  }, []);
+
+  const requestGuardedNavigation = useCallback((action: () => void) => {
+    if (!bobIsDirtyRef.current) {
+      action();
+      return;
+    }
+    pendingDiscardActionRef.current = action;
+    setUnsavedDialogOpen(true);
   }, []);
 
   useEffect(() => {
@@ -486,24 +471,11 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
     const resolved = pathInstanceId || String(initialInstanceId || '').trim();
     if (!resolved) {
       if (activeInstanceId) setActiveInstanceId('');
-      setOpenedInstanceId('');
-      setActivePublishStatus(null);
-      setCopyStatus(null);
       return;
     }
     if (resolved === activeInstanceId) return;
     setActiveInstanceId(resolved);
-    setOpenedInstanceId('');
-    setActivePublishStatus(null);
-    setCopyStatus(null);
   }, [activeInstanceId, initialInstanceId, pathInstanceId]);
-
-  const handleCopyWidgetArtifact = useCallback(async (label: string, value: string) => {
-    setCopyStatus(null);
-    const ok = await copyToClipboard(value);
-    setCopyStatus(ok ? `Copied: ${label}` : `Copy failed: ${label}`);
-    window.setTimeout(() => setCopyStatus(null), 1800);
-  }, []);
 
   const runBobAccountCommand = useCallback(
     async (args: { source: Window; requestId: string; command: BobAccountCommand; instanceId?: string; headers?: Record<string, string>; body?: unknown }) => {
@@ -711,9 +683,6 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
 
     const openSeq = ++openDispatchSeqRef.current;
     setOpenError(null);
-    setOpenedInstanceId('');
-    setActivePublishStatus(null);
-    setCopyStatus(null);
 
     try {
       const builderOpen = await accountApi.fetchJson<BuilderOpenResponse>(`/api/builder/${encodeURIComponent(activeInstanceId)}/open`);
@@ -737,6 +706,9 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
         activeAccount,
         accountPolicy,
       });
+      const publicUrl = builderOpen.publishStatus === 'published'
+        ? buildWidgetPublicUrl(activeAccount.accountPublicId, resolvedInstanceId)
+        : '';
       const message: BobOpenEditorPayload = {
         type: 'ck:open-editor',
         accountPublicId: activeAccount.accountPublicId,
@@ -749,6 +721,16 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
         publicPackage: builderOpen.publicPackage,
         fontLibrary: builderOpen.fontLibrary,
         publishStatus: builderOpen.publishStatus,
+        returnLabel: returnTo
+          ? (returnTo.startsWith('/pages') ? 'Return to page' : 'Return')
+          : undefined,
+        publicActions: publicUrl
+          ? {
+              publicUrl,
+              iframeSnippet: buildWidgetIframeSnippet(publicUrl),
+              scriptSnippet: buildWidgetScriptSnippet(publicUrl),
+            }
+          : null,
         policy: accountPolicy,
         copilot: builderOpen.copilot ?? null,
         translationSetup,
@@ -761,8 +743,6 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
       if (openSeq !== openDispatchSeqRef.current) return;
       bobAppliedInstanceIdRef.current = resolvedInstanceId;
       bobIsDirtyRef.current = false;
-      setOpenedInstanceId(resolvedInstanceId);
-      setActivePublishStatus(builderOpen.publishStatus);
       setOpenError(null);
     } catch (error) {
       if (openSeq !== openDispatchSeqRef.current) return;
@@ -777,7 +757,7 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
       }
       setOpenError(message);
     }
-  }, [accountApi, accountPolicy, activeAccount, activeInstanceId, currentUrl, postOpenEditorAndWait, router]);
+  }, [accountApi, accountPolicy, activeAccount, activeInstanceId, currentUrl, postOpenEditorAndWait, returnTo, router]);
 
   const openActiveInstanceInBobRef = useRef(openActiveInstanceInBob);
   useEffect(() => {
@@ -795,7 +775,7 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
       if (event.origin !== bobBaseUrl) return;
       const source = iframeRef.current?.contentWindow;
       if (!source || event.source !== source) return;
-      const data = event.data as BobReadyMessage | BobDirtyStateChangedMessage | BobAccountCommandMessage | BobUpsellMessage | null;
+      const data = event.data as BobReadyMessage | BobDirtyStateChangedMessage | BobAccountCommandMessage | BobUpsellMessage | BobHostActionMessage | null;
       if (!data || typeof data !== 'object') return;
       if (data.type === 'bob:session-ready') {
         bobReadyRef.current = true;
@@ -810,6 +790,14 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
       }
       if (data.type === 'bob:upsell') {
         if (data.cta === 'upgrade') setUpsellReason(resolveBobUpsellReason(data.reasonKey));
+        return;
+      }
+      if (data.type === 'bob:host-action') {
+        if (data.action === 'open-navigation') {
+          openNavigation(iframeRef.current);
+        } else if (data.action === 'return' && returnTo) {
+          requestGuardedNavigation(() => router.push(returnTo));
+        }
         return;
       }
       if (data.type === 'bob:account-command') {
@@ -833,7 +821,7 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
 
     window.addEventListener('message', listener);
     return () => window.removeEventListener('message', listener);
-  }, [activeInstanceId, bobBaseUrl, runBobAccountCommand]);
+  }, [activeInstanceId, bobBaseUrl, openNavigation, requestGuardedNavigation, returnTo, router, runBobAccountCommand]);
 
   useEffect(() => {
     bobReadyRef.current = false;
@@ -841,17 +829,11 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
     bobAppliedInstanceIdRef.current = '';
     bobIsDirtyRef.current = false;
     setOpenError(null);
-    setOpenedInstanceId('');
-    setActivePublishStatus(null);
-    setCopyStatus(null);
   }, [bobSrc]);
 
   useEffect(() => {
     if (!activeInstanceId) {
       setOpenError(null);
-      setOpenedInstanceId('');
-      setActivePublishStatus(null);
-      setCopyStatus(null);
       return;
     }
     if (!bobReadyRef.current) return;
@@ -897,11 +879,10 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
       }
       event.preventDefault();
       event.stopPropagation();
-      pendingDiscardActionRef.current = () => {
+      requestGuardedNavigation(() => {
         allowNavigationRef.current = true;
         (navigable as HTMLElement).click();
-      };
-      setUnsavedDialogOpen(true);
+      });
     };
 
     const handlePopState = () => {
@@ -931,7 +912,7 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
       window.removeEventListener('popstate', handlePopState);
       document.removeEventListener('click', handleClick, true);
     };
-  }, []);
+  }, [requestGuardedNavigation]);
 
   const builderOpenErrorCopy = resolveBuilderErrorCopy(openError || '', 'Builder could not open this widget. Please try again.');
 
@@ -951,69 +932,8 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
 
   return (
     <>
-      {returnTo ? (
-        <div className="rd-canvas-module">
-          <div className="rd-canvas-module__actions">
-            <Link className="diet-btn-txt" data-size="md" data-variant="line2" href={returnTo}>
-              <span className="diet-btn-txt__label body-m">
-                {returnTo.startsWith('/pages') ? 'Return to page' : 'Return'}
-              </span>
-            </Link>
-          </div>
-        </div>
-      ) : null}
-      {activeInstanceId ? (
-        <div className="rd-canvas-module">
-          <div className="rd-canvas-module__actions">
-            <button
-              className="diet-btn-txt"
-              data-size="md"
-              data-variant="secondary"
-              type="button"
-              onClick={() => void handleCopyWidgetArtifact('widget URL', widgetPublicUrl)}
-              disabled={!widgetPublicUrl}
-            >
-              <span className="diet-btn-txt__label body-m">Copy URL</span>
-            </button>
-            <button
-              className="diet-btn-txt"
-              data-size="md"
-              data-variant="secondary"
-              type="button"
-              onClick={() => void handleCopyWidgetArtifact('widget embed', widgetIframeSnippet)}
-              disabled={!widgetIframeSnippet}
-            >
-              <span className="diet-btn-txt__label body-m">Copy embed</span>
-            </button>
-            <button
-              className="diet-btn-txt"
-              data-size="md"
-              data-variant="secondary"
-              type="button"
-              onClick={() => void handleCopyWidgetArtifact('script embed', widgetScriptSnippet)}
-              disabled={!widgetScriptSnippet}
-            >
-              <span className="diet-btn-txt__label body-m">Copy script</span>
-            </button>
-            {widgetPublicUrl ? (
-              <a
-                className="diet-btn-txt"
-                data-size="md"
-                data-variant="secondary"
-                href={widgetPublicUrl}
-                target="_blank"
-                rel="noreferrer"
-              >
-                <span className="diet-btn-txt__label body-m">Open public widget</span>
-              </a>
-            ) : null}
-          </div>
-          {copyStatus ? <p className="body-s">{copyStatus}</p> : null}
-          {activePublishStatus === 'unpublished' ? <p className="body-s">Publish this widget before copying public code.</p> : null}
-        </div>
-      ) : null}
       {openError ? (
-        <div className="rd-canvas-module">
+        <div className="rd-canvas-module roma-builder-error">
           <p className="body-m">{builderOpenErrorCopy}</p>
           <div className="rd-canvas-module__actions">
             <button className="diet-btn-txt" data-size="md" data-variant="primary" type="button" onClick={() => void openActiveInstanceInBob()}>

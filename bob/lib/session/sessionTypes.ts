@@ -47,6 +47,12 @@ export type SessionMeta = {
   widgetname?: string;
   publishStatus?: 'published' | 'unpublished';
   label?: string;
+  returnLabel?: string;
+  publicActions: {
+    publicUrl: string;
+    iframeSnippet: string;
+    scriptSnippet: string;
+  } | null;
   fontLibrary: AccountFontLibrary;
   translationSetup?: TranslationSetup | null;
 } | null;
@@ -83,6 +89,12 @@ export type EditorOpenMessage = {
   instanceId?: string;
   publishStatus?: 'published' | 'unpublished';
   label?: string;
+  returnLabel?: string;
+  publicActions?: {
+    publicUrl: string;
+    iframeSnippet: string;
+    scriptSnippet: string;
+  } | null;
   copilot?: CopilotRuntimeUi;
   translationSetup?: TranslationSetup | null;
 };
@@ -94,6 +106,11 @@ export type BobSessionReadyMessage = {
 export type BobDirtyStateChangedMessage = {
   type: 'bob:dirty-state-changed';
   isDirty: boolean;
+};
+
+export type BobHostActionMessage = {
+  type: 'bob:host-action';
+  action: 'open-navigation' | 'return';
 };
 
 export type BobOpenEditorAppliedMessage = {
