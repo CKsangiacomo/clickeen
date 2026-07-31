@@ -14,6 +14,23 @@ Scope: premature A-H code-change reality, final A-M current-source audits,
 executable PRDs, exact-tree peer reviews, and current Step-9 execution state.
 Parent: `126__PRD__UI_Optimization_Program.md` (MAMA).
 
+## 2026-07-31 Full Navigation Width Correction
+
+The product owner rejected the shared Full navigation as too wide for the
+actual DevStudio and Roma label sets. D8 changes only
+`--layout-left-nav-width` from `20rem` to `16rem`. The shared Dieter authority,
+`main-container > left-nav + page` taxonomy, `--space-2` inset,
+`--space-6` panel padding, Full/Compact classifier, and consumer composition
+remain unchanged. Compact retains its separate
+`--layout-compact-left-nav-width: 20rem` maximum.
+
+Local built-browser evidence at `1440x1000` measures a `256px` Full panel at
+`x=8`, a `272px` first grid track (`8 + 256 + 8`), and zero document overflow.
+At `390x844`, Compact retains a `320px` panel and zero document overflow. The
+Layouts browser contract asserts both computed widths and is GREEN. Exact-SHA
+deployment and remote owning-surface evidence are recorded after this
+implementation reaches `main`.
+
 ## 2026-07-31 Rendered Vertical Rhythm Correction
 
 The product owner rejected D6's rendered result as visually unchanged. D7

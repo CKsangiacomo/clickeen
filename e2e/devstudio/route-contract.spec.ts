@@ -366,7 +366,7 @@ test.describe('DevStudio route contract', () => {
           path: 'dieter/tokens/dieter-foundation-tokens.css',
           sha: 'test-sha',
           tokens: [
-            { token: '--layout-left-nav-width', value: '20rem', editable: true },
+            { token: '--layout-left-nav-width', value: '16rem', editable: true },
             { token: '--layout-left-nav-padding', value: 'var(--space-6)', editable: true },
             { token: '--layout-page-padding', value: 'var(--space-6)', editable: true },
             { token: '--layout-compact-left-nav-width', value: '20rem', editable: true },
@@ -398,8 +398,12 @@ test.describe('DevStudio route contract', () => {
       await expect(content.locator('.page__content')).toHaveCount(1);
     }
 
+    const fullFrame = page.locator('[data-layout-example="full"] iframe').contentFrame();
+    await expect(fullFrame.locator('.main-container > .left-nav')).toHaveCSS('width', '256px');
+
     const openFrame = page.locator('[data-layout-example="compact-open"] iframe').contentFrame();
     await expect(openFrame.locator('.main-container')).toHaveAttribute('data-navigation-open', 'true');
+    await expect(openFrame.locator('.main-container > .left-nav')).toHaveCSS('width', '320px');
 
     await page.getByRole('button', { name: 'Edit --layout-page-padding' }).click();
     const layoutTokenSelect = page.getByRole('dialog').locator('select[name="token"]');

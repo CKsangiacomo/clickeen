@@ -31,6 +31,10 @@ also removes the generated component row's inline margin so CSS has one
 spacing owner. D7 adds no density token or DevStudio-owned restatement of
 Dieter Page/Table rules.
 
+D8 narrows only the shared Full navigation to `16rem`; DevStudio inherits the
+updated Dieter token without a local width rule. Compact retains the separate
+`20rem` maximum-width token.
+
 DevStudio must become both:
 
 1. the real consumer of Dieter's Layout, Table, and Popup contracts; and
@@ -52,7 +56,7 @@ The markup/classes and CSS come from
 navigation items, route state, page content, and navigation-open state; it does
 not own a parallel shell appearance.
 
-The Dieter visual contract is `20rem | minmax(0, 1fr)` in Full, `100dvh`,
+The Dieter visual contract is `16rem | minmax(0, 1fr)` in Full, `100dvh`,
 nav-owned scrolling/padding, and page-owned scrolling with `var(--space-6)`
 safe-area padding. The Full navigation is an 8px-inset foreground panel using
 the shared Dieter surface, no border, `3xl` radius, and floating-shadow
@@ -228,7 +232,7 @@ rewrite, or new token-management system.
 
 ## Product Contract
 
-- Full mode: persistent `320px` sidebar and flexible work area.
+- Full mode: persistent `256px` sidebar and flexible work area.
 - Tablet portrait and landscape remain Full and touch-operable.
 - Compact mode: one menu icon button opens the same sidebar as an overlay
   drawer over a full-width work area in narrow landscape and portrait.
@@ -270,7 +274,7 @@ registry.
 2. Delete the obsolete portrait replacement; the shared shell remains mounted.
 3. Replace the generic `960px`/`640px` branches with 126J's Full/Compact
    predicates.
-4. Preserve the sidebar at `320px` in Full mode with Dieter's shared inset
+4. Preserve the sidebar at `256px` in Full mode with Dieter's shared inset
    panel treatment. Compact mode overlays that same
    navigation; it does not create another nav tree.
 5. Use `100dvh`, overflow ownership, and safe-area padding.

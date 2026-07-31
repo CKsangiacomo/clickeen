@@ -31,6 +31,10 @@ padding, `28px` navigation rows, `12px` primary-module block padding with
 `8px` internal gaps, and `8px` secondary-card block padding with `8px`
 internal gaps. Inline padding remains roomier. No density system is added.
 
+D8 narrows only the shared Full navigation to `16rem`; Roma inherits the
+updated Dieter token without a local width rule. Compact retains the separate
+`20rem` maximum-width token.
+
 ### Exact Adoption
 
 `RomaShell` must render:
@@ -57,7 +61,7 @@ Roma routes adopt the same Page foundation:
 Roma may retain domain-specific `rd-*` classes inside `.page__content`, but
 they must not restate the shared outer header/content/padding/scroll contract.
 
-Roma adopts the shared `20rem | minmax(0, 1fr)` Full geometry, `100dvh`,
+Roma adopts the shared `16rem | minmax(0, 1fr)` Full geometry, `100dvh`,
 nav-owned scrolling/padding, page-owned outer scrolling/padding, and shared
 Compact presentation from the parent contract. Page header/content use the
 shared centered `80rem` maximum width. Roma does not retain its former

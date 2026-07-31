@@ -43,7 +43,7 @@ navigation DOM owns Full and Compact modes, with Escape/scrim close and focus
 return in Compact mode. At least `600px` of usable width and height is Full; a
 smaller dimension is Compact. Full presents the navigation as an 8px-inset
 foreground panel; Compact presents that same panel as an 8px-inset overlay over
-the full-width page. The shared panel is `20rem` wide, borderless, and uses the
+the full-width page. The shared Full panel is `16rem` wide, borderless, and uses the
 shared surface, `3xl` radius, and Dieter elevation. Page headers and domain
 content align to the same centered `80rem` maximum width. Domain screens are
 not replaced by mobile variants. Roma uses the Dieter Page rhythm directly.

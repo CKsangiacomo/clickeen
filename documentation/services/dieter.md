@@ -73,12 +73,13 @@ DevStudio's validated GitHub write path.
 The shared application shell keeps the exact
 `main-container > left-nav + page` taxonomy. In Full mode the navigation is a
 foreground panel inset by `--space-2` on all sides over the application
-muted backdrop. It is `20rem` wide and uses the shared surface, no border,
+muted backdrop. It is `16rem` wide and uses the shared surface, no border,
 `3xl` radius, and floating shadow. The page header and content share one
 centered `80rem` maximum width. Full Page padding is `--space-6`; header and
 content separation use `--space-4`. Compact Page padding is `--space-4`;
-header and content separation use `--space-3`. In Compact mode the same `20rem` panel becomes
-an inset overlay over a full-width page and uses the existing elevated shadow.
+header and content separation use `--space-3`. In Compact mode the same panel
+DOM becomes an inset overlay over a full-width page, retains its separate
+`20rem` maximum-width token, and uses the existing elevated shadow.
 Roma and DevStudio use that Compact composition in narrow landscape and
 portrait; consumer code owns only open state and navigation/page content.
 

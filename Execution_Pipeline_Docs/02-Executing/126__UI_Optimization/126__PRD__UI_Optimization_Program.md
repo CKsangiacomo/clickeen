@@ -71,6 +71,15 @@ instead of an additional inline margin. Roma primary modules use
 `--space-2` for both. Base token values, typography, behavior, routes, data,
 and architecture do not change.
 
+### 2026-07-31 Full Navigation Width Correction
+
+D8 supersedes only the Full navigation width after rendered review showed that
+the `20rem` panel was disproportionate to the navigation labels. Full now uses
+the existing `--layout-left-nav-width` authority at `16rem`; the grid continues
+to add `--space-4` for the two `--space-2` outer insets. Compact retains its
+separate `--layout-compact-left-nav-width` value of `20rem`. No consumer
+override, new token, taxonomy, breakpoint, or navigation behavior is added.
+
 ### Frozen Taxonomy And Composition
 
 Roma and DevStudio use exactly this high-level composition:
@@ -124,9 +133,9 @@ The Layout ownership, taxonomy, and source/edit path are frozen. D5 corrected
 the initial values after visual review. The four named layout values can still
 be refined later through DevStudio without changing the contract:
 
-- Full: `20rem` left navigation and `minmax(0, 1fr)` page;
+- Full: `16rem` left navigation and `minmax(0, 1fr)` page;
 - root: `100dvh`, one grid row, hidden root overflow;
-- left navigation: a `20rem` foreground panel inside a track widened by
+- left navigation: a `16rem` foreground panel inside a track widened by
   `var(--space-4)`, inset by `var(--space-2)` on all sides, with its own
   vertical scrolling, `var(--space-6)` padding plus safe-area insets,
   `var(--role-surface)`, no border, `var(--control-radius-3xl)`, and

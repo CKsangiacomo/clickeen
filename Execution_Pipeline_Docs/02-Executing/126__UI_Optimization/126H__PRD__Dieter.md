@@ -46,6 +46,11 @@ deployed result remained visually too loose. Current Full Page rhythm is
 `--space-1`/`--space-4`. D7 selects smaller existing tokens at the owning
 selectors and does not alter the spacing or control-size scales.
 
+The D8 rendered-width correction changes only Full navigation from `20rem` to
+`16rem` through the existing `--layout-left-nav-width` token. Compact remains
+governed independently by `--layout-compact-left-nav-width: 20rem`. The shared
+taxonomy, inset, padding, breakpoint, and consumer boundaries are unchanged.
+
 126H now owns this source:
 
 ```text
@@ -81,7 +86,7 @@ Layout source owns:
 - scrim and navigation-open visual state;
 - dynamic viewport and safe-area layout treatment already accepted by 126J.
 
-The visual contract uses the parent's `20rem` Full navigation inside a track
+The current visual contract uses a `16rem` Full navigation inside a track
 widened by `var(--space-4)`, `100dvh` root, nav-owned scrolling and
 `var(--space-6)` safe-area padding, page-owned scrolling and
 `var(--space-8)` safe-area padding, and the existing `600px` Full/Compact

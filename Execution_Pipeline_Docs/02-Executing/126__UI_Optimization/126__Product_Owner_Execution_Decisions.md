@@ -481,6 +481,19 @@ change base token values, typography, behavior, routes, data, or architecture.
 Owner decision:
 `DECIDED - MAKE THE RENDERED RHYTHM MATERIALLY TIGHTER THROUGH EXISTING TOKENS`
 
+### D8 - Narrow The Shared Full Navigation
+
+**Status: DECIDED by the product owner on 2026-07-31.** The rendered `20rem`
+Full navigation is too wide for the actual DevStudio and Roma label sets.
+Change only `--layout-left-nav-width` to `16rem`. Preserve the `--space-2`
+inset, `--space-6` panel padding, shared Dieter ownership, and all consumer
+composition. Compact remains independently governed by
+`--layout-compact-left-nav-width: 20rem`; do not add consumer overrides, a new
+token, taxonomy, breakpoint, or behavior.
+
+Owner decision:
+`DECIDED - USE A 16REM SHARED FULL NAVIGATION AND RETAIN THE 20REM COMPACT MAXIMUM`
+
 ## Product Owner Response
 
 The recorded decisions are:
@@ -493,6 +506,7 @@ D4: Decided - Dieter Layout/Table/Popup consumer convergence
 D5: Decided - shared visual composition acceptance target
 D6: Decided - tighter shared vertical rhythm using the existing spacing scale
 D7: Decided - materially tighter rendered rhythm through existing tokens
+D8: Decided - 16rem shared Full navigation with the existing 20rem Compact maximum
 ```
 
 No other architecture, cleanup, component, surface, translation, storage,
