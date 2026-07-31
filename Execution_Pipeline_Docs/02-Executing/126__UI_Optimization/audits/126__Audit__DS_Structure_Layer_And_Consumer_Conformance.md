@@ -1,17 +1,24 @@
 # 126 Design System Structure Layer And Consumer Conformance - Audit
 
-Status: POINT-IN-TIME STATIC AUDIT (2026-07-31) - source inspection only; no
-runtime evidence; no execution credit.
+Status: POINT-IN-TIME STATIC AUDIT - source inspection only; no runtime evidence;
+no execution credit.
+
+Measured state: working tree at `6af4a665` plus uncommitted modifications to
+`roma/app/roma.css`, `bob/app/bob_app.css`, and
+`dieter/layouts/main-container/main-container.css`, 2026-07-31.
+
+Evidence is cited by selector rather than by line number. The measured files are
+under active edit; selectors survive line drift and line numbers do not.
 
 Scope: every stylesheet and inline style in Roma and Bob, measured against the
-Dieter source inventory, to test the product law that consumers use the design
-system as-is.
+Dieter source inventory and the surface vocabulary declared in
+`documentation/engineering/UI/surfaces.md`.
 
 Authority boundary:
 
 - Inspected: `roma/**`, `bob/**`, `dieter/**` source on disk.
 - Not touched: account/session/storage/route/runtime/deploy authorities, product
-  data, cloud-dev surfaces.
+  data, cloud-dev surfaces, and the in-flight working-tree changes.
 - Verification surface: local source inspection only. No browser, no screenshots,
   no rendered evidence.
 
@@ -20,19 +27,26 @@ roadmap, or make scope decisions.
 
 ## Executive Current Reality
 
-The consume-as-is law is holding for controls and failing for structure, and the
-failure is caused by absence rather than indiscipline.
+126 is making the presentation layer agent-operable: thirteen doctrine domains in
+`documentation/engineering/UI/`, 24 of 29 components carrying a machine-readable
+`.spec.json`, a declared surface vocabulary and application taxonomy in
+`surfaces.md`, and a governed token-edit lane in DevStudio. This audit measures
+how far implementation has followed declaration.
 
-Dieter's inventory is 29 components and one layout. Every component is a control
-or an overlay. There is no nav, card, panel, surface, page header, form grid,
-drawer, app shell, or empty state. Consumers therefore have nothing to consume
-for the structural half of a screen, and both Roma and Bob independently invented
-one.
+`surfaces.md` names nine surface types. Dieter implements roughly five. The four
+declared-but-unimplemented types — **module/section, item/card, inspector/tool,
+preview** — are where, and essentially only where, Roma and Bob hand-wrote
+structural CSS.
 
-The consumer CSS itself is small, tokenized, and disciplined. This audit did not
-find sprawl. It found a missing layer, one component living in an app instead of
-the design system, and four places where a consumer patches a Dieter internal
-from outside.
+That is the finding. It is not indiscipline and not a missing layer. It is a
+partially-implemented vocabulary, and the consequence is specific to an
+agent-operated system: a noun declared in doctrine with nothing consumable behind
+it is worse than an undeclared one, because a correct reading of `surfaces.md`
+leads an author — human or agent — to use the word and then write CSS for it.
+Both consumer stylesheets contain the result.
+
+The consumer CSS itself is small, tokenized, and disciplined. This audit found no
+sprawl.
 
 ## Method
 
@@ -50,7 +64,7 @@ ls dieter/components/ dieter/layouts/
 
 | Measure | Roma | Bob |
 | --- | --- | --- |
-| Stylesheets | 1 (`roma/app/roma.css`, 541 lines) | 1 (`bob/app/bob_app.css`, 529 lines) |
+| Stylesheets | 1 (`roma/app/roma.css`, 477 lines) | 1 (`bob/app/bob_app.css`, 454 lines) |
 | CSS modules | 0 | 0 |
 | styled-jsx blocks | 0 | 0 |
 | Inline `style={{}}` | 13 across 5 files | 19 |
@@ -58,166 +72,185 @@ ls dieter/components/ dieter/layouts/
 
 Token usage is the norm in both files: `var(--space-N)`, `var(--role-*)`,
 `var(--control-radius-*)`, `var(--control-size-*)`, `var(--duration-*)`,
-`var(--easing-*)`. Logical properties (`padding-inline`, `margin-block-end`,
-`inset-inline`) are used consistently.
+`var(--easing-*)`. Logical properties are used consistently.
 
-Implication: any remediation framed as "delete the consumer CSS sprawl" is
-aimed at a problem this audit could not find.
+Any remediation framed as "delete the consumer CSS sprawl" is aimed at a problem
+this audit could not find.
 
-## Finding 2 - Dieter has no structure layer
+## Finding 2 - The surface vocabulary is declared and about half implemented
 
-`dieter/components/` (29, excluding `index.ts` and `shared/`):
-
-```text
-agent-activity  bulk-edit       button          choice-tiles    command-activity
-dropdown-actions dropdown-border dropdown-edit  dropdown-fill   dropdown-shadow
-dropdown-upload icon            menuactions     object-manager  operational-field
-operational-table popaddlink    popover         popup           repeater
-segmented       slider          table           tabs            textedit
-textfield       toggle          tooltip         valuefield
-```
-
-`dieter/layouts/`:
+`documentation/engineering/UI/surfaces.md` declares the application taxonomy:
 
 ```text
 main-container
+├── left-nav
+└── page
+    ├── page__header
+    │   └── page__actions
+    └── page__content
 ```
 
-Every component above is a control or an overlay. The design system owns what
-goes inside a screen and owns almost nothing about the screen.
+and names nine surface types: navigation plane, header/action band,
+canvas/work area, module/section, item/card, table/list, inspector/tool,
+preview, overlay/dialog.
 
-Absent from the system: nav, card, panel/surface, page header, section header,
-form grid, field wrapper, drawer, app shell, code block, empty state.
+Implementation status:
 
-## Finding 3 - Two independent structural vocabularies
-
-Because Finding 2 leaves structure unowned, each consumer authored its own.
-
-Roma (`roma/app/roma.css`):
-
-| Class family | Lines | Role |
+| Declared surface | Dieter implementation | State |
 | --- | --- | --- |
-| `.roma-nav` + 8 children | 19-123 | App navigation, brand, links, subnav, footer, signout |
-| `.roma-page-heading` | 125-131 | Page header |
-| `.rd-canvas-module` | 177-189 | Content surface |
-| `.roma-module-surface` | 204-214 | Content surface |
-| `.roma-card` | 408-430 | Card |
-| `.roma-codeblock` | 432-449 | Code block |
-| `.roma-toolbar` | 451-465 | Toolbar |
-| `.roma-form-grid`, `.roma-field` | 493-504 | Form layout |
-| `.roma-grid`, `.roma-grid--three` | 399-406 | Grid layout |
+| Page shell | `.main-container`, `.page`, `.page__content` | Implemented |
+| Navigation plane | `.left-nav`, incl. compact drawer, scrim, transitions | Container implemented; nav items not |
+| Header/action band | `.page__header`, `.page__actions` | Implemented |
+| Table/list | `table`, `operational-table` | Implemented |
+| Overlay/dialog | `popover`, `popup`, `tooltip` | Implemented |
+| **Module/section** | none | **Declared, not implemented** |
+| **Item/card** | none | **Declared, not implemented** |
+| **Inspector/tool** | none | **Declared, not implemented** |
+| **Preview / canvas work area** | none | **Declared, not implemented** |
 
-Bob (`bob/app/bob_app.css`):
+The app shell is real, tokenized (`--layout-left-nav-width`,
+`--layout-page-padding`, `--layout-compact-left-nav-width`), and carries the
+600px compact behavior including the navigation scrim and drawer transition. The
+gap is not the shell. It is four interior surface types that doctrine names and
+nothing implements.
 
-| Class family | Lines | Role |
+## Finding 3 - Consumers conform at the shell and hand-roll the four gaps
+
+Roma and Bob both consume `main-container`. Neither reimplements the app shell.
+What each authored maps onto the unimplemented surface types:
+
+| Declared surface | Roma authored | Bob authored |
 | --- | --- | --- |
-| `.builder-app` | 21-32 | App shell |
-| `.editor-content` | 34-42 | Two-pane layout |
-| `.topdrawer` + 10 children | 60-90, 155-209 | Top bar |
-| `.tooldrawer` | 211-221 | Side panel |
-| `.tdheader`, `.tdcontent`, `.tdmenu` | 223-252 | Panel structure |
-| `.tdmenucontent` + 15 children | 254-375 | Panel content |
-| `.workspace` + 12 variants | 415-529 | Canvas surface |
+| Module/section | `.rd-canvas-module` | — |
+| Item/card | `.roma-card` | — |
+| Inspector/tool | — | `.tooldrawer`, `.tdheader`, `.tdcontent`, `.tdmenu*` |
+| Preview / canvas | — | `.workspace` + variants |
+| Navigation items | `.roma-nav__link`, `.roma-nav__subnav`, `.roma-nav__signout` | — |
+| Not in doctrine | `.roma-form-grid`, `.roma-field`, `.roma-grid`, `.roma-toolbar` | `.topdrawer*`, `.builder-app`, `.editor-content` |
 
-Two applications, two complete structural vocabularies, zero shared terms. Neither
-app is at fault for this; there was no shared vocabulary available to either.
+The overlap between what consumers authored and what doctrine declared but did
+not implement is near total. This is gap-filling, not divergence by preference.
+
+The two applications share no terms for the same concepts, because each named its
+gap-filler locally. Nothing connects Roma's module/section to Bob's.
+
+`.roma-nav__signout` is a distinct case: it reimplements a button
+(`border: 0`, background, cursor, hover, disabled) while Dieter ships `button` at
+466 lines. That is not gap-filling.
 
 ## Finding 4 - `tdmenucontent` is a shared component living in one app
 
 `roma/components/widget-defaults-builder-controls.tsx` renders Bob's
-`tdmenucontent` markup. Bob's stylesheet does not load in Roma. The component's
-CSS was therefore copy-pasted into Roma, scoped under
+`tdmenucontent` markup. Bob's stylesheet does not load in Roma, so the
+component's CSS was copy-pasted into Roma, scoped under
 `.widget-defaults-builder-fields`.
 
-Duplicated rules, verbatim bodies:
+Duplicated selectors, present in both files:
 
-| Rule | Bob | Roma |
-| --- | --- | --- |
-| `.tdmenucontent__cluster` | `bob_app.css:317-321` | `roma.css:303-307` |
-| `.tdmenucontent__cluster-header` | `bob_app.css:331-338` | `roma.css:317-324` |
-| `[data-collapsed='true']` header variant | `bob_app.css:340-342` | `roma.css:326-328` |
-| `.tdmenucontent__cluster-toggle .diet-btn-ic__icon` | `bob_app.css:344-346` | `roma.css:330-332` |
-| collapsed toggle rotate | `bob_app.css:348-350` | `roma.css:334-336` |
-| `.tdmenucontent__cluster-body` | `bob_app.css:352-356` | `roma.css:338-343` (merged with `__group`) |
-| `.tdmenucontent__cluster-body[hidden]` | `bob_app.css:358-360` | `roma.css:345-347` |
-| `.tdmenucontent__group-label` | `bob_app.css:368-371` | `roma.css:349-352` |
-| `.tdmenucontent__cluster-label` | `bob_app.css:373-375` | `roma.css:354-356` |
+```text
+.tdmenucontent__cluster
+.tdmenucontent__cluster-header
+.tdmenucontent__cluster[data-collapsed='true'] > .tdmenucontent__cluster-header
+.tdmenucontent__cluster-toggle .diet-btn-ic__icon
+.tdmenucontent__cluster[data-collapsed='true'] ... .diet-btn-ic__icon
+.tdmenucontent__cluster-body
+.tdmenucontent__cluster-body[hidden]
+.tdmenucontent__group-label
+.tdmenucontent__cluster-label
+```
 
-Two further rules are equivalent rather than verbatim: the cluster margin rules
-at `bob_app.css:323-329` and `roma.css:309-315` share bodies but differ in parent
-selector (`.tdmenucontent__fields` vs `.widget-defaults-builder-fields`). Roma
-also merges Bob's separate `__cluster-body` and `__group` rules into one grouped
-selector. The copies have already begun to diverge structurally.
+The copies have already begun to diverge: Roma merges Bob's separate
+`__cluster-body` and `__group` rules into one grouped selector, and the cluster
+margin rules differ in parent selector (`.tdmenucontent__fields` vs
+`.widget-defaults-builder-fields`).
 
-A change to this component's appearance currently requires two edits in two
-applications, with no mechanism that fails when only one is made.
+A change to this component currently requires two edits in two applications, with
+no mechanism that fails when only one is made. `tdmenucontent` has no
+`.spec.json`, no registry entry, and no owning authority — so the only available
+operation was copy-paste.
 
 ## Finding 5 - Consumer patches of Dieter internals
 
-Five sites where a consumer restyles a component it does not own. Ownership
-verified in Dieter source:
+Sites where a consumer restyles a component it does not own:
 
-| Site | Target | Owned at |
+| Consumer selector | Target | Owned by |
 | --- | --- | --- |
-| `roma.css:330-336` | `.diet-btn-ic__icon` transition and transform | `dieter/components/button/button.css:377` |
-| `bob_app.css:344-350` | `.diet-btn-ic__icon` transition and transform | `dieter/components/button/button.css:377` |
-| `roma.css:133-135`, `528-530` | `.diet-btn-ic` display | `dieter/components/button/button.css` |
-| `roma.css:143-150` | `.page`, `.page__content` padding and `max-inline-size` | `dieter/layouts/main-container/main-container.css:66,90` |
-| `bob_app.css:180-191` | `.diet-popover` position, display, z-index, size | `dieter/components/popover/popover.css:28` |
+| `.widget-defaults-builder-fields ... .diet-btn-ic__icon` (Roma) | icon transition/transform | `dieter/components/button/button.css` |
+| `.tdmenucontent__cluster-toggle .diet-btn-ic__icon` (Bob) | icon transition/transform | `dieter/components/button/button.css` |
+| `.roma-nav-trigger.diet-btn-ic` (Roma) | display | `dieter/components/button/button.css` |
+| `.main-container > .page.roma-builder-page`, `.roma-builder-page > .page__content` (Roma) | padding, `max-inline-size` | `dieter/layouts/main-container/main-container.css` |
+| `.topdrawer-more > .topdrawer-more__menu.diet-popover` (Bob) | placement | `dieter/components/popover/popover.css` |
 
-The popover case is the most consequential. Dieter already ships the exact
-pattern Bob is hand-rolling: `.diet-popover-host` with
-`.diet-popover-host[data-state='open'] > .diet-popover` at
-`dieter/components/popover/popover.css:1-21`. Bob reimplements that host and its
-open-state toggle as `.topdrawer-more[data-state='open'] > .topdrawer-more__menu`
-rather than consuming it. This is a consumer duplicating an available design
-system behavior, not filling a gap.
-
-The first four are low in volume and precisely locatable. All five are
-enforceable today.
+The Roma `main-container` override is the structurally interesting one: the
+builder route needs a full-bleed page, and no full-bleed variant is declared, so
+Roma escapes the shell's padding and width constraints from outside.
 
 ## Finding 6 - Minor drift
 
-- **Duplicate definition in one file.** `.rd-canvas-module` (`roma.css:177-189`)
-  and `.roma-module-surface` (`roma.css:204-214`) declare the same nine
-  properties with the same values under two names.
-- **Three naming conventions in Roma.** `.roma-*`, `.rd-*`, and unnamespaced
-  `.widget-defaults-*` coexist, indicating at least two authoring eras.
-- **Hardcoded control heights where tokens exist.** `min-height: 36px`
-  (`roma.css:286`), `min-height: 32px` (`bob_app.css:228`), `min-height: 24px`
-  (`bob_app.css:412`), `grid-template-columns: 36px 1fr` (`bob_app.css:233`).
-- **Hand-rolled shadows.** `bob_app.css:456`, `466`, `499` declare
+- **Naming eras.** Roma carries `.roma-*`, `.rd-*`, and unnamespaced
+  `.widget-defaults-*` simultaneously, indicating at least two authoring
+  generations. No rule tells an author which prefix to use.
+- **Hardcoded control heights where `--control-size-*` exists.** `36px` in Roma's
+  `.widget-defaults-group > summary`; `32px`, `24px`, and a `36px` grid track in
+  Bob's `.tdheader`, `.translations-panel__locale-row`, and `.tdcontent`.
+- **Hand-rolled shadows.** Bob's `.workspace` variants declare literal
   `0 18px 64px` and `0 16px 48px` box-shadows while `--shadow-elevated` is used
-  correctly at `bob_app.css:110`.
+  correctly elsewhere in the same file.
 - **Capability boundary is untokenized.** The documented 600px workspace boundary
-  appears as literal `599px` in four media queries (`roma.css:527`,
-  `bob_app.css:92`, `bob_app.css:135`) with no token backing it.
-- **Two different resets.** `roma.css:1-3` sets `box-sizing` only;
-  `bob_app.css:2-6` also zeroes all margin and padding. Identical markup starts
-  from different baselines in the two applications.
+  appears as literal `599px` in media queries across both consumers and
+  `main-container.css`, with no token backing it. Product law that an agent
+  cannot resolve to an implementation.
+- **Two different resets.** Roma sets `box-sizing` only; Bob also zeroes all
+  margin and padding. Identical markup starts from different baselines in the two
+  applications.
+
+## Closed By In-Flight Work
+
+The working-tree changes under `8c4a493b` / `6af4a665` have already resolved:
+
+- **The duplicate module/section pair.** `.roma-module-surface` is deleted;
+  `.rd-canvas-module` survives as the single definition.
+- **`.roma-codeblock`** is deleted.
+- **The popover host reimplementation.** Bob now composes
+  `.topdrawer-more.diet-popover-host`, adopting Dieter's declared host and its
+  `[data-state='open']` machinery. A placement override remains.
+
+Roma is down 84 lines and Bob 58 in the current working tree. The direction of
+that work matches this audit's findings.
 
 ## Implications For Enforcement
 
-A guard that bans consumer-local CSS today would fail both applications, because
-the structural half has no design-system equivalent to move to. Finding 5 is
-enforceable now and is a small, bounded list. Findings 3 and 4 are not
-enforceable until the structure they refer to exists somewhere consumable.
+Enforceable now, no prerequisite:
 
-The sequencing question this raises — whether the structure layer belongs in
-Dieter, and in what form — is a product and design-system decision, not an audit
-output. It is named here because it gates any conformance rule broader than
-Finding 5.
+- The Finding 5 DS-internal patches.
+- `.roma-nav__signout` reimplementing `button`.
+- Hardcoded control heights where `--control-size-*` exists; hand-rolled shadows
+  where `--shadow-*` exists.
+
+Blocked until the four declared surfaces have implementations: Findings 3 and 4.
+A guard banning consumer-authored structural CSS would fail both applications
+today, because module/section, item/card, inspector/tool, and preview have
+nothing consumable behind them.
+
+For an agent-operated presentation layer the ordering matters in one specific
+way. Doctrine is what an agent reads; implementation is what it can use. While
+those disagree, a correct reading of `surfaces.md` still produces hand-authored
+CSS, and every surface built in that window adds to Findings 3 and 4. The
+divergence is self-sustaining until the vocabulary is closed.
+
+Whether those four are implemented in Dieter, and in what form, is a design
+system and product decision, not an audit output. It is named here because it
+gates every conformance rule beyond the list above.
 
 ## Scope Limits
 
 This audit measured CSS conformance. It did not measure user experience.
 
-Not covered, and not inferable from this evidence: information architecture,
+Not covered and not inferable from this evidence: information architecture,
 navigation model, density, flow quality, empty and error states as rendered,
 responsive behavior in practice, or whether any surface is good to use. A fully
-conformant application can still be poor to use. Those questions require rendered
-evidence.
+conformant application can still be poor to use.
 
-The authenticated screenshot path is already wired and was not exercised for this
-audit: `playwright.config.ts` targets `https://roma.dev.clickeen.com` with stored
-state at `e2e/.auth/roma-dev.json`, mintable via `pnpm e2e:auth:roma-dev`.
+The authenticated screenshot path is wired and was not exercised:
+`playwright.config.ts` targets `https://roma.dev.clickeen.com` with stored state
+at `e2e/.auth/roma-dev.json`, mintable via `pnpm e2e:auth:roma-dev`.
