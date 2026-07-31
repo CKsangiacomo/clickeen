@@ -30,6 +30,21 @@ test.describe('Roma Builder authenticated smoke', () => {
     const iframeBox = await bobIframe.boundingBox();
     expect(iframeBox?.width ?? 0).toBeGreaterThan(900);
     expect(iframeBox?.height ?? 0).toBeGreaterThan(600);
+    const outerCanvasBackground = await page
+      .locator('.main-container')
+      .evaluate((element) => getComputedStyle(element).backgroundColor);
+    const pageBackground = await page
+      .locator('main.page')
+      .evaluate((element) => getComputedStyle(element).backgroundColor);
+    const bobCanvasBackground = await bobFrame
+      .locator('.builder-app')
+      .evaluate((element) => getComputedStyle(element).backgroundColor);
+    const bobWorkspaceBackground = await bobFrame
+      .locator('.workspace')
+      .evaluate((element) => getComputedStyle(element).backgroundColor);
+    expect(pageBackground).toBe(outerCanvasBackground);
+    expect(bobCanvasBackground).toBe(outerCanvasBackground);
+    expect(bobWorkspaceBackground).toBe(outerCanvasBackground);
 
     await bobFrame.getByRole('button', { name: 'More' }).click();
     await expect(bobFrame.getByRole('menuitem', { name: 'Copy URL' })).toBeVisible();

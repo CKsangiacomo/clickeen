@@ -14,6 +14,34 @@ Scope: premature A-H code-change reality, final A-M current-source audits,
 executable PRDs, exact-tree peer reviews, and current Step-9 execution state.
 Parent: `126__PRD__UI_Optimization_Program.md` (MAMA).
 
+## 2026-07-31 Shared Canvas Background Correction
+
+The product owner required the background beneath Roma Page, the floating
+left-nav, and Bob to read as one continuous canvas. Roma root/Page and all Bob
+editor/workspace canvas backgrounds now use `--role-surface-muted`. The
+left-nav remains the floating white `--role-surface` panel. Neither active Roma
+nor Bob CSS uses the darker raw `--color-system-gray-6-step3`.
+
+### Verification and deployment evidence
+
+- Implementation commit `e463fe3b150631b9a1593c71b5b19f8bc67d3dc6`
+  is on `github/main`.
+- Roma/Bob lint and typecheck, the strengthened Roma/Bob canvas contract, both
+  serialized Cloudflare builds, and `git diff --check` are GREEN.
+- Exact-SHA Pages deployments are GREEN: Bob
+  `025ea674-ade9-42bb-acfe-45e2bf441d97` and Roma
+  `a9892019-34ef-43b9-8e76-d56220d1da0d`.
+- GitHub Roma/Bob verification run `30659636552` and cloud-dev surface
+  reachability run `30659839717` are GREEN.
+- The authenticated deployed Builder smoke requires the computed backgrounds
+  of Roma `main-container`, Roma Page, Bob `builder-app`, and Bob Workspace to
+  be identical. It remains read-only and does not mutate product data.
+- Independent audit confirms the approved role on Roma root and all five Bob
+  canvas selectors, exact positive regression coverage, no raw-color alias or
+  substitute, and V1 through V8 GREEN.
+- No product data, account/session coordinate, API route, storage object,
+  Tokyo/R2 state, publish state, or save model changed.
+
 ## 2026-07-31 Active Builder Composition Correction
 
 The product owner selected Builder as the first Roma domain to converge before
