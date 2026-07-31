@@ -55,9 +55,33 @@ the shared Compact scrim was restored to its existing `64%` black-mix value and
 the generated Layout reveal was regenerated. The final independent V1-V8 audit
 is GREEN: no substitution, healing, omission, fail-open control,
 corruption-as-absence, partial-success claim, renamed failing workflow, or
-runtime test dependency remains. Deployment evidence is recorded only after
-the implementation reaches the owning Cloudflare surfaces. Product-owner
-visual acceptance remains open.
+runtime test dependency remains.
+
+### Commit, deployment, and owning-surface evidence
+
+- Implementation commit
+  `c57f2d907af780e09c2dc4aab026b34216268e8b` is on `github/main`.
+- DevStudio exact-SHA Pages deployment
+  `3ef38351-7956-45b7-8475-a0fd62b95bdc` is GREEN.
+- Roma exact-SHA Pages deployment
+  `6b7bfb73-2034-4da0-a170-8e952ec4e26d` is GREEN.
+- GitHub Roma/Bob verification run `30600663271` is GREEN.
+- GitHub Worker/R2 run `30600663263` is GREEN. Worker deployment steps were
+  correctly skipped; the canonical static-root operation uploaded all 581
+  objects to `tokyo-assets-dev` (`dieter=157`, `prague=348`, `product=76`).
+- Authenticated deployed Roma at `1440x1000` resolves the navigation to
+  `8,8,320,984`, Page to `x=336`, and content to `1040px`; at `390x844` the
+  same navigation opens at `8,8,320,828`, while Table alone scrolls
+  `326px -> 672px`.
+- Authenticated deployed DevStudio at `1600x1000` resolves the navigation to
+  `8,8,320,984`, Page to `x=336`, and centered content/Table to `1200px`.
+  Table computes to a borderless 16px-radius elevated surface with
+  `12px`/`16px` cell padding. At `390x844`, the same navigation opens at
+  `8,8,320,828` over the full-width Page.
+- Both deployed browser checks emitted zero console or page errors.
+
+Product-owner visual acceptance remains open; automated and browser evidence
+do not grant that acceptance.
 
 ## 2026-07-30 Inset Shared Shell And Portrait Correction
 
