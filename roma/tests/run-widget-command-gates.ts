@@ -89,6 +89,7 @@ async function testBuilderUsesBobTopDrawerAsItsOnlyEditorChrome(): Promise<void>
   const builderRoute = await readRoute('app/(authed)/builder/[instanceId]/page.tsx');
   const builderLandingRoute = await readRoute('app/(authed)/builder/page.tsx');
   const romaCss = await readRoute('app/roma.css');
+  const bobCss = await readFile(new URL('../../bob/app/bob_app.css', import.meta.url), 'utf8');
   const topDrawer = await readFile(new URL('../../bob/components/TopDrawer.tsx', import.meta.url), 'utf8');
   const builderApp = await readFile(new URL('../../bob/components/BuilderApp.tsx', import.meta.url), 'utf8');
   const bobBoot = await readFile(new URL('../../bob/lib/session/useSessionBoot.ts', import.meta.url), 'utf8');
@@ -100,6 +101,20 @@ async function testBuilderUsesBobTopDrawerAsItsOnlyEditorChrome(): Promise<void>
   assert.match(builderLandingRoute, /RomaShellDefaultActions/);
   assert.match(romaCss, /\.main-container > \.page\.roma-builder-page \{\s+padding: 0;/);
   assert.match(romaCss, /\.roma-builder-page > \.page__content \{\s+max-inline-size: none;/);
+  assert.match(romaCss, /html,\s+body \{[^}]*background: var\(--role-surface-muted\);/);
+  assert.doesNotMatch(romaCss, /--color-system-gray-6-step3/);
+  assert.match(bobCss, /\.builder-app \{[^}]*background: var\(--role-surface-muted\);/);
+  assert.match(bobCss, /\.builder-unsupported \{[^}]*background: var\(--role-surface-muted\);/);
+  assert.match(bobCss, /\.workspace \{[^}]*background: var\(--role-surface-muted\);/);
+  assert.match(
+    bobCss,
+    /\.workspace-status-overlay \{[^}]*background: color-mix\(in oklab, var\(--role-surface-muted\), transparent 20%\);/,
+  );
+  assert.match(
+    bobCss,
+    /\.workspace\[data-host='canvas'\]\[data-canvas-resize='true'\] \.workspace-iframe \{[^}]*background: var\(--role-surface-muted\);/,
+  );
+  assert.doesNotMatch(bobCss, /--color-system-gray-6-step3/);
 
   assert.match(builderSource, /publicActions: publicUrl/);
   assert.match(builderSource, /iframeSnippet: buildWidgetIframeSnippet\(publicUrl\)/);
