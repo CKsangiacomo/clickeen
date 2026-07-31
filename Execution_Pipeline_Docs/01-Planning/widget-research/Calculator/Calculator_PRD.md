@@ -56,9 +56,61 @@ one of them, and it is the one fewest users will touch.
 
 ### Path 1 — Start from a template (primary)
 
-The user opens the gallery, picks **Mortgage Calculator**, and gets a working
-calculator with fields, ranges, formulas, formatting, and captions already
-correct. They then change labels, ranges, branding, and the CTA.
+**Elfsight puts the template picker between "create" and the editor.** Clicking
+Create Widget does not open an editor — it opens a full-screen **"Choose a
+Template"** step. Verified end to end on 2026-07-31 by deleting a Calculator
+instance and recreating it.
+
+That step contains:
+
+- a paged thumbnail grid, left rail, reading **"1 – 4 of 116"** — 116 templates
+  for the Calculator app alone;
+- category filters with counts — **Cost Calculators 32, Finance Calculators 30,
+  Fitness & Health Calculators 17, Mortgage & Loan Calculators 16, Other
+  Calculators 21**;
+- a **live, interactive preview** filling the rest of the screen. The selected
+  template is a working calculator: sliders move, dropdowns change, results
+  recompute. The user tries it before committing;
+- an explicit **"Continue with this template →"** commit, after which the editor
+  opens fully populated — fields, calculations, header, results, and CTA all
+  configured. Toast: *Widget "Untitled Calculator" was created.*
+
+The app's empty state frames the same two paths in copy: *"Create a captivating
+widget with the help of ready-made templates or configure a unique widget from
+scratch."*
+
+There is also a cross-app gallery at `dash.elfsight.com/templates` — **1,000+
+templates** across all 95 apps, category-filtered and searchable, each card naming
+its parent app. Applying from there is a query parameter at creation:
+`/widget/{newId}?templatePid={templateId}`.
+
+This is a platform pattern across every app, not a Calculator feature. It is the
+single highest-leverage thing in their onboarding, and Clickeen has no
+equivalent: today a user lands in Builder on factory defaults.
+
+The Clickeen mechanism is the existing Clickeen-Owned Examples flow — no new
+machinery:
+
+```text
+Clickeen authors each starter through Builder under the admin account CLICKEEN
+-> product-owned files reference it as accountPublicId + instanceId
+-> user copy creates a normal instance in the destination account
+```
+
+Per `FAQ_competitoranalysis.md`: *"Starter designs are just Clickeen-owned
+instances users can clone (no separate preset system)."* There is no preset
+system, no template registry, and no per-type defaults tree. A starter is an
+ordinary saved instance.
+
+What is **not** settled by that quote is *where the choice happens*. Copying an
+instance is the storage mechanism; presenting a picker before the editor opens is
+a Roma surface, and it does not exist. That is a platform decision beyond this
+PRD — flagged in §17 — but a Calculator without it ships eight excellent starters
+that nobody is shown.
+
+The user picks **Construction Price Calculator**, gets working fields, ranges,
+formulas, formatting and captions, and then changes labels, ranges, branding, and
+the CTA.
 
 Mechanism is the existing Clickeen-Owned Examples flow — no new machinery:
 
@@ -789,24 +841,51 @@ stacked arrangement; the full Shell surface; **and the starter library in §14.1
 
 ### 14.1 Starter library (in scope one)
 
-Eight Clickeen-owned instances authored under `CLICKEEN`, each a complete working
-calculator. Every one uses only the §5.4 function set and the six field types —
-no starter requires capability beyond what this PRD ships. That constraint is the
-point: if a starter needs a function we do not have, either the function set or
-the starter list is wrong, and it is better to find that out while writing them.
+Elfsight ships **116 Calculator templates in five categories**. That is the bar
+for a mature product, not a scope-one target. But their category split is the
+useful signal, because it says what people actually publish:
 
-| Starter | Fields | Calculations | Exercises |
-| --- | --- | --- | --- |
-| Mortgage payment | loan amount (slider), rate (slider), term (slider) | monthly payment, total interest | `pow`, nested arithmetic, currency |
-| Loan repayment | amount, rate, months | monthly payment, total repaid | same engine, simpler shape |
-| Savings growth | initial (number), monthly (number), rate, years | final balance, total contributed, interest earned | three calculations, one referencing another |
-| ROI | investment, return | ROI %, net gain | percent formatting |
-| Tip | bill (number), tip % (choice), split (number) | tip amount, total, per person | `choice` field, division |
-| Discount | price, discount % (slider) | sale price, you save | simplest possible starter |
-| Profit margin | revenue, cost | margin %, markup %, profit | percent + currency in one result set |
-| Project quote | hourly rate, hours, package (image-choice) | subtotal, total | `image-choice`, `IF`, and a strong CTA |
+| Their category | Count | Read |
+| --- | --- | --- |
+| Cost Calculators | 32 | service-business estimators — construction, cleaning, interior design, windows, renovation, car rental, events. Every one ends in Get a Quote / Book Now |
+| Finance Calculators | 30 | business finance — ROI, margin, break-even |
+| Mortgage & Loan Calculators | 16 | the classic lending set |
+| Fitness & Health Calculators | 17 | consumer utilities — BMI, calorie, macro |
+| Other Calculators | 21 | long tail |
 
-Each starter also ships: a title, per-field help text, result captions, and a
+The dominant pattern — 48 of 116 across Cost plus Mortgage & Loan — is a
+**lead-generation estimator for a service business**. The buyer is a contractor
+or agency who wants qualified enquiries, and the CTA is the point of the widget,
+not an accessory to it.
+
+Scope one ships **eight** Clickeen-owned instances authored under `CLICKEEN`,
+weighted to that dominant pattern rather than spread evenly. Every one uses only
+the §5.4 function set and the six field types — if a starter needs capability we
+do not have, either the function set or the starter list is wrong, and it is
+better to find that out while writing them.
+
+| Starter | Category | Fields | Calculations | Exercises |
+| --- | --- | --- | --- | --- |
+| Mortgage payment | Mortgage & Loan | loan amount, rate, term (sliders) | monthly payment, total interest | `pow`, nested arithmetic, currency |
+| Loan repayment | Mortgage & Loan | amount, rate, months | monthly payment, total repaid | same engine, simpler shape |
+| Construction cost | Cost | area (slider), build type (dropdown), extras (multi-choice) | total, labour, materials | three results, dropdown-driven rates |
+| Cleaning cost | Cost | area, cleaning type (choice), frequency (choice) | total per visit, monthly | two `choice` fields, `IF` |
+| Interior design cost | Cost | room type, area, options (multi-choice) | total | multi-select summing into a total |
+| Project quote | Cost | hourly rate, hours, package (image-choice) | subtotal, total | `image-choice`, strong CTA |
+| ROI | Finance | investment, return | ROI %, net gain | percent formatting |
+| Profit margin | Finance | revenue, cost | margin %, markup %, profit | percent and currency in one result set |
+
+Dropped from the earlier draft of this list, and why: **tip**, **discount**, and
+**savings growth**. All three are consumer utilities with no commercial intent,
+and a business does not embed a tip calculator on its site to generate work.
+
+Correction to an earlier reading in `Calculator_competitoranalysis.md`: a search
+of the cross-app gallery returned only cost estimators, which suggested Elfsight
+ships no consumer utilities. The in-app picker disproves that — Fitness & Health
+is a 17-template category. The accurate statement is that consumer utilities
+exist but are a minority, and the commercial estimators dominate.
+
+Each starter also ships a title, per-field help text, result captions, and a
 configured Core action. A starter with unlabelled fields and no captions teaches
 the user nothing about what good looks like.
 
