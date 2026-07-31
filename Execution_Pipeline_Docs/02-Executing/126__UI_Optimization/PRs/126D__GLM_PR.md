@@ -59,7 +59,7 @@ it does not change the PRD.
   `--font-display`, and the two-fluidity-mechanism issue — i.e., it documents only half
   the converged standard. The PRD's own execution target (380-382) says expand it to both
   lanes. Flag the kb doc as currently half-complete.
-- **Inter vs Inter Tight conflation risk:** `--font-ui` (operational UI) is
+- **Inter vs Inter Tight conflation risk:** the operational UI stack is
   `Inter Tight, Inter, system-ui, sans-serif` (kb line 12); the Account Font Library
   baseline is **Inter** (PRD 280-281). Different fonts for different lanes — correct, but
   the docs should state the distinction explicitly so agents don't conflate them.
@@ -190,7 +190,7 @@ no services/routes/data *changed*. Accurate in content, not tabulated in form.
 3. **`typography.md` kb doc is half the picture** — covers Dieter only, silent on the widget
    lane (`CKTypography`), account font library, `--font-display`, two-fluidity issue. PRD
    knows (execution target 380-382); flag for execution.
-4. **Inter vs Inter Tight conflation risk** — operational UI `--font-ui` is `Inter Tight`;
+4. **Inter vs Inter Tight conflation risk** — operational UI uses `Inter Tight`;
    the widget-lane baseline is `Inter`. State the distinction in docs.
 5. **Strengths noted:** two-lane authority (resists the merge-everything trap); embed-safe
    font moat via account-asset CDN; GLM findings sharply integrated with file:line.

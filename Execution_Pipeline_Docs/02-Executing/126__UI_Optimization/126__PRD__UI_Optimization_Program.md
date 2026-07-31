@@ -188,11 +188,12 @@ a data/table engine.
 Its initial base carries forward the current `operational-table` visual source:
 `1px solid var(--role-border)`, `var(--control-radius-md)`,
 `var(--role-surface)` wrapper, collapsed borders,
-`var(--color-text)`, `400 var(--fs-13) / var(--lh-body-ui) var(--font-ui)`,
+`var(--color-text)`, `body-s` body cells and `label-s` column headers,
 row/cell bottom borders using `var(--role-border)`, start/middle alignment,
-`var(--role-surface-muted)` and weight `600` for headers, and no final-row
-border. No shared hover, selected, editable, error, or loading state is added;
-those remain consumer-owned.
+`var(--role-surface-muted)` for the column-header band only, and no final-row
+border. Header weight is owned by `label-s`, not assembled locally. No shared
+hover, selected, editable, error, or loading state is added; those remain
+consumer-owned.
 
 `operational-table` is replaced by Table in the same migration. Its directory,
 imports, selectors, generated registry entries, and consumer markup are

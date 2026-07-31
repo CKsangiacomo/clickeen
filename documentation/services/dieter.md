@@ -80,6 +80,19 @@ Color source keeps one small shared role layer:
 authorities. Dieter does not carry unused action, feedback, selected,
 disabled, or `on-*` role families.
 
+Operational typography is selected only through the complete visual classes
+revealed by DevStudio Typography: `display-*`, `heading-*`, `body-*`,
+`label-*`, `caption*`, and `overline*`. Consumers do not assemble typography
+from font-family, size, weight, line-height, or tracking values and do not add a
+monospace exception for technical strings.
+
+Dieter Table uses `label-s` for column headers and `body-s` for every body
+header/data cell. Its body and row-header cells use `--role-surface`; only the
+column-header band uses `--role-surface-muted`. The shared contract has
+horizontal dividers, no vertical rules or zebra stripes, and small preview and
+action column composition classes. Apps own data and behavior, not another
+table presentation.
+
 ## Icon Delivery
 
 New or changed icons are generated manually with `tooling/sf-symbols/**`, then

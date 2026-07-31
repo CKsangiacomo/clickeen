@@ -38,26 +38,10 @@
     position: sticky;
     top: 0;
     z-index: 2;
-    background: color-mix(in oklab, var(--role-surface-bg), var(--color-system-white) 10%);
-    backdrop-filter: blur(10px);
-  }
-
-  .entitlements-table tbody tr:hover {
-    background: color-mix(in oklab, var(--role-surface-bg), var(--color-system-blue) 4%);
   }
 
   .entitlements-table__token {
-    font-family: var(--font-mono);
     white-space: nowrap;
-    font-size: var(--fs-10);
-  }
-
-  .entitlements-table__token-head {
-    font-size: var(--fs-10);
-  }
-
-  .entitlements-table__value {
-    font-family: var(--font-mono);
   }
 
   .entitlements-cell {
@@ -127,8 +111,6 @@
     border: 1px solid color-mix(in oklab, var(--role-border), transparent 10%);
     background: var(--color-system-white);
     color: var(--color-text);
-    font: 500 var(--fs-11)/var(--lh-tight) var(--font-ui);
-    letter-spacing: -0.01em;
     cursor: pointer;
   }
 
@@ -159,7 +141,6 @@
     min-block-size: 18px;
     padding-inline: 6px;
     border-radius: var(--control-radius-sm, 0.25rem);
-    font: 600 var(--fs-10)/1 var(--font-ui);
     color: var(--color-system-green-contrast);
     background: color-mix(in oklab, var(--color-system-green), transparent 84%);
   }
@@ -173,17 +154,9 @@
     color: color-mix(in oklab, var(--color-text), transparent 45%);
   }
 
-  .entitlements-table__name {
-    font-weight: 500;
-  }
-
   .entitlements-ai__hint {
     margin-top: 4px;
     color: color-mix(in oklab, var(--color-text), transparent 40%);
-  }
-
-  .entitlements-ai-row__name {
-    font-weight: 600;
   }
 
   tr.entitlements-ai-row--model td:first-child {
@@ -193,26 +166,13 @@
   .entitlements-ai-row__model-label {
     display: block;
     color: var(--color-text);
-    font-weight: 500;
     margin-block-end: 2px;
   }
 
-  .entitlements-agent-row__name {
-    font-weight: 600;
-  }
-
   .entitlements-agent-row__name--provider {
-    font-weight: 500;
     padding-left: 14px;
   }
 
-  tr.entitlements-agent-row--agent td {
-    background: color-mix(in oklab, var(--role-surface-bg), var(--color-system-white) 28%);
-  }
-
-  tr.entitlements-agent-row--agent:hover td {
-    background: color-mix(in oklab, var(--role-surface-bg), var(--color-system-blue) 7%);
-  }
 </style>
 
 <h1 class="heading-2">Policy Editor</h1>
@@ -534,7 +494,7 @@
     let unitSelect = null;
     if (isBytes) {
       unitSelect = document.createElement('select');
-      unitSelect.className = 'entitlements-unit';
+      unitSelect.className = 'entitlements-unit body-xs';
       unitSelect.setAttribute('aria-label', 'Units');
       unitSelect.innerHTML = `
         <option value="kb">KB</option>
@@ -679,7 +639,7 @@
 
     tiers.forEach((tier) => {
       const th = document.createElement('th');
-      th.className = 'entitlements-table__tier-head';
+      th.className = 'label-s entitlements-table__tier-head';
 
       const label = document.createElement('span');
       label.className = 'label-s entitlements-tier-label';
@@ -737,7 +697,7 @@
         const enforcement = document.createElement('span');
         enforcement.className = 'entitlements-table__enforcement';
         const badge = document.createElement('span');
-        badge.className = 'entitlements-table__badge';
+        badge.className = 'entitlements-table__badge label-xxs';
         badge.dataset.status = metaEntry.enforcement.status || 'gap';
         badge.textContent = metaEntry.enforcement.status === 'enforced' ? 'Enforced' : 'Enforcement gap';
         enforcement.appendChild(badge);
@@ -883,8 +843,8 @@
         row.innerHTML = `
           <td class="body-s entitlements-table__name entitlements-ai-row__name">${providerLabels.get(model.provider) || model.provider}</td>
           <td class="body-s entitlements-table__desc">
-            <span class="entitlements-ai-row__model-label">${model.label || model.model}</span>
-            <span class="entitlements-table__token">${model.provider}:${model.model}</span>
+            <span class="body-s entitlements-ai-row__model-label">${model.label || model.model}</span>
+            <span class="body-s entitlements-table__token">${model.provider}:${model.model}</span>
           </td>
         `;
         tbody.appendChild(row);
@@ -969,7 +929,7 @@
     td.className = 'body-s entitlements-table__value';
 
     const select = document.createElement('select');
-    select.className = 'entitlements-unit';
+    select.className = 'entitlements-unit body-xs';
     select.disabled = state.busy;
     select.setAttribute('aria-label', `${agent.agentId} ${tier} default model`);
 
@@ -1048,7 +1008,7 @@
     });
     tiers.forEach((tier) => {
       const th = document.createElement('th');
-      th.className = 'entitlements-table__tier-head';
+      th.className = 'label-s entitlements-table__tier-head';
       const label = document.createElement('span');
       label.className = 'label-s entitlements-tier-label';
       label.textContent = normalizeTierLabel(tier);
@@ -1236,7 +1196,7 @@
     });
     tiers.forEach((tier) => {
       const th = document.createElement('th');
-      th.className = 'entitlements-table__tier-head';
+      th.className = 'label-s entitlements-table__tier-head';
       const label = document.createElement('span');
       label.className = 'label-s entitlements-tier-label';
       label.textContent = normalizeTierLabel(tier);

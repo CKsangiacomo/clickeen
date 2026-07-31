@@ -337,7 +337,6 @@ a {
   background: var(--role-surface-muted);
   padding: var(--space-3);
   color: var(--color-system-black);
-  font: 400 var(--fs-13) / var(--lh-body-ui) var(--font-mono);
   white-space: pre-wrap;
 }
 
@@ -403,7 +402,6 @@ a {
 .roma-codeblock pre {
   margin: 0;
   overflow: auto;
-  font: 400 var(--fs-12) / 1.5 var(--font-ui);
 }
 
 .roma-toolbar {
@@ -462,6 +460,7 @@ a {
 .roma-cell-actions {
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   gap: 8px;
 }
 

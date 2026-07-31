@@ -29,7 +29,7 @@
         "id": "popup-form",
         "size": "medium",
         "title": "Edit details",
-        "body": "<label>Name <input class='diet-operational-field' type='text' value='Example' /></label>",
+        "body": "<label class='body-s'>Name <input class='diet-operational-field body-s' type='text' value='Example' /></label>",
         "secondaryAction": "Cancel",
         "primaryAction": "Save"
       }

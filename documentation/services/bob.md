@@ -46,6 +46,12 @@ locally owned. Bob consumes applicable shared component contracts, including
 Popup for its plan-limit prompt; Table remains available where a semantic table
 is needed.
 
+Bob operational chrome selects only the complete Dieter visual typography
+classes revealed by DevStudio. It does not assemble local typography from font
+family, size, weight, line-height, or tracking declarations and gives technical
+strings no automatic monospace treatment. This operational rule does not alter
+Bob's separate account-authored public-widget typography controls.
+
 Bob provides that composition directly. Full mode keeps the persistent
 ToolDrawer when both usable dimensions are at least `600px`. Compact mode uses
 the same ToolDrawer as an overlay when either usable dimension is smaller.

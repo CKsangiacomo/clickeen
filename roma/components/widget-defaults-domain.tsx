@@ -666,7 +666,7 @@ export function WidgetDefaultsDomain() {
           Account defaults contain paths that are not exposed by the compiled Builder control
           contract. Fix Widget Shell or the widget spec before editing defaults.
         </p>
-        <pre className="widget-defaults-contract-error__paths">
+        <pre className="widget-defaults-contract-error__paths body-s">
           {unmappedDefaultPaths.join('\n')}
         </pre>
       </section>
@@ -693,7 +693,7 @@ export function WidgetDefaultsDomain() {
       <section className="roma-module-surface widget-defaults-contract-error" role="alert">
         <div>
           <h2 className="heading-4">Widget Defaults Contract Error</h2>
-          <pre className="widget-defaults-contract-error__paths">
+          <pre className="widget-defaults-contract-error__paths body-s">
             {coreContractErrorEntries
               .map(([widgetType, message]) => `${compiledWidgetLabels[widgetType] ?? widgetType}: ${message}`)
               .join('\n')}

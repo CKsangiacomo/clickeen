@@ -83,7 +83,7 @@ Source:
 
 Current root token set:
 
-- `--font-ui` and `--font-mono` are declared at
+- Two former operational font-family variables were declared at
   `dieter/tokens/dieter-typography.css:3-4`.
 - `--fs-body`, `--fs-ui`, and `--lh-body` are declared at
   `dieter/tokens/dieter-typography.css:7-9`.
@@ -198,10 +198,10 @@ Bob imports Dieter tokens/components:
 
 Bob shell CSS:
 
-- `bob/app/bob_app.css:15-19` uses `var(--font-ui, "Inter Tight", Inter, ...)`
-  for body text.
-- `bob/app/bob_app.css:367-370` uses a hardcoded monospace stack for code
-  blocks rather than `--font-mono`.
+- `bob/app/bob_app.css:15-19` used the former operational sans variable with an
+  `Inter Tight, Inter, ...` fallback for body text.
+- `bob/app/bob_app.css:367-370` used a hardcoded monospace stack for code
+  blocks rather than the former operational monospace variable.
 
 Bob component usage:
 
@@ -267,10 +267,12 @@ Roma utility usage:
 
 Roma direct CSS usage:
 
-- `roma/app/roma.css:463-472` uses `font: 400 var(--fs-13) /
-  var(--lh-body-ui) var(--font-ui)` for widget default inputs.
-- `roma/app/roma.css:489-498` uses `--font-mono` for contract error paths.
-- `roma/app/roma.css:565-568` uses `--font-ui` for `pre` blocks.
+- `roma/app/roma.css:463-472` used assembled family, size, and line-height
+  mechanics for widget default inputs.
+- `roma/app/roma.css:489-498` used the former monospace family variable for
+  contract error paths.
+- `roma/app/roma.css:565-568` used the former sans family variable for `pre`
+  blocks.
 - `roma/app/roma.css:611-618` uses direct UI font shorthand for general inputs.
 
 Observed class drift:
@@ -479,7 +481,8 @@ This section records current gaps without choosing fixes:
 - Line-height token coverage is incomplete because some utilities hardcode raw
   line heights and some declared line-height tokens are not used by utilities.
 - `--font-display` is referenced but not defined in inspected source.
-- Bob has at least one mono-stack bypass of `--font-mono`.
+- Bob had at least one hardcoded mono-stack bypass of the former family
+  variable.
 - DevStudio typography token editor does not expose all typography decisions in
   the CSS file.
 - Bob authoring roles and widget-shell default roles are not the same set.

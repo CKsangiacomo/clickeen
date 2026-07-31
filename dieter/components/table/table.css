@@ -10,10 +10,10 @@
 .diet-table__table {
   box-sizing: border-box;
   inline-size: 100%;
-  min-inline-size: max-content;
+  min-inline-size: 0;
   border-collapse: collapse;
   color: var(--color-text);
-  font: 400 var(--fs-13) / var(--lh-body-ui) var(--font-ui);
+  background: var(--role-surface);
 }
 
 .diet-table__table th,
@@ -24,11 +24,24 @@
   vertical-align: middle;
 }
 
-.diet-table__table th {
+.diet-table__table thead > tr > th {
   background: var(--role-surface-muted);
-  font-weight: 600;
 }
 
-.diet-table__table tr:last-child > * {
+.diet-table__table tbody > tr > * {
+  background: var(--role-surface);
+}
+
+.diet-table__cell--preview {
+  inline-size: auto;
+}
+
+.diet-table__table .diet-table__cell--action {
+  inline-size: 1%;
+  text-align: end;
+  white-space: nowrap;
+}
+
+.diet-table__table tbody > tr:last-child > * {
   border-block-end: 0;
 }

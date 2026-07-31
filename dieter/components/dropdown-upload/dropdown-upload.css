@@ -185,10 +185,6 @@
   block-size: 100%;
 }
 
-.diet-dropdown-upload__preview-doc-ext {
-  line-height: 1.1;
-}
-
 .diet-dropdown-upload__preview-meta {
   display: grid;
   gap: var(--space-1, 0.25rem);

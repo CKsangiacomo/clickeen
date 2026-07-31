@@ -9,7 +9,6 @@ body {
   overflow: hidden;
   background: var(--role-surface-bg);
   color: var(--color-system-black);
-  font: 400 var(--fs-13, 0.8125rem)/var(--lh-body, 1.5) var(--font-ui);
 }
 
 * {
@@ -47,9 +46,6 @@ body {
 }
 
 .nav-group__title {
-  font: 600 var(--fs-11)/1.2 var(--font-ui);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
   color: color-mix(in oklab, var(--color-text), transparent 45%);
   margin: 0;
   padding: 0 0 var(--space-2) 0;
@@ -83,7 +79,6 @@ body {
   --btn-bg: color-mix(in oklab, var(--color-system-blue), transparent 84%);
   --btn-color: var(--color-system-blue);
   justify-content: flex-start;
-  font-weight: 600;
 }
 
 .nav-link:focus-visible {

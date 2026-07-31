@@ -76,6 +76,13 @@ their columns, editable cells, data, and mutation behavior. The token editor
 uses Dieter Popup while retaining DevStudio's source-write workflow and
 dismissal state.
 
+DevStudio operational text uses only the complete classes shown on its
+Typography route. Page titles use `heading-2`, section titles use `heading-4`,
+Table column headers use `label-s`, and all Table body cells use `body-s`.
+Token names, source values, policy values, IDs, and model names do not receive a
+separate monospace treatment. DevStudio does not restate Table typography,
+header, row, cell, border, or overflow presentation locally.
+
 Hash routes are generated from `admin/src/html/**` and route data in
 `admin/src/data/routes.ts`. There is no separate design-system admin app. The
 current generated inventory is 5 Foundation routes, 24 Dieter Component routes,

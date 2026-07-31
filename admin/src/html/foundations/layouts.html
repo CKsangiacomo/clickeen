@@ -2,20 +2,19 @@
 <div class="dieter-preview layouts-page" data-layout-source="dieter/layouts/main-container">
   <style>
     .layout-example { display: grid; gap: var(--space-2); margin: 0; }
-    .layout-example figcaption { font: 600 var(--fs-13)/var(--lh-body-ui) var(--font-ui); }
     .layout-example__viewport { max-inline-size: 100%; overflow: auto; border: 1px solid var(--role-border); border-radius: var(--control-radius-md); background: var(--role-surface-muted); }
     .layout-example iframe { display: block; border: 0; background: var(--role-surface); }
   </style>
-  <p>The shared application layout used directly by DevStudio and Roma.</p>
+  <p class="body-s">The shared application layout used directly by DevStudio and Roma.</p>
   <details class="foundation-section">
     <summary class="heading-4">Source structure</summary>
-    <pre><code>&lt;div class=&quot;main-container&quot;&gt;
+    <pre class="body-s"><code class="body-s">&lt;div class=&quot;main-container&quot;&gt;
   &lt;aside class=&quot;left-nav&quot; aria-label=&quot;Example navigation&quot;&gt;
-    &lt;strong&gt;Product&lt;/strong&gt;
+    &lt;strong class=&quot;heading-5&quot;&gt;Product&lt;/strong&gt;
     &lt;nav aria-label=&quot;Example sections&quot;&gt;
-      &lt;a href=&quot;#overview&quot;&gt;Overview&lt;/a&gt;
-      &lt;a href=&quot;#content&quot;&gt;Content&lt;/a&gt;
-      &lt;a href=&quot;#settings&quot;&gt;Settings&lt;/a&gt;
+      &lt;a class=&quot;body-s&quot; href=&quot;#overview&quot;&gt;Overview&lt;/a&gt;
+      &lt;a class=&quot;body-s&quot; href=&quot;#content&quot;&gt;Content&lt;/a&gt;
+      &lt;a class=&quot;body-s&quot; href=&quot;#settings&quot;&gt;Settings&lt;/a&gt;
     &lt;/nav&gt;
   &lt;/aside&gt;
 
@@ -23,8 +22,8 @@
     &lt;button type=&quot;button&quot; data-navigation-scrim aria-label=&quot;Close navigation&quot;&gt;&lt;/button&gt;
     &lt;header class=&quot;page__header&quot;&gt;
       &lt;div&gt;
-        &lt;h1&gt;Page title&lt;/h1&gt;
-        &lt;p&gt;Page description explains what can be managed here.&lt;/p&gt;
+        &lt;h1 class=&quot;heading-2&quot;&gt;Page title&lt;/h1&gt;
+        &lt;p class=&quot;body-s&quot;&gt;Page description explains what can be managed here.&lt;/p&gt;
       &lt;/div&gt;
       &lt;div class=&quot;page__actions&quot;&gt;
         &lt;button class=&quot;diet-btn-txt&quot; type=&quot;button&quot; data-size=&quot;md&quot; data-variant=&quot;primary&quot;&gt;
@@ -34,7 +33,7 @@
     &lt;/header&gt;
 
     &lt;div class=&quot;page__content&quot;&gt;
-      &lt;p&gt;Consumer-owned page content uses the shared Dieter page composition.&lt;/p&gt;
+      &lt;p class=&quot;body-s&quot;&gt;Consumer-owned page content uses the shared Dieter page composition.&lt;/p&gt;
     &lt;/div&gt;
   &lt;/main&gt;
 &lt;/div&gt;</code></pre>
@@ -43,7 +42,7 @@
     <h2 class="heading-4" id="layout-examples">Examples</h2>
 
     <figure class="layout-example" data-layout-example="full">
-      <figcaption>Full — 1024 × 640</figcaption>
+      <figcaption class="label-s">Full — 1024 × 640</figcaption>
       <div class="layout-example__viewport">
         <iframe title="Full main-container example" width="1024" height="640" srcdoc="&lt;!doctype html&gt;&lt;html lang=&quot;en&quot;&gt;&lt;head&gt;&lt;meta charset=&quot;utf-8&quot;&gt;&lt;meta name=&quot;viewport&quot; content=&quot;width=device-width,initial-scale=1&quot;&gt;&lt;style&gt;html, body { margin: 0; }
 /* Dieter Foundation Tokens (spacing, layout, motion) */
@@ -329,10 +328,6 @@
 }
 
 :root {
-  /* Base font family */
-  --font-ui: &quot;Inter Tight&quot;, &quot;Inter&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif;
-  --font-mono: &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, Menlo, monospace;
-
   /* Base sizes */
   --fs-body: 1rem;        /* 16px default body */
   --fs-ui: 0.9375rem;     /* 15px default UI */
@@ -364,97 +359,97 @@
 
 /* Display (marketing) */
 .display-1 {
-  font: 600 var(--fs-fluid-display-1)/1.08 var(--font-ui);
+  font: 600 var(--fs-fluid-display-1)/1.08 &quot;Inter Tight&quot;, &quot;Inter&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif;
   letter-spacing: -0.015em;
   color: inherit;
 }
 
 .display-2 {
-  font: 600 var(--fs-fluid-display-2)/1.08 var(--font-ui);
+  font: 600 var(--fs-fluid-display-2)/1.08 &quot;Inter Tight&quot;, &quot;Inter&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif;
   letter-spacing: -0.012em;
   color: inherit;
 }
 
 .display-3 {
-  font: 600 var(--fs-fluid-display-3)/1.08 var(--font-ui);
+  font: 600 var(--fs-fluid-display-3)/1.08 &quot;Inter Tight&quot;, &quot;Inter&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif;
   letter-spacing: -0.01em;
   color: inherit;
 }
 
 /* Body text */
-.body-xxs { font: 400 var(--fs-10)/var(--lh-tight) var(--font-ui); }
-.body-xs { font: 400 var(--fs-11)/var(--lh-tight) var(--font-ui); }
-.body-s { font: 400 var(--fs-13)/var(--lh-body-ui) var(--font-ui); }
-.body-m { font: 400 var(--fs-14)/var(--lh-body-ui) var(--font-ui); }
-.body-l { font: 400 var(--fs-15)/var(--lh-body-ui) var(--font-ui); }
-.body-xl { font: 400 var(--fs-16)/var(--lh-body-ui) var(--font-ui); }
-.body-xxl { font: 400 var(--fs-18)/var(--lh-body-ui) var(--font-ui); }
+.body-xxs { font: 400 var(--fs-10)/var(--lh-tight) &quot;Inter Tight&quot;, &quot;Inter&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; }
+.body-xs { font: 400 var(--fs-11)/var(--lh-tight) &quot;Inter Tight&quot;, &quot;Inter&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; }
+.body-s { font: 400 var(--fs-13)/var(--lh-body-ui) &quot;Inter Tight&quot;, &quot;Inter&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; }
+.body-m { font: 400 var(--fs-14)/var(--lh-body-ui) &quot;Inter Tight&quot;, &quot;Inter&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; }
+.body-l { font: 400 var(--fs-15)/var(--lh-body-ui) &quot;Inter Tight&quot;, &quot;Inter&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; }
+.body-xl { font: 400 var(--fs-16)/var(--lh-body-ui) &quot;Inter Tight&quot;, &quot;Inter&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; }
+.body-xxl { font: 400 var(--fs-18)/var(--lh-body-ui) &quot;Inter Tight&quot;, &quot;Inter&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; }
 
 /* Website body (larger than body-xxl; used in-product) */
-.body-website { font: 400 var(--fs-20)/var(--lh-body-ui) var(--font-ui); }
-.body-website-large { font: 400 var(--fs-24)/var(--lh-body-ui) var(--font-ui); }
-.body-website-xlarge { font: 400 var(--fs-32)/var(--lh-body-ui) var(--font-ui); }
+.body-website { font: 400 var(--fs-20)/var(--lh-body-ui) &quot;Inter Tight&quot;, &quot;Inter&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; }
+.body-website-large { font: 400 var(--fs-24)/var(--lh-body-ui) &quot;Inter Tight&quot;, &quot;Inter&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; }
+.body-website-xlarge { font: 400 var(--fs-32)/var(--lh-body-ui) &quot;Inter Tight&quot;, &quot;Inter&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; }
 
-.body { font: 400 var(--fs-16)/var(--lh-body-ui) var(--font-ui); }
+.body { font: 400 var(--fs-16)/var(--lh-body-ui) &quot;Inter Tight&quot;, &quot;Inter&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; }
 
 /* Headings */
 .heading-1 {
-  font: 700 var(--fs-32)/var(--lh-tight) var(--font-ui);
+  font: 700 var(--fs-32)/var(--lh-tight) &quot;Inter Tight&quot;, &quot;Inter&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif;
   letter-spacing: -0.01em;
   color: inherit;
 }
 
 .heading-2 {
-  font: 600 var(--fs-24)/var(--lh-tight) var(--font-ui);
+  font: 600 var(--fs-24)/var(--lh-tight) &quot;Inter Tight&quot;, &quot;Inter&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif;
   letter-spacing: -0.01em;
   color: inherit;
 }
 
 .heading-3 {
-  font: 600 var(--fs-20)/var(--lh-tight) var(--font-ui);
+  font: 600 var(--fs-20)/var(--lh-tight) &quot;Inter Tight&quot;, &quot;Inter&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif;
   letter-spacing: -0.01em;
   color: inherit;
 }
 
 .heading-4 {
-  font: 500 var(--fs-18)/var(--lh-tight) var(--font-ui);
+  font: 500 var(--fs-18)/var(--lh-tight) &quot;Inter Tight&quot;, &quot;Inter&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif;
   letter-spacing: -0.005em;
   color: inherit;
 }
 
 .heading-5 {
-  font: 500 var(--fs-16)/var(--lh-tight) var(--font-ui);
+  font: 500 var(--fs-16)/var(--lh-tight) &quot;Inter Tight&quot;, &quot;Inter&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif;
   letter-spacing: -0.005em;
   color: inherit;
 }
 
 .heading-6 {
-  font: 500 var(--fs-14)/var(--lh-tight) var(--font-ui);
+  font: 500 var(--fs-14)/var(--lh-tight) &quot;Inter Tight&quot;, &quot;Inter&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif;
   letter-spacing: -0.005em;
   color: inherit;
 }
 
 /* UI Labels &amp; Captions */
-.label-xxs { font: 500 var(--fs-10)/var(--lh-tight) var(--font-ui); letter-spacing: -0.02em; }
-.label-xs { font: 500 var(--fs-11)/var(--lh-tight) var(--font-ui); letter-spacing: -0.02em; }
-.label-s { font: 500 var(--fs-13)/var(--lh-tight) var(--font-ui); letter-spacing: -0.02em; }
-.label-m { font: 500 var(--fs-14)/var(--lh-tight) var(--font-ui); letter-spacing: -0.02em; }
-.label-l { font: 500 var(--fs-15)/var(--lh-tight) var(--font-ui); letter-spacing: -0.02em; }
-.label-xl { font: 500 var(--fs-16)/var(--lh-tight) var(--font-ui); letter-spacing: -0.02em; }
-.label-xxl { font: 500 var(--fs-18)/var(--lh-tight) var(--font-ui); letter-spacing: -0.02em; }
+.label-xxs { font: 500 var(--fs-10)/var(--lh-tight) &quot;Inter Tight&quot;, &quot;Inter&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; letter-spacing: -0.02em; }
+.label-xs { font: 500 var(--fs-11)/var(--lh-tight) &quot;Inter Tight&quot;, &quot;Inter&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; letter-spacing: -0.02em; }
+.label-s { font: 500 var(--fs-13)/var(--lh-tight) &quot;Inter Tight&quot;, &quot;Inter&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; letter-spacing: -0.02em; }
+.label-m { font: 500 var(--fs-14)/var(--lh-tight) &quot;Inter Tight&quot;, &quot;Inter&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; letter-spacing: -0.02em; }
+.label-l { font: 500 var(--fs-15)/var(--lh-tight) &quot;Inter Tight&quot;, &quot;Inter&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; letter-spacing: -0.02em; }
+.label-xl { font: 500 var(--fs-16)/var(--lh-tight) &quot;Inter Tight&quot;, &quot;Inter&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; letter-spacing: -0.02em; }
+.label-xxl { font: 500 var(--fs-18)/var(--lh-tight) &quot;Inter Tight&quot;, &quot;Inter&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; letter-spacing: -0.02em; }
 
-.caption { font: 500 var(--fs-11)/var(--lh-tight) var(--font-ui); }
-.caption-small { font: 500 var(--fs-10)/1.1 var(--font-ui); }
+.caption { font: 500 var(--fs-11)/var(--lh-tight) &quot;Inter Tight&quot;, &quot;Inter&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; }
+.caption-small { font: 500 var(--fs-10)/1.1 &quot;Inter Tight&quot;, &quot;Inter&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; }
 
 /* Overline/Eyebrow */
 .overline {
-  font: 700 var(--fs-10)/1 var(--font-ui);
+  font: 700 var(--fs-10)/1 &quot;Inter Tight&quot;, &quot;Inter&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif;
   text-transform: uppercase;
   letter-spacing: 0.08em;
 }
 
 .overline-small {
-  font: 600 var(--fs-10)/1.1 var(--font-ui);
+  font: 600 var(--fs-10)/1.1 &quot;Inter Tight&quot;, &quot;Inter&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif;
   text-transform: uppercase;
   letter-spacing: 0.06em;
 }
@@ -936,7 +931,6 @@
   overflow: hidden;
   background: var(--role-surface-bg);
   color: var(--color-text);
-  font: 400 var(--fs-13) / var(--lh-body-ui) var(--font-ui);
 }
 
 .main-container &gt; .page &gt; [data-navigation-scrim] {
@@ -1046,11 +1040,11 @@
 }
 &lt;/style&gt;&lt;/head&gt;&lt;body&gt;&lt;div class=&quot;main-container&quot;&gt;
   &lt;aside class=&quot;left-nav&quot; aria-label=&quot;Example navigation&quot;&gt;
-    &lt;strong&gt;Product&lt;/strong&gt;
+    &lt;strong class=&quot;heading-5&quot;&gt;Product&lt;/strong&gt;
     &lt;nav aria-label=&quot;Example sections&quot;&gt;
-      &lt;a href=&quot;#overview&quot;&gt;Overview&lt;/a&gt;
-      &lt;a href=&quot;#content&quot;&gt;Content&lt;/a&gt;
-      &lt;a href=&quot;#settings&quot;&gt;Settings&lt;/a&gt;
+      &lt;a class=&quot;body-s&quot; href=&quot;#overview&quot;&gt;Overview&lt;/a&gt;
+      &lt;a class=&quot;body-s&quot; href=&quot;#content&quot;&gt;Content&lt;/a&gt;
+      &lt;a class=&quot;body-s&quot; href=&quot;#settings&quot;&gt;Settings&lt;/a&gt;
     &lt;/nav&gt;
   &lt;/aside&gt;
 
@@ -1058,8 +1052,8 @@
     &lt;button type=&quot;button&quot; data-navigation-scrim aria-label=&quot;Close navigation&quot;&gt;&lt;/button&gt;
     &lt;header class=&quot;page__header&quot;&gt;
       &lt;div&gt;
-        &lt;h1&gt;Page title&lt;/h1&gt;
-        &lt;p&gt;Page description explains what can be managed here.&lt;/p&gt;
+        &lt;h1 class=&quot;heading-2&quot;&gt;Page title&lt;/h1&gt;
+        &lt;p class=&quot;body-s&quot;&gt;Page description explains what can be managed here.&lt;/p&gt;
       &lt;/div&gt;
       &lt;div class=&quot;page__actions&quot;&gt;
         &lt;button class=&quot;diet-btn-txt&quot; type=&quot;button&quot; data-size=&quot;md&quot; data-variant=&quot;primary&quot;&gt;
@@ -1069,7 +1063,7 @@
     &lt;/header&gt;
 
     &lt;div class=&quot;page__content&quot;&gt;
-      &lt;p&gt;Consumer-owned page content uses the shared Dieter page composition.&lt;/p&gt;
+      &lt;p class=&quot;body-s&quot;&gt;Consumer-owned page content uses the shared Dieter page composition.&lt;/p&gt;
     &lt;/div&gt;
   &lt;/main&gt;
 &lt;/div&gt;
@@ -1078,7 +1072,7 @@
     </figure>
 
     <figure class="layout-example" data-layout-example="compact-closed">
-      <figcaption>Compact closed — 560 × 640</figcaption>
+      <figcaption class="label-s">Compact closed — 560 × 640</figcaption>
       <div class="layout-example__viewport">
         <iframe title="Compact closed main-container example" width="560" height="640" srcdoc="&lt;!doctype html&gt;&lt;html lang=&quot;en&quot;&gt;&lt;head&gt;&lt;meta charset=&quot;utf-8&quot;&gt;&lt;meta name=&quot;viewport&quot; content=&quot;width=device-width,initial-scale=1&quot;&gt;&lt;style&gt;html, body { margin: 0; }
 /* Dieter Foundation Tokens (spacing, layout, motion) */
@@ -1364,10 +1358,6 @@
 }
 
 :root {
-  /* Base font family */
-  --font-ui: &quot;Inter Tight&quot;, &quot;Inter&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif;
-  --font-mono: &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, Menlo, monospace;
-
   /* Base sizes */
   --fs-body: 1rem;        /* 16px default body */
   --fs-ui: 0.9375rem;     /* 15px default UI */
@@ -1399,97 +1389,97 @@
 
 /* Display (marketing) */
 .display-1 {
-  font: 600 var(--fs-fluid-display-1)/1.08 var(--font-ui);
+  font: 600 var(--fs-fluid-display-1)/1.08 &quot;Inter Tight&quot;, &quot;Inter&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif;
   letter-spacing: -0.015em;
   color: inherit;
 }
 
 .display-2 {
-  font: 600 var(--fs-fluid-display-2)/1.08 var(--font-ui);
+  font: 600 var(--fs-fluid-display-2)/1.08 &quot;Inter Tight&quot;, &quot;Inter&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif;
   letter-spacing: -0.012em;
   color: inherit;
 }
 
 .display-3 {
-  font: 600 var(--fs-fluid-display-3)/1.08 var(--font-ui);
+  font: 600 var(--fs-fluid-display-3)/1.08 &quot;Inter Tight&quot;, &quot;Inter&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif;
   letter-spacing: -0.01em;
   color: inherit;
 }
 
 /* Body text */
-.body-xxs { font: 400 var(--fs-10)/var(--lh-tight) var(--font-ui); }
-.body-xs { font: 400 var(--fs-11)/var(--lh-tight) var(--font-ui); }
-.body-s { font: 400 var(--fs-13)/var(--lh-body-ui) var(--font-ui); }
-.body-m { font: 400 var(--fs-14)/var(--lh-body-ui) var(--font-ui); }
-.body-l { font: 400 var(--fs-15)/var(--lh-body-ui) var(--font-ui); }
-.body-xl { font: 400 var(--fs-16)/var(--lh-body-ui) var(--font-ui); }
-.body-xxl { font: 400 var(--fs-18)/var(--lh-body-ui) var(--font-ui); }
+.body-xxs { font: 400 var(--fs-10)/var(--lh-tight) &quot;Inter Tight&quot;, &quot;Inter&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; }
+.body-xs { font: 400 var(--fs-11)/var(--lh-tight) &quot;Inter Tight&quot;, &quot;Inter&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; }
+.body-s { font: 400 var(--fs-13)/var(--lh-body-ui) &quot;Inter Tight&quot;, &quot;Inter&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; }
+.body-m { font: 400 var(--fs-14)/var(--lh-body-ui) &quot;Inter Tight&quot;, &quot;Inter&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; }
+.body-l { font: 400 var(--fs-15)/var(--lh-body-ui) &quot;Inter Tight&quot;, &quot;Inter&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; }
+.body-xl { font: 400 var(--fs-16)/var(--lh-body-ui) &quot;Inter Tight&quot;, &quot;Inter&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; }
+.body-xxl { font: 400 var(--fs-18)/var(--lh-body-ui) &quot;Inter Tight&quot;, &quot;Inter&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; }
 
 /* Website body (larger than body-xxl; used in-product) */
-.body-website { font: 400 var(--fs-20)/var(--lh-body-ui) var(--font-ui); }
-.body-website-large { font: 400 var(--fs-24)/var(--lh-body-ui) var(--font-ui); }
-.body-website-xlarge { font: 400 var(--fs-32)/var(--lh-body-ui) var(--font-ui); }
+.body-website { font: 400 var(--fs-20)/var(--lh-body-ui) &quot;Inter Tight&quot;, &quot;Inter&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; }
+.body-website-large { font: 400 var(--fs-24)/var(--lh-body-ui) &quot;Inter Tight&quot;, &quot;Inter&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; }
+.body-website-xlarge { font: 400 var(--fs-32)/var(--lh-body-ui) &quot;Inter Tight&quot;, &quot;Inter&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; }
 
-.body { font: 400 var(--fs-16)/var(--lh-body-ui) var(--font-ui); }
+.body { font: 400 var(--fs-16)/var(--lh-body-ui) &quot;Inter Tight&quot;, &quot;Inter&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; }
 
 /* Headings */
 .heading-1 {
-  font: 700 var(--fs-32)/var(--lh-tight) var(--font-ui);
+  font: 700 var(--fs-32)/var(--lh-tight) &quot;Inter Tight&quot;, &quot;Inter&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif;
   letter-spacing: -0.01em;
   color: inherit;
 }
 
 .heading-2 {
-  font: 600 var(--fs-24)/var(--lh-tight) var(--font-ui);
+  font: 600 var(--fs-24)/var(--lh-tight) &quot;Inter Tight&quot;, &quot;Inter&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif;
   letter-spacing: -0.01em;
   color: inherit;
 }
 
 .heading-3 {
-  font: 600 var(--fs-20)/var(--lh-tight) var(--font-ui);
+  font: 600 var(--fs-20)/var(--lh-tight) &quot;Inter Tight&quot;, &quot;Inter&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif;
   letter-spacing: -0.01em;
   color: inherit;
 }
 
 .heading-4 {
-  font: 500 var(--fs-18)/var(--lh-tight) var(--font-ui);
+  font: 500 var(--fs-18)/var(--lh-tight) &quot;Inter Tight&quot;, &quot;Inter&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif;
   letter-spacing: -0.005em;
   color: inherit;
 }
 
 .heading-5 {
-  font: 500 var(--fs-16)/var(--lh-tight) var(--font-ui);
+  font: 500 var(--fs-16)/var(--lh-tight) &quot;Inter Tight&quot;, &quot;Inter&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif;
   letter-spacing: -0.005em;
   color: inherit;
 }
 
 .heading-6 {
-  font: 500 var(--fs-14)/var(--lh-tight) var(--font-ui);
+  font: 500 var(--fs-14)/var(--lh-tight) &quot;Inter Tight&quot;, &quot;Inter&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif;
   letter-spacing: -0.005em;
   color: inherit;
 }
 
 /* UI Labels &amp; Captions */
-.label-xxs { font: 500 var(--fs-10)/var(--lh-tight) var(--font-ui); letter-spacing: -0.02em; }
-.label-xs { font: 500 var(--fs-11)/var(--lh-tight) var(--font-ui); letter-spacing: -0.02em; }
-.label-s { font: 500 var(--fs-13)/var(--lh-tight) var(--font-ui); letter-spacing: -0.02em; }
-.label-m { font: 500 var(--fs-14)/var(--lh-tight) var(--font-ui); letter-spacing: -0.02em; }
-.label-l { font: 500 var(--fs-15)/var(--lh-tight) var(--font-ui); letter-spacing: -0.02em; }
-.label-xl { font: 500 var(--fs-16)/var(--lh-tight) var(--font-ui); letter-spacing: -0.02em; }
-.label-xxl { font: 500 var(--fs-18)/var(--lh-tight) var(--font-ui); letter-spacing: -0.02em; }
+.label-xxs { font: 500 var(--fs-10)/var(--lh-tight) &quot;Inter Tight&quot;, &quot;Inter&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; letter-spacing: -0.02em; }
+.label-xs { font: 500 var(--fs-11)/var(--lh-tight) &quot;Inter Tight&quot;, &quot;Inter&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; letter-spacing: -0.02em; }
+.label-s { font: 500 var(--fs-13)/var(--lh-tight) &quot;Inter Tight&quot;, &quot;Inter&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; letter-spacing: -0.02em; }
+.label-m { font: 500 var(--fs-14)/var(--lh-tight) &quot;Inter Tight&quot;, &quot;Inter&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; letter-spacing: -0.02em; }
+.label-l { font: 500 var(--fs-15)/var(--lh-tight) &quot;Inter Tight&quot;, &quot;Inter&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; letter-spacing: -0.02em; }
+.label-xl { font: 500 var(--fs-16)/var(--lh-tight) &quot;Inter Tight&quot;, &quot;Inter&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; letter-spacing: -0.02em; }
+.label-xxl { font: 500 var(--fs-18)/var(--lh-tight) &quot;Inter Tight&quot;, &quot;Inter&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; letter-spacing: -0.02em; }
 
-.caption { font: 500 var(--fs-11)/var(--lh-tight) var(--font-ui); }
-.caption-small { font: 500 var(--fs-10)/1.1 var(--font-ui); }
+.caption { font: 500 var(--fs-11)/var(--lh-tight) &quot;Inter Tight&quot;, &quot;Inter&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; }
+.caption-small { font: 500 var(--fs-10)/1.1 &quot;Inter Tight&quot;, &quot;Inter&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; }
 
 /* Overline/Eyebrow */
 .overline {
-  font: 700 var(--fs-10)/1 var(--font-ui);
+  font: 700 var(--fs-10)/1 &quot;Inter Tight&quot;, &quot;Inter&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif;
   text-transform: uppercase;
   letter-spacing: 0.08em;
 }
 
 .overline-small {
-  font: 600 var(--fs-10)/1.1 var(--font-ui);
+  font: 600 var(--fs-10)/1.1 &quot;Inter Tight&quot;, &quot;Inter&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif;
   text-transform: uppercase;
   letter-spacing: 0.06em;
 }
@@ -1971,7 +1961,6 @@
   overflow: hidden;
   background: var(--role-surface-bg);
   color: var(--color-text);
-  font: 400 var(--fs-13) / var(--lh-body-ui) var(--font-ui);
 }
 
 .main-container &gt; .page &gt; [data-navigation-scrim] {
@@ -2081,11 +2070,11 @@
 }
 &lt;/style&gt;&lt;/head&gt;&lt;body&gt;&lt;div class=&quot;main-container&quot;&gt;
   &lt;aside class=&quot;left-nav&quot; aria-label=&quot;Example navigation&quot;&gt;
-    &lt;strong&gt;Product&lt;/strong&gt;
+    &lt;strong class=&quot;heading-5&quot;&gt;Product&lt;/strong&gt;
     &lt;nav aria-label=&quot;Example sections&quot;&gt;
-      &lt;a href=&quot;#overview&quot;&gt;Overview&lt;/a&gt;
-      &lt;a href=&quot;#content&quot;&gt;Content&lt;/a&gt;
-      &lt;a href=&quot;#settings&quot;&gt;Settings&lt;/a&gt;
+      &lt;a class=&quot;body-s&quot; href=&quot;#overview&quot;&gt;Overview&lt;/a&gt;
+      &lt;a class=&quot;body-s&quot; href=&quot;#content&quot;&gt;Content&lt;/a&gt;
+      &lt;a class=&quot;body-s&quot; href=&quot;#settings&quot;&gt;Settings&lt;/a&gt;
     &lt;/nav&gt;
   &lt;/aside&gt;
 
@@ -2093,8 +2082,8 @@
     &lt;button type=&quot;button&quot; data-navigation-scrim aria-label=&quot;Close navigation&quot;&gt;&lt;/button&gt;
     &lt;header class=&quot;page__header&quot;&gt;
       &lt;div&gt;
-        &lt;h1&gt;Page title&lt;/h1&gt;
-        &lt;p&gt;Page description explains what can be managed here.&lt;/p&gt;
+        &lt;h1 class=&quot;heading-2&quot;&gt;Page title&lt;/h1&gt;
+        &lt;p class=&quot;body-s&quot;&gt;Page description explains what can be managed here.&lt;/p&gt;
       &lt;/div&gt;
       &lt;div class=&quot;page__actions&quot;&gt;
         &lt;button class=&quot;diet-btn-txt&quot; type=&quot;button&quot; data-size=&quot;md&quot; data-variant=&quot;primary&quot;&gt;
@@ -2104,7 +2093,7 @@
     &lt;/header&gt;
 
     &lt;div class=&quot;page__content&quot;&gt;
-      &lt;p&gt;Consumer-owned page content uses the shared Dieter page composition.&lt;/p&gt;
+      &lt;p class=&quot;body-s&quot;&gt;Consumer-owned page content uses the shared Dieter page composition.&lt;/p&gt;
     &lt;/div&gt;
   &lt;/main&gt;
 &lt;/div&gt;
@@ -2113,7 +2102,7 @@
     </figure>
 
     <figure class="layout-example" data-layout-example="compact-open">
-      <figcaption>Compact open — 560 × 640</figcaption>
+      <figcaption class="label-s">Compact open — 560 × 640</figcaption>
       <div class="layout-example__viewport">
         <iframe title="Compact open main-container example" width="560" height="640" srcdoc="&lt;!doctype html&gt;&lt;html lang=&quot;en&quot;&gt;&lt;head&gt;&lt;meta charset=&quot;utf-8&quot;&gt;&lt;meta name=&quot;viewport&quot; content=&quot;width=device-width,initial-scale=1&quot;&gt;&lt;style&gt;html, body { margin: 0; }
 /* Dieter Foundation Tokens (spacing, layout, motion) */
@@ -2399,10 +2388,6 @@
 }
 
 :root {
-  /* Base font family */
-  --font-ui: &quot;Inter Tight&quot;, &quot;Inter&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif;
-  --font-mono: &quot;SFMono-Regular&quot;, Consolas, &quot;Liberation Mono&quot;, Menlo, monospace;
-
   /* Base sizes */
   --fs-body: 1rem;        /* 16px default body */
   --fs-ui: 0.9375rem;     /* 15px default UI */
@@ -2434,97 +2419,97 @@
 
 /* Display (marketing) */
 .display-1 {
-  font: 600 var(--fs-fluid-display-1)/1.08 var(--font-ui);
+  font: 600 var(--fs-fluid-display-1)/1.08 &quot;Inter Tight&quot;, &quot;Inter&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif;
   letter-spacing: -0.015em;
   color: inherit;
 }
 
 .display-2 {
-  font: 600 var(--fs-fluid-display-2)/1.08 var(--font-ui);
+  font: 600 var(--fs-fluid-display-2)/1.08 &quot;Inter Tight&quot;, &quot;Inter&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif;
   letter-spacing: -0.012em;
   color: inherit;
 }
 
 .display-3 {
-  font: 600 var(--fs-fluid-display-3)/1.08 var(--font-ui);
+  font: 600 var(--fs-fluid-display-3)/1.08 &quot;Inter Tight&quot;, &quot;Inter&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif;
   letter-spacing: -0.01em;
   color: inherit;
 }
 
 /* Body text */
-.body-xxs { font: 400 var(--fs-10)/var(--lh-tight) var(--font-ui); }
-.body-xs { font: 400 var(--fs-11)/var(--lh-tight) var(--font-ui); }
-.body-s { font: 400 var(--fs-13)/var(--lh-body-ui) var(--font-ui); }
-.body-m { font: 400 var(--fs-14)/var(--lh-body-ui) var(--font-ui); }
-.body-l { font: 400 var(--fs-15)/var(--lh-body-ui) var(--font-ui); }
-.body-xl { font: 400 var(--fs-16)/var(--lh-body-ui) var(--font-ui); }
-.body-xxl { font: 400 var(--fs-18)/var(--lh-body-ui) var(--font-ui); }
+.body-xxs { font: 400 var(--fs-10)/var(--lh-tight) &quot;Inter Tight&quot;, &quot;Inter&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; }
+.body-xs { font: 400 var(--fs-11)/var(--lh-tight) &quot;Inter Tight&quot;, &quot;Inter&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; }
+.body-s { font: 400 var(--fs-13)/var(--lh-body-ui) &quot;Inter Tight&quot;, &quot;Inter&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; }
+.body-m { font: 400 var(--fs-14)/var(--lh-body-ui) &quot;Inter Tight&quot;, &quot;Inter&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; }
+.body-l { font: 400 var(--fs-15)/var(--lh-body-ui) &quot;Inter Tight&quot;, &quot;Inter&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; }
+.body-xl { font: 400 var(--fs-16)/var(--lh-body-ui) &quot;Inter Tight&quot;, &quot;Inter&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; }
+.body-xxl { font: 400 var(--fs-18)/var(--lh-body-ui) &quot;Inter Tight&quot;, &quot;Inter&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; }
 
 /* Website body (larger than body-xxl; used in-product) */
-.body-website { font: 400 var(--fs-20)/var(--lh-body-ui) var(--font-ui); }
-.body-website-large { font: 400 var(--fs-24)/var(--lh-body-ui) var(--font-ui); }
-.body-website-xlarge { font: 400 var(--fs-32)/var(--lh-body-ui) var(--font-ui); }
+.body-website { font: 400 var(--fs-20)/var(--lh-body-ui) &quot;Inter Tight&quot;, &quot;Inter&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; }
+.body-website-large { font: 400 var(--fs-24)/var(--lh-body-ui) &quot;Inter Tight&quot;, &quot;Inter&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; }
+.body-website-xlarge { font: 400 var(--fs-32)/var(--lh-body-ui) &quot;Inter Tight&quot;, &quot;Inter&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; }
 
-.body { font: 400 var(--fs-16)/var(--lh-body-ui) var(--font-ui); }
+.body { font: 400 var(--fs-16)/var(--lh-body-ui) &quot;Inter Tight&quot;, &quot;Inter&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; }
 
 /* Headings */
 .heading-1 {
-  font: 700 var(--fs-32)/var(--lh-tight) var(--font-ui);
+  font: 700 var(--fs-32)/var(--lh-tight) &quot;Inter Tight&quot;, &quot;Inter&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif;
   letter-spacing: -0.01em;
   color: inherit;
 }
 
 .heading-2 {
-  font: 600 var(--fs-24)/var(--lh-tight) var(--font-ui);
+  font: 600 var(--fs-24)/var(--lh-tight) &quot;Inter Tight&quot;, &quot;Inter&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif;
   letter-spacing: -0.01em;
   color: inherit;
 }
 
 .heading-3 {
-  font: 600 var(--fs-20)/var(--lh-tight) var(--font-ui);
+  font: 600 var(--fs-20)/var(--lh-tight) &quot;Inter Tight&quot;, &quot;Inter&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif;
   letter-spacing: -0.01em;
   color: inherit;
 }
 
 .heading-4 {
-  font: 500 var(--fs-18)/var(--lh-tight) var(--font-ui);
+  font: 500 var(--fs-18)/var(--lh-tight) &quot;Inter Tight&quot;, &quot;Inter&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif;
   letter-spacing: -0.005em;
   color: inherit;
 }
 
 .heading-5 {
-  font: 500 var(--fs-16)/var(--lh-tight) var(--font-ui);
+  font: 500 var(--fs-16)/var(--lh-tight) &quot;Inter Tight&quot;, &quot;Inter&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif;
   letter-spacing: -0.005em;
   color: inherit;
 }
 
 .heading-6 {
-  font: 500 var(--fs-14)/var(--lh-tight) var(--font-ui);
+  font: 500 var(--fs-14)/var(--lh-tight) &quot;Inter Tight&quot;, &quot;Inter&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif;
   letter-spacing: -0.005em;
   color: inherit;
 }
 
 /* UI Labels &amp; Captions */
-.label-xxs { font: 500 var(--fs-10)/var(--lh-tight) var(--font-ui); letter-spacing: -0.02em; }
-.label-xs { font: 500 var(--fs-11)/var(--lh-tight) var(--font-ui); letter-spacing: -0.02em; }
-.label-s { font: 500 var(--fs-13)/var(--lh-tight) var(--font-ui); letter-spacing: -0.02em; }
-.label-m { font: 500 var(--fs-14)/var(--lh-tight) var(--font-ui); letter-spacing: -0.02em; }
-.label-l { font: 500 var(--fs-15)/var(--lh-tight) var(--font-ui); letter-spacing: -0.02em; }
-.label-xl { font: 500 var(--fs-16)/var(--lh-tight) var(--font-ui); letter-spacing: -0.02em; }
-.label-xxl { font: 500 var(--fs-18)/var(--lh-tight) var(--font-ui); letter-spacing: -0.02em; }
+.label-xxs { font: 500 var(--fs-10)/var(--lh-tight) &quot;Inter Tight&quot;, &quot;Inter&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; letter-spacing: -0.02em; }
+.label-xs { font: 500 var(--fs-11)/var(--lh-tight) &quot;Inter Tight&quot;, &quot;Inter&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; letter-spacing: -0.02em; }
+.label-s { font: 500 var(--fs-13)/var(--lh-tight) &quot;Inter Tight&quot;, &quot;Inter&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; letter-spacing: -0.02em; }
+.label-m { font: 500 var(--fs-14)/var(--lh-tight) &quot;Inter Tight&quot;, &quot;Inter&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; letter-spacing: -0.02em; }
+.label-l { font: 500 var(--fs-15)/var(--lh-tight) &quot;Inter Tight&quot;, &quot;Inter&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; letter-spacing: -0.02em; }
+.label-xl { font: 500 var(--fs-16)/var(--lh-tight) &quot;Inter Tight&quot;, &quot;Inter&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; letter-spacing: -0.02em; }
+.label-xxl { font: 500 var(--fs-18)/var(--lh-tight) &quot;Inter Tight&quot;, &quot;Inter&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; letter-spacing: -0.02em; }
 
-.caption { font: 500 var(--fs-11)/var(--lh-tight) var(--font-ui); }
-.caption-small { font: 500 var(--fs-10)/1.1 var(--font-ui); }
+.caption { font: 500 var(--fs-11)/var(--lh-tight) &quot;Inter Tight&quot;, &quot;Inter&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; }
+.caption-small { font: 500 var(--fs-10)/1.1 &quot;Inter Tight&quot;, &quot;Inter&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif; }
 
 /* Overline/Eyebrow */
 .overline {
-  font: 700 var(--fs-10)/1 var(--font-ui);
+  font: 700 var(--fs-10)/1 &quot;Inter Tight&quot;, &quot;Inter&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif;
   text-transform: uppercase;
   letter-spacing: 0.08em;
 }
 
 .overline-small {
-  font: 600 var(--fs-10)/1.1 var(--font-ui);
+  font: 600 var(--fs-10)/1.1 &quot;Inter Tight&quot;, &quot;Inter&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif;
   text-transform: uppercase;
   letter-spacing: 0.06em;
 }
@@ -3006,7 +2991,6 @@
   overflow: hidden;
   background: var(--role-surface-bg);
   color: var(--color-text);
-  font: 400 var(--fs-13) / var(--lh-body-ui) var(--font-ui);
 }
 
 .main-container &gt; .page &gt; [data-navigation-scrim] {
@@ -3116,11 +3100,11 @@
 }
 &lt;/style&gt;&lt;/head&gt;&lt;body&gt;&lt;div class=&quot;main-container&quot; data-navigation-open=&quot;true&quot;&gt;
   &lt;aside class=&quot;left-nav&quot; aria-label=&quot;Example navigation&quot;&gt;
-    &lt;strong&gt;Product&lt;/strong&gt;
+    &lt;strong class=&quot;heading-5&quot;&gt;Product&lt;/strong&gt;
     &lt;nav aria-label=&quot;Example sections&quot;&gt;
-      &lt;a href=&quot;#overview&quot;&gt;Overview&lt;/a&gt;
-      &lt;a href=&quot;#content&quot;&gt;Content&lt;/a&gt;
-      &lt;a href=&quot;#settings&quot;&gt;Settings&lt;/a&gt;
+      &lt;a class=&quot;body-s&quot; href=&quot;#overview&quot;&gt;Overview&lt;/a&gt;
+      &lt;a class=&quot;body-s&quot; href=&quot;#content&quot;&gt;Content&lt;/a&gt;
+      &lt;a class=&quot;body-s&quot; href=&quot;#settings&quot;&gt;Settings&lt;/a&gt;
     &lt;/nav&gt;
   &lt;/aside&gt;
 
@@ -3128,8 +3112,8 @@
     &lt;button type=&quot;button&quot; data-navigation-scrim aria-label=&quot;Close navigation&quot;&gt;&lt;/button&gt;
     &lt;header class=&quot;page__header&quot;&gt;
       &lt;div&gt;
-        &lt;h1&gt;Page title&lt;/h1&gt;
-        &lt;p&gt;Page description explains what can be managed here.&lt;/p&gt;
+        &lt;h1 class=&quot;heading-2&quot;&gt;Page title&lt;/h1&gt;
+        &lt;p class=&quot;body-s&quot;&gt;Page description explains what can be managed here.&lt;/p&gt;
       &lt;/div&gt;
       &lt;div class=&quot;page__actions&quot;&gt;
         &lt;button class=&quot;diet-btn-txt&quot; type=&quot;button&quot; data-size=&quot;md&quot; data-variant=&quot;primary&quot;&gt;
@@ -3139,7 +3123,7 @@
     &lt;/header&gt;
 
     &lt;div class=&quot;page__content&quot;&gt;
-      &lt;p&gt;Consumer-owned page content uses the shared Dieter page composition.&lt;/p&gt;
+      &lt;p class=&quot;body-s&quot;&gt;Consumer-owned page content uses the shared Dieter page composition.&lt;/p&gt;
     &lt;/div&gt;
   &lt;/main&gt;
 &lt;/div&gt;
@@ -3151,30 +3135,30 @@
     <h2 class="heading-4" id="layout-properties">Editable properties</h2>
     <div class="diet-table">
       <table class="diet-table__table">
-        <thead><tr><th scope="col">Token</th><th scope="col">Source value</th><th scope="col">Action</th></tr></thead>
+        <thead><tr><th class="label-s" scope="col">Token</th><th class="label-s" scope="col">Source value</th><th class="label-s diet-table__cell--action" scope="col">Action</th></tr></thead>
         <tbody>
           <tr data-token="--layout-left-nav-width">
-            <th scope="row"><code>--layout-left-nav-width</code></th>
-            <td><code data-token-value="--layout-left-nav-width">13.75rem</code></td>
-            <td><button class="diet-btn-txt" data-size="md" data-variant="secondary" type="button" data-token-edit="foundation" data-token="--layout-left-nav-width" data-value="13.75rem" aria-label="Edit --layout-left-nav-width"><span class="diet-btn-txt__label">Edit</span></button></td>
+            <th class="body-s" scope="row"><code class="body-s">--layout-left-nav-width</code></th>
+            <td class="body-s"><code class="body-s" data-token-value="--layout-left-nav-width">13.75rem</code></td>
+            <td class="body-s diet-table__cell--action"><button class="diet-btn-txt" data-size="md" data-variant="secondary" type="button" data-token-edit="foundation" data-token="--layout-left-nav-width" data-value="13.75rem" aria-label="Edit --layout-left-nav-width"><span class="diet-btn-txt__label">Edit</span></button></td>
           </tr>
 
           <tr data-token="--layout-left-nav-padding">
-            <th scope="row"><code>--layout-left-nav-padding</code></th>
-            <td><code data-token-value="--layout-left-nav-padding">var(--space-6)</code></td>
-            <td><button class="diet-btn-txt" data-size="md" data-variant="secondary" type="button" data-token-edit="foundation" data-token="--layout-left-nav-padding" data-value="var(--space-6)" aria-label="Edit --layout-left-nav-padding"><span class="diet-btn-txt__label">Edit</span></button></td>
+            <th class="body-s" scope="row"><code class="body-s">--layout-left-nav-padding</code></th>
+            <td class="body-s"><code class="body-s" data-token-value="--layout-left-nav-padding">var(--space-6)</code></td>
+            <td class="body-s diet-table__cell--action"><button class="diet-btn-txt" data-size="md" data-variant="secondary" type="button" data-token-edit="foundation" data-token="--layout-left-nav-padding" data-value="var(--space-6)" aria-label="Edit --layout-left-nav-padding"><span class="diet-btn-txt__label">Edit</span></button></td>
           </tr>
 
           <tr data-token="--layout-page-padding">
-            <th scope="row"><code>--layout-page-padding</code></th>
-            <td><code data-token-value="--layout-page-padding">var(--space-8)</code></td>
-            <td><button class="diet-btn-txt" data-size="md" data-variant="secondary" type="button" data-token-edit="foundation" data-token="--layout-page-padding" data-value="var(--space-8)" aria-label="Edit --layout-page-padding"><span class="diet-btn-txt__label">Edit</span></button></td>
+            <th class="body-s" scope="row"><code class="body-s">--layout-page-padding</code></th>
+            <td class="body-s"><code class="body-s" data-token-value="--layout-page-padding">var(--space-8)</code></td>
+            <td class="body-s diet-table__cell--action"><button class="diet-btn-txt" data-size="md" data-variant="secondary" type="button" data-token-edit="foundation" data-token="--layout-page-padding" data-value="var(--space-8)" aria-label="Edit --layout-page-padding"><span class="diet-btn-txt__label">Edit</span></button></td>
           </tr>
 
           <tr data-token="--layout-compact-left-nav-width">
-            <th scope="row"><code>--layout-compact-left-nav-width</code></th>
-            <td><code data-token-value="--layout-compact-left-nav-width">20rem</code></td>
-            <td><button class="diet-btn-txt" data-size="md" data-variant="secondary" type="button" data-token-edit="foundation" data-token="--layout-compact-left-nav-width" data-value="20rem" aria-label="Edit --layout-compact-left-nav-width"><span class="diet-btn-txt__label">Edit</span></button></td>
+            <th class="body-s" scope="row"><code class="body-s">--layout-compact-left-nav-width</code></th>
+            <td class="body-s"><code class="body-s" data-token-value="--layout-compact-left-nav-width">20rem</code></td>
+            <td class="body-s diet-table__cell--action"><button class="diet-btn-txt" data-size="md" data-variant="secondary" type="button" data-token-edit="foundation" data-token="--layout-compact-left-nav-width" data-value="20rem" aria-label="Edit --layout-compact-left-nav-width"><span class="diet-btn-txt__label">Edit</span></button></td>
           </tr></tbody>
       </table>
     </div>

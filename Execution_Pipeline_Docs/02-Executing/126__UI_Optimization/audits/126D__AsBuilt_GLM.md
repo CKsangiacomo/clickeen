@@ -10,8 +10,8 @@ Status: FROZEN POINT-IN-TIME PRE-EXECUTION AS-BUILT - code and remote font state
 
 | Token | Stack |
 |---|---|
-| `--font-ui` | `"Inter Tight", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif` |
-| `--font-mono` | `"SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace` |
+| Former operational sans family variable | `"Inter Tight", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif` |
+| Former operational monospace family variable | `"SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace` |
 
 ## 2. Size scale (`:12–22`) — 11 px-named tokens
 

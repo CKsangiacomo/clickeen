@@ -18,7 +18,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={interTight.className} suppressHydrationWarning>
+      <body className={`${interTight.className} body-s`} suppressHydrationWarning>
         {children}
       </body>
     </html>

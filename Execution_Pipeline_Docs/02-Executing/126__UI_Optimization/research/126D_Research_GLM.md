@@ -48,7 +48,7 @@
 - "Limit variation in font size."
 
 ### Implications for clickeen
-- **Inherit system fonts** — clickeen's `--font-ui` starts with "Inter Tight" then falls back to system fonts (-apple-system, etc.). This is close but not "inherit the system stack" — it LEADS with a custom font (Inter Tight). If strict OpenAI compliance is needed, clickeen might need a host-mode that defers to the ChatGPT font.
+- **Inherit system fonts** — the operational visual classes start with "Inter Tight" then fall back to system fonts (-apple-system, etc.). This is close but not "inherit the system stack" — it LEADS with a custom font (Inter Tight). If strict OpenAI compliance is needed, clickeen might need a host-mode that defers to the ChatGPT font.
 - **Respect system sizing** — rem-based (which clickeen uses) respects the browser's default font-size preference.
 - **Limit variation** — clickeen has 11 size tokens + 3 fluid + 26 utility classes. That's a lot of variation. OpenAI's "limit" suggests fewer is better.
 

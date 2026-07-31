@@ -96,7 +96,7 @@
 }
 
 .ck-countdown__separator {
-  font-family: var(--typo-timer-family, var(--font-ui));
+  font-family: var(--typo-timer-family, "Inter", sans-serif);
   font-size: var(--typo-timer-size, var(--fs-32));
   font-weight: var(--typo-timer-weight, 700);
   letter-spacing: var(--typo-timer-tracking, 0em);
@@ -105,7 +105,7 @@
 }
 
 .ck-countdown__value {
-  font-family: var(--typo-timer-family, var(--font-ui));
+  font-family: var(--typo-timer-family, "Inter", sans-serif);
   font-style: var(--typo-timer-style, normal);
   font-size: var(--typo-timer-size, var(--fs-32));
   font-weight: var(--typo-timer-weight, 700);
@@ -116,7 +116,7 @@
 
 .ck-countdown__label {
   margin-top: var(--space-1);
-  font-family: var(--typo-label-family, var(--font-ui));
+  font-family: var(--typo-label-family, "Inter", sans-serif);
   font-style: var(--typo-label-style, normal);
   font-size: var(--typo-label-size, var(--fs-12));
   font-weight: var(--typo-label-weight, 400);
@@ -161,7 +161,7 @@
   padding: var(--space-3) var(--space-5);
   border-radius: var(--control-radius-md);
   text-decoration: none;
-  font-family: var(--typo-button-family, var(--font-ui));
+  font-family: var(--typo-button-family, "Inter", sans-serif);
   font-style: var(--typo-button-style, normal);
   font-size: var(--typo-button-size, var(--fs-14));
   font-weight: var(--typo-button-weight, 600);
@@ -196,7 +196,7 @@
 }
 
 .ck-countdown__after-link {
-  font-family: var(--typo-label-family, var(--font-ui));
+  font-family: var(--typo-label-family, "Inter", sans-serif);
   font-style: var(--typo-label-style, normal);
   font-size: var(--typo-label-size, var(--fs-12));
   font-weight: var(--typo-label-weight, 500);

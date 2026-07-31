@@ -202,6 +202,34 @@ test.describe('DevStudio route contract', () => {
       .locator('[data-table-composition="horizontal-overflow"]')
       .evaluate((element) => element.scrollWidth > element.clientWidth);
     expect(overflow).toBe(true);
+
+    const ordinary = page.locator('[data-table-composition="ordinary"]');
+    await expect(ordinary.locator('thead th:not(.label-s)')).toHaveCount(0);
+    await expect(ordinary.locator('tbody :is(th, td):not(.body-s)')).toHaveCount(0);
+    const ordinaryPresentation = await ordinary.evaluate((element) => {
+      const header = element.querySelector<HTMLElement>('thead th');
+      const rowHeader = element.querySelector<HTMLElement>('tbody th');
+      const bodyCell = element.querySelector<HTMLElement>('tbody td');
+      if (!header || !rowHeader || !bodyCell) throw new Error('Table example is incomplete.');
+      return {
+        headerBackground: getComputedStyle(header).backgroundColor,
+        rowHeaderBackground: getComputedStyle(rowHeader).backgroundColor,
+        bodyBackground: getComputedStyle(bodyCell).backgroundColor,
+        bodyInlineStartBorder: getComputedStyle(bodyCell).borderInlineStartWidth,
+        bodyInlineEndBorder: getComputedStyle(bodyCell).borderInlineEndWidth,
+      };
+    });
+    expect(ordinaryPresentation.headerBackground).not.toBe(ordinaryPresentation.bodyBackground);
+    expect(ordinaryPresentation.rowHeaderBackground).toBe(ordinaryPresentation.bodyBackground);
+    expect(ordinaryPresentation.bodyInlineStartBorder).toBe('0px');
+    expect(ordinaryPresentation.bodyInlineEndBorder).toBe('0px');
+
+    const rowAction = page.locator('[data-table-composition="row-action"]');
+    const actionCells = rowAction.locator('.diet-table__cell--action');
+    await expect(actionCells).toHaveCount(3);
+    for (const actionCell of await actionCells.all()) {
+      await expect(actionCell).toHaveCSS('text-align', 'end');
+    }
   });
 
   test('Layouts reveals the exact source contract and edits its four tokens through the foundation path', async ({ page }) => {

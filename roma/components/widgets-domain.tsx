@@ -515,7 +515,7 @@ export function WidgetsDomain() {
                   <th className="label-s">Instance</th>
                   <th className="label-s">Instance ID</th>
                   <th className="label-s">Status</th>
-                  <th className="label-s">Actions</th>
+                  <th className="label-s diet-table__cell--action">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -582,9 +582,10 @@ export function WidgetsDomain() {
                       </td>
                       <td className="body-s">{instance.instanceId}</td>
                       <td className="body-s">{instance.status === 'published' ? 'Published' : 'Unpublished'}</td>
-                      <td className="roma-cell-actions">
-                        {canMutateWidgets ? (
-                          <>
+                      <td className="body-s diet-table__cell--action">
+                        <div className="roma-cell-actions">
+                          {canMutateWidgets ? (
+                            <>
                             <Link
                               href={buildBuilderRoute({
                                 instanceId: instance.instanceId,
@@ -650,10 +651,11 @@ export function WidgetsDomain() {
                             >
                               <span className="diet-btn-txt__label body-m">{activeActionKey === deleteActionKey ? 'Deleting...' : 'Delete'}</span>
                             </button>
-                          </>
-                        ) : (
-                          <span className="body-s">View only</span>
-                        )}
+                            </>
+                          ) : (
+                            <span className="body-s">View only</span>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   );

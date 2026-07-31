@@ -170,7 +170,7 @@ if (!appRoot) {
 }
 
 const shell = document.createElement('div');
-shell.className = 'main-container';
+shell.className = 'main-container body-s';
 
 const sidebar = document.createElement('aside');
 sidebar.className = 'left-nav';
@@ -206,7 +206,7 @@ portraitBoundary.className = 'devstudio-portrait-boundary';
 portraitBoundary.setAttribute('aria-label', 'Unsupported workspace');
 portraitBoundary.innerHTML = `
   <h1 class="heading-3">Rotate your device or use a larger screen</h1>
-  <p class="body-sm">DevStudio needs a wider workspace.</p>
+  <p class="body-s">DevStudio needs a wider workspace.</p>
 `;
 
 shell.append(sidebar, main);
@@ -281,7 +281,7 @@ navGroups.forEach((group) => {
 
   if (group.title) {
     const title = document.createElement('p');
-    title.className = 'nav-group__title label-xs';
+    title.className = 'nav-group__title overline-small';
     title.textContent = group.title;
     wrapper.append(title);
   }
@@ -292,7 +292,7 @@ navGroups.forEach((group) => {
   group.items.forEach((item) => {
     const li = document.createElement('li');
     const link = document.createElement('a');
-    link.className = 'nav-link';
+    link.className = 'nav-link body-s';
     link.href = item.path;
     link.textContent = item.title;
     link.addEventListener('click', (event) => {
@@ -462,11 +462,11 @@ async function openTokenEditor(
         <div class="diet-popup__body devstudio-token-editor__body">
           <label class="devstudio-token-editor__field">
             <span class="label-xs">Token</span>
-            <select class="diet-operational-field devstudio-token-editor__select" name="token" disabled></select>
+            <select class="diet-operational-field body-s devstudio-token-editor__select" name="token" disabled></select>
           </label>
           <label class="devstudio-token-editor__field">
             <span class="label-xs">Value</span>
-            <input class="diet-operational-field devstudio-token-editor__input" name="value" type="text" autocomplete="off" autocapitalize="none" spellcheck="false" aria-describedby="devstudio-token-editor-status" disabled />
+            <input class="diet-operational-field body-s devstudio-token-editor__input" name="value" type="text" autocomplete="off" autocapitalize="none" spellcheck="false" aria-describedby="devstudio-token-editor-status" disabled />
           </label>
           <div class="devstudio-token-editor__diff body-xs" id="devstudio-token-editor-status" aria-live="polite">Loading token source…</div>
         </div>
@@ -692,7 +692,7 @@ function renderNotFound(slug: string): DocumentFragment {
   const fragment = document.createDocumentFragment();
   const article = document.createElement('article');
   article.className = 'stack';
-  article.innerHTML = `<h1 class="heading-2">Missing</h1><p>Could not load \`${slug}\`.</p>`;
+  article.innerHTML = `<h1 class="heading-2">Missing</h1><p class="body-s">Could not load \`${slug}\`.</p>`;
   fragment.append(article);
   return fragment;
 }
@@ -801,10 +801,10 @@ function hydrateTypographyPage(scope: ParentNode) {
     table.innerHTML = `
       <thead>
         <tr>
-          <th scope="col">Role</th>
-          <th scope="col">Source class</th>
-          <th scope="col">Preview</th>
-          <th scope="col">Action</th>
+          <th class="label-s" scope="col">Role</th>
+          <th class="label-s" scope="col">Source class</th>
+          <th class="label-s diet-table__cell--preview" scope="col">Preview</th>
+          <th class="label-s diet-table__cell--action" scope="col">Action</th>
         </tr>
       </thead>
     `;
@@ -814,17 +814,21 @@ function hydrateTypographyPage(scope: ParentNode) {
       const row = doc.createElement('tr');
 
       const rowHeader = doc.createElement('th');
+      rowHeader.className = 'body-s';
       rowHeader.scope = 'row';
       rowHeader.textContent = sample.name;
       row.appendChild(rowHeader);
 
       const sourceCell = doc.createElement('td');
+      sourceCell.className = 'body-s';
       const sourceCode = doc.createElement('code');
+      sourceCode.className = 'body-s';
       sourceCode.textContent = `.${sample.className}`;
       sourceCell.appendChild(sourceCode);
       row.appendChild(sourceCell);
 
       const previewCell = doc.createElement('td');
+      previewCell.className = 'body-s diet-table__cell--preview';
       const sampleElement = doc.createElement('div');
       sampleElement.className = sample.className;
       sampleElement.textContent = getTypographySampleText(sample.sample);
@@ -832,6 +836,7 @@ function hydrateTypographyPage(scope: ParentNode) {
       row.appendChild(previewCell);
 
       const actionCell = doc.createElement('td');
+      actionCell.className = 'body-s diet-table__cell--action';
       const editButton = doc.createElement('button');
       editButton.className = 'diet-btn-txt';
       editButton.type = 'button';

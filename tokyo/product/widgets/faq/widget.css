@@ -47,7 +47,7 @@
 }
 
 .ck-faq__category {
-  font-family: var(--typo-section-family, var(--font-ui));
+  font-family: var(--typo-section-family, "Inter", sans-serif);
   font-style: var(--typo-section-style, normal);
   font-weight: var(--typo-section-weight, 600);
   font-size: var(--typo-section-size, var(--fs-14));
@@ -74,7 +74,7 @@
   background: none;
   border: 0;
   cursor: pointer;
-  font-family: var(--typo-question-family, var(--font-ui));
+  font-family: var(--typo-question-family, "Inter", sans-serif);
   font-style: var(--typo-question-style, normal);
   font-size: var(--typo-question-size, var(--faq-question-size, var(--fs-14)));
   font-weight: var(--typo-question-weight, 500);
@@ -88,7 +88,7 @@
 }
 
 .ck-faq__q-text {
-  font-family: var(--typo-question-family, var(--font-ui));
+  font-family: var(--typo-question-family, "Inter", sans-serif);
   font-style: var(--typo-question-style, normal);
   font-size: var(--typo-question-size, var(--faq-question-size, var(--fs-14)));
   font-weight: var(--typo-question-weight, 500);
@@ -140,7 +140,7 @@
   font: var(--typo-answer-weight, 400)
     var(--typo-answer-size, var(--faq-answer-size, var(--fs-14)))
     / var(--typo-answer-line-height, var(--lh-body))
-    var(--typo-answer-family, var(--font-ui));
+    var(--typo-answer-family, "Inter", sans-serif);
   font-style: var(--typo-answer-style, normal);
   letter-spacing: var(--typo-answer-tracking, 0em);
 }
@@ -231,7 +231,7 @@
   border-radius: var(--control-radius-md);
   background: var(--color-system-gray-6-step5);
   color: var(--color-system-gray-2);
-  font: 500 var(--fs-13)/var(--lh-body) var(--font-ui);
+  font: 500 var(--fs-13)/var(--lh-body) "Inter", sans-serif;
 }
 
 .ck-faq[data-layout='multicolumn'] .ck-faq__list {

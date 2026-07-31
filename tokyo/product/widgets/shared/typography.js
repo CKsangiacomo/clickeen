@@ -654,7 +654,7 @@
 
   function resolveFallbackTailTokens(familyClass) {
     if (familyClass === 'serif') return ['serif'];
-    return ['var(--font-ui)', 'sans-serif'];
+    return ['Inter', 'sans-serif'];
   }
 
   function resolveFamilyValue(family, script) {

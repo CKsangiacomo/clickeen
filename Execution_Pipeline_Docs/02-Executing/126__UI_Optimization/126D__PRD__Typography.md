@@ -1,6 +1,7 @@
 # 126D - PRD: Typography
 
-Status: STEP 9 GREEN - EXECUTED AND VERIFIED.
+Status: ORIGINAL STEP 9 GREEN; 2026-07-30 OPERATIONAL TYPOGRAPHY
+CORRECTION IN EXECUTION.
 
 Post-126G delivery note: references below to `pnpm build:dieter`, generated
 editor bundles, generated token/component mirrors, or
@@ -19,6 +20,55 @@ gaps, and defines the blast radius for execution.
 126D execution must make the codebase and docs match this PRD. It must not
 create a new typography framework, compatibility lane, generic text engine,
 font governance subsystem, or validation ritual.
+
+## 2026-07-30 Human Operational Typography Correction
+
+The human product owner rejected the two operational font-family variables
+introduced or retained by the earlier 126 execution. They are removed from
+active Clickeen source and current-system documentation without aliases,
+fallbacks, replacement font tokens, or a monospace exception.
+
+The typography classes revealed at
+`https://devstudio.clickeen.com/#/dieter/typography` are the complete
+operational text contract:
+
+```text
+display-*
+heading-*
+body-*
+label-*
+caption*
+overline*
+```
+
+Each class is a complete visual type choice. Dieter, DevStudio, Roma, Bob, and
+Prague consumers select one of those classes instead of assembling typography
+from a font family, size, weight, line height, or tracking declaration. The
+existing size and line-height values may remain internal to the class
+definitions; they are not consumer composition APIs. Components such as Button
+own the approved class used by their internal label.
+
+For shared Table:
+
+- page titles use `heading-2`;
+- section titles use `heading-4`;
+- column headers use `label-s`;
+- every body `th` and `td`, including technical token names and source values,
+  uses `body-s`;
+- actions use Dieter Button typography;
+- no technical value receives an automatic monospace treatment.
+
+Public widget content remains the separate account-authored typography lane.
+Its structured family/weight/style authority and `--typo-*` runtime variables
+remain unchanged. Static widget fallback must use the existing Inter account
+font baseline directly and must not reference an operational font-family
+variable.
+
+This correction supersedes the earlier Operational UI Typography, Widget
+Fallback Baseline, blast-radius, and verification statements that require the
+removed variables or permit consumers to assemble operational typography from
+raw mechanics. Historical Step-9 evidence remains a record of what the earlier
+commits did; it is not current implementation direction.
 
 ## Step Inputs
 
@@ -70,9 +120,9 @@ single execution-grade product law.
 
 Strong current substrate:
 
-- `dieter/tokens/dieter-typography.css` defines `--font-ui`, `--font-mono`,
-  base size tokens, `--fs-10` through `--fs-32`, display size tokens, line-height
-  tokens, and utility classes.
+- `dieter/tokens/dieter-typography.css` defines base size tokens, `--fs-10`
+  through `--fs-32`, display size tokens, line-height tokens, and the complete
+  visual classes.
 - `tokyo/product/widgets/shared/typography.js` validates and applies
   public-widget typography through `CKTypography.applyTypography`.
 - `bob/lib/compiler/modules/typography.ts` exposes Bob's widget typography
@@ -127,10 +177,10 @@ and Dieter components.
 
 Target law:
 
-- Use `--font-ui` for normal UI text.
-- Use `--font-mono` for code, IDs, logs, structured technical values, and
-  monospace text.
-- Use Dieter-declared size and line-height tokens/classes.
+- Use a complete Dieter visual class for every operational text node.
+- Use the same context-appropriate visual classes for code, IDs, logs, and
+  structured technical values; there is no automatic monospace lane.
+- Keep Dieter-declared size and line-height values internal to those classes.
 - Do not create local font stacks, local type scales, or per-component type
   systems.
 - Do not use viewport-fluid typography in operational UI chrome.
@@ -198,8 +248,9 @@ Target law:
 - Inter is always present in every account font library.
 - Accounts cannot remove Inter.
 - Account font library Inter is the required widget/content baseline. It is not
-  the same authority as operational UI `--font-ui`, which may use the Dieter
-  `Inter Tight, Inter, system-ui, sans-serif` stack for dense Clickeen chrome.
+  the same authority as operational UI, whose complete Dieter visual classes
+  use the `Inter Tight, Inter, system-ui, sans-serif` stack for dense Clickeen
+  chrome.
 - Every account has one widget typography font library:
   Inter baseline + account-selected Google Fonts + account-uploaded custom
   fonts.
@@ -368,9 +419,9 @@ Git execution. They remain untouched and receive no Step-9 credit.
 
 ## Widget Fallback Baseline
 
-Replacing undefined `--font-display` references with `var(--font-ui)` is a
-static CSS fallback only. It means "no widget typography variable has been
-applied yet, so render with the system UI baseline."
+Replacing undefined `--font-display` references with the direct Inter account
+font baseline is a static CSS fallback only. It means "no widget typography
+variable has been applied yet, so render with the required widget baseline."
 
 It must not be used to hide runtime failure. If `CKTypography.applyTypography`
 or required account font data is missing, runtime/editor behavior must fail
@@ -428,7 +479,7 @@ migration work.
 | Admin component example generation | `admin/src/data/componentRenderer.ts`, `admin/src/html/components/**` | Verified current: generated examples use `body-xs`. |
 | Dieter component stale class cleanup | `dieter/components/textedit/textedit.html`, `dieter/components/textedit/textedit-dom.ts`, `dieter/components/dropdown-edit/dropdown-edit.html`, `dieter/components/textrename/textrename.css` | Verified current: removed `body-xsmall`/`label-small` names and preserving comments are absent. |
 | Dieter component tracking cleanup | `dieter/components/button/button.css`, `dieter/components/textfield/textfield.css`, `dieter/components/valuefield/valuefield.css`, `dieter/components/textrename/textrename.css` | Verified current: component-local copied tracking values are absent. |
-| Bob shell typography | `bob/app/bob_app.css` | Verified current: the code block uses `var(--font-mono)`. |
+| Bob shell typography | `bob/app/bob_app.css` | Corrected current: code blocks use an approved visual class with no automatic monospace treatment. |
 | Account font library document | `roma/lib/account-widget-defaults-direct.ts`, `roma/lib/account-widget-defaults-contract.ts`, `roma/lib/account-widget-defaults-materialization.ts`, `roma/components/widget-defaults-domain.tsx`, `roma/app/api/account/widget-defaults/route.ts`, `tokyo-worker/src/domains/account-widget-defaults.ts`, `tokyo-worker/src/routes/internal-widget-default-routes.ts` | Verified current: top-level `fontLibrary` flows through the existing account widget-defaults authority. |
 | Bob open/session font payload | `roma/components/builder-domain.tsx`, `bob/lib/session/sessionTypes.ts`, `bob/lib/session/useSessionBoot.ts`, `bob/lib/session/WidgetDocumentSession.tsx` | Verified current: Bob receives the account font library and rejects missing/malformed data. |
 | Bob widget typography authoring | `bob/lib/edit/typography-fonts.ts`, `bob/lib/compiler/{controls,editor-contract}.ts`, `bob/lib/compiler/modules/typography.ts`, `bob/lib/session/{sessionConfig,sessionTypes,useSessionBoot,useSessionEditing,useSessionSaving,WidgetDocumentSession}.ts*`, `bob/components/{CopilotPane,TdMenuContent,ToolDrawer}.tsx`, `bob/components/td-menu-content/{accountFonts,linkedOps,useTdMenuBindings}.ts`, `bob/lib/control-host.ts` | Closed in Step 9: the compiler is account-neutral, session binding supplies the exact account library, one transition operation serves manual and Copilot edits, and the obsolete Bob font authority is deleted. |
@@ -458,9 +509,9 @@ Current documentation reconciliation:
 - It documents the
   `fontLibrary` record shape in account widget defaults and state that public
   URLs are materialized runtime data, not persisted account font source truth.
-- It states the Inter/Inter Tight
-  distinction: widget/content baseline Inter is required in every account font
-  library; operational UI `--font-ui` is the Dieter chrome stack.
+- It states the Inter/Inter Tight distinction: widget/content baseline Inter is
+  required in every account font library; operational UI visual classes use
+  the Dieter chrome stack.
 - It covers current
   `CKTypography` behavior, `--font-display` cleanup, and the viewport-fluid
   versus container-query-fluid split.

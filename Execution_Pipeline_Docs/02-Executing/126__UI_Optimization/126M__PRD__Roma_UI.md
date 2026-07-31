@@ -85,6 +85,20 @@ proof for every affected Roma route and applicable Bob path, preservation of
 all domain operations, zero replaced selector hits, current-doc reconciliation,
 and independent V1–V8 recorded in `126_DevQA.md`.
 
+### 2026-07-30 Typography And Table Correction
+
+Roma and Bob operational chrome use only the complete typography classes
+revealed by DevStudio Typography. They do not assemble local typography from
+font-family, size, weight, line-height, or tracking declarations. The removed
+font-family variables receive no aliases or fallbacks. Bob's account-authored
+widget-content typography remains a separate product-data/runtime authority.
+
+Every Roma semantic table uses the corrected Dieter Table: `label-s` column
+headers, `body-s` body cells, white body including row-header cells, muted
+header only, shared horizontal dividers, and compact end-aligned action columns
+where applicable. Roma and Bob retain domain data and behavior but do not
+restate shared Table typography or presentation.
+
 ## Purpose
 
 Finish Roma's simple operational shell and adopt the small shared field/table

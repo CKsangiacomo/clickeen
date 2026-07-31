@@ -90,6 +90,14 @@ not own sorting, pagination, data policy, or a React table abstraction.
 DevStudio's token editor consumes `operational-field`; Dieter, Roma, and
 DevStudio tables consume `table`.
 
+Table body and row-header cells use the shared surface; only column headers use
+the muted surface. Table has an outer stroke and horizontal row dividers, with
+no vertical rules or zebra stripes. Column headers use `label-s`; every body
+`th` and `td` uses `body-s`; action controls retain their Dieter component
+typography. Technical values receive no separate monospace treatment. Preview
+and action columns use the small Table-owned composition classes rather than
+consumer-local base styling.
+
 Dieter Popup owns the blocking native `<dialog>` appearance and structural
 slots: header, body, footer, and actions, with small, medium, and large sizes.
 Product owners keep workflow state, copy, validation, persistence, and the

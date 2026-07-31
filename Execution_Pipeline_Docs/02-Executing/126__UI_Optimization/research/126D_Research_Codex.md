@@ -169,7 +169,8 @@ Concrete Clickeen audit implication:
 
 As-built evidence to compare:
 
-- Dieter declares `--font-ui` and `--font-mono`.
+- Dieter formerly declared separate operational sans and monospace family
+  variables.
 - Bob imports Inter Tight and has at least one hardcoded mono stack.
 - Widget runtime supports Google and Tokyo-hosted fonts.
 

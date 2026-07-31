@@ -71,7 +71,7 @@
         border: none;
         background: color-mix(in oklab, var(--color-system-white), transparent 15%);
         box-shadow: none;
-        font: 500 var(--fs-12, 12px) / var(--lh-tight, 1.2) var(--font-ui, ui-sans-serif);
+        font: 500 var(--fs-12, 12px) / var(--lh-tight, 1.2) "Inter", sans-serif;
         color: var(--color-text);
         text-decoration: none;
         -webkit-font-smoothing: antialiased;

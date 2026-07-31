@@ -177,7 +177,7 @@ function buildRows(path: string, rowPath: string, strips: unknown[]): BulkRow[] 
 function renderEmpty(tableWrap: HTMLElement, label: string | null) {
   tableWrap.innerHTML = '';
   const empty = document.createElement('div');
-  empty.className = 'diet-bulk-edit__empty';
+  empty.className = 'diet-bulk-edit__empty body-s';
   empty.textContent = label || 'No rows available';
   tableWrap.appendChild(empty);
 }
@@ -212,6 +212,7 @@ function renderTable(
   const headRow = document.createElement('tr');
   visibleColumns.forEach((col) => {
     const th = document.createElement('th');
+    th.className = 'label-s';
     th.textContent = col.label || '';
     headRow.appendChild(th);
   });
@@ -224,6 +225,7 @@ function renderTable(
     const tr = document.createElement('tr');
     visibleColumns.forEach((col, colIndex) => {
       const td = document.createElement('td');
+      td.className = 'body-s';
       const controlType = (col.control || 'text').toLowerCase();
       const path = col.path || '';
       const value = path ? row.data[path] : undefined;
@@ -237,7 +239,7 @@ function renderTable(
           preview.style.background = value;
         }
         const name = document.createElement('div');
-        name.className = 'diet-bulk-edit__logo-name';
+        name.className = 'diet-bulk-edit__logo-name label-s';
         const labelPath = col.labelPath || 'name';
         const nameValue = row.data[labelPath];
         name.textContent = typeof nameValue === 'string' ? nameValue : '';
@@ -284,7 +286,7 @@ function renderTable(
 
       const input = document.createElement('input');
       input.type = 'text';
-      input.className = 'diet-bulk-edit__input';
+      input.className = 'diet-bulk-edit__input body-s';
       input.value = value == null ? '' : String(value);
       if (col.placeholder) input.placeholder = col.placeholder;
       if (path) input.setAttribute('data-bulk-path', `${row.pathPrefix}.${path}`);

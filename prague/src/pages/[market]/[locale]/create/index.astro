@@ -2,6 +2,7 @@
 export const prerender = false;
 
 import { getPragueMarket } from '../../../../lib/markets';
+import Base from '../../../../layouts/Base.astro';
 
 const { market, locale } = Astro.params;
 const url = Astro.url;
@@ -41,22 +42,14 @@ if (romaBase) {
 Astro.response.status = 503;
 ---
 
-<!doctype html>
-<html lang={localeKey || 'en'}>
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Clickeen create unavailable</title>
-  </head>
-  <body>
-    <main style="font-family: var(--font-ui); max-width: 640px; margin: 64px auto; padding: 0 16px;">
-      <h1 style="font-size: 24px; line-height: 1.25; margin-bottom: 12px;">Create is temporarily unavailable</h1>
-      <p style="font-size: 16px; line-height: 1.5; margin-bottom: 8px;">
-        Account creation cannot be opened from this page right now.
-      </p>
-      <p style="font-size: 14px; line-height: 1.5; opacity: 0.8;">
-        Please try again later.
-      </p>
-    </main>
-  </body>
-</html>
+<Base title="Clickeen create unavailable" locale={localeKey || 'en'}>
+  <main style="max-width: 640px; margin: 64px auto; padding: 0 16px;">
+    <h1 class="heading-2" style="margin-bottom: 12px;">Create is temporarily unavailable</h1>
+    <p class="body-xl" style="margin-bottom: 8px;">
+      Account creation cannot be opened from this page right now.
+    </p>
+    <p class="body-m" style="opacity: 0.8;">
+      Please try again later.
+    </p>
+  </main>
+</Base>

@@ -8,7 +8,6 @@
   overflow: hidden;
   background: var(--role-surface-bg);
   color: var(--color-text);
-  font: 400 var(--fs-13) / var(--lh-body-ui) var(--font-ui);
 }
 
 .main-container > .page > [data-navigation-scrim] {

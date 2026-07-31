@@ -436,7 +436,7 @@ export function AssetsDomain() {
               <th className="label-s">Type</th>
               <th className="label-s">MIME</th>
               <th className="label-s">Size</th>
-              <th className="label-s">Actions</th>
+              <th className="label-s diet-table__cell--action">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -446,7 +446,7 @@ export function AssetsDomain() {
                 <td className="body-s">{asset.assetType}</td>
                 <td className="body-s">{asset.contentType}</td>
                 <td className="body-s">{formatBytes(asset.sizeBytes)}</td>
-                <td className="roma-cell-actions">
+                <td className="body-s diet-table__cell--action">
                   <button
                     className="diet-btn-txt"
                     data-size="md"

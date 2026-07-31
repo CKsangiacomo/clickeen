@@ -150,7 +150,6 @@
   border-radius: 999px;
   border: 1px solid color-mix(in oklab, var(--color-system-black), transparent 88%);
   background: color-mix(in oklab, var(--color-system-white), transparent 15%);
-  font: 600 var(--fs-11)/1 var(--font-ui);
   color: color-mix(in oklab, var(--color-system-black), transparent 25%);
 }
 
@@ -181,8 +180,6 @@
   appearance: none;
   -webkit-appearance: none;
   -moz-appearance: none;
-  font: 500 var(--fs-14)/1.1 var(--font-ui);
-  letter-spacing: -0.01em;
   color: var(--color-system-black);
   background: var(--color-system-white);
   border: 1px solid color-mix(in oklab, var(--color-system-black), transparent 84%);
@@ -230,7 +227,6 @@
 
 @media (max-width: 900px) {
   .selector-dropdown {
-    font: 500 var(--fs-14)/1.1 var(--font-ui);
     padding: 10px 38px 10px 14px;
   }
 }

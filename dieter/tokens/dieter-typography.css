@@ -1,8 +1,4 @@
 :root {
-  /* Base font family */
-  --font-ui: "Inter Tight", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
-  --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
-
   /* Base sizes */
   --fs-body: 1rem;        /* 16px default body */
   --fs-ui: 0.9375rem;     /* 15px default UI */
@@ -34,97 +30,97 @@
 
 /* Display (marketing) */
 .display-1 {
-  font: 600 var(--fs-fluid-display-1)/1.08 var(--font-ui);
+  font: 600 var(--fs-fluid-display-1)/1.08 "Inter Tight", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
   letter-spacing: -0.015em;
   color: inherit;
 }
 
 .display-2 {
-  font: 600 var(--fs-fluid-display-2)/1.08 var(--font-ui);
+  font: 600 var(--fs-fluid-display-2)/1.08 "Inter Tight", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
   letter-spacing: -0.012em;
   color: inherit;
 }
 
 .display-3 {
-  font: 600 var(--fs-fluid-display-3)/1.08 var(--font-ui);
+  font: 600 var(--fs-fluid-display-3)/1.08 "Inter Tight", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
   letter-spacing: -0.01em;
   color: inherit;
 }
 
 /* Body text */
-.body-xxs { font: 400 var(--fs-10)/var(--lh-tight) var(--font-ui); }
-.body-xs { font: 400 var(--fs-11)/var(--lh-tight) var(--font-ui); }
-.body-s { font: 400 var(--fs-13)/var(--lh-body-ui) var(--font-ui); }
-.body-m { font: 400 var(--fs-14)/var(--lh-body-ui) var(--font-ui); }
-.body-l { font: 400 var(--fs-15)/var(--lh-body-ui) var(--font-ui); }
-.body-xl { font: 400 var(--fs-16)/var(--lh-body-ui) var(--font-ui); }
-.body-xxl { font: 400 var(--fs-18)/var(--lh-body-ui) var(--font-ui); }
+.body-xxs { font: 400 var(--fs-10)/var(--lh-tight) "Inter Tight", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif; }
+.body-xs { font: 400 var(--fs-11)/var(--lh-tight) "Inter Tight", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif; }
+.body-s { font: 400 var(--fs-13)/var(--lh-body-ui) "Inter Tight", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif; }
+.body-m { font: 400 var(--fs-14)/var(--lh-body-ui) "Inter Tight", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif; }
+.body-l { font: 400 var(--fs-15)/var(--lh-body-ui) "Inter Tight", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif; }
+.body-xl { font: 400 var(--fs-16)/var(--lh-body-ui) "Inter Tight", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif; }
+.body-xxl { font: 400 var(--fs-18)/var(--lh-body-ui) "Inter Tight", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif; }
 
 /* Website body (larger than body-xxl; used in-product) */
-.body-website { font: 400 var(--fs-20)/var(--lh-body-ui) var(--font-ui); }
-.body-website-large { font: 400 var(--fs-24)/var(--lh-body-ui) var(--font-ui); }
-.body-website-xlarge { font: 400 var(--fs-32)/var(--lh-body-ui) var(--font-ui); }
+.body-website { font: 400 var(--fs-20)/var(--lh-body-ui) "Inter Tight", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif; }
+.body-website-large { font: 400 var(--fs-24)/var(--lh-body-ui) "Inter Tight", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif; }
+.body-website-xlarge { font: 400 var(--fs-32)/var(--lh-body-ui) "Inter Tight", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif; }
 
-.body { font: 400 var(--fs-16)/var(--lh-body-ui) var(--font-ui); }
+.body { font: 400 var(--fs-16)/var(--lh-body-ui) "Inter Tight", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif; }
 
 /* Headings */
 .heading-1 {
-  font: 700 var(--fs-32)/var(--lh-tight) var(--font-ui);
+  font: 700 var(--fs-32)/var(--lh-tight) "Inter Tight", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
   letter-spacing: -0.01em;
   color: inherit;
 }
 
 .heading-2 {
-  font: 600 var(--fs-24)/var(--lh-tight) var(--font-ui);
+  font: 600 var(--fs-24)/var(--lh-tight) "Inter Tight", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
   letter-spacing: -0.01em;
   color: inherit;
 }
 
 .heading-3 {
-  font: 600 var(--fs-20)/var(--lh-tight) var(--font-ui);
+  font: 600 var(--fs-20)/var(--lh-tight) "Inter Tight", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
   letter-spacing: -0.01em;
   color: inherit;
 }
 
 .heading-4 {
-  font: 500 var(--fs-18)/var(--lh-tight) var(--font-ui);
+  font: 500 var(--fs-18)/var(--lh-tight) "Inter Tight", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
   letter-spacing: -0.005em;
   color: inherit;
 }
 
 .heading-5 {
-  font: 500 var(--fs-16)/var(--lh-tight) var(--font-ui);
+  font: 500 var(--fs-16)/var(--lh-tight) "Inter Tight", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
   letter-spacing: -0.005em;
   color: inherit;
 }
 
 .heading-6 {
-  font: 500 var(--fs-14)/var(--lh-tight) var(--font-ui);
+  font: 500 var(--fs-14)/var(--lh-tight) "Inter Tight", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
   letter-spacing: -0.005em;
   color: inherit;
 }
 
 /* UI Labels & Captions */
-.label-xxs { font: 500 var(--fs-10)/var(--lh-tight) var(--font-ui); letter-spacing: -0.02em; }
-.label-xs { font: 500 var(--fs-11)/var(--lh-tight) var(--font-ui); letter-spacing: -0.02em; }
-.label-s { font: 500 var(--fs-13)/var(--lh-tight) var(--font-ui); letter-spacing: -0.02em; }
-.label-m { font: 500 var(--fs-14)/var(--lh-tight) var(--font-ui); letter-spacing: -0.02em; }
-.label-l { font: 500 var(--fs-15)/var(--lh-tight) var(--font-ui); letter-spacing: -0.02em; }
-.label-xl { font: 500 var(--fs-16)/var(--lh-tight) var(--font-ui); letter-spacing: -0.02em; }
-.label-xxl { font: 500 var(--fs-18)/var(--lh-tight) var(--font-ui); letter-spacing: -0.02em; }
+.label-xxs { font: 500 var(--fs-10)/var(--lh-tight) "Inter Tight", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif; letter-spacing: -0.02em; }
+.label-xs { font: 500 var(--fs-11)/var(--lh-tight) "Inter Tight", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif; letter-spacing: -0.02em; }
+.label-s { font: 500 var(--fs-13)/var(--lh-tight) "Inter Tight", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif; letter-spacing: -0.02em; }
+.label-m { font: 500 var(--fs-14)/var(--lh-tight) "Inter Tight", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif; letter-spacing: -0.02em; }
+.label-l { font: 500 var(--fs-15)/var(--lh-tight) "Inter Tight", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif; letter-spacing: -0.02em; }
+.label-xl { font: 500 var(--fs-16)/var(--lh-tight) "Inter Tight", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif; letter-spacing: -0.02em; }
+.label-xxl { font: 500 var(--fs-18)/var(--lh-tight) "Inter Tight", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif; letter-spacing: -0.02em; }
 
-.caption { font: 500 var(--fs-11)/var(--lh-tight) var(--font-ui); }
-.caption-small { font: 500 var(--fs-10)/1.1 var(--font-ui); }
+.caption { font: 500 var(--fs-11)/var(--lh-tight) "Inter Tight", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif; }
+.caption-small { font: 500 var(--fs-10)/1.1 "Inter Tight", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif; }
 
 /* Overline/Eyebrow */
 .overline {
-  font: 700 var(--fs-10)/1 var(--font-ui);
+  font: 700 var(--fs-10)/1 "Inter Tight", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
   text-transform: uppercase;
   letter-spacing: 0.08em;
 }
 
 .overline-small {
-  font: 600 var(--fs-10)/1.1 var(--font-ui);
+  font: 600 var(--fs-10)/1.1 "Inter Tight", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
   text-transform: uppercase;
   letter-spacing: 0.06em;
 }

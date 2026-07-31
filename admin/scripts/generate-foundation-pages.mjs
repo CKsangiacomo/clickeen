@@ -152,17 +152,17 @@ function renderCoreStyleRows(tokens) {
     <div class="diet-table">
       <table class="diet-table__table">
         <thead>
-          <tr><th scope="col">Token</th><th scope="col">Source value</th><th scope="col">Preview</th><th scope="col">Action</th></tr>
+          <tr><th class="label-s" scope="col">Token</th><th class="label-s" scope="col">Source value</th><th class="label-s diet-table__cell--preview" scope="col">Preview</th><th class="label-s diet-table__cell--action" scope="col">Action</th></tr>
         </thead>
         <tbody>
 ${entries
   .map(
     (entry) => `
           <tr data-token="${escapeHtml(entry.name)}">
-            <th scope="row"><code>${escapeHtml(entry.name)}</code></th>
-            <td><code data-token-value="${escapeHtml(entry.name)}">${escapeHtml(entry.value)}</code></td>
-            <td>${renderCoreStyleSample(entry)}</td>
-            <td>${renderCoreStyleAction(entry)}</td>
+            <th class="body-s" scope="row"><code class="body-s">${escapeHtml(entry.name)}</code></th>
+            <td class="body-s"><code class="body-s" data-token-value="${escapeHtml(entry.name)}">${escapeHtml(entry.value)}</code></td>
+            <td class="body-s diet-table__cell--preview">${renderCoreStyleSample(entry)}</td>
+            <td class="body-s diet-table__cell--action">${renderCoreStyleAction(entry)}</td>
           </tr>`,
   )
   .join('\n')}
@@ -202,17 +202,17 @@ function renderColorRows(tokens) {
     <div class="diet-table">
       <table class="diet-table__table">
         <thead>
-          <tr><th scope="col">Token</th><th scope="col">Source value</th><th scope="col">Preview</th><th scope="col">Action</th></tr>
+          <tr><th class="label-s" scope="col">Token</th><th class="label-s" scope="col">Source value</th><th class="label-s diet-table__cell--preview" scope="col">Preview</th><th class="label-s diet-table__cell--action" scope="col">Action</th></tr>
         </thead>
         <tbody>
 ${entries
     .map(
       (entry) => `
           <tr data-token="${entry.name}">
-            <th scope="row"><code>${entry.name}</code></th>
-            <td><code data-token-value="${entry.name}">${entry.value}</code></td>
-            <td><span class="color-preview">${renderColorChip(entry)}</span></td>
-            <td>${isWritableColorToken(entry) ? `<button class="diet-btn-txt" data-size="md" data-variant="secondary" type="button" data-token-edit="color" data-token="${entry.name}" data-value="${entry.value}" aria-label="Edit ${entry.name}"><span class="diet-btn-txt__label">Edit</span></button>` : '<span class="label-xs">Read only</span>'}</td>
+            <th class="body-s" scope="row"><code class="body-s">${entry.name}</code></th>
+            <td class="body-s"><code class="body-s" data-token-value="${entry.name}">${entry.value}</code></td>
+            <td class="body-s diet-table__cell--preview"><span class="color-preview">${renderColorChip(entry)}</span></td>
+            <td class="body-s diet-table__cell--action">${isWritableColorToken(entry) ? `<button class="diet-btn-txt" data-size="md" data-variant="secondary" type="button" data-token-edit="color" data-token="${entry.name}" data-value="${entry.value}" aria-label="Edit ${entry.name}"><span class="diet-btn-txt__label">Edit</span></button>` : '<span class="label-xs">Read only</span>'}</td>
           </tr>`,
     )
     .join('\n')}
@@ -313,7 +313,7 @@ async function generateIconsPage() {
       (name) => `
   <div class="icon-card" data-icon-name="${name}">
     <span class="diet-icon" aria-hidden="true" data-size="24" data-icon="${name}"></span>
-    <code>${name}</code>
+    <code class="body-s">${name}</code>
   </div>`,
     )
     .join('\n');
@@ -379,9 +379,9 @@ async function generateLayoutsPage() {
     if (!entry?.editable) throw new Error(`Layout token ${token} is not editable through the foundation token path.`);
     return `
           <tr data-token="${escapeHtml(token)}">
-            <th scope="row"><code>${escapeHtml(token)}</code></th>
-            <td><code data-token-value="${escapeHtml(token)}">${escapeHtml(entry.value)}</code></td>
-            <td><button class="diet-btn-txt" data-size="md" data-variant="secondary" type="button" data-token-edit="foundation" data-token="${escapeHtml(token)}" data-value="${escapeHtml(entry.value)}" aria-label="Edit ${escapeHtml(token)}"><span class="diet-btn-txt__label">Edit</span></button></td>
+            <th class="body-s" scope="row"><code class="body-s">${escapeHtml(token)}</code></th>
+            <td class="body-s"><code class="body-s" data-token-value="${escapeHtml(token)}">${escapeHtml(entry.value)}</code></td>
+            <td class="body-s diet-table__cell--action"><button class="diet-btn-txt" data-size="md" data-variant="secondary" type="button" data-token-edit="foundation" data-token="${escapeHtml(token)}" data-value="${escapeHtml(entry.value)}" aria-label="Edit ${escapeHtml(token)}"><span class="diet-btn-txt__label">Edit</span></button></td>
           </tr>`;
   }).join('\n');
   const composedSource = `${foundationCss}\n${colorCss}\n${typographyCss}\n${buttonCss}`;
@@ -402,7 +402,7 @@ async function generateLayoutsPage() {
   }
   const examplesHtml = examples.map((example) => `
     <figure class="layout-example" data-layout-example="${example.id}">
-      <figcaption>${example.label} — ${example.width} × ${example.height}</figcaption>
+      <figcaption class="label-s">${example.label} — ${example.width} × ${example.height}</figcaption>
       <div class="layout-example__viewport">
         <iframe title="${example.label} main-container example" width="${example.width}" height="${example.height}" srcdoc="${escapeHtml(buildLayoutIframeDocument({ html: layoutHtml, layoutCss, tokenCss: composedSource, attributes: example.attributes }))}"></iframe>
       </div>
@@ -411,14 +411,13 @@ async function generateLayoutsPage() {
 <div class="dieter-preview layouts-page" data-layout-source="dieter/layouts/main-container">
   <style>
     .layout-example { display: grid; gap: var(--space-2); margin: 0; }
-    .layout-example figcaption { font: 600 var(--fs-13)/var(--lh-body-ui) var(--font-ui); }
     .layout-example__viewport { max-inline-size: 100%; overflow: auto; border: 1px solid var(--role-border); border-radius: var(--control-radius-md); background: var(--role-surface-muted); }
     .layout-example iframe { display: block; border: 0; background: var(--role-surface); }
   </style>
-  <p>The shared application layout used directly by DevStudio and Roma.</p>
+  <p class="body-s">The shared application layout used directly by DevStudio and Roma.</p>
   <details class="foundation-section">
     <summary class="heading-4">Source structure</summary>
-    <pre><code>${escapeHtml(layoutHtml.trim())}</code></pre>
+    <pre class="body-s"><code class="body-s">${escapeHtml(layoutHtml.trim())}</code></pre>
   </details>
   <section class="foundation-section layout-examples" aria-labelledby="layout-examples">
     <h2 class="heading-4" id="layout-examples">Examples</h2>
@@ -428,7 +427,7 @@ ${examplesHtml}
     <h2 class="heading-4" id="layout-properties">Editable properties</h2>
     <div class="diet-table">
       <table class="diet-table__table">
-        <thead><tr><th scope="col">Token</th><th scope="col">Source value</th><th scope="col">Action</th></tr></thead>
+        <thead><tr><th class="label-s" scope="col">Token</th><th class="label-s" scope="col">Source value</th><th class="label-s diet-table__cell--action" scope="col">Action</th></tr></thead>
         <tbody>${tokenRows}</tbody>
       </table>
     </div>

@@ -35,7 +35,7 @@
 
 .ck-bigBang__statement {
   color: var(--typo-bigBang-color, var(--color-system-black));
-  font-family: var(--typo-bigBang-family, var(--font-ui));
+  font-family: var(--typo-bigBang-family, "Inter", sans-serif);
   font-size: var(--typo-bigBang-size, 84px);
   font-style: var(--typo-bigBang-style, normal);
   font-weight: var(--typo-bigBang-weight, 800);
@@ -46,7 +46,7 @@
 .ck-bigBang__support {
   max-width: min(720px, 100%);
   color: var(--typo-body-color, color-mix(in oklab, var(--color-system-black), transparent 28%));
-  font-family: var(--typo-body-family, var(--font-ui));
+  font-family: var(--typo-body-family, "Inter", sans-serif);
   font-size: var(--typo-body-size, 20px);
   font-style: var(--typo-body-style, normal);
   font-weight: var(--typo-body-weight, 400);

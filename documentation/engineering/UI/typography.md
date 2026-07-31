@@ -26,19 +26,30 @@ Source:
 dieter/tokens/dieter-typography.css
 ```
 
-Operational UI uses:
+The complete operational typography contract is the set of visual classes
+revealed in DevStudio Typography:
 
 ```text
---font-ui: Inter Tight, Inter, system-ui, sans-serif
---font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace
+display-*
+heading-*
+body-*
+label-*
+caption*
+overline*
 ```
 
 Rules:
 
-- Use `--font-ui` for normal Clickeen UI text.
-- Use `--font-mono` for code, IDs, logs, and structured technical values.
-- Use Dieter visual text classes and declared size/line-height tokens.
-- Do not create local font stacks or local type scales in components.
+- Every operational text node selects one declared Dieter visual class.
+- Each visual class is a complete typography choice. Consumers do not assemble
+  typography from raw family, size, weight, line-height, or tracking values.
+- Technical values, IDs, logs, token names, and source values do not receive an
+  automatic monospace exception; they use the visual class selected for their
+  UI context.
+- Declared size and line-height values remain internal mechanics of the visual
+  class definitions, not consumer composition APIs.
+- Do not create local font stacks, local type scales, or component-local text
+  styles.
 - Do not style raw `h1` through `h6` globally in Dieter typography.
 - Use `.heading-1` through `.heading-6` as visual text classes only.
 - Typography utilities own text mechanics, not color semantics.
@@ -190,8 +201,9 @@ Shared widget runtime behavior:
 
 ## Fallback Truth
 
-A widget CSS fallback to `var(--font-ui)` is only the static baseline before
-widget typography data is applied. It must not turn missing
+Public widget CSS uses the required Inter account-font baseline directly before
+structured widget typography data is applied. It does not depend on an
+operational UI font-family variable. That static baseline must not turn missing
 `CKTypography.applyTypography`, malformed account font data, or a missing font
 asset into apparent success. Those failures surface through the owning editor
 or materialization path.

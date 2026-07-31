@@ -9,7 +9,7 @@ body {
   padding: 0;
   background: transparent;
   color: var(--color-system-black);
-  font: 400 var(--fs-14)/var(--lh-body) var(--font-ui);
+  font: 400 var(--fs-14)/var(--lh-body) "Inter", sans-serif;
 }
 
 .stage {

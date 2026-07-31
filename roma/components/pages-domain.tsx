@@ -650,7 +650,7 @@ export function PagesDomain() {
                 <th className="label-s">Page</th>
                 <th className="label-s">Page ID</th>
                 <th className="label-s">Placements</th>
-                <th className="label-s">Actions</th>
+                <th className="label-s diet-table__cell--action">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -662,20 +662,22 @@ export function PagesDomain() {
                     <td className="body-s">{page.title}</td>
                     <td className="body-s">{page.pageId}</td>
                     <td className="body-s">{page.placementCount}</td>
-                    <td className="roma-cell-actions">
-                      <Link className="diet-btn-txt" data-size="md" data-variant={isActive ? 'primary' : 'line2'} href={buildPagesRoute(page.pageId)}>
-                        <span className="diet-btn-txt__label body-m">{isActive ? 'Open' : 'Select'}</span>
-                      </Link>
-                      <button
-                        className="diet-btn-txt"
-                        data-size="md"
-                        data-variant="line2"
-                        type="button"
-                        onClick={() => void handleDeletePage(page.pageId)}
-                        disabled={Boolean(activeActionKey) || (pageSourceLocked && page.pageId === pageSource?.pageId)}
-                      >
-                        <span className="diet-btn-txt__label body-m">{activeActionKey === deleteActionKey ? 'Deleting...' : 'Delete'}</span>
-                      </button>
+                    <td className="body-s diet-table__cell--action">
+                      <div className="roma-cell-actions">
+                        <Link className="diet-btn-txt" data-size="md" data-variant={isActive ? 'primary' : 'line2'} href={buildPagesRoute(page.pageId)}>
+                          <span className="diet-btn-txt__label body-m">{isActive ? 'Open' : 'Select'}</span>
+                        </Link>
+                        <button
+                          className="diet-btn-txt"
+                          data-size="md"
+                          data-variant="line2"
+                          type="button"
+                          onClick={() => void handleDeletePage(page.pageId)}
+                          disabled={Boolean(activeActionKey) || (pageSourceLocked && page.pageId === pageSource?.pageId)}
+                        >
+                          <span className="diet-btn-txt__label body-m">{activeActionKey === deleteActionKey ? 'Deleting...' : 'Delete'}</span>
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 );
@@ -871,7 +873,7 @@ export function PagesDomain() {
                 <tr>
                   <th className="label-s">Country</th>
                   <th className="label-s">Locale</th>
-                  <th className="label-s">Actions</th>
+                  <th className="label-s diet-table__cell--action">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -901,7 +903,7 @@ export function PagesDomain() {
                         ))}
                       </select>
                     </td>
-                    <td className="roma-cell-actions">
+                    <td className="body-s diet-table__cell--action">
                       <button
                         className="diet-btn-txt"
                         data-size="md"
@@ -1072,7 +1074,7 @@ export function PagesDomain() {
                   <th className="label-s">Widget</th>
                   <th className="label-s">Instance ID</th>
                   <th className="label-s">Status</th>
-                  <th className="label-s">Actions</th>
+                  <th className="label-s diet-table__cell--action">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -1089,45 +1091,47 @@ export function PagesDomain() {
                       <td className="body-s">
                         {!instance ? 'Unavailable, blocks publish' : instance.status === 'published' ? 'Published' : 'Unpublished, blocks publish'}
                       </td>
-                      <td className="roma-cell-actions">
-                        <button
-                          className="diet-btn-txt"
-                          data-size="md"
-                          data-variant="line2"
-                          type="button"
-                          onClick={() => void handleMovePlacement(index, -1)}
-                          disabled={Boolean(activeActionKey) || pageSourceLocked || index === 0}
-                        >
-                          <span className="diet-btn-txt__label body-m">Up</span>
-                        </button>
-                        <button
-                          className="diet-btn-txt"
-                          data-size="md"
-                          data-variant="line2"
-                          type="button"
-                          onClick={() => void handleMovePlacement(index, 1)}
-                          disabled={Boolean(activeActionKey) || pageSourceLocked || index === pageSource.placements.length - 1}
-                        >
-                          <span className="diet-btn-txt__label body-m">Down</span>
-                        </button>
-                        <Link
-                          className="diet-btn-txt"
-                          data-size="md"
-                          data-variant="secondary"
-                          href={`${buildBuilderRoute({ instanceId: placement.instanceId })}?returnTo=${encodeURIComponent(buildPagesRoute(pageSource.pageId))}`}
-                        >
-                          <span className="diet-btn-txt__label body-m">Edit</span>
-                        </Link>
-                        <button
-                          className="diet-btn-txt"
-                          data-size="md"
-                          data-variant="line2"
-                          type="button"
-                          onClick={() => void handleRemovePlacement(index)}
-                          disabled={Boolean(activeActionKey) || pageSourceLocked}
-                        >
-                          <span className="diet-btn-txt__label body-m">Remove</span>
-                        </button>
+                      <td className="body-s diet-table__cell--action">
+                        <div className="roma-cell-actions">
+                          <button
+                            className="diet-btn-txt"
+                            data-size="md"
+                            data-variant="line2"
+                            type="button"
+                            onClick={() => void handleMovePlacement(index, -1)}
+                            disabled={Boolean(activeActionKey) || pageSourceLocked || index === 0}
+                          >
+                            <span className="diet-btn-txt__label body-m">Up</span>
+                          </button>
+                          <button
+                            className="diet-btn-txt"
+                            data-size="md"
+                            data-variant="line2"
+                            type="button"
+                            onClick={() => void handleMovePlacement(index, 1)}
+                            disabled={Boolean(activeActionKey) || pageSourceLocked || index === pageSource.placements.length - 1}
+                          >
+                            <span className="diet-btn-txt__label body-m">Down</span>
+                          </button>
+                          <Link
+                            className="diet-btn-txt"
+                            data-size="md"
+                            data-variant="secondary"
+                            href={`${buildBuilderRoute({ instanceId: placement.instanceId })}?returnTo=${encodeURIComponent(buildPagesRoute(pageSource.pageId))}`}
+                          >
+                            <span className="diet-btn-txt__label body-m">Edit</span>
+                          </Link>
+                          <button
+                            className="diet-btn-txt"
+                            data-size="md"
+                            data-variant="line2"
+                            type="button"
+                            onClick={() => void handleRemovePlacement(index)}
+                            disabled={Boolean(activeActionKey) || pageSourceLocked}
+                          >
+                            <span className="diet-btn-txt__label body-m">Remove</span>
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );

@@ -40,7 +40,7 @@
 }
 
 .ck-calltoaction__eyebrow {
-  font-family: var(--typo-eyebrow-family, var(--font-ui));
+  font-family: var(--typo-eyebrow-family, "Inter", sans-serif);
   font-style: var(--typo-eyebrow-style, normal);
   font-weight: var(--typo-eyebrow-weight, 700);
   font-size: var(--typo-eyebrow-size, var(--fs-13));
@@ -50,7 +50,7 @@
 }
 
 .ck-calltoaction__headline {
-  font-family: var(--typo-title-family, var(--font-ui));
+  font-family: var(--typo-title-family, "Inter", sans-serif);
   font-style: var(--typo-title-style, normal);
   font-weight: var(--typo-title-weight, 700);
   font-size: var(--typo-title-size, var(--fs-44));
@@ -60,7 +60,7 @@
 }
 
 .ck-calltoaction__supportingText {
-  font-family: var(--typo-body-family, var(--font-ui));
+  font-family: var(--typo-body-family, "Inter", sans-serif);
   font-style: var(--typo-body-style, normal);
   font-weight: var(--typo-body-weight, 400);
   font-size: var(--typo-body-size, var(--fs-18));
@@ -88,7 +88,7 @@
   border-radius: var(--ck-calltoaction-action-radius, var(--control-radius-md));
   background: var(--ck-calltoaction-action-bg, var(--color-system-blue));
   color: var(--ck-calltoaction-action-fg, var(--color-system-white));
-  font-family: var(--typo-button-family, var(--font-ui));
+  font-family: var(--typo-button-family, "Inter", sans-serif);
   font-style: var(--typo-button-style, normal);
   font-weight: var(--typo-button-weight, 600);
   font-size: var(--typo-button-size, var(--fs-14));

@@ -68,6 +68,29 @@ consumer, deletion searches, local checks, exact-SHA deployments, deployed
 browser evidence, current docs, and independent V1–V8 to reconcile in
 `126_DevQA.md`.
 
+### 2026-07-30 Table Styling And Typography Acceptance
+
+The human product owner fixed the shared Table presentation and its operational
+typography mapping:
+
+- the frame and body use `--role-surface`;
+- only the column-header band uses `--role-surface-muted`;
+- row-header cells have no separate fill;
+- `--role-border` owns the outer stroke and horizontal row dividers;
+- there are no vertical rules or zebra stripes;
+- column headers use `label-s`;
+- every body `th` and `td` uses `body-s`;
+- action controls retain Dieter Button typography;
+- technical token names and source values do not receive monospace typography;
+- action columns are compact and end-aligned; preview columns receive remaining
+  width where that composition uses them.
+
+Table CSS must not reconstruct typography from raw font-family, font-size,
+weight, line-height, or tracking declarations. Consumers must not restate the
+shared frame, header, row, cell, or typography presentation locally. This
+remains one Dieter Table plus small documented cell/column composition
+patterns, not a separate Token Table component.
+
 ## Purpose
 
 Make the current Dieter component layer smaller, native where the browser

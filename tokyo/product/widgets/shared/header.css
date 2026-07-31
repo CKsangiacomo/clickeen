@@ -61,7 +61,7 @@
 }
 
 .ck-header__title {
-  font-family: var(--typo-title-family, var(--font-ui));
+  font-family: var(--typo-title-family, "Inter", sans-serif);
   font-style: var(--typo-title-style, normal);
   font-weight: var(--typo-title-weight, 600);
   font-size: var(--typo-title-size, var(--fs-18));
@@ -71,7 +71,7 @@
 }
 
 .ck-header__subtitle {
-  font-family: var(--typo-body-family, var(--font-ui));
+  font-family: var(--typo-body-family, "Inter", sans-serif);
   font-style: var(--typo-body-style, normal);
   font-weight: var(--typo-body-weight, 400);
   font-size: var(--typo-body-size, var(--fs-14));
@@ -151,7 +151,7 @@
   color: var(--ck-header-cta-fg, var(--color-system-white));
   border: var(--ck-header-cta-border-width, 0px) solid var(--ck-header-cta-border-color, transparent);
   text-decoration: none;
-  font-family: var(--typo-button-family, var(--font-ui));
+  font-family: var(--typo-button-family, "Inter", sans-serif);
   font-style: var(--typo-button-style, normal);
   font-weight: var(--typo-button-weight, 600);
   font-size: var(--typo-button-size, var(--fs-14));

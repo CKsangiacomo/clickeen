@@ -26,7 +26,14 @@
         "path": "",
         "min": "",
         "max": "",
-        "step": ""
+        "step": "",
+        "labelClass": "label-s",
+        "bodyClass": "body-s"
+      },
+      "sizeContext": {
+        "sm": { "labelClass": "label-xs", "bodyClass": "body-xs" },
+        "md": { "labelClass": "label-s", "bodyClass": "body-s" },
+        "lg": { "labelClass": "label-m", "bodyClass": "body-m" }
       }
     }
   ]

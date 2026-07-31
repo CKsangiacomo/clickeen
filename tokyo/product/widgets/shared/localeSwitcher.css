@@ -121,7 +121,7 @@
     var(--ck-locale-switcher-arrow, none) no-repeat right 10px center / 14px 14px,
     var(--ck-locale-switcher-bg, var(--color-system-white));
   color: inherit;
-  font-family: var(--typo-locale-switcher-family, var(--font-ui));
+  font-family: var(--typo-locale-switcher-family, "Inter", sans-serif);
   font-style: var(--typo-locale-switcher-style, normal);
   font-weight: var(--typo-locale-switcher-weight, 600);
   font-size: var(--typo-locale-switcher-size, var(--fs-14));

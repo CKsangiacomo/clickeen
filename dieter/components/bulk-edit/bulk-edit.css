@@ -21,7 +21,6 @@
 
 .diet-bulk-edit__title {
   margin: 0;
-  font: 600 var(--fs-16) / var(--lh-tight) var(--font-ui);
 }
 
 .diet-bulk-edit__table {
@@ -52,17 +51,12 @@
   background-repeat: no-repeat;
 }
 
-.diet-bulk-edit__logo-name {
-  font: 600 var(--fs-13) / var(--lh-tight) var(--font-ui);
-}
-
 .diet-bulk-edit__input {
   width: 100%;
   min-width: 180px;
   padding: var(--space-2) var(--space-3);
   border-radius: var(--control-radius-sm);
   border: 1px solid var(--color-system-gray-5);
-  font: 500 var(--fs-13) / var(--lh-tight) var(--font-ui);
   color: var(--color-system-black);
   background: var(--color-system-white);
 }
@@ -80,7 +74,6 @@
 
 .diet-bulk-edit__empty {
   padding: var(--space-4);
-  font: 500 var(--fs-13) / var(--lh-tight) var(--font-ui);
   color: color-mix(in oklab, var(--color-system-black), transparent 40%);
 }
 

@@ -99,7 +99,7 @@ a.ck-cards__card:hover {
 
 .ck-cards__title {
   color: var(--typo-card-title-color, currentColor);
-  font-family: var(--typo-card-title-family, var(--font-ui));
+  font-family: var(--typo-card-title-family, "Inter", sans-serif);
   font-size: var(--typo-card-title-size, 24px);
   font-style: var(--typo-card-title-style, normal);
   font-weight: var(--typo-card-title-weight, 700);
@@ -109,7 +109,7 @@ a.ck-cards__card:hover {
 
 .ck-cards__copy {
   color: var(--typo-card-copy-color, color-mix(in oklab, currentColor, transparent 28%));
-  font-family: var(--typo-card-copy-family, var(--font-ui));
+  font-family: var(--typo-card-copy-family, "Inter", sans-serif);
   font-size: var(--typo-card-copy-size, 17px);
   font-style: var(--typo-card-copy-style, normal);
   font-weight: var(--typo-card-copy-weight, 400);

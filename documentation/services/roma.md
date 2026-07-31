@@ -52,6 +52,12 @@ Tables preserve every column and own horizontal overflow through the Dieter
 wrapper. Checkboxes, hidden file inputs, modules, toolbars, and specialized
 composition remain locally owned.
 
+Roma operational text selects only the complete Dieter visual typography
+classes revealed by DevStudio. It does not assemble local typography from font
+family, size, weight, line-height, or tracking declarations. Semantic Table
+column headers use `label-s`; every body header/data cell uses `body-s`; action
+controls retain their Dieter component typography.
+
 ## Accepted Dialog And Upsell Law
 
 Under accepted 126 law, Roma's blocking dialogs consume Dieter Popup and follow

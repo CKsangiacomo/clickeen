@@ -14,6 +14,65 @@ Scope: premature A-H code-change reality, final A-M current-source audits,
 executable PRDs, exact-tree peer reviews, and current Step-9 execution state.
 Parent: `126__PRD__UI_Optimization_Program.md` (MAMA).
 
+## 2026-07-30 Operational Typography And Table Correction
+
+The human product owner rejected the two operational font-family variables and
+the resulting local typography assembly. This correction applies the accepted
+DevStudio Typography classes across Dieter, DevStudio, Roma, Bob, and Prague;
+preserves public-widget account-authored typography; and makes Dieter Table the
+visible shared pattern rather than a consumer invention.
+
+### Authority and work separation
+
+| Concern | Authority/result |
+| --- | --- |
+| Operational typography | `dieter/tokens/dieter-typography.css`; consumers select only the complete `display-*`, `heading-*`, `body-*`, `label-*`, `caption*`, and `overline*` classes |
+| Table presentation | `dieter/components/table/table.{css,html,spec.json}` |
+| DevStudio reveal | Typography and Table routes plus generated Foundation tables |
+| Consumers | DevStudio, Roma, Bob, and Prague operational UI |
+| Public-widget typography | Existing `--typo-*`, `CKTypography`, account font library, and materializer remain authoritative; static fallback uses direct Inter |
+| Product data | None changed |
+| Runtime/deploy | Git-connected Pages for DevStudio/Roma/Bob/Prague and the standard Tokyo static-root R2 sync |
+
+### Local implementation evidence
+
+- Repository-wide search returns zero references to either rejected
+  font-family variable, including 126 history and archived research fixtures.
+- Outside the canonical Dieter typography source, operational UI has no local
+  family, size, weight, line-height, or tracking composition; retained
+  `font: inherit`, icon line-height, and toggle tracking are component mechanics,
+  not visual type choices.
+- No operational `<code>` or `<pre>` node, Table `th`, or Table `td` lacks its
+  approved visual class.
+- Table column headers use `label-s`; every body header/data cell uses `body-s`;
+  code/token values compute to the same proportional Inter Tight treatment.
+- Computed browser evidence on Core styles proves a muted header, white body and
+  row-header cells, zero vertical cell border, compact end-aligned action cells,
+  and no unintended horizontal overflow (`clientWidth = scrollWidth = 1154`).
+  The governed horizontal-overflow composition still scrolls as required.
+- Widget artifact generation preserves all eight widget pairs and Tokyo dry-run
+  inventory remains 581 files (`dieter` 157, `prague` 348, `product` 76).
+- Focused Dieter/DevStudio/Roma/Bob/Prague checks, widget/typography/runtime
+  contracts, sequential Cloudflare builds, root lint, root typecheck, root build,
+  `git diff --check`, R2 preflight, and Pages API preflight are GREEN.
+
+The independent final audit is GREEN:
+
+| ID | Result | Reconciliation |
+| --- | --- | --- |
+| V1 Silent substitution | GREEN | Direct Inter is the accepted widget fallback, not invented source truth. |
+| V2 Silent healing | GREEN | No persisted or user-authored state is normalized or rewritten. |
+| V3 Silent omission | GREEN | All operational consumers, Table cells, generated surfaces, and widget fallback sites were covered. |
+| V4 Fail-open control | GREEN | Existing widget typography validation and missing-data failures remain intact. |
+| V5 Corruption-as-absence | GREEN | No storage, account data, or corruption handling changed. |
+| V6 Partial-success masquerade | GREEN | Local evidence remains separate from pending commit/deployment evidence. |
+| V7 Masquerade/redress | GREEN | No aliases, replacement variables, compatibility wrappers, or renamed copies preserve the rejected behavior. |
+| V8 Runtime test dependency | GREEN | Tests assert the contract; runtime behavior does not depend on them. |
+
+Commit, push, exact-SHA deployment, deployed browser evidence, and R2 read-back
+are recorded after those gates complete. This sub-correction does not close the
+broader C14 product-owner acceptance boundary.
+
 ## 2026-07-30 UI Convergence Acceptance Matrix
 
 Original A–M execution and localization-correction evidence below remains
@@ -471,7 +530,7 @@ audit. They do not prove implementation completion or replace later step-9 verif
 | Signal | Severity | Evidence |
 |---|---|---|
 | Hardcoded hex colors in inspected operational app source | **clean in inspected scope** | 0 raw hex in `roma/app/roma.css`, `bob/app/bob_app.css`, `admin/src/css/*.css`, or inspected app TSX. Dieter component CSS retains intentional hue-spectrum stops at `dieter/components/dropdown-fill/dropdown-fill.css:603-610`. This does not claim all product/widget CSS is hex-free. |
-| Typography delivery | **multiple intentional lanes, explicit** | Dieter typography roles use `var(--font-ui)` / `var(--font-mono)`. Roma and Bob apply `next/font` Inter Tight body classes (`roma/app/layout.tsx:2-20`, `bob/app/layout.tsx:2-22`); DevStudio imports its font/source locally. Public-widget account-font delivery is separately proven through account assets. One delivery path is neither required nor planned. |
+| Typography delivery | **multiple intentional lanes, explicit** | Operational UI uses the complete Dieter visual classes with no font-family variables or technical-value monospace exception. Roma and Bob use `next/font` only to deliver Inter Tight files (`roma/app/layout.tsx`, `bob/app/layout.tsx`); DevStudio imports the same font directly. Public-widget account-font delivery is separately proven through account assets. One delivery path is neither required nor planned. |
 | Dieter token consumption | **shared source, different delivery** | Roma links the Tokyo Dieter root, Bob links its `/dieter` surface, and DevStudio bundles local Dieter source. All consume the Dieter token package, but this scan does not claim byte/provenance parity across those delivery lanes. |
 | Current phantom component-token references | **clean** | Current `dieter/components/**/*.css` has 0 references to `--color-surface`, `--radius-2`, or `--hspace-*`. Historical source did contain them; see §6. |
 | Ghost/undefined `var()` refs | **low** | 1 real ghost: `admin/src/css/utilities.css:74` references `--shadow-lg` (undefined; has fallback so it renders). Dieter defines `--shadow-elevated`/`--shadow-floating`/`--shadow-inset-control` (`dieter-foundation-tokens.css:76-78`), not `--shadow-lg`. |

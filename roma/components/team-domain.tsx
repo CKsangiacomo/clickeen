@@ -265,7 +265,7 @@ export function TeamDomain() {
                   <th className="label-s">Email</th>
                   <th className="label-s">Role</th>
                   <th className="label-s">Expires</th>
-                  <th className="label-s">Action</th>
+                  <th className="label-s diet-table__cell--action">Action</th>
                 </tr>
               </thead>
               <tbody>
@@ -274,7 +274,7 @@ export function TeamDomain() {
                     <td className="body-s">{invitation.email}</td>
                     <td className="body-s">{formatAccountRoleLabel(invitation.role)}</td>
                     <td className="body-s">{invitation.expiresAt}</td>
-                    <td className="body-s">
+                    <td className="body-s diet-table__cell--action">
                       <button
                         className="diet-btn-txt"
                         data-size="md"

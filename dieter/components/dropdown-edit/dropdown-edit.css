@@ -73,7 +73,6 @@
   color: var(--color-text);
   overflow: auto;
   outline: none;
-  line-height: 1.4;
 }
 
 .diet-dropdown-edit__palette {

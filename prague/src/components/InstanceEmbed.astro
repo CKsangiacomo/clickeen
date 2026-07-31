@@ -82,7 +82,7 @@ const brandSvgs = {
   {showShareChrome ? (
     <>
       {/* Toast is anchored to the creative (not the fading topbar). */}
-      <div class="ck-share__toast" role="status" aria-live="polite"></div>
+      <div class="ck-share__toast label-s" role="status" aria-live="polite"></div>
 
       {/* Global creative chrome (outside iframe): share bar (hover/focus reveal). */}
       <div class="ck-instanceEmbed__topbar">
@@ -95,7 +95,7 @@ const brandSvgs = {
               </summary>
 
               <div class="ck-share__menu" role="menu" aria-label="Share options">
-                <div class="ck-share__sectionTitle eyebrow heading-5">Send this widget as message</div>
+                <div class="ck-share__sectionTitle heading-5">Send this widget as message</div>
                 <div class="ck-share__grid">
                   <button type="button" class="ck-shareCard" data-action="copy">
                     <span class="ck-shareCard__icon" aria-hidden="true">
@@ -153,7 +153,7 @@ const brandSvgs = {
                   </button>
                 </div>
 
-                <div class="ck-share__sectionTitle eyebrow heading-5">Share this widget on social</div>
+                <div class="ck-share__sectionTitle heading-5">Share this widget on social</div>
                 <div class="ck-share__grid">
                   <button type="button" class="ck-shareCard" data-action="x">
                     <span class="ck-shareCard__icon" aria-hidden="true"><Icon name="x" size={18} /></span>
@@ -310,7 +310,6 @@ const brandSvgs = {
     border-radius: var(--control-radius-lg);
     background: color-mix(in oklab, var(--color-system-white), transparent 25%);
     color: color-mix(in oklab, var(--color-system-black), transparent 25%);
-    font: 500 var(--fs-13)/1.2 var(--font-ui);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
     box-shadow: 0 20px 60px color-mix(in oklab, var(--color-system-black), transparent 92%);
@@ -414,7 +413,6 @@ const brandSvgs = {
 
   .ck-shareCard__label {
     display: block;
-    line-height: 1.05;
     text-wrap: balance;
     color: inherit;
   }

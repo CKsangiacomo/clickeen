@@ -7,7 +7,6 @@
   border-radius: var(--control-radius-md);
   background: var(--role-surface);
   color: var(--color-text);
-  font: 400 var(--fs-13) / var(--lh-body-ui) var(--font-ui);
 }
 
 .diet-operational-field:focus-visible {

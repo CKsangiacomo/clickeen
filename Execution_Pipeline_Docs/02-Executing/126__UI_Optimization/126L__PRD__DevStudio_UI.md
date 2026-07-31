@@ -159,6 +159,20 @@ The earlier “no new routes,” “local shell,” “do not touch generated pa
 requires Layouts, Table, Popup, semantic page presentation, shared-source
 adoption, and deletion.
 
+### 2026-07-30 Typography And Table Correction
+
+DevStudio uses only the complete typography classes revealed by its Typography
+route. Page titles use `heading-2`, section titles use `heading-4`, Table column
+headers use `label-s`, and every Table body cell uses `body-s`. Token names,
+source values, policy values, IDs, and model names receive no automatic
+monospace treatment. Buttons retain Dieter Button typography.
+
+Core styles, Colors, Typography, Entitlements, and every other semantic
+DevStudio table consume the corrected Dieter Table presentation: white body,
+muted header only, no tinted row-header column, horizontal dividers, and compact
+end-aligned action cells where present. DevStudio does not restate typography,
+header, row, cell, border, or overflow styling locally.
+
 ## Purpose
 
 Make DevStudio a complete operational cockpit across supported workspaces while
