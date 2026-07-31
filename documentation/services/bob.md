@@ -419,10 +419,11 @@ validation. Bob contains no default-account font catalog. A family change
 is expanded through the shared account-font resolver into one atomic
 family/weight/style edit.
 
-Bob also exposes a narrow `@clickeen/bob/control-host` module for non-editor
-surfaces that must reuse Builder control presentation. That export is limited to
-compiled-control DOM helpers, Dieter hydrator execution,
-show-if visibility, field value serialization/parsing, and the pure
+Bob also exposes a narrow `@clickeen/bob/control-host` module and paired
+`@clickeen/bob/control-host.css` stylesheet for non-editor surfaces that must
+reuse Builder control behavior and presentation. Those exports are limited to
+compiled-control DOM helpers and cluster/group presentation, Dieter hydrator
+execution, show-if visibility, field value serialization/parsing, and the pure
 account-font family transition adapter. It does not export
 Bob session state, live edit application, preview binding, save behavior, or
 account persistence. Roma Widget Defaults uses this presentation seam to bind

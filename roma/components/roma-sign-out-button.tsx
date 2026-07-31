@@ -27,12 +27,16 @@ export function RomaSignOutButton() {
   return (
     <button
       type="button"
-      className="roma-nav__signout"
+      className="roma-nav__signout diet-btn-txt"
+      data-size="lg"
+      data-variant="secondary"
       onClick={handleSignOut}
       disabled={pending}
       aria-busy={pending}
     >
-      <span className="roma-nav__label label-s">{pending ? 'Signing out...' : 'Sign out'}</span>
+      <span className="roma-nav__label diet-btn-txt__label label-s">
+        {pending ? 'Signing out...' : 'Sign out'}
+      </span>
     </button>
   );
 }

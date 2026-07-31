@@ -4,7 +4,6 @@ import { DEFAULT_PANELS, TdMenu } from './TdMenu';
 import { TdMenuContent } from './TdMenuContent';
 import { AccountCopilotPane } from './CopilotPane';
 import { useWidgetSession } from '../lib/session/useWidgetSession';
-import { TdHeader } from '../bob_native_ui/tdheader/TdHeader';
 import { SettingsPanel } from './SettingsPanel';
 import { TranslationsPanel } from './TranslationsPanel';
 import type { TranslatedLocalesData, TranslationSetup } from './useTranslationPreviewState';
@@ -230,7 +229,7 @@ export function ToolDrawer({
       data-compact-open={compactOpen ? 'true' : 'false'}
     >
       {/* Segmented control in the header */}
-      <TdHeader>
+      <div className="tdheader">
         <div className="diet-segmented diet-segmented-ictxt tdheader-mode-switch" role="radiogroup" aria-label="Assist mode" data-size="lg">
           <label className="diet-segment">
             <input
@@ -303,7 +302,7 @@ export function ToolDrawer({
             aria-hidden="true"
           />
         </button>
-      </TdHeader>
+      </div>
 
       {/* Drawer body switches between Manual and Copilot */}
       <div className="tdcontent">

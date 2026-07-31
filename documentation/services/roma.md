@@ -393,7 +393,11 @@ Roma owns Settings > Widget Defaults. That surface edits only the current
 account defaults document through `/api/account/widget-defaults`; it does not
 open a Bob editing session and does not save widget instances. The UI consumes
 deploy-built Builder panel HTML, binds controls to the Roma draft defaults
-document, and saves the full document back through the same Roma route.
+document, and saves the full document back through the same Roma route. It uses
+Bob's paired `@clickeen/bob/control-host` and
+`@clickeen/bob/control-host.css` exports for compiled-control behavior and
+presentation; Roma owns the surrounding page and draft state, not a second copy
+of the control host.
 
 Widget Defaults must fail closed when compiled Builder controls are unavailable,
 when Dieter source hydration fails, or when the rendered controls do not cover

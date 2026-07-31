@@ -112,7 +112,7 @@ export function expandTooldrawerClusters(html: string): string {
 
           const toggleMarkup = [
             `<button type="button" class="diet-btn-ic tdmenucontent__cluster-toggle" data-size="xs" data-variant="neutral" aria-label="Toggle section" aria-expanded="true" aria-controls="${bodyId}">`,
-            `  <span class="diet-btn-ic__icon" data-icon="chevron.up" aria-hidden="true"></span>`,
+            `  <span class="diet-btn-ic__icon tdmenucontent__cluster-toggle-icon" data-icon="chevron.up" aria-hidden="true"></span>`,
             `</button>`,
           ].join('');
 

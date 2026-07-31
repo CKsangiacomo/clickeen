@@ -17,7 +17,8 @@ overlay/dialog. The app background is a backdrop. Layout helpers are not
 surfaces.
 
 Surfaces organize content. Layouts compose surfaces. Screens and product apps
-compose layouts.
+compose layouts. The vocabulary classifies visible planes; it does not require
+one generic Dieter component for every named surface type.
 
 ## Ownership
 

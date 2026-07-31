@@ -1,5 +1,6 @@
 import './bob_app.css';
 import '../../dieter/styles.css';
+import '@clickeen/bob/control-host.css';
 import { Inter_Tight } from 'next/font/google';
 import type { Viewport } from 'next';
 
