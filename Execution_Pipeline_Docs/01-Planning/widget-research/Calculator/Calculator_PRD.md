@@ -199,6 +199,90 @@ is part of scope one, not a follow-up.
 
 ---
 
+## 0.3) What their Calculator actually is
+
+Read before scoping anything below. This is the largest open question in the
+document.
+
+Elfsight's Calculator changelog (`/apps/calculator/whats-new`, read 2026-07-31)
+shows what the product has become. Dated entries, most recent first:
+
+| Date | Entry | Kind |
+| --- | --- | --- |
+| Jul 29 | Google reCAPTCHA is required now | New |
+| Jul 13 | Let users reset calculation results in one click | New |
+| May 19 | Keyboard navigation of the Slider field improved | Improved |
+| Apr 10 | Issue with **Stripe integration** fixed | Fixed |
+| Mar 31 | Bulk add multiple options in Dropdown field | New |
+| Mar 23 | Issues with **Image Choice field** and **mail tags** fixed | Fixed |
+| Mar 19 | **Accept payments via Stripe Integration** | New — **306 views**, ~10× any other entry |
+| Mar 18 | Automate your workflows with **Make.com integration** | New |
+| Mar 3 | Add Company Logo and Signature to **Autoresponder Emails** | New |
+| Feb 25 | **Mailchimp integration** fixed | Fixed |
+| Feb 10 | **Submission delivery** and field values fixed | Fixed |
+| Jan 28 | Results display in **print docs** fixed | Fixed |
+| Jan 23 | **Print button** on Androids fixed | Fixed |
+| Jan | Results display in **PDF version** fixed | Fixed |
+
+Their Calculator is not a computation widget. It is a **quote-to-payment capture
+form**. Read from the linked changelog posts, not inferred from titles:
+
+**It is internally a Form app.** The reCAPTCHA entry is titled *"Forms: Google
+reCAPTCHA is required now"* and applies to *"all widgets that include forms."*
+Calculator receives it. A December fix references a **"Lead Form"** component by
+name.
+
+**Submissions send email through Elfsight's shared provider.** Verbatim: *"Our
+widgets with forms were receiving a large number of automated spam submissions.
+Emails and autoresponses were being sent to non-existent addresses, which caused
+the email provider to start limiting outgoing messages. This affected email
+deliverability for all our customers."* So a submission triggers an owner
+notification and a visitor autoresponse, sent from shared infrastructure where
+one tenant's spam degrades every tenant's deliverability.
+
+**Payments are taken in the widget, not linked out.** Verbatim: *"connect your
+Stripe account and process payments directly within the widget."* The post also
+covers where to view completed payments, and an option to change **form field
+width**.
+
+**The spam protection is now mandatory and visitor-visible.** Invisible reCAPTCHA
+v3, *"enabled by default and cannot be disabled."* A reCAPTCHA notice sits below
+the form and *"can't be removed"* because Google requires it. It *"sends technical
+visitor data to Google (such as IP address and browser information) and uses
+cookies,"* and Elfsight tells EU customers to update their privacy policy.
+
+Corroborating, gathered independently: the widget overflow menu carries
+**"Download Responses in CSV"**; the Results section exposes **Print** and
+**Download** buttons (shipped Dec 2025, their second most-read update); and 48 of
+116 templates are lead-generation estimators whose CTA is the point of the widget.
+
+Not read, and therefore not claimed: the submission storage model, whether the
+Lead Form is a field type or a section, and how the Mailchimp and Make.com
+integrations are wired.
+
+### What this PRD scopes against that
+
+Everything in §1 through §17 describes the **computation half only**. Visitor
+input stays in the browser (§6.1), nothing is stored, nothing is emailed, nothing
+is charged.
+
+That is the correct reading of the current Clickeen contracts. `applyState` must
+be deterministic with no network, no shared surface authorizes a submission
+endpoint, and there is no account-owned store for visitor-submitted records. A
+submission pipeline is not a widget feature — it is a new data class, a new
+storage coordinate, a new privacy surface, and an integration boundary.
+
+But it must be stated plainly rather than left as a scope footnote: **shipping
+§1–§17 produces a calculator that computes and cannot capture.** Against a
+competitor whose most-read update in a year was "accept payments," that is a
+partial product for the buyer those 48 templates target — a contractor who wants
+qualified enquiries, not a visitor who wants a number.
+
+The decision this forces is §17.3, and it is a product decision, not an
+engineering one.
+
+---
+
 ## 1) Non-negotiables (architecture)
 
 1. **Shell + Core.** Calculator is `Widget Shell + Widget Core`. `spec.json.defaults`
@@ -1010,3 +1094,60 @@ Two, both genuine forks rather than deferred work.
 2. **Does `resultValue` get fluid display sizing?** Countdown's `timer` role has
    it. It matters if the primary result is intended to be the visual anchor of
    the widget, which §7's `primary`/`secondary` ranking implies.
+
+### 17.3 — Blocking: does Clickeen capture the submission?
+
+Per §0.3, Elfsight's Calculator stores submissions, emails the owner, sends the
+visitor an autoresponder PDF, and takes Stripe payments. This PRD scopes none of
+that, correctly under current contracts.
+
+Three coherent positions. This document does not choose between them.
+
+**A — Compute only.** Ship §1–§17 as written. The calculator is a decision aid;
+the CTA is a link to a contact page the business already has. Cheapest, entirely
+inside existing contracts, and honest — the widget does one thing well. Weakest
+against their 48 estimator templates.
+
+**B — Compute and hand off.** No storage, no email, no payment. The CTA carries
+the computed values as URL parameters into whatever form or CRM the business
+already runs. Keeps every current invariant — nothing is stored, nothing is
+emailed, the widget stays a static artifact — while making the result actionable.
+This is the smallest step that answers the estimator use case, and it needs one
+decision: which values, and in what encoding.
+
+**C — Full capture.** Submission storage, owner notification, autoresponder,
+integrations. A new data class with its own storage coordinate, retention policy,
+privacy surface, and probably its own PRD series. Reaches parity. Nothing in the
+current contracts authorizes any part of it.
+
+Recommendation: **B**, and decide it before Step 1 rather than after, because the
+CTA's role changes the results-panel design and B is nearly free if designed in
+from the start and expensive to retrofit.
+
+**What C actually costs, from their own account of it.** This is not speculation
+about a hypothetical — Elfsight has run the experiment and published the result:
+
+- **Shared email reputation is a shared failure.** Spam submissions to their form
+  widgets caused their email provider to throttle outgoing mail, and by their own
+  words that *"affected email deliverability for all our customers."* Sending on
+  behalf of tenants from shared infrastructure means one bad actor degrades
+  everyone.
+- **The fix was mandatory and cannot be turned off.** reCAPTCHA v3 is now forced
+  on every form-bearing widget.
+- **It puts a third-party script, cookies, and visitor PII on the customer's
+  page.** IP address and browser information go to Google, with an unremovable
+  notice below the form.
+
+That last point collides directly with the reason Clickeen's serving model is
+worth having. The advantage recorded in
+`planning_Research__Elfsight_Competitive_Breakdown.md` §5.4 is a static artifact
+with no runtime dependency, crawlable and clean. Option C converts every embed
+into a page with a Google script, a cookie banner obligation, and a PII flow —
+and the evidence says that outcome is not optional once you accept submissions at
+scale.
+
+Option B keeps the computation widget static and hands the lead to infrastructure
+the business already owns and is already accountable for.
+
+This is the one open item that changes what the product *is* rather than how it
+is built.
