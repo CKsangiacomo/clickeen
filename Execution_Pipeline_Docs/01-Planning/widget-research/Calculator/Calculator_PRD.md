@@ -47,6 +47,50 @@ model rather than the data:
 Do not add `calculator.type` to state in scope one. A single-Type widget declares
 no type enum, per FAQ's precedent.
 
+### 0.1.1 Evidence: 116 templates, one layout
+
+This was tested rather than assumed. Eleven Elfsight Calculator templates were
+examined across all five of their categories — Mortgage, Loan, Construction
+Price, Event Cost, Interior Design Cost, Cleaning Cost, Window Cost, House
+Renovation Cost, Car Rental Cost, Tile Flooring Cost, and Body Mass Index.
+
+**Every one has the identical structure:**
+
+```text
+inputs (left column)          results card (right column)
+  label                         primary result: large value
+  control (slider / dropdown)   caption
+  min … max                     secondary results
+  helper text                   CTA heading + copy + button
+```
+
+The BMI template is the decisive case. It is the furthest from commercial intent
+in the catalogue, and it still ships two columns, a results card, and a call to
+action ("Get Health Tips").
+
+| Varies across templates | Does **not** vary |
+| --- | --- |
+| field set — count, types, ranges, labels, helper text | two-column arrangement |
+| result set — count, names, captions, formatting | results as a distinct right-hand card |
+| accent colour — blue, green, red, dark | primary result as the visual anchor |
+| all copy, including the CTA heading and button label | presence of a CTA |
+
+Three consequences for this PRD:
+
+1. **One Type is empirically correct**, not a scoping compromise. A competitor
+   with 116 published templates found no reason to vary structure.
+2. **A template is pure data.** No per-template layout, no structural variation,
+   no conditional rendering. This is exactly what the Clickeen-Owned Examples
+   copy flow already delivers — the mechanism needs no extension.
+3. **The CTA is not optional.** Elfsight ships one on every template including
+   BMI. `calculator.action.enabled` therefore defaults to `true`, and every
+   starter in §14.1 ships a configured action.
+
+Note that `calculator.layout.arrangement` (§4.5) gives authors a `stacked` option
+Elfsight does not offer at all. That is a superset of their capability, not a
+parity requirement — worth keeping for narrow embeds, but it should not be read
+as a missing feature if it were cut.
+
 ---
 
 ## 0.2) How a user gets a working calculator
@@ -323,7 +367,7 @@ excluded from evaluation.
 
 | Path | Type |
 | --- | --- |
-| `calculator.action.enabled` | boolean |
+| `calculator.action.enabled` | boolean — **defaults `true`**, per §0.1.1 |
 | `calculator.action.label` | string, translatable |
 | `calculator.action.href` | string |
 | `calculator.action.openMode` | `same-tab` \| `new-tab` \| `new-window` |
