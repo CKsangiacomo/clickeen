@@ -33,6 +33,12 @@ header, direct role-border row separators, and
 `--space-3`/`--space-4` cell padding. These values use the existing token and
 role vocabulary; no new aliases or presentation layer are authorized.
 
+The 2026-07-31 D6 correction supersedes only those initial spacing values:
+Full Page rhythm becomes `--space-6`/`--space-6`/`--space-5`, Compact becomes
+`--space-4` at all three levels, and Table cell padding becomes
+`--space-2`/`--space-4`. The source authority and token vocabulary do not
+change.
+
 126H now owns this source:
 
 ```text

@@ -22,6 +22,12 @@ compose navigation content and source-derived component examples, but it must
 use existing Dieter tokens and roles and must not add another shell, Table,
 token family, role family, or generator.
 
+The accepted rhythm correction uses only existing structural spacing tokens:
+shared Full Page `24/24/20px`, Compact Page `16/16/16px`, `8/16px` Table cell
+padding, `24px` brand-to-navigation separation, `16px` between navigation
+groups, and tighter source-example block spacing. It adds no density token or
+DevStudio-owned restatement of Dieter Page/Table rules.
+
 DevStudio must become both:
 
 1. the real consumer of Dieter's Layout, Table, and Popup contracts; and
@@ -44,7 +50,7 @@ navigation items, route state, page content, and navigation-open state; it does
 not own a parallel shell appearance.
 
 The Dieter visual contract is `20rem | minmax(0, 1fr)` in Full, `100dvh`,
-nav-owned scrolling/padding, and page-owned scrolling with `var(--space-8)`
+nav-owned scrolling/padding, and page-owned scrolling with `var(--space-6)`
 safe-area padding. The Full navigation is an 8px-inset foreground panel using
 the shared Dieter surface, no border, `3xl` radius, and floating-shadow
 authority. Page header and content align to one centered `80rem` maximum width.

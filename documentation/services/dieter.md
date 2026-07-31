@@ -75,7 +75,9 @@ The shared application shell keeps the exact
 foreground panel inset by `--space-2` on all sides over the application
 muted backdrop. It is `20rem` wide and uses the shared surface, no border,
 `3xl` radius, and floating shadow. The page header and content share one
-centered `80rem` maximum width. In Compact mode the same `20rem` panel becomes
+centered `80rem` maximum width. Full Page padding and header separation are
+`--space-6`; content sections use `--space-5`. Compact Page padding, header
+separation, and content sections all use `--space-4`. In Compact mode the same `20rem` panel becomes
 an inset overlay over a full-width page and uses the existing elevated shadow.
 Roma and DevStudio use that Compact composition in narrow landscape and
 portrait; consumer code owns only open state and navigation/page content.
@@ -100,7 +102,7 @@ monospace exception for technical strings.
 Dieter Table uses `label-s` for column headers and `body-s` for every body
 header/data cell. Its body and row-header cells use `--role-surface`; only the
 column-header band uses `--role-surface-muted`. The shared table is a
-borderless `2xl` surface with floating elevation, `--space-3`/`--space-4` cell
+borderless `2xl` surface with floating elevation, `--space-2`/`--space-4` cell
 padding, direct role-border horizontal dividers, no vertical rules or zebra
 stripes, and small preview and action column composition classes. Apps own
 data and behavior, not another table presentation.

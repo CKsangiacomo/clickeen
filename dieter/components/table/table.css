@@ -19,7 +19,7 @@
 
 .diet-table__table th,
 .diet-table__table td {
-  padding: var(--space-3) var(--space-4);
+  padding: var(--space-2) var(--space-4);
   border-block-end: 1px solid var(--role-border);
   text-align: start;
   vertical-align: middle;

@@ -93,7 +93,7 @@ DevStudio tables consume `table`.
 Table body and row-header cells use the shared surface; only column headers use
 the muted surface. Table is a borderless `2xl` surface with floating elevation
 and direct role-border horizontal row dividers, with no vertical rules or zebra
-stripes. Cells use `--space-3` block and `--space-4` inline padding. Column
+stripes. Cells use `--space-2` block and `--space-4` inline padding. Column
 headers use `label-s`; every body `th` and `td` uses `body-s`; action controls
 retain their Dieter component typography. Technical values receive no separate
 monospace treatment. Preview and action columns use the small Table-owned

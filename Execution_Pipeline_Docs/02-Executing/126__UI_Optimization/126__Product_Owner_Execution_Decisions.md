@@ -451,6 +451,20 @@ taxonomy, authority, behavior, and deletion rules.
 Owner decision:
 `DECIDED - CORRECT THE SHARED VISUAL COMPOSITION WITHOUT CHANGING D4 OWNERSHIP`
 
+### D6 - Tighter Shared Vertical Rhythm
+
+**Status: DECIDED by the product owner on 2026-07-31.** Keep the existing
+`--space-*` scale and use smaller values at existing hierarchy levels. Full
+Page rhythm is `24/24/20px`; Compact Page rhythm is `16/16/16px`; Table cells
+are `8px` block by `16px` inline. DevStudio tightens navigation groups and
+source examples. Roma uses `32px` navigation rows, `16px` primary-module block
+padding with `12px` internal gaps, and `12px` secondary-card block padding with
+`8px` internal gaps. Horizontal room is retained where useful. No new token,
+density mode, typography rule, component, or architecture is authorized.
+
+Owner decision:
+`DECIDED - TIGHTEN RHYTHM WITH EXISTING STRUCTURAL SPACING VALUES`
+
 ## Product Owner Response
 
 The recorded decisions are:
@@ -461,6 +475,7 @@ D2: Decided - global workspace capability tenet
 D3: Decided - keep Upgrade and open the shared upsell dialog scaffold
 D4: Decided - Dieter Layout/Table/Popup consumer convergence
 D5: Decided - shared visual composition acceptance target
+D6: Decided - tighter shared vertical rhythm using the existing spacing scale
 ```
 
 No other architecture, cleanup, component, surface, translation, storage,

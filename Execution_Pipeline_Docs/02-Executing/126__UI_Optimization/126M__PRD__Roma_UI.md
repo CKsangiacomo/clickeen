@@ -24,6 +24,12 @@ elevation values and secondary cards with the existing muted surface. It must
 not add another card system, shell contract, Page-width rule, Table
 presentation, token family, or color role.
 
+The accepted rhythm correction uses only existing structural spacing tokens:
+shared Full Page `24/24/20px`, Compact Page `16/16/16px`, `8/16px` Table cell
+padding, `32px` navigation rows, `16px` primary-module block padding with
+`12px` internal gaps, and `12px` secondary-card block padding with `8px`
+internal gaps. Inline padding remains roomier. No density system is added.
+
 ### Exact Adoption
 
 `RomaShell` must render:

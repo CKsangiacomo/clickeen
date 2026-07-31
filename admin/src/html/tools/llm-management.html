@@ -1,14 +1,14 @@
 <style>
   .llm-management {
     display: grid;
-    gap: var(--space-5);
+    gap: var(--space-4);
   }
 
   .llm-management__header {
     display: flex;
     align-items: start;
     justify-content: space-between;
-    gap: var(--space-4);
+    gap: var(--space-3);
   }
 
   .llm-management__meta {
@@ -20,14 +20,15 @@
   .llm-management__grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: var(--space-4);
+    gap: var(--space-3);
   }
 
   .llm-management__panel {
     display: grid;
     align-content: start;
-    gap: var(--space-4);
-    padding: var(--space-5);
+    gap: var(--space-3);
+    padding-block: var(--space-4);
+    padding-inline: var(--space-5);
     border: 1px solid var(--role-border);
     border-radius: var(--control-radius-xl);
     background: var(--role-surface);
@@ -53,7 +54,8 @@
     gap: var(--space-3);
     align-items: center;
     min-height: var(--control-size-xl);
-    padding: var(--space-3);
+    padding-block: var(--space-2);
+    padding-inline: var(--space-3);
     border-radius: var(--control-radius-md);
     background: var(--role-surface-muted);
   }

@@ -41,7 +41,9 @@ uses that same panel as an 8px-inset overlay above the full-width page. Reveal
 and policy pages are not rebuilt as mobile variants. The shared navigation is
 `20rem` wide, uses the shared surface without a border, and has the Dieter
 `3xl` radius and floating shadow. Page headers and route content align to the
-same centered `80rem` maximum width.
+same centered `80rem` maximum width. DevStudio uses the Dieter Page rhythm
+directly, then composes its navigation groups and source-derived previews from
+smaller existing `--space-*` steps; it does not introduce a density scale.
 
 ## Token Editor Dialog
 

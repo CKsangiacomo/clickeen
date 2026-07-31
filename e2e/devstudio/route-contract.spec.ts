@@ -300,7 +300,7 @@ test.describe('DevStudio route contract', () => {
     expect(ordinaryPresentation.frameBoxShadow).not.toBe('none');
     expect(ordinaryPresentation.headerBackground).not.toBe(ordinaryPresentation.bodyBackground);
     expect(ordinaryPresentation.rowHeaderBackground).toBe(ordinaryPresentation.bodyBackground);
-    expect(ordinaryPresentation.bodyPaddingBlockStart).toBe('12px');
+    expect(ordinaryPresentation.bodyPaddingBlockStart).toBe('8px');
     expect(ordinaryPresentation.bodyPaddingInlineStart).toBe('16px');
     expect(ordinaryPresentation.bodyInlineStartBorder).toBe('0px');
     expect(ordinaryPresentation.bodyInlineEndBorder).toBe('0px');
@@ -326,7 +326,7 @@ test.describe('DevStudio route contract', () => {
           tokens: [
             { token: '--layout-left-nav-width', value: '20rem', editable: true },
             { token: '--layout-left-nav-padding', value: 'var(--space-6)', editable: true },
-            { token: '--layout-page-padding', value: 'var(--space-8)', editable: true },
+            { token: '--layout-page-padding', value: 'var(--space-6)', editable: true },
             { token: '--layout-compact-left-nav-width', value: '20rem', editable: true },
             { token: '--space-0', value: '0.125rem', editable: true },
           ],
@@ -379,7 +379,7 @@ test.describe('DevStudio route contract', () => {
           tokens: [
             { token: '--space-0', value: '0.125rem', editable: true },
             { token: '--space-1', value: '0.25rem', editable: true },
-            { token: '--layout-page-padding', value: 'var(--space-8)', editable: true },
+            { token: '--layout-page-padding', value: 'var(--space-6)', editable: true },
           ],
         }),
       });

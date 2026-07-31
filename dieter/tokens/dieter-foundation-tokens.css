@@ -16,7 +16,7 @@
   /* Shared application layout */
   --layout-left-nav-width: 20rem;
   --layout-left-nav-padding: var(--space-6);
-  --layout-page-padding: var(--space-8);
+  --layout-page-padding: var(--space-6);
   --layout-compact-left-nav-width: 20rem;
 
   /* Vertical spacing (tight line rhythm) */

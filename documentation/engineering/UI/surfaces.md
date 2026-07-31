@@ -48,7 +48,9 @@ layout tokens through the existing foundation-token write path.
 `--role-surface`. In Full mode `left-nav` is `20rem` wide, inset by
 `--space-2` on all four sides, borderless, and uses `3xl` radius plus the
 floating shadow. The Page header and content share one centered `80rem`
-maximum width. In Compact mode the same `20rem` inset panel overlays the
+maximum width. Full Page rhythm uses `--space-6` outer padding and header
+separation with `--space-5` between content sections. Compact uses
+`--space-4` for all three. In Compact mode the same `20rem` inset panel overlays the
 full-width page and uses the existing elevated shadow. Consumer content uses
 `--role-surface` for contained primary surfaces.
 

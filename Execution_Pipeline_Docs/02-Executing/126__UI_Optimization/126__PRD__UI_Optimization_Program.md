@@ -47,6 +47,15 @@ values without changing its taxonomy or ownership:
 No new token family, color role, component, layout name, framework, generator,
 or runtime service is authorized by this correction.
 
+### 2026-07-31 Vertical Rhythm Correction
+
+D6 supersedes only D5's spacing values. Wide Page rhythm is
+`--layout-page-padding` (`--space-6`), `--space-6`, and `--space-5`; Compact
+rhythm is `--space-4` for all three levels. Table cell padding is
+`--space-2`/`--space-4`. DevStudio and Roma tighten their local composition
+spacing with smaller existing `--space-*` values. No density token, new scale,
+typography change, component, or architecture is authorized.
+
 ### Frozen Taxonomy And Composition
 
 Roma and DevStudio use exactly this high-level composition:
@@ -107,7 +116,7 @@ be refined later through DevStudio without changing the contract:
   vertical scrolling, `var(--space-6)` padding plus safe-area insets,
   `var(--role-surface)`, no border, `var(--control-radius-3xl)`, and
   `var(--shadow-floating)`;
-- page: the only outer route-content scrolling owner, `var(--space-8)` padding
+- page: the only outer route-content scrolling owner, `var(--space-6)` padding
   plus safe-area insets and `var(--role-surface-muted)`;
 - Compact below `600px` usable width or height: one-column page, fixed
   navigation inset by `var(--space-2)` with

@@ -9,10 +9,32 @@ intermediate commit deployed, or close any PRD whose required verification is
 still missing.
 
 Date: 2026-07-14
-Last reconciled: 2026-07-30
+Last reconciled: 2026-07-31
 Scope: premature A-H code-change reality, final A-M current-source audits,
 executable PRDs, exact-tree peer reviews, and current Step-9 execution state.
 Parent: `126__PRD__UI_Optimization_Program.md` (MAMA).
+
+## 2026-07-31 Shared Vertical Rhythm Correction
+
+The product owner accepted the shared shell direction and requested a tighter
+vertical rhythm in both DevStudio and Roma. This correction changes values,
+not architecture: Dieter remains the Page/Table authority and both apps remain
+composition consumers.
+
+| Level | Corrected value |
+| --- | --- |
+| Full Page | `24px` outer padding, `24px` header separation, `20px` content gap |
+| Compact Page | `16px` outer padding, header separation, and content gap |
+| Table | `8px` block and `16px` inline cell padding |
+| DevStudio | `24px` brand-to-nav gap, `16px` nav-group gap, tighter preview blocks |
+| Roma navigation | `32px` rows with `4px` stack gap |
+| Roma primary modules | `16px` block padding, `24px` inline padding, `12px` internal gap |
+| Roma secondary cards | `12px` block padding, `16px` inline padding, `8px` internal gap |
+
+All values come from the existing `--space-*` scale. No density token, new
+spacing scale, typography change, route/API/data change, or new component is
+part of this correction. Deployment and owning-surface evidence are recorded
+after the exact implementation commit is verified.
 
 ## 2026-07-30 Shared Visual Composition Correction
 

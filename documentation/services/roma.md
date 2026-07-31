@@ -46,7 +46,11 @@ foreground panel; Compact presents that same panel as an 8px-inset overlay over
 the full-width page. The shared panel is `20rem` wide, borderless, and uses the
 shared surface, `3xl` radius, and Dieter elevation. Page headers and domain
 content align to the same centered `80rem` maximum width. Domain screens are
-not replaced by mobile variants.
+not replaced by mobile variants. Roma uses the Dieter Page rhythm directly.
+Its primary modules use `--space-4` block padding and `--space-3` internal
+gaps, while secondary cards use `--space-3` block padding and `--space-2`
+internal gaps. Inline padding remains roomier. These are direct uses of the
+existing structural spacing scale, not a second density system.
 
 Roma's ordinary operational text/select controls and nine semantic table
 definitions use Dieter's operational-field and Table visual contracts.
