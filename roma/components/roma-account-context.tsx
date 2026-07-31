@@ -29,9 +29,14 @@ type RomaAccountContextValue = {
   reload: () => Promise<void>;
 };
 
-const RomaAccountContext = createContext<RomaAccountContextValue | null>(null);
+type RomaAccountProviderState = {
+  me: ReturnType<typeof useRomaMe>;
+  value: RomaAccountContextValue | null;
+};
 
-export function RomaAccountBoundary({ children }: { children: ReactNode }) {
+const RomaAccountContext = createContext<RomaAccountProviderState | null>(null);
+
+export function RomaAccountProvider({ children }: { children: ReactNode }) {
   const me = useRomaMe();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -71,22 +76,47 @@ export function RomaAccountBoundary({ children }: { children: ReactNode }) {
     };
   }, [me.data, me.reload]);
 
-  if (me.loading) {
-    return <section className="rd-canvas-module body-m" role="status">Loading account context...</section>;
+  return <RomaAccountContext.Provider value={{ me, value }}>{children}</RomaAccountContext.Provider>;
+}
+
+export function RomaAccountBoundary({ children }: { children: ReactNode }) {
+  const state = useContext(RomaAccountContext);
+  if (!state) {
+    throw new Error('RomaAccountBoundary must be used within RomaAccountProvider');
   }
 
-  if (me.error === AUTH_REQUIRED_REASON_KEY) {
-    return <section className="rd-canvas-module body-m" role="status">Redirecting to sign in...</section>;
+  const { me, value } = state;
+  if ((!value && me.loading) || me.error === AUTH_REQUIRED_REASON_KEY) {
+    return (
+      <section
+        className="rd-canvas-module roma-account-loading"
+        role="status"
+        aria-label={me.error === AUTH_REQUIRED_REASON_KEY ? 'Opening sign in' : 'Loading page'}
+      >
+        <span aria-hidden="true" />
+        <span aria-hidden="true" />
+        <span aria-hidden="true" />
+      </section>
+    );
   }
 
-  if (me.error || !me.data) {
+  if (me.error || !value) {
     return (
       <section className="rd-canvas-module" role="alert">
         <p className="body-m">
-          {resolveAccountShellErrorCopy(me.error ?? 'coreui.errors.auth.contextUnavailable', 'Account context is unavailable right now. Please try again.')}
+          {resolveAccountShellErrorCopy(
+            me.error ?? 'coreui.errors.auth.contextUnavailable',
+            'This account is unavailable right now. Please try again.',
+          )}
         </p>
         <div className="rd-canvas-module__actions">
-          <button className="diet-btn-txt" data-size="md" data-variant="primary" type="button" onClick={() => void me.reload()}>
+          <button
+            className="diet-btn-txt"
+            data-size="md"
+            data-variant="primary"
+            type="button"
+            onClick={() => void me.reload()}
+          >
             <span className="diet-btn-txt__label body-m">Retry</span>
           </button>
         </div>
@@ -94,26 +124,13 @@ export function RomaAccountBoundary({ children }: { children: ReactNode }) {
     );
   }
 
-  if (!value) {
-    return (
-      <section className="rd-canvas-module" role="alert">
-        <p className="body-m">No account context is available.</p>
-        <div className="rd-canvas-module__actions">
-          <button className="diet-btn-txt" data-size="md" data-variant="primary" type="button" onClick={() => void me.reload()}>
-            <span className="diet-btn-txt__label body-m">Reload</span>
-          </button>
-        </div>
-      </section>
-    );
-  }
-
-  return <RomaAccountContext.Provider value={value}>{children}</RomaAccountContext.Provider>;
+  return children;
 }
 
 export function useRomaAccountContext(): RomaAccountContextValue {
-  const value = useContext(RomaAccountContext);
-  if (!value) {
+  const state = useContext(RomaAccountContext);
+  if (!state?.value) {
     throw new Error('coreui.errors.auth.contextUnavailable');
   }
-  return value;
+  return state.value;
 }

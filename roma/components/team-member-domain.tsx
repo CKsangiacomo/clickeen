@@ -171,7 +171,6 @@ export function TeamMemberDomain({ memberId }: TeamMemberDomainProps) {
       }
       await reload();
       router.push('/team');
-      router.refresh();
     } catch (nextError) {
       const reason = nextError instanceof Error ? nextError.message : String(nextError);
       setMutationError(resolveTeamMemberErrorCopy(reason, 'Removing the team member failed. Please try again.'));

@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { isRecord } from '@clickeen/ck-contracts';
+import { isCompactAccountPublicId, isRecord } from '@clickeen/ck-contracts';
 import { assertPolicyEntitlementsSnapshot } from '@clickeen/ck-policy';
 
 export type RomaLifecycleNotice = {
@@ -72,13 +72,16 @@ export type RomaAuthzPolicy = {
   limits: Record<string, number | null>;
 };
 
+function normalizeAccountCoordinate(value: unknown): string | null {
+  return isCompactAccountPublicId(value) ? value : null;
+}
+
 function normalizeAccountId(value: unknown): string | null {
-  const normalized = String(value || '').trim();
-  return normalized || null;
+  return normalizeAccountCoordinate(value);
 }
 
 function normalizeAccountPublicId(value: unknown): string | null {
-  return typeof value === 'string' && /^[0-9A-Z]{8}$/.test(value) ? value : null;
+  return normalizeAccountCoordinate(value);
 }
 
 function normalizeOptionalString(value: unknown): string | null {
@@ -168,7 +171,9 @@ function assertRomaMeActiveAccountPayload(data: RomaMeResponse | null): void {
 
 function assertRomaMeAuthzPayload(data: RomaMeResponse | null): void {
   const authz = data?.authz;
-  if (!authz) return;
+  if (!authz) {
+    throw new Error('coreui.errors.auth.contextUnavailable');
+  }
 
   const accountId = normalizeAccountId(authz.accountId);
   const accountPublicId = normalizeAccountPublicId(authz.accountPublicId);
@@ -178,10 +183,28 @@ function assertRomaMeAuthzPayload(data: RomaMeResponse | null): void {
   const issuedAt = typeof authz.issuedAt === 'string' ? authz.issuedAt.trim() : '';
   const expiresAt = typeof authz.expiresAt === 'string' ? authz.expiresAt.trim() : '';
 
-  if (!accountId || !accountPublicId || !role || !profile || !authzVersion || !issuedAt || !expiresAt) {
+  if (
+    !accountId ||
+    !accountPublicId ||
+    accountId !== accountPublicId ||
+    !role ||
+    !profile ||
+    !authzVersion ||
+    !issuedAt ||
+    !expiresAt
+  ) {
     throw new Error('coreui.errors.auth.contextUnavailable');
   }
-  if (!Number.isFinite(Date.parse(issuedAt)) || !Number.isFinite(Date.parse(expiresAt))) {
+  const issuedAtMs = Date.parse(issuedAt);
+  const expiresAtMs = Date.parse(expiresAt);
+  if (!Number.isFinite(issuedAtMs) || !Number.isFinite(expiresAtMs)) {
+    throw new Error('coreui.errors.auth.contextUnavailable');
+  }
+  if (
+    issuedAtMs > Date.now() + ROMA_ME_AUTHZ_EXPIRY_SKEW_MS ||
+    issuedAtMs >= expiresAtMs ||
+    expiresAtMs <= Date.now() + ROMA_ME_AUTHZ_EXPIRY_SKEW_MS
+  ) {
     throw new Error('coreui.errors.auth.contextUnavailable');
   }
   if (!Object.prototype.hasOwnProperty.call(authz, 'entitlements')) {
@@ -194,7 +217,16 @@ function assertRomaMeAuthzPayload(data: RomaMeResponse | null): void {
   assertRomaMeActiveAccountPayload(data);
   const activeAccountId = normalizeAccountId(data?.activeAccount?.accountId);
   const activeAccountPublicId = normalizeAccountPublicId(data?.activeAccount?.accountPublicId);
-  if (!activeAccountId || activeAccountId !== accountId || !activeAccountPublicId || activeAccountPublicId !== accountPublicId) {
+  const activeAccountRole = normalizeRole(data?.activeAccount?.role);
+  const activeAccountProfile = normalizeProfile(data?.activeAccount?.tier);
+  if (
+    !activeAccountId ||
+    activeAccountId !== accountId ||
+    !activeAccountPublicId ||
+    activeAccountPublicId !== accountPublicId ||
+    activeAccountRole !== role ||
+    activeAccountProfile !== profile
+  ) {
     throw new Error('coreui.errors.auth.contextUnavailable');
   }
 }
@@ -237,11 +269,20 @@ type UseRomaMeState = {
   loading: boolean;
   data: RomaMeResponse | null;
   error: string | null;
+  transientError: boolean;
+  revision: number;
 };
 
-const ROMA_ME_SUCCESS_FALLBACK_TTL_MS = 5 * 60_000;
+class RomaMeLoadError extends Error {
+  constructor(
+    message: string,
+    readonly transient: boolean,
+  ) {
+    super(message);
+  }
+}
+
 const ROMA_ME_ERROR_TTL_MS = 10_000;
-const ROMA_ME_MIN_SUCCESS_TTL_MS = 30_000;
 const ROMA_ME_AUTHZ_EXPIRY_SKEW_MS = 30_000;
 const ROMA_ME_PROACTIVE_REFRESH_LEAD_MS = 2 * 60_000;
 const ROMA_ME_PROACTIVE_REFRESH_MIN_DELAY_MS = 5_000;
@@ -267,20 +308,19 @@ function isRomaMeStore(value: unknown): value is RomaMeStore {
   return true;
 }
 
-function resolveRomaMeSuccessTtlMs(data: RomaMeResponse | null): number {
+function resolveRomaMeSafeUntilMs(data: RomaMeResponse | null): number {
   const expiresAt = typeof data?.authz?.expiresAt === 'string' ? data.authz.expiresAt.trim() : '';
   const expiresAtMs = Date.parse(expiresAt);
-  if (!Number.isFinite(expiresAtMs)) return ROMA_ME_SUCCESS_FALLBACK_TTL_MS;
-  const remainingMs = expiresAtMs - Date.now() - ROMA_ME_AUTHZ_EXPIRY_SKEW_MS;
-  if (!Number.isFinite(remainingMs) || remainingMs <= 0) return ROMA_ME_MIN_SUCCESS_TTL_MS;
-  return Math.max(ROMA_ME_MIN_SUCCESS_TTL_MS, Math.round(remainingMs));
+  if (!Number.isFinite(expiresAtMs)) return 0;
+  return expiresAtMs - ROMA_ME_AUTHZ_EXPIRY_SKEW_MS;
+}
+
+function resolveRomaMeSuccessTtlMs(data: RomaMeResponse | null): number {
+  return Math.max(0, resolveRomaMeSafeUntilMs(data) - Date.now());
 }
 
 function isRomaMeAuthzStillValid(data: RomaMeResponse | null): boolean {
-  const expiresAt = typeof data?.authz?.expiresAt === 'string' ? data.authz.expiresAt.trim() : '';
-  const expiresAtMs = Date.parse(expiresAt);
-  if (!Number.isFinite(expiresAtMs)) return false;
-  return expiresAtMs > Date.now() + ROMA_ME_AUTHZ_EXPIRY_SKEW_MS;
+  return resolveRomaMeSafeUntilMs(data) > Date.now();
 }
 
 function resolveRomaMeRefreshDelayMs(data: RomaMeResponse | null): number | null {
@@ -288,7 +328,13 @@ function resolveRomaMeRefreshDelayMs(data: RomaMeResponse | null): number | null
   const expiresAtMs = Date.parse(expiresAt);
   if (!Number.isFinite(expiresAtMs)) return null;
   const refreshAtMs = expiresAtMs - ROMA_ME_PROACTIVE_REFRESH_LEAD_MS;
-  return Math.max(ROMA_ME_PROACTIVE_REFRESH_MIN_DELAY_MS, refreshAtMs - Date.now());
+  const safeUntilMs = resolveRomaMeSafeUntilMs(data);
+  const safeRemainingMs = safeUntilMs - Date.now();
+  if (safeRemainingMs <= 0) return null;
+  return Math.min(
+    Math.max(ROMA_ME_PROACTIVE_REFRESH_MIN_DELAY_MS, refreshAtMs - Date.now()),
+    safeRemainingMs,
+  );
 }
 
 function resolveRomaMeStore(): RomaMeStore {
@@ -314,13 +360,28 @@ function readRomaMeCache(): UseRomaMeState | null {
 
 function writeRomaMeCache(state: UseRomaMeState): UseRomaMeState {
   const store = resolveRomaMeStore();
-  const ttl = state.error ? ROMA_ME_ERROR_TTL_MS : resolveRomaMeSuccessTtlMs(state.data);
+  let cachedState = state;
+  const now = Date.now();
+  let expiresAt = now + ROMA_ME_ERROR_TTL_MS;
+  if (!state.error) {
+    const safeUntilMs = resolveRomaMeSafeUntilMs(state.data);
+    if (safeUntilMs <= now) {
+      cachedState = {
+        ...state,
+        data: null,
+        error: 'coreui.errors.auth.contextUnavailable',
+        transientError: false,
+      };
+    } else {
+      expiresAt = safeUntilMs;
+    }
+  }
   const key = '__default__';
   store.cache[key] = {
-    state,
-    expiresAt: Date.now() + ttl,
+    state: cachedState,
+    expiresAt,
   };
-  return state;
+  return cachedState;
 }
 
 async function fetchRomaMeState(): Promise<UseRomaMeState> {
@@ -329,11 +390,20 @@ async function fetchRomaMeState(): Promise<UseRomaMeState> {
     const payload = (await response.json().catch(() => null)) as RomaMeResponse | { error?: unknown } | null;
     const authErrorReason = (payload as any)?.error?.reasonKey || (payload as any)?.error;
     if (response.ok && authErrorReason) {
-      throw new Error(typeof authErrorReason === 'string' ? authErrorReason : 'coreui.errors.auth.required');
+      throw new RomaMeLoadError(
+        typeof authErrorReason === 'string' ? authErrorReason : 'coreui.errors.auth.required',
+        false,
+      );
     }
     if (!response.ok) {
       const reason = (payload as any)?.error?.reasonKey || (payload as any)?.error || `HTTP_${response.status}`;
-      throw new Error(typeof reason === 'string' ? reason : 'coreui.errors.auth.required');
+      const normalizedReason = typeof reason === 'string' ? reason : 'coreui.errors.auth.required';
+      throw new RomaMeLoadError(
+        normalizedReason,
+        response.status >= 500 &&
+          normalizedReason !== 'coreui.errors.auth.required' &&
+          normalizedReason !== 'coreui.errors.auth.forbidden',
+      );
     }
     assertRomaMeAuthzPayload(payload as RomaMeResponse | null);
 
@@ -341,6 +411,8 @@ async function fetchRomaMeState(): Promise<UseRomaMeState> {
       loading: false,
       data: payload as RomaMeResponse,
       error: null,
+      transientError: false,
+      revision: 0,
     };
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
@@ -348,6 +420,8 @@ async function fetchRomaMeState(): Promise<UseRomaMeState> {
       loading: false,
       data: null,
       error: message,
+      transientError: error instanceof RomaMeLoadError ? error.transient : error instanceof TypeError,
+      revision: 0,
     };
   }
 }
@@ -361,26 +435,40 @@ async function loadRomaMeState(force: boolean, preserveCurrentOnError: boolean):
     if (cached) return cached;
   }
 
-  const inFlight = store.inFlight[key];
-  if (inFlight) return inFlight;
-
-  store.inFlight[key] = fetchRomaMeState()
-    .then((nextState) => {
-      if (
-        preserveCurrentOnError &&
-        nextState.error &&
-        existingEntry &&
-        existingEntry.expiresAt > Date.now() &&
-        isRomaMeAuthzStillValid(existingEntry.state.data)
-      ) {
-        return existingEntry.state;
-      }
-      return writeRomaMeCache(nextState);
-    })
-    .finally(() => {
-      delete resolveRomaMeStore().inFlight[key];
+  let request = store.inFlight[key];
+  while (request && force && !preserveCurrentOnError) {
+    await request;
+    request = store.inFlight[key];
+  }
+  if (!request) {
+    request = fetchRomaMeState().finally(() => {
+      const currentStore = resolveRomaMeStore();
+      if (currentStore.inFlight[key] === request) delete currentStore.inFlight[key];
     });
-  return store.inFlight[key] as Promise<UseRomaMeState>;
+    store.inFlight[key] = request;
+  }
+
+  const nextState = await request;
+  if (
+    preserveCurrentOnError &&
+    nextState.error &&
+    nextState.transientError &&
+    existingEntry &&
+    store.cache[key] === existingEntry &&
+    existingEntry.expiresAt - Date.now() > ROMA_ME_PROACTIVE_REFRESH_MIN_DELAY_MS &&
+    isRomaMeAuthzStillValid(existingEntry.state.data)
+  ) {
+    const preservedState = {
+      ...existingEntry.state,
+      revision: existingEntry.state.revision + 1,
+    };
+    store.cache[key] = {
+      ...existingEntry,
+      state: preservedState,
+    };
+    return preservedState;
+  }
+  return writeRomaMeCache(nextState);
 }
 
 export function useRomaMe() {
@@ -388,6 +476,8 @@ export function useRomaMe() {
     loading: true,
     data: null,
     error: null,
+    transientError: false,
+    revision: 0,
   });
 
   const load = useCallback(
@@ -429,12 +519,39 @@ export function useRomaMe() {
       });
     }, delayMs);
     return () => window.clearTimeout(timeout);
-  }, [load, state.data, state.error, state.loading]);
+  }, [load, state.data, state.error, state.loading, state.revision]);
 
+  useEffect(() => {
+    const ttlMs = resolveRomaMeSuccessTtlMs(state.data);
+    if (!state.data) return;
+
+    const expire = () => {
+      setState((current) =>
+        current.data === state.data
+          ? {
+              ...current,
+              loading: true,
+              data: null,
+              error: null,
+              transientError: false,
+            }
+          : current,
+      );
+    };
+    if (ttlMs <= 0) {
+      expire();
+      return;
+    }
+
+    const timeout = window.setTimeout(expire, ttlMs);
+    return () => window.clearTimeout(timeout);
+  }, [state.data]);
+
+  const dataStillValid = !state.data || isRomaMeAuthzStillValid(state.data);
   return {
-    loading: state.loading,
-    data: state.data,
-    error: state.error,
+    loading: state.loading || !dataStillValid,
+    data: dataStillValid ? state.data : null,
+    error: dataStillValid ? state.error : 'coreui.errors.auth.contextUnavailable',
     reload,
   };
 }

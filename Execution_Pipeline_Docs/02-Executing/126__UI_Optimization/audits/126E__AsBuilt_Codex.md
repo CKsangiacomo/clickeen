@@ -86,29 +86,30 @@ semantics today.
 
 Global shell boundary:
 
-- `roma/components/roma-account-context.tsx:34-47` wires `useRomaMe` and redirects
-  auth-required errors to login.
-- `roma/components/roma-account-context.tsx:74-76` renders loading:
-  `Loading account context...`.
-- `roma/components/roma-account-context.tsx:78-80` renders auth redirect:
-  `Redirecting to sign in...`.
-- `roma/components/roma-account-context.tsx:82-95` renders recoverable error copy
-  and a Retry button.
-- `roma/components/roma-account-context.tsx:97-108` renders no-context copy and a
-  Reload button.
-- `roma/components/roma-account-context.tsx:110` renders children only after the
-  account context resolves.
+- `RomaAccountProvider` owns `useRomaMe`, validates the complete account context,
+  and redirects auth-required results to login while remaining mounted across
+  authenticated route transitions.
+- `RomaShell` always renders the shared navigation and page frame. Its one
+  `RomaAccountBoundary` gates only `page__content`.
+- Before the first valid context, the page content renders a compact skeleton
+  without implementation-status copy. A recoverable error replaces that
+  content with product copy and Retry.
+- Explicit reconciliation keeps an already validated page mounted while the
+  owning command renders its own pending state.
 
 `useRomaMe` state shape:
 
-- `roma/components/use-roma-me.ts:386-440` returns `loading`, `data`, `error`,
-  and `reload`.
-- `roma/components/use-roma-me.ts:402-407` sets loading unless the load is silent.
-- `roma/components/use-roma-me.ts:369-378` preserves current cached data during
-  a silent forced refresh if the fresh result errors and the cached authz is
-  still valid.
-- `roma/components/use-roma-me.ts:420-430` performs silent refresh with
-  `preserveCurrentOnError: true`.
+- `roma/components/use-roma-me.ts` returns `loading`, `data`, `error`, and
+  `reload`.
+- A non-silent load sets loading; a silent refresh does not replace the current
+  rendered state.
+- A silent forced refresh preserves current cached data only for transient
+  network/upstream failure and only while the cached authz remains outside its
+  expiry safety boundary.
+- Proactive renewal performs a silent refresh with transient-error preservation.
+- Terminal auth failures and missing, malformed, mismatched, near-expired, or
+  expired authz discard usable context. A preserved transient failure schedules
+  another bounded refresh attempt without extending the authority lifetime.
 
 As-built read:
 
