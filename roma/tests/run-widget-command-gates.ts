@@ -96,8 +96,16 @@ async function testDieterLayoutTableAndPopupConsumption(): Promise<void> {
   assert.match(shell, /className="page__header"/);
   assert.match(shell, /className="page__actions"/);
   assert.match(shell, /className=\{`page__content/);
+  assert.match(shell, /matchMedia\('\(min-width: 600px\) and \(min-height: 600px\)'\)/);
+  assert.match(shell, /data-navigation-open=\{navigationOpen \? 'true' : undefined\}/);
+  assert.match(shell, /data-navigation-scrim/);
   assert.doesNotMatch(shell, /roma-layout|rd-domain|rd-header/);
-  assert.doesNotMatch(romaCss, /\.roma-layout|\.roma-modal|\.rd-header|\.rd-domain/);
+  assert.doesNotMatch(shell, /Unsupported workspace|Rotate your device|roma-portrait-boundary/);
+  assert.doesNotMatch(
+    romaCss,
+    /\.roma-layout|\.roma-modal|\.rd-header|\.rd-domain|\.roma-portrait-boundary/,
+  );
+  assert.doesNotMatch(romaCss, /pointer:\s*coarse|orientation:\s*portrait/);
 
   for (const relativePath of [
     'components/pages-domain.tsx',

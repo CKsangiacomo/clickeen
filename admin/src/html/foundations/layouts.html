@@ -925,7 +925,9 @@
   position: relative;
   isolation: isolate;
   display: grid;
-  grid-template-columns: var(--layout-left-nav-width) minmax(0, 1fr);
+  grid-template-columns:
+    calc(var(--layout-left-nav-width) + var(--space-4))
+    minmax(0, 1fr);
   min-inline-size: 0;
   block-size: 100dvh;
   overflow: hidden;
@@ -952,16 +954,22 @@
 }
 
 .main-container &gt; .left-nav {
+  margin: var(--space-2);
   overflow: auto;
+  overscroll-behavior: contain;
   padding: max(var(--layout-left-nav-padding), env(safe-area-inset-top))
     max(var(--layout-left-nav-padding), env(safe-area-inset-right))
     max(var(--layout-left-nav-padding), env(safe-area-inset-bottom))
     max(var(--layout-left-nav-padding), env(safe-area-inset-left));
+  border: 1px solid var(--role-border);
+  border-radius: var(--control-radius-2xl);
   background: var(--role-surface-muted);
+  box-shadow: var(--shadow-floating);
 }
 
 .main-container &gt; .page {
   overflow: auto;
+  overscroll-behavior: contain;
   padding: max(var(--layout-page-padding), env(safe-area-inset-top))
     max(var(--layout-page-padding), env(safe-area-inset-right))
     max(var(--layout-page-padding), env(safe-area-inset-bottom))
@@ -1008,13 +1016,18 @@
 
   .main-container &gt; .left-nav {
     position: fixed;
-    inset-block: 0;
-    inset-inline-start: 0;
+    inset-block: var(--space-2);
+    inset-inline-start: var(--space-2);
     z-index: 2;
-    inline-size: min(var(--layout-compact-left-nav-width), calc(100vw - 3rem));
-    transform: translateX(-100%);
+    inline-size: min(var(--layout-compact-left-nav-width), calc(100vw - var(--space-4)));
+    margin: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transform: translateX(calc(-100% - var(--space-4)));
     box-shadow: var(--shadow-elevated);
-    transition: transform var(--duration-base) var(--easing-standard);
+    transition:
+      transform var(--duration-base) var(--easing-standard),
+      visibility 0s linear var(--duration-base);
   }
 
   .main-container &gt; .page {
@@ -1026,7 +1039,10 @@
   }
 
   .main-container[data-navigation-open=&#39;true&#39;] &gt; .left-nav {
+    visibility: visible;
+    pointer-events: auto;
     transform: translateX(0);
+    transition-delay: 0s;
   }
 
   .page__header {
@@ -1955,7 +1971,9 @@
   position: relative;
   isolation: isolate;
   display: grid;
-  grid-template-columns: var(--layout-left-nav-width) minmax(0, 1fr);
+  grid-template-columns:
+    calc(var(--layout-left-nav-width) + var(--space-4))
+    minmax(0, 1fr);
   min-inline-size: 0;
   block-size: 100dvh;
   overflow: hidden;
@@ -1982,16 +2000,22 @@
 }
 
 .main-container &gt; .left-nav {
+  margin: var(--space-2);
   overflow: auto;
+  overscroll-behavior: contain;
   padding: max(var(--layout-left-nav-padding), env(safe-area-inset-top))
     max(var(--layout-left-nav-padding), env(safe-area-inset-right))
     max(var(--layout-left-nav-padding), env(safe-area-inset-bottom))
     max(var(--layout-left-nav-padding), env(safe-area-inset-left));
+  border: 1px solid var(--role-border);
+  border-radius: var(--control-radius-2xl);
   background: var(--role-surface-muted);
+  box-shadow: var(--shadow-floating);
 }
 
 .main-container &gt; .page {
   overflow: auto;
+  overscroll-behavior: contain;
   padding: max(var(--layout-page-padding), env(safe-area-inset-top))
     max(var(--layout-page-padding), env(safe-area-inset-right))
     max(var(--layout-page-padding), env(safe-area-inset-bottom))
@@ -2038,13 +2062,18 @@
 
   .main-container &gt; .left-nav {
     position: fixed;
-    inset-block: 0;
-    inset-inline-start: 0;
+    inset-block: var(--space-2);
+    inset-inline-start: var(--space-2);
     z-index: 2;
-    inline-size: min(var(--layout-compact-left-nav-width), calc(100vw - 3rem));
-    transform: translateX(-100%);
+    inline-size: min(var(--layout-compact-left-nav-width), calc(100vw - var(--space-4)));
+    margin: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transform: translateX(calc(-100% - var(--space-4)));
     box-shadow: var(--shadow-elevated);
-    transition: transform var(--duration-base) var(--easing-standard);
+    transition:
+      transform var(--duration-base) var(--easing-standard),
+      visibility 0s linear var(--duration-base);
   }
 
   .main-container &gt; .page {
@@ -2056,7 +2085,10 @@
   }
 
   .main-container[data-navigation-open=&#39;true&#39;] &gt; .left-nav {
+    visibility: visible;
+    pointer-events: auto;
     transform: translateX(0);
+    transition-delay: 0s;
   }
 
   .page__header {
@@ -2985,7 +3017,9 @@
   position: relative;
   isolation: isolate;
   display: grid;
-  grid-template-columns: var(--layout-left-nav-width) minmax(0, 1fr);
+  grid-template-columns:
+    calc(var(--layout-left-nav-width) + var(--space-4))
+    minmax(0, 1fr);
   min-inline-size: 0;
   block-size: 100dvh;
   overflow: hidden;
@@ -3012,16 +3046,22 @@
 }
 
 .main-container &gt; .left-nav {
+  margin: var(--space-2);
   overflow: auto;
+  overscroll-behavior: contain;
   padding: max(var(--layout-left-nav-padding), env(safe-area-inset-top))
     max(var(--layout-left-nav-padding), env(safe-area-inset-right))
     max(var(--layout-left-nav-padding), env(safe-area-inset-bottom))
     max(var(--layout-left-nav-padding), env(safe-area-inset-left));
+  border: 1px solid var(--role-border);
+  border-radius: var(--control-radius-2xl);
   background: var(--role-surface-muted);
+  box-shadow: var(--shadow-floating);
 }
 
 .main-container &gt; .page {
   overflow: auto;
+  overscroll-behavior: contain;
   padding: max(var(--layout-page-padding), env(safe-area-inset-top))
     max(var(--layout-page-padding), env(safe-area-inset-right))
     max(var(--layout-page-padding), env(safe-area-inset-bottom))
@@ -3068,13 +3108,18 @@
 
   .main-container &gt; .left-nav {
     position: fixed;
-    inset-block: 0;
-    inset-inline-start: 0;
+    inset-block: var(--space-2);
+    inset-inline-start: var(--space-2);
     z-index: 2;
-    inline-size: min(var(--layout-compact-left-nav-width), calc(100vw - 3rem));
-    transform: translateX(-100%);
+    inline-size: min(var(--layout-compact-left-nav-width), calc(100vw - var(--space-4)));
+    margin: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transform: translateX(calc(-100% - var(--space-4)));
     box-shadow: var(--shadow-elevated);
-    transition: transform var(--duration-base) var(--easing-standard);
+    transition:
+      transform var(--duration-base) var(--easing-standard),
+      visibility 0s linear var(--duration-base);
   }
 
   .main-container &gt; .page {
@@ -3086,7 +3131,10 @@
   }
 
   .main-container[data-navigation-open=&#39;true&#39;] &gt; .left-nav {
+    visibility: visible;
+    pointer-events: auto;
     transform: translateX(0);
+    transition-delay: 0s;
   }
 
   .page__header {

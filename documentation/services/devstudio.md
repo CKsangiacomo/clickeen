@@ -30,13 +30,15 @@ Non-canonical Pages origins redirect or block through `admin/functions/_middlewa
 
 DevStudio follows the global operational-workspace tenet in
 `documentation/engineering/UI/surfaces.md`: full desktop workspace on desktop
-and tablets in either orientation; compact drawer navigation on mobile
-landscape; explicit unsupported boundary on mobile portrait. Retina/4K density
-governs sharpness, not layout class. DevStudio consumes Dieter's
+and tablets in either orientation, with the same compact drawer navigation on
+narrow mobile landscape and portrait. Retina/4K density governs sharpness, not
+layout class. DevStudio consumes Dieter's
 `main-container > left-nav + page` source directly. Its four layout values are
 source tokens rather than DevStudio shell constants. The shell uses the shared
 `600px` usable-width-and-height capability boundary, dynamic viewport units,
-and safe areas. Reveal and policy pages are not rebuilt as mobile variants.
+and safe areas. The Full navigation is an 8px-inset foreground panel; Compact
+uses that same panel as an 8px-inset overlay above the full-width page. Reveal
+and policy pages are not rebuilt as mobile variants.
 
 ## Token Editor Dialog
 

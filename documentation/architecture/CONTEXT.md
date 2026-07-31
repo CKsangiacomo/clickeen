@@ -135,10 +135,11 @@ Clickeen is a simple account product.
 - Clickeen admin work uses the normal admin account.
 - UI capability follows one forward-looking rule: resolution determines
   sharpness, available workspace determines layout, and form factor determines
-  the expected product experience. Operational editors and dashboards preserve
-  the desktop workspace on tablets in both orientations, use a compact
-  workspace on mobile landscape, and do not pretend mobile portrait can carry
-  the authoring/operations product.
+  the expected product experience. Operational dashboards preserve the desktop
+  workspace on tablets in both orientations and use the same compact drawer
+  workspace on narrow mobile landscape and portrait. A specialized editor may
+  retain an explicit unsupported portrait boundary only when its real
+  composition cannot remain operable there; Bob currently owns that exception.
 
 The active cloud-dev admin account coordinate is:
 

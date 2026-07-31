@@ -14,6 +14,51 @@ Scope: premature A-H code-change reality, final A-M current-source audits,
 executable PRDs, exact-tree peer reviews, and current Step-9 execution state.
 Parent: `126__PRD__UI_Optimization_Program.md` (MAMA).
 
+## 2026-07-30 Inset Shared Shell And Portrait Correction
+
+The human product owner selected one cohesive shell for DevStudio and Roma:
+`main-container > left-nav + page`, with the navigation presented as an inset
+foreground panel over the application backdrop. The same panel becomes the
+Compact overlay in narrow landscape and portrait. This supersedes only the old
+DevStudio/Roma portrait replacement; Bob's specialized editor boundary remains
+unchanged.
+
+### Exact authority and implementation
+
+| Concern | Authority/result |
+| --- | --- |
+| Layout source | `dieter/layouts/main-container/main-container.{css,html,spec.json}` |
+| Taxonomy | `main-container > left-nav + page`; no alias or additional shell vocabulary |
+| Full navigation | Exact `--layout-left-nav-width` panel, `--space-2` inset, existing muted surface, role border, `2xl` radius, and floating shadow |
+| Compact navigation | Same panel fixed `--space-2` from every viewport edge, full-width page beneath, existing elevated shadow and scrim |
+| DevStudio consumer | Existing navigation/content/open state retained; portrait replacement deleted |
+| Roma consumer | Existing navigation/content/open state retained; portrait replacement deleted |
+| Product data/routes/storage | Unchanged |
+| Deploy/runtime | Git-connected DevStudio and Roma Pages; normal Dieter-triggered static-root workflow |
+
+No new token, color role, component, framework, runtime classifier, generator,
+or compatibility alias was added. The four existing editable layout tokens
+remain the only Layout-specific token contract. The inset, surface, border,
+radius, and elevation reference existing Dieter foundations directly.
+
+### Local evidence
+
+- Wide `1440x900`: navigation rect `8,8,220,884`; one-pixel border, 16px
+  radius, floating shadow; page begins at `x=236`.
+- Narrow portrait `390x844`: page remains mounted at full width; navigation
+  opens at `8,8`, width `320`, height `828`, with 16px radius and visible
+  scrim; the retired portrait boundary is absent.
+- DevStudio generation, typecheck, lint, build, Functions syntax, and focused
+  shell Playwright checks are GREEN.
+- Roma widget-command contract, typecheck, lint, and Cloudflare production
+  build are GREEN.
+- Dieter typecheck, governance, generated Layouts examples, and source diff
+  checks are GREEN.
+
+Commit, exact-SHA Pages deployments, deployed browser evidence, and the
+independent final V1-V8 audit are recorded after those gates complete. This
+correction does not close the broader C14 visual-acceptance boundary.
+
 ## 2026-07-30 Operational Typography And Table Correction
 
 The human product owner rejected the two operational font-family variables and

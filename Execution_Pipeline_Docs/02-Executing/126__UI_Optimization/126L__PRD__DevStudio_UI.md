@@ -35,11 +35,14 @@ The markup/classes and CSS come from
 navigation items, route state, page content, and navigation-open state; it does
 not own a parallel shell appearance.
 
-The initial Dieter visual values are `13.75rem | minmax(0, 1fr)` in Full,
-`100dvh`, nav-owned scrolling/padding, and page-owned scrolling with
-`var(--space-8)` safe-area padding. Compact geometry, scrim visual, and the
-`600px` classifier come from the same source. DevStudio owns the trigger/scrim
-click state and unsupported portrait message, not their base layout appearance.
+The Dieter visual contract is `13.75rem | minmax(0, 1fr)` in Full, `100dvh`,
+nav-owned scrolling/padding, and page-owned scrolling with `var(--space-8)`
+safe-area padding. The Full navigation is an 8px-inset foreground panel using
+existing Dieter surface, border, radius, and floating-shadow authorities.
+Compact geometry, the inset overlay, scrim visual, and the `600px` classifier
+come from the same source. DevStudio owns only trigger/scrim click state and
+navigation/page content; narrow portrait uses Compact rather than a replacement
+screen.
 
 Every DevStudio route uses the shared Page foundation:
 
@@ -186,7 +189,8 @@ rewrite, or new token-management system.
 ## Dependencies
 
 - 126I supplies `operational-field`, `operational-table`, and `tooltip` CSS.
-- 126J pins the global Full/Compact/unsupported workspace classifier.
+- 126J pins the global Full/Compact workspace classifier and Bob's separate
+  editor portrait exception.
 - 126K supplies native dialog lifecycle and has already migrated the token
   editor behavior before 126L changes its visual classes.
 - The execution order is I -> J -> K -> L.
@@ -209,17 +213,15 @@ rewrite, or new token-management system.
 - Full mode: persistent `220px` sidebar and flexible work area.
 - Tablet portrait and landscape remain Full and touch-operable.
 - Compact mode: one menu icon button opens the same sidebar as an overlay
-  drawer over a full-width work area.
-- Unsupported mobile portrait: explicit `Rotate your device or use a larger
-  screen` boundary.
+  drawer over a full-width work area in narrow landscape and portrait.
 - Mode changes occur without reload and preserve the current hash route.
 - All 3/22/2 routes, policy operations, token commit behavior, and generated
   source relationships remain unchanged.
 
 Use 126J's classifier exactly: Full is default at at least `600px` usable inline
-and block size; Compact below either dimension; coarse-pointer portrait below
-`600px` shows the unsupported boundary. Use dynamic viewport units and safe
-areas. Do not add UA sniffing or a device registry.
+and block size; Compact below either dimension without a portrait override. Use
+dynamic viewport units and safe areas. Do not add UA sniffing or a device
+registry.
 
 ## Current Source Truth
 
@@ -247,10 +249,11 @@ areas. Do not add UA sniffing or a device registry.
 1. Add a stable sidebar id, compact menu button, scrim, open state, Escape
    close, link-selection close, initial drawer focus, and opener focus return in
    `main.ts`.
-2. Render the portrait boundary once at shell construction.
-3. Replace the generic `960px`/`640px` branches with 126J's Full/Compact/
-   unsupported predicates.
-4. Preserve the sidebar at `220px` in Full mode. Compact mode overlays that same
+2. Delete the obsolete portrait replacement; the shared shell remains mounted.
+3. Replace the generic `960px`/`640px` branches with 126J's Full/Compact
+   predicates.
+4. Preserve the sidebar at `220px` in Full mode with Dieter's shared inset
+   panel treatment. Compact mode overlays that same
    navigation; it does not create another nav tree.
 5. Use `100dvh`, overflow ownership, and safe-area padding.
 6. Add `viewport-fit=cover` to the existing viewport metadata.
@@ -302,14 +305,18 @@ Execution result:
   horizontal overflow, and console/page errors GREEN
 - No product data, Worker, R2, Supabase, policy, or token mutation occurred
 
+That matrix is point-in-time evidence for the original execution. The later
+inset-shell correction supersedes only DevStudio's portrait result: current
+narrow portrait uses Compact and is proven separately in `126_DevQA.md`.
+
 ## Exact Blast Radius
 
 ### Edit
 
 | File | Change |
 | --- | --- |
-| `admin/src/main.ts` | Compact drawer, portrait boundary, operational CSS imports/classes; preserve K dialog lifecycle. |
-| `admin/src/css/layout.css` | Full/Compact/unsupported shell, dynamic viewport, safe areas; delete dead responsive/collapsed branches. |
+| `admin/src/main.ts` | Compact drawer and portrait replacement deletion; operational CSS imports/classes; preserve K dialog lifecycle. |
+| `admin/src/css/layout.css` | Full/Compact shell, dynamic viewport, safe areas; delete the portrait blocker and dead responsive/collapsed branches. |
 | `admin/src/css/tokens.css` | Keep shell variables only; remove duplicate Dieter/font imports and dead variables. |
 | `admin/src/css/utilities.css` | Delete local field appearance and invalid shadow fallback; preserve DevStudio-specific dialog composition. |
 | `admin/src/html/tools/entitlements.html` | Adopt operational-table; preserve policy composition; remove raw color fallback. |
@@ -365,7 +372,7 @@ Browser matrix:
 | `768x1024` | Full tablet portrait cockpit. |
 | `1024x768` | Full tablet landscape cockpit. |
 | `844x390` | Compact overlay drawer and full work area. |
-| `390x844` | Unsupported portrait boundary. |
+| `390x844` | Compact inset navigation drawer over the full-width page. |
 | `600x960` | Full boundary behavior. |
 
 Deploy proof is the Git-connected DevStudio Pages build at the exact source SHA

@@ -58,12 +58,15 @@ Layout source owns:
 - scrim and navigation-open visual state;
 - dynamic viewport and safe-area layout treatment already accepted by 126J.
 
-The initial visual values are the parent correction's `13.75rem` Full nav,
-`100dvh` root, nav-owned scrolling and `var(--space-6)` safe-area padding,
-page-owned scrolling and `var(--space-8)` safe-area padding, and the existing
-`600px` Full/Compact classifier. Compact initially uses the `20rem`/`3rem`
-off-canvas geometry and shared scrim visual. Consumer JavaScript owns state.
-Selectors are structurally scoped through `.main-container > .left-nav` and
+The visual contract uses the parent's `13.75rem` Full navigation inside a track
+widened by `var(--space-4)`, `100dvh` root, nav-owned scrolling and
+`var(--space-6)` safe-area padding, page-owned scrolling and
+`var(--space-8)` safe-area padding, and the existing `600px` Full/Compact
+classifier. The navigation is inset by `var(--space-2)` and uses existing
+Dieter surface, border, `2xl` radius, and floating shadow authorities. Compact
+uses the same inset panel with `20rem` maximum width, elevated shadow, and the
+shared scrim over a full-width page. Consumer JavaScript owns state. Selectors
+are structurally scoped through `.main-container > .left-nav` and
 `.main-container > .page`.
 
 The adjustable values are authored as `--layout-left-nav-width`,

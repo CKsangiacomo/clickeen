@@ -111,6 +111,7 @@ const expectedRoutes = navGroups.flatMap((group) => group.routes);
 
 test.describe('DevStudio route contract', () => {
   test('renders the three-section authenticated main-container', async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto('/');
     await expect(page.getByRole('heading', { name: 'DevStudio' })).toBeVisible();
     await expect(page.locator('.main-container')).toHaveCount(1);
@@ -131,6 +132,40 @@ test.describe('DevStudio route contract', () => {
     await expect(page.locator('.nav-link', { hasText: 'Bob UI Native' })).toHaveCount(0);
     await expect(page.locator('.nav-link[href^="#/tools/"]')).toHaveCount(0);
     await expect(page.locator('.nav-link[href="#/policy/entitlements"]')).toHaveCount(1);
+
+    const wideShell = await page.evaluate(() => {
+      const navigation = document.querySelector<HTMLElement>('.main-container > .left-nav');
+      const workspace = document.querySelector<HTMLElement>('.main-container > .page');
+      if (!navigation || !workspace) throw new Error('Shared shell is missing');
+      const navigationRect = navigation.getBoundingClientRect();
+      const workspaceRect = workspace.getBoundingClientRect();
+      const navigationStyle = getComputedStyle(navigation);
+      return {
+        navigation: {
+          x: navigationRect.x,
+          y: navigationRect.y,
+          width: navigationRect.width,
+          height: navigationRect.height,
+          borderWidth: navigationStyle.borderWidth,
+          borderRadius: navigationStyle.borderRadius,
+          boxShadow: navigationStyle.boxShadow,
+        },
+        workspace: {
+          x: workspaceRect.x,
+          width: workspaceRect.width,
+        },
+      };
+    });
+    expect(wideShell.navigation).toMatchObject({
+      x: 8,
+      y: 8,
+      width: 220,
+      height: 884,
+      borderWidth: '1px',
+      borderRadius: '16px',
+    });
+    expect(wideShell.navigation.boxShadow).not.toBe('none');
+    expect(wideShell.workspace).toEqual({ x: 236, width: 1204 });
   });
 
   test('actual DevStudio main-container uses the shared Compact navigation state', async ({ page }) => {
@@ -145,12 +180,46 @@ test.describe('DevStudio route contract', () => {
     await expect(trigger).toBeVisible();
     await expect(navigation).toHaveJSProperty('inert', true);
     await expect(mainContainer).not.toHaveAttribute('data-navigation-open', 'true');
+    await expect(page.locator('.devstudio-portrait-boundary')).toHaveCount(0);
 
     await trigger.click();
     await expect(mainContainer).toHaveAttribute('data-navigation-open', 'true');
     await expect(trigger).toHaveAttribute('aria-expanded', 'true');
     await expect(navigation).toHaveJSProperty('inert', false);
     await expect(scrim).toBeVisible();
+    await expect
+      .poll(() => navigation.evaluate((element) => Math.round(element.getBoundingClientRect().x)))
+      .toBe(8);
+
+    const compactShell = await page.evaluate(() => {
+      const navigationElement =
+        document.querySelector<HTMLElement>('.main-container > .left-nav');
+      const workspace = document.querySelector<HTMLElement>('.main-container > .page');
+      if (!navigationElement || !workspace) throw new Error('Shared shell is missing');
+      const navigationRect = navigationElement.getBoundingClientRect();
+      const workspaceRect = workspace.getBoundingClientRect();
+      return {
+        navigation: {
+          x: navigationRect.x,
+          y: navigationRect.y,
+          width: navigationRect.width,
+          height: navigationRect.height,
+          borderRadius: getComputedStyle(navigationElement).borderRadius,
+        },
+        workspace: {
+          x: workspaceRect.x,
+          width: workspaceRect.width,
+        },
+      };
+    });
+    expect(compactShell.navigation).toEqual({
+      x: 8,
+      y: 8,
+      width: 320,
+      height: 624,
+      borderRadius: '16px',
+    });
+    expect(compactShell.workspace).toEqual({ x: 0, width: 560 });
 
     await scrim.click({ position: { x: 500, y: 300 } });
     await expect(mainContainer).not.toHaveAttribute('data-navigation-open', 'true');

@@ -45,8 +45,11 @@ The source contract is
 reveals its Full, Compact-closed, and Compact-open examples and edits its four
 layout tokens through the existing foundation-token write path.
 `main-container` and `page` use `--role-surface-bg`; `left-nav` uses
-`--role-surface-muted`. Consumer content uses `--role-surface` only for
-contained surfaces rather than the page canvas.
+`--role-surface-muted`. In Full mode `left-nav` is inset by `--space-2` on all
+four sides and uses the existing role border, `2xl` radius, and floating
+shadow. In Compact mode the same inset panel overlays the full-width page and
+uses the existing elevated shadow. Consumer content uses `--role-surface` only
+for contained surfaces rather than the page canvas.
 
 Preserve the existing backdrop, white/muted surfaces, borders, and shadows. This
 program does not create a new depth or tonal ramp.
@@ -59,10 +62,10 @@ data, policy, behavior, and composition.
 ## Current Direction
 
 Bob is the strongest directional editor reference because it uses a clear tool
-drawer, toolbar, canvas, and preview plane hierarchy. DevStudio now implements
-the accepted Full/Compact/unsupported operational shell with one navigation
-tree. Roma implements the same capability contract with one navigation tree,
-while retaining its own simple account-app shell and domain composition.
+drawer, toolbar, canvas, and preview plane hierarchy. DevStudio and Roma
+implement the accepted Full/Compact operational shell with one inset navigation
+tree while retaining their own route and domain composition. Bob keeps its
+specialized editor portrait boundary.
 
 ## Global Workspace Capability Tenet
 
@@ -87,8 +90,9 @@ The supported operational-workspace contract is:
 - tablet portrait: full desktop workspace;
 - tablet landscape: full desktop workspace;
 - mobile landscape: compact workspace with accessible navigation drawer;
-- mobile portrait: no broken editor/dashboard approximation; present a clear
-  rotate-device or larger-screen boundary.
+- mobile portrait: DevStudio and Roma use the same compact navigation drawer
+  and full-width page; a specialized editor may expose a clear boundary only
+  when its real composition cannot remain operable there.
 
 The operational shell remains intentionally simple:
 
@@ -106,8 +110,9 @@ Bob uses the same nested composition: `ToolDrawer | preview/workspace` when it
 fits, and an explicit ToolDrawer button/drawer plus full preview/workspace in
 compact mode. This is the same editor, not a mobile variant.
 
-Desktop workspace on tablet remains touch-operable. Mobile-landscape compact
-mode changes composition, not product authority or available operations.
+Desktop workspace on tablet remains touch-operable. Compact mode in mobile
+landscape or portrait changes composition, not product authority or available
+operations.
 Constrained split-screen/windowed contexts respond to the usable workspace they
 actually provide.
 
@@ -120,8 +125,9 @@ space.
 World-class execution means predictable allocation and complete operability,
 not more layout machinery. Dieter supplies CSS/HTML/spec source, not a shell
 framework or runtime controller. Roma and DevStudio retain small local shell
-code for product state; Bob retains its editor layout. No device registry or
-domain-by-domain mobile redesign is part of this law.
+code for product state; Bob retains its editor layout and current explicit
+portrait boundary. No device registry or domain-by-domain mobile redesign is
+part of this law.
 
 ## Rules For Agents
 

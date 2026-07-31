@@ -141,9 +141,8 @@ form engine, state framework, or mobile product variant.
   work area.
 - Tablet portrait and landscape remain Full and touch-operable.
 - Compact mode: one menu icon button opens that same navigation DOM as an
-  overlay drawer; the domain work area uses the viewport.
-- Unsupported mobile portrait: explicit `Rotate your device or use a larger
-  screen` boundary.
+  8px-inset overlay drawer; the domain work area uses the viewport in narrow
+  landscape and portrait.
 - Domain routes, settings hierarchy, operations, tables, and data remain the
   same in every supported mode.
 - Tables retain all columns and scroll horizontally inside the Dieter wrapper;
@@ -152,9 +151,8 @@ form engine, state framework, or mobile product variant.
   Bob's Translations panel beside Tokyo's authoritative state.
 
 Use 126J's classifier exactly: Full is default at at least `600px` usable inline
-and block size; Compact below either dimension; coarse-pointer portrait below
-`600px` shows the unsupported boundary. Use dynamic viewport units and safe
-areas. No UA sniffing or device registry.
+and block size; Compact below either dimension without a portrait override. Use
+dynamic viewport units and safe areas. No UA sniffing or device registry.
 
 ## Execution Starting Point
 
@@ -183,20 +181,20 @@ areas. No UA sniffing or device registry.
 ### M1 - One Roma Navigation Tree
 
 1. Make `RomaShell` the small client owner of drawer open state, opener focus,
-   Escape close, scrim close, and portrait boundary.
+   Escape close, and scrim close; delete the obsolete portrait replacement.
 2. Keep one `RomaNav` instance in the existing aside. In Compact mode CSS moves
    that same aside into the overlay drawer.
 3. Add one menu icon button in the header with accessible name,
    `aria-expanded`, and `aria-controls`.
 4. Remove `RomaNav.compact`, the second inline `<details>` tree, and
    `.roma-nav--compact`.
-5. Replace the generic `980px` branch with 126J's Full/Compact/unsupported
-   predicates.
+5. Replace the generic `980px` branch with 126J's Full/Compact predicates.
 6. Delete dead `.roma-layout--focus`; use `100dvh`, explicit overflow ownership,
    safe-area padding, and viewport-fit support.
 
 Green gate: one navigation tree, complete tablet workspace, reachable compact
-drawer, route change without hidden controls, and no portrait approximation.
+drawer in narrow landscape and portrait, and route change without hidden
+controls.
 
 ### M2 - Operational Fields And Nine Tables
 
@@ -258,9 +256,9 @@ control; no deleted selector has a source consumer.
 
 | File | Change |
 | --- | --- |
-| `roma/components/roma-shell.tsx` | One drawer state/trigger/scrim and portrait boundary. |
+| `roma/components/roma-shell.tsx` | One drawer state/trigger/scrim and portrait replacement deletion. |
 | `roma/components/roma-nav.tsx` | Delete compact duplicate-tree branch; keep one nav. |
-| `roma/app/roma.css` | Full/Compact/unsupported shell; operational-class adoption cleanup; dead Widget Defaults deletion. |
+| `roma/app/roma.css` | Full/Compact shell including narrow portrait; operational-class adoption cleanup; dead Widget Defaults deletion. |
 | `roma/app/layout.tsx` | Preserve direct `dieter/styles.css` source compilation and add viewport-fit support. |
 | `roma/components/pages-domain.tsx` | Operational fields; wrap four tables. Preserve K dialog changes. |
 | `roma/components/widgets-domain.tsx` | Rename field; wrap one table. Preserve K upsell/dialog changes. |
@@ -319,7 +317,7 @@ Browser matrix:
 | `768x1024` | Full tablet portrait workspaces. |
 | `1024x768` | Full tablet landscape workspaces. |
 | `844x390` | Compact overlay drawers and complete work areas. |
-| `390x844` | Unsupported portrait boundaries. |
+| `390x844` | Compact inset drawers in Roma and DevStudio; Bob retains its unsupported editor boundary. |
 | `600x960` | Full boundary behavior. |
 
 Deploy evidence requires Roma, `bob-dev`, and DevStudio Pages at the final source
@@ -357,6 +355,10 @@ mutation belongs to 126M.
   and two DevStudio token-editor fields: GREEN.
 - Real Bob `bob:upsell` message to Roma scaffold: GREEN; no Billing navigation
   and no discarded Builder work.
+
+That matrix is point-in-time evidence for the original execution. The later
+inset-shell correction supersedes only Roma and DevStudio's portrait result:
+both now use Compact at `390x844`; Bob's editor boundary is unchanged.
 - Git-connected Cloudflare Pages deployments at `61317dbb`: Roma
   `e26e1db5-909a-45ac-934b-7dd491780127`, Bob
   `8cdcfb83-6d3d-4317-990c-f49d2f4741ed`, and DevStudio

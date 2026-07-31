@@ -201,18 +201,9 @@ scrim.dataset.navigationScrim = '';
 scrim.tabIndex = -1;
 scrim.setAttribute('aria-label', 'Close navigation');
 
-const portraitBoundary = document.createElement('section');
-portraitBoundary.className = 'devstudio-portrait-boundary';
-portraitBoundary.setAttribute('aria-label', 'Unsupported workspace');
-portraitBoundary.innerHTML = `
-  <h1 class="heading-3">Rotate your device or use a larger screen</h1>
-  <p class="body-s">DevStudio needs a wider workspace.</p>
-`;
-
 shell.append(sidebar, main);
 main.append(compactBar, scrim);
 appRoot.append(shell);
-appRoot.append(portraitBoundary);
 
 const navHeader = document.createElement('header');
 navHeader.className = 'devstudio-nav__brand';

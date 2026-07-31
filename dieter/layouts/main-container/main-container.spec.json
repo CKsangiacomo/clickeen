@@ -17,6 +17,15 @@
       "owner": "consumer"
     }
   },
+  "presentation": {
+    "inset": "--space-2",
+    "surface": "--role-surface-muted",
+    "border": "--role-border",
+    "radius": "--control-radius-2xl",
+    "wideElevation": "--shadow-floating",
+    "compactElevation": "--shadow-elevated",
+    "compactQuery": "(max-width: 599px), (max-height: 599px)"
+  },
   "editableTokens": [
     "--layout-left-nav-width",
     "--layout-left-nav-padding",

@@ -85,8 +85,7 @@ body {
   outline: none;
 }
 
-.devstudio-compact-bar,
-.devstudio-portrait-boundary {
+.devstudio-compact-bar {
   display: none;
 }
 
@@ -100,32 +99,5 @@ body {
 
   .devstudio-navigation-trigger {
     display: inline-flex;
-  }
-}
-
-@media (pointer: coarse) and (orientation: portrait) and (max-width: 599px) {
-  .main-container {
-    display: none;
-  }
-
-  .devstudio-portrait-boundary {
-    box-sizing: border-box;
-    display: grid;
-    align-content: center;
-    justify-items: center;
-    gap: var(--space-3);
-    width: 100%;
-    height: 100dvh;
-    padding:
-      max(var(--space-6), env(safe-area-inset-top))
-      max(var(--space-6), env(safe-area-inset-right))
-      max(var(--space-6), env(safe-area-inset-bottom))
-      max(var(--space-6), env(safe-area-inset-left));
-    text-align: center;
-    background: var(--role-surface-bg);
-  }
-
-  .devstudio-portrait-boundary > * {
-    margin: 0;
   }
 }

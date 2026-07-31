@@ -76,20 +76,25 @@ values can be refined later through DevStudio without changing the contract:
 
 - Full: `13.75rem` left navigation and `minmax(0, 1fr)` page;
 - root: `100dvh`, one grid row, hidden root overflow;
-- left navigation: its own vertical scrolling, `var(--space-6)` padding plus
-  safe-area insets, and
-  `color-mix(in oklab, var(--color-system-gray-5), white 40%)`;
+- left navigation: a `13.75rem` foreground panel inside a track widened by
+  `var(--space-4)`, inset by `var(--space-2)` on all sides, with its own
+  vertical scrolling, `var(--space-6)` padding plus safe-area insets,
+  `var(--role-surface-muted)`, the existing role border,
+  `var(--control-radius-2xl)`, and `var(--shadow-floating)`;
 - page: the only outer route-content scrolling owner, `var(--space-8)` padding
-  plus safe-area insets, and
-  `color-mix(in oklab, var(--color-system-gray-6), white 40%)`;
+  plus safe-area insets and `var(--role-surface-bg)`;
 - Compact below `600px` usable width or height: one-column page, fixed
-  navigation `min(20rem, calc(100vw - 3rem))`, off-canvas when closed,
-  `var(--shadow-elevated)` when open, and the existing `64%` black-mix scrim;
+  navigation inset by `var(--space-2)` with
+  `min(20rem, calc(100vw - var(--space-4)))` width, off-canvas and
+  non-interactive when closed, `var(--shadow-elevated)` when open, and the
+  existing `64%` black-mix scrim;
 - apps render their trigger and a `button[data-navigation-scrim]` inside
   `main.page`; Dieter styles the scrim/open presentation, while apps own click,
   open/close, and focus behavior;
-- the existing coarse-pointer portrait unsupported boundary remains app-owned
-  126J behavior, not a fourth layout class or a Dieter runtime classifier.
+- DevStudio and Roma use Compact in narrow portrait as well as narrow
+  landscape. Bob's specialized editor may retain its app-owned portrait
+  boundary; that is not a fourth shared layout class or Dieter runtime
+  classifier.
 
 The three structural selectors must be scoped as
 `.main-container`, `.main-container > .left-nav`, and

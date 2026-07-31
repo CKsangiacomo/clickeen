@@ -55,7 +55,10 @@ layering are owned by their own UI docs.
 - **Application layout** - `--layout-left-nav-width`,
   `--layout-left-nav-padding`, `--layout-page-padding`, and
   `--layout-compact-left-nav-width` are the editable values used by the
-  `main-container` layout.
+  `main-container` layout. The layout also uses existing source tokens directly
+  for its fixed presentation: `--space-2` inset, muted navigation surface,
+  role border, `--control-radius-2xl`, and floating/elevated shadows. These are
+  not duplicated as layout aliases.
 - **Vertical rhythm** - `--vertspace-1` through `--vertspace-9`. Use this for
   compact vertical breathing room inside dense controls where structural
   spacing is too coarse.
@@ -92,7 +95,8 @@ layering are owned by their own UI docs.
 - **Consumption.** Bob and Roma compile `dieter/styles.css`; Prague compiles
   token source; widget materialization folds required Dieter CSS into instance
   `styles.css`. Roma and DevStudio also import the shared application layout
-  directly; Bob retains its ToolDrawer/Workspace layout. Only
+  directly, including its inset Full panel and Compact overlay in narrow
+  landscape and portrait; Bob retains its ToolDrawer/Workspace layout. Only
   `dieter/icons/svg/**` is deployed to Tokyo R2. See [`ops.md`](ops.md).
 
 ## Package And Artifact Boundary

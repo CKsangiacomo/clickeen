@@ -64,18 +64,19 @@ Operational workspace behavior is:
 | Mode | Product behavior |
 | --- | --- |
 | Full | Persistent narrow navigation or ToolDrawer beside a flexible work area. |
-| Compact | A menu/tool button opens the same navigation or ToolDrawer as an overlay drawer; the work area uses the viewport. |
-| Unsupported portrait | A clear `Rotate your device or use a larger screen` boundary replaces the unusable editor/dashboard composition. |
+| Compact | A menu/tool button opens the same navigation or ToolDrawer as an overlay drawer; the work area uses the viewport. DevStudio and Roma use this mode in narrow landscape and portrait. |
+| Specialized editor portrait boundary | An editor may show `Rotate your device or use a larger screen` only when its real composition cannot remain operable there; Bob currently owns this exception. |
 
 Desktop and tablets in both orientations use Full mode when the usable
-workspace fits. Mobile landscape uses Compact mode. Mobile portrait receives
-the unsupported boundary. Routes, domains, actions, controls, tables, editing
-operations, and information architecture do not change between supported
-modes.
+workspace fits. DevStudio and Roma use Compact mode in narrow mobile landscape
+and portrait. Bob retains its explicit narrow-portrait editor boundary. Routes,
+domains, actions, controls, tables, editing operations, and information
+architecture do not change between supported modes.
 
 Resolution affects sharpness. CSS workspace geometry affects composition.
-Form-factor signals are used only to distinguish the unsupported mobile
-portrait boundary. No user-agent sniffing is allowed.
+Form-factor signals may distinguish Bob's specialized editor boundary; they do
+not replace the shared DevStudio/Roma Compact shell. No user-agent sniffing is
+allowed.
 
 ## Deterministic Workspace Classification
 
@@ -88,8 +89,10 @@ are fixed, while the four named layout values remain editable:
 - Full is the default when usable inline and block size are each at least
   `600px`.
 - Compact applies when usable inline size or block size is below `600px`.
-- Unsupported portrait overrides Compact only when the primary pointer is
-  coarse, orientation is portrait, and usable inline size is below `600px`.
+- DevStudio and Roma do not override Compact in portrait.
+- Bob's existing editor boundary may override its local Compact composition
+  when the primary pointer is coarse, orientation is portrait, and usable
+  inline size is below `600px`.
 - `600px` is a workspace-fit boundary: it accommodates the narrow navigation or
   Bob ToolDrawer plus a viable work area. It is not a hardware-resolution or
   device-name breakpoint.

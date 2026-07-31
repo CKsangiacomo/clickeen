@@ -65,9 +65,19 @@ DevStudio reads Dieter source through its existing source generators. Its
 generated reveal pages are tooling output, not a deployable Dieter runtime.
 The generated Core styles page reads spacing, control geometry, radius, shadow,
 and motion values from `dieter-foundation-tokens.css`. The separate Layouts
-page reads the real layout HTML/CSS/spec and exposes its four source tokens.
+page reads the real layout HTML/CSS/spec, exposes its four source tokens, and
+renders the inset navigation presentation declared by the source spec.
 Authenticated edits commit back to that same foundation token file through
 DevStudio's validated GitHub write path.
+
+The shared application shell keeps the exact
+`main-container > left-nav + page` taxonomy. In Full mode the navigation is a
+foreground panel inset by `--space-2` on all sides over the application
+backdrop. It uses the existing muted surface, role border, `2xl` radius, and
+floating shadow. In Compact mode the same panel becomes an inset overlay over a
+full-width page and uses the existing elevated shadow. Roma and DevStudio use
+that Compact composition in narrow landscape and portrait; consumer code owns
+only open state and navigation/page content.
 
 Compact property controls share row geometry through
 `dieter/components/shared/property-row.css`. Components continue to own their

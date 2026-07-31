@@ -33,17 +33,17 @@ identity. San Francisco owns AI execution.
 
 Roma follows the global operational-workspace tenet in
 `documentation/engineering/UI/surfaces.md`: full desktop workspace on desktop
-and tablets in either orientation; compact navigation/workspace on mobile
-landscape; explicit unsupported boundary on mobile portrait. Retina/4K density
-governs sharpness, not layout class. Roma directly consumes Dieter's
+and tablets in either orientation, with the same compact navigation/workspace
+on narrow mobile landscape and portrait. Retina/4K density governs sharpness,
+not layout class. Roma directly consumes Dieter's
 `main-container > left-nav + page` source. The shared Page provides
 `page__header`, `page__actions`, and `page__content`; Roma owns the navigation
 tree, page content, domain composition, commands, and drawer state. The same
 navigation DOM owns Full and Compact modes, with Escape/scrim close and focus
 return in Compact mode. At least `600px` of usable width and height is Full; a
-smaller dimension is Compact; coarse-pointer mobile portrait below `600px`
-shows the explicit unsupported boundary. Domain screens are not replaced by
-mobile variants.
+smaller dimension is Compact. Full presents the navigation as an 8px-inset
+foreground panel; Compact presents that same panel as an 8px-inset overlay over
+the full-width page. Domain screens are not replaced by mobile variants.
 
 Roma's ordinary operational text/select controls and nine semantic table
 definitions use Dieter's operational-field and Table visual contracts.
