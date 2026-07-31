@@ -65,13 +65,57 @@ The independent final audit is GREEN:
 | V3 Silent omission | GREEN | All operational consumers, Table cells, generated surfaces, and widget fallback sites were covered. |
 | V4 Fail-open control | GREEN | Existing widget typography validation and missing-data failures remain intact. |
 | V5 Corruption-as-absence | GREEN | No storage, account data, or corruption handling changed. |
-| V6 Partial-success masquerade | GREEN | Local evidence remains separate from pending commit/deployment evidence. |
+| V6 Partial-success masquerade | GREEN | Local, exact-SHA Pages, R2, and deployed-browser evidence are stated separately; Prague's queued Pages state is not reported as deployed. |
 | V7 Masquerade/redress | GREEN | No aliases, replacement variables, compatibility wrappers, or renamed copies preserve the rejected behavior. |
 | V8 Runtime test dependency | GREEN | Tests assert the contract; runtime behavior does not depend on them. |
 
-Commit, push, exact-SHA deployment, deployed browser evidence, and R2 read-back
-are recorded after those gates complete. This sub-correction does not close the
-broader C14 product-owner acceptance boundary.
+### Commit, deployment, and owning-surface evidence
+
+Implementation commit
+`c2f7ba16822534a9c47ed3a2475aca4528aea041` was pushed to `github/main`.
+GitHub Actions passed at that exact source:
+
+- `cloud-dev workers deploy` run `30594014413` uploaded all 581 standard
+  static-root files to `tokyo-assets-dev` (`dieter/` 157, `prague/` 348,
+  `product/` 76); every Worker deployment step was correctly skipped by its
+  change gate;
+- `cloud-dev prague app verify` run `30594014406`;
+- `cloud-dev roma app verify` run `30594014412`;
+- `cloud-dev surface reachability` run `30594149610`.
+
+Cloudflare Pages completed successfully at the exact implementation SHA for:
+
+- DevStudio deployment `f724a8c3-db34-4733-a669-811281bced0d`;
+- Roma deployment `cdf8c9f9-07bc-4393-ab63-6047a3fb54bc`;
+- Bob deployment `8c8a3afd-a86d-4f8b-89f9-9bd47b43e057`.
+
+Prague deployment `3d5d254a-138d-4cc6-92bc-44f80eae4742` selected the exact
+implementation SHA but remains queued behind the existing Prague Pages backlog.
+The successful Prague source workflow and R2 sync do not masquerade that queued
+Pages state as a completed deployment.
+
+Authenticated deployed-browser reads proved:
+
+- DevStudio Core styles uses `heading-2`, `heading-4`, `label-s`, and `body-s`;
+  its shared tables render muted headers, white body and row-header cells, no
+  vertical rules, compact end-aligned actions, proportional Inter Tight, and
+  no unintended overflow or browser errors;
+- Roma `/widgets` renders the governed shell and eight shared tables with no
+  unclassed header/body cells, no rejected font-family variables, and no
+  browser errors;
+- Bob `/bob` renders its operational shell as `body-s` through the existing
+  Inter Tight file-delivery class, with no rejected font-family variables and
+  no browser errors.
+
+R2 read-back hashes match committed bytes for all 12 changed public-widget
+files: six widget stylesheets and the six shared branding/header/locale/social/
+stage/typography assets. Existing account-authored typography remains intact;
+no account product data, Worker code, or Supabase state changed. The
+authentication command refreshed only the ignored cloud-dev browser-session
+file.
+
+This sub-correction does not close the broader C14 product-owner acceptance
+boundary.
 
 ## 2026-07-30 UI Convergence Acceptance Matrix
 
