@@ -1,5 +1,3 @@
-import type { PlanLimitKey } from '@clickeen/ck-policy';
-
 export type RomaUsageKv = {
   get(key: string): Promise<string | null>;
   put(
@@ -11,8 +9,8 @@ export type RomaUsageKv = {
   ): Promise<void>;
 };
 
-function limitCounterKey(accountId: string, limitKey: PlanLimitKey, periodKey: string): string {
-  return `usage.limit.${limitKey}.${periodKey}.acct:${accountId}`;
+function copilotTurnCounterKey(accountId: string, periodKey: string): string {
+  return `usage.limit.copilot.turns.monthly.max.${periodKey}.acct:${accountId}`;
 }
 
 function currentLimitPeriodKey(now = new Date()): string {
@@ -26,15 +24,11 @@ function secondsUntilNextLimitPeriod(now = new Date()): number {
   return Math.max(1, Math.ceil((nextMonth.getTime() - now.getTime()) / 1000) + 172_800);
 }
 
-export async function readAccountLimitUsed(
+async function readCopilotTurnsUsed(
   accountId: string,
-  limitKey: PlanLimitKey,
-  usageKv: RomaUsageKv | null | undefined,
+  usageKv: RomaUsageKv,
 ): Promise<number> {
-  const counterKey = limitCounterKey(accountId, limitKey, currentLimitPeriodKey());
-  if (!usageKv) {
-    throw new Error('[Roma] Missing USAGE_KV binding');
-  }
+  const counterKey = copilotTurnCounterKey(accountId, currentLimitPeriodKey());
   const raw = await usageKv.get(counterKey);
   if (raw === null) return 0;
   const parsed = Number(raw);
@@ -44,24 +38,21 @@ export async function readAccountLimitUsed(
   return parsed;
 }
 
-export async function reserveAccountLimitUse(args: {
+export async function reserveAccountCopilotTurn(args: {
   accountId: string;
-  limitKey: PlanLimitKey;
   max: number | null;
   usageKv: RomaUsageKv | null | undefined;
-  amount?: number;
 }): Promise<{ ok: true; used: number } | { ok: false; used: number }> {
   if (!args.usageKv) {
     throw new Error('[Roma] Missing USAGE_KV binding');
   }
-  const amount = Math.max(1, Math.trunc(args.amount ?? 1));
   const periodKey = currentLimitPeriodKey();
-  const counterKey = limitCounterKey(args.accountId, args.limitKey, periodKey);
-  const current = await readAccountLimitUsed(args.accountId, args.limitKey, args.usageKv);
-  if (args.max != null && current + amount > args.max) {
+  const counterKey = copilotTurnCounterKey(args.accountId, periodKey);
+  const current = await readCopilotTurnsUsed(args.accountId, args.usageKv);
+  if (args.max != null && current + 1 > args.max) {
     return { ok: false, used: current };
   }
-  const nextUsed = current + amount;
+  const nextUsed = current + 1;
   await args.usageKv.put(counterKey, String(nextUsed), { expirationTtl: secondsUntilNextLimitPeriod() });
   return { ok: true, used: nextUsed };
 }

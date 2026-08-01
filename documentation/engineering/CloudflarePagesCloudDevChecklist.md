@@ -157,7 +157,7 @@ Env contract:
 | `NEXT_PUBLIC_BOB_URL` | yes | `https://bob.dev.clickeen.com` | `roma/wrangler.toml` |
 | `SUPABASE_URL` | yes | `https://ebmqwqdexmemhrdhkmwn.supabase.co` | Cloudflare Pages dashboard + GitHub Actions env |
 | `SUPABASE_ANON_KEY` | yes | cloud-dev anon key for project `ebmqwqdexmemhrdhkmwn` | Cloudflare Pages dashboard + GitHub Actions env |
-| `SUPABASE_SERVICE_ROLE_KEY` | yes | cloud-dev service-role key for account settings and Copilot usage reservation | Cloudflare Pages secret |
+| `SUPABASE_SERVICE_ROLE_KEY` | yes | cloud-dev service-role key for account settings | Cloudflare Pages secret |
 | `ROMA_AI_GRANT_PRIVATE_KEY_PEM` | yes | Roma-only RS256 private key | Cloudflare Pages secret |
 
 Dashboard action:

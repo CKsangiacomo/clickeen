@@ -17,7 +17,7 @@ import {
   isProductCopilotManagedModel,
   listProductCopilotManagedModels,
 } from '@clickeen/ck-contracts/ai-model-management';
-import { reserveAccountLimitUse, type RomaUsageKv } from '../account-limit-usage';
+import { reserveAccountCopilotTurn, type RomaUsageKv } from '../account-limit-usage';
 import { resolveProductCopilotBaseUrl } from '../env/product-copilot';
 import {
   mintRomaAIGrant,
@@ -164,9 +164,8 @@ export async function issueAccountCopilotGrant(args: {
 
   const copilotTurnLimit = policy.limits['copilot.turns.monthly.max'];
   try {
-    const reservation = await reserveAccountLimitUse({
+    const reservation = await reserveAccountCopilotTurn({
       accountId: args.authz.accountId,
-      limitKey: 'copilot.turns.monthly.max',
       max: copilotTurnLimit,
       usageKv: args.usageKv,
     });

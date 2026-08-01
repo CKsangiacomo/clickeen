@@ -528,7 +528,7 @@ Required runtime configuration:
 | `TRANSLATION_AGENT` | Cloudflare service binding for Translation Agent Worker. |
 | `TOKYO_ASSET_CONTROL` | Cloudflare service binding for account asset operations. |
 | `TOKYO_PRODUCT_CONTROL` | Cloudflare service binding for product/account instance and page operations. |
-| `USAGE_KV` | Roma request-rate-limit counters and current monthly Copilot turn counters. |
+| `USAGE_KV` | Roma request-rate-limit counters and current monthly Copilot turn counters. Counter corruption and missing bindings fail closed. Cloudflare KV has no compare-and-swap, so simultaneous Copilot requests can reserve from the same observed count. |
 | `SUPABASE_URL` | Roma account settings database URL; supplied in cloud-dev CI/env. |
 | `SUPABASE_SERVICE_ROLE_KEY` | Roma service-role account settings writes; supplied as a secret. |
 | `ROMA_AI_GRANT_PRIVATE_KEY_PEM` | Roma-only RS256 signing key for Product Copilot and Translation Agent grants. |
