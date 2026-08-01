@@ -8,6 +8,7 @@ on:
         required: true
         type: choice
         options:
+          - deploy-sanfrancisco-cutover
           - retired-bindings
           - retired-d1-r2
           - obsolete-config
@@ -27,6 +28,25 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
+
+      - name: Deploy the queue-free San Francisco cutover
+        if: inputs.phase == 'deploy-sanfrancisco-cutover'
+        shell: bash
+        env:
+          ROMA_AI_GRANT_PUBLIC_KEY_PEM: ${{ secrets.ROMA_AI_GRANT_PUBLIC_KEY_PEM }}
+          PRAGUE_L10N_HMAC_SECRET: ${{ secrets.PRAGUE_L10N_HMAC_SECRET }}
+        run: |
+          set -euo pipefail
+          if [ -z "$ROMA_AI_GRANT_PUBLIC_KEY_PEM" ] || [ -z "$PRAGUE_L10N_HMAC_SECRET" ]; then
+            echo 'Missing San Francisco signing authorities.' >&2
+            exit 1
+          fi
+
+          pnpm install --frozen-lockfile
+          printf '%s' "$ROMA_AI_GRANT_PUBLIC_KEY_PEM" | pnpm -C sanfrancisco exec wrangler secret put ROMA_AI_GRANT_PUBLIC_KEY_PEM
+          printf '%s' "$PRAGUE_L10N_HMAC_SECRET" | pnpm -C sanfrancisco exec wrangler secret put PRAGUE_L10N_HMAC_SECRET
+          pnpm -C sanfrancisco exec wrangler queues consumer remove sanfrancisco-events-dev sanfrancisco-dev
+          pnpm -C sanfrancisco run deploy
 
       - name: Delete retired queue and KV namespace
         if: inputs.phase == 'retired-bindings'
