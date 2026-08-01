@@ -247,25 +247,82 @@ countdown counts down only.
 
 ---
 
-## 6. Gaps against Clickeen — provisional
+## 6. Gaps against Clickeen (Step 9, verified against source)
 
-Pending the source inventory (Step 9, in flight). Stated as questions to verify,
-not as findings.
+Clickeen side read from `tokyo/product/widgets/countdown/**`. Composed control
+count is **214** — 160 shared Shell, 54 widget-specific — but only **34 touch
+`countdown.*` paths**. The widget is thin; the Shell around it is thick.
 
-| 3.0 capability | Clickeen countdown | Verify |
+### 6.1 Modes — closer than expected
+
+We already have all three of the legacy Elfsight modes:
+
+| Mode | `countdown.timer.mode` | Behaviour |
 | --- | --- | --- |
-| Calendar-grade recurrence (7 presets + Custom) | none | confirm |
-| Per-visitor evergreen timer | ? | legacy had it; confirm ours |
-| Number counter mode | ? | legacy had it; confirm ours |
-| Count-up mode | none (also absent in Elfsight — 18 votes) | confirm |
-| All Day toggle | ? | confirm |
-| Action collection with During/After phases | single completion behavior | confirm |
-| Form action / lead capture | none — and out of scope by contract | platform decision |
-| Add to Google Calendar action | none | confirm |
-| Position as banner / floating bar / section | Shell stage/pod handles this | confirm equivalence |
-| Theme presets and digit styles | ? | confirm |
-| Per-role typography | **ships by default** | our advantage |
-| Custom CSS / JS | deliberately absent | our position |
+| Fixed date | `date` | one absolute instant |
+| Per-visitor evergreen | `personal` | anchored at first view, `localStorage` |
+| Number counter | `number` | animates start → target over N seconds |
+
+Whether 3.0 kept all three is **unverified** — the mode gallery behind `Change`
+was not opened.
+
+### 6.2 What 3.0 has that we do not
+
+| Capability | Elfsight 3.0 | Clickeen |
+| --- | --- | --- |
+| **Recurrence** | Daily, Weekly on ⟨day⟩, Monthly on the first ⟨day⟩, Annually, Every weekday, Custom | six flat intervals (`never`, 1 min, 5 min, 1 hr, 1 day, 1 week), **personal mode only**, and it is a modulo over the original anchor rather than a schedule |
+| **Date and time entry** | date picker + time picker | **plain `textfield`**, user types `2030-01-01T00:00`; regex-validated, throws on anything else |
+| **Timezone entry** | dropdown | **plain `textfield`**, user types an IANA name or `browser` |
+| All Day toggle | yes | none |
+| Actions | two-phase collection (During / After), multiple per phase | one during-CTA, one after-behaviour |
+| Action types | Link · **Form** · Add to Google Calendar | Link only |
+| Placement | floating bar, banner, full-width section | **no floating** — merged defaults have no `stage.floating`, so zero floating controls are emitted |
+| Themes | Style carousel (5) + Holiday Theme carousel (8) | **no presets at all**; `spec.json` has no `presets` key |
+
+### 6.3 What we have that they do not
+
+- **Per-role typography.** Six roles × 10 properties. Two of their top-ten
+  feature requests — "more than one font size for the header text and plain text"
+  (Planned) and "set different fonts for the message and counters" — are asking
+  for exactly this. They ship one font for the whole widget.
+- **Shell depth.** Stage/Pod fills including image and video, inside shadows,
+  18-channel social share, locale switcher, corner control per corner.
+- **No Custom CSS or JS escape hatch**, by design.
+
+### 6.4 Defects found in our source while diffing
+
+These are not competitive gaps; they are things wrong with what we shipped.
+Each is an absence or a behaviour in source, not an inference.
+
+| # | Defect | Evidence |
+| --- | --- | --- |
+| 1 | **Counter mode disappears ~5 s after load on factory defaults.** `number` mode finishes its 5 s animation, enters phase `ended`, and the default `actions.after.type: "hide"` sets `coreEl.hidden = true`. A "1,000 customers" counter deletes itself. | `renderPhase`, defaults |
+| 2 | **Leading separator renders when a unit is hidden.** `updateUnits` toggles `unitEl.hidden` but the three `[data-role="separator"]` nodes are static siblings nothing hides. Default `auto` format with 0 days renders a leading `:` before hours. | `updateUnits`, `widget.html` |
+| 3 | **`countdown.appearance.textColor` is a dead control for the digits.** CSS resolves `var(--typo-timer-color, var(--countdown-text-color))`, and `timer.color` is set by default, so the appearance control never wins. Violates the zero-dead-controls rule. | `widget.css` |
+| 4 | **No accessibility or machine-readable output on a ticking value.** No `aria-live`, no `role="timer"`, no `<time datetime>`. Screen readers get no announcements; crawlers and answer engines get no deadline. | `widget.html` |
+| 5 | **`months` is 30 days flat** in `getDurationSeconds`. "1 month" is not a calendar month. | `widget.client.js:466` |
+| 6 | **No pluralisation.** At `days === 1` the label renders "1 Days". | `updateUnits` |
+| 7 | **Personal timer throws when `localStorage` is unavailable** rather than degrading. Third-party storage is commonly blocked in embedded iframes — the exact deployment context. | `widget.client.js` |
+| 8 | **DST edge.** `getTimeZoneOffset` samples the offset at the wall-clock-as-UTC instant, not the true target instant; within ~1 h of a transition the end time can be off by the transition delta. | `resolveTargetTimestamp` |
+| 9 | **During-CTA appearance is hardcoded.** `--countdown-cta-bg: var(--color-system-blue)`, no colour, radius, padding or size control — while the shared *header* CTA has 11 appearance controls. | `widget.css` |
+| 10 | **`itemKey: "countdown.item"` is inert.** No array under `countdown.item`, no repeater node. | `spec.json` |
+| 11 | **Per-unit show/hide was specified and never built.** `Countdown_PRD.md:185` calls for individual unit toggles; only `timeFormat` (`auto` / `D:H:M:S` / `H:M:S`) exists, so minutes and seconds can never be hidden. | PRD vs spec |
+| 12 | **Timer roles omit line-height and tracking defaults.** `timer` and `label` declare no `lineHeightPreset/Custom` or `trackingPreset/Custom`, and the Shell supplies them only for `title`/`body`/`button`/`localeSwitcher` — yet the typography panel renders those controls for both roles. | `spec.json` defaults |
+
+Defects 1–4 are the ones I would fix before any competitive feature work. 1 is a
+visible product failure on defaults, 3 is a contract violation, and 4 is the SEO
+and accessibility argument we make about ourselves.
+
+### 6.5 The honest headline
+
+On timer *mechanics* we are closer to them than the feature lists suggest — we
+have all three modes. Where we lose is **authoring** (typing an ISO string and an
+IANA timezone into bare text fields), **scheduling** (flat intervals versus
+calendar recurrence), **placement** (no floating or banner mode), and **presets**
+(none versus thirteen).
+
+Where we win is typography, Shell depth, and output quality — and two of their
+own top-ten requests confirm the typography advantage is one customers ask for.
 
 ---
 
