@@ -365,28 +365,9 @@ a {
   inline-size: 100%;
 }
 
-.roma-widget-group {
-  grid-template-columns: minmax(9rem, 12rem) minmax(0, 1fr);
-  align-items: start;
-  gap: var(--space-4);
-}
-
-.roma-widget-group__meta {
-  display: grid;
-  align-content: start;
-  justify-items: start;
-  gap: var(--space-2);
-  min-width: 0;
-}
-
-.roma-widget-group__count,
 .roma-widget-instance-id,
 .roma-widget-action-status {
   color: var(--color-text-secondary);
-}
-
-.roma-widget-group > .diet-table {
-  box-shadow: none;
 }
 
 .roma-widget-sort.diet-btn-ictxt {
@@ -473,12 +454,6 @@ a {
   border: none;
   display: block;
   background: transparent;
-}
-
-@media (max-width: 900px) {
-  .roma-widget-group {
-    grid-template-columns: minmax(0, 1fr);
-  }
 }
 
 @media (max-width: 599px), (max-height: 599px) {

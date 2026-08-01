@@ -124,14 +124,23 @@ async function testBuilderUsesBobTopDrawerAsItsOnlyEditorChrome(): Promise<void>
 async function testWidgetsListComposition(): Promise<void> {
   const source = await readRoute('components/widgets-domain.tsx');
   const route = await readRoute('app/(authed)/widgets/page.tsx');
+  const romaCss = await readRoute('app/roma.css');
 
   assert.match(route, /return <WidgetsPage \/>/);
   assert.doesNotMatch(route, /DomainPageShell|RomaShellDefaultActions/);
+  assert.match(source, /useState<WidgetsView>\('your-widgets'\)/);
+  assert.match(source, />Your widgets<\/span>/);
+  assert.match(source, />Widget catalog<\/span>/);
+  assert.match(source, /activeView === 'your-widgets' \? \(/);
   assert.match(source, /<option value="all">Show all<\/option>/);
   assert.match(source, /<option value="published">Show published<\/option>/);
   assert.match(source, /<option value="unpublished">Show unpublished<\/option>/);
   assert.match(source, /WidgetSortHeader label="Name" sortKey="name"/);
   assert.match(source, /WidgetSortHeader label="Published" sortKey="status"/);
+  assert.match(source, />Widget type<\/th>/);
+  assert.match(source, /displayedInstances\.map\(\(instance\)/);
+  assert.match(source, /displayedCatalog\.map\(\(option\)/);
+  assert.match(source, /handleCreateInstance\(option\.widgetType\)/);
   assert.match(source, /checked=\{instance\.status === 'published'\}/);
   assert.match(source, /handleStatusChange\(instance, event\.target\.checked \? 'published' : 'unpublished'\)/);
   assert.match(source, /className="diet-popover roma-widget-actions-popover"/);
@@ -142,7 +151,9 @@ async function testWidgetsListComposition(): Promise<void> {
   assert.match(source, />Rename<\/span>/);
   assert.match(source, />Duplicate<\/span>/);
   assert.match(source, />Delete<\/span>/);
-  assert.match(source, /No \{statusFilter\} instances\./);
+  assert.match(source, /No \{statusFilter\} widgets\./);
+  assert.doesNotMatch(source, /groupedInstances|displayedGroups|groupSorts|changeGroupSort/);
+  assert.doesNotMatch(romaCss, /roma-widget-group/);
   assert.doesNotMatch(source, /menuWidth|menuHeight/);
   assert.doesNotMatch(source, /Unpublishing\.\.\.|Publishing\.\.\.|>Unpublish<|>Publish</);
 }
@@ -211,7 +222,7 @@ async function run(): Promise<void> {
   await testBuilderUsesBobTopDrawerAsItsOnlyEditorChrome();
   console.log('PASS active Builder owns full-canvas chrome and preserves initial-only preview readiness');
   await testWidgetsListComposition();
-  console.log('PASS Widgets list uses the accepted filter, sort, toggle, and overflow-action composition');
+  console.log('PASS Widgets separates the catalog from the account-instance inventory');
   await testDieterLayoutTableAndPopupConsumption();
   console.log('PASS Roma and Bob consume the final Dieter Layout, Table, and Popup contracts');
 }

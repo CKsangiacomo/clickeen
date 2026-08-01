@@ -26,16 +26,13 @@ import {
   type WidgetInstance,
 } from './use-roma-widgets';
 
-type WidgetInstanceGroup = WidgetCatalogOption & {
-  instances: WidgetInstance[];
-};
-
+type WidgetsView = 'your-widgets' | 'catalog';
 type WidgetStatusFilter = 'all' | 'published' | 'unpublished';
 type WidgetSortKey = 'name' | 'status';
 type WidgetSortDirection = 'ascending' | 'descending';
-type WidgetGroupSort = { key: WidgetSortKey; direction: WidgetSortDirection };
+type WidgetSort = { key: WidgetSortKey; direction: WidgetSortDirection };
 
-const DEFAULT_WIDGET_SORT: WidgetGroupSort = { key: 'name', direction: 'ascending' };
+const DEFAULT_WIDGET_SORT: WidgetSort = { key: 'name', direction: 'ascending' };
 
 type WidgetUpgradePrompt = {
   message: string;
@@ -161,7 +158,7 @@ function WidgetSortHeader({
 }: {
   label: string;
   sortKey: WidgetSortKey;
-  sort: WidgetGroupSort;
+  sort: WidgetSort;
   onSort: (key: WidgetSortKey) => void;
 }) {
   const active = sort.key === sortKey;
@@ -196,15 +193,16 @@ function WidgetSortHeader({
 }
 
 export function WidgetsPage() {
+  const [activeView, setActiveView] = useState<WidgetsView>('your-widgets');
   const [statusFilter, setStatusFilter] = useState<WidgetStatusFilter>('all');
 
   return (
     <RomaShell
       activeDomain="widgets"
       title="Widgets"
-      headerRight={(
+      headerRight={activeView === 'your-widgets' ? (
         <label className="roma-widgets-filter">
-          <span className="sr-only">Filter widgets by publish status</span>
+          <span className="sr-only">Filter your widgets by publish status</span>
           <select
             className="diet-operational-field body-m"
             value={statusFilter}
@@ -215,19 +213,31 @@ export function WidgetsPage() {
             <option value="unpublished">Show unpublished</option>
           </select>
         </label>
-      )}
+      ) : null}
     >
       <RomaAccountNoticeModal />
       <Suspense fallback={null}>
         <RomaDomainErrorBoundary domainLabel="Widgets" resetKey="widgets">
-          <WidgetsDomain statusFilter={statusFilter} />
+          <WidgetsDomain
+            activeView={activeView}
+            statusFilter={statusFilter}
+            onViewChange={setActiveView}
+          />
         </RomaDomainErrorBoundary>
       </Suspense>
     </RomaShell>
   );
 }
 
-export function WidgetsDomain({ statusFilter = 'all' }: { statusFilter?: WidgetStatusFilter }) {
+export function WidgetsDomain({
+  activeView,
+  statusFilter,
+  onViewChange,
+}: {
+  activeView: WidgetsView;
+  statusFilter: WidgetStatusFilter;
+  onViewChange: (view: WidgetsView) => void;
+}) {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { accountContext, accountPolicy } = useRomaAccountContext();
@@ -248,7 +258,7 @@ export function WidgetsDomain({ statusFilter = 'all' }: { statusFilter?: WidgetS
   const [renamingInstanceId, setRenamingInstanceId] = useState<string | null>(null);
   const [renameDraft, setRenameDraft] = useState('');
   const [renameError, setRenameError] = useState<string | null>(null);
-  const [groupSorts, setGroupSorts] = useState<Record<string, WidgetGroupSort>>({});
+  const [sort, setSort] = useState<WidgetSort>(DEFAULT_WIDGET_SORT);
   const [openWidgetActions, setOpenWidgetActions] = useState<{
     instanceId: string;
     position: { top: number; left: number } | null;
@@ -327,63 +337,43 @@ export function WidgetsDomain({ statusFilter = 'all' }: { statusFilter?: WidgetS
   const widgetDataError = missingCatalogWidgetTypes.length
     ? 'Some widgets could not load. Please try again.'
     : dataError;
+  const canRenderWidgetData = missingCatalogWidgetTypes.length === 0
+    && (!dataError || catalog.length > 0 || widgetInstances.length > 0);
 
-  const groupedInstances = useMemo<WidgetInstanceGroup[]>(() => {
-    const groups = new Map<string, WidgetInstanceGroup>();
+  const catalogByWidgetType = useMemo(
+    () => new Map(catalog.map((option) => [option.widgetType, option])),
+    [catalog],
+  );
 
-    catalog.forEach((option) => {
-      groups.set(option.widgetType, {
-        ...option,
-        instances: [],
+  const displayedCatalog = useMemo(
+    () => catalog.slice().sort((left, right) => left.displayName.localeCompare(right.displayName)),
+    [catalog],
+  );
+
+  const displayedInstances = useMemo(() => {
+    return widgetInstances
+      .filter((instance) => statusFilter === 'all' || instance.status === statusFilter)
+      .slice()
+      .sort((left, right) => {
+        const leftName = left.displayName || DEFAULT_INSTANCE_DISPLAY_NAME;
+        const rightName = right.displayName || DEFAULT_INSTANCE_DISPLAY_NAME;
+        const primary = sort.key === 'name'
+          ? leftName.localeCompare(rightName)
+          : left.status.localeCompare(right.status);
+        if (primary !== 0) return sort.direction === 'ascending' ? primary : -primary;
+        const nameOrder = leftName.localeCompare(rightName);
+        if (nameOrder !== 0) return nameOrder;
+        return left.instanceId.localeCompare(right.instanceId);
       });
-    });
+  }, [sort, statusFilter, widgetInstances]);
 
-    widgetInstances.forEach((instance) => {
-      const widgetType = instance.widgetType;
-      const group = groups.get(widgetType);
-      if (group) {
-        group.instances.push(instance);
-      }
-    });
-
-    return Array.from(groups.values())
-      .sort((a, b) => a.displayName.localeCompare(b.displayName));
-  }, [catalog, widgetInstances]);
-
-  const displayedGroups = useMemo<WidgetInstanceGroup[]>(() => {
-    return groupedInstances
-      .map((group) => {
-        const sort = groupSorts[group.widgetType] ?? DEFAULT_WIDGET_SORT;
-        const instances = group.instances
-          .filter((instance) => statusFilter === 'all' || instance.status === statusFilter)
-          .slice()
-          .sort((left, right) => {
-            const leftName = left.displayName || DEFAULT_INSTANCE_DISPLAY_NAME;
-            const rightName = right.displayName || DEFAULT_INSTANCE_DISPLAY_NAME;
-            const primary = sort.key === 'name'
-              ? leftName.localeCompare(rightName)
-              : left.status.localeCompare(right.status);
-            if (primary !== 0) return sort.direction === 'ascending' ? primary : -primary;
-            const nameOrder = leftName.localeCompare(rightName);
-            if (nameOrder !== 0) return nameOrder;
-            return left.instanceId.localeCompare(right.instanceId);
-          });
-        return { ...group, instances };
-      })
-      .filter((group) => statusFilter === 'all' || group.instances.length > 0);
-  }, [groupSorts, groupedInstances, statusFilter]);
-
-  const changeGroupSort = useCallback((widgetType: string, key: WidgetSortKey) => {
-    setGroupSorts((current) => {
-      const currentSort = current[widgetType] ?? DEFAULT_WIDGET_SORT;
-      const nextSort: WidgetGroupSort = currentSort.key === key
-        ? {
-            key,
-            direction: currentSort.direction === 'ascending' ? 'descending' : 'ascending',
-          }
-        : { key, direction: 'ascending' };
-      return { ...current, [widgetType]: nextSort };
-    });
+  const changeSort = useCallback((key: WidgetSortKey) => {
+    setSort((current) => current.key === key
+      ? {
+          key,
+          direction: current.direction === 'ascending' ? 'descending' : 'ascending',
+        }
+      : { key, direction: 'ascending' });
   }, []);
 
   const closeWidgetActions = useCallback((returnFocus = false) => {
@@ -469,6 +459,10 @@ export function WidgetsDomain({ statusFilter = 'all' }: { statusFilter?: WidgetS
   useEffect(() => {
     if (openWidgetActions && !openWidgetActionsInstance) closeWidgetActions();
   }, [closeWidgetActions, openWidgetActions, openWidgetActionsInstance]);
+
+  useEffect(() => {
+    if (activeView === 'catalog' && openWidgetActions) closeWidgetActions();
+  }, [activeView, closeWidgetActions, openWidgetActions]);
 
   useEffect(() => {
     const candidates = instanceWidgetTypes.slice(0, 8);
@@ -676,7 +670,60 @@ export function WidgetsDomain({ statusFilter = 'all' }: { statusFilter?: WidgetS
 
   return (
     <>
-      {widgetDataError || mutationError || renameError || (domainLoading && groupedInstances.length === 0) ? (
+      <div
+        className="diet-tabs diet-tabs--block"
+        data-size="md"
+        role="tablist"
+        aria-label="Widgets"
+        onKeyDown={(event) => {
+          if (!['ArrowRight', 'ArrowDown', 'ArrowLeft', 'ArrowUp'].includes(event.key)) return;
+          const nextView = activeView === 'your-widgets' ? 'catalog' : 'your-widgets';
+          event.preventDefault();
+          onViewChange(nextView);
+          requestAnimationFrame(() => document.getElementById(`roma-widgets-${nextView}-tab`)?.focus());
+        }}
+      >
+        <input
+          id="roma-widgets-your-widgets"
+          className="diet-tab__input sr-only"
+          type="radio"
+          name="roma-widgets-view"
+          checked={activeView === 'your-widgets'}
+          onChange={() => onViewChange('your-widgets')}
+        />
+        <label
+          id="roma-widgets-your-widgets-tab"
+          className="diet-tab"
+          htmlFor="roma-widgets-your-widgets"
+          role="tab"
+          aria-selected={activeView === 'your-widgets'}
+          aria-controls="roma-widgets-panel"
+          tabIndex={activeView === 'your-widgets' ? 0 : -1}
+        >
+          <span className="diet-tab__label label-s">Your widgets</span>
+        </label>
+        <input
+          id="roma-widgets-catalog"
+          className="diet-tab__input sr-only"
+          type="radio"
+          name="roma-widgets-view"
+          checked={activeView === 'catalog'}
+          onChange={() => onViewChange('catalog')}
+        />
+        <label
+          id="roma-widgets-catalog-tab"
+          className="diet-tab"
+          htmlFor="roma-widgets-catalog"
+          role="tab"
+          aria-selected={activeView === 'catalog'}
+          aria-controls="roma-widgets-panel"
+          tabIndex={activeView === 'catalog' ? 0 : -1}
+        >
+          <span className="diet-tab__label label-s">Widget catalog</span>
+        </label>
+      </div>
+
+      {widgetDataError || mutationError || renameError || (domainLoading && catalog.length === 0 && widgetInstances.length === 0) ? (
         <section className="rd-canvas-module" role={widgetDataError || mutationError || renameError ? 'alert' : 'status'}>
           {widgetDataError ? (
             <div className="roma-inline-stack">
@@ -689,55 +736,59 @@ export function WidgetsDomain({ statusFilter = 'all' }: { statusFilter?: WidgetS
           {mutationError ? <p className="body-m">{mutationError}</p> : null}
           {renameError ? <p className="body-m">{renameError}</p> : null}
 
-          {domainLoading && groupedInstances.length === 0 && !widgetDataError ? <p className="body-m">Loading widgets...</p> : null}
+          {domainLoading && catalog.length === 0 && widgetInstances.length === 0 && !widgetDataError ? <p className="body-m">Loading widgets...</p> : null}
         </section>
       ) : null}
 
-      {!domainLoading && !widgetDataError && groupedInstances.length === 0 ? (
-        <section className="rd-canvas-module">
-          <p className="body-m">No widget types available.</p>
-        </section>
-      ) : null}
+      <div
+        id="roma-widgets-panel"
+        role="tabpanel"
+        aria-labelledby={activeView === 'your-widgets' ? 'roma-widgets-your-widgets-tab' : 'roma-widgets-catalog-tab'}
+      >
+        {activeView === 'your-widgets' ? (
+          <>
+            {!domainLoading && canRenderWidgetData && widgetInstances.length === 0 ? (
+              <section className="rd-canvas-module">
+                <p className="body-m">No widgets yet.</p>
+                {canMutateWidgets && catalog.length > 0 ? (
+                  <div className="rd-canvas-module__actions">
+                    <button
+                      className="diet-btn-txt"
+                      data-size="md"
+                      data-variant="primary"
+                      type="button"
+                      onClick={() => onViewChange('catalog')}
+                    >
+                      <span className="diet-btn-txt__label body-m">Browse widget catalog</span>
+                    </button>
+                  </div>
+                ) : null}
+              </section>
+            ) : null}
 
-      {displayedGroups.map((group) => {
-        const createActionKey = `create:${group.widgetType}`;
-        const sort = groupSorts[group.widgetType] ?? DEFAULT_WIDGET_SORT;
-        return (
-          <section className="rd-canvas-module roma-widget-group" key={group.widgetType}>
-            <div className="roma-widget-group__meta">
-              <h2 className="heading-4">{group.displayName}</h2>
-              <p className="body-s roma-widget-group__count">
-                {group.instances.length} {group.instances.length === 1 ? 'instance' : 'instances'}
-              </p>
-              {canMutateWidgets ? (
-                <button
-                  className="diet-btn-txt"
-                  data-size="md"
-                  data-variant="line2"
-                  type="button"
-                  onClick={() => void handleCreateInstance(group.widgetType)}
-                  disabled={Boolean(activeActionKey)}
-                  title={group.description || undefined}
-                >
-                  <span className="diet-btn-txt__label body-m">{activeActionKey === createActionKey ? 'Creating...' : 'Create instance'}</span>
-                </button>
-              ) : null}
-            </div>
+            {!domainLoading && canRenderWidgetData && statusFilter !== 'all' && widgetInstances.length > 0 && displayedInstances.length === 0 ? (
+              <section className="rd-canvas-module">
+                <p className="body-m">No {statusFilter} widgets.</p>
+              </section>
+            ) : null}
 
-            <div className="diet-table">
-              <table className="diet-table__table">
-                <caption className="sr-only">{group.displayName} widget instances</caption>
+            {displayedInstances.length > 0 && canRenderWidgetData ? (
+              <div className="diet-table">
+                <table className="diet-table__table">
+                <caption className="sr-only">Your widgets</caption>
                 <thead>
                   <tr>
-                    <WidgetSortHeader label="Name" sortKey="name" sort={sort} onSort={(key) => changeGroupSort(group.widgetType, key)} />
-                    <WidgetSortHeader label="Published" sortKey="status" sort={sort} onSort={(key) => changeGroupSort(group.widgetType, key)} />
+                    <WidgetSortHeader label="Name" sortKey="name" sort={sort} onSort={changeSort} />
+                    <th className="label-s" scope="col">Widget type</th>
+                    <WidgetSortHeader label="Published" sortKey="status" sort={sort} onSort={changeSort} />
                     <th className="label-s" scope="col">Instance ID</th>
                     <th className="label-s diet-table__cell--action" scope="col">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {group.instances.map((instance) => {
+                  {displayedInstances.map((instance) => {
                     const instanceName = instance.displayName || DEFAULT_INSTANCE_DISPLAY_NAME;
+                    const widgetDisplayName = catalogByWidgetType.get(instance.widgetType)!.displayName;
                     const isSelected = selectedInstanceId === instance.instanceId;
                     const renameActionKey = `rename:${instance.instanceId}`;
                     const isRenaming = renamingInstanceId === instance.instanceId;
@@ -802,6 +853,7 @@ export function WidgetsDomain({ statusFilter = 'all' }: { statusFilter?: WidgetS
                             </>
                           )}
                         </th>
+                        <td className="body-s">{widgetDisplayName}</td>
                         <td className="body-s">
                           <label className="diet-toggle roma-widget-status-toggle" data-size="sm" aria-busy={statusUpdating || undefined}>
                             <span className="diet-toggle__label sr-only">
@@ -867,27 +919,51 @@ export function WidgetsDomain({ statusFilter = 'all' }: { statusFilter?: WidgetS
                       </tr>
                     );
                   })}
-                  {group.instances.length === 0 ? (
-                    <tr>
-                      <td colSpan={4} className="body-s">
-                        No instances yet.
-                      </td>
-                    </tr>
-                  ) : null}
                 </tbody>
-              </table>
-            </div>
-          </section>
-        );
-      })}
-      {!domainLoading && !widgetDataError && statusFilter !== 'all' && displayedGroups.length === 0 ? (
-        <section className="rd-canvas-module">
-          <p className="body-m">
-            No {statusFilter} instances.
-          </p>
-        </section>
-      ) : null}
-      {openWidgetActions && openWidgetActionsInstance && typeof document !== 'undefined'
+                </table>
+              </div>
+            ) : null}
+          </>
+        ) : !domainLoading && canRenderWidgetData ? (
+          displayedCatalog.length > 0 ? (
+            <section className="rd-canvas-module">
+              <div className="roma-grid roma-grid--three">
+                {displayedCatalog.map((option) => {
+                  const createActionKey = `create:${option.widgetType}`;
+                  return (
+                    <article className="roma-card" key={option.widgetType}>
+                      <h2 className="heading-4">{option.displayName}</h2>
+                      {option.description ? <p className="body-s">{option.description}</p> : null}
+                      {canMutateWidgets ? (
+                        <div className="rd-canvas-module__actions">
+                          <button
+                            className="diet-btn-txt"
+                            data-size="md"
+                            data-variant="primary"
+                            type="button"
+                            onClick={() => void handleCreateInstance(option.widgetType)}
+                            disabled={Boolean(activeActionKey)}
+                          >
+                            <span className="diet-btn-txt__label body-m">
+                              {activeActionKey === createActionKey ? 'Creating...' : 'Create instance'}
+                            </span>
+                          </button>
+                        </div>
+                      ) : null}
+                    </article>
+                  );
+                })}
+              </div>
+            </section>
+          ) : (
+            <section className="rd-canvas-module">
+              <p className="body-m">No widget types available.</p>
+            </section>
+          )
+        ) : null}
+      </div>
+
+      {activeView === 'your-widgets' && openWidgetActions && openWidgetActionsInstance && typeof document !== 'undefined'
         ? createPortal(
             <div
               ref={widgetActionsPopoverRef}

@@ -300,17 +300,22 @@ runtime materializer writes exact root-relative support-file paths inside
 
 Roma `/widgets` is the account widget management surface.
 
-The page header contains only the Widgets title and one account-instance status
-filter: Show all, Show published, or Show unpublished. Each widget-type module
-places widget identity, the visible instance count, and Create instance in a
-left metadata rail beside a semantic Dieter Table. Rows expose instance name,
-the exact published state as a Dieter Toggle, subordinate instance id, Edit,
-and one ellipsis menu for Rename, Duplicate, and Delete. Name and published
-state sort independently inside each widget-type module; filtering and sorting
-are client-side projections over the validated list payload and do not change
-the account command or storage authority. Publication remains a controlled
-command: the toggle changes only after the existing Roma command succeeds and
-the authoritative instance list refreshes.
+Widgets has two local views with separate purposes. **Your widgets** is the
+default account-instance inventory. It uses one semantic Dieter Table whose
+rows expose instance name, canonical widget type, exact published state as a
+Dieter Toggle, subordinate instance id, Edit, and one ellipsis menu for Rename,
+Duplicate, and Delete. The header status filter and the Name and Published
+sorts are client-side projections over that validated account list.
+
+**Widget catalog** renders the canonical widget definitions as Dieter-styled
+cards. A catalog card creates an instance of that widget type; it does not
+represent, count, or group saved account instances. Roma renders only catalog
+metadata supplied by the owning definition and does not invent descriptions,
+categories, badges, or preview media.
+
+Switching views does not change the account command or storage authority.
+Publication remains a controlled command: the toggle changes only after the
+existing Roma command succeeds and the authoritative instance list refreshes.
 
 It owns:
 
