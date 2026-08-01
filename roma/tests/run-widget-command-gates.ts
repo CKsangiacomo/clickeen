@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
+import { buildWidgetPublicActions } from '../lib/public-widget-actions';
 
 async function readRoute(relativePath: string): Promise<string> {
   return readFile(new URL(`../${relativePath}`, import.meta.url), 'utf8');
@@ -90,6 +91,9 @@ async function testBuilderUsesBobTopDrawerAsItsOnlyEditorChrome(): Promise<void>
   const builderLandingRoute = await readRoute('app/(authed)/builder/page.tsx');
   const topDrawer = await readFile(new URL('../../bob/components/TopDrawer.tsx', import.meta.url), 'utf8');
   const bobBoot = await readFile(new URL('../../bob/lib/session/useSessionBoot.ts', import.meta.url), 'utf8');
+  const bobCss = await readFile(new URL('../../bob/app/bob_app.css', import.meta.url), 'utf8');
+  const copyDialog = await readRoute('components/widget-copy-code-dialog.tsx');
+  const clipboard = await readRoute('lib/copy-to-clipboard.ts');
 
   assert.doesNotMatch(builderRoute, /showHeader/);
   assert.match(builderRoute, /fullCanvas/);
@@ -98,10 +102,11 @@ async function testBuilderUsesBobTopDrawerAsItsOnlyEditorChrome(): Promise<void>
   assert.doesNotMatch(builderLandingRoute, /rd-canvas--builder/);
   assert.match(builderLandingRoute, /RomaShellDefaultActions/);
 
-  assert.match(builderSource, /publicActions: publicUrl/);
-  assert.match(builderSource, /iframeSnippet: buildWidgetIframeSnippet\(publicUrl\)/);
-  assert.match(builderSource, /scriptSnippet: buildWidgetScriptSnippet\(publicUrl\)/);
+  assert.match(builderSource, /buildWidgetPublicActions\(\{/);
+  assert.match(builderSource, /publicActions: nextPublicActions/);
   assert.match(builderSource, /data\.type === 'bob:host-action'/);
+  assert.match(builderSource, /data\.action === 'copy-code'/);
+  assert.match(builderSource, /<WidgetCopyCodeDialog/);
   assert.doesNotMatch(builderSource, />Copy URL</);
   assert.doesNotMatch(builderSource, />Copy embed</);
   assert.doesNotMatch(builderSource, />Copy script</);
@@ -110,39 +115,82 @@ async function testBuilderUsesBobTopDrawerAsItsOnlyEditorChrome(): Promise<void>
   assert.match(topDrawer, /className="topdrawer"/);
   assert.match(topDrawer, />Open public widget</);
   assert.match(topDrawer, />More</);
-  assert.match(topDrawer, />Copy URL</);
-  assert.match(topDrawer, />Copy embed</);
-  assert.match(topDrawer, />Copy script</);
+  assert.match(topDrawer, />Copy code</);
+  assert.match(topDrawer, /requestHostAction\('copy-code'\)/);
+  assert.doesNotMatch(topDrawer, />Copy URL</);
+  assert.doesNotMatch(topDrawer, />Copy embed</);
+  assert.doesNotMatch(topDrawer, />Copy script</);
+  assert.doesNotMatch(topDrawer, /navigator\.clipboard|document\.execCommand/);
   assert.match(topDrawer, /className="topdrawer-more diet-popover-host"/);
   assert.match(topDrawer, /requestHostAction\('open-navigation'\)/);
   assert.match(topDrawer, /requestHostAction\('return'\)/);
   assert.equal((topDrawer.match(/data-variant="primary"/g) ?? []).length, 1);
   assert.match(bobBoot, /message\.publishStatus === 'published'/);
   assert.match(bobBoot, /coreui\.errors\.builder\.publicActions\.invalid/);
+  assert.doesNotMatch(bobCss, /topdrawer-action-status/);
+  assert.match(copyDialog, /aria-label=\{`Copy \$\{option\.label\}`\}/);
+  assert.doesNotMatch(copyDialog, /data-size="large"/);
+  assert.match(copyDialog, /request !== copyRequestRef\.current/);
+  assert.match(clipboard, /finally \{\s+element\?\.remove\(\);/);
+}
+
+function testRomaOwnsExactPublicWidgetActions(): void {
+  const actions = buildWidgetPublicActions({
+    accountPublicId: 'CLICKEEN',
+    instanceId: 'ABC123',
+    baseUrl: 'https://dev.clk.live/',
+  });
+  assert.equal(actions.publicUrl, 'https://dev.clk.live/CLICKEEN/ABC123');
+  assert.match(actions.iframeSnippet, /src="https:\/\/dev\.clk\.live\/CLICKEEN\/ABC123"/);
+  assert.equal(actions.scriptSnippet, '<script src="https://dev.clk.live/CLICKEEN/ABC123/runtime.js" async></script>');
+  assert.throws(
+    () => buildWidgetPublicActions({ accountPublicId: '', instanceId: 'ABC123', baseUrl: 'https://dev.clk.live' }),
+    /coreui\.errors\.payload\.invalid/,
+  );
 }
 
 async function testWidgetsListComposition(): Promise<void> {
   const source = await readRoute('components/widgets-domain.tsx');
   const route = await readRoute('app/(authed)/widgets/page.tsx');
+  const catalogRoute = await readRoute('app/(authed)/widgets/catalog/page.tsx');
+  const nav = await readRoute('components/roma-nav.tsx');
+  const domains = await readRoute('lib/domains.ts');
   const romaCss = await readRoute('app/roma.css');
 
-  assert.match(route, /return <WidgetsPage \/>/);
+  assert.match(route, /<WidgetsPage view="your-widgets" \/>/);
+  assert.match(catalogRoute, /<WidgetsPage view="catalog" \/>/);
   assert.doesNotMatch(route, /DomainPageShell|RomaShellDefaultActions/);
-  assert.match(source, /useState<WidgetsView>\('your-widgets'\)/);
-  assert.match(source, />Your widgets<\/span>/);
-  assert.match(source, />Widget catalog<\/span>/);
-  assert.match(source, /activeView === 'your-widgets' \? \(/);
+  assert.doesNotMatch(source, /useState<WidgetsView>|activeView|onViewChange|diet-tabs|role="tab"/);
+  assert.match(nav, /label="Widgets" domains=\{ROMA_WIDGETS_DOMAINS\}/);
+  assert.match(nav, /label="Settings" domains=\{ROMA_SETTINGS_DOMAINS\}/);
+  assert.match(nav, /className="roma-nav__group"/);
+  assert.match(nav, /domains\.some\(\(domain\) => domain\.key === activeDomain\)/);
+  assert.match(nav, /<details className="roma-nav__group" open=\{active\}>/);
+  assert.match(domains, /label: 'Widget catalog', href: '\/widgets\/catalog'/);
+  assert.match(domains, /label: 'Your widgets'/);
+  assertBefore(domains, "'widgets',", "'widgetCatalog',");
+  assert.match(source, /headerRight=\{view === 'your-widgets' \? \(/);
+  assert.doesNotMatch(nav, /roma-nav__settings/);
+  assert.doesNotMatch(romaCss, /roma-nav__settings/);
   assert.match(source, /<option value="all">Show all<\/option>/);
   assert.match(source, /<option value="published">Show published<\/option>/);
   assert.match(source, /<option value="unpublished">Show unpublished<\/option>/);
-  assert.match(source, /WidgetSortHeader label="Name" sortKey="name"/);
+  assert.match(source, /WidgetSortHeader label="Instance name" sortKey="name"/);
   assert.match(source, /WidgetSortHeader label="Published" sortKey="status"/);
-  assert.match(source, />Widget type<\/th>/);
+  assert.match(source, />Widget<\/th>/);
+  assertBefore(source, />Widget<\/th>/, /WidgetSortHeader label="Instance name"/);
+  assertBefore(source, /WidgetSortHeader label="Instance name"/, /WidgetSortHeader label="Published"/);
   assert.match(source, /displayedInstances\.map\(\(instance\)/);
   assert.match(source, /displayedCatalog\.map\(\(option\)/);
   assert.match(source, /handleCreateInstance\(option\.widgetType\)/);
   assert.match(source, /checked=\{instance\.status === 'published'\}/);
   assert.match(source, /handleStatusChange\(instance, event\.target\.checked \? 'published' : 'unpublished'\)/);
+  assert.match(source, /className="roma-widget-publish-actions"/);
+  assert.match(source, /instance\.status === 'published' \? \(/);
+  assert.match(source, />Copy code<\/span>/);
+  assert.match(source, /<WidgetCopyCodeDialog/);
+  assert.match(source, /<span className="body-xs roma-widget-instance-id">\{instance\.instanceId\}<\/span>/);
+  assert.match(romaCss, /\.roma-widget-publish-actions \{[\s\S]*justify-content: flex-start;/);
   assert.match(source, /className="diet-popover roma-widget-actions-popover"/);
   assert.match(source, /instanceId: string;\s+position:/);
   assert.match(source, /instance\.instanceId === openWidgetActions\.instanceId/);
@@ -200,6 +248,7 @@ async function testDieterLayoutTableAndPopupConsumption(): Promise<void> {
     'components/pages-domain.tsx',
     'components/assets-domain.tsx',
     'components/widgets-domain.tsx',
+    'components/widget-copy-code-dialog.tsx',
   ]) {
     const source = await readRoute(relativePath);
     assert.match(source, /className="diet-popup"/, `${relativePath} must consume Dieter Popup`);
@@ -221,6 +270,8 @@ async function run(): Promise<void> {
   console.log('PASS Bob upsell CTA opens the Roma scaffold without discarding Builder work');
   await testBuilderUsesBobTopDrawerAsItsOnlyEditorChrome();
   console.log('PASS active Builder owns full-canvas chrome and preserves initial-only preview readiness');
+  testRomaOwnsExactPublicWidgetActions();
+  console.log('PASS Roma owns exact public widget actions for Widgets and Builder');
   await testWidgetsListComposition();
   console.log('PASS Widgets separates the catalog from the account-instance inventory');
   await testDieterLayoutTableAndPopupConsumption();

@@ -1,7 +1,7 @@
 import { WidgetsPage } from '../../../components/widgets-domain';
 
 export default function WidgetsPageRoute() {
-  return <WidgetsPage />;
+  return <WidgetsPage view="your-widgets" />;
 }
 
 export const runtime = 'edge';

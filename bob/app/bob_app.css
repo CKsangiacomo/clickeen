@@ -164,7 +164,6 @@ body {
   flex: none;
 }
 
-.topdrawer-action-status,
 .topdrawer-publish-status {
   color: var(--color-text-secondary);
 }

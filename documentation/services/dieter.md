@@ -103,7 +103,7 @@ monospace exception for technical strings.
 Dieter Table uses `label-s` for column headers and `body-s` for every body
 header/data cell. Its body and row-header cells use `--role-surface`; only the
 column-header band uses `--role-surface-muted`. The shared table is a
-borderless `2xl` surface with floating elevation, `--space-1`/`--space-4` cell
+borderless `2xl` surface with floating elevation, `--space-2`/`--space-4` cell
 padding, direct role-border horizontal dividers, no vertical rules or zebra
 stripes, and small preview and action column composition classes. Apps own
 data and behavior, not another table presentation.

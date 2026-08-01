@@ -23,10 +23,8 @@ export function TopDrawer({
   const chrome = useWidgetSessionChrome();
   const { save, isSaving, isDirty } = session;
   const [moreOpen, setMoreOpen] = useState(false);
-  const [actionStatus, setActionStatus] = useState<string | null>(null);
   const moreRef = useRef<HTMLDivElement>(null);
   const moreButtonRef = useRef<HTMLButtonElement>(null);
-  const statusTimerRef = useRef<number | null>(null);
 
   const meta = chrome.meta;
   const currentInstanceId = typeof meta?.instanceId === 'string' ? meta.instanceId : '';
@@ -57,25 +55,6 @@ export function TopDrawer({
       document.removeEventListener('keydown', closeOnEscape);
     };
   }, [moreOpen]);
-
-  useEffect(
-    () => () => {
-      if (statusTimerRef.current !== null) window.clearTimeout(statusTimerRef.current);
-    },
-    [],
-  );
-
-  const copyArtifact = async (label: string, value: string) => {
-    let copied = false;
-    try {
-      await navigator.clipboard.writeText(value);
-      copied = true;
-    } catch {}
-    setMoreOpen(false);
-    setActionStatus(copied ? `${label} copied` : `${label} could not be copied`);
-    if (statusTimerRef.current !== null) window.clearTimeout(statusTimerRef.current);
-    statusTimerRef.current = window.setTimeout(() => setActionStatus(null), 2400);
-  };
 
   return (
     <section className="topdrawer">
@@ -144,11 +123,6 @@ export function TopDrawer({
             </span>
           ) : null}
         </div>
-        {actionStatus ? (
-          <span className="topdrawer-action-status body-xs" role="status">
-            {actionStatus}
-          </span>
-        ) : null}
       </div>
 
       <div className="topdrawer-actions">
@@ -188,29 +162,12 @@ export function TopDrawer({
                   data-variant="neutral"
                   type="button"
                   role="menuitem"
-                  onClick={() => void copyArtifact('Widget URL', publicActions.publicUrl)}
+                  onClick={() => {
+                    setMoreOpen(false);
+                    requestHostAction('copy-code');
+                  }}
                 >
-                  <span className="diet-btn-menuactions__label body-s">Copy URL</span>
-                </button>
-                <button
-                  className="diet-btn-menuactions"
-                  data-size="md"
-                  data-variant="neutral"
-                  type="button"
-                  role="menuitem"
-                  onClick={() => void copyArtifact('Embed code', publicActions.iframeSnippet)}
-                >
-                  <span className="diet-btn-menuactions__label body-s">Copy embed</span>
-                </button>
-                <button
-                  className="diet-btn-menuactions"
-                  data-size="md"
-                  data-variant="neutral"
-                  type="button"
-                  role="menuitem"
-                  onClick={() => void copyArtifact('Script code', publicActions.scriptSnippet)}
-                >
-                  <span className="diet-btn-menuactions__label body-s">Copy script</span>
+                  <span className="diet-btn-menuactions__label body-s">Copy code</span>
                 </button>
               </div>
             </div>

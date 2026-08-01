@@ -108,7 +108,7 @@ export type BobDirtyStateChangedMessage = {
 
 export type BobHostActionMessage = {
   type: 'bob:host-action';
-  action: 'open-navigation' | 'return';
+  action: 'open-navigation' | 'return' | 'copy-code';
 };
 
 export type BobOpenEditorAppliedMessage = {

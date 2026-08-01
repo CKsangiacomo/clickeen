@@ -64,19 +64,19 @@ a {
   border-color: transparent;
 }
 
-.roma-nav__settings {
+.roma-nav__group {
   display: block;
   margin-top: var(--space-1);
   padding-top: var(--space-2);
   border-top: 1px solid var(--role-border);
 }
 
-.roma-nav__settings > summary {
+.roma-nav__group > summary {
   list-style: none;
   cursor: pointer;
 }
 
-.roma-nav__settings > summary::-webkit-details-marker {
+.roma-nav__group > summary::-webkit-details-marker {
   display: none;
 }
 
@@ -388,6 +388,48 @@ a {
   min-block-size: 0;
   padding: 0;
   background: transparent;
+}
+
+.roma-widget-publish-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: var(--space-2);
+}
+
+.roma-widget-code-list,
+.roma-widget-code-item {
+  display: grid;
+}
+
+.roma-widget-code-list {
+  gap: var(--space-4);
+}
+
+.roma-widget-code-item {
+  gap: var(--space-2);
+}
+
+.roma-widget-code-item__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.roma-widget-code-item__header h3,
+.roma-widget-code-value {
+  margin: 0;
+}
+
+.roma-widget-code-value {
+  overflow: auto;
+  padding: var(--space-3);
+  border-radius: var(--control-radius-xl);
+  color: var(--color-text);
+  background: var(--role-surface-muted);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
 }
 
 .roma-widget-actions-popover.diet-popover {

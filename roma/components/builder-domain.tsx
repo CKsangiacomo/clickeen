@@ -7,13 +7,14 @@ import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { resolveBobBaseUrl } from '../lib/env/bob';
-import { resolvePublicServingBaseUrl } from '../lib/env/public-serving';
+import { buildWidgetPublicActions, type WidgetPublicActions } from '../lib/public-widget-actions';
 import { useRomaAccountApi } from './account-api';
 import { getWidgetEditorArtifact } from './widget-editor-artifact';
 import { useRomaAccountContext } from './roma-account-context';
 import { RomaUnsavedChangesDialog } from './roma-unsaved-changes-dialog';
 import { RomaUpsellDialog } from './roma-upsell-dialog';
 import { useRomaShellActions } from './roma-shell';
+import { WidgetCopyCodeDialog } from './widget-copy-code-dialog';
 
 type BuilderDomainProps = {
   initialInstanceId?: string;
@@ -69,7 +70,7 @@ type BobUpsellMessage = {
 
 type BobHostActionMessage = {
   type: 'bob:host-action';
-  action?: 'open-navigation' | 'return' | string | null;
+  action?: 'open-navigation' | 'return' | 'copy-code' | string | null;
 };
 
 function resolveBobUpsellReason(reasonKey: string | null | undefined): string {
@@ -119,11 +120,7 @@ type BobOpenEditorMessage = {
   fontLibrary: AccountFontLibrary;
   publishStatus?: 'published' | 'unpublished';
   returnLabel?: string;
-  publicActions: {
-    publicUrl: string;
-    iframeSnippet: string;
-    scriptSnippet: string;
-  } | null;
+  publicActions: WidgetPublicActions | null;
   policy?: unknown;
   copilot?: unknown;
   translationSetup?: {
@@ -367,30 +364,6 @@ function normalizeReturnTo(value: string | null): string {
   return normalized;
 }
 
-function resolveClkLiveBaseUrl(): string {
-  return resolvePublicServingBaseUrl();
-}
-
-function buildWidgetPublicUrl(accountPublicId: string, instanceId: string): string {
-  return `${resolveClkLiveBaseUrl()}/${encodeURIComponent(accountPublicId)}/${encodeURIComponent(instanceId)}`;
-}
-
-function buildWidgetIframeSnippet(publicUrl: string): string {
-  return `<iframe
-  src="${publicUrl}"
-  title="Clickeen widget"
-  loading="lazy"
-  referrerpolicy="no-referrer"
-  allow="clipboard-write"
-  sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox"
-  style="width:100%;border:0;min-height:420px;"
-></iframe>`;
-}
-
-function buildWidgetScriptSnippet(publicUrl: string): string {
-  return `<script src="${publicUrl}/runtime.js" async></script>`;
-}
-
 export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
   const { activeAccount, accountPolicy } = useRomaAccountContext();
   const accountApi = useRomaAccountApi();
@@ -413,6 +386,11 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
     return String(initialInstanceId || '').trim();
   });
   const [openError, setOpenError] = useState<string | null>(null);
+  const [publicActionContext, setPublicActionContext] = useState<{
+    instanceName: string;
+    actions: WidgetPublicActions;
+  } | null>(null);
+  const [copyCodeOpen, setCopyCodeOpen] = useState(false);
   const [unsavedDialogOpen, setUnsavedDialogOpen] = useState(false);
   const [upsellReason, setUpsellReason] = useState<string | null>(null);
 
@@ -676,6 +654,8 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
 
     const openSeq = ++openDispatchSeqRef.current;
     setOpenError(null);
+    setCopyCodeOpen(false);
+    setPublicActionContext(null);
 
     try {
       const builderOpen = await accountApi.fetchJson<BuilderOpenResponse>(`/api/builder/${encodeURIComponent(activeInstanceId)}/open`);
@@ -699,9 +679,12 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
         activeAccount,
         accountPolicy,
       });
-      const publicUrl = builderOpen.publishStatus === 'published'
-        ? buildWidgetPublicUrl(activeAccount.accountPublicId, resolvedInstanceId)
-        : '';
+      const nextPublicActions = builderOpen.publishStatus === 'published'
+        ? buildWidgetPublicActions({
+            accountPublicId: activeAccount.accountPublicId,
+            instanceId: resolvedInstanceId,
+          })
+        : null;
       const message: BobOpenEditorPayload = {
         type: 'ck:open-editor',
         accountPublicId: activeAccount.accountPublicId,
@@ -717,13 +700,7 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
         returnLabel: returnTo
           ? (returnTo.startsWith('/pages') ? 'Return to page' : 'Return')
           : undefined,
-        publicActions: publicUrl
-          ? {
-              publicUrl,
-              iframeSnippet: buildWidgetIframeSnippet(publicUrl),
-              scriptSnippet: buildWidgetScriptSnippet(publicUrl),
-            }
-          : null,
+        publicActions: nextPublicActions,
         policy: accountPolicy,
         copilot: builderOpen.copilot ?? null,
         translationSetup,
@@ -736,6 +713,7 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
       if (openSeq !== openDispatchSeqRef.current) return;
       bobAppliedInstanceIdRef.current = resolvedInstanceId;
       bobIsDirtyRef.current = false;
+      setPublicActionContext(nextPublicActions ? { instanceName: label, actions: nextPublicActions } : null);
       setOpenError(null);
     } catch (error) {
       if (openSeq !== openDispatchSeqRef.current) return;
@@ -790,6 +768,9 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
           openNavigation(iframeRef.current);
         } else if (data.action === 'return' && returnTo) {
           requestGuardedNavigation(() => router.push(returnTo));
+        } else if (data.action === 'copy-code') {
+          if (publicActionContext) setCopyCodeOpen(true);
+          else setOpenError('coreui.errors.builder.publicActions.invalid');
         }
         return;
       }
@@ -814,13 +795,15 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
 
     window.addEventListener('message', listener);
     return () => window.removeEventListener('message', listener);
-  }, [activeInstanceId, bobBaseUrl, openNavigation, requestGuardedNavigation, returnTo, router, runBobAccountCommand]);
+  }, [activeInstanceId, bobBaseUrl, openNavigation, publicActionContext, requestGuardedNavigation, returnTo, router, runBobAccountCommand]);
 
   useEffect(() => {
     bobReadyRef.current = false;
     openDispatchSeqRef.current += 1;
     bobAppliedInstanceIdRef.current = '';
     bobIsDirtyRef.current = false;
+    setCopyCodeOpen(false);
+    setPublicActionContext(null);
     setOpenError(null);
   }, [bobSrc]);
 
@@ -941,6 +924,12 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
         className="roma-builder__iframe"
         title="Bob Builder"
         onLoad={handleBobIframeLoad}
+      />
+      <WidgetCopyCodeDialog
+        open={copyCodeOpen}
+        instanceName={publicActionContext?.instanceName ?? ''}
+        actions={publicActionContext?.actions ?? null}
+        onClose={() => setCopyCodeOpen(false)}
       />
       <RomaUnsavedChangesDialog
         open={unsavedDialogOpen}

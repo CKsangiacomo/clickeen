@@ -82,8 +82,10 @@ full-canvas Builder body. Roma does not place a Page header, generic action
 band, padding, or module frame around Bob. `TopDrawer` is Bob-owned editor
 chrome, not a Roma Page header. It holds the instance label and publish state,
 Save as the primary editor action, Open public widget as the applicable
-secondary action, and public copy operations under More. A return control is
-context navigation rather than another CTA. In Compact mode TopDrawer also
+secondary action, and one Copy code host intent under More. Roma presents the
+shared public-code Popup and performs the browser copy; Bob neither reconstructs
+nor copies public values. A return control is context navigation rather than
+another CTA. In Compact mode TopDrawer also
 exposes the control that opens Roma's existing navigation drawer.
 
 ## Authoring Flow
@@ -200,13 +202,15 @@ Bob sends host navigation intents without owning Roma routes:
 ```json
 {
   "type": "bob:host-action",
-  "action": "[open-navigation|return]"
+  "action": "[open-navigation|return|copy-code]"
 }
 ```
 
 Roma validates the Bob origin and frame source. `open-navigation` opens the
 existing Roma navigation drawer. `return` follows Roma's sanitized return
-coordinate and existing unsaved-work guard.
+coordinate and existing unsaved-work guard. `copy-code` asks Roma to open the
+shared public-code Popup for the exact published values already supplied in the
+current Builder-open envelope.
 
 Roma replies to account commands with:
 
@@ -537,10 +541,11 @@ https://clk.live/{accountPublicId}/{instanceId}
 Roma owns public-widget action truth for the current account and opened
 instance. It constructs the exact public URL and iframe/script snippets and
 sends either that complete set or `null` in the Builder-open envelope. Bob
-fails a published open when that set is incomplete, presents the supplied
-actions in TopDrawer, and performs the user-requested browser copy. Bob never
-constructs those values from editor state. Unpublished instances expose no
-live actions.
+fails a published open when that set is incomplete and presents Open public
+widget plus one Copy code intent in TopDrawer. Roma handles that intent with
+the same public-code Popup used by the Widgets inventory. Bob never constructs
+or copies those values from editor state. Unpublished instances expose no live
+actions.
 
 ## Account Assets
 

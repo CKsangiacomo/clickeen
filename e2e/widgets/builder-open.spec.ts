@@ -47,11 +47,16 @@ test.describe('Roma Builder authenticated smoke', () => {
     expect(bobWorkspaceBackground).toBe(outerCanvasBackground);
 
     await bobFrame.getByRole('button', { name: 'More' }).click();
-    await expect(bobFrame.getByRole('menuitem', { name: 'Copy URL' })).toBeVisible();
-    await expect(bobFrame.getByRole('menuitem', { name: 'Copy embed' })).toBeVisible();
-    await expect(bobFrame.getByRole('menuitem', { name: 'Copy script' })).toBeVisible();
-    await page.keyboard.press('Escape');
-    await expect(bobFrame.getByRole('menuitem', { name: 'Copy URL' })).toBeHidden();
+    const copyCodeAction = bobFrame.getByRole('menuitem', { name: 'Copy code' });
+    await expect(copyCodeAction).toBeVisible();
+    await copyCodeAction.click();
+    const copyCodeDialog = page.getByRole('dialog', { name: 'Copy code' });
+    await expect(copyCodeDialog).toBeVisible();
+    await expect(copyCodeDialog.getByRole('heading', { name: 'Widget URL' })).toBeVisible();
+    await expect(copyCodeDialog.getByRole('heading', { name: 'Embed code' })).toBeVisible();
+    await expect(copyCodeDialog.getByRole('heading', { name: 'Script code' })).toBeVisible();
+    await copyCodeDialog.getByRole('button', { name: 'Close' }).click();
+    await expect(copyCodeDialog).toBeHidden();
 
     await page.screenshot({ path: testInfo.outputPath('builder-open.png'), fullPage: true });
     await bobFrame.locator('.builder-app').screenshot({ path: testInfo.outputPath('bob-editor.png') });

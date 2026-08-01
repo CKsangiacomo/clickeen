@@ -342,7 +342,7 @@ test.describe('DevStudio route contract', () => {
     expect(ordinaryPresentation.frameBoxShadow).not.toBe('none');
     expect(ordinaryPresentation.headerBackground).not.toBe(ordinaryPresentation.bodyBackground);
     expect(ordinaryPresentation.rowHeaderBackground).toBe(ordinaryPresentation.bodyBackground);
-    expect(ordinaryPresentation.bodyPaddingBlockStart).toBe('4px');
+    expect(ordinaryPresentation.bodyPaddingBlockStart).toBe('8px');
     expect(ordinaryPresentation.bodyPaddingInlineStart).toBe('16px');
     expect(ordinaryPresentation.bodyInlineStartBorder).toBe('0px');
     expect(ordinaryPresentation.bodyInlineEndBorder).toBe('0px');

@@ -74,6 +74,7 @@ a dialog seems low-risk.
 | Roma Bulk Upload | Disabled while an upload is active; close after terminal | Never | Close exists only after terminal state |
 | Roma account tier-drop notice | Never | Never | Open settings or persisted Dismiss resolves it |
 | Roma plan-limit prompt | Close | Close | No work is lost; enforcement and Upgrade meaning are separate concerns |
+| Roma widget public code | Close | Close | Close; read/copy only, no work is mutated |
 | Bob plan-limit/upsell prompt | Close | Close | No work is lost; enforcement and Upgrade meaning are separate concerns |
 | Roma upsell scaffold | Close | Close | No work is lost; no commercial operation has started |
 | DevStudio token editor | Close if unchanged; dirty opens discard confirmation | Never | Cancel follows the dirty rule; Confirm Commit persists |

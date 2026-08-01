@@ -106,6 +106,7 @@ Roma account-shell routes include:
 - `/home`
 - `/profile`
 - `/widgets`
+- `/widgets/catalog`
 - `/widgets/:instanceId`
 - `/builder`
 - `/builder/:instanceId`
@@ -120,8 +121,8 @@ Roma account-shell routes include:
 `/home` currently preserves the Roma shell and navigation but renders no
 domain-specific header, actions, placeholders, or page content.
 
-`/widgets` owns account widget lifecycle actions. `/builder/:instanceId` opens
-one widget instance in Bob for editing.
+The Widgets routes own account widget lifecycle actions.
+`/builder/:instanceId` opens one widget instance in Bob for editing.
 
 ## Auth And Account Bootstrap
 
@@ -277,10 +278,13 @@ instance. It builds the public URL and iframe/script snippets from the current
 account public id, the exact instance id, the configured public-serving
 origin, and the publish status returned by the Builder-open envelope.
 It sends that exact complete set to Bob, where TopDrawer presents Open public
-widget and the three copy operations. Bob does not reconstruct the values.
-Unpublished instances receive `publicActions: null` and expose no public action.
-Bob's `bob:host-action` message carries only `open-navigation` or `return`
-intent; Roma retains navigation routes and the unsaved-work guard.
+widget and one Copy code intent under More. Roma answers that intent with the
+same Dieter Popup used by the Widgets inventory; the Popup presents the exact
+URL, iframe, and script values and owns browser copy. Bob does not reconstruct
+or copy those values. Unpublished instances receive `publicActions: null` and
+expose no public action. Bob's `bob:host-action` message carries only
+`open-navigation`, `return`, or `copy-code` intent; Roma retains navigation,
+public-action, and unsaved-work authority.
 The copied public URL is slashless:
 
 ```text
@@ -298,14 +302,19 @@ runtime materializer writes exact root-relative support-file paths inside
 
 ## Widgets Domain
 
-Roma `/widgets` is the account widget management surface.
+Roma `/widgets` and `/widgets/catalog` are the account widget management
+surfaces. Widgets is one expandable Roma navigation group, using the same
+left-navigation pattern as Settings. Its route-owned subitems are **Your
+widgets** at `/widgets` and **Widget catalog** at `/widgets/catalog`; they are
+not local page tabs.
 
-Widgets has two local views with separate purposes. **Your widgets** is the
-default account-instance inventory. It uses one semantic Dieter Table whose
-rows expose instance name, canonical widget type, exact published state as a
-Dieter Toggle, subordinate instance id, Edit, and one ellipsis menu for Rename,
-Duplicate, and Delete. The header status filter and the Name and Published
-sorts are client-side projections over that validated account list.
+**Your widgets** is the default account-instance inventory. It uses one
+semantic Dieter Table whose columns are Widget, Instance name, Published,
+Instance ID, and Actions. Published uses a left-aligned Dieter Toggle and, only
+for a published instance, a small Copy code action that opens Roma's shared
+public-code Popup. Edit is the direct row action; Rename, Duplicate, and Delete
+remain in one ellipsis menu. The header status filter and the Instance name and
+Published sorts are client-side projections over the validated account list.
 
 **Widget catalog** renders the canonical widget definitions as Dieter-styled
 cards. A catalog card creates an instance of that widget type; it does not
@@ -313,7 +322,7 @@ represent, count, or group saved account instances. Roma renders only catalog
 metadata supplied by the owning definition and does not invent descriptions,
 categories, badges, or preview media.
 
-Switching views does not change the account command or storage authority.
+Changing routes does not change the account command or storage authority.
 Publication remains a controlled command: the toggle changes only after the
 existing Roma command succeeds and the authoritative instance list refreshes.
 

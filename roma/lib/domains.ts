@@ -3,6 +3,7 @@ export type RomaDomainKey =
   | 'profile'
   | 'builder'
   | 'widgets'
+  | 'widgetCatalog'
   | 'pages'
   | 'assets'
   | 'team'
@@ -23,6 +24,7 @@ export const ROMA_DOMAINS: readonly RomaDomainDefinition[] = [
   { key: 'home', label: 'Home', href: '/home', description: 'Reserved for account insights and messages.' },
   { key: 'profile', label: 'User Settings', href: '/profile', description: 'Person-scoped settings for the signed-in user.' },
   { key: 'widgets', label: 'Widgets', href: '/widgets', description: 'Manage account-owned instances.' },
+  { key: 'widgetCatalog', label: 'Widget catalog', href: '/widgets/catalog', description: 'Create instances from available widgets.' },
   { key: 'pages', label: 'Pages', href: '/pages', description: 'Stack widget instances into pages.' },
   { key: 'builder', label: 'Builder', href: '/builder', description: 'Edit widget instances in Bob.' },
   { key: 'assets', label: 'Assets', href: '/assets', description: 'Account library and usage mapping.' },
@@ -53,6 +55,11 @@ export const ROMA_SETTINGS_DOMAIN_KEYS: readonly RomaDomainKey[] = [
   'widgetDefaults',
 ];
 
+export const ROMA_WIDGETS_DOMAIN_KEYS: readonly RomaDomainKey[] = [
+  'widgets',
+  'widgetCatalog',
+];
+
 export const ROMA_MAIN_DOMAINS = ROMA_MAIN_DOMAIN_KEYS.map((key) => {
   const domain = ROMA_DOMAINS.find((entry) => entry.key === key);
   if (!domain) throw new Error(`missing Roma main domain: ${key}`);
@@ -63,6 +70,12 @@ export const ROMA_SETTINGS_DOMAINS = ROMA_SETTINGS_DOMAIN_KEYS.map((key) => {
   const domain = ROMA_DOMAINS.find((entry) => entry.key === key);
   if (!domain) throw new Error(`missing Roma settings domain: ${key}`);
   return key === 'settings' ? { ...domain, label: 'Account' } : domain;
+});
+
+export const ROMA_WIDGETS_DOMAINS = ROMA_WIDGETS_DOMAIN_KEYS.map((key) => {
+  const domain = ROMA_DOMAINS.find((entry) => entry.key === key);
+  if (!domain) throw new Error(`missing Roma widgets domain: ${key}`);
+  return key === 'widgets' ? { ...domain, label: 'Your widgets' } : domain;
 });
 
 export const DEFAULT_HOME_ROUTE = '/home';

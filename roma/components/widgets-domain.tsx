@@ -7,6 +7,7 @@ import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'rea
 import { createPortal } from 'react-dom';
 import { createDialogLifecycle, type DialogLifecycle } from '../../dieter/components/shared/dialog-lifecycle';
 import { resolveAccountShellErrorCopy, resolveAccountShellReason } from '../lib/account-shell-copy';
+import { buildWidgetPublicActions, type WidgetPublicActions } from '../lib/public-widget-actions';
 import { useRomaAccountApi } from './account-api';
 import { prefetchWidgetEditorArtifact } from './widget-editor-artifact';
 import { RomaAccountNoticeModal } from './roma-account-notice-modal';
@@ -14,6 +15,7 @@ import { useRomaAccountContext } from './roma-account-context';
 import { RomaDomainErrorBoundary } from './roma-domain-error-boundary';
 import { RomaShell } from './roma-shell';
 import { RomaUpsellDialog } from './roma-upsell-dialog';
+import { WidgetCopyCodeDialog } from './widget-copy-code-dialog';
 import {
   buildBuilderRoute,
   DEFAULT_INSTANCE_DISPLAY_NAME,
@@ -192,15 +194,14 @@ function WidgetSortHeader({
   );
 }
 
-export function WidgetsPage() {
-  const [activeView, setActiveView] = useState<WidgetsView>('your-widgets');
+export function WidgetsPage({ view }: { view: WidgetsView }) {
   const [statusFilter, setStatusFilter] = useState<WidgetStatusFilter>('all');
 
   return (
     <RomaShell
-      activeDomain="widgets"
+      activeDomain={view === 'catalog' ? 'widgetCatalog' : 'widgets'}
       title="Widgets"
-      headerRight={activeView === 'your-widgets' ? (
+      headerRight={view === 'your-widgets' ? (
         <label className="roma-widgets-filter">
           <span className="sr-only">Filter your widgets by publish status</span>
           <select
@@ -219,9 +220,8 @@ export function WidgetsPage() {
       <Suspense fallback={null}>
         <RomaDomainErrorBoundary domainLabel="Widgets" resetKey="widgets">
           <WidgetsDomain
-            activeView={activeView}
+            view={view}
             statusFilter={statusFilter}
-            onViewChange={setActiveView}
           />
         </RomaDomainErrorBoundary>
       </Suspense>
@@ -230,13 +230,11 @@ export function WidgetsPage() {
 }
 
 export function WidgetsDomain({
-  activeView,
+  view,
   statusFilter,
-  onViewChange,
 }: {
-  activeView: WidgetsView;
+  view: WidgetsView;
   statusFilter: WidgetStatusFilter;
-  onViewChange: (view: WidgetsView) => void;
 }) {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -259,6 +257,12 @@ export function WidgetsDomain({
   const [renameDraft, setRenameDraft] = useState('');
   const [renameError, setRenameError] = useState<string | null>(null);
   const [sort, setSort] = useState<WidgetSort>(DEFAULT_WIDGET_SORT);
+  const [copyCodeContext, setCopyCodeContext] = useState<{
+    accountPublicId: string;
+    instanceId: string;
+    instanceName: string;
+    actions: WidgetPublicActions | null;
+  } | null>(null);
   const [openWidgetActions, setOpenWidgetActions] = useState<{
     instanceId: string;
     position: { top: number; left: number } | null;
@@ -273,7 +277,6 @@ export function WidgetsDomain({
       : null,
     [openWidgetActions, widgetInstances],
   );
-
   const applyWidgets = useCallback((widgets: RomaWidgetsResponse) => {
     setWidgetInstances(widgets.instances);
     setCatalog(widgets.catalog);
@@ -461,15 +464,20 @@ export function WidgetsDomain({
   }, [closeWidgetActions, openWidgetActions, openWidgetActionsInstance]);
 
   useEffect(() => {
-    if (activeView === 'catalog' && openWidgetActions) closeWidgetActions();
-  }, [activeView, closeWidgetActions, openWidgetActions]);
+    if (!copyCodeContext) return;
+    const instance = widgetInstances.find((candidate) => candidate.instanceId === copyCodeContext.instanceId);
+    if (copyCodeContext.accountPublicId !== productAccountId || instance?.status !== 'published') {
+      setCopyCodeContext(null);
+    }
+  }, [copyCodeContext, productAccountId, widgetInstances]);
 
   useEffect(() => {
+    if (view !== 'your-widgets') return;
     const candidates = instanceWidgetTypes.slice(0, 8);
     candidates.forEach((widgetType) => {
       void prefetchWidgetEditorArtifact(widgetType);
     });
-  }, [instanceWidgetTypes]);
+  }, [instanceWidgetTypes, view]);
 
   const handleCreateInstance = useCallback(
     async (widgetType: string) => {
@@ -511,6 +519,29 @@ export function WidgetsDomain({
     },
     [accountApi, canMutateWidgets, productAccountId, refreshWidgets, router],
   );
+
+  const openCopyCode = useCallback((instance: WidgetInstance) => {
+    if (instance.status !== 'published') return;
+    const instanceName = instance.displayName || DEFAULT_INSTANCE_DISPLAY_NAME;
+    try {
+      setCopyCodeContext({
+        accountPublicId: productAccountId,
+        instanceId: instance.instanceId,
+        instanceName,
+        actions: buildWidgetPublicActions({
+          accountPublicId: productAccountId,
+          instanceId: instance.instanceId,
+        }),
+      });
+    } catch {
+      setCopyCodeContext({
+        accountPublicId: productAccountId,
+        instanceId: instance.instanceId,
+        instanceName,
+        actions: null,
+      });
+    }
+  }, [productAccountId]);
 
   const handleDuplicateInstance = useCallback(
     async (instance: WidgetInstance) => {
@@ -670,59 +701,6 @@ export function WidgetsDomain({
 
   return (
     <>
-      <div
-        className="diet-tabs diet-tabs--block"
-        data-size="md"
-        role="tablist"
-        aria-label="Widgets"
-        onKeyDown={(event) => {
-          if (!['ArrowRight', 'ArrowDown', 'ArrowLeft', 'ArrowUp'].includes(event.key)) return;
-          const nextView = activeView === 'your-widgets' ? 'catalog' : 'your-widgets';
-          event.preventDefault();
-          onViewChange(nextView);
-          requestAnimationFrame(() => document.getElementById(`roma-widgets-${nextView}-tab`)?.focus());
-        }}
-      >
-        <input
-          id="roma-widgets-your-widgets"
-          className="diet-tab__input sr-only"
-          type="radio"
-          name="roma-widgets-view"
-          checked={activeView === 'your-widgets'}
-          onChange={() => onViewChange('your-widgets')}
-        />
-        <label
-          id="roma-widgets-your-widgets-tab"
-          className="diet-tab"
-          htmlFor="roma-widgets-your-widgets"
-          role="tab"
-          aria-selected={activeView === 'your-widgets'}
-          aria-controls="roma-widgets-panel"
-          tabIndex={activeView === 'your-widgets' ? 0 : -1}
-        >
-          <span className="diet-tab__label label-s">Your widgets</span>
-        </label>
-        <input
-          id="roma-widgets-catalog"
-          className="diet-tab__input sr-only"
-          type="radio"
-          name="roma-widgets-view"
-          checked={activeView === 'catalog'}
-          onChange={() => onViewChange('catalog')}
-        />
-        <label
-          id="roma-widgets-catalog-tab"
-          className="diet-tab"
-          htmlFor="roma-widgets-catalog"
-          role="tab"
-          aria-selected={activeView === 'catalog'}
-          aria-controls="roma-widgets-panel"
-          tabIndex={activeView === 'catalog' ? 0 : -1}
-        >
-          <span className="diet-tab__label label-s">Widget catalog</span>
-        </label>
-      </div>
-
       {widgetDataError || mutationError || renameError || (domainLoading && catalog.length === 0 && widgetInstances.length === 0) ? (
         <section className="rd-canvas-module" role={widgetDataError || mutationError || renameError ? 'alert' : 'status'}>
           {widgetDataError ? (
@@ -740,27 +718,21 @@ export function WidgetsDomain({
         </section>
       ) : null}
 
-      <div
-        id="roma-widgets-panel"
-        role="tabpanel"
-        aria-labelledby={activeView === 'your-widgets' ? 'roma-widgets-your-widgets-tab' : 'roma-widgets-catalog-tab'}
-      >
-        {activeView === 'your-widgets' ? (
+      {view === 'your-widgets' ? (
           <>
             {!domainLoading && canRenderWidgetData && widgetInstances.length === 0 ? (
               <section className="rd-canvas-module">
                 <p className="body-m">No widgets yet.</p>
                 {canMutateWidgets && catalog.length > 0 ? (
                   <div className="rd-canvas-module__actions">
-                    <button
+                    <Link
                       className="diet-btn-txt"
                       data-size="md"
                       data-variant="primary"
-                      type="button"
-                      onClick={() => onViewChange('catalog')}
+                      href="/widgets/catalog"
                     >
                       <span className="diet-btn-txt__label body-m">Browse widget catalog</span>
-                    </button>
+                    </Link>
                   </div>
                 ) : null}
               </section>
@@ -778,8 +750,8 @@ export function WidgetsDomain({
                 <caption className="sr-only">Your widgets</caption>
                 <thead>
                   <tr>
-                    <WidgetSortHeader label="Name" sortKey="name" sort={sort} onSort={changeSort} />
-                    <th className="label-s" scope="col">Widget type</th>
+                    <th className="label-s" scope="col">Widget</th>
+                    <WidgetSortHeader label="Instance name" sortKey="name" sort={sort} onSort={changeSort} />
                     <WidgetSortHeader label="Published" sortKey="status" sort={sort} onSort={changeSort} />
                     <th className="label-s" scope="col">Instance ID</th>
                     <th className="label-s diet-table__cell--action" scope="col">Actions</th>
@@ -802,6 +774,7 @@ export function WidgetsDomain({
                         : null;
                     return (
                       <tr key={instance.instanceId} data-selected={isSelected ? 'true' : undefined} aria-current={isSelected ? 'true' : undefined}>
+                        <td className="body-s">{widgetDisplayName}</td>
                         <th className="body-s" scope="row">
                           {isRenaming ? (
                             <div className="roma-instance-rename">
@@ -853,26 +826,40 @@ export function WidgetsDomain({
                             </>
                           )}
                         </th>
-                        <td className="body-s">{widgetDisplayName}</td>
                         <td className="body-s">
-                          <label className="diet-toggle roma-widget-status-toggle" data-size="sm" aria-busy={statusUpdating || undefined}>
-                            <span className="diet-toggle__label sr-only">
-                              Published: {instanceName}{statusUpdating ? ', updating' : ''}
-                            </span>
-                            <input
-                              className="diet-toggle__input sr-only"
-                              type="checkbox"
-                              role="switch"
-                              checked={instance.status === 'published'}
-                              disabled={!canMutateWidgets || Boolean(activeActionKey)}
-                              onChange={(event) => void handleStatusChange(instance, event.target.checked ? 'published' : 'unpublished')}
-                            />
-                            <span className="diet-toggle__switch" aria-hidden="true">
-                              <span className="diet-toggle__knob" />
-                            </span>
-                          </label>
+                          <div className="roma-widget-publish-actions">
+                            <label className="diet-toggle roma-widget-status-toggle" data-size="sm" aria-busy={statusUpdating || undefined}>
+                              <span className="diet-toggle__label sr-only">
+                                Published: {instanceName}{statusUpdating ? ', updating' : ''}
+                              </span>
+                              <input
+                                className="diet-toggle__input sr-only"
+                                type="checkbox"
+                                role="switch"
+                                checked={instance.status === 'published'}
+                                disabled={!canMutateWidgets || Boolean(activeActionKey)}
+                                onChange={(event) => void handleStatusChange(instance, event.target.checked ? 'published' : 'unpublished')}
+                              />
+                              <span className="diet-toggle__switch" aria-hidden="true">
+                                <span className="diet-toggle__knob" />
+                              </span>
+                            </label>
+                            {instance.status === 'published' ? (
+                              <button
+                                className="diet-btn-txt"
+                                data-size="sm"
+                                data-variant="line2"
+                                type="button"
+                                onClick={() => openCopyCode(instance)}
+                              >
+                                <span className="diet-btn-txt__label body-s">Copy code</span>
+                              </button>
+                            ) : null}
+                          </div>
                         </td>
-                        <td className="body-xs roma-widget-instance-id">{instance.instanceId}</td>
+                        <td className="body-s">
+                          <span className="body-xs roma-widget-instance-id">{instance.instanceId}</span>
+                        </td>
                         <td className="body-s diet-table__cell--action">
                           {canMutateWidgets ? (
                             <div className="roma-cell-actions">
@@ -961,9 +948,8 @@ export function WidgetsDomain({
             </section>
           )
         ) : null}
-      </div>
 
-      {activeView === 'your-widgets' && openWidgetActions && openWidgetActionsInstance && typeof document !== 'undefined'
+      {view === 'your-widgets' && openWidgetActions && openWidgetActionsInstance && typeof document !== 'undefined'
         ? createPortal(
             <div
               ref={widgetActionsPopoverRef}
@@ -1032,6 +1018,12 @@ export function WidgetsDomain({
         open={Boolean(upsellReason)}
         reason={upsellReason ?? undefined}
         onClose={() => setUpsellReason(null)}
+      />
+      <WidgetCopyCodeDialog
+        open={Boolean(copyCodeContext)}
+        instanceName={copyCodeContext?.instanceName ?? ''}
+        actions={copyCodeContext?.actions ?? null}
+        onClose={() => setCopyCodeContext(null)}
       />
     </>
   );

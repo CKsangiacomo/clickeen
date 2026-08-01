@@ -7,6 +7,7 @@ import { normalizeCanonicalLocalesFile, normalizeLocaleToken, resolveLocaleLabel
 import localesJson from '@clickeen/l10n/locales.json';
 import { createDialogLifecycle } from '../../dieter/components/shared/dialog-lifecycle';
 import { resolveAccountShellErrorCopy } from '../lib/account-shell-copy';
+import { copyToClipboard } from '../lib/copy-to-clipboard';
 import { resolvePublicServingBaseUrl } from '../lib/env/public-serving';
 import { useRomaAccountApi } from './account-api';
 import { useRomaAccountContext } from './roma-account-context';
@@ -93,30 +94,6 @@ function buildPageIframeSnippet(publicUrl: string): string {
   sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox"
   style="width:100%;border:0;min-height:720px;"
 ></iframe>`;
-}
-
-async function copyToClipboard(text: string): Promise<boolean> {
-  if (!text) return false;
-  try {
-    await navigator.clipboard.writeText(text);
-    return true;
-  } catch {}
-
-  try {
-    const el = document.createElement('textarea');
-    el.value = text;
-    el.setAttribute('readonly', 'true');
-    el.style.position = 'fixed';
-    el.style.top = '-1000px';
-    el.style.left = '-1000px';
-    document.body.appendChild(el);
-    el.select();
-    const ok = document.execCommand('copy');
-    document.body.removeChild(el);
-    return ok;
-  } catch {
-    return false;
-  }
 }
 
 export function PagesDomain() {
