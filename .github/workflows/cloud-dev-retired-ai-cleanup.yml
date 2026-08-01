@@ -34,9 +34,14 @@ jobs:
           set -euo pipefail
           wrangler=(pnpm dlx wrangler@4.54.0)
 
-          "${wrangler[@]}" d1 execute sanfrancisco_d1_dev --remote --json \
+          if ! "${wrangler[@]}" d1 execute sanfrancisco_d1_dev --remote --json \
             --command "SELECT requestId, day, agentId FROM copilot_events" \
-            > "$RUNNER_TEMP/copilot-events.json"
+            > "$RUNNER_TEMP/copilot-events.json" \
+            2> "$RUNNER_TEMP/copilot-events.err"; then
+            cat "$RUNNER_TEMP/copilot-events.err" >&2
+            cat "$RUNNER_TEMP/copilot-events.json" >&2
+            exit 1
+          fi
 
           node --input-type=module <<'NODE'
           import fs from 'node:fs';
