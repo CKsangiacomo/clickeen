@@ -1,0 +1,131 @@
+name: temporary cloud-dev retired AI cleanup
+
+on:
+  workflow_dispatch:
+    inputs:
+      phase:
+        description: Exact cleanup phase
+        required: true
+        type: choice
+        options:
+          - retired-resources
+          - obsolete-config
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with: {}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Delete retired learning data and infrastructure
+        if: inputs.phase == 'retired-resources'
+        shell: bash
+        run: |
+          set -euo pipefail
+          wrangler=(pnpm dlx wrangler@4.54.0)
+
+          "${wrangler[@]}" d1 execute sanfrancisco_d1_dev --remote --json \
+            --command "SELECT requestId, day, agentId FROM copilot_events" \
+            > "$RUNNER_TEMP/copilot-events.json"
+
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+
+          const payload = JSON.parse(fs.readFileSync(process.env.RUNNER_TEMP + '/copilot-events.json', 'utf8'));
+          const batches = Array.isArray(payload) ? payload : [payload];
+          const rows = batches.flatMap((batch) => Array.isArray(batch?.results) ? batch.results : []);
+          const keys = new Set();
+
+          for (const row of rows) {
+            const requestId = String(row.requestId ?? '');
+            const agentId = String(row.agentId ?? '');
+            const day = String(row.day ?? '');
+            if (!/^[A-Za-z0-9_-]+$/.test(requestId)) throw new Error(`Unsafe requestId in retired D1 data: ${requestId}`);
+            if (!/^[a-z0-9.-]+$/.test(agentId)) throw new Error(`Unsafe agentId in retired D1 data: ${agentId}`);
+            if (!/^\d{4}-\d{2}-\d{2}$/.test(day)) throw new Error(`Invalid day in retired D1 data: ${day}`);
+
+            const start = new Date(`${day}T00:00:00.000Z`);
+            if (!Number.isFinite(start.getTime())) throw new Error(`Invalid date in retired D1 data: ${day}`);
+            for (let offset = 0; offset <= 14; offset += 1) {
+              const candidate = new Date(start);
+              candidate.setUTCDate(candidate.getUTCDate() + offset);
+              const objectDay = candidate.toISOString().slice(0, 10);
+              keys.add(`learning/dev/${agentId}/${objectDay}/${requestId}.json`);
+            }
+          }
+
+          fs.writeFileSync(process.env.RUNNER_TEMP + '/retired-learning-keys.txt', [...keys].sort().join('\n') + (keys.size ? '\n' : ''));
+          console.log(`Resolved ${keys.size} exact retired learning object candidates from ${rows.length} indexed events.`);
+          NODE
+
+          while IFS= read -r key; do
+            [ -n "$key" ] || continue
+            "${wrangler[@]}" r2 object delete "sanfrancisco-logs-dev/$key" --remote
+          done < "$RUNNER_TEMP/retired-learning-keys.txt"
+
+          printf 'y\n' | "${wrangler[@]}" queues delete sanfrancisco-events-dev
+          "${wrangler[@]}" d1 delete sanfrancisco_d1_dev --skip-confirmation
+          "${wrangler[@]}" kv namespace delete \
+            --namespace-id f1abe003b9a8434699175b0c1ccd2603 \
+            --skip-confirmation
+
+          if "${wrangler[@]}" queues list | grep -Fq 'sanfrancisco-events-dev'; then
+            echo 'Retired San Francisco queue still exists.' >&2
+            exit 1
+          fi
+          if "${wrangler[@]}" d1 list --json | grep -Fq 'sanfrancisco_d1_dev'; then
+            echo 'Retired San Francisco D1 database still exists.' >&2
+            exit 1
+          fi
+          if "${wrangler[@]}" kv namespace list | grep -Fq 'f1abe003b9a8434699175b0c1ccd2603'; then
+            echo 'Retired San Francisco KV namespace still exists.' >&2
+            exit 1
+          fi
+
+      - name: Delete obsolete signing and Roma routing configuration
+        if: inputs.phase == 'obsolete-config'
+        shell: bash
+        run: |
+          set -euo pipefail
+          wrangler=(pnpm dlx wrangler@4.54.0)
+
+          for worker in sanfrancisco-dev tokyo-assets-dev translation-agent-dev; do
+            if "${wrangler[@]}" secret list --name "$worker" --format json \
+              | node -e "let s='';process.stdin.on('data',d=>s+=d).on('end',()=>{const v=JSON.parse(s);process.exit(v.some(x=>x.name==='AI_GRANT_HMAC_SECRET')?0:1)})"; then
+              printf 'y\n' | "${wrangler[@]}" secret delete AI_GRANT_HMAC_SECRET --name "$worker"
+            fi
+          done
+
+          response="$RUNNER_TEMP/roma-pages-cleanup.json"
+          curl --fail-with-body --silent --show-error \
+            --request PATCH \
+            --header "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+            --header 'Content-Type: application/json' \
+            --data '{"deployment_configs":{"production":{"env_vars":{"AI_GRANT_HMAC_SECRET":null,"SANFRANCISCO_BASE_URL":null}},"preview":{"env_vars":{"SANFRANCISCO_BASE_URL":null}}}}' \
+            "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/pages/projects/roma-dev" \
+            > "$response"
+          node -e "const fs=require('fs');const v=JSON.parse(fs.readFileSync(process.argv[1],'utf8'));if(v.success!==true)process.exit(1)" "$response"
+
+          project="$RUNNER_TEMP/roma-pages-project.json"
+          curl --fail-with-body --silent --show-error \
+            --header "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+            "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/pages/projects/roma-dev" \
+            > "$project"
+          node -e "const fs=require('fs');const v=JSON.parse(fs.readFileSync(process.argv[1],'utf8'));const d=v.result.deployment_configs;if(d.production.env_vars.AI_GRANT_HMAC_SECRET||d.production.env_vars.SANFRANCISCO_BASE_URL||d.preview.env_vars.SANFRANCISCO_BASE_URL)process.exit(1)" "$project"
+
+          for worker in sanfrancisco-dev tokyo-assets-dev translation-agent-dev; do
+            if "${wrangler[@]}" secret list --name "$worker" --format json | grep -Fq 'AI_GRANT_HMAC_SECRET'; then
+              echo "Obsolete HMAC secret still exists on $worker." >&2
+              exit 1
+            fi
+          done
