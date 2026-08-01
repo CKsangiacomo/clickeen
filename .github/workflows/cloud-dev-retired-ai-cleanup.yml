@@ -34,6 +34,12 @@ jobs:
           set -euo pipefail
           wrangler=(pnpm dlx wrangler@4.54.0)
 
+          printf 'y\n' | "${wrangler[@]}" queues delete sanfrancisco-events-dev
+          if "${wrangler[@]}" queues list | grep -Fq 'sanfrancisco-events-dev'; then
+            echo 'Retired San Francisco queue still exists.' >&2
+            exit 1
+          fi
+
           if ! "${wrangler[@]}" d1 execute sanfrancisco_d1_dev --remote --json \
             --command "SELECT requestId, day, agentId FROM copilot_events" \
             > "$RUNNER_TEMP/copilot-events.json" \
@@ -78,16 +84,11 @@ jobs:
             "${wrangler[@]}" r2 object delete "sanfrancisco-logs-dev/$key" --remote
           done < "$RUNNER_TEMP/retired-learning-keys.txt"
 
-          printf 'y\n' | "${wrangler[@]}" queues delete sanfrancisco-events-dev
           "${wrangler[@]}" d1 delete sanfrancisco_d1_dev --skip-confirmation
           "${wrangler[@]}" kv namespace delete \
             --namespace-id f1abe003b9a8434699175b0c1ccd2603 \
             --skip-confirmation
 
-          if "${wrangler[@]}" queues list | grep -Fq 'sanfrancisco-events-dev'; then
-            echo 'Retired San Francisco queue still exists.' >&2
-            exit 1
-          fi
           if "${wrangler[@]}" d1 list --json | grep -Fq 'sanfrancisco_d1_dev'; then
             echo 'Retired San Francisco D1 database still exists.' >&2
             exit 1
