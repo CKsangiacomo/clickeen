@@ -1,0 +1,20 @@
+name: temporary sync Roma grant key
+
+on:
+  workflow_dispatch: {}
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      ROMA_AI_GRANT_PRIVATE_KEY_PEM: ${{ secrets.ROMA_AI_GRANT_PRIVATE_KEY_PEM }}
+    steps:
+      - name: Install Roma private key in Pages
+        run: |
+          if [ -z "$ROMA_AI_GRANT_PRIVATE_KEY_PEM" ]; then
+            echo "Missing ROMA_AI_GRANT_PRIVATE_KEY_PEM." >&2
+            exit 1
+          fi
+          printf '%s' "$ROMA_AI_GRANT_PRIVATE_KEY_PEM" | npx --yes wrangler@4.54.0 pages secret put ROMA_AI_GRANT_PRIVATE_KEY_PEM --project-name roma-dev
