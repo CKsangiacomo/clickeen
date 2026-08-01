@@ -45,7 +45,15 @@ jobs:
           pnpm install --frozen-lockfile
           printf '%s' "$ROMA_AI_GRANT_PUBLIC_KEY_PEM" | pnpm -C sanfrancisco exec wrangler secret put ROMA_AI_GRANT_PUBLIC_KEY_PEM
           printf '%s' "$PRAGUE_L10N_HMAC_SECRET" | pnpm -C sanfrancisco exec wrangler secret put PRAGUE_L10N_HMAC_SECRET
-          pnpm -C sanfrancisco exec wrangler queues consumer remove sanfrancisco-events-dev sanfrancisco-dev
+          set +e
+          pnpm -C sanfrancisco exec wrangler queues consumer remove sanfrancisco-events-dev sanfrancisco-dev \
+            > "$RUNNER_TEMP/remove-consumer.log" 2>&1
+          remove_status=$?
+          set -e
+          if [ "$remove_status" -ne 0 ] && ! grep -Fq "No worker consumer 'sanfrancisco-dev' exists" "$RUNNER_TEMP/remove-consumer.log"; then
+            cat "$RUNNER_TEMP/remove-consumer.log" >&2
+            exit "$remove_status"
+          fi
           pnpm -C sanfrancisco run deploy
 
       - name: Delete retired queue and KV namespace
