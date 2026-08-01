@@ -1,16 +1,39 @@
-/**
- * Minimal shared types for the in-progress Bob refactor.
- * These mirror the plan’s canonical panel IDs so session + UI stay in sync.
- */
+/** Shared Bob contracts used by the compiler, session, and UI. */
 
 import type { LimitsSpec } from '@clickeen/ck-policy';
 import type { WidgetEditableFieldsContract } from '@clickeen/ck-contracts/translated-value-primitives';
 
-export type PanelId = string;
+export const BOB_PANEL_LABELS = {
+  content: 'Content',
+  layout: 'Layout',
+  appearance: 'Appearance',
+  typography: 'Typography',
+  translations: 'Translations',
+  settings: 'Settings',
+} as const;
+
+export type PanelId = keyof typeof BOB_PANEL_LABELS;
+
+export const BOB_WIDGET_PANEL_IDS = [
+  'content',
+  'layout',
+  'appearance',
+  'typography',
+  'settings',
+] as const satisfies readonly PanelId[];
+
+export const BOB_MENU_PANEL_IDS = [
+  ...BOB_WIDGET_PANEL_IDS.slice(0, -1),
+  'translations',
+  BOB_WIDGET_PANEL_IDS[BOB_WIDGET_PANEL_IDS.length - 1],
+] as const satisfies readonly PanelId[];
+
+export function isPanelId(value: string): value is PanelId {
+  return Object.prototype.hasOwnProperty.call(BOB_PANEL_LABELS, value);
+}
 
 export interface CompiledPanel {
   id: PanelId;
-  label: string;
   html: string;
 }
 
@@ -79,7 +102,7 @@ export interface WidgetPackageFileContext {
 }
 
 export interface WidgetPackageContext {
-    widgetType: string;
+  widgetType: string;
   files: Partial<Record<WidgetPackageFileName, WidgetPackageFileContext>>;
 }
 

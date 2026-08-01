@@ -267,12 +267,15 @@
             "id": "header-content"
           },
           {
+            "label": "Content",
+            "initiallyOpen": true,
             "nodes": [
               {
                 "kind": "field",
                 "type": "object-manager",
                 "groupId": "content-sections",
                 "path": "faq.sections",
+                "label": "Sections",
                 "template": [
                   {
                     "kind": "field",
@@ -1369,6 +1372,7 @@
             ]
           },
           {
+            "label": "Section titles",
             "nodes": [
               {
                 "kind": "field",
@@ -1771,6 +1775,7 @@
         "id": "appearance",
         "clusters": [
           {
+            "label": "Accordion",
             "nodes": [
               {
                 "kind": "field",

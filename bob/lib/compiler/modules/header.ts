@@ -3,59 +3,52 @@
 // Layout owns: positioning (header placement/alignment/header CTA placement)
 // Appearance owns: header CTA styling (fill/colors/border/radius + sizing presets)
 
-const headerPlacementOptions =
-  '[{\"label\":\"Top\",\"value\":\"top\"},{\"label\":\"Bottom\",\"value\":\"bottom\"},{\"label\":\"Left\",\"value\":\"left\"},{\"label\":\"Right\",\"value\":\"right\"}]'.replace(
-    /"/g,
-    '&quot;',
-  );
+import { encodeHtmlEntities } from '../../compiler.shared';
 
-const headerAlignmentOptions =
-  '[{\"label\":\"Left\",\"value\":\"left\"},{\"label\":\"Center\",\"value\":\"center\"},{\"label\":\"Right\",\"value\":\"right\"}]'.replace(
-    /"/g,
-    '&quot;',
-  );
+const encodeOptions = (value: string) => encodeHtmlEntities(value);
 
-const headerCtaPlacementOptions =
-  '[{\"label\":\"Right of title\",\"value\":\"right\"},{\"label\":\"Under title\",\"value\":\"below\"}]'.replace(
-    /"/g,
-    '&quot;',
-  );
+const headerPlacementOptions = encodeOptions(
+  '[{\"label\":\"Top\",\"value\":\"top\"},{\"label\":\"Bottom\",\"value\":\"bottom\"},{\"label\":\"Left\",\"value\":\"left\"},{\"label\":\"Right\",\"value\":\"right\"}]',
+);
 
-const iconPlacementOptions =
-  '[{\"label\":\"Left\",\"value\":\"left\"},{\"label\":\"Right\",\"value\":\"right\"}]'.replace(/"/g, '&quot;');
+const headerAlignmentOptions = encodeOptions(
+  '[{\"label\":\"Left\",\"value\":\"left\"},{\"label\":\"Center\",\"value\":\"center\"},{\"label\":\"Right\",\"value\":\"right\"}]',
+);
 
-const iconNameOptions =
-  '[{\"label\":\"Checkmark\",\"value\":\"checkmark\"},{\"label\":\"Arrow right\",\"value\":\"arrow.right\"},{\"label\":\"Chevron right\",\"value\":\"chevron.right\"},{\"label\":\"Arrowshape forward\",\"value\":\"arrowshape.forward\"},{\"label\":\"Arrowshape turn up right\",\"value\":\"arrowshape.turn.up.right\"}]'.replace(
-    /"/g,
-    '&quot;',
-  );
+const headerCtaPlacementOptions = encodeOptions(
+  '[{\"label\":\"Right of title\",\"value\":\"right\"},{\"label\":\"Under title\",\"value\":\"below\"}]',
+);
 
-const headerCtaOpenModeOptions =
-  '[{\"label\":\"Same tab\",\"value\":\"same-tab\"},{\"label\":\"New tab\",\"value\":\"new-tab\"},{\"label\":\"New window\",\"value\":\"new-window\"}]'.replace(
-    /"/g,
-    '&quot;',
-  );
+const iconPlacementOptions = encodeOptions(
+  '[{\"label\":\"Left\",\"value\":\"left\"},{\"label\":\"Right\",\"value\":\"right\"}]',
+);
 
-const sizePresetOptions =
-  '[{\"label\":\"X-Small\",\"value\":\"xs\"},{\"label\":\"Small\",\"value\":\"s\"},{\"label\":\"Medium\",\"value\":\"m\"},{\"label\":\"Large\",\"value\":\"l\"},{\"label\":\"X-Large\",\"value\":\"xl\"},{\"label\":\"Custom\",\"value\":\"custom\"}]'.replace(
-    /"/g,
-    '&quot;',
-  );
+const iconNameOptions = encodeOptions(
+  '[{\"label\":\"Checkmark\",\"value\":\"checkmark\"},{\"label\":\"Arrow right\",\"value\":\"arrow.right\"},{\"label\":\"Chevron right\",\"value\":\"chevron.right\"},{\"label\":\"Arrowshape forward\",\"value\":\"arrowshape.forward\"},{\"label\":\"Arrowshape turn up right\",\"value\":\"arrowshape.turn.up.right\"}]',
+);
 
-const radiusOptions =
-  '[{\"label\":\"None\",\"value\":\"none\"},{\"label\":\"Small\",\"value\":\"sm\"},{\"label\":\"Medium\",\"value\":\"md\"},{\"label\":\"Large\",\"value\":\"lg\"},{\"label\":\"X-Large\",\"value\":\"xl\"},{\"label\":\"2XL\",\"value\":\"2xl\"}]'.replace(
-    /"/g,
-    '&quot;',
-  );
+const headerCtaOpenModeOptions = encodeOptions(
+  '[{\"label\":\"Same tab\",\"value\":\"same-tab\"},{\"label\":\"New tab\",\"value\":\"new-tab\"},{\"label\":\"New window\",\"value\":\"new-window\"}]',
+);
+
+const sizePresetOptions = encodeOptions(
+  '[{\"label\":\"X-Small\",\"value\":\"xs\"},{\"label\":\"Small\",\"value\":\"s\"},{\"label\":\"Medium\",\"value\":\"m\"},{\"label\":\"Large\",\"value\":\"l\"},{\"label\":\"X-Large\",\"value\":\"xl\"},{\"label\":\"Custom\",\"value\":\"custom\"}]',
+);
+
+const radiusOptions = encodeOptions(
+  '[{\"label\":\"None\",\"value\":\"none\"},{\"label\":\"Small\",\"value\":\"sm\"},{\"label\":\"Medium\",\"value\":\"md\"},{\"label\":\"Large\",\"value\":\"lg\"},{\"label\":\"X-Large\",\"value\":\"xl\"},{\"label\":\"2XL\",\"value\":\"2xl\"}]',
+);
 
 type HeaderPanelFieldOptions = {
   includeCta?: boolean;
 };
 
-export function buildHeaderContentPanelFields({ includeCta = true }: HeaderPanelFieldOptions = {}): string[] {
+export function buildHeaderContentPanelFields({
+  includeCta = true,
+}: HeaderPanelFieldOptions = {}): string[] {
   const fields = [
-    '  <tooldrawer-cluster label=\'Header\'>',
-      "    <tooldrawer-field-headercontent group-label='' type='toggle' size='md' path='header.enabled' label='Show header' />",
+    "  <tooldrawer-cluster label='Header' initially-open='true'>",
+    "    <tooldrawer-field-headercontent group-label='' type='toggle' size='md' path='header.enabled' label='Show header' />",
     "    <tooldrawer-field-headercontent group-label='' type='dropdown-edit' size='lg' path='header.title' label='Title' placeholder='Add title text' show-if=\"header.enabled == true\" />",
     "    <tooldrawer-field-headercontent group-label='' type='toggle' size='md' path='header.showSubtitle' label='Show subtitle' show-if=\"header.enabled == true\" />",
     "    <tooldrawer-field-headercontent group-label='' type='dropdown-edit' size='md' path='header.subtitleHtml' label='Subtitle' placeholder='Add subtitle text' show-if=\"header.enabled == true && header.showSubtitle == true\" />",
@@ -77,9 +70,11 @@ export function buildHeaderContentPanelFields({ includeCta = true }: HeaderPanel
   return fields;
 }
 
-export function buildHeaderLayoutPanelFields({ includeCta = true }: HeaderPanelFieldOptions = {}): string[] {
+export function buildHeaderLayoutPanelFields({
+  includeCta = true,
+}: HeaderPanelFieldOptions = {}): string[] {
   const fields = [
-    '  <tooldrawer-cluster label=\'Header\'>',
+    "  <tooldrawer-cluster label='Header'>",
     `    <tooldrawer-field-headerlayout group-label='' type='dropdown-actions' size='md' path='header.placement' label='Header placement' placeholder='Choose placement' value='{{header.placement}}' options='${headerPlacementOptions}' show-if=\"header.enabled == true\" />`,
     `    <tooldrawer-field-headerlayout group-label='' type='dropdown-actions' size='md' path='header.alignment' label='Header alignment' placeholder='Choose alignment' value='{{header.alignment}}' options='${headerAlignmentOptions}' show-if=\"header.enabled == true\" />`,
     `    <tooldrawer-field-headerlayout group-label='' type='valuefield' size='md' path='header.gap' label='Header/content gap (px)' show-if=\"header.enabled == true\" />`,
@@ -97,7 +92,9 @@ export function buildHeaderLayoutPanelFields({ includeCta = true }: HeaderPanelF
   return fields;
 }
 
-export function buildHeaderAppearancePanelFields({ includeCta = true }: HeaderPanelFieldOptions = {}): string[] {
+export function buildHeaderAppearancePanelFields({
+  includeCta = true,
+}: HeaderPanelFieldOptions = {}): string[] {
   if (!includeCta) return [];
 
   return [

@@ -177,6 +177,8 @@
             "id": "header-content"
           },
           {
+            "label": "Content",
+            "initiallyOpen": true,
             "nodes": [
               {
                 "kind": "field",
@@ -207,6 +209,7 @@
                 "type": "object-manager",
                 "groupId": "content-logos",
                 "path": "logoshowcase.strips",
+                "label": "Logo strips",
                 "template": [
                   {
                     "kind": "field",
@@ -354,6 +357,7 @@
             ]
           },
           {
+            "label": "Carousel",
             "nodes": [
               {
                 "kind": "field",
@@ -669,6 +673,7 @@
         "id": "appearance",
         "clusters": [
           {
+            "label": "Logos",
             "nodes": [
               {
                 "kind": "field",

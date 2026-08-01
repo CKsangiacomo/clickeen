@@ -20,13 +20,6 @@ import {
 import { hydrateObjectManager } from '../../../dieter/components/object-manager/object-manager';
 import { hydrateRepeater } from '../../../dieter/components/repeater/repeater';
 
-const GROUP_LABELS: Record<string, string> = {
-  wgtappearance: 'Widget appearance',
-  wgtlayout: 'Widget layout',
-  podstageappearance: 'Stage/Pod appearance',
-  podstagelayout: 'Stage/Pod layout',
-};
-
 export type DieterHydratorDeps = {
   accountAssets: AccountAssetsClient;
 };
@@ -37,11 +30,6 @@ function hydrateIcons(scope: Element | DocumentFragment): void {
     if (!/^[a-z0-9.-]+$/i.test(name)) return;
     icon.style.setProperty('--diet-icon-source', `url("/dieter/icons/svg/${name}.svg")`);
   });
-}
-
-function labelForGroup(key: string | null): string {
-  if (!key) return '';
-  return GROUP_LABELS[key] || key.replace(/-/g, ' ');
 }
 
 export function runHydrators(scope: HTMLElement, deps: DieterHydratorDeps): void {
@@ -80,7 +68,7 @@ export function syncSegmentedPressedState(input: HTMLInputElement) {
   button.setAttribute('aria-pressed', input.checked ? 'true' : 'false');
 }
 
-export function applyGroupHeaders(scope: HTMLElement) {
+export function applyGroupHeaders(scope: HTMLElement, ownerLabel = '') {
   const children = Array.from(scope.children) as HTMLElement[];
   if (!children.length) return;
 
@@ -100,8 +88,10 @@ export function applyGroupHeaders(scope: HTMLElement) {
     wrapper.className = 'tdmenucontent__group';
     wrapper.setAttribute('data-bob-group', key);
     const rawLabel = node.getAttribute('data-bob-group-label');
-    const label = rawLabel !== null ? rawLabel : labelForGroup(key);
-    if (label.trim()) {
+    const label = rawLabel ?? '';
+    const normalizedLabel = label.trim().replace(/\s+/g, ' ').toLocaleLowerCase();
+    const normalizedOwner = ownerLabel.trim().replace(/\s+/g, ' ').toLocaleLowerCase();
+    if (normalizedLabel && normalizedLabel !== normalizedOwner) {
       const header = document.createElement('div');
       header.className = 'overline-small tdmenucontent__group-label';
       header.textContent = label;
@@ -125,6 +115,45 @@ export function applyGroupHeaders(scope: HTMLElement) {
 
 export function getClusterBody(cluster: HTMLElement): HTMLElement | null {
   return cluster.querySelector<HTMLElement>(':scope > .tdmenucontent__cluster-body');
+}
+
+export function applyClusterGroupHeaders(cluster: HTMLElement): void {
+  const label = cluster.querySelector<HTMLElement>(
+    ':scope > .tdmenucontent__cluster-header > .tdmenucontent__cluster-label',
+  );
+  applyGroupHeaders(getClusterBody(cluster) ?? cluster, label?.textContent ?? '');
+}
+
+export function controlHostClusterId(namespace: string, id: string): string {
+  if (!/^[a-z][a-z0-9-]*$/.test(namespace)) {
+    throw new Error('[BobControlHost] cluster id namespace is invalid');
+  }
+  if (!/^td-[a-z0-9-]+-cluster-body-\d+$/.test(id)) {
+    throw new Error('[BobControlHost] compiled cluster body id is invalid');
+  }
+  return `${namespace}-${id}`;
+}
+
+export function namespaceControlHostClusterIds(scope: HTMLElement, namespace: string): void {
+  const bodies = Array.from(
+    scope.querySelectorAll<HTMLElement>('.tdmenucontent__cluster-body[id]'),
+  );
+  const controls = Array.from(scope.querySelectorAll<HTMLElement>('[aria-controls]'));
+  const ids = new Set<string>();
+  bodies.forEach((body) => {
+    const previousId = body.id;
+    if (ids.has(previousId)) {
+      throw new Error(`[BobControlHost] duplicate compiled cluster body id: ${previousId}`);
+    }
+    ids.add(previousId);
+    const nextId = controlHostClusterId(namespace, previousId);
+    body.id = nextId;
+    controls.forEach((control) => {
+      if (control.getAttribute('aria-controls') === previousId) {
+        control.setAttribute('aria-controls', nextId);
+      }
+    });
+  });
 }
 
 export function installClusterCollapseBehavior(container: HTMLElement): () => void {

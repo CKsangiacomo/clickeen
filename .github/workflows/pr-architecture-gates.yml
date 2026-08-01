@@ -48,6 +48,9 @@ jobs:
       - name: Typecheck
         run: pnpm typecheck
 
+      - name: Bob editor contracts
+        run: pnpm --filter @clickeen/bob test
+
       - name: No Local Runtime Emulation
         run: |
           if test -e scripts/dev-up.sh || test -e tokyo/dev-server.mjs || test -e scripts/dev/generate-berlin-keys.mjs; then

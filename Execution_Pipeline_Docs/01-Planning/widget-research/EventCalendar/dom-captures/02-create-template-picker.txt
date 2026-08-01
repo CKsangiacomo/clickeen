@@ -1,0 +1,100 @@
+STEP 2 — CREATION FLOW AND TEMPLATE PICKER
+Captured 2026-07-31
+Path: /apps/event-calendar -> delete instance (freed 1/1) -> Create Widget
+Resulting URL: https://dash.elfsight.com/widget/6eb11561-5eaa-415b-b55c-674de1fb19bb?
+
+--- EMPTY STATE (Step 1.4), captured after delete ---
+
+"Your first widget is almost here!"
+"Create a captivating widget with the help of ready-made templates or
+ configure a unique widget from scratch."
+[+ Create Widget]
+OR
+"In case you don't feel like using this app right now, feel free to remove it
+ from your Apps list. You will be able to find it in our catalog at any time."
+[Remove App]
+
+Their own copy names the two entry paths: ready-made templates, or from scratch.
+
+--- PICKER STRUCTURE ---
+
+Chrome:      back arrow (left) · "Choose a Template" (center) · "Close" (right)
+Left rail:   "Select a template to start with", two-column thumbnail grid,
+             vertically scrolling, ~18 items, NO category filters, NO search,
+             NO pagination or count readout
+Right pane:  large LIVE INTERACTIVE preview of the selected template
+Commit:      "Continue with this template →" pinned bottom-left, green
+
+NOTE: the picker renders inside the cross-origin configurator iframe
+(static.elfsight.com/apps/{app}/stable/{sha}/configurator/index.html), so its
+DOM is unreachable from the parent document. Template names below are
+transcribed from screenshots, not extracted.
+
+--- COMPLETE TEMPLATE LIST (18, in sidebar order) ---
+
+ 1. Team Games Schedule            (selected by default)
+ 2. Upcoming Webinars
+ 3. University Events
+ 4. Movie Show Schedule
+ 5. Upcoming Classes
+ 6. Weekly School Schedule
+ 7. City Events
+ 8. Conference Agenda
+ 9. Museum
+10. Hotel Shows & Entertainment Schedule
+11. Club Events
+12. Festival Lineup
+13. Concert Hall
+14. Slider Exhibition
+15. Convention Center
+16. Upcoming Events Sidebar Widget
+17. University Events List
+18. Halloween Calendar
+
+--- PICKER DIFFERS PER APP ---
+
+                     Calculator            Event Calendar
+Count                116                   18
+Categories           5, with counts        none
+                     (Cost 32, Finance 30,
+                      Fitness & Health 17,
+                      Mortgage & Loan 16,
+                      Other 21)
+Pagination           yes, "1 – 4 of 116"   none, single scroll
+Layout               full-screen grid      sidebar + large preview
+Live preview         yes                   yes
+
+The picker is not one component with different data. Scale and structure both
+change per app.
+
+--- TEMPLATE VARIETY: STRUCTURAL, NOT JUST CONTENT ---
+
+Names alone imply distinct layouts, confirmed by thumbnails:
+  Movie Show Schedule            month grid
+  Weekly School Schedule         week grid
+  Upcoming Events Sidebar Widget narrow vertical column
+  Slider Exhibition              carousel
+  Festival Lineup / Club Events  hero / poster styling
+  University Events List         dense list
+  Team Games Schedule            row list with per-row emphasis
+
+This confirms the rule recorded in WidgetCompetitorResearchSteps.md 3.4:
+template variety tracks layout capability. Calculator exposes no layout axis and
+its 116 templates vary only by content. Event Calendar exposes many layouts and
+its 18 templates vary structurally.
+
+--- EVENT ITEM MODEL, read from the Team Games Schedule preview ---
+
+Each event row renders:
+  date badge          "AUG 1"  (month abbrev + day, stacked)
+  image               team logo, circular
+  category/tag        "AWAY" / "HOME", uppercase, above the title
+  title               "vs.Astros"
+  time range          "3:00 PM - 5:00 PM"  with a clock icon
+  location            "AT&T Park – San Francisco Giants"  with a pin icon
+  per-event CTA       "Get Tickets" button, right-aligned
+  row emphasis        HOME rows render dark navy, AWAY rows light grey
+
+So a single event carries at minimum: date, start time, end time, title,
+category, location, image, and its own CTA — plus a per-event visual emphasis
+state. That is a materially richer item than any current Clickeen widget item.

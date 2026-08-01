@@ -1,5 +1,5 @@
 import type { TooldrawerAttrs } from '../compiler.shared';
-import { parseTooldrawerAttributes } from '../compiler.shared';
+import { encodeHtmlEntities, parseTooldrawerAttributes } from '../compiler.shared';
 import { interpolateStencilContext, renderStencil } from './stencil-renderer';
 import { validateShowIfExpression } from '../../components/td-menu-content/showIf';
 
@@ -17,32 +17,12 @@ type WidgetI18nContext = {
 export type ComponentStencil = { stencil: string; spec: ComponentSpec };
 export type ComponentStencilLoader = (type: string) => Promise<ComponentStencil>;
 
-function decodeHtmlEntities(value: string): string {
-  return value
-    .replace(/&quot;/g, '"')
-    .replace(/&apos;/g, "'")
-    .replace(/&amp;/g, '&')
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>');
-}
-
-function encodeHtmlEntities(value: string): string {
-  return value
-    .replace(/&/g, '&amp;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&apos;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;');
-}
-
 function normalizeJsonAttrValue(raw: string): string {
   const trimmed = String(raw || '').trim();
   if (!trimmed) return '';
 
-  // Support inputs that are already entity-encoded or even double-encoded (e.g. &amp;quot;).
-  const decodedTwice = decodeHtmlEntities(decodeHtmlEntities(trimmed));
-  const parsed = JSON.parse(decodedTwice) as unknown;
-  return encodeHtmlEntities(JSON.stringify(parsed));
+  const parsed = JSON.parse(trimmed) as unknown;
+  return JSON.stringify(parsed);
 }
 
 function parseBooleanAttr(value: string | undefined): boolean | undefined {
@@ -64,11 +44,14 @@ function parseFillModes(value: string | undefined): string[] | null {
 }
 
 export function renderComponentStencil(stencil: string, context: Record<string, unknown>): string {
-  return renderStencil(stencil, context);
+  return renderStencil(stencil, context, { rawKeys: new Set(['template']) });
 }
 
 function sanitizeId(input: string): string {
-  return input.toLowerCase().replace(/[^a-z0-9-]+/g, '-').replace(/-+/g, '-');
+  return input
+    .toLowerCase()
+    .replace(/[^a-z0-9-]+/g, '-')
+    .replace(/-+/g, '-');
 }
 
 async function renderNestedTooldrawerFields(
@@ -108,17 +91,20 @@ async function renderNestedTooldrawerFields(
     }
 
     const { stencil: nestedStencil, spec: nestedSpec } = await loadStencil(typeInner);
-    const nestedContext = await buildContext(typeInner, attrsInner, nestedSpec, widgetContext, loadStencil);
+    const nestedContext = await buildContext(
+      typeInner,
+      attrsInner,
+      nestedSpec,
+      widgetContext,
+      loadStencil,
+    );
     let rendered = renderComponentStencil(nestedStencil, nestedContext);
     rendered = coerceRenderedToBobPaths(rendered, (nestedContext as Record<string, unknown>).path);
-    if (attrsInner.template) {
-      const decodedNested = decodeHtmlEntities(attrsInner.template);
-      rendered = rendered.replace(/{{\s*template\s*}}/g, decodedNested);
-    }
-
-    const showIf = attrsInner['show-if'] ? decodeHtmlEntities(attrsInner['show-if']) : '';
+    const showIf = attrsInner['show-if'] || '';
     if (showIf) validateShowIfExpression(showIf);
-    out += showIf ? `<div data-bob-showif="${encodeHtmlEntities(showIf)}">${rendered}</div>` : rendered;
+    out += showIf
+      ? `<div data-bob-showif="${encodeHtmlEntities(showIf)}">${rendered}</div>`
+      : rendered;
     cursor = tdRegex.lastIndex;
   }
 
@@ -135,7 +121,8 @@ export async function buildContext(
 ): Promise<Record<string, unknown>> {
   const defaults = spec.defaults?.[0];
   const size = attrs.size || (defaults?.context?.size as string) || 'md';
-  const indexToken = attrs.indexToken || attrs['index-token'] || attrs['data-index-token'] || '__INDEX__';
+  const indexToken =
+    attrs.indexToken || attrs['index-token'] || attrs['data-index-token'] || '__INDEX__';
 
   const merged: Record<string, unknown> = {
     ...(defaults?.context ?? {}),
@@ -152,53 +139,83 @@ export async function buildContext(
     (pathAttr ? '' : ((merged.placeholder as string | undefined) ?? 'Select a fill'));
   const objectType = attrs.objectType || attrs['object-type'] || '';
   const value = pathAttr ? '' : attrs.value || '';
-  const optionsRaw = attrs.options ? decodeHtmlEntities(attrs.options) : '';
+  const optionsRaw = attrs.options || '';
   let headerLabel = attrs.headerLabel || '';
   const headerIcon = attrs.headerIcon || '';
   const reorderLabel =
-    attrs.reorderLabel || attrs['reorder-label'] || (merged.reorderLabel as string) || 'Reorder items';
+    attrs.reorderLabel ||
+    attrs['reorder-label'] ||
+    (merged.reorderLabel as string) ||
+    'Reorder items';
   const reorderTitle =
-    attrs.reorderTitle || attrs['reorder-title'] || (merged.reorderTitle as string) || 'Reorder items';
+    attrs.reorderTitle ||
+    attrs['reorder-title'] ||
+    (merged.reorderTitle as string) ||
+    'Reorder items';
   const reorderLabelPath =
-    attrs.reorderLabelPath || attrs['reorder-label-path'] || (merged.reorderLabelPath as string) || '';
-  const reorderMode = attrs.reorderMode || attrs['reorder-mode'] || (merged.reorderMode as string) || 'inline';
-  const reorderThreshold = attrs.reorderThreshold || attrs['reorder-threshold'] || (merged.reorderThreshold as string) || '';
-  const defaultItemRaw = attrs.defaultItem || attrs['default-item'] || (merged.defaultItem as string) || '';
+    attrs.reorderLabelPath ||
+    attrs['reorder-label-path'] ||
+    (merged.reorderLabelPath as string) ||
+    '';
+  const reorderMode =
+    attrs.reorderMode || attrs['reorder-mode'] || (merged.reorderMode as string) || 'inline';
+  const reorderThreshold =
+    attrs.reorderThreshold ||
+    attrs['reorder-threshold'] ||
+    (merged.reorderThreshold as string) ||
+    '';
+  const defaultItemRaw =
+    attrs.defaultItem || attrs['default-item'] || (merged.defaultItem as string) || '';
   const defaultItem = normalizeJsonAttrValue(defaultItemRaw);
   let labelKey = attrs.labelKey || attrs['label-key'] || (merged.labelKey as string) || '';
-  const labelParamsRaw = attrs.labelParams || attrs['label-params'] || (merged.labelParams as string) || '';
+  const labelParamsRaw =
+    attrs.labelParams || attrs['label-params'] || (merged.labelParams as string) || '';
   let labelParams = normalizeJsonAttrValue(labelParamsRaw);
-  const addLabel = attrs.addLabel || attrs['add-label'] || (merged.addLabel as string) || 'Add item';
-  const removeLabel = attrs.removeLabel || attrs['remove-label'] || (merged.removeLabel as string) || 'Remove item {index}';
-  const moveLabel = attrs.moveLabel || attrs['move-label'] || (merged.moveLabel as string) || 'Move item {index}';
-  let addLabelKey = attrs.addLabelKey || attrs['add-label-key'] || (merged.addLabelKey as string) || '';
-  const addLabelParamsRaw = attrs.addLabelParams || attrs['add-label-params'] || (merged.addLabelParams as string) || '';
+  const addLabel =
+    attrs.addLabel || attrs['add-label'] || (merged.addLabel as string) || 'Add item';
+  const removeLabel =
+    attrs.removeLabel ||
+    attrs['remove-label'] ||
+    (merged.removeLabel as string) ||
+    'Remove item {index}';
+  const moveLabel =
+    attrs.moveLabel || attrs['move-label'] || (merged.moveLabel as string) || 'Move item {index}';
+  let addLabelKey =
+    attrs.addLabelKey || attrs['add-label-key'] || (merged.addLabelKey as string) || '';
+  const addLabelParamsRaw =
+    attrs.addLabelParams || attrs['add-label-params'] || (merged.addLabelParams as string) || '';
   let addLabelParams = normalizeJsonAttrValue(addLabelParamsRaw);
   const addOpen = attrs.addOpen || attrs['add-open'] || (merged.addOpen as string) || '';
   let reorderLabelKey =
     attrs.reorderLabelKey || attrs['reorder-label-key'] || (merged.reorderLabelKey as string) || '';
   const reorderLabelParamsRaw =
-    attrs.reorderLabelParams || attrs['reorder-label-params'] || (merged.reorderLabelParams as string) || '';
+    attrs.reorderLabelParams ||
+    attrs['reorder-label-params'] ||
+    (merged.reorderLabelParams as string) ||
+    '';
   let reorderLabelParams = normalizeJsonAttrValue(reorderLabelParamsRaw);
   let reorderTitleKey =
     attrs.reorderTitleKey || attrs['reorder-title-key'] || (merged.reorderTitleKey as string) || '';
   const reorderTitleParamsRaw =
-    attrs.reorderTitleParams || attrs['reorder-title-params'] || (merged.reorderTitleParams as string) || '';
+    attrs.reorderTitleParams ||
+    attrs['reorder-title-params'] ||
+    (merged.reorderTitleParams as string) ||
+    '';
   let reorderTitleParams = normalizeJsonAttrValue(reorderTitleParamsRaw);
   const rowPath = attrs.rowPath || attrs['row-path'] || (merged.rowPath as string) || '';
   const metaPath = attrs.metaPath || attrs['meta-path'] || (merged.metaPath as string) || '';
   const columnsRaw = attrs.columns || (merged.columns as string) || '';
   const columns = columnsRaw ? normalizeJsonAttrValue(columnsRaw) : '';
   const title = attrs.title || (merged.title as string) || label;
-  const emptyLabel = attrs.emptyLabel || attrs['empty-label'] || (merged.emptyLabel as string) || '';
+  const emptyLabel =
+    attrs.emptyLabel || attrs['empty-label'] || (merged.emptyLabel as string) || '';
   const idBase = pathAttr || label || `${component}-${size}`;
   const id = sanitizeId(`${component}-${idBase}`);
 
   const defaultOptions = (defaults?.context as any)?.options;
   let options = defaultOptions;
   if (attrs.options) {
-    const decoded = decodeHtmlEntities(attrs.options);
-    const parsed = JSON.parse(decoded);
+    const parsed = JSON.parse(attrs.options);
     if (!Array.isArray(parsed)) {
       throw new Error(`[BobCompiler] options for component "${component}" must be a JSON array`);
     }
@@ -228,13 +245,14 @@ export async function buildContext(
     : undefined;
 
   const allowImage =
-    component === 'dropdown-fill' ? (allowImageOverride ?? allowImageFromModes ?? inferredAllowsImage) : undefined;
+    component === 'dropdown-fill'
+      ? (allowImageOverride ?? allowImageFromModes ?? inferredAllowsImage)
+      : undefined;
   if (component === 'dropdown-fill' && !headerLabel) headerLabel = 'Color fill';
   if (component === 'dropdown-shadow' && !headerLabel) headerLabel = 'Shadow';
   const axis = attrs.axis || attrs['data-axis'] || (merged.axis as string) || '';
   const allowLinks =
     attrs.allowLinks ?? attrs['allow-links'] ?? (merged.allowLinks as string | undefined) ?? 'true';
-
 
   const min = attrs.min || (merged.min as string) || '';
   const max = attrs.max || (merged.max as string) || '';
@@ -251,7 +269,7 @@ export async function buildContext(
     throw new Error(`[BobCompiler] dropdown-upload control "${controlId}" requires meta-path`);
   }
 
-  let templateValue = attrs.template ? decodeHtmlEntities(attrs.template) : (merged.template as string) || '';
+  let templateValue = attrs.template || (merged.template as string) || '';
   if (templateValue) {
     templateValue = await renderNestedTooldrawerFields(templateValue, widgetContext, loadStencil);
   }
@@ -278,7 +296,11 @@ export async function buildContext(
       labelParams = normalizeJsonAttrValue(JSON.stringify({ count: 2 }));
     }
 
-    if (!addLabelKey && !hasAddLabelAttr && (addLabel === 'Add item' || addLabel === 'Add object')) {
+    if (
+      !addLabelKey &&
+      !hasAddLabelAttr &&
+      (addLabel === 'Add item' || addLabel === 'Add object')
+    ) {
       addLabelKey = 'coreui.actions.addItem';
       addLabelParams = singularItemParam;
     }
@@ -336,8 +358,16 @@ export async function buildContext(
     addOpen,
     labelPath: attrs.labelPath || attrs['label-path'] || (merged.labelPath as string) || '',
     labelInputLabel:
-      attrs.labelInputLabel || attrs['label-input-label'] || (merged.labelInputLabel as string) || label || 'Title',
-    labelPlaceholder: attrs.labelPlaceholder || attrs['label-placeholder'] || (merged.labelPlaceholder as string) || '',
+      attrs.labelInputLabel ||
+      attrs['label-input-label'] ||
+      (merged.labelInputLabel as string) ||
+      label ||
+      'Title',
+    labelPlaceholder:
+      attrs.labelPlaceholder ||
+      attrs['label-placeholder'] ||
+      (merged.labelPlaceholder as string) ||
+      '',
     labelSize: attrs.labelSize || attrs['label-size'] || (merged.labelSize as string) || size,
     toggleLabel: attrs.toggleLabel || attrs['toggle-label'] || (merged.toggleLabel as string) || '',
     togglePath: attrs.togglePath || attrs['toggle-path'] || (merged.togglePath as string) || '',
@@ -400,5 +430,7 @@ export async function buildContext(
   if (merged.bodyClass == null) merged.bodyClass = 'body-s';
   if (merged.popoverLabel == null) merged.popoverLabel = placeholder || label;
 
-  return interpolateStencilContext(merged, { skipInterpolationKeys: new Set(['template', 'optionsRaw']) });
+  return interpolateStencilContext(merged, {
+    skipInterpolationKeys: new Set(['template', 'optionsRaw']),
+  });
 }

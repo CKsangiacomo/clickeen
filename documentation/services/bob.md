@@ -412,6 +412,26 @@ Common primitives include:
 Controls emit edit operations. The edit engine applies those operations to the
 current in-memory instance state.
 
+Bob's visible control taxonomy is `Panel > Section > optional Group > Control`.
+Widget specs own the five fixed widget panel ids and plain-text section labels;
+Bob rejects unknown panels and unlabeled sections. Panel labels have one Bob
+authority rather than being re-created by compiler and UI consumers. Group
+labels remain semantic control metadata, but the UI does not repeat a group
+heading when it is identical to its enclosing section label.
+Technical group ids are never converted into UI or Copilot labels; an absent
+semantic group label remains absent.
+
+Sections start collapsed unless the structured widget contract explicitly sets
+`initiallyOpen`. On initial widget open, only the shared Header section and one
+primary Content section are open; both remain user-collapsible. Layout,
+Appearance, Typography, and Settings sections start collapsed. This policy is
+compiled once and is shared by Builder and Roma's compiled-control consumers.
+
+Source labels and attribute values are never HTML-encoded. Bob parses each
+internal ToolDrawer attribute into its raw value once and escapes it once when
+rendering final markup. Every-widget contract tests enforce the taxonomy,
+initial-state, and entity round-trip rules.
+
 Typography family controls are account-independent in compiled widget
 artifacts. Session open binds them to the current account `fontLibrary`; that
 bound contract drives manual controls, Copilot choices, and normal config

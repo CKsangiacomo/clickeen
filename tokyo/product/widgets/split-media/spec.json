@@ -55,7 +55,8 @@
             "id": "header-content"
           },
           {
-            "label": "Visual",
+            "label": "Content",
+            "initiallyOpen": true,
             "nodes": [
               {
                 "kind": "field",

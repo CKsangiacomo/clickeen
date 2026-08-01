@@ -57,6 +57,9 @@ jobs:
       - name: Typecheck
         run: pnpm typecheck
 
+      - name: Bob editor contracts
+        run: pnpm --filter @clickeen/bob test
+
       - name: Build Bob Pages contract
         run: pnpm -C bob build:cf
 

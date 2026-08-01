@@ -4,7 +4,6 @@ import { DEFAULT_PANELS, TdMenu } from './TdMenu';
 import { TdMenuContent } from './TdMenuContent';
 import { AccountCopilotPane } from './CopilotPane';
 import { useWidgetSession } from '../lib/session/useWidgetSession';
-import { SettingsPanel } from './SettingsPanel';
 import { TranslationsPanel } from './TranslationsPanel';
 import type { TranslatedLocalesData, TranslationSetup } from './useTranslationPreviewState';
 import { ACCOUNT_TYPOGRAPHY_SELECTION_INVALID_REASON_KEY } from '@clickeen/widget-shell';
@@ -200,8 +199,6 @@ export function ToolDrawer({
       <div className="heading-3">Content</div>
       <div className="label-s label-muted">No instance selected yet. Choose one from Widgets to begin editing.</div>
     </div>
-  ) : activePanel === 'settings' ? (
-    <SettingsPanel />
   ) : activePanel === 'translations' ? (
     <TranslationsPanel
       translationPreviewLocale={translationPreviewLocale}

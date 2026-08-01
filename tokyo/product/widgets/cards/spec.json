@@ -217,7 +217,8 @@
             "id": "header-content"
           },
           {
-            "label": "Cards",
+            "label": "Content",
+            "initiallyOpen": true,
             "nodes": [
               {
                 "kind": "field",
@@ -519,7 +520,7 @@
                 "kind": "field",
                 "type": "toggle",
                 "path": "cards.betweenCards.enabled",
-                "label": "Graphic between cards",
+                "label": "Show graphic",
                 "attrs": {
                   "size": "md"
                 }

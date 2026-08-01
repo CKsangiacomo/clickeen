@@ -3,10 +3,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   applyAccountFontLibraryToTypographyMenus,
+  applyClusterGroupHeaders,
   applyGroupHeaders,
   applyShowIfVisibility,
   buildShowIfEntries,
   installClusterCollapseBehavior,
+  namespaceControlHostClusterIds,
   parseBobJsonValue,
   resolvePathFromTarget,
   runHydrators,
@@ -19,7 +21,6 @@ import type { AccountFontLibrary } from '@clickeen/widget-shell';
 
 type BuilderControlPanel = {
   id?: string;
-  label?: string;
   html: string;
 };
 
@@ -39,13 +40,13 @@ type BuilderDefaultsControlsProps = {
   payloads: BuilderControlPayload[];
   values: Record<string, unknown>;
   fontLibrary: AccountFontLibrary;
+  hostId: string;
   scopeLabel: string;
   onContractError: (message: string) => void;
   onOps: (ops: Array<{ path: string; value: unknown }>) => void;
   onReadyChange: (ready: boolean) => void;
 };
 
-const PANEL_ORDER = ['content', 'layout', 'appearance', 'typography', 'settings'];
 const BUILDER_CONTROLS_LOAD_ERROR_COPY = 'Builder controls could not be loaded. Please try again.';
 
 const stubAccountAssets: AccountAssetsClient = {
@@ -140,11 +141,7 @@ function buildPanelHtml(
 ): { html: string; missingPaths: string[] } {
   const allowedPaths = new Set(controls.map((control) => control.path));
   const panelIds = new Set(controls.map((control) => control.panelId));
-  const panels = [...(payload.panels ?? [])].sort(
-    (left, right) =>
-      PANEL_ORDER.indexOf(left.id ?? '') - PANEL_ORDER.indexOf(right.id ?? ''),
-  );
-  const html = panels
+  const html = (payload.panels ?? [])
     .filter((panel) => panel.id && panelIds.has(panel.id))
     .map((panel) => filterPanelHtml(panel, allowedPaths))
     .filter(Boolean)
@@ -246,6 +243,7 @@ function valueFromField(target: HTMLElement, values: Record<string, unknown>): u
 export function WidgetDefaultsBuilderControls({
   controls,
   fontLibrary,
+  hostId,
   onContractError,
   onOps,
   onReadyChange,
@@ -300,10 +298,10 @@ export function WidgetDefaultsBuilderControls({
     }
 
     container.innerHTML = panelHtml;
+    namespaceControlHostClusterIds(container, hostId);
     applyGroupHeaders(container);
     container.querySelectorAll<HTMLElement>('.tdmenucontent__cluster').forEach((cluster) => {
-      const body = cluster.querySelector<HTMLElement>(':scope > .tdmenucontent__cluster-body');
-      applyGroupHeaders(body ?? cluster);
+      applyClusterGroupHeaders(cluster);
     });
     const cleanupCollapse = installClusterCollapseBehavior(container);
     showIfEntriesRef.current = buildShowIfEntries(container);
@@ -400,6 +398,7 @@ export function WidgetDefaultsBuilderControls({
     panelBuild.missingPaths,
     panelHtml,
     fontLibrary,
+    hostId,
     scopeLabel,
   ]);
 

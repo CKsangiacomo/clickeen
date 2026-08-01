@@ -17,10 +17,14 @@
 import type { AccountAssetsClient } from '../../dieter/components/shared/account-assets';
 
 export {
+  applyClusterGroupHeaders,
   applyGroupHeaders,
+  controlHostClusterId,
   installClusterCollapseBehavior,
+  namespaceControlHostClusterIds,
   runHydrators,
 } from '../components/td-menu-content/dom';
+export { BOB_WIDGET_PANEL_IDS } from './types';
 export type { DieterHydratorDeps } from '../components/td-menu-content/dom';
 export {
   applyShowIfVisibility,

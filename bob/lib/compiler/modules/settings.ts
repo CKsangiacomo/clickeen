@@ -1,6 +1,8 @@
 // Bob module: builds shared Settings controls for shell-owned widget behavior.
 // Widgets declare this shared node in the Settings panel; the shell owns the paths and labels.
 
+import { encodeHtmlEntities } from '../../compiler.shared';
+
 type SocialShareChannel = {
   key: string;
   label: string;
@@ -28,19 +30,17 @@ const socialShareChannels: SocialShareChannel[] = [
   { key: 'tiktok', label: 'TikTok', groupLabel: 'Social networks' },
 ];
 
-const localeSwitcherAttachOptions =
-  '[{\"label\":\"Stage\",\"value\":\"stage\"},{\"label\":\"Pod\",\"value\":\"pod\"}]'.replace(
-    /"/g,
-    '&quot;',
-  );
+const encodeOptions = (value: string) => encodeHtmlEntities(value);
+
+const localeSwitcherAttachOptions = encodeOptions(
+  '[{\"label\":\"Stage\",\"value\":\"stage\"},{\"label\":\"Pod\",\"value\":\"pod\"}]',
+);
 
 const shellUtilityAttachOptions = localeSwitcherAttachOptions;
 
-const localeSwitcherPositionOptions =
-  '[{\"label\":\"Top left\",\"value\":\"top-left\"},{\"label\":\"Top center\",\"value\":\"top-center\"},{\"label\":\"Top right\",\"value\":\"top-right\"},{\"label\":\"Right middle\",\"value\":\"right-middle\"},{\"label\":\"Bottom right\",\"value\":\"bottom-right\"},{\"label\":\"Bottom center\",\"value\":\"bottom-center\"},{\"label\":\"Bottom left\",\"value\":\"bottom-left\"},{\"label\":\"Left middle\",\"value\":\"left-middle\"}]'.replace(
-    /"/g,
-    '&quot;',
-  );
+const localeSwitcherPositionOptions = encodeOptions(
+  '[{\"label\":\"Top left\",\"value\":\"top-left\"},{\"label\":\"Top center\",\"value\":\"top-center\"},{\"label\":\"Top right\",\"value\":\"top-right\"},{\"label\":\"Right middle\",\"value\":\"right-middle\"},{\"label\":\"Bottom right\",\"value\":\"bottom-right\"},{\"label\":\"Bottom center\",\"value\":\"bottom-center\"},{\"label\":\"Bottom left\",\"value\":\"bottom-left\"},{\"label\":\"Left middle\",\"value\":\"left-middle\"}]',
+);
 
 const shellUtilityPositionOptions = localeSwitcherPositionOptions;
 

@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import type { PanelId } from '../lib/types';
+import { BOB_MENU_PANEL_IDS, BOB_PANEL_LABELS, type PanelId } from '../lib/types';
 import { dieterIconStyle } from './dieterIcon';
 
 export type Panel = { id: PanelId; label: string; icon?: string };
@@ -12,19 +12,26 @@ type TdMenuProps = {
   panels?: Panel[];
 };
 
-// Default order for ToolDrawer panels.
-export const DEFAULT_PANELS: Panel[] = [
-  { id: 'content', icon: 'square.and.pencil', label: 'Content' },
-  { id: 'layout', icon: 'circle.grid.2x2', label: 'Layout' },
-  { id: 'appearance', icon: 'paintbrush.pointed', label: 'Appearance' },
-  { id: 'typography', icon: 'character.circle', label: 'Typography' },
-  { id: 'translations', icon: 'globe', label: 'Translations' },
-  { id: 'settings', icon: 'gearshape', label: 'Settings' },
-];
+const PANEL_ICONS: Record<PanelId, string> = {
+  content: 'square.and.pencil',
+  layout: 'circle.grid.2x2',
+  appearance: 'paintbrush.pointed',
+  typography: 'character.circle',
+  translations: 'globe',
+  settings: 'gearshape',
+};
+
+export const DEFAULT_PANELS: Panel[] = BOB_MENU_PANEL_IDS.map((id) => ({
+  id,
+  icon: PANEL_ICONS[id],
+  label: BOB_PANEL_LABELS[id],
+}));
 
 export function TdMenu({ active, onSelect, panels }: TdMenuProps) {
   const items = useMemo(() => panels ?? DEFAULT_PANELS, [panels]);
-  const [internalActive, setInternalActive] = useState<PanelId>(active ?? items[0]?.id ?? 'appearance');
+  const [internalActive, setInternalActive] = useState<PanelId>(
+    active ?? items[0]?.id ?? 'appearance',
+  );
   const current = (active ?? internalActive) as PanelId;
 
   const handleSelect = (id: PanelId) => {
@@ -33,12 +40,7 @@ export function TdMenu({ active, onSelect, panels }: TdMenuProps) {
   };
 
   return (
-    <nav
-      className="tdmenu"
-      role="tablist"
-      aria-orientation="vertical"
-      aria-label="Panels"
-    >
+    <nav className="tdmenu" role="tablist" aria-orientation="vertical" aria-label="Panels">
       {items.map((panel) => {
         const isActive = panel.id === current;
         return (

@@ -77,7 +77,8 @@
             "id": "header-content"
           },
           {
-            "label": "Carousel visuals",
+            "label": "Content",
+            "initiallyOpen": true,
             "nodes": [
               {
                 "kind": "field",

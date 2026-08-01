@@ -90,7 +90,8 @@
             "id": "header-content"
           },
           {
-            "label": "Call to Action content",
+            "label": "Content",
+            "initiallyOpen": true,
             "nodes": [
               {
                 "kind": "field",

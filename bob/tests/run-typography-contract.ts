@@ -22,16 +22,13 @@ import { expandTypographyFamilyOps } from '../lib/edit/typography-family-ops';
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const runtimeRequire = createRequire(import.meta.url);
 runtimeRequire.extensions['.css'] = () => undefined;
-const widgetTypes = [
-  'big-bang',
-  'calltoaction',
-  'cards',
-  'countdown',
-  'faq',
-  'logoshowcase',
-  'split-carousel-media',
-  'split-media',
-] as const;
+const widgetsRoot = path.join(repoRoot, 'tokyo/product/widgets');
+const widgetTypes = fs
+  .readdirSync(widgetsRoot, { withFileTypes: true })
+  .filter((entry) => entry.isDirectory() && entry.name !== 'shared')
+  .map((entry) => entry.name)
+  .filter((widgetType) => fs.existsSync(path.join(widgetsRoot, widgetType, 'spec.json')))
+  .sort();
 
 const loadStencil: ComponentStencilLoader = async (type): Promise<ComponentStencil> => {
   const root = path.join(repoRoot, 'dieter/components', type);
@@ -45,7 +42,7 @@ const loadStencil: ComponentStencilLoader = async (type): Promise<ComponentStenc
 function readSpec(widgetType: string): RawWidget {
   return JSON.parse(
     fs.readFileSync(
-      path.join(repoRoot, 'tokyo/product/widgets', widgetType, 'spec.json'),
+      path.join(widgetsRoot, widgetType, 'spec.json'),
       'utf8',
     ),
   ) as RawWidget;

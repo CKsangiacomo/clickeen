@@ -1,3 +1,5 @@
+import { encodeHtmlEntities } from '../compiler.shared';
+
 export type StencilContext = Record<string, unknown>;
 
 type RenderOptions = {
@@ -6,6 +8,7 @@ type RenderOptions = {
    * Useful when a key contains raw markup that may legitimately include moustache syntax.
    */
   skipInterpolationKeys?: Set<string>;
+  rawKeys?: Set<string>;
 };
 
 function isTruthy(value: unknown): boolean {
@@ -33,7 +36,10 @@ function resolveKey(key: string, stack: StencilContext[]): unknown {
   return value;
 }
 
-export function interpolateStencilContext(context: StencilContext, options?: RenderOptions): StencilContext {
+export function interpolateStencilContext(
+  context: StencilContext,
+  options?: RenderOptions,
+): StencilContext {
   const skip = options?.skipInterpolationKeys ?? new Set<string>();
 
   const root = context;
@@ -61,7 +67,12 @@ export function interpolateStencilContext(context: StencilContext, options?: Ren
   return walk(context) as StencilContext;
 }
 
-export function renderStencil(stencil: string, context: StencilContext): string {
+export function renderStencil(
+  stencil: string,
+  context: StencilContext,
+  options?: RenderOptions,
+): string {
+  const rawKeys = options?.rawKeys ?? new Set<string>();
   type Node =
     | { type: 'text'; value: string }
     | { type: 'var'; key: string }
@@ -113,7 +124,8 @@ export function renderStencil(stencil: string, context: StencilContext): string 
             index = falsyRes.index;
             if (falsyRes.stopTag !== '/if') {
               nodes.push({ type: 'text', value: `${OPEN}${rawToken}${CLOSE}` }, ...truthyRes.nodes);
-              if (truthyRes.stopTag) nodes.push({ type: 'text', value: `${OPEN}${truthyRes.stopTag}${CLOSE}` });
+              if (truthyRes.stopTag)
+                nodes.push({ type: 'text', value: `${OPEN}${truthyRes.stopTag}${CLOSE}` });
               nodes.push(...falsyRes.nodes);
               continue;
             }
@@ -134,7 +146,8 @@ export function renderStencil(stencil: string, context: StencilContext): string 
           index = bodyRes.index;
           if (bodyRes.stopTag !== '/unless') {
             nodes.push({ type: 'text', value: `${OPEN}${rawToken}${CLOSE}` }, ...bodyRes.nodes);
-            if (bodyRes.stopTag) nodes.push({ type: 'text', value: `${OPEN}${bodyRes.stopTag}${CLOSE}` });
+            if (bodyRes.stopTag)
+              nodes.push({ type: 'text', value: `${OPEN}${bodyRes.stopTag}${CLOSE}` });
             continue;
           }
           nodes.push({ type: 'unless', key, body: bodyRes.nodes });
@@ -147,7 +160,8 @@ export function renderStencil(stencil: string, context: StencilContext): string 
           index = bodyRes.index;
           if (bodyRes.stopTag !== '/each') {
             nodes.push({ type: 'text', value: `${OPEN}${rawToken}${CLOSE}` }, ...bodyRes.nodes);
-            if (bodyRes.stopTag) nodes.push({ type: 'text', value: `${OPEN}${bodyRes.stopTag}${CLOSE}` });
+            if (bodyRes.stopTag)
+              nodes.push({ type: 'text', value: `${OPEN}${bodyRes.stopTag}${CLOSE}` });
             continue;
           }
           nodes.push({ type: 'each', key, body: bodyRes.nodes });
@@ -174,7 +188,9 @@ export function renderStencil(stencil: string, context: StencilContext): string 
         if (node.type === 'text') return node.value;
         if (node.type === 'var') {
           const value = resolveKey(node.key, stack);
-          return value == null ? '' : String(value);
+          if (value == null) return '';
+          const rendered = String(value);
+          return rawKeys.has(node.key) ? rendered : encodeHtmlEntities(rendered);
         }
         if (node.type === 'if') {
           const value = resolveKey(node.key, stack);
@@ -189,7 +205,10 @@ export function renderStencil(stencil: string, context: StencilContext): string 
           if (!Array.isArray(value)) return '';
           return value
             .map((item: any) =>
-              renderNodes(node.body, [...stack, typeof item === 'object' && item !== null ? item : { this: item }]),
+              renderNodes(node.body, [
+                ...stack,
+                typeof item === 'object' && item !== null ? item : { this: item },
+              ]),
             )
             .join('');
         }

@@ -2,6 +2,9 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
+  BOB_WIDGET_PANEL_IDS,
+} from '@clickeen/bob/control-host';
+import {
   listWidgetShellAccountDefaultMetadataPaths,
   type AccountFontLibrary,
 } from '@clickeen/widget-shell';
@@ -51,7 +54,6 @@ type WidgetDefaultsEntry = {
   payload?: BuilderControlPayload;
 };
 
-const PANEL_ORDER = ['content', 'layout', 'appearance', 'typography', 'settings'];
 const SHELL_TOP_LEVEL_PATHS = new Set([
   'header',
   'headerCta',
@@ -84,8 +86,8 @@ function cloneValue<T>(value: T): T {
 }
 
 function panelSortValue(panelId: string): number {
-  const index = PANEL_ORDER.indexOf(panelId);
-  return index >= 0 ? index : PANEL_ORDER.length;
+  const index = BOB_WIDGET_PANEL_IDS.findIndex((candidate) => candidate === panelId);
+  return index >= 0 ? index : BOB_WIDGET_PANEL_IDS.length;
 }
 
 function readPathValue(root: Record<string, unknown>, path: string): unknown {
@@ -285,6 +287,7 @@ function WidgetDefaultsCoreSection(args: {
         controls={entry.controls}
         payloads={entry.payload ? [entry.payload] : []}
         fontLibrary={fontLibrary}
+        hostId={`widget-defaults-core-${entry.widgetType}`}
         scopeLabel={`${entry.label} Core`}
         values={entry.core}
         onOps={handleOps}
@@ -744,6 +747,7 @@ export function WidgetDefaultsDomain() {
             controls={shellControls}
             payloads={widgetTypes.map((widgetType) => compiledPayloads[widgetType]).filter(Boolean)}
             fontLibrary={draft.fontLibrary}
+            hostId="widget-defaults-shell"
             scopeLabel="Shell"
             values={draft.shell}
             onOps={updateShellOps}

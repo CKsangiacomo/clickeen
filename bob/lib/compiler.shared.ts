@@ -1,4 +1,4 @@
-import { CompiledPanel } from './types';
+import { isPanelId, type CompiledPanel } from './types';
 
 export type RawWidget = {
   widgetname?: unknown;
@@ -12,13 +12,22 @@ export type RawWidget = {
 
 export type TooldrawerAttrs = Record<string, string>;
 
+export function encodeHtmlEntities(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
 export function decodeHtmlEntities(value: string): string {
   return value
     .replace(/&quot;/g, '"')
     .replace(/&apos;/g, "'")
-    .replace(/&amp;/g, '&')
     .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>');
+    .replace(/&gt;/g, '>')
+    .replace(/&amp;/g, '&');
 }
 
 export function parseTooldrawerAttributes(tag: string): TooldrawerAttrs {
@@ -27,14 +36,9 @@ export function parseTooldrawerAttributes(tag: string): TooldrawerAttrs {
   const attrRegex = /([\w-]+)\s*=\s*(?:"([^"]*)"|'([^']*)')/g;
   let m: RegExpExecArray | null;
   while ((m = attrRegex.exec(tag)) !== null) {
-    attrs[m[1]] = m[2] ?? m[3] ?? '';
+    attrs[m[1]] = decodeHtmlEntities(m[2] ?? m[3] ?? '');
   }
   return attrs;
-}
-
-export function formatPanelLabel(id: string): string {
-  if (!id) return 'Panel';
-  return id.charAt(0).toUpperCase() + id.slice(1);
 }
 
 export function parsePanels(htmlLines: unknown): CompiledPanel[] {
@@ -50,10 +54,12 @@ export function parsePanels(htmlLines: unknown): CompiledPanel[] {
   while ((match = panelRegex.exec(html)) !== null) {
     const id = match[1];
     const panelMarkup = match[2];
+    if (!isPanelId(id) || id === 'translations') {
+      throw new Error(`[BobCompiler] Unsupported widget editor panel: ${id || '(empty)'}`);
+    }
 
     panels.push({
       id,
-      label: formatPanelLabel(id),
       html: panelMarkup,
     });
   }

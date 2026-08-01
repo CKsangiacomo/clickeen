@@ -1,0 +1,60 @@
+STEP 1 — APP SURFACE
+Captured 2026-07-31
+URL: https://dash.elfsight.com/apps/event-calendar
+Method: get_page_text (source element <main>)
+
+--- PAGE TEXT AS RENDERED ---
+
+Calculator
+Countdown Timer
+Event Calendar
+FAQ
+Google Reviews
+Add New App
+Get All Apps -97%
+Please, choose your professional role
+Go To Profile
+Event Calendar
+SELECT PLAN
+Select Plan
+WIDGETS
+1 / 1
+VIEWS
+0 / 200
+RESETS ON AUG 31
+Widgets
+Request a Feature
+What's New
+Create Widget
+Untitled Event Calendar
+Created Jan 31, 2026
+Edit
+Install
+Need help with widget installation?
+Installation Tutorials
+Request Installation Help
+
+--- OBSERVATIONS ---
+
+Plan state:      SELECT PLAN badge, green "Select Plan" CTA (no plan chosen)
+Widget meter:    1 / 1  (at free cap — Step 2 blocked without freeing a slot)
+Views meter:     0 / 200
+Reset date:      Aug 31
+
+Reset dates are staggered per app, not account-wide:
+  Calculator      Aug 9
+  Countdown       Aug 19
+  Event Calendar  Aug 31
+Each app's view window runs on its own monthly cycle, presumably anchored to
+when that app was added to the account.
+
+Tabs present:    Widgets · Request a Feature · What's New
+                 (What's New carries an unread dot)
+
+Card actions:    Edit · Install
+NO "Update" button and no "New version available" label — unlike Countdown,
+which carried both. So Event Calendar's instance is on the current major, or
+the app has no pending major. Countdown's update prompt is not a universal
+platform surface; it appears per app when a major exists.
+
+Instance:        "Untitled Event Calendar", created Jan 31 2026

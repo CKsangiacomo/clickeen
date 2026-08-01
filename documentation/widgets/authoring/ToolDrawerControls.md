@@ -18,6 +18,9 @@ typography
 settings
 ```
 
+Widget specs declare each exactly once. Missing, duplicate, or unknown panels
+fail compilation. Bob emits them in the canonical order shown above.
+
 | Panel | Owns |
 | --- | --- |
 | `content` | Header content, Core text/content, Core media choices, repeatable items, content toggles. |
@@ -46,6 +49,8 @@ Compiler-enforced rules:
 
 - Path-bound fields must resolve against composed defaults.
 - `dropdown-upload` requires `meta-path`; missing upload metadata fails compile.
+- Panel ids must be one of the five current widget panels; unknown ids fail compile.
+- Every cluster must have `label` or `labelKey`; unlabeled clusters fail compile.
 - Malformed source nodes fail compilation.
 
 Product rules:
@@ -55,17 +60,45 @@ Product rules:
 - Conditional controls use structured `showIf`.
 - Repeated content uses `repeater` or `object-manager` with stable item ids.
 - Widget specs use shared nodes for Shell controls.
-- Current product panel IDs are fixed to the five panels above even though the
-  compiler accepts arbitrary non-empty panel ids.
+- Labels are authored as plain text, never as pre-encoded HTML entities.
 
 Current source node shapes:
 
 ```text
 panel:   { "id": "...", "clusters": [...] }
-cluster: { "label": "...", "nodes": [...] }
+cluster: { "label": "...", "initiallyOpen": true, "nodes": [...] }
 shared:  { "kind": "shared", "id": "..." }
 field:   { "kind": "field", "type": "...", "path": "...", "attrs": {...} }
 ```
+
+## Visible Hierarchy And Initial State
+
+The authoring hierarchy is fixed:
+
+```text
+Panel > Section (cluster) > optional Group > Control
+```
+
+A panel title names the domain once. Every cluster supplies one visible section
+name. A control group supplies a heading only when it adds meaning below the
+section; if its label equals the section label, Bob suppresses the duplicate
+visible heading while retaining the control metadata used by Copilot.
+Blank or omitted group labels remain absent; Bob never turns a technical
+`groupId` into customer-visible or Copilot-facing copy.
+
+Sections start collapsed unless their source explicitly sets
+`"initiallyOpen": true`. The Content panel is the only exception in current
+widget specs: its shared `Header` section and one primary `Content` section are
+explicitly open when a widget is opened. They remain ordinary collapsible
+sections after that initial render. All sections in Layout, Appearance,
+Typography, and Settings start collapsed.
+
+Bob owns the HTML boundary: structured source values are plain strings, the
+shared codec escapes them when compiler modules serialize internal ToolDrawer
+attributes, the parser decodes each internal attribute exactly once, and final
+rendered markup escapes it exactly once. Specs must not contain pre-encoded
+labels, options, parameters, or conditions; compiler modules must use the one
+shared codec rather than local replacements.
 
 Do not add code that silently drops unknown fields, missing state paths, or
 missing upload metadata.

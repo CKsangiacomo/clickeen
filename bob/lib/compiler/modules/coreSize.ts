@@ -1,27 +1,29 @@
 // Bob module: builds the shared Widget Core size controls.
 // The architecture noun is Core; widget specs provide user-facing labels like Visual size.
 
+import { encodeHtmlEntities } from '../../compiler.shared';
+
 type JsonObject = Record<string, unknown>;
 
-const coreSizeModeOptions =
-  '[{\"label\":\"Auto\",\"value\":\"auto\"},{\"label\":\"Fixed\",\"value\":\"fixed\"},{\"label\":\"Responsive\",\"value\":\"responsive\"}]'.replace(
-    /"/g,
-    '&quot;',
-  );
+const coreSizeModeOptions = encodeHtmlEntities(
+  '[{\"label\":\"Auto\",\"value\":\"auto\"},{\"label\":\"Fixed\",\"value\":\"fixed\"},{\"label\":\"Responsive\",\"value\":\"responsive\"}]',
+);
 
 function readCoreSizeLabel(defaults: JsonObject): string {
-  const uiLabels = defaults.uiLabels && typeof defaults.uiLabels === 'object' && !Array.isArray(defaults.uiLabels)
-    ? (defaults.uiLabels as JsonObject)
-    : null;
-  const core = uiLabels?.core && typeof uiLabels.core === 'object' && !Array.isArray(uiLabels.core)
-    ? (uiLabels.core as JsonObject)
-    : null;
+  const uiLabels =
+    defaults.uiLabels && typeof defaults.uiLabels === 'object' && !Array.isArray(defaults.uiLabels)
+      ? (defaults.uiLabels as JsonObject)
+      : null;
+  const core =
+    uiLabels?.core && typeof uiLabels.core === 'object' && !Array.isArray(uiLabels.core)
+      ? (uiLabels.core as JsonObject)
+      : null;
   const label = typeof core?.sizeCluster === 'string' ? core.sizeCluster.trim() : '';
   return label || 'Core size';
 }
 
 export function buildCoreSizeLayoutPanelFields(defaults: JsonObject): string[] {
-  const label = readCoreSizeLabel(defaults).replace(/'/g, '&apos;');
+  const label = encodeHtmlEntities(readCoreSizeLabel(defaults));
   return [
     `  <tooldrawer-cluster label='${label}'>`,
     `    <tooldrawer-field-coresize group-label='' type='dropdown-actions' size='md' path='coreSize.mode' label='Sizing' placeholder='Choose sizing' value='{{coreSize.mode}}' options='${coreSizeModeOptions}' />`,

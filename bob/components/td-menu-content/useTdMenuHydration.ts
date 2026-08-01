@@ -3,8 +3,8 @@
 import { useLayoutEffect, type Dispatch, type MutableRefObject, type SetStateAction } from 'react';
 import { applyI18nToDom } from '../../lib/i18n/dom';
 import {
+  applyClusterGroupHeaders,
   applyGroupHeaders,
-  getClusterBody,
   installClusterCollapseBehavior,
   runHydrators,
 } from './dom';
@@ -42,8 +42,7 @@ export function useTdMenuHydration(args: {
     container.innerHTML = panelHtml || '';
     applyGroupHeaders(container);
     container.querySelectorAll<HTMLElement>('.tdmenucontent__cluster').forEach((cluster) => {
-      const body = getClusterBody(cluster);
-      applyGroupHeaders(body ?? cluster);
+      applyClusterGroupHeaders(cluster);
     });
     const cleanupCollapse = installClusterCollapseBehavior(container);
     showIfEntriesRef.current = buildShowIfEntries(container);
@@ -73,7 +72,8 @@ export function useTdMenuHydration(args: {
         setRenderKey((current) => current + 1);
       } catch {
         if (cancelled) return;
-        container.innerHTML = '<div class="settings-panel__error" role="alert">Builder controls failed to load.</div>';
+        container.innerHTML =
+          '<div class="settings-panel__error" role="alert">Builder controls failed to load.</div>';
         showIfEntriesRef.current = [];
         setRenderKey((current) => current + 1);
       }

@@ -18,6 +18,8 @@ import {
   buildSettingsBehaviorPanelFields,
 } from './modules/settings';
 import { buildTypographyPanel } from './modules/typography';
+import { encodeHtmlEntities } from '../compiler.shared';
+import { BOB_WIDGET_PANEL_IDS, isPanelId } from '../types';
 
 type JsonObject = Record<string, unknown>;
 
@@ -65,6 +67,7 @@ type EditorCluster = {
   labelKey?: string;
   labelParams?: JsonObject;
   labelCount?: string | number;
+  initiallyOpen?: boolean;
   showIf?: EditorCondition;
   attrs?: JsonObject;
   nodes: EditorNode[];
@@ -74,7 +77,6 @@ type EditorPanelItem = EditorCluster | EditorSharedNode;
 
 type EditorPanel = {
   id: string;
-  label?: string;
   shared?: { id: 'typography'; roleLabels?: Record<string, string> };
   clusters?: EditorPanelItem[];
 };
@@ -82,15 +84,6 @@ type EditorPanel = {
 type EditorContract = {
   panels: EditorPanel[];
 };
-
-function encodeHtmlEntities(value: string): string {
-  return value
-    .replace(/&/g, '&amp;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&apos;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;');
-}
 
 function renderAttrValue(value: unknown): string {
   if (value === undefined || value === null) return '';
@@ -179,6 +172,12 @@ function assertFieldNode(node: unknown, widgetname: string): asserts node is Edi
   }
   if (node.attrs !== undefined && !isPlainObject(node.attrs)) {
     throw new Error(`[BobCompiler] ${widgetname} editor field attrs must be an object`);
+  }
+  if (
+    node.groupId !== undefined &&
+    (typeof node.groupId !== 'string' || !/^[a-z][a-z0-9-]*$/.test(node.groupId))
+  ) {
+    throw new Error(`[BobCompiler] ${widgetname} editor field groupId is invalid`);
   }
   if (node.template !== undefined && !Array.isArray(node.template)) {
     throw new Error(`[BobCompiler] ${widgetname} editor field template must be an array`);
@@ -317,12 +316,39 @@ function resolveCardWrapperPath(
 function renderCluster(cluster: EditorCluster, defaults: JsonObject): string[] {
   if (!Array.isArray(cluster.nodes))
     throw new Error('[BobCompiler] editor cluster missing nodes array');
+  const hasLabel = typeof cluster.label === 'string' && Boolean(cluster.label.trim());
+  const hasLabelKey = typeof cluster.labelKey === 'string' && Boolean(cluster.labelKey.trim());
+  if (cluster.label !== undefined && !hasLabel) {
+    throw new Error('[BobCompiler] editor cluster label must be a non-empty string');
+  }
+  if (cluster.labelKey !== undefined && !hasLabelKey) {
+    throw new Error('[BobCompiler] editor cluster labelKey must be a non-empty string');
+  }
+  if (!hasLabel && !hasLabelKey) {
+    throw new Error('[BobCompiler] editor cluster requires label or labelKey');
+  }
+  if (cluster.initiallyOpen !== undefined && typeof cluster.initiallyOpen !== 'boolean') {
+    throw new Error('[BobCompiler] editor cluster initiallyOpen must be boolean');
+  }
+  if (cluster.labelParams !== undefined && !isPlainObject(cluster.labelParams)) {
+    throw new Error('[BobCompiler] editor cluster labelParams must be an object');
+  }
+  if (
+    cluster.labelCount !== undefined &&
+    !(
+      (typeof cluster.labelCount === 'number' && Number.isFinite(cluster.labelCount)) ||
+      (typeof cluster.labelCount === 'string' && Boolean(cluster.labelCount.trim()))
+    )
+  ) {
+    throw new Error('[BobCompiler] editor cluster labelCount must be finite or non-empty');
+  }
   const attrs: JsonObject = {
     ...(cluster.attrs ?? {}),
     ...(cluster.label ? { label: cluster.label } : {}),
     ...(cluster.labelKey ? { 'label-key': cluster.labelKey } : {}),
     ...(cluster.labelParams ? { 'label-params': cluster.labelParams } : {}),
     ...(cluster.labelCount !== undefined ? { 'label-count': cluster.labelCount } : {}),
+    ...(cluster.initiallyOpen === true ? { 'initially-open': true } : {}),
   };
   if (cluster.showIf) attrs['show-if'] = renderEditorShowIf(cluster.showIf);
 
@@ -356,8 +382,8 @@ function renderPanel(
   widgetname: string,
   editorFieldPaths: ReadonlySet<string>,
 ): string[] {
-  if (typeof panel.id !== 'string' || !panel.id.trim()) {
-    throw new Error(`[BobCompiler] ${widgetname} editor panel missing id`);
+  if (typeof panel.id !== 'string' || !isPanelId(panel.id) || panel.id === 'translations') {
+    throw new Error(`[BobCompiler] ${widgetname} editor panel has unsupported id`);
   }
 
   if (panel.shared?.id === 'typography') {
@@ -367,10 +393,6 @@ function renderPanel(
       throw new Error(
         `[BobCompiler] ${widgetname} typography panel requires defaults.typography.roles`,
       );
-    const roleScales =
-      typography && isPlainObject(typography.roleScales)
-        ? (typography.roleScales as any)
-        : undefined;
     let roleLabels: Record<string, string> | undefined;
     if (panel.shared.roleLabels !== undefined) {
       if (!isPlainObject(panel.shared.roleLabels)) {
@@ -386,7 +408,7 @@ function renderPanel(
         roleLabels[roleKey] = label.trim();
       }
     }
-    const rendered = buildTypographyPanel({ roles, roleScales, roleLabels });
+    const rendered = buildTypographyPanel({ roles, roleLabels });
     if (rendered.length === 0)
       throw new Error(`[BobCompiler] ${widgetname} typography panel produced no controls`);
     return rendered;
@@ -456,8 +478,21 @@ export function buildEditorHtmlLines(
       `[BobCompiler] ${widgetname} spec.json editor.panels must be a non-empty array`,
     );
   }
+  const panelIds = editor.panels.map((panel) =>
+    isPlainObject(panel) && typeof panel.id === 'string' ? panel.id : '',
+  );
+  if (
+    panelIds.length !== BOB_WIDGET_PANEL_IDS.length ||
+    new Set(panelIds).size !== panelIds.length ||
+    BOB_WIDGET_PANEL_IDS.some((panelId) => !panelIds.includes(panelId))
+  ) {
+    throw new Error(
+      `[BobCompiler] ${widgetname} editor must declare the canonical panels: ${BOB_WIDGET_PANEL_IDS.join(', ')}`,
+    );
+  }
   const editorFieldPaths = collectEditorFieldPaths(editor);
-  return editor.panels.flatMap((panel) =>
-    renderPanel(panel, defaults, widgetname, editorFieldPaths),
+  const panelsById = new Map(editor.panels.map((panel) => [panel.id, panel]));
+  return BOB_WIDGET_PANEL_IDS.flatMap((panelId) =>
+    renderPanel(panelsById.get(panelId)!, defaults, widgetname, editorFieldPaths),
   );
 }

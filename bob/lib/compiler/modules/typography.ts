@@ -2,6 +2,7 @@
 // Specs declare the shared typography panel explicitly in spec.json.editor; this helper renders that declared panel.
 
 import { WIDGET_SHELL_TYPOGRAPHY_ROLE_LABELS } from '@clickeen/widget-shell';
+import { encodeHtmlEntities } from '../../compiler.shared';
 
 export const TYPOGRAPHY_SIZE_OPTIONS = [
   { label: 'X-Small', value: 'xs' },
@@ -52,20 +53,11 @@ export const TYPOGRAPHY_LINE_HEIGHT_OPTIONS = [
 ];
 
 function encodeOptions(options: unknown[]): string {
-  return JSON.stringify(options).replace(/"/g, '&quot;');
-}
-
-function encodeAttribute(value: string): string {
-  return value
-    .replace(/&/g, '&amp;')
-    .replace(/'/g, '&apos;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;');
+  return encodeHtmlEntities(JSON.stringify(options));
 }
 
 export function buildTypographyPanel(args: {
   roles: Record<string, unknown>;
-  roleScales?: Record<string, Record<string, string>>;
   roleLabels?: Record<string, string>;
 }): string[] {
   const fontsOptions = encodeOptions([]);
@@ -84,8 +76,8 @@ export function buildTypographyPanel(args: {
   const composedWidgetRoleKeys = composedRoleKeys.filter(
     (key) => !Object.prototype.hasOwnProperty.call(WIDGET_SHELL_TYPOGRAPHY_ROLE_LABELS, key),
   );
-  const declaredWidgetRoleKeys = Object.keys(suppliedRoleLabels).filter(
-    (key) => composedWidgetRoleKeys.includes(key),
+  const declaredWidgetRoleKeys = Object.keys(suppliedRoleLabels).filter((key) =>
+    composedWidgetRoleKeys.includes(key),
   );
   const widgetRoleKeys = [
     ...declaredWidgetRoleKeys,
@@ -94,32 +86,28 @@ export function buildTypographyPanel(args: {
   const orderedRoleKeys = ['title', 'body', ...widgetRoleKeys, 'button', 'localeSwitcher'].filter(
     (key, index, keys) => composedRoleKeys.includes(key) && keys.indexOf(key) === index,
   );
-  const roleEntries: Array<{ key: string; label: string }> = orderedRoleKeys.map(
-    (key) => {
-      const value = args.roles[key];
-      if (!value || typeof value !== 'object' || Array.isArray(value)) {
-        throw new Error(`[BobCompiler] typography role "${key}" must be an object`);
-      }
-      const label =
-        suppliedRoleLabels[key] ??
-        WIDGET_SHELL_TYPOGRAPHY_ROLE_LABELS[
-          key as keyof typeof WIDGET_SHELL_TYPOGRAPHY_ROLE_LABELS
-        ];
-      if (!label) {
-        throw new Error(`[BobCompiler] typography role "${key}" requires a product label`);
-      }
-      return { key, label };
-    },
-  );
+  const roleEntries: Array<{ key: string; label: string }> = orderedRoleKeys.map((key) => {
+    const value = args.roles[key];
+    if (!value || typeof value !== 'object' || Array.isArray(value)) {
+      throw new Error(`[BobCompiler] typography role "${key}" must be an object`);
+    }
+    const label =
+      suppliedRoleLabels[key] ??
+      WIDGET_SHELL_TYPOGRAPHY_ROLE_LABELS[key as keyof typeof WIDGET_SHELL_TYPOGRAPHY_ROLE_LABELS];
+    if (!label) {
+      throw new Error(`[BobCompiler] typography role "${key}" requires a product label`);
+    }
+    return { key, label };
+  });
 
   if (roleEntries.length === 0) return [];
 
   const lines: string[] = ["<bob-panel id='typography'>"];
   lines.push(
-    `  <tooldrawer-field-typofields group-label='Typography' type='textfield' size='md' path='typography.globalFamily' label='Global font family' value='{{typography.globalFamily}}' show-if="false" />`,
+    `  <tooldrawer-field-typofields group-label='' type='textfield' size='md' path='typography.globalFamily' label='Global font family' value='{{typography.globalFamily}}' show-if="false" />`,
   );
   roleEntries.forEach((role) => {
-    const roleLabel = encodeAttribute(role.label);
+    const roleLabel = encodeHtmlEntities(role.label);
     const groupAttr = `group-label='${roleLabel}'`;
     lines.push(`  <tooldrawer-cluster label='${roleLabel}'>`);
     lines.push(

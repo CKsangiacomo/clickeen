@@ -1,41 +1,33 @@
 // Bob module: builds shared Stage/Pod layout fields for all widgets.
 // Widgets declare shared Stage/Pod controls explicitly in spec.json.editor; this helper renders those declarations.
 
-const radiusOptions =
-  '[{\"label\":\"None\",\"value\":\"none\"},{\"label\":\"Small\",\"value\":\"2xl\"},{\"label\":\"Medium\",\"value\":\"4xl\"},{\"label\":\"Large\",\"value\":\"6xl\"},{\"label\":\"X-Large\",\"value\":\"10xl\"}]'.replace(
-    /"/g,
-    '&quot;',
-  );
+import { encodeHtmlEntities } from '../../compiler.shared';
 
-const localeSwitcherRadiusOptions =
-  '[{\"label\":\"None\",\"value\":\"none\"},{\"label\":\"X-Small\",\"value\":\"xs\"},{\"label\":\"Small\",\"value\":\"sm\"},{\"label\":\"Medium\",\"value\":\"md\"},{\"label\":\"Large\",\"value\":\"lg\"},{\"label\":\"X-Large\",\"value\":\"xl\"},{\"label\":\"2X-Large\",\"value\":\"2xl\"}]'.replace(
-    /"/g,
-    '&quot;',
-  );
+const encodeOptions = (value: string) => encodeHtmlEntities(value);
 
-const widthOptions =
-  '[{\"label\":\"Wrap pod to widget\",\"value\":\"wrap\"},{\"label\":\"Full width\",\"value\":\"full\"},{\"label\":\"Fixed width\",\"value\":\"fixed\"}]'.replace(
-    /"/g,
-    '&quot;',
-  );
+const radiusOptions = encodeOptions(
+  '[{\"label\":\"None\",\"value\":\"none\"},{\"label\":\"Small\",\"value\":\"2xl\"},{\"label\":\"Medium\",\"value\":\"4xl\"},{\"label\":\"Large\",\"value\":\"6xl\"},{\"label\":\"X-Large\",\"value\":\"10xl\"}]',
+);
 
-const alignmentOptions =
-  '[{\"label\":\"Center\",\"value\":\"center\"},{\"label\":\"Align left\",\"value\":\"left\"},{\"label\":\"Align right\",\"value\":\"right\"},{\"label\":\"Align top\",\"value\":\"top\"},{\"label\":\"Align bottom\",\"value\":\"bottom\"}]'.replace(
-    /"/g,
-    '&quot;',
-  );
+const localeSwitcherRadiusOptions = encodeOptions(
+  '[{\"label\":\"None\",\"value\":\"none\"},{\"label\":\"X-Small\",\"value\":\"xs\"},{\"label\":\"Small\",\"value\":\"sm\"},{\"label\":\"Medium\",\"value\":\"md\"},{\"label\":\"Large\",\"value\":\"lg\"},{\"label\":\"X-Large\",\"value\":\"xl\"},{\"label\":\"2X-Large\",\"value\":\"2xl\"}]',
+);
 
-const canvasOptions =
-  '[{\"label\":\"Full\",\"value\":\"viewport\"},{\"label\":\"Wrap to pod\",\"value\":\"wrap\"},{\"label\":\"Fixed size\",\"value\":\"fixed\"}]'.replace(
-    /"/g,
-    '&quot;',
-  );
+const widthOptions = encodeOptions(
+  '[{\"label\":\"Wrap pod to widget\",\"value\":\"wrap\"},{\"label\":\"Full width\",\"value\":\"full\"},{\"label\":\"Fixed width\",\"value\":\"fixed\"}]',
+);
 
-const floatingAnchorOptions =
-  '[{\"label\":\"Top\",\"value\":\"top\"},{\"label\":\"Bottom\",\"value\":\"bottom\"},{\"label\":\"Left\",\"value\":\"left\"},{\"label\":\"Right\",\"value\":\"right\"},{\"label\":\"Center\",\"value\":\"center\"},{\"label\":\"Top left\",\"value\":\"top-left\"},{\"label\":\"Top right\",\"value\":\"top-right\"},{\"label\":\"Bottom left\",\"value\":\"bottom-left\"},{\"label\":\"Bottom right\",\"value\":\"bottom-right\"}]'.replace(
-    /"/g,
-    '&quot;',
-  );
+const alignmentOptions = encodeOptions(
+  '[{\"label\":\"Center\",\"value\":\"center\"},{\"label\":\"Align left\",\"value\":\"left\"},{\"label\":\"Align right\",\"value\":\"right\"},{\"label\":\"Align top\",\"value\":\"top\"},{\"label\":\"Align bottom\",\"value\":\"bottom\"}]',
+);
+
+const canvasOptions = encodeOptions(
+  '[{\"label\":\"Full\",\"value\":\"viewport\"},{\"label\":\"Wrap to pod\",\"value\":\"wrap\"},{\"label\":\"Fixed size\",\"value\":\"fixed\"}]',
+);
+
+const floatingAnchorOptions = encodeOptions(
+  '[{\"label\":\"Top\",\"value\":\"top\"},{\"label\":\"Bottom\",\"value\":\"bottom\"},{\"label\":\"Left\",\"value\":\"left\"},{\"label\":\"Right\",\"value\":\"right\"},{\"label\":\"Center\",\"value\":\"center\"},{\"label\":\"Top left\",\"value\":\"top-left\"},{\"label\":\"Top right\",\"value\":\"top-right\"},{\"label\":\"Bottom left\",\"value\":\"bottom-left\"},{\"label\":\"Bottom right\",\"value\":\"bottom-right\"}]',
+);
 
 type StagePodLayoutPanelOptions = {
   includeFloating?: boolean;
@@ -45,11 +37,9 @@ type StagePodAppearancePanelOptions = {
   includePodBorder?: boolean;
 };
 
-const insideShadowLayerOptions =
-  '[{\"label\":\"Show below content\",\"value\":\"below-content\"},{\"label\":\"Show above content\",\"value\":\"above-content\"}]'.replace(
-    /"/g,
-    '&quot;',
-  );
+const insideShadowLayerOptions = encodeOptions(
+  '[{\"label\":\"Show below content\",\"value\":\"below-content\"},{\"label\":\"Show above content\",\"value\":\"above-content\"}]',
+);
 
 export function buildStagePodLayoutPanelFields(options: StagePodLayoutPanelOptions = {}): string[] {
   const includeFloating = options.includeFloating === true;
@@ -102,12 +92,12 @@ export function buildStagePodLayoutPanelFields(options: StagePodLayoutPanelOptio
 
 export function buildStagePodCornerAppearanceFields(): string[] {
   return [
-    "    <tooldrawer-field-podstageappearance group-label='Stage/Pod' type='toggle' size='md' path='pod.radiusLinked' label='Link pod corners' value='{{pod.radiusLinked}}' default='true' />",
-    `    <tooldrawer-field-podstageappearance group-label='Stage/Pod' type='dropdown-actions' size='md' path='pod.radius' label='Corner radius' placeholder='Choose radius' value='{{pod.radius}}' show-if=\"pod.radiusLinked == true\" options='${radiusOptions}' />`,
-    `    <tooldrawer-field-podstageappearance group-label='Stage/Pod' type='dropdown-actions' size='md' path='pod.radiusTL' label='Pod top-left corner' placeholder='Choose radius' value='{{pod.radiusTL}}' show-if=\"pod.radiusLinked == false\" options='${radiusOptions}' />`,
-    `    <tooldrawer-field-podstageappearance group-label='Stage/Pod' type='dropdown-actions' size='md' path='pod.radiusTR' label='Pod top-right corner' placeholder='Choose radius' value='{{pod.radiusTR}}' show-if=\"pod.radiusLinked == false\" options='${radiusOptions}' />`,
-    `    <tooldrawer-field-podstageappearance group-label='Stage/Pod' type='dropdown-actions' size='md' path='pod.radiusBR' label='Pod bottom-right corner' placeholder='Choose radius' value='{{pod.radiusBR}}' show-if=\"pod.radiusLinked == false\" options='${radiusOptions}' />`,
-    `    <tooldrawer-field-podstageappearance group-label='Stage/Pod' type='dropdown-actions' size='md' path='pod.radiusBL' label='Pod bottom-left corner' placeholder='Choose radius' value='{{pod.radiusBL}}' show-if=\"pod.radiusLinked == false\" options='${radiusOptions}' />`,
+    "    <tooldrawer-field-podstageappearance group-label='' type='toggle' size='md' path='pod.radiusLinked' label='Link pod corners' value='{{pod.radiusLinked}}' default='true' />",
+    `    <tooldrawer-field-podstageappearance group-label='' type='dropdown-actions' size='md' path='pod.radius' label='Corner radius' placeholder='Choose radius' value='{{pod.radius}}' show-if=\"pod.radiusLinked == true\" options='${radiusOptions}' />`,
+    `    <tooldrawer-field-podstageappearance group-label='' type='dropdown-actions' size='md' path='pod.radiusTL' label='Pod top-left corner' placeholder='Choose radius' value='{{pod.radiusTL}}' show-if=\"pod.radiusLinked == false\" options='${radiusOptions}' />`,
+    `    <tooldrawer-field-podstageappearance group-label='' type='dropdown-actions' size='md' path='pod.radiusTR' label='Pod top-right corner' placeholder='Choose radius' value='{{pod.radiusTR}}' show-if=\"pod.radiusLinked == false\" options='${radiusOptions}' />`,
+    `    <tooldrawer-field-podstageappearance group-label='' type='dropdown-actions' size='md' path='pod.radiusBR' label='Pod bottom-right corner' placeholder='Choose radius' value='{{pod.radiusBR}}' show-if=\"pod.radiusLinked == false\" options='${radiusOptions}' />`,
+    `    <tooldrawer-field-podstageappearance group-label='' type='dropdown-actions' size='md' path='pod.radiusBL' label='Pod bottom-left corner' placeholder='Choose radius' value='{{pod.radiusBL}}' show-if=\"pod.radiusLinked == false\" options='${radiusOptions}' />`,
   ];
 }
 
@@ -195,21 +185,18 @@ export function buildLocaleSwitcherAppearancePanelFields(
     : [];
 }
 
-export function buildCoreCardWrapperAppearancePanelFields(
-  args: {
-    basePath: string;
-    existingPaths?: ReadonlySet<string>;
-    includeInsideShadow?: boolean;
-    itemLabel?: string;
-  },
-): string[] {
+export function buildCoreCardWrapperAppearancePanelFields(args: {
+  basePath: string;
+  existingPaths?: ReadonlySet<string>;
+  includeInsideShadow?: boolean;
+  itemLabel?: string;
+}): string[] {
   const basePath = args.basePath;
   const existingPaths = args.existingPaths ?? new Set<string>();
-  const itemLabel = typeof args.itemLabel === 'string' && args.itemLabel.trim()
-    ? args.itemLabel.trim()
-    : 'Item';
-  const label = itemLabel.replace(/'/g, '&apos;');
-  const lowerItemLabel = itemLabel.toLowerCase().replace(/'/g, '&apos;');
+  const itemLabel =
+    typeof args.itemLabel === 'string' && args.itemLabel.trim() ? args.itemLabel.trim() : 'Item';
+  const label = encodeHtmlEntities(itemLabel);
+  const lowerItemLabel = encodeHtmlEntities(itemLabel.toLowerCase());
   const fields: string[] = [];
   const push = (path: string, line: string) => {
     if (!existingPaths.has(path)) fields.push(line);

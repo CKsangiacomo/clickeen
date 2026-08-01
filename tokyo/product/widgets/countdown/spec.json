@@ -164,7 +164,8 @@
                 }
               }
             ],
-            "label": "Timer mode"
+            "label": "Content",
+            "initiallyOpen": true
           },
           {
             "nodes": [

@@ -1,28 +1,15 @@
-import type { CompiledControl, CompiledControlOption, CompiledPanel, ControlKind } from '../types';
-import { decodeHtmlEntities, parseTooldrawerAttributes } from '../compiler.shared';
+import type {
+  CompiledControl,
+  CompiledControlOption,
+  CompiledPanel,
+  ControlKind,
+  PanelId,
+} from '../types';
+import { encodeHtmlEntities, parseTooldrawerAttributes } from '../compiler.shared';
 import { getAt } from '../utils/paths';
 import { validateShowIfExpression } from '../../components/td-menu-content/showIf';
 
 const TOKEN_SEGMENT = /^__[^.]+__$/;
-
-function encodeHtmlEntities(value: string): string {
-  return value
-    .replace(/&/g, '&amp;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&apos;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;');
-}
-
-export function groupKeyToLabel(key: string): string {
-  const map: Record<string, string> = {
-    wgtappearance: 'Widget appearance',
-    wgtlayout: 'Widget layout',
-    podstageappearance: 'Stage/Pod appearance',
-    podstagelayout: 'Stage/Pod layout',
-  };
-  return map[key] || key.replace(/-/g, ' ');
-}
 
 function findTagEnd(source: string, startIndex: number): number {
   let quote: '"' | "'" | null = null;
@@ -41,7 +28,10 @@ function findTagEnd(source: string, startIndex: number): number {
   return -1;
 }
 
-export function expandTooldrawerClusters(html: string): string {
+export function expandTooldrawerClusters(html: string, idNamespace = ''): string {
+  if (idNamespace && !/^[a-z][a-z0-9-]*$/.test(idNamespace)) {
+    throw new Error('[BobCompiler] cluster id namespace is invalid');
+  }
   const openTag = '<tooldrawer-cluster';
   const closeTag = '</tooldrawer-cluster>';
 
@@ -61,6 +51,7 @@ export function expandTooldrawerClusters(html: string): string {
     const labelKey = attrs.labelKey || attrs['label-key'] || '';
     const labelParams = attrs.labelParams || attrs['label-params'] || '';
     const labelCount = attrs.labelCount || attrs['label-count'] || '';
+    const initiallyOpen = parseBooleanAttr(attrs.initiallyOpen || attrs['initially-open']) === true;
 
     let depth = 1;
     let searchPos = openEnd + 1;
@@ -88,40 +79,45 @@ export function expandTooldrawerClusters(html: string): string {
       depth -= 1;
       if (depth === 0) {
         const inner = html.slice(openEnd + 1, nextClose);
-        const showIf = attrs['show-if'] ? decodeHtmlEntities(attrs['show-if']) : '';
+        const showIf = attrs['show-if'] || '';
         if (showIf) validateShowIfExpression(showIf);
+
+        if (!label && !labelKey) {
+          throw new Error('[BobCompiler] <tooldrawer-cluster> requires label or label-key');
+        }
 
         if (attrs.gap || attrs['space-after'] || attrs.spaceAfter) {
           throw new Error(
-            "[BobCompiler] <tooldrawer-cluster> does not support gap/space-after; use ToolDrawer stack gap + fixed cluster gap",
+            '[BobCompiler] <tooldrawer-cluster> does not support gap/space-after; use ToolDrawer stack gap + fixed cluster gap',
           );
         }
 
-        const wrapperAttrs: string[] = ['class="tdmenucontent__cluster"'];
-        if (showIf) wrapperAttrs.push(`data-bob-showif="${showIf}"`);
+        const wrapperAttrs: string[] = [
+          'class="tdmenucontent__cluster"',
+          `data-collapsed="${initiallyOpen ? 'false' : 'true'}"`,
+        ];
+        if (showIf) wrapperAttrs.push(`data-bob-showif="${encodeHtmlEntities(showIf)}"`);
         const nextClusterId = clusterId;
         clusterId += 1;
 
-        const bodyId = `td-cluster-body-${nextClusterId}`;
+        const bodyId = `td-${idNamespace ? `${idNamespace}-` : ''}cluster-body-${nextClusterId}`;
         let headerMarkup = '';
-        if (label || labelKey) {
-          const labelAttrs: string[] = ['class="overline-small tdmenucontent__cluster-label"'];
-          if (labelKey) labelAttrs.push(`data-i18n-key="${encodeHtmlEntities(labelKey)}"`);
-          if (labelParams) labelAttrs.push(`data-i18n-params="${labelParams}"`);
-          if (labelCount) labelAttrs.push(`data-i18n-count="${encodeHtmlEntities(labelCount)}"`);
+        const labelAttrs: string[] = ['class="overline-small tdmenucontent__cluster-label"'];
+        if (labelKey) labelAttrs.push(`data-i18n-key="${encodeHtmlEntities(labelKey)}"`);
+        if (labelParams) labelAttrs.push(`data-i18n-params="${encodeHtmlEntities(labelParams)}"`);
+        if (labelCount) labelAttrs.push(`data-i18n-count="${encodeHtmlEntities(labelCount)}"`);
 
-          const toggleMarkup = [
-            `<button type="button" class="diet-btn-ic tdmenucontent__cluster-toggle" data-size="xs" data-variant="neutral" aria-label="Toggle section" aria-expanded="true" aria-controls="${bodyId}">`,
-            `  <span class="diet-btn-ic__icon tdmenucontent__cluster-toggle-icon" data-icon="chevron.up" aria-hidden="true"></span>`,
-            `</button>`,
-          ].join('');
+        const toggleMarkup = [
+          `<button type="button" class="diet-btn-ic tdmenucontent__cluster-toggle" data-size="xs" data-variant="neutral" aria-label="Toggle section" aria-expanded="${initiallyOpen ? 'true' : 'false'}" aria-controls="${bodyId}">`,
+          `  <span class="diet-btn-ic__icon tdmenucontent__cluster-toggle-icon" data-icon="chevron.up" aria-hidden="true"></span>`,
+          `</button>`,
+        ].join('');
 
-          const labelMarkup = `<div ${labelAttrs.join(' ')}>${encodeHtmlEntities(label)}</div>`;
-          headerMarkup = `<div class="tdmenucontent__cluster-header">${labelMarkup}${toggleMarkup}</div>`;
-        }
+        const labelMarkup = `<div ${labelAttrs.join(' ')}>${encodeHtmlEntities(label)}</div>`;
+        headerMarkup = `<div class="tdmenucontent__cluster-header">${labelMarkup}${toggleMarkup}</div>`;
 
-        const bodyAttrs: string[] = ['class="tdmenucontent__cluster-body"'];
-        if (headerMarkup) bodyAttrs.push(`id="${bodyId}"`);
+        const bodyAttrs: string[] = ['class="tdmenucontent__cluster-body"', `id="${bodyId}"`];
+        if (!initiallyOpen) bodyAttrs.push('hidden');
         const bodyMarkup = `<div ${bodyAttrs.join(' ')}>${inner}</div>`;
         const replacement = `<div ${wrapperAttrs.join(' ')}>${headerMarkup}${bodyMarkup}</div>`;
         html = html.slice(0, start) + replacement + html.slice(nextClose + closeTag.length);
@@ -144,10 +140,9 @@ function parseControlOptions(args: {
   controlPath: string;
   optionsRaw: string;
 }): CompiledControlOption[] | undefined {
-  const decoded = decodeHtmlEntities(args.optionsRaw);
   let parsed: unknown;
   try {
-    parsed = JSON.parse(decoded) as unknown;
+    parsed = JSON.parse(args.optionsRaw) as unknown;
   } catch {
     throw new Error(`[BobCompiler] Invalid JSON options for control "${args.controlPath}"`);
   }
@@ -159,20 +154,26 @@ function parseControlOptions(args: {
   const options: CompiledControlOption[] = [];
   parsed.forEach((opt, index) => {
     if (!opt || typeof opt !== 'object' || Array.isArray(opt)) {
-      throw new Error(`[BobCompiler] options[${index}] for control "${args.controlPath}" must be an object`);
+      throw new Error(
+        `[BobCompiler] options[${index}] for control "${args.controlPath}" must be an object`,
+      );
     }
     if ('isGroupHeader' in opt && (opt as any).isGroupHeader === true) return;
     const label = (opt as any).label;
     const value = (opt as any).value;
     if (typeof label !== 'string' || !label.trim()) {
-      throw new Error(`[BobCompiler] options[${index}] for control "${args.controlPath}" requires label`);
+      throw new Error(
+        `[BobCompiler] options[${index}] for control "${args.controlPath}" requires label`,
+      );
     }
     if (
       (typeof value !== 'string' || !value.trim()) &&
       (typeof value !== 'number' || !Number.isFinite(value)) &&
       typeof value !== 'boolean'
     ) {
-      throw new Error(`[BobCompiler] options[${index}] for control "${args.controlPath}" requires value`);
+      throw new Error(
+        `[BobCompiler] options[${index}] for control "${args.controlPath}" requires value`,
+      );
     }
     options.push({ label, value });
   });
@@ -184,7 +185,10 @@ function samplePathForDefaults(pathPattern: string): string {
   return segments.map((segment) => (TOKEN_SEGMENT.test(segment) ? '0' : segment)).join('.');
 }
 
-function inferControlMetadata(control: CompiledControl, defaults: Record<string, unknown>): {
+function inferControlMetadata(
+  control: CompiledControl,
+  defaults: Record<string, unknown>,
+): {
   kind: ControlKind;
   enumValues?: string[];
   itemIdPath?: string;
@@ -221,7 +225,8 @@ function inferControlMetadata(control: CompiledControl, defaults: Record<string,
     const itemIdPath =
       control.type === 'object-manager'
         ? 'id'
-        : Array.isArray(sample) && sample.some((item) => item && typeof item === 'object' && !Array.isArray(item))
+        : Array.isArray(sample) &&
+            sample.some((item) => item && typeof item === 'object' && !Array.isArray(item))
           ? 'id'
           : undefined;
     return { kind: 'array', itemIdPath };
@@ -261,7 +266,7 @@ function parseFillModes(value: string | undefined): string[] | null {
   return modes.length ? modes : null;
 }
 
-function collectControlsFromMarkup(markup: string, panelId: string, controls: CompiledControl[]) {
+function collectControlsFromMarkup(markup: string, panelId: PanelId, controls: CompiledControl[]) {
   // Allow '>' inside quoted attribute values (e.g., template strings) and match both self-closing and open/close.
   const tdRegex =
     /<tooldrawer-field(?:-([a-z0-9-]+))?((?:[^>"']|"[^"]*"|'[^']*')*)(?:\/>|>([\s\S]*?)<\/tooldrawer-field>)/gi;
@@ -291,7 +296,8 @@ function collectControlsFromMarkup(markup: string, panelId: string, controls: Co
       const max = parseNumberAttr(attrs.max);
       const step = parseNumberAttr(attrs.step);
       const required = parseBooleanAttr(attrs.required);
-      const fillModes = type === 'dropdown-fill' ? parseFillModes(attrs.fillModes || attrs['fill-modes']) : null;
+      const fillModes =
+        type === 'dropdown-fill' ? parseFillModes(attrs.fillModes || attrs['fill-modes']) : null;
       const allowImageOverride = parseBooleanAttr(attrs.allowImage || attrs['allow-image']);
       const inferredAllowsImage = (() => {
         const pathLower = path.toLowerCase();
@@ -299,24 +305,30 @@ function collectControlsFromMarkup(markup: string, panelId: string, controls: Co
         const labelLower = (attrs.label || '').toLowerCase();
         return labelLower.includes('background');
       })();
-      const allowImageFromModes = fillModes ? fillModes.some((mode) => mode === 'image' || mode === 'video') : undefined;
+      const allowImageFromModes = fillModes
+        ? fillModes.some((mode) => mode === 'image' || mode === 'video')
+        : undefined;
       const allowImage =
-        type === 'dropdown-fill' ? (allowImageOverride ?? allowImageFromModes ?? inferredAllowsImage) : undefined;
-      const showIf = attrs['show-if'] ? decodeHtmlEntities(attrs['show-if']) : undefined;
+        type === 'dropdown-fill'
+          ? (allowImageOverride ?? allowImageFromModes ?? inferredAllowsImage)
+          : undefined;
+      const showIf = attrs['show-if'] || undefined;
       const explicitGroupLabel =
         typeof (attrs.groupLabel || attrs['group-label']) === 'string'
-          ? decodeHtmlEntities(attrs.groupLabel || attrs['group-label']).trim()
+          ? (attrs.groupLabel || attrs['group-label']).trim()
           : '';
       if (showIf) validateShowIfExpression(showIf);
       controls.push({
         panelId,
         groupId,
-        groupLabel: explicitGroupLabel || (groupId ? groupKeyToLabel(groupId) : undefined),
+        groupLabel: explicitGroupLabel || undefined,
         type,
         path,
-        label: attrs.label ? decodeHtmlEntities(attrs.label) : undefined,
+        label: attrs.label || undefined,
         showIf,
-        options: attrs.options ? parseControlOptions({ controlPath: path, optionsRaw: attrs.options }) : undefined,
+        options: attrs.options
+          ? parseControlOptions({ controlPath: path, optionsRaw: attrs.options })
+          : undefined,
         allowImage,
         enumValues: fillModes ?? undefined,
         min,
@@ -329,7 +341,7 @@ function collectControlsFromMarkup(markup: string, panelId: string, controls: Co
         controls.push({
           panelId,
           groupId,
-          groupLabel: groupId ? groupKeyToLabel(groupId) : undefined,
+          groupLabel: explicitGroupLabel || undefined,
           type: 'dropdown-upload-meta',
           path: metaPath.trim(),
         });
@@ -339,8 +351,7 @@ function collectControlsFromMarkup(markup: string, panelId: string, controls: Co
     }
 
     if (attrs.template) {
-      const decodedTemplate = decodeHtmlEntities(attrs.template);
-      collectControlsFromMarkup(decodedTemplate, panelId, controls);
+      collectControlsFromMarkup(attrs.template, panelId, controls);
     }
     if (inner) {
       collectControlsFromMarkup(inner, panelId, controls);
@@ -363,15 +374,12 @@ function collectControlsFromMarkup(markup: string, panelId: string, controls: Co
 export function compileControlsFromPanels(args: {
   panels: CompiledPanel[];
   defaults: Record<string, unknown>;
-  optionsByPath?: Record<string, CompiledControlOption[]>;
 }): CompiledControl[] {
   const rawControls = args.panels.flatMap((panel) => {
     const panelControls: CompiledControl[] = [];
     collectControlsFromMarkup(panel.html, panel.id, panelControls);
     return panelControls;
   });
-  const optionsByPath = args.optionsByPath || {};
-
   const score = (control: CompiledControl) =>
     (control.options && control.options.length ? 100 : 0) +
     (control.type === 'field' ? 0 : 10) +
@@ -387,10 +395,8 @@ export function compileControlsFromPanels(args: {
   });
 
   const controls = Array.from(deduped.values()).map((control) => {
-    const overrideOptions = optionsByPath[control.path];
-    const controlWithOptions = overrideOptions ? { ...control, options: overrideOptions } : control;
-    const meta = inferControlMetadata(controlWithOptions, args.defaults);
-    return { ...controlWithOptions, ...meta };
+    const meta = inferControlMetadata(control, args.defaults);
+    return { ...control, ...meta };
   });
 
   const unknownControl = controls.find((control) => !control.kind || control.kind === 'unknown');

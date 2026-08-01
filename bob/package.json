@@ -14,8 +14,10 @@
     "lint": "next lint",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test:accessibility-copy": "tsx tests/run-accessibility-copy.ts",
+    "test:editor-contract": "tsx tests/run-editor-contract.ts",
     "test:translations-panel": "tsx tests/run-translations-panel.ts",
-    "test:typography-contract": "tsx tests/run-typography-contract.ts"
+    "test:typography-contract": "tsx tests/run-typography-contract.ts",
+    "test": "pnpm test:accessibility-copy && pnpm test:editor-contract && pnpm test:translations-panel && pnpm test:typography-contract"
   },
   "dependencies": {
     "@clickeen/ck-contracts": "workspace:*",

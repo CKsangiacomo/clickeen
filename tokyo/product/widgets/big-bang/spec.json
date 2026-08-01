@@ -58,7 +58,8 @@
             "id": "header-content"
           },
           {
-            "label": "Big Bang content",
+            "label": "Content",
+            "initiallyOpen": true,
             "nodes": [
               {
                 "kind": "field",

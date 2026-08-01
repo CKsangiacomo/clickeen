@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
-import type { PanelId } from '../lib/types';
+import { BOB_PANEL_LABELS, type PanelId } from '../lib/types';
 import type { ApplyWidgetOpsResult, WidgetOp } from '../lib/ops';
 import { useWidgetSession, useWidgetSessionChrome } from '../lib/session/useWidgetSession';
 import { resolvePathFromTarget } from './td-menu-content/fieldValue';
@@ -101,12 +101,10 @@ export function TdMenuContent({
     );
   }
 
-  const panelTitle = `${panelId.charAt(0).toUpperCase()}${panelId.slice(1)}`;
-
   return (
     <div className="tdmenucontent">
       <div className="tdmenucontent__header">
-        <div className="heading-3">{panelTitle}</div>
+        <div className="heading-3">{BOB_PANEL_LABELS[panelId]}</div>
         {header}
       </div>
       <div className="tdmenucontent__fields" ref={containerRef} />
