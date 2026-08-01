@@ -25,12 +25,14 @@ function secondsUntilNextLimitPeriod(now = new Date()): number {
 }
 
 async function readCopilotTurnsUsed(
-  accountId: string,
+  counterKey: string,
   usageKv: RomaUsageKv,
 ): Promise<number> {
-  const counterKey = copilotTurnCounterKey(accountId, currentLimitPeriodKey());
   const raw = await usageKv.get(counterKey);
   if (raw === null) return 0;
+  if (!/^(0|[1-9][0-9]*)$/.test(raw)) {
+    throw new Error(`[Roma] Invalid USAGE_KV counter: ${counterKey}`);
+  }
   const parsed = Number(raw);
   if (!Number.isSafeInteger(parsed) || parsed < 0) {
     throw new Error(`[Roma] Invalid USAGE_KV counter: ${counterKey}`);
@@ -48,7 +50,7 @@ export async function reserveAccountCopilotTurn(args: {
   }
   const periodKey = currentLimitPeriodKey();
   const counterKey = copilotTurnCounterKey(args.accountId, periodKey);
-  const current = await readCopilotTurnsUsed(args.accountId, args.usageKv);
+  const current = await readCopilotTurnsUsed(counterKey, args.usageKv);
   if (args.max != null && current + 1 > args.max) {
     return { ok: false, used: current };
   }

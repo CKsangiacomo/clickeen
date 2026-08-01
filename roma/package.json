@@ -10,6 +10,7 @@
     "start": "next start",
     "lint": "next lint",
     "test:account-page-source": "tsx tests/run-account-page-source.ts",
+    "test:account-limit-usage": "tsx tests/run-account-limit-usage.ts",
     "pretest:instance-package": "node ../scripts/widgets/generate-artifacts.mjs",
     "test:instance-package": "tsx tests/run-instance-package-reroute.ts",
     "test:instance-save-boundary": "tsx tests/run-instance-save-boundary.ts",

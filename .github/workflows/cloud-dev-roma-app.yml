@@ -59,6 +59,9 @@ jobs:
       - name: Policy entitlement contracts
         run: pnpm --filter @clickeen/ck-policy test:entitlements
 
+      - name: Roma Copilot usage contracts
+        run: pnpm --filter @clickeen/roma test:account-limit-usage
+
       - name: Runtime materializer contracts
         run: pnpm --filter @clickeen/ck-runtime-materializer test
 
