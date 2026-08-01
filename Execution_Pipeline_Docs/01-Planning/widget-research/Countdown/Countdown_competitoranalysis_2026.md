@@ -80,19 +80,61 @@ per app is the only way to see this surface.
 
 ---
 
-## 2. Creation flow and templates (Steps 2–3) — NOT COMPLETED
+## 2. Creation flow and templates (Steps 2–3) — COMPLETED 2026-07-31
 
-Both steps were blocked: the app sits at `1/1` on the free plan, and clearing the
-slot was not completed within this pass. **Countdown's template count, category
-split, and whether its templates vary structurally or only by content are
-unknown.**
+Evidence: `screenshots/03-empty-state.png` … `screenshots/07-timer-mode-gallery.png`.
 
-Do not infer them from Calculator. Calculator's 116 templates vary by content only
-because Calculator exposes no layout axis; Event Calendar and Google Reviews
-templates vary structurally. Countdown 3.0 exposes both Position and Theme axes,
-so the structural hypothesis is plausible and untested.
+### 2.1 Empty state — `03-empty-state.png`
 
-This is the highest-value gap remaining in this document.
+Same copy as every other app: *"Create a captivating widget with the help of
+ready-made templates or configure a unique widget from scratch."*
+
+### 2.2 The picker shape differs from Calculator's — `04-create-template-picker.png`
+
+Countdown's picker is a **sidebar of 2-column thumbnails plus a large live
+preview**. There are **no categories, no counts, and no pagination** — unlike
+Calculator, which gets a paginated grid with five named categories and a total.
+
+So the picker itself is not one component reused across apps. Calculator and
+Countdown get materially different template-selection experiences.
+
+### 2.3 Template set maps onto the three timer modes — `05-picker-template-list-scrolled.png`
+
+Observed, in sidebar order:
+
+| Template | Mode it exercises |
+| --- | --- |
+| Countdown Timer | date |
+| Halloween Sale Countdown | date, holiday theme |
+| Black Friday Sale Banner | date, banner position |
+| Special Offer Banner | date, banner position |
+| Urgency Countdown | date |
+| Event Start Countdown | date |
+| Limited-Shipping Banner | date, banner |
+| Wedding Countdown | date |
+| Launch Countdown | date |
+| **Trust Counter** | **number counter** — "10000" |
+| **Stock Countdown** | **number counter** — "Items left in stock: 25" |
+| **Fame Counter** | **number counter** — "People viewing this product: 09" |
+| Countdown to New Year | date, holiday |
+| Thanksgiving Day | date, holiday |
+| Hanukkah | date, holiday |
+| **Evergreen Timer** | **personal / per-visitor** |
+
+The three number-counter templates are the interesting ones: they use the counter
+mode as **scarcity and social proof**, not as a timer at all. That is a product
+use case our countdown's `number` mode could serve today and does not advertise.
+
+### 2.4 Runtime version is pinned in the iframe URL
+
+The editor loads from:
+
+```text
+universe-static.elfsightcdn.com/app-releases/countdown-timer/stable/v3.1
+```
+
+Per-app-type, `stable` channel, explicit semantic version. Countdown is on
+**v3.1**, not merely "3.0".
 
 ---
 
@@ -118,6 +160,26 @@ Rail went from three sections to five.
 | **All Day** | toggle | new in 3.0 |
 | Time Zone | dropdown | `(GMT-07:00) America…` |
 | **Repeat** | sub-panel | new in 3.0, the headline feature |
+| **Hide Widget Before Countdown Starts** | toggle | new in 3.0 — **scheduled activation**, captured `06-editor-on-arrival.png` |
+
+`Hide Widget Before Countdown Starts` closes a gap listed against our countdown
+in §6.4 item 2 of the earlier analysis: nothing in our widget makes it appear
+only between two dates.
+
+### 3.1a Mode gallery — resolved — `07-timer-mode-gallery.png`
+
+The `Change` link opens **Countdown Mode**, confirming 3.0 kept all three legacy
+modes with clearer naming and explicit descriptions:
+
+| Mode | Their description |
+| --- | --- |
+| **Countdown to Date** | "Counts down to a specific date and time" |
+| **Personal Countdown** | "Starts for each visitor when they first open the page" |
+| **Number Counter** | "Counts up or down between chosen numbers" |
+
+Note "counts up or down" — the counter mode does count up. Their #2 feature
+request, "Count up from a particular date" (18 votes), is specifically about
+*time*, which neither product does.
 
 ### 3.2 Repeat Event
 
@@ -328,17 +390,32 @@ own top-ten requests confirm the typography advantage is one customers ask for.
 
 ## 7. What this pass did not cover
 
-Stated plainly so nobody mistakes it for covered:
+Stated plainly so nobody mistakes it for covered.
 
-- **Steps 2 and 3** — creation flow, template picker, template count, category
-  split. Blocked at `1/1`.
-- **3.0's Position, Theme, and Settings rail sections** — never opened.
-- **The mode gallery behind `Change`** — 3.0's mode list is unknown; the legacy
-  three types may or may not have survived.
-- **The Form action's field types and integration configuration.**
+**Closed on 2026-07-31:** Steps 2 and 3 (creation flow, picker, template set) and
+the mode gallery behind `Change`. See §2 and §3.1a.
+
+**Still open:**
+
+- **3.0's Position, Theme, and Settings rail sections.** Not captured. The editor
+  loads as a single cross-origin iframe (`app-releases/countdown-timer/stable/v3.1`)
+  and synthetic clicks on the rail buttons stopped taking effect partway through
+  the session — clicks reach the iframe (a double-click produced a text
+  selection) but the rail items do not respond at any coordinate tried, including
+  the icon centre, the label, and both `devicePixelRatio`-scaled variants. Panel
+  content inside the Timer section was clickable earlier in the same session, so
+  this is a tooling limitation, not a property of the product.
+
+  What is known about these three from the pre-update legacy version — Style and
+  Holiday Theme carousels, five colours, Sizes & Fonts, Animation, Position as a
+  four-way radio — is recorded in §3.4 and must not be assumed to still hold in
+  3.1.
+- **The Form action's field types and integration configuration.** The action
+  type list (Link / Form / Add to Google Calendar) was captured; what a Form
+  action contains was not.
 - **Step 7 install/serving and Step 8 pricing** — unchanged from the platform
-  behavior already recorded in
-  `planning_Research__Elfsight_Competitive_Breakdown.md`; not re-verified here.
+  behaviour in `planning_Research__Elfsight_Competitive_Breakdown.md`; not
+  re-verified here.
 - The changelog **posts** were not opened for Countdown; only the list was read.
   Per the procedure, titles are not findings — treat §4 as an index, not a
   description of mechanisms.
