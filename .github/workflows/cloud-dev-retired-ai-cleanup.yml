@@ -8,6 +8,7 @@ on:
         required: true
         type: choice
         options:
+          - sanfrancisco-queue-audit
           - retired-learning-r2
           - retired-d1
           - obsolete-worker-secrets
@@ -27,6 +28,12 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
+
+      - name: Inspect San Francisco queue consumers
+        if: inputs.phase == 'sanfrancisco-queue-audit'
+        env:
+          CLOUDFLARE_REST_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: node scripts/cloudflare/api.mjs workers:queue-consumers sanfrancisco-dev
 
       - name: Delete the retired learning prefix only
         if: inputs.phase == 'retired-learning-r2'

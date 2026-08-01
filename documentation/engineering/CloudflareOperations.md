@@ -42,6 +42,7 @@ pnpm cf:api:preflight
 pnpm cf:pages:list
 pnpm cf:pages:project <project-name>
 pnpm cf:pages:domains <project-name>
+pnpm cf:workers:queue-consumers <script-name>
 pnpm cf:dns:records <zone-name> [record-name]
 ```
 
@@ -236,6 +237,12 @@ pnpm cf:dns:upsert-cname <zone-name> <record-name> <target>
 - lists Pages projects;
 - lists DevStudio custom domains when the project is visible;
 - verifies the `clickeen.com` zone and the `devstudio.clickeen.com` DNS record.
+
+`pnpm cf:workers:queue-consumers <script-name>` is a read-only Worker/Queues
+diagnostic. It enumerates every queue visible to the typed REST token and
+returns only consumers attached to the exact Worker script. Use it when a
+Worker deploy reports a queue-handler mismatch; it does not create, attach, or
+delete queues or consumers.
 
 Token permissions:
 
