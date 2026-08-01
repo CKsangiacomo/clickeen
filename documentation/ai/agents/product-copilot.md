@@ -380,7 +380,7 @@ pnpm -C agents/product-copilot run deploy
 
 Normal cloud-dev deploy evidence comes from the GitHub Actions
 `cloud-dev workers deploy` workflow after changes to `agents/product-copilot/**`,
-`packages/ck-contracts/**`, `packages/ck-policy/**`, `scripts/infra/**`, or the
+`packages/ck-contracts/**`, `packages/ck-policy/**`, or the
 workflow file.
 
 ## Operator Debug Sequence

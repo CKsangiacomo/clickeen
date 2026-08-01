@@ -381,21 +381,6 @@ Rules:
   fix the underlying config or verification gap; do not normalize direct
   artifact deploys as the operating model.
 
-AI signing cutover has one authority-preserving order and no dual-verification
-mode:
-
-1. Generate one RS256 key pair outside the repo.
-2. After `pnpm cf:api:preflight`, install `ROMA_AI_GRANT_PRIVATE_KEY_PEM` only
-   on Roma Pages through `pnpm cf:pages:put-secret roma-dev
-   ROMA_AI_GRANT_PRIVATE_KEY_PEM --apply`.
-3. Install the matching `ROMA_AI_GRANT_PUBLIC_KEY_PEM` as the GitHub Actions
-   secret used to configure San Francisco, Translation Agent, and Tokyo-worker.
-4. Install the independent `PRAGUE_L10N_HMAC_SECRET` in GitHub Actions.
-5. Push/deploy the code and verify Product Copilot, Translation Agent, and
-   Prague localization through their owning runtime checks.
-6. Delete the obsolete `AI_GRANT_HMAC_SECRET` from Roma Pages, GitHub Actions,
-   San Francisco, Translation Agent, and Tokyo-worker.
-
 ## Verification
 
 Run verification from the owning surface:

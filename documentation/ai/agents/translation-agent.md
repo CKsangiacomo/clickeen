@@ -418,7 +418,7 @@ pnpm -C agents/translation-agent run deploy
 Normal cloud-dev deploy evidence comes from the GitHub Actions
 `cloud-dev workers deploy` workflow after changes to
 `agents/translation-agent/**`, `packages/ck-contracts/**`,
-`packages/ck-policy/**`, `packages/l10n/**`, `scripts/infra/**`, or the workflow
+`packages/ck-policy/**`, `packages/l10n/**`, or the workflow
 file. The workflow also syncs `ROMA_AI_GRANT_PUBLIC_KEY_PEM` to
 `translation-agent-dev`, `sanfrancisco-dev`, and `tokyo-assets-dev` when
 required. Roma's matching private key remains only in Roma Pages.

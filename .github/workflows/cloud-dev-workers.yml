@@ -17,7 +17,6 @@ on:
       - "packages/ck-policy/**"
       - "packages/l10n/**"
       - "packages/widget-shell/**"
-      - "scripts/infra/**"
       - "scripts/verify/**"
       - "scripts/widgets/**"
       - "scripts/tokyo-r2-deploy-sync.mjs"
@@ -114,23 +113,23 @@ jobs:
             workflow_changed=true
           fi
 
-          if [ "$workflow_changed" = "true" ] || path_changed '^(berlin/|scripts/infra/|packages/(ck-policy|ck-contracts)/)'; then
+          if [ "$workflow_changed" = "true" ] || path_changed '^(berlin/|packages/(ck-policy|ck-contracts)/)'; then
             berlin=true
           fi
 
-          if [ "$workflow_changed" = "true" ] || path_changed '^(agents/product-copilot/|scripts/infra/|packages/(ck-contracts|ck-policy)/)'; then
+          if [ "$workflow_changed" = "true" ] || path_changed '^(agents/product-copilot/|packages/(ck-contracts|ck-policy)/)'; then
             product_copilot=true
           fi
 
-          if [ "$workflow_changed" = "true" ] || path_changed '^(agents/translation-agent/|scripts/infra/|packages/(ck-contracts|ck-policy|l10n)/)'; then
+          if [ "$workflow_changed" = "true" ] || path_changed '^(agents/translation-agent/|packages/(ck-contracts|ck-policy|l10n)/)'; then
             translation_agent=true
           fi
 
-          if [ "$workflow_changed" = "true" ] || path_changed '^(sanfrancisco/|scripts/infra/|packages/(ck-contracts|ck-policy|l10n)/)'; then
+          if [ "$workflow_changed" = "true" ] || path_changed '^(sanfrancisco/|packages/(ck-contracts|ck-policy|l10n)/)'; then
             sanfrancisco=true
           fi
 
-          if [ "$workflow_changed" = "true" ] || path_changed '^(tokyo-worker/|scripts/infra/|packages/(ck-contracts|ck-policy|l10n|widget-shell)/)'; then
+          if [ "$workflow_changed" = "true" ] || path_changed '^(tokyo-worker/|packages/(ck-contracts|ck-policy|l10n|widget-shell)/)'; then
             tokyo=true
           fi
 
