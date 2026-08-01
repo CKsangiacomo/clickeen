@@ -1,219 +1,194 @@
-# Event Calendar — Competitor Analysis And Build Considerations
+# Event Calendar — Competitor Analysis (Elfsight)
 
-Status: PRIMARY-SOURCE COMPETITIVE RESEARCH (2026-07-31)
-Type: Research. Defines no scope and authorizes no build. Clickeen has no event
-calendar widget today.
+STATUS: PRIMARY-SOURCE RESEARCH (2026-07-31). Research only — defines no scope
+and authorizes no build. Clickeen has no event calendar widget today.
 
-## Method
+Method: `../WidgetCompetitorResearchSteps.md`, executed in order against a live
+authenticated free account, **starting from Create Widget at 0/1**. Every rail
+section and the event editor were opened.
 
-Live authenticated Elfsight account driven in-browser on 2026-07-31. The Event
-Calendar editor was opened and the Events, Layout, and Settings panels walked.
-The sample instance was a sports fixture list rendering in Italian.
+Evidence: `screenshots/` — 9 captures plus all 21 template thumbnails.
 
-Editor chrome rendered in the account's UI language; control semantics were read
-from structure, values, and the live preview.
+---
 
-## Part 0 — Read this first: this one is a bridge
+## 1. The funnel
 
-Of the three unbuilt widgets researched, Event Calendar is the only one that can
-ship **with or without** an integration.
+**Empty state** (`01-empty-state.png`) — same copy as every app: *"…with the help
+of ready-made templates or configure a unique widget from scratch."*
 
-It offers three data sources, and the first two require no connector at all:
+**Picker** (`02-template-picker.png`) — sidebar of 2-column thumbnails plus a
+large **live interactive preview**. No categories, no counts, no pagination —
+the Countdown shape, not Calculator's paginated grid.
 
-1. **Manage events manually** — authored content, exactly like every Clickeen
-   widget today.
-2. **Import from CSV** — authored content, bulk-loaded.
-3. **Connect to Google Calendar** — integration-sourced, with all the refresh and
-   staleness problems described in the Google Reviews analysis.
+**Editor opens populated** with the chosen template's events, taxonomy and layout.
 
-That makes it the natural first step toward integration-sourced widgets: build
-the manual and CSV paths on the existing materialize-at-save model, ship a
-complete product, and add the Google Calendar source later once a connector
-framework exists. Google Reviews has no such path — without the connector there
-is no widget.
+### 1.1 The 21 templates — `screenshots/templates/`
 
-Event Calendar is also the only one of the three where a **repeating structured
-record** is the content model. That is closer to what
-`documentation/strategy/SchemaFirstApps.md` describes than any widget Clickeen
-currently ships, and it is a reasonable proving ground for it.
+All 21 pulled as real PNGs. Unlike Calculator's, these vary **structurally**:
 
-## Part 1 — What Elfsight ships
-
-**Editor shape:** five rail sections — Events, Layout, (filters/sorting), (style),
-Settings — plus panel and live preview.
-
-### Events panel
-
-Three source cards, presented as equals:
-
-| Source | Icon |
+| Template | Structure it demonstrates |
 | --- | --- |
-| **Manage events manually** | pencil |
-| **Import from CSV** | CSV |
-| **Connect to Google Calendar** | Google Calendar |
+| Team Games Schedule | dense list, date badge, logo, HOME/AWAY tag, per-event CTA, row highlighting |
+| Movie Show Schedule | **month grid** |
+| Weekly School Schedule | **week grid** |
+| Upcoming Events Sidebar Widget | **narrow vertical / sidebar** |
+| University Events List | list **with filter chips and a Past Events section** |
+| Slider Exhibition | **slider** |
+| Museum, Festival Lineup, Concert Hall | image-led card grids |
+| Conference Agenda, Convention Center | agenda / schedule |
+| Club Events, City Events, Halloween Calendar | themed lists |
+| Upcoming Webinars, Upcoming Classes | compact list |
+| Hotel Shows & Entertainment Schedule | dark schedule |
+| Blank | empty start |
 
-### The event record
+**Template variety tracks layout capability.** Calculator has no layout axis and
+its 116 templates vary only in content; Event Calendar has eight layouts and its
+templates exercise them. Do not generalise one to the other.
 
-Read from the rendered cards. Each event carries:
+---
 
-| Field | Example |
+## 2. Editor — five rail sections
+
+**Events · Layout · Filters · Theme · Settings**
+
+### 2.1 Events — three data sources — `03-events-data-sources.png`
+
+| Source | |
 | --- | --- |
-| Start date | FEB 7 |
-| End date | FEB 8 |
-| Image / logo | team crest thumbnail |
-| Category or tag | "LONTANO" (Away) / "CASA" (Home) |
-| Title | "contro i Royals" |
-| Start and end time | "7 febbraio 23:00 - 8 febbraio 01:00" |
-| Location | "AT&T Park – San Francisco Giants" |
-| CTA | "Ottieni i biglietti" (Get tickets) |
+| **Manage Events Manually** | authored |
+| **Import from CSV** | bulk import |
+| **Connect to Google Calendar** | live external sync |
 
-Cards render with alternating emphasis — some with a dark filled background —
-suggesting a per-event featured or category-driven styling axis.
+This is the first widget in this research with a genuine **integration-sourced**
+content path. Clickeen's `CONTEXT.md` names integration-sourced content as one of
+three content authorities and nothing implements it.
 
-The widget also renders a **past events** section and an **empty state** with
-author-editable copy ("Sorry, no events at the moment. But really interesting
-things will arrive soon.").
+### 2.2 Event manager — `08-event-manager.png`
 
-### Layout panel
+Event list with per-row overflow, **+ Add Event**, search, and a **…** menu. Then:
 
-**Eight layouts**, the largest set of any Elfsight widget seen in this research:
+- **Past Events** →
+- **Event Types** → · **Venues** → · **Hosts** →  — three *reusable taxonomies*,
+  managed separately from events
+- **Google Calendar Integration** →
 
-List · Grid · Masonry · Carousel · Slider · **Month** · **Week** · **Day**
+Venues and Hosts as first-class entities, not per-event strings, is the
+structural decision worth noting.
 
-The last three are true calendar views — a month grid, a week view, and a day
-view — which is a categorically different rendering problem from the first five.
+### 2.3 The per-event model — `09-event-editor.png`
 
-| Control | Value observed |
+| Field | Notes |
 | --- | --- |
-| Group events | dropdown, "None" |
-| Events per page | 10 |
-| Events per page on mobile | 10 |
-| Width | 940px |
-| Widget title | disclosure |
-| Event elements | disclosure |
-| Past events | disclosure |
+| Event Title | |
+| Starts / Ends | date + time |
+| **All Day** | toggle |
+| **Time Zone** | per event |
+| **Repeat** | **per-event recurrence** |
+| Description | rich text |
+| Cover Image | |
+| **Event Type** | from the Event Types taxonomy |
+| **Venue** | from the Venues taxonomy |
+| **Tags** | |
+| **Images** | gallery |
+| **Video** | |
+| **Actions** | per-event CTA (e.g. "Get Tickets") |
+| **Attachment** | file |
+| **Custom Event Color** | per-event override |
 
-Product copy in this panel, paraphrased: *"You can use the same widget several
-times on your website with different layouts — change it dynamically through
-attributes in the widget code. The calendar layout changes dynamically."*
+Fifteen fields per event, with recurrence and a timezone **on each event**.
 
-That is a notable capability: **one saved widget, many embeds, layout overridden
-per placement via a data attribute on the embed div.** A month view in one place
-and a compact list in a sidebar, from a single source of truth.
+### 2.4 Layout — eight modes — `04-layout-eight-modes.png`
 
-### Settings panel
+**List · Grid · Masonry · Carousel · Slider · Month · Week · Day**
 
-| Control | Detail |
+Plus **Group Events by**, **Events per Page** (10), **Events per Page on Mobile**
+(10), **Width** (940px), and disclosures for **Widget Title**, **Event Elements**,
+**Past Events**.
+
+Note their own copy: *"If you want to use the same widget multiple times on your
+website but with different layouts, you can change it dynamically through an
+attribute in the widget code."* — layout is overridable per embed.
+
+### 2.5 Filters & Search — `05-filters-search.png`
+
+Visitor-facing **Search** toggle, then five filter axes: **Dates · Event Type ·
+Venue · Host · Tags**.
+
+*"You can set default values for filters by specifying attributes in the
+installation code."* — filters are pre-settable per embed, so one widget serves
+many filtered views.
+
+### 2.6 Theme — `06-theme.png`
+
+Six presets — **Light · Outline · Soft Tint · Deep Tint · Dark · Dark Outline** —
+plus a 16-swatch **Accent Color** palette with a custom picker, and **Customize
+Theme**.
+
+### 2.7 Settings — `07-settings.png`
+
+- **Action On Event Click**: View Event Details In Popup / Go To Event Button Link / None
+- **Popup Elements** →
+- **Enable Direct Linking to Events** — *"Adds a unique identifier to the URL when
+  you open an event, making it easy to share specific events by copying the URL"*
+- **Events in Visitors Local Time Zone** — converts event times to the viewer's zone
+- **Language** with **Edit Texts**
+- **Custom CSS** · **Custom JS**
+
+---
+
+## 3. What this would require that Clickeen does not have
+
+Ordered by how much new architecture each implies.
+
+| Requirement | Status in Clickeen |
 | --- | --- |
-| **Action on event click** | radio — View event details in a popup · Go to the event's button link · Nothing |
-| Popup elements | disclosure |
-| **Enable direct link for events** | toggle, on — "a unique identifying URL is added, making it easy to copy the URL and share a specific event" |
-| **Events in visitor's local timezone** | toggle, off — by default an event shows in its own timezone, with the visitor's local time appended when they differ; enabling it converts everything to the viewer's timezone. Copy explicitly cites online events as the use case. |
-| Language | dropdown (Italiano observed) |
-| Edit text | per-string copy override |
-| Custom CSS | code editor |
-| Custom JS | code editor |
+| **Date/time as first-class content** | Only countdown handles dates, and it stores an ISO string in a plain `textfield` with no picker |
+| **Per-event timezone + visitor-local conversion** | Nothing. Countdown has one widget-level timezone, also a bare textfield |
+| **Recurrence** | Nothing. Countdown's repeat is six flat intervals, personal mode only |
+| **Reusable taxonomies (Event Types, Venues, Hosts)** | No concept of entities referenced by items. `repeater`/`object-manager` model nested arrays, not shared lookups |
+| **Visitor-facing filtering and search** | No widget has runtime visitor interaction beyond accordion toggles |
+| **Past vs upcoming derivation** | Requires comparing content to *now* at render — our artifacts are materialised at save |
+| **Eight layout modes incl. month/week/day grids** | Calendar grids are a rendering class we have never built |
+| **CSV import** | No bulk-import path into instance content |
+| **Google Calendar sync** | No connector infrastructure; integration-sourced content is specified but unbuilt |
+| **Per-embed attribute overrides** | Our embed is one URL per instance; no attribute layer |
+| **Deep links to individual events** | No sub-instance addressing |
 
-Two of these are worth flagging.
+### 3.1 The one that matters most for our serving model
 
-**Per-event deep links.** Clickeen's FAQ already implements exactly this pattern
-(`faq.geo.enableDeepLinks`, stable per-question anchors, hash restore on load).
-The mechanism transfers directly.
+**Past vs upcoming is time-dependent rendering.** Our artifacts are materialised
+at save and served as static bytes. A calendar that must hide past events, or
+show "this week", changes what it renders as time passes without any authored
+change.
 
-**Timezone handling is thoughtful.** Default is event-local with the visitor's
-time appended when it differs — not a blunt convert-everything. Compare
-Clickeen's countdown, where `timezone` is a raw unvalidated textfield.
+That is not solvable by re-materialising on a schedule without giving every
+calendar instance a cron. The honest options are: compute in the client from a
+materialised full event list (keeps static serving, costs SEO on the filtered
+view), or accept that the served artifact is a full list and let filtering be
+visitor-side only. This is a genuine architectural decision, not a feature gap,
+and it should be settled before any build.
 
-## Part 2 — What building this in Clickeen would require
+### 3.2 Where we would be structurally advantaged
 
-### Exists and would transfer
+- **Crawlable output.** An event list in the initial HTML is exactly what
+  schema.org `Event` wants. Theirs is client-rendered and lazy — invisible to
+  fetchers that do not execute JS. This is the strongest SEO case of any widget
+  researched so far.
+- **Per-role typography** across event title, date, venue, description.
+- **Localisation.** Their Language picker swaps chrome strings only; author
+  content stays in one language. Our overlay model serves N locales from one
+  instance — and dates are the one content type where locale formatting matters
+  most.
 
-| Capability | Where |
-| --- | --- |
-| Repeating item authoring | `object-manager` + `repeater` controls, as used by FAQ sections and questions |
-| Per-item deep links | FAQ's `geo.enableDeepLinks` pattern |
-| Entitlement-gated item counts | `items.group.*.max` — FAQ already uses all three tiers |
-| Grid and masonry rendering | FAQ's `multicolumn` layout with `grid` / `masonry` sub-layout |
-| Typography, fill, border, shadow, radius | shared shell |
-| Translation of authored strings | overlay model — event titles, locations, categories, CTA labels, empty-state copy |
-| Image handling per item | account asset references, already used elsewhere |
+---
 
-A manual-source event calendar in List / Grid / Masonry form is close to
-assembly from parts Clickeen already has. It is the FAQ content model with a
-richer item shape.
+## 4. Not covered
 
-### Does not exist
-
-| Capability | Notes |
-| --- | --- |
-| **Calendar views** (month / week / day) | A genuinely different rendering problem — date grids, week boundaries, multi-day event spanning, overflow when a day has many events. This is the bulk of the work. |
-| **Date/time authoring UI** | Clickeen has no date picker anywhere. Countdown's target date is a raw regex-validated textfield — see `Countdown_ElfsightGapAnalysis.md` Part 3.6. A calendar makes this unavoidable. |
-| **Timezone model** | Per-event timezone, plus optional visitor-local conversion. Countdown's single-pass offset resolution is already flagged as DST-risky; a calendar needs this done properly. |
-| **Recurring events** | Not observed in this pass, but standard for the category. Implies RRULE-style expansion. |
-| **Past/upcoming partitioning** | Requires evaluating "now" — which for a materialized static artifact means the partition must be computed client-side at render, not baked at save. |
-| **CSV import** | A bulk-authoring path Clickeen has nowhere. |
-| **Popup detail view** | Dieter has `popup` and `popover`; the composition is new. |
-| **Per-embed layout override** | Clickeen's embed is a URL, not a script + attributed div. Achieving this would mean a query parameter on `clk.live/{account}/{instance}` — which interacts with cache keys and with the one-artifact-per-instance storage model. |
-| **Google Calendar connector** | Same foundation gap as Google Reviews. Deferrable. |
-
-### The one that needs a decision early
-
-**"Past events" and "upcoming events" are time-relative.** A materialized artifact
-is computed once at save. If the partition is baked in, a calendar published in
-January will still call February's events "upcoming" in March.
-
-So the partition must be evaluated in the browser at render time against
-`Date.now()`. That is entirely compatible with static serving — countdown already
-does exactly this — but it means the served HTML contains **all** events and the
-runtime decides presentation. Worth being deliberate about, because it also means
-past events remain in the crawlable HTML unless explicitly excluded at
-materialization.
-
-## Part 3 — Product observations
-
-**Eight layouts is the differentiator, and three of them are the real product.**
-Month, Week, and Day views are what makes this an *event calendar* rather than a
-styled list. A version shipping only List/Grid/Masonry is a different, smaller
-product — legitimate, but it should be named as such rather than treated as
-phase one of the same thing.
-
-**The record is the schema-first proving ground.** An event is a structured
-record with typed fields — dates, times, location, image, category, link. That is
-closer to `SchemaFirstApps.md` than anything Clickeen ships. If the substrate
-thesis is going to be tested on a widget, this is the one.
-
-**Date authoring can't be dodged here.** Countdown got away with a raw textfield
-because there is one date. A calendar has one per event, authored repeatedly. The
-date picker Clickeen has been able to avoid becomes mandatory — and building it
-well would retroactively fix countdown's worst authoring moment.
-
-**Per-embed layout override is a genuinely good idea.** One event source rendered
-as a month grid on the events page and a compact upcoming-three list in the
-footer, without duplicating content. It does not fit Clickeen's current
-one-artifact-per-instance model cleanly, which makes it worth thinking about
-before the model hardens rather than after.
-
-**Timezone deserves borrowing wholesale.** Event-local by default, visitor's time
-appended when they differ, optional full conversion. That is a better model than
-anything currently in the Clickeen countdown.
-
-## Part 4 — Open questions for the team
-
-Not decisions.
-
-1. **Do calendar views (month/week/day) ship, or is scope List/Grid/Masonry?**
-   This is the single largest scoping question and it changes what the product
-   is.
-2. **Manual + CSV first, connector later?** This is the only researched widget
-   where that sequencing yields a complete product at each step.
-3. **Does a date/time picker get built as a Dieter component?** It is needed here,
-   it would fix countdown, and it does not exist. That makes it a shared-contract
-   candidate rather than widget-local work.
-4. **Recurring events — in or out?** Standard for the category, and a large
-   increment (expansion rules, exceptions, end conditions).
-5. **How is the past/upcoming boundary handled at materialization?** See Part 2.
-   Also: are past events emitted into the crawlable HTML at all?
-6. **Is per-embed layout override worth supporting**, and if so how does it
-   interact with one-artifact-per-instance storage and edge cache keys?
-7. **What is the entitlement axis?** FAQ uses `items.group.*.max` for sections and
-   questions. Events per calendar is the obvious analogue.
+- **Popup Elements**, **Event Elements**, **Widget Title**, **Past Events**
+  disclosures — not expanded.
+- **Google Calendar Integration** connect flow — not run.
+- **Import from CSV** — column contract not seen.
+- **Customize Theme**, **Custom CSS/JS** editors.
+- **What's New** and the changelog posts.
+- **Install dialog and pricing** — platform behaviour already recorded in
+  `../../planning_Research__Elfsight_Competitive_Breakdown.md`.
