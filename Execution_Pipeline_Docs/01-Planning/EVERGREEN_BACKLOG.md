@@ -2,6 +2,7 @@
 
 Status: ACTIVE
 Date: 2026-05-28
+Updated: 2026-08-01
 Owner: Product Dev Team
 
 ## Purpose
@@ -50,6 +51,9 @@ This file is the canonical holding area for work that is:
 | EB-013 | backlog | PRD 105D / 105G / 105J | Zero-touch Babel runtime: save-triggered translation generation, durable operation ledger/outbox outside the instance folder, push/SSE or equivalent state updates, and completion-triggered rematerialization for already-published instances | The 105 series intentionally stabilizes the current manual Generate workflow and instance-folder taxonomy first. Zero-touch automation should not be built until translation sync, operation authority, public materialization, and Prague public boundary are green. | PRD 105D, 105G, 105F, and 105J are green enough to support automation without reviving operation-controller JSON or Bob queue math. | — |
 | EB-014 | promoted | 082 / codebase audits | Pre-GA codebase and documentation cleanup verification | The remaining audit work has been extracted into PRD 105K so it can be verified against the PRD 105 north star instead of remaining as loose planning residue. | — | PRD 105K |
 | EB-015 | promoted | PRD 101 stub | Paid SEO/GEO static build mode | The old 101 stub used stale pre-105 language. It has been replaced by a current PRD grounded in the PRD 105 instance-folder taxonomy. | — | PRD 101 |
+| EB-016 | backlog | 2026-08-01 Cloudflare cleanup audit | Delete obsolete Roma Pages variables: production `AI_GRANT_HMAC_SECRET` and preview `SANFRANCISCO_BASE_URL` | Both variables are unused by current Roma runtime, but the documented `cf:pages:delete-var` operation was rejected with Cloudflare `403` because the available token lacks Pages edit authority | A Cloudflare token with Pages Read/Edit is available; run `pnpm cf:api:preflight`, dry-run and apply each exact deletion, then read back `roma-dev` production and preview configuration | — |
+| EB-017 | backlog | 2026-08-01 Cloudflare cleanup audit | Delete the retired `sanfrancisco_d1_dev` D1 database after exact verification | Current San Francisco has no D1 binding or runtime use, but the cleanup run received Cloudflare authentication error `10000`; the repo also has no current documented D1 deletion command path | Establish the documented D1 operation path with D1 Read/Edit authority, verify the exact database identity and absence of active bindings, delete only `sanfrancisco_d1_dev`, then prove absence | — |
+| EB-018 | backlog | 2026-08-01 Cloudflare cleanup audit | Inventory and delete retired Queue resources, including `instance-l10n-generate-cloud-dev`, `instance-translation-jobs-dev`, and `l10n-jobs-dev`, when proven ownerless | The three exact San Francisco consumer edges were detached and San Francisco is Queue-free, but the cleanup did not prove every remote producer and consumer for the Queue resources themselves | Cloudflare Queue Read/Edit authority is available and an exact per-Queue producer/consumer inventory proves no active owner; delete only proven-retired Queue resources and read back their absence | — |
 
 ## Promotion log
 
