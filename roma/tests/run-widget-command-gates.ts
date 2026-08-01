@@ -121,6 +121,32 @@ async function testBuilderUsesBobTopDrawerAsItsOnlyEditorChrome(): Promise<void>
   assert.match(bobBoot, /coreui\.errors\.builder\.publicActions\.invalid/);
 }
 
+async function testWidgetsListComposition(): Promise<void> {
+  const source = await readRoute('components/widgets-domain.tsx');
+  const route = await readRoute('app/(authed)/widgets/page.tsx');
+
+  assert.match(route, /return <WidgetsPage \/>/);
+  assert.doesNotMatch(route, /DomainPageShell|RomaShellDefaultActions/);
+  assert.match(source, /<option value="all">Show all<\/option>/);
+  assert.match(source, /<option value="published">Show published<\/option>/);
+  assert.match(source, /<option value="unpublished">Show unpublished<\/option>/);
+  assert.match(source, /WidgetSortHeader label="Name" sortKey="name"/);
+  assert.match(source, /WidgetSortHeader label="Published" sortKey="status"/);
+  assert.match(source, /checked=\{instance\.status === 'published'\}/);
+  assert.match(source, /handleStatusChange\(instance, event\.target\.checked \? 'published' : 'unpublished'\)/);
+  assert.match(source, /className="diet-popover roma-widget-actions-popover"/);
+  assert.match(source, /instanceId: string;\s+position:/);
+  assert.match(source, /instance\.instanceId === openWidgetActions\.instanceId/);
+  assert.doesNotMatch(source, /instance: WidgetInstance;\s+position:/);
+  assert.match(source, /\['ArrowDown', 'ArrowUp', 'Home', 'End'\]/);
+  assert.match(source, />Rename<\/span>/);
+  assert.match(source, />Duplicate<\/span>/);
+  assert.match(source, />Delete<\/span>/);
+  assert.match(source, /No \{statusFilter\} instances\./);
+  assert.doesNotMatch(source, /menuWidth|menuHeight/);
+  assert.doesNotMatch(source, /Unpublishing\.\.\.|Publishing\.\.\.|>Unpublish<|>Publish</);
+}
+
 async function testDieterLayoutTableAndPopupConsumption(): Promise<void> {
   const shell = await readRoute('components/roma-shell.tsx');
   const layout = await readRoute('app/layout.tsx');
@@ -184,6 +210,8 @@ async function run(): Promise<void> {
   console.log('PASS Bob upsell CTA opens the Roma scaffold without discarding Builder work');
   await testBuilderUsesBobTopDrawerAsItsOnlyEditorChrome();
   console.log('PASS active Builder owns full-canvas chrome and preserves initial-only preview readiness');
+  await testWidgetsListComposition();
+  console.log('PASS Widgets list uses the accepted filter, sort, toggle, and overflow-action composition');
   await testDieterLayoutTableAndPopupConsumption();
   console.log('PASS Roma and Bob consume the final Dieter Layout, Table, and Popup contracts');
 }

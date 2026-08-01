@@ -1,8 +1,7 @@
-import { WidgetsDomain } from '../../../components/widgets-domain';
-import { DomainPageShell } from '../domain-page-shell';
+import { WidgetsPage } from '../../../components/widgets-domain';
 
-export default function WidgetsPage() {
-  return <DomainPageShell activeDomain="widgets" title="Widgets" Component={WidgetsDomain} />;
+export default function WidgetsPageRoute() {
+  return <WidgetsPage />;
 }
 
 export const runtime = 'edge';

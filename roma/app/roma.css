@@ -356,6 +356,70 @@ a {
   color: var(--color-system-gray);
 }
 
+.roma-widgets-filter {
+  display: block;
+  inline-size: 11rem;
+}
+
+.roma-widgets-filter .diet-operational-field {
+  inline-size: 100%;
+}
+
+.roma-widget-group {
+  grid-template-columns: minmax(9rem, 12rem) minmax(0, 1fr);
+  align-items: start;
+  gap: var(--space-4);
+}
+
+.roma-widget-group__meta {
+  display: grid;
+  align-content: start;
+  justify-items: start;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.roma-widget-group__count,
+.roma-widget-instance-id,
+.roma-widget-action-status {
+  color: var(--color-text-secondary);
+}
+
+.roma-widget-group > .diet-table {
+  box-shadow: none;
+}
+
+.roma-widget-sort.diet-btn-ictxt {
+  inline-size: auto;
+  min-height: 0;
+  justify-content: flex-start;
+  padding: 0;
+  background: transparent;
+}
+
+.roma-widget-sort__icon {
+  display: block;
+  opacity: 0.6;
+}
+
+.roma-widget-status-toggle.diet-toggle {
+  inline-size: auto;
+  min-block-size: 0;
+  padding: 0;
+  background: transparent;
+}
+
+.roma-widget-actions-popover.diet-popover {
+  position: fixed;
+  inline-size: 10rem;
+  z-index: 100;
+  gap: var(--space-1);
+}
+
+.roma-widget-actions-popover[data-positioned='false'] {
+  visibility: hidden;
+}
+
 .roma-locale-settings__list {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr));
@@ -411,6 +475,12 @@ a {
   background: transparent;
 }
 
+@media (max-width: 900px) {
+  .roma-widget-group {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
 @media (max-width: 599px), (max-height: 599px) {
   .roma-nav-trigger.diet-btn-ic {
     display: inline-flex;
@@ -428,4 +498,5 @@ a {
   .roma-grid--three {
     grid-template-columns: minmax(0, 1fr);
   }
+
 }

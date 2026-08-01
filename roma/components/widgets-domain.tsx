@@ -1,13 +1,18 @@
 'use client';
 
+import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { createDialogLifecycle, type DialogLifecycle } from '../../dieter/components/shared/dialog-lifecycle';
 import { resolveAccountShellErrorCopy, resolveAccountShellReason } from '../lib/account-shell-copy';
 import { useRomaAccountApi } from './account-api';
 import { prefetchWidgetEditorArtifact } from './widget-editor-artifact';
+import { RomaAccountNoticeModal } from './roma-account-notice-modal';
 import { useRomaAccountContext } from './roma-account-context';
+import { RomaDomainErrorBoundary } from './roma-domain-error-boundary';
+import { RomaShell } from './roma-shell';
 import { RomaUpsellDialog } from './roma-upsell-dialog';
 import {
   buildBuilderRoute,
@@ -24,6 +29,13 @@ import {
 type WidgetInstanceGroup = WidgetCatalogOption & {
   instances: WidgetInstance[];
 };
+
+type WidgetStatusFilter = 'all' | 'published' | 'unpublished';
+type WidgetSortKey = 'name' | 'status';
+type WidgetSortDirection = 'ascending' | 'descending';
+type WidgetGroupSort = { key: WidgetSortKey; direction: WidgetSortDirection };
+
+const DEFAULT_WIDGET_SORT: WidgetGroupSort = { key: 'name', direction: 'ascending' };
 
 type WidgetUpgradePrompt = {
   message: string;
@@ -141,7 +153,81 @@ async function readJsonOrNull(response: Response): Promise<unknown> {
   }
 }
 
-export function WidgetsDomain() {
+function WidgetSortHeader({
+  label,
+  sortKey,
+  sort,
+  onSort,
+}: {
+  label: string;
+  sortKey: WidgetSortKey;
+  sort: WidgetGroupSort;
+  onSort: (key: WidgetSortKey) => void;
+}) {
+  const active = sort.key === sortKey;
+  const direction = active ? sort.direction : null;
+  const icon = direction === 'ascending'
+    ? 'arrow.up.svg'
+    : direction === 'descending'
+      ? 'arrow.down.svg'
+      : 'arrow.up.arrow.down.svg';
+
+  return (
+    <th className="label-s" scope="col" aria-sort={direction ?? 'none'}>
+      <button
+        className="roma-widget-sort diet-btn-ictxt"
+        data-size="sm"
+        data-variant="neutral"
+        type="button"
+        onClick={() => onSort(sortKey)}
+      >
+        <span className="diet-btn-ictxt__label label-s">{label}</span>
+        <Image
+          className="diet-btn-ictxt__icon roma-widget-sort__icon"
+          src={`/dieter/icons/svg/${icon}`}
+          alt=""
+          width={12}
+          height={12}
+          aria-hidden="true"
+        />
+      </button>
+    </th>
+  );
+}
+
+export function WidgetsPage() {
+  const [statusFilter, setStatusFilter] = useState<WidgetStatusFilter>('all');
+
+  return (
+    <RomaShell
+      activeDomain="widgets"
+      title="Widgets"
+      headerRight={(
+        <label className="roma-widgets-filter">
+          <span className="sr-only">Filter widgets by publish status</span>
+          <select
+            className="diet-operational-field body-m"
+            value={statusFilter}
+            onChange={(event) => setStatusFilter(event.target.value as WidgetStatusFilter)}
+          >
+            <option value="all">Show all</option>
+            <option value="published">Show published</option>
+            <option value="unpublished">Show unpublished</option>
+          </select>
+        </label>
+      )}
+    >
+      <RomaAccountNoticeModal />
+      <Suspense fallback={null}>
+        <RomaDomainErrorBoundary domainLabel="Widgets" resetKey="widgets">
+          <WidgetsDomain statusFilter={statusFilter} />
+        </RomaDomainErrorBoundary>
+      </Suspense>
+    </RomaShell>
+  );
+}
+
+export function WidgetsDomain({ statusFilter = 'all' }: { statusFilter?: WidgetStatusFilter }) {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { accountContext, accountPolicy } = useRomaAccountContext();
@@ -162,8 +248,21 @@ export function WidgetsDomain() {
   const [renamingInstanceId, setRenamingInstanceId] = useState<string | null>(null);
   const [renameDraft, setRenameDraft] = useState('');
   const [renameError, setRenameError] = useState<string | null>(null);
+  const [groupSorts, setGroupSorts] = useState<Record<string, WidgetGroupSort>>({});
+  const [openWidgetActions, setOpenWidgetActions] = useState<{
+    instanceId: string;
+    position: { top: number; left: number } | null;
+  } | null>(null);
+  const widgetActionsTriggerRef = useRef<HTMLButtonElement | null>(null);
+  const widgetActionsPopoverRef = useRef<HTMLDivElement>(null);
 
   const selectedInstanceId = useMemo(() => (searchParams.get('selected') || '').trim(), [searchParams]);
+  const openWidgetActionsInstance = useMemo(
+    () => openWidgetActions
+      ? widgetInstances.find((instance) => instance.instanceId === openWidgetActions.instanceId) ?? null
+      : null,
+    [openWidgetActions, widgetInstances],
+  );
 
   const applyWidgets = useCallback((widgets: RomaWidgetsResponse) => {
     setWidgetInstances(widgets.instances);
@@ -248,12 +347,128 @@ export function WidgetsDomain() {
     });
 
     return Array.from(groups.values())
-      .map((group) => ({
-        ...group,
-        instances: group.instances.slice().sort((a, b) => a.instanceId.localeCompare(b.instanceId)),
-      }))
       .sort((a, b) => a.displayName.localeCompare(b.displayName));
   }, [catalog, widgetInstances]);
+
+  const displayedGroups = useMemo<WidgetInstanceGroup[]>(() => {
+    return groupedInstances
+      .map((group) => {
+        const sort = groupSorts[group.widgetType] ?? DEFAULT_WIDGET_SORT;
+        const instances = group.instances
+          .filter((instance) => statusFilter === 'all' || instance.status === statusFilter)
+          .slice()
+          .sort((left, right) => {
+            const leftName = left.displayName || DEFAULT_INSTANCE_DISPLAY_NAME;
+            const rightName = right.displayName || DEFAULT_INSTANCE_DISPLAY_NAME;
+            const primary = sort.key === 'name'
+              ? leftName.localeCompare(rightName)
+              : left.status.localeCompare(right.status);
+            if (primary !== 0) return sort.direction === 'ascending' ? primary : -primary;
+            const nameOrder = leftName.localeCompare(rightName);
+            if (nameOrder !== 0) return nameOrder;
+            return left.instanceId.localeCompare(right.instanceId);
+          });
+        return { ...group, instances };
+      })
+      .filter((group) => statusFilter === 'all' || group.instances.length > 0);
+  }, [groupSorts, groupedInstances, statusFilter]);
+
+  const changeGroupSort = useCallback((widgetType: string, key: WidgetSortKey) => {
+    setGroupSorts((current) => {
+      const currentSort = current[widgetType] ?? DEFAULT_WIDGET_SORT;
+      const nextSort: WidgetGroupSort = currentSort.key === key
+        ? {
+            key,
+            direction: currentSort.direction === 'ascending' ? 'descending' : 'ascending',
+          }
+        : { key, direction: 'ascending' };
+      return { ...current, [widgetType]: nextSort };
+    });
+  }, []);
+
+  const closeWidgetActions = useCallback((returnFocus = false) => {
+    const trigger = widgetActionsTriggerRef.current;
+    setOpenWidgetActions(null);
+    widgetActionsTriggerRef.current = null;
+    if (returnFocus) requestAnimationFrame(() => trigger?.focus());
+  }, []);
+
+  useEffect(() => {
+    if (!openWidgetActions || openWidgetActions.position) return undefined;
+    const frame = requestAnimationFrame(() => {
+      const trigger = widgetActionsTriggerRef.current;
+      const popover = widgetActionsPopoverRef.current;
+      if (!trigger || !popover) return;
+      const triggerRect = trigger.getBoundingClientRect();
+      const popoverStyles = getComputedStyle(popover);
+      const gap = Number.parseFloat(popoverStyles.rowGap) || 0;
+      const edge = Number.parseFloat(popoverStyles.paddingInlineStart) || 0;
+      const top = triggerRect.bottom + gap + popover.offsetHeight <= window.innerHeight - edge
+        ? triggerRect.bottom + gap
+        : Math.max(edge, triggerRect.top - popover.offsetHeight - gap);
+      const left = Math.min(
+        window.innerWidth - popover.offsetWidth - edge,
+        Math.max(edge, triggerRect.right - popover.offsetWidth),
+      );
+      setOpenWidgetActions((current) => current
+        ? { ...current, position: { top, left } }
+        : null);
+      requestAnimationFrame(() => {
+        popover.querySelector<HTMLButtonElement>('[role="menuitem"]')?.focus();
+      });
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [openWidgetActions]);
+
+  useEffect(() => {
+    if (!openWidgetActions) return undefined;
+    const closeOnPointerDown = (event: PointerEvent) => {
+      if (!(event.target instanceof Node)) return;
+      if (widgetActionsTriggerRef.current?.contains(event.target) || widgetActionsPopoverRef.current?.contains(event.target)) return;
+      closeWidgetActions();
+    };
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        closeWidgetActions(true);
+        return;
+      }
+      if (event.key === 'Tab') {
+        closeWidgetActions();
+        return;
+      }
+      if (!['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key)) return;
+      const items = Array.from(
+        widgetActionsPopoverRef.current?.querySelectorAll<HTMLButtonElement>('[role="menuitem"]') ?? [],
+      );
+      if (items.length === 0) return;
+      event.preventDefault();
+      const currentIndex = items.indexOf(document.activeElement as HTMLButtonElement);
+      if (event.key === 'Home') items[0]?.focus();
+      else if (event.key === 'End') items.at(-1)?.focus();
+      else if (event.key === 'ArrowDown') items[(currentIndex + 1 + items.length) % items.length]?.focus();
+      else items[(currentIndex - 1 + items.length) % items.length]?.focus();
+    };
+    const closeOnViewportChange = () => closeWidgetActions();
+    document.addEventListener('pointerdown', closeOnPointerDown);
+    document.addEventListener('keydown', closeOnEscape);
+    window.addEventListener('resize', closeOnViewportChange);
+    window.addEventListener('scroll', closeOnViewportChange, true);
+    return () => {
+      document.removeEventListener('pointerdown', closeOnPointerDown);
+      document.removeEventListener('keydown', closeOnEscape);
+      window.removeEventListener('resize', closeOnViewportChange);
+      window.removeEventListener('scroll', closeOnViewportChange, true);
+    };
+  }, [closeWidgetActions, openWidgetActions]);
+
+  useEffect(() => {
+    if (activeActionKey && openWidgetActions) closeWidgetActions();
+  }, [activeActionKey, closeWidgetActions, openWidgetActions]);
+
+  useEffect(() => {
+    if (openWidgetActions && !openWidgetActionsInstance) closeWidgetActions();
+  }, [closeWidgetActions, openWidgetActions, openWidgetActionsInstance]);
 
   useEffect(() => {
     const candidates = instanceWidgetTypes.slice(0, 8);
@@ -484,13 +699,14 @@ export function WidgetsDomain() {
         </section>
       ) : null}
 
-      {groupedInstances.map((group) => {
+      {displayedGroups.map((group) => {
         const createActionKey = `create:${group.widgetType}`;
+        const sort = groupSorts[group.widgetType] ?? DEFAULT_WIDGET_SORT;
         return (
-          <section className="rd-canvas-module" key={group.widgetType}>
-            <div className="roma-toolbar">
+          <section className="rd-canvas-module roma-widget-group" key={group.widgetType}>
+            <div className="roma-widget-group__meta">
               <h2 className="heading-4">{group.displayName}</h2>
-              <p className="body-m roma-toolbar-count">
+              <p className="body-s roma-widget-group__count">
                 {group.instances.length} {group.instances.length === 1 ? 'instance' : 'instances'}
               </p>
               {canMutateWidgets ? (
@@ -509,170 +725,225 @@ export function WidgetsDomain() {
             </div>
 
             <div className="diet-table">
-            <table className="diet-table__table">
-              <thead>
-                <tr>
-                  <th className="label-s">Instance</th>
-                  <th className="label-s">Instance ID</th>
-                  <th className="label-s">Status</th>
-                  <th className="label-s diet-table__cell--action">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {group.instances.map((instance) => {
-                  const duplicateActionKey = `duplicate:${instance.instanceId}`;
-                  const deleteActionKey = `delete:${instance.instanceId}`;
-                  const publishActionKey = `published:${instance.instanceId}`;
-                  const unpublishActionKey = `unpublished:${instance.instanceId}`;
-                  const isSelected = selectedInstanceId === instance.instanceId;
-                  const renameActionKey = `rename:${instance.instanceId}`;
-                  const isRenaming = renamingInstanceId === instance.instanceId;
-                  return (
-                    <tr key={instance.instanceId} data-selected={isSelected ? 'true' : undefined} aria-current={isSelected ? 'true' : undefined}>
-                      <td className="body-s">
-                        {isRenaming ? (
-                          <div className="roma-instance-rename">
+              <table className="diet-table__table">
+                <caption className="sr-only">{group.displayName} widget instances</caption>
+                <thead>
+                  <tr>
+                    <WidgetSortHeader label="Name" sortKey="name" sort={sort} onSort={(key) => changeGroupSort(group.widgetType, key)} />
+                    <WidgetSortHeader label="Published" sortKey="status" sort={sort} onSort={(key) => changeGroupSort(group.widgetType, key)} />
+                    <th className="label-s" scope="col">Instance ID</th>
+                    <th className="label-s diet-table__cell--action" scope="col">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {group.instances.map((instance) => {
+                    const instanceName = instance.displayName || DEFAULT_INSTANCE_DISPLAY_NAME;
+                    const isSelected = selectedInstanceId === instance.instanceId;
+                    const renameActionKey = `rename:${instance.instanceId}`;
+                    const isRenaming = renamingInstanceId === instance.instanceId;
+                    const statusActionKey = `${instance.status === 'published' ? 'unpublished' : 'published'}:${instance.instanceId}`;
+                    const statusUpdating = activeActionKey === statusActionKey;
+                    const actionsOpen = openWidgetActions?.instanceId === instance.instanceId;
+                    const secondaryActionStatus = activeActionKey === `duplicate:${instance.instanceId}`
+                      ? 'Duplicating…'
+                      : activeActionKey === `delete:${instance.instanceId}`
+                        ? 'Deleting…'
+                        : null;
+                    return (
+                      <tr key={instance.instanceId} data-selected={isSelected ? 'true' : undefined} aria-current={isSelected ? 'true' : undefined}>
+                        <th className="body-s" scope="row">
+                          {isRenaming ? (
+                            <div className="roma-instance-rename">
+                              <input
+                                className="diet-operational-field roma-instance-rename__input body-s"
+                                type="text"
+                                value={renameDraft}
+                                maxLength={120}
+                                onChange={(event) => setRenameDraft(event.target.value)}
+                                onKeyDown={(event) => {
+                                  if (event.key === 'Enter') {
+                                    event.preventDefault();
+                                    void handleRenameInstance(instance);
+                                  }
+                                  if (event.key === 'Escape') {
+                                    event.preventDefault();
+                                    cancelRename();
+                                  }
+                                }}
+                                autoFocus
+                              />
+                              <div className="roma-instance-rename__actions">
+                                <button
+                                  className="diet-btn-txt"
+                                  data-size="md"
+                                  data-variant="neutral"
+                                  type="button"
+                                  onClick={cancelRename}
+                                  disabled={Boolean(activeActionKey)}
+                                >
+                                  <span className="diet-btn-txt__label body-m">Cancel</span>
+                                </button>
+                                <button
+                                  className="diet-btn-txt"
+                                  data-size="md"
+                                  data-variant="primary"
+                                  type="button"
+                                  onClick={() => void handleRenameInstance(instance)}
+                                  disabled={Boolean(activeActionKey)}
+                                >
+                                  <span className="diet-btn-txt__label body-m">{activeActionKey === renameActionKey ? 'Renaming...' : 'Rename'}</span>
+                                </button>
+                              </div>
+                            </div>
+                          ) : (
+                            <>
+                              {instanceName}
+                              {isSelected ? ' (selected)' : ''}
+                            </>
+                          )}
+                        </th>
+                        <td className="body-s">
+                          <label className="diet-toggle roma-widget-status-toggle" data-size="sm" aria-busy={statusUpdating || undefined}>
+                            <span className="diet-toggle__label sr-only">
+                              Published: {instanceName}{statusUpdating ? ', updating' : ''}
+                            </span>
                             <input
-                              className="diet-operational-field roma-instance-rename__input body-s"
-                              type="text"
-                              value={renameDraft}
-                              maxLength={120}
-                              onChange={(event) => setRenameDraft(event.target.value)}
-                              onKeyDown={(event) => {
-                                if (event.key === 'Enter') {
-                                  event.preventDefault();
-                                  void handleRenameInstance(instance);
-                                }
-                                if (event.key === 'Escape') {
-                                  event.preventDefault();
-                                  cancelRename();
-                                }
-                              }}
-                              autoFocus
+                              className="diet-toggle__input sr-only"
+                              type="checkbox"
+                              role="switch"
+                              checked={instance.status === 'published'}
+                              disabled={!canMutateWidgets || Boolean(activeActionKey)}
+                              onChange={(event) => void handleStatusChange(instance, event.target.checked ? 'published' : 'unpublished')}
                             />
-                            <div className="roma-instance-rename__actions">
-                              <button
+                            <span className="diet-toggle__switch" aria-hidden="true">
+                              <span className="diet-toggle__knob" />
+                            </span>
+                          </label>
+                        </td>
+                        <td className="body-xs roma-widget-instance-id">{instance.instanceId}</td>
+                        <td className="body-s diet-table__cell--action">
+                          {canMutateWidgets ? (
+                            <div className="roma-cell-actions">
+                              <Link
+                                href={buildBuilderRoute({
+                                  instanceId: instance.instanceId,
+                                  widgetType: instance.widgetType,
+                                })}
                                 className="diet-btn-txt"
+                                data-size="md"
+                                data-variant="line2"
+                              >
+                                <span className="diet-btn-txt__label body-m">Edit</span>
+                              </Link>
+                              {secondaryActionStatus ? (
+                                <span className="body-xs roma-widget-action-status" role="status">{secondaryActionStatus}</span>
+                              ) : null}
+                              <button
+                                className="diet-btn-ic"
                                 data-size="md"
                                 data-variant="neutral"
                                 type="button"
-                                onClick={() => cancelRename()}
-                                disabled={Boolean(activeActionKey)}
+                                aria-label={`More actions for ${instanceName}`}
+                                aria-haspopup="menu"
+                                aria-controls="roma-widget-actions-menu"
+                                aria-expanded={actionsOpen}
+                                disabled={Boolean(activeActionKey) || isRenaming}
+                                onClick={(event) => {
+                                  if (actionsOpen) {
+                                    closeWidgetActions();
+                                    return;
+                                  }
+                                  widgetActionsTriggerRef.current = event.currentTarget;
+                                  setOpenWidgetActions({ instanceId: instance.instanceId, position: null });
+                                }}
                               >
-                                <span className="diet-btn-txt__label body-m">Cancel</span>
-                              </button>
-                              <button
-                                className="diet-btn-txt"
-                                data-size="md"
-                                data-variant="primary"
-                                type="button"
-                                onClick={() => void handleRenameInstance(instance)}
-                                disabled={Boolean(activeActionKey)}
-                              >
-                                <span className="diet-btn-txt__label body-m">{activeActionKey === renameActionKey ? 'Renaming...' : 'Rename'}</span>
+                                <Image className="diet-btn-ic__icon" src="/dieter/icons/svg/ellipsis.svg" alt="" width={16} height={16} aria-hidden="true" />
                               </button>
                             </div>
-                          </div>
-                        ) : (
-                          <>
-                            {instance.displayName || DEFAULT_INSTANCE_DISPLAY_NAME}
-                            {isSelected ? ' (selected)' : ''}
-                          </>
-                        )}
-                      </td>
-                      <td className="body-s">{instance.instanceId}</td>
-                      <td className="body-s">{instance.status === 'published' ? 'Published' : 'Unpublished'}</td>
-                      <td className="body-s diet-table__cell--action">
-                        <div className="roma-cell-actions">
-                          {canMutateWidgets ? (
-                            <>
-                            <Link
-                              href={buildBuilderRoute({
-                                instanceId: instance.instanceId,
-                                widgetType: instance.widgetType,
-                              })}
-                              className="diet-btn-txt"
-                              data-size="md"
-                              data-variant="line2"
-                            >
-                              <span className="diet-btn-txt__label body-m">Edit</span>
-                            </Link>
-                            {instance.status === 'published' ? (
-                              <button
-                                className="diet-btn-txt"
-                                data-size="md"
-                                data-variant="secondary"
-                                type="button"
-                                onClick={() => void handleStatusChange(instance, 'unpublished')}
-                                disabled={Boolean(activeActionKey)}
-                              >
-                                <span className="diet-btn-txt__label body-m">{activeActionKey === unpublishActionKey ? 'Unpublishing...' : 'Unpublish'}</span>
-                              </button>
-                            ) : null}
-                            {instance.status === 'unpublished' ? (
-                              <button
-                                className="diet-btn-txt"
-                                data-size="md"
-                                data-variant="primary"
-                                type="button"
-                                onClick={() => void handleStatusChange(instance, 'published')}
-                                disabled={Boolean(activeActionKey)}
-                              >
-                                <span className="diet-btn-txt__label body-m">{activeActionKey === publishActionKey ? 'Publishing...' : 'Publish'}</span>
-                              </button>
-                            ) : null}
-                            <button
-                              className="diet-btn-txt"
-                              data-size="md"
-                              data-variant="secondary"
-                              type="button"
-                              onClick={() => startRename(instance)}
-                              disabled={Boolean(activeActionKey) || isRenaming}
-                            >
-                              <span className="diet-btn-txt__label body-m">Rename</span>
-                            </button>
-                            <button
-                              className="diet-btn-txt"
-                              data-size="md"
-                              data-variant="secondary"
-                              type="button"
-                              onClick={() => handleDuplicateInstance(instance)}
-                              disabled={Boolean(activeActionKey)}
-                            >
-                              <span className="diet-btn-txt__label body-m">{activeActionKey === duplicateActionKey ? 'Duplicating...' : 'Duplicate'}</span>
-                            </button>
-                            <button
-                              className="diet-btn-txt"
-                              data-size="md"
-                              data-variant="line2"
-                              type="button"
-                              onClick={() => handleDeleteInstance(instance)}
-                              disabled={Boolean(activeActionKey)}
-                            >
-                              <span className="diet-btn-txt__label body-m">{activeActionKey === deleteActionKey ? 'Deleting...' : 'Delete'}</span>
-                            </button>
-                            </>
                           ) : (
                             <span className="body-s">View only</span>
                           )}
-                        </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                  {group.instances.length === 0 ? (
+                    <tr>
+                      <td colSpan={4} className="body-s">
+                        No instances yet.
                       </td>
                     </tr>
-                  );
-                })}
-                {group.instances.length === 0 ? (
-                  <tr>
-                    <td colSpan={4} className="body-s">
-                      No instances yet.
-                    </td>
-                  </tr>
-                ) : null}
-              </tbody>
-            </table>
+                  ) : null}
+                </tbody>
+              </table>
             </div>
           </section>
         );
       })}
+      {!domainLoading && !widgetDataError && statusFilter !== 'all' && displayedGroups.length === 0 ? (
+        <section className="rd-canvas-module">
+          <p className="body-m">
+            No {statusFilter} instances.
+          </p>
+        </section>
+      ) : null}
+      {openWidgetActions && openWidgetActionsInstance && typeof document !== 'undefined'
+        ? createPortal(
+            <div
+              ref={widgetActionsPopoverRef}
+              id="roma-widget-actions-menu"
+              className="diet-popover roma-widget-actions-popover"
+              role="menu"
+              aria-label={`Actions for ${openWidgetActionsInstance.displayName || DEFAULT_INSTANCE_DISPLAY_NAME}`}
+              data-positioned={openWidgetActions.position ? 'true' : 'false'}
+              style={{
+                top: openWidgetActions.position?.top ?? 0,
+                left: openWidgetActions.position?.left ?? 0,
+              }}
+            >
+              <button
+                className="diet-btn-menuactions"
+                data-size="md"
+                data-variant="neutral"
+                type="button"
+                role="menuitem"
+                onClick={() => {
+                  closeWidgetActions();
+                  startRename(openWidgetActionsInstance);
+                }}
+              >
+                <span className="diet-btn-menuactions__label body-s">Rename</span>
+              </button>
+              <button
+                className="diet-btn-menuactions"
+                data-size="md"
+                data-variant="neutral"
+                type="button"
+                role="menuitem"
+                onClick={() => {
+                  closeWidgetActions(true);
+                  void handleDuplicateInstance(openWidgetActionsInstance);
+                }}
+              >
+                <span className="diet-btn-menuactions__label body-s">Duplicate</span>
+              </button>
+              <button
+                className="diet-btn-menuactions"
+                data-size="md"
+                data-variant="neutral"
+                type="button"
+                role="menuitem"
+                onClick={() => {
+                  closeWidgetActions(true);
+                  void handleDeleteInstance(openWidgetActionsInstance);
+                }}
+              >
+                <span className="diet-btn-menuactions__label body-s">Delete</span>
+              </button>
+            </div>,
+            document.body,
+          )
+        : null}
       <WidgetUpgradePromptDialog
         prompt={upgradePrompt}
         onClose={() => setUpgradePrompt(null)}
