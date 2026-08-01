@@ -397,14 +397,21 @@ the mode gallery behind `Change`. See §2 and §3.1a.
 
 **Still open:**
 
-- **3.0's Position, Theme, and Settings rail sections.** Not captured. The editor
-  loads as a single cross-origin iframe (`app-releases/countdown-timer/stable/v3.1`)
-  and synthetic clicks on the rail buttons stopped taking effect partway through
-  the session — clicks reach the iframe (a double-click produced a text
-  selection) but the rail items do not respond at any coordinate tried, including
-  the icon centre, the label, and both `devicePixelRatio`-scaled variants. Panel
-  content inside the Timer section was clickable earlier in the same session, so
-  this is a tooling limitation, not a property of the product.
+- **3.1's Position, Theme, and Settings rail sections.** Not captured, and the
+  cause is now isolated. The editor is a single cross-origin iframe
+  (`app-releases/countdown-timer/stable/v3.1`). Synthetic clicks reach that iframe
+  — a double-click produced a text selection, and the `Change` link inside the
+  Timer panel opened the mode gallery. But the **rail buttons specifically** do not
+  respond, across two browser tab groups, three tabs, four window sizes, and every
+  coordinate variant tried (icon centre, text label, and both
+  `devicePixelRatio`-scaled positions).
+
+  The decisive comparison: **the equivalent rail in Calculator's editor bundle
+  responded to the same technique in the same session** — Build, Action, Style and
+  Settings were all switched by synthetic click. So this is specific to Countdown
+  v3.1's bundle, not a general automation limit and not a property of the product.
+
+  Practical unblock: a human clicking the three rail items while captures run.
 
   What is known about these three from the pre-update legacy version — Style and
   Holiday Theme carousels, five colours, Sizes & Fonts, Animation, Position as a
