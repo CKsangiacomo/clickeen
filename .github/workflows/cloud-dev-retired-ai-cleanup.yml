@@ -8,7 +8,8 @@ on:
         required: true
         type: choice
         options:
-          - retired-resources
+          - retired-bindings
+          - retired-d1-r2
           - obsolete-config
 
 jobs:
@@ -27,19 +28,33 @@ jobs:
         with:
           node-version: 20
 
-      - name: Delete retired learning data and infrastructure
-        if: inputs.phase == 'retired-resources'
+      - name: Delete retired queue and KV namespace
+        if: inputs.phase == 'retired-bindings'
         shell: bash
         run: |
           set -euo pipefail
           wrangler=(pnpm dlx wrangler@4.54.0)
 
-          "${wrangler[@]}" queues consumer remove sanfrancisco-events-dev sanfrancisco-dev
           printf 'y\n' | "${wrangler[@]}" queues delete sanfrancisco-events-dev
+          "${wrangler[@]}" kv namespace delete \
+            --namespace-id f1abe003b9a8434699175b0c1ccd2603 \
+            --skip-confirmation
+
           if "${wrangler[@]}" queues list | grep -Fq 'sanfrancisco-events-dev'; then
             echo 'Retired San Francisco queue still exists.' >&2
             exit 1
           fi
+          if "${wrangler[@]}" kv namespace list | grep -Fq 'f1abe003b9a8434699175b0c1ccd2603'; then
+            echo 'Retired San Francisco KV namespace still exists.' >&2
+            exit 1
+          fi
+
+      - name: Delete retired learning data and D1 database
+        if: inputs.phase == 'retired-d1-r2'
+        shell: bash
+        run: |
+          set -euo pipefail
+          wrangler=(pnpm dlx wrangler@4.54.0)
 
           if ! "${wrangler[@]}" d1 execute sanfrancisco_d1_dev --remote --json \
             --command "SELECT requestId, day, agentId FROM copilot_events" \
@@ -86,16 +101,9 @@ jobs:
           done < "$RUNNER_TEMP/retired-learning-keys.txt"
 
           "${wrangler[@]}" d1 delete sanfrancisco_d1_dev --skip-confirmation
-          "${wrangler[@]}" kv namespace delete \
-            --namespace-id f1abe003b9a8434699175b0c1ccd2603 \
-            --skip-confirmation
 
           if "${wrangler[@]}" d1 list --json | grep -Fq 'sanfrancisco_d1_dev'; then
             echo 'Retired San Francisco D1 database still exists.' >&2
-            exit 1
-          fi
-          if "${wrangler[@]}" kv namespace list | grep -Fq 'f1abe003b9a8434699175b0c1ccd2603'; then
-            echo 'Retired San Francisco KV namespace still exists.' >&2
             exit 1
           fi
 
@@ -118,7 +126,7 @@ jobs:
             --request PATCH \
             --header "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
             --header 'Content-Type: application/json' \
-            --data '{"deployment_configs":{"production":{"env_vars":{"AI_GRANT_HMAC_SECRET":null,"SANFRANCISCO_BASE_URL":null}},"preview":{"env_vars":{"SANFRANCISCO_BASE_URL":null}}}}' \
+            --data '{"deployment_configs":{"production":{"env_vars":{"AI_GRANT_HMAC_SECRET":null,"SANFRANCISCO_BASE_URL":null}},"preview":{"env_vars":{"AI_GRANT_HMAC_SECRET":null,"SANFRANCISCO_BASE_URL":null}}}}' \
             "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/pages/projects/roma-dev" \
             > "$response"
           node -e "const fs=require('fs');const v=JSON.parse(fs.readFileSync(process.argv[1],'utf8'));if(v.success!==true)process.exit(1)" "$response"
@@ -128,7 +136,7 @@ jobs:
             --header "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
             "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/pages/projects/roma-dev" \
             > "$project"
-          node -e "const fs=require('fs');const v=JSON.parse(fs.readFileSync(process.argv[1],'utf8'));const d=v.result.deployment_configs;if(d.production.env_vars.AI_GRANT_HMAC_SECRET||d.production.env_vars.SANFRANCISCO_BASE_URL||d.preview.env_vars.SANFRANCISCO_BASE_URL)process.exit(1)" "$project"
+          node -e "const fs=require('fs');const v=JSON.parse(fs.readFileSync(process.argv[1],'utf8'));const d=v.result.deployment_configs;if(d.production.env_vars.AI_GRANT_HMAC_SECRET||d.production.env_vars.SANFRANCISCO_BASE_URL||d.preview.env_vars.AI_GRANT_HMAC_SECRET||d.preview.env_vars.SANFRANCISCO_BASE_URL)process.exit(1)" "$project"
 
           for worker in sanfrancisco-dev tokyo-assets-dev translation-agent-dev; do
             if "${wrangler[@]}" secret list --name "$worker" --format json | grep -Fq 'AI_GRANT_HMAC_SECRET'; then
