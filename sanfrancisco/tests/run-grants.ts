@@ -26,8 +26,11 @@ async function run(): Promise<void> {
   const token = await mintRomaAiGrant(payload, privateKeyPem);
   assert.equal((await verifyGrant(token, publicKeyPem)).iss, 'roma');
 
+  const [prefix, encodedPayload, encodedSignature] = token.split('.');
+  assert.ok(prefix && encodedPayload && encodedSignature);
+  const tamperedSignature = `${encodedSignature[0] === 'a' ? 'b' : 'a'}${encodedSignature.slice(1)}`;
   await assert.rejects(
-    () => verifyGrant(`${token.slice(0, -1)}${token.endsWith('a') ? 'b' : 'a'}`, publicKeyPem),
+    () => verifyGrant(`${prefix}.${encodedPayload}.${tamperedSignature}`, publicKeyPem),
     /Grant signature mismatch/,
   );
   const wrongIssuer = await mintRomaAiGrant({ ...payload, iss: 'sanfrancisco' }, privateKeyPem);

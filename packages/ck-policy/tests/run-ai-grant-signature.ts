@@ -23,7 +23,10 @@ async function run(): Promise<void> {
   assert.ok(envelope);
   assert.equal(await verifyRomaAiGrantSignature(envelope, publicKeyPem), true);
 
-  const tampered = { ...envelope, payloadB64: envelope.payloadB64.replace(/.$/, envelope.payloadB64.endsWith('a') ? 'b' : 'a') };
+  const tampered = {
+    ...envelope,
+    payloadB64: `${envelope.payloadB64[0] === 'a' ? 'b' : 'a'}${envelope.payloadB64.slice(1)}`,
+  };
   assert.equal(await verifyRomaAiGrantSignature(tampered, publicKeyPem), false);
   assert.equal(readRomaAiGrantEnvelope('ckgrant.invalid.invalid'), null);
   await assert.rejects(() => mintRomaAiGrant({ iss: 'roma' }, publicKeyPem), /private key PEM/);
