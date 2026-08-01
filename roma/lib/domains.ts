@@ -20,7 +20,7 @@ export type RomaDomainDefinition = {
 };
 
 export const ROMA_DOMAINS: readonly RomaDomainDefinition[] = [
-  { key: 'home', label: 'Home', href: '/home', description: 'Account overview and quick actions.' },
+  { key: 'home', label: 'Home', href: '/home', description: 'Reserved for account insights and messages.' },
   { key: 'profile', label: 'User Settings', href: '/profile', description: 'Person-scoped settings for the signed-in user.' },
   { key: 'widgets', label: 'Widgets', href: '/widgets', description: 'Manage account-owned instances.' },
   { key: 'pages', label: 'Pages', href: '/pages', description: 'Stack widget instances into pages.' },

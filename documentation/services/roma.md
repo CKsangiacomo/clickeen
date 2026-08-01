@@ -117,6 +117,9 @@ Roma account-shell routes include:
 - `/ai`
 - `/settings`
 
+`/home` currently preserves the Roma shell and navigation but renders no
+domain-specific header, actions, placeholders, or page content.
+
 `/widgets` owns account widget lifecycle actions. `/builder/:instanceId` opens
 one widget instance in Bob for editing.
 

@@ -416,6 +416,10 @@ a {
     display: inline-flex;
   }
 
+  .roma-nav-trigger--standalone {
+    margin-block-end: var(--space-3);
+  }
+
   .rd-canvas-module {
     padding-block: var(--space-3);
     padding-inline: var(--space-4);

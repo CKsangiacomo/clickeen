@@ -1,8 +1,12 @@
-import { HomeDomain } from '../../../components/home-domain';
-import { DomainPageShell } from '../domain-page-shell';
+import { RomaAccountNoticeModal } from '../../../components/roma-account-notice-modal';
+import { RomaShell } from '../../../components/roma-shell';
 
 export default function HomePage() {
-  return <DomainPageShell activeDomain="home" title="Home" Component={HomeDomain} />;
+  return (
+    <RomaShell activeDomain="home" title="Home" pageHeader={false}>
+      <RomaAccountNoticeModal />
+    </RomaShell>
+  );
 }
 
 export const runtime = 'edge';

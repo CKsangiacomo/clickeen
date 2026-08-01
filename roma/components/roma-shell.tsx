@@ -22,6 +22,7 @@ type RomaShellProps = {
   children: ReactNode;
   headerRight?: ReactNode;
   fullCanvas?: boolean;
+  pageHeader?: boolean;
 };
 
 type RomaShellActions = {
@@ -55,6 +56,7 @@ export function RomaShell({
   children,
   headerRight,
   fullCanvas = false,
+  pageHeader = true,
 }: RomaShellProps) {
   const [compact, setCompact] = useState(false);
   const [navigationOpen, setNavigationOpen] = useState(false);
@@ -109,6 +111,30 @@ export function RomaShell({
     return () => window.removeEventListener('keydown', closeOnEscape);
   }, [closeNavigation, navigationOpen]);
 
+  const renderNavigationTrigger = (standalone = false) => (
+    <button
+      ref={openerRef}
+      className={`roma-nav-trigger diet-btn-ic${standalone ? ' roma-nav-trigger--standalone' : ''}`}
+      data-size="md"
+      data-variant="neutral"
+      type="button"
+      aria-label={navigationOpen ? 'Close navigation' : 'Open navigation'}
+      aria-controls="roma-primary-navigation"
+      aria-expanded={navigationOpen}
+      onClick={() => {
+        if (navigationOpen) closeNavigation(true);
+        else openNavigation(openerRef.current);
+      }}
+    >
+      <Image
+        src="/dieter/icons/svg/line.3.horizontal.decrease.circle.svg"
+        alt=""
+        width={20}
+        height={20}
+      />
+    </button>
+  );
+
   return (
     <RomaShellActionsContext.Provider value={shellActions}>
       <div className="main-container" data-navigation-open={navigationOpen ? 'true' : undefined}>
@@ -133,30 +159,11 @@ export function RomaShell({
             aria-label="Close navigation"
             onClick={() => closeNavigation(true)}
           />
-          {!fullCanvas ? (
+          {!fullCanvas && !pageHeader ? renderNavigationTrigger(true) : null}
+          {!fullCanvas && pageHeader ? (
             <header className="page__header">
               <div className="roma-page-heading">
-                <button
-                  ref={openerRef}
-                  className="roma-nav-trigger diet-btn-ic"
-                  data-size="md"
-                  data-variant="neutral"
-                  type="button"
-                  aria-label={navigationOpen ? 'Close navigation' : 'Open navigation'}
-                  aria-controls="roma-primary-navigation"
-                  aria-expanded={navigationOpen}
-                  onClick={() => {
-                    if (navigationOpen) closeNavigation(true);
-                    else openNavigation(openerRef.current);
-                  }}
-                >
-                  <Image
-                    src="/dieter/icons/svg/line.3.horizontal.decrease.circle.svg"
-                    alt=""
-                    width={20}
-                    height={20}
-                  />
-                </button>
+                {renderNavigationTrigger()}
                 <h1 className="heading-2">{title}</h1>
               </div>
               <div className="page__actions">{headerRight}</div>
