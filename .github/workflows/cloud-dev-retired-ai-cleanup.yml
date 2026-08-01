@@ -34,6 +34,7 @@ jobs:
           set -euo pipefail
           wrangler=(pnpm dlx wrangler@4.54.0)
 
+          "${wrangler[@]}" queues consumer remove sanfrancisco-events-dev sanfrancisco-dev
           printf 'y\n' | "${wrangler[@]}" queues delete sanfrancisco-events-dev
           if "${wrangler[@]}" queues list | grep -Fq 'sanfrancisco-events-dev'; then
             echo 'Retired San Francisco queue still exists.' >&2
