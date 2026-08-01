@@ -160,7 +160,7 @@ jobs:
             echo "Missing ROMA_AI_GRANT_PRIVATE_KEY_PEM GitHub deployment secret for roma-dev." >&2
             exit 1
           fi
-          printf '%s' "$ROMA_AI_GRANT_PRIVATE_KEY_PEM" | pnpm -C roma exec wrangler pages secret put ROMA_AI_GRANT_PRIVATE_KEY_PEM --project-name roma-dev
+          printf '%s' "$ROMA_AI_GRANT_PRIVATE_KEY_PEM" | pnpm dlx wrangler@4.54.0 pages secret put ROMA_AI_GRANT_PRIVATE_KEY_PEM --project-name roma-dev
 
       - name: Sync sanfrancisco-dev signing authorities
         if: steps.changes.outputs.sanfrancisco == 'true'
