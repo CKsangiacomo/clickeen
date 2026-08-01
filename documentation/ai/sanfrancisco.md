@@ -19,7 +19,6 @@ Code authority: `sanfrancisco/`
 | Cloud-dev host | `https://sanfrancisco.dev.clickeen.com` |
 | Deploy workflow | `.github/workflows/cloud-dev-workers.yml` |
 | R2 bucket | `sanfrancisco-logs-dev` |
-| KV namespace | `f1abe003b9a8434699175b0c1ccd2603` |
 
 Every response includes `x-request-id`. San Francisco emits one structured
 `http.request` log for each handled request.

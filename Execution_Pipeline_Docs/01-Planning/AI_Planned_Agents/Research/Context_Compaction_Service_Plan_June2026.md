@@ -95,13 +95,18 @@ S3 and S4 are described here so the design accommodates them, but they are expli
 
 ## 5. Reversibility (CCR-lite) — only if forced
 
-If S3/S4 ever drop content a caller later needs: store the dropped bytes keyed by SHA-256 (copy Headroom's CCR keying) in **D1/KV** (San Francisco already binds `SF_D1`/`SF_KV`), expose a retrieve path. **Do not build this in v0.** v0 is lossless only — nothing is dropped, so nothing needs retrieving. Reversibility is added exactly when a lossy strategy is first enabled, not before.
+If S3/S4 ever drop content a caller later needs, that proposal must first name a
+new storage authority and justify its product value. San Francisco has no D1 or
+KV binding and must not regain a learning/event plane incidentally. **Do not
+build this in v0.** v0 is lossless only, so nothing needs retrieving.
 
 ## 6. Measurement & rollout (the anti-speculation core)
 
 This is the most important section. Nothing ships always-on; everything is measured.
 
-1. **Instrument first.** San Francisco already captures `usage.prompt_tokens`/`completion_tokens` per call (`providers/openai.ts:157`) and already has an events queue (`SF_EVENTS`) + D1 (`SF_D1`). Emit one compaction-metrics event per call: `{agentId, surface, strategy, tokensBefore, tokensAfter, reverted, ts}`. No new infrastructure — reuse `SF_EVENTS`.
+1. **Measure first in the owning evals.** San Francisco returns provider usage
+   to the calling agent. Compare representative fixture runs there; do not add
+   a San Francisco event queue, D1 store, or outcome/learning plane.
 2. **A/B holdout (copy Headroom's discipline).** A deterministic fraction of calls (start 10%) are assigned `holdout=true` → `passthrough`. Savings are then *measured* (compressed vs control), never estimated. Assignment is a stable hash of `(agentId, threadId)` so a conversation stays in one arm.
 3. **Flag-gated, off by default.** Per-`surface` flags in SF config/env; a global kill switch. v0 enables `lossless` only, and only on surfaces where measurement shows meaningful input-token spend.
 4. **Gate every strategy on measured evidence.** S2 ships only if instrumentation shows real duplication. S3/S4 ship only if a measured caller forces them. No strategy is built on assumption.
@@ -112,11 +117,11 @@ Net: Step 1 (measurement) is valuable *on its own* — it answers "is token cost
 
 | Step | Builds | Acceptance | Gate to proceed |
 |---|---|---|---|
-| **1** | Measurement scaffold: compaction-metrics event → `SF_EVENTS` → D1; a query/dash showing per-`agentId`×`surface` input-token spend | Can read real per-surface token cost over a window | Does any surface show material input-token spend? If no → **stop here**, ship only the measurement. |
+| **1** | Fixture-based measurement in each owning agent eval | Can compare representative prompt-token cost without a runtime telemetry plane | Does any surface show material input-token spend? If no → **stop here**. |
 | **2** | `packages/ck-context-compaction` with `passthrough` + `lossless` (S1) + inflation guard + A/B holdout + flag wiring at `chat.ts:41` | Lossless runs behind a flag on one surface; parity fixtures show zero output drift; measured savings reported vs control | Savings material and no accuracy regression? |
 | **3** | S2 dedup | Only if Step-2 instrumentation shows real repeated content | Measured duplication present |
 | **4** | S3 schema-slice and/or S4 lossy-drop | Only if a measured non-Translation caller forces it | Measured large-irrelevant-schema payloads |
-| **5** | Reversibility (CCR-lite in D1/KV + retrieve) | Only if a lossy strategy (Step 4) is enabled | A lossy strategy is shipping |
+| **5** | Separately reviewed reversibility authority, only if justified | Only if a lossy strategy (Step 4) is enabled | A lossy strategy is shipping |
 
 Steps 1–2 are the v0. Steps 3–5 are conditional, each requiring measured justification. Nothing is "deferred to a phase" — it is either forced by evidence or removed from scope.
 
@@ -150,9 +155,9 @@ Steps 1–2 are the v0. Steps 3–5 are conditional, each requiring measured jus
 - `sanfrancisco/src/ai/chat.ts:41` — `callChatCompletion`, the single chokepoint (insert compaction here).
 - `sanfrancisco/src/ai/chat.ts:48-50` — `resolveModelSelection` / `resolveGrantBudgets`.
 - `sanfrancisco/src/providers/openai.ts:103-157` — env base URL, fetch, `usage` readback.
-- `sanfrancisco/src/grants.ts:155-237` — grant budgets incl. `maxTokensPerCall`, `maxMonthlyTurns`, `timeoutMs` (compaction extends these).
-- `sanfrancisco/src/types.ts:136-141` — `Env` (`OPENAI_*`, `DEEPSEEK_*`, `AI_GRANT_HMAC_SECRET`).
-- `sanfrancisco/wrangler.toml` — `SF_KV`, `SF_D1`, `SF_R2`, `SF_EVENTS` bindings (reuse for metrics + reversibility).
+- `sanfrancisco/src/grants.ts` — grant budgets including per-call token and timeout limits.
+- `sanfrancisco/src/types.ts` — current provider and grant-verification environment.
+- `sanfrancisco/wrangler.toml` — current `SF_R2` binding for Prague localization logs only.
 - `agents/translation-agent/src/worker.ts:308-317`, `agents/product-copilot/src/worker.ts:90-100` — service-binding callers (all funnel through SF).
 - `packages/ck-runtime-materializer`, `packages/ck-contracts` — sibling-package pattern to follow.
 - Schema substrate: widget spec + `editable-fields.json` + `arrayItemIdentity` (per PRD 124A).

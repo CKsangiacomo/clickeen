@@ -162,9 +162,10 @@ Env contract:
 
 Dashboard action:
 - Keep `SUPABASE_URL`, `SUPABASE_ANON_KEY`, and `SUPABASE_SERVICE_ROLE_KEY` in the Cloudflare Pages dashboard for the live Roma app.
-- Keep `ROMA_AI_GRANT_PRIVATE_KEY_PEM` as the GitHub deployment secret that the
-  Worker deploy workflow installs only into Roma Pages for Copilot and
-  Translation Agent grant minting. Never install it on a verifier.
+- Keep `ROMA_AI_GRANT_PRIVATE_KEY_PEM` only as a Roma Pages secret for Copilot
+  and Translation Agent grant minting. Manage it through the preflight-gated
+  Pages secret command; never install it on a verifier or synchronize it from
+  the Worker deployment workflow.
 - Keep the host/base-URL vars in `roma/wrangler.toml`.
 - Configure the `TOKYO_ASSET_CONTROL` service binding on Roma Pages to target the `tokyo-assets-dev` worker.
 - Configure the `TOKYO_PRODUCT_CONTROL` service binding on Roma Pages to target the `tokyo-assets-dev` worker.
@@ -384,7 +385,9 @@ AI signing cutover has one authority-preserving order and no dual-verification
 mode:
 
 1. Generate one RS256 key pair outside the repo.
-2. Install `ROMA_AI_GRANT_PRIVATE_KEY_PEM` only on Roma Pages.
+2. After `pnpm cf:api:preflight`, install `ROMA_AI_GRANT_PRIVATE_KEY_PEM` only
+   on Roma Pages through `pnpm cf:pages:put-secret roma-dev
+   ROMA_AI_GRANT_PRIVATE_KEY_PEM --apply`.
 3. Install the matching `ROMA_AI_GRANT_PUBLIC_KEY_PEM` as the GitHub Actions
    secret used to configure San Francisco, Translation Agent, and Tokyo-worker.
 4. Install the independent `PRAGUE_L10N_HMAC_SECRET` in GitHub Actions.

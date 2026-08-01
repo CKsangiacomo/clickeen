@@ -16,7 +16,6 @@ Related:
 - `121D__PRD__Translation_Agent.md`
 - `Execution_Pipeline_Docs/01-Planning/AI_Planned_Agents/README.md`
 - `Execution_Pipeline_Docs/01-Planning/AI_Planned_Agents/sdr-copilot.md`
-- `Execution_Pipeline_Docs/01-Planning/planning_PRD__Agent_Learning_And_Outcomes_Foundation.md`
 - `Execution_Pipeline_Docs/01-Planning/planning_PRD__Ombra_Model_Strategy_And_Self_Hosted_Readiness.md`
 
 ---

@@ -43,7 +43,21 @@ function encodeKeyPath(key) {
   return key.split('/').map((part) => encodeURIComponent(part)).join('/');
 }
 
-function getConfig() {
+function optionValue(args, name) {
+  const index = args.indexOf(name);
+  return index >= 0 ? args[index + 1]?.trim() || '' : '';
+}
+
+function positionalArgs(args) {
+  const valueOptions = new Set(['--bucket', '--prefix', '--limit', '--content-type']);
+  return args.filter((arg, index) => {
+    if (valueOptions.has(arg)) return false;
+    if (index > 0 && valueOptions.has(args[index - 1])) return false;
+    return !arg.startsWith('--');
+  });
+}
+
+function getConfig(args = []) {
   loadLocalEnv();
   const accountId = requireEnv('CLOUDFLARE_ACCOUNT_ID');
   const endpoint = optionalEnv('CLOUDFLARE_R2_ENDPOINT') || `https://${accountId}.r2.cloudflarestorage.com`;
@@ -57,7 +71,7 @@ function getConfig() {
     endpoint,
     accessKeyId,
     secretAccessKey,
-    bucket: requireEnv('TOKYO_R2_BUCKET'),
+    bucket: optionValue(args, '--bucket') || requireEnv('TOKYO_R2_BUCKET'),
   };
 }
 
@@ -380,10 +394,11 @@ function parseContentType(args, fallback = 'application/octet-stream') {
 function printUsage() {
   console.error(`Usage:
 	  pnpm cf:preflight
-	  pnpm cf:r2:ls <prefix> [--limit 100]
-	  pnpm cf:r2:get <key>
-	  pnpm cf:r2:put <key> <local-file> [--content-type application/json]
-	  node scripts/cloudflare/r2.mjs delete <key>
+	  pnpm cf:r2:preflight --bucket <bucket> [--prefix <prefix>]
+	  pnpm cf:r2:ls <prefix> [--bucket <bucket>] [--limit 100]
+	  pnpm cf:r2:get <key> [--bucket <bucket>]
+	  pnpm cf:r2:put <key> <local-file> [--bucket <bucket>] [--content-type application/json]
+	  pnpm cf:r2:delete <key> [--bucket <bucket>]
 
 Required env, loaded from .env.local if not exported:
   CLOUDFLARE_ACCOUNT_ID
@@ -405,7 +420,7 @@ async function main() {
     process.exit(command ? 0 : 1);
   }
 
-  const config = getConfig();
+  const config = getConfig(args);
 
   if (command === 'preflight') {
     console.log(`[cf:preflight] account=${config.accountId}`);
@@ -417,16 +432,22 @@ async function main() {
       await verifyToken(config);
       console.log('[cf:preflight] token verify ok');
     }
-    const listed = await listObjects(config, 'accounts/', 1);
-    console.log(`[cf:preflight] list accounts/ ok (${listed.length} object${listed.length === 1 ? '' : 's'} sampled)`);
-    const faqSpec = await getObject(config, 'product/widgets/faq/spec.json');
-    JSON.parse(faqSpec);
-    console.log('[cf:preflight] get product/widgets/faq/spec.json ok');
+    if (args.includes('--bucket')) {
+      const prefix = optionValue(args, '--prefix');
+      const listed = await listObjects(config, prefix, 1);
+      console.log(`[cf:preflight] list ${prefix || '(root)'} ok (${listed.length} object${listed.length === 1 ? '' : 's'} sampled)`);
+    } else {
+      const listed = await listObjects(config, 'accounts/', 1);
+      console.log(`[cf:preflight] list accounts/ ok (${listed.length} object${listed.length === 1 ? '' : 's'} sampled)`);
+      const faqSpec = await getObject(config, 'product/widgets/faq/spec.json');
+      JSON.parse(faqSpec);
+      console.log('[cf:preflight] get product/widgets/faq/spec.json ok');
+    }
     return;
   }
 
   if (command === 'ls') {
-    const prefix = args.find((arg) => !arg.startsWith('--')) || '';
+    const prefix = positionalArgs(args)[0] || '';
     const limit = parseLimit(args, 100);
     const objects = await listObjects(config, prefix, limit);
     for (const object of objects) {
@@ -439,14 +460,14 @@ async function main() {
   }
 
   if (command === 'get') {
-    const key = args.find((arg) => !arg.startsWith('--')) || '';
+    const key = positionalArgs(args)[0] || '';
     if (!key) throw new Error('Missing object key.');
     process.stdout.write(await getObject(config, key));
     return;
   }
 
   if (command === 'put') {
-    const positional = args.filter((arg) => !arg.startsWith('--'));
+    const positional = positionalArgs(args);
     const key = positional[0] || '';
     const localFile = positional[1] || '';
     if (!key) throw new Error('Missing object key.');
@@ -458,7 +479,7 @@ async function main() {
   }
 
   if (command === 'delete') {
-    const key = args.find((arg) => !arg.startsWith('--')) || '';
+    const key = positionalArgs(args)[0] || '';
     if (!key) throw new Error('Missing object key.');
     await deleteObject(config, key);
     console.log(`[cf:r2] deleted ${key}`);

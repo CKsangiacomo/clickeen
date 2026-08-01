@@ -8,10 +8,9 @@ on:
         required: true
         type: choice
         options:
-          - deploy-sanfrancisco-cutover
-          - retired-bindings
-          - retired-d1-r2
-          - obsolete-config
+          - retired-learning-r2
+          - retired-d1
+          - obsolete-worker-secrets
 
 jobs:
   cleanup:
@@ -29,155 +28,70 @@ jobs:
         with:
           node-version: 20
 
-      - name: Deploy the queue-free San Francisco cutover
-        if: inputs.phase == 'deploy-sanfrancisco-cutover'
+      - name: Delete the retired learning prefix only
+        if: inputs.phase == 'retired-learning-r2'
         shell: bash
         env:
-          ROMA_AI_GRANT_PUBLIC_KEY_PEM: ${{ secrets.ROMA_AI_GRANT_PUBLIC_KEY_PEM }}
-          PRAGUE_L10N_HMAC_SECRET: ${{ secrets.PRAGUE_L10N_HMAC_SECRET }}
+          CLOUDFLARE_R2_REST_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         run: |
           set -euo pipefail
-          if [ -z "$ROMA_AI_GRANT_PUBLIC_KEY_PEM" ] || [ -z "$PRAGUE_L10N_HMAC_SECRET" ]; then
-            echo 'Missing San Francisco signing authorities.' >&2
-            exit 1
-          fi
+          before="$RUNNER_TEMP/retired-learning-objects.tsv"
+          after="$RUNNER_TEMP/retired-learning-objects-after.tsv"
 
-          pnpm install --frozen-lockfile
-          printf '%s' "$ROMA_AI_GRANT_PUBLIC_KEY_PEM" | pnpm -C sanfrancisco exec wrangler secret put ROMA_AI_GRANT_PUBLIC_KEY_PEM
-          printf '%s' "$PRAGUE_L10N_HMAC_SECRET" | pnpm -C sanfrancisco exec wrangler secret put PRAGUE_L10N_HMAC_SECRET
-          set +e
-          pnpm -C sanfrancisco exec wrangler queues consumer remove sanfrancisco-events-dev sanfrancisco-dev \
-            > "$RUNNER_TEMP/remove-consumer.log" 2>&1
-          remove_status=$?
-          set -e
-          if [ "$remove_status" -ne 0 ] && ! grep -Fq "No worker consumer 'sanfrancisco-dev' exists" "$RUNNER_TEMP/remove-consumer.log"; then
-            cat "$RUNNER_TEMP/remove-consumer.log" >&2
-            exit "$remove_status"
-          fi
-          pnpm -C sanfrancisco run deploy
+          node scripts/cloudflare/r2.mjs preflight \
+            --bucket sanfrancisco-logs-dev \
+            --prefix learning/dev/
+          node scripts/cloudflare/r2.mjs ls learning/dev/ \
+            --bucket sanfrancisco-logs-dev \
+            --limit 100000 > "$before"
 
-      - name: Delete retired queue and KV namespace
-        if: inputs.phase == 'retired-bindings'
-        shell: bash
-        run: |
-          set -euo pipefail
-          wrangler=(pnpm dlx wrangler@4.54.0)
-
-          set +e
-          "${wrangler[@]}" queues consumer remove sanfrancisco-events-dev sanfrancisco-dev \
-            > "$RUNNER_TEMP/remove-consumer.log" 2>&1
-          remove_status=$?
-          set -e
-          if [ "$remove_status" -ne 0 ] && ! grep -Fq "No worker consumer 'sanfrancisco-dev' exists" "$RUNNER_TEMP/remove-consumer.log"; then
-            cat "$RUNNER_TEMP/remove-consumer.log" >&2
-            exit "$remove_status"
-          fi
-          printf 'y\n' | "${wrangler[@]}" queues delete sanfrancisco-events-dev
-          "${wrangler[@]}" kv namespace delete \
-            --namespace-id f1abe003b9a8434699175b0c1ccd2603 \
-            --skip-confirmation
-
-          if "${wrangler[@]}" queues list | grep -Fq 'sanfrancisco-events-dev'; then
-            echo 'Retired San Francisco queue still exists.' >&2
-            exit 1
-          fi
-          if "${wrangler[@]}" kv namespace list | grep -Fq 'f1abe003b9a8434699175b0c1ccd2603'; then
-            echo 'Retired San Francisco KV namespace still exists.' >&2
-            exit 1
-          fi
-
-      - name: Delete retired learning data and D1 database
-        if: inputs.phase == 'retired-d1-r2'
-        shell: bash
-        run: |
-          set -euo pipefail
-          wrangler=(pnpm dlx wrangler@4.54.0)
-
-          if ! "${wrangler[@]}" d1 execute sanfrancisco_d1_dev --remote --json \
-            --command "SELECT requestId, day, agentId FROM copilot_events" \
-            > "$RUNNER_TEMP/copilot-events.json" \
-            2> "$RUNNER_TEMP/copilot-events.err"; then
-            cat "$RUNNER_TEMP/copilot-events.err" >&2
-            cat "$RUNNER_TEMP/copilot-events.json" >&2
-            exit 1
-          fi
-
-          node --input-type=module <<'NODE'
-          import fs from 'node:fs';
-
-          const payload = JSON.parse(fs.readFileSync(process.env.RUNNER_TEMP + '/copilot-events.json', 'utf8'));
-          const batches = Array.isArray(payload) ? payload : [payload];
-          const rows = batches.flatMap((batch) => Array.isArray(batch?.results) ? batch.results : []);
-          const keys = new Set();
-
-          for (const row of rows) {
-            const requestId = String(row.requestId ?? '');
-            const agentId = String(row.agentId ?? '');
-            const day = String(row.day ?? '');
-            if (!/^[A-Za-z0-9_-]+$/.test(requestId)) throw new Error(`Unsafe requestId in retired D1 data: ${requestId}`);
-            if (!/^[a-z0-9.-]+$/.test(agentId)) throw new Error(`Unsafe agentId in retired D1 data: ${agentId}`);
-            if (!/^\d{4}-\d{2}-\d{2}$/.test(day)) throw new Error(`Invalid day in retired D1 data: ${day}`);
-
-            const start = new Date(`${day}T00:00:00.000Z`);
-            if (!Number.isFinite(start.getTime())) throw new Error(`Invalid date in retired D1 data: ${day}`);
-            for (let offset = 0; offset <= 14; offset += 1) {
-              const candidate = new Date(start);
-              candidate.setUTCDate(candidate.getUTCDate() + offset);
-              const objectDay = candidate.toISOString().slice(0, 10);
-              keys.add(`learning/dev/${agentId}/${objectDay}/${requestId}.json`);
-            }
-          }
-
-          fs.writeFileSync(process.env.RUNNER_TEMP + '/retired-learning-keys.txt', [...keys].sort().join('\n') + (keys.size ? '\n' : ''));
-          console.log(`Resolved ${keys.size} exact retired learning object candidates from ${rows.length} indexed events.`);
-          NODE
-
-          while IFS= read -r key; do
+          while IFS=$'\t' read -r key _; do
             [ -n "$key" ] || continue
-            "${wrangler[@]}" r2 object delete "sanfrancisco-logs-dev/$key" --remote
-          done < "$RUNNER_TEMP/retired-learning-keys.txt"
+            case "$key" in
+              learning/dev/*) ;;
+              *) echo "Refusing unexpected R2 key: $key" >&2; exit 1 ;;
+            esac
+            pnpm dlx wrangler@4.54.0 r2 object delete \
+              "sanfrancisco-logs-dev/$key" --remote
+          done < "$before"
 
-          "${wrangler[@]}" d1 delete sanfrancisco_d1_dev --skip-confirmation
-
-          if "${wrangler[@]}" d1 list --json | grep -Fq 'sanfrancisco_d1_dev'; then
-            echo 'Retired San Francisco D1 database still exists.' >&2
+          node scripts/cloudflare/r2.mjs ls learning/dev/ \
+            --bucket sanfrancisco-logs-dev \
+            --limit 1 > "$after"
+          if [ -s "$after" ]; then
+            echo 'Retired San Francisco learning objects still exist.' >&2
+            cat "$after" >&2
             exit 1
           fi
 
-      - name: Delete obsolete signing and Roma routing configuration
-        if: inputs.phase == 'obsolete-config'
+      - name: Delete the retired D1 database
+        if: inputs.phase == 'retired-d1'
+        shell: bash
+        run: |
+          set -euo pipefail
+          before="$RUNNER_TEMP/d1-before.json"
+          after="$RUNNER_TEMP/d1-after.json"
+          pnpm dlx wrangler@4.54.0 d1 list --json > "$before"
+          database_id="$(node -e "const fs=require('fs');const rows=JSON.parse(fs.readFileSync(process.argv[1],'utf8'));const row=rows.find(x=>x.name==='sanfrancisco_d1_dev');process.stdout.write(row?.uuid||row?.id||'')" "$before")"
+          if [ -n "$database_id" ]; then
+            pnpm dlx wrangler@4.54.0 d1 delete "$database_id" --skip-confirmation
+          fi
+          pnpm dlx wrangler@4.54.0 d1 list --json > "$after"
+          node -e "const fs=require('fs');const rows=JSON.parse(fs.readFileSync(process.argv[1],'utf8'));if(rows.some(x=>x.name==='sanfrancisco_d1_dev'))process.exit(1)" "$after"
+
+      - name: Delete obsolete Worker HMAC secrets
+        if: inputs.phase == 'obsolete-worker-secrets'
         shell: bash
         run: |
           set -euo pipefail
           wrangler=(pnpm dlx wrangler@4.54.0)
-
           for worker in sanfrancisco-dev tokyo-assets-dev translation-agent-dev; do
-            if "${wrangler[@]}" secret list --name "$worker" --format json \
-              | node -e "let s='';process.stdin.on('data',d=>s+=d).on('end',()=>{const v=JSON.parse(s);process.exit(v.some(x=>x.name==='AI_GRANT_HMAC_SECRET')?0:1)})"; then
+            before="$RUNNER_TEMP/$worker-secrets-before.json"
+            after="$RUNNER_TEMP/$worker-secrets-after.json"
+            "${wrangler[@]}" secret list --name "$worker" --format json > "$before"
+            if node -e "const fs=require('fs');const v=JSON.parse(fs.readFileSync(process.argv[1],'utf8'));process.exit(v.some(x=>x.name==='AI_GRANT_HMAC_SECRET')?0:1)" "$before"; then
               printf 'y\n' | "${wrangler[@]}" secret delete AI_GRANT_HMAC_SECRET --name "$worker"
             fi
-          done
-
-          response="$RUNNER_TEMP/roma-pages-cleanup.json"
-          curl --fail-with-body --silent --show-error \
-            --request PATCH \
-            --header "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
-            --header 'Content-Type: application/json' \
-            --data '{"deployment_configs":{"production":{"env_vars":{"AI_GRANT_HMAC_SECRET":null,"SANFRANCISCO_BASE_URL":null}},"preview":{"env_vars":{"AI_GRANT_HMAC_SECRET":null,"SANFRANCISCO_BASE_URL":null}}}}' \
-            "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/pages/projects/roma-dev" \
-            > "$response"
-          node -e "const fs=require('fs');const v=JSON.parse(fs.readFileSync(process.argv[1],'utf8'));if(v.success!==true)process.exit(1)" "$response"
-
-          project="$RUNNER_TEMP/roma-pages-project.json"
-          curl --fail-with-body --silent --show-error \
-            --header "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
-            "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/pages/projects/roma-dev" \
-            > "$project"
-          node -e "const fs=require('fs');const v=JSON.parse(fs.readFileSync(process.argv[1],'utf8'));const d=v.result.deployment_configs;if(d.production.env_vars.AI_GRANT_HMAC_SECRET||d.production.env_vars.SANFRANCISCO_BASE_URL||d.preview.env_vars.AI_GRANT_HMAC_SECRET||d.preview.env_vars.SANFRANCISCO_BASE_URL)process.exit(1)" "$project"
-
-          for worker in sanfrancisco-dev tokyo-assets-dev translation-agent-dev; do
-            if "${wrangler[@]}" secret list --name "$worker" --format json | grep -Fq 'AI_GRANT_HMAC_SECRET'; then
-              echo "Obsolete HMAC secret still exists on $worker." >&2
-              exit 1
-            fi
+            "${wrangler[@]}" secret list --name "$worker" --format json > "$after"
+            node -e "const fs=require('fs');const v=JSON.parse(fs.readFileSync(process.argv[1],'utf8'));if(v.some(x=>x.name==='AI_GRANT_HMAC_SECRET'))process.exit(1)" "$after"
           done

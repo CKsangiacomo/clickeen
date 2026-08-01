@@ -26,6 +26,14 @@ pnpm cf:r2:ls <prefix> [--limit 100]
 pnpm cf:r2:get <key>
 ```
 
+For another named R2 bucket, use the same helper with an explicit bucket and
+prove that bucket independently:
+
+```bash
+pnpm cf:r2:preflight --bucket <bucket> --prefix <prefix>
+pnpm cf:r2:ls <prefix> --bucket <bucket> [--limit 100]
+```
+
 For Pages projects, Pages env/secrets, Pages domains, DNS, and Cloudflare REST
 configuration:
 
@@ -44,6 +52,7 @@ pnpm cf:api:preflight
 pnpm cf:pages:devstudio-env
 pnpm cf:pages:sync-devstudio-env
 pnpm cf:pages:sync-devstudio-project
+pnpm cf:pages:delete-var <project-name> <variable-name> [--env production|preview|both] [--apply]
 ```
 
 If preflight passes, proceed through the documented command path and verify the
@@ -64,11 +73,12 @@ object keys, zones, project names, or bindings.
 | Read an R2 object | `pnpm cf:preflight`, then `pnpm cf:r2:get <key>` | object bytes from the exact key |
 | List R2 keys | `pnpm cf:preflight`, then `pnpm cf:r2:ls <prefix>` | listed keys under the exact prefix |
 | Repair an R2 object | `pnpm cf:preflight`, then `pnpm cf:r2:put <key> <file>` | read-back of the exact key |
-| Delete an R2 object | `pnpm cf:preflight`, then `node scripts/cloudflare/r2.mjs delete <key>` | missing-key or list evidence |
+| Delete an R2 object | owning-bucket preflight, then `pnpm cf:r2:delete <key> [--bucket <bucket>]` | missing-key or list evidence |
 | Inspect Pages project config | `pnpm cf:api:preflight`, then `pnpm cf:pages:project <project-name>` | returned project JSON |
 | Inspect DevStudio Pages env/secrets | `pnpm cf:api:preflight`, then `pnpm cf:pages:devstudio-env` | env comparison output |
 | Sync DevStudio Pages env/project | dry-run command, then same command with `--apply` | read-back command output |
 | Write a Pages secret | `pnpm cf:api:preflight`, then `pnpm cf:pages:put-secret ... --apply` | Pages env verification shows secret present |
+| Delete a Pages variable or secret | `pnpm cf:api:preflight`, dry-run `pnpm cf:pages:delete-var ...`, then `--apply` | Pages project read-back shows it absent |
 | Inspect/upsert DNS | `pnpm cf:api:preflight`, then `pnpm cf:dns:*` | read-back of the DNS record |
 | Prove Pages deploy | Cloudflare Pages Git build state plus runtime response | owning app URL responds |
 | Prove Worker deploy | GitHub Actions `cloud-dev workers deploy` plus runtime response | owning Worker URL/route responds |
@@ -144,7 +154,7 @@ pnpm cf:preflight
 pnpm cf:r2:ls <prefix> [--limit 100]
 pnpm cf:r2:get <key>
 pnpm cf:r2:put <key> <local-file> [--content-type application/json]
-node scripts/cloudflare/r2.mjs delete <key>
+pnpm cf:r2:delete <key> [--bucket <bucket>]
 ```
 
 `pnpm cf:preflight`:
@@ -212,6 +222,7 @@ pnpm cf:pages:devstudio-env
 pnpm cf:pages:sync-devstudio-env [--apply]
 pnpm cf:pages:sync-devstudio-project [--apply]
 pnpm cf:pages:put-secret <project-name> <secret-name> [--env production|preview] [--apply]
+pnpm cf:pages:delete-var <project-name> <variable-name> [--env production|preview|both] [--apply]
 pnpm cf:pages:domains <project-name>
 pnpm cf:dns:records <zone-name> [record-name]
 pnpm cf:dns:upsert-cname <zone-name> <record-name> <target>

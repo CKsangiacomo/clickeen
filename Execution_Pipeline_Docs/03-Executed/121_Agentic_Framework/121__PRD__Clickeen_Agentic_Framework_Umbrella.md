@@ -22,7 +22,6 @@ Related:
 - `Execution_Pipeline_Docs/03-Executed/121_Agentic_Framework/121D__PRD__Translation_Agent.md`
 - `Execution_Pipeline_Docs/01-Planning/AI_Planned_Agents/README.md`
 - `Execution_Pipeline_Docs/01-Planning/AI_Planned_Agents/sdr-copilot.md`
-- `Execution_Pipeline_Docs/01-Planning/planning_PRD__Agent_Learning_And_Outcomes_Foundation.md`
 - `Execution_Pipeline_Docs/01-Planning/planning_PRD__Ombra_Model_Strategy_And_Self_Hosted_Readiness.md`
 - `Execution_Pipeline_Docs/03-Executed/085__PRD__San_Francisco_Agentic_Platform_Product_Strategy.md`
 - `Execution_Pipeline_Docs/03-Executed/085C__PRD__San_Francisco_Customer_Facing_Agent_Ownership.md`

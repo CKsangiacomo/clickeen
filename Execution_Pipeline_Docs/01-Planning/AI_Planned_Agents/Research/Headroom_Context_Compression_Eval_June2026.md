@@ -96,11 +96,12 @@ Vendor benchmarks (README, *not reproduced here*): 92% fewer tokens on code-sear
 Everything funnels through one function: **`callChatCompletion`** (`sanfrancisco/src/ai/chat.ts:41`), which dispatches to `callOpenAiChat` / `callDeepseekChat`. Messages are plain OpenAI `{role, content}`; calls are **non-streaming**; usage (`prompt_tokens`/`completion_tokens`) is read back for grant accounting.
 
 **Who calls San Francisco:**
-- **Roma** → San Francisco over HTTP via `SANFRANCISCO_BASE_URL` (`roma/lib/env/sanfrancisco.ts`).
-- **Translation Agent & Product Copilot** → San Francisco via a **service binding** `SANFRANCISCO_AI_ENGINE` (Fetcher) to `https://sanfrancisco.internal/model/chat` (`agents/translation-agent/src/worker.ts:308-317`, `agents/product-copilot/src/worker.ts:90-100`).
+- **Translation Agent & Product Copilot** → San Francisco via a **service binding** `SANFRANCISCO_AI_ENGINE` (Fetcher) to `/model/chat`.
+- **Prague localization tooling** → San Francisco's separately signed `/l10n/translate` HTTP endpoint.
 - The only other LLM call in the repo is an **eval harness** (`agents/product-copilot/evals/real-eval.ts`), not runtime.
 
-San Francisco itself is a **Cloudflare Worker** (`sanfrancisco/wrangler.toml`: `sanfrancisco-dev`, KV/D1/R2/Queues bindings).
+San Francisco itself is a **Cloudflare Worker** (`sanfrancisco/wrangler.toml`:
+`sanfrancisco-dev`, with R2 used only for Prague localization logs).
 
 ## B.2 The decisive constraint
 

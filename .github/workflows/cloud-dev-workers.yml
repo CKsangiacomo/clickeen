@@ -151,17 +151,6 @@ jobs:
         if: steps.changes.outputs.berlin == 'true'
         run: pnpm -C berlin run deploy
 
-      - name: Sync Roma grant private key
-        if: steps.changes.outputs.sanfrancisco == 'true' || steps.changes.outputs.translation_agent == 'true' || steps.changes.outputs.tokyo == 'true'
-        env:
-          ROMA_AI_GRANT_PRIVATE_KEY_PEM: ${{ secrets.ROMA_AI_GRANT_PRIVATE_KEY_PEM }}
-        run: |
-          if [ -z "$ROMA_AI_GRANT_PRIVATE_KEY_PEM" ]; then
-            echo "Missing ROMA_AI_GRANT_PRIVATE_KEY_PEM GitHub deployment secret for roma-dev." >&2
-            exit 1
-          fi
-          printf '%s' "$ROMA_AI_GRANT_PRIVATE_KEY_PEM" | pnpm dlx wrangler@4.54.0 pages secret put ROMA_AI_GRANT_PRIVATE_KEY_PEM --project-name roma-dev
-
       - name: Sync sanfrancisco-dev signing authorities
         if: steps.changes.outputs.sanfrancisco == 'true'
         env:

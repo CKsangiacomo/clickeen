@@ -54,7 +54,6 @@ A current Clickeen agent home:
 | Saved widget instance source | Roma/Tokyo-worker | Translation Agent receives items built from saved source |
 | Browser draft | Bob | Product Copilot returns draft ops; Bob applies them locally |
 | Overlay storage | Tokyo-worker | Translation Agent writes through internal Tokyo-worker route |
-| Outcome storage | San Francisco | Bob/Roma attach outcomes; agents do not write outcome rows directly |
 
 ## Operator Failure Map
 

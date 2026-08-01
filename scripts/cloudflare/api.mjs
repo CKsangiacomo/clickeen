@@ -533,6 +533,71 @@ async function putPagesSecret(config, args) {
   };
 }
 
+async function deletePagesVariable(config, args) {
+  const apply = args.includes('--apply');
+  const envIndex = args.indexOf('--env');
+  const envName = envIndex >= 0 ? args[envIndex + 1] : 'both';
+  const positional = args.filter((arg, index) => {
+    if (arg === '--apply' || arg === '--env') return false;
+    if (envIndex >= 0 && index === envIndex + 1) return false;
+    return true;
+  });
+  const [projectName, variableName] = positional;
+  if (!projectName || !variableName) throw new Error('Missing project name or variable name.');
+  if (!['production', 'preview', 'both'].includes(envName)) {
+    throw new Error('Pages variable env must be production, preview, or both.');
+  }
+
+  const environments = envName === 'both' ? ['production', 'preview'] : [envName];
+  const before = await getPagesProject(config, projectName);
+  const presence = Object.fromEntries(environments.map((name) => [
+    name,
+    Boolean(before.deployment_configs?.[name]?.env_vars?.[variableName]),
+  ]));
+  const payload = {
+    deployment_configs: Object.fromEntries(environments.map((name) => {
+      const deploymentConfig = before.deployment_configs?.[name] ?? {};
+      return [name, {
+        env_vars: { [variableName]: null },
+        ...(deploymentConfig.wrangler_config_hash
+          ? { wrangler_config_hash: deploymentConfig.wrangler_config_hash }
+          : {}),
+      }];
+    })),
+  };
+
+  if (!apply) {
+    return {
+      apply: false,
+      project: projectName,
+      env: envName,
+      variable: variableName,
+      before: presence,
+      note: 'Dry run only. Re-run with --apply to delete the exact Pages variable.',
+    };
+  }
+
+  if (Object.values(presence).some(Boolean)) {
+    await patchPagesProject(config, projectName, payload);
+  }
+  const after = await getPagesProject(config, projectName);
+  const remaining = Object.fromEntries(environments.map((name) => [
+    name,
+    Boolean(after.deployment_configs?.[name]?.env_vars?.[variableName]),
+  ]));
+  if (Object.values(remaining).some(Boolean)) {
+    throw new Error(`Cloudflare Pages variable still exists after delete: ${projectName}/${variableName}`);
+  }
+  return {
+    apply: true,
+    project: projectName,
+    env: envName,
+    variable: variableName,
+    before: presence,
+    after: remaining,
+  };
+}
+
 async function preflight(config) {
   const result = {
     token: null,
@@ -570,6 +635,7 @@ function usage() {
   pnpm cf:pages:sync-devstudio-env [--apply]
   pnpm cf:pages:sync-devstudio-project [--apply]
   pnpm cf:pages:put-secret <project-name> <secret-name> [--env production|preview] [--apply]
+  pnpm cf:pages:delete-var <project-name> <variable-name> [--env production|preview|both] [--apply]
   pnpm cf:pages:domains <project-name>
   pnpm cf:dns:records <zone-name> [record-name]
   pnpm cf:dns:upsert-cname <zone-name> <record-name> <target>
@@ -623,6 +689,11 @@ async function main() {
 
   if (command === 'pages:put-secret') {
     printJson(await putPagesSecret(config, args));
+    return;
+  }
+
+  if (command === 'pages:delete-var') {
+    printJson(await deletePagesVariable(config, args));
     return;
   }
 

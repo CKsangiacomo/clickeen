@@ -22,7 +22,7 @@ public-site surfaces:
 | Tokyo-worker R2 boundary | `documentation/services/tokyo-worker.md` |
 
 AI execution systems live in `documentation/ai/`, not here. San Francisco,
-Ombra, Learning, Product Copilot, Translation Agent, and planned agents are
+Ombra, Product Copilot, Translation Agent, and planned agents are
 documented there because their primary authority is AI operation, not product
 surface storage or UI.
 
