@@ -1,5 +1,16 @@
 # content.countdown — Countdown competitor analysis
 
+> **SUPERSEDED (2026-07-31).** This document describes the pre-3.0 Elfsight
+> Countdown, which no longer exists. Its competitor inventory — five editor tabs,
+> the old timer types, the old theme model — is historical only.
+>
+> Current competitor truth: `Countdown_competitoranalysis_2026.md`.
+> Clickeen implementation truth: `Countdown_PRD.md` + `tokyo/product/widgets/countdown/`.
+>
+> Retained for its Bob controls specification and SSR strategy sections, which
+> were written in Clickeen terms and remain useful as drafting reference.
+
+
 STATUS: REFERENCE — Competitor inventory (Elfsight) + key takeaways
 
 This doc captures competitor behavior and editor surface area for countdown widgets (primarily Elfsight), based on the assets in `documentation/widgets/Countdown/CompetitorAnalysis/`.
