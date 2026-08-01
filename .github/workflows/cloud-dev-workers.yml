@@ -60,6 +60,21 @@ jobs:
       - name: Typecheck
         run: pnpm typecheck
 
+      - name: Policy entitlement contracts
+        run: pnpm --filter @clickeen/ck-policy test:entitlements
+
+      - name: Roma AI grant signature contracts
+        run: pnpm --filter @clickeen/ck-policy test:ai-grants
+
+      - name: San Francisco grant contracts
+        run: pnpm --filter @clickeen/sanfrancisco test:grants
+
+      - name: Berlin auth boundary
+        run: pnpm --filter @clickeen/berlin verify:auth-boundary
+
+      - name: Tokyo auth config
+        run: pnpm --filter @clickeen/tokyo-worker test:auth-config
+
       - name: Detect changed worker surfaces
         id: changes
         shell: bash
@@ -136,24 +151,48 @@ jobs:
         if: steps.changes.outputs.berlin == 'true'
         run: pnpm -C berlin run deploy
 
+      - name: Sync Roma grant private key
+        if: steps.changes.outputs.sanfrancisco == 'true' || steps.changes.outputs.translation_agent == 'true' || steps.changes.outputs.tokyo == 'true'
+        env:
+          ROMA_AI_GRANT_PRIVATE_KEY_PEM: ${{ secrets.ROMA_AI_GRANT_PRIVATE_KEY_PEM }}
+        run: |
+          if [ -z "$ROMA_AI_GRANT_PRIVATE_KEY_PEM" ]; then
+            echo "Missing ROMA_AI_GRANT_PRIVATE_KEY_PEM GitHub deployment secret for roma-dev." >&2
+            exit 1
+          fi
+          printf '%s' "$ROMA_AI_GRANT_PRIVATE_KEY_PEM" | pnpm -C roma exec wrangler pages secret put ROMA_AI_GRANT_PRIVATE_KEY_PEM --project-name roma-dev
+
+      - name: Sync sanfrancisco-dev signing authorities
+        if: steps.changes.outputs.sanfrancisco == 'true'
+        env:
+          ROMA_AI_GRANT_PUBLIC_KEY_PEM: ${{ secrets.ROMA_AI_GRANT_PUBLIC_KEY_PEM }}
+          PRAGUE_L10N_HMAC_SECRET: ${{ secrets.PRAGUE_L10N_HMAC_SECRET }}
+        run: |
+          if [ -z "$ROMA_AI_GRANT_PUBLIC_KEY_PEM" ] || [ -z "$PRAGUE_L10N_HMAC_SECRET" ]; then
+            echo "Missing Roma public key or Prague localization secret for sanfrancisco-dev." >&2
+            exit 1
+          fi
+          printf '%s' "$ROMA_AI_GRANT_PUBLIC_KEY_PEM" | pnpm -C sanfrancisco exec wrangler secret put ROMA_AI_GRANT_PUBLIC_KEY_PEM
+          printf '%s' "$PRAGUE_L10N_HMAC_SECRET" | pnpm -C sanfrancisco exec wrangler secret put PRAGUE_L10N_HMAC_SECRET
+
       - name: Deploy sanfrancisco-dev
         if: steps.changes.outputs.sanfrancisco == 'true'
         run: pnpm -C sanfrancisco run deploy
 
+      - name: Sync tokyo-assets-dev Roma grant public key
+        if: steps.changes.outputs.tokyo == 'true'
+        env:
+          ROMA_AI_GRANT_PUBLIC_KEY_PEM: ${{ secrets.ROMA_AI_GRANT_PUBLIC_KEY_PEM }}
+        run: |
+          if [ -z "$ROMA_AI_GRANT_PUBLIC_KEY_PEM" ]; then
+            echo "Missing ROMA_AI_GRANT_PUBLIC_KEY_PEM GitHub secret for tokyo-assets-dev." >&2
+            exit 1
+          fi
+          printf '%s' "$ROMA_AI_GRANT_PUBLIC_KEY_PEM" | pnpm -C tokyo-worker exec wrangler secret put ROMA_AI_GRANT_PUBLIC_KEY_PEM
+
       - name: Deploy tokyo-assets-dev (tokyo-worker)
         if: steps.changes.outputs.tokyo == 'true'
         run: pnpm -C tokyo-worker run deploy
-
-      - name: Sync tokyo-assets-dev AI grant secret
-        if: steps.changes.outputs.tokyo == 'true' || steps.changes.outputs.translation_agent == 'true'
-        env:
-          AI_GRANT_HMAC_SECRET: ${{ secrets.AI_GRANT_HMAC_SECRET }}
-        run: |
-          if [ -z "$AI_GRANT_HMAC_SECRET" ]; then
-            echo "Missing AI_GRANT_HMAC_SECRET GitHub secret for tokyo-assets-dev." >&2
-            exit 1
-          fi
-          printf '%s' "$AI_GRANT_HMAC_SECRET" | pnpm -C tokyo-worker exec wrangler secret put AI_GRANT_HMAC_SECRET
 
       - name: Sync tokyo-assets-dev public cache purge token
         if: steps.changes.outputs.tokyo == 'true'
@@ -168,20 +207,20 @@ jobs:
         if: steps.changes.outputs.product_copilot == 'true'
         run: pnpm -C agents/product-copilot run deploy
 
+      - name: Sync translation-agent-dev Roma grant public key
+        if: steps.changes.outputs.translation_agent == 'true'
+        env:
+          ROMA_AI_GRANT_PUBLIC_KEY_PEM: ${{ secrets.ROMA_AI_GRANT_PUBLIC_KEY_PEM }}
+        run: |
+          if [ -z "$ROMA_AI_GRANT_PUBLIC_KEY_PEM" ]; then
+            echo "Missing ROMA_AI_GRANT_PUBLIC_KEY_PEM GitHub secret for translation-agent-dev." >&2
+            exit 1
+          fi
+          printf '%s' "$ROMA_AI_GRANT_PUBLIC_KEY_PEM" | pnpm -C agents/translation-agent exec wrangler secret put ROMA_AI_GRANT_PUBLIC_KEY_PEM
+
       - name: Deploy translation-agent-dev
         if: steps.changes.outputs.translation_agent == 'true'
         run: pnpm -C agents/translation-agent run deploy
-
-      - name: Sync translation-agent-dev AI grant secret
-        if: steps.changes.outputs.translation_agent == 'true'
-        env:
-          AI_GRANT_HMAC_SECRET: ${{ secrets.AI_GRANT_HMAC_SECRET }}
-        run: |
-          if [ -z "$AI_GRANT_HMAC_SECRET" ]; then
-            echo "Missing AI_GRANT_HMAC_SECRET GitHub secret for translation-agent-dev." >&2
-            exit 1
-          fi
-          printf '%s' "$AI_GRANT_HMAC_SECRET" | pnpm -C agents/translation-agent exec wrangler secret put AI_GRANT_HMAC_SECRET
 
       - name: Sync Tokyo deploy roots to R2 (cloud-dev)
         if: steps.changes.outputs.tokyo_assets == 'true'

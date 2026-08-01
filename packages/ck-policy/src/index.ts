@@ -6,3 +6,4 @@ export * from './limits';
 export * from './authz-capsule';
 export * from './jwks';
 export * from './ai-runtime';
+export * from './ai-grant-signature';

@@ -57,6 +57,12 @@ jobs:
       - name: Typecheck
         run: pnpm typecheck
 
+      - name: Policy entitlement contracts
+        run: pnpm --filter @clickeen/ck-policy test:entitlements
+
+      - name: Runtime materializer contracts
+        run: pnpm --filter @clickeen/ck-runtime-materializer test
+
       - name: Bob editor contracts
         run: pnpm --filter @clickeen/bob test
 

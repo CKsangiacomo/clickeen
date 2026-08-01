@@ -20,7 +20,6 @@ export type AgentTierRuntimeConfig = {
   allowModelPicker: boolean;
   budget: AiBudget;
   maxTurnsPerThread: number;
-  learningCapture: AgentRuntimePolicy['learningCapture'];
 };
 
 export type AiRuntimeMatrix = {
@@ -32,7 +31,6 @@ export type AiRuntimeScalarField =
   | 'maxTokens'
   | 'timeoutMs'
   | 'maxTurnsPerThread'
-  | 'rawSamplePercent'
   | 'defaultModel'
   | 'allowedModel';
 
@@ -108,13 +106,6 @@ function assertAgentTierRuntimeConfig(value: unknown, label: string): asserts va
   assertPositiveInteger(value.budget.maxTokens, `${label}.budget.maxTokens`);
   assertPositiveInteger(value.budget.timeoutMs, `${label}.budget.timeoutMs`);
   assertPositiveInteger(value.maxTurnsPerThread, `${label}.maxTurnsPerThread`);
-  if (!isRecord(value.learningCapture)) {
-    throw new Error(`[ck-policy] ${label}.learningCapture must be an object`);
-  }
-  assertFiniteNumber(value.learningCapture.rawSamplePercent, `${label}.learningCapture.rawSamplePercent`);
-  if (value.learningCapture.rawSamplePercent < 0 || value.learningCapture.rawSamplePercent > 100) {
-    throw new Error(`[ck-policy] ${label}.learningCapture.rawSamplePercent must be between 0 and 100`);
-  }
 }
 
 export function assertAiRuntimeMatrix(input: unknown = rawRuntimeMatrix): AiRuntimeMatrix {
@@ -182,12 +173,6 @@ function assertModelInCatalog(provider: AiProvider, model: unknown): asserts mod
   if (!exists) throw new Error(`[ck-policy] AI runtime update model is not in catalog: ${provider}/${value}`);
 }
 
-function assertRuntimeNumber(value: unknown, field: string): number {
-  assertFiniteNumber(value, `AI runtime update ${field}`);
-  if (value < 0) throw new Error(`[ck-policy] AI runtime update ${field} must be >= 0`);
-  return value;
-}
-
 function assertRuntimePositiveInteger(value: unknown, field: string): number {
   assertPositiveInteger(value, `AI runtime update ${field}`);
   return value;
@@ -218,12 +203,6 @@ export function applyAiRuntimeMatrixCellUpdate(input: unknown, update: AiRuntime
     case 'maxTurnsPerThread':
       config.maxTurnsPerThread = assertRuntimePositiveInteger(update.value, 'maxTurnsPerThread');
       break;
-    case 'rawSamplePercent': {
-      const value = assertRuntimeNumber(update.value, 'rawSamplePercent');
-      if (value > 100) throw new Error('[ck-policy] rawSamplePercent must be between 0 and 100');
-      config.learningCapture.rawSamplePercent = value;
-      break;
-    }
     case 'defaultModel': {
       assertAiModelRef(update.value, 'AI runtime update defaultModel');
       const defaultModel = update.value;
@@ -356,7 +335,6 @@ function buildRuntimePolicy(args: {
     maxTurnsPerThread: args.config.maxTurnsPerThread,
     maxMonthlyTurns: monthlyTurnCeiling(args.policyProfile, args.entry),
     timeoutMs: args.config.budget.timeoutMs,
-    learningCapture: args.config.learningCapture,
   };
 
   return {

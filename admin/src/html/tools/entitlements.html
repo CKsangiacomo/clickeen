@@ -902,11 +902,9 @@
       } catch (_err) {
         const config = getAiRuntimeConfig(agentId, tier);
         const current =
-          field === 'rawSamplePercent'
-            ? config?.learningCapture?.rawSamplePercent
-            : field === 'maxTurnsPerThread'
-              ? config?.maxTurnsPerThread
-              : config?.budget?.[field];
+          field === 'maxTurnsPerThread'
+            ? config?.maxTurnsPerThread
+            : config?.budget?.[field];
         input.value = current === null || typeof current === 'undefined' ? '' : String(current);
       }
     };
@@ -1116,11 +1114,9 @@
             const value =
               field === 'allowModelPicker'
                 ? config?.allowModelPicker
-                : field === 'rawSamplePercent'
-                  ? config?.learningCapture?.rawSamplePercent
-                  : field === 'maxTurnsPerThread'
-                    ? config?.maxTurnsPerThread
-                    : config?.budget?.[field];
+                : field === 'maxTurnsPerThread'
+                  ? config?.maxTurnsPerThread
+                  : config?.budget?.[field];
             if (field === 'allowModelPicker') {
               if (!editable) {
                 return renderReadonlyToggleCell({ id: `ai_${field}_${agent.agentId}_${tier}`, checked: Boolean(value), label: `${agent.agentId} ${tier} ${field}` });
@@ -1138,107 +1134,6 @@
           }),
         });
       });
-    });
-
-    table.appendChild(tbody);
-    appendTable(section, table);
-    return section;
-  }
-
-  function renderLearningCaptureTable({ agents, tiers }) {
-    if (!Array.isArray(agents) || !agents.length || !tiers.length) return null;
-
-    const section = document.createElement('section');
-    section.className = 'entitlements-section';
-
-    const heading = document.createElement('h2');
-    heading.className = 'heading-4';
-    heading.textContent = 'Learning Capture';
-    section.appendChild(heading);
-
-    const hint = document.createElement('p');
-    hint.className = 'body-s entitlements-ai__hint';
-    hint.textContent = 'Raw AI payload sampling policy. Customer copilot rows are editable; system agents are shown for inspection.';
-    section.appendChild(hint);
-
-    if (!state.aiRuntimeMatrix) {
-      const loading = document.createElement('p');
-      loading.className = 'body-s';
-      loading.textContent = 'Loading learning capture policy...';
-      section.appendChild(loading);
-      return section;
-    }
-
-    const table = document.createElement('table');
-    table.className = 'body-s entitlements-table';
-
-    const colgroup = document.createElement('colgroup');
-    const colName = document.createElement('col');
-    colName.className = 'entitlements-table__name-col';
-    const colDesc = document.createElement('col');
-    colDesc.className = 'entitlements-table__desc-col';
-    colgroup.append(colName, colDesc);
-    tiers.forEach(() => {
-      const col = document.createElement('col');
-      col.className = 'entitlements-table__tier';
-      colgroup.appendChild(col);
-    });
-    const colToken = document.createElement('col');
-    colToken.className = 'entitlements-table__token-col';
-    colgroup.appendChild(colToken);
-    table.appendChild(colgroup);
-
-    const thead = document.createElement('thead');
-    const headRow = document.createElement('tr');
-    ['Agent', 'Policy'].forEach((label) => {
-      const th = document.createElement('th');
-      th.className = 'label-s';
-      th.textContent = label;
-      headRow.appendChild(th);
-    });
-    tiers.forEach((tier) => {
-      const th = document.createElement('th');
-      th.className = 'label-s entitlements-table__tier-head';
-      const label = document.createElement('span');
-      label.className = 'label-s entitlements-tier-label';
-      label.textContent = normalizeTierLabel(tier);
-      th.appendChild(label);
-      headRow.appendChild(th);
-    });
-    const tokenHeader = document.createElement('th');
-    tokenHeader.textContent = 'ID';
-    tokenHeader.className = 'label-s entitlements-table__token-head';
-    headRow.appendChild(tokenHeader);
-    thead.appendChild(headRow);
-    table.appendChild(thead);
-
-    const tbody = document.createElement('tbody');
-    agents.forEach((agent) => {
-      const row = document.createElement('tr');
-      const nameCell = document.createElement('td');
-      nameCell.className = 'body-s entitlements-table__name';
-      nameCell.textContent = agent.description || agent.agentId;
-      row.appendChild(nameCell);
-
-      const descCell = document.createElement('td');
-      descCell.className = 'body-s entitlements-table__desc';
-      descCell.textContent = agent.category === 'copilot' ? 'Customer copilot raw sample %' : 'System agent raw sample %';
-      row.appendChild(descCell);
-
-      tiers.forEach((tier) => {
-        const value = getAiRuntimeConfig(agent.agentId, tier)?.learningCapture?.rawSamplePercent;
-        if (agent.category === 'copilot') {
-          row.appendChild(renderAiNumberCell({ agentId: agent.agentId, tier, field: 'rawSamplePercent', value }));
-        } else {
-          row.appendChild(renderReadonlyValueCell(value));
-        }
-      });
-
-      const tokenCell = document.createElement('td');
-      tokenCell.className = 'body-s entitlements-table__token';
-      tokenCell.textContent = agent.agentId;
-      row.appendChild(tokenCell);
-      tbody.appendChild(row);
     });
 
     table.appendChild(tbody);
@@ -1319,12 +1214,6 @@
       editable: false,
     });
     if (systemAgentSection) root.appendChild(systemAgentSection);
-
-    const learningCaptureSection = renderLearningCaptureTable({
-      agents: [...aiCopilots, ...aiSystemAgents],
-      tiers,
-    });
-    if (learningCaptureSection) root.appendChild(learningCaptureSection);
   }
 
   if (!root) {

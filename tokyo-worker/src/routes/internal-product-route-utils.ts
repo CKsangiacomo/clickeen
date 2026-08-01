@@ -1,7 +1,10 @@
 import { CK_REQUEST_ID_HEADER, isRecord, serializeCkLogEvent } from '@clickeen/ck-contracts';
 import { isCompactAccountPublicId } from '@clickeen/ck-contracts/overlay-identity';
-import { timingSafeEqualBytes } from '@clickeen/ck-contracts/security';
-import type { RomaAccountAuthzCapsulePayload } from '@clickeen/ck-policy';
+import {
+  readRomaAiGrantEnvelope,
+  verifyRomaAiGrantSignature,
+  type RomaAccountAuthzCapsulePayload,
+} from '@clickeen/ck-policy';
 import {
   INTERNAL_SERVICE_HEADER,
   TOKYO_INTERNAL_SERVICE_ROMA_EDGE,
@@ -43,21 +46,6 @@ function normalizeStringArray(raw: unknown): string[] | null {
   return values as string[];
 }
 
-function base64UrlToBytes(input: string): Uint8Array {
-  const padded = input.replace(/-/g, '+').replace(/_/g, '/').padEnd(Math.ceil(input.length / 4) * 4, '=');
-  const binary = atob(padded);
-  const bytes = new Uint8Array(binary.length);
-  for (let i = 0; i < binary.length; i += 1) bytes[i] = binary.charCodeAt(i);
-  return bytes;
-}
-
-async function hmacSha256(secret: string, message: string): Promise<Uint8Array> {
-  const enc = new TextEncoder();
-  const key = await crypto.subtle.importKey('raw', enc.encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
-  const sig = await crypto.subtle.sign('HMAC', key, enc.encode(message));
-  return new Uint8Array(sig);
-}
-
 function sameStringSet(left: string[], right: string[]): boolean {
   const leftSet = new Set(left);
   const rightSet = new Set(right);
@@ -73,32 +61,29 @@ async function verifyTranslationAgentWriteGrant(args: {
   instanceId: string;
   locale: string;
 }): Promise<null | Response> {
-  const secret = String(args.env.AI_GRANT_HMAC_SECRET || '').trim();
-  if (!secret) {
+  const publicKeyPem = String(args.env.ROMA_AI_GRANT_PUBLIC_KEY_PEM || '').trim();
+  if (!publicKeyPem) {
     return json(
-      { error: { kind: 'UPSTREAM_UNAVAILABLE', reasonKey: 'tokyo.translation.writeGrantSecretMissing' } },
+      { error: { kind: 'UPSTREAM_UNAVAILABLE', reasonKey: 'tokyo.translation.writeGrantPublicKeyMissing' } },
       { status: 503 },
     );
   }
   const grant = String(args.req.headers.get('x-ck-ai-grant') || '').trim();
-  const parts = grant.split('.');
-  if (parts.length !== 3 || parts[0] !== 'ckgrant') {
+  const envelope = readRomaAiGrantEnvelope(grant);
+  if (!envelope) {
     return json({ error: { kind: 'AUTH', reasonKey: 'tokyo.translation.writeGrantInvalid' } }, { status: 401 });
   }
-  const payloadB64 = parts[1] ?? '';
-  const sigB64 = parts[2] ?? '';
-  let payload: unknown;
   try {
-    const payloadText = new TextDecoder().decode(base64UrlToBytes(payloadB64));
-    payload = JSON.parse(payloadText) as unknown;
+    if (!(await verifyRomaAiGrantSignature(envelope, publicKeyPem))) {
+      return json({ error: { kind: 'AUTH', reasonKey: 'tokyo.translation.writeGrantInvalid' } }, { status: 401 });
+    }
   } catch {
-    return json({ error: { kind: 'AUTH', reasonKey: 'tokyo.translation.writeGrantInvalid' } }, { status: 401 });
+    return json(
+      { error: { kind: 'UPSTREAM_UNAVAILABLE', reasonKey: 'tokyo.translation.writeGrantPublicKeyInvalid' } },
+      { status: 503 },
+    );
   }
-  const expectedSig = await hmacSha256(secret, `ckgrant.${payloadB64}`);
-  const providedSig = base64UrlToBytes(sigB64);
-  if (!timingSafeEqualBytes(expectedSig, providedSig)) {
-    return json({ error: { kind: 'AUTH', reasonKey: 'tokyo.translation.writeGrantInvalid' } }, { status: 401 });
-  }
+  const payload = envelope.payload;
   if (!isRecord(payload)) {
     return json({ error: { kind: 'AUTH', reasonKey: 'tokyo.translation.writeGrantInvalid' } }, { status: 401 });
   }

@@ -293,7 +293,6 @@ Bob account commands currently include:
 - `read-translation`
 - `generate-translations`
 - `run-copilot`
-- `attach-ai-outcome`
 
 Dirty/save comparison uses the current editor config directly; Bob does not
 substitute an empty config when serialization fails.
@@ -386,14 +385,13 @@ Roma opens the instance with its saved `index.html`, `styles.css`, and
 `runtime.js` package. Bob boots that exact package in the sandboxed iframe, then
 streams unsaved browser-memory state into the running instance runtime.
 
-The Bob-local AI API routes are guard routes only:
+The Bob-local AI API route is a guard route only:
 
 ```text
 POST /api/ai/widget-copilot -> 409
-POST /api/ai/outcome -> 409
 ```
 
-Copilot traffic must run through Roma account routes.
+Copilot turn traffic must run through the Roma account route.
 
 Editor artifacts contain no raw widget HTML, CSS, JavaScript, or materializer
 package. Roma's server-only materializer reads a separate build artifact.
@@ -605,7 +603,8 @@ Generate translations.
 
 Bob owns the chat surface and current in-memory context. Roma grants and routes
 AI execution for the current account. San Francisco executes the AI operation and
-returns structured editor operations or outcomes.
+returns the model result through Product Copilot. Bob applies valid editor
+operations locally and preserves request-id correlation in the conversation.
 
 ## Deploy Plane
 

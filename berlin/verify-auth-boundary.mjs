@@ -55,6 +55,17 @@ for (const root of roots.map((path) => join(repoRoot, path))) {
   }
 }
 
+const authRoutesSource = readFileSync(join(repoRoot, 'berlin/src/auth/routes.ts'), 'utf8');
+if (!/const accountId = claimAsString\(env\.BERLIN_DEV_ADMIN_ACCOUNT_ID\);/.test(authRoutesSource)) {
+  failures.push('berlin/src/auth/routes.ts: dev-admin account is not explicit configuration');
+}
+if (authRoutesSource.includes('BERLIN_ISSUER')) {
+  failures.push('berlin/src/auth/routes.ts: dev-admin stage inferred from issuer');
+}
+if (!/claimAsString\(env\.ENV_STAGE\)\?\.toLowerCase\(\)/.test(authRoutesSource)) {
+  failures.push('berlin/src/auth/routes.ts: dev-admin stage is not read from explicit ENV_STAGE');
+}
+
 if (failures.length) {
   console.error('Berlin auth boundary verification failed:');
   for (const failure of failures) console.error(`- ${failure}`);

@@ -1,4 +1,5 @@
 import type { AiGrantPolicy } from '@clickeen/ck-contracts/ai';
+import { mintRomaAiGrant } from '@clickeen/ck-policy';
 import { getOptionalCloudflareRequestContext } from '../cloudflare-request-context';
 
 export type RomaAIGrant = {
@@ -23,37 +24,22 @@ export type RomaAIGrant = {
   };
 };
 
-function readTrimmedSecret(value: unknown): string {
+function readTrimmedKey(value: unknown): string {
   return typeof value === 'string' ? value.trim() : '';
 }
 
-export function resolveAiGrantSecret(): string {
-  const fromRequestContext = getOptionalCloudflareRequestContext<{ env?: { AI_GRANT_HMAC_SECRET?: string } }>()
-    ?.env?.AI_GRANT_HMAC_SECRET;
-  const requestSecret = readTrimmedSecret(fromRequestContext);
-  if (requestSecret) return requestSecret;
+export function resolveRomaAiGrantPrivateKeyPem(): string {
+  const fromRequestContext = getOptionalCloudflareRequestContext<{ env?: { ROMA_AI_GRANT_PRIVATE_KEY_PEM?: string } }>()
+    ?.env?.ROMA_AI_GRANT_PRIVATE_KEY_PEM;
+  const requestKey = readTrimmedKey(fromRequestContext);
+  if (requestKey) return requestKey;
 
-  const processSecret = readTrimmedSecret(typeof process !== 'undefined' ? process.env.AI_GRANT_HMAC_SECRET : undefined);
-  if (processSecret) return processSecret;
+  const processKey = readTrimmedKey(
+    typeof process !== 'undefined' ? process.env.ROMA_AI_GRANT_PRIVATE_KEY_PEM : undefined,
+  );
+  if (processKey) return processKey;
 
-  throw new Error('[Roma] Missing AI_GRANT_HMAC_SECRET');
-}
-
-function base64UrlEncodeBytes(bytes: Uint8Array): string {
-  let binary = '';
-  for (let i = 0; i < bytes.length; i += 1) binary += String.fromCharCode(bytes[i]);
-  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
-}
-
-async function hmacSha256(secret: string, message: string): Promise<Uint8Array> {
-  const enc = new TextEncoder();
-  const key = await crypto.subtle.importKey('raw', enc.encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
-  const sig = await crypto.subtle.sign('HMAC', key, enc.encode(message));
-  return new Uint8Array(sig);
-}
-
-export async function hmacSha256Base64Url(secret: string, message: string): Promise<string> {
-  return base64UrlEncodeBytes(await hmacSha256(secret, message));
+  throw new Error('[Roma] Missing ROMA_AI_GRANT_PRIVATE_KEY_PEM');
 }
 
 export function resolveEnvStage(): string {
@@ -62,9 +48,6 @@ export function resolveEnvStage(): string {
   return process.env.NODE_ENV === 'development' ? 'local' : 'cloud-dev';
 }
 
-export async function mintRomaAIGrant(grant: RomaAIGrant, secret: string): Promise<string> {
-  const payloadB64 = base64UrlEncodeBytes(new TextEncoder().encode(JSON.stringify(grant)));
-  const sigBytes = await hmacSha256(secret, `ckgrant.${payloadB64}`);
-  const sigB64 = base64UrlEncodeBytes(sigBytes);
-  return `ckgrant.${payloadB64}.${sigB64}`;
+export async function mintRomaAIGrant(grant: RomaAIGrant, privateKeyPem: string): Promise<string> {
+  return await mintRomaAiGrant(grant, privateKeyPem);
 }

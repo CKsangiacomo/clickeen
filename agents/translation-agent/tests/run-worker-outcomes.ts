@@ -1,16 +1,11 @@
 import assert from 'node:assert/strict';
+import { mintRomaAiGrant } from '@clickeen/ck-policy';
 import worker from '../src/worker';
 
-const SECRET = 'translation-agent-outcome-test-secret';
 const REQUESTED_LOCALES = ['fr', 'de', 'it'];
 
-function base64Url(value: Uint8Array | string): string {
-  const bytes = typeof value === 'string' ? Buffer.from(value) : Buffer.from(value);
-  return bytes.toString('base64url');
-}
-
-async function createGrant(): Promise<string> {
-  const payload = {
+async function createGrant(privateKeyPem: string): Promise<string> {
+  return await mintRomaAiGrant({
     iss: 'roma',
     exp: Math.floor(Date.now() / 1000) + 60,
     caps: ['agent:widget.instance.translator'],
@@ -20,22 +15,21 @@ async function createGrant(): Promise<string> {
       instanceId: 'UZ3JEJSHII',
       activeLocales: REQUESTED_LOCALES,
     },
-  };
-  const payloadB64 = base64Url(JSON.stringify(payload));
-  const key = await crypto.subtle.importKey(
-    'raw',
-    new TextEncoder().encode(SECRET),
-    { name: 'HMAC', hash: 'SHA-256' },
-    false,
-    ['sign'],
-  );
-  const signature = new Uint8Array(
-    await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(`ckgrant.${payloadB64}`)),
-  );
-  return `ckgrant.${payloadB64}.${base64Url(signature)}`;
+  }, privateKeyPem);
 }
 
 async function run(): Promise<void> {
+  const keys = await crypto.subtle.generateKey(
+    { name: 'RSASSA-PKCS1-v1_5', modulusLength: 2048, publicExponent: new Uint8Array([1, 0, 1]), hash: 'SHA-256' },
+    true,
+    ['sign', 'verify'],
+  );
+  const privateKeyBody = Buffer.from(await crypto.subtle.exportKey('pkcs8', keys.privateKey))
+    .toString('base64').match(/.{1,64}/g)?.join('\n') || '';
+  const publicKeyBody = Buffer.from(await crypto.subtle.exportKey('spki', keys.publicKey))
+    .toString('base64').match(/.{1,64}/g)?.join('\n') || '';
+  const privateKeyPem = `-----BEGIN PRIVATE KEY-----\n${privateKeyBody}\n-----END PRIVATE KEY-----`;
+  const publicKeyPem = `-----BEGIN PUBLIC KEY-----\n${publicKeyBody}\n-----END PUBLIC KEY-----`;
   const writtenLocales: string[] = [];
   const response = await worker.fetch(
     new Request('https://translation-agent.test/translate-instance', {
@@ -45,7 +39,7 @@ async function run(): Promise<void> {
         'content-type': 'application/json',
       },
       body: JSON.stringify({
-        grant: await createGrant(),
+        grant: await createGrant(privateKeyPem),
         agentId: 'widget.instance.translator',
         accountPublicId: 'CLICKEEN',
         instanceId: 'UZ3JEJSHII',
@@ -56,7 +50,7 @@ async function run(): Promise<void> {
       }),
     }),
     {
-      AI_GRANT_HMAC_SECRET: SECRET,
+      ROMA_AI_GRANT_PUBLIC_KEY_PEM: publicKeyPem,
       SANFRANCISCO_AI_ENGINE: {
         async fetch(_input: RequestInfo | URL, init?: RequestInit) {
           const request = JSON.parse(String(init?.body)) as {

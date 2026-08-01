@@ -6,6 +6,14 @@ const CLOUDFLARE_REQUEST_CONTEXT_SYMBOL = Symbol.for('__cloudflare-request-conte
 const requestedLocales = ['fr', 'de', 'it'];
 
 async function run(): Promise<void> {
+  const keys = await crypto.subtle.generateKey(
+    { name: 'RSASSA-PKCS1-v1_5', modulusLength: 2048, publicExponent: new Uint8Array([1, 0, 1]), hash: 'SHA-256' },
+    true,
+    ['sign', 'verify'],
+  );
+  const privateKeyBytes = await crypto.subtle.exportKey('pkcs8', keys.privateKey);
+  const privateKeyBody = Buffer.from(privateKeyBytes).toString('base64').match(/.{1,64}/g)?.join('\n') || '';
+  const privateKeyPem = `-----BEGIN PRIVATE KEY-----\n${privateKeyBody}\n-----END PRIVATE KEY-----`;
   const globalRecord = globalThis as Record<PropertyKey, unknown>;
   const previous = globalRecord[CLOUDFLARE_REQUEST_CONTEXT_SYMBOL];
   let agentRequest: Record<string, unknown> | null = null;
@@ -27,7 +35,7 @@ async function run(): Promise<void> {
   let agentTranslation: Record<string, unknown> = validAgentTranslation();
   globalRecord[CLOUDFLARE_REQUEST_CONTEXT_SYMBOL] = {
     env: {
-      AI_GRANT_HMAC_SECRET: 'roma-translation-outcome-test-secret',
+      ROMA_AI_GRANT_PRIVATE_KEY_PEM: privateKeyPem,
       TOKYO_PRODUCT_CONTROL: {
         async fetch() {
           return Response.json({

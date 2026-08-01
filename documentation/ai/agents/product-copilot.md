@@ -12,7 +12,6 @@ Code authority:
 - `bob/lib/session/sessionTransport.ts`
 - `roma/app/api/account/instances/[instanceId]/copilot/route.ts`
 - `roma/lib/ai/account-copilot.ts`
-- `roma/app/api/account/instances/[instanceId]/copilot/outcome/route.ts`
 
 ## Runtime Coordinates
 
@@ -34,7 +33,7 @@ Code authority:
 | Bob | open Builder draft, visible controls, draft signature, browser-memory apply/undo |
 | Roma | current account/session/tier, instance route authority, model selection validation, AI grant minting, usage reservation |
 | Product Copilot Worker | Product Copilot reasoning, model prompts, output parsing, `draft_edit` structural validation, one bounded structural retry |
-| San Francisco | grant/model enforcement, provider call, usage metadata, telemetry |
+| San Francisco | grant/model enforcement, provider call, and returned usage metadata |
 | Tokyo-worker | saved account instance storage when the user saves through Roma |
 
 Product Copilot does not save, publish, mutate Tokyo, mint grants, own provider
@@ -56,18 +55,15 @@ Bob CopilotPane
 -> Bob applies draft_edit in browser memory only, if valid and draft signature still matches
 ```
 
-Bob's `/api/ai/widget-copilot` and `/api/ai/outcome` are synthetic session APIs
-inside the hosted Builder transport. In hosted Roma mode they are not Bob HTTP
-routes. Bob delegates them to the parent Roma host through `postMessage`
-commands:
+Bob's `/api/ai/widget-copilot` is a synthetic session API inside the hosted
+Builder transport. In hosted Roma mode it is not a Bob HTTP route. Bob
+delegates it to the parent Roma host through a `postMessage` command:
 
 | Bob synthetic path | Hosted command | Roma route |
 | --- | --- | --- |
 | `/api/ai/widget-copilot` | `run-copilot` | `POST /api/account/instances/[instance id]/copilot` |
-| `/api/ai/outcome` | `attach-ai-outcome` | `POST /api/account/instances/[instance id]/copilot/outcome` |
 
-The hosted command timeout for both Copilot turns and outcome attach is
-`120_000ms`.
+The hosted Copilot command timeout is `120_000ms`.
 
 ## Roma Grant And Model Policy
 
@@ -95,19 +91,21 @@ Roma route/operator requirements:
 - Roma loads the saved Tokyo instance before grant issuance;
 - `context.widgetType` must match the saved instance widget type;
 - selected model must be Product Copilot managed;
+- the grant is minted before usage reservation, so missing signing configuration
+  cannot consume a turn;
 - monthly Copilot turn usage is reserved before the worker call;
 - grant TTL is 10 minutes;
 - grant budgets come from the runtime policy matrix;
-- `USAGE_KV` is used for monthly turn reservation when present.
+- Roma fails closed if `USAGE_KV` is unavailable or contains a malformed
+  counter.
 
 Roma env/bindings involved in the Copilot path:
 
 | Roma env/binding | Required | Used for |
 | --- | --- | --- |
 | `PRODUCT_COPILOT_BASE_URL` | yes | Roma HTTP call to Product Copilot `/execute` |
-| `SANFRANCISCO_BASE_URL` | yes for outcome forwarding | Roma HTTP call to San Francisco `/outcome` |
-| `AI_GRANT_HMAC_SECRET` | yes | grant minting and outcome signing |
-| `USAGE_KV` | yes for usage enforcement | monthly Copilot turn reservation |
+| `ROMA_AI_GRANT_PRIVATE_KEY_PEM` | yes | Roma-only RS256 grant minting |
+| `USAGE_KV` | yes | monthly Copilot turn reservation |
 
 ## Worker HTTP Contract
 
@@ -318,30 +316,8 @@ Bob applies `draft_edit` only when:
 
 Apply is browser-memory only. User save remains a Roma account operation. Publish
 remains Roma-owned. Tokyo persistence is not touched by Product Copilot.
-
-Bob reports outcomes through `/api/ai/outcome`, which routes through Roma to San
-Francisco `/outcome`.
-
-Current outcome behavior:
-
-- Bob emits outcome attachments for `edit_applied` and `edit_undone`;
-- stale draft signature, invalid undo construction, failed apply, non-edit
-  responses, and request errors do not currently attach outcome events;
-- Roma outcome route requires only current account role `viewer`;
-- invalid/skipped/forward-failed outcomes return HTTP `200` to Bob with
-  `{ ok: false }` or a skipped payload;
-- free learning profiles are skipped and are not forwarded to San Francisco;
-- paid profiles are signed by Roma and forwarded to San Francisco `/outcome`.
-
-Outcome forwarding headers:
-
-```text
-content-type: application/json
-x-clickeen-signature: hmacSha256("outcome.[body text]", AI_GRANT_HMAC_SECRET)
-```
-
-HTTP `200` from Roma's outcome route is not proof that San Francisco persisted
-the outcome. Inspect San Francisco D1 when outcome persistence matters.
+Bob does not send apply or Undo activity to a separate outcome or learning
+route. Apply and Undo remain local editor operations.
 
 ## Error Contract
 
@@ -414,10 +390,9 @@ workflow file.
    `run-copilot` command to Roma and did not hit a raw Bob HTTP route.
 3. If Roma returns `422`, inspect envelope instance/widget/context validation.
 4. If Roma returns `403`, inspect tier/model/usage policy.
-5. If Roma returns `503`, inspect `USAGE_KV` and account usage reservation.
+5. If Roma returns `503`, inspect `USAGE_KV` availability and the exact account
+   counter value.
 6. If Product Copilot returns provider/model error, inspect San Francisco health,
    grant policy, and selected provider secret.
 7. If an edit response is visible but not applied, inspect Bob draft signature,
    inverse undo construction, and `session.applyOps`.
-8. If outcome evidence is missing, remember only applied/undone edits attach
-   outcomes today and Roma may return HTTP `200` even when forwarding failed.

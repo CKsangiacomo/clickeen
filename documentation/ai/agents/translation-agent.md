@@ -345,12 +345,12 @@ This is an operator fact, not a desired future abstraction.
 | --- | --- | --- | --- |
 | Roma | `TRANSLATION_AGENT -> translation-agent-dev` | yes | service-binding call to `/translate-instance` |
 | Roma | `TOKYO_PRODUCT_CONTROL -> tokyo-assets-dev` | yes | listing/reading/deleting translations and source instance loads |
-| Roma | `AI_GRANT_HMAC_SECRET` | yes | minting Translation Agent grant |
+| Roma | `ROMA_AI_GRANT_PRIVATE_KEY_PEM` | yes | minting the Roma-issued Translation Agent grant |
 | Roma | `SUPABASE_SERVICE_ROLE_KEY` | yes for locale settings write | account locale settings patch |
-| Translation Agent | `AI_GRANT_HMAC_SECRET` | yes | verifying Roma grant before model/write work |
+| Translation Agent | `ROMA_AI_GRANT_PUBLIC_KEY_PEM` | yes | verifying the Roma grant before model/write work |
 | Translation Agent | `SANFRANCISCO_AI_ENGINE -> sanfrancisco-dev` | yes | model execution |
 | Translation Agent | `TOKYO_PRODUCT_CONTROL -> tokyo-assets-dev` | yes | overlay writes |
-| Tokyo-worker | `AI_GRANT_HMAC_SECRET` | yes for Translation Agent writes | verifies `x-ck-ai-grant` before accepting overlay writes |
+| Tokyo-worker | `ROMA_AI_GRANT_PUBLIC_KEY_PEM` | yes for Translation Agent writes | verifies `x-ck-ai-grant` before accepting overlay writes |
 
 ## Failure Semantics
 
@@ -359,14 +359,14 @@ This is an operator fact, not a desired future abstraction.
 | invalid worker request | `400 BAD_REQUEST` |
 | invalid or expired grant | `401 GRANT_INVALID` or `401 GRANT_EXPIRED` |
 | grant/request mismatch | `403 CAPABILITY_DENIED` |
-| missing `AI_GRANT_HMAC_SECRET` | `500 PROVIDER_ERROR` from Translation Agent |
+| missing `ROMA_AI_GRANT_PUBLIC_KEY_PEM` | `500 PROVIDER_ERROR` from Translation Agent |
 | missing `SANFRANCISCO_AI_ENGINE` | HTTP `200` with an explicit failed result for every requested locale |
 | San Francisco provider/model failure | exact failed-locale result; remaining locales continue |
 | malformed model output | exact failed-locale result; remaining locales continue |
 | missing requested path | exact failed-locale result |
 | unexpected translated path | exact failed-locale result |
 | missing `TOKYO_PRODUCT_CONTROL` | HTTP `200` with an explicit failed result for every requested locale |
-| Tokyo-worker missing write grant secret | HTTP `200` with explicit failed-locale outcomes carrying `tokyo.translation.writeGrantSecretMissing` |
+| Tokyo-worker missing write grant public key | HTTP `200` with explicit failed-locale outcomes carrying `tokyo.translation.writeGrantPublicKeyMissing` |
 | Tokyo write rejection | exact failed-locale result; remaining locales continue |
 | failure after prior locale writes | complete ordered result set reports written and failed locales separately |
 
@@ -385,7 +385,7 @@ a successful overlay write.
 
 Required secret/env:
 
-- `AI_GRANT_HMAC_SECRET`
+- `ROMA_AI_GRANT_PUBLIC_KEY_PEM`
 
 Deploy evidence comes from the GitHub Actions `cloud-dev workers deploy`
 workflow after pushing `main`.
@@ -419,8 +419,9 @@ Normal cloud-dev deploy evidence comes from the GitHub Actions
 `cloud-dev workers deploy` workflow after changes to
 `agents/translation-agent/**`, `packages/ck-contracts/**`,
 `packages/ck-policy/**`, `packages/l10n/**`, `scripts/infra/**`, or the workflow
-file. The workflow also syncs `AI_GRANT_HMAC_SECRET` to `translation-agent-dev`
-and to `tokyo-assets-dev` when required.
+file. The workflow also syncs `ROMA_AI_GRANT_PUBLIC_KEY_PEM` to
+`translation-agent-dev`, `sanfrancisco-dev`, and `tokyo-assets-dev` when
+required. Roma's matching private key remains only in Roma Pages.
 
 ## Operator Debug Sequence
 
@@ -437,6 +438,6 @@ and to `tokyo-assets-dev` when required.
    and selected provider secret.
 8. If Tokyo write fails, inspect `TOKYO_PRODUCT_CONTROL`, `x-account-id`,
    `x-ck-internal-service`, `x-ck-ai-grant`, and Tokyo-worker
-   `AI_GRANT_HMAC_SECRET`.
+   `ROMA_AI_GRANT_PUBLIC_KEY_PEM`.
 9. If Bob shows only a generic failure, inspect the Roma response body and then
    the Translation Agent/San Francisco/Tokyo request id chain.

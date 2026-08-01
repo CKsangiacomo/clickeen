@@ -104,7 +104,10 @@ Health contract:
 
 `POST /auth/login/dev-admin` is the dev manual login path. It is rate-limited
 like other auth mutation routes and is available only under the configured
-cloud-dev/admin constraints.
+cloud-dev/admin constraints. `ENV_STAGE` must explicitly be `local` or
+`cloud-dev`; Berlin does not infer the stage from its issuer. The configured
+admin account must come from `BERLIN_DEV_ADMIN_ACCOUNT_ID`; missing account
+configuration fails instead of selecting an account.
 
 ## Login Flow
 
@@ -218,6 +221,7 @@ Required for direct Google login:
 
 Required for dev admin login:
 
+- `ENV_STAGE` (`local` or `cloud-dev`)
 - `BERLIN_DEV_ADMIN_EMAIL`
 - `BERLIN_DEV_ADMIN_PASSWORD`
 - `BERLIN_DEV_ADMIN_ACCOUNT_ID`

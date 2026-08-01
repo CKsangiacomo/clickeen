@@ -176,7 +176,6 @@ service:
 | `/api/builder/:instanceId/open` | Roma Builder-open envelope backed by Tokyo-worker    |
 | `/widget-editors/:widgetname.json` | Deploy-built static Bob editor artifact       |
 | `/api/account/instances/:instanceId/copilot` | San Francisco through Roma grants       |
-| `/api/account/instances/:instanceId/copilot/outcome` | San Francisco outcome/linkage path |
 
 Roma attaches the account authz capsule and account public id to private
 Tokyo-worker calls.
@@ -446,10 +445,13 @@ Francisco. Bob sends the Product Copilot request through Roma: `instanceId`,
 signature, editable controls/current values, available draft actions, and
 unavailable capabilities. Roma validates that capsule, resolves account and
 widget identity from the saved instance context, mints the account grant, and
-forwards the request for governed model execution. Roma attaches outcome
-linkage fields such as `surfaceId: roma.builder` and the opened `instanceId`
-as the artifact id when forwarding Product Copilot outcomes. Linkage is not
-attribution.
+forwards the request for governed model execution. Bob keeps apply and Undo in
+browser memory; Roma does not forward those editor actions to a separate
+outcome or learning route.
+
+Roma is the sole AI grant signing authority. It holds
+`ROMA_AI_GRANT_PRIVATE_KEY_PEM`; San Francisco, Translation Agent, and
+Tokyo-worker hold only the matching public key and accept only issuer `roma`.
 
 Product Copilot model selection is also Roma-owned. Bob may send a selected
 model from the UI, but Roma validates it against
@@ -523,13 +525,13 @@ Required runtime configuration:
 | `NEXT_PUBLIC_CLK_LIVE_URL` | Public widget serving origin for copy/open snippets. |
 | `BERLIN_BASE_URL` | Berlin auth/session authority. |
 | `PRODUCT_COPILOT_BASE_URL` | Product Copilot worker origin where used. |
-| `SANFRANCISCO_BASE_URL` | San Francisco model execution authority. |
 | `TRANSLATION_AGENT` | Cloudflare service binding for Translation Agent Worker. |
 | `TOKYO_ASSET_CONTROL` | Cloudflare service binding for account asset operations. |
 | `TOKYO_PRODUCT_CONTROL` | Cloudflare service binding for product/account instance and page operations. |
-| `USAGE_KV` | Usage/account metrics KV binding. |
-| `SUPABASE_URL` | Roma account locale/settings route database URL; supplied in cloud-dev CI/env. |
-| `SUPABASE_SERVICE_ROLE_KEY` | Roma service-role account locale/settings writes; supplied as a secret. |
+| `USAGE_KV` | Roma request-rate-limit counters and current monthly Copilot turn counters. |
+| `SUPABASE_URL` | Roma account settings database URL; supplied in cloud-dev CI/env. |
+| `SUPABASE_SERVICE_ROLE_KEY` | Roma service-role account settings writes; supplied as a secret. |
+| `ROMA_AI_GRANT_PRIVATE_KEY_PEM` | Roma-only RS256 signing key for Product Copilot and Translation Agent grants. |
 
 Cloudflare Pages config evidence uses:
 

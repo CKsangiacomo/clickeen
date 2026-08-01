@@ -191,7 +191,7 @@ that exposes it.
 | Berlin        | Cloudflare Workers           | Auth, session bootstrap, account authz capsule      |
 | Prague        | Cloudflare Pages / Astro     | Marketing, gallery, demo/funnel pages               |
 | DevStudio     | Cloudflare Pages             | The one human's cockpit for governing the AI-operated company (through the normal admin account) |
-| San Francisco | Workers/D1/KV/R2/Queues      | Governed AI model execution and trace/outcome sink  |
+| San Francisco | Cloudflare Worker + KV/R2    | Governed AI model execution and Prague l10n logs   |
 | Product Copilot | Cloudflare Worker          | Builder Product Copilot brain; agent id `product.copilot` |
 | Translation Agent | Cloudflare Worker        | Translation Agent brain; agent id `widget.instance.translator` |
 | Michael       | Supabase Postgres            | Account/user/invitation/locale relational data      |

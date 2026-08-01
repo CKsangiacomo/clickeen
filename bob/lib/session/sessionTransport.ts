@@ -252,13 +252,13 @@ export function useSessionTransport(args: {
   const fetchApi = useCallback(async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
     const inputUrl = normalizeInputUrl(input);
     const instanceId = String(args.metaRef.current?.instanceId || '').trim();
-    if (inputUrl === '/api/ai/widget-copilot' || inputUrl === '/api/ai/outcome') {
+    if (inputUrl === '/api/ai/widget-copilot') {
       if (!instanceId) {
         return createHostUnavailableResponse();
       }
       const body = await readRequestJsonBody(input, init);
       const result = await dispatchHostAccountCommand({
-        command: inputUrl === '/api/ai/widget-copilot' ? 'run-copilot' : 'attach-ai-outcome',
+        command: 'run-copilot',
         instanceId,
         // Copilot turns are variable-latency: a large draft_edit (many ops) on a
         // reasoning model can exceed the 15s default and trip

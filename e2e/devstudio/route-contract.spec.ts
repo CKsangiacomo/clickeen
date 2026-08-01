@@ -820,12 +820,6 @@ test.describe('DevStudio route contract', () => {
       const configRecord = config as Record<string, unknown>;
       if (field === 'maxTurnsPerThread') {
         configRecord.maxTurnsPerThread = AI_RETURNED_MATRIX_PROOF_VALUE;
-      } else if (field === 'rawSamplePercent') {
-        const learningCapture = configRecord.learningCapture && typeof configRecord.learningCapture === 'object'
-          ? { ...(configRecord.learningCapture as Record<string, unknown>) }
-          : {};
-        learningCapture.rawSamplePercent = AI_RETURNED_MATRIX_PROOF_VALUE;
-        configRecord.learningCapture = learningCapture;
       } else {
         const budget = configRecord.budget && typeof configRecord.budget === 'object'
           ? { ...(configRecord.budget as Record<string, unknown>) }

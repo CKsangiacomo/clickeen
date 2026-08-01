@@ -1,5 +1,5 @@
 import { CK_REQUEST_ID_HEADER, asTrimmedString, isRecord, normalizeRequestId } from '@clickeen/ck-contracts';
-import { timingSafeEqualBytes } from '@clickeen/ck-contracts/security';
+import { readRomaAiGrantEnvelope, verifyRomaAiGrantSignature } from '@clickeen/ck-policy';
 import {
   buildStructuredTranslationPlan,
   buildSystemPrompt,
@@ -17,7 +17,7 @@ const LOCALE_TRANSLATION_CONCURRENCY = 6;
 
 type Env = {
   ENVIRONMENT?: string;
-  AI_GRANT_HMAC_SECRET: string;
+  ROMA_AI_GRANT_PUBLIC_KEY_PEM: string;
   SANFRANCISCO_AI_ENGINE?: Fetcher;
   TOKYO_PRODUCT_CONTROL?: Fetcher;
 };
@@ -120,50 +120,29 @@ function normalizeStringArray(raw: unknown): string[] | null {
   return new Set(normalized).size === normalized.length ? normalized : null;
 }
 
-function base64UrlToBytes(input: string): Uint8Array {
-  const padded = input.replace(/-/g, '+').replace(/_/g, '/').padEnd(Math.ceil(input.length / 4) * 4, '=');
-  const binary = atob(padded);
-  const bytes = new Uint8Array(binary.length);
-  for (let i = 0; i < binary.length; i += 1) bytes[i] = binary.charCodeAt(i);
-  return bytes;
-}
-
-async function hmacSha256(secret: string, message: string): Promise<Uint8Array> {
-  const enc = new TextEncoder();
-  const key = await crypto.subtle.importKey('raw', enc.encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
-  const sig = await crypto.subtle.sign('HMAC', key, enc.encode(message));
-  return new Uint8Array(sig);
-}
-
-function readGrantPayload(grant: string): { payloadB64: string; sigB64: string; payload: unknown } {
-  const parts = grant.split('.');
-  if (parts.length !== 3 || parts[0] !== 'ckgrant') {
-    throw new HttpError(401, { error: { code: 'GRANT_INVALID', message: 'Invalid grant format' } });
-  }
-  try {
-    const payloadText = new TextDecoder().decode(base64UrlToBytes(parts[1] ?? ''));
-    return { payloadB64: parts[1] ?? '', sigB64: parts[2] ?? '', payload: JSON.parse(payloadText) as unknown };
-  } catch {
-    throw new HttpError(401, { error: { code: 'GRANT_INVALID', message: 'Invalid grant payload' } });
-  }
-}
-
 async function verifyRomaTranslationGrant(args: {
   grant: string;
-  secret: string;
+  publicKeyPem: string;
   accountPublicId: string;
   instanceId: string;
   requestedLocales: string[];
 }): Promise<VerifiedTranslationGrant> {
-  if (!args.secret) {
-    throw new HttpError(500, { error: { code: 'PROVIDER_ERROR', provider: 'translation-agent', message: 'Missing AI_GRANT_HMAC_SECRET' } });
+  if (!String(args.publicKeyPem || '').trim()) {
+    throw new HttpError(500, { error: { code: 'PROVIDER_ERROR', provider: 'translation-agent', message: 'Missing ROMA_AI_GRANT_PUBLIC_KEY_PEM' } });
   }
-  const { payloadB64, sigB64, payload } = readGrantPayload(args.grant);
-  const expectedSig = await hmacSha256(args.secret, `ckgrant.${payloadB64}`);
-  const providedSig = base64UrlToBytes(sigB64);
-  if (!timingSafeEqualBytes(expectedSig, providedSig)) {
-    throw new HttpError(401, { error: { code: 'GRANT_INVALID', message: 'Grant signature mismatch' } });
+  const envelope = readRomaAiGrantEnvelope(args.grant);
+  if (!envelope) {
+    throw new HttpError(401, { error: { code: 'GRANT_INVALID', message: 'Invalid grant format or payload' } });
   }
+  try {
+    if (!(await verifyRomaAiGrantSignature(envelope, args.publicKeyPem))) {
+      throw new HttpError(401, { error: { code: 'GRANT_INVALID', message: 'Grant signature mismatch' } });
+    }
+  } catch (error) {
+    if (error instanceof HttpError) throw error;
+    throw new HttpError(500, { error: { code: 'PROVIDER_ERROR', provider: 'translation-agent', message: 'Invalid ROMA_AI_GRANT_PUBLIC_KEY_PEM' } });
+  }
+  const payload = envelope.payload;
   if (!isRecord(payload)) {
     throw new HttpError(401, { error: { code: 'GRANT_INVALID', message: 'Invalid grant payload' } });
   }
@@ -556,7 +535,7 @@ async function handleTranslateInstance(args: {
   const requestId = resolveRequestId(args.request, body);
   await verifyRomaTranslationGrant({
     grant: body.grant,
-    secret: args.env.AI_GRANT_HMAC_SECRET,
+    publicKeyPem: args.env.ROMA_AI_GRANT_PUBLIC_KEY_PEM,
     accountPublicId: body.accountPublicId,
     instanceId: body.instanceId,
     requestedLocales: body.requestedLocales,

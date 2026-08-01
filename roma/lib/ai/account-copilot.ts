@@ -19,22 +19,13 @@ import {
 } from '@clickeen/ck-contracts/ai-model-management';
 import { reserveAccountLimitUse, type RomaUsageKv } from '../account-limit-usage';
 import { resolveProductCopilotBaseUrl } from '../env/product-copilot';
-import { resolveSanfranciscoBaseUrl } from '../env/sanfrancisco';
 import {
-  hmacSha256Base64Url,
   mintRomaAIGrant,
-  resolveAiGrantSecret,
+  resolveRomaAiGrantPrivateKeyPem,
   resolveEnvStage,
   type RomaAIGrant,
 } from './grants';
 
-const OUTCOME_EVENTS = new Set([
-  'edit_applied',
-  'edit_rejected',
-  'edit_undone',
-  'clarification_needed',
-  'invalid_output',
-] as const);
 export const ACCOUNT_WIDGET_COPILOT_AGENT_ID = 'product.copilot';
 export type AccountCopilotRuntimeUi = AgentRuntimePolicyUi;
 
@@ -147,31 +138,6 @@ export async function issueAccountCopilotGrant(args: {
   const maxTokens = baseBudgets.maxTokens;
   const timeoutMs = baseBudgets.timeoutMs;
 
-  const copilotTurnLimit = policy.limits['copilot.turns.monthly.max'];
-  try {
-    const reserved = await reserveAccountLimitUse({
-      accountId: args.authz.accountId,
-      limitKey: 'copilot.turns.monthly.max',
-      max: copilotTurnLimit ?? null,
-      usageKv: args.usageKv,
-    });
-    if (!reserved.ok) {
-      return {
-        ok: false,
-        status: 403,
-        reasonKey: 'coreui.upsell.reason.limitReached',
-        detail: 'copilot.turns.monthly.max limit exceeded.',
-      };
-    }
-  } catch (error) {
-    return {
-      ok: false,
-      status: 503,
-      reasonKey: 'coreui.errors.auth.contextUnavailable',
-      detail: error instanceof Error ? error.message : String(error),
-    };
-  }
-
   const nowSec = Math.floor(Date.now() / 1000);
   const exp = nowSec + 10 * 60;
   const grantPayload: RomaAIGrant = {
@@ -194,7 +160,33 @@ export async function issueAccountCopilotGrant(args: {
     },
   };
 
-  const grant = await mintRomaAIGrant(grantPayload, resolveAiGrantSecret());
+  const grant = await mintRomaAIGrant(grantPayload, resolveRomaAiGrantPrivateKeyPem());
+
+  const copilotTurnLimit = policy.limits['copilot.turns.monthly.max'];
+  try {
+    const reservation = await reserveAccountLimitUse({
+      accountId: args.authz.accountId,
+      limitKey: 'copilot.turns.monthly.max',
+      max: copilotTurnLimit,
+      usageKv: args.usageKv,
+    });
+    if (!reservation.ok) {
+      return {
+        ok: false,
+        status: 403,
+        reasonKey: 'coreui.upsell.reason.limitReached',
+        detail: 'copilot.turns.monthly.max limit exceeded.',
+      };
+    }
+  } catch (error) {
+    return {
+      ok: false,
+      status: 503,
+      reasonKey: 'coreui.errors.auth.contextUnavailable',
+      detail: error instanceof Error ? error.message : String(error),
+    };
+  }
+
   return { ok: true, grant, exp, agentId: resolvedAgent.canonicalId };
 }
 
@@ -286,76 +278,4 @@ export async function executeCopilotOnProductCopilot(args: {
     requestId: asTrimmedString(payload?.requestId) ?? '',
     result: payload?.result ?? null,
   };
-}
-
-export function isValidCopilotOutcomePayload(value: unknown): value is {
-  requestId: string;
-  outcomeId?: string;
-  surfaceId?: string;
-  artifactId?: string;
-  sessionId: string;
-  event: string;
-  occurredAtMs: number;
-  timeToDecisionMs?: number;
-  accountIdHash?: string;
-} {
-  if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
-  const body = value as Record<string, unknown>;
-  const requestId = asTrimmedString(body.requestId);
-  const outcomeId = asTrimmedString(body.outcomeId);
-  const surfaceId = asTrimmedString(body.surfaceId);
-  const artifactId = asTrimmedString(body.artifactId);
-  const sessionId = asTrimmedString(body.sessionId);
-  const event = asTrimmedString(body.event);
-  const occurredAtMs = body.occurredAtMs;
-  const timeToDecisionMs = body.timeToDecisionMs;
-  const accountIdHash = body.accountIdHash;
-  if (!requestId || !sessionId || !event || !OUTCOME_EVENTS.has(event as any)) return false;
-  if (body.outcomeId !== undefined && !outcomeId) return false;
-  if (body.surfaceId !== undefined && !surfaceId) return false;
-  if (body.artifactId !== undefined && !artifactId) return false;
-  if (typeof occurredAtMs !== 'number' || !Number.isFinite(occurredAtMs)) return false;
-  if (timeToDecisionMs !== undefined && (typeof timeToDecisionMs !== 'number' || !Number.isFinite(timeToDecisionMs) || timeToDecisionMs < 0)) {
-    return false;
-  }
-  if (accountIdHash !== undefined && (typeof accountIdHash !== 'string' || !accountIdHash.trim())) return false;
-  return true;
-}
-
-export async function hashCopilotAccountId(accountId: string): Promise<string> {
-  const normalized = String(accountId || '').trim();
-  if (!normalized) return '';
-  return hmacSha256Base64Url(resolveAiGrantSecret(), `copilot.account.${normalized}`);
-}
-
-export async function forwardCopilotOutcome(body: unknown): Promise<{ ok: true; upstream: unknown } | { ok: false; message: string }> {
-  const bodyText = JSON.stringify(body);
-  const signature = await hmacSha256Base64Url(resolveAiGrantSecret(), `outcome.${bodyText}`);
-  const baseUrl = resolveSanfranciscoBaseUrl().replace(/\/+$/, '');
-
-  let response: Response;
-  try {
-    response = await fetch(`${baseUrl}/outcome`, {
-      method: 'POST',
-      headers: {
-        'content-type': 'application/json',
-        'x-clickeen-signature': signature,
-      },
-      body: bodyText,
-      cache: 'no-store',
-    });
-  } catch (error) {
-    const detail = error instanceof Error ? error.message : String(error);
-    return { ok: false, message: `SanFrancisco outcome request failed: ${detail}` };
-  }
-
-  const text = await response.text().catch(() => '');
-  if (!response.ok) {
-    return {
-      ok: false,
-      message: summarizeUpstreamError({ serviceName: 'SanFrancisco', baseUrl, status: response.status, bodyText: text }),
-    };
-  }
-
-  return { ok: true, upstream: safeJsonParse(text) };
 }

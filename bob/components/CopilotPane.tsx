@@ -159,35 +159,6 @@ function buildProductCopilotControls(args: {
     }));
 }
 
-function buildOutcomeMetadata(ops: WidgetOp[] | null, controls: Array<{ path: string; label?: string; groupId?: string; groupLabel?: string }>) {
-  if (!ops || ops.length === 0) {
-    return {
-      opsCount: 0,
-      uniquePathsTouched: 0,
-      validationResult: 'not_applicable' as const,
-    };
-  }
-  const controlsByPath = new Map(controls.map((control) => [control.path, control]));
-  const paths = Array.from(new Set(ops.map((op) => op.path).filter(Boolean)));
-  return {
-    opsCount: ops.length,
-    uniquePathsTouched: paths.length,
-    touchedPaths: paths,
-    touchedControls: paths
-      .map((path) => {
-        const control = controlsByPath.get(path);
-        return {
-          path,
-          ...(control?.label ? { label: control.label } : {}),
-          ...(control?.groupId ? { groupId: control.groupId } : {}),
-          ...(control?.groupLabel ? { groupLabel: control.groupLabel } : {}),
-        };
-      })
-      .filter((entry) => Boolean(entry.path)),
-    validationResult: 'valid' as const,
-  };
-}
-
 function summarizeAppliedOps(ops: WidgetOp[], controls: Array<{ path: string; label?: string }>): string {
   const byPath = new Map(controls.map((control) => [control.path, control]));
   const labels = Array.from(new Set(ops.map((op) => byPath.get(op.path)?.label).filter(Boolean))).slice(0, 3);
@@ -235,9 +206,6 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
 
   const undoRef = useRef<{
     ops: WidgetOp[];
-    requestId: string;
-    appliedAtMs: number;
-    metadata: ReturnType<typeof buildOutcomeMetadata>;
     token: string;
     postApplySignature: string;
   } | null>(null);
@@ -280,32 +248,6 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
   useEffect(() => {
     instanceDataRef.current = session.instanceData;
   }, [session.instanceData]);
-
-  const reportOutcome = async (args: {
-    event: 'edit_applied' | 'edit_undone';
-    requestId: string;
-    sessionId: string;
-    timeToDecisionMs?: number;
-    metadata?: ReturnType<typeof buildOutcomeMetadata>;
-  }) => {
-    if (!args.requestId || !args.sessionId) return;
-    try {
-      await session.apiFetch('/api/ai/outcome', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          requestId: args.requestId,
-          sessionId: args.sessionId,
-          event: args.event,
-          occurredAtMs: Date.now(),
-          ...(typeof args.timeToDecisionMs === 'number' ? { timeToDecisionMs: args.timeToDecisionMs } : {}),
-          ...(args.metadata ? { metadata: args.metadata } : {}),
-        }),
-      });
-    } catch {
-      // best-effort
-    }
-  };
 
   useEffect(() => {
     if (!threadKey || !compiled || !widgetType) return;
@@ -383,13 +325,6 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
         setActiveUndoToken('');
         return;
       }
-      void reportOutcome({
-        event: 'edit_undone',
-        requestId: undo.requestId,
-        sessionId: copilotSessionId,
-        timeToDecisionMs: Math.max(0, Date.now() - undo.appliedAtMs),
-        metadata: undo.metadata,
-      });
       undoRef.current = null;
       setUndoAvailable(false);
       setActiveUndoToken('');
@@ -536,25 +471,14 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
           return;
         }
         const postApplySignature = serializeInstanceDataSignature(applied.data);
-        const metadata = buildOutcomeMetadata(expandedOps, controlsForAi);
-        const appliedAtMs = Date.now();
         const undoToken = crypto.randomUUID();
         undoRef.current = {
           ops: inverseOps,
-          requestId: requestId || '',
-          appliedAtMs,
-          metadata,
           token: undoToken,
           postApplySignature,
         };
         setUndoAvailable(true);
         setActiveUndoToken(undoToken);
-        void reportOutcome({
-          event: 'edit_applied',
-          requestId: requestId || '',
-          sessionId,
-          metadata,
-        });
         const appliedText = summarizeAppliedOps(expandedOps, controlsForAi);
         pushMessage({
           role: 'assistant',
@@ -639,13 +563,6 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
                       setActiveUndoToken('');
                       return;
                     }
-                    void reportOutcome({
-                      event: 'edit_undone',
-                      requestId: undo.requestId,
-                      sessionId: copilotSessionId,
-                      timeToDecisionMs: Math.max(0, Date.now() - undo.appliedAtMs),
-                      metadata: undo.metadata,
-                    });
                     undoRef.current = null;
                     setUndoAvailable(false);
                     setActiveUndoToken('');

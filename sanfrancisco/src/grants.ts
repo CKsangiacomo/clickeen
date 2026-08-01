@@ -1,51 +1,35 @@
 import type { AiGrantPolicy, AiModelRef, AiPolicyProfile, AiProvider } from '@clickeen/ck-contracts/ai';
-import { timingSafeEqualBytes } from '@clickeen/ck-contracts/security';
+import { readRomaAiGrantEnvelope, verifyRomaAiGrantSignature } from '@clickeen/ck-policy';
 import type { AIGrant } from './types';
 import { HttpError, asNumber, asString, isRecord } from './http';
 
-const AI_GRANT_ISSUER_SET = new Set<AIGrant['iss']>(['roma', 'sanfrancisco']);
 const AI_PROVIDER_SET = new Set<AiProvider>(['deepseek', 'openai']);
 const AI_POLICY_PROFILE_SET = new Set<AiPolicyProfile>(['free', 'tier1', 'tier2', 'tier3', 'tier4']);
 
 function isAiGrantIssuer(value: string): value is AIGrant['iss'] {
-  return AI_GRANT_ISSUER_SET.has(value as AIGrant['iss']);
+  return value === 'roma';
 }
 
 function isAiProvider(value: string): value is AiProvider {
   return AI_PROVIDER_SET.has(value as AiProvider);
 }
 
-function base64UrlToBytes(input: string): Uint8Array {
-  const padded = input.replace(/-/g, '+').replace(/_/g, '/').padEnd(Math.ceil(input.length / 4) * 4, '=');
-  const binary = atob(padded);
-  const bytes = new Uint8Array(binary.length);
-  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-  return bytes;
-}
-
-async function hmacSha256(secret: string, message: string): Promise<Uint8Array> {
-  const enc = new TextEncoder();
-  const key = await crypto.subtle.importKey('raw', enc.encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
-  const sig = await crypto.subtle.sign('HMAC', key, enc.encode(message));
-  return new Uint8Array(sig);
-}
-
-export async function verifyGrant(grant: string, secret: string): Promise<AIGrant> {
-  const parts = grant.split('.');
-  if (parts.length !== 3 || parts[0] !== 'ckgrant') {
-    throw new HttpError(401, { code: 'GRANT_INVALID', message: 'Invalid grant format' });
+export async function verifyGrant(grant: string, publicKeyPem: string): Promise<AIGrant> {
+  const envelope = readRomaAiGrantEnvelope(grant);
+  if (!envelope) throw new HttpError(401, { code: 'GRANT_INVALID', message: 'Invalid grant format or payload' });
+  const key = String(publicKeyPem || '').trim();
+  if (!key) {
+    throw new HttpError(500, { code: 'PROVIDER_ERROR', provider: 'sanfrancisco', message: 'Missing ROMA_AI_GRANT_PUBLIC_KEY_PEM' });
   }
-
-  const payloadB64 = parts[1];
-  const sigB64 = parts[2];
-
-  let payload: unknown;
   try {
-    const jsonText = new TextDecoder().decode(base64UrlToBytes(payloadB64));
-    payload = JSON.parse(jsonText);
-  } catch {
-    throw new HttpError(401, { code: 'GRANT_INVALID', message: 'Invalid grant payload' });
+    if (!(await verifyRomaAiGrantSignature(envelope, key))) {
+      throw new HttpError(401, { code: 'GRANT_INVALID', message: 'Grant signature mismatch' });
+    }
+  } catch (error) {
+    if (error instanceof HttpError) throw error;
+    throw new HttpError(500, { code: 'PROVIDER_ERROR', provider: 'sanfrancisco', message: 'Invalid ROMA_AI_GRANT_PUBLIC_KEY_PEM' });
   }
+  const payload = envelope.payload;
 
   if (!isRecord(payload)) throw new HttpError(401, { code: 'GRANT_INVALID', message: 'Invalid grant payload' });
 
@@ -79,16 +63,8 @@ export async function verifyGrant(grant: string, secret: string): Promise<AIGran
     if (!asString(sub.userId) || !asString(sub.accountId)) {
       throw new HttpError(401, { code: 'GRANT_INVALID', message: 'Grant subject missing userId/accountId' });
     }
-  } else if (subKind === 'service') {
-    if (!asString(sub.serviceId)) throw new HttpError(401, { code: 'GRANT_INVALID', message: 'Grant subject missing serviceId' });
   } else {
     throw new HttpError(401, { code: 'GRANT_INVALID', message: 'Grant subject kind is invalid' });
-  }
-
-  const expectedSig = await hmacSha256(secret, `ckgrant.${payloadB64}`);
-  const providedSig = base64UrlToBytes(sigB64);
-  if (!timingSafeEqualBytes(expectedSig, providedSig)) {
-    throw new HttpError(401, { code: 'GRANT_INVALID', message: 'Grant signature mismatch' });
   }
 
   const nowSec = Math.floor(Date.now() / 1000);
@@ -157,9 +133,8 @@ function normalizeAiPolicy(value: unknown): AiGrantPolicy | undefined {
   const maxMonthlyTurnsRaw = (value as any).maxMonthlyTurns;
   const maxMonthlyTurns = maxMonthlyTurnsRaw === null ? null : asPositiveInteger(maxMonthlyTurnsRaw);
   const timeoutMs = asPositiveInteger((value as any).timeoutMs);
-  const learningCapture = normalizeLearningCapturePolicy((value as any).learningCapture);
   const policyId = asString((value as any).policyId);
-  if (!maxTokensPerCall || !maxTurnsPerThread || maxMonthlyTurns === undefined || !timeoutMs || !learningCapture || !policyId) {
+  if (!maxTokensPerCall || !maxTurnsPerThread || maxMonthlyTurns === undefined || !timeoutMs || !policyId) {
     throw new HttpError(401, { code: 'GRANT_INVALID', message: 'Grant ai policy has invalid limits' });
   }
 
@@ -175,7 +150,6 @@ function normalizeAiPolicy(value: unknown): AiGrantPolicy | undefined {
     maxTurnsPerThread,
     maxMonthlyTurns,
     timeoutMs,
-    learningCapture,
     policyId,
   };
 }
@@ -191,17 +165,6 @@ function normalizeAiModelRef(value: unknown): AiModelRef | undefined {
   const model = asString((value as any).model);
   if (!provider || !isAiProvider(provider) || !model) return undefined;
   return { provider, model };
-}
-
-function normalizeLearningCapturePolicy(value: unknown): AiGrantPolicy['learningCapture'] | undefined {
-  if (!isRecord(value)) return undefined;
-  const rawSamplePercent = (value as any).rawSamplePercent;
-  if (typeof rawSamplePercent !== 'number' || !Number.isFinite(rawSamplePercent) || rawSamplePercent < 0 || rawSamplePercent > 100) {
-    return undefined;
-  }
-  return {
-    rawSamplePercent,
-  };
 }
 
 export function assertCap(grant: AIGrant, capability: string): void {

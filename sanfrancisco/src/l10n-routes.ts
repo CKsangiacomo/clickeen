@@ -14,9 +14,9 @@ export async function handlePragueStringsTranslate(request: Request, env: Env): 
     const bodyText = await request.text();
     await verifyBodySignature({
       signature: request.headers.get('x-clickeen-signature'),
-      secret: env.AI_GRANT_HMAC_SECRET,
+      secret: env.PRAGUE_L10N_HMAC_SECRET,
       message: `prague-l10n.${bodyText}`,
-      missingSecretMessage: 'Missing AI_GRANT_HMAC_SECRET',
+      missingSecretMessage: 'Missing PRAGUE_L10N_HMAC_SECRET',
     });
 
     let body: unknown;

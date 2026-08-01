@@ -50,8 +50,7 @@ type BobAccountCommand =
   | 'list-translations'
   | 'read-translation'
   | 'generate-translations'
-  | 'run-copilot'
-  | 'attach-ai-outcome';
+  | 'run-copilot';
 
 type BobAccountCommandMessage = {
   type: 'bob:account-command';
@@ -245,12 +244,6 @@ function resolveBobAccountCommandRequest(args: {
       return {
         method: 'POST',
         path: `/api/account/instances/${encodeURIComponent(instanceId)}/copilot`,
-      };
-    case 'attach-ai-outcome':
-      if (!instanceId) return null;
-      return {
-        method: 'POST',
-        path: `/api/account/instances/${encodeURIComponent(instanceId)}/copilot/outcome`,
       };
     default:
       return null;

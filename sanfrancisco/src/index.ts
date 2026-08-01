@@ -13,25 +13,12 @@ import {
   readJson,
   type SanFranciscoRequestContext,
 } from './http';
-import {
-  handlePragueStringsTranslate,
-} from './l10n-routes';
-import {
-  buildLearningSample,
-  indexCopilotEvent,
-  isOutcomeAttachRequest,
-  persistOutcomeAttach,
-  resolveLearningCaptureDecision,
-  verifyOutcomeSignature,
-} from './telemetry';
+import { handlePragueStringsTranslate } from './l10n-routes';
 import type {
   AIGrant,
   Env,
-  InteractionEvent,
   ModelChatRequest,
   ModelChatResponse,
-  OutcomeAttachRequest,
-  Usage,
 } from './types';
 
 function isChatMessage(value: unknown): value is ChatMessage {
@@ -68,21 +55,9 @@ function okHealth(env: Env): Response {
   );
 }
 
-function usageForExecutionFailure(grant: AIGrant, startedAtMs: number): Usage {
-  const modelRef = grant.ai?.selectedModel ?? grant.ai?.defaultModel;
-  return {
-    provider: modelRef?.provider ?? 'unknown',
-    model: modelRef?.model ?? 'unknown',
-    promptTokens: 0,
-    completionTokens: 0,
-    latencyMs: Math.max(0, Date.now() - startedAtMs),
-  };
-}
-
 async function handleModelChat(
   request: Request,
   env: Env,
-  ctx: ExecutionContext,
   requestContext: SanFranciscoRequestContext,
 ): Promise<Response> {
   return await withInflightLimit(async () => {
@@ -91,7 +66,7 @@ async function handleModelChat(
       throw new HttpError(400, { code: 'BAD_REQUEST', message: 'Invalid request', issues: [{ path: '', message: 'Expected { grant, agentId, messages }' }] });
     }
 
-    const grant: AIGrant = await verifyGrant(body.grant, env.AI_GRANT_HMAC_SECRET);
+    const grant: AIGrant = await verifyGrant(body.grant, env.ROMA_AI_GRANT_PUBLIC_KEY_PEM);
     const resolvedAgent = resolveAiAgent(body.agentId);
     if (!resolvedAgent) {
       throw new HttpError(403, { code: 'CAPABILITY_DENIED', message: `Unknown agentId: ${body.agentId}` });
@@ -105,92 +80,18 @@ async function handleModelChat(
     }
     assertCap(grant, `agent:${canonicalId}`);
 
-    const requestId = requestContext.requestId;
-    const occurredAtMs = Date.now();
-
-    const baseEvent: Omit<InteractionEvent, 'result' | 'usage'> = {
-      requestId,
+    const executed = await callChatCompletion({
+      env,
+      grant,
       agentId: canonicalId,
-      occurredAtMs,
-      subject: grant.sub,
-      trace: grant.trace,
-      ai: {
-        policyProfile: grant.ai?.policyProfile,
-        policyId: grant.ai?.policyId,
-        learningCapture: grant.ai?.learningCapture,
-        taskClass: resolvedAgent.entry.taskClass,
-      },
-      input: { kind: 'model_chat', messages: body.messages },
-    };
-
-    const sendEvent = (event: InteractionEvent) => {
-      if (!env.SF_EVENTS) return;
-      ctx.waitUntil(
-        env.SF_EVENTS.send(event).catch((err: unknown) => {
-          console.error('[sanfrancisco] SF_EVENTS.send failed', err);
-        }),
-      );
-    };
-
-    let executed: { content: string; usage: Usage };
-    try {
-      executed = await callChatCompletion({
-        env,
-        grant,
-        agentId: canonicalId,
-        messages: body.messages,
-        temperature: body.temperature,
-      });
-    } catch (err) {
-      const message = err instanceof HttpError ? err.error?.message ?? err.message : err instanceof Error ? err.message : 'Unknown execution error';
-      sendEvent({
-        ...baseEvent,
-        result: {
-          message,
-          error: { message },
-          meta: {
-            outcome: 'execution_failure',
-            validationResult: 'invalid',
-            invalidReason: message,
-          },
-        },
-        usage: usageForExecutionFailure(grant, occurredAtMs),
-      });
-      throw err;
-    }
-
-    sendEvent({
-      ...baseEvent,
-      result: { kind: 'model_chat', content: executed.content },
-      usage: executed.usage,
+      messages: body.messages,
+      temperature: body.temperature,
     });
 
+    const requestId = requestContext.requestId;
     const response: ModelChatResponse = { requestId, agentId: canonicalId, content: executed.content, usage: executed.usage };
     return noStore(json(response));
   });
-}
-
-async function handleOutcome(request: Request, env: Env): Promise<Response> {
-  const bodyText = await request.text();
-  await verifyOutcomeSignature({ request, env, bodyText });
-
-  let parsedBody: unknown;
-  try {
-    parsedBody = bodyText ? JSON.parse(bodyText) : null;
-  } catch {
-    throw new HttpError(400, { code: 'BAD_REQUEST', message: 'Invalid JSON body' });
-  }
-
-  if (!isOutcomeAttachRequest(parsedBody)) {
-    throw new HttpError(400, {
-      code: 'BAD_REQUEST',
-      message: 'Invalid request',
-      issues: [{ path: '', message: 'Expected { requestId, sessionId, event, occurredAtMs } with optional linkage fields' }],
-    });
-  }
-
-  await persistOutcomeAttach(env, parsedBody as OutcomeAttachRequest);
-  return noStore(json({ ok: true }));
 }
 
 export default class SanFranciscoWorker extends WorkerEntrypoint<Env> {
@@ -209,7 +110,7 @@ export default class SanFranciscoWorker extends WorkerEntrypoint<Env> {
       if (request.method === 'POST' && url.pathname === '/model/chat') {
         return finalizeSanFranciscoObservedResponse({
           context: requestContext,
-          response: await handleModelChat(request, this.env, this.ctx, requestContext),
+          response: await handleModelChat(request, this.env, requestContext),
           boundary: 'ai.model.chat',
         });
       }
@@ -223,13 +124,6 @@ export default class SanFranciscoWorker extends WorkerEntrypoint<Env> {
             },
           }, { status: 410 })),
           boundary: 'ai.execute.deprecated',
-        });
-      }
-      if (request.method === 'POST' && url.pathname === '/outcome') {
-        return finalizeSanFranciscoObservedResponse({
-          context: requestContext,
-          response: await handleOutcome(request, this.env),
-          boundary: 'ai.outcome',
         });
       }
       if (request.method === 'POST' && url.pathname === '/l10n/translate') {
@@ -258,37 +152,6 @@ export default class SanFranciscoWorker extends WorkerEntrypoint<Env> {
         reasonKey: 'PROVIDER_ERROR',
         detail: err instanceof Error ? err.message : String(err),
       });
-    }
-  }
-
-  async queue(batch: MessageBatch<unknown>): Promise<void> {
-    const today = new Date().toISOString().slice(0, 10);
-
-    console.log(JSON.stringify({
-      event: 'queue.batch.received',
-      service: 'sanfrancisco',
-      stage: this.env.ENVIRONMENT ?? 'unknown',
-      totalMessages: batch.messages.length,
-    }));
-
-    for (const msg of batch.messages) {
-      const e = msg.body;
-      if (!e || typeof e !== 'object' || Array.isArray(e)) {
-        msg.ack();
-        continue;
-      }
-      const event = e as InteractionEvent;
-      await indexCopilotEvent(this.env, event);
-      const decision = resolveLearningCaptureDecision(event);
-      if (decision.captureRaw) {
-        const key = `learning/${this.env.ENVIRONMENT ?? 'unknown'}/${event.agentId}/${today}/${event.requestId}.json`;
-        const sample = buildLearningSample(event, decision);
-        try {
-          await this.env.SF_R2.put(key, JSON.stringify(sample), { httpMetadata: { contentType: 'application/json' } });
-        } catch (err) {
-          console.error('[sanfrancisco] learning sample write failed', err);
-        }
-      }
     }
   }
 }

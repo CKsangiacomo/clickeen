@@ -181,7 +181,8 @@ Operational examples:
 - Publish enforces `instances.published.max` at command time;
 - asset upload checks `uploads.size.max` and `storage.bytes.max` in Roma and
   Tokyo-worker;
-- Copilot grant issuance enforces `copilot.turns.monthly.max`.
+- Copilot grant issuance enforces `copilot.turns.monthly.max`; missing or
+  malformed `USAGE_KV` counters fail closed.
 
 ### Verify Account-Owned Files
 

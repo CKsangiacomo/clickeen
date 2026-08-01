@@ -100,7 +100,7 @@ token/capsule/grant for that boundary.
 | Berlin | Cloudflare Worker | Auth/session/account bootstrap |
 | Tokyo-worker | Cloudflare Worker + R2 | Account storage boundary and public file serving |
 | Tokyo R2 | Cloudflare R2 | Product roots and account runtime storage |
-| San Francisco | Cloudflare Worker + D1/KV/R2/Queues | Governed model execution and trace/outcome sink |
+| San Francisco | Cloudflare Worker + KV/R2 | Governed model execution and Prague l10n logs |
 | Product Copilot | Cloudflare Worker | Builder Product Copilot agent home |
 | Translation Agent | Cloudflare Worker | Translation Agent home |
 | Prague | Cloudflare Pages / Astro | Marketing, gallery, demo/funnel pages |

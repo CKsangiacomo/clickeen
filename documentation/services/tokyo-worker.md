@@ -344,11 +344,11 @@ Worker env and bindings:
 | Name | Required | Purpose |
 | --- | --- | --- |
 | `TOKYO_R2` | yes | R2 bucket binding for static and account storage. |
-| `BERLIN_BASE_URL` | yes | Berlin session/JWKS authority for private request verification. |
+| `BERLIN_BASE_URL` | yes unless `BERLIN_JWKS_URL` is set | Berlin session/JWKS authority for private request verification. Missing both Berlin URL settings fails verification; Tokyo-worker does not select a cloud-dev default. |
 | `TOKYO_PUBLIC_BASE_URL` | yes | Public Tokyo static/resource origin. |
 | `PUBLIC_SERVING_BASE_URL` | yes | Public `clk.live`/`dev.clk.live` serving origin. |
-| `BERLIN_JWKS_URL` | no | Explicit JWKS URL when not derived from Berlin base URL. |
-| `AI_GRANT_HMAC_SECRET` | yes for Translation Agent writes | HMAC secret that verifies Translation Agent overlay-write grants. |
+| `BERLIN_JWKS_URL` | no | Explicit JWKS URL override. When present, it is used instead of deriving JWKS from `BERLIN_BASE_URL`. |
+| `ROMA_AI_GRANT_PUBLIC_KEY_PEM` | yes for Translation Agent writes | Public key that verifies Roma-issued overlay-write grants. |
 | `CLOUDFLARE_ZONE_ID` | yes for published public-byte mutations | Cloudflare zone for public cache refresh. |
 | `CLOUDFLARE_API_TOKEN` | yes for published public-byte mutations | Cloudflare API token allowed to purge the public zone. |
 

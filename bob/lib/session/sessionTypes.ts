@@ -131,8 +131,7 @@ export type BobAccountCommand =
   | 'list-translations'
   | 'read-translation'
   | 'generate-translations'
-  | 'run-copilot'
-  | 'attach-ai-outcome';
+  | 'run-copilot';
 
 export type BobAccountCommandMessage = {
   type: 'bob:account-command';

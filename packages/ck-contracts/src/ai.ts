@@ -31,10 +31,6 @@ export type AiModelPolicy = {
   allowed: string[];
 };
 
-export type AiLearningCapturePolicy = {
-  rawSamplePercent: number;
-};
-
 export type AgentRuntimePolicy = {
   agentId: string;
   policyProfile: AiPolicyProfile;
@@ -47,7 +43,6 @@ export type AgentRuntimePolicy = {
   maxTurnsPerThread: number;
   maxMonthlyTurns: number | null;
   timeoutMs: number;
-  learningCapture: AiLearningCapturePolicy;
   policyId: string;
 };
 

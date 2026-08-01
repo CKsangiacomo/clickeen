@@ -36,8 +36,12 @@ export async function readAccountLimitUsed(
     throw new Error('[Roma] Missing USAGE_KV binding');
   }
   const raw = await usageKv.get(counterKey);
-  const parsed = raw ? Number(raw) : 0;
-  return Number.isFinite(parsed) && parsed >= 0 ? Math.trunc(parsed) : 0;
+  if (raw === null) return 0;
+  const parsed = Number(raw);
+  if (!Number.isSafeInteger(parsed) || parsed < 0) {
+    throw new Error(`[Roma] Invalid USAGE_KV counter: ${counterKey}`);
+  }
+  return parsed;
 }
 
 export async function reserveAccountLimitUse(args: {

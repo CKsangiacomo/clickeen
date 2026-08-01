@@ -1,6 +1,6 @@
 import { isRecord } from '@clickeen/ck-contracts';
 import rawMatrix from '../entitlements.matrix.json';
-import { ENTITLEMENT_META, type EntitlementKey } from './registry';
+import { ENTITLEMENT_KEYS, ENTITLEMENT_META, type EntitlementKey } from './registry';
 import type { EntitlementKind, EntitlementsMatrix, PolicyProfile } from './types';
 
 const REQUIRED_TIERS: PolicyProfile[] = ['free', 'tier1', 'tier2', 'tier3', 'tier4'];
@@ -54,6 +54,15 @@ export function assertEntitlementsMatrix(input: unknown): EntitlementsMatrix {
   const entitlementsRaw = input.entitlements;
   if (!isRecord(entitlementsRaw)) {
     throw new Error('[ck-policy] Entitlements matrix entitlements must be an object');
+  }
+  const expectedKeys = new Set<string>(ENTITLEMENT_KEYS);
+  const unknownKeys = Object.keys(entitlementsRaw).filter((key) => !expectedKeys.has(key));
+  if (unknownKeys.length) {
+    throw new Error(`[ck-policy] Entitlements matrix contains unknown entitlement keys: ${unknownKeys.join(', ')}`);
+  }
+  const missingKeys = ENTITLEMENT_KEYS.filter((key) => !Object.hasOwn(entitlementsRaw, key));
+  if (missingKeys.length) {
+    throw new Error(`[ck-policy] Entitlements matrix missing entitlement keys: ${missingKeys.join(', ')}`);
   }
 
   const entitlements: EntitlementsMatrix['entitlements'] = {};

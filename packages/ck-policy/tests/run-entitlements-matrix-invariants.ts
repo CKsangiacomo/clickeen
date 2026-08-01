@@ -1,5 +1,10 @@
 import { strict as assert } from 'node:assert';
-import { ENTITLEMENT_KEYS, PLAN_LIMIT_KEYS, getEntitlementsMatrix } from '../src/index';
+import {
+  ENTITLEMENT_KEYS,
+  PLAN_LIMIT_KEYS,
+  assertEntitlementsMatrix,
+  getEntitlementsMatrix,
+} from '../src/index';
 
 const tiers = ['free', 'tier1', 'tier2', 'tier3', 'tier4'] as const;
 
@@ -12,6 +17,29 @@ assert.deepEqual(
   [...matrixKeys].sort(),
   [...registryKeys].sort(),
   'registry keys and matrix keys must match exactly',
+);
+
+const rawMatrix = structuredClone(matrix) as {
+  tiers: string[];
+  entitlements: Record<string, unknown>;
+};
+const missingKeyMatrix = structuredClone(rawMatrix);
+delete missingKeyMatrix.entitlements[ENTITLEMENT_KEYS[0]];
+assert.throws(
+  () => assertEntitlementsMatrix(missingKeyMatrix),
+  /missing entitlement keys/,
+  'matrix validation must reject missing registry keys',
+);
+
+const unknownKeyMatrix = structuredClone(rawMatrix);
+unknownKeyMatrix.entitlements['invented.entitlement'] = {
+  kind: 'flag',
+  values: Object.fromEntries(tiers.map((tier) => [tier, false])),
+};
+assert.throws(
+  () => assertEntitlementsMatrix(unknownKeyMatrix),
+  /unknown entitlement keys/,
+  'matrix validation must reject keys outside the registry',
 );
 
 assert.ok(registryKeys.has('widgets.instances.max'), 'widgets.instances.max must exist');

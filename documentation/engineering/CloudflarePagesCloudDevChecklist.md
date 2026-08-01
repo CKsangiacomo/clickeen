@@ -154,15 +154,17 @@ Env contract:
 | `NEXT_PUBLIC_CLK_LIVE_URL` | yes | `https://dev.clk.live` | `roma/wrangler.toml` |
 | `BERLIN_BASE_URL` | yes | `https://berlin-dev.clickeen.workers.dev` | `roma/wrangler.toml` |
 | `PRODUCT_COPILOT_BASE_URL` | yes | `https://product-copilot-dev.clickeen.workers.dev` | `roma/wrangler.toml` |
-| `SANFRANCISCO_BASE_URL` | yes | `https://sanfrancisco.dev.clickeen.com` | `roma/wrangler.toml` |
 | `NEXT_PUBLIC_BOB_URL` | yes | `https://bob.dev.clickeen.com` | `roma/wrangler.toml` |
 | `SUPABASE_URL` | yes | `https://ebmqwqdexmemhrdhkmwn.supabase.co` | Cloudflare Pages dashboard + GitHub Actions env |
 | `SUPABASE_ANON_KEY` | yes | cloud-dev anon key for project `ebmqwqdexmemhrdhkmwn` | Cloudflare Pages dashboard + GitHub Actions env |
-| `SUPABASE_SERVICE_ROLE_KEY` | yes | cloud-dev service-role key for account settings writes | Cloudflare Pages secret |
+| `SUPABASE_SERVICE_ROLE_KEY` | yes | cloud-dev service-role key for account settings and Copilot usage reservation | Cloudflare Pages secret |
+| `ROMA_AI_GRANT_PRIVATE_KEY_PEM` | yes | Roma-only RS256 private key | Cloudflare Pages secret |
 
 Dashboard action:
 - Keep `SUPABASE_URL`, `SUPABASE_ANON_KEY`, and `SUPABASE_SERVICE_ROLE_KEY` in the Cloudflare Pages dashboard for the live Roma app.
-- Keep `AI_GRANT_HMAC_SECRET` as a Roma Pages secret for Copilot grant/outcome signing and Translation Agent grant minting.
+- Keep `ROMA_AI_GRANT_PRIVATE_KEY_PEM` as the GitHub deployment secret that the
+  Worker deploy workflow installs only into Roma Pages for Copilot and
+  Translation Agent grant minting. Never install it on a verifier.
 - Keep the host/base-URL vars in `roma/wrangler.toml`.
 - Configure the `TOKYO_ASSET_CONTROL` service binding on Roma Pages to target the `tokyo-assets-dev` worker.
 - Configure the `TOKYO_PRODUCT_CONTROL` service binding on Roma Pages to target the `tokyo-assets-dev` worker.
@@ -341,15 +343,15 @@ These values remain outside git by design. Keep the inventory true; do not store
 
 Worker secrets:
 - Berlin: `SUPABASE_SERVICE_ROLE_KEY`, `BERLIN_DEV_ADMIN_EMAIL`, `BERLIN_DEV_ADMIN_PASSWORD`
-- San Francisco: `AI_GRANT_HMAC_SECRET`
-- Translation Agent: `AI_GRANT_HMAC_SECRET`
-- Tokyo-worker: `AI_GRANT_HMAC_SECRET` for Translation Agent overlay write grant verification
+- San Francisco: `ROMA_AI_GRANT_PUBLIC_KEY_PEM` for Roma AI grant verification and `PRAGUE_L10N_HMAC_SECRET` for Prague request verification
+- Translation Agent: `ROMA_AI_GRANT_PUBLIC_KEY_PEM`
+- Tokyo-worker: `ROMA_AI_GRANT_PUBLIC_KEY_PEM` for Translation Agent overlay write grant verification
 - Tokyo-worker: `CLOUDFLARE_API_TOKEN` for exact public `clk.live` cache
   purge after published package byte writes/deletes. Cloud-dev deploys this as a
   Worker secret from the GitHub Actions `CLOUDFLARE_API_TOKEN` secret.
 
 Pages secrets:
-- Roma: `AI_GRANT_HMAC_SECRET` is required for account Copilot grant/outcome signing and Translation Agent grant minting. `SUPABASE_SERVICE_ROLE_KEY` is required for Roma-owned account settings writes. Roma -> Tokyo/Tokyo-worker storage commands use service bindings. Account instance translation generation calls the Translation Agent Worker; that Worker calls San Francisco `/model/chat` and writes translated locale values via Tokyo-worker.
+- Roma: `ROMA_AI_GRANT_PRIVATE_KEY_PEM` is required for account Copilot and Translation Agent grant minting and must not be installed on any verifier. `SUPABASE_SERVICE_ROLE_KEY` is required for Roma-owned account settings writes. Roma -> Tokyo/Tokyo-worker storage commands use service bindings. Account instance translation generation calls the Translation Agent Worker; that Worker calls San Francisco `/model/chat` and writes translated locale values via Tokyo-worker.
 - DevStudio: `DEVSTUDIO_GITHUB_TOKEN` is required for GitHub-backed policy writes.
 
 CI secrets/vars:
@@ -360,7 +362,8 @@ CI secrets/vars:
   for local repo Cloudflare helper commands.
 - `CLOUDFLARE_REST_API_TOKEN` for local Pages/DNS/config repo helper commands.
 - `CLOUDFLARE_ACCOUNT_ID`
-- `AI_GRANT_HMAC_SECRET` for Prague string translation request signing
+- `ROMA_AI_GRANT_PUBLIC_KEY_PEM` for the Worker grant verifiers; it is the public half of Roma's key pair
+- `PRAGUE_L10N_HMAC_SECRET` shared only by the Prague localization workflow and San Francisco
 - Supabase migration workflow: `SUPABASE_ACCESS_TOKEN`,
   `SUPABASE_DB_PASSWORD`, and `SUPABASE_URL_CLOUD_DEV`. Supabase schema changes
   deploy through the reviewed migration workflow, not through Pages or Worker
@@ -376,6 +379,19 @@ Rules:
 - If a Pages custom domain serves a previous deploy after a Git-connected deploy,
   fix the underlying config or verification gap; do not normalize direct
   artifact deploys as the operating model.
+
+AI signing cutover has one authority-preserving order and no dual-verification
+mode:
+
+1. Generate one RS256 key pair outside the repo.
+2. Install `ROMA_AI_GRANT_PRIVATE_KEY_PEM` only on Roma Pages.
+3. Install the matching `ROMA_AI_GRANT_PUBLIC_KEY_PEM` as the GitHub Actions
+   secret used to configure San Francisco, Translation Agent, and Tokyo-worker.
+4. Install the independent `PRAGUE_L10N_HMAC_SECRET` in GitHub Actions.
+5. Push/deploy the code and verify Product Copilot, Translation Agent, and
+   Prague localization through their owning runtime checks.
+6. Delete the obsolete `AI_GRANT_HMAC_SECRET` from Roma Pages, GitHub Actions,
+   San Francisco, Translation Agent, and Tokyo-worker.
 
 ## Verification
 

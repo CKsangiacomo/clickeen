@@ -8,6 +8,7 @@
   },
   "scripts": {
     "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test:ai-grants": "tsx tests/run-ai-grant-signature.ts",
     "test:entitlements": "tsx tests/run-entitlements-matrix-invariants.ts"
   },
   "exports": {

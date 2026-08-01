@@ -20,7 +20,7 @@ is not documented here.
 | Product Copilot | `ENVIRONMENT` | no | Worker var | health reports `unknown` when absent |
 | Product Copilot | `SANFRANCISCO_AI_ENGINE` | yes | service binding to `sanfrancisco-dev` | `500 PROVIDER_ERROR` before model call |
 | Translation Agent | `ENVIRONMENT` | no | Worker var | health reports `unknown` when absent |
-| Translation Agent | `AI_GRANT_HMAC_SECRET` | yes | Worker secret | `500 PROVIDER_ERROR` before model/write work |
+| Translation Agent | `ROMA_AI_GRANT_PUBLIC_KEY_PEM` | yes | Worker secret | `500 PROVIDER_ERROR` before model/write work |
 | Translation Agent | `SANFRANCISCO_AI_ENGINE` | yes | service binding to `sanfrancisco-dev` | `500 PROVIDER_ERROR` before model call |
 | Translation Agent | `TOKYO_PRODUCT_CONTROL` | yes | service binding to `tokyo-assets-dev` | `500 PROVIDER_ERROR` before overlay write |
 
@@ -62,7 +62,7 @@ A current Clickeen agent home:
 | --- | --- | --- |
 | Copilot returns model/provider error | San Francisco health, grant/model policy, provider secret | `sanfrancisco.md`, `product-copilot.md` |
 | Copilot edit not applied | Bob draft signature, ops validation, undo construction | `product-copilot.md` |
-| Translation generation fails before model call | Roma active locales, grant trace, `AI_GRANT_HMAC_SECRET` | `translation-agent.md` |
+| Translation generation fails before model call | Roma active locales, grant trace, Roma grant signing/verification keys | `translation-agent.md` |
 | Translation model output rejected | Translation Agent parse/path validation | `translation-agent.md` |
 | Translation write rejected | Tokyo-worker internal translation route and grant trace | `translation-agent.md` |
 | Evals pass but runtime fails | Cloud-dev bindings/secrets/deploy workflow | agent doc plus `sanfrancisco.md` |

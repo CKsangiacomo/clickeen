@@ -13,7 +13,7 @@ import {
 } from '@clickeen/ck-contracts/ai';
 import {
   mintRomaAIGrant,
-  resolveAiGrantSecret,
+  resolveRomaAiGrantPrivateKeyPem,
   resolveEnvStage,
   type RomaAIGrant,
 } from './ai/grants';
@@ -377,7 +377,7 @@ async function issueTranslationAgentGrant(args: {
     },
   };
   return {
-    grant: await mintRomaAIGrant(grantPayload, resolveAiGrantSecret()),
+    grant: await mintRomaAIGrant(grantPayload, resolveRomaAiGrantPrivateKeyPem()),
     agentId: TRANSLATION_AGENT_ID,
   };
 }

@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "deploy": "wrangler deploy --routes \"\"",
+    "test:auth-config": "tsx tests/run-auth-config.ts",
     "test:clk-live": "tsx tests/run-clk-live-locale-serving.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },

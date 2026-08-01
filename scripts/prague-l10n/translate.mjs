@@ -55,8 +55,8 @@ function getSfBaseUrl() {
   }
 }
 
-function getAiGrantSecret() {
-  return String(process.env.AI_GRANT_HMAC_SECRET || '').trim();
+function getPragueL10nHmacSecret() {
+  return String(process.env.PRAGUE_L10N_HMAC_SECRET || '').trim();
 }
 
 function base64UrlEncodeBuffer(buffer) {
@@ -283,9 +283,9 @@ function splitTranslateBatches(items) {
 }
 
 async function translateWithSanFrancisco({ job, items }) {
-  const secret = getAiGrantSecret();
+  const secret = getPragueL10nHmacSecret();
   if (!secret) {
-    throw new Error('[prague-l10n] Missing AI_GRANT_HMAC_SECRET for San Francisco request signing');
+    throw new Error('[prague-l10n] Missing PRAGUE_L10N_HMAC_SECRET for San Francisco request signing');
   }
   const baseUrl = getSfBaseUrl();
   const url = `${baseUrl}/l10n/translate`;

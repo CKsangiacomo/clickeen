@@ -49,7 +49,6 @@ documentation/
 │   ├── README.md            # AI taxonomy and product law
 │   ├── sanfrancisco.md      # Governed model execution
 │   ├── ombra.md             # Product AI layer / model strategy guardrail
-│   ├── learning.md          # Trace/outcome/eval/release loop
 │   ├── agents/
 │   │   ├── product-copilot.md
 │   │   └── translation-agent.md
@@ -224,7 +223,7 @@ If you change runtime behavior, update docs in the same PR/commit:
 
 ## Security rules for docs
 
-- Never commit or paste real secrets into docs (`AI_GRANT_HMAC_SECRET`, API keys, Supabase keys, JWTs, etc.).
+- Never commit or paste real secrets into docs (private keys, HMAC secrets, API keys, Supabase keys, JWTs, etc.).
 - Use placeholders: `<secret>`, `<token>`, `<baseUrl>`, `{instanceId}`.
 - If an endpoint requires auth, describe the header shape, not the value.
 
@@ -234,7 +233,7 @@ If you change runtime behavior, update docs in the same PR/commit:
 
 - Compiler determinism: repo typecheck/build plus Cloudflare verification, not a localhost Bob HTTP gate
 - Quick grep for removed/renamed surfaces:
-  - `rg -n "/api/ai/widget-copilot|/api/ai/outcome|/api/account/instances/.*/copilot|/model/chat|/execute|PRODUCT_COPILOT_BASE_URL|SANFRANCISCO_BASE_URL|AI_GRANT_HMAC_SECRET" documentation`
+  - `rg -n "/api/ai/widget-copilot|/api/account/instances/.*/copilot|/model/chat|/execute|PRODUCT_COPILOT_BASE_URL|SANFRANCISCO_BASE_URL|ROMA_AI_GRANT_|PRAGUE_L10N_HMAC_SECRET" documentation`
   - `rg -n "claims/minibob/complete|/api/account/assets|POST /api/instance\\b" documentation --glob '*.md'`
   - `rg -n "/api/bootstrap|/api/account/widgets|/api/session/finish|/api/account/assets" documentation --glob '*.md'`
   - `rg -n "published/widgets|/renders/widgets|accounts/.*/widgets|root (widgets|public|published|l10n)" documentation --glob '*.md'`

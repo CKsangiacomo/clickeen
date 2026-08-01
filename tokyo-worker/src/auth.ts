@@ -20,7 +20,6 @@ export const TOKYO_INTERNAL_SERVICE_ROMA_EDGE = 'roma.edge';
 export const TOKYO_INTERNAL_SERVICE_TRANSLATION_AGENT = 'translation-agent';
 
 const BERLIN_ACCOUNT_CAPSULE_JWKS_CACHE_KEY = '__CK_TOKYO_ACCOUNT_CAPSULE_JWKS__';
-const DEFAULT_BERLIN_BASE_URL = 'https://berlin-dev.clickeen.workers.dev';
 
 function normalizeInternalServiceId(value: string | null): string | null {
   if (typeof value !== 'string') return null;
@@ -28,10 +27,13 @@ function normalizeInternalServiceId(value: string | null): string | null {
   return normalized || null;
 }
 
-function resolveBerlinJwksUrl(env: Env): string {
+export function resolveBerlinJwksUrl(env: Env): string {
   const direct = (typeof env.BERLIN_JWKS_URL === 'string' ? env.BERLIN_JWKS_URL.trim() : '') || null;
   if (direct) return direct;
-  const base = (typeof env.BERLIN_BASE_URL === 'string' ? env.BERLIN_BASE_URL.trim() : '') || DEFAULT_BERLIN_BASE_URL;
+  const base = typeof env.BERLIN_BASE_URL === 'string' ? env.BERLIN_BASE_URL.trim() : '';
+  if (!base) {
+    throw new Error('[Tokyo] Missing BERLIN_BASE_URL or BERLIN_JWKS_URL');
+  }
   return `${base.replace(/\/+$/, '')}/.well-known/jwks.json`;
 }
 

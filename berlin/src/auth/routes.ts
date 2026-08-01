@@ -52,25 +52,16 @@ function normalizeEmail(value: unknown): string | null {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalized) ? normalized : null;
 }
 
-function resolveStage(env: Env): string {
-  const stage = claimAsString(env.ENV_STAGE)?.toLowerCase();
-  if (stage) return stage;
-  const issuer = claimAsString(env.BERLIN_ISSUER)?.toLowerCase() || '';
-  if (issuer.includes('localhost')) return 'local';
-  if (issuer.includes('berlin-dev')) return 'cloud-dev';
-  return 'unknown';
-}
-
 function resolveDevAdminCredentials(env: Env): { email: string; password: string; accountId: string } | null {
   const email = normalizeEmail(env.BERLIN_DEV_ADMIN_EMAIL) || normalizeEmail(env.CK_ADMIN_EMAIL);
   const password = claimAsString(env.BERLIN_DEV_ADMIN_PASSWORD) || claimAsString(env.CK_ADMIN_PASSWORD);
-  const accountId = claimAsString(env.BERLIN_DEV_ADMIN_ACCOUNT_ID) || 'CLICKEEN';
+  const accountId = claimAsString(env.BERLIN_DEV_ADMIN_ACCOUNT_ID);
   if (!email || !password || !accountId) return null;
   return { email, password, accountId };
 }
 
 function isDevAdminLoginAllowed(env: Env): boolean {
-  const stage = resolveStage(env);
+  const stage = claimAsString(env.ENV_STAGE)?.toLowerCase();
   return stage === 'local' || stage === 'cloud-dev';
 }
 
