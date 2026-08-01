@@ -130,11 +130,13 @@ use case our countdown's `number` mode could serve today and does not advertise.
 The editor loads from:
 
 ```text
-universe-static.elfsightcdn.com/app-releases/countdown-timer/stable/v3.1
+universe-static.elfsightcdn.com/app-releases/countdown-timer/stable/v3.11.1/66a5c9…
 ```
 
-Per-app-type, `stable` channel, explicit semantic version. Countdown is on
-**v3.1**, not merely "3.0".
+Per-app-type, `stable` channel, explicit semantic version plus a build hash.
+Countdown is on **v3.11.1** — an earlier reading of "v3.1" was a truncated URL.
+So the "3.0" in the update dialog is a marketing major; the shipped runtime is
+eleven minors past it.
 
 ---
 
@@ -399,7 +401,7 @@ the mode gallery behind `Change`. See §2 and §3.1a.
 
 - **3.1's Position, Theme, and Settings rail sections.** Not captured, and the
   cause is now isolated. The editor is a single cross-origin iframe
-  (`app-releases/countdown-timer/stable/v3.1`). Synthetic clicks reach that iframe
+  (`app-releases/countdown-timer/stable/v3.11.1`). Synthetic clicks reach that iframe
   — a double-click produced a text selection, and the `Change` link inside the
   Timer panel opened the mode gallery. But the **rail buttons specifically** do not
   respond, across two browser tab groups, three tabs, four window sizes, and every
