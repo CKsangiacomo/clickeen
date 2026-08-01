@@ -156,6 +156,36 @@ function summarizeWorkerQueueConsumers(queues, scriptName) {
   });
 }
 
+async function detachWorkerQueueConsumers(config, args) {
+  const apply = args.includes('--apply');
+  const scriptName = args.find((arg) => arg !== '--apply');
+  if (!scriptName) throw new Error('Missing Worker script name.');
+
+  const before = summarizeWorkerQueueConsumers(await listQueues(config), scriptName);
+  if (!apply) {
+    return {
+      apply: false,
+      script: scriptName,
+      consumers: before,
+      note: 'Dry run only. Re-run with --apply to detach these exact Queue consumers.',
+    };
+  }
+
+  for (const consumer of before) {
+    await cf(
+      config,
+      `/accounts/${config.accountId}/queues/${consumer.queue_id}/consumers/${consumer.consumer_id}`,
+      { method: 'DELETE' },
+    );
+  }
+
+  const after = summarizeWorkerQueueConsumers(await listQueues(config), scriptName);
+  if (after.length > 0) {
+    throw new Error(`Queue consumers remain attached to Worker after detach: ${scriptName}`);
+  }
+  return { apply: true, script: scriptName, before, after };
+}
+
 async function getPagesProject(config, projectName) {
   const body = await cf(config, `/accounts/${config.accountId}/pages/projects/${encodeURIComponent(projectName)}`);
   return body.result ?? {};
@@ -666,6 +696,7 @@ function usage() {
   pnpm cf:pages:delete-var <project-name> <variable-name> [--env production|preview|both] [--apply]
   pnpm cf:pages:domains <project-name>
   pnpm cf:workers:queue-consumers <script-name>
+  pnpm cf:workers:detach-queue-consumers <script-name> [--apply]
   pnpm cf:dns:records <zone-name> [record-name]
   pnpm cf:dns:upsert-cname <zone-name> <record-name> <target>
 
@@ -742,6 +773,11 @@ async function main() {
       queues_inspected: queues.length,
       consumers: summarizeWorkerQueueConsumers(queues, scriptName),
     });
+    return;
+  }
+
+  if (command === 'workers:detach-queue-consumers') {
+    printJson(await detachWorkerQueueConsumers(config, args));
     return;
   }
 

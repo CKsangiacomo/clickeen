@@ -28,6 +28,7 @@
     "cf:pages:delete-var": "node scripts/cloudflare/api.mjs pages:delete-var",
     "cf:pages:domains": "node scripts/cloudflare/api.mjs pages:domains",
     "cf:workers:queue-consumers": "node scripts/cloudflare/api.mjs workers:queue-consumers",
+    "cf:workers:detach-queue-consumers": "node scripts/cloudflare/api.mjs workers:detach-queue-consumers",
     "cf:dns:records": "node scripts/cloudflare/api.mjs dns:records",
     "cf:dns:upsert-cname": "node scripts/cloudflare/api.mjs dns:upsert-cname",
     "e2e": "playwright test",
