@@ -63,6 +63,15 @@ jobs:
           set -euo pipefail
           wrangler=(pnpm dlx wrangler@4.54.0)
 
+          set +e
+          "${wrangler[@]}" queues consumer remove sanfrancisco-events-dev sanfrancisco-dev \
+            > "$RUNNER_TEMP/remove-consumer.log" 2>&1
+          remove_status=$?
+          set -e
+          if [ "$remove_status" -ne 0 ] && ! grep -Fq "No worker consumer 'sanfrancisco-dev' exists" "$RUNNER_TEMP/remove-consumer.log"; then
+            cat "$RUNNER_TEMP/remove-consumer.log" >&2
+            exit "$remove_status"
+          fi
           printf 'y\n' | "${wrangler[@]}" queues delete sanfrancisco-events-dev
           "${wrangler[@]}" kv namespace delete \
             --namespace-id f1abe003b9a8434699175b0c1ccd2603 \

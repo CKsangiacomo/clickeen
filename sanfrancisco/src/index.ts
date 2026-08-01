@@ -95,6 +95,10 @@ async function handleModelChat(
 }
 
 export default class SanFranciscoWorker extends WorkerEntrypoint<Env> {
+  async queue(batch: MessageBatch<unknown>): Promise<void> {
+    for (const message of batch.messages) message.ack();
+  }
+
   async fetch(request: Request): Promise<Response> {
     const url = new URL(request.url);
     const requestContext = createSanFranciscoRequestContext(request, this.env);
