@@ -204,6 +204,19 @@ is part of scope one, not a follow-up.
 Read before scoping anything below. This is the largest open question in the
 document.
 
+**Confirmed by direct capture 2026-07-31**, not only by the changelog below.
+`Calculator_competitoranalysis.md` §2.7 and `screenshots/12-rail-action.png`:
+**Action is one of four rail sections**, peer to Build. It carries a
+Redirect / Lead Form / No Action mode, eight prebuilt form fields (Full Name,
+Email Address, Phone Number, Estimated Budget, Preferred Timeframe, Describe
+Your Request, How Did You Hear About Us?, Consent), and four sub-panels —
+Payment, Submit Button, Email Notifications, Integrations. Integrations are
+Google Sheets, Zapier, Make.com, Mailchimp and Webhooks
+(`screenshots/13-action-integrations.png`).
+
+Lead capture is not a feature attached to their calculator. It is a quarter of
+the product surface.
+
 Elfsight's Calculator changelog (`/apps/calculator/whats-new`, read 2026-07-31)
 shows what the product has become. Dated entries, most recent first:
 
@@ -550,6 +563,25 @@ field type in §4.1 resolves to a number.
 Division by zero, `pow` producing a non-finite value, and any operation yielding
 `NaN` or `±Infinity` resolve to the **unavailable** result state (§6.4). They do
 not throw and do not substitute a value.
+
+### 5.4a Field references — decision forced by capture
+
+Elfsight's formulas reference fields **by display label**:
+`Area in Square Meters * SUM(Tile Type)`
+(`Calculator_competitoranalysis.md` §2.5). The bracket Field ID
+`[area_in_square_meters]` is displayed but not what the formula uses.
+
+That is fragile — renaming a field either breaks its formulas or forces a
+rewrite pass.
+
+**Decision: Clickeen references by stable `token`, never by label.** `token` is
+authored once, validated against `^[a-z][a-z0-9_]{0,39}$`, and immutable for the
+life of the field. Labels are translatable (§10); tokens are not. A rename
+changes only what the visitor reads.
+
+This also removes a translation hazard their model has: if a formula referenced
+a label and that label were translated, the formula would resolve differently
+per locale, or not at all.
 
 ### 5.5 Author-facing formula input — decision
 

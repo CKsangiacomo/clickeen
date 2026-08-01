@@ -1,220 +1,302 @@
-# Calculator — Competitor Analysis And Build Considerations
+# Calculator — Competitor Analysis (Elfsight)
 
-Status: PRIMARY-SOURCE COMPETITIVE RESEARCH (2026-07-31)
-Type: Research. Defines no scope and authorizes no build. Clickeen has no
-calculator widget today.
+STATUS: PRIMARY-SOURCE RESEARCH (2026-07-31). Research only — defines no scope
+and authorizes no build. The ruling document is `Calculator_PRD.md`.
 
-## Method
+Method: `../WidgetCompetitorResearchSteps.md`, executed in order against a live
+authenticated free account, **starting from Create Widget at 0/1** rather than
+from an existing instance. This replaces an earlier pass that opened an existing
+instance and therefore never saw the creation funnel.
 
-Live authenticated Elfsight account driven in-browser on 2026-07-31. The
-Calculator editor was opened, the Build panel walked, and both a field editor and
-a calculation editor opened and read in full. The sample instance was a mortgage
-calculator.
+Evidence: `screenshots/`. Every claim cites its capture.
 
-Editor chrome rendered in the account's UI language; control semantics were read
-from structure, values, and the live preview.
+---
 
-## Part 0 — Read this first: this is a different widget class
+## 1. The funnel, from zero
 
-Every Clickeen widget today is **render-only**. Content goes in at author time,
-HTML comes out, the visitor reads it. No visitor input, no state, no computation.
+### 1.1 Empty state — `01-app-empty-state.png`
 
-A calculator inverts that. The visitor supplies input, the widget computes, and
-the output is a function of what the visitor typed. The widget is a small
-application.
+At zero widgets the app states its own intended entry paths:
 
-**The good news: this fits Clickeen's serving model better than reviews do.**
+> "Your first widget is almost here! Create a captivating widget with the help of
+> **ready-made templates** or configure a **unique widget from scratch**."
 
-Unlike Google Reviews, a calculator has **no external data dependency**. The
-fields, the formulas, and the formatting are all authored. They can be
-materialized into `runtime.js` at save exactly like any other widget, and the
-evaluation happens client-side in the visitor's browser. No refresh job, no
-connector, no staleness policy, no API quota.
+Two paths. Templates named first.
 
-So the architectural cost is not in serving. It is in the **authoring surface**:
-Clickeen would need a formula language, an expression evaluator, a dependency
-graph between fields and calculations, and conditional logic — none of which
-exist. That is real engineering, but it is self-contained and it does not
-challenge any existing tenet.
+### 1.2 Create opens a template picker, not an editor — `02-create-template-picker.png`
 
-## Part 1 — What Elfsight ships
+**Create Widget** opens a full-screen **Choose a Template** step:
 
-**Editor shape:** four rail sections — Build, (design), (style), Settings — plus
-panel and live preview.
+- left sidebar, 2×2 thumbnail grid, pagination reading **"1 – 4 of 116"**
+- right pane, a **live interactive preview** — the selected calculator runs,
+  sliders move, results recompute
+- **"Continue with this template →"** pinned bottom-left
 
-### Build panel
+The editor is reachable only through this step.
 
-Top of the panel, before anything else:
+### 1.3 Five categories summing to 116 — `03-picker-categories.png`
 
-> **Elfsight AI Calculator Generator** — "Tell AI what you need and it will
-> create a working calculator." → **Create calculator** button.
-
-AI generation of the entire calculator from a natural-language prompt is
-positioned as the primary entry point, above the manual builder.
-
-Below it, two ordered lists and two disclosures:
-
-| Section | Contents |
+| Category | Count |
 | --- | --- |
-| **Fields** | Loan Amount · Interest Rate · Loan Period, each with an overflow menu, plus **+ Add field** |
-| **Calculations** | Monthly Payment · Total Interest Paid, each marked with an `F` (formula) badge, plus **+ Add calculation** |
-| Header | disclosure |
-| Results section | disclosure |
+| Cost Calculators | 32 |
+| Finance Calculators | 30 |
+| Fitness & Health Calculators | 17 |
+| Mortgage & Loan Calculators | 16 |
+| Other Calculators | 21 |
+| **Total** | **116** |
 
-### Field editor
+### 1.4 The catalogue is not only lead-gen — `04-picker-fitness-health-category.png`
 
-Opened on "Loan Amount", whose type is **Slider**:
+Fitness & Health, "1 – 4 of 17": **Body Mass Index (BMI)**, **Calorie**,
+**Nutrition**, **Keto**.
 
-| Control | Value observed |
+This corrects an earlier claim in this repo that Elfsight ships no consumer
+utilities. That came from a ranked keyword search, which surfaces only cost
+estimators. The picker is the complete list; the search is a biased sample.
+
+Finance, "1 – 4 of 30" — Profit Margin, Sales Tax, Car Insurance, Fees
+(`05-picker-finance-category.png`).
+
+### 1.5 The editor opens populated — `06-editor-on-arrival.png`
+
+Continuing lands in the editor with the template's fields, formulas, formatting,
+captions and CTA already configured. There is no blank state unless chosen.
+
+---
+
+## 2. Editor structure
+
+Four rail sections: **Build · Action · Style · Settings**.
+
+That **Action is a peer of Build**, not a sub-panel of it, is the most important
+structural fact about this product.
+
+### 2.1 Build — `06-editor-on-arrival.png`
+
+1. **Elfsight AI Calculator Generator** card — *"Create a calculator just by
+   describing it to the AI in plain language"* + **Generate Calculator**. First
+   item in the panel, above all authoring.
+2. **FIELDS** — ordered list, per-row overflow menu, **+ Add Field**
+3. **CALCULATIONS** — ordered list, per-row overflow menu, **+ Add Calculation**
+4. **Header** → · **Results Section** →
+
+### 2.2 Field types — `10-add-field-types.png`
+
+Six, in a 3×2 chooser: **Slider · Number · Dropdown · Choice · Image Choice ·
+Heading**. Five inputs plus one structural.
+
+### 2.3 Field model — `07-field-editor-slider.png`
+
+Panel title is the field type.
+
+| Control | Captured value |
 | --- | --- |
-| Label | "Loan Amount" |
-| Info / helper text | "Enter the total loan amount you want to borrow" — **rich text** with a formatting toolbar |
-| Minimum value | 100000 |
-| Maximum value | 5000000 |
-| Default value | 500000 |
-| Slider step | 50000 |
-| Format | **Currency ($100)** |
-| **Conditional logic** | Off — disclosure |
-| **Field ID** | `[loan_amount]` |
+| Label | Area in Square Meters |
+| Hint | rich text — B / I / link / lists / more |
+| Min Value | 1 |
+| Max Value | 100 |
+| Default Value | 50 |
+| Slider Step | 1 |
+| Format | Number (100 m²) |
+| Conditional Logic | Off → |
+| **Field ID** | `[area_in_square_meters]` |
 
-The field ID is exposed to the author because it is the token formulas reference.
-Slider is one field type; the "Add field" flow presumably offers others (number,
-dropdown, toggle, date) — not enumerated during this pass.
+Field ID is displayed, snake_cased from the label, bracket-delimited.
 
-The rendered field is a combined **text input + slider** with the min and max
-printed beneath and the helper text below that.
+### 2.4 Conditional logic — `09-field-conditional-logic.png`
 
-### Calculation editor
+> "Enable Conditional Logic — Set the rules to control the field visibility based
+> on values entered in other fields."
 
-Opened on "Monthly Payment":
+A second dependency graph over field values, independent of the formula graph.
+Available on fields *and* calculations.
 
-| Control | Value observed |
+### 2.5 Calculation model — `11-calculation-editor-formula.png`
+
+| Control | Captured value |
 | --- | --- |
-| Name | "Monthly Payment" |
-| **Formula** | `(Loan Amount*Interest Rate/(12*100))/(1-(1+Interest Rate/(12*100))^ (-12*Loan Period))` |
-| Show in results | toggle, on |
-| Result rank | segmented — **Primary result** · Secondary result |
+| Name | Total Cost of Tiles |
+| **Formula** | `Area in Square Meters * SUM(Tile Type)` |
+| Show in Results | on |
+| Rank | **Primary Result** / Secondary Result |
 | Format | Currency ($100) |
-| Caption | "This is an approximate monthly repayment amount for your mortgage based on the given inputs." — **rich text** |
-| Divider | toggle, on |
-| Conditional logic | Off — disclosure |
-| **Field ID** | `[monthly_payment]` |
+| Caption | rich text |
+| Divider | off |
+| Conditional Logic | Off → |
+| Field ID | `[total_cost_of_tiles]` |
 
-The formula editor carries three insert menus — **Fields**, **Calculations**,
-**Functions** — an operator row (`+` `-` `*` `/` `(` `)` `^`), and a **Create with
-AI** action.
+**Two authoring details that bear on our spec.**
 
-Two things follow from that formula:
+Formulas reference fields by **display label**, not by the bracket Field ID shown
+beneath the panel. Renaming a field therefore either breaks its formulas or
+requires a rewrite pass — a decision our AST design must make explicitly.
 
-- **Exponentiation is supported** (`^` with a negative exponent), so the
-  expression language is not toy arithmetic. The sample is a real amortization
-  formula.
-- **Calculations can reference other calculations**, not just fields — the
-  Calculations insert menu exists alongside Fields, and each calculation has its
-  own `[field_id]`.
+`SUM(Tile Type)` on a dropdown means choice options carry numeric values and
+`SUM` aggregates the selection.
 
-Below the formula editor, a link: *"Learn about creating formulas and functions
-in our guide. Need additional features or custom functions? Submit your
-request."* — so the function library is fixed and extended by request, the same
-crowdsourced-roadmap pattern seen in their FAQ Custom CSS panel.
+Beneath the formula box: *"Need extra features or a custom function? **Submit
+your request**"* — the library is fixed and extended by request.
 
-### Rendered output
+### 2.6 Function library
 
-The preview shows the full product shape:
+`MAX · MIN · ROUND · ROUNDUP · ROUNDDOWN · ABS · RAND · RANDBETWEEN · SUM · IF ·
+AND · OR · NOT · CONTAINS`
 
-- Title: "Mortgage Calculator"
-- Left column: three input fields with sliders, values, ranges, helper text
-- Right column, a results card:
-  - **Primary result** — "Monthly Payment", `$2,684`, large type, with its caption
-  - Divider
-  - **Secondary result** — "Total Interest Paid", `$466,279`, smaller, with caption
-  - A CTA block: "Ready to get started? Get in touch with our mortgage advisors
-    for personalized advice!" and a **Book a Meeting** button
+Operators `+ − * / ( ) ^`, plus an **AI formula generator**.
 
-That CTA block is the commercial point of the whole widget. A calculator is a
-lead-generation surface: the visitor invests effort, sees a number that matters
-to them, and is asked to talk to someone at exactly that moment.
+### 2.7 Action — the lead-capture system — `12-rail-action.png`
 
-## Part 2 — What building this in Clickeen would require
+Mode: **Redirect · Lead Form · No Action**. The captured template defaults to
+Lead Form.
 
-### Does not exist anywhere in Clickeen
+- **Heading**, **Caption** (rich text), **Open Form Button Text**
+- *"You can set a target action for users to take after they complete the
+  calculation."*
+- **LEAD FORM FIELDS** — Full Name · Email Address · Phone Number · Estimated
+  Budget · Preferred Timeframe · Describe Your Request · How Did You Hear About
+  Us? · Consent — each with an overflow menu, plus **+ Add Field**
+- **Payment** → · **Submit Button** → · **Email Notifications** → ·
+  **Integrations** →
 
-| Capability | Notes |
+The preview's "Shop Tiles Now" button is not a link. It opens this form.
+
+### 2.8 Integrations — `13-action-integrations.png`
+
+**Google Sheets · Zapier · Make.com · Mailchimp · Webhooks**, plus *"Request
+Integration."*
+
+### 2.9 Style — `14-rail-style.png`
+
+**8 field-style presets** in a carousel · **Font** (one, whole widget) ·
+**Background** → · four colours: **Text**, **Field Accent**, **Results
+Background**, **Action Button**.
+
+No layout axis. No per-role typography. This is why its 116 templates vary by
+content rather than structure — there is no structure to vary.
+
+### 2.10 Settings — `15-rail-settings.png`
+
+**Calculator Width** (800px) · **Language** · **Edit Texts** · **Custom CSS** ·
+**Custom JS**
+
+---
+
+## 3. Localization is chrome-only
+
+`16-settings-language-list.png`, `17-settings-edit-texts.png`
+
+**Language** is a searchable list with native and English names. **Edit Texts**
+opens "Language & Texts" — a list of overridable strings:
+
+> Clear · Download · Results · Calculation Results · Choose file · Print · Drop
+> file here · "Please enter a valid (0)" · "This field is required" · "Please
+> fill all the fields correctly" · "An error occurred when submitting the form,
+> please try again" · "This file cannot be uploaded because the file format is
+> unsupported" · "This file cannot be uploaded because file size limit (100 MB)
+> is exceeded"
+
+Every one is widget chrome. None is author content.
+
+So: the Language picker swaps built-in strings; field labels, hints, captions and
+headings remain in whatever language the author typed. **One instance serves one
+language of content.** Five languages means five widgets against the widget cap.
+
+Their "Translated and localized for 76 countries" claim describes this
+chrome-string coverage.
+
+---
+
+## 4. Publish lands on the paywall — `18-publish-to-paywall.png`
+
+**Publish** produces no embed code. It redirects to:
+
+```text
+/apps/calculator/pricing/single?redirectURL=…installationWidgetPid={widgetId}&headerCloseURL=%2Fapps%2Fcalculator
+```
+
+The wall is interposed inside the flow, carrying the widget id so installation
+resumes after payment. Build, edit and configure are free; the wall lands at
+existence.
+
+---
+
+## 5. Their own feature manifest — `19-paid-plan-feature-manifest.png`
+
+Verbatim from the pricing page, "All paid plans include":
+
+| | |
 | --- | --- |
-| **Visitor input handling** | No current widget accepts input. Needs input state, validation, and re-render on change. |
-| **Expression language + evaluator** | Parse and evaluate author-written formulas safely at runtime. Must not be `eval`. |
-| **Dependency graph** | Calculations reference fields and other calculations; needs topological evaluation and cycle detection. |
-| **Number formatting** | Currency, percent, decimal precision, locale-aware separators. |
-| **Conditional logic** | Present on both fields and calculations — show/hide based on other values. |
-| **A function library** | Elfsight ships one and extends it by request. Scope is a product decision. |
-| **Stable author-visible IDs** | `[loan_amount]` tokens. Clickeen has stable ids internally (`faq.sections[].id`) but never exposes them to authors as reference tokens. |
+| AI-powered full calculator generator | 8 pre-built styles with custom fonts & colors |
+| 6 adaptable fields for building any calculator | Simplify calculations with **hidden formulas** |
+| User-friendly formula editor with excel style | **Conditional logic for fields & results** |
+| **AI assistant for easy formula generation** | **Post-calculation form for lead capture** |
+| Rich function library for complex calculations | Send results and client data to your email |
+| **Send calculation details to client** | Translated and localized for 76 countries |
+| **Post-calculation action button** | Auto-adapting layout for any device |
+| Flexible result organization and structuring | Page-speed friendly lazy loading |
+| **Customizable number formatting options** | Tech-free calculator customization |
+| **116 ready-made templates** | Custom CSS Editor · Custom JS Editor |
 
-### Exists and would transfer
+Corroborates the counts above and adds **hidden formulas** — intermediate
+calculations excluded from results, mapping to a `showInResults: false` flag.
 
-Typography, fill/border/shadow/radius, stage and pod, locale switcher, social
-share, entitlement gating, and the whole materialization path. A calculator's
-presentation layer is ordinary Clickeen widget work — Clickeen's 213–233 control
-surface would make it far better-looking than Elfsight's.
+---
 
-Translation transfers cleanly too: field labels, helper text, calculation names,
-captions, and CTA copy are all authored strings and fit the existing overlay
-model exactly. Formulas and field IDs must **not** be translatable — the same
-distinction `editable-fields.json` already draws.
+## 6. Templates — `screenshots/templates/`
 
-### Where Clickeen is structurally advantaged
+18 of 116 downloaded as real PNGs from
+`universe-static.elfsightcdn.com/widget-thumbnails/{uuid}@2x.png`:
 
-**AI generation maps onto the agent plane.** Elfsight's "Create calculator" and
-"Create with AI" are model calls producing a structured artifact. Clickeen has
-San Francisco for governed execution and agent homes for reasoning. Generating a
-calculator spec — fields with types and ranges, formulas, formatting, captions —
-is a structured-output task against a schema Clickeen would already own. This is
-the single best fit between an Elfsight feature and Clickeen's existing
-architecture found in this entire research pass.
+Mortgage · Loan · Construction Price · Event Cost · Interior Design Cost ·
+Cleaning Cost · Window Cost · House Renovation Cost · Car Rental Cost · House
+Painting Cost · Photography Pricing · Screen Printing · Product Price · Solar
+Panel Price · T-Shirt Pricing · Printing Cost · Car Towing Cost · Video
+Production Cost.
 
-**Crawlable output still applies, partly.** The computed result is
-visitor-specific and not indexable, but the title, field labels, helper text,
-captions, and CTA are authored content that would appear in Clickeen's served
-HTML and not in Elfsight's empty div.
+**This set is not representative.** All 18 are cost and pricing estimators
+because the gallery search that produced them is ranked. The 17 consumer
+utilities in Fitness & Health are absent from it (§1.4). The remaining ~98 need
+paging through the gallery or the picker's own API, which is inside a
+cross-origin iframe and unreachable from the parent document.
 
-## Part 3 — Product observations
+---
 
-**Calculators are lead-generation, not content.** The result card's CTA is the
-product. This is the first widget in this research where the conversion mechanic
-is inseparable from the widget's purpose — which makes the CTA surface a
-first-class design concern rather than an add-on.
+## 7. Not captured
 
-**The field-type set is the scope dial.** Slider alone covers a large share of
-real calculators (mortgage, loan, savings, ROI, pricing). Adding dropdown and
-number covers most of the rest. The formula engine is the fixed cost; field types
-are incremental.
+Stated plainly so nothing is mistaken for covered:
 
-**Primary versus secondary results is a small idea worth copying.** It gives the
-author a way to say which number matters, and it drives the visual hierarchy of
-the result card automatically.
+- **Header** and **Results Section** disclosures in Build.
+- **Payment**, **Submit Button**, **Email Notifications** panels under Action.
+- **Background** disclosure under Style; **Custom CSS/JS** editors.
+- The **AI Calculator Generator** flow — the card is captured, the generation
+  experience is not.
+- The **Install** dialog for Calculator specifically. Platform behaviour is in
+  `../../planning_Research__Elfsight_Competitive_Breakdown.md` §7.
+- **What's New posts.** The list was read in an earlier pass and summarised in
+  `Calculator_PRD.md` §0.3. Per the procedure, titles are not findings; the posts
+  remain unopened.
+- **Request a Feature** — deliberately skipped.
 
-**A function library is an open-ended commitment.** Elfsight manages it by
-shipping a fixed set and taking requests. Whatever Clickeen ships becomes a
-compatibility surface — formulas authored against it must keep evaluating.
+---
 
-**This is the most self-contained of the three unbuilt widgets.** No connector,
-no refresh, no external quota, no staleness. Compared to Google Reviews it is
-almost entirely local work.
+## 8. Implications for the PRD
 
-## Part 4 — Open questions for the team
+Observations only; rulings belong in `Calculator_PRD.md`.
 
-Not decisions.
-
-1. **What is the expression language?** A safe evaluator is required; the scope
-   of operators and functions is a product decision with long-term compatibility
-   consequences.
-2. **Which field types ship?** Slider only, or slider plus number plus dropdown?
-3. **How is conditional logic expressed** in a way an agent can author and a
-   materializer can serialize?
-4. **Does the AI generator ship with it or after it?** It is Elfsight's primary
-   entry point, and it is the piece Clickeen is best equipped to build — but it
-   needs the schema to exist first.
-5. **What is the CTA/lead surface?** A link is the minimum. A form implies
-   submission storage, which is a much larger commitment and a new data class.
-6. **Are results shareable or persistable?** A URL that reproduces a computed
-   result is a distribution mechanic; it also implies encoding input state into
-   the address.
+1. **Their product is a lead-capture form with a calculator attached.** Action is
+   one of four rail sections, ships eight prebuilt form fields, and carries
+   payment, email notifications and five integrations. Our PRD scopes that out by
+   contract and offers three positions in §17.3 — which now rests on direct
+   evidence rather than inference from release notes.
+2. **AI generation is their first affordance.** Top card in Build, and twice in
+   their feature manifest. Our PRD's Path 2 ordering is confirmed as primary, not
+   deferred.
+3. **Their design surface is thin** — 8 presets, one font, four colours, no
+   layout axis, no per-role typography. Our typography system is a real
+   advantage; their Custom CSS/JS editors are the admission.
+4. **Their localization is chrome-only.** One instance, one content language.
+   The sharpest Babel contrast available, now evidenced.
+5. **Formulas reference labels, not ids.** Our AST design must decide whether a
+   field rename rewrites formulas or is refused.
+6. **Conditional logic covers fields and results** and is a paid-plan headline.
+   Our PRD defers it entirely — worth re-testing that deferral against this.
