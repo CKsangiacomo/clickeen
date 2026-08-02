@@ -218,6 +218,10 @@ async function testDieterLayoutTableAndPopupConsumption(): Promise<void> {
   const shell = await readRoute('components/roma-shell.tsx');
   const layout = await readRoute('app/layout.tsx');
   const romaCss = await readRoute('app/roma.css');
+  const assets = await readRoute('components/assets-domain.tsx');
+  const pages = await readRoute('components/pages-domain.tsx');
+  const assetsPage = assets.slice(assets.indexOf('export function AssetsPage'), assets.indexOf('export function AssetsDomain'));
+  const pagesPage = pages.slice(pages.indexOf('export function PagesPage'), pages.indexOf('const CANONICAL_LOCALES'));
 
   assert.match(layout, /dieter\/layouts\/main-container\/main-container\.css/);
   assert.match(shell, /className="main-container"/);
@@ -236,6 +240,24 @@ async function testDieterLayoutTableAndPopupConsumption(): Promise<void> {
     /\.roma-layout|\.roma-modal|\.rd-header|\.rd-domain|\.roma-portrait-boundary/,
   );
   assert.doesNotMatch(romaCss, /pointer:\s*coarse|orientation:\s*portrait/);
+
+  assert.match(assetsPage, /<AssetsDomain onHeaderActions=\{setHeaderActions\} \/>/);
+  assert.doesNotMatch(assetsPage, /useRomaAccountContext|useRomaAccountApi|refreshToken|onLoadingChange/);
+  assert.match(pagesPage, /<PagesDomain onHeaderActions=\{setHeaderActions\} \/>/);
+  assert.doesNotMatch(pagesPage, /PagesHeaderActionsRegistration|rd-canvas-module__actions/);
+  assert.doesNotMatch(pages, /createContext|useContext|PagesHeaderActionsRegistration/);
+
+  for (const [label, key] of [
+    ['Asset', 'filename'],
+    ['Type', 'assetType'],
+    ['Size', 'sizeBytes'],
+  ] as const) {
+    assert.match(
+      assets,
+      new RegExp(`<span>${label}<\\/span>\\{' '\\}[\\s\\S]*?className="diet-btn-ic"[\\s\\S]*?data-size="sm"[\\s\\S]*?changeSort\\('${key}'\\)`),
+    );
+    assert.match(assets, new RegExp(`aria-sort=\\{sort\\.key === '${key}' \\? sort\\.direction : 'none'\\}`));
+  }
 
   for (const relativePath of [
     'components/pages-domain.tsx',

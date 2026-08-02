@@ -384,6 +384,12 @@ It owns:
 - delete exact account asset references
 - show storage usage facts returned from the same account asset authority
 
+The page header owns Upload asset, Upload in bulk, and Refresh list. The
+account-dependent commands remain inside the Roma account boundary and report
+only their current actions and busy state to that header. The asset table uses
+the Dieter table contract; Asset, Type, and Size use the same inline label plus
+small Dieter icon-button sorting pattern as the Widgets table.
+
 The active asset route chain is:
 
 ```text
@@ -419,6 +425,11 @@ to read or write the named account page object. Current account page publish is
 disabled until Roma has a real page package writer. Public page copy/open actions
 are disabled until that writer exists. While a page is published, Roma requires
 unpublish before page source edit or delete.
+
+The page header owns Create page and Refresh through the same direct
+domain-to-shell action contract. The page list uses the Dieter table contract;
+Page, Page ID, and Placements use inline labels with small Dieter icon buttons
+for sorting.
 
 Current page source references saved widget instances by placement id and
 instance id. It does not embed widget source and does not currently store child

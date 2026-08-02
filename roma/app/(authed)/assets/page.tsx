@@ -1,8 +1,7 @@
-import { AssetsDomain } from '../../../components/assets-domain';
-import { DomainPageShell } from '../domain-page-shell';
+import { AssetsPage } from '../../../components/assets-domain';
 
-export default function AssetsPage() {
-  return <DomainPageShell activeDomain="assets" title="Assets" Component={AssetsDomain} />;
+export default function AssetsPageRoute() {
+  return <AssetsPage />;
 }
 
 export const runtime = 'edge';

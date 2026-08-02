@@ -1,8 +1,7 @@
-import { PagesDomain } from '../../../components/pages-domain';
-import { DomainPageShell } from '../domain-page-shell';
+import { PagesPage } from '../../../components/pages-domain';
 
-export default function PagesPage() {
-  return <DomainPageShell activeDomain="pages" title="Pages" Component={PagesDomain} />;
+export default function PagesPageRoute() {
+  return <PagesPage />;
 }
 
 export const runtime = 'edge';

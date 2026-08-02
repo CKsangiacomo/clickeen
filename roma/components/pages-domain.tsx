@@ -1,8 +1,9 @@
 'use client';
 
+import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { normalizeCanonicalLocalesFile, normalizeLocaleToken, resolveLocaleLabel } from '@clickeen/l10n';
 import localesJson from '@clickeen/l10n/locales.json';
 import { createDialogLifecycle } from '../../dieter/components/shared/dialog-lifecycle';
@@ -10,7 +11,10 @@ import { resolveAccountShellErrorCopy } from '../lib/account-shell-copy';
 import { copyToClipboard } from '../lib/copy-to-clipboard';
 import { resolvePublicServingBaseUrl } from '../lib/env/public-serving';
 import { useRomaAccountApi } from './account-api';
+import { RomaAccountNoticeModal } from './roma-account-notice-modal';
 import { useRomaAccountContext } from './roma-account-context';
+import { RomaDomainErrorBoundary } from './roma-domain-error-boundary';
+import { RomaShell } from './roma-shell';
 import {
   buildBuilderRoute,
   DEFAULT_INSTANCE_DISPLAY_NAME,
@@ -31,6 +35,62 @@ import {
   type PageRobots,
   type RomaPagesResponse,
 } from './use-roma-pages';
+
+type PageSortKey = 'title' | 'pageId' | 'placementCount';
+type PageSortDirection = 'ascending' | 'descending';
+type PageSort = { key: PageSortKey; direction: PageSortDirection };
+
+const DEFAULT_PAGE_SORT: PageSort = { key: 'title', direction: 'ascending' };
+
+type PagesHeaderActions = {
+  createPage: () => void;
+  refresh: () => void;
+  creating: boolean;
+  refreshing: boolean;
+  busy: boolean;
+};
+
+export function PagesPage() {
+  const [headerActions, setHeaderActions] = useState<PagesHeaderActions | null>(null);
+
+  return (
+    <RomaShell
+      activeDomain="pages"
+      title="Pages"
+      headerRight={headerActions ? (
+        <>
+          <button
+            className="diet-btn-txt"
+            data-size="md"
+            data-variant="primary"
+            type="button"
+            onClick={() => headerActions.createPage()}
+            disabled={headerActions.busy}
+          >
+            <span className="diet-btn-txt__label body-m">{headerActions.creating ? 'Creating...' : 'Create page'}</span>
+          </button>
+          <button
+            className="diet-btn-txt"
+            data-size="md"
+            data-variant="line2"
+            type="button"
+            onClick={() => headerActions.refresh()}
+            disabled={headerActions.refreshing}
+          >
+            <span className="diet-btn-txt__label body-m">Refresh</span>
+          </button>
+        </>
+      ) : null}
+    >
+      <RomaAccountNoticeModal />
+      <Suspense fallback={<section className="rd-canvas-module">Loading domain...</section>}>
+        <RomaDomainErrorBoundary domainLabel="Pages" resetKey="pages">
+          <PagesDomain onHeaderActions={setHeaderActions} />
+        </RomaDomainErrorBoundary>
+      </Suspense>
+    </RomaShell>
+  );
+}
 
 const CANONICAL_LOCALES = normalizeCanonicalLocalesFile(localesJson);
 
@@ -96,7 +156,11 @@ function buildPageIframeSnippet(publicUrl: string): string {
 ></iframe>`;
 }
 
-export function PagesDomain() {
+export function PagesDomain({
+  onHeaderActions,
+}: {
+  onHeaderActions?: (actions: PagesHeaderActions | null) => void;
+}) {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { accountContext } = useRomaAccountContext();
@@ -121,6 +185,7 @@ export function PagesDomain() {
   const [dataError, setDataError] = useState<string | null>(null);
   const [mutationError, setMutationError] = useState<string | null>(null);
   const [copyStatus, setCopyStatus] = useState<string | null>(null);
+  const [sort, setSort] = useState<PageSort>(DEFAULT_PAGE_SORT);
   const addInstancesDialogRef = useRef<HTMLDialogElement>(null);
 
   const selectedPageId = useMemo(() => searchParams.get('page') || '', [searchParams]);
@@ -278,6 +343,27 @@ export function PagesDomain() {
     () => widgetInstances.slice(0, pickerVisibleLimit),
     [pickerVisibleLimit, widgetInstances],
   );
+
+  const displayedPages = useMemo(() => {
+    return pages.slice().sort((left, right) => {
+      const primary = sort.key === 'placementCount'
+        ? left.placementCount - right.placementCount
+        : sort.key === 'pageId'
+          ? left.pageId.localeCompare(right.pageId)
+          : left.title.localeCompare(right.title);
+      if (primary !== 0) return sort.direction === 'ascending' ? primary : -primary;
+      return left.title.localeCompare(right.title);
+    });
+  }, [pages, sort]);
+
+  const changeSort = useCallback((key: PageSortKey) => {
+    setSort((current) => current.key === key
+      ? {
+          key,
+          direction: current.direction === 'ascending' ? 'descending' : 'ascending',
+        }
+      : { key, direction: 'ascending' });
+  }, []);
 
   const publishBlockers = useMemo(() => {
     if (!pageSource) return [];
@@ -579,42 +665,24 @@ export function PagesDomain() {
     }, `remove:${index}`);
   }, [pageSource, saveSource]);
 
+  const headerActions = useMemo<PagesHeaderActions>(() => ({
+    createPage: () => void handleCreatePage(),
+    refresh: () => void refreshPages({ force: true }),
+    creating: activeActionKey === 'create-page',
+    refreshing: domainLoading || domainRefreshing,
+    busy: Boolean(activeActionKey),
+  }), [activeActionKey, domainLoading, domainRefreshing, handleCreatePage, refreshPages]);
+
+  useEffect(() => {
+    onHeaderActions?.(headerActions);
+    return () => {
+      onHeaderActions?.(null);
+    };
+  }, [headerActions, onHeaderActions]);
+
   return (
     <>
       <section className="rd-canvas-module">
-        <div className="roma-toolbar">
-          <h2 className="heading-4">Pages</h2>
-          <p className="body-m roma-toolbar-count">
-            {pages.length} {pages.length === 1 ? 'page' : 'pages'}
-          </p>
-          {domainRefreshing ? (
-            <p className="body-m roma-toolbar-count" role="status">
-              Refreshing...
-            </p>
-          ) : null}
-        </div>
-        <div className="rd-canvas-module__actions">
-          <button
-            className="diet-btn-txt"
-            data-size="md"
-            data-variant="primary"
-            type="button"
-            onClick={() => void handleCreatePage()}
-            disabled={Boolean(activeActionKey)}
-          >
-            <span className="diet-btn-txt__label body-m">{activeActionKey === 'create-page' ? 'Creating...' : 'Create page'}</span>
-          </button>
-          <button
-            className="diet-btn-txt"
-            data-size="md"
-            data-variant="line2"
-            type="button"
-            onClick={() => void refreshPages({ force: true })}
-            disabled={domainLoading || domainRefreshing}
-          >
-            <span className="diet-btn-txt__label body-m">Refresh</span>
-          </button>
-        </div>
         {dataError ? <p className="body-m" role="alert">{dataError}</p> : null}
         {mutationError ? <p className="body-m" role="alert">{mutationError}</p> : null}
         {domainLoading && pages.length === 0 ? <p className="body-m" role="status">Loading pages...</p> : null}
@@ -622,16 +690,83 @@ export function PagesDomain() {
         {pages.length ? (
           <div className="diet-table">
           <table className="diet-table__table">
+            <caption className="sr-only">
+              {pages.length} {pages.length === 1 ? 'page' : 'pages'}
+              {domainRefreshing ? ', refreshing' : ''}
+            </caption>
             <thead>
               <tr>
-                <th className="label-s">Page</th>
-                <th className="label-s">Page ID</th>
-                <th className="label-s">Placements</th>
-                <th className="label-s diet-table__cell--action">Actions</th>
+                <th className="label-s" scope="col" aria-sort={sort.key === 'title' ? sort.direction : 'none'}>
+                  <span>Page</span>{' '}
+                  <button
+                    className="diet-btn-ic"
+                    data-size="sm"
+                    data-variant="neutral"
+                    type="button"
+                    aria-label="Sort by page"
+                    onClick={() => changeSort('title')}
+                  >
+                    <Image
+                      className="diet-btn-ic__icon"
+                      src={`/dieter/icons/svg/${sort.key === 'title'
+                        ? sort.direction === 'ascending' ? 'arrow.up.svg' : 'arrow.down.svg'
+                        : 'arrow.up.arrow.down.svg'}`}
+                      alt=""
+                      width={12}
+                      height={12}
+                      aria-hidden="true"
+                    />
+                  </button>
+                </th>
+                <th className="label-s" scope="col" aria-sort={sort.key === 'pageId' ? sort.direction : 'none'}>
+                  <span>Page ID</span>{' '}
+                  <button
+                    className="diet-btn-ic"
+                    data-size="sm"
+                    data-variant="neutral"
+                    type="button"
+                    aria-label="Sort by page ID"
+                    onClick={() => changeSort('pageId')}
+                  >
+                    <Image
+                      className="diet-btn-ic__icon"
+                      src={`/dieter/icons/svg/${sort.key === 'pageId'
+                        ? sort.direction === 'ascending' ? 'arrow.up.svg' : 'arrow.down.svg'
+                        : 'arrow.up.arrow.down.svg'}`}
+                      alt=""
+                      width={12}
+                      height={12}
+                      aria-hidden="true"
+                    />
+                  </button>
+                </th>
+                <th className="label-s" scope="col" aria-sort={sort.key === 'placementCount' ? sort.direction : 'none'}>
+                  <span>Placements</span>{' '}
+                  <button
+                    className="diet-btn-ic"
+                    data-size="sm"
+                    data-variant="neutral"
+                    type="button"
+                    aria-label="Sort by placements"
+                    onClick={() => changeSort('placementCount')}
+                  >
+                    <Image
+                      className="diet-btn-ic__icon"
+                      src={`/dieter/icons/svg/${sort.key === 'placementCount'
+                        ? sort.direction === 'ascending' ? 'arrow.up.svg' : 'arrow.down.svg'
+                        : 'arrow.up.arrow.down.svg'}`}
+                      alt=""
+                      width={12}
+                      height={12}
+                      aria-hidden="true"
+                    />
+                  </button>
+                </th>
+                <th className="label-s diet-table__cell--action" scope="col">Actions</th>
               </tr>
             </thead>
             <tbody>
-              {pages.map((page) => {
+              {displayedPages.map((page) => {
                 const isActive = page.pageId === activePageId;
                 const deleteActionKey = `delete-page:${page.pageId}`;
                 return (

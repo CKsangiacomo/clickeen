@@ -1,6 +1,7 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react';
+import Image from 'next/image';
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react';
 import type { AccountAssetRecord } from '@clickeen/ck-contracts';
 import { createDialogLifecycle } from '../../dieter/components/shared/dialog-lifecycle';
 import { parseAccountAssetRecord } from '../lib/account-asset-record';
@@ -8,6 +9,9 @@ import { formatBytes, formatNumber } from '../lib/format';
 import { useRomaAccountApi, type RomaAccountApi } from './account-api';
 import { parseApiErrorReason } from './same-origin-json';
 import { useRomaAccountContext } from './roma-account-context';
+import { RomaAccountNoticeModal } from './roma-account-notice-modal';
+import { RomaDomainErrorBoundary } from './roma-domain-error-boundary';
+import { RomaShell } from './roma-shell';
 
 type DeleteAssetPayload = {
   accountId: string;
@@ -31,6 +35,21 @@ type BulkUploadItem = {
   status: BulkItemStatus;
   error: string | null;
 };
+
+type AssetSortKey = 'filename' | 'assetType' | 'sizeBytes';
+type AssetSortDirection = 'ascending' | 'descending';
+type AssetSort = { key: AssetSortKey; direction: AssetSortDirection };
+
+type AssetsHeaderActions = {
+  uploadAsset: () => void;
+  uploadBulk: () => void;
+  refresh: () => void;
+  singleUploadBusy: boolean;
+  bulkUploadBusy: boolean;
+  listLoading: boolean;
+};
+
+const DEFAULT_ASSET_SORT: AssetSort = { key: 'filename', direction: 'ascending' };
 
 const DELETE_REASON_COPY: Record<string, string> = {
   'coreui.errors.asset.notFound': 'Asset not found. It may already be deleted.',
@@ -128,7 +147,64 @@ async function requestUploadAsset(accountApi: Pick<RomaAccountApi, 'fetchRaw'>, 
   return normalized;
 }
 
-export function AssetsDomain() {
+export function AssetsPage() {
+  const [headerActions, setHeaderActions] = useState<AssetsHeaderActions | null>(null);
+  const actionsBusy = Boolean(headerActions?.singleUploadBusy || headerActions?.bulkUploadBusy);
+
+  return (
+    <RomaShell
+      activeDomain="assets"
+      title="Assets"
+      headerRight={headerActions ? (
+        <>
+          <button
+            className="diet-btn-txt"
+            data-size="md"
+            data-variant="primary"
+            type="button"
+            onClick={headerActions.uploadAsset}
+            disabled={actionsBusy}
+          >
+            <span className="diet-btn-txt__label body-m">{headerActions.singleUploadBusy ? 'Uploading…' : 'Upload asset'}</span>
+          </button>
+          <button
+            className="diet-btn-txt"
+            data-size="md"
+            data-variant="secondary"
+            type="button"
+            onClick={headerActions.uploadBulk}
+            disabled={actionsBusy}
+          >
+            <span className="diet-btn-txt__label body-m">{headerActions.bulkUploadBusy ? 'Uploading…' : 'Upload in bulk'}</span>
+          </button>
+          <button
+            className="diet-btn-txt"
+            data-size="md"
+            data-variant="line2"
+            type="button"
+            onClick={headerActions.refresh}
+            disabled={headerActions.listLoading || actionsBusy}
+          >
+            <span className="diet-btn-txt__label body-m">{headerActions.listLoading ? 'Refreshing…' : 'Refresh list'}</span>
+          </button>
+        </>
+      ) : null}
+    >
+      <RomaAccountNoticeModal />
+      <Suspense fallback={<section className="rd-canvas-module">Loading domain...</section>}>
+        <RomaDomainErrorBoundary domainLabel="Assets" resetKey="assets">
+          <AssetsDomain onHeaderActions={setHeaderActions} />
+        </RomaDomainErrorBoundary>
+      </Suspense>
+    </RomaShell>
+  );
+}
+
+export function AssetsDomain({
+  onHeaderActions,
+}: {
+  onHeaderActions?: (actions: AssetsHeaderActions | null) => void;
+}) {
   const { accountContext, data } = useRomaAccountContext();
   const accountApi = useRomaAccountApi();
   const singleUploadInputRef = useRef<HTMLInputElement | null>(null);
@@ -157,6 +233,7 @@ export function AssetsDomain() {
   const [bulkUploadOpen, setBulkUploadOpen] = useState(false);
   const [bulkUploadBusy, setBulkUploadBusy] = useState(false);
   const [bulkItems, setBulkItems] = useState<BulkUploadItem[]>([]);
+  const [sort, setSort] = useState<AssetSort>(DEFAULT_ASSET_SORT);
 
   useEffect(() => {
     bulkUploadBusyRef.current = bulkUploadBusy;
@@ -364,9 +441,49 @@ export function AssetsDomain() {
           ? `Upload failed for ${failedBulkCount} file${failedBulkCount === 1 ? '' : 's'}.`
           : `${successfulBulkCount} file${successfulBulkCount === 1 ? '' : 's'} uploaded.`
       : null;
+  const changeSort = useCallback((key: AssetSortKey) => {
+    setSort((current) => current.key === key
+      ? {
+          key,
+          direction: current.direction === 'ascending' ? 'descending' : 'ascending',
+        }
+      : { key, direction: 'ascending' });
+  }, []);
+
+  const sortedAssets = useMemo(() => {
+    const rows = assets ?? [];
+    return rows.slice().sort((left, right) => {
+      let comparison: number;
+      if (sort.key === 'sizeBytes') {
+        comparison = left.sizeBytes - right.sizeBytes;
+      } else if (sort.key === 'assetType') {
+        comparison = left.assetType.localeCompare(right.assetType);
+      } else {
+        comparison = left.filename.localeCompare(right.filename);
+      }
+      if (comparison !== 0) return sort.direction === 'ascending' ? comparison : -comparison;
+      return left.filename.localeCompare(right.filename);
+    });
+  }, [assets, sort]);
+
+  const headerActions = useMemo<AssetsHeaderActions>(() => ({
+    uploadAsset: () => singleUploadInputRef.current?.click(),
+    uploadBulk: () => bulkUploadInputRef.current?.click(),
+    refresh: () => void refreshAssets(),
+    singleUploadBusy,
+    bulkUploadBusy,
+    listLoading: loading,
+  }), [bulkUploadBusy, loading, refreshAssets, singleUploadBusy]);
+
+  useEffect(() => {
+    onHeaderActions?.(headerActions);
+    return () => {
+      onHeaderActions?.(null);
+    };
+  }, [headerActions, onHeaderActions]);
+
   const storedAssetsLabel = assets == null ? (loading ? 'Loading...' : 'Unavailable') : formatNumber(assets.length);
   const storageUsedLabel = storageBytesUsed == null ? (loading ? 'Loading...' : 'Unavailable') : formatBytes(storageBytesUsed);
-  const assetRows = assets ?? [];
 
   return (
     <>
@@ -387,39 +504,6 @@ export function AssetsDomain() {
         </p>
         {uploadSizeLimitBytes != null ? <p className="body-m">Per-file upload limit: {formatBytes(uploadSizeLimitBytes)}</p> : null}
 
-        <div className="roma-toolbar">
-          <button
-            className="diet-btn-txt"
-            data-size="md"
-            data-variant="primary"
-            type="button"
-            onClick={() => singleUploadInputRef.current?.click()}
-            disabled={singleUploadBusy || bulkUploadBusy}
-          >
-            <span className="diet-btn-txt__label body-m">{singleUploadBusy ? 'Uploading…' : 'Upload asset'}</span>
-          </button>
-          <button
-            className="diet-btn-txt"
-            data-size="md"
-            data-variant="secondary"
-            type="button"
-            onClick={() => bulkUploadInputRef.current?.click()}
-            disabled={singleUploadBusy || bulkUploadBusy}
-          >
-            <span className="diet-btn-txt__label body-m">{bulkUploadBusy ? 'Uploading…' : 'Upload in bulk'}</span>
-          </button>
-          <button
-            className="diet-btn-txt"
-            data-size="md"
-            data-variant="line2"
-            type="button"
-            onClick={() => void refreshAssets()}
-            disabled={loading || singleUploadBusy || bulkUploadBusy}
-          >
-            <span className="diet-btn-txt__label body-m">{loading ? 'Refreshing…' : 'Refresh list'}</span>
-          </button>
-        </div>
-
         <input ref={singleUploadInputRef} type="file" hidden onChange={handleSingleFileChange} aria-label="Upload single asset" />
         <input ref={bulkUploadInputRef} type="file" multiple hidden onChange={handleBulkFileChange} aria-label="Upload multiple assets" />
 
@@ -432,15 +516,78 @@ export function AssetsDomain() {
         <table className="diet-table__table">
           <thead>
             <tr>
-              <th className="label-s">Asset</th>
-              <th className="label-s">Type</th>
-              <th className="label-s">MIME</th>
-              <th className="label-s">Size</th>
-              <th className="label-s diet-table__cell--action">Actions</th>
+              <th className="label-s" scope="col" aria-sort={sort.key === 'filename' ? sort.direction : 'none'}>
+                <span>Asset</span>{' '}
+                <button
+                  className="diet-btn-ic"
+                  data-size="sm"
+                  data-variant="neutral"
+                  type="button"
+                  aria-label="Sort by asset name"
+                  onClick={() => changeSort('filename')}
+                >
+                  <Image
+                    className="diet-btn-ic__icon"
+                    src={`/dieter/icons/svg/${sort.key === 'filename'
+                      ? sort.direction === 'ascending' ? 'arrow.up.svg' : 'arrow.down.svg'
+                      : 'arrow.up.arrow.down.svg'}`}
+                    alt=""
+                    width={12}
+                    height={12}
+                    aria-hidden="true"
+                  />
+                </button>
+              </th>
+              <th className="label-s" scope="col" aria-sort={sort.key === 'assetType' ? sort.direction : 'none'}>
+                <span>Type</span>{' '}
+                <button
+                  className="diet-btn-ic"
+                  data-size="sm"
+                  data-variant="neutral"
+                  type="button"
+                  aria-label="Sort by type"
+                  onClick={() => changeSort('assetType')}
+                >
+                  <Image
+                    className="diet-btn-ic__icon"
+                    src={`/dieter/icons/svg/${sort.key === 'assetType'
+                      ? sort.direction === 'ascending' ? 'arrow.up.svg' : 'arrow.down.svg'
+                      : 'arrow.up.arrow.down.svg'}`}
+                    alt=""
+                    width={12}
+                    height={12}
+                    aria-hidden="true"
+                  />
+                </button>
+              </th>
+              <th className="label-s" scope="col">MIME</th>
+              <th className="label-s" scope="col" aria-sort={sort.key === 'sizeBytes' ? sort.direction : 'none'}>
+                <span>Size</span>{' '}
+                <button
+                  className="diet-btn-ic"
+                  data-size="sm"
+                  data-variant="neutral"
+                  type="button"
+                  aria-label="Sort by size"
+                  onClick={() => changeSort('sizeBytes')}
+                >
+                  <Image
+                    className="diet-btn-ic__icon"
+                    src={`/dieter/icons/svg/${sort.key === 'sizeBytes'
+                      ? sort.direction === 'ascending' ? 'arrow.up.svg' : 'arrow.down.svg'
+                      : 'arrow.up.arrow.down.svg'}`}
+                    alt=""
+                    width={12}
+                    height={12}
+                    aria-hidden="true"
+                  />
+                </button>
+              </th>
+              <th className="label-s diet-table__cell--action" scope="col">Actions</th>
             </tr>
           </thead>
           <tbody>
-            {assetRows.map((asset) => (
+            {sortedAssets.map((asset) => (
               <tr key={asset.assetRef}>
                 <td className="body-s">{asset.filename}</td>
                 <td className="body-s">{asset.assetType}</td>
