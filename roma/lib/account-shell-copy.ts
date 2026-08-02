@@ -9,6 +9,11 @@ const ACCOUNT_SHELL_REASON_COPY: Record<string, string> = {
   'coreui.errors.account.memberNotFound': 'That team member could not be found.',
   'coreui.errors.account.invitationNotFound': 'That invitation could not be found.',
   'coreui.errors.instance.placedOnPage': 'Remove this widget from every page before deleting it.',
+  'roma.errors.proxy.tokyo_unavailable': 'Widget delivery is unavailable right now. Please try again.',
+  'tokyo.errors.publicCache.purgeConfigMissing':
+    'Public delivery is not configured, so publishing status was not changed.',
+  'tokyo.errors.publicCache.purgeFailed':
+    'Public delivery could not be refreshed, so publishing status was not changed. Please try again.',
 };
 
 export function resolveAccountShellReason(payload: unknown, fallback: string): string {

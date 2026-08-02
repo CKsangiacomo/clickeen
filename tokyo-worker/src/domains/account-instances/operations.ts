@@ -96,7 +96,7 @@ export async function purgeClkLiveEntryCache(args: {
   instanceId: string;
 }): Promise<void> {
   const zoneId = String(args.env.CLOUDFLARE_ZONE_ID || '').trim();
-  const token = String(args.env.CLOUDFLARE_API_TOKEN || '').trim();
+  const token = String(args.env.CLOUDFLARE_CACHE_PURGE_TOKEN || '').trim();
   const publicServingBase = String(args.env.PUBLIC_SERVING_BASE_URL || '').trim().replace(/\/+$/, '');
   if (!zoneId || !token || !publicServingBase) {
     throw new AccountInstanceTransitionError({

@@ -7,5 +7,5 @@ export type Env = {
   BERLIN_JWKS_URL?: string;
   ROMA_AI_GRANT_PUBLIC_KEY_PEM?: string;
   CLOUDFLARE_ZONE_ID?: string;
-  CLOUDFLARE_API_TOKEN?: string;
+  CLOUDFLARE_CACHE_PURGE_TOKEN?: string;
 };

@@ -5,6 +5,7 @@ import {
   isAccountRoleValue,
 } from '../lib/format';
 import { resolveAccountLocalesSuccessCopy } from '../components/account-locale-settings-card';
+import { resolveAccountShellErrorCopy } from '../lib/account-shell-copy';
 
 const tierLabels = [
   ['free', 'Free'],
@@ -45,6 +46,18 @@ assert.equal(
     },
   }),
   'Saved languages. Removed language content could not be fully deleted.',
+);
+assert.equal(
+  resolveAccountShellErrorCopy('roma.errors.proxy.tokyo_unavailable', 'fallback'),
+  'Widget delivery is unavailable right now. Please try again.',
+);
+assert.equal(
+  resolveAccountShellErrorCopy('tokyo.errors.publicCache.purgeConfigMissing', 'fallback'),
+  'Public delivery is not configured, so publishing status was not changed.',
+);
+assert.equal(
+  resolveAccountShellErrorCopy('tokyo.errors.publicCache.purgeFailed', 'fallback'),
+  'Public delivery could not be refreshed, so publishing status was not changed. Please try again.',
 );
 
 console.log('PASS account plan, role, and locale cleanup display labels');

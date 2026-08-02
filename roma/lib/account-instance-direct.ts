@@ -449,7 +449,7 @@ async function postInstanceStatusTransition(args: {
     body: args.body ?? {},
     decode: (payload) => payload,
     errorDetail: `tokyo_instance_${args.action}_http_error`,
-    errorKey: 'coreui.errors.db.writeFailed',
+    errorKey: 'roma.errors.proxy.tokyo_unavailable',
   });
   if (!result.ok) return result;
   const payload = isRecord(result.value) ? result.value : null;

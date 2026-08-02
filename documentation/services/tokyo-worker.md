@@ -350,10 +350,11 @@ Worker env and bindings:
 | `BERLIN_JWKS_URL` | no | Explicit JWKS URL override. When present, it is used instead of deriving JWKS from `BERLIN_BASE_URL`. |
 | `ROMA_AI_GRANT_PUBLIC_KEY_PEM` | yes for Translation Agent writes | Public key that verifies Roma-issued overlay-write grants. |
 | `CLOUDFLARE_ZONE_ID` | yes for published public-byte mutations | Cloudflare zone for public cache refresh. |
-| `CLOUDFLARE_API_TOKEN` | yes for published public-byte mutations | Cloudflare API token allowed to purge the public zone. |
+| `CLOUDFLARE_CACHE_PURGE_TOKEN` | yes for published public-byte mutations | Least-privilege Cloudflare API token allowed to purge the public zone. |
 
 Current `tokyo-worker/wrangler.toml` binds `TOKYO_R2` and configures
 `BERLIN_BASE_URL`, `TOKYO_PUBLIC_BASE_URL`, `PUBLIC_SERVING_BASE_URL`, and the
 cloud-dev `clk.live` `CLOUDFLARE_ZONE_ID`. The Cloudflare purge API token is
-deployed as the `CLOUDFLARE_API_TOKEN` Worker secret by the `cloud-dev workers
-deploy` workflow and is not stored in `wrangler.toml`.
+deployed as the `CLOUDFLARE_CACHE_PURGE_TOKEN` Worker secret by the `cloud-dev
+workers deploy` workflow and is not stored in `wrangler.toml`. It is separate
+from the CI `CLOUDFLARE_API_TOKEN` used to deploy Workers.

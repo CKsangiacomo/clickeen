@@ -86,18 +86,39 @@ export async function callTokyo<T>(
     errorDetail: string;
   },
 ): Promise<TokyoCallResult<T>> {
-  const response = await fetchTokyoProductControl({
-    path: args.path,
-    method: args.method,
-    headers: buildTokyoProductControlHeaders({
-      accountId: context.accountId,
-      accountCapsule: context.accountCapsule,
-      internalServiceName: context.internalServiceName,
-      requestId: context.requestId,
-      ...(args.body !== undefined ? { contentType: 'application/json' } : {}),
-    }),
-    ...(args.body !== undefined ? { body: JSON.stringify(args.body) } : {}),
+  const headers = buildTokyoProductControlHeaders({
+    accountId: context.accountId,
+    accountCapsule: context.accountCapsule,
+    internalServiceName: context.internalServiceName,
+    requestId: context.requestId,
+    ...(args.body !== undefined ? { contentType: 'application/json' } : {}),
   });
+  const body = args.body !== undefined ? JSON.stringify(args.body) : undefined;
+  let response: Response;
+  try {
+    response = await fetchTokyoProductControl({
+      path: args.path,
+      method: args.method,
+      headers,
+      ...(body !== undefined ? { body } : {}),
+    });
+  } catch (error) {
+    console.error('[Roma] Tokyo product-control request failed', {
+      path: args.path,
+      method: args.method,
+      requestId: context.requestId ?? null,
+      detail: error instanceof Error ? error.message : String(error),
+    });
+    return {
+      ok: false,
+      status: 502,
+      error: {
+        kind: 'UPSTREAM_UNAVAILABLE',
+        reasonKey: args.errorKey,
+        detail: args.errorDetail,
+      },
+    };
+  }
   const payload = await response.json().catch(() => null);
   if (!response.ok) {
     return buildTokyoFailure({
