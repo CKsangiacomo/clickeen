@@ -313,8 +313,9 @@ semantic Dieter Table whose columns are Widget, Instance name, Published,
 Instance ID, and Actions. Published uses a left-aligned Dieter Toggle and, only
 for a published instance, a small Copy code action that opens Roma's shared
 public-code Popup. Edit is the direct row action; Rename, Duplicate, and Delete
-remain in one ellipsis menu. The header status filter and the Instance name and
-Published sorts are client-side projections over the validated account list.
+remain in one ellipsis menu. The header status filter and the Widget, Instance
+name, and Published sorts are client-side projections over the validated
+account list.
 
 **Widget catalog** renders the canonical widget definitions as Dieter-styled
 cards. A catalog card creates an instance of that widget type; it does not

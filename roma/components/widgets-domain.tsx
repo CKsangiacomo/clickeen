@@ -30,7 +30,7 @@ import {
 
 type WidgetsView = 'your-widgets' | 'catalog';
 type WidgetStatusFilter = 'all' | 'published' | 'unpublished';
-type WidgetSortKey = 'name' | 'status';
+type WidgetSortKey = 'widget' | 'name' | 'status';
 type WidgetSortDirection = 'ascending' | 'descending';
 type WidgetSort = { key: WidgetSortKey; direction: WidgetSortDirection };
 
@@ -312,21 +312,26 @@ export function WidgetsDomain({
   );
 
   const displayedInstances = useMemo(() => {
+    if (!canRenderWidgetData) return [];
     return widgetInstances
       .filter((instance) => statusFilter === 'all' || instance.status === statusFilter)
       .slice()
       .sort((left, right) => {
         const leftName = left.displayName || DEFAULT_INSTANCE_DISPLAY_NAME;
         const rightName = right.displayName || DEFAULT_INSTANCE_DISPLAY_NAME;
-        const primary = sort.key === 'name'
-          ? leftName.localeCompare(rightName)
-          : left.status.localeCompare(right.status);
+        const primary = sort.key === 'widget'
+          ? catalogByWidgetType.get(left.widgetType)!.displayName.localeCompare(
+              catalogByWidgetType.get(right.widgetType)!.displayName,
+            )
+          : sort.key === 'name'
+            ? leftName.localeCompare(rightName)
+            : left.status.localeCompare(right.status);
         if (primary !== 0) return sort.direction === 'ascending' ? primary : -primary;
         const nameOrder = leftName.localeCompare(rightName);
         if (nameOrder !== 0) return nameOrder;
         return left.instanceId.localeCompare(right.instanceId);
       });
-  }, [sort, statusFilter, widgetInstances]);
+  }, [canRenderWidgetData, catalogByWidgetType, sort, statusFilter, widgetInstances]);
 
   const changeSort = useCallback((key: WidgetSortKey) => {
     setSort((current) => current.key === key
@@ -708,7 +713,28 @@ export function WidgetsDomain({
                 <caption className="sr-only">Your widgets</caption>
                 <thead>
                   <tr>
-                    <th className="label-s" scope="col">Widget</th>
+                    <th className="label-s" scope="col" aria-sort={sort.key === 'widget' ? sort.direction : 'none'}>
+                      <span>Widget</span>{' '}
+                      <button
+                        className="diet-btn-ic"
+                        data-size="sm"
+                        data-variant="neutral"
+                        type="button"
+                        aria-label="Sort by widget"
+                        onClick={() => changeSort('widget')}
+                      >
+                        <Image
+                          className="diet-btn-ic__icon"
+                          src={`/dieter/icons/svg/${sort.key === 'widget'
+                            ? sort.direction === 'ascending' ? 'arrow.up.svg' : 'arrow.down.svg'
+                            : 'arrow.up.arrow.down.svg'}`}
+                          alt=""
+                          width={12}
+                          height={12}
+                          aria-hidden="true"
+                        />
+                      </button>
+                    </th>
                     <th className="label-s" scope="col" aria-sort={sort.key === 'name' ? sort.direction : 'none'}>
                       <span>Instance name</span>{' '}
                       <button

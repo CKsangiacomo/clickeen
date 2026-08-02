@@ -177,12 +177,16 @@ async function testWidgetsListComposition(): Promise<void> {
   assert.match(source, /<option value="unpublished">Show unpublished<\/option>/);
   assert.doesNotMatch(source, /WidgetSortHeader|roma-widget-sort/);
   assert.doesNotMatch(romaCss, /roma-widget-sort/);
+  assert.match(source, /type WidgetSortKey = 'widget' \| 'name' \| 'status'/);
+  assert.match(source, /<span>Widget<\/span>\{' '\}[\s\S]*?className="diet-btn-ic"[\s\S]*?data-size="sm"[\s\S]*?aria-label="Sort by widget"[\s\S]*?changeSort\('widget'\)/);
   assert.match(source, /<span>Instance name<\/span>\{' '\}[\s\S]*?className="diet-btn-ic"[\s\S]*?data-size="sm"[\s\S]*?aria-label="Sort by instance name"[\s\S]*?changeSort\('name'\)/);
   assert.match(source, /<span>Published<\/span>\{' '\}[\s\S]*?className="diet-btn-ic"[\s\S]*?data-size="sm"[\s\S]*?aria-label="Sort by published status"[\s\S]*?changeSort\('status'\)/);
+  assert.match(source, /aria-sort=\{sort\.key === 'widget' \? sort\.direction : 'none'\}/);
   assert.match(source, /aria-sort=\{sort\.key === 'name' \? sort\.direction : 'none'\}/);
   assert.match(source, /aria-sort=\{sort\.key === 'status' \? sort\.direction : 'none'\}/);
-  assert.match(source, />Widget<\/th>/);
-  assertBefore(source, />Widget<\/th>/, /<span>Instance name<\/span>/);
+  assert.match(source, /const displayedInstances = useMemo\(\(\) => \{\s+if \(!canRenderWidgetData\) return \[\];/);
+  assert.match(source, /catalogByWidgetType\.get\(left\.widgetType\)!\.displayName\.localeCompare/);
+  assertBefore(source, /<span>Widget<\/span>/, /<span>Instance name<\/span>/);
   assertBefore(source, /<span>Instance name<\/span>/, /<span>Published<\/span>/);
   assert.match(source, /displayedInstances\.map\(\(instance\)/);
   assert.match(source, /displayedCatalog\.map\(\(option\)/);
