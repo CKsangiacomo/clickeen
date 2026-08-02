@@ -255,10 +255,11 @@ async function testDieterLayoutTableAndPopupConsumption(): Promise<void> {
   assert.doesNotMatch(pages, /createContext|useContext|PagesHeaderActionsRegistration/);
 
   assert.match(dropdownActions, /className=\{`diet-dropdown-actions diet-popover-host/);
-  assert.match(dropdownActions, /className="diet-dropdown-header diet-dropdown-actions__control"/);
+  assert.match(dropdownActions, /triggerStyle === 'button' \? 'diet-btn-ictxt' : 'diet-dropdown-header diet-dropdown-actions__control'/);
+  assert.match(dropdownActions, /className="diet-popover diet-dropdown-actions__popover" role="listbox"/);
+  assert.match(dropdownActions, /triggerStyle === 'field' \? \(/);
   assert.match(dropdownActions, /const labelClass = size === 'sm' \? 'label-xs' : size === 'lg' \? 'label-m' : 'label-s'/);
   assert.match(dropdownActions, /const bodyClass = size === 'sm' \? 'body-xs' : size === 'lg' \? 'body-m' : 'body-s'/);
-  assert.match(dropdownActions, /className="diet-popover diet-dropdown-actions__popover" role="listbox"/);
   assert.match(dropdownActions, /className=\{`diet-btn-menuactions diet-dropdown-actions__menuaction/);
   assert.match(dropdownActions, /removeEventListener\('pointerdown', closeOnPointerDown, true\)/);
   assert.match(dropdownActions, /removeEventListener\('keydown', closeOnEscape\)/);
@@ -266,8 +267,10 @@ async function testDieterLayoutTableAndPopupConsumption(): Promise<void> {
   assert.match(textfield, /className=\{`diet-textfield__field/);
 
   assert.match(widgets, /ariaLabel="Filter your widgets by publish status"/);
+  assert.match(widgets, /triggerStyle="button"/);
   assert.match(widgets, /\{ value: 'published', label: 'Show published' \}/);
   assert.match(assetsPage, /ariaLabel="Filter assets by type"/);
+  assert.match(assetsPage, /triggerStyle="button"/);
   for (const [value, label] of [
     ['all', 'Show all'],
     ['font', 'Fonts'],

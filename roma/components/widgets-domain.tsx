@@ -165,6 +165,7 @@ export function WidgetsPage({ view }: { view: WidgetsView }) {
         <DieterDropdownActions
           className="roma-header-filter"
           ariaLabel="Filter your widgets by publish status"
+          triggerStyle="button"
           value={statusFilter}
           options={[
             { value: 'all', label: 'Show all' },

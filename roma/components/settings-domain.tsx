@@ -159,7 +159,7 @@ export function SettingsDomain() {
         {membersError ? <p className="body-m" role="alert">{membersError}</p> : null}
         <div className="roma-toolbar">
           <DieterDropdownActions
-            className="roma-header-filter"
+            className="roma-owner-select"
             value={nextOwnerUserId}
             onChange={setNextOwnerUserId}
             ariaLabel="Select next owner"

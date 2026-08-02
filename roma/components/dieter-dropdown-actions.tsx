@@ -16,6 +16,7 @@ export function DieterDropdownActions({
   ariaLabel,
   disabled = false,
   size = 'md',
+  triggerStyle = 'field',
   className,
 }: {
   value: string;
@@ -25,6 +26,7 @@ export function DieterDropdownActions({
   ariaLabel?: string;
   disabled?: boolean;
   size?: 'sm' | 'md' | 'lg';
+  triggerStyle?: 'field' | 'button';
   className?: string;
 }) {
   const generatedId = useId();
@@ -75,27 +77,51 @@ export function DieterDropdownActions({
       <button
         ref={triggerRef}
         type="button"
-        className="diet-dropdown-header diet-dropdown-actions__control"
+        className={triggerStyle === 'button' ? 'diet-btn-ictxt' : 'diet-dropdown-header diet-dropdown-actions__control'}
+        data-size={triggerStyle === 'button' ? size : undefined}
+        data-variant={triggerStyle === 'button' ? 'secondary' : undefined}
         aria-haspopup="listbox"
         aria-expanded={open}
-        aria-labelledby={label ? labelId : undefined}
-        aria-label={label ? undefined : accessibleLabel}
+        aria-labelledby={triggerStyle === 'field' && label ? labelId : undefined}
+        aria-label={triggerStyle === 'button'
+          ? `${accessibleLabel}: ${selectedOption?.label ?? accessibleLabel}`
+          : label ? undefined : accessibleLabel}
         disabled={disabled}
         onClick={() => setOpen((current) => !current)}
       >
-        {label ? (
-          <span className={`diet-dropdown-header-label ${labelClass}`} id={labelId}>
-            {label}
-          </span>
-        ) : null}
-        <span className={`diet-dropdown-header-value ${bodyClass}`} data-muted={selectedOption ? 'false' : 'true'}>
-          {selectedOption?.label ?? accessibleLabel}
-        </span>
+        {triggerStyle === 'button' ? (
+          <>
+            <span
+              className="diet-btn-ictxt__icon diet-icon-mask"
+              style={{ '--diet-icon-source': 'url("/dieter/icons/svg/line.3.horizontal.decrease.circle.svg")' } as CSSProperties}
+              aria-hidden="true"
+            />
+            <span className={`diet-btn-ictxt__label ${bodyClass}`}>{selectedOption?.label ?? accessibleLabel}</span>
+            <span
+              className="diet-btn-ictxt__icon diet-icon-mask"
+              style={{ '--diet-icon-source': `url("/dieter/icons/svg/chevron.compact.${open ? 'up' : 'down'}.svg")` } as CSSProperties}
+              aria-hidden="true"
+            />
+          </>
+        ) : (
+          <>
+            {label ? (
+              <span className={`diet-dropdown-header-label ${labelClass}`} id={labelId}>
+                {label}
+              </span>
+            ) : null}
+            <span className={`diet-dropdown-header-value ${bodyClass}`} data-muted={selectedOption ? 'false' : 'true'}>
+              {selectedOption?.label ?? accessibleLabel}
+            </span>
+          </>
+        )}
       </button>
       <div className="diet-popover diet-dropdown-actions__popover" role="listbox" aria-label={accessibleLabel} data-state={open ? 'open' : 'closed'}>
-        <div className="diet-popover__header">
-          <span className="diet-popover__header-label label-s">{accessibleLabel}</span>
-        </div>
+        {triggerStyle === 'field' ? (
+          <div className="diet-popover__header">
+            <span className="diet-popover__header-label label-s">{accessibleLabel}</span>
+          </div>
+        ) : null}
         <div className="diet-popover__body diet-dropdown-actions__menu">
           {options.map((option) => {
             const selected = option.value === value;

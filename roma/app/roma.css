@@ -354,6 +354,19 @@ a {
 }
 
 .roma-header-filter {
+  display: inline-block;
+  inline-size: auto;
+}
+
+.roma-header-filter > .diet-popover {
+  inset-inline-start: auto;
+  inset-inline-end: 0;
+  top: calc(100% + var(--space-1));
+  inline-size: 11rem;
+  margin-inline: 0;
+}
+
+.roma-owner-select {
   display: block;
   inline-size: 11rem;
 }

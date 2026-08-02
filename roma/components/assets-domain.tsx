@@ -162,6 +162,7 @@ export function AssetsPage() {
           <DieterDropdownActions
             className="roma-header-filter"
             ariaLabel="Filter assets by type"
+            triggerStyle="button"
             value={assetFilter}
             options={[
               { value: 'all', label: 'Show all' },
