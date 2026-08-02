@@ -152,48 +152,6 @@ async function readJsonOrNull(response: Response): Promise<unknown> {
   }
 }
 
-function WidgetSortHeader({
-  label,
-  sortKey,
-  sort,
-  onSort,
-}: {
-  label: string;
-  sortKey: WidgetSortKey;
-  sort: WidgetSort;
-  onSort: (key: WidgetSortKey) => void;
-}) {
-  const active = sort.key === sortKey;
-  const direction = active ? sort.direction : null;
-  const icon = direction === 'ascending'
-    ? 'arrow.up.svg'
-    : direction === 'descending'
-      ? 'arrow.down.svg'
-      : 'arrow.up.arrow.down.svg';
-
-  return (
-    <th className="label-s" scope="col" aria-sort={direction ?? 'none'}>
-      <button
-        className="roma-widget-sort diet-btn-ictxt"
-        data-size="sm"
-        data-variant="neutral"
-        type="button"
-        onClick={() => onSort(sortKey)}
-      >
-        <span className="diet-btn-ictxt__label label-s">{label}</span>
-        <Image
-          className="diet-btn-ictxt__icon roma-widget-sort__icon"
-          src={`/dieter/icons/svg/${icon}`}
-          alt=""
-          width={12}
-          height={12}
-          aria-hidden="true"
-        />
-      </button>
-    </th>
-  );
-}
-
 export function WidgetsPage({ view }: { view: WidgetsView }) {
   const [statusFilter, setStatusFilter] = useState<WidgetStatusFilter>('all');
 
@@ -751,8 +709,50 @@ export function WidgetsDomain({
                 <thead>
                   <tr>
                     <th className="label-s" scope="col">Widget</th>
-                    <WidgetSortHeader label="Instance name" sortKey="name" sort={sort} onSort={changeSort} />
-                    <WidgetSortHeader label="Published" sortKey="status" sort={sort} onSort={changeSort} />
+                    <th className="label-s" scope="col" aria-sort={sort.key === 'name' ? sort.direction : 'none'}>
+                      <span>Instance name</span>{' '}
+                      <button
+                        className="diet-btn-ic"
+                        data-size="sm"
+                        data-variant="neutral"
+                        type="button"
+                        aria-label="Sort by instance name"
+                        onClick={() => changeSort('name')}
+                      >
+                        <Image
+                          className="diet-btn-ic__icon"
+                          src={`/dieter/icons/svg/${sort.key === 'name'
+                            ? sort.direction === 'ascending' ? 'arrow.up.svg' : 'arrow.down.svg'
+                            : 'arrow.up.arrow.down.svg'}`}
+                          alt=""
+                          width={12}
+                          height={12}
+                          aria-hidden="true"
+                        />
+                      </button>
+                    </th>
+                    <th className="label-s" scope="col" aria-sort={sort.key === 'status' ? sort.direction : 'none'}>
+                      <span>Published</span>{' '}
+                      <button
+                        className="diet-btn-ic"
+                        data-size="sm"
+                        data-variant="neutral"
+                        type="button"
+                        aria-label="Sort by published status"
+                        onClick={() => changeSort('status')}
+                      >
+                        <Image
+                          className="diet-btn-ic__icon"
+                          src={`/dieter/icons/svg/${sort.key === 'status'
+                            ? sort.direction === 'ascending' ? 'arrow.up.svg' : 'arrow.down.svg'
+                            : 'arrow.up.arrow.down.svg'}`}
+                          alt=""
+                          width={12}
+                          height={12}
+                          aria-hidden="true"
+                        />
+                      </button>
+                    </th>
                     <th className="label-s" scope="col">Instance ID</th>
                     <th className="label-s diet-table__cell--action" scope="col">Actions</th>
                   </tr>
