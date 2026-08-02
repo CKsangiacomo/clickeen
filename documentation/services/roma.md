@@ -315,7 +315,8 @@ for a published instance, a small Copy code action that opens Roma's shared
 public-code Popup. Edit is the direct row action; Rename, Duplicate, and Delete
 remain in one ellipsis menu. The header status filter and the Widget, Instance
 name, and Published sorts are client-side projections over the validated
-account list.
+account list. Their headers use the shared `xs` Dieter sort control: the active
+sort is black and inactive sorts are gray.
 
 **Widget catalog** renders the canonical widget definitions as Dieter-styled
 cards. A catalog card creates an instance of that widget type; it does not
@@ -388,7 +389,8 @@ The page header owns Upload asset, Upload in bulk, and Refresh list. The
 account-dependent commands remain inside the Roma account boundary and report
 only their current actions and busy state to that header. The asset table uses
 the Dieter table contract; Asset, Type, and Size use the same inline label plus
-small Dieter icon-button sorting pattern as the Widgets table.
+`xs` Dieter icon-button sorting pattern as the Widgets table. Dieter renders
+the active sort control black and inactive sort controls gray.
 
 The active asset route chain is:
 
@@ -429,7 +431,7 @@ unpublish before page source edit or delete.
 The page header owns Create page and Refresh through the same direct
 domain-to-shell action contract. The page list uses the Dieter table contract;
 Page, Page ID, and Placements use inline labels with small Dieter icon buttons
-for sorting.
+for sorting, using the same `xs` active-black/inactive-gray Table contract.
 
 Current page source references saved widget instances by placement id and
 instance id. It does not embed widget source and does not currently store child

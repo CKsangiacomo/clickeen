@@ -1,9 +1,8 @@
 'use client';
 
-import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { normalizeCanonicalLocalesFile, normalizeLocaleToken, resolveLocaleLabel } from '@clickeen/l10n';
 import localesJson from '@clickeen/l10n/locales.json';
 import { createDialogLifecycle } from '../../dieter/components/shared/dialog-lifecycle';
@@ -700,20 +699,19 @@ export function PagesDomain({
                   <span>Page</span>{' '}
                   <button
                     className="diet-btn-ic"
-                    data-size="sm"
+                    data-size="xs"
                     data-variant="neutral"
                     type="button"
                     aria-label="Sort by page"
                     onClick={() => changeSort('title')}
                   >
-                    <Image
-                      className="diet-btn-ic__icon"
-                      src={`/dieter/icons/svg/${sort.key === 'title'
-                        ? sort.direction === 'ascending' ? 'arrow.up.svg' : 'arrow.down.svg'
-                        : 'arrow.up.arrow.down.svg'}`}
-                      alt=""
-                      width={12}
-                      height={12}
+                    <span
+                      className="diet-btn-ic__icon diet-icon-mask"
+                      style={{
+                        '--diet-icon-source': `url("/dieter/icons/svg/${sort.key === 'title'
+                          ? sort.direction === 'ascending' ? 'arrow.up.svg' : 'arrow.down.svg'
+                          : 'arrow.up.arrow.down.svg'}")`,
+                      } as CSSProperties}
                       aria-hidden="true"
                     />
                   </button>
@@ -722,20 +720,19 @@ export function PagesDomain({
                   <span>Page ID</span>{' '}
                   <button
                     className="diet-btn-ic"
-                    data-size="sm"
+                    data-size="xs"
                     data-variant="neutral"
                     type="button"
                     aria-label="Sort by page ID"
                     onClick={() => changeSort('pageId')}
                   >
-                    <Image
-                      className="diet-btn-ic__icon"
-                      src={`/dieter/icons/svg/${sort.key === 'pageId'
-                        ? sort.direction === 'ascending' ? 'arrow.up.svg' : 'arrow.down.svg'
-                        : 'arrow.up.arrow.down.svg'}`}
-                      alt=""
-                      width={12}
-                      height={12}
+                    <span
+                      className="diet-btn-ic__icon diet-icon-mask"
+                      style={{
+                        '--diet-icon-source': `url("/dieter/icons/svg/${sort.key === 'pageId'
+                          ? sort.direction === 'ascending' ? 'arrow.up.svg' : 'arrow.down.svg'
+                          : 'arrow.up.arrow.down.svg'}")`,
+                      } as CSSProperties}
                       aria-hidden="true"
                     />
                   </button>
@@ -744,20 +741,19 @@ export function PagesDomain({
                   <span>Placements</span>{' '}
                   <button
                     className="diet-btn-ic"
-                    data-size="sm"
+                    data-size="xs"
                     data-variant="neutral"
                     type="button"
                     aria-label="Sort by placements"
                     onClick={() => changeSort('placementCount')}
                   >
-                    <Image
-                      className="diet-btn-ic__icon"
-                      src={`/dieter/icons/svg/${sort.key === 'placementCount'
-                        ? sort.direction === 'ascending' ? 'arrow.up.svg' : 'arrow.down.svg'
-                        : 'arrow.up.arrow.down.svg'}`}
-                      alt=""
-                      width={12}
-                      height={12}
+                    <span
+                      className="diet-btn-ic__icon diet-icon-mask"
+                      style={{
+                        '--diet-icon-source': `url("/dieter/icons/svg/${sort.key === 'placementCount'
+                          ? sort.direction === 'ascending' ? 'arrow.up.svg' : 'arrow.down.svg'
+                          : 'arrow.up.arrow.down.svg'}")`,
+                      } as CSSProperties}
                       aria-hidden="true"
                     />
                   </button>

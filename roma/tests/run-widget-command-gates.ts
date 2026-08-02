@@ -178,9 +178,9 @@ async function testWidgetsListComposition(): Promise<void> {
   assert.doesNotMatch(source, /WidgetSortHeader|roma-widget-sort/);
   assert.doesNotMatch(romaCss, /roma-widget-sort/);
   assert.match(source, /type WidgetSortKey = 'widget' \| 'name' \| 'status'/);
-  assert.match(source, /<span>Widget<\/span>\{' '\}[\s\S]*?className="diet-btn-ic"[\s\S]*?data-size="sm"[\s\S]*?aria-label="Sort by widget"[\s\S]*?changeSort\('widget'\)/);
-  assert.match(source, /<span>Instance name<\/span>\{' '\}[\s\S]*?className="diet-btn-ic"[\s\S]*?data-size="sm"[\s\S]*?aria-label="Sort by instance name"[\s\S]*?changeSort\('name'\)/);
-  assert.match(source, /<span>Published<\/span>\{' '\}[\s\S]*?className="diet-btn-ic"[\s\S]*?data-size="sm"[\s\S]*?aria-label="Sort by published status"[\s\S]*?changeSort\('status'\)/);
+  assert.match(source, /<span>Widget<\/span>\{' '\}[\s\S]*?className="diet-btn-ic"[\s\S]*?data-size="xs"[\s\S]*?aria-label="Sort by widget"[\s\S]*?changeSort\('widget'\)/);
+  assert.match(source, /<span>Instance name<\/span>\{' '\}[\s\S]*?className="diet-btn-ic"[\s\S]*?data-size="xs"[\s\S]*?aria-label="Sort by instance name"[\s\S]*?changeSort\('name'\)/);
+  assert.match(source, /<span>Published<\/span>\{' '\}[\s\S]*?className="diet-btn-ic"[\s\S]*?data-size="xs"[\s\S]*?aria-label="Sort by published status"[\s\S]*?changeSort\('status'\)/);
   assert.match(source, /aria-sort=\{sort\.key === 'widget' \? sort\.direction : 'none'\}/);
   assert.match(source, /aria-sort=\{sort\.key === 'name' \? sort\.direction : 'none'\}/);
   assert.match(source, /aria-sort=\{sort\.key === 'status' \? sort\.direction : 'none'\}/);
@@ -218,8 +218,10 @@ async function testDieterLayoutTableAndPopupConsumption(): Promise<void> {
   const shell = await readRoute('components/roma-shell.tsx');
   const layout = await readRoute('app/layout.tsx');
   const romaCss = await readRoute('app/roma.css');
+  const tableCss = await readFile(new URL('../../dieter/components/table/table.css', import.meta.url), 'utf8');
   const assets = await readRoute('components/assets-domain.tsx');
   const pages = await readRoute('components/pages-domain.tsx');
+  const widgets = await readRoute('components/widgets-domain.tsx');
   const assetsPage = assets.slice(assets.indexOf('export function AssetsPage'), assets.indexOf('export function AssetsDomain'));
   const pagesPage = pages.slice(pages.indexOf('export function PagesPage'), pages.indexOf('const CANONICAL_LOCALES'));
 
@@ -240,12 +242,23 @@ async function testDieterLayoutTableAndPopupConsumption(): Promise<void> {
     /\.roma-layout|\.roma-modal|\.rd-header|\.rd-domain|\.roma-portrait-boundary/,
   );
   assert.doesNotMatch(romaCss, /pointer:\s*coarse|orientation:\s*portrait/);
+  assert.match(tableCss, /th\[aria-sort\] > \.diet-btn-ic \{\s+--btn-color: var\(--color-system-gray-3\);/);
+  assert.match(tableCss, /th\[aria-sort='ascending'\] > \.diet-btn-ic,[\s\S]*?th\[aria-sort='descending'\] > \.diet-btn-ic \{\s+--btn-color: var\(--color-system-black\);/);
 
   assert.match(assetsPage, /<AssetsDomain onHeaderActions=\{setHeaderActions\} \/>/);
   assert.doesNotMatch(assetsPage, /useRomaAccountContext|useRomaAccountApi|refreshToken|onLoadingChange/);
   assert.match(pagesPage, /<PagesDomain onHeaderActions=\{setHeaderActions\} \/>/);
   assert.doesNotMatch(pagesPage, /PagesHeaderActionsRegistration|rd-canvas-module__actions/);
   assert.doesNotMatch(pages, /createContext|useContext|PagesHeaderActionsRegistration/);
+
+  for (const [domain, source] of [['Assets', assets], ['Pages', pages], ['Widgets', widgets]] as const) {
+    const sortableHeaders = source.match(/<th[^>]*aria-sort=[\s\S]*?<\/th>/g) ?? [];
+    assert.ok(sortableHeaders.length > 0, `${domain} must have sortable headers`);
+    for (const header of sortableHeaders) {
+      assert.match(header, /className="diet-btn-ic"[\s\S]*?data-size="xs"/);
+      assert.match(header, /className="diet-btn-ic__icon diet-icon-mask"/);
+    }
+  }
 
   for (const [label, key] of [
     ['Asset', 'filename'],
@@ -254,7 +267,7 @@ async function testDieterLayoutTableAndPopupConsumption(): Promise<void> {
   ] as const) {
     assert.match(
       assets,
-      new RegExp(`<span>${label}<\\/span>\\{' '\\}[\\s\\S]*?className="diet-btn-ic"[\\s\\S]*?data-size="sm"[\\s\\S]*?changeSort\\('${key}'\\)`),
+      new RegExp(`<span>${label}<\\/span>\\{' '\\}[\\s\\S]*?className="diet-btn-ic"[\\s\\S]*?data-size="xs"[\\s\\S]*?changeSort\\('${key}'\\)`),
     );
     assert.match(assets, new RegExp(`aria-sort=\\{sort\\.key === '${key}' \\? sort\\.direction : 'none'\\}`));
   }

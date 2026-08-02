@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { createPortal } from 'react-dom';
 import { createDialogLifecycle, type DialogLifecycle } from '../../dieter/components/shared/dialog-lifecycle';
 import { resolveAccountShellErrorCopy, resolveAccountShellReason } from '../lib/account-shell-copy';
@@ -717,20 +717,19 @@ export function WidgetsDomain({
                       <span>Widget</span>{' '}
                       <button
                         className="diet-btn-ic"
-                        data-size="sm"
+                        data-size="xs"
                         data-variant="neutral"
                         type="button"
                         aria-label="Sort by widget"
                         onClick={() => changeSort('widget')}
                       >
-                        <Image
-                          className="diet-btn-ic__icon"
-                          src={`/dieter/icons/svg/${sort.key === 'widget'
-                            ? sort.direction === 'ascending' ? 'arrow.up.svg' : 'arrow.down.svg'
-                            : 'arrow.up.arrow.down.svg'}`}
-                          alt=""
-                          width={12}
-                          height={12}
+                        <span
+                          className="diet-btn-ic__icon diet-icon-mask"
+                          style={{
+                            '--diet-icon-source': `url("/dieter/icons/svg/${sort.key === 'widget'
+                              ? sort.direction === 'ascending' ? 'arrow.up.svg' : 'arrow.down.svg'
+                              : 'arrow.up.arrow.down.svg'}")`,
+                          } as CSSProperties}
                           aria-hidden="true"
                         />
                       </button>
@@ -739,20 +738,19 @@ export function WidgetsDomain({
                       <span>Instance name</span>{' '}
                       <button
                         className="diet-btn-ic"
-                        data-size="sm"
+                        data-size="xs"
                         data-variant="neutral"
                         type="button"
                         aria-label="Sort by instance name"
                         onClick={() => changeSort('name')}
                       >
-                        <Image
-                          className="diet-btn-ic__icon"
-                          src={`/dieter/icons/svg/${sort.key === 'name'
-                            ? sort.direction === 'ascending' ? 'arrow.up.svg' : 'arrow.down.svg'
-                            : 'arrow.up.arrow.down.svg'}`}
-                          alt=""
-                          width={12}
-                          height={12}
+                        <span
+                          className="diet-btn-ic__icon diet-icon-mask"
+                          style={{
+                            '--diet-icon-source': `url("/dieter/icons/svg/${sort.key === 'name'
+                              ? sort.direction === 'ascending' ? 'arrow.up.svg' : 'arrow.down.svg'
+                              : 'arrow.up.arrow.down.svg'}")`,
+                          } as CSSProperties}
                           aria-hidden="true"
                         />
                       </button>
@@ -761,20 +759,19 @@ export function WidgetsDomain({
                       <span>Published</span>{' '}
                       <button
                         className="diet-btn-ic"
-                        data-size="sm"
+                        data-size="xs"
                         data-variant="neutral"
                         type="button"
                         aria-label="Sort by published status"
                         onClick={() => changeSort('status')}
                       >
-                        <Image
-                          className="diet-btn-ic__icon"
-                          src={`/dieter/icons/svg/${sort.key === 'status'
-                            ? sort.direction === 'ascending' ? 'arrow.up.svg' : 'arrow.down.svg'
-                            : 'arrow.up.arrow.down.svg'}`}
-                          alt=""
-                          width={12}
-                          height={12}
+                        <span
+                          className="diet-btn-ic__icon diet-icon-mask"
+                          style={{
+                            '--diet-icon-source': `url("/dieter/icons/svg/${sort.key === 'status'
+                              ? sort.direction === 'ascending' ? 'arrow.up.svg' : 'arrow.down.svg'
+                              : 'arrow.up.arrow.down.svg'}")`,
+                          } as CSSProperties}
                           aria-hidden="true"
                         />
                       </button>

@@ -99,6 +99,12 @@ retain their Dieter component typography. Technical values receive no separate
 monospace treatment. Preview and action columns use the small Table-owned
 composition classes rather than consumer-local base styling.
 
+Sortable headers remain app-owned behavior composed inside Dieter Table. Their
+control is an `xs` `diet-btn-ic`: inactive columns use
+`--color-system-gray-3`, while the active ascending or descending column uses
+`--color-system-black`. Dieter owns that presentation through `aria-sort`; apps
+own the selected column, direction, and row ordering.
+
 Dieter Popup owns the blocking native `<dialog>` appearance and structural
 slots: header, body, footer, and actions, with small, medium, and large sizes.
 Product owners keep workflow state, copy, validation, persistence, and the

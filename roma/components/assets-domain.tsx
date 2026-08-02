@@ -1,7 +1,6 @@
 'use client';
 
-import Image from 'next/image';
-import { Suspense, useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react';
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent, type CSSProperties } from 'react';
 import type { AccountAssetRecord } from '@clickeen/ck-contracts';
 import { createDialogLifecycle } from '../../dieter/components/shared/dialog-lifecycle';
 import { parseAccountAssetRecord } from '../lib/account-asset-record';
@@ -520,20 +519,19 @@ export function AssetsDomain({
                 <span>Asset</span>{' '}
                 <button
                   className="diet-btn-ic"
-                  data-size="sm"
+                  data-size="xs"
                   data-variant="neutral"
                   type="button"
                   aria-label="Sort by asset name"
                   onClick={() => changeSort('filename')}
                 >
-                  <Image
-                    className="diet-btn-ic__icon"
-                    src={`/dieter/icons/svg/${sort.key === 'filename'
-                      ? sort.direction === 'ascending' ? 'arrow.up.svg' : 'arrow.down.svg'
-                      : 'arrow.up.arrow.down.svg'}`}
-                    alt=""
-                    width={12}
-                    height={12}
+                  <span
+                    className="diet-btn-ic__icon diet-icon-mask"
+                    style={{
+                      '--diet-icon-source': `url("/dieter/icons/svg/${sort.key === 'filename'
+                        ? sort.direction === 'ascending' ? 'arrow.up.svg' : 'arrow.down.svg'
+                        : 'arrow.up.arrow.down.svg'}")`,
+                    } as CSSProperties}
                     aria-hidden="true"
                   />
                 </button>
@@ -542,20 +540,19 @@ export function AssetsDomain({
                 <span>Type</span>{' '}
                 <button
                   className="diet-btn-ic"
-                  data-size="sm"
+                  data-size="xs"
                   data-variant="neutral"
                   type="button"
                   aria-label="Sort by type"
                   onClick={() => changeSort('assetType')}
                 >
-                  <Image
-                    className="diet-btn-ic__icon"
-                    src={`/dieter/icons/svg/${sort.key === 'assetType'
-                      ? sort.direction === 'ascending' ? 'arrow.up.svg' : 'arrow.down.svg'
-                      : 'arrow.up.arrow.down.svg'}`}
-                    alt=""
-                    width={12}
-                    height={12}
+                  <span
+                    className="diet-btn-ic__icon diet-icon-mask"
+                    style={{
+                      '--diet-icon-source': `url("/dieter/icons/svg/${sort.key === 'assetType'
+                        ? sort.direction === 'ascending' ? 'arrow.up.svg' : 'arrow.down.svg'
+                        : 'arrow.up.arrow.down.svg'}")`,
+                    } as CSSProperties}
                     aria-hidden="true"
                   />
                 </button>
@@ -565,20 +562,19 @@ export function AssetsDomain({
                 <span>Size</span>{' '}
                 <button
                   className="diet-btn-ic"
-                  data-size="sm"
+                  data-size="xs"
                   data-variant="neutral"
                   type="button"
                   aria-label="Sort by size"
                   onClick={() => changeSort('sizeBytes')}
                 >
-                  <Image
-                    className="diet-btn-ic__icon"
-                    src={`/dieter/icons/svg/${sort.key === 'sizeBytes'
-                      ? sort.direction === 'ascending' ? 'arrow.up.svg' : 'arrow.down.svg'
-                      : 'arrow.up.arrow.down.svg'}`}
-                    alt=""
-                    width={12}
-                    height={12}
+                  <span
+                    className="diet-btn-ic__icon diet-icon-mask"
+                    style={{
+                      '--diet-icon-source': `url("/dieter/icons/svg/${sort.key === 'sizeBytes'
+                        ? sort.direction === 'ascending' ? 'arrow.up.svg' : 'arrow.down.svg'
+                        : 'arrow.up.arrow.down.svg'}")`,
+                    } as CSSProperties}
                     aria-hidden="true"
                   />
                 </button>

@@ -29,6 +29,15 @@
   background: var(--role-surface-muted);
 }
 
+.diet-table__table th[aria-sort] > .diet-btn-ic {
+  --btn-color: var(--color-system-gray-3);
+}
+
+.diet-table__table th[aria-sort='ascending'] > .diet-btn-ic,
+.diet-table__table th[aria-sort='descending'] > .diet-btn-ic {
+  --btn-color: var(--color-system-black);
+}
+
 .diet-table__table tbody > tr > * {
   background: var(--role-surface);
 }
