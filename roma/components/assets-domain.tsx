@@ -157,58 +157,56 @@ export function AssetsPage() {
     <RomaShell
       activeDomain="assets"
       title="Assets"
-      headerRight={(
-        <>
-          <DieterDropdownActions
-            className="roma-header-filter"
-            ariaLabel="Filter assets by type"
-            triggerStyle="button"
-            value={assetFilter}
-            options={[
-              { value: 'all', label: 'Show all' },
-              { value: 'font', label: 'Fonts' },
-              { value: 'vector', label: 'SVGs' },
-              { value: 'image', label: 'Photo' },
-              { value: 'video', label: 'Video' },
-            ]}
-            onChange={(value) => setAssetFilter(value as AssetFilter)}
-          />
-          {headerActions ? (
-            <>
-              <button
-                className="diet-btn-txt"
-                data-size="md"
-                data-variant="primary"
-                type="button"
-                onClick={headerActions.uploadAsset}
-                disabled={actionsBusy}
-              >
-                <span className="diet-btn-txt__label body-m">{headerActions.singleUploadBusy ? 'Uploading…' : 'Upload asset'}</span>
-              </button>
-              <button
-                className="diet-btn-txt"
-                data-size="md"
-                data-variant="secondary"
-                type="button"
-                onClick={headerActions.uploadBulk}
-                disabled={actionsBusy}
-              >
-                <span className="diet-btn-txt__label body-m">{headerActions.bulkUploadBusy ? 'Uploading…' : 'Upload in bulk'}</span>
-              </button>
-              <button
-                className="diet-btn-txt"
-                data-size="md"
-                data-variant="line2"
-                type="button"
-                onClick={headerActions.refresh}
-                disabled={headerActions.listLoading || actionsBusy}
-              >
-                <span className="diet-btn-txt__label body-m">{headerActions.listLoading ? 'Refreshing…' : 'Refresh list'}</span>
-              </button>
-            </>
-          ) : null}
-        </>
+      headerControls={(
+        <DieterDropdownActions
+          className="roma-header-filter"
+          ariaLabel="Filter assets by type"
+          triggerStyle="button"
+          value={assetFilter}
+          options={[
+            { value: 'all', label: 'Show all' },
+            { value: 'font', label: 'Fonts' },
+            { value: 'vector', label: 'SVGs' },
+            { value: 'image', label: 'Photo' },
+            { value: 'video', label: 'Video' },
+          ]}
+          onChange={(value) => setAssetFilter(value as AssetFilter)}
+        />
       )}
+      headerRight={headerActions ? (
+        <>
+          <button
+            className="diet-btn-txt"
+            data-size="md"
+            data-variant="primary"
+            type="button"
+            onClick={headerActions.uploadAsset}
+            disabled={actionsBusy}
+          >
+            <span className="diet-btn-txt__label body-m">{headerActions.singleUploadBusy ? 'Uploading…' : 'Upload asset'}</span>
+          </button>
+          <button
+            className="diet-btn-txt"
+            data-size="md"
+            data-variant="secondary"
+            type="button"
+            onClick={headerActions.uploadBulk}
+            disabled={actionsBusy}
+          >
+            <span className="diet-btn-txt__label body-m">{headerActions.bulkUploadBusy ? 'Uploading…' : 'Upload in bulk'}</span>
+          </button>
+          <button
+            className="diet-btn-txt"
+            data-size="md"
+            data-variant="line2"
+            type="button"
+            onClick={headerActions.refresh}
+            disabled={headerActions.listLoading || actionsBusy}
+          >
+            <span className="diet-btn-txt__label body-m">{headerActions.listLoading ? 'Refreshing…' : 'Refresh list'}</span>
+          </button>
+        </>
+      ) : null}
     >
       <RomaAccountNoticeModal />
       <Suspense fallback={<section className="rd-canvas-module">Loading domain...</section>}>

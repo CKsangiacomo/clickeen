@@ -169,7 +169,7 @@ async function testWidgetsListComposition(): Promise<void> {
   assert.match(domains, /label: 'Widget catalog', href: '\/widgets\/catalog'/);
   assert.match(domains, /label: 'Your widgets'/);
   assertBefore(domains, "'widgets',", "'widgetCatalog',");
-  assert.match(source, /headerRight=\{view === 'your-widgets' \? \(/);
+  assert.match(source, /headerControls=\{view === 'your-widgets' \? \(/);
   assert.doesNotMatch(nav, /roma-nav__settings/);
   assert.doesNotMatch(romaCss, /roma-nav__settings/);
   assert.match(source, /<DieterDropdownActions/);
@@ -233,6 +233,8 @@ async function testDieterLayoutTableAndPopupConsumption(): Promise<void> {
   assert.match(shell, /className="left-nav"/);
   assert.match(shell, /className=\{`page/);
   assert.match(shell, /className="page__header"/);
+  assert.match(shell, /headerControls\?: ReactNode/);
+  assert.match(shell, /<h1 className="heading-2">\{title\}<\/h1>\s+\{headerControls\}/);
   assert.match(shell, /className="page__actions"/);
   assert.match(shell, /className="page__content"/);
   assert.match(shell, /matchMedia\('\(min-width: 600px\) and \(min-height: 600px\)'\)/);
@@ -263,6 +265,7 @@ async function testDieterLayoutTableAndPopupConsumption(): Promise<void> {
   assert.match(dropdownActions, /className=\{`diet-btn-menuactions diet-dropdown-actions__menuaction/);
   assert.match(dropdownActions, /removeEventListener\('pointerdown', closeOnPointerDown, true\)/);
   assert.match(dropdownActions, /removeEventListener\('keydown', closeOnEscape\)/);
+  assert.doesNotMatch(dropdownActions, /chevron\.compact/);
   assert.match(textfield, /className="diet-textfield__control"/);
   assert.match(textfield, /className=\{`diet-textfield__field/);
 
@@ -271,6 +274,8 @@ async function testDieterLayoutTableAndPopupConsumption(): Promise<void> {
   assert.match(widgets, /\{ value: 'published', label: 'Show published' \}/);
   assert.match(assetsPage, /ariaLabel="Filter assets by type"/);
   assert.match(assetsPage, /triggerStyle="button"/);
+  assert.match(assetsPage, /headerControls=\{\(\s+<DieterDropdownActions/);
+  assert.match(assetsPage, /headerRight=\{headerActions \? \(/);
   for (const [value, label] of [
     ['all', 'Show all'],
     ['font', 'Fonts'],

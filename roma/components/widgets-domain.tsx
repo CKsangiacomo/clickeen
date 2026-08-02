@@ -161,7 +161,7 @@ export function WidgetsPage({ view }: { view: WidgetsView }) {
     <RomaShell
       activeDomain={view === 'catalog' ? 'widgetCatalog' : 'widgets'}
       title="Widgets"
-      headerRight={view === 'your-widgets' ? (
+      headerControls={view === 'your-widgets' ? (
         <DieterDropdownActions
           className="roma-header-filter"
           ariaLabel="Filter your widgets by publish status"

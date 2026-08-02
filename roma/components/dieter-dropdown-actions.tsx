@@ -97,11 +97,6 @@ export function DieterDropdownActions({
               aria-hidden="true"
             />
             <span className={`diet-btn-ictxt__label ${bodyClass}`}>{selectedOption?.label ?? accessibleLabel}</span>
-            <span
-              className="diet-btn-ictxt__icon diet-icon-mask"
-              style={{ '--diet-icon-source': `url("/dieter/icons/svg/chevron.compact.${open ? 'up' : 'down'}.svg")` } as CSSProperties}
-              aria-hidden="true"
-            />
           </>
         ) : (
           <>

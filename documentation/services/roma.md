@@ -64,8 +64,10 @@ Dropdown Actions, multiline content uses Textedit, and semantic table
 definitions use Dieter Table. Roma retains their values, labels, validation,
 data, actions, and layout.
 Page-header filters compose Dieter's icon-text Button, Popover, and Menu
-Actions primitives; they show the current filter in the trigger and omit the
-field-style popover heading. Roma owns the selected filter and row filtering.
+Actions primitives; they sit directly beside the page title, show the current
+filter in the trigger without a redundant chevron, and omit the field-style
+popover heading. The opposite header edge is reserved for page actions. Roma
+owns the selected filter and row filtering.
 Tables preserve every column and own horizontal overflow through the Dieter
 wrapper. Checkboxes, hidden file inputs, modules, toolbars, and specialized
 composition remain locally owned. Primary Roma modules use the shared surface,

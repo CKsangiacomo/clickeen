@@ -20,6 +20,7 @@ type RomaShellProps = {
   activeDomain: RomaDomainKey;
   title: string;
   children: ReactNode;
+  headerControls?: ReactNode;
   headerRight?: ReactNode;
   fullCanvas?: boolean;
   pageHeader?: boolean;
@@ -54,6 +55,7 @@ export function RomaShell({
   activeDomain,
   title,
   children,
+  headerControls,
   headerRight,
   fullCanvas = false,
   pageHeader = true,
@@ -165,8 +167,9 @@ export function RomaShell({
               <div className="roma-page-heading">
                 {renderNavigationTrigger()}
                 <h1 className="heading-2">{title}</h1>
+                {headerControls}
               </div>
-              <div className="page__actions">{headerRight}</div>
+              {headerRight ? <div className="page__actions">{headerRight}</div> : null}
             </header>
           ) : null}
           <section className="page__content">
