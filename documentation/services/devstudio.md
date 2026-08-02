@@ -57,9 +57,9 @@ dismissal is disabled, Cancel follows the same dirty rule, and Confirm Commit
 persists through the existing validated write lane. Native `beforeunload`, where
 needed at the browser boundary, is not replaced by an in-product dialog helper.
 The editor uses the shared native-dialog lifecycle while keeping token state and
-source commit behavior in DevStudio. Its native select and input use Dieter's
-small operational-field appearance contract, and every action uses the Dieter
-button contract loaded by the DevStudio shell. The work body and dirty-discard
+source commit behavior in DevStudio. Token selection uses Dieter Dropdown
+Actions and token value editing uses Dieter Textfield; every action uses the
+Dieter button contract loaded by the DevStudio shell. The work body and dirty-discard
 body are mutually exclusive states in the same native dialog; they never stack.
 Token fields remain disabled until source truth loads, and every editor and
 dismissal control remains disabled while a commit is in flight.

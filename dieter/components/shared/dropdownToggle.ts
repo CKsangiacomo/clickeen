@@ -19,6 +19,7 @@ type HostRecord = {
 export type DropdownHydrator = {
   (scope: Element | DocumentFragment): void;
   setOpen: (root: HTMLElement, open: boolean) => void;
+  destroy: (root: HTMLElement) => void;
 };
 
 export function createDropdownHydrator(config: DropdownHydrateConfig): DropdownHydrator {
@@ -105,6 +106,10 @@ export function createDropdownHydrator(config: DropdownHydrateConfig): DropdownH
   hydrate.setOpen = (root: HTMLElement, open: boolean) => {
     const record = hostRegistry.get(root);
     if (record) setOpen(record, open);
+  };
+
+  hydrate.destroy = (root: HTMLElement) => {
+    hostRegistry.delete(root);
   };
 
   return hydrate;

@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { formatAccountRoleLabel, isAccountRoleValue } from '../lib/format';
 import { resolvePersonLabel } from '../lib/person-profile';
 import { useRomaAccountApi } from './account-api';
+import { DieterDropdownActions } from './dieter-dropdown-actions';
 import { useRomaAccountContext } from './roma-account-context';
 
 type TeamMemberProfile = {
@@ -224,21 +225,22 @@ export function TeamMemberDomain({ memberId }: TeamMemberDomainProps) {
               <p className="body-s">Owner role is final account-holder authority. Ownership transfer stays on a dedicated flow.</p>
             ) : null}
             <div className="roma-inline-stack" style={{ alignItems: 'flex-end', gap: '12px' }}>
-              <label className="roma-field">
-                <span className="label-s">Role</span>
-                <select
-                  className="diet-operational-field body-m"
-                  value={roleDraft}
-                  onChange={(event) => setRoleDraft(event.target.value)}
-                  disabled={!canManage || member.member.role === 'owner' || savingRole}
-                >
-                  {roleDraft === 'owner' ? <option value="owner" disabled>{formatAccountRoleLabel('owner')}</option> : null}
-                  {!isAccountRoleValue(roleDraft) ? <option value={roleDraft} disabled>{formatAccountRoleLabel(roleDraft)}</option> : null}
-                  <option value="viewer">{formatAccountRoleLabel('viewer')}</option>
-                  <option value="editor">{formatAccountRoleLabel('editor')}</option>
-                  <option value="admin">{formatAccountRoleLabel('admin')}</option>
-                </select>
-              </label>
+              <DieterDropdownActions
+                className="roma-field"
+                size="lg"
+                label="Role"
+                ariaLabel="Choose member role"
+                value={roleDraft}
+                onChange={setRoleDraft}
+                disabled={!canManage || member.member.role === 'owner' || savingRole}
+                options={[
+                  ...(roleDraft === 'owner' ? [{ value: 'owner', label: formatAccountRoleLabel('owner'), disabled: true }] : []),
+                  ...(!isAccountRoleValue(roleDraft) ? [{ value: roleDraft, label: formatAccountRoleLabel(roleDraft), disabled: true }] : []),
+                  { value: 'viewer', label: formatAccountRoleLabel('viewer') },
+                  { value: 'editor', label: formatAccountRoleLabel('editor') },
+                  { value: 'admin', label: formatAccountRoleLabel('admin') },
+                ]}
+              />
               <button
                 className="diet-btn-txt"
                 data-size="md"

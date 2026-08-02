@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { normalizeCanonicalLocalesFile, normalizeLocaleToken, resolveLocaleLabel } from '@clickeen/l10n';
 import localesJson from '@clickeen/l10n/locales.json';
 import { useRomaAccountApi } from './account-api';
+import { DieterDropdownActions } from './dieter-dropdown-actions';
 
 type AccountLocalesPayload = {
   activeLocales: string[];
@@ -239,32 +240,29 @@ export function AccountLocaleSettingsCard(args: {
 
       {settingsReady ? (
         <div className="roma-inline-stack">
-          <label className="roma-inline-stack" htmlFor="roma-settings-base-locale">
-            <span className="label-s">Base language</span>
-            <select
-              id="roma-settings-base-locale"
-              className="diet-operational-field"
+          <div className="roma-inline-stack">
+            <DieterDropdownActions
+              label="Base language"
+              ariaLabel="Choose base language"
               value={baseLocale}
               disabled={loading || saving || !args.canEdit || baseLocaleLocked}
-              onChange={(event) => {
-                const nextBase = normalizeLocaleToken(event.target.value);
+              onChange={(value) => {
+                const nextBase = normalizeLocaleToken(value);
                 if (!nextBase) return;
                 setDraftBaseLocale(nextBase);
                 setDraftActiveLocales((current) => current.filter((entry) => entry !== nextBase));
               }}
-            >
-              {CANONICAL_LOCALES.map((entry) => (
-                <option key={entry.code} value={entry.code}>
-                  {resolveLocaleUiLabel(entry.code)}
-                </option>
-              ))}
-            </select>
+              options={CANONICAL_LOCALES.map((entry) => ({
+                value: entry.code,
+                label: resolveLocaleUiLabel(entry.code),
+              }))}
+            />
             <span className="body-s">
               {baseLocaleLocked
                 ? 'Base language is locked because this account already has saved widgets. Changing it later requires support/migration.'
                 : 'Choose the source language before the first widget save. After authoring starts, this setting locks.'}
             </span>
-          </label>
+          </div>
 
           <div className="roma-inline-stack">
             <div className="label-s">Active languages</div>

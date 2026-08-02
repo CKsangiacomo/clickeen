@@ -34,8 +34,8 @@ program.
 - `tokens.css` — `@import`s the three above.
 
 **Layouts and components (middle).** `dieter/layouts/main-container/*` owns the
-shared application Layout/Page structure. The 28 non-empty source directories
-under `dieter/components/*` comprise 27 component directories plus the
+shared application Layout/Page structure. The 27 non-empty source directories
+under `dieter/components/*` comprise 26 component directories plus the
 non-rendered `shared/` helper directory. Component source shape varies by
 contract; see [`components.md`](components.md) for the exact catalog and
 hydration/spec model.
@@ -95,7 +95,9 @@ layering are owned by their own UI docs.
   in [`components.md`](components.md).
 - **Hydration.** Interactive components export source `hydrate*` functions.
   Bob imports the hydrators it uses and calls them explicitly. CSS/HTML-only
-  components need no browser runtime.
+  components need no browser runtime. A dynamically removed Dropdown Actions
+  host calls `destroyDropdownActions` before its DOM is discarded so the shared
+  dropdown registry cannot retain detached controls.
 - **Consumption.** Bob and Roma compile `dieter/styles.css`; Prague compiles
   token source; widget materialization folds required Dieter CSS into instance
   `styles.css`. Roma and DevStudio also import the shared application layout

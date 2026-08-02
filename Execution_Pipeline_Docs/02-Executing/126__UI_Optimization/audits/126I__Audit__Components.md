@@ -23,7 +23,7 @@ slices?
 | DevStudio component inventory/pages | `admin/scripts/generate-component-pages.ts`, `admin/scripts/generate-static-registries.mjs`, generated `admin/src/**` |
 | Blocking dialog lifecycle | 126K, using component-local state callbacks; not 126I |
 | DevStudio adoption | 126L |
-| Roma operational-field/table adoption | 126M |
+| Roma Dieter input/Table adoption | 126M |
 | Generated/deployed Dieter authority | 126G build-before-sync path |
 | One-time stale product-root cleanup | Approved repo Cloudflare R2 delete command after `pnpm cf:preflight`, limited to deleted `textrename` CSS/HTML/JS and `toggle.js`. |
 
@@ -40,9 +40,9 @@ inventories and must never be reported as one unqualified component count.
 
 After the accepted deletion/addition work, the expected inventories are:
 
-- 27 source directories including `shared`: delete `textrename`, add the three
-  CSS-only `operational-field`, `operational-table`, and `tooltip` contracts;
-- 26 CSS-backed manifest components;
+- 26 source directories including `shared`: delete `textrename`, add the two
+  CSS-only `operational-table` and `tooltip` contracts;
+- 25 CSS-backed manifest components;
 - 18 JS-backed manifest components: `textrename` is gone and Toggle is native;
 - 22 DevStudio specs, 22 templates, and 26 CSS sources;
 - the DevStudio route count remains 22 because the three new visual primitives
@@ -141,13 +141,14 @@ lifecycle in these two component files. Its rewrite must delete the accumulating
 listener and implement unchanged/dirty dismissal against component-local
 working state. 126I records and verifies that handoff but does not duplicate it.
 
-### Three small visual contracts are missing
+### Two small visual contracts are missing
 
-Roma currently repeats one bordered native-field look in `.roma-input` and has
-two unstyled `.roma-select` consumers. Nine current tables use `.roma-table` and
-repeat width, collapse, neutral borders, header surface, cell alignment, and a
-mobile overflow rule (`roma/app/roma.css:611-669,756-759`). Those reusable visual
-decisions belong in Dieter; labels, values, layout, data, and behavior remain in
+Roma currently repeats native-field styling despite Dieter already owning
+Textfield, Dropdown Actions, and Textedit. Nine current tables use `.roma-table`
+and repeat width, collapse, neutral borders, header surface, cell alignment,
+and a mobile overflow rule (`roma/app/roma.css:611-669,756-759`). Roma should
+compose the existing input components directly; the reusable table decisions
+belong in Dieter, while labels, values, layout, data, and behavior remain in
 Roma.
 
 Current icon-only controls use either native `title` (`bob/components/TdMenu.tsx:60-73`,
@@ -155,16 +156,16 @@ Repeater source) or only an accessible name (Object Manager). Clickeen needs a
 small CSS tooltip that appears on hover and keyboard focus while `aria-label`
 continues to name the control. It does not need a tooltip runtime or portal.
 
-The correct source additions are three CSS-only, non-ToolDrawer contracts:
+The correct source additions are two CSS-only, non-ToolDrawer contracts:
 
-- `dieter/components/operational-field/operational-field.css`;
 - `dieter/components/operational-table/operational-table.css`;
 - `dieter/components/tooltip/tooltip.css`.
 
-126I creates and documents them. 126L applies them only where DevStudio has a
-matching operational surface. 126M replaces Roma's duplicated field/table
-appearance and adds the corresponding layout links. No React component or form/
-table framework is introduced.
+126I creates and documents them. 126L applies the table contract only where
+DevStudio has a matching operational surface and composes existing Dieter input
+components. 126M replaces Roma's duplicated field/table appearance with those
+same existing input components and the table contract. No React component or
+form/table framework is introduced.
 
 ## Exact Step-7 Disposition
 
@@ -176,7 +177,7 @@ table framework is introduced.
 | Dropdown triggers | Native buttons in six templates and Bulk Edit's dynamic upload markup; preserve appearance and current popover semantics. | 126I direct. 126K later corrects listbox/dialog semantics. |
 | `dropdown-actions` | Delete footer markup/CSS, pending state/functions, and Bob's empty compiler fields. | 126I direct. |
 | Manifest deps | Add exact Object Manager/Repeater dependencies. | 126I direct in `scripts/build-dieter.js`. |
-| Field/table/tooltip | Add three CSS-only Dieter contracts; apply tooltip to Bob TdMenu and Dieter Repeater icon actions; regenerate Repeater's Admin page. | 126I source; 126K owns Object Manager adoption with its dialog rewrite; 126L/126M own app adoption. |
+| Inputs/table/tooltip | Reuse existing Dieter input components; add Table and Tooltip CSS contracts; apply Tooltip to Bob TdMenu and Dieter Repeater icon actions; regenerate Repeater's Admin page. | 126I source; 126K owns Object Manager adoption with its dialog rewrite; 126L/126M own app adoption. |
 | DevStudio route baseline | Update the stale route-contract fixture to 3 foundation, 22 component, and 2 Policy routes by adding `agent-activity`, `textedit`, and `/#/policy/llm-management` with exact heading `LLM Management`. Run it with a real host-scoped DevStudio auth state. | 126I verification correction; no product route change, no Roma-auth substitution, and no second inventory in 126L. |
 | Pages deployment | Verify the `bob-dev`, Roma, and DevStudio Git-connected Pages deployments at the exact source SHA. | 126I deployment proof; Bob is not masqueraded as part of Roma. |
 | Bulk Edit/Object Manager lifecycle | Delete listener accumulation and implement D1 lifecycle once. | 126K exclusive write owner. |

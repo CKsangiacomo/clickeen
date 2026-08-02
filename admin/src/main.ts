@@ -5,8 +5,10 @@ import '@dieter/components/popup/popup.css';
 import '@dieter/components/shared/property-row.css';
 import '@dieter/components/shared/authoring-focus.css';
 import '@dieter/components/popover/popover.css';
-import '@dieter/components/operational-field/operational-field.css';
+import '@dieter/components/dropdown-actions/dropdown-actions.css';
+import '@dieter/components/menuactions/menuactions.css';
 import '@dieter/components/table/table.css';
+import '@dieter/components/textfield/textfield.css';
 import '@dieter/components/tooltip/tooltip.css';
 import '@dieter/components/valuefield/valuefield.css';
 import '@dieter/components/toggle/toggle.css';
@@ -16,6 +18,7 @@ import './css/utilities.css';
 import { navGroups, showcaseIndex, showcaseModules } from './data/routes';
 import { getIcon } from './data/icons';
 import {
+  destroyDropdownActions,
   hydrateBulkEdit,
   hydrateChoiceTiles,
   hydrateDropdownActions,
@@ -411,6 +414,8 @@ async function saveDieterToken(kind: DieterTokenKind, token: string, value: stri
 
 function closeTokenEditor() {
   tokenEditorLifecycle?.destroy();
+  const dropdown = tokenEditor?.querySelector<HTMLElement>('.diet-dropdown-actions');
+  if (dropdown) destroyDropdownActions(dropdown);
   tokenEditor?.remove();
   tokenEditor = null;
   tokenEditorLifecycle = null;
@@ -451,14 +456,25 @@ async function openTokenEditor(
           </button>
         </header>
         <div class="diet-popup__body devstudio-token-editor__body">
-          <label class="devstudio-token-editor__field">
-            <span class="label-xs">Token</span>
-            <select class="diet-operational-field body-s devstudio-token-editor__select" name="token" disabled></select>
-          </label>
-          <label class="devstudio-token-editor__field">
-            <span class="label-xs">Value</span>
-            <input class="diet-operational-field body-s devstudio-token-editor__input" name="value" type="text" autocomplete="off" autocapitalize="none" spellcheck="false" aria-describedby="devstudio-token-editor-status" disabled />
-          </label>
+          <div class="diet-dropdown-actions diet-popover-host" data-size="sm" data-state="closed">
+            <input class="diet-dropdown-actions__value-field" name="token" type="hidden" value="" data-placeholder="Loading token source…" />
+            <button class="diet-dropdown-header diet-dropdown-actions__control" type="button" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="devstudio-token-editor-token-label" disabled>
+              <span class="diet-dropdown-header-label label-xs" id="devstudio-token-editor-token-label">Token</span>
+              <span class="diet-dropdown-header-value body-xs" data-muted="true">Loading token source…</span>
+            </button>
+            <div class="diet-popover diet-dropdown-actions__popover" role="listbox" aria-label="Editable Dieter tokens" data-state="closed">
+              <div class="diet-popover__header">
+                <span class="diet-popover__header-label label-xs">Token</span>
+              </div>
+              <div class="diet-popover__body diet-dropdown-actions__menu"></div>
+            </div>
+          </div>
+          <div class="diet-textfield" data-size="sm">
+            <label class="diet-textfield__control">
+              <span class="diet-textfield__display-label label-xs">Value</span>
+              <input class="diet-textfield__field body-xs" name="value" type="text" autocomplete="off" autocapitalize="none" spellcheck="false" aria-label="Value" aria-describedby="devstudio-token-editor-status" disabled />
+            </label>
+          </div>
           <div class="devstudio-token-editor__diff body-xs" id="devstudio-token-editor-status" aria-live="polite">Loading token source…</div>
         </div>
         <footer class="diet-popup__footer">
@@ -495,11 +511,14 @@ async function openTokenEditor(
   document.body.append(dialog);
   tokenEditor = dialog;
   hydrateIcons(dialog);
+  hydrateTextfield(dialog);
 
   const form = dialog.querySelector<HTMLFormElement>('form');
   const editorView = dialog.querySelector<HTMLElement>('[data-token-editor-work]');
   const discardView = dialog.querySelector<HTMLElement>('[data-token-editor-discard-view]');
-  const select = dialog.querySelector<HTMLSelectElement>('select[name="token"]');
+  const tokenInput = dialog.querySelector<HTMLInputElement>('input[name="token"]');
+  const tokenTrigger = dialog.querySelector<HTMLButtonElement>('.diet-dropdown-actions__control');
+  const tokenMenu = dialog.querySelector<HTMLElement>('.diet-dropdown-actions__menu');
   const input = dialog.querySelector<HTMLInputElement>('input[name="value"]');
   const diff = dialog.querySelector<HTMLElement>('.devstudio-token-editor__diff');
   const commitButton = dialog.querySelector<HTMLButtonElement>('[data-token-editor-commit]');
@@ -508,7 +527,7 @@ async function openTokenEditor(
   const closeButtons = Array.from(
     dialog.querySelectorAll<HTMLButtonElement>('[data-token-editor-close]'),
   );
-  if (!form || !editorView || !discardView || !select || !input || !diff || !commitButton || !keepEditingButton || !discardButton) {
+  if (!form || !editorView || !discardView || !tokenInput || !tokenTrigger || !tokenMenu || !input || !diff || !commitButton || !keepEditingButton || !discardButton) {
     closeTokenEditor();
     return;
   }
@@ -522,12 +541,15 @@ async function openTokenEditor(
   let saving = false;
   let editorFocus: HTMLElement | null = null;
   const isDirty = () => {
-    const current = tokens.find((entry) => entry.token === select.value);
+    const current = tokens.find((entry) => entry.token === tokenInput.value);
     return Boolean(current && input.value.trim() !== current.value);
   };
   const setSaving = (next: boolean) => {
     saving = next;
-    select.disabled = next;
+    tokenTrigger.disabled = next;
+    tokenMenu.querySelectorAll<HTMLButtonElement>('.diet-dropdown-actions__menuaction').forEach((button) => {
+      button.disabled = next;
+    });
     input.disabled = next;
     closeButtons.forEach((button) => {
       button.disabled = next;
@@ -563,7 +585,7 @@ async function openTokenEditor(
   };
   const lifecycle = createDialogLifecycle({
     dialog,
-    initialFocus: select,
+    initialFocus: tokenTrigger,
     requestDismiss(reason) {
       if (reason === 'backdrop') return;
       if (!discardView.hidden) {
@@ -587,15 +609,44 @@ async function openTokenEditor(
   discardButton.addEventListener('click', closeTokenEditor);
 
   try {
-    tokens = (await fetchDieterTokens(kind)).filter(
+    const loadedTokens = await fetchDieterTokens(kind);
+    if (tokenEditor !== dialog || !dialog.isConnected) return;
+    tokens = loadedTokens.filter(
       (token) => token.editable && (!visibleTokens || visibleTokens.has(token.token)),
     );
-    select.replaceChildren(
+    tokenMenu.replaceChildren(
       ...tokens.map((entry) => {
-        const option = document.createElement('option');
-        option.value = entry.token;
-        option.textContent = entry.token;
-        return option;
+        const action = document.createElement('button');
+        action.className = 'diet-btn-menuactions diet-dropdown-actions__menuaction';
+        action.type = 'button';
+        action.dataset.size = 'sm';
+        action.dataset.variant = 'neutral';
+        action.dataset.value = entry.token;
+        action.dataset.label = entry.token;
+        action.setAttribute('role', 'option');
+
+        const actionLabel = document.createElement('span');
+        actionLabel.className = 'diet-btn-menuactions__label body-xs';
+        const actionText = document.createElement('span');
+        actionText.className = 'diet-dropdown-actions__menuaction-text';
+        actionText.textContent = entry.token;
+        actionLabel.append(actionText);
+
+        const actionIcon = document.createElement('span');
+        actionIcon.className = 'diet-btn-menuactions__icon';
+        actionIcon.setAttribute('aria-hidden', 'true');
+        const check = document.createElement('span');
+        check.className = 'diet-dropdown-actions__check diet-btn-ic';
+        check.dataset.size = 'xs';
+        check.dataset.variant = 'neutral';
+        check.setAttribute('aria-hidden', 'true');
+        const checkIcon = document.createElement('span');
+        checkIcon.className = 'diet-btn-ic__icon';
+        checkIcon.dataset.icon = 'checkmark';
+        check.append(checkIcon);
+        actionIcon.append(check);
+        action.append(actionLabel, actionIcon);
+        return action;
       }),
     );
     const selected = tokens.find((entry) => entry.token === preferredToken) ?? tokens[0];
@@ -603,13 +654,15 @@ async function openTokenEditor(
       setStatus('No editable tokens found.', 'error');
       return;
     }
-    select.value = selected.token;
+    tokenInput.value = selected.token;
     input.value = selected.value;
-    select.disabled = false;
+    hydrateIcons(dialog);
+    hydrateDropdownActions(dialog);
+    tokenTrigger.disabled = false;
     input.disabled = false;
 
     const syncDiff = () => {
-      const current = tokens.find((entry) => entry.token === select.value);
+      const current = tokens.find((entry) => entry.token === tokenInput.value);
       if (!current) return;
       if (input.value.trim() === current.value) {
         setStatus('No changes to commit.');
@@ -619,8 +672,8 @@ async function openTokenEditor(
       commitButton.disabled = saving || !isDirty();
     };
 
-    select.addEventListener('change', () => {
-      const current = tokens.find((entry) => entry.token === select.value);
+    tokenInput.addEventListener('input', () => {
+      const current = tokens.find((entry) => entry.token === tokenInput.value);
       input.value = current?.value ?? '';
       syncDiff();
     });
@@ -630,7 +683,7 @@ async function openTokenEditor(
     form.addEventListener('submit', async (event) => {
       event.preventDefault();
       if (saving) return;
-      const token = select.value;
+      const token = tokenInput.value;
       const value = input.value.trim();
       const current = tokens.find((entry) => entry.token === token);
       if (!current || !value || value === current.value) {
@@ -656,6 +709,7 @@ async function openTokenEditor(
       }
     });
   } catch {
+    if (tokenEditor !== dialog || !dialog.isConnected) return;
     setStatus(DIETER_TOKEN_LOAD_ERROR_COPY, 'error');
   }
 }

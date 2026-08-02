@@ -8,6 +8,8 @@ import {
   userSettingsCountryRequiresTimezoneChoice,
 } from '@clickeen/ck-contracts';
 import { useCallback, useEffect, useState } from 'react';
+import { DieterDropdownActions } from './dieter-dropdown-actions';
+import { DieterTextfield } from './dieter-textfield';
 import { useRomaAccountContext } from './roma-account-context';
 
 type ProfileDraft = {
@@ -159,101 +161,88 @@ export function ProfileDomain() {
       <section className="rd-canvas-module">
         <h2 className="heading-6">Personal details</h2>
         <div className="roma-form-grid">
-          <label className="roma-field">
-            <span className="label-s">First name</span>
-            <input
-              className="diet-operational-field body-m"
-              value={draft.firstName}
-              onChange={(event) =>
+          <DieterTextfield
+            className="roma-field"
+            controlSize="lg"
+            label="First name"
+            value={draft.firstName}
+            onChange={(event) =>
+              setDraft((current) => ({
+                ...current,
+                firstName: event.target.value,
+              }))
+            }
+            disabled={saving}
+          />
+          <DieterTextfield
+            className="roma-field"
+            controlSize="lg"
+            label="Last name"
+            value={draft.lastName}
+            onChange={(event) =>
+              setDraft((current) => ({
+                ...current,
+                lastName: event.target.value,
+              }))
+            }
+            disabled={saving}
+          />
+          <DieterTextfield
+            className="roma-field"
+            controlSize="lg"
+            label="Primary Language"
+            value={draft.primaryLanguage}
+            onChange={(event) =>
+              setDraft((current) => ({
+                ...current,
+                primaryLanguage: event.target.value,
+              }))
+            }
+            disabled={saving}
+          />
+          <DieterDropdownActions
+            className="roma-field"
+            size="lg"
+            label="Country"
+            ariaLabel="Choose country"
+            value={draft.country}
+            options={[{ value: '', label: 'Select country' }, ...USER_SETTINGS_COUNTRY_OPTIONS]}
+            onChange={(nextCountry) => {
+              setDraft((current) => ({
+                ...current,
+                country: nextCountry,
+                timezone: nextCountry ? (resolveUserSettingsTimezone(nextCountry, current.timezone, null) ?? '') : '',
+              }));
+            }}
+            disabled={saving}
+          />
+          {requiresTimezoneChoice ? (
+            <DieterDropdownActions
+              className="roma-field"
+              size="lg"
+              label="Timezone"
+              ariaLabel="Choose timezone"
+              value={draft.timezone}
+              options={timezoneOptions.map((timezone) => ({ value: timezone, label: formatTimezoneLabel(timezone) }))}
+              onChange={(timezone) =>
                 setDraft((current) => ({
                   ...current,
-                  firstName: event.target.value,
+                  timezone,
                 }))
               }
-              disabled={saving}
+              disabled={saving || !draft.country}
             />
-          </label>
-          <label className="roma-field">
-            <span className="label-s">Last name</span>
-            <input
-              className="diet-operational-field body-m"
-              value={draft.lastName}
-              onChange={(event) =>
-                setDraft((current) => ({
-                  ...current,
-                  lastName: event.target.value,
-                }))
-              }
-              disabled={saving}
+          ) : (
+            <DieterTextfield
+              className="roma-field"
+              controlSize="lg"
+              label="Timezone"
+              value={derivedTimezone ? formatTimezoneLabel(derivedTimezone) : ''}
+              placeholder={draft.country ? '' : 'Select a country first'}
+              disabled
+              readOnly
             />
-          </label>
-          <label className="roma-field">
-            <span className="label-s">Primary Language</span>
-            <input
-              className="diet-operational-field body-m"
-              value={draft.primaryLanguage}
-              onChange={(event) =>
-                setDraft((current) => ({
-                  ...current,
-                  primaryLanguage: event.target.value,
-                }))
-              }
-              disabled={saving}
-            />
-          </label>
-          <label className="roma-field">
-            <span className="label-s">Country</span>
-            <select
-              className="diet-operational-field body-m"
-              value={draft.country}
-              onChange={(event) => {
-                const nextCountry = event.target.value;
-                setDraft((current) => ({
-                  ...current,
-                  country: nextCountry,
-                  timezone: nextCountry ? (resolveUserSettingsTimezone(nextCountry, current.timezone, null) ?? '') : '',
-                }));
-              }}
-              disabled={saving}
-            >
-              <option value="">Select country</option>
-              {USER_SETTINGS_COUNTRY_OPTIONS.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="roma-field">
-            <span className="label-s">Timezone</span>
-            {requiresTimezoneChoice ? (
-              <select
-                className="diet-operational-field body-m"
-                value={draft.timezone}
-                onChange={(event) =>
-                  setDraft((current) => ({
-                    ...current,
-                    timezone: event.target.value,
-                  }))
-                }
-                disabled={saving || !draft.country}
-              >
-                {timezoneOptions.map((timezone) => (
-                  <option key={timezone} value={timezone}>
-                    {formatTimezoneLabel(timezone)}
-                  </option>
-                ))}
-              </select>
-            ) : (
-              <input
-                className="diet-operational-field body-m"
-                value={derivedTimezone ? formatTimezoneLabel(derivedTimezone) : ''}
-                placeholder={draft.country ? '' : 'Select a country first'}
-                disabled
-                readOnly
-              />
-            )}
-          </label>
+          )}
         </div>
         {draft.country && !requiresTimezoneChoice ? (
           <p className="body-s" style={{ marginTop: '8px' }}>

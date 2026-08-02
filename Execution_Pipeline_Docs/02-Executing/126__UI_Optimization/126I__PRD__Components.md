@@ -168,9 +168,9 @@ The Step-6 audit proves:
 
 Expected inventory after 126I source changes:
 
-- 27 source directories including `shared`: delete `textrename`; add
-  `operational-field`, `operational-table`, and `tooltip`;
-- 26 CSS-backed source components;
+- 26 source directories including `shared`: delete `textrename`; add
+  `operational-table` and `tooltip`;
+- 25 CSS-backed source components;
 - 18 source hydrators;
 - 22 DevStudio specs, 22 templates, and 26 CSS sources;
 - 22 DevStudio component routes, unchanged. The stale 20-route test fixture is
@@ -221,12 +221,10 @@ No second variant or compatibility branch survives.
   manifest guesses possible nested fields.
 - 126K applies Object Manager tooltip markup during the one dialog rewrite.
 
-### Three Small CSS Contracts
+### Two Small CSS Contracts
 
 126I adds CSS only:
 
-- `operational-field`: the shared visual base for ordinary operational
-  `input`/`select` controls;
 - `operational-table`: table width, neutral borders, header surface, cell
   alignment, and horizontal overflow shell;
 - `tooltip`: a short label from `data-tooltip`, visible on hover and
@@ -234,8 +232,6 @@ No second variant or compatibility branch survives.
 
 The public selectors are fixed:
 
-- `.diet-operational-field` goes directly on an ordinary operational `input`,
-  `select`, or `textarea`;
 - `.diet-operational-table` is the horizontal-overflow wrapper and
   `.diet-operational-table__table` goes on its semantic `<table>`;
 - `.diet-tooltip` goes on the positioned icon-action control and reads its
@@ -347,7 +343,7 @@ Green gate:
 - no dependency manifest or recursive media resolver is added;
 - TdMenu and Repeater tooltips appear on hover and keyboard focus without a
   native `title`, preserve the same `aria-label`, and do not capture clicks;
-- operational-field/table CSS contains visual rules only;
+- table and tooltip CSS contains visual rules only;
 - no tooltip runtime, form framework, or table framework exists.
 
 ### Slice I4 - Reconcile, Deploy, Verify
@@ -384,7 +380,7 @@ Green gate:
 | FAQ nested copies | `tokyo/product/widgets/faq/spec.json` | Use native dropdown-edit buttons in both nested editor templates; regenerate widget artifacts. |
 | Dropdown Actions dead branch | `dieter/components/dropdown-actions/dropdown-actions.{html,css,ts}`; `bob/lib/compiler/stencils.ts` | Delete apply/cancel/footer/pending workflow completely. |
 | Source consumption | `dieter/styles.css`; Bob source hydration | Ensure new component CSS and behavior are consumed directly; do not add a manifest. |
-| CSS contracts | `dieter/components/operational-field/operational-field.css`; `dieter/components/operational-table/operational-table.css`; `dieter/components/tooltip/tooltip.css` | Add three CSS-only primitives. |
+| CSS contracts | `dieter/components/operational-table/operational-table.css`; `dieter/components/tooltip/tooltip.css` | Add two CSS-only primitives. |
 | Tooltip adoption | `bob/components/TdMenu.tsx`; `bob/app/layout.tsx`; `dieter/components/repeater/repeater.{html,js}` | Replace native title/ad hoc names with shared hover/focus visual contract while keeping ARIA names. |
 | Generated Admin inventories/pages | `admin/src/data/componentRegistry.generated.ts`; `admin/src/data/showcase.generated.ts` only if generator output changes it; `admin/src/html/components/dropdown-{actions,border,edit,fill,shadow,upload}.html`; `admin/src/html/components/repeater.html` | Regenerate from source, never hand-edit. |
 | E2E/browser | `e2e/devstudio/route-contract.spec.ts`; `e2e/widgets/prd106f-builder-certification.spec.ts`; direct read-only browser evidence | Correct the stale DevStudio fixture to 3 foundation, 22 component, and 2 Policy routes by adding `agent-activity`, `textedit`, and `/#/policy/llm-management` with exact heading `LLM Management`; replace stale fake-button assertions in the broad suite; do not add another E2E suite. |
@@ -403,8 +399,8 @@ no current affected statement are recorded as checked and left unchanged.
 
 126L owns:
 
-- adoption of operational-field/table/tooltip in matching DevStudio operational
-  screens;
+- adoption of existing Dieter input components plus table/tooltip in matching
+  DevStudio operational screens;
 - all later DevStudio visual work inherits 126I's corrected 22-route generated
   component baseline and complete 3/22/2 generated route inventory; 126L does
   not create a second route inventory;
@@ -502,8 +498,8 @@ substituted. Missing or expired DevStudio auth keeps the browser gate RED.
 - Net 126I source/documentation result: 322 additions and 655 deletions.
 - `textrename`, custom Toggle hydration, fake dropdown triggers, and the dead
   dropdown-actions apply/cancel workflow are deleted.
-- The only new contracts are CSS-only operational field, operational table,
-  and tooltip source. No test, validator, manifest, probe, framework, portal,
+- The only new contracts are CSS-only table and tooltip source. No test,
+  validator, manifest, probe, framework, portal,
   observer, timer, or runtime subsystem was added.
 - Widget validation, Dieter governance/typecheck, Bob lint/typecheck/build,
   Roma lint/typecheck/Cloudflare build, and DevStudio

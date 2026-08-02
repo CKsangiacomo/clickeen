@@ -1,6 +1,6 @@
 // Component hydration functions (for Bob and DevStudio)
 export { hydrateTextedit } from './textedit/textedit';
-export { hydrateDropdownActions } from './dropdown-actions/dropdown-actions';
+export { destroyDropdownActions, hydrateDropdownActions } from './dropdown-actions/dropdown-actions';
 export { hydrateDropdownFill } from './dropdown-fill/dropdown-fill';
 export { hydrateDropdownBorder } from './dropdown-border/dropdown-border';
 export { hydrateDropdownShadow } from './dropdown-shadow/dropdown-shadow';

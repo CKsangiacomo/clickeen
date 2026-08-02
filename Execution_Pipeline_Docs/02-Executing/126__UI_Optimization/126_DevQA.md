@@ -745,7 +745,7 @@ composition with one ToolDrawer and no responsive framework. 126K replaced
 local modal wrappers and in-app confirms with native dialogs, preserved each
 workflow's exact dismissal law, and connected Upgrade to one honest Roma
 scaffold. 126L completed the DevStudio Full/Compact/unsupported shell and
-adopted the small operational field/table contracts without adding a shell
+adopted Dieter's existing input and Table contracts without adding a shell
 framework or new test machinery. 126M then completed Roma's matching one-tree
 shell, adopted the same small field/table contracts, deleted dead local control
 CSS, and closed the deployed Roma/Bob/DevStudio workspace matrix. The historical pre-execution

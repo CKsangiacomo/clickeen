@@ -6,6 +6,7 @@ import { createDialogLifecycle } from '../../dieter/components/shared/dialog-lif
 import { parseAccountAssetRecord } from '../lib/account-asset-record';
 import { formatBytes, formatNumber } from '../lib/format';
 import { useRomaAccountApi, type RomaAccountApi } from './account-api';
+import { DieterDropdownActions } from './dieter-dropdown-actions';
 import { parseApiErrorReason } from './same-origin-json';
 import { useRomaAccountContext } from './roma-account-context';
 import { RomaAccountNoticeModal } from './roma-account-notice-modal';
@@ -38,6 +39,7 @@ type BulkUploadItem = {
 type AssetSortKey = 'filename' | 'assetType' | 'sizeBytes';
 type AssetSortDirection = 'ascending' | 'descending';
 type AssetSort = { key: AssetSortKey; direction: AssetSortDirection };
+type AssetFilter = 'all' | 'font' | 'vector' | 'image' | 'video';
 
 type AssetsHeaderActions = {
   uploadAsset: () => void;
@@ -148,51 +150,69 @@ async function requestUploadAsset(accountApi: Pick<RomaAccountApi, 'fetchRaw'>, 
 
 export function AssetsPage() {
   const [headerActions, setHeaderActions] = useState<AssetsHeaderActions | null>(null);
+  const [assetFilter, setAssetFilter] = useState<AssetFilter>('all');
   const actionsBusy = Boolean(headerActions?.singleUploadBusy || headerActions?.bulkUploadBusy);
 
   return (
     <RomaShell
       activeDomain="assets"
       title="Assets"
-      headerRight={headerActions ? (
+      headerRight={(
         <>
-          <button
-            className="diet-btn-txt"
-            data-size="md"
-            data-variant="primary"
-            type="button"
-            onClick={headerActions.uploadAsset}
-            disabled={actionsBusy}
-          >
-            <span className="diet-btn-txt__label body-m">{headerActions.singleUploadBusy ? 'Uploading…' : 'Upload asset'}</span>
-          </button>
-          <button
-            className="diet-btn-txt"
-            data-size="md"
-            data-variant="secondary"
-            type="button"
-            onClick={headerActions.uploadBulk}
-            disabled={actionsBusy}
-          >
-            <span className="diet-btn-txt__label body-m">{headerActions.bulkUploadBusy ? 'Uploading…' : 'Upload in bulk'}</span>
-          </button>
-          <button
-            className="diet-btn-txt"
-            data-size="md"
-            data-variant="line2"
-            type="button"
-            onClick={headerActions.refresh}
-            disabled={headerActions.listLoading || actionsBusy}
-          >
-            <span className="diet-btn-txt__label body-m">{headerActions.listLoading ? 'Refreshing…' : 'Refresh list'}</span>
-          </button>
+          <DieterDropdownActions
+            className="roma-header-filter"
+            ariaLabel="Filter assets by type"
+            value={assetFilter}
+            options={[
+              { value: 'all', label: 'Show all' },
+              { value: 'font', label: 'Fonts' },
+              { value: 'vector', label: 'SVGs' },
+              { value: 'image', label: 'Photo' },
+              { value: 'video', label: 'Video' },
+            ]}
+            onChange={(value) => setAssetFilter(value as AssetFilter)}
+          />
+          {headerActions ? (
+            <>
+              <button
+                className="diet-btn-txt"
+                data-size="md"
+                data-variant="primary"
+                type="button"
+                onClick={headerActions.uploadAsset}
+                disabled={actionsBusy}
+              >
+                <span className="diet-btn-txt__label body-m">{headerActions.singleUploadBusy ? 'Uploading…' : 'Upload asset'}</span>
+              </button>
+              <button
+                className="diet-btn-txt"
+                data-size="md"
+                data-variant="secondary"
+                type="button"
+                onClick={headerActions.uploadBulk}
+                disabled={actionsBusy}
+              >
+                <span className="diet-btn-txt__label body-m">{headerActions.bulkUploadBusy ? 'Uploading…' : 'Upload in bulk'}</span>
+              </button>
+              <button
+                className="diet-btn-txt"
+                data-size="md"
+                data-variant="line2"
+                type="button"
+                onClick={headerActions.refresh}
+                disabled={headerActions.listLoading || actionsBusy}
+              >
+                <span className="diet-btn-txt__label body-m">{headerActions.listLoading ? 'Refreshing…' : 'Refresh list'}</span>
+              </button>
+            </>
+          ) : null}
         </>
-      ) : null}
+      )}
     >
       <RomaAccountNoticeModal />
       <Suspense fallback={<section className="rd-canvas-module">Loading domain...</section>}>
         <RomaDomainErrorBoundary domainLabel="Assets" resetKey="assets">
-          <AssetsDomain onHeaderActions={setHeaderActions} />
+          <AssetsDomain assetFilter={assetFilter} onHeaderActions={setHeaderActions} />
         </RomaDomainErrorBoundary>
       </Suspense>
     </RomaShell>
@@ -200,8 +220,10 @@ export function AssetsPage() {
 }
 
 export function AssetsDomain({
+  assetFilter,
   onHeaderActions,
 }: {
+  assetFilter: AssetFilter;
   onHeaderActions?: (actions: AssetsHeaderActions | null) => void;
 }) {
   const { accountContext, data } = useRomaAccountContext();
@@ -450,7 +472,7 @@ export function AssetsDomain({
   }, []);
 
   const sortedAssets = useMemo(() => {
-    const rows = assets ?? [];
+    const rows = (assets ?? []).filter((asset) => assetFilter === 'all' || asset.assetType === assetFilter);
     return rows.slice().sort((left, right) => {
       let comparison: number;
       if (sort.key === 'sizeBytes') {
@@ -463,7 +485,7 @@ export function AssetsDomain({
       if (comparison !== 0) return sort.direction === 'ascending' ? comparison : -comparison;
       return left.filename.localeCompare(right.filename);
     });
-  }, [assets, sort]);
+  }, [assetFilter, assets, sort]);
 
   const headerActions = useMemo<AssetsHeaderActions>(() => ({
     uploadAsset: () => singleUploadInputRef.current?.click(),
@@ -611,10 +633,10 @@ export function AssetsDomain({
                   </span>
                 </td>
               </tr>
-            ) : assets.length === 0 ? (
+            ) : sortedAssets.length === 0 ? (
               <tr>
                 <td colSpan={5} className="body-s">
-                  No assets found for this account.
+                  {assets.length === 0 ? 'No assets found for this account.' : 'No assets match this filter.'}
                 </td>
               </tr>
             ) : null}

@@ -165,8 +165,9 @@ form engine, state framework, or mobile product variant.
 
 ## Dependencies And Exclusive Ownership
 
-- 126I supplies fixed selectors: `.diet-operational-field`,
-  `.diet-operational-table`, and `.diet-operational-table__table`.
+- 126I supplies fixed Table selectors: `.diet-operational-table` and
+  `.diet-operational-table__table`; existing Dieter Textfield, Dropdown Actions,
+  and Textedit own application inputs.
 - 126J owns Bob Full/Compact/unsupported behavior. 126M does not edit Bob's
   workspace implementation.
 - 126K owns all D1 dialog migrations, the Roma upsell scaffold, Bob intent
@@ -183,7 +184,7 @@ form engine, state framework, or mobile product variant.
 | Account/session/policy | Berlin bootstrap and Roma server routes, unchanged |
 | Roma shell/navigation/domain layout | Roma |
 | Bob editing state and translation panel | Bob, unchanged by 126M |
-| Shared field/table appearance | Dieter 126I CSS |
+| Shared input/table appearance | Dieter input components and 126I Table CSS |
 | Field values, labels, validation, table data/actions | Owning Roma domains |
 | Dialog lifecycle and upsell | Completed 126K behavior |
 | Account storage/public runtime | Tokyo, outside scope |
@@ -249,12 +250,12 @@ Green gate: one navigation tree, complete tablet workspace, reachable compact
 drawer in narrow landscape and portrait, and route change without hidden
 controls.
 
-### M2 - Operational Fields And Nine Tables
+### M2 - Dieter Inputs And Nine Tables
 
 1. Use Roma's existing direct `dieter/styles.css` source import in
    `roma/app/layout.tsx`; do not add another CSS delivery path.
-2. Put `.diet-operational-field` directly on ordinary operational text inputs,
-   selects, and textareas in:
+2. Replace ordinary controls with Dieter Textfield for single-line text,
+   Dropdown Actions for choices, and Textedit for multiline content in:
    - `pages-domain.tsx`;
    - `widgets-domain.tsx` rename input;
    - `team-domain.tsx`;
@@ -311,16 +312,16 @@ control; no deleted selector has a source consumer.
 | --- | --- |
 | `roma/components/roma-shell.tsx` | One drawer state/trigger/scrim and portrait replacement deletion. |
 | `roma/components/roma-nav.tsx` | Delete compact duplicate-tree branch; keep one nav. |
-| `roma/app/roma.css` | Full/Compact shell including narrow portrait; operational-class adoption cleanup; dead Widget Defaults deletion. |
+| `roma/app/roma.css` | Full/Compact shell including narrow portrait; Dieter component adoption cleanup; dead Widget Defaults deletion. |
 | `roma/app/layout.tsx` | Preserve direct `dieter/styles.css` source compilation and add viewport-fit support. |
-| `roma/components/pages-domain.tsx` | Operational fields; wrap four tables. Preserve K dialog changes. |
+| `roma/components/pages-domain.tsx` | Dieter inputs; wrap four tables. Preserve K dialog changes. |
 | `roma/components/widgets-domain.tsx` | Rename field; wrap one table. Preserve K upsell/dialog changes. |
 | `roma/components/assets-domain.tsx` | Wrap two tables. Preserve K upload dialog behavior. |
-| `roma/components/team-domain.tsx` | Operational fields; wrap two tables. |
-| `roma/components/team-member-domain.tsx` | Operational field. |
-| `roma/components/profile-domain.tsx` | Operational fields. |
-| `roma/components/settings-domain.tsx` | Operational select. |
-| `roma/components/account-locale-settings-card.tsx` | Operational base-locale select; leave checkboxes native. |
+| `roma/components/team-domain.tsx` | Dieter inputs; wrap two tables. |
+| `roma/components/team-member-domain.tsx` | Dieter Dropdown Actions. |
+| `roma/components/profile-domain.tsx` | Dieter inputs. |
+| `roma/components/settings-domain.tsx` | Dieter Dropdown Actions. |
+| `roma/components/account-locale-settings-card.tsx` | Dieter Dropdown Actions for base locale; leave checkboxes native. |
 | `documentation/services/roma.md` | Record delivered shell and visual-contract behavior. |
 | `documentation/services/bob.md`; `documentation/services/devstudio.md`; UI docs | Final integrated reconciliation only. |
 

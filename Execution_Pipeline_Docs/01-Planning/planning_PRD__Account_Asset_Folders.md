@@ -40,9 +40,9 @@ this feature must not restore:
 
 - **126M deleted the `.roma-input` and `.roma-table` visual bases** that would
   have forced the folder UI onto a parallel component family.
-- **126M adopted the shared operational-field and Table contracts** that the
-  folder UI should use from day one (folder rename input, folder-aware table
-  rows, move dialog form controls).
+- **126M adopted Dieter's existing input and Table contracts** that the folder
+  UI should use from day one: Textfield for folder naming, Dropdown Actions for
+  choices, and Table for folder-aware rows.
 - **The reopened 126 convergence gate is still authoritative**
   (`126_DevQA.md`). Asset folders must be designed against the converged Roma
   shell rather than carrying pre-126 drift.
@@ -287,7 +287,7 @@ the default.
 | **Move/rename handler (Option A)** | **Hard** | Per §6: R2 put+delete + scan referencing instances + rewrite all refs all-or-nothing, with rollback. This is the most complex single piece. |
 | **Folder cascade-delete (Option A)** | **Med–Hard** | Per §8: bulk integrity check + rewrite + R2 prefix delete, all-or-nothing. Shares machinery with move. |
 | Empty-folder create/delete (markers) | Low–Med | Marker object write/delete; consistency rules from §7. |
-| Roma folder UI (Drive-style) | Med | Bulk of visible work; ~400-600 lines: breadcrumb, tree, create-folder, move modal, drag-drop, folder-scoped list. Must use Dieter operational-field, Table, and Popup contracts where applicable. |
+| Roma folder UI (Drive-style) | Med | Bulk of visible work; ~400-600 lines: breadcrumb, tree, create-folder, move modal, drag-drop, folder-scoped list. Must use Dieter Textfield, Dropdown Actions, Table, and Popup contracts where applicable. |
 | E2E tests | Med | Folder CRUD, move with instance-ref integrity, nested navigation, search scope, empty folders, cascade-delete confirmation. |
 
 **Rough total: 2-3 weeks for one engineer.** Option A's reference-rewriting
@@ -298,8 +298,9 @@ cascade-delete reuse it.
 
 Historical foundation: **the original 126M scope executed and remains
 evidence.** Promotion still waits for the reopened 126 convergence gate. The
-folder UI will use Dieter operational-field, Table, and Popup contracts where
-applicable, not the deleted `.roma-input`/`.roma-table` families.
+folder UI will use Dieter Textfield, Dropdown Actions, Table, and Popup
+contracts where applicable, not the deleted `.roma-input`/`.roma-table`
+families.
 
 This PRD cannot move to execution until:
 

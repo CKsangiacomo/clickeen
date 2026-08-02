@@ -353,13 +353,9 @@ a {
   color: var(--color-system-gray);
 }
 
-.roma-widgets-filter {
+.roma-header-filter {
   display: block;
   inline-size: 11rem;
-}
-
-.roma-widgets-filter .diet-operational-field {
-  inline-size: 100%;
 }
 
 .roma-widget-instance-id,

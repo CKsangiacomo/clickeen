@@ -29,7 +29,7 @@
         "id": "popup-form",
         "size": "medium",
         "title": "Edit details",
-        "body": "<label class='body-s'>Name <input class='diet-operational-field body-s' type='text' value='Example' /></label>",
+        "body": "<div class='diet-textfield' data-size='sm'><label class='diet-textfield__control'><span class='diet-textfield__display-label label-xs'>Name</span><input class='diet-textfield__field body-xs' type='text' value='Example' aria-label='Name' /></label></div>",
         "secondaryAction": "Cancel",
         "primaryAction": "Save"
       }

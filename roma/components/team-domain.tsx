@@ -6,6 +6,8 @@ import { formatAccountRoleLabel } from '../lib/format';
 import { resolvePersonLabel } from '../lib/person-profile';
 import { resolveAccountShellErrorCopy, resolveAccountShellReason } from '../lib/account-shell-copy';
 import { useRomaAccountApi } from './account-api';
+import { DieterDropdownActions } from './dieter-dropdown-actions';
+import { DieterTextfield } from './dieter-textfield';
 import { useRomaAccountContext } from './roma-account-context';
 
 type AccountMembersResponse = {
@@ -228,18 +230,29 @@ export function TeamDomain() {
             <p className="body-s">Pending invitations appear here until they are accepted.</p>
             {inviteError ? <p className="body-m" role="alert">{inviteError}</p> : null}
             <div className="roma-form-grid">
-              <label className="roma-field">
-                <span className="label-s">Email</span>
-                <input className="diet-operational-field body-m" value={inviteEmail} onChange={(event) => setInviteEmail(event.target.value)} disabled={inviteLoading} />
-              </label>
-              <label className="roma-field">
-                <span className="label-s">Role</span>
-                <select className="diet-operational-field body-m" value={inviteRole} onChange={(event) => setInviteRole(event.target.value)} disabled={inviteLoading}>
-                  <option value="viewer">{formatAccountRoleLabel('viewer')}</option>
-                  <option value="editor">{formatAccountRoleLabel('editor')}</option>
-                  <option value="admin">{formatAccountRoleLabel('admin')}</option>
-                </select>
-              </label>
+              <DieterTextfield
+                className="roma-field"
+                controlSize="lg"
+                label="Email"
+                type="email"
+                value={inviteEmail}
+                onChange={(event) => setInviteEmail(event.target.value)}
+                disabled={inviteLoading}
+              />
+              <DieterDropdownActions
+                className="roma-field"
+                size="lg"
+                label="Role"
+                ariaLabel="Choose invitation role"
+                value={inviteRole}
+                onChange={setInviteRole}
+                disabled={inviteLoading}
+                options={[
+                  { value: 'viewer', label: formatAccountRoleLabel('viewer') },
+                  { value: 'editor', label: formatAccountRoleLabel('editor') },
+                  { value: 'admin', label: formatAccountRoleLabel('admin') },
+                ]}
+              />
             </div>
             <div className="rd-canvas-module__actions" style={{ justifyContent: 'flex-start' }}>
               <button

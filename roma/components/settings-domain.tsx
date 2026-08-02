@@ -6,6 +6,7 @@ import { formatAccountRoleLabel, formatAccountTierLabel } from '../lib/format';
 import { resolvePersonLabel } from '../lib/person-profile';
 import { useRomaAccountApi } from './account-api';
 import { AccountLocaleSettingsCard } from './account-locale-settings-card';
+import { DieterDropdownActions } from './dieter-dropdown-actions';
 import { useRomaAccountContext } from './roma-account-context';
 
 type AccountMembersResponse = {
@@ -157,20 +158,20 @@ export function SettingsDomain() {
         {!canManageAccount ? <p className="body-s">Only the current owner can transfer ownership.</p> : null}
         {membersError ? <p className="body-m" role="alert">{membersError}</p> : null}
         <div className="roma-toolbar">
-          <select
-            className="diet-operational-field"
+          <DieterDropdownActions
+            className="roma-header-filter"
             value={nextOwnerUserId}
-            onChange={(event) => setNextOwnerUserId(event.target.value)}
-            aria-label="Select next owner"
+            onChange={setNextOwnerUserId}
+            ariaLabel="Select next owner"
             disabled={!canManageAccount || membersLoading || ownerTransferLoading || ownerCandidates.length === 0}
-          >
-            <option value="">Select next owner</option>
-            {ownerCandidates.map((member) => (
-              <option key={member.userId} value={member.userId}>
-                {resolvePersonLabel(member.profile, member.userId)} ({member.profile?.primaryEmail ?? member.userId})
-              </option>
-            ))}
-          </select>
+            options={[
+              { value: '', label: 'Select next owner' },
+              ...ownerCandidates.map((member) => ({
+                value: member.userId,
+                label: `${resolvePersonLabel(member.profile, member.userId)} (${member.profile?.primaryEmail ?? member.userId})`,
+              })),
+            ]}
+          />
           <button
             className="diet-btn-txt"
             data-size="md"

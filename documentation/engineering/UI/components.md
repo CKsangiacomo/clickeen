@@ -9,7 +9,7 @@
   `dieter/components/index.ts`.
 - System mechanics (hydration model, spec binding, build): see [`dieter.md`](dieter.md). This doc is the per-component lookup; that doc explains the system once.
 
-## Catalog (28 non-empty source directories including `shared`)
+## Catalog (27 non-empty source directories including `shared`)
 
 Legend: ✅ exported from `index.ts` · Direct host import · ⊘ CSS/HTML only.
 
@@ -29,7 +29,7 @@ Legend: ✅ exported from `index.ts` · Direct host import · ⊘ CSS/HTML only.
 | choosers | `repeater` | direct ESM `hydrateRepeater` | Direct host import |
 | choosers | `bulk-edit` | `hydrateBulkEdit`, `row-path` | ✅ |
 | dropdowns | `dropdown-fill` | `hydrateDropdownFill` (color/fill; largest dropdown) | ✅ |
-| dropdowns | `dropdown-actions` | `hydrateDropdownActions`, `string` | ✅ |
+| dropdowns | `dropdown-actions` | `hydrateDropdownActions` / `destroyDropdownActions`, `string` | ✅ |
 | dropdowns | `dropdown-border` | `hydrateDropdownBorder`, `string` | ✅ |
 | dropdowns | `dropdown-shadow` | `hydrateDropdownShadow`, `string` | ✅ |
 | dropdowns | `dropdown-upload` | `hydrateDropdownUpload`, `meta-path` | ✅ |
@@ -40,7 +40,6 @@ Legend: ✅ exported from `index.ts` · Direct host import · ⊘ CSS/HTML only.
 | structural | `table` | semantic table visual base and overflow shell | ⊘ |
 | structural | `popup` | blocking native-dialog visual structure | ⊘ |
 | activity | `agent-activity` | — (transient narration strip) | ⊘ |
-| operational | `operational-field` | ordinary app field visual base | ⊘ |
 | operational | `tooltip` | CSS label from `data-tooltip` | ⊘ |
 | other | `shared/` | helpers (`account-assets`, `dialog-lifecycle`, `dropdownToggle`) — not rendered | — |
 
@@ -75,19 +74,18 @@ binding, behavior/hydration, variants, sizes, states, and semantics. Step 6 maps
 the exact source lines that diverge from this contract; it does not reopen the
 contract.
 
-## Native Operational Fields And Tables
+## Application Inputs And Tables
 
-Dieter owns one small visual/state contract for native operational `input`,
-`select`, and `textarea` controls. Apps own labels, validation copy, values,
-layout, and behavior. This contract preserves Roma's current bordered-field
-appearance and does not turn Bob's compact ToolDrawer `textfield` into a generic
-application form.
+Applications compose forms from Dieter's actual input contracts. Single-line
+text uses `textfield`, immediate choices use `dropdown-actions`, and multiline
+content uses `textedit`. Apps retain labels, validation copy, values, layout,
+and product behavior; they do not create a parallel generic field family.
 
 Dieter Table owns width, alignment, borders, base spacing, and horizontal
 overflow. Roma owns table data and state. DevStudio retains policy-specific
 columns, editable-cell composition, data, and mutation behavior. Dieter does
 not own sorting, pagination, data policy, or a React table abstraction.
-DevStudio's token editor consumes `operational-field`; Dieter, Roma, and
+DevStudio and Roma consume those input contracts directly. Dieter, Roma, and
 DevStudio tables consume `table`.
 
 Table body and row-header cells use the shared surface; only column headers use

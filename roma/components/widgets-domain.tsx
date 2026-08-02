@@ -9,6 +9,8 @@ import { createDialogLifecycle, type DialogLifecycle } from '../../dieter/compon
 import { resolveAccountShellErrorCopy, resolveAccountShellReason } from '../lib/account-shell-copy';
 import { buildWidgetPublicActions, type WidgetPublicActions } from '../lib/public-widget-actions';
 import { useRomaAccountApi } from './account-api';
+import { DieterDropdownActions } from './dieter-dropdown-actions';
+import { DieterTextfield } from './dieter-textfield';
 import { prefetchWidgetEditorArtifact } from './widget-editor-artifact';
 import { RomaAccountNoticeModal } from './roma-account-notice-modal';
 import { useRomaAccountContext } from './roma-account-context';
@@ -160,18 +162,17 @@ export function WidgetsPage({ view }: { view: WidgetsView }) {
       activeDomain={view === 'catalog' ? 'widgetCatalog' : 'widgets'}
       title="Widgets"
       headerRight={view === 'your-widgets' ? (
-        <label className="roma-widgets-filter">
-          <span className="sr-only">Filter your widgets by publish status</span>
-          <select
-            className="diet-operational-field body-m"
-            value={statusFilter}
-            onChange={(event) => setStatusFilter(event.target.value as WidgetStatusFilter)}
-          >
-            <option value="all">Show all</option>
-            <option value="published">Show published</option>
-            <option value="unpublished">Show unpublished</option>
-          </select>
-        </label>
+        <DieterDropdownActions
+          className="roma-header-filter"
+          ariaLabel="Filter your widgets by publish status"
+          value={statusFilter}
+          options={[
+            { value: 'all', label: 'Show all' },
+            { value: 'published', label: 'Show published' },
+            { value: 'unpublished', label: 'Show unpublished' },
+          ]}
+          onChange={(value) => setStatusFilter(value as WidgetStatusFilter)}
+        />
       ) : null}
     >
       <RomaAccountNoticeModal />
@@ -801,9 +802,10 @@ export function WidgetsDomain({
                         <th className="body-s" scope="row">
                           {isRenaming ? (
                             <div className="roma-instance-rename">
-                              <input
-                                className="diet-operational-field roma-instance-rename__input body-s"
+                              <DieterTextfield
+                                className="roma-instance-rename__input"
                                 type="text"
+                                aria-label="Instance name"
                                 value={renameDraft}
                                 maxLength={120}
                                 onChange={(event) => setRenameDraft(event.target.value)}

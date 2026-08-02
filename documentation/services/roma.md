@@ -59,9 +59,10 @@ body entirely to Bob. Bob's own TopDrawer supplies editor context and actions;
 Roma does not add another title or action band above the iframe. The `/builder`
 landing route remains an ordinary Roma page because no editor is open there.
 
-Roma's ordinary operational text/select controls and nine semantic table
-definitions use Dieter's operational-field and Table visual contracts.
-Roma retains their values, labels, validation, data, actions, and layout.
+Roma's single-line text controls use Dieter Textfield, choice controls use
+Dropdown Actions, multiline content uses Textedit, and semantic table
+definitions use Dieter Table. Roma retains their values, labels, validation,
+data, actions, and layout.
 Tables preserve every column and own horizontal overflow through the Dieter
 wrapper. Checkboxes, hidden file inputs, modules, toolbars, and specialized
 composition remain locally owned. Primary Roma modules use the shared surface,

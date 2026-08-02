@@ -172,9 +172,10 @@ async function testWidgetsListComposition(): Promise<void> {
   assert.match(source, /headerRight=\{view === 'your-widgets' \? \(/);
   assert.doesNotMatch(nav, /roma-nav__settings/);
   assert.doesNotMatch(romaCss, /roma-nav__settings/);
-  assert.match(source, /<option value="all">Show all<\/option>/);
-  assert.match(source, /<option value="published">Show published<\/option>/);
-  assert.match(source, /<option value="unpublished">Show unpublished<\/option>/);
+  assert.match(source, /<DieterDropdownActions/);
+  assert.match(source, /\{ value: 'all', label: 'Show all' \}/);
+  assert.match(source, /\{ value: 'published', label: 'Show published' \}/);
+  assert.match(source, /\{ value: 'unpublished', label: 'Show unpublished' \}/);
   assert.doesNotMatch(source, /WidgetSortHeader|roma-widget-sort/);
   assert.doesNotMatch(romaCss, /roma-widget-sort/);
   assert.match(source, /type WidgetSortKey = 'widget' \| 'name' \| 'status'/);
@@ -222,6 +223,8 @@ async function testDieterLayoutTableAndPopupConsumption(): Promise<void> {
   const assets = await readRoute('components/assets-domain.tsx');
   const pages = await readRoute('components/pages-domain.tsx');
   const widgets = await readRoute('components/widgets-domain.tsx');
+  const dropdownActions = await readRoute('components/dieter-dropdown-actions.tsx');
+  const textfield = await readRoute('components/dieter-textfield.tsx');
   const assetsPage = assets.slice(assets.indexOf('export function AssetsPage'), assets.indexOf('export function AssetsDomain'));
   const pagesPage = pages.slice(pages.indexOf('export function PagesPage'), pages.indexOf('const CANONICAL_LOCALES'));
 
@@ -245,11 +248,37 @@ async function testDieterLayoutTableAndPopupConsumption(): Promise<void> {
   assert.match(tableCss, /th\[aria-sort\] > \.diet-btn-ic \{\s+--btn-color: var\(--color-system-gray-3\);/);
   assert.match(tableCss, /th\[aria-sort='ascending'\] > \.diet-btn-ic,[\s\S]*?th\[aria-sort='descending'\] > \.diet-btn-ic \{\s+--btn-color: var\(--color-system-black\);/);
 
-  assert.match(assetsPage, /<AssetsDomain onHeaderActions=\{setHeaderActions\} \/>/);
+  assert.match(assetsPage, /<AssetsDomain assetFilter=\{assetFilter\} onHeaderActions=\{setHeaderActions\} \/>/);
   assert.doesNotMatch(assetsPage, /useRomaAccountContext|useRomaAccountApi|refreshToken|onLoadingChange/);
   assert.match(pagesPage, /<PagesDomain onHeaderActions=\{setHeaderActions\} \/>/);
   assert.doesNotMatch(pagesPage, /PagesHeaderActionsRegistration|rd-canvas-module__actions/);
   assert.doesNotMatch(pages, /createContext|useContext|PagesHeaderActionsRegistration/);
+
+  assert.match(dropdownActions, /className=\{`diet-dropdown-actions diet-popover-host/);
+  assert.match(dropdownActions, /className="diet-dropdown-header diet-dropdown-actions__control"/);
+  assert.match(dropdownActions, /const labelClass = size === 'sm' \? 'label-xs' : size === 'lg' \? 'label-m' : 'label-s'/);
+  assert.match(dropdownActions, /const bodyClass = size === 'sm' \? 'body-xs' : size === 'lg' \? 'body-m' : 'body-s'/);
+  assert.match(dropdownActions, /className="diet-popover diet-dropdown-actions__popover" role="listbox"/);
+  assert.match(dropdownActions, /className=\{`diet-btn-menuactions diet-dropdown-actions__menuaction/);
+  assert.match(dropdownActions, /removeEventListener\('pointerdown', closeOnPointerDown, true\)/);
+  assert.match(dropdownActions, /removeEventListener\('keydown', closeOnEscape\)/);
+  assert.match(textfield, /className="diet-textfield__control"/);
+  assert.match(textfield, /className=\{`diet-textfield__field/);
+
+  assert.match(widgets, /ariaLabel="Filter your widgets by publish status"/);
+  assert.match(widgets, /\{ value: 'published', label: 'Show published' \}/);
+  assert.match(assetsPage, /ariaLabel="Filter assets by type"/);
+  for (const [value, label] of [
+    ['all', 'Show all'],
+    ['font', 'Fonts'],
+    ['vector', 'SVGs'],
+    ['image', 'Photo'],
+    ['video', 'Video'],
+  ] as const) {
+    assert.match(assetsPage, new RegExp(`\\{ value: '${value}', label: '${label}' \\}`));
+  }
+  assert.match(assets, /filter\(\(asset\) => assetFilter === 'all' \|\| asset\.assetType === assetFilter\)/);
+  assertBefore(assets, /filter\(\(asset\) => assetFilter/, /\.sort\(\(left, right\) =>/);
 
   for (const [domain, source] of [['Assets', assets], ['Pages', pages], ['Widgets', widgets]] as const) {
     const sortableHeaders = source.match(/<th[^>]*aria-sort=[\s\S]*?<\/th>/g) ?? [];

@@ -35,6 +35,11 @@ export function hydrateDropdownActions(scope: Element | DocumentFragment): void 
   hydrateHost(scope);
 }
 
+export function destroyDropdownActions(root: HTMLElement): void {
+  states.delete(root);
+  hydrateHost.destroy(root);
+}
+
 function createState(root: HTMLElement, scope: Element | DocumentFragment): DropdownActionsState | null {
   const input = root.querySelector<HTMLInputElement>('.diet-dropdown-actions__value-field');
   const display = root.querySelector<HTMLElement>('.diet-dropdown-header-value');

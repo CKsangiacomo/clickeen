@@ -10,6 +10,8 @@ import { resolveAccountShellErrorCopy } from '../lib/account-shell-copy';
 import { copyToClipboard } from '../lib/copy-to-clipboard';
 import { resolvePublicServingBaseUrl } from '../lib/env/public-serving';
 import { useRomaAccountApi } from './account-api';
+import { DieterDropdownActions } from './dieter-dropdown-actions';
+import { DieterTextfield } from './dieter-textfield';
 import { RomaAccountNoticeModal } from './roma-account-notice-modal';
 import { useRomaAccountContext } from './roma-account-context';
 import { RomaDomainErrorBoundary } from './roma-domain-error-boundary';
@@ -806,49 +808,43 @@ export function PagesDomain({
             <p className="body-m roma-toolbar-count">{pagePublishStatus === 'published' ? 'Published' : 'Unpublished'}</p>
           </div>
           <div className="roma-form-grid">
-            <label className="roma-field">
-              <span className="label-s">Title</span>
-              <input
-                className="diet-operational-field"
-                type="text"
-                value={pageSource.metadata.title}
-                maxLength={160}
-                disabled={pageSourceLocked}
-                onChange={(event) => updateMetadata({ title: event.target.value })}
-              />
-            </label>
-            <label className="roma-field">
-              <span className="label-s">Description</span>
-              <input
-                className="diet-operational-field"
-                type="text"
-                value={pageSource.metadata.description}
-                maxLength={300}
-                disabled={pageSourceLocked}
-                onChange={(event) => updateMetadata({ description: event.target.value })}
-              />
-            </label>
-            <label className="roma-field">
-              <span className="label-s">Robots</span>
-              <select
-                className="diet-operational-field"
-                value={pageSource.metadata.robots}
-                disabled={pageSourceLocked}
-                onChange={(event) => updateMetadata({ robots: event.target.value as PageRobots })}
-              >
-                <option value="index,follow">index,follow</option>
-                <option value="noindex,nofollow">noindex,nofollow</option>
-              </select>
-            </label>
-            <label className="roma-field">
-              <span className="label-s">Hosted URL</span>
-              <input
-                className="diet-operational-field"
-                type="text"
-                value={hostedPageUrl}
-                readOnly
-              />
-            </label>
+            <DieterTextfield
+              className="roma-field"
+              label="Title"
+              type="text"
+              value={pageSource.metadata.title}
+              maxLength={160}
+              disabled={pageSourceLocked}
+              onChange={(event) => updateMetadata({ title: event.target.value })}
+            />
+            <DieterTextfield
+              className="roma-field"
+              label="Description"
+              type="text"
+              value={pageSource.metadata.description}
+              maxLength={300}
+              disabled={pageSourceLocked}
+              onChange={(event) => updateMetadata({ description: event.target.value })}
+            />
+            <DieterDropdownActions
+              className="roma-field"
+              label="Robots"
+              ariaLabel="Choose robots directive"
+              value={pageSource.metadata.robots}
+              disabled={pageSourceLocked}
+              onChange={(value) => updateMetadata({ robots: value as PageRobots })}
+              options={[
+                { value: 'index,follow', label: 'index,follow' },
+                { value: 'noindex,nofollow', label: 'noindex,nofollow' },
+              ]}
+            />
+            <DieterTextfield
+              className="roma-field"
+              label="Hosted URL"
+              type="text"
+              value={hostedPageUrl}
+              readOnly
+            />
           </div>
           <div className="rd-canvas-module__actions">
             <button
@@ -934,24 +930,21 @@ export function PagesDomain({
             <h2 className="heading-4">Page settings</h2>
           </div>
           <div className="roma-form-grid">
-            <label className="roma-field">
-              <span className="label-s">Default locale</span>
-              <select
-                className="diet-operational-field"
+            <DieterDropdownActions
+                className="roma-field"
+                label="Default locale"
+                ariaLabel="Choose default locale"
                 value={pageSource.localization.defaultLocale}
                 disabled={pageSourceLocked}
-                onChange={(event) => {
-                  const locale = normalizeLocaleToken(event.target.value);
+                onChange={(value) => {
+                  const locale = normalizeLocaleToken(value);
                   if (locale) updateLocalization({ defaultLocale: locale });
                 }}
-              >
-                {pageLocaleOptions.map((locale) => (
-                  <option key={locale} value={locale}>
-                    {resolveLocaleUiLabel(locale)}
-                  </option>
-                ))}
-              </select>
-            </label>
+                options={pageLocaleOptions.map((locale) => ({
+                  value: locale,
+                  label: resolveLocaleUiLabel(locale),
+                }))}
+            />
             <label className="roma-field">
               <span className="label-s">Language switcher</span>
               <input
@@ -988,9 +981,9 @@ export function PagesDomain({
                 {pageSource.localization.countryLocaleRules.map((rule, index) => (
                   <tr key={`${rule.country}:${index}`}>
                     <td className="body-s">
-                      <input
-                        className="diet-operational-field"
+                      <DieterTextfield
                         type="text"
+                        aria-label={`Country code for rule ${index + 1}`}
                         value={rule.country}
                         maxLength={2}
                         disabled={pageSourceLocked}
@@ -998,18 +991,16 @@ export function PagesDomain({
                       />
                     </td>
                     <td className="body-s">
-                      <select
-                        className="diet-operational-field"
+                      <DieterDropdownActions
+                        ariaLabel={`Locale for country rule ${index + 1}`}
                         value={rule.locale}
                         disabled={pageSourceLocked}
-                        onChange={(event) => updateCountryLocaleRule(index, { locale: event.target.value })}
-                      >
-                        {pageLocaleOptions.map((locale) => (
-                          <option key={locale} value={locale}>
-                            {resolveLocaleUiLabel(locale)}
-                          </option>
-                        ))}
-                      </select>
+                        onChange={(locale) => updateCountryLocaleRule(index, { locale })}
+                        options={pageLocaleOptions.map((locale) => ({
+                          value: locale,
+                          label: resolveLocaleUiLabel(locale),
+                        }))}
+                      />
                     </td>
                     <td className="body-s diet-table__cell--action">
                       <button

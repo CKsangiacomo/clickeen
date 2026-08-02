@@ -210,7 +210,8 @@ rewrite, or new token-management system.
 
 ## Dependencies
 
-- 126I supplies `operational-field`, `operational-table`, and `tooltip` CSS.
+- 126I supplies `operational-table` and `tooltip` CSS; existing Dieter
+  Dropdown Actions and Textfield own token-editor controls.
 - 126J pins the global Full/Compact workspace classifier and Bob's separate
   editor portrait exception.
 - 126K supplies native dialog lifecycle and has already migrated the token
@@ -226,7 +227,7 @@ rewrite, or new token-management system.
 | Current generated truth | 3 foundation / 22 component / 2 Policy routes |
 | Token reads/writes | Existing validated Pages Functions |
 | Policy reads/writes | Existing Entitlements/LLM Pages Functions and contracts |
-| Reusable visual fields/tables | Dieter 126I CSS contracts |
+| Reusable inputs/tables | Dieter input components and 126I Table CSS contract |
 | Token-editor dialog mechanics | 126K helper; DevStudio retains dirty/source-commit state |
 | Auth | Berlin -> DevStudio session finish |
 
@@ -285,18 +286,19 @@ there is no hidden tablet sidebar or unreachable compact navigation.
 
 ### L2 - Small Dieter Contract Adoption And Deletion
 
-1. Import 126I's operational-field and operational-table CSS directly in
-   `main.ts` using the existing `@dieter/*` source alias.
-2. Apply operational-field to token-editor `select`/`input` while preserving
-   DevStudio labels, validation, values, and commit state.
+1. Import 126I's table CSS directly in `main.ts` using the existing
+   `@dieter/*` source alias.
+2. Compose token selection with Dieter Dropdown Actions and token value editing
+   with Dieter Textfield while preserving DevStudio labels, validation, values,
+   and commit state.
 3. Apply operational-table to Entitlements' five rendered tables while preserving
    all policy-specific composition. LLM Management currently renders lists, not
    tables; delete its dead table CSS instead of inventing a table.
 4. Delete the duplicate Dieter token import and duplicate Google-font import
    from `tokens.css`; `main.ts` remains token CSS authority and `index.html`
    remains font-link authority.
-5. Delete local field appearance now owned by operational-field, duplicated
-   table base declarations, dead collapsed-sidebar/menu selectors, dead
+5. Delete local field appearance now owned by Dieter input components,
+   duplicated table base declarations, dead collapsed-sidebar/menu selectors, dead
    `#root`, `--sidebar-width-collapsed`, and unused `--content-max-width`.
 6. Replace the undefined `--shadow-lg` fallback with the existing
    `--shadow-elevated` token.
