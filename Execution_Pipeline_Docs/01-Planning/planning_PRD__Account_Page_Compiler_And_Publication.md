@@ -1,6 +1,6 @@
 # Planning PRD — Account Page Compiler And Publication
 
-Status: Planning — product-owner approval and peer review required before execution
+Status: Planning — alignment input to the future PRD 127; not independently executable
 
 Owner: Roma / Page Compiler
 
@@ -9,6 +9,16 @@ Date: 2026-08-03
 Carries forward: unfinished Page Composer compiler and publication work from historical PRD 106B and the PRD 110 review
 
 Unlocks: Clickeen Pages, stable public Page URLs, and a future Websites product built from Pages
+
+Related planning:
+
+- `planning_PRD__System_SEO_GEO_AEO_Widget_And_Page_Surfaces.md`
+- `planning_PRD__Prague_Migration_From_Astro_Blocks_To_Page_Composer.md`
+
+This document owns the compiler and publication design input. The System
+SEO/GEO/AEO PRD owns the surface-quality contract it must implement. The Prague
+PRD owns migration proof and cutover constraints. Their accepted decisions must
+be consolidated into PRD 127 before execution begins.
 
 ## Product Direction
 
@@ -29,8 +39,8 @@ A Page is not:
 
 Page source remains a small ordered list of instance references. On publication,
 the Page Compiler resolves those references and creates one coherent, optimized,
-SEO-complete web document. Clickeen stores and hosts that document behind one
-stable Page identity:
+SEO-valid web document. Clickeen stores and hosts that document behind one
+stable Page identity. The proposed first public path taxonomy is:
 
 ```text
 https://clk.live/{accountPublicId}/pages/{pageId}
@@ -60,15 +70,15 @@ Roma Page source
 
 The Page Compiler has three primary product responsibilities:
 
-1. Construct one valid, crawlable and SEO-complete document from the Page and
+1. Construct one valid, crawlable and SEO-valid document from the Page and
    its instance content.
 2. Consolidate and deduplicate CSS without weakening instance isolation.
 3. Consolidate and deduplicate JavaScript while preserving independent instance
    behavior.
 
 SEO is not an optional post-processing feature. Once Clickeen hosts the public
-Page response, the compiler owns the quality and integrity of that document as
-a whole.
+Page response, the compiler must enforce and materialize the approved
+whole-document SEO/GEO/AEO contract.
 
 ## Why This PRD Exists
 
@@ -95,7 +105,8 @@ planning authority for the missing behavior.
 | Instance content and configuration  | the referenced account Instance, edited in Bob                                |
 | Saved instance package bytes        | Tokyo-worker/R2 through Roma instance routes                                  |
 | Instance materialization contract   | `@clickeen/ck-runtime-materializer` and Widget Shell markers                  |
-| Page compilation and SEO validation | Roma Page Compiler                                                            |
+| SEO/GEO/AEO product contract        | System SEO/GEO/AEO planning, consolidated into PRD 127                        |
+| Page compilation and validation     | Roma Page Compiler                                                            |
 | Page package storage and activation | Tokyo-worker/R2                                                               |
 | Public Page identity                | Tokyo-worker `clk.live` Page coordinate                                       |
 | Public visitor delivery             | active stored Page package through `clk.live`/CDN                             |
@@ -406,8 +417,9 @@ materialized unpublished instances, but no public build changes.
 2. Roma resolves every current materialized instance package allowed by the
    approved child-publication policy.
 3. Roma compiles and validates the complete Page.
-4. Tokyo-worker stores and verifies the immutable build.
-5. Tokyo-worker activates that exact build and published serve state.
+4. Tokyo-worker stores and verifies the complete build under the approved
+   activation contract.
+5. Tokyo-worker activates that exact complete build and published serve state.
 6. The exact public Page cache coordinate is purged.
 
 No partial package is reported as published.
@@ -478,7 +490,8 @@ reuse the Page Compiler rather than copy Page source or create another renderer.
 - [ ] Implement runtime payload consolidation, module deduplication and conflict
       failure.
 - [ ] Emit exact build and SEO evidence.
-- [ ] Implement Roma → Tokyo-worker immutable package write/activation.
+- [ ] Implement the approved Roma → Tokyo-worker package write/activation
+      contract.
 - [ ] Enable Tokyo-worker public serving from active stored builds only.
 - [ ] Recompose affected Pages after successful instance save.
 - [ ] Add a direct named Page recompile operation.
@@ -617,4 +630,5 @@ Only these decisions remain open:
 
 Until those decisions are recorded and peer review confirms that existing
 instance package markers can support exact contribution extraction, this PRD
-remains Planning and must not be executed.
+remains Planning. Its accepted contract must be consolidated into PRD 127
+before any execution slice begins.

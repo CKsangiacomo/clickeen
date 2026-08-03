@@ -1,14 +1,22 @@
 # Planning PRD — Prague Migration From Astro Blocks To Clickeen Pages
 
-Status: Planning — not executable until the Account Page Compiler PRD is approved and deployed
+Status: Planning — alignment input to the future PRD 127; not independently executable
 
 Owner: Prague migration + Roma Pages
 
 Date: 2026-08-03
 
-Depends on: `planning_PRD__Account_Page_Compiler_And_Publication.md` and composition-ready widget packages
+Depends on:
+
+- `planning_PRD__Account_Page_Compiler_And_Publication.md`
+- `planning_PRD__System_SEO_GEO_AEO_Widget_And_Page_Surfaces.md`
+- composition-ready Widget packages
 
 Unlocks: replacement of Prague's legacy Astro block composition with normal Clickeen Instances and Pages
+
+This document owns Prague migration input, proof and cutover constraints. It
+does not own the Page product or SEO contract. Accepted decisions from all three
+planning PRDs must be consolidated into PRD 127 before execution begins.
 
 ## Direction
 
@@ -45,7 +53,8 @@ or visitor-time composition path.
 ## Relationship To The First Pages Release
 
 The first Clickeen Pages release is a standalone single-page publishing
-product. One Page has one stable public identity:
+product. One Page has one stable public identity. The proposed first path
+taxonomy is:
 
 ```text
 https://clk.live/{accountPublicId}/pages/{pageId}
@@ -107,6 +116,8 @@ The historical PRD106 series is not current runtime authority. Today:
 
 This migration remains Planning until all of the following are true:
 
+- PRD 127 consolidates and locks the shared Page, compiler, SEO and Prague
+  contracts and authorizes the named execution sequence;
 - the Account Page Compiler PRD is approved and executed;
 - Roma can publish a real Page at the approved stable `clk.live` coordinate;
 - the compiler proves initial semantic HTML, Page-level SEO, CSS deduplication,
@@ -127,7 +138,8 @@ missing, fix that Widget. Prague must not fill either gap locally.
 | Prague route content before migration    | current Prague source, as migration input only                                                      |
 | Migrated content/configuration           | normal account-owned Instances                                                                      |
 | Migrated composition order               | Roma Page source                                                                                    |
-| Page compilation and Page-level SEO      | Roma Page Compiler                                                                                  |
+| SEO/GEO/AEO product contract             | System SEO/GEO/AEO planning, consolidated into PRD 127                                              |
+| Page compilation and SEO validation      | Roma Page Compiler                                                                                  |
 | Page package and stable public Page URL  | Tokyo-worker/R2 and `clk.live`                                                                      |
 | Prague menus, route tree and site chrome | Prague until a general Website authority replaces it                                                |
 | Prague market/locale routing             | Prague until a general Website authority replaces it                                                |
@@ -200,8 +212,9 @@ The migration must not add a graph or recursive Prague composer.
 
 ## Page-Level SEO Contract
 
-The Account Page Compiler PRD owns the SEO integrity of the standalone Page
-artifact. For every migrated Page it must produce and verify:
+The System SEO/GEO/AEO PRD owns the Page surface-quality contract. The Account
+Page Compiler must materialize and validate that contract. For every migrated
+Page it must produce and verify:
 
 - primary content in the initial HTML;
 - exactly one approved title and description;
@@ -210,8 +223,9 @@ artifact. For every migrated Page it must produce and verify:
 - coherent whole-Page heading behavior under the approved compiler policy;
 - unique generated IDs;
 - valid declared links and image semantics;
-- compatible, non-duplicated structured-data contributions;
-- approved social metadata when present;
+- compatible, non-duplicated structured-data contributions when their generic
+  contract is approved;
+- approved social metadata when its source fields are present;
 - deduplicated CSS/runtime and no client-only primary content.
 
 Prague must not regenerate or override that SEO at the standalone Page URL.
@@ -377,7 +391,7 @@ is not a compatibility product mode.
   Instances and one Roma Page.
 - The Page publishes through the standard compiler at one stable `clk.live`
   Page URL.
-- The Page is SEO-complete initial HTML with consolidated CSS/runtime.
+- The Page is SEO-valid initial HTML with consolidated CSS/runtime.
 - Updating an included Instance recompiles the Page behind the same URL.
 - Prague does not copy, parse, mutate or independently compose the Page package.
 - Pages V1 gains no menu, navigation or Website machinery to accommodate
