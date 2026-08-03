@@ -1,405 +1,402 @@
-# Planning PRD - Prague Migration From Astro Blocks To Page Composer
+# Planning PRD — Prague Migration From Astro Blocks To Clickeen Pages
 
-Status: Draft execution PRD
-Owner: Prague + Roma
-Date: 2026-06-05
-Parent: `106__Umbrella__Composition_Vision.md`
-Series step: 8
-Depends on: `PRD106A2_WidgetShellExtraction.md`, `PRD106B_PageComposer.md`, `PRD106C_Prague astro blocks migration to widget instances.md`, `PRD106C3`-`PRD106C6`
-Unlocks: Prague route cutover to composed Clickeen pages.
-Authority owned by this PRD: Prague route cutover from Astro block assembly to composed page output.
-Authority explicitly not owned by this PRD: Widget Shell extraction, Widget Core implementation, Page Composer implementation, account authoring truth.
+Status: Planning — not executable until the Account Page Compiler PRD is approved and deployed
 
-## PRD Tenets
+Owner: Prague migration + Roma Pages
 
-- Execute one step at a time.
-- Do not start Step N+1 until Step N is green.
-- The current step is the only execution permission.
-- Green requires named completion evidence.
-- A blocker report stops execution; it does not unlock the next step.
-- Do not solve missing decisions by inventing product behavior.
-- The goal is not to accommodate old drift. If existing code contradicts this
-  PRD's intended architecture, delete it, fence it, or stop; do not preserve it
-  and work around it.
+Date: 2026-08-03
 
-## Mandatory PRD106 Execution Contract
+Depends on: `planning_PRD__Account_Page_Compiler_And_Publication.md` and composition-ready widget packages
 
-This PRD is step-gated. Execute exactly one numbered step at a time.
+Unlocks: replacement of Prague's legacy Astro block composition with normal Clickeen Instances and Pages
 
-Before executing any step:
+## Direction
 
-1. Read `106__Umbrella__Composition_Vision.md`.
-2. Confirm dependencies are green or explicitly fenced.
-3. Name the surviving authority for any route/page/widget concern being changed.
-4. Execute only the current step. Long reference sections are context, not
-   execution permission.
+Prague is an existing Clickeen website whose current Astro blocks, block JSON,
+registries, translation sidecars and `WidgetBlocks` assembly are legacy
+implementation. They are migration input, not architecture to preserve.
 
-A step is green only when its named completion evidence exists. A blocker report
-is evidence to stop, not evidence to proceed.
+The migration must preserve Prague's visible product experience:
 
-## Dependency Gate
+- menus and navigation;
+- public routes and redirects;
+- market and locale behavior;
+- branding and site chrome;
+- content meaning and visual intent;
+- crawlability and required SEO truth.
 
-| Dependency  | Required green evidence                                       | Status   |
-| ----------- | ------------------------------------------------------------- | -------- |
-| PRD106A2    | Shared Widget Shell package accepted.                         | REQUIRED |
-| PRD106B     | Page Composer save/publish/public model accepted.             | REQUIRED |
-| PRD106C     | Prague block target map accepted.                             | REQUIRED |
-| PRD106C3-C6 | Required migrated widgets produce composition-ready packages. | REQUIRED |
+It does not need to preserve how Prague currently implements those things.
 
-## Current Step Gate
-
-Current executable step:
+The target content model is:
 
 ```text
-Step 1: Select one Prague route for cutover readiness.
+Prague legacy route content
+→ normal account-owned Clickeen Instances
+→ one Roma Page containing ordered Instance references
+→ Page Compiler
+→ one optimized Page at a stable clk.live Page URL
 ```
 
-Required evidence before marking green:
+Prague is the first substantial first-party consumer and migration proof for
+Clickeen Pages. It must consume the same Page product customers receive; it
+must not create a Prague-specific Page compiler, copied package, block adapter
+or visitor-time composition path.
 
-- Route block stack is listed.
-- Every required block has a migrated widget instance target.
-- Page Composer can represent the route content stack.
+## Relationship To The First Pages Release
 
-Stop conditions:
-
-- Route needs an unmigrated block.
-- Route needs Prague block architecture as product truth.
-
-## Execution Steps
-
-| Step | Action                                                   | Required evidence                       | Green criteria                                                       | Stop condition                                 |
-| ---: | -------------------------------------------------------- | --------------------------------------- | -------------------------------------------------------------------- | ---------------------------------------------- |
-|    1 | Select one Prague route for cutover readiness.           | Route stack and widget target evidence. | Every migrated visual/content section is representable as instances. | Unmapped block required.                       |
-|    2 | Create account-owned widget instances for route content. | Instance source/package evidence.       | Instances are normal account-owned widgets.                          | Prague stores account truth.                   |
-|    3 | Create composed page through Page Composer.              | Page source/output evidence.            | Page stack matches route content order.                              | Page needs block/page-specific instance edits. |
-|    4 | Integrate Prague route to composed output.               | Route diff/screenshot.                  | Prague chrome survives; content comes from composed page output.     | Route recreates Page Composer locally.         |
-|    5 | Verify localization/SEO behavior.                        | Locale screenshots/HTML evidence.       | Approved route metadata and page content render.                     | Host-nav/customer integration is invented.     |
-|    6 | Delete/fence old block assembly for route.               | Diff/`rg` evidence.                     | Route no longer depends on migrated Astro blocks.                    | Old block path remains active.                 |
-
-## Purpose
-
-Move Prague from Astro block assembly to Clickeen-composed page output after the
-needed Prague blocks have been faithfully migrated into widgets and widget
-instances.
-
-This PRD is intentionally after PRD106C. Prague cannot migrate to Page Composer
-until the widgets it needs are real.
-
-PRD106D is a cutover PRD. It does not invent a new page, site, block, fragment,
-or embed architecture. It decides how Prague consumes already-composed Clickeen
-page output while preserving Prague website responsibilities.
-
-## Preconditions
-
-PRD106D is blocked until all of the following are true:
-
-- PRD106B has accepted the Page Composer source schema, storage coordinate,
-  serve-state coordinate, public URL/embed shape, widget package contribution
-  contract, affected-page recomposition, and Tokyo/Roma authority split.
-- PRD106A2 has accepted the shared Widget Shell package contract.
-- PRD106C has accepted the scoped Prague block inventory and all widgets needed
-  by the target Prague route have composition-ready packages built from the
-  shared Widget Shell package.
-- PRD106C decisions are resolved or explicitly fenced outside migrated route
-  truth for nested `accountInstanceRef` visuals, `subpage-cards` route
-  semantics, locale overlays, `minibob`, carousel blocks, and unmapped blocks.
-- Prague has a route-by-route cutover matrix with delivery mode, retained
-  Prague chrome, target Roma page, locale behavior, parity bar, and rollback
-  path.
-
-If any missing Page Composer capability is needed, fix PRD106B. If any missing
-widget capability is needed, fix PRD106C. Do not fill the gap inside Prague.
-
-## Product Rule
-
-Prague is a customer of Clickeen output. It may embed or serve composed
-Clickeen pages, but it must not define account page architecture, composed
-content semantics, storage, dependency tracking, or migrated SEO/GEO content.
-
-Prague can own website routes and chrome. It cannot own account page source,
-widget instance source, composition order, dependency tracking, dedupe,
-recomposition, or SEO/GEO generation for migrated composed content.
-
-All migrated Prague sections must become normal widget instances using the
-Widget Shell:
+The first Clickeen Pages release is a standalone single-page publishing
+product. One Page has one stable public identity:
 
 ```text
-Stage -> Pod -> ck-headerLayout(Header + Widget Core)
+https://clk.live/{accountPublicId}/pages/{pageId}
 ```
 
-Prague must not preserve Astro block Header/CTA/layout names inside migrated
-widget state. Prague block values are migration source only; PRD106C converts
-them into shell paths (`header.*`, `headerCta.*`, Stage/Pod) plus the approved
-Widget Core.
+A Page does not yet own:
 
-## Migration Shape
+- menus or navigation;
+- a shared website header or footer;
+- a site route tree;
+- multi-Page domains;
+- sitemaps or site-wide locale alternates.
 
-1. Keep current Astro block pages working as a temporary cutover fence while
-   widget ports are incomplete. Each fence needs an owner, route scope, tests,
-   and delete gate.
-2. Create account-owned Clickeen instances for the migrated widgets.
-3. Create Roma pages that stack those instances in the order Prague needs.
-4. Publish composed page files.
-5. Point Prague pages at the composed public output or inject that output through
-   a deliberate delivery integration.
-6. Remove the replaced Astro block assembly only after visual, SEO/GEO, locale,
-   and routing parity are proven.
+Those are Website-level concerns. A future Clickeen Website may collect Page
+IDs under routes and add shared navigation, chrome, domains and site-wide SEO.
+That future product must reuse Page identities and the Page Compiler.
 
-## Prague Delivery Contract
+Prague already has those Website-level concerns. Therefore this PRD separates:
 
-Each migrated route must choose one approved delivery mode before implementation:
+1. **Page content migration** — replace Prague block composition with normal
+   Instances and published Clickeen Pages.
+2. **Prague route cutover** — make Prague's existing routes and retained site
+   chrome deliver those Pages.
 
-- `link-or-redirect`: Prague links or redirects to the composed public page URL.
-- `reverse-proxy-full-document`: Prague serves the exact composed full document
-  from the public/generated coordinate.
-- `same-route-shell-with-composed-content`: Prague keeps its route shell/chrome
-  and injects an exact read-only composed content package using a named
-  integration approved by PRD106B.
+Page content migration can be specified and proven through the stable
+`clk.live` Page URL. Production Prague route cutover is blocked until Clickeen
+approves one general Website/host-route contract that preserves site chrome and
+serves the Page's initial semantic HTML. This PRD must not invent a Prague-only
+redirect, reverse proxy, fragment injector or shell adapter to bridge that gap.
 
-Forbidden delivery behavior:
+## Why The Previous Delivery Modes Are Removed
 
-- Prague request-time composition.
-- Prague parsing widget/page source to rebuild content.
-- Prague copying page packages into new snapshots that do not update with Roma.
-- Prague mutating composed HTML/CSS/runtime.
-- Stacked iframes as the composed page.
-- Prague block-shaped wrappers around migrated content.
-- Prague-owned per-page widget overrides.
-- Current generated `embed.js` behavior. PRD106D must use the PRD106B-approved
-  page public serving/embed model, not invent or preserve a page `embed.js`.
+The previous PRD listed:
 
-If `same-route-shell-with-composed-content` is chosen, PRD106B must explicitly
-support the required package shape. A full-document Page Composer output cannot
-be blindly placed inside Prague `Base.astro` without duplicating `<html>` and
-`<head>` or damaging SEO.
+- link or redirect;
+- reverse-proxy full document;
+- Prague shell with injected composed content.
 
-## Route Cutover Matrix
+Those were unresolved architecture branches caused by treating Prague's legacy
+shell as the Page product boundary. They are removed.
 
-Before migration, create a table for every route in scope:
+The agreed Page boundary is one stable Page identity backed by one compiled,
+hosted artifact. Any later host or Website integration must reference that Page
+identity and be designed once for Prague and external platforms—not improvised
+per Prague route.
 
-| Prague route                                   | Current source                   | Target Roma page | Delivery mode                 | Prague-owned chrome | Blocked/unmigrated content | Delete gate     |
-| ---------------------------------------------- | -------------------------------- | ---------------- | ----------------------------- | ------------------- | -------------------------- | --------------- | ---- | -------------- |
-| `/{market}/{locale}/widgets/{widget}/`         | `overview.json` + `WidgetBlocks` | page id          | mode                          | Nav/Footer/etc.     | list                       | parity + tests  |
-| `/{market}/{locale}/widgets/{widget}/{examples | features                         | pricing}/`       | subpage JSON + `WidgetBlocks` | page id             | mode                       | Nav/Footer/etc. | list | parity + tests |
+Until that general contract exists, Prague may link to a standalone Page for
+testing, but a link is not accepted as production route parity when the required
+Prague menu/chrome would disappear.
 
-The matrix must also capture:
+## Current Truth And Dependency Gate
 
-- trailing-slash 301 behavior;
-- invalid market/locale redirects;
-- overview canonicalization from `/overview/` to the overview route;
-- fixed subpage set and 404 behavior;
-- query/cookie/geo redirect behavior if the route participates in it;
-- approved temporary cutover behavior while a route is partially migrated.
+The historical PRD106 series is not current runtime authority. Today:
 
-## Data Migration Contract
+- Roma stores Page source but cannot publish it.
+- no deployed Page Compiler emits coherent Page HTML/CSS/runtime or Page SEO;
+- Tokyo-worker does not serve public Pages;
+- Prague still renders repository/Astro block data through its legacy assembly.
 
-Current Prague page data under `tokyo/prague/pages/**.json` is migration source
-material, not the future page source for migrated routes.
+This migration remains Planning until all of the following are true:
 
-For each migrated route:
+- the Account Page Compiler PRD is approved and executed;
+- Roma can publish a real Page at the approved stable `clk.live` coordinate;
+- the compiler proves initial semantic HTML, Page-level SEO, CSS deduplication,
+  runtime deduplication and affected-Page recomposition;
+- every block needed by the selected Prague route has a real
+  composition-ready Widget/Instance representation;
+- base-locale limitations are accepted for the selected route;
+- the general Prague Website/host-route delivery contract is approved before
+  production route cutover.
 
-- Convert eligible block content into normal account-owned widget instances.
-- Confirm those widget instances were materialized as shared Widget Shell
-  package plus Widget Core, not Prague-derived block/control
-  architecture and not copied per-widget shell logic.
-- Convert the route's visual/content stack into a normal Roma page.
-- Store only the approved Prague routing map needed to choose the public
-  composed page for `{market, locale, widget, page}`.
-- Do not store private instance source, page source, blocks, block IDs, or block
-  translation operations in Prague after cutover.
+If Page capability is missing, fix the Page Compiler PRD. If a widget is
+missing, fix that Widget. Prague must not fill either gap locally.
 
-Prague-owned directory and navigation data may survive only as website metadata:
-widget labels, nav labels, card descriptions, route availability, CTA hrefs, and
-locale URLs. It must not become account page truth.
+## Authority Gate
 
-## What Prague Still Owns
+| Concern                                  | Active authority                                                                                    |
+| ---------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| Prague route content before migration    | current Prague source, as migration input only                                                      |
+| Migrated content/configuration           | normal account-owned Instances                                                                      |
+| Migrated composition order               | Roma Page source                                                                                    |
+| Page compilation and Page-level SEO      | Roma Page Compiler                                                                                  |
+| Page package and stable public Page URL  | Tokyo-worker/R2 and `clk.live`                                                                      |
+| Prague menus, route tree and site chrome | Prague until a general Website authority replaces it                                                |
+| Prague market/locale routing             | Prague until a general Website authority replaces it                                                |
+| Account/session coordinate               | Berlin bootstrap → Roma current `accountPublicId`                                                   |
+| Runtime/deploy                           | Roma Pages, Tokyo-worker Worker, and Prague Pages only for an approved route cutover                |
+| Verification                             | Roma Page routes, public Page URL, Prague public route after cutover, and exact deployment evidence |
 
-- Site chrome.
-- Navigation.
-- Markets and locale routes.
-- Marketing URLs.
-- Any copy or routing that is explicitly Prague website content and not a
-  Clickeen widget/page artifact yet.
-- Route redirects, 404s, trailing slash policy, locale selector, mega menu,
-  footer, and Prague-only funnel surfaces.
+Named migration account and Page IDs must be recorded before product data is
+created. No Page or Instance source may be written directly to R2.
 
-## What Prague Must Stop Owning
+## Product Rules
 
-- Page section product architecture.
-- Widget-equivalent block rendering after the corresponding widget port is
-  complete.
-- Private instance/page source.
-- Translation or locale truth for embedded account-owned widget/page artifacts.
-- `page-meta` and `navmeta` as block-shaped product page source.
-- `WidgetBlocks` rendering for migrated sections.
-- Prague block registry dependencies for migrated routes.
+1. Each migrated Prague content section becomes a normal Clickeen Instance.
+2. The target Page stores only ordered `instanceId` references.
+3. Prague does not store private Page source, Instance source or copied compiler
+   output.
+4. Prague does not parse, modify, concatenate or repair Page packages.
+5. Page compilation happens before public delivery, never on a visitor request.
+6. The stable Page URL represents the Page and continues serving successful
+   recompositions after an included Instance changes.
+7. Prague's current blocks, block IDs, registries, Astro rendering and
+   translation sidecars are deleted route-by-route after their replacement is
+   proven.
+8. Existing Prague menus/navigation remain outside Page source in the first
+   Pages release.
+9. No menu, navigation, shared-shell or Website feature is added to Pages solely
+   to unblock Prague.
+10. Production route cutover cannot remove required Prague chrome or weaken
+    initial-response SEO.
+11. No migration claims parity while required locale behavior is unsupported.
+12. One representative route proves the complete path before broader migration.
 
-## SEO/GEO Authority Matrix
+## Migration Source And Target
 
-Every migrated route must name one authority for each field:
+Current Prague data under `tokyo/prague/pages/**`, repository JSON, translation
+sidecars, `blocks[]`, `blockRegistry` and `WidgetBlocks` is read-only migration
+source.
 
-| Field               | Candidate authority                                  | Rule                                                                 |
-| ------------------- | ---------------------------------------------------- | -------------------------------------------------------------------- |
-| `<html lang>`       | Prague route shell or composed page                  | Must match route locale                                              |
-| `dir`               | Prague route shell or composed page                  | Must match locale text direction                                     |
-| Title               | PRD106B page metadata or Prague route shell          | No duplicate conflicting titles                                      |
-| Description         | PRD106B page metadata or Prague route shell          | No duplicate conflicting descriptions                                |
-| Robots              | Prague route shell or PRD106B page metadata          | Dev noindex behavior preserved                                       |
-| Canonical           | Prague route shell or PRD106B page metadata          | Must preserve canonical marketing URL if Prague route remains public |
-| Hreflang alternates | Prague route shell                                   | Must preserve market/locale alternates                               |
-| Structured data     | PRD106B page metadata unless explicitly Prague-owned | Must be valid and non-duplicated                                     |
-| OG/Twitter metadata | Blocking decision                                    | Decide before implementation if route SEO/GEO parity depends on it   |
+Legacy metadata separates by authority:
 
-SEO/GEO acceptance requires primary migrated content to be present in initial
-HTML at the public Prague route or approved public destination. Client-only
-loading of primary marketing content fails this PRD.
+- Page-specific `page-meta` truth maps into the Roma Page SEO source after
+  explicit validation.
+- Prague `navmeta`, directory labels and menu relationships remain Prague-owned
+  Website metadata until a general Website product replaces that authority.
+- Neither shape survives as block-shaped Page product architecture.
 
-## Locale Contract
+For each selected route:
 
-Prague still owns market/locale routing and chrome locale. Migrated widget/page
-content locale must come from the Clickeen composed artifact contract.
+1. Inventory visible content and behavior in route order.
+2. Map each content section to an existing composition-ready Widget or identify
+   the missing Widget work explicitly.
+3. Create normal account-owned Instances through Roma/Bob authorities.
+4. Create one Roma Page containing those Instance references in the same content
+   order.
+5. Publish through the normal Page Compiler path.
+6. Verify the standalone Page at its stable `clk.live` URL.
+7. Only after the general Website/host-route contract exists, map the Prague
+   route to the Page identity while retaining approved Prague site behavior.
+8. Delete the replaced legacy content assembly after the route delete gate is
+   green.
 
-Rules:
+Nested Prague `accountInstanceRef` behavior is not automatically a Page
+dependency graph. Each case must become either:
 
-- A Prague route locale selects the approved composed page/locale coordinate.
-- Prague must not inspect widget locale overlays or apply Prague block
-  translation operations to migrated content.
-- Missing required composed locale output fails before cutover or uses an
-  explicitly approved temporary cutover fence. The fence is not a product mode
-  and must have an owner, tests, and delete gate.
-- Existing `tokyo/prague/pages/**/*.translations/{locale}.json` paths must be
-  deleted, migrated to widget/page content, or retained only for unmigrated
-  routes.
-- RTL and non-Latin locales must be verified for both Prague chrome and composed
-  content.
+- a normal direct Page placement;
+- a self-contained Widget capability owned by that Widget; or
+- an explicit blocker that keeps the route out of migration.
 
-## Chrome And Navigation Contract
+The migration must not add a graph or recursive Prague composer.
 
-Prague keeps website chrome unless a route explicitly chooses full-document
-takeover.
+## Page-Level SEO Contract
 
-Chrome parity includes:
+The Account Page Compiler PRD owns the SEO integrity of the standalone Page
+artifact. For every migrated Page it must produce and verify:
 
-- `Base.astro` behavior where still used.
-- `Nav` and `Footer`.
-- Locale selector.
-- Mega menu.
-- CTA hrefs.
-- Hero overlay behavior.
-- `WidgetSubnav` or its approved replacement.
-- Directory cards and widget labels.
+- primary content in the initial HTML;
+- exactly one approved title and description;
+- exactly one robots and canonical policy;
+- correct `lang` and `dir` for the supported locale;
+- coherent whole-Page heading behavior under the approved compiler policy;
+- unique generated IDs;
+- valid declared links and image semantics;
+- compatible, non-duplicated structured-data contributions;
+- approved social metadata when present;
+- deduplicated CSS/runtime and no client-only primary content.
 
-Because current navigation reads `navmeta` from Prague page JSON, PRD106D must
-define the replacement Prague-owned website metadata source before deleting the
-block JSON for migrated routes.
+Prague must not regenerate or override that SEO at the standalone Page URL.
 
-## Update, Cache, And Failure Behavior
+Future Prague route integration must separately define Website-level authority
+for:
 
-When an included Clickeen instance changes:
+- the final Prague canonical URL;
+- market/locale route alternates and `hreflang`;
+- sitemap membership;
+- shared navigation and site chrome;
+- Prague-wide social and structured identity when applicable.
 
-1. Roma recomposes the affected page under PRD106B.
-2. Prague's public route must serve the updated composed output without editing
-   Prague block code.
-3. The delivery mode must define cache invalidation, revalidation, or direct
-   live consumption.
+That contract must prevent duplicate titles, canonicals, schema or conflicting
+language truth. It is deliberately not invented in this Page-content migration
+PRD.
 
-Failure handling must be explicit:
+## Locale Boundary
 
-- If recomposition fails, Prague either serves the last good composed package,
-  returns a controlled failure, or uses an approved temporary cutover fence.
-- The chosen behavior must not silently serve stale content while Roma reports
-  the page current.
-- Rollback is not a product mode. It may preserve current Astro block pages only
-  as temporary cutover safety until the replacement route passes parity and
-  update tests, and it must have an owner, tests, and delete gate.
+The first Page Compiler release publishes only the account base/default locale.
+Therefore:
 
-## Implementation Sequence
+- select a base-locale Prague route for the first proof;
+- do not migrate non-base Prague routes to production Page delivery;
+- Prague block translation sidecars remain only for unmigrated routes;
+- Prague must not apply its block translation operations to Page packages;
+- multi-locale Page publication and Website-level `hreflang` require separately
+  approved contracts.
 
-1. Complete PRD106B and PRD106C gates.
-2. Build the route cutover matrix.
-3. Choose delivery mode per route.
-4. Define SEO/GEO authority per route.
-5. Define locale mapping per route.
-6. Seed normal account-owned widget instances.
-7. Create normal Roma pages for target routes.
-8. Publish composed pages through the normal Page Composer path.
-9. Integrate Prague route delivery without parsing or mutating composed output.
-10. Verify route, SEO/GEO, locale, visual, cache/update, and temporary cutover
-    behavior.
-11. Delete replaced Astro block rendering/data only after the delete gate passes.
+This is a real scope boundary, not permission to present untranslated content as
+localized output.
 
-## Blast Radius
+## Update, Cache And Failure Truth
 
-Expected touched areas:
+When a migrated Instance changes:
 
-- Prague route files under `prague/src/pages/**`.
-- Prague `Base`, `Nav`, `Footer`, `WidgetSubnav`, and directory/mega-menu data
-  loading only where the chosen delivery mode requires it.
-- `prague/src/components/WidgetBlocks.astro` and block components for deletion
-  or fencing on migrated routes with owner, tests, and delete gate.
-- `prague/src/lib/markdown.ts` and Prague l10n scripts for removing block JSON
-  authority on migrated routes.
-- `tokyo/prague/pages/**` page JSON and translation sidecars as migration
-  source, then deletion/fencing for migrated routes.
-- Roma page IDs and Clickeen-owned account instances used for Prague marketing.
-- PRD106B public serving/cache behavior.
+1. Roma saves and materializes the Instance through its normal authority.
+2. Roma finds directly affected Page sources.
+3. Roma recompiles the affected Page.
+4. Tokyo-worker activates only the complete successful Page build.
+5. The same stable Page URL serves the new build after exact cache purge.
 
-## Adopted Peer Review Constraints
+Prague must never take a copied snapshot of that package as a second source.
+The future route integration must reference the Page identity and preserve this
+update behavior.
 
-The peer review's Prague cutover feedback is accepted:
+If Page recomposition fails:
 
-- PRD106D stays blocked until PRD106B and PRD106C close their gates. Prague must
-  not fill missing Page Composer or widget capability locally.
-- Start with one representative route. Build the cutover matrix for that route,
-  prove the end-to-end path, then expand.
-- Choose delivery mode before implementation. Agents must not improvise between
-  redirect, full-document proxy, same-route shell integration, iframe, or
-  fragment behavior.
-- If same-route shell integration is chosen, PRD106B must first define the exact
-  composed content package shape. Prague must not carve fragments out of full
-  documents itself.
-- Define replacements for `page-meta`, `navmeta`, directory snippets, widget
-  card descriptions, subpage links, and CTA labels before deleting block JSON.
-- Temporary cutover safety is allowed only when explicitly approved. It is not
-  legacy support, not a product mode, and not a second public product path.
-- Search gates proving migrated routes no longer import `WidgetBlocks`,
-  `blockRegistry`, `blocks[]`, or Prague block translation sidecars are required
-  for each cutover.
+- the last complete Page build may remain public;
+- Roma shows the Page as out of date;
+- Prague route cutover cannot represent that Page as current;
+- no legacy block renderer silently substitutes for the failed Page after its
+  delete gate has passed.
 
-The accepted migration posture is: seed normal account-owned instances and pages
-for a route, publish through normal Page Composer, integrate the route, verify
-SEO/GEO/locale/update propagation, then delete or temporarily fence the old
-block path for that route with owner, tests, and delete gate.
+## Route Migration Record
 
-## Acceptance
+Before any migration data is created, record one row per selected route:
 
-- A Prague page can be represented as a Page Composer stack of real widget
-  instances where all required blocks have migrated.
-- Updating an included Clickeen instance updates the Prague-composed page output
-  without editing Prague Astro block code.
-- Prague no longer needs a parallel block implementation for migrated sections.
-- Prague keeps only website concerns: chrome, routing, markets, locales, and
-  delivery integration.
-- Current public route behavior is preserved or intentionally changed in the
-  cutover matrix.
-- Initial HTML remains crawlable and contains correct title, description,
-  canonical, robots, hreflang, `lang`, `dir`, and visible primary content.
-- Prague block JSON, `WidgetBlocks`, and block translation sidecars are not used
-  by migrated routes after their delete gate passes.
-- Cache/update behavior is proven for at least one migrated route.
-- Approved temporary cutover path is available until parity is accepted.
+| Prague route | Legacy source        | Target account      | Target Page ID | Required Instances | Supported locale | Page proof       | Site-contract blocker | Delete gate |
+| ------------ | -------------------- | ------------------- | -------------- | ------------------ | ---------------- | ---------------- | --------------------- | ----------- |
+| `<route>`    | `<files/components>` | `<accountPublicId>` | `<pageId>`     | `<instanceIds>`    | `<locale>`       | `<URL/evidence>` | `<named blocker>`     | `<proof>`   |
+
+The record must also capture current redirect, trailing-slash, 404, canonical
+and locale behavior that a later Website route cutover must preserve.
+
+## Execution Slices
+
+This document does not authorize execution while its dependency gates are red.
+After they are green, migration proceeds one slice at a time.
+
+### Slice 1 — One Page content proof
+
+- select one base-locale representative Prague route;
+- inventory its legacy content stack;
+- prove every required Widget is composition-ready;
+- create normal Instances and one Roma Page;
+- publish and verify its stable `clk.live` Page URL;
+- prove initial SEO, CSS/runtime dedupe and included-Instance recomposition.
+
+Completion of Slice 1 proves Page content migration only. It does not authorize
+production Prague route replacement.
+
+### Slice 2 — General site delivery decision
+
+- approve the general Website/host-route contract;
+- prove how the stable Page identity is delivered under a site route;
+- prove retained menu/chrome and initial semantic HTML;
+- prove canonical, locale and cache/update authority;
+- update the Page/Website planning docs rather than hiding behavior in Prague.
+
+### Slice 3 — One Prague production route
+
+- map the selected route to the approved Page identity;
+- verify desktop/mobile behavior, Prague chrome, routing and SEO;
+- verify an Instance edit reaches the same Prague route;
+- delete the route's replaced legacy block assembly and data;
+- prove search gates for the removed imports and paths.
+
+### Slice 4 — Route-by-route expansion
+
+Repeat the accepted route record and delete gate. Do not bulk-convert routes
+whose widgets, locales or site behavior are not supported.
+
+## Delete Gate
+
+For a migrated production route, deletion is complete only when:
+
+- the route no longer imports or executes `WidgetBlocks`, `blockRegistry` or
+  legacy `blocks[]` composition;
+- migrated content no longer reads Prague block JSON or translation sidecars;
+- Prague stores no copied Page or Instance source/package;
+- the public route uses the approved Page identity contract;
+- required Prague menu, route, locale and SEO behavior is proven;
+- included-Instance update propagation is proven;
+- the old path is removed rather than renamed, wrapped or left as fallback.
+
+Legacy source for unmigrated routes may remain only with exact route scope. It
+is not a compatibility product mode.
 
 ## Verification
 
-- Route matrix tests for overview routes, subpage routes, redirects, trailing
-  slash behavior, invalid market/locale, and 404s.
-- Static HTML assertions for title, description, canonical, robots, hreflang,
-  `lang`, `dir`, and primary content.
-- Desktop and mobile screenshot parity against current Prague pages.
-- RTL and non-Latin locale checks where translation fixtures exist.
-- Update propagation test: edit included widget instance, wait for Page Composer
-  recomposition, verify Prague route serves updated content.
-- Cache/cutover-fence test for recomposition failure or stale page state.
-- Search gate proving migrated routes no longer import/use `WidgetBlocks`,
-  `blockRegistry`, `blocks[]`, or Prague block translation sidecars.
-- Prague build/typecheck and l10n verification updated for the new authority.
+### Page content proof
+
+- Page source contains only ordered normal Instance references.
+- Stable Page URL serves one initial semantic document.
+- Every migrated content section appears exactly once and in order.
+- Page title, description, canonical, robots, `lang`, `dir`, heading policy,
+  structured data and social metadata follow the compiler contract.
+- Shared CSS/runtime contributions occur once.
+- Multiple Instances remain behaviorally isolated.
+- Editing an included Instance updates the same Page URL.
+- Failed recomposition leaves the last good build exact and the Page visibly out
+  of date.
+
+### Future Prague route cutover proof
+
+- Existing menu, navigation, branding and required chrome remain visible.
+- Route, redirect, trailing-slash and 404 behavior match the approved record.
+- Primary content and SEO are present in the initial Prague response.
+- Canonical and locale authority are singular and correct.
+- The Prague route follows the active Page build without copied package state.
+- Search gates prove the selected route no longer uses legacy block composition.
+- Prague build/typecheck and Cloudflare deployment evidence are green.
+
+## V1–V8 Design Audit
+
+| ID                            | Required behavior                                                                     |
+| ----------------------------- | ------------------------------------------------------------------------------------- |
+| V1 Silent substitution        | Missing Widgets, locale output, Page builds or site contracts block migration         |
+| V2 Silent healing             | Legacy block data is migrated explicitly, never normalized into new truth silently    |
+| V3 Silent omission            | Every required visible section, route behavior and SEO field is recorded and verified |
+| V4 Fail-open control          | A route cannot cut over with missing Page, locale, chrome or SEO proof                |
+| V5 Corruption-as-absence      | Invalid legacy/Page data is a blocker, not an empty section or Page                   |
+| V6 Partial-success masquerade | Standalone Page proof is not represented as completed Prague route migration          |
+| V7 Masquerade/redress         | Legacy block composition is deleted, not hidden behind an adapter or fallback         |
+| V8 Runtime test dependency    | Public delivery depends on active stored Page truth, not tests or probes              |
+
+## Acceptance Criteria
+
+- Prague legacy composition is treated as migration input, not future Page
+  architecture.
+- One representative route's content is faithfully represented by normal
+  Instances and one Roma Page.
+- The Page publishes through the standard compiler at one stable `clk.live`
+  Page URL.
+- The Page is SEO-complete initial HTML with consolidated CSS/runtime.
+- Updating an included Instance recompiles the Page behind the same URL.
+- Prague does not copy, parse, mutate or independently compose the Page package.
+- Pages V1 gains no menu, navigation or Website machinery to accommodate
+  Prague.
+- Production Prague route cutover remains blocked until one general site
+  delivery contract preserves existing chrome and initial-response SEO.
+- After that contract is approved, each migrated route deletes its replaced
+  Astro block composition through a proven route-specific delete gate.
+
+## Open Questions Before Production Route Cutover
+
+Only these Prague-specific product questions remain open:
+
+1. What general Website/host-route contract maps a stable Page identity into a
+   site while retaining site-owned navigation/chrome and initial-response SEO?
+2. When that contract exists, does Prague become its first Website collection
+   or another first-party host consumer of the same contract?
+3. Which base-locale Prague route is the first representative Page proof?
+4. Which current Prague sections still lack composition-ready Widgets?
+
+The first question belongs to the future general Pages-to-Websites/hosts
+architecture. It must not be answered with one-off Prague machinery.
