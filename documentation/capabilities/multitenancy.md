@@ -296,8 +296,9 @@ PRD 127's accepted target keeps two existing keys separate:
 
 Neither key controls whether the generated HTML contains the customer's primary
 content. Free Widget attribution is mandatory when `branding.remove` is false;
-the Web Code Generator writes it into initial HTML. This is planned 127 behavior,
-not a claim that the current runtime gap has already closed.
+the Web Code Generator writes it into initial HTML. Bob enforces the customer
+SEO/GEO/AEO choice during editing, and Roma independently enforces it again at
+the Instance save boundary through the same Widget limits and account policy.
 
 Ordinary Pages have no SEO/GEO/AEO boolean. `pages.max` begins at Tier 2, and
 every ordinary Page receives Page SEO/GEO/AEO output from its declared fields
