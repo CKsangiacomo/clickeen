@@ -721,9 +721,13 @@ documentation matches runtime; and an independent V1–V8 audit is GREEN.
 ## Execution evidence
 
 - Implementation commit: `c44bf50cc24cb1ae1440a0a7758b0539efaaf128`.
+- Final correction commit: `ec4592dbfc75c9236749ac15ace2dd41697480e6`.
 - GitHub `cloud-dev roma app verify` run `31088896071`: green, including
   Roma Page source, Roma Page Builder, Web Code Generator, Bob, lint,
   typecheck, and both Cloudflare Pages build contracts.
+- GitHub `cloud-dev roma app verify` run `31090773807`: green against the final
+  correction commit, including Roma Page Builder, Page source, Web Code
+  Generator, Bob, lint, typecheck, and both Pages build contracts.
 - Cloudflare Pages production: `roma-dev` and `bob-dev` both report the exact
   implementation commit with deploy status `success`.
 - Authenticated `CLICKEEN` runtime proof: opening `/page-builder/new` wrote no
@@ -734,6 +738,14 @@ documentation matches runtime; and an independent V1–V8 audit is GREEN.
   **Done, go back to the page** restored the mounted Page draft; the saved test
   Page and its placement were then deleted and the account again returned to
   zero Pages.
+- Authenticated final-correction proof: `/page-builder/new` wrote no remote
+  Page before Save; Save produced `Current`; a partial Translation Agent result
+  named failed locale `de-DE`; Publish named all missing exact locales and
+  changed no public state; the temporary Page `UESJ19E044` was deleted through
+  the Page Builder confirmation flow.
+- Cloudflare Pages production: `roma-dev` and `bob-dev` both report exact final
+  correction commit `ec4592dbfc75c9236749ac15ace2dd41697480e6` with deploy
+  status `success`.
 
 The slice remains blocked from final completion until the required Staff
 Engineer, Senior PM, and Principal TPM execution reviews are all green.
