@@ -725,12 +725,16 @@ documentation matches runtime; and an independent V1–V8 audit is GREEN.
 
 - Implementation commit: `c44bf50cc24cb1ae1440a0a7758b0539efaaf128`.
 - Final correction commit: `ec4592dbfc75c9236749ac15ace2dd41697480e6`.
+- Feedback-state correction commit: `cd11bf55941938f704683e6a361c485816a9ca13`.
 - GitHub `cloud-dev roma app verify` run `31088896071`: green, including
   Roma Page source, Roma Page Builder, Web Code Generator, Bob, lint,
   typecheck, and both Cloudflare Pages build contracts.
 - GitHub `cloud-dev roma app verify` run `31090773807`: green against the final
   correction commit, including Roma Page Builder, Page source, Web Code
   Generator, Bob, lint, typecheck, and both Pages build contracts.
+- GitHub `cloud-dev roma app verify` run `31091728758`: green against the
+  feedback-state correction commit, including every 127E contract and both
+  Cloudflare Pages build contracts.
 - Cloudflare Pages production: `roma-dev` and `bob-dev` both report the exact
   implementation commit with deploy status `success`.
 - Authenticated `CLICKEEN` runtime proof: opening `/page-builder/new` wrote no
@@ -746,9 +750,17 @@ documentation matches runtime; and an independent V1–V8 audit is GREEN.
   named failed locale `de-DE`; Publish named all missing exact locales and
   changed no public state; the temporary Page `UESJ19E044` was deleted through
   the Page Builder confirmation flow.
+- Authenticated feedback-state proof: Save created temporary Page `JN9B929CCR`;
+  an accepted-false Translation Agent result displayed **No translation
+  languages are available for this page.**, did not make the Page dirty, and
+  exposed no Save action; Delete then removed the Page and its account route
+  returned `404`.
 - Cloudflare Pages production: `roma-dev` and `bob-dev` both report exact final
   correction commit `ec4592dbfc75c9236749ac15ace2dd41697480e6` with deploy
   status `success`.
+- Cloudflare Pages production: `roma-dev` and `bob-dev` both report exact
+  feedback-state correction commit `cd11bf55941938f704683e6a361c485816a9ca13`
+  with deploy status `success`.
 
 The slice remains blocked from final completion until the required Staff
 Engineer, Senior PM, and Principal TPM execution reviews are all green.
