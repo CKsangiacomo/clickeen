@@ -8,6 +8,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createDialogLifecycle, type DialogLifecycle } from '../../dieter/components/shared/dialog-lifecycle';
 import { parseAccountAssetRecord, parseResolvedAccountAsset } from '../lib/account-asset-record';
 import { parseAccountPageSource } from '../lib/account-page-contract';
+import { copyToClipboard } from '../lib/copy-to-clipboard';
 import { buildPagePublicActions, type PublicActions } from '../lib/public-actions';
 import { useRomaAccountApi } from './account-api';
 import { BuilderDomain } from './builder-domain';
@@ -37,10 +38,11 @@ function parseDetail(raw: unknown): PageDetail {
   const source = parseAccountPageSource(value.source);
   const files = value.files as WebFiles | null;
   const state = value.serveState as PageDetail['serveState'] | null;
-  if (!source || source.isTemplate || !files || typeof files.indexHtml !== 'string' || typeof files.stylesCss !== 'string' || typeof files.runtimeJs !== 'string' || !state || typeof state.published !== 'boolean' || typeof state.needsUpdate !== 'boolean') {
+  const overlaysJson = value.overlaysJson;
+  if (!source || source.isTemplate || !files || typeof files.indexHtml !== 'string' || typeof files.stylesCss !== 'string' || typeof files.runtimeJs !== 'string' || !overlaysJson || typeof overlaysJson !== 'object' || Array.isArray(overlaysJson) || !state || typeof state.published !== 'boolean' || typeof state.needsUpdate !== 'boolean') {
     throw new Error('coreui.errors.payload.invalid');
   }
-  return { source, files, overlaysJson: (value.overlaysJson ?? {}) as Record<string, unknown>, serveState: state };
+  return { source, files, overlaysJson: overlaysJson as Record<string, unknown>, serveState: state };
 }
 
 async function readPageOverlay(fetchRaw: ReturnType<typeof useRomaAccountApi>['fetchRaw'], pageId: string, locale: string): Promise<PageLocaleOverlay | null> {
@@ -56,6 +58,28 @@ async function readPageOverlay(fetchRaw: ReturnType<typeof useRomaAccountApi>['f
 
 function isNotFoundError(error: unknown): boolean {
   return error instanceof Error && (error as Error & { status?: number }).status === 404;
+}
+
+function readTranslationResult(raw: unknown): { translatedLocales: string[]; failedLocales: string[] } {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) throw new Error('coreui.errors.payload.invalid');
+  const translation = (raw as { translation?: unknown }).translation;
+  if (!translation || typeof translation !== 'object' || Array.isArray(translation)) throw new Error('coreui.errors.payload.invalid');
+  const value = translation as { translatedLocales?: unknown; failedLocales?: unknown };
+  if (!Array.isArray(value.translatedLocales) || !value.translatedLocales.every((locale) => typeof locale === 'string')) throw new Error('coreui.errors.payload.invalid');
+  if (!Array.isArray(value.failedLocales) || !value.failedLocales.every((failure) => failure && typeof failure === 'object' && typeof (failure as { locale?: unknown }).locale === 'string')) throw new Error('coreui.errors.payload.invalid');
+  return {
+    translatedLocales: value.translatedLocales,
+    failedLocales: value.failedLocales.map((failure) => (failure as { locale: string }).locale),
+  };
+}
+
+function readMissingPublishLocales(raw: unknown): string[] {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return [];
+  const error = (raw as { error?: unknown }).error;
+  if (!error || typeof error !== 'object' || Array.isArray(error)) return [];
+  const value = error as { reasonKey?: unknown; paths?: unknown };
+  if (value.reasonKey !== 'coreui.errors.page.localesIncomplete' || !Array.isArray(value.paths)) return [];
+  return value.paths.flatMap((path) => typeof path === 'string' && path.startsWith('locales.') ? [path.slice('locales.'.length)] : []);
 }
 
 function nextPaint(): Promise<void> {
@@ -91,12 +115,14 @@ export function PageBuilder({ pageId = '' }: { pageId?: string }) {
   const [savedFiles, setSavedFiles] = useState<WebFiles | null>(null);
   const [published, setPublished] = useState(false);
   const [needsUpdate, setNeedsUpdate] = useState(false);
+  const [freshEntryBlocked, setFreshEntryBlocked] = useState(false);
   const [dirty, setDirty] = useState(false);
   const [loading, setLoading] = useState(Boolean(pageId));
   const [loadFailed, setLoadFailed] = useState(false);
   const [saving, setSaving] = useState(false);
   const [previewingGenerated, setPreviewingGenerated] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
   const [selectedPlacementId, setSelectedPlacementId] = useState('');
   const [activePanel, setActivePanel] = useState<'content' | 'seo'>('content');
   const [activeLocale, setActiveLocale] = useState(baseLocale);
@@ -148,6 +174,7 @@ export function PageBuilder({ pageId = '' }: { pageId?: string }) {
       setSavedFiles(detail.files);
       setPublished(detail.serveState.published);
       setNeedsUpdate(detail.serveState.needsUpdate);
+      setFreshEntryBlocked(detail.serveState.needsUpdate);
       setSelectedPlacementId(loadedPlacements[0]?.placementId ?? '');
       setActiveLocale(baseLocale);
       setDirty(false);
@@ -191,9 +218,9 @@ export function PageBuilder({ pageId = '' }: { pageId?: string }) {
     return () => lifecycle.destroy();
   }, [loading, router]);
   useEffect(() => {
-    if (needsUpdate && currentPageId && !dirty && !bobInstanceId) updateLifecycleRef.current?.open();
+    if (freshEntryBlocked && needsUpdate && currentPageId && !dirty && !bobInstanceId) updateLifecycleRef.current?.open();
     else updateLifecycleRef.current?.close();
-  }, [bobInstanceId, currentPageId, dirty, needsUpdate]);
+  }, [bobInstanceId, currentPageId, dirty, freshEntryBlocked, needsUpdate]);
   useEffect(() => {
     const dialog = deleteDialogRef.current;
     if (!dialog) return;
@@ -217,21 +244,23 @@ export function PageBuilder({ pageId = '' }: { pageId?: string }) {
       const id = currentPageId || createCompactPageId();
       const sourceForSave: PageDraftSource = { ...source, baseLocale };
       const generated = await generatePageDraft({ source: sourceForSave, settingsLocales, pageOverlays, placements, fetchJson: accountApi.fetchJson });
+      if (!generated.overlaysJson) throw new Error('Page overlay output is missing.');
       setSavedFiles(generated.files);
       setPreviewingGenerated(true);
       await nextPaint();
       const completeSource: AccountPage = { pageId: id, ...sourceForSave };
       if (currentPageId) {
         await persistOverlays(id);
-        await accountApi.fetchJson(`/api/account/pages/${encodeURIComponent(id)}`, { method: 'PUT', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ source: completeSource, files: generated.files, overlaysJson: generated.overlaysJson ?? {}, operation: forceUpdate || needsUpdate ? 'update' : 'save' }), timeoutMs: 120_000 });
+        await accountApi.fetchJson(`/api/account/pages/${encodeURIComponent(id)}`, { method: 'PUT', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ source: completeSource, files: generated.files, overlaysJson: generated.overlaysJson, operation: forceUpdate || needsUpdate ? 'update' : 'save' }), timeoutMs: 120_000 });
       } else {
-        await accountApi.fetchJson('/api/account/pages', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ source: completeSource, files: generated.files, overlaysJson: generated.overlaysJson ?? {} }), timeoutMs: 120_000 });
+        await accountApi.fetchJson('/api/account/pages', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ source: completeSource, files: generated.files, overlaysJson: generated.overlaysJson }), timeoutMs: 120_000 });
         setCurrentPageId(id);
         router.replace(`/page-builder/${encodeURIComponent(id)}`);
       }
       clearRomaPagesCache(accountContext.accountPublicId);
       setSourceState(sourceForSave);
       setNeedsUpdate(false);
+      setFreshEntryBlocked(false);
       setDirty(false);
     } catch (saveError) {
       setError(saveError instanceof Error && saveError.message === 'Page title is required.' ? saveError.message : 'Saving this Page failed. Please try again.');
@@ -271,11 +300,17 @@ export function PageBuilder({ pageId = '' }: { pageId?: string }) {
     if (!currentPageId) return;
     setTranslationBusy(true);
     setError(null);
+    setNotice(null);
     try {
-      await accountApi.fetchJson('/api/account/translations/generate', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ target: { kind: 'page', id: currentPageId } }), timeoutMs: 120_000 });
+      const result = readTranslationResult(await accountApi.fetchJson('/api/account/translations/generate', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ target: { kind: 'page', id: currentPageId } }), timeoutMs: 120_000 }));
       const overlays = Object.fromEntries((await Promise.all(settingsLocales.filter((locale) => locale !== baseLocale).map(async (locale) => [locale, await readPageOverlay(accountApi.fetchRaw, currentPageId, locale)] as const))).filter((entry): entry is readonly [string, PageLocaleOverlay] => Boolean(entry[1])));
       setPageOverlaysState(overlays);
-      setDirty(true);
+      if (result.translatedLocales.length) setDirty(true);
+      if (result.failedLocales.length) {
+        setError(`${result.translatedLocales.length ? 'Translations generated, but failed' : 'Translations failed'} for: ${result.failedLocales.join(', ')}.`);
+      } else {
+        setNotice('Translations generated. Save the Page to update its files.');
+      }
     } catch {
       setError('Translations could not be generated. Please try again.');
     } finally {
@@ -287,12 +322,19 @@ export function PageBuilder({ pageId = '' }: { pageId?: string }) {
     if (!canEditPages || !currentPageId) return;
     setSaving(true);
     setError(null);
+    setNotice(null);
     try {
-      await accountApi.fetchJson(`/api/account/pages/${encodeURIComponent(currentPageId)}/${next ? 'publish' : 'unpublish'}`, { method: 'POST' });
+      const response = await accountApi.fetchRaw(`/api/account/pages/${encodeURIComponent(currentPageId)}/${next ? 'publish' : 'unpublish'}`, { method: 'POST' });
+      const payload = await response.json().catch(() => null);
+      if (!response.ok) {
+        const missingLocales = next ? readMissingPublishLocales(payload) : [];
+        if (missingLocales.length) throw new Error(`Generate translations for: ${missingLocales.join(', ')} before publishing.`);
+        throw new Error(`${next ? 'Publishing' : 'Unpublishing'} this Page failed. Please try again.`);
+      }
       clearRomaPagesCache(accountContext.accountPublicId);
       setPublished(next);
-    } catch {
-      setError(`${next ? 'Publishing' : 'Unpublishing'} this Page failed. Please try again.`);
+    } catch (publishError) {
+      setError(publishError instanceof Error ? publishError.message : `${next ? 'Publishing' : 'Unpublishing'} this Page failed. Please try again.`);
     } finally { setSaving(false); }
   };
 
@@ -315,15 +357,16 @@ export function PageBuilder({ pageId = '' }: { pageId?: string }) {
       <div className="builder-app roma-page-builder">
         <section className="topdrawer">
           <div className="topdrawer-leading"><button className="host-navigation-open diet-btn-ic" data-size="xl" data-variant="neutral" type="button" aria-label="Open Clickeen navigation" onClick={() => openNavigation()}><span className="diet-btn-ic__icon" data-icon="rectangle.portrait.and.arrow.right" /></button></div>
-          <div className="topdrawer-context-wrap"><div className="topdrawer-context"><input className="roma-page-name heading-3" value={source.displayName} aria-label="Page name" onChange={(event) => setSource({ ...source, displayName: event.target.value })} /><span className="body-xs topdrawer-publish-status">{needsUpdate ? 'Needs update' : published ? 'Published' : currentPageId ? 'Unpublished' : 'Unsaved'}</span></div></div>
+          <div className="topdrawer-context-wrap"><div className="topdrawer-context"><input className="roma-page-name heading-3" value={source.displayName} aria-label="Page name" onChange={(event) => setSource({ ...source, displayName: event.target.value })} /><span className="body-xs topdrawer-publish-status">{needsUpdate ? 'Needs update' : currentPageId ? 'Current' : 'Unsaved'}</span></div></div>
           <div className="topdrawer-actions">
             {(dirty || !currentPageId || needsUpdate) ? <button className="diet-btn-txt" data-size="xl" data-variant="primary" type="button" disabled={saving} onClick={() => void save(needsUpdate)}><span className="diet-btn-txt__label">{saving ? 'Saving…' : needsUpdate ? 'Update page' : 'Save'}</span></button> : null}
             {currentPageId && !needsUpdate && !published ? <button className="diet-btn-txt" data-size="lg" data-variant="secondary" type="button" disabled={saving || dirty} onClick={() => void changePublished(true)}><span className="diet-btn-txt__label body-s">Publish</span></button> : null}
             {publicActions ? <a className="diet-btn-txt" data-size="lg" data-variant="line2" href={publicActions.publicUrl} target="_blank" rel="noreferrer"><span className="diet-btn-txt__label body-s">Open public page</span></a> : null}
-            {currentPageId ? <div ref={moreRef} className="topdrawer-more diet-popover-host" data-state={moreOpen ? 'open' : 'closed'}><button className="diet-btn-txt" data-size="lg" data-variant="line2" type="button" onClick={() => setMoreOpen((open) => !open)}><span className="diet-btn-txt__label body-s">More</span></button><div className="topdrawer-more__menu diet-popover" role="menu">{published ? <><button className="diet-btn-menuactions" data-size="md" data-variant="neutral" type="button" role="menuitem" onClick={() => { setMoreOpen(false); setCopyOpen(true); }}><span className="diet-btn-menuactions__label body-s">Copy URL / code</span></button><button className="diet-btn-menuactions" data-size="md" data-variant="neutral" type="button" role="menuitem" onClick={() => { setMoreOpen(false); void changePublished(false); }}><span className="diet-btn-menuactions__label body-s">Unpublish</span></button></> : <button className="diet-btn-menuactions" data-size="md" data-variant="neutral" type="button" role="menuitem" onClick={() => { setMoreOpen(false); setDeleteOpen(true); }}><span className="diet-btn-menuactions__label body-s">Delete</span></button>}</div></div> : null}
+            {currentPageId ? <div ref={moreRef} className="topdrawer-more diet-popover-host" data-state={moreOpen ? 'open' : 'closed'}><button className="diet-btn-txt" data-size="lg" data-variant="line2" type="button" onClick={() => setMoreOpen((open) => !open)}><span className="diet-btn-txt__label body-s">More</span></button><div className="topdrawer-more__menu diet-popover" role="menu">{published && publicActions ? <><button className="diet-btn-menuactions" data-size="md" data-variant="neutral" type="button" role="menuitem" onClick={() => { setMoreOpen(false); void copyToClipboard(publicActions.publicUrl).then((copied) => setNotice(copied ? 'Page URL copied.' : 'Page URL could not be copied.')); }}><span className="diet-btn-menuactions__label body-s">Copy URL</span></button><button className="diet-btn-menuactions" data-size="md" data-variant="neutral" type="button" role="menuitem" onClick={() => { setMoreOpen(false); setCopyOpen(true); }}><span className="diet-btn-menuactions__label body-s">Copy code</span></button><button className="diet-btn-menuactions" data-size="md" data-variant="neutral" type="button" role="menuitem" onClick={() => { setMoreOpen(false); void changePublished(false); }}><span className="diet-btn-menuactions__label body-s">Unpublish</span></button></> : <button className="diet-btn-menuactions" data-size="md" data-variant="neutral" type="button" role="menuitem" onClick={() => { setMoreOpen(false); setDeleteOpen(true); }}><span className="diet-btn-menuactions__label body-s">Delete</span></button>}</div></div> : null}
           </div>
         </section>
         {error ? <div className="roma-page-builder__error body-s" role="alert">{error}</div> : null}
+        {notice ? <div className="roma-page-builder__notice body-s" role="status">{notice}</div> : null}
         <div className="editor-content">
           <aside className="tooldrawer" id="page-builder-tool-drawer">
             <div className="roma-page-panel-tabs" role="tablist"><button className="diet-btn-txt" data-size="sm" data-variant={activePanel === 'content' ? 'primary' : 'neutral'} type="button" role="tab" aria-selected={activePanel === 'content'} onClick={() => setActivePanel('content')}><span className="diet-btn-txt__label body-s">Content</span></button><button className="diet-btn-txt" data-size="sm" data-variant={activePanel === 'seo' ? 'primary' : 'neutral'} type="button" role="tab" aria-selected={activePanel === 'seo'} onClick={() => setActivePanel('seo')}><span className="diet-btn-txt__label body-s">SEO/GEO/AEO</span></button></div>
@@ -333,7 +376,7 @@ export function PageBuilder({ pageId = '' }: { pageId?: string }) {
         </div>
       </div>
 
-      {bobInstanceId ? <div className="roma-page-bob-slide" role="dialog" aria-label="Edit widget in Bob"><BuilderDomain initialInstanceId={bobInstanceId} embedded returnLabel="Done, go back to the page" contextMessage="You are editing a saved widget. Other Pages using it will need updating after Save." onReturn={() => setBobInstanceId('')} onInstanceSaved={() => { void Promise.all([loadPagePlacement({ instanceId: bobInstanceId, settingsLocales, fetchJson: accountApi.fetchJson }), currentPageId ? accountApi.fetchJson(`/api/account/pages/${encodeURIComponent(currentPageId)}`).then(parseDetail) : Promise.resolve(null)]).then(([updated, detail]) => { setPlacementsState((current) => current.map((placement) => placement.instanceId === bobInstanceId ? { ...updated, placementId: placement.placementId } : placement)); if (detail) setNeedsUpdate(detail.serveState.needsUpdate); }).catch(() => setError('This widget was saved, but the Page status could not be refreshed.')); }} /></div> : null}
+      {bobInstanceId ? <div className="roma-page-bob-slide" role="dialog" aria-label="Edit widget in Bob"><BuilderDomain initialInstanceId={bobInstanceId} embedded returnLabel="Done, go back to the page" contextMessage="You're editing the saved widget. Other pages using it will also need updating after Save." onReturn={() => setBobInstanceId('')} onInstanceSaved={() => { void Promise.all([loadPagePlacement({ instanceId: bobInstanceId, settingsLocales, fetchJson: accountApi.fetchJson }), currentPageId ? accountApi.fetchJson(`/api/account/pages/${encodeURIComponent(currentPageId)}`).then(parseDetail) : Promise.resolve(null)]).then(([updated, detail]) => { setPlacementsState((current) => current.map((placement) => placement.instanceId === bobInstanceId ? { ...updated, placementId: placement.placementId } : placement)); if (detail) setNeedsUpdate(detail.serveState.needsUpdate); }).catch(() => setError('This widget was saved, but the Page status could not be refreshed.')); }} /></div> : null}
       <dialog ref={updateDialogRef} className="diet-popup" data-size="medium" aria-labelledby="page-needs-update-title"><header className="diet-popup__header"><h2 id="page-needs-update-title" className="heading-4">Update this page to edit</h2></header><div className="diet-popup__body"><p className="body-m">One or more widgets in this page has changed. Update the page to edit.</p></div><footer className="diet-popup__footer"><div className="diet-popup__actions"><button className="diet-btn-txt" data-size="md" data-variant="secondary" type="button" onClick={() => router.push('/pages')}><span className="diet-btn-txt__label body-m">Back to pages</span></button><button className="diet-btn-txt" data-size="md" data-variant="primary" type="button" disabled={saving} onClick={() => void save(true)}><span className="diet-btn-txt__label body-m">{saving ? 'Updating…' : 'Update page'}</span></button></div></footer></dialog>
       <dialog ref={deleteDialogRef} className="diet-popup" data-size="medium" aria-label="Delete page"><header className="diet-popup__header"><h2 className="heading-4">Delete page?</h2></header><div className="diet-popup__body"><p className="body-m">This permanently deletes the saved Page.</p></div><footer className="diet-popup__footer"><div className="diet-popup__actions"><button className="diet-btn-txt" data-size="md" data-variant="secondary" type="button" onClick={() => setDeleteOpen(false)}><span className="diet-btn-txt__label body-m">Cancel</span></button><button className="diet-btn-txt" data-size="md" data-variant="primary" type="button" disabled={saving} onClick={() => { if (!currentPageId) return; setSaving(true); void accountApi.fetchJson(`/api/account/pages/${encodeURIComponent(currentPageId)}`, { method: 'DELETE' }).then(() => { clearRomaPagesCache(accountContext.accountPublicId); router.push('/pages'); }).catch(() => { setError('Deleting this Page failed. Please try again.'); setDeleteOpen(false); }).finally(() => setSaving(false)); }}><span className="diet-btn-txt__label body-m">Delete</span></button></div></footer></dialog>
       <PublicCodeDialog open={copyOpen} productName={source.displayName} actions={publicActions} onClose={() => setCopyOpen(false)} />

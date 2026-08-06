@@ -13,6 +13,7 @@
 .roma-page-name { width:min(32rem, 100%); border:1px solid transparent; border-radius:var(--control-radius-lg); background:transparent; color:var(--color-text); padding:var(--space-1) var(--space-2); }
 .roma-page-name:focus { outline:none; border-color:var(--role-focus); background:var(--role-surface); }
 .roma-page-builder__error { position:absolute; z-index:4; inset-block-start:var(--space-10); inset-inline:calc(var(--layout-page-padding) + var(--space-2)); padding:var(--space-2) var(--space-3); border-radius:var(--control-radius-xl); background:var(--role-surface); color:var(--role-error); box-shadow:var(--shadow-floating); }
+.roma-page-builder__notice { position:absolute; z-index:4; inset-block-start:var(--space-10); inset-inline:calc(var(--layout-page-padding) + var(--space-2)); padding:var(--space-2) var(--space-3); border-radius:var(--control-radius-xl); background:var(--role-surface); color:var(--role-text); box-shadow:var(--shadow-floating); }
 .roma-page-panel-tabs,.roma-page-panel__header,.roma-page-panel__actions { display:flex; align-items:center; gap:var(--space-2); }
 .roma-page-panel-tabs { width:100%; }
 .roma-page-panel-tabs > button { flex:1; }

@@ -41,7 +41,6 @@ export function PageList({ filter }: { filter: PageListFilter }) {
   const deleteLifecycleRef = useRef<DialogLifecycle | null>(null);
   const canUsePages = accountPolicy.limits['pages.max'] !== 0;
   const canMutatePages = accountPolicy.role !== 'viewer';
-  const canEditPages = canUsePages && canMutatePages;
 
   const reload = useCallback(async (force = false) => {
     setLoading(true);
@@ -140,7 +139,7 @@ export function PageList({ filter }: { filter: PageListFilter }) {
                   <th className="body-s" scope="row">{page.source.displayName}</th>
                   <td>
                     <label className="diet-toggle roma-widget-status-toggle" data-size="sm">
-                      <input type="checkbox" checked={page.serveState.published} disabled={!canEditPages || Boolean(activeAction) || (!page.serveState.published && page.serveState.needsUpdate)} onChange={() => void mutate(statusKey, () => accountApi.fetchJson(`/api/account/pages/${encodeURIComponent(id)}/${page.serveState.published ? 'unpublish' : 'publish'}`, { method: 'POST' }))} />
+                      <input type="checkbox" checked={page.serveState.published} disabled={!canMutatePages || Boolean(activeAction) || (!page.serveState.published && page.serveState.needsUpdate)} onChange={() => { if (!canUsePages) { setUpsellOpen(true); return; } void mutate(statusKey, () => accountApi.fetchJson(`/api/account/pages/${encodeURIComponent(id)}/${page.serveState.published ? 'unpublish' : 'publish'}`, { method: 'POST' })); }} />
                       <span className="diet-toggle__track" aria-hidden="true"><span className="diet-toggle__thumb" /></span>
                     </label>
                   </td>
@@ -151,11 +150,11 @@ export function PageList({ filter }: { filter: PageListFilter }) {
                     <div className="roma-cell-actions">
                       {actions ? <button className="diet-btn-txt" data-size="sm" data-variant="line2" type="button" onClick={() => setPublicContext({ name: page.source.displayName, actions })}><span className="diet-btn-txt__label body-s">Copy code</span></button> : null}
                       {canMutatePages ? (canUsePages ? <Link className="diet-btn-txt" data-size="sm" data-variant="line2" href={`/page-builder/${encodeURIComponent(id)}`}><span className="diet-btn-txt__label body-s">{page.serveState.needsUpdate ? 'Update page' : 'Edit'}</span></Link> : <button className="diet-btn-txt" data-size="sm" data-variant="line2" type="button" onClick={() => setUpsellOpen(true)}><span className="diet-btn-txt__label body-s">Edit</span></button>) : null}
-                      {canEditPages ? <div className="diet-popover-host" ref={menuPageId === id ? menuRef : undefined} data-state={menuPageId === id ? 'open' : 'closed'}>
+                      {canMutatePages ? <div className="diet-popover-host" ref={menuPageId === id ? menuRef : undefined} data-state={menuPageId === id ? 'open' : 'closed'}>
                         <button className="diet-btn-ic" data-size="sm" data-variant="neutral" type="button" aria-label={`More actions for ${page.source.displayName}`} aria-expanded={menuPageId === id} onClick={() => setMenuPageId((current) => current === id ? '' : id)}><span className="diet-btn-ic__icon diet-icon-mask" style={{ '--diet-icon-source': 'url("/dieter/icons/svg/ellipsis.svg")' } as CSSProperties} aria-hidden="true" /></button>
                         <div className="diet-popover roma-page-actions-popover" role="menu">
-                          <button className="diet-btn-menuactions" data-size="md" data-variant="neutral" type="button" role="menuitem" onClick={() => { setMenuPageId(''); setRenamePage(page); setRenameValue(page.source.displayName); }}><span className="diet-btn-menuactions__label body-s">Rename</span></button>
-                          {!page.serveState.published ? <button className="diet-btn-menuactions" data-size="md" data-variant="neutral" type="button" role="menuitem" onClick={() => { setMenuPageId(''); setDeletePage(page); }}><span className="diet-btn-menuactions__label body-s">Delete</span></button> : null}
+                          <button className="diet-btn-menuactions" data-size="md" data-variant="neutral" type="button" role="menuitem" onClick={() => { setMenuPageId(''); if (!canUsePages) { setUpsellOpen(true); return; } setRenamePage(page); setRenameValue(page.source.displayName); }}><span className="diet-btn-menuactions__label body-s">Rename</span></button>
+                          {!page.serveState.published ? <button className="diet-btn-menuactions" data-size="md" data-variant="neutral" type="button" role="menuitem" onClick={() => { setMenuPageId(''); if (!canUsePages) { setUpsellOpen(true); return; } setDeletePage(page); }}><span className="diet-btn-menuactions__label body-s">Delete</span></button> : null}
                         </div>
                       </div> : null}
                     </div>

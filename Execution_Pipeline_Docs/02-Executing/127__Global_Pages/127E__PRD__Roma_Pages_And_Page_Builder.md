@@ -327,15 +327,16 @@ Popover behavior, not another editor:
   immediately;
 - outside click or Escape closes it through the existing Popover lifecycle;
 - closing neither persists nor discards the current browser value;
-- the component supports `id`, label, value, placeholder, path, disabled, size,
-  and maximum length;
+- the React binding supports label, value, placeholder, disabled, and size;
 - the value is plain text: no HTML, formatting palette, links, rich-text
   parsing, Apply button, internal Save, or component-owned remote operation.
 
-The component lives under `dieter/components/textarea/` with the ordinary
-HTML, CSS, TypeScript hydrator, and component specification files, and is
-exported through the existing Dieter component entry point. Roma consumes it
-without a Page-only wrapper or duplicate CSS contract.
+The component contract, CSS, and framework-neutral hydrator live under
+`dieter/components/textarea/`. Roma's thin React binding renders that exact
+Dieter markup and classes because Dieter deliberately has no React/Next
+dependency. The image-upload binding follows the same rule and uses the
+existing Dieter Dropdown Upload contract. Neither binding creates a second
+visual component or duplicate CSS contract.
 
 ### Workspace
 
@@ -494,6 +495,12 @@ customer's explicit Save applies those Page edits. First Save is never blocked
 by missing translations: the Page must exist before Generate translations can
 run.
 
+Generate translations reports the exact locales that failed while keeping each
+successful overlay written by the existing Translation Agent. When at least one
+locale succeeds, Page Builder reloads the saved overlays and marks the browser
+draft dirty so the customer can review and Save the generated Page files. It
+does not hide a partial result behind a generic success or failure message.
+
 Country is not a Page Builder variant. Regional locales such as `en-US`,
 `en-GB`, `it-IT`, and `zh-CN` are the customer-selected exact versions. 127C
 uses country only as a hint to select among them.
@@ -537,7 +544,8 @@ Current. Failure remains Needs update and shows:
 
 Publish is available only for ordinary saved Current Pages with complete
 required locales and tier access. It invokes 127C Publish only. It never runs
-generation or translation.
+generation or translation. When required saved locale output is missing, Roma
+names those exact locales in the existing Page Builder error message.
 
 ### Unpublish and delete
 
@@ -560,50 +568,50 @@ No UI state becomes a second persisted Page truth.
 
 ## Code work
 
-- [ ] Replace `roma/components/pages-domain.tsx` with a thin Pages wrapper plus
+- [x] Replace `roma/components/pages-domain.tsx` with a thin Pages wrapper plus
       named Your-pages and Page-Builder components; delete its inline legacy
       editor, account-country-rule editor, publication/embed helpers, and form
       orchestration.
-- [ ] Make `use-roma-pages.ts` import 127A Page contracts and retain only Page
+- [x] Make `use-roma-pages.ts` import 127A Page contracts and retain only Page
       loading/cache transport; delete its local Page-source contract.
-- [ ] Reuse/extract the proven product-neutral Bob builder shell components.
-- [ ] Build Page-specific TopDrawer/ToolDrawer/Workspace composition using
+- [x] Reuse/extract the proven product-neutral Bob builder shell components.
+- [x] Build Page-specific TopDrawer/ToolDrawer/Workspace composition using
       Dieter; add no duplicate primitive or CSS system.
-- [ ] Implement Your pages with accepted Dieter table/filter/action patterns.
-- [ ] Implement `/page-builder/new` as browser-only draft and existing unsaved dialog.
-- [ ] Keep editable Page name in TopDrawer and implement only Content and
+- [x] Implement Your pages with accepted Dieter table/filter/action patterns.
+- [x] Implement `/page-builder/new` as browser-only draft and existing unsaved dialog.
+- [x] Keep editable Page name in TopDrawer and implement only Content and
       SEO/GEO/AEO panels from 127A fields.
-- [ ] Add the small Dieter Textarea composition and use it for Page meta and
+- [x] Add the small Dieter Textarea composition and use it for Page meta and
       social descriptions; add no Page-specific textarea or rich-text editor.
-- [ ] Implement SEO/GEO/AEO with the fixed required/optional fields, social
+- [x] Implement SEO/GEO/AEO with the fixed required/optional fields, social
       fallback copy, image-only Dropdown Upload, the two search-visibility
       choices, the active metadata locale selector, and the existing Generate
       translations operation; show neutral live character counts without
       setting a validation threshold; add no separate
       Languages/Translations/Meta panel, schema editor, panel Save, or
       metadata-generation operation.
-- [ ] Implement **Add widget** as a large Dieter Popup reusing the Your widgets
+- [x] Implement **Add widget** as a large Dieter Popup reusing the Your widgets
       inventory response, current filter/sort/Table/states, and **Add to page**
       row actions; add no Popup-only search.
-- [ ] Implement compact Content placement rows and two-way Content/Workspace
+- [x] Implement compact Content placement rows and two-way Content/Workspace
       selection using browser-only state.
-- [ ] Implement **Manage order** through the Dieter Object Manager Popup
+- [x] Implement **Manage order** through the Dieter Object Manager Popup
       interaction with move up/down/remove and local Cancel/Save/discard
       behavior; add no drag system or Repeater adapter.
-- [ ] Implement same-account Instance placement removal and slide the existing
+- [x] Implement same-account Instance placement removal and slide the existing
       Bob editor over the still-mounted Page Builder.
-- [ ] Add only the Bob host action **Done, go back to the page**; add no Bob
+- [x] Add only the Bob host action **Done, go back to the page**; add no Bob
       return route, `returnTo` coordinate, remote Page draft, or duplicate
       Widget editor.
-- [ ] Implement Translation Agent commands/status through existing authority.
-- [ ] Mint the compact Page ID in browser memory on first Save and make Roma
+- [x] Implement Translation Agent commands/status through existing authority.
+- [x] Mint the compact Page ID in browser memory on first Save and make Roma
       validate, not replace, that submitted ID.
-- [ ] Invoke 127B only on Save/Update and submit exact result through Roma.
-- [ ] Implement 127D update gate and Current/Needs update UI only.
-- [ ] Implement 127C Publish/Unpublish/Delete controls.
-- [ ] Reuse one Widget/Page public-action dialog for Copy URL and Copy code,
+- [x] Invoke 127B only on Save/Update and submit exact result through Roma.
+- [x] Implement 127D update gate and Current/Needs update UI only.
+- [x] Implement 127C Publish/Unpublish/Delete controls.
+- [x] Reuse one Widget/Page public-action dialog for Copy URL and Copy code,
       emitting 127C's `clickeen.js` contract and no iframe/runtime-only option.
-- [ ] Delete obsolete Roma Pages UI, temporary cards, Needs fixing UI, and
+- [x] Delete obsolete Roma Pages UI, temporary cards, Needs fixing UI, and
       duplicate builder styles/components, including the iframe helper.
 
 ## Verification

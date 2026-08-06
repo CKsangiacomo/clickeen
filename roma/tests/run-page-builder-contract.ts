@@ -72,6 +72,8 @@ async function main() {
   assertBefore(builder, 'setPreviewingGenerated(true)', 'await nextPaint()');
   assertBefore(builder, 'await nextPaint()', 'const completeSource: AccountPage');
   assert.match(builder, /clearRomaPagesCache\(accountContext\.accountPublicId\)/);
+  assert.match(builder, /if \(!generated\.overlaysJson\) throw new Error\('Page overlay output is missing\.'\)/);
+  assert.doesNotMatch(builder, /generated\.overlaysJson \?\? \{\}/);
   assert.match(builder, /if \(pageId && loadFailed\)/);
   assert.match(builder, /if \(isNotFoundError\(placementError\)\) return unavailablePlacement/);
   assert.match(builder, /payload\?\.overlay\?\.values/);
@@ -87,7 +89,17 @@ async function main() {
   assert.match(builder, />SEO\/GEO\/AEO</);
   assert.doesNotMatch(builder, />Languages<|>Translations<|>Meta</);
   assert.match(builder, /embedded returnLabel="Done, go back to the page"/);
-  assert.match(builder, /contextMessage="You are editing a saved widget\./);
+  assert.match(builder, /contextMessage="You're editing the saved widget\. Other pages using it will also need updating after Save\."/);
+  assert.match(builder, /freshEntryBlocked && needsUpdate/);
+  assert.match(builder, /setFreshEntryBlocked\(detail\.serveState\.needsUpdate\)/);
+  assert.match(builder, /setFreshEntryBlocked\(false\)/);
+  assert.match(builder, /readTranslationResult/);
+  assert.match(builder, /Translations generated, but failed/);
+  assert.match(builder, /Generate translations for: \$\{missingLocales\.join\(', '\)\} before publishing\./);
+  assert.match(builder, />Copy URL</);
+  assert.match(builder, />Copy code</);
+  assert.match(builder, />Unpublish</);
+  assert.match(builder, /currentPageId \? 'Current' : 'Unsaved'/);
   assert.match(bob, /embedded\?: boolean/);
   assert.match(bob, /if \(embedded \|\| !activeInstanceId\) return/);
   assert.match(bobTopDrawer, /returnLabel/);
@@ -137,6 +149,8 @@ async function main() {
   assert.match(list, /buildPagePublicActions/);
   assert.match(list, /\/rename`, \{ method: 'POST'/);
   assert.match(list, /accountPolicy\.role !== 'viewer'/);
+  assert.match(list, /if \(!canUsePages\) \{ setUpsellOpen\(true\); return; \} void mutate\(statusKey/);
+  assert.match(list, /if \(!canUsePages\) \{ setUpsellOpen\(true\); return; \} setRenamePage\(page\)/);
   assert.match(list, /<PublicCodeDialog/);
   assert.doesNotMatch(list, /iframe|runtime\.js/);
 

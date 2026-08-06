@@ -525,7 +525,10 @@ facts/filter/sort/Table behavior in its Add-widget Popup, and uses the Dieter
 Object Manager interaction for ordering. SEO/GEO/AEO edits the Page title,
 optional descriptions/sharing fields, search visibility and exact metadata
 locale overlays. Generate translations calls the existing Translation Agent
-against the locales selected in Settings.
+against the locales selected in Settings. Page Builder keeps every successful
+overlay, names any failed locales, and waits for explicit Save/Update before it
+regenerates Page files. Publish names missing required locales and never runs
+translation or generation.
 
 Editing a placement opens the existing Bob editor as a layer while Page
 Builder remains mounted. Bob's single Page-host action, **Done, go back to the
@@ -536,6 +539,11 @@ its browser draft. Bob does not save or regenerate the Page. Page Save and Updat
 the browser and submit its exact files. Publish only changes publication state.
 All Page blocking Popups use Dieter's existing native-dialog lifecycle; Roma
 adds no Page dialog framework or global editor state.
+
+A fresh open of a Page marked Needs update shows the blocking Update dialog.
+If Bob Save marks the already-mounted Page Needs update, the current browser
+session stays visible and Update becomes its next Page persistence action; the
+fresh-entry dialog does not reopen on top of that retained session.
 
 `pages.max = 0` keeps retained Page inventory visible but makes Page detail,
 Save, Rename, metadata-overlay write, Publish, Unpublish, and Delete routes

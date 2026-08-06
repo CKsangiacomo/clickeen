@@ -148,6 +148,28 @@ direct Page URLs. Save while published, Publish, Unpublish, and Delete purge
 the affected previous/current exact-locale and support-file URLs. Public
 serving never calls child Instance URLs, Web Code Generator, Roma, or a model.
 
+## Page Authoring
+
+Roma Page Builder owns Page SEO/GEO/AEO authoring. Its one SEO/GEO/AEO panel
+edits the required Page title plus optional meta description, social title,
+social description, social image, and the two supported search-visibility
+choices. Base metadata and exact-locale metadata use the same fields. Optional
+values stay empty until the customer supplies them; the UI shows neutral live
+character counts but does not invent SEO scores or hard character limits.
+
+The social image uses the account asset routes and Dieter's image-upload
+contract. Page Builder has no Page SEO entitlement toggle because ordinary
+Pages already begin at Tier 2, where Page SEO/GEO/AEO output is part of the
+product.
+
+**Generate translations** uses the existing Translation Agent and the locales
+selected in account Settings. It writes exact Page metadata overlays and
+reports any failed locales by name. It does not run Web Code Generator. The
+customer reviews the result and chooses Save or Update; that explicit action
+runs Web Code Generator and submits the exact Page files plus `overlays.json`.
+Publish does not generate or translate. If required saved locale output is
+missing, Publish names the missing locales and changes no public state.
+
 ## Boundaries
 
 SEO/GEO/AEO is not:
