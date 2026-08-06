@@ -1,6 +1,6 @@
 # 127C — Page Publication and Public Serving
 
-Status: **APPROVED FOR EXECUTION — EXECUTE AFTER 127A–127B ARE DEPLOYED AND VERIFIED**
+Status: **EXECUTED, DEPLOYED, VERIFIED, AND REVIEW-GREEN**
 
 Parent: `127__PRD__Global_Pages_Program.md`
 
@@ -321,30 +321,30 @@ Instances or account assets.
 
 ## 13. Required code cutover
 
-- [ ] Replace the public iframe and direct-`runtime.js` snippet fields in
+- [x] Replace the public iframe and direct-`runtime.js` snippet fields in
       `roma/lib/public-widget-actions.ts`, Roma's shared Copy-code dialog and
       its current Widget/Builder consumers, Bob's public-action session shape
       and TopDrawer consumer, and their focused tests with one product-neutral
       public URL plus `clickeen.js` snippet. 127E adds the Page consumer after
       Page Builder exists.
-- [ ] Delete the public iframe/direct-`runtime.js` choices, obsolete payload
+- [x] Delete the public iframe/direct-`runtime.js` choices, obsolete payload
       fields, obsolete UI/CSS branches, obsolete tests, and obsolete service
       documentation. Bob's editor-preview iframe is not a public installation
       path and is not part of this deletion.
-- [ ] Store the direct current Page source, files, overlays, and serving state
+- [x] Store the direct current Page source, files, overlays, and serving state
       in the Page folder.
-- [ ] Keep ordinary Page JSON parsing in the replacement Roma/Tokyo Page owner;
+- [x] Keep ordinary Page JSON parsing in the replacement Roma/Tokyo Page owner;
       delete the obsolete parser with the obsolete Page implementation.
-- [ ] Implement Save/Update storage without revision metadata, fingerprints,
+- [x] Implement Save/Update storage without revision metadata, fingerprints,
       candidates, or pointers.
-- [ ] Implement Publish, Unpublish, Delete, stable URL, exact-locale response,
+- [x] Implement Publish, Unpublish, Delete, stable URL, exact-locale response,
       scoped purges, and support-file responses.
-- [ ] Complete and verify the existing Widget base/locale HTML invalidation
+- [x] Complete and verify the existing Widget base/locale HTML invalidation
       lifecycle before replacing 127B's `no-store` HTML policy.
-- [ ] Add `tokyo/product/clickeen/clickeen.js`, its `product/clickeen.js` sync
+- [x] Add `tokyo/product/clickeen/clickeen.js`, its `product/clickeen.js` sync
       mapping and workflow change-detection path, and the `/clickeen.js` Tokyo
       route to the existing product-root deployment.
-- [ ] Delete obsolete Page package/pointer/request-generation code and tests.
+- [x] Delete obsolete Page package/pointer/request-generation code and tests.
 
 ## 14. Verification
 
@@ -395,7 +395,54 @@ until those slices deploy.
 Public missing-Page or missing-locale responses use normal visitor-facing Page
 error text. Logs retain the technical storage or locale reason.
 
-## 16. Definition of done
+## 16. Execution evidence
+
+### Git and deployment
+
+- implementation: `6cf42027d503fb290bb4d4dad1148689d2c9adc7`
+  (`feat(127c): publish and serve direct pages`);
+- source-locale fidelity correction:
+  `0deaddc6c79cf4b07782edb26b53cc076e44c2f5`
+  (`fix(127c): preserve page source locale`);
+- final current-truth cleanup: `25c7e60b`
+  (`docs(127c): remove stale page serving statement`);
+- Worker/R2 deployment run `31077750906` and Roma verification run
+  `31077750918` passed for the implementation commit;
+- Roma verification run `31079128902` and surface-reachability run
+  `31079338205` passed for the correction commit;
+- Cloudflare Pages project `roma-dev` deployed correction commit `0deaddc6`
+  successfully; the following `25c7e60b` commit changes documentation only.
+
+### Code and runtime verification
+
+- focused Roma Page source and Widget public-action contract tests passed;
+- focused Tokyo Page storage, publication, exact-locale serving, shared-loader,
+  Widget cache-lifecycle, and `clk.live` locale-serving tests passed;
+- Tokyo R2 sync dry run proved the existing product-root mapping for
+  `product/clickeen.js`;
+- root typecheck, lint, build, and `git diff --check` passed;
+- R2 `product/clickeen.js` and live `https://dev.clk.live/clickeen.js` matched
+  the git-authored source bytes;
+- live public Page routing returned the explicit Page boundary response rather
+  than falling through another product route;
+- a live browser host mounted two published Widget Instances through the
+  shared loader with two open Shadow roots, zero iframes, distinct product
+  styles, source-backed schema, and no console or page errors.
+
+No account Pages existed in the cloud-dev Page root during this slice. The
+controlled Roma/Tokyo tests therefore prove Page storage/publication and the
+live route proves the deployed public boundary. Customer Page Builder Save,
+Update, Copy code, and live Page creation remain 127E work exactly as scoped in
+Section 14; 127C did not fabricate remote Page data to pre-execute that slice.
+
+### Required independent review
+
+Staff engineering, Senior PM, and Principal TPM independently reviewed final
+HEAD `25c7e60b`. All three returned GREEN. The Staff and TPM reviews found and
+required removal of one stale current-truth sentence before closure. The final
+independent V1–V8 result is GREEN for every violation.
+
+## 17. Definition of done
 
 127C is done when direct Page files publish and serve complete locale-specific
 HTML through the documented URLs and Cloudflare cache; the shared iframe-free
