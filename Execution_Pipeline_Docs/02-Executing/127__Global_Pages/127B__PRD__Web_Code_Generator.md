@@ -493,7 +493,7 @@ produce `overlays.json`.
 ## 14. Locale response markers
 
 Generated HTML uses one small field-path contract so Tokyo can place exact
-locale values into complete HTML before the response is cached:
+locale values into complete HTML before returning the response:
 
 - `data-ck-field-path` names the exact saved field path;
 - `data-ck-field-target` identifies text, approved rich text, or an approved
@@ -575,23 +575,23 @@ For Free ordinary Widget Instances, Web Code Generator emits:
 
 - one visible contextual Clickeen attribution in initial HTML;
 - the approved link relationship;
-- truthful static structured data connecting Clickeen, the Widget product,
+- truthful static structured data connecting the global Clickeen application
   and the customer Instance;
 - no claim that Clickeen authored or owns customer content.
 
-Use one small approved repository data module for the eight Widget product
-names, descriptions, attribution text, and market product paths. This is
-Clickeen product truth, not a service or registry API.
-
-The matching product URL is:
+Use the Widget definition's approved display name for the visible contextual
+credit. Every Free Widget uses the same global Clickeen product link:
 
 ```text
-https://clickeen.com/{market}/widgets/{widgetType}/
+https://clickeen.com/
 ```
 
-Tokyo resolves the market from the existing Cloudflare country coordinate when
-serving the Free Widget and completes the approved product URL before caching.
-Web Code Generator does not infer a market.
+The generated link is identical for every Widget and in every country. The
+machine-readable application identity describes Clickeen itself; it does not
+invent a separate public product page for each Widget. Public Widget HTML
+therefore does not vary by country. 127B keeps completed Instance HTML
+`no-store`; the public-serving slice may enable caching only together with the
+full Save, translation, Publish, Unpublish, and delete invalidation lifecycle.
 
 Paid branding removal and the customer SEO/GEO/AEO toggle remain independent
 existing capabilities.
@@ -743,7 +743,7 @@ After 127B is deployed, update current truth in:
   `documentation/widgets/authoring/WidgetAuthoringChecklist.md`, and
   `documentation/widgets/README.md`;
 - the Web Code Generator package documentation;
-- approved Clickeen Widget product-route documentation.
+- Clickeen attribution and application-identity documentation.
 
 Delete the obsolete runtime-materializer documentation when its package is
 deleted. Page publication, caching, and public-serving documentation belongs

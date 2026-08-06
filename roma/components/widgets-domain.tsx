@@ -445,44 +445,13 @@ export function WidgetsDomain({
   }, [instanceWidgetTypes, view]);
 
   const handleCreateInstance = useCallback(
-    async (widgetType: string) => {
+    (widgetType: string) => {
       if (!productAccountId || !canMutateWidgets) return;
-      const actionKey = `create:${widgetType}`;
-      setActiveActionKey(actionKey);
       setMutationError(null);
       setUpgradePrompt(null);
-      try {
-        const response = await accountApi.fetchRaw('/api/account/instances', {
-          method: 'POST',
-          headers: accountApi.buildHeaders({ contentType: 'application/json' }),
-          body: JSON.stringify({ widgetType }),
-        });
-        const payload = await readJsonOrNull(response);
-        if (response.status === 402) {
-          const prompt = normalizeUpgradePrompt(payload);
-          if (prompt) {
-            setUpgradePrompt(prompt);
-            return;
-          }
-        }
-        if (!response.ok) {
-          throw new Error(resolveAccountShellReason(payload, 'Creating the widget failed. Please try again.'));
-        }
-        const payloadRecord = payload && typeof payload === 'object' && !Array.isArray(payload) ? payload as Record<string, unknown> : null;
-        const createdInstanceId = typeof payloadRecord?.instanceId === 'string' ? payloadRecord.instanceId.trim() : '';
-        if (!createdInstanceId) {
-          throw new Error('coreui.errors.payload.invalid');
-        }
-        await refreshWidgets({ force: true });
-        router.push(buildBuilderRoute({ instanceId: createdInstanceId, widgetType }));
-      } catch (err) {
-        const message = err instanceof Error ? err.message : String(err);
-        setMutationError(resolveAccountShellErrorCopy(message, 'Creating the widget failed. Please try again.'));
-      } finally {
-        setActiveActionKey((current) => (current === actionKey ? null : current));
-      }
+      router.push(`/builder?new=${encodeURIComponent(widgetType)}`);
     },
-    [accountApi, canMutateWidgets, productAccountId, refreshWidgets, router],
+    [canMutateWidgets, productAccountId, router],
   );
 
   const openCopyCode = useCallback((instance: WidgetInstance) => {
@@ -509,44 +478,13 @@ export function WidgetsDomain({
   }, [productAccountId]);
 
   const handleDuplicateInstance = useCallback(
-    async (instance: WidgetInstance) => {
+    (instance: WidgetInstance) => {
       if (!productAccountId || !canMutateWidgets) return;
-      const actionKey = `duplicate:${instance.instanceId}`;
-      setActiveActionKey(actionKey);
       setMutationError(null);
       setUpgradePrompt(null);
-      try {
-        const response = await accountApi.fetchRaw(`/api/account/instances/${encodeURIComponent(instance.instanceId)}/duplicate`, {
-          method: 'POST',
-        });
-        const payload = await readJsonOrNull(response);
-        if (response.status === 402) {
-          const prompt = normalizeUpgradePrompt(payload);
-          if (prompt) {
-            setUpgradePrompt(prompt);
-            return;
-          }
-        }
-        if (!response.ok) {
-          throw new Error(resolveAccountShellReason(payload, 'Duplicating the widget failed. Please try again.'));
-        }
-        const payloadRecord = payload && typeof payload === 'object' && !Array.isArray(payload) ? payload as Record<string, unknown> : null;
-        const duplicatedInstanceId =
-          typeof payloadRecord?.instanceId === 'string' && payloadRecord.instanceId.trim()
-            ? payloadRecord.instanceId.trim()
-            : '';
-        if (!duplicatedInstanceId) {
-          throw new Error('coreui.errors.payload.invalid');
-        }
-        await refreshWidgets({ force: true });
-      } catch (err) {
-        const message = err instanceof Error ? err.message : String(err);
-        setMutationError(resolveAccountShellErrorCopy(message, 'Duplicating the widget failed. Please try again.'));
-      } finally {
-        setActiveActionKey((current) => (current === actionKey ? null : current));
-      }
+      router.push(`/builder?duplicate=${encodeURIComponent(instance.instanceId)}`);
     },
-    [accountApi, canMutateWidgets, productAccountId, refreshWidgets],
+    [canMutateWidgets, productAccountId, router],
   );
 
   const handleDeleteInstance = useCallback(

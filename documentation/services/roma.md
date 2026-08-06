@@ -226,29 +226,27 @@ Builder opens one saved widget instance:
 no path, query, or hash. Missing or malformed Bob origin config fails Builder
 instead of falling back to another origin.
 
-Bob edits in browser memory. Save sends the current widget document back to
-Roma. Roma performs the current-account save command and Tokyo-worker writes the
-saved source plus generated package under:
+Bob edits in browser memory and generates the exact browser package for each
+valid working state. Save sends the current config and exact generated package
+to Roma. Roma performs the current-account save command and Tokyo-worker writes
+the submitted source plus exact package under:
 
 ```text
 accounts/{accountPublicId}/instances/{instanceId}/
 ```
 
-The Builder preview uses that same saved package as its runtime base. Roma does
-not provide a second source-widget preview package.
+The saved package is persistence/open baseline truth. Bob uses Web Code
+Generator for the preview package, including the initial working state and
+every later valid change. Roma does not provide a second source-widget preview
+package and does not generate browser files.
 
-Create, save, and duplicate all use the same package contract: Roma reads the
-server-only materializer artifact generated from canonical widget source at
-deploy time, materializes account asset references in the current account
-config, then delegates deterministic base byte generation to
-`@clickeen/ck-runtime-materializer` for `index.html`, `styles.css`, and
-`runtime.js`. Roma submits those exact files with the source to Tokyo-worker.
-Roma derives the package base locale from current account settings. Duplicate is
-a new account operation; it does not copy locale authority from the source
-instance. Tokyo-worker stores the submitted files; it does not render, compile,
-infer, or repair widget package bytes. Tokyo-worker records a package
-fingerprint on newly saved source and package objects so package reads, publish,
-and public serving can reject mixed package state deterministically.
+Create and save accept the exact `index.html`, `styles.css`, and `runtime.js`
+that Bob generated for the submitted config. Roma validates the account command
+and current save policy, including the Widget `limits.json` mappings, then
+submits those exact files with the source to Tokyo-worker. Duplicate remains a
+new account operation and does not copy locale authority from the source
+instance. Tokyo-worker stores submitted package files; it does not render,
+compile, infer, or repair their bytes.
 
 When the existing source-save command changes a saved instance, Roma saves the
 source and base package only. It does not generate translations, regenerate
@@ -272,7 +270,8 @@ files.
 `PUT /api/account/instances/{instanceId}/translations/{locale}` is the exact
 editor-authorized overlay-value mutation boundary. It accepts one complete
 saved-field value map and delegates it to Tokyo-worker; Tokyo rejects base-locale
-overlays, missing paths, and extra paths. It does not materialize runtime files.
+overlays, missing paths, and extra paths. It does not generate or rebuild
+runtime files.
 When the command is invoked through hosted Bob, Translation Agent may stream
 Agent Activity while it operates. Roma forwards that activity to Bob; Roma does
 not author it, summarize it, poll for it, persist it, or convert it into product
@@ -280,7 +279,7 @@ status.
 
 Account language settings choose which languages are available to widgets. Roma
 writes that account configuration to Supabase. Adding a language does not call
-the Translation Agent or materialize any widget; each widget remains missing
+the Translation Agent or regenerate any Widget package; each widget remains missing
 that translation until its Translations panel explicitly generates it.
 
 Removing a language deletes its exact overlay from saved account instances
@@ -306,14 +305,16 @@ The copied public URL is slashless:
 {public-serving-origin}/{accountPublicId}/{instanceId}
 ```
 
-Generated package HTML must not depend on that URL being folder-normalized. The
-runtime materializer writes exact root-relative support-file paths inside
-`index.html`:
+Web Code Generator writes public-coordinate placeholders for the support files
+inside the exact generated `index.html`:
 
 ```text
-/{accountPublicId}/{instanceId}/styles.css
-/{accountPublicId}/{instanceId}/runtime.js
+/__CK_PUBLIC_ACCOUNT_ID__/__CK_PUBLIC_INSTANCE_ID__/styles.css
+/__CK_PUBLIC_ACCOUNT_ID__/__CK_PUBLIC_INSTANCE_ID__/runtime.js
 ```
+
+Tokyo completes those placeholders from the validated public route. The
+resulting absolute paths resolve correctly from Roma's slashless public URL.
 
 ## Widgets Domain
 
@@ -375,16 +376,14 @@ returns stored `displayName` as string or `null`; Roma applies the UI fallback
 label for product rendering.
 
 Create and duplicate enforce `widgets.instances.max` at command time before
-minting a new instance id, compiling package bytes, materializing source, or
-calling Tokyo-worker create/write routes. Publish enforces
+minting a new instance id or calling Tokyo-worker create/write routes. Publish enforces
 `instances.published.max` at command time from Roma-computed list-facts rows.
 Over-tier Create, Duplicate, and Publish return HTTP 402 `UPGRADE_REQUIRED`.
 Missing or malformed policy limits return a Roma policy contract failure, not
 unlimited usage and not a disabled list-time control.
 
 Create and duplicate mint the new instance id in Roma only after the command
-gate passes, so the generated browser package and the saved source use the same
-account instance identity from the start. Publish and unpublish are account
+gate passes. Publish and unpublish are account
 product actions; Roma sends the exact product transition to Tokyo-worker for R2
 `serve-state.json` mutation.
 
@@ -454,8 +453,9 @@ draft that the user leaves without Save exists only in browser memory.
 
 Current Page source references saved Widget Instances by placement id and
 instance id. It does not embed or copy Instance source. Page templates have no
-locales. Page UI, compilation, publication, and public serving are not
-implemented in the current slice.
+locales. Web Code Generator includes deterministic Page generation, but Roma
+does not invoke it and current Page routes do not store, publish, or publicly
+serve generated Page files.
 
 ## Team, Profile, Settings
 
@@ -487,10 +487,10 @@ Each accepted family transition updates all three values in one draft-state
 update. GET and PUT reject exact invalid typography paths before Tokyo
 persistence. The account-backed controls expose only available choices.
 
-Account instance create, save, and duplicate materialize the candidate public
-package before the Tokyo write. Package materialization applies the same
-account-font validator before font asset resolution, so direct or replayed
-invalid typography cannot reach source persistence or public package bytes.
+Account instance create and save require the candidate public package before
+the Tokyo write. Roma validates the submitted config and current Widget limits;
+Web Code Generator validates account-font selections and resolved font assets
+before Bob can submit a successful generated package.
 
 Account deletion is disabled in the current runtime. Roma does not offer the
 delete-account settings action and `DELETE /api/account` returns an explicit

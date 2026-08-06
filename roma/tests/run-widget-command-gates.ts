@@ -30,25 +30,26 @@ async function testCreateGateBeforeWork(): Promise<void> {
   assertNoOldUpgradePath(source);
   assertBefore(source, gateBranch, 'listTokyoWidgetDefinitions({');
   assertBefore(source, gateBranch, 'createCompactInstanceId()');
-  assertBefore(source, gateBranch, 'readWidgetForInstancePackage(');
-  assertBefore(source, gateBranch, 'materializeAccountInstancePublicPackage({');
+  assertBefore(source, gateBranch, 'materializeAccountInstanceSourceArtifacts({');
   assertBefore(source, gateBranch, 'createAccountInstanceInTokyo({');
+  assert.doesNotMatch(source, /readWidgetForInstancePackage|materializeAccountInstancePublicPackage/);
 }
 
-async function testDuplicateGateBeforeWorkAfterSourceProof(): Promise<void> {
-  const source = await readRoute('app/api/account/instances/[instanceId]/duplicate/route.ts');
-  const gateBranch = 'if (widgetInstanceIds.value.instanceIds.length >= widgetInstancesLimit)';
-  assert.match(source, /action: 'duplicate_instance'/);
-  assert.match(source, /status: 402/);
-  assert.match(source, /policyContractFailure\('widgets\.instances\.max'\)/);
-  assert.match(source, /listAccountWidgetInstanceIds\(\{/);
-  assert.match(source, /if \(widgetInstanceIds\.value\.instanceIds\.length >= widgetInstancesLimit\) \{\s+return withSession\(\s+request,\s+upgradeRequired\(\{/);
-  assertNoOldUpgradePath(source);
-  assertBefore(source, 'loadTokyoAccountInstanceDocument({', 'listAccountWidgetInstanceIds({');
-  assertBefore(source, gateBranch, 'createCompactInstanceId()');
-  assertBefore(source, gateBranch, 'readWidgetForInstancePackage(');
-  assertBefore(source, gateBranch, 'materializeAccountInstancePublicPackage({');
-  assertBefore(source, gateBranch, 'createAccountInstanceInTokyo({');
+async function testCreateAndDuplicateStayInBrowserUntilSave(): Promise<void> {
+  const widgets = await readRoute('components/widgets-domain.tsx');
+  const builder = await readRoute('components/builder-domain.tsx');
+  const bobSaving = await readFile(new URL('../../bob/lib/session/useSessionSaving.ts', import.meta.url), 'utf8');
+
+  assert.match(widgets, /router\.push\(`\/builder\?new=\$\{encodeURIComponent\(widgetType\)\}`\)/);
+  assert.match(widgets, /router\.push\(`\/builder\?duplicate=\$\{encodeURIComponent\(instance\.instanceId\)\}`\)/);
+  assert.doesNotMatch(widgets, /\/duplicate`/);
+  assert.match(builder, /const newWidgetType = useMemo/);
+  assert.match(builder, /const duplicateInstanceId = useMemo/);
+  assert.match(builder, /let publicPackage:[^;]+\| null = null;/);
+  assert.match(builder, /method: instanceId \? 'PUT' : 'POST'/);
+  assert.match(builder, /path: instanceId[\s\S]*?'\/api\/account\/instances'/);
+  assert.match(bobSaving, /command: 'update-instance'/);
+  assert.doesNotMatch(bobSaving, /Missing instance context for save/);
 }
 
 async function testPublishGateBeforeTransition(): Promise<void> {
@@ -98,7 +99,8 @@ async function testBuilderUsesBobTopDrawerAsItsOnlyEditorChrome(): Promise<void>
   assert.doesNotMatch(builderRoute, /showHeader/);
   assert.match(builderRoute, /fullCanvas/);
   assert.doesNotMatch(builderRoute, /RomaShellDefaultActions/);
-  assert.doesNotMatch(builderLandingRoute, /fullCanvas/);
+  assert.match(builderLandingRoute, /const hasDraft = Boolean/);
+  assert.match(builderLandingRoute, /hasDraft[\s\S]*?fullCanvas: true/);
   assert.doesNotMatch(builderLandingRoute, /rd-canvas--builder/);
   assert.match(builderLandingRoute, /RomaShellDefaultActions/);
 
@@ -333,9 +335,9 @@ async function testDieterLayoutTableAndPopupConsumption(): Promise<void> {
 
 async function run(): Promise<void> {
   await testCreateGateBeforeWork();
-  console.log('PASS create gate runs before id/package/Tokyo write work');
-  await testDuplicateGateBeforeWorkAfterSourceProof();
-  console.log('PASS duplicate gate runs after source proof and before id/package/Tokyo write work');
+  console.log('PASS Save-created Instance gate runs before id and Tokyo write work');
+  await testCreateAndDuplicateStayInBrowserUntilSave();
+  console.log('PASS Create and Duplicate stay in browser until explicit Save');
   await testPublishGateBeforeTransition();
   console.log('PASS publish gate uses list-facts and runs before Tokyo publish transition');
   await testBuilderHandlesBobUpsell();

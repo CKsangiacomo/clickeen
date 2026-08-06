@@ -1,7 +1,7 @@
 {
   "widgetname": "faq",
   "displayName": "FAQ",
-  "description": "",
+  "description": "Build a fast, beautiful FAQ widget. Customize, publish, and localize in minutes.",
   "itemKey": "faq.item",
   "normalization": {
     "idRules": [

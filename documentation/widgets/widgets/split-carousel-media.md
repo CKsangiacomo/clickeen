@@ -19,9 +19,9 @@ Files:
 spec.json
 editable-fields.json
 limits.json
-widget.html
-widget.css
-widget.client.js
+index.html
+styles.css
+runtime.js
 ```
 
 ## Contract
@@ -68,6 +68,7 @@ non-empty `id` values.
 items.group.small.max -> splitCarouselMedia.items[]
 branding.remove -> behavior.showBacklink
 widget.socialShare.enabled -> behavior.socialShare.enabled
+embed.seoGeo.enabled -> behavior.seoGeoAeoEnabled
 ```
 
 ## Shell Utilities
@@ -76,40 +77,34 @@ Split Carousel Media uses the shared Shell for Header, Header CTA, Stage/Pod,
 Core size, typography, branding, social share, and locale switcher. Carousel
 media items belong to `splitCarouselMedia.*`.
 
-Runtime requires these Core DOM hooks:
+Generated `index.html` contains every slide and its media markup. Its stable
+Core hooks include:
 
 ```text
 [data-role="split-carousel-media"]
 [data-role="split-carousel-media-core"]
 ```
 
-`widget.client.js` registers as `split-carousel-media`, validates
-`splitCarouselMedia.*`, renders slides into `split-carousel-media-core`, applies
-shared Shell utilities, and binds `ck:state-update` for the current instance id.
+`runtime.js` registers as `split-carousel-media` through `CKWidgetRuntime` and
+binds controls, autoplay, and video behavior to generated slides. It does not
+render slides from config or accept generic state updates.
 
-Runtime invariants:
+Runtime behavior contract:
 
-- `splitCarouselMedia.items[]` must contain 2-6 visuals.
-- Item ids must be stable and unique.
-- Media kind is `none`, `image`, or `video`.
-- Empty media state must not include populated image/video buckets.
-- Media source values must be non-empty and accepted as relative, absolute-path,
-  or `http(s)` URLs.
 - Video media may include a poster and defaults muted, loop, autoplay, and
   playsinline behavior unless explicitly disabled by state.
 - Carousel controls, autoplay, loop, transition, and interval behavior belong to
   `splitCarouselMedia.carousel`.
-- Carousel transition is `slide` or `fade`; autoplay interval is 2000..12000ms.
-- Applying new state resets the active slide to the first rendered item.
+- Runtime requires at least two generated slides, a `slide` or `fade`
+  transition, and a finite positive autoplay interval.
 - Auto core size uses a 16:9 shape with a 320px minimum height in current CSS.
-- Card wrapper styling uses shared `CKSurface.applyCardWrapper`.
+- Card wrapper styling is generated from the shared Shell surface contract.
 
 ## Clickeen Pages Usage
 
 Split Carousel Media appears in Clickeen Page source as a saved account widget
 instance placement. Media fill objects remain in instance state. Uploaded files
-are account assets, but runtime validates source URL shape; it does not rely on
-account-asset identity alone.
+are account assets resolved before generation.
 
 ## Verification
 

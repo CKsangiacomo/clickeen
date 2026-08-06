@@ -80,21 +80,6 @@ export async function loadBuilderOpenEnvelope(args: {
     return publicPackage;
   }
 
-  if (
-    instance.value.row.publicPackageFingerprint !==
-    publicPackage.value.publicPackageFingerprint
-  ) {
-    return {
-      ok: false,
-      status: 409,
-      error: {
-        kind: 'VALIDATION',
-        reasonKey: 'coreui.errors.instance.embedNotReady',
-        detail: 'saved source and public package fingerprints do not match',
-      },
-    };
-  }
-
   if (!widgetDefaults.ok) {
     console.error(
       JSON.stringify({

@@ -1,4 +1,5 @@
 import { normalizeLocale } from '../../asset-utils';
+import { assertTranslationSafety } from '@clickeen/l10n';
 import type { Env } from '../../types';
 import {
   readConfigDocumentByLocation,
@@ -10,6 +11,7 @@ import type {
   AccountInstanceSourceReadFailure,
 } from '../account-instances/types';
 import { normalizeStorageId } from '../account-instances/utils';
+import { getWidgetDefinition } from '../widget-definitions';
 import {
   assertLocaleOverlayValuesMatchSavedTextFields,
   deleteLocaleOverlay,
@@ -53,6 +55,26 @@ function savedContentOverlayFields(content: AccountInstanceContentDocument): Arr
   return Object.keys(content.fields).map((path) => ({ path }));
 }
 
+function assertSavedTranslationSafety(args: {
+  configDoc: AccountInstanceConfigDocument;
+  content: AccountInstanceContentDocument;
+  values: Record<string, string>;
+}): void {
+  const definition = getWidgetDefinition(args.configDoc.widgetType);
+  if (!definition) throw new Error(`tokyo.translation.widget_unsupported:${args.configDoc.widgetType}`);
+  const contractByPattern = new Map(definition.editableFields.fields.map((field) => [field.path, field]));
+  for (const [path, field] of Object.entries(args.content.fields)) {
+    const pattern = field.fieldPattern || path;
+    const contract = contractByPattern.get(pattern);
+    if (!contract) throw new Error(`coreui.errors.instance.content.invalid:${path}`);
+    assertTranslationSafety(
+      { path, type: contract.type, value: field.value },
+      args.values[path]!,
+      'tokyo',
+    );
+  }
+}
+
 export async function readAccountInstanceTranslatedLocaleValues(args: {
   env: Env;
   instanceId: string;
@@ -87,6 +109,11 @@ export async function readAccountInstanceTranslatedLocaleValues(args: {
     return { ok: false, kind: 'NOT_FOUND', reasonKey: 'tokyo.translation.notFound' };
   }
   assertLocaleOverlayValuesMatchSavedTextFields({ fields: current, values: overlay.values });
+  assertSavedTranslationSafety({
+    configDoc: stored.configDoc,
+    content: stored.content,
+    values: overlay.values,
+  });
   const values: Record<string, string> = {};
   for (const { path } of current) {
     values[path] = overlay.values[path]!;
@@ -120,6 +147,11 @@ export async function writeAccountInstanceTranslatedLocaleValues(args: {
   }
   const fields = savedContentOverlayFields(stored.content);
   assertLocaleOverlayValuesMatchSavedTextFields({ fields, values: args.values });
+  assertSavedTranslationSafety({
+    configDoc: stored.configDoc,
+    content: stored.content,
+    values: args.values,
+  });
   await writeLocaleOverlay({
     env: args.env,
     accountId: stored.configDoc.accountId,

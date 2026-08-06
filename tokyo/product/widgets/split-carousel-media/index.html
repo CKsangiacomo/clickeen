@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{{header.title}} | Split Carousel</title>
+    <link rel="stylesheet" href="/dieter/tokens/tokens.css" />
+    <link rel="stylesheet" href="../shared/header.css" />
+    <link rel="stylesheet" href="../shared/localeSwitcher.css" />
+    <link rel="stylesheet" href="../shared/stagePod.css" />
+    <link rel="stylesheet" href="../shared/socialShare.css" />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="stage" data-role="stage">
+      <div class="pod" data-role="pod">
+        <main class="ck-widget ck-split-carousel-media-widget" data-ck-widget="split-carousel-media" data-role="root">
+          <section class="ck-split-carousel-media ck-headerLayout" data-role="split-carousel-media" data-transition="{{splitCarouselMedia.carousel.transition}}" data-autoplay="{{splitCarouselMedia.carousel.autoplay}}" data-interval-ms="{{splitCarouselMedia.carousel.intervalMs}}" data-loop="{{splitCarouselMedia.carousel.loop}}">
+            <header class="ck-split-carousel-media__header ck-header" {{#unless header.enabled}}hidden{{/unless}}>
+              <div class="ck-header__text">
+                <h2 class="ck-split-carousel-media__title ck-header__title heading-2" data-role="header-title" data-ck-field-path="header.title" data-ck-field-target="richtext">{{header.title}}</h2>
+                <div class="ck-header__subtitle" data-role="header-subtitle" data-ck-field-path="header.subtitleHtml" data-ck-field-target="richtext" {{#unless header.showSubtitle}}hidden{{/unless}}>{{header.subtitleHtml}}</div>
+              </div>
+              <a class="ck-header__cta" data-role="header-cta" href="{{headerCta.href}}" data-open-mode="{{headerCta.openMode}}" {{#unless headerCta.enabled}}hidden{{/unless}}><span class="ck-header__ctaIcon" aria-hidden="true"></span><span class="ck-header__ctaLabel" data-ck-field-path="headerCta.label" data-ck-field-target="text">{{headerCta.label}}</span></a>
+            </header>
+            <div class="ck-split-carousel-media__core ck-headerLayout__body" data-role="split-carousel-media-core">
+              <div class="ck-split-carousel-media__stage" data-role="carousel-stage" aria-roledescription="carousel" data-fit="{{splitCarouselMedia.media.fit}}" data-position="{{splitCarouselMedia.media.position}}" style="--ck-split-carousel-media-fit: {{splitCarouselMedia.media.fit}}; --ck-split-carousel-media-position: {{splitCarouselMedia.media.position}}">
+                {{#each splitCarouselMedia.items}}
+                <figure class="ck-split-carousel-media__media" data-role="carousel-slide" data-item-id="{{id}}" data-active="false" {{#unless media.image}}{{#unless media.video}}data-empty="true"{{/unless}}{{/unless}}>
+                  {{#if media.image}}<img src="{{media.image.src}}" alt="{{alt}}" data-ck-field-path="{{@path}}.alt" data-ck-field-target="attribute:alt" loading="lazy" />{{/if}}
+                  {{#if media.video}}<video src="{{media.video.src}}" {{#if media.video.poster}}poster="{{media.video.poster}}"{{/if}} {{#if media.video.autoplay}}data-autoplay="true"{{/if}} {{#if media.video.muted}}muted{{/if}} {{#if media.video.loop}}loop{{/if}} playsinline aria-label="{{alt}}"></video>{{/if}}
+                </figure>
+                {{/each}}
+                {{#if splitCarouselMedia.carousel.showArrows}}
+                <button type="button" class="ck-split-carousel-media__control" data-role="carousel-control" data-dir="prev" aria-label="Previous visual">‹</button>
+                <button type="button" class="ck-split-carousel-media__control" data-role="carousel-control" data-dir="next" aria-label="Next visual">›</button>
+                {{/if}}
+                {{#if splitCarouselMedia.carousel.showDots}}
+                <div class="ck-split-carousel-media__dots" data-role="carousel-dots" role="tablist" aria-label="Choose a visual">
+                  {{#each splitCarouselMedia.items}}<button type="button" class="ck-split-carousel-media__dot" data-role="carousel-dot" data-index="{{@index}}" aria-label="Show visual" aria-current="false"></button>{{/each}}
+                </div>
+                {{/if}}
+              </div>
+            </div>
+          </section>
+          <script src="./runtime.js" defer></script>
+        </main>
+      </div>
+    </div>
+  </body>
+</html>

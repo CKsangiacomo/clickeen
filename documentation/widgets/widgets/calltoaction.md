@@ -19,9 +19,9 @@ Files:
 spec.json
 editable-fields.json
 limits.json
-widget.html
-widget.css
-widget.client.js
+index.html
+styles.css
+runtime.js
 ```
 
 ## Contract
@@ -88,16 +88,16 @@ calltoaction.action.label
 ```text
 branding.remove -> behavior.showBacklink
 widget.socialShare.enabled -> behavior.socialShare.enabled
+embed.seoGeo.enabled -> behavior.seoGeoAeoEnabled
 ```
 
 ## Shell Utilities
 
 Call to Action uses the shared Shell for Header, Header CTA, Stage/Pod, Core
-size, typography, social share, and locale switcher. Current runtime applies
-branding only when `CKBranding.applyBacklink` is present; it does not fail when
-branding is missing.
+size, typography, branding, social share, and locale switcher.
 
-Runtime requires these Core DOM hooks:
+Generated `index.html` contains the complete action block and customer content.
+Its stable Core hooks are:
 
 ```text
 [data-role="calltoaction"]
@@ -110,15 +110,10 @@ Runtime requires these Core DOM hooks:
 [data-role="calltoaction-action-icon"]
 ```
 
-`widget.client.js` registers as `calltoaction`, validates `calltoaction.*`,
-normalizes action URLs, applies shared Shell utilities, and binds
-`ck:state-update` for the current instance id.
+`runtime.js` has no Widget-local interaction. Web Code Generator renders the
+structured values into `index.html`.
 
-Allowed action URL forms are empty, `#`, root-relative, `http(s)`, `mailto`,
-and `tel`. Do not add URL fallback behavior that silently rewrites an invalid
-action.
-
-Runtime constraints:
+The structured editor contract exposes:
 
 ```text
 calltoaction.action.openMode -> same-tab|new-tab|new-window

@@ -21,6 +21,7 @@ export const SHELL_STATE_FAMILIES = [
   'typography.roleScales.button',
   'typography.roleScales.localeSwitcher',
   'localeSwitcher',
+  'behavior.seoGeoAeoEnabled',
   'behavior.showBacklink',
   'behavior.socialShare',
 ] as const;

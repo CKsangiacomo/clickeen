@@ -1,14 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import {
   deleteAccountInstanceFromTokyo,
+  listTokyoWidgetDefinitions,
   saveAccountInstanceInTokyo,
 } from '@roma/lib/account-instance-direct';
 import { pageIdsPlacingInstance } from '@roma/lib/account-page-contract';
 import { listAccountPageSources } from '@roma/lib/account-pages';
-import {
-  readWidgetForInstancePackage,
-  materializeAccountInstancePublicPackage,
-} from '@roma/lib/account-instance-public-package';
 import { materializeAccountInstanceSourceArtifacts } from '@roma/lib/account-instance-source-artifacts';
 import { loadCurrentAccountLocalesState } from '@roma/lib/account-locales-state';
 import { validateAccountInstanceSavePolicy } from '@roma/lib/account-instance-save-policy';
@@ -63,6 +60,11 @@ export async function PUT(request: NextRequest, context: RouteContext) {
     widgetType?: string;
     config?: Record<string, unknown>;
     displayName?: string | null;
+    publicPackage?: {
+      indexHtml?: unknown;
+      stylesCss?: unknown;
+      runtimeJs?: unknown;
+    };
   } | null>(request);
   if (!bodyResult.ok) {
     return withSession(
@@ -75,6 +77,7 @@ export async function PUT(request: NextRequest, context: RouteContext) {
 
   const widgetType = typeof body?.widgetType === 'string' ? body.widgetType.trim() : '';
   const config = body?.config;
+  const publicPackage = body?.publicPackage;
   const displayName =
     body && Object.prototype.hasOwnProperty.call(body, 'displayName')
       ? typeof body.displayName === 'string'
@@ -87,7 +90,11 @@ export async function PUT(request: NextRequest, context: RouteContext) {
     !widgetType ||
     !config ||
     typeof config !== 'object' ||
-    Array.isArray(config)
+    Array.isArray(config) ||
+    !publicPackage ||
+    typeof publicPackage.indexHtml !== 'string' ||
+    typeof publicPackage.stylesCss !== 'string' ||
+    typeof publicPackage.runtimeJs !== 'string'
   ) {
     return withSession(
       request,
@@ -139,18 +146,29 @@ export async function PUT(request: NextRequest, context: RouteContext) {
   }
   const baseLocale = accountLocales.localePolicy.baseLocale;
 
-  const compiled = readWidgetForInstancePackage(widgetType);
-  if (!compiled.ok) {
+  const widgetDefinitions = await listTokyoWidgetDefinitions({
+    accountId,
+    accountCapsule: current.value.authzToken,
+    requestId: current.value.requestId,
+  });
+  if (!widgetDefinitions.ok) {
+    return routeFailureResponse(request, widgetDefinitions, current.value.setCookies);
+  }
+  const widgetDefinition = widgetDefinitions.value.widgetDefinitions.find((entry) => entry.widgetType === widgetType);
+  if (!widgetDefinition) {
     return withSession(
       request,
-      NextResponse.json({ error: compiled.error }, { status: compiled.status }),
+      NextResponse.json(
+        { error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.instance.widgetMissing' } },
+        { status: 422 },
+      ),
       current.value.setCookies,
     );
   }
   const policyGate = validateAccountInstanceSavePolicy({
     config,
     authz: current.value.authzPayload,
-    limits: compiled.value.limits,
+    limits: widgetDefinition.limits,
     context: 'publish',
   });
   if (!policyGate.ok) {
@@ -160,29 +178,12 @@ export async function PUT(request: NextRequest, context: RouteContext) {
       current.value.setCookies,
     );
   }
-  const publicPackage = await materializeAccountInstancePublicPackage({
-    compiled: compiled.value,
-    accountId,
-    accountCapsule: current.value.authzToken,
-    requestId: current.value.requestId,
-    instanceId,
-    baseLocale,
-    displayName: displayName ?? null,
-    config,
-  });
-  if (!publicPackage.ok) {
-    return withSession(
-      request,
-      NextResponse.json({ error: publicPackage.error }, { status: publicPackage.status }),
-      current.value.setCookies,
-    );
-  }
   const sourceArtifacts = materializeAccountInstanceSourceArtifacts({
     accountId,
     instanceId,
     widgetType,
     config,
-    editableFields: compiled.value.editableFields ?? null,
+    editableFields: widgetDefinition.editableFields,
     initialStatus: 'changed',
   });
   if (!sourceArtifacts.ok) {
@@ -200,7 +201,11 @@ export async function PUT(request: NextRequest, context: RouteContext) {
     baseLocale,
     config: sourceArtifacts.value.config,
     content: sourceArtifacts.value.content,
-    publicPackage: publicPackage.value,
+    publicPackage: {
+      indexHtml: publicPackage.indexHtml,
+      stylesCss: publicPackage.stylesCss,
+      runtimeJs: publicPackage.runtimeJs,
+    },
     ...(displayName !== undefined ? { displayName } : {}),
     accountCapsule: current.value.authzToken,
     requestId: current.value.requestId,

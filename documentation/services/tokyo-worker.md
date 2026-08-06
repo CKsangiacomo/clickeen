@@ -117,7 +117,7 @@ accounts/{accountPublicId}/instances/{instanceId}/
 ```
 
 `instance.config.json` carries non-text config, widget identity, display name,
-base locale, package fingerprint when present, and timestamps. Account
+base locale, and timestamps. Account
 instances do not have a generic metadata field. Account active locales are Roma
 account settings, not instance config.
 
@@ -135,19 +135,13 @@ deletes removed active locale overlay files through Tokyo-worker with the Roma
 account capsule. Tokyo does not decide active
 locales, tier, translation meaning, or model policy.
 
-`index.html`, `styles.css`, and `runtime.js` are the generated browser package
-saved with the instance.
+`index.html`, `styles.css`, and `runtime.js` are the exact browser package Bob
+generated and submitted through Roma. Tokyo-worker requires all three exact
+files with valid package content-type metadata. It does not rebuild, restore,
+infer, or repair package bytes.
 
-Newly saved generated package files carry R2 metadata matching the saved source
-package fingerprint. Package reads, publish, and public serving require source
-and package agreement. Existing unmarked source and unmarked package files remain
-readable until the instance is saved again; any marked/unmarked mix fails closed.
-Tokyo-worker does not rebuild or restore package bytes.
-
-On source save, Tokyo-worker writes `instance.content.json` before
-`instance.config.json`. The config document carries the package fingerprint and
-is the source commit marker, so readers cannot accept a new package with
-partially written source.
+On source save, Tokyo-worker writes the exact submitted package, then
+`instance.content.json`, then `instance.config.json`.
 
 The stable public coordinate is:
 
@@ -177,8 +171,9 @@ created or saved, Tokyo-worker verifies that every referenced Instance and the
 optional social-image asset exist under that same account.
 
 Page source is an ordered document of saved Instance references. It does not
-duplicate child Instance source. Page compilation, publication, and public
-serving are not implemented in the current slice.
+duplicate child Instance source. Web Code Generator has deterministic Page
+generation, but Tokyo-worker does not accept, publish, or publicly serve
+generated Page files in the current runtime.
 
 ## Public Serving
 
@@ -203,14 +198,22 @@ Public support files are:
 - `styles.css`
 - `runtime.js`
 
-Generated `index.html` references support files by exact root-relative package
-paths, not `./` relative paths. The slashless public URL is the user-facing
-coordinate, and browser resolution must not depend on a trailing slash:
+Generated `index.html` references its support files through public-coordinate
+placeholders:
 
 ```text
-/{accountPublicId}/{instanceId}/styles.css
-/{accountPublicId}/{instanceId}/runtime.js
+/__CK_PUBLIC_ACCOUNT_ID__/__CK_PUBLIC_INSTANCE_ID__/styles.css
+/__CK_PUBLIC_ACCOUNT_ID__/__CK_PUBLIC_INSTANCE_ID__/runtime.js
 ```
+
+Before serving base or translated Instance HTML, Tokyo-worker completes the Web
+Code Generator's `__CK_PUBLIC_ACCOUNT_ID__` and `__CK_PUBLIC_INSTANCE_ID__`
+literals from the validated public route. The Free attribution link is one
+global Clickeen product URL and does not vary by country. If any
+`__CK_PUBLIC_*__` literal remains after completion, the HTML fails closed with
+`500 Public HTML invalid`; incomplete HTML is never served or cached. Base and
+translated HTML remain `no-store` until public serving owns complete
+invalidation across Save, translation, Publish, Unpublish, and delete.
 
 Private source and state files remain private account storage.
 
@@ -221,9 +224,11 @@ https://clk.live/{accountPublicId}/{instanceId}?locale={locale}
 ```
 
 Cloud-dev uses the same query under `https://dev.clk.live`. Tokyo-worker reads
-and validates the exact overlay against saved content, injects the locale
-context into the root index response, and returns it with `no-store`. The HTML
-references only root support files. Missing overlays return `404 Locale not
+and validates the exact overlay against saved content, replaces exact
+field-marked text/attributes and `<html lang>` in the stored root index,
+completes public placeholders, and returns it with `no-store` until public
+serving owns the complete invalidation lifecycle. `runtime.js` is
+not involved in overlay application. Missing overlays return `404 Locale not
 available`; corrupt overlays return `500 Locale data invalid`; neither falls
 back to base content.
 

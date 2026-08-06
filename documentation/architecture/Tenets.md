@@ -55,21 +55,21 @@ Clickeen is a simple account product.
 
 The automatic asset-overage cleanup above is accepted product law, not a claim
 that the current runtime already performs it.
-The following three bullets are accepted PRD 127 product law for the new Web
-Code Generator and generated public files. They do not claim the pre-127 Widget
-runtime has already completed that cutover:
+The following three bullets are current Web Code Generator law for generated
+public files:
 
 - Complete semantic public HTML is the baseline for every tier. For Widget
   Instances, a paid SEO/GEO/AEO entitlement plus the saved Instance choice may
-  add customer optimization output. Ordinary Pages already begin at Tier 2 and
-  always receive Page SEO/GEO/AEO output; they have no Page SEO toggle. Neither
-  rule decides whether customer content exists in initial HTML.
+  add customer optimization output. The Page generation API has no Page SEO
+  toggle and always emits its declared semantic output, although generated Page
+  files are not yet connected to public serving. Neither rule decides whether
+  customer content exists in initial HTML.
 - `branding.remove` and `embed.seoGeo.enabled` are different product policies.
   Branding controls visible Clickeen attribution. The SEO entitlement controls
   the saved Widget Instance enhancement choice; it is not a Page switch.
 - Free Widget distribution is truthful product attribution, not hidden growth
-  code: one visible contextual Clickeen link and matching product identity are
-  generated into initial HTML from approved Clickeen product data. Clickeen is
+  code: one visible contextual link to the global Clickeen product and matching
+  Clickeen application identity are generated into initial HTML. Clickeen is
   never represented as the author or owner of customer content.
 
 Current account storage coordinate:
@@ -196,15 +196,17 @@ product/widgets/{widgetType}/
 A widget's files define its behavior:
 
 - `spec.json`;
-- `widget.html`;
-- `widget.css`;
-- `widget.client.js`;
 - `editable-fields.json` when the widget has editable/translatable text;
 - `limits.json` when the widget maps controls/paths to policy keys.
+- `index.html` for the generated initial document template;
+- `styles.css` for widget and shared presentation;
+- `runtime.js` for behavior attached to generated markup.
 
-Bob compiles widget definitions into editor controls. Roma saves account
-instances. Tokyo-worker stores submitted runtime files. None of those systems
-should invent widget-specific semantics outside the widget contract.
+Bob compiles widget definitions into editor controls and Web Code Generator
+uses the structured config, content, overlays, and those exact source files to
+generate browser files in memory. Roma hosts the save command. Tokyo-worker
+stores submitted runtime files. None of those systems should invent
+widget-specific semantics outside the widget contract.
 
 ## Tenet 7: Bob Edits In Browser Memory
 
@@ -323,10 +325,11 @@ Visitor requests must not:
 If the requested public artifact is not available, the boundary returns an
 explicit failure such as 404.
 
-Page source is current account-owned product data. Page UI, compilation,
-publication, and public serving are not implemented in the current slice.
-Tokyo-worker has no placeholder Page public route and must not compose Pages
-from authoring source on visitor requests.
+Page source is current account-owned product data. Web Code Generator includes
+deterministic Page generation, but Roma/Tokyo do not invoke, store, publish, or
+publicly serve generated Page files. Tokyo-worker has no placeholder Page
+public route and must not compose Pages from authoring source on visitor
+requests.
 
 ## Tenet 12: Dieter Tokens First
 

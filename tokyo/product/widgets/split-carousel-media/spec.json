@@ -1,7 +1,7 @@
 {
   "widgetname": "split-carousel-media",
   "displayName": "Split Carousel Media",
-  "description": "",
+  "description": "Showcase multiple images or videos in a polished split carousel widget.",
   "itemKey": "split-carousel-media.item",
   "defaults": {
     "uiLabels": {

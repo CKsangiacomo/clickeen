@@ -240,6 +240,7 @@ export const WIDGET_SHELL_FACTORY_DEFAULTS = {
     position: 'top-right',
   },
   behavior: {
+    seoGeoAeoEnabled: false,
     showBacklink: true,
     socialShare: {
       channels: {

@@ -201,7 +201,6 @@ export async function tryHandleInternalInstanceRoutes(
             displayName: created.pointer.displayName,
             publishStatus: created.pointer.publishStatus,
             updatedAt: created.pointer.updatedAt,
-            publicPackageFingerprint: created.pointer.publicPackageFingerprint,
             source: {
               config: created.config,
               content: created.content,
@@ -337,7 +336,6 @@ export async function tryHandleInternalInstanceRoutes(
         env,
         accountId,
         instanceId,
-        expectedFingerprint: pointer.value.publicPackageFingerprint ?? null,
       });
       if (!packageReady.ok) {
         return respond(
@@ -357,7 +355,6 @@ export async function tryHandleInternalInstanceRoutes(
         env,
         accountId,
         instanceId,
-        expectedFingerprint: pointer.value.publicPackageFingerprint ?? null,
       });
       if (!publicPackage) {
         return respond(
@@ -377,7 +374,6 @@ export async function tryHandleInternalInstanceRoutes(
           ok: true,
           accountId,
           instanceId,
-          publicPackageFingerprint: pointer.value.publicPackageFingerprint,
           publicPackage,
         }),
       );
@@ -439,7 +435,6 @@ export async function tryHandleInternalInstanceRoutes(
           publishStatus: pointer.publishStatus,
           updatedAt: pointer.updatedAt,
           baseLocale: pointer.baseLocale,
-          publicPackageFingerprint: pointer.publicPackageFingerprint,
           source: {
             config: source.value.config,
             content: source.value.content,

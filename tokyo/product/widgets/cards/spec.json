@@ -1,7 +1,7 @@
 {
   "widgetname": "cards",
   "displayName": "Cards",
-  "description": "",
+  "description": "Present repeatable cards with text, media, and optional links in flexible layouts.",
   "itemKey": "cards.item",
   "defaults": {
     "uiLabels": {

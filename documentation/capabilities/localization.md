@@ -1,6 +1,6 @@
 # Localization Capability
 
-Last updated: 2026-07-30
+Last updated: 2026-08-05
 
 ## Product Contract
 
@@ -16,12 +16,11 @@ one saved base source
 Translation is content work. It does not create another widget artifact,
 publication state, delivery file, or cache lifecycle.
 
-PRD 127 keeps that rule. Its Web Code Generator target uses the same
-exact `baseLocale` and overlay truth when it writes semantic HTML, attribution,
-and structured data. The served locale must agree across visible content,
-`<html lang>`, structured-data `inLanguage`, canonical/alternate relationships,
-and cache identity. A translation command still does not invent Clickeen
-language-support claims or trigger a hidden generator/publication operation.
+Web Code Generator uses the exact `baseLocale` and overlay coordinates when it
+writes initial HTML and locale-switcher options. Tokyo-worker uses exact overlay
+values for translated Instance response completion. A translation command does
+not invent Clickeen language-support claims or trigger a hidden
+generator/publication operation.
 For ordinary Pages, the current authoring shape is equally direct:
 
 ```text
@@ -32,8 +31,8 @@ accounts/{accountPublicId}/pages/{pageId}/overlays/locales/{locale}.json
 `source.json` owns the Page `baseLocale`. Account Settings—not the Page—owns the
 selected exact locale list used by Generate translations. Each non-base Page
 locale is one separate exact overlay object. Page templates have no
-`baseLocale` and no translations. Page compilation and public serving belong to
-later 127 slices.
+`baseLocale` and no translations. Web Code Generator has a Page generation API,
+but Page public serving is not implemented.
 
 ## Code Authority
 
@@ -44,9 +43,8 @@ later 127 slices.
 | Translation operation | Translation Agent -> San Francisco |
 | Saved text extraction and exact overlay validation | Tokyo-worker account translation domain |
 | Overlay storage | Tokyo R2 `overlays/locales/{locale}.json` |
-| Bob translated preview | translated-value primitives over saved base state |
-| Public localized serving | Tokyo-worker root index response plus root runtime |
-| Root artifact construction | `@clickeen/ck-runtime-materializer` |
+| Bob package generation and translated preview | `@clickeen/ck-web-code-generator` over current in-memory state and exact overlays |
+| Public localized serving | Tokyo-worker exact stored index response |
 
 ## Authority Chain
 
@@ -65,9 +63,10 @@ Public serving adds the single publication coordinate:
 
 ```text
 serve-state.json
--> root index/styles/runtime fingerprint
+-> exact root index/styles/runtime files
 -> exact requested overlay
--> injected locale context
+-> field-marked HTML completion
+-> public placeholder completion
 ```
 
 ## Locale Policy
@@ -143,9 +142,10 @@ fail. Stored corruption is not normalized or treated as missing.
 
 ## Bob Preview
 
-Bob reads saved overlays through Roma and resolves them over the current saved
-base state with `resolveTranslatedValues`. Preview state is not public artifact
-truth and never writes storage.
+Bob reads saved overlays through Roma, resolves them over the current in-memory
+base state, and runs Web Code Generator for the selected preview locale. The
+translated preview is an exact in-memory generated package and never writes
+storage.
 
 ## Public Serving
 
@@ -156,15 +156,18 @@ https://clk.live/{accountPublicId}/{instanceId}
 https://clk.live/{accountPublicId}/{instanceId}?locale={locale}
 ```
 
-For an index request, Tokyo-worker verifies the published instance and one root
-artifact. It lists overlay coordinates, reads and validates the exact requested
-overlay, injects a locale context into the stored root index, and returns HTML
-with `no-store`. That HTML references only root `styles.css` and `runtime.js`.
+For an index request, Tokyo-worker verifies the published instance and exact
+root files. It validates stored overlay coordinates, reads and validates the
+exact requested overlay, replaces exact field-marked text/attributes and
+`<html lang>` in the stored root index, completes public account/instance
+placeholders, and returns HTML with `no-store` until public serving owns the
+complete invalidation lifecycle.
 
-The root runtime applies injected values synchronously before widget modules
-initialize. A missing requested overlay returns `404 Locale not available`. A
-corrupt overlay returns `500 Locale data invalid`. Base content is never
-presented as a requested non-base locale.
+`runtime.js` binds behavior to generated markup; it does not apply locale
+overlays. A missing requested overlay returns `404 Locale not available`. A
+corrupt overlay returns `500 Locale data invalid`. Incomplete public HTML
+returns `500 Public HTML invalid`. Base content is never presented as a
+requested non-base locale.
 
 ## Operator Recipes
 
@@ -207,7 +210,7 @@ reconcile exactly.
 | Saved text set | Tokyo instance content |
 | Overlay bytes | exact R2 read after `pnpm cf:preflight` |
 | Translation outcome | Roma requested/translated/failed sets |
-| Bob preview | exact overlay values displayed over saved source |
-| Root artifact | root R2 index/styles/runtime fingerprint |
-| Localized runtime | root URL with `?locale=` and translated output |
+| Bob preview | exact generated package for current state and selected overlay |
+| Root artifact | exact R2 `index.html`, `styles.css`, and `runtime.js` objects and content types |
+| Localized response | root URL with `?locale=` and translated HTML output |
 | Negative storage invariant | no instance locale-derived HTML/CSS/JS objects |

@@ -14,6 +14,12 @@ serve complete localized Page HTML through `clk.live` and Cloudflare.
 127C also replaces the iframe and direct-`runtime.js` embed choices with one
 shared `clickeen.js` installer for published Widget Instances and Pages.
 
+It also completes the existing Widget HTML cache lifecycle before enabling
+shared caching for base and explicit-locale Widget responses. 127B leaves
+those completed HTML responses `no-store` because country independence alone
+does not invalidate cached HTML after Save, translation, Publish, Unpublish,
+or delete.
+
 127C does not generate code, translate content, compare revisions, or create a
 package/version system.
 
@@ -222,6 +228,13 @@ saved exact-locale and support-file URLs. The stable locale-selection redirect
 is `no-store` and therefore has no cache entry to purge. There is no global
 purge, Page revision/fingerprint system, or request-time generator.
 
+Completed Widget HTML may become cacheable in this slice only after the same
+rule is proved for Instances: Save purges the base URL and every saved explicit
+locale URL; translation write/delete purges that exact locale URL; Publish,
+Unpublish, and delete purge the base URL, every saved locale URL, and support
+files after the state mutation can no longer refill stale public output.
+Browser HTML must revalidate rather than remain usable after an API purge.
+
 ## 11. Shared iframe-free installation
 
 Direct URLs remain the canonical output. No installer is required when a
@@ -326,6 +339,8 @@ Instances or account assets.
       candidates, or pointers.
 - [ ] Implement Publish, Unpublish, Delete, stable URL, exact-locale response,
       scoped purges, and support-file responses.
+- [ ] Complete and verify the existing Widget base/locale HTML invalidation
+      lifecycle before replacing 127B's `no-store` HTML policy.
 - [ ] Add `tokyo/product/clickeen/clickeen.js`, its `product/clickeen.js` sync
       mapping and workflow change-detection path, and the `/clickeen.js` Tokyo
       route to the existing product-root deployment.
@@ -343,6 +358,8 @@ Prove:
 - CSS/JS are shared across locales and cached;
 - purges cover the affected Page's previous and current exact-locale URLs and
   changed support-file URLs without a global purge;
+- Widget Save, translation write/delete, Publish, Unpublish, and delete purge
+  every affected base/locale HTML URL before Widget HTML caching is enabled;
 - direct URLs work without an installer;
 - Widget and Page Copy code use the same `clickeen.js` shape;
 - several installers on one host mount once each without an iframe;

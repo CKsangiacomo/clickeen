@@ -270,7 +270,7 @@ export async function GET(request: NextRequest) {
     const widgetDefaults = await materializeInitialAccountWidgetDefaults({
       request,
       accountId: bootstrap.accountId,
-      widgetTypes: widgetDefinitions.value.widgetDefinitions.map((entry) => entry.widgetType),
+      widgetDefinitions: widgetDefinitions.value.widgetDefinitions,
     });
     if (!widgetDefaults.ok) {
       return applySession(

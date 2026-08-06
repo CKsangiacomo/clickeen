@@ -19,9 +19,9 @@ Files:
 spec.json
 editable-fields.json
 limits.json
-widget.html
-widget.css
-widget.client.js
+index.html
+styles.css
+runtime.js
 ```
 
 ## Contract
@@ -65,6 +65,7 @@ splitMedia.alt
 ```text
 branding.remove -> behavior.showBacklink
 widget.socialShare.enabled -> behavior.socialShare.enabled
+embed.seoGeo.enabled -> behavior.seoGeoAeoEnabled
 ```
 
 ## Shell Utilities
@@ -73,30 +74,28 @@ Split Media uses the shared Shell for Header, Header CTA, Stage/Pod, Core size,
 typography, branding, social share, and locale switcher. The media surface
 belongs to `splitMedia.*`.
 
-Runtime requires these Core DOM hooks:
+Generated `index.html` contains the complete media surface. Its stable Core
+hooks are:
 
 ```text
 [data-role="split-media"]
 [data-role="split-media-core"]
 ```
 
-`widget.client.js` registers as `split-media`, validates `splitMedia.*`, renders
-the media surface into `split-media-core`, applies shared Shell utilities, and
-binds `ck:state-update` for the current instance id.
+`runtime.js` has no Widget-local interaction. Web Code Generator renders the
+structured `splitMedia.*` values into the complete media surface in
+`index.html`.
 
-Runtime invariants:
+Core state includes:
 
-- `splitMedia.media.type` is `none`, `image`, or `video`.
-- Empty media state must not include populated image/video buckets.
-- Image/video media source values must be non-empty and accepted as relative,
-  absolute-path, or `http(s)` URLs.
+- `splitMedia.media.type` (`none`, `image`, or `video`).
 - Video media may include a poster and defaults muted, loop, autoplay, and
   playsinline behavior unless explicitly disabled by state.
 - `splitMedia.alt` is the customer-visible alt/aria text path.
 - `splitMedia.fit` and `splitMedia.position` control rendered media fit and
   position.
-- `splitMedia.appearance.cardwrapper` controls the visual frame through shared
-  `CKSurface.applyCardWrapper`.
+- `splitMedia.appearance.cardwrapper` controls the generated visual frame
+  through the shared Shell surface contract.
 - Auto core size uses a 16:9 shape with a 320px minimum height in current CSS.
 
 ## Clickeen Pages Usage

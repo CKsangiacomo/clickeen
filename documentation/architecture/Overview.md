@@ -182,8 +182,10 @@ Roma resolves current account/session
 -> Roma opens one account instance through Tokyo-worker
 -> Roma sends Bob one ck:open-editor payload
 -> Bob edits in browser memory
+-> Bob generates and previews exact index.html/styles.css/runtime.js in memory
 -> User saves
--> Roma submits the saved instance/package through Tokyo-worker
+-> Bob submits the current config and exact generated package to Roma
+-> Roma forwards the account save command through Tokyo-worker
 -> Tokyo-worker stores the exact submitted account files
 ```
 
@@ -201,6 +203,12 @@ Visitor requests https://clk.live/{accountPublicId}/{instanceId}
 
 Visitor requests do not call models, read Supabase, compose widgets from
 authoring source, or repair missing artifacts.
+
+Tokyo-worker completes the exact public account and instance placeholders in
+stored HTML. For a translated request it also replaces the
+field-marked base values from the validated exact overlay and sets
+`<html lang>`. Base and translated HTML remain `no-store` until public serving
+owns their complete mutation and invalidation lifecycle.
 
 Cloud-dev public serving uses:
 
@@ -236,8 +244,9 @@ locale overlays under:
 accounts/{accountPublicId}/pages/{pageId}/
 ```
 
-Page UI, compilation, publication, and public serving are not implemented in
-the current slice. There is no placeholder public Page route or publish command.
+Web Code Generator includes deterministic Page generation. Roma/Tokyo do not
+yet invoke, store, publish, or publicly serve generated Page files. There is no
+placeholder public Page route or publish command.
 
 ### Translation Overlays
 

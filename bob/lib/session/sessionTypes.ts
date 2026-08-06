@@ -16,6 +16,7 @@ export type SessionError =
   | { source: 'load'; message: string }
   | { source: 'ops'; errors: WidgetOpError[] }
   | { source: 'translation'; message: string; detail?: string }
+  | { source: 'generation'; message: string }
   | { source: 'save'; message: string; detail?: string; paths?: string[] };
 
 export type PreviewSettings = {
@@ -28,6 +29,7 @@ export type SessionState = {
   instanceData: Record<string, unknown>;
   publicPackage: InstancePublicPackage | null;
   savedInstanceDataSignature: string;
+  savedPublicPackageSignature: string;
   isDirty: boolean;
   isSaving: boolean;
   lastUpdate: UpdateMeta | null;
@@ -176,12 +178,20 @@ export function serializeInstanceDataSignature(value: Record<string, unknown>): 
   return serialized;
 }
 
+export function serializePublicPackageSignature(value: InstancePublicPackage | null): string {
+  if (!value) return '';
+  const serialized = JSON.stringify(value);
+  if (typeof serialized !== 'string') throw new Error('coreui.errors.instance.publicPackage.unserializable');
+  return serialized;
+}
+
 export function createInitialSessionState(): SessionState {
   return {
     compiled: null,
     instanceData: {},
     publicPackage: null,
     savedInstanceDataSignature: serializeInstanceDataSignature({}),
+    savedPublicPackageSignature: '',
     isDirty: false,
     isSaving: false,
     lastUpdate: null,

@@ -450,10 +450,10 @@ Web Code Generator uses only approved customer source and Clickeen product
 truth. It does not invent keywords, claims, locations, descriptions, schema
 values, or search outcomes.
 
-Free Widget Instances include the approved visible Clickeen attribution and
-truthful static structured data connecting Clickeen, the Widget product, and
-the customer Instance. Paid branding removal and customer SEO/GEO/AEO remain
-separate existing capabilities.
+Free Widget Instances include the approved visible link to the global Clickeen
+product and truthful static structured data connecting the Clickeen application
+and the customer Instance. Paid branding removal and customer SEO/GEO/AEO
+remain separate existing capabilities.
 
 ## 10. Files and storage
 

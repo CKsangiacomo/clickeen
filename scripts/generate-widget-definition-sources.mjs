@@ -32,6 +32,7 @@ function buildSource(widgetTypes) {
     const prefix = `../../../tokyo/product/widgets/${widgetType}`;
     return [
       `import ${variableName(widgetType, "EditableFields")} from "${prefix}/editable-fields.json";`,
+      `import ${variableName(widgetType, "Limits")} from "${prefix}/limits.json";`,
       `import ${variableName(widgetType, "Spec")} from "${prefix}/spec.json";`,
     ];
   });
@@ -42,6 +43,7 @@ function buildSource(widgetTypes) {
     widgetType: "${widgetType}",
     spec: ${variableName(widgetType, "Spec")},
     editableFields: ${variableName(widgetType, "EditableFields")},
+    limits: ${variableName(widgetType, "Limits")},
   },`,
     )
     .join("\n");
@@ -55,6 +57,7 @@ export type WidgetDefinitionSource = {
   widgetType: string;
   spec: unknown;
   editableFields: unknown;
+  limits: unknown;
 };
 
 export const WIDGET_DEFINITION_SOURCES = [

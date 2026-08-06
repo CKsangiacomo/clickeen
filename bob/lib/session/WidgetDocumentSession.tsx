@@ -2,7 +2,13 @@
 
 import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import type { AccountFontLibrary } from '@clickeen/widget-shell';
-import { createInitialSessionState, type SessionState } from './sessionTypes';
+import {
+  createInitialSessionState,
+  serializeInstanceDataSignature,
+  serializePublicPackageSignature,
+  type InstancePublicPackage,
+  type SessionState,
+} from './sessionTypes';
 import { useSessionTransport } from './sessionTransport';
 import { useSessionEditing } from './useSessionEditing';
 import { useSessionBoot } from './useSessionBoot';
@@ -27,6 +33,9 @@ export type WidgetDocumentSessionValue = {
   applyOps: ReturnType<typeof useSessionEditing>['applyOps'];
   save: ReturnType<typeof useSessionSaving>['save'];
   setInstanceLabel: ReturnType<typeof useSessionEditing>['setInstanceLabel'];
+  setGeneratedPublicPackage: (result:
+    | { ok: true; publicPackage: InstancePublicPackage }
+    | { ok: false; message: string }) => void;
   loadInstance: ReturnType<typeof useSessionBoot>['loadInstance'];
 };
 
@@ -53,6 +62,8 @@ export function WidgetDocumentSessionProvider({ children }: { children: ReactNod
     stateRef,
     setState,
     setMeta: chrome.setMeta,
+    policy: chrome.policy,
+    requestUpsell: chrome.requestUpsell,
   });
   const boot = useSessionBoot({
     stateRef,
@@ -67,9 +78,45 @@ export function WidgetDocumentSessionProvider({ children }: { children: ReactNod
     stateRef,
     metaRef,
     setUpsell: chrome.setUpsell,
+    setMeta: chrome.setMeta,
     setState,
     executeAccountCommand: transport.executeAccountCommand,
   });
+
+  const setGeneratedPublicPackage = useMemo(() => (
+    result:
+      | { ok: true; publicPackage: InstancePublicPackage }
+      | { ok: false; message: string },
+  ) => {
+    const current = stateRef.current;
+    if (!result.ok) {
+      if (current.error?.source === 'generation' && current.error.message === result.message) return;
+      const nextState: SessionState = {
+        ...current,
+        error: { source: 'generation', message: result.message },
+      };
+      stateRef.current = nextState;
+      setState(nextState);
+      return;
+    }
+    const nextPublicPackageSignature = serializePublicPackageSignature(result.publicPackage);
+    const currentPublicPackageSignature = serializePublicPackageSignature(current.publicPackage);
+    if (
+      nextPublicPackageSignature === currentPublicPackageSignature &&
+      current.error?.source !== 'generation'
+    ) return;
+    const configDirty =
+      serializeInstanceDataSignature(current.instanceData) !== current.savedInstanceDataSignature;
+    const packageDirty = nextPublicPackageSignature !== current.savedPublicPackageSignature;
+    const nextState: SessionState = {
+      ...current,
+      publicPackage: result.publicPackage,
+      isDirty: configDirty || packageDirty,
+      error: current.error?.source === 'generation' ? null : current.error,
+    };
+    stateRef.current = nextState;
+    setState(nextState);
+  }, [setState]);
 
   useEffect(() => {
     const origin = transport.hostOriginRef.current || '*';
@@ -123,6 +170,7 @@ export function WidgetDocumentSessionProvider({ children }: { children: ReactNod
       applyOps: editing.applyOps,
       save: saving.save,
       setInstanceLabel: editing.setInstanceLabel,
+      setGeneratedPublicPackage,
       loadInstance: boot.loadInstance,
     }),
     [
@@ -131,6 +179,7 @@ export function WidgetDocumentSessionProvider({ children }: { children: ReactNod
       editing.applyOps,
       editing.setInstanceLabel,
       saving.save,
+      setGeneratedPublicPackage,
       state,
       chrome.meta,
       transport.fetchApi,

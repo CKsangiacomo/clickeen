@@ -62,8 +62,8 @@ https://clk.live/{accountPublicId}/{instanceId}?locale={locale}
 
 Cloud-dev uses `https://dev.clk.live`.
 
-Tokyo-worker serves a published instance only after root artifact fingerprint
-checks pass. Root HTML references:
+Tokyo-worker serves a published instance only after the publication state and
+all three exact package files pass their storage contract. Root HTML references:
 
 ```text
 /{accountPublicId}/{instanceId}/styles.css
@@ -71,10 +71,11 @@ checks pass. Root HTML references:
 ```
 
 For `?locale=`, Tokyo-worker reads and validates the exact overlay against
-saved instance content, injects it into the root index response, and uses
-`no-store`. The root runtime resolves the overlay before widget modules start.
-Missing locale truth is `404`; corrupt locale truth is `500`; neither falls
-back to base content.
+saved instance content and replaces field-marked values in the root index
+response. Base and translated HTML remain `no-store` until public serving owns
+complete invalidation across Save, translation, Publish, Unpublish, and delete.
+`runtime.js` binds behavior and does not apply overlays. Missing locale truth
+is `404`; corrupt locale truth is `500`; neither falls back to base content.
 
 Public account page serving remains `404` until Roma writes real page
 artifacts.

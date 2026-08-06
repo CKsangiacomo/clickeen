@@ -9,9 +9,9 @@ tokyo/product/widgets/{widgetType}/
   spec.json
   editable-fields.json
   limits.json
-  widget.html
-  widget.css
-  widget.client.js
+  index.html
+  styles.css
+  runtime.js
 ```
 
 No widget-local source runtime files exist outside this six-file contract.
@@ -24,25 +24,26 @@ Shared runtime utilities live in `tokyo/product/widgets/shared/`.
 | `spec.json` | Widget identity, defaults, presets when present, Bob editor panels, ToolDrawer controls, `itemKey`, and widget-local normalization when present. |
 | `editable-fields.json` | Customer-visible text paths that Bob and Translation Agent can edit or translate. |
 | `limits.json` | Mapping from widget paths/operations to account entitlement keys. |
-| `widget.html` | Static Shell/Core DOM skeleton, shared CSS/script includes, stable `data-role` hooks. |
-| `widget.css` | Widget-scoped visual styles and CSS variable consumption. |
-| `widget.client.js` | Deterministic browser runtime that validates state, applies Shell utilities, and updates Core DOM. |
+| `index.html` | Initial document template and stable field/behavior hooks used to generate complete customer-visible markup. |
+| `styles.css` | Widget-scoped visual styles, shared style module markers, and CSS variable consumption. |
+| `runtime.js` | Behavior-only module that binds interaction to generated markup; it does not render primary content. |
 
 ## Consumers
 
 | File | Consumed by |
 | --- | --- |
-| `spec.json` | Bob compiler, Roma package materialization, widget default composition. |
+| `spec.json` | Bob compiler, Web Code Generator, and widget default composition. |
 | `editable-fields.json` | Bob copy-edit surfaces and Translation Agent field selection. |
-| `limits.json` | Roma account policy and publish/save enforcement. |
-| `widget.html` | Roma package materialization for Builder preview and public serving. |
-| `widget.css` | Roma package materialization into generated `styles.css`. |
-| `widget.client.js` | Roma package materialization into generated `runtime.js`. |
+| `limits.json` | Bob edit policy and Roma account create/save enforcement. |
+| `index.html` | Web Code Generator initial document generation for Bob preview and exact save package. |
+| `styles.css` | Web Code Generator composition of exact saved `styles.css`. |
+| `runtime.js` | Web Code Generator composition of exact saved behavior-only `runtime.js`. |
 
 Operators must keep the six files internally consistent. A new Core path in
 `spec.json.defaults` is not enough: if it is customer-visible text it also needs
 `editable-fields.json`; if it is tier-limited it needs `limits.json`; if runtime
-uses it, `widget.client.js` must validate and render it.
+uses it, generated markup and `runtime.js` behavior must consume it through
+their exact structured contracts.
 
 ## Source Vs Compiled Package
 
@@ -50,7 +51,7 @@ The six-file contract is the widget source contract. It is not the compiled Bob
 payload and it is not the saved public package.
 
 Compiled/saved packages may include shared Shell CSS/JS, Dieter assets, and
-generated package files. Roma materializes saved account instance packages as:
+generated package files. The saved account Instance folder is:
 
 ```text
 accounts/{accountPublicId}/instances/{instanceId}/
@@ -61,12 +62,16 @@ accounts/{accountPublicId}/instances/{instanceId}/
   runtime.js
 ```
 
-Tokyo-worker stores the exact source/package files submitted by Roma. Public
-serving requires publish state and package/source agreement.
+Bob generates only the exact `index.html`, `styles.css`, and `runtime.js` bytes
+and submits those with the current config through Roma. Roma derives exact
+`instance.config.json` and `instance.content.json` source artifacts from that
+config and the Widget editable-field contract. Tokyo-worker stores Roma's
+derived source artifacts plus Bob's exact three package files. Public serving
+requires publish state and valid exact package files.
 
-Current package materialization seals widget-local `widget.css`,
-`widget.client.js`, and selected shared widget modules into generated
-`styles.css` and `runtime.js`. Required Dieter token/component CSS is also
+Current generation seals widget-local `styles.css`, `runtime.js`, and selected
+shared widget modules into generated `styles.css` and `runtime.js`. Required
+Dieter token/component CSS is also
 sealed into `styles.css`; account assets and approved Dieter icon URLs remain
 external delivery references. Changing sealed source files after an account
 package is written does not rewrite that stored package.
@@ -76,10 +81,10 @@ package is written does not rewrite that stored package.
 ```text
 Roma loads compiled widget software
   -> Roma opens Bob with saved instance data and the saved instance package
-  -> Bob previews that package and applies browser-memory edits to its runtime
   -> user edits one browser-memory instance
-  -> Bob sends save intent to Roma
-  -> Roma materializes package files
+  -> Bob generates and previews exact package files for each valid working state
+  -> Bob sends current config and exact generated package to Roma
+  -> Roma hosts and policy-checks the save command
   -> Tokyo-worker stores exact account files
   -> clk.live serves stored package files when published
 ```
@@ -103,3 +108,4 @@ folder.
 - Do not add fallback package files that mask a bad save.
 - Do not document generated account package files as widget source files.
 - Do not make `editable-fields.json` broader than actual customer-visible text.
+- Do not move primary content rendering into `runtime.js`.

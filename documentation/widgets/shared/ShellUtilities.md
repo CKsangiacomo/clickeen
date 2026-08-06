@@ -2,12 +2,24 @@
 
 STATUS: CURRENT SYSTEM OPERATOR SPEC
 
-Branding, social share, and locale switching are shared Shell utilities.
-Widget Core consumes them; Widget Core does not reimplement them.
+Branding, social share, locale switching, typography, and Shell presentation are
+shared generation/runtime concerns. Widget Core does not reimplement them.
+
+## Generation Boundary
+
+Web Code Generator consumes structured Shell state together with exact Widget
+source and shared modules. It writes complete Shell markup into generated
+`index.html`, presentation into `styles.css`, and behavior into `runtime.js`.
+Generated initial HTML owns primary customer content, branding attribution,
+social-share controls, and locale-switcher controls.
+
+The shared runtime binds interactions to that generated markup. It does not
+accept generic state updates, apply overlays, inject styles, or construct the
+primary Shell/Core content DOM.
 
 ## Typography Roles
 
-Widget Shell owns the shared runtime/editor typography roles:
+Widget Shell owns the shared typography roles:
 
 ```text
 title
@@ -16,103 +28,51 @@ button
 localeSwitcher
 ```
 
-The Shell package owns their default product labels. A widget declares labels
-and visible order for its additional roles in its structured typography panel.
-Bob composes those declared roles into the editor. The widget runtime consumes
-the same structured typography state through `CKTypography.applyTypography`.
+The Shell package owns their defaults. A Widget declares labels and visible
+order for additional roles in its structured typography panel. Bob composes
+those declarations into the editor. Web Code Generator validates the selected
+font family, weight, and style, emits typography variables and required font
+CSS, and applies them to generated markup.
 
 ## Branding
 
-State:
+State and entitlement:
 
 ```text
 behavior.showBacklink
-```
-
-Entitlement:
-
-```text
 branding.remove
 ```
 
-Runtime:
+Web Code Generator writes the final branding/attribution markup and styles. A
+Free Widget receives one visible contextual link to the global Clickeen product
+with `rel="nofollow noreferrer"` and matching truthful Clickeen application
+identity. `runtime.js` does not create attribution DOM.
 
-```text
-tokyo/product/widgets/shared/branding.js
-```
-
-Runtime API:
-
-```text
-CKBranding.applyBacklink(widgetRoot, state)
-```
-
-Rules:
-
-- Shared Shell applies the Clickeen badge/backlink.
-- Bob preview and public runtime use the same shared behavior.
-- Widgets do not hand-code badge or backlink markup.
-- Removing branding is account policy, not widget choice.
-
-PRD 127 accepted cutover:
-
-- the Web Code Generator writes the final branding/attribution markup into the
-  saved Instance `index.html`;
-- a Free Widget receives one visible contextual link to its matching Clickeen
-  Widget product page with `rel="nofollow noreferrer"` plus matching truthful
-  product identity;
-- `runtime.js` must not create the attribution DOM;
-- the existing branding layout/style contract moves into generated
-  `styles.css`; JavaScript no longer injects branding CSS;
-- `branding.remove` continues to control visible branding and remains separate
-  from `embed.seoGeo.enabled`;
-- Bob preview must render the same generated markup as the public Instance;
-- the current `CKBranding.applyBacklink` DOM-construction path is removed only
-  when the 127B runtime cutover is deployed and verified.
-
-This subsection is an accepted PRD 127 target, not a claim that the current
-runtime has already completed the cutover.
+`branding.remove` controls visible attribution independently of
+`embed.seoGeo.enabled`. Bob preview uses the same generated markup that Bob
+submits for save.
 
 ## Social Share
 
-State:
+State and entitlement:
 
 ```text
 behavior.socialShare.enabled
 behavior.socialShare.attachTo
 behavior.socialShare.position
 behavior.socialShare.channels.*
-```
-
-Entitlement:
-
-```text
 widget.socialShare.enabled
 ```
 
-Runtime:
+Web Code Generator validates the structured social-share state and writes the
+enabled controls into generated `index.html`, attached to Stage or Pod at the
+selected position. Shared `socialShare.css` supplies their presentation. The
+shared `runtime.js` binds share, copy, and preview-only behavior to those
+generated controls. It does not create or remove their DOM in response to
+state updates.
 
-```text
-tokyo/product/widgets/shared/socialShare.js
-tokyo/product/widgets/shared/socialShare.css
-```
-
-Runtime API:
-
-```text
-CKSocialShare.apply(widgetRoot, state, options)
-```
-
-Rules:
-
-- Shared Shell creates and removes the share trigger/menu.
-- Share UI attaches to Stage or Pod through `behavior.socialShare.attachTo`.
-- Share position comes from `behavior.socialShare.position`.
-- Channel booleans under `behavior.socialShare.channels.*` decide which shared actions appear.
-- Widget Core does not create share DOM.
-- Builder preview renders the menu without performing external share side effects.
-- Public iframe snippets need clipboard and popup permissions for share actions.
-- State updates re-apply the shared share root for the current widget instance.
+Public iframe snippets need clipboard and popup permissions for the relevant
+share actions. Builder preview does not perform external share side effects.
 
 ## Locale Switcher
 
@@ -123,89 +83,64 @@ localeSwitcher.*
 appearance.localeSwitcher*
 ```
 
-Runtime:
+Available locales come from account tier policy, and active locales come from
+Roma Settings. Web Code Generator uses the exact base locale and supplied
+overlay coordinates to write switcher options when the control is enabled and
+more than one locale exists. Shared `localeSwitcher.css` supplies presentation.
 
-```text
-tokyo/product/widgets/shared/localeSwitcher.js
-tokyo/product/widgets/shared/localeSwitcher.css
-```
+The shared runtime behavior is limited to selection:
 
-Runtime API:
+- editing preview blocks locale changes;
+- translations preview posts `ck:preview-locale-change-request`;
+- public runtime changes the `locale` query parameter.
 
-```text
-CKLocaleSwitcher.applyLocaleSwitcher(state, widgetRoot, runtimeContext)
-```
-
-Rules:
-
-- Available locales come from the account tier.
-- Active locales are the account language selection in Roma Settings.
-- Rendered switcher options come from delivered `window.CK_LOCALE_POLICY.languages`.
-- The current public root runtime receives the exact stored overlay coordinates
-  and the requested overlay through Tokyo-worker's index response.
-- The switcher switches delivered locale values.
-- The switcher removes itself when disabled or when delivered languages length
-  is `<= 1`.
-- In editing preview, locale changes are blocked.
-- In translations preview, locale changes post `ck:preview-locale-change-request`.
-- In public runtime, locale changes update the `locale` query parameter.
-- The switcher does not generate translations.
-- The switcher does not decide active locales.
-- Widget Core does not implement locale switching.
+Tokyo-worker, not `runtime.js`, applies a requested overlay to exact
+field-marked HTML and sets `<html lang>` before serving the response. The
+switcher does not generate translations, select active account locales, fetch
+overlays, or apply translated values.
 
 Locale operation boundary:
 
 ```text
 Available locales -> account tier
 Active locales -> Roma Settings
-Translated values -> instance overlays under Tokyo-worker
-Delivered locale policy -> rendered switcher options
-Switcher behavior -> choose among delivered values
+Translated values -> exact instance overlays under Tokyo-worker
+Generated switcher options -> Web Code Generator
+Localized HTML completion -> Tokyo-worker
+Switcher behavior -> shared runtime.js
 ```
 
-The switcher is runtime UI only. Translation generation belongs to the
-Translation Agent; account active-locale changes belong to Roma settings and
-Tokyo-worker overlay storage.
+## Shared Widget Files
 
-## Preview Localization
-
-Runtime:
+Current shared source files are:
 
 ```text
-tokyo/product/widgets/shared/previewL10n.js
-```
-
-`previewL10n.js` applies host-supplied translated value maps to preview/runtime
-state when those values are delivered inline. It applies exact value-map paths
-onto a cloned state object. It does not fetch overlays, generate translations,
-or invent missing values.
-
-## Shared Runtime Files
-
-Current shared widget files:
-
-```text
-appearance.js
-branding.js
-coreSize.js
-fill.js
 header.css
-header.js
 localeSwitcher.css
-localeSwitcher.js
-previewL10n.js
 runtime.js
 socialShare.css
-socialShare.js
 stagePod.css
-stagePod.js
-surface.js
-typography-data.js
-typography.js
 ```
 
-Shared runtime files are broad package dependencies. When Roma materializes a
-saved account widget package, selected shared CSS/JS modules are copied into
-the generated `styles.css` or `runtime.js` bytes. Later edits to shared widget
-files do not change already-stored account package bytes without a named
-regeneration command.
+Web Code Generator composes the declared shared style/runtime modules into the
+exact generated `styles.css` and `runtime.js`. Later source edits do not change
+already-stored account package bytes without another explicit account save.
+
+## Runtime API
+
+Shared `runtime.js` exposes `window.CKWidgetRuntime` for behavior-only Widget
+initializers:
+
+```text
+assertWidgetRoot
+contextFor
+isComposedPage
+register
+resolveInstanceId
+roots
+```
+
+It also binds shared header CTA, social-share, locale-switcher, preview-ready,
+and iframe-resize behavior. Widget-local `runtime.js` may register interaction
+against generated DOM through this API. It must not become a renderer for
+structured content.

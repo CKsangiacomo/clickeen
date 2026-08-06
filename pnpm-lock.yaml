@@ -157,6 +157,9 @@ importers:
       '@clickeen/ck-policy':
         specifier: workspace:*
         version: link:../packages/ck-policy
+      '@clickeen/ck-web-code-generator':
+        specifier: workspace:*
+        version: link:../packages/ck-web-code-generator
       '@clickeen/l10n':
         specifier: workspace:*
         version: link:../packages/l10n
@@ -216,11 +219,14 @@ importers:
         specifier: workspace:*
         version: link:../ck-contracts
 
-  packages/ck-runtime-materializer:
+  packages/ck-web-code-generator:
     dependencies:
       '@clickeen/ck-contracts':
         specifier: workspace:*
         version: link:../ck-contracts
+      '@clickeen/l10n':
+        specifier: workspace:*
+        version: link:../l10n
       '@clickeen/widget-shell':
         specifier: workspace:*
         version: link:../widget-shell
@@ -272,9 +278,6 @@ importers:
       '@clickeen/ck-policy':
         specifier: workspace:*
         version: link:../packages/ck-policy
-      '@clickeen/ck-runtime-materializer':
-        specifier: workspace:*
-        version: link:../packages/ck-runtime-materializer
       '@clickeen/l10n':
         specifier: workspace:*
         version: link:../packages/l10n

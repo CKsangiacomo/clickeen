@@ -4,8 +4,9 @@ STATUS: CURRENT SYSTEM OPERATOR SPEC
 
 ## Purpose
 
-FAQ renders grouped questions and answers inside the shared widget Shell. Runtime
-supports list, accordion, and multicolumn/card layouts.
+FAQ renders grouped questions and answers inside the shared widget Shell. Web
+Code Generator renders every layout; runtime binds accordion and deep-link
+behavior to the generated markup.
 
 ## Source
 
@@ -19,9 +20,9 @@ Files:
 spec.json
 editable-fields.json
 limits.json
-widget.html
-widget.css
-widget.client.js
+index.html
+styles.css
+runtime.js
 ```
 
 ## Contract
@@ -74,6 +75,7 @@ in widget Core state.
 ```text
 branding.remove -> behavior.showBacklink
 widget.socialShare.enabled -> behavior.socialShare.enabled
+embed.seoGeo.enabled -> behavior.seoGeoAeoEnabled
 items.group.small.max -> faq.sections[]
 items.group.medium.max -> faq.sections[].faqs[]
 items.group.large.max -> faq.sections[].faqs[]
@@ -82,13 +84,10 @@ items.group.large.max -> faq.sections[].faqs[]
 ## Shell Utilities
 
 FAQ uses the shared Shell for Header, Header CTA, Stage/Pod, Core size,
-typography, and locale switcher. Current runtime applies branding only when
-`CKBranding.applyBacklink` is present; it does not fail when branding is
-missing. `widget.html` loads the shared social-share asset and `limits.json`
-contains the social-share entitlement path, but current FAQ runtime does not
-call `CKSocialShare.apply`.
+typography, branding, social share, and locale switcher.
 
-Runtime requires these Core DOM hooks:
+Generated `index.html` contains the complete section, question, and answer DOM.
+Its stable Core hooks include:
 
 ```text
 [data-role="faq"]
@@ -97,22 +96,14 @@ Runtime requires these Core DOM hooks:
 [data-role="faq-list"]
 ```
 
-`widget.client.js` registers as `faq`, validates `faq.*`, renders section and
-question DOM into `faq-list`, applies shared Shell utilities, and binds
-`ck:state-update` for the current instance id.
+`runtime.js` registers as `faq` through `CKWidgetRuntime` and binds accordion
+and deep-link behavior to the generated questions. It does not accept generic
+state or copy-override messages and does not render FAQ content.
 
-Runtime invariants:
-
-- `faq.sections[]` ids must be stable and unique.
-- `faq.sections[].faqs[]` ids must be stable and unique inside each section.
-- Runtime validates 1-20 sections and 1-100 FAQs per section.
-- Question and answer fields are customer-visible text and must stay in
-  `editable-fields.json`.
-- Answer HTML is sanitized to inline tags and `http(s)` links. Question display
-  strips unsafe link behavior.
-- The runtime handles `ck:copy-overrides` for exact FAQ copy paths and replies
-  with `ck:copy-overrides-applied`; do not turn that into a generic mutation
-  channel.
+Question and answer fields are customer-visible text and stay in
+`editable-fields.json`. Web Code Generator sanitizes answer rich text before it
+writes the complete FAQ DOM. Runtime rejects an unknown layout or malformed
+generated boolean behavior settings.
 
 Accordion behavior applies only when `faq.layout.type` is `accordion`.
 Accordion-specific state includes:

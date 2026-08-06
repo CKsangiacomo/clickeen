@@ -43,14 +43,6 @@ export function normalizeAccountInstanceConfigDocument(
     !updatedAt
   )
     return null;
-  const publicPackageFingerprint = asTrimmedString(payload.publicPackageFingerprint);
-  if (
-    Object.prototype.hasOwnProperty.call(payload, 'publicPackageFingerprint') &&
-    payload.publicPackageFingerprint != null &&
-    !publicPackageFingerprint
-  ) {
-    return null;
-  }
   return {
     id,
     accountId,
@@ -59,7 +51,6 @@ export function normalizeAccountInstanceConfigDocument(
     displayName,
     config,
     baseLocale,
-    ...(publicPackageFingerprint ? { publicPackageFingerprint } : {}),
     createdAt,
     updatedAt,
   };

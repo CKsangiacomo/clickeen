@@ -3,6 +3,7 @@
 import { useCallback, type Dispatch, type MutableRefObject, type SetStateAction } from 'react';
 import {
   serializeInstanceDataSignature,
+  serializePublicPackageSignature,
   type SessionMeta,
   type SessionState,
   type SessionUpsell,
@@ -14,10 +15,11 @@ export function useSessionSaving(args: {
   stateRef: MutableRefObject<SessionState>;
   metaRef: MutableRefObject<SessionMeta>;
   setUpsell: Dispatch<SetStateAction<SessionUpsell>>;
+  setMeta: Dispatch<SetStateAction<SessionMeta>>;
   setState: Dispatch<SetStateAction<SessionState>>;
   executeAccountCommand: ExecuteAccountCommand;
 }) {
-  const { executeAccountCommand, metaRef, setState, setUpsell, stateRef } = args;
+  const { executeAccountCommand, metaRef, setMeta, setState, setUpsell, stateRef } = args;
 
   const save = useCallback(async () => {
     // Save persists the one widget the customer is actively editing.
@@ -25,13 +27,6 @@ export function useSessionSaving(args: {
     const meta = metaRef.current;
     const instanceId = meta?.instanceId ? String(meta.instanceId) : '';
     const widgetType = meta?.widgetname ? String(meta.widgetname).trim() : '';
-    if (!instanceId) {
-      setState((prev) => ({
-        ...prev,
-        error: { source: 'save', message: 'Missing instance context for save.' },
-      }));
-      return;
-    }
     if (!widgetType) {
       setState((prev) => ({
         ...prev,
@@ -52,18 +47,23 @@ export function useSessionSaving(args: {
 
     try {
       if (!snapshot.compiled) throw new Error('coreui.errors.builder.save.missingContract');
+      if (!snapshot.publicPackage || snapshot.error?.source === 'generation') {
+        throw new Error('coreui.errors.builder.save.generationFailed');
+      }
       const config = snapshot.instanceData;
       assertSessionConfigContract(config, snapshot.compiled);
       const submittedInstanceDataSignature = serializeInstanceDataSignature(config);
+      const submittedPublicPackageSignature = serializePublicPackageSignature(snapshot.publicPackage);
       const saveBody: Record<string, unknown> = {
         widgetType,
         config,
+        publicPackage: snapshot.publicPackage,
         baseLocale: meta?.baseLocale ?? null,
         displayName: meta?.label ?? null,
       };
       const { ok, json } = await executeAccountCommand({
         command: 'update-instance',
-        instanceId,
+        ...(instanceId ? { instanceId } : {}),
         body: saveBody,
       });
       if (!ok) {
@@ -99,15 +99,30 @@ export function useSessionSaving(args: {
         return;
       }
 
+      const savedInstanceId = instanceId || (typeof json?.instanceId === 'string' ? json.instanceId.trim() : '');
+      if (!savedInstanceId) throw new Error('coreui.errors.builder.save.missingInstanceId');
+      if (!instanceId) {
+        setMeta((currentMeta) => currentMeta ? {
+          ...currentMeta,
+          instanceId: savedInstanceId,
+          publishStatus: 'unpublished',
+          publicActions: null,
+        } : currentMeta);
+      }
+
       const current = stateRef.current;
       const currentInstanceDataSignature = serializeInstanceDataSignature(current.instanceData);
-      const hasEditsAfterSubmittedSave = currentInstanceDataSignature !== submittedInstanceDataSignature;
+      const currentPublicPackageSignature = serializePublicPackageSignature(current.publicPackage);
+      const hasEditsAfterSubmittedSave =
+        currentInstanceDataSignature !== submittedInstanceDataSignature ||
+        currentPublicPackageSignature !== submittedPublicPackageSignature;
       const nextInstanceData = hasEditsAfterSubmittedSave ? current.instanceData : config;
       const nextState: SessionState = {
         ...current,
         instanceData: nextInstanceData,
         savedInstanceDataSignature: submittedInstanceDataSignature,
-        isDirty: serializeInstanceDataSignature(nextInstanceData) !== submittedInstanceDataSignature,
+        savedPublicPackageSignature: submittedPublicPackageSignature,
+        isDirty: hasEditsAfterSubmittedSave,
         isSaving: false,
         error: null,
       };
@@ -128,6 +143,7 @@ export function useSessionSaving(args: {
     executeAccountCommand,
     metaRef,
     setState,
+    setMeta,
     setUpsell,
     stateRef,
   ]);

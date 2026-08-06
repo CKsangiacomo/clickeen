@@ -5,12 +5,17 @@ import {
   readWidgetEditableFieldsContract,
   type WidgetEditableFieldsContract,
 } from '../../packages/ck-contracts/src/translated-value-primitives';
-import { parseLimitsSpec, type LimitsSpec } from '../../packages/ck-policy/src';
+import { parseLimitsSpec } from '../../packages/ck-policy/src';
 import {
+  SYSTEM_GOOGLE_FONT_RECORDS,
   WIDGET_SHELL_CSS_MODULE_KEYS,
   WIDGET_SHELL_RUNTIME_MODULE_KEYS,
 } from '../../packages/widget-shell/src';
-import { extractStylesheetSources } from '../../packages/ck-runtime-materializer/src/html';
+import type {
+  WebCodeModuleSource,
+  WidgetDefinition,
+} from '../../packages/ck-web-code-generator/src/types';
+import { generateInstance } from '../../packages/ck-web-code-generator/src';
 import { compileWidgetServer } from '../../bob/lib/compiler.server';
 import type { RawWidget } from '../../bob/lib/compiler.shared';
 import type {
@@ -19,8 +24,7 @@ import type {
 } from '../../bob/lib/compiler/stencils';
 import type {
   CompiledWidget,
-  WidgetPackageContext,
-  WidgetPackageFileContext,
+  CompiledWidgetArtifact,
 } from '../../bob/lib/types';
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
@@ -28,17 +32,9 @@ const widgetsRoot = path.join(repoRoot, 'tokyo/product/widgets');
 const dieterRoot = path.join(repoRoot, 'dieter');
 const dieterComponentsRoot = path.join(dieterRoot, 'components');
 const editorOutputRoot = path.join(repoRoot, 'roma/public/widget-editors');
-const materializerOutputRoot = path.join(repoRoot, 'roma/generated/widgets');
 const checkOnly = process.argv.includes('--check');
 
-type MaterializerArtifact = {
-  widgetname: string;
-  displayName: string;
-  limits: LimitsSpec;
-  editableFields: WidgetEditableFieldsContract;
-  controls: Array<{ path?: string }>;
-  widgetPackage: WidgetPackageContext;
-};
+type WidgetEditorArtifact = CompiledWidgetArtifact;
 
 function discoverWidgetTypes(): string[] {
   return fs
@@ -61,11 +57,10 @@ function readCssEntry(relativePath: string): string {
   );
 }
 
-function mediaTypeForPath(filePath: string): WidgetPackageFileContext['mediaType'] {
-  if (filePath.endsWith('.json')) return 'application/json';
-  if (filePath.endsWith('.html')) return 'text/html';
-  if (filePath.endsWith('.css')) return 'text/css';
-  return 'text/javascript';
+function extractStylesheetSources(html: string): string[] {
+  return [...html.matchAll(/<link\b[^>]*rel=["']stylesheet["'][^>]*href=["']([^"']+)["'][^>]*>/gi)]
+    .map((match) => String(match[1] || '').trim())
+    .filter(Boolean);
 }
 
 const loadLocalStencil: ComponentStencilLoader = async (type): Promise<ComponentStencil> => {
@@ -82,49 +77,60 @@ const loadLocalStencil: ComponentStencilLoader = async (type): Promise<Component
   };
 };
 
-function buildWidgetPackage(args: {
+function stylesheetModule(args: {
   widgetType: string;
-  specSource: string;
-  editableFieldsSource: string;
-}): WidgetPackageContext {
-  const files: WidgetPackageContext['files'] = {};
-  const widgetRoot = `tokyo/product/widgets/${args.widgetType}`;
-  const widgetHtml = readText(`${widgetRoot}/widget.html`);
-  for (const filename of ['spec.json', 'widget.html', 'widget.css', 'widget.client.js'] as const) {
-    files[filename] = {
-      mediaType: mediaTypeForPath(filename),
-      source:
-        filename === 'spec.json'
-          ? args.specSource
-          : filename === 'widget.html'
-            ? widgetHtml
-            : readText(`${widgetRoot}/${filename}`),
-    };
+  href: string;
+}): WebCodeModuleSource | null {
+  const href = args.href.split(/[?#]/, 1)[0] || '';
+  if (!href || href === './styles.css' || href === 'styles.css') return null;
+  if (href.startsWith('/dieter/')) {
+    return { id: href, source: readCssEntry(href.slice(1)) };
   }
-  files['editable-fields.json'] = {
-    mediaType: 'application/json',
-    source: args.editableFieldsSource,
-  };
-  for (const href of extractStylesheetSources(widgetHtml).filter((source) => source.startsWith('/dieter/'))) {
-    files[href] = {
-      mediaType: 'text/css',
-      source: readCssEntry(href.slice(1)),
-    };
+  if (href.startsWith('/') || /^https?:\/\//i.test(href)) {
+    throw new Error(`[generate-widget-artifacts] unsupported stylesheet source: ${args.href}`);
   }
+  const productPath = path.posix.normalize(`product/widgets/${args.widgetType}/${href}`);
+  if (!productPath.startsWith('product/widgets/') || !productPath.endsWith('.css')) {
+    throw new Error(`[generate-widget-artifacts] invalid stylesheet source: ${args.href}`);
+  }
+  return { id: productPath, source: readText(`tokyo/${productPath}`) };
+}
 
-  const supportKeys = new Set<string>([
-    ...WIDGET_SHELL_CSS_MODULE_KEYS,
-    ...WIDGET_SHELL_RUNTIME_MODULE_KEYS,
-    `product/widgets/${args.widgetType}/widget.css`,
-    `product/widgets/${args.widgetType}/widget.client.js`,
-  ]);
-  for (const key of supportKeys) {
-    files[key] = {
-      mediaType: mediaTypeForPath(key),
-      source: readText(`tokyo/${key}`),
-    };
+function buildDefinition(args: {
+  widgetType: string;
+  displayName: string;
+  description: string;
+  editableFields: WidgetEditableFieldsContract;
+}): WidgetDefinition {
+  const widgetRoot = `tokyo/product/widgets/${args.widgetType}`;
+  const indexHtml = readText(`${widgetRoot}/index.html`);
+  const styleModules = extractStylesheetSources(indexHtml)
+    .map((href) => stylesheetModule({ widgetType: args.widgetType, href }))
+    .filter((module): module is WebCodeModuleSource => Boolean(module));
+  const linkedIds = new Set(styleModules.map((module) => module.id));
+  for (const requiredKey of WIDGET_SHELL_CSS_MODULE_KEYS) {
+    if (!linkedIds.has(requiredKey)) {
+      throw new Error(
+        `[generate-widget-artifacts] ${args.widgetType} index.html is missing shared stylesheet ${requiredKey}`,
+      );
+    }
   }
-  return { widgetType: args.widgetType, files };
+  return {
+    widgetType: args.widgetType,
+    displayName: args.displayName,
+    description: args.description,
+    editableFields: args.editableFields,
+    files: {
+      'index.html': indexHtml,
+      'styles.css': readText(`${widgetRoot}/styles.css`),
+      'runtime.js': readText(`${widgetRoot}/runtime.js`),
+    },
+    styleModules,
+    runtimeModules: WIDGET_SHELL_RUNTIME_MODULE_KEYS.map((id) => ({
+      id,
+      source: readText(`tokyo/${id}`),
+    })),
+  };
 }
 
 function writeOrCheck(filePath: string, source: string): void {
@@ -166,45 +172,16 @@ function assertProductReadableControls(
   }
 }
 
-function generatedMaterializerIndex(widgetTypes: string[]): string {
-  const imports = widgetTypes.map(
-    (widgetType, index) => `import artifact${index} from './widgets/${widgetType}.json';`,
-  );
-  const entries = widgetTypes
-    .map((widgetType, index) => `  '${widgetType}': artifact${index},`)
-    .join('\n');
-  return `// Generated by scripts/widgets/generate-artifacts.ts. Do not edit manually.
-import type { CompiledWidget, WidgetPackageContext } from '../../bob/lib/types';
-
-${imports.join('\n')}
-
-export type WidgetMaterializerArtifact = {
-  widgetname: string;
-  displayName: string;
-  limits: CompiledWidget['limits'];
-  editableFields: NonNullable<CompiledWidget['editableFields']>;
-  controls: Array<{ path?: string }>;
-  widgetPackage: WidgetPackageContext;
-};
-
-const WIDGET_MATERIALIZER_ARTIFACTS = {
-${entries}
-} as unknown as Record<string, WidgetMaterializerArtifact>;
-
-export function readWidgetMaterializerArtifact(widgetType: string): WidgetMaterializerArtifact | null {
-  return WIDGET_MATERIALIZER_ARTIFACTS[widgetType] ?? null;
-}
-`;
-}
-
-async function buildArtifacts(widgetType: string): Promise<{
-  editor: CompiledWidget;
-  materializer: MaterializerArtifact;
-}> {
+async function buildArtifact(widgetType: string): Promise<WidgetEditorArtifact> {
   const widgetRoot = `tokyo/product/widgets/${widgetType}`;
   const specSource = readText(`${widgetRoot}/spec.json`);
   const editableFieldsSource = readText(`${widgetRoot}/editable-fields.json`);
-  const spec = JSON.parse(specSource) as RawWidget;
+  const specValue = JSON.parse(specSource) as RawWidget & { description?: unknown };
+  const spec = specValue as RawWidget;
+  const description = typeof specValue.description === 'string' ? specValue.description.trim() : '';
+  if (!description) {
+    throw new Error(`[generate-widget-artifacts] ${widgetType} spec.json description is required`);
+  }
   const editableFields = readWidgetEditableFieldsContract(JSON.parse(editableFieldsSource));
   const limits = parseLimitsSpec(JSON.parse(readText(`${widgetRoot}/limits.json`)));
   const compiled = await compileWidgetServer(spec, {
@@ -212,42 +189,58 @@ async function buildArtifacts(widgetType: string): Promise<{
     tokyoBaseUrl: '',
   });
   assertProductReadableControls(widgetType, compiled.controls);
-  return {
-    editor: { ...compiled, limits, editableFields },
-    materializer: {
-      widgetname: compiled.widgetname,
+  const artifact: WidgetEditorArtifact = {
+    ...compiled,
+    limits,
+    editableFields,
+    definition: buildDefinition({
+      widgetType,
       displayName: compiled.displayName,
-      limits,
+      description,
       editableFields,
-      controls: compiled.controls.map(({ path }) => ({ path })),
-      widgetPackage: buildWidgetPackage({ widgetType, specSource, editableFieldsSource }),
-    },
+    }),
   };
+  generateInstance({
+    definition: artifact.definition,
+    source: artifact.defaults,
+    baseLocale: 'en-US',
+    overlays: null,
+    settings: {
+      seoGeoAeoEnabled: false,
+      includeClickeenAttribution: true,
+    },
+    context: {
+      assetsByRef: {},
+      typography: {
+        curatedFonts: {
+          Inter: {
+            source: 'google',
+            spec: SYSTEM_GOOGLE_FONT_RECORDS.Inter.spec,
+            familyClass: 'sans',
+            weights: [...SYSTEM_GOOGLE_FONT_RECORDS.Inter.weights],
+            styles: [...SYSTEM_GOOGLE_FONT_RECORDS.Inter.styles],
+          },
+        },
+      },
+    },
+  });
+  return artifact;
 }
 
 async function main(): Promise<void> {
   const widgetTypes = discoverWidgetTypes();
   if (!checkOnly) {
     fs.rmSync(editorOutputRoot, { recursive: true, force: true });
-    fs.rmSync(materializerOutputRoot, { recursive: true, force: true });
   }
   for (const widgetType of widgetTypes) {
-    const artifacts = await buildArtifacts(widgetType);
+    const artifact = await buildArtifact(widgetType);
     writeOrCheck(
       path.join(editorOutputRoot, `${widgetType}.json`),
-      `${JSON.stringify(artifacts.editor)}\n`,
-    );
-    writeOrCheck(
-      path.join(materializerOutputRoot, `${widgetType}.json`),
-      `${JSON.stringify(artifacts.materializer)}\n`,
+      `${JSON.stringify(artifact)}\n`,
     );
   }
-  writeOrCheck(
-    path.join(repoRoot, 'roma/generated/widget-materializer-artifacts.ts'),
-    generatedMaterializerIndex(widgetTypes),
-  );
   console.log(
-    `[generate-widget-artifacts] ${checkOnly ? 'verified' : 'wrote'} ${widgetTypes.length} widget artifact pairs`,
+    `[generate-widget-artifacts] ${checkOnly ? 'verified' : 'wrote'} ${widgetTypes.length} browser editor artifacts`,
   );
 }
 

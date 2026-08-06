@@ -28,8 +28,7 @@ export function TopDrawer({
 
   const meta = chrome.meta;
   const currentInstanceId = typeof meta?.instanceId === 'string' ? meta.instanceId : '';
-  const hasInstance = Boolean(currentInstanceId);
-  const canSave = hasInstance && isDirty;
+  const canSave = Boolean(meta) && isDirty;
   const showSaveAction = canSave || isSaving;
   const instanceLabel = typeof meta?.label === 'string' ? meta.label.trim() : '';
   const currentLabel = instanceLabel || currentInstanceId;
@@ -112,9 +111,9 @@ export function TopDrawer({
               <span className="diet-btn-ictxt__label body-s">{meta.returnLabel}</span>
             </button>
           ) : null}
-          {hasInstance ? (
+          {meta ? (
             <span className="topdrawer-instance-title heading-3">
-              {currentLabel}
+              {currentLabel || 'Untitled widget'}
             </span>
           ) : null}
           {meta?.publishStatus ? (

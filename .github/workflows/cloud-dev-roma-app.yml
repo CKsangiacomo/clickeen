@@ -62,8 +62,8 @@ jobs:
       - name: Roma Copilot usage contracts
         run: pnpm --filter @clickeen/roma test:account-limit-usage
 
-      - name: Runtime materializer contracts
-        run: pnpm --filter @clickeen/ck-runtime-materializer test
+      - name: Web Code Generator contracts
+        run: pnpm --filter @clickeen/ck-web-code-generator test
 
       - name: Bob editor contracts
         run: pnpm --filter @clickeen/bob test

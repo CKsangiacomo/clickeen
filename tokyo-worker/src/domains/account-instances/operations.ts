@@ -223,7 +223,6 @@ export async function createAccountInstanceFromSubmittedSource(args: {
       content: args.content,
       displayName: normalizeDisplayName(args.displayName),
       baseLocale: args.baseLocale,
-      publicPackageFingerprint: packaged.fingerprint,
     });
   } catch (error) {
     return cleanupCreatedInstanceOrThrow({
@@ -296,7 +295,6 @@ export async function saveAccountInstanceTransition(args: {
     content: args.content,
     displayName: args.hasDisplayName ? args.displayName : existing.value.pointer.displayName,
     baseLocale: args.baseLocale,
-    publicPackageFingerprint: packaged.fingerprint,
   });
   const live = (await readInstanceServeState({
     env: args.env,
@@ -324,7 +322,6 @@ export async function publishAccountInstanceTransition(args: {
     env: args.env,
     accountId,
     instanceId,
-    expectedFingerprint: existing.value.pointer.publicPackageFingerprint ?? null,
   });
   if (!packageReady.ok) {
     throw new AccountInstanceTransitionError({

@@ -9,6 +9,14 @@ import {
 } from '@clickeen/widget-shell';
 import { validateAccountWidgetDefaultsContract } from '../lib/account-widget-defaults-contract';
 import type { AccountWidgetDefaultsDocument } from '../lib/account-widget-defaults-direct';
+import type { TokyoWidgetDefinition } from '../lib/account-instance-direct';
+
+function definitionsFor(value: AccountWidgetDefaultsDocument): TokyoWidgetDefinition[] {
+  return [{
+    widgetType: 'calltoaction',
+    defaults: structuredClone(value.widgets.calltoaction!.core),
+  } as TokyoWidgetDefinition];
+}
 
 function fontLibraryWithOrio(): AccountFontLibrary {
   const library = createDefaultAccountFontLibrary();
@@ -73,7 +81,7 @@ async function main(): Promise<void> {
   );
   setRoleFont(valid.shell, 'title', 'Orio', '400');
   assert.deepEqual(
-    await validateAccountWidgetDefaultsContract({ request, widgetDefaults: valid }),
+    await validateAccountWidgetDefaultsContract({ request, widgetDefaults: valid, widgetDefinitions: definitionsFor(valid) }),
     { ok: true },
   );
 
@@ -81,6 +89,7 @@ async function main(): Promise<void> {
   const invalid = await validateAccountWidgetDefaultsContract({
     request,
     widgetDefaults: valid,
+    widgetDefinitions: definitionsFor(valid),
   });
   assert.equal(invalid.ok, false);
   if (!invalid.ok) {
@@ -95,6 +104,7 @@ async function main(): Promise<void> {
   const malformedResult = await validateAccountWidgetDefaultsContract({
     request,
     widgetDefaults: malformed,
+    widgetDefinitions: definitionsFor(malformed),
   });
   assert.equal(malformedResult.ok, false);
   if (!malformedResult.ok) {

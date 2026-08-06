@@ -280,10 +280,12 @@ route. They are classified as vector assets by Tokyo-worker.
    Tokyo-worker.
 3. Roma hosts Bob and sends one editor-open payload containing the saved source
    and exact saved package.
-4. Bob edits the active instance in browser memory.
-5. Roma saves the submitted instance package to Tokyo-worker.
-6. Tokyo-worker stores the account instance source and exact package files that
-   Roma submitted.
+4. Bob edits the active instance in browser memory and uses Web Code Generator
+   to generate and preview exact `index.html`, `styles.css`, and `runtime.js`
+   for each valid working state.
+5. Bob submits the current config and exact generated package to Roma.
+6. Roma forwards the account save command; Tokyo-worker stores the submitted
+   source and exact package files without generating or repairing them.
 
 ### Assets
 
@@ -302,8 +304,8 @@ route. They are classified as vector assets by Tokyo-worker.
    placements.
 3. Tokyo-worker stores exact Page source and Page locale overlay files under the
    account Page folder.
-4. Page UI, compilation, publication, and public serving are not implemented in
-   the current slice.
+4. Web Code Generator includes deterministic Page generation, but Roma/Tokyo do
+   not yet invoke, store, publish, or publicly serve generated Page files.
 
 ### Clickeen-Owned Examples
 

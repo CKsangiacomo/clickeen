@@ -106,7 +106,7 @@ type BobOpenEditorMessage = {
   type: 'ck:open-editor';
   requestId: string;
   accountPublicId: string;
-  instanceId: string;
+  instanceId?: string;
   baseLocale: string;
   label: string;
   widgetname: string;
@@ -116,7 +116,7 @@ type BobOpenEditorMessage = {
     indexHtml: string;
     stylesCss: string;
     runtimeJs: string;
-  };
+  } | null;
   fontLibrary: AccountFontLibrary;
   publishStatus?: 'published' | 'unpublished';
   returnLabel?: string;
@@ -146,6 +146,44 @@ type BuilderOpenResponse = {
   publishStatus?: 'published' | 'unpublished';
   copilot?: unknown;
 };
+
+type WidgetDefaultsResponse = {
+  widgetDefaults: {
+    fontLibrary: AccountFontLibrary;
+    shell: Record<string, unknown>;
+    widgets: Record<string, { core: Record<string, unknown> }>;
+  };
+};
+
+function cloneRecord(value: Record<string, unknown>): Record<string, unknown> {
+  return structuredClone(value);
+}
+
+function mergeDraftDefaults(
+  shell: Record<string, unknown>,
+  core: Record<string, unknown>,
+): Record<string, unknown> {
+  const output = cloneRecord(shell);
+  const merge = (target: Record<string, unknown>, source: Record<string, unknown>, path: string) => {
+    for (const [key, value] of Object.entries(source)) {
+      const existing = target[key];
+      if (typeof existing === 'undefined') {
+        target[key] = structuredClone(value);
+        continue;
+      }
+      if (
+        existing && typeof existing === 'object' && !Array.isArray(existing) &&
+        value && typeof value === 'object' && !Array.isArray(value)
+      ) {
+        merge(existing as Record<string, unknown>, value as Record<string, unknown>, path ? `${path}.${key}` : key);
+        continue;
+      }
+      throw new Error(`coreui.errors.widgetDefaults.shellCoreConflict:${path ? `${path}.` : ''}${key}`);
+    }
+  };
+  merge(output, core, '');
+  return output;
+}
 
 const BUILDER_REASON_COPY: Record<string, string> = {
   'coreui.errors.auth.required': 'You need to sign in again to open Builder.',
@@ -198,10 +236,11 @@ function resolveBobAccountCommandRequest(args: {
 
   switch (args.command) {
     case 'update-instance':
-      if (!instanceId) return null;
       return {
-        method: 'PUT',
-        path: `/api/account/instances/${encodeURIComponent(instanceId)}`,
+        method: instanceId ? 'PUT' : 'POST',
+        path: instanceId
+          ? `/api/account/instances/${encodeURIComponent(instanceId)}`
+          : '/api/account/instances',
       };
     case 'list-assets':
       return {
@@ -378,6 +417,7 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
   const bobAppliedInstanceIdRef = useRef('');
   const bobIsDirtyRef = useRef(false);
   const activeInstanceIdRef = useRef('');
+  const suppressNextActiveOpenRef = useRef(false);
   const pendingDiscardActionRef = useRef<(() => void) | null>(null);
   const allowNavigationRef = useRef(false);
   const allowPopStateRef = useRef(false);
@@ -399,6 +439,9 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
   const currentUrl = pathname;
   const pathInstanceId = useMemo(() => decodeBuilderPathInstanceId(pathname), [pathname]);
   const returnTo = useMemo(() => normalizeReturnTo(searchParams.get('returnTo')), [searchParams]);
+  const newWidgetType = useMemo(() => String(searchParams.get('new') || '').trim().toLowerCase(), [searchParams]);
+  const duplicateInstanceId = useMemo(() => String(searchParams.get('duplicate') || '').trim(), [searchParams]);
+  const hasDraftRequest = Boolean(!activeInstanceId && (newWidgetType || duplicateInstanceId));
 
   const keepEditing = useCallback(() => {
     pendingDiscardActionRef.current = null;
@@ -442,12 +485,13 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
   useEffect(() => {
     const resolved = pathInstanceId || String(initialInstanceId || '').trim();
     if (!resolved) {
+      if (hasDraftRequest) return;
       if (activeInstanceId) setActiveInstanceId('');
       return;
     }
     if (resolved === activeInstanceId) return;
     setActiveInstanceId(resolved);
-  }, [activeInstanceId, initialInstanceId, pathInstanceId]);
+  }, [activeInstanceId, hasDraftRequest, initialInstanceId, pathInstanceId]);
 
   const runBobAccountCommand = useCallback(
     async (args: { source: Window; requestId: string; command: BobAccountCommand; instanceId?: string; headers?: Record<string, string>; body?: unknown }) => {
@@ -545,6 +589,27 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
         const status = streamedResult ? streamedResult.status : response.status;
         const payload = streamedResult ? streamedResult.payload : resultPayload;
 
+        if (
+          args.command === 'update-instance' &&
+          !scopedInstanceId &&
+          status >= 200 &&
+          status < 300 &&
+          payload &&
+          typeof payload === 'object' &&
+          !Array.isArray(payload)
+        ) {
+          const createdInstanceId = typeof (payload as { instanceId?: unknown }).instanceId === 'string'
+            ? String((payload as { instanceId: string }).instanceId).trim()
+            : '';
+          if (createdInstanceId) {
+            bobAppliedInstanceIdRef.current = createdInstanceId;
+            activeInstanceIdRef.current = createdInstanceId;
+            suppressNextActiveOpenRef.current = true;
+            setActiveInstanceId(createdInstanceId);
+            router.replace(buildRomaBuilderRoute({ instanceId: createdInstanceId }), { scroll: false });
+          }
+        }
+
         reply({
           requestId: args.requestId,
           command: args.command,
@@ -577,7 +642,7 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
         });
       }
     },
-    [accountApi, activeInstanceId, bobBaseUrl],
+    [accountApi, activeInstanceId, bobBaseUrl, router],
   );
 
   const postOpenEditorAndWait = useCallback(
@@ -732,15 +797,100 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
     }
   }, [accountApi, accountPolicy, activeAccount, activeInstanceId, currentUrl, postOpenEditorAndWait, returnTo, router]);
 
+  const openDraftInBob = useCallback(async () => {
+    const targetWindow = iframeRef.current?.contentWindow;
+    if (!targetWindow || !hasDraftRequest) return;
+
+    const openSeq = ++openDispatchSeqRef.current;
+    setOpenError(null);
+    setCopyCodeOpen(false);
+    setPublicActionContext(null);
+
+    try {
+      const baseLocale = parseAccountLocalePolicyStrict(activeAccount.localePolicy).baseLocale;
+      let widgetType = newWidgetType;
+      let label = 'Untitled widget';
+      let config: Record<string, unknown>;
+      let publicPackage: BuilderOpenResponse['publicPackage'] | null = null;
+      let fontLibrary: AccountFontLibrary;
+      let copilot: unknown = null;
+
+      if (duplicateInstanceId) {
+        const source = await accountApi.fetchJson<BuilderOpenResponse>(
+          `/api/builder/${encodeURIComponent(duplicateInstanceId)}/open`,
+        );
+        widgetType = source.widgetType;
+        label = `${source.displayName || 'Untitled widget'} copy`;
+        config = structuredClone(source.config);
+        publicPackage = source.publicPackage;
+        fontLibrary = source.fontLibrary;
+        copilot = source.copilot ?? null;
+      } else {
+        const defaults = await accountApi.fetchJson<WidgetDefaultsResponse>('/api/account/widget-defaults');
+        const widgetDefaults = defaults.widgetDefaults.widgets[widgetType];
+        if (!widgetDefaults) throw new Error('coreui.errors.widgetDefaults.widgetMissing');
+        config = mergeDraftDefaults(defaults.widgetDefaults.shell, widgetDefaults.core);
+        fontLibrary = defaults.widgetDefaults.fontLibrary;
+      }
+
+      const compiled = await getWidgetEditorArtifact(widgetType);
+      if (openSeq !== openDispatchSeqRef.current) return;
+      const compiledDisplayName = typeof (compiled as { displayName?: unknown }).displayName === 'string'
+        ? String((compiled as { displayName: string }).displayName).trim()
+        : '';
+      if (!duplicateInstanceId && compiledDisplayName) label = `Untitled ${compiledDisplayName}`;
+      const message: BobOpenEditorPayload = {
+        type: 'ck:open-editor',
+        accountPublicId: activeAccount.accountPublicId,
+        baseLocale,
+        label,
+        widgetname: widgetType,
+        compiled,
+        instanceData: config,
+        publicPackage,
+        fontLibrary,
+        returnLabel: returnTo ? 'Return' : undefined,
+        publicActions: null,
+        policy: accountPolicy,
+        copilot,
+        translationSetup: buildTranslationSetup({ baseLocale, activeAccount, accountPolicy }),
+      };
+      await postOpenEditorAndWait({ targetWindow, message, openSeq });
+      if (openSeq !== openDispatchSeqRef.current) return;
+      bobAppliedInstanceIdRef.current = '';
+      bobIsDirtyRef.current = true;
+      setOpenError(null);
+    } catch (error) {
+      if (openSeq !== openDispatchSeqRef.current) return;
+      setOpenError(error instanceof Error ? error.message : String(error));
+    }
+  }, [
+    accountApi,
+    accountPolicy,
+    activeAccount,
+    duplicateInstanceId,
+    hasDraftRequest,
+    newWidgetType,
+    postOpenEditorAndWait,
+    returnTo,
+  ]);
+
   const openActiveInstanceInBobRef = useRef(openActiveInstanceInBob);
+  const openDraftInBobRef = useRef(openDraftInBob);
   useEffect(() => {
     openActiveInstanceInBobRef.current = openActiveInstanceInBob;
   }, [openActiveInstanceInBob]);
+  useEffect(() => {
+    openDraftInBobRef.current = openDraftInBob;
+  }, [openDraftInBob]);
 
   const handleBobIframeLoad = useCallback(() => {
     bobReadyRef.current = true;
-    if (!activeInstanceIdRef.current) return;
-    void openActiveInstanceInBobRef.current();
+    if (activeInstanceIdRef.current) {
+      void openActiveInstanceInBobRef.current();
+    } else {
+      void openDraftInBobRef.current();
+    }
   }, []);
 
   useEffect(() => {
@@ -754,6 +904,8 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
         bobReadyRef.current = true;
         if (activeInstanceId) {
           void openActiveInstanceInBobRef.current();
+        } else if (hasDraftRequest) {
+          void openDraftInBobRef.current();
         }
         return;
       }
@@ -782,7 +934,7 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
         const command = message.command ?? null;
         const instanceId = typeof message.instanceId === 'string' ? message.instanceId.trim() : '';
         if (!requestId || !command) return;
-        if (!instanceId && !isAccountAssetCommand(command)) return;
+        if (!instanceId && !isAccountAssetCommand(command) && command !== 'update-instance') return;
         void runBobAccountCommand({
           source,
           requestId,
@@ -797,7 +949,7 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
 
     window.addEventListener('message', listener);
     return () => window.removeEventListener('message', listener);
-  }, [activeInstanceId, bobBaseUrl, openNavigation, publicActionContext, requestGuardedNavigation, returnTo, router, runBobAccountCommand]);
+  }, [activeInstanceId, bobBaseUrl, hasDraftRequest, openNavigation, publicActionContext, requestGuardedNavigation, returnTo, router, runBobAccountCommand]);
 
   useEffect(() => {
     bobReadyRef.current = false;
@@ -812,11 +964,16 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
   useEffect(() => {
     if (!activeInstanceId) {
       setOpenError(null);
+      if (hasDraftRequest && bobReadyRef.current) void openDraftInBobRef.current();
+      return;
+    }
+    if (suppressNextActiveOpenRef.current) {
+      suppressNextActiveOpenRef.current = false;
       return;
     }
     if (!bobReadyRef.current) return;
     void openActiveInstanceInBobRef.current();
-  }, [activeInstanceId]);
+  }, [activeInstanceId, hasDraftRequest, newWidgetType, duplicateInstanceId]);
 
   useEffect(() => {
     if (!activeInstanceId) return;
@@ -894,7 +1051,7 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
 
   const builderOpenErrorCopy = resolveBuilderErrorCopy(openError || '', 'Builder could not open this widget. Please try again.');
 
-  if (!activeInstanceId) {
+  if (!activeInstanceId && !hasDraftRequest) {
     return (
       <div className="rd-canvas-module">
         <p className="body-m">No instance selected for Builder.</p>

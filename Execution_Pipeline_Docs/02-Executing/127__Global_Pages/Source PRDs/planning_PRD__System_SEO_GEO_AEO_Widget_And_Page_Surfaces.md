@@ -68,9 +68,9 @@ It does not determine whether customer content exists in initial HTML.
 Public-search output has three separate layers:
 
 1. every tier receives complete semantic initial HTML;
-2. Free Widget Instances carry a visible contextual Clickeen attribution link
-   and matching truthful Clickeen/Widget product identity generated into that
-   HTML;
+2. Free Widget Instances carry a visible contextual link to the global Clickeen
+   product and matching truthful Clickeen application identity generated into
+   that HTML;
 3. Tier 2+ customers may enable enhanced customer-owned SEO/GEO/AEO output.
 
 Every generated document includes the neutral provenance tag
@@ -84,19 +84,16 @@ optimization. Pages are a Tier 2+ product. Free, Tier 1, and accounts downgraded
 into those tiers can see the Pages domain and retained inventory, but Roma blocks Page product
 actions through the standard Upgrade interaction before generation.
 
-The Web Code Generator reads one approved Clickeen public product identity map
-containing the canonical Clickeen organization/platform identity and each
-Widget product's real landing URL, stable schema `@id`, factual description,
-and approved attribution wording. It does not invent product copy. Language
-truth remains in the existing locale authority; the map is not a second locale
-registry. Every referenced Clickeen URL and entity must exist and agree with the
-generated claim.
+The Web Code Generator uses the one approved global Clickeen URL and stable
+Clickeen organization/application schema IDs. The Widget definition's display
+name supplies contextual attribution wording. It does not invent product copy
+or maintain a second product or locale registry.
 
-Free attribution is ordinary, visible, crawlable HTML pointing to the matching
-Widget product page with `rel="nofollow noreferrer"`, not a hidden link and not
+Free attribution is ordinary, visible, crawlable HTML pointing to the global
+Clickeen product with `rel="nofollow noreferrer"`, not a hidden link and not
 DOM injected by `runtime.js`. Matching JSON-LD may identify Clickeen as the
-software/service and schema publisher, the Widget type as the Clickeen product,
-and the public Instance as the customer's `WebPage`. It must never identify
+software/service and schema publisher and the public Instance as the customer's
+`WebPage`. It must never identify
 Clickeen as the author or owner of customer content. Customer `mainEntity` and
 Widget-specific content schema are emitted only when the customer SEO/GEO/AEO
 value is authorized on, only from declared source fields, and must agree with
@@ -323,10 +320,9 @@ renderers.
 
 ## 8. Why the output is SEO-friendly
 
-For Clickeen itself, Free Widget distribution is useful only when the visible
-attribution and the machine-readable relationship point to a real,
-authoritative Clickeen product page. Repeated generic homepage links, hidden
-links, keyword-stuffed anchors, invented “all languages” claims, or schema that
+For Clickeen itself, Free Widget distribution uses one real global Clickeen URL
+and the matching Clickeen application identity. Hidden links, keyword-stuffed
+anchors, invented “all languages” claims, or schema that
 does not match visible truth are forbidden. Clickeen can create a clear product
 entity and discovery trail; it cannot claim or guarantee ranking benefit.
 
@@ -543,13 +539,13 @@ This planning direction is correctly represented in PRD 127 when:
   DOM and make no child public Widget requests;
 - iframe and runtime-only installation choices are absent;
 - crawlers never need JavaScript or `overlays.json` to obtain primary content;
-- Free Widget output contains one visible contextual link to the matching real
-  Clickeen Widget product page and matching source-truthful product identity in
-  initial HTML;
+- Free Widget output contains one visible contextual link to the global Clickeen
+  product and matching source-truthful Clickeen application identity in initial
+  HTML;
 - paid branding removal is controlled by `branding.remove` and remains separate
   from customer SEO/GEO/AEO authorization through `embed.seoGeo.enabled`;
-- no Clickeen product URL, schema ID, description, or language claim is emitted
-  outside the accepted identity map and corresponding real product page;
+- no Clickeen product URL, schema ID, description, or language claim is invented
+  outside the one approved global Clickeen identity;
 - exact responses always contain consistent language, semantic content, Page
   title, and robots; every ordinary Page additionally contains its metadata,
   canonical and alternate links, localized `WebPage` JSON-LD, and only

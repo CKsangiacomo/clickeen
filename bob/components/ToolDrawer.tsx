@@ -52,6 +52,7 @@ function resolveBuilderErrorCopy(reason: string, fallback: string): string {
 function resolveSessionErrorTitle(error: NonNullable<ReturnType<typeof useWidgetSession>['error']>): string {
   if (error.source === 'load') return 'Builder unavailable';
   if (error.source === 'translation') return 'Translations need attention';
+  if (error.source === 'generation') return 'Preview could not update';
   if (error.source === 'save') return 'Save failed';
   return 'Edit blocked';
 }
@@ -79,6 +80,10 @@ export function resolveSessionErrorLines(error: NonNullable<ReturnType<typeof us
         'Changes were saved, but translations could not start. Try saving again.',
       ),
     ];
+  }
+
+  if (error.source === 'generation') {
+    return ['The widget could not be generated. Fix the current value and try again.'];
   }
 
   const deduped = new Set(

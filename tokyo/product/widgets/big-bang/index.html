@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Big Bang Widget</title>
+    <link rel="stylesheet" href="/dieter/tokens/tokens.css" />
+    <link rel="stylesheet" href="../shared/header.css" />
+    <link rel="stylesheet" href="../shared/localeSwitcher.css" />
+    <link rel="stylesheet" href="../shared/stagePod.css" />
+    <link rel="stylesheet" href="../shared/socialShare.css" />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="stage" data-role="stage">
+      <div class="pod" data-role="pod">
+        <div class="ck-widget ck-bigBang-widget" data-ck-widget="big-bang" data-role="root">
+          <section class="ck-bigBang ck-headerLayout" data-role="big-bang">
+            <header class="ck-bigBang__header ck-header" {{#unless header.enabled}}hidden{{/unless}}>
+              <div class="ck-header__text">
+                <h2 class="ck-bigBang__title ck-header__title heading-2" data-role="header-title" data-ck-field-path="header.title" data-ck-field-target="richtext">{{header.title}}</h2>
+                <div class="ck-header__subtitle" data-role="header-subtitle" data-ck-field-path="header.subtitleHtml" data-ck-field-target="richtext" {{#unless header.showSubtitle}}hidden{{/unless}}>{{header.subtitleHtml}}</div>
+              </div>
+              <a class="ck-header__cta" data-role="header-cta" href="{{headerCta.href}}" data-open-mode="{{headerCta.openMode}}" {{#unless headerCta.enabled}}hidden{{/unless}}>
+                <span class="ck-header__ctaIcon" aria-hidden="true"></span>
+                <span class="ck-header__ctaLabel" data-ck-field-path="headerCta.label" data-ck-field-target="text">{{headerCta.label}}</span>
+              </a>
+            </header>
+            <div class="ck-bigBang__core ck-headerLayout__body" data-role="big-bang-core" data-align="{{bigBang.alignment}}" style="--ck-bigBang-text-width: {{bigBang.textWidth}}px; --ck-bigBang-gap: {{bigBang.gap}}px">
+              <div class="ck-bigBang__content">
+                <div class="ck-bigBang__statement" data-role="big-bang-statement" data-ck-field-path="bigBang.statement" data-ck-field-target="richtext">{{bigBang.statement}}</div>
+                {{#if bigBang.showSupportingCopy}}
+                <div class="ck-bigBang__support body-l" data-role="big-bang-support" data-ck-field-path="bigBang.supportingCopy" data-ck-field-target="richtext">{{bigBang.supportingCopy}}</div>
+                {{/if}}
+              </div>
+            </div>
+          </section>
+          <script src="./runtime.js" defer></script>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

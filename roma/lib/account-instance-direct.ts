@@ -2,6 +2,7 @@ import { asTrimmedString, isRecord } from '@clickeen/ck-contracts';
 import { isCompactInstanceId } from '@clickeen/ck-contracts/overlay-identity';
 import { readWidgetEditableFieldsContract } from '@clickeen/ck-contracts/translated-value-primitives';
 import type { WidgetEditableFieldsContract } from '@clickeen/ck-contracts/translated-value-primitives';
+import { parseLimitsSpec, type LimitsSpec } from '@clickeen/ck-policy';
 import { callTokyo, type TokyoCallContext } from './tokyo-client';
 import {
   composeConfigWithInstanceContent,
@@ -33,7 +34,6 @@ export type AccountInstanceCoreRow = {
   accountId: string;
   widgetType: string;
   baseLocale?: string;
-  publicPackageFingerprint: string;
   publishStatus?: AccountInstanceLiveStatus;
 };
 
@@ -46,7 +46,6 @@ export type AccountInstancePublicPackage = {
 };
 
 export type AccountInstancePublicPackageRead = {
-  publicPackageFingerprint: string;
   publicPackage: AccountInstancePublicPackage;
 };
 
@@ -75,6 +74,8 @@ export type TokyoWidgetDefinition = {
   displayName: string;
   description: string;
   editableFields: WidgetEditableFieldsContract;
+  limits: LimitsSpec;
+  defaults: Record<string, unknown>;
 };
 
 function tokyoCallContext(args: {
@@ -139,13 +140,17 @@ function normalizeTokyoWidgetDefinition(raw: unknown): TokyoWidgetDefinition | n
   const widgetCode = asTrimmedString(raw.widgetCode);
   const displayName = asTrimmedString(raw.displayName);
   const description = typeof raw.description === 'string' ? raw.description : null;
+  const defaults = isRecord(raw.defaults) ? raw.defaults : null;
   let editableFields: WidgetEditableFieldsContract | null = null;
+  let limits: LimitsSpec | null = null;
   try {
     editableFields = readWidgetEditableFieldsContract(raw.editableFields);
+    limits = parseLimitsSpec(raw.limits);
   } catch {
     editableFields = null;
+    limits = null;
   }
-  if (!widgetType || !widgetCode || !displayName || description == null || !editableFields)
+  if (!widgetType || !widgetCode || !displayName || description == null || !editableFields || !limits || !defaults)
     return null;
   return {
     widgetType,
@@ -153,6 +158,8 @@ function normalizeTokyoWidgetDefinition(raw: unknown): TokyoWidgetDefinition | n
     displayName,
     description,
     editableFields,
+    limits,
+    defaults,
   };
 }
 
@@ -236,8 +243,7 @@ function normalizeAccountInstancePayload(payload: unknown): {
   const instanceId = asTrimmedString(payload.instanceId ?? payload.id);
   const accountId = asTrimmedString(payload.accountId);
   const widgetType = asTrimmedString(payload.widgetType);
-  const publicPackageFingerprint = asTrimmedString(payload.publicPackageFingerprint);
-  if (!instanceId || !accountId || !widgetType || !publicPackageFingerprint) return null;
+  if (!instanceId || !accountId || !widgetType) return null;
   return {
     row: {
       instanceId,
@@ -248,7 +254,6 @@ function normalizeAccountInstancePayload(payload: unknown): {
       accountId,
       widgetType,
       baseLocale: asTrimmedString(payload.baseLocale) ?? undefined,
-      publicPackageFingerprint,
       publishStatus:
         payload.publishStatus === 'published'
           ? 'published'
@@ -277,9 +282,7 @@ function normalizeAccountInstancePublicPackagePayload(
     return null;
   }
   const { indexHtml, stylesCss, runtimeJs } = payload.publicPackage;
-  const publicPackageFingerprint = asTrimmedString(payload.publicPackageFingerprint);
   if (
-    !publicPackageFingerprint ||
     typeof indexHtml !== 'string' ||
     typeof stylesCss !== 'string' ||
     typeof runtimeJs !== 'string'
@@ -287,7 +290,6 @@ function normalizeAccountInstancePublicPackagePayload(
     return null;
   }
   return {
-    publicPackageFingerprint,
     publicPackage: { indexHtml, stylesCss, runtimeJs },
   };
 }

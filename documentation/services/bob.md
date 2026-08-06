@@ -263,12 +263,14 @@ Roma:
 - widget type
 - display name
 - base locale
-- current config/content state
+- current merged config
+- exact browser-generated `index.html`, `styles.css`, and `runtime.js`
 
 Bob sends this as a `bob:account-command` with `command: "update-instance"`.
-Roma reads the deploy-built materializer artifact, materializes the browser
-package files, and performs the account save command. Tokyo-worker stores the
-saved source and package under:
+Bob must have a successful Web Code Generator result for the current working
+state before it sends Save. Roma derives the separate config/content source
+artifacts, performs the account save command, and Tokyo-worker stores those
+derived source artifacts with Bob's exact package under:
 
 ```text
 accounts/{accountPublicId}/instances/{instanceId}/
@@ -279,13 +281,11 @@ duplicate, and delete. Roma does not generate translations, regenerate
 translations, or mutate locale overlays from the `update-instance` command.
 Bob treats the save response as source/root persistence truth only.
 
-When translations need update, that attention belongs to the Translations panel.
-[`interactions.md`](../engineering/UI/interactions.md) owns interaction feedback
-behavior. The Bob/Roma UI execution PRDs own any future top-of-builder attention
-surface that points the user to the Translations panel and the explicit Generate
-translations action when exact stale-translation evidence exists. Bob must not
-infer that state from runtime package probes, active locale count alone, or
-hidden UI-authored status.
+When translations need update, that work belongs to the Translations panel and
+its explicit Generate translations action. Bob must not infer stale-translation
+truth from runtime package probes, active locale count alone, or hidden
+UI-authored status. [`interactions.md`](../engineering/UI/interactions.md) owns
+interaction feedback behavior.
 
 Bob account commands currently include:
 
@@ -344,10 +344,9 @@ Each widget package contains:
 spec.json
 editable-fields.json
 limits.json
-widget.html
-widget.css
-widget.client.js
-declared support files
+index.html
+styles.css
+runtime.js
 ```
 
 `spec.json` carries defaults and editor structure. `editable-fields.json`
@@ -366,8 +365,9 @@ The widget build compiles each canonical `spec.json` once into:
 Compiler source lives under `bob/lib/compiler*`.
 `scripts/widgets/generate-artifacts.ts` reads widget and Dieter source directly
 from the repo and emits ignored editor artifacts under
-`roma/public/widget-editors/` plus server-only materializer artifacts under
-`roma/generated/`.
+`roma/public/widget-editors/`. Each artifact includes the compiled editor
+contract and the exact Widget definition/source modules Web Code Generator
+needs in Bob.
 Normal product requests do not fetch Tokyo source, fetch Dieter stencils, or
 compile controls.
 
@@ -386,8 +386,9 @@ GET /l10n/**
 
 Builder preview does not load widget source through a Bob `/widgets/**` proxy.
 Roma opens the instance with its saved `index.html`, `styles.css`, and
-`runtime.js` package. Bob boots that exact package in the sandboxed iframe, then
-streams unsaved browser-memory state into the running instance runtime.
+`runtime.js` package and the deploy-built editor artifact. For every valid
+working state, Bob runs Web Code Generator in browser memory and previews the
+exact generated package in the sandboxed iframe.
 
 The Bob-local AI API route is a guard route only:
 
@@ -397,8 +398,9 @@ POST /api/ai/widget-copilot -> 409
 
 Copilot turn traffic must run through the Roma account route.
 
-Editor artifacts contain no raw widget HTML, CSS, JavaScript, or materializer
-package. Roma's server-only materializer reads a separate build artifact.
+Editor artifacts contain the exact Widget definition, including the source
+HTML, CSS, runtime, and selected shared modules required for browser generation.
+There is no separate server materializer artifact.
 
 ## Controls
 
@@ -498,38 +500,18 @@ no item identity.
 
 ## Preview
 
-Bob preview loads the saved instance package in a sandboxed iframe and streams
-working state updates into its runtime:
-
-```json
-{
-  "type": "ck:state-update",
-  "widgetname": "[widgetType]",
-  "state": "[workingState]",
-  "device": "[desktop|mobile]"
-}
-```
-
-Widget runtime sends:
-
-```json
-{
-  "type": "ck:ready"
-}
-```
-
-`ck:ready` acknowledges the first state applied by one iframe document. Bob's
-generic `Loading preview...` status therefore belongs only to that initial
-iframe boot and resets only when a different saved public package recreates the
-iframe document. It is not an edit-progress signal.
+Bob preview is the current successful Web Code Generator result for the
+browser-memory working state. Bob constructs the iframe document from the exact
+generated `index.html`, inlines the generated stylesheet for preview, and loads
+the exact generated runtime. Widget runtime may send `ck:ready` and resize
+messages for iframe behavior, but it does not receive a generic state document
+or rebuild customer content.
 
 When an in-memory edit introduces an unresolved account media or font
-reference, Bob keeps the last successfully rendered preview visible, resolves
-the dependency through Roma, materializes the resolved URL, and sends the
-updated state to the existing iframe. Resolution failure is an explicit preview
-error. A later valid dependency resolution clears that dependency error; Bob
-does not reload the iframe, repeat `ck:ready`, or present an iframe failure as a
-ready preview.
+reference, Bob withholds the preview package while it resolves the dependency
+through Roma and regenerates from the resolved URL. Resolution or generation
+failure is an explicit preview error. A later valid resolution produces and
+previews a new exact package.
 
 Preview represents the in-memory working copy. Public snippets point at the
 published static URL:
@@ -662,7 +644,7 @@ Runtime evidence comes from cloud-dev Cloudflare surfaces.
 ## Hard Stops
 
 - Do not add account persistence inside Bob.
-- Do not save package files from Bob.
+- Do not save without Bob's exact generated package for the current config.
 - Do not let Bob choose account locales, tier policy, model availability, or storage paths.
 - Do not create Bob account asset API routes; asset commands go through Roma.
 - Do not treat Builder preview as public serving evidence.

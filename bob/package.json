@@ -22,6 +22,7 @@
   "dependencies": {
     "@clickeen/ck-contracts": "workspace:*",
     "@clickeen/ck-policy": "workspace:*",
+    "@clickeen/ck-web-code-generator": "workspace:*",
     "@clickeen/l10n": "workspace:*",
     "@clickeen/widget-shell": "workspace:*",
     "next": "15.5.2",

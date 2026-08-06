@@ -105,9 +105,6 @@ function toAccountInstanceSourcePointer(args: {
     displayName: configDoc.displayName,
     baseLocale: configDoc.baseLocale,
     publishStatus: args.publishStatus,
-    ...(configDoc.publicPackageFingerprint
-      ? { publicPackageFingerprint: configDoc.publicPackageFingerprint }
-      : {}),
     updatedAt: args.updatedAt,
   };
 }
@@ -212,7 +209,6 @@ export async function writeAccountInstanceSource(args: {
   content: AccountInstanceContentDocument;
   displayName?: unknown;
   baseLocale: string;
-  publicPackageFingerprint?: string | null;
 }): Promise<{ pointer: AccountInstanceSourcePointer }> {
   const instanceId = normalizeStorageId(args.instanceId);
   const accountId = normalizeStorageId(args.accountId);
@@ -250,9 +246,6 @@ export async function writeAccountInstanceSource(args: {
     displayName: normalizeDisplayName(args.displayName),
     config: args.config,
     baseLocale,
-    ...(args.publicPackageFingerprint
-      ? { publicPackageFingerprint: args.publicPackageFingerprint }
-      : {}),
     createdAt: existingConfig?.createdAt ?? now,
     updatedAt: now,
   };

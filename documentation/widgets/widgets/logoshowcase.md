@@ -19,9 +19,9 @@ Files:
 spec.json
 editable-fields.json
 limits.json
-widget.html
-widget.css
-widget.client.js
+index.html
+styles.css
+runtime.js
 ```
 
 ## Contract
@@ -74,6 +74,7 @@ stable `id` values in widget Core state.
 ```text
 branding.remove -> behavior.showBacklink
 widget.socialShare.enabled -> behavior.socialShare.enabled
+embed.seoGeo.enabled -> behavior.seoGeoAeoEnabled
 items.group.small.max -> logoshowcase.strips[]
 items.group.medium.max -> logoshowcase.strips[].logos[]
 items.group.large.max -> logoshowcase.strips[].logos[]
@@ -85,16 +86,18 @@ Logo Showcase uses the shared Shell for Header, Header CTA, Stage/Pod, Core
 size, typography, branding, social share, and locale switcher. Logo strips and
 logo items belong to `logoshowcase.*`.
 
-Runtime requires these Core DOM hooks:
+Generated `index.html` contains the complete strips and logos. Its stable Core
+hooks include:
 
 ```text
 [data-role="logoshowcase"]
 [data-role="logoshowcase-core"]
 ```
 
-`widget.client.js` registers as `logoshowcase`, validates `logoshowcase.*`,
-renders strips/logos into `logoshowcase-core`, applies shared Shell utilities,
-and binds `ck:state-update` for the current instance id.
+`runtime.js` registers as `logoshowcase` through `CKWidgetRuntime` and binds the
+deterministic ordering and carousel behavior to generated logo DOM. Continuous
+carousel behavior may clone an existing generated ticker; it does not render
+the primary strip/logo content from config or accept generic state updates.
 
 Runtime invariants:
 
@@ -102,17 +105,9 @@ Runtime invariants:
 - Carousel mode is `paged` or `continuous`.
 - Carousel state owns step, arrows, swipe, autoplay delay, transition, speed,
   direction, and pause-on-hover behavior.
-- `logoshowcase.strips[]` ids must be stable and unique.
-- `logoshowcase.strips[].logos[]` ids must be stable and unique inside each
-  strip.
 - Logo state includes logo fill, `href`, `targetBlank`, `nofollow`, `alt`,
   `title`, `caption`, and `name`.
-- Logo media must use resolved account asset media or a valid relative,
-  absolute-path, or `http(s)` URL accepted by runtime validation.
-- Logo media rejects malformed URLs, `javascript:` URLs, and product-local
-  `/widgets/logoshowcase/media/` references.
-- Logo links are normalized as `http(s)` URLs.
-- Card wrapper styling uses shared `CKSurface.applyCardWrapper`.
+- Card wrapper styling is generated from the shared Shell surface contract.
 - Keyboard focus uses Dieter's shared `--focus-ring-color`.
 - `logoshowcase.behavior.randomOrder` is deterministic from strip/logo ids; it
   is not nondeterministic shuffle.

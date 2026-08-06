@@ -1,7 +1,7 @@
 {
   "widgetname": "split-media",
   "displayName": "Split Media",
-  "description": "",
+  "description": "Pair content with a polished image or video in a flexible split media widget.",
   "itemKey": "split-media.item",
   "defaults": {
     "uiLabels": {

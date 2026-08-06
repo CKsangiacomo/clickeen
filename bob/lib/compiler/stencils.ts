@@ -1,6 +1,9 @@
 import type { TooldrawerAttrs } from '../compiler.shared';
 import { encodeHtmlEntities, parseTooldrawerAttributes } from '../compiler.shared';
-import { interpolateStencilContext, renderStencil } from './stencil-renderer';
+import {
+  interpolateStencilContext,
+  renderStencil,
+} from '@clickeen/ck-web-code-generator/stencil-renderer';
 import { validateShowIfExpression } from '../../components/td-menu-content/showIf';
 
 type ComponentSpec = {

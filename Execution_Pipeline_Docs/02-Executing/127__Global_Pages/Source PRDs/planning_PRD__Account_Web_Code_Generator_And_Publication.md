@@ -445,8 +445,8 @@ it does not author, translate, repair or infer content.
 
 The generator also owns the public attribution boundary. Every tier receives
 complete semantic initial HTML. Free Widget Instances additionally receive one
-visible contextual Clickeen link and matching truthful Clickeen/Widget product
-identity from the accepted Clickeen public product identity map. This output is
+visible contextual link to the global Clickeen product and matching truthful
+Clickeen application identity. This output is
 baked into `index.html`; runtime JavaScript does not create it. Paid branding
 follows `branding.remove`. Enhanced customer SEO/GEO/AEO follows the separate
 saved Instance choice plus `embed.seoGeo.enabled` for Widget Instances. Every
@@ -463,14 +463,11 @@ schema; those require an authorized enabled Instance choice. Retained Pages afte
 a downgrade remain visible in Roma, but Page product actions are tier-gated
 before any generator call.
 
-The identity map is typed product data within the Web Code Generator authority,
-not another service or runtime lookup. It names only approved Clickeen product
-URLs, stable schema IDs, factual descriptions, attribution wording and proven
-product identity. Locale truth remains in the existing locale authority rather
-than being copied into this map. Generated schema identifies Clickeen as
-software/service and schema publisher, never as author of customer content. All
-Clickeen URLs and entities used by generated output must resolve to real public
-product pages whose visible content and JSON-LD agree.
+The global URL and Clickeen application identity are constants within Web Code
+Generator, not another service, map, or runtime lookup. The Widget definition's
+display name supplies the contextual visible credit. Locale truth remains in
+the existing locale authority. Generated schema identifies Clickeen as
+software/service and schema publisher, never as author of customer content.
 
 ## Current Truth
 
@@ -1433,12 +1430,13 @@ product-data mutation may be bundled into a schema or consumer deployment.
   introduced.
 - Every exact locale URL returns complete initial HTML and self-consistent
   SEO truth.
-- Every Free Widget Instance contains one generated visible contextual Clickeen
-  attribution link and matching truthful product identity in initial HTML.
+- Every Free Widget Instance contains one generated visible contextual link to
+  the global Clickeen product and matching truthful Clickeen application
+  identity in initial HTML.
 - `branding.remove` and `embed.seoGeo.enabled` remain separate policies; neither
   changes the complete semantic HTML baseline.
-- Every generated Clickeen product URL and schema ID comes from accepted typed
-  product data and resolves to a real authoritative Clickeen product page.
+- Every generated Free attribution uses the one real global Clickeen URL and
+  stable Clickeen application schema ID.
 - Neutral root selection uses Cloudflare market evidence without hiding variants
   behind one content URL.
 - Shared CSS/runtime contributions are not repeated per placement or locale.
