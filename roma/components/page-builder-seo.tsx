@@ -1,8 +1,8 @@
 'use client';
 
 import type { AccountPage, PageLocaleOverlay, PageValues } from '@clickeen/ck-contracts/pages';
-import { useRef, useState } from 'react';
 import { DieterDropdownActions } from './dieter-dropdown-actions';
+import { DieterImageUpload } from './dieter-image-upload';
 import { DieterTextarea } from './dieter-textarea';
 import { DieterTextfield } from './dieter-textfield';
 
@@ -25,6 +25,8 @@ export function PageBuilderSeo({
   translating,
   onGenerateTranslations,
   onUploadSocialImage,
+  onResolveSocialImage,
+  onAssetUpsell,
 }: {
   source: PageDraftSource;
   onSourceChange: (source: PageDraftSource) => void;
@@ -37,9 +39,9 @@ export function PageBuilderSeo({
   translating: boolean;
   onGenerateTranslations: () => Promise<void>;
   onUploadSocialImage: (file: File) => Promise<string>;
+  onResolveSocialImage: (assetRef: string) => Promise<string>;
+  onAssetUpsell: () => void;
 }) {
-  const fileRef = useRef<HTMLInputElement>(null);
-  const [uploading, setUploading] = useState(false);
   const base = activeLocale === source.baseLocale;
   const activeValues = base ? source.values : overlays[activeLocale]?.values ?? { title: '' };
 
@@ -82,7 +84,7 @@ export function PageBuilderSeo({
         <div className="roma-page-section__body">
           <div><DieterTextfield label="Social title" placeholder="Uses Page title when empty" value={socialTitle} onChange={(event) => setValue('socialTitle', event.target.value)} /><CharacterCount value={socialTitle} /></div>
           <div><DieterTextarea label="Social description" value={socialDescription} placeholder="Uses Meta description when empty" onChange={(value) => setValue('socialDescription', value)} /><CharacterCount value={socialDescription} /></div>
-          {base ? <div className="diet-dropdown-upload" data-size="md" data-has-file={source.values.socialImageAssetRef ? 'true' : 'false'}><button className="diet-dropdown-header diet-dropdown-upload__control" type="button" disabled={uploading} onClick={() => fileRef.current?.click()}><span className="diet-dropdown-header-label label-s">Social image</span><span className="diet-dropdown-header-value body-s" data-muted={source.values.socialImageAssetRef ? 'false' : 'true'}>{source.values.socialImageAssetRef || 'Upload an image'}</span></button><input ref={fileRef} type="file" accept="image/*" hidden onChange={(event) => { const file = event.target.files?.[0]; if (!file) return; setUploading(true); void onUploadSocialImage(file).then((assetRef) => onSourceChange({ ...source, values: { ...source.values, socialImageAssetRef: assetRef } })).finally(() => setUploading(false)); }} /></div> : null}
+          {base ? <DieterImageUpload value={source.values.socialImageAssetRef ?? ''} onChange={(assetRef) => onSourceChange({ ...source, values: { ...source.values, ...(assetRef ? { socialImageAssetRef: assetRef } : { socialImageAssetRef: undefined }) } })} onUpload={onUploadSocialImage} onResolve={onResolveSocialImage} onUpsell={onAssetUpsell} /> : null}
         </div>
       </details>
     </section>

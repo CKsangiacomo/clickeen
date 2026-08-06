@@ -47,6 +47,7 @@ async function main() {
   const builder = await read('components/page-builder.tsx');
   const content = await read('components/page-builder-content.tsx');
   const seo = await read('components/page-builder-seo.tsx');
+  const imageUpload = await read('components/dieter-image-upload.tsx');
   const workspace = await read('components/page-workspace.tsx');
   const list = await read('components/page-list.tsx');
   const domains = await read('lib/domains.ts');
@@ -54,6 +55,7 @@ async function main() {
   const bobTopDrawer = await readFile(new URL('../../bob/components/TopDrawer.tsx', import.meta.url), 'utf8');
   const bobCss = await readFile(new URL('../../bob/app/bob_app.css', import.meta.url), 'utf8');
   const editorShell = await readFile(new URL('../../bob/lib/editor-shell.css', import.meta.url), 'utf8');
+  const romaCss = await read('app/roma.css');
   const productDefaults = await readFile(new URL('../../packages/widget-shell/src/defaults.ts', import.meta.url), 'utf8');
   const newPageRoute = await read('app/(authed)/page-builder/new/page.tsx');
   const savedPageRoute = await read('app/(authed)/page-builder/[pageId]/page.tsx');
@@ -66,6 +68,15 @@ async function main() {
   assert.match(builder, /createCompactPageId\(\)/);
   assertBefore(builder, 'generatePageDraft({', "accountApi.fetchJson('/api/account/pages'");
   assert.match(builder, /currentPageId \|\| createCompactPageId\(\)/);
+  assert.match(builder, /const sourceForSave: PageDraftSource = \{ \.\.\.source, baseLocale \}/);
+  assertBefore(builder, 'setPreviewingGenerated(true)', 'await nextPaint()');
+  assertBefore(builder, 'await nextPaint()', 'const completeSource: AccountPage');
+  assert.match(builder, /clearRomaPagesCache\(accountContext\.accountPublicId\)/);
+  assert.match(builder, /if \(pageId && loadFailed\)/);
+  assert.match(builder, /if \(isNotFoundError\(placementError\)\) return unavailablePlacement/);
+  assert.match(builder, /payload\?\.overlay\?\.values/);
+  assert.match(builder, /accountPolicy\.role !== 'viewer'/);
+  assert.match(builder, /\}, \[loading, router\]\)/);
   assert.match(builder, /onClick=\{\(\) => void save\(needsUpdate\)\}/);
   assert.match(builder, /onClick=\{\(\) => void changePublished\(true\)\}/);
   assert.match(builder, /Delete page\?/);
@@ -78,6 +89,7 @@ async function main() {
   assert.match(builder, /embedded returnLabel="Done, go back to the page"/);
   assert.match(builder, /contextMessage="You are editing a saved widget\./);
   assert.match(bob, /embedded\?: boolean/);
+  assert.match(bob, /if \(embedded \|\| !activeInstanceId\) return/);
   assert.match(bobTopDrawer, /returnLabel/);
 
   assert.match(content, /Filter widgets by publish status/);
@@ -91,6 +103,12 @@ async function main() {
   assert.match(content, /Manage order/);
   assert.match(content, /diet-object-manager__modal-row/);
   assert.match(content, /createDialogLifecycle/);
+  assert.match(content, /const loadInstances = useCallback/);
+  assert.match(content, />Retry</);
+  assert.match(content, /requestOrderDismissRef/);
+  assert.match(content, /placementRowsRef\.current\.get\(selectedPlacementId\)\?\.scrollIntoView/);
+  assert.match(content, /<RomaUnsavedChangesDialog/);
+  assert.match(content, /onKeepEditing=\{\(\) => \{ setOrderDiscardOpen\(false\); setOrderOpen\(true\); \}\}/);
 
   assert.match(seo, /Page title/);
   assert.match(seo, /Meta description/);
@@ -100,11 +118,25 @@ async function main() {
   assert.match(seo, /Index this page/);
   assert.match(seo, /Hide this page/);
   assert.doesNotMatch(seo, /schema editor|structured data/i);
+  assert.match(seo, /<DieterImageUpload/);
+  assert.match(imageUpload, /accept="image\/\*"/);
+  assert.match(imageUpload, />Upload new image</);
+  assert.match(imageUpload, />Remove</);
+  assert.match(imageUpload, /onUpsell\(\)/);
 
-  assert.match(workspace, /srcdoc/);
+  assert.match(workspace, /attachShadow\(\{ mode: 'open' \}\)/);
+  assert.match(workspace, /scrollIntoView/);
+  assert.match(workspace, /onClick=\{onAdd\}/);
   assert.match(workspace, /data-ck-page-editor-placement/);
+  assert.match(workspace, /runRuntime\(args\.container, args\.files\.runtimeJs\)/);
+  assert.match(workspace, /runRuntime\(host, placement\.files\.runtimeJs\)/);
+  assert.doesNotMatch(workspace, /iframe|srcdoc|#[0-9a-f]{3,8}/i);
   assert.doesNotMatch(workspace, /clk\.live|publicUrl|iframeSnippet/);
+  assert.match(romaCss, /\.roma-page-workspace__placement\[aria-current='true'\] \{ border-color:var\(--role-focus\); \}/);
+  assert.doesNotMatch(romaCss, /\.roma-page-workspace[^\n]*#[0-9a-f]{3,8}/i);
   assert.match(list, /buildPagePublicActions/);
+  assert.match(list, /\/rename`, \{ method: 'POST'/);
+  assert.match(list, /accountPolicy\.role !== 'viewer'/);
   assert.match(list, /<PublicCodeDialog/);
   assert.doesNotMatch(list, /iframe|runtime\.js/);
 

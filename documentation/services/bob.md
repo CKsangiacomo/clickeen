@@ -547,8 +547,9 @@ translation, asset, or unsaved-work authority. Roma supplies Page-context copy
 and one **Done, go back to the page** host action; Bob returns through that
 callback only after its normal unsaved-work interaction allows it. The mounted
 Page draft stays in Roma browser memory. A successful Bob Save tells the host
-to refresh that placement and require explicit Page Update; Bob never writes or
-regenerates the Page.
+to refresh that placement. A saved referencing Page then requires explicit
+Page Update; an unsaved Page has no remote update flag and keeps the refreshed
+Instance in its browser draft. Bob never writes or regenerates the Page.
 
 ## Account Assets
 

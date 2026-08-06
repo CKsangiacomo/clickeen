@@ -40,6 +40,8 @@ export function PageList({ filter }: { filter: PageListFilter }) {
   const renameLifecycleRef = useRef<DialogLifecycle | null>(null);
   const deleteLifecycleRef = useRef<DialogLifecycle | null>(null);
   const canUsePages = accountPolicy.limits['pages.max'] !== 0;
+  const canMutatePages = accountPolicy.role !== 'viewer';
+  const canEditPages = canUsePages && canMutatePages;
 
   const reload = useCallback(async (force = false) => {
     setLoading(true);
@@ -108,12 +110,12 @@ export function PageList({ filter }: { filter: PageListFilter }) {
     <>
       <div className="roma-pages-toolbar">
         <span className="body-s roma-toolbar-count">{pages.length} {pages.length === 1 ? 'page' : 'pages'}</span>
-        <button className="diet-btn-txt" data-size="md" data-variant="primary" type="button" onClick={() => {
+        {canMutatePages ? <button className="diet-btn-txt" data-size="md" data-variant="primary" type="button" onClick={() => {
           if (!canUsePages) setUpsellOpen(true);
           else window.location.assign('/page-builder/new');
         }}>
           <span className="diet-btn-txt__label body-m">Create page</span>
-        </button>
+        </button> : null}
       </div>
       {error ? <section className="rd-canvas-module" role="alert"><p className="body-m">{error}</p></section> : null}
       <div className="diet-table roma-pages-table">
@@ -138,7 +140,7 @@ export function PageList({ filter }: { filter: PageListFilter }) {
                   <th className="body-s" scope="row">{page.source.displayName}</th>
                   <td>
                     <label className="diet-toggle roma-widget-status-toggle" data-size="sm">
-                      <input type="checkbox" checked={page.serveState.published} disabled={Boolean(activeAction) || (!page.serveState.published && page.serveState.needsUpdate)} onChange={() => void mutate(statusKey, () => accountApi.fetchJson(`/api/account/pages/${encodeURIComponent(id)}/${page.serveState.published ? 'unpublish' : 'publish'}`, { method: 'POST' }))} />
+                      <input type="checkbox" checked={page.serveState.published} disabled={!canEditPages || Boolean(activeAction) || (!page.serveState.published && page.serveState.needsUpdate)} onChange={() => void mutate(statusKey, () => accountApi.fetchJson(`/api/account/pages/${encodeURIComponent(id)}/${page.serveState.published ? 'unpublish' : 'publish'}`, { method: 'POST' }))} />
                       <span className="diet-toggle__track" aria-hidden="true"><span className="diet-toggle__thumb" /></span>
                     </label>
                   </td>
@@ -148,14 +150,14 @@ export function PageList({ filter }: { filter: PageListFilter }) {
                   <td className="diet-table__cell--action">
                     <div className="roma-cell-actions">
                       {actions ? <button className="diet-btn-txt" data-size="sm" data-variant="line2" type="button" onClick={() => setPublicContext({ name: page.source.displayName, actions })}><span className="diet-btn-txt__label body-s">Copy code</span></button> : null}
-                      {canUsePages ? <Link className="diet-btn-txt" data-size="sm" data-variant="line2" href={`/page-builder/${encodeURIComponent(id)}`}><span className="diet-btn-txt__label body-s">{page.serveState.needsUpdate ? 'Update page' : 'Edit'}</span></Link> : <button className="diet-btn-txt" data-size="sm" data-variant="line2" type="button" onClick={() => setUpsellOpen(true)}><span className="diet-btn-txt__label body-s">Edit</span></button>}
-                      <div className="diet-popover-host" ref={menuPageId === id ? menuRef : undefined} data-state={menuPageId === id ? 'open' : 'closed'}>
+                      {canMutatePages ? (canUsePages ? <Link className="diet-btn-txt" data-size="sm" data-variant="line2" href={`/page-builder/${encodeURIComponent(id)}`}><span className="diet-btn-txt__label body-s">{page.serveState.needsUpdate ? 'Update page' : 'Edit'}</span></Link> : <button className="diet-btn-txt" data-size="sm" data-variant="line2" type="button" onClick={() => setUpsellOpen(true)}><span className="diet-btn-txt__label body-s">Edit</span></button>) : null}
+                      {canEditPages ? <div className="diet-popover-host" ref={menuPageId === id ? menuRef : undefined} data-state={menuPageId === id ? 'open' : 'closed'}>
                         <button className="diet-btn-ic" data-size="sm" data-variant="neutral" type="button" aria-label={`More actions for ${page.source.displayName}`} aria-expanded={menuPageId === id} onClick={() => setMenuPageId((current) => current === id ? '' : id)}><span className="diet-btn-ic__icon diet-icon-mask" style={{ '--diet-icon-source': 'url("/dieter/icons/svg/ellipsis.svg")' } as CSSProperties} aria-hidden="true" /></button>
                         <div className="diet-popover roma-page-actions-popover" role="menu">
                           <button className="diet-btn-menuactions" data-size="md" data-variant="neutral" type="button" role="menuitem" onClick={() => { setMenuPageId(''); setRenamePage(page); setRenameValue(page.source.displayName); }}><span className="diet-btn-menuactions__label body-s">Rename</span></button>
                           {!page.serveState.published ? <button className="diet-btn-menuactions" data-size="md" data-variant="neutral" type="button" role="menuitem" onClick={() => { setMenuPageId(''); setDeletePage(page); }}><span className="diet-btn-menuactions__label body-s">Delete</span></button> : null}
                         </div>
-                      </div>
+                      </div> : null}
                     </div>
                   </td>
                 </tr>
@@ -170,7 +172,7 @@ export function PageList({ filter }: { filter: PageListFilter }) {
       <dialog ref={renameDialogRef} className="diet-popup" data-size="medium" aria-label="Rename page">
         <header className="diet-popup__header"><h2 className="heading-4">Rename page</h2></header>
         <div className="diet-popup__body"><label className="roma-field"><span className="label-s">Page name</span><input className="diet-textfield__field body-s" value={renameValue} onChange={(event) => setRenameValue(event.target.value)} /></label></div>
-        <footer className="diet-popup__footer"><div className="diet-popup__actions"><button className="diet-btn-txt" data-size="md" data-variant="secondary" type="button" onClick={() => setRenamePage(null)}><span className="diet-btn-txt__label body-m">Cancel</span></button><button className="diet-btn-txt" data-size="md" data-variant="primary" type="button" disabled={!renameValue.trim() || Boolean(activeAction)} onClick={() => { const page = renamePage; if (!page) return; void mutate(`rename:${page.source.pageId}`, () => accountApi.fetchJson(`/api/account/pages/${encodeURIComponent(page.source.pageId)}/rename`, { method: 'PUT', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ displayName: renameValue }) })).then(() => setRenamePage(null)); }}><span className="diet-btn-txt__label body-m">Rename</span></button></div></footer>
+        <footer className="diet-popup__footer"><div className="diet-popup__actions"><button className="diet-btn-txt" data-size="md" data-variant="secondary" type="button" onClick={() => setRenamePage(null)}><span className="diet-btn-txt__label body-m">Cancel</span></button><button className="diet-btn-txt" data-size="md" data-variant="primary" type="button" disabled={!renameValue.trim() || Boolean(activeAction)} onClick={() => { const page = renamePage; if (!page) return; void mutate(`rename:${page.source.pageId}`, () => accountApi.fetchJson(`/api/account/pages/${encodeURIComponent(page.source.pageId)}/rename`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ displayName: renameValue }) })).then(() => setRenamePage(null)); }}><span className="diet-btn-txt__label body-m">Rename</span></button></div></footer>
       </dialog>
       <dialog ref={deleteDialogRef} className="diet-popup" data-size="medium" aria-label="Delete page">
         <header className="diet-popup__header"><h2 className="heading-4">Delete page?</h2></header>

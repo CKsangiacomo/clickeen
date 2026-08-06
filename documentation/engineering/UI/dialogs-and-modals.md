@@ -80,7 +80,7 @@ a dialog seems low-risk.
 | DevStudio token editor | Close if unchanged; dirty opens discard confirmation | Never | Cancel follows the dirty rule; Confirm Commit persists |
 | Roma unsaved Builder/defaults confirmation | Keep editing | Never | Keep editing is safe; Discard is explicit |
 | Roma Page Add widget | Close; keep the Page draft | Never | Close discards no Page work; Add to page changes browser draft only |
-| Roma Page Manage order | Close; discard temporary order | Never | Cancel discards the temporary order; Save applies it to browser draft only |
+| Roma Page Manage order | Close if unchanged; dirty opens discard confirmation | Never | Cancel follows the dirty rule; Save applies it to browser draft only |
 | Roma Page Needs update | Back to pages | Never | Update page explicitly regenerates and saves; no autonomous update |
 
 ## Upsell Transition

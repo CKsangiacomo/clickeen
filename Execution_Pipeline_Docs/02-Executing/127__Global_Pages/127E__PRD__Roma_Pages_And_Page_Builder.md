@@ -215,8 +215,9 @@ belongs in TopDrawer and is not duplicated in a one-field panel.
    - Add widget through the Your-widgets selection Popup;
    - Manage order through the Dieter Object Manager interaction;
    - Edit in slide-in Bob;
-   - show an unavailable placement with **Remove from page** when its saved
-     Instance is missing or invalid.
+   - show an unavailable placement with **Remove from page** only when its
+     saved Instance is missing; authentication, network, or invalid-data
+     failures block Page load and are never presented as a missing Instance.
 
 2. **SEO/GEO/AEO**
    - required Page title through Dieter Textfield;
@@ -675,7 +676,8 @@ Prove:
 | Update fails                           | Remain Needs update; keep update gate.                    |
 | Direct mutation route lacks access     | Existing Upgrade/auth failure; change nothing.            |
 | Bob has unsaved Widget changes on Done | Existing Save/Discard/Keep editing interaction.           |
-| Edited Instance becomes unavailable    | Keep Page draft; show unavailable placement explicitly.   |
+| Referenced Instance is missing          | Keep its position; show unavailable placement explicitly. |
+| Referenced Instance cannot be read safely | Block Page load and show Retry; never treat it as missing. |
 | Add-widget inventory fails to load      | Keep Page draft; show the existing inventory error/Retry.  |
 | Manage-order Popup is dismissed dirty   | Existing Keep editing/Discard interaction; no Page write.  |
 

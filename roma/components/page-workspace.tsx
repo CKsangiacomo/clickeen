@@ -1,40 +1,88 @@
 'use client';
 
-import { useEffect, useMemo, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { PagePlacementDraft } from './page-builder-model';
 
 type WebFiles = { indexHtml: string; stylesCss: string; runtimeJs: string };
+type RuntimeWindow = Window & {
+  CK_WIDGET_INITIALIZERS?: Record<string, (root: HTMLElement) => void>;
+};
 
-function bodyOnly(indexHtml: string): string {
-  const match = /<body\b[^>]*>([\s\S]*?)<\/body>/i.exec(indexHtml);
-  return (match?.[1] ?? indexHtml)
-    .replace(/<link\b[^>]*rel=["']stylesheet["'][^>]*>/gi, '')
-    .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '')
-    .replace(/<script\b[^>]*\/?>/gi, '');
+function instanceBody(indexHtml: string): DocumentFragment {
+  const parsed = new DOMParser().parseFromString(indexHtml, 'text/html');
+  parsed.body.querySelectorAll('link[rel="stylesheet"], script').forEach((element) => element.remove());
+  const fragment = document.createDocumentFragment();
+  Array.from(parsed.body.childNodes).forEach((node) => fragment.append(node.cloneNode(true)));
+  return fragment;
 }
 
-function draftDocument(placements: PagePlacementDraft[], selectedId: string, runtimeUrl: string): string {
-  const sections = placements.map((placement) => `<section data-ck-page-editor-placement="${placement.placementId}"${placement.placementId === selectedId ? ' data-selected="true"' : ''}>
-    <template shadowrootmode="open"><style>${placement.files.stylesCss}</style>${bodyOnly(placement.files.indexHtml)}</template>
-  </section>`).join('\n');
-  return `<!doctype html><html><head><meta charset="utf-8"><style>
-    body{margin:0;padding:16px;display:grid;gap:16px;background:#f4f4f4}
-    [data-ck-page-editor-placement]{display:block;min-width:0;border:2px solid transparent;border-radius:12px}
-    [data-ck-page-editor-placement][data-selected="true"]{border-color:#087dfd}
-  </style></head><body>${sections}<script src="${runtimeUrl}"></script><script>
-    document.querySelectorAll('[data-ck-page-editor-placement]').forEach(function(host){
-      var root=host.shadowRoot&&host.shadowRoot.querySelector('[data-ck-widget][data-role="root"]');
-      if(!root)return;var type=root.getAttribute('data-ck-widget')||'';
-      var init=window.CK_WIDGET_INITIALIZERS&&window.CK_WIDGET_INITIALIZERS[type];
-      if(typeof init==='function')init(root);
-    });
-  </script></body></html>`;
+function installShadow(host: HTMLElement, stylesCss: string, content: DocumentFragment): ShadowRoot {
+  const shadow = host.shadowRoot ?? host.attachShadow({ mode: 'open' });
+  const style = document.createElement('style');
+  style.textContent = stylesCss;
+  shadow.replaceChildren(style, content);
+  return shadow;
 }
 
-function savedDocument(files: WebFiles, runtimeUrl: string): string {
-  return files.indexHtml
-    .replace(/<link\b[^>]*rel=["']stylesheet["'][^>]*>/i, `<style>${files.stylesCss}</style>`)
-    .replace(/<script\b[^>]*src=["'][^"']*runtime\.js["'][^>]*><\/script>/i, `<script src="${runtimeUrl}"></script>`);
+function runRuntime(container: HTMLElement, runtimeJs: string): HTMLScriptElement {
+  const script = document.createElement('script');
+  script.dataset.ckPageEditorRuntime = 'true';
+  script.textContent = runtimeJs;
+  container.append(script);
+  return script;
+}
+
+function initializeDraftPlacement(shadow: ShadowRoot): void {
+  const widgetRoot = shadow.querySelector<HTMLElement>('[data-ck-widget][data-role="root"]');
+  if (!widgetRoot) throw new Error('coreui.errors.page.preview.widgetRootMissing');
+  const widgetType = widgetRoot.dataset.ckWidget ?? '';
+  const initializer = (window as RuntimeWindow).CK_WIDGET_INITIALIZERS?.[widgetType];
+  if (typeof initializer !== 'function') throw new Error('coreui.errors.page.preview.initializerMissing');
+  initializer(widgetRoot);
+}
+
+function savedPlacementContent(sourceHost: HTMLElement): DocumentFragment {
+  const content = document.createDocumentFragment();
+  if (sourceHost.shadowRoot) {
+    Array.from(sourceHost.shadowRoot.childNodes).forEach((node) => content.append(node.cloneNode(true)));
+  } else {
+    const template = sourceHost.querySelector<HTMLTemplateElement>('template[shadowrootmode="open"]');
+    if (!template) throw new Error('coreui.errors.page.preview.shadowTemplateMissing');
+    content.append(template.content.cloneNode(true));
+  }
+  content.querySelectorAll('link[rel="stylesheet"], script').forEach((element) => element.remove());
+  return content;
+}
+
+function mountSavedPage(args: {
+  container: HTMLElement;
+  files: WebFiles;
+  hosts: Map<string, HTMLElement>;
+  onSelect: (placementId: string) => void;
+}): () => void {
+  const parsed = new DOMParser().parseFromString(args.files.indexHtml, 'text/html');
+  const sourceHosts = Array.from(parsed.body.querySelectorAll<HTMLElement>('[data-ck-placement-id]'));
+  if (!sourceHosts.length) throw new Error('coreui.errors.page.preview.placementsMissing');
+
+  args.container.replaceChildren();
+  sourceHosts.forEach((sourceHost) => {
+    const placementId = sourceHost.dataset.ckPlacementId ?? '';
+    if (!placementId || args.hosts.has(placementId)) throw new Error('coreui.errors.page.preview.placementInvalid');
+    const host = document.createElement(sourceHost.tagName.toLowerCase());
+    Array.from(sourceHost.attributes).forEach((attribute) => host.setAttribute(attribute.name, attribute.value));
+    host.classList.add('roma-page-workspace__placement');
+    host.dataset.ckPageEditorPlacement = placementId;
+    host.addEventListener('click', () => args.onSelect(placementId));
+    installShadow(host, args.files.stylesCss, savedPlacementContent(sourceHost));
+    args.hosts.set(placementId, host);
+    args.container.append(host);
+  });
+  runRuntime(args.container, args.files.runtimeJs);
+
+  return () => {
+    sourceHosts.forEach((sourceHost) => args.hosts.delete(sourceHost.dataset.ckPlacementId ?? ''));
+    args.container.replaceChildren();
+  };
 }
 
 export function PageWorkspace({
@@ -43,40 +91,93 @@ export function PageWorkspace({
   savedFiles,
   showSaved,
   onSelect,
+  onAdd,
 }: {
   placements: PagePlacementDraft[];
   selectedPlacementId: string;
   savedFiles: WebFiles | null;
   showSaved: boolean;
   onSelect: (placementId: string) => void;
+  onAdd: () => void;
 }) {
-  const iframeRef = useRef<HTMLIFrameElement>(null);
-  const runtimeSource = showSaved && savedFiles ? savedFiles.runtimeJs : placements.map((placement) => placement.files.runtimeJs).join('\n\n');
-  const coordinate = useMemo(() => JSON.stringify({ placements: placements.map((placement) => placement.placementId), selectedPlacementId, showSaved, saved: Boolean(savedFiles) }), [placements, savedFiles, selectedPlacementId, showSaved]);
+  const savedContainerRef = useRef<HTMLDivElement>(null);
+  const placementHostsRef = useRef(new Map<string, HTMLElement>());
+  const [previewError, setPreviewError] = useState(false);
+  const savedMode = Boolean(showSaved && savedFiles);
+  const placementCoordinate = useMemo(
+    () => placements.map((placement) => `${placement.placementId}:${placement.instanceId}`).join('|'),
+    [placements],
+  );
+  const setDraftHost = useCallback((placementId: string, host: HTMLElement | null) => {
+    if (host) placementHostsRef.current.set(placementId, host);
+    else placementHostsRef.current.delete(placementId);
+  }, []);
 
   useEffect(() => {
-    const runtimeUrl = URL.createObjectURL(new Blob([runtimeSource], { type: 'text/javascript' }));
-    const iframe = iframeRef.current;
-    if (iframe) iframe.srcdoc = showSaved && savedFiles ? savedDocument(savedFiles, runtimeUrl) : draftDocument(placements, selectedPlacementId, runtimeUrl);
-    return () => URL.revokeObjectURL(runtimeUrl);
-  }, [coordinate, placements, runtimeSource, savedFiles, selectedPlacementId, showSaved]);
+    setPreviewError(false);
+    const container = savedContainerRef.current;
+    if (!savedMode || !savedFiles || !container) return;
+    try {
+      return mountSavedPage({ container, files: savedFiles, hosts: placementHostsRef.current, onSelect });
+    } catch {
+      setPreviewError(true);
+      container.replaceChildren();
+    }
+  }, [onSelect, savedFiles, savedMode]);
 
   useEffect(() => {
-    const iframe = iframeRef.current;
-    const listen = () => {
-      const document = iframe?.contentDocument;
-      if (!document) return;
-      document.querySelectorAll<HTMLElement>('[data-ck-page-editor-placement]').forEach((element) => {
-        element.onclick = () => onSelect(element.dataset.ckPageEditorPlacement ?? '');
+    if (savedMode || !placements.length) return;
+    const scripts: HTMLScriptElement[] = [];
+    const placementHosts = placementHostsRef.current;
+    try {
+      placements.forEach((placement) => {
+        const host = placementHosts.get(placement.placementId);
+        if (!host) throw new Error('coreui.errors.page.preview.placementMissing');
+        const shadow = installShadow(host, placement.files.stylesCss, instanceBody(placement.files.indexHtml));
+        scripts.push(runRuntime(host, placement.files.runtimeJs));
+        initializeDraftPlacement(shadow);
       });
+      setPreviewError(false);
+    } catch {
+      setPreviewError(true);
+    }
+    return () => {
+      scripts.forEach((script) => script.remove());
+      placements.forEach((placement) => placementHosts.get(placement.placementId)?.shadowRoot?.replaceChildren());
     };
-    iframe?.addEventListener('load', listen);
-    return () => iframe?.removeEventListener('load', listen);
-  }, [coordinate, onSelect]);
+  }, [placementCoordinate, placements, savedMode]);
+
+  useEffect(() => {
+    placementHostsRef.current.forEach((host, placementId) => {
+      if (placementId === selectedPlacementId) host.setAttribute('aria-current', 'true');
+      else host.removeAttribute('aria-current');
+    });
+    placementHostsRef.current.get(selectedPlacementId)?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+  }, [placementCoordinate, savedMode, selectedPlacementId]);
 
   return (
     <section className="workspace roma-page-workspace" aria-label="Page preview">
-      {placements.length || savedFiles ? <iframe ref={iframeRef} className="roma-page-workspace__frame" title="Page preview" /> : <div className="roma-page-workspace__empty"><p className="heading-4">This page has no widgets yet</p><p className="body-m">Add a widget from Content to start composing the page.</p></div>}
+      {previewError ? <p className="body-m roma-page-workspace__error" role="alert">This Page preview could not be shown.</p> : null}
+      {placements.length ? (
+        <div className="roma-page-workspace__canvas" hidden={previewError}>
+          {savedMode ? <div ref={savedContainerRef} className="roma-page-workspace__saved" /> : placements.map((placement) => (
+            <section
+              key={placement.placementId}
+              ref={(host) => setDraftHost(placement.placementId, host)}
+              className="roma-page-workspace__placement"
+              data-ck-page-editor-placement={placement.placementId}
+              onClick={() => onSelect(placement.placementId)}
+            />
+          ))}
+        </div>
+      ) : (
+        <div className="roma-page-workspace__empty">
+          <p className="heading-4">Add a widget to start your page</p>
+          <button className="diet-btn-txt" data-size="md" data-variant="primary" type="button" onClick={onAdd}>
+            <span className="diet-btn-txt__label body-m">Add widget</span>
+          </button>
+        </div>
+      )}
     </section>
   );
 }

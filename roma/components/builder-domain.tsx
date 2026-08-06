@@ -487,13 +487,13 @@ export function BuilderDomain({
   }, [bobBaseUrl]);
 
   useEffect(() => {
-    if (!activeInstanceId) return;
+    if (embedded || !activeInstanceId) return;
     const nextRoute = buildRomaBuilderRoute({
       instanceId: activeInstanceId,
     });
     if (nextRoute === currentUrl) return;
     router.replace(nextRoute, { scroll: false });
-  }, [activeInstanceId, currentUrl, router]);
+  }, [activeInstanceId, currentUrl, embedded, router]);
 
   useEffect(() => {
     const resolved = pathInstanceId || String(initialInstanceId || '').trim();

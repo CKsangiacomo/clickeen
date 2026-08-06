@@ -6,6 +6,7 @@ import { createCompactPageId } from '@clickeen/ck-contracts/overlay-identity';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createDialogLifecycle, type DialogLifecycle } from '../../dieter/components/shared/dialog-lifecycle';
+import { parseAccountAssetRecord, parseResolvedAccountAsset } from '../lib/account-asset-record';
 import { parseAccountPageSource } from '../lib/account-page-contract';
 import { buildPagePublicActions, type PublicActions } from '../lib/public-actions';
 import { useRomaAccountApi } from './account-api';
@@ -19,6 +20,7 @@ import { RomaUnsavedChangesDialog } from './roma-unsaved-changes-dialog';
 import { RomaUpsellDialog } from './roma-upsell-dialog';
 import { useRomaAccountContext } from './roma-account-context';
 import { useRomaShellActions } from './roma-shell';
+import { clearRomaPagesCache } from './use-roma-pages';
 import type { WidgetInstance } from './use-roma-widgets';
 
 type WebFiles = { indexHtml: string; stylesCss: string; runtimeJs: string };
@@ -44,11 +46,20 @@ function parseDetail(raw: unknown): PageDetail {
 async function readPageOverlay(fetchRaw: ReturnType<typeof useRomaAccountApi>['fetchRaw'], pageId: string, locale: string): Promise<PageLocaleOverlay | null> {
   const response = await fetchRaw(`/api/account/pages/${encodeURIComponent(pageId)}/translations/${encodeURIComponent(locale)}`, { method: 'GET' });
   if (response.status === 404) return null;
-  const payload = await response.json().catch(() => null) as { values?: unknown } | null;
-  if (!response.ok || !payload?.values || typeof payload.values !== 'object' || Array.isArray(payload.values)) throw new Error('coreui.errors.payload.invalid');
-  const values = payload.values as PageLocaleOverlay['values'];
+  const payload = await response.json().catch(() => null) as { overlay?: { values?: unknown } } | null;
+  const rawValues = payload?.overlay?.values;
+  if (!response.ok || !rawValues || typeof rawValues !== 'object' || Array.isArray(rawValues)) throw new Error('coreui.errors.payload.invalid');
+  const values = rawValues as PageLocaleOverlay['values'];
   if (typeof values.title !== 'string') throw new Error('coreui.errors.payload.invalid');
   return { values };
+}
+
+function isNotFoundError(error: unknown): boolean {
+  return error instanceof Error && (error as Error & { status?: number }).status === 404;
+}
+
+function nextPaint(): Promise<void> {
+  return new Promise((resolve) => window.requestAnimationFrame(() => resolve()));
 }
 
 function unavailablePlacement(coordinate: AccountPage['placements'][number]): PagePlacementDraft {
@@ -72,6 +83,7 @@ export function PageBuilder({ pageId = '' }: { pageId?: string }) {
   const baseLocale = parseAccountLocalePolicyStrict(activeAccount.localePolicy).baseLocale;
   const settingsLocales = useMemo(() => Array.from(new Set([baseLocale, ...parseAccountLocaleListStrict(activeAccount.activeLocales)])), [activeAccount.activeLocales, baseLocale]);
   const canUsePages = accountPolicy.limits['pages.max'] !== 0;
+  const canEditPages = accountPolicy.role !== 'viewer';
   const [currentPageId, setCurrentPageId] = useState(pageId);
   const [source, setSourceState] = useState<PageDraftSource>(() => createBlankPageDraft(baseLocale));
   const [placements, setPlacementsState] = useState<PagePlacementDraft[]>([]);
@@ -81,11 +93,14 @@ export function PageBuilder({ pageId = '' }: { pageId?: string }) {
   const [needsUpdate, setNeedsUpdate] = useState(false);
   const [dirty, setDirty] = useState(false);
   const [loading, setLoading] = useState(Boolean(pageId));
+  const [loadFailed, setLoadFailed] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [previewingGenerated, setPreviewingGenerated] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedPlacementId, setSelectedPlacementId] = useState('');
   const [activePanel, setActivePanel] = useState<'content' | 'seo'>('content');
   const [activeLocale, setActiveLocale] = useState(baseLocale);
+  const [widgetPickerOpen, setWidgetPickerOpen] = useState(false);
   const [translationBusy, setTranslationBusy] = useState(false);
   const [bobInstanceId, setBobInstanceId] = useState('');
   const [moreOpen, setMoreOpen] = useState(false);
@@ -93,6 +108,7 @@ export function PageBuilder({ pageId = '' }: { pageId?: string }) {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [leaveOpen, setLeaveOpen] = useState(false);
   const [upsellOpen, setUpsellOpen] = useState(!canUsePages);
+  const [upsellReason, setUpsellReason] = useState('Pages are available on Tier 2 and above.');
   const pendingLeaveRef = useRef<(() => void) | null>(null);
   const moreRef = useRef<HTMLDivElement>(null);
   const updateDialogRef = useRef<HTMLDialogElement>(null);
@@ -110,6 +126,7 @@ export function PageBuilder({ pageId = '' }: { pageId?: string }) {
 
   const loadSavedPage = useCallback(async (id: string) => {
     setLoading(true);
+    setLoadFailed(false);
     setError(null);
     try {
       const detail = parseDetail(await accountApi.fetchJson(`/api/account/pages/${encodeURIComponent(id)}`));
@@ -117,29 +134,33 @@ export function PageBuilder({ pageId = '' }: { pageId?: string }) {
         try {
           const placement = await loadPagePlacement({ instanceId: coordinate.instanceId, settingsLocales, fetchJson: accountApi.fetchJson });
           return { ...placement, placementId: coordinate.placementId };
-        } catch {
-          return unavailablePlacement(coordinate);
+        } catch (placementError) {
+          if (isNotFoundError(placementError)) return unavailablePlacement(coordinate);
+          throw placementError;
         }
       }));
-      const overlays = Object.fromEntries((await Promise.all(settingsLocales.filter((locale) => locale !== detail.source.baseLocale).map(async (locale) => [locale, await readPageOverlay(accountApi.fetchRaw, id, locale)] as const))).filter((entry): entry is readonly [string, PageLocaleOverlay] => Boolean(entry[1])));
+      const overlays = Object.fromEntries((await Promise.all(settingsLocales.filter((locale) => locale !== baseLocale).map(async (locale) => [locale, await readPageOverlay(accountApi.fetchRaw, id, locale)] as const))).filter((entry): entry is readonly [string, PageLocaleOverlay] => Boolean(entry[1])));
       const { pageId: ignoredPageId, ...draftSource } = detail.source;
       void ignoredPageId;
-      setSourceState(draftSource);
+      setSourceState({ ...draftSource, baseLocale });
       setPlacementsState(loadedPlacements);
       setPageOverlaysState(overlays);
       setSavedFiles(detail.files);
       setPublished(detail.serveState.published);
       setNeedsUpdate(detail.serveState.needsUpdate);
       setSelectedPlacementId(loadedPlacements[0]?.placementId ?? '');
+      setActiveLocale(baseLocale);
       setDirty(false);
+      setLoadFailed(false);
     } catch {
+      setLoadFailed(true);
       setError('This Page could not be loaded. Please try again.');
     } finally {
       setLoading(false);
     }
-  }, [accountApi, settingsLocales]);
+  }, [accountApi, baseLocale, settingsLocales]);
 
-  useEffect(() => { if (pageId && canUsePages) void loadSavedPage(pageId); }, [canUsePages, loadSavedPage, pageId]);
+  useEffect(() => { if (pageId && canUsePages && canEditPages) void loadSavedPage(pageId); }, [canEditPages, canUsePages, loadSavedPage, pageId]);
   useEffect(() => {
     if (!moreOpen) return;
     const close = (event: PointerEvent) => { if (event.target instanceof Node && !moreRef.current?.contains(event.target)) setMoreOpen(false); };
@@ -168,7 +189,7 @@ export function PageBuilder({ pageId = '' }: { pageId?: string }) {
     const lifecycle = createDialogLifecycle({ dialog, initialFocus: () => dialog.querySelector('button'), requestDismiss: () => router.push('/pages') });
     updateLifecycleRef.current = lifecycle;
     return () => lifecycle.destroy();
-  }, [router]);
+  }, [loading, router]);
   useEffect(() => {
     if (needsUpdate && currentPageId && !dirty && !bobInstanceId) updateLifecycleRef.current?.open();
     else updateLifecycleRef.current?.close();
@@ -186,16 +207,20 @@ export function PageBuilder({ pageId = '' }: { pageId?: string }) {
   }, [accountApi, pageOverlays]);
 
   const save = useCallback(async (forceUpdate = false) => {
-    if (!canUsePages) { setUpsellOpen(true); return; }
+    if (!canEditPages) return;
+    if (!canUsePages) { setUpsellReason('Pages are available on Tier 2 and above.'); setUpsellOpen(true); return; }
     if (!source.values.title.trim()) { setError('Page title is required.'); setActivePanel('seo'); return; }
     if (placements.some((placement) => placement.unavailable)) { setError('Remove unavailable widgets before saving this Page.'); return; }
     setSaving(true);
     setError(null);
     try {
       const id = currentPageId || createCompactPageId();
-      const generated = await generatePageDraft({ source, settingsLocales, pageOverlays, placements, fetchJson: accountApi.fetchJson });
+      const sourceForSave: PageDraftSource = { ...source, baseLocale };
+      const generated = await generatePageDraft({ source: sourceForSave, settingsLocales, pageOverlays, placements, fetchJson: accountApi.fetchJson });
       setSavedFiles(generated.files);
-      const completeSource: AccountPage = { pageId: id, ...source };
+      setPreviewingGenerated(true);
+      await nextPaint();
+      const completeSource: AccountPage = { pageId: id, ...sourceForSave };
       if (currentPageId) {
         await persistOverlays(id);
         await accountApi.fetchJson(`/api/account/pages/${encodeURIComponent(id)}`, { method: 'PUT', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ source: completeSource, files: generated.files, overlaysJson: generated.overlaysJson ?? {}, operation: forceUpdate || needsUpdate ? 'update' : 'save' }), timeoutMs: 120_000 });
@@ -204,14 +229,17 @@ export function PageBuilder({ pageId = '' }: { pageId?: string }) {
         setCurrentPageId(id);
         router.replace(`/page-builder/${encodeURIComponent(id)}`);
       }
+      clearRomaPagesCache(accountContext.accountPublicId);
+      setSourceState(sourceForSave);
       setNeedsUpdate(false);
       setDirty(false);
     } catch (saveError) {
       setError(saveError instanceof Error && saveError.message === 'Page title is required.' ? saveError.message : 'Saving this Page failed. Please try again.');
     } finally {
+      setPreviewingGenerated(false);
       setSaving(false);
     }
-  }, [accountApi, canUsePages, currentPageId, needsUpdate, pageOverlays, persistOverlays, placements, router, settingsLocales, source]);
+  }, [accountApi, accountContext.accountPublicId, baseLocale, canEditPages, canUsePages, currentPageId, needsUpdate, pageOverlays, persistOverlays, placements, router, settingsLocales, source]);
 
   const addWidget = async (instance: WidgetInstance) => {
     if (placements.some((placement) => placement.instanceId === instance.instanceId)) return;
@@ -221,11 +249,23 @@ export function PageBuilder({ pageId = '' }: { pageId?: string }) {
   };
 
   const uploadSocialImage = async (file: File): Promise<string> => {
-    const response = await accountApi.fetchRaw('/api/account/assets/upload', { method: 'POST', headers: { 'content-type': file.type, 'x-filename': file.name, 'x-source': 'roma-page-social-image' }, body: file });
-    const payload = await response.json().catch(() => null) as { assetRef?: unknown } | null;
-    if (!response.ok || typeof payload?.assetRef !== 'string') throw new Error('coreui.errors.assets.uploadFailed');
-    return payload.assetRef;
+    const payload = await accountApi.fetchJson('/api/account/assets/upload', { method: 'POST', headers: { 'content-type': file.type, 'x-filename': file.name, 'x-source': 'roma-page-social-image' }, body: file });
+    const asset = parseAccountAssetRecord(payload);
+    if (!asset || !asset.contentType.startsWith('image/')) throw new Error('coreui.errors.assets.uploadFailed');
+    return asset.assetRef;
   };
+
+  const resolveSocialImage = useCallback(async (assetRef: string): Promise<string> => {
+    const payload = await accountApi.fetchJson('/api/account/assets/resolve', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ assetRefs: [assetRef] }),
+    }) as { assets?: unknown };
+    if (!Array.isArray(payload.assets) || payload.assets.length !== 1) throw new Error('coreui.errors.assets.payloadInvalid');
+    const asset = parseResolvedAccountAsset(payload.assets[0]);
+    if (!asset || asset.assetRef !== assetRef || !asset.contentType.startsWith('image/')) throw new Error('coreui.errors.assets.payloadInvalid');
+    return asset.url;
+  }, [accountApi]);
 
   const generateTranslations = async () => {
     if (!currentPageId) return;
@@ -244,11 +284,12 @@ export function PageBuilder({ pageId = '' }: { pageId?: string }) {
   };
 
   const changePublished = async (next: boolean) => {
-    if (!currentPageId) return;
+    if (!canEditPages || !currentPageId) return;
     setSaving(true);
     setError(null);
     try {
       await accountApi.fetchJson(`/api/account/pages/${encodeURIComponent(currentPageId)}/${next ? 'publish' : 'unpublish'}`, { method: 'POST' });
+      clearRomaPagesCache(accountContext.accountPublicId);
       setPublished(next);
     } catch {
       setError(`${next ? 'Publishing' : 'Unpublishing'} this Page failed. Please try again.`);
@@ -256,10 +297,18 @@ export function PageBuilder({ pageId = '' }: { pageId?: string }) {
   };
 
   if (!canUsePages) {
-    return <><section className="roma-page-upgrade"><h1 className="heading-2">Pages</h1><p className="body-m">Upgrade to create, edit and publish Pages.</p><button className="diet-btn-txt" data-size="md" data-variant="primary" type="button" onClick={() => setUpsellOpen(true)}><span className="diet-btn-txt__label body-m">Upgrade</span></button></section><RomaUpsellDialog open={upsellOpen} reason="Pages are available on Tier 2 and above." onClose={() => setUpsellOpen(false)} /></>;
+    return <><section className="roma-page-upgrade"><h1 className="heading-2">Pages</h1><p className="body-m">Upgrade to create, edit and publish Pages.</p><button className="diet-btn-txt" data-size="md" data-variant="primary" type="button" onClick={() => { setUpsellReason('Pages are available on Tier 2 and above.'); setUpsellOpen(true); }}><span className="diet-btn-txt__label body-m">Upgrade</span></button></section><RomaUpsellDialog open={upsellOpen} reason={upsellReason} onClose={() => setUpsellOpen(false)} /></>;
+  }
+
+  if (!canEditPages) {
+    return <section className="roma-page-upgrade"><h1 className="heading-2">Pages</h1><p className="body-m">You need editor access to create or edit Pages.</p></section>;
   }
 
   if (loading) return <section className="roma-account-loading" aria-label="Loading Page"><span /><span /><span /></section>;
+
+  if (pageId && loadFailed) {
+    return <section className="roma-page-upgrade" role="alert"><h1 className="heading-2">Page could not be loaded</h1><p className="body-m">Please retry before editing this Page.</p><div className="roma-page-panel__actions"><button className="diet-btn-txt" data-size="md" data-variant="primary" type="button" onClick={() => void loadSavedPage(pageId)}><span className="diet-btn-txt__label body-m">Retry</span></button><button className="diet-btn-txt" data-size="md" data-variant="secondary" type="button" onClick={() => router.push('/pages')}><span className="diet-btn-txt__label body-m">Back to pages</span></button></div></section>;
+  }
 
   return (
     <>
@@ -278,17 +327,18 @@ export function PageBuilder({ pageId = '' }: { pageId?: string }) {
         <div className="editor-content">
           <aside className="tooldrawer" id="page-builder-tool-drawer">
             <div className="roma-page-panel-tabs" role="tablist"><button className="diet-btn-txt" data-size="sm" data-variant={activePanel === 'content' ? 'primary' : 'neutral'} type="button" role="tab" aria-selected={activePanel === 'content'} onClick={() => setActivePanel('content')}><span className="diet-btn-txt__label body-s">Content</span></button><button className="diet-btn-txt" data-size="sm" data-variant={activePanel === 'seo' ? 'primary' : 'neutral'} type="button" role="tab" aria-selected={activePanel === 'seo'} onClick={() => setActivePanel('seo')}><span className="diet-btn-txt__label body-s">SEO/GEO/AEO</span></button></div>
-            <div className="roma-page-tooldrawer-body">{activePanel === 'content' ? <PageBuilderContent placements={placements} selectedPlacementId={selectedPlacementId} onSelect={setSelectedPlacementId} onAdd={addWidget} onChange={setPlacements} onEdit={setBobInstanceId} /> : <PageBuilderSeo source={source} onSourceChange={setSource} locales={currentPageId ? settingsLocales : [baseLocale]} activeLocale={activeLocale} onActiveLocaleChange={setActiveLocale} overlays={pageOverlays} onOverlaysChange={setPageOverlays} canTranslate={Boolean(currentPageId)} translating={translationBusy} onGenerateTranslations={generateTranslations} onUploadSocialImage={uploadSocialImage} />}</div>
+            <div className="roma-page-tooldrawer-body">{activePanel === 'content' ? <PageBuilderContent placements={placements} selectedPlacementId={selectedPlacementId} addOpen={widgetPickerOpen} onAddOpenChange={setWidgetPickerOpen} onSelect={setSelectedPlacementId} onAdd={addWidget} onChange={setPlacements} onEdit={setBobInstanceId} /> : <PageBuilderSeo source={source} onSourceChange={setSource} locales={currentPageId ? settingsLocales : [baseLocale]} activeLocale={activeLocale} onActiveLocaleChange={setActiveLocale} overlays={pageOverlays} onOverlaysChange={setPageOverlays} canTranslate={Boolean(currentPageId)} translating={translationBusy} onGenerateTranslations={generateTranslations} onUploadSocialImage={uploadSocialImage} onResolveSocialImage={resolveSocialImage} onAssetUpsell={() => { setUpsellReason('This upload is not available on your current plan.'); setUpsellOpen(true); }} />}</div>
           </aside>
-          <PageWorkspace placements={placements} selectedPlacementId={selectedPlacementId} savedFiles={savedFiles} showSaved={Boolean(currentPageId && !dirty && !needsUpdate)} onSelect={setSelectedPlacementId} />
+          <PageWorkspace placements={placements} selectedPlacementId={selectedPlacementId} savedFiles={savedFiles} showSaved={Boolean(previewingGenerated || (currentPageId && !dirty && !needsUpdate))} onSelect={setSelectedPlacementId} onAdd={() => setWidgetPickerOpen(true)} />
         </div>
       </div>
 
-      {bobInstanceId ? <div className="roma-page-bob-slide" role="dialog" aria-label="Edit widget in Bob"><BuilderDomain initialInstanceId={bobInstanceId} embedded returnLabel="Done, go back to the page" contextMessage="You are editing a saved widget. Other Pages using it will need updating after Save." onReturn={() => setBobInstanceId('')} onInstanceSaved={() => { void loadPagePlacement({ instanceId: bobInstanceId, settingsLocales, fetchJson: accountApi.fetchJson }).then((updated) => { setPlacementsState((current) => current.map((placement) => placement.instanceId === bobInstanceId ? { ...updated, placementId: placement.placementId } : placement)); setNeedsUpdate(true); }); }} /></div> : null}
+      {bobInstanceId ? <div className="roma-page-bob-slide" role="dialog" aria-label="Edit widget in Bob"><BuilderDomain initialInstanceId={bobInstanceId} embedded returnLabel="Done, go back to the page" contextMessage="You are editing a saved widget. Other Pages using it will need updating after Save." onReturn={() => setBobInstanceId('')} onInstanceSaved={() => { void Promise.all([loadPagePlacement({ instanceId: bobInstanceId, settingsLocales, fetchJson: accountApi.fetchJson }), currentPageId ? accountApi.fetchJson(`/api/account/pages/${encodeURIComponent(currentPageId)}`).then(parseDetail) : Promise.resolve(null)]).then(([updated, detail]) => { setPlacementsState((current) => current.map((placement) => placement.instanceId === bobInstanceId ? { ...updated, placementId: placement.placementId } : placement)); if (detail) setNeedsUpdate(detail.serveState.needsUpdate); }).catch(() => setError('This widget was saved, but the Page status could not be refreshed.')); }} /></div> : null}
       <dialog ref={updateDialogRef} className="diet-popup" data-size="medium" aria-labelledby="page-needs-update-title"><header className="diet-popup__header"><h2 id="page-needs-update-title" className="heading-4">Update this page to edit</h2></header><div className="diet-popup__body"><p className="body-m">One or more widgets in this page has changed. Update the page to edit.</p></div><footer className="diet-popup__footer"><div className="diet-popup__actions"><button className="diet-btn-txt" data-size="md" data-variant="secondary" type="button" onClick={() => router.push('/pages')}><span className="diet-btn-txt__label body-m">Back to pages</span></button><button className="diet-btn-txt" data-size="md" data-variant="primary" type="button" disabled={saving} onClick={() => void save(true)}><span className="diet-btn-txt__label body-m">{saving ? 'Updating…' : 'Update page'}</span></button></div></footer></dialog>
-      <dialog ref={deleteDialogRef} className="diet-popup" data-size="medium" aria-label="Delete page"><header className="diet-popup__header"><h2 className="heading-4">Delete page?</h2></header><div className="diet-popup__body"><p className="body-m">This permanently deletes the saved Page.</p></div><footer className="diet-popup__footer"><div className="diet-popup__actions"><button className="diet-btn-txt" data-size="md" data-variant="secondary" type="button" onClick={() => setDeleteOpen(false)}><span className="diet-btn-txt__label body-m">Cancel</span></button><button className="diet-btn-txt" data-size="md" data-variant="primary" type="button" disabled={saving} onClick={() => { if (!currentPageId) return; setSaving(true); void accountApi.fetchJson(`/api/account/pages/${encodeURIComponent(currentPageId)}`, { method: 'DELETE' }).then(() => router.push('/pages')).catch(() => { setError('Deleting this Page failed. Please try again.'); setDeleteOpen(false); }).finally(() => setSaving(false)); }}><span className="diet-btn-txt__label body-m">Delete</span></button></div></footer></dialog>
+      <dialog ref={deleteDialogRef} className="diet-popup" data-size="medium" aria-label="Delete page"><header className="diet-popup__header"><h2 className="heading-4">Delete page?</h2></header><div className="diet-popup__body"><p className="body-m">This permanently deletes the saved Page.</p></div><footer className="diet-popup__footer"><div className="diet-popup__actions"><button className="diet-btn-txt" data-size="md" data-variant="secondary" type="button" onClick={() => setDeleteOpen(false)}><span className="diet-btn-txt__label body-m">Cancel</span></button><button className="diet-btn-txt" data-size="md" data-variant="primary" type="button" disabled={saving} onClick={() => { if (!currentPageId) return; setSaving(true); void accountApi.fetchJson(`/api/account/pages/${encodeURIComponent(currentPageId)}`, { method: 'DELETE' }).then(() => { clearRomaPagesCache(accountContext.accountPublicId); router.push('/pages'); }).catch(() => { setError('Deleting this Page failed. Please try again.'); setDeleteOpen(false); }).finally(() => setSaving(false)); }}><span className="diet-btn-txt__label body-m">Delete</span></button></div></footer></dialog>
       <PublicCodeDialog open={copyOpen} productName={source.displayName} actions={publicActions} onClose={() => setCopyOpen(false)} />
       <RomaUnsavedChangesDialog open={leaveOpen} message="This Page has unsaved changes." onKeepEditing={() => { pendingLeaveRef.current = null; setLeaveOpen(false); }} onDiscard={() => { const leave = pendingLeaveRef.current; pendingLeaveRef.current = null; setDirty(false); setLeaveOpen(false); leave?.(); }} />
+      <RomaUpsellDialog open={upsellOpen} reason={upsellReason} onClose={() => setUpsellOpen(false)} />
     </>
   );
 }

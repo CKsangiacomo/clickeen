@@ -31,7 +31,11 @@
 .roma-page-section__body { padding-block:var(--space-3) var(--space-2); }
 .roma-page-section__body > div { display:grid; gap:var(--space-1); }
 .roma-page-workspace { padding:0; }
-.roma-page-workspace__frame { width:100%; height:100%; border:0; background:var(--role-surface-muted); }
+.roma-page-workspace__canvas { align-self:stretch; inline-size:100%; min-block-size:100%; overflow:auto; padding:var(--space-4); display:grid; align-content:start; gap:var(--space-4); background:var(--role-surface-muted); }
+.roma-page-workspace__saved { display:grid; gap:var(--space-4); }
+.roma-page-workspace__placement { display:block; min-inline-size:0; border:2px solid transparent; border-radius:var(--control-radius-xl); overflow:clip; }
+.roma-page-workspace__placement[aria-current='true'] { border-color:var(--role-focus); }
+.roma-page-workspace__error { margin:auto; color:var(--role-error); }
 .roma-page-widget-picker { width:min(70rem, calc(100vw - var(--space-8))); }
 .roma-page-bob-slide { position:fixed; z-index:50; inset:var(--space-2); display:flex; overflow:hidden; border-radius:var(--control-radius-2xl); background:var(--role-surface-muted); box-shadow:var(--shadow-elevated); }
 .roma-page-bob-slide > * { flex:1; min-width:0; }

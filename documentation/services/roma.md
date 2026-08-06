@@ -126,6 +126,9 @@ Roma account-shell routes include:
 - `/widgets/:instanceId`
 - `/builder`
 - `/builder/:instanceId`
+- `/pages`
+- `/page-builder/new`
+- `/page-builder/:pageId`
 - `/assets`
 - `/team`
 - `/billing`
@@ -527,8 +530,9 @@ against the locales selected in Settings.
 Editing a placement opens the existing Bob editor as a layer while Page
 Builder remains mounted. Bob's single Page-host action, **Done, go back to the
 page**, closes that layer and returns to the exact browser Page draft. Bob Save
-updates the saved Instance and makes the Page require explicit Update; it does
-not save or regenerate the Page. Page Save and Update run Web Code Generator in
+updates the saved Instance. A saved Page that references it then requires
+explicit Update; an unsaved Page simply keeps using the newly saved Instance in
+its browser draft. Bob does not save or regenerate the Page. Page Save and Update run Web Code Generator in
 the browser and submit its exact files. Publish only changes publication state.
 All Page blocking Popups use Dieter's existing native-dialog lifecycle; Roma
 adds no Page dialog framework or global editor state.
