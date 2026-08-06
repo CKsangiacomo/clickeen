@@ -57,9 +57,14 @@ async function main() {
   const editorShell = await readFile(new URL('../../bob/lib/editor-shell.css', import.meta.url), 'utf8');
   const romaCss = await read('app/roma.css');
   const productDefaults = await readFile(new URL('../../packages/widget-shell/src/defaults.ts', import.meta.url), 'utf8');
+  const middleware = await read('middleware.ts');
   const newPageRoute = await read('app/(authed)/page-builder/new/page.tsx');
   const savedPageRoute = await read('app/(authed)/page-builder/[pageId]/page.tsx');
 
+  assert.match(middleware, /'\/pages'/);
+  assert.match(middleware, /'\/page-builder'/);
+  assert.match(middleware, /'\/profile'/);
+  assert.match(middleware, /pathname === prefix \|\| pathname\.startsWith\(`\$\{prefix\}\/`\)/);
   assert.match(domains, /key: 'pages', label: 'Pages', href: '\/pages'/);
   assert.match(newPageRoute, /<PageBuilder templateDraft=\{templateDraft\} \/>/);
   assert.match(newPageRoute, /kind: 'account'/);

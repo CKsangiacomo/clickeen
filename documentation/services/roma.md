@@ -136,6 +136,10 @@ Roma account-shell routes include:
 - `/ai`
 - `/settings`
 
+Roma middleware requires a Berlin/Roma session for every route in this list,
+including `/profile`, `/pages`, and `/page-builder/**`. Public login, invite,
+API, and framework-asset routes retain their existing separate boundaries.
+
 `/home` currently preserves the Roma shell and navigation but renders no
 domain-specific header, actions, placeholders, or page content.
 
