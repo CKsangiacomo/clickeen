@@ -61,9 +61,8 @@ public files:
 - Complete semantic public HTML is the baseline for every tier. For Widget
   Instances, a paid SEO/GEO/AEO entitlement plus the saved Instance choice may
   add customer optimization output. The Page generation API has no Page SEO
-  toggle and always emits its declared semantic output, although generated Page
-  files are not yet connected to public serving. Neither rule decides whether
-  customer content exists in initial HTML.
+  toggle and always emits its declared semantic output. Neither rule decides
+  whether customer content exists in initial HTML.
 - `branding.remove` and `embed.seoGeo.enabled` are different product policies.
   Branding controls visible Clickeen attribution. The SEO entitlement controls
   the saved Widget Instance enhancement choice; it is not a Page switch.
