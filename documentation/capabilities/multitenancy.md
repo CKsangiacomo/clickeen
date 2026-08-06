@@ -296,13 +296,13 @@ Ordinary Pages have no SEO/GEO/AEO boolean. `pages.max` begins at Tier 2, and
 every ordinary Page receives Page SEO/GEO/AEO output from its declared fields
 and exact overlays.
 
-PRD 127 also adds `pages.max` through the same policy system. Its target product
-law is visibility plus command-time access: Pages stays in navigation for every
+`pages.max` uses the same policy system. Product law is visibility plus
+command-time access: Pages stays in navigation for every
 tier; Free and Tier 1 see **Upgrade to get Pages**; an account downgraded into
 those tiers still sees its retained Page inventory and **Upgrade to use Pages**.
-The Page API already denies detail and mutation commands at a zero Page limit
-without calling Tokyo. 127E adds the visible Page domain and standard Upgrade
-dialog around that result. Downgrade does not hide, delete, rewrite,
+The Page API denies detail and mutation commands at a zero Page limit without
+calling Tokyo. Roma's visible Page domain uses the standard Upgrade dialog
+around that result. Downgrade does not hide, delete, rewrite,
 regenerate, publish, or unpublish retained Pages.
 
 Current Page limits:
