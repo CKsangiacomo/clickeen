@@ -190,7 +190,7 @@ actions. Selecting a Page opens that Page in the Page Builder.
 catalog** lists only Page templates owned by account `CLICKEEN`. The account
 coordinate—not Tier99 or an administrator role—defines the Catalog owner.
 Catalog is a read-only ownership-based view, not another object or flag.
-Selecting **Use template** opens an unsaved `/pages/new` Page Builder
+Selecting **Use template** opens an unsaved `/page-builder/new` Page Builder
 draft. Only explicit **Save** creates the ordinary Page.
 
 The **Page Builder** is the orchestration editor for one Page. It provides:
@@ -1185,7 +1185,7 @@ product-data mutation may be bundled into a schema or consumer deployment.
       `free=0`, `tier1=0`, `tier2=3`, `tier3=10`, `tier4=null`, `tier99=null`.
 - [ ] Enforce `pages.max` through the existing Roma policy and saved-object
       creation path over all account-owned Page identities; opening
-      `/pages/new` performs no mutation and adds no Page limit logic to the
+      `/page-builder/new` performs no mutation and adds no Page limit logic to the
       generator or Tokyo serving.
 - [ ] Define fail-closed tier-reduction behavior for existing Pages without
       silently deleting, rewriting or publishing Page truth.
@@ -1202,7 +1202,7 @@ product-data mutation may be bundled into a schema or consumer deployment.
 - [ ] Persist only the minimal `isTemplate` designation; add no Catalog object,
       flag, registry, source format, or publication route.
 - [ ] Implement Use Widget template as one independent ordinary Instance and
-      Use Page template as an unsaved `/pages/new` draft whose explicit Save
+      Use Page template as an unsaved `/page-builder/new` draft whose explicit Save
       creates one ordinary Page.
 - [ ] Make Catalog read-only for every account, including `CLICKEEN`; edit
       underlying `CLICKEEN` templates only through DevStudio using normal
@@ -1302,7 +1302,7 @@ product-data mutation may be bundled into a schema or consumer deployment.
 - [ ] Verify `pages.max` at first Save: free/Tier 1 cannot create Pages, Tier 2
       owns at most three, Tier 3 at most ten, and Tier 4/Tier99 are unlimited;
       saved unpublished and published Pages count identically while an unsaved
-      `/pages/new` draft does not count.
+      `/page-builder/new` draft does not count.
 - [ ] Verify direct Page routes enforce the same policy even when navigation is
       bypassed, while generator/Tokyo serving contains no tier branch.
 - [ ] After the Admin account migration, re-verify the owning Berlin, Roma, San

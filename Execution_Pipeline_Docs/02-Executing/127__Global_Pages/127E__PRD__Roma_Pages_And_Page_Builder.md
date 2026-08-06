@@ -40,11 +40,11 @@ temporary hardcoded Catalog model or template-editing mode.
 
 ```text
 /pages                 Your pages
-/pages/new             Unsaved blank Page draft
-/pages/{pageId}        Page Builder for one saved Page
+/page-builder/new             Unsaved blank Page draft
+/page-builder/{pageId}        Page Builder for one saved Page
 ```
 
-Opening `/pages/new` or `/pages/{pageId}` keeps Pages active in `left-nav`.
+Opening `/page-builder/new` or `/page-builder/{pageId}` keeps Pages active in `left-nav`.
 Direct routes use the same Berlin/Roma account, role, tier, and `pages.max`
 checks as visible actions.
 
@@ -155,7 +155,7 @@ Behavior:
 
 ## Starting a Page
 
-Create page opens `/pages/new` with an unsaved browser-memory draft:
+Create page opens `/page-builder/new` with an unsaved browser-memory draft:
 
 - no Page ID;
 - no Tokyo object;
@@ -569,7 +569,7 @@ No UI state becomes a second persisted Page truth.
 - [ ] Build Page-specific TopDrawer/ToolDrawer/Workspace composition using
       Dieter; add no duplicate primitive or CSS system.
 - [ ] Implement Your pages with accepted Dieter table/filter/action patterns.
-- [ ] Implement `/pages/new` as browser-only draft and existing unsaved dialog.
+- [ ] Implement `/page-builder/new` as browser-only draft and existing unsaved dialog.
 - [ ] Keep editable Page name in TopDrawer and implement only Content and
       SEO/GEO/AEO panels from 127A fields.
 - [ ] Add the small Dieter Textarea composition and use it for Page meta and
@@ -613,7 +613,7 @@ Prove:
   Bob behavior;
 - `pages-domain.tsx` is a thin wrapper and no longer owns Page loading, list,
   editor sections, localization rules, publication, or embed-code generation;
-- `/pages/new` writes nothing before Save;
+- `/page-builder/new` writes nothing before Save;
 - unsaved-leave dialog uses existing Dieter interaction;
 - Page fields map exactly to 127A source;
 - SEO/GEO/AEO requires only Page title, keeps optional values empty when the

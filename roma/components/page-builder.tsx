@@ -193,7 +193,7 @@ export function PageBuilder({ pageId = '' }: { pageId?: string }) {
       } else {
         await accountApi.fetchJson('/api/account/pages', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ source: completeSource, files: generated.files, overlaysJson: generated.overlaysJson ?? {} }), timeoutMs: 120_000 });
         setCurrentPageId(id);
-        router.replace(`/pages/${encodeURIComponent(id)}`);
+        router.replace(`/page-builder/${encodeURIComponent(id)}`);
       }
       setNeedsUpdate(false);
       setDirty(false);

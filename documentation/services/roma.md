@@ -513,7 +513,7 @@ returns `/ACCOUNT/pages/PAGEID` plus the same `clickeen.js` snippet shape used
 for a Widget. Page actions therefore need no Page-specific marketing URL,
 iframe helper, or runtime-only install option.
 
-Roma exposes `/pages` as Your pages and `/pages/new` or `/pages/{pageId}` as
+Roma exposes `/pages` as Your pages and `/page-builder/new` or `/page-builder/{pageId}` as
 Page Builder. A new Page exists only in browser memory until Save. Page Builder
 uses the same shared editor shell taxonomy as Bob—TopDrawer, ToolDrawer and
 Workspace—but has only two Page-owned panels: Content and SEO/GEO/AEO. Content

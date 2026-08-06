@@ -55,8 +55,14 @@ async function main() {
   const bobCss = await readFile(new URL('../../bob/app/bob_app.css', import.meta.url), 'utf8');
   const editorShell = await readFile(new URL('../../bob/lib/editor-shell.css', import.meta.url), 'utf8');
   const productDefaults = await readFile(new URL('../../packages/widget-shell/src/defaults.ts', import.meta.url), 'utf8');
+  const newPageRoute = await read('app/(authed)/page-builder/new/page.tsx');
+  const savedPageRoute = await read('app/(authed)/page-builder/[pageId]/page.tsx');
 
   assert.match(domains, /key: 'pages', label: 'Pages', href: '\/pages'/);
+  assert.match(newPageRoute, /<PageBuilder \/>/);
+  assert.match(savedPageRoute, /<PageBuilder pageId=\{pageId\} \/>/);
+  assert.match(list, /['"]\/page-builder\/new['"]/);
+  assert.match(list, /`\/page-builder\/\$\{encodeURIComponent\(id\)\}`/);
   assert.match(builder, /createCompactPageId\(\)/);
   assertBefore(builder, 'generatePageDraft({', "accountApi.fetchJson('/api/account/pages'");
   assert.match(builder, /currentPageId \|\| createCompactPageId\(\)/);

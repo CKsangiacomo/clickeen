@@ -110,7 +110,7 @@ export function PageList({ filter }: { filter: PageListFilter }) {
         <span className="body-s roma-toolbar-count">{pages.length} {pages.length === 1 ? 'page' : 'pages'}</span>
         <button className="diet-btn-txt" data-size="md" data-variant="primary" type="button" onClick={() => {
           if (!canUsePages) setUpsellOpen(true);
-          else window.location.assign('/pages/new');
+          else window.location.assign('/page-builder/new');
         }}>
           <span className="diet-btn-txt__label body-m">Create page</span>
         </button>
@@ -148,7 +148,7 @@ export function PageList({ filter }: { filter: PageListFilter }) {
                   <td className="diet-table__cell--action">
                     <div className="roma-cell-actions">
                       {actions ? <button className="diet-btn-txt" data-size="sm" data-variant="line2" type="button" onClick={() => setPublicContext({ name: page.source.displayName, actions })}><span className="diet-btn-txt__label body-s">Copy code</span></button> : null}
-                      {canUsePages ? <Link className="diet-btn-txt" data-size="sm" data-variant="line2" href={`/pages/${encodeURIComponent(id)}`}><span className="diet-btn-txt__label body-s">{page.serveState.needsUpdate ? 'Update page' : 'Edit'}</span></Link> : <button className="diet-btn-txt" data-size="sm" data-variant="line2" type="button" onClick={() => setUpsellOpen(true)}><span className="diet-btn-txt__label body-s">Edit</span></button>}
+                      {canUsePages ? <Link className="diet-btn-txt" data-size="sm" data-variant="line2" href={`/page-builder/${encodeURIComponent(id)}`}><span className="diet-btn-txt__label body-s">{page.serveState.needsUpdate ? 'Update page' : 'Edit'}</span></Link> : <button className="diet-btn-txt" data-size="sm" data-variant="line2" type="button" onClick={() => setUpsellOpen(true)}><span className="diet-btn-txt__label body-s">Edit</span></button>}
                       <div className="diet-popover-host" ref={menuPageId === id ? menuRef : undefined} data-state={menuPageId === id ? 'open' : 'closed'}>
                         <button className="diet-btn-ic" data-size="sm" data-variant="neutral" type="button" aria-label={`More actions for ${page.source.displayName}`} aria-expanded={menuPageId === id} onClick={() => setMenuPageId((current) => current === id ? '' : id)}><span className="diet-btn-ic__icon diet-icon-mask" style={{ '--diet-icon-source': 'url("/dieter/icons/svg/ellipsis.svg")' } as CSSProperties} aria-hidden="true" /></button>
                         <div className="diet-popover roma-page-actions-popover" role="menu">
