@@ -94,9 +94,13 @@ The routes are:
 /widgets/templates        Widget My templates
 /widgets/catalog          Widget catalog
 /pages                    Your pages
-/pages/templates          Page My templates
-/pages/catalog            Page catalog
+/pages?view=templates     Page My templates
+/pages?view=catalog       Page catalog
 ```
+
+The three Page entries are views of the same Roma Pages domain. They share one
+Edge route; the `view` query selects the requested subview. This avoids turning
+one product domain into separate runtime functions.
 
 ## Structural cutover boundary
 

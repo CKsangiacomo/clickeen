@@ -6,17 +6,24 @@ async function read(path: string): Promise<string> {
 }
 
 async function main(): Promise<void> {
-  const [domain, ordinary, templates, catalog, builder] = await Promise.all([
+  const [domain, ordinary, templates, catalog, builder, route, domains] = await Promise.all([
     read('components/pages-domain.tsx'),
     read('components/page-list.tsx'),
     read('components/page-templates-list.tsx'),
     read('components/page-catalog.tsx'),
     read('components/page-builder.tsx'),
+    read('app/(authed)/pages/page.tsx'),
+    read('lib/domains.ts'),
   ]);
 
   assert.match(domain, /type PagesView = 'your-pages' \| 'templates' \| 'catalog'/);
   assert.match(domain, /view === 'your-pages' \? <PageList filter=\{filter\} \/> : view === 'templates' \? <PageTemplatesList \/> : <PageCatalog \/>/);
   assert.match(domain, /headerControls=\{view === 'your-pages' \?/);
+  assert.match(route, /searchParams: Promise<\{ view\?: string \| string\[\] \}>/);
+  assert.match(route, /if \(view === 'templates' \|\| view === 'catalog'\) return view/);
+  assert.match(route, /export const runtime = 'edge'/);
+  assert.match(domains, /key: 'pageTemplates', label: 'My templates', href: '\/pages\?view=templates'/);
+  assert.match(domains, /key: 'pageCatalog', label: 'Page catalog', href: '\/pages\?view=catalog'/);
 
   assert.match(templates, /\/api\/account\/page-templates/);
   assert.match(templates, /className="diet-table/);

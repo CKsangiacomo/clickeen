@@ -582,11 +582,11 @@ returns `/ACCOUNT/pages/PAGEID` plus the same `clickeen.js` snippet shape used
 for a Widget. Page actions therefore need no Page-specific marketing URL,
 iframe helper, or runtime-only install option.
 
-Roma's Pages navigation group has three routes: **Your pages** at `/pages`,
-**My templates** at `/pages/templates`, and the read-only **Page catalog** at
-`/pages/catalog`. My templates lists current-account Pages with
-`isTemplate: true`; its rows show Template, Edit, and an ellipsis menu for Use,
-Rename, and Delete, but no serving or locale controls. Page catalog reads only
+Roma's Pages navigation group has three views on one Edge route: **Your pages**
+at `/pages`, **My templates** at `/pages?view=templates`, and the read-only
+**Page catalog** at `/pages?view=catalog`. My templates lists current-account
+Pages with `isTemplate: true`; its rows show Template, Edit, and an ellipsis
+menu for Use, Rename, and Delete, but no serving or locale controls. Page catalog reads only
 `CLICKEEN` Page templates, filters their saved presentation values in the
 browser, and opens `/page-builder/new?catalog={pageId}` without creating a
 Page. The initial Catalog item is one real blank Page template, not a hardcoded
