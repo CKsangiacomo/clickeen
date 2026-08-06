@@ -109,8 +109,7 @@ Runtime invariants:
 Split Carousel Media appears in Clickeen Page source as a saved account widget
 instance placement. Media fill objects remain in instance state. Uploaded files
 are account assets, but runtime validates source URL shape; it does not rely on
-account-asset identity alone. Public page package serving depends on Roma
-writing real page packages.
+account-asset identity alone.
 
 ## Verification
 

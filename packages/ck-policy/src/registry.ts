@@ -9,6 +9,7 @@ export const ENTITLEMENT_KEYS = [
   'views.monthly.max',
   'instances.published.max',
   'widgets.instances.max',
+  'pages.max',
   'uploads.size.max',
   'items.group.small.max',
   'items.group.medium.max',
@@ -30,6 +31,7 @@ export const PLAN_LIMIT_KEYS = [
   'views.monthly.max',
   'instances.published.max',
   'widgets.instances.max',
+  'pages.max',
   'uploads.size.max',
   'items.group.small.max',
   'items.group.medium.max',
@@ -127,6 +129,15 @@ export const ENTITLEMENT_META: Record<EntitlementKey, EntitlementMeta> = {
       status: 'enforced',
       owner: 'Roma create and duplicate command routes',
       note: 'Roma create and duplicate enforce this before minting a new instance id, materializing package bytes, or calling Tokyo create/write routes.',
+    },
+  },
+  'pages.max': {
+    label: 'Pages',
+    description: 'Maximum saved Pages and Page templates.',
+    enforcement: {
+      status: 'enforced',
+      owner: 'Roma Page first Save',
+      note: 'Roma rejects a first Page Save when the account is already at its saved Page limit. Existing Pages remain stored and visible after downgrade.',
     },
   },
   'uploads.size.max': {

@@ -1,270 +1,62 @@
-import { NextRequest, NextResponse } from 'next/server';
+import type { AccountPageSource } from '@clickeen/ck-contracts/pages';
 import { isCompactPageId } from '@clickeen/ck-contracts/overlay-identity';
-import {
-  deleteAccountPageFromTokyo,
-  loadAccountPageFromTokyo,
-  saveAccountPageInTokyo,
-} from '@roma/lib/account-page-direct';
-import type { AccountPageSource } from '@roma/lib/account-page-direct';
-import { materializeAccountPageSourceSave } from '@roma/lib/account-page-source';
+import { NextRequest, NextResponse } from 'next/server';
+import { parseAccountPageSource } from '@roma/lib/account-page-contract';
+import { deleteAccountPage, readAccountPage, saveAccountPage } from '@roma/lib/account-pages';
+import { loadCurrentAccountLocalesState } from '@roma/lib/account-locales-state';
 import { readJsonPayloadOrValidation } from '@roma/lib/route-helpers';
-import {
-  resolveCurrentAccountRouteContext,
-  withSession,
-  type CurrentAccountRouteContext,
-} from '../../_lib/current-account-route';
+import { resolveCurrentAccountRouteContext, withSession } from '../../_lib/current-account-route';
 
 export const runtime = 'edge';
-
 type RouteContext = { params: Promise<{ pageId: string }> };
 
-type RouteFailureLike = {
-  ok: false;
-  status: number;
-  error: {
-    kind: string;
-    reasonKey: string;
-    detail?: string;
-    paths?: string[];
-  };
-};
-
-function routeFailureResponse(
-  request: NextRequest,
-  failure: RouteFailureLike,
-  setCookies: CurrentAccountRouteContext['setCookies'],
-) {
-  return withSession(
-    request,
-    NextResponse.json({ error: failure.error }, { status: failure.status }),
-    setCookies,
-  );
+async function pageIdFrom(context: RouteContext): Promise<string | null> {
+  const { pageId } = await context.params;
+  return isCompactPageId(pageId) ? pageId : null;
 }
 
-async function requirePageIdParam(context: RouteContext) {
-  const { pageId: rawPageId } = await context.params;
-  if (isCompactPageId(rawPageId)) return rawPageId;
-  return {
-    ok: false as const,
-    status: 422,
-    error: { kind: 'VALIDATION' as const, reasonKey: 'coreui.errors.page.invalidPageId' },
-  };
+function invalidPageId(request: NextRequest, setCookies?: Parameters<typeof withSession>[2]) {
+  return withSession(request, NextResponse.json({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.page.invalidPageId' } }, { status: 422 }), setCookies);
 }
 
 export async function GET(request: NextRequest, context: RouteContext) {
   const current = await resolveCurrentAccountRouteContext({ request, minRole: 'viewer' });
   if (!current.ok) return current.response;
-
-  const pageId = await requirePageIdParam(context);
-  if (typeof pageId !== 'string') {
-    return withSession(
-      request,
-      NextResponse.json({ error: pageId.error }, { status: pageId.status }),
-      current.value.setCookies,
-    );
-  }
-
-  const accountId = current.value.authzPayload.accountPublicId;
-  const result = await loadAccountPageFromTokyo({
-    accountId,
-    pageId,
-    accountCapsule: current.value.authzToken,
-    requestId: current.value.requestId,
-  });
-  if (!result.ok) {
-    return withSession(
-      request,
-      NextResponse.json({ error: result.error }, { status: result.status }),
-      current.value.setCookies,
-    );
-  }
-  if (!result.value) {
-    return withSession(
-      request,
-      NextResponse.json(
-        { error: { kind: 'NOT_FOUND', reasonKey: 'coreui.errors.page.notFound' } },
-        { status: 404 },
-      ),
-      current.value.setCookies,
-    );
-  }
-  return withSession(
-    request,
-    NextResponse.json({ accountId, pageId, source: result.value.source, publishStatus: result.value.publishStatus }),
-    current.value.setCookies,
-  );
+  const pageId = await pageIdFrom(context);
+  if (!pageId) return invalidPageId(request, current.value.setCookies);
+  const result = await readAccountPage({ accountId: current.value.authzPayload.accountPublicId, pageId, accountCapsule: current.value.authzToken, requestId: current.value.requestId });
+  return withSession(request, result.ok ? NextResponse.json({ source: result.value.source }) : NextResponse.json({ error: result.error }, { status: result.status }), current.value.setCookies);
 }
 
 export async function PUT(request: NextRequest, context: RouteContext) {
   const current = await resolveCurrentAccountRouteContext({ request, minRole: 'editor' });
   if (!current.ok) return current.response;
+  const pageId = await pageIdFrom(context);
+  if (!pageId) return invalidPageId(request, current.value.setCookies);
+  const bodyResult = await readJsonPayloadOrValidation<{ source?: unknown } | null>(request);
+  if (!bodyResult.ok) return withSession(request, NextResponse.json({ error: bodyResult.error }, { status: bodyResult.status }), current.value.setCookies);
+  const submitted = parseAccountPageSource(bodyResult.payload?.source, pageId);
+  if (!submitted) return withSession(request, NextResponse.json({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.page.sourceInvalid' } }, { status: 422 }), current.value.setCookies);
 
-  const pageId = await requirePageIdParam(context);
-  if (typeof pageId !== 'string') {
-    return withSession(
-      request,
-      NextResponse.json({ error: pageId.error }, { status: pageId.status }),
-      current.value.setCookies,
-    );
+  let source: AccountPageSource = submitted;
+  if (!submitted.isTemplate) {
+    const locales = await loadCurrentAccountLocalesState({
+      accessToken: current.value.accessToken,
+      accountId: current.value.authzPayload.accountId,
+      requestId: current.value.requestId,
+    });
+    if (!locales.ok) return withSession(request, NextResponse.json(locales.payload ?? { error: { kind: 'UPSTREAM_UNAVAILABLE', reasonKey: 'coreui.errors.auth.contextUnavailable', detail: locales.detail } }, { status: locales.status }), current.value.setCookies);
+    source = { ...submitted, baseLocale: locales.localePolicy.baseLocale };
   }
-
-  const bodyResult = await readJsonPayloadOrValidation<{ source?: AccountPageSource } | null>(request);
-  if (!bodyResult.ok) {
-    return withSession(
-      request,
-      NextResponse.json({ error: bodyResult.error }, { status: bodyResult.status }),
-      current.value.setCookies,
-    );
-  }
-  if (!bodyResult.payload?.source || typeof bodyResult.payload.source !== 'object' || Array.isArray(bodyResult.payload.source)) {
-    return withSession(
-      request,
-      NextResponse.json(
-        { error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.page.sourceInvalid' } },
-        { status: 422 },
-      ),
-      current.value.setCookies,
-    );
-  }
-  if (bodyResult.payload.source.pageId !== pageId) {
-    return withSession(
-      request,
-      NextResponse.json(
-        { error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.page.invalidPageId' } },
-        { status: 422 },
-      ),
-      current.value.setCookies,
-    );
-  }
-
-  const accountId = current.value.authzPayload.accountPublicId;
-  const currentPage = await loadAccountPageFromTokyo({
-    accountId,
-    pageId,
-    accountCapsule: current.value.authzToken,
-    requestId: current.value.requestId,
-  });
-  if (!currentPage.ok) {
-    return withSession(
-      request,
-      NextResponse.json({ error: currentPage.error }, { status: currentPage.status }),
-      current.value.setCookies,
-    );
-  }
-  if (!currentPage.value) {
-    return withSession(
-      request,
-      NextResponse.json(
-        { error: { kind: 'NOT_FOUND', reasonKey: 'coreui.errors.page.notFound' } },
-        { status: 404 },
-      ),
-      current.value.setCookies,
-    );
-  }
-  if (currentPage.value.publishStatus === 'published') {
-    return withSession(
-      request,
-      NextResponse.json(
-        {
-          error: {
-            kind: 'VALIDATION',
-            reasonKey: 'coreui.errors.page.saveRequiresUnpublish',
-            detail: 'Unpublish the page before saving source until Roma page package generation is enabled.',
-          },
-        },
-        { status: 422 },
-      ),
-      current.value.setCookies,
-    );
-  }
-  const source = materializeAccountPageSourceSave({
-    accountId,
-    pageId,
-    current: currentPage.value.source,
-    submitted: bodyResult.payload.source,
-  });
-  if (!source) {
-    return withSession(
-      request,
-      NextResponse.json(
-        { error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.page.sourceInvalid' } },
-        { status: 422 },
-      ),
-      current.value.setCookies,
-    );
-  }
-  const result = await saveAccountPageInTokyo({
-    accountId,
-    pageId,
-    source,
-    accountCapsule: current.value.authzToken,
-    requestId: current.value.requestId,
-  });
-  if (!result.ok) {
-    return withSession(
-      request,
-      NextResponse.json({ error: result.error }, { status: result.status }),
-      current.value.setCookies,
-    );
-  }
-  return withSession(
-    request,
-    NextResponse.json({
-      accountId,
-      pageId,
-      source: result.value.source,
-      summary: result.value.summary,
-    }),
-    current.value.setCookies,
-  );
+  const result = await saveAccountPage({ accountId: current.value.authzPayload.accountPublicId, pageId, source, accountCapsule: current.value.authzToken, requestId: current.value.requestId });
+  return withSession(request, result.ok ? NextResponse.json({ source: result.value.source }) : NextResponse.json({ error: result.error }, { status: result.status }), current.value.setCookies);
 }
 
 export async function DELETE(request: NextRequest, context: RouteContext) {
   const current = await resolveCurrentAccountRouteContext({ request, minRole: 'editor' });
   if (!current.ok) return current.response;
-
-  const pageId = await requirePageIdParam(context);
-  if (typeof pageId !== 'string') {
-    return withSession(
-      request,
-      NextResponse.json({ error: pageId.error }, { status: pageId.status }),
-      current.value.setCookies,
-    );
-  }
-
-  const accountId = current.value.authzPayload.accountPublicId;
-  let deleted: Awaited<ReturnType<typeof deleteAccountPageFromTokyo>>;
-  try {
-    deleted = await deleteAccountPageFromTokyo({
-      accountId,
-      pageId,
-      accountCapsule: current.value.authzToken,
-      requestId: current.value.requestId,
-    });
-  } catch (error) {
-    const detail = error instanceof Error ? error.message : String(error);
-    return withSession(
-      request,
-      NextResponse.json(
-        {
-          error: {
-            kind: 'UPSTREAM_UNAVAILABLE',
-            reasonKey: 'coreui.errors.db.writeFailed',
-            detail,
-          },
-        },
-        { status: 502 },
-      ),
-      current.value.setCookies,
-    );
-  }
-  if (!deleted.ok) {
-    return routeFailureResponse(request, deleted, current.value.setCookies);
-  }
-
-  return withSession(
-    request,
-    NextResponse.json({ accountId, pageId, deleted: deleted.value.existed, existed: deleted.value.existed }),
-    current.value.setCookies,
-  );
+  const pageId = await pageIdFrom(context);
+  if (!pageId) return invalidPageId(request, current.value.setCookies);
+  const result = await deleteAccountPage({ accountId: current.value.authzPayload.accountPublicId, pageId, accountCapsule: current.value.authzToken, requestId: current.value.requestId });
+  return withSession(request, result.ok ? NextResponse.json({ ok: true, pageId }) : NextResponse.json({ error: result.error }, { status: result.status }), current.value.setCookies);
 }

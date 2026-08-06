@@ -37,10 +37,7 @@ accounts/{accountPublicId}/
     runtime.js
   pages/{pageId}/
     source.json
-    serve-state.json
-    index.html
-    styles.css
-    runtime.js
+    overlays/locales/{locale}.json
 ```
 
 Rules:
@@ -53,6 +50,8 @@ Rules:
   translate, infer, or repair them.
 - A locale never owns HTML, CSS, JavaScript, publication state, or another
   artifact root.
+- Page UI, compilation, publication, and public serving are not implemented in
+  the current slice.
 
 ## Public Serving
 

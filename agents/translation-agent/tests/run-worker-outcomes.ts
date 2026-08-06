@@ -12,7 +12,7 @@ async function createGrant(privateKeyPem: string): Promise<string> {
     ai: { agentId: 'widget.instance.translator' },
     trace: {
       accountPublicId: 'CLICKEEN',
-      instanceId: 'UZ3JEJSHII',
+      translationTarget: { kind: 'instance', id: 'UZ3JEJSHII' },
       activeLocales: REQUESTED_LOCALES,
     },
   }, privateKeyPem);
@@ -32,7 +32,7 @@ async function run(): Promise<void> {
   const publicKeyPem = `-----BEGIN PUBLIC KEY-----\n${publicKeyBody}\n-----END PUBLIC KEY-----`;
   const writtenLocales: string[] = [];
   const response = await worker.fetch(
-    new Request('https://translation-agent.test/translate-instance', {
+    new Request('https://translation-agent.test/translate', {
       method: 'POST',
       headers: {
         accept: 'text/event-stream',
@@ -42,7 +42,7 @@ async function run(): Promise<void> {
         grant: await createGrant(privateKeyPem),
         agentId: 'widget.instance.translator',
         accountPublicId: 'CLICKEEN',
-        instanceId: 'UZ3JEJSHII',
+        target: { kind: 'instance', id: 'UZ3JEJSHII' },
         widgetType: 'faq',
         baseLocale: 'en',
         requestedLocales: REQUESTED_LOCALES,
@@ -131,6 +131,24 @@ async function run(): Promise<void> {
     'coreui.errors.translation.providerFailed',
   );
   assert.deepEqual(writtenLocales.sort(), ['fr', 'it']);
+
+  const denied = await worker.fetch(
+    new Request('https://translation-agent.test/translate', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        grant: await createGrant(privateKeyPem),
+        agentId: 'widget.instance.translator',
+        accountPublicId: 'CLICKEEN',
+        target: { kind: 'page', id: '7UZXTP3TOI' },
+        baseLocale: 'en',
+        requestedLocales: REQUESTED_LOCALES,
+        items: [{ path: 'title', type: 'string', value: 'Summer' }],
+      }),
+    }),
+    { ROMA_AI_GRANT_PUBLIC_KEY_PEM: publicKeyPem } as never,
+  );
+  assert.equal(denied.status, 403, 'a grant for one target must not translate another target');
 
   console.log('translation-agent worker outcomes: ok');
 }

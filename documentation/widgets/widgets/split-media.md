@@ -103,8 +103,7 @@ Runtime invariants:
 
 Split Media appears in Clickeen Page source as a saved account widget instance
 placement. The media fill object, alt text, fit, position, and visual frame
-config remain account-owned instance state. Public page package serving depends
-on Roma writing real page packages.
+config remain account-owned instance state.
 
 ## Verification
 

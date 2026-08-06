@@ -1,75 +1,100 @@
 import assert from 'node:assert/strict';
-import {
-  normalizeAccountPageSource,
-  pageIdsPlacingInstance,
-} from '../lib/account-page-source';
+import { readFile } from 'node:fs/promises';
+import { pageIdsPlacingInstance, parseAccountPageSource } from '../lib/account-page-contract';
 
-const storedPageSource = {
-  accountPublicId: 'CLICKEEN',
-  createdAt: '2026-06-23T16:08:16.899Z',
-  displayName: 'Untitled page',
-  localization: {
-    countryLocaleRules: [],
-    defaultLocale: 'en',
-    ipLocalizationEnabled: false,
-    languageSwitcherEnabled: false,
-    missingLocaleBehavior: 'block_publish',
-  },
-  metadata: {
-    description: '',
-    robots: 'index,follow',
-    title: 'Widgets - Faq Overview',
-  },
-  pageId: '7UZXTP3TOI',
-  placements: [
-    {
-      instanceId: 'QD1G068MX7',
-      placementId: 'P001',
+async function main() {
+  const ordinaryPage = {
+    pageId: '7UZXTP3TOI',
+    displayName: 'Summer page',
+    isTemplate: false,
+    baseLocale: 'en-US',
+    values: {
+      title: 'Summer',
+      description: 'A summer page',
     },
-    {
-      instanceId: 'I5918UU0IA',
-      placementId: 'P002',
-    },
-  ],
-  schemaVersion: 1,
-  updatedAt: '2026-06-23T16:12:17.816Z',
-  version: 4,
-};
+    robots: 'index-follow',
+    placements: [
+      { placementId: 'hero', instanceId: 'QD1G068MX7' },
+      { placementId: 'faq', instanceId: 'I5918UU0IA' },
+    ],
+  } as const;
 
-function testStoredVersionNormalizesAsRevision() {
-  const normalized = normalizeAccountPageSource(storedPageSource);
-  assert.ok(normalized);
-  assert.equal(normalized.revision, 4);
-  assert.deepEqual(
-    pageIdsPlacingInstance({
-      sources: [normalized],
-      instanceId: 'QD1G068MX7',
-    }),
-    ['7UZXTP3TOI'],
+  const parsed = parseAccountPageSource(ordinaryPage);
+  assert.deepEqual(parsed, ordinaryPage);
+  assert.deepEqual(pageIdsPlacingInstance({ sources: [parsed!], instanceId: 'QD1G068MX7' }), [
+    '7UZXTP3TOI',
+  ]);
+
+  assert.equal(
+    parseAccountPageSource({ ...ordinaryPage, revision: 1 }),
+    null,
+    'unknown legacy fields must fail',
   );
+  assert.equal(
+    parseAccountPageSource({ ...ordinaryPage, robots: 'index,follow' }),
+    null,
+    'legacy robots values must fail',
+  );
+  assert.equal(
+    parseAccountPageSource({
+      ...ordinaryPage,
+      placements: [...ordinaryPage.placements, ordinaryPage.placements[0]],
+    }),
+    null,
+    'duplicate placements must fail',
+  );
+
+  const template = {
+    pageId: '8UZXTP3TOI',
+    displayName: 'Reusable page',
+    isTemplate: true,
+    values: { title: 'Template' },
+    robots: 'noindex-follow',
+    placements: [],
+  } as const;
+  assert.deepEqual(parseAccountPageSource(template), template);
+  assert.equal(
+    parseAccountPageSource({ ...template, baseLocale: 'en' }),
+    null,
+    'templates must reject locale state',
+  );
+
+  const createRoute = await readFile(
+    new URL('../app/api/account/pages/route.ts', import.meta.url),
+    'utf8',
+  );
+  const limitGate = createRoute.indexOf(
+    'if (limit !== null && existing.value.sources.length >= limit)',
+  );
+  assert.ok(limitGate > 0, 'Page first Save must enforce pages.max');
+  assert.ok(
+    limitGate < createRoute.indexOf('createCompactPageId()'),
+    'pages.max must run before Page ID minting',
+  );
+  assert.ok(
+    limitGate < createRoute.indexOf('createAccountPage({'),
+    'pages.max must run before Tokyo writes',
+  );
+  assert.match(createRoute, /readPolicyLimit\(policy, 'pages\.max'\)/);
+
+  await assert.rejects(
+    readFile(new URL('../app/(authed)/pages/page.tsx', import.meta.url), 'utf8'),
+    /ENOENT/,
+    '127A must not retain the obsolete Page UI',
+  );
+  await assert.rejects(
+    readFile(
+      new URL('../app/api/account/pages/[pageId]/publish/route.ts', import.meta.url),
+      'utf8',
+    ),
+    /ENOENT/,
+    '127A must not retain obsolete Page publication routes',
+  );
+
+  console.log('Roma Page source contract verification passed.');
 }
 
-function testMissingRevisionAndVersionStillFails() {
-  const { version, ...withoutRevision } = storedPageSource;
-  void version;
-  assert.equal(normalizeAccountPageSource(withoutRevision), null);
-}
-
-const tests = [
-  ['stored page version normalizes as revision', testStoredVersionNormalizesAsRevision],
-  ['missing revision and version still fails', testMissingRevisionAndVersionStillFails],
-] as const;
-
-let failed = false;
-for (const [name, run] of tests) {
-  try {
-    run();
-    console.log(`PASS ${name}`);
-  } catch (error) {
-    failed = true;
-    console.error(`FAIL ${name}`);
-    console.error(error);
-  }
-}
-
-if (failed) process.exit(1);
+main().catch((error) => {
+  console.error(error);
+  process.exitCode = 1;
+});

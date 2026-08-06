@@ -3,7 +3,7 @@ import rawMatrix from '../entitlements.matrix.json';
 import { ENTITLEMENT_KEYS, ENTITLEMENT_META, type EntitlementKey } from './registry';
 import type { EntitlementKind, EntitlementsMatrix, PolicyProfile } from './types';
 
-const REQUIRED_TIERS: PolicyProfile[] = ['free', 'tier1', 'tier2', 'tier3', 'tier4'];
+const REQUIRED_TIERS: PolicyProfile[] = ['free', 'tier1', 'tier2', 'tier3', 'tier4', 'tier99'];
 const VALID_KINDS: EntitlementKind[] = ['flag', 'limit'];
 
 let cachedMatrix: EntitlementsMatrix | null = null;

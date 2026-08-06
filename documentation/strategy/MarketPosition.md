@@ -68,6 +68,16 @@ than a services project.
 Public widgets can become discovery surfaces when attribution, sharing, or
 reuse is part of the product policy for that surface.
 
+The accepted PRD 127 direction makes that concrete for Free Widgets: complete
+customer HTML carries one visible contextual qualified link to the matching
+Clickeen Widget product page and matching truthful product identity. Clickeen
+must own a real authoritative page for every referenced product. Generic
+repeated links, hidden links, invented language claims, and machine-readable
+claims that do not match visible truth are not distribution.
+
+Paid branding removal and customer SEO/GEO/AEO are separate product decisions.
+Removing Clickeen attribution must never degrade the customer's semantic HTML.
+
 ### Design-Led Quality
 
 Public output should be fast, polished, accessible, embed-safe, locale-aware,

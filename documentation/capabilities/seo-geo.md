@@ -19,7 +19,7 @@ machinery that does not exist.
 | Roma instance publish route | `roma/app/api/account/instances/[instanceId]/publish/route.ts` |
 | Roma public package builder | `roma/lib/account-instance-public-package.ts` |
 | Roma public-serving origin env | `roma/lib/env/public-serving.ts` |
-| Roma page publish disabled route | `roma/app/api/account/pages/[pageId]/publish/route.ts` |
+| Page authoring source | `packages/ck-contracts/src/pages.ts`, `roma/app/api/account/pages/**`, `tokyo-worker/src/domains/pages/**` |
 | Policy registry/matrix | `packages/ck-policy/src/registry.ts`, `packages/ck-policy/entitlements.matrix.json` |
 
 ## Current Runtime Truth
@@ -50,9 +50,10 @@ accounts/{accountPublicId}/instances/{instanceId}/
   runtime.js
 ```
 
-Public serving is gated by the stored publish/package state. Unpublished,
-missing, malformed, or mismatched package state returns `404`. Public page
-serving currently returns `404` because page package serving is not active.
+Public Widget serving is gated by the stored publish/package state.
+Unpublished, missing, malformed, or mismatched package state returns `404`.
+Page public serving is not implemented in the current slice; Tokyo-worker has
+no placeholder public Page route.
 
 Public-serving hosts must expose generated artifacts only. Operational paths
 such as `/healthz`, `/__internal/*`, and `/widgets/*` return `404` on
@@ -84,8 +85,122 @@ code flow as owner. Runtime evidence does not currently prove that consumer.
 For this capability, treat the registry row as conflicting metadata until a
 real runtime consumer is implemented or the registry is corrected.
 
+PRD 127 closes this gap for Widget Instances through the shared Clickeen
+tier-gate interaction and the Web Code Generator. Bob's planned **Enable
+SEO/GEO/AEO** control is visible and off by default for every tier. When a Free
+or Tier 1 user attempts to turn it on, the value remains off and the existing
+Upgrade dialog opens. Tier 2 and above may turn it on. The saved Instance choice
+lives in `instance.config.json`; Roma rechecks `embed.seoGeo.enabled` on Save
+before generated Instance files are accepted. The Web Code Generator receives
+the effective Instance boolean and never resolves tiers itself.
+
+Pages have no equivalent toggle or saved boolean. `pages.max` already makes
+ordinary Pages a Tier 2-or-higher product, so every ordinary Page receives the
+Page metadata, locale relationships, social metadata, one localized `WebPage`
+JSON-LD block, and any supported visible-content schema described by PRD 127.
+Complete semantic HTML remains the baseline for every Widget and Page.
+
 Tokyo-worker stores and serves submitted artifact files. It does not decide
 whether an account is entitled to SEO/GEO output.
+
+### Accepted PRD 127 product contract
+
+PRD 127 separates four responsibilities that must not be confused:
+
+1. **Baseline output:** every ordinary Widget Instance and Page receives
+   complete semantic initial HTML. This applies to every tier and does not
+   depend on `embed.seoGeo.enabled`. Every generated document contains the
+   neutral `<meta name="generator" content="Clickeen">` provenance tag.
+2. **Clickeen identity and Free distribution:** a Free Widget Instance contains
+   one visible contextual Clickeen attribution link plus matching truthful
+   Clickeen/Widget product identity in its initial HTML. Pages are a Tier 2+
+   product and do not use the Free Widget distribution contract.
+3. **Widget customer enhancement:** an entitled customer may enable
+   customer-owned Widget metadata, canonical and locale relationships,
+   supplied social metadata, discovery, and supported source-backed structured
+   data through the saved Instance choice plus `embed.seoGeo.enabled`.
+4. **Page customer output:** every ordinary Page receives the equivalent Page
+   output from its declared Page fields and exact Page overlays. There is no
+   Page SEO switch or Page SEO entitlement branch.
+
+Every ordinary Page's initial HTML contains one `WebPage` JSON-LD block. For an
+exact-locale response it contains:
+
+- `@context: https://schema.org`;
+- `@type: WebPage`;
+- `@id`: the exact-locale Page URL followed by `#webpage`;
+- `url`: the exact-locale Page URL;
+- `name`: the effective localized Page title;
+- optional `description`: the effective localized Page description;
+- `inLanguage`: the exact requested locale;
+- optional `primaryImageOfPage`:
+  `{ "@type": "ImageObject", "contentUrl": <supplied social image URL> }`.
+
+Web Code Generator writes the JSON-LD into `index.html`; Tokyo completes its
+exact URL and locale values through the existing HTML-marker response path
+before the response is cached. This is ordinary Page generation and serving,
+not a separate schema or AEO subsystem.
+
+For the eight current Widgets, PRD 127 uses declared source paths rather than
+heuristics: `header.title` supplies the customer SEO title and
+`header.subtitleHtml` supplies the source-backed description. Only FAQ declares
+content-specific `FAQPage` structured data, using its existing visible question
+and answer paths. This is the only current content-specific Page schema
+contribution. The other Widgets receive common semantic metadata without
+invented content schema or Widget-specific SEO renderers.
+
+`branding.remove` controls visible Clickeen attribution. It does not control
+complete HTML and it does not grant customer SEO/GEO/AEO. Conversely,
+`embed.seoGeo.enabled` does not control the Free attribution requirement.
+
+The planned Web Code Generator owns final markup for all four responsibilities.
+It consumes a small typed Clickeen public product identity map, not an agent or
+request-time service. That map owns the approved Clickeen organization/platform
+identity and, per Widget product, the real product URL, stable schema `@id`,
+factual description, attribution wording, and Schema.org type. Locale truth
+remains in the existing locale authority; the identity map is not a second
+locale registry.
+
+For Free Widgets, the generator writes the visible link as ordinary crawlable
+HTML with `rel="nofollow noreferrer"` and writes matching JSON-LD into the same
+`index.html`. It may identify:
+
+- Clickeen as `Organization` and software/service provider;
+- the Widget product as a `WebApplication`;
+- the generated public Instance as the customer's `WebPage`;
+- the exact served locale through `inLanguage`;
+- Clickeen product/service `availableLanguage` only from the existing
+  supported-locale authority;
+- Clickeen as structured-data publisher through `sdPublisher` only when true;
+- the product relationship through `isPartOf`, `isBasedOn`, `creditText`, or
+  other supported properties only when their literal meaning is true.
+
+The customer or integration remains the owner of customer content. A
+content-specific `mainEntity`, such as FAQ content, is not part of the mandatory
+Free identity graph. It is generated only when `seoGeoAeoEnabled: true`, only
+from declared source fields, and must agree with visible HTML. Clickeen is never
+declared the author of customer facts.
+
+Pages remain visible to every tier. Free, Tier 1, and accounts downgraded into
+those tiers see the Pages domain and any retained Page inventory, but Roma blocks Page product
+actions through the standard Upgrade interaction before any write or generator
+call. SEO/GEO/AEO adds no downgrade generator branch, package rewrite,
+Page-currency rule, sitemap policy, or cleanup job. Public serving does not
+resolve account tier.
+
+Paid output has the same semantic baseline. When `branding.remove` removes
+branding, generated code contains no visible Clickeen promotional link. The
+neutral `meta[name="generator"]` remains because it identifies the generating
+software; it is not a link, visible promotion, or claim of content authorship.
+
+The Clickeen product pages and identity map are one contract. A generated URL
+or schema `@id` must resolve to a real public Clickeen page whose visible claims
+and JSON-LD agree. Unsupported language claims, placeholder URLs, hidden links,
+keyword-stuffed anchors, or improvised product descriptions are invalid.
+
+This can make Clickeen and its Widget products easier to discover and
+understand. It cannot guarantee ranking, indexing, rich results, AI citation,
+or answer placement.
 
 ## Current Operator Rule
 
@@ -122,7 +237,7 @@ serves the generated artifact.
 Clickeen SEO/GEO/AEO will operate by public surface:
 
 - by widget instance;
-- by page when page package serving exists.
+- by Page after its later generation and publication slices are implemented.
 
 Directionally, the system should produce crawlable, high-quality public
 surfaces from structured Clickeen artifacts. Translation/Babel overlays are a
@@ -131,9 +246,13 @@ locale-specific crawlable surfaces from overlays.
 
 No implemented SEO/GEO/AEO agent exists. Directionally, such an agent would
 measure, recommend, and improve public surface quality without mutating source
-truth silently. Exact cron jobs, telemetry, schema, routes, ranking feedback,
-answer-engine optimization, and page/widget output contracts are not specified
-here.
+truth silently. Exact cron jobs, telemetry, ranking feedback, and future
+automatic optimization are not specified here. The accepted deterministic
+generation contract is the PRD 127 target stated above.
+
+The Web Code Generator described by PRD 127 is deterministic code generation,
+not that future agent. Until 127B is deployed, current JavaScript branding and
+current generated-package behavior remain the runtime truth.
 
 ## Current Failure Semantics
 
@@ -143,7 +262,7 @@ here.
 | Missing or malformed package state | public serving returns `404` |
 | Missing package file | public serving returns `404` |
 | Package metadata/fingerprint mismatch | public serving returns `404` |
-| Public page request | `404` because page package serving is not active |
+| Public Page request | no Page public route exists in the current slice |
 | Operational path on public host | `404` |
 | `embed.seoGeo.enabled` absent from runtime consumer path | no SEO/GEO runtime gate is proven |
 
@@ -163,3 +282,9 @@ here.
 - `documentation/engineering/CloudflareOperations.md`
 - `documentation/services/tokyo-worker.md`
 - `documentation/capabilities/localization.md`
+- [Google Search structured-data guidelines](https://developers.google.com/search/docs/appearance/structured-data/sd-policies)
+- [Google crawlable-link guidance](https://developers.google.com/search/docs/crawling-indexing/links-crawlable)
+- [Google outbound-link qualification](https://developers.google.com/search/docs/crawling-indexing/qualify-outbound-links)
+- [Schema.org `sdPublisher`](https://schema.org/sdPublisher)
+- [Schema.org `WebApplication`](https://schema.org/WebApplication)
+- [Schema.org `availableLanguage`](https://schema.org/availableLanguage)

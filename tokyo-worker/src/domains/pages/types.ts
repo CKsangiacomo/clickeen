@@ -1,5 +1,3 @@
-export type PageServeState = 'published' | 'unpublished';
-
 export type PageOperationErrorKind =
   | 'VALIDATION'
   | 'NOT_FOUND'

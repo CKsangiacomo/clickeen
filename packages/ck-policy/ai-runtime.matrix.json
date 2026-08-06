@@ -136,6 +136,35 @@
           "timeoutMs": 60000
         },
         "maxTurnsPerThread": 50
+      },
+      "tier99": {
+        "defaultModel": {
+          "provider": "openai",
+          "model": "gpt-5.4-mini"
+        },
+        "modelsByProvider": {
+          "deepseek": {
+            "defaultModel": "deepseek-v4-flash",
+            "allowed": [
+              "deepseek-v4-flash",
+              "deepseek-v4-pro"
+            ]
+          },
+          "openai": {
+            "defaultModel": "gpt-5.4-mini",
+            "allowed": [
+              "gpt-5.4-mini",
+              "gpt-5.4",
+              "gpt-5.5"
+            ]
+          }
+        },
+        "allowModelPicker": true,
+        "budget": {
+          "maxTokens": 1600,
+          "timeoutMs": 60000
+        },
+        "maxTurnsPerThread": 50
       }
     },
     "widget.instance.translator": {
@@ -220,6 +249,26 @@
         "maxTurnsPerThread": 1
       },
       "tier4": {
+        "defaultModel": {
+          "provider": "openai",
+          "model": "gpt-5.4-mini"
+        },
+        "modelsByProvider": {
+          "openai": {
+            "defaultModel": "gpt-5.4-mini",
+            "allowed": [
+              "gpt-5.4-mini"
+            ]
+          }
+        },
+        "allowModelPicker": false,
+        "budget": {
+          "maxTokens": 2200,
+          "timeoutMs": 60000
+        },
+        "maxTurnsPerThread": 1
+      },
+      "tier99": {
         "defaultModel": {
           "provider": "openai",
           "model": "gpt-5.4-mini"

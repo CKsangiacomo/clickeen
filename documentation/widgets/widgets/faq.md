@@ -137,8 +137,7 @@ items.group.large.max -> faq.sections[].faqs[] total count
 
 FAQ appears in Clickeen Page source as a saved account widget instance
 placement. FAQ sections and questions remain widget Core state inside the
-instance. Public page package serving depends on Roma writing real page
-packages.
+instance.
 
 ## Verification
 

@@ -2,6 +2,7 @@ import {
   asTrimmedString,
   isRecord,
 } from '@clickeen/ck-contracts';
+import type { TranslationTarget } from '@clickeen/ck-contracts/translations';
 import {
   resolveAiRuntimeBudget,
   resolveAiRuntimePolicy,
@@ -19,6 +20,7 @@ import {
 } from './ai/grants';
 import { callTokyo } from './tokyo-client';
 import { fetchTranslationAgent } from './translation-agent-control';
+import { readAccountPage } from './account-pages';
 
 const TRANSLATION_AGENT_ID = 'widget.instance.translator';
 
@@ -181,6 +183,20 @@ function buildTranslationAgentItems(content: SavedInstanceSourcePayload['source'
     ...(field.identityKey ? { label: field.identityKey } : {}),
     ...(field.fieldPattern ? { role: field.fieldPattern } : {}),
   }));
+}
+
+function buildPageTranslationAgentItems(values: {
+  title: string;
+  description?: string;
+  socialTitle?: string;
+  socialDescription?: string;
+}): TranslationAgentItem[] {
+  return (['title', 'description', 'socialTitle', 'socialDescription'] as const).flatMap((path) => {
+    const value = values[path];
+    return typeof value === 'string'
+      ? [{ path, type: 'string' as const, value, label: path }]
+      : [];
+  });
 }
 
 function normalizeLocaleResult(raw: unknown): TranslationAgentLocaleResult | null {
@@ -351,7 +367,7 @@ function resolveTranslationAgentPolicy(authz: RomaAccountAuthzCapsulePayload): A
 async function issueTranslationAgentGrant(args: {
   authz: RomaAccountAuthzCapsulePayload;
   accountPublicId: string;
-  instanceId: string;
+  target: TranslationTarget;
   activeLocales: string[];
 }): Promise<{ grant: string; agentId: typeof TRANSLATION_AGENT_ID }> {
   const resolved = resolveAiAgent(TRANSLATION_AGENT_ID);
@@ -370,9 +386,9 @@ async function issueTranslationAgentGrant(args: {
     ai,
     trace: {
       accountPublicId: args.accountPublicId,
-      instanceId: args.instanceId,
+      translationTarget: args.target,
       activeLocales: args.activeLocales,
-      surfaceId: 'roma.account.instance.translations',
+      surfaceId: 'roma.account.translations',
       envStage: resolveEnvStage(),
     },
   };
@@ -423,9 +439,9 @@ export async function loadAccountInstanceTranslations(args: {
   return { ok: true, value };
 }
 
-export async function generateAccountInstanceTranslations(args: {
+export async function generateAccountTranslations(args: {
   accountId: string;
-  instanceId: string;
+  target: TranslationTarget;
   baseLocale: string;
   activeLocales: string[];
   authz: RomaAccountAuthzCapsulePayload;
@@ -437,6 +453,29 @@ export async function generateAccountInstanceTranslations(args: {
   const activeLocales = normalizeStringArray(args.activeLocales);
   if (!baseLocale) return invalidPayload('baseLocale_missing');
   if (!activeLocales) return invalidPayload('activeLocales_invalid');
+  let items: TranslationAgentItem[];
+  let widgetType: string | null = null;
+  if (args.target.kind === 'instance') {
+    const saved = await loadSavedInstanceSource({
+      accountId: args.accountId,
+      instanceId: args.target.id,
+      accountCapsule: args.accountCapsule,
+      requestId: args.requestId,
+    });
+    if (!saved.ok) return saved;
+    widgetType = saved.value.widgetType;
+    items = buildTranslationAgentItems(saved.value.source.content);
+  } else {
+    const saved = await readAccountPage({
+      accountId: args.accountId,
+      pageId: args.target.id,
+      accountCapsule: args.accountCapsule,
+      requestId: args.requestId,
+    });
+    if (!saved.ok) return saved;
+    if (saved.value.source.isTemplate) return invalidPayload('page_template_cannot_translate');
+    items = buildPageTranslationAgentItems(saved.value.source.values);
+  }
   if (activeLocales.length === 0) {
     return {
       ok: true,
@@ -454,22 +493,14 @@ export async function generateAccountInstanceTranslations(args: {
       },
     };
   }
-  const saved = await loadSavedInstanceSource({
-    accountId: args.accountId,
-    instanceId: args.instanceId,
-    accountCapsule: args.accountCapsule,
-    requestId: args.requestId,
-  });
-  if (!saved.ok) return saved;
-  const items = buildTranslationAgentItems(saved.value.source.content);
-  if (items.length === 0) return invalidPayload('saved_instance_has_no_translatable_fields');
+  if (items.length === 0) return invalidPayload('saved_target_has_no_translatable_fields');
 
   let issued: { grant: string; agentId: typeof TRANSLATION_AGENT_ID };
   try {
     issued = await issueTranslationAgentGrant({
       authz: args.authz,
       accountPublicId: args.accountId,
-      instanceId: args.instanceId,
+      target: args.target,
       activeLocales,
     });
   } catch (error) {
@@ -487,7 +518,7 @@ export async function generateAccountInstanceTranslations(args: {
   let response: Response;
   try {
     response = await fetchTranslationAgent({
-      path: '/translate-instance',
+      path: '/translate',
       method: 'POST',
       requestId: args.requestId,
       accept: args.onActivity ? 'text/event-stream' : 'application/json',
@@ -495,8 +526,8 @@ export async function generateAccountInstanceTranslations(args: {
         grant: issued.grant,
         agentId: issued.agentId,
         accountPublicId: args.accountId,
-        instanceId: args.instanceId,
-        widgetType: saved.value.widgetType,
+        target: args.target,
+        widgetType,
         baseLocale,
         requestedLocales: activeLocales,
         items,

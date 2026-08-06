@@ -34,6 +34,17 @@ Bob edits one instance in browser memory. Roma owns account routing, policy,
 and save operations. Tokyo-worker stores exact submitted files. Shared widget
 Shell utilities live under `tokyo/product/widgets/shared/`.
 
+PRD 127's accepted generation target keeps these ownership boundaries but moves
+final Free attribution from JavaScript-created DOM into generated initial HTML.
+In that target, each Widget's `index.html` is its only Widget-specific HTML
+template. One generic renderer moved into Web Code Generator applies structured
+values for every Widget; there are no per-Widget TypeScript HTML writers or
+render switches. The existing `ck-style-module` and `ck-runtime-module`
+markers remain the mandatory shared-module keys for Page assembly.
+The normative future contract is in `documentation/capabilities/seo-geo.md` and
+the current/cutover distinction is in `shared/ShellUtilities.md`. Until that
+slice deploys, the current runtime files remain operator truth.
+
 ## Operator Authority
 
 | Concern | Authority |

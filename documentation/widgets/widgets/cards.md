@@ -124,7 +124,6 @@ cards.appearance.cardwrapper
 
 Cards appears in Clickeen Page source as a saved account widget instance
 placement. Repeated card items remain widget Core state inside the instance.
-Public page package serving depends on Roma writing real page packages.
 
 ## Verification
 

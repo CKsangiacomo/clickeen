@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import type { RomaAccountAuthzCapsulePayload } from '@clickeen/ck-policy';
-import { generateAccountInstanceTranslations } from '../lib/account-instance-translations';
+import { generateAccountTranslations } from '../lib/account-instance-translations';
 
 const CLOUDFLARE_REQUEST_CONTEXT_SYMBOL = Symbol.for('__cloudflare-request-context__');
 const requestedLocales = ['fr', 'de', 'it'];
@@ -37,7 +37,20 @@ async function run(): Promise<void> {
     env: {
       ROMA_AI_GRANT_PRIVATE_KEY_PEM: privateKeyPem,
       TOKYO_PRODUCT_CONTROL: {
-        async fetch() {
+        async fetch(input: RequestInfo | URL) {
+          if (new URL(String(input)).pathname.includes('/__internal/pages/')) {
+            return Response.json({
+              source: {
+                pageId: '7UZXTP3TOI',
+                displayName: 'Summer page',
+                isTemplate: false,
+                baseLocale: 'en',
+                values: { title: 'Summer', description: 'Summer page' },
+                robots: 'index-follow',
+                placements: [],
+              },
+            });
+          }
           return Response.json({
             widgetType: 'faq',
             source: {
@@ -83,9 +96,9 @@ async function run(): Promise<void> {
   };
 
   const generate = () =>
-    generateAccountInstanceTranslations({
+    generateAccountTranslations({
       accountId: 'CLICKEEN',
-      instanceId: 'UZ3JEJSHII',
+      target: { kind: 'instance', id: 'UZ3JEJSHII' },
       baseLocale: 'en',
       activeLocales: requestedLocales,
       authz,
@@ -112,6 +125,21 @@ async function run(): Promise<void> {
     assert.ok(sentAgentRequest);
     assert.deepEqual(sentAgentRequest.requestedLocales, requestedLocales);
     assert.equal(Object.prototype.hasOwnProperty.call(sentAgentRequest, 'activeLocales'), false);
+    assert.deepEqual(sentAgentRequest.target, { kind: 'instance', id: 'UZ3JEJSHII' });
+
+    const pageResult = await generateAccountTranslations({
+      accountId: 'CLICKEEN',
+      target: { kind: 'page', id: '7UZXTP3TOI' },
+      baseLocale: 'en',
+      activeLocales: requestedLocales,
+      authz,
+      accountCapsule: 'test-capsule',
+      requestId: 'page-translation-outcome-test',
+    });
+    assert.equal(pageResult.ok, true, JSON.stringify(pageResult));
+    const pageAgentRequest = agentRequest as unknown as Record<string, unknown>;
+    assert.deepEqual(pageAgentRequest.target, { kind: 'page', id: '7UZXTP3TOI' });
+    assert.deepEqual((pageAgentRequest.items as Array<{ path: string }>).map((item) => item.path), ['title', 'description']);
 
     const valid = validAgentTranslation();
     const validResults = valid.results as Array<Record<string, unknown>>;

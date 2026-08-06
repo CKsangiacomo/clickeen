@@ -219,6 +219,53 @@ References from existing widget instances remain saved widget data. A user can
 repair or replace those references by editing the instance in Bob and saving
 through Roma.
 
+## Accepted Downgrade Storage Law
+
+Asset access and asset retention are separate:
+
+- the current tier's `storage.bytes.max` controls whether another upload is
+  allowed;
+- the account continues to own and see its existing assets after downgrade;
+- account management owns the 30-day downgrade grace and any automatic quota
+  cleanup;
+- Tokyo-worker remains the exact asset-byte deletion authority;
+- Roma remains the user-facing list/upload/delete surface and does not own an
+  automatic cleanup workflow.
+
+If a downgrade leaves the account above its new `storage.bytes.max`, the grace
+deadline is 30 days after the authoritative tier-change time. During grace:
+
+- all retained assets remain visible and usable;
+- the account can delete exact assets through the normal Roma route;
+- upgrading or manually reducing usage to the current allowance cancels the
+  need for automatic deletion;
+- uploads that would keep or put the account above the current allowance remain
+  blocked by the existing storage limit.
+
+After the deadline, if usage still exceeds the allowance, account management
+directs Tokyo-worker to delete the most recently uploaded assets until the sum
+of remaining `sizeBytes` is within `storage.bytes.max`. “Most recently uploaded”
+means descending stored `updatedAt`; equal timestamps use ascending `assetRef`
+as the deterministic tie-breaker. Cleanup stops immediately when usage fits.
+Missing/corrupt `sizeBytes`, `updatedAt`, or asset identity stops the operation
+and reports the exact account/asset failure; it never guesses or silently skips
+the bad record.
+
+Tokyo-worker validates the complete inventory, allowance, ordering fields, and
+size math before deleting the first asset. If deletion fails after one or more
+assets were already removed, it returns explicit partial failure with the
+completed deletions and remaining overage; it does not claim success. Any later
+attempt re-lists current storage truth before choosing further deletions.
+
+This cleanup may make an existing Instance/Page asset reference unresolved.
+Clickeen does not substitute another file or rewrite customer source. The
+customer can repair the reference after regaining the required product access.
+
+This is accepted product law, not current runtime behavior. Automatic 30-day
+cleanup is not implemented. It must be delivered through the existing account
+lifecycle and Tokyo asset authorities, not through a second asset store or a
+Roma-owned background cleanup system.
+
 ## Failure Semantics
 
 - Malformed Tokyo success payloads become Roma `502`.

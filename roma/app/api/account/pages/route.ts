@@ -1,113 +1,52 @@
-import { NextRequest, NextResponse } from 'next/server';
 import { isRecord } from '@clickeen/ck-contracts';
+import type { AccountPageSource } from '@clickeen/ck-contracts/pages';
 import { createCompactPageId } from '@clickeen/ck-contracts/overlay-identity';
-import {
-  createAccountPageInTokyo,
-  listAccountPagesInTokyo,
-} from '@roma/lib/account-page-direct';
-import type {
-  AccountPageMetadata,
-  AccountPageSource,
-} from '@roma/lib/account-page-direct';
-import { readJsonPayloadOrValidation } from '@roma/lib/route-helpers';
+import { readPolicyLimit, resolvePolicyFromEntitlementsSnapshot } from '@clickeen/ck-policy';
+import { NextRequest, NextResponse } from 'next/server';
+import { parseAccountPageSource } from '@roma/lib/account-page-contract';
+import { createAccountPage, listAccountPageSources } from '@roma/lib/account-pages';
 import { loadCurrentAccountLocalesState } from '@roma/lib/account-locales-state';
-import {
-  accountPageSummaryFromSource,
-  normalizeAccountPageSource,
-} from '@roma/lib/account-page-source';
-import {
-  resolveCurrentAccountRouteContext,
-  withSession,
-} from '../_lib/current-account-route';
+import { readJsonPayloadOrValidation } from '@roma/lib/route-helpers';
+import { resolveCurrentAccountRouteContext, withSession } from '../_lib/current-account-route';
 
 export const runtime = 'edge';
 
-function exactString(value: unknown): string | null {
-  return typeof value === 'string' && value === value.trim() ? value : null;
-}
+const CREATE_KEYS = ['displayName', 'isTemplate', 'values', 'robots', 'placements'] as const;
 
-function isValidCanonicalUrl(value: string): boolean {
-  if (value !== value.trim()) return false;
-  try {
-    const url = new URL(value);
-    return url.protocol === 'https:' || url.protocol === 'http:';
-  } catch {
-    return false;
-  }
-}
-
-function defaultPageMetadata(): AccountPageMetadata {
-  return { title: 'Untitled page', description: '', robots: 'index,follow' };
-}
-
-function pageMetadataFromCreatePayload(body: Record<string, unknown>): AccountPageMetadata | null {
-  if (!Object.prototype.hasOwnProperty.call(body, 'metadata')) return defaultPageMetadata();
-  const raw = body.metadata;
-  if (!isRecord(raw)) return null;
-  const title = Object.prototype.hasOwnProperty.call(raw, 'title') ? exactString(raw.title) : 'Untitled page';
-  const description = Object.prototype.hasOwnProperty.call(raw, 'description') ? exactString(raw.description) : '';
-  const robots = Object.prototype.hasOwnProperty.call(raw, 'robots') ? raw.robots : 'index,follow';
-  if (!title || description == null || (robots !== 'index,follow' && robots !== 'noindex,nofollow')) return null;
-  const canonicalUrl = Object.prototype.hasOwnProperty.call(raw, 'canonicalUrl') ? exactString(raw.canonicalUrl) : null;
-  if (Object.prototype.hasOwnProperty.call(raw, 'canonicalUrl') && (!canonicalUrl || !isValidCanonicalUrl(canonicalUrl))) return null;
-  return { title, description, robots, ...(canonicalUrl ? { canonicalUrl } : {}) };
-}
-
-function createPageSourceFromPayload(
-  raw: unknown,
-  accountId: string,
-  localePolicy: { baseLocale: string; ip: { countryToLocale: Record<string, string> } },
-): AccountPageSource | null {
-  if (!isRecord(raw)) return null;
-  const metadata = pageMetadataFromCreatePayload(raw);
-  if (!metadata) return null;
-  const displayName = Object.prototype.hasOwnProperty.call(raw, 'displayName')
-    ? exactString(raw.displayName)
-    : metadata.title;
-  if (!displayName) return null;
-  const now = new Date().toISOString();
+function parseOrdinaryPageDraft(raw: unknown): Omit<Extract<AccountPageSource, { isTemplate: false }>, 'pageId' | 'baseLocale'> | null {
+  if (!isRecord(raw) || Object.keys(raw).length !== CREATE_KEYS.length || !CREATE_KEYS.every((key) => Object.prototype.hasOwnProperty.call(raw, key))) return null;
+  const source = parseAccountPageSource({
+    pageId: '0000000000',
+    displayName: raw.displayName,
+    isTemplate: raw.isTemplate,
+    baseLocale: 'en',
+    values: raw.values,
+    robots: raw.robots,
+    placements: raw.placements,
+  });
+  if (!source || source.isTemplate) return null;
   return {
-    pageId: createCompactPageId(),
-    accountPublicId: accountId,
-    displayName,
-    metadata,
-    localization: {
-      defaultLocale: localePolicy.baseLocale,
-      ipLocalizationEnabled: false,
-      countryLocaleRules: Object.entries(localePolicy.ip.countryToLocale).map(([country, locale]) => ({
-        country,
-        locale,
-      })),
-      languageSwitcherEnabled: false,
-      missingLocaleBehavior: 'block_publish',
-    },
-    placements: [],
-    revision: 1,
-    createdAt: now,
-    updatedAt: now,
+    displayName: source.displayName,
+    isTemplate: false,
+    values: source.values,
+    robots: source.robots,
+    placements: source.placements,
   };
 }
 
 export async function GET(request: NextRequest) {
   const current = await resolveCurrentAccountRouteContext({ request, minRole: 'viewer' });
   if (!current.ok) return current.response;
-
-  const accountId = current.value.authzPayload.accountPublicId;
-  const result = await listAccountPagesInTokyo({
-    accountId,
+  const result = await listAccountPageSources({
+    accountId: current.value.authzPayload.accountPublicId,
     accountCapsule: current.value.authzToken,
     requestId: current.value.requestId,
   });
-  if (!result.ok) {
-    return withSession(
-      request,
-      NextResponse.json({ error: result.error }, { status: result.status }),
-      current.value.setCookies,
-    );
-  }
   return withSession(
     request,
-    NextResponse.json({ accountId, pages: result.value.pages }),
+    result.ok
+      ? NextResponse.json({ accountId: result.value.accountId, sources: result.value.sources })
+      : NextResponse.json({ error: result.error }, { status: result.status }),
     current.value.setCookies,
   );
 }
@@ -115,90 +54,63 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   const current = await resolveCurrentAccountRouteContext({ request, minRole: 'editor' });
   if (!current.ok) return current.response;
-
-  const bodyResult = await readJsonPayloadOrValidation<unknown>(request);
+  const bodyResult = await readJsonPayloadOrValidation<{ source?: unknown } | null>(request);
   if (!bodyResult.ok) {
-    return withSession(
-      request,
-      NextResponse.json({ error: bodyResult.error }, { status: bodyResult.status }),
-      current.value.setCookies,
-    );
+    return withSession(request, NextResponse.json({ error: bodyResult.error }, { status: bodyResult.status }), current.value.setCookies);
+  }
+  const draft = parseOrdinaryPageDraft(bodyResult.payload?.source);
+  if (!draft) {
+    return withSession(request, NextResponse.json({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.page.sourceInvalid' } }, { status: 422 }), current.value.setCookies);
   }
 
   const accountId = current.value.authzPayload.accountPublicId;
-  const accountLocales = await loadCurrentAccountLocalesState({
+  const existing = await listAccountPageSources({ accountId, accountCapsule: current.value.authzToken, requestId: current.value.requestId });
+  if (!existing.ok) {
+    return withSession(request, NextResponse.json({ error: existing.error }, { status: existing.status }), current.value.setCookies);
+  }
+  const policy = resolvePolicyFromEntitlementsSnapshot({
+    profile: current.value.authzPayload.profile,
+    role: current.value.authzPayload.role,
+    entitlements: current.value.authzPayload.entitlements ?? null,
+  });
+  let limit: number | null;
+  try {
+    limit = readPolicyLimit(policy, 'pages.max');
+  } catch (error) {
+    return withSession(request, NextResponse.json({
+      error: { kind: 'UPSTREAM_UNAVAILABLE', reasonKey: 'roma.errors.policy.invalidEntitlement', detail: error instanceof Error ? error.message : String(error) },
+    }, { status: 500 }), current.value.setCookies);
+  }
+  if (limit !== null && existing.value.sources.length >= limit) {
+    return withSession(request, NextResponse.json({
+      ok: false,
+      kind: 'UPGRADE_REQUIRED',
+      upgrade: { gate: 'pages.max', action: 'create_page', current: existing.value.sources.length, limit },
+    }, { status: 402 }), current.value.setCookies);
+  }
+
+  const locales = await loadCurrentAccountLocalesState({
     accessToken: current.value.accessToken,
     accountId: current.value.authzPayload.accountId,
     requestId: current.value.requestId,
-  }).catch((error) => ({
-    ok: false as const,
-    status: 502,
-    payload: {
-      error: {
-        kind: 'UPSTREAM_UNAVAILABLE',
-        reasonKey: 'coreui.errors.auth.contextUnavailable',
-        detail: error instanceof Error ? error.message : String(error),
-      },
-    },
-  }));
-  if (!accountLocales.ok) {
-    return withSession(
-      request,
-      NextResponse.json(
-        accountLocales.payload ?? {
-          error: {
-            kind: accountLocales.status === 401 ? 'AUTH' : 'UPSTREAM_UNAVAILABLE',
-            reasonKey:
-              accountLocales.status === 401
-                ? 'coreui.errors.auth.required'
-                : 'coreui.errors.auth.contextUnavailable',
-          },
-        },
-        { status: accountLocales.status },
-      ),
-      current.value.setCookies,
-    );
-  }
-
-  const source = createPageSourceFromPayload(bodyResult.payload, accountId, accountLocales.localePolicy);
-  const normalizedSource = normalizeAccountPageSource(source, { accountId, pageId: source?.pageId });
-  if (!source || !normalizedSource) {
-    return withSession(
-      request,
-      NextResponse.json(
-        { error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.page.sourceInvalid' } },
-        { status: 422 },
-      ),
-      current.value.setCookies,
-    );
-  }
-  const summary = accountPageSummaryFromSource(normalizedSource);
-
-  const result = await createAccountPageInTokyo({
-    accountId,
-    accountCapsule: current.value.authzToken,
-    source: normalizedSource,
-    requestId: current.value.requestId,
   });
-  if (!result.ok) {
-    return withSession(
-      request,
-      NextResponse.json({ error: result.error }, { status: result.status }),
-      current.value.setCookies,
-    );
+  if (!locales.ok) {
+    return withSession(request, NextResponse.json(locales.payload ?? {
+      error: { kind: 'UPSTREAM_UNAVAILABLE', reasonKey: 'coreui.errors.auth.contextUnavailable', detail: locales.detail },
+    }, { status: locales.status }), current.value.setCookies);
   }
+  const source: AccountPageSource = {
+    pageId: createCompactPageId(),
+    ...draft,
+    isTemplate: false,
+    baseLocale: locales.localePolicy.baseLocale,
+  };
+  const created = await createAccountPage({ accountId, source, accountCapsule: current.value.authzToken, requestId: current.value.requestId });
   return withSession(
     request,
-    NextResponse.json(
-      {
-        accountId,
-        pageId: result.value.source.pageId,
-        source: result.value.source,
-        summary,
-        publishStatus: result.value.publishStatus,
-      },
-      { status: 201 },
-    ),
+    created.ok
+      ? NextResponse.json({ accountId, source: created.value.source }, { status: 201 })
+      : NextResponse.json({ error: created.error }, { status: created.status }),
     current.value.setCookies,
   );
 }

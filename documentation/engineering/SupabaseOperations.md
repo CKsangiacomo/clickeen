@@ -7,7 +7,7 @@ product data: accounts, users, account invitations, account locale settings,
 instance registry rows, and translation generation operation rows.
 
 Supabase does not own widget instance source, account assets, translated locale
-overlays, generated public packages, or page package files. Those live in
+overlays, generated public packages, or Page authoring/runtime files. Those live in
 Tokyo/R2.
 
 Additional billing, support, usage, reporting, or governance tables may belong
@@ -235,6 +235,12 @@ Migration requirements:
 - do not silently repair corrupt product state without an explicit migration
   comment and rollback/recovery reasoning;
 - do not recreate deleted pre-GA widget-instance tables or storage authority.
+
+The 127A Tier99 change is two ordered migrations: first add `tier99` to the
+account-tier enum and allowed-values constraint, then assign it to the one
+`CLICKEEN` account. Deploy tier99-aware Berlin, Roma, policy, and agent
+consumers before applying the assignment migration. Never assign Tier99 through
+an ad hoc Studio edit.
 
 ## Repair Applied Versions
 

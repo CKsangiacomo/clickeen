@@ -1,4 +1,5 @@
 import type { AiGrantPolicy } from '@clickeen/ck-contracts/ai';
+import type { TranslationTarget } from '@clickeen/ck-contracts/translations';
 import { mintRomaAiGrant } from '@clickeen/ck-policy';
 import { getOptionalCloudflareRequestContext } from '../cloudflare-request-context';
 
@@ -18,6 +19,7 @@ export type RomaAIGrant = {
     sessionId?: string;
     accountPublicId?: string;
     instanceId?: string;
+    translationTarget?: TranslationTarget;
     activeLocales?: string[];
     surfaceId?: string;
     envStage?: string;

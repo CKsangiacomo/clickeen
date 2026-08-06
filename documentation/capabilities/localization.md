@@ -16,12 +16,31 @@ one saved base source
 Translation is content work. It does not create another widget artifact,
 publication state, delivery file, or cache lifecycle.
 
+PRD 127 keeps that rule. Its Web Code Generator target uses the same
+exact `baseLocale` and overlay truth when it writes semantic HTML, attribution,
+and structured data. The served locale must agree across visible content,
+`<html lang>`, structured-data `inLanguage`, canonical/alternate relationships,
+and cache identity. A translation command still does not invent Clickeen
+language-support claims or trigger a hidden generator/publication operation.
+For ordinary Pages, the current authoring shape is equally direct:
+
+```text
+accounts/{accountPublicId}/pages/{pageId}/source.json
+accounts/{accountPublicId}/pages/{pageId}/overlays/locales/{locale}.json
+```
+
+`source.json` owns the Page `baseLocale`. Account Settings—not the Page—owns the
+selected exact locale list used by Generate translations. Each non-base Page
+locale is one separate exact overlay object. Page templates have no
+`baseLocale` and no translations. Page compilation and public serving belong to
+later 127 slices.
+
 ## Code Authority
 
 | Concern | Authority |
 | --- | --- |
 | Account locale policy | Roma account locale routes and account storage |
-| Translation command | Bob `TranslationsPanel` -> Roma translation route |
+| Translation command | Product control -> Roma `/api/account/translations/generate` |
 | Translation operation | Translation Agent -> San Francisco |
 | Saved text extraction and exact overlay validation | Tokyo-worker account translation domain |
 | Overlay storage | Tokyo R2 `overlays/locales/{locale}.json` |
@@ -34,10 +53,12 @@ publication state, delivery file, or cache lifecycle.
 ```text
 Roma current account/session
 -> accountPublicId
--> saved account instance
+-> target `{ kind: instance | page, id }`
+-> saved target source
 -> exact locale coordinate
+-> Translation Agent
 -> Tokyo-worker
--> accounts/{accountPublicId}/instances/{instanceId}/overlays/locales/{locale}.json
+-> exact target overlay path
 ```
 
 Public serving adds the single publication coordinate:
@@ -69,12 +90,14 @@ they do not silently rewrite the base source.
 
 ## Generate Translations
 
-1. Bob requires a saved, clean instance and at least one active non-base locale.
+1. Generate translations requires a saved ordinary Instance or Page and at
+   least one active non-base locale.
 2. Roma resolves current account/session and entitlement truth.
-3. Roma asks the Translation Agent for exact requested locale results.
+3. Roma reads the saved target and sends its translatable values to the same
+   Translation Agent operation.
 4. San Francisco translates the supplied saved text items.
-5. Tokyo-worker accepts only complete exact overlay value maps and writes each
-   overlay.
+5. Tokyo-worker writes each completed exact overlay to the target's existing
+   overlay path.
 6. Roma returns:
 
    ```text
@@ -83,9 +106,12 @@ they do not silently rewrite the base source.
    failedLocales
    ```
 
-7. Bob reports those outcomes and refreshes translated preview state.
+7. The calling product surface reports those outcomes.
 
-No later artifact step exists.
+For a Page, only `title`, `description`, `socialTitle`, and
+`socialDescription` are translated. `socialImageAssetRef`, placements, robots,
+and every other Page value are not translation inputs. No compilation or
+publication step runs as part of translation generation.
 
 ## Overlay Contract
 

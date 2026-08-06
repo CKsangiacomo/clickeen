@@ -31,7 +31,7 @@ Michael does not own:
 - account assets;
 - translated locale overlay files;
 - generated public packages;
-- page package files;
+- Page source and Page locale overlay files;
 - public serving bytes.
 
 Those are Tokyo/R2-owned runtime files under `accounts/{accountPublicId}/...`.
@@ -83,7 +83,7 @@ Current enum values:
 | Enum | Values |
 | --- | --- |
 | `public.account_status` | `active`, `suspended` |
-| `public.account_tier` | `free`, `tier1`, `tier2`, `tier3`, `tier4` |
+| `public.account_tier` | `free`, `tier1`, `tier2`, `tier3`, `tier4`, `tier99` |
 | `public.user_role` | `owner`, `admin`, `editor`, `viewer` |
 | `public.login_provider` | `google` |
 | `public.invitation_status` | `pending`, `accepted`, `revoked` |

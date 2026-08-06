@@ -58,9 +58,9 @@ async function testEveryWidgetBuildsOneRootPackage(): Promise<void> {
 
 async function testTranslationAndSettingsAreOverlayOnly(): Promise<void> {
   const generation = await readSource(
-    'roma/app/api/account/instances/[instanceId]/translations/generate/route.ts',
+    'roma/app/api/account/translations/generate/route.ts',
   );
-  assert.match(generation, /generateAccountInstanceTranslations/);
+  assert.match(generation, /generateAccountTranslations/);
   assert.doesNotMatch(generation, /materializeRuntimePackage|localePackages|LocalePackage/);
 
   const settings = await readSource('roma/app/api/account/locales/route.ts');

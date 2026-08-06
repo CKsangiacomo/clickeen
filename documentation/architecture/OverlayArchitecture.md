@@ -42,6 +42,27 @@ The overlay body is exact:
 
 There is no instance-level locale artifact subtree.
 
+## Page Authoring Overlays
+
+Page authoring uses the same separate exact-file law:
+
+```text
+accounts/{accountPublicId}/pages/{pageId}/
+  source.json
+  overlays/
+    locales/
+      {locale}.json
+```
+
+`source.json` owns `baseLocale` and the selected locale list. Each non-base
+locale is one exact Page overlay file; Page overlays are not stored inline in
+`source.json`. This lets Translation Agent write locales independently without
+one concurrent result replacing another.
+
+Page templates have no locales and no locale overlay files. Page compilation
+and its generated serving files belong to later 127 slices and are not current
+runtime behavior.
+
 ## Field Authority
 
 `instance.content.json` owns the current saved text-field set. Every overlay
@@ -82,6 +103,10 @@ to the base language.
 | Save instance source | Roma -> Tokyo-worker; updates source and the one root runtime only |
 | Publish/unpublish | Tokyo-worker owns the single `serve-state.json` |
 | Public localized read | Tokyo-worker reads the one root artifact and exact overlay |
+
+The same Generate translations operation accepts an Instance or Page target.
+For a Page, it writes only the translated Page metadata values to the exact Page
+locale overlay path. It does not compile or publish the Page.
 
 ## Failure Semantics
 

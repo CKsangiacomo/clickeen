@@ -141,8 +141,7 @@ are Core-owned under `countdown.appearance.*`.
 
 Countdown appears in Clickeen Page source as a saved account widget instance
 placement. Timer runtime behavior belongs to the instance package served from
-the account folder. Public page package serving depends on Roma writing real
-page packages.
+the account folder.
 
 ## Verification
 

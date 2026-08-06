@@ -4,7 +4,7 @@ import type { AIGrant } from './types';
 import { HttpError, asNumber, asString, isRecord } from './http';
 
 const AI_PROVIDER_SET = new Set<AiProvider>(['deepseek', 'openai']);
-const AI_POLICY_PROFILE_SET = new Set<AiPolicyProfile>(['free', 'tier1', 'tier2', 'tier3', 'tier4']);
+const AI_POLICY_PROFILE_SET = new Set<AiPolicyProfile>(['free', 'tier1', 'tier2', 'tier3', 'tier4', 'tier99']);
 
 function isAiGrantIssuer(value: string): value is AIGrant['iss'] {
   return value === 'roma';

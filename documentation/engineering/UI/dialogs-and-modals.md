@@ -82,6 +82,12 @@ a dialog seems low-risk.
 
 ## Upsell Transition
 
+Tier-gated controls remain visible and clickable. When a blocked attempt occurs,
+the underlying value or product state remains unchanged and the existing
+plan-limit/Upsell dialog path opens. The control itself is not disabled or
+replaced with a lock treatment. `interactions.md` owns this product behavior;
+this section owns only the resulting dialog transition.
+
 Legitimate Upgrade entry points remain during pre-GA development. When Upgrade
 starts inside a plan-limit prompt, that prompt transitions to the shared upsell
 dialog scaffold in the same dialog layer. Do not stack two modals.

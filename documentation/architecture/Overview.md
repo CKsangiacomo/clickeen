@@ -58,6 +58,21 @@ Clickeen is a simple account product.
 - Roma is the account app. Roma routes the user to the current account,
   enforces tier/product policy, and saves account work through owner services.
 - Tokyo-worker stores and serves account runtime files in R2.
+- Accepted product law for new or changed surfaces: everything is visible to
+  every tier; access is controlled by tier. This does not expose another
+  account's data or bypass user-role authorization. Existing surfaces remain
+  current only where their owning runtime and service document prove
+  conformance.
+- Accepted lifecycle law: tier controls creation and product use. Account management controls storage
+  retention and deletion over the account lifecycle. Tokyo-worker performs the
+  exact approved byte operation. Account management is a responsibility, not a
+  new service or storage layer.
+- Downgrade retains account-created product truth. The one automatic downgrade
+  deletion exception is asset usage above the new `storage.bytes.max`: assets
+  remain visible and usable for 30 days, then the most recently uploaded assets
+  are deleted only until usage fits. Whole-account deletion is the only
+  operation that purges the complete account root. Automatic asset cleanup and
+  complete account-root deletion are not implemented in the current runtime.
 - Berlin owns authentication and account session bootstrap.
 - San Francisco owns governed model execution.
 - Built agents live under `agents/<name>` and operate their product boundary.
@@ -75,10 +90,11 @@ CLICKEEN
 | --- | --- | --- |
 | Authentication and session bootstrap | Berlin | `berlin/` |
 | Current account and account product routes | Roma | `roma/` |
+| Account storage lifecycle | Account management | Berlin account/tier timing truth plus approved Tokyo-worker byte operations |
 | Builder editing state | Bob | `bob/` browser-memory session |
 | Account runtime storage | Tokyo-worker | `tokyo-worker/` over Tokyo R2 |
 | Product widget software | Git-authored Tokyo product root | `tokyo/product/widgets/` deployed to `product/widgets/` |
-| Public widget serving | Tokyo-worker public serving | generated instance files under `accounts/{accountPublicId}/...`; page public serving is disabled until Roma writes page packages |
+| Public widget serving | Tokyo-worker public serving | generated Instance files under `accounts/{accountPublicId}/...`; Page public serving is not implemented in the current slice |
 | Relational account/support data | Michael/Supabase | `supabase/migrations/` and service-owned routes |
 | Model execution | San Francisco | `sanfrancisco/` |
 | Product Copilot brain | Product Copilot Worker | `agents/product-copilot/` |
@@ -142,10 +158,9 @@ accounts/{accountPublicId}/
   pages/
     {pageId}/
       source.json
-      serve-state.json              # when submitted
-      index.html                    # when submitted
-      styles.css                    # when submitted
-      runtime.js                    # when submitted
+      overlays/
+        locales/
+          {locale}.json
 ```
 
 The non-account roots are git-authored deploy artifacts:
@@ -213,17 +228,16 @@ contract.
 
 ### Account Pages
 
-Pages are account-owned stacks of saved instances. Roma owns page source rules
-and product actions. Tokyo-worker stores the exact page source/package files
-that Roma submits under:
+Pages are account-owned ordered collections of saved Instances. Roma owns Page
+source validation and Save. Tokyo-worker stores exact Page source and Page
+locale overlays under:
 
 ```text
 accounts/{accountPublicId}/pages/{pageId}/
 ```
 
-Page publish and public page serving are currently disabled. Tokyo-worker parses
-page public routes but returns `404`, and internal publish returns
-`coreui.errors.page.publishUnavailable` until Roma writes page packages.
+Page UI, compilation, publication, and public serving are not implemented in
+the current slice. There is no placeholder public Page route or publish command.
 
 ### Translation Overlays
 

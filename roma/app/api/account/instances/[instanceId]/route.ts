@@ -3,8 +3,8 @@ import {
   deleteAccountInstanceFromTokyo,
   saveAccountInstanceInTokyo,
 } from '@roma/lib/account-instance-direct';
-import { listAccountPageSourcesInTokyo } from '@roma/lib/account-page-direct';
-import { pageIdsPlacingInstance } from '@roma/lib/account-page-source';
+import { pageIdsPlacingInstance } from '@roma/lib/account-page-contract';
+import { listAccountPageSources } from '@roma/lib/account-pages';
 import {
   readWidgetForInstancePackage,
   materializeAccountInstancePublicPackage,
@@ -232,7 +232,7 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
     );
   }
 
-  const pageSources = await listAccountPageSourcesInTokyo({
+  const pageSources = await listAccountPageSources({
     accountId,
     accountCapsule: current.value.authzToken,
     requestId: current.value.requestId,

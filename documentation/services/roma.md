@@ -100,10 +100,20 @@ Upgrade to inactive Billing or add a global upsell store/framework. The scaffold
 performs no purchase, plan mutation, provider call, fake success, or invented
 contact operation. When the intent starts in a plan-limit prompt, Roma replaces
 that prompt instead of stacking dialogs. Ordinary Billing navigation remains
-valid for inspecting the current plan. Roma's native dialogs and Bob's typed
-intent implement this behavior directly. The Builder discard guard remains on
+valid for inspecting the current plan.
+
+The Builder discard guard remains on
 real navigation only. Final 126M integration re-verified this behavior through
 the deployed Bob-to-Roma intent path.
+
+**Everything is visible to every tier; access is controlled by tier.** This is
+the normative rule for new or changed Roma surfaces, not a claim that every
+legacy surface has been audited. Roma keeps domains, retained account objects,
+and tier-gated actions visible. An
+attempted action that the current tier does not allow makes no product change
+and opens the standard Upgrade dialog. This law does not grant cross-account
+visibility or bypass role authorization. The complete interaction contract is
+owned by `documentation/engineering/UI/interactions.md`.
 
 ## Runtime Routes
 
@@ -320,8 +330,8 @@ Instance ID, and Actions. Published uses a left-aligned Dieter Toggle and, only
 for a published instance, a small Copy code action that opens Roma's shared
 public-code Popup. Edit is the direct row action; Rename, Duplicate, and Delete
 remain in one ellipsis menu. The header status filter and the Widget, Instance
-name, and Published sorts are client-side projections over the validated
-account list. Their headers use the shared `xs` Dieter sort control: the active
+name, and Published sorts run over the validated account list in the browser.
+Their headers use the shared `xs` Dieter sort control: the active
 sort is black and inactive sorts are gray.
 
 **Widget catalog** renders the canonical widget definitions as Dieter-styled
@@ -418,32 +428,35 @@ Roma treats malformed successful Tokyo asset delete responses as upstream
 contract failures. A delete is success only when the response names the current
 account public id, the exact asset reference, and `deleted: true`.
 
+Tier policy controls whether the account may upload another asset. Account
+management controls retained storage after a downgrade. If current usage is
+above the new `storage.bytes.max`, Roma keeps the inventory visible and usable,
+shows the authoritative 30-day grace state, accepts ordinary user-authorized
+exact deletes, and keeps over-limit Upload as an Upgrade-gated action. Roma does
+not run automatic quota cleanup. After the deadline, account management directs
+Tokyo-worker to delete the most recently uploaded assets until usage fits the
+allowance. This automatic cleanup is accepted product law but is not implemented
+in the current runtime.
+
 ## Pages Domain
 
-Roma owns the account page product surface. Account pages are stacks of saved
-widget instances. Page source and any generated page packages live in Tokyo under:
+Roma owns account Page source operations. A Page is an ordered collection of
+saved Widget Instances. Page authoring files live in Tokyo under:
 
 ```text
 accounts/{accountPublicId}/pages/{pageId}/
 ```
 
-Roma validates current-account access, policy, page source shape, page source
-save stamps, list summaries, and placement product rules. It asks Tokyo-worker
-to read or write the named account page object. Current account page publish is
-disabled until Roma has a real page package writer. Public page copy/open actions
-are disabled until that writer exists. While a page is published, Roma requires
-unpublish before page source edit or delete.
+Roma validates current-account access, exact Page source shape, and
+`pages.max`. First Save is the only operation that creates a Page: Roma checks
+the limit before minting the Page id, reads the account base locale, then asks
+Tokyo-worker to store the source. Later Save replaces that exact source. A
+draft that the user leaves without Save exists only in browser memory.
 
-The page header owns Create page and Refresh through the same direct
-domain-to-shell action contract. The page list uses the Dieter table contract;
-Page, Page ID, and Placements use inline labels with small Dieter icon buttons
-for sorting, using the same `xs` active-black/inactive-gray Table contract.
-
-Current page source references saved widget instances by placement id and
-instance id. It does not embed widget source and does not currently store child
-widget artifact references. Any shift to generated child artifact coordinates,
-child evidence, or page package materialization belongs to a future Page Package
-PRD.
+Current Page source references saved Widget Instances by placement id and
+instance id. It does not embed or copy Instance source. Page templates have no
+locales. Page UI, compilation, publication, and public serving are not
+implemented in the current slice.
 
 ## Team, Profile, Settings
 

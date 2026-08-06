@@ -31,7 +31,7 @@ async function testBobSaveHasNoPartialLocalizationBranch(): Promise<void> {
 
 async function testExplicitTranslationRouteSurvives(): Promise<void> {
   const translationRouteSource = await readSource(
-    'roma/app/api/account/instances/[instanceId]/translations/generate/route.ts',
+    'roma/app/api/account/translations/generate/route.ts',
   );
   const translationValuesRouteSource = await readSource(
     'roma/app/api/account/instances/[instanceId]/translations/[locale]/route.ts',
@@ -41,9 +41,9 @@ async function testExplicitTranslationRouteSurvives(): Promise<void> {
   );
   const panelSource = await readSource('bob/components/TranslationsPanel.tsx');
 
-  assert.match(translationRouteSource, /generateAccountInstanceTranslations/);
-  assert.match(translationRouteSource, /activeLocalesToGenerate/);
-  assert.match(translationRouteSource, /generateAccountInstanceTranslations\(\{[\s\S]*onActivity: activity/);
+  assert.match(translationRouteSource, /generateAccountTranslations/);
+  assert.match(translationRouteSource, /activeLocales/);
+  assert.match(translationRouteSource, /target/);
   assert.doesNotMatch(translationRouteSource, /materializeRuntimePackage|localePackages|LocalePackage/);
   assert.match(panelSource, /Generate translations/);
   assert.match(panelSource, /generateTranslations/);

@@ -9,7 +9,7 @@ Last updated: 2026-07-30
 | Bob preview | compiled widget software plus in-memory editor state |
 | Saved instance | one stored root `index.html`, `styles.css`, and `runtime.js` |
 | Localized saved instance | the same root artifact plus one exact stored overlay |
-| Composed page | page-owned composition over referenced saved instances |
+| Saved Page | exact Page source plus exact Page locale overlays; no current public runtime |
 
 ## Local Runtime Rule
 

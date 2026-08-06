@@ -106,6 +106,11 @@ Host services transport them. Surfaces render them.
 - Tokyo is responsible for account runtime storage in R2.
 - Roma is the app. Roma routes the user to their account, enforces the user's
   tier, and saves what the user does.
+- Accepted product law for new or changed surfaces: everything is visible to
+  every tier; access is controlled by tier. A blocked action changes nothing and
+  uses the standard Upgrade interaction. This never exposes another account's
+  data or bypasses user-role authorization. Existing surfaces are not assumed
+  compliant until their owning runtime and service document prove it.
 - Roma owns widget inventory product meaning. Tokyo returns exact account
   instance storage coordinates and exact row facts, not tier decisions or
   product-shaped inventory summaries.
@@ -131,8 +136,16 @@ Clickeen is a simple account product.
 - Bob is the Builder editor: it edits one widget instance in browser memory and
   returns the saved result through Roma.
 - Tokyo stores and serves account runtime data through Tokyo-worker and R2.
+- Tier controls creation/use; account management controls storage lifecycle.
+  Downgrade retains account-created product truth. The one automatic downgrade
+  deletion is asset overage after a 30-day grace period; account deletion is the
+  only operation that purges the complete account root. This is accepted
+  lifecycle law; automatic asset cleanup is not implemented in the current
+  runtime.
 - Berlin owns authentication and account session bootstrap.
-- Clickeen admin work uses the normal admin account.
+- Clickeen operations use the normal `CLICKEEN` account with the internal-only
+  `tier99` policy profile. `tier99` is not a customer tier and is not a role or
+  authorization bypass.
 - UI capability follows one forward-looking rule: resolution determines
   sharpness, available workspace determines layout, and form factor determines
   the expected product experience. Operational dashboards preserve the desktop
@@ -230,10 +243,9 @@ accounts/{accountPublicId}/
   pages/
     {pageId}/
       source.json
-      serve-state.json              # when submitted
-      index.html                    # when submitted
-      styles.css                    # when submitted
-      runtime.js                    # when submitted
+      overlays/
+        locales/
+          {locale}.json
 ```
 
 Each instance has one root runtime. Translation generation writes only
@@ -285,15 +297,13 @@ route. They are classified as vector assets by Tokyo-worker.
 
 ### Clickeen Pages
 
-1. Roma manages Clickeen Page source, source save stamps, summaries, and
-   placement product rules.
+1. Roma validates and saves Clickeen Page source for the current account.
 2. A Clickeen Page is an ordered stack of saved account widget instance
    placements.
-3. Tokyo-worker stores page source, serve-state, and any submitted page package
-   files under the account page folder.
-4. Page publish and public page serving are currently disabled because Roma
-   does not currently write page packages.
-5. Published page source cannot be edited or deleted until Roma unpublishes it.
+3. Tokyo-worker stores exact Page source and Page locale overlay files under the
+   account Page folder.
+4. Page UI, compilation, publication, and public serving are not implemented in
+   the current slice.
 
 ### Clickeen-Owned Examples
 

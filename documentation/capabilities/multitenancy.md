@@ -27,7 +27,7 @@ Canonical account-management architecture:
 | Roma tier-drop dismiss route | `roma/app/api/account/lifecycle/tier-drop/dismiss/route.ts` |
 | Roma account asset upload | `roma/app/api/account/assets/upload/route.ts` |
 | Roma instance create/save/publish routes | `roma/app/api/account/instances/**` |
-| Roma page publish disabled route | `roma/app/api/account/pages/[pageId]/publish/route.ts` |
+| Roma Page source routes | `roma/app/api/account/pages/**` |
 | Roma instance save policy | `roma/lib/account-instance-save-policy.ts` |
 | Policy resolver | `packages/ck-policy/src/policy.ts` |
 | Policy registry/matrix | `packages/ck-policy/src/registry.ts`, `packages/ck-policy/entitlements.matrix.json` |
@@ -49,7 +49,9 @@ Current account truth:
 - role lives on `users.role`;
 - `accounts.id` is the compact account product/storage coordinate;
 - `accountPublicId` is the API/embed/authz field name for that same value;
-- Clickeen admin uses the normal `CLICKEEN` account.
+- Clickeen operations use the normal `CLICKEEN` account. Its `tier99` profile
+  is internal-only, not sold to customers, and does not change role checks or
+  account isolation.
 
 Current relational truth lives in:
 
@@ -184,6 +186,29 @@ Operational examples:
 - Copilot grant issuance enforces `copilot.turns.monthly.max`; missing or
   malformed `USAGE_KV` counters fail closed.
 
+Universal product law:
+
+```text
+everything is visible to every tier; access is controlled by tier
+```
+
+This applies inside the authenticated current account and never grants
+cross-account visibility or bypasses role authorization. Tier policy decides
+which create, edit, publish, and use commands the account may perform now.
+Account management decides how retained account storage changes over the
+account lifecycle. A downgrade keeps existing Instances, Pages, templates,
+overlays, generated files, and assets visible; blocked commands remain visible
+and use the standard Upgrade interaction without mutation.
+
+The one automatic downgrade deletion exception is asset storage overage. The
+account has 30 days from the authoritative downgrade time to delete assets or
+upgrade. If usage still exceeds `storage.bytes.max`, account management directs
+Tokyo-worker to delete assets by descending `updatedAt`, with ascending
+`assetRef` as the deterministic tie-break, only until usage fits. Ordinary
+user-authorized deletes remain valid. Whole-account storage deletion occurs only
+through the account-deletion lifecycle. Neither automatic downgraded-asset
+cleanup nor whole-account root deletion exists in the current runtime.
+
 ### Verify Account-Owned Files
 
 Account-owned runtime files use:
@@ -231,6 +256,7 @@ Current finite instance limits:
 | `tier2` | 25 | 5 |
 | `tier3` | 100 | 25 |
 | `tier4` | 250 | 100 |
+| `tier99` | 250 | 100 |
 
 Invariant:
 
@@ -252,6 +278,34 @@ Operator warning: `packages/ck-policy/src/registry.ts` currently marks
 `embed.seoGeo.enabled` as `enforced`, but runtime evidence does not prove an
 active consumer in Roma save, Roma publish, or Tokyo-worker public serving.
 Treat this row as conflicting policy metadata until code and registry agree.
+
+PRD 127's accepted target keeps two existing keys separate:
+
+- `branding.remove` controls whether generated public HTML contains visible
+  Clickeen attribution;
+- `embed.seoGeo.enabled` controls whether an ordinary Widget Instance may save
+  its enabled customer SEO/GEO/AEO choice.
+
+Neither key controls whether the generated HTML contains the customer's primary
+content. Free Widget attribution is mandatory when `branding.remove` is false;
+the Web Code Generator writes it into initial HTML. This is planned 127 behavior,
+not a claim that the current runtime gap has already closed.
+
+Ordinary Pages have no SEO/GEO/AEO boolean. `pages.max` begins at Tier 2, and
+every ordinary Page receives Page SEO/GEO/AEO output from its declared fields
+and exact overlays.
+
+PRD 127 also adds `pages.max` through the same policy system. Its target product
+law is visibility plus command-time access: Pages stays in navigation for every
+tier; Free and Tier 1 see **Upgrade to get Pages**; an account downgraded into
+those tiers still sees its retained Page inventory and **Upgrade to use Pages**.
+Blocked Page actions remain visible, open the standard Upgrade dialog, and
+perform no write or generator call. Downgrade does not hide, delete, rewrite,
+regenerate, publish, or unpublish retained Pages. This is planned 127 behavior,
+not current runtime truth.
+
+Current `pages.max` values are `0` for Free and Tier 1, `3` for Tier 2, `10`
+for Tier 3, and unlimited for Tier 4 and internal Tier99.
 
 ## Failure Semantics
 
@@ -275,7 +329,9 @@ These are not active runtime truth:
 - customer account switching;
 - core `account_members` role authority;
 - public monthly view denial/upsell behavior for `views.monthly.max`;
-- page publish is disabled; Roma returns `422 coreui.errors.page.publishUnavailable`, and public page copy/open is not active.
+- automatic 30-day downgraded-asset overage cleanup;
+- Page UI, compilation, publication, and public serving are not implemented in
+  the current slice.
 
 ## Verification
 
@@ -288,7 +344,7 @@ These are not active runtime truth:
 | Entitlement keys/values | `packages/ck-policy/entitlements.matrix.json` |
 | Entitlement metadata/enforcement status | runtime owner evidence plus `packages/ck-policy/src/registry.ts`; `embed.seoGeo.enabled` currently conflicts |
 | Account files | Roma routes first; raw bytes require `pnpm cf:preflight` and R2 evidence |
-| Page publish disabled | `POST /api/account/pages/{pageId}/publish` returns `422 coreui.errors.page.publishUnavailable` |
+| Page authoring source | Roma Page source routes and Tokyo-worker exact Page source/overlay files |
 
 ## Not Current Product Truth
 

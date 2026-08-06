@@ -221,12 +221,10 @@ async function testDieterLayoutTableAndPopupConsumption(): Promise<void> {
   const romaCss = await readRoute('app/roma.css');
   const tableCss = await readFile(new URL('../../dieter/components/table/table.css', import.meta.url), 'utf8');
   const assets = await readRoute('components/assets-domain.tsx');
-  const pages = await readRoute('components/pages-domain.tsx');
   const widgets = await readRoute('components/widgets-domain.tsx');
   const dropdownActions = await readRoute('components/dieter-dropdown-actions.tsx');
   const textfield = await readRoute('components/dieter-textfield.tsx');
   const assetsPage = assets.slice(assets.indexOf('export function AssetsPage'), assets.indexOf('export function AssetsDomain'));
-  const pagesPage = pages.slice(pages.indexOf('export function PagesPage'), pages.indexOf('const CANONICAL_LOCALES'));
 
   assert.match(layout, /dieter\/layouts\/main-container\/main-container\.css/);
   assert.match(shell, /className="main-container"/);
@@ -252,10 +250,6 @@ async function testDieterLayoutTableAndPopupConsumption(): Promise<void> {
 
   assert.match(assetsPage, /<AssetsDomain assetFilter=\{assetFilter\} onHeaderActions=\{setHeaderActions\} \/>/);
   assert.doesNotMatch(assetsPage, /useRomaAccountContext|useRomaAccountApi|refreshToken|onLoadingChange/);
-  assert.match(pagesPage, /<PagesDomain onHeaderActions=\{setHeaderActions\} \/>/);
-  assert.doesNotMatch(pagesPage, /PagesHeaderActionsRegistration|rd-canvas-module__actions/);
-  assert.doesNotMatch(pages, /createContext|useContext|PagesHeaderActionsRegistration/);
-
   assert.match(dropdownActions, /className=\{`diet-dropdown-actions diet-popover-host/);
   assert.match(dropdownActions, /triggerStyle === 'button' \? 'diet-btn-ictxt' : 'diet-dropdown-header diet-dropdown-actions__control'/);
   assert.match(dropdownActions, /className="diet-popover diet-dropdown-actions__popover" role="listbox"/);
@@ -288,7 +282,7 @@ async function testDieterLayoutTableAndPopupConsumption(): Promise<void> {
   assert.match(assets, /filter\(\(asset\) => assetFilter === 'all' \|\| asset\.assetType === assetFilter\)/);
   assertBefore(assets, /filter\(\(asset\) => assetFilter/, /\.sort\(\(left, right\) =>/);
 
-  for (const [domain, source] of [['Assets', assets], ['Pages', pages], ['Widgets', widgets]] as const) {
+  for (const [domain, source] of [['Assets', assets], ['Widgets', widgets]] as const) {
     const sortableHeaders = source.match(/<th[^>]*aria-sort=[\s\S]*?<\/th>/g) ?? [];
     assert.ok(sortableHeaders.length > 0, `${domain} must have sortable headers`);
     for (const header of sortableHeaders) {
@@ -310,7 +304,6 @@ async function testDieterLayoutTableAndPopupConsumption(): Promise<void> {
   }
 
   for (const relativePath of [
-    'components/pages-domain.tsx',
     'components/assets-domain.tsx',
     'components/widgets-domain.tsx',
     'components/team-domain.tsx',
@@ -325,7 +318,6 @@ async function testDieterLayoutTableAndPopupConsumption(): Promise<void> {
     'components/roma-account-notice-modal.tsx',
     'components/roma-unsaved-changes-dialog.tsx',
     'components/roma-upsell-dialog.tsx',
-    'components/pages-domain.tsx',
     'components/assets-domain.tsx',
     'components/widgets-domain.tsx',
     'components/widget-copy-code-dialog.tsx',

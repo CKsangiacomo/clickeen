@@ -10,14 +10,6 @@ export function accountPageSourceKey(accountId: string, pageId: string): string 
   return `${accountPageRoot(accountId, pageId)}/source.json`;
 }
 
-export function accountPageServeStateKey(accountId: string, pageId: string): string {
-  return `${accountPageRoot(accountId, pageId)}/serve-state.json`;
-}
-
-export function accountPagePublishRoot(accountId: string, pageId: string): string {
-  return accountPageRoot(accountId, pageId);
-}
-
-export function accountPagePublishFileKey(accountId: string, pageId: string, fileName: 'index.html' | 'styles.css' | 'runtime.js'): string {
-  return `${accountPagePublishRoot(accountId, pageId)}/${fileName}`;
+export function accountPageLocaleOverlayKey(accountId: string, pageId: string, locale: string): string {
+  return `${accountPageRoot(accountId, pageId)}/overlays/locales/${locale}.json`;
 }

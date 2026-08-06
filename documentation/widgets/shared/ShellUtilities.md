@@ -54,6 +54,25 @@ Rules:
 - Widgets do not hand-code badge or backlink markup.
 - Removing branding is account policy, not widget choice.
 
+PRD 127 accepted cutover:
+
+- the Web Code Generator writes the final branding/attribution markup into the
+  saved Instance `index.html`;
+- a Free Widget receives one visible contextual link to its matching Clickeen
+  Widget product page with `rel="nofollow noreferrer"` plus matching truthful
+  product identity;
+- `runtime.js` must not create the attribution DOM;
+- the existing branding layout/style contract moves into generated
+  `styles.css`; JavaScript no longer injects branding CSS;
+- `branding.remove` continues to control visible branding and remains separate
+  from `embed.seoGeo.enabled`;
+- Bob preview must render the same generated markup as the public Instance;
+- the current `CKBranding.applyBacklink` DOM-construction path is removed only
+  when the 127B runtime cutover is deployed and verified.
+
+This subsection is an accepted PRD 127 target, not a claim that the current
+runtime has already completed the cutover.
+
 ## Social Share
 
 State:

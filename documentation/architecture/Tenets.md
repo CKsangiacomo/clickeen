@@ -37,6 +37,40 @@ Clickeen is a simple account product.
   and saves account work through owner services.
 - Tokyo-worker stores and serves account runtime files in R2.
 - Admin uses the normal `CLICKEEN` account.
+- **Everything is visible to every tier; access is controlled by tier.** Product
+  domains, capabilities, and tier-gated actions remain visible and actionable.
+  When the current tier does not allow the attempted action, product state stays
+  unchanged and Clickeen opens its standard Upgrade dialog. This does not expose
+  another account's data or override user-role authorization. The contextual
+  **Save as template** utility is the named conditional-visibility exception in
+  Tenet 14.
+- Tier controls creation and product use. Account ownership and account
+  lifecycle control storage retention. A downgrade does not hide or
+  automatically delete account Instances, Pages, templates, or generated files.
+- System-initiated deletion of the complete account root happens only as part of
+  the one account-deletion operation. The one downgrade exception is account
+  assets over the new `storage.bytes.max`: they receive a 30-day grace period,
+  after which account management deletes the most recently uploaded assets until
+  usage fits the current allowance.
+
+The automatic asset-overage cleanup above is accepted product law, not a claim
+that the current runtime already performs it.
+The following three bullets are accepted PRD 127 product law for the new Web
+Code Generator and generated public files. They do not claim the pre-127 Widget
+runtime has already completed that cutover:
+
+- Complete semantic public HTML is the baseline for every tier. For Widget
+  Instances, a paid SEO/GEO/AEO entitlement plus the saved Instance choice may
+  add customer optimization output. Ordinary Pages already begin at Tier 2 and
+  always receive Page SEO/GEO/AEO output; they have no Page SEO toggle. Neither
+  rule decides whether customer content exists in initial HTML.
+- `branding.remove` and `embed.seoGeo.enabled` are different product policies.
+  Branding controls visible Clickeen attribution. The SEO entitlement controls
+  the saved Widget Instance enhancement choice; it is not a Page switch.
+- Free Widget distribution is truthful product attribution, not hidden growth
+  code: one visible contextual Clickeen link and matching product identity are
+  generated into initial HTML from approved Clickeen product data. Clickeen is
+  never represented as the author or owner of customer content.
 
 Current account storage coordinate:
 
@@ -201,6 +235,30 @@ browser files.
 The non-account roots are git-authored deploy artifacts. Account operations must
 not mutate them as runtime state.
 
+Tier and storage answer different questions:
+
+```text
+tier policy -> what the account may create or use now
+account lifecycle -> how long account-owned truth is retained
+Tokyo-worker -> exact byte operation under the account root
+```
+
+Changing tier does not move, rename, rewrite, or automatically delete account
+Instances, Pages, templates, overlays, or generated files. User-authorized
+deletion remains an explicit product operation. Whole-account deletion is the
+only operation that purges the entire account root.
+
+Asset quota cleanup is the sole automatic downgrade-deletion exception. When a downgrade makes
+account asset usage exceed `storage.bytes.max`, account management gives the
+customer 30 days to delete assets or upgrade. After the deadline, it directs
+Tokyo-worker to delete the newest assets by `updatedAt` until stored asset bytes
+fit the current allowance. Equal timestamps use the stable asset reference as
+the deterministic tie-breaker. Missing or corrupt ordering/size truth stops the
+cleanup; the system never guesses which asset to delete.
+
+The current runtime does not yet have the authoritative tier-change timing and
+account-lifecycle operation required to execute this law.
+
 Root `widgets/`, `public/`, `published/`, and `l10n/` are not product storage
 boundaries.
 
@@ -265,9 +323,10 @@ Visitor requests must not:
 If the requested public artifact is not available, the boundary returns an
 explicit failure such as 404.
 
-Page source is current account-owned product data. Page publish and page public
-serving are currently unavailable until Roma writes page packages. Tokyo-worker
-must not compose pages from source on visitor requests.
+Page source is current account-owned product data. Page UI, compilation,
+publication, and public serving are not implemented in the current slice.
+Tokyo-worker has no placeholder Page public route and must not compose Pages
+from authoring source on visitor requests.
 
 ## Tenet 12: Dieter Tokens First
 
@@ -308,6 +367,47 @@ not a place for planning, legacy support, or execution history.
 
 If runtime and docs disagree, runtime code/migrations/deployed configuration win
 and the stale doc must be fixed.
+
+## Tenet 14: Tier-Gated Actions Stay Visible
+
+Clickeen exposes the product rather than hiding paid capabilities from lower
+tiers.
+
+This tenet is the normative product rule for new or changed surfaces. It does
+not claim that every pre-existing runtime surface already conforms; owning
+service and capability documents remain current-runtime truth until the
+behavior is deployed and verified.
+
+- A tier-gated action remains visible and clickable.
+- A tier-gated boolean control renders its real current value. If that value is
+  off and the user is not entitled, attempting to turn it on leaves it off and
+  opens the standard Upgrade dialog.
+- A tier-gated command such as Create, Duplicate, or Publish
+  remains available as an expression of user intent. If its limit or flag gate
+  fails, no product mutation occurs and the standard Upgrade dialog opens.
+- The UI may use the current entitlement snapshot to respond immediately, but
+  Roma rechecks the entitlement at the owning command or Save route before any
+  write. UI state is never the enforcement authority.
+- Every surface uses the existing entitlement failure and Upsell interaction;
+  features must not add private lock states, disabled-control variants, hidden
+  catalog entries, or feature-specific upgrade dialogs.
+
+This law applies to authenticated product actions that an account user cannot
+complete because of account tier or plan. The owning route returns the standard
+entitlement failure and the product surface opens the Upgrade dialog.
+
+**Save as template** is the named exception. It is a contextual editing utility,
+not a monetized capability: show it only for an editable ordinary Widget
+Instance or Page when the account can create another object of that type. It
+appears in the object's list-row three-dot menu and as a persistent secondary
+action in Bob or Page Builder. Otherwise it is absent. The owning command still
+performs the normal role and saved-object-limit validation; it adds no separate
+entitlement or Upsell path.
+
+Public visitor requests and background work are not account-user actions. Role
+authorization, invalid state, missing source truth, and unsafe or impossible
+operations are not upsells; their owning authorization, validation, and
+failure rules still apply.
 
 ## Core Violations
 

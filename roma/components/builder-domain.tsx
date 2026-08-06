@@ -189,7 +189,7 @@ function resolveBobAccountCommandRequest(args: {
   command: BobAccountCommand;
   instanceId?: string;
   body?: unknown;
-}): { method: 'GET' | 'PUT' | 'POST' | 'DELETE'; path: string } | null {
+}): { method: 'GET' | 'PUT' | 'POST' | 'DELETE'; path: string; body?: unknown } | null {
   const instanceId = String(args.instanceId || '').trim();
   const body = args.body && typeof args.body === 'object' && !Array.isArray(args.body)
     ? (args.body as Record<string, unknown>)
@@ -234,7 +234,8 @@ function resolveBobAccountCommandRequest(args: {
       if (!instanceId) return null;
       return {
         method: 'POST',
-        path: `/api/account/instances/${encodeURIComponent(instanceId)}/translations/generate`,
+        path: '/api/account/translations/generate',
+        body: { target: { kind: 'instance', id: instanceId } },
       };
     case 'run-copilot':
       if (!instanceId) return null;
@@ -513,11 +514,12 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
         if (args.command === 'generate-translations') {
           headers.set('accept', 'text/event-stream');
         }
-        if (typeof args.body !== 'undefined' && route.method !== 'GET') {
+        const requestBody = route.body ?? args.body;
+        if (typeof requestBody !== 'undefined' && route.method !== 'GET') {
           if (!headers.has('content-type')) {
             headers.set('content-type', 'application/json');
           }
-          const body = args.body;
+          const body = requestBody;
           if (
             typeof body === 'string' ||
             body instanceof Blob ||
@@ -698,7 +700,7 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
         fontLibrary: builderOpen.fontLibrary,
         publishStatus: builderOpen.publishStatus,
         returnLabel: returnTo
-          ? (returnTo.startsWith('/pages') ? 'Return to page' : 'Return')
+          ? 'Return'
           : undefined,
         publicActions: nextPublicActions,
         policy: accountPolicy,

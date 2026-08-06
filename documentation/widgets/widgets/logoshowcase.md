@@ -131,8 +131,7 @@ logoshowcase.behavior -> random order and carousel behavior
 
 Logo Showcase appears in Clickeen Page source as a saved account widget
 instance placement. Uploaded logo assets remain account assets; the widget
-instance stores references and text metadata. Public page package serving
-depends on Roma writing real page packages.
+instance stores references and text metadata.
 
 ## Verification
 

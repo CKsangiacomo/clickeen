@@ -1,4 +1,5 @@
 import { isRecord } from '@clickeen/ck-contracts';
+import type { PlanLimitKey } from './registry';
 import type { Policy, PolicyProfile } from './types';
 import { FLAG_KEYS, PLAN_LIMIT_KEYS } from './registry';
 import { getEntitlementsMatrix } from './matrix';
@@ -145,4 +146,13 @@ export function isPolicyEntitled(policy: Policy, key: string): boolean {
     return value == null || (Number.isFinite(value) && value > 0);
   }
   return false;
+}
+
+export function readPolicyLimit(policy: Policy, key: PlanLimitKey): number | null {
+  const value = policy.limits[key];
+  if (value === null) return null;
+  if (!Number.isFinite(value) || value < 0 || !Number.isInteger(value)) {
+    throw new Error(`[ck-policy] Invalid limit at ${key}`);
+  }
+  return value;
 }
