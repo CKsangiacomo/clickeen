@@ -50,10 +50,6 @@ The signed account authz capsule carries stable account authz truth only. Mutabl
 - Bootstrap exposes the one current account id for the user. Product storage uses the compact public account coordinate.
 - Missing canonical user, role, login mapping, or account state at bootstrap is a producer bug and must fail explicitly.
 - Current account resolution comes from `users.account_id`. Berlin must never open a privileged alternate account.
-- `tier99` is the internal-only policy profile for the normal `CLICKEEN`
-  account. Berlin carries it through the same bootstrap and signed account
-  capsule fields as every other tier; it creates no role or authorization
-  bypass.
 - Invalid persisted profile/account locale-policy truth must fail explicitly in canonical product/account routes. Berlin logs the defect and does not silently default it away.
 - Product shells must not treat login provider summaries as connector/account linkage. Login is not connector authorization.
 - Additional login providers plug into the same provider adapter shape: provider verifies identity; Berlin maps identity to Clickeen account/session truth.
@@ -88,18 +84,7 @@ Residual public account-management routes:
 - `POST /invitations/:token/accept` (signed-in accept is disabled; invitation acceptance happens during login)
 - `POST /accounts/:id/lifecycle/tier-drop/dismiss`
 
-Berlin does not build, validate, migrate, or clean Tokyo/R2 account paths.
-Account-owned assets and instances use `accountPublicId` in Tokyo storage;
-private UUIDs stay relational and session-scoped. Roma owns product-command and
-tier enforcement. Account management owns storage-retention consequences of a
-downgrade, suspension, or account deletion. Berlin supplies authoritative
-account and current-tier truth. It does not currently supply reliable tier-change
-timing: bootstrap maps `status_changed_at` to `tierChangedAt` and returns null
-`tierChangedFrom`/`tierChangedTo`. That contract must be corrected before Berlin
-account management can authorize the accepted 30-day asset cleanup operation.
-Tokyo-worker performs the approved exact byte operation. Berlin does not
-directly delete R2 data, and Roma page activity is not an account-lifecycle
-cleanup trigger.
+Berlin does not build, validate, migrate, or clean Tokyo/R2 account paths. Account-owned assets and instances use `accountPublicId` in Tokyo storage; private UUIDs stay relational and session-scoped. Product policy that affects asset storage, publication, downgrade, suspension, or stale-root cleanup belongs to Roma/system account operations, with Berlin only supplying the stable session/account truth and narrow account-governance reads named above.
 
 Berlin does not claim full account deletion. Account deletion remains disabled
 until a single account-root operation owns Berlin database cleanup and Tokyo/R2
@@ -251,12 +236,6 @@ Prefer the `BERLIN_DEV_ADMIN_*` names in env files and Cloudflare config.
 Current product login provider:
 
 - `BERLIN_ALLOWED_PROVIDERS=google`
-
-The account identity contract retains both `google` and `email` login-provider
-values during pre-GA. The cloud-dev allowed-provider setting above names the
-provider currently exposed by that environment; it does not narrow the Michael
-schema or delete existing email identities. Enabling ordinary email login later
-uses the same Berlin identity/session authority, not an E2E session-mint route.
 
 Recommended:
 

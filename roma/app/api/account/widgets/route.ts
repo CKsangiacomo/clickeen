@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import {
   loadAccountWidgetInstanceFacts,
   listTokyoWidgetDefinitions,
-  type AccountWidgetInstanceListFact,
 } from '@roma/lib/account-instance-direct';
 import { resolveCurrentAccountRouteContext, withSession } from '../_lib/current-account-route';
 
@@ -12,10 +11,15 @@ const DEFAULT_INSTANCE_DISPLAY_NAME = 'Untitled widget';
 type WidgetInstance = {
   instanceId: string;
   widgetType: string;
-  widget: string;
   displayName: string;
   status: 'published' | 'unpublished';
   updatedAt: string;
+};
+
+type WidgetCatalogOption = {
+  widgetType: string;
+  displayName: string;
+  description: string;
 };
 
 function routeKind(status: number): 'AUTH' | 'DENY' | 'VALIDATION' | 'UPSTREAM_UNAVAILABLE' {
@@ -72,45 +76,29 @@ export async function GET(request: NextRequest) {
       current.value.setCookies,
     );
   }
-  const widgetNameByType = new Map(
-    widgetDefinitions.value.widgetDefinitions.map((entry) => [entry.widgetType, entry.displayName]),
-  );
-  const missingDefinition = widgetInstances.value.instances.find(
-    (instance) => !instance.isTemplate && !widgetNameByType.has(instance.widgetType),
-  );
-  if (missingDefinition) {
-    return withSession(
-      request,
-      NextResponse.json(
-        {
-          error: {
-            kind: 'UPSTREAM_UNAVAILABLE',
-            reasonKey: 'coreui.errors.payload.invalid',
-            detail: `widget_definition_missing:${missingDefinition.widgetType}`,
-          },
-        },
-        { status: 502 },
-      ),
-      current.value.setCookies,
-    );
-  }
-  const accountInstances: WidgetInstance[] = widgetInstances.value.instances
-    .filter((instance): instance is AccountWidgetInstanceListFact & { isTemplate: false; publishStatus: 'published' | 'unpublished' } => !instance.isTemplate && Boolean(instance.publishStatus))
-    .map((instance) => {
+  const catalog: WidgetCatalogOption[] = widgetDefinitions.value.widgetDefinitions
+    .map((entry) => {
+      return {
+        widgetType: entry.widgetType,
+        displayName: entry.displayName,
+        description: entry.description,
+      };
+    });
+  const accountInstances: WidgetInstance[] = widgetInstances.value.instances.map((instance) => {
     return {
       instanceId: instance.instanceId,
       widgetType: instance.widgetType,
-      widget: widgetNameByType.get(instance.widgetType)!,
       displayName: instance.displayName ?? DEFAULT_INSTANCE_DISPLAY_NAME,
-      status: instance.publishStatus!,
+      status: instance.publishStatus,
       updatedAt: instance.updatedAt,
     };
-    });
+  });
 
   return withSession(
     request,
     NextResponse.json({
       accountId,
+      catalog,
       instances: accountInstances,
     }),
     current.value.setCookies,

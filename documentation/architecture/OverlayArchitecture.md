@@ -1,6 +1,6 @@
 # Overlay Architecture
 
-Last updated: 2026-08-05
+Last updated: 2026-07-30
 
 ## Product Rule
 
@@ -12,7 +12,8 @@ one root runtime + one exact locale overlay = localized rendering
 ```
 
 Translation changes locale overlay truth only. It must never create HTML, CSS,
-JavaScript, publication state, or another delivery lifecycle for a locale.
+JavaScript, publication state, fingerprints, or another delivery lifecycle for
+a locale.
 
 ## Storage
 
@@ -58,24 +59,18 @@ The canonical public selection is:
 
 Tokyo-worker:
 
-1. validates the account, instance, publication state, exact package files,
-   and locale coordinate;
-2. lists stored overlay coordinates and rejects an invalid base-locale overlay;
+1. validates the account, instance, publication state, root artifact
+   fingerprint, and locale coordinate;
+2. lists the stored overlay coordinates for the locale switcher;
 3. reads and validates the exact requested overlay against saved content;
-4. for a translated request, replaces the exact field-marked values in the
-   stored `index.html` and sets `<html lang>`;
-5. completes the public account and instance placeholders from the validated
-   route;
-6. rejects any remaining `__CK_PUBLIC_*__` placeholder and serves valid HTML
-   through the exact public URL cache key.
+4. injects that locale context into the stored root `index.html`;
+5. serves the response with `no-store`.
 
 The HTML continues to reference the single root `styles.css` and `runtime.js`.
-`runtime.js` binds widget and shared behavior to the generated markup; it does
-not apply overlays or render primary customer content. Missing overlays return
-`404 Locale not available`. Corrupt overlays return `500 Locale data invalid`.
-Neither condition falls back to the base language. Instance Save, Instance
-translation writes/deletes, publication, and deletion operations purge only
-the affected public URLs.
+The root runtime applies the injected overlay synchronously before widget
+modules initialize. Missing overlays return `404 Locale not available`.
+Corrupt overlays return `500 Locale data invalid`. Neither condition falls back
+to the base language.
 
 ## Current Operations
 
@@ -84,7 +79,7 @@ the affected public URLs.
 | List/read/write/delete overlay values | Roma account route -> Tokyo-worker translation route |
 | Generate translations | Bob command -> Roma -> Translation Agent -> exact Tokyo overlay writes |
 | Remove an active language | Roma deletes that exact overlay from every account instance |
-| Save instance source | Bob submits current config and exact three-file package -> Roma derives source artifacts -> Tokyo-worker stores both |
+| Save instance source | Roma -> Tokyo-worker; updates source and the one root runtime only |
 | Publish/unpublish | Tokyo-worker owns the single `serve-state.json` |
 | Public localized read | Tokyo-worker reads the one root artifact and exact overlay |
 
@@ -106,7 +101,7 @@ the affected public URLs.
 | --- | --- |
 | Overlay bytes | `pnpm cf:preflight`, then exact R2 object read |
 | Translation command | Roma response contains requested/translated/failed locale truth only |
-| Base public response | root URL returns completed stored HTML whose absolute support-file URLs remain inside the Instance coordinate |
+| Base public runtime | root URL loads root index, stylesheet, and runtime |
 | Localized public runtime | root URL with `?locale=` contains translated text and root support URLs |
 | Missing/corrupt locale | explicit 404/500; never base-language output |
 | Storage invariant | zero instance objects outside `overlays/locales/` representing a locale runtime |

@@ -5,7 +5,6 @@ import {
   isWidgetOverlayCode,
 } from '@clickeen/ck-contracts/overlay-identity';
 import { normalizeLocale } from '../../asset-utils';
-import { parseCatalogPresentation } from '@clickeen/ck-contracts/catalog';
 import type {
   AccountInstanceConfigDocument,
   AccountInstanceContentDocument,
@@ -32,43 +31,38 @@ export function normalizeAccountInstanceConfigDocument(
   const createdAt = asTrimmedString(payload.createdAt) ?? '';
   const updatedAt = asTrimmedString(payload.updatedAt) ?? '';
   const config = asRecord(payload.config);
-  const isTemplate = payload.isTemplate;
-  const catalogPresentation = Object.prototype.hasOwnProperty.call(payload, 'catalogPresentation')
-    ? parseCatalogPresentation(payload.catalogPresentation)
-    : undefined;
+  const baseLocale = normalizeLocale(payload.baseLocale) ?? '';
   if (
     !isCompactInstanceId(id) ||
     !isCompactAccountPublicId(accountId) ||
     !isWidgetOverlayCode(widgetCode) ||
     !widgetType ||
     !config ||
-    (isTemplate !== true && isTemplate !== false) ||
-    (Object.prototype.hasOwnProperty.call(payload, 'catalogPresentation') && !catalogPresentation) ||
+    !baseLocale ||
     !createdAt ||
     !updatedAt
   )
     return null;
-  const identity = {
+  const publicPackageFingerprint = asTrimmedString(payload.publicPackageFingerprint);
+  if (
+    Object.prototype.hasOwnProperty.call(payload, 'publicPackageFingerprint') &&
+    payload.publicPackageFingerprint != null &&
+    !publicPackageFingerprint
+  ) {
+    return null;
+  }
+  return {
     id,
     accountId,
     widgetCode,
     widgetType,
     displayName,
     config,
+    baseLocale,
+    ...(publicPackageFingerprint ? { publicPackageFingerprint } : {}),
     createdAt,
     updatedAt,
   };
-  if (isTemplate === true) {
-    if (Object.prototype.hasOwnProperty.call(payload, 'baseLocale')) return null;
-    return {
-      ...identity,
-      isTemplate: true,
-      ...(catalogPresentation ? { catalogPresentation } : {}),
-    };
-  }
-  const baseLocale = normalizeLocale(payload.baseLocale) ?? '';
-  if (!baseLocale || Object.prototype.hasOwnProperty.call(payload, 'catalogPresentation')) return null;
-  return { ...identity, isTemplate: false, baseLocale };
 }
 
 function normalizeContentFieldStatus(value: unknown): AccountInstanceContentFieldStatus | null {

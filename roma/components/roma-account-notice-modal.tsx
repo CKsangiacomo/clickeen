@@ -7,7 +7,7 @@ import { formatAccountTierLabel } from '../lib/format';
 import { useRomaAccountApi } from './account-api';
 import { useRomaAccountContext } from './roma-account-context';
 
-type AccountTier = 'free' | 'tier1' | 'tier2' | 'tier3' | 'tier4' | 'tier99';
+type AccountTier = 'free' | 'tier1' | 'tier2' | 'tier3' | 'tier4';
 
 function normalizeTier(value: unknown): AccountTier | null {
   switch (value) {
@@ -16,7 +16,6 @@ function normalizeTier(value: unknown): AccountTier | null {
     case 'tier2':
     case 'tier3':
     case 'tier4':
-    case 'tier99':
       return value;
     default:
       return null;
@@ -25,8 +24,6 @@ function normalizeTier(value: unknown): AccountTier | null {
 
 function tierRank(tier: AccountTier): number {
   switch (tier) {
-    case 'tier99':
-      return 6;
     case 'tier4':
       return 5;
     case 'tier3':

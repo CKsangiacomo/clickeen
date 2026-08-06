@@ -1,6 +1,6 @@
 # Localization Capability
 
-Last updated: 2026-08-05
+Last updated: 2026-07-30
 
 ## Product Contract
 
@@ -16,50 +16,37 @@ one saved base source
 Translation is content work. It does not create another widget artifact,
 publication state, delivery file, or cache lifecycle.
 
-Web Code Generator uses the exact `baseLocale` and overlay coordinates when it
-writes initial HTML and locale-switcher options. Tokyo-worker uses exact overlay
-values for translated Instance response completion. A translation command does
-not invent Clickeen language-support claims or trigger a hidden
-generator/publication operation.
-Widget templates follow the same localization boundary: they retain reusable
-Widget config and their exact three files, but have no `baseLocale`, selected
-locale list, overlays, Generate translations action, or public locale output.
-An ordinary Instance created from a template receives the destination
-account's normal base-locale and Settings-locale behavior when it is saved.
-
 ## Code Authority
 
 | Concern | Authority |
 | --- | --- |
 | Account locale policy | Roma account locale routes and account storage |
-| Translation command | Product control -> Roma `/api/account/instances/[instanceId]/translations/generate` |
+| Translation command | Bob `TranslationsPanel` -> Roma translation route |
 | Translation operation | Translation Agent -> San Francisco |
 | Saved text extraction and exact overlay validation | Tokyo-worker account translation domain |
 | Overlay storage | Tokyo R2 `overlays/locales/{locale}.json` |
-| Bob package generation and translated preview | `@clickeen/ck-web-code-generator` over current in-memory state and exact overlays |
-| Public localized serving | Tokyo-worker exact stored Instance response completion |
+| Bob translated preview | translated-value primitives over saved base state |
+| Public localized serving | Tokyo-worker root index response plus root runtime |
+| Root artifact construction | `@clickeen/ck-runtime-materializer` |
 
 ## Authority Chain
 
 ```text
 Roma current account/session
 -> accountPublicId
--> saved Instance id
--> saved Instance source
+-> saved account instance
 -> exact locale coordinate
--> Translation Agent
 -> Tokyo-worker
--> exact Instance overlay path
+-> accounts/{accountPublicId}/instances/{instanceId}/overlays/locales/{locale}.json
 ```
 
 Public serving adds the single publication coordinate:
 
 ```text
 serve-state.json
--> exact root index/styles/runtime files
+-> root index/styles/runtime fingerprint
 -> exact requested overlay
--> field-marked HTML completion
--> public placeholder completion
+-> injected locale context
 ```
 
 ## Locale Policy
@@ -82,14 +69,12 @@ they do not silently rewrite the base source.
 
 ## Generate Translations
 
-1. Generate translations requires a saved ordinary Instance and at
-   least one active non-base locale.
+1. Bob requires a saved, clean instance and at least one active non-base locale.
 2. Roma resolves current account/session and entitlement truth.
-3. Roma reads the saved Instance and sends its translatable values to the
-   Translation Agent operation.
+3. Roma asks the Translation Agent for exact requested locale results.
 4. San Francisco translates the supplied saved text items.
-5. Tokyo-worker writes each completed exact overlay to the Instance's existing
-   overlay path.
+5. Tokyo-worker accepts only complete exact overlay value maps and writes each
+   overlay.
 6. Roma returns:
 
    ```text
@@ -98,7 +83,9 @@ they do not silently rewrite the base source.
    failedLocales
    ```
 
-7. The calling product surface reports those outcomes.
+7. Bob reports those outcomes and refreshes translated preview state.
+
+No later artifact step exists.
 
 ## Overlay Contract
 
@@ -130,13 +117,9 @@ fail. Stored corruption is not normalized or treated as missing.
 
 ## Bob Preview
 
-Bob reads the complete exact saved overlay map through Roma before the current
-base package becomes savable. Web Code Generator uses that complete map for the
-base package's locale coordinates. Translation preview selection separately
-chooses one of those already-read overlays, resolves it over the current
-in-memory base state, and runs Web Code Generator for that selected locale. The
-translated preview is an exact in-memory generated package and never writes
-storage. A failed overlay read blocks package generation and Save.
+Bob reads saved overlays through Roma and resolves them over the current saved
+base state with `resolveTranslatedValues`. Preview state is not public artifact
+truth and never writes storage.
 
 ## Public Serving
 
@@ -147,21 +130,15 @@ https://clk.live/{accountPublicId}/{instanceId}
 https://clk.live/{accountPublicId}/{instanceId}?locale={locale}
 ```
 
-For an index request, Tokyo-worker verifies the published instance and exact
-root files. It validates stored overlay coordinates, reads and validates the
-exact requested overlay, replaces exact field-marked text/attributes and
-`<html lang>` in the stored root index, completes public account/instance
-placeholders, and returns complete HTML through the exact public URL cache key.
+For an index request, Tokyo-worker verifies the published instance and one root
+artifact. It lists overlay coordinates, reads and validates the exact requested
+overlay, injects a locale context into the stored root index, and returns HTML
+with `no-store`. That HTML references only root `styles.css` and `runtime.js`.
 
-`runtime.js` binds behavior to generated markup; it does not apply locale
-overlays. A missing requested overlay returns `404 Locale not available`. A
-corrupt overlay returns `500 Locale data invalid`. Incomplete public HTML
-returns `500 Public HTML invalid`. Base content is never presented as a
-requested non-base locale.
-
-Instance HTML is CDN-cacheable only at its exact response key. Instance
-translation writes and deletes purge their exact public locale URL. Locale
-selection is never hidden in a shared cached variant.
+The root runtime applies injected values synchronously before widget modules
+initialize. A missing requested overlay returns `404 Locale not available`. A
+corrupt overlay returns `500 Locale data invalid`. Base content is never
+presented as a requested non-base locale.
 
 ## Operator Recipes
 
@@ -204,7 +181,7 @@ reconcile exactly.
 | Saved text set | Tokyo instance content |
 | Overlay bytes | exact R2 read after `pnpm cf:preflight` |
 | Translation outcome | Roma requested/translated/failed sets |
-| Bob preview | exact generated package for current state and selected overlay |
-| Root artifact | exact R2 `index.html`, `styles.css`, and `runtime.js` objects and content types |
-| Localized response | root URL with `?locale=` and translated HTML output |
+| Bob preview | exact overlay values displayed over saved source |
+| Root artifact | root R2 index/styles/runtime fingerprint |
+| Localized runtime | root URL with `?locale=` and translated output |
 | Negative storage invariant | no instance locale-derived HTML/CSS/JS objects |

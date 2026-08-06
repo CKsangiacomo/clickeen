@@ -37,11 +37,9 @@ async function run(): Promise<void> {
     env: {
       ROMA_AI_GRANT_PRIVATE_KEY_PEM: privateKeyPem,
       TOKYO_PRODUCT_CONTROL: {
-        async fetch(input: RequestInfo | URL) {
-          void input;
+        async fetch() {
           return Response.json({
             widgetType: 'faq',
-            isTemplate: false,
             source: {
               content: {
                 fields: {
@@ -114,9 +112,7 @@ async function run(): Promise<void> {
     assert.ok(sentAgentRequest);
     assert.deepEqual(sentAgentRequest.requestedLocales, requestedLocales);
     assert.equal(Object.prototype.hasOwnProperty.call(sentAgentRequest, 'activeLocales'), false);
-    assert.equal(sentAgentRequest.instanceId, 'UZ3JEJSHII');
 
-    agentTranslation = validAgentTranslation();
     const valid = validAgentTranslation();
     const validResults = valid.results as Array<Record<string, unknown>>;
     const invalidTranslations: Array<{ name: string; value: Record<string, unknown> }> = [

@@ -19,23 +19,8 @@
   }
 
   function roots(widgetType) {
-    const selector = `[data-ck-widget="${widgetType}"]`;
-    const found = [];
-    const visited = new Set();
-
-    function collect(scope) {
-      if (visited.has(scope)) return;
-      visited.add(scope);
-      scope.querySelectorAll(selector).forEach((root) => {
-        if (root instanceof HTMLElement) found.push(root);
-      });
-      scope.querySelectorAll('*').forEach((element) => {
-        if (element instanceof HTMLElement && element.shadowRoot) collect(element.shadowRoot);
-      });
-    }
-
-    collect(document);
-    return found;
+    return Array.from(document.querySelectorAll(`[data-ck-widget="${widgetType}"]`))
+      .filter((root) => root instanceof HTMLElement);
   }
 
   function resolveInstanceId(widgetRoot) {
@@ -58,14 +43,29 @@
     return '';
   }
 
+  function readPayload(instanceId) {
+    if (!instanceId || !window.CK_WIDGETS || typeof window.CK_WIDGETS !== 'object') return null;
+    const payload = window.CK_WIDGETS[instanceId];
+    return payload && typeof payload === 'object' ? payload : null;
+  }
+
+  function isComposedPage(widgetRoot) {
+    if (!(widgetRoot instanceof HTMLElement)) return false;
+    return widgetRoot.closest('[data-ck-composed-page="true"]') instanceof HTMLElement;
+  }
+
   function contextFor(widgetRoot, widgetType) {
     assertWidgetRoot(widgetRoot, widgetType);
     const instanceId = resolveInstanceId(widgetRoot);
     if (instanceId) widgetRoot.setAttribute('data-ck-instance-id', instanceId);
+    const payload = readPayload(instanceId);
     return {
       widgetRoot,
+      composedPage: isComposedPage(widgetRoot),
       instanceId,
-      locale: document.documentElement.lang || '',
+      payload,
+      locale: payload && typeof payload.locale === 'string' ? payload.locale : '',
+      state: payload ? payload.state : null,
     };
   }
 
@@ -88,145 +88,35 @@
     return initializer;
   }
 
-  function matchingEventElement(event, selector) {
-    const path = typeof event.composedPath === 'function' ? event.composedPath() : [];
-    for (const item of path) {
-      if (item instanceof Element) {
-        const match = item.closest(selector);
-        if (match) return match;
-      }
-    }
-    return event.target instanceof Element ? event.target.closest(selector) : null;
-  }
+  function bindStateUpdates(widgetType, instanceId, handler, options) {
+    const normalized = normalizeWidgetType(widgetType);
+    if (!normalized) throw new Error('[CKWidgetRuntime] widget type is required');
+    if (typeof handler !== 'function') throw new Error('[CKWidgetRuntime] state update handler must be a function');
+    const requireWidgetName = Boolean(options && options.requireWidgetName === true);
 
-  function isEditorPreview() {
-    if (window.parent === window) return false;
-    try { return window.parent.location.origin === window.location.origin; } catch (_error) { return false; }
-  }
-
-  function showPreviewOnly(target) {
-    const root = target.closest('[data-ck-social-share-root]');
-    const toast = root && root.querySelector('.ck-socialShare__toast');
-    if (!(toast instanceof HTMLElement)) return;
-    toast.textContent = 'Preview only';
-    toast.style.display = 'block';
-    window.setTimeout(() => { toast.style.display = 'none'; toast.textContent = ''; }, 1600);
-  }
-
-  function bindStaticInteractions() {
-    if (document.documentElement.getAttribute('data-ck-static-runtime-bound') === 'true') return;
-    document.documentElement.setAttribute('data-ck-static-runtime-bound', 'true');
-    async function copyText(value) {
-      if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
-        await navigator.clipboard.writeText(value);
-        return;
+    window.addEventListener('message', (event) => {
+      const data = event.data;
+      if (!data || typeof data !== 'object') return;
+      if (data.type !== 'ck:state-update') return;
+      if (requireWidgetName && data.widgetname !== normalized) return;
+      if (!requireWidgetName && data.widgetname && data.widgetname !== normalized) return;
+      if (instanceId && typeof data.instanceId === 'string' && data.instanceId && data.instanceId !== instanceId) return;
+      if (data.typographyData && typeof data.typographyData === 'object') {
+        window.CK_WIDGET_TYPOGRAPHY_DATA = data.typographyData;
+        if (window.CKTypography && typeof window.CKTypography.setTypographyData === 'function') {
+          window.CKTypography.setTypographyData(data.typographyData);
+        }
       }
-      const textarea = document.createElement('textarea');
-      textarea.value = value;
-      textarea.style.position = 'fixed';
-      textarea.style.left = '-9999px';
-      document.body.appendChild(textarea);
-      textarea.select();
-      const copied = document.execCommand('copy');
-      textarea.remove();
-      if (!copied) throw new Error('[CKWidgetRuntime] clipboard write failed');
-    }
-
-    function openUrl(url) {
-      const opened = window.open(url, '_blank', 'noopener,noreferrer');
-      if (!opened) throw new Error('[CKWidgetRuntime] share window was blocked');
-      opened.opener = null;
-    }
-
-    document.addEventListener('click', async (event) => {
-      const target = matchingEventElement(event, '[data-role="header-cta"], [data-ck-social-share-root] [data-action]');
-      if (!(target instanceof HTMLElement)) return;
-      if (target.matches('[data-role="header-cta"]') && isEditorPreview()) {
-        event.preventDefault();
-        return;
-      }
-      if (target.matches('[data-open-mode="new-window"]')) {
-        const href = target.getAttribute('href');
-        if (!href) return;
-        event.preventDefault();
-        if (isEditorPreview()) return;
-        const popup = window.open(href, '_blank', 'noopener,noreferrer,popup=yes,width=1024,height=720');
-        if (popup) popup.opener = null;
-        return;
-      }
-      const action = target.getAttribute('data-action') || '';
-      if (!action) return;
-      event.preventDefault();
-      const details = target.closest('details');
-      if (details instanceof HTMLDetailsElement) details.removeAttribute('open');
-      if (isEditorPreview()) { showPreviewOnly(target); return; }
-      const shareUrl = new URL(window.location.href);
-      shareUrl.searchParams.set('ref', 'share');
-      shareUrl.searchParams.set('channel', action);
-      const url = shareUrl.toString();
-      const messageText = 'Check out this widget from Clickeen!';
-      const socialText = `This Clickeen ${document.title || 'widget'} widget is awesome`;
-      const message = `${messageText}\n${url}`;
-      if (action === 'copy') return copyText(url);
-      if (action === 'email') { window.location.href = `mailto:?subject=${encodeURIComponent(document.title)}&body=${encodeURIComponent(message)}`; return; }
-      if (action === 'sms') { window.location.href = `sms:?&body=${encodeURIComponent(message)}`; return; }
-      const intents = {
-        whatsapp: `https://wa.me/?text=${encodeURIComponent(message)}`,
-        telegram: `https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(messageText)}`,
-        x: `https://twitter.com/intent/tweet?url=${encodeURIComponent(url)}&text=${encodeURIComponent(socialText)}`,
-        facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`,
-        reddit: `https://www.reddit.com/submit?url=${encodeURIComponent(url)}&title=${encodeURIComponent(socialText)}`,
-      };
-      if (intents[action]) { openUrl(intents[action]); return; }
-      const pasteDestinations = {
-        linkedin: 'https://www.linkedin.com/sharing/share-offsite/?url=' + encodeURIComponent(url),
-        signal: 'https://signal.me/', messenger: 'https://www.messenger.com/', line: 'https://line.me/',
-        slack: 'https://slack.com/app', teams: 'https://teams.microsoft.com/', discord: 'https://discord.com/channels/@me',
-        instagram: 'https://www.instagram.com/', tiktok: 'https://www.tiktok.com/',
-      };
-      if (action === 'wechat') { await copyText(url); return; }
-      if (action === 'linkedin') { await copyText(`${socialText}\n\n${url}`); openUrl(pasteDestinations[action]); return; }
-      if (pasteDestinations[action]) {
-        await copyText(action === 'instagram' || action === 'tiktok' ? `${socialText}\n\n${url}` : url);
-        openUrl(pasteDestinations[action]);
-        return;
-      }
-      throw new Error(`[CKWidgetRuntime] unsupported social action: ${action}`);
+      handler(data);
     });
-    document.addEventListener('change', (event) => {
-      const select = matchingEventElement(event, '.ck-locale-switcher__select');
-      if (!(select instanceof HTMLSelectElement)) return;
-      const nextLocale = select.value.trim();
-      const currentLocale = select.getAttribute('data-current-locale') || '';
-      if (!nextLocale || nextLocale === currentLocale) return;
-      const previewMode = document.documentElement.getAttribute('data-ck-preview-mode') || '';
-      if (previewMode === 'editing' || previewMode === 'translations') {
-        select.value = currentLocale;
-        window.parent.postMessage(
-          previewMode === 'editing'
-            ? { type: 'ck:preview-locale-switch-blocked' }
-            : { type: 'ck:preview-locale-change-request', locale: nextLocale },
-          '*',
-        );
-        return;
-      }
-      const url = new URL(window.location.href);
-      url.searchParams.set('locale', nextLocale);
-      window.location.assign(url.toString());
-    });
-    if (window.parent !== window) {
-      const postSize = () => window.parent.postMessage({ type: 'ck:resize', height: Math.ceil(document.documentElement.scrollHeight) }, '*');
-      window.parent.postMessage({ type: 'ck:ready' }, '*');
-      postSize();
-      if (typeof ResizeObserver !== 'undefined') new ResizeObserver(postSize).observe(document.documentElement);
-    }
   }
-
-  bindStaticInteractions();
 
   window.CKWidgetRuntime = Object.freeze({
     assertWidgetRoot,
+    bindStateUpdates,
     contextFor,
+    isComposedPage,
+    readPayload,
     register,
     resolveInstanceId,
     roots,

@@ -263,10 +263,30 @@ As-built read:
 
 ## Pages Domain Interactions
 
-Superseded on 2026-08-06: the experimental customer Pages product was removed
-from the current runtime and PRD 127 moved back to Planning. This historical
-section is not current implementation guidance. Prague remains an independent
-Astro site.
+Observed state and feedback:
+
+- `roma/components/pages-domain.tsx:129-144` defines many local state fields for
+  pages, sources, loading, refreshing, data errors, mutation errors, copy status,
+  selected source, draft/source edits, and active action.
+- `roma/components/pages-domain.tsx:315` participates in loading/error state.
+- `roma/components/pages-domain.tsx:335` saves page source through a command path.
+- `roma/components/pages-domain.tsx:426` mutates page source draft state before
+  persistence.
+- `roma/components/pages-domain.tsx:518-522` sets `Copied:` / `Copy failed:`
+  and clears it after 1800ms.
+- `roma/components/pages-domain.tsx:616` renders page state sections.
+- `roma/components/pages-domain.tsx:731` renders page action state.
+- `roma/components/pages-domain.tsx:778` renders copy status.
+- `roma/components/pages-domain.tsx:786` renders disabled publish/unpublish
+  explanation.
+
+As-built read:
+
+- Pages has broad local state and transient copy feedback.
+- Page source editing is optimistic in memory, with persistence confirmed by
+  save.
+- Publishing is currently visibly unavailable as disabled action plus inline
+  explanation.
 
 ## Settings, Team, Profile, Usage
 

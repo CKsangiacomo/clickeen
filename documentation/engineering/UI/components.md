@@ -77,10 +77,9 @@ contract.
 ## Application Inputs And Tables
 
 Applications compose forms from Dieter's actual input contracts. Single-line
-text uses `textfield`, plain multiline text uses `textedit`, immediate choices
-use `dropdown-actions`, and formatted multiline content uses `textedit`. Apps
-retain labels, validation copy, values, layout, and product behavior; they do
-not create a parallel generic field family.
+text uses `textfield`, immediate choices use `dropdown-actions`, and multiline
+content uses `textedit`. Apps retain labels, validation copy, values, layout,
+and product behavior; they do not create a parallel generic field family.
 
 Dieter Table owns width, alignment, borders, base spacing, and horizontal
 overflow. Roma owns table data and state. DevStudio retains policy-specific
@@ -139,5 +138,5 @@ Current inventory detail: Dieter components are source modules consumed
 directly by Bob, Roma, and DevStudio; there is no runtime component manifest.
 `shared/` contains helpers and is not a rendered component.
 `command-activity` and `operational-table` are absent from current tracked
-source. DevStudio generates 25 source-backed component pages. Historical 126
+source. DevStudio generates 24 source-backed component pages. Historical 126
 audits remain point-in-time evidence.

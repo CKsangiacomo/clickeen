@@ -19,9 +19,9 @@ Files:
 spec.json
 editable-fields.json
 limits.json
-index.html
-styles.css
-runtime.js
+widget.html
+widget.css
+widget.client.js
 ```
 
 ## Contract
@@ -88,16 +88,16 @@ calltoaction.action.label
 ```text
 branding.remove -> behavior.showBacklink
 widget.socialShare.enabled -> behavior.socialShare.enabled
-embed.seoGeo.enabled -> behavior.seoGeoAeoEnabled
 ```
 
 ## Shell Utilities
 
 Call to Action uses the shared Shell for Header, Header CTA, Stage/Pod, Core
-size, typography, branding, social share, and locale switcher.
+size, typography, social share, and locale switcher. Current runtime applies
+branding only when `CKBranding.applyBacklink` is present; it does not fail when
+branding is missing.
 
-Generated `index.html` contains the complete action block and customer content.
-Its stable Core hooks are:
+Runtime requires these Core DOM hooks:
 
 ```text
 [data-role="calltoaction"]
@@ -110,10 +110,15 @@ Its stable Core hooks are:
 [data-role="calltoaction-action-icon"]
 ```
 
-`runtime.js` has no Widget-local interaction. Web Code Generator renders the
-structured values into `index.html`.
+`widget.client.js` registers as `calltoaction`, validates `calltoaction.*`,
+normalizes action URLs, applies shared Shell utilities, and binds
+`ck:state-update` for the current instance id.
 
-The structured editor contract exposes:
+Allowed action URL forms are empty, `#`, root-relative, `http(s)`, `mailto`,
+and `tel`. Do not add URL fallback behavior that silently rewrites an invalid
+action.
+
+Runtime constraints:
 
 ```text
 calltoaction.action.openMode -> same-tab|new-tab|new-window
@@ -123,6 +128,13 @@ calltoaction.action.iconPlacement -> left|right
 
 Action style state owns background, text color, border, radius, padding, and
 icon size. Header CTA style remains Shell-owned under `appearance.headerCta.*`.
+
+## Clickeen Pages Usage
+
+Call to Action appears in Clickeen Page source as a saved account widget
+instance placement. The body action belongs to `calltoaction.*`; the shared
+Header CTA remains Shell-owned. Public page package serving depends on Roma
+writing real page packages.
 
 ## Verification
 

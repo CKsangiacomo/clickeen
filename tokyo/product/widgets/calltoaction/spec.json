@@ -1,7 +1,7 @@
 {
   "widgetname": "calltoaction",
   "displayName": "Call to Action",
-  "description": "Guide visitors toward one focused action with a headline, supporting copy, and customizable link.",
+  "description": "",
   "itemKey": "calltoaction.item",
   "defaults": {
     "uiLabels": {

@@ -35,7 +35,7 @@ export type AiModelManagementValidationResult =
   | { ok: true; config: AiModelManagementConfig }
   | { ok: false; issues: AiModelManagementValidationIssue[] };
 
-const AI_POLICY_PROFILES: readonly AiPolicyProfile[] = ['free', 'tier1', 'tier2', 'tier3', 'tier4', 'tier99'];
+const AI_POLICY_PROFILES: readonly AiPolicyProfile[] = ['free', 'tier1', 'tier2', 'tier3', 'tier4'];
 
 export const AI_MODEL_MANAGEMENT_CONFIG: AiModelManagementConfig = {
   productCopilot: {
@@ -76,11 +76,6 @@ export const AI_MODEL_MANAGEMENT_CONFIG: AiModelManagementConfig = {
           policyProfile: 'tier4',
           model: { provider: 'openai', model: 'gpt-5.4-mini' },
           reason: 'paid translation route with stronger hosted model',
-        },
-        {
-          policyProfile: 'tier99',
-          model: { provider: 'openai', model: 'gpt-5.4-mini' },
-          reason: 'internal account translation route',
         },
       ],
     },

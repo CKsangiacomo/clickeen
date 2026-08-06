@@ -1,14 +1,15 @@
 # Runtime Profiles
 
-Last updated: 2026-08-05
+Last updated: 2026-07-30
 
 ## Current Runtime Surfaces
 
 | Surface | Runtime truth |
 | --- | --- |
-| Bob preview | Web Code Generator output for the current valid in-memory editor state |
+| Bob preview | compiled widget software plus in-memory editor state |
 | Saved instance | one stored root `index.html`, `styles.css`, and `runtime.js` |
 | Localized saved instance | the same root artifact plus one exact stored overlay |
+| Composed page | page-owned composition over referenced saved instances |
 
 ## Local Runtime Rule
 
@@ -17,7 +18,7 @@ surfaces are deployment truth.
 
 ## Tokyo-worker Runtime Boundary
 
-Tokyo-worker owns public Instance delivery:
+Tokyo-worker owns public instance delivery:
 
 ```text
 /{accountPublicId}/{instanceId}
@@ -28,9 +29,9 @@ Tokyo-worker owns public Instance delivery:
 ```
 
 The locale query does not identify another artifact. It selects one exact
-overlay for the root artifact. Tokyo-worker validates publication, exact
-package files, locale coordinate, overlay shape, and saved-field equality
-before returning localized HTML.
+overlay for the root artifact. Tokyo-worker validates publication, root
+fingerprint, locale coordinate, overlay shape, and saved-field equality before
+returning localized HTML.
 
 ## Storage Runtime
 
@@ -41,26 +42,18 @@ accounts/{accountPublicId}/instances/{instanceId}/
   runtime.js
   serve-state.json
   overlays/locales/{locale}.json
-
 ```
 
-The root index contains exact field markers and may contain public placeholders
-when generated semantics or attribution require public coordinates.
-Tokyo-worker rewrites marked values and `<html lang>` for a translated request,
-then completes any public account and instance placeholders for both base and
-translated responses. Any remaining public placeholder fails closed. Root
-support URLs never vary by locale. `runtime.js` binds behavior to the generated
-markup; it does not apply locale overlays. Completed Instance HTML uses the
-exact response URL as its CDN cache key. Support files are shared across
-locales. Instance Save, translation, publication, and deletion purge only
-affected public HTML and support-file URLs.
+The root index contains a stable locale-context marker. Tokyo-worker injects
+base or translated context into the response. Root support URLs never vary by
+locale. Runtime initialization is synchronous: the exact overlay is applied
+before widget modules execute.
 
 ## Failure Rule
 
 - unpublished instance: `404`;
 - missing requested overlay: `404 Locale not available`;
-- corrupt requested overlay: `500 Locale data invalid`;
-- incomplete public placeholder completion: `500 Public HTML invalid`;
+- corrupt requested overlay or invalid root context marker: `500 Locale data invalid`;
 - no requested non-base locale may render base content.
 
 ## Verification

@@ -68,11 +68,11 @@ export const ENTITLEMENT_META: Record<EntitlementKey, EntitlementMeta> = {
   },
   'embed.seoGeo.enabled': {
     label: 'SEO/GEO embed',
-    description: 'Allow Widget SEO/GEO/AEO generation.',
+    description: 'Allow generating and serving SEO/GEO optimized embed artifacts (Iframe++).',
     enforcement: {
       status: 'enforced',
-      owner: 'Bob widget editor ops and Roma save policy',
-      note: 'Widget limits map behavior.seoGeoAeoEnabled to this policy key. Bob rejects non-entitled edits, and Roma rejects non-entitled saves before submitted package bytes reach Tokyo-worker.',
+      owner: 'Roma product save/publish and public code flow',
+      note: 'Product policy belongs to Roma/account flow; Tokyo stores and serves submitted artifact files.',
     },
   },
   'widget.socialShare.enabled': {

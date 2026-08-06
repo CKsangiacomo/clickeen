@@ -22,7 +22,6 @@ appearance.localeSwitcher*
 appearance.podBorder
 behavior.showBacklink
 behavior.socialShare.*
-behavior.seoGeoAeoEnabled
 typography.globalFamily
 typography.roles.title
 typography.roles.body
@@ -50,28 +49,27 @@ packages/widget-shell/src/modules.ts
 Bob compiler composes Shell factory defaults with widget defaults. Roma account
 widget defaults are a separate account document.
 
-## Generation And Runtime Boundary
+## Shared Runtime APIs
 
-Web Code Generator consumes Shell and Core structured state. It generates the
-complete Header, Stage/Pod, sizing, typography, branding, social-share,
-locale-switcher, and Core content markup into `index.html`, with their
-presentation in `styles.css`.
+Widget clients call these shared globals from `tokyo/product/widgets/shared/`:
 
-Shared `runtime.js` exposes only behavior support through
-`window.CKWidgetRuntime`:
+| Global | Source file | Operator role |
+| --- | --- | --- |
+| `CKWidgetRuntime.register` | `runtime.js` | Registers the widget initializer and builds runtime context. |
+| `CKWidgetRuntime.bindStateUpdates` | `runtime.js` | Applies `ck:state-update` messages for the same widget/instance and refreshes preview typography data before the widget handler runs. |
+| `CKHeader.applyHeader` | `header.js` | Renders Header title, subtitle, Header CTA, and Header layout. |
+| `CKStagePod.applyStagePod` | `stagePod.js` | Applies Stage/Pod layout, background, padding, border, and sizing. |
+| `CKCoreSize.applyCoreSize` | `coreSize.js` | Applies Core width/height sizing variables. |
+| `CKTypography.applyTypography` | `typography.js` | Applies shared typography roles and locale/script font behavior. |
+| `CKBranding.applyBacklink` | `branding.js` | Applies/removes shared Clickeen backlink branding. |
+| `CKSocialShare.apply` | `socialShare.js` | Applies shared social share UI. |
+| `CKLocaleSwitcher.applyLocaleSwitcher` | `localeSwitcher.js` | Applies shared locale switcher UI for delivered overlays. |
+| `CKSurface.applyCardWrapper` | `surface.js` | Applies shared card-wrapper surface styling where the widget uses it. |
+| `CKAppearance` / `CKFill` helpers | `appearance.js`, `fill.js` | Resolve fill, color, border, radius, and shadow values. |
 
-```text
-assertWidgetRoot
-contextFor
-register
-resolveInstanceId
-roots
-```
-
-Widget-local interactive runtimes register against already-generated DOM.
-Shared runtime also binds Header CTA, social-share, locale-switcher,
-preview-ready, and iframe-resize behavior. There is no generic state-update
-message, runtime typography-data channel, or Shell/Core content renderer.
+If a widget client requires one of these helpers and it is missing, runtime must
+fail closed with an explicit error. Optional helper use is documented in the
+individual widget spec. Do not add local fallbacks in the widget.
 
 ## Core-Owned State
 
@@ -122,11 +120,8 @@ Stable Shell roles:
 [data-role="header-cta"]
 ```
 
-Stable Core roles are documented in each Widget operator spec. Web Code
-Generator requires only the template hooks each generation step actually
-fills; it is not a general Widget-local hook validator. Interactive Widget
-runtimes resolve only the generated behavior hooks they bind and fail
-explicitly when a required hook is missing.
+Stable Core roles are documented in each widget operator spec. Widget clients
+resolve those roles directly and throw when required hooks are missing.
 
 ## Hard Stops
 
@@ -135,4 +130,3 @@ explicitly when a required hook is missing.
 - Do not create widget-local Header, branding, share, or locale switcher systems.
 - Do not add runtime state healing for missing Core defaults.
 - Do not add account-owned assets or account coordinates to product defaults.
-- Do not move generated Shell/Core content rendering into `runtime.js`.

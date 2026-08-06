@@ -4,8 +4,7 @@ STATUS: CURRENT SYSTEM OPERATOR SPEC
 
 Use this guide only for bounded edits to Prague marketing page JSON.
 
-Prague marketing JSON is its own authority. Prague is not coupled to the
-deferred customer Pages product.
+Prague pages are marketing pages. Account Pages are a different product surface: stacks of saved widget instances owned by Roma and Tokyo-worker.
 
 ## Read First
 

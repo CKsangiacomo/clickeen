@@ -132,24 +132,6 @@ async function run(): Promise<void> {
   );
   assert.deepEqual(writtenLocales.sort(), ['fr', 'it']);
 
-  const denied = await worker.fetch(
-    new Request('https://translation-agent.test/translate-instance', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({
-        grant: await createGrant(privateKeyPem),
-        agentId: 'widget.instance.translator',
-        accountPublicId: 'CLICKEEN',
-        instanceId: '7UZXTP3TOI',
-        baseLocale: 'en',
-        requestedLocales: REQUESTED_LOCALES,
-        items: [{ path: 'title', type: 'string', value: 'Summer' }],
-      }),
-    }),
-    { ROMA_AI_GRANT_PUBLIC_KEY_PEM: publicKeyPem } as never,
-  );
-  assert.equal(denied.status, 403, 'a grant for one Instance must not translate another Instance');
-
   console.log('translation-agent worker outcomes: ok');
 }
 

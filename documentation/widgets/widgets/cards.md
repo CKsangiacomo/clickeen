@@ -19,9 +19,9 @@ Files:
 spec.json
 editable-fields.json
 limits.json
-index.html
-styles.css
-runtime.js
+widget.html
+widget.css
+widget.client.js
 ```
 
 ## Contract
@@ -75,7 +75,6 @@ cards.items[].link.label
 items.group.small.max -> cards.items[]
 branding.remove -> behavior.showBacklink
 widget.socialShare.enabled -> behavior.socialShare.enabled
-embed.seoGeo.enabled -> behavior.seoGeoAeoEnabled
 ```
 
 ## Shell Utilities
@@ -84,17 +83,30 @@ Cards uses the shared Shell for Header, Header CTA, Stage/Pod, Core size,
 typography, branding, social share, and locale switcher. Card visual surfaces
 are Core-owned under `cards.*`.
 
-Generated `index.html` contains every card and its customer content. Its stable
-Core hooks are:
+Runtime requires these Core DOM hooks:
 
 ```text
 [data-role="cards"]
 [data-role="cards-core"]
 ```
 
-`runtime.js` has no Widget-local interaction. Web Code Generator renders the
-complete structured card set into `index.html`. Card wrapper styling is
-generated from the shared Shell surface contract.
+`widget.client.js` registers as `cards`, validates `cards.*`, renders cards
+into `cards-core`, applies shared Shell utilities, and binds `ck:state-update`
+for the current instance id.
+
+Runtime invariants:
+
+- `cards.items[]` must contain 2-16 cards.
+- `cards.items[]` must contain stable, unique item ids.
+- Card `title` and `copy` are required non-empty values.
+- `cards.items[].media.kind` is `none`, `icon`, or `image`.
+- Image cards require `cards.items[].media.image.src`.
+- Icon cards require a Dieter icon name.
+- Linked-card treatment requires each rendered card link to have both href and label.
+- Card action URLs are validated as empty, `#`, root-relative, `http(s)`,
+  `mailto`, or `tel`.
+- Card wrapper styling uses shared `CKSurface.applyCardWrapper`, not a
+  widget-local surface helper.
 
 Treatment and layout state:
 
@@ -107,6 +119,12 @@ cards.betweenCards
 cards.customCardStyles
 cards.appearance.cardwrapper
 ```
+
+## Clickeen Pages Usage
+
+Cards appears in Clickeen Page source as a saved account widget instance
+placement. Repeated card items remain widget Core state inside the instance.
+Public page package serving depends on Roma writing real page packages.
 
 ## Verification
 

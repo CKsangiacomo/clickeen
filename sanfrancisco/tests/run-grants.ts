@@ -1,7 +1,5 @@
 import assert from 'node:assert/strict';
 import { mintRomaAiGrant } from '@clickeen/ck-policy';
-import { resolveAiAgent } from '@clickeen/ck-contracts/ai';
-import { resolveAiRuntimeBudget, resolveAiRuntimePolicy } from '@clickeen/ck-policy';
 import { verifyGrant } from '../src/grants';
 
 function pem(label: 'PRIVATE KEY' | 'PUBLIC KEY', bytes: ArrayBuffer): string {
@@ -37,23 +35,6 @@ async function run(): Promise<void> {
   );
   const wrongIssuer = await mintRomaAiGrant({ ...payload, iss: 'sanfrancisco' }, privateKeyPem);
   await assert.rejects(() => verifyGrant(wrongIssuer, publicKeyPem), /Grant missing required fields/);
-
-  const translator = resolveAiAgent('widget.instance.translator');
-  assert.ok(translator);
-  const ai = resolveAiRuntimePolicy({ entry: translator.entry, policyProfile: 'tier99' });
-  const tier99 = await mintRomaAiGrant({
-    ...payload,
-    mode: 'ops',
-    caps: ['agent:widget.instance.translator'],
-    ai,
-    budgets: resolveAiRuntimeBudget(ai),
-    trace: {
-      accountPublicId: 'CLICKEEN',
-      instanceId: '7UZXTP3TOI',
-      activeLocales: ['it'],
-    },
-  }, privateKeyPem);
-  assert.equal((await verifyGrant(tier99, publicKeyPem)).ai?.policyProfile, 'tier99');
 }
 
 run().then(

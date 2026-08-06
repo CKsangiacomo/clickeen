@@ -38,8 +38,6 @@ export function formatAccountTierLabel(value: unknown): string {
       return 'Tier 3';
     case 'tier4':
       return 'Tier 4';
-    case 'tier99':
-      return 'Tier 99';
     default:
       return 'Invalid plan';
   }

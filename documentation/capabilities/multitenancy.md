@@ -27,6 +27,7 @@ Canonical account-management architecture:
 | Roma tier-drop dismiss route | `roma/app/api/account/lifecycle/tier-drop/dismiss/route.ts` |
 | Roma account asset upload | `roma/app/api/account/assets/upload/route.ts` |
 | Roma instance create/save/publish routes | `roma/app/api/account/instances/**` |
+| Roma page publish disabled route | `roma/app/api/account/pages/[pageId]/publish/route.ts` |
 | Roma instance save policy | `roma/lib/account-instance-save-policy.ts` |
 | Policy resolver | `packages/ck-policy/src/policy.ts` |
 | Policy registry/matrix | `packages/ck-policy/src/registry.ts`, `packages/ck-policy/entitlements.matrix.json` |
@@ -48,9 +49,7 @@ Current account truth:
 - role lives on `users.role`;
 - `accounts.id` is the compact account product/storage coordinate;
 - `accountPublicId` is the API/embed/authz field name for that same value;
-- Clickeen operations use the normal `CLICKEEN` account. Its `tier99` profile
-  is internal-only, not sold to customers, and does not change role checks or
-  account isolation.
+- Clickeen admin uses the normal `CLICKEEN` account.
 
 Current relational truth lives in:
 
@@ -74,9 +73,9 @@ users.role -> role inside that account
 | Login/session/account bootstrap | Berlin |
 | Current account shell and product routes | Roma |
 | Relational account/user/team data | Michael/Supabase |
-| Account asset and Instance files | Tokyo-worker over Tokyo R2 |
+| Account assets/instances/pages files | Tokyo-worker over Tokyo R2 |
 | Account product policy | Roma using `@clickeen/ck-policy` |
-| Public Instance serving | Tokyo-worker stored generated-file serving |
+| Public widget serving | Tokyo-worker generated package serving |
 
 Account-scoped product work follows:
 
@@ -185,29 +184,6 @@ Operational examples:
 - Copilot grant issuance enforces `copilot.turns.monthly.max`; missing or
   malformed `USAGE_KV` counters fail closed.
 
-Universal product law:
-
-```text
-everything is visible to every tier; access is controlled by tier
-```
-
-This applies inside the authenticated current account and never grants
-cross-account visibility or bypasses role authorization. Tier policy decides
-which create, edit, publish, and use commands the account may perform now.
-Account management decides how retained account storage changes over the
-account lifecycle. A downgrade keeps existing Instances, templates,
-overlays, generated files, and assets visible; blocked commands remain visible
-and use the standard Upgrade interaction without mutation.
-
-The one automatic downgrade deletion exception is asset storage overage. The
-account has 30 days from the authoritative downgrade time to delete assets or
-upgrade. If usage still exceeds `storage.bytes.max`, account management directs
-Tokyo-worker to delete assets by descending `updatedAt`, with ascending
-`assetRef` as the deterministic tie-break, only until usage fits. Ordinary
-user-authorized deletes remain valid. Whole-account storage deletion occurs only
-through the account-deletion lifecycle. Neither automatic downgraded-asset
-cleanup nor whole-account root deletion exists in the current runtime.
-
 ### Verify Account-Owned Files
 
 Account-owned runtime files use:
@@ -234,7 +210,7 @@ Current entitlement keys:
 | --- | --- | --- | --- |
 | `l10n.locales.max` | limit | Roma account locale settings | enforced |
 | `branding.remove` | flag | Roma save policy | enforced |
-| `embed.seoGeo.enabled` | flag | Bob Widget editor operations and Roma Instance save policy | enforced |
+| `embed.seoGeo.enabled` | flag | no proven active runtime owner outside policy metadata | gap |
 | `widget.socialShare.enabled` | flag | Roma save policy | enforced |
 | `copilot.turns.monthly.max` | limit | Roma copilot grant issuance | enforced |
 | `storage.bytes.max` | limit | Roma upload route and Tokyo-worker assets | enforced |
@@ -255,7 +231,6 @@ Current finite instance limits:
 | `tier2` | 25 | 5 |
 | `tier3` | 100 | 25 |
 | `tier4` | 250 | 100 |
-| `tier99` | 250 | 100 |
 
 Invariant:
 
@@ -263,40 +238,20 @@ Invariant:
 widgets.instances.max >= instances.published.max
 ```
 
-The Widget Catalog is not tier-filtered. Tier limits do not hide CLICKEEN-owned
-template cards. Creating an ordinary Instance from a Catalog or account
-template, creating a blank Instance, and duplicating an Instance all use the
-same command-time instance-count limit. Publish uses its existing command-time
-limit. Over-tier Create, Duplicate, Use template, and Publish commands return
-HTTP 402 `UPGRADE_REQUIRED`; missing or malformed policy limits are Roma policy
-contract failures, not unlimited usage.
+The Widgets catalog is not tier-filtered. Tier limits do not hide widget types
+and do not create disabled Create/Duplicate controls in the Widgets list.
+Create and duplicate instance-count limits are enforced at command time. Publish
+limits are enforced at command time. Over-tier Create, Duplicate, and Publish
+return HTTP 402 `UPGRADE_REQUIRED`; missing or malformed policy limits are Roma
+policy contract failures, not unlimited usage.
 
 Tier values are read from the matrix. Do not restate commercial package prose
 here unless it maps to exact entitlement keys.
 
-## Templates and Catalog ownership
-
-Widget templates count under `widgets.instances.max`. They are normal saved
-objects owned by one account and carry `isTemplate: true`. **My templates**
-reads the current account. The customer Widget Catalog always reads templates
-owned by the exact `CLICKEEN`
-account and never infer Catalog membership from widget type, tier, or a second
-registry. Customer Catalog routes are read-only. DevStudio manages CLICKEEN
-template source and presentation through Roma, which remains the account
-authority and writes through Tokyo-worker.
-
-Two existing keys remain separate:
-
-- `branding.remove` controls whether generated public HTML contains visible
-  Clickeen attribution;
-- `embed.seoGeo.enabled` controls whether an ordinary Widget Instance may save
-  its enabled customer SEO/GEO/AEO choice.
-
-Neither key controls whether the generated HTML contains the customer's primary
-content. Free Widget attribution is mandatory when `branding.remove` is false;
-the Web Code Generator writes it into initial HTML. Bob enforces the customer
-SEO/GEO/AEO choice during editing, and Roma independently enforces it again at
-the Instance save boundary through the same Widget limits and account policy.
+Operator warning: `packages/ck-policy/src/registry.ts` currently marks
+`embed.seoGeo.enabled` as `enforced`, but runtime evidence does not prove an
+active consumer in Roma save, Roma publish, or Tokyo-worker public serving.
+Treat this row as conflicting policy metadata until code and registry agree.
 
 ## Failure Semantics
 
@@ -320,7 +275,7 @@ These are not active runtime truth:
 - customer account switching;
 - core `account_members` role authority;
 - public monthly view denial/upsell behavior for `views.monthly.max`;
-- automatic 30-day downgraded-asset overage cleanup;
+- page publish is disabled; Roma returns `422 coreui.errors.page.publishUnavailable`, and public page copy/open is not active.
 
 ## Verification
 
@@ -331,8 +286,9 @@ These are not active runtime truth:
 | Relational account schema | Supabase migrations and `documentation/services/michael.md` |
 | Role/account invariant | `users.account_id` and `users.role` current truth |
 | Entitlement keys/values | `packages/ck-policy/entitlements.matrix.json` |
-| Entitlement metadata/enforcement status | runtime owner evidence plus `packages/ck-policy/src/registry.ts` |
+| Entitlement metadata/enforcement status | runtime owner evidence plus `packages/ck-policy/src/registry.ts`; `embed.seoGeo.enabled` currently conflicts |
 | Account files | Roma routes first; raw bytes require `pnpm cf:preflight` and R2 evidence |
+| Page publish disabled | `POST /api/account/pages/{pageId}/publish` returns `422 coreui.errors.page.publishUnavailable` |
 
 ## Not Current Product Truth
 

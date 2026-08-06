@@ -1,7 +1,7 @@
 {
   "widgetname": "big-bang",
   "displayName": "Big Bang",
-  "description": "Present a high-impact statement with supporting copy in a polished website widget.",
+  "description": "",
   "itemKey": "bigBang.item",
   "defaults": {
     "uiLabels": {

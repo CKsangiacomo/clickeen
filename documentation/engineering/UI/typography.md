@@ -4,16 +4,16 @@ STATUS: CURRENT SYSTEM OPERATOR SPEC
 
 Canonical doctrine: this document.
 Execution PRD: [`126D__PRD__Typography.md`](../../../Execution_Pipeline_Docs/02-Executing/126__UI_Optimization/126D__PRD__Typography.md).
-Current source authorities are Dieter typography source, account Widget
-defaults, and structured Widget typography consumed by Web Code Generator.
+Current source authorities are Dieter typography source, account widget
+defaults, and widget runtime typography.
 
 This document defines two typography lanes:
 
 - Operational UI typography: Dieter owns Bob, Roma, DevStudio, Admin chrome, and
   Dieter components.
-- Public Widget content typography: Bob authors structured Widget typography;
-  Web Code Generator validates it and writes its font CSS and `--typo-*`
-  variables into the exact generated package.
+- Public widget content typography: Bob authors structured widget typography;
+  widget runtime applies it through `CKTypography.applyTypography` and
+  `--typo-*` variables.
 
 Do not merge these lanes. Operational UI must stay deterministic and Clickeen
 owned. Public widget content must stay account-authored and portable.
@@ -74,13 +74,14 @@ typography.roles.*
 typography.roleScales.*
 ```
 
-Web Code Generator applies that state through:
+Runtime applies that state through:
 
 ```text
-packages/ck-web-code-generator/src/shell.ts
+tokyo/product/widgets/shared/typography.js
+CKTypography.applyTypography(...)
 ```
 
-Generation emits `--typo-*` variables for the Widget scope. Widget typography may
+Runtime emits `--typo-*` variables for the widget scope. Widget typography may
 include account-authored content colors, role scales, custom sizes, weights,
 styles, tracking presets, line-height presets, and locale/script-aware fallback
 behavior. That is widget content authority, not Dieter chrome authority.
@@ -146,9 +147,9 @@ fontLibrary: {
 }
 ```
 
-Persisted uploaded font records keep `assetRef`, not public URLs. Bob resolves
-that reference through the account asset authority before generation. Web Code
-Generator emits the resolved public URL only into generated font CSS.
+Persisted uploaded font records keep `assetRef`, not public URLs. Runtime
+package materialization resolves `assetRef` through the account asset authority
+and emits the public account asset URL only into materialized runtime data.
 
 ## Bob And Runtime Flow
 
@@ -166,44 +167,46 @@ Bob behavior:
   compatible weight and style are applied together. Dieter emits the requested
   family only; it does not choose companion values.
 - The account-backed controls do not offer unavailable choices. Direct or
-  malformed saved family/weight/style combinations are rejected by Web Code
-  Generator; they are not trimmed, repaired, or replaced.
+  malformed saved family/weight/style combinations are rejected by package
+  materialization; they are not trimmed, repaired, or replaced.
 - Bob preview resolves account-uploaded font `assetRef` values through the
-  current account asset route and regenerates the exact preview package with
-  the resolved font context.
+  current account asset route and posts runtime typography data into the widget
+  iframe with preview state.
 - Inter is always available when account data is valid.
 - Missing or malformed `fontLibrary` fails editor open explicitly.
-- Bob must not show or preview font choices generation cannot load.
+- Bob must not show or preview font choices the runtime cannot load.
 
-Generated package behavior:
+Runtime package behavior:
 
-- Web Code Generator reads the current structured typography and resolved
-  account font context together.
-- Generation validates every role's family, weight, and style against the
-  already resolved font context before CSS emission. Instance typography and
-  Shell defaults are required. A widget
+- Save/package materialization reads saved typography and account font library
+  together.
+- Materialization validates every role's family, weight, and style before asset
+  resolution. Instance typography and Shell defaults are required. A widget
   with no widget-core typography roles does not invent a core typography block.
-- Packages emit font CSS only for families selected by the generated Instance.
+- Packages include only the font records used by the saved instance plus Inter.
 - Google records load from Google.
 - Account-uploaded records emit `@font-face` from resolved account asset URLs.
 - Unknown font families, missing font records, or missing account font assets
-  fail resolution or generation. They are not silently replaced with Inter.
+  fail materialization. They are not silently replaced with Inter.
 
-Shared Widget typography behavior:
+Shared widget runtime behavior:
 
 - Shell typography labels are owned by `@clickeen/widget-shell`. Widgets declare
   labels and display order for widget-specific roles in
   `editor.panels[].shared.roleLabels`.
-- Web Code Generator writes selected typography variables and required font CSS
-  into the same exact package Bob previews and submits on Save.
-- `runtime.js` does not receive or apply typography state.
+- `CKTypography` reads `CK_WIDGET_TYPOGRAPHY_DATA`.
+- Public runtime packages inline that data during package materialization.
+- Bob preview supplies the same shape through `ck:state-update.typographyData`
+  before widget clients apply preview state.
 
 ## Fallback Truth
 
-Public Widget CSS does not depend on an operational UI font-family variable.
-Malformed structured typography, an unavailable selected font, or a missing
-font asset must fail through Bob resolution or Web Code Generator rather than
-becoming an apparent successful package.
+Public widget CSS uses the required Inter account-font baseline directly before
+structured widget typography data is applied. It does not depend on an
+operational UI font-family variable. That static baseline must not turn missing
+`CKTypography.applyTypography`, malformed account font data, or a missing font
+asset into apparent success. Those failures surface through the owning editor
+or materialization path.
 
 ## Font Uploads
 

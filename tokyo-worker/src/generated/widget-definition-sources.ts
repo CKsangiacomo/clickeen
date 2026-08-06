@@ -2,35 +2,26 @@
 // This is a source index for bundling Tokyo widget definitions; it is not product state.
 
 import big_bangEditableFields from "../../../tokyo/product/widgets/big-bang/editable-fields.json";
-import big_bangLimits from "../../../tokyo/product/widgets/big-bang/limits.json";
 import big_bangSpec from "../../../tokyo/product/widgets/big-bang/spec.json";
 import calltoactionEditableFields from "../../../tokyo/product/widgets/calltoaction/editable-fields.json";
-import calltoactionLimits from "../../../tokyo/product/widgets/calltoaction/limits.json";
 import calltoactionSpec from "../../../tokyo/product/widgets/calltoaction/spec.json";
 import cardsEditableFields from "../../../tokyo/product/widgets/cards/editable-fields.json";
-import cardsLimits from "../../../tokyo/product/widgets/cards/limits.json";
 import cardsSpec from "../../../tokyo/product/widgets/cards/spec.json";
 import countdownEditableFields from "../../../tokyo/product/widgets/countdown/editable-fields.json";
-import countdownLimits from "../../../tokyo/product/widgets/countdown/limits.json";
 import countdownSpec from "../../../tokyo/product/widgets/countdown/spec.json";
 import faqEditableFields from "../../../tokyo/product/widgets/faq/editable-fields.json";
-import faqLimits from "../../../tokyo/product/widgets/faq/limits.json";
 import faqSpec from "../../../tokyo/product/widgets/faq/spec.json";
 import logoshowcaseEditableFields from "../../../tokyo/product/widgets/logoshowcase/editable-fields.json";
-import logoshowcaseLimits from "../../../tokyo/product/widgets/logoshowcase/limits.json";
 import logoshowcaseSpec from "../../../tokyo/product/widgets/logoshowcase/spec.json";
 import split_carousel_mediaEditableFields from "../../../tokyo/product/widgets/split-carousel-media/editable-fields.json";
-import split_carousel_mediaLimits from "../../../tokyo/product/widgets/split-carousel-media/limits.json";
 import split_carousel_mediaSpec from "../../../tokyo/product/widgets/split-carousel-media/spec.json";
 import split_mediaEditableFields from "../../../tokyo/product/widgets/split-media/editable-fields.json";
-import split_mediaLimits from "../../../tokyo/product/widgets/split-media/limits.json";
 import split_mediaSpec from "../../../tokyo/product/widgets/split-media/spec.json";
 
 export type WidgetDefinitionSource = {
   widgetType: string;
   spec: unknown;
   editableFields: unknown;
-  limits: unknown;
 };
 
 export const WIDGET_DEFINITION_SOURCES = [
@@ -38,48 +29,40 @@ export const WIDGET_DEFINITION_SOURCES = [
     widgetType: "big-bang",
     spec: big_bangSpec,
     editableFields: big_bangEditableFields,
-    limits: big_bangLimits,
   },
   {
     widgetType: "calltoaction",
     spec: calltoactionSpec,
     editableFields: calltoactionEditableFields,
-    limits: calltoactionLimits,
   },
   {
     widgetType: "cards",
     spec: cardsSpec,
     editableFields: cardsEditableFields,
-    limits: cardsLimits,
   },
   {
     widgetType: "countdown",
     spec: countdownSpec,
     editableFields: countdownEditableFields,
-    limits: countdownLimits,
   },
   {
     widgetType: "faq",
     spec: faqSpec,
     editableFields: faqEditableFields,
-    limits: faqLimits,
   },
   {
     widgetType: "logoshowcase",
     spec: logoshowcaseSpec,
     editableFields: logoshowcaseEditableFields,
-    limits: logoshowcaseLimits,
   },
   {
     widgetType: "split-carousel-media",
     spec: split_carousel_mediaSpec,
     editableFields: split_carousel_mediaEditableFields,
-    limits: split_carousel_mediaLimits,
   },
   {
     widgetType: "split-media",
     spec: split_mediaSpec,
     editableFields: split_mediaEditableFields,
-    limits: split_mediaLimits,
   },
 ] as const satisfies readonly WidgetDefinitionSource[];

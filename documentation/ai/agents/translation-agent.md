@@ -2,8 +2,8 @@
 
 STATUS: CURRENT SYSTEM OPERATOR SPEC
 
-Translation Agent translates saved ordinary Instance content into exact locale
-overlay files.
+Translation Agent is the current account-widget translation agent home. It
+translates saved account instance content into locale overlay files.
 
 Code authority:
 
@@ -37,27 +37,27 @@ Code authority:
 
 | Authority | Owns |
 | --- | --- |
-| Roma | current account, tier, active locales, saved Instance read, grant issuance |
+| Roma | current account, tier, active locales, saved instance route, grant issuance |
 | Translation Agent | translation planning, protected-token handling, model prompts, exact overlay value production |
 | San Francisco | signed model execution and usage metadata |
-| Tokyo-worker | exact Instance overlay file storage in R2 |
-| Product surface | user request and result display |
+| Tokyo-worker | account instance overlay file storage in R2 |
+| Bob | user-facing Translations panel and request/result display |
 
 Translation Agent does not own account permission, tier permission, active locale
-selection, deletion, visitor runtime, or saved Instance source truth.
+selection, deletion, visitor runtime, or saved instance source truth.
 
 ## Product Triggers
 
 Current generation route:
 
 ```text
-POST /api/account/instances/[instanceId]/translations/generate
+POST /api/account/instances/[instance id]/translations/generate
 ```
 
 Roma loads current account locale state, excludes the base locale, enforces tier
-locale entitlement, loads that saved Instance, builds translation items, mints
-a grant bound to that exact Instance id, and calls the Translation Agent
-service binding.
+locale entitlement, loads the saved instance source from Tokyo-worker, builds
+translation items from saved `source.content.fields`, mints the Translation
+Agent grant, and calls the Translation Agent service binding.
 
 Locale removal is not Translation Agent work. Roma/Tokyo delete exact overlay
 files for removed active locales.
@@ -87,7 +87,7 @@ from polling. Bob does not expose user translation overrides.
 | --- | --- | --- | --- |
 | `GET` | `/api/account/instances/[instance id]/translations` | viewer | lists stored locale overlay summaries from Tokyo-worker |
 | `GET` | `/api/account/instances/[instance id]/translations/[active locale]` | viewer | reads one locale overlay value map from Tokyo-worker |
-| `POST` | `/api/account/instances/[instance id]/translations/generate` | editor | generates overlays for that saved ordinary Instance and current active locales excluding base locale |
+| `POST` | `/api/account/instances/[instance id]/translations/generate` | editor | generates overlays for current active locales excluding base locale |
 
 The browser-facing generation response is Roma-shaped, not the raw Worker
 response:
@@ -111,7 +111,7 @@ Roma returns `accepted: false` and does not call the Translation Agent.
 
 ## Roma Request Construction
 
-For an Instance, Roma builds items from saved source:
+Roma builds items from the saved instance source:
 
 ```text
 source.content.fields[path].value
@@ -130,7 +130,7 @@ Item shape sent to Translation Agent:
 ```
 
 Rich text is detected from HTML-like values and sent as `type: "richtext"`.
-The saved Instance field map is authority. Translation Agent must not rederive
+The saved instance field map is authority. Translation Agent must not rederive
 the field list from current widget source code during overlay writes.
 
 ## Worker HTTP Contract
@@ -231,7 +231,7 @@ Required grant facts:
 - `caps` includes `agent:widget.instance.translator`;
 - `ai.agentId = "widget.instance.translator"`;
 - `trace.accountPublicId` equals request `accountPublicId`;
-- `trace.instanceId` exactly equals request `instanceId`;
+- `trace.instanceId` equals request `instanceId`;
 - `trace.activeLocales` is the same set as request `requestedLocales`;
 - `exp` is greater than current time.
 
@@ -239,7 +239,7 @@ Tokyo-worker verifies the same grant on each write using the `x-ck-ai-grant`
 header and accepts only:
 
 - the same account id;
-- the same Instance id;
+- the same instance id;
 - a locale included in `trace.activeLocales`.
 
 ## Translation Planning And Safety
@@ -296,7 +296,7 @@ Expected Tokyo response:
 
 ## Storage And Verification
 
-Overlay file paths:
+Overlay file path:
 
 ```text
 accounts/[account public id]/instances/[instance id]/overlays/locales/[active locale].json
@@ -336,6 +336,8 @@ available in each widget's Translations panel and remain missing until that
 widget explicitly generates translations. Removed-locale cleanup does not veto
 the saved setting; an exact cleanup failure returns as
 `localeCleanup.ok: false`.
+
+This is an operator fact, not a desired future abstraction.
 
 ## End-To-End Runtime Secrets And Bindings
 
@@ -419,15 +421,13 @@ Normal cloud-dev deploy evidence comes from the GitHub Actions
 `packages/ck-policy/**`, `packages/l10n/**`, or the workflow
 file. The workflow also syncs `ROMA_AI_GRANT_PUBLIC_KEY_PEM` to
 `translation-agent-dev`, `sanfrancisco-dev`, and `tokyo-assets-dev` when
-required. Roma's matching private key remains only in the Roma Cloudflare Pages
-application.
+required. Roma's matching private key remains only in Roma Pages.
 
 ## Operator Debug Sequence
 
 1. Confirm Roma can load current account locale state.
 2. Confirm active locales exclude the base locale and pass tier entitlement.
-3. Confirm the saved Instance has translatable values in
-   `source.content.fields`.
+3. Confirm the saved instance has translatable `source.content.fields`.
 4. If generation returns `accepted: false`, there were no active non-base
    locales to generate.
 5. If `failedLocales` is non-empty, inspect those exact locale outcomes; other

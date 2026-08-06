@@ -621,7 +621,7 @@ export default {
       if (request.method !== 'POST' || url.pathname !== '/translate-instance') {
         throw new HttpError(404, { error: { code: 'BAD_REQUEST', message: 'Not found' } });
       }
-      return await handleTranslateInstance({
+      return handleTranslateInstance({
         request,
         env,
         streamActivity: request.headers.get('accept')?.includes('text/event-stream') === true,

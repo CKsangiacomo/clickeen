@@ -1,7 +1,7 @@
 {
   "widgetname": "logoshowcase",
   "displayName": "Logo Showcase",
-  "description": "Highlight customer logos with a fast, flexible showcase widget.",
+  "description": "",
   "itemKey": "logoshowcase.item",
   "normalization": {
     "idRules": [

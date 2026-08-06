@@ -5,7 +5,6 @@ import {
 } from '@clickeen/ck-contracts/overlay-codebooks';
 import type { WidgetEditableFieldsContract } from '@clickeen/ck-contracts/translated-value-primitives';
 import { readWidgetEditableFieldsContract } from '@clickeen/ck-contracts/translated-value-primitives';
-import { parseLimitsSpec, type LimitsSpec } from '@clickeen/ck-policy';
 import {
   WIDGET_DEFINITION_SOURCES,
   type WidgetDefinitionSource,
@@ -17,8 +16,6 @@ export type WidgetDefinition = {
   displayName: string;
   description: string;
   editableFields: WidgetEditableFieldsContract;
-  limits: LimitsSpec;
-  defaults: Record<string, unknown>;
 };
 
 type WidgetDefinitionInternal = WidgetDefinition & {
@@ -60,9 +57,6 @@ function readWidgetDefinitionSource(source: WidgetDefinitionSource): WidgetDefin
   if (editableFields.widgetType !== widgetType) {
     throw new Error(`widget_definition_editable_fields_mismatch:${widgetType}`);
   }
-  const limits = parseLimitsSpec(source.limits);
-  const defaults = isRecord(spec.defaults) ? spec.defaults : null;
-  if (!defaults) throw new Error(`widget_definition_defaults_missing:${widgetType}`);
 
   return {
     widgetType,
@@ -71,8 +65,6 @@ function readWidgetDefinitionSource(source: WidgetDefinitionSource): WidgetDefin
     description,
     itemKey: asNonEmptyString(spec.itemKey),
     editableFields,
-    limits,
-    defaults,
   };
 }
 
@@ -87,8 +79,6 @@ function publicEntry(entry: WidgetDefinitionInternal): WidgetDefinition {
     displayName: entry.displayName,
     description: entry.description,
     editableFields: entry.editableFields,
-    limits: entry.limits,
-    defaults: entry.defaults,
   };
 }
 

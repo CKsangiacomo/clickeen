@@ -8,7 +8,19 @@ export const WIDGET_SHELL_CSS_MODULE_KEYS = [
 ] as const;
 
 export const WIDGET_SHELL_RUNTIME_MODULE_KEYS = [
+  'product/widgets/shared/fill.js',
+  'product/widgets/shared/appearance.js',
   'product/widgets/shared/runtime.js',
+  'product/widgets/shared/header.js',
+  'product/widgets/shared/localeSwitcher.js',
+  'product/widgets/shared/surface.js',
+  'product/widgets/shared/typography-data.js',
+  'product/widgets/shared/typography.js',
+  'product/widgets/shared/coreSize.js',
+  'product/widgets/shared/stagePod.js',
+  'product/widgets/shared/branding.js',
+  'product/widgets/shared/previewL10n.js',
+  'product/widgets/shared/socialShare.js',
 ] as const;
 
 export const WIDGET_SHELL_STYLE_CHUNK_END = '/* ck-style-module:end */';

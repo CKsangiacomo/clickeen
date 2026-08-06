@@ -2,15 +2,9 @@
 
 STATUS: CURRENT SYSTEM OPERATOR SPEC
 
-Prague is Clickeen's public marketing surface. It is an Astro app deployed on
-Cloudflare Pages and served as static output. Prague explains and sells
-Widgets; it is not the Widget editor.
+Prague is Clickeen's public marketing surface. It is an Astro app deployed on Cloudflare Pages and served as static output. Prague explains and sells widgets. It is not the account Pages product, and it is not the widget editor.
 
-Prague is an independent complex global marketing site. It continues using its
-Astro app, repo-authored JSON and block source under `tokyo/prague/pages/**`,
-current routes, market and locale behavior, navigation, automation, and
-Cloudflare Pages deployment. It does not depend on the deferred customer Pages
-product.
+Account Pages are stacks of saved widget instances owned by Roma and Tokyo-worker. Prague marketing pages are repo-authored JSON documents under `tokyo/prague/pages/**`.
 
 ## Runtime Authority
 
@@ -28,7 +22,7 @@ product.
 
 Prague bundles repo JSON through Astro glob loading at build/runtime. The same git-authored Prague content also deploys to Tokyo/R2 under `prague/**` for the static-content root, but live Prague page rendering in this repo does not fetch page JSON from R2.
 
-Prague does not write account assets, account Instances, or account overlay folders.
+Prague does not write account assets, account instances, account pages, or account overlay folders.
 
 ## Routes
 
@@ -199,7 +193,7 @@ https://prague.dev.clickeen.com/us/en/widgets/countdown/
 
 Stop before editing if the request asks Prague to:
 
-- save account Instances or other Roma account-product data
+- save account instances or account pages
 - generate account translations
 - write Tokyo account folders
 - become the Bob editor

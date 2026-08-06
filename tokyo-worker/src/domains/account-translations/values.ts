@@ -1,5 +1,4 @@
 import { normalizeLocale } from '../../asset-utils';
-import { assertTranslationSafety } from '@clickeen/l10n';
 import type { Env } from '../../types';
 import {
   readConfigDocumentByLocation,
@@ -11,9 +10,6 @@ import type {
   AccountInstanceSourceReadFailure,
 } from '../account-instances/types';
 import { normalizeStorageId } from '../account-instances/utils';
-import { AccountInstanceTransitionError, purgeClkLiveLocaleCache } from '../account-instances/operations';
-import { readInstanceServeState } from '../account-instances/serve-state';
-import { getWidgetDefinition } from '../widget-definitions';
 import {
   assertLocaleOverlayValuesMatchSavedTextFields,
   deleteLocaleOverlay,
@@ -42,7 +38,6 @@ async function resolveStoredTranslationSource(args: {
   });
   const requestedWidgetType = typeof args.widgetType === 'string' ? args.widgetType.trim() : '';
   if (!configDoc || (requestedWidgetType && configDoc.widgetType !== requestedWidgetType)) return null;
-  if (configDoc.isTemplate) throw new Error('tokyo.translation.template_forbidden');
   const content = await readContentDocumentByLocation({
     env: args.env,
     accountId,
@@ -56,26 +51,6 @@ async function resolveStoredTranslationSource(args: {
 
 function savedContentOverlayFields(content: AccountInstanceContentDocument): Array<{ path: string }> {
   return Object.keys(content.fields).map((path) => ({ path }));
-}
-
-function assertSavedTranslationSafety(args: {
-  configDoc: AccountInstanceConfigDocument;
-  content: AccountInstanceContentDocument;
-  values: Record<string, string>;
-}): void {
-  const definition = getWidgetDefinition(args.configDoc.widgetType);
-  if (!definition) throw new Error(`tokyo.translation.widget_unsupported:${args.configDoc.widgetType}`);
-  const contractByPattern = new Map(definition.editableFields.fields.map((field) => [field.path, field]));
-  for (const [path, field] of Object.entries(args.content.fields)) {
-    const pattern = field.fieldPattern || path;
-    const contract = contractByPattern.get(pattern);
-    if (!contract) throw new Error(`coreui.errors.instance.content.invalid:${path}`);
-    assertTranslationSafety(
-      { path, type: contract.type, value: field.value },
-      args.values[path]!,
-      'tokyo',
-    );
-  }
 }
 
 export async function readAccountInstanceTranslatedLocaleValues(args: {
@@ -112,11 +87,6 @@ export async function readAccountInstanceTranslatedLocaleValues(args: {
     return { ok: false, kind: 'NOT_FOUND', reasonKey: 'tokyo.translation.notFound' };
   }
   assertLocaleOverlayValuesMatchSavedTextFields({ fields: current, values: overlay.values });
-  assertSavedTranslationSafety({
-    configDoc: stored.configDoc,
-    content: stored.content,
-    values: overlay.values,
-  });
   const values: Record<string, string> = {};
   for (const { path } of current) {
     values[path] = overlay.values[path]!;
@@ -150,17 +120,6 @@ export async function writeAccountInstanceTranslatedLocaleValues(args: {
   }
   const fields = savedContentOverlayFields(stored.content);
   assertLocaleOverlayValuesMatchSavedTextFields({ fields, values: args.values });
-  assertSavedTranslationSafety({
-    configDoc: stored.configDoc,
-    content: stored.content,
-    values: args.values,
-  });
-  const publishStatus = await readInstanceServeState({
-    env: args.env,
-    accountId: stored.configDoc.accountId,
-    widgetCode: stored.configDoc.widgetCode,
-    instanceId: stored.configDoc.id,
-  });
   await writeLocaleOverlay({
     env: args.env,
     accountId: stored.configDoc.accountId,
@@ -171,14 +130,6 @@ export async function writeAccountInstanceTranslatedLocaleValues(args: {
             values: args.values,
     },
   });
-  if (publishStatus === 'published') {
-    await purgeClkLiveLocaleCache({
-      env: args.env,
-      accountId: stored.configDoc.accountId,
-      instanceId: stored.configDoc.id,
-      locale,
-    });
-  }
   return { locale, values: args.values };
 }
 
@@ -202,12 +153,6 @@ export async function deleteAccountInstanceTranslatedLocaleValues(args: {
     widgetType: args.widgetType,
   });
   if (!stored) throw new Error('coreui.errors.instance.notFound');
-  const publishStatus = await readInstanceServeState({
-    env: args.env,
-    accountId: stored.configDoc.accountId,
-    widgetCode: stored.configDoc.widgetCode,
-    instanceId: stored.configDoc.id,
-  });
   await deleteLocaleOverlay({
     env: args.env,
     accountId: stored.configDoc.accountId,
@@ -215,14 +160,6 @@ export async function deleteAccountInstanceTranslatedLocaleValues(args: {
     instanceId: stored.configDoc.id,
     locale,
   });
-  if (publishStatus === 'published') {
-    await purgeClkLiveLocaleCache({
-      env: args.env,
-      accountId: stored.configDoc.accountId,
-      instanceId: stored.configDoc.id,
-      locale,
-    });
-  }
   return { locale };
 }
 

@@ -8,7 +8,6 @@ DEVSTUDIO_CANONICAL_ORIGIN = "https://devstudio.clickeen.com"
 DEVSTUDIO_GITHUB_BRANCH = "main"
 DEVSTUDIO_GITHUB_REPOSITORY = "CKsangiacomo/clickeen"
 ENV_STAGE = "cloud-dev"
-ROMA_BASE_URL = "https://roma.dev.clickeen.com"
 
 [secrets]
 required = ["DEVSTUDIO_GITHUB_TOKEN"]

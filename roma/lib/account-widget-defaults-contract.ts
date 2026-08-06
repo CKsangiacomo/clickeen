@@ -4,22 +4,17 @@ import {
   listWidgetShellAccountDefaultMetadataPaths,
   listWidgetShellControlPaths,
   normalizeAccountFontLibrary,
+  pathBelongsToShell,
   validateAccountTypographyFontSelections,
 } from '@clickeen/widget-shell';
 import type { NextRequest } from 'next/server';
-import type { TokyoWidgetDefinition } from './account-instance-direct';
+import {
+  readWidgetForInstancePackage,
+  type InstancePackageFailure,
+} from './account-instance-public-package';
 import type { AccountWidgetDefaultsDocument } from './account-widget-defaults-direct';
 
-export type InstancePackageFailure = {
-  ok: false;
-  status: 422;
-  error: {
-    kind: 'VALIDATION';
-    reasonKey: string;
-    detail?: string;
-    paths?: string[];
-  };
-};
+const CORE_SOFTWARE_METADATA_PATHS = ['uiLabels.core', 'typography.roleScales'] as const;
 
 function collectDefaultPaths(value: unknown, prefix = ''): string[] {
   if (Array.isArray(value)) return prefix ? [prefix] : [];
@@ -58,17 +53,23 @@ function typographyValidationFailure(paths: string[]): InstancePackageFailure {
   };
 }
 
+function compiledCoreDefaultControlPaths(controls: Array<{ path?: string }> | undefined): string[] {
+  return (controls ?? [])
+    .map((control) => (typeof control.path === 'string' ? control.path.trim() : ''))
+    .filter((path) => path && !pathBelongsToShell(path))
+    .sort((left, right) => left.localeCompare(right));
+}
+
 export async function validateAccountWidgetDefaultsContract(args: {
   request: NextRequest;
   widgetDefaults: AccountWidgetDefaultsDocument;
-  widgetDefinitions: TokyoWidgetDefinition[];
+  widgetTypes?: string[];
 }): Promise<{ ok: true } | InstancePackageFailure> {
   const fontLibrary = normalizeAccountFontLibrary(args.widgetDefaults.fontLibrary);
   if (!fontLibrary) {
     return validationFailure(['fontLibrary']);
   }
-  const widgetTypes = Object.keys(args.widgetDefaults.widgets);
-  const definitionsByType = new Map(args.widgetDefinitions.map((entry) => [entry.widgetType, entry]));
+  const widgetTypes = args.widgetTypes ?? Object.keys(args.widgetDefaults.widgets);
   const invalidTypographyPaths = validateAccountTypographyFontSelections({
     fontLibrary,
     typography: args.widgetDefaults.shell.typography,
@@ -85,12 +86,9 @@ export async function validateAccountWidgetDefaultsContract(args: {
       unmappedPaths.push(`${widgetType}:core`);
       continue;
     }
-    const definition = definitionsByType.get(widgetType);
-    if (!definition) {
-      unmappedPaths.push(`${widgetType}:definition`);
-      continue;
-    }
-    const allowedCorePaths = collectDefaultPaths(definition.defaults);
+    const compiled = readWidgetForInstancePackage(widgetType);
+    if (!compiled.ok) return compiled;
+    const controlPaths = compiledCoreDefaultControlPaths(compiled.value.controls);
     invalidTypographyPaths.push(
       ...validateAccountTypographyFontSelections({
         fontLibrary,
@@ -99,7 +97,8 @@ export async function validateAccountWidgetDefaultsContract(args: {
     );
     unmappedPaths.push(
       ...collectDefaultPaths(widgetDefaults.core)
-        .filter((path) => !pathIsCovered(path, allowedCorePaths))
+        .filter((path) => !pathIsCovered(path, controlPaths))
+        .filter((path) => !pathIsCovered(path, CORE_SOFTWARE_METADATA_PATHS))
         .map((path) => `${widgetType}:${path}`),
     );
   }

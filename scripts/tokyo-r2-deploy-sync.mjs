@@ -18,7 +18,6 @@ const concurrency = Number.parseInt(process.env.TOKYO_R2_DEPLOY_SYNC_CONCURRENCY
 const maxUploadAttempts = Number.parseInt(process.env.TOKYO_R2_DEPLOY_SYNC_ATTEMPTS || '4', 10);
 
 const mappings = [
-  { source: 'tokyo/product/clickeen', target: 'product' },
   { source: 'tokyo/product/widgets', target: 'product/widgets' },
   { source: 'dieter/icons/svg', target: 'dieter/icons/svg' },
   { source: 'tokyo/roma', target: 'product/roma' },

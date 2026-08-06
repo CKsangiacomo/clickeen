@@ -30,7 +30,7 @@ export const WIDGET_SHELL_FACTORY_DEFAULTS = {
   },
   headerCta: {
     enabled: true,
-    href: 'https://clickeen.com/',
+    href: 'https://www.clickeen.com',
     iconEnabled: true,
     iconName: 'arrowshape.turn.up.right',
     iconPlacement: 'right',
@@ -240,7 +240,6 @@ export const WIDGET_SHELL_FACTORY_DEFAULTS = {
     position: 'top-right',
   },
   behavior: {
-    seoGeoAeoEnabled: false,
     showBacklink: true,
     socialShare: {
       channels: {

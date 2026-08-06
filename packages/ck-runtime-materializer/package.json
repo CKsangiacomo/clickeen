@@ -1,0 +1,22 @@
+{
+  "name": "@clickeen/ck-runtime-materializer",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "test": "tsx tests/run-runtime-materializer-contract.ts",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@clickeen/ck-contracts": "workspace:*",
+    "@clickeen/widget-shell": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^20.16.5",
+    "tsx": "^4.20.6",
+    "typescript": "^5.4.5"
+  },
+  "exports": {
+    ".": "./src/index.ts"
+  }
+}

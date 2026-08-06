@@ -34,7 +34,6 @@ type RouteFailure = {
 
 type SavedInstanceSourcePayload = {
   widgetType: string;
-  isTemplate: boolean;
   source: {
     content: {
       fields: Record<string, { value: string; identityKey?: string; fieldPattern?: string }>;
@@ -154,11 +153,10 @@ function normalizeStringArray(raw: unknown): string[] | null {
 function normalizeSavedInstanceSourcePayload(raw: unknown): SavedInstanceSourcePayload | null {
   if (!isRecord(raw)) return null;
   const widgetType = asTrimmedString(raw.widgetType);
-  const isTemplate = raw.isTemplate;
   const source = isRecord(raw.source) ? raw.source : null;
   const content = isRecord(source?.content) ? source.content : null;
   const fields = isRecord(content?.fields) ? content.fields : null;
-  if (!widgetType || (isTemplate !== true && isTemplate !== false) || !fields) return null;
+  if (!widgetType || !fields) return null;
   const normalizedFields: SavedInstanceSourcePayload['source']['content']['fields'] = {};
   for (const [path, field] of Object.entries(fields)) {
     if (!path || !isRecord(field) || typeof field.value !== 'string') return null;
@@ -168,7 +166,7 @@ function normalizeSavedInstanceSourcePayload(raw: unknown): SavedInstanceSourceP
       ...(typeof field.fieldPattern === 'string' && field.fieldPattern ? { fieldPattern: field.fieldPattern } : {}),
     };
   }
-  return { widgetType, isTemplate, source: { content: { fields: normalizedFields } } };
+  return { widgetType, source: { content: { fields: normalizedFields } } };
 }
 
 function isRichtextValue(value: string): boolean {
@@ -439,16 +437,6 @@ export async function generateAccountInstanceTranslations(args: {
   const activeLocales = normalizeStringArray(args.activeLocales);
   if (!baseLocale) return invalidPayload('baseLocale_missing');
   if (!activeLocales) return invalidPayload('activeLocales_invalid');
-  const saved = await loadSavedInstanceSource({
-    accountId: args.accountId,
-    instanceId: args.instanceId,
-    accountCapsule: args.accountCapsule,
-    requestId: args.requestId,
-  });
-  if (!saved.ok) return saved;
-  if (saved.value.isTemplate) return invalidPayload('instance_template_cannot_translate');
-  const widgetType = saved.value.widgetType;
-  const items: TranslationAgentItem[] = buildTranslationAgentItems(saved.value.source.content);
   if (activeLocales.length === 0) {
     return {
       ok: true,
@@ -466,6 +454,14 @@ export async function generateAccountInstanceTranslations(args: {
       },
     };
   }
+  const saved = await loadSavedInstanceSource({
+    accountId: args.accountId,
+    instanceId: args.instanceId,
+    accountCapsule: args.accountCapsule,
+    requestId: args.requestId,
+  });
+  if (!saved.ok) return saved;
+  const items = buildTranslationAgentItems(saved.value.source.content);
   if (items.length === 0) return invalidPayload('saved_instance_has_no_translatable_fields');
 
   let issued: { grant: string; agentId: typeof TRANSLATION_AGENT_ID };
@@ -500,7 +496,7 @@ export async function generateAccountInstanceTranslations(args: {
         agentId: issued.agentId,
         accountPublicId: args.accountId,
         instanceId: args.instanceId,
-        widgetType,
+        widgetType: saved.value.widgetType,
         baseLocale,
         requestedLocales: activeLocales,
         items,

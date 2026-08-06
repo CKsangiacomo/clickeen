@@ -18,12 +18,9 @@ import { isCompactAccountPublicId } from '@clickeen/ck-contracts/overlay-identit
 import {
   AccountAssetKeyError,
   AccountAssetMetadataError,
-  CLICKEEN_ASSET_ACCOUNT_ID,
-  CatalogAssetCopyError,
   type AccountAssetFile,
   type MemberRole,
   deleteAccountAssetByRef,
-  copyClickeenCatalogAssets,
   directAccountAssetRefFromKey,
   isAccountAssetSource,
   listAccountAssetFilesByAccount,
@@ -342,85 +339,6 @@ export async function handleUploadAccountAsset(req: Request, env: Env): Promise<
     },
     { status: 200 },
   );
-}
-
-export async function handleCopyClickeenCatalogAssets(req: Request, env: Env): Promise<Response> {
-  const destinationAccountId = (req.headers.get('x-account-id') || '').trim();
-  if (!destinationAccountId || !isCompactAccountPublicId(destinationAccountId)) {
-    return json({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.accountId.invalid' } }, { status: 422 });
-  }
-
-  const authorized = await resolveAccountAssetAuthorization({
-    req,
-    env,
-    accountId: destinationAccountId,
-    minRole: 'editor',
-  });
-  if (!authorized.ok) return authorized.response;
-  if (authorized.accountAuthz && authorized.accountAuthz.accountStatus !== 'active') {
-    return json({ error: { kind: 'DENY', reasonKey: 'coreui.errors.account.disabled' } }, { status: 403 });
-  }
-
-  const body = await req.json().catch(() => null);
-  if (!body || typeof body !== 'object' || Array.isArray(body) || Object.keys(body).length !== 1 || !Object.prototype.hasOwnProperty.call(body, 'assetRefs')) {
-    return json({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.assets.copy.invalidPayload' } }, { status: 422 });
-  }
-  const rawAssetRefs = (body as { assetRefs?: unknown }).assetRefs;
-  if (!Array.isArray(rawAssetRefs) || rawAssetRefs.length === 0 || rawAssetRefs.some((value) => typeof value !== 'string')) {
-    return json({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.assets.copy.invalidAssetRefs' } }, { status: 422 });
-  }
-  if (rawAssetRefs.some((value) => !isAssetRef(value))) {
-    return json({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.assets.copy.invalidAssetRefs' } }, { status: 422 });
-  }
-  const sourceAssetRefs = rawAssetRefs as string[];
-  if (new Set(sourceAssetRefs).size !== sourceAssetRefs.length) {
-    return json({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.assets.copy.invalidAssetRefs' } }, { status: 422 });
-  }
-
-  let uploadSizeLimit: number | null;
-  let storageLimit: number | null;
-  try {
-    uploadSizeLimit = readLimitHeader(req, 'x-upload-size-max');
-    storageLimit = readLimitHeader(req, 'x-storage-bytes-max');
-  } catch (error) {
-    return json({
-      error: {
-        kind: 'VALIDATION',
-        reasonKey: 'coreui.errors.payload.invalid',
-        detail: error instanceof Error ? error.message : String(error),
-      },
-    }, { status: 422 });
-  }
-
-  try {
-    const mappings = await copyClickeenCatalogAssets({
-      env,
-      destinationAccountId,
-      sourceAssetRefs,
-      uploadSizeLimit,
-      storageLimit,
-    });
-    return json({ mappings }, { status: 200 });
-  } catch (error) {
-    if (error instanceof AccountAssetMetadataError) return accountAssetMetadataInvalidResponse(error);
-    if (error instanceof AccountAssetKeyError) return accountAssetKeyInvalidResponse(error);
-    if (error instanceof CatalogAssetCopyError) {
-      const status = error.reasonKey === 'coreui.upsell.reason.limitReached'
-        ? 403
-        : error.reasonKey === 'coreui.errors.asset.notFound'
-          ? 404
-          : 500;
-      return json({
-        error: {
-          kind: status === 403 ? 'DENY' : status === 404 ? 'NOT_FOUND' : 'INTERNAL',
-          reasonKey: error.reasonKey,
-          detail: error.message,
-        },
-        completedMappings: error.completedMappings,
-      }, { status });
-    }
-    throw error;
-  }
 }
 
 async function respondAccountAsset(env: Env, key: string, obj: { body: ReadableStream | null; httpMetadata?: { contentType?: string | null } | null }): Promise<Response> {

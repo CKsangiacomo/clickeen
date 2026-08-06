@@ -52,10 +52,9 @@ test.describe('Roma Builder authenticated smoke', () => {
     await copyCodeAction.click();
     const copyCodeDialog = page.getByRole('dialog', { name: 'Copy code' });
     await expect(copyCodeDialog).toBeVisible();
-    await expect(copyCodeDialog.getByRole('heading', { name: 'Public URL' })).toBeVisible();
-    await expect(copyCodeDialog.getByRole('heading', { name: 'Installation code' })).toBeVisible();
-    await expect(copyCodeDialog.getByRole('heading', { name: 'Embed code' })).toHaveCount(0);
-    await expect(copyCodeDialog.getByRole('heading', { name: 'Script code' })).toHaveCount(0);
+    await expect(copyCodeDialog.getByRole('heading', { name: 'Widget URL' })).toBeVisible();
+    await expect(copyCodeDialog.getByRole('heading', { name: 'Embed code' })).toBeVisible();
+    await expect(copyCodeDialog.getByRole('heading', { name: 'Script code' })).toBeVisible();
     await copyCodeDialog.getByRole('button', { name: 'Close' }).click();
     await expect(copyCodeDialog).toBeHidden();
 

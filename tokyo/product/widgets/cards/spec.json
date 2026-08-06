@@ -1,7 +1,7 @@
 {
   "widgetname": "cards",
   "displayName": "Cards",
-  "description": "Present repeatable cards with text, media, and optional links in flexible layouts.",
+  "description": "",
   "itemKey": "cards.item",
   "defaults": {
     "uiLabels": {
@@ -120,8 +120,8 @@
         },
         {
           "id": "card-2",
-          "title": "Built for websites",
-          "copy": "Add one saved Widget to your site while every card stays easy to edit.",
+          "title": "Built for pages",
+          "copy": "Stack instances into composed pages while each card stays easy to edit.",
           "media": {
             "kind": "icon",
             "iconName": "square.stack.3d.up",

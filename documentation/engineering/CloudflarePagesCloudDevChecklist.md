@@ -292,7 +292,6 @@ Env contract:
 | `DEVSTUDIO_GITHUB_BRANCH` | yes | `main` | `admin/wrangler.toml` |
 | `DEVSTUDIO_GITHUB_REPOSITORY` | yes | `CKsangiacomo/clickeen` | `admin/wrangler.toml` |
 | `ENV_STAGE` | yes | `cloud-dev` | `admin/wrangler.toml` |
-| `ROMA_BASE_URL` | yes | `https://roma.dev.clickeen.com` | `admin/wrangler.toml` |
 | `DEVSTUDIO_GITHUB_TOKEN` | yes | GitHub contents token scoped to this repo | Cloudflare Pages secret |
 
 Verification:

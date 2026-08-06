@@ -1,4 +1,4 @@
-import { normalizeLocale, prettyStableJson, sha256Hex } from '../../asset-utils';
+import { normalizeLocale, normalizeSha256Hex, prettyStableJson, sha256Hex } from '../../asset-utils';
 
 const UTF8_ENCODER = new TextEncoder();
 
@@ -18,6 +18,10 @@ export function jsonSha256Hex(value: unknown): Promise<string> {
 export function normalizeStorageId(value: unknown): string | null {
   const normalized = String(value || '').trim();
   return normalized ? normalized : null;
+}
+
+export function normalizeFingerprint(value: unknown): string | null {
+  return normalizeSha256Hex(value);
 }
 
 export function normalizeLocaleList(value: unknown): string[] | null {

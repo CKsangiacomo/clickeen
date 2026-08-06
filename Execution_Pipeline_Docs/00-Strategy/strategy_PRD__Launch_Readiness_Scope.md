@@ -16,6 +16,7 @@ Launch means Clickeen can:
 - acquire a user;
 - onboard the user into Roma;
 - let the user create, edit, save, publish, and serve real widget instances;
+- let the user create and serve pages made from widget instances;
 - translate and expose content globally;
 - communicate with users and internal agents;
 - bill the account;
@@ -30,6 +31,7 @@ The launch work must preserve the current architecture:
 - Roma is the account app and product authority surface.
 - Bob is the editor for one widget instance in browser memory.
 - Tokyo stores account runtime artifacts in R2.
+- Pages are stacks of saved widget instances.
 - Prague is the marketing site and dogfoods Clickeen output.
 - San Francisco is governed model execution.
 - Product Copilot and Translation Agent are real agent homes.
@@ -115,47 +117,55 @@ Strategy position:
 - inbound email to agents is untrusted external content, not authority to mutate
   product truth.
 
-### 4. SEO/GEO/AEO for Widgets
+### 4. SEO/GEO/AEO for Widgets and Pages
 
-Clickeen needs system SEO/GEO/AEO for its real served Widget Instances.
-Customer Pages are deferred and are not launch scope.
+Clickeen needs system SEO/GEO/AEO for the real served surfaces:
+
+- widget instances;
+- pages composed of widget instances.
+
+There is no page-block SEO model.
 
 Why it matters:
 
 - Clickeen's largest distribution moat depends on crawlable, localized,
   structured content;
-- Widget SEO/GEO/AEO makes each Widget a machine-readable content surface;
+- widget-level SEO/GEO/AEO makes each widget a machine-readable content surface;
+- page-level SEO/GEO/AEO makes stacks of widget instances rank as complete
+  pages;
 - answer engines increasingly decide what users see before they click.
 
 Strategy position:
 
 - widget outputs may emit widget-owned schema and answer-ready content;
+- page outputs own page metadata, canonical/hreflang, combined schema, and
+  page-level ranking intent;
 - public serving uses generated artifacts only;
 - visitor requests must not call agents or models;
 - the future SEO/GEO/AEO Agent measures and proposes improvements asynchronously.
 
-### 5. Prague Remains Its Independent Astro Site
+### 5. Prague Pages Built from Clickeen Widgets
 
 Prague must present Clickeen by using Clickeen.
 
-Prague keeps its existing Astro/global architecture and may embed real Clickeen
-Widgets where useful. It does not depend on the deferred customer Pages
-product.
+The launch marketing site should rely on real Clickeen widgets and real Clickeen
+page composition wherever the product model says it should. The old Prague block
+model is not the destination.
 
 Why it matters:
 
 - Prague is the top of funnel;
 - Prague proves the product visually and structurally;
 - dogfooding exposes product gaps earlier than isolated marketing code;
-- users should see real Clickeen Widgets where the marketing experience calls
-  for them.
+- users should see the same system they will use.
 
 Strategy position:
 
-- Prague owns its page source, navigation, automation, and global delivery;
-- Widget embeds use the current public Widget installer;
-- no customer Pages machinery or generic composition engine is built for
-  Prague.
+- page-shaped marketing sections become widget instances where appropriate;
+- Prague pages should be stacks of real widget instances when migrated;
+- current Prague-specific structures are migration source, not future product
+  truth;
+- no generic composition engine should be invented for Prague.
 
 ### 6. Launch Widget Set for Prague and Product Proof
 
@@ -229,10 +239,11 @@ Strategy position:
 These are candidate launch requirements that should be confirmed, rejected, or
 promoted into planning.
 
-### Public Widget Locale Serving
+### Public Page and Locale Serving
 
 SEO/GEO/AEO and Translation Agent value require crawlable locale URLs for
-Widgets. Launch scope must verify current clk.live Widget locale serving.
+widgets and pages. If clk.live page/locale serving is not complete, launch scope
+must name it explicitly.
 
 ### Translation Agent Launch Closure
 
@@ -290,9 +301,8 @@ Known active or planned work already exists for:
 - Roma UI Refactor;
 - DevStudio/Dieter governance;
 - Email Service planning;
-- SEO/GEO/AEO for current Widget surfaces;
-- Prague's independent Astro/global site work;
-- deferred customer Pages/website-builder planning (not launch scope);
+- SEO/GEO/AEO widget and page surfaces;
+- Prague migration from Astro blocks to Page Composer;
 - planned internal agents;
 - integrations.
 

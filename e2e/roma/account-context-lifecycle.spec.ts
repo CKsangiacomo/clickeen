@@ -162,7 +162,7 @@ test.describe('Roma account context lifecycle', () => {
       if (requests === 3) {
         recoveredRefresh.resolve();
         const now = Date.now();
-        const nextProfile = bootstrapPayload?.authz?.profile === 'free' ? 'tier4' : 'free';
+        const nextProfile = bootstrapPayload?.authz?.profile === 'tier4' ? 'free' : 'tier4';
         return fulfillJson(route, 200, {
           ...bootstrapPayload,
           activeAccount: {
@@ -187,7 +187,7 @@ test.describe('Roma account context lifecycle', () => {
     await expect(page.getByRole('status', { name: 'Loading page' })).toHaveCount(0);
     await recoveredRefresh.promise;
     await expect(page.getByRole('heading', { name: 'Current plan' })).toBeVisible();
-    const expectedPlan = bootstrapPayload?.authz?.profile === 'free' ? 'Tier 4' : 'Free';
+    const expectedPlan = bootstrapPayload?.authz?.profile === 'tier4' ? 'Free' : 'Tier 4';
     await expect(page.getByRole('heading', { name: 'Current plan' }).locator('..').getByText(expectedPlan)).toBeVisible();
   });
 

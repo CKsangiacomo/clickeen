@@ -25,7 +25,7 @@ compatibility paths, validation layers, state machines, and fallback behavior.
 
 Clickeen is the opposite. The system stays lean, structured, typed, and
 AI-legible. Widget specs, control maps, field maps, account files, overlays,
-policy files, routes, and storage folders are product artifacts
+page files, policy files, routes, and storage folders are product artifacts
 agents can understand and operate. The intelligence lives in the agents and in
 their ability to operate the structured substrate through named authorities.
 
@@ -52,26 +52,12 @@ Clickeen is a simple account product.
 - `accountPublicId` is the API/embed/authz field name for that same value.
 - Widgets are software and live in the system.
 - Users create widget instances in Roma/Bob and save them in their account.
+- Pages are account-owned stacks of saved instances.
 - Bob is an editor. Open/edit work is browser memory. Save is the persistence
   boundary.
 - Roma is the account app. Roma routes the user to the current account,
   enforces tier/product policy, and saves account work through owner services.
 - Tokyo-worker stores and serves account runtime files in R2.
-- Accepted product law for new or changed surfaces: everything is visible to
-  every tier; access is controlled by tier. This does not expose another
-  account's data or bypass user-role authorization. Existing surfaces remain
-  current only where their owning runtime and service document prove
-  conformance.
-- Accepted lifecycle law: tier controls creation and product use. Account management controls storage
-  retention and deletion over the account lifecycle. Tokyo-worker performs the
-  exact approved byte operation. Account management is a responsibility, not a
-  new service or storage layer.
-- Downgrade retains account-created product truth. The one automatic downgrade
-  deletion exception is asset usage above the new `storage.bytes.max`: assets
-  remain visible and usable for 30 days, then the most recently uploaded assets
-  are deleted only until usage fits. Whole-account deletion is the only
-  operation that purges the complete account root. Automatic asset cleanup and
-  complete account-root deletion are not implemented in the current runtime.
 - Berlin owns authentication and account session bootstrap.
 - San Francisco owns governed model execution.
 - Built agents live under `agents/<name>` and operate their product boundary.
@@ -89,11 +75,10 @@ CLICKEEN
 | --- | --- | --- |
 | Authentication and session bootstrap | Berlin | `berlin/` |
 | Current account and account product routes | Roma | `roma/` |
-| Account storage lifecycle | Account management | Berlin account/tier timing truth plus approved Tokyo-worker byte operations |
 | Builder editing state | Bob | `bob/` browser-memory session |
 | Account runtime storage | Tokyo-worker | `tokyo-worker/` over Tokyo R2 |
 | Product widget software | Git-authored Tokyo product root | `tokyo/product/widgets/` deployed to `product/widgets/` |
-| Public Instance serving | Tokyo-worker public serving | exact generated files under `accounts/{accountPublicId}/...` exposed through published `clk.live` coordinates |
+| Public widget serving | Tokyo-worker public serving | generated instance files under `accounts/{accountPublicId}/...`; page public serving is disabled until Roma writes page packages |
 | Relational account/support data | Michael/Supabase | `supabase/migrations/` and service-owned routes |
 | Model execution | San Francisco | `sanfrancisco/` |
 | Product Copilot brain | Product Copilot Worker | `agents/product-copilot/` |
@@ -123,9 +108,8 @@ token/capsule/grant for that boundary.
 | Michael | Supabase Postgres | Relational account/user/support data |
 | Dieter | Git source + Tokyo artifacts | Design tokens/components |
 
-Public Instance serving is stored generated-file delivery through
-`clk.live` / `dev.clk.live`, backed by Tokyo-worker, R2, and scoped Cloudflare
-cache invalidation.
+Public widget serving is generated static artifact delivery through `clk.live`
+/ `dev.clk.live` backed by Tokyo-worker and R2.
 
 ## Storage Ownership
 
@@ -155,19 +139,18 @@ accounts/{accountPublicId}/
       index.html
       styles.css
       runtime.js
+  pages/
+    {pageId}/
+      source.json
+      serve-state.json              # when submitted
+      index.html                    # when submitted
+      styles.css                    # when submitted
+      runtime.js                    # when submitted
 ```
-
-Ordinary Instances have `isTemplate: false`, locale/publication state, and may
-be served. Templates use the same Instance folder and the same three files with
-`isTemplate: true`, but have no `baseLocale`, locale overlays, publication
-state, or public route. A Catalog is not another storage tree: customer **My
-templates** reads the current account's templates, while the read-only Widget
-Catalog reads the exact `CLICKEEN` account templates.
 
 The non-account roots are git-authored deploy artifacts:
 
 - `product/widgets/**` for widget software;
-- `product/clickeen.js` for the shared iframe-free public installer;
 - `product/roma/**` for Roma public i18n/static support artifacts;
 - `dieter/**` for design-system artifacts;
 - `prague/**` for Prague content/media.
@@ -184,10 +167,8 @@ Roma resolves current account/session
 -> Roma opens one account instance through Tokyo-worker
 -> Roma sends Bob one ck:open-editor payload
 -> Bob edits in browser memory
--> Bob generates and previews exact index.html/styles.css/runtime.js in memory
 -> User saves
--> Bob submits the current config and exact generated package to Roma
--> Roma forwards the account save command through Tokyo-worker
+-> Roma submits the saved instance/package through Tokyo-worker
 -> Tokyo-worker stores the exact submitted account files
 ```
 
@@ -205,13 +186,6 @@ Visitor requests https://clk.live/{accountPublicId}/{instanceId}
 
 Visitor requests do not call models, read Supabase, compose widgets from
 authoring source, or repair missing artifacts.
-
-Tokyo-worker completes the exact public account and instance placeholders in
-stored HTML. For a translated request it also replaces the field-marked base
-values from the validated exact overlay and sets `<html lang>`. Completed HTML
-revalidates through the exact public URL cache key. Instance Save, translation
-writes/deletes, Publish, Unpublish, and Delete purge only the affected base,
-locale, and support-file URLs.
 
 Cloud-dev public serving uses:
 
@@ -236,6 +210,20 @@ Bob/Roma asset UI
 
 See `documentation/architecture/AssetManagement.md` for the full asset
 contract.
+
+### Account Pages
+
+Pages are account-owned stacks of saved instances. Roma owns page source rules
+and product actions. Tokyo-worker stores the exact page source/package files
+that Roma submits under:
+
+```text
+accounts/{accountPublicId}/pages/{pageId}/
+```
+
+Page publish and public page serving are currently disabled. Tokyo-worker parses
+page public routes but returns `404`, and internal publish returns
+`coreui.errors.page.publishUnavailable` until Roma writes page packages.
 
 ### Translation Overlays
 
@@ -294,7 +282,7 @@ Agents treat content according to source authority:
 | Integration-sourced content | Use, summarize, extract, route, display, analyze, and derive from it; do not rewrite source truth except through an explicit authorized integration write path. |
 
 The rule is source-truth fidelity. Around content, agents also operate widgets,
-reports, analytics, support tickets, locale overlays, runtime packages,
+pages, reports, analytics, support tickets, locale overlays, runtime packages,
 account assets, routes, and storage folders.
 
 ## Runtime And Deploy Evidence
@@ -306,8 +294,7 @@ https://roma.dev.clickeen.com
 https://bob.dev.clickeen.com
 https://tokyo.dev.clickeen.com
 https://berlin.dev.clickeen.com
-https://dev.clk.live/{accountPublicId}/{instanceId}
-https://dev.clk.live/clickeen.js
+https://dev.clk.live
 https://prague.dev.clickeen.com
 https://devstudio.clickeen.com
 https://sanfrancisco.dev.clickeen.com/healthz

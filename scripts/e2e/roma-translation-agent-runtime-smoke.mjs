@@ -212,7 +212,7 @@ async function runBobGenerationSmoke(romaBase, authStatePath, instanceId, expect
     const responsePromise = page.waitForResponse(
       (response) =>
         response.request().method() === 'POST' &&
-        response.url().includes('/api/account/translations/generate'),
+        response.url().includes(`/api/account/instances/${encodeURIComponent(instanceId)}/translations/generate`),
       { timeout: 180_000 },
     );
     await generateButton.click();

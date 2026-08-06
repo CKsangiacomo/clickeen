@@ -5,7 +5,6 @@ const PUBLIC_PATHS = new Set<string>(['/', '/login']);
 
 const AUTHED_PREFIXES = [
   '/home',
-  '/profile',
   '/builder',
   '/assets',
   '/billing',

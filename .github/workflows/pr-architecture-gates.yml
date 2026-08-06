@@ -51,8 +51,8 @@ jobs:
       - name: Policy entitlement contracts
         run: pnpm --filter @clickeen/ck-policy test:entitlements
 
-      - name: Web Code Generator contracts
-        run: pnpm --filter @clickeen/ck-web-code-generator test
+      - name: Runtime materializer contracts
+        run: pnpm --filter @clickeen/ck-runtime-materializer test
 
       - name: Berlin auth boundary
         run: pnpm --filter @clickeen/berlin verify:auth-boundary

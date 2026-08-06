@@ -1,58 +1,38 @@
-import type { CatalogPresentation } from '@clickeen/ck-contracts/catalog';
+export type AccountInstanceDocument = {
+    id: string;
+  accountId: string;
+  widgetCode: string;
+  widgetType: string;
+  displayName: string | null;
+  config: Record<string, unknown>;
+  baseLocale: string;
+  publishStatus: InstanceServeState;
+  createdAt: string;
+  updatedAt: string;
+};
 
-type AccountInstanceIdentity = {
+export type AccountInstanceConfigDocument = {
   id: string;
   accountId: string;
   widgetCode: string;
   widgetType: string;
   displayName: string | null;
+  config: Record<string, unknown>;
+  baseLocale: string;
+  publicPackageFingerprint?: string;
   createdAt: string;
   updatedAt: string;
 };
 
-export type AccountInstanceDocument = AccountInstanceIdentity & {
-  config: Record<string, unknown>;
-} & ({
-  isTemplate: false;
-  baseLocale: string;
-  publishStatus: InstanceServeState;
-  catalogPresentation?: never;
-} | {
-  isTemplate: true;
-  baseLocale?: never;
-  publishStatus?: never;
-  catalogPresentation?: CatalogPresentation;
-});
-
-export type AccountInstanceConfigDocument = AccountInstanceIdentity & {
-  config: Record<string, unknown>;
-} & ({
-  isTemplate: false;
-  baseLocale: string;
-  catalogPresentation?: never;
-} | {
-  isTemplate: true;
-  baseLocale?: never;
-  catalogPresentation?: CatalogPresentation;
-});
-
-type AccountInstanceSummaryIdentity = {
+export type AccountInstanceSummary = {
   accountId: string;
   instanceId: string;
   widgetCode: string;
   widgetType: string;
   displayName: string;
+  publishStatus: InstanceServeState;
   updatedAt: string;
 };
-
-export type AccountInstanceSummary = AccountInstanceSummaryIdentity & ({
-  isTemplate: false;
-  publishStatus: InstanceServeState;
-} | {
-  isTemplate: true;
-  publishStatus?: never;
-  catalogPresentation?: CatalogPresentation;
-});
 
 export type AccountInstanceContentFieldStatus = 'ok' | 'changed';
 
@@ -76,25 +56,17 @@ export type AccountInstanceContentDocument = {
   updatedAt: string;
 };
 
-type AccountInstanceSourcePointerIdentity = {
-  id: string;
+export type AccountInstanceSourcePointer = {
+    id: string;
   accountId: string;
   widgetCode: string;
   widgetType: string;
   displayName: string | null;
-  updatedAt: string;
-};
-
-export type AccountInstanceSourcePointer = AccountInstanceSourcePointerIdentity & ({
-  isTemplate: false;
   baseLocale: string;
   publishStatus: InstanceServeState;
-} | {
-  isTemplate: true;
-  baseLocale?: never;
-  publishStatus?: never;
-  catalogPresentation?: CatalogPresentation;
-});
+  publicPackageFingerprint?: string;
+  updatedAt: string;
+};
 
 export type AccountInstanceSourceDocument = {
   pointer: AccountInstanceSourcePointer;

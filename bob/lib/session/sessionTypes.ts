@@ -16,7 +16,6 @@ export type SessionError =
   | { source: 'load'; message: string }
   | { source: 'ops'; errors: WidgetOpError[] }
   | { source: 'translation'; message: string; detail?: string }
-  | { source: 'generation'; message: string }
   | { source: 'save'; message: string; detail?: string; paths?: string[] };
 
 export type PreviewSettings = {
@@ -29,7 +28,6 @@ export type SessionState = {
   instanceData: Record<string, unknown>;
   publicPackage: InstancePublicPackage | null;
   savedInstanceDataSignature: string;
-  savedPublicPackageSignature: string;
   isDirty: boolean;
   isSaving: boolean;
   lastUpdate: UpdateMeta | null;
@@ -44,7 +42,8 @@ export type InstancePublicPackage = {
 
 type PublicActions = {
   publicUrl: string;
-  clickeenJsSnippet: string;
+  iframeSnippet: string;
+  scriptSnippet: string;
 };
 
 export type SessionMeta = {
@@ -52,12 +51,10 @@ export type SessionMeta = {
   instanceId?: string;
   baseLocale?: string;
   widgetname?: string;
-  isTemplate: boolean;
   publishStatus?: 'published' | 'unpublished';
   label?: string;
   returnLabel?: string;
   publicActions: PublicActions | null;
-  canSaveAsTemplate?: boolean;
   fontLibrary: AccountFontLibrary;
   translationSetup?: TranslationSetup | null;
 } | null;
@@ -84,8 +81,6 @@ export type EditorOpenMessage = {
   type: 'ck:open-editor';
   requestId?: string;
   widgetname: string;
-  isTemplate: boolean;
-  templateDraft?: true;
   baseLocale: string;
   compiled: CompiledWidget;
   instanceData?: Record<string, unknown> | null;
@@ -98,7 +93,6 @@ export type EditorOpenMessage = {
   label?: string;
   returnLabel?: string;
   publicActions?: PublicActions | null;
-  canSaveAsTemplate?: boolean;
   copilot?: CopilotRuntimeUi;
   translationSetup?: TranslationSetup | null;
 };
@@ -114,8 +108,7 @@ export type BobDirtyStateChangedMessage = {
 
 export type BobHostActionMessage = {
   type: 'bob:host-action';
-  action: 'open-navigation' | 'return' | 'copy-code' | 'use-template' | 'save-as-template';
-  templateName?: string;
+  action: 'open-navigation' | 'return' | 'copy-code';
 };
 
 export type BobOpenEditorAppliedMessage = {
@@ -183,20 +176,12 @@ export function serializeInstanceDataSignature(value: Record<string, unknown>): 
   return serialized;
 }
 
-export function serializePublicPackageSignature(value: InstancePublicPackage | null): string {
-  if (!value) return '';
-  const serialized = JSON.stringify(value);
-  if (typeof serialized !== 'string') throw new Error('coreui.errors.instance.publicPackage.unserializable');
-  return serialized;
-}
-
 export function createInitialSessionState(): SessionState {
   return {
     compiled: null,
     instanceData: {},
     publicPackage: null,
     savedInstanceDataSignature: serializeInstanceDataSignature({}),
-    savedPublicPackageSignature: '',
     isDirty: false,
     isSaving: false,
     lastUpdate: null,

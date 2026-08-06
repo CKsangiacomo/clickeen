@@ -32,8 +32,8 @@ That is the strategic difference.
 
 Clickeen serves content.
 
-Current Clickeen product work proves this through account-owned Widgets. Other
-content surfaces become eligible only when they have a
+Current Clickeen product work proves this through account-owned widgets and
+Clickeen Pages. Other content surfaces become eligible only when they have a
 named source authority, structured fields, a storage/runtime boundary, and an
 operator doc. The web is content delivery; Clickeen makes content structured and
 agent-operable before it makes it broad.
@@ -114,7 +114,7 @@ assets, policies, and artifacts.
 These apps are not only larger rendered surfaces. Widgets, pages, emails, and
 reports mostly render truth. Apps also operate truth through command
 authorities, integration boundaries, agent homes, and materialized surfaces.
-Artifact generation is one capability of the substrate; it is not the whole
+The materializer is one capability of the substrate; it is not the whole
 substrate.
 
 See `documentation/strategy/SchemaFirstApps.md`.
@@ -151,17 +151,6 @@ See `documentation/strategy/GlobalReach.md`.
 Public widgets may carry Clickeen distribution where account policy, surface
 context, and customer brand intent allow it. Distribution must never compromise
 source-truth fidelity, accessibility, performance, or the user's public output.
-
-For Free Widgets, this means one useful, visible, contextual, qualified
-attribution link to the global Clickeen product, backed by consistent
-machine-readable Clickeen application identity. It does not mean hidden links,
-keyword stuffing, or claiming Clickeen authored customer content.
-
-The growth loop uses one stable global Clickeen product identity rather than
-inventing a landing page for every Widget type. Paid branding policy may remove the visible attribution without
-reducing the customer's semantic HTML quality. Customer SEO/GEO/AEO capability
-is a separate product benefit, not the mechanism that makes Free attribution
-possible.
 
 ### Design-Led Quality
 

@@ -3,7 +3,7 @@
 STATUS: CURRENT SYSTEM OPERATOR SPEC
 
 Tokyo is the storage and static-serving plane. Tokyo is not an editor, account
-authority, translation authority, or AI runtime.
+authority, page builder, translation authority, or AI runtime.
 
 Tokyo has two forms:
 
@@ -35,6 +35,12 @@ accounts/{accountPublicId}/
     index.html
     styles.css
     runtime.js
+  pages/{pageId}/
+    source.json
+    serve-state.json
+    index.html
+    styles.css
+    runtime.js
 ```
 
 Rules:
@@ -47,6 +53,7 @@ Rules:
   translate, infer, or repair them.
 - A locale never owns HTML, CSS, JavaScript, publication state, or another
   artifact root.
+
 ## Public Serving
 
 ```text
@@ -56,8 +63,8 @@ https://clk.live/{accountPublicId}/{instanceId}?locale={locale}
 
 Cloud-dev uses `https://dev.clk.live`.
 
-Tokyo-worker serves a published instance only after the publication state and
-all three exact package files pass their storage contract. Root HTML references:
+Tokyo-worker serves a published instance only after root artifact fingerprint
+checks pass. Root HTML references:
 
 ```text
 /{accountPublicId}/{instanceId}/styles.css
@@ -65,18 +72,19 @@ all three exact package files pass their storage contract. Root HTML references:
 ```
 
 For `?locale=`, Tokyo-worker reads and validates the exact overlay against
-saved instance content and replaces field-marked values in the root index
-response. Completed Instance HTML revalidates through its exact public URL
-cache key. `runtime.js` binds behavior and does not apply overlays. Missing
-locale truth is `404`; corrupt locale truth is `500`; neither falls back to
-base content.
+saved instance content, injects it into the root index response, and uses
+`no-store`. The root runtime resolves the overlay before widget modules start.
+Missing locale truth is `404`; corrupt locale truth is `500`; neither falls
+back to base content.
+
+Public account page serving remains `404` until Roma writes real page
+artifacts.
 
 ## Static Read Paths
 
 | Friendly path | Canonical R2 root |
 | --- | --- |
 | `/widgets/**` | `product/widgets/**` |
-| `/clickeen.js` | `product/clickeen.js` |
 | `/dieter/icons/svg/**` | `dieter/icons/svg/**` |
 | `/i18n/**` | `product/roma/i18n/public/**` |
 | `/assets/account/**` | account asset reads allowed by Tokyo-worker |
@@ -93,8 +101,6 @@ pnpm cf:preflight
 ```
 
 Product-root deployment runs through GitHub Actions `cloud-dev workers deploy`.
-`tokyo/product/clickeen/clickeen.js` syncs to `product/clickeen.js`; a change to
-that source path triggers the same product-root sync.
 Remote R2 operations must use the repo paths documented in
 `documentation/engineering/CloudflareOperations.md`.
 

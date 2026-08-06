@@ -21,6 +21,7 @@ Roma owns the current-account product shell:
 - domain navigation
 - account policy and tier enforcement
 - account widget instance commands
+- account page commands
 - account asset commands
 - Builder host flow
 - team, billing, usage, AI, profile, and settings surfaces
@@ -99,20 +100,10 @@ Upgrade to inactive Billing or add a global upsell store/framework. The scaffold
 performs no purchase, plan mutation, provider call, fake success, or invented
 contact operation. When the intent starts in a plan-limit prompt, Roma replaces
 that prompt instead of stacking dialogs. Ordinary Billing navigation remains
-valid for inspecting the current plan.
-
-The Builder discard guard remains on
+valid for inspecting the current plan. Roma's native dialogs and Bob's typed
+intent implement this behavior directly. The Builder discard guard remains on
 real navigation only. Final 126M integration re-verified this behavior through
 the deployed Bob-to-Roma intent path.
-
-**Everything is visible to every tier; access is controlled by tier.** This is
-the normative rule for new or changed Roma surfaces, not a claim that every
-legacy surface has been audited. Roma keeps domains, retained account objects,
-and tier-gated actions visible. An
-attempted action that the current tier does not allow makes no product change
-and opens the standard Upgrade dialog. This law does not grant cross-account
-visibility or bypass role authorization. The complete interaction contract is
-owned by `documentation/engineering/UI/interactions.md`.
 
 ## Runtime Routes
 
@@ -125,16 +116,13 @@ Roma account-shell routes include:
 - `/widgets/:instanceId`
 - `/builder`
 - `/builder/:instanceId`
+- `/pages`
 - `/assets`
 - `/team`
 - `/billing`
 - `/usage`
 - `/ai`
 - `/settings`
-
-Roma middleware requires a Berlin/Roma session for every route in this list,
-including `/profile`. Public login, invite,
-API, and framework-asset routes retain their existing separate boundaries.
 
 `/home` currently preserves the Roma shell and navigation but renders no
 domain-specific header, actions, placeholders, or page content.
@@ -192,6 +180,7 @@ service:
 | `/api/account/widgets/**`   | Tokyo-worker through product control                   |
 | `/api/account/instances/**` | Tokyo-worker through product control                   |
 | `/api/account/assets/**`    | Tokyo-worker through asset control                     |
+| `/api/account/pages/**`     | Tokyo-worker through product control                   |
 | `/api/account/usage`        | Tokyo-worker storage facts plus account policy context |
 | `/api/account/widget-defaults` | Roma defaults document backed by Tokyo-worker        |
 | `/api/builder/:instanceId/open` | Roma Builder-open envelope backed by Tokyo-worker    |
@@ -228,30 +217,29 @@ Builder opens one saved widget instance:
 no path, query, or hash. Missing or malformed Bob origin config fails Builder
 instead of falling back to another origin.
 
-Bob edits in browser memory and generates the exact browser package for each
-valid working state. The saved package in the open envelope establishes the
-persisted baseline; Bob does not treat those loaded bytes as the current
-savable package. Save becomes available only after Web Code Generator succeeds
-for the open working state, then sends that config and exact generated package
-to Roma. Roma performs the current-account save command and Tokyo-worker writes
-the submitted source plus exact package under:
+Bob edits in browser memory. Save sends the current widget document back to
+Roma. Roma performs the current-account save command and Tokyo-worker writes the
+saved source plus generated package under:
 
 ```text
 accounts/{accountPublicId}/instances/{instanceId}/
 ```
 
-The saved package is persistence/open baseline truth. Bob uses Web Code
-Generator for the preview package, including the initial working state and
-every later valid change. Roma does not provide a second source-widget preview
-package and does not generate browser files.
+The Builder preview uses that same saved package as its runtime base. Roma does
+not provide a second source-widget preview package.
 
-Create and save accept the exact `index.html`, `styles.css`, and `runtime.js`
-that Bob generated for the submitted config. Roma validates the account command
-and current save policy, including the Widget `limits.json` mappings, then
-submits those exact files with the source to Tokyo-worker. Duplicate remains a
-new account operation and does not copy locale authority from the source
-instance. Tokyo-worker stores submitted package files; it does not render,
-compile, infer, or repair their bytes.
+Create, save, and duplicate all use the same package contract: Roma reads the
+server-only materializer artifact generated from canonical widget source at
+deploy time, materializes account asset references in the current account
+config, then delegates deterministic base byte generation to
+`@clickeen/ck-runtime-materializer` for `index.html`, `styles.css`, and
+`runtime.js`. Roma submits those exact files with the source to Tokyo-worker.
+Roma derives the package base locale from current account settings. Duplicate is
+a new account operation; it does not copy locale authority from the source
+instance. Tokyo-worker stores the submitted files; it does not render, compile,
+infer, or repair widget package bytes. Tokyo-worker records a package
+fingerprint on newly saved source and package objects so package reads, publish,
+and public serving can reject mixed package state deterministically.
 
 When the existing source-save command changes a saved instance, Roma saves the
 source and base package only. It does not generate translations, regenerate
@@ -275,8 +263,7 @@ files.
 `PUT /api/account/instances/{instanceId}/translations/{locale}` is the exact
 editor-authorized overlay-value mutation boundary. It accepts one complete
 saved-field value map and delegates it to Tokyo-worker; Tokyo rejects base-locale
-overlays, missing paths, and extra paths. It does not generate or rebuild
-runtime files.
+overlays, missing paths, and extra paths. It does not materialize runtime files.
 When the command is invoked through hosted Bob, Translation Agent may stream
 Agent Activity while it operates. Roma forwards that activity to Bob; Roma does
 not author it, summarize it, poll for it, persist it, or convert it into product
@@ -284,7 +271,7 @@ status.
 
 Account language settings choose which languages are available to widgets. Roma
 writes that account configuration to Supabase. Adding a language does not call
-the Translation Agent or regenerate any Widget package; each widget remains missing
+the Translation Agent or materialize any widget; each widget remains missing
 that translation until its Translations panel explicitly generates it.
 
 Removing a language deletes its exact overlay from saved account instances
@@ -292,20 +279,17 @@ through Tokyo-worker. If deletion fails after the settings write, Roma returns
 the saved settings with `localeCleanup.ok: false` and the exact failed
 coordinate. The account setting remains the user decision and account truth.
 
-Roma owns one public-action contract for Widgets. It builds the direct public
-URL and shared `clickeen.js` installer snippet from the current account public
-id, the exact Widget Instance id, and the configured public-serving origin.
-Widget Builder availability also
-uses the publish status returned by the Builder-open envelope.
+Roma owns public widget action truth for the current account and opened
+instance. It builds the public URL and iframe/script snippets from the current
+account public id, the exact instance id, the configured public-serving
+origin, and the publish status returned by the Builder-open envelope.
 It sends that exact complete set to Bob, where TopDrawer presents Open public
 widget and one Copy code intent under More. Roma answers that intent with the
 same Dieter Popup used by the Widgets inventory; the Popup presents the exact
-public URL and `clickeen.js` installer and owns browser copy. Bob does not
-reconstruct or copy those values. Unpublished instances receive
-`publicActions: null` and expose no public action. Bob's `bob:host-action`
-message carries only
-`open-navigation`, `return`, `copy-code`, `use-template`, or
-`save-as-template` intent; Roma retains navigation,
+URL, iframe, and script values and owns browser copy. Bob does not reconstruct
+or copy those values. Unpublished instances receive `publicActions: null` and
+expose no public action. Bob's `bob:host-action` message carries only
+`open-navigation`, `return`, or `copy-code` intent; Roma retains navigation,
 public-action, and unsaved-work authority.
 The copied public URL is slashless:
 
@@ -313,66 +297,38 @@ The copied public URL is slashless:
 {public-serving-origin}/{accountPublicId}/{instanceId}
 ```
 
-The copied installer uses the same configured public-serving origin and exact
-public URL:
-
-```html
-<script
-  src="{public-serving-origin}/clickeen.js"
-  data-clickeen="{public-serving-origin}/{accountPublicId}/{instanceId}"
-  defer
-></script>
-```
-
-There is no public iframe option, product-specific installer, or installer that
-loads a product's `runtime.js` directly. The direct public URL remains
-available independently of the installer.
-
-Web Code Generator writes public-coordinate placeholders for the support files
-inside the exact generated `index.html`:
+Generated package HTML must not depend on that URL being folder-normalized. The
+runtime materializer writes exact root-relative support-file paths inside
+`index.html`:
 
 ```text
-/__CK_PUBLIC_ACCOUNT_ID__/__CK_PUBLIC_INSTANCE_ID__/styles.css
-/__CK_PUBLIC_ACCOUNT_ID__/__CK_PUBLIC_INSTANCE_ID__/runtime.js
+/{accountPublicId}/{instanceId}/styles.css
+/{accountPublicId}/{instanceId}/runtime.js
 ```
-
-Tokyo completes those placeholders from the validated public route. The
-resulting absolute paths resolve correctly from Roma's slashless public URL.
 
 ## Widgets Domain
 
-Roma's Widgets navigation group has three routes, not local page tabs:
-
-- **Your widgets** at `/widgets` lists ordinary current-account Instances;
-- **My templates** at `/widgets/templates` lists current-account Instances with
-  `isTemplate: true`; and
-- **Widget catalog** at `/widgets/catalog` lists `CLICKEEN`-owned Widget
-  templates through the fixed-owner Catalog read.
+Roma `/widgets` and `/widgets/catalog` are the account widget management
+surfaces. Widgets is one expandable Roma navigation group, using the same
+left-navigation pattern as Settings. Its route-owned subitems are **Your
+widgets** at `/widgets` and **Widget catalog** at `/widgets/catalog`; they are
+not local page tabs.
 
 **Your widgets** is the default account-instance inventory. It uses one
 semantic Dieter Table whose columns are Widget, Instance name, Published,
 Instance ID, and Actions. Published uses a left-aligned Dieter Toggle and, only
 for a published instance, a small Copy code action that opens Roma's shared
-public-code Popup. Edit is the direct row action; Save as template, Rename,
-Duplicate, and Delete remain in one ellipsis menu when each action is valid.
-The header status filter and the Widget, Instance
-name, and Published sorts run over the validated account list in the browser.
-Their headers use the shared `xs` Dieter sort control: the active
+public-code Popup. Edit is the direct row action; Rename, Duplicate, and Delete
+remain in one ellipsis menu. The header status filter and the Widget, Instance
+name, and Published sorts are client-side projections over the validated
+account list. Their headers use the shared `xs` Dieter sort control: the active
 sort is black and inactive sorts are gray.
 
-The route component remains composition-only. Widget loading and commands,
-the Dieter Table, row actions, and dialogs stay in their named local
-responsibilities; Roma does not put those concerns back into one renamed
-Widget-list owner or introduce another service for them.
-
-**My templates** reuses the Dieter table. A row carries a Template badge and
-Edit, with Use template, Rename, and Delete in its ellipsis menu. It has no
-publish, locale, translation, public URL, or Copy code controls. **Widget
-catalog** is a read-only card view of `CLICKEEN` Widget templates, ordered and
-described by each template's `catalogPresentation`. Its left category menu and
-search filter only the loaded response. **Use template** opens an ID-less Bob
-draft; no Instance exists before Save. Widget software definitions remain the
-Widget type/editor authority but are not Catalog items.
+**Widget catalog** renders the canonical widget definitions as Dieter-styled
+cards. A catalog card creates an instance of that widget type; it does not
+represent, count, or group saved account instances. Roma renders only catalog
+metadata supplied by the owning definition and does not invent descriptions,
+categories, badges, or preview media.
 
 Changing routes does not change the account command or storage authority.
 Publication remains a controlled command: the toggle changes only after the
@@ -388,19 +344,12 @@ It owns:
 - unpublish
 - delete
 
-`GET /api/account/widgets` returns only ordinary saved Instance rows. Each row
-contains its Widget label resolved from the current Widget definition:
+`GET /api/account/widgets` returns the full widget catalog plus saved account
+instances:
 
 ```text
-{ accountId, instances[] }
+catalog[] + instances[]
 ```
-
-`GET /api/account/widget-templates` returns current-account Widget templates;
-when a template has Catalog presentation, the exact saved presentation is part
-of that row.
-`GET /api/account/widget-catalog` and its exact-id read return only
-`CLICKEEN`-owned Widget templates. The Catalog routes accept no owner coordinate
-and have no write method.
 
 The Widgets list payload does not carry Create, Duplicate, or Publish
 availability booleans. Tier limits do not hide catalog items and do not disable
@@ -411,48 +360,24 @@ client code derives read-only versus mutable controls from the current account
 role and the instance publish state, while tier upgrade decisions happen only in
 command routes.
 
-Roma loads Widget definitions only to label ordinary rows and validate Widget
-commands, and loads saved Instance rows through the account
-instance coordinate/list-facts helpers. Tokyo-worker
+Roma loads widget catalog definitions from Tokyo-worker and loads saved instance
+rows through the account instance coordinate/list-facts helpers. Tokyo-worker
 returns stored `displayName` as string or `null`; Roma applies the UI fallback
 label for product rendering.
 
 Create and duplicate enforce `widgets.instances.max` at command time before
-minting a new instance id or calling Tokyo-worker create/write routes. Publish enforces
+minting a new instance id, compiling package bytes, materializing source, or
+calling Tokyo-worker create/write routes. Publish enforces
 `instances.published.max` at command time from Roma-computed list-facts rows.
 Over-tier Create, Duplicate, and Publish return HTTP 402 `UPGRADE_REQUIRED`.
 Missing or malformed policy limits return a Roma policy contract failure, not
 unlimited usage and not a disabled list-time control.
 
 Create and duplicate mint the new instance id in Roma only after the command
-gate passes. Publish and unpublish are account
+gate passes, so the generated browser package and the saved source use the same
+account instance identity from the start. Publish and unpublish are account
 product actions; Roma sends the exact product transition to Tokyo-worker for R2
 `serve-state.json` mutation.
-
-`POST /api/account/instances/{instanceId}/save-as-template` is the Widget
-snapshot command. A customer editor supplies only a distinct template name.
-For the exact `CLICKEEN` account, DevStudio supplies the distinct name plus the
-four required Catalog presentation values in that same request. Roma opens
-the ordinary saved source, checks `widgets.instances.max`, reads its exact saved
-three-file package, then mints a new instance id and creates a template with the
-split config/content and file bytes unchanged except for the new content
-identity. The command does not save the source, generate files, copy locale or
-publication state. Capacity exhaustion returns the same Widget creation policy
-gate contract used by ordinary instance creation.
-
-`PATCH /api/account/instances/{instanceId}` is the narrow presentation-only
-operation for a `CLICKEEN` Widget template. It preserves the template source
-and three files and changes only `catalogPresentation`. Other accounts and
-ordinary Instances are rejected. DevStudio reaches it through its authenticated
-Roma proxy; customer Catalog routes remain read-only.
-
-Templates count under `widgets.instances.max`. Roma hides Save as template when
-the current role or visible capacity makes it invalid; the command rechecks the
-same normal limit. Catalog Use remains visible at a tier limit and sends that
-attempt to the existing Upgrade interaction without creating an Instance.
-Catalog thumbnails are exact `CLICKEEN` public asset paths served by Tokyo. If
-reusable source contains CLICKEEN assets, the explicit Copy/Discard dialog
-completes before the unsaved Bob draft opens.
 
 ## Assets Domain
 
@@ -464,7 +389,6 @@ It owns:
 - upload account assets
 - resolve account asset references
 - delete exact account asset references
-- copy selected `CLICKEEN` Catalog assets into the current account
 - show storage usage facts returned from the same account asset authority
 
 The page header owns Upload asset, Upload in bulk, and Refresh list. The
@@ -494,24 +418,32 @@ Roma treats malformed successful Tokyo asset delete responses as upstream
 contract failures. A delete is success only when the response names the current
 account public id, the exact asset reference, and `deleted: true`.
 
-`POST /api/account/catalog-assets/copy` is an editor command with the exact body
-`{ assetRefs: string[] }`. Each value is the account-local asset ref stored in
-the Catalog template config, such as `hero.png`. Roma supplies no source or
-destination account choice: Tokyo fixes the source to `CLICKEEN` and the
-destination is the authenticated current account. Roma forwards the current
-upload-size and storage limits to one Tokyo asset-domain operation and accepts
-success only when every expected source ref has one valid account-local
-destination ref.
+## Pages Domain
 
-Tier policy controls whether the account may upload another asset. Account
-management controls retained storage after a downgrade. If current usage is
-above the new `storage.bytes.max`, Roma keeps the inventory visible and usable,
-shows the authoritative 30-day grace state, accepts ordinary user-authorized
-exact deletes, and keeps over-limit Upload as an Upgrade-gated action. Roma does
-not run automatic quota cleanup. After the deadline, account management directs
-Tokyo-worker to delete the most recently uploaded assets until usage fits the
-allowance. This automatic cleanup is accepted product law but is not implemented
-in the current runtime.
+Roma owns the account page product surface. Account pages are stacks of saved
+widget instances. Page source and any generated page packages live in Tokyo under:
+
+```text
+accounts/{accountPublicId}/pages/{pageId}/
+```
+
+Roma validates current-account access, policy, page source shape, page source
+save stamps, list summaries, and placement product rules. It asks Tokyo-worker
+to read or write the named account page object. Current account page publish is
+disabled until Roma has a real page package writer. Public page copy/open actions
+are disabled until that writer exists. While a page is published, Roma requires
+unpublish before page source edit or delete.
+
+The page header owns Create page and Refresh through the same direct
+domain-to-shell action contract. The page list uses the Dieter table contract;
+Page, Page ID, and Placements use inline labels with small Dieter icon buttons
+for sorting, using the same `xs` active-black/inactive-gray Table contract.
+
+Current page source references saved widget instances by placement id and
+instance id. It does not embed widget source and does not currently store child
+widget artifact references. Any shift to generated child artifact coordinates,
+child evidence, or page package materialization belongs to a future Page Package
+PRD.
 
 ## Team, Profile, Settings
 
@@ -543,10 +475,10 @@ Each accepted family transition updates all three values in one draft-state
 update. GET and PUT reject exact invalid typography paths before Tokyo
 persistence. The account-backed controls expose only available choices.
 
-Account instance create and save require the candidate public package before
-the Tokyo write. Roma validates the submitted config and current Widget limits;
-Web Code Generator validates account-font selections and resolved font assets
-before Bob can submit a successful generated package.
+Account instance create, save, and duplicate materialize the candidate public
+package before the Tokyo write. Package materialization applies the same
+account-font validator before font asset resolution, so direct or replayed
+invalid typography cannot reach source persistence or public package bytes.
 
 Account deletion is disabled in the current runtime. Roma does not offer the
 delete-account settings action and `DELETE /api/account` returns an explicit
@@ -639,12 +571,12 @@ Required runtime configuration:
 | --- | --- |
 | `NEXT_PUBLIC_BOB_URL` | Bob Builder iframe origin. |
 | `NEXT_PUBLIC_TOKYO_URL` | Tokyo public static/resource origin. |
-| `NEXT_PUBLIC_CLK_LIVE_URL` | Public serving origin for direct public URLs and shared `clickeen.js` installer snippets. |
+| `NEXT_PUBLIC_CLK_LIVE_URL` | Public widget serving origin for copy/open snippets. |
 | `BERLIN_BASE_URL` | Berlin auth/session authority. |
 | `PRODUCT_COPILOT_BASE_URL` | Product Copilot worker origin where used. |
 | `TRANSLATION_AGENT` | Cloudflare service binding for Translation Agent Worker. |
 | `TOKYO_ASSET_CONTROL` | Cloudflare service binding for account asset operations. |
-| `TOKYO_PRODUCT_CONTROL` | Cloudflare service binding for product/account Instance operations. |
+| `TOKYO_PRODUCT_CONTROL` | Cloudflare service binding for product/account instance and page operations. |
 | `USAGE_KV` | Roma request-rate-limit counters and current monthly Copilot turn counters. Counter corruption and missing bindings fail closed. Cloudflare KV has no compare-and-swap, so simultaneous Copilot requests can reserve from the same observed count. |
 | `SUPABASE_URL` | Roma account settings database URL; supplied in cloud-dev CI/env. |
 | `SUPABASE_SERVICE_ROLE_KEY` | Roma service-role account settings writes; supplied as a secret. |

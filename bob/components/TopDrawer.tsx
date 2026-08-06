@@ -3,11 +3,10 @@
 import { useEffect, useRef, useState, type RefObject } from 'react';
 import { useWidgetSession, useWidgetSessionChrome } from '../lib/session/useWidgetSession';
 import type { BobHostActionMessage } from '../lib/session/sessionTypes';
-import { createDialogLifecycle, type DialogLifecycle } from '../../dieter/components/shared/dialog-lifecycle';
 import { dieterIconStyle } from './dieterIcon';
 
-function requestHostAction(action: BobHostActionMessage['action'], templateName?: string): void {
-  const message: BobHostActionMessage = { type: 'bob:host-action', action, ...(templateName ? { templateName } : {}) };
+function requestHostAction(action: BobHostActionMessage['action']): void {
+  const message: BobHostActionMessage = { type: 'bob:host-action', action };
   window.parent?.postMessage(message, '*');
 }
 
@@ -22,25 +21,19 @@ export function TopDrawer({
 }) {
   const session = useWidgetSession();
   const chrome = useWidgetSessionChrome();
-  const { save, isSaving, isDirty, publicPackage } = session;
+  const { save, isSaving, isDirty } = session;
   const [moreOpen, setMoreOpen] = useState(false);
-  const [saveTemplateOpen, setSaveTemplateOpen] = useState(false);
-  const [templateName, setTemplateName] = useState('');
-  const [templateSaving, setTemplateSaving] = useState(false);
   const moreRef = useRef<HTMLDivElement>(null);
   const moreButtonRef = useRef<HTMLButtonElement>(null);
-  const saveTemplateDialogRef = useRef<HTMLDialogElement>(null);
-  const saveTemplateLifecycleRef = useRef<DialogLifecycle | null>(null);
 
   const meta = chrome.meta;
   const currentInstanceId = typeof meta?.instanceId === 'string' ? meta.instanceId : '';
-  const canSave = Boolean(meta) && isDirty && Boolean(publicPackage);
+  const hasInstance = Boolean(currentInstanceId);
+  const canSave = hasInstance && isDirty;
   const showSaveAction = canSave || isSaving;
   const instanceLabel = typeof meta?.label === 'string' ? meta.label.trim() : '';
   const currentLabel = instanceLabel || currentInstanceId;
   const publicActions = meta?.publicActions ?? null;
-  const isTemplate = meta?.isTemplate === true;
-  const canSaveAsTemplate = meta?.canSaveAsTemplate === true && Boolean(currentInstanceId) && !isTemplate;
 
   useEffect(() => {
     if (!moreOpen) return undefined;
@@ -62,19 +55,6 @@ export function TopDrawer({
       document.removeEventListener('keydown', closeOnEscape);
     };
   }, [moreOpen]);
-
-  useEffect(() => {
-    const dialog = saveTemplateDialogRef.current;
-    if (!dialog) return;
-    const lifecycle = createDialogLifecycle({ dialog, initialFocus: 'input', requestDismiss: () => setSaveTemplateOpen(false) });
-    saveTemplateLifecycleRef.current = lifecycle;
-    return () => lifecycle.destroy();
-  }, []);
-
-  useEffect(() => {
-    if (saveTemplateOpen) saveTemplateLifecycleRef.current?.open();
-    else saveTemplateLifecycleRef.current?.close();
-  }, [saveTemplateOpen]);
 
   return (
     <section className="topdrawer">
@@ -132,9 +112,9 @@ export function TopDrawer({
               <span className="diet-btn-ictxt__label body-s">{meta.returnLabel}</span>
             </button>
           ) : null}
-          {meta ? (
+          {hasInstance ? (
             <span className="topdrawer-instance-title heading-3">
-              {currentLabel || 'Untitled widget'}
+              {currentLabel}
             </span>
           ) : null}
           {meta?.publishStatus ? (
@@ -142,36 +122,10 @@ export function TopDrawer({
               {meta.publishStatus === 'published' ? 'Published' : 'Unpublished'}
             </span>
           ) : null}
-          {isTemplate ? (
-            <span className="topdrawer-template-badge body-xs">Template</span>
-          ) : null}
         </div>
       </div>
 
       <div className="topdrawer-actions">
-        {canSaveAsTemplate ? (
-          <button
-            className="diet-btn-txt"
-            data-size="lg"
-            data-variant="line2"
-            type="button"
-            disabled={isSaving}
-            onClick={() => { setTemplateName(''); setSaveTemplateOpen(true); }}
-          >
-            <span className="diet-btn-txt__label body-s">Save as template</span>
-          </button>
-        ) : null}
-        {isTemplate ? (
-          <button
-            className="diet-btn-txt"
-            data-size="lg"
-            data-variant="line2"
-            type="button"
-            onClick={() => requestHostAction('use-template')}
-          >
-            <span className="diet-btn-txt__label body-s">Use template</span>
-          </button>
-        ) : null}
         {publicActions ? (
           <>
             <a
@@ -232,11 +186,6 @@ export function TopDrawer({
           </button>
         ) : null}
       </div>
-      <dialog ref={saveTemplateDialogRef} className="diet-popup" data-size="medium" aria-labelledby="bob-save-template-title">
-        <header className="diet-popup__header"><h2 id="bob-save-template-title" className="heading-4">Save as template</h2></header>
-        <div className="diet-popup__body"><div className="diet-textfield" data-size="md"><label className="diet-textfield__control"><span className="diet-textfield__display-label label-s">Template name</span><input className="diet-textfield__field body-s" value={templateName} maxLength={120} onChange={(event) => setTemplateName(event.target.value)} /></label></div><p className="body-s">Your current changes will be saved first.</p></div>
-        <footer className="diet-popup__footer"><div className="diet-popup__actions"><button className="diet-btn-txt" data-size="md" data-variant="secondary" type="button" disabled={templateSaving} onClick={() => setSaveTemplateOpen(false)}><span className="diet-btn-txt__label body-m">Cancel</span></button><button className="diet-btn-txt" data-size="md" data-variant="primary" type="button" disabled={templateSaving || !templateName.trim() || templateName.trim() === currentLabel.trim()} onClick={() => { const name = templateName.trim(); setTemplateSaving(true); void save().then((saved) => { if (saved) { setSaveTemplateOpen(false); requestHostAction('save-as-template', name); } }).finally(() => setTemplateSaving(false)); }}><span className="diet-btn-txt__label body-m">{templateSaving ? 'Saving…' : 'Save as template'}</span></button></div></footer>
-      </dialog>
     </section>
   );
 }

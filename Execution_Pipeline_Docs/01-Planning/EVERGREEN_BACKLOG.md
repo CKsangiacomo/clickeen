@@ -2,7 +2,7 @@
 
 Status: ACTIVE
 Date: 2026-05-28
-Updated: 2026-08-06
+Updated: 2026-08-01
 Owner: Product Dev Team
 
 ## Purpose
@@ -54,8 +54,6 @@ This file is the canonical holding area for work that is:
 | EB-016 | backlog | 2026-08-01 Cloudflare cleanup audit | Delete obsolete Roma Pages variables: production `AI_GRANT_HMAC_SECRET` and preview `SANFRANCISCO_BASE_URL` | Both variables are unused by current Roma runtime, but the documented `cf:pages:delete-var` operation was rejected with Cloudflare `403` because the available token lacks Pages edit authority | A Cloudflare token with Pages Read/Edit is available; run `pnpm cf:api:preflight`, dry-run and apply each exact deletion, then read back `roma-dev` production and preview configuration | — |
 | EB-017 | backlog | 2026-08-01 Cloudflare cleanup audit | Delete the retired `sanfrancisco_d1_dev` D1 database after exact verification | Current San Francisco has no D1 binding or runtime use, but the cleanup run received Cloudflare authentication error `10000`; the repo also has no current documented D1 deletion command path | Establish the documented D1 operation path with D1 Read/Edit authority, verify the exact database identity and absence of active bindings, delete only `sanfrancisco_d1_dev`, then prove absence | — |
 | EB-018 | backlog | 2026-08-01 Cloudflare cleanup audit | Inventory and delete retired Queue resources, including `instance-l10n-generate-cloud-dev`, `instance-translation-jobs-dev`, and `l10n-jobs-dev`, when proven ownerless | The three exact San Francisco consumer edges were detached and San Francisco is Queue-free, but the cleanup did not prove every remote producer and consumer for the Queue resources themselves | Cloudflare Queue Read/Edit authority is available and an exact per-Queue producer/consumer inventory proves no active owner; delete only proven-retired Queue resources and read back their absence | — |
-| EB-019 | backlog | PRD 127 | Customer Pages and simple website-builder product | A useful Pages product expands beyond stacking Widgets into deliberate site-building scope. That work would distract from the current Widget product, while Prague already has an independent Astro/global architecture that does not need this product. | Product explicitly prioritizes customer Pages and accepts the simple website-builder boundary; rewrite and re-review the deferred 127 program against the then-current system before execution | — |
-| EB-020 | backlog | 2026-08-06 PRD 127 deferral | Delete the two obsolete CLICKEEN Page roots in R2: `accounts/CLICKEEN/pages/HM2VXMTE61/` and `accounts/CLICKEEN/pages/KTYKBJWH2G/` | The exact inventory contains 38 objects. The documented signed-delete operation was denied and its approved Wrangler fallback had no valid local Cloudflare authentication. Execution stopped at the first object; no object was deleted. | R2 delete authority is available through the documented repo command path; run `pnpm cf:preflight`, enumerate the same two exact roots, delete the enumerated keys, then prove `accounts/CLICKEEN/pages/` is empty | — |
 
 ## Promotion log
 

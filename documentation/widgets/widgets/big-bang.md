@@ -19,9 +19,9 @@ Files:
 spec.json
 editable-fields.json
 limits.json
-index.html
-styles.css
-runtime.js
+widget.html
+widget.css
+widget.client.js
 ```
 
 ## Contract
@@ -77,7 +77,6 @@ bigBang.supportingCopy
 ```text
 branding.remove -> behavior.showBacklink
 widget.socialShare.enabled -> behavior.socialShare.enabled
-embed.seoGeo.enabled -> behavior.seoGeoAeoEnabled
 ```
 
 ## Shell Utilities
@@ -85,8 +84,7 @@ embed.seoGeo.enabled -> behavior.seoGeoAeoEnabled
 Big Bang uses the shared Shell for Header, Header CTA, Stage/Pod, Core size,
 typography, branding, social share, and locale switcher.
 
-Generated `index.html` contains the complete Big Bang markup and customer
-content. Its stable Core hooks are:
+Runtime requires these Core DOM hooks:
 
 ```text
 [data-role="big-bang"]
@@ -95,20 +93,29 @@ content. Its stable Core hooks are:
 [data-role="big-bang-support"]
 ```
 
-`runtime.js` has no Widget-local interaction. Web Code Generator renders the
-structured values into `index.html`; shared runtime behavior binds only to
-generated shared controls.
+`widget.client.js` registers as `big-bang`, validates `bigBang.*`, requires a
+non-empty `bigBang.statement`, applies shared Shell utilities, and binds
+`ck:state-update` for the current instance id.
 
-The structured editor contract exposes:
+Runtime constraints:
 
 ```text
+bigBang.statement -> non-empty
 bigBang.alignment -> left|center
 bigBang.textWidth -> 480..1280
 bigBang.gap -> 8..80
 ```
 
 Do not add a local Header, typography, branding, share, or locale switcher
-path.
+path. Missing shared helpers or missing required DOM hooks must remain explicit
+runtime errors.
+
+## Clickeen Pages Usage
+
+Big Bang appears in Clickeen Page source as a saved account widget instance
+placement. The page stores a placement reference to the instance; the widget
+software remains under `tokyo/product/widgets/big-bang/`. Public page package
+serving depends on Roma writing real page packages.
 
 ## Verification
 

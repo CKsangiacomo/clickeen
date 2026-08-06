@@ -3,12 +3,10 @@
 STATUS: CURRENT SYSTEM OPERATOR SPEC
 
 Tokyo-worker is the Tokyo R2/storage/CDN boundary for account runtime data,
-account assets, saved widget instance files, translated locale values,
-generated public files, and public artifact serving.
+account assets, saved widget instance files, translated locale values, page
+files, generated public packages, and public artifact serving.
 
-Tokyo-worker stores and serves bytes. Roma owns account product commands and
-tier enforcement. Account management owns storage retention and deletion
-lifecycle.
+Tokyo-worker stores and serves bytes. Roma owns account product decisions.
 
 For platform context see:
 
@@ -28,8 +26,8 @@ Tokyo-worker owns:
 - account asset R2 operations
 - account widget instance R2 operations
 - translated locale value R2 operations
-- published Instance file serving
-- shared `/clickeen.js` installer serving from the Tokyo product root
+- page source and page package R2 operations
+- public package file serving
 - `clk.live` and `dev.clk.live` static artifact serving
 - `GET /healthz`
 
@@ -39,17 +37,8 @@ Roma owns:
 - tier and entitlement decisions
 - upload and storage policy
 - publish/unpublish eligibility
-
-Account management owns:
-
-- storage retention after tier changes or suspension
-- the 30-day downgraded-asset overage decision
-- whole-account deletion lifecycle
-
-Tokyo-worker does not decide which tier an account has, whether grace expired,
-or whether an account should be deleted. It performs the exact authorized byte
-operation and fails when required identity, ordering, or size metadata is
-missing or malformed.
+- downgrade and suspension consequences
+- account lifecycle correctness
 
 ## Account Storage
 
@@ -86,20 +75,7 @@ Tokyo-worker supports the asset operations Roma calls:
 - list account asset inventory
 - resolve account asset references
 - delete one exact account asset reference
-- copy selected `CLICKEEN` Catalog assets into Roma's authenticated current account
 - return storage usage facts from the same account asset authority
-
-Accepted product law adds one account-management operation: after a downgrade
-leaves asset usage above `storage.bytes.max` for 30 days, account management
-directs Tokyo-worker to remove assets by descending `updatedAt`, with ascending
-`assetRef` as the deterministic tie-break, stopping as soon as stored asset
-bytes fit the allowance. Tokyo-worker validates the complete inventory,
-allowance, ordering fields, and size math before the first deletion. A mid-set
-failure is explicit partial failure that identifies completed deletions and
-remaining overage; it is never full success. This operation must not touch Instances,
-templates, overlays, or generated files. It is not implemented in the current
-runtime; this document does not invent a second storage owner or make Roma page
-loads a cleanup dependency.
 
 ## Account Widget Instances
 
@@ -118,7 +94,7 @@ accounts/{accountPublicId}/instances/{instanceId}/
 ```
 
 `instance.config.json` carries non-text config, widget identity, display name,
-base locale, and timestamps. Account
+base locale, package fingerprint when present, and timestamps. Account
 instances do not have a generic metadata field. Account active locales are Roma
 account settings, not instance config.
 
@@ -136,19 +112,51 @@ deletes removed active locale overlay files through Tokyo-worker with the Roma
 account capsule. Tokyo does not decide active
 locales, tier, translation meaning, or model policy.
 
-`index.html`, `styles.css`, and `runtime.js` are the exact browser package Bob
-generated and submitted through Roma. Tokyo-worker requires all three exact
-files with valid package content-type metadata. It does not rebuild, restore,
-infer, or repair package bytes.
+`index.html`, `styles.css`, and `runtime.js` are the generated browser package
+saved with the instance.
 
-On source save, Tokyo-worker writes the exact submitted package, then
-`instance.content.json`, then `instance.config.json`.
+Newly saved generated package files carry R2 metadata matching the saved source
+package fingerprint. Package reads, publish, and public serving require source
+and package agreement. Existing unmarked source and unmarked package files remain
+readable until the instance is saved again; any marked/unmarked mix fails closed.
+Tokyo-worker does not rebuild or restore package bytes.
+
+On source save, Tokyo-worker writes `instance.content.json` before
+`instance.config.json`. The config document carries the package fingerprint and
+is the source commit marker, so readers cannot accept a new package with
+partially written source.
 
 The stable public coordinate is:
 
 ```text
 accountPublicId + instanceId
 ```
+
+## Pages
+
+Account pages are stacks of saved widget instances. Page source lives at:
+
+```text
+accounts/{accountPublicId}/pages/{pageId}/source.json
+```
+
+Generated page package files live beside the page source under:
+
+```text
+accounts/{accountPublicId}/pages/{pageId}/
+```
+
+Roma owns page product decisions, page source validation, page source save
+stamps, list summaries, and placement rules. Tokyo-worker stores page source,
+any submitted page package files, and serve state under the account path Roma
+names. Current account page publish is unavailable until Roma writes page
+packages. Tokyo-worker rejects save/delete operations against published page
+source until Roma unpublishes the page.
+
+Current page source is a source document with widget placement references. It is
+not a generated page artifact and it does not duplicate child widget source.
+Tokyo-worker does not compose pages from child widget packages on public
+requests.
 
 ## Public Serving
 
@@ -164,33 +172,25 @@ Cloud-dev public serving uses:
 https://dev.clk.live/{accountPublicId}/{instanceId}
 ```
 
-Instance serving reads the one root widget artifact from the account folder
-after `accounts/{accountPublicId}/instances/{instanceId}/serve-state.json` is
-published.
+Serving reads the one root widget artifact from the account folder after
+`accounts/{accountPublicId}/instances/{instanceId}/serve-state.json` is
+published. Account page public serving is
+unavailable until Roma writes page packages. Tokyo-worker does not generate page
+package files.
 
 Public support files are:
 
 - `styles.css`
 - `runtime.js`
 
-Generated `index.html` references its support files through public-coordinate
-placeholders:
+Generated `index.html` references support files by exact root-relative package
+paths, not `./` relative paths. The slashless public URL is the user-facing
+coordinate, and browser resolution must not depend on a trailing slash:
 
 ```text
-/__CK_PUBLIC_ACCOUNT_ID__/__CK_PUBLIC_INSTANCE_ID__/styles.css
-/__CK_PUBLIC_ACCOUNT_ID__/__CK_PUBLIC_INSTANCE_ID__/runtime.js
+/{accountPublicId}/{instanceId}/styles.css
+/{accountPublicId}/{instanceId}/runtime.js
 ```
-
-Before serving base or translated Instance HTML, Tokyo-worker completes the Web
-Code Generator's `__CK_PUBLIC_ACCOUNT_ID__` and `__CK_PUBLIC_INSTANCE_ID__`
-literals from the validated public route. The Free attribution product link is
-always the literal `https://clickeen.com/`; locale, country, and market do not
-select another product link. If any
-`__CK_PUBLIC_*__` literal remains after completion, the HTML fails closed with
-`500 Public HTML invalid`; incomplete HTML is never served or cached. Completed
-base and translated HTML responses revalidate through their exact URL cache
-keys. Save, translation writes/deletes, Publish, Unpublish, and Delete purge
-the affected base/locale and support-file URLs.
 
 Private source and state files remain private account storage.
 
@@ -201,22 +201,14 @@ https://clk.live/{accountPublicId}/{instanceId}?locale={locale}
 ```
 
 Cloud-dev uses the same query under `https://dev.clk.live`. Tokyo-worker reads
-and validates the exact overlay against saved content, replaces exact
-field-marked text/attributes and `<html lang>` in the stored root index,
-completes public placeholders, and returns complete cacheable HTML.
-`runtime.js` is not involved in overlay application. Missing overlays return `404 Locale not
+and validates the exact overlay against saved content, injects the locale
+context into the root index response, and returns it with `no-store`. The HTML
+references only root support files. Missing overlays return `404 Locale not
 available`; corrupt overlays return `500 Locale data invalid`; neither falls
 back to base content.
 
-The product-neutral iframe-free installer is served at:
-
-```text
-https://clk.live/clickeen.js
-```
-
-It reads a published Instance URL from `data-clickeen`, mounts the
-already-completed public product in open Shadow DOM, resolves only generated
-relative support references, and does not generate, translate, or publish.
+Public page-serving URL shape is parsed by Tokyo-worker, but current page
+public serving returns `404` until Roma writes real page packages.
 
 ## Private Roma Routes
 
@@ -235,6 +227,7 @@ Storage command routes cover:
 - publish and unpublish
 - translated locale reads and writes
 - account asset list/upload/resolve/delete
+- page source/package/serve-state operations
 
 Account instance inventory is split by authority:
 
@@ -261,32 +254,16 @@ Current internal route families:
 | `/__internal/instances/{instanceId}/package` | `GET` | read generated package metadata/files where supported |
 | `/__internal/instances/{instanceId}/translations` | `GET` | list saved translated locale value files |
 | `/__internal/instances/{instanceId}/translations/{locale}` | `GET`, `PUT`, `DELETE` | read/write/delete one translated value file |
-| `/__internal/catalog/widgets` and `/__internal/catalog/widgets/{templateId}` | `GET` | list/open exact `CLICKEEN` Widget templates for Roma Catalog |
+| `/__internal/accounts/{accountPublicId}/pages` | `GET` | list account pages |
+| `/__internal/pages` | `POST` | create account page source |
+| `/__internal/pages/{pageId}` | `GET`, `PUT`, `DELETE` | read/save/delete account page source |
+| `/__internal/pages/{pageId}/{publish|unpublish}` | `POST` | update page serve state |
 | `/__internal/accounts/{accountPublicId}/widget-defaults` | `GET`, `POST`, `PUT` | read/create/write account widget defaults |
 | `/__internal/assets/upload` | `POST` | upload account asset bytes |
-| `/__internal/assets/catalog-copy` | `POST` | copy fixed-owner `CLICKEEN` Catalog assets into the capsule-bound account |
 | `/__internal/assets/account/{accountPublicId}` | `GET` | list account asset metadata |
 | `/__internal/assets/account/{accountPublicId}/usage` | `GET` | account asset usage facts |
 | `/__internal/assets/account/{accountPublicId}/resolve` | `POST` | resolve account asset references |
 | `/__internal/assets/account/{accountPublicId}/asset/{assetRef}` | `DELETE` | delete exact account asset |
-
-Catalog read routes accept no owner coordinate. Tokyo fixes the storage owner
-to `CLICKEEN`, returns only records whose saved discriminator is
-`isTemplate: true`, and requires complete Catalog presentation values. The
-routes have no create, update, delete, publish, translation, or arbitrary
-cross-account operation. The caller's Roma account capsule authorizes product
-access; it does not become the Catalog storage owner.
-
-Catalog copy stays inside the account asset domain. Tokyo requires the
-`roma.edge` service identity and an editor-or-higher account capsule whose
-account equals `x-account-id`. Request asset references are the account-local
-refs stored in template config. Tokyo fixes their owner to exact account
-`CLICKEEN`; no owner coordinate is accepted. Tokyo reads
-the existing source files and metadata, checks every per-file upload limit and
-the full destination storage limit before the first write, chooses unique
-destination filenames without overwriting, and writes source `promotion`.
-Success returns exact local-ref mappings for draft rewriting. A later write failure returns an
-error and the mappings already completed, never full success.
 
 Health route:
 
@@ -327,18 +304,15 @@ Public localized serving reads this exact overlay state after publication and
 root artifact checks. It does not write, regenerate, heal, call Roma, or call a
 model on visitor requests.
 
-Roma calls the Translation Agent Worker for saved Instance translation
+Roma calls the Translation Agent Worker for account-widget translation
 generation. Translation Agent calls San Francisco `/model/chat` and writes
-overlays back through the one target-bound Tokyo-worker route. Tokyo-worker
-does not provide a generation route.
+overlays back through Tokyo-worker. Tokyo-worker does not provide a generation
+route.
 
 ## DevOps
 
 Tokyo-worker deploys through the GitHub Actions Cloudflare Workers workflow for
 cloud-dev workers. Tokyo product roots in R2 sync through the same workflow.
-`tokyo/product/clickeen/clickeen.js` maps to `product/clickeen.js`; its source
-path is part of the workflow change detector, so installer-only changes run the
-product-root sync.
 
 Before any manual Tokyo/R2 operation, run:
 

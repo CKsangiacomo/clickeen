@@ -9,6 +9,11 @@ const INSTANCE_PATH = new RegExp(
   `/api/account/instances/${INSTANCE_ID}(?:\\?.*)?$`,
 );
 
+type CapturedStateUpdate = {
+  device: unknown;
+  hasTheme: boolean;
+};
+
 async function openBuilder(page: Page): Promise<FrameLocator> {
   await page.goto(BUILDER_PATH, { waitUntil: "domcontentloaded" });
   await expect(page).toHaveURL(new RegExp(`${BUILDER_PATH}$`));
@@ -24,6 +29,20 @@ async function openBuilder(page: Page): Promise<FrameLocator> {
   return bobFrame;
 }
 
+async function readCapturedStateUpdates(
+  bobFrame: FrameLocator,
+): Promise<CapturedStateUpdate[]> {
+  return bobFrame
+    .frameLocator('iframe[title="Widget preview"]')
+    .locator("body")
+    .evaluate(() => {
+      const runtimeWindow = window as typeof window & {
+        __prd126bStateUpdates?: CapturedStateUpdate[];
+      };
+      return runtimeWindow.__prd126bStateUpdates ?? [];
+    });
+}
+
 test.describe("PRD 126B.1 Bob color truth and theme deletion", () => {
   test.beforeEach(() => {
     test.skip(
@@ -32,7 +51,7 @@ test.describe("PRD 126B.1 Bob color truth and theme deletion", () => {
     );
   });
 
-  test("changes preview device without a runtime state channel and renders intercepted save failure", async ({
+  test("preserves device updates, removes theme fiction, and renders intercepted save failure", async ({
     page,
   }) => {
     let interceptedSavePuts = 0;
@@ -68,14 +87,42 @@ test.describe("PRD 126B.1 Bob color truth and theme deletion", () => {
     );
 
     const bobFrame = await openBuilder(page);
+    const previewFrame = bobFrame.frameLocator(
+      'iframe[title="Widget preview"]',
+    );
+    await previewFrame.locator("body").evaluate(() => {
+      const runtimeWindow = window as typeof window & {
+        __prd126bStateUpdates?: CapturedStateUpdate[];
+      };
+      runtimeWindow.__prd126bStateUpdates = [];
+      window.addEventListener("message", (event) => {
+        const data = event.data as Record<string, unknown> | null;
+        if (data?.type !== "ck:state-update") return;
+        runtimeWindow.__prd126bStateUpdates?.push({
+          device: data.device,
+          hasTheme: Object.prototype.hasOwnProperty.call(data, "theme"),
+        });
+      });
+    });
+
     const desktop = bobFrame.getByRole("radio", { name: "Desktop" });
     const mobile = bobFrame.getByRole("radio", { name: "Mobile" });
     await expect(desktop).toBeChecked();
     await mobile.check();
     await expect(mobile).toBeChecked();
+    await expect
+      .poll(async () => readCapturedStateUpdates(bobFrame))
+      .toContainEqual({ device: "mobile", hasTheme: false });
 
     await desktop.check();
     await expect(desktop).toBeChecked();
+    await expect
+      .poll(async () => readCapturedStateUpdates(bobFrame))
+      .toContainEqual({ device: "desktop", hasTheme: false });
+
+    const capturedUpdates = await readCapturedStateUpdates(bobFrame);
+    expect(capturedUpdates.length).toBeGreaterThanOrEqual(2);
+    expect(capturedUpdates.every((entry) => !entry.hasTheme)).toBe(true);
 
     const titleField = bobFrame
       .locator('[data-bob-path="header.title"]')
@@ -109,7 +156,7 @@ test("PRD 126B.2 Logo Showcase uses the shared keyboard focus color", async ({
 }) => {
   const [tokensCss, widgetCss] = await Promise.all([
     readFile(resolve("dieter/tokens/dieter-color-tokens.css"), "utf8"),
-    readFile(resolve("tokyo/product/widgets/logoshowcase/styles.css"), "utf8"),
+    readFile(resolve("tokyo/product/widgets/logoshowcase/widget.css"), "utf8"),
   ]);
   const networkRequests: string[] = [];
 

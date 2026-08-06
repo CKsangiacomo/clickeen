@@ -2,8 +2,6 @@ import { asTrimmedString, isRecord } from '@clickeen/ck-contracts';
 import { isCompactInstanceId } from '@clickeen/ck-contracts/overlay-identity';
 import { readWidgetEditableFieldsContract } from '@clickeen/ck-contracts/translated-value-primitives';
 import type { WidgetEditableFieldsContract } from '@clickeen/ck-contracts/translated-value-primitives';
-import { parseCatalogPresentation, type CatalogPresentation } from '@clickeen/ck-contracts/catalog';
-import { parseLimitsSpec, type LimitsSpec } from '@clickeen/ck-policy';
 import { callTokyo, type TokyoCallContext } from './tokyo-client';
 import {
   composeConfigWithInstanceContent,
@@ -18,6 +16,7 @@ export type DirectRouteError = {
   reasonKey: string;
   detail?: string;
   paths?: string[];
+  pageIds?: string[];
 };
 
 type RouteFailure = {
@@ -33,10 +32,9 @@ export type AccountInstanceCoreRow = {
   widgetId?: string;
   accountId: string;
   widgetType: string;
-  isTemplate: boolean;
   baseLocale?: string;
+  publicPackageFingerprint: string;
   publishStatus?: AccountInstanceLiveStatus;
-  catalogPresentation?: CatalogPresentation;
 };
 
 export type AccountInstanceLiveStatus = 'published' | 'unpublished';
@@ -48,6 +46,7 @@ export type AccountInstancePublicPackage = {
 };
 
 export type AccountInstancePublicPackageRead = {
+  publicPackageFingerprint: string;
   publicPackage: AccountInstancePublicPackage;
 };
 
@@ -55,11 +54,9 @@ export type AccountWidgetInstanceListFact = {
   accountId: string;
   instanceId: string;
   widgetType: string;
-  isTemplate: boolean;
   displayName: string | null;
-  publishStatus?: AccountInstanceLiveStatus;
+  publishStatus: AccountInstanceLiveStatus;
   updatedAt: string;
-  catalogPresentation?: CatalogPresentation;
 };
 
 export type AccountWidgetInstanceIds = {
@@ -78,8 +75,6 @@ export type TokyoWidgetDefinition = {
   displayName: string;
   description: string;
   editableFields: WidgetEditableFieldsContract;
-  limits: LimitsSpec;
-  defaults: Record<string, unknown>;
 };
 
 function tokyoCallContext(args: {
@@ -144,17 +139,13 @@ function normalizeTokyoWidgetDefinition(raw: unknown): TokyoWidgetDefinition | n
   const widgetCode = asTrimmedString(raw.widgetCode);
   const displayName = asTrimmedString(raw.displayName);
   const description = typeof raw.description === 'string' ? raw.description : null;
-  const defaults = isRecord(raw.defaults) ? raw.defaults : null;
   let editableFields: WidgetEditableFieldsContract | null = null;
-  let limits: LimitsSpec | null = null;
   try {
     editableFields = readWidgetEditableFieldsContract(raw.editableFields);
-    limits = parseLimitsSpec(raw.limits);
   } catch {
     editableFields = null;
-    limits = null;
   }
-  if (!widgetType || !widgetCode || !displayName || description == null || !editableFields || !limits || !defaults)
+  if (!widgetType || !widgetCode || !displayName || description == null || !editableFields)
     return null;
   return {
     widgetType,
@@ -162,8 +153,6 @@ function normalizeTokyoWidgetDefinition(raw: unknown): TokyoWidgetDefinition | n
     displayName,
     description,
     editableFields,
-    limits,
-    defaults,
   };
 }
 
@@ -208,9 +197,6 @@ function normalizeAccountWidgetInstanceListFactPayload(
       : raw.publishStatus === 'unpublished'
         ? 'unpublished'
         : null;
-  const isTemplate = raw.isTemplate;
-  const hasCatalogPresentation = Object.prototype.hasOwnProperty.call(raw, 'catalogPresentation');
-  const catalogPresentation = hasCatalogPresentation ? parseCatalogPresentation(raw.catalogPresentation) : null;
   const displayName =
     typeof raw.displayName === 'string'
       ? raw.displayName
@@ -223,11 +209,7 @@ function normalizeAccountWidgetInstanceListFactPayload(
     !isCompactInstanceId(instanceId) ||
     !widgetType ||
     !updatedAt ||
-    (isTemplate !== true && isTemplate !== false) ||
-    (isTemplate === false && !publishStatus) ||
-    (isTemplate === true && publishStatus !== null) ||
-    (hasCatalogPresentation && !catalogPresentation) ||
-    (isTemplate === false && hasCatalogPresentation) ||
+    !publishStatus ||
     displayName === undefined
   ) {
     return null;
@@ -236,20 +218,15 @@ function normalizeAccountWidgetInstanceListFactPayload(
     accountId,
     instanceId,
     widgetType,
-    isTemplate,
     displayName,
     updatedAt,
-    ...(isTemplate
-      ? (catalogPresentation ? { catalogPresentation } : {})
-      : { publishStatus: publishStatus! }),
+    publishStatus,
   };
 }
 
 function normalizeAccountInstancePayload(payload: unknown): {
   row: AccountInstanceCoreRow;
   config: Record<string, unknown>;
-  sourceConfig: Record<string, unknown>;
-  sourceContent: AccountInstanceContentDocument;
 } | null {
   if (!isRecord(payload)) return null;
   const source = isRecord(payload.source) ? payload.source : null;
@@ -259,23 +236,8 @@ function normalizeAccountInstancePayload(payload: unknown): {
   const instanceId = asTrimmedString(payload.instanceId ?? payload.id);
   const accountId = asTrimmedString(payload.accountId);
   const widgetType = asTrimmedString(payload.widgetType);
-  const isTemplate = payload.isTemplate;
-  const baseLocale = asTrimmedString(payload.baseLocale);
-  const publishStatus = payload.publishStatus === 'published'
-    ? 'published'
-    : payload.publishStatus === 'unpublished'
-      ? 'unpublished'
-      : null;
-  const hasCatalogPresentation = Object.prototype.hasOwnProperty.call(payload, 'catalogPresentation');
-  const catalogPresentation = hasCatalogPresentation ? parseCatalogPresentation(payload.catalogPresentation) : null;
-  if (
-    !instanceId || !accountId || !widgetType ||
-    (isTemplate !== true && isTemplate !== false) ||
-    (isTemplate === false && (!baseLocale || !publishStatus)) ||
-    (isTemplate === true && (baseLocale || publishStatus)) ||
-    (hasCatalogPresentation && !catalogPresentation) ||
-    (isTemplate === false && hasCatalogPresentation)
-  ) return null;
+  const publicPackageFingerprint = asTrimmedString(payload.publicPackageFingerprint);
+  if (!instanceId || !accountId || !widgetType || !publicPackageFingerprint) return null;
   return {
     row: {
       instanceId,
@@ -285,17 +247,19 @@ function normalizeAccountInstancePayload(payload: unknown): {
       updatedAt: asTrimmedString(payload.updatedAt),
       accountId,
       widgetType,
-      isTemplate,
-      ...(isTemplate
-        ? (catalogPresentation ? { catalogPresentation } : {})
-        : { baseLocale: baseLocale!, publishStatus: publishStatus! }),
+      baseLocale: asTrimmedString(payload.baseLocale) ?? undefined,
+      publicPackageFingerprint,
+      publishStatus:
+        payload.publishStatus === 'published'
+          ? 'published'
+          : payload.publishStatus === 'unpublished'
+            ? 'unpublished'
+            : undefined,
     },
     config: composeConfigWithInstanceContent({
       config: sourceConfig,
       content: sourceContent,
     }),
-    sourceConfig,
-    sourceContent,
   };
 }
 
@@ -313,7 +277,9 @@ function normalizeAccountInstancePublicPackagePayload(
     return null;
   }
   const { indexHtml, stylesCss, runtimeJs } = payload.publicPackage;
+  const publicPackageFingerprint = asTrimmedString(payload.publicPackageFingerprint);
   if (
+    !publicPackageFingerprint ||
     typeof indexHtml !== 'string' ||
     typeof stylesCss !== 'string' ||
     typeof runtimeJs !== 'string'
@@ -321,6 +287,7 @@ function normalizeAccountInstancePublicPackagePayload(
     return null;
   }
   return {
+    publicPackageFingerprint,
     publicPackage: { indexHtml, stylesCss, runtimeJs },
   };
 }
@@ -334,12 +301,7 @@ async function openAccountInstanceFromTokyo(args: {
 }): Promise<
   | {
       ok: true;
-      value: {
-        row: AccountInstanceCoreRow;
-        config: Record<string, unknown>;
-        sourceConfig: Record<string, unknown>;
-        sourceContent: AccountInstanceContentDocument;
-      } | null;
+      value: { row: AccountInstanceCoreRow; config: Record<string, unknown> } | null;
     }
   | RouteFailure
 > {
@@ -372,9 +334,7 @@ export async function createAccountInstanceInTokyo(args: {
     stylesCss: string;
     runtimeJs: string;
   };
-  baseLocale?: string;
-  isTemplate: boolean;
-  catalogPresentation?: CatalogPresentation;
+  baseLocale: string;
   internalServiceName?: string | null;
   requestId?: string | null;
 }): Promise<
@@ -405,9 +365,7 @@ export async function createAccountInstanceInTokyo(args: {
         content: args.content,
       },
       publicPackage: args.publicPackage,
-      isTemplate: args.isTemplate,
-      ...(args.isTemplate ? {} : { baseLocale: args.baseLocale }),
-      ...(args.catalogPresentation ? { catalogPresentation: args.catalogPresentation } : {}),
+      baseLocale: args.baseLocale,
     },
     decode: (payload) => payload,
     errorDetail: 'tokyo_instance_create_http_error',
@@ -425,9 +383,7 @@ export async function saveAccountInstanceInTokyo(args: {
   instanceId: string;
   accountCapsule?: string | null;
   widgetType: string;
-  baseLocale?: string;
-  isTemplate: boolean;
-  catalogPresentation?: CatalogPresentation;
+  baseLocale: string;
   config: Record<string, unknown>;
   content: AccountInstanceContentDocument;
   publicPackage: {
@@ -452,9 +408,7 @@ export async function saveAccountInstanceInTokyo(args: {
     method: 'PUT',
     body: {
       widgetType: args.widgetType,
-      isTemplate: args.isTemplate,
-      ...(args.isTemplate ? {} : { baseLocale: args.baseLocale }),
-      ...(args.catalogPresentation ? { catalogPresentation: args.catalogPresentation } : {}),
+      baseLocale: args.baseLocale,
       source: {
         config: args.config,
         content: args.content,
@@ -619,48 +573,6 @@ export async function loadTokyoAccountInstanceDocument<TRow extends AccountInsta
     value: {
       row: saved.value.row as TRow,
       config: saved.value.config,
-    },
-  };
-}
-
-export async function loadTokyoAccountInstanceSourceSnapshot(args: {
-  accountId: string;
-  instanceId: string;
-  accountCapsule?: string | null;
-  internalServiceName?: string | null;
-  requestId?: string | null;
-}): Promise<
-  | {
-      ok: true;
-      value: {
-        row: AccountInstanceCoreRow;
-        config: Record<string, unknown>;
-        content: AccountInstanceContentDocument;
-      };
-    }
-  | RouteFailure
-> {
-  const saved = await openAccountInstanceFromTokyo(args);
-  if (!saved.ok) return saved;
-  if (!saved.value) {
-    return notFoundFailure({ reasonKey: 'coreui.errors.instance.notFound' });
-  }
-  const { row, sourceConfig, sourceContent } = saved.value;
-  if (
-    row.accountId !== args.accountId ||
-    row.instanceId !== args.instanceId ||
-    sourceContent.id !== row.instanceId ||
-    sourceContent.accountId !== row.accountId ||
-    sourceContent.widgetType !== row.widgetType
-  ) {
-    return invalidTokyoPayload('Tokyo account instance source coordinates do not match');
-  }
-  return {
-    ok: true,
-    value: {
-      row,
-      config: sourceConfig,
-      content: sourceContent,
     },
   };
 }

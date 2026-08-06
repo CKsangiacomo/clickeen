@@ -3,8 +3,8 @@ export type RomaDomainKey =
   | 'profile'
   | 'builder'
   | 'widgets'
-  | 'widgetTemplates'
   | 'widgetCatalog'
+  | 'pages'
   | 'assets'
   | 'team'
   | 'billing'
@@ -24,8 +24,8 @@ export const ROMA_DOMAINS: readonly RomaDomainDefinition[] = [
   { key: 'home', label: 'Home', href: '/home', description: 'Reserved for account insights and messages.' },
   { key: 'profile', label: 'User Settings', href: '/profile', description: 'Person-scoped settings for the signed-in user.' },
   { key: 'widgets', label: 'Widgets', href: '/widgets', description: 'Manage account-owned instances.' },
-  { key: 'widgetTemplates', label: 'My templates', href: '/widgets/templates', description: 'Manage Widget templates saved by this account.' },
-  { key: 'widgetCatalog', label: 'Widget catalog', href: '/widgets/catalog', description: 'Start from Clickeen Widget templates.' },
+  { key: 'widgetCatalog', label: 'Widget catalog', href: '/widgets/catalog', description: 'Create instances from available widgets.' },
+  { key: 'pages', label: 'Pages', href: '/pages', description: 'Stack widget instances into pages.' },
   { key: 'builder', label: 'Builder', href: '/builder', description: 'Edit widget instances in Bob.' },
   { key: 'assets', label: 'Assets', href: '/assets', description: 'Account library and usage mapping.' },
   { key: 'team', label: 'Team', href: '/team', description: 'Members and roles.' },
@@ -39,6 +39,7 @@ export const ROMA_DOMAINS: readonly RomaDomainDefinition[] = [
 export const ROMA_MAIN_DOMAIN_KEYS: readonly RomaDomainKey[] = [
   'home',
   'widgets',
+  'pages',
   'builder',
   'assets',
   'settings',
@@ -56,7 +57,6 @@ export const ROMA_SETTINGS_DOMAIN_KEYS: readonly RomaDomainKey[] = [
 
 export const ROMA_WIDGETS_DOMAIN_KEYS: readonly RomaDomainKey[] = [
   'widgets',
-  'widgetTemplates',
   'widgetCatalog',
 ];
 

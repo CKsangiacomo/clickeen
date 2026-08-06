@@ -11,7 +11,7 @@ is not documented here.
 | Agent | Agent id | Worker | Wrangler | Inbound caller | Outbound dependencies | Mutation boundary | Verification |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | Product Copilot | `product.copilot` | `agents/product-copilot/src/worker.ts` | `agents/product-copilot/wrangler.toml` | Roma account Builder route | San Francisco `/model/chat` | Bob live draft only; save/publish remains Roma | `pnpm --filter @clickeen/product-copilot test:copilot-contract`, `pnpm --filter @clickeen/product-copilot eval:copilot` |
-| Translation Agent | `widget.instance.translator` | `agents/translation-agent/src/worker.ts` | `agents/translation-agent/wrangler.toml` | Roma saved-Instance translation route/service binding | San Francisco `/model/chat`, Tokyo-worker target-bound translation route | saved Instance locale overlay files in Tokyo/R2 | `pnpm --filter @clickeen/translation-agent eval:translation-agent`, `pnpm e2e:smoke:translation-agent-runtime` |
+| Translation Agent | `widget.instance.translator` | `agents/translation-agent/src/worker.ts` | `agents/translation-agent/wrangler.toml` | Roma translation routes/service binding | San Francisco `/model/chat`, Tokyo-worker internal product route | account instance locale overlay files in Tokyo/R2 | `pnpm --filter @clickeen/translation-agent eval:translation-agent`, `pnpm e2e:smoke:translation-agent-runtime` |
 
 ## Worker Binding Inventory
 
@@ -43,7 +43,7 @@ A current Clickeen agent home:
 | Agent | Invocation authority | Runtime mutation |
 | --- | --- | --- |
 | Product Copilot | Roma account Builder route, with Bob-provided draft context | returns typed draft results; Bob applies draft edits in browser memory only |
-| Translation Agent | Roma saved Instance translation operation | writes completed locale overlay files through Tokyo-worker |
+| Translation Agent | Roma saved-instance translation operation | writes completed locale overlay files through Tokyo-worker |
 
 ## Dependency Ownership
 
@@ -51,7 +51,7 @@ A current Clickeen agent home:
 | --- | --- | --- |
 | Current account/session/tier | Roma | agents receive only the signed authority they need |
 | Model/provider execution | San Francisco | agents call `/model/chat`; agents do not own provider keys |
-| Saved Instance source | Roma/Tokyo-worker | Translation Agent receives items built from saved source |
+| Saved widget instance source | Roma/Tokyo-worker | Translation Agent receives items built from saved source |
 | Browser draft | Bob | Product Copilot returns draft ops; Bob applies them locally |
 | Overlay storage | Tokyo-worker | Translation Agent writes through internal Tokyo-worker route |
 

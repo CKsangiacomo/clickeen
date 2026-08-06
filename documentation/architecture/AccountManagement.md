@@ -18,9 +18,8 @@ For product/system context, see [CONTEXT.md](./CONTEXT.md) and [Overview.md](./O
 | Account runtime root | `accounts/{accountPublicId}/`. |
 | Role authority | `users.role` in the one-account user model. |
 | Tier/product policy | Roma/product policy, not Tokyo-worker. |
-| Account files | Tokyo-worker stores exact account Instance and asset files under the account root. |
-| Storage lifecycle | Account management decides retention/deletion consequences; Tokyo-worker performs exact approved byte operations. |
-| Public references | `accountPublicId + instanceId`. |
+| Account files | Tokyo-worker stores exact account instance/page/asset files under the account root. |
+| Public references | `accountPublicId + instanceId` or `accountPublicId + pageId`, depending on surface. |
 
 If an operator needs account truth, start at Berlin/Roma session bootstrap. If
 an operator needs account files, start at the Roma account route and
@@ -86,92 +85,18 @@ Current runtime status: account deletion is disabled until that account-root ope
 Agency or multi-account behavior is not current customer account behavior and
 does not belong in current account truth.
 
-## Product Access And Storage Lifecycle
-
-The accepted product law is:
-
-```text
-everything is visible to every tier; access is controlled by tier
-tier controls creation and product use
-account management controls storage lifecycle
-Tokyo-worker performs exact approved storage operations
-```
-
-“Account management” names the existing account-lifecycle responsibility; it
-is not a new service, Worker, queue, or storage layer.
-
-`tier99` is the internal-only policy profile of the normal `CLICKEEN` account.
-It is not sold, is not a user role, and creates no alternate account or
-authorization path.
-
-“Everyone” means every tier inside the authenticated current-account product.
-It does not mean cross-account visibility and does not bypass the current
-user's role. Users always see the account-owned Instances, templates,
-and assets they created or retained. If the current tier blocks a product
-action, that action stays visible, changes nothing, and uses the standard
-Upgrade interaction.
-
-A downgrade does not automatically hide, select, rewrite, publish, unpublish,
-or delete account Instances, templates, overlays, or generated files.
-Those objects remain under `accounts/{accountPublicId}/` and become usable again
-when policy allows. A finite creation limit can block creating another object
-without erasing objects the account already owns.
-
-Account-lifecycle or tier-change deletion of retained customer product truth has
-only two authorities:
-
-1. **Account deletion:** the one account-root operation removes the account's
-   relational truth and its entire `accounts/{accountPublicId}/` storage root.
-2. **Downgraded asset overage:** when current asset bytes exceed the new
-   `storage.bytes.max`, account management grants 30 days from the authoritative
-   downgrade time. During grace, assets stay visible and usable; the customer
-   may delete assets or upgrade. New uploads that would exceed the current limit
-   remain blocked. If the account is still over limit at the deadline, account
-   management directs Tokyo-worker to delete assets in descending `updatedAt`
-   order, with `assetRef` as the stable tie-breaker, stopping as soon as usage is
-   within the current allowance.
-
-User-authorized deletion through an owning product route remains allowed and is
-not system-initiated cleanup. The asset-overage rule never extends to Instances,
-templates, overlays, or generated files. If required asset metadata is
-missing or corrupt, cleanup stops and reports the exact account/asset problem;
-it does not guess or silently treat the asset as absent.
-
-Before the first automatic asset delete, Tokyo-worker must load and validate the
-complete current asset inventory, current allowance, ordering metadata, and size
-math. If a byte deletion fails after earlier deletions succeeded, the operation
-reports explicit partial failure, including what was deleted and what remains;
-it never reports full success. A later attempt starts from a fresh inventory.
-Deleted bytes are not silently reconstructed or rolled back.
-
-This is accepted product law. Current runtime gaps remain explicit: full
-account-root deletion is disabled, and automatic 30-day asset-overage cleanup
-is not yet implemented. The current Berlin bootstrap has a current tier but no
-reliable persisted downgrade time/from/to contract: it maps account
-`status_changed_at` into `tierChangedAt` and returns null from/to values. Status
-time cannot start an asset grace deadline. Before cleanup can ship, Berlin
-account management must own authoritative tier-change timing and authorize one
-Tokyo-worker cleanup operation. Berlin does not delete R2 bytes itself. This law
-does not select or authorize a new scheduler, queue, service, or Roma cleanup
-system.
-
 ## Current Tables And Account Coordinates
 
 Current account truth uses these relational tables/functions:
 
 | Relational object | Operator meaning |
 | --- | --- |
-| `accounts(id,status,status_changed_at,tier,created_at)` | Account existence, status, current tier, and status timing. It does not currently provide authoritative tier-change timing. |
+| `accounts(id,status,status_changed_at,tier,created_at)` | Account existence, status, tier, lifecycle timing. |
 | `users(user_id,account_id,role,primary_email,login_provider,login_subject,first_name,last_name,primary_language,country,timezone,phone,whatsapp,created_at)` | One-account user, role, login mapping, accepted user fields. |
 | `account_invitations(...)` | Account-scoped invitation lifecycle. |
 | `resolve_login_identity` | Login identity resolution. |
 | `accept_login_invitation_identity` | Invite acceptance plus user creation. |
 | `transfer_account_owner` | Owner transfer operation. |
-
-`users.login_provider` retains the ordinary `google | email` identity contract
-during pre-GA. Removing a test-only session-mint route does not remove email
-login support, rewrite existing email identities, or narrow this account-data
-contract. Berlin remains the one login/session authority for either provider.
 
 `accounts.id` is the compact account product/storage coordinate.
 `accountPublicId` is the API/embed/authz field name for that same value.
@@ -188,6 +113,18 @@ Public widget references use:
 
 ```text
 accountPublicId + instanceId
+```
+
+Page references use:
+
+```text
+accountPublicId + pageId
+```
+
+When page public serving is enabled, the public route shape is:
+
+```text
+/{accountPublicId}/pages/{pageId}
 ```
 
 ## User
@@ -334,11 +271,12 @@ Berlin must not preserve old `user_profiles`, `account_members`, `active_account
 
 ### Tokyo
 
-Tokyo owns widget definitions, exact account Instance storage operations,
+Tokyo owns widget definitions, exact account instance/page storage operations,
 translated locale overlay storage, and submitted public package
-storage/readiness for Widgets. Tokyo consumes account/user authz context; it
-does not decide billing or account identity, does not render Widget package
-bytes from saved source, and does not own translation generation.
+storage/readiness for widgets and pages. Tokyo consumes account/user authz
+context; it does not decide billing or account identity, does not render widget
+package bytes from saved source, does not compose pages, and does not own
+translation generation.
 
 ### Public Serving
 
@@ -352,7 +290,7 @@ Verify account behavior through the owning authority:
 | --- | --- |
 | Auth/session/account bootstrap | Berlin/Roma session bootstrap response |
 | Current account UI behavior | Roma authenticated account shell |
-| Account Instance files | Roma account routes plus Tokyo-worker storage evidence |
+| Account instance/page files | Roma account routes plus Tokyo-worker storage evidence |
 | Account assets | Roma `/api/account/assets` or Roma Assets UI |
 | Account storage bytes | R2 evidence after `pnpm cf:preflight` |
 | Supabase account schema changes | reviewed migration and Supabase migration workflow |

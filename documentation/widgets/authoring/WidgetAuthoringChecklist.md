@@ -37,26 +37,26 @@ Verification surface
 5. Confirm every customer-visible text path, including Shell Header text paths,
    is listed in `editable-fields.json`.
 6. Confirm plan limits map through `limits.json`.
-7. Confirm `index.html` uses the Shell/Core DOM shape and exact field/behavior
-   hooks required by Web Code Generator.
-8. Confirm `styles.css` and behavior-only `runtime.js` use the declared shared
-   module markers for appearance, branding, share, locale switcher, Header,
-   Stage/Pod, Core size, and typography as relevant.
+7. Confirm `widget.html` uses the Shell/Core DOM shape.
+8. Confirm `widget.client.js` uses shared Shell utilities for runtime,
+   appearance/fill/surface, branding, share, preview localization, locale
+   switcher, Header, Stage/Pod, Core size, and typography as relevant.
 9. Confirm no widget-local fallbacks were added for required shared helpers.
-10. Confirm every editor cluster has one plain-text section label, with no
+10. Confirm Clickeen Pages references use saved account widget instances.
+11. Confirm every editor cluster has one plain-text section label, with no
     pre-encoded HTML entities or duplicate section/group heading.
-11. Confirm only shared Header and the widget's primary Content section declare
+12. Confirm only shared Header and the widget's primary Content section declare
     `initiallyOpen: true`; every other section relies on the collapsed default.
 
 ## Edit Boundaries
 
 | Change | Required files |
 | --- | --- |
-| New Core state path | `spec.json`, generated `index.html`/`styles.css`/`runtime.js` consumers as relevant, and docs for that widget. |
-| New customer-visible text | `spec.json`, `editable-fields.json`, `index.html`, and docs for that widget. |
+| New Core state path | `spec.json`, `widget.client.js`, and docs for that widget. |
+| New customer-visible text | `spec.json`, `editable-fields.json`, `widget.client.js`, and docs for that widget. |
 | New repeatable item text | Same as customer-visible text, plus stable `arrayItemIdentity`. |
 | New entitlement-limited behavior | `limits.json`, Roma policy path if needed, and docs for that widget. |
-| New Core DOM hook | `index.html`, behavior-only `runtime.js` when interactive, and docs for that widget. |
+| New Core DOM hook | `widget.html`, `widget.client.js`, and docs for that widget. |
 | Shared Shell behavior | Shared file under `tokyo/product/widgets/shared/`, not a widget-local helper. |
 
 Do not move a change across these boundaries by hiding it in a generated package

@@ -3,13 +3,14 @@
 STATUS: CURRENT SYSTEM OPERATOR SPEC
 
 This folder documents current Clickeen widget operation. Use it when changing
-widget source, Bob editor controls, Translation Agent editable paths, or Widget
-Shell utilities.
+widget source, Bob editor controls, Translation Agent editable paths, widget
+Shell utilities, or account page placement behavior.
 
 Clickeen widget law:
 
 - Widgets are software.
 - Widget instances are saved account-owned widgets.
+- Clickeen Pages are account-owned stacks of saved widget instances.
 
 Widget software lives in git:
 
@@ -23,15 +24,15 @@ Saved account instances live in Tokyo/R2 through Tokyo-worker:
 accounts/{accountPublicId}/instances/{instanceId}/
 ```
 
+Clickeen Pages live in Tokyo/R2 through Tokyo-worker:
+
+```text
+accounts/{accountPublicId}/pages/{pageId}/
+```
+
 Bob edits one instance in browser memory. Roma owns account routing, policy,
 and save operations. Tokyo-worker stores exact submitted files. Shared widget
 Shell utilities live under `tokyo/product/widgets/shared/`.
-
-Web Code Generator applies structured config, content, and overlays to each
-Widget's exact `index.html`, `styles.css`, and `runtime.js` source. Generated
-initial HTML owns customer content and attribution markup. `runtime.js` binds
-behavior to that generated markup; it does not receive generic state updates or
-render primary customer content.
 
 ## Operator Authority
 
@@ -44,20 +45,20 @@ render primary customer content.
 | Dieter controls | `dieter/components/**` source |
 | Customer-visible text paths | `editable-fields.json` |
 | Account entitlement limits | `limits.json` |
-| Browser package generation | `@clickeen/ck-web-code-generator` in Bob |
-| Account save policy/hosting | Roma account instance command and save policy |
+| Saved package materialization | Roma account instance package builder/save policy |
 | Saved widget instances | Tokyo-worker under `accounts/{accountPublicId}/instances/{instanceId}/` |
+| Clickeen Pages | Tokyo-worker under `accounts/{accountPublicId}/pages/{pageId}/` |
 
 ## Generated Package Dependency Rule
 
 Saved account widget packages are stored product bytes. Widget-local
-`index.html`, `styles.css`, and `runtime.js`, selected shared widget CSS/JS,
-widget-shell markers, structured config/content, and overlays are resolved when
-Bob runs Web Code Generator.
+`widget.html`, `widget.css`, `widget.client.js`, selected shared widget
+CSS/JS, widget-shell markers, source state, and overlay state are resolved when
+Roma materializes `index.html`, `styles.css`, and `runtime.js`.
 
 Later widget software or shared runtime changes do not mutate already-stored
-account package files. A later explicit Save generates and stores a new exact
-package for that account Instance. Public serving must not compare
+account package files. They require a named account command or a future broad
+re-resolution command with exact coordinates. Public serving must not compare
 stored account package bytes to current widget source on visitor requests.
 
 Dieter icon URLs and account asset references remain external delivery
@@ -93,7 +94,7 @@ runtime in the same change that exposes the mismatch.
 
 | Manual | Purpose |
 | --- | --- |
-| `authoring/WidgetFiles.md` | Exact six-file widget source and generated-package contract. |
+| `authoring/WidgetFiles.md` | Exact six-file widget source contract. |
 | `authoring/ToolDrawerControls.md` | Bob panels, ToolDrawer fields, and Dieter controls. |
 | `authoring/WidgetAuthoringChecklist.md` | Current execution checklist for widget edits. |
 | `shared/ShellCore.md` | Shell/Core ownership, state paths, and DOM shape. |

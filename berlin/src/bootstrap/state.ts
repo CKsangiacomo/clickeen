@@ -84,7 +84,6 @@ function normalizeTier(value: unknown): AccountTier | null {
     case 'tier2':
     case 'tier3':
     case 'tier4':
-    case 'tier99':
       return value;
     default:
       return null;

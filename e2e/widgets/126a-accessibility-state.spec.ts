@@ -218,6 +218,19 @@ test.describe("PRD 126A.2 Bob failure-state truth", () => {
     await previewFrame
       .locator("body")
       .waitFor({ state: "attached", timeout: 30_000 });
+    await previewFrame.locator("body").evaluate(() => {
+      const runtimeWindow = window as typeof window & {
+        __prd126aStateLocales?: string[];
+      };
+      runtimeWindow.__prd126aStateLocales = [];
+      window.addEventListener("message", (event) => {
+        const data = event.data as { type?: unknown; locale?: unknown } | null;
+        if (data?.type !== "ck:state-update" || typeof data.locale !== "string")
+          return;
+        runtimeWindow.__prd126aStateLocales?.push(data.locale);
+      });
+    });
+
     await openTranslations(bobFrame);
     const localeSelect = bobFrame.getByLabel("Preview locale");
     await expect(localeSelect).toBeEnabled();
@@ -244,6 +257,20 @@ test.describe("PRD 126A.2 Bob failure-state truth", () => {
     await expect
       .poll(() => requestedLocale, { timeout: 10_000 })
       .toBe(targetLocale);
+    expect(
+      await previewFrame.locator("body").evaluate((locale) => {
+        const runtimeWindow = window as typeof window & {
+          __prd126aStateLocales?: string[];
+        };
+        return {
+          installed: Array.isArray(runtimeWindow.__prd126aStateLocales),
+          count:
+            runtimeWindow.__prd126aStateLocales?.filter(
+              (entry) => entry === locale,
+            ).length ?? 0,
+        };
+      }, targetLocale!),
+    ).toEqual({ installed: true, count: 0 });
     expect(previewNavigations).toBe(0);
 
     releaseLocale();
@@ -257,6 +284,20 @@ test.describe("PRD 126A.2 Bob failure-state truth", () => {
     await expect(
       bobFrame.getByText("RAW_TRANSLATION_LOCALE_SENTINEL"),
     ).toHaveCount(0);
+    expect(
+      await previewFrame.locator("body").evaluate((locale) => {
+        const runtimeWindow = window as typeof window & {
+          __prd126aStateLocales?: string[];
+        };
+        return {
+          installed: Array.isArray(runtimeWindow.__prd126aStateLocales),
+          count:
+            runtimeWindow.__prd126aStateLocales?.filter(
+              (entry) => entry === locale,
+            ).length ?? 0,
+        };
+      }, targetLocale!),
+    ).toEqual({ installed: true, count: 0 });
     expect(previewNavigations).toBe(0);
     expect(localeRequests).toBe(1);
     expect(forbiddenMutations).toEqual([]);

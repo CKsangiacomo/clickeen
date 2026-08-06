@@ -57,7 +57,7 @@ explicitly; Dieter does not install a browser global.
 Prague imports the canonical token entrypoint in its application build.
 
 Widget package generation reads canonical Dieter token and component CSS.
-Web Code Generator writes the required rules into that Instance's
+Instance materialization writes the required rules into that instance's
 `styles.css`. Public widget HTML therefore does not fetch Dieter CSS or
 JavaScript.
 

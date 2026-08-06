@@ -4,11 +4,9 @@ import {
   PLAN_LIMIT_KEYS,
   assertEntitlementsMatrix,
   getEntitlementsMatrix,
-  readPolicyLimit,
-  resolvePolicy,
 } from '../src/index';
 
-const tiers = ['free', 'tier1', 'tier2', 'tier3', 'tier4', 'tier99'] as const;
+const tiers = ['free', 'tier1', 'tier2', 'tier3', 'tier4'] as const;
 
 const registryKeys = new Set<string>(ENTITLEMENT_KEYS);
 const matrix = getEntitlementsMatrix();
@@ -57,14 +55,6 @@ const publishedInstances = matrix.entitlements['instances.published.max'];
 
 assert.equal(widgetInstances?.kind, 'limit', 'widgets.instances.max must be a limit');
 assert.equal(publishedInstances?.kind, 'limit', 'instances.published.max must be a limit');
-
-for (const entitlement of Object.values(matrix.entitlements)) {
-  assert.deepEqual(
-    entitlement.values.tier99,
-    entitlement.values.tier4,
-    'Tier99 must match Tier 4 for every existing entitlement',
-  );
-}
 
 for (const tier of tiers) {
   const widgetValue = widgetInstances.values[tier];

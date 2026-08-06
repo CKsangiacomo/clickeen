@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { isRecord } from '@clickeen/ck-contracts';
 import { createCompactInstanceId } from '@clickeen/ck-contracts/overlay-identity';
 import { resolvePolicyFromEntitlementsSnapshot } from '@clickeen/ck-policy';
 import {
@@ -7,8 +8,13 @@ import {
   listTokyoWidgetDefinitions,
 } from '@roma/lib/account-instance-direct';
 import { loadCurrentAccountLocalesState } from '@roma/lib/account-locales-state';
+import { loadAccountWidgetDefaultsInTokyo } from '@roma/lib/account-widget-defaults-direct';
+import { validateAccountWidgetDefaultsContract } from '@roma/lib/account-widget-defaults-contract';
+import {
+  readWidgetForInstancePackage,
+  materializeAccountInstancePublicPackage,
+} from '@roma/lib/account-instance-public-package';
 import { materializeAccountInstanceSourceArtifacts } from '@roma/lib/account-instance-source-artifacts';
-import { validateAccountInstanceSavePolicy } from '@roma/lib/account-instance-save-policy';
 import { readJsonPayloadOrValidation } from '@roma/lib/route-helpers';
 import { resolveCurrentAccountRouteContext, withSession } from '../_lib/current-account-route';
 
@@ -21,6 +27,10 @@ function normalizeDisplayName(value: unknown): string | null | undefined {
   const trimmed = value.trim();
   if (!trimmed) return null;
   return trimmed.length <= 120 ? trimmed : undefined;
+}
+
+function cloneValue<T>(value: T): T {
+  return JSON.parse(JSON.stringify(value)) as T;
 }
 
 function readFinitePolicyLimit(limits: Record<string, unknown>, key: string): number | null {
@@ -58,6 +68,37 @@ function upgradeRequired(args: {
   );
 }
 
+function mergeDefaultsInto(
+  target: Record<string, unknown>,
+  source: Record<string, unknown>,
+  path: string,
+  conflicts: string[],
+): void {
+  for (const [key, value] of Object.entries(source)) {
+    const nextPath = path ? `${path}.${key}` : key;
+    const existing = target[key];
+    if (typeof existing === 'undefined') {
+      target[key] = cloneValue(value);
+      continue;
+    }
+    if (isRecord(existing) && isRecord(value)) {
+      mergeDefaultsInto(existing, value, nextPath, conflicts);
+      continue;
+    }
+    conflicts.push(nextPath);
+  }
+}
+
+function materializeInstanceConfigFromAccountDefaults(args: {
+  shell: Record<string, unknown>;
+  core: Record<string, unknown>;
+}): { ok: true; config: Record<string, unknown> } | { ok: false; conflicts: string[] } {
+  const config = cloneValue(args.shell);
+  const conflicts: string[] = [];
+  mergeDefaultsInto(config, args.core, '', conflicts);
+  return conflicts.length > 0 ? { ok: false, conflicts } : { ok: true, config };
+}
+
 export async function POST(request: NextRequest) {
   const current = await resolveCurrentAccountRouteContext({ request, minRole: 'editor' });
   if (!current.ok) return current.response;
@@ -65,12 +106,6 @@ export async function POST(request: NextRequest) {
   const bodyResult = await readJsonPayloadOrValidation<{
     widgetType?: unknown;
     displayName?: unknown;
-    config?: unknown;
-    publicPackage?: {
-      indexHtml?: unknown;
-      stylesCss?: unknown;
-      runtimeJs?: unknown;
-    };
   } | null>(request);
   if (!bodyResult.ok) {
     return withSession(
@@ -82,21 +117,9 @@ export async function POST(request: NextRequest) {
   const body = bodyResult.payload;
 
   const widgetType = typeof body?.widgetType === 'string' ? body.widgetType.trim() : '';
-  const config = body?.config;
-  const publicPackage = body?.publicPackage;
   const hasDisplayName = Boolean(body && Object.prototype.hasOwnProperty.call(body, 'displayName'));
   const displayName = hasDisplayName ? normalizeDisplayName(body?.displayName) : undefined;
-  if (
-    !widgetType ||
-    (hasDisplayName && displayName === undefined) ||
-    !config ||
-    typeof config !== 'object' ||
-    Array.isArray(config) ||
-    !publicPackage ||
-    typeof publicPackage.indexHtml !== 'string' ||
-    typeof publicPackage.stylesCss !== 'string' ||
-    typeof publicPackage.runtimeJs !== 'string'
-  ) {
+  if (!widgetType || (hasDisplayName && displayName === undefined)) {
     return withSession(
       request,
       NextResponse.json(
@@ -156,12 +179,75 @@ export async function POST(request: NextRequest) {
       current.value.setCookies,
     );
   }
-  const widgetDefinition = widgetDefinitions.value.widgetDefinitions.find((entry) => entry.widgetType === widgetType);
-  if (!widgetDefinition) {
+  if (!widgetDefinitions.value.widgetDefinitions.some((entry) => entry.widgetType === widgetType)) {
     return withSession(
       request,
       NextResponse.json(
         { error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.instance.widgetMissing' } },
+        { status: 422 },
+      ),
+      current.value.setCookies,
+    );
+  }
+  const accountWidgetDefaults = await loadAccountWidgetDefaultsInTokyo({
+    accountId,
+    accountCapsule: current.value.authzToken,
+    requestId: current.value.requestId,
+  });
+  if (!accountWidgetDefaults.ok) {
+    return withSession(
+      request,
+      NextResponse.json(
+        { error: accountWidgetDefaults.error },
+        { status: accountWidgetDefaults.status },
+      ),
+      current.value.setCookies,
+    );
+  }
+  const defaultsContract = await validateAccountWidgetDefaultsContract({
+    request,
+    widgetDefaults: accountWidgetDefaults.value.widgetDefaults,
+    widgetTypes: [widgetType],
+  });
+  if (!defaultsContract.ok) {
+    return withSession(
+      request,
+      NextResponse.json({ error: defaultsContract.error }, { status: defaultsContract.status }),
+      current.value.setCookies,
+    );
+  }
+  const widgetDefaults = accountWidgetDefaults.value.widgetDefaults.widgets[widgetType];
+  if (!widgetDefaults) {
+    return withSession(
+      request,
+      NextResponse.json(
+        {
+          error: {
+            kind: 'VALIDATION',
+            reasonKey: 'coreui.errors.widgetDefaults.widgetMissing',
+            detail: `missing account defaults for widgetType "${widgetType}"`,
+          },
+        },
+        { status: 422 },
+      ),
+      current.value.setCookies,
+    );
+  }
+  const materialized = materializeInstanceConfigFromAccountDefaults({
+    shell: accountWidgetDefaults.value.widgetDefaults.shell,
+    core: widgetDefaults.core,
+  });
+  if (!materialized.ok) {
+    return withSession(
+      request,
+      NextResponse.json(
+        {
+          error: {
+            kind: 'VALIDATION',
+            reasonKey: 'coreui.errors.widgetDefaults.shellCoreConflict',
+            paths: materialized.conflicts,
+          },
+        },
         { status: 422 },
       ),
       current.value.setCookies,
@@ -193,16 +279,28 @@ export async function POST(request: NextRequest) {
   }
   const baseLocale = accountLocales.localePolicy.baseLocale;
   const instanceId = createCompactInstanceId();
-  const savePolicy = validateAccountInstanceSavePolicy({
-    config: config as Record<string, unknown>,
-    authz: current.value.authzPayload,
-    limits: widgetDefinition.limits,
-    context: 'publish',
-  });
-  if (!savePolicy.ok) {
+  const compiled = readWidgetForInstancePackage(widgetType);
+  if (!compiled.ok) {
     return withSession(
       request,
-      NextResponse.json({ error: savePolicy.error }, { status: savePolicy.status }),
+      NextResponse.json({ error: compiled.error }, { status: compiled.status }),
+      current.value.setCookies,
+    );
+  }
+  const publicPackage = await materializeAccountInstancePublicPackage({
+    compiled: compiled.value,
+    accountId,
+    accountCapsule: current.value.authzToken,
+    requestId: current.value.requestId,
+    instanceId,
+    baseLocale,
+    displayName: displayName ?? null,
+    config: materialized.config,
+  });
+  if (!publicPackage.ok) {
+    return withSession(
+      request,
+      NextResponse.json({ error: publicPackage.error }, { status: publicPackage.status }),
       current.value.setCookies,
     );
   }
@@ -210,8 +308,8 @@ export async function POST(request: NextRequest) {
     accountId,
     instanceId,
     widgetType,
-    config: config as Record<string, unknown>,
-    editableFields: widgetDefinition.editableFields,
+    config: materialized.config,
+    editableFields: compiled.value.editableFields ?? null,
     initialStatus: 'ok',
   });
   if (!sourceArtifacts.ok) {
@@ -229,12 +327,7 @@ export async function POST(request: NextRequest) {
     displayName,
     config: sourceArtifacts.value.config,
     content: sourceArtifacts.value.content,
-    publicPackage: {
-      indexHtml: publicPackage.indexHtml,
-      stylesCss: publicPackage.stylesCss,
-      runtimeJs: publicPackage.runtimeJs,
-    },
-    isTemplate: false,
+    publicPackage: publicPackage.value,
     baseLocale,
     requestId: current.value.requestId,
   });

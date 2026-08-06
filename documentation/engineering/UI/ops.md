@@ -18,7 +18,7 @@ There is one Dieter source tree and no generated Dieter runtime tree.
 - Prague compiles canonical token CSS.
 - DevStudio generates its reveal pages from source.
 - Widget package generation reads canonical token/component CSS.
-- Web Code Generator writes required Dieter CSS into Instance
+- Instance materialization writes required Dieter CSS into instance
   `styles.css`.
 
 The applications and widget packages do not fetch shared Dieter CSS or

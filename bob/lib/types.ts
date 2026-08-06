@@ -2,7 +2,6 @@
 
 import type { LimitsSpec } from '@clickeen/ck-policy';
 import type { WidgetEditableFieldsContract } from '@clickeen/ck-contracts/translated-value-primitives';
-import type { WidgetDefinition } from '@clickeen/ck-web-code-generator';
 
 export const BOB_PANEL_LABELS = {
   content: 'Content',
@@ -89,6 +88,24 @@ export interface WidgetNormalizationSpec {
   idRules?: WidgetNormalizationIdRule[];
 }
 
+export type WidgetPackageFileName =
+  | 'editable-fields.json'
+  | 'spec.json'
+  | 'widget.html'
+  | 'widget.css'
+  | 'widget.client.js'
+  | string;
+
+export interface WidgetPackageFileContext {
+  mediaType: 'application/json' | 'text/html' | 'text/css' | 'text/javascript';
+  source: string;
+}
+
+export interface WidgetPackageContext {
+  widgetType: string;
+  files: Partial<Record<WidgetPackageFileName, WidgetPackageFileContext>>;
+}
+
 export interface CompiledWidgetCore {
   widgetname: string;
   displayName: string;
@@ -102,9 +119,4 @@ export interface CompiledWidgetCore {
 
 export interface CompiledWidget extends CompiledWidgetCore {
   limits: LimitsSpec;
-  definition?: WidgetDefinition;
-}
-
-export interface CompiledWidgetArtifact extends CompiledWidget {
-  definition: WidgetDefinition;
 }

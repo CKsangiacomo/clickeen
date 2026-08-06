@@ -78,7 +78,7 @@ change to source truth is authorized by whoever owns it — the human, the
 product tenets, or the external
 system.
 
-The surrounding system is also agent-operated. Widgets, reports,
+The surrounding system is also agent-operated. Widgets, pages, reports,
 analytics, support tickets, locale overlays, runtime packages, account assets,
 routes, and storage folders are structured artifacts that agents operate through
 named authorities.
@@ -99,25 +99,18 @@ Host services transport them. Surfaces render them.
 - Widgets are software and live in the system.
 - Users create widget instances in Roma/Bob and save them in their account in
   Tokyo.
+- Clickeen Pages are account-owned stacks of saved widget instances that live in
+  Tokyo.
 - Bob is an editor. User opens and edits are browser-memory work. User save is
   the persistence boundary.
 - Tokyo is responsible for account runtime storage in R2.
 - Roma is the app. Roma routes the user to their account, enforces the user's
   tier, and saves what the user does.
-- Accepted product law for new or changed surfaces: everything is visible to
-  every tier; access is controlled by tier. A blocked action changes nothing and
-  uses the standard Upgrade interaction. This never exposes another account's
-  data or bypasses user-role authorization. Existing surfaces are not assumed
-  compliant until their owning runtime and service document prove it.
 - Roma owns widget inventory product meaning. Tokyo returns exact account
   instance storage coordinates and exact row facts, not tier decisions or
   product-shaped inventory summaries.
 - Clickeen uses Clickeen. Admin is a normal account using Clickeen's own
-  widgets, assets, and product routes.
-- **My templates** are the current account's Widget templates. The read-only
-  customer Widget Catalog is exactly the templates owned by the `CLICKEEN`
-  account. DevStudio manages their Catalog presentation values; Bob edits their
-  source through the normal product routes.
+  widgets, assets, pages, and product routes.
 
 ## Product Law
 
@@ -132,21 +125,14 @@ Clickeen is a simple account product.
 - Widgets are software.
 - Instances are saved account-owned widgets.
 - Assets are account-owned files.
+- Clickeen Pages are account-owned stacks of saved widget instances.
 - Roma is the account app: it routes the user to the current account, enforces
   account policy, and saves account work.
 - Bob is the Builder editor: it edits one widget instance in browser memory and
   returns the saved result through Roma.
 - Tokyo stores and serves account runtime data through Tokyo-worker and R2.
-- Tier controls creation/use; account management controls storage lifecycle.
-  Downgrade retains account-created product truth. The one automatic downgrade
-  deletion is asset overage after a 30-day grace period; account deletion is the
-  only operation that purges the complete account root. This is accepted
-  lifecycle law; automatic asset cleanup is not implemented in the current
-  runtime.
 - Berlin owns authentication and account session bootstrap.
-- Clickeen operations use the normal `CLICKEEN` account with the internal-only
-  `tier99` policy profile. `tier99` is not a customer tier and is not a role or
-  authorization bypass.
+- Clickeen admin work uses the normal admin account.
 - UI capability follows one forward-looking rule: resolution determines
   sharpness, available workspace determines layout, and form factor determines
   the expected product experience. Operational dashboards preserve the desktop
@@ -161,7 +147,7 @@ The active cloud-dev admin account coordinate is:
 CLICKEEN
 ```
 
-Admin-owned instances, assets, and examples use the same account-owned
+Admin-owned instances, assets, pages, and examples use the same account-owned
 paths and product routes as any other account.
 
 ## Current Authorities
@@ -175,6 +161,7 @@ paths and product routes as any other account.
 | Widget software                            | `tokyo/product/widgets/{widgetType}/` in git, deployed to Tokyo |
 | Account instances                          | Tokyo-worker over `accounts/{accountPublicId}/instances/`       |
 | Account assets                             | Tokyo-worker over `accounts/{accountPublicId}/assets/`          |
+| Clickeen Pages                            | Tokyo-worker over `accounts/{accountPublicId}/pages/`           |
 | Public serving state                       | Tokyo-worker                                                    |
 | Runtime bytes                              | Cloudflare R2/CDN through Tokyo-worker                          |
 | Relational account/user/invitation/locale data | Michael/Supabase                                           |
@@ -182,7 +169,6 @@ paths and product routes as any other account.
 | Product Copilot brain/runtime              | `agents/product-copilot` Cloudflare Worker                      |
 | Translation Agent brain/runtime            | `agents/translation-agent` Cloudflare Worker                     |
 | Design system                              | Dieter                                                          |
-| Global Widget Catalog source               | `CLICKEEN` account templates, managed in DevStudio through Roma |
 
 When runtime behavior and docs disagree, use this order:
 
@@ -219,7 +205,6 @@ https://bob.dev.clickeen.com
 https://tokyo.dev.clickeen.com
 https://berlin.dev.clickeen.com
 https://dev.clk.live/{accountPublicId}/{instanceId}
-https://dev.clk.live/clickeen.js
 https://devstudio.clickeen.com
 ```
 
@@ -242,6 +227,13 @@ accounts/{accountPublicId}/
       index.html
       styles.css
       runtime.js
+  pages/
+    {pageId}/
+      source.json
+      serve-state.json              # when submitted
+      index.html                    # when submitted
+      styles.css                    # when submitted
+      runtime.js                    # when submitted
 ```
 
 Each instance has one root runtime. Translation generation writes only
@@ -254,7 +246,6 @@ storage:
 
 ```text
 product/widgets/{widgetType}/
-product/clickeen.js
 dieter/
 prague/
 ```
@@ -277,14 +268,10 @@ route. They are classified as vector assets by Tokyo-worker.
    Tokyo-worker.
 3. Roma hosts Bob and sends one editor-open payload containing the saved source
    and exact saved package.
-4. Bob edits the active instance in browser memory and uses Web Code Generator
-   to generate and preview exact `index.html`, `styles.css`, and `runtime.js`
-   for each valid working state.
-   The loaded package is the saved baseline only; Save remains unavailable
-   until generation succeeds for the open working state.
-5. Bob submits the current config and exact generated package to Roma.
-6. Roma forwards the account save command; Tokyo-worker stores the submitted
-   source and exact package files without generating or repairing them.
+4. Bob edits the active instance in browser memory.
+5. Roma saves the submitted instance package to Tokyo-worker.
+6. Tokyo-worker stores the account instance source and exact package files that
+   Roma submitted.
 
 ### Assets
 
@@ -295,6 +282,18 @@ route. They are classified as vector assets by Tokyo-worker.
 4. Tokyo-worker validates accepted uploads and writes account asset files under
    `accounts/{accountPublicId}/assets/{filename}` with required metadata.
 5. Roma and Bob read the same Tokyo account asset truth.
+
+### Clickeen Pages
+
+1. Roma manages Clickeen Page source, source save stamps, summaries, and
+   placement product rules.
+2. A Clickeen Page is an ordered stack of saved account widget instance
+   placements.
+3. Tokyo-worker stores page source, serve-state, and any submitted page package
+   files under the account page folder.
+4. Page publish and public page serving are currently disabled because Roma
+   does not currently write page packages.
+5. Published page source cannot be edited or deleted until Roma unpublishes it.
 
 ### Clickeen-Owned Examples
 

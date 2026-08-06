@@ -1,14 +1,13 @@
 import { isRecord } from '@clickeen/ck-contracts';
-import { parseCatalogPresentation } from '@clickeen/ck-contracts/catalog';
 import { normalizeLocale, normalizeStorageId } from '../asset-utils';
 import {
   AccountInstanceTransitionError,
   createAccountInstanceFromSubmittedSource,
-  deleteAccountInstanceTransition,
   publishAccountInstanceTransition,
   saveAccountInstanceTransition,
   unpublishAccountInstanceTransition,
 } from '../domains/account-instances/operations';
+import { deleteAccountInstanceSubtree } from '../domains/account-instances/delete';
 import {
   readInstancePublicPackage,
   readSubmittedInstancePublicPackage,
@@ -145,12 +144,9 @@ export async function tryHandleInternalInstanceRoutes(
         accountId: pointer.value.accountId,
         instanceId: pointer.value.id,
         widgetType: pointer.value.widgetType,
-        isTemplate: pointer.value.isTemplate,
         displayName: pointer.value.displayName,
         updatedAt: pointer.value.updatedAt,
-        ...(pointer.value.isTemplate
-          ? (pointer.value.catalogPresentation ? { catalogPresentation: pointer.value.catalogPresentation } : {})
-          : { publishStatus: pointer.value.publishStatus }),
+        publishStatus: pointer.value.publishStatus,
       }),
     );
   }
@@ -178,18 +174,8 @@ export async function tryHandleInternalInstanceRoutes(
     const content = normalizeAccountInstanceContentDocument(source?.content);
     const instanceId = normalizeStorageId(rawBody.instanceId);
     const publicPackage = readSubmittedInstancePublicPackage(rawBody.publicPackage);
-    const isTemplate = rawBody.isTemplate;
-    const baseLocale = isTemplate === false ? normalizeLocale(rawBody.baseLocale) : null;
-    const hasCatalogPresentation = Object.prototype.hasOwnProperty.call(rawBody, 'catalogPresentation');
-    const catalogPresentation = hasCatalogPresentation ? parseCatalogPresentation(rawBody.catalogPresentation) : null;
-    if (
-      !instanceId || !config || !content || !publicPackage ||
-      (isTemplate !== true && isTemplate !== false) ||
-      (isTemplate === false && !baseLocale) ||
-      (isTemplate === true && Object.prototype.hasOwnProperty.call(rawBody, 'baseLocale')) ||
-      (hasCatalogPresentation && !catalogPresentation) ||
-      (isTemplate === false && hasCatalogPresentation)
-    )
+    const baseLocale = normalizeLocale(rawBody.baseLocale);
+    if (!instanceId || !config || !content || !publicPackage || !baseLocale)
       return respondValidation(respond, 'coreui.errors.instance.invalidPayload');
 
     try {
@@ -201,9 +187,7 @@ export async function tryHandleInternalInstanceRoutes(
         displayName: rawBody.displayName,
         config,
         content,
-        isTemplate,
-        ...(baseLocale ? { baseLocale } : {}),
-        ...(catalogPresentation ? { catalogPresentation } : {}),
+        baseLocale,
         publicPackage,
       });
       return respond(
@@ -214,15 +198,10 @@ export async function tryHandleInternalInstanceRoutes(
             instanceId: created.pointer.id,
             widgetCode: created.pointer.widgetCode,
             widgetType: created.pointer.widgetType,
-            isTemplate: created.pointer.isTemplate,
             displayName: created.pointer.displayName,
+            publishStatus: created.pointer.publishStatus,
             updatedAt: created.pointer.updatedAt,
-            ...(created.pointer.isTemplate
-              ? (created.pointer.catalogPresentation ? { catalogPresentation: created.pointer.catalogPresentation } : {})
-              : {
-                  baseLocale: created.pointer.baseLocale,
-                  publishStatus: created.pointer.publishStatus,
-                }),
+            publicPackageFingerprint: created.pointer.publicPackageFingerprint,
             source: {
               config: created.config,
               content: created.content,
@@ -358,6 +337,7 @@ export async function tryHandleInternalInstanceRoutes(
         env,
         accountId,
         instanceId,
+        expectedFingerprint: pointer.value.publicPackageFingerprint ?? null,
       });
       if (!packageReady.ok) {
         return respond(
@@ -377,6 +357,7 @@ export async function tryHandleInternalInstanceRoutes(
         env,
         accountId,
         instanceId,
+        expectedFingerprint: pointer.value.publicPackageFingerprint ?? null,
       });
       if (!publicPackage) {
         return respond(
@@ -396,6 +377,7 @@ export async function tryHandleInternalInstanceRoutes(
           ok: true,
           accountId,
           instanceId,
+          publicPackageFingerprint: pointer.value.publicPackageFingerprint,
           publicPackage,
         }),
       );
@@ -453,12 +435,11 @@ export async function tryHandleInternalInstanceRoutes(
           instanceId: pointer.id,
           widgetCode: pointer.widgetCode,
           widgetType: pointer.widgetType,
-          isTemplate: pointer.isTemplate,
           displayName: pointer.displayName,
+          publishStatus: pointer.publishStatus,
           updatedAt: pointer.updatedAt,
-          ...(pointer.isTemplate
-            ? (pointer.catalogPresentation ? { catalogPresentation: pointer.catalogPresentation } : {})
-            : { publishStatus: pointer.publishStatus, baseLocale: pointer.baseLocale }),
+          baseLocale: pointer.baseLocale,
+          publicPackageFingerprint: pointer.publicPackageFingerprint,
           source: {
             config: source.value.config,
             content: source.value.content,
@@ -484,20 +465,13 @@ export async function tryHandleInternalInstanceRoutes(
       const publicPackage = isRecord(body)
         ? readSubmittedInstancePublicPackage(body.publicPackage)
         : null;
-      const isTemplate = body?.isTemplate;
-      const baseLocale = isTemplate === false ? normalizeLocale(body?.baseLocale) : null;
-      const hasCatalogPresentation = Boolean(body && Object.prototype.hasOwnProperty.call(body, 'catalogPresentation'));
-      const catalogPresentation = hasCatalogPresentation ? parseCatalogPresentation(body?.catalogPresentation) : null;
+      const baseLocale = normalizeLocale(body?.baseLocale);
       if (
         !isRecord(body) ||
         !config ||
         !content ||
         !publicPackage ||
-        (isTemplate !== true && isTemplate !== false) ||
-        (isTemplate === false && !baseLocale) ||
-        (isTemplate === true && Object.prototype.hasOwnProperty.call(body, 'baseLocale')) ||
-        (hasCatalogPresentation && !catalogPresentation) ||
-        (isTemplate === false && hasCatalogPresentation)
+        !baseLocale
       ) {
         return respondValidation(respond, 'coreui.errors.instance.invalidPayload');
       }
@@ -510,9 +484,7 @@ export async function tryHandleInternalInstanceRoutes(
           config,
           content,
           publicPackage,
-          isTemplate,
-          ...(baseLocale ? { baseLocale } : {}),
-          ...(catalogPresentation ? { catalogPresentation } : {}),
+          baseLocale,
           displayName: body.displayName,
           hasDisplayName: Object.prototype.hasOwnProperty.call(body, 'displayName'),
         });
@@ -521,13 +493,10 @@ export async function tryHandleInternalInstanceRoutes(
             ok: true,
             instanceId,
             widgetType: result.pointer.widgetType,
-            isTemplate: result.pointer.isTemplate,
             displayName: result.pointer.displayName,
+            publishStatus: result.pointer.publishStatus,
             updatedAt: result.pointer.updatedAt,
             live: result.live,
-            ...(result.pointer.isTemplate
-              ? (result.pointer.catalogPresentation ? { catalogPresentation: result.pointer.catalogPresentation } : {})
-              : { publishStatus: result.pointer.publishStatus, baseLocale: result.pointer.baseLocale }),
           }),
         );
       } catch (error) {
@@ -539,7 +508,7 @@ export async function tryHandleInternalInstanceRoutes(
       const auth = await authorizeRomaEditorTransition({ req, env, accountId });
       if (!auth.ok) return respond(auth.response);
       try {
-        const deleted = await deleteAccountInstanceTransition({ env, instanceId, accountId });
+        const deleted = await deleteAccountInstanceSubtree(env, instanceId, accountId);
         if (!deleted.existed) {
           return respond(
             json(
@@ -550,7 +519,19 @@ export async function tryHandleInternalInstanceRoutes(
         }
         return respond(json({ ok: true, deleted: deleted.existed, existed: deleted.existed }));
       } catch (error) {
-        return respond(transitionErrorResponse(error));
+        const detail = error instanceof Error ? error.message : String(error);
+        return respond(
+          json(
+            {
+              error: {
+                kind: 'UPSTREAM_UNAVAILABLE',
+                reasonKey: 'coreui.errors.db.writeFailed',
+                detail,
+              },
+            },
+            { status: 502 },
+          ),
+        );
       }
     }
 

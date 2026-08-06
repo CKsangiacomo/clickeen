@@ -21,7 +21,7 @@ accountPublicId: CLICKEEN
 | Build command | `pnpm build` |
 | Build output | `admin/dist` |
 | Auth/session | Berlin login + DevStudio Pages session finish route |
-| Write path | Pages Functions under `admin/functions/**`; source-controlled tools commit to GitHub, while Catalog management forwards the authenticated `CLICKEEN` operation to Roma |
+| Write path | Pages Functions under `admin/functions/**` |
 | Commit branch | `DEVSTUDIO_GITHUB_REPOSITORY` + `DEVSTUDIO_GITHUB_BRANCH` |
 
 Non-canonical Pages origins redirect or block through `admin/functions/_middleware.js` unless Cloudflare project health behavior requires otherwise.
@@ -81,7 +81,6 @@ Edit action so the preview itself does not masquerade as a control.
 | Dieter Components | Generated/static component showcase pages from Dieter component specs and snippets. |
 | Entitlements | Pages Functions read/write entitlement policy files through GitHub. The same tool also renders AI runtime policy editing backed by `/api/ai-runtime/*`. |
 | LLM Management | Read-only generated visibility into managed model configuration. It is not a runtime API-backed editor. |
-| Widget catalog | Lists and manages the underlying `CLICKEEN` Widget templates that appear read-only in every customer Widget Catalog. Presentation values are edited here; Bob remains the source editor. |
 
 Foundation and Policy Editor tables use Dieter Table. DevStudio still owns
 their columns, editable cells, data, and mutation behavior. The token editor
@@ -117,38 +116,8 @@ routes.
 | `POST /api/dieter/tokens/foundation/value` | Validate and commit one recognized Dieter foundation token edit. |
 | `GET /api/dieter/tokens/typography` | Read source-controlled Dieter typography tokens. |
 | `POST /api/dieter/tokens/typography/value` | Validate and commit one Dieter typography token edit. |
-| `GET/POST /api/catalog/widgets` | List the `CLICKEEN` Widget templates and ordinary source Instances, or snapshot one source as a complete Catalog template. |
-| `GET/PATCH/DELETE /api/catalog/widgets/{templateId}` | Open, update presentation on, or delete the underlying `CLICKEEN` Widget template through Roma. |
-| `POST /api/catalog/widgets/{templateId}/rename` | Rename the underlying `CLICKEEN` Widget template through Roma. |
 
-Every source-controlled write uses GitHub SHA conflict checks. A stale write
-fails; it does not overwrite current `main`.
-
-Catalog writes are the deliberate exception because Catalog truth is product
-data, not repository source. DevStudio accepts only the authenticated
-`CLICKEEN` account, forwards the operator's Berlin access token to Roma, and
-uses Roma's normal Widget routes. Roma then uses Tokyo-worker as the only
-storage writer. DevStudio never writes R2 and owns no Catalog database,
-registry, copy, or synchronization process.
-
-## Catalog Management
-
-The Widget Catalog view manages the same `CLICKEEN` templates customers read in
-Roma. A Catalog item is not a separate record. It is a Widget template
-with four required presentation values: thumbnail asset reference,
-description, category, and display order.
-
-Creating an item starts from an existing ordinary `CLICKEEN` Widget Instance.
-The operator supplies a distinct template name and all four presentation
-values, and one normal Save-as-template operation creates the underlying
-template. Missing or invalid presentation blocks the Save. The ordinary source
-is unchanged. DevStudio provides links to create or edit the source in Bob; it
-does not implement another source editor.
-
-Presentation edits, rename, and delete target the underlying template through
-the normal current-account route. Customer Catalogs remain read-only. They see
-the result on the next Catalog read because both surfaces read the same object;
-there is no copy or propagation step.
+Every write uses GitHub SHA conflict checks. A stale write fails; it does not overwrite current `main`.
 
 ## Core Styles Reveal And Write Truth
 
@@ -213,7 +182,6 @@ Configured in `admin/wrangler.toml` and Cloudflare Pages:
 | `DEVSTUDIO_GITHUB_BRANCH` | Commit branch, currently `main`. |
 | `DEVSTUDIO_GITHUB_REPOSITORY` | Repository for source-controlled writes. |
 | `ENV_STAGE` | Runtime stage label. |
-| `ROMA_BASE_URL` | Roma product origin used by the narrow Catalog-management Pages Functions. |
 | `DEVSTUDIO_GITHUB_TOKEN` | Pages secret for GitHub contents reads/writes. |
 
 Cloudflare API commands require root `.env.local` values:

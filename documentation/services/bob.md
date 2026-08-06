@@ -82,9 +82,7 @@ full-canvas Builder body. Roma does not place a Page header, generic action
 band, padding, or module frame around Bob. `TopDrawer` is Bob-owned editor
 chrome, not a Roma Page header. It holds the instance label and publish state,
 Save as the primary editor action, Open public widget as the applicable
-secondary action, conditional Save as template for an eligible saved ordinary
-Instance, and one Copy code host intent under More. A saved template instead
-shows a Template badge and Use template. Roma presents the
+secondary action, and one Copy code host intent under More. Roma presents the
 shared public-code Popup and performs the browser copy; Bob neither reconstructs
 nor copies public values. A return control is context navigation rather than
 another CTA. In Compact mode TopDrawer also
@@ -106,13 +104,6 @@ The active account authoring flow is:
 9. Roma saves the current account instance through Tokyo-worker.
 
 Between open and save, Bob writes no account persistence.
-
-An ordinary saved Instance and a saved Widget template use the same editor and
-three-file Save authority. `isTemplate` in saved source selects the mode. A
-template draft opened through Use template has no ID and remains only in browser
-memory until ordinary Save. Templates omit translation, publish and public-code
-controls. Save as template first saves the current ordinary Instance, then asks
-Roma to create a separate saved template with a distinct name and ID.
 
 Ordinary control edits are path operations against the already validated open
 document. Bob applies the compiled control allowlist and value contract to the
@@ -158,16 +149,14 @@ Roma opens Bob:
   "policy": "[policySnapshot]",
   "accountPublicId": "[accountPublicId]",
   "instanceId": "[instanceId]",
-  "isTemplate": "[true|false]",
-  "templateDraft": "[optional true for an ID-less draft opened from a template]",
   "publishStatus": "[published|unpublished]",
   "label": "[displayName]",
   "returnLabel": "[optional host return label]",
   "publicActions": {
     "publicUrl": "[exact published URL]",
-    "clickeenJsSnippet": "[exact clickeen.js installer snippet]"
+    "iframeSnippet": "[exact iframe snippet]",
+    "scriptSnippet": "[exact script snippet]"
   },
-  "canSaveAsTemplate": "[host-computed role/source/capacity eligibility]",
   "copilot": "[copilotRuntimeUi]",
   "translationSetup": "[translationSetup]"
 }
@@ -213,7 +202,7 @@ Bob sends host navigation intents without owning Roma routes:
 ```json
 {
   "type": "bob:host-action",
-  "action": "[open-navigation|return|copy-code|use-template|save-as-template]"
+  "action": "[open-navigation|return|copy-code]"
 }
 ```
 
@@ -222,11 +211,6 @@ existing Roma navigation drawer. `return` follows Roma's sanitized return
 coordinate and existing unsaved-work guard. `copy-code` asks Roma to open the
 shared public-code Popup for the exact published values already supplied in the
 current Builder-open envelope.
-`use-template` asks Roma to open an ID-less ordinary draft from the current
-saved template. Bob owns the persistent **Save as template** action and its
-template-name Popup. It emits `save-as-template` only after Bob's current Save
-has succeeded. Roma owns the snapshot command, progress/outcome Popup, and
-**Open template** choice.
 
 Roma replies to account commands with:
 
@@ -279,14 +263,12 @@ Roma:
 - widget type
 - display name
 - base locale
-- current merged config
-- exact browser-generated `index.html`, `styles.css`, and `runtime.js`
+- current config/content state
 
 Bob sends this as a `bob:account-command` with `command: "update-instance"`.
-Bob must have a successful Web Code Generator result for the current working
-state before it sends Save. Roma derives the separate config/content source
-artifacts, performs the account save command, and Tokyo-worker stores those
-derived source artifacts with Bob's exact package under:
+Roma reads the deploy-built materializer artifact, materializes the browser
+package files, and performs the account save command. Tokyo-worker stores the
+saved source and package under:
 
 ```text
 accounts/{accountPublicId}/instances/{instanceId}/
@@ -297,11 +279,13 @@ duplicate, and delete. Roma does not generate translations, regenerate
 translations, or mutate locale overlays from the `update-instance` command.
 Bob treats the save response as source/root persistence truth only.
 
-When translations need update, that work belongs to the Translations panel and
-its explicit Generate translations action. Bob must not infer stale-translation
-truth from runtime package probes, active locale count alone, or hidden
-UI-authored status. [`interactions.md`](../engineering/UI/interactions.md) owns
-interaction feedback behavior.
+When translations need update, that attention belongs to the Translations panel.
+[`interactions.md`](../engineering/UI/interactions.md) owns interaction feedback
+behavior. The Bob/Roma UI execution PRDs own any future top-of-builder attention
+surface that points the user to the Translations panel and the explicit Generate
+translations action when exact stale-translation evidence exists. Bob must not
+infer that state from runtime package probes, active locale count alone, or
+hidden UI-authored status.
 
 Bob account commands currently include:
 
@@ -360,9 +344,10 @@ Each widget package contains:
 spec.json
 editable-fields.json
 limits.json
-index.html
-styles.css
-runtime.js
+widget.html
+widget.css
+widget.client.js
+declared support files
 ```
 
 `spec.json` carries defaults and editor structure. `editable-fields.json`
@@ -381,9 +366,8 @@ The widget build compiles each canonical `spec.json` once into:
 Compiler source lives under `bob/lib/compiler*`.
 `scripts/widgets/generate-artifacts.ts` reads widget and Dieter source directly
 from the repo and emits ignored editor artifacts under
-`roma/public/widget-editors/`. Each artifact includes the compiled editor
-contract and the exact Widget definition/source modules Web Code Generator
-needs in Bob.
+`roma/public/widget-editors/` plus server-only materializer artifacts under
+`roma/generated/`.
 Normal product requests do not fetch Tokyo source, fetch Dieter stencils, or
 compile controls.
 
@@ -402,9 +386,8 @@ GET /l10n/**
 
 Builder preview does not load widget source through a Bob `/widgets/**` proxy.
 Roma opens the instance with its saved `index.html`, `styles.css`, and
-`runtime.js` package and the deploy-built editor artifact. For every valid
-working state, Bob runs Web Code Generator in browser memory and previews the
-exact generated package in the sandboxed iframe.
+`runtime.js` package. Bob boots that exact package in the sandboxed iframe, then
+streams unsaved browser-memory state into the running instance runtime.
 
 The Bob-local AI API route is a guard route only:
 
@@ -414,9 +397,8 @@ POST /api/ai/widget-copilot -> 409
 
 Copilot turn traffic must run through the Roma account route.
 
-Editor artifacts contain the exact Widget definition, including the source
-HTML, CSS, runtime, and selected shared modules required for browser generation.
-There is no separate server materializer artifact.
+Editor artifacts contain no raw widget HTML, CSS, JavaScript, or materializer
+package. Roma's server-only materializer reads a separate build artifact.
 
 ## Controls
 
@@ -516,29 +498,38 @@ no item identity.
 
 ## Preview
 
-Bob preview is the current successful Web Code Generator result for the
-browser-memory working state. Bob constructs the iframe document from the exact
-generated `index.html`, inlines the generated stylesheet for preview, and loads
-the exact generated runtime. Widget runtime may send `ck:ready` and resize
-messages for iframe behavior, but it does not receive a generic state document
-or rebuild customer content.
+Bob preview loads the saved instance package in a sandboxed iframe and streams
+working state updates into its runtime:
 
-On open, the saved public package is retained only as the persisted signature
-baseline. Bob withholds the current savable package until Web Code Generator
-successfully generates the open working state. This prevents an immediate Save
-from writing previously loaded package bytes for a newly changed config.
+```json
+{
+  "type": "ck:state-update",
+  "widgetname": "[widgetType]",
+  "state": "[workingState]",
+  "device": "[desktop|mobile]"
+}
+```
 
-For an existing saved Instance, Bob reads the complete exact saved overlay map
-through Roma before that generated package becomes savable. Translation preview
-selection chooses which already-read overlay to display; it does not determine
-which overlay coordinates are included in the base generated package. A failed
-overlay read withholds the package and blocks Save.
+Widget runtime sends:
+
+```json
+{
+  "type": "ck:ready"
+}
+```
+
+`ck:ready` acknowledges the first state applied by one iframe document. Bob's
+generic `Loading preview...` status therefore belongs only to that initial
+iframe boot and resets only when a different saved public package recreates the
+iframe document. It is not an edit-progress signal.
 
 When an in-memory edit introduces an unresolved account media or font
-reference, Bob withholds the preview package while it resolves the dependency
-through Roma and regenerates from the resolved URL. Resolution or generation
-failure is an explicit preview error. A later valid resolution produces and
-previews a new exact package.
+reference, Bob keeps the last successfully rendered preview visible, resolves
+the dependency through Roma, materializes the resolved URL, and sends the
+updated state to the existing iframe. Resolution failure is an explicit preview
+error. A later valid dependency resolution clears that dependency error; Bob
+does not reload the iframe, repeat `ck:ready`, or present an iframe failure as a
+ready preview.
 
 Preview represents the in-memory working copy. Public snippets point at the
 published static URL:
@@ -548,15 +539,13 @@ https://clk.live/{accountPublicId}/{instanceId}
 ```
 
 Roma owns public-widget action truth for the current account and opened
-instance. It constructs the exact direct public URL and shared `clickeen.js`
-installer snippet and sends either that complete set or `null` in the
-Builder-open envelope. Bob fails a published open when that set is incomplete
-and presents Open public widget plus one Copy code intent in TopDrawer. Roma
-handles that intent with the same public-code Popup used by the Widgets
-inventory. Bob never constructs or copies those values from editor state.
-Unpublished instances expose no live actions. There is no public iframe option
-and no installer that loads the Instance's `runtime.js` directly. Bob's
-sandboxed editor-preview iframe remains separate from public installation.
+instance. It constructs the exact public URL and iframe/script snippets and
+sends either that complete set or `null` in the Builder-open envelope. Bob
+fails a published open when that set is incomplete and presents Open public
+widget plus one Copy code intent in TopDrawer. Roma handles that intent with
+the same public-code Popup used by the Widgets inventory. Bob never constructs
+or copies those values from editor state. Unpublished instances expose no live
+actions.
 
 ## Account Assets
 
@@ -673,7 +662,7 @@ Runtime evidence comes from cloud-dev Cloudflare surfaces.
 ## Hard Stops
 
 - Do not add account persistence inside Bob.
-- Do not save without Bob's exact generated package for the current config.
+- Do not save package files from Bob.
 - Do not let Bob choose account locales, tier policy, model availability, or storage paths.
 - Do not create Bob account asset API routes; asset commands go through Roma.
 - Do not treat Builder preview as public serving evidence.

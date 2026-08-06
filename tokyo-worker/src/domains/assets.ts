@@ -1,4 +1,4 @@
-import { parseAccountAssetKey, toAccountAssetPublicPath } from '@clickeen/ck-contracts';
+import { parseAccountAssetKey } from '@clickeen/ck-contracts';
 import {
   classifyAccountAssetType,
   type AccountAssetType,
@@ -23,29 +23,6 @@ export function roleRank(role: MemberRole): number {
 }
 
 export type AccountAssetSource = 'bob.publish' | 'bob.export' | 'devstudio' | 'promotion' | 'api';
-
-export const CLICKEEN_ASSET_ACCOUNT_ID = 'CLICKEEN';
-
-export type CatalogAssetCopyMapping = {
-  sourceAssetRef: string;
-  destinationAssetRef: string;
-};
-
-export class CatalogAssetCopyError extends Error {
-  readonly reasonKey: string;
-  readonly completedMappings: CatalogAssetCopyMapping[];
-
-  constructor(args: {
-    reasonKey: string;
-    detail: string;
-    completedMappings?: CatalogAssetCopyMapping[];
-  }) {
-    super(args.detail);
-    this.name = 'CatalogAssetCopyError';
-    this.reasonKey = args.reasonKey;
-    this.completedMappings = args.completedMappings ?? [];
-  }
-}
 
 export function isAccountAssetSource(raw: unknown): raw is AccountAssetSource {
   return raw === 'bob.publish' || raw === 'bob.export' || raw === 'devstudio' || raw === 'promotion' || raw === 'api';
@@ -101,29 +78,6 @@ function isStoredAssetMetadataString(value: unknown): value is string {
 
 function accountAssetKey(accountId: string, assetRef: string): string {
   return `accounts/${accountId}/assets/${assetRef}`;
-}
-
-function publicAccountAssetRef(accountId: string, assetRef: string): string {
-  const path = toAccountAssetPublicPath(accountAssetKey(accountId, assetRef));
-  if (!path) throw new AccountAssetKeyError(accountAssetKey(accountId, assetRef));
-  return path;
-}
-
-function collisionSafeAssetRef(filename: string, unavailable: Set<string>): string {
-  if (!unavailable.has(filename)) return filename;
-  const dot = filename.lastIndexOf('.');
-  const hasExtension = dot > 0 && dot < filename.length - 1;
-  const stem = hasExtension ? filename.slice(0, dot) : filename;
-  const extension = hasExtension ? filename.slice(dot) : '';
-  for (let index = 2; index < 100_000; index += 1) {
-    const suffix = `-${index}`;
-    const candidate = `${stem.slice(0, 180 - extension.length - suffix.length)}${suffix}${extension}`;
-    if (!unavailable.has(candidate)) return candidate;
-  }
-  throw new CatalogAssetCopyError({
-    reasonKey: 'tokyo.errors.assets.copyFailed',
-    detail: `destination_filename_unavailable:${filename}`,
-  });
 }
 
 function accountAssetPrefix(accountId: string): string {
@@ -252,93 +206,4 @@ export async function deleteAccountAssetByRef(env: Env, accountId: string, asset
     throw new AccountAssetKeyError(key);
   }
   await env.TOKYO_R2.delete(key);
-}
-
-export async function copyClickeenCatalogAssets(args: {
-  env: Env;
-  destinationAccountId: string;
-  sourceAssetRefs: string[];
-  uploadSizeLimit: number | null;
-  storageLimit: number | null;
-}): Promise<CatalogAssetCopyMapping[]> {
-  const destinationFiles = await listAccountAssetFilesByAccount(args.env, args.destinationAccountId);
-  const unavailable = new Set(destinationFiles.map((file) => file.assetRef));
-  const prepared: Array<{
-    source: AccountAssetFile;
-    destinationAssetRef: string;
-    bytes: ArrayBuffer;
-  }> = [];
-
-  for (const sourceAssetRef of args.sourceAssetRefs) {
-    const source = await loadAccountAssetByRef(args.env, CLICKEEN_ASSET_ACCOUNT_ID, sourceAssetRef);
-    if (!source) {
-      throw new CatalogAssetCopyError({
-        reasonKey: 'coreui.errors.asset.notFound',
-        detail: publicAccountAssetRef(CLICKEEN_ASSET_ACCOUNT_ID, sourceAssetRef),
-      });
-    }
-    const sourceObject = await args.env.TOKYO_R2.get(source.key);
-    if (!sourceObject) {
-      throw new CatalogAssetCopyError({
-        reasonKey: 'coreui.errors.asset.notFound',
-        detail: publicAccountAssetRef(CLICKEEN_ASSET_ACCOUNT_ID, sourceAssetRef),
-      });
-    }
-    const bytes = await sourceObject.arrayBuffer();
-    if (bytes.byteLength !== source.sizeBytes) {
-      throw new CatalogAssetCopyError({
-        reasonKey: 'tokyo.errors.assets.metadataInvalid',
-        detail: source.key,
-      });
-    }
-    if (args.uploadSizeLimit !== null && bytes.byteLength > args.uploadSizeLimit) {
-      throw new CatalogAssetCopyError({
-        reasonKey: 'coreui.upsell.reason.limitReached',
-        detail: 'uploads.size.max',
-      });
-    }
-    const destinationAssetRef = collisionSafeAssetRef(source.normalizedFilename, unavailable);
-    unavailable.add(destinationAssetRef);
-    prepared.push({ source, destinationAssetRef, bytes });
-  }
-
-  if (
-    args.storageLimit !== null &&
-    sumAccountAssetFileSizeBytes(destinationFiles) + prepared.reduce((total, item) => total + item.bytes.byteLength, 0) > args.storageLimit
-  ) {
-    throw new CatalogAssetCopyError({
-      reasonKey: 'coreui.upsell.reason.limitReached',
-      detail: 'storage.bytes.max',
-    });
-  }
-
-  const completedMappings: CatalogAssetCopyMapping[] = [];
-  for (const item of prepared) {
-    const destinationKey = accountAssetKey(args.destinationAccountId, item.destinationAssetRef);
-    try {
-      const stored = await args.env.TOKYO_R2.put(destinationKey, item.bytes, {
-        httpMetadata: { contentType: item.source.contentType },
-        customMetadata: {
-          filename: item.destinationAssetRef,
-          originalFilename: item.source.originalFilename,
-          source: 'promotion',
-          createdAt: new Date().toISOString(),
-          sizeBytes: String(item.bytes.byteLength),
-        },
-        onlyIf: { etagDoesNotMatch: '*' },
-      });
-      if (!stored) throw new Error(`destination_exists:${destinationKey}`);
-    } catch (error) {
-      throw new CatalogAssetCopyError({
-        reasonKey: 'tokyo.errors.assets.copyFailed',
-        detail: error instanceof Error ? error.message : String(error),
-        completedMappings,
-      });
-    }
-    completedMappings.push({
-      sourceAssetRef: item.source.assetRef,
-      destinationAssetRef: item.destinationAssetRef,
-    });
-  }
-  return completedMappings;
 }

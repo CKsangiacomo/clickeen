@@ -1,7 +1,6 @@
 'use client';
 
 import { useCallback, type Dispatch, type MutableRefObject, type SetStateAction } from 'react';
-import { evaluateLimits, type Policy } from '@clickeen/ck-policy';
 import type { ApplyWidgetOpsResult, WidgetOp } from '../ops';
 import { applyWidgetOps } from '../ops';
 import { assertSessionConfigContract } from './sessionConfig';
@@ -11,10 +10,8 @@ export function useSessionEditing(args: {
   stateRef: MutableRefObject<SessionState>;
   setState: Dispatch<SetStateAction<SessionState>>;
   setMeta: Dispatch<SetStateAction<SessionMeta>>;
-  policy: Policy | null;
-  requestUpsell: (reasonKey: string, detail?: string) => void;
 }) {
-  const { policy, requestUpsell, stateRef, setMeta, setState } = args;
+  const { stateRef, setMeta, setState } = args;
 
   const applyOps = useCallback(
     (ops: WidgetOp[]): ApplyWidgetOpsResult => {
@@ -48,29 +45,6 @@ export function useSessionEditing(args: {
         setState(nextState);
         return applied;
       }
-      if (policy) {
-        const violations = evaluateLimits({
-          config: applied.data,
-          limits: compiled.limits,
-          policy,
-          context: 'ops',
-        });
-        if (violations.length) {
-          const first = violations[0];
-          requestUpsell(first.reasonKey, first.key);
-          const result: ApplyWidgetOpsResult = {
-            ok: false,
-            errors: [{ opIndex: 0, path: first.path, message: first.reasonKey }],
-          };
-          const nextState: SessionState = {
-            ...stateRef.current,
-            error: { source: 'ops', errors: result.errors },
-          };
-          stateRef.current = nextState;
-          setState(nextState);
-          return result;
-        }
-      }
       if (applied.requiresDocumentValidation) {
         try {
           assertSessionConfigContract(applied.data, compiled);
@@ -87,7 +61,6 @@ export function useSessionEditing(args: {
       const nextState: SessionState = {
         ...latest,
         instanceData: applied.data,
-        publicPackage: null,
         isDirty: serializeInstanceDataSignature(applied.data) !== latest.savedInstanceDataSignature,
         error: null,
         lastUpdate: {
@@ -102,7 +75,7 @@ export function useSessionEditing(args: {
 
       return applied;
     },
-    [policy, requestUpsell, setState, stateRef],
+    [setState, stateRef],
   );
 
   const setInstanceLabel = useCallback((label: string) => {

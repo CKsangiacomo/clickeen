@@ -78,12 +78,6 @@ The strategy is that Clickeen can compound globally because it structures
 account-owned source, locale overlays, public artifact generation, and agent
 authorities.
 
-The same language rule applies to Clickeen's own product identity. Generated
-Widget attribution may describe only locale support proven by the existing
-locale authority. It must not turn global-by-default into an unsupported “all
-languages” claim. Each served Instance declares its exact language;
-each Clickeen product page declares only the languages it actually supports.
-
 ## Strategic Boundary
 
 This document does not define locale registries, tier caps, overlay storage

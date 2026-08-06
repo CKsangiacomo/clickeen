@@ -100,7 +100,6 @@ function normalizeDeployAssetRelativePath(raw: string): string | null {
 
 function normalizeTokyoDeployAssetKey(pathname: string): string | null {
   const normalizedPathname = String(pathname || '').trim();
-  if (normalizedPathname === '/clickeen.js') return 'product/clickeen.js';
   for (const route of TOKYO_DEPLOY_ASSET_ROUTES) {
     if (!normalizedPathname.startsWith(route.prefix)) continue;
     const relativePath = normalizeDeployAssetRelativePath(normalizedPathname.slice(route.prefix.length));
@@ -132,8 +131,6 @@ export async function handleGetTokyoDeployAsset(env: Env, pathname: string): Pro
   headers.set('cache-control', cacheControl);
   headers.set('cdn-cache-control', cacheControl);
   headers.set('cloudflare-cdn-cache-control', cacheControl);
-  headers.set('access-control-allow-origin', '*');
-  headers.set('x-content-type-options', 'nosniff');
   return new Response(obj.body, { status: 200, headers });
 }
 

@@ -2,34 +2,12 @@ import { BuilderDomain } from '../../../components/builder-domain';
 import { RomaDomainErrorBoundary } from '../../../components/roma-domain-error-boundary';
 import { RomaShell, RomaShellDefaultActions } from '../../../components/roma-shell';
 
-type BuilderLandingPageProps = {
-  searchParams: Promise<{
-    new?: string | string[];
-    duplicate?: string | string[];
-    template?: string | string[];
-    catalogTemplate?: string | string[];
-  }>;
-};
-
-function firstQueryValue(value: string | string[] | undefined): string {
-  return typeof value === 'string' ? value.trim() : Array.isArray(value) ? String(value[0] || '').trim() : '';
-}
-
-export default async function BuilderLandingPage({ searchParams }: BuilderLandingPageProps) {
-  const query = await searchParams;
-  const hasDraft = Boolean(
-    firstQueryValue(query.new) ||
-    firstQueryValue(query.duplicate) ||
-    firstQueryValue(query.template) ||
-    firstQueryValue(query.catalogTemplate),
-  );
+export default function BuilderLandingPage() {
   return (
     <RomaShell
       activeDomain="builder"
       title="Builder"
-      {...(hasDraft
-        ? { fullCanvas: true }
-        : { headerRight: <RomaShellDefaultActions /> })}
+      headerRight={<RomaShellDefaultActions />}
     >
       <RomaDomainErrorBoundary domainLabel="Builder" resetKey="builder">
         <BuilderDomain />

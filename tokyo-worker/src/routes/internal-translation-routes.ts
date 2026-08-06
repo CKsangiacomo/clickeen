@@ -6,7 +6,6 @@ import {
   writeAccountInstanceTranslatedLocaleValues,
 } from '../domains/account-translations/values';
 import { readAccountInstanceDocument } from '../domains/account-instances/source';
-import { AccountInstanceTransitionError } from '../domains/account-instances/operations';
 import { json } from '../http';
 import {
   authorizeAccountInstanceControlRequest,
@@ -21,21 +20,6 @@ import {
   normalizeTranslatedValues,
   readInternalProductJsonBody,
 } from './internal-product-route-utils';
-
-function translationMutationError(error: unknown): Response {
-  if (error instanceof AccountInstanceTransitionError) {
-    return json({
-      error: {
-        kind: error.kind,
-        reasonKey: error.reasonKey,
-        detail: error.message,
-        ...(error.paths?.length ? { paths: error.paths } : {}),
-      },
-    }, { status: error.status });
-  }
-  const detail = error instanceof Error ? error.message : String(error);
-  return json({ error: { kind: 'VALIDATION', reasonKey: detail, detail } }, { status: 422 });
-}
 
 export async function tryHandleInternalTranslationRoutes(
   args: TokyoRouteArgs,
@@ -67,19 +51,12 @@ export async function tryHandleInternalTranslationRoutes(
         ),
       );
     }
-    if (instance.value.isTemplate) {
-      return respondValidation(respond, 'tokyo.translation.template_forbidden');
-    }
-    try {
-      const translations = await listAccountInstanceTranslatedLocaleValues({ env, accountId, instanceId });
-      return respond(json({
-        ok: true,
-        baseLocale: instance.value.baseLocale,
-        translations,
-      }));
-    } catch (error) {
-      return respond(translationMutationError(error));
-    }
+    const translations = await listAccountInstanceTranslatedLocaleValues({ env, accountId, instanceId });
+    return respond(json({
+      ok: true,
+            baseLocale: instance.value.baseLocale,
+      translations,
+    }));
   }
 
   const internalTranslationValuesMatch = pathname.match(/^\/__internal\/instances\/([^/]+)\/translations\/([^/]+)$/);
@@ -100,15 +77,11 @@ export async function tryHandleInternalTranslationRoutes(
       });
       if (authErr) return respond(authErr);
 
-      try {
-        const translation = await readAccountInstanceTranslatedLocaleValues({ env, accountId, instanceId, locale });
-        if (!translation.ok) {
-          return respond(json({ error: { kind: 'NOT_FOUND', reasonKey: 'tokyo.translation.notFound' } }, { status: 404 }));
-        }
-        return respond(json({ ok: true, ...translation.value }));
-      } catch (error) {
-        return respond(translationMutationError(error));
+      const translation = await readAccountInstanceTranslatedLocaleValues({ env, accountId, instanceId, locale });
+      if (!translation.ok) {
+        return respond(json({ error: { kind: 'NOT_FOUND', reasonKey: 'tokyo.translation.notFound' } }, { status: 404 }));
       }
+      return respond(json({ ok: true, ...translation.value }));
     }
 
     if (req.method === 'PUT') {
@@ -128,7 +101,8 @@ export async function tryHandleInternalTranslationRoutes(
         const translation = await writeAccountInstanceTranslatedLocaleValues({ env, accountId, instanceId, locale, values });
         return respond(json({ ok: true, locale: translation.locale }));
       } catch (error) {
-        return respond(translationMutationError(error));
+        const detail = error instanceof Error ? error.message : String(error);
+        return respond(json({ error: { kind: 'VALIDATION', reasonKey: detail, detail } }, { status: 422 }));
       }
     }
 
@@ -145,7 +119,8 @@ export async function tryHandleInternalTranslationRoutes(
         const translation = await deleteAccountInstanceTranslatedLocaleValues({ env, accountId, instanceId, locale });
         return respond(json({ ok: true, locale: translation.locale }));
       } catch (error) {
-        return respond(translationMutationError(error));
+        const detail = error instanceof Error ? error.message : String(error);
+        return respond(json({ error: { kind: 'VALIDATION', reasonKey: detail, detail } }, { status: 422 }));
       }
     }
 

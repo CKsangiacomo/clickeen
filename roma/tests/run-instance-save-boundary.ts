@@ -26,23 +26,7 @@ async function testBobSaveHasNoPartialLocalizationBranch(): Promise<void> {
   assert.doesNotMatch(savingSource, /localeCascade/);
   assert.doesNotMatch(savingSource, /source: 'translation'/);
   assert.match(savingSource, /command: 'update-instance'/);
-  assert.match(savingSource, /publicPackage: snapshot\.publicPackage/);
   assert.match(savingSource, /savedInstanceDataSignature: submittedInstanceDataSignature/);
-  assert.match(savingSource, /savedPublicPackageSignature: submittedPublicPackageSignature/);
-}
-
-async function testRomaStoresTheBrowserGeneratedFilesWithoutRegeneration(): Promise<void> {
-  const createRoute = await readSource('roma/app/api/account/instances/route.ts');
-  const saveRoute = await readSource('roma/app/api/account/instances/[instanceId]/route.ts');
-  const direct = await readSource('roma/lib/account-instance-direct.ts');
-
-  for (const source of [createRoute, saveRoute]) {
-    assert.match(source, /publicPackage\.indexHtml/);
-    assert.match(source, /publicPackage\.stylesCss/);
-    assert.match(source, /publicPackage\.runtimeJs/);
-    assert.doesNotMatch(source, /generateInstance|materializeAccountInstancePublicPackage|packageFingerprint/);
-  }
-  assert.doesNotMatch(direct, /packageFingerprint|fingerprint/);
 }
 
 async function testExplicitTranslationRouteSurvives(): Promise<void> {
@@ -58,8 +42,8 @@ async function testExplicitTranslationRouteSurvives(): Promise<void> {
   const panelSource = await readSource('bob/components/TranslationsPanel.tsx');
 
   assert.match(translationRouteSource, /generateAccountInstanceTranslations/);
-  assert.match(translationRouteSource, /activeLocales/);
-  assert.match(translationRouteSource, /instanceId/);
+  assert.match(translationRouteSource, /activeLocalesToGenerate/);
+  assert.match(translationRouteSource, /generateAccountInstanceTranslations\(\{[\s\S]*onActivity: activity/);
   assert.doesNotMatch(translationRouteSource, /materializeRuntimePackage|localePackages|LocalePackage/);
   assert.match(panelSource, /Generate translations/);
   assert.match(panelSource, /generateTranslations/);
@@ -152,7 +136,6 @@ async function testInvalidTokyoBodyDoesNotMasqueradeAsAvailabilityFailure(): Pro
 const tests: Array<{ name: string; run: () => Promise<void> }> = [
   { name: 'Roma source save does not run localization', run: testRomaSaveDoesNotRunLocalization },
   { name: 'Bob save has no partial localization branch', run: testBobSaveHasNoPartialLocalizationBranch },
-  { name: 'Roma stores browser-generated files without regeneration', run: testRomaStoresTheBrowserGeneratedFilesWithoutRegeneration },
   { name: 'explicit translation route and panel survive', run: testExplicitTranslationRouteSurvives },
   { name: 'account instance persistence has no generic meta contract', run: testNoAccountInstanceMetaPersistenceContract },
   { name: 'account instance save has no invented body key whitelist', run: testNoInventedAccountInstanceBodyKeyWhitelist },

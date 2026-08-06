@@ -12,7 +12,6 @@ export type BuilderOpenEnvelope = {
   instanceId: string;
   displayName: string;
   widgetType: string;
-  isTemplate: boolean;
   config: Record<string, unknown>;
   publicPackage: AccountInstancePublicPackage;
   fontLibrary: AccountWidgetDefaultsDocument['fontLibrary'];
@@ -81,6 +80,21 @@ export async function loadBuilderOpenEnvelope(args: {
     return publicPackage;
   }
 
+  if (
+    instance.value.row.publicPackageFingerprint !==
+    publicPackage.value.publicPackageFingerprint
+  ) {
+    return {
+      ok: false,
+      status: 409,
+      error: {
+        kind: 'VALIDATION',
+        reasonKey: 'coreui.errors.instance.embedNotReady',
+        detail: 'saved source and public package fingerprints do not match',
+      },
+    };
+  }
+
   if (!widgetDefaults.ok) {
     console.error(
       JSON.stringify({
@@ -100,7 +114,6 @@ export async function loadBuilderOpenEnvelope(args: {
       instanceId: instance.value.row.instanceId,
       displayName: instance.value.row.displayName || 'Untitled widget',
       widgetType: instance.value.row.widgetType,
-      isTemplate: instance.value.row.isTemplate,
       config: instance.value.config,
       publicPackage: publicPackage.value.publicPackage,
       fontLibrary: widgetDefaults.value.widgetDefaults.fontLibrary,

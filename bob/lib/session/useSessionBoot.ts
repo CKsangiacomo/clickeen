@@ -14,7 +14,6 @@ import {
   type SessionState,
   type CopilotRuntimeUi,
   serializeInstanceDataSignature,
-  serializePublicPackageSignature,
 } from './sessionTypes';
 import {
   assertSessionConfigContract,
@@ -45,20 +44,12 @@ export function useSessionBoot(args: {
         }
 
         const rawCompiled = message.compiled;
-        if (!rawCompiled?.definition) {
-          return {
-            ok: false,
-            error: 'coreui.errors.widget.compiled.invalid',
-          };
-        }
         const baseLocale = typeof message.baseLocale === 'string' ? message.baseLocale.trim() : '';
-        const isTemplate = message.isTemplate;
-        const isTemplateDraft = message.templateDraft === true;
         let nextLabel = typeof message.label === 'string' && message.label.trim() ? message.label.trim() : '';
         const rawInstanceData = message.instanceData;
-        const publicPackage = message.publicPackage ?? null;
+        const publicPackage = message.publicPackage;
         const publicActions = message.publicActions ?? null;
-        if (!baseLocale || (isTemplate !== true && isTemplate !== false)) {
+        if (!baseLocale) {
           return {
             ok: false,
             error: 'coreui.errors.builder.open.invalidRequest',
@@ -70,39 +61,11 @@ export function useSessionBoot(args: {
             error: 'coreui.errors.instance.config.invalid',
           };
         }
-        const isDraft = !String(message.instanceId || '').trim();
-        if (isTemplate && isDraft) {
-          return {
-            ok: false,
-            error: 'coreui.errors.builder.open.invalidRequest',
-          };
-        }
         if (
-          !isTemplate &&
-          !isDraft &&
-          message.publishStatus !== 'published' &&
-          message.publishStatus !== 'unpublished'
-        ) {
-          return {
-            ok: false,
-            error: 'coreui.errors.builder.open.invalidRequest',
-          };
-        }
-        if (
-          (Object.prototype.hasOwnProperty.call(message, 'templateDraft') && message.templateDraft !== true) ||
-          (isTemplateDraft && (isTemplate || !isDraft || !publicPackage))
-        ) {
-          return {
-            ok: false,
-            error: 'coreui.errors.builder.open.invalidRequest',
-          };
-        }
-        if (
-          (!publicPackage && !isDraft) ||
-          (publicPackage && (
+          !publicPackage ||
           typeof publicPackage.indexHtml !== 'string' ||
           typeof publicPackage.stylesCss !== 'string' ||
-          typeof publicPackage.runtimeJs !== 'string'))
+          typeof publicPackage.runtimeJs !== 'string'
         ) {
           return {
             ok: false,
@@ -114,8 +77,10 @@ export function useSessionBoot(args: {
           (!publicActions ||
             typeof publicActions.publicUrl !== 'string' ||
             !publicActions.publicUrl.trim() ||
-            typeof publicActions.clickeenJsSnippet !== 'string' ||
-            !publicActions.clickeenJsSnippet.trim())
+            typeof publicActions.iframeSnippet !== 'string' ||
+            !publicActions.iframeSnippet.trim() ||
+            typeof publicActions.scriptSnippet !== 'string' ||
+            !publicActions.scriptSnippet.trim())
         ) {
           return {
             ok: false,
@@ -128,12 +93,6 @@ export function useSessionBoot(args: {
             error: 'coreui.errors.builder.publicActions.invalid',
           };
         }
-        if (isTemplate && (message.publishStatus || publicActions || message.translationSetup)) {
-          return {
-            ok: false,
-            error: 'coreui.errors.builder.open.invalidRequest',
-          };
-        }
         const fontLibrary = normalizeAccountFontLibrary(message.fontLibrary);
         if (!fontLibrary) {
           return {
@@ -144,7 +103,7 @@ export function useSessionBoot(args: {
         const compiled = bindSessionTypographyControls(rawCompiled, fontLibrary);
         const instanceData = rawInstanceData as Record<string, unknown>;
         assertSessionConfigContract(instanceData, compiled);
-        const savedInstanceDataSignature = isDraft ? '' : serializeInstanceDataSignature(instanceData);
+        const savedInstanceDataSignature = serializeInstanceDataSignature(instanceData);
         const nextPolicy = (message.policy as Policy | null | undefined) ?? null;
         const nextCopilot = (message.copilot as CopilotRuntimeUi | undefined) ?? null;
 
@@ -157,7 +116,6 @@ export function useSessionBoot(args: {
           instanceId: message.instanceId,
           baseLocale,
           widgetname: compiled.widgetname,
-          isTemplate,
           publishStatus: message.publishStatus,
           label: nextLabel,
           returnLabel:
@@ -165,18 +123,16 @@ export function useSessionBoot(args: {
               ? message.returnLabel.trim()
               : undefined,
           publicActions,
-          canSaveAsTemplate: message.canSaveAsTemplate === true,
           fontLibrary,
-          translationSetup: isTemplate ? null : message.translationSetup ?? null,
+          translationSetup: message.translationSetup ?? null,
         };
         const nextState: SessionState = {
           ...current,
           compiled,
           instanceData,
-          publicPackage: isTemplate || isTemplateDraft ? publicPackage : null,
+          publicPackage,
           savedInstanceDataSignature,
-          savedPublicPackageSignature: isDraft ? '' : serializePublicPackageSignature(publicPackage ?? null),
-          isDirty: isDraft,
+          isDirty: false,
           error: null,
           lastUpdate: {
             source: 'load',
@@ -212,7 +168,6 @@ export function useSessionBoot(args: {
           instanceData: {},
           publicPackage: null,
           savedInstanceDataSignature: serializeInstanceDataSignature({}),
-          savedPublicPackageSignature: '',
           isDirty: false,
           error: { source: 'load', message: messageText },
         };

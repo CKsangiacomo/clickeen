@@ -113,26 +113,10 @@ Never do these to "make Cloudflare work":
 Passing one preflight proves only that plane. R2 preflight does not prove
 Pages/DNS access. REST preflight does not prove R2 object access.
 
-Normal account assets, instances, and translations mutate through
+Normal account assets, instances, pages, and translations mutate through
 Roma/Tokyo-worker product routes. Direct `accounts/**` R2 writes are exceptional
 repair operations and must be named as product data repair, not normal product
 flow.
-
-## Public Serving Cache Purges
-
-Public cache invalidation is part of the owning Tokyo-worker product mutation,
-not a manual Cloudflare repair path. Tokyo-worker uses its configured
-`CLOUDFLARE_ZONE_ID` and the least-privilege
-`CLOUDFLARE_CACHE_PURGE_TOKEN` Worker secret to purge exact public URLs.
-
-Instance mutations purge their exact base, saved locale, and support-file URLs.
-There is no global zone purge or locale-hidden cache variant.
-
-Missing purge configuration or a rejected Cloudflare purge is an explicit
-product-operation failure. Do not repeat the mutation through a dashboard or
-direct cache API wrapper. Deployment evidence for the zone setting/secret and
-runtime behavior comes from the `cloud-dev workers deploy` run plus the owning
-Tokyo-worker public-route checks.
 
 ## Required Local Environment
 
@@ -188,7 +172,7 @@ Report that path in the execution evidence when it happens.
 
 Direct R2 mutation is not normal product operation. Use it only for explicit
 product-data repair or git-authored product-root sync. For account assets,
-instances and translation overlays, prefer the product route or owning
+instances, pages, and translation overlays, prefer the product route or owning
 agent path unless the task explicitly names remote data repair.
 
 ## Tokyo Product-Root R2 Sync
@@ -197,7 +181,6 @@ Git-authored Tokyo product roots sync to canonical R2 roots:
 
 | Repo input | Canonical R2 root |
 | --- | --- |
-| `tokyo/product/clickeen/clickeen.js` | `product/clickeen.js` |
 | `tokyo/product/widgets/**` | `product/widgets/**` |
 | `dieter/icons/svg/**` | `dieter/icons/svg/**` |
 | `tokyo/roma/**` | `product/roma/**` |
@@ -216,21 +199,18 @@ reconciliation, orphan cleanup, or rollback.
 Remote product-root deployment runs only through GitHub Actions
 `cloud-dev workers deploy` after a push to `main`. That workflow runs the repo
 checks, which regenerate widget product packages from current source, then
-syncs every mapped product-root input. The workflow run is the deployment
-evidence.
+syncs all four roots. The workflow run is the deployment evidence.
 
 Auth boundary: the GitHub Actions sync path may use the workflow
 `CLOUDFLARE_API_TOKEN` because it is a CI/Wrangler deploy workflow. Local repo
 helper commands must not use that ambiguous token name; local R2 commands use
 the typed env names above.
 
-Changes to the shared Clickeen installer, Dieter source, widget product source,
-Roma product media, Prague product media, or the sync workflow trigger that
-product-root path. Dieter source is watched because widget product packages
-consume its token/component CSS; only SVG icon bytes are written under the R2
-`dieter/` root. Use the repo R2 read commands after deployment when an exact
-remote key must be verified. Verify the shared installer at exact R2 key
-`product/clickeen.js` and public URL `https://dev.clk.live/clickeen.js`.
+Changes to Dieter source, widget product source, Roma product media, Prague
+product media, or the sync workflow trigger that product-root path. Dieter
+source is watched because widget product packages consume its token/component
+CSS; only SVG icon bytes are written under the R2 `dieter/` root. Use the repo
+R2 read commands after deployment when an exact remote key must be verified.
 
 ## Pages/DNS REST Commands
 
@@ -238,8 +218,6 @@ remote key must be verified. Verify the shared installer at exact R2 key
 pnpm cf:api:preflight
 pnpm cf:pages:list
 pnpm cf:pages:project <project-name>
-pnpm cf:pages:deployments <project-name>
-pnpm cf:pages:rollback <project-name> <deployment-id> --apply
 pnpm cf:pages:devstudio-env
 pnpm cf:pages:sync-devstudio-env [--apply]
 pnpm cf:pages:sync-devstudio-project [--apply]
@@ -315,7 +293,6 @@ for the full Pages project/env/binding inventory.
 | DevStudio domain | `pnpm cf:pages:domains devstudio` |
 | DevStudio DNS | `pnpm cf:dns:records clickeen.com devstudio.clickeen.com` |
 | Public embed runtime | `https://dev.clk.live/{accountPublicId}/{instanceId}` |
-| Shared public installer | `https://dev.clk.live/clickeen.js` |
 | R2 object | `pnpm cf:r2:get <exact-key>` |
 | Worker deploys | GitHub Actions `cloud-dev workers deploy` run plus the owning service runtime check |
 

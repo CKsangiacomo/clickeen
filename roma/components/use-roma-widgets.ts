@@ -3,23 +3,34 @@
 export type WidgetInstance = {
   instanceId: string;
   widgetType: string;
-  widget: string;
   displayName: string;
   status: 'published' | 'unpublished';
   updatedAt: string;
 };
 
+export type WidgetCatalogOption = {
+  widgetType: string;
+  displayName: string;
+  description: string;
+};
+
 type RawWidgetInstance = {
   instanceId?: string | null;
   widgetType?: string | null;
-  widget?: string | null;
   displayName?: string | null;
   status?: string | null;
   updatedAt?: string | null;
 };
 
+type RawWidgetCatalogOption = {
+  widgetType?: string | null;
+  displayName?: string | null;
+  description?: string | null;
+};
+
 export type RomaWidgetsResponse = {
   accountId: string;
+  catalog: WidgetCatalogOption[];
   instances: WidgetInstance[];
 };
 
@@ -35,6 +46,12 @@ const ROMA_WIDGETS_CACHE_TTL_MS = 5 * 60 * 1000;
 const romaWidgetsCache = new Map<string, RomaWidgetsCacheEntry>();
 const romaWidgetsInflight = new Map<string, Promise<RomaWidgetsResponse>>();
 const romaWidgetsRequestSeq = new Map<string, number>();
+const RETIRED_WIDGETS_PAYLOAD_FIELDS = [
+  'systemWidgets',
+  'canCreate',
+  'disabledReasonKey',
+  'account',
+] as const;
 
 export function normalizeWidgetType(value: string | null | undefined): string | null {
   const normalized = String(value || '')
@@ -49,8 +66,6 @@ export function normalizeWidgetInstance(raw: RawWidgetInstance): WidgetInstance 
 
   const widgetType = normalizeWidgetType(raw.widgetType);
   if (!widgetType) return null;
-  const widget = typeof raw.widget === 'string' ? raw.widget.trim() : '';
-  if (!widget) return null;
   const displayName = typeof raw.displayName === 'string' ? raw.displayName.trim() : '';
   if (raw.status !== 'published' && raw.status !== 'unpublished') return null;
   const status = raw.status;
@@ -60,30 +75,50 @@ export function normalizeWidgetInstance(raw: RawWidgetInstance): WidgetInstance 
   return {
     instanceId,
     widgetType,
-    widget,
     displayName,
     status,
     updatedAt,
   };
 }
 
+export function normalizeWidgetCatalogOption(raw: RawWidgetCatalogOption): WidgetCatalogOption | null {
+  const widgetType = normalizeWidgetType(raw.widgetType);
+  if (!widgetType) return null;
+  const displayName = typeof raw.displayName === 'string' ? raw.displayName.trim() : '';
+  if (!displayName) return null;
+  const description = String(raw.description || '').trim();
+  return {
+    widgetType,
+    displayName,
+    description,
+  };
+}
+
 export function normalizeRomaWidgetsResponse(raw: unknown): RomaWidgetsResponse | null {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
   const record = raw as Record<string, unknown>;
-  if (Object.keys(record).sort().join(',') !== 'accountId,instances') return null;
   const accountId = typeof record.accountId === 'string' ? record.accountId.trim() : '';
   if (!accountId) return null;
 
-  if (!Array.isArray(record.instances)) {
+  if (
+    RETIRED_WIDGETS_PAYLOAD_FIELDS.some((field) => field in record) ||
+    !Array.isArray(record.instances) ||
+    !Array.isArray(record.catalog)
+  ) {
     return null;
   }
   const instances = record.instances.map((item) => normalizeWidgetInstance((item || {}) as RawWidgetInstance));
-  if (instances.some((item): item is null => item === null)) {
+  const catalog = record.catalog.map((item) => normalizeWidgetCatalogOption((item || {}) as RawWidgetCatalogOption));
+  if (
+    instances.some((item): item is null => item === null) ||
+    catalog.some((item): item is null => item === null)
+  ) {
     return null;
   }
 
   return {
     accountId,
+    catalog: catalog as WidgetCatalogOption[],
     instances: instances as WidgetInstance[],
   };
 }

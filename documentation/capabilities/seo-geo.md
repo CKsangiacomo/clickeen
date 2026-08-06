@@ -1,149 +1,165 @@
 # SEO/GEO/AEO Capability
 
-STATUS: CURRENT SYSTEM OPERATOR SPEC
+STATUS: DIRECTIONAL CAPABILITY NOTE WITH CURRENT RUNTIME GUARDRAILS
 
-SEO/GEO/AEO output is deterministic Web Code Generator output. It is not an
-agent, crawler, ranking loop, request-time model call, or separate runtime
-subsystem.
+SEO/GEO/AEO is a Clickeen direction, not a fully specified operator contract
+yet. Keep this page honest: it records what is true today and the direction we
+intend to build without inventing routes, agents, crawlers, telemetry, or schema
+machinery that does not exist.
 
 ## Code Authority
 
-| Concern | Authority |
+| Concern | File |
 | --- | --- |
-| Instance generation | `packages/ck-web-code-generator/src/generate-instance.ts`, `instance-semantics.ts` |
-| Bob generation/preview/save payload | `bob/components/Workspace.tsx`, `bob/lib/session/useSessionSaving.ts` |
-| Roma save enforcement | `roma/lib/account-instance-save-policy.ts`, account instance routes |
-| Public instance serving and response completion | `tokyo-worker/src/routes/clk-live-routes.ts` |
-| Exact package readiness | `tokyo-worker/src/domains/account-instances/package-files.ts` |
-| Control/entitlement mapping | Widget `limits.json`, `@clickeen/ck-policy` |
+| Current public widget serving | `tokyo-worker/src/routes/clk-live-routes.ts` |
+| Account instance package state | `tokyo-worker/src/domains/account-instances/serve-state.ts` |
+| Account instance package files | `tokyo-worker/src/domains/account-instances/package-files.ts` |
+| Public package metadata | `tokyo-worker/src/domains/public-package-serve-metadata.ts` |
+| Roma instance save route | `roma/app/api/account/instances/[instanceId]/route.ts` |
+| Roma instance publish route | `roma/app/api/account/instances/[instanceId]/publish/route.ts` |
+| Roma public package builder | `roma/lib/account-instance-public-package.ts` |
+| Roma public-serving origin env | `roma/lib/env/public-serving.ts` |
+| Roma page publish disabled route | `roma/app/api/account/pages/[pageId]/publish/route.ts` |
+| Policy registry/matrix | `packages/ck-policy/src/registry.ts`, `packages/ck-policy/entitlements.matrix.json` |
 
-## Instance Generation
+## Current Runtime Truth
 
-Web Code Generator consumes structured config/content, exact overlays, the
-Widget definition, base locale, generation settings, and resolved assets/fonts.
-It produces exact:
-
-```text
-index.html
-styles.css
-runtime.js
-```
-
-Bob runs generation in browser memory for preview and submits the exact current
-package with the config through Roma on Save. Roma enforces the submitted
-config against the Widget limits and account policy. Tokyo-worker stores and
-serves the exact submitted files; it does not generate SEO output.
-
-Every generated Instance receives complete initial HTML and the neutral:
-
-```html
-<meta name="generator" content="Clickeen">
-```
-
-This baseline does not depend on the customer SEO/GEO/AEO setting.
-
-## Customer SEO/GEO/AEO Control
-
-The structured control is:
-
-```text
-behavior.seoGeoAeoEnabled
-```
-
-Every current Widget maps that path in `limits.json` to:
-
-```text
-embed.seoGeo.enabled
-```
-
-Bob evaluates edit operations against that mapping. Roma independently runs
-the account instance save policy against the same Widget limits before it
-accepts the package/config save. Web Code Generator receives the effective
-boolean; it does not resolve account tier or entitlement truth.
-
-When enabled, `header.title` replaces the document title and
-`header.subtitleHtml` supplies the optional meta description. Generator output
-also contains a source-backed `WebPage` JSON-LD block. Only FAQ adds
-content-specific `FAQPage` data, and it uses the same visible question/answer
-source. Current Instance generation does not emit canonical, alternate, Open
-Graph, Twitter, or `inLanguage` metadata. Other Widgets do not invent content
-schema.
-
-## Clickeen Attribution
-
-The structured branding choice is:
-
-```text
-behavior.showBacklink
-```
-
-Its entitlement mapping is `branding.remove`, independent of
-`embed.seoGeo.enabled`. When attribution is required, Web Code Generator writes
-one visible contextual link to the literal `https://clickeen.com/` product URL
-with
-`rel="nofollow noreferrer"`, its styles, and matching truthful Clickeen
-application identity into generated initial files. Locale, country, and market
-never select another Clickeen product link.
-`runtime.js` does not construct the attribution DOM.
-
-Removing branding removes the visible promotional link. The neutral generator
-meta remains because it identifies the generating software rather than claiming
-customer content authorship.
-
-## Public Instance Serving
-
-Public coordinates are:
+Current public widget serving is generated-file serving.
 
 ```text
 https://dev.clk.live/{accountPublicId}/{instanceId}
 https://clk.live/{accountPublicId}/{instanceId}
 ```
 
-Visitor requests receive stored generated files and do not fetch authoring JSON
-or call Bob, Roma, San Francisco, or an agent. Tokyo-worker verifies publication
-and all three exact package files. For HTML it completes the generator's public
-account and instance placeholders. For a requested translated locale,
-it also replaces exact field-marked values and `<html lang>` from the validated
-overlay before completing those public placeholders.
+Public visitor requests:
 
-Base and translated HTML revalidates through its exact public URL cache key.
-Instance Save, translation, Publish, Unpublish, and Delete purge only the
-affected base/locale and support-file URLs. Completion does not regenerate the
-files, call a model, or write storage.
-`runtime.js` binds behavior only; it does not apply SEO metadata or locale
-overlays.
+- receive generated files from Tokyo-worker/R2;
+- do not fetch authoring JSON;
+- do not fetch overlay JSON directly;
+- do not call Bob/Roma account APIs;
+- do not call San Francisco or an agent endpoint;
+- do not compose translations at request time.
 
-## Boundaries
+Generated account instance package files live under:
 
-SEO/GEO/AEO is not:
+```text
+accounts/{accountPublicId}/instances/{instanceId}/
+  serve-state.json
+  index.html
+  styles.css
+  runtime.js
+```
 
-- a Widget source sidecar;
-- an agent or public request-time model call;
+Public serving is gated by the stored publish/package state. Unpublished,
+missing, malformed, or mismatched package state returns `404`. Public page
+serving currently returns `404` because page package serving is not active.
+
+Public-serving hosts must expose generated artifacts only. Operational paths
+such as `/healthz`, `/__internal/*`, and `/widgets/*` return `404` on
+`dev.clk.live` and `clk.live`.
+
+## Current Policy Key
+
+The policy registry currently contains this key:
+
+```text
+embed.seoGeo.enabled
+```
+
+Current policy source:
+
+```text
+packages/ck-policy/entitlements.matrix.json
+packages/ck-policy/src/registry.ts
+```
+
+Current runtime gap: the key exists in policy metadata, but current runtime code
+does not prove an active SEO/GEO entitlement gate in Roma save, Roma publish, or
+Tokyo-worker public serving. Until code consumes the key on a product path, this
+is policy metadata, not an enforced runtime entitlement.
+
+Operator warning: `packages/ck-policy/src/registry.ts` currently marks
+`embed.seoGeo.enabled` as `enforced` and names Roma product save/publish/public
+code flow as owner. Runtime evidence does not currently prove that consumer.
+For this capability, treat the registry row as conflicting metadata until a
+real runtime consumer is implemented or the registry is corrected.
+
+Tokyo-worker stores and serves submitted artifact files. It does not decide
+whether an account is entitled to SEO/GEO output.
+
+## Current Operator Rule
+
+There is no SEO/GEO/AEO operation to run today.
+
+Operators can currently verify only these facts:
+
+1. The policy key exists in `@clickeen/ck-policy`.
+2. Public widget serving returns generated package files for published account
+   instances.
+3. Page public serving is not active.
+4. No current runtime path proves SEO/GEO/AEO generation, measurement, ranking
+   feedback, or automatic optimization.
+
+Do not create a work item from this page that assumes a current SEO/GEO/AEO
+agent, crawler, cron job, page route, locale route, schema output, or ranking
+feedback loop exists.
+
+## Current Boundaries
+
+SEO/GEO is not currently:
+
+- a widget source sidecar;
+- a runtime agent call;
+- a public request-time rewrite;
 - a locale fallback mechanism;
-- a ranking/indexing guarantee;
-- an authority to invent customer facts, supported languages, product URLs, or
-  product descriptions.
+- a widget-source SEO/GEO sidecar contract.
 
-The customer or integration remains the source authority for customer content.
-Clickeen is never declared the author of customer facts.
+Roma builds embed snippets from the public URL after publish. Public runtime
+serves the generated artifact.
 
-## Failure Semantics
+## Direction
 
-| Case | Result |
+Clickeen SEO/GEO/AEO will operate by public surface:
+
+- by widget instance;
+- by page when page package serving exists.
+
+Directionally, the system should produce crawlable, high-quality public
+surfaces from structured Clickeen artifacts. Translation/Babel overlays are a
+key input to global availability, but current public runtime does not yet expose
+locale-specific crawlable surfaces from overlays.
+
+No implemented SEO/GEO/AEO agent exists. Directionally, such an agent would
+measure, recommend, and improve public surface quality without mutating source
+truth silently. Exact cron jobs, telemetry, schema, routes, ranking feedback,
+answer-engine optimization, and page/widget output contracts are not specified
+here.
+
+## Current Failure Semantics
+
+| Case | Current result |
 | --- | --- |
-| Invalid generator input, metadata source, asset/font resolution, or public identity | generation fails; Bob cannot save that working state |
-| Disallowed `behavior.seoGeoAeoEnabled` | Bob blocks the edit through the tier interaction; Roma also rejects a disallowed submitted save |
-| Unpublished Instance | public serving returns `404` |
-| Missing/invalid exact package file or content type | public serving returns `404` |
-| Invalid requested locale overlay | explicit locale `404` or `500`; no base-locale substitution |
-| Uncompleted `__CK_PUBLIC_*__` placeholder | `500 Public HTML invalid` with `no-store` |
+| Unpublished widget instance | public serving returns `404` |
+| Missing or malformed package state | public serving returns `404` |
+| Missing package file | public serving returns `404` |
+| Package metadata/fingerprint mismatch | public serving returns `404` |
+| Public page request | `404` because page package serving is not active |
+| Operational path on public host | `404` |
+| `embed.seoGeo.enabled` absent from runtime consumer path | no SEO/GEO runtime gate is proven |
 
 ## Verification
 
-| Concern | Verification |
+| Concern | Current verification |
 | --- | --- |
-| Generated Instance output | Bob Web Code Generator result and exact Save payload |
-| Saved package files | exact R2 `index.html`, `styles.css`, and `runtime.js` objects after `pnpm cf:preflight` |
-| Entitlement enforcement | Widget `limits.json`, Bob edit result, and Roma save-policy response |
-| Public Instance output | published base/locale URL and returned completed HTML at its exact cache key |
-| Public no-agent rule | Tokyo-worker route reads stored files/overlays and performs deterministic completion only |
+| Public widget runtime | `https://dev.clk.live/{accountPublicId}/{instanceId}` returns stored package only when instance pointer is published and package is ready |
+| Stored package files | `index.html`, `styles.css`, and `runtime.js` exist under `accounts/{accountPublicId}/instances/{instanceId}/` with valid package metadata/fingerprint |
+| Policy key source | `packages/ck-policy/entitlements.matrix.json` |
+| Runtime entitlement gap | no proven active consumer of `embed.seoGeo.enabled` outside policy metadata/docs; registry metadata currently conflicts with runtime evidence |
+| Public no-agent rule | public runtime does not call Roma/Bob/San Francisco/agents |
+
+## References
+
+- `documentation/architecture/RuntimeProfiles.md`
+- `documentation/engineering/CloudflareOperations.md`
+- `documentation/services/tokyo-worker.md`
+- `documentation/capabilities/localization.md`

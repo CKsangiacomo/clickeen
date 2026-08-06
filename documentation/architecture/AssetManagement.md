@@ -66,7 +66,6 @@ The account asset library supports:
 - resolve for authoring and runtime consumption
 - delete by exact account asset reference
 - reuse from Bob controls
-- copy selected `CLICKEEN` Catalog assets into the authenticated account
 
 Accepted uploads are direct files under the account asset folder:
 
@@ -133,25 +132,10 @@ path as other account assets.
 | List assets | `GET /api/account/assets` | `viewer` | `GET /__internal/assets/account/{accountPublicId}` | `{ accountId, storageBytesUsed, assets }` |
 | Resolve asset refs | `POST /api/account/assets/resolve` | `viewer` | `POST /__internal/assets/account/{accountPublicId}/resolve` | `{ assets: [{ assetRef, url, assetType, contentType }] }` |
 | Upload asset | `POST /api/account/assets/upload` | `editor` | `POST /__internal/assets/upload` | `AccountAssetRecord` |
-| Copy Catalog assets | `POST /api/account/catalog-assets/copy` | `editor` | `POST /__internal/assets/catalog-copy` | `{ mappings: [{ sourceAssetRef, destinationAssetRef }] }` |
 | Delete asset | `DELETE /api/account/assets/{assetRef}` | `editor` | `DELETE /__internal/assets/account/{accountPublicId}/asset/{assetRef}` | `{ accountId, assetRef, deleted: true }` |
 | Public asset read | generated/public asset URL | public read | account asset public route | asset bytes or `404` |
 
 Upload also rejects disabled accounts at the Tokyo-worker boundary.
-
-Catalog asset copy accepts exactly `{ "assetRefs": [accountLocalAssetRef] }`,
-using the same references stored in Widget config, such as `hero.png`.
-The server fixes the source owner to exact account `CLICKEEN`; the source owner
-is not a request parameter. Roma derives the destination from the authenticated
-current account and sends its existing `uploads.size.max` and
-`storage.bytes.max` policy values to Tokyo-worker. Tokyo validates all source
-files and the complete destination storage total before its first write,
-chooses a new filename rather than overwriting a collision, stores each copy as
-source `promotion`, and returns the exact source-to-destination local refs for
-rewriting the unsaved customer draft.
-A write failure returns an error plus mappings for writes already completed; it
-never reports the batch as successful. This is an ordinary asset operation,
-not a template store, transaction, Queue, or second storage path.
 
 ## Upload Contract
 
@@ -234,53 +218,6 @@ contract failures.
 References from existing widget instances remain saved widget data. A user can
 repair or replace those references by editing the instance in Bob and saving
 through Roma.
-
-## Accepted Downgrade Storage Law
-
-Asset access and asset retention are separate:
-
-- the current tier's `storage.bytes.max` controls whether another upload is
-  allowed;
-- the account continues to own and see its existing assets after downgrade;
-- account management owns the 30-day downgrade grace and any automatic quota
-  cleanup;
-- Tokyo-worker remains the exact asset-byte deletion authority;
-- Roma remains the user-facing list/upload/delete surface and does not own an
-  automatic cleanup workflow.
-
-If a downgrade leaves the account above its new `storage.bytes.max`, the grace
-deadline is 30 days after the authoritative tier-change time. During grace:
-
-- all retained assets remain visible and usable;
-- the account can delete exact assets through the normal Roma route;
-- upgrading or manually reducing usage to the current allowance cancels the
-  need for automatic deletion;
-- uploads that would keep or put the account above the current allowance remain
-  blocked by the existing storage limit.
-
-After the deadline, if usage still exceeds the allowance, account management
-directs Tokyo-worker to delete the most recently uploaded assets until the sum
-of remaining `sizeBytes` is within `storage.bytes.max`. “Most recently uploaded”
-means descending stored `updatedAt`; equal timestamps use ascending `assetRef`
-as the deterministic tie-breaker. Cleanup stops immediately when usage fits.
-Missing/corrupt `sizeBytes`, `updatedAt`, or asset identity stops the operation
-and reports the exact account/asset failure; it never guesses or silently skips
-the bad record.
-
-Tokyo-worker validates the complete inventory, allowance, ordering fields, and
-size math before deleting the first asset. If deletion fails after one or more
-assets were already removed, it returns explicit partial failure with the
-completed deletions and remaining overage; it does not claim success. Any later
-attempt re-lists current storage truth before choosing further deletions.
-
-This cleanup may make an existing Instance asset reference unresolved.
-Clickeen does not substitute another file or rewrite customer source. The
-customer can repair the reference after regaining the required product access.
-
-This is accepted product law, not current runtime behavior. Automatic 30-day
-cleanup is not implemented. It must be delivered through the existing account
-lifecycle and Tokyo asset authorities, not through a second asset store or a
-Roma-owned background cleanup system.
 
 ## Failure Semantics
 

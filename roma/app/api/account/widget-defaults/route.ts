@@ -6,7 +6,6 @@ import {
   type AccountWidgetDefaultsDocument,
 } from '@roma/lib/account-widget-defaults-direct';
 import { validateAccountWidgetDefaultsContract } from '@roma/lib/account-widget-defaults-contract';
-import { listTokyoWidgetDefinitions } from '@roma/lib/account-instance-direct';
 import { readJsonPayloadOrValidation } from '@roma/lib/route-helpers';
 import {
   resolveCurrentAccountRouteContext,
@@ -60,22 +59,9 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const definitions = await listTokyoWidgetDefinitions({
-    accountId,
-    accountCapsule: current.value.authzToken,
-    requestId: current.value.requestId,
-  });
-  if (!definitions.ok) {
-    return withSession(
-      request,
-      NextResponse.json({ error: definitions.error }, { status: definitions.status }),
-      current.value.setCookies,
-    );
-  }
   const contract = await validateAccountWidgetDefaultsContract({
     request,
     widgetDefaults: result.value.widgetDefaults,
-    widgetDefinitions: definitions.value.widgetDefinitions,
   });
   if (!contract.ok) {
     return withSession(
@@ -117,22 +103,9 @@ export async function PUT(request: NextRequest) {
     accountId,
     widgetDefaults: widgetDefaults as AccountWidgetDefaultsDocument,
   });
-  const definitions = await listTokyoWidgetDefinitions({
-    accountId,
-    accountCapsule: current.value.authzToken,
-    requestId: current.value.requestId,
-  });
-  if (!definitions.ok) {
-    return withSession(
-      request,
-      NextResponse.json({ error: definitions.error }, { status: definitions.status }),
-      current.value.setCookies,
-    );
-  }
   const contract = await validateAccountWidgetDefaultsContract({
     request,
     widgetDefaults: stamped,
-    widgetDefinitions: definitions.value.widgetDefinitions,
   });
   if (!contract.ok) {
     return withSession(

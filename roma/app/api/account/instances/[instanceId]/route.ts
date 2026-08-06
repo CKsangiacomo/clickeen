@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import {
   deleteAccountInstanceFromTokyo,
-  listTokyoWidgetDefinitions,
-  loadTokyoAccountInstancePublicPackage,
-  loadTokyoAccountInstanceSourceSnapshot,
   saveAccountInstanceInTokyo,
 } from '@roma/lib/account-instance-direct';
-import { isRecord } from '@clickeen/ck-contracts';
-import { parseCatalogPresentation } from '@clickeen/ck-contracts/catalog';
+import { listAccountPageSourcesInTokyo } from '@roma/lib/account-page-direct';
+import { pageIdsPlacingInstance } from '@roma/lib/account-page-source';
+import {
+  readWidgetForInstancePackage,
+  materializeAccountInstancePublicPackage,
+} from '@roma/lib/account-instance-public-package';
 import { materializeAccountInstanceSourceArtifacts } from '@roma/lib/account-instance-source-artifacts';
 import { loadCurrentAccountLocalesState } from '@roma/lib/account-locales-state';
 import { validateAccountInstanceSavePolicy } from '@roma/lib/account-instance-save-policy';
@@ -45,96 +46,6 @@ function routeFailureResponse(
   );
 }
 
-export async function PATCH(request: NextRequest, context: RouteContext) {
-  const current = await resolveCurrentAccountRouteContext({ request, minRole: 'editor' });
-  if (!current.ok) return current.response;
-  const accountId = current.value.authzPayload.accountPublicId;
-  if (accountId !== 'CLICKEEN') {
-    return withSession(
-      request,
-      NextResponse.json(
-        { error: { kind: 'DENY', reasonKey: 'coreui.errors.auth.accountForbidden' } },
-        { status: 403 },
-      ),
-      current.value.setCookies,
-    );
-  }
-  const instanceId = await requireInstanceIdParam(context, { mode: 'normalized' });
-  if (typeof instanceId !== 'string') {
-    return withSession(
-      request,
-      NextResponse.json({ error: instanceId.error }, { status: instanceId.status }),
-      current.value.setCookies,
-    );
-  }
-  const body = await readJsonPayloadOrValidation<unknown>(request);
-  if (!body.ok) {
-    return withSession(
-      request,
-      NextResponse.json({ error: body.error }, { status: body.status }),
-      current.value.setCookies,
-    );
-  }
-  const catalogPresentation = isRecord(body.payload) &&
-    Object.keys(body.payload).length === 1
-    ? parseCatalogPresentation(body.payload.catalogPresentation)
-    : null;
-  if (!catalogPresentation) {
-    return withSession(
-      request,
-      NextResponse.json(
-        { error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.invalid' } },
-        { status: 422 },
-      ),
-      current.value.setCookies,
-    );
-  }
-  const source = await loadTokyoAccountInstanceSourceSnapshot({
-    accountId,
-    instanceId,
-    accountCapsule: current.value.authzToken,
-    requestId: current.value.requestId,
-  });
-  if (!source.ok) return routeFailureResponse(request, source, current.value.setCookies);
-  if (!source.value.row.isTemplate) {
-    return withSession(
-      request,
-      NextResponse.json(
-        { error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.instance.templateMismatch' } },
-        { status: 422 },
-      ),
-      current.value.setCookies,
-    );
-  }
-  const packageResult = await loadTokyoAccountInstancePublicPackage({
-    accountId,
-    instanceId,
-    accountCapsule: current.value.authzToken,
-    requestId: current.value.requestId,
-  });
-  if (!packageResult.ok) {
-    return routeFailureResponse(request, packageResult, current.value.setCookies);
-  }
-  const saved = await saveAccountInstanceInTokyo({
-    accountId,
-    instanceId,
-    widgetType: source.value.row.widgetType,
-    isTemplate: true,
-    catalogPresentation,
-    config: source.value.config,
-    content: source.value.content,
-    publicPackage: packageResult.value.publicPackage,
-    accountCapsule: current.value.authzToken,
-    requestId: current.value.requestId,
-  });
-  if (!saved.ok) return routeFailureResponse(request, saved, current.value.setCookies);
-  return withSession(
-    request,
-    NextResponse.json({ ok: true, templateId: instanceId, catalogPresentation }),
-    current.value.setCookies,
-  );
-}
-
 export async function PUT(request: NextRequest, context: RouteContext) {
   const current = await resolveCurrentAccountRouteContext({ request, minRole: 'editor' });
   if (!current.ok) return current.response;
@@ -150,14 +61,8 @@ export async function PUT(request: NextRequest, context: RouteContext) {
   }
   const bodyResult = await readJsonPayloadOrValidation<{
     widgetType?: string;
-    isTemplate?: unknown;
     config?: Record<string, unknown>;
     displayName?: string | null;
-    publicPackage?: {
-      indexHtml?: unknown;
-      stylesCss?: unknown;
-      runtimeJs?: unknown;
-    };
   } | null>(request);
   if (!bodyResult.ok) {
     return withSession(
@@ -169,9 +74,7 @@ export async function PUT(request: NextRequest, context: RouteContext) {
   const body = bodyResult.payload;
 
   const widgetType = typeof body?.widgetType === 'string' ? body.widgetType.trim() : '';
-  const isTemplate = body?.isTemplate;
   const config = body?.config;
-  const publicPackage = body?.publicPackage;
   const displayName =
     body && Object.prototype.hasOwnProperty.call(body, 'displayName')
       ? typeof body.displayName === 'string'
@@ -182,14 +85,9 @@ export async function PUT(request: NextRequest, context: RouteContext) {
       : undefined;
   if (
     !widgetType ||
-    (isTemplate !== true && isTemplate !== false) ||
     !config ||
     typeof config !== 'object' ||
-    Array.isArray(config) ||
-    !publicPackage ||
-    typeof publicPackage.indexHtml !== 'string' ||
-    typeof publicPackage.stylesCss !== 'string' ||
-    typeof publicPackage.runtimeJs !== 'string'
+    Array.isArray(config)
   ) {
     return withSession(
       request,
@@ -215,76 +113,44 @@ export async function PUT(request: NextRequest, context: RouteContext) {
     );
   }
 
-  const savedSource = await loadTokyoAccountInstanceSourceSnapshot({
-    accountId,
-    instanceId,
-    accountCapsule: current.value.authzToken,
+  const accountLocales = await loadCurrentAccountLocalesState({
+    accessToken: current.value.accessToken,
+    accountId: current.value.authzPayload.accountId,
     requestId: current.value.requestId,
   });
-  if (!savedSource.ok) return routeFailureResponse(request, savedSource, current.value.setCookies);
-  if (savedSource.value.row.isTemplate !== isTemplate) {
+  if (!accountLocales.ok) {
     return withSession(
       request,
       NextResponse.json(
-        { error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.instance.templateMismatch' } },
-        { status: 422 },
+        accountLocales.payload ?? {
+          error: {
+            kind: accountLocales.status === 401 ? 'AUTH' : 'UPSTREAM_UNAVAILABLE',
+            reasonKey:
+              accountLocales.status === 401
+                ? 'coreui.errors.auth.required'
+                : 'coreui.errors.auth.contextUnavailable',
+            detail: accountLocales.detail,
+          },
+        },
+        { status: accountLocales.status },
       ),
       current.value.setCookies,
     );
   }
+  const baseLocale = accountLocales.localePolicy.baseLocale;
 
-  let baseLocale: string | undefined;
-  if (!isTemplate) {
-    const accountLocales = await loadCurrentAccountLocalesState({
-      accessToken: current.value.accessToken,
-      accountId: current.value.authzPayload.accountId,
-      requestId: current.value.requestId,
-    });
-    if (!accountLocales.ok) {
-      return withSession(
-        request,
-        NextResponse.json(
-          accountLocales.payload ?? {
-            error: {
-              kind: accountLocales.status === 401 ? 'AUTH' : 'UPSTREAM_UNAVAILABLE',
-              reasonKey:
-                accountLocales.status === 401
-                  ? 'coreui.errors.auth.required'
-                  : 'coreui.errors.auth.contextUnavailable',
-              detail: accountLocales.detail,
-            },
-          },
-          { status: accountLocales.status },
-        ),
-        current.value.setCookies,
-      );
-    }
-    baseLocale = accountLocales.localePolicy.baseLocale;
-  }
-
-  const widgetDefinitions = await listTokyoWidgetDefinitions({
-    accountId,
-    accountCapsule: current.value.authzToken,
-    requestId: current.value.requestId,
-  });
-  if (!widgetDefinitions.ok) {
-    return routeFailureResponse(request, widgetDefinitions, current.value.setCookies);
-  }
-  const widgetDefinition = widgetDefinitions.value.widgetDefinitions.find((entry) => entry.widgetType === widgetType);
-  if (!widgetDefinition) {
+  const compiled = readWidgetForInstancePackage(widgetType);
+  if (!compiled.ok) {
     return withSession(
       request,
-      NextResponse.json(
-        { error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.instance.widgetMissing' } },
-        { status: 422 },
-      ),
+      NextResponse.json({ error: compiled.error }, { status: compiled.status }),
       current.value.setCookies,
     );
   }
   const policyGate = validateAccountInstanceSavePolicy({
     config,
     authz: current.value.authzPayload,
-    limits: widgetDefinition.limits,
+    limits: compiled.value.limits,
     context: 'publish',
   });
   if (!policyGate.ok) {
@@ -294,12 +160,29 @@ export async function PUT(request: NextRequest, context: RouteContext) {
       current.value.setCookies,
     );
   }
+  const publicPackage = await materializeAccountInstancePublicPackage({
+    compiled: compiled.value,
+    accountId,
+    accountCapsule: current.value.authzToken,
+    requestId: current.value.requestId,
+    instanceId,
+    baseLocale,
+    displayName: displayName ?? null,
+    config,
+  });
+  if (!publicPackage.ok) {
+    return withSession(
+      request,
+      NextResponse.json({ error: publicPackage.error }, { status: publicPackage.status }),
+      current.value.setCookies,
+    );
+  }
   const sourceArtifacts = materializeAccountInstanceSourceArtifacts({
     accountId,
     instanceId,
     widgetType,
     config,
-    editableFields: widgetDefinition.editableFields,
+    editableFields: compiled.value.editableFields ?? null,
     initialStatus: 'changed',
   });
   if (!sourceArtifacts.ok) {
@@ -314,18 +197,10 @@ export async function PUT(request: NextRequest, context: RouteContext) {
     accountId,
     instanceId,
     widgetType,
-    isTemplate,
-    ...(baseLocale ? { baseLocale } : {}),
-    ...(isTemplate && savedSource.value.row.catalogPresentation
-      ? { catalogPresentation: savedSource.value.row.catalogPresentation }
-      : {}),
+    baseLocale,
     config: sourceArtifacts.value.config,
     content: sourceArtifacts.value.content,
-    publicPackage: {
-      indexHtml: publicPackage.indexHtml,
-      stylesCss: publicPackage.stylesCss,
-      runtimeJs: publicPackage.runtimeJs,
-    },
+    publicPackage: publicPackage.value,
     ...(displayName !== undefined ? { displayName } : {}),
     accountCapsule: current.value.authzToken,
     requestId: current.value.requestId,
@@ -353,6 +228,46 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
     return withSession(
       request,
       NextResponse.json({ error: instanceId.error }, { status: instanceId.status }),
+      current.value.setCookies,
+    );
+  }
+
+  const pageSources = await listAccountPageSourcesInTokyo({
+    accountId,
+    accountCapsule: current.value.authzToken,
+    requestId: current.value.requestId,
+  });
+  if (!pageSources.ok) {
+    return routeFailureResponse(request, pageSources, current.value.setCookies);
+  }
+  const placedPageIds = pageIdsPlacingInstance({
+    sources: pageSources.value.sources,
+    instanceId,
+  });
+  if (!placedPageIds) {
+    return withSession(
+      request,
+      NextResponse.json(
+        { error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.instance.invalidPayload' } },
+        { status: 422 },
+      ),
+      current.value.setCookies,
+    );
+  }
+  if (placedPageIds.length) {
+    return withSession(
+      request,
+      NextResponse.json(
+        {
+          error: {
+            kind: 'VALIDATION',
+            reasonKey: 'coreui.errors.instance.placedOnPage',
+            detail: 'Remove this widget from every page before deleting it.',
+            pageIds: placedPageIds,
+          },
+        },
+        { status: 422 },
+      ),
       current.value.setCookies,
     );
   }

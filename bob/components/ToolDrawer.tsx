@@ -52,7 +52,6 @@ function resolveBuilderErrorCopy(reason: string, fallback: string): string {
 function resolveSessionErrorTitle(error: NonNullable<ReturnType<typeof useWidgetSession>['error']>): string {
   if (error.source === 'load') return 'Builder unavailable';
   if (error.source === 'translation') return 'Translations need attention';
-  if (error.source === 'generation') return 'Preview could not update';
   if (error.source === 'save') return 'Save failed';
   return 'Edit blocked';
 }
@@ -80,10 +79,6 @@ export function resolveSessionErrorLines(error: NonNullable<ReturnType<typeof us
         'Changes were saved, but translations could not start. Try saving again.',
       ),
     ];
-  }
-
-  if (error.source === 'generation') {
-    return ['The widget could not be generated. Fix the current value and try again.'];
   }
 
   const deduped = new Set(
@@ -121,7 +116,6 @@ export function ToolDrawer({
   translatedLocales,
   savedTranslationsLoading,
   savedTranslationsError,
-  isTemplate,
 }: {
   id: string;
   compactOpen: boolean;
@@ -135,7 +129,6 @@ export function ToolDrawer({
   translatedLocales: TranslatedLocalesData | null;
   savedTranslationsLoading: boolean;
   savedTranslationsError: string | null;
-  isTemplate: boolean;
 }) {
   const session = useWidgetSession();
   const compiled = session.compiled;
@@ -174,12 +167,6 @@ export function ToolDrawer({
   }, [compiled?.widgetname, compiled?.panels]);
 
   useEffect(() => {
-    if (!isTemplate || activePanel !== 'translations') return;
-    const nextPanel = compiled?.panels?.find((panel) => panel.id !== 'translations')?.id ?? 'content';
-    setActivePanel(nextPanel as PanelId);
-  }, [activePanel, compiled?.panels, isTemplate]);
-
-  useEffect(() => {
     onPreviewModeChange(mode === 'manual' && activePanel === 'translations' ? 'translations' : 'editing');
   }, [activePanel, mode, onPreviewModeChange]);
 
@@ -198,10 +185,10 @@ export function ToolDrawer({
     }
     const availableIds = new Set(compiled.panels.map((panel) => panel.id));
     return DEFAULT_PANELS.filter((panel) => {
-      if (panel.id === 'translations') return !isTemplate;
+      if (panel.id === 'translations') return true;
       return availableIds.has(panel.id);
     });
-  }, [compiled?.panels, isTemplate]);
+  }, [compiled?.panels]);
   const activePanelHtml = panelsById[activePanel]?.html ?? null;
   const alertBorderColor = '1px solid color-mix(in oklab, var(--role-error), transparent 55%)';
   const alertBackground = 'color-mix(in oklab, var(--color-system-red-5), transparent 85%)';

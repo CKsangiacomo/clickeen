@@ -13,7 +13,6 @@ const tierLabels = [
   ['tier2', 'Tier 2'],
   ['tier3', 'Tier 3'],
   ['tier4', 'Tier 4'],
-  ['tier99', 'Tier 99'],
 ] as const;
 
 const roleLabels = [

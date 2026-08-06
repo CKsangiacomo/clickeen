@@ -103,65 +103,11 @@ surface.
 Product policy and routes enforce entitlement. UI prechecks can guide the user,
 but they are not the control.
 
-This section defines the required interaction for new or changed product
-surfaces. It does not claim an undeployed PRD already exists in runtime; the
-owning service document is the current-behavior authority until deployment.
-
-**Everything is visible to every tier; access is controlled by tier.** This is
-the universal monetization interaction law. It means every authenticated user
-can see the product domains and retained account objects they are otherwise
-authorized to see; it does not grant cross-account visibility or bypass role
-authorization. Tier-gated capabilities remain visible and clickable. The user
-discovers the gate by attempting the action, not through a hidden feature or a
-disabled control:
-
-- an unavailable boolean capability shows its real off state;
-- attempting to turn it on leaves the value off and opens the standard Upgrade
-  dialog;
-- an unavailable or exhausted command remains clickable; attempting it makes no
-  product mutation and opens the same dialog;
-- Roma rechecks the entitlement at the command or Save boundary before writing,
-  even when the UI already checked the current entitlement snapshot.
-
-When a tier gates an entire product domain, the domain remains in navigation.
-An account that has never had access sees the domain's normal Upgrade state. An
-account that retained objects after a downgrade still sees those objects and
-their real state, plus an **Upgrade to use** message. Product actions remain
-visible; attempting one opens the same Upgrade dialog and performs no mutation.
-A downgrade does not silently hide, delete, rewrite, regenerate, publish, or
-unpublish customer objects.
-
-Asset storage is the one downgrade-specific retention exception. If the new
-tier's `storage.bytes.max` is below current usage, the Assets domain and all
-assets remain visible and usable during a 30-day grace period. The account
-surface must show the current usage, new allowance, deadline, and consequence:
-unless the customer deletes enough assets or upgrades, account management will
-remove the most recently uploaded assets until usage fits the allowance. Upload
-remains visible; an attempted upload above the current allowance performs no
-write and opens the standard Upgrade dialog. Roma displays this account
-lifecycle state, but does not own or trigger the automatic cleanup operation.
-
-Do not create feature-specific lock treatments, disabled monetization controls,
-or separate upsell dialogs. This interaction applies only to tier/plan policy.
-Role denial, invalid state, and unavailable source truth use their own explicit
-failure behavior and must not masquerade as upgrade opportunities. Public
-visitor requests and background operations are not account-user actions and do
-not open product dialogs.
-
-**Save as template** is the explicit contextual-utility exception. It is shown
-only when the current user can edit an ordinary Widget Instance and the account
-can create another Instance. Put it in the object's list-row three-dot menu and
-keep it as a secondary action in Bob. When
-those conditions are false, omit it; do not replace it with a disabled state,
-lock treatment, or Upgrade flow. Its owning command still performs the normal
-authorization and saved-object-limit validation.
-
 Entitlement failures must be visible, actionable, and consistent with the
 command surface. Legitimate user-triggered monetization gates keep clear Upgrade
 copy and an Upgrade action. Roma widget 402 responses, Bob upsell events, and
-asset entitlement failures share one product meaning: the account tried an
-action the current tier does not allow, product state stayed unchanged, and the
-standard Upgrade dialog opened.
+asset limit/upsell inline copy share one product meaning: the account tried an
+action the current tier does not allow.
 
 During pre-GA, every legitimate Upgrade entry point opens or transitions to one
 coherent upsell dialog scaffold. This is a stable product surface for developing
@@ -179,10 +125,9 @@ scaffold in Bob. Ordinary navigation to Billing remains valid for inspecting
 the current plan; Upgrade must not masquerade that read-only surface as a
 plan-change flow.
 
-Inline monetization copy may explain a limit beside the affected work, but it is
-never a substitute for the attempted-action contract or the standard Upgrade
-dialog. Dieter owns dialog mechanics; the upsell surface owns its content/state;
-future billing owns commercial execution.
+Inline monetization copy is allowed only when the product situation is genuinely
+inline and the user has a clear next action. Dieter owns dialog mechanics; the
+upsell surface owns its content/state; future billing owns commercial execution.
 
 ## Agent Activity
 

@@ -80,7 +80,6 @@ export async function onRequest(context) {
         session.reasonKey || 'coreui.errors.auth.required',
       );
     }
-    context.data.devstudioSession = session;
     const response = await context.next();
     return cloneResponseWithCookies(response, session.setCookies);
   }
@@ -97,7 +96,6 @@ export async function onRequest(context) {
     return authHtmlFailure(status, reasonKey);
   }
 
-  context.data.devstudioSession = session;
   const response = await context.next();
   return cloneResponseWithCookies(response, session.setCookies);
 }

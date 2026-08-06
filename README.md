@@ -96,6 +96,7 @@ Account-owned files live under the account coordinate:
 ```text
 accounts/{accountPublicId}/assets/{filename}
 accounts/{accountPublicId}/instances/{instanceId}/...
+accounts/{accountPublicId}/pages/{pageId}/...
 ```
 
 Deploy-managed roots are separate:

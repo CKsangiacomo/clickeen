@@ -2,17 +2,6 @@
   "limits": [
     {
       "kind": "flag",
-      "key": "embed.seoGeo.enabled",
-      "path": "behavior.seoGeoAeoEnabled",
-      "mode": "boolean",
-      "deny": true,
-      "enforce": {
-        "ops": "reject",
-        "publish": "reject"
-      }
-    },
-    {
-      "kind": "flag",
       "key": "branding.remove",
       "path": "behavior.showBacklink",
       "mode": "boolean",

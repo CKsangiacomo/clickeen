@@ -9,7 +9,6 @@ on:
       - "agents/translation-agent/**"
       - "sanfrancisco/**"
       - "tokyo-worker/**"
-      - "tokyo/product/clickeen/**"
       - "tokyo/product/widgets/**"
       - "tokyo/roma/**"
       - "tokyo/prague/**"
@@ -137,7 +136,7 @@ jobs:
             tokyo=true
           fi
 
-          if [ "$workflow_changed" = "true" ] || path_changed '^(dieter/|tokyo/product/clickeen/|tokyo/product/widgets/|tokyo/roma/|tokyo/prague/|scripts/widgets/|scripts/tokyo-r2-deploy-sync\.mjs$)'; then
+          if [ "$workflow_changed" = "true" ] || path_changed '^(dieter/|tokyo/product/widgets/|tokyo/roma/|tokyo/prague/|scripts/widgets/|scripts/tokyo-r2-deploy-sync\.mjs$)'; then
             tokyo_assets=true
           fi
 

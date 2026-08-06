@@ -1,7 +1,7 @@
 {
   "widgetname": "countdown",
   "displayName": "Countdown",
-  "description": "Create urgency with customizable countdown timers. Launch, sell, and announce with confidence.",
+  "description": "",
   "itemKey": "countdown.item",
   "defaults": {
     "uiLabels": {

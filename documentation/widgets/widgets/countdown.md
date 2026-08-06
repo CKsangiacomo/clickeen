@@ -5,8 +5,8 @@ STATUS: CURRENT SYSTEM OPERATOR SPEC
 ## Purpose
 
 Countdown renders date, personal, or number countdown/counter behavior. Runtime
-reads and validates its generated behavior settings and binds the clock/number
-behavior to the generated markup.
+validates deterministic timer configuration and fails fast on invalid timer
+state.
 
 ## Source
 
@@ -20,9 +20,9 @@ Files:
 spec.json
 editable-fields.json
 limits.json
-index.html
-styles.css
-runtime.js
+widget.html
+widget.css
+widget.client.js
 ```
 
 Countdown has no widget-local runtime files outside the six-file contract.
@@ -72,14 +72,13 @@ countdown.actions.after.text
 ```text
 branding.remove -> behavior.showBacklink
 widget.socialShare.enabled -> behavior.socialShare.enabled
-embed.seoGeo.enabled -> behavior.seoGeoAeoEnabled
 ```
 
 ## Runtime Notes
 
-Web Code Generator writes the complete timer, number, and action markup.
-`runtime.js` registers the Countdown initializer and updates the generated
-timer/number/action values. Personal countdown storage requires an instance id.
+`widget.client.js` validates state, resolves required Countdown DOM hooks,
+applies shared Shell utilities, and updates timer/number/action DOM. Personal
+countdown storage requires an instance id.
 
 Timer modes:
 
@@ -111,19 +110,23 @@ Runtime requires these Core DOM hooks:
 [data-role="after-link"]
 ```
 
-`runtime.js` registers as `countdown` through `CKWidgetRuntime`, resolves the
-required generated hooks, and binds timer behavior. It does not accept generic
-state updates or render the initial customer content.
+`widget.client.js` registers as `countdown`, validates `countdown.*`, validates
+date/timezone/action URL state, applies shared Shell utilities, and binds
+`ck:state-update` for the current instance id.
 
-Runtime failure rules:
+The DOM resolver is part of `widget.client.js`. Do not reintroduce
+`widget.dom.js` or another widget-local runtime helper.
+
+Timer failure rules:
 
 - Date mode requires exact ISO `YYYY-MM-DDTHH:MM(:SS)` target date shape.
-- Timezone is `browser`, `UTC`, or a value accepted by `Intl.DateTimeFormat`.
-  `browser` interprets the authored target date in the visitor's local timezone.
+- Timezone is a valid IANA timezone or `browser`.
 - Personal mode uses `localStorage` keyed by the runtime instance id and fails
   when storage is unavailable or stored state is corrupt.
-- Runtime rejects unknown timer mode, time format, after-timer action, personal
-  duration unit/repeat, and missing/non-numeric generated number settings.
+- During-action URL accepts empty, `#`, root-relative, `http(s)`, `mailto`, or
+  `tel`.
+- Finished-action link requires valid text and URL when
+  `countdown.actions.after.type` is `link`.
 
 Appearance state includes timer style, time format, labels, separator, text
 color, item background, and card-wrapper radius/border/shadow.
@@ -133,6 +136,13 @@ color, item background, and card-wrapper radius/border/shadow.
 Countdown uses the shared Shell for Header, Header CTA, Stage/Pod, Core size,
 typography, branding, social share, and locale switcher. Timer tile surfaces
 are Core-owned under `countdown.appearance.*`.
+
+## Clickeen Pages Usage
+
+Countdown appears in Clickeen Page source as a saved account widget instance
+placement. Timer runtime behavior belongs to the instance package served from
+the account folder. Public page package serving depends on Roma writing real
+page packages.
 
 ## Verification
 

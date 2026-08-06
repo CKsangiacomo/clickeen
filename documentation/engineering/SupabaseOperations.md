@@ -6,8 +6,9 @@ Supabase is Michael's managed Postgres runtime. It owns current relational
 product data: accounts, users, account invitations, account locale settings,
 instance registry rows, and translation generation operation rows.
 
-Supabase does not own Widget Instance source, account assets, translated locale
-overlays, or generated public packages. Those live in Tokyo/R2.
+Supabase does not own widget instance source, account assets, translated locale
+overlays, generated public packages, or page package files. Those live in
+Tokyo/R2.
 
 Additional billing, support, usage, reporting, or governance tables may belong
 in Michael only after a reviewed migration introduces them. They are not
@@ -137,8 +138,8 @@ Migration credentials are not product runtime credentials.
 | --- | --- | --- |
 | Berlin Worker | `SUPABASE_URL` | cloud-dev Supabase project URL |
 | Berlin Worker | `SUPABASE_SERVICE_ROLE_KEY` | account/session/bootstrap relational access |
-| Roma Cloudflare Pages app | `SUPABASE_URL` | cloud-dev Supabase project URL for account settings routes |
-| Roma Cloudflare Pages app | `SUPABASE_SERVICE_ROLE_KEY` | service-role account locale/settings writes |
+| Roma Pages | `SUPABASE_URL` | cloud-dev Supabase project URL for account settings routes |
+| Roma Pages | `SUPABASE_SERVICE_ROLE_KEY` | service-role account locale/settings writes |
 
 Do not put runtime Supabase secret values in git. Do not replace Berlin auth
 with Supabase Auth.
@@ -182,7 +183,8 @@ Tokyo/R2 owns account runtime files:
 - `accounts/{accountPublicId}/instances/{instanceId}/overlays/locales/**`;
 - `accounts/{accountPublicId}/instances/{instanceId}/index.html`;
 - `accounts/{accountPublicId}/instances/{instanceId}/styles.css`;
-- `accounts/{accountPublicId}/instances/{instanceId}/runtime.js`.
+- `accounts/{accountPublicId}/instances/{instanceId}/runtime.js`;
+- `accounts/{accountPublicId}/pages/**`.
 
 Do not move runtime file ownership into Supabase.
 
@@ -233,13 +235,6 @@ Migration requirements:
 - do not silently repair corrupt product state without an explicit migration
   comment and rollback/recovery reasoning;
 - do not recreate deleted pre-GA widget-instance tables or storage authority.
-
-Tier99 remains the current internal-only profile for the normal `CLICKEEN`
-account even though customer Pages and PRD 127 are deferred. Its two ordered
-migrations first add `tier99` to the account-tier enum and allowed-values
-constraint, then assign it to `CLICKEEN`. Deploy tier99-aware Berlin, Roma,
-policy, and agent consumers before applying the assignment migration. Never
-assign Tier99 through an ad hoc Studio edit.
 
 ## Repair Applied Versions
 

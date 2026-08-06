@@ -10,7 +10,7 @@ function isPublicServingHost(hostname: string): boolean {
 
 export async function dispatchTokyoRoute(args: TokyoRouteArgs): Promise<Response> {
   if (isPublicServingHost(args.url.hostname)) {
-    if (args.pathname === '/clickeen.js' || args.pathname.startsWith('/dieter/icons/svg/')) {
+    if (args.pathname.startsWith('/dieter/icons/svg/')) {
       const assetResponse = await tryHandleAssetRoutes(args);
       if (assetResponse) return assetResponse;
     }
