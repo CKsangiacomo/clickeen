@@ -23,7 +23,9 @@ function comparePage(left: RomaPageInventoryItem, right: RomaPageInventoryItem, 
 export function PageList({ filter }: { filter: PageListFilter }) {
   const { accountContext, accountPolicy } = useRomaAccountContext();
   const accountApi = useRomaAccountApi();
+  const { fetchJson } = accountApi;
   const [pages, setPages] = useState<RomaPageInventoryItem[]>([]);
+  const [templateCount, setTemplateCount] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeAction, setActiveAction] = useState('');
@@ -32,30 +34,51 @@ export function PageList({ filter }: { filter: PageListFilter }) {
   const [renamePage, setRenamePage] = useState<RomaPageInventoryItem | null>(null);
   const [renameValue, setRenameValue] = useState('');
   const [deletePage, setDeletePage] = useState<RomaPageInventoryItem | null>(null);
+  const [saveTemplatePage, setSaveTemplatePage] = useState<RomaPageInventoryItem | null>(null);
+  const [templateName, setTemplateName] = useState('');
+  const [createdTemplate, setCreatedTemplate] = useState<{ templateId: string; templateName: string } | null>(null);
   const [publicContext, setPublicContext] = useState<{ name: string; actions: PublicActions } | null>(null);
   const [upsellOpen, setUpsellOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const renameDialogRef = useRef<HTMLDialogElement>(null);
   const deleteDialogRef = useRef<HTMLDialogElement>(null);
+  const saveTemplateDialogRef = useRef<HTMLDialogElement>(null);
   const renameLifecycleRef = useRef<DialogLifecycle | null>(null);
   const deleteLifecycleRef = useRef<DialogLifecycle | null>(null);
   const canUsePages = accountPolicy.limits['pages.max'] !== 0;
   const canMutatePages = accountPolicy.role !== 'viewer';
+  const pageLimit = accountPolicy.limits['pages.max'];
+  const hasTemplateCapacity = accountContext.accountPublicId !== 'CLICKEEN' && templateCount !== null && (
+    pageLimit === null ||
+    (typeof pageLimit === 'number' && pages.length + templateCount < pageLimit)
+  );
 
   const reload = useCallback(async (force = false) => {
     setLoading(true);
     setError(null);
     try {
-      const response = await loadRomaPages({ accountId: accountContext.accountPublicId, fetchJson: accountApi.fetchJson, force });
+      const response = await loadRomaPages({ accountId: accountContext.accountPublicId, fetchJson, force });
       setPages(response.pages);
     } catch {
       setError('Pages could not be loaded. Please try again.');
     } finally {
       setLoading(false);
     }
-  }, [accountApi.fetchJson, accountContext.accountPublicId]);
+  }, [accountContext.accountPublicId, fetchJson]);
+
+  const reloadTemplateCount = useCallback(async () => {
+    try {
+      const payload = await fetchJson('/api/account/page-templates');
+      setTemplateCount(payload && typeof payload === 'object' && !Array.isArray(payload) && Array.isArray((payload as { templates?: unknown }).templates)
+        ? (payload as { templates: unknown[] }).templates.length
+        : null);
+    } catch {
+      setTemplateCount(null);
+    }
+  }, [fetchJson]);
 
   useEffect(() => { void reload(); }, [reload]);
+  useEffect(() => { void reloadTemplateCount(); }, [reloadTemplateCount]);
   useEffect(() => {
     if (!menuPageId) return;
     const close = (event: PointerEvent) => {
@@ -76,6 +99,13 @@ export function PageList({ filter }: { filter: PageListFilter }) {
   }, []);
   useEffect(() => { if (renamePage) renameLifecycleRef.current?.open(); else renameLifecycleRef.current?.close(); }, [renamePage]);
   useEffect(() => { if (deletePage) deleteLifecycleRef.current?.open(); else deleteLifecycleRef.current?.close(); }, [deletePage]);
+  useEffect(() => {
+    const dialog = saveTemplateDialogRef.current;
+    if (!dialog) return;
+    const lifecycle = createDialogLifecycle({ dialog, initialFocus: 'input', requestDismiss: () => setSaveTemplatePage(null) });
+    if (saveTemplatePage) lifecycle.open();
+    return () => lifecycle.destroy();
+  }, [saveTemplatePage]);
 
   const visiblePages = useMemo(() => pages
     .filter((page) => filter === 'all'
@@ -97,13 +127,41 @@ export function PageList({ filter }: { filter: PageListFilter }) {
     try {
       await run();
       clearRomaPagesCache(accountContext.accountPublicId);
-      await reload(true);
+      await Promise.all([reload(true), reloadTemplateCount()]);
     } catch {
       setError('The Page could not be updated. Please try again.');
     } finally {
       setActiveAction('');
     }
-  }, [accountContext.accountPublicId, reload]);
+  }, [accountContext.accountPublicId, reload, reloadTemplateCount]);
+
+  const saveAsTemplate = useCallback(async () => {
+    const page = saveTemplatePage;
+    const name = templateName.trim();
+    if (!page || !name || name === page.source.displayName.trim() || !hasTemplateCapacity) return;
+    setActiveAction(`template:${page.source.pageId}`);
+    setError(null);
+    try {
+      const payload = await accountApi.fetchJson(`/api/account/pages/${encodeURIComponent(page.source.pageId)}/save-as-template`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ templateName: name }),
+      });
+      const record = payload && typeof payload === 'object' && !Array.isArray(payload)
+        ? payload as { templateId?: unknown; templateName?: unknown }
+        : null;
+      const templateId = typeof record?.templateId === 'string' ? record.templateId.trim() : '';
+      const savedName = typeof record?.templateName === 'string' ? record.templateName.trim() : '';
+      if (!templateId || !savedName) throw new Error('coreui.errors.payload.invalid');
+      setCreatedTemplate({ templateId, templateName: savedName });
+      clearRomaPagesCache(accountContext.accountPublicId);
+      await Promise.all([reload(true), reloadTemplateCount()]);
+    } catch {
+      setError('The Page template could not be created. Please try again.');
+    } finally {
+      setActiveAction('');
+    }
+  }, [accountApi, accountContext.accountPublicId, hasTemplateCapacity, reload, reloadTemplateCount, saveTemplatePage, templateName]);
 
   return (
     <>
@@ -154,6 +212,7 @@ export function PageList({ filter }: { filter: PageListFilter }) {
                         <button className="diet-btn-ic" data-size="sm" data-variant="neutral" type="button" aria-label={`More actions for ${page.source.displayName}`} aria-expanded={menuPageId === id} onClick={() => setMenuPageId((current) => current === id ? '' : id)}><span className="diet-btn-ic__icon diet-icon-mask" style={{ '--diet-icon-source': 'url("/dieter/icons/svg/ellipsis.svg")' } as CSSProperties} aria-hidden="true" /></button>
                         <div className="diet-popover roma-page-actions-popover" role="menu">
                           <button className="diet-btn-menuactions" data-size="md" data-variant="neutral" type="button" role="menuitem" onClick={() => { setMenuPageId(''); if (!canUsePages) { setUpsellOpen(true); return; } setRenamePage(page); setRenameValue(page.source.displayName); }}><span className="diet-btn-menuactions__label body-s">Rename</span></button>
+                          {hasTemplateCapacity ? <button className="diet-btn-menuactions" data-size="md" data-variant="neutral" type="button" role="menuitem" onClick={() => { setMenuPageId(''); setTemplateName(''); setCreatedTemplate(null); setSaveTemplatePage(page); }}><span className="diet-btn-menuactions__label body-s">Save as template</span></button> : null}
                           {!page.serveState.published ? <button className="diet-btn-menuactions" data-size="md" data-variant="neutral" type="button" role="menuitem" onClick={() => { setMenuPageId(''); if (!canUsePages) { setUpsellOpen(true); return; } setDeletePage(page); }}><span className="diet-btn-menuactions__label body-s">Delete</span></button> : null}
                         </div>
                       </div> : null}
@@ -177,6 +236,11 @@ export function PageList({ filter }: { filter: PageListFilter }) {
         <header className="diet-popup__header"><h2 className="heading-4">Delete page?</h2></header>
         <div className="diet-popup__body"><p className="body-m">This permanently deletes the saved Page.</p></div>
         <footer className="diet-popup__footer"><div className="diet-popup__actions"><button className="diet-btn-txt" data-size="md" data-variant="secondary" type="button" onClick={() => setDeletePage(null)}><span className="diet-btn-txt__label body-m">Cancel</span></button><button className="diet-btn-txt" data-size="md" data-variant="primary" type="button" disabled={Boolean(activeAction)} onClick={() => { const page = deletePage; if (!page) return; void mutate(`delete:${page.source.pageId}`, () => accountApi.fetchJson(`/api/account/pages/${encodeURIComponent(page.source.pageId)}`, { method: 'DELETE' })).then(() => setDeletePage(null)); }}><span className="diet-btn-txt__label body-m">Delete</span></button></div></footer>
+      </dialog>
+      <dialog ref={saveTemplateDialogRef} className="diet-popup" data-size="medium" aria-label="Save Page as template">
+        <header className="diet-popup__header"><h2 className="heading-4">Save as template</h2></header>
+        <div className="diet-popup__body">{createdTemplate ? <p className="body-m">{createdTemplate.templateName} was saved as a template.</p> : <><label className="roma-field"><span className="label-s">Template name</span><input className="diet-textfield__field body-s" value={templateName} maxLength={120} onChange={(event) => setTemplateName(event.target.value)} /></label><p className="body-s">Your current changes will be saved first.</p></>}</div>
+        <footer className="diet-popup__footer"><div className="diet-popup__actions">{createdTemplate ? <><button className="diet-btn-txt" data-size="md" data-variant="secondary" type="button" onClick={() => { setSaveTemplatePage(null); setCreatedTemplate(null); }}><span className="diet-btn-txt__label body-m">Stay here</span></button><button className="diet-btn-txt" data-size="md" data-variant="primary" type="button" onClick={() => window.location.assign(`/page-builder/${encodeURIComponent(createdTemplate.templateId)}`)}><span className="diet-btn-txt__label body-m">Open template</span></button></> : <><button className="diet-btn-txt" data-size="md" data-variant="secondary" type="button" disabled={Boolean(activeAction)} onClick={() => setSaveTemplatePage(null)}><span className="diet-btn-txt__label body-m">Cancel</span></button><button className="diet-btn-txt" data-size="md" data-variant="primary" type="button" disabled={Boolean(activeAction) || !templateName.trim() || templateName.trim() === saveTemplatePage?.source.displayName.trim()} onClick={() => void saveAsTemplate()}><span className="diet-btn-txt__label body-m">Save as template</span></button></>}</div></footer>
       </dialog>
       <PublicCodeDialog open={Boolean(publicContext)} productName={publicContext?.name ?? ''} actions={publicContext?.actions ?? null} onClose={() => setPublicContext(null)} />
       <RomaUpsellDialog open={upsellOpen} reason="Upgrade to create and edit Pages." onClose={() => setUpsellOpen(false)} />

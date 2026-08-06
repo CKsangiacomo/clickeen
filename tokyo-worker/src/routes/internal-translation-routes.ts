@@ -96,12 +96,19 @@ export async function tryHandleInternalTranslationRoutes(
         ),
       );
     }
-    const translations = await listAccountInstanceTranslatedLocaleValues({ env, accountId, instanceId });
-    return respond(json({
-      ok: true,
-            baseLocale: instance.value.baseLocale,
-      translations,
-    }));
+    if (instance.value.isTemplate) {
+      return respondValidation(respond, 'tokyo.translation.template_forbidden');
+    }
+    try {
+      const translations = await listAccountInstanceTranslatedLocaleValues({ env, accountId, instanceId });
+      return respond(json({
+        ok: true,
+        baseLocale: instance.value.baseLocale,
+        translations,
+      }));
+    } catch (error) {
+      return respond(translationMutationError(error));
+    }
   }
 
   const internalTranslationValuesMatch = pathname.match(/^\/__internal\/instances\/([^/]+)\/translations\/([^/]+)$/);
@@ -122,11 +129,15 @@ export async function tryHandleInternalTranslationRoutes(
       });
       if (authErr) return respond(authErr);
 
-      const translation = await readAccountInstanceTranslatedLocaleValues({ env, accountId, instanceId, locale });
-      if (!translation.ok) {
-        return respond(json({ error: { kind: 'NOT_FOUND', reasonKey: 'tokyo.translation.notFound' } }, { status: 404 }));
+      try {
+        const translation = await readAccountInstanceTranslatedLocaleValues({ env, accountId, instanceId, locale });
+        if (!translation.ok) {
+          return respond(json({ error: { kind: 'NOT_FOUND', reasonKey: 'tokyo.translation.notFound' } }, { status: 404 }));
+        }
+        return respond(json({ ok: true, ...translation.value }));
+      } catch (error) {
+        return respond(translationMutationError(error));
       }
-      return respond(json({ ok: true, ...translation.value }));
     }
 
     if (req.method === 'PUT') {

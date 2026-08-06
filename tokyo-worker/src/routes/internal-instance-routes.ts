@@ -1,4 +1,5 @@
 import { isRecord } from '@clickeen/ck-contracts';
+import { parseCatalogPresentation } from '@clickeen/ck-contracts/catalog';
 import { normalizeLocale, normalizeStorageId } from '../asset-utils';
 import {
   AccountInstanceTransitionError,
@@ -144,9 +145,12 @@ export async function tryHandleInternalInstanceRoutes(
         accountId: pointer.value.accountId,
         instanceId: pointer.value.id,
         widgetType: pointer.value.widgetType,
+        isTemplate: pointer.value.isTemplate,
         displayName: pointer.value.displayName,
         updatedAt: pointer.value.updatedAt,
-        publishStatus: pointer.value.publishStatus,
+        ...(pointer.value.isTemplate
+          ? (pointer.value.catalogPresentation ? { catalogPresentation: pointer.value.catalogPresentation } : {})
+          : { publishStatus: pointer.value.publishStatus }),
       }),
     );
   }
@@ -174,8 +178,18 @@ export async function tryHandleInternalInstanceRoutes(
     const content = normalizeAccountInstanceContentDocument(source?.content);
     const instanceId = normalizeStorageId(rawBody.instanceId);
     const publicPackage = readSubmittedInstancePublicPackage(rawBody.publicPackage);
-    const baseLocale = normalizeLocale(rawBody.baseLocale);
-    if (!instanceId || !config || !content || !publicPackage || !baseLocale)
+    const isTemplate = rawBody.isTemplate;
+    const baseLocale = isTemplate === false ? normalizeLocale(rawBody.baseLocale) : null;
+    const hasCatalogPresentation = Object.prototype.hasOwnProperty.call(rawBody, 'catalogPresentation');
+    const catalogPresentation = hasCatalogPresentation ? parseCatalogPresentation(rawBody.catalogPresentation) : null;
+    if (
+      !instanceId || !config || !content || !publicPackage ||
+      (isTemplate !== true && isTemplate !== false) ||
+      (isTemplate === false && !baseLocale) ||
+      (isTemplate === true && Object.prototype.hasOwnProperty.call(rawBody, 'baseLocale')) ||
+      (hasCatalogPresentation && !catalogPresentation) ||
+      (isTemplate === false && hasCatalogPresentation)
+    )
       return respondValidation(respond, 'coreui.errors.instance.invalidPayload');
 
     try {
@@ -187,7 +201,9 @@ export async function tryHandleInternalInstanceRoutes(
         displayName: rawBody.displayName,
         config,
         content,
-        baseLocale,
+        isTemplate,
+        ...(baseLocale ? { baseLocale } : {}),
+        ...(catalogPresentation ? { catalogPresentation } : {}),
         publicPackage,
       });
       return respond(
@@ -198,9 +214,15 @@ export async function tryHandleInternalInstanceRoutes(
             instanceId: created.pointer.id,
             widgetCode: created.pointer.widgetCode,
             widgetType: created.pointer.widgetType,
+            isTemplate: created.pointer.isTemplate,
             displayName: created.pointer.displayName,
-            publishStatus: created.pointer.publishStatus,
             updatedAt: created.pointer.updatedAt,
+            ...(created.pointer.isTemplate
+              ? (created.pointer.catalogPresentation ? { catalogPresentation: created.pointer.catalogPresentation } : {})
+              : {
+                  baseLocale: created.pointer.baseLocale,
+                  publishStatus: created.pointer.publishStatus,
+                }),
             source: {
               config: created.config,
               content: created.content,
@@ -431,10 +453,12 @@ export async function tryHandleInternalInstanceRoutes(
           instanceId: pointer.id,
           widgetCode: pointer.widgetCode,
           widgetType: pointer.widgetType,
+          isTemplate: pointer.isTemplate,
           displayName: pointer.displayName,
-          publishStatus: pointer.publishStatus,
           updatedAt: pointer.updatedAt,
-          baseLocale: pointer.baseLocale,
+          ...(pointer.isTemplate
+            ? (pointer.catalogPresentation ? { catalogPresentation: pointer.catalogPresentation } : {})
+            : { publishStatus: pointer.publishStatus, baseLocale: pointer.baseLocale }),
           source: {
             config: source.value.config,
             content: source.value.content,
@@ -460,13 +484,20 @@ export async function tryHandleInternalInstanceRoutes(
       const publicPackage = isRecord(body)
         ? readSubmittedInstancePublicPackage(body.publicPackage)
         : null;
-      const baseLocale = normalizeLocale(body?.baseLocale);
+      const isTemplate = body?.isTemplate;
+      const baseLocale = isTemplate === false ? normalizeLocale(body?.baseLocale) : null;
+      const hasCatalogPresentation = Boolean(body && Object.prototype.hasOwnProperty.call(body, 'catalogPresentation'));
+      const catalogPresentation = hasCatalogPresentation ? parseCatalogPresentation(body?.catalogPresentation) : null;
       if (
         !isRecord(body) ||
         !config ||
         !content ||
         !publicPackage ||
-        !baseLocale
+        (isTemplate !== true && isTemplate !== false) ||
+        (isTemplate === false && !baseLocale) ||
+        (isTemplate === true && Object.prototype.hasOwnProperty.call(body, 'baseLocale')) ||
+        (hasCatalogPresentation && !catalogPresentation) ||
+        (isTemplate === false && hasCatalogPresentation)
       ) {
         return respondValidation(respond, 'coreui.errors.instance.invalidPayload');
       }
@@ -479,7 +510,9 @@ export async function tryHandleInternalInstanceRoutes(
           config,
           content,
           publicPackage,
-          baseLocale,
+          isTemplate,
+          ...(baseLocale ? { baseLocale } : {}),
+          ...(catalogPresentation ? { catalogPresentation } : {}),
           displayName: body.displayName,
           hasDisplayName: Object.prototype.hasOwnProperty.call(body, 'displayName'),
         });
@@ -488,10 +521,13 @@ export async function tryHandleInternalInstanceRoutes(
             ok: true,
             instanceId,
             widgetType: result.pointer.widgetType,
+            isTemplate: result.pointer.isTemplate,
             displayName: result.pointer.displayName,
-            publishStatus: result.pointer.publishStatus,
             updatedAt: result.pointer.updatedAt,
             live: result.live,
+            ...(result.pointer.isTemplate
+              ? (result.pointer.catalogPresentation ? { catalogPresentation: result.pointer.catalogPresentation } : {})
+              : { publishStatus: result.pointer.publishStatus, baseLocale: result.pointer.baseLocale }),
           }),
         );
       } catch (error) {

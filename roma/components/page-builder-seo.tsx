@@ -1,12 +1,12 @@
 'use client';
 
-import type { AccountPage, PageLocaleOverlay, PageValues } from '@clickeen/ck-contracts/pages';
+import type { AccountPage, AccountPageTemplate, PageLocaleOverlay, PageValues } from '@clickeen/ck-contracts/pages';
 import { DieterDropdownActions } from './dieter-dropdown-actions';
 import { DieterImageUpload } from './dieter-image-upload';
 import { DieterTextarea } from './dieter-textarea';
 import { DieterTextfield } from './dieter-textfield';
 
-type PageDraftSource = Omit<AccountPage, 'pageId'>;
+type PageDraftSource = Omit<AccountPage, 'pageId'> | Omit<AccountPageTemplate, 'pageId'>;
 type TranslatableKey = 'title' | 'description' | 'socialTitle' | 'socialDescription';
 
 function CharacterCount({ value }: { value: string }) {
@@ -42,7 +42,8 @@ export function PageBuilderSeo({
   onResolveSocialImage: (assetRef: string) => Promise<string>;
   onAssetUpsell: () => void;
 }) {
-  const base = activeLocale === source.baseLocale;
+  const baseLocale = source.isTemplate ? '' : source.baseLocale;
+  const base = source.isTemplate || activeLocale === baseLocale;
   const activeValues = base ? source.values : overlays[activeLocale]?.values ?? { title: '' };
 
   const setValue = (key: TranslatableKey, value: string) => {
@@ -67,7 +68,7 @@ export function PageBuilderSeo({
       <div className="roma-page-panel__header">
         <h2 id="page-seo-title" className="heading-4">SEO/GEO/AEO</h2>
         <div className="roma-page-panel__actions">
-          <DieterDropdownActions value={activeLocale} options={locales.map((locale) => ({ value: locale, label: locale === source.baseLocale ? `Base · ${locale}` : locale }))} ariaLabel="Metadata language" size="sm" onChange={onActiveLocaleChange} />
+          {!source.isTemplate ? <DieterDropdownActions value={activeLocale} options={locales.map((locale) => ({ value: locale, label: locale === baseLocale ? `Base · ${locale}` : locale }))} ariaLabel="Metadata language" size="sm" onChange={onActiveLocaleChange} /> : null}
           {canTranslate ? <button className="diet-btn-txt" data-size="sm" data-variant="secondary" type="button" disabled={translating} onClick={() => void onGenerateTranslations()}><span className="diet-btn-txt__label body-s">{translating ? 'Generating…' : 'Generate translations'}</span></button> : null}
         </div>
       </div>

@@ -43,6 +43,7 @@ async function resolveStoredTranslationSource(args: {
   });
   const requestedWidgetType = typeof args.widgetType === 'string' ? args.widgetType.trim() : '';
   if (!configDoc || (requestedWidgetType && configDoc.widgetType !== requestedWidgetType)) return null;
+  if (configDoc.isTemplate) throw new Error('tokyo.translation.template_forbidden');
   const content = await readContentDocumentByLocation({
     env: args.env,
     accountId,

@@ -66,6 +66,7 @@ The account asset library supports:
 - resolve for authoring and runtime consumption
 - delete by exact account asset reference
 - reuse from Bob controls
+- copy selected `CLICKEEN` Catalog assets into the authenticated account
 
 Accepted uploads are direct files under the account asset folder:
 
@@ -132,10 +133,25 @@ path as other account assets.
 | List assets | `GET /api/account/assets` | `viewer` | `GET /__internal/assets/account/{accountPublicId}` | `{ accountId, storageBytesUsed, assets }` |
 | Resolve asset refs | `POST /api/account/assets/resolve` | `viewer` | `POST /__internal/assets/account/{accountPublicId}/resolve` | `{ assets: [{ assetRef, url, assetType, contentType }] }` |
 | Upload asset | `POST /api/account/assets/upload` | `editor` | `POST /__internal/assets/upload` | `AccountAssetRecord` |
+| Copy Catalog assets | `POST /api/account/catalog-assets/copy` | `editor` | `POST /__internal/assets/catalog-copy` | `{ mappings: [{ sourceAssetRef, destinationAssetRef }] }` |
 | Delete asset | `DELETE /api/account/assets/{assetRef}` | `editor` | `DELETE /__internal/assets/account/{accountPublicId}/asset/{assetRef}` | `{ accountId, assetRef, deleted: true }` |
 | Public asset read | generated/public asset URL | public read | account asset public route | asset bytes or `404` |
 
 Upload also rejects disabled accounts at the Tokyo-worker boundary.
+
+Catalog asset copy accepts exactly `{ "assetRefs": [accountLocalAssetRef] }`,
+using the same references stored in Widget and Page config, such as `hero.png`.
+The server fixes the source owner to exact account `CLICKEEN`; the source owner
+is not a request parameter. Roma derives the destination from the authenticated
+current account and sends its existing `uploads.size.max` and
+`storage.bytes.max` policy values to Tokyo-worker. Tokyo validates all source
+files and the complete destination storage total before its first write,
+chooses a new filename rather than overwriting a collision, stores each copy as
+source `promotion`, and returns the exact source-to-destination local refs for
+rewriting the unsaved customer draft.
+A write failure returns an error plus mappings for writes already completed; it
+never reports the batch as successful. This is an ordinary asset operation,
+not a template store, transaction, Queue, or second storage path.
 
 ## Upload Contract
 

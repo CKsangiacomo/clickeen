@@ -114,6 +114,28 @@ async function putPageFiles(args: {
   if (failed) throw failed.reason;
 }
 
+async function readRequiredPageFiles(args: {
+  env: Env;
+  accountId: string;
+  pageId: string;
+}): Promise<PageGeneratedFiles> {
+  const [index, styles, runtime] = await Promise.all([
+    loadText({ env: args.env, key: accountPageIndexKey(args.accountId, args.pageId), expectedContentType: 'text/html; charset=utf-8' }),
+    loadText({ env: args.env, key: accountPageStylesKey(args.accountId, args.pageId), expectedContentType: 'text/css; charset=utf-8' }),
+    loadText({ env: args.env, key: accountPageRuntimeKey(args.accountId, args.pageId), expectedContentType: 'text/javascript; charset=utf-8' }),
+  ]);
+  if (!index.exists || !styles.exists || !runtime.exists) {
+    sourceInvalid([
+      ...(!index.exists ? [accountPageIndexKey(args.accountId, args.pageId)] : []),
+      ...(!styles.exists ? [accountPageStylesKey(args.accountId, args.pageId)] : []),
+      ...(!runtime.exists ? [accountPageRuntimeKey(args.accountId, args.pageId)] : []),
+    ]);
+  }
+  const files = parsePageGeneratedFiles({ indexHtml: index.value, stylesCss: styles.value, runtimeJs: runtime.value });
+  if (!files) sourceInvalid();
+  return files;
+}
+
 async function readRequiredPageRuntime(args: {
   env: Env;
   accountId: string;
@@ -121,26 +143,20 @@ async function readRequiredPageRuntime(args: {
   source: AccountPageSource;
 }): Promise<{ files: PageGeneratedFiles; overlaysJson: PageServingOverlays; serveState: PageServeState }> {
   if (args.source.isTemplate) sourceInvalid([accountPageSourceKey(args.accountId, args.pageId)]);
-  const [index, styles, runtime, overlaysStored, serveStateStored] = await Promise.all([
-    loadText({ env: args.env, key: accountPageIndexKey(args.accountId, args.pageId), expectedContentType: 'text/html; charset=utf-8' }),
-    loadText({ env: args.env, key: accountPageStylesKey(args.accountId, args.pageId), expectedContentType: 'text/css; charset=utf-8' }),
-    loadText({ env: args.env, key: accountPageRuntimeKey(args.accountId, args.pageId), expectedContentType: 'text/javascript; charset=utf-8' }),
+  const [files, overlaysStored, serveStateStored] = await Promise.all([
+    readRequiredPageFiles(args),
     loadJson({ env: args.env, key: accountPageServingOverlaysKey(args.accountId, args.pageId), invalid: sourceInvalid }),
     loadJson({ env: args.env, key: accountPageServeStateKey(args.accountId, args.pageId), invalid: sourceInvalid }),
   ]);
-  if (!index.exists || !styles.exists || !runtime.exists || !overlaysStored.exists || !serveStateStored.exists) {
+  if (!overlaysStored.exists || !serveStateStored.exists) {
     sourceInvalid([
-      ...(!index.exists ? [accountPageIndexKey(args.accountId, args.pageId)] : []),
-      ...(!styles.exists ? [accountPageStylesKey(args.accountId, args.pageId)] : []),
-      ...(!runtime.exists ? [accountPageRuntimeKey(args.accountId, args.pageId)] : []),
       ...(!overlaysStored.exists ? [accountPageServingOverlaysKey(args.accountId, args.pageId)] : []),
       ...(!serveStateStored.exists ? [accountPageServeStateKey(args.accountId, args.pageId)] : []),
     ]);
   }
-  const files = parsePageGeneratedFiles({ indexHtml: index.value, stylesCss: styles.value, runtimeJs: runtime.value });
   const overlaysJson = parsePageServingOverlays(overlaysStored.value, args.source);
   const serveState = parsePageServeState(serveStateStored.value);
-  if (!files || !overlaysJson || !serveState) sourceInvalid();
+  if (!overlaysJson || !serveState) sourceInvalid();
   return { files, overlaysJson, serveState };
 }
 
@@ -239,7 +255,10 @@ export async function createAccountPageSource(args: {
   source: unknown;
   files: unknown;
   overlaysJson: unknown;
-}): Promise<{ source: AccountPageSource; files: PageGeneratedFiles; overlaysJson: PageServingOverlays; serveState: PageServeState }> {
+}): Promise<
+  | { source: Extract<AccountPageSource, { isTemplate: false }>; files: PageGeneratedFiles; overlaysJson: PageServingOverlays; serveState: PageServeState }
+  | { source: Extract<AccountPageSource, { isTemplate: true }>; files: PageGeneratedFiles }
+> {
   const accountId = assertAccountId(args.accountId);
   const pageId = normalizePageId(args.pageId);
   if (!pageId) throw new PageOperationError({ kind: 'VALIDATION', reasonKey: 'tokyo.errors.page.invalidPageId' });
@@ -247,12 +266,17 @@ export async function createAccountPageSource(args: {
     throw new PageOperationError({ kind: 'VALIDATION', reasonKey: 'tokyo.errors.page.alreadyExists' });
   }
   const source = parseAccountPageSource(args.source, pageId);
-  if (!source || source.isTemplate) sourceInvalid();
+  if (!source) sourceInvalid();
   const files = parsePageGeneratedFiles(args.files);
-  const overlaysJson = parsePageServingOverlays(args.overlaysJson, source);
-  if (!files || !overlaysJson) sourceInvalid();
+  if (!files) sourceInvalid();
   await assertPageReferences({ env: args.env, accountId, source });
   await putPageFiles({ env: args.env, accountId, pageId, files });
+  if (source.isTemplate) {
+    await putJson(args.env, accountPageSourceKey(accountId, pageId), source);
+    return { source, files };
+  }
+  const overlaysJson = parsePageServingOverlays(args.overlaysJson, source);
+  if (!overlaysJson) sourceInvalid();
   await putJson(args.env, accountPageServingOverlaysKey(accountId, pageId), overlaysJson);
   const serveState = { published: false, needsUpdate: false } as const;
   await putJson(args.env, accountPageServeStateKey(accountId, pageId), serveState);
@@ -273,11 +297,11 @@ export async function renameAccountPage(args: {
     throw new PageOperationError({ kind: 'VALIDATION', reasonKey: 'tokyo.errors.page.sourceInvalid' });
   }
   const source = await readAccountPageSource({ env: args.env, accountId, pageId });
-  if (!source || source.isTemplate) {
+  if (!source) {
     throw new PageOperationError({ kind: 'NOT_FOUND', reasonKey: 'tokyo.errors.page.notFound' });
   }
   const renamed = parseAccountPageSource({ ...source, displayName }, pageId);
-  if (!renamed || renamed.isTemplate) sourceInvalid([accountPageSourceKey(accountId, pageId)]);
+  if (!renamed || renamed.isTemplate !== source.isTemplate) sourceInvalid([accountPageSourceKey(accountId, pageId)]);
   await putJson(args.env, accountPageSourceKey(accountId, pageId), renamed);
   return { pageId, displayName: renamed.displayName };
 }
@@ -290,7 +314,10 @@ export async function saveAccountPageSource(args: {
   files: unknown;
   overlaysJson: unknown;
   operation: 'save' | 'update';
-}): Promise<{ source: AccountPageSource; files: PageGeneratedFiles; overlaysJson: PageServingOverlays; serveState: PageServeState }> {
+}): Promise<
+  | { source: Extract<AccountPageSource, { isTemplate: false }>; files: PageGeneratedFiles; overlaysJson: PageServingOverlays; serveState: PageServeState }
+  | { source: Extract<AccountPageSource, { isTemplate: true }>; files: PageGeneratedFiles }
+> {
   const accountId = assertAccountId(args.accountId);
   const pageId = normalizePageId(args.pageId);
   if (!pageId) throw new PageOperationError({ kind: 'VALIDATION', reasonKey: 'tokyo.errors.page.invalidPageId' });
@@ -298,16 +325,24 @@ export async function saveAccountPageSource(args: {
   if (!existing) {
     throw new PageOperationError({ kind: 'NOT_FOUND', reasonKey: 'tokyo.errors.page.notFound' });
   }
+  const source = parseAccountPageSource(args.source, pageId);
+  if (!source || source.isTemplate !== existing.isTemplate) sourceInvalid();
+  const files = parsePageGeneratedFiles(args.files);
+  if (!files) sourceInvalid();
+  await assertPageReferences({ env: args.env, accountId, source });
+  if (existing.isTemplate) {
+    if (!source.isTemplate || args.operation !== 'save') sourceInvalid();
+    await putPageFiles({ env: args.env, accountId, pageId, files });
+    await putJson(args.env, accountPageSourceKey(accountId, pageId), source);
+    return { source, files };
+  }
+  if (source.isTemplate) sourceInvalid();
   const current = await readRequiredPageRuntime({ env: args.env, accountId, pageId, source: existing });
   if (args.operation === 'save' && current.serveState.needsUpdate) {
     throw new PageOperationError({ kind: 'DENY', reasonKey: 'tokyo.errors.page.needsUpdate' });
   }
-  const source = parseAccountPageSource(args.source, pageId);
-  if (!source || source.isTemplate) sourceInvalid();
-  const files = parsePageGeneratedFiles(args.files);
   const overlaysJson = parsePageServingOverlays(args.overlaysJson, source);
-  if (!files || !overlaysJson) sourceInvalid();
-  await assertPageReferences({ env: args.env, accountId, source });
+  if (!overlaysJson) sourceInvalid();
   await putPageFiles({ env: args.env, accountId, pageId, files });
   await putJson(args.env, accountPageServingOverlaysKey(accountId, pageId), overlaysJson);
   await putJson(args.env, accountPageSourceKey(accountId, pageId), source);
@@ -343,6 +378,23 @@ export async function readAccountPage(args: {
   if (source.isTemplate) sourceInvalid([accountPageSourceKey(args.accountId, args.pageId)]);
   const runtime = await readRequiredPageRuntime({ ...args, source });
   return { source, ...runtime };
+}
+
+export async function readAccountPageRecord(args: {
+  env: Env;
+  accountId: string;
+  pageId: string;
+}): Promise<
+  | { source: Extract<AccountPageSource, { isTemplate: false }>; files: PageGeneratedFiles; overlaysJson: PageServingOverlays; serveState: PageServeState }
+  | { source: Extract<AccountPageSource, { isTemplate: true }>; files: PageGeneratedFiles }
+  | null
+> {
+  const source = await readAccountPageSource(args);
+  if (!source) return null;
+  if (source.isTemplate) {
+    return { source, files: await readRequiredPageFiles(args) };
+  }
+  return { source, ...(await readRequiredPageRuntime({ ...args, source })) };
 }
 
 export async function publishAccountPage(args: {
@@ -460,13 +512,15 @@ export async function deleteAccountPageSource(args: {
   const accountId = assertAccountId(args.accountId);
   const pageId = normalizePageId(args.pageId);
   if (!pageId) throw new PageOperationError({ kind: 'VALIDATION', reasonKey: 'tokyo.errors.page.invalidPageId' });
-  const page = await readAccountPage({ env: args.env, accountId, pageId });
+  const page = await readAccountPageRecord({ env: args.env, accountId, pageId });
   if (!page) return { existed: false };
-  if (page.serveState.published) {
+  if ('serveState' in page && page.serveState.published) {
     throw new PageOperationError({ kind: 'DENY', reasonKey: 'tokyo.errors.page.deletePublished' });
   }
-  const locales = [page.source.baseLocale, ...Object.keys(page.overlaysJson)];
+  const locales = 'overlaysJson' in page ? [page.source.baseLocale, ...Object.keys(page.overlaysJson)] : [];
   await deletePrefix(args.env, `${accountPageRoot(accountId, pageId)}/`);
-  await purgePagePublicCache({ env: args.env, accountId, pageId, locales });
+  if ('overlaysJson' in page) {
+    await purgePagePublicCache({ env: args.env, accountId, pageId, locales });
+  }
   return { existed: true };
 }

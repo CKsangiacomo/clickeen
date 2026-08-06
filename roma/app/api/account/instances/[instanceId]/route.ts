@@ -2,8 +2,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import {
   deleteAccountInstanceFromTokyo,
   listTokyoWidgetDefinitions,
+  loadTokyoAccountInstancePublicPackage,
+  loadTokyoAccountInstanceSourceSnapshot,
   saveAccountInstanceInTokyo,
 } from '@roma/lib/account-instance-direct';
+import { isRecord } from '@clickeen/ck-contracts';
+import { parseCatalogPresentation } from '@clickeen/ck-contracts/catalog';
 import { pageIdsPlacingInstance } from '@roma/lib/account-page-contract';
 import { listAccountPageSources } from '@roma/lib/account-pages';
 import { materializeAccountInstanceSourceArtifacts } from '@roma/lib/account-instance-source-artifacts';
@@ -43,6 +47,96 @@ function routeFailureResponse(
   );
 }
 
+export async function PATCH(request: NextRequest, context: RouteContext) {
+  const current = await resolveCurrentAccountRouteContext({ request, minRole: 'editor' });
+  if (!current.ok) return current.response;
+  const accountId = current.value.authzPayload.accountPublicId;
+  if (accountId !== 'CLICKEEN') {
+    return withSession(
+      request,
+      NextResponse.json(
+        { error: { kind: 'DENY', reasonKey: 'coreui.errors.auth.accountForbidden' } },
+        { status: 403 },
+      ),
+      current.value.setCookies,
+    );
+  }
+  const instanceId = await requireInstanceIdParam(context, { mode: 'normalized' });
+  if (typeof instanceId !== 'string') {
+    return withSession(
+      request,
+      NextResponse.json({ error: instanceId.error }, { status: instanceId.status }),
+      current.value.setCookies,
+    );
+  }
+  const body = await readJsonPayloadOrValidation<unknown>(request);
+  if (!body.ok) {
+    return withSession(
+      request,
+      NextResponse.json({ error: body.error }, { status: body.status }),
+      current.value.setCookies,
+    );
+  }
+  const catalogPresentation = isRecord(body.payload) &&
+    Object.keys(body.payload).length === 1
+    ? parseCatalogPresentation(body.payload.catalogPresentation)
+    : null;
+  if (!catalogPresentation) {
+    return withSession(
+      request,
+      NextResponse.json(
+        { error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.invalid' } },
+        { status: 422 },
+      ),
+      current.value.setCookies,
+    );
+  }
+  const source = await loadTokyoAccountInstanceSourceSnapshot({
+    accountId,
+    instanceId,
+    accountCapsule: current.value.authzToken,
+    requestId: current.value.requestId,
+  });
+  if (!source.ok) return routeFailureResponse(request, source, current.value.setCookies);
+  if (!source.value.row.isTemplate) {
+    return withSession(
+      request,
+      NextResponse.json(
+        { error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.instance.templateMismatch' } },
+        { status: 422 },
+      ),
+      current.value.setCookies,
+    );
+  }
+  const packageResult = await loadTokyoAccountInstancePublicPackage({
+    accountId,
+    instanceId,
+    accountCapsule: current.value.authzToken,
+    requestId: current.value.requestId,
+  });
+  if (!packageResult.ok) {
+    return routeFailureResponse(request, packageResult, current.value.setCookies);
+  }
+  const saved = await saveAccountInstanceInTokyo({
+    accountId,
+    instanceId,
+    widgetType: source.value.row.widgetType,
+    isTemplate: true,
+    catalogPresentation,
+    config: source.value.config,
+    content: source.value.content,
+    publicPackage: packageResult.value.publicPackage,
+    accountCapsule: current.value.authzToken,
+    requestId: current.value.requestId,
+  });
+  if (!saved.ok) return routeFailureResponse(request, saved, current.value.setCookies);
+  return withSession(
+    request,
+    NextResponse.json({ ok: true, templateId: instanceId, catalogPresentation }),
+    current.value.setCookies,
+  );
+}
+
 export async function PUT(request: NextRequest, context: RouteContext) {
   const current = await resolveCurrentAccountRouteContext({ request, minRole: 'editor' });
   if (!current.ok) return current.response;
@@ -58,6 +152,7 @@ export async function PUT(request: NextRequest, context: RouteContext) {
   }
   const bodyResult = await readJsonPayloadOrValidation<{
     widgetType?: string;
+    isTemplate?: unknown;
     config?: Record<string, unknown>;
     displayName?: string | null;
     publicPackage?: {
@@ -76,6 +171,7 @@ export async function PUT(request: NextRequest, context: RouteContext) {
   const body = bodyResult.payload;
 
   const widgetType = typeof body?.widgetType === 'string' ? body.widgetType.trim() : '';
+  const isTemplate = body?.isTemplate;
   const config = body?.config;
   const publicPackage = body?.publicPackage;
   const displayName =
@@ -88,6 +184,7 @@ export async function PUT(request: NextRequest, context: RouteContext) {
       : undefined;
   if (
     !widgetType ||
+    (isTemplate !== true && isTemplate !== false) ||
     !config ||
     typeof config !== 'object' ||
     Array.isArray(config) ||
@@ -120,31 +217,52 @@ export async function PUT(request: NextRequest, context: RouteContext) {
     );
   }
 
-  const accountLocales = await loadCurrentAccountLocalesState({
-    accessToken: current.value.accessToken,
-    accountId: current.value.authzPayload.accountId,
+  const savedSource = await loadTokyoAccountInstanceSourceSnapshot({
+    accountId,
+    instanceId,
+    accountCapsule: current.value.authzToken,
     requestId: current.value.requestId,
   });
-  if (!accountLocales.ok) {
+  if (!savedSource.ok) return routeFailureResponse(request, savedSource, current.value.setCookies);
+  if (savedSource.value.row.isTemplate !== isTemplate) {
     return withSession(
       request,
       NextResponse.json(
-        accountLocales.payload ?? {
-          error: {
-            kind: accountLocales.status === 401 ? 'AUTH' : 'UPSTREAM_UNAVAILABLE',
-            reasonKey:
-              accountLocales.status === 401
-                ? 'coreui.errors.auth.required'
-                : 'coreui.errors.auth.contextUnavailable',
-            detail: accountLocales.detail,
-          },
-        },
-        { status: accountLocales.status },
+        { error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.instance.templateMismatch' } },
+        { status: 422 },
       ),
       current.value.setCookies,
     );
   }
-  const baseLocale = accountLocales.localePolicy.baseLocale;
+
+  let baseLocale: string | undefined;
+  if (!isTemplate) {
+    const accountLocales = await loadCurrentAccountLocalesState({
+      accessToken: current.value.accessToken,
+      accountId: current.value.authzPayload.accountId,
+      requestId: current.value.requestId,
+    });
+    if (!accountLocales.ok) {
+      return withSession(
+        request,
+        NextResponse.json(
+          accountLocales.payload ?? {
+            error: {
+              kind: accountLocales.status === 401 ? 'AUTH' : 'UPSTREAM_UNAVAILABLE',
+              reasonKey:
+                accountLocales.status === 401
+                  ? 'coreui.errors.auth.required'
+                  : 'coreui.errors.auth.contextUnavailable',
+              detail: accountLocales.detail,
+            },
+          },
+          { status: accountLocales.status },
+        ),
+        current.value.setCookies,
+      );
+    }
+    baseLocale = accountLocales.localePolicy.baseLocale;
+  }
 
   const widgetDefinitions = await listTokyoWidgetDefinitions({
     accountId,
@@ -198,7 +316,11 @@ export async function PUT(request: NextRequest, context: RouteContext) {
     accountId,
     instanceId,
     widgetType,
-    baseLocale,
+    isTemplate,
+    ...(baseLocale ? { baseLocale } : {}),
+    ...(isTemplate && savedSource.value.row.catalogPresentation
+      ? { catalogPresentation: savedSource.value.row.catalogPresentation }
+      : {}),
     config: sourceArtifacts.value.config,
     content: sourceArtifacts.value.content,
     publicPackage: {

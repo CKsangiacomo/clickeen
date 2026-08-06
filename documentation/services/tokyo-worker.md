@@ -87,6 +87,7 @@ Tokyo-worker supports the asset operations Roma calls:
 - list account asset inventory
 - resolve account asset references
 - delete one exact account asset reference
+- copy selected `CLICKEEN` Catalog assets into Roma's authenticated current account
 - return storage usage facts from the same account asset authority
 
 Accepted product law adds one account-management operation: after a downgrade
@@ -350,13 +351,34 @@ Current internal route families:
 | `/__internal/pages/{pageId}/rename` | `POST` | change only `source.json.displayName` |
 | `/__internal/pages/{pageId}/translations/{locale}` | `GET`, `PUT` | read/write one customer-authorized Page metadata overlay while preserving serving state |
 | `/__internal/pages/{pageId}/{publish|unpublish}` | `POST` | change Page publication state without generation or translation |
+| `/__internal/catalog/widgets` and `/__internal/catalog/widgets/{templateId}` | `GET` | list/open exact `CLICKEEN` Widget templates for Roma Catalog |
+| `/__internal/catalog/pages` and `/__internal/catalog/pages/{pageId}` | `GET` | list/open exact `CLICKEEN` Page templates for Roma Catalog |
 | `/__internal/translations/{instance|page}/{targetId}/{locale}` | `PUT` | Translation Agent write bound to the exact granted target and locale |
 | `/__internal/accounts/{accountPublicId}/widget-defaults` | `GET`, `POST`, `PUT` | read/create/write account widget defaults |
 | `/__internal/assets/upload` | `POST` | upload account asset bytes |
+| `/__internal/assets/catalog-copy` | `POST` | copy fixed-owner `CLICKEEN` Catalog assets into the capsule-bound account |
 | `/__internal/assets/account/{accountPublicId}` | `GET` | list account asset metadata |
 | `/__internal/assets/account/{accountPublicId}/usage` | `GET` | account asset usage facts |
 | `/__internal/assets/account/{accountPublicId}/resolve` | `POST` | resolve account asset references |
 | `/__internal/assets/account/{accountPublicId}/asset/{assetRef}` | `DELETE` | delete exact account asset |
+
+Catalog read routes accept no owner coordinate. Tokyo fixes the storage owner
+to `CLICKEEN`, returns only records whose saved discriminator is
+`isTemplate: true`, and requires complete Catalog presentation values. The
+routes have no create, update, delete, publish, translation, or arbitrary
+cross-account operation. The caller's Roma account capsule authorizes product
+access; it does not become the Catalog storage owner.
+
+Catalog copy stays inside the account asset domain. Tokyo requires the
+`roma.edge` service identity and an editor-or-higher account capsule whose
+account equals `x-account-id`. Request asset references are the account-local
+refs stored in template config. Tokyo fixes their owner to exact account
+`CLICKEEN`; no owner coordinate is accepted. Tokyo reads
+the existing source files and metadata, checks every per-file upload limit and
+the full destination storage limit before the first write, chooses unique
+destination filenames without overwriting, and writes source `promotion`.
+Success returns exact local-ref mappings for draft rewriting. A later write failure returns an
+error and the mappings already completed, never full success.
 
 Health route:
 

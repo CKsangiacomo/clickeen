@@ -56,6 +56,7 @@ async function run(): Promise<void> {
           }
           return Response.json({
             widgetType: 'faq',
+            isTemplate: false,
             source: {
               content: {
                 fields: {

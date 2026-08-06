@@ -16,6 +16,7 @@ export async function resolveDevstudioSession(request, env) {
       return {
         ok: true,
         accountId: bootstrap.accountId,
+        accessToken,
         setCookies: sessionCookieHeaders(request, {
           accountCapsule: bootstrap.accountCapsule,
         }),
@@ -74,6 +75,7 @@ export async function resolveDevstudioSession(request, env) {
   return {
     ok: true,
     accountId: bootstrap.accountId,
+    accessToken: refreshed.accessToken,
     setCookies,
   };
 }

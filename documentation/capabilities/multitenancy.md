@@ -265,15 +265,27 @@ Invariant:
 widgets.instances.max >= instances.published.max
 ```
 
-The Widgets catalog is not tier-filtered. Tier limits do not hide widget types
-and do not create disabled Create/Duplicate controls in the Widgets list.
-Create and duplicate instance-count limits are enforced at command time. Publish
-limits are enforced at command time. Over-tier Create, Duplicate, and Publish
-return HTTP 402 `UPGRADE_REQUIRED`; missing or malformed policy limits are Roma
-policy contract failures, not unlimited usage.
+The Widget Catalog is not tier-filtered. Tier limits do not hide CLICKEEN-owned
+template cards. Creating an ordinary Instance from a Catalog or account
+template, creating a blank Instance, and duplicating an Instance all use the
+same command-time instance-count limit. Publish uses its existing command-time
+limit. Over-tier Create, Duplicate, Use template, and Publish commands return
+HTTP 402 `UPGRADE_REQUIRED`; missing or malformed policy limits are Roma policy
+contract failures, not unlimited usage.
 
 Tier values are read from the matrix. Do not restate commercial package prose
 here unless it maps to exact entitlement keys.
+
+## Templates and Catalog ownership
+
+Widget templates count under `widgets.instances.max`; Page templates count
+under `pages.max`. They are normal saved objects owned by one account and carry
+`isTemplate: true`. **My templates** reads the current account. The customer
+Widget and Page Catalogs always read templates owned by the exact `CLICKEEN`
+account and never infer Catalog membership from widget type, tier, or a second
+registry. Customer Catalog routes are read-only. DevStudio manages CLICKEEN
+template source and presentation through Roma, which remains the account
+authority and writes through Tokyo-worker.
 
 Operator warning: `packages/ck-policy/src/registry.ts` currently marks
 `embed.seoGeo.enabled` as `enforced`, but runtime evidence does not prove an

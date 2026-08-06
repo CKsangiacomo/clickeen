@@ -153,7 +153,7 @@ export async function tryHandleClkLiveStaticRoutes(
     accountId: parsed.accountId,
     instanceId: parsed.instanceId,
   });
-  if (!pointer.ok || pointer.value.publishStatus !== 'published') return respond(notFound());
+  if (!pointer.ok || pointer.value.isTemplate || pointer.value.publishStatus !== 'published') return respond(notFound());
 
   const ready = await verifyInstancePublicPackageReady({
     env,

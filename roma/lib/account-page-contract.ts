@@ -1,4 +1,5 @@
 import { isRecord } from '@clickeen/ck-contracts';
+import { parseCatalogPresentation } from '@clickeen/ck-contracts/catalog';
 import type {
   AccountPageSource,
   PagePlacement,
@@ -64,7 +65,13 @@ export function parseAccountPageSource(raw: unknown, expectedPageId?: string): A
   if (new Set(exactPlacements.map((entry) => entry.instanceId)).size !== exactPlacements.length) return null;
 
   if (raw.isTemplate) {
-    if (!hasExactKeys(raw, ['pageId', 'displayName', 'isTemplate', 'values', 'robots', 'placements'])) return null;
+    const hasPresentation = Object.prototype.hasOwnProperty.call(raw, 'catalogPresentation');
+    if (!hasExactKeys(raw, [
+      'pageId', 'displayName', 'isTemplate', 'values', 'robots', 'placements',
+      ...(hasPresentation ? ['catalogPresentation'] : []),
+    ])) return null;
+    const catalogPresentation = hasPresentation ? parseCatalogPresentation(raw.catalogPresentation) : null;
+    if (hasPresentation && !catalogPresentation) return null;
     return {
       pageId: raw.pageId,
       displayName: raw.displayName,
@@ -72,6 +79,7 @@ export function parseAccountPageSource(raw: unknown, expectedPageId?: string): A
       values,
       robots: raw.robots,
       placements: exactPlacements,
+      ...(catalogPresentation ? { catalogPresentation } : {}),
     };
   }
 

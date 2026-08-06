@@ -121,6 +121,7 @@ export function ToolDrawer({
   translatedLocales,
   savedTranslationsLoading,
   savedTranslationsError,
+  isTemplate,
 }: {
   id: string;
   compactOpen: boolean;
@@ -134,6 +135,7 @@ export function ToolDrawer({
   translatedLocales: TranslatedLocalesData | null;
   savedTranslationsLoading: boolean;
   savedTranslationsError: string | null;
+  isTemplate: boolean;
 }) {
   const session = useWidgetSession();
   const compiled = session.compiled;
@@ -172,6 +174,12 @@ export function ToolDrawer({
   }, [compiled?.widgetname, compiled?.panels]);
 
   useEffect(() => {
+    if (!isTemplate || activePanel !== 'translations') return;
+    const nextPanel = compiled?.panels?.find((panel) => panel.id !== 'translations')?.id ?? 'content';
+    setActivePanel(nextPanel as PanelId);
+  }, [activePanel, compiled?.panels, isTemplate]);
+
+  useEffect(() => {
     onPreviewModeChange(mode === 'manual' && activePanel === 'translations' ? 'translations' : 'editing');
   }, [activePanel, mode, onPreviewModeChange]);
 
@@ -190,10 +198,10 @@ export function ToolDrawer({
     }
     const availableIds = new Set(compiled.panels.map((panel) => panel.id));
     return DEFAULT_PANELS.filter((panel) => {
-      if (panel.id === 'translations') return true;
+      if (panel.id === 'translations') return !isTemplate;
       return availableIds.has(panel.id);
     });
-  }, [compiled?.panels]);
+  }, [compiled?.panels, isTemplate]);
   const activePanelHtml = panelsById[activePanel]?.html ?? null;
   const alertBorderColor = '1px solid color-mix(in oklab, var(--role-error), transparent 55%)';
   const alertBackground = 'color-mix(in oklab, var(--color-system-red-5), transparent 85%)';

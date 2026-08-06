@@ -15,6 +15,7 @@ import {
   markPagesReferencingInstanceNeedsUpdate,
   publishAccountPage,
   readAccountPage,
+  readAccountPageRecord,
   readAccountPageLocaleOverlay,
   renameAccountPage,
   saveAccountPageSource,
@@ -98,6 +99,7 @@ async function putReferencedInstance(env: any): Promise<void> {
     widgetCode: 'FAQ',
     widgetType: 'faq',
     displayName: 'FAQ',
+    isTemplate: false,
     config: {},
     baseLocale: 'en',
     createdAt: updatedAt,
@@ -221,6 +223,91 @@ assert.deepEqual(await listAccountPageInventory({ env: store.env, accountId }), 
     savedLocales: ['en', 'it'],
   }],
 });
+
+const templateSource = parseAccountPageSource({
+  pageId: '8UZXTP3TOI',
+  displayName: 'Blank page template',
+  isTemplate: true,
+  values: { title: 'Blank page' },
+  robots: 'noindex-follow',
+  placements: [],
+  catalogPresentation: {
+    thumbnailAssetRef: '/assets/account/CLICKEEN/blank.png',
+    description: 'Start with a blank page.',
+    category: 'Essentials',
+    displayOrder: 0,
+  },
+});
+assert.ok(templateSource?.isTemplate);
+const templateCreated = await createAccountPageSource({
+  env: store.env,
+  accountId,
+  pageId: templateSource.pageId,
+  source: templateSource,
+  files,
+  overlaysJson: undefined,
+});
+assert.deepEqual(templateCreated, { source: templateSource, files });
+const templateRoot = `accounts/${accountId}/pages/${templateSource.pageId}`;
+assert.deepEqual(
+  [...store.objects.keys()].filter((key) => key.startsWith(`${templateRoot}/`)).sort(),
+  [
+    `${templateRoot}/index.html`,
+    `${templateRoot}/runtime.js`,
+    `${templateRoot}/source.json`,
+    `${templateRoot}/styles.css`,
+  ],
+  'Page templates must store only source plus the exact three generated files',
+);
+assert.deepEqual(await readAccountPageRecord({ env: store.env, accountId, pageId: templateSource.pageId }), templateCreated);
+await assert.rejects(
+  readAccountPage({ env: store.env, accountId, pageId: templateSource.pageId }),
+  (error: unknown) => error instanceof PageOperationError && error.reasonKey === 'tokyo.errors.page.sourceInvalid',
+  'ordinary Page runtime reads must reject templates',
+);
+assert.deepEqual(await listAccountPageInventory({ env: store.env, accountId }), {
+  accountId,
+  sources: [source, templateSource],
+  pages: [{
+    source,
+    serveState: { published: false, needsUpdate: false },
+    savedLocales: ['en', 'it'],
+  }],
+});
+const renamedTemplate = { ...templateSource, displayName: 'Renamed blank page template' };
+await renameAccountPage({
+  env: store.env,
+  accountId,
+  pageId: templateSource.pageId,
+  displayName: renamedTemplate.displayName,
+});
+assert.deepEqual(
+  await saveAccountPageSource({
+    env: store.env,
+    accountId,
+    pageId: templateSource.pageId,
+    source: renamedTemplate,
+    files: { ...files, stylesCss: '.page {}' },
+    overlaysJson: undefined,
+    operation: 'save',
+  }),
+  { source: renamedTemplate, files: { ...files, stylesCss: '.page {}' } },
+);
+await assert.rejects(
+  saveAccountPageSource({
+    env: store.env,
+    accountId,
+    pageId: templateSource.pageId,
+    source: { ...source, pageId: templateSource.pageId },
+    files,
+    overlaysJson,
+    operation: 'save',
+  }),
+  (error: unknown) => error instanceof PageOperationError && error.reasonKey === 'tokyo.errors.page.sourceInvalid',
+  'Page Save must never convert a template into an ordinary Page',
+);
+assert.deepEqual(await deleteAccountPageSource({ env: store.env, accountId, pageId: templateSource.pageId }), { existed: true });
+assert.equal([...store.objects.keys()].some((key) => key.startsWith(`${templateRoot}/`)), false);
 
 const unchangedArtifacts = new Map(
   [...store.objects.entries()].filter(([key]) => key.startsWith(`${pageRoot}/`) && key !== `${pageRoot}/source.json`),

@@ -169,6 +169,13 @@ accounts/{accountPublicId}/
       runtime.js
 ```
 
+Ordinary Instances and Pages have `isTemplate: false`, locale/publication
+state, and may be served. Templates use the same Instance or Page folder and
+the same three files with `isTemplate: true`, but have no `baseLocale`, locale
+overlays, publication state, or public route. A Catalog is not another storage
+tree: customer **My templates** reads the current account's templates, while
+the read-only Widget/Page Catalog reads the exact `CLICKEEN` account templates.
+
 The non-account roots are git-authored deploy artifacts:
 
 - `product/widgets/**` for widget software;

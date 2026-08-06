@@ -54,11 +54,18 @@ export async function POST(request: NextRequest) {
   const source = parseAccountPageSource(bodyResult.payload?.source);
   const files = parseGeneratedFiles(bodyResult.payload?.files);
   const overlaysJson = bodyResult.payload?.overlaysJson;
-  if (!source || source.isTemplate || !files || !isRecord(overlaysJson)) {
+  if (
+    !source ||
+    !files ||
+    (!source.isTemplate && !isRecord(overlaysJson))
+  ) {
     return withSession(request, NextResponse.json({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.page.sourceInvalid' } }, { status: 422 }), current.value.setCookies);
   }
 
   const accountId = current.value.authzPayload.accountPublicId;
+  if (source.isTemplate && accountId === 'CLICKEEN' && !source.catalogPresentation) {
+    return withSession(request, NextResponse.json({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.page.sourceInvalid' } }, { status: 422 }), current.value.setCookies);
+  }
   const existing = await listAccountPageSources({ accountId, accountCapsule: current.value.authzToken, requestId: current.value.requestId });
   if (!existing.ok) {
     return withSession(request, NextResponse.json({ error: existing.error }, { status: existing.status }), current.value.setCookies);
@@ -76,31 +83,33 @@ export async function POST(request: NextRequest) {
     }, { status: 402 }), current.value.setCookies);
   }
 
-  const locales = await loadCurrentAccountLocalesState({
-    accessToken: current.value.accessToken,
-    accountId: current.value.authzPayload.accountId,
-    requestId: current.value.requestId,
-  });
-  if (!locales.ok) {
-    return withSession(request, NextResponse.json(locales.payload ?? {
-      error: { kind: 'UPSTREAM_UNAVAILABLE', reasonKey: 'coreui.errors.auth.contextUnavailable', detail: locales.detail },
-    }, { status: locales.status }), current.value.setCookies);
-  }
-  if (source.baseLocale !== locales.localePolicy.baseLocale) {
-    return withSession(
-      request,
-      NextResponse.json(
-        { error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.page.sourceInvalid' } },
-        { status: 422 },
-      ),
-      current.value.setCookies,
-    );
+  if (!source.isTemplate) {
+    const locales = await loadCurrentAccountLocalesState({
+      accessToken: current.value.accessToken,
+      accountId: current.value.authzPayload.accountId,
+      requestId: current.value.requestId,
+    });
+    if (!locales.ok) {
+      return withSession(request, NextResponse.json(locales.payload ?? {
+        error: { kind: 'UPSTREAM_UNAVAILABLE', reasonKey: 'coreui.errors.auth.contextUnavailable', detail: locales.detail },
+      }, { status: locales.status }), current.value.setCookies);
+    }
+    if (source.baseLocale !== locales.localePolicy.baseLocale) {
+      return withSession(
+        request,
+        NextResponse.json(
+          { error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.page.sourceInvalid' } },
+          { status: 422 },
+        ),
+        current.value.setCookies,
+      );
+    }
   }
   const created = await createAccountPage({
     accountId,
     source,
     files,
-    overlaysJson: overlaysJson as PageServingOverlays,
+    ...(!source.isTemplate ? { overlaysJson: overlaysJson as PageServingOverlays } : {}),
     accountCapsule: current.value.authzToken,
     requestId: current.value.requestId,
   });

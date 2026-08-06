@@ -1,5 +1,6 @@
 import type { Env } from '../../types';
 import { normalizeLocale } from '../../asset-utils';
+import type { CatalogPresentation } from '@clickeen/ck-contracts/catalog';
 import { isCompactInstanceId } from '@clickeen/ck-contracts/overlay-identity';
 import {
   accountInstanceConfigKey,
@@ -45,6 +46,9 @@ export function buildLocaleOverlayFields(args: {
 }): {
   fields: SavedTextField[];
 } {
+  if (args.configDoc.isTemplate) {
+    throw new Error('tokyo.translation.template_forbidden');
+  }
   const widgetDefinition = getWidgetDefinition(args.configDoc.widgetType);
   if (
     !widgetDefinition?.editableFields ||
@@ -93,19 +97,31 @@ export function savedTextFieldsFromContentDocument(
 
 function toAccountInstanceSourcePointer(args: {
   configDoc: AccountInstanceConfigDocument;
-  publishStatus: InstanceServeState;
+  publishStatus?: InstanceServeState;
   updatedAt: string;
 }): AccountInstanceSourcePointer {
   const { configDoc } = args;
-  return {
-        id: configDoc.id,
+  const identity = {
+    id: configDoc.id,
     accountId: configDoc.accountId,
     widgetCode: configDoc.widgetCode,
     widgetType: configDoc.widgetType,
     displayName: configDoc.displayName,
+    updatedAt: args.updatedAt,
+  };
+  if (configDoc.isTemplate) {
+    return {
+      ...identity,
+      isTemplate: true,
+      ...(configDoc.catalogPresentation ? { catalogPresentation: configDoc.catalogPresentation } : {}),
+    };
+  }
+  if (!args.publishStatus) throw new Error('coreui.errors.instance.serveStateMissing');
+  return {
+    ...identity,
+    isTemplate: false,
     baseLocale: configDoc.baseLocale,
     publishStatus: args.publishStatus,
-    updatedAt: args.updatedAt,
   };
 }
 
@@ -114,18 +130,28 @@ function instanceFromConfigAndContent(args: {
   content: AccountInstanceContentDocument;
 }): AccountInstanceDocument {
   void args.content;
-  return {
-        id: args.configDoc.id,
+  const identity = {
+    id: args.configDoc.id,
     accountId: args.configDoc.accountId,
     widgetCode: args.configDoc.widgetCode,
     widgetType: args.configDoc.widgetType,
     displayName: args.configDoc.displayName,
     config: args.configDoc.config,
-    baseLocale: args.configDoc.baseLocale,
-    publishStatus: 'unpublished',
     createdAt: args.configDoc.createdAt,
     updatedAt: args.configDoc.updatedAt,
   };
+  return args.configDoc.isTemplate
+    ? {
+        ...identity,
+        isTemplate: true,
+        ...(args.configDoc.catalogPresentation ? { catalogPresentation: args.configDoc.catalogPresentation } : {}),
+      }
+    : {
+        ...identity,
+        isTemplate: false,
+        baseLocale: args.configDoc.baseLocale,
+        publishStatus: 'unpublished',
+      };
 }
 
 export async function readConfigDocumentByLocation(args: {
@@ -208,7 +234,9 @@ export async function writeAccountInstanceSource(args: {
   config: Record<string, unknown>;
   content: AccountInstanceContentDocument;
   displayName?: unknown;
-  baseLocale: string;
+  isTemplate: boolean;
+  baseLocale?: string;
+  catalogPresentation?: CatalogPresentation;
 }): Promise<{ pointer: AccountInstanceSourcePointer }> {
   const instanceId = normalizeStorageId(args.instanceId);
   const accountId = normalizeStorageId(args.accountId);
@@ -228,8 +256,14 @@ export async function writeAccountInstanceSource(args: {
     widgetCode,
     instanceId,
   });
-  const baseLocale = normalizeLocale(args.baseLocale);
-  if (!baseLocale) throw new Error('coreui.errors.instance.baseLocaleMissing');
+  if (existingConfig && existingConfig.isTemplate !== args.isTemplate) {
+    throw new Error('coreui.errors.instance.templateMismatch');
+  }
+  const baseLocale = args.isTemplate ? null : normalizeLocale(args.baseLocale);
+  if (!args.isTemplate && !baseLocale) throw new Error('coreui.errors.instance.baseLocaleMissing');
+  if (!args.isTemplate && args.catalogPresentation) {
+    throw new Error('coreui.errors.instance.config.invalid');
+  }
   const content = args.content;
   if (
     content.id !== instanceId ||
@@ -238,20 +272,26 @@ export async function writeAccountInstanceSource(args: {
   ) {
     throw new Error('coreui.errors.instance.content.invalid');
   }
-  const configDoc: AccountInstanceConfigDocument = {
+  const identity = {
     id: instanceId,
     accountId,
     widgetCode,
     widgetType,
     displayName: normalizeDisplayName(args.displayName),
     config: args.config,
-    baseLocale,
     createdAt: existingConfig?.createdAt ?? now,
     updatedAt: now,
   };
+  const configDoc: AccountInstanceConfigDocument = args.isTemplate
+    ? {
+        ...identity,
+        isTemplate: true,
+        ...(args.catalogPresentation ? { catalogPresentation: args.catalogPresentation } : {}),
+      }
+    : { ...identity, isTemplate: false, baseLocale: baseLocale! };
   await putJson(args.env, accountInstanceContentKey(accountId, widgetCode, instanceId), content);
   await putJson(args.env, accountInstanceConfigKey(accountId, widgetCode, instanceId), configDoc);
-  if (!existingConfig) {
+  if (!existingConfig && !configDoc.isTemplate) {
     await createInstanceServeState({
       env: args.env,
       accountId,
@@ -263,9 +303,13 @@ export async function writeAccountInstanceSource(args: {
   return {
     pointer: toAccountInstanceSourcePointer({
       configDoc,
-      publishStatus: existingConfig
-        ? await readInstanceServeState({ env: args.env, accountId, instanceId, widgetCode })
-        : 'unpublished',
+      ...(configDoc.isTemplate
+        ? {}
+        : {
+            publishStatus: existingConfig
+              ? await readInstanceServeState({ env: args.env, accountId, instanceId, widgetCode })
+              : 'unpublished' as const,
+          }),
       updatedAt: now,
     }),
   };
@@ -295,12 +339,14 @@ export async function readAccountInstanceSourcePointer(args: {
   if (requestedWidgetType && configDoc.widgetType !== requestedWidgetType) {
     return { ok: false, kind: 'NOT_FOUND', reasonKey: 'coreui.errors.instance.notFound' };
   }
-  const publishStatus = await readInstanceServeState({
-    env: args.env,
-    accountId,
-    instanceId,
-    widgetCode: configDoc.widgetCode,
-  });
+  const publishStatus = configDoc.isTemplate
+    ? undefined
+    : await readInstanceServeState({
+        env: args.env,
+        accountId,
+        instanceId,
+        widgetCode: configDoc.widgetCode,
+      });
   const pointer = toAccountInstanceSourcePointer({
     configDoc,
     publishStatus,
@@ -313,7 +359,6 @@ export async function readAccountInstanceSourcePointer(args: {
     ok: true,
     value: {
       ...pointer,
-      publishStatus,
       updatedAt: configDoc.updatedAt,
     },
   };
@@ -343,19 +388,19 @@ export async function readAccountInstanceDocument(args: {
   if (requestedWidgetType && instance.widgetType !== requestedWidgetType) {
     return { ok: false, kind: 'NOT_FOUND', reasonKey: 'coreui.errors.instance.notFound' };
   }
-  const publishStatus = await readInstanceServeState({
-    env: args.env,
-    accountId,
-    instanceId,
-    widgetCode: instance.widgetCode,
-  });
+  const publishStatus = instance.isTemplate
+    ? undefined
+    : await readInstanceServeState({
+        env: args.env,
+        accountId,
+        instanceId,
+        widgetCode: instance.widgetCode,
+      });
   return {
     ok: true,
-    value: {
-      ...instance,
-      publishStatus,
-      updatedAt: instance.updatedAt,
-    },
+    value: instance.isTemplate
+      ? instance
+      : { ...instance, publishStatus: publishStatus!, updatedAt: instance.updatedAt },
   };
 }
 

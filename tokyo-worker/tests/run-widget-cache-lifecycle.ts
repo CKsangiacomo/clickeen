@@ -97,6 +97,7 @@ try {
     displayName: 'Cards',
     config: {},
     content: { id: instanceId, accountId, widgetType: 'cards', fields: {}, updatedAt: new Date().toISOString() },
+    isTemplate: false,
     baseLocale: 'en',
     publicPackage,
   });
@@ -163,6 +164,7 @@ try {
     content: { id: instanceId, accountId, widgetType: 'cards', fields: {}, updatedAt: new Date().toISOString() },
     publicPackage: { ...publicPackage, stylesCss: '.cards{display:block}' },
     displayName: 'Cards',
+    isTemplate: false,
     baseLocale: 'en',
     hasDisplayName: true,
   } as const;

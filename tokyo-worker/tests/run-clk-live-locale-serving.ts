@@ -98,6 +98,7 @@ async function putPublishedSource(
     accountId,
     widgetCode: 'FAQ',
     widgetType: 'faq',
+    isTemplate: false,
     displayName: 'FAQ',
     config: {},
     baseLocale: 'en',

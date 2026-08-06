@@ -57,6 +57,12 @@ async function main() {
     values: { title: 'Template' },
     robots: 'noindex-follow',
     placements: [],
+    catalogPresentation: {
+      thumbnailAssetRef: '/assets/account/CLICKEEN/blank.png',
+      description: 'Start with a blank page.',
+      category: 'Essentials',
+      displayOrder: 0,
+    },
   } as const;
   assert.deepEqual(parseAccountPageSource(template), template);
   assert.equal(
@@ -109,7 +115,11 @@ async function main() {
     /if \(source\.baseLocale !== locales\.localePolicy\.baseLocale\)/,
     'Page create must validate the exact current base locale',
   );
-  assert.match(createRoute, /source,\s*files,\s*overlaysJson:/s, 'the browser-supplied Page source must pass unchanged to Tokyo');
+  assert.match(
+    createRoute,
+    /createAccountPage\(\{\s*accountId,\s*source,\s*files,/s,
+    'the browser-supplied Page source must pass unchanged to Tokyo',
+  );
   assert.match(
     createRoute,
     /NextResponse\.json\(\{ accountId: result\.value\.accountId, pages: result\.value\.pages \}\)/,
@@ -158,7 +168,8 @@ async function main() {
   assert.match(saveRoute, /pageAccess\(request, current, 'open_page'\)/);
   assert.match(saveRoute, /pageAccess\(request, current, 'save_page'\)/);
   assert.match(saveRoute, /pageAccess\(request, current, 'delete_page'\)/);
-  assert.match(pageClient, /body: \{ source: args\.source, files: args\.files, overlaysJson: args\.overlaysJson, operation: args\.operation \}/);
+  assert.match(pageClient, /body: \{\s*source: args\.source,\s*files: args\.files,/s);
+  assert.match(pageClient, /!args\.source\.isTemplate \? \{ overlaysJson: args\.overlaysJson \} : \{\}/);
   assert.match(pageClient, /typeof serveState\.needsUpdate !== 'boolean'/);
   assert.match(pageClient, /needsUpdate: serveState\.needsUpdate/);
   assert.doesNotMatch(pageClient, /needsUpdate:\s*false/);

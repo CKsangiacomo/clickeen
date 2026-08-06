@@ -102,6 +102,7 @@ export async function proxyAccountAssetJson(args: {
   path: string;
   body?: BodyInit;
   contentType?: string;
+  headers?: HeadersInit;
   passthroughSearchParams?: URLSearchParams;
   validateSuccessPayload?: (payload: unknown) => boolean;
 }): Promise<NextResponse> {
@@ -112,6 +113,7 @@ export async function proxyAccountAssetJson(args: {
       accountCapsule: args.context.accountCapsule,
       requestId: args.context.requestId,
       ...(args.contentType ? { contentType: args.contentType } : {}),
+      ...(args.headers ? { headers: args.headers } : {}),
     });
   } catch (error) {
     const detail = error instanceof Error ? error.message : String(error);

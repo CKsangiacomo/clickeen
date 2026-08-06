@@ -1,3 +1,5 @@
+import type { CatalogPresentation } from './catalog';
+
 export type PageRobots = 'index-follow' | 'noindex-follow';
 
 export type PageValues = {
@@ -30,6 +32,7 @@ export type AccountPageTemplate = {
   values: PageValues;
   robots: PageRobots;
   placements: PagePlacement[];
+  catalogPresentation?: CatalogPresentation;
   baseLocale?: never;
 };
 

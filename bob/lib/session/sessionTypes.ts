@@ -52,11 +52,13 @@ export type SessionMeta = {
   instanceId?: string;
   baseLocale?: string;
   widgetname?: string;
+  isTemplate: boolean;
   publishStatus?: 'published' | 'unpublished';
   label?: string;
   returnLabel?: string;
   contextMessage?: string;
   publicActions: PublicActions | null;
+  canSaveAsTemplate?: boolean;
   fontLibrary: AccountFontLibrary;
   translationSetup?: TranslationSetup | null;
 } | null;
@@ -83,6 +85,8 @@ export type EditorOpenMessage = {
   type: 'ck:open-editor';
   requestId?: string;
   widgetname: string;
+  isTemplate: boolean;
+  templateDraft?: true;
   baseLocale: string;
   compiled: CompiledWidget;
   instanceData?: Record<string, unknown> | null;
@@ -96,6 +100,7 @@ export type EditorOpenMessage = {
   returnLabel?: string;
   contextMessage?: string;
   publicActions?: PublicActions | null;
+  canSaveAsTemplate?: boolean;
   copilot?: CopilotRuntimeUi;
   translationSetup?: TranslationSetup | null;
 };
@@ -111,7 +116,8 @@ export type BobDirtyStateChangedMessage = {
 
 export type BobHostActionMessage = {
   type: 'bob:host-action';
-  action: 'open-navigation' | 'return' | 'copy-code';
+  action: 'open-navigation' | 'return' | 'copy-code' | 'use-template' | 'save-as-template';
+  templateName?: string;
 };
 
 export type BobOpenEditorAppliedMessage = {

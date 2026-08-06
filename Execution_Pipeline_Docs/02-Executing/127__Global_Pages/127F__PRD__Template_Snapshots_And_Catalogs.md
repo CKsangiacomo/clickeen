@@ -316,10 +316,11 @@ This widget includes images, SVGs, or videos.
 - **Copy assets in my assets folder** uses the existing Roma account-assets
   route and Tokyo asset authority to copy those source assets into the current
   account's **My assets**, then rewrites the unsaved working copy to those new
-  same-account asset references. The source owner is fixed to `CLICKEEN` by the
-  Catalog read, the destination comes from the authenticated Roma account, and
-  the existing `promotion` asset source identifies the copy. The client cannot
-  supply either account coordinate.
+  same-account asset references. The request and returned mappings use the same
+  account-local refs stored in Widget/Page config. The source owner is fixed to
+  `CLICKEEN` by the server, the destination comes from the authenticated Roma
+  account, and the existing `promotion` asset source identifies the copy. The
+  client cannot supply either account coordinate.
 - **Discard assets** copies nothing and removes those external asset references
   from the unsaved working copy. The corresponding asset-backed fields are
   empty; Clickeen does not invent replacement assets.
@@ -553,6 +554,22 @@ account; 127F does not install or remove an interim hardcoded Page card.
 14. Build the read-only Roma Catalog layout with left category navigation,
     client-side search/filtering, Dieter cards, and **Use template**. Do not add
     ranking, popularity, marketplace, or search infrastructure.
+
+## Pre-deploy product-data migration
+
+Pre-127F ordinary Widget configs do not contain the now-required
+`isTemplate` discriminator. Before deploying the strict reader:
+
+1. run the documented R2 preflight;
+2. inventory every existing
+   `accounts/*/instances/*/instance.config.json` object;
+3. explicitly add `isTemplate: false` to each ordinary pre-127F config through
+   the approved Cloudflare R2 operation path; and
+4. read every rewritten object back and verify the exact discriminator before
+   deploying code.
+
+This is a one-time explicit product-data migration. Do not add a runtime
+fallback, compatibility parser, or silent default.
 
 ## Product-data work
 

@@ -1,13 +1,13 @@
 'use client';
 
 import { collectConfigMediaAssetRefs, type ResolvedAccountAsset } from '@clickeen/ck-contracts';
-import type { AccountPage, PageLocaleOverlay } from '@clickeen/ck-contracts/pages';
+import type { AccountPage, AccountPageTemplate, PageLocaleOverlay } from '@clickeen/ck-contracts/pages';
 import { generatePage, type ExactLocaleOverlays, type GeneratePageOutput } from '@clickeen/ck-web-code-generator';
 import type { AccountFontLibrary } from '@clickeen/widget-shell';
 import { buildRuntimeTypographyData, collectFontAssetRefs } from '@clickeen/bob/web-code-context';
 import { parseResolvedAccountAsset } from '@roma/lib/account-asset-record';
 
-export type PageDraftSource = Omit<AccountPage, 'pageId'>;
+export type PageDraftSource = Omit<AccountPage, 'pageId'> | Omit<AccountPageTemplate, 'pageId'>;
 
 export type PagePlacementDraft = {
   placementId: string;

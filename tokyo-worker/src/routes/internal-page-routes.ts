@@ -7,7 +7,7 @@ import {
   PageOperationError,
   publishAccountPage,
   readAccountPageLocaleOverlay,
-  readAccountPage,
+  readAccountPageRecord,
   renameAccountPage,
   saveAccountPageSource,
   unpublishAccountPage,
@@ -190,7 +190,7 @@ export async function tryHandleInternalPageRoutes(args: TokyoRouteArgs): Promise
   if (authError) return respond(authError);
   try {
     if (req.method === 'GET') {
-      const page = await readAccountPage({ env, accountId, pageId });
+      const page = await readAccountPageRecord({ env, accountId, pageId });
       if (!page) throw new PageOperationError({ kind: 'NOT_FOUND', reasonKey: 'tokyo.errors.page.notFound' });
       return respond(json({ ok: true, accountId, pageId, ...page }));
     }

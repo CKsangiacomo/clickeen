@@ -226,11 +226,13 @@ export function Workspace({
   }, [generateFiles, instanceData]);
 
   useEffect(() => {
+    if (session.publicPackage) return;
     setGeneratedPublicPackage(generatedBasePackage);
-  }, [generatedBasePackage, setGeneratedPublicPackage]);
+  }, [generatedBasePackage, session.publicPackage, setGeneratedPublicPackage]);
 
   const previewPublicPackage = useMemo(() => {
     if (!generateFiles) return null;
+    if (previewMode === 'editing' && session.publicPackage) return session.publicPackage;
     if (savedTranslationPreviewBlocked) {
       return generatedBasePackage?.ok ? generatedBasePackage.publicPackage : null;
     }
@@ -239,7 +241,14 @@ export function Workspace({
     } catch {
       return null;
     }
-  }, [generateFiles, generatedBasePackage, resolvedPreviewInstanceData, savedTranslationPreviewBlocked]);
+  }, [
+    generateFiles,
+    generatedBasePackage,
+    previewMode,
+    resolvedPreviewInstanceData,
+    savedTranslationPreviewBlocked,
+    session.publicPackage,
+  ]);
   const hasWidget = Boolean(compiled && previewPublicPackage);
   const previewError =
     (sessionError?.source === 'generation' ? sessionError.message : null) ??

@@ -30,6 +30,7 @@ function BuilderShell() {
   const session = useWidgetSession();
   const chrome = useWidgetSessionChrome();
   const instanceId = chrome.meta?.instanceId ?? '';
+  const isTemplate = chrome.meta?.isTemplate === true;
   const baseLocale = chrome.meta?.baseLocale ?? '';
   const translationSetup = chrome.meta?.translationSetup ?? null;
   const [previewMode, setPreviewMode] = useState<'editing' | 'translations'>('editing');
@@ -41,7 +42,8 @@ function BuilderShell() {
   const savedOverlaysEnabled = Boolean(
     session.compiled &&
       instanceId &&
-      baseLocale,
+      baseLocale &&
+      !isTemplate,
   );
   const {
     translatedLocales,
@@ -126,6 +128,7 @@ function BuilderShell() {
             translatedLocales={translatedLocales}
             savedTranslationsLoading={savedTranslationReadState.loading}
             savedTranslationsError={savedTranslationReadState.error}
+            isTemplate={isTemplate}
           />
           {toolsOpen ? (
             <button

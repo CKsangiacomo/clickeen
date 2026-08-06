@@ -6,15 +6,33 @@ import type { AccountFontLibrary } from '@clickeen/widget-shell';
 import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { createDialogLifecycle, type DialogLifecycle } from '../../dieter/components/shared/dialog-lifecycle';
 import { resolveBobBaseUrl } from '../lib/env/bob';
 import { buildWidgetPublicActions, type PublicActions } from '../lib/public-actions';
+import {
+  composeConfigWithInstanceContent,
+  type AccountInstanceContentDocument,
+} from '../lib/account-instance-source-artifacts';
+import {
+  buildWidgetTemplateDraftRoute,
+  prepareCatalogTemplateDraft,
+  resolveWidgetTemplateDraftRequest,
+} from '../lib/widget-template-draft';
+import {
+  discardConfigMediaAssets,
+  parseCatalogAssetMappings,
+  rewriteConfigMediaAssetRefs,
+} from '../lib/catalog-asset-choice';
 import { useRomaAccountApi } from './account-api';
+import { CatalogAssetChoiceDialog } from './catalog-asset-choice-dialog';
 import { getWidgetEditorArtifact } from './widget-editor-artifact';
 import { useRomaAccountContext } from './roma-account-context';
 import { RomaUnsavedChangesDialog } from './roma-unsaved-changes-dialog';
 import { RomaUpsellDialog } from './roma-upsell-dialog';
 import { useRomaShellActions } from './roma-shell';
 import { PublicCodeDialog } from './public-code-dialog';
+import { loadRomaWidgetTemplates } from './use-roma-widget-templates';
+import { loadRomaWidgetsForAccount } from './use-roma-widgets';
 
 type BuilderDomainProps = {
   initialInstanceId?: string;
@@ -75,7 +93,8 @@ type BobUpsellMessage = {
 
 type BobHostActionMessage = {
   type: 'bob:host-action';
-  action?: 'open-navigation' | 'return' | 'copy-code' | string | null;
+  action?: 'open-navigation' | 'return' | 'copy-code' | 'use-template' | 'save-as-template' | string | null;
+  templateName?: string | null;
 };
 
 function resolveBobUpsellReason(reasonKey: string | null | undefined): string {
@@ -115,6 +134,8 @@ type BobOpenEditorMessage = {
   baseLocale: string;
   label: string;
   widgetname: string;
+  isTemplate: boolean;
+  templateDraft?: true;
   compiled: unknown;
   instanceData: Record<string, unknown>;
   publicPackage: {
@@ -127,6 +148,7 @@ type BobOpenEditorMessage = {
   returnLabel?: string;
   contextMessage?: string;
   publicActions: PublicActions | null;
+  canSaveAsTemplate?: boolean;
   policy?: unknown;
   copilot?: unknown;
   translationSetup?: {
@@ -142,6 +164,7 @@ type BuilderOpenResponse = {
   instanceId: string;
   displayName: string;
   widgetType: string;
+  isTemplate: boolean;
   config: Record<string, unknown>;
   publicPackage: {
     indexHtml: string;
@@ -151,6 +174,20 @@ type BuilderOpenResponse = {
   fontLibrary: AccountFontLibrary;
   publishStatus?: 'published' | 'unpublished';
   copilot?: unknown;
+};
+
+type WidgetCatalogOpenResponse = {
+  template: {
+    templateId: string;
+    templateName: string;
+    widgetType: string;
+    isTemplate: true;
+    source: {
+      config: Record<string, unknown>;
+      content: AccountInstanceContentDocument;
+    };
+    publicPackage: BuilderOpenResponse['publicPackage'];
+  };
 };
 
 type WidgetDefaultsResponse = {
@@ -428,10 +465,16 @@ export function BuilderDomain({
   const bobReadyRef = useRef(false);
   const openDispatchSeqRef = useRef(0);
   const bobAppliedInstanceIdRef = useRef('');
+  const bobAppliedIsTemplateRef = useRef(false);
+  const bobAppliedLabelRef = useRef('');
   const bobIsDirtyRef = useRef(false);
   const activeInstanceIdRef = useRef('');
   const suppressNextActiveOpenRef = useRef(false);
   const pendingDiscardActionRef = useRef<(() => void) | null>(null);
+  const catalogAssetChoiceResolverRef = useRef<{
+    resolve: (config: Record<string, unknown>) => void;
+    reject: (error: Error) => void;
+  } | null>(null);
   const allowNavigationRef = useRef(false);
   const allowPopStateRef = useRef(false);
   const [activeInstanceId, setActiveInstanceId] = useState(() => {
@@ -447,6 +490,16 @@ export function BuilderDomain({
   const [copyCodeOpen, setCopyCodeOpen] = useState(false);
   const [unsavedDialogOpen, setUnsavedDialogOpen] = useState(false);
   const [upsellReason, setUpsellReason] = useState<string | null>(null);
+  const [saveTemplateOpen, setSaveTemplateOpen] = useState(false);
+  const [createdTemplate, setCreatedTemplate] = useState<{ templateId: string; templateName: string } | null>(null);
+  const [catalogAssetChoice, setCatalogAssetChoice] = useState<{
+    config: Record<string, unknown>;
+    assetRefs: string[];
+  } | null>(null);
+  const [catalogAssetCopying, setCatalogAssetCopying] = useState(false);
+  const [catalogAssetError, setCatalogAssetError] = useState<string | null>(null);
+  const saveTemplateDialogRef = useRef<HTMLDialogElement>(null);
+  const saveTemplateLifecycleRef = useRef<DialogLifecycle | null>(null);
 
   const bobBaseUrl = useMemo(() => resolveBobBaseUrl(), []);
   const currentUrl = pathname;
@@ -454,7 +507,37 @@ export function BuilderDomain({
   const returnTo = useMemo(() => embedded ? '' : normalizeReturnTo(searchParams.get('returnTo')), [embedded, searchParams]);
   const newWidgetType = useMemo(() => String(searchParams.get('new') || '').trim().toLowerCase(), [searchParams]);
   const duplicateInstanceId = useMemo(() => String(searchParams.get('duplicate') || '').trim(), [searchParams]);
-  const hasDraftRequest = Boolean(!activeInstanceId && (newWidgetType || duplicateInstanceId));
+  const accountTemplateId = useMemo(() => String(searchParams.get('template') || '').trim(), [searchParams]);
+  const catalogTemplateId = useMemo(() => String(searchParams.get('catalogTemplate') || '').trim(), [searchParams]);
+  const templateDraftRequest = useMemo(() => resolveWidgetTemplateDraftRequest({
+    accountTemplateId,
+    catalogTemplateId,
+  }), [accountTemplateId, catalogTemplateId]);
+  const draftRequestCount = [newWidgetType, duplicateInstanceId, accountTemplateId, catalogTemplateId]
+    .filter(Boolean).length;
+  const hasDraftRequest = Boolean(!activeInstanceId && draftRequestCount > 0);
+
+  const resolveHasWidgetCapacity = useCallback(async (): Promise<boolean> => {
+    const accountId = activeAccount.accountPublicId;
+    const limit = accountPolicy.limits['widgets.instances.max'];
+    if (accountPolicy.role === 'viewer') return false;
+    if (limit === null) return true;
+    if (typeof limit !== 'number' || !Number.isFinite(limit)) return false;
+    try {
+      const [widgets, templates] = await Promise.all([
+        loadRomaWidgetsForAccount({ accountId, fetchJson: accountApi.fetchJson }),
+        loadRomaWidgetTemplates({ accountId, fetchJson: accountApi.fetchJson }),
+      ]);
+      return widgets.instances.length + templates.templates.length < Math.max(0, Math.floor(limit));
+    } catch {
+      return false;
+    }
+  }, [accountApi.fetchJson, accountPolicy.limits, accountPolicy.role, activeAccount.accountPublicId]);
+
+  const resolveCanSaveAsTemplate = useCallback(async (isTemplate: boolean): Promise<boolean> => {
+    if (isTemplate || activeAccount.accountPublicId === 'CLICKEEN') return false;
+    return resolveHasWidgetCapacity();
+  }, [activeAccount.accountPublicId, resolveHasWidgetCapacity]);
 
   const keepEditing = useCallback(() => {
     pendingDiscardActionRef.current = null;
@@ -476,6 +559,53 @@ export function BuilderDomain({
     pendingDiscardActionRef.current = action;
     setUnsavedDialogOpen(true);
   }, []);
+
+  const requestCatalogAssetChoice = useCallback((args: {
+    config: Record<string, unknown>;
+    assetRefs: string[];
+  }): Promise<Record<string, unknown>> => {
+    catalogAssetChoiceResolverRef.current?.reject(new Error('coreui.errors.builder.open.invalidRequest'));
+    setCatalogAssetError(null);
+    setCatalogAssetChoice(args);
+    return new Promise((resolve, reject) => {
+      catalogAssetChoiceResolverRef.current = { resolve, reject };
+    });
+  }, []);
+
+  const finishCatalogAssetChoice = useCallback((config: Record<string, unknown>) => {
+    const resolver = catalogAssetChoiceResolverRef.current;
+    catalogAssetChoiceResolverRef.current = null;
+    setCatalogAssetChoice(null);
+    setCatalogAssetError(null);
+    resolver?.resolve(config);
+  }, []);
+
+  const copyCatalogAssets = useCallback(async () => {
+    if (!catalogAssetChoice || catalogAssetCopying) return;
+    setCatalogAssetCopying(true);
+    setCatalogAssetError(null);
+    try {
+      const payload = await accountApi.fetchJson('/api/account/catalog-assets/copy', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ assetRefs: catalogAssetChoice.assetRefs }),
+      });
+      const mappings = parseCatalogAssetMappings(payload, catalogAssetChoice.assetRefs);
+      finishCatalogAssetChoice(rewriteConfigMediaAssetRefs(catalogAssetChoice.config, mappings));
+    } catch {
+      setCatalogAssetError('Assets could not be copied. Try again or discard them.');
+    } finally {
+      setCatalogAssetCopying(false);
+    }
+  }, [accountApi, catalogAssetChoice, catalogAssetCopying, finishCatalogAssetChoice]);
+
+  const discardCatalogAssets = useCallback(() => {
+    if (!catalogAssetChoice || catalogAssetCopying) return;
+    finishCatalogAssetChoice(discardConfigMediaAssets(
+      catalogAssetChoice.config,
+      catalogAssetChoice.assetRefs,
+    ));
+  }, [catalogAssetChoice, catalogAssetCopying, finishCatalogAssetChoice]);
 
   useEffect(() => {
     activeInstanceIdRef.current = activeInstanceId;
@@ -616,6 +746,7 @@ export function BuilderDomain({
             : '';
           if (createdInstanceId) {
             bobAppliedInstanceIdRef.current = createdInstanceId;
+            bobAppliedIsTemplateRef.current = false;
             activeInstanceIdRef.current = createdInstanceId;
             suppressNextActiveOpenRef.current = true;
             setActiveInstanceId(createdInstanceId);
@@ -744,7 +875,10 @@ export function BuilderDomain({
     try {
       const builderOpen = await accountApi.fetchJson<BuilderOpenResponse>(`/api/builder/${encodeURIComponent(activeInstanceId)}/open`);
       const widgetType = builderOpen.widgetType;
-      const compiled = await getWidgetEditorArtifact(widgetType);
+      const [compiled, canSaveAsTemplate] = await Promise.all([
+        getWidgetEditorArtifact(widgetType),
+        resolveCanSaveAsTemplate(builderOpen.isTemplate),
+      ]);
 
       if (openSeq !== openDispatchSeqRef.current) return;
 
@@ -752,18 +886,20 @@ export function BuilderDomain({
       if (!resolvedInstanceId || resolvedInstanceId !== activeInstanceId) {
         throw new Error('coreui.errors.payload.invalid');
       }
-      if (builderOpen.publishStatus !== 'published' && builderOpen.publishStatus !== 'unpublished') {
+      if (builderOpen.isTemplate !== true && builderOpen.isTemplate !== false) {
         throw new Error('coreui.errors.payload.invalid');
       }
+      if (
+        (!builderOpen.isTemplate && builderOpen.publishStatus !== 'published' && builderOpen.publishStatus !== 'unpublished') ||
+        (builderOpen.isTemplate && typeof builderOpen.publishStatus !== 'undefined')
+      ) throw new Error('coreui.errors.payload.invalid');
       const label = typeof builderOpen?.displayName === 'string' && builderOpen.displayName.trim() ? builderOpen.displayName.trim() : resolvedInstanceId;
       const config = builderOpen.config as Record<string, unknown>;
       const baseLocale = parseAccountLocalePolicyStrict(activeAccount.localePolicy).baseLocale;
-      const translationSetup = buildTranslationSetup({
-        baseLocale,
-        activeAccount,
-        accountPolicy,
-      });
-      const nextPublicActions = builderOpen.publishStatus === 'published'
+      const translationSetup = builderOpen.isTemplate
+        ? undefined
+        : buildTranslationSetup({ baseLocale, activeAccount, accountPolicy });
+      const nextPublicActions = !builderOpen.isTemplate && builderOpen.publishStatus === 'published'
         ? buildWidgetPublicActions({
             accountPublicId: activeAccount.accountPublicId,
             instanceId: resolvedInstanceId,
@@ -776,6 +912,7 @@ export function BuilderDomain({
         baseLocale,
         label,
         widgetname: widgetType,
+        isTemplate: builderOpen.isTemplate,
         compiled,
         instanceData: config,
         publicPackage: builderOpen.publicPackage,
@@ -784,6 +921,7 @@ export function BuilderDomain({
         returnLabel: embedded ? embeddedReturnLabel ?? 'Done, go back to the page' : returnTo ? 'Return' : undefined,
         contextMessage,
         publicActions: nextPublicActions,
+        canSaveAsTemplate,
         policy: accountPolicy,
         copilot: builderOpen.copilot ?? null,
         translationSetup,
@@ -795,6 +933,8 @@ export function BuilderDomain({
       });
       if (openSeq !== openDispatchSeqRef.current) return;
       bobAppliedInstanceIdRef.current = resolvedInstanceId;
+      bobAppliedIsTemplateRef.current = builderOpen.isTemplate;
+      bobAppliedLabelRef.current = label;
       bobIsDirtyRef.current = false;
       setPublicActionContext(nextPublicActions ? { instanceName: label, actions: nextPublicActions } : null);
       setOpenError(null);
@@ -811,7 +951,7 @@ export function BuilderDomain({
       }
       setOpenError(message);
     }
-  }, [accountApi, accountPolicy, activeAccount, activeInstanceId, contextMessage, currentUrl, embedded, embeddedReturnLabel, postOpenEditorAndWait, returnTo, router]);
+  }, [accountApi, accountPolicy, activeAccount, activeInstanceId, contextMessage, currentUrl, embedded, embeddedReturnLabel, postOpenEditorAndWait, resolveCanSaveAsTemplate, returnTo, router]);
 
   const openDraftInBob = useCallback(async () => {
     const targetWindow = iframeRef.current?.contentWindow;
@@ -824,17 +964,56 @@ export function BuilderDomain({
 
     try {
       const baseLocale = parseAccountLocalePolicyStrict(activeAccount.localePolicy).baseLocale;
+      if (draftRequestCount !== 1) throw new Error('coreui.errors.builder.open.invalidRequest');
+      if (templateDraftRequest && !(await resolveHasWidgetCapacity())) {
+        setUpsellReason("You've reached your plan limit.");
+        return;
+      }
       let widgetType = newWidgetType;
       let label = 'Untitled widget';
       let config: Record<string, unknown>;
       let publicPackage: BuilderOpenResponse['publicPackage'] | null = null;
       let fontLibrary: AccountFontLibrary;
       let copilot: unknown = null;
+      let templateDraft = false;
 
-      if (duplicateInstanceId) {
+      if (templateDraftRequest?.kind === 'account-template') {
+        const source = await accountApi.fetchJson<BuilderOpenResponse>(
+          `/api/builder/${encodeURIComponent(templateDraftRequest.templateId)}/open`,
+        );
+        if (!source.isTemplate) throw new Error('coreui.errors.payload.invalid');
+        widgetType = source.widgetType;
+        label = source.displayName || 'Untitled widget';
+        config = structuredClone(source.config);
+        publicPackage = structuredClone(source.publicPackage);
+        fontLibrary = source.fontLibrary;
+        copilot = source.copilot ?? null;
+        templateDraft = true;
+      } else if (templateDraftRequest?.kind === 'catalog-template') {
+        const [catalog, defaults] = await Promise.all([
+          accountApi.fetchJson<WidgetCatalogOpenResponse>(
+            `/api/account/widget-catalog/${encodeURIComponent(templateDraftRequest.templateId)}`,
+          ),
+          accountApi.fetchJson<WidgetDefaultsResponse>('/api/account/widget-defaults'),
+        ]);
+        const source = catalog.template;
+        if (!source.isTemplate || source.templateId !== templateDraftRequest.templateId) {
+          throw new Error('coreui.errors.payload.invalid');
+        }
+        widgetType = source.widgetType;
+        label = source.templateName;
+        const prepared = prepareCatalogTemplateDraft(structuredClone(composeConfigWithInstanceContent(source.source)));
+        config = prepared.kind === 'asset-choice-required'
+          ? await requestCatalogAssetChoice(prepared)
+          : prepared.config;
+        publicPackage = structuredClone(source.publicPackage);
+        fontLibrary = defaults.widgetDefaults.fontLibrary;
+        templateDraft = true;
+      } else if (duplicateInstanceId) {
         const source = await accountApi.fetchJson<BuilderOpenResponse>(
           `/api/builder/${encodeURIComponent(duplicateInstanceId)}/open`,
         );
+        if (source.isTemplate) throw new Error('coreui.errors.payload.invalid');
         widgetType = source.widgetType;
         label = `${source.displayName || 'Untitled widget'} copy`;
         config = structuredClone(source.config);
@@ -854,13 +1033,15 @@ export function BuilderDomain({
       const compiledDisplayName = typeof (compiled as { displayName?: unknown }).displayName === 'string'
         ? String((compiled as { displayName: string }).displayName).trim()
         : '';
-      if (!duplicateInstanceId && compiledDisplayName) label = `Untitled ${compiledDisplayName}`;
+      if (newWidgetType && compiledDisplayName) label = `Untitled ${compiledDisplayName}`;
       const message: BobOpenEditorPayload = {
         type: 'ck:open-editor',
         accountPublicId: activeAccount.accountPublicId,
         baseLocale,
         label,
         widgetname: widgetType,
+        isTemplate: false,
+        ...(templateDraft ? { templateDraft: true as const } : {}),
         compiled,
         instanceData: config,
         publicPackage,
@@ -875,6 +1056,8 @@ export function BuilderDomain({
       await postOpenEditorAndWait({ targetWindow, message, openSeq });
       if (openSeq !== openDispatchSeqRef.current) return;
       bobAppliedInstanceIdRef.current = '';
+      bobAppliedIsTemplateRef.current = false;
+      bobAppliedLabelRef.current = '';
       bobIsDirtyRef.current = true;
       setOpenError(null);
     } catch (error) {
@@ -885,14 +1068,18 @@ export function BuilderDomain({
     accountApi,
     accountPolicy,
     activeAccount,
+    draftRequestCount,
     duplicateInstanceId,
     hasDraftRequest,
     newWidgetType,
+    templateDraftRequest,
     contextMessage,
     embedded,
     embeddedReturnLabel,
     postOpenEditorAndWait,
     returnTo,
+    requestCatalogAssetChoice,
+    resolveHasWidgetCapacity,
   ]);
 
   const openActiveInstanceInBobRef = useRef(openActiveInstanceInBob);
@@ -903,6 +1090,48 @@ export function BuilderDomain({
   useEffect(() => {
     openDraftInBobRef.current = openDraftInBob;
   }, [openDraftInBob]);
+
+  useEffect(() => {
+    const dialog = saveTemplateDialogRef.current;
+    if (!dialog) return;
+    const lifecycle = createDialogLifecycle({
+      dialog,
+      initialFocus: () => dialog.querySelector('input, button'),
+      requestDismiss: () => setSaveTemplateOpen(false),
+    });
+    saveTemplateLifecycleRef.current = lifecycle;
+    return () => lifecycle.destroy();
+  }, []);
+
+  useEffect(() => {
+    if (saveTemplateOpen) saveTemplateLifecycleRef.current?.open();
+    else saveTemplateLifecycleRef.current?.close();
+  }, [saveTemplateOpen]);
+
+  const saveWidgetAsTemplate = useCallback(async (name: string) => {
+    const instanceId = bobAppliedInstanceIdRef.current;
+    const templateName = name.trim();
+    if (!instanceId || !templateName || templateName === bobAppliedLabelRef.current.trim()) return;
+    setOpenError(null);
+    try {
+      const payload = await accountApi.fetchJson(`/api/account/instances/${encodeURIComponent(instanceId)}/save-as-template`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ templateName }),
+      });
+      const record = payload && typeof payload === 'object' && !Array.isArray(payload)
+        ? payload as { templateId?: unknown; templateName?: unknown }
+        : null;
+      const templateId = typeof record?.templateId === 'string' ? record.templateId.trim() : '';
+      const savedName = typeof record?.templateName === 'string' ? record.templateName.trim() : '';
+      if (!templateId || !savedName) throw new Error('coreui.errors.payload.invalid');
+      setCreatedTemplate({ templateId, templateName: savedName });
+      await openActiveInstanceInBobRef.current();
+    } catch {
+      setSaveTemplateOpen(false);
+      setOpenError('Changes saved. Template was not created.');
+    }
+  }, [accountApi]);
 
   const handleBobIframeLoad = useCallback(() => {
     bobReadyRef.current = true;
@@ -947,6 +1176,25 @@ export function BuilderDomain({
         } else if (data.action === 'copy-code') {
           if (publicActionContext) setCopyCodeOpen(true);
           else setOpenError('coreui.errors.builder.publicActions.invalid');
+        } else if (data.action === 'use-template') {
+          const templateId = bobAppliedInstanceIdRef.current;
+          if (!bobAppliedIsTemplateRef.current || !templateId) {
+            setOpenError('coreui.errors.builder.open.invalidRequest');
+          } else {
+            requestGuardedNavigation(() => router.push(buildWidgetTemplateDraftRoute({
+              kind: 'account-template',
+              templateId,
+            })));
+          }
+        } else if (data.action === 'save-as-template') {
+          const name = typeof data.templateName === 'string' ? data.templateName.trim() : '';
+          if (!bobAppliedInstanceIdRef.current || bobAppliedIsTemplateRef.current || !name || name === bobAppliedLabelRef.current.trim()) {
+            setOpenError('coreui.errors.builder.open.invalidRequest');
+          } else {
+            setCreatedTemplate(null);
+            setSaveTemplateOpen(true);
+            void saveWidgetAsTemplate(name);
+          }
         }
         return;
       }
@@ -971,12 +1219,14 @@ export function BuilderDomain({
 
     window.addEventListener('message', listener);
     return () => window.removeEventListener('message', listener);
-  }, [activeInstanceId, bobBaseUrl, embedded, hasDraftRequest, onReturn, openNavigation, publicActionContext, requestGuardedNavigation, returnTo, router, runBobAccountCommand]);
+  }, [activeInstanceId, bobBaseUrl, embedded, hasDraftRequest, onReturn, openNavigation, publicActionContext, requestGuardedNavigation, returnTo, router, runBobAccountCommand, saveWidgetAsTemplate]);
 
   useEffect(() => {
     bobReadyRef.current = false;
     openDispatchSeqRef.current += 1;
     bobAppliedInstanceIdRef.current = '';
+    bobAppliedIsTemplateRef.current = false;
+    bobAppliedLabelRef.current = '';
     bobIsDirtyRef.current = false;
     setCopyCodeOpen(false);
     setPublicActionContext(null);
@@ -995,7 +1245,7 @@ export function BuilderDomain({
     }
     if (!bobReadyRef.current) return;
     void openActiveInstanceInBobRef.current();
-  }, [activeInstanceId, hasDraftRequest, newWidgetType, duplicateInstanceId]);
+  }, [activeInstanceId, hasDraftRequest, newWidgetType, duplicateInstanceId, accountTemplateId, catalogTemplateId]);
 
   useEffect(() => {
     if (!activeInstanceId) return;
@@ -1094,7 +1344,7 @@ export function BuilderDomain({
         <div className="rd-canvas-module roma-builder-error">
           <p className="body-m">{builderOpenErrorCopy}</p>
           <div className="rd-canvas-module__actions">
-            <button className="diet-btn-txt" data-size="md" data-variant="primary" type="button" onClick={() => void openActiveInstanceInBob()}>
+            <button className="diet-btn-txt" data-size="md" data-variant="primary" type="button" onClick={() => void (activeInstanceId ? openActiveInstanceInBob() : openDraftInBob())}>
               <span className="diet-btn-txt__label body-m">Retry</span>
             </button>
           </div>
@@ -1123,6 +1373,30 @@ export function BuilderDomain({
         open={Boolean(upsellReason)}
         reason={upsellReason ?? undefined}
         onClose={() => setUpsellReason(null)}
+      />
+      <dialog ref={saveTemplateDialogRef} className="diet-popup" data-size="medium" aria-labelledby="widget-save-template-title">
+        <header className="diet-popup__header"><h2 id="widget-save-template-title" className="heading-4">Save as template</h2></header>
+        <div className="diet-popup__body">
+          {createdTemplate ? (
+            <p className="body-m">{createdTemplate.templateName} was saved as a template.</p>
+          ) : <p className="body-m">Saving template…</p>}
+        </div>
+        <footer className="diet-popup__footer"><div className="diet-popup__actions">
+          {createdTemplate ? (
+            <>
+              <button className="diet-btn-txt" data-size="md" data-variant="secondary" type="button" onClick={() => setSaveTemplateOpen(false)}><span className="diet-btn-txt__label body-m">Stay here</span></button>
+              <button className="diet-btn-txt" data-size="md" data-variant="primary" type="button" onClick={() => router.push(`/builder/${encodeURIComponent(createdTemplate.templateId)}`)}><span className="diet-btn-txt__label body-m">Open template</span></button>
+            </>
+          ) : null}
+        </div></footer>
+      </dialog>
+      <CatalogAssetChoiceDialog
+        open={Boolean(catalogAssetChoice)}
+        product="widget"
+        copying={catalogAssetCopying}
+        error={catalogAssetError}
+        onCopy={() => void copyCatalogAssets()}
+        onDiscard={discardCatalogAssets}
       />
     </>
   );

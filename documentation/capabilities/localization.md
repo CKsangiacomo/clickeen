@@ -42,6 +42,12 @@ change root `overlays.json`. Page publish compares that saved output-locale set
 with the current Settings base and active locales and blocks while any required
 locale is absent.
 
+Widget templates follow the same localization boundary: they retain reusable
+Widget config and their exact three files, but have no `baseLocale`, selected
+locale list, overlays, Generate translations action, or public locale output.
+An ordinary Instance created from a template receives the destination
+account's normal base-locale and Settings-locale behavior when it is saved.
+
 ## Code Authority
 
 | Concern | Authority |

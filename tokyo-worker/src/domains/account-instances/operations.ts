@@ -18,6 +18,7 @@ import {
 } from './serve-state';
 import { listLocaleOverlayCoordinates } from '../account-translations/overlays';
 import type { AccountInstanceContentDocument, AccountInstanceSourcePointer } from './types';
+import type { CatalogPresentation } from '@clickeen/ck-contracts/catalog';
 import { normalizeStorageId } from './utils';
 import { deletePrefix } from '../storage';
 import { PublicCachePurgeError, purgePublicServingFiles } from '../public-cache';
@@ -198,7 +199,9 @@ export async function createAccountInstanceFromSubmittedSource(args: {
   displayName?: unknown;
   config: Record<string, unknown>;
   content: AccountInstanceContentDocument;
-  baseLocale: string;
+  isTemplate: boolean;
+  baseLocale?: string;
+  catalogPresentation?: CatalogPresentation;
   publicPackage: SubmittedInstancePublicPackage;
 }): Promise<{
   pointer: AccountInstanceSourcePointer;
@@ -251,7 +254,9 @@ export async function createAccountInstanceFromSubmittedSource(args: {
       config: args.config,
       content: args.content,
       displayName: normalizeDisplayName(args.displayName),
-      baseLocale: args.baseLocale,
+      isTemplate: args.isTemplate,
+      ...(args.baseLocale ? { baseLocale: args.baseLocale } : {}),
+      ...(args.catalogPresentation ? { catalogPresentation: args.catalogPresentation } : {}),
     });
   } catch (error) {
     return cleanupCreatedInstanceOrThrow({
@@ -273,7 +278,9 @@ export async function saveAccountInstanceTransition(args: {
   content: AccountInstanceContentDocument;
   publicPackage: SubmittedInstancePublicPackage;
   displayName?: unknown;
-  baseLocale: string;
+  isTemplate: boolean;
+  baseLocale?: string;
+  catalogPresentation?: CatalogPresentation;
   hasDisplayName: boolean;
 }): Promise<{
   ok: true;
@@ -293,6 +300,13 @@ export async function saveAccountInstanceTransition(args: {
   const existing = await readAccountInstanceSource({ env: args.env, accountId, instanceId });
   if (!existing.ok) transitionFailureFromSavedRead(existing);
   const existingWidgetType = existing.value.pointer.widgetType;
+  if (existing.value.pointer.isTemplate !== args.isTemplate) {
+    throw new AccountInstanceTransitionError({
+      status: 422,
+      kind: 'VALIDATION',
+      reasonKey: 'coreui.errors.instance.templateMismatch',
+    });
+  }
   if (submittedWidgetType !== existingWidgetType) {
     throw new AccountInstanceTransitionError({
       status: 422,
@@ -301,13 +315,15 @@ export async function saveAccountInstanceTransition(args: {
       detail: `submitted widgetType "${submittedWidgetType}" does not match Tokyo instance widgetType "${existingWidgetType}"`,
     });
   }
-  const live = (await readInstanceServeState({
-    env: args.env,
-    accountId,
-    instanceId,
-    widgetCode: existing.value.pointer.widgetCode,
-  })) === 'published';
-  const locales = live
+  const live = existing.value.pointer.isTemplate
+    ? false
+    : (await readInstanceServeState({
+        env: args.env,
+        accountId,
+        instanceId,
+        widgetCode: existing.value.pointer.widgetCode,
+      })) === 'published';
+  const locales = !existing.value.pointer.isTemplate && live
     ? await listLocaleOverlayCoordinates({
         env: args.env,
         accountId,
@@ -337,12 +353,16 @@ export async function saveAccountInstanceTransition(args: {
     config: args.config,
     content: args.content,
     displayName: args.hasDisplayName ? args.displayName : existing.value.pointer.displayName,
-    baseLocale: args.baseLocale,
+    isTemplate: args.isTemplate,
+    ...(args.baseLocale ? { baseLocale: args.baseLocale } : {}),
+    ...(args.catalogPresentation ? { catalogPresentation: args.catalogPresentation } : {}),
   });
-  if (live) {
+  if (!existing.value.pointer.isTemplate && live) {
     await purgeClkLiveEntryCache({ env: args.env, accountId, instanceId, locales });
   }
-  await markPagesReferencingInstanceNeedsUpdate({ env: args.env, accountId, instanceId });
+  if (!existing.value.pointer.isTemplate) {
+    await markPagesReferencingInstanceNeedsUpdate({ env: args.env, accountId, instanceId });
+  }
 
   return {
     ok: true,
@@ -359,6 +379,13 @@ export async function publishAccountInstanceTransition(args: {
   const { accountId, instanceId } = assertScopedIds(args.accountId, args.instanceId);
   const existing = await readAccountInstanceSource({ env: args.env, accountId, instanceId });
   if (!existing.ok) transitionFailureFromSavedRead(existing);
+  if (existing.value.pointer.isTemplate) {
+    throw new AccountInstanceTransitionError({
+      status: 422,
+      kind: 'VALIDATION',
+      reasonKey: 'coreui.errors.instance.templatePublicForbidden',
+    });
+  }
   const packageReady = await verifyInstancePublicPackageReady({
     env: args.env,
     accountId,
@@ -404,6 +431,13 @@ export async function unpublishAccountInstanceTransition(args: {
   const { accountId, instanceId } = assertScopedIds(args.accountId, args.instanceId);
   const existing = await readAccountInstanceSource({ env: args.env, accountId, instanceId });
   if (!existing.ok) transitionFailureFromSavedRead(existing);
+  if (existing.value.pointer.isTemplate) {
+    throw new AccountInstanceTransitionError({
+      status: 422,
+      kind: 'VALIDATION',
+      reasonKey: 'coreui.errors.instance.templatePublicForbidden',
+    });
+  }
   const liveStatus = await readInstanceServeState({
     env: args.env,
     accountId,
@@ -439,6 +473,9 @@ export async function deleteAccountInstanceTransition(args: {
   if (!existing.ok) {
     if (existing.kind === 'NOT_FOUND') return { existed: false };
     transitionFailureFromSavedRead(existing);
+  }
+  if (existing.value.pointer.isTemplate) {
+    return deleteAccountInstanceSubtree(args.env, instanceId, accountId);
   }
   const locales = await listLocaleOverlayCoordinates({
     env: args.env,

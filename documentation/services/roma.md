@@ -305,7 +305,8 @@ public URL and `clickeen.js` installer and owns browser copy. Bob does not
 reconstruct or copy those values. Unpublished instances receive
 `publicActions: null` and expose no public action. Bob's `bob:host-action`
 message carries only
-`open-navigation`, `return`, or `copy-code` intent; Roma retains navigation,
+`open-navigation`, `return`, `copy-code`, `use-template`, or
+`save-as-template` intent; Roma retains navigation,
 public-action, and unsaved-work authority.
 The copied public URL is slashless:
 
@@ -342,27 +343,33 @@ resulting absolute paths resolve correctly from Roma's slashless public URL.
 
 ## Widgets Domain
 
-Roma `/widgets` and `/widgets/catalog` are the account widget management
-surfaces. Widgets is one expandable Roma navigation group, using the same
-left-navigation pattern as Settings. Its route-owned subitems are **Your
-widgets** at `/widgets` and **Widget catalog** at `/widgets/catalog`; they are
-not local page tabs.
+Roma's Widgets navigation group has three routes, not local page tabs:
+
+- **Your widgets** at `/widgets` lists ordinary current-account Instances;
+- **My templates** at `/widgets/templates` lists current-account Instances with
+  `isTemplate: true`; and
+- **Widget catalog** at `/widgets/catalog` lists `CLICKEEN`-owned Widget
+  templates through the fixed-owner Catalog read.
 
 **Your widgets** is the default account-instance inventory. It uses one
 semantic Dieter Table whose columns are Widget, Instance name, Published,
 Instance ID, and Actions. Published uses a left-aligned Dieter Toggle and, only
 for a published instance, a small Copy code action that opens Roma's shared
-public-code Popup. Edit is the direct row action; Rename, Duplicate, and Delete
-remain in one ellipsis menu. The header status filter and the Widget, Instance
+public-code Popup. Edit is the direct row action; Save as template, Rename,
+Duplicate, and Delete remain in one ellipsis menu when each action is valid.
+The header status filter and the Widget, Instance
 name, and Published sorts run over the validated account list in the browser.
 Their headers use the shared `xs` Dieter sort control: the active
 sort is black and inactive sorts are gray.
 
-**Widget catalog** renders the canonical widget definitions as Dieter-styled
-cards. A catalog card creates an instance of that widget type; it does not
-represent, count, or group saved account instances. Roma renders only catalog
-metadata supplied by the owning definition and does not invent descriptions,
-categories, badges, or preview media.
+**My templates** reuses the Dieter table. A row carries a Template badge and
+Edit, with Use template, Rename, and Delete in its ellipsis menu. It has no
+publish, locale, translation, public URL, or Copy code controls. **Widget
+catalog** is a read-only card view of `CLICKEEN` Widget templates, ordered and
+described by each template's `catalogPresentation`. Its left category menu and
+search filter only the loaded response. **Use template** opens an ID-less Bob
+draft; no Instance exists before Save. Widget software definitions remain the
+Widget type/editor authority but are not Catalog items.
 
 Changing routes does not change the account command or storage authority.
 Publication remains a controlled command: the toggle changes only after the
@@ -378,12 +385,19 @@ It owns:
 - unpublish
 - delete
 
-`GET /api/account/widgets` returns the full widget catalog plus saved account
-instances:
+`GET /api/account/widgets` returns only ordinary saved Instance rows. Each row
+contains its Widget label resolved from the current Widget definition:
 
 ```text
-catalog[] + instances[]
+{ accountId, instances[] }
 ```
+
+`GET /api/account/widget-templates` returns current-account Widget templates;
+when a template has Catalog presentation, the exact saved presentation is part
+of that row.
+`GET /api/account/widget-catalog` and its exact-id read return only
+`CLICKEEN`-owned Widget templates. The Catalog routes accept no owner coordinate
+and have no write method.
 
 The Widgets list payload does not carry Create, Duplicate, or Publish
 availability booleans. Tier limits do not hide catalog items and do not disable
@@ -394,8 +408,9 @@ client code derives read-only versus mutable controls from the current account
 role and the instance publish state, while tier upgrade decisions happen only in
 command routes.
 
-Roma loads widget catalog definitions from Tokyo-worker and loads saved instance
-rows through the account instance coordinate/list-facts helpers. Tokyo-worker
+Roma loads Widget definitions only to label ordinary rows and validate Widget
+commands, and loads saved Instance rows through the account
+instance coordinate/list-facts helpers. Tokyo-worker
 returns stored `displayName` as string or `null`; Roma applies the UI fallback
 label for product rendering.
 
@@ -411,6 +426,31 @@ gate passes. Publish and unpublish are account
 product actions; Roma sends the exact product transition to Tokyo-worker for R2
 `serve-state.json` mutation.
 
+`POST /api/account/instances/{instanceId}/save-as-template` is the Widget
+snapshot command. A customer editor supplies only a distinct template name.
+For the exact `CLICKEEN` account, DevStudio supplies the distinct name plus the
+four required Catalog presentation values in that same request. Roma opens
+the ordinary saved source, checks `widgets.instances.max`, reads its exact saved
+three-file package, then mints a new instance id and creates a template with the
+split config/content and file bytes unchanged except for the new content
+identity. The command does not save the source, generate files, copy locale or
+publication state. Capacity exhaustion returns the same Widget creation policy
+gate contract used by ordinary instance creation.
+
+`PATCH /api/account/instances/{instanceId}` is the narrow presentation-only
+operation for a `CLICKEEN` Widget template. It preserves the template source
+and three files and changes only `catalogPresentation`. Other accounts and
+ordinary Instances are rejected. DevStudio reaches it through its authenticated
+Roma proxy; customer Catalog routes remain read-only.
+
+Templates count under `widgets.instances.max`. Roma hides Save as template when
+the current role or visible capacity makes it invalid; the command rechecks the
+same normal limit. Catalog Use remains visible at a tier limit and sends that
+attempt to the existing Upgrade interaction without creating an Instance.
+Catalog thumbnails are exact `CLICKEEN` public asset paths served by Tokyo. If
+reusable source contains CLICKEEN assets, the explicit Copy/Discard dialog
+completes before the unsaved Bob draft opens.
+
 ## Assets Domain
 
 Roma `/assets` is the account asset library surface.
@@ -421,6 +461,7 @@ It owns:
 - upload account assets
 - resolve account asset references
 - delete exact account asset references
+- copy selected `CLICKEEN` Catalog assets into the current account
 - show storage usage facts returned from the same account asset authority
 
 The page header owns Upload asset, Upload in bulk, and Refresh list. The
@@ -449,6 +490,15 @@ accounts/CLICKEEN/assets/{filename}
 Roma treats malformed successful Tokyo asset delete responses as upstream
 contract failures. A delete is success only when the response names the current
 account public id, the exact asset reference, and `deleted: true`.
+
+`POST /api/account/catalog-assets/copy` is an editor command with the exact body
+`{ assetRefs: string[] }`. Each value is the account-local asset ref stored in
+the Catalog template config, such as `hero.png`. Roma supplies no source or
+destination account choice: Tokyo fixes the source to `CLICKEEN` and the
+destination is the authenticated current account. Roma forwards the current
+upload-size and storage limits to one Tokyo asset-domain operation and accepts
+success only when every expected source ref has one valid account-local
+destination ref.
 
 Tier policy controls whether the account may upload another asset. Account
 management controls retained storage after a downgrade. If current usage is
@@ -511,13 +561,40 @@ write preserves `needsUpdate` and does not rebuild root output. Rename uses
 current Settings base and active locales and rejects an incomplete saved
 package before requesting Tokyo publication.
 
+`POST /api/account/pages/{pageId}/save-as-template` is the Page snapshot
+command. A customer editor supplies only a distinct template name. For the
+exact `CLICKEEN` account, DevStudio supplies the distinct name plus the four
+required Catalog presentation values in that same request. Roma opens the
+ordinary saved Page, checks `pages.max`, then mints a new Page id and creates a
+template from its exact values, robots, placements, and three saved files.
+Base-locale, overlay, translation, and serving state are absent from the new
+template. Capacity denial is a direct command failure and does not open an
+unrelated policy path; it uses the same `pages.max` gate contract as ordinary
+Page Save.
+
+`PATCH /api/account/pages/{pageId}` is the matching presentation-only operation
+for a `CLICKEEN` Page template. It preserves Page source and the three files and
+changes only `catalogPresentation`. Other accounts and ordinary Pages are
+rejected; the customer Page Catalog has no write method.
+
 The shared Roma public-action contract accepts the Page coordinate and
 returns `/ACCOUNT/pages/PAGEID` plus the same `clickeen.js` snippet shape used
 for a Widget. Page actions therefore need no Page-specific marketing URL,
 iframe helper, or runtime-only install option.
 
-Roma exposes `/pages` as Your pages and `/page-builder/new` or `/page-builder/{pageId}` as
-Page Builder. A new Page exists only in browser memory until Save. Page Builder
+Roma's Pages navigation group has three routes: **Your pages** at `/pages`,
+**My templates** at `/pages/templates`, and the read-only **Page catalog** at
+`/pages/catalog`. My templates lists current-account Pages with
+`isTemplate: true`; its rows show Template, Edit, and an ellipsis menu for Use,
+Rename, and Delete, but no serving or locale controls. Page catalog reads only
+`CLICKEEN` Page templates, filters their saved presentation values in the
+browser, and opens `/page-builder/new?catalog={pageId}` without creating a
+Page. The initial Catalog item is one real blank Page template, not a hardcoded
+card. `CLICKEEN` templates are read-only in Roma and are managed through
+DevStudio.
+
+Roma exposes `/page-builder/new` or `/page-builder/{pageId}` as Page Builder.
+A new Page exists only in browser memory until Save. Page Builder
 uses the same shared editor shell taxonomy as Bob—TopDrawer, ToolDrawer and
 Workspace—but has only two Page-owned panels: Content and SEO/GEO/AEO. Content
 shows ordered saved Instance references, reuses the Your-widgets inventory
@@ -539,6 +616,15 @@ its browser draft. Bob does not save or regenerate the Page. Page Save and Updat
 the browser and submit its exact files. Publish only changes publication state.
 All Page blocking Popups use Dieter's existing native-dialog lifecycle; Roma
 adds no Page dialog framework or global editor state.
+
+Page templates count under `pages.max`. Save as template appears only while
+the account role and visible capacity allow it, and the command enforces the
+same normal Page limit. Page Catalog remains visible below Tier 2; attempting
+Use opens the existing Upgrade interaction and creates no draft or Page.
+Catalog thumbnails are exact `CLICKEEN` asset paths served by Tokyo. The first
+blank Page template has no child Instances to copy. A later direct Page-owned
+Catalog asset uses the same explicit Copy/Discard dialog as Widget Catalog;
+127F does not clone referenced child Instances.
 
 A fresh open of a Page marked Needs update shows the blocking Update dialog.
 If Bob Save marks the already-mounted Page Needs update, the current browser

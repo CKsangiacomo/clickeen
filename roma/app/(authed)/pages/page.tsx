@@ -1,5 +1,5 @@
 import { PagesDomain } from '../../../components/pages-domain';
 
 export default function PagesPage() {
-  return <PagesDomain />;
+  return <PagesDomain view="your-pages" />;
 }

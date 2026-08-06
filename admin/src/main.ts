@@ -13,9 +13,11 @@ import '@dieter/components/tooltip/tooltip.css';
 import '@dieter/components/valuefield/valuefield.css';
 import '@dieter/components/toggle/toggle.css';
 import './css/layout.css';
+import './css/catalogs.css';
 import './css/dieter-previews.css';
 import './css/utilities.css';
-import { navGroups, showcaseIndex, showcaseModules } from './data/routes';
+import { navGroups, navIndex, showcaseIndex, showcaseModules } from './data/routes';
+import { renderCatalogView } from './catalogs';
 import { getIcon } from './data/icons';
 import {
   destroyDropdownActions,
@@ -312,9 +314,9 @@ function navigateTo(path: string) {
   }
 }
 
-function parseShowcasePath(hash: string): string | null {
+function parseRoutePath(hash: string): string | null {
   const cleanHash = hash.split('?')[0];
-  if (showcaseIndex.has(cleanHash)) return cleanHash;
+  if (navIndex.has(cleanHash)) return cleanHash;
   return null;
 }
 
@@ -906,10 +908,21 @@ function hydrateTypographyPage(scope: ParentNode) {
 }
 
 function renderFromHash() {
-  const pagePath = parseShowcasePath(window.location.hash);
+  const pagePath = parseRoutePath(window.location.hash);
   if (!pagePath) {
     const first = navGroups[0]?.items[0];
     if (first) navigateTo(first.path);
+    return;
+  }
+
+  const route = navIndex.get(pagePath);
+  if (route?.kind === 'catalog' && route.catalogKind) {
+    const content = renderCatalogView(route.catalogKind);
+    const wrapped = wrapWithPageChrome(content, route.title);
+    setActive(route.path);
+    document.title = `DevStudio · ${route.title}`;
+    main.replaceChildren(compactBar, scrim, wrapped);
+    hydrateDieterComponents(main);
     return;
   }
 

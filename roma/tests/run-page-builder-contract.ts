@@ -61,18 +61,20 @@ async function main() {
   const savedPageRoute = await read('app/(authed)/page-builder/[pageId]/page.tsx');
 
   assert.match(domains, /key: 'pages', label: 'Pages', href: '\/pages'/);
-  assert.match(newPageRoute, /<PageBuilder \/>/);
+  assert.match(newPageRoute, /<PageBuilder templateDraft=\{templateDraft\} \/>/);
+  assert.match(newPageRoute, /kind: 'account'/);
+  assert.match(newPageRoute, /kind: 'catalog'/);
   assert.match(savedPageRoute, /<PageBuilder pageId=\{pageId\} \/>/);
   assert.match(list, /['"]\/page-builder\/new['"]/);
   assert.match(list, /`\/page-builder\/\$\{encodeURIComponent\(id\)\}`/);
   assert.match(builder, /createCompactPageId\(\)/);
-  assertBefore(builder, 'generatePageDraft({', "accountApi.fetchJson('/api/account/pages'");
+  assertBefore(builder, 'generatePageDraft({', "accountApi.fetchRaw('/api/account/pages'");
   assert.match(builder, /currentPageId \|\| createCompactPageId\(\)/);
-  assert.match(builder, /const sourceForSave: PageDraftSource = \{ \.\.\.source, baseLocale \}/);
+  assert.match(builder, /const sourceForSave: PageDraftSource = source\.isTemplate \? source : \{ \.\.\.source, baseLocale \}/);
   assertBefore(builder, 'setPreviewingGenerated(true)', 'await nextPaint()');
-  assertBefore(builder, 'await nextPaint()', 'const completeSource: AccountPage');
+  assertBefore(builder, 'await nextPaint()', 'const completeSource: AccountPageSource');
   assert.match(builder, /clearRomaPagesCache\(accountContext\.accountPublicId\)/);
-  assert.match(builder, /if \(!generated\.overlaysJson\) throw new Error\('Page overlay output is missing\.'\)/);
+  assert.match(builder, /if \(!sourceForSave\.isTemplate && !generated\.overlaysJson\) throw new Error\('Page overlay output is missing\.'\)/);
   assert.doesNotMatch(builder, /generated\.overlaysJson \?\? \{\}/);
   assert.match(builder, /if \(pageId && loadFailed\)/);
   assert.match(builder, /if \(isNotFoundError\(placementError\)\) return unavailablePlacement/);
@@ -91,7 +93,7 @@ async function main() {
   assert.match(builder, /embedded returnLabel="Done, go back to the page"/);
   assert.match(builder, /contextMessage="You're editing the saved widget\. Other pages using it will also need updating\."/);
   assert.match(builder, /freshEntryBlocked && needsUpdate/);
-  assert.match(builder, /setFreshEntryBlocked\(detail\.serveState\.needsUpdate\)/);
+  assert.match(builder, /setFreshEntryBlocked\(detail\.serveState\?\.needsUpdate \?\? false\)/);
   assert.match(builder, /setFreshEntryBlocked\(false\)/);
   assert.match(builder, /readTranslationResult/);
   assert.match(builder, /typeof value\.accepted !== 'boolean'/);
@@ -104,7 +106,10 @@ async function main() {
   assert.match(builder, />Copy URL</);
   assert.match(builder, />Copy code</);
   assert.match(builder, />Unpublish</);
-  assert.match(builder, /currentPageId \? 'Current' : 'Unsaved'/);
+  assert.match(builder, /source\.isTemplate \? 'Template'/);
+  assert.match(builder, /parseCatalogTemplate/);
+  assert.match(builder, /setSourceState\(\{ \.\.\.templateSource, isTemplate: false, baseLocale \}\)/);
+  assert.match(builder, /canTranslate=\{Boolean\(currentPageId && !source\.isTemplate\)\}/);
   assert.match(bob, /embedded\?: boolean/);
   assert.match(bob, /if \(embedded \|\| !activeInstanceId\) return/);
   assert.match(bobTopDrawer, /returnLabel/);

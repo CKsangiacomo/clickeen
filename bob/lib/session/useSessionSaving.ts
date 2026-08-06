@@ -21,7 +21,7 @@ export function useSessionSaving(args: {
 }) {
   const { executeAccountCommand, metaRef, setMeta, setState, setUpsell, stateRef } = args;
 
-  const save = useCallback(async () => {
+  const save = useCallback(async (): Promise<boolean> => {
     // Save persists the one widget the customer is actively editing.
     const snapshot = stateRef.current;
     const meta = metaRef.current;
@@ -32,10 +32,10 @@ export function useSessionSaving(args: {
         ...prev,
         error: { source: 'save', message: 'Missing widget type for save.' },
       }));
-      return;
+      return false;
     }
     if (!snapshot.isDirty) {
-      return;
+      return true;
     }
     const savingState: SessionState = {
       ...stateRef.current,
@@ -56,9 +56,10 @@ export function useSessionSaving(args: {
       const submittedPublicPackageSignature = serializePublicPackageSignature(snapshot.publicPackage);
       const saveBody: Record<string, unknown> = {
         widgetType,
+        isTemplate: meta?.isTemplate === true,
         config,
         publicPackage: snapshot.publicPackage,
-        baseLocale: meta?.baseLocale ?? null,
+        ...(meta?.isTemplate ? {} : { baseLocale: meta?.baseLocale ?? null }),
         displayName: meta?.label ?? null,
       };
       const { ok, json } = await executeAccountCommand({
@@ -68,6 +69,17 @@ export function useSessionSaving(args: {
       });
       if (!ok) {
         const err = json?.error;
+        if (json?.kind === 'UPGRADE_REQUIRED' || err?.kind === 'UPGRADE_REQUIRED') {
+          setUpsell({ reasonKey: 'coreui.upsell.reason.limitReached', cta: 'upgrade' });
+          const nextState: SessionState = {
+            ...stateRef.current,
+            isSaving: false,
+            error: null,
+          };
+          stateRef.current = nextState;
+          setState(nextState);
+          return false;
+        }
         if (err?.kind === 'VALIDATION') {
           const nextState: SessionState = {
             ...stateRef.current,
@@ -83,7 +95,7 @@ export function useSessionSaving(args: {
           };
           stateRef.current = nextState;
           setState(nextState);
-          return;
+          return false;
         }
         const nextState: SessionState = {
           ...stateRef.current,
@@ -96,7 +108,7 @@ export function useSessionSaving(args: {
         };
         stateRef.current = nextState;
         setState(nextState);
-        return;
+        return false;
       }
 
       const savedInstanceId = instanceId || (typeof json?.instanceId === 'string' ? json.instanceId.trim() : '');
@@ -105,6 +117,7 @@ export function useSessionSaving(args: {
         setMeta((currentMeta) => currentMeta ? {
           ...currentMeta,
           instanceId: savedInstanceId,
+          isTemplate: false,
           publishStatus: 'unpublished',
           publicActions: null,
         } : currentMeta);
@@ -129,6 +142,7 @@ export function useSessionSaving(args: {
       setUpsell(null);
       stateRef.current = nextState;
       setState(nextState);
+      return true;
     } catch (err) {
       const messageText = err instanceof Error ? err.message : String(err);
       const nextState: SessionState = {
@@ -138,6 +152,7 @@ export function useSessionSaving(args: {
       };
       stateRef.current = nextState;
       setState(nextState);
+      return false;
     }
   }, [
     executeAccountCommand,

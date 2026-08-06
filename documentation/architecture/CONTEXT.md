@@ -116,6 +116,10 @@ Host services transport them. Surfaces render them.
   product-shaped inventory summaries.
 - Clickeen uses Clickeen. Admin is a normal account using Clickeen's own
   widgets, assets, pages, and product routes.
+- **My templates** are the current account's Widget/Page templates. The
+  read-only customer Catalogs are exactly the templates owned by the
+  `CLICKEEN` account. DevStudio manages their Catalog presentation values;
+  Bob and Page Builder edit their source through the normal product routes.
 
 ## Product Law
 
@@ -182,6 +186,7 @@ paths and product routes as any other account.
 | Product Copilot brain/runtime              | `agents/product-copilot` Cloudflare Worker                      |
 | Translation Agent brain/runtime            | `agents/translation-agent` Cloudflare Worker                     |
 | Design system                              | Dieter                                                          |
+| Global Widget/Page Catalog source          | `CLICKEEN` account templates, managed in DevStudio through Roma |
 
 When runtime behavior and docs disagree, use this order:
 

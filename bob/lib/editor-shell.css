@@ -60,6 +60,12 @@
 .topdrawer-context { min-width: 0; flex-wrap: wrap; }
 .topdrawer-return { flex: none; }
 .topdrawer-publish-status { color: var(--color-text-secondary); }
+.topdrawer-template-badge {
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--control-radius-md);
+  background: var(--role-surface);
+  color: var(--color-text-secondary);
+}
 .topdrawer-more.diet-popover-host { flex: none; inline-size: auto; }
 .topdrawer-more > .topdrawer-more__menu.diet-popover {
   inset-inline-start: auto;

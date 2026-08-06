@@ -30,12 +30,17 @@ export type PageServingOverlays = Record<
   }
 >;
 
-export type StoredAccountPage = {
-  source: Extract<AccountPageSource, { isTemplate: false }>;
-  files: PageGeneratedFiles;
-  overlaysJson: PageServingOverlays;
-  serveState: { published: boolean; needsUpdate: boolean };
-};
+export type StoredAccountPage =
+  | {
+      source: Extract<AccountPageSource, { isTemplate: false }>;
+      files: PageGeneratedFiles;
+      overlaysJson: PageServingOverlays;
+      serveState: { published: boolean; needsUpdate: boolean };
+    }
+  | {
+      source: Extract<AccountPageSource, { isTemplate: true }>;
+      files: PageGeneratedFiles;
+    };
 
 function context(args: {
   accountId: string;
@@ -65,14 +70,24 @@ function decodeStoredPage(raw: unknown): StoredAccountPage | null {
   if (!isRecord(raw)) return null;
   const source = parseAccountPageSource(raw.source);
   const files = isRecord(raw.files) ? raw.files : null;
-  const serveState = isRecord(raw.serveState) ? raw.serveState : null;
   if (
     !source ||
-    source.isTemplate ||
     !files ||
     typeof files.indexHtml !== 'string' ||
     typeof files.stylesCss !== 'string' ||
-    typeof files.runtimeJs !== 'string' ||
+    typeof files.runtimeJs !== 'string'
+  ) return null;
+  const exactFiles = {
+    indexHtml: files.indexHtml,
+    stylesCss: files.stylesCss,
+    runtimeJs: files.runtimeJs,
+  };
+  if (source.isTemplate) {
+    if (Object.prototype.hasOwnProperty.call(raw, 'overlaysJson') || Object.prototype.hasOwnProperty.call(raw, 'serveState')) return null;
+    return { source, files: exactFiles };
+  }
+  const serveState = isRecord(raw.serveState) ? raw.serveState : null;
+  if (
     !isRecord(raw.overlaysJson) ||
     !serveState ||
     typeof serveState.published !== 'boolean' ||
@@ -80,11 +95,7 @@ function decodeStoredPage(raw: unknown): StoredAccountPage | null {
   ) return null;
   return {
     source,
-    files: {
-      indexHtml: files.indexHtml,
-      stylesCss: files.stylesCss,
-      runtimeJs: files.runtimeJs,
-    },
+    files: exactFiles,
     overlaysJson: raw.overlaysJson as PageServingOverlays,
     serveState: { published: serveState.published, needsUpdate: serveState.needsUpdate },
   };
@@ -185,14 +196,18 @@ export async function createAccountPage(args: {
   accountId: string;
   source: AccountPageSource;
   files: PageGeneratedFiles;
-  overlaysJson: PageServingOverlays;
+  overlaysJson?: PageServingOverlays;
   accountCapsule?: string | null;
   requestId?: string | null;
 }) {
   const result = await callTokyo(context(args), {
     path: '/__internal/pages',
     method: 'POST',
-    body: { source: args.source, files: args.files, overlaysJson: args.overlaysJson },
+    body: {
+      source: args.source,
+      files: args.files,
+      ...(!args.source.isTemplate ? { overlaysJson: args.overlaysJson } : {}),
+    },
     decode: (payload) => payload,
     errorDetail: 'tokyo_account_page_create_http_error',
     errorKey: 'coreui.errors.db.writeFailed',
@@ -225,7 +240,7 @@ export async function saveAccountPage(args: {
   pageId: string;
   source: AccountPageSource;
   files: PageGeneratedFiles;
-  overlaysJson: PageServingOverlays;
+  overlaysJson?: PageServingOverlays;
   operation: 'save' | 'update';
   accountCapsule?: string | null;
   requestId?: string | null;
@@ -233,7 +248,12 @@ export async function saveAccountPage(args: {
   const result = await callTokyo(context(args), {
     path: `/__internal/pages/${encodeURIComponent(args.pageId)}`,
     method: 'PUT',
-    body: { source: args.source, files: args.files, overlaysJson: args.overlaysJson, operation: args.operation },
+    body: {
+      source: args.source,
+      files: args.files,
+      ...(!args.source.isTemplate ? { overlaysJson: args.overlaysJson } : {}),
+      operation: args.operation,
+    },
     decode: (payload) => payload,
     errorDetail: 'tokyo_account_page_save_http_error',
     errorKey: 'coreui.errors.db.writeFailed',

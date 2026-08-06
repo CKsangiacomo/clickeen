@@ -36,6 +36,7 @@ type RouteFailure = {
 
 type SavedInstanceSourcePayload = {
   widgetType: string;
+  isTemplate: boolean;
   source: {
     content: {
       fields: Record<string, { value: string; identityKey?: string; fieldPattern?: string }>;
@@ -155,10 +156,11 @@ function normalizeStringArray(raw: unknown): string[] | null {
 function normalizeSavedInstanceSourcePayload(raw: unknown): SavedInstanceSourcePayload | null {
   if (!isRecord(raw)) return null;
   const widgetType = asTrimmedString(raw.widgetType);
+  const isTemplate = raw.isTemplate;
   const source = isRecord(raw.source) ? raw.source : null;
   const content = isRecord(source?.content) ? source.content : null;
   const fields = isRecord(content?.fields) ? content.fields : null;
-  if (!widgetType || !fields) return null;
+  if (!widgetType || (isTemplate !== true && isTemplate !== false) || !fields) return null;
   const normalizedFields: SavedInstanceSourcePayload['source']['content']['fields'] = {};
   for (const [path, field] of Object.entries(fields)) {
     if (!path || !isRecord(field) || typeof field.value !== 'string') return null;
@@ -168,7 +170,7 @@ function normalizeSavedInstanceSourcePayload(raw: unknown): SavedInstanceSourceP
       ...(typeof field.fieldPattern === 'string' && field.fieldPattern ? { fieldPattern: field.fieldPattern } : {}),
     };
   }
-  return { widgetType, source: { content: { fields: normalizedFields } } };
+  return { widgetType, isTemplate, source: { content: { fields: normalizedFields } } };
 }
 
 function isRichtextValue(value: string): boolean {
@@ -463,6 +465,7 @@ export async function generateAccountTranslations(args: {
       requestId: args.requestId,
     });
     if (!saved.ok) return saved;
+    if (saved.value.isTemplate) return invalidPayload('instance_template_cannot_translate');
     widgetType = saved.value.widgetType;
     items = buildTranslationAgentItems(saved.value.source.content);
   } else {

@@ -40,6 +40,13 @@ export async function POST(request: NextRequest, context: RouteContext) {
       current.value.setCookies,
     );
   }
+  if (!('overlaysJson' in page.value)) {
+    return withSession(
+      request,
+      NextResponse.json({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.page.publishInvalid' } }, { status: 422 }),
+      current.value.setCookies,
+    );
+  }
   if (!locales.ok) {
     return withSession(
       request,

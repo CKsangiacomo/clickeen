@@ -35,12 +35,11 @@ async function testCreateGateBeforeWork(): Promise<void> {
   assert.doesNotMatch(source, /readWidgetForInstancePackage|materializeAccountInstancePublicPackage/);
 }
 
-async function testCreateAndDuplicateStayInBrowserUntilSave(): Promise<void> {
-  const widgets = await readRoute('components/widgets-domain.tsx');
+async function testDuplicateStaysInBrowserUntilSave(): Promise<void> {
+  const widgets = await readRoute('components/widget-list.tsx');
   const builder = await readRoute('components/builder-domain.tsx');
   const bobSaving = await readFile(new URL('../../bob/lib/session/useSessionSaving.ts', import.meta.url), 'utf8');
 
-  assert.match(widgets, /router\.push\(`\/builder\?new=\$\{encodeURIComponent\(widgetType\)\}`\)/);
   assert.match(widgets, /router\.push\(`\/builder\?duplicate=\$\{encodeURIComponent\(instance\.instanceId\)\}`\)/);
   assert.doesNotMatch(widgets, /\/duplicate`/);
   assert.match(builder, /const newWidgetType = useMemo/);
@@ -128,7 +127,11 @@ async function testBuilderUsesBobTopDrawerAsItsOnlyEditorChrome(): Promise<void>
   assert.match(topDrawer, /className="topdrawer-more diet-popover-host"/);
   assert.match(topDrawer, /requestHostAction\('open-navigation'\)/);
   assert.match(topDrawer, /requestHostAction\('return'\)/);
-  assert.equal((topDrawer.match(/data-variant="primary"/g) ?? []).length, 1);
+  const topDrawerActions = topDrawer.slice(
+    topDrawer.indexOf('<div className="topdrawer-actions">'),
+    topDrawer.indexOf('<dialog ref={saveTemplateDialogRef}'),
+  );
+  assert.equal((topDrawerActions.match(/data-variant="primary"/g) ?? []).length, 1);
   assert.match(bobBoot, /message\.publishStatus === 'published'/);
   assert.match(bobBoot, /coreui\.errors\.builder\.publicActions\.invalid/);
   assert.match(bobBoot, /typeof publicActions\.clickeenJsSnippet !== 'string'/);
@@ -202,6 +205,10 @@ function testRomaOwnsExactPublicInstallActions(): void {
 
 async function testWidgetsListComposition(): Promise<void> {
   const source = await readRoute('components/widgets-domain.tsx');
+  const list = await readRoute('components/widget-list.tsx');
+  const templates = await readRoute('components/widget-template-list.tsx');
+  const templateData = await readRoute('components/use-roma-widget-templates.ts');
+  const catalog = await readRoute('components/widget-catalog.tsx');
   const route = await readRoute('app/(authed)/widgets/page.tsx');
   const catalogRoute = await readRoute('app/(authed)/widgets/catalog/page.tsx');
   const nav = await readRoute('components/roma-nav.tsx');
@@ -227,43 +234,49 @@ async function testWidgetsListComposition(): Promise<void> {
   assert.match(source, /\{ value: 'all', label: 'Show all' \}/);
   assert.match(source, /\{ value: 'published', label: 'Show published' \}/);
   assert.match(source, /\{ value: 'unpublished', label: 'Show unpublished' \}/);
-  assert.doesNotMatch(source, /WidgetSortHeader|roma-widget-sort/);
+  assert.match(source, /<WidgetList statusFilter=\{statusFilter\} \/>/);
+  assert.match(source, /<WidgetTemplateList \/>/);
+  assert.match(source, /<WidgetCatalog \/>/);
+  assert.doesNotMatch(source, /\/api\/account\/widgets|\/api\/account\/widget-catalog/);
+  assert.doesNotMatch(list, /WidgetSortHeader|roma-widget-sort/);
   assert.doesNotMatch(romaCss, /roma-widget-sort/);
-  assert.match(source, /type WidgetSortKey = 'widget' \| 'name' \| 'status'/);
-  assert.match(source, /<span>Widget<\/span>\{' '\}[\s\S]*?className="diet-btn-ic"[\s\S]*?data-size="xs"[\s\S]*?aria-label="Sort by widget"[\s\S]*?changeSort\('widget'\)/);
-  assert.match(source, /<span>Instance name<\/span>\{' '\}[\s\S]*?className="diet-btn-ic"[\s\S]*?data-size="xs"[\s\S]*?aria-label="Sort by instance name"[\s\S]*?changeSort\('name'\)/);
-  assert.match(source, /<span>Published<\/span>\{' '\}[\s\S]*?className="diet-btn-ic"[\s\S]*?data-size="xs"[\s\S]*?aria-label="Sort by published status"[\s\S]*?changeSort\('status'\)/);
-  assert.match(source, /aria-sort=\{sort\.key === 'widget' \? sort\.direction : 'none'\}/);
-  assert.match(source, /aria-sort=\{sort\.key === 'name' \? sort\.direction : 'none'\}/);
-  assert.match(source, /aria-sort=\{sort\.key === 'status' \? sort\.direction : 'none'\}/);
-  assert.match(source, /const displayedInstances = useMemo\(\(\) => \{\s+if \(!canRenderWidgetData\) return \[\];/);
-  assert.match(source, /catalogByWidgetType\.get\(left\.widgetType\)!\.displayName\.localeCompare/);
-  assertBefore(source, /<span>Widget<\/span>/, /<span>Instance name<\/span>/);
-  assertBefore(source, /<span>Instance name<\/span>/, /<span>Published<\/span>/);
-  assert.match(source, /displayedInstances\.map\(\(instance\)/);
-  assert.match(source, /displayedCatalog\.map\(\(option\)/);
-  assert.match(source, /handleCreateInstance\(option\.widgetType\)/);
-  assert.match(source, /checked=\{instance\.status === 'published'\}/);
-  assert.match(source, /handleStatusChange\(instance, event\.target\.checked \? 'published' : 'unpublished'\)/);
-  assert.match(source, /className="roma-widget-publish-actions"/);
-  assert.match(source, /instance\.status === 'published' \? \(/);
-  assert.match(source, />Copy code<\/span>/);
-  assert.match(source, /<PublicCodeDialog/);
-  assert.match(source, /<span className="body-xs roma-widget-instance-id">\{instance\.instanceId\}<\/span>/);
+  assert.match(list, /type WidgetSortKey = 'widget' \| 'name' \| 'status'/);
+  assert.match(list, /<span>Widget<\/span>\{' '\}[\s\S]*?className="diet-btn-ic"[\s\S]*?data-size="xs"[\s\S]*?aria-label="Sort by widget"[\s\S]*?changeSort\('widget'\)/);
+  assert.match(list, /<span>Instance name<\/span>\{' '\}[\s\S]*?className="diet-btn-ic"[\s\S]*?data-size="xs"[\s\S]*?aria-label="Sort by instance name"[\s\S]*?changeSort\('name'\)/);
+  assert.match(list, /<span>Published<\/span>\{' '\}[\s\S]*?className="diet-btn-ic"[\s\S]*?data-size="xs"[\s\S]*?aria-label="Sort by published status"[\s\S]*?changeSort\('status'\)/);
+  assert.match(list, /aria-sort=\{sort\.key === 'widget' \? sort\.direction : 'none'\}/);
+  assert.match(list, /aria-sort=\{sort\.key === 'name' \? sort\.direction : 'none'\}/);
+  assert.match(list, /aria-sort=\{sort\.key === 'status' \? sort\.direction : 'none'\}/);
+  assert.match(list, /const displayedInstances = useMemo\(\(\) => \{\s+if \(!canRenderWidgetData\) return \[\];/);
+  assert.match(list, /left\.widget\.localeCompare\(right\.widget\)/);
+  assertBefore(list, /<span>Widget<\/span>/, /<span>Instance name<\/span>/);
+  assertBefore(list, /<span>Instance name<\/span>/, /<span>Published<\/span>/);
+  assert.match(list, /displayedInstances\.map\(\(instance\)/);
+  assert.doesNotMatch(list, /displayedCatalog|catalogByWidgetType|handleCreateInstance/);
+  assert.match(list, /checked=\{instance\.status === 'published'\}/);
+  assert.match(list, /handleStatusChange\(instance, event\.target\.checked \? 'published' : 'unpublished'\)/);
+  assert.match(list, /className="roma-widget-publish-actions"/);
+  assert.match(list, /instance\.status === 'published' \? \(/);
+  assert.match(list, />Copy code<\/span>/);
+  assert.match(list, /<PublicCodeDialog/);
+  assert.match(list, /<span className="body-xs roma-widget-instance-id">\{instance\.instanceId\}<\/span>/);
   assert.match(romaCss, /\.roma-widget-publish-actions \{[\s\S]*justify-content: flex-start;/);
-  assert.match(source, /className="diet-popover roma-widget-actions-popover"/);
-  assert.match(source, /instanceId: string;\s+position:/);
-  assert.match(source, /instance\.instanceId === openWidgetActions\.instanceId/);
-  assert.doesNotMatch(source, /instance: WidgetInstance;\s+position:/);
-  assert.match(source, /\['ArrowDown', 'ArrowUp', 'Home', 'End'\]/);
-  assert.match(source, />Rename<\/span>/);
-  assert.match(source, />Duplicate<\/span>/);
-  assert.match(source, />Delete<\/span>/);
-  assert.match(source, /No \{statusFilter\} widgets\./);
-  assert.doesNotMatch(source, /groupedInstances|displayedGroups|groupSorts|changeGroupSort/);
+  assert.match(list, /className="diet-popover roma-widget-actions-popover"/);
+  assert.match(list, /instanceId: string;\s+position:/);
+  assert.match(list, /instance\.instanceId === openWidgetActions\.instanceId/);
+  assert.doesNotMatch(list, /instance: WidgetInstance;\s+position:/);
+  assert.match(list, /\['ArrowDown', 'ArrowUp', 'Home', 'End'\]/);
+  assert.match(list, />Rename<\/span>/);
+  assert.match(list, />Duplicate<\/span>/);
+  assert.match(list, />Save as template<\/span>/);
+  assert.match(list, />Delete<\/span>/);
+  assert.match(list, /No \{statusFilter\} widgets\./);
+  assert.doesNotMatch(list, /groupedInstances|displayedGroups|groupSorts|changeGroupSort/);
   assert.doesNotMatch(romaCss, /roma-widget-group/);
-  assert.doesNotMatch(source, /menuWidth|menuHeight/);
-  assert.doesNotMatch(source, /Unpublishing\.\.\.|Publishing\.\.\.|>Unpublish<|>Publish</);
+  assert.doesNotMatch(list, /menuWidth|menuHeight/);
+  assert.doesNotMatch(list, /Unpublishing\.\.\.|Publishing\.\.\.|>Unpublish<|>Publish</);
+  assert.match(templateData, /\/api\/account\/widget-templates/);
+  assert.match(catalog, /\/api\/account\/widget-catalog/);
 }
 
 async function testDieterLayoutTableAndPopupConsumption(): Promise<void> {
@@ -273,6 +286,7 @@ async function testDieterLayoutTableAndPopupConsumption(): Promise<void> {
   const tableCss = await readFile(new URL('../../dieter/components/table/table.css', import.meta.url), 'utf8');
   const assets = await readRoute('components/assets-domain.tsx');
   const widgets = await readRoute('components/widgets-domain.tsx');
+  const widgetList = await readRoute('components/widget-list.tsx');
   const dropdownActions = await readRoute('components/dieter-dropdown-actions.tsx');
   const textfield = await readRoute('components/dieter-textfield.tsx');
   const assetsPage = assets.slice(assets.indexOf('export function AssetsPage'), assets.indexOf('export function AssetsDomain'));
@@ -333,7 +347,7 @@ async function testDieterLayoutTableAndPopupConsumption(): Promise<void> {
   assert.match(assets, /filter\(\(asset\) => assetFilter === 'all' \|\| asset\.assetType === assetFilter\)/);
   assertBefore(assets, /filter\(\(asset\) => assetFilter/, /\.sort\(\(left, right\) =>/);
 
-  for (const [domain, source] of [['Assets', assets], ['Widgets', widgets]] as const) {
+  for (const [domain, source] of [['Assets', assets], ['Widgets', widgetList]] as const) {
     const sortableHeaders = source.match(/<th[^>]*aria-sort=[\s\S]*?<\/th>/g) ?? [];
     assert.ok(sortableHeaders.length > 0, `${domain} must have sortable headers`);
     for (const header of sortableHeaders) {
@@ -356,7 +370,7 @@ async function testDieterLayoutTableAndPopupConsumption(): Promise<void> {
 
   for (const relativePath of [
     'components/assets-domain.tsx',
-    'components/widgets-domain.tsx',
+    'components/widget-list.tsx',
     'components/team-domain.tsx',
   ]) {
     const source = await readRoute(relativePath);
@@ -370,7 +384,7 @@ async function testDieterLayoutTableAndPopupConsumption(): Promise<void> {
     'components/roma-unsaved-changes-dialog.tsx',
     'components/roma-upsell-dialog.tsx',
     'components/assets-domain.tsx',
-    'components/widgets-domain.tsx',
+    'components/widget-list.tsx',
     'components/public-code-dialog.tsx',
   ]) {
     const source = await readRoute(relativePath);
@@ -385,8 +399,8 @@ async function testDieterLayoutTableAndPopupConsumption(): Promise<void> {
 async function run(): Promise<void> {
   await testCreateGateBeforeWork();
   console.log('PASS Save-created Instance gate runs before id and Tokyo write work');
-  await testCreateAndDuplicateStayInBrowserUntilSave();
-  console.log('PASS Create and Duplicate stay in browser until explicit Save');
+  await testDuplicateStaysInBrowserUntilSave();
+  console.log('PASS Duplicate stays in browser until explicit Save');
   await testPublishGateBeforeTransition();
   console.log('PASS publish gate uses list-facts and runs before Tokyo publish transition');
   await testBuilderHandlesBobUpsell();

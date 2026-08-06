@@ -4,6 +4,7 @@ import {
 import { handleGetTokyoDeployAsset } from '../asset-utils';
 import {
   handleDeleteAccountAsset,
+  handleCopyClickeenCatalogAssets,
   handleGetAccountAsset,
   handleGetAccountAssetUsage,
   handleListAccountAssetMetadata,
@@ -42,6 +43,11 @@ export async function tryHandleAssetRoutes(
   if (pathname === '/__internal/assets/upload') {
     if (req.method !== 'POST') return respondMethodNotAllowed(respond);
     return respond(await handleUploadAccountAsset(req, env));
+  }
+
+  if (pathname === '/__internal/assets/catalog-copy') {
+    if (req.method !== 'POST') return respondMethodNotAllowed(respond);
+    return respond(await handleCopyClickeenCatalogAssets(req, env));
   }
 
   const accountAssetsListMatch = pathname.match(

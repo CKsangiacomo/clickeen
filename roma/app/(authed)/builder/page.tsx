@@ -3,7 +3,12 @@ import { RomaDomainErrorBoundary } from '../../../components/roma-domain-error-b
 import { RomaShell, RomaShellDefaultActions } from '../../../components/roma-shell';
 
 type BuilderLandingPageProps = {
-  searchParams: Promise<{ new?: string | string[]; duplicate?: string | string[] }>;
+  searchParams: Promise<{
+    new?: string | string[];
+    duplicate?: string | string[];
+    template?: string | string[];
+    catalogTemplate?: string | string[];
+  }>;
 };
 
 function firstQueryValue(value: string | string[] | undefined): string {
@@ -12,7 +17,12 @@ function firstQueryValue(value: string | string[] | undefined): string {
 
 export default async function BuilderLandingPage({ searchParams }: BuilderLandingPageProps) {
   const query = await searchParams;
-  const hasDraft = Boolean(firstQueryValue(query.new) || firstQueryValue(query.duplicate));
+  const hasDraft = Boolean(
+    firstQueryValue(query.new) ||
+    firstQueryValue(query.duplicate) ||
+    firstQueryValue(query.template) ||
+    firstQueryValue(query.catalogTemplate),
+  );
   return (
     <RomaShell
       activeDomain="builder"

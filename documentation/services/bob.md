@@ -82,7 +82,9 @@ full-canvas Builder body. Roma does not place a Page header, generic action
 band, padding, or module frame around Bob. `TopDrawer` is Bob-owned editor
 chrome, not a Roma Page header. It holds the instance label and publish state,
 Save as the primary editor action, Open public widget as the applicable
-secondary action, and one Copy code host intent under More. Roma presents the
+secondary action, conditional Save as template for an eligible saved ordinary
+Instance, and one Copy code host intent under More. A saved template instead
+shows a Template badge and Use template. Roma presents the
 shared public-code Popup and performs the browser copy; Bob neither reconstructs
 nor copies public values. A return control is context navigation rather than
 another CTA. In Compact mode TopDrawer also
@@ -104,6 +106,13 @@ The active account authoring flow is:
 9. Roma saves the current account instance through Tokyo-worker.
 
 Between open and save, Bob writes no account persistence.
+
+An ordinary saved Instance and a saved Widget template use the same editor and
+three-file Save authority. `isTemplate` in saved source selects the mode. A
+template draft opened through Use template has no ID and remains only in browser
+memory until ordinary Save. Templates omit translation, publish and public-code
+controls. Save as template first saves the current ordinary Instance, then asks
+Roma to create a separate saved template with a distinct name and ID.
 
 Ordinary control edits are path operations against the already validated open
 document. Bob applies the compiled control allowlist and value contract to the
@@ -149,6 +158,8 @@ Roma opens Bob:
   "policy": "[policySnapshot]",
   "accountPublicId": "[accountPublicId]",
   "instanceId": "[instanceId]",
+  "isTemplate": "[true|false]",
+  "templateDraft": "[optional true for an ID-less draft opened from a template]",
   "publishStatus": "[published|unpublished]",
   "label": "[displayName]",
   "returnLabel": "[optional host return label]",
@@ -156,6 +167,7 @@ Roma opens Bob:
     "publicUrl": "[exact published URL]",
     "clickeenJsSnippet": "[exact clickeen.js installer snippet]"
   },
+  "canSaveAsTemplate": "[host-computed role/source/capacity eligibility]",
   "copilot": "[copilotRuntimeUi]",
   "translationSetup": "[translationSetup]"
 }
@@ -201,7 +213,7 @@ Bob sends host navigation intents without owning Roma routes:
 ```json
 {
   "type": "bob:host-action",
-  "action": "[open-navigation|return|copy-code]"
+  "action": "[open-navigation|return|copy-code|use-template|save-as-template]"
 }
 ```
 
@@ -210,6 +222,11 @@ existing Roma navigation drawer. `return` follows Roma's sanitized return
 coordinate and existing unsaved-work guard. `copy-code` asks Roma to open the
 shared public-code Popup for the exact published values already supplied in the
 current Builder-open envelope.
+`use-template` asks Roma to open an ID-less ordinary draft from the current
+saved template. Bob owns the persistent **Save as template** action and its
+template-name Popup. It emits `save-as-template` only after Bob's current Save
+has succeeded. Roma owns the snapshot command, progress/outcome Popup, and
+**Open template** choice.
 
 Roma replies to account commands with:
 

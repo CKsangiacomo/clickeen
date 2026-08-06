@@ -234,6 +234,7 @@ export async function POST(request: NextRequest) {
       stylesCss: publicPackage.stylesCss,
       runtimeJs: publicPackage.runtimeJs,
     },
+    isTemplate: false,
     baseLocale,
     requestId: current.value.requestId,
   });
