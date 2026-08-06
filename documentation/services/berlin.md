@@ -252,6 +252,12 @@ Current product login provider:
 
 - `BERLIN_ALLOWED_PROVIDERS=google`
 
+The account identity contract retains both `google` and `email` login-provider
+values during pre-GA. The cloud-dev allowed-provider setting above names the
+provider currently exposed by that environment; it does not narrow the Michael
+schema or delete existing email identities. Enabling ordinary email login later
+uses the same Berlin identity/session authority, not an E2E session-mint route.
+
 Recommended:
 
 - `BERLIN_ISSUER`

@@ -85,7 +85,7 @@ Current enum values:
 | `public.account_status` | `active`, `suspended` |
 | `public.account_tier` | `free`, `tier1`, `tier2`, `tier3`, `tier4`, `tier99` |
 | `public.user_role` | `owner`, `admin`, `editor`, `viewer` |
-| `public.login_provider` | `google` |
+| `public.login_provider` | `google`, `email` |
 | `public.invitation_status` | `pending`, `accepted`, `revoked` |
 | `public.instance_publish_status` | `unpublished`, `published` |
 | `public.instance_translation_status` | `idle`, `queued`, `running`, `failed` |

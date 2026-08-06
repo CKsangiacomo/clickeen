@@ -168,6 +168,11 @@ Current account truth uses these relational tables/functions:
 | `accept_login_invitation_identity` | Invite acceptance plus user creation. |
 | `transfer_account_owner` | Owner transfer operation. |
 
+`users.login_provider` retains the ordinary `google | email` identity contract
+during pre-GA. Removing a test-only session-mint route does not remove email
+login support, rewrite existing email identities, or narrow this account-data
+contract. Berlin remains the one login/session authority for either provider.
+
 `accounts.id` is the compact account product/storage coordinate.
 `accountPublicId` is the API/embed/authz field name for that same value.
 Current Berlin/Roma payloads may carry both `accountId` and `accountPublicId`;

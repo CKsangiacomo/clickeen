@@ -83,9 +83,9 @@ Berlin does not own:
 - BER-05: deleted Roma `/api/e2e/session` and DevStudio `/api/e2e/session` because they only proxied the removed Berlin runtime test helper.
 - BER-05: removed E2E runtime env/config requirements from Berlin, Roma, DevStudio, and Cloudflare helper docs.
 - BER-05: changed Playwright setup to use an ignored storage-state file only; missing auth state skips authenticated specs instead of minting product runtime sessions.
-- BER-05: added Supabase migration `20260617193000__prd124a_remove_e2e_email_provider.sql` to make login providers Google-only. The migration fails explicitly if existing rows still use a non-Google login provider; it does not delete or rewrite account data.
-- Boundary rationale: Berlin owns product auth/session/bootstrap, not runtime test session minting. Product login remains Google-only. E2E state is external test material, not a product service.
-- Closure verification: independent BER-05 audit confirmed no active runtime E2E session mint route/config, no active `email` provider runtime path, fail-closed migration behavior for existing non-Google rows, and a clean V1-V8/product-law assessment.
+- BER-05 deleted the runtime E2E session-minting path without deleting the normal `email` login-provider value or existing email identities. The proposed Google-only migration was never applied and was removed on 2026-08-05 after the product owner confirmed that regular email login must remain available during pre-GA.
+- Boundary rationale: Berlin owns product auth/session/bootstrap, not runtime test session minting. Removing a test-only session route does not remove `email` as a product login-provider contract. The current cloud-dev human provider may remain Google while Berlin retains the ordinary `email` provider for pre-GA use.
+- Closure verification: the active runtime has no E2E session-mint route/config, `public.login_provider` remains `google | email`, existing email identities are preserved, and no migration rewrites or deletes account users.
 
 2026-06-17 BER-06 deletion slice:
 
