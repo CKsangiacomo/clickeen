@@ -1,5 +1,4 @@
 import { isRecord } from '@clickeen/ck-contracts';
-import type { AccountPageSource } from '@clickeen/ck-contracts/pages';
 import { isCompactPageId } from '@clickeen/ck-contracts/overlay-identity';
 import { NextRequest, NextResponse } from 'next/server';
 import { parseAccountPageSource } from '@roma/lib/account-page-contract';
@@ -76,7 +75,6 @@ export async function PUT(request: NextRequest, context: RouteContext) {
   const overlaysJson = bodyResult.payload?.overlaysJson;
   if (!submitted || !files || !isRecord(overlaysJson)) return withSession(request, NextResponse.json({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.page.sourceInvalid' } }, { status: 422 }), current.value.setCookies);
 
-  let source: AccountPageSource = submitted;
   if (!submitted.isTemplate) {
     const locales = await loadCurrentAccountLocalesState({
       accessToken: current.value.accessToken,
@@ -84,12 +82,14 @@ export async function PUT(request: NextRequest, context: RouteContext) {
       requestId: current.value.requestId,
     });
     if (!locales.ok) return withSession(request, NextResponse.json(locales.payload ?? { error: { kind: 'UPSTREAM_UNAVAILABLE', reasonKey: 'coreui.errors.auth.contextUnavailable', detail: locales.detail } }, { status: locales.status }), current.value.setCookies);
-    source = { ...submitted, baseLocale: locales.localePolicy.baseLocale };
+    if (submitted.baseLocale !== locales.localePolicy.baseLocale) {
+      return withSession(request, NextResponse.json({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.page.sourceInvalid' } }, { status: 422 }), current.value.setCookies);
+    }
   }
   const result = await saveAccountPage({
     accountId: current.value.authzPayload.accountPublicId,
     pageId,
-    source,
+    source: submitted,
     files,
     overlaysJson: overlaysJson as PageServingOverlays,
     accountCapsule: current.value.authzToken,

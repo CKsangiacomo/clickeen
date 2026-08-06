@@ -325,11 +325,13 @@ Visitor requests must not:
 If the requested public artifact is not available, the boundary returns an
 explicit failure such as 404.
 
-Page source is current account-owned product data. Web Code Generator includes
-deterministic Page generation, but Roma/Tokyo do not invoke, store, publish, or
-publicly serve generated Page files. Tokyo-worker has no placeholder Page
-public route and must not compose Pages from authoring source on visitor
-requests.
+Page source is current account-owned product data. On explicit Save or Update,
+Page Builder uses Web Code Generator in the browser and sends the exact current
+Page source, `index.html`, `styles.css`, `runtime.js`, and `overlays.json`
+through Roma to Tokyo. Publish changes only `serve-state.json`. Tokyo serves
+the stored files at the Page's stable and exact-locale `clk.live` routes.
+Visitor requests never invoke generation, translation, models, Roma, Page
+Builder, or child Widget URLs, and never compose a Page from authoring source.
 
 ## Tenet 12: Dieter Tokens First
 

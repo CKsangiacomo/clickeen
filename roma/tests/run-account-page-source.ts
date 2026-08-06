@@ -122,6 +122,21 @@ async function main() {
   assert.match(createRoute, /overlaysJson = bodyResult\.payload\?\.overlaysJson/);
   assert.match(saveRoute, /parseGeneratedFiles\(bodyResult\.payload\?\.files\)/);
   assert.match(saveRoute, /overlaysJson = bodyResult\.payload\?\.overlaysJson/);
+  assert.match(
+    saveRoute,
+    /if \(submitted\.baseLocale !== locales\.localePolicy\.baseLocale\)/,
+    'Page Update must reject a submitted package generated for a different account base locale',
+  );
+  assert.doesNotMatch(
+    saveRoute,
+    /source = \{ \.\.\.submitted, baseLocale: locales\.localePolicy\.baseLocale \}/,
+    'Page Update must never rewrite the submitted source locale',
+  );
+  assert.match(
+    saveRoute,
+    /source: submitted/,
+    'a matching submitted Page source must pass unchanged to Tokyo',
+  );
   assert.match(saveRoute, /pageAccess\(request, current, 'open_page'\)/);
   assert.match(saveRoute, /pageAccess\(request, current, 'save_page'\)/);
   assert.match(saveRoute, /pageAccess\(request, current, 'delete_page'\)/);
