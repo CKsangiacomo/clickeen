@@ -463,6 +463,20 @@ cleanly after the obsolete imports and routes are removed.
   selected locales: 27 successful overlays and one explicit `fil`
   `tokyo.errors.page.overlayInvalid` failure. The operation did not report full
   success, and the temporary Page was deleted afterward.
+- The initial independent review kept 127A open because the Page boundary
+  accepted only two-letter primary locale codes, Page translation used the
+  current account `baseLocale` instead of the saved Page `baseLocale`, and four
+  current documentation statements were inaccurate. Commit `f44d3b88`
+  corrected those findings without adding a service, route, job, validator, or
+  Page-specific translation path.
+- GitHub Actions `cloud-dev workers deploy` run `31062369845` deployed the
+  corrected Tokyo-worker successfully. Roma verification run `31062369839`
+  succeeded, and Cloudflare Pages project `roma-dev` reported commit
+  `f44d3b88` at deployment stage `success`.
+- The deployed Page Generate translations proof then returned 28 successful
+  terminal results for all 28 selected locales, including `fil`, with zero
+  failures. Its temporary Page returned `404` after Delete, and the documented
+  R2 read-back showed `accounts/CLICKEEN/pages/` empty.
 
 ## 15. Failure behavior
 
