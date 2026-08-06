@@ -7,7 +7,7 @@ const accountId = 'CLICKEEN';
 const pageId = 'PAGE123456';
 const root = `accounts/${accountId}/pages/${pageId}`;
 
-function createEnv(published = true, needsUpdate = false, omitNeedsUpdate = false) {
+function createEnv(published = true, needsUpdate = false, omitNeedsUpdate = false, isTemplate = false) {
   const objects = new Map<string, Stored>();
   const put = (key: string, value: unknown, contentType = 'application/json; charset=utf-8') => {
     objects.set(key, {
@@ -15,7 +15,20 @@ function createEnv(published = true, needsUpdate = false, omitNeedsUpdate = fals
       httpMetadata: { contentType },
     });
   };
-  put(`${root}/source.json`, {
+  put(`${root}/source.json`, isTemplate ? {
+    pageId,
+    displayName: 'Summer template',
+    isTemplate: true,
+    values: { title: 'Summer' },
+    robots: 'index-follow',
+    placements: [],
+    catalogPresentation: {
+      thumbnailAssetRef: '/assets/account/CLICKEEN/catalog/summer.jpg',
+      description: 'Summer template',
+      category: 'Seasonal',
+      displayOrder: 0,
+    },
+  } : {
     pageId,
     displayName: 'Summer',
     isTemplate: false,
@@ -24,17 +37,19 @@ function createEnv(published = true, needsUpdate = false, omitNeedsUpdate = fals
     robots: 'index-follow',
     placements: [{ placementId: 'hero', instanceId: 'ABCD123456' }],
   });
-  put(`${root}/serve-state.json`, omitNeedsUpdate ? { published } : { published, needsUpdate });
-  put(`${root}/overlays.json`, {
-    'it-IT': {
-      page: { title: 'Estate' },
-      placements: { hero: {
-        'header.title': 'Benvenuti',
-        'faq.sections.0.faqs.0.question': 'Che cos’è Clickeen?',
-        'faq.sections.0.faqs.0.answer': '<p>Una piattaforma globale di widget.</p>',
-      } },
-    },
-  });
+  if (!isTemplate) {
+    put(`${root}/serve-state.json`, omitNeedsUpdate ? { published } : { published, needsUpdate });
+    put(`${root}/overlays.json`, {
+      'it-IT': {
+        page: { title: 'Estate' },
+        placements: { hero: {
+          'header.title': 'Benvenuti',
+          'faq.sections.0.faqs.0.question': 'Che cos’è Clickeen?',
+          'faq.sections.0.faqs.0.answer': '<p>Una piattaforma globale di widget.</p>',
+        } },
+      },
+    });
+  }
   put(`${root}/index.html`, `<!doctype html><html lang="en-US"><head>
     <title data-ck-field-path="values.title" data-ck-field-target="text">Summer</title>
     <meta property="og:title" content="Summer" data-ck-field-path="values.title" data-ck-field-target="attribute:content" />
@@ -120,6 +135,12 @@ async function main() {
     'missing Page currency must fail instead of silently becoming Current',
   );
   assert.equal((await request(`/${accountId}/pages/${pageId}/en-US`, createEnv(false)))?.status, 404);
+
+  const templateEnv = createEnv(true, false, false, true);
+  assert.equal((await request(`/${accountId}/pages/${pageId}`, templateEnv))?.status, 404);
+  assert.equal((await request(`/${accountId}/pages/${pageId}/en-US`, templateEnv))?.status, 404);
+  assert.equal((await request(`/${accountId}/pages/${pageId}/styles.css`, templateEnv))?.status, 404);
+  assert.equal((await request(`/${accountId}/pages/${pageId}/runtime.js`, templateEnv))?.status, 404);
 
   console.log('Tokyo Page public serving verification passed.');
 }

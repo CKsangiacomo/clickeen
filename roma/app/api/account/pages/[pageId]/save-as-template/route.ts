@@ -123,6 +123,16 @@ export async function POST(request: NextRequest, context: RouteContext) {
       current.value.setCookies,
     );
   }
+  if (accountId === 'CLICKEEN' && source.value.source.placements.length > 0) {
+    return withSession(
+      request,
+      NextResponse.json(
+        { error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.invalid' } },
+        { status: 422 },
+      ),
+      current.value.setCookies,
+    );
+  }
 
   const inventory = await listAccountPageSources({
     accountId,

@@ -1,5 +1,5 @@
 import { isCompactAccountPublicId, isCompactPageId } from '@clickeen/ck-contracts/overlay-identity';
-import { completePagePublicHtml, readAccountPage } from '../domains/pages';
+import { completePagePublicHtml, readAccountPageRecord } from '../domains/pages';
 import { respondMethodNotAllowed, type TokyoRouteArgs } from '../route-helpers';
 
 type ParsedPagePath = {
@@ -94,13 +94,19 @@ export async function tryHandleClkLivePageRoutes(args: TokyoRouteArgs): Promise<
   if (!parsed) return null;
   if (args.req.method !== 'GET' && args.req.method !== 'HEAD') return respondMethodNotAllowed(args.respond);
 
-  let page: Awaited<ReturnType<typeof readAccountPage>>;
+  let page: Awaited<ReturnType<typeof readAccountPageRecord>>;
   try {
-    page = await readAccountPage({ env: args.env, accountId: parsed.accountId, pageId: parsed.pageId });
+    page = await readAccountPageRecord({ env: args.env, accountId: parsed.accountId, pageId: parsed.pageId });
   } catch {
     return args.respond(noStoreResponse('Page unavailable', 500));
   }
-  if (!page || page.source.isTemplate || !page.serveState.published) {
+  if (!page || page.source.isTemplate) {
+    return args.respond(noStoreResponse('Page not found', 404));
+  }
+  if (!('serveState' in page)) {
+    return args.respond(noStoreResponse('Page not found', 404));
+  }
+  if (!page.serveState.published) {
     return args.respond(noStoreResponse('Page not found', 404));
   }
 

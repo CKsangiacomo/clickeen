@@ -72,6 +72,7 @@ async function verifyPageCommand(): Promise<void> {
   assert.doesNotMatch(route, /overlaysJson:|baseLocale:/);
   assertBefore(route, 'const templateInput = readTemplateInput(body.payload, accountId);', write);
   assertBefore(route, 'source.value.source.isTemplate || source.value.source.displayName === templateName', write);
+  assertBefore(route, "accountId === 'CLICKEEN' && source.value.source.placements.length > 0", write);
   assertBefore(route, 'if (access.limit !== null && inventory.value.sources.length >= access.limit)', write);
   assertBefore(route, 'let templateId = createCompactPageId();', write);
   assert.match(route, /isTemplate: true,/);
@@ -82,6 +83,7 @@ async function verifyPageCommand(): Promise<void> {
   assert.match(route, /files: source\.value\.files,/);
   assert.match(route, /source\.value\.source\.pageId !== pageId/);
   assert.match(route, /while \(templateId === pageId \|\| inventory\.value\.sources\.some/);
+  assert.match(route, /accountId === 'CLICKEEN' && source\.value\.source\.placements\.length > 0/);
 }
 
 async function main(): Promise<void> {

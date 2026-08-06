@@ -47,6 +47,8 @@ assert.match(session, /accessToken: refreshed\.accessToken/);
 assert.match(middleware, /context\.data\.devstudioSession = session/);
 assert.match(widgets, /json\(\{ templates, sources, widgetTypes: Object\.keys\(widgets\)\.sort\(\) \}\)/);
 assert.match(pages, /json\(\{ templates, sources \}\)/);
+assert.match(pages, /Array\.isArray\(row\.source\.placements\)/);
+assert.match(pages, /filter\(\(row\) => row\.placements\.length === 0\)/);
 assert.match(widgets, /\/api\/account\/instances\/\$\{payload\.sourceId\}\/save-as-template/);
 assert.match(pages, /\/api\/account\/pages\/\$\{payload\.sourceId\}\/save-as-template/);
 assert.match(widgetDetail, /method: 'PATCH'/);

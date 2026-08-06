@@ -38,13 +38,16 @@ async function list(context, session) {
       ? { templateId: row.pageId, templateName: row.displayName, catalogPresentation }
       : null;
   });
-  const sources = sourceRows.map((row) => row?.source && typeof row.source.pageId === 'string' &&
-    typeof row.source.displayName === 'string'
-    ? { sourceId: row.source.pageId, displayName: row.source.displayName }
+  const sourceRecords = sourceRows.map((row) => row?.source && typeof row.source.pageId === 'string' &&
+    typeof row.source.displayName === 'string' && Array.isArray(row.source.placements)
+    ? { sourceId: row.source.pageId, displayName: row.source.displayName, placements: row.source.placements }
     : null);
-  if (templates.some((row) => !row) || sources.some((row) => !row)) {
+  if (templates.some((row) => !row) || sourceRecords.some((row) => !row)) {
     return invalidUpstream('Roma Page catalog item is invalid');
   }
+  const sources = sourceRecords
+    .filter((row) => row.placements.length === 0)
+    .map(({ sourceId, displayName }) => ({ sourceId, displayName }));
   return json({ templates, sources });
 }
 
