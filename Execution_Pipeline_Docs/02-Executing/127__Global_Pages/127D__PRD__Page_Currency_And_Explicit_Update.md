@@ -1,6 +1,6 @@
 # 127D — Page Update State
 
-Status: **APPROVED FOR EXECUTION — EXECUTE AFTER 127A–127C ARE DEPLOYED AND VERIFIED**
+Status: **EXECUTED, DEPLOYED, VERIFIED, AND REVIEW-GREEN**
 
 Parent: `127__PRD__Global_Pages_Program.md`
 
@@ -237,3 +237,27 @@ clears it only after success, no duplicate boundary or rejected freshness
 machinery is introduced, current documentation matches runtime, and V1–V8 are
 independently GREEN. 127E completes the customer-facing Current/Needs update
 experience.
+
+## 12. Execution evidence
+
+- Implementation commit: `a623d64e02f82857b65159e33ae2a38993feeb99`.
+- Focused checks passed:
+  - `pnpm --filter @clickeen/tokyo-worker test:page-contract`;
+  - `pnpm --filter @clickeen/tokyo-worker test:page-serving`;
+  - `pnpm --filter @clickeen/tokyo-worker test:widget-cache`;
+  - `pnpm --filter @clickeen/roma test:account-page-source`.
+- Repository checks passed sequentially: `pnpm typecheck`, `pnpm lint`,
+  `pnpm build`, and `git diff --check`.
+- Cloudflare gates passed: `pnpm cf:preflight` and
+  `pnpm cf:api:preflight`.
+- Exact-commit deploy evidence passed:
+  - GitHub Actions `cloud-dev workers deploy` run `31081223586`;
+  - GitHub Actions `cloud-dev roma app verify` run `31081223494`;
+  - Cloudflare Roma Pages deployment
+    `eb50972b-4b4b-46b1-80d9-3395062fc6a2` with `deploy: success`;
+  - GitHub Actions `cloud-dev surface reachability` run `31081422657`.
+- The documented Roma `/home` surface returned the expected authenticated
+  redirect and Tokyo `/healthz` returned `{ "up": true }`.
+- Staff Engineer, Senior PM, and Principal TPM independent execution reviews
+  all returned GREEN with no correction required.
+- Independent V1–V8 result: GREEN for every violation class.
