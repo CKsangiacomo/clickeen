@@ -21,6 +21,8 @@
     "cf:api:preflight": "node scripts/cloudflare/api.mjs preflight",
     "cf:pages:list": "node scripts/cloudflare/api.mjs pages:list",
     "cf:pages:project": "node scripts/cloudflare/api.mjs pages:project",
+    "cf:pages:deployments": "node scripts/cloudflare/api.mjs pages:deployments",
+    "cf:pages:rollback": "node scripts/cloudflare/api.mjs pages:rollback",
     "cf:pages:devstudio-env": "node scripts/cloudflare/api.mjs pages:devstudio-env",
     "cf:pages:sync-devstudio-env": "node scripts/cloudflare/api.mjs pages:sync-devstudio-env",
     "cf:pages:sync-devstudio-project": "node scripts/cloudflare/api.mjs pages:sync-devstudio-project",

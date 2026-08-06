@@ -238,6 +238,8 @@ remote key must be verified. Verify the shared installer at exact R2 key
 pnpm cf:api:preflight
 pnpm cf:pages:list
 pnpm cf:pages:project <project-name>
+pnpm cf:pages:deployments <project-name>
+pnpm cf:pages:rollback <project-name> <deployment-id> --apply
 pnpm cf:pages:devstudio-env
 pnpm cf:pages:sync-devstudio-env [--apply]
 pnpm cf:pages:sync-devstudio-project [--apply]

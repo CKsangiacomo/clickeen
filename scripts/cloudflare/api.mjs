@@ -133,6 +133,23 @@ async function getPagesProject(config, projectName) {
   return body.result ?? {};
 }
 
+async function listPagesDeployments(config, projectName) {
+  const body = await cf(
+    config,
+    `/accounts/${config.accountId}/pages/projects/${encodeURIComponent(projectName)}/deployments?env=production&per_page=20`,
+  );
+  return Array.isArray(body.result) ? body.result : [];
+}
+
+async function rollbackPagesDeployment(config, projectName, deploymentId) {
+  const body = await cf(
+    config,
+    `/accounts/${config.accountId}/pages/projects/${encodeURIComponent(projectName)}/deployments/${encodeURIComponent(deploymentId)}/rollback`,
+    { method: 'POST' },
+  );
+  return body.result ?? {};
+}
+
 async function patchPagesProject(config, projectName, payload) {
   const body = await cf(config, `/accounts/${config.accountId}/pages/projects/${encodeURIComponent(projectName)}`, {
     method: 'PATCH',
@@ -631,6 +648,8 @@ function usage() {
   pnpm cf:api:preflight
   pnpm cf:pages:list
   pnpm cf:pages:project <project-name>
+  pnpm cf:pages:deployments <project-name>
+  pnpm cf:pages:rollback <project-name> <deployment-id> --apply
   pnpm cf:pages:devstudio-env
   pnpm cf:pages:sync-devstudio-env [--apply]
   pnpm cf:pages:sync-devstudio-project [--apply]
@@ -669,6 +688,21 @@ async function main() {
     const projectName = args[0];
     if (!projectName) throw new Error('Missing project name.');
     printJson(summarizeProjectDetails(await getPagesProject(config, projectName)));
+    return;
+  }
+
+  if (command === 'pages:deployments') {
+    const projectName = args[0];
+    if (!projectName) throw new Error('Missing project name.');
+    printJson((await listPagesDeployments(config, projectName)).map(summarizeLatestDeployment));
+    return;
+  }
+
+  if (command === 'pages:rollback') {
+    const [projectName, deploymentId] = args;
+    if (!projectName || !deploymentId) throw new Error('Missing project name or deployment id.');
+    if (!args.includes('--apply')) throw new Error('Rollback requires --apply.');
+    printJson(summarizeLatestDeployment(await rollbackPagesDeployment(config, projectName, deploymentId)));
     return;
   }
 
