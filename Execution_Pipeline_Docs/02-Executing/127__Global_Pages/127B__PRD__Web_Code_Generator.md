@@ -44,6 +44,10 @@ Verification completed on the cloud-dev product surfaces:
   HTML without unresolved public markers;
 - the authenticated Roma Builder browser smoke passed, and reopening a saved
   current package leaves Save hidden because no working files changed;
+- the final program gate directly proved that the existing Widget
+  `limits.json` mapping rejects `behavior.seoGeoAeoEnabled: true` in Bob's edit
+  context and Roma's save policy for Free, while Tier 2 accepts the same
+  choice; no second entitlement check or policy owner was added;
 - Bob and Roma Cloudflare Pages deployments for `d3e3e48b` completed
   successfully; the Prague code cutover was verified by GitHub Actions and its
   successful Pages deployment for `f4071ab5`;

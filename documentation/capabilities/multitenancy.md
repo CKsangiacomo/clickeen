@@ -235,7 +235,7 @@ Current entitlement keys:
 | --- | --- | --- | --- |
 | `l10n.locales.max` | limit | Roma account locale settings | enforced |
 | `branding.remove` | flag | Roma save policy | enforced |
-| `embed.seoGeo.enabled` | flag | no proven active runtime owner outside policy metadata | gap |
+| `embed.seoGeo.enabled` | flag | Bob Widget editor operations and Roma Instance save policy | enforced |
 | `widget.socialShare.enabled` | flag | Roma save policy | enforced |
 | `copilot.turns.monthly.max` | limit | Roma copilot grant issuance | enforced |
 | `storage.bytes.max` | limit | Roma upload route and Tokyo-worker assets | enforced |
@@ -286,11 +286,6 @@ account and never infer Catalog membership from widget type, tier, or a second
 registry. Customer Catalog routes are read-only. DevStudio manages CLICKEEN
 template source and presentation through Roma, which remains the account
 authority and writes through Tokyo-worker.
-
-Operator warning: `packages/ck-policy/src/registry.ts` currently marks
-`embed.seoGeo.enabled` as `enforced`, but runtime evidence does not prove an
-active consumer in Roma save, Roma publish, or Tokyo-worker public serving.
-Treat this row as conflicting policy metadata until code and registry agree.
 
 PRD 127's accepted target keeps two existing keys separate:
 
@@ -361,7 +356,7 @@ These are not active runtime truth:
 | Relational account schema | Supabase migrations and `documentation/services/michael.md` |
 | Role/account invariant | `users.account_id` and `users.role` current truth |
 | Entitlement keys/values | `packages/ck-policy/entitlements.matrix.json` |
-| Entitlement metadata/enforcement status | runtime owner evidence plus `packages/ck-policy/src/registry.ts`; `embed.seoGeo.enabled` currently conflicts |
+| Entitlement metadata/enforcement status | runtime owner evidence plus `packages/ck-policy/src/registry.ts` |
 | Account files | Roma routes first; raw bytes require `pnpm cf:preflight` and R2 evidence |
 | Page storage/publication | Roma Page routes plus Tokyo-worker exact direct Page root and `serve-state.json` |
 | Public Page isolation | published `clk.live/{accountPublicId}/pages/{pageId}/{locale}` response and account-scoped R2 evidence |

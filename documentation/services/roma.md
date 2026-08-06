@@ -362,6 +362,11 @@ name, and Published sorts run over the validated account list in the browser.
 Their headers use the shared `xs` Dieter sort control: the active
 sort is black and inactive sorts are gray.
 
+The route component remains composition-only. Widget loading and commands,
+the Dieter Table, row actions, and dialogs stay in their named local
+responsibilities; Roma does not put those concerns back into one renamed
+Widget-list owner or introduce another service for them.
+
 **My templates** reuses the Dieter table. A row carries a Template badge and
 Edit, with Use template, Rename, and Delete in its ellipsis menu. It has no
 publish, locale, translation, public URL, or Copy code controls. **Widget

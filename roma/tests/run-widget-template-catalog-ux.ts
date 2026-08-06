@@ -7,13 +7,18 @@ async function read(path: string): Promise<string> {
 }
 
 async function main(): Promise<void> {
-  const [domain, ordinary, templates, catalog, templateData] = await Promise.all([
+  const [domain, listShell, controller, table, rowActions, dialogs, templates, catalog, templateData] = await Promise.all([
     read('components/widgets-domain.tsx'),
     read('components/widget-list.tsx'),
+    read('components/use-widget-list-controller.ts'),
+    read('components/widget-list-table.tsx'),
+    read('components/widget-row-actions.tsx'),
+    read('components/widget-list-dialogs.tsx'),
     read('components/widget-template-list.tsx'),
     read('components/widget-catalog.tsx'),
     read('components/use-roma-widget-templates.ts'),
   ]);
+  const ordinary = [listShell, controller, table, rowActions, dialogs].join('\n');
 
   assert.match(domain, /type WidgetsView = 'your-widgets' \| 'templates' \| 'catalog'/);
   assert.match(domain, /<WidgetList statusFilter=\{statusFilter\} \/>/);

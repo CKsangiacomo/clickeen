@@ -1,9 +1,21 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
+import { evaluateLimits, parseLimitsSpec, resolvePolicy } from '@clickeen/ck-policy';
+import { validateAccountInstanceSavePolicy } from '../lib/account-instance-save-policy';
 import { buildPagePublicActions, buildWidgetPublicActions } from '../lib/public-actions';
 
 async function readRoute(relativePath: string): Promise<string> {
   return readFile(new URL(`../${relativePath}`, import.meta.url), 'utf8');
+}
+
+async function readWidgetListSources(): Promise<string> {
+  return (await Promise.all([
+    'components/widget-list.tsx',
+    'components/use-widget-list-controller.ts',
+    'components/widget-list-table.tsx',
+    'components/widget-row-actions.tsx',
+    'components/widget-list-dialogs.tsx',
+  ].map(readRoute))).join('\n');
 }
 
 function assertBefore(source: string, earlier: string | RegExp, later: string | RegExp): void {
@@ -17,6 +29,51 @@ function assertBefore(source: string, earlier: string | RegExp, later: string | 
 function assertNoOldUpgradePath(source: string): void {
   assert.doesNotMatch(source, /coreui\.upsell\.reason\.limitReached/);
   assert.doesNotMatch(source, /status:\s*403/);
+}
+
+async function testSeoGeoEntitlementUsesExistingWidgetLimits(): Promise<void> {
+  const rawLimits = JSON.parse(
+    await readFile(new URL('../../tokyo/product/widgets/big-bang/limits.json', import.meta.url), 'utf8'),
+  ) as unknown;
+  const limits = parseLimitsSpec(rawLimits);
+  const config = { behavior: { seoGeoAeoEnabled: true } };
+
+  assert.deepEqual(
+    evaluateLimits({
+      config,
+      limits,
+      policy: resolvePolicy({ profile: 'free', role: 'owner' }),
+      context: 'ops',
+    }),
+    [{
+      key: 'embed.seoGeo.enabled',
+      path: 'behavior.seoGeoAeoEnabled',
+      reasonKey: 'coreui.upsell.reason.flagBlocked',
+    }],
+  );
+
+  const freeResult = validateAccountInstanceSavePolicy({
+    config,
+    authz: { profile: 'free', role: 'owner' },
+    limits,
+  });
+  assert.deepEqual(freeResult, {
+    ok: false,
+    status: 422,
+    error: {
+      kind: 'VALIDATION',
+      reasonKey: 'coreui.upsell.reason.flagBlocked',
+      detail: 'embed.seoGeo.enabled',
+      paths: ['behavior.seoGeoAeoEnabled'],
+    },
+  });
+
+  const paidResult = validateAccountInstanceSavePolicy({
+    config,
+    authz: { profile: 'tier2', role: 'owner' },
+    limits,
+  });
+  assert.deepEqual(paidResult, { ok: true });
 }
 
 async function testCreateGateBeforeWork(): Promise<void> {
@@ -36,7 +93,7 @@ async function testCreateGateBeforeWork(): Promise<void> {
 }
 
 async function testDuplicateStaysInBrowserUntilSave(): Promise<void> {
-  const widgets = await readRoute('components/widget-list.tsx');
+  const widgets = await readWidgetListSources();
   const builder = await readRoute('components/builder-domain.tsx');
   const bobSaving = await readFile(new URL('../../bob/lib/session/useSessionSaving.ts', import.meta.url), 'utf8');
 
@@ -205,7 +262,12 @@ function testRomaOwnsExactPublicInstallActions(): void {
 
 async function testWidgetsListComposition(): Promise<void> {
   const source = await readRoute('components/widgets-domain.tsx');
-  const list = await readRoute('components/widget-list.tsx');
+  const listShell = await readRoute('components/widget-list.tsx');
+  const controller = await readRoute('components/use-widget-list-controller.ts');
+  const table = await readRoute('components/widget-list-table.tsx');
+  const rowActions = await readRoute('components/widget-row-actions.tsx');
+  const dialogs = await readRoute('components/widget-list-dialogs.tsx');
+  const list = [listShell, controller, table, rowActions, dialogs].join('\n');
   const templates = await readRoute('components/widget-template-list.tsx');
   const templateData = await readRoute('components/use-roma-widget-templates.ts');
   const catalog = await readRoute('components/widget-catalog.tsx');
@@ -238,39 +300,40 @@ async function testWidgetsListComposition(): Promise<void> {
   assert.match(source, /<WidgetTemplateList \/>/);
   assert.match(source, /<WidgetCatalog \/>/);
   assert.doesNotMatch(source, /\/api\/account\/widgets|\/api\/account\/widget-catalog/);
-  assert.doesNotMatch(list, /WidgetSortHeader|roma-widget-sort/);
+  assert.match(listShell, /const controller = useWidgetListController\(statusFilter\)/);
+  assert.match(listShell, /<WidgetListTable controller=\{controller\} \/>/);
+  assert.match(listShell, /<WidgetListDialogs controller=\{controller\} \/>/);
+  assert.doesNotMatch(listShell, /fetchJson|useEffect|useState|createPortal/);
+  assert.doesNotMatch(list, /roma-widget-sort/);
   assert.doesNotMatch(romaCss, /roma-widget-sort/);
-  assert.match(list, /type WidgetSortKey = 'widget' \| 'name' \| 'status'/);
-  assert.match(list, /<span>Widget<\/span>\{' '\}[\s\S]*?className="diet-btn-ic"[\s\S]*?data-size="xs"[\s\S]*?aria-label="Sort by widget"[\s\S]*?changeSort\('widget'\)/);
-  assert.match(list, /<span>Instance name<\/span>\{' '\}[\s\S]*?className="diet-btn-ic"[\s\S]*?data-size="xs"[\s\S]*?aria-label="Sort by instance name"[\s\S]*?changeSort\('name'\)/);
-  assert.match(list, /<span>Published<\/span>\{' '\}[\s\S]*?className="diet-btn-ic"[\s\S]*?data-size="xs"[\s\S]*?aria-label="Sort by published status"[\s\S]*?changeSort\('status'\)/);
-  assert.match(list, /aria-sort=\{sort\.key === 'widget' \? sort\.direction : 'none'\}/);
-  assert.match(list, /aria-sort=\{sort\.key === 'name' \? sort\.direction : 'none'\}/);
-  assert.match(list, /aria-sort=\{sort\.key === 'status' \? sort\.direction : 'none'\}/);
-  assert.match(list, /const displayedInstances = useMemo\(\(\) => \{\s+if \(!canRenderWidgetData\) return \[\];/);
-  assert.match(list, /left\.widget\.localeCompare\(right\.widget\)/);
-  assertBefore(list, /<span>Widget<\/span>/, /<span>Instance name<\/span>/);
-  assertBefore(list, /<span>Instance name<\/span>/, /<span>Published<\/span>/);
-  assert.match(list, /displayedInstances\.map\(\(instance\)/);
+  assert.match(controller, /type WidgetSortKey = 'widget' \| 'name' \| 'status'/);
+  assert.match(table, /ariaLabel="Sort by widget"[\s\S]*?label="Widget" sortKey="widget"/);
+  assert.match(table, /ariaLabel="Sort by instance name"[\s\S]*?label="Instance name" sortKey="name"/);
+  assert.match(table, /ariaLabel="Sort by published status"[\s\S]*?label="Published" sortKey="status"/);
+  assert.match(table, /aria-sort=\{active \? controller\.sort\.direction : 'none'\}/);
+  assert.match(controller, /const displayedInstances = useMemo\(\(\) => \{\s+if \(!canRenderWidgetData\) return \[\];/);
+  assert.match(controller, /left\.widget\.localeCompare\(right\.widget\)/);
+  assertBefore(table, /controller=\{controller\} label="Widget"/, /controller=\{controller\} label="Instance name"/);
+  assertBefore(table, /controller=\{controller\} label="Instance name"/, /controller=\{controller\} label="Published"/);
+  assert.match(table, /controller\.displayedInstances\.map\(\(instance\)/);
   assert.doesNotMatch(list, /displayedCatalog|catalogByWidgetType|handleCreateInstance/);
-  assert.match(list, /checked=\{instance\.status === 'published'\}/);
-  assert.match(list, /handleStatusChange\(instance, event\.target\.checked \? 'published' : 'unpublished'\)/);
-  assert.match(list, /className="roma-widget-publish-actions"/);
-  assert.match(list, /instance\.status === 'published' \? \(/);
-  assert.match(list, />Copy code<\/span>/);
-  assert.match(list, /<PublicCodeDialog/);
-  assert.match(list, /<span className="body-xs roma-widget-instance-id">\{instance\.instanceId\}<\/span>/);
+  assert.match(table, /checked=\{instance\.status === 'published'\}/);
+  assert.match(table, /handleStatusChange\(instance, event\.target\.checked \? 'published' : 'unpublished'\)/);
+  assert.match(table, /className="roma-widget-publish-actions"/);
+  assert.match(table, /instance\.status === 'published' \? \(/);
+  assert.match(table, />Copy code<\/span>/);
+  assert.match(dialogs, /<PublicCodeDialog/);
+  assert.match(table, /<span className="body-xs roma-widget-instance-id">\{instance\.instanceId\}<\/span>/);
   assert.match(romaCss, /\.roma-widget-publish-actions \{[\s\S]*justify-content: flex-start;/);
-  assert.match(list, /className="diet-popover roma-widget-actions-popover"/);
-  assert.match(list, /instanceId: string;\s+position:/);
-  assert.match(list, /instance\.instanceId === openWidgetActions\.instanceId/);
-  assert.doesNotMatch(list, /instance: WidgetInstance;\s+position:/);
-  assert.match(list, /\['ArrowDown', 'ArrowUp', 'Home', 'End'\]/);
-  assert.match(list, />Rename<\/span>/);
-  assert.match(list, />Duplicate<\/span>/);
-  assert.match(list, />Save as template<\/span>/);
-  assert.match(list, />Delete<\/span>/);
-  assert.match(list, /No \{statusFilter\} widgets\./);
+  assert.match(rowActions, /className="diet-popover roma-widget-actions-popover"/);
+  assert.match(rowActions, /const \[position, setPosition\] = useState/);
+  assert.doesNotMatch(rowActions, /useState<WidgetInstance/);
+  assert.match(rowActions, /\['ArrowDown', 'ArrowUp', 'Home', 'End'\]/);
+  assert.match(rowActions, />Rename<\/span>/);
+  assert.match(rowActions, />Duplicate<\/span>/);
+  assert.match(rowActions, />Save as template<\/span>/);
+  assert.match(rowActions, />Delete<\/span>/);
+  assert.match(listShell, /No \{statusFilter\} widgets\./);
   assert.doesNotMatch(list, /groupedInstances|displayedGroups|groupSorts|changeGroupSort/);
   assert.doesNotMatch(romaCss, /roma-widget-group/);
   assert.doesNotMatch(list, /menuWidth|menuHeight/);
@@ -286,7 +349,7 @@ async function testDieterLayoutTableAndPopupConsumption(): Promise<void> {
   const tableCss = await readFile(new URL('../../dieter/components/table/table.css', import.meta.url), 'utf8');
   const assets = await readRoute('components/assets-domain.tsx');
   const widgets = await readRoute('components/widgets-domain.tsx');
-  const widgetList = await readRoute('components/widget-list.tsx');
+  const widgetList = await readWidgetListSources();
   const dropdownActions = await readRoute('components/dieter-dropdown-actions.tsx');
   const textfield = await readRoute('components/dieter-textfield.tsx');
   const assetsPage = assets.slice(assets.indexOf('export function AssetsPage'), assets.indexOf('export function AssetsDomain'));
@@ -370,7 +433,7 @@ async function testDieterLayoutTableAndPopupConsumption(): Promise<void> {
 
   for (const relativePath of [
     'components/assets-domain.tsx',
-    'components/widget-list.tsx',
+    'components/widget-list-table.tsx',
     'components/team-domain.tsx',
   ]) {
     const source = await readRoute(relativePath);
@@ -384,7 +447,7 @@ async function testDieterLayoutTableAndPopupConsumption(): Promise<void> {
     'components/roma-unsaved-changes-dialog.tsx',
     'components/roma-upsell-dialog.tsx',
     'components/assets-domain.tsx',
-    'components/widget-list.tsx',
+    'components/widget-list-dialogs.tsx',
     'components/public-code-dialog.tsx',
   ]) {
     const source = await readRoute(relativePath);
@@ -397,6 +460,8 @@ async function testDieterLayoutTableAndPopupConsumption(): Promise<void> {
 }
 
 async function run(): Promise<void> {
+  await testSeoGeoEntitlementUsesExistingWidgetLimits();
+  console.log('PASS Widget SEO/GEO/AEO uses existing Bob limits and Roma save policy');
   await testCreateGateBeforeWork();
   console.log('PASS Save-created Instance gate runs before id and Tokyo write work');
   await testDuplicateStaysInBrowserUntilSave();

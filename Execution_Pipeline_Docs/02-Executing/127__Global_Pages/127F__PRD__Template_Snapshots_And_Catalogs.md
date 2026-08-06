@@ -1,6 +1,6 @@
 # 127F — Templates and Catalogs
 
-Status: **APPROVED FOR EXECUTION — EXECUTE AFTER 127E IS DEPLOYED AND VERIFIED**
+Status: **EXECUTED, DEPLOYED, VERIFIED, AND REVIEW-GREEN — 2026-08-06**
 
 Parent: `127__PRD__Global_Pages_Program.md`
 
@@ -702,6 +702,48 @@ are deleted; My templates uses the approved Template/Edit/Use/Rename/Delete row
 contract; DevStudio uses the approved CATALOGS navigation and existing
 Bob/Page Builder editors; and no template/Catalog subsystem or multi-object
 machinery was added.
+
+## Execution evidence
+
+- Code and documentation shipped in `76b52f1d`; the Cloudflare-compatible
+  single-Edge-route correction for the three Roma Pages views shipped in
+  `043a2ed2`. Final Catalog-source and Page-template public-route corrections
+  shipped in `5544416e`.
+- Before the strict Widget template discriminator deployed, the nine existing
+  `CLICKEEN` Widget configs were explicitly updated with
+  `isTemplate: false`, read back, and compared with their pre-change JSON.
+  No compatibility parser or runtime default was added.
+- GitHub Actions run `31102503855` deployed the changed Workers. Its
+  product-root R2 sync correctly skipped because 127F changed no product-root
+  inputs. Roma verification runs `31103647088` and `31104528989` passed on
+  `043a2ed2`.
+- Final Worker deployment run `31105450823` and Roma verification run
+  `31105450213` passed on `5544416e`. Cloudflare Pages deployed that commit
+  successfully to Roma and DevStudio.
+- Cloudflare Pages deployed `043a2ed2` successfully to Roma, Bob, and
+  DevStudio. DevStudio's deployed environment matches its repo authority,
+  including `ROMA_BASE_URL`.
+- Through Page Builder, ordinary Page `KTYKBJWH2G` was saved with zero Widget
+  placements. Through DevStudio's normal Catalog route, it was snapshotted as
+  Page template `HM2VXMTE61` with the four required Catalog presentation
+  values.
+- Roma reads `KTYKBJWH2G` only in Your pages with `isTemplate: false`, reads
+  `HM2VXMTE61` only in My templates with `isTemplate: true`, and exposes the
+  same `HM2VXMTE61` record read-only in Page catalog. Opening it as a Catalog
+  draft leaves the ordinary Page count unchanged until Save.
+- DevStudio's Page catalog view renders that same template and presentation
+  record through DevStudio -> Roma -> Tokyo. No Catalog copy, registry, sync,
+  direct R2 write, second editor, Queue, or transaction was introduced.
+- DevStudio offers only blank ordinary `CLICKEEN` Pages as global Page Catalog
+  sources, and Roma rejects a non-empty `CLICKEEN` Page snapshot. Tokyo returns
+  `404` for a Page template's stable, locale, stylesheet, and runtime URLs.
+- Focused Admin, Bob, Roma, and Tokyo tests, repo lint, repo typecheck, repo
+  build, Roma's exact Cloudflare build, and `git diff --check` passed. Published
+  Widget attribution uses the single global product link
+  `https://clickeen.com/`; saved customer CTA URLs remain customer content.
+- Independent Staff Engineer, Senior PM, and Principal TPM execution reviews
+  are green. All three found no remaining blocker, unnecessary subsystem, or
+  V1-V8 violation.
 
 ## Required documentation after deployment
 
