@@ -185,7 +185,196 @@ Google ignores?") and then win on it.
 
 ---
 
-## 6. The strategic conclusions
+## 6. The four structural advantages — verified and refined
+
+Deep verification research (4 independent subagents, each crawling competitors
+and independent sources) confirms the four advantages with important refinements.
+Each claim was stress-tested against the market. Where the original claim was
+overstated, the honest version is stated.
+
+---
+
+### Advantage 1: Saved crawlable HTML (verified — STRONGEST, needs precise wording)
+
+**Original claim:** Widget content is invisible to crawlers at all competitors.
+
+**Verified finding:** The claim is **substantially true but needs precision.**
+Googlebot DOES execute JavaScript and CAN index some widget content. The correct,
+defensible claim has three layers:
+
+1. **The iframe attribution problem (strongest).** Elfsight and Common Ninja
+   widgets render inside cross-origin iframes. Google attributes iframe content
+   to the widget vendor's domain, not the customer's page. Elfsight's own staff
+   tell customers to "put the markup outside the iframe" because the JSON-LD
+   inside the iframe is credited to Elfsight's domain. This is the structural
+   gap — and it's confirmed by Elfsight's own community:
+   - Staffer "Max" states: *"Your widget is installed via iframe that causes
+     issues with the markup"* (community thread on rich snippets).
+   - Staffer "Max" also admits: *"the link in the widget button isn't counted as
+     a backlink and it can't be read by Google."*
+   - Google Search Central thread: a user reports Elfsight review snippets are
+     "not displayed in Google's review snippet" even though Search Console shows
+     no error.
+
+2. **Client-side rendering is the most fragile SEO option.** Google's
+   documentation says server-side or pre-rendering is "still a great idea"
+   because "not all bots can run JavaScript." Content can sit in a render queue
+   for "seconds to days." Search Engine Land: *"CSR will always be the most
+   fragile option from a search visibility perspective."*
+
+3. **No general-purpose widget platform ships server-side-rendered,
+   host-attributed HTML.** Verified across Elfsight, Common Ninja, Jotform,
+   Embeddable, OpenWidget. (Niche exception: Tickaroo for live sports. Partial
+   exception: Embeddable.co pre-renders *landing pages* but NOT *widgets*.)
+   Clickeen's saved HTML is genuinely differentiated.
+
+**What NOT to claim:**
+- "Crawlers can't see JavaScript" — false; Googlebot runs Chromium.
+- "Structured data in JS can't be read" — false; Google explicitly reads
+  dynamically-injected JSON-LD. The real issue is iframe attribution, not JS.
+- "Widget content is invisible" — too absolute. Use "not reliably indexed or
+  attributed to your page."
+
+**What TO claim (defensible):**
+> "Elfsight and Common Ninja render widget content and structured data inside
+> cross-origin iframes. Google attributes iframe content to the widget vendor's
+> domain, not your page — so your widget's reviews, FAQs, and ratings don't
+> earn your site search visibility. Elfsight's own support staff tell customers
+> to 'put the markup outside the iframe.' Clickeen serves complete saved HTML
+> that Google crawls on the first request — no iframe, no JavaScript execution
+> required, no attribution to anyone else's domain."
+
+---
+
+### Advantage 2: Uncapped edge serving (verified — STRONGEST cost argument)
+
+**Original claim:** Competitors MUST meter views because their architecture
+requires per-view compute. Clickeen serves pre-generated static files from CDN.
+
+**Verified finding:** The claim is **substantially true and technically
+defensible.** Live HTTP inspection confirmed:
+
+**Elfsight:** The `platform.js` loader is CDN-cached, BUT the widget
+config/payload fetches from `core.service.elfsight.com` with
+`cf-cache-status: DYNAMIC` (never HIT) on every view. Every view = origin hit.
+Elfsight's own help center ties pricing to this: "more views mean higher server
+demands."
+
+**Common Ninja:** Widgets serve via server-rendered Next.js on Heroku with
+`cache-control: private, no-cache, no-store, must-revalidate`. Every view =
+Heroku dyno invocation. `cf-cache-status: DYNAMIC` on all requests. Explicitly
+forbids edge caching.
+
+**Clickeen:** Serves pre-generated static files from R2 through Tokyo-worker
+with `s-maxage=300, stale-while-revalidate=86400` on generated files and
+`max-age=31536000, immutable` on fingerprinted assets. Marginal cost per view
+approaches zero on cache hit.
+
+**The cost gap is real:** Origin compute is 3-5 orders of magnitude more
+expensive per view than a CDN-cached R2 GET. The metering is not arbitrary —
+it reflects genuine infrastructure cost. Clickeen's architecture eliminates
+that cost by design.
+
+**Honest caveat:** Elfsight *could theoretically* CDN-cache their widget
+payloads — they choose not to, partly because widget configs change and they
+want live updates, and partly because metering is a monetization lever. So
+"they MUST meter" overstates necessity. More accurate: "their runtime
+architecture requires uncached origin compute per view."
+
+**Clickeen's one uncached path:** Localized index HTML uses `no-store` (the
+locale completion marker swap). But the work is a cheap string transform on a
+pre-built file, not widget rendering. Still far cheaper than SSR.
+
+**What TO claim (defensible):**
+> "Elfsight and Common Ninja fetch the widget payload from their origin server
+> on every page view — verified by their `cache-control: no-store` /
+> `cf-cache-status: DYNAMIC` headers. That uncached origin compute is why they
+> meter views. Clickeen pre-generates each widget into static files served from
+> Cloudflare R2 through a Worker with explicit edge-cache headers, so the
+> marginal cost per additional view is effectively zero — which is why we can
+> uncap."
+
+---
+
+### Advantage 3: Agent-operated composition (verified — needs refinement)
+
+**Original claim:** No widget platform has agent-operated composition of
+structured source artifacts.
+
+**Verified finding:** The claim **must be split into two parts:**
+
+**Part A — "Agent-operated editing of structured artifacts" — NOT unique.**
+Common Ninja has a real, official MCP server (`mcp.commoninja.com/mcp`) that
+exposes 18 tools including `create_widget`, `update_widget`,
+`validate_json_schema`, and `get_widget_with_schema`. Agents (Claude, Cursor)
+can create and edit widget instances against JSON schemas. Jotform also has an
+official MCP server with form CRUD tools.
+
+**Part B — "Agent-operated composition of multiple widgets into pages" — UNIQUE.**
+No widget platform (Common Ninja, Jotform, Elfsight, OpenWidget, Embeddable,
+Duda) exposes agent tools for multi-widget page composition. Every platform
+stops at individual widget creation/editing. Page placement is manual
+copy-paste of embed code.
+
+**What TO claim (defensible):**
+> "Clickeen is the only widget platform where an AI agent composes multiple
+> widgets into complete pages by operating typed source artifacts. Competitors
+> (Common Ninja, Jotform) expose MCP servers that let agents edit individual
+> widget instances against a schema — but none compose multiple widgets into a
+> page, and none operate on the widget source contract itself."
+
+---
+
+### Advantage 4: Systemic localization (verified — strongest combined claim)
+
+**Original claim:** No widget platform has structural localization. All use
+Google Translate widgets, tier-gates, or copy-based duplication.
+
+**Verified finding:** The claim is **largely true but needs honest tiers.**
+No competitor has the complete Clickeen triad (baseLocale + exact overlays +
+Translation Agent). But several are closer than the original claim implied:
+
+**Honest competitive tiering:**
+
+| Competitor | Localization model | Structural? | Agent? | baseLocale? |
+| --- | --- | --- | --- | --- |
+| **Elfsight** | Google Translate widget + manual widget duplication per locale | No | No | No |
+| **Common Ninja** | Tier-gated per-widget content translation (Ultimate only) + RTL + format matching | Partial | No | No |
+| **Embeddable** | Developer-facing i18n with overlay dictionaries (manual wiring) | Yes (dev-facing) | No | No (en-US fallback) |
+| **Jotform** | Single-form translation overlay with auto + manual translation | Partial (forms only) | No | No |
+| **OpenWidget** | None | No | No | No |
+| **Rivo (niche)** | baseLocale + AI prefill overlay (Shopify loyalty only) | Yes | Partial (one-time AI prefill) | Closest |
+
+**What NO competitor has (verified):**
+- No widget platform markets a "Translation Agent" as a named, persistent,
+  agent-driven localization system.
+- No general widget platform exposes a named `baseLocale` configuration concept.
+- No competitor combines all three: baseLocale + exact-match overlays +
+  persistent Translation Agent as a unified system.
+
+**What TO claim (defensible):**
+> "Clickeen is the only general widget platform that combines a named baseLocale,
+  exact-match overlays, and a persistent Translation Agent as a unified
+  localization system at every tier. Competitors offer partial localization —
+  Common Ninja has tier-gated per-widget translation; Embeddable has
+  developer-facing i18n overlays; Jotform has a forms-only overlay — but none
+  combine structural baseLocale + overlays + agent at every tier, and none
+  offer a named Translation Agent that operates the localization authority."
+
+---
+
+### The refined four-advantage summary
+
+| # | Advantage | Strength | Key refinement from verification |
+| --- | --- | --- | --- |
+| 1 | **Saved crawlable HTML** | Strong | Claim the **iframe attribution problem**, not "invisible." Google runs JS — but credits iframe content to the vendor, not your page. |
+| 2 | **Uncapped edge serving** | Strongest | Verified by live HTTP headers: competitors send `no-store` / `DYNAMIC`. Clickeen sends `s-maxage` + `immutable`. Don't say "must meter" — say "their architecture requires uncached origin compute." |
+| 3 | **Agent-operated composition** | Strong (refined) | Don't claim "no one has agent-operated editing" — Common Ninja and Jotform have MCP servers. DO claim "no one composes widgets into pages via agents." |
+| 4 | **Systemic localization** | Strong (combined) | Don't claim "no one has structural localization" — Embeddable has developer i18n overlays, Rivo has baseLocale + AI prefill. DO claim the **triad combination**: baseLocale + overlays + Translation Agent at every tier, as a unified system. |
+
+**The moat is the combination of all four.** No competitor has even two of the
+four. Clickeen has all four by architectural design — and each requires a
+rebuild-from-zero to match.
 
 ### Clickeen's category position
 

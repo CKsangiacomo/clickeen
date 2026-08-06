@@ -1,6 +1,6 @@
 # 127A — Page Source and Policy
 
-Status: **APPROVED FOR EXECUTION**
+Status: **EXECUTED — FINAL INDEPENDENT REVIEW PENDING**
 
 Parent: `127__PRD__Global_Pages_Program.md`
 
@@ -401,37 +401,66 @@ cleanly after the obsolete imports and routes are removed.
 
 ### Code
 
-- [ ] Add the shared `AccountPageSource`, placement, values, and locale-overlay
+- [x] Add the shared `AccountPageSource`, placement, values, and locale-overlay
       types in one named `@clickeen/ck-contracts` Page module.
-- [ ] Remove duplicate local Page source shapes.
-- [ ] Add Page-owned fields to the existing Generate translations operation.
-- [ ] Introduce the Page overlay root using the existing Instance locale-
+- [x] Remove duplicate local Page source shapes.
+- [x] Add Page-owned fields to the existing Generate translations operation.
+- [x] Introduce the Page overlay root using the existing Instance locale-
       overlay convention and write Page-owned translated values there.
-- [ ] Keep account Settings as the only selected-locale authority.
-- [ ] Add `pages.max` through the existing entitlement system.
-- [ ] Add Tier99 through the existing tier system.
-- [ ] Delete the obsolete pre-GA Page implementation listed above.
-- [ ] Add no Page UI, Web Code Generator, public serving, locale cleanup,
-      revisions, validators, or background machinery.
+- [x] Keep account Settings as the only selected-locale authority.
+- [x] Add `pages.max` through the existing entitlement system.
+- [x] Add Tier99 through the existing tier system.
+- [x] Delete the obsolete pre-GA Page implementation listed above.
+- [x] Add no Page UI, Web Code Generator, public serving, locale cleanup,
+      revisions, shared validator framework, or background machinery.
 
 ### Product data
 
-- [ ] Inventory disposable cloud-dev Page data before removal.
-- [ ] Remove obsolete Page data only through the approved Roma/Tokyo or
+- [x] Inventory disposable cloud-dev Page data before removal.
+- [x] Remove obsolete Page data only through the approved Roma/Tokyo or
       Cloudflare product-data path.
-- [ ] Keep code changes and product-data removal separately evidenced.
-- [ ] Set only the exact internal `CLICKEEN` account to Tier99.
+- [x] Keep code changes and product-data removal separately evidenced.
+- [x] Set only the exact internal `CLICKEEN` account to Tier99.
 
 ### Deployment and verification
 
-- [ ] Run focused contract, policy, Roma, Tokyo, Berlin, and Supabase checks.
-- [ ] Run repository lint/typecheck/build proportional to the changed graph.
-- [ ] Deploy the reviewed Supabase tier migration through its workflow.
-- [ ] Deploy the owning Roma/Tokyo changes through documented paths.
-- [ ] Verify `pages.max` returns `0/0/3/10/null/null`.
-- [ ] Verify Tier99 resolves through the ordinary tier system.
-- [ ] Verify the obsolete Page UI/routes/storage implementation is gone.
+- [x] Run focused contract, policy, Roma, Tokyo, Berlin, and Supabase checks.
+- [x] Run repository lint/typecheck/build proportional to the changed graph.
+- [x] Deploy the reviewed Supabase tier migration through its workflow.
+- [x] Deploy the owning Roma/Tokyo changes through documented paths.
+- [x] Verify `pages.max` returns `0/0/3/10/null/null`.
+- [x] Verify Tier99 resolves through the ordinary tier system.
+- [x] Verify the obsolete Page UI/routes/storage implementation is gone.
 - [ ] Run an independent V1–V8 audit.
+
+### 2026-08-05 execution evidence
+
+- Source implementation and the complete 127 planning/documentation set were
+  pushed to `main` in `bdd5d791`.
+- The unapplied Google-only login-provider migration was removed in `5db27d4c`
+  after the product owner confirmed that ordinary `email` login remains part of
+  the pre-GA identity contract. No user row was deleted or rewritten.
+- GitHub Actions `cloud-dev workers deploy` run `31060499451` deployed Berlin,
+  San Francisco, Tokyo-worker, Product Copilot, and Translation Agent
+  successfully. Roma verification run `31060499430` and both resulting
+  cloud-dev reachability runs succeeded.
+- Cloudflare Pages project `roma-dev` reported commit `bdd5d791` at deployment
+  stage `success`; the Pages REST preflight and project read used the documented
+  repo command path.
+- Supabase workflow run `31061092185` linked the cloud-dev project and applied
+  the two Tier99 migrations successfully with no migration-history repair.
+- Michael read-back returned `CLICKEEN.tier = tier99` while preserving two
+  existing `email` identities and one `google` identity. Roma `/api/bootstrap`
+  returned account `CLICKEEN`, role `admin`, tier `tier99`, and
+  `pages.max = null` through the ordinary bootstrap/policy path.
+- Deployed Page first Save, exact read, Save, list, and Delete all succeeded
+  through Roma/Tokyo-worker. The temporary verification Page was absent after
+  Delete, and `accounts/CLICKEEN/pages/` was empty in the documented R2
+  read-back.
+- Deployed Page Generate translations returned one terminal result for all 28
+  selected locales: 27 successful overlays and one explicit `fil`
+  `tokyo.errors.page.overlayInvalid` failure. The operation did not report full
+  success, and the temporary Page was deleted afterward.
 
 ## 15. Failure behavior
 
