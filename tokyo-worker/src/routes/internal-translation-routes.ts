@@ -7,6 +7,7 @@ import {
   writeAccountInstanceTranslatedLocaleValues,
 } from '../domains/account-translations/values';
 import { readAccountInstanceDocument } from '../domains/account-instances/source';
+import { AccountInstanceTransitionError } from '../domains/account-instances/operations';
 import { writeAccountPageLocaleOverlay } from '../domains/pages';
 import { json } from '../http';
 import {
@@ -23,6 +24,21 @@ import {
   normalizeTranslatedValues,
   readInternalProductJsonBody,
 } from './internal-product-route-utils';
+
+function translationMutationError(error: unknown): Response {
+  if (error instanceof AccountInstanceTransitionError) {
+    return json({
+      error: {
+        kind: error.kind,
+        reasonKey: error.reasonKey,
+        detail: error.message,
+        ...(error.paths?.length ? { paths: error.paths } : {}),
+      },
+    }, { status: error.status });
+  }
+  const detail = error instanceof Error ? error.message : String(error);
+  return json({ error: { kind: 'VALIDATION', reasonKey: detail, detail } }, { status: 422 });
+}
 
 export async function tryHandleInternalTranslationRoutes(
   args: TokyoRouteArgs,
@@ -51,8 +67,7 @@ export async function tryHandleInternalTranslationRoutes(
       await writeAccountPageLocaleOverlay({ env, accountId, pageId: id, locale, overlay: { values } });
       return respond(json({ ok: true, locale }));
     } catch (error) {
-      const detail = error instanceof Error ? error.message : String(error);
-      return respond(json({ error: { kind: 'VALIDATION', reasonKey: detail, detail } }, { status: 422 }));
+      return respond(translationMutationError(error));
     }
   }
 
@@ -131,8 +146,7 @@ export async function tryHandleInternalTranslationRoutes(
         const translation = await writeAccountInstanceTranslatedLocaleValues({ env, accountId, instanceId, locale, values });
         return respond(json({ ok: true, locale: translation.locale }));
       } catch (error) {
-        const detail = error instanceof Error ? error.message : String(error);
-        return respond(json({ error: { kind: 'VALIDATION', reasonKey: detail, detail } }, { status: 422 }));
+        return respond(translationMutationError(error));
       }
     }
 
@@ -149,8 +163,7 @@ export async function tryHandleInternalTranslationRoutes(
         const translation = await deleteAccountInstanceTranslatedLocaleValues({ env, accountId, instanceId, locale });
         return respond(json({ ok: true, locale: translation.locale }));
       } catch (error) {
-        const detail = error instanceof Error ? error.message : String(error);
-        return respond(json({ error: { kind: 'VALIDATION', reasonKey: detail, detail } }, { status: 422 }));
+        return respond(translationMutationError(error));
       }
     }
 

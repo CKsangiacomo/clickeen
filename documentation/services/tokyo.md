@@ -37,7 +37,12 @@ accounts/{accountPublicId}/
     runtime.js
   pages/{pageId}/
     source.json
+    serve-state.json
     overlays/locales/{locale}.json
+    overlays.json
+    index.html
+    styles.css
+    runtime.js
 ```
 
 Rules:
@@ -50,14 +55,18 @@ Rules:
   translate, infer, or repair them.
 - A locale never owns HTML, CSS, JavaScript, publication state, or another
   artifact root.
-- Page UI, compilation, publication, and public serving are not implemented in
-  the current slice.
+- An ordinary Page has one direct stored file set. First Save is unpublished;
+  later Save preserves publication state. Publish requires all six root
+  artifacts to parse through their storage contracts, but does not render-test,
+  compile, or translate them.
 
 ## Public Serving
 
 ```text
 https://clk.live/{accountPublicId}/{instanceId}
 https://clk.live/{accountPublicId}/{instanceId}?locale={locale}
+https://clk.live/{accountPublicId}/pages/{pageId}
+https://clk.live/{accountPublicId}/pages/{pageId}/{locale}
 ```
 
 Cloud-dev uses `https://dev.clk.live`.
@@ -72,19 +81,27 @@ all three exact package files pass their storage contract. Root HTML references:
 
 For `?locale=`, Tokyo-worker reads and validates the exact overlay against
 saved instance content and replaces field-marked values in the root index
-response. Base and translated HTML remain `no-store` until public serving owns
-complete invalidation across Save, translation, Publish, Unpublish, and delete.
-`runtime.js` binds behavior and does not apply overlays. Missing locale truth
-is `404`; corrupt locale truth is `500`; neither falls back to base content.
+response. Completed Instance HTML revalidates through its exact public URL
+cache key. `runtime.js` binds behavior and does not apply overlays. Missing
+locale truth is `404`; corrupt locale truth is `500`; neither falls back to
+base content.
 
-Public account page serving remains `404` until Roma writes real page
-artifacts.
+For Pages, the stable URL redirects with `no-store` to one locale from the
+saved set. The exact-locale URL is the HTML cache key. Tokyo-worker uses stored
+base index values for the base locale and the matching root `overlays.json`
+entry only for a non-base locale, then completes public Page coordinates. It
+does not traverse child Instances or call a generator/model. Because the root
+serving-overlay document is validated as a whole, one malformed locale entry
+makes every Page route unavailable. Page CSS/runtime files are shared across
+locales. Page Save while published, Publish, Unpublish, and Delete purge only
+affected exact-locale and support-file URLs.
 
 ## Static Read Paths
 
 | Friendly path | Canonical R2 root |
 | --- | --- |
 | `/widgets/**` | `product/widgets/**` |
+| `/clickeen.js` | `product/clickeen.js` |
 | `/dieter/icons/svg/**` | `dieter/icons/svg/**` |
 | `/i18n/**` | `product/roma/i18n/public/**` |
 | `/assets/account/**` | account asset reads allowed by Tokyo-worker |
@@ -101,6 +118,8 @@ pnpm cf:preflight
 ```
 
 Product-root deployment runs through GitHub Actions `cloud-dev workers deploy`.
+`tokyo/product/clickeen/clickeen.js` syncs to `product/clickeen.js`; a change to
+that source path triggers the same product-root sync.
 Remote R2 operations must use the repo paths documented in
 `documentation/engineering/CloudflareOperations.md`.
 

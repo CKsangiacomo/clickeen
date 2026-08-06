@@ -291,15 +291,17 @@ the saved settings with `localeCleanup.ok: false` and the exact failed
 coordinate. The account setting remains the user decision and account truth.
 
 Roma owns public widget action truth for the current account and opened
-instance. It builds the public URL and iframe/script snippets from the current
-account public id, the exact instance id, the configured public-serving
-origin, and the publish status returned by the Builder-open envelope.
+instance. It builds the direct public URL and shared `clickeen.js` installer
+snippet from the current account public id, the exact instance id, the
+configured public-serving origin, and the publish status returned by the
+Builder-open envelope.
 It sends that exact complete set to Bob, where TopDrawer presents Open public
 widget and one Copy code intent under More. Roma answers that intent with the
 same Dieter Popup used by the Widgets inventory; the Popup presents the exact
-URL, iframe, and script values and owns browser copy. Bob does not reconstruct
-or copy those values. Unpublished instances receive `publicActions: null` and
-expose no public action. Bob's `bob:host-action` message carries only
+public URL and `clickeen.js` installer and owns browser copy. Bob does not
+reconstruct or copy those values. Unpublished instances receive
+`publicActions: null` and expose no public action. Bob's `bob:host-action`
+message carries only
 `open-navigation`, `return`, or `copy-code` intent; Roma retains navigation,
 public-action, and unsaved-work authority.
 The copied public URL is slashless:
@@ -307,6 +309,21 @@ The copied public URL is slashless:
 ```text
 {public-serving-origin}/{accountPublicId}/{instanceId}
 ```
+
+The copied installer uses the same configured public-serving origin and exact
+public URL:
+
+```html
+<script
+  src="{public-serving-origin}/clickeen.js"
+  data-clickeen="{public-serving-origin}/{accountPublicId}/{instanceId}"
+  defer
+></script>
+```
+
+There is no public iframe option and no installer that loads the Instance's
+`runtime.js` directly. The direct public URL remains available independently
+of the installer.
 
 Web Code Generator writes public-coordinate placeholders for the support files
 inside the exact generated `index.html`:
@@ -441,24 +458,39 @@ in the current runtime.
 
 ## Pages Domain
 
-Roma owns account Page source operations. A Page is an ordered collection of
-saved Widget Instances. Page authoring files live in Tokyo under:
+Roma owns authenticated account Page commands. A Page is an ordered collection
+of saved Widget Instances. Its direct files live in Tokyo under:
 
 ```text
 accounts/{accountPublicId}/pages/{pageId}/
+  source.json
+  serve-state.json
+  overlays/locales/{locale}.json
+  overlays.json
+  index.html
+  styles.css
+  runtime.js
 ```
 
-Roma validates current-account access, exact Page source shape, and
-`pages.max`. First Save is the only operation that creates a Page: Roma checks
-the limit before minting the Page id, reads the account base locale, then asks
-Tokyo-worker to store the source. Later Save replaces that exact source. A
-draft that the user leaves without Save exists only in browser memory.
+Roma validates current-account access, role, `pages.max`, exact Page source,
+and the exact browser-generated file payload. First Save is the only operation
+that creates a Page: Roma checks the limit before minting the Page id, reads the
+account base locale, then asks Tokyo-worker to store the source, files, and
+root serving overlays as unpublished. Later Save replaces those exact values
+and preserves publication state. A draft left without Save exists only in
+browser memory.
 
 Current Page source references saved Widget Instances by placement id and
 instance id. It does not embed or copy Instance source. Page templates have no
-locales. Web Code Generator includes deterministic Page generation, but Roma
-does not invoke it and current Page routes do not store, publish, or publicly
-serve generated Page files.
+locales. Roma does not generate or translate Page files. Publish and Unpublish
+change only Tokyo's Page publication state; Delete accepts only an unpublished
+Page and never deletes referenced Instances or assets.
+
+`pages.max = 0` keeps retained Page inventory visible but makes Page detail,
+Save, Publish, Unpublish, and Delete routes return the standard
+`UPGRADE_REQUIRED` result without calling Tokyo. A positive or unlimited limit
+allows existing-Page actions; first Save separately enforces the finite count.
+Page Builder and its visible Upgrade interaction arrive in 127E.
 
 ## Team, Profile, Settings
 
@@ -586,7 +618,7 @@ Required runtime configuration:
 | --- | --- |
 | `NEXT_PUBLIC_BOB_URL` | Bob Builder iframe origin. |
 | `NEXT_PUBLIC_TOKYO_URL` | Tokyo public static/resource origin. |
-| `NEXT_PUBLIC_CLK_LIVE_URL` | Public widget serving origin for copy/open snippets. |
+| `NEXT_PUBLIC_CLK_LIVE_URL` | Public serving origin for direct public URLs and shared `clickeen.js` installer snippets. |
 | `BERLIN_BASE_URL` | Berlin auth/session authority. |
 | `PRODUCT_COPILOT_BASE_URL` | Product Copilot worker origin where used. |
 | `TRANSLATION_AGENT` | Cloudflare service binding for Translation Agent Worker. |

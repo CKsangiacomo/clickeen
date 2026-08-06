@@ -71,8 +71,11 @@ shared `runtime.js` binds share, copy, and preview-only behavior to those
 generated controls. It does not create or remove their DOM in response to
 state updates.
 
-Public iframe snippets need clipboard and popup permissions for the relevant
-share actions. Builder preview does not perform external share side effects.
+Public installation uses the shared `clickeen.js` installer rather than a
+permission-bearing iframe snippet or a direct `runtime.js` installer. The
+installer loads saved runtime behavior when the mounted public product requires
+it.
+Builder preview does not perform external share side effects.
 
 ## Locale Switcher
 

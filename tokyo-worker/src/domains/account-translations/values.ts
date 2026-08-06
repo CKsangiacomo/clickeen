@@ -11,6 +11,8 @@ import type {
   AccountInstanceSourceReadFailure,
 } from '../account-instances/types';
 import { normalizeStorageId } from '../account-instances/utils';
+import { purgeClkLiveLocaleCache } from '../account-instances/operations';
+import { readInstanceServeState } from '../account-instances/serve-state';
 import { getWidgetDefinition } from '../widget-definitions';
 import {
   assertLocaleOverlayValuesMatchSavedTextFields,
@@ -152,6 +154,12 @@ export async function writeAccountInstanceTranslatedLocaleValues(args: {
     content: stored.content,
     values: args.values,
   });
+  const publishStatus = await readInstanceServeState({
+    env: args.env,
+    accountId: stored.configDoc.accountId,
+    widgetCode: stored.configDoc.widgetCode,
+    instanceId: stored.configDoc.id,
+  });
   await writeLocaleOverlay({
     env: args.env,
     accountId: stored.configDoc.accountId,
@@ -162,6 +170,14 @@ export async function writeAccountInstanceTranslatedLocaleValues(args: {
             values: args.values,
     },
   });
+  if (publishStatus === 'published') {
+    await purgeClkLiveLocaleCache({
+      env: args.env,
+      accountId: stored.configDoc.accountId,
+      instanceId: stored.configDoc.id,
+      locale,
+    });
+  }
   return { locale, values: args.values };
 }
 
@@ -185,6 +201,12 @@ export async function deleteAccountInstanceTranslatedLocaleValues(args: {
     widgetType: args.widgetType,
   });
   if (!stored) throw new Error('coreui.errors.instance.notFound');
+  const publishStatus = await readInstanceServeState({
+    env: args.env,
+    accountId: stored.configDoc.accountId,
+    widgetCode: stored.configDoc.widgetCode,
+    instanceId: stored.configDoc.id,
+  });
   await deleteLocaleOverlay({
     env: args.env,
     accountId: stored.configDoc.accountId,
@@ -192,6 +214,14 @@ export async function deleteAccountInstanceTranslatedLocaleValues(args: {
     instanceId: stored.configDoc.id,
     locale,
   });
+  if (publishStatus === 'published') {
+    await purgeClkLiveLocaleCache({
+      env: args.env,
+      accountId: stored.configDoc.accountId,
+      instanceId: stored.configDoc.id,
+      locale,
+    });
+  }
   return { locale };
 }
 

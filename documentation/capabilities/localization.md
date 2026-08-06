@@ -31,8 +31,10 @@ accounts/{accountPublicId}/pages/{pageId}/overlays/locales/{locale}.json
 `source.json` owns the Page `baseLocale`. Account Settings—not the Page—owns the
 selected exact locale list used by Generate translations. Each non-base Page
 locale is one separate exact overlay object. Page templates have no
-`baseLocale` and no translations. Web Code Generator has a Page generation API,
-but Page public serving is not implemented.
+`baseLocale` and no translations. On Page Save, Web Code Generator's already
+generated direct files and root `overlays.json` are stored beside authoring
+truth. Root `overlays.json` is the saved exact-locale response input; it is not
+another authoring authority and changes only through Page Save or Update.
 
 ## Code Authority
 
@@ -44,7 +46,7 @@ but Page public serving is not implemented.
 | Saved text extraction and exact overlay validation | Tokyo-worker account translation domain |
 | Overlay storage | Tokyo R2 `overlays/locales/{locale}.json` |
 | Bob package generation and translated preview | `@clickeen/ck-web-code-generator` over current in-memory state and exact overlays |
-| Public localized serving | Tokyo-worker exact stored index response |
+| Public localized serving | Tokyo-worker exact stored Instance/Page response completion |
 
 ## Authority Chain
 
@@ -157,20 +159,38 @@ Canonical URLs:
 ```text
 https://clk.live/{accountPublicId}/{instanceId}
 https://clk.live/{accountPublicId}/{instanceId}?locale={locale}
+https://clk.live/{accountPublicId}/pages/{pageId}
+https://clk.live/{accountPublicId}/pages/{pageId}/{locale}
 ```
 
 For an index request, Tokyo-worker verifies the published instance and exact
 root files. It validates stored overlay coordinates, reads and validates the
 exact requested overlay, replaces exact field-marked text/attributes and
 `<html lang>` in the stored root index, completes public account/instance
-placeholders, and returns HTML with `no-store` until public serving owns the
-complete invalidation lifecycle.
+placeholders, and returns complete HTML through the exact public URL cache key.
 
 `runtime.js` binds behavior to generated markup; it does not apply locale
 overlays. A missing requested overlay returns `404 Locale not available`. A
 corrupt overlay returns `500 Locale data invalid`. Incomplete public HTML
 returns `500 Public HTML invalid`. Base content is never presented as a
 requested non-base locale.
+
+For a published Page, the stable URL redirects with `no-store` to one locale in
+the saved public locale set. The base exact-locale response uses values already
+stored in `index.html`; a non-base response applies only its exact root
+`overlays.json` entry. Both complete public SEO coordinates and return HTML
+before JavaScript. Root `overlays.json` is validated as one document before
+route selection, so one malformed entry makes the Page unavailable for every
+Page route. With a valid root, a missing locale is `404` and selected HTML
+completion failure is `500`; neither falls back to the base locale. Page
+`styles.css` and `runtime.js` are shared across locales.
+
+Instance and Page HTML are CDN-cacheable only at their exact response keys.
+Instance translation writes/deletes purge their exact public locale URL. Page
+authoring translation writes do not change root serving overlays or purge;
+Page Save while published, Publish, Unpublish, and Delete purge affected public
+HTML and support-file URLs. Locale selection is never hidden in a shared cached
+variant.
 
 ## Operator Recipes
 
@@ -196,6 +216,10 @@ reconcile exactly.
 4. Confirm both responses reference identical root stylesheet/runtime URLs.
 5. Confirm missing and corrupt overlays fail explicitly.
 
+For a Page, verify the stable redirect and each saved exact-locale URL
+separately, confirm metadata/visible placement values match that locale before
+JavaScript, and confirm every locale references the same Page CSS/runtime URLs.
+
 ## Failure Semantics
 
 - Requested locale outcomes are exhaustive.
@@ -216,4 +240,5 @@ reconcile exactly.
 | Bob preview | exact generated package for current state and selected overlay |
 | Root artifact | exact R2 `index.html`, `styles.css`, and `runtime.js` objects and content types |
 | Localized response | root URL with `?locale=` and translated HTML output |
+| Localized Page response | stable redirect plus base-index or exact non-base `overlays.json` completion |
 | Negative storage invariant | no instance locale-derived HTML/CSS/JS objects |

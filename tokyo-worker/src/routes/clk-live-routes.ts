@@ -125,9 +125,10 @@ function responseForObject(
 function responseForCompletedIndex(html: string, contentType: string, headOnly: boolean): Response {
   const headers = new Headers();
   headers.set('content-type', contentType);
-  headers.set('cache-control', 'no-store');
-  headers.set('cdn-cache-control', 'no-store');
-  headers.set('cloudflare-cdn-cache-control', 'no-store');
+  const cacheControl = 'public, max-age=0, s-maxage=300, must-revalidate';
+  headers.set('cache-control', cacheControl);
+  headers.set('cdn-cache-control', cacheControl);
+  headers.set('cloudflare-cdn-cache-control', cacheControl);
   headers.set('access-control-allow-origin', '*');
   headers.set('x-content-type-options', 'nosniff');
   return new Response(headOnly ? null : html, { status: 200, headers });

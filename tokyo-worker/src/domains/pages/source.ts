@@ -4,15 +4,33 @@ import type { Env } from '../../types';
 import { readAccountInstanceSourcePointer } from '../account-instances/source';
 import { loadAccountAssetByRef } from '../assets';
 import { deletePrefix, putJson } from '../storage';
-import { isPageLocale, parseAccountPageSource, parsePageLocaleOverlay } from './contract';
 import {
+  isPageLocale,
+  parseAccountPageSource,
+  parsePageGeneratedFiles,
+  parsePageLocaleOverlay,
+  parsePageServeState,
+  parsePageServingOverlays,
+} from './contract';
+import {
+  accountPageIndexKey,
   accountPagesRoot,
   accountPageLocaleOverlayKey,
   accountPageRoot,
+  accountPageRuntimeKey,
+  accountPageServeStateKey,
+  accountPageServingOverlaysKey,
   accountPageSourceKey,
+  accountPageStylesKey,
 } from './keys';
 import { normalizePageId } from './ids';
-import { PageOperationError } from './types';
+import { purgePagePublicCache } from './cache';
+import {
+  PageOperationError,
+  type PageGeneratedFiles,
+  type PageServeState,
+  type PageServingOverlays,
+} from './types';
 
 export { normalizePageId } from './ids';
 
@@ -44,6 +62,72 @@ async function loadJson(args: {
   } catch {
     args.invalid([args.key]);
   }
+}
+
+async function loadText(args: {
+  env: Env;
+  key: string;
+  expectedContentType: string;
+}): Promise<{ exists: true; value: string } | { exists: false }> {
+  const object = await args.env.TOKYO_R2.get(args.key);
+  if (!object) return { exists: false };
+  if (object.httpMetadata?.contentType !== args.expectedContentType) sourceInvalid([args.key]);
+  try {
+    return { exists: true, value: await object.text() };
+  } catch {
+    sourceInvalid([args.key]);
+  }
+}
+
+async function putPageFiles(args: {
+  env: Env;
+  accountId: string;
+  pageId: string;
+  files: PageGeneratedFiles;
+}): Promise<void> {
+  const writes = await Promise.allSettled([
+    args.env.TOKYO_R2.put(accountPageIndexKey(args.accountId, args.pageId), args.files.indexHtml, {
+      httpMetadata: { contentType: 'text/html; charset=utf-8' },
+    }),
+    args.env.TOKYO_R2.put(accountPageStylesKey(args.accountId, args.pageId), args.files.stylesCss, {
+      httpMetadata: { contentType: 'text/css; charset=utf-8' },
+    }),
+    args.env.TOKYO_R2.put(accountPageRuntimeKey(args.accountId, args.pageId), args.files.runtimeJs, {
+      httpMetadata: { contentType: 'text/javascript; charset=utf-8' },
+    }),
+  ]);
+  const failed = writes.find((write): write is PromiseRejectedResult => write.status === 'rejected');
+  if (failed) throw failed.reason;
+}
+
+async function readRequiredPageRuntime(args: {
+  env: Env;
+  accountId: string;
+  pageId: string;
+  source: AccountPageSource;
+}): Promise<{ files: PageGeneratedFiles; overlaysJson: PageServingOverlays; serveState: PageServeState }> {
+  if (args.source.isTemplate) sourceInvalid([accountPageSourceKey(args.accountId, args.pageId)]);
+  const [index, styles, runtime, overlaysStored, serveStateStored] = await Promise.all([
+    loadText({ env: args.env, key: accountPageIndexKey(args.accountId, args.pageId), expectedContentType: 'text/html; charset=utf-8' }),
+    loadText({ env: args.env, key: accountPageStylesKey(args.accountId, args.pageId), expectedContentType: 'text/css; charset=utf-8' }),
+    loadText({ env: args.env, key: accountPageRuntimeKey(args.accountId, args.pageId), expectedContentType: 'text/javascript; charset=utf-8' }),
+    loadJson({ env: args.env, key: accountPageServingOverlaysKey(args.accountId, args.pageId), invalid: sourceInvalid }),
+    loadJson({ env: args.env, key: accountPageServeStateKey(args.accountId, args.pageId), invalid: sourceInvalid }),
+  ]);
+  if (!index.exists || !styles.exists || !runtime.exists || !overlaysStored.exists || !serveStateStored.exists) {
+    sourceInvalid([
+      ...(!index.exists ? [accountPageIndexKey(args.accountId, args.pageId)] : []),
+      ...(!styles.exists ? [accountPageStylesKey(args.accountId, args.pageId)] : []),
+      ...(!runtime.exists ? [accountPageRuntimeKey(args.accountId, args.pageId)] : []),
+      ...(!overlaysStored.exists ? [accountPageServingOverlaysKey(args.accountId, args.pageId)] : []),
+      ...(!serveStateStored.exists ? [accountPageServeStateKey(args.accountId, args.pageId)] : []),
+    ]);
+  }
+  const files = parsePageGeneratedFiles({ indexHtml: index.value, stylesCss: styles.value, runtimeJs: runtime.value });
+  const overlaysJson = parsePageServingOverlays(overlaysStored.value, args.source);
+  const serveState = parsePageServeState(serveStateStored.value);
+  if (!files || !overlaysJson || !serveState) sourceInvalid();
+  return { files, overlaysJson, serveState };
 }
 
 async function assertPageReferences(args: { env: Env; accountId: string; source: AccountPageSource }): Promise<void> {
@@ -114,7 +198,9 @@ export async function createAccountPageSource(args: {
   accountId: string;
   pageId: string;
   source: unknown;
-}): Promise<{ source: AccountPageSource }> {
+  files: unknown;
+  overlaysJson: unknown;
+}): Promise<{ source: AccountPageSource; files: PageGeneratedFiles; overlaysJson: PageServingOverlays; serveState: PageServeState }> {
   const accountId = assertAccountId(args.accountId);
   const pageId = normalizePageId(args.pageId);
   if (!pageId) throw new PageOperationError({ kind: 'VALIDATION', reasonKey: 'tokyo.errors.page.invalidPageId' });
@@ -122,10 +208,17 @@ export async function createAccountPageSource(args: {
     throw new PageOperationError({ kind: 'VALIDATION', reasonKey: 'tokyo.errors.page.alreadyExists' });
   }
   const source = parseAccountPageSource(args.source, pageId);
-  if (!source) sourceInvalid();
+  if (!source || source.isTemplate) sourceInvalid();
+  const files = parsePageGeneratedFiles(args.files);
+  const overlaysJson = parsePageServingOverlays(args.overlaysJson, source);
+  if (!files || !overlaysJson) sourceInvalid();
   await assertPageReferences({ env: args.env, accountId, source });
+  await putPageFiles({ env: args.env, accountId, pageId, files });
+  await putJson(args.env, accountPageServingOverlaysKey(accountId, pageId), overlaysJson);
+  const serveState = { published: false } as const;
+  await putJson(args.env, accountPageServeStateKey(accountId, pageId), serveState);
   await putJson(args.env, accountPageSourceKey(accountId, pageId), source);
-  return { source };
+  return { source, files, overlaysJson, serveState };
 }
 
 export async function saveAccountPageSource(args: {
@@ -133,18 +226,91 @@ export async function saveAccountPageSource(args: {
   accountId: string;
   pageId: string;
   source: unknown;
-}): Promise<{ source: AccountPageSource }> {
+  files: unknown;
+  overlaysJson: unknown;
+}): Promise<{ source: AccountPageSource; files: PageGeneratedFiles; overlaysJson: PageServingOverlays; serveState: PageServeState }> {
   const accountId = assertAccountId(args.accountId);
   const pageId = normalizePageId(args.pageId);
   if (!pageId) throw new PageOperationError({ kind: 'VALIDATION', reasonKey: 'tokyo.errors.page.invalidPageId' });
-  if (!(await readAccountPageSource({ env: args.env, accountId, pageId }))) {
+  const existing = await readAccountPageSource({ env: args.env, accountId, pageId });
+  if (!existing) {
     throw new PageOperationError({ kind: 'NOT_FOUND', reasonKey: 'tokyo.errors.page.notFound' });
   }
+  const current = await readRequiredPageRuntime({ env: args.env, accountId, pageId, source: existing });
   const source = parseAccountPageSource(args.source, pageId);
-  if (!source) sourceInvalid();
+  if (!source || source.isTemplate) sourceInvalid();
+  const files = parsePageGeneratedFiles(args.files);
+  const overlaysJson = parsePageServingOverlays(args.overlaysJson, source);
+  if (!files || !overlaysJson) sourceInvalid();
   await assertPageReferences({ env: args.env, accountId, source });
+  await putPageFiles({ env: args.env, accountId, pageId, files });
+  await putJson(args.env, accountPageServingOverlaysKey(accountId, pageId), overlaysJson);
   await putJson(args.env, accountPageSourceKey(accountId, pageId), source);
-  return { source };
+  if (current.serveState.published) {
+    await purgePagePublicCache({
+      env: args.env,
+      accountId,
+      pageId,
+      locales: [
+        existing.baseLocale!,
+        ...Object.keys(current.overlaysJson),
+        source.baseLocale,
+        ...Object.keys(overlaysJson),
+      ],
+    });
+  }
+  return { source, files, overlaysJson, serveState: current.serveState };
+}
+
+export async function readAccountPage(args: {
+  env: Env;
+  accountId: string;
+  pageId: string;
+}): Promise<{ source: Extract<AccountPageSource, { isTemplate: false }>; files: PageGeneratedFiles; overlaysJson: PageServingOverlays; serveState: PageServeState } | null> {
+  const source = await readAccountPageSource(args);
+  if (!source) return null;
+  if (source.isTemplate) sourceInvalid([accountPageSourceKey(args.accountId, args.pageId)]);
+  const runtime = await readRequiredPageRuntime({ ...args, source });
+  return { source, ...runtime };
+}
+
+export async function publishAccountPage(args: {
+  env: Env;
+  accountId: string;
+  pageId: string;
+}): Promise<{ published: true; changed: boolean }> {
+  const page = await readAccountPage(args);
+  if (!page) throw new PageOperationError({ kind: 'NOT_FOUND', reasonKey: 'tokyo.errors.page.notFound' });
+  if (page.source.isTemplate || page.source.placements.length === 0) {
+    throw new PageOperationError({ kind: 'VALIDATION', reasonKey: 'tokyo.errors.page.publishInvalid' });
+  }
+  const changed = !page.serveState.published;
+  await putJson(args.env, accountPageServeStateKey(assertAccountId(args.accountId), normalizePageId(args.pageId)!), { published: true });
+  await purgePagePublicCache({
+    env: args.env,
+    accountId: args.accountId,
+    pageId: args.pageId,
+    locales: [page.source.baseLocale, ...Object.keys(page.overlaysJson)],
+  });
+  return { published: true, changed };
+}
+
+export async function unpublishAccountPage(args: {
+  env: Env;
+  accountId: string;
+  pageId: string;
+}): Promise<{ published: false; changed: boolean }> {
+  const page = await readAccountPage(args);
+  if (!page) throw new PageOperationError({ kind: 'NOT_FOUND', reasonKey: 'tokyo.errors.page.notFound' });
+  const changed = page.serveState.published;
+  await putJson(args.env, accountPageServeStateKey(assertAccountId(args.accountId), normalizePageId(args.pageId)!), { published: false });
+  await purgePagePublicCache({
+    env: args.env,
+    accountId: args.accountId,
+    pageId: args.pageId,
+    locales: [page.source.baseLocale, ...Object.keys(page.overlaysJson)],
+  });
+  return { published: false, changed };
 }
 
 export async function readAccountPageLocaleOverlay(args: {
@@ -192,7 +358,13 @@ export async function deleteAccountPageSource(args: {
   const accountId = assertAccountId(args.accountId);
   const pageId = normalizePageId(args.pageId);
   if (!pageId) throw new PageOperationError({ kind: 'VALIDATION', reasonKey: 'tokyo.errors.page.invalidPageId' });
-  if (!(await readAccountPageSource({ env: args.env, accountId, pageId }))) return { existed: false };
+  const page = await readAccountPage({ env: args.env, accountId, pageId });
+  if (!page) return { existed: false };
+  if (page.serveState.published) {
+    throw new PageOperationError({ kind: 'DENY', reasonKey: 'tokyo.errors.page.deletePublished' });
+  }
+  const locales = [page.source.baseLocale, ...Object.keys(page.overlaysJson)];
   await deletePrefix(args.env, `${accountPageRoot(accountId, pageId)}/`);
+  await purgePagePublicCache({ env: args.env, accountId, pageId, locales });
   return { existed: true };
 }

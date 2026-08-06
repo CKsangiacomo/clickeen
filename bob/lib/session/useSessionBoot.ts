@@ -86,10 +86,8 @@ export function useSessionBoot(args: {
           (!publicActions ||
             typeof publicActions.publicUrl !== 'string' ||
             !publicActions.publicUrl.trim() ||
-            typeof publicActions.iframeSnippet !== 'string' ||
-            !publicActions.iframeSnippet.trim() ||
-            typeof publicActions.scriptSnippet !== 'string' ||
-            !publicActions.scriptSnippet.trim())
+            typeof publicActions.clickeenJsSnippet !== 'string' ||
+            !publicActions.clickeenJsSnippet.trim())
         ) {
           return {
             ok: false,

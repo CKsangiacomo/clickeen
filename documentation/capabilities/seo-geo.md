@@ -15,6 +15,7 @@ subsystem.
 | Bob generation/preview/save payload | `bob/components/Workspace.tsx`, `bob/lib/session/useSessionSaving.ts` |
 | Roma save enforcement | `roma/lib/account-instance-save-policy.ts`, account instance routes |
 | Public instance serving and response completion | `tokyo-worker/src/routes/clk-live-routes.ts` |
+| Public Page serving and response completion | `tokyo-worker/src/routes/clk-live-page-routes.ts`, `tokyo-worker/src/domains/pages/public-html.ts` |
 | Exact package readiness | `tokyo-worker/src/domains/account-instances/package-files.ts` |
 | Control/entitlement mapping | Widget `limits.json`, `@clickeen/ck-policy` |
 
@@ -80,9 +81,11 @@ behavior.showBacklink
 
 Its entitlement mapping is `branding.remove`, independent of
 `embed.seoGeo.enabled`. When attribution is required, Web Code Generator writes
-one visible contextual link to the global Clickeen product with
+one visible contextual link to the literal `https://clickeen.com/` product URL
+with
 `rel="nofollow noreferrer"`, its styles, and matching truthful Clickeen
-application identity into generated initial files.
+application identity into generated initial files. Locale, country, and market
+never select another Clickeen product link.
 `runtime.js` does not construct the attribution DOM.
 
 Removing branding removes the visible promotional link. The neutral generator
@@ -105,13 +108,14 @@ account and instance placeholders. For a requested translated locale,
 it also replaces exact field-marked values and `<html lang>` from the validated
 overlay before completing those public placeholders.
 
-Base and translated HTML remain `no-store` until public serving owns complete
-invalidation across Save, translation, Publish, Unpublish, and delete.
-Completion does not regenerate the package, call a model, or write storage.
+Base and translated HTML revalidates through its exact public URL cache key.
+Instance Save, translation, Publish, Unpublish, and Delete purge only the
+affected base/locale and support-file URLs. Completion does not regenerate the
+files, call a model, or write storage.
 `runtime.js` binds behavior only; it does not apply SEO metadata or locale
 overlays.
 
-## Page Generation Boundary
+## Public Page Serving
 
 Web Code Generator has deterministic Page generation. It uses exact Page
 source, placements, Page overlays, selected settings locales, and generation
@@ -121,8 +125,28 @@ canonical/alternate relationships, social metadata, and one base-locale
 `WebPage` JSON-LD block. There is no Page SEO toggle; ordinary Page access is
 governed by the existing Page product policy.
 
-Page public serving is not implemented. Tokyo-worker has no public Page route,
-so generated Page behavior must not be described as deployed public serving.
+An ordinary published Page is served at:
+
+```text
+https://clk.live/{accountPublicId}/pages/{pageId}
+https://clk.live/{accountPublicId}/pages/{pageId}/{locale}
+```
+
+The stable URL chooses only from the saved public locale set and redirects with
+`no-store`. The exact-locale URL is the HTML cache key. For the base locale,
+Tokyo-worker uses the metadata/content already in stored `index.html`; for a
+non-base locale it applies only the matching root `overlays.json` values through
+declared Page/placement markers. Both complete canonical/alternate links,
+social URL metadata, and `WebPage.url`/`@id` from the validated public
+coordinate. Root `overlays.json` is validated before route selection, so one
+malformed entry makes every Page route unavailable. With a valid root, missing
+exact locale truth is `404`; selected HTML completion failure is an explicit
+`500`; neither returns base-locale content for a requested non-base locale.
+
+Page `styles.css` and `runtime.js` are shared across locales and cached at their
+direct Page URLs. Save while published, Publish, Unpublish, and Delete purge
+the affected previous/current exact-locale and support-file URLs. Public
+serving never calls child Instance URLs, Web Code Generator, Roma, or a model.
 
 ## Boundaries
 
@@ -148,7 +172,10 @@ Clickeen is never declared the author of customer facts.
 | Missing/invalid exact package file or content type | public serving returns `404` |
 | Invalid requested locale overlay | explicit locale `404` or `500`; no base-locale substitution |
 | Uncompleted `__CK_PUBLIC_*__` placeholder | `500 Public HTML invalid` with `no-store` |
-| Public Page request | no Page public route exists |
+| Unpublished or missing Page | public Page serving returns `404` |
+| Malformed root Page `overlays.json` | every Page route returns `500 Page unavailable` with `no-store` |
+| Missing saved Page locale from valid root | `404 Locale not available`; no base-locale substitution |
+| Selected Page HTML completion failure | `500 Page locale data invalid` with `no-store` |
 
 ## Verification
 
@@ -157,6 +184,6 @@ Clickeen is never declared the author of customer facts.
 | Generated Instance output | Bob Web Code Generator result and exact Save payload |
 | Saved package files | exact R2 `index.html`, `styles.css`, and `runtime.js` objects after `pnpm cf:preflight` |
 | Entitlement enforcement | Widget `limits.json`, Bob edit result, and Roma save-policy response |
-| Public output | published base/locale URL and returned HTML; both HTML responses are `no-store` in the current slice |
+| Public Instance output | published base/locale URL and returned completed HTML at its exact cache key |
 | Public no-agent rule | Tokyo-worker route reads stored files/overlays and performs deterministic completion only |
-| Page boundary | generation tests/API; no claim of a public Page-serving route |
+| Public Page output | stable redirect, exact-locale completed HTML, shared support files, and scoped purge evidence |

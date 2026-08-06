@@ -44,8 +44,7 @@ export type InstancePublicPackage = {
 
 type PublicActions = {
   publicUrl: string;
-  iframeSnippet: string;
-  scriptSnippet: string;
+  clickeenJsSnippet: string;
 };
 
 export type SessionMeta = {

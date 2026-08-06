@@ -1,10 +1,15 @@
 import { isRecord } from '@clickeen/ck-contracts';
 import type { AccountPageSource } from '@clickeen/ck-contracts/pages';
 import { createCompactPageId } from '@clickeen/ck-contracts/overlay-identity';
-import { readPolicyLimit, resolvePolicyFromEntitlementsSnapshot } from '@clickeen/ck-policy';
 import { NextRequest, NextResponse } from 'next/server';
 import { parseAccountPageSource } from '@roma/lib/account-page-contract';
-import { createAccountPage, listAccountPageSources } from '@roma/lib/account-pages';
+import { resolvePageProductPolicy } from '@roma/lib/account-page-policy';
+import {
+  createAccountPage,
+  listAccountPageSources,
+  type PageGeneratedFiles,
+  type PageServingOverlays,
+} from '@roma/lib/account-pages';
 import { loadCurrentAccountLocalesState } from '@roma/lib/account-locales-state';
 import { readJsonPayloadOrValidation } from '@roma/lib/route-helpers';
 import { resolveCurrentAccountRouteContext, withSession } from '../_lib/current-account-route';
@@ -12,6 +17,15 @@ import { resolveCurrentAccountRouteContext, withSession } from '../_lib/current-
 export const runtime = 'edge';
 
 const CREATE_KEYS = ['displayName', 'isTemplate', 'values', 'robots', 'placements'] as const;
+
+function parseGeneratedFiles(raw: unknown): PageGeneratedFiles | null {
+  if (!isRecord(raw)) return null;
+  return typeof raw.indexHtml === 'string' &&
+    typeof raw.stylesCss === 'string' &&
+    typeof raw.runtimeJs === 'string'
+    ? { indexHtml: raw.indexHtml, stylesCss: raw.stylesCss, runtimeJs: raw.runtimeJs }
+    : null;
+}
 
 function parseOrdinaryPageDraft(raw: unknown): Omit<Extract<AccountPageSource, { isTemplate: false }>, 'pageId' | 'baseLocale'> | null {
   if (!isRecord(raw) || Object.keys(raw).length !== CREATE_KEYS.length || !CREATE_KEYS.every((key) => Object.prototype.hasOwnProperty.call(raw, key))) return null;
@@ -54,12 +68,18 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   const current = await resolveCurrentAccountRouteContext({ request, minRole: 'editor' });
   if (!current.ok) return current.response;
-  const bodyResult = await readJsonPayloadOrValidation<{ source?: unknown } | null>(request);
+  const bodyResult = await readJsonPayloadOrValidation<{
+    source?: unknown;
+    files?: unknown;
+    overlaysJson?: unknown;
+  } | null>(request);
   if (!bodyResult.ok) {
     return withSession(request, NextResponse.json({ error: bodyResult.error }, { status: bodyResult.status }), current.value.setCookies);
   }
   const draft = parseOrdinaryPageDraft(bodyResult.payload?.source);
-  if (!draft) {
+  const files = parseGeneratedFiles(bodyResult.payload?.files);
+  const overlaysJson = bodyResult.payload?.overlaysJson;
+  if (!draft || !files || !isRecord(overlaysJson)) {
     return withSession(request, NextResponse.json({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.page.sourceInvalid' } }, { status: 422 }), current.value.setCookies);
   }
 
@@ -68,19 +88,11 @@ export async function POST(request: NextRequest) {
   if (!existing.ok) {
     return withSession(request, NextResponse.json({ error: existing.error }, { status: existing.status }), current.value.setCookies);
   }
-  const policy = resolvePolicyFromEntitlementsSnapshot({
-    profile: current.value.authzPayload.profile,
-    role: current.value.authzPayload.role,
-    entitlements: current.value.authzPayload.entitlements ?? null,
-  });
-  let limit: number | null;
-  try {
-    limit = readPolicyLimit(policy, 'pages.max');
-  } catch (error) {
-    return withSession(request, NextResponse.json({
-      error: { kind: 'UPSTREAM_UNAVAILABLE', reasonKey: 'roma.errors.policy.invalidEntitlement', detail: error instanceof Error ? error.message : String(error) },
-    }, { status: 500 }), current.value.setCookies);
+  const access = resolvePageProductPolicy(current.value.authzPayload, 'save_page');
+  if (!access.ok) {
+    return withSession(request, NextResponse.json(access.payload, { status: access.status }), current.value.setCookies);
   }
+  const limit = access.limit;
   if (limit !== null && existing.value.sources.length >= limit) {
     return withSession(request, NextResponse.json({
       ok: false,
@@ -105,7 +117,14 @@ export async function POST(request: NextRequest) {
     isTemplate: false,
     baseLocale: locales.localePolicy.baseLocale,
   };
-  const created = await createAccountPage({ accountId, source, accountCapsule: current.value.authzToken, requestId: current.value.requestId });
+  const created = await createAccountPage({
+    accountId,
+    source,
+    files,
+    overlaysJson: overlaysJson as PageServingOverlays,
+    accountCapsule: current.value.authzToken,
+    requestId: current.value.requestId,
+  });
   return withSession(
     request,
     created.ok

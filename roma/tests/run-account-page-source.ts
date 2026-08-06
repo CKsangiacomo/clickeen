@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { pageIdsPlacingInstance, parseAccountPageSource } from '../lib/account-page-contract';
+import { resolvePageProductPolicy } from '../lib/account-page-policy';
 
 async function main() {
   const ordinaryPage = {
@@ -64,6 +65,27 @@ async function main() {
     'templates must reject locale state',
   );
 
+  const authz = (profile: 'free' | 'tier2' | 'tier99') => ({
+    profile,
+    role: 'owner',
+    entitlements: null,
+  }) as Parameters<typeof resolvePageProductPolicy>[0];
+  assert.deepEqual(
+    resolvePageProductPolicy(authz('free'), 'open_page'),
+    {
+      ok: false,
+      status: 402,
+      payload: {
+        ok: false,
+        kind: 'UPGRADE_REQUIRED',
+        upgrade: { gate: 'pages.max', action: 'open_page', current: 0, limit: 0 },
+      },
+    },
+    'a zero Page limit must keep retained inventory visible but deny Page product actions',
+  );
+  assert.deepEqual(resolvePageProductPolicy(authz('tier2'), 'save_page'), { ok: true, limit: 3 });
+  assert.deepEqual(resolvePageProductPolicy(authz('tier99'), 'publish_page'), { ok: true, limit: null });
+
   const createRoute = await readFile(
     new URL('../app/api/account/pages/route.ts', import.meta.url),
     'utf8',
@@ -80,21 +102,32 @@ async function main() {
     limitGate < createRoute.indexOf('createAccountPage({'),
     'pages.max must run before Tokyo writes',
   );
-  assert.match(createRoute, /readPolicyLimit\(policy, 'pages\.max'\)/);
+  assert.match(createRoute, /resolvePageProductPolicy\(current\.value\.authzPayload, 'save_page'\)/);
 
   await assert.rejects(
     readFile(new URL('../app/(authed)/pages/page.tsx', import.meta.url), 'utf8'),
     /ENOENT/,
     '127A must not retain the obsolete Page UI',
   );
-  await assert.rejects(
-    readFile(
-      new URL('../app/api/account/pages/[pageId]/publish/route.ts', import.meta.url),
-      'utf8',
-    ),
-    /ENOENT/,
-    '127A must not retain obsolete Page publication routes',
+  const saveRoute = await readFile(
+    new URL('../app/api/account/pages/[pageId]/route.ts', import.meta.url),
+    'utf8',
   );
+  const pageClient = await readFile(new URL('../lib/account-pages.ts', import.meta.url), 'utf8');
+  const publishRoute = await readFile(
+    new URL('../app/api/account/pages/[pageId]/publish/route.ts', import.meta.url),
+    'utf8',
+  );
+  assert.match(createRoute, /parseGeneratedFiles\(bodyResult\.payload\?\.files\)/);
+  assert.match(createRoute, /overlaysJson = bodyResult\.payload\?\.overlaysJson/);
+  assert.match(saveRoute, /parseGeneratedFiles\(bodyResult\.payload\?\.files\)/);
+  assert.match(saveRoute, /overlaysJson = bodyResult\.payload\?\.overlaysJson/);
+  assert.match(saveRoute, /pageAccess\(request, current, 'open_page'\)/);
+  assert.match(saveRoute, /pageAccess\(request, current, 'save_page'\)/);
+  assert.match(saveRoute, /pageAccess\(request, current, 'delete_page'\)/);
+  assert.match(pageClient, /body: \{ source: args\.source, files: args\.files, overlaysJson: args\.overlaysJson \}/);
+  assert.match(publishRoute, /publishAccountPage\(/);
+  assert.match(publishRoute, /resolvePageProductPolicy\(current\.value\.authzPayload, 'publish_page'\)/);
 
   console.log('Roma Page source contract verification passed.');
 }

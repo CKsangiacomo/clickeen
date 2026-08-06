@@ -218,6 +218,8 @@ https://bob.dev.clickeen.com
 https://tokyo.dev.clickeen.com
 https://berlin.dev.clickeen.com
 https://dev.clk.live/{accountPublicId}/{instanceId}
+https://dev.clk.live/{accountPublicId}/pages/{pageId}/{locale}
+https://dev.clk.live/clickeen.js
 https://devstudio.clickeen.com
 ```
 
@@ -243,9 +245,14 @@ accounts/{accountPublicId}/
   pages/
     {pageId}/
       source.json
+      serve-state.json
       overlays/
         locales/
           {locale}.json
+      overlays.json
+      index.html
+      styles.css
+      runtime.js
 ```
 
 Each instance has one root runtime. Translation generation writes only
@@ -258,6 +265,7 @@ storage:
 
 ```text
 product/widgets/{widgetType}/
+product/clickeen.js
 dieter/
 prague/
 ```
@@ -301,13 +309,23 @@ route. They are classified as vector assets by Tokyo-worker.
 
 ### Clickeen Pages
 
-1. Roma validates and saves Clickeen Page source for the current account.
+1. Roma resolves current-account authority and sends exact Page source,
+   generated files, and root serving overlays through its authenticated Page
+   routes.
 2. A Clickeen Page is an ordered stack of saved account widget instance
    placements.
-3. Tokyo-worker stores exact Page source and Page locale overlay files under the
-   account Page folder.
-4. Web Code Generator includes deterministic Page generation, but Roma/Tokyo do
-   not yet invoke, store, publish, or publicly serve generated Page files.
+3. Tokyo-worker stores the exact direct Page root. First Save is unpublished;
+   later Save preserves the existing publication state.
+4. Publish exposes the already-saved ordinary Page only when it has at least one
+   placement and all six direct-root artifacts exist and parse through their
+   storage contracts. Publish does not regenerate or render-test those files.
+5. The stable `clk.live/{accountPublicId}/pages/{pageId}` URL selects only from
+   the saved locale set and redirects without shared caching. Its exact-locale
+   URL returns completed stored HTML; Page CSS and runtime remain shared across
+   locales.
+6. Save while published, Publish, Unpublish, and Delete use Page-scoped cache
+   purges. Unpublish retains the Page; Delete is allowed only while unpublished
+   and never deletes referenced Instances or assets.
 
 ### Clickeen-Owned Examples
 
@@ -326,6 +344,7 @@ Use the owning surface for evidence:
 | Account asset visibility      | Roma `/api/account/assets` and Roma Assets UI                 |
 | Account asset storage         | `pnpm cf:preflight` then repo R2 commands                     |
 | Account instance behavior     | Roma account instance routes and Tokyo-worker                 |
+| Account Page behavior         | Roma account Page routes and Tokyo-worker public Page routes  |
 | Widget software source        | `tokyo/product/widgets/{widgetType}/`                         |
 | Cloud-dev worker/R2 deploy    | GitHub Actions worker deploy runs and R2 evidence             |
 | Roma/Bob/Prague app runtime   | Cloudflare Pages Git build state and cloud-dev surface checks |

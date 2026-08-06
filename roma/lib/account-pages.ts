@@ -6,6 +6,27 @@ import { callTokyo, type TokyoCallContext, type TokyoCallFailure } from './tokyo
 
 type PageList = { accountId: string; sources: AccountPageSource[] };
 
+export type PageGeneratedFiles = {
+  indexHtml: string;
+  stylesCss: string;
+  runtimeJs: string;
+};
+
+export type PageServingOverlays = Record<
+  string,
+  {
+    page: Record<string, string>;
+    placements: Record<string, Record<string, string>>;
+  }
+>;
+
+export type StoredAccountPage = {
+  source: AccountPageSource;
+  files: PageGeneratedFiles;
+  overlaysJson: PageServingOverlays;
+  serveState: { published: boolean };
+};
+
 function context(args: {
   accountId: string;
   accountCapsule?: string | null;
@@ -30,8 +51,31 @@ function invalidPayload(detail: string): TokyoCallFailure {
   };
 }
 
-function decodeSource(raw: unknown): AccountPageSource | null {
-  return isRecord(raw) ? parseAccountPageSource(raw.source) : null;
+function decodeStoredPage(raw: unknown): StoredAccountPage | null {
+  if (!isRecord(raw)) return null;
+  const source = parseAccountPageSource(raw.source);
+  const files = isRecord(raw.files) ? raw.files : null;
+  const serveState = isRecord(raw.serveState) ? raw.serveState : null;
+  if (
+    !source ||
+    !files ||
+    typeof files.indexHtml !== 'string' ||
+    typeof files.stylesCss !== 'string' ||
+    typeof files.runtimeJs !== 'string' ||
+    !isRecord(raw.overlaysJson) ||
+    !serveState ||
+    typeof serveState.published !== 'boolean'
+  ) return null;
+  return {
+    source,
+    files: {
+      indexHtml: files.indexHtml,
+      stylesCss: files.stylesCss,
+      runtimeJs: files.runtimeJs,
+    },
+    overlaysJson: raw.overlaysJson as PageServingOverlays,
+    serveState: { published: serveState.published },
+  };
 }
 
 export async function listAccountPageSources(args: {
@@ -58,20 +102,22 @@ export async function listAccountPageSources(args: {
 export async function createAccountPage(args: {
   accountId: string;
   source: AccountPageSource;
+  files: PageGeneratedFiles;
+  overlaysJson: PageServingOverlays;
   accountCapsule?: string | null;
   requestId?: string | null;
 }) {
   const result = await callTokyo(context(args), {
     path: '/__internal/pages',
     method: 'POST',
-    body: { source: args.source },
+    body: { source: args.source, files: args.files, overlaysJson: args.overlaysJson },
     decode: (payload) => payload,
     errorDetail: 'tokyo_account_page_create_http_error',
     errorKey: 'coreui.errors.db.writeFailed',
   });
   if (!result.ok) return result;
-  const source = decodeSource(result.value);
-  return source ? { ok: true as const, value: { source } } : invalidPayload('invalid Tokyo Page create payload');
+  const page = decodeStoredPage(result.value);
+  return page ? { ok: true as const, value: page } : invalidPayload('invalid Tokyo Page create payload');
 }
 
 export async function readAccountPage(args: {
@@ -88,28 +134,67 @@ export async function readAccountPage(args: {
     errorKey: 'coreui.errors.db.readFailed',
   });
   if (!result.ok) return result;
-  const source = decodeSource(result.value);
-  return source ? { ok: true as const, value: { source } } : invalidPayload('invalid Tokyo Page read payload');
+  const page = decodeStoredPage(result.value);
+  return page ? { ok: true as const, value: page } : invalidPayload('invalid Tokyo Page read payload');
 }
 
 export async function saveAccountPage(args: {
   accountId: string;
   pageId: string;
   source: AccountPageSource;
+  files: PageGeneratedFiles;
+  overlaysJson: PageServingOverlays;
   accountCapsule?: string | null;
   requestId?: string | null;
 }) {
   const result = await callTokyo(context(args), {
     path: `/__internal/pages/${encodeURIComponent(args.pageId)}`,
     method: 'PUT',
-    body: { source: args.source },
+    body: { source: args.source, files: args.files, overlaysJson: args.overlaysJson },
     decode: (payload) => payload,
     errorDetail: 'tokyo_account_page_save_http_error',
     errorKey: 'coreui.errors.db.writeFailed',
   });
   if (!result.ok) return result;
-  const source = decodeSource(result.value);
-  return source ? { ok: true as const, value: { source } } : invalidPayload('invalid Tokyo Page save payload');
+  const page = decodeStoredPage(result.value);
+  return page ? { ok: true as const, value: page } : invalidPayload('invalid Tokyo Page save payload');
+}
+
+async function changeAccountPagePublication(args: {
+  accountId: string;
+  pageId: string;
+  action: 'publish' | 'unpublish';
+  accountCapsule?: string | null;
+  requestId?: string | null;
+}) {
+  const result = await callTokyo(context(args), {
+    path: `/__internal/pages/${encodeURIComponent(args.pageId)}/${args.action}`,
+    method: 'POST',
+    body: {},
+    decode: (payload) => payload,
+    errorDetail: `tokyo_account_page_${args.action}_http_error`,
+    errorKey: 'coreui.errors.db.writeFailed',
+  });
+  if (!result.ok) return result;
+  if (!isRecord(result.value) || result.value.published !== (args.action === 'publish')) {
+    return invalidPayload(`invalid Tokyo Page ${args.action} payload`);
+  }
+  return {
+    ok: true as const,
+    value: {
+      pageId: args.pageId,
+      published: result.value.published,
+      changed: result.value.changed === true,
+    },
+  };
+}
+
+export function publishAccountPage(args: Omit<Parameters<typeof changeAccountPagePublication>[0], 'action'>) {
+  return changeAccountPagePublication({ ...args, action: 'publish' });
+}
+
+export function unpublishAccountPage(args: Omit<Parameters<typeof changeAccountPagePublication>[0], 'action'>) {
+  return changeAccountPagePublication({ ...args, action: 'unpublish' });
 }
 
 export async function deleteAccountPage(args: {

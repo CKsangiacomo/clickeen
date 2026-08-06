@@ -94,7 +94,7 @@ CLICKEEN
 | Builder editing state | Bob | `bob/` browser-memory session |
 | Account runtime storage | Tokyo-worker | `tokyo-worker/` over Tokyo R2 |
 | Product widget software | Git-authored Tokyo product root | `tokyo/product/widgets/` deployed to `product/widgets/` |
-| Public widget serving | Tokyo-worker public serving | generated Instance files under `accounts/{accountPublicId}/...`; Page public serving is not implemented in the current slice |
+| Public Instance/Page serving | Tokyo-worker public serving | exact generated files under `accounts/{accountPublicId}/...` exposed through published `clk.live` coordinates |
 | Relational account/support data | Michael/Supabase | `supabase/migrations/` and service-owned routes |
 | Model execution | San Francisco | `sanfrancisco/` |
 | Product Copilot brain | Product Copilot Worker | `agents/product-copilot/` |
@@ -124,8 +124,9 @@ token/capsule/grant for that boundary.
 | Michael | Supabase Postgres | Relational account/user/support data |
 | Dieter | Git source + Tokyo artifacts | Design tokens/components |
 
-Public widget serving is generated static artifact delivery through `clk.live`
-/ `dev.clk.live` backed by Tokyo-worker and R2.
+Public Instance and Page serving is stored generated-file delivery through
+`clk.live` / `dev.clk.live`, backed by Tokyo-worker, R2, and scoped Cloudflare
+cache invalidation.
 
 ## Storage Ownership
 
@@ -158,14 +159,20 @@ accounts/{accountPublicId}/
   pages/
     {pageId}/
       source.json
+      serve-state.json
       overlays/
         locales/
           {locale}.json
+      overlays.json
+      index.html
+      styles.css
+      runtime.js
 ```
 
 The non-account roots are git-authored deploy artifacts:
 
 - `product/widgets/**` for widget software;
+- `product/clickeen.js` for the shared iframe-free public installer;
 - `product/roma/**` for Roma public i18n/static support artifacts;
 - `dieter/**` for design-system artifacts;
 - `prague/**` for Prague content/media.
@@ -205,10 +212,11 @@ Visitor requests do not call models, read Supabase, compose widgets from
 authoring source, or repair missing artifacts.
 
 Tokyo-worker completes the exact public account and instance placeholders in
-stored HTML. For a translated request it also replaces the
-field-marked base values from the validated exact overlay and sets
-`<html lang>`. Base and translated HTML remain `no-store` until public serving
-owns their complete mutation and invalidation lifecycle.
+stored HTML. For a translated request it also replaces the field-marked base
+values from the validated exact overlay and sets `<html lang>`. Completed HTML
+revalidates through the exact public URL cache key. Instance Save, translation
+writes/deletes, Publish, Unpublish, and Delete purge only the affected base,
+locale, and support-file URLs.
 
 Cloud-dev public serving uses:
 
@@ -236,17 +244,43 @@ contract.
 
 ### Account Pages
 
-Pages are account-owned ordered collections of saved Instances. Roma owns Page
-source validation and Save. Tokyo-worker stores exact Page source and Page
-locale overlays under:
+Pages are account-owned ordered collections of saved Instances. Roma owns
+current-account policy and authenticated Page commands. Tokyo-worker stores the
+exact direct Page root under:
 
 ```text
 accounts/{accountPublicId}/pages/{pageId}/
+  source.json
+  serve-state.json
+  overlays/locales/{locale}.json
+  overlays.json
+  index.html
+  styles.css
+  runtime.js
 ```
 
-Web Code Generator includes deterministic Page generation. Roma/Tokyo do not
-yet invoke, store, publish, or publicly serve generated Page files. There is no
-placeholder public Page route or publish command.
+First Save creates an unpublished ordinary Page. Later Save stores the exact
+submitted source/files and preserves publication state. Publish requires a
+saved Page with at least one placement and all six contract-shaped direct-root
+artifacts; it does not render-test or regenerate them. Unpublish retains the
+direct Page root, and Delete accepts only an unpublished Page.
+
+The stable public URL redirects without shared caching to one saved exact
+locale chosen from browser language, Cloudflare country-region hints, and the
+Page base locale:
+
+```text
+https://clk.live/{accountPublicId}/pages/{pageId}
+https://clk.live/{accountPublicId}/pages/{pageId}/{locale}
+```
+
+The exact-locale URL is the HTML cache key. For the base locale Tokyo-worker
+uses the base values already in stored `index.html`; for a non-base locale it
+applies only that locale's Page/placement values from root `overlays.json`.
+Public Page coordinates are completed for both. It never calls child Instance
+URLs, a model, or a generator. `styles.css` and `runtime.js` are shared across
+locales. Save while published, Publish, Unpublish, and Delete purge only the
+Page's affected previous/current locale and support-file URLs.
 
 ### Translation Overlays
 
@@ -317,7 +351,9 @@ https://roma.dev.clickeen.com
 https://bob.dev.clickeen.com
 https://tokyo.dev.clickeen.com
 https://berlin.dev.clickeen.com
-https://dev.clk.live
+https://dev.clk.live/{accountPublicId}/{instanceId}
+https://dev.clk.live/{accountPublicId}/pages/{pageId}/{locale}
+https://dev.clk.live/clickeen.js
 https://prague.dev.clickeen.com
 https://devstudio.clickeen.com
 https://sanfrancisco.dev.clickeen.com/healthz

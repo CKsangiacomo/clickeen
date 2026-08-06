@@ -27,7 +27,7 @@ Canonical account-management architecture:
 | Roma tier-drop dismiss route | `roma/app/api/account/lifecycle/tier-drop/dismiss/route.ts` |
 | Roma account asset upload | `roma/app/api/account/assets/upload/route.ts` |
 | Roma instance create/save/publish routes | `roma/app/api/account/instances/**` |
-| Roma Page source routes | `roma/app/api/account/pages/**` |
+| Roma Page storage/publication routes | `roma/app/api/account/pages/**` |
 | Roma instance save policy | `roma/lib/account-instance-save-policy.ts` |
 | Policy resolver | `packages/ck-policy/src/policy.ts` |
 | Policy registry/matrix | `packages/ck-policy/src/registry.ts`, `packages/ck-policy/entitlements.matrix.json` |
@@ -77,7 +77,7 @@ users.role -> role inside that account
 | Relational account/user/team data | Michael/Supabase |
 | Account assets/instances/pages files | Tokyo-worker over Tokyo R2 |
 | Account product policy | Roma using `@clickeen/ck-policy` |
-| Public widget serving | Tokyo-worker generated package serving |
+| Public Instance/Page serving | Tokyo-worker stored generated-file serving |
 
 Account-scoped product work follows:
 
@@ -300,10 +300,10 @@ PRD 127 also adds `pages.max` through the same policy system. Its target product
 law is visibility plus command-time access: Pages stays in navigation for every
 tier; Free and Tier 1 see **Upgrade to get Pages**; an account downgraded into
 those tiers still sees its retained Page inventory and **Upgrade to use Pages**.
-Blocked Page actions remain visible, open the standard Upgrade dialog, and
-perform no write or generator call. Downgrade does not hide, delete, rewrite,
-regenerate, publish, or unpublish retained Pages. This is planned 127 behavior,
-not current runtime truth.
+The Page API already denies detail and mutation commands at a zero Page limit
+without calling Tokyo. 127E adds the visible Page domain and standard Upgrade
+dialog around that result. Downgrade does not hide, delete, rewrite,
+regenerate, publish, or unpublish retained Pages.
 
 Current Page limits:
 
@@ -339,8 +339,6 @@ These are not active runtime truth:
 - core `account_members` role authority;
 - public monthly view denial/upsell behavior for `views.monthly.max`;
 - automatic 30-day downgraded-asset overage cleanup;
-- Page UI, compilation, publication, and public serving are not implemented in
-  the current slice.
 
 ## Verification
 
@@ -353,7 +351,8 @@ These are not active runtime truth:
 | Entitlement keys/values | `packages/ck-policy/entitlements.matrix.json` |
 | Entitlement metadata/enforcement status | runtime owner evidence plus `packages/ck-policy/src/registry.ts`; `embed.seoGeo.enabled` currently conflicts |
 | Account files | Roma routes first; raw bytes require `pnpm cf:preflight` and R2 evidence |
-| Page authoring source | Roma Page source routes and Tokyo-worker exact Page source/overlay files |
+| Page storage/publication | Roma Page routes plus Tokyo-worker exact direct Page root and `serve-state.json` |
+| Public Page isolation | published `clk.live/{accountPublicId}/pages/{pageId}/{locale}` response and account-scoped R2 evidence |
 
 ## Not Current Product Truth
 

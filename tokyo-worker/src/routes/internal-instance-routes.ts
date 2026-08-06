@@ -3,11 +3,11 @@ import { normalizeLocale, normalizeStorageId } from '../asset-utils';
 import {
   AccountInstanceTransitionError,
   createAccountInstanceFromSubmittedSource,
+  deleteAccountInstanceTransition,
   publishAccountInstanceTransition,
   saveAccountInstanceTransition,
   unpublishAccountInstanceTransition,
 } from '../domains/account-instances/operations';
-import { deleteAccountInstanceSubtree } from '../domains/account-instances/delete';
 import {
   readInstancePublicPackage,
   readSubmittedInstancePublicPackage,
@@ -503,7 +503,7 @@ export async function tryHandleInternalInstanceRoutes(
       const auth = await authorizeRomaEditorTransition({ req, env, accountId });
       if (!auth.ok) return respond(auth.response);
       try {
-        const deleted = await deleteAccountInstanceSubtree(env, instanceId, accountId);
+        const deleted = await deleteAccountInstanceTransition({ env, instanceId, accountId });
         if (!deleted.existed) {
           return respond(
             json(
@@ -514,19 +514,7 @@ export async function tryHandleInternalInstanceRoutes(
         }
         return respond(json({ ok: true, deleted: deleted.existed, existed: deleted.existed }));
       } catch (error) {
-        const detail = error instanceof Error ? error.message : String(error);
-        return respond(
-          json(
-            {
-              error: {
-                kind: 'UPSTREAM_UNAVAILABLE',
-                reasonKey: 'coreui.errors.db.writeFailed',
-                detail,
-              },
-            },
-            { status: 502 },
-          ),
-        );
+        return respond(transitionErrorResponse(error));
       }
     }
 

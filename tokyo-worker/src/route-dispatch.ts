@@ -1,5 +1,6 @@
 import { tryHandleAssetRoutes } from './routes/asset-routes';
 import { tryHandleClkLiveStaticRoutes } from './routes/clk-live-routes';
+import { tryHandleClkLivePageRoutes } from './routes/clk-live-page-routes';
 import { tryHandleInternalProductRoutes } from './routes/internal-product-routes';
 import { json } from './http';
 import type { TokyoRouteArgs } from './route-helpers';
@@ -10,10 +11,12 @@ function isPublicServingHost(hostname: string): boolean {
 
 export async function dispatchTokyoRoute(args: TokyoRouteArgs): Promise<Response> {
   if (isPublicServingHost(args.url.hostname)) {
-    if (args.pathname.startsWith('/dieter/icons/svg/')) {
+    if (args.pathname === '/clickeen.js' || args.pathname.startsWith('/dieter/icons/svg/')) {
       const assetResponse = await tryHandleAssetRoutes(args);
       if (assetResponse) return assetResponse;
     }
+    const pageResponse = await tryHandleClkLivePageRoutes(args);
+    if (pageResponse) return pageResponse;
     const response = await tryHandleClkLiveStaticRoutes(args);
     return response ?? args.respond(new Response('Not found', { status: 404 }));
   }

@@ -9,6 +9,7 @@ import {
   isCompactInstanceId,
   isCompactPageId,
 } from '@clickeen/ck-contracts/overlay-identity';
+import type { PageGeneratedFiles, PageServeState, PageServingOverlays } from './types';
 
 const LOCALE_RE = /^[a-z]{2,3}(?:-[A-Za-z0-9]{2,8})?$/;
 const ASSET_REF_SEGMENT_RE = /^[A-Za-z0-9][A-Za-z0-9._-]{0,119}$/;
@@ -112,4 +113,49 @@ export function parsePageLocaleOverlay(raw: unknown, source: AccountPageSource):
 
 export function isPageLocale(value: unknown): value is string {
   return typeof value === 'string' && LOCALE_RE.test(value);
+}
+
+export function parsePageGeneratedFiles(raw: unknown): PageGeneratedFiles | null {
+  if (!isRecord(raw) || !hasExactKeys(raw, ['indexHtml', 'stylesCss', 'runtimeJs'])) return null;
+  if (
+    typeof raw.indexHtml !== 'string' ||
+    typeof raw.stylesCss !== 'string' ||
+    typeof raw.runtimeJs !== 'string'
+  ) return null;
+  return { indexHtml: raw.indexHtml, stylesCss: raw.stylesCss, runtimeJs: raw.runtimeJs };
+}
+
+export function parsePageServingOverlays(raw: unknown, source: AccountPageSource): PageServingOverlays | null {
+  if (source.isTemplate || !isRecord(raw)) return null;
+  const placementIds = source.placements.map((placement) => placement.placementId);
+  const expectedPlacements = new Set(placementIds);
+  const output: PageServingOverlays = {};
+  for (const [locale, entry] of Object.entries(raw)) {
+    if (!isPageLocale(locale) || locale === source.baseLocale || !isRecord(entry) || !hasExactKeys(entry, ['page', 'placements'])) return null;
+    const pageOverlay = parsePageLocaleOverlay({ values: entry.page }, source);
+    if (!pageOverlay || !isRecord(entry.placements)) return null;
+    if (
+      Object.keys(entry.placements).length !== placementIds.length ||
+      Object.keys(entry.placements).some((placementId) => !expectedPlacements.has(placementId))
+    ) return null;
+    const placements: Record<string, Record<string, string>> = {};
+    for (const placementId of placementIds) {
+      const values = entry.placements[placementId];
+      if (!isRecord(values)) return null;
+      const exactValues: Record<string, string> = {};
+      for (const [path, value] of Object.entries(values)) {
+        if (!path || path.includes('[]') || path.includes('*') || typeof value !== 'string') return null;
+        exactValues[path] = value;
+      }
+      placements[placementId] = exactValues;
+    }
+    output[locale] = { page: pageOverlay.values, placements };
+  }
+  return output;
+}
+
+export function parsePageServeState(raw: unknown): PageServeState | null {
+  return isRecord(raw) && hasExactKeys(raw, ['published']) && typeof raw.published === 'boolean'
+    ? { published: raw.published }
+    : null;
 }

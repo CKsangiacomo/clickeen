@@ -136,8 +136,8 @@ export const ENTITLEMENT_META: Record<EntitlementKey, EntitlementMeta> = {
     description: 'Maximum saved Pages and Page templates.',
     enforcement: {
       status: 'enforced',
-      owner: 'Roma Page first Save',
-      note: 'Roma rejects a first Page Save when the account is already at its saved Page limit. Existing Pages remain stored and visible after downgrade.',
+      owner: 'Roma Page routes',
+      note: 'Roma rejects a first Page Save at the saved Page limit. A zero limit leaves retained Pages visible but denies Page product actions through the Upgrade response.',
     },
   },
   'uploads.size.max': {

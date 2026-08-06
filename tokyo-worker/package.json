@@ -7,7 +7,10 @@
     "deploy": "wrangler deploy --routes \"\"",
     "test:auth-config": "tsx tests/run-auth-config.ts",
     "test:clk-live": "tsx tests/run-clk-live-locale-serving.ts",
+    "test:public-loader": "tsx tests/run-public-loader-contract.ts",
+    "test:widget-cache": "tsx tests/run-widget-cache-lifecycle.ts",
     "test:page-contract": "tsx tests/run-page-contract.ts",
+    "test:page-serving": "tsx tests/run-page-public-serving.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {

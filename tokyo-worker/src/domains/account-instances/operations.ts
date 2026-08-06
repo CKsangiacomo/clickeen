@@ -16,9 +16,11 @@ import {
   readInstanceServeState,
   writeInstanceServeState,
 } from './serve-state';
+import { listLocaleOverlayCoordinates } from '../account-translations/overlays';
 import type { AccountInstanceContentDocument, AccountInstanceSourcePointer } from './types';
 import { normalizeStorageId } from './utils';
 import { deletePrefix } from '../storage';
+import { PublicCachePurgeError, purgePublicServingFiles } from '../public-cache';
 
 export class AccountInstanceTransitionError extends Error {
   status: number;
@@ -78,6 +80,7 @@ export function buildClkLiveEntryCachePurgeFiles(args: {
   publicServingBase: string;
   accountId: string;
   instanceId: string;
+  locales?: string[];
 }): string[] {
   const base = `${args.publicServingBase.replace(/\/+$/, '')}/${args.accountId}/${args.instanceId}`;
   const files = new Set([
@@ -87,47 +90,72 @@ export function buildClkLiveEntryCachePurgeFiles(args: {
     `${base}/${PUBLIC_STYLES_FILE}`,
     `${base}/${PUBLIC_RUNTIME_FILE}`,
   ]);
+  for (const locale of args.locales ?? []) {
+    const coordinate = encodeURIComponent(locale);
+    files.add(`${base}?locale=${coordinate}`);
+    files.add(`${base}/?locale=${coordinate}`);
+  }
   return [...files];
 }
 
-export async function purgeClkLiveEntryCache(args: {
-  env: Env;
+export function buildClkLiveLocaleCachePurgeFiles(args: {
+  publicServingBase: string;
   accountId: string;
   instanceId: string;
+  locale: string;
+}): string[] {
+  const base = `${args.publicServingBase.replace(/\/+$/, '')}/${args.accountId}/${args.instanceId}`;
+  const coordinate = encodeURIComponent(args.locale);
+  return [`${base}?locale=${coordinate}`, `${base}/?locale=${coordinate}`];
+}
+
+async function purgeClkLiveFiles(args: {
+  env: Env;
+  files: (publicServingBase: string) => string[];
 }): Promise<void> {
-  const zoneId = String(args.env.CLOUDFLARE_ZONE_ID || '').trim();
-  const token = String(args.env.CLOUDFLARE_CACHE_PURGE_TOKEN || '').trim();
   const publicServingBase = String(args.env.PUBLIC_SERVING_BASE_URL || '').trim().replace(/\/+$/, '');
-  if (!zoneId || !token || !publicServingBase) {
+  if (!publicServingBase) {
     throw new AccountInstanceTransitionError({
       status: 503,
       kind: 'UPSTREAM_UNAVAILABLE',
       reasonKey: 'tokyo.errors.publicCache.purgeConfigMissing',
     });
   }
-  const response = await fetch(`https://api.cloudflare.com/client/v4/zones/${encodeURIComponent(zoneId)}/purge_cache`, {
-    method: 'POST',
-    headers: {
-      authorization: `Bearer ${token}`,
-      'content-type': 'application/json',
-    },
-    body: JSON.stringify({
-      files: buildClkLiveEntryCachePurgeFiles({
-        publicServingBase,
-        accountId: args.accountId,
-        instanceId: args.instanceId,
-      }),
-    }),
-  });
-  const payload = await response.json().catch(() => null) as { success?: unknown } | null;
-  if (!response.ok || payload?.success !== true) {
+  try {
+    await purgePublicServingFiles({ env: args.env, files: args.files(publicServingBase) });
+  } catch (error) {
+    if (!(error instanceof PublicCachePurgeError)) throw error;
     throw new AccountInstanceTransitionError({
-      status: 502,
+      status: error.status,
       kind: 'UPSTREAM_UNAVAILABLE',
-      reasonKey: 'tokyo.errors.publicCache.purgeFailed',
-      detail: `cloudflare_purge_status_${response.status}`,
+      reasonKey: error.reasonKey,
+      detail: error.message,
     });
   }
+}
+
+export async function purgeClkLiveEntryCache(args: {
+  env: Env;
+  accountId: string;
+  instanceId: string;
+  locales?: string[];
+}): Promise<void> {
+  await purgeClkLiveFiles({
+    env: args.env,
+    files: (publicServingBase) => buildClkLiveEntryCachePurgeFiles({ ...args, publicServingBase }),
+  });
+}
+
+export async function purgeClkLiveLocaleCache(args: {
+  env: Env;
+  accountId: string;
+  instanceId: string;
+  locale: string;
+}): Promise<void> {
+  await purgeClkLiveFiles({
+    env: args.env,
+    files: (publicServingBase) => buildClkLiveLocaleCachePurgeFiles({ ...args, publicServingBase }),
+  });
 }
 
 function normalizeDisplayName(value: unknown): string | null {
@@ -272,6 +300,20 @@ export async function saveAccountInstanceTransition(args: {
       detail: `submitted widgetType "${submittedWidgetType}" does not match Tokyo instance widgetType "${existingWidgetType}"`,
     });
   }
+  const live = (await readInstanceServeState({
+    env: args.env,
+    accountId,
+    instanceId,
+    widgetCode: existing.value.pointer.widgetCode,
+  })) === 'published';
+  const locales = live
+    ? await listLocaleOverlayCoordinates({
+        env: args.env,
+        accountId,
+        widgetCode: existing.value.pointer.widgetCode,
+        instanceId,
+      })
+    : [];
   const packaged = await writeInstancePublicPackage({
     env: args.env,
     accountId,
@@ -296,12 +338,9 @@ export async function saveAccountInstanceTransition(args: {
     displayName: args.hasDisplayName ? args.displayName : existing.value.pointer.displayName,
     baseLocale: args.baseLocale,
   });
-  const live = (await readInstanceServeState({
-    env: args.env,
-    accountId,
-    instanceId,
-    widgetCode: saved.pointer.widgetCode,
-  })) === 'published';
+  if (live) {
+    await purgeClkLiveEntryCache({ env: args.env, accountId, instanceId, locales });
+  }
 
   return {
     ok: true,
@@ -338,7 +377,12 @@ export async function publishAccountInstanceTransition(args: {
     instanceId,
     widgetCode: existing.value.pointer.widgetCode,
   });
-  await purgeClkLiveEntryCache({ env: args.env, accountId, instanceId });
+  const locales = await listLocaleOverlayCoordinates({
+    env: args.env,
+    accountId,
+    widgetCode: existing.value.pointer.widgetCode,
+    instanceId,
+  });
   await writeInstanceServeState({
     env: args.env,
     accountId,
@@ -346,6 +390,7 @@ export async function publishAccountInstanceTransition(args: {
     widgetCode: existing.value.pointer.widgetCode,
     status: 'published',
   });
+  await purgeClkLiveEntryCache({ env: args.env, accountId, instanceId, locales });
   return { instanceId, status: 'published', changed: liveStatus !== 'published' };
 }
 
@@ -363,7 +408,12 @@ export async function unpublishAccountInstanceTransition(args: {
     instanceId,
     widgetCode: existing.value.pointer.widgetCode,
   });
-  await purgeClkLiveEntryCache({ env: args.env, accountId, instanceId });
+  const locales = await listLocaleOverlayCoordinates({
+    env: args.env,
+    accountId,
+    widgetCode: existing.value.pointer.widgetCode,
+    instanceId,
+  });
   if (liveStatus !== 'unpublished') {
     await writeInstanceServeState({
       env: args.env,
@@ -373,5 +423,30 @@ export async function unpublishAccountInstanceTransition(args: {
       status: 'unpublished',
     });
   }
+  await purgeClkLiveEntryCache({ env: args.env, accountId, instanceId, locales });
   return { instanceId, status: 'unpublished', changed: liveStatus !== 'unpublished' };
+}
+
+export async function deleteAccountInstanceTransition(args: {
+  env: Env;
+  accountId: string;
+  instanceId: string;
+}): Promise<{ existed: boolean }> {
+  const { accountId, instanceId } = assertScopedIds(args.accountId, args.instanceId);
+  const existing = await readAccountInstanceSource({ env: args.env, accountId, instanceId });
+  if (!existing.ok) {
+    if (existing.kind === 'NOT_FOUND') return { existed: false };
+    transitionFailureFromSavedRead(existing);
+  }
+  const locales = await listLocaleOverlayCoordinates({
+    env: args.env,
+    accountId,
+    widgetCode: existing.value.pointer.widgetCode,
+    instanceId,
+  });
+  const deleted = await deleteAccountInstanceSubtree(args.env, instanceId, accountId);
+  if (deleted.existed) {
+    await purgeClkLiveEntryCache({ env: args.env, accountId, instanceId, locales });
+  }
+  return deleted;
 }

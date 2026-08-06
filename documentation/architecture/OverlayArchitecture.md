@@ -48,9 +48,14 @@ Page authoring uses the same separate exact-file law:
 ```text
 accounts/{accountPublicId}/pages/{pageId}/
   source.json
+  serve-state.json
   overlays/
     locales/
       {locale}.json
+  overlays.json
+  index.html
+  styles.css
+  runtime.js
 ```
 
 `source.json` owns the saved `baseLocale`. Account Settings owns the selected
@@ -60,8 +65,10 @@ lets Translation Agent write locales independently without one concurrent
 result replacing another.
 
 Page templates have no locales and no locale overlay files. Web Code Generator
-has deterministic Page generation, but generated Page files are not connected
-to current storage, publication, or public serving.
+produces the direct Page files and root `overlays.json`. The authoring overlay
+files remain independently writable translation truth; root `overlays.json` is
+the saved locale-value input used to complete published exact-locale HTML and
+changes only through a Page Save or Update.
 
 ## Field Authority
 
@@ -89,15 +96,25 @@ Tokyo-worker:
 5. completes the public account and instance placeholders from the validated
    route;
 6. rejects any remaining `__CK_PUBLIC_*__` placeholder and serves valid HTML
-   with `no-store`.
+   through the exact public URL cache key.
 
 The HTML continues to reference the single root `styles.css` and `runtime.js`.
 `runtime.js` binds widget and shared behavior to the generated markup; it does
 not apply overlays or render primary customer content. Missing overlays return
 `404 Locale not available`. Corrupt overlays return `500 Locale data invalid`.
-Neither condition falls back to the base language. Base and translated HTML
-remain `no-store` until public serving owns complete invalidation for Save,
-translation, publication, and deletion operations.
+Neither condition falls back to the base language. Instance Save, Instance
+translation writes/deletes, publication, and deletion operations purge only
+the affected public URLs.
+
+For a published Page, Tokyo-worker uses
+`/{accountPublicId}/pages/{pageId}/{locale}` as the exact-locale HTML cache key.
+The base locale uses values already in stored `index.html`; a non-base locale
+applies only its matching root `overlays.json` Page/placement values through
+declared markers. Both complete public Page coordinates. The full root
+`overlays.json` is validated before route selection, so corruption in any entry
+makes the entire Page unavailable rather than isolating failure to one locale.
+The stable Page URL selects from the saved locale set and redirects with
+`no-store`; Page `styles.css` and `runtime.js` remain shared across locales.
 
 ## Current Operations
 
@@ -109,6 +126,9 @@ translation, publication, and deletion operations.
 | Save instance source | Bob submits current config and exact three-file package -> Roma derives source artifacts -> Tokyo-worker stores both |
 | Publish/unpublish | Tokyo-worker owns the single `serve-state.json` |
 | Public localized read | Tokyo-worker reads the one root artifact and exact overlay |
+| Save Page runtime | Roma submits exact source/files/root serving overlays -> Tokyo-worker stores the direct Page root |
+| Publish/unpublish Page | Tokyo-worker changes only Page `serve-state.json.published` and purges scoped public URLs |
+| Public localized Page read | Tokyo-worker reads one Page root; base uses stored index values and non-base uses one exact root `overlays.json` entry |
 
 The same Generate translations operation accepts an Instance or Page target.
 For a Page, it writes only the translated Page metadata values to the exact Page
@@ -136,3 +156,5 @@ locale overlay path. It does not compile or publish the Page.
 | Localized public runtime | root URL with `?locale=` contains translated text and root support URLs |
 | Missing/corrupt locale | explicit 404/500; never base-language output |
 | Storage invariant | zero instance objects outside `overlays/locales/` representing a locale runtime |
+| Page serving input | exact root `overlays.json` locale keys and values plus the one stored Page file set |
+| Page exact locale | exact-locale URL contains only base index or matching non-base values; malformed root overlays fail the whole Page read |

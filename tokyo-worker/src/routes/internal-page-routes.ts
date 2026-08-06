@@ -5,8 +5,10 @@ import {
   listAccountPageSources,
   normalizePageId,
   PageOperationError,
-  readAccountPageSource,
+  publishAccountPage,
+  readAccountPage,
   saveAccountPageSource,
+  unpublishAccountPage,
 } from '../domains/pages';
 import { json } from '../http';
 import {
@@ -71,8 +73,33 @@ export async function tryHandleInternalPageRoutes(args: TokyoRouteArgs): Promise
     const pageId = normalizePageId(body.source.pageId);
     if (!pageId) return respondValidation(respond, 'tokyo.errors.page.invalidPageId');
     try {
-      const created = await createAccountPageSource({ env, accountId, pageId, source: body.source });
-      return respond(json({ ok: true, accountId, pageId, source: created.source }, { status: 201 }));
+      const created = await createAccountPageSource({
+        env,
+        accountId,
+        pageId,
+        source: body.source,
+        files: body.files,
+        overlaysJson: body.overlaysJson,
+      });
+      return respond(json({ ok: true, accountId, pageId, ...created }, { status: 201 }));
+    } catch (error) {
+      return respond(pageErrorResponse(error));
+    }
+  }
+
+  const transitionMatch = pathname.match(/^\/__internal\/pages\/([^/]+)\/(publish|unpublish)$/);
+  if (transitionMatch) {
+    const accountId = normalizeAccountPublicId(req.headers.get('x-account-id'));
+    const pageId = normalizePageId(decodeURIComponent(transitionMatch[1] || ''));
+    if (!accountId || !pageId) return respondValidation(respond, 'tokyo.errors.page.invalidPageId', accountId ? 422 : 403);
+    if (req.method !== 'POST') return respondMethodNotAllowed(respond);
+    const authError = await authorizeAccountInstanceControlRequest({ req, env, accountId, minRole: 'editor' });
+    if (authError) return respond(authError);
+    try {
+      const transition = transitionMatch[2] === 'publish'
+        ? await publishAccountPage({ env, accountId, pageId })
+        : await unpublishAccountPage({ env, accountId, pageId });
+      return respond(json({ ok: true, accountId, pageId, ...transition }));
     } catch (error) {
       return respond(pageErrorResponse(error));
     }
@@ -89,15 +116,22 @@ export async function tryHandleInternalPageRoutes(args: TokyoRouteArgs): Promise
   if (authError) return respond(authError);
   try {
     if (req.method === 'GET') {
-      const source = await readAccountPageSource({ env, accountId, pageId });
-      if (!source) throw new PageOperationError({ kind: 'NOT_FOUND', reasonKey: 'tokyo.errors.page.notFound' });
-      return respond(json({ ok: true, accountId, pageId, source }));
+      const page = await readAccountPage({ env, accountId, pageId });
+      if (!page) throw new PageOperationError({ kind: 'NOT_FOUND', reasonKey: 'tokyo.errors.page.notFound' });
+      return respond(json({ ok: true, accountId, pageId, ...page }));
     }
     if (req.method === 'PUT') {
       const body = await readInternalProductJsonBody({ req, env, boundary: 'internal.page.save.body', accountId });
       if (!isRecord(body) || !isRecord(body.source)) return respondValidation(respond, 'tokyo.errors.page.sourceInvalid');
-      const saved = await saveAccountPageSource({ env, accountId, pageId, source: body.source });
-      return respond(json({ ok: true, accountId, pageId, source: saved.source }));
+      const saved = await saveAccountPageSource({
+        env,
+        accountId,
+        pageId,
+        source: body.source,
+        files: body.files,
+        overlaysJson: body.overlaysJson,
+      });
+      return respond(json({ ok: true, accountId, pageId, ...saved }));
     }
     if (req.method === 'DELETE') {
       const deleted = await deleteAccountPageSource({ env, accountId, pageId });

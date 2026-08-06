@@ -154,8 +154,7 @@ Roma opens Bob:
   "returnLabel": "[optional host return label]",
   "publicActions": {
     "publicUrl": "[exact published URL]",
-    "iframeSnippet": "[exact iframe snippet]",
-    "scriptSnippet": "[exact script snippet]"
+    "clickeenJsSnippet": "[exact clickeen.js installer snippet]"
   },
   "copilot": "[copilotRuntimeUi]",
   "translationSetup": "[translationSetup]"
@@ -532,13 +531,15 @@ https://clk.live/{accountPublicId}/{instanceId}
 ```
 
 Roma owns public-widget action truth for the current account and opened
-instance. It constructs the exact public URL and iframe/script snippets and
-sends either that complete set or `null` in the Builder-open envelope. Bob
-fails a published open when that set is incomplete and presents Open public
-widget plus one Copy code intent in TopDrawer. Roma handles that intent with
-the same public-code Popup used by the Widgets inventory. Bob never constructs
-or copies those values from editor state. Unpublished instances expose no live
-actions.
+instance. It constructs the exact direct public URL and shared `clickeen.js`
+installer snippet and sends either that complete set or `null` in the
+Builder-open envelope. Bob fails a published open when that set is incomplete
+and presents Open public widget plus one Copy code intent in TopDrawer. Roma
+handles that intent with the same public-code Popup used by the Widgets
+inventory. Bob never constructs or copies those values from editor state.
+Unpublished instances expose no live actions. There is no public iframe option
+and no installer that loads the Instance's `runtime.js` directly. Bob's
+sandboxed editor-preview iframe remains separate from public installation.
 
 ## Account Assets
 

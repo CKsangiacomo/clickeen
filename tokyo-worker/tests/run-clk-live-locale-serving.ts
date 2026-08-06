@@ -195,7 +195,7 @@ async function testRootAndTranslatedIndexUseOnePackage(): Promise<void> {
   assert.match(baseHtml, /href="\/CLICKEEN\/ABCD123456\/styles\.css"/);
   assert.match(baseHtml, /src="\/CLICKEEN\/ABCD123456\/runtime\.js"/);
   assert.match(baseHtml, /English <strong>headline<\/strong>/);
-  assert.equal(base?.headers.get('cache-control'), 'no-store');
+  assert.equal(base?.headers.get('cache-control'), 'public, max-age=0, s-maxage=300, must-revalidate');
 
   const translated = await request(`/${accountId}/${instanceId}?locale=fr`, env);
   assert.equal(translated?.status, 200);
@@ -212,7 +212,7 @@ async function testRootAndTranslatedIndexUseOnePackage(): Promise<void> {
   assert.match(translatedHtml, /href="\/CLICKEEN\/ABCD123456\/styles\.css"/);
   assert.match(translatedHtml, /src="\/CLICKEEN\/ABCD123456\/runtime\.js"/);
   assert.doesNotMatch(translatedHtml, /\/locales\//);
-  assert.equal(translated?.headers.get('cache-control'), 'no-store');
+  assert.equal(translated?.headers.get('cache-control'), 'public, max-age=0, s-maxage=300, must-revalidate');
 
   const runtime = await request(`/${accountId}/${instanceId}/runtime.js`, env);
   assert.equal(await runtime?.text(), basePackage.runtimeJs);
@@ -230,7 +230,7 @@ async function testGlobalProductLinkDoesNotVaryByCountry(): Promise<void> {
   assert.equal(us?.status, 200);
   assert.equal(it?.status, 200);
   assert.equal(await us!.text(), await it!.text());
-  assert.equal(us?.headers.get('cache-control'), 'no-store');
+  assert.equal(us?.headers.get('cache-control'), 'public, max-age=0, s-maxage=300, must-revalidate');
 }
 
 async function testUnresolvedPublicPlaceholdersFailClosed(): Promise<void> {
@@ -380,6 +380,23 @@ async function testHeadAndOtherPublicRoutes(): Promise<void> {
     respond: (response) => response,
   });
   assert.equal(icon.status, 200);
+
+  await env.TOKYO_R2.put('product/clickeen.js', 'window.__clickeenLoader = true;', {
+    httpMetadata: { contentType: 'application/javascript; charset=utf-8' },
+  });
+  const loaderUrl = new URL('https://dev.clk.live/clickeen.js');
+  const loader = await dispatchTokyoRoute({
+    req: new Request(loaderUrl),
+    env,
+    pathname: loaderUrl.pathname,
+    url: loaderUrl,
+    respond: (response) => response,
+  });
+  assert.equal(loader.status, 200);
+  assert.equal(await loader.text(), 'window.__clickeenLoader = true;');
+  assert.equal(loader.headers.get('content-type'), 'application/javascript; charset=utf-8');
+  assert.equal(loader.headers.get('access-control-allow-origin'), '*');
+  assert.equal(loader.headers.get('x-content-type-options'), 'nosniff');
 }
 
 const tests = [

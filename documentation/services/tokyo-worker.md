@@ -3,8 +3,8 @@
 STATUS: CURRENT SYSTEM OPERATOR SPEC
 
 Tokyo-worker is the Tokyo R2/storage/CDN boundary for account runtime data,
-account assets, saved widget instance files, translated locale values, page
-files, generated public packages, and public artifact serving.
+account assets, saved widget instance files, translated locale values, direct
+Page files, generated public files, and public artifact serving.
 
 Tokyo-worker stores and serves bytes. Roma owns account product commands and
 tier enforcement. Account management owns storage retention and deletion
@@ -28,8 +28,9 @@ Tokyo-worker owns:
 - account asset R2 operations
 - account widget instance R2 operations
 - translated locale value R2 operations
-- Page source and Page locale overlay R2 operations
-- public package file serving
+- Page source, generated-file, serving-overlay, and publication-state R2 operations
+- published Instance and Page file serving
+- shared `/clickeen.js` installer serving from the Tokyo product root
 - `clk.live` and `dev.clk.live` static artifact serving
 - `GET /healthz`
 
@@ -151,29 +152,35 @@ accountPublicId + instanceId
 
 ## Pages
 
-Account pages are stacks of saved widget instances. Page source lives at:
+Account pages are stacks of saved widget instances. Their direct root is:
 
 ```text
-accounts/{accountPublicId}/pages/{pageId}/source.json
+accounts/{accountPublicId}/pages/{pageId}/
+  source.json
+  serve-state.json
+  overlays/
+    locales/
+      {locale}.json
+  overlays.json
+  index.html
+  styles.css
+  runtime.js
 ```
 
-Page authoring files live under:
-
-```text
-accounts/{accountPublicId}/pages/{pageId}/source.json
-accounts/{accountPublicId}/pages/{pageId}/overlays/locales/{locale}.json
-```
-
-Roma owns current-account access, Page policy, exact source validation, and
-Save. Tokyo-worker validates and stores exact Page source and Page locale
-overlay files under the account path Roma names. Before a Page source is
-created or saved, Tokyo-worker verifies that every referenced Instance and the
-optional social-image asset exist under that same account.
+Roma owns current-account access, Page policy, and authenticated Save, Publish,
+Unpublish, and Delete commands. Tokyo-worker validates and stores the exact
+submitted source, browser-generated files, root serving overlays, and
+`{ "published": boolean }` serving state. Before Save, Tokyo-worker verifies
+that every referenced Instance and optional social-image asset exist under the
+same account.
 
 Page source is an ordered document of saved Instance references. It does not
-duplicate child Instance source. Web Code Generator has deterministic Page
-generation, but Tokyo-worker does not accept, publish, or publicly serve
-generated Page files in the current runtime.
+duplicate child Instance source. First Save creates an unpublished Page; later
+Save preserves its current publication state. Publish requires an ordinary
+Page with at least one placement whose six direct-root artifacts exist and
+parse through their storage contracts; it does not render-test the HTML.
+Publish changes publication only. Unpublish retains the Page. Delete rejects a
+published Page and never deletes referenced Instances or account assets.
 
 ## Public Serving
 
@@ -189,9 +196,9 @@ Cloud-dev public serving uses:
 https://dev.clk.live/{accountPublicId}/{instanceId}
 ```
 
-Serving reads the one root widget artifact from the account folder after
-`accounts/{accountPublicId}/instances/{instanceId}/serve-state.json` is
-published. Tokyo-worker has no public Page-serving route in the current slice.
+Instance serving reads the one root widget artifact from the account folder
+after `accounts/{accountPublicId}/instances/{instanceId}/serve-state.json` is
+published.
 
 Public support files are:
 
@@ -208,12 +215,14 @@ placeholders:
 
 Before serving base or translated Instance HTML, Tokyo-worker completes the Web
 Code Generator's `__CK_PUBLIC_ACCOUNT_ID__` and `__CK_PUBLIC_INSTANCE_ID__`
-literals from the validated public route. The Free attribution link is one
-global Clickeen product URL and does not vary by country. If any
+literals from the validated public route. The Free attribution product link is
+always the literal `https://clickeen.com/`; locale, country, and market do not
+select another product link. If any
 `__CK_PUBLIC_*__` literal remains after completion, the HTML fails closed with
-`500 Public HTML invalid`; incomplete HTML is never served or cached. Base and
-translated HTML remain `no-store` until public serving owns complete
-invalidation across Save, translation, Publish, Unpublish, and delete.
+`500 Public HTML invalid`; incomplete HTML is never served or cached. Completed
+base and translated HTML responses revalidate through their exact URL cache
+keys. Save, translation writes/deletes, Publish, Unpublish, and Delete purge
+the affected base/locale and support-file URLs.
 
 Private source and state files remain private account storage.
 
@@ -226,11 +235,56 @@ https://clk.live/{accountPublicId}/{instanceId}?locale={locale}
 Cloud-dev uses the same query under `https://dev.clk.live`. Tokyo-worker reads
 and validates the exact overlay against saved content, replaces exact
 field-marked text/attributes and `<html lang>` in the stored root index,
-completes public placeholders, and returns it with `no-store` until public
-serving owns the complete invalidation lifecycle. `runtime.js` is
-not involved in overlay application. Missing overlays return `404 Locale not
+completes public placeholders, and returns complete cacheable HTML.
+`runtime.js` is not involved in overlay application. Missing overlays return `404 Locale not
 available`; corrupt overlays return `500 Locale data invalid`; neither falls
 back to base content.
+
+Published Page serving uses:
+
+```text
+https://clk.live/{accountPublicId}/pages/{pageId}
+https://clk.live/{accountPublicId}/pages/{pageId}/{locale}
+https://clk.live/{accountPublicId}/pages/{pageId}/styles.css
+https://clk.live/{accountPublicId}/pages/{pageId}/runtime.js
+```
+
+The stable Page URL selects only from `source.json.baseLocale` plus the exact
+top-level locale keys in root `overlays.json`, then redirects with `no-store`.
+The exact-locale URL is the HTML cache key. On a cache miss Tokyo-worker reads
+the direct Page root, requires `serve-state.json.published`, applies only the
+matching Page and placement values for a non-base locale, and uses the base
+values already stored in `index.html` for the base locale. It fills canonical,
+alternate-locale, social, and `WebPage` public coordinates for both and returns
+HTML. It never traverses child Instance URLs or calls Roma, a model, or a
+generator. Root `overlays.json` is validated before route selection; one
+malformed entry therefore makes stable, support-file, base, and locale Page
+requests return `500 Page unavailable`. With a valid root, missing locale truth
+is `404` and selected HTML completion failure is `500 Page locale data invalid`;
+neither silently falls back. Page CSS and runtime JavaScript are the same direct
+files for every locale.
+
+Exact-locale Page HTML uses
+`public, max-age=0, s-maxage=300, must-revalidate`. Page support files use
+`public, max-age=60, s-maxage=300, stale-while-revalidate=86400`. Stable
+redirects and all public failure responses are `no-store`. Public routes never
+return `source.json`, `serve-state.json`, authoring overlays, or root
+`overlays.json`.
+
+Page Save while published purges the union of previous/current saved locale
+URLs plus its support files. Publish, Unpublish, and Delete purge the Page's
+saved exact-locale and support-file URLs. Purge configuration or API failure is
+an operation failure, not success with stale cache risk.
+
+The product-neutral iframe-free installer is served at:
+
+```text
+https://clk.live/clickeen.js
+```
+
+It reads a published Instance or Page URL from `data-clickeen`, mounts the
+already-completed public product in open Shadow DOM, resolves only generated
+relative support references, and does not generate, translate, or publish.
 
 ## Private Roma Routes
 
@@ -249,7 +303,7 @@ Storage command routes cover:
 - publish and unpublish
 - translated locale reads and writes
 - account asset list/upload/resolve/delete
-- Page source and Page locale overlay operations
+- Page source/files/serving-overlay operations and publication transitions
 
 Account instance inventory is split by authority:
 
@@ -277,8 +331,9 @@ Current internal route families:
 | `/__internal/instances/{instanceId}/translations` | `GET` | list saved translated locale value files |
 | `/__internal/instances/{instanceId}/translations/{locale}` | `GET`, `PUT`, `DELETE` | read/write/delete one translated value file |
 | `/__internal/accounts/{accountPublicId}/pages` | `GET` | list account pages |
-| `/__internal/pages` | `POST` | create account page source |
-| `/__internal/pages/{pageId}` | `GET`, `PUT`, `DELETE` | read/save/delete account page source |
+| `/__internal/pages` | `POST` | create an unpublished Page from exact source/files/root serving overlays |
+| `/__internal/pages/{pageId}` | `GET`, `PUT`, `DELETE` | read/save the complete direct Page root or delete an unpublished Page |
+| `/__internal/pages/{pageId}/{publish|unpublish}` | `POST` | change Page publication state without generation or translation |
 | `/__internal/translations/{instance|page}/{targetId}/{locale}` | `PUT` | Translation Agent write bound to the exact granted target and locale |
 | `/__internal/accounts/{accountPublicId}/widget-defaults` | `GET`, `POST`, `PUT` | read/create/write account widget defaults |
 | `/__internal/assets/upload` | `POST` | upload account asset bytes |
@@ -335,6 +390,9 @@ does not provide a generation route.
 
 Tokyo-worker deploys through the GitHub Actions Cloudflare Workers workflow for
 cloud-dev workers. Tokyo product roots in R2 sync through the same workflow.
+`tokyo/product/clickeen/clickeen.js` maps to `product/clickeen.js`; its source
+path is part of the workflow change detector, so installer-only changes run the
+product-root sync.
 
 Before any manual Tokyo/R2 operation, run:
 

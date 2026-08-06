@@ -118,6 +118,26 @@ Roma/Tokyo-worker product routes. Direct `accounts/**` R2 writes are exceptional
 repair operations and must be named as product data repair, not normal product
 flow.
 
+## Public Serving Cache Purges
+
+Public cache invalidation is part of the owning Tokyo-worker product mutation,
+not a manual Cloudflare repair path. Tokyo-worker uses its configured
+`CLOUDFLARE_ZONE_ID` and the least-privilege
+`CLOUDFLARE_CACHE_PURGE_TOKEN` Worker secret to purge exact public URLs.
+
+For Pages, Save while published purges the union of the previous/current saved
+exact-locale URLs plus `styles.css` and `runtime.js`. Publish, Unpublish, and
+Delete purge the Page's saved exact-locale and support-file URLs. The stable
+locale-selection URL is `no-store`, so it has no cache entry to purge. Instance
+mutations use the same exact-URL rule for their base, saved locale, and support
+files. There is no global zone purge or locale-hidden cache variant.
+
+Missing purge configuration or a rejected Cloudflare purge is an explicit
+product-operation failure. Do not repeat the mutation through a dashboard or
+direct cache API wrapper. Deployment evidence for the zone setting/secret and
+runtime behavior comes from the `cloud-dev workers deploy` run plus the owning
+Tokyo-worker public-route checks.
+
 ## Required Local Environment
 
 Values live in root `.env.local` and are not committed.
@@ -181,6 +201,7 @@ Git-authored Tokyo product roots sync to canonical R2 roots:
 
 | Repo input | Canonical R2 root |
 | --- | --- |
+| `tokyo/product/clickeen/clickeen.js` | `product/clickeen.js` |
 | `tokyo/product/widgets/**` | `product/widgets/**` |
 | `dieter/icons/svg/**` | `dieter/icons/svg/**` |
 | `tokyo/roma/**` | `product/roma/**` |
@@ -199,18 +220,21 @@ reconciliation, orphan cleanup, or rollback.
 Remote product-root deployment runs only through GitHub Actions
 `cloud-dev workers deploy` after a push to `main`. That workflow runs the repo
 checks, which regenerate widget product packages from current source, then
-syncs all four roots. The workflow run is the deployment evidence.
+syncs every mapped product-root input. The workflow run is the deployment
+evidence.
 
 Auth boundary: the GitHub Actions sync path may use the workflow
 `CLOUDFLARE_API_TOKEN` because it is a CI/Wrangler deploy workflow. Local repo
 helper commands must not use that ambiguous token name; local R2 commands use
 the typed env names above.
 
-Changes to Dieter source, widget product source, Roma product media, Prague
-product media, or the sync workflow trigger that product-root path. Dieter
-source is watched because widget product packages consume its token/component
-CSS; only SVG icon bytes are written under the R2 `dieter/` root. Use the repo
-R2 read commands after deployment when an exact remote key must be verified.
+Changes to the shared Clickeen installer, Dieter source, widget product source,
+Roma product media, Prague product media, or the sync workflow trigger that
+product-root path. Dieter source is watched because widget product packages
+consume its token/component CSS; only SVG icon bytes are written under the R2
+`dieter/` root. Use the repo R2 read commands after deployment when an exact
+remote key must be verified. Verify the shared installer at exact R2 key
+`product/clickeen.js` and public URL `https://dev.clk.live/clickeen.js`.
 
 ## Pages/DNS REST Commands
 
@@ -293,6 +317,8 @@ for the full Pages project/env/binding inventory.
 | DevStudio domain | `pnpm cf:pages:domains devstudio` |
 | DevStudio DNS | `pnpm cf:dns:records clickeen.com devstudio.clickeen.com` |
 | Public embed runtime | `https://dev.clk.live/{accountPublicId}/{instanceId}` |
+| Public Page runtime | `https://dev.clk.live/{accountPublicId}/pages/{pageId}/{locale}` |
+| Shared public installer | `https://dev.clk.live/clickeen.js` |
 | R2 object | `pnpm cf:r2:get <exact-key>` |
 | Worker deploys | GitHub Actions `cloud-dev workers deploy` run plus the owning service runtime check |
 

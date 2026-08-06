@@ -92,6 +92,7 @@ async function testBuilderUsesBobTopDrawerAsItsOnlyEditorChrome(): Promise<void>
   const builderLandingRoute = await readRoute('app/(authed)/builder/page.tsx');
   const topDrawer = await readFile(new URL('../../bob/components/TopDrawer.tsx', import.meta.url), 'utf8');
   const bobBoot = await readFile(new URL('../../bob/lib/session/useSessionBoot.ts', import.meta.url), 'utf8');
+  const bobSessionTypes = await readFile(new URL('../../bob/lib/session/sessionTypes.ts', import.meta.url), 'utf8');
   const bobCss = await readFile(new URL('../../bob/app/bob_app.css', import.meta.url), 'utf8');
   const copyDialog = await readRoute('components/widget-copy-code-dialog.tsx');
   const clipboard = await readRoute('lib/copy-to-clipboard.ts');
@@ -129,8 +130,15 @@ async function testBuilderUsesBobTopDrawerAsItsOnlyEditorChrome(): Promise<void>
   assert.equal((topDrawer.match(/data-variant="primary"/g) ?? []).length, 1);
   assert.match(bobBoot, /message\.publishStatus === 'published'/);
   assert.match(bobBoot, /coreui\.errors\.builder\.publicActions\.invalid/);
+  assert.match(bobBoot, /typeof publicActions\.clickeenJsSnippet !== 'string'/);
+  assert.doesNotMatch(bobBoot, /iframeSnippet|scriptSnippet/);
+  assert.match(bobSessionTypes, /publicUrl: string;\s+clickeenJsSnippet: string;/);
+  assert.doesNotMatch(bobSessionTypes, /iframeSnippet|scriptSnippet/);
   assert.doesNotMatch(bobCss, /topdrawer-action-status/);
   assert.match(copyDialog, /aria-label=\{`Copy \$\{option\.label\}`\}/);
+  assert.match(copyDialog, /\{ key: 'publicUrl', label: 'Public URL' \}/);
+  assert.match(copyDialog, /\{ key: 'clickeenJsSnippet', label: 'Installation code' \}/);
+  assert.doesNotMatch(copyDialog, /iframeSnippet|scriptSnippet|Widget URL|Embed code|Script code/);
   assert.doesNotMatch(copyDialog, /data-size="large"/);
   assert.match(copyDialog, /request !== copyRequestRef\.current/);
   assert.match(clipboard, /finally \{\s+element\?\.remove\(\);/);
@@ -143,8 +151,11 @@ function testRomaOwnsExactPublicWidgetActions(): void {
     baseUrl: 'https://dev.clk.live/',
   });
   assert.equal(actions.publicUrl, 'https://dev.clk.live/CLICKEEN/ABC123');
-  assert.match(actions.iframeSnippet, /src="https:\/\/dev\.clk\.live\/CLICKEEN\/ABC123"/);
-  assert.equal(actions.scriptSnippet, '<script src="https://dev.clk.live/CLICKEEN/ABC123/runtime.js" async></script>');
+  assert.equal(
+    actions.clickeenJsSnippet,
+    '<script\n  src="https://dev.clk.live/clickeen.js"\n  data-clickeen="https://dev.clk.live/CLICKEEN/ABC123"\n  defer\n></script>',
+  );
+  assert.doesNotMatch(actions.clickeenJsSnippet, /iframe|runtime\.js|async/);
   assert.throws(
     () => buildWidgetPublicActions({ accountPublicId: '', instanceId: 'ABC123', baseUrl: 'https://dev.clk.live' }),
     /coreui\.errors\.payload\.invalid/,

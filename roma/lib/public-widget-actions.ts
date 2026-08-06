@@ -2,8 +2,7 @@ import { normalizePublicServingBaseUrl, resolvePublicServingBaseUrl } from './en
 
 export type WidgetPublicActions = {
   publicUrl: string;
-  iframeSnippet: string;
-  scriptSnippet: string;
+  clickeenJsSnippet: string;
 };
 
 export function buildWidgetPublicActions({
@@ -26,15 +25,10 @@ export function buildWidgetPublicActions({
 
   return {
     publicUrl,
-    iframeSnippet: `<iframe
-  src="${publicUrl}"
-  title="Clickeen widget"
-  loading="lazy"
-  referrerpolicy="no-referrer"
-  allow="clipboard-write"
-  sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox"
-  style="width:100%;border:0;min-height:420px;"
-></iframe>`,
-    scriptSnippet: `<script src="${publicUrl}/runtime.js" async></script>`,
+    clickeenJsSnippet: `<script
+  src="${origin}/clickeen.js"
+  data-clickeen="${publicUrl}"
+  defer
+></script>`,
   };
 }

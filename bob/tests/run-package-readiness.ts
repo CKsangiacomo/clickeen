@@ -61,12 +61,14 @@ async function run(): Promise<void> {
     /Saved translations could not be read/,
   );
 
-  const [builder, workspace, editing, session, topDrawer] = await Promise.all([
+  const [builder, workspace, editing, session, topDrawer, sessionTypes, sessionBoot] = await Promise.all([
     readFile(new URL('../components/BuilderApp.tsx', import.meta.url), 'utf8'),
     readFile(new URL('../components/Workspace.tsx', import.meta.url), 'utf8'),
     readFile(new URL('../lib/session/useSessionEditing.ts', import.meta.url), 'utf8'),
     readFile(new URL('../lib/session/WidgetDocumentSession.tsx', import.meta.url), 'utf8'),
     readFile(new URL('../components/TopDrawer.tsx', import.meta.url), 'utf8'),
+    readFile(new URL('../lib/session/sessionTypes.ts', import.meta.url), 'utf8'),
+    readFile(new URL('../lib/session/useSessionBoot.ts', import.meta.url), 'utf8'),
   ]);
 
   const overlayEnablement =
@@ -90,6 +92,10 @@ async function run(): Promise<void> {
     topDrawer,
     /const canSave = Boolean\(meta\) && isDirty && Boolean\(publicPackage\);/,
   );
+  assert.match(sessionTypes, /publicUrl: string;\s+clickeenJsSnippet: string;/);
+  assert.doesNotMatch(sessionTypes, /iframeSnippet|scriptSnippet/);
+  assert.match(sessionBoot, /typeof publicActions\.clickeenJsSnippet !== 'string'/);
+  assert.doesNotMatch(sessionBoot, /iframeSnippet|scriptSnippet/);
 
   console.log('package readiness tests passed');
 }

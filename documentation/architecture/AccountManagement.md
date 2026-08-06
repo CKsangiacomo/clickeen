@@ -196,10 +196,11 @@ Page references use:
 accountPublicId + pageId
 ```
 
-When page public serving is enabled, the public route shape is:
+Published Page serving uses:
 
 ```text
 /{accountPublicId}/pages/{pageId}
+/{accountPublicId}/pages/{pageId}/{locale}
 ```
 
 ## User

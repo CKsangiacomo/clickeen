@@ -6,9 +6,8 @@ import { copyToClipboard } from '../lib/copy-to-clipboard';
 import type { WidgetPublicActions } from '../lib/public-widget-actions';
 
 const COPY_OPTIONS = [
-  { key: 'publicUrl', label: 'Widget URL' },
-  { key: 'iframeSnippet', label: 'Embed code' },
-  { key: 'scriptSnippet', label: 'Script code' },
+  { key: 'publicUrl', label: 'Public URL' },
+  { key: 'clickeenJsSnippet', label: 'Installation code' },
 ] as const;
 
 export function WidgetCopyCodeDialog({
@@ -69,7 +68,7 @@ export function WidgetCopyCodeDialog({
     setCopyStatus(copied ? `${label} copied` : `${label} could not be copied`);
   }, []);
 
-  const complete = Boolean(actions?.publicUrl && actions.iframeSnippet && actions.scriptSnippet);
+  const complete = Boolean(actions?.publicUrl && actions.clickeenJsSnippet);
 
   return (
     <dialog ref={dialogRef} className="diet-popup" aria-labelledby="roma-widget-code-title">
@@ -100,7 +99,7 @@ export function WidgetCopyCodeDialog({
             ))}
           </div>
         ) : (
-          <p className="body-m" role="alert">Public widget code is unavailable.</p>
+          <p className="body-m" role="alert">Public code is unavailable.</p>
         )}
         {copyStatus ? <p className="body-s" role="status">{copyStatus}</p> : null}
       </div>
