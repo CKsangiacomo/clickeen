@@ -81,7 +81,7 @@ Apps operate truth.
 
 A CRM, ORM, social media management app, marketing automation app, support app,
 or analytics app must read, write, sync, govern, and route domain truth. It
-therefore sits on the whole Clickeen substrate, not only on the materializer:
+therefore sits on the whole Clickeen substrate, not only on artifact generation:
 
 ```text
 schema
@@ -93,7 +93,7 @@ schema
 + materialized surfaces
 ```
 
-The materializer is one substrate capability. It resolves schema truth into
+Artifact generation is one substrate capability. It resolves schema truth into
 artifacts. It does not define app operation by itself.
 
 A Clickeen-native app has this shape:

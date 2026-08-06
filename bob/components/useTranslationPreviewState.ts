@@ -2,10 +2,10 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { useWidgetSessionTransport } from '../lib/session/useWidgetSession';
+import type { ListTranslations, ReadTranslation } from '../lib/session/sessionTransport';
 import {
   normalizeTranslatedLocales,
   normalizeTranslatedLocaleValues,
-  retainTranslatedLocaleValues,
   type TranslatedLocalesData,
 } from '../lib/translations-preview';
 
@@ -52,6 +52,41 @@ export function resolveSavedTranslationLocaleReadResult(args: {
     : args.current;
 }
 
+export async function loadCompleteSavedTranslationState(args: {
+  instanceId: string;
+  baseLocale: string;
+  listTranslations: ListTranslations;
+  readTranslation: ReadTranslation;
+}): Promise<{
+  translatedLocales: TranslatedLocalesData;
+  valuesByLocale: Record<string, Record<string, string>>;
+}> {
+  const listResponse = await args.listTranslations({
+    instanceId: args.instanceId,
+    baseLocale: args.baseLocale,
+  });
+  const listFailure = resolveSavedTranslationReadFailure(listResponse);
+  if (listFailure) throw new Error(listFailure);
+  const translatedLocales = normalizeTranslatedLocales(listResponse.json);
+  if (!translatedLocales || translatedLocales.baseLocale !== args.baseLocale) {
+    throw new Error('coreui.errors.payload.invalid');
+  }
+
+  const entries = await Promise.all(translatedLocales.translations.map(async ({ locale }) => {
+    const response = await args.readTranslation({ instanceId: args.instanceId, locale });
+    const readFailure = resolveSavedTranslationReadFailure(response);
+    if (readFailure) throw new Error(readFailure);
+    const payload = normalizeTranslatedLocaleValues(response.json);
+    if (!payload || payload.locale !== locale) throw new Error('coreui.errors.payload.invalid');
+    return [locale, payload.values] as const;
+  }));
+
+  return {
+    translatedLocales,
+    valuesByLocale: Object.fromEntries(entries),
+  };
+}
+
 export function useTranslationPreviewState(args: {
   instanceId: string;
   baseLocale: string;
@@ -62,49 +97,56 @@ export function useTranslationPreviewState(args: {
   const { listTranslations, readTranslation } = useWidgetSessionTransport();
   const [translatedLocales, setTranslatedLocales] = useState<TranslatedLocalesData | null>(null);
   const [valuesByLocale, setValuesByLocale] = useState<Record<string, Record<string, string>>>({});
-  const [listState, setListState] = useState<SavedTranslationReadChannel>(EMPTY_READ_CHANNEL);
-  const [localeState, setLocaleState] = useState<SavedTranslationLocaleReadChannel>(EMPTY_LOCALE_READ_CHANNEL);
+  const [readState, setReadState] = useState<SavedTranslationReadChannel & { coordinate: string }>(() => ({
+    coordinate: '',
+    ...EMPTY_READ_CHANNEL,
+  }));
+  const coordinate = args.enabled && args.instanceId && args.baseLocale
+    ? `${args.instanceId}\u0000${args.baseLocale}\u0000${args.refreshVersion}`
+    : '';
+  const listState: SavedTranslationReadChannel = !coordinate
+    ? EMPTY_READ_CHANNEL
+    : readState.coordinate === coordinate
+      ? { loading: readState.loading, error: readState.error }
+      : { loading: true, error: null };
+  const ready = !coordinate || (
+    readState.coordinate === coordinate &&
+    !readState.loading &&
+    !readState.error
+  );
 
   useEffect(() => {
-    setTranslatedLocales(null);
-    setValuesByLocale({});
-    setListState(EMPTY_READ_CHANNEL);
-    setLocaleState(EMPTY_LOCALE_READ_CHANNEL);
-  }, [args.instanceId]);
-
-  useEffect(() => {
-    if (!args.instanceId || !args.baseLocale) {
+    if (!coordinate) {
       setTranslatedLocales(null);
       setValuesByLocale({});
-      setListState(EMPTY_READ_CHANNEL);
-      return;
-    }
-    if (!args.enabled) {
-      setListState((current) => ({ ...current, loading: false }));
+      setReadState({ coordinate: '', ...EMPTY_READ_CHANNEL });
       return;
     }
 
     let cancelled = false;
-    setListState({ loading: true, error: null });
+    setReadState({ coordinate, loading: true, error: null });
 
-    listTranslations({
+    loadCompleteSavedTranslationState({
       instanceId: args.instanceId,
       baseLocale: args.baseLocale,
+      listTranslations,
+      readTranslation,
     })
-      .then((response) => {
+      .then((result) => {
         if (cancelled) return;
-        const readFailure = resolveSavedTranslationReadFailure(response);
-        if (readFailure) throw new Error(readFailure);
-        const payload = normalizeTranslatedLocales(response.json);
-        if (!payload) throw new Error('coreui.errors.payload.invalid');
-        if (payload.baseLocale !== args.baseLocale) throw new Error('coreui.errors.payload.invalid');
-        setValuesByLocale((current) => retainTranslatedLocaleValues(current, payload));
-        setTranslatedLocales(payload);
-        setListState(EMPTY_READ_CHANNEL);
+        setValuesByLocale(result.valuesByLocale);
+        setTranslatedLocales(result.translatedLocales);
+        setReadState({ coordinate, ...EMPTY_READ_CHANNEL });
       })
       .catch(() => {
         if (cancelled) return;
-        setListState({ loading: false, error: SAVED_TRANSLATIONS_READ_FAILURE });
+        setValuesByLocale({});
+        setTranslatedLocales(null);
+        setReadState({
+          coordinate,
+          loading: false,
+          error: SAVED_TRANSLATIONS_READ_FAILURE,
+        });
       });
 
     return () => {
@@ -112,10 +154,10 @@ export function useTranslationPreviewState(args: {
     };
   }, [
     args.baseLocale,
-    args.enabled,
     args.instanceId,
-    args.refreshVersion,
+    coordinate,
     listTranslations,
+    readTranslation,
   ]);
 
   const selectedTranslation = useMemo(() => {
@@ -125,72 +167,21 @@ export function useTranslationPreviewState(args: {
   }, [args.selectedLocale, translatedLocales]);
 
   const selectedTranslationLocale = selectedTranslation?.locale ?? '';
-  const selectedLocaleState = selectedTranslationLocale
-    ? localeState.locale === selectedTranslationLocale
-      ? localeState
-      : { locale: selectedTranslationLocale, loading: true, error: null }
+  const selectedLocaleState: SavedTranslationLocaleReadChannel = selectedTranslationLocale
+    ? { locale: selectedTranslationLocale, loading: false, error: null }
     : EMPTY_LOCALE_READ_CHANNEL;
   const combinedState = resolveSavedTranslationReadState({
     list: listState,
     locale: selectedLocaleState,
   });
 
-  useEffect(() => {
-    if (!args.enabled || !args.instanceId || !selectedTranslationLocale) {
-      setLocaleState(EMPTY_LOCALE_READ_CHANNEL);
-      return;
-    }
-    let cancelled = false;
-    const requestedLocale = selectedTranslationLocale;
-    setLocaleState({ locale: requestedLocale, loading: true, error: null });
-    readTranslation({
-      instanceId: args.instanceId,
-      locale: requestedLocale,
-    })
-      .then((response) => {
-        if (cancelled) return;
-        const readFailure = resolveSavedTranslationReadFailure(response);
-        if (readFailure) throw new Error(readFailure);
-        const payload = normalizeTranslatedLocaleValues(response.json);
-        if (!payload || payload.locale !== requestedLocale) {
-          throw new Error('coreui.errors.payload.invalid');
-        }
-        setValuesByLocale((current) => ({
-          ...current,
-          [requestedLocale]: payload.values,
-        }));
-        setLocaleState((current) => resolveSavedTranslationLocaleReadResult({
-          current,
-          requestedLocale,
-          error: null,
-        }));
-      })
-      .catch(() => {
-        if (cancelled) return;
-        setLocaleState((current) => resolveSavedTranslationLocaleReadResult({
-          current,
-          requestedLocale,
-          error: SAVED_TRANSLATIONS_READ_FAILURE,
-        }));
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [
-    args.enabled,
-    args.instanceId,
-    args.refreshVersion,
-    readTranslation,
-    selectedTranslationLocale,
-  ]);
-
   return {
-    translatedLocales,
-    valuesByLocale,
+    translatedLocales: ready ? translatedLocales : null,
+    valuesByLocale: ready ? valuesByLocale : {},
     listState,
     localeState: selectedLocaleState,
     loading: combinedState.loading,
     error: combinedState.error,
+    ready,
   };
 }

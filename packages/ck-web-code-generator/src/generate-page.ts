@@ -142,7 +142,8 @@ function pageOverlays(input: GeneratePageInput, placements: PagePlacementInput[]
     seen.add(normalized);
     if (normalized === input.source.baseLocale) return;
     const pageOverlay = input.pageOverlays[normalized];
-    if (!pageOverlay || !isRecord(pageOverlay.values)) {
+    if (!pageOverlay) return;
+    if (!isRecord(pageOverlay.values)) {
       throw new Error(`ck.web_code.page_overlay_missing:${normalized}`);
     }
     const placementValues: Record<string, Record<string, unknown>> = {};
@@ -188,7 +189,11 @@ ${body}
     </section>`;
 }
 
-function renderPageIndex(input: GeneratePageInput, placements: PagePlacementInput[]): string {
+function renderPageIndex(
+  input: GeneratePageInput,
+  placements: PagePlacementInput[],
+  publicLocales: string[],
+): string {
   if (input.source.robots !== 'index-follow' && input.source.robots !== 'noindex-follow') {
     throw new Error('ck.web_code.page_robots_invalid');
   }
@@ -198,7 +203,7 @@ function renderPageIndex(input: GeneratePageInput, placements: PagePlacementInpu
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-${renderPageSemanticHead(input, placements)}
+${renderPageSemanticHead(input, placements, publicLocales)}
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body data-ck-page-id="${escapeHtml(input.source.pageId)}" data-ck-composed-page="true">
@@ -237,7 +242,13 @@ export function generatePage(input: GeneratePageInput): GeneratePageOutput {
     input.context,
   );
   const files = {
-    indexHtml: renderPageIndex(input, placements),
+    indexHtml: renderPageIndex(
+      input,
+      placements,
+      input.source.isTemplate
+        ? []
+        : [input.source.baseLocale, ...Object.keys(overlaysJson ?? {})],
+    ),
     stylesCss: `${typographyFontModule}${collectFirstUseChunks({ placements, kind: 'style', omitIds: new Set([TYPOGRAPHY_FONT_STYLE_MODULE_ID]) })}`,
     runtimeJs: `${collectFirstUseChunks({ placements, kind: 'runtime' }).trimEnd()}\n\n${pagePlacementBootstrap()}\n`,
   };

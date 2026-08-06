@@ -114,7 +114,7 @@ assets, policies, and artifacts.
 These apps are not only larger rendered surfaces. Widgets, pages, emails, and
 reports mostly render truth. Apps also operate truth through command
 authorities, integration boundaries, agent homes, and materialized surfaces.
-The materializer is one capability of the substrate; it is not the whole
+Artifact generation is one capability of the substrate; it is not the whole
 substrate.
 
 See `documentation/strategy/SchemaFirstApps.md`.

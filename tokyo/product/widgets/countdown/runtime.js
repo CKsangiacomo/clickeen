@@ -18,6 +18,9 @@
 
   function targetTimestamp(value, timezone) {
     const target = parseTargetDate(value);
+    if (timezone === 'browser') {
+      return new Date(target.year, target.month - 1, target.day, target.hour, target.minute, target.second).getTime();
+    }
     const targetUtc = Date.UTC(target.year, target.month - 1, target.day, target.hour, target.minute, target.second);
     if (timezone === 'UTC') return targetUtc;
     const formatter = new Intl.DateTimeFormat('en-US', {

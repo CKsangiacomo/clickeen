@@ -38,21 +38,21 @@ function BuilderShell() {
   const [toolsOpen, setToolsOpen] = useState(false);
   const toolsButtonRef = useRef<HTMLButtonElement>(null);
   const toolsCloseButtonRef = useRef<HTMLButtonElement>(null);
-  const translationsEnabled = Boolean(
+  const savedOverlaysEnabled = Boolean(
     session.compiled &&
       instanceId &&
-      baseLocale &&
-      previewMode === 'translations',
+      baseLocale,
   );
   const {
     translatedLocales,
     valuesByLocale: translationValuesByLocale,
     listState: savedTranslationListState,
     localeState: savedTranslationLocaleState,
+    ready: savedTranslationsReady,
   } = useTranslationPreviewState({
     instanceId,
     baseLocale,
-    enabled: translationsEnabled,
+    enabled: savedOverlaysEnabled,
     selectedLocale: translationPreviewLocale,
     refreshVersion: translationsRefreshVersion,
   });
@@ -91,6 +91,7 @@ function BuilderShell() {
   }, []);
 
   const requestTranslationsRefresh = () => {
+    session.setGeneratedPublicPackage(null);
     setTranslationsRefreshVersion((prev) => prev + 1);
   };
 
@@ -143,6 +144,7 @@ function BuilderShell() {
             translationValuesByLanguage={translationValuesByLocale}
             savedTranslationsLoading={savedTranslationReadState.loading}
             savedTranslationsError={savedTranslationReadState.error}
+            savedTranslationsReady={savedTranslationsReady}
           />
         </div>
         <UpsellPopupHost />

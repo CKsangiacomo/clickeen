@@ -99,7 +99,7 @@ layering are owned by their own UI docs.
   host calls `destroyDropdownActions` before its DOM is discarded so the shared
   dropdown registry cannot retain detached controls.
 - **Consumption.** Bob and Roma compile `dieter/styles.css`; Prague compiles
-  token source; widget materialization folds required Dieter CSS into instance
+  token source; Web Code Generator folds required Dieter CSS into Instance
   `styles.css`. Roma and DevStudio also import the shared application layout
   directly, including its inset Full panel and Compact overlay in narrow
   landscape and portrait; Bob retains its ToolDrawer/Workspace layout. Only

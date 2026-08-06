@@ -49,39 +49,50 @@ function faqPageSchema(placements: PagePlacementInput[]): SemanticJsonObject | n
 export function renderPageSemanticHead(
   input: GeneratePageInput,
   placements: PagePlacementInput[],
+  publicLocales: string[],
 ): string {
   const title = input.source.values.title;
   const description = optionalSourceText(input.source.values.description, 'values.description');
-  const socialTitle = optionalSourceText(input.source.values.socialTitle, 'values.socialTitle') ?? title;
-  const socialDescription = optionalSourceText(
-    input.source.values.socialDescription,
-    'values.socialDescription',
-  ) ?? description;
+  const socialTitle =
+    optionalSourceText(input.source.values.socialTitle, 'values.socialTitle') ?? title;
+  const socialDescription =
+    optionalSourceText(input.source.values.socialDescription, 'values.socialDescription') ??
+    description;
   const socialImage = socialImageUrl(input);
+  const socialTitlePath = input.source.values.socialTitle ? 'values.socialTitle' : 'values.title';
+  const socialDescriptionPath = input.source.values.socialDescription
+    ? 'values.socialDescription'
+    : 'values.description';
   const robots = input.source.robots === 'index-follow' ? 'index,follow' : 'noindex,follow';
   const lines = [
     '    <meta name="generator" content="Clickeen" />',
     `    <meta name="robots" content="${robots}" />`,
-    `    <title data-ck-field-path="values.title" data-ck-field-target="text" data-ck-page-field="title">${escapeHtml(title)}</title>`,
+    `    <title data-ck-field-path="values.title" data-ck-field-target="text">${escapeHtml(title)}</title>`,
     ...(description
-      ? [`    <meta name="description" content="${escapeHtml(description)}" data-ck-page-field="description" />`]
+      ? [
+          `    <meta name="description" content="${escapeHtml(description)}" data-ck-field-path="values.description" data-ck-field-target="attribute:content" />`,
+        ]
       : []),
-    `    <meta property="og:title" content="${escapeHtml(socialTitle)}" data-ck-page-field="social-title" />`,
+    `    <meta property="og:title" content="${escapeHtml(socialTitle)}" data-ck-field-path="${socialTitlePath}" data-ck-field-target="attribute:content" />`,
     ...(socialDescription
-      ? [`    <meta property="og:description" content="${escapeHtml(socialDescription)}" data-ck-page-field="social-description" />`]
+      ? [
+          `    <meta property="og:description" content="${escapeHtml(socialDescription)}" data-ck-field-path="${socialDescriptionPath}" data-ck-field-target="attribute:content" />`,
+        ]
       : []),
     '    <meta property="og:type" content="website" />',
     `    <meta name="twitter:card" content="${socialImage ? 'summary_large_image' : 'summary'}" />`,
-    `    <meta name="twitter:title" content="${escapeHtml(socialTitle)}" data-ck-page-field="social-title" />`,
+    `    <meta name="twitter:title" content="${escapeHtml(socialTitle)}" data-ck-field-path="${socialTitlePath}" data-ck-field-target="attribute:content" />`,
     ...(socialDescription
-      ? [`    <meta name="twitter:description" content="${escapeHtml(socialDescription)}" data-ck-page-field="social-description" />`]
+      ? [
+          `    <meta name="twitter:description" content="${escapeHtml(socialDescription)}" data-ck-field-path="${socialDescriptionPath}" data-ck-field-target="attribute:content" />`,
+        ]
       : []),
   ];
 
   if (socialImage) {
     lines.push(
-      `    <meta property="og:image" content="${escapeHtml(socialImage)}" data-ck-page-field="social-image" />`,
-      `    <meta name="twitter:image" content="${escapeHtml(socialImage)}" data-ck-page-field="social-image" />`,
+      `    <meta property="og:image" content="${escapeHtml(socialImage)}" />`,
+      `    <meta name="twitter:image" content="${escapeHtml(socialImage)}" />`,
     );
   }
 
@@ -92,7 +103,7 @@ export function renderPageSemanticHead(
     `    <link rel="canonical" href="${exactUrl}" data-ck-page-public-coordinate="canonical" />`,
     `    <meta property="og:url" content="${exactUrl}" data-ck-page-public-coordinate="social-url" />`,
   );
-  input.settingsLocales.forEach((locale) => {
+  publicLocales.forEach((locale) => {
     lines.push(
       `    <link rel="alternate" hreflang="${escapeHtml(locale)}" href="${PUBLIC_PAGE_URL}/${encodeURIComponent(locale)}" data-ck-page-public-coordinate="alternate" />`,
     );

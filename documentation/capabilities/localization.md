@@ -142,10 +142,13 @@ fail. Stored corruption is not normalized or treated as missing.
 
 ## Bob Preview
 
-Bob reads saved overlays through Roma, resolves them over the current in-memory
-base state, and runs Web Code Generator for the selected preview locale. The
+Bob reads the complete exact saved overlay map through Roma before the current
+base package becomes savable. Web Code Generator uses that complete map for the
+base package's locale coordinates. Translation preview selection separately
+chooses one of those already-read overlays, resolves it over the current
+in-memory base state, and runs Web Code Generator for that selected locale. The
 translated preview is an exact in-memory generated package and never writes
-storage.
+storage. A failed overlay read blocks package generation and Save.
 
 ## Public Serving
 

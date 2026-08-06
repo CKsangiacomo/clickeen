@@ -431,8 +431,10 @@ function testGeneratePage(): void {
   assert.match(generated.files.indexHtml, /"@type":"WebPage"/);
   assert.match(generated.files.indexHtml, /"inLanguage":"en-US"/);
   assert.ok(!generated.files.indexHtml.includes('property="og:image"'));
-  assert.match(generated.files.indexHtml, /data-ck-page-field="title"/);
-  assert.match(generated.files.indexHtml, /data-ck-page-field="description"/);
+  assert.match(generated.files.indexHtml, /data-ck-field-path="values.title" data-ck-field-target="text"/);
+  assert.match(generated.files.indexHtml, /data-ck-field-path="values.description" data-ck-field-target="attribute:content"/);
+  assert.match(generated.files.indexHtml, /property="og:title"[^>]*data-ck-field-path="values.title" data-ck-field-target="attribute:content"/);
+  assert.ok(!generated.files.indexHtml.includes('data-ck-page-field'));
   assert.deepEqual(generated.overlaysJson, {
     'it-IT': {
       page: { title: 'Pagina', description: 'Descrizione' },
@@ -442,6 +444,38 @@ function testGeneratePage(): void {
       },
     },
   });
+
+  const firstSave = generatePage({
+    ...input,
+    pageOverlays: {},
+  });
+  assert.deepEqual(firstSave.overlaysJson, {});
+  assert.equal((firstSave.files.indexHtml.match(/rel="alternate"/g) ?? []).length, 1);
+  assert.match(firstSave.files.indexHtml, /hreflang="en-US" href="__CK_PUBLIC_PAGE_URL__\/en-US"/);
+  assert.ok(!firstSave.files.indexHtml.includes('hreflang="it-IT"'));
+
+  const translatedSave = generatePage(input);
+  assert.deepEqual(Object.keys(translatedSave.overlaysJson ?? {}), ['it-IT']);
+  assert.equal((translatedSave.files.indexHtml.match(/rel="alternate"/g) ?? []).length, 2);
+  assert.match(translatedSave.files.indexHtml, /hreflang="it-IT" href="__CK_PUBLIC_PAGE_URL__\/it-IT"/);
+
+  expectThrow(
+    () => generatePage({
+      ...input,
+      pageOverlays: { 'it-IT': { values: null as never } },
+    }),
+    /ck\.web_code\.page_overlay_missing:it-IT/,
+  );
+  expectThrow(
+    () => generatePage({
+      ...input,
+      pageOverlays: {
+        ...input.pageOverlays,
+        'de-DE': { values: { title: 'Seite' } },
+      },
+    }),
+    /ck\.web_code\.page_overlay_unexpected:de-DE/,
+  );
 
   expectThrow(
     () => generatePage({ ...input, source: { ...input.source, robots: 'invalid' as never } }),
@@ -488,6 +522,8 @@ function testPageSocialTemplateAndFaqSemantics(): void {
     },
   };
   const social = generatePage(socialInput).files.indexHtml;
+  assert.match(social, /property="og:title"[^>]*data-ck-field-path="values.socialTitle" data-ck-field-target="attribute:content"/);
+  assert.match(social, /property="og:description"[^>]*data-ck-field-path="values.socialDescription" data-ck-field-target="attribute:content"/);
   assert.match(social, /<meta name="robots" content="noindex,follow" \/>/);
   assert.match(social, /property="og:title" content="Share Landing"/);
   assert.match(social, /name="twitter:title" content="Share Landing"/);

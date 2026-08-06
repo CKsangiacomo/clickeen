@@ -104,6 +104,7 @@ export function Workspace({
   translationValuesByLanguage,
   savedTranslationsLoading,
   savedTranslationsError,
+  savedTranslationsReady,
 }: {
   baseLocale: string;
   previewMode: 'editing' | 'translations';
@@ -113,6 +114,7 @@ export function Workspace({
   translationValuesByLanguage: Record<string, Record<string, string>>;
   savedTranslationsLoading: boolean;
   savedTranslationsError: string | null;
+  savedTranslationsReady: boolean;
 }) {
   const session = useWidgetSession();
   const chrome = useWidgetSessionChrome();
@@ -203,7 +205,9 @@ export function Workspace({
   });
   const previewDependencyError = !mediaAssets.ok
     ? 'Failed to resolve preview media assets'
-    : assetResolutionError ?? (!previewTypography.ok ? previewTypography.error : null);
+    : assetResolutionError ??
+      savedTranslationsError ??
+      (!previewTypography.ok ? previewTypography.error : null);
   const resolvedPreviewInstanceData = useMemo(() => {
     if (!selectedTranslationValues) return instanceData;
     return resolveTranslatedValues(instanceData, selectedTranslationValues);
@@ -224,6 +228,7 @@ export function Workspace({
   const generateFiles = useMemo(() => {
     if (
       !compiled?.definition ||
+      !savedTranslationsReady ||
       !previewTypographyData ||
       !mediaPreviewStateReady ||
       unresolvedFontAssetRefs.length
@@ -250,6 +255,7 @@ export function Workspace({
     mediaPreviewStateReady,
     previewTypographyData,
     resolvedAssetsByRef,
+    savedTranslationsReady,
     translationValuesByLanguage,
     unresolvedFontAssetRefs.length,
   ]);
@@ -263,7 +269,7 @@ export function Workspace({
   }, [generateFiles, instanceData]);
 
   useEffect(() => {
-    if (generatedBasePackage) setGeneratedPublicPackage(generatedBasePackage);
+    setGeneratedPublicPackage(generatedBasePackage);
   }, [generatedBasePackage, setGeneratedPublicPackage]);
 
   const previewPublicPackage = useMemo(() => {

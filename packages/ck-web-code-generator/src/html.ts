@@ -74,7 +74,13 @@ function attributeValue(tag: string, name: string): string | null {
 }
 
 export function validateFieldMarkers(html: string): void {
-  const allowedTargets = new Set(['text', 'richtext', 'attribute:alt', 'attribute:title']);
+  const allowedTargets = new Set([
+    'text',
+    'richtext',
+    'attribute:alt',
+    'attribute:title',
+    'attribute:content',
+  ]);
   for (const match of html.matchAll(/<[a-z][^<>]*>/gi)) {
     const tag = match[0];
     const path = attributeValue(tag, 'data-ck-field-path');

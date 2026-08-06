@@ -512,6 +512,12 @@ baseline. Bob withholds the current savable package until Web Code Generator
 successfully generates the open working state. This prevents an immediate Save
 from writing previously loaded package bytes for a newly changed config.
 
+For an existing saved Instance, Bob reads the complete exact saved overlay map
+through Roma before that generated package becomes savable. Translation preview
+selection chooses which already-read overlay to display; it does not determine
+which overlay coordinates are included in the base generated package. A failed
+overlay read withholds the package and blocks Save.
+
 When an in-memory edit introduces an unresolved account media or font
 reference, Bob withholds the preview package while it resolves the dependency
 through Roma and regenerates from the resolved URL. Resolution or generation

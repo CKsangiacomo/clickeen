@@ -87,6 +87,7 @@ export function useSessionEditing(args: {
       const nextState: SessionState = {
         ...latest,
         instanceData: applied.data,
+        publicPackage: null,
         isDirty: serializeInstanceDataSignature(applied.data) !== latest.savedInstanceDataSignature,
         error: null,
         lastUpdate: {

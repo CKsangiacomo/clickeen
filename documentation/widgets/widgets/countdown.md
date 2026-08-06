@@ -118,7 +118,8 @@ state updates or render the initial customer content.
 Runtime failure rules:
 
 - Date mode requires exact ISO `YYYY-MM-DDTHH:MM(:SS)` target date shape.
-- Timezone is `UTC` or a value accepted by `Intl.DateTimeFormat`.
+- Timezone is `browser`, `UTC`, or a value accepted by `Intl.DateTimeFormat`.
+  `browser` interprets the authored target date in the visitor's local timezone.
 - Personal mode uses `localStorage` keyed by the runtime instance id and fails
   when storage is unavailable or stored state is corrupt.
 - Runtime rejects unknown timer mode, time format, after-timer action, personal

@@ -35,7 +35,8 @@ export type WidgetDocumentSessionValue = {
   setInstanceLabel: ReturnType<typeof useSessionEditing>['setInstanceLabel'];
   setGeneratedPublicPackage: (result:
     | { ok: true; publicPackage: InstancePublicPackage }
-    | { ok: false; message: string }) => void;
+    | { ok: false; message: string }
+    | null) => void;
   loadInstance: ReturnType<typeof useSessionBoot>['loadInstance'];
 };
 
@@ -86,13 +87,30 @@ export function WidgetDocumentSessionProvider({ children }: { children: ReactNod
   const setGeneratedPublicPackage = useMemo(() => (
     result:
       | { ok: true; publicPackage: InstancePublicPackage }
-      | { ok: false; message: string },
+      | { ok: false; message: string }
+      | null,
   ) => {
     const current = stateRef.current;
-    if (!result.ok) {
-      if (current.error?.source === 'generation' && current.error.message === result.message) return;
+    if (result === null) {
+      if (!current.publicPackage && current.error?.source !== 'generation') return;
       const nextState: SessionState = {
         ...current,
+        publicPackage: null,
+        error: current.error?.source === 'generation' ? null : current.error,
+      };
+      stateRef.current = nextState;
+      setState(nextState);
+      return;
+    }
+    if (!result.ok) {
+      if (
+        !current.publicPackage &&
+        current.error?.source === 'generation' &&
+        current.error.message === result.message
+      ) return;
+      const nextState: SessionState = {
+        ...current,
+        publicPackage: null,
         error: { source: 'generation', message: result.message },
       };
       stateRef.current = nextState;

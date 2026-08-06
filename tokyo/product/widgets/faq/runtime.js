@@ -61,10 +61,12 @@
       const willOpen = item.dataset.open !== 'true';
       if (willOpen && !multiOpen) items.forEach((candidate) => setOpen(candidate, false));
       setOpen(item, willOpen);
+      if (willOpen && deepLinks && item.id) window.location.hash = item.id;
     });
 
     if (deepLinks && window.location.hash) {
-      const target = document.getElementById(window.location.hash.slice(1));
+      const targetId = decodeURIComponent(window.location.hash.slice(1));
+      const target = items.find((item) => item instanceof HTMLElement && item.id === targetId);
       if (target instanceof HTMLElement && target.matches('[data-role="faq-item"]')) {
         if (!multiOpen) items.forEach((item) => setOpen(item, false));
         setOpen(target, true);

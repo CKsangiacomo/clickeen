@@ -35,6 +35,10 @@ owns locale selection. Page exact-locale URLs append the declared locale to
 markers identify canonical, social URL, and `WebPage` JSON-LD values for the
 later exact-locale serving path.
 
+Page title and metadata use the same `data-ck-field-path` /
+`data-ck-field-target` contract as Widget content. Metadata uses the approved
+`attribute:content` target. There is no second Page-field marker system.
+
 Every generated Instance includes neutral `meta[name="generator"]` provenance.
 Customer Instance metadata and source-backed schema are emitted only when
 `seoGeoAeoEnabled` is true. Contextual Clickeen Widget attribution and its

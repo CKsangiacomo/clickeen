@@ -92,13 +92,16 @@ Its stable Core hooks include:
 ```text
 [data-role="faq"]
 [data-role="faq-core"]
-[data-role="faq-empty"]
 [data-role="faq-list"]
 ```
 
 `runtime.js` registers as `faq` through `CKWidgetRuntime` and binds accordion
 and deep-link behavior to the generated questions. It does not accept generic
 state or copy-override messages and does not render FAQ content.
+
+When deep links are enabled, opening a question writes its item id to the URL
+hash. Initial hash resolution decodes the id and searches only within the
+current Widget root, including when that root is inside a Page shadow tree.
 
 Question and answer fields are customer-visible text and stay in
 `editable-fields.json`. Web Code Generator sanitizes answer rich text before it
