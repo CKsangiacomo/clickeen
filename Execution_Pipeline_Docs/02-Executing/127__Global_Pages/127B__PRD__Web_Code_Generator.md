@@ -8,7 +8,7 @@ Depends on: deployed and verified 127A
 
 ## Execution evidence
 
-127B was executed on `main` in four implementation and cleanup commits:
+127B was executed on `main` in five implementation and cleanup commits:
 
 - `f4071ab5` cut over Widget definitions, Bob, Roma, Tokyo-worker, and Page
   generation to the browser Web Code Generator and removed the obsolete
@@ -23,7 +23,11 @@ Depends on: deployed and verified 127A
   Countdown again interprets `browser` as the visitor's local timezone, FAQ
   deep links work inside the rendered Widget tree, first Page Save emits only
   locales that actually exist, and Page fields use the existing public field
-  markers.
+  markers;
+- `2a498983` made Bob's Save action use the same generated-package readiness
+  condition as the save command, and made Page generation accept the real
+  ID-less first-Save browser source instead of requiring a persisted Page
+  identity.
 
 Verification completed on the cloud-dev product surfaces:
 
@@ -57,7 +61,12 @@ Verification completed on the cloud-dev product surfaces:
   the corrected deep-link behavior;
 - reopening the translation-heavy saved FAQ `VUWUJ7OQ0Y` shows no saved-
   translation read error and no Save action, proving the generated package is
-  current after the normal save lifecycle.
+  current after the normal save lifecycle;
+- for `2a498983`, GitHub Actions Roma verification `31074820095` passed every
+  lint, typecheck, policy, generator, Bob, and Pages build-contract gate. The
+  exact Bob and Roma Cloudflare Pages deployments completed successfully, and
+  the authenticated Roma-to-Bob browser smoke passed against the deployed
+  surfaces.
 
 ## 1. Goal
 
