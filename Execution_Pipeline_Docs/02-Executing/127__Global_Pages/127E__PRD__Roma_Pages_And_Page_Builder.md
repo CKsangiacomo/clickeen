@@ -500,6 +500,9 @@ successful overlay written by the existing Translation Agent. When at least one
 locale succeeds, Page Builder reloads the saved overlays and marks the browser
 draft dirty so the customer can review and Save the generated Page files. It
 does not hide a partial result behind a generic success or failure message.
+When Settings contains no non-base locale, the operation reports **No
+translation languages are available for this page.** It does not claim that
+translations were generated and does not make the Page draft dirty.
 
 Country is not a Page Builder variant. Regional locales such as `en-US`,
 `en-GB`, `it-IT`, and `zh-CN` are the customer-selected exact versions. 127C

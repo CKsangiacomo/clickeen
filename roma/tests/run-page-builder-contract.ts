@@ -89,11 +89,16 @@ async function main() {
   assert.match(builder, />SEO\/GEO\/AEO</);
   assert.doesNotMatch(builder, />Languages<|>Translations<|>Meta</);
   assert.match(builder, /embedded returnLabel="Done, go back to the page"/);
-  assert.match(builder, /contextMessage="You're editing the saved widget\. Other pages using it will also need updating after Save\."/);
+  assert.match(builder, /contextMessage="You're editing the saved widget\. Other pages using it will also need updating\."/);
   assert.match(builder, /freshEntryBlocked && needsUpdate/);
   assert.match(builder, /setFreshEntryBlocked\(detail\.serveState\.needsUpdate\)/);
   assert.match(builder, /setFreshEntryBlocked\(false\)/);
   assert.match(builder, /readTranslationResult/);
+  assert.match(builder, /typeof value\.accepted !== 'boolean'/);
+  assert.match(builder, /No translation languages are available for this page\./);
+  assert.match(builder, /setNotice\(null\);[\s\S]{0,100}try \{/);
+  assert.match(builder, /We couldn't update this page\. Try again\./);
+  assert.match(builder, /We couldn't save this page\. Try again\./);
   assert.match(builder, /Translations generated, but failed/);
   assert.match(builder, /Generate translations for: \$\{missingLocales\.join\(', '\)\} before publishing\./);
   assert.match(builder, />Copy URL</);

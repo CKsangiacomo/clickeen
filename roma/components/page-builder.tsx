@@ -60,14 +60,16 @@ function isNotFoundError(error: unknown): boolean {
   return error instanceof Error && (error as Error & { status?: number }).status === 404;
 }
 
-function readTranslationResult(raw: unknown): { translatedLocales: string[]; failedLocales: string[] } {
+function readTranslationResult(raw: unknown): { accepted: boolean; translatedLocales: string[]; failedLocales: string[] } {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) throw new Error('coreui.errors.payload.invalid');
   const translation = (raw as { translation?: unknown }).translation;
   if (!translation || typeof translation !== 'object' || Array.isArray(translation)) throw new Error('coreui.errors.payload.invalid');
-  const value = translation as { translatedLocales?: unknown; failedLocales?: unknown };
+  const value = translation as { accepted?: unknown; translatedLocales?: unknown; failedLocales?: unknown };
+  if (typeof value.accepted !== 'boolean') throw new Error('coreui.errors.payload.invalid');
   if (!Array.isArray(value.translatedLocales) || !value.translatedLocales.every((locale) => typeof locale === 'string')) throw new Error('coreui.errors.payload.invalid');
   if (!Array.isArray(value.failedLocales) || !value.failedLocales.every((failure) => failure && typeof failure === 'object' && typeof (failure as { locale?: unknown }).locale === 'string')) throw new Error('coreui.errors.payload.invalid');
   return {
+    accepted: value.accepted,
     translatedLocales: value.translatedLocales,
     failedLocales: value.failedLocales.map((failure) => (failure as { locale: string }).locale),
   };
@@ -240,6 +242,7 @@ export function PageBuilder({ pageId = '' }: { pageId?: string }) {
     if (placements.some((placement) => placement.unavailable)) { setError('Remove unavailable widgets before saving this Page.'); return; }
     setSaving(true);
     setError(null);
+    setNotice(null);
     try {
       const id = currentPageId || createCompactPageId();
       const sourceForSave: PageDraftSource = { ...source, baseLocale };
@@ -263,7 +266,11 @@ export function PageBuilder({ pageId = '' }: { pageId?: string }) {
       setFreshEntryBlocked(false);
       setDirty(false);
     } catch (saveError) {
-      setError(saveError instanceof Error && saveError.message === 'Page title is required.' ? saveError.message : 'Saving this Page failed. Please try again.');
+      setError(saveError instanceof Error && saveError.message === 'Page title is required.'
+        ? saveError.message
+        : forceUpdate || needsUpdate
+          ? "We couldn't update this page. Try again."
+          : "We couldn't save this page. Try again.");
     } finally {
       setPreviewingGenerated(false);
       setSaving(false);
@@ -303,6 +310,10 @@ export function PageBuilder({ pageId = '' }: { pageId?: string }) {
     setNotice(null);
     try {
       const result = readTranslationResult(await accountApi.fetchJson('/api/account/translations/generate', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ target: { kind: 'page', id: currentPageId } }), timeoutMs: 120_000 }));
+      if (!result.accepted) {
+        setNotice('No translation languages are available for this page.');
+        return;
+      }
       const overlays = Object.fromEntries((await Promise.all(settingsLocales.filter((locale) => locale !== baseLocale).map(async (locale) => [locale, await readPageOverlay(accountApi.fetchRaw, currentPageId, locale)] as const))).filter((entry): entry is readonly [string, PageLocaleOverlay] => Boolean(entry[1])));
       setPageOverlaysState(overlays);
       if (result.translatedLocales.length) setDirty(true);
@@ -376,7 +387,7 @@ export function PageBuilder({ pageId = '' }: { pageId?: string }) {
         </div>
       </div>
 
-      {bobInstanceId ? <div className="roma-page-bob-slide" role="dialog" aria-label="Edit widget in Bob"><BuilderDomain initialInstanceId={bobInstanceId} embedded returnLabel="Done, go back to the page" contextMessage="You're editing the saved widget. Other pages using it will also need updating after Save." onReturn={() => setBobInstanceId('')} onInstanceSaved={() => { void Promise.all([loadPagePlacement({ instanceId: bobInstanceId, settingsLocales, fetchJson: accountApi.fetchJson }), currentPageId ? accountApi.fetchJson(`/api/account/pages/${encodeURIComponent(currentPageId)}`).then(parseDetail) : Promise.resolve(null)]).then(([updated, detail]) => { setPlacementsState((current) => current.map((placement) => placement.instanceId === bobInstanceId ? { ...updated, placementId: placement.placementId } : placement)); if (detail) setNeedsUpdate(detail.serveState.needsUpdate); }).catch(() => setError('This widget was saved, but the Page status could not be refreshed.')); }} /></div> : null}
+      {bobInstanceId ? <div className="roma-page-bob-slide" role="dialog" aria-label="Edit widget in Bob"><BuilderDomain initialInstanceId={bobInstanceId} embedded returnLabel="Done, go back to the page" contextMessage="You're editing the saved widget. Other pages using it will also need updating." onReturn={() => setBobInstanceId('')} onInstanceSaved={() => { void Promise.all([loadPagePlacement({ instanceId: bobInstanceId, settingsLocales, fetchJson: accountApi.fetchJson }), currentPageId ? accountApi.fetchJson(`/api/account/pages/${encodeURIComponent(currentPageId)}`).then(parseDetail) : Promise.resolve(null)]).then(([updated, detail]) => { setPlacementsState((current) => current.map((placement) => placement.instanceId === bobInstanceId ? { ...updated, placementId: placement.placementId } : placement)); if (detail) setNeedsUpdate(detail.serveState.needsUpdate); }).catch(() => setError('This widget was saved, but the Page status could not be refreshed.')); }} /></div> : null}
       <dialog ref={updateDialogRef} className="diet-popup" data-size="medium" aria-labelledby="page-needs-update-title"><header className="diet-popup__header"><h2 id="page-needs-update-title" className="heading-4">Update this page to edit</h2></header><div className="diet-popup__body"><p className="body-m">One or more widgets in this page has changed. Update the page to edit.</p></div><footer className="diet-popup__footer"><div className="diet-popup__actions"><button className="diet-btn-txt" data-size="md" data-variant="secondary" type="button" onClick={() => router.push('/pages')}><span className="diet-btn-txt__label body-m">Back to pages</span></button><button className="diet-btn-txt" data-size="md" data-variant="primary" type="button" disabled={saving} onClick={() => void save(true)}><span className="diet-btn-txt__label body-m">{saving ? 'Updating…' : 'Update page'}</span></button></div></footer></dialog>
       <dialog ref={deleteDialogRef} className="diet-popup" data-size="medium" aria-label="Delete page"><header className="diet-popup__header"><h2 className="heading-4">Delete page?</h2></header><div className="diet-popup__body"><p className="body-m">This permanently deletes the saved Page.</p></div><footer className="diet-popup__footer"><div className="diet-popup__actions"><button className="diet-btn-txt" data-size="md" data-variant="secondary" type="button" onClick={() => setDeleteOpen(false)}><span className="diet-btn-txt__label body-m">Cancel</span></button><button className="diet-btn-txt" data-size="md" data-variant="primary" type="button" disabled={saving} onClick={() => { if (!currentPageId) return; setSaving(true); void accountApi.fetchJson(`/api/account/pages/${encodeURIComponent(currentPageId)}`, { method: 'DELETE' }).then(() => { clearRomaPagesCache(accountContext.accountPublicId); router.push('/pages'); }).catch(() => { setError('Deleting this Page failed. Please try again.'); setDeleteOpen(false); }).finally(() => setSaving(false)); }}><span className="diet-btn-txt__label body-m">Delete</span></button></div></footer></dialog>
       <PublicCodeDialog open={copyOpen} productName={source.displayName} actions={publicActions} onClose={() => setCopyOpen(false)} />
