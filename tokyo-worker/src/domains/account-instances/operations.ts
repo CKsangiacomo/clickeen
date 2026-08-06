@@ -21,6 +21,7 @@ import type { AccountInstanceContentDocument, AccountInstanceSourcePointer } fro
 import { normalizeStorageId } from './utils';
 import { deletePrefix } from '../storage';
 import { PublicCachePurgeError, purgePublicServingFiles } from '../public-cache';
+import { markPagesReferencingInstanceNeedsUpdate } from '../pages';
 
 export class AccountInstanceTransitionError extends Error {
   status: number;
@@ -341,6 +342,7 @@ export async function saveAccountInstanceTransition(args: {
   if (live) {
     await purgeClkLiveEntryCache({ env: args.env, accountId, instanceId, locales });
   }
+  await markPagesReferencingInstanceNeedsUpdate({ env: args.env, accountId, instanceId });
 
   return {
     ok: true,

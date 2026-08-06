@@ -62,6 +62,11 @@ Set `needsUpdate: true` after either of these existing writes succeeds:
    ordinary Page in the same account references that Instance ID, including
    Generate translations and an approved exact localized-value edit.
 
+Deleting an Instance overlay because Account Settings removed that locale does
+not set the flag. Settings changes the locale inputs used by later Generate
+translations and Page Save/Update operations; it does not change the current
+saved Page files or their state.
+
 For an Instance Save or Instance overlay write, the existing account operation
 reads the account's saved Page sources and marks only Pages whose placements
 contain that Instance ID. This is a direct same-account source scan, not a
@@ -154,27 +159,27 @@ public request.
 
 127D does not add a compatibility reader or silently treat a missing
 `needsUpdate` value as false. This pre-GA execution replaces the obsolete Page
-implementation. New Pages initialize the field through first Save; obsolete
-development Page data can be recreated through the normal Page Save operation
-when needed. There is no migration framework or retained old state shape.
+state shape. The verified cloud-dev Page root was empty before this cutover, so
+there is no saved Page data to migrate. New Pages initialize the field through
+first Save. There is no migration framework or retained old state shape.
 
 ## 8. Required code cutover
 
-- [ ] Add `needsUpdate: boolean` to the small Page serving-state contract.
-- [ ] Initialize it to false on first successful Save.
-- [ ] Mark referencing ordinary Pages after every successful existing ordinary
+- [x] Add `needsUpdate: boolean` to the small Page serving-state contract.
+- [x] Initialize it to false on first successful Save.
+- [x] Mark referencing ordinary Pages after every successful existing ordinary
       Instance Save using their same-account Page source.
-- [ ] Mark referencing ordinary Pages after every successful referenced
+- [x] Mark referencing ordinary Pages after every successful referenced
       ordinary-Instance overlay write.
-- [ ] Extend 127C's authenticated Roma Save/Update boundary with the
+- [x] Extend 127C's authenticated Roma Save/Update boundary with the
       `needsUpdate` gate and clear behavior; do not add another storage or
       policy boundary.
-- [ ] Clear the flag only after successful Page file storage.
-- [ ] Initialize first Save without reading a missing flag; gate later ordinary
+- [x] Clear the flag only after successful Page file storage.
+- [x] Initialize first Save without reading a missing flag; gate later ordinary
       Page Save and Publish mutations on the boolean while preserving the
       explicit Update route and all existing role, tier, entitlement, and Page
       policy.
-- [ ] Do not reintroduce revision, fingerprint, evidence, dependency-graph,
+- [x] Do not reintroduce revision, fingerprint, evidence, dependency-graph,
       reverse-index, Queue, background-generator, transaction, or recovery
       machinery removed by 127A–127C.
 

@@ -24,7 +24,7 @@ export type StoredAccountPage = {
   source: AccountPageSource;
   files: PageGeneratedFiles;
   overlaysJson: PageServingOverlays;
-  serveState: { published: boolean };
+  serveState: { published: boolean; needsUpdate: boolean };
 };
 
 function context(args: {
@@ -64,7 +64,8 @@ function decodeStoredPage(raw: unknown): StoredAccountPage | null {
     typeof files.runtimeJs !== 'string' ||
     !isRecord(raw.overlaysJson) ||
     !serveState ||
-    typeof serveState.published !== 'boolean'
+    typeof serveState.published !== 'boolean' ||
+    typeof serveState.needsUpdate !== 'boolean'
   ) return null;
   return {
     source,
@@ -74,7 +75,7 @@ function decodeStoredPage(raw: unknown): StoredAccountPage | null {
       runtimeJs: files.runtimeJs,
     },
     overlaysJson: raw.overlaysJson as PageServingOverlays,
-    serveState: { published: serveState.published },
+    serveState: { published: serveState.published, needsUpdate: serveState.needsUpdate },
   };
 }
 
@@ -144,13 +145,14 @@ export async function saveAccountPage(args: {
   source: AccountPageSource;
   files: PageGeneratedFiles;
   overlaysJson: PageServingOverlays;
+  operation: 'save' | 'update';
   accountCapsule?: string | null;
   requestId?: string | null;
 }) {
   const result = await callTokyo(context(args), {
     path: `/__internal/pages/${encodeURIComponent(args.pageId)}`,
     method: 'PUT',
-    body: { source: args.source, files: args.files, overlaysJson: args.overlaysJson },
+    body: { source: args.source, files: args.files, overlaysJson: args.overlaysJson, operation: args.operation },
     decode: (payload) => payload,
     errorDetail: 'tokyo_account_page_save_http_error',
     errorKey: 'coreui.errors.db.writeFailed',

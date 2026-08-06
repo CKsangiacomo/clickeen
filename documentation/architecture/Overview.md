@@ -259,11 +259,14 @@ accounts/{accountPublicId}/pages/{pageId}/
   runtime.js
 ```
 
-First Save creates an unpublished ordinary Page. Later Save stores the exact
-submitted source/files and preserves publication state. Publish requires a
-saved Page with at least one placement and all six contract-shaped direct-root
-artifacts; it does not render-test or regenerate them. Unpublish retains the
-direct Page root, and Delete accepts only an unpublished Page.
+First Save creates a Current unpublished ordinary Page. Saving a referenced
+Instance or writing one of that Instance's translated locale files marks only
+the same-account ordinary Pages that use it as Needs update. Ordinary Page Save
+and Publish then block. Explicit Update stores the exact browser-generated
+source/files through the same Page PUT boundary and clears the flag only after
+that operation succeeds. Nothing recompiles automatically. Unpublish preserves
+the flag and the direct Page root; Delete accepts only an unpublished Page.
+A published Needs-update Page keeps serving its last saved files.
 
 The stable public URL redirects without shared caching to one saved exact
 locale chosen from browser language, Cloudflare country-region hints, and the
@@ -279,7 +282,7 @@ uses the base values already in stored `index.html`; for a non-base locale it
 applies only that locale's Page/placement values from root `overlays.json`.
 Public Page coordinates are completed for both. It never calls child Instance
 URLs, a model, or a generator. `styles.css` and `runtime.js` are shared across
-locales. Save while published, Publish, Unpublish, and Delete purge only the
+locales. Save or Update while published, Publish, Unpublish, and Delete purge only the
 Page's affected previous/current locale and support-file URLs.
 
 ### Translation Overlays

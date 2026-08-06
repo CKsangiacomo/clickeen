@@ -192,6 +192,13 @@ Page Save while published, Publish, Unpublish, and Delete purge affected public
 HTML and support-file URLs. Locale selection is never hidden in a shared cached
 variant.
 
+A successful Instance translation write also marks each same-account ordinary
+Page that references that Instance as Needs update. It does not regenerate the
+Page or change its live files. Page-owned translation writes do not mark the
+Page. Removing an Instance overlay because Account Settings removed a locale
+also does not mark it; Settings affects later Generate translations and Page
+Save/Update inputs.
+
 ## Operator Recipes
 
 ### Generate one instance

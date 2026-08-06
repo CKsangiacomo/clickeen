@@ -314,16 +314,22 @@ route. They are classified as vector assets by Tokyo-worker.
    routes.
 2. A Clickeen Page is an ordered stack of saved account widget instance
    placements.
-3. Tokyo-worker stores the exact direct Page root. First Save is unpublished;
-   later Save preserves the existing publication state.
-4. Publish exposes the already-saved ordinary Page only when it has at least one
+3. Tokyo-worker stores the exact direct Page root. First Save initializes
+   `{ published: false, needsUpdate: false }`. Later ordinary Save is allowed
+   only while the Page is Current and preserves the serving state.
+4. Saving a referenced Widget Instance or one of its translated locale value
+   files marks only the same-account ordinary Pages that use it as
+   `needsUpdate: true`. Nothing recompiles automatically. Explicit Page Update
+   stores the browser-generated files through the same Save boundary and then
+   clears the flag.
+5. Publish exposes the already-saved ordinary Page only when it is Current and has at least one
    placement and all six direct-root artifacts exist and parse through their
    storage contracts. Publish does not regenerate or render-test those files.
-5. The stable `clk.live/{accountPublicId}/pages/{pageId}` URL selects only from
+6. The stable `clk.live/{accountPublicId}/pages/{pageId}` URL selects only from
    the saved locale set and redirects without shared caching. Its exact-locale
    URL returns completed stored HTML; Page CSS and runtime remain shared across
    locales.
-6. Save while published, Publish, Unpublish, and Delete use Page-scoped cache
+7. Save or Update while published, Publish, Unpublish, and Delete use Page-scoped cache
    purges. Unpublish retains the Page; Delete is allowed only while unpublished
    and never deletes referenced Instances or assets.
 

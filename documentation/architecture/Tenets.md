@@ -331,6 +331,10 @@ through Roma to Tokyo. Publish changes only `serve-state.json`. Tokyo serves
 the stored files at the Page's stable and exact-locale `clk.live` routes.
 Visitor requests never invoke generation, translation, models, Roma, Page
 Builder, or child Widget URLs, and never compose a Page from authoring source.
+Referenced Instance Save or translation writes set the Page's one
+`needsUpdate` flag; they do not regenerate it. Ordinary Page Save and Publish
+then block until the customer explicitly runs Update through the same Page
+write boundary. A published Page keeps serving its last saved files meanwhile.
 
 ## Tenet 12: Dieter Tokens First
 

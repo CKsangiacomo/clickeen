@@ -70,6 +70,11 @@ account package files. A later explicit Save generates and stores a new exact
 package for that account Instance. Public serving must not compare
 stored account package bytes to current widget source on visitor requests.
 
+Saving an existing Instance marks only same-account ordinary Pages that
+reference it as Needs update. This does not generate or change Page files. The
+customer's later explicit Page Update regenerates in Page Builder and stores
+the result through the normal Page Save boundary.
+
 Dieter icon URLs and account asset references remain external delivery
 references owned by their own roots. Dieter CSS and JavaScript do not.
 

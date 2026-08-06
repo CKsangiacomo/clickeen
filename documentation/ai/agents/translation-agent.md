@@ -343,6 +343,11 @@ widget explicitly generates translations. Removed-locale cleanup does not veto
 the saved setting; an exact cleanup failure returns as
 `localeCleanup.ok: false`.
 
+Each successful ordinary Instance overlay write marks same-account ordinary
+Pages that reference the Instance as Needs update. The Translation Agent does
+not update or compile those Pages. Page-owned overlay writes and Settings-owned
+removed-locale cleanup do not set Page update state.
+
 This is an operator fact, not a desired future abstraction.
 
 ## End-To-End Runtime Secrets And Bindings

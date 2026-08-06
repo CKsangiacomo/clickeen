@@ -155,7 +155,10 @@ export function parsePageServingOverlays(raw: unknown, source: AccountPageSource
 }
 
 export function parsePageServeState(raw: unknown): PageServeState | null {
-  return isRecord(raw) && hasExactKeys(raw, ['published']) && typeof raw.published === 'boolean'
-    ? { published: raw.published }
+  return isRecord(raw) &&
+    hasExactKeys(raw, ['published', 'needsUpdate']) &&
+    typeof raw.published === 'boolean' &&
+    typeof raw.needsUpdate === 'boolean'
+    ? { published: raw.published, needsUpdate: raw.needsUpdate }
     : null;
 }

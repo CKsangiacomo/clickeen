@@ -56,9 +56,11 @@ Rules:
 - A locale never owns HTML, CSS, JavaScript, publication state, or another
   artifact root.
 - An ordinary Page has one direct stored file set. First Save is unpublished;
-  later Save preserves publication state. Publish requires all six root
-  artifacts to parse through their storage contracts, but does not render-test,
-  compile, or translate them.
+  later ordinary Save requires Current state. Referenced Instance Save or
+  translation writes set one `needsUpdate` flag. Explicit Page Update stores
+  browser-generated files through the same boundary and clears the flag after
+  success. Publish requires Current state and all six root artifacts, but does
+  not render-test, compile, or translate them.
 
 ## Public Serving
 
@@ -95,6 +97,10 @@ serving-overlay document is validated as a whole, one malformed locale entry
 makes every Page route unavailable. Page CSS/runtime files are shared across
 locales. Page Save while published, Publish, Unpublish, and Delete purge only
 affected exact-locale and support-file URLs.
+
+A published Page continues serving its last saved files while `needsUpdate` is
+true. The flag blocks authoring Save and Publish; it is never evaluated or
+changed by a public request.
 
 ## Static Read Paths
 

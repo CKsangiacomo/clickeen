@@ -476,15 +476,22 @@ Roma validates current-account access, role, `pages.max`, exact Page source,
 and the exact browser-generated file payload. First Save is the only operation
 that creates a Page: Roma checks the limit before minting the Page id, reads the
 account base locale, then asks Tokyo-worker to store the source, files, and
-root serving overlays as unpublished. Later Save replaces those exact values
-and preserves publication state. A draft left without Save exists only in
-browser memory.
+root serving overlays as `{ published: false, needsUpdate: false }`. Later
+ordinary Save uses the same Page PUT with `operation: "save"`, replaces those
+exact values only while the Page is Current, and preserves serving state.
+Explicit Update uses that same boundary with `operation: "update"`; after its
+browser-generated files store successfully, Tokyo clears `needsUpdate`. A draft
+left without Save exists only in browser memory.
 
 Current Page source references saved Widget Instances by placement id and
 instance id. It does not embed or copy Instance source. Page templates have no
-locales. Roma does not generate or translate Page files. Publish and Unpublish
-change only Tokyo's Page publication state; Delete accepts only an unpublished
-Page and never deletes referenced Instances or assets.
+locales. Roma does not generate or translate Page files. Saving a referenced
+Instance or writing its translated locale values marks the Page Needs update.
+Ordinary Save and Publish then return the Page update error; Unpublish remains
+available and preserves the flag. A published Needs-update Page keeps serving
+its last saved files. Delete accepts only an unpublished Page and never deletes
+referenced Instances or assets. 127E owns the visible status, Update action,
+and Page Builder flow.
 
 `pages.max = 0` keeps retained Page inventory visible but makes Page detail,
 Save, Publish, Unpublish, and Delete routes return the standard

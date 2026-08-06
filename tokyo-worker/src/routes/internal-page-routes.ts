@@ -122,7 +122,11 @@ export async function tryHandleInternalPageRoutes(args: TokyoRouteArgs): Promise
     }
     if (req.method === 'PUT') {
       const body = await readInternalProductJsonBody({ req, env, boundary: 'internal.page.save.body', accountId });
-      if (!isRecord(body) || !isRecord(body.source)) return respondValidation(respond, 'tokyo.errors.page.sourceInvalid');
+      if (
+        !isRecord(body) ||
+        !isRecord(body.source) ||
+        (body.operation !== 'save' && body.operation !== 'update')
+      ) return respondValidation(respond, 'tokyo.errors.page.sourceInvalid');
       const saved = await saveAccountPageSource({
         env,
         accountId,
@@ -130,6 +134,7 @@ export async function tryHandleInternalPageRoutes(args: TokyoRouteArgs): Promise
         source: body.source,
         files: body.files,
         overlaysJson: body.overlaysJson,
+        operation: body.operation,
       });
       return respond(json({ ok: true, accountId, pageId, ...saved }));
     }

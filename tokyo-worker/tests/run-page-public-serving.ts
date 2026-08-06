@@ -7,7 +7,7 @@ const accountId = 'CLICKEEN';
 const pageId = 'PAGE123456';
 const root = `accounts/${accountId}/pages/${pageId}`;
 
-function createEnv(published = true) {
+function createEnv(published = true, needsUpdate = false, omitNeedsUpdate = false) {
   const objects = new Map<string, Stored>();
   const put = (key: string, value: unknown, contentType = 'application/json; charset=utf-8') => {
     objects.set(key, {
@@ -24,7 +24,7 @@ function createEnv(published = true) {
     robots: 'index-follow',
     placements: [{ placementId: 'hero', instanceId: 'ABCD123456' }],
   });
-  put(`${root}/serve-state.json`, { published });
+  put(`${root}/serve-state.json`, omitNeedsUpdate ? { published } : { published, needsUpdate });
   put(`${root}/overlays.json`, {
     'it-IT': {
       page: { title: 'Estate' },
@@ -109,6 +109,16 @@ async function main() {
   assert.equal((await request(`/${accountId}/pages/${pageId}/fr-FR`, env))?.status, 404);
   assert.equal((await request(`/${accountId}/pages/${pageId}/styles.css`, env))?.status, 200);
   assert.equal((await request(`/${accountId}/pages/${pageId}/runtime.js`, env))?.status, 200);
+  assert.equal(
+    (await request(`/${accountId}/pages/${pageId}/en-US`, createEnv(true, true)))?.status,
+    200,
+    'the last published Page must remain public while it needs Update',
+  );
+  assert.equal(
+    (await request(`/${accountId}/pages/${pageId}/en-US`, createEnv(true, false, true)))?.status,
+    500,
+    'missing Page currency must fail instead of silently becoming Current',
+  );
   assert.equal((await request(`/${accountId}/pages/${pageId}/en-US`, createEnv(false)))?.status, 404);
 
   console.log('Tokyo Page public serving verification passed.');

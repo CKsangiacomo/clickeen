@@ -122,6 +122,8 @@ async function main() {
   assert.match(createRoute, /overlaysJson = bodyResult\.payload\?\.overlaysJson/);
   assert.match(saveRoute, /parseGeneratedFiles\(bodyResult\.payload\?\.files\)/);
   assert.match(saveRoute, /overlaysJson = bodyResult\.payload\?\.overlaysJson/);
+  assert.match(saveRoute, /operation = bodyResult\.payload\?\.operation/);
+  assert.match(saveRoute, /operation !== 'save' && operation !== 'update'/);
   assert.match(
     saveRoute,
     /if \(submitted\.baseLocale !== locales\.localePolicy\.baseLocale\)/,
@@ -140,7 +142,10 @@ async function main() {
   assert.match(saveRoute, /pageAccess\(request, current, 'open_page'\)/);
   assert.match(saveRoute, /pageAccess\(request, current, 'save_page'\)/);
   assert.match(saveRoute, /pageAccess\(request, current, 'delete_page'\)/);
-  assert.match(pageClient, /body: \{ source: args\.source, files: args\.files, overlaysJson: args\.overlaysJson \}/);
+  assert.match(pageClient, /body: \{ source: args\.source, files: args\.files, overlaysJson: args\.overlaysJson, operation: args\.operation \}/);
+  assert.match(pageClient, /typeof serveState\.needsUpdate !== 'boolean'/);
+  assert.match(pageClient, /needsUpdate: serveState\.needsUpdate/);
+  assert.doesNotMatch(pageClient, /needsUpdate:\s*false/);
   assert.match(publishRoute, /publishAccountPage\(/);
   assert.match(publishRoute, /resolvePageProductPolicy\(current\.value\.authzPayload, 'publish_page'\)/);
 

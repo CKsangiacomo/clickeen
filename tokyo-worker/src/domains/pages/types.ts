@@ -20,6 +20,7 @@ export type PageServingOverlays = Record<
 
 export type PageServeState = {
   published: boolean;
+  needsUpdate: boolean;
 };
 
 export class PageOperationError extends Error {

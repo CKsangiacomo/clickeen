@@ -74,6 +74,11 @@ locales. Instance Save/translation/publication/deletion and Page Save while
 published/Publish/Unpublish/Delete purge only affected public HTML and
 support-file URLs.
 
+Page `serve-state.json` contains `published` and `needsUpdate`. Public serving
+uses only `published`: a published Needs-update Page keeps returning its last
+saved files. The second flag blocks authenticated ordinary Save and Publish
+until explicit Update stores current browser-generated files and clears it.
+
 ## Failure Rule
 
 - unpublished instance: `404`;

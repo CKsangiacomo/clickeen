@@ -9,10 +9,12 @@ import {
 import {
   createAccountPageSource,
   deleteAccountPageSource,
+  markPagesReferencingInstanceNeedsUpdate,
   publishAccountPage,
   readAccountPage,
   saveAccountPageSource,
   unpublishAccountPage,
+  writeAccountPageLocaleOverlay,
 } from '../src/domains/pages/source';
 import { PageOperationError } from '../src/domains/pages/types';
 
@@ -137,8 +139,9 @@ assert.deepEqual(parsePageLocaleOverlay({
 assert.equal(parsePageLocaleOverlay({ values: { title: 'Estate' } }, source), null, 'required translated fields must not be omitted');
 assert.equal(parsePageLocaleOverlay({ values: { title: 'Estate', description: 'Test', socialTitle: 'Test', status: 'done' } }, source), null, 'overlay metadata must fail');
 assert.equal(parseAccountPageSource({ ...source, version: 1 }), null, 'legacy Page fields must fail');
-assert.deepEqual(parsePageServeState({ published: false }), { published: false });
-assert.equal(parsePageServeState({ published: false, needsUpdate: false }), null, 'serve-state must remain exact');
+assert.equal(parsePageServeState({ published: false }), null, 'missing Page currency must not silently default');
+assert.deepEqual(parsePageServeState({ published: false, needsUpdate: false }), { published: false, needsUpdate: false });
+assert.equal(parsePageServeState({ published: false, needsUpdate: false, revision: 1 }), null, 'serve-state must remain exact');
 
 const files = {
   indexHtml: '<!doctype html><html><body>Summer</body></html>',
@@ -163,10 +166,15 @@ assert.deepEqual(parsePageServingOverlays(overlaysJson, source), overlaysJson);
 assert.equal(parsePageServingOverlays({ it: { ...overlaysJson.it, placements: {} } }, source), null, 'serving overlay placement set must be exact');
 
 const purgedFiles: string[] = [];
+let failPurgeOnce = false;
 const originalFetch = globalThis.fetch;
 globalThis.fetch = (async (_input: RequestInfo | URL, init?: RequestInit) => {
   const body = JSON.parse(String(init?.body || '{}')) as { files?: string[] };
   purgedFiles.push(...(body.files ?? []));
+  if (failPurgeOnce) {
+    failPurgeOnce = false;
+    return new Response(JSON.stringify({ success: false }), { status: 500 });
+  }
   return new Response(JSON.stringify({ success: true }), { status: 200 });
 }) as typeof fetch;
 
@@ -180,7 +188,7 @@ const created = await createAccountPageSource({
   files,
   overlaysJson,
 });
-assert.deepEqual(created, { source, files, overlaysJson, serveState: { published: false } });
+assert.deepEqual(created, { source, files, overlaysJson, serveState: { published: false, needsUpdate: false } });
 
 const pageRoot = `accounts/${accountId}/pages/${source.pageId}`;
 assert.deepEqual(
@@ -197,7 +205,7 @@ assert.deepEqual(
 );
 assert.equal(store.objects.get(`${pageRoot}/index.html`)?.body, files.indexHtml);
 assert.equal(store.objects.get(`${pageRoot}/index.html`)?.httpMetadata?.contentType, 'text/html; charset=utf-8');
-assert.deepEqual(JSON.parse(store.objects.get(`${pageRoot}/serve-state.json`)?.body ?? 'null'), { published: false });
+assert.deepEqual(JSON.parse(store.objects.get(`${pageRoot}/serve-state.json`)?.body ?? 'null'), { published: false, needsUpdate: false });
 assert.deepEqual(await readAccountPage({ env: store.env, accountId, pageId: source.pageId }), created);
 
 assert.deepEqual(await publishAccountPage({ env: store.env, accountId, pageId: source.pageId }), { published: true, changed: true });
@@ -220,11 +228,134 @@ const saved = await saveAccountPageSource({
   source: savedSource,
   files: savedFiles,
   overlaysJson: savedOverlays,
+  operation: 'save',
 });
-assert.deepEqual(saved, { source: savedSource, files: savedFiles, overlaysJson: savedOverlays, serveState: { published: true } });
+assert.deepEqual(saved, { source: savedSource, files: savedFiles, overlaysJson: savedOverlays, serveState: { published: true, needsUpdate: false } });
 assert.ok(purgedFiles.includes(`https://dev.clk.live/${accountId}/pages/${source.pageId}/it`), 'save must purge the removed locale');
 assert.ok(purgedFiles.includes(`https://dev.clk.live/${accountId}/pages/${source.pageId}/de`), 'save must purge the new locale');
-assert.deepEqual(JSON.parse(store.objects.get(`${pageRoot}/serve-state.json`)?.body ?? 'null'), { published: true }, 'save must preserve publication state');
+assert.deepEqual(JSON.parse(store.objects.get(`${pageRoot}/serve-state.json`)?.body ?? 'null'), { published: true, needsUpdate: false }, 'save must preserve Page serving state');
+
+await markPagesReferencingInstanceNeedsUpdate({ env: store.env, accountId, instanceId: 'ZZZZ123456' });
+assert.deepEqual(
+  JSON.parse(store.objects.get(`${pageRoot}/serve-state.json`)?.body ?? 'null'),
+  { published: true, needsUpdate: false },
+  'an unrelated Instance must not change Page currency',
+);
+await markPagesReferencingInstanceNeedsUpdate({ env: store.env, accountId, instanceId });
+assert.deepEqual(JSON.parse(store.objects.get(`${pageRoot}/serve-state.json`)?.body ?? 'null'), { published: true, needsUpdate: true });
+await assert.rejects(
+  publishAccountPage({ env: store.env, accountId, pageId: source.pageId }),
+  (error: unknown) => error instanceof PageOperationError && error.reasonKey === 'tokyo.errors.page.needsUpdate',
+  'Publish must block while the Page needs Update',
+);
+await assert.rejects(
+  saveAccountPageSource({
+    env: store.env,
+    accountId,
+    pageId: source.pageId,
+    source: savedSource,
+    files: savedFiles,
+    overlaysJson: savedOverlays,
+    operation: 'save',
+  }),
+  (error: unknown) => error instanceof PageOperationError && error.reasonKey === 'tokyo.errors.page.needsUpdate',
+  'ordinary Save must block while the Page needs Update',
+);
+store.failOnce(`${pageRoot}/index.html`);
+await assert.rejects(
+  saveAccountPageSource({
+    env: store.env,
+    accountId,
+    pageId: source.pageId,
+    source: savedSource,
+    files: savedFiles,
+    overlaysJson: savedOverlays,
+    operation: 'update',
+  }),
+  /injected_write_failure/,
+);
+assert.deepEqual(
+  JSON.parse(store.objects.get(`${pageRoot}/serve-state.json`)?.body ?? 'null'),
+  { published: true, needsUpdate: true },
+  'failed Update must retain Needs update',
+);
+store.failOnce(`${pageRoot}/serve-state.json`);
+await assert.rejects(
+  saveAccountPageSource({
+    env: store.env,
+    accountId,
+    pageId: source.pageId,
+    source: savedSource,
+    files: savedFiles,
+    overlaysJson: savedOverlays,
+    operation: 'update',
+  }),
+  /injected_write_failure/,
+);
+assert.deepEqual(
+  JSON.parse(store.objects.get(`${pageRoot}/serve-state.json`)?.body ?? 'null'),
+  { published: true, needsUpdate: true },
+  'Update must not report Current when clearing the stored flag fails',
+);
+failPurgeOnce = true;
+await assert.rejects(
+  saveAccountPageSource({
+    env: store.env,
+    accountId,
+    pageId: source.pageId,
+    source: savedSource,
+    files: savedFiles,
+    overlaysJson: savedOverlays,
+    operation: 'update',
+  }),
+  /purge/i,
+);
+assert.deepEqual(
+  JSON.parse(store.objects.get(`${pageRoot}/serve-state.json`)?.body ?? 'null'),
+  { published: true, needsUpdate: true },
+  'Update must retain Needs update when required cache purge fails',
+);
+const updated = await saveAccountPageSource({
+  env: store.env,
+  accountId,
+  pageId: source.pageId,
+  source: savedSource,
+  files: savedFiles,
+  overlaysJson: savedOverlays,
+  operation: 'update',
+});
+assert.deepEqual(updated.serveState, { published: true, needsUpdate: false });
+assert.deepEqual(JSON.parse(store.objects.get(`${pageRoot}/serve-state.json`)?.body ?? 'null'), { published: true, needsUpdate: false });
+await writeAccountPageLocaleOverlay({
+  env: store.env,
+  accountId,
+  pageId: source.pageId,
+  locale: 'it',
+  overlay: { values: { title: 'Estate', description: 'Una pagina estiva', socialTitle: 'Estate social' } },
+});
+assert.deepEqual(
+  JSON.parse(store.objects.get(`${pageRoot}/serve-state.json`)?.body ?? 'null'),
+  { published: true, needsUpdate: false },
+  'Page-owned locale edits must not change Page currency',
+);
+await markPagesReferencingInstanceNeedsUpdate({ env: store.env, accountId, instanceId });
+assert.deepEqual(await unpublishAccountPage({ env: store.env, accountId, pageId: source.pageId }), { published: false, changed: true });
+assert.deepEqual(
+  JSON.parse(store.objects.get(`${pageRoot}/serve-state.json`)?.body ?? 'null'),
+  { published: false, needsUpdate: true },
+  'Unpublish must preserve Needs update',
+);
+const updatedWhileUnpublished = await saveAccountPageSource({
+  env: store.env,
+  accountId,
+  pageId: source.pageId,
+  source: savedSource,
+  files: savedFiles,
+  overlaysJson: savedOverlays,
+  operation: 'update',
+});
+assert.deepEqual(updatedWhileUnpublished.serveState, { published: false, needsUpdate: false });
+assert.deepEqual(await publishAccountPage({ env: store.env, accountId, pageId: source.pageId }), { published: true, changed: true });
 
 await assert.rejects(
   deleteAccountPageSource({ env: store.env, accountId, pageId: source.pageId }),

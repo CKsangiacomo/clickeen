@@ -70,6 +70,13 @@ files remain independently writable translation truth; root `overlays.json` is
 the saved locale-value input used to complete published exact-locale HTML and
 changes only through a Page Save or Update.
 
+An existing ordinary Instance Save or Instance locale-overlay write marks each
+same-account ordinary Page that references that Instance as Needs update. It
+does not alter Page source, Page overlays, root `overlays.json`, or live files.
+Page-owned overlay writes do not set the flag. Removing an Instance overlay
+because Account Settings removed a locale also does not set it; that Settings
+change affects later generation and Save/Update inputs.
+
 ## Field Authority
 
 `instance.content.json` owns the current saved text-field set. Every overlay
@@ -127,7 +134,8 @@ The stable Page URL selects from the saved locale set and redirects with
 | Publish/unpublish | Tokyo-worker owns the single `serve-state.json` |
 | Public localized read | Tokyo-worker reads the one root artifact and exact overlay |
 | Save Page runtime | Roma submits exact source/files/root serving overlays -> Tokyo-worker stores the direct Page root |
-| Publish/unpublish Page | Tokyo-worker changes only Page `serve-state.json.published` and purges scoped public URLs |
+| Save/Update Page | the existing Page PUT stores exact browser output; ordinary Save requires Current, while explicit Update clears `needsUpdate` only after success |
+| Publish/unpublish Page | Publish requires Current; both preserve `needsUpdate`, change only `published`, and purge scoped public URLs |
 | Public localized Page read | Tokyo-worker reads one Page root; base uses stored index values and non-base uses one exact root `overlays.json` entry |
 
 The same Generate translations operation accepts an Instance or Page target.

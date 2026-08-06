@@ -1,4 +1,4 @@
-import { isCompactAccountPublicId } from '@clickeen/ck-contracts/overlay-identity';
+import { isCompactAccountPublicId, isCompactInstanceId } from '@clickeen/ck-contracts/overlay-identity';
 import type { AccountPageSource, PageLocaleOverlay } from '@clickeen/ck-contracts/pages';
 import type { Env } from '../../types';
 import { readAccountInstanceSourcePointer } from '../account-instances/source';
@@ -77,6 +77,19 @@ async function loadText(args: {
   } catch {
     sourceInvalid([args.key]);
   }
+}
+
+async function readRequiredPageServeState(args: {
+  env: Env;
+  accountId: string;
+  pageId: string;
+}): Promise<PageServeState> {
+  const key = accountPageServeStateKey(args.accountId, args.pageId);
+  const stored = await loadJson({ env: args.env, key, invalid: sourceInvalid });
+  if (!stored.exists) sourceInvalid([key]);
+  const serveState = parsePageServeState(stored.value);
+  if (!serveState) sourceInvalid([key]);
+  return serveState;
 }
 
 async function putPageFiles(args: {
@@ -215,7 +228,7 @@ export async function createAccountPageSource(args: {
   await assertPageReferences({ env: args.env, accountId, source });
   await putPageFiles({ env: args.env, accountId, pageId, files });
   await putJson(args.env, accountPageServingOverlaysKey(accountId, pageId), overlaysJson);
-  const serveState = { published: false } as const;
+  const serveState = { published: false, needsUpdate: false } as const;
   await putJson(args.env, accountPageServeStateKey(accountId, pageId), serveState);
   await putJson(args.env, accountPageSourceKey(accountId, pageId), source);
   return { source, files, overlaysJson, serveState };
@@ -228,6 +241,7 @@ export async function saveAccountPageSource(args: {
   source: unknown;
   files: unknown;
   overlaysJson: unknown;
+  operation: 'save' | 'update';
 }): Promise<{ source: AccountPageSource; files: PageGeneratedFiles; overlaysJson: PageServingOverlays; serveState: PageServeState }> {
   const accountId = assertAccountId(args.accountId);
   const pageId = normalizePageId(args.pageId);
@@ -237,6 +251,9 @@ export async function saveAccountPageSource(args: {
     throw new PageOperationError({ kind: 'NOT_FOUND', reasonKey: 'tokyo.errors.page.notFound' });
   }
   const current = await readRequiredPageRuntime({ env: args.env, accountId, pageId, source: existing });
+  if (args.operation === 'save' && current.serveState.needsUpdate) {
+    throw new PageOperationError({ kind: 'DENY', reasonKey: 'tokyo.errors.page.needsUpdate' });
+  }
   const source = parseAccountPageSource(args.source, pageId);
   if (!source || source.isTemplate) sourceInvalid();
   const files = parsePageGeneratedFiles(args.files);
@@ -259,7 +276,13 @@ export async function saveAccountPageSource(args: {
       ],
     });
   }
-  return { source, files, overlaysJson, serveState: current.serveState };
+  const serveState = args.operation === 'update' && current.serveState.needsUpdate
+    ? { ...current.serveState, needsUpdate: false }
+    : current.serveState;
+  if (serveState !== current.serveState) {
+    await putJson(args.env, accountPageServeStateKey(accountId, pageId), serveState);
+  }
+  return { source, files, overlaysJson, serveState };
 }
 
 export async function readAccountPage(args: {
@@ -284,8 +307,14 @@ export async function publishAccountPage(args: {
   if (page.source.isTemplate || page.source.placements.length === 0) {
     throw new PageOperationError({ kind: 'VALIDATION', reasonKey: 'tokyo.errors.page.publishInvalid' });
   }
+  if (page.serveState.needsUpdate) {
+    throw new PageOperationError({ kind: 'DENY', reasonKey: 'tokyo.errors.page.needsUpdate' });
+  }
   const changed = !page.serveState.published;
-  await putJson(args.env, accountPageServeStateKey(assertAccountId(args.accountId), normalizePageId(args.pageId)!), { published: true });
+  await putJson(args.env, accountPageServeStateKey(assertAccountId(args.accountId), normalizePageId(args.pageId)!), {
+    ...page.serveState,
+    published: true,
+  });
   await purgePagePublicCache({
     env: args.env,
     accountId: args.accountId,
@@ -303,7 +332,10 @@ export async function unpublishAccountPage(args: {
   const page = await readAccountPage(args);
   if (!page) throw new PageOperationError({ kind: 'NOT_FOUND', reasonKey: 'tokyo.errors.page.notFound' });
   const changed = page.serveState.published;
-  await putJson(args.env, accountPageServeStateKey(assertAccountId(args.accountId), normalizePageId(args.pageId)!), { published: false });
+  await putJson(args.env, accountPageServeStateKey(assertAccountId(args.accountId), normalizePageId(args.pageId)!), {
+    ...page.serveState,
+    published: false,
+  });
   await purgePagePublicCache({
     env: args.env,
     accountId: args.accountId,
@@ -348,6 +380,28 @@ export async function writeAccountPageLocaleOverlay(args: {
   if (!overlay) overlayInvalid();
   await putJson(args.env, accountPageLocaleOverlayKey(accountId, pageId, args.locale), overlay);
   return { overlay };
+}
+
+export async function markPagesReferencingInstanceNeedsUpdate(args: {
+  env: Env;
+  accountId: string;
+  instanceId: string;
+}): Promise<void> {
+  const accountId = assertAccountId(args.accountId);
+  if (!isCompactInstanceId(args.instanceId)) {
+    throw new PageOperationError({ kind: 'VALIDATION', reasonKey: 'tokyo.errors.page.instanceMissing' });
+  }
+  const pages = await listAccountPageSources({ env: args.env, accountId });
+  const referenced = pages.sources.filter((source) =>
+    !source.isTemplate && source.placements.some((placement) => placement.instanceId === args.instanceId));
+  for (const source of referenced) {
+    const serveState = await readRequiredPageServeState({ env: args.env, accountId, pageId: source.pageId });
+    if (serveState.needsUpdate) continue;
+    await putJson(args.env, accountPageServeStateKey(accountId, source.pageId), {
+      ...serveState,
+      needsUpdate: true,
+    });
+  }
 }
 
 export async function deleteAccountPageSource(args: {

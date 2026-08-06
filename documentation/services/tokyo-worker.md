@@ -170,17 +170,20 @@ accounts/{accountPublicId}/pages/{pageId}/
 Roma owns current-account access, Page policy, and authenticated Save, Publish,
 Unpublish, and Delete commands. Tokyo-worker validates and stores the exact
 submitted source, browser-generated files, root serving overlays, and
-`{ "published": boolean }` serving state. Before Save, Tokyo-worker verifies
+`{ "published": boolean, "needsUpdate": boolean }` serving state. Before Save, Tokyo-worker verifies
 that every referenced Instance and optional social-image asset exist under the
 same account.
 
 Page source is an ordered document of saved Instance references. It does not
-duplicate child Instance source. First Save creates an unpublished Page; later
-Save preserves its current publication state. Publish requires an ordinary
-Page with at least one placement whose six direct-root artifacts exist and
-parse through their storage contracts; it does not render-test the HTML.
-Publish changes publication only. Unpublish retains the Page. Delete rejects a
-published Page and never deletes referenced Instances or account assets.
+duplicate child Instance source. First Save creates a Current unpublished Page.
+Every existing Instance Save and Instance locale-overlay write scans the same
+account's Page sources and sets `needsUpdate: true` only on ordinary Pages that
+reference that Instance. The scan reads only Page source and serving state; it
+does not build an index or generate files. Ordinary Page Save and Publish reject
+Needs-update state. Explicit Update uses the same Page write operation and
+clears the flag only after the exact files store and any required cache purge
+succeeds. Unpublish preserves the flag. Delete rejects a published Page and
+never deletes referenced Instances or account assets.
 
 ## Public Serving
 
@@ -276,6 +279,10 @@ URLs plus its support files. Publish, Unpublish, and Delete purge the Page's
 saved exact-locale and support-file URLs. Purge configuration or API failure is
 an operation failure, not success with stale cache risk.
 
+`needsUpdate` is an authenticated authoring-state gate, not a public-serving
+gate. A published Needs-update Page continues serving its last explicitly
+saved files until Update or Unpublish. Public requests never set or clear it.
+
 The product-neutral iframe-free installer is served at:
 
 ```text
@@ -332,7 +339,7 @@ Current internal route families:
 | `/__internal/instances/{instanceId}/translations/{locale}` | `GET`, `PUT`, `DELETE` | read/write/delete one translated value file |
 | `/__internal/accounts/{accountPublicId}/pages` | `GET` | list account pages |
 | `/__internal/pages` | `POST` | create an unpublished Page from exact source/files/root serving overlays |
-| `/__internal/pages/{pageId}` | `GET`, `PUT`, `DELETE` | read/save the complete direct Page root or delete an unpublished Page |
+| `/__internal/pages/{pageId}` | `GET`, `PUT`, `DELETE` | read, ordinary-Save or explicit-Update the complete direct Page root, or delete an unpublished Page |
 | `/__internal/pages/{pageId}/{publish|unpublish}` | `POST` | change Page publication state without generation or translation |
 | `/__internal/translations/{instance|page}/{targetId}/{locale}` | `PUT` | Translation Agent write bound to the exact granted target and locale |
 | `/__internal/accounts/{accountPublicId}/widget-defaults` | `GET`, `POST`, `PUT` | read/create/write account widget defaults |

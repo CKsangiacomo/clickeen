@@ -68,12 +68,19 @@ export async function PUT(request: NextRequest, context: RouteContext) {
     source?: unknown;
     files?: unknown;
     overlaysJson?: unknown;
+    operation?: unknown;
   } | null>(request);
   if (!bodyResult.ok) return withSession(request, NextResponse.json({ error: bodyResult.error }, { status: bodyResult.status }), current.value.setCookies);
   const submitted = parseAccountPageSource(bodyResult.payload?.source, pageId);
   const files = parseGeneratedFiles(bodyResult.payload?.files);
   const overlaysJson = bodyResult.payload?.overlaysJson;
-  if (!submitted || !files || !isRecord(overlaysJson)) return withSession(request, NextResponse.json({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.page.sourceInvalid' } }, { status: 422 }), current.value.setCookies);
+  const operation = bodyResult.payload?.operation;
+  if (
+    !submitted ||
+    !files ||
+    !isRecord(overlaysJson) ||
+    (operation !== 'save' && operation !== 'update')
+  ) return withSession(request, NextResponse.json({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.page.sourceInvalid' } }, { status: 422 }), current.value.setCookies);
 
   if (!submitted.isTemplate) {
     const locales = await loadCurrentAccountLocalesState({
@@ -92,6 +99,7 @@ export async function PUT(request: NextRequest, context: RouteContext) {
     source: submitted,
     files,
     overlaysJson: overlaysJson as PageServingOverlays,
+    operation,
     accountCapsule: current.value.authzToken,
     requestId: current.value.requestId,
   });
