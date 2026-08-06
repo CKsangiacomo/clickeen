@@ -98,6 +98,14 @@ destructive, or high-importance decisions. `dialogs-and-modals.md` owns overlay
 mechanics; this document owns when product behavior needs a blocking or notice
 surface.
 
+Page Builder uses the same interaction ownership: Add widget is one large
+Dieter Popup over the current-account Your-widgets inventory; Manage order is
+the Dieter Object Manager Popup interaction; and a stale Page opens one Dieter
+blocking Popup requiring explicit Update before editing. The existing Bob
+editor slides over the mounted Page draft and returns through **Done, go back
+to the page**. These are Page workflow states, not a new dialog framework,
+generic editor router, or persisted Page UI state.
+
 ## Monetization
 
 Product policy and routes enforce entitlement. UI prechecks can guide the user,

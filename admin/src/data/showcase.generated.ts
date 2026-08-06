@@ -19,17 +19,18 @@ import html16 from "../html/components/segmented.html?raw";
 import html17 from "../html/components/slider.html?raw";
 import html18 from "../html/components/table.html?raw";
 import html19 from "../html/components/tabs.html?raw";
-import html20 from "../html/components/textedit.html?raw";
-import html21 from "../html/components/textfield.html?raw";
-import html22 from "../html/components/toggle.html?raw";
-import html23 from "../html/components/valuefield.html?raw";
-import html24 from "../html/foundations/colors.html?raw";
-import html25 from "../html/foundations/core-styles.html?raw";
-import html26 from "../html/foundations/icons.html?raw";
-import html27 from "../html/foundations/layouts.html?raw";
-import html28 from "../html/foundations/typography.html?raw";
-import html29 from "../html/tools/entitlements.html?raw";
-import html30 from "../html/tools/llm-management.html?raw";
+import html20 from "../html/components/textarea.html?raw";
+import html21 from "../html/components/textedit.html?raw";
+import html22 from "../html/components/textfield.html?raw";
+import html23 from "../html/components/toggle.html?raw";
+import html24 from "../html/components/valuefield.html?raw";
+import html25 from "../html/foundations/colors.html?raw";
+import html26 from "../html/foundations/core-styles.html?raw";
+import html27 from "../html/foundations/icons.html?raw";
+import html28 from "../html/foundations/layouts.html?raw";
+import html29 from "../html/foundations/typography.html?raw";
+import html30 from "../html/tools/entitlements.html?raw";
+import html31 from "../html/tools/llm-management.html?raw";
 
 export const staticShowcaseModules: Record<string, string> = {
   "../html/components/agent-activity.html": html0,
@@ -52,15 +53,16 @@ export const staticShowcaseModules: Record<string, string> = {
   "../html/components/slider.html": html17,
   "../html/components/table.html": html18,
   "../html/components/tabs.html": html19,
-  "../html/components/textedit.html": html20,
-  "../html/components/textfield.html": html21,
-  "../html/components/toggle.html": html22,
-  "../html/components/valuefield.html": html23,
-  "../html/foundations/colors.html": html24,
-  "../html/foundations/core-styles.html": html25,
-  "../html/foundations/icons.html": html26,
-  "../html/foundations/layouts.html": html27,
-  "../html/foundations/typography.html": html28,
-  "../html/tools/entitlements.html": html29,
-  "../html/tools/llm-management.html": html30,
+  "../html/components/textarea.html": html20,
+  "../html/components/textedit.html": html21,
+  "../html/components/textfield.html": html22,
+  "../html/components/toggle.html": html23,
+  "../html/components/valuefield.html": html24,
+  "../html/foundations/colors.html": html25,
+  "../html/foundations/core-styles.html": html26,
+  "../html/foundations/icons.html": html27,
+  "../html/foundations/layouts.html": html28,
+  "../html/foundations/typography.html": html29,
+  "../html/tools/entitlements.html": html30,
+  "../html/tools/llm-management.html": html31,
 };

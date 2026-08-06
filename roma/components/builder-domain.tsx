@@ -7,17 +7,22 @@ import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { resolveBobBaseUrl } from '../lib/env/bob';
-import { buildWidgetPublicActions, type WidgetPublicActions } from '../lib/public-widget-actions';
+import { buildWidgetPublicActions, type PublicActions } from '../lib/public-actions';
 import { useRomaAccountApi } from './account-api';
 import { getWidgetEditorArtifact } from './widget-editor-artifact';
 import { useRomaAccountContext } from './roma-account-context';
 import { RomaUnsavedChangesDialog } from './roma-unsaved-changes-dialog';
 import { RomaUpsellDialog } from './roma-upsell-dialog';
 import { useRomaShellActions } from './roma-shell';
-import { WidgetCopyCodeDialog } from './widget-copy-code-dialog';
+import { PublicCodeDialog } from './public-code-dialog';
 
 type BuilderDomainProps = {
   initialInstanceId?: string;
+  embedded?: boolean;
+  returnLabel?: string;
+  contextMessage?: string;
+  onReturn?: () => void;
+  onInstanceSaved?: () => void;
 };
 
 const OPEN_EDITOR_TIMEOUT_MS = 7000;
@@ -120,7 +125,8 @@ type BobOpenEditorMessage = {
   fontLibrary: AccountFontLibrary;
   publishStatus?: 'published' | 'unpublished';
   returnLabel?: string;
-  publicActions: WidgetPublicActions | null;
+  contextMessage?: string;
+  publicActions: PublicActions | null;
   policy?: unknown;
   copilot?: unknown;
   translationSetup?: {
@@ -404,7 +410,14 @@ function normalizeReturnTo(value: string | null): string {
   return normalized;
 }
 
-export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
+export function BuilderDomain({
+  initialInstanceId = '',
+  embedded = false,
+  returnLabel: embeddedReturnLabel,
+  contextMessage,
+  onReturn,
+  onInstanceSaved,
+}: BuilderDomainProps) {
   const { activeAccount, accountPolicy } = useRomaAccountContext();
   const accountApi = useRomaAccountApi();
   const router = useRouter();
@@ -429,7 +442,7 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
   const [openError, setOpenError] = useState<string | null>(null);
   const [publicActionContext, setPublicActionContext] = useState<{
     instanceName: string;
-    actions: WidgetPublicActions;
+    actions: PublicActions;
   } | null>(null);
   const [copyCodeOpen, setCopyCodeOpen] = useState(false);
   const [unsavedDialogOpen, setUnsavedDialogOpen] = useState(false);
@@ -438,7 +451,7 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
   const bobBaseUrl = useMemo(() => resolveBobBaseUrl(), []);
   const currentUrl = pathname;
   const pathInstanceId = useMemo(() => decodeBuilderPathInstanceId(pathname), [pathname]);
-  const returnTo = useMemo(() => normalizeReturnTo(searchParams.get('returnTo')), [searchParams]);
+  const returnTo = useMemo(() => embedded ? '' : normalizeReturnTo(searchParams.get('returnTo')), [embedded, searchParams]);
   const newWidgetType = useMemo(() => String(searchParams.get('new') || '').trim().toLowerCase(), [searchParams]);
   const duplicateInstanceId = useMemo(() => String(searchParams.get('duplicate') || '').trim(), [searchParams]);
   const hasDraftRequest = Boolean(!activeInstanceId && (newWidgetType || duplicateInstanceId));
@@ -606,8 +619,12 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
             activeInstanceIdRef.current = createdInstanceId;
             suppressNextActiveOpenRef.current = true;
             setActiveInstanceId(createdInstanceId);
-            router.replace(buildRomaBuilderRoute({ instanceId: createdInstanceId }), { scroll: false });
+            if (!embedded) router.replace(buildRomaBuilderRoute({ instanceId: createdInstanceId }), { scroll: false });
           }
+        }
+
+        if (args.command === 'update-instance' && status >= 200 && status < 300) {
+          onInstanceSaved?.();
         }
 
         reply({
@@ -642,7 +659,7 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
         });
       }
     },
-    [accountApi, activeInstanceId, bobBaseUrl, router],
+    [accountApi, activeInstanceId, bobBaseUrl, embedded, onInstanceSaved, router],
   );
 
   const postOpenEditorAndWait = useCallback(
@@ -764,9 +781,8 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
         publicPackage: builderOpen.publicPackage,
         fontLibrary: builderOpen.fontLibrary,
         publishStatus: builderOpen.publishStatus,
-        returnLabel: returnTo
-          ? 'Return'
-          : undefined,
+        returnLabel: embedded ? embeddedReturnLabel ?? 'Done, go back to the page' : returnTo ? 'Return' : undefined,
+        contextMessage,
         publicActions: nextPublicActions,
         policy: accountPolicy,
         copilot: builderOpen.copilot ?? null,
@@ -795,7 +811,7 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
       }
       setOpenError(message);
     }
-  }, [accountApi, accountPolicy, activeAccount, activeInstanceId, currentUrl, postOpenEditorAndWait, returnTo, router]);
+  }, [accountApi, accountPolicy, activeAccount, activeInstanceId, contextMessage, currentUrl, embedded, embeddedReturnLabel, postOpenEditorAndWait, returnTo, router]);
 
   const openDraftInBob = useCallback(async () => {
     const targetWindow = iframeRef.current?.contentWindow;
@@ -849,7 +865,8 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
         instanceData: config,
         publicPackage,
         fontLibrary,
-        returnLabel: returnTo ? 'Return' : undefined,
+        returnLabel: embedded ? embeddedReturnLabel ?? 'Done, go back to the page' : returnTo ? 'Return' : undefined,
+        contextMessage,
         publicActions: null,
         policy: accountPolicy,
         copilot,
@@ -871,6 +888,9 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
     duplicateInstanceId,
     hasDraftRequest,
     newWidgetType,
+    contextMessage,
+    embedded,
+    embeddedReturnLabel,
     postOpenEditorAndWait,
     returnTo,
   ]);
@@ -920,6 +940,8 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
       if (data.type === 'bob:host-action') {
         if (data.action === 'open-navigation') {
           openNavigation(iframeRef.current);
+        } else if (data.action === 'return' && embedded && onReturn) {
+          requestGuardedNavigation(onReturn);
         } else if (data.action === 'return' && returnTo) {
           requestGuardedNavigation(() => router.push(returnTo));
         } else if (data.action === 'copy-code') {
@@ -949,7 +971,7 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
 
     window.addEventListener('message', listener);
     return () => window.removeEventListener('message', listener);
-  }, [activeInstanceId, bobBaseUrl, hasDraftRequest, openNavigation, publicActionContext, requestGuardedNavigation, returnTo, router, runBobAccountCommand]);
+  }, [activeInstanceId, bobBaseUrl, embedded, hasDraftRequest, onReturn, openNavigation, publicActionContext, requestGuardedNavigation, returnTo, router, runBobAccountCommand]);
 
   useEffect(() => {
     bobReadyRef.current = false;
@@ -1021,6 +1043,7 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
     };
 
     const handlePopState = () => {
+      if (embedded) return;
       if (!bobIsDirtyRef.current) return;
       if (allowPopStateRef.current) {
         allowPopStateRef.current = false;
@@ -1047,7 +1070,7 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
       window.removeEventListener('popstate', handlePopState);
       document.removeEventListener('click', handleClick, true);
     };
-  }, [requestGuardedNavigation]);
+  }, [embedded, requestGuardedNavigation]);
 
   const builderOpenErrorCopy = resolveBuilderErrorCopy(openError || '', 'Builder could not open this widget. Please try again.');
 
@@ -1084,9 +1107,9 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
         title="Bob Builder"
         onLoad={handleBobIframeLoad}
       />
-      <WidgetCopyCodeDialog
+      <PublicCodeDialog
         open={copyCodeOpen}
-        instanceName={publicActionContext?.instanceName ?? ''}
+        productName={publicActionContext?.instanceName ?? ''}
         actions={publicActionContext?.actions ?? null}
         onClose={() => setCopyCodeOpen(false)}
       />

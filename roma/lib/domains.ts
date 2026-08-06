@@ -4,6 +4,7 @@ export type RomaDomainKey =
   | 'builder'
   | 'widgets'
   | 'widgetCatalog'
+  | 'pages'
   | 'assets'
   | 'team'
   | 'billing'
@@ -25,6 +26,7 @@ export const ROMA_DOMAINS: readonly RomaDomainDefinition[] = [
   { key: 'widgets', label: 'Widgets', href: '/widgets', description: 'Manage account-owned instances.' },
   { key: 'widgetCatalog', label: 'Widget catalog', href: '/widgets/catalog', description: 'Create instances from available widgets.' },
   { key: 'builder', label: 'Builder', href: '/builder', description: 'Edit widget instances in Bob.' },
+  { key: 'pages', label: 'Pages', href: '/pages', description: 'Manage account Pages.' },
   { key: 'assets', label: 'Assets', href: '/assets', description: 'Account library and usage mapping.' },
   { key: 'team', label: 'Team', href: '/team', description: 'Members and roles.' },
   { key: 'billing', label: 'Billing', href: '/billing', description: 'Current plan; billing provider not connected.' },
@@ -38,6 +40,7 @@ export const ROMA_MAIN_DOMAIN_KEYS: readonly RomaDomainKey[] = [
   'home',
   'widgets',
   'builder',
+  'pages',
   'assets',
   'settings',
 ];

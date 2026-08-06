@@ -24,6 +24,7 @@
 @import url('./components/table/table.css');
 @import url('./components/textedit/textedit.css');
 @import url('./components/textfield/textfield.css');
+@import url('./components/textarea/textarea.css');
 @import url('./components/toggle/toggle.css');
 @import url('./components/tooltip/tooltip.css');
 @import url('./components/valuefield/valuefield.css');

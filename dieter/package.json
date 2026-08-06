@@ -8,6 +8,7 @@
     "tldts": "^6.1.86"
   },
   "scripts": {
+    "test": "node tests/run-textarea-contract.mjs",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   }
 }

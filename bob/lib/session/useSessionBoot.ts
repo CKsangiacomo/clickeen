@@ -129,6 +129,10 @@ export function useSessionBoot(args: {
             typeof message.returnLabel === 'string' && message.returnLabel.trim()
               ? message.returnLabel.trim()
               : undefined,
+          contextMessage:
+            typeof message.contextMessage === 'string' && message.contextMessage.trim()
+              ? message.contextMessage.trim()
+              : undefined,
           publicActions,
           fontLibrary,
           translationSetup: message.translationSetup ?? null,

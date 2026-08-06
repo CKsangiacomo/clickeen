@@ -7,7 +7,7 @@ import { Suspense, useCallback, useEffect, useMemo, useRef, useState, type CSSPr
 import { createPortal } from 'react-dom';
 import { createDialogLifecycle, type DialogLifecycle } from '../../dieter/components/shared/dialog-lifecycle';
 import { resolveAccountShellErrorCopy, resolveAccountShellReason } from '../lib/account-shell-copy';
-import { buildWidgetPublicActions, type WidgetPublicActions } from '../lib/public-widget-actions';
+import { buildWidgetPublicActions, type PublicActions } from '../lib/public-actions';
 import { useRomaAccountApi } from './account-api';
 import { DieterDropdownActions } from './dieter-dropdown-actions';
 import { DieterTextfield } from './dieter-textfield';
@@ -17,7 +17,7 @@ import { useRomaAccountContext } from './roma-account-context';
 import { RomaDomainErrorBoundary } from './roma-domain-error-boundary';
 import { RomaShell } from './roma-shell';
 import { RomaUpsellDialog } from './roma-upsell-dialog';
-import { WidgetCopyCodeDialog } from './widget-copy-code-dialog';
+import { PublicCodeDialog } from './public-code-dialog';
 import {
   buildBuilderRoute,
   DEFAULT_INSTANCE_DISPLAY_NAME,
@@ -221,7 +221,7 @@ export function WidgetsDomain({
     accountPublicId: string;
     instanceId: string;
     instanceName: string;
-    actions: WidgetPublicActions | null;
+    actions: PublicActions | null;
   } | null>(null);
   const [openWidgetActions, setOpenWidgetActions] = useState<{
     instanceId: string;
@@ -983,9 +983,9 @@ export function WidgetsDomain({
         reason={upsellReason ?? undefined}
         onClose={() => setUpsellReason(null)}
       />
-      <WidgetCopyCodeDialog
+      <PublicCodeDialog
         open={Boolean(copyCodeContext)}
-        instanceName={copyCodeContext?.instanceName ?? ''}
+        productName={copyCodeContext?.instanceName ?? ''}
         actions={copyCodeContext?.actions ?? null}
         onClose={() => setCopyCodeContext(null)}
       />

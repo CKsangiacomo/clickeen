@@ -311,7 +311,9 @@ route. They are classified as vector assets by Tokyo-worker.
 
 1. Roma resolves current-account authority and sends exact Page source,
    generated files, and root serving overlays through its authenticated Page
-   routes.
+   routes. The browser supplies the complete ordinary source coordinate; Roma
+   validates its exact base locale against current Settings without minting or
+   replacing the Page id.
 2. A Clickeen Page is an ordered stack of saved account widget instance
    placements.
 3. Tokyo-worker stores the exact direct Page root. First Save initializes
@@ -322,9 +324,10 @@ route. They are classified as vector assets by Tokyo-worker.
    `needsUpdate: true`. Nothing recompiles automatically. Explicit Page Update
    stores the browser-generated files through the same Save boundary and then
    clears the flag.
-5. Publish exposes the already-saved ordinary Page only when it is Current and has at least one
-   placement and all six direct-root artifacts exist and parse through their
-   storage contracts. Publish does not regenerate or render-test those files.
+5. Publish exposes the already-saved ordinary Page only when it is Current, has
+   at least one placement, contains every current Settings output locale, and
+   all six direct-root artifacts exist and parse through their storage
+   contracts. Publish does not regenerate or render-test those files.
 6. The stable `clk.live/{accountPublicId}/pages/{pageId}` URL selects only from
    the saved locale set and redirects without shared caching. Its exact-locale
    URL returns completed stored HTML; Page CSS and runtime remain shared across

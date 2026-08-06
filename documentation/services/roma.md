@@ -290,11 +290,11 @@ through Tokyo-worker. If deletion fails after the settings write, Roma returns
 the saved settings with `localeCleanup.ok: false` and the exact failed
 coordinate. The account setting remains the user decision and account truth.
 
-Roma owns public widget action truth for the current account and opened
-instance. It builds the direct public URL and shared `clickeen.js` installer
-snippet from the current account public id, the exact instance id, the
-configured public-serving origin, and the publish status returned by the
-Builder-open envelope.
+Roma owns one product-neutral public-action contract for Widgets and
+Pages. It builds the direct public URL and shared `clickeen.js` installer
+snippet from the current account public id, the exact Widget Instance or Page
+id, and the configured public-serving origin. Widget Builder availability also
+uses the publish status returned by the Builder-open envelope.
 It sends that exact complete set to Bob, where TopDrawer presents Open public
 widget and one Copy code intent under More. Roma answers that intent with the
 same Dieter Popup used by the Widgets inventory; the Popup presents the exact
@@ -308,6 +308,7 @@ The copied public URL is slashless:
 
 ```text
 {public-serving-origin}/{accountPublicId}/{instanceId}
+{public-serving-origin}/{accountPublicId}/pages/{pageId}
 ```
 
 The copied installer uses the same configured public-serving origin and exact
@@ -321,9 +322,9 @@ public URL:
 ></script>
 ```
 
-There is no public iframe option and no installer that loads the Instance's
-`runtime.js` directly. The direct public URL remains available independently
-of the installer.
+There is no public iframe option, product-specific installer, or installer that
+loads a product's `runtime.js` directly. The direct public URL remains
+available independently of the installer.
 
 Web Code Generator writes public-coordinate placeholders for the support files
 inside the exact generated `index.html`:
@@ -474,9 +475,11 @@ accounts/{accountPublicId}/pages/{pageId}/
 
 Roma validates current-account access, role, `pages.max`, exact Page source,
 and the exact browser-generated file payload. First Save is the only operation
-that creates a Page: Roma checks the limit before minting the Page id, reads the
-account base locale, then asks Tokyo-worker to store the source, files, and
-root serving overlays as `{ published: false, needsUpdate: false }`. Later
+that creates a Page: the browser supplies the complete ordinary Page source,
+including its `pageId` and `baseLocale`; Roma checks the limit, validates the
+submitted base locale against current Settings without replacing it, then asks
+Tokyo-worker to store the source, files, and root serving overlays as
+`{ published: false, needsUpdate: false }`. Later
 ordinary Save uses the same Page PUT with `operation: "save"`, replaces those
 exact values only while the Page is Current, and preserves serving state.
 Explicit Update uses that same boundary with `operation: "update"`; after its
@@ -493,11 +496,48 @@ its last saved files. Delete accepts only an unpublished Page and never deletes
 referenced Instances or assets. 127E owns the visible status, Update action,
 and Page Builder flow.
 
+`GET /api/account/pages` returns the ordinary Page inventory as
+`{ accountId, pages: [{ source, serveState, savedLocales }] }`. `savedLocales`
+is the exact saved output-locale set: the source base locale followed by the
+locale keys present in root `overlays.json`. Page Builder reads and writes one
+metadata overlay through
+`GET|PUT /api/account/pages/{pageId}/translations/{locale}`. That authoring
+write preserves `needsUpdate` and does not rebuild root output. Rename uses
+`POST /api/account/pages/{pageId}/rename`; it changes only
+`source.json.displayName`. Publish compares the saved output locales with the
+current Settings base and active locales and rejects an incomplete saved
+package before requesting Tokyo publication.
+
+The shared Roma public-action contract accepts the Page coordinate and
+returns `/ACCOUNT/pages/PAGEID` plus the same `clickeen.js` snippet shape used
+for a Widget. Page actions therefore need no Page-specific marketing URL,
+iframe helper, or runtime-only install option.
+
+Roma exposes `/pages` as Your pages and `/pages/new` or `/pages/{pageId}` as
+Page Builder. A new Page exists only in browser memory until Save. Page Builder
+uses the same shared editor shell taxonomy as Bob—TopDrawer, ToolDrawer and
+Workspace—but has only two Page-owned panels: Content and SEO/GEO/AEO. Content
+shows ordered saved Instance references, reuses the Your-widgets inventory
+facts/filter/sort/Table behavior in its Add-widget Popup, and uses the Dieter
+Object Manager interaction for ordering. SEO/GEO/AEO edits the Page title,
+optional descriptions/sharing fields, search visibility and exact metadata
+locale overlays. Generate translations calls the existing Translation Agent
+against the locales selected in Settings.
+
+Editing a placement opens the existing Bob editor as a layer while Page
+Builder remains mounted. Bob's single Page-host action, **Done, go back to the
+page**, closes that layer and returns to the exact browser Page draft. Bob Save
+updates the saved Instance and makes the Page require explicit Update; it does
+not save or regenerate the Page. Page Save and Update run Web Code Generator in
+the browser and submit its exact files. Publish only changes publication state.
+All Page blocking Popups use Dieter's existing native-dialog lifecycle; Roma
+adds no Page dialog framework or global editor state.
+
 `pages.max = 0` keeps retained Page inventory visible but makes Page detail,
-Save, Publish, Unpublish, and Delete routes return the standard
-`UPGRADE_REQUIRED` result without calling Tokyo. A positive or unlimited limit
-allows existing-Page actions; first Save separately enforces the finite count.
-Page Builder and its visible Upgrade interaction arrive in 127E.
+Save, Rename, metadata-overlay write, Publish, Unpublish, and Delete routes
+return the standard `UPGRADE_REQUIRED` result without calling Tokyo. A positive
+or unlimited limit allows existing-Page actions; first Save separately enforces
+the finite count.
 
 ## Team, Profile, Settings
 

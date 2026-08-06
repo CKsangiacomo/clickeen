@@ -30,7 +30,7 @@ export const WIDGET_SHELL_FACTORY_DEFAULTS = {
   },
   headerCta: {
     enabled: true,
-    href: 'https://www.clickeen.com',
+    href: 'https://clickeen.com/',
     iconEnabled: true,
     iconName: 'arrowshape.turn.up.right',
     iconPlacement: 'right',

@@ -33,6 +33,7 @@ import {
   hydrateTabs,
   hydrateTextedit,
   hydrateTextfield,
+  hydrateTextarea,
   hydrateValuefield,
 } from '@dieter/components';
 import { hydrateObjectManager } from '@dieter/components/object-manager/object-manager';
@@ -344,6 +345,7 @@ function hydrateDieterComponents(scope: Element | DocumentFragment): void {
   hydrateChoiceTiles(scope);
   hydrateObjectManager(scope);
   hydrateTextfield(scope);
+  hydrateTextarea(scope);
   hydrateValuefield(scope);
   hydrateTextedit(scope);
   hydrateDropdownActions(scope);

@@ -95,20 +95,28 @@ async function main() {
   );
   assert.ok(limitGate > 0, 'Page first Save must enforce pages.max');
   assert.ok(
-    limitGate < createRoute.indexOf('createCompactPageId()'),
-    'pages.max must run before Page ID minting',
-  );
-  assert.ok(
     limitGate < createRoute.indexOf('createAccountPage({'),
     'pages.max must run before Tokyo writes',
   );
+  assert.doesNotMatch(
+    createRoute,
+    /createCompactPageId/,
+    'Roma must never mint or replace the browser-supplied Page ID',
+  );
+  assert.match(createRoute, /const source = parseAccountPageSource\(bodyResult\.payload\?\.source\)/);
+  assert.match(
+    createRoute,
+    /if \(source\.baseLocale !== locales\.localePolicy\.baseLocale\)/,
+    'Page create must validate the exact current base locale',
+  );
+  assert.match(createRoute, /source,\s*files,\s*overlaysJson:/s, 'the browser-supplied Page source must pass unchanged to Tokyo');
+  assert.match(
+    createRoute,
+    /NextResponse\.json\(\{ accountId: result\.value\.accountId, pages: result\.value\.pages \}\)/,
+    'the public inventory response must expose only accountId and ordinary Page inventory facts',
+  );
   assert.match(createRoute, /resolvePageProductPolicy\(current\.value\.authzPayload, 'save_page'\)/);
 
-  await assert.rejects(
-    readFile(new URL('../app/(authed)/pages/page.tsx', import.meta.url), 'utf8'),
-    /ENOENT/,
-    '127A must not retain the obsolete Page UI',
-  );
   const saveRoute = await readFile(
     new URL('../app/api/account/pages/[pageId]/route.ts', import.meta.url),
     'utf8',
@@ -116,6 +124,14 @@ async function main() {
   const pageClient = await readFile(new URL('../lib/account-pages.ts', import.meta.url), 'utf8');
   const publishRoute = await readFile(
     new URL('../app/api/account/pages/[pageId]/publish/route.ts', import.meta.url),
+    'utf8',
+  );
+  const overlayRoute = await readFile(
+    new URL('../app/api/account/pages/[pageId]/translations/[locale]/route.ts', import.meta.url),
+    'utf8',
+  );
+  const renameRoute = await readFile(
+    new URL('../app/api/account/pages/[pageId]/rename/route.ts', import.meta.url),
     'utf8',
   );
   assert.match(createRoute, /parseGeneratedFiles\(bodyResult\.payload\?\.files\)/);
@@ -146,8 +162,23 @@ async function main() {
   assert.match(pageClient, /typeof serveState\.needsUpdate !== 'boolean'/);
   assert.match(pageClient, /needsUpdate: serveState\.needsUpdate/);
   assert.doesNotMatch(pageClient, /needsUpdate:\s*false/);
+  assert.match(pageClient, /savedLocales: \[\.\.\.raw\.savedLocales\]/);
+  assert.match(pageClient, /serveState: \{ published: serveState\.published, needsUpdate: serveState\.needsUpdate \}/);
+  assert.match(pageClient, /\/__internal\/pages\/\$\{encodeURIComponent\(args\.pageId\)\}\/translations\/\$\{encodeURIComponent\(args\.locale\)\}/);
+  assert.match(pageClient, /\/__internal\/pages\/\$\{encodeURIComponent\(args\.pageId\)\}\/rename/);
+  assert.match(overlayRoute, /export async function GET/);
+  assert.match(overlayRoute, /export async function PUT/);
+  assert.match(overlayRoute, /minRole: 'viewer'/);
+  assert.match(overlayRoute, /minRole: 'editor'/);
+  assert.match(overlayRoute, /resolvePageProductPolicy\(current\.value\.authzPayload, 'save_page'\)/);
+  assert.match(renameRoute, /resolvePageProductPolicy\(current\.value\.authzPayload, 'save_page'\)/);
+  assert.match(renameRoute, /renameAccountPage\(\{/);
   assert.match(publishRoute, /publishAccountPage\(/);
   assert.match(publishRoute, /resolvePageProductPolicy\(current\.value\.authzPayload, 'publish_page'\)/);
+  const localeGate = publishRoute.indexOf('const missingLocales =');
+  assert.ok(localeGate > 0, 'Publish must compare saved Page output locales with current Settings locales');
+  assert.ok(localeGate < publishRoute.indexOf('publishAccountPage({'), 'locale completeness must be checked before publish');
+  assert.match(publishRoute, /reasonKey: 'coreui\.errors\.page\.localesIncomplete'/);
 
   console.log('Roma Page source contract verification passed.');
 }

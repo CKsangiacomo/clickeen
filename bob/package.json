@@ -4,7 +4,9 @@
   "version": "0.0.0",
   "exports": {
     "./control-host": "./lib/control-host.ts",
-    "./control-host.css": "./lib/control-host.css"
+    "./control-host.css": "./lib/control-host.css",
+    "./editor-shell.css": "./lib/editor-shell.css",
+    "./web-code-context": "./lib/web-code-context.ts"
   },
   "scripts": {
     "dev": "next dev",

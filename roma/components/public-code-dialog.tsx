@@ -3,22 +3,22 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { createDialogLifecycle, type DialogLifecycle } from '../../dieter/components/shared/dialog-lifecycle';
 import { copyToClipboard } from '../lib/copy-to-clipboard';
-import type { WidgetPublicActions } from '../lib/public-widget-actions';
+import type { PublicActions } from '../lib/public-actions';
 
 const COPY_OPTIONS = [
   { key: 'publicUrl', label: 'Public URL' },
   { key: 'clickeenJsSnippet', label: 'Installation code' },
 ] as const;
 
-export function WidgetCopyCodeDialog({
+export function PublicCodeDialog({
   open,
-  instanceName,
+  productName,
   actions,
   onClose,
 }: {
   open: boolean;
-  instanceName: string;
-  actions: WidgetPublicActions | null;
+  productName: string;
+  actions: PublicActions | null;
   onClose: () => void;
 }) {
   const dialogRef = useRef<HTMLDialogElement>(null);
@@ -71,17 +71,17 @@ export function WidgetCopyCodeDialog({
   const complete = Boolean(actions?.publicUrl && actions.clickeenJsSnippet);
 
   return (
-    <dialog ref={dialogRef} className="diet-popup" aria-labelledby="roma-widget-code-title">
+    <dialog ref={dialogRef} className="diet-popup" aria-labelledby="roma-public-code-title">
       <header className="diet-popup__header">
-        <h2 id="roma-widget-code-title" className="heading-4">Copy code</h2>
+        <h2 id="roma-public-code-title" className="heading-4">Copy code</h2>
       </header>
       <div className="diet-popup__body">
-        <p className="body-m">Use {instanceName} on your website.</p>
+        <p className="body-m">Use {productName} on your website.</p>
         {complete && actions ? (
-          <div className="roma-widget-code-list">
+          <div className="roma-public-code-list">
             {COPY_OPTIONS.map((option) => (
-              <section className="roma-widget-code-item" key={option.key}>
-                <div className="roma-widget-code-item__header">
+              <section className="roma-public-code-item" key={option.key}>
+                <div className="roma-public-code-item__header">
                   <h3 className="label-s">{option.label}</h3>
                   <button
                     className="diet-btn-txt"
@@ -94,7 +94,7 @@ export function WidgetCopyCodeDialog({
                     <span className="diet-btn-txt__label body-s">Copy</span>
                   </button>
                 </div>
-                <pre className="roma-widget-code-value body-s"><code>{actions[option.key]}</code></pre>
+                <pre className="roma-public-code-value body-s"><code>{actions[option.key]}</code></pre>
               </section>
             ))}
           </div>

@@ -268,6 +268,13 @@ that operation succeeds. Nothing recompiles automatically. Unpublish preserves
 the flag and the direct Page root; Delete accepts only an unpublished Page.
 A published Needs-update Page keeps serving its last saved files.
 
+Roma's Page Builder is the authenticated editor for this source. It reuses
+Bob's TopDrawer/ToolDrawer/Workspace shell and Dieter controls but owns only
+Page composition and Page metadata. A new draft has no remote identity before
+Save. Editing a referenced Instance opens the existing Bob editor over the
+still-mounted Page draft; returning to the Page does not create a second Widget
+editor or remote draft.
+
 The stable public URL redirects without shared caching to one saved exact
 locale chosen from browser language, Cloudflare country-region hints, and the
 Page base locale:

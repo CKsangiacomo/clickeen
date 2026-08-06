@@ -1,3 +1,5 @@
+import type { AccountPage } from '@clickeen/ck-contracts/pages';
+
 export type PageOperationErrorKind =
   | 'VALIDATION'
   | 'DENY'
@@ -21,6 +23,12 @@ export type PageServingOverlays = Record<
 export type PageServeState = {
   published: boolean;
   needsUpdate: boolean;
+};
+
+export type AccountPageInventoryFact = {
+  source: AccountPage;
+  serveState: PageServeState;
+  savedLocales: string[];
 };
 
 export class PageOperationError extends Error {

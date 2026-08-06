@@ -22,6 +22,7 @@ Legend: ✅ exported from `index.ts` · Direct host import · ⊘ CSS/HTML only.
 | atoms | `toggle` | native checkbox behavior | ⊘ |
 | atoms | `slider` | — (no `.ts`) | ⊘ |
 | inputs | `textfield` | `hydrateTextfield` | ✅ |
+| inputs | `textarea` | `hydrateTextarea`, plain text in a Popover | ✅ |
 | inputs | `valuefield` | `hydrateValuefield` | ✅ |
 | inputs | `textedit` | `hydrateTextedit` (largest; 7 `.ts` modules) | ✅ |
 | choosers | `choice-tiles` | `hydrateChoiceTiles`, `string` | ✅ |
@@ -77,9 +78,10 @@ contract.
 ## Application Inputs And Tables
 
 Applications compose forms from Dieter's actual input contracts. Single-line
-text uses `textfield`, immediate choices use `dropdown-actions`, and multiline
-content uses `textedit`. Apps retain labels, validation copy, values, layout,
-and product behavior; they do not create a parallel generic field family.
+text uses `textfield`, plain multiline text uses `textarea`, immediate choices
+use `dropdown-actions`, and formatted multiline content uses `textedit`. Apps
+retain labels, validation copy, values, layout, and product behavior; they do
+not create a parallel generic field family.
 
 Dieter Table owns width, alignment, borders, base spacing, and horizontal
 overflow. Roma owns table data and state. DevStudio retains policy-specific
@@ -138,5 +140,5 @@ Current inventory detail: Dieter components are source modules consumed
 directly by Bob, Roma, and DevStudio; there is no runtime component manifest.
 `shared/` contains helpers and is not a rendered component.
 `command-activity` and `operational-table` are absent from current tracked
-source. DevStudio generates 24 source-backed component pages. Historical 126
+source. DevStudio generates 25 source-backed component pages. Historical 126
 audits remain point-in-time evidence.

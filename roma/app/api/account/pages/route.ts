@@ -1,6 +1,4 @@
 import { isRecord } from '@clickeen/ck-contracts';
-import type { AccountPageSource } from '@clickeen/ck-contracts/pages';
-import { createCompactPageId } from '@clickeen/ck-contracts/overlay-identity';
 import { NextRequest, NextResponse } from 'next/server';
 import { parseAccountPageSource } from '@roma/lib/account-page-contract';
 import { resolvePageProductPolicy } from '@roma/lib/account-page-policy';
@@ -16,8 +14,6 @@ import { resolveCurrentAccountRouteContext, withSession } from '../_lib/current-
 
 export const runtime = 'edge';
 
-const CREATE_KEYS = ['displayName', 'isTemplate', 'values', 'robots', 'placements'] as const;
-
 function parseGeneratedFiles(raw: unknown): PageGeneratedFiles | null {
   if (!isRecord(raw)) return null;
   return typeof raw.indexHtml === 'string' &&
@@ -25,27 +21,6 @@ function parseGeneratedFiles(raw: unknown): PageGeneratedFiles | null {
     typeof raw.runtimeJs === 'string'
     ? { indexHtml: raw.indexHtml, stylesCss: raw.stylesCss, runtimeJs: raw.runtimeJs }
     : null;
-}
-
-function parseOrdinaryPageDraft(raw: unknown): Omit<Extract<AccountPageSource, { isTemplate: false }>, 'pageId' | 'baseLocale'> | null {
-  if (!isRecord(raw) || Object.keys(raw).length !== CREATE_KEYS.length || !CREATE_KEYS.every((key) => Object.prototype.hasOwnProperty.call(raw, key))) return null;
-  const source = parseAccountPageSource({
-    pageId: '0000000000',
-    displayName: raw.displayName,
-    isTemplate: raw.isTemplate,
-    baseLocale: 'en',
-    values: raw.values,
-    robots: raw.robots,
-    placements: raw.placements,
-  });
-  if (!source || source.isTemplate) return null;
-  return {
-    displayName: source.displayName,
-    isTemplate: false,
-    values: source.values,
-    robots: source.robots,
-    placements: source.placements,
-  };
 }
 
 export async function GET(request: NextRequest) {
@@ -59,7 +34,7 @@ export async function GET(request: NextRequest) {
   return withSession(
     request,
     result.ok
-      ? NextResponse.json({ accountId: result.value.accountId, sources: result.value.sources })
+      ? NextResponse.json({ accountId: result.value.accountId, pages: result.value.pages })
       : NextResponse.json({ error: result.error }, { status: result.status }),
     current.value.setCookies,
   );
@@ -76,10 +51,10 @@ export async function POST(request: NextRequest) {
   if (!bodyResult.ok) {
     return withSession(request, NextResponse.json({ error: bodyResult.error }, { status: bodyResult.status }), current.value.setCookies);
   }
-  const draft = parseOrdinaryPageDraft(bodyResult.payload?.source);
+  const source = parseAccountPageSource(bodyResult.payload?.source);
   const files = parseGeneratedFiles(bodyResult.payload?.files);
   const overlaysJson = bodyResult.payload?.overlaysJson;
-  if (!draft || !files || !isRecord(overlaysJson)) {
+  if (!source || source.isTemplate || !files || !isRecord(overlaysJson)) {
     return withSession(request, NextResponse.json({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.page.sourceInvalid' } }, { status: 422 }), current.value.setCookies);
   }
 
@@ -111,12 +86,16 @@ export async function POST(request: NextRequest) {
       error: { kind: 'UPSTREAM_UNAVAILABLE', reasonKey: 'coreui.errors.auth.contextUnavailable', detail: locales.detail },
     }, { status: locales.status }), current.value.setCookies);
   }
-  const source: AccountPageSource = {
-    pageId: createCompactPageId(),
-    ...draft,
-    isTemplate: false,
-    baseLocale: locales.localePolicy.baseLocale,
-  };
+  if (source.baseLocale !== locales.localePolicy.baseLocale) {
+    return withSession(
+      request,
+      NextResponse.json(
+        { error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.page.sourceInvalid' } },
+        { status: 422 },
+      ),
+      current.value.setCookies,
+    );
+  }
   const created = await createAccountPage({
     accountId,
     source,

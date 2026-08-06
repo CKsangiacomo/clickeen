@@ -121,6 +121,9 @@ export function TopDrawer({
               {meta.publishStatus === 'published' ? 'Published' : 'Unpublished'}
             </span>
           ) : null}
+          {meta?.contextMessage ? (
+            <span className="topdrawer-context-message body-xs">{meta.contextMessage}</span>
+          ) : null}
         </div>
       </div>
 

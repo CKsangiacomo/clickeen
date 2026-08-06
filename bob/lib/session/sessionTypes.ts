@@ -55,6 +55,7 @@ export type SessionMeta = {
   publishStatus?: 'published' | 'unpublished';
   label?: string;
   returnLabel?: string;
+  contextMessage?: string;
   publicActions: PublicActions | null;
   fontLibrary: AccountFontLibrary;
   translationSetup?: TranslationSetup | null;
@@ -93,6 +94,7 @@ export type EditorOpenMessage = {
   publishStatus?: 'published' | 'unpublished';
   label?: string;
   returnLabel?: string;
+  contextMessage?: string;
   publicActions?: PublicActions | null;
   copilot?: CopilotRuntimeUi;
   translationSetup?: TranslationSetup | null;

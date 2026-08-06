@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
-import { buildWidgetPublicActions } from '../lib/public-widget-actions';
+import { buildPagePublicActions, buildWidgetPublicActions } from '../lib/public-actions';
 
 async function readRoute(relativePath: string): Promise<string> {
   return readFile(new URL(`../${relativePath}`, import.meta.url), 'utf8');
@@ -94,7 +94,8 @@ async function testBuilderUsesBobTopDrawerAsItsOnlyEditorChrome(): Promise<void>
   const bobBoot = await readFile(new URL('../../bob/lib/session/useSessionBoot.ts', import.meta.url), 'utf8');
   const bobSessionTypes = await readFile(new URL('../../bob/lib/session/sessionTypes.ts', import.meta.url), 'utf8');
   const bobCss = await readFile(new URL('../../bob/app/bob_app.css', import.meta.url), 'utf8');
-  const copyDialog = await readRoute('components/widget-copy-code-dialog.tsx');
+  const copyDialog = await readRoute('components/public-code-dialog.tsx');
+  const publicActions = await readRoute('lib/public-actions.ts');
   const clipboard = await readRoute('lib/copy-to-clipboard.ts');
 
   assert.doesNotMatch(builderRoute, /showHeader/);
@@ -109,7 +110,7 @@ async function testBuilderUsesBobTopDrawerAsItsOnlyEditorChrome(): Promise<void>
   assert.match(builderSource, /publicActions: nextPublicActions/);
   assert.match(builderSource, /data\.type === 'bob:host-action'/);
   assert.match(builderSource, /data\.action === 'copy-code'/);
-  assert.match(builderSource, /<WidgetCopyCodeDialog/);
+  assert.match(builderSource, /<PublicCodeDialog/);
   assert.doesNotMatch(builderSource, />Copy URL</);
   assert.doesNotMatch(builderSource, />Copy embed</);
   assert.doesNotMatch(builderSource, />Copy script</);
@@ -138,26 +139,63 @@ async function testBuilderUsesBobTopDrawerAsItsOnlyEditorChrome(): Promise<void>
   assert.match(copyDialog, /aria-label=\{`Copy \$\{option\.label\}`\}/);
   assert.match(copyDialog, /\{ key: 'publicUrl', label: 'Public URL' \}/);
   assert.match(copyDialog, /\{ key: 'clickeenJsSnippet', label: 'Installation code' \}/);
+  assert.match(copyDialog, /productName: string/);
+  assert.doesNotMatch(copyDialog, /instanceName|WidgetCopyCodeDialog/);
   assert.doesNotMatch(copyDialog, /iframeSnippet|scriptSnippet|Widget URL|Embed code|Script code/);
   assert.doesNotMatch(copyDialog, /data-size="large"/);
   assert.match(copyDialog, /request !== copyRequestRef\.current/);
+  assert.match(publicActions, /export type PublicActions/);
+  assert.match(publicActions, /export function buildWidgetPublicActions/);
+  assert.match(publicActions, /export function buildPagePublicActions/);
+  assert.doesNotMatch(publicActions, /iframe|runtime\.js|clickeen\.com/);
   assert.match(clipboard, /finally \{\s+element\?\.remove\(\);/);
 }
 
-function testRomaOwnsExactPublicWidgetActions(): void {
-  const actions = buildWidgetPublicActions({
+function testRomaOwnsExactPublicInstallActions(): void {
+  const widgetActions = buildWidgetPublicActions({
     accountPublicId: 'CLICKEEN',
     instanceId: 'ABC123',
     baseUrl: 'https://dev.clk.live/',
   });
-  assert.equal(actions.publicUrl, 'https://dev.clk.live/CLICKEEN/ABC123');
+  assert.equal(widgetActions.publicUrl, 'https://dev.clk.live/CLICKEEN/ABC123');
   assert.equal(
-    actions.clickeenJsSnippet,
+    widgetActions.clickeenJsSnippet,
     '<script\n  src="https://dev.clk.live/clickeen.js"\n  data-clickeen="https://dev.clk.live/CLICKEEN/ABC123"\n  defer\n></script>',
   );
-  assert.doesNotMatch(actions.clickeenJsSnippet, /iframe|runtime\.js|async/);
+  assert.doesNotMatch(widgetActions.clickeenJsSnippet, /iframe|runtime\.js|async/);
+
+  const pageActions = buildPagePublicActions({
+    accountPublicId: 'CLICKEEN',
+    pageId: 'PAGE123456',
+    baseUrl: 'https://dev.clk.live/',
+  });
+  assert.equal(pageActions.publicUrl, 'https://dev.clk.live/CLICKEEN/pages/PAGE123456');
+  assert.equal(
+    pageActions.clickeenJsSnippet,
+    '<script\n  src="https://dev.clk.live/clickeen.js"\n  data-clickeen="https://dev.clk.live/CLICKEEN/pages/PAGE123456"\n  defer\n></script>',
+  );
+  assert.doesNotMatch(pageActions.clickeenJsSnippet, /iframe|runtime\.js|async/);
+
+  const encodedWidgetActions = buildWidgetPublicActions({
+    accountPublicId: ' CLICKEEN ',
+    instanceId: ' A/B ',
+    baseUrl: 'https://dev.clk.live/',
+  });
+  assert.equal(encodedWidgetActions.publicUrl, 'https://dev.clk.live/CLICKEEN/A%2FB');
   assert.throws(
-    () => buildWidgetPublicActions({ accountPublicId: '', instanceId: 'ABC123', baseUrl: 'https://dev.clk.live' }),
+    () => buildWidgetPublicActions({
+      accountPublicId: '',
+      instanceId: 'ABC123',
+      baseUrl: 'https://dev.clk.live',
+    }),
+    /coreui\.errors\.payload\.invalid/,
+  );
+  assert.throws(
+    () => buildPagePublicActions({
+      accountPublicId: 'CLICKEEN',
+      pageId: '',
+      baseUrl: 'https://dev.clk.live',
+    }),
     /coreui\.errors\.payload\.invalid/,
   );
 }
@@ -210,7 +248,7 @@ async function testWidgetsListComposition(): Promise<void> {
   assert.match(source, /className="roma-widget-publish-actions"/);
   assert.match(source, /instance\.status === 'published' \? \(/);
   assert.match(source, />Copy code<\/span>/);
-  assert.match(source, /<WidgetCopyCodeDialog/);
+  assert.match(source, /<PublicCodeDialog/);
   assert.match(source, /<span className="body-xs roma-widget-instance-id">\{instance\.instanceId\}<\/span>/);
   assert.match(romaCss, /\.roma-widget-publish-actions \{[\s\S]*justify-content: flex-start;/);
   assert.match(source, /className="diet-popover roma-widget-actions-popover"/);
@@ -333,7 +371,7 @@ async function testDieterLayoutTableAndPopupConsumption(): Promise<void> {
     'components/roma-upsell-dialog.tsx',
     'components/assets-domain.tsx',
     'components/widgets-domain.tsx',
-    'components/widget-copy-code-dialog.tsx',
+    'components/public-code-dialog.tsx',
   ]) {
     const source = await readRoute(relativePath);
     assert.match(source, /className="diet-popup"/, `${relativePath} must consume Dieter Popup`);
@@ -355,8 +393,8 @@ async function run(): Promise<void> {
   console.log('PASS Bob upsell CTA opens the Roma scaffold without discarding Builder work');
   await testBuilderUsesBobTopDrawerAsItsOnlyEditorChrome();
   console.log('PASS active Builder owns full-canvas chrome and preserves initial-only preview readiness');
-  testRomaOwnsExactPublicWidgetActions();
-  console.log('PASS Roma owns exact public widget actions for Widgets and Builder');
+  testRomaOwnsExactPublicInstallActions();
+  console.log('PASS Roma owns exact shared public install actions for Widgets and Pages');
   await testWidgetsListComposition();
   console.log('PASS Widgets separates the catalog from the account-instance inventory');
   await testDieterLayoutTableAndPopupConsumption();

@@ -27,6 +27,7 @@ import { normalizePageId } from './ids';
 import { purgePagePublicCache } from './cache';
 import {
   PageOperationError,
+  type AccountPageInventoryFact,
   type PageGeneratedFiles,
   type PageServeState,
   type PageServingOverlays,
@@ -206,6 +207,31 @@ export async function listAccountPageSources(args: {
   return { accountId, sources };
 }
 
+export async function listAccountPageInventory(args: {
+  env: Env;
+  accountId: string;
+}): Promise<{ accountId: string; sources: AccountPageSource[]; pages: AccountPageInventoryFact[] }> {
+  const listed = await listAccountPageSources(args);
+  const pages = await Promise.all(
+    listed.sources.flatMap((source) => source.isTemplate ? [] : [
+      (async (): Promise<AccountPageInventoryFact> => {
+        const runtime = await readRequiredPageRuntime({
+          env: args.env,
+          accountId: listed.accountId,
+          pageId: source.pageId,
+          source,
+        });
+        return {
+          source,
+          serveState: runtime.serveState,
+          savedLocales: [source.baseLocale, ...Object.keys(runtime.overlaysJson)],
+        };
+      })(),
+    ]),
+  );
+  return { accountId: listed.accountId, sources: listed.sources, pages };
+}
+
 export async function createAccountPageSource(args: {
   env: Env;
   accountId: string;
@@ -232,6 +258,28 @@ export async function createAccountPageSource(args: {
   await putJson(args.env, accountPageServeStateKey(accountId, pageId), serveState);
   await putJson(args.env, accountPageSourceKey(accountId, pageId), source);
   return { source, files, overlaysJson, serveState };
+}
+
+export async function renameAccountPage(args: {
+  env: Env;
+  accountId: string;
+  pageId: string;
+  displayName: string;
+}): Promise<{ pageId: string; displayName: string }> {
+  const accountId = assertAccountId(args.accountId);
+  const pageId = normalizePageId(args.pageId);
+  const displayName = typeof args.displayName === 'string' ? args.displayName : '';
+  if (!pageId || !displayName || displayName !== displayName.trim() || displayName.length > 120) {
+    throw new PageOperationError({ kind: 'VALIDATION', reasonKey: 'tokyo.errors.page.sourceInvalid' });
+  }
+  const source = await readAccountPageSource({ env: args.env, accountId, pageId });
+  if (!source || source.isTemplate) {
+    throw new PageOperationError({ kind: 'NOT_FOUND', reasonKey: 'tokyo.errors.page.notFound' });
+  }
+  const renamed = parseAccountPageSource({ ...source, displayName }, pageId);
+  if (!renamed || renamed.isTemplate) sourceInvalid([accountPageSourceKey(accountId, pageId)]);
+  await putJson(args.env, accountPageSourceKey(accountId, pageId), renamed);
+  return { pageId, displayName: renamed.displayName };
 }
 
 export async function saveAccountPageSource(args: {

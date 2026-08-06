@@ -541,6 +541,15 @@ Unpublished instances expose no live actions. There is no public iframe option
 and no installer that loads the Instance's `runtime.js` directly. Bob's
 sandboxed editor-preview iframe remains separate from public installation.
 
+Roma Page Builder may host this same Bob editor as a slide-in layer for one
+saved placement. Embedded hosting changes no Widget editing, generation, Save,
+translation, asset, or unsaved-work authority. Roma supplies Page-context copy
+and one **Done, go back to the page** host action; Bob returns through that
+callback only after its normal unsaved-work interaction allows it. The mounted
+Page draft stays in Roma browser memory. A successful Bob Save tells the host
+to refresh that placement and require explicit Page Update; Bob never writes or
+regenerates the Page.
+
 ## Account Assets
 
 Bob uses account assets while editing through Roma.

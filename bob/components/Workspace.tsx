@@ -5,9 +5,9 @@ import {
   type ResolvedAccountAsset,
 } from '@clickeen/ck-contracts';
 import { generateInstance } from '@clickeen/ck-web-code-generator';
-import type { AccountFontLibrary, RuntimeTypographyData } from '@clickeen/widget-shell';
 import type { InstancePublicPackage } from '../lib/session/sessionTypes';
 import { useWidgetSession, useWidgetSessionChrome } from '../lib/session/useWidgetSession';
+import { buildRuntimeTypographyData, collectFontAssetRefs } from '../lib/web-code-context';
 import { dieterIconStyle } from './dieterIcon';
 
 const BLOCKED_SWITCHER_COPY =
@@ -24,49 +24,6 @@ export function shouldBlockSavedTranslationPreview(args: {
     Boolean(args.requestedLocale) &&
     args.requestedLocale !== args.baseLocale &&
     (args.loading || Boolean(args.error));
-}
-
-function collectFontAssetRefs(fontLibrary: AccountFontLibrary | null): string[] {
-  if (!fontLibrary) return [];
-  const refs = new Set<string>();
-  Object.values(fontLibrary.fonts).forEach((record) => {
-    if (record.source === 'account-asset') refs.add(record.assetRef);
-  });
-  return Array.from(refs);
-}
-
-function buildPreviewTypographyData(args: {
-  fontLibrary: AccountFontLibrary | null;
-  resolvedAssets: Map<string, ResolvedAccountAsset>;
-}): { ok: true; data: RuntimeTypographyData } | { ok: false; error: string | null } {
-  if (!args.fontLibrary) return { ok: false, error: 'Missing preview font library' };
-  const curatedFonts: RuntimeTypographyData['curatedFonts'] = {};
-  for (const [family, record] of Object.entries(args.fontLibrary.fonts)) {
-    if (record.source === 'google') {
-      curatedFonts[family] = {
-        source: 'google',
-        spec: record.spec,
-        familyClass: record.familyClass,
-        weights: record.weights,
-        styles: record.styles,
-      };
-      continue;
-    }
-    const resolved = args.resolvedAssets.get(record.assetRef);
-    if (!resolved) return { ok: false, error: null };
-    if (resolved.assetType !== 'font' || resolved.contentType !== record.contentType) {
-      return { ok: false, error: 'Failed to resolve preview font assets' };
-    }
-    curatedFonts[family] = {
-      source: 'account-asset',
-      url: resolved.url,
-      contentType: record.contentType,
-      familyClass: record.familyClass,
-      weights: record.weights,
-      styles: record.styles,
-    };
-  }
-  return { ok: true, data: { curatedFonts } };
 }
 
 function buildPreviewDocument(
@@ -166,7 +123,7 @@ export function Workspace({
   );
   const mediaPreviewStateReady = mediaAssets.ok && !unresolvedMediaAssetRefs.length;
   const previewTypography = useMemo(
-    () => buildPreviewTypographyData({ fontLibrary, resolvedAssets }),
+    () => buildRuntimeTypographyData({ fontLibrary, resolvedAssets }),
     [fontLibrary, resolvedAssets],
   );
   const previewTypographyData = previewTypography.ok ? previewTypography.data : null;

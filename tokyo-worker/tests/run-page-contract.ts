@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
 import {
   isPageLocale,
   parseAccountPageSource,
@@ -9,9 +10,13 @@ import {
 import {
   createAccountPageSource,
   deleteAccountPageSource,
+  listAccountPageInventory,
+  listAccountPageSources,
   markPagesReferencingInstanceNeedsUpdate,
   publishAccountPage,
   readAccountPage,
+  readAccountPageLocaleOverlay,
+  renameAccountPage,
   saveAccountPageSource,
   unpublishAccountPage,
   writeAccountPageLocaleOverlay,
@@ -207,6 +212,42 @@ assert.equal(store.objects.get(`${pageRoot}/index.html`)?.body, files.indexHtml)
 assert.equal(store.objects.get(`${pageRoot}/index.html`)?.httpMetadata?.contentType, 'text/html; charset=utf-8');
 assert.deepEqual(JSON.parse(store.objects.get(`${pageRoot}/serve-state.json`)?.body ?? 'null'), { published: false, needsUpdate: false });
 assert.deepEqual(await readAccountPage({ env: store.env, accountId, pageId: source.pageId }), created);
+assert.deepEqual(await listAccountPageInventory({ env: store.env, accountId }), {
+  accountId,
+  sources: [source],
+  pages: [{
+    source,
+    serveState: { published: false, needsUpdate: false },
+    savedLocales: ['en', 'it'],
+  }],
+});
+
+const unchangedArtifacts = new Map(
+  [...store.objects.entries()].filter(([key]) => key.startsWith(`${pageRoot}/`) && key !== `${pageRoot}/source.json`),
+);
+assert.deepEqual(
+  await renameAccountPage({
+    env: store.env,
+    accountId,
+    pageId: source.pageId,
+    displayName: 'Renamed summer page',
+  }),
+  { pageId: source.pageId, displayName: 'Renamed summer page' },
+);
+assert.deepEqual(
+  await readAccountPage({ env: store.env, accountId, pageId: source.pageId }),
+  { ...created, source: { ...source, displayName: 'Renamed summer page' } },
+);
+assert.deepEqual(
+  new Map([...store.objects.entries()].filter(([key]) => key.startsWith(`${pageRoot}/`) && key !== `${pageRoot}/source.json`)),
+  unchangedArtifacts,
+  'rename must change only source.json and preserve generated files, overlays, and serving state',
+);
+await assert.rejects(
+  renameAccountPage({ env: store.env, accountId, pageId: source.pageId, displayName: ' silently trimmed ' }),
+  (error: unknown) => error instanceof PageOperationError && error.kind === 'VALIDATION',
+  'rename must reject non-exact display names instead of silently normalizing them',
+);
 
 assert.deepEqual(await publishAccountPage({ env: store.env, accountId, pageId: source.pageId }), { published: true, changed: true });
 assert.ok(purgedFiles.includes(`https://dev.clk.live/${accountId}/pages/${source.pageId}/it`));
@@ -334,6 +375,11 @@ await writeAccountPageLocaleOverlay({
   overlay: { values: { title: 'Estate', description: 'Una pagina estiva', socialTitle: 'Estate social' } },
 });
 assert.deepEqual(
+  await readAccountPageLocaleOverlay({ env: store.env, accountId, pageId: source.pageId, locale: 'it' }),
+  { values: { title: 'Estate', description: 'Una pagina estiva', socialTitle: 'Estate social' } },
+  'the customer-authorized Page overlay read must return the exact saved metadata overlay',
+);
+assert.deepEqual(
   JSON.parse(store.objects.get(`${pageRoot}/serve-state.json`)?.body ?? 'null'),
   { published: true, needsUpdate: false },
   'Page-owned locale edits must not change Page currency',
@@ -394,11 +440,30 @@ assert.equal(store.objects.has(retrySourceKey), false, 'failed create must not e
 await createAccountPageSource({ env: store.env, accountId, pageId: retryPageId, source: retrySource, files, overlaysJson });
 
 store.objects.delete(`accounts/${accountId}/pages/${retryPageId}/runtime.js`);
+assert.ok(
+  (await listAccountPageSources({ env: store.env, accountId })).sources.some((entry) => entry.pageId === retryPageId),
+  'the source-only Page marker scan must remain independent of ordinary Page runtime artifacts',
+);
+await assert.rejects(
+  listAccountPageInventory({ env: store.env, accountId }),
+  (error: unknown) => error instanceof PageOperationError && error.reasonKey === 'tokyo.errors.page.sourceInvalid',
+  'ordinary Page inventory must fail on corrupt runtime truth instead of omitting or healing it',
+);
 await assert.rejects(
   readAccountPage({ env: store.env, accountId, pageId: retryPageId }),
   (error: unknown) => error instanceof PageOperationError && error.reasonKey === 'tokyo.errors.page.sourceInvalid',
   'missing runtime truth must be corruption, not absence',
 );
+
+const internalRoutes = await readFile(
+  new URL('../src/routes/internal-page-routes.ts', import.meta.url),
+  'utf8',
+);
+assert.match(internalRoutes, /\/__internal\\\/pages\\\/\(\[\^\/\]\+\)\\\/translations\\\/\(\[\^\/\]\+\)/);
+assert.match(internalRoutes, /req\.method === 'GET' \? 'viewer' : 'editor'/);
+assert.match(internalRoutes, /\/__internal\\\/pages\\\/\(\[\^\/\]\+\)\\\/rename/);
+assert.match(internalRoutes, /listAccountPageInventory\(\{ env, accountId \}\)/);
+assert.match(internalRoutes, /sources: inventory\.sources, pages: inventory\.pages/);
 
 console.log('Tokyo Page contract verification passed.');
 globalThis.fetch = originalFetch;

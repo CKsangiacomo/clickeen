@@ -2,13 +2,16 @@ import { isRecord } from '@clickeen/ck-contracts';
 import {
   createAccountPageSource,
   deleteAccountPageSource,
-  listAccountPageSources,
+  listAccountPageInventory,
   normalizePageId,
   PageOperationError,
   publishAccountPage,
+  readAccountPageLocaleOverlay,
   readAccountPage,
+  renameAccountPage,
   saveAccountPageSource,
   unpublishAccountPage,
+  writeAccountPageLocaleOverlay,
 } from '../domains/pages';
 import { json } from '../http';
 import {
@@ -55,8 +58,8 @@ export async function tryHandleInternalPageRoutes(args: TokyoRouteArgs): Promise
     const authError = await authorizeAccountInstanceControlRequest({ req, env, accountId, minRole: 'viewer' });
     if (authError) return respond(authError);
     try {
-      const pages = await listAccountPageSources({ env, accountId });
-      return respond(json({ ok: true, accountId, sources: pages.sources }));
+      const inventory = await listAccountPageInventory({ env, accountId });
+      return respond(json({ ok: true, accountId, sources: inventory.sources, pages: inventory.pages }));
     } catch (error) {
       return respond(pageErrorResponse(error));
     }
@@ -87,6 +90,34 @@ export async function tryHandleInternalPageRoutes(args: TokyoRouteArgs): Promise
     }
   }
 
+  const renameMatch = pathname.match(/^\/__internal\/pages\/([^/]+)\/rename$/);
+  if (renameMatch) {
+    const accountId = normalizeAccountPublicId(req.headers.get('x-account-id'));
+    const pageId = normalizePageId(decodeURIComponent(renameMatch[1] || ''));
+    if (!accountId || !pageId) {
+      return respondValidation(respond, 'tokyo.errors.page.invalidPageId', accountId ? 422 : 403);
+    }
+    if (req.method !== 'POST') return respondMethodNotAllowed(respond);
+    const authError = await authorizeAccountInstanceControlRequest({ req, env, accountId, minRole: 'editor' });
+    if (authError) return respond(authError);
+    const body = await readInternalProductJsonBody({
+      req,
+      env,
+      boundary: 'internal.page.rename.body',
+      accountId,
+    });
+    const displayName = isRecord(body) && typeof body.displayName === 'string' ? body.displayName : '';
+    if (!displayName || displayName !== displayName.trim() || displayName.length > 120) {
+      return respondValidation(respond, 'tokyo.errors.page.sourceInvalid');
+    }
+    try {
+      const renamed = await renameAccountPage({ env, accountId, pageId, displayName });
+      return respond(json({ ok: true, accountId, ...renamed }));
+    } catch (error) {
+      return respond(pageErrorResponse(error));
+    }
+  }
+
   const transitionMatch = pathname.match(/^\/__internal\/pages\/([^/]+)\/(publish|unpublish)$/);
   if (transitionMatch) {
     const accountId = normalizeAccountPublicId(req.headers.get('x-account-id'));
@@ -100,6 +131,49 @@ export async function tryHandleInternalPageRoutes(args: TokyoRouteArgs): Promise
         ? await publishAccountPage({ env, accountId, pageId })
         : await unpublishAccountPage({ env, accountId, pageId });
       return respond(json({ ok: true, accountId, pageId, ...transition }));
+    } catch (error) {
+      return respond(pageErrorResponse(error));
+    }
+  }
+
+  const localeOverlayMatch = pathname.match(/^\/__internal\/pages\/([^/]+)\/translations\/([^/]+)$/);
+  if (localeOverlayMatch) {
+    const accountId = normalizeAccountPublicId(req.headers.get('x-account-id'));
+    const pageId = normalizePageId(decodeURIComponent(localeOverlayMatch[1] || ''));
+    const locale = String(decodeURIComponent(localeOverlayMatch[2] || ''));
+    if (!accountId || !pageId || !locale || locale !== locale.trim()) {
+      return respondValidation(respond, 'tokyo.errors.page.overlayInvalid', accountId ? 422 : 403);
+    }
+    if (req.method !== 'GET' && req.method !== 'PUT') return respondMethodNotAllowed(respond);
+    const authError = await authorizeAccountInstanceControlRequest({
+      req,
+      env,
+      accountId,
+      minRole: req.method === 'GET' ? 'viewer' : 'editor',
+    });
+    if (authError) return respond(authError);
+    try {
+      if (req.method === 'GET') {
+        const overlay = await readAccountPageLocaleOverlay({ env, accountId, pageId, locale });
+        if (!overlay) {
+          throw new PageOperationError({ kind: 'NOT_FOUND', reasonKey: 'tokyo.errors.page.overlayNotFound' });
+        }
+        return respond(json({ ok: true, accountId, pageId, locale, overlay }));
+      }
+      const body = await readInternalProductJsonBody({
+        req,
+        env,
+        boundary: 'internal.page.translation.body',
+        accountId,
+      });
+      const saved = await writeAccountPageLocaleOverlay({
+        env,
+        accountId,
+        pageId,
+        locale,
+        overlay: body,
+      });
+      return respond(json({ ok: true, accountId, pageId, locale, overlay: saved.overlay }));
     } catch (error) {
       return respond(pageErrorResponse(error));
     }

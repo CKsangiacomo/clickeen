@@ -176,6 +176,13 @@ same account.
 
 Page source is an ordered document of saved Instance references. It does not
 duplicate child Instance source. First Save creates a Current unpublished Page.
+The account Page inventory returns each ordinary Page's exact source, stored
+serve state, and saved output locales derived from the source base locale and
+root `overlays.json`; the existing source-only listing authority remains the
+marker-scan input. One customer-authorized Page metadata overlay is read or
+written at `overlays/locales/{locale}.json`; that write preserves serving state.
+Rename changes only `source.json.displayName` and leaves every other Page
+artifact unchanged.
 Every existing Instance Save and Instance locale-overlay write scans the same
 account's Page sources and sets `needsUpdate: true` only on ordinary Pages that
 reference that Instance. The scan reads only Page source and serving state; it
@@ -337,9 +344,11 @@ Current internal route families:
 | `/__internal/instances/{instanceId}/package` | `GET` | read generated package metadata/files where supported |
 | `/__internal/instances/{instanceId}/translations` | `GET` | list saved translated locale value files |
 | `/__internal/instances/{instanceId}/translations/{locale}` | `GET`, `PUT`, `DELETE` | read/write/delete one translated value file |
-| `/__internal/accounts/{accountPublicId}/pages` | `GET` | list account pages |
+| `/__internal/accounts/{accountPublicId}/pages` | `GET` | list Page sources plus ordinary Page source/serve-state/saved-output-locale inventory facts |
 | `/__internal/pages` | `POST` | create an unpublished Page from exact source/files/root serving overlays |
 | `/__internal/pages/{pageId}` | `GET`, `PUT`, `DELETE` | read, ordinary-Save or explicit-Update the complete direct Page root, or delete an unpublished Page |
+| `/__internal/pages/{pageId}/rename` | `POST` | change only `source.json.displayName` |
+| `/__internal/pages/{pageId}/translations/{locale}` | `GET`, `PUT` | read/write one customer-authorized Page metadata overlay while preserving serving state |
 | `/__internal/pages/{pageId}/{publish|unpublish}` | `POST` | change Page publication state without generation or translation |
 | `/__internal/translations/{instance|page}/{targetId}/{locale}` | `PUT` | Translation Agent write bound to the exact granted target and locale |
 | `/__internal/accounts/{accountPublicId}/widget-defaults` | `GET`, `POST`, `PUT` | read/create/write account widget defaults |

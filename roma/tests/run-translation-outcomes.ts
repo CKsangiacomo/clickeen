@@ -49,6 +49,9 @@ async function run(): Promise<void> {
                 robots: 'index-follow',
                 placements: [],
               },
+              files: { indexHtml: '<!doctype html>', stylesCss: '', runtimeJs: '' },
+              overlaysJson: {},
+              serveState: { published: false, needsUpdate: false },
             });
           }
           return Response.json({

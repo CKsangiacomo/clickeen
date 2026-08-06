@@ -35,6 +35,12 @@ locale is one separate exact overlay object. Page templates have no
 generated direct files and root `overlays.json` are stored beside authoring
 truth. Root `overlays.json` is the saved exact-locale response input; it is not
 another authoring authority and changes only through Page Save or Update.
+Page Builder reads or replaces one exact Page metadata overlay through
+`GET|PUT /api/account/pages/{pageId}/translations/{locale}`. These
+customer-authorized authoring operations preserve `needsUpdate` and do not
+change root `overlays.json`. Page publish compares that saved output-locale set
+with the current Settings base and active locales and blocks while any required
+locale is absent.
 
 ## Code Authority
 
