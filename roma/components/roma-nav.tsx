@@ -2,7 +2,6 @@ import Image from 'next/image';
 import Link from 'next/link';
 import {
   ROMA_MAIN_DOMAINS,
-  ROMA_PAGES_DOMAINS,
   ROMA_SETTINGS_DOMAINS,
   ROMA_WIDGETS_DOMAINS,
   type RomaDomainDefinition,
@@ -84,9 +83,6 @@ export function RomaNav({ activeDomain }: RomaNavProps) {
         }
         if (domain.key === 'settings') {
           return <RomaNavGroup key={domain.key} label="Settings" domains={ROMA_SETTINGS_DOMAINS} activeDomain={activeDomain} />;
-        }
-        if (domain.key === 'pages') {
-          return <RomaNavGroup key={domain.key} label="Pages" domains={ROMA_PAGES_DOMAINS} activeDomain={activeDomain} />;
         }
         return <RomaNavLink key={domain.key} domain={domain} active={domain.key === activeDomain} />;
       })}

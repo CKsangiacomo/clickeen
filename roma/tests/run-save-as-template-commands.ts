@@ -55,40 +55,8 @@ async function verifyWidgetCommand(): Promise<void> {
   );
 }
 
-async function verifyPageCommand(): Promise<void> {
-  const route = await read('app/api/account/pages/[pageId]/save-as-template/route.ts');
-  const write = 'const created = await createAccountPage({';
-
-  assert.match(route, /minRole: 'editor'/);
-  assert.match(route, /accountId === 'CLICKEEN'/);
-  assert.match(route, /\['catalogPresentation', 'templateName'\]/);
-  assert.match(route, /parseCatalogPresentation\(payload\.catalogPresentation\)/);
-  assert.match(route, /source\.value\.source\.isTemplate \|\| source\.value\.source\.displayName === templateName/);
-  assert.match(route, /resolvePageProductPolicy\(current\.value\.authzPayload, 'save_page'\)/);
-  assert.match(route, /kind: 'UPGRADE_REQUIRED'/);
-  assert.match(route, /gate: 'pages\.max'/);
-  assert.match(route, /action: 'save_page'/);
-  assert.match(route, /status: 402/);
-  assert.doesNotMatch(route, /overlaysJson:|baseLocale:/);
-  assertBefore(route, 'const templateInput = readTemplateInput(body.payload, accountId);', write);
-  assertBefore(route, 'source.value.source.isTemplate || source.value.source.displayName === templateName', write);
-  assertBefore(route, "accountId === 'CLICKEEN' && source.value.source.placements.length > 0", write);
-  assertBefore(route, 'if (access.limit !== null && inventory.value.sources.length >= access.limit)', write);
-  assertBefore(route, 'let templateId = createCompactPageId();', write);
-  assert.match(route, /isTemplate: true,/);
-  assert.match(route, /values: ordinarySource\.values,/);
-  assert.match(route, /robots: ordinarySource\.robots,/);
-  assert.match(route, /placements: ordinarySource\.placements,/);
-  assert.match(route, /\.\.\.\(catalogPresentation \? \{ catalogPresentation \} : \{\}\),/);
-  assert.match(route, /files: source\.value\.files,/);
-  assert.match(route, /source\.value\.source\.pageId !== pageId/);
-  assert.match(route, /while \(templateId === pageId \|\| inventory\.value\.sources\.some/);
-  assert.match(route, /accountId === 'CLICKEEN' && source\.value\.source\.placements\.length > 0/);
-}
-
 async function main(): Promise<void> {
   await verifyWidgetCommand();
-  await verifyPageCommand();
   console.log('Roma Save-as-template command verification passed.');
 }
 

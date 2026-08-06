@@ -6,9 +6,8 @@ async function read(path: string): Promise<string> {
 }
 
 async function main(): Promise<void> {
-  const [widgetRoute, pageRoute, templateList] = await Promise.all([
+  const [widgetRoute, templateList] = await Promise.all([
     read('app/api/account/instances/[instanceId]/route.ts'),
-    read('app/api/account/pages/[pageId]/route.ts'),
     read('app/api/account/widget-templates/route.ts'),
   ]);
 
@@ -24,17 +23,6 @@ assert.match(widgetPatch, /config: source\.value\.config/);
 assert.match(widgetPatch, /content: source\.value\.content/);
 assert.match(widgetPatch, /publicPackage: packageResult\.value\.publicPackage/);
 assert.doesNotMatch(widgetPatch, /materializeAccountInstanceSourceArtifacts|listTokyoWidgetDefinitions/);
-
-const pagePatch = pageRoute.slice(
-  pageRoute.indexOf('export async function PATCH'),
-  pageRoute.indexOf('export async function PUT'),
-);
-assert.match(pagePatch, /accountPublicId !== 'CLICKEEN'/);
-assert.match(pagePatch, /!existing\.value\.source\.isTemplate/);
-assert.match(pagePatch, /source: \{ \.\.\.existing\.value\.source, catalogPresentation \}/);
-assert.match(pagePatch, /files: existing\.value\.files/);
-assert.match(pagePatch, /operation: 'save'/);
-assert.doesNotMatch(pagePatch, /overlaysJson|loadCurrentAccountLocalesState/);
 
 assert.match(templateList, /instance\.catalogPresentation/);
 assert.match(templateList, /template_display_name_missing/);

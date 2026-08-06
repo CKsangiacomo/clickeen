@@ -122,12 +122,6 @@ logoshowcase.appearance -> logo look, opacity, item background, cardwrapper
 logoshowcase.behavior -> random order and carousel behavior
 ```
 
-## Clickeen Pages Usage
-
-Logo Showcase appears in Clickeen Page source as a saved account widget
-instance placement. Uploaded logo assets remain account assets; the widget
-instance stores references and text metadata.
-
 ## Verification
 
 ```bash

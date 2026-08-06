@@ -22,7 +22,6 @@ Legend: ✅ exported from `index.ts` · Direct host import · ⊘ CSS/HTML only.
 | atoms | `toggle` | native checkbox behavior | ⊘ |
 | atoms | `slider` | — (no `.ts`) | ⊘ |
 | inputs | `textfield` | `hydrateTextfield` | ✅ |
-| inputs | `textarea` | `hydrateTextarea`, plain text in a Popover | ✅ |
 | inputs | `valuefield` | `hydrateValuefield` | ✅ |
 | inputs | `textedit` | `hydrateTextedit` (largest; 7 `.ts` modules) | ✅ |
 | choosers | `choice-tiles` | `hydrateChoiceTiles`, `string` | ✅ |
@@ -78,7 +77,7 @@ contract.
 ## Application Inputs And Tables
 
 Applications compose forms from Dieter's actual input contracts. Single-line
-text uses `textfield`, plain multiline text uses `textarea`, immediate choices
+text uses `textfield`, plain multiline text uses `textedit`, immediate choices
 use `dropdown-actions`, and formatted multiline content uses `textedit`. Apps
 retain labels, validation copy, values, layout, and product behavior; they do
 not create a parallel generic field family.

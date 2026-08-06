@@ -81,7 +81,7 @@ Edit action so the preview itself does not masquerade as a control.
 | Dieter Components | Generated/static component showcase pages from Dieter component specs and snippets. |
 | Entitlements | Pages Functions read/write entitlement policy files through GitHub. The same tool also renders AI runtime policy editing backed by `/api/ai-runtime/*`. |
 | LLM Management | Read-only generated visibility into managed model configuration. It is not a runtime API-backed editor. |
-| Catalogs: Widget catalog, Page catalog | Lists and manages the underlying `CLICKEEN` templates that appear read-only in every customer Catalog. Presentation values are edited here; Bob and Page Builder remain the source editors. |
+| Widget catalog | Lists and manages the underlying `CLICKEEN` Widget templates that appear read-only in every customer Widget Catalog. Presentation values are edited here; Bob remains the source editor. |
 
 Foundation and Policy Editor tables use Dieter Table. DevStudio still owns
 their columns, editable cells, data, and mutation behavior. The token editor
@@ -120,9 +120,6 @@ routes.
 | `GET/POST /api/catalog/widgets` | List the `CLICKEEN` Widget templates and ordinary source Instances, or snapshot one source as a complete Catalog template. |
 | `GET/PATCH/DELETE /api/catalog/widgets/{templateId}` | Open, update presentation on, or delete the underlying `CLICKEEN` Widget template through Roma. |
 | `POST /api/catalog/widgets/{templateId}/rename` | Rename the underlying `CLICKEEN` Widget template through Roma. |
-| `GET/POST /api/catalog/pages` | List the `CLICKEEN` Page templates and ordinary source Pages, or snapshot one source as a complete Catalog template. |
-| `GET/PATCH/DELETE /api/catalog/pages/{templateId}` | Open, update presentation on, or delete the underlying `CLICKEEN` Page template through Roma. |
-| `POST /api/catalog/pages/{templateId}/rename` | Rename the underlying `CLICKEEN` Page template through Roma. |
 
 Every source-controlled write uses GitHub SHA conflict checks. A stale write
 fails; it does not overwrite current `main`.
@@ -130,23 +127,23 @@ fails; it does not overwrite current `main`.
 Catalog writes are the deliberate exception because Catalog truth is product
 data, not repository source. DevStudio accepts only the authenticated
 `CLICKEEN` account, forwards the operator's Berlin access token to Roma, and
-uses Roma's normal Widget/Page routes. Roma then uses Tokyo-worker as the only
+uses Roma's normal Widget routes. Roma then uses Tokyo-worker as the only
 storage writer. DevStudio never writes R2 and owns no Catalog database,
 registry, copy, or synchronization process.
 
 ## Catalog Management
 
-The two Catalog views manage the same `CLICKEEN` templates customers read in
-Roma. A Catalog item is not a separate record. It is a Widget or Page template
+The Widget Catalog view manages the same `CLICKEEN` templates customers read in
+Roma. A Catalog item is not a separate record. It is a Widget template
 with four required presentation values: thumbnail asset reference,
 description, category, and display order.
 
-Creating an item starts from an existing ordinary `CLICKEEN` Widget Instance or
-Page. The operator supplies a distinct template name and all four presentation
+Creating an item starts from an existing ordinary `CLICKEEN` Widget Instance.
+The operator supplies a distinct template name and all four presentation
 values, and one normal Save-as-template operation creates the underlying
 template. Missing or invalid presentation blocks the Save. The ordinary source
-is unchanged. DevStudio provides links to create or edit the source in Bob or
-Page Builder; it does not implement another source editor.
+is unchanged. DevStudio provides links to create or edit the source in Bob; it
+does not implement another source editor.
 
 Presentation edits, rename, and delete target the underlying template through
 the normal current-account route. Customer Catalogs remain read-only. They see

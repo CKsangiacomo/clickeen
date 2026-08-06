@@ -107,17 +107,6 @@
         "tier99": 250
       }
     },
-    "pages.max": {
-      "kind": "limit",
-      "values": {
-        "free": 0,
-        "tier1": 0,
-        "tier2": 3,
-        "tier3": 10,
-        "tier4": null,
-        "tier99": null
-      }
-    },
     "uploads.size.max": {
       "kind": "limit",
       "values": {

@@ -19,19 +19,9 @@ assert.equal(
   'Widget root-relative runtime must stay on clk.live',
 );
 assert.equal(
-  new URL('./runtime.js', 'https://clk.live/CLICKEEN/pages/ABCD123456/it').toString(),
-  'https://clk.live/CLICKEEN/pages/ABCD123456/runtime.js',
-  'Page relative runtime must resolve beside the Page package',
-);
-assert.equal(
   new URL('/CLICKEEN/ABCD123456/styles.css', 'https://clk.live/CLICKEEN/ABCD123456').toString(),
   'https://clk.live/CLICKEEN/ABCD123456/styles.css',
   'Widget root-relative stylesheet must stay on clk.live',
-);
-assert.equal(
-  new URL('./styles.css', 'https://clk.live/CLICKEEN/pages/ABCD123456/it').toString(),
-  'https://clk.live/CLICKEEN/pages/ABCD123456/styles.css',
-  'Page relative stylesheet must resolve beside the Page package',
 );
 
 console.log('Public clickeen.js loader contract verification passed.');

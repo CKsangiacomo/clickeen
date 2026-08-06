@@ -22,7 +22,6 @@ import type { CatalogPresentation } from '@clickeen/ck-contracts/catalog';
 import { normalizeStorageId } from './utils';
 import { deletePrefix } from '../storage';
 import { PublicCachePurgeError, purgePublicServingFiles } from '../public-cache';
-import { markPagesReferencingInstanceNeedsUpdate } from '../pages';
 
 export class AccountInstanceTransitionError extends Error {
   status: number;
@@ -360,10 +359,6 @@ export async function saveAccountInstanceTransition(args: {
   if (!existing.value.pointer.isTemplate && live) {
     await purgeClkLiveEntryCache({ env: args.env, accountId, instanceId, locales });
   }
-  if (!existing.value.pointer.isTemplate) {
-    await markPagesReferencingInstanceNeedsUpdate({ env: args.env, accountId, instanceId });
-  }
-
   return {
     ok: true,
     pointer: saved.pointer,

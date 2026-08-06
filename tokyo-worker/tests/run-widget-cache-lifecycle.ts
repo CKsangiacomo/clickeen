@@ -1,6 +1,5 @@
 import assert from 'node:assert/strict';
 import {
-  AccountInstanceTransitionError,
   buildClkLiveEntryCachePurgeFiles,
   createAccountInstanceFromSubmittedSource,
   deleteAccountInstanceTransition,
@@ -13,7 +12,6 @@ import {
   writeAccountInstanceTranslatedLocaleValues,
 } from '../src/domains/account-translations/values';
 import { purgePublicServingFiles } from '../src/domains/public-cache';
-import { createAccountPageSource } from '../src/domains/pages';
 
 const accountId = 'CLICKEEN';
 const instanceId = 'ABCD123456';
@@ -27,17 +25,9 @@ type Stored = { body: string; httpMetadata?: { contentType?: string }; httpEtag:
 
 function createEnv(events: string[]) {
   const objects = new Map<string, Stored>();
-  let failOnceKey: string | null = null;
   return {
-    failOnce(key: string) {
-      failOnceKey = key;
-    },
     TOKYO_R2: {
       async put(key: string, body: string | Uint8Array, options?: { httpMetadata?: { contentType?: string } }) {
-        if (key === failOnceKey) {
-          failOnceKey = null;
-          throw new Error('injected_page_currency_write_failure');
-        }
         const text = typeof body === 'string' ? body : new TextDecoder().decode(body);
         objects.set(key, { body: text, httpMetadata: options?.httpMetadata, httpEtag: `etag-${objects.size + 1}` });
         if (key.endsWith('/serve-state.json')) {
@@ -102,46 +92,6 @@ try {
     publicPackage,
   });
 
-  const pageId = 'PAGE123456';
-  const unrelatedPageId = 'PAGE654321';
-  const pageFiles = {
-    indexHtml: '<!doctype html><html lang="en"><body>Page</body></html>',
-    stylesCss: '.page{}',
-    runtimeJs: '',
-  };
-  await createAccountPageSource({
-    env,
-    accountId,
-    pageId,
-    source: {
-      pageId,
-      displayName: 'Cards page',
-      isTemplate: false,
-      baseLocale: 'en',
-      values: { title: 'Cards page' },
-      robots: 'index-follow',
-      placements: [{ placementId: 'cards', instanceId }],
-    },
-    files: pageFiles,
-    overlaysJson: {},
-  });
-  await createAccountPageSource({
-    env,
-    accountId,
-    pageId: unrelatedPageId,
-    source: {
-      pageId: unrelatedPageId,
-      displayName: 'Empty page',
-      isTemplate: false,
-      baseLocale: 'en',
-      values: { title: 'Empty page' },
-      robots: 'index-follow',
-      placements: [],
-    },
-    files: pageFiles,
-    overlaysJson: {},
-  });
-
   await env.TOKYO_R2.put(
     `accounts/${accountId}/instances/${instanceId}/overlays/locales/fr.json`,
     JSON.stringify({ values: {} }),
@@ -168,72 +118,22 @@ try {
     baseLocale: 'en',
     hasDisplayName: true,
   } as const;
-  env.failOnce(`accounts/${accountId}/pages/${pageId}/serve-state.json`);
-  await assert.rejects(
-    saveAccountInstanceTransition(saveInput),
-    /injected_page_currency_write_failure/,
-    'Instance Save must not report success when a required Page mark fails',
-  );
-  assert.deepEqual(
-    await (await env.TOKYO_R2.get(`accounts/${accountId}/pages/${pageId}/serve-state.json`)).json(),
-    { published: false, needsUpdate: false },
-  );
   await saveAccountInstanceTransition(saveInput);
   assert.ok(purgeBodies.flat().includes(`https://dev.clk.live/${accountId}/${instanceId}/styles.css`));
   assert.ok(purgeBodies.flat().includes(`https://dev.clk.live/${accountId}/${instanceId}?locale=fr`));
-  assert.deepEqual(
-    await (await env.TOKYO_R2.get(`accounts/${accountId}/pages/${pageId}/serve-state.json`)).json(),
-    { published: false, needsUpdate: true },
-    'Instance Save must mark a referencing Page',
-  );
-  assert.deepEqual(
-    await (await env.TOKYO_R2.get(`accounts/${accountId}/pages/${unrelatedPageId}/serve-state.json`)).json(),
-    { published: false, needsUpdate: false },
-    'Instance Save must not mark an unrelated Page',
-  );
 
-  await env.TOKYO_R2.put(
-    `accounts/${accountId}/pages/${pageId}/serve-state.json`,
-    JSON.stringify({ published: false, needsUpdate: false }),
-    { httpMetadata: { contentType: 'application/json; charset=utf-8' } },
-  );
-
-  purgeBodies.length = 0;
-  env.failOnce(`accounts/${accountId}/pages/${pageId}/serve-state.json`);
-  await assert.rejects(
-    writeAccountInstanceTranslatedLocaleValues({ env, accountId, instanceId, locale: 'fr', values: {} }),
-    (error: unknown) => error instanceof AccountInstanceTransitionError && error.status === 502,
-    'translation write must report failure when required Page marking fails',
-  );
   purgeBodies.length = 0;
   await writeAccountInstanceTranslatedLocaleValues({ env, accountId, instanceId, locale: 'fr', values: {} });
   assert.deepEqual(purgeBodies.flat().sort(), [
     `https://dev.clk.live/${accountId}/${instanceId}/?locale=fr`,
     `https://dev.clk.live/${accountId}/${instanceId}?locale=fr`,
   ]);
-  assert.deepEqual(
-    await (await env.TOKYO_R2.get(`accounts/${accountId}/pages/${pageId}/serve-state.json`)).json(),
-    { published: false, needsUpdate: true },
-    'Instance locale write must mark a referencing Page',
-  );
-
-  await env.TOKYO_R2.put(
-    `accounts/${accountId}/pages/${pageId}/serve-state.json`,
-    JSON.stringify({ published: false, needsUpdate: false }),
-    { httpMetadata: { contentType: 'application/json; charset=utf-8' } },
-  );
   purgeBodies.length = 0;
   await deleteAccountInstanceTranslatedLocaleValues({ env, accountId, instanceId, locale: 'fr' });
   assert.deepEqual(purgeBodies.flat().sort(), [
     `https://dev.clk.live/${accountId}/${instanceId}/?locale=fr`,
     `https://dev.clk.live/${accountId}/${instanceId}?locale=fr`,
   ]);
-  assert.deepEqual(
-    await (await env.TOKYO_R2.get(`accounts/${accountId}/pages/${pageId}/serve-state.json`)).json(),
-    { published: false, needsUpdate: false },
-    'Settings-owned locale deletion changes future generation input and must not mark a Page',
-  );
-
   await env.TOKYO_R2.put(
     `accounts/${accountId}/instances/${instanceId}/overlays/locales/fr.json`,
     JSON.stringify({ values: {} }),

@@ -8,7 +8,6 @@ import {
   decodeCatalogCollection,
   decodeCatalogDetail,
   readCatalogPresentation,
-  type CatalogKind,
   type DevStudioCatalogCollection,
   type DevStudioCatalogSource,
   type DevStudioCatalogTemplate,
@@ -202,20 +201,18 @@ function createDropdown(args: {
   return root;
 }
 
-function editorUrl(kind: CatalogKind, id: string): string {
-  return kind === 'widgets'
-    ? `${ROMA_ORIGIN}/builder/${encodeURIComponent(id)}`
-    : `${ROMA_ORIGIN}/page-builder/${encodeURIComponent(id)}`;
+function editorUrl(id: string): string {
+  return `${ROMA_ORIGIN}/builder/${encodeURIComponent(id)}`;
 }
 
-function apiPath(kind: CatalogKind, id?: string): string {
-  return `/api/catalog/${kind}${id ? `/${encodeURIComponent(id)}` : ''}`;
+function apiPath(id?: string): string {
+  return `/api/catalog/widgets${id ? `/${encodeURIComponent(id)}` : ''}`;
 }
 
-function sourceOptions(kind: CatalogKind, sources: DevStudioCatalogSource[]): Array<{ value: string; label: string }> {
+function sourceOptions(sources: DevStudioCatalogSource[]): Array<{ value: string; label: string }> {
   return sources.map((source) => ({
     value: source.sourceId,
-    label: kind === 'widgets' ? `${source.displayName} — ${source.widgetType}` : source.displayName,
+    label: `${source.displayName} — ${source.widgetType}`,
   }));
 }
 
@@ -225,9 +222,9 @@ function readExactFormText(form: HTMLFormElement, name: string): string {
   return input.value && input.value === input.value.trim() ? input.value : '';
 }
 
-export function renderCatalogView(kind: CatalogKind): DocumentFragment {
+export function renderCatalogView(): DocumentFragment {
   const fragment = document.createDocumentFragment();
-  const label = kind === 'widgets' ? 'Widget' : 'Page';
+  const label = 'Widget';
   const actions = document.createElement('div');
   actions.dataset.pageActions = '';
   actions.className = 'devstudio-catalog-actions';
@@ -268,25 +265,25 @@ export function renderCatalogView(kind: CatalogKind): DocumentFragment {
   `;
 
   const createView = createDialog({
-    id: `devstudio-${kind}-catalog-create`,
+    id: 'devstudio-widget-catalog-create',
     title: `Create ${label} Catalog item`,
     body: `<div data-create-source-choice></div>${textfield('templateName', 'Template name', { maxLength: 120 })}${presentationFields()}`,
     saveLabel: 'Save',
   });
   const editView = createDialog({
-    id: `devstudio-${kind}-catalog-edit`,
+    id: 'devstudio-widget-catalog-edit',
     title: `Edit ${label} Catalog presentation`,
     body: presentationFields(),
     saveLabel: 'Save',
   });
   const renameView = createDialog({
-    id: `devstudio-${kind}-catalog-rename`,
+    id: 'devstudio-widget-catalog-rename',
     title: `Rename ${label} Catalog template`,
     body: textfield('displayName', 'Template name', { maxLength: 120 }),
     saveLabel: 'Rename',
   });
   const deleteView = createDialog({
-    id: `devstudio-${kind}-catalog-delete`,
+    id: 'devstudio-widget-catalog-delete',
     title: `Delete ${label} Catalog item?`,
     body: '<p class="body-s">This permanently deletes the CLICKEEN Catalog template. The ordinary source is not deleted.</p>',
     saveLabel: 'Delete',
@@ -323,21 +320,16 @@ export function renderCatalogView(kind: CatalogKind): DocumentFragment {
     sourceDropdown = createDropdown({
       label: `${label} source`,
       name: 'sourceId',
-      options: sourceOptions(kind, collection.sources),
+      options: sourceOptions(collection.sources),
     });
     createSourceChoice.replaceChildren(sourceDropdown);
 
     if (widgetTypeDropdown) destroyDropdownActions(widgetTypeDropdown);
     widgetTypeChoice.replaceChildren();
-    if (kind === 'pages') {
-      createSourceLink.href = `${ROMA_ORIGIN}/page-builder/new`;
-      createSourceLink.hidden = false;
-      return;
-    }
     const widgetTypes = Array.from(new Set([
       ...collection.widgetTypes,
-      ...collection.sources.map((source) => source.widgetType ?? ''),
-      ...collection.templates.map((template) => template.widgetType ?? ''),
+      ...collection.sources.map((source) => source.widgetType),
+      ...collection.templates.map((template) => template.widgetType),
     ].filter(Boolean))).sort((left, right) => left.localeCompare(right));
     if (!widgetTypes.length) {
       createSourceLink.hidden = true;
@@ -362,7 +354,7 @@ export function renderCatalogView(kind: CatalogKind): DocumentFragment {
     opener.disabled = true;
     setStatus(`Loading ${template.templateName}…`, 'loading');
     try {
-      const current = decodeCatalogDetail(kind, await requestJson(apiPath(kind, template.templateId)));
+      const current = decodeCatalogDetail(await requestJson(apiPath(template.templateId)));
       if (!current || current.templateId !== template.templateId) throw new Error('catalog_payload_invalid');
       if (!root.isConnected) return;
       activeTemplate = current;
@@ -407,7 +399,7 @@ export function renderCatalogView(kind: CatalogKind): DocumentFragment {
       open.className = 'diet-btn-txt';
       open.dataset.size = 'sm';
       open.dataset.variant = 'secondary';
-      open.href = editorUrl(kind, template.templateId);
+      open.href = editorUrl(template.templateId);
       open.target = '_blank';
       open.rel = 'noopener';
       open.innerHTML = '<span class="diet-btn-txt__label">Open source</span>';
@@ -453,7 +445,7 @@ export function renderCatalogView(kind: CatalogKind): DocumentFragment {
 
   const load = async (afterMutationCopy = '') => {
     try {
-      const decoded = decodeCatalogCollection(kind, await requestJson(apiPath(kind)));
+      const decoded = decodeCatalogCollection(await requestJson(apiPath()));
       if (!decoded) throw new Error('catalog_payload_invalid');
       if (!root.isConnected) return;
       collection = decoded;
@@ -504,7 +496,7 @@ export function renderCatalogView(kind: CatalogKind): DocumentFragment {
     }
     setDialogBusy(createView, true);
     setDialogStatus(createView, 'Saving…');
-    void requestJson(apiPath(kind), {
+    void requestJson(apiPath(), {
       method: 'POST',
       body: JSON.stringify({ sourceId, templateName, catalogPresentation }),
     }).then(async () => {
@@ -525,7 +517,7 @@ export function renderCatalogView(kind: CatalogKind): DocumentFragment {
     }
     setDialogBusy(editView, true);
     setDialogStatus(editView, 'Saving…');
-    void requestJson(apiPath(kind, template.templateId), {
+    void requestJson(apiPath(template.templateId), {
       method: 'PATCH',
       body: JSON.stringify({ catalogPresentation }),
     }).then(async () => {
@@ -547,7 +539,7 @@ export function renderCatalogView(kind: CatalogKind): DocumentFragment {
     }
     setDialogBusy(renameView, true);
     setDialogStatus(renameView, 'Renaming…');
-    void requestJson(`${apiPath(kind, template.templateId)}/rename`, {
+    void requestJson(`${apiPath(template.templateId)}/rename`, {
       method: 'POST',
       body: JSON.stringify({ displayName }),
     }).then(async () => {
@@ -565,7 +557,7 @@ export function renderCatalogView(kind: CatalogKind): DocumentFragment {
     if (!template) return;
     setDialogBusy(deleteView, true);
     setDialogStatus(deleteView, 'Deleting…');
-    void requestJson(apiPath(kind, template.templateId), { method: 'DELETE' }).then(async () => {
+    void requestJson(apiPath(template.templateId), { method: 'DELETE' }).then(async () => {
       collection.templates = collection.templates.filter((entry) => entry.templateId !== template.templateId);
       deleteView.dialog.close();
       await refreshAfterMutation('Catalog item deleted.');

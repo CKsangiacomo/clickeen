@@ -134,12 +134,6 @@ Countdown uses the shared Shell for Header, Header CTA, Stage/Pod, Core size,
 typography, branding, social share, and locale switcher. Timer tile surfaces
 are Core-owned under `countdown.appearance.*`.
 
-## Clickeen Pages Usage
-
-Countdown appears in Clickeen Page source as a saved account widget instance
-placement. Timer runtime behavior belongs to the instance package served from
-the account folder.
-
 ## Verification
 
 ```bash

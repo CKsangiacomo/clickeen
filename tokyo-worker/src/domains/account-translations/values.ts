@@ -13,7 +13,6 @@ import type {
 import { normalizeStorageId } from '../account-instances/utils';
 import { AccountInstanceTransitionError, purgeClkLiveLocaleCache } from '../account-instances/operations';
 import { readInstanceServeState } from '../account-instances/serve-state';
-import { markPagesReferencingInstanceNeedsUpdate } from '../pages';
 import { getWidgetDefinition } from '../widget-definitions';
 import {
   assertLocaleOverlayValuesMatchSavedTextFields,
@@ -178,20 +177,6 @@ export async function writeAccountInstanceTranslatedLocaleValues(args: {
       accountId: stored.configDoc.accountId,
       instanceId: stored.configDoc.id,
       locale,
-    });
-  }
-  try {
-    await markPagesReferencingInstanceNeedsUpdate({
-      env: args.env,
-      accountId: stored.configDoc.accountId,
-      instanceId: stored.configDoc.id,
-    });
-  } catch (error) {
-    throw new AccountInstanceTransitionError({
-      status: 502,
-      kind: 'UPSTREAM_UNAVAILABLE',
-      reasonKey: 'coreui.errors.db.writeFailed',
-      detail: error instanceof Error ? error.message : String(error),
     });
   }
   return { locale, values: args.values };

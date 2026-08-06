@@ -1,9 +1,4 @@
 import type { ResolvedAccountAsset } from '@clickeen/ck-contracts';
-import type {
-  AccountPage,
-  AccountPageTemplate,
-  PageLocaleOverlay,
-} from '@clickeen/ck-contracts/pages';
 import type { WidgetEditableFieldsContract } from '@clickeen/ck-contracts/translated-value-primitives';
 import type { RuntimeTypographyData } from '@clickeen/widget-shell';
 
@@ -57,37 +52,4 @@ export type GenerateInstanceInput = {
     includeClickeenAttribution: boolean;
   };
   context: ResolvedWebCodeContext;
-};
-
-export type PagePlacementInput = {
-  placementId: string;
-  instanceId: string;
-  source: SavedInstanceStructuredSource;
-  files: WebCodeFiles;
-  overlays: ExactLocaleOverlays | null;
-};
-
-export type PageGenerationSource =
-  | Omit<AccountPage, 'pageId'>
-  | Omit<AccountPageTemplate, 'pageId'>;
-
-export type GeneratePageInput = {
-  source: PageGenerationSource;
-  settingsLocales: string[];
-  pageOverlays: Record<string, PageLocaleOverlay>;
-  placements: PagePlacementInput[];
-  context: ResolvedWebCodeContext;
-};
-
-export type PageServingOverlays = Record<
-  string,
-  {
-    page: Record<string, string>;
-    placements: Record<string, Record<string, unknown>>;
-  }
->;
-
-export type GeneratePageOutput = {
-  files: WebCodeFiles;
-  overlaysJson?: PageServingOverlays;
 };

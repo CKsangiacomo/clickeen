@@ -168,8 +168,8 @@ export function WidgetCatalog() {
               </article>
             ))}
           </div>
-          {loading ? <p className="body-m roma-pages-state">Loading Widget Catalog…</p> : null}
-          {!loading && !error && visibleTemplates.length === 0 ? <p className="body-m roma-pages-state">No Widget templates match this view.</p> : null}
+          {loading ? <p className="body-m roma-collection-state">Loading Widget Catalog…</p> : null}
+          {!loading && !error && visibleTemplates.length === 0 ? <p className="body-m roma-collection-state">No Widget templates match this view.</p> : null}
         </section>
       </div>
     </>

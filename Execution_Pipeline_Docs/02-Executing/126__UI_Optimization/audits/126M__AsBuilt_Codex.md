@@ -338,69 +338,10 @@ As-built reading:
 
 ## 9. Pages Domain
 
-Pages is the largest current Roma UI domain and includes page source editing,
-localization settings, placement management, publishing controls, and local
-modals.
-
-Evidence:
-
-- `roma/components/pages-domain.tsx:120` exports `PagesDomain`.
-- `roma/components/pages-domain.tsx:129` through
-  `roma/components/pages-domain.tsx:143` define pages, source, publish status,
-  widget instances, locale options, modal state, loading, refreshing, source
-  loading, mutation error, and action/copy states.
-- `roma/components/pages-domain.tsx:315` sets
-  `ipLocalizationBlocksPublish`.
-- `roma/components/pages-domain.tsx:316` sets
-  `pagePublishingUnavailable = true`.
-- `roma/components/pages-domain.tsx:335` starts the shared page source save
-  helper.
-- `roma/components/pages-domain.tsx:365` starts create-page handling.
-- `roma/components/pages-domain.tsx:402` starts delete-page handling.
-- `roma/components/pages-domain.tsx:485` through
-  `roma/components/pages-domain.tsx:493` save metadata/settings by calling the
-  page source save helper.
-- `roma/components/pages-domain.tsx:495` starts publish/unpublish handling.
-- `roma/components/pages-domain.tsx:598` through
-  `roma/components/pages-domain.tsx:601` render the create-page button.
-- `roma/components/pages-domain.tsx:616` through
-  `roma/components/pages-domain.tsx:617` render loading and empty page states.
-- `roma/components/pages-domain.tsx:619` renders a `.roma-table`.
-- `roma/components/pages-domain.tsx:660` renders source-loading state.
-- `roma/components/pages-domain.tsx:673` through
-  `roma/components/pages-domain.tsx:707` render metadata inputs as
-  `.roma-input`.
-- `roma/components/pages-domain.tsx:720` through
-  `roma/components/pages-domain.tsx:765` render metadata/publish/copy actions.
-- `roma/components/pages-domain.tsx:782` renders publish blocker copy.
-- `roma/components/pages-domain.tsx:785` renders IP localization unavailable
-  copy.
-- `roma/components/pages-domain.tsx:786` renders page package unavailable copy.
-- `roma/components/pages-domain.tsx:787` through
-  `roma/components/pages-domain.tsx:788` render page-locked/copy guidance.
-- `roma/components/pages-domain.tsx:799` through
-  `roma/components/pages-domain.tsx:811` render default locale selection.
-- `roma/components/pages-domain.tsx:839` renders a country-locale rules table.
-- `roma/components/pages-domain.tsx:852` and
-  `roma/components/pages-domain.tsx:862` use `.roma-input` in country-locale
-  rows.
-- `roma/components/pages-domain.tsx:909` through
-  `roma/components/pages-domain.tsx:912` render save settings action.
-- `roma/components/pages-domain.tsx:941` through
-  `roma/components/pages-domain.tsx:1001` render the add-instances local modal.
-- `roma/components/pages-domain.tsx:1030` renders the placed-widgets
-  `.roma-table`.
-- `roma/components/pages-domain.tsx:1052` renders unavailable/unpublished
-  publish-blocking copy for placements.
-- `roma/components/pages-domain.tsx:1100` renders "No widgets placed yet."
-
-As-built reading:
-
-- Pages has current UI truth for account pages and placement management.
-- It contains explicit unavailable/stub-like copy that must not be silently
-  erased in later docs.
-- It depends heavily on local `.roma-input`, `.roma-table`, and `.roma-modal`
-  patterns.
+Superseded on 2026-08-06: the experimental customer Pages domain was removed
+from the current codebase and PRD 127 returned to Planning. The deleted
+implementation described here is historical evidence only and must not guide
+current Roma work. Prague remains an independent Astro site.
 
 ## 10. Assets Domain
 
@@ -732,8 +673,6 @@ Evidence:
   delete.
 - `roma/app/api/account/instances/[instanceId]/translations/generate/route.ts`
   owns explicit translation generation.
-- `roma/app/api/account/pages/route.ts` and
-  `roma/app/api/account/pages/[pageId]/route.ts` own account page operations.
 - `roma/app/api/account/assets/route.ts` and
   `roma/app/api/account/assets/upload/route.ts` own account asset operations.
 - `roma/app/api/account/team/**` routes own team operations through Berlin.

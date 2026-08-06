@@ -140,7 +140,7 @@ path as other account assets.
 Upload also rejects disabled accounts at the Tokyo-worker boundary.
 
 Catalog asset copy accepts exactly `{ "assetRefs": [accountLocalAssetRef] }`,
-using the same references stored in Widget and Page config, such as `hero.png`.
+using the same references stored in Widget config, such as `hero.png`.
 The server fixes the source owner to exact account `CLICKEEN`; the source owner
 is not a request parameter. Roma derives the destination from the authenticated
 current account and sends its existing `uploads.size.max` and
@@ -273,7 +273,7 @@ assets were already removed, it returns explicit partial failure with the
 completed deletions and remaining overage; it does not claim success. Any later
 attempt re-lists current storage truth before choosing further deletions.
 
-This cleanup may make an existing Instance/Page asset reference unresolved.
+This cleanup may make an existing Instance asset reference unresolved.
 Clickeen does not substitute another file or rewrite customer source. The
 customer can repair the reference after regaining the required product access.
 

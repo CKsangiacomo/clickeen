@@ -27,7 +27,6 @@ Canonical account-management architecture:
 | Roma tier-drop dismiss route | `roma/app/api/account/lifecycle/tier-drop/dismiss/route.ts` |
 | Roma account asset upload | `roma/app/api/account/assets/upload/route.ts` |
 | Roma instance create/save/publish routes | `roma/app/api/account/instances/**` |
-| Roma Page storage/publication routes | `roma/app/api/account/pages/**` |
 | Roma instance save policy | `roma/lib/account-instance-save-policy.ts` |
 | Policy resolver | `packages/ck-policy/src/policy.ts` |
 | Policy registry/matrix | `packages/ck-policy/src/registry.ts`, `packages/ck-policy/entitlements.matrix.json` |
@@ -75,9 +74,9 @@ users.role -> role inside that account
 | Login/session/account bootstrap | Berlin |
 | Current account shell and product routes | Roma |
 | Relational account/user/team data | Michael/Supabase |
-| Account assets/instances/pages files | Tokyo-worker over Tokyo R2 |
+| Account asset and Instance files | Tokyo-worker over Tokyo R2 |
 | Account product policy | Roma using `@clickeen/ck-policy` |
-| Public Instance/Page serving | Tokyo-worker stored generated-file serving |
+| Public Instance serving | Tokyo-worker stored generated-file serving |
 
 Account-scoped product work follows:
 
@@ -196,7 +195,7 @@ This applies inside the authenticated current account and never grants
 cross-account visibility or bypasses role authorization. Tier policy decides
 which create, edit, publish, and use commands the account may perform now.
 Account management decides how retained account storage changes over the
-account lifecycle. A downgrade keeps existing Instances, Pages, templates,
+account lifecycle. A downgrade keeps existing Instances, templates,
 overlays, generated files, and assets visible; blocked commands remain visible
 and use the standard Upgrade interaction without mutation.
 
@@ -242,7 +241,6 @@ Current entitlement keys:
 | `views.monthly.max` | limit | clk.live public-serving telemetry | gap |
 | `instances.published.max` | limit | Roma publish route | enforced |
 | `widgets.instances.max` | limit | Roma create and duplicate command routes | enforced |
-| `pages.max` | limit | Roma Page first Save | enforced |
 | `uploads.size.max` | limit | Roma upload route and Tokyo-worker assets | enforced |
 | `items.group.small.max` | limit | Roma save policy | enforced |
 | `items.group.medium.max` | limit | Roma save policy | enforced |
@@ -278,16 +276,16 @@ here unless it maps to exact entitlement keys.
 
 ## Templates and Catalog ownership
 
-Widget templates count under `widgets.instances.max`; Page templates count
-under `pages.max`. They are normal saved objects owned by one account and carry
-`isTemplate: true`. **My templates** reads the current account. The customer
-Widget and Page Catalogs always read templates owned by the exact `CLICKEEN`
+Widget templates count under `widgets.instances.max`. They are normal saved
+objects owned by one account and carry `isTemplate: true`. **My templates**
+reads the current account. The customer Widget Catalog always reads templates
+owned by the exact `CLICKEEN`
 account and never infer Catalog membership from widget type, tier, or a second
 registry. Customer Catalog routes are read-only. DevStudio manages CLICKEEN
 template source and presentation through Roma, which remains the account
 authority and writes through Tokyo-worker.
 
-PRD 127's accepted target keeps two existing keys separate:
+Two existing keys remain separate:
 
 - `branding.remove` controls whether generated public HTML contains visible
   Clickeen attribution;
@@ -299,30 +297,6 @@ content. Free Widget attribution is mandatory when `branding.remove` is false;
 the Web Code Generator writes it into initial HTML. Bob enforces the customer
 SEO/GEO/AEO choice during editing, and Roma independently enforces it again at
 the Instance save boundary through the same Widget limits and account policy.
-
-Ordinary Pages have no SEO/GEO/AEO boolean. `pages.max` begins at Tier 2, and
-every ordinary Page receives Page SEO/GEO/AEO output from its declared fields
-and exact overlays.
-
-`pages.max` uses the same policy system. Product law is visibility plus
-command-time access: Pages stays in navigation for every
-tier; Free and Tier 1 see **Upgrade to get Pages**; an account downgraded into
-those tiers still sees its retained Page inventory and **Upgrade to use Pages**.
-The Page API denies detail and mutation commands at a zero Page limit without
-calling Tokyo. Roma's visible Page domain uses the standard Upgrade dialog
-around that result. Downgrade does not hide, delete, rewrite,
-regenerate, publish, or unpublish retained Pages.
-
-Current Page limits:
-
-| Tier | `pages.max` |
-| --- | ---: |
-| `free` | 0 |
-| `tier1` | 0 |
-| `tier2` | 3 |
-| `tier3` | 10 |
-| `tier4` | unlimited |
-| `tier99` | unlimited |
 
 ## Failure Semantics
 
@@ -359,8 +333,6 @@ These are not active runtime truth:
 | Entitlement keys/values | `packages/ck-policy/entitlements.matrix.json` |
 | Entitlement metadata/enforcement status | runtime owner evidence plus `packages/ck-policy/src/registry.ts` |
 | Account files | Roma routes first; raw bytes require `pnpm cf:preflight` and R2 evidence |
-| Page storage/publication | Roma Page routes plus Tokyo-worker exact direct Page root and `serve-state.json` |
-| Public Page isolation | published `clk.live/{accountPublicId}/pages/{pageId}/{locale}` response and account-scoped R2 evidence |
 
 ## Not Current Product Truth
 

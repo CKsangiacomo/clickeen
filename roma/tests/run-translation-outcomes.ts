@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import type { RomaAccountAuthzCapsulePayload } from '@clickeen/ck-policy';
-import { generateAccountTranslations } from '../lib/account-instance-translations';
+import { generateAccountInstanceTranslations } from '../lib/account-instance-translations';
 
 const CLOUDFLARE_REQUEST_CONTEXT_SYMBOL = Symbol.for('__cloudflare-request-context__');
 const requestedLocales = ['fr', 'de', 'it'];
@@ -38,22 +38,7 @@ async function run(): Promise<void> {
       ROMA_AI_GRANT_PRIVATE_KEY_PEM: privateKeyPem,
       TOKYO_PRODUCT_CONTROL: {
         async fetch(input: RequestInfo | URL) {
-          if (new URL(String(input)).pathname.includes('/__internal/pages/')) {
-            return Response.json({
-              source: {
-                pageId: '7UZXTP3TOI',
-                displayName: 'Summer page',
-                isTemplate: false,
-                baseLocale: 'es',
-                values: { title: 'Summer', description: 'Summer page' },
-                robots: 'index-follow',
-                placements: [],
-              },
-              files: { indexHtml: '<!doctype html>', stylesCss: '', runtimeJs: '' },
-              overlaysJson: {},
-              serveState: { published: false, needsUpdate: false },
-            });
-          }
+          void input;
           return Response.json({
             widgetType: 'faq',
             isTemplate: false,
@@ -100,9 +85,9 @@ async function run(): Promise<void> {
   };
 
   const generate = () =>
-    generateAccountTranslations({
+    generateAccountInstanceTranslations({
       accountId: 'CLICKEEN',
-      target: { kind: 'instance', id: 'UZ3JEJSHII' },
+      instanceId: 'UZ3JEJSHII',
       baseLocale: 'en',
       activeLocales: requestedLocales,
       authz,
@@ -129,29 +114,7 @@ async function run(): Promise<void> {
     assert.ok(sentAgentRequest);
     assert.deepEqual(sentAgentRequest.requestedLocales, requestedLocales);
     assert.equal(Object.prototype.hasOwnProperty.call(sentAgentRequest, 'activeLocales'), false);
-    assert.deepEqual(sentAgentRequest.target, { kind: 'instance', id: 'UZ3JEJSHII' });
-
-    agentTranslation = {
-      ...validAgentTranslation(),
-      baseLocale: 'es',
-    };
-    const pageResult = await generateAccountTranslations({
-      accountId: 'CLICKEEN',
-      target: { kind: 'page', id: '7UZXTP3TOI' },
-      baseLocale: 'en',
-      activeLocales: [...requestedLocales, 'es'],
-      authz,
-      accountCapsule: 'test-capsule',
-      requestId: 'page-translation-outcome-test',
-    });
-    assert.equal(pageResult.ok, true, JSON.stringify(pageResult));
-    if (!pageResult.ok) return;
-    assert.equal(pageResult.value.translation.baseLocale, 'es');
-    const pageAgentRequest = agentRequest as unknown as Record<string, unknown>;
-    assert.deepEqual(pageAgentRequest.target, { kind: 'page', id: '7UZXTP3TOI' });
-    assert.equal(pageAgentRequest.baseLocale, 'es');
-    assert.deepEqual(pageAgentRequest.requestedLocales, requestedLocales);
-    assert.deepEqual((pageAgentRequest.items as Array<{ path: string }>).map((item) => item.path), ['title', 'description']);
+    assert.equal(sentAgentRequest.instanceId, 'UZ3JEJSHII');
 
     agentTranslation = validAgentTranslation();
     const valid = validAgentTranslation();

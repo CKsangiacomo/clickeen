@@ -1,5 +1,4 @@
 import { CK_REQUEST_ID_HEADER, isRecord, serializeCkLogEvent } from '@clickeen/ck-contracts';
-import type { TranslationTarget } from '@clickeen/ck-contracts/translations';
 import { isCompactAccountPublicId } from '@clickeen/ck-contracts/overlay-identity';
 import {
   readRomaAiGrantEnvelope,
@@ -59,7 +58,7 @@ async function verifyTranslationAgentWriteGrant(args: {
   req: Request;
   env: Env;
   accountId: string;
-  target: TranslationTarget;
+  instanceId: string;
   locale: string;
 }): Promise<null | Response> {
   const publicKeyPem = String(args.env.ROMA_AI_GRANT_PUBLIC_KEY_PEM || '').trim();
@@ -96,22 +95,14 @@ async function verifyTranslationAgentWriteGrant(args: {
   const ai = isRecord(payload.ai) ? payload.ai : null;
   const trace = isRecord(payload.trace) ? payload.trace : null;
   const traceAccountPublicId = asTrimmedString(trace?.accountPublicId);
-  const traceTarget = isRecord(trace?.translationTarget)
-    ? {
-        kind: trace.translationTarget.kind,
-        id: asTrimmedString(trace.translationTarget.id),
-      }
-    : null;
+  const traceInstanceId = asTrimmedString(trace?.instanceId);
   const traceActiveLocales = normalizeStringArray(trace?.activeLocales);
   if (
     payload.iss !== 'roma' ||
     !caps.includes('agent:widget.instance.translator') ||
     ai?.agentId !== 'widget.instance.translator' ||
     traceAccountPublicId !== args.accountId ||
-    !traceTarget ||
-    (traceTarget.kind !== 'instance' && traceTarget.kind !== 'page') ||
-    traceTarget.kind !== args.target.kind ||
-    traceTarget.id !== args.target.id ||
+    traceInstanceId !== args.instanceId ||
     !traceActiveLocales ||
     !sameStringSet(traceActiveLocales, Array.from(new Set(traceActiveLocales))) ||
     !traceActiveLocales.includes(args.locale)
@@ -228,7 +219,7 @@ export async function authorizeTranslatedLocaleWriteTransition(args: {
   req: Request;
   env: Env;
   accountId: string;
-  target: TranslationTarget;
+  instanceId: string;
   locale: string;
 }): Promise<
   | { ok: true }
@@ -242,7 +233,7 @@ export async function authorizeTranslatedLocaleWriteTransition(args: {
       req: args.req,
       env: args.env,
       accountId: args.accountId,
-      target: args.target,
+      instanceId: args.instanceId,
       locale: args.locale,
     });
     return grantError ? { ok: false, response: grantError } : { ok: true };

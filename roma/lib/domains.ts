@@ -5,9 +5,6 @@ export type RomaDomainKey =
   | 'widgets'
   | 'widgetTemplates'
   | 'widgetCatalog'
-  | 'pages'
-  | 'pageTemplates'
-  | 'pageCatalog'
   | 'assets'
   | 'team'
   | 'billing'
@@ -30,9 +27,6 @@ export const ROMA_DOMAINS: readonly RomaDomainDefinition[] = [
   { key: 'widgetTemplates', label: 'My templates', href: '/widgets/templates', description: 'Manage Widget templates saved by this account.' },
   { key: 'widgetCatalog', label: 'Widget catalog', href: '/widgets/catalog', description: 'Start from Clickeen Widget templates.' },
   { key: 'builder', label: 'Builder', href: '/builder', description: 'Edit widget instances in Bob.' },
-  { key: 'pages', label: 'Pages', href: '/pages', description: 'Manage account Pages.' },
-  { key: 'pageTemplates', label: 'My templates', href: '/pages?view=templates', description: 'Manage Page templates saved by this account.' },
-  { key: 'pageCatalog', label: 'Page catalog', href: '/pages?view=catalog', description: 'Start from Clickeen Page templates.' },
   { key: 'assets', label: 'Assets', href: '/assets', description: 'Account library and usage mapping.' },
   { key: 'team', label: 'Team', href: '/team', description: 'Members and roles.' },
   { key: 'billing', label: 'Billing', href: '/billing', description: 'Current plan; billing provider not connected.' },
@@ -46,7 +40,6 @@ export const ROMA_MAIN_DOMAIN_KEYS: readonly RomaDomainKey[] = [
   'home',
   'widgets',
   'builder',
-  'pages',
   'assets',
   'settings',
 ];
@@ -67,12 +60,6 @@ export const ROMA_WIDGETS_DOMAIN_KEYS: readonly RomaDomainKey[] = [
   'widgetCatalog',
 ];
 
-export const ROMA_PAGES_DOMAIN_KEYS: readonly RomaDomainKey[] = [
-  'pages',
-  'pageTemplates',
-  'pageCatalog',
-];
-
 export const ROMA_MAIN_DOMAINS = ROMA_MAIN_DOMAIN_KEYS.map((key) => {
   const domain = ROMA_DOMAINS.find((entry) => entry.key === key);
   if (!domain) throw new Error(`missing Roma main domain: ${key}`);
@@ -89,12 +76,6 @@ export const ROMA_WIDGETS_DOMAINS = ROMA_WIDGETS_DOMAIN_KEYS.map((key) => {
   const domain = ROMA_DOMAINS.find((entry) => entry.key === key);
   if (!domain) throw new Error(`missing Roma widgets domain: ${key}`);
   return key === 'widgets' ? { ...domain, label: 'Your widgets' } : domain;
-});
-
-export const ROMA_PAGES_DOMAINS = ROMA_PAGES_DOMAIN_KEYS.map((key) => {
-  const domain = ROMA_DOMAINS.find((entry) => entry.key === key);
-  if (!domain) throw new Error(`missing Roma Pages domain: ${key}`);
-  return key === 'pages' ? { ...domain, label: 'Your pages' } : domain;
 });
 
 export const DEFAULT_HOME_ROUTE = '/home';

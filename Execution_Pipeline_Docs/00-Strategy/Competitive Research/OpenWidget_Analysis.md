@@ -11,7 +11,7 @@ widget catalog.
 ## TL;DR
 
 OpenWidget is a **free embeddable widget launcher** from LiveChat, Inc. It is
-not a content platform, not a site builder, and not a composed-surface product.
+not a content platform or site builder.
 It is a top-of-funnel lead-gen tool for LiveChat's paid chat product, shipped as
 one snippet that renders a floating button → gallery → micro-apps. Its
 architecture is the **classic Elfsight/loader pattern** (shell stub + lazy
@@ -148,7 +148,7 @@ are not the content surface; they are an app on top of one. The loader pattern
 is defensible for that job: the widget is interactive, session-scoped, and not
 meant to be crawled as primary content.
 
-Clickeen's thesis is the opposite: the widget/page IS the content surface. The
+Clickeen's thesis is the opposite: the saved Widget IS the content surface. The
 saved HTML must carry the customer's content before any JS runs. The contrast
 is the whole point of 127B.
 
@@ -216,12 +216,12 @@ a content surface.
 - FAQ is capped at 10 questions.
 - Product Cards at 6.
 - No categories, no search, no rich text.
-- No composition, no pages, no public artifact.
+- No hosted Pages and no standalone public artifact.
 - The "Create Your Own" app is an iframe pointed at a URL.
 
-The widgets are single-purpose micro-apps, not composable. There's no notion of
-authoring once and composing into many surfaces. This is the opposite of the
-schema-first thesis.
+The widgets are single-purpose micro-apps. There is no saved Widget artifact
+that can be authored once and served as complete HTML. This is the opposite of
+Clickeen's current schema-first Widget thesis.
 
 ### 4.3 Customization is near-zero
 
@@ -231,12 +231,11 @@ design system the widgets inherit from. They look like OpenWidget on every
 site, which is fine for free but caps the ceiling at "I'll use it until I can
 afford something branded."
 
-### 4.4 No composition, no pages, no public artifact
+### 4.4 No hosted Pages or standalone public artifact
 
 A "page" isn't even a concept in their model. They're an overlay layer. The
-"Create Your Own" app is an iframe pointed at your URL — there's no composition
-of widgets into a single document, no generated artifact, nothing crawlable as
-a standalone surface.
+"Create Your Own" app is an iframe pointed at your URL; there is no generated
+artifact and nothing crawlable as a standalone surface.
 
 ### 4.5 No agent-operability
 
@@ -315,15 +314,15 @@ OpenWidget cannot have it without rebuilding from zero.
 
 | Dimension | OpenWidget | Clickeen |
 | --- | --- | --- |
-| **What it is** | Floating launcher overlay | Composed content surface |
+| **What it is** | Floating launcher overlay | Saved Widget platform |
 | **Public artifact** | Shell stub + lazy bundle + runtime JSON fetch | Saved complete HTML + CSS + JS (three-file law) |
 | **Crawlable content** | None (JS-rendered; `<noscript>` only) | Complete semantic HTML before JS runs |
-| **Composition** | None (one launcher → N micro-apps) | Pages = ordered stacks of saved instances |
+| **Customer Pages** | None | Deferred planning, not current product |
 | **Customization** | Avatar/name/welcome only | Full Dieter token system + widget controls |
 | **AI** | Button-click content generation (FAQ answers, descriptions) | Agent-operated authoring (Product Copilot, Translation Agent) |
 | **Operability** | Human form-filling dashboard | Agent-operated substrate |
 | **Business model** | Free → lead-gen into LiveChat paid | Tiered SaaS with entitlements |
-| **Target customer** | Non-technical Shopify/WP store owner | Businesses building content surfaces with agents |
+| **Target customer** | Non-technical Shopify/WP store owner | Businesses authoring crawlable Widgets with agents |
 | **Architecture thesis** | Distribution-first (fast embed, shallow) | Source-truth-first (saved artifact is the product) |
 
 ---
@@ -337,13 +336,12 @@ widgets are single-purpose micro-apps. There's no notion of a Page, no
 composition of widgets into a single document, no public artifact that stands
 alone without their CDN.
 
-It is not a direct competitor to Clickeen Pages in the architectural sense —
-it's a launcher, not a composed content surface. But it is a competitor for the
+It is a launcher, not a saved Widget platform. It is a competitor for the
 customer's attention and embed real estate, and its free + easy + 14-widget
 breadth is the kind of distribution moat that's hard to out-feature.
 
 Clickeen's answer to it is the opposite trade: fewer surfaces, deeper
-composition, saved-as-product truth, agent-operated. The two are betting on
+Widget depth, saved-as-product truth, and agent operation. The two are betting on
 different definitions of what a "widget" is for.
 
 ### What to take from them
@@ -553,20 +551,20 @@ useful.
 
 ### 11.1 Positioning statement
 
-> Clickeen is the only widget and page platform where your content is saved as
+> Clickeen is a Widget platform where your content is saved as
 > real, crawlable HTML — not a CDN script that renders in the browser. OpenWidget
 > is a free launcher overlay whose widgets are invisible to crawlers and offer no
-> customization, no composition, and no localization.
+> customization or structural localization.
 
 ### 11.2 Battle card
 
 | | Clickeen | OpenWidget |
 | --- | --- | --- |
-| Where we win | Complete crawlable HTML; composed pages; Dieter design system; baseLocale + exact overlays; agent-operated substrate | — |
+| Where we win | Complete crawlable Widget HTML; Dieter design system; baseLocale + exact overlays; agent-operated substrate | — |
 | Where they win | — | Zero friction (free, 1 snippet, 5 minutes); 14 ready widgets; no learning curve; no cost |
 | When we lose | Customer wants a free, instant, floating chat button on an existing site. Clickeen is not that product. | Customer wants that. |
-| When we win | Customer cares about SEO, brand consistency, composing widgets into pages, or having their content be a real artifact. OpenWidget cannot do any of this. |
-| Killer question | "Do you want a free chat button, or do you want your content to be crawlable, composed, and brand-consistent?" |
+| When we win | Customer cares about SEO, brand consistency, localization, or having Widget content be a real artifact. OpenWidget cannot do any of this. |
+| Killer question | "Do you want a free chat button, or do you want your Widget content to be crawlable and brand-consistent?" |
 
 ### 11.3 Messaging guidance
 

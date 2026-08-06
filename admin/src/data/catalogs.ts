@@ -1,18 +1,16 @@
 import { parseCatalogPresentation, type CatalogPresentation } from '@clickeen/ck-contracts/catalog';
 
-export type CatalogKind = 'widgets' | 'pages';
-
 export type DevStudioCatalogTemplate = {
   templateId: string;
   templateName: string;
-  widgetType?: string;
+  widgetType: string;
   catalogPresentation: CatalogPresentation;
 };
 
 export type DevStudioCatalogSource = {
   sourceId: string;
   displayName: string;
-  widgetType?: string;
+  widgetType: string;
 };
 
 export type DevStudioCatalogCollection = {
@@ -25,42 +23,42 @@ function exactString(value: unknown): string {
   return typeof value === 'string' && value && value === value.trim() ? value : '';
 }
 
-function decodeTemplate(kind: CatalogKind, raw: unknown): DevStudioCatalogTemplate | null {
+function decodeTemplate(raw: unknown): DevStudioCatalogTemplate | null {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
   const value = raw as Record<string, unknown>;
   const templateId = exactString(value.templateId);
   const templateName = exactString(value.templateName);
   const widgetType = exactString(value.widgetType);
   const catalogPresentation = parseCatalogPresentation(value.catalogPresentation);
-  if (!templateId || !templateName || !catalogPresentation || (kind === 'widgets' && !widgetType)) return null;
+  if (!templateId || !templateName || !catalogPresentation || !widgetType) return null;
   return {
     templateId,
     templateName,
-    ...(kind === 'widgets' ? { widgetType } : {}),
+    widgetType,
     catalogPresentation,
   };
 }
 
-function decodeSource(kind: CatalogKind, raw: unknown): DevStudioCatalogSource | null {
+function decodeSource(raw: unknown): DevStudioCatalogSource | null {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
   const value = raw as Record<string, unknown>;
   const sourceId = exactString(value.sourceId);
   const displayName = exactString(value.displayName);
   const widgetType = exactString(value.widgetType);
-  if (!sourceId || !displayName || (kind === 'widgets' && !widgetType)) return null;
+  if (!sourceId || !displayName || !widgetType) return null;
   return {
     sourceId,
     displayName,
-    ...(kind === 'widgets' ? { widgetType } : {}),
+    widgetType,
   };
 }
 
-export function decodeCatalogCollection(kind: CatalogKind, raw: unknown): DevStudioCatalogCollection | null {
+export function decodeCatalogCollection(raw: unknown): DevStudioCatalogCollection | null {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
   const value = raw as Record<string, unknown>;
   if (!Array.isArray(value.templates) || !Array.isArray(value.sources)) return null;
-  const templates = value.templates.map((entry) => decodeTemplate(kind, entry));
-  const sources = value.sources.map((entry) => decodeSource(kind, entry));
+  const templates = value.templates.map(decodeTemplate);
+  const sources = value.sources.map(decodeSource);
   const rawWidgetTypes = value.widgetTypes;
   if (
     templates.some((entry) => !entry) ||
@@ -83,9 +81,9 @@ export function decodeCatalogCollection(kind: CatalogKind, raw: unknown): DevStu
   };
 }
 
-export function decodeCatalogDetail(kind: CatalogKind, raw: unknown): DevStudioCatalogTemplate | null {
+export function decodeCatalogDetail(raw: unknown): DevStudioCatalogTemplate | null {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
-  return decodeTemplate(kind, (raw as Record<string, unknown>).template);
+  return decodeTemplate((raw as Record<string, unknown>).template);
 }
 
 export function readCatalogPresentation(raw: {

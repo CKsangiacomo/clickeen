@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { evaluateLimits, parseLimitsSpec, resolvePolicy } from '@clickeen/ck-policy';
 import { validateAccountInstanceSavePolicy } from '../lib/account-instance-save-policy';
-import { buildPagePublicActions, buildWidgetPublicActions } from '../lib/public-actions';
+import { buildWidgetPublicActions } from '../lib/public-actions';
 
 async function readRoute(relativePath: string): Promise<string> {
   return readFile(new URL(`../${relativePath}`, import.meta.url), 'utf8');
@@ -206,7 +206,6 @@ async function testBuilderUsesBobTopDrawerAsItsOnlyEditorChrome(): Promise<void>
   assert.match(copyDialog, /request !== copyRequestRef\.current/);
   assert.match(publicActions, /export type PublicActions/);
   assert.match(publicActions, /export function buildWidgetPublicActions/);
-  assert.match(publicActions, /export function buildPagePublicActions/);
   assert.doesNotMatch(publicActions, /iframe|runtime\.js|clickeen\.com/);
   assert.match(clipboard, /finally \{\s+element\?\.remove\(\);/);
 }
@@ -224,18 +223,6 @@ function testRomaOwnsExactPublicInstallActions(): void {
   );
   assert.doesNotMatch(widgetActions.clickeenJsSnippet, /iframe|runtime\.js|async/);
 
-  const pageActions = buildPagePublicActions({
-    accountPublicId: 'CLICKEEN',
-    pageId: 'PAGE123456',
-    baseUrl: 'https://dev.clk.live/',
-  });
-  assert.equal(pageActions.publicUrl, 'https://dev.clk.live/CLICKEEN/pages/PAGE123456');
-  assert.equal(
-    pageActions.clickeenJsSnippet,
-    '<script\n  src="https://dev.clk.live/clickeen.js"\n  data-clickeen="https://dev.clk.live/CLICKEEN/pages/PAGE123456"\n  defer\n></script>',
-  );
-  assert.doesNotMatch(pageActions.clickeenJsSnippet, /iframe|runtime\.js|async/);
-
   const encodedWidgetActions = buildWidgetPublicActions({
     accountPublicId: ' CLICKEEN ',
     instanceId: ' A/B ',
@@ -246,14 +233,6 @@ function testRomaOwnsExactPublicInstallActions(): void {
     () => buildWidgetPublicActions({
       accountPublicId: '',
       instanceId: 'ABC123',
-      baseUrl: 'https://dev.clk.live',
-    }),
-    /coreui\.errors\.payload\.invalid/,
-  );
-  assert.throws(
-    () => buildPagePublicActions({
-      accountPublicId: 'CLICKEEN',
-      pageId: '',
       baseUrl: 'https://dev.clk.live',
     }),
     /coreui\.errors\.payload\.invalid/,
@@ -473,7 +452,7 @@ async function run(): Promise<void> {
   await testBuilderUsesBobTopDrawerAsItsOnlyEditorChrome();
   console.log('PASS active Builder owns full-canvas chrome and preserves initial-only preview readiness');
   testRomaOwnsExactPublicInstallActions();
-  console.log('PASS Roma owns exact shared public install actions for Widgets and Pages');
+  console.log('PASS Roma owns exact public install actions for Widgets');
   await testWidgetsListComposition();
   console.log('PASS Widgets separates the catalog from the account-instance inventory');
   await testDieterLayoutTableAndPopupConsumption();

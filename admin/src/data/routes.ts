@@ -1,8 +1,6 @@
 import { dieterComponentCssByName } from './dieterComponents';
 import { staticShowcaseModules } from './showcase.generated';
 
-import type { CatalogKind } from './catalogs';
-
 export type NavItemKind = 'home' | 'showcase' | 'catalog';
 
 export interface NavItem {
@@ -10,7 +8,6 @@ export interface NavItem {
   title: string;
   path: string;
   kind: NavItemKind;
-  catalogKind?: CatalogKind;
 }
 
 export interface NavGroup {
@@ -113,8 +110,7 @@ const buildShowcaseGroups = (): NavGroup[] => {
     id: 'catalogs',
     title: 'CATALOGS',
     items: [
-      { id: 'catalog-widgets', title: 'Widget catalog', path: '#/catalog/widgets', kind: 'catalog', catalogKind: 'widgets' },
-      { id: 'catalog-pages', title: 'Page catalog', path: '#/catalog/pages', kind: 'catalog', catalogKind: 'pages' },
+      { id: 'catalog-widgets', title: 'Widget catalog', path: '#/catalog/widgets', kind: 'catalog' },
     ],
   };
 

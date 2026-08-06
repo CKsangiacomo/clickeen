@@ -289,7 +289,7 @@ full viewport frame -> context/action band -> tool panel + workspace preview
 This is useful evidence, not a universal template. Roma and DevStudio do not
 become Bob. They consume the same surface vocabulary according to their own job.
 
-### 6.3 Roma Is Directional For Account Page Composition
+### 6.3 Roma Is Directional For Account Product Layout
 
 Roma already points at the right sequence:
 
@@ -297,8 +297,9 @@ Roma already points at the right sequence:
 account shell -> domain frame -> header + canvas -> modules/cards/tables
 ```
 
-The problem is not that Roma has no surface thinking. The problem is that the
-surface thinking is local, duplicated, and not yet Dieter/Clickeen doctrine.
+This concerns Roma's current Widget, Asset, Settings, and account domains.
+Customer Pages were removed on 2026-08-06 and are deferred planning, not a
+current implementation surface.
 
 ### 6.4 DevStudio Is Directional For Reveal/Documentation Layout
 

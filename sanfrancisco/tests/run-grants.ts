@@ -49,7 +49,7 @@ async function run(): Promise<void> {
     budgets: resolveAiRuntimeBudget(ai),
     trace: {
       accountPublicId: 'CLICKEEN',
-      translationTarget: { kind: 'page', id: '7UZXTP3TOI' },
+      instanceId: '7UZXTP3TOI',
       activeLocales: ['it'],
     },
   }, privateKeyPem);

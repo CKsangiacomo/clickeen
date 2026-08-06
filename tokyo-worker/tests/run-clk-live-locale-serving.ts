@@ -239,7 +239,7 @@ async function testUnresolvedPublicPlaceholdersFailClosed(): Promise<void> {
   await putRootAndSource(base.env);
   const baseIndex = base.objects.get(`accounts/${accountId}/instances/${instanceId}/index.html`);
   assert.ok(baseIndex);
-  baseIndex.body = baseIndex.body.replace('</body>', '<span>__CK_PUBLIC_PAGE_URL__</span></body>');
+  baseIndex.body = baseIndex.body.replace('</body>', '<span>__CK_PUBLIC_UNKNOWN__</span></body>');
   const baseResponse = await request(`/${accountId}/${instanceId}`, base.env);
   assert.equal(baseResponse?.status, 500);
   assert.equal(await baseResponse?.text(), 'Public HTML invalid');

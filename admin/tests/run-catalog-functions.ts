@@ -31,32 +31,21 @@ assert.deepEqual(readTemplateCreatePayload({ sourceId: 'ABC1234567', templateNam
   catalogPresentation: presentation,
 });
 
-const [session, middleware, widgets, pages, widgetDetail, pageDetail, widgetRename, pageRename] = await Promise.all([
+const [session, middleware, widgets, widgetDetail, widgetRename] = await Promise.all([
   read('functions/_shared/session.js'),
   read('functions/_middleware.js'),
   read('functions/api/catalog/widgets.js'),
-  read('functions/api/catalog/pages.js'),
   read('functions/api/catalog/widgets/[templateId].js'),
-  read('functions/api/catalog/pages/[templateId].js'),
   read('functions/api/catalog/widgets/[templateId]/rename.js'),
-  read('functions/api/catalog/pages/[templateId]/rename.js'),
 ]);
 
 assert.match(session, /accessToken,/);
 assert.match(session, /accessToken: refreshed\.accessToken/);
 assert.match(middleware, /context\.data\.devstudioSession = session/);
 assert.match(widgets, /json\(\{ templates, sources, widgetTypes: Object\.keys\(widgets\)\.sort\(\) \}\)/);
-assert.match(pages, /json\(\{ templates, sources \}\)/);
-assert.match(pages, /Array\.isArray\(row\.source\.placements\)/);
-assert.match(pages, /filter\(\(row\) => row\.placements\.length === 0\)/);
 assert.match(widgets, /\/api\/account\/instances\/\$\{payload\.sourceId\}\/save-as-template/);
-assert.match(pages, /\/api\/account\/pages\/\$\{payload\.sourceId\}\/save-as-template/);
 assert.match(widgetDetail, /method: 'PATCH'/);
 assert.match(widgetDetail, /method: 'DELETE'/);
-assert.match(pageDetail, /template: \{/);
-assert.match(pageDetail, /source,/);
-assert.match(pageDetail, /files,/);
 assert.match(widgetRename, /\/rename/);
-assert.match(pageRename, /\/rename/);
 
 console.log('PASS DevStudio Catalog Function contracts');

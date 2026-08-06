@@ -8,8 +8,6 @@ import {
 } from '@roma/lib/account-instance-direct';
 import { isRecord } from '@clickeen/ck-contracts';
 import { parseCatalogPresentation } from '@clickeen/ck-contracts/catalog';
-import { pageIdsPlacingInstance } from '@roma/lib/account-page-contract';
-import { listAccountPageSources } from '@roma/lib/account-pages';
 import { materializeAccountInstanceSourceArtifacts } from '@roma/lib/account-instance-source-artifacts';
 import { loadCurrentAccountLocalesState } from '@roma/lib/account-locales-state';
 import { validateAccountInstanceSavePolicy } from '@roma/lib/account-instance-save-policy';
@@ -355,46 +353,6 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
     return withSession(
       request,
       NextResponse.json({ error: instanceId.error }, { status: instanceId.status }),
-      current.value.setCookies,
-    );
-  }
-
-  const pageSources = await listAccountPageSources({
-    accountId,
-    accountCapsule: current.value.authzToken,
-    requestId: current.value.requestId,
-  });
-  if (!pageSources.ok) {
-    return routeFailureResponse(request, pageSources, current.value.setCookies);
-  }
-  const placedPageIds = pageIdsPlacingInstance({
-    sources: pageSources.value.sources,
-    instanceId,
-  });
-  if (!placedPageIds) {
-    return withSession(
-      request,
-      NextResponse.json(
-        { error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.instance.invalidPayload' } },
-        { status: 422 },
-      ),
-      current.value.setCookies,
-    );
-  }
-  if (placedPageIds.length) {
-    return withSession(
-      request,
-      NextResponse.json(
-        {
-          error: {
-            kind: 'VALIDATION',
-            reasonKey: 'coreui.errors.instance.placedOnPage',
-            detail: 'Remove this widget from every page before deleting it.',
-            pageIds: placedPageIds,
-          },
-        },
-        { status: 422 },
-      ),
       current.value.setCookies,
     );
   }

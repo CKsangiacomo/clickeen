@@ -2,13 +2,10 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import {
   CLICKEEN_CATALOG_ACCOUNT_ID,
-  listClickeenPageCatalog,
   listClickeenWidgetCatalog,
-  readClickeenPageCatalogTemplate,
   readClickeenWidgetCatalogTemplate,
 } from '../src/domains/catalog';
 import { createAccountInstanceFromSubmittedSource } from '../src/domains/account-instances/operations';
-import { createAccountPageSource } from '../src/domains/pages/source';
 import { tryHandleInternalCatalogRoutes } from '../src/routes/internal-catalog-routes';
 
 function createEnv() {
@@ -52,14 +49,6 @@ const widget = await readClickeenWidgetCatalogTemplate(env, 'CATW123456');
 assert.deepEqual(widget?.catalogPresentation, presentation);
 assert.deepEqual(widget?.source.config, { reusable: true });
 assert.deepEqual(widget?.publicPackage, files);
-
-const pageSource = { pageId: 'CATP123456', displayName: 'Catalog page', isTemplate: true as const, values: { title: 'Page' }, robots: 'noindex-follow' as const, placements: [], catalogPresentation: presentation };
-await createAccountPageSource({ env, accountId: CLICKEEN_CATALOG_ACCOUNT_ID, pageId: pageSource.pageId, source: pageSource, files, overlaysJson: undefined });
-const ordinaryPage = { pageId: 'LIVEP12345', displayName: 'Ordinary page', isTemplate: false as const, baseLocale: 'en', values: { title: 'Live' }, robots: 'index-follow' as const, placements: [] };
-await createAccountPageSource({ env, accountId: CLICKEEN_CATALOG_ACCOUNT_ID, pageId: ordinaryPage.pageId, source: ordinaryPage, files, overlaysJson: {} });
-assert.deepEqual((await listClickeenPageCatalog(env)).map((item) => item.pageId), ['CATP123456']);
-assert.equal(await readClickeenPageCatalogTemplate(env, ordinaryPage.pageId), null);
-assert.deepEqual(await readClickeenPageCatalogTemplate(env, pageSource.pageId), { source: pageSource, files });
 
 const methodResponse = await tryHandleInternalCatalogRoutes({
   req: new Request('https://tokyo.internal/__internal/catalog/widgets', { method: 'POST' }), env,

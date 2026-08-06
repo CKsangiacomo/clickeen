@@ -31,7 +31,6 @@ Michael does not own:
 - account assets;
 - translated locale overlay files;
 - generated public packages;
-- Page source and Page locale overlay files;
 - public serving bytes.
 
 Those are Tokyo/R2-owned runtime files under `accounts/{accountPublicId}/...`.
@@ -138,9 +137,9 @@ Product runtime credentials:
 | --- | --- | --- |
 | Berlin Worker | `SUPABASE_URL` | cloud-dev Supabase project URL |
 | Berlin Worker | `SUPABASE_SERVICE_ROLE_KEY` | account/session/bootstrap relational access |
-| Roma Pages | `SUPABASE_URL` | cloud-dev Supabase project URL for account settings routes |
-| Roma Pages | `SUPABASE_SERVICE_ROLE_KEY` | service-role account locale/settings writes |
-| Roma Pages CI/build verification | `SUPABASE_ANON_KEY` or `SUPABASE_ANON_KEY_CLOUD_DEV` | Supabase client/build check dependency where the workflow provides it |
+| Roma Cloudflare Pages app | `SUPABASE_URL` | cloud-dev Supabase project URL for account settings routes |
+| Roma Cloudflare Pages app | `SUPABASE_SERVICE_ROLE_KEY` | service-role account locale/settings writes |
+| Roma Cloudflare Pages build verification | `SUPABASE_ANON_KEY` or `SUPABASE_ANON_KEY_CLOUD_DEV` | Supabase client/build check dependency where the workflow provides it |
 
 Do not commit secret values. Do not use Supabase Auth as the product login
 authority; Berlin owns product auth.

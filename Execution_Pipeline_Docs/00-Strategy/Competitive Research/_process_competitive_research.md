@@ -4,8 +4,8 @@ Status: **PROCESS — REUSABLE**
 
 Date: 2026-08-05
 
-This is the standard process for conducting competitive research on widget/page/
-content-surface platforms. It exists to prevent the two failure modes we hit in
+This is the standard process for conducting competitive research on Widget and
+adjacent content-surface platforms. It exists to prevent the two failure modes we hit in
 the first pass: (1) taking marketing numbers at face value (the "229 widgets"
 mistake), and (2) producing feature catalogs instead of positioning artifacts.
 
@@ -110,9 +110,9 @@ For every competitor, identify:
    storage, AI tokens)? HOW is each metric counted? (e.g., is a "view" per-page
    or per-widget-load? Per-app or shared pool? This distinction changes the real
    cost by orders of magnitude.)
-4. **The composition penalty:** if a customer wants N widgets or a page with N
-   placements, what does it cost? (Per-widget pricing penalizes composition;
-   account-owned does not.)
+4. **The multiple-Widget penalty:** if a customer wants N Widgets, what does it
+   cost? Per-widget pricing penalizes broader use; account-owned pricing does
+   not.
 5. **The upgrade cliff:** where does free → paid hit? What does the customer
    lose if they downgrade?
 6. **Billing cycle:** monthly? annual-only? Is the headline price promotional
@@ -153,14 +153,15 @@ pricing pain point Clickeen exploits:
   Confusing metering? Branding removal fees?
 - What does the median paying customer actually pay (revenue-weighted average)?
 - What could Clickeen charge that undercuts that number while delivering more
-  value (no deactivation, composition, saved HTML, agents)?
+  value (no deactivation, saved HTML, agents)?
 - State the Clickeen pricing position as a one-sentence answer to "why is your
   pricing better?" — not "we're cheaper" but "what you get for the price is
   structurally different."
 
 **Compare to Clickeen's model explicitly:** account-owned tier, entitlement
-matrix (`widgets.instances.max`, `instances.published.max`, `pages.max`), no
-per-widget pricing, no view metering, baseLocale + overlays at every tier.
+matrix (`widgets.instances.max`, `instances.published.max`), no per-widget
+pricing, no view metering, baseLocale + overlays at every tier. Pages are a
+deferred future product and are not part of the current comparison.
 
 ---
 

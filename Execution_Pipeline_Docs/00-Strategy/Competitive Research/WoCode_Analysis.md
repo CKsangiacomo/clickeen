@@ -11,10 +11,9 @@ Cenny review, LinkedIn, Crunchbase, and browser inspection of the product.
 
 WoCode (full name "Without Code") is a **no-code website builder** — not a
 widget platform. It is in a different category from Elfsight, Common Ninja, and
-OpenWidget. But it is a **future competitor** for Clickeen because Clickeen's
-trajectory is widgets → pages → websites (per WhyClickeen/SchemaFirstApps).
-WoCode shows what the "pages compose into websites" future looks like when a
-small team builds it for designers.
+OpenWidget. It is a **future research reference** because customer Pages and
+website building are deferred planning. WoCode shows the scope of that possible
+future product when a small team builds it for designers.
 
 Founded 2018 by Steve (former web designer, also founder of MuseThemes — an
 Adobe Muse template/widget company). When Adobe Muse reached end-of-life, the
@@ -84,7 +83,7 @@ animation/effect engine.
 WoCode has significantly more builder components than Clickeen has widget types
 (100+ vs 8). But the comparison is misleading: WoCode's components only work
 inside their proprietary builder. Clickeen's widgets are standalone saved
-artifacts that compose into pages and serve from `clk.live`.
+artifacts served from `clk.live`.
 
 ---
 
@@ -113,8 +112,8 @@ WoCode has a dedicated SEO page emphasizing:
 - Meta tag controls
 - Fast load times (AWS hosting)
 
-This is the same SEO story Clickeen tells (complete crawlable HTML), but built
-into a full website builder rather than a widget/page platform.
+This is the same SEO story Clickeen tells for Widgets (complete crawlable HTML),
+but built into a full website builder rather than a Widget platform.
 
 ### The embed question
 
@@ -163,10 +162,9 @@ designer/agency market directly.
    as Clickeen's account-owned entitlements. No deactivation risk.
 2. **$18-35/mo is competitive.** For a full website builder with hosting, this
    is cheaper than Webflow ($16-39/mo) and Squarespace ($16-54/mo).
-3. **Clickeen's advantage when composing into websites:** Clickeen's
-   agent-operated model + Dieter design system + saved-as-truth HTML should
-   produce better websites at lower operational cost. But Clickeen does not
-   yet have the full builder stack (hosting, templates, CMS, ecommerce).
+3. **Possible future direction:** Clickeen's agent-operated model + Dieter
+   design system + saved-as-truth HTML may inform a future website product.
+   Clickeen does not currently have that builder stack.
 4. **WoCode's advantage today:** they ARE a website builder. Clickeen is not —
    yet.
 
@@ -178,10 +176,10 @@ designer/agency market directly.
 no MCP server, no agent surface. The builder is entirely human-operated via
 drag-and-drop.
 
-This is the **biggest competitive gap** WoCode has vs Clickeen. When Clickeen
-composes pages from widget instances and eventually extends to websites, the
-agent-operated model (Product Copilot, Translation Agent) will be a structural
-advantage WoCode cannot match without rebuilding.
+This is the **biggest competitive gap** WoCode has vs current Clickeen Widgets.
+The agent-operated model (Product Copilot, Translation Agent) is a structural
+advantage in Widget authoring. Future Pages or website comparisons remain
+deferred planning.
 
 ---
 
@@ -353,10 +351,8 @@ customers.
 ### 11.1 Positioning statement
 
 > WoCode is a niche website builder for designers (24,000+ community, ~$1-3M
-> revenue, no AI) that shows what Clickeen's "pages compose into websites"
-> future looks like when a small team builds it without agents or a structured
-> substrate. Clickeen's path to the same destination is agent-operated,
-> schema-first, and built on saved-as-truth artifacts.
+> revenue, no AI) that shows the scope of a possible future website product.
+> Clickeen currently ships Widgets; customer Pages and websites are deferred.
 
 ### 11.2 Battle card (future — when Clickeen extends to websites)
 
@@ -364,37 +360,35 @@ customers.
 | --- | --- | --- |
 | Where we win | Agent-operated website composition; Dieter design system; baseLocale + exact overlays; saved-as-truth HTML at every level; no platform lock-in (artifacts served from R2, not trapped in a builder) | — |
 | Where they win | — | Full website builder today (hosting, templates, CMS, ecommerce, memberships, email); 100+ builder components; 24,000+ designer community; white-label reseller model |
-| When we lose | Customer needs a full website builder today, not a widget/page platform. Customer needs hosting, email, memberships. | Customer needs those. |
+| When we lose | Customer needs a full website builder today. Clickeen is currently a Widget platform. | Customer needs those. |
 | When we win | Customer wants agent-operated website building. Customer wants their content to be real saved HTML, not trapped in a proprietary builder. Customer wants localization as a structural property. |
 | Killer question | "Do you want to build websites by dragging boxes in a proprietary builder, or do you want agents to compose saved artifacts into websites you own?" |
 
 ### 11.3 Messaging guidance (future)
 
 **Say:**
-1. "Your website is composed from real saved artifacts, not trapped in a builder." Each page, each widget is a real HTML file you own.
-2. "Agents build it with you." Product Copilot and Translation Agent operate the composition.
-3. "One account, all your widgets, pages, and websites." No per-site pricing. No platform lock-in.
+1. Do not use future website messaging as a current product claim.
+2. Current messaging remains about saved, crawlable Widgets operated by agents.
+3. Revisit website positioning only when the deferred product has an approved execution PRD.
 
 **Do NOT say:**
-1. "We're a website builder." Not yet. The message is composition + agents, not "we replaced Wix."
-2. "We have more widgets." WoCode has 100+. The message is depth + composition + agents.
+1. "We're a website builder." We are not. Customer Pages and websites are deferred planning.
+2. "We have more widgets." WoCode has 100+. The current message is Widget depth + agents.
 3. "We're cheaper." WoCode is $18-35/mo for a full builder. Clickeen's pricing model is different and the comparison is not straightforward.
 
 ---
 
 ## 12. The strategic read for Clickeen
 
-WoCode is a **preview of Clickeen's future competitive set** — not a current
-competitor. When Clickeen extends from pages to websites (per the
-schema-first-apps thesis), it will compete with website builders like WoCode,
-Webflow, and Duda, not just with widget platforms like Elfsight.
+WoCode is a **possible future competitive reference** — not a current
+competitor. Customer Pages and websites are deferred planning; this research
+must not be read as an approved roadmap or current product claim.
 
 The lessons from WoCode:
 
 1. **A small team CAN build a full website builder.** ~5-15 people built a
    platform with hosting, 100+ components, ecommerce, SEO, and memberships.
-   Clickeen's substrate is more advanced (agent-operated, saved-as-truth,
-   Dieter, overlays) — the engineering to extend to full websites is feasible.
+   This is competitor evidence only, not approval for Clickeen to build one.
 
 2. **The designer/agency niche is real and underserved.** WoCode's 24,000+
    community proves designers want a code-free platform with white-label
@@ -404,9 +398,9 @@ The lessons from WoCode:
 3. **Per-site pricing with no metering is the right model.** WoCode proves it
    works. Clickeen's account-owned entitlements are the natural extension.
 
-4. **No AI is a fatal gap.** WoCode has zero AI. When Clickeen extends to
-   websites, Product Copilot composing full sites from saved widget instances
-   + Dieter + page source will be structurally impossible for WoCode to match.
+4. **No AI is a fatal gap.** WoCode has zero AI. Clickeen's current Product
+   Copilot operates structured saved Widget truth directly. A future website
+   product remains deferred planning and is not a current claim.
 
 5. **Platform lock-in is the vulnerability.** WoCode traps your entire site.
    Clickeen's saved-as-truth artifacts (real HTML/CSS/JS files served from R2)

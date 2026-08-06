@@ -35,7 +35,6 @@ import {
   hydrateTabs,
   hydrateTextedit,
   hydrateTextfield,
-  hydrateTextarea,
   hydrateValuefield,
 } from '@dieter/components';
 import { hydrateObjectManager } from '@dieter/components/object-manager/object-manager';
@@ -347,7 +346,6 @@ function hydrateDieterComponents(scope: Element | DocumentFragment): void {
   hydrateChoiceTiles(scope);
   hydrateObjectManager(scope);
   hydrateTextfield(scope);
-  hydrateTextarea(scope);
   hydrateValuefield(scope);
   hydrateTextedit(scope);
   hydrateDropdownActions(scope);
@@ -916,8 +914,8 @@ function renderFromHash() {
   }
 
   const route = navIndex.get(pagePath);
-  if (route?.kind === 'catalog' && route.catalogKind) {
-    const content = renderCatalogView(route.catalogKind);
+  if (route?.kind === 'catalog') {
+    const content = renderCatalogView();
     const wrapped = wrapWithPageChrome(content, route.title);
     setActive(route.path);
     document.title = `DevStudio · ${route.title}`;

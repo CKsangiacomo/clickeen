@@ -81,7 +81,7 @@ authorities.
 The same language rule applies to Clickeen's own product identity. Generated
 Widget attribution may describe only locale support proven by the existing
 locale authority. It must not turn global-by-default into an unsupported “all
-languages” claim. Each served Instance or Page declares its exact language;
+languages” claim. Each served Instance declares its exact language;
 each Clickeen product page declares only the languages it actually supports.
 
 ## Strategic Boundary

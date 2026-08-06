@@ -113,7 +113,7 @@ Never do these to "make Cloudflare work":
 Passing one preflight proves only that plane. R2 preflight does not prove
 Pages/DNS access. REST preflight does not prove R2 object access.
 
-Normal account assets, instances, pages, and translations mutate through
+Normal account assets, instances, and translations mutate through
 Roma/Tokyo-worker product routes. Direct `accounts/**` R2 writes are exceptional
 repair operations and must be named as product data repair, not normal product
 flow.
@@ -125,12 +125,8 @@ not a manual Cloudflare repair path. Tokyo-worker uses its configured
 `CLOUDFLARE_ZONE_ID` and the least-privilege
 `CLOUDFLARE_CACHE_PURGE_TOKEN` Worker secret to purge exact public URLs.
 
-For Pages, Save while published purges the union of the previous/current saved
-exact-locale URLs plus `styles.css` and `runtime.js`. Publish, Unpublish, and
-Delete purge the Page's saved exact-locale and support-file URLs. The stable
-locale-selection URL is `no-store`, so it has no cache entry to purge. Instance
-mutations use the same exact-URL rule for their base, saved locale, and support
-files. There is no global zone purge or locale-hidden cache variant.
+Instance mutations purge their exact base, saved locale, and support-file URLs.
+There is no global zone purge or locale-hidden cache variant.
 
 Missing purge configuration or a rejected Cloudflare purge is an explicit
 product-operation failure. Do not repeat the mutation through a dashboard or
@@ -192,7 +188,7 @@ Report that path in the execution evidence when it happens.
 
 Direct R2 mutation is not normal product operation. Use it only for explicit
 product-data repair or git-authored product-root sync. For account assets,
-instances, pages, and translation overlays, prefer the product route or owning
+instances and translation overlays, prefer the product route or owning
 agent path unless the task explicitly names remote data repair.
 
 ## Tokyo Product-Root R2 Sync
@@ -317,7 +313,6 @@ for the full Pages project/env/binding inventory.
 | DevStudio domain | `pnpm cf:pages:domains devstudio` |
 | DevStudio DNS | `pnpm cf:dns:records clickeen.com devstudio.clickeen.com` |
 | Public embed runtime | `https://dev.clk.live/{accountPublicId}/{instanceId}` |
-| Public Page runtime | `https://dev.clk.live/{accountPublicId}/pages/{pageId}/{locale}` |
 | Shared public installer | `https://dev.clk.live/clickeen.js` |
 | R2 object | `pnpm cf:r2:get <exact-key>` |
 | Worker deploys | GitHub Actions `cloud-dev workers deploy` run plus the owning service runtime check |

@@ -2,13 +2,13 @@
 
 STATUS: CURRENT SYSTEM OPERATOR SPEC
 
-Translation Agent translates saved ordinary Instance or Page content into exact
-locale overlay files.
+Translation Agent translates saved ordinary Instance content into exact locale
+overlay files.
 
 Code authority:
 
 - `agents/translation-agent/`
-- `roma/app/api/account/translations/generate/route.ts`
+- `roma/app/api/account/instances/[instanceId]/translations/generate/route.ts`
 - `roma/app/api/account/instances/[instanceId]/translations/route.ts`
 - `roma/app/api/account/instances/[instanceId]/translations/[locale]/route.ts`
 - `roma/app/api/account/locales/route.ts`
@@ -37,29 +37,27 @@ Code authority:
 
 | Authority | Owns |
 | --- | --- |
-| Roma | current account, tier, active locales, saved target read, grant issuance |
+| Roma | current account, tier, active locales, saved Instance read, grant issuance |
 | Translation Agent | translation planning, protected-token handling, model prompts, exact overlay value production |
 | San Francisco | signed model execution and usage metadata |
-| Tokyo-worker | exact Instance and Page overlay file storage in R2 |
+| Tokyo-worker | exact Instance overlay file storage in R2 |
 | Product surface | user request and result display |
 
 Translation Agent does not own account permission, tier permission, active locale
-selection, deletion, visitor runtime, or saved Instance/Page source truth.
+selection, deletion, visitor runtime, or saved Instance source truth.
 
 ## Product Triggers
 
 Current generation route:
 
 ```text
-POST /api/account/translations/generate
+POST /api/account/instances/[instanceId]/translations/generate
 ```
 
 Roma loads current account locale state, excludes the base locale, enforces tier
-locale entitlement, loads the saved target source, builds translation items,
-mints a grant bound to that exact target, and calls the Translation Agent
-service binding. The request body names either
-`{ "kind": "instance", "id": "..." }` or
-`{ "kind": "page", "id": "..." }` as `target`.
+locale entitlement, loads that saved Instance, builds translation items, mints
+a grant bound to that exact Instance id, and calls the Translation Agent
+service binding.
 
 Locale removal is not Translation Agent work. Roma/Tokyo delete exact overlay
 files for removed active locales.
@@ -74,7 +72,7 @@ renders it temporarily.
 | --- | --- | --- |
 | list translations | `list-translations` | `GET /api/account/instances/[instance id]/translations` |
 | read one translation | `read-translation` | `GET /api/account/instances/[instance id]/translations/[active locale]` |
-| generate translations | `generate-translations` | `POST /api/account/translations/generate` |
+| generate translations | `generate-translations` | `POST /api/account/instances/[instance id]/translations/generate` |
 
 Bob's current Translations panel shows the Generate translations operation and
 transient Translation Agent Activity while the agent operates. After the command
@@ -89,7 +87,7 @@ from polling. Bob does not expose user translation overrides.
 | --- | --- | --- | --- |
 | `GET` | `/api/account/instances/[instance id]/translations` | viewer | lists stored locale overlay summaries from Tokyo-worker |
 | `GET` | `/api/account/instances/[instance id]/translations/[active locale]` | viewer | reads one locale overlay value map from Tokyo-worker |
-| `POST` | `/api/account/translations/generate` | editor | generates overlays for one saved ordinary Instance or Page target and current active locales excluding base locale |
+| `POST` | `/api/account/instances/[instance id]/translations/generate` | editor | generates overlays for that saved ordinary Instance and current active locales excluding base locale |
 
 The browser-facing generation response is Roma-shaped, not the raw Worker
 response:
@@ -135,9 +133,6 @@ Rich text is detected from HTML-like values and sent as `type: "richtext"`.
 The saved Instance field map is authority. Translation Agent must not rederive
 the field list from current widget source code during overlay writes.
 
-For a Page, Roma sends only saved `title`, `description`, `socialTitle`, and
-`socialDescription`. Page templates cannot generate translations.
-
 ## Worker HTTP Contract
 
 Health:
@@ -150,7 +145,7 @@ HEAD /healthz
 Translate:
 
 ```text
-POST /translate
+POST /translate-instance
 ```
 
 Request:
@@ -160,7 +155,7 @@ Request:
   "grant": "[signed grant]",
   "agentId": "widget.instance.translator",
   "accountPublicId": "[account public id]",
-  "target": { "kind": "instance", "id": "[instance id]" },
+  "instanceId": "[instance id]",
   "widgetType": "[widget type]",
   "baseLocale": "[base locale]",
   "requestedLocales": ["[requested locale]"],
@@ -185,7 +180,7 @@ Required fields:
 
 - `grant`
 - `accountPublicId`
-- `target`
+- `instanceId`
 - `requestedLocales`
 - `items`
 
@@ -236,7 +231,7 @@ Required grant facts:
 - `caps` includes `agent:widget.instance.translator`;
 - `ai.agentId = "widget.instance.translator"`;
 - `trace.accountPublicId` equals request `accountPublicId`;
-- `trace.translationTarget` exactly equals request `target`;
+- `trace.instanceId` exactly equals request `instanceId`;
 - `trace.activeLocales` is the same set as request `requestedLocales`;
 - `exp` is greater than current time.
 
@@ -244,7 +239,7 @@ Tokyo-worker verifies the same grant on each write using the `x-ck-ai-grant`
 header and accepts only:
 
 - the same account id;
-- the same target kind and id;
+- the same Instance id;
 - a locale included in `trace.activeLocales`.
 
 ## Translation Planning And Safety
@@ -275,7 +270,7 @@ Current item limits in `agents/translation-agent/src/index.ts`:
 Translation Agent writes one overlay file per locale through Tokyo-worker:
 
 ```text
-PUT /__internal/translations/[instance|page]/[target id]/[active locale]
+PUT /__internal/instances/[instance id]/translations/[active locale]
 ```
 
 Headers:
@@ -305,7 +300,6 @@ Overlay file paths:
 
 ```text
 accounts/[account public id]/instances/[instance id]/overlays/locales/[active locale].json
-accounts/[account public id]/pages/[page id]/overlays/locales/[active locale].json
 ```
 
 Tokyo-worker stores the file. Translation Agent does not store files directly in
@@ -343,18 +337,11 @@ widget explicitly generates translations. Removed-locale cleanup does not veto
 the saved setting; an exact cleanup failure returns as
 `localeCleanup.ok: false`.
 
-Each successful ordinary Instance overlay write marks same-account ordinary
-Pages that reference the Instance as Needs update. The Translation Agent does
-not update or compile those Pages. Page-owned overlay writes and Settings-owned
-removed-locale cleanup do not set Page update state.
-
-This is an operator fact, not a desired future abstraction.
-
 ## End-To-End Runtime Secrets And Bindings
 
 | Surface | Secret/binding/env | Required | Used for |
 | --- | --- | --- | --- |
-| Roma | `TRANSLATION_AGENT -> translation-agent-dev` | yes | service-binding call to `/translate` |
+| Roma | `TRANSLATION_AGENT -> translation-agent-dev` | yes | service-binding call to `/translate-instance` |
 | Roma | `TOKYO_PRODUCT_CONTROL -> tokyo-assets-dev` | yes | listing/reading/deleting translations and source instance loads |
 | Roma | `ROMA_AI_GRANT_PRIVATE_KEY_PEM` | yes | minting the Roma-issued Translation Agent grant |
 | Roma | `SUPABASE_SERVICE_ROLE_KEY` | yes for locale settings write | account locale settings patch |
@@ -432,20 +419,21 @@ Normal cloud-dev deploy evidence comes from the GitHub Actions
 `packages/ck-policy/**`, `packages/l10n/**`, or the workflow
 file. The workflow also syncs `ROMA_AI_GRANT_PUBLIC_KEY_PEM` to
 `translation-agent-dev`, `sanfrancisco-dev`, and `tokyo-assets-dev` when
-required. Roma's matching private key remains only in Roma Pages.
+required. Roma's matching private key remains only in the Roma Cloudflare Pages
+application.
 
 ## Operator Debug Sequence
 
 1. Confirm Roma can load current account locale state.
 2. Confirm active locales exclude the base locale and pass tier entitlement.
-3. Confirm the saved target has translatable values: Instance
-   `source.content.fields`, or ordinary Page metadata.
+3. Confirm the saved Instance has translatable values in
+   `source.content.fields`.
 4. If generation returns `accepted: false`, there were no active non-base
    locales to generate.
 5. If `failedLocales` is non-empty, inspect those exact locale outcomes; other
    requested locales may still have translated and written successfully.
 6. If Translation Agent returns `401` or `403`, inspect the Roma grant trace:
-   `accountPublicId`, `translationTarget`, and `activeLocales`.
+   `accountPublicId`, `instanceId`, and `activeLocales`.
 7. If model execution fails, inspect San Francisco health, grant model policy,
    and selected provider secret.
 8. If Tokyo write fails, inspect `TOKYO_PRODUCT_CONTROL`, `x-account-id`,

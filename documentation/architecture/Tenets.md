@@ -31,7 +31,6 @@ Clickeen is a simple account product.
 - `accountPublicId` is the API/embed/authz field name for that same value.
 - Widgets are software and live in the system.
 - Users create widget instances in Roma/Bob and save them in their account.
-- Pages are account-owned stacks of saved instances.
 - Bob edits in browser memory; user save is the persistence boundary.
 - Roma is the account app; it routes the user, enforces tier/product policy,
   and saves account work through owner services.
@@ -46,7 +45,7 @@ Clickeen is a simple account product.
   Tenet 14.
 - Tier controls creation and product use. Account ownership and account
   lifecycle control storage retention. A downgrade does not hide or
-  automatically delete account Instances, Pages, templates, or generated files.
+  automatically delete account Instances, templates, or generated files.
 - System-initiated deletion of the complete account root happens only as part of
   the one account-deletion operation. The one downgrade exception is account
   assets over the new `storage.bytes.max`: they receive a 30-day grace period,
@@ -60,12 +59,11 @@ public files:
 
 - Complete semantic public HTML is the baseline for every tier. For Widget
   Instances, a paid SEO/GEO/AEO entitlement plus the saved Instance choice may
-  add customer optimization output. The Page generation API has no Page SEO
-  toggle and always emits its declared semantic output. Neither rule decides
-  whether customer content exists in initial HTML.
+  add customer optimization output. Neither rule decides whether customer
+  content exists in initial HTML.
 - `branding.remove` and `embed.seoGeo.enabled` are different product policies.
   Branding controls visible Clickeen attribution. The SEO entitlement controls
-  the saved Widget Instance enhancement choice; it is not a Page switch.
+  the saved Widget Instance enhancement choice.
 - Free Widget distribution is truthful product attribution, not hidden growth
   code: one visible contextual link to the global Clickeen product and matching
   Clickeen application identity are generated into initial HTML. Clickeen is
@@ -92,7 +90,6 @@ Examples:
 - editable/translatable field contracts;
 - account instance config/content files;
 - locale overlay value maps;
-- page source files;
 - account asset references;
 - policy matrices and grants;
 - service-owned route contracts.
@@ -138,7 +135,6 @@ This applies to:
 - storage paths;
 - public artifacts;
 - account assets;
-- page source and package files.
 
 If requested truth is unavailable, the system returns an explicit error or
 serves nothing at that boundary. It does not substitute another account,
@@ -230,7 +226,7 @@ prague/
 ```
 
 Only `accounts/` is runtime-managed account storage. It owns account instances,
-uploaded account assets, overlays, account pages, and generated account-scoped
+uploaded account assets, overlays, and generated account-scoped
 browser files.
 
 The non-account roots are git-authored deploy artifacts. Account operations must
@@ -245,7 +241,7 @@ Tokyo-worker -> exact byte operation under the account root
 ```
 
 Changing tier does not move, rename, rewrite, or automatically delete account
-Instances, Pages, templates, overlays, or generated files. User-authorized
+Instances, templates, overlays, or generated files. User-authorized
 deletion remains an explicit product operation. Whole-account deletion is the
 only operation that purges the entire account root.
 
@@ -324,18 +320,6 @@ Visitor requests must not:
 If the requested public artifact is not available, the boundary returns an
 explicit failure such as 404.
 
-Page source is current account-owned product data. On explicit Save or Update,
-Page Builder uses Web Code Generator in the browser and sends the exact current
-Page source, `index.html`, `styles.css`, `runtime.js`, and `overlays.json`
-through Roma to Tokyo. Publish changes only `serve-state.json`. Tokyo serves
-the stored files at the Page's stable and exact-locale `clk.live` routes.
-Visitor requests never invoke generation, translation, models, Roma, Page
-Builder, or child Widget URLs, and never compose a Page from authoring source.
-Referenced Instance Save or translation writes set the Page's one
-`needsUpdate` flag; they do not regenerate it. Ordinary Page Save and Publish
-then block until the customer explicitly runs Update through the same Page
-write boundary. A published Page keeps serving its last saved files meanwhile.
-
 ## Tenet 12: Dieter Tokens First
 
 Widget configs use Dieter tokens by default for styling. User overrides are
@@ -406,9 +390,9 @@ entitlement failure and the product surface opens the Upgrade dialog.
 
 **Save as template** is the named exception. It is a contextual editing utility,
 not a monetized capability: show it only for an editable ordinary Widget
-Instance or Page when the account can create another object of that type. It
-appears in the object's list-row three-dot menu and as a persistent secondary
-action in Bob or Page Builder. Otherwise it is absent. The owning command still
+Instance when the account can create another Instance. It appears in the
+object's list-row three-dot menu and as a persistent secondary action in Bob.
+Otherwise it is absent. The owning command still
 performs the normal role and saved-object-limit validation; it adds no separate
 entitlement or Upsell path.
 

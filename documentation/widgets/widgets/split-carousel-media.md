@@ -100,12 +100,6 @@ Runtime behavior contract:
 - Auto core size uses a 16:9 shape with a 320px minimum height in current CSS.
 - Card wrapper styling is generated from the shared Shell surface contract.
 
-## Clickeen Pages Usage
-
-Split Carousel Media appears in Clickeen Page source as a saved account widget
-instance placement. Media fill objects remain in instance state. Uploaded files
-are account assets resolved before generation.
-
 ## Verification
 
 ```bash

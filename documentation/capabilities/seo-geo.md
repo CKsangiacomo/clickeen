@@ -11,11 +11,9 @@ subsystem.
 | Concern | Authority |
 | --- | --- |
 | Instance generation | `packages/ck-web-code-generator/src/generate-instance.ts`, `instance-semantics.ts` |
-| Page generation | `packages/ck-web-code-generator/src/generate-page.ts`, `page-semantics.ts` |
 | Bob generation/preview/save payload | `bob/components/Workspace.tsx`, `bob/lib/session/useSessionSaving.ts` |
 | Roma save enforcement | `roma/lib/account-instance-save-policy.ts`, account instance routes |
 | Public instance serving and response completion | `tokyo-worker/src/routes/clk-live-routes.ts` |
-| Public Page serving and response completion | `tokyo-worker/src/routes/clk-live-page-routes.ts`, `tokyo-worker/src/domains/pages/public-html.ts` |
 | Exact package readiness | `tokyo-worker/src/domains/account-instances/package-files.ts` |
 | Control/entitlement mapping | Widget `limits.json`, `@clickeen/ck-policy` |
 
@@ -115,61 +113,6 @@ files, call a model, or write storage.
 `runtime.js` binds behavior only; it does not apply SEO metadata or locale
 overlays.
 
-## Public Page Serving
-
-Web Code Generator has deterministic Page generation. It uses exact Page
-source, placements, Page overlays, selected settings locales, and generation
-context to produce complete initial Page files plus exact serving overlay JSON
-when locales exist. The base generated Page output includes declared metadata,
-canonical/alternate relationships, social metadata, and one base-locale
-`WebPage` JSON-LD block. There is no Page SEO toggle; ordinary Page access is
-governed by the existing Page product policy.
-
-An ordinary published Page is served at:
-
-```text
-https://clk.live/{accountPublicId}/pages/{pageId}
-https://clk.live/{accountPublicId}/pages/{pageId}/{locale}
-```
-
-The stable URL chooses only from the saved public locale set and redirects with
-`no-store`. The exact-locale URL is the HTML cache key. For the base locale,
-Tokyo-worker uses the metadata/content already in stored `index.html`; for a
-non-base locale it applies only the matching root `overlays.json` values through
-declared Page/placement markers. Both complete canonical/alternate links,
-social URL metadata, and `WebPage.url`/`@id` from the validated public
-coordinate. Root `overlays.json` is validated before route selection, so one
-malformed entry makes every Page route unavailable. With a valid root, missing
-exact locale truth is `404`; selected HTML completion failure is an explicit
-`500`; neither returns base-locale content for a requested non-base locale.
-
-Page `styles.css` and `runtime.js` are shared across locales and cached at their
-direct Page URLs. Save while published, Publish, Unpublish, and Delete purge
-the affected previous/current exact-locale and support-file URLs. Public
-serving never calls child Instance URLs, Web Code Generator, Roma, or a model.
-
-## Page Authoring
-
-Roma Page Builder owns Page SEO/GEO/AEO authoring. Its one SEO/GEO/AEO panel
-edits the required Page title plus optional meta description, social title,
-social description, social image, and the two supported search-visibility
-choices. Base metadata and exact-locale metadata use the same fields. Optional
-values stay empty until the customer supplies them; the UI shows neutral live
-character counts but does not invent SEO scores or hard character limits.
-
-The social image uses the account asset routes and Dieter's image-upload
-contract. Page Builder has no Page SEO entitlement toggle because ordinary
-Pages already begin at Tier 2, where Page SEO/GEO/AEO output is part of the
-product.
-
-**Generate translations** uses the existing Translation Agent and the locales
-selected in account Settings. It writes exact Page metadata overlays and
-reports any failed locales by name. It does not run Web Code Generator. The
-customer reviews the result and chooses Save or Update; that explicit action
-runs Web Code Generator and submits the exact Page files plus `overlays.json`.
-Publish does not generate or translate. If required saved locale output is
-missing, Publish names the missing locales and changes no public state.
-
 ## Boundaries
 
 SEO/GEO/AEO is not:
@@ -194,10 +137,6 @@ Clickeen is never declared the author of customer facts.
 | Missing/invalid exact package file or content type | public serving returns `404` |
 | Invalid requested locale overlay | explicit locale `404` or `500`; no base-locale substitution |
 | Uncompleted `__CK_PUBLIC_*__` placeholder | `500 Public HTML invalid` with `no-store` |
-| Unpublished or missing Page | public Page serving returns `404` |
-| Malformed root Page `overlays.json` | every Page route returns `500 Page unavailable` with `no-store` |
-| Missing saved Page locale from valid root | `404 Locale not available`; no base-locale substitution |
-| Selected Page HTML completion failure | `500 Page locale data invalid` with `no-store` |
 
 ## Verification
 
@@ -208,4 +147,3 @@ Clickeen is never declared the author of customer facts.
 | Entitlement enforcement | Widget `limits.json`, Bob edit result, and Roma save-policy response |
 | Public Instance output | published base/locale URL and returned completed HTML at its exact cache key |
 | Public no-agent rule | Tokyo-worker route reads stored files/overlays and performs deterministic completion only |
-| Public Page output | stable redirect, exact-locale completed HTML, shared support files, and scoped purge evidence |

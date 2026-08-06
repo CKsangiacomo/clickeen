@@ -10,8 +10,6 @@
     "test:public-loader": "tsx tests/run-public-loader-contract.ts",
     "test:widget-cache": "tsx tests/run-widget-cache-lifecycle.ts",
     "test:widget-template": "tsx tests/run-widget-template-contract.ts",
-    "test:page-contract": "tsx tests/run-page-contract.ts",
-    "test:page-serving": "tsx tests/run-page-public-serving.ts",
     "test:catalog-read": "tsx tests/run-catalog-read-contract.ts",
     "test:catalog-asset-copy": "tsx tests/run-catalog-asset-copy.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit"

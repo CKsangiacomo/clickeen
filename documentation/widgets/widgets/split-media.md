@@ -98,12 +98,6 @@ Core state includes:
   through the shared Shell surface contract.
 - Auto core size uses a 16:9 shape with a 320px minimum height in current CSS.
 
-## Clickeen Pages Usage
-
-Split Media appears in Clickeen Page source as a saved account widget instance
-placement. The media fill object, alt text, fit, position, and visual frame
-config remain account-owned instance state.
-
 ## Verification
 
 ```bash

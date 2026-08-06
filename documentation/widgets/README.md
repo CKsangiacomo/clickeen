@@ -3,14 +3,13 @@
 STATUS: CURRENT SYSTEM OPERATOR SPEC
 
 This folder documents current Clickeen widget operation. Use it when changing
-widget source, Bob editor controls, Translation Agent editable paths, widget
-Shell utilities, or account page placement behavior.
+widget source, Bob editor controls, Translation Agent editable paths, or Widget
+Shell utilities.
 
 Clickeen widget law:
 
 - Widgets are software.
 - Widget instances are saved account-owned widgets.
-- Clickeen Pages are account-owned stacks of saved widget instances.
 
 Widget software lives in git:
 
@@ -24,12 +23,6 @@ Saved account instances live in Tokyo/R2 through Tokyo-worker:
 accounts/{accountPublicId}/instances/{instanceId}/
 ```
 
-Clickeen Pages live in Tokyo/R2 through Tokyo-worker:
-
-```text
-accounts/{accountPublicId}/pages/{pageId}/
-```
-
 Bob edits one instance in browser memory. Roma owns account routing, policy,
 and save operations. Tokyo-worker stores exact submitted files. Shared widget
 Shell utilities live under `tokyo/product/widgets/shared/`.
@@ -38,9 +31,7 @@ Web Code Generator applies structured config, content, and overlays to each
 Widget's exact `index.html`, `styles.css`, and `runtime.js` source. Generated
 initial HTML owns customer content and attribution markup. `runtime.js` binds
 behavior to that generated markup; it does not receive generic state updates or
-render primary customer content. The existing `ck-style-module` and
-`ck-runtime-module` markers remain the mandatory shared-module keys for Page
-assembly.
+render primary customer content.
 
 ## Operator Authority
 
@@ -56,7 +47,6 @@ assembly.
 | Browser package generation | `@clickeen/ck-web-code-generator` in Bob |
 | Account save policy/hosting | Roma account instance command and save policy |
 | Saved widget instances | Tokyo-worker under `accounts/{accountPublicId}/instances/{instanceId}/` |
-| Clickeen Pages | Tokyo-worker under `accounts/{accountPublicId}/pages/{pageId}/` |
 
 ## Generated Package Dependency Rule
 
@@ -69,11 +59,6 @@ Later widget software or shared runtime changes do not mutate already-stored
 account package files. A later explicit Save generates and stores a new exact
 package for that account Instance. Public serving must not compare
 stored account package bytes to current widget source on visitor requests.
-
-Saving an existing Instance marks only same-account ordinary Pages that
-reference it as Needs update. This does not generate or change Page files. The
-customer's later explicit Page Update regenerates in Page Builder and stores
-the result through the normal Page Save boundary.
 
 Dieter icon URLs and account asset references remain external delivery
 references owned by their own roots. Dieter CSS and JavaScript do not.

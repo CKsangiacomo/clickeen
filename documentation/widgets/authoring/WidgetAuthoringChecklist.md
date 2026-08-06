@@ -43,10 +43,9 @@ Verification surface
    module markers for appearance, branding, share, locale switcher, Header,
    Stage/Pod, Core size, and typography as relevant.
 9. Confirm no widget-local fallbacks were added for required shared helpers.
-10. Confirm Clickeen Pages references use saved account widget instances.
-11. Confirm every editor cluster has one plain-text section label, with no
+10. Confirm every editor cluster has one plain-text section label, with no
     pre-encoded HTML entities or duplicate section/group heading.
-12. Confirm only shared Header and the widget's primary Content section declare
+11. Confirm only shared Header and the widget's primary Content section declare
     `initiallyOpen: true`; every other section relies on the collapsed default.
 
 ## Edit Boundaries

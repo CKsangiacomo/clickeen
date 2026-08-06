@@ -406,7 +406,7 @@ Each widget styled independently. No Dieter equivalent.
 > distribution (35M users) and engineering capacity to become a serious
 > competitor, but their widget architecture is the same invisible-to-crawlers
 > loader pattern as Elfsight. Clickeen's saved-as-truth HTML + agent-operated
-> composition is structurally different — and when Jotform starts charging in
+> Widget authoring is structurally different — and when Jotform starts charging in
 > 2027, Clickeen can position as "the widget platform that doesn't deactivate
 > your widgets when traffic arrives."
 
@@ -414,10 +414,10 @@ Each widget styled independently. No Dieter equivalent.
 
 | | Clickeen | Jotform Website Widgets |
 | --- | --- | --- |
-| Where we win | Complete crawlable HTML; composed pages; Dieter design system; baseLocale + overlays; agent-operated substrate; no view limits ever | — |
+| Where we win | Complete crawlable Widget HTML; Dieter design system; baseLocale + overlays; agent-operated substrate; no view limits ever | — |
 | Where they win | — | 35M user distribution; 600+ engineering capacity; free until 2027; forms + widgets integration; deep catalog (153 entries); 24/7 support |
 | When we lose | Customer already uses Jotform for forms and wants one-vendor simplicity. Customer wants free widgets during the land-grab period. | Customer wants those. |
-| When we win | Customer cares about SEO/crawlability. Customer wants to compose widgets into pages. Customer hits view-limit deactivation when Jotform starts charging. |
+| When we win | Customer cares about SEO/crawlability. Customer hits view-limit deactivation when Jotform starts charging. |
 | Killer question | "Jotform's widgets are free today, but in 2027 they'll charge you per view and deactivate your widgets when you exceed the limit. Do you want widgets that are real HTML today, or free widgets that disappear tomorrow?" |
 
 ### 11.3 Messaging guidance
@@ -428,7 +428,7 @@ Each widget styled independently. No Dieter equivalent.
 3. "Agents operate it." Product Copilot and Translation Agent, not a forms company bolting on widgets.
 
 **Do NOT say:**
-1. "We have 8 widgets." Jotform claims 153. The message is depth + composition.
+1. "We have 8 widgets." Jotform claims 153. The message is depth.
 2. "We're free." Jotform is free until 2027. We can't compete on free.
 3. "We're bigger." Jotform is 600+ people. We're not. The message is structural difference, not scale.
 
@@ -441,23 +441,21 @@ startup — they are an established SaaS company with massive distribution and
 engineering capacity. Their free-until-2027 strategy is a land-grab designed to
 capture install base before monetizing.
 
-**The timing is critical:** Jotform starts charging in January 2027. Clickeen's
-Pages program (127) needs to ship before then, so that when Jotform's free
-period ends and customers face view-limit deactivation for the first time,
-Clickeen has a live product with real crawlable HTML, no view limits, page
-composition, and agent operation.
+**The timing is useful:** Jotform starts charging in January 2027. Clickeen can
+meet that moment with its current Widget advantages: real crawlable HTML, no
+view limits, and agent operation. Deferred PRD 127 is not part of that claim.
 
 The competitive dynamics:
 - **Elfsight** is the incumbent widget platform with the most reviews.
 - **Common Ninja** is the agile innovator with MCP and AI editor.
 - **Jotform** is the giant entering with distribution and free pricing.
-- **Clickeen** is the structural alternative with saved HTML + agents + composition.
+- **Clickeen** is the structural Widget alternative with saved HTML + agents.
 
 The four are not playing the same game. Elfsight and Jotform are playing the
 widget-count + distribution game. Common Ninja is playing the AI-innovation
 game. Clickeen is playing the structural-architecture game. The question is
-whether structural advantages (crawlable content, agent operation, page
-composition) can overcome distribution disadvantages (fewer widgets, smaller
+whether structural advantages (crawlable content and agent operation) can
+overcome distribution disadvantages (fewer widgets, smaller
 user base).
 
 The answer depends on whether customers care about SEO and content ownership

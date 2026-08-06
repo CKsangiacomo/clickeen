@@ -58,20 +58,12 @@
     return '';
   }
 
-  function isComposedPage(widgetRoot) {
-    if (!(widgetRoot instanceof HTMLElement)) return false;
-    if (widgetRoot.closest('[data-ck-composed-page="true"]') instanceof HTMLElement) return true;
-    const rootNode = widgetRoot.getRootNode();
-    return rootNode instanceof ShadowRoot && rootNode.host.closest('[data-ck-composed-page="true"]') instanceof HTMLElement;
-  }
-
   function contextFor(widgetRoot, widgetType) {
     assertWidgetRoot(widgetRoot, widgetType);
     const instanceId = resolveInstanceId(widgetRoot);
     if (instanceId) widgetRoot.setAttribute('data-ck-instance-id', instanceId);
     return {
       widgetRoot,
-      composedPage: isComposedPage(widgetRoot),
       instanceId,
       locale: document.documentElement.lang || '',
     };
@@ -235,7 +227,6 @@
   window.CKWidgetRuntime = Object.freeze({
     assertWidgetRoot,
     contextFor,
-    isComposedPage,
     register,
     resolveInstanceId,
     roots,

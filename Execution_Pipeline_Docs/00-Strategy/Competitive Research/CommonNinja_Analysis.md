@@ -98,7 +98,7 @@ Common Ninja has widgets in categories Clickeen has no equivalent for:
 - **Data viz** (charts, graphs, diagrams)
 
 This is not a gap to fill — it is a different product thesis. Common Ninja is a
-widget-for-every-purpose marketplace; Clickeen is a composed-content platform.
+widget-for-every-purpose marketplace; Clickeen is a focused Widget platform.
 
 ---
 
@@ -185,7 +185,7 @@ catalog.
 | **Pricing model** | Per-widget subscription | Per-account tier with entitlements |
 | **Embed architecture** | CDN script + runtime fetch + browser render (Elfsight pattern) | Saved complete HTML/CSS/JS served from R2 (three-file law) |
 | **Crawlable content** | No (JS-rendered; `<noscript>` only) | Yes (complete semantic HTML before JS runs) |
-| **Composition** | None (independent widget islands) | Pages = ordered stacks of saved instances |
+| **Customer Pages** | None | Deferred planning, not a current product |
 | **Design system** | Per-widget style options (no shared system) | Dieter token system across all widgets |
 | **Localization** | Auto-detect + manual language selection + RTL | baseLocale + exact overlays + Babel protocol |
 | **AI authoring** | Prompt-to-widget inside editor + AI image gen + AI site analyzer | Product Copilot (agent-operated draft editing) |
@@ -208,7 +208,7 @@ catalog.
 
 They are the first widget platform we've seen that has built an MCP server for agent operation. The UX is clean: connect Claude/ChatGPT/Cursor via OAuth, then describe widgets in natural language. The agent creates, edits, and embeds. This is the right instinct — agent-operated widgets are the future — even though their substrate is legacy (CDN-hosted, client-rendered, per-widget config).
 
-**This is the competitive threat to watch.** If Common Ninja's MCP server works well, they have a faster path to "agent creates my widget" than Clickeen has to "agent operates my composed content platform" — because their scope per widget is smaller.
+**This is the competitive threat to watch.** If Common Ninja's MCP server works well, they have a faster path to "agent creates my widget." Clickeen's concrete difference is that agents operate saved Widget source and generated files through named product authorities.
 
 ### 6.3 The AI editor is the right product pattern
 
@@ -216,7 +216,7 @@ Prompt-to-widget + AI modification commands + AI image generation + AI site anal
 
 ### 6.4 Beyond-widgets features (payments, CRM, analytics)
 
-They've added native in-widget payments (checkout inside the widget, no redirect), a submission CRM (form submissions managed in-dashboard), and widget analytics. These make individual widgets more valuable as standalone products. Clickeen's thesis is different (widgets compose into pages, not standalone products), but the lesson is: each widget should be useful enough to justify its existence on its own, even when composed.
+They've added native in-widget payments (checkout inside the widget, no redirect), a submission CRM (form submissions managed in-dashboard), and widget analytics. These make individual widgets more valuable as standalone products. The lesson for current Clickeen is that each Widget must be useful enough to justify its existence on its own.
 
 ### 6.5 Platform integrations are comprehensive
 
@@ -230,13 +230,13 @@ WordPress, Shopify, Webflow, Squarespace, Wix, Google Tag Manager, plus direct H
 
 229 widgets, all client-rendered from CDN scripts, all fetching config at runtime, all invisible to crawlers. This is the Elfsight pattern at 229× scale. A site with 5 Common Ninja widgets loads 5 CDN scripts, makes 5 runtime config fetches, and renders 5 independent DOM islands — none of which contribute crawlable content to the host page.
 
-### 7.2 No composition, no pages
+### 7.2 No hosted Pages
 
-You cannot build a page from Common Ninja widgets. You can only embed independent widgets on a page someone else built. There is no composition surface, no generated artifact, no single document. This is the structural ceiling: they are an embed layer, not a content platform.
+You cannot build a hosted page from Common Ninja widgets. You can only embed independent widgets on a page someone else built. That is a competitor fact; customer Pages are also deferred at Clickeen and are not a current competitive claim.
 
-### 7.3 Per-widget pricing penalizes composition
+### 7.3 Per-widget pricing penalizes using multiple Widgets
 
-Even if they added composition, the per-widget pricing model actively discourages it. A customer composing 10 widgets into a page would pay 10× the plan price. Clickeen's account-owned model (one account, many instances, tier-based entitlements) is structurally friendlier to composition.
+The per-widget pricing model actively discourages customers from using multiple Widget types. A customer using 10 Widgets can pay for 10 subscriptions. Clickeen's account-owned model (one account, many instances, tier-based entitlements) is structurally simpler.
 
 ### 7.4 No shared design system
 
@@ -264,8 +264,8 @@ truth substrate (Clickeen).
 
 **Clickeen's answer:** Product Copilot and Translation Agent already operate
 the structured source. The Clickeen equivalent of an MCP server would expose
-the same agent operations to external AI clients — but the substrate is richer
-(composed pages, saved HTML, exact overlays, Dieter).
+the same agent operations to external AI clients — but the current Widget
+substrate is richer (saved HTML, exact overlays, Dieter).
 
 **Action:** Consider whether an MCP-compatible surface for Clickeen agents is
 warranted. Not now — but the MCP protocol is becoming a standard, and if
@@ -290,12 +290,13 @@ three tactics:
    layout configuration, not new engines.
 
 Clickeen's 8 curated widgets cannot compete on headline count and should not
-try. The thesis is fewer, deeper, composed — not 50 independent engines
-inflated to 229 entries. The right response is to make the 8 deeper, composed,
+try. The thesis is fewer, deeper Widgets — not 50 independent engines
+inflated to 229 entries. The right response is to make the 8 deeper,
 and more crawlable than any of their 50.
 
-**Action:** do not chase catalog breadth. Invest in widget depth (Dieter,
-overlays, composition) and page composition instead.
+**Action:** do not chase catalog breadth. Invest in current Widget depth
+(Dieter, overlays, authoring, serving). Customer Pages remain deferred; Prague
+continues as its independent Astro site.
 
 ### 8.3 The AI editor pattern is confirmed correct (again)
 
@@ -309,9 +310,9 @@ specific feature worth noting for future consideration.
 
 ### 8.4 Per-widget pricing vs account-owned is a structural advantage
 
-Common Ninja's per-widget pricing penalizes composition. Clickeen's account-
-owned model with `pages.max` and `widgets.instances.max` entitlements is
-structurally friendlier to composing multiple instances into pages.
+Common Ninja's per-widget pricing penalizes customers who create multiple
+widgets. Clickeen's account-owned model with `widgets.instances.max` and
+`instances.published.max` remains structurally simpler for customers.
 
 **Action:** keep the account-owned tier model. Do not move to per-widget
 pricing.
@@ -328,13 +329,12 @@ embedding is worth building. Not now, but note for distribution.
 ### 8.6 Payments, CRM, and analytics in widgets are product directions worth noting
 
 Common Ninja's native in-widget payments, submission CRM, and widget analytics
-make each widget more valuable as a standalone product. Clickeen's thesis is
-composition into pages, but individual widgets that can collect payments,
-manage submissions, and report analytics are more useful both standalone and
-composed.
+make each widget more valuable as a standalone product. The lesson for current
+Clickeen is that Widgets which collect payments, manage submissions, and report
+analytics are more useful on their own.
 
-**Action:** note for future. Not a 127 concern, but a direction for the
-widget-platform roadmap after Pages.
+**Action:** note for the future Widget-platform roadmap. It is not part of
+deferred PRD 127.
 
 ---
 
@@ -350,11 +350,11 @@ direction:
   system.
 
 - **Clickeen's path:** Agent-operated substrate (structured source, saved
-  artifacts, named authorities) → widget instances → composed pages. Agents are
-  native operators, not remote controllers.
+  artifacts, named authorities) → saved Widget Instances. Agents are native
+  operators, not remote controllers. Customer Pages are deferred planning.
 
-The two will converge on the same customer expectation: "tell an AI to build my
-widget/page." The competitive question is whether the substrate under the AI is
+The two will converge on the same current customer expectation: "tell an AI to
+build my Widget." The competitive question is whether the substrate under the AI is
 legacy (CDN + client-render, invisible to crawlers) or structured (saved HTML,
 crawlable, source-of-truth). Clickeen's bet is that the structured substrate
 wins because the public artifact matters (SEO, GEO, AEO, source-truth
@@ -627,30 +627,30 @@ and platform guides confirm cross-platform embedding is a real support surface.
 
 ### 13.1 Positioning statement
 
-> Clickeen is the only widget and page platform where your content is saved as
+> Clickeen is a Widget platform where your content is saved as
 > real, crawlable HTML — not a CDN script that renders in the browser. Common
 > Ninja ships 229 catalog entries built on ~50 engines that are invisible to
-> crawlers and answer engines, priced per-widget so composition is penalized.
+> crawlers and answer engines, with simpler account-owned pricing.
 
 ### 13.2 Battle card
 
 | | Clickeen | Common Ninja |
 | --- | --- | --- |
-| Where we win | Complete crawlable HTML; composed pages; account-owned pricing; Dieter design system; baseLocale + exact overlays at every tier; agent-operated substrate (not MCP bolt-on) | — |
+| Where we win | Complete crawlable Widget HTML; account-owned pricing; Dieter design system; baseLocale + exact overlays at every tier; agent-operated substrate (not MCP bolt-on) | — |
 | Where they win | — | ~50 widget engines with connector breadth (reviews, feeds, forms); MCP server today; native payments/CRM/analytics; platform plugins (WordPress, Shopify) |
 | When we lose | Customer needs a widget type Clickeen doesn't have (social feeds, review aggregators, booking, charts, gaming). Customer wants MCP today. | Customer needs those. |
-| When we win | Customer wants to compose widgets into pages, cares about SEO/crawlability, wants brand consistency across widgets, or wants to stop paying per-widget. |
-| Killer question | "Do you want 229 independent scripts that crawlers can't see, or do you want composed pages with real crawlable content?" |
+| When we win | Customer cares about Widget SEO/crawlability, wants brand consistency across Widgets, or wants to stop paying per Widget. |
+| Killer question | "Do you want a client-rendered script crawlers struggle to read, or a saved Widget with real crawlable content?" |
 
 ### 13.3 Messaging guidance
 
 **Say:**
 1. "Your content is real." Saved HTML, not CDN scripts. Crawlers see it, answer engines see it.
-2. "One account, all your widgets and pages." Not per-widget pricing. Not independent islands.
+2. "One account, all your widgets." Not per-widget pricing.
 3. "Agents operate it natively." Product Copilot edits your widgets. Translation Agent localizes them. Not an MCP bolt-on.
 
 **Do NOT say:**
-1. "We have 8 widgets." Next to their inflated 229, this invites the wrong comparison. The message is depth + composition, not catalog size.
+1. "We have 8 widgets." Next to their inflated 229, this invites the wrong comparison. The message is depth, not catalog size.
 2. "We have an MCP server." We don't yet. Common Ninja does. Don't claim it.
 3. "We're cheaper." Per-widget vs account-owned is complex to compare. The message is "one account owns everything," not "we cost less."
 
@@ -727,10 +727,10 @@ widget engineering innovation. The corrected competitive picture:
 
 - Common Ninja: ~50 engines (many simple single-purpose widgets), 229 inflated
   entries, no composition, no shared design system, no crawlable HTML
-- Clickeen: 8 engines (all deep, all composed into pages), Dieter design system,
+- Clickeen: 8 deep engines, Dieter design system,
   saved crawlable HTML, agent-operated substrate
 
-The real comparison is **8 deep composed engines vs ~50 mostly-simple
+The real comparison is **8 deep engines vs ~50 mostly-simple
 independent engines with connector breadth.** Common Ninja's moat is integration
 work, not widget quality or platform depth.
 

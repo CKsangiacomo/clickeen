@@ -12,7 +12,6 @@ Each spec documents:
 - entitlement limits;
 - Core state families;
 - runtime DOM hooks and invariants;
-- Clickeen Pages placement behavior.
 
 Current built widgets:
 
@@ -26,4 +25,3 @@ logoshowcase
 split-carousel-media
 split-media
 ```
-

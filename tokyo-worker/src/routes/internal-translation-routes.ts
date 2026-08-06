@@ -1,5 +1,4 @@
 import { normalizeStorageId } from '../asset-utils';
-import { isCompactInstanceId, isCompactPageId } from '@clickeen/ck-contracts/overlay-identity';
 import {
   deleteAccountInstanceTranslatedLocaleValues,
   listAccountInstanceTranslatedLocaleValues,
@@ -8,7 +7,6 @@ import {
 } from '../domains/account-translations/values';
 import { readAccountInstanceDocument } from '../domains/account-instances/source';
 import { AccountInstanceTransitionError } from '../domains/account-instances/operations';
-import { writeAccountPageLocaleOverlay } from '../domains/pages';
 import { json } from '../http';
 import {
   authorizeAccountInstanceControlRequest,
@@ -19,7 +17,6 @@ import {
 } from '../route-helpers';
 import {
   authorizeTranslatedLocaleWriteTransition,
-  authorizeRomaEditorTransition,
   normalizeAccountPublicId,
   normalizeTranslatedValues,
   readInternalProductJsonBody,
@@ -44,32 +41,6 @@ export async function tryHandleInternalTranslationRoutes(
   args: TokyoRouteArgs,
 ): Promise<Response | null> {
   const { req, env, pathname, respond } = args;
-
-  const translatedWriteMatch = pathname.match(/^\/__internal\/translations\/(instance|page)\/([^/]+)\/([^/]+)$/);
-  if (translatedWriteMatch) {
-    const kind = translatedWriteMatch[1] as 'instance' | 'page';
-    const id = decodeURIComponent(translatedWriteMatch[2] || '');
-    const locale = String(decodeURIComponent(translatedWriteMatch[3] || '')).trim();
-    const accountId = normalizeAccountPublicId(req.headers.get('x-account-id'));
-    const validId = kind === 'instance' ? isCompactInstanceId(id) : isCompactPageId(id);
-    if (!accountId || !validId || !locale) return respondValidation(respond, 'coreui.errors.translation.invalid', accountId ? 422 : 403);
-    if (req.method !== 'PUT') return respondMethodNotAllowed(respond);
-    const auth = await authorizeTranslatedLocaleWriteTransition({ req, env, accountId, target: { kind, id }, locale });
-    if (!auth.ok) return respond(auth.response);
-    const body = (await readInternalProductJsonBody({ req, env, boundary: 'internal.translation.values.body', accountId })) as Record<string, unknown> | null;
-    const values = normalizeTranslatedValues(body?.values);
-    if (!values) return respondValidation(respond, 'coreui.errors.translation.invalid');
-    try {
-      if (kind === 'instance') {
-        const translation = await writeAccountInstanceTranslatedLocaleValues({ env, accountId, instanceId: id, locale, values });
-        return respond(json({ ok: true, locale: translation.locale }));
-      }
-      await writeAccountPageLocaleOverlay({ env, accountId, pageId: id, locale, overlay: { values } });
-      return respond(json({ ok: true, locale }));
-    } catch (error) {
-      return respond(translationMutationError(error));
-    }
-  }
 
   const internalTranslationsListMatch = pathname.match(/^\/__internal\/instances\/([^/]+)\/translations$/);
   if (internalTranslationsListMatch) {
@@ -141,7 +112,7 @@ export async function tryHandleInternalTranslationRoutes(
     }
 
     if (req.method === 'PUT') {
-      const auth = await authorizeRomaEditorTransition({ req, env, accountId });
+      const auth = await authorizeTranslatedLocaleWriteTransition({ req, env, accountId, instanceId, locale });
       if (!auth.ok) return respond(auth.response);
 
       const body = (await readInternalProductJsonBody({

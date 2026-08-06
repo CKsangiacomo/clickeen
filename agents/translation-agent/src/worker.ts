@@ -1,5 +1,4 @@
 import { CK_REQUEST_ID_HEADER, asTrimmedString, isRecord, normalizeRequestId } from '@clickeen/ck-contracts';
-import type { TranslationTarget } from '@clickeen/ck-contracts/translations';
 import { readRomaAiGrantEnvelope, verifyRomaAiGrantSignature } from '@clickeen/ck-policy';
 import {
   buildStructuredTranslationPlan,
@@ -30,7 +29,7 @@ type VerifiedTranslationGrant = {
   ai: { agentId: typeof TRANSLATION_AGENT_ID };
   trace: {
     accountPublicId: string;
-    translationTarget: TranslationTarget;
+    instanceId: string;
     activeLocales: string[];
   };
 };
@@ -39,7 +38,7 @@ type TranslationAgentWorkerRequest = {
   grant: string;
   agentId?: string;
   accountPublicId: string;
-  target: TranslationTarget;
+  instanceId: string;
   widgetType?: string | null;
   baseLocale?: string | null;
   requestedLocales: string[];
@@ -125,7 +124,7 @@ async function verifyRomaTranslationGrant(args: {
   grant: string;
   publicKeyPem: string;
   accountPublicId: string;
-  target: TranslationTarget;
+  instanceId: string;
   requestedLocales: string[];
 }): Promise<VerifiedTranslationGrant> {
   if (!String(args.publicKeyPem || '').trim()) {
@@ -157,21 +156,21 @@ async function verifyRomaTranslationGrant(args: {
   const ai = isRecord(payload.ai) ? payload.ai : null;
   const trace = isRecord(payload.trace) ? payload.trace : null;
   const traceAccountPublicId = asTrimmedString(trace?.accountPublicId);
-  const traceTarget = normalizeTranslationTarget(trace?.translationTarget);
+  const traceInstanceId = asTrimmedString(trace?.instanceId);
   const traceActiveLocales = normalizeStringArray(trace?.activeLocales);
   if (
     payload.iss !== 'roma' ||
     !caps.includes(`agent:${TRANSLATION_AGENT_ID}`) ||
     ai?.agentId !== TRANSLATION_AGENT_ID ||
     traceAccountPublicId !== args.accountPublicId ||
-    !traceTarget || traceTarget.kind !== args.target.kind || traceTarget.id !== args.target.id ||
+    traceInstanceId !== args.instanceId ||
     !traceActiveLocales ||
     !sameStringSet(traceActiveLocales, args.requestedLocales)
   ) {
     throw new HttpError(403, {
       error: {
         code: 'CAPABILITY_DENIED',
-        message: 'Translation Agent grant does not match the requested account target.',
+        message: 'Translation Agent grant does not match the requested account instance.',
       },
     });
   }
@@ -182,7 +181,7 @@ async function verifyRomaTranslationGrant(args: {
     ai: { agentId: TRANSLATION_AGENT_ID },
     trace: {
       accountPublicId: traceAccountPublicId,
-      translationTarget: traceTarget,
+      instanceId: traceInstanceId,
       activeLocales: traceActiveLocales,
     },
   };
@@ -225,26 +224,19 @@ function normalizeTranslationItems(raw: unknown): TranslationItem[] | null {
   }));
 }
 
-function normalizeTranslationTarget(raw: unknown): TranslationTarget | null {
-  if (!isRecord(raw) || Object.keys(raw).length !== 2) return null;
-  const id = asTrimmedString(raw.id);
-  if (!id || (raw.kind !== 'instance' && raw.kind !== 'page')) return null;
-  return { kind: raw.kind, id };
-}
-
 function normalizeWorkerRequest(raw: unknown): TranslationAgentWorkerRequest | null {
   if (!isRecord(raw)) return null;
   const grant = asTrimmedString(raw.grant);
   const accountPublicId = asTrimmedString(raw.accountPublicId);
-  const target = normalizeTranslationTarget(raw.target);
+  const instanceId = asTrimmedString(raw.instanceId);
   const requestedLocales = normalizeStringArray(raw.requestedLocales);
   const items = normalizeTranslationItems(raw.items);
-  if (!grant || !accountPublicId || !target || !requestedLocales || !items) return null;
+  if (!grant || !accountPublicId || !instanceId || !requestedLocales || !items) return null;
   if (raw.agentId !== undefined && raw.agentId !== TRANSLATION_AGENT_ID) return null;
   return {
     grant,
     accountPublicId,
-    target,
+    instanceId,
     widgetType: asTrimmedString(raw.widgetType) ?? null,
     baseLocale: asTrimmedString(raw.baseLocale) ?? null,
     requestedLocales,
@@ -365,11 +357,11 @@ async function writeTokyoOverlayValues(args: {
   requestId: string;
   grant: string;
   accountPublicId: string;
-  target: TranslationTarget;
+  instanceId: string;
   locale: string;
   values: Record<string, string>;
 }): Promise<void> {
-  const path = `/__internal/translations/${args.target.kind}/${encodeURIComponent(args.target.id)}/${encodeURIComponent(args.locale)}`;
+  const path = `/__internal/instances/${encodeURIComponent(args.instanceId)}/translations/${encodeURIComponent(args.locale)}`;
   const init: RequestInit = {
     method: 'PUT',
     headers: {
@@ -493,7 +485,7 @@ async function executeTranslationRun(args: {
           requestId: args.requestId,
           grant: args.request.grant,
           accountPublicId: args.request.accountPublicId,
-          target: args.request.target,
+          instanceId: args.request.instanceId,
           locale,
           values,
         });
@@ -524,7 +516,7 @@ async function executeTranslationRun(args: {
   return results;
 }
 
-async function handleTranslate(args: {
+async function handleTranslateInstance(args: {
   request: Request;
   env: Env;
   streamActivity: boolean;
@@ -536,7 +528,7 @@ async function handleTranslate(args: {
         code: 'BAD_REQUEST',
         reasonKey: 'coreui.errors.translation.invalidRequest',
         message: 'Invalid Translation Agent worker request',
-        issues: [{ path: '', message: 'Expected { grant, accountPublicId, target, requestedLocales, items }' }],
+        issues: [{ path: '', message: 'Expected { grant, accountPublicId, instanceId, requestedLocales, items }' }],
       },
     });
   }
@@ -545,7 +537,7 @@ async function handleTranslate(args: {
     grant: body.grant,
     publicKeyPem: args.env.ROMA_AI_GRANT_PUBLIC_KEY_PEM,
     accountPublicId: body.accountPublicId,
-    target: body.target,
+    instanceId: body.instanceId,
     requestedLocales: body.requestedLocales,
   });
 
@@ -626,10 +618,10 @@ export default {
       });
     }
     try {
-      if (request.method !== 'POST' || url.pathname !== '/translate') {
+      if (request.method !== 'POST' || url.pathname !== '/translate-instance') {
         throw new HttpError(404, { error: { code: 'BAD_REQUEST', message: 'Not found' } });
       }
-      return await handleTranslate({
+      return await handleTranslateInstance({
         request,
         env,
         streamActivity: request.headers.get('accept')?.includes('text/event-stream') === true,

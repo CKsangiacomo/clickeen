@@ -403,10 +403,11 @@ runtime fetch + browser-rendered DOM. Zero crawlable content. Confirmed by
 their own community forum staff. This is the structural ceiling Clickeen
 breaks through.
 
-### 9.2 No composition, no pages, no public artifact
+### 9.2 No hosted Pages or standalone public artifact
 
-Same as Common Ninja and OpenWidget. No "Page" concept. No composition. No
-generated artifact. No standalone crawlable URL. Independent widget islands.
+Same as Common Ninja and OpenWidget. No "Page" concept, generated artifact, or
+standalone crawlable URL. This is a competitor fact; Clickeen customer Pages
+are deferred and are not a current advantage.
 
 ### 9.3 View limits create hard stops
 
@@ -443,12 +444,11 @@ feature; it is a competitive advantage. Clickeen's agent-operated model should
 make support better (agents handle the work), but the lesson is: never
 underestimate the value of a human who installs the widget for you.
 
-### 10.2 View-based pricing is more composition-friendly than per-widget
+### 10.2 View-based pricing is friendlier to multiple Widgets than per-widget
 
-Elfsight's view-based model does not penalize composition the way Common Ninja's
-per-widget pricing does. Clickeen's account-owned model is even better (no
-view limits, no per-widget charges), but the lesson is: meter by usage, not by
-widget count, if you want customers to compose.
+Elfsight's view-based model does not penalize customers for using multiple
+Widget types the way Common Ninja's per-widget pricing does. Clickeen's
+account-owned model is simpler: no view limits and no per-widget charges.
 
 ### 10.3 Platform breadth is table stakes for this market
 
@@ -475,7 +475,7 @@ should expect to out-architect them.
 
 ### 11.1 Positioning statement
 
-> Clickeen is the only widget and page platform where your content is saved as
+> Clickeen is a Widget platform where your content is saved as
 > real, crawlable HTML — not a CDN script that renders in the browser. Elfsight
 > is the incumbent widget platform (907 G2 reviews, 12 years, 3M signups), but
 > their own community staff admit widgets don't benefit SEO because all content
@@ -485,10 +485,10 @@ should expect to out-architect them.
 
 | | Clickeen | Elfsight |
 | --- | --- | --- |
-| Where we win | Complete crawlable HTML; composed pages; account-owned pricing (no view limits); Dieter design system; baseLocale + exact overlays; agent-operated substrate | — |
+| Where we win | Complete crawlable Widget HTML; account-owned pricing (no view limits); Dieter design system; baseLocale + exact overlays; agent-operated substrate | — |
 | Where they win | — | Market tenure (12 years); 907 G2 reviews at 4.8/5; customer support (free installation service); 40+ platform integrations; AI chatbot with website-scanning knowledge base; deepest widget catalog by engine count (~45 engines) |
 | When we lose | Customer needs a widget type Clickeen doesn't have. Customer needs a specific platform integration Clickeen doesn't guide. Customer wants free installation service. | Customer needs those. |
-| When we win | Customer cares about SEO/crawlability (Elfsight admits no SEO benefit). Customer wants to compose widgets into pages. Customer is tired of view limits deactivating widgets during traffic spikes. Customer wants brand consistency (Dieter). |
+| When we win | Customer cares about SEO/crawlability (Elfsight admits no SEO benefit). Customer is tired of view limits deactivating widgets during traffic spikes. Customer wants brand consistency (Dieter). |
 | Killer question | "Elfsight's own staff say their widgets don't benefit SEO because all content is JavaScript-rendered. Do you want widgets that Google can see, or widgets that Google can't?" |
 
 ### 11.3 Messaging guidance
@@ -496,10 +496,10 @@ should expect to out-architect them.
 **Say:**
 1. "Your content is real." Saved HTML, not CDN scripts. Google sees it. Elfsight's own community staff admit their widgets don't.
 2. "No view limits." Your widgets don't disappear during a traffic spike. Elfsight deactivates widgets when you exceed the cap.
-3. "One account, all your widgets and pages." Not view-metered. Not per-widget priced.
+3. "One account, all your widgets." Not view-metered. Not per-widget priced.
 
 **Do NOT say:**
-1. "We have 8 widgets." Elfsight has ~45 engines and 97 catalog entries. The comparison is depth + composition, not catalog size.
+1. "We have 8 widgets." Elfsight has ~45 engines and 97 catalog entries. The comparison is depth, not catalog size.
 2. "We have better support." Elfsight's support is their #1 praised feature (31/907 reviews). Don't pick that fight until we can back it.
 3. "We're cheaper." The pricing models are too different to compare simply. The message is "no view limits, no per-widget pricing."
 
@@ -514,7 +514,7 @@ should expect to out-architect them.
 | **View limits** | Yes (200 to unlimited by tier) | No |
 | **Embed architecture** | CDN script + empty div + runtime fetch + browser render | Saved complete HTML/CSS/JS served from R2 |
 | **Crawlable content** | No (JS-rendered; staff-admitted) | Yes (complete semantic HTML before JS runs) |
-| **Composition** | None (independent widget islands) | Pages = ordered stacks of saved instances |
+| **Customer Pages** | None | Deferred planning, not current product |
 | **Design system** | Per-widget styling (no shared system) | Dieter token system across all widgets |
 | **Localization** | Website Translator widget (Google Translate wrapper) | baseLocale + exact overlays + Babel protocol |
 | **AI** | AI Chatbot widget (website-scanning, file upload training) | Product Copilot (agent-operated draft editing) + Translation Agent |
@@ -543,14 +543,13 @@ Clickeen's path against Elfsight is NOT to match their catalog, their platform
 guides, or their review count. It is to:
 1. **Win the SEO argument** — Elfsight admits the gap; Clickeen delivers the
    solution.
-2. **Win the composition argument** — Elfsight has no Pages; Clickeen does.
-3. **Win the agent-operation argument** — Elfsight has no agent surface;
+2. **Win the agent-operation argument** — Elfsight has no agent surface;
    Clickeen's agents are native operators.
-4. **Win the pricing argument** — Elfsight deactivates widgets on view limits;
+3. **Win the pricing argument** — Elfsight deactivates widgets on view limits;
    Clickeen's account-owned model never does.
 
 Elfsight's moat is customer love (support + tenure + familiarity). Clickeen's
-moat is structural (saved HTML + composition + agents). The question is whether
+moat is structural (saved HTML + agents). The question is whether
 structural advantages can overcome incumbent loyalty. The SEO admission is the
 wedge.
 
@@ -715,12 +714,12 @@ price (33% off) is shown as the headline; the regular price is in small grey
 text. Annual-only billing is not obvious. **Clickeen's answer: simple
 account-owned entitlements. No view metering. No per-app counters.**
 
-**Seam 3: Per-widget-type pricing penalizes composition.**
+**Seam 3: Per-widget-type pricing penalizes using multiple Widgets.**
 On the Single App track, a customer who wants 5 different widget types needs 5
 subscriptions. The All Apps Pack fixes this but introduces per-app view
 budgets that are equally confusing. Either way, the customer is managing a
 pricing model, not building a website. **Clickeen's answer: one account, all
-widget types, compose into pages, no per-type or per-view pricing.**
+Widget types, no per-type or per-view pricing.**
 
 **Seam 4: The Free tier is nearly useless.**
 200 views/month = ~6-7 visitors per day seeing the widget. That's not enough
@@ -737,12 +736,12 @@ number to beat.
 A Clickeen tier that includes:
 - Multiple widget types (not per-app metered)
 - No view limits
-- Page composition
+- Customer Pages are deferred planning, not current pricing scope
 - Agent-operated editing
 - baseLocale + overlays at every tier
 
 …priced at **$150-250/year** would undercut Elfsight's median paid customer
-while delivering structurally more value (no deactivation, composition, saved
+while delivering structurally more value (no deactivation, saved
 HTML, agents). The message is not "we're cheaper per widget" — it is "one
 price, all widgets, no disappearing, real HTML."
 

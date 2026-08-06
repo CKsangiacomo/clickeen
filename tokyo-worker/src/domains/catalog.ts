@@ -1,5 +1,4 @@
 import type { CatalogPresentation } from '@clickeen/ck-contracts/catalog';
-import type { AccountPageTemplate } from '@clickeen/ck-contracts/pages';
 import type { Env } from '../types';
 import {
   listAccountInstanceIds,
@@ -8,8 +7,6 @@ import {
 } from './account-instances/source';
 import { readInstancePublicPackage, type SubmittedInstancePublicPackage } from './account-instances/package-files';
 import type { AccountInstanceContentDocument } from './account-instances/types';
-import { listAccountPageSources, readAccountPageRecord } from './pages/source';
-import type { PageGeneratedFiles } from './pages/types';
 
 export const CLICKEEN_CATALOG_ACCOUNT_ID = 'CLICKEEN';
 
@@ -99,34 +96,4 @@ export async function readClickeenWidgetCatalogTemplate(env: Env, templateId: st
     source: { config: stored.value.config, content: stored.value.content },
     publicPackage,
   };
-}
-
-export type PageCatalogListItem = {
-  pageId: string;
-  displayName: string;
-  catalogPresentation: CatalogPresentation;
-};
-
-export type PageCatalogTemplate = {
-  source: AccountPageTemplate;
-  files: PageGeneratedFiles;
-};
-
-export async function listClickeenPageCatalog(env: Env): Promise<PageCatalogListItem[]> {
-  const listed = await listAccountPageSources({ env, accountId: CLICKEEN_CATALOG_ACCOUNT_ID });
-  return listed.sources
-    .filter((source): source is AccountPageTemplate => source.isTemplate)
-    .map((source) => ({
-      pageId: source.pageId,
-      displayName: source.displayName,
-      catalogPresentation: requirePresentation(source.catalogPresentation),
-    }))
-    .sort((left, right) => left.catalogPresentation.displayOrder - right.catalogPresentation.displayOrder || left.displayName.localeCompare(right.displayName) || left.pageId.localeCompare(right.pageId));
-}
-
-export async function readClickeenPageCatalogTemplate(env: Env, pageId: string): Promise<PageCatalogTemplate | null> {
-  const stored = await readAccountPageRecord({ env, accountId: CLICKEEN_CATALOG_ACCOUNT_ID, pageId });
-  if (!stored || !stored.source.isTemplate) return null;
-  requirePresentation(stored.source.catalogPresentation);
-  return { source: stored.source, files: stored.files };
 }

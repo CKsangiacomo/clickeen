@@ -98,14 +98,6 @@ destructive, or high-importance decisions. `dialogs-and-modals.md` owns overlay
 mechanics; this document owns when product behavior needs a blocking or notice
 surface.
 
-Page Builder uses the same interaction ownership: Add widget is one large
-Dieter Popup over the current-account Your-widgets inventory; Manage order is
-the Dieter Object Manager Popup interaction; and a stale Page opens one Dieter
-blocking Popup requiring explicit Update before editing. The existing Bob
-editor slides over the mounted Page draft and returns through **Done, go back
-to the page**. These are Page workflow states, not a new dialog framework,
-generic editor router, or persisted Page UI state.
-
 ## Monetization
 
 Product policy and routes enforce entitlement. UI prechecks can guide the user,
@@ -132,12 +124,12 @@ disabled control:
   even when the UI already checked the current entitlement snapshot.
 
 When a tier gates an entire product domain, the domain remains in navigation.
-An account that has never had access sees the domain's normal Upgrade state,
-such as **Upgrade to get Pages**. An account that retained objects after a
-downgrade still sees those objects and their real state, plus an **Upgrade to
-use** message. Product actions remain visible; attempting one opens the same
-Upgrade dialog and performs no mutation. A downgrade does not silently hide,
-delete, rewrite, regenerate, publish, or unpublish customer objects.
+An account that has never had access sees the domain's normal Upgrade state. An
+account that retained objects after a downgrade still sees those objects and
+their real state, plus an **Upgrade to use** message. Product actions remain
+visible; attempting one opens the same Upgrade dialog and performs no mutation.
+A downgrade does not silently hide, delete, rewrite, regenerate, publish, or
+unpublish customer objects.
 
 Asset storage is the one downgrade-specific retention exception. If the new
 tier's `storage.bytes.max` is below current usage, the Assets domain and all
@@ -157,9 +149,9 @@ visitor requests and background operations are not account-user actions and do
 not open product dialogs.
 
 **Save as template** is the explicit contextual-utility exception. It is shown
-only when the current user can edit an ordinary Widget Instance or Page and the
-account can create another same-type object. Put it in the object's list-row
-three-dot menu and keep it as a secondary action in Bob or Page Builder. When
+only when the current user can edit an ordinary Widget Instance and the account
+can create another Instance. Put it in the object's list-row three-dot menu and
+keep it as a secondary action in Bob. When
 those conditions are false, omit it; do not replace it with a disabled state,
 lock treatment, or Upgrade flow. Its owning command still performs the normal
 authorization and saved-object-limit validation.

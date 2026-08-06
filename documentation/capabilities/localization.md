@@ -21,27 +21,6 @@ writes initial HTML and locale-switcher options. Tokyo-worker uses exact overlay
 values for translated Instance response completion. A translation command does
 not invent Clickeen language-support claims or trigger a hidden
 generator/publication operation.
-For ordinary Pages, the current authoring shape is equally direct:
-
-```text
-accounts/{accountPublicId}/pages/{pageId}/source.json
-accounts/{accountPublicId}/pages/{pageId}/overlays/locales/{locale}.json
-```
-
-`source.json` owns the Page `baseLocale`. Account Settings—not the Page—owns the
-selected exact locale list used by Generate translations. Each non-base Page
-locale is one separate exact overlay object. Page templates have no
-`baseLocale` and no translations. On Page Save, Web Code Generator's already
-generated direct files and root `overlays.json` are stored beside authoring
-truth. Root `overlays.json` is the saved exact-locale response input; it is not
-another authoring authority and changes only through Page Save or Update.
-Page Builder reads or replaces one exact Page metadata overlay through
-`GET|PUT /api/account/pages/{pageId}/translations/{locale}`. These
-customer-authorized authoring operations preserve `needsUpdate` and do not
-change root `overlays.json`. Page publish compares that saved output-locale set
-with the current Settings base and active locales and blocks while any required
-locale is absent.
-
 Widget templates follow the same localization boundary: they retain reusable
 Widget config and their exact three files, but have no `baseLocale`, selected
 locale list, overlays, Generate translations action, or public locale output.
@@ -53,24 +32,24 @@ account's normal base-locale and Settings-locale behavior when it is saved.
 | Concern | Authority |
 | --- | --- |
 | Account locale policy | Roma account locale routes and account storage |
-| Translation command | Product control -> Roma `/api/account/translations/generate` |
+| Translation command | Product control -> Roma `/api/account/instances/[instanceId]/translations/generate` |
 | Translation operation | Translation Agent -> San Francisco |
 | Saved text extraction and exact overlay validation | Tokyo-worker account translation domain |
 | Overlay storage | Tokyo R2 `overlays/locales/{locale}.json` |
 | Bob package generation and translated preview | `@clickeen/ck-web-code-generator` over current in-memory state and exact overlays |
-| Public localized serving | Tokyo-worker exact stored Instance/Page response completion |
+| Public localized serving | Tokyo-worker exact stored Instance response completion |
 
 ## Authority Chain
 
 ```text
 Roma current account/session
 -> accountPublicId
--> target `{ kind: instance | page, id }`
--> saved target source
+-> saved Instance id
+-> saved Instance source
 -> exact locale coordinate
 -> Translation Agent
 -> Tokyo-worker
--> exact target overlay path
+-> exact Instance overlay path
 ```
 
 Public serving adds the single publication coordinate:
@@ -103,13 +82,13 @@ they do not silently rewrite the base source.
 
 ## Generate Translations
 
-1. Generate translations requires a saved ordinary Instance or Page and at
+1. Generate translations requires a saved ordinary Instance and at
    least one active non-base locale.
 2. Roma resolves current account/session and entitlement truth.
-3. Roma reads the saved target and sends its translatable values to the same
+3. Roma reads the saved Instance and sends its translatable values to the
    Translation Agent operation.
 4. San Francisco translates the supplied saved text items.
-5. Tokyo-worker writes each completed exact overlay to the target's existing
+5. Tokyo-worker writes each completed exact overlay to the Instance's existing
    overlay path.
 6. Roma returns:
 
@@ -120,11 +99,6 @@ they do not silently rewrite the base source.
    ```
 
 7. The calling product surface reports those outcomes.
-
-For a Page, only `title`, `description`, `socialTitle`, and
-`socialDescription` are translated. `socialImageAssetRef`, placements, robots,
-and every other Page value are not translation inputs. No compilation or
-publication step runs as part of translation generation.
 
 ## Overlay Contract
 
@@ -171,8 +145,6 @@ Canonical URLs:
 ```text
 https://clk.live/{accountPublicId}/{instanceId}
 https://clk.live/{accountPublicId}/{instanceId}?locale={locale}
-https://clk.live/{accountPublicId}/pages/{pageId}
-https://clk.live/{accountPublicId}/pages/{pageId}/{locale}
 ```
 
 For an index request, Tokyo-worker verifies the published instance and exact
@@ -187,29 +159,9 @@ corrupt overlay returns `500 Locale data invalid`. Incomplete public HTML
 returns `500 Public HTML invalid`. Base content is never presented as a
 requested non-base locale.
 
-For a published Page, the stable URL redirects with `no-store` to one locale in
-the saved public locale set. The base exact-locale response uses values already
-stored in `index.html`; a non-base response applies only its exact root
-`overlays.json` entry. Both complete public SEO coordinates and return HTML
-before JavaScript. Root `overlays.json` is validated as one document before
-route selection, so one malformed entry makes the Page unavailable for every
-Page route. With a valid root, a missing locale is `404` and selected HTML
-completion failure is `500`; neither falls back to the base locale. Page
-`styles.css` and `runtime.js` are shared across locales.
-
-Instance and Page HTML are CDN-cacheable only at their exact response keys.
-Instance translation writes/deletes purge their exact public locale URL. Page
-authoring translation writes do not change root serving overlays or purge;
-Page Save while published, Publish, Unpublish, and Delete purge affected public
-HTML and support-file URLs. Locale selection is never hidden in a shared cached
-variant.
-
-A successful Instance translation write also marks each same-account ordinary
-Page that references that Instance as Needs update. It does not regenerate the
-Page or change its live files. Page-owned translation writes do not mark the
-Page. Removing an Instance overlay because Account Settings removed a locale
-also does not mark it; Settings affects later Generate translations and Page
-Save/Update inputs.
+Instance HTML is CDN-cacheable only at its exact response key. Instance
+translation writes and deletes purge their exact public locale URL. Locale
+selection is never hidden in a shared cached variant.
 
 ## Operator Recipes
 
@@ -235,10 +187,6 @@ reconcile exactly.
 4. Confirm both responses reference identical root stylesheet/runtime URLs.
 5. Confirm missing and corrupt overlays fail explicitly.
 
-For a Page, verify the stable redirect and each saved exact-locale URL
-separately, confirm metadata/visible placement values match that locale before
-JavaScript, and confirm every locale references the same Page CSS/runtime URLs.
-
 ## Failure Semantics
 
 - Requested locale outcomes are exhaustive.
@@ -259,5 +207,4 @@ JavaScript, and confirm every locale references the same Page CSS/runtime URLs.
 | Bob preview | exact generated package for current state and selected overlay |
 | Root artifact | exact R2 `index.html`, `styles.css`, and `runtime.js` objects and content types |
 | Localized response | root URL with `?locale=` and translated HTML output |
-| Localized Page response | stable redirect plus base-index or exact non-base `overlays.json` completion |
 | Negative storage invariant | no instance locale-derived HTML/CSS/JS objects |

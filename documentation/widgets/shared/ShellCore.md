@@ -63,7 +63,6 @@ Shared `runtime.js` exposes only behavior support through
 ```text
 assertWidgetRoot
 contextFor
-isComposedPage
 register
 resolveInstanceId
 roots

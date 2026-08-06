@@ -10,7 +10,7 @@ STATUS: CURRENT SYSTEM OPERATOR SPEC
 | --- | --- | --- | --- |
 | San Francisco | Governed model execution, grant checks, model routing, and Prague system-copy translation | `sanfrancisco/` | `documentation/ai/sanfrancisco.md` |
 | Product Copilot | Builder agent home for Bob draft operations and Builder help | `agents/product-copilot/` | `documentation/ai/agents/product-copilot.md` |
-| Translation Agent | Saved Instance and Page locale-overlay translation | `agents/translation-agent/` | `documentation/ai/agents/translation-agent.md` |
+| Translation Agent | Saved Instance locale-overlay translation | `agents/translation-agent/` | `documentation/ai/agents/translation-agent.md` |
 | Ombra | Model-strategy boundary name; not a runtime service | `packages/ck-contracts/src/ai.ts`, `packages/ck-policy/ai-runtime.matrix.json` | `documentation/ai/ombra.md` |
 
 Agent eval suites remain owned by each agent home. There is no shared learning,
@@ -26,12 +26,12 @@ Bob CopilotPane
 -> provider API
 
 Generate translations
--> Roma `/api/account/translations/generate` with an Instance or Page target
--> Translation Agent Worker `/translate`
+-> Roma `/api/account/instances/[instanceId]/translations/generate`
+-> Translation Agent Worker `/translate-instance`
 -> San Francisco /model/chat
 -> provider API
--> Tokyo-worker internal translation write
--> exact target `overlays/locales/[active locale].json`
+-> Tokyo-worker Instance translation write
+-> exact Instance `overlays/locales/[active locale].json`
 
 Prague system-copy translation tooling
 -> scripts/prague-l10n/translate.mjs

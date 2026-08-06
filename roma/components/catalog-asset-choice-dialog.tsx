@@ -5,14 +5,12 @@ import { createDialogLifecycle } from '../../dieter/components/shared/dialog-lif
 
 export function CatalogAssetChoiceDialog({
   open,
-  product,
   copying,
   error,
   onCopy,
   onDiscard,
 }: {
   open: boolean;
-  product: 'widget' | 'page';
   copying: boolean;
   error: string | null;
   onCopy: () => void;
@@ -34,12 +32,12 @@ export function CatalogAssetChoiceDialog({
   }, [open]);
 
   return (
-    <dialog ref={dialogRef} className="diet-popup" data-size="medium" aria-labelledby={`catalog-${product}-assets-title`}>
+    <dialog ref={dialogRef} className="diet-popup" data-size="medium" aria-labelledby="catalog-widget-assets-title">
       <header className="diet-popup__header">
-        <h2 id={`catalog-${product}-assets-title`} className="heading-4">This {product} includes assets</h2>
+        <h2 id="catalog-widget-assets-title" className="heading-4">This Widget includes assets</h2>
       </header>
       <div className="diet-popup__body">
-        <p className="body-m">This {product} includes assets (images/SVGs/videos).</p>
+        <p className="body-m">This Widget includes assets (images/SVGs/videos).</p>
         {error ? <p className="body-s" role="alert">{error}</p> : null}
       </div>
       <footer className="diet-popup__footer">

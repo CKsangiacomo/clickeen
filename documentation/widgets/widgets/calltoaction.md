@@ -124,12 +124,6 @@ calltoaction.action.iconPlacement -> left|right
 Action style state owns background, text color, border, radius, padding, and
 icon size. Header CTA style remains Shell-owned under `appearance.headerCta.*`.
 
-## Clickeen Pages Usage
-
-Call to Action appears in Clickeen Page source as a saved account widget
-instance placement. The body action belongs to `calltoaction.*`; the shared
-Header CTA remains Shell-owned.
-
 ## Verification
 
 ```bash

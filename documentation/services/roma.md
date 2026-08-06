@@ -21,7 +21,6 @@ Roma owns the current-account product shell:
 - domain navigation
 - account policy and tier enforcement
 - account widget instance commands
-- account page commands
 - account asset commands
 - Builder host flow
 - team, billing, usage, AI, profile, and settings surfaces
@@ -126,9 +125,6 @@ Roma account-shell routes include:
 - `/widgets/:instanceId`
 - `/builder`
 - `/builder/:instanceId`
-- `/pages`
-- `/page-builder/new`
-- `/page-builder/:pageId`
 - `/assets`
 - `/team`
 - `/billing`
@@ -137,7 +133,7 @@ Roma account-shell routes include:
 - `/settings`
 
 Roma middleware requires a Berlin/Roma session for every route in this list,
-including `/profile`, `/pages`, and `/page-builder/**`. Public login, invite,
+including `/profile`. Public login, invite,
 API, and framework-asset routes retain their existing separate boundaries.
 
 `/home` currently preserves the Roma shell and navigation but renders no
@@ -196,7 +192,6 @@ service:
 | `/api/account/widgets/**`   | Tokyo-worker through product control                   |
 | `/api/account/instances/**` | Tokyo-worker through product control                   |
 | `/api/account/assets/**`    | Tokyo-worker through asset control                     |
-| `/api/account/pages/**`     | Tokyo-worker through product control                   |
 | `/api/account/usage`        | Tokyo-worker storage facts plus account policy context |
 | `/api/account/widget-defaults` | Roma defaults document backed by Tokyo-worker        |
 | `/api/builder/:instanceId/open` | Roma Builder-open envelope backed by Tokyo-worker    |
@@ -297,10 +292,10 @@ through Tokyo-worker. If deletion fails after the settings write, Roma returns
 the saved settings with `localeCleanup.ok: false` and the exact failed
 coordinate. The account setting remains the user decision and account truth.
 
-Roma owns one product-neutral public-action contract for Widgets and
-Pages. It builds the direct public URL and shared `clickeen.js` installer
-snippet from the current account public id, the exact Widget Instance or Page
-id, and the configured public-serving origin. Widget Builder availability also
+Roma owns one public-action contract for Widgets. It builds the direct public
+URL and shared `clickeen.js` installer snippet from the current account public
+id, the exact Widget Instance id, and the configured public-serving origin.
+Widget Builder availability also
 uses the publish status returned by the Builder-open envelope.
 It sends that exact complete set to Bob, where TopDrawer presents Open public
 widget and one Copy code intent under More. Roma answers that intent with the
@@ -316,7 +311,6 @@ The copied public URL is slashless:
 
 ```text
 {public-serving-origin}/{accountPublicId}/{instanceId}
-{public-serving-origin}/{accountPublicId}/pages/{pageId}
 ```
 
 The copied installer uses the same configured public-serving origin and exact
@@ -519,133 +513,6 @@ Tokyo-worker to delete the most recently uploaded assets until usage fits the
 allowance. This automatic cleanup is accepted product law but is not implemented
 in the current runtime.
 
-## Pages Domain
-
-Roma owns authenticated account Page commands. A Page is an ordered collection
-of saved Widget Instances. Its direct files live in Tokyo under:
-
-```text
-accounts/{accountPublicId}/pages/{pageId}/
-  source.json
-  serve-state.json
-  overlays/locales/{locale}.json
-  overlays.json
-  index.html
-  styles.css
-  runtime.js
-```
-
-Roma validates current-account access, role, `pages.max`, exact Page source,
-and the exact browser-generated file payload. First Save is the only operation
-that creates a Page: the browser supplies the complete ordinary Page source,
-including its `pageId` and `baseLocale`; Roma checks the limit, validates the
-submitted base locale against current Settings without replacing it, then asks
-Tokyo-worker to store the source, files, and root serving overlays as
-`{ published: false, needsUpdate: false }`. Later
-ordinary Save uses the same Page PUT with `operation: "save"`, replaces those
-exact values only while the Page is Current, and preserves serving state.
-Explicit Update uses that same boundary with `operation: "update"`; after its
-browser-generated files store successfully, Tokyo clears `needsUpdate`. A draft
-left without Save exists only in browser memory.
-
-Current Page source references saved Widget Instances by placement id and
-instance id. It does not embed or copy Instance source. Page templates have no
-locales. Roma does not generate or translate Page files. Saving a referenced
-Instance or writing its translated locale values marks the Page Needs update.
-Ordinary Save and Publish then return the Page update error; Unpublish remains
-available and preserves the flag. A published Needs-update Page keeps serving
-its last saved files. Delete accepts only an unpublished Page and never deletes
-referenced Instances or assets. Roma owns the visible status, Update action,
-and Page Builder flow.
-
-`GET /api/account/pages` returns the ordinary Page inventory as
-`{ accountId, pages: [{ source, serveState, savedLocales }] }`. `savedLocales`
-is the exact saved output-locale set: the source base locale followed by the
-locale keys present in root `overlays.json`. Page Builder reads and writes one
-metadata overlay through
-`GET|PUT /api/account/pages/{pageId}/translations/{locale}`. That authoring
-write preserves `needsUpdate` and does not rebuild root output. Rename uses
-`POST /api/account/pages/{pageId}/rename`; it changes only
-`source.json.displayName`. Publish compares the saved output locales with the
-current Settings base and active locales and rejects an incomplete saved
-package before requesting Tokyo publication.
-
-`POST /api/account/pages/{pageId}/save-as-template` is the Page snapshot
-command. A customer editor supplies only a distinct template name. For the
-exact `CLICKEEN` account, DevStudio supplies the distinct name plus the four
-required Catalog presentation values in that same request. Roma opens the
-ordinary saved Page, checks `pages.max`, then mints a new Page id and creates a
-template from its exact values, robots, placements, and three saved files.
-Base-locale, overlay, translation, and serving state are absent from the new
-template. Capacity denial is a direct command failure and does not open an
-unrelated policy path; it uses the same `pages.max` gate contract as ordinary
-Page Save.
-
-`PATCH /api/account/pages/{pageId}` is the matching presentation-only operation
-for a `CLICKEEN` Page template. It preserves Page source and the three files and
-changes only `catalogPresentation`. Other accounts and ordinary Pages are
-rejected; the customer Page Catalog has no write method.
-
-The shared Roma public-action contract accepts the Page coordinate and
-returns `/ACCOUNT/pages/PAGEID` plus the same `clickeen.js` snippet shape used
-for a Widget. Page actions therefore need no Page-specific marketing URL,
-iframe helper, or runtime-only install option.
-
-Roma's Pages navigation group has three views on one Edge route: **Your pages**
-at `/pages`, **My templates** at `/pages?view=templates`, and the read-only
-**Page catalog** at `/pages?view=catalog`. My templates lists current-account
-Pages with `isTemplate: true`; its rows show Template, Edit, and an ellipsis
-menu for Use, Rename, and Delete, but no serving or locale controls. Page catalog reads only
-`CLICKEEN` Page templates, filters their saved presentation values in the
-browser, and opens `/page-builder/new?catalog={pageId}` without creating a
-Page. The initial Catalog item is one real blank Page template, not a hardcoded
-card. `CLICKEEN` templates are read-only in Roma and are managed through
-DevStudio.
-
-Roma exposes `/page-builder/new` or `/page-builder/{pageId}` as Page Builder.
-A new Page exists only in browser memory until Save. Page Builder
-uses the same shared editor shell taxonomy as Bob—TopDrawer, ToolDrawer and
-Workspace—but has only two Page-owned panels: Content and SEO/GEO/AEO. Content
-shows ordered saved Instance references, reuses the Your-widgets inventory
-facts/filter/sort/Table behavior in its Add-widget Popup, and uses the Dieter
-Object Manager interaction for ordering. SEO/GEO/AEO edits the Page title,
-optional descriptions/sharing fields, search visibility and exact metadata
-locale overlays. Generate translations calls the existing Translation Agent
-against the locales selected in Settings. Page Builder keeps every successful
-overlay, names any failed locales, and waits for explicit Save/Update before it
-regenerates Page files. Publish names missing required locales and never runs
-translation or generation.
-
-Editing a placement opens the existing Bob editor as a layer while Page
-Builder remains mounted. Bob's single Page-host action, **Done, go back to the
-page**, closes that layer and returns to the exact browser Page draft. Bob Save
-updates the saved Instance. A saved Page that references it then requires
-explicit Update; an unsaved Page simply keeps using the newly saved Instance in
-its browser draft. Bob does not save or regenerate the Page. Page Save and Update run Web Code Generator in
-the browser and submit its exact files. Publish only changes publication state.
-All Page blocking Popups use Dieter's existing native-dialog lifecycle; Roma
-adds no Page dialog framework or global editor state.
-
-Page templates count under `pages.max`. Save as template appears only while
-the account role and visible capacity allow it, and the command enforces the
-same normal Page limit. Page Catalog remains visible below Tier 2; attempting
-Use opens the existing Upgrade interaction and creates no draft or Page.
-Catalog thumbnails are exact `CLICKEEN` asset paths served by Tokyo. The first
-blank Page template has no child Instances to copy. A later direct Page-owned
-Catalog asset uses the same explicit Copy/Discard dialog as Widget Catalog;
-127F does not clone referenced child Instances.
-
-A fresh open of a Page marked Needs update shows the blocking Update dialog.
-If Bob Save marks the already-mounted Page Needs update, the current browser
-session stays visible and Update becomes its next Page persistence action; the
-fresh-entry dialog does not reopen on top of that retained session.
-
-`pages.max = 0` keeps retained Page inventory visible but makes Page detail,
-Save, Rename, metadata-overlay write, Publish, Unpublish, and Delete routes
-return the standard `UPGRADE_REQUIRED` result without calling Tokyo. A positive
-or unlimited limit allows existing-Page actions; first Save separately enforces
-the finite count.
-
 ## Team, Profile, Settings
 
 Berlin owns person identity, account membership, roles, invitations, ownership,
@@ -777,7 +644,7 @@ Required runtime configuration:
 | `PRODUCT_COPILOT_BASE_URL` | Product Copilot worker origin where used. |
 | `TRANSLATION_AGENT` | Cloudflare service binding for Translation Agent Worker. |
 | `TOKYO_ASSET_CONTROL` | Cloudflare service binding for account asset operations. |
-| `TOKYO_PRODUCT_CONTROL` | Cloudflare service binding for product/account instance and page operations. |
+| `TOKYO_PRODUCT_CONTROL` | Cloudflare service binding for product/account Instance operations. |
 | `USAGE_KV` | Roma request-rate-limit counters and current monthly Copilot turn counters. Counter corruption and missing bindings fail closed. Cloudflare KV has no compare-and-swap, so simultaneous Copilot requests can reserve from the same observed count. |
 | `SUPABASE_URL` | Roma account settings database URL; supplied in cloud-dev CI/env. |
 | `SUPABASE_SERVICE_ROLE_KEY` | Roma service-role account settings writes; supplied as a secret. |

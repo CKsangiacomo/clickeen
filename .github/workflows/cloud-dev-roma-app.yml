@@ -62,12 +62,6 @@ jobs:
       - name: Roma Copilot usage contracts
         run: pnpm --filter @clickeen/roma test:account-limit-usage
 
-      - name: Roma Page source contracts
-        run: pnpm --filter @clickeen/roma test:account-page-source
-
-      - name: Roma Page Builder contracts
-        run: pnpm --filter @clickeen/roma test:page-builder
-
       - name: Web Code Generator contracts
         run: pnpm --filter @clickeen/ck-web-code-generator test
 

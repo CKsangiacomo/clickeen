@@ -3,7 +3,7 @@
 STATUS: CURRENT SYSTEM OPERATOR SPEC
 
 Tokyo is the storage and static-serving plane. Tokyo is not an editor, account
-authority, page builder, translation authority, or AI runtime.
+authority, translation authority, or AI runtime.
 
 Tokyo has two forms:
 
@@ -35,14 +35,6 @@ accounts/{accountPublicId}/
     index.html
     styles.css
     runtime.js
-  pages/{pageId}/
-    source.json
-    serve-state.json
-    overlays/locales/{locale}.json
-    overlays.json
-    index.html
-    styles.css
-    runtime.js
 ```
 
 Rules:
@@ -55,20 +47,11 @@ Rules:
   translate, infer, or repair them.
 - A locale never owns HTML, CSS, JavaScript, publication state, or another
   artifact root.
-- An ordinary Page has one direct stored file set. First Save is unpublished;
-  later ordinary Save requires Current state. Referenced Instance Save or
-  translation writes set one `needsUpdate` flag. Explicit Page Update stores
-  browser-generated files through the same boundary and clears the flag after
-  success. Publish requires Current state and all six root artifacts, but does
-  not render-test, compile, or translate them.
-
 ## Public Serving
 
 ```text
 https://clk.live/{accountPublicId}/{instanceId}
 https://clk.live/{accountPublicId}/{instanceId}?locale={locale}
-https://clk.live/{accountPublicId}/pages/{pageId}
-https://clk.live/{accountPublicId}/pages/{pageId}/{locale}
 ```
 
 Cloud-dev uses `https://dev.clk.live`.
@@ -87,20 +70,6 @@ response. Completed Instance HTML revalidates through its exact public URL
 cache key. `runtime.js` binds behavior and does not apply overlays. Missing
 locale truth is `404`; corrupt locale truth is `500`; neither falls back to
 base content.
-
-For Pages, the stable URL redirects with `no-store` to one locale from the
-saved set. The exact-locale URL is the HTML cache key. Tokyo-worker uses stored
-base index values for the base locale and the matching root `overlays.json`
-entry only for a non-base locale, then completes public Page coordinates. It
-does not traverse child Instances or call a generator/model. Because the root
-serving-overlay document is validated as a whole, one malformed locale entry
-makes every Page route unavailable. Page CSS/runtime files are shared across
-locales. Page Save while published, Publish, Unpublish, and Delete purge only
-affected exact-locale and support-file URLs.
-
-A published Page continues serving its last saved files while `needsUpdate` is
-true. The flag blocks authoring Save and Publish; it is never evaluated or
-changed by a public request.
 
 ## Static Read Paths
 

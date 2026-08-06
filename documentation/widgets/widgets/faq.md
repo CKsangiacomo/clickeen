@@ -101,7 +101,7 @@ state or copy-override messages and does not render FAQ content.
 
 When deep links are enabled, opening a question writes its item id to the URL
 hash. Initial hash resolution decodes the id and searches only within the
-current Widget root, including when that root is inside a Page shadow tree.
+current Widget root.
 
 Question and answer fields are customer-visible text and stay in
 `editable-fields.json`. Web Code Generator sanitizes answer rich text before it
@@ -126,12 +126,6 @@ items.group.small.max -> faq.sections[] count
 items.group.medium.max -> faq.sections[].faqs[] per-section count
 items.group.large.max -> faq.sections[].faqs[] total count
 ```
-
-## Clickeen Pages Usage
-
-FAQ appears in Clickeen Page source as a saved account widget instance
-placement. FAQ sections and questions remain widget Core state inside the
-instance.
 
 ## Verification
 

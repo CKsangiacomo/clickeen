@@ -9,7 +9,6 @@ type OpenElement = {
   openEnd: number;
   path: string | null;
   target: string | null;
-  placementId: string | null;
 };
 
 const VOID_ELEMENTS = new Set([
@@ -90,7 +89,7 @@ function applyReplacements(html: string, replacements: Replacement[]): string {
 
 function localizedFieldReplacements(
   html: string,
-  resolveValue: (path: string, placementId: string | null) => string | undefined,
+  resolveValue: (path: string) => string | undefined,
 ): Replacement[] {
   const replacements: Replacement[] = [];
   const stack: OpenElement[] = [];
@@ -107,7 +106,7 @@ function localizedFieldReplacements(
       const open = stack.pop();
       if (!open || open.name !== name) throw new Error('tokyo.locale_html.structure_invalid');
       if (open.path === null || open.target === null || open.target.startsWith('attribute:')) continue;
-      const translated = resolveValue(open.path, open.placementId);
+      const translated = resolveValue(open.path);
       if (typeof translated !== 'string') throw new Error(`tokyo.locale_html.value_missing:${open.path}`);
       replacements.push({
         start: open.openEnd,
@@ -122,13 +121,10 @@ function localizedFieldReplacements(
     const name = String(opening[1]).toLowerCase();
     const path = readAttribute(tag, 'data-ck-field-path');
     const target = readAttribute(tag, 'data-ck-field-target');
-    const inheritedPlacementId = stack.at(-1)?.placementId ?? null;
-    const declaredPlacementId = readAttribute(tag, 'data-ck-placement-id');
-    const placementId = declaredPlacementId ?? inheritedPlacementId;
     assertMarkerPair(path, target);
     if (path !== null && target !== null) {
       markerCount += 1;
-      const translated = resolveValue(path, placementId);
+      const translated = resolveValue(path);
       if (typeof translated !== 'string') throw new Error(`tokyo.locale_html.value_missing:${path}`);
       if (target.startsWith('attribute:')) {
         const attributeName = target.slice('attribute:'.length);
@@ -152,7 +148,6 @@ function localizedFieldReplacements(
       openEnd: start + tag.length,
       path,
       target,
-      placementId,
     });
   }
 
@@ -174,30 +169,6 @@ export function completeLocalizedInstanceHtml(args: {
   }
   const htmlTag = htmlTags[0]!;
   const replacements = localizedFieldReplacements(args.html, (path) => args.values[path]);
-  replacements.push({
-    start: htmlTag.index!,
-    end: htmlTag.index! + htmlTag[0].length,
-    value: replaceExistingAttribute(htmlTag[0], 'lang', args.locale),
-  });
-  return applyReplacements(args.html, replacements);
-}
-
-export function completeLocalizedPageFields(args: {
-  html: string;
-  locale: string;
-  pageValues: Record<string, string>;
-  placementValues: Record<string, Record<string, string>>;
-}): string {
-  const htmlTags = Array.from(args.html.matchAll(/<html\b[^>]*>/gi));
-  if (htmlTags.length !== 1 || htmlTags[0]!.index == null) {
-    throw new Error('tokyo.locale_html.document_invalid');
-  }
-  const htmlTag = htmlTags[0]!;
-  const replacements = localizedFieldReplacements(args.html, (path, placementId) =>
-    placementId
-      ? args.placementValues[placementId]?.[path]
-      : args.pageValues[path.startsWith('values.') ? path.slice('values.'.length) : path],
-  );
   replacements.push({
     start: htmlTag.index!,
     end: htmlTag.index! + htmlTag[0].length,

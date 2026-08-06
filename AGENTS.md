@@ -87,7 +87,7 @@ change to source truth is authorized by whoever owns it — the human, the
 product tenets, or the external
 system.
 
-Around the content, agents operate the Clickeen system itself: widgets, pages,
+Around the content, agents operate the Clickeen system itself: widgets,
 reports, analytics, support tickets, locale overlays, runtime packages, account
 assets, routes, and storage folders. Different agents own different operational
 domains, but the rule is the same: operate structured artifacts directly through
@@ -162,7 +162,6 @@ Use product routes for product mutations.
 
 - Account assets move through Roma account asset routes and Tokyo-worker.
 - Account instances move through Roma account instance routes and Tokyo-worker.
-- Account pages move through Roma account page routes and Tokyo-worker.
 - Auth/account context comes from Berlin/Roma session bootstrap.
 
 Remote Cloudflare operations use the repo command path from
@@ -224,8 +223,7 @@ Verify through the owner of the truth:
 | Account assets visible to users | Roma `/api/account/assets` or Roma Assets UI                  |
 | Account asset bytes/metadata    | repo R2 commands after `pnpm cf:preflight`                    |
 | Account instances               | Roma account routes and Tokyo-worker evidence                 |
-| Pages                           | Roma page routes and Tokyo-worker evidence                    |
-| Pages app runtime               | Cloudflare Pages Git build state and cloud-dev surface checks |
+| Cloudflare Pages app runtime    | Cloudflare Pages Git build state and cloud-dev surface checks |
 | Worker/R2 deploy                | GitHub Actions worker deploy runs and R2 evidence             |
 | Git state                       | local branch, tracking branch, remote branch                  |
 

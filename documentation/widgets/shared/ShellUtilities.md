@@ -137,7 +137,6 @@ initializers:
 ```text
 assertWidgetRoot
 contextFor
-isComposedPage
 register
 resolveInstanceId
 roots

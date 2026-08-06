@@ -1,10 +1,9 @@
 # @clickeen/ck-web-code-generator
 
-Pure, browser-compatible generation of Clickeen Widget Instance and Page web
-files. The package exports exactly two generation operations:
+Pure, browser-compatible generation of Clickeen Widget Instance web files. The
+package exports one generation operation:
 
 - `generateInstance`
-- `generatePage`
 
 The package performs no network or storage work. Callers supply structured
 source, authored definition files, the required base-locale coordinate, exact
@@ -21,23 +20,13 @@ The generator writes only these unresolved public-coordinate literals:
 
 - `__CK_PUBLIC_ACCOUNT_ID__` — compact public account coordinate in a Widget
   Instance URL;
-- `__CK_PUBLIC_INSTANCE_ID__` — compact public Instance coordinate;
-- `__CK_PUBLIC_PAGE_URL__` — stable Page base URL
-  `https://clk.live/{accountPublicId}/pages/{pageId}`.
+- `__CK_PUBLIC_INSTANCE_ID__` — compact public Instance coordinate.
 
 Tokyo owns those values and must replace every occurrence before public HTML is
 served. The generator does not create locale placeholders. When the structured
 Instance enables its locale switcher and the base locale plus exact overlay
 keys provide more than one locale, the saved HTML contains the complete static
-switcher. Page composition removes child Instance switchers because the Page
-owns locale selection. Page exact-locale URLs append the declared locale to
-`__CK_PUBLIC_PAGE_URL__`; `data-ck-page-public-coordinate`
-markers identify canonical, social URL, and `WebPage` JSON-LD values for the
-later exact-locale serving path.
-
-Page title and metadata use the same `data-ck-field-path` /
-`data-ck-field-target` contract as Widget content. Metadata uses the approved
-`attribute:content` target. There is no second Page-field marker system.
+switcher.
 
 Every generated Instance includes neutral `meta[name="generator"]` provenance.
 Customer Instance metadata and source-backed schema are emitted only when

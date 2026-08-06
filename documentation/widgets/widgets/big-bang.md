@@ -110,13 +110,6 @@ bigBang.gap -> 8..80
 Do not add a local Header, typography, branding, share, or locale switcher
 path.
 
-## Clickeen Pages Usage
-
-Big Bang appears in Clickeen Page source as a saved account widget instance
-placement. The page stores a placement reference to the instance; the widget
-software remains under `tokyo/product/widgets/big-bang/`. Page public serving
-is not implemented.
-
 ## Verification
 
 ```bash

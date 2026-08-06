@@ -36,11 +36,6 @@ import { loadRomaWidgetsForAccount } from './use-roma-widgets';
 
 type BuilderDomainProps = {
   initialInstanceId?: string;
-  embedded?: boolean;
-  returnLabel?: string;
-  contextMessage?: string;
-  onReturn?: () => void;
-  onInstanceSaved?: () => void;
 };
 
 const OPEN_EDITOR_TIMEOUT_MS = 7000;
@@ -146,7 +141,6 @@ type BobOpenEditorMessage = {
   fontLibrary: AccountFontLibrary;
   publishStatus?: 'published' | 'unpublished';
   returnLabel?: string;
-  contextMessage?: string;
   publicActions: PublicActions | null;
   canSaveAsTemplate?: boolean;
   policy?: unknown;
@@ -270,7 +264,7 @@ function resolveBobAccountCommandRequest(args: {
   command: BobAccountCommand;
   instanceId?: string;
   body?: unknown;
-}): { method: 'GET' | 'PUT' | 'POST' | 'DELETE'; path: string; body?: unknown } | null {
+}): { method: 'GET' | 'PUT' | 'POST' | 'DELETE'; path: string } | null {
   const instanceId = String(args.instanceId || '').trim();
   const body = args.body && typeof args.body === 'object' && !Array.isArray(args.body)
     ? (args.body as Record<string, unknown>)
@@ -316,8 +310,7 @@ function resolveBobAccountCommandRequest(args: {
       if (!instanceId) return null;
       return {
         method: 'POST',
-        path: '/api/account/translations/generate',
-        body: { target: { kind: 'instance', id: instanceId } },
+        path: `/api/account/instances/${encodeURIComponent(instanceId)}/translations/generate`,
       };
     case 'run-copilot':
       if (!instanceId) return null;
@@ -449,11 +442,6 @@ function normalizeReturnTo(value: string | null): string {
 
 export function BuilderDomain({
   initialInstanceId = '',
-  embedded = false,
-  returnLabel: embeddedReturnLabel,
-  contextMessage,
-  onReturn,
-  onInstanceSaved,
 }: BuilderDomainProps) {
   const { activeAccount, accountPolicy } = useRomaAccountContext();
   const accountApi = useRomaAccountApi();
@@ -504,7 +492,7 @@ export function BuilderDomain({
   const bobBaseUrl = useMemo(() => resolveBobBaseUrl(), []);
   const currentUrl = pathname;
   const pathInstanceId = useMemo(() => decodeBuilderPathInstanceId(pathname), [pathname]);
-  const returnTo = useMemo(() => embedded ? '' : normalizeReturnTo(searchParams.get('returnTo')), [embedded, searchParams]);
+  const returnTo = useMemo(() => normalizeReturnTo(searchParams.get('returnTo')), [searchParams]);
   const newWidgetType = useMemo(() => String(searchParams.get('new') || '').trim().toLowerCase(), [searchParams]);
   const duplicateInstanceId = useMemo(() => String(searchParams.get('duplicate') || '').trim(), [searchParams]);
   const accountTemplateId = useMemo(() => String(searchParams.get('template') || '').trim(), [searchParams]);
@@ -617,13 +605,13 @@ export function BuilderDomain({
   }, [bobBaseUrl]);
 
   useEffect(() => {
-    if (embedded || !activeInstanceId) return;
+    if (!activeInstanceId) return;
     const nextRoute = buildRomaBuilderRoute({
       instanceId: activeInstanceId,
     });
     if (nextRoute === currentUrl) return;
     router.replace(nextRoute, { scroll: false });
-  }, [activeInstanceId, currentUrl, embedded, router]);
+  }, [activeInstanceId, currentUrl, router]);
 
   useEffect(() => {
     const resolved = pathInstanceId || String(initialInstanceId || '').trim();
@@ -701,7 +689,7 @@ export function BuilderDomain({
         if (args.command === 'generate-translations') {
           headers.set('accept', 'text/event-stream');
         }
-        const requestBody = route.body ?? args.body;
+        const requestBody = args.body;
         if (typeof requestBody !== 'undefined' && route.method !== 'GET') {
           if (!headers.has('content-type')) {
             headers.set('content-type', 'application/json');
@@ -750,12 +738,8 @@ export function BuilderDomain({
             activeInstanceIdRef.current = createdInstanceId;
             suppressNextActiveOpenRef.current = true;
             setActiveInstanceId(createdInstanceId);
-            if (!embedded) router.replace(buildRomaBuilderRoute({ instanceId: createdInstanceId }), { scroll: false });
+            router.replace(buildRomaBuilderRoute({ instanceId: createdInstanceId }), { scroll: false });
           }
-        }
-
-        if (args.command === 'update-instance' && status >= 200 && status < 300) {
-          onInstanceSaved?.();
         }
 
         reply({
@@ -790,7 +774,7 @@ export function BuilderDomain({
         });
       }
     },
-    [accountApi, activeInstanceId, bobBaseUrl, embedded, onInstanceSaved, router],
+    [accountApi, activeInstanceId, bobBaseUrl, router],
   );
 
   const postOpenEditorAndWait = useCallback(
@@ -918,8 +902,7 @@ export function BuilderDomain({
         publicPackage: builderOpen.publicPackage,
         fontLibrary: builderOpen.fontLibrary,
         publishStatus: builderOpen.publishStatus,
-        returnLabel: embedded ? embeddedReturnLabel ?? 'Done, go back to the page' : returnTo ? 'Return' : undefined,
-        contextMessage,
+        returnLabel: returnTo ? 'Return' : undefined,
         publicActions: nextPublicActions,
         canSaveAsTemplate,
         policy: accountPolicy,
@@ -951,7 +934,7 @@ export function BuilderDomain({
       }
       setOpenError(message);
     }
-  }, [accountApi, accountPolicy, activeAccount, activeInstanceId, contextMessage, currentUrl, embedded, embeddedReturnLabel, postOpenEditorAndWait, resolveCanSaveAsTemplate, returnTo, router]);
+  }, [accountApi, accountPolicy, activeAccount, activeInstanceId, currentUrl, postOpenEditorAndWait, resolveCanSaveAsTemplate, returnTo, router]);
 
   const openDraftInBob = useCallback(async () => {
     const targetWindow = iframeRef.current?.contentWindow;
@@ -1046,8 +1029,7 @@ export function BuilderDomain({
         instanceData: config,
         publicPackage,
         fontLibrary,
-        returnLabel: embedded ? embeddedReturnLabel ?? 'Done, go back to the page' : returnTo ? 'Return' : undefined,
-        contextMessage,
+        returnLabel: returnTo ? 'Return' : undefined,
         publicActions: null,
         policy: accountPolicy,
         copilot,
@@ -1073,9 +1055,6 @@ export function BuilderDomain({
     hasDraftRequest,
     newWidgetType,
     templateDraftRequest,
-    contextMessage,
-    embedded,
-    embeddedReturnLabel,
     postOpenEditorAndWait,
     returnTo,
     requestCatalogAssetChoice,
@@ -1169,8 +1148,6 @@ export function BuilderDomain({
       if (data.type === 'bob:host-action') {
         if (data.action === 'open-navigation') {
           openNavigation(iframeRef.current);
-        } else if (data.action === 'return' && embedded && onReturn) {
-          requestGuardedNavigation(onReturn);
         } else if (data.action === 'return' && returnTo) {
           requestGuardedNavigation(() => router.push(returnTo));
         } else if (data.action === 'copy-code') {
@@ -1219,7 +1196,7 @@ export function BuilderDomain({
 
     window.addEventListener('message', listener);
     return () => window.removeEventListener('message', listener);
-  }, [activeInstanceId, bobBaseUrl, embedded, hasDraftRequest, onReturn, openNavigation, publicActionContext, requestGuardedNavigation, returnTo, router, runBobAccountCommand, saveWidgetAsTemplate]);
+  }, [activeInstanceId, bobBaseUrl, hasDraftRequest, openNavigation, publicActionContext, requestGuardedNavigation, returnTo, router, runBobAccountCommand, saveWidgetAsTemplate]);
 
   useEffect(() => {
     bobReadyRef.current = false;
@@ -1293,7 +1270,6 @@ export function BuilderDomain({
     };
 
     const handlePopState = () => {
-      if (embedded) return;
       if (!bobIsDirtyRef.current) return;
       if (allowPopStateRef.current) {
         allowPopStateRef.current = false;
@@ -1320,7 +1296,7 @@ export function BuilderDomain({
       window.removeEventListener('popstate', handlePopState);
       document.removeEventListener('click', handleClick, true);
     };
-  }, [embedded, requestGuardedNavigation]);
+  }, [requestGuardedNavigation]);
 
   const builderOpenErrorCopy = resolveBuilderErrorCopy(openError || '', 'Builder could not open this widget. Please try again.');
 
@@ -1392,7 +1368,6 @@ export function BuilderDomain({
       </dialog>
       <CatalogAssetChoiceDialog
         open={Boolean(catalogAssetChoice)}
-        product="widget"
         copying={catalogAssetCopying}
         error={catalogAssetError}
         onCopy={() => void copyCatalogAssets()}

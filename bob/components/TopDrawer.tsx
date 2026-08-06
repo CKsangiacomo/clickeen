@@ -145,9 +145,6 @@ export function TopDrawer({
           {isTemplate ? (
             <span className="topdrawer-template-badge body-xs">Template</span>
           ) : null}
-          {meta?.contextMessage ? (
-            <span className="topdrawer-context-message body-xs">{meta.contextMessage}</span>
-          ) : null}
         </div>
       </div>
 

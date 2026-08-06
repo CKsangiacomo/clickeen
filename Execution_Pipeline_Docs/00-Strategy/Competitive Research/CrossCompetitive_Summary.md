@@ -35,8 +35,8 @@ that customers evaluate widget platforms on these axes, in this order:
   content before switching," but nobody frames this as a structural advantage.
 - **Agent operation / AI-powered editing** — not mentioned in any independent
   comparison.
-- **Page composition** — not mentioned. All comparisons treat widgets as
-  independent embeds.
+- **Website composition** — not a current Clickeen product comparison. Customer
+  Pages are deferred planning.
 - **Localization model** — not mentioned.
 
 **This is Clickeen's opening.** The market doesn't currently compare on the axes
@@ -169,7 +169,7 @@ Google ignores?") and then win on it.
 
 | Dimension | Elfsight | Common Ninja | Embeddable | Jotform | OpenWidget | Clickeen |
 | --- | --- | --- | --- | --- | --- | --- |
-| **Category** | Widget platform | Widget marketplace | AI widget builder | Forms + widgets | Free widget launcher | Widget + page platform |
+| **Category** | Widget platform | Widget marketplace | AI widget builder | Forms + widgets | Free widget launcher | Widget platform |
 | **Market position** | Incumbent (907 G2 reviews) | Challenger (6 G2 reviews) | New entrant (0 independent reviews) | Giant entering (1,083 G2 reviews) | Niche free tool | Pre-launch |
 | **Widget count (real)** | ~45 engines | ~50 engines | AI-generated (infinite) | ~50-70 engines | ~14 widgets | 8 (curated) |
 | **Pricing model** | Per-view + per-widget | Per-widget | Per-account + AI messages | Free until 2027, then per-view | Free | Per-account tier |
@@ -177,7 +177,7 @@ Google ignores?") and then win on it.
 | **AI** | AI chatbot widget | MCP server | AI IS the builder | AI forms + AI tools | None | Product Copilot + Translation Agent |
 | **Agent-operated** | No | External (MCP) | No | No | No | Native |
 | **Crawlable content** | No (admitted by staff) | No | No (React SPA) | No | No | **Yes** |
-| **Page composition** | No | No | No | No | No | **Yes** |
+| **Customer Pages** | No | No | Landing pages | No | No | Deferred planning |
 | **Localization** | Google Translate widget | Ultimate-only tier | None | Unknown | None | **baseLocale + overlays** |
 | **Design system** | Per-widget styling | Per-widget styling | AI-generated styling | Per-widget styling | Avatar/name only | **Dieter** |
 | **Employees** | ~20-30 | ~5-10 (same as Embeddable) | ~5-10 (same as Common Ninja) | ~600-850 | ~300-450 (parent) | Pre-launch |
@@ -296,10 +296,10 @@ pre-built file, not widget rendering. Still far cheaper than SSR.
 
 ---
 
-### Advantage 3: Agent-operated composition (verified — needs refinement)
+### Advantage 3: Agent-operated Widget authoring (verified — needs refinement)
 
-**Original claim:** No widget platform has agent-operated composition of
-structured source artifacts.
+**Original claim:** No widget platform has agent-operated editing of structured
+source artifacts.
 
 **Verified finding:** The claim **must be split into two parts:**
 
@@ -310,18 +310,9 @@ exposes 18 tools including `create_widget`, `update_widget`,
 can create and edit widget instances against JSON schemas. Jotform also has an
 official MCP server with form CRUD tools.
 
-**Part B — "Agent-operated composition of multiple widgets into pages" — UNIQUE.**
-No widget platform (Common Ninja, Jotform, Elfsight, OpenWidget, Embeddable,
-Duda) exposes agent tools for multi-widget page composition. Every platform
-stops at individual widget creation/editing. Page placement is manual
-copy-paste of embed code.
-
-**What TO claim (defensible):**
-> "Clickeen is the only widget platform where an AI agent composes multiple
-> widgets into complete pages by operating typed source artifacts. Competitors
-> (Common Ninja, Jotform) expose MCP servers that let agents edit individual
-> widget instances against a schema — but none compose multiple widgets into a
-> page, and none operate on the widget source contract itself."
+Customer Pages are deferred planning, so Page composition is not a current
+competitive claim. The defensible current claim is that Clickeen agents operate
+the saved Widget source contract and its generated files directly.
 
 ---
 
@@ -369,7 +360,7 @@ Translation Agent). But several are closer than the original claim implied:
 | --- | --- | --- | --- |
 | 1 | **Saved crawlable HTML** | Strong | Claim the **iframe attribution problem**, not "invisible." Google runs JS — but credits iframe content to the vendor, not your page. |
 | 2 | **Uncapped edge serving** | Strongest | Verified by live HTTP headers: competitors send `no-store` / `DYNAMIC`. Clickeen sends `s-maxage` + `immutable`. Don't say "must meter" — say "their architecture requires uncached origin compute." |
-| 3 | **Agent-operated composition** | Strong (refined) | Don't claim "no one has agent-operated editing" — Common Ninja and Jotform have MCP servers. DO claim "no one composes widgets into pages via agents." |
+| 3 | **Agent-operated Widget authoring** | Strong (refined) | Don't claim "no one has agent-operated editing" — Common Ninja and Jotform have MCP servers. Describe the concrete difference: Clickeen agents operate saved Widget source and generated files through named authorities. |
 | 4 | **Systemic localization** | Strong (combined) | Don't claim "no one has structural localization" — Embeddable has developer i18n overlays, Rivo has baseLocale + AI prefill. DO claim the **triad combination**: baseLocale + overlays + Translation Agent at every tier, as a unified system. |
 
 **The moat is the combination of all four.** No competitor has even two of the
@@ -383,12 +374,11 @@ category is defined by:
 - Pre-built widget catalogs (Elfsight, Common Ninja)
 - View-metered pricing with deactivation (Elfsight, Jotform)
 - JavaScript-rendered uncrawlable embeds (all competitors)
-- Independent widget islands (no composition)
+- Independent client-rendered widget islands
 
 Clickeen is creating a **new category adjacent to the existing one:**
 - Structured saved-as-truth artifacts (not CDN scripts)
 - Account-owned entitlements (no view limits, no deactivation)
-- Page composition from widget instances (not independent islands)
 - Agent-operated editing (not human form-filling)
 - baseLocale + overlay localization (not a Google Translate widget)
 

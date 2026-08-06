@@ -108,8 +108,8 @@ integrations (HubSpot, Google Sheets, Notion, Slack, Google Analytics, Stripe).
 - **No saved HTML.** The widget is a live application, not a static file.
 - **No source-truth model.** The AI-generated code IS the truth — there is no
   structured source contract, no typed artifact, no deterministic fingerprint.
-- **No composition.** Each generated widget is a standalone application, not a
-  composable unit that can be stacked into pages.
+- **No saved standalone artifact.** Each generated widget is a live application
+  tied to Embeddable's runtime.
 - **No crawlable content.** Everything is client-rendered from Embeddable's
   backend via the loader pattern.
 
@@ -176,17 +176,17 @@ removal is a monetization lever (same as Elfsight/Common Ninja).
 | **Elfsight** | `static.elfsight.com` | CDN loader script + empty div | No — content rendered by JS |
 | **Embeddable** | `embeddable.live` | Compiled React SPA | **No — worst case** (React SPA is even less SEO-friendly than the loader pattern; at least Elfsight injects some DOM structure) |
 
-**Clickeen's wedge against Embeddable:** "Your AI-generated landing page is
-invisible to Google. Clickeen pages are real saved HTML that Google crawls
-on the first request — no JS execution required."
+**Clickeen's current wedge against Embeddable:** "Your AI-generated Widget is a
+runtime application. A Clickeen Widget is saved HTML that a crawler can read
+without waiting for a client application to build it."
 
 **Crawlability:** Zero. The widget is a live application rendered client-side
 from Embeddable's backend. Content, logic, and data all flow through
 Embeddable's servers at runtime. A React SPA is the worst-case for SEO —
 even Google's JS renderer may not fully execute complex React bundles.
 
-**Composition:** Zero. Each generated widget is a standalone application.
-There is no concept of stacking widgets into a composed page.
+**Hosted Pages:** Embeddable can generate landing-page experiences, but each is
+still a live application tied to its runtime rather than a saved HTML artifact.
 
 **Source ownership:** Zero. The customer does not own the generated code —
 it runs on Embeddable's infrastructure and depends on their backend for all
@@ -327,11 +327,11 @@ Ninja's own about page admits: "no matter how many widgets we built, there
 would always be unique use cases we couldn't predict"). AI-generated custom
 widgets break that ceiling. This is the direction the market is heading.
 
-### 8.2 Landing pages extend the surface
+### 8.2 Landing pages extend Embeddable's surface
 
-Widgets → landing pages → (eventually) full pages/sites. This is the same
-trajectory Clickeen is on (widgets → pages → websites). Embeddable is further
-along on the landing-page axis.
+Embeddable is extending from Widgets into landing pages and potentially full
+sites. Clickeen customer Pages and websites are deferred planning; this is
+competitor evidence, not a current Clickeen trajectory or commitment.
 
 ### 8.3 Per-account pricing (not per-widget)
 
@@ -360,7 +360,7 @@ competitor.
 AI-generated custom widgets are code blobs, not typed contracts. There is no
 baseLocale, no overlay model, no deterministic fingerprint, no saved-as-truth
 HTML. The widget is whatever the AI generated — which means:
-- No composition into pages (each widget is independent generated code)
+- No reusable typed Widget contract across its generated code blobs
 - No locale overlays (each widget is single-language)
 - No source-truth discipline (the AI output IS the truth)
 
@@ -397,24 +397,24 @@ token system. No brand consistency guarantee across generated widgets.
 > platform that generates custom widgets from natural language. It is the most
 > AI-forward widget platform in the market, but generated widgets are code
 > blobs, not structured artifacts. Clickeen's typed contracts + saved HTML +
-> agent-operated composition is the structured alternative to AI-generated
+> agent-operated Widget authoring is the structured alternative to AI-generated
 > widget soup.
 
 ### 10.2 Battle card
 
 | | Clickeen | Embeddable |
 | --- | --- | --- |
-| Where we win | Structured typed artifacts; saved crawlable HTML; Dieter design system; baseLocale + overlays; composed pages; deterministic fingerprints | — |
+| Where we win | Structured typed Widget artifacts; saved crawlable HTML; Dieter design system; baseLocale + overlays; deterministic fingerprints | — |
 | Where they win | — | AI generates ANY widget from a prompt (infinite flexibility); landing pages; AI agents; 687 SEO-indexed template pages; per-account pricing (no per-widget) |
-| When we lose | Customer wants a widget type Clickeen doesn't have and Embeddable's AI can generate it. Customer wants landing pages. Customer wants infinite widget variety. | Customer needs structured content, SEO crawlability, composition into pages, brand consistency across widgets, or localization |
-| When we win | Customer cares about content ownership (saved HTML vs generated code blob). Customer wants to compose widgets into pages. Customer needs localization. Customer wants brand consistency (Dieter). |
-| Killer question | "Embeddable's AI generates a custom code blob for each widget — no saved HTML, no locale overlays, no page composition, no design system. Do you want infinite widget variety with no structure, or structured widgets that compose into real crawlable pages?" |
+| When we lose | Customer wants a widget type Clickeen doesn't have and Embeddable's AI can generate it. Customer wants landing pages. Customer wants infinite widget variety. | Customer needs structured content, SEO crawlability, brand consistency across widgets, or localization |
+| When we win | Customer cares about content ownership (saved HTML vs generated code blob). Customer needs localization. Customer wants brand consistency (Dieter). |
+| Killer question | "Embeddable's AI generates a custom code blob for each widget — no saved HTML, no locale overlays, no shared design system. Do you want infinite widget variety with no structure, or structured crawlable Widgets?" |
 
 ### 10.3 Messaging guidance
 
 **Say:**
 1. "Your widgets are structured artifacts, not generated code blobs." Saved HTML, typed contracts, deterministic output.
-2. "Your widgets compose into pages." Not independent generated islands.
+2. "Your Widget is a saved artifact." It is not an independent generated runtime island.
 3. "Your brand is consistent." Dieter design system, not per-widget AI styling.
 
 **Do NOT say:**
@@ -440,16 +440,15 @@ This bifurcation tells us Common Ninja's founder sees the market splitting:
 - Customers who want pre-built widgets from a catalog (Common Ninja legacy).
 - Customers who want AI to build custom widgets (Embeddable).
 
-**Clickeen is playing a third game:** structured widgets that compose into
-pages, operated by agents, saved as real HTML. Neither Common Ninja's catalog
-nor Embeddable's AI generation produces structured, composable, crawlable
-artifacts. That is Clickeen's unique position.
+**Clickeen is playing a third game:** structured Widgets operated by agents and
+saved as real HTML. Neither Common Ninja's catalog nor Embeddable's AI
+generation produces the same structured, crawlable Widget artifact.
 
-The key strategic question: will the market prefer **infinite AI-generated
-flexibility** (Embeddable) or **structured composability with agents**
-(Clickeen)? The answer is probably "both, for different customers" — but
-Clickeen's structured approach is the only one that delivers SEO value, page
-composition, localization, and brand consistency.
+The key strategic question is whether the market prefers **infinite AI-generated
+flexibility** (Embeddable) or **structured Widget authoring with agents**
+(Clickeen). The answer is probably "both, for different customers," but
+Clickeen's current approach delivers SEO value, localization, and brand
+consistency through a saved Widget artifact.
 
 ---
 
@@ -566,8 +565,8 @@ and customizes each 3× = 30 messages = fine. A customer who iterates heavily
 (50+ generations/month) will pay $19 + $24 = $43/mo — more than Elfsight.
 
 **What they never mention on comparison pages:** crawlability, SEO, saved HTML,
-content ownership, page composition, localization, or design systems. These are
-exactly Clickeen's structural advantages — and Embeddable doesn't even
+content ownership, localization, or design systems. These are current
+Clickeen structural advantages — and Embeddable doesn't even
 acknowledge them as competitive dimensions.
 
 ### Monetization channels

@@ -162,7 +162,7 @@ export function WidgetTemplateList() {
                             aria-hidden="true"
                           />
                         </button>
-                        <div className="diet-popover roma-page-actions-popover" role="menu">
+                        <div className="diet-popover roma-actions-popover" role="menu">
                           <Link
                             className="diet-btn-menuactions"
                             data-size="md"
@@ -211,8 +211,8 @@ export function WidgetTemplateList() {
             ))}
           </tbody>
         </table>
-        {loading ? <p className="body-m roma-pages-state">Loading Widget templates…</p> : null}
-        {!loading && !error && templates.length === 0 ? <p className="body-m roma-pages-state">No Widget templates yet.</p> : null}
+        {loading ? <p className="body-m roma-collection-state">Loading Widget templates…</p> : null}
+        {!loading && !error && templates.length === 0 ? <p className="body-m roma-collection-state">No Widget templates yet.</p> : null}
       </div>
 
       <dialog ref={renameDialogRef} className="diet-popup" data-size="medium" aria-labelledby="roma-widget-template-rename-title">

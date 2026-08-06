@@ -1,5 +1,4 @@
 import { isRecord } from '@clickeen/ck-contracts';
-import type { AccountPageTemplate } from '@clickeen/ck-contracts/pages';
 import { isAccountAssetRef } from './account-asset-record';
 
 export type CatalogAssetMapping = {
@@ -102,35 +101,4 @@ export function discardConfigMediaAssets(
     return Object.fromEntries(Object.entries(node).map(([key, value]) => [key, visit(value)]));
   };
   return visit(config) as Record<string, unknown>;
-}
-
-export function collectPageCatalogAssetRefs(source: AccountPageTemplate): string[] {
-  return source.values.socialImageAssetRef ? [source.values.socialImageAssetRef] : [];
-}
-
-export function copyCatalogAssetsInPageSource(
-  source: AccountPageTemplate,
-  mappings: CatalogAssetMapping[],
-): AccountPageTemplate {
-  const socialImageAssetRef = source.values.socialImageAssetRef;
-  const destinationAssetRef = mappings.find((mapping) => mapping.sourceAssetRef === socialImageAssetRef)?.destinationAssetRef;
-  return destinationAssetRef
-    ? { ...source, values: { ...source.values, socialImageAssetRef: destinationAssetRef } }
-    : source;
-}
-
-export function discardCatalogAssetsInPageSource(
-  source: AccountPageTemplate,
-  assetRefs: string[],
-): AccountPageTemplate {
-  const discarded = new Set(assetRefs);
-  const socialImageAssetRef = source.values.socialImageAssetRef;
-  const { socialImageAssetRef: ignoredSocialImageAssetRef, ...valuesWithoutSocialImage } = source.values;
-  void ignoredSocialImageAssetRef;
-  return {
-    ...source,
-    values: socialImageAssetRef && discarded.has(socialImageAssetRef)
-      ? valuesWithoutSocialImage
-      : source.values,
-  };
 }

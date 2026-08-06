@@ -25,7 +25,7 @@ compatibility paths, validation layers, state machines, and fallback behavior.
 
 Clickeen is the opposite. The system stays lean, structured, typed, and
 AI-legible. Widget specs, control maps, field maps, account files, overlays,
-page files, policy files, routes, and storage folders are product artifacts
+policy files, routes, and storage folders are product artifacts
 agents can understand and operate. The intelligence lives in the agents and in
 their ability to operate the structured substrate through named authorities.
 
@@ -52,7 +52,6 @@ Clickeen is a simple account product.
 - `accountPublicId` is the API/embed/authz field name for that same value.
 - Widgets are software and live in the system.
 - Users create widget instances in Roma/Bob and save them in their account.
-- Pages are account-owned stacks of saved instances.
 - Bob is an editor. Open/edit work is browser memory. Save is the persistence
   boundary.
 - Roma is the account app. Roma routes the user to the current account,
@@ -94,7 +93,7 @@ CLICKEEN
 | Builder editing state | Bob | `bob/` browser-memory session |
 | Account runtime storage | Tokyo-worker | `tokyo-worker/` over Tokyo R2 |
 | Product widget software | Git-authored Tokyo product root | `tokyo/product/widgets/` deployed to `product/widgets/` |
-| Public Instance/Page serving | Tokyo-worker public serving | exact generated files under `accounts/{accountPublicId}/...` exposed through published `clk.live` coordinates |
+| Public Instance serving | Tokyo-worker public serving | exact generated files under `accounts/{accountPublicId}/...` exposed through published `clk.live` coordinates |
 | Relational account/support data | Michael/Supabase | `supabase/migrations/` and service-owned routes |
 | Model execution | San Francisco | `sanfrancisco/` |
 | Product Copilot brain | Product Copilot Worker | `agents/product-copilot/` |
@@ -124,7 +123,7 @@ token/capsule/grant for that boundary.
 | Michael | Supabase Postgres | Relational account/user/support data |
 | Dieter | Git source + Tokyo artifacts | Design tokens/components |
 
-Public Instance and Page serving is stored generated-file delivery through
+Public Instance serving is stored generated-file delivery through
 `clk.live` / `dev.clk.live`, backed by Tokyo-worker, R2, and scoped Cloudflare
 cache invalidation.
 
@@ -156,25 +155,14 @@ accounts/{accountPublicId}/
       index.html
       styles.css
       runtime.js
-  pages/
-    {pageId}/
-      source.json
-      serve-state.json
-      overlays/
-        locales/
-          {locale}.json
-      overlays.json
-      index.html
-      styles.css
-      runtime.js
 ```
 
-Ordinary Instances and Pages have `isTemplate: false`, locale/publication
-state, and may be served. Templates use the same Instance or Page folder and
-the same three files with `isTemplate: true`, but have no `baseLocale`, locale
-overlays, publication state, or public route. A Catalog is not another storage
-tree: customer **My templates** reads the current account's templates, while
-the read-only Widget/Page Catalog reads the exact `CLICKEEN` account templates.
+Ordinary Instances have `isTemplate: false`, locale/publication state, and may
+be served. Templates use the same Instance folder and the same three files with
+`isTemplate: true`, but have no `baseLocale`, locale overlays, publication
+state, or public route. A Catalog is not another storage tree: customer **My
+templates** reads the current account's templates, while the read-only Widget
+Catalog reads the exact `CLICKEEN` account templates.
 
 The non-account roots are git-authored deploy artifacts:
 
@@ -249,56 +237,6 @@ Bob/Roma asset UI
 See `documentation/architecture/AssetManagement.md` for the full asset
 contract.
 
-### Account Pages
-
-Pages are account-owned ordered collections of saved Instances. Roma owns
-current-account policy and authenticated Page commands. Tokyo-worker stores the
-exact direct Page root under:
-
-```text
-accounts/{accountPublicId}/pages/{pageId}/
-  source.json
-  serve-state.json
-  overlays/locales/{locale}.json
-  overlays.json
-  index.html
-  styles.css
-  runtime.js
-```
-
-First Save creates a Current unpublished ordinary Page. Saving a referenced
-Instance or writing one of that Instance's translated locale files marks only
-the same-account ordinary Pages that use it as Needs update. Ordinary Page Save
-and Publish then block. Explicit Update stores the exact browser-generated
-source/files through the same Page PUT boundary and clears the flag only after
-that operation succeeds. Nothing recompiles automatically. Unpublish preserves
-the flag and the direct Page root; Delete accepts only an unpublished Page.
-A published Needs-update Page keeps serving its last saved files.
-
-Roma's Page Builder is the authenticated editor for this source. It reuses
-Bob's TopDrawer/ToolDrawer/Workspace shell and Dieter controls but owns only
-Page composition and Page metadata. A new draft has no remote identity before
-Save. Editing a referenced Instance opens the existing Bob editor over the
-still-mounted Page draft; returning to the Page does not create a second Widget
-editor or remote draft.
-
-The stable public URL redirects without shared caching to one saved exact
-locale chosen from browser language, Cloudflare country-region hints, and the
-Page base locale:
-
-```text
-https://clk.live/{accountPublicId}/pages/{pageId}
-https://clk.live/{accountPublicId}/pages/{pageId}/{locale}
-```
-
-The exact-locale URL is the HTML cache key. For the base locale Tokyo-worker
-uses the base values already in stored `index.html`; for a non-base locale it
-applies only that locale's Page/placement values from root `overlays.json`.
-Public Page coordinates are completed for both. It never calls child Instance
-URLs, a model, or a generator. `styles.css` and `runtime.js` are shared across
-locales. Save or Update while published, Publish, Unpublish, and Delete purge only the
-Page's affected previous/current locale and support-file URLs.
-
 ### Translation Overlays
 
 Translation overlays are account instance content artifacts:
@@ -356,7 +294,7 @@ Agents treat content according to source authority:
 | Integration-sourced content | Use, summarize, extract, route, display, analyze, and derive from it; do not rewrite source truth except through an explicit authorized integration write path. |
 
 The rule is source-truth fidelity. Around content, agents also operate widgets,
-pages, reports, analytics, support tickets, locale overlays, runtime packages,
+reports, analytics, support tickets, locale overlays, runtime packages,
 account assets, routes, and storage folders.
 
 ## Runtime And Deploy Evidence
@@ -369,7 +307,6 @@ https://bob.dev.clickeen.com
 https://tokyo.dev.clickeen.com
 https://berlin.dev.clickeen.com
 https://dev.clk.live/{accountPublicId}/{instanceId}
-https://dev.clk.live/{accountPublicId}/pages/{pageId}/{locale}
 https://dev.clk.live/clickeen.js
 https://prague.dev.clickeen.com
 https://devstudio.clickeen.com

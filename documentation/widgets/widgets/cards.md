@@ -108,11 +108,6 @@ cards.customCardStyles
 cards.appearance.cardwrapper
 ```
 
-## Clickeen Pages Usage
-
-Cards appears in Clickeen Page source as a saved account widget instance
-placement. Repeated card items remain widget Core state inside the instance.
-
 ## Verification
 
 ```bash

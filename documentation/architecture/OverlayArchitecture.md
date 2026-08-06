@@ -41,42 +41,6 @@ The overlay body is exact:
 
 There is no instance-level locale artifact subtree.
 
-## Page Authoring Overlays
-
-Page authoring uses the same separate exact-file law:
-
-```text
-accounts/{accountPublicId}/pages/{pageId}/
-  source.json
-  serve-state.json
-  overlays/
-    locales/
-      {locale}.json
-  overlays.json
-  index.html
-  styles.css
-  runtime.js
-```
-
-`source.json` owns the saved `baseLocale`. Account Settings owns the selected
-locale list used by Generate translations. Each non-base locale is one exact
-Page overlay file; Page overlays are not stored inline in `source.json`. This
-lets Translation Agent write locales independently without one concurrent
-result replacing another.
-
-Page templates have no locales and no locale overlay files. Web Code Generator
-produces the direct Page files and root `overlays.json`. The authoring overlay
-files remain independently writable translation truth; root `overlays.json` is
-the saved locale-value input used to complete published exact-locale HTML and
-changes only through a Page Save or Update.
-
-An existing ordinary Instance Save or Instance locale-overlay write marks each
-same-account ordinary Page that references that Instance as Needs update. It
-does not alter Page source, Page overlays, root `overlays.json`, or live files.
-Page-owned overlay writes do not set the flag. Removing an Instance overlay
-because Account Settings removed a locale also does not set it; that Settings
-change affects later generation and Save/Update inputs.
-
 ## Field Authority
 
 `instance.content.json` owns the current saved text-field set. Every overlay
@@ -113,16 +77,6 @@ Neither condition falls back to the base language. Instance Save, Instance
 translation writes/deletes, publication, and deletion operations purge only
 the affected public URLs.
 
-For a published Page, Tokyo-worker uses
-`/{accountPublicId}/pages/{pageId}/{locale}` as the exact-locale HTML cache key.
-The base locale uses values already in stored `index.html`; a non-base locale
-applies only its matching root `overlays.json` Page/placement values through
-declared markers. Both complete public Page coordinates. The full root
-`overlays.json` is validated before route selection, so corruption in any entry
-makes the entire Page unavailable rather than isolating failure to one locale.
-The stable Page URL selects from the saved locale set and redirects with
-`no-store`; Page `styles.css` and `runtime.js` remain shared across locales.
-
 ## Current Operations
 
 | Operation | Authority |
@@ -133,14 +87,6 @@ The stable Page URL selects from the saved locale set and redirects with
 | Save instance source | Bob submits current config and exact three-file package -> Roma derives source artifacts -> Tokyo-worker stores both |
 | Publish/unpublish | Tokyo-worker owns the single `serve-state.json` |
 | Public localized read | Tokyo-worker reads the one root artifact and exact overlay |
-| Save Page runtime | Roma submits exact source/files/root serving overlays -> Tokyo-worker stores the direct Page root |
-| Save/Update Page | the existing Page PUT stores exact browser output; ordinary Save requires Current, while explicit Update clears `needsUpdate` only after success |
-| Publish/unpublish Page | Publish requires Current; both preserve `needsUpdate`, change only `published`, and purge scoped public URLs |
-| Public localized Page read | Tokyo-worker reads one Page root; base uses stored index values and non-base uses one exact root `overlays.json` entry |
-
-The same Generate translations operation accepts an Instance or Page target.
-For a Page, it writes only the translated Page metadata values to the exact Page
-locale overlay path. It does not compile or publish the Page.
 
 ## Failure Semantics
 
@@ -164,5 +110,3 @@ locale overlay path. It does not compile or publish the Page.
 | Localized public runtime | root URL with `?locale=` contains translated text and root support URLs |
 | Missing/corrupt locale | explicit 404/500; never base-language output |
 | Storage invariant | zero instance objects outside `overlays/locales/` representing a locale runtime |
-| Page serving input | exact root `overlays.json` locale keys and values plus the one stored Page file set |
-| Page exact locale | exact-locale URL contains only base index or matching non-base values; malformed root overlays fail the whole Page read |

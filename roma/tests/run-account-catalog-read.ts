@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
-import { decodePageCatalogTemplate, decodeWidgetCatalogTemplate } from '../lib/account-catalog';
+import { decodeWidgetCatalogTemplate } from '../lib/account-catalog';
 
 async function main() {
 const presentation = { thumbnailAssetRef: '/assets/account/CLICKEEN/catalog.png', description: 'Catalog item', category: 'Featured', displayOrder: 1 };
@@ -16,15 +16,9 @@ assert.deepEqual(decodeWidgetCatalogTemplate({
 assert.equal(decodeWidgetCatalogTemplate({ isTemplate: false }), null);
 assert.equal(decodeWidgetCatalogTemplate({ templateId: 'CATW123456', isTemplate: true }), null);
 
-const pageSource = { pageId: 'CATP123456', displayName: 'Catalog page', isTemplate: true, values: { title: 'Page' }, robots: 'noindex-follow', placements: [], catalogPresentation: presentation };
-assert.deepEqual(decodePageCatalogTemplate({ source: pageSource, files }), { source: pageSource, files });
-assert.equal(decodePageCatalogTemplate({ source: { ...pageSource, isTemplate: false, baseLocale: 'en' }, files }), null);
-
 for (const path of [
   '../app/api/account/widget-catalog/route.ts',
   '../app/api/account/widget-catalog/[templateId]/route.ts',
-  '../app/api/account/page-catalog/route.ts',
-  '../app/api/account/page-catalog/[pageId]/route.ts',
 ]) {
   const source = await readFile(new URL(path, import.meta.url), 'utf8');
   assert.match(source, /resolveCurrentAccountRouteContext\(\{ request, minRole: 'viewer' \}\)/);
@@ -35,7 +29,6 @@ for (const path of [
 
 const helper = await readFile(new URL('../lib/account-catalog.ts', import.meta.url), 'utf8');
 assert.match(helper, /path: '\/__internal\/catalog\/widgets'/);
-assert.match(helper, /path: '\/__internal\/catalog\/pages'/);
 assert.doesNotMatch(helper, /accountId:\s*'CLICKEEN'|ownerAccountId|sourceAccountId|destinationAccountId/);
 
 console.log('Roma account Catalog read contract verification passed.');

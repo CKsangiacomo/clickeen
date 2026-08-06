@@ -17,8 +17,6 @@
     "./ids": "./src/ids.ts",
     "./overlay-codebooks": "./src/overlay-codebooks.ts",
     "./overlay-identity": "./src/overlay-identity.ts",
-    "./pages": "./src/pages.ts",
-    "./translations": "./src/translations.ts",
     "./translated-value-primitives": "./src/translated-value-primitives.ts",
     "./security": "./src/security.ts"
   }
