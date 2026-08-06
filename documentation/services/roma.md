@@ -126,7 +126,6 @@ Roma account-shell routes include:
 - `/widgets/:instanceId`
 - `/builder`
 - `/builder/:instanceId`
-- `/pages`
 - `/assets`
 - `/team`
 - `/billing`

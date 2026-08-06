@@ -69,9 +69,11 @@ code to the package barrel and do not maintain duplicate Roma/Tokyo Page
 interfaces.
 
 `AccountPageSource` is the saved Page contract. Page Builder owns a separate
-unsaved browser draft shape without `pageId`; first Save creates the ID and
-submits the saved contract. This type distinction creates no draft service or
-remote draft record.
+unsaved browser draft shape without `pageId`. On first Save, Page Builder sends
+that ID-less draft to Roma. Roma enforces `pages.max`, mints `pageId`, reads the
+account `baseLocale`, constructs the complete saved contract, and writes it
+through Tokyo-worker. This type distinction creates no draft service or remote
+draft record.
 
 The contract is:
 
@@ -301,9 +303,9 @@ Changing `baseLocale`, selected locales, or country/market Settings does not:
 The new Settings apply only when the customer next performs the relevant
 explicit operation, such as Generate translations, Save, or Update.
 
-On the next Page Save or Update, Page Builder uses the account's current
-`baseLocale` in the submitted saved Page source. The Settings change alone
-still performs no Page write.
+On the next Page Save or Update, Roma reads the account's current `baseLocale`
+and constructs or refreshes the saved Page source before writing it through
+Tokyo-worker. The Settings change alone still performs no Page write.
 
 127A therefore does not extend account-locale cleanup into Page roots and does
 not add locale-removal orchestration for Pages.

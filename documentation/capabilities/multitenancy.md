@@ -242,6 +242,7 @@ Current entitlement keys:
 | `views.monthly.max` | limit | clk.live public-serving telemetry | gap |
 | `instances.published.max` | limit | Roma publish route | enforced |
 | `widgets.instances.max` | limit | Roma create and duplicate command routes | enforced |
+| `pages.max` | limit | Roma Page first Save | enforced |
 | `uploads.size.max` | limit | Roma upload route and Tokyo-worker assets | enforced |
 | `items.group.small.max` | limit | Roma save policy | enforced |
 | `items.group.medium.max` | limit | Roma save policy | enforced |
@@ -304,8 +305,16 @@ perform no write or generator call. Downgrade does not hide, delete, rewrite,
 regenerate, publish, or unpublish retained Pages. This is planned 127 behavior,
 not current runtime truth.
 
-Current `pages.max` values are `0` for Free and Tier 1, `3` for Tier 2, `10`
-for Tier 3, and unlimited for Tier 4 and internal Tier99.
+Current Page limits:
+
+| Tier | `pages.max` |
+| --- | ---: |
+| `free` | 0 |
+| `tier1` | 0 |
+| `tier2` | 3 |
+| `tier3` | 10 |
+| `tier4` | unlimited |
+| `tier99` | unlimited |
 
 ## Failure Semantics
 

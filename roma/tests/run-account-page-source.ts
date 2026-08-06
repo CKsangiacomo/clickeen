@@ -21,6 +21,11 @@ async function main() {
 
   const parsed = parseAccountPageSource(ordinaryPage);
   assert.deepEqual(parsed, ordinaryPage);
+  assert.deepEqual(
+    parseAccountPageSource({ ...ordinaryPage, baseLocale: 'fil' }),
+    { ...ordinaryPage, baseLocale: 'fil' },
+    'canonical three-letter locales must remain valid Page source',
+  );
   assert.deepEqual(pageIdsPlacingInstance({ sources: [parsed!], instanceId: 'QD1G068MX7' }), [
     '7UZXTP3TOI',
   ]);

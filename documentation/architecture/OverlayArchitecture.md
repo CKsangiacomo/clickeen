@@ -54,10 +54,11 @@ accounts/{accountPublicId}/pages/{pageId}/
       {locale}.json
 ```
 
-`source.json` owns `baseLocale` and the selected locale list. Each non-base
-locale is one exact Page overlay file; Page overlays are not stored inline in
-`source.json`. This lets Translation Agent write locales independently without
-one concurrent result replacing another.
+`source.json` owns the saved `baseLocale`. Account Settings owns the selected
+locale list used by Generate translations. Each non-base locale is one exact
+Page overlay file; Page overlays are not stored inline in `source.json`. This
+lets Translation Agent write locales independently without one concurrent
+result replacing another.
 
 Page templates have no locales and no locale overlay files. Page compilation
 and its generated serving files belong to later 127 slices and are not current

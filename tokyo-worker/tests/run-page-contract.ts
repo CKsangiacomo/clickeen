@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { parseAccountPageSource, parsePageLocaleOverlay } from '../src/domains/pages/contract';
+import { isPageLocale, parseAccountPageSource, parsePageLocaleOverlay } from '../src/domains/pages/contract';
 
 const source = parseAccountPageSource({
   pageId: '7UZXTP3TOI',
@@ -15,6 +15,8 @@ const source = parseAccountPageSource({
   placements: [{ placementId: 'hero', instanceId: 'QD1G068MX7' }],
 });
 assert.ok(source && !source.isTemplate);
+assert.equal(isPageLocale('fil'), true, 'canonical three-letter Page locales must be accepted');
+assert.ok(parseAccountPageSource({ ...source, baseLocale: 'fil' }), 'fil must be accepted as Page baseLocale');
 assert.deepEqual(parsePageLocaleOverlay({
   values: {
     title: 'Estate',

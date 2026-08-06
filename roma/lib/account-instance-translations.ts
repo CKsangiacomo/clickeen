@@ -449,8 +449,8 @@ export async function generateAccountTranslations(args: {
   requestId?: string | null;
   onActivity?: (event: TranslationAgentActivityEvent) => void;
 }): Promise<{ ok: true; value: InstanceTranslationsGeneratePayload; status: number } | RouteFailure> {
-  const baseLocale = asTrimmedString(args.baseLocale);
-  const activeLocales = normalizeStringArray(args.activeLocales);
+  let baseLocale = asTrimmedString(args.baseLocale);
+  let activeLocales = normalizeStringArray(args.activeLocales);
   if (!baseLocale) return invalidPayload('baseLocale_missing');
   if (!activeLocales) return invalidPayload('activeLocales_invalid');
   let items: TranslationAgentItem[];
@@ -474,6 +474,8 @@ export async function generateAccountTranslations(args: {
     });
     if (!saved.ok) return saved;
     if (saved.value.source.isTemplate) return invalidPayload('page_template_cannot_translate');
+    baseLocale = saved.value.source.baseLocale;
+    activeLocales = activeLocales.filter((locale) => locale !== baseLocale);
     items = buildPageTranslationAgentItems(saved.value.source.values);
   }
   if (activeLocales.length === 0) {

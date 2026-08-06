@@ -10,7 +10,7 @@ import {
   isCompactPageId,
 } from '@clickeen/ck-contracts/overlay-identity';
 
-const LOCALE_RE = /^[a-z]{2}(?:-[A-Za-z0-9]{2,8})?$/;
+const LOCALE_RE = /^[a-z]{2,3}(?:-[A-Za-z0-9]{2,8})?$/;
 const ASSET_REF_SEGMENT_RE = /^[A-Za-z0-9][A-Za-z0-9._-]{0,119}$/;
 
 function hasExactKeys(value: Record<string, unknown>, allowed: readonly string[]): boolean {

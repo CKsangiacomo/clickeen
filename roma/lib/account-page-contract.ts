@@ -10,7 +10,7 @@ import {
 } from '@clickeen/ck-contracts/overlay-identity';
 import { isAccountAssetRef } from './account-asset-record';
 
-const LOCALE_RE = /^[a-z]{2}(?:-[A-Za-z0-9]{2,8})?$/;
+const LOCALE_RE = /^[a-z]{2,3}(?:-[A-Za-z0-9]{2,8})?$/;
 
 function hasExactKeys(value: Record<string, unknown>, allowed: readonly string[]): boolean {
   const expected = new Set(allowed);
