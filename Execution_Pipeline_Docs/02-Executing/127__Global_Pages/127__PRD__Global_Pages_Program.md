@@ -726,4 +726,10 @@ parallel renderer remains. The final alignment gate also decomposed Roma's
 renamed Widget-list god owner into its existing controller, table, row-action,
 dialog, and composition responsibilities, and directly proved the existing
 Bob/Roma SEO/GEO/AEO entitlement path. It introduced no route, storage owner,
-policy owner, or CSS system. The final V1-V8 audit is green.
+policy owner, or CSS system. Final route reconciliation added `/profile`,
+`/pages`, and `/page-builder/**` to Roma's existing authenticated middleware
+boundary. Roma verification run `31108288849` passed on commit `b544d1fe`,
+Cloudflare Pages deployment `99e5c115-cba9-4bec-8b72-ded405a1fc97` deployed
+that exact commit, and unauthenticated production requests to Your pages, Page
+catalog, new/existing Page Builder, and Profile all return `307` to Login while
+preserving the requested path. The final V1-V8 audit is green.

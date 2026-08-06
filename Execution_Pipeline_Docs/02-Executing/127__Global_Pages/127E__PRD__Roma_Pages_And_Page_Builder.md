@@ -772,6 +772,16 @@ documentation matches runtime; and an independent V1–V8 audit is GREEN.
 - Cloudflare Pages production: `roma-dev` and `bob-dev` both report exact final
   notice-order correction commit `0ee465ad5c6380fd077d564584e47cd441d70ae3`
   with deploy status `success`.
+- Final authenticated-route correction commit:
+  `b544d1fe1e2fe9590e73f252ceb85e506c65da9c`.
+- GitHub `cloud-dev roma app verify` run `31108288849`: green, including every
+  Roma contract, lint, typecheck, Bob build, and Roma build.
+- Cloudflare Pages production deployment
+  `99e5c115-cba9-4bec-8b72-ded405a1fc97`: success on the exact final
+  authenticated-route correction commit.
+- Unauthenticated production requests to `/pages`, `/pages?view=catalog`,
+  `/page-builder/new`, `/page-builder/HM2VXMTE61`, and `/profile` all return
+  `307` to Login with the requested path preserved.
 
 - Final Staff Engineer execution review: GREEN; architecture, tenets,
   simplicity, documentation, and V1–V8 all passed.
