@@ -90,11 +90,13 @@ export function PageBuilder({ pageId = '' }: { pageId?: string }) {
   const [bobInstanceId, setBobInstanceId] = useState('');
   const [moreOpen, setMoreOpen] = useState(false);
   const [copyOpen, setCopyOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
   const [leaveOpen, setLeaveOpen] = useState(false);
   const [upsellOpen, setUpsellOpen] = useState(!canUsePages);
   const pendingLeaveRef = useRef<(() => void) | null>(null);
   const moreRef = useRef<HTMLDivElement>(null);
   const updateDialogRef = useRef<HTMLDialogElement>(null);
+  const deleteDialogRef = useRef<HTMLDialogElement>(null);
   const updateLifecycleRef = useRef<DialogLifecycle | null>(null);
   const publicActions: PublicActions | null = currentPageId && published ? buildPagePublicActions({ accountPublicId: accountContext.accountPublicId, pageId: currentPageId }) : null;
 
@@ -171,6 +173,13 @@ export function PageBuilder({ pageId = '' }: { pageId?: string }) {
     if (needsUpdate && currentPageId && !dirty && !bobInstanceId) updateLifecycleRef.current?.open();
     else updateLifecycleRef.current?.close();
   }, [bobInstanceId, currentPageId, dirty, needsUpdate]);
+  useEffect(() => {
+    const dialog = deleteDialogRef.current;
+    if (!dialog) return;
+    const lifecycle = createDialogLifecycle({ dialog, initialFocus: () => dialog.querySelector('button'), requestDismiss: () => setDeleteOpen(false) });
+    if (deleteOpen) lifecycle.open();
+    return () => lifecycle.destroy();
+  }, [deleteOpen]);
 
   const persistOverlays = useCallback(async (id: string) => {
     await Promise.all(Object.entries(pageOverlays).map(([locale, overlay]) => accountApi.fetchJson(`/api/account/pages/${encodeURIComponent(id)}/translations/${encodeURIComponent(locale)}`, { method: 'PUT', headers: { 'content-type': 'application/json' }, body: JSON.stringify(overlay) })));
@@ -262,7 +271,7 @@ export function PageBuilder({ pageId = '' }: { pageId?: string }) {
             {(dirty || !currentPageId || needsUpdate) ? <button className="diet-btn-txt" data-size="xl" data-variant="primary" type="button" disabled={saving} onClick={() => void save(needsUpdate)}><span className="diet-btn-txt__label">{saving ? 'Saving…' : needsUpdate ? 'Update page' : 'Save'}</span></button> : null}
             {currentPageId && !needsUpdate && !published ? <button className="diet-btn-txt" data-size="lg" data-variant="secondary" type="button" disabled={saving || dirty} onClick={() => void changePublished(true)}><span className="diet-btn-txt__label body-s">Publish</span></button> : null}
             {publicActions ? <a className="diet-btn-txt" data-size="lg" data-variant="line2" href={publicActions.publicUrl} target="_blank" rel="noreferrer"><span className="diet-btn-txt__label body-s">Open public page</span></a> : null}
-            {currentPageId ? <div ref={moreRef} className="topdrawer-more diet-popover-host" data-state={moreOpen ? 'open' : 'closed'}><button className="diet-btn-txt" data-size="lg" data-variant="line2" type="button" onClick={() => setMoreOpen((open) => !open)}><span className="diet-btn-txt__label body-s">More</span></button><div className="topdrawer-more__menu diet-popover" role="menu">{published ? <><button className="diet-btn-menuactions" data-size="md" data-variant="neutral" type="button" role="menuitem" onClick={() => { setMoreOpen(false); setCopyOpen(true); }}><span className="diet-btn-menuactions__label body-s">Copy URL / code</span></button><button className="diet-btn-menuactions" data-size="md" data-variant="neutral" type="button" role="menuitem" onClick={() => { setMoreOpen(false); void changePublished(false); }}><span className="diet-btn-menuactions__label body-s">Unpublish</span></button></> : <button className="diet-btn-menuactions" data-size="md" data-variant="neutral" type="button" role="menuitem" onClick={() => { setMoreOpen(false); void accountApi.fetchJson(`/api/account/pages/${encodeURIComponent(currentPageId)}`, { method: 'DELETE' }).then(() => router.push('/pages')).catch(() => setError('Deleting this Page failed. Please try again.')); }}><span className="diet-btn-menuactions__label body-s">Delete</span></button>}</div></div> : null}
+            {currentPageId ? <div ref={moreRef} className="topdrawer-more diet-popover-host" data-state={moreOpen ? 'open' : 'closed'}><button className="diet-btn-txt" data-size="lg" data-variant="line2" type="button" onClick={() => setMoreOpen((open) => !open)}><span className="diet-btn-txt__label body-s">More</span></button><div className="topdrawer-more__menu diet-popover" role="menu">{published ? <><button className="diet-btn-menuactions" data-size="md" data-variant="neutral" type="button" role="menuitem" onClick={() => { setMoreOpen(false); setCopyOpen(true); }}><span className="diet-btn-menuactions__label body-s">Copy URL / code</span></button><button className="diet-btn-menuactions" data-size="md" data-variant="neutral" type="button" role="menuitem" onClick={() => { setMoreOpen(false); void changePublished(false); }}><span className="diet-btn-menuactions__label body-s">Unpublish</span></button></> : <button className="diet-btn-menuactions" data-size="md" data-variant="neutral" type="button" role="menuitem" onClick={() => { setMoreOpen(false); setDeleteOpen(true); }}><span className="diet-btn-menuactions__label body-s">Delete</span></button>}</div></div> : null}
           </div>
         </section>
         {error ? <div className="roma-page-builder__error body-s" role="alert">{error}</div> : null}
@@ -277,6 +286,7 @@ export function PageBuilder({ pageId = '' }: { pageId?: string }) {
 
       {bobInstanceId ? <div className="roma-page-bob-slide" role="dialog" aria-label="Edit widget in Bob"><BuilderDomain initialInstanceId={bobInstanceId} embedded returnLabel="Done, go back to the page" contextMessage="You are editing a saved widget. Other Pages using it will need updating after Save." onReturn={() => setBobInstanceId('')} onInstanceSaved={() => { void loadPagePlacement({ instanceId: bobInstanceId, settingsLocales, fetchJson: accountApi.fetchJson }).then((updated) => { setPlacementsState((current) => current.map((placement) => placement.instanceId === bobInstanceId ? { ...updated, placementId: placement.placementId } : placement)); setNeedsUpdate(true); }); }} /></div> : null}
       <dialog ref={updateDialogRef} className="diet-popup" data-size="medium" aria-labelledby="page-needs-update-title"><header className="diet-popup__header"><h2 id="page-needs-update-title" className="heading-4">Update this page to edit</h2></header><div className="diet-popup__body"><p className="body-m">One or more widgets in this page has changed. Update the page to edit.</p></div><footer className="diet-popup__footer"><div className="diet-popup__actions"><button className="diet-btn-txt" data-size="md" data-variant="secondary" type="button" onClick={() => router.push('/pages')}><span className="diet-btn-txt__label body-m">Back to pages</span></button><button className="diet-btn-txt" data-size="md" data-variant="primary" type="button" disabled={saving} onClick={() => void save(true)}><span className="diet-btn-txt__label body-m">{saving ? 'Updating…' : 'Update page'}</span></button></div></footer></dialog>
+      <dialog ref={deleteDialogRef} className="diet-popup" data-size="medium" aria-label="Delete page"><header className="diet-popup__header"><h2 className="heading-4">Delete page?</h2></header><div className="diet-popup__body"><p className="body-m">This permanently deletes the saved Page.</p></div><footer className="diet-popup__footer"><div className="diet-popup__actions"><button className="diet-btn-txt" data-size="md" data-variant="secondary" type="button" onClick={() => setDeleteOpen(false)}><span className="diet-btn-txt__label body-m">Cancel</span></button><button className="diet-btn-txt" data-size="md" data-variant="primary" type="button" disabled={saving} onClick={() => { if (!currentPageId) return; setSaving(true); void accountApi.fetchJson(`/api/account/pages/${encodeURIComponent(currentPageId)}`, { method: 'DELETE' }).then(() => router.push('/pages')).catch(() => { setError('Deleting this Page failed. Please try again.'); setDeleteOpen(false); }).finally(() => setSaving(false)); }}><span className="diet-btn-txt__label body-m">Delete</span></button></div></footer></dialog>
       <PublicCodeDialog open={copyOpen} productName={source.displayName} actions={publicActions} onClose={() => setCopyOpen(false)} />
       <RomaUnsavedChangesDialog open={leaveOpen} message="This Page has unsaved changes." onKeepEditing={() => { pendingLeaveRef.current = null; setLeaveOpen(false); }} onDiscard={() => { const leave = pendingLeaveRef.current; pendingLeaveRef.current = null; setDirty(false); setLeaveOpen(false); leave?.(); }} />
     </>

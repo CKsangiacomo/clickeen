@@ -68,6 +68,8 @@ async function main() {
   assert.match(builder, /currentPageId \|\| createCompactPageId\(\)/);
   assert.match(builder, /onClick=\{\(\) => void save\(needsUpdate\)\}/);
   assert.match(builder, /onClick=\{\(\) => void changePublished\(true\)\}/);
+  assert.match(builder, /Delete page\?/);
+  assert.match(builder, /setDeleteOpen\(true\)/);
   assert.doesNotMatch(builder, /changePublished[\s\S]{0,500}generatePageDraft/);
   assert.match(builder, /activePanel === 'content'/);
   assert.match(builder, />Content</);
