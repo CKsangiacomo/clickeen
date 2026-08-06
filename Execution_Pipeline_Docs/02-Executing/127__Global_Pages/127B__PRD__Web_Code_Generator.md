@@ -8,7 +8,7 @@ Depends on: deployed and verified 127A
 
 ## Execution evidence
 
-127B was executed on `main` in three commits:
+127B was executed on `main` in four implementation and cleanup commits:
 
 - `f4071ab5` cut over Widget definitions, Bob, Roma, Tokyo-worker, and Page
   generation to the browser Web Code Generator and removed the obsolete
@@ -17,7 +17,13 @@ Depends on: deployed and verified 127A
   the normal cloud-dev Worker/R2 deployment workflow;
 - `d3e3e48b` made the saved package an open-time baseline only, so Bob cannot
   Save until Web Code Generator has produced the current working files, and
-  removed the one-time cleanup step after it completed.
+  removed the one-time cleanup step after it completed;
+- `d2c4685f` closed the final integrity gaps: Bob invalidates generated files
+  after source edits and loads every saved overlay before generation,
+  Countdown again interprets `browser` as the visitor's local timezone, FAQ
+  deep links work inside the rendered Widget tree, first Page Save emits only
+  locales that actually exist, and Page fields use the existing public field
+  markers.
 
 Verification completed on the cloud-dev product surfaces:
 
@@ -36,7 +42,22 @@ Verification completed on the cloud-dev product surfaces:
   current package leaves Save hidden because no working files changed;
 - Bob and Roma Cloudflare Pages deployments for `d3e3e48b` completed
   successfully; the Prague code cutover was verified by GitHub Actions and its
-  successful Pages deployment for `f4071ab5`.
+  successful Pages deployment for `f4071ab5`;
+- for `d2c4685f`, GitHub Actions Roma verification `31073534587`, Prague
+  verification `31073534583`, and Worker/R2 deployment `31073534625` all
+  completed successfully; the exact Bob and Roma Cloudflare Pages deployments
+  for that commit also completed successfully;
+- the synchronized R2 product roots contain the corrected Countdown and FAQ
+  runtime bytes. The affected saved Instances `8LGOEM8JGC`, `VUWUJ7OQ0Y`, and
+  `I5918UU0IA` were then opened and saved through Bob/Roma/Tokyo (`PUT 200` for
+  each), and their exact R2 `runtime.js` objects contain the same fixes;
+- published Instances `I5918UU0IA`, `VUWUJ7OQ0Y`, and `QD1G068MX7`, plus the
+  Italian exact-locale request for `QD1G068MX7`, return complete `200` HTML
+  without unresolved public markers. Both published FAQ runtime URLs return
+  the corrected deep-link behavior;
+- reopening the translation-heavy saved FAQ `VUWUJ7OQ0Y` shows no saved-
+  translation read error and no Save action, proving the generated package is
+  current after the normal save lifecycle.
 
 ## 1. Goal
 
