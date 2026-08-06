@@ -6,6 +6,7 @@ export type {
   GenerateInstanceInput,
   GeneratePageInput,
   GeneratePageOutput,
+  PageGenerationSource,
   PagePlacementInput,
   PageServingOverlays,
   ResolvedWebCodeContext,

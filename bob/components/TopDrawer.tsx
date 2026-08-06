@@ -21,14 +21,14 @@ export function TopDrawer({
 }) {
   const session = useWidgetSession();
   const chrome = useWidgetSessionChrome();
-  const { save, isSaving, isDirty } = session;
+  const { save, isSaving, isDirty, publicPackage } = session;
   const [moreOpen, setMoreOpen] = useState(false);
   const moreRef = useRef<HTMLDivElement>(null);
   const moreButtonRef = useRef<HTMLButtonElement>(null);
 
   const meta = chrome.meta;
   const currentInstanceId = typeof meta?.instanceId === 'string' ? meta.instanceId : '';
-  const canSave = Boolean(meta) && isDirty;
+  const canSave = Boolean(meta) && isDirty && Boolean(publicPackage);
   const showSaveAction = canSave || isSaving;
   const instanceLabel = typeof meta?.label === 'string' ? meta.label.trim() : '';
   const currentLabel = instanceLabel || currentInstanceId;

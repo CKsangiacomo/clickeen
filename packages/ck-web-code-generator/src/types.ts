@@ -1,6 +1,7 @@
 import type { ResolvedAccountAsset } from '@clickeen/ck-contracts';
 import type {
-  AccountPageSource,
+  AccountPage,
+  AccountPageTemplate,
   PageLocaleOverlay,
 } from '@clickeen/ck-contracts/pages';
 import type { WidgetEditableFieldsContract } from '@clickeen/ck-contracts/translated-value-primitives';
@@ -66,8 +67,12 @@ export type PagePlacementInput = {
   overlays: ExactLocaleOverlays | null;
 };
 
+export type PageGenerationSource =
+  | Omit<AccountPage, 'pageId'>
+  | Omit<AccountPageTemplate, 'pageId'>;
+
 export type GeneratePageInput = {
-  source: AccountPageSource;
+  source: PageGenerationSource;
   settingsLocales: string[];
   pageOverlays: Record<string, PageLocaleOverlay>;
   placements: PagePlacementInput[];

@@ -206,7 +206,7 @@ function renderPageIndex(
 ${renderPageSemanticHead(input, placements, publicLocales)}
     <link rel="stylesheet" href="./styles.css" />
   </head>
-  <body data-ck-page-id="${escapeHtml(input.source.pageId)}" data-ck-composed-page="true">
+  <body data-ck-composed-page="true">
 ${placements.map(renderPlacement).join('\n')}
     <script src="./runtime.js" defer></script>
   </body>

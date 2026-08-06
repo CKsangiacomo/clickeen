@@ -61,11 +61,12 @@ async function run(): Promise<void> {
     /Saved translations could not be read/,
   );
 
-  const [builder, workspace, editing, session] = await Promise.all([
+  const [builder, workspace, editing, session, topDrawer] = await Promise.all([
     readFile(new URL('../components/BuilderApp.tsx', import.meta.url), 'utf8'),
     readFile(new URL('../components/Workspace.tsx', import.meta.url), 'utf8'),
     readFile(new URL('../lib/session/useSessionEditing.ts', import.meta.url), 'utf8'),
     readFile(new URL('../lib/session/WidgetDocumentSession.tsx', import.meta.url), 'utf8'),
+    readFile(new URL('../components/TopDrawer.tsx', import.meta.url), 'utf8'),
   ]);
 
   const overlayEnablement =
@@ -84,6 +85,11 @@ async function run(): Promise<void> {
   assert.match(editing, /instanceData: applied\.data,\s+publicPackage: null,/);
   assert.match(session, /if \(result === null\)[\s\S]*?publicPackage: null,/);
   assert.match(session, /if \(!result\.ok\)[\s\S]*?publicPackage: null,/);
+  assert.match(topDrawer, /const \{ save, isSaving, isDirty, publicPackage \} = session;/);
+  assert.match(
+    topDrawer,
+    /const canSave = Boolean\(meta\) && isDirty && Boolean\(publicPackage\);/,
+  );
 
   console.log('package readiness tests passed');
 }

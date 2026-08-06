@@ -234,7 +234,7 @@ function testGenerateInstance(): void {
   const loraInstance = generateInstance(loraInput);
   const pageWithCuratedFont = generatePage({
     source: {
-      pageId: 'PAGEFONT01', displayName: 'Font page', isTemplate: false, baseLocale: 'en-US',
+      displayName: 'Font page', isTemplate: false, baseLocale: 'en-US',
       values: { title: 'Font page', description: '' }, robots: 'index-follow',
       placements: [{ placementId: 'FONT', instanceId: 'INSTANCEFONT' }, { placementId: 'LORA', instanceId: 'INSTANCELORA' }],
     },
@@ -381,7 +381,6 @@ function placement(placementId: string, instanceId: string, label: string): Page
 function testGeneratePage(): void {
   const input: Parameters<typeof generatePage>[0] = {
     source: {
-      pageId: 'PAGE000001',
       displayName: 'Landing',
       isTemplate: false,
       baseLocale: 'en-US',
@@ -449,6 +448,8 @@ function testGeneratePage(): void {
     ...input,
     pageOverlays: {},
   });
+  assert.ok(!firstSave.files.indexHtml.includes('data-ck-page-id'));
+  assert.match(firstSave.files.indexHtml, /<html lang="en-US">/);
   assert.deepEqual(firstSave.overlaysJson, {});
   assert.equal((firstSave.files.indexHtml.match(/rel="alternate"/g) ?? []).length, 1);
   assert.match(firstSave.files.indexHtml, /hreflang="en-US" href="__CK_PUBLIC_PAGE_URL__\/en-US"/);
@@ -492,7 +493,6 @@ function testGeneratePage(): void {
 function testPageSocialTemplateAndFaqSemantics(): void {
   const socialInput: Parameters<typeof generatePage>[0] = {
     source: {
-      pageId: 'PAGE000002',
       displayName: 'Social Landing',
       isTemplate: false,
       baseLocale: 'en-US',
@@ -535,7 +535,6 @@ function testPageSocialTemplateAndFaqSemantics(): void {
 
   const templateInput: Parameters<typeof generatePage>[0] = {
     source: {
-      pageId: 'TEMPLATE001',
       displayName: 'Landing Template',
       isTemplate: true,
       values: { title: 'Template title', description: 'Template description' },
@@ -572,7 +571,6 @@ function testPageSocialTemplateAndFaqSemantics(): void {
   faqPlacement.files.indexHtml = faqPlacement.files.indexHtml.replace('data-ck-widget="cards"', 'data-ck-widget="faq"');
   const faqInput: Parameters<typeof generatePage>[0] = {
     source: {
-      pageId: 'PAGE000FAQ',
       displayName: 'FAQ Landing',
       isTemplate: false,
       baseLocale: 'en-US',

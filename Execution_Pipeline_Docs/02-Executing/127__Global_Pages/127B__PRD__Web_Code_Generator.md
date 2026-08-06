@@ -258,7 +258,9 @@ type PagePlacementInput = {
 };
 
 type GeneratePageInput = {
-  source: AccountPageSource;
+  source:
+    | Omit<AccountPage, 'pageId'>
+    | Omit<AccountPageTemplate, 'pageId'>;
   settingsLocales: string[];
   pageOverlays: Record<string, PageLocaleOverlay>;
   placements: PagePlacementInput[];
@@ -276,6 +278,13 @@ generatePage(input: GeneratePageInput): GeneratePageOutput;
 
 These types describe the required product inputs. Execution may reuse existing
 contract names and casing, but must not add another generation entrypoint.
+
+Page generation does not require a persisted `pageId`. On first Save, Page
+Builder adds the current account `baseLocale` to the ordinary ID-less browser
+draft and passes that generation source to Web Code Generator. Roma still owns
+minting `pageId` and reading the same current account `baseLocale` for the saved
+Page source. Generated Page HTML therefore contains no temporary Page identity
+or Page-id placeholder.
 
 Bob and Page Builder resolve account assets and typography through their
 existing account authorities and pass those resolved values into the
