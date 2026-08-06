@@ -96,7 +96,7 @@ async function main() {
   assert.match(builder, /readTranslationResult/);
   assert.match(builder, /typeof value\.accepted !== 'boolean'/);
   assert.match(builder, /No translation languages are available for this page\./);
-  assert.match(builder, /setNotice\(null\);[\s\S]{0,100}try \{/);
+  assert.match(builder, /const save = useCallback[\s\S]{0,150}setNotice\(null\);[\s\S]{0,100}if \(!canUsePages\)/);
   assert.match(builder, /We couldn't update this page\. Try again\./);
   assert.match(builder, /We couldn't save this page\. Try again\./);
   assert.match(builder, /Translations generated, but failed/);

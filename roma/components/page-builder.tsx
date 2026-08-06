@@ -237,12 +237,12 @@ export function PageBuilder({ pageId = '' }: { pageId?: string }) {
 
   const save = useCallback(async (forceUpdate = false) => {
     if (!canEditPages) return;
+    setNotice(null);
     if (!canUsePages) { setUpsellReason('Pages are available on Tier 2 and above.'); setUpsellOpen(true); return; }
     if (!source.values.title.trim()) { setError('Page title is required.'); setActivePanel('seo'); return; }
     if (placements.some((placement) => placement.unavailable)) { setError('Remove unavailable widgets before saving this Page.'); return; }
     setSaving(true);
     setError(null);
-    setNotice(null);
     try {
       const id = currentPageId || createCompactPageId();
       const sourceForSave: PageDraftSource = { ...source, baseLocale };
