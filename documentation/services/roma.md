@@ -227,7 +227,10 @@ no path, query, or hash. Missing or malformed Bob origin config fails Builder
 instead of falling back to another origin.
 
 Bob edits in browser memory and generates the exact browser package for each
-valid working state. Save sends the current config and exact generated package
+valid working state. The saved package in the open envelope establishes the
+persisted baseline; Bob does not treat those loaded bytes as the current
+savable package. Save becomes available only after Web Code Generator succeeds
+for the open working state, then sends that config and exact generated package
 to Roma. Roma performs the current-account save command and Tokyo-worker writes
 the submitted source plus exact package under:
 

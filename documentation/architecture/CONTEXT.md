@@ -283,6 +283,8 @@ route. They are classified as vector assets by Tokyo-worker.
 4. Bob edits the active instance in browser memory and uses Web Code Generator
    to generate and preview exact `index.html`, `styles.css`, and `runtime.js`
    for each valid working state.
+   The loaded package is the saved baseline only; Save remains unavailable
+   until generation succeeds for the open working state.
 5. Bob submits the current config and exact generated package to Roma.
 6. Roma forwards the account save command; Tokyo-worker stores the submitted
    source and exact package files without generating or repairing them.

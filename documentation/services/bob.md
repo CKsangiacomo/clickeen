@@ -507,6 +507,11 @@ the exact generated runtime. Widget runtime may send `ck:ready` and resize
 messages for iframe behavior, but it does not receive a generic state document
 or rebuild customer content.
 
+On open, the saved public package is retained only as the persisted signature
+baseline. Bob withholds the current savable package until Web Code Generator
+successfully generates the open working state. This prevents an immediate Save
+from writing previously loaded package bytes for a newly changed config.
+
 When an in-memory edit introduces an unresolved account media or font
 reference, Bob withholds the preview package while it resolves the dependency
 through Roma and regenerates from the resolved URL. Resolution or generation

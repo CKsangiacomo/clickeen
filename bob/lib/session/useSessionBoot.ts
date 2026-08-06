@@ -139,7 +139,7 @@ export function useSessionBoot(args: {
           ...current,
           compiled,
           instanceData,
-          publicPackage,
+          publicPackage: null,
           savedInstanceDataSignature,
           savedPublicPackageSignature: isDraft ? '' : serializePublicPackageSignature(publicPackage ?? null),
           isDirty: isDraft,
