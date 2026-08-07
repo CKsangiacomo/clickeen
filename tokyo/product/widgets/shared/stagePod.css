@@ -103,14 +103,13 @@ body {
   max-width: 100%;
 }
 
-[data-ck-widget],
-.ck-headerLayout,
+.ck-headerLayout[data-ck-widget],
 .ck-headerLayout__body {
   min-width: 0;
   max-width: 100%;
 }
 
-[data-ck-widget]
+.ck-headerLayout[data-ck-widget]
   :where(
     h1,
     h2,
@@ -129,7 +128,7 @@ body {
   text-wrap: balance;
 }
 
-[data-ck-widget]
+.ck-headerLayout[data-ck-widget]
   :where(
     [data-role$='subtitle'],
     [data-role$='eyebrow'],
@@ -145,7 +144,7 @@ body {
   word-break: normal;
 }
 
-[data-ck-widget] :where(a, button, [data-role$='cta'], [data-role$='action']) {
+.ck-headerLayout[data-ck-widget] :where(a, button, [data-role$='cta'], [data-role$='action']) {
   max-width: 100%;
   min-width: 0;
   white-space: normal;

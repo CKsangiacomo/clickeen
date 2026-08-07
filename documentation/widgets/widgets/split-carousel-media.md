@@ -70,11 +70,12 @@ branding.remove -> behavior.showBacklink
 widget.socialShare.enabled -> behavior.socialShare.enabled
 ```
 
-## Shell Utilities
+## Shared Widget Utilities
 
-Split Carousel Media uses the shared Shell for Header, Header CTA, Stage/Pod,
-Core size, typography, branding, social share, and locale switcher. Carousel
-media items belong to `splitCarouselMedia.*`.
+Split Carousel Media uses the presentation frame for Stage/Pod, the Shell for
+Header/Core composition, and shared utilities for Core sizing, typography,
+branding, social share, and locale switching. Carousel media items belong to
+`splitCarouselMedia.*`.
 
 Runtime requires these Core DOM hooks:
 
@@ -85,7 +86,7 @@ Runtime requires these Core DOM hooks:
 
 `widget.client.js` registers as `split-carousel-media`, validates
 `splitCarouselMedia.*`, renders slides into `split-carousel-media-core`, applies
-shared Shell utilities, and binds `ck:state-update` for the current instance id.
+shared widget utilities, and binds `ck:state-update` for the current instance id.
 
 Runtime invariants:
 
@@ -103,14 +104,6 @@ Runtime invariants:
 - Applying new state resets the active slide to the first rendered item.
 - Auto core size uses a 16:9 shape with a 320px minimum height in current CSS.
 - Card wrapper styling uses shared `CKSurface.applyCardWrapper`.
-
-## Clickeen Pages Usage
-
-Split Carousel Media appears in Clickeen Page source as a saved account widget
-instance placement. Media fill objects remain in instance state. Uploaded files
-are account assets, but runtime validates source URL shape; it does not rely on
-account-asset identity alone. Public page package serving depends on Roma
-writing real page packages.
 
 ## Verification
 

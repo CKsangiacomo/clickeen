@@ -17,7 +17,7 @@ import {
   type AccountAssetsClient,
   type ShowIfEntry,
 } from '@clickeen/bob/control-host';
-import type { AccountFontLibrary } from '@clickeen/widget-shell';
+import type { AccountFontLibrary } from '@clickeen/widget-foundation';
 
 type BuilderControlPanel = {
   id?: string;

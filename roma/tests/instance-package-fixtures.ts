@@ -4,10 +4,10 @@ import { fileURLToPath } from 'node:url';
 import { parseLimitsSpec } from '@clickeen/ck-policy';
 import { readWidgetEditableFieldsContract } from '@clickeen/ck-contracts/translated-value-primitives';
 import {
-  WIDGET_SHELL_CSS_MODULE_KEYS,
-  WIDGET_SHELL_FACTORY_DEFAULTS,
-  WIDGET_SHELL_RUNTIME_MODULE_KEYS,
-} from '@clickeen/widget-shell';
+  COMMON_WIDGET_FACTORY_DEFAULTS,
+  WIDGET_SHARED_CSS_MODULE_KEYS,
+  WIDGET_SHARED_RUNTIME_MODULE_KEYS,
+} from '@clickeen/widget-foundation';
 import type { CompiledWidgetForPublicPackage } from '../lib/account-instance-public-package';
 import { extractStylesheetSources } from '../../packages/ck-runtime-materializer/src/html';
 
@@ -95,7 +95,7 @@ async function readWidgetPackageFiles(widgetType: PackageParityWidget) {
       source: await readCssEntry(href.slice(1)),
     };
   }
-  const supportKeys = new Set<string>([...WIDGET_SHELL_CSS_MODULE_KEYS, ...WIDGET_SHELL_RUNTIME_MODULE_KEYS]);
+  const supportKeys = new Set<string>([...WIDGET_SHARED_CSS_MODULE_KEYS, ...WIDGET_SHARED_RUNTIME_MODULE_KEYS]);
   supportKeys.add(`product/widgets/${widgetType}/widget.css`);
   supportKeys.add(`product/widgets/${widgetType}/widget.client.js`);
   for (const key of supportKeys) {
@@ -133,7 +133,7 @@ export async function buildAccountDefaultStateFixture(widgetType: PackageParityW
   const specSource = await readText(`tokyo/product/widgets/${widgetType}/spec.json`);
   const spec = JSON.parse(specSource) as Record<string, unknown>;
   if (!isRecord(spec.defaults)) throw new Error(`missing widget defaults fixture:${widgetType}`);
-  const state = cloneRecord(WIDGET_SHELL_FACTORY_DEFAULTS as unknown as Record<string, unknown>);
+  const state = cloneRecord(COMMON_WIDGET_FACTORY_DEFAULTS as unknown as Record<string, unknown>);
   mergeDefaultsInto(state, spec.defaults);
   return state;
 }

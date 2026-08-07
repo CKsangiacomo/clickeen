@@ -4,7 +4,7 @@ const REASON_KEYS: Record<RuntimeMaterializerErrorReason, string> = {
   compiled_widget_invalid: 'coreui.errors.widget.compiled.invalid',
   widget_package_missing: 'coreui.errors.widget.packageMissing',
   widget_package_file_missing: 'coreui.errors.widget.packageMissing',
-  widget_package_root_invalid: 'coreui.errors.widget.packageRootInvalid',
+  widget_package_shell_invalid: 'coreui.errors.widget.packageShellInvalid',
   artifact_coordinate_invalid: 'coreui.errors.instance.invalidPayload',
   typography_data_invalid: 'coreui.errors.typography.fontLibrary.invalid',
   source_state_invalid: 'coreui.errors.instance.content.invalid',

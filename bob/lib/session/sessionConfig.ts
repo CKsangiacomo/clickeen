@@ -2,7 +2,7 @@ import type { CompiledControl, CompiledWidget } from '../types';
 import {
   accountFontLibraryToFamilyOptions,
   type AccountFontLibrary,
-} from '@clickeen/widget-shell';
+} from '@clickeen/widget-foundation';
 const TOKEN_SEGMENT = /^__[^.]+__$/;
 function isPlainRecord(value: unknown): value is Record<string, unknown> { return Boolean(value) && typeof value === 'object' && !Array.isArray(value); }
 function invalid(path: string): never { throw new Error(`coreui.errors.instance.config.invalid:${path}`); }

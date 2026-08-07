@@ -216,12 +216,9 @@
     return media;
   }
 
-  function initSplitMedia(widgetRoot, runtimeContext) {
-    const splitMediaRoot = widgetRoot.querySelector('[data-role="split-media"]');
-    const coreEl = widgetRoot.querySelector('[data-role="split-media-core"]');
-    if (!(splitMediaRoot instanceof HTMLElement)) {
-      throw new Error('[SplitMedia] Missing [data-role="split-media"]');
-    }
+  function initSplitMedia(widgetShell, runtimeContext) {
+    const splitMediaShell = widgetShell;
+    const coreEl = widgetShell.querySelector('[data-role="split-media-core"]');
     if (!(coreEl instanceof HTMLElement)) {
       throw new Error('[SplitMedia] Missing [data-role="split-media-core"]');
     }
@@ -233,14 +230,14 @@
       if (!window.CKStagePod?.applyStagePod) {
         throw new Error('[SplitMedia] Missing CKStagePod.applyStagePod');
       }
-      window.CKStagePod.applyStagePod(state.stage, state.pod, widgetRoot, state.appearance);
+      window.CKStagePod.applyStagePod(state.stage, state.pod, widgetShell, state.appearance);
 
       if (!window.CKTypography?.applyTypography) {
         throw new Error('[SplitMedia] Missing CKTypography.applyTypography');
       }
       window.CKTypography.applyTypography(
         state.typography,
-        splitMediaRoot,
+        splitMediaShell,
         {
           title: { varKey: 'title' },
           body: { varKey: 'body' },
@@ -251,7 +248,7 @@
       );
 
       if (!window.CKHeader?.applyHeader) throw new Error('[SplitMedia] Missing CKHeader.applyHeader');
-      window.CKHeader.applyHeader(state, widgetRoot);
+      window.CKHeader.applyHeader(state, widgetShell);
 
       if (!window.CKCoreSize?.applyCoreSize) {
         throw new Error('[SplitMedia] Missing CKCoreSize.applyCoreSize');
@@ -261,11 +258,10 @@
       if (!window.CKLocaleSwitcher?.applyLocaleSwitcher) {
         throw new Error('[SplitMedia] Missing CKLocaleSwitcher.applyLocaleSwitcher');
       }
-      window.CKLocaleSwitcher.applyLocaleSwitcher(state, widgetRoot, {
-        composedPage: context && context.composedPage === true,
+      window.CKLocaleSwitcher.applyLocaleSwitcher(state, widgetShell, {
         locale: context && context.locale,
         previewMode: context && context.previewMode,
-        typographyScope: splitMediaRoot,
+        typographyScope: splitMediaShell,
       });
 
       coreEl.style.setProperty('--ck-split-media-fit', normalized.fit);
@@ -286,12 +282,12 @@
       if (!window.CKBranding || typeof window.CKBranding.applyBacklink !== 'function') {
         throw new Error('[SplitMedia] Missing CKBranding.applyBacklink');
       }
-      window.CKBranding.applyBacklink(widgetRoot, state);
+      window.CKBranding.applyBacklink(widgetShell, state);
 
       if (!window.CKSocialShare || typeof window.CKSocialShare.apply !== 'function') {
         throw new Error('[SplitMedia] Missing CKSocialShare.apply');
       }
-      window.CKSocialShare.apply(widgetRoot, state, {
+      window.CKSocialShare.apply(widgetShell, state, {
         instanceId: resolvedInstanceId,
         widgetType: 'split-media',
         widgetLabel: 'Split Media',
@@ -338,7 +334,6 @@
       applyState(localizedState, {
         locale,
         previewMode,
-        composedPage: runtimeContext && runtimeContext.composedPage === true,
         instanceId: typeof instanceId === 'string' ? instanceId : resolvedInstanceId,
       });
     }

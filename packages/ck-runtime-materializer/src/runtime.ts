@@ -1,9 +1,9 @@
 import {
-  WIDGET_SHELL_RUNTIME_MODULE_END,
-  WIDGET_SHELL_RUNTIME_PAYLOAD_END,
-  WIDGET_SHELL_RUNTIME_PAYLOAD_START,
-  WIDGET_SHELL_STYLE_CHUNK_END,
-} from '@clickeen/widget-shell';
+  WIDGET_PACKAGE_RUNTIME_MODULE_END,
+  WIDGET_PACKAGE_RUNTIME_PAYLOAD_END,
+  WIDGET_PACKAGE_RUNTIME_PAYLOAD_START,
+  WIDGET_PACKAGE_STYLE_CHUNK_END,
+} from '@clickeen/widget-foundation';
 import { extractStylesheetSources } from './html';
 import {
   chunkMarkerId,
@@ -14,18 +14,18 @@ import {
 } from './files';
 import { materializerFailure } from './errors';
 import type { RuntimeMaterializerCompiledWidget, RuntimeMaterializerFailure } from './types';
-import type { RuntimeTypographyData } from '@clickeen/widget-shell';
+import type { RuntimeTypographyData } from '@clickeen/widget-foundation';
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
 }
 
 export function styleChunk(id: string, body: string): string {
-  return `/* ck-style-module:${chunkMarkerId(id)} */\n${body}\n${WIDGET_SHELL_STYLE_CHUNK_END}`;
+  return `/* ck-style-module:${chunkMarkerId(id)} */\n${body}\n${WIDGET_PACKAGE_STYLE_CHUNK_END}`;
 }
 
 export function runtimeModuleChunk(id: string, body: string): string {
-  return `/* ck-runtime-module:${chunkMarkerId(id)} */\n${body}\n${WIDGET_SHELL_RUNTIME_MODULE_END}`;
+  return `/* ck-runtime-module:${chunkMarkerId(id)} */\n${body}\n${WIDGET_PACKAGE_RUNTIME_MODULE_END}`;
 }
 
 export function socialShareEnabled(state: Record<string, unknown>): boolean {
@@ -73,7 +73,7 @@ export function buildRuntime(args: {
   baseState: Record<string, unknown>;
   typographyData?: RuntimeTypographyData;
 }): { ok: true; runtimeJs: string } | RuntimeMaterializerFailure {
-  const payload = `${WIDGET_SHELL_RUNTIME_PAYLOAD_START}
+  const payload = `${WIDGET_PACKAGE_RUNTIME_PAYLOAD_START}
 (function () {
   var payload = ${JSON.stringify({
     instanceId: args.instanceId,
@@ -179,7 +179,7 @@ export function buildRuntime(args: {
     locales: locales
   };
 })();
-${WIDGET_SHELL_RUNTIME_PAYLOAD_END}`;
+${WIDGET_PACKAGE_RUNTIME_PAYLOAD_END}`;
 
   const chunks = [payload];
   if (args.typographyData) {

@@ -1,7 +1,7 @@
 import {
   resolveAccountTypographyFamilySelection,
   type AccountFontLibrary,
-} from '@clickeen/widget-shell';
+} from '@clickeen/widget-foundation';
 import type { WidgetOp } from '../ops';
 import { getAt } from '../utils/paths';
 

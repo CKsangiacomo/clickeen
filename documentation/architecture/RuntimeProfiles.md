@@ -7,9 +7,8 @@ Last updated: 2026-07-30
 | Surface | Runtime truth |
 | --- | --- |
 | Bob preview | compiled widget software plus in-memory editor state |
-| Saved instance | one stored root `index.html`, `styles.css`, and `runtime.js` |
-| Localized saved instance | the same root artifact plus one exact stored overlay |
-| Composed page | page-owned composition over referenced saved instances |
+| Saved instance | one stored base `index.html`, `styles.css`, and `runtime.js` package |
+| Localized saved instance | the same base package plus one exact stored overlay |
 
 ## Local Runtime Rule
 
@@ -29,7 +28,7 @@ Tokyo-worker owns public instance delivery:
 ```
 
 The locale query does not identify another artifact. It selects one exact
-overlay for the root artifact. Tokyo-worker validates publication, root
+overlay for the base package. Tokyo-worker validates publication, base
 fingerprint, locale coordinate, overlay shape, and saved-field equality before
 returning localized HTML.
 
@@ -44,8 +43,8 @@ accounts/{accountPublicId}/instances/{instanceId}/
   overlays/locales/{locale}.json
 ```
 
-The root index contains a stable locale-context marker. Tokyo-worker injects
-base or translated context into the response. Root support URLs never vary by
+The base index contains a stable locale-context marker. Tokyo-worker injects
+base or translated context into the response. Package support URLs never vary by
 locale. Runtime initialization is synchronous: the exact overlay is applied
 before widget modules execute.
 
@@ -60,7 +59,7 @@ before widget modules execute.
 
 - Git state: local `main`, tracking branch, and GitHub `main`.
 - Worker state: GitHub Actions deploy for the exact SHA.
-- Root runtime: base and locale requests reference identical root support URLs.
+- Base runtime: base and locale requests reference identical support URLs.
 - Overlay behavior: changing one overlay changes only that locale response.
-- R2: exactly one root artifact set and overlay JSON; no locale-derived runtime
+- R2: exactly one base artifact set and overlay JSON; no locale-derived runtime
   objects.

@@ -1,5 +1,5 @@
 import { isRecord as isPlainObject } from '@clickeen/ck-contracts';
-import { WIDGET_SHELL_FACTORY_DEFAULTS } from '@clickeen/widget-shell';
+import { COMMON_WIDGET_FACTORY_DEFAULTS } from '@clickeen/widget-foundation';
 import type { CompiledPanel, CompiledWidgetCore, WidgetPresets } from './types';
 import {
   encodeHtmlEntities,
@@ -126,7 +126,7 @@ function composeWidgetFactoryDefaults(
   coreDefaults: Record<string, unknown>,
 ): Record<string, unknown> {
   return mergeDefaults(
-    WIDGET_SHELL_FACTORY_DEFAULTS as unknown as Record<string, unknown>,
+    COMMON_WIDGET_FACTORY_DEFAULTS as unknown as Record<string, unknown>,
     coreDefaults,
   );
 }

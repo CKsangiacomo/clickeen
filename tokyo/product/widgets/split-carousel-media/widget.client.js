@@ -317,21 +317,18 @@
     }
   }
 
-  function initSplitCarouselMedia(widgetRoot, runtimeContext) {
-    const splitCarouselMediaRoot = widgetRoot.querySelector('[data-role="split-carousel-media"]');
-    const coreEl = widgetRoot.querySelector('[data-role="split-carousel-media-core"]');
-    if (!(splitCarouselMediaRoot instanceof HTMLElement)) {
-      throw new Error('[SplitCarouselMedia] Missing [data-role="split-carousel-media"]');
-    }
+  function initSplitCarouselMedia(widgetShell, runtimeContext) {
+    const splitCarouselMediaShell = widgetShell;
+    const coreEl = widgetShell.querySelector('[data-role="split-carousel-media-core"]');
     if (!(coreEl instanceof HTMLElement)) {
       throw new Error('[SplitCarouselMedia] Missing [data-role="split-carousel-media-core"]');
     }
     const resolvedInstanceId = runtimeContext.instanceId;
 
     function clearAutoplay() {
-      if (widgetRoot.__ckSplitCarouselMediaAutoplayTimer) {
-        window.clearInterval(widgetRoot.__ckSplitCarouselMediaAutoplayTimer);
-        widgetRoot.__ckSplitCarouselMediaAutoplayTimer = 0;
+      if (widgetShell.__ckSplitCarouselMediaAutoplayTimer) {
+        window.clearInterval(widgetShell.__ckSplitCarouselMediaAutoplayTimer);
+        widgetShell.__ckSplitCarouselMediaAutoplayTimer = 0;
       }
     }
 
@@ -342,14 +339,14 @@
       if (!window.CKStagePod?.applyStagePod) {
         throw new Error('[SplitCarouselMedia] Missing CKStagePod.applyStagePod');
       }
-      window.CKStagePod.applyStagePod(state.stage, state.pod, widgetRoot, state.appearance);
+      window.CKStagePod.applyStagePod(state.stage, state.pod, widgetShell, state.appearance);
 
       if (!window.CKTypography?.applyTypography) {
         throw new Error('[SplitCarouselMedia] Missing CKTypography.applyTypography');
       }
       window.CKTypography.applyTypography(
         state.typography,
-        splitCarouselMediaRoot,
+        splitCarouselMediaShell,
         {
           title: { varKey: 'title' },
           body: { varKey: 'body' },
@@ -362,7 +359,7 @@
       if (!window.CKHeader?.applyHeader) {
         throw new Error('[SplitCarouselMedia] Missing CKHeader.applyHeader');
       }
-      window.CKHeader.applyHeader(state, widgetRoot);
+      window.CKHeader.applyHeader(state, widgetShell);
 
       if (!window.CKCoreSize?.applyCoreSize) {
         throw new Error('[SplitCarouselMedia] Missing CKCoreSize.applyCoreSize');
@@ -372,14 +369,13 @@
       if (!window.CKLocaleSwitcher?.applyLocaleSwitcher) {
         throw new Error('[SplitCarouselMedia] Missing CKLocaleSwitcher.applyLocaleSwitcher');
       }
-      window.CKLocaleSwitcher.applyLocaleSwitcher(state, widgetRoot, {
-        composedPage: context && context.composedPage === true,
+      window.CKLocaleSwitcher.applyLocaleSwitcher(state, widgetShell, {
         locale: context && context.locale,
         previewMode: context && context.previewMode,
-        typographyScope: splitCarouselMediaRoot,
+        typographyScope: splitCarouselMediaShell,
       });
 
-      splitCarouselMediaRoot.dataset.transition = normalized.carousel.transition;
+      splitCarouselMediaShell.dataset.transition = normalized.carousel.transition;
       coreEl.style.setProperty('--ck-split-carousel-media-fit', normalized.fit);
       coreEl.style.setProperty('--ck-split-carousel-media-position', normalized.position);
 
@@ -424,7 +420,7 @@
       );
 
       if (normalized.carousel.autoplay && slides.length > 1) {
-        widgetRoot.__ckSplitCarouselMediaAutoplayTimer = window.setInterval(function () {
+        widgetShell.__ckSplitCarouselMediaAutoplayTimer = window.setInterval(function () {
           if (!document.body.contains(stage)) {
             clearAutoplay();
             return;
@@ -439,12 +435,12 @@
       if (!window.CKBranding || typeof window.CKBranding.applyBacklink !== 'function') {
         throw new Error('[SplitCarouselMedia] Missing CKBranding.applyBacklink');
       }
-      window.CKBranding.applyBacklink(widgetRoot, state);
+      window.CKBranding.applyBacklink(widgetShell, state);
 
       if (!window.CKSocialShare || typeof window.CKSocialShare.apply !== 'function') {
         throw new Error('[SplitCarouselMedia] Missing CKSocialShare.apply');
       }
-      window.CKSocialShare.apply(widgetRoot, state, {
+      window.CKSocialShare.apply(widgetShell, state, {
         instanceId: resolvedInstanceId,
         widgetType: 'split-carousel-media',
         widgetLabel: 'Split Carousel Media',
@@ -491,7 +487,6 @@
       applyState(localizedState, {
         locale,
         previewMode,
-        composedPage: runtimeContext && runtimeContext.composedPage === true,
         instanceId: typeof instanceId === 'string' ? instanceId : resolvedInstanceId,
       });
     }

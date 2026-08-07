@@ -110,7 +110,7 @@ stronger requirement than Countdown's zoneless string satisfies, so the storage
 decision in §4 determines whether valid Event markup is derivable at all.
 
 **No viewer timezone in runtime context.** `ctx` carries
-`{ widgetRoot, composedPage, instanceId, payload, locale, state }`.
+`{ widgetShell, instanceId, payload, locale, state }`.
 `Intl.DateTimeFormat().resolvedOptions().timeZone` is available client-side and
 is probably the right answer — but it makes the widget's output not a pure
 function of state, which nothing else in the platform does.

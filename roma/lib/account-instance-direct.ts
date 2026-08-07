@@ -16,7 +16,6 @@ export type DirectRouteError = {
   reasonKey: string;
   detail?: string;
   paths?: string[];
-  pageIds?: string[];
 };
 
 type RouteFailure = {

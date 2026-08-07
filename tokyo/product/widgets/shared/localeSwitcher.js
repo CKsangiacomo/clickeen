@@ -11,16 +11,16 @@
     'bottom-left',
     'left-middle',
   ]);
-  const ROOT_SWITCHER_IDS = new WeakMap();
+  const SHELL_SWITCHER_IDS = new WeakMap();
   let switcherSequence = 0;
 
   function normalizeLocale(value) {
     return typeof value === 'string' ? value.trim().toLowerCase().replace(/_/g, '-') : '';
   }
 
-  function assertHost(widgetRoot, hostName) {
+  function assertHost(widgetShell, hostName) {
     const selector = hostName === 'pod' ? '.pod' : '.stage';
-    const host = widgetRoot.closest(selector);
+    const host = widgetShell.closest(selector);
     if (!(host instanceof HTMLElement)) {
       throw new Error('[CKLocaleSwitcher] Missing ' + selector);
     }
@@ -49,14 +49,14 @@
     return runtime;
   }
 
-  function resolveInstanceKey(widgetRoot) {
-    const existing = ROOT_SWITCHER_IDS.get(widgetRoot);
+  function resolveInstanceKey(widgetShell) {
+    const existing = SHELL_SWITCHER_IDS.get(widgetShell);
     if (existing) return existing;
     switcherSequence += 1;
-    const instanceId = resolveRuntime().resolveInstanceId(widgetRoot);
-    const widgetName = widgetRoot.getAttribute('data-ck-widget') || 'widget';
+    const instanceId = resolveRuntime().resolveInstanceId(widgetShell);
+    const widgetName = widgetShell.getAttribute('data-ck-widget') || 'widget';
     const instanceKey = (instanceId || widgetName) + '__' + String(switcherSequence);
-    ROOT_SWITCHER_IDS.set(widgetRoot, instanceKey);
+    SHELL_SWITCHER_IDS.set(widgetShell, instanceKey);
     return instanceKey;
   }
 
@@ -99,8 +99,8 @@
     } catch {}
   }
 
-  function ensureElement(widgetRoot, hostName) {
-    const key = resolveInstanceKey(widgetRoot);
+  function ensureElement(widgetShell, hostName) {
+    const key = resolveInstanceKey(widgetShell);
     let existing = document.querySelector(
       '.ck-locale-switcher[data-ck-locale-switcher-for="' + key.replace(/"/g, '&quot;') + '"]',
     );
@@ -114,7 +114,7 @@
       existing.appendChild(select);
     }
 
-    const host = assertHost(widgetRoot, hostName);
+    const host = assertHost(widgetShell, hostName);
     if (existing.parentElement !== host) {
       host.appendChild(existing);
     }
@@ -162,26 +162,22 @@
     return out;
   }
 
-  function removeExisting(widgetRoot) {
-    const key = resolveInstanceKey(widgetRoot);
+  function removeExisting(widgetShell) {
+    const key = resolveInstanceKey(widgetShell);
     const existing = document.querySelector(
       '.ck-locale-switcher[data-ck-locale-switcher-for="' + key.replace(/"/g, '&quot;') + '"]',
     );
     if (existing instanceof HTMLElement) existing.remove();
   }
 
-  function applyLocaleSwitcher(state, widgetRoot, runtimeContext) {
-    if (!(widgetRoot instanceof HTMLElement)) {
-      throw new Error('[CKLocaleSwitcher] widgetRoot must be an HTMLElement');
+  function applyLocaleSwitcher(state, widgetShell, runtimeContext) {
+    if (!(widgetShell instanceof HTMLElement)) {
+      throw new Error('[CKLocaleSwitcher] widgetShell must be an HTMLElement');
     }
 
     const config = state && state.localeSwitcher && typeof state.localeSwitcher === 'object' && !Array.isArray(state.localeSwitcher) ? state.localeSwitcher : null;
     if (!config || typeof config.enabled !== 'boolean' || (config.attachTo !== 'pod' && config.attachTo !== 'stage') || !POSITION_SET.has(config.position)) {
       throw new Error('[CKLocaleSwitcher] ck_locale_switcher_placement_invalid');
-    }
-    if (runtimeContext && runtimeContext.composedPage === true) {
-      removeExisting(widgetRoot);
-      return;
     }
     const policy =
       window.CK_LOCALE_POLICY && typeof window.CK_LOCALE_POLICY === 'object' ? window.CK_LOCALE_POLICY : {};
@@ -193,7 +189,7 @@
     const languages = Array.from(new Set(policyLanguages.map(normalizeLocale).filter(Boolean)));
 
     if (!config.enabled || languages.length <= 1) {
-      removeExisting(widgetRoot);
+      removeExisting(widgetShell);
       return;
     }
 
@@ -204,7 +200,7 @@
         ? runtimeContext.previewMode.trim()
         : '';
     const labels = readLabels();
-    const element = ensureElement(widgetRoot, config.attachTo);
+    const element = ensureElement(widgetShell, config.attachTo);
     const select = element.querySelector('.ck-locale-switcher__select');
     if (!(select instanceof HTMLSelectElement)) {
       throw new Error('[CKLocaleSwitcher] Missing select element');
@@ -214,7 +210,7 @@
       element,
       runtimeContext && runtimeContext.typographyScope instanceof HTMLElement
         ? runtimeContext.typographyScope
-        : widgetRoot,
+        : widgetShell,
     );
     applyAppearanceVars(element, resolveAppearance(state && state.appearance));
     element.setAttribute('data-position', config.position);

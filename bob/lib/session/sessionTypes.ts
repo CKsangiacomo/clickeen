@@ -3,7 +3,7 @@ import type { WidgetOpError } from '../ops';
 import type { Policy } from '@clickeen/ck-policy';
 import type { AccountAssetHostCommand } from '@clickeen/ck-contracts';
 import type { TranslationSetup } from '../translations-preview';
-import type { AccountFontLibrary } from '@clickeen/widget-shell';
+import type { AccountFontLibrary } from '@clickeen/widget-foundation';
 
 export type UpdateMeta = {
   source: 'field' | 'load' | 'external' | 'ops' | 'unknown';
@@ -53,7 +53,6 @@ export type SessionMeta = {
   widgetname?: string;
   publishStatus?: 'published' | 'unpublished';
   label?: string;
-  returnLabel?: string;
   publicActions: PublicActions | null;
   fontLibrary: AccountFontLibrary;
   translationSetup?: TranslationSetup | null;
@@ -91,7 +90,6 @@ export type EditorOpenMessage = {
   instanceId?: string;
   publishStatus?: 'published' | 'unpublished';
   label?: string;
-  returnLabel?: string;
   publicActions?: PublicActions | null;
   copilot?: CopilotRuntimeUi;
   translationSetup?: TranslationSetup | null;
@@ -108,7 +106,7 @@ export type BobDirtyStateChangedMessage = {
 
 export type BobHostActionMessage = {
   type: 'bob:host-action';
-  action: 'open-navigation' | 'return' | 'copy-code';
+  action: 'open-navigation' | 'copy-code';
 };
 
 export type BobOpenEditorAppliedMessage = {

@@ -4,7 +4,7 @@ import {
 } from '@clickeen/ck-contracts';
 import { sha256Hex as computeSha256Hex } from '@clickeen/ck-contracts/security';
 import { normalizeLocaleToken } from '@clickeen/l10n';
-import { accountFontContentTypeExtension } from '@clickeen/widget-shell';
+import { accountFontContentTypeExtension } from '@clickeen/widget-foundation';
 import type { Env } from './types';
 
 function extFromMime(mime: string): string | null {

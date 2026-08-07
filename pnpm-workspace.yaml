@@ -13,7 +13,7 @@ packages:
   - packages/ck-contracts
   - packages/ck-runtime-materializer
   - packages/l10n
-  - packages/widget-shell
+  - packages/widget-foundation
   - tooling/sf-symbols
 
 onlyBuiltDependencies:

@@ -130,6 +130,6 @@ Stop if:
 - the section type is not registered
 - a required copy key is missing
 - a page needs account data that is not an explicit public `accountInstanceRef`
-- the task asks Prague to own account page or account translation operations
+- the task asks Prague to own account translation operations
 - the task asks for generated translation sidecars without an explicit localization task
 - the task asks for `feature-explorer`; current registry validation and renderer input shape are not aligned

@@ -21,7 +21,6 @@ Roma owns the current-account product shell:
 - domain navigation
 - account policy and tier enforcement
 - account widget instance commands
-- account page commands
 - account asset commands
 - Builder host flow
 - team, billing, usage, AI, profile, and settings surfaces
@@ -116,7 +115,6 @@ Roma account-shell routes include:
 - `/widgets/:instanceId`
 - `/builder`
 - `/builder/:instanceId`
-- `/pages`
 - `/assets`
 - `/team`
 - `/billing`
@@ -180,7 +178,6 @@ service:
 | `/api/account/widgets/**`   | Tokyo-worker through product control                   |
 | `/api/account/instances/**` | Tokyo-worker through product control                   |
 | `/api/account/assets/**`    | Tokyo-worker through asset control                     |
-| `/api/account/pages/**`     | Tokyo-worker through product control                   |
 | `/api/account/usage`        | Tokyo-worker storage facts plus account policy context |
 | `/api/account/widget-defaults` | Roma defaults document backed by Tokyo-worker        |
 | `/api/builder/:instanceId/open` | Roma Builder-open envelope backed by Tokyo-worker    |
@@ -210,7 +207,7 @@ Builder opens one saved widget instance:
 5. Send `ck:open-editor` with deploy-built editor software, saved instance data,
    the exact saved `index.html`, `styles.css`, and `runtime.js` package, account
    font library, policy, account public id, instance id, label, publish state,
-   exact public-action values or `null`, and optional return label.
+   and exact public-action values or `null`.
 6. Receive `bob:open-editor-applied` or `bob:open-editor-failed`.
 
 `NEXT_PUBLIC_BOB_URL` is required and must be an `http` or `https` origin with
@@ -244,7 +241,7 @@ and public serving can reject mixed package state deterministically.
 When the existing source-save command changes a saved instance, Roma saves the
 source and base package only. It does not generate translations, regenerate
 translations, mutate locale overlays, or make the authoring save wait on
-localization. Save returns source/root save truth:
+localization. Save returns base-source and base-package save truth:
 `ok: true` when the source/base package was saved, or the exact source-save
 failure when it was not. Translation failure is localization failure, not
 source-save failure.
@@ -289,7 +286,7 @@ same Dieter Popup used by the Widgets inventory; the Popup presents the exact
 URL, iframe, and script values and owns browser copy. Bob does not reconstruct
 or copy those values. Unpublished instances receive `publicActions: null` and
 expose no public action. Bob's `bob:host-action` message carries only
-`open-navigation`, `return`, or `copy-code` intent; Roma retains navigation,
+`open-navigation` or `copy-code` intent; Roma retains navigation,
 public-action, and unsaved-work authority.
 The copied public URL is slashless:
 
@@ -418,33 +415,6 @@ Roma treats malformed successful Tokyo asset delete responses as upstream
 contract failures. A delete is success only when the response names the current
 account public id, the exact asset reference, and `deleted: true`.
 
-## Pages Domain
-
-Roma owns the account page product surface. Account pages are stacks of saved
-widget instances. Page source and any generated page packages live in Tokyo under:
-
-```text
-accounts/{accountPublicId}/pages/{pageId}/
-```
-
-Roma validates current-account access, policy, page source shape, page source
-save stamps, list summaries, and placement product rules. It asks Tokyo-worker
-to read or write the named account page object. Current account page publish is
-disabled until Roma has a real page package writer. Public page copy/open actions
-are disabled until that writer exists. While a page is published, Roma requires
-unpublish before page source edit or delete.
-
-The page header owns Create page and Refresh through the same direct
-domain-to-shell action contract. The page list uses the Dieter table contract;
-Page, Page ID, and Placements use inline labels with small Dieter icon buttons
-for sorting, using the same `xs` active-black/inactive-gray Table contract.
-
-Current page source references saved widget instances by placement id and
-instance id. It does not embed widget source and does not currently store child
-widget artifact references. Any shift to generated child artifact coordinates,
-child evidence, or page package materialization belongs to a future Page Package
-PRD.
-
 ## Team, Profile, Settings
 
 Berlin owns person identity, account membership, roles, invitations, ownership,
@@ -461,16 +431,21 @@ Bob's paired `@clickeen/bob/control-host` and
 presentation; Roma owns the surrounding page and draft state, not a second copy
 of the control host.
 
+The persisted defaults split is `common` plus
+`widgets.{widgetType}.core`. `common` means one account default reused across
+widget types; it does not mean Shell ownership. The retired `shell` bucket is
+not read as an alias and is rejected as invalid stored truth.
+
 Widget Defaults must fail closed when compiled Builder controls are unavailable,
 when Dieter source hydration fails, or when the rendered controls do not cover
-every requested Shell/Core default path. Metadata coverage alone is not enough:
+every requested common/Core default path. Metadata coverage alone is not enough:
 the rendered `[data-bob-path]` set is the editable surface. Roma compiles the
 shared Dieter CSS and hydrators from source; compiled widget artifacts do not
 carry per-control Dieter media lists.
 
 Widget Defaults is the second account-bound typography editor host. It uses the
 same current account `fontLibrary`, family transition resolver, and relational
-family/weight/style validator as Bob for both Shell and Widget Core defaults.
+family/weight/style validator as Bob for both common and widget Core defaults.
 Each accepted family transition updates all three values in one draft-state
 update. GET and PUT reject exact invalid typography paths before Tokyo
 persistence. The account-backed controls expose only available choices.
@@ -576,7 +551,7 @@ Required runtime configuration:
 | `PRODUCT_COPILOT_BASE_URL` | Product Copilot worker origin where used. |
 | `TRANSLATION_AGENT` | Cloudflare service binding for Translation Agent Worker. |
 | `TOKYO_ASSET_CONTROL` | Cloudflare service binding for account asset operations. |
-| `TOKYO_PRODUCT_CONTROL` | Cloudflare service binding for product/account instance and page operations. |
+| `TOKYO_PRODUCT_CONTROL` | Cloudflare service binding for product/account instance operations. |
 | `USAGE_KV` | Roma request-rate-limit counters and current monthly Copilot turn counters. Counter corruption and missing bindings fail closed. Cloudflare KV has no compare-and-swap, so simultaneous Copilot requests can reserve from the same observed count. |
 | `SUPABASE_URL` | Roma account settings database URL; supplied in cloud-dev CI/env. |
 | `SUPABASE_SERVICE_ROLE_KEY` | Roma service-role account settings writes; supplied as a secret. |

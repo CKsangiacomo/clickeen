@@ -90,12 +90,13 @@ branding.remove -> behavior.showBacklink
 widget.socialShare.enabled -> behavior.socialShare.enabled
 ```
 
-## Shell Utilities
+## Shared Widget Utilities
 
-Call to Action uses the shared Shell for Header, Header CTA, Stage/Pod, Core
-size, typography, social share, and locale switcher. Current runtime applies
-branding only when `CKBranding.applyBacklink` is present; it does not fail when
-branding is missing.
+Call to Action uses the presentation frame for Stage/Pod, the Shell for
+Header/Core composition, and shared utilities for Core sizing, typography,
+social share, and locale switching. Branding and social share are required
+shared runtime contracts; a missing `CKBranding.applyBacklink` or
+`CKSocialShare.apply` fails closed.
 
 Runtime requires these Core DOM hooks:
 
@@ -111,7 +112,7 @@ Runtime requires these Core DOM hooks:
 ```
 
 `widget.client.js` registers as `calltoaction`, validates `calltoaction.*`,
-normalizes action URLs, applies shared Shell utilities, and binds
+normalizes action URLs, applies shared widget utilities, and binds
 `ck:state-update` for the current instance id.
 
 Allowed action URL forms are empty, `#`, root-relative, `http(s)`, `mailto`,
@@ -127,14 +128,8 @@ calltoaction.action.iconPlacement -> left|right
 ```
 
 Action style state owns background, text color, border, radius, padding, and
-icon size. Header CTA style remains Shell-owned under `appearance.headerCta.*`.
-
-## Clickeen Pages Usage
-
-Call to Action appears in Clickeen Page source as a saved account widget
-instance placement. The body action belongs to `calltoaction.*`; the shared
-Header CTA remains Shell-owned. Public page package serving depends on Roma
-writing real page packages.
+icon size. Header CTA style remains Header-owned under
+`appearance.headerCta.*`.
 
 ## Verification
 

@@ -15,38 +15,38 @@
     return el;
   }
 
-  function resolveCountdownDom(widgetRoot, runtimeContext) {
-    if (!(widgetRoot instanceof HTMLElement)) {
+  function resolveCountdownDom(widgetShell, runtimeContext) {
+    if (!(widgetShell instanceof HTMLElement)) {
       throw new Error('[Countdown] init requires [data-ck-widget="countdown"]');
     }
-    if (widgetRoot.getAttribute('data-ck-widget') !== 'countdown') {
+    if (widgetShell.getAttribute('data-ck-widget') !== 'countdown') {
       throw new Error('[Countdown] init requires [data-ck-widget="countdown"]');
     }
 
-    const countdownRoot = requireElement(widgetRoot, '[data-role="countdown"]', '[Countdown] Missing [data-role="countdown"] root');
-    const coreEl = requireElement(countdownRoot, '[data-role="countdown-core"]', '[Countdown] Missing [data-role="countdown-core"]');
-    const timerEl = requireElement(countdownRoot, '[data-role="timer"]', '[Countdown] Missing [data-role="timer"]');
-    const afterMsgEl = requireElement(countdownRoot, '[data-role="after-message"]', '[Countdown] Missing [data-role="after-message"]');
-    const stageEl = widgetRoot.closest('.stage');
+    const countdownShell = widgetShell;
+    const coreEl = requireElement(countdownShell, '[data-role="countdown-core"]', '[Countdown] Missing [data-role="countdown-core"]');
+    const timerEl = requireElement(countdownShell, '[data-role="timer"]', '[Countdown] Missing [data-role="timer"]');
+    const afterMsgEl = requireElement(countdownShell, '[data-role="after-message"]', '[Countdown] Missing [data-role="after-message"]');
+    const stageEl = widgetShell.closest('.stage');
     if (!(stageEl instanceof HTMLElement)) throw new Error('[Countdown] Missing .stage wrapper');
-    const podEl = widgetRoot.closest('.pod');
+    const podEl = widgetShell.closest('.pod');
     if (!(podEl instanceof HTMLElement)) throw new Error('[Countdown] Missing .pod wrapper');
 
     const resolvedInstanceId =
       runtimeContext && typeof runtimeContext.instanceId === 'string'
         ? runtimeContext.instanceId
         : '';
-    if (resolvedInstanceId) widgetRoot.setAttribute('data-ck-instance-id', resolvedInstanceId);
+    if (resolvedInstanceId) widgetShell.setAttribute('data-ck-instance-id', resolvedInstanceId);
 
     return {
-      widgetRoot,
-      countdownRoot,
+      widgetShell,
+      countdownShell,
       coreEl,
       timerEl,
       numberDisplayEl: requireElement(timerEl, '[data-role="number-display"]', '[Countdown] Missing [data-role="number-display"]'),
       numberValueEl: requireElement(timerEl, '[data-role="number-value"]', '[Countdown] Missing [data-role="number-value"]'),
       unitsDisplayEl: requireElement(timerEl, '[data-role="units-display"]', '[Countdown] Missing [data-role="units-display"]'),
-      ctaEl: requireElement(countdownRoot, '[data-role="cta"]', '[Countdown] Missing [data-role="cta"]'),
+      ctaEl: requireElement(countdownShell, '[data-role="cta"]', '[Countdown] Missing [data-role="cta"]'),
       afterMsgEl,
       afterLinkEl: requireElement(afterMsgEl, '[data-role="after-link"]', '[Countdown] Missing [data-role="after-link"]'),
       stageEl,
@@ -55,12 +55,12 @@
     };
   }
 
-  function initCountdown(widgetRoot, runtimeContext) {
-  const dom = resolveCountdownDom(widgetRoot, runtimeContext);
+  function initCountdown(widgetShell, runtimeContext) {
+  const dom = resolveCountdownDom(widgetShell, runtimeContext);
   if (!dom) return;
   const {
-    widgetRoot: resolvedWidgetRoot,
-    countdownRoot,
+    widgetShell: resolvedWidgetShell,
+    countdownShell,
     coreEl,
     timerEl,
     numberDisplayEl,
@@ -73,7 +73,7 @@
     podEl,
     resolvedInstanceId,
   } = dom;
-  widgetRoot = resolvedWidgetRoot;
+  widgetShell = resolvedWidgetShell;
 
   const TIMER_UNIT_KEYS = ['days', 'hours', 'minutes', 'seconds'];
 
@@ -518,14 +518,14 @@
     if (!window.CKStagePod?.applyStagePod) {
       throw new Error('[Countdown] Missing CKStagePod.applyStagePod');
     }
-    window.CKStagePod.applyStagePod(state.stage, state.pod, widgetRoot, state.appearance);
+    window.CKStagePod.applyStagePod(state.stage, state.pod, widgetShell, state.appearance);
 
     if (!window.CKTypography?.applyTypography) {
       throw new Error('[Countdown] Missing CKTypography.applyTypography');
     }
     window.CKTypography.applyTypography(
       state.typography,
-      countdownRoot,
+      countdownShell,
       {
         title: { varKey: 'title' },
         body: { varKey: 'body' },
@@ -543,7 +543,7 @@
     if (!window.CKHeader?.applyHeader) {
       throw new Error('[Countdown] Missing CKHeader.applyHeader');
     }
-    window.CKHeader.applyHeader(state, widgetRoot);
+    window.CKHeader.applyHeader(state, widgetShell);
 
     if (!window.CKCoreSize?.applyCoreSize) {
       throw new Error('[Countdown] Missing CKCoreSize.applyCoreSize');
@@ -553,11 +553,10 @@
     if (!window.CKLocaleSwitcher?.applyLocaleSwitcher) {
       throw new Error('[Countdown] Missing CKLocaleSwitcher.applyLocaleSwitcher');
     }
-    window.CKLocaleSwitcher.applyLocaleSwitcher(state, widgetRoot, {
-      composedPage: runtimeContext && runtimeContext.composedPage === true,
+    window.CKLocaleSwitcher.applyLocaleSwitcher(state, widgetShell, {
       locale: runtimeContext && runtimeContext.locale,
       previewMode: runtimeContext && runtimeContext.previewMode,
-      typographyScope: countdownRoot,
+      typographyScope: countdownShell,
     });
 
     applyAppearanceVars(state);
@@ -567,7 +566,7 @@
     applyActionsDuring(state);
     applyAfterMessage(state);
 
-    countdownRoot.setAttribute('data-mode', state.countdown.timer.mode);
+    countdownShell.setAttribute('data-mode', state.countdown.timer.mode);
 
     if (state.countdown.timer.mode === 'number') {
       numberDisplayEl.hidden = false;
@@ -580,12 +579,12 @@
     if (!window.CKBranding?.applyBacklink) {
       throw new Error('[Countdown] Missing CKBranding.applyBacklink');
     }
-    window.CKBranding.applyBacklink(widgetRoot, state);
+    window.CKBranding.applyBacklink(widgetShell, state);
 
     if (!window.CKSocialShare?.apply) {
       throw new Error('[Countdown] Missing CKSocialShare.apply');
     }
-    window.CKSocialShare.apply(widgetRoot, state, {
+    window.CKSocialShare.apply(widgetShell, state, {
       instanceId: runtimeContext && runtimeContext.instanceId || resolvedInstanceId,
       widgetType: 'countdown',
       widgetLabel: document.title || 'Countdown',
@@ -609,15 +608,15 @@
     const textColor = helpers.toCssColor(state.countdown.appearance.textColor);
     const itemBackground = helpers.toCssBackground(state.countdown.appearance.itemBackground);
 
-    countdownRoot.setAttribute('data-timer-style', state.countdown.appearance.timerStyle);
-    countdownRoot.setAttribute('data-show-labels', state.countdown.appearance.showLabels ? 'true' : 'false');
-    countdownRoot.style.setProperty('--countdown-text-color', textColor);
-    countdownRoot.style.setProperty('--countdown-item-bg', itemBackground);
+    countdownShell.setAttribute('data-timer-style', state.countdown.appearance.timerStyle);
+    countdownShell.setAttribute('data-show-labels', state.countdown.appearance.showLabels ? 'true' : 'false');
+    countdownShell.style.setProperty('--countdown-text-color', textColor);
+    countdownShell.style.setProperty('--countdown-item-bg', itemBackground);
 
     if (!window.CKSurface?.applyCardWrapper) {
       throw new Error('[Countdown] Missing CKSurface.applyCardWrapper');
     }
-    window.CKSurface.applyCardWrapper(state.countdown.appearance.cardwrapper, countdownRoot);
+    window.CKSurface.applyCardWrapper(state.countdown.appearance.cardwrapper, countdownShell);
 
     timerEl.querySelectorAll('[data-role="separator"]').forEach((el) => {
       el.textContent = state.countdown.appearance.separator;
@@ -640,11 +639,11 @@
   }
 
   function applyLayoutVars(state) {
-    countdownRoot.setAttribute('data-layout-position', 'inline');
-    countdownRoot.setAttribute('data-layout-align', 'center');
+    countdownShell.setAttribute('data-layout-position', 'inline');
+    countdownShell.setAttribute('data-layout-align', 'center');
     stageEl.setAttribute('data-layout-position', 'inline');
-    countdownRoot.style.removeProperty('--countdown-content-width');
-    countdownRoot.removeAttribute('data-layout-width');
+    countdownShell.style.removeProperty('--countdown-content-width');
+    countdownShell.removeAttribute('data-layout-width');
   }
 
 

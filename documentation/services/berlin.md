@@ -251,6 +251,12 @@ Optional key rotation:
 - `BERLIN_ACCESS_PREVIOUS_PUBLIC_KEY_PEM`
 - `BERLIN_ACCESS_PREVIOUS_KID`
 
+The current signing-key id is always derived from the current public key.
+`BERLIN_ACCESS_PREVIOUS_KID` can label only the previous public key during the
+overlap window. Berlin fails configuration when current and previous keys would
+publish the same id or when configured previous-key material is malformed; JWKS
+must expose one distinct id per signing key.
+
 Berlin requires explicit signing key PEMs. Cloud environments provide them
 directly; the old local `dev-up` key materialization path is retired.
 

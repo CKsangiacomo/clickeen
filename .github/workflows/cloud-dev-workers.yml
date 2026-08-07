@@ -16,7 +16,7 @@ on:
       - "packages/ck-contracts/**"
       - "packages/ck-policy/**"
       - "packages/l10n/**"
-      - "packages/widget-shell/**"
+      - "packages/widget-foundation/**"
       - "scripts/verify/**"
       - "scripts/widgets/**"
       - "scripts/tokyo-r2-deploy-sync.mjs"
@@ -132,7 +132,7 @@ jobs:
             sanfrancisco=true
           fi
 
-          if [ "$workflow_changed" = "true" ] || path_changed '^(tokyo-worker/|packages/(ck-contracts|ck-policy|l10n|widget-shell)/)'; then
+          if [ "$workflow_changed" = "true" ] || path_changed '^(tokyo-worker/|packages/(ck-contracts|ck-policy|l10n|widget-foundation)/)'; then
             tokyo=true
           fi
 

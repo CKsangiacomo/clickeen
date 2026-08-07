@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "deploy": "wrangler deploy",
+    "test:key-rotation": "tsx tests/run-signing-key-rotation.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "verify:auth-boundary": "node ./verify-auth-boundary.mjs"
   },
@@ -15,6 +16,7 @@
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20251228.0",
+    "tsx": "^4.20.6",
     "wrangler": "^4.54.0"
   }
 }

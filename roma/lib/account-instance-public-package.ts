@@ -15,7 +15,7 @@ import {
   isAccountFontFamily,
   validateAccountTypographyFontSelections,
   type RuntimeTypographyData,
-} from '@clickeen/widget-shell';
+} from '@clickeen/widget-foundation';
 import type { LimitsSpec } from '@clickeen/ck-policy';
 import {
   widgetEditableFieldsContractHash,
@@ -132,7 +132,7 @@ function materializerFailureToInstancePackageFailure(args: {
       return validationFailure('coreui.errors.widget.compiled.invalid', args.detail ?? args.reasonKey, args.paths);
     case 'widget_package_missing':
     case 'widget_package_file_missing':
-    case 'widget_package_root_invalid':
+    case 'widget_package_shell_invalid':
     case 'source_state_invalid':
       return validationFailure(args.reasonKey, args.detail, args.paths);
     case 'artifact_coordinate_invalid':

@@ -396,9 +396,9 @@ Edit Roma:
 - `roma/components/accept-invite-domain.tsx`;
 - `roma/app/roma.css`;
 - Table sites in
-  `roma/components/{pages-domain,assets-domain,team-domain,widgets-domain}.tsx`;
+  `roma/components/{assets-domain,team-domain,widgets-domain}.tsx`;
 - Popup sites in
-  `roma/components/{assets-domain,pages-domain,roma-account-notice-modal,roma-unsaved-changes-dialog,roma-upsell-dialog,widgets-domain}.tsx`.
+  `roma/components/{assets-domain,roma-account-notice-modal,roma-unsaved-changes-dialog,roma-upsell-dialog,widgets-domain}.tsx`.
 - `roma/tests/run-widget-command-gates.ts`.
 
 Edit Bob only where applicable:
@@ -556,10 +556,10 @@ path and be valid for `devstudio.clickeen.com`; missing/expired auth keeps this
 gate RED.
 
 Authenticated Roma browser coverage is:
-`/home`, `/profile`, `/widgets`, `/pages`, `/builder`, `/assets`, `/team`,
+`/home`, `/profile`, `/widgets`, `/builder`, `/assets`, `/team`,
 `/billing`, `/usage`, `/ai`, `/settings`, and the existing
 `/settings/widget-defaults` rewrite. Table operations are exercised on
-`/widgets`, `/pages`, `/assets`, and `/team`; all Roma Popup workflows listed
+`/widgets`, `/assets`, and `/team`; all Roma Popup workflows listed
 in 126K are exercised on their owning routes. Bob proof runs through
 `/builder` with an existing instance and covers Upsell, Bulk Edit, and Object
 Manager; `Workspace` preview is a non-regression.

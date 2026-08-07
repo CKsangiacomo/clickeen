@@ -9,7 +9,7 @@ Clickeen localization is overlay-native:
 ```text
 one saved base source
 + one exact overlay per translated locale
-+ one published root runtime
++ one published base runtime
 = localized public widget
 ```
 
@@ -26,8 +26,8 @@ publication state, delivery file, or cache lifecycle.
 | Saved text extraction and exact overlay validation | Tokyo-worker account translation domain |
 | Overlay storage | Tokyo R2 `overlays/locales/{locale}.json` |
 | Bob translated preview | translated-value primitives over saved base state |
-| Public localized serving | Tokyo-worker root index response plus root runtime |
-| Root artifact construction | `@clickeen/ck-runtime-materializer` |
+| Public localized serving | Tokyo-worker base index response plus base runtime |
+| Base package construction | `@clickeen/ck-runtime-materializer` |
 
 ## Authority Chain
 
@@ -44,7 +44,7 @@ Public serving adds the single publication coordinate:
 
 ```text
 serve-state.json
--> root index/styles/runtime fingerprint
+-> base index/styles/runtime fingerprint
 -> exact requested overlay
 -> injected locale context
 ```
@@ -130,12 +130,12 @@ https://clk.live/{accountPublicId}/{instanceId}
 https://clk.live/{accountPublicId}/{instanceId}?locale={locale}
 ```
 
-For an index request, Tokyo-worker verifies the published instance and one root
+For an index request, Tokyo-worker verifies the published instance and one base
 artifact. It lists overlay coordinates, reads and validates the exact requested
-overlay, injects a locale context into the stored root index, and returns HTML
-with `no-store`. That HTML references only root `styles.css` and `runtime.js`.
+overlay, injects a locale context into the stored base index, and returns HTML
+with `no-store`. That HTML references only the package `styles.css` and `runtime.js`.
 
-The root runtime applies injected values synchronously before widget modules
+The base runtime applies injected values synchronously before widget modules
 initialize. A missing requested overlay returns `404 Locale not available`. A
 corrupt overlay returns `500 Locale data invalid`. Base content is never
 presented as a requested non-base locale.
@@ -153,7 +153,7 @@ reconcile exactly.
 1. Run `pnpm cf:preflight`.
 2. Read the exact `overlays/locales/{locale}.json` object.
 3. Compare its path set with `instance.content.json`.
-4. Confirm no root source or artifact object changed unless a separate instance
+4. Confirm no base source or package object changed unless a separate instance
    save occurred.
 
 ### Verify public localization
@@ -161,7 +161,7 @@ reconcile exactly.
 1. Confirm the instance is published.
 2. Open the base URL and the same URL with `?locale={locale}`.
 3. Confirm translated text and `<html lang>` on the locale response.
-4. Confirm both responses reference identical root stylesheet/runtime URLs.
+4. Confirm both responses reference identical package stylesheet/runtime URLs.
 5. Confirm missing and corrupt overlays fail explicitly.
 
 ## Failure Semantics
@@ -182,6 +182,6 @@ reconcile exactly.
 | Overlay bytes | exact R2 read after `pnpm cf:preflight` |
 | Translation outcome | Roma requested/translated/failed sets |
 | Bob preview | exact overlay values displayed over saved source |
-| Root artifact | root R2 index/styles/runtime fingerprint |
-| Localized runtime | root URL with `?locale=` and translated output |
+| Base package | base R2 index/styles/runtime fingerprint |
+| Localized runtime | public instance URL with `?locale=` and translated output |
 | Negative storage invariant | no instance locale-derived HTML/CSS/JS objects |

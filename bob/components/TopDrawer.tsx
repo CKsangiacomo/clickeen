@@ -95,23 +95,6 @@ export function TopDrawer({
       </div>
       <div className="topdrawer-context-wrap">
         <div className="topdrawer-context">
-          {meta?.returnLabel ? (
-            <button
-              className="topdrawer-return diet-btn-ictxt"
-              data-size="lg"
-              data-variant="neutral"
-              type="button"
-              onClick={() => requestHostAction('return')}
-            >
-              <span
-                className="diet-btn-ictxt__icon"
-                data-icon="arrow.left"
-                style={dieterIconStyle('arrow.left')}
-                aria-hidden="true"
-              />
-              <span className="diet-btn-ictxt__label body-s">{meta.returnLabel}</span>
-            </button>
-          ) : null}
           {hasInstance ? (
             <span className="topdrawer-instance-title heading-3">
               {currentLabel}

@@ -66,6 +66,12 @@ async function testPublishGateBeforeTransition(): Promise<void> {
   assertBefore(source, gateBranch, 'publishAccountInstanceInTokyo({');
 }
 
+async function testDeleteDoesNotDependOnRetiredPages(): Promise<void> {
+  const source = await readRoute('app/api/account/instances/[instanceId]/route.ts');
+  assert.match(source, /deleteAccountInstanceFromTokyo\(\{/);
+  assert.doesNotMatch(source, /account-page|PageSources|pageIdsPlacingInstance|placedOnPage|pageIds/);
+}
+
 async function testBuilderHandlesBobUpsell(): Promise<void> {
   const builderSource = await readRoute('components/builder-domain.tsx');
   const bobDocs = await readFile(new URL('../../documentation/services/bob.md', import.meta.url), 'utf8');
@@ -106,6 +112,7 @@ async function testBuilderUsesBobTopDrawerAsItsOnlyEditorChrome(): Promise<void>
   assert.match(builderSource, /publicActions: nextPublicActions/);
   assert.match(builderSource, /data\.type === 'bob:host-action'/);
   assert.match(builderSource, /data\.action === 'copy-code'/);
+  assert.doesNotMatch(builderSource, /returnTo|returnLabel|data\.action === 'return'/);
   assert.match(builderSource, /<WidgetCopyCodeDialog/);
   assert.doesNotMatch(builderSource, />Copy URL</);
   assert.doesNotMatch(builderSource, />Copy embed</);
@@ -123,10 +130,11 @@ async function testBuilderUsesBobTopDrawerAsItsOnlyEditorChrome(): Promise<void>
   assert.doesNotMatch(topDrawer, /navigator\.clipboard|document\.execCommand/);
   assert.match(topDrawer, /className="topdrawer-more diet-popover-host"/);
   assert.match(topDrawer, /requestHostAction\('open-navigation'\)/);
-  assert.match(topDrawer, /requestHostAction\('return'\)/);
+  assert.doesNotMatch(topDrawer, /requestHostAction\('return'\)|returnLabel|topdrawer-return/);
   assert.equal((topDrawer.match(/data-variant="primary"/g) ?? []).length, 1);
   assert.match(bobBoot, /message\.publishStatus === 'published'/);
   assert.match(bobBoot, /coreui\.errors\.builder\.publicActions\.invalid/);
+  assert.doesNotMatch(bobBoot, /returnLabel/);
   assert.doesNotMatch(bobCss, /topdrawer-action-status/);
   assert.match(copyDialog, /aria-label=\{`Copy \$\{option\.label\}`\}/);
   assert.doesNotMatch(copyDialog, /data-size="large"/);
@@ -168,6 +176,7 @@ async function testWidgetsListComposition(): Promise<void> {
   assert.match(nav, /<details className="roma-nav__group" open=\{active\}>/);
   assert.match(domains, /label: 'Widget catalog', href: '\/widgets\/catalog'/);
   assert.match(domains, /label: 'Your widgets'/);
+  assert.doesNotMatch(domains, /key: 'pages'|href: '\/pages'/);
   assertBefore(domains, "'widgets',", "'widgetCatalog',");
   assert.match(source, /headerControls=\{view === 'your-widgets' \? \(/);
   assert.doesNotMatch(nav, /roma-nav__settings/);
@@ -221,12 +230,10 @@ async function testDieterLayoutTableAndPopupConsumption(): Promise<void> {
   const romaCss = await readRoute('app/roma.css');
   const tableCss = await readFile(new URL('../../dieter/components/table/table.css', import.meta.url), 'utf8');
   const assets = await readRoute('components/assets-domain.tsx');
-  const pages = await readRoute('components/pages-domain.tsx');
   const widgets = await readRoute('components/widgets-domain.tsx');
   const dropdownActions = await readRoute('components/dieter-dropdown-actions.tsx');
   const textfield = await readRoute('components/dieter-textfield.tsx');
   const assetsPage = assets.slice(assets.indexOf('export function AssetsPage'), assets.indexOf('export function AssetsDomain'));
-  const pagesPage = pages.slice(pages.indexOf('export function PagesPage'), pages.indexOf('const CANONICAL_LOCALES'));
 
   assert.match(layout, /dieter\/layouts\/main-container\/main-container\.css/);
   assert.match(shell, /className="main-container"/);
@@ -252,9 +259,6 @@ async function testDieterLayoutTableAndPopupConsumption(): Promise<void> {
 
   assert.match(assetsPage, /<AssetsDomain assetFilter=\{assetFilter\} onHeaderActions=\{setHeaderActions\} \/>/);
   assert.doesNotMatch(assetsPage, /useRomaAccountContext|useRomaAccountApi|refreshToken|onLoadingChange/);
-  assert.match(pagesPage, /<PagesDomain onHeaderActions=\{setHeaderActions\} \/>/);
-  assert.doesNotMatch(pagesPage, /PagesHeaderActionsRegistration|rd-canvas-module__actions/);
-  assert.doesNotMatch(pages, /createContext|useContext|PagesHeaderActionsRegistration/);
 
   assert.match(dropdownActions, /className=\{`diet-dropdown-actions diet-popover-host/);
   assert.match(dropdownActions, /triggerStyle === 'button' \? 'diet-btn-ictxt' : 'diet-dropdown-header diet-dropdown-actions__control'/);
@@ -288,7 +292,7 @@ async function testDieterLayoutTableAndPopupConsumption(): Promise<void> {
   assert.match(assets, /filter\(\(asset\) => assetFilter === 'all' \|\| asset\.assetType === assetFilter\)/);
   assertBefore(assets, /filter\(\(asset\) => assetFilter/, /\.sort\(\(left, right\) =>/);
 
-  for (const [domain, source] of [['Assets', assets], ['Pages', pages], ['Widgets', widgets]] as const) {
+  for (const [domain, source] of [['Assets', assets], ['Widgets', widgets]] as const) {
     const sortableHeaders = source.match(/<th[^>]*aria-sort=[\s\S]*?<\/th>/g) ?? [];
     assert.ok(sortableHeaders.length > 0, `${domain} must have sortable headers`);
     for (const header of sortableHeaders) {
@@ -310,7 +314,6 @@ async function testDieterLayoutTableAndPopupConsumption(): Promise<void> {
   }
 
   for (const relativePath of [
-    'components/pages-domain.tsx',
     'components/assets-domain.tsx',
     'components/widgets-domain.tsx',
     'components/team-domain.tsx',
@@ -325,7 +328,6 @@ async function testDieterLayoutTableAndPopupConsumption(): Promise<void> {
     'components/roma-account-notice-modal.tsx',
     'components/roma-unsaved-changes-dialog.tsx',
     'components/roma-upsell-dialog.tsx',
-    'components/pages-domain.tsx',
     'components/assets-domain.tsx',
     'components/widgets-domain.tsx',
     'components/widget-copy-code-dialog.tsx',
@@ -346,6 +348,8 @@ async function run(): Promise<void> {
   console.log('PASS duplicate gate runs after source proof and before id/package/Tokyo write work');
   await testPublishGateBeforeTransition();
   console.log('PASS publish gate uses list-facts and runs before Tokyo publish transition');
+  await testDeleteDoesNotDependOnRetiredPages();
+  console.log('PASS instance deletion has no retired Pages dependency');
   await testBuilderHandlesBobUpsell();
   console.log('PASS Bob upsell CTA opens the Roma scaffold without discarding Builder work');
   await testBuilderUsesBobTopDrawerAsItsOnlyEditorChrome();

@@ -32,7 +32,7 @@ Layout choices (inside the same Type):
 1. **Account instances are the authoring unit**: Bob edits one account widget instance at a time.
 2. **Editor is strict**: no silent fixups, no coercing bad values, no inventing missing state.
 3. **Deterministic render**: the same instance state produces the same output every time.
-4. **Scoped runtime**: runtime queries inside the widget root (no global selectors for internals).
+4. **Scoped runtime**: runtime queries inside the widget Shell (no global selectors for internals).
 
 ## Subject Policy — Entitlements (current)
 

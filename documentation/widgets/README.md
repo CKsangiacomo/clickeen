@@ -3,14 +3,13 @@
 STATUS: CURRENT SYSTEM OPERATOR SPEC
 
 This folder documents current Clickeen widget operation. Use it when changing
-widget source, Bob editor controls, Translation Agent editable paths, widget
-Shell utilities, or account page placement behavior.
+widget source, Bob editor controls, Translation Agent editable paths, the
+presentation frame, Shell composition, or shared widget utilities.
 
 Clickeen widget law:
 
 - Widgets are software.
 - Widget instances are saved account-owned widgets.
-- Clickeen Pages are account-owned stacks of saved widget instances.
 
 Widget software lives in git:
 
@@ -24,36 +23,29 @@ Saved account instances live in Tokyo/R2 through Tokyo-worker:
 accounts/{accountPublicId}/instances/{instanceId}/
 ```
 
-Clickeen Pages live in Tokyo/R2 through Tokyo-worker:
-
-```text
-accounts/{accountPublicId}/pages/{pageId}/
-```
-
 Bob edits one instance in browser memory. Roma owns account routing, policy,
 and save operations. Tokyo-worker stores exact submitted files. Shared widget
-Shell utilities live under `tokyo/product/widgets/shared/`.
+utilities live under `tokyo/product/widgets/shared/`.
 
 ## Operator Authority
 
 | Concern | Authority |
 | --- | --- |
 | Widget software source | `tokyo/product/widgets/{widgetType}/` |
-| Shell state/default/control contracts | `packages/widget-shell/src/` |
-| Shared Shell utilities | `tokyo/product/widgets/shared/` |
+| Common defaults and shared control contracts | `packages/widget-foundation/src/` |
+| Shared widget utilities | `tokyo/product/widgets/shared/` |
 | Bob editor panels and controls | `spec.json.editor.panels[]`, `bob/lib/compiler*` |
 | Dieter controls | `dieter/components/**` source |
 | Customer-visible text paths | `editable-fields.json` |
 | Account entitlement limits | `limits.json` |
 | Saved package materialization | Roma account instance package builder/save policy |
 | Saved widget instances | Tokyo-worker under `accounts/{accountPublicId}/instances/{instanceId}/` |
-| Clickeen Pages | Tokyo-worker under `accounts/{accountPublicId}/pages/{pageId}/` |
 
 ## Generated Package Dependency Rule
 
 Saved account widget packages are stored product bytes. Widget-local
 `widget.html`, `widget.css`, `widget.client.js`, selected shared widget
-CSS/JS, widget-shell markers, source state, and overlay state are resolved when
+CSS/JS, widget identity markers, source state, and overlay state are resolved when
 Roma materializes `index.html`, `styles.css`, and `runtime.js`.
 
 Later widget software or shared runtime changes do not mutate already-stored
@@ -87,7 +79,7 @@ runtime in the same change that exposes the mismatch.
 | Folder | Purpose |
 | --- | --- |
 | `authoring/` | Source-file contract, Bob/ToolDrawer controls, and widget execution checklist. |
-| `shared/` | Shell/Core contract and shared runtime utility behavior. |
+| `shared/` | Presentation frame, Shell/Core contract, and shared runtime utility behavior. |
 | `widgets/` | Per-widget operator specs for built widgets. |
 
 ## Shared Manuals
@@ -97,7 +89,7 @@ runtime in the same change that exposes the mismatch.
 | `authoring/WidgetFiles.md` | Exact six-file widget source contract. |
 | `authoring/ToolDrawerControls.md` | Bob panels, ToolDrawer fields, and Dieter controls. |
 | `authoring/WidgetAuthoringChecklist.md` | Current execution checklist for widget edits. |
-| `shared/ShellCore.md` | Shell/Core ownership, state paths, and DOM shape. |
+| `shared/ShellCore.md` | Presentation frame and Shell/Header/Core ownership, state paths, and DOM shape. |
 | `shared/ShellUtilities.md` | Branding, social share, and locale switcher. |
 
 ## Folder Rules

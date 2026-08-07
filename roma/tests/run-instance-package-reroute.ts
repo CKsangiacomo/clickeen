@@ -19,7 +19,7 @@ async function readSource(relativePath: string): Promise<string> {
   return readFile(path.join(repoRoot, relativePath), 'utf8');
 }
 
-async function testEveryWidgetBuildsOneRootPackage(): Promise<void> {
+async function testEveryWidgetBuildsPackageWithOneShell(): Promise<void> {
   for (const widgetType of PACKAGE_PARITY_WIDGETS) {
     const compiled = readWidgetForInstancePackage(widgetType);
     assert.equal(compiled.ok, true, JSON.stringify(compiled));
@@ -52,7 +52,7 @@ async function testEveryWidgetBuildsOneRootPackage(): Promise<void> {
       instanceId: coordinate.instanceId,
       baseLocale: coordinate.baseLocale,
     });
-    assert.equal(result.value.evidence.materializerContractVersion, 'ck-runtime-materializer:126-overlay-runtime');
+    assert.equal(result.value.evidence.materializerContractVersion, 'ck-runtime-materializer:shell-anchor');
   }
 }
 
@@ -130,7 +130,7 @@ async function testNoActiveLocalePackageAuthority(): Promise<void> {
 }
 
 const tests = [
-  ['every widget builds one root package', testEveryWidgetBuildsOneRootPackage],
+  ['every widget builds a package with one Shell', testEveryWidgetBuildsPackageWithOneShell],
   ['translation and settings are overlay-only', testTranslationAndSettingsAreOverlayOnly],
   ['removed locale cleanup attempts every overlay', testRemovedLocaleCleanupAttemptsEveryOverlay],
   ['no active locale package authority', testNoActiveLocalePackageAuthority],

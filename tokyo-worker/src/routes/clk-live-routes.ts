@@ -1,4 +1,4 @@
-import { isCompactAccountPublicId, isCompactInstanceId, isCompactPageId } from '@clickeen/ck-contracts/overlay-identity';
+import { isCompactAccountPublicId, isCompactInstanceId } from '@clickeen/ck-contracts/overlay-identity';
 import { normalizeLocale } from '../asset-utils';
 import { readAccountInstanceSourcePointer } from '../domains/account-instances/source';
 import { publicPackageContentType } from '../domains/public-package-serve-metadata';
@@ -43,19 +43,10 @@ function localeDataInvalid(): Response {
   });
 }
 
-function isPageDeliveryFile(file: string): file is PublicPackageFile {
-  return isPublicPackageFile(file);
-}
-
 function parseClkLivePath(pathname: string): {
   kind: 'instance';
   accountId: string;
   instanceId: string;
-  file: PublicPackageFile;
-} | {
-  kind: 'page';
-  accountId: string;
-  pageId: string;
   file: PublicPackageFile;
 } | null {
   if (pathname.includes('%2f') || pathname.includes('%2F') || pathname.includes('\\')) return null;
@@ -67,16 +58,6 @@ function parseClkLivePath(pathname: string): {
   }
   if (decoded.includes('..') || decoded.includes('\\')) return null;
   const segments = decoded.split('/').filter(Boolean);
-
-  if (segments.length === 3 || segments.length === 4) {
-    const [accountId, pagesSegment, pageId, requestedFile] = segments;
-    if (pagesSegment === 'pages') {
-      if (!isCompactAccountPublicId(accountId) || !isCompactPageId(pageId)) return null;
-      const file = requestedFile ?? PUBLIC_INDEX_FILE;
-      if (!isPageDeliveryFile(file)) return null;
-      return { kind: 'page', accountId, pageId, file };
-    }
-  }
 
   if (segments.length !== 2 && segments.length !== 3) return null;
   const [accountId, instanceId, requestedFile] = segments;
@@ -173,10 +154,6 @@ export async function tryHandleClkLiveStaticRoutes(
   const parsed = parseClkLivePath(pathname);
   if (!parsed) return null;
   if (req.method !== 'GET' && req.method !== 'HEAD') return respondMethodNotAllowed(respond);
-
-  if (parsed.kind === 'page') {
-    return respond(notFound());
-  }
 
   const pointer = await readAccountInstanceSourcePointer({
     env,

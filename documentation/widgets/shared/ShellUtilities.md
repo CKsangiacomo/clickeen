@@ -1,13 +1,14 @@
-# Shell Utilities
+# Shared Widget Utilities
 
 STATUS: CURRENT SYSTEM OPERATOR SPEC
 
-Branding, social share, and locale switching are shared Shell utilities.
-Widget Core consumes them; Widget Core does not reimplement them.
+Branding, social share, locale switching, typography, presentation, and Core
+geometry use shared widget implementations. Reuse does not make them Shell
+children. Shell remains the composition of Header and Core only.
 
 ## Typography Roles
 
-Widget Shell owns the shared runtime/editor typography roles:
+The shared typography engine exposes these common runtime/editor roles:
 
 ```text
 title
@@ -16,7 +17,7 @@ button
 localeSwitcher
 ```
 
-The Shell package owns their default product labels. A widget declares labels
+The widget foundation owns their default product labels. A widget declares labels
 and visible order for its additional roles in its structured typography panel.
 Bob composes those declared roles into the editor. The widget runtime consumes
 the same structured typography state through `CKTypography.applyTypography`.
@@ -44,12 +45,12 @@ tokyo/product/widgets/shared/branding.js
 Runtime API:
 
 ```text
-CKBranding.applyBacklink(widgetRoot, state)
+CKBranding.applyBacklink(shellElement, state)
 ```
 
 Rules:
 
-- Shared Shell applies the Clickeen badge/backlink.
+- Shared branding chrome applies the Clickeen badge/backlink to the Pod.
 - Bob preview and public runtime use the same shared behavior.
 - Widgets do not hand-code badge or backlink markup.
 - Removing branding is account policy, not widget choice.
@@ -81,19 +82,19 @@ tokyo/product/widgets/shared/socialShare.css
 Runtime API:
 
 ```text
-CKSocialShare.apply(widgetRoot, state, options)
+CKSocialShare.apply(shellElement, state, options)
 ```
 
 Rules:
 
-- Shared Shell creates and removes the share trigger/menu.
+- Shared share chrome creates and removes the share trigger/menu.
 - Share UI attaches to Stage or Pod through `behavior.socialShare.attachTo`.
 - Share position comes from `behavior.socialShare.position`.
 - Channel booleans under `behavior.socialShare.channels.*` decide which shared actions appear.
 - Widget Core does not create share DOM.
 - Builder preview renders the menu without performing external share side effects.
 - Public iframe snippets need clipboard and popup permissions for share actions.
-- State updates re-apply the shared share root for the current widget instance.
+- State updates re-apply share chrome for the current widget instance.
 
 ## Locale Switcher
 
@@ -114,7 +115,7 @@ tokyo/product/widgets/shared/localeSwitcher.css
 Runtime API:
 
 ```text
-CKLocaleSwitcher.applyLocaleSwitcher(state, widgetRoot, runtimeContext)
+CKLocaleSwitcher.applyLocaleSwitcher(state, shellElement, runtimeContext)
 ```
 
 Rules:
@@ -122,7 +123,7 @@ Rules:
 - Available locales come from the account tier.
 - Active locales are the account language selection in Roma Settings.
 - Rendered switcher options come from delivered `window.CK_LOCALE_POLICY.languages`.
-- The current public root runtime receives the exact stored overlay coordinates
+- The current public instance runtime receives the exact stored overlay coordinates
   and the requested overlay through Tokyo-worker's index response.
 - The switcher switches delivered locale values.
 - The switcher removes itself when disabled or when delivered languages length

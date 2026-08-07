@@ -165,7 +165,7 @@ This section lists **only controls that apply to every Type**. Type-specific con
   - **Layout**: sizing/spacing/arrangement for arrays/items (logo size, gaps, strip gaps)
   - **Appearance**: “paint” for surfaces (logo look/opacity/radius, tile background/border, header/CTA colors)
   - **Typography**: role-based text (header title/body)
-  - **Settings**: shared Shell behavior only; website URL is account/workspace
+  - **Settings**: shared product behavior only; website URL is account/workspace
     context outside widget instance state
 
 ### Panel: Content (common)
@@ -174,7 +174,7 @@ This section lists **only controls that apply to every Type**. Type-specific con
   - **how**:
     - Use `segmented` for the Type picker (2 options: `grid`, `carousel`).
     - Bob uses `show-if="logoshowcase.type == '...'"` to show type-specific controls under the picker
-    - runtime sets `data-type="<type>"` on widget root
+    - runtime sets `data-type="<type>"` on the widget Shell
 
 - **Strips list (CRUD + reorder)**: `strips[]`
   - **changes**: how many logo rows/sections exist and their ordering
@@ -209,7 +209,7 @@ Note: Links and logo media fill are baseline product behavior (not tier-gated). 
 - **Header (shared primitive)**: `header.*` + `headerCta.*`
   - **changes**: title/subtitle/CTA copy + placement/alignment + CTA styling
   - **how**:
-    - runtime delegates to `window.CKHeader.applyHeader(state, widgetRoot)` (no widget-specific header DOM code)
+    - runtime delegates to `window.CKHeader.applyHeader(state, widgetShell)` (no widget-specific header DOM code)
     - Content-owned: `header.enabled`, `header.title`, `header.showSubtitle`, `header.subtitleHtml`, `headerCta.enabled`, `headerCta.label`, `headerCta.href`, `headerCta.iconEnabled`, `headerCta.iconName`, `headerCta.iconPlacement`
     - Layout-owned: `header.placement`, `header.alignment`, `header.ctaPlacement`, `header.gap`, `header.textGap`, `header.innerGap`
     - Appearance-owned: `appearance.headerCta.background`, `appearance.headerCta.textColor`, `appearance.headerCta.border`, `appearance.headerCta.radius`, `appearance.headerCta.sizePreset`, `appearance.headerCta.padding*`, `appearance.headerCta.iconSizePreset`, `appearance.headerCta.iconSize`
@@ -217,7 +217,7 @@ Note: Links and logo media fill are baseline product behavior (not tier-gated). 
 ### Panel: Layout (common)
 - **Logo size**: `logoshowcase.spacing.logoHeight` (used for both desktop + mobile)
   - **changes**: rendered logo height across all types
-  - **how**: root CSS vars `--ls-logo-h` and `--ls-logo-h-mobile`
+  - **how**: Shell-scoped CSS vars `--ls-logo-h` and `--ls-logo-h-mobile`
 
 - **Gutter / spacing**: `logoshowcase.spacing.gap`, `logoshowcase.spacing.mobileGap`
   - **changes**: spacing between logos (within a strip)
@@ -254,14 +254,14 @@ Note: Links and logo media fill are baseline product behavior (not tier-gated). 
 
 - **Logo opacity**: `logoshowcase.appearance.logoOpacity`
   - **changes**: logo opacity
-  - **how**: root CSS var `--ls-logo-opacity`
+  - **how**: Shell CSS var `--ls-logo-opacity`
 
 - **Per-logo tile styling (platform schemas; Dieter-backed)**:
   - **Fill**: `logoshowcase.appearance.itemBackground` (`dropdown-fill`)
   - **Border**: `logoshowcase.appearance.cardwrapper.border` (object schema; `dropdown-border`)
   - **Shadow**: `logoshowcase.appearance.cardwrapper.shadow` (object schema; `dropdown-shadow`)
   - **Radius**: `logoshowcase.appearance.cardwrapper.radiusLinked` + `logoshowcase.appearance.cardwrapper.radius*` (linked/unlinked)
-  - **how**: runtime calls `CKSurface.applyCardWrapper(state.logoshowcase.appearance.cardwrapper, root)` which sets `--ck-cardwrapper-*` vars on the widget root; the logo tile CSS consumes them
+  - **how**: runtime calls `CKSurface.applyCardWrapper(state.logoshowcase.appearance.cardwrapper, shellElement)` which sets `--ck-cardwrapper-*` vars on the Shell; the logo tile CSS consumes them
 
 - **Header text styling**: Typography roles `title` + `body`
   - **changes**: header title/subtitle font + text color

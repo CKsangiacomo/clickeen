@@ -5,7 +5,6 @@ const UPPER_BASE36_RE = /^[0-9A-Z]+$/;
 export const COMPACT_ACCOUNT_ID_LENGTH = 8;
 export const WIDGET_CODE_LENGTH = 3;
 export const COMPACT_INSTANCE_ID_LENGTH = 10;
-export const COMPACT_PAGE_ID_LENGTH = 10;
 
 type RandomBytesSource = (length: number) => Uint8Array;
 
@@ -47,20 +46,12 @@ export function createCompactInstanceId(randomBytes?: RandomBytesSource): string
   return createUpperBase36Id(COMPACT_INSTANCE_ID_LENGTH, randomBytes);
 }
 
-export function createCompactPageId(randomBytes?: RandomBytesSource): string {
-  return createUpperBase36Id(COMPACT_PAGE_ID_LENGTH, randomBytes);
-}
-
 export function isCompactAccountPublicId(value: unknown): value is string {
   return typeof value === 'string' && isUpperBase36(value, COMPACT_ACCOUNT_ID_LENGTH);
 }
 
 export function isCompactInstanceId(value: unknown): value is string {
   return typeof value === 'string' && isUpperBase36(value, COMPACT_INSTANCE_ID_LENGTH);
-}
-
-export function isCompactPageId(value: unknown): value is string {
-  return typeof value === 'string' && isUpperBase36(value, COMPACT_PAGE_ID_LENGTH);
 }
 
 export function isWidgetOverlayCode(value: unknown): value is string {

@@ -3,12 +3,16 @@ import { readFile } from 'node:fs/promises';
 import { NextRequest } from 'next/server';
 import {
   createDefaultAccountFontLibrary,
+  isCommonWidgetControlPath,
   validateAccountTypographyFontSelections,
-  WIDGET_SHELL_FACTORY_DEFAULTS,
+  COMMON_WIDGET_FACTORY_DEFAULTS,
   type AccountFontLibrary,
-} from '@clickeen/widget-shell';
+} from '@clickeen/widget-foundation';
 import { validateAccountWidgetDefaultsContract } from '../lib/account-widget-defaults-contract';
-import type { AccountWidgetDefaultsDocument } from '../lib/account-widget-defaults-direct';
+import {
+  normalizeAccountWidgetDefaultsDocument,
+  type AccountWidgetDefaultsDocument,
+} from '../lib/account-widget-defaults-direct';
 
 function fontLibraryWithOrio(): AccountFontLibrary {
   const library = createDefaultAccountFontLibrary();
@@ -32,9 +36,7 @@ function setRoleFont(
   family: string,
   weight: string,
 ): void {
-  const roles = (
-    (root.typography as Record<string, unknown>).roles as Record<string, unknown>
-  );
+  const roles = (root.typography as Record<string, unknown>).roles as Record<string, unknown>;
   Object.assign(roles[role] as Record<string, unknown>, {
     family,
     weight,
@@ -52,9 +54,7 @@ async function document(): Promise<AccountWidgetDefaultsDocument> {
   return {
     accountId: 'CLICKEEN',
     fontLibrary: fontLibraryWithOrio(),
-    shell: structuredClone(
-      WIDGET_SHELL_FACTORY_DEFAULTS as unknown as Record<string, unknown>,
-    ),
+    common: structuredClone(COMMON_WIDGET_FACTORY_DEFAULTS as unknown as Record<string, unknown>),
     widgets: { calltoaction: { core: structuredClone(spec.defaults) } },
     seededAt: '2026-01-01T00:00:00.000Z',
     updatedAt: '2026-01-01T00:00:00.000Z',
@@ -64,6 +64,23 @@ async function document(): Promise<AccountWidgetDefaultsDocument> {
 async function main(): Promise<void> {
   const request = new NextRequest('https://roma.test/api/account/widget-defaults');
   const valid = await document();
+  assert.ok(valid.common.coreSize);
+  assert.equal(isCommonWidgetControlPath('coreSize.mode'), true);
+  assert.equal(isCommonWidgetControlPath(' coreSize.mode'), false);
+  assert.ok(normalizeAccountWidgetDefaultsDocument(valid));
+  const retiredShellOnly = {
+    ...valid,
+    shell: valid.common,
+  } as Record<string, unknown>;
+  delete retiredShellOnly.common;
+  assert.equal(normalizeAccountWidgetDefaultsDocument(retiredShellOnly), null);
+  assert.equal(
+    normalizeAccountWidgetDefaultsDocument({
+      ...valid,
+      shell: valid.common,
+    }),
+    null,
+  );
   assert.deepEqual(
     validateAccountTypographyFontSelections({
       fontLibrary: valid.fontLibrary,
@@ -71,11 +88,24 @@ async function main(): Promise<void> {
     }),
     [],
   );
-  setRoleFont(valid.shell, 'title', 'Orio', '400');
+  setRoleFont(valid.common, 'title', 'Orio', '400');
   assert.deepEqual(
     await validateAccountWidgetDefaultsContract({ request, widgetDefaults: valid }),
     { ok: true },
   );
+
+  const misplacedCoreSize = await document();
+  misplacedCoreSize.widgets.calltoaction!.core.coreSize = structuredClone(
+    misplacedCoreSize.common.coreSize,
+  );
+  const misplacedCoreSizeResult = await validateAccountWidgetDefaultsContract({
+    request,
+    widgetDefaults: misplacedCoreSize,
+  });
+  assert.equal(misplacedCoreSizeResult.ok, false);
+  if (!misplacedCoreSizeResult.ok) {
+    assert.ok(misplacedCoreSizeResult.error.paths?.includes('calltoaction:coreSize.mode'));
+  }
 
   setRoleFont(valid.widgets.calltoaction!.core, 'eyebrow', 'Orio', '700');
   const invalid = await validateAccountWidgetDefaultsContract({
@@ -85,22 +115,20 @@ async function main(): Promise<void> {
   assert.equal(invalid.ok, false);
   if (!invalid.ok) {
     assert.equal(invalid.error.reasonKey, 'coreui.errors.typography.selection.invalid');
-    assert.deepEqual(invalid.error.paths, [
-      'calltoaction:typography.roles.eyebrow.weight',
-    ]);
+    assert.deepEqual(invalid.error.paths, ['calltoaction:typography.roles.eyebrow.weight']);
   }
 
   const malformed = await document();
-  malformed.shell.typography = { roles: { title: 'bad' } };
+  malformed.common.typography = { roles: { title: 'bad' } };
   const malformedResult = await validateAccountWidgetDefaultsContract({
     request,
     widgetDefaults: malformed,
   });
   assert.equal(malformedResult.ok, false);
   if (!malformedResult.ok) {
-    assert.deepEqual(malformedResult.error.paths, ['shell:typography.roles.title']);
+    assert.deepEqual(malformedResult.error.paths, ['common:typography.roles.title']);
   }
-  console.log('PASS Widget Defaults accepts account fonts and rejects invalid combinations');
+  console.log('PASS Widget Defaults common/core and typography contracts');
 }
 
 void main();

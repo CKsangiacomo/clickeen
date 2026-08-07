@@ -2,9 +2,9 @@
 
 STATUS: CURRENT SYSTEM OPERATOR SPEC
 
-Prague is Clickeen's public marketing surface. It is an Astro app deployed on Cloudflare Pages and served as static output. Prague explains and sells widgets. It is not the account Pages product, and it is not the widget editor.
+Prague is Clickeen's public marketing surface. It is an Astro app deployed on Cloudflare Pages and served as static output. Prague explains and sells widgets. It is not the widget editor.
 
-Account Pages are stacks of saved widget instances owned by Roma and Tokyo-worker. Prague marketing pages are repo-authored JSON documents under `tokyo/prague/pages/**`.
+Prague marketing pages are repo-authored JSON documents under `tokyo/prague/pages/**`.
 
 ## Runtime Authority
 
@@ -22,7 +22,7 @@ Account Pages are stacks of saved widget instances owned by Roma and Tokyo-worke
 
 Prague bundles repo JSON through Astro glob loading at build/runtime. The same git-authored Prague content also deploys to Tokyo/R2 under `prague/**` for the static-content root, but live Prague page rendering in this repo does not fetch page JSON from R2.
 
-Prague does not write account assets, account instances, account pages, or account overlay folders.
+Prague does not write account assets, account instances, or account overlay folders.
 
 ## Routes
 
@@ -57,7 +57,7 @@ tokyo/prague/pages/{widget}/features.json
 tokyo/prague/pages/{widget}/pricing.json
 ```
 
-Each page JSON contains a `blocks[]` array. `blocks[]` is the current Prague implementation field for marketing sections. It is not the account Pages model.
+Each page JSON contains a `blocks[]` array for marketing sections.
 
 Required non-visual blocks:
 
@@ -193,7 +193,7 @@ https://prague.dev.clickeen.com/us/en/widgets/countdown/
 
 Stop before editing if the request asks Prague to:
 
-- save account instances or account pages
+- save account instances
 - generate account translations
 - write Tokyo account folders
 - become the Bob editor

@@ -23,7 +23,7 @@
     "@clickeen/ck-contracts": "workspace:*",
     "@clickeen/ck-policy": "workspace:*",
     "@clickeen/l10n": "workspace:*",
-    "@clickeen/widget-shell": "workspace:*",
+    "@clickeen/widget-foundation": "workspace:*",
     "next": "15.5.2",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",

@@ -1,290 +1,287 @@
-# Planning PRD — System SEO/GEO/AEO For Widget And Page Surfaces
+# Planning PRD — System SEO/GEO/AEO for Public Widget Instances and Prague Pages
 
-Status: Planning — alignment input to the future PRD 127; not independently executable
+Status: Planning — active direction, not independently executable
 
 Owner: Product + Architecture
 
 Date: 2026-08-03
 
-Related planning:
+Current authority references:
 
-- `planning_PRD__Account_Page_Compiler_And_Publication.md`
-- `planning_PRD__Prague_Migration_From_Astro_Blocks_To_Page_Composer.md`
+- `documentation/capabilities/seo-geo.md`
+- `documentation/services/tokyo-worker.md`
+- `documentation/services/prague/prague-overview.md`
+- `documentation/capabilities/localization.md`
 
 ## Shared Vision
 
-Clickeen serves two real structured content surfaces:
+Clickeen has two real public content surfaces in this program:
 
 ```text
-Instance → one independently materialized Widget identity that may be published
+Account Instance source
+  -> Roma/Bob materialization
+  -> generated Widget package in Tokyo/R2
+  -> stable clk.live account-instance URL
 
-Page source = Page metadata + ordered saved Instance references
-Page source + exact Instance packages → Page Compiler
-Page Compiler → one SEO-valid document + deduplicated CSS/runtime
-compiled build → Tokyo/R2 → one stable clk.live Page URL
+Repo-authored Prague page JSON + locale sidecar
+  -> Prague Astro build and Cloudflare Pages runtime
+  -> canonical Prague market/locale route on Cloudflare Pages
 ```
 
-This PRD owns the SEO/GEO/AEO product contract. The Page Compiler PRD owns its
-deterministic materialization and publication. The Prague PRD owns migration
-proof and legacy deletion. Their accepted decisions must be consolidated into
-PRD 127 before execution begins.
+The surfaces share SEO/GEO/AEO quality rules, but they do not share source or
+runtime authority. Public Widget Instances remain account artifacts. Prague
+pages remain repo-authored marketing content. This plan improves both without
+creating a second content tree or moving Prague into an account product.
 
-## What And Why
+## What and Why
 
-- **SEO** means crawlability, indexability, semantic document quality, metadata
-  and structured information for search engines.
+- **SEO** means crawlability, indexability, semantic document quality,
+  metadata, and structured information for search engines.
 - **GEO** means geographic and local-market relevance grounded in approved
-  locale, market and source content.
-- **AEO** means clear, attributable and machine-readable answers for search and
+  locale, market, and source content.
+- **AEO** means clear, attributable, machine-readable answers for search and
   AI answer experiences.
 
-They are quality dimensions of the same served content—not separate pipelines,
-content trees or agents.
+They are quality dimensions of served content, not separate pipelines, copies,
+or visitor-time agent calls.
 
-An individually valid Widget does not automatically produce a valid Page. A
-browser stack of independently served Widget documents can duplicate metadata,
-schema, CSS, runtime and shells while losing whole-document heading and
-canonical authority. Copying compiled output into another system creates a
-second stale source.
+The program matters because:
 
-The system therefore keeps Instance and Page source structured, compiles
-approved truth before publication, and serves exact generated artifacts from
-stable public identities.
+- every published Widget Instance can be a useful, independently addressable
+  content surface;
+- Prague is Clickeen's public marketing and product-proof surface;
+- explicit locale and market coordinates can make approved content globally
+  discoverable;
+- source-grounded structured data can make content easier for search and answer
+  engines to understand;
+- public output must remain fast and deterministic even when agents help
+  improve its source asynchronously.
 
 ## Product Law
 
-1. There is no SEO block layer and no duplicate SEO content tree.
-2. Widget content meaning remains owned by the Widget Instance and its source
+1. There is no duplicate SEO content tree.
+2. Widget content meaning stays owned by the account Instance and its source
    authority.
-3. Page metadata and composition order remain owned by Page source.
-4. The Page Compiler validates and materializes approved truth; it does not
-   silently rewrite customer content.
-5. A published Page is one initial semantic document, not a client-only loader,
-   iframe stack or browser stack of Widget URLs.
-6. A Page has one document-head authority. Included Widgets do not contribute
-   competing title, canonical, robots, locale or social heads.
-7. Widget structured data enters a Page only through an explicit generic
-   Widget-owned contribution contract.
-8. Missing or conflicting required truth fails visibly under an approved
-   blocking/advisory policy; nothing is invented.
-9. Public serving never calls an agent, model, authoring route or compiler.
-10. Pages V1 publishes one base/default locale and does not claim locale URL
-    trees, `hreflang`, country routing or language switching.
-11. Pages V1 does not own menus, shared site chrome, domains or Website routes.
-12. A future Website may collect stable Page identities and add site-wide
-    navigation, routes, localization and SEO without replacing the Page
-    Compiler.
+3. Prague page content, metadata, and section order stay owned by the matching
+   file under `tokyo/prague/pages/**` and its locale sidecars.
+4. Widget output may expose only claims grounded in approved Instance or
+   integration source truth.
+5. Prague output may expose only claims grounded in its repo-authored page
+   source and approved sidecars.
+6. Missing or conflicting required truth fails visibly; nothing is invented.
+7. Visitor and crawler requests never call an agent, model, authoring route, or
+   optimization pipeline.
+8. Public Widget serving starts from generated package files. Index requests
+   may inject exact saved base/overlay locale context from R2; the browser does
+   not fetch overlay JSON directly.
+9. Prague serving reads Astro output built from repo source.
+10. Locale and market context do not create a second content identity or grant
+    permission to rewrite source truth.
+11. Integration-sourced reviews, ratings, listings, and other facts remain
+    attributable to their external authority.
+12. An agent may propose or apply an authorized source edit, but it must use the
+    owning route or repo file and preserve the source's authority.
 
 ## Source Authorities
 
-| Truth                                               | Authority                                     |
-| --------------------------------------------------- | --------------------------------------------- |
-| Human-authored content                              | approved Instance or Page source              |
-| Approved AI-authored content                        | governed Instance or Page source              |
-| Reviews, feeds, listings and other integration data | external source and its structured derivative |
-| Widget semantics and optional schema capability     | Widget-owned source/specification             |
-| Instance content/configuration                      | account Instance source                       |
-| Page metadata and composition                       | Roma Page source                              |
-| Page-level validation/materialization               | deterministic Roma Page Compiler              |
-| Generated public bytes                              | compiler output stored by Tokyo-worker/R2     |
-| Public serving                                      | active generated artifact at `clk.live`       |
+| Truth | Authority |
+| --- | --- |
+| Human-authored Widget content | approved account Instance source |
+| Approved AI-authored Widget content | governed account Instance source |
+| Widget integration data | external source plus its structured derivative |
+| Widget semantics and optional schema capability | Widget source/specification |
+| Generated public Widget bytes | Roma-submitted package stored by Tokyo-worker/R2 |
+| Saved Widget locale values | exact account Instance overlays in Tokyo/R2 |
+| Localized Widget index response | Tokyo-worker injection into the stored base index |
+| Widget public serving | Tokyo-worker at `clk.live/{accountPublicId}/{instanceId}` |
+| Prague base page content and metadata | `tokyo/prague/pages/{widget}/{page}.json` |
+| Prague localized page copy | matching `.translations/{locale}.json` sidecar |
+| Prague market and locale coordinates | `prague/src/markets/markets.json` and `packages/l10n/locales.json` |
+| Prague canonical/alternate head output | Prague route code and `prague/src/layouts/Base.astro` |
+| Prague deploy/runtime | Astro app on Cloudflare Pages |
 
-The compiler may report that source needs improvement. It must not mutate human-
-or integration-owned truth to make validation pass.
+No optimizer may rewrite human- or integration-owned truth merely to make a
+quality check pass.
 
-## Widget Contract
+## Current Runtime Truth
 
-A public Widget Instance should expose approved visible content as semantic
-initial HTML. A Widget may also contribute structured data when its type owns an
-approved capability, for example:
+### Public Widget Instances
 
-- FAQ questions and answers with FAQ schema;
-- review facts with schema grounded in integration-sourced review truth;
-- product/service facts grounded in structured Instance truth.
-
-A Widget must not infer claims, ratings, locations, prices or other schema
-values from presentation markup.
-
-When included in a Page, an Instance contributes:
-
-- one validated semantic root;
-- exact style modules;
-- exact runtime payload/modules;
-- optional explicitly declared structured SEO data.
-
-It does not contribute a Page document head. Adding an SEO-capable Widget must
-not require a central `if widgetType === ...` branch in the Page Compiler.
-
-PRD 127 must approve the smallest generic Widget SEO contribution shape. If it
-does not ship in the first slice, the compiler may validate semantic HTML but
-must not scrape arbitrary markup to invent JSON-LD.
-
-## Page Contract
-
-Page source remains:
+Published Widget Instances are served from:
 
 ```text
-Page metadata + ordered saved Instance references
+https://clk.live/{accountPublicId}/{instanceId}
+https://dev.clk.live/{accountPublicId}/{instanceId}
 ```
 
-It does not copy Widget content, generated packages or SEO sidecars. The Page
-Compiler creates one complete document at:
+Tokyo-worker serves the stored `index.html`, `styles.css`, and `runtime.js`
+only when the saved pointer is published and the package is ready. Missing,
+malformed, unpublished, or fingerprint-mismatched state fails closed.
+
+For every index request, Tokyo-worker validates the source/serve state and
+lists the exact saved locale coordinates. A requested non-base `?locale=` loads
+the exact stored translated values and injects `CK_LOCALE_CONTEXT` into the
+stored base index. The browser never fetches overlay JSON directly, and no
+agent or model runs on the visitor path.
+
+The policy registry contains `embed.seoGeo.enabled`, but no current runtime
+consumer proves enforcement on save, publish, or public serving. That mismatch
+must be resolved explicitly; policy metadata is not runtime evidence.
+
+### Prague Marketing Pages
+
+Prague pages are repo-authored under:
 
 ```text
-https://clk.live/{accountPublicId}/pages/{pageId}
-https://dev.clk.live/{accountPublicId}/pages/{pageId}
+tokyo/prague/pages/{widget}/{overview|examples|features|pricing}.json
+tokyo/prague/pages/{widget}/{page}.translations/{locale}.json
 ```
 
-The stable `clk.live` identity is locked; the exact first path taxonomy shown
-above remains proposed for PRD 127 approval. The URL identifies the Page, not a
-particular build.
+Prague exposes Astro routes under `/{market}/{locale}/...`. Widget pages
+require a `page-meta` title and description. The route layer emits canonical
+and locale-alternate links from the approved route coordinates. Missing
+required translated page truth fails visibly rather than substituting base
+copy.
 
-Every published Page requires one approved authority for:
+Prague may embed a published Widget Instance through an explicit
+`accountPublicId + instanceId` reference. That embed does not give Prague
+private account or authoring authority.
 
-- title;
-- description;
-- robots policy;
-- canonical URL;
-- `lang`;
-- `dir`;
-- viewport.
+### Not Implemented
 
-Social title, description and image are included only if PRD 127 approves their
-structured source fields. `lang` and `dir` may be derived deterministically from
-the approved base locale; marketing copy, canonicals, social content and images
-must not be invented.
+No current runtime proves an SEO/GEO/AEO agent, crawler, cron job, ranking
+feedback loop, automated recommendation store, or automatic source rewrite.
+The active program must specify each capability before code claims it exists.
 
-The compiler validates the assembled Page as one document:
+## Public Widget Contract
 
-- every placement appears once and in order;
-- primary content exists in initial HTML;
-- compiler-generated Instance coordinates are unique;
-- contribution IDs and structured data do not conflict;
-- one Page metadata authority exists;
-- heading, link and image findings follow the approved severity policy;
-- declared schema matches visible source truth;
-- ordinary content and links remain useful without JavaScript;
-- CSS/runtime contributions are deduplicated without changing content meaning.
+A public Widget Instance should expose approved visible content in semantic
+initial HTML. A Widget may contribute structured data only when its type owns an
+approved, typed capability, for example:
 
-The compiler rejects conflicts it cannot preserve exactly. It does not silently
-renumber arbitrary Widget markup, rewrite headings, manufacture alt text or
-coerce schema.
+- FAQ questions and answers grounded in visible Instance content;
+- review facts grounded in integration-sourced review truth;
+- product or service facts grounded in structured Instance truth.
 
-## GEO And AEO Boundaries
+A Widget must not infer claims, ratings, locations, prices, or other schema
+values from presentation markup. It must not scrape its rendered DOM to invent
+source meaning.
 
-GEO uses approved locale and market truth. For Pages V1, one base locale is
-published with required `lang` and `dir`; unsupported localization settings
-block publication. Locale Page URLs, market routing and `hreflang` require a
-later Page/Website localization contract.
+The smallest shared Widget SEO contribution contract remains a planning
+decision. If no generic contract is approved, individual Widgets may improve
+semantic HTML without claiming unsupported JSON-LD.
+
+## Prague Page Contract
+
+Prague keeps one repo source and one owning route for each marketing
+page. SEO work must operate through that existing authority:
+
+- `page-meta` owns the page title and description;
+- the Prague route owns canonical and locale-alternate coordinates;
+- the market/locale route owns `lang` and route identity;
+- visible sections own the content that metadata or structured data describes;
+- translation sidecars own approved localized string changes;
+- the Astro runtime turns the approved source into initial HTML.
+
+Future social metadata or structured data must be added to the owning Prague
+source contract and rendered by Prague. It must not be hidden in a parallel SEO
+file, inferred from arbitrary markup, or generated only for crawlers.
+
+## GEO and AEO Boundaries
+
+GEO uses explicit locale and market truth.
+
+- Prague already owns market/locale paths and translated page sidecars.
+- Public Widget Instances have locale overlays, but a stable crawlable Widget
+  locale URL contract is not yet established by this plan.
+- Unsupported locale or market claims must not be inferred from request
+  geography alone.
 
 AEO comes from clear semantic source content and compatible structured data.
-Questions, answers and factual claims remain attributable to their human or
-integration source. AEO does not create a separate answer tree or model-generated
-visitor response.
+Questions, answers, reviews, and factual claims remain attributable to their
+human or integration source. AEO does not create a separate answer tree or a
+model-generated visitor response.
 
-## Compiler, Agent And Serving Boundaries
+## Agent, Build, and Serving Boundaries
 
-The Page Compiler is deterministic: identical Page source and exact Instance
-packages produce identical public bytes and validation results.
+An agent may later measure public quality, recommend improvements, and apply an
+approved edit through the owning source authority. It must not silently mutate
+customer truth, integration truth, Prague source, or locale sidecars.
 
-An agent may later propose improvements to Page metadata or Instance content,
-but an accepted change must use the owning structured route and preserve source
-authority. This planning set does not create an SEO agent, crawler, cron,
-recommendation store, learning loop, ranking integration or automatic rewrite.
+Normal visitor and crawler requests must not:
 
-Normal visitor/crawler requests must not:
+- fetch private authoring or overlay JSON;
+- call Bob, Roma, Berlin, San Francisco, or an agent;
+- generate or repair metadata, schema, or locale output;
+- substitute a stale or different source when required truth is invalid;
+- receive crawler-only content that differs in meaning from visible output.
 
-- fetch authoring or overlay JSON;
-- call Bob, Roma, Berlin, San Francisco or any agent;
-- resolve Page Instance references or concatenate Widget packages;
-- generate or repair metadata, schema or locale output;
-- activate a partial build.
-
-Tokyo-worker serves one exact complete active generated artifact. For Pages,
-the stable URL must resolve HTML, CSS and runtime from one build-coherent package
-under the activation contract approved in PRD 127.
+Widget public serving starts from one stored generated base package and may
+inject exact saved locale context into index HTML. Prague serves its Astro
+build. Neither surface waits for optimization work at request time.
 
 ## Failure Law
 
-| Case                                           | Required result                                               |
-| ---------------------------------------------- | ------------------------------------------------------------- |
-| Missing required Page metadata                 | publication blocks; no value is invented                      |
-| Missing/malformed Instance contribution        | compilation blocks; placement is not omitted                  |
-| Conflicting module identity or structured data | compilation blocks                                            |
-| Advisory quality finding                       | exact finding remains visible under approved policy           |
-| Unsupported localization enabled               | publication blocks                                            |
-| Failed Page recomposition                      | last complete build may serve; Roma shows Page as out of date |
-| Partial new build                              | never becomes active                                          |
-| Missing/corrupt public artifact                | public serving fails closed                                   |
+| Case | Required result |
+| --- | --- |
+| Unpublished Widget Instance | public Widget route returns `404` |
+| Missing or malformed Widget package state | public Widget route returns `404` |
+| Widget schema claim lacks structured source | schema output is rejected or omitted under an explicit contract; no claim is invented |
+| Prague page missing required `page-meta` | Prague load/build fails visibly |
+| Required Prague locale sidecar missing or invalid | Prague load/build fails visibly; base copy is not substituted |
+| Metadata or schema conflicts with visible source | quality check fails; source is not silently rewritten |
+| Automated measurement dependency unavailable | source and public serving remain unchanged; no success is claimed for the measurement operation |
 
-PRD 127 must classify blocking versus advisory findings. Execution agents must
-not decide severity ad hoc.
+Any future quality gate must classify blocking and advisory findings in its
+own approved contract. Execution agents must not choose severity ad hoc.
 
-## Prague Alignment
+## Active Planning Workstreams
 
-Prague supplies migration source; it does not create another Page SEO authority.
-
-- Prague `page-meta` maps into validated Roma Page metadata.
-- Prague blocks map into normal account Instances and ordered Page placements.
-- Prague `navmeta`, menus, routes and chrome remain Website-level Prague truth
-  outside Pages V1.
-- The standalone Page Compiler owns the document at the stable `clk.live` URL.
-- Production Prague cutover remains blocked until a general host/Website
-  contract preserves site chrome and initial-response SEO.
-
-Prague must not parse, proxy, inject, rewrite or copy Page packages to fill that
-future product gap.
-
-## Current Truth
-
-This is target planning, not deployed behavior. Today:
-
-- public Widget serving returns generated files for published Instances;
-- Page publication and public Page serving are disabled;
-- no runtime proves complete SEO/GEO/AEO generation or measurement;
-- `embed.seoGeo.enabled` exists in policy metadata but has no proven active
-  runtime consumer.
-
-Minimum Page SEO is part of creating a valid hosted Page, not an optional embed
-enhancement. `embed.seoGeo.enabled` must not silently become a Page publication
-gate. Its Widget embed meaning and current runtime mismatch need an explicit
-decision.
+1. Define the minimum semantic-initial-HTML requirements for every public
+   Widget type.
+2. Decide whether a smallest generic Widget structured-data contribution shape
+   is warranted, without a central per-Widget switchboard.
+3. Decide the stable crawlable locale identity for public Widget Instances, or
+   explicitly defer it.
+4. Extend Prague metadata or structured-data source fields only where a named
+   use case requires them.
+5. Define source-safe measurement and recommendation evidence before creating
+   an SEO/GEO/AEO agent or scheduled operation.
+6. Resolve or explicitly defer the `embed.seoGeo.enabled` policy/runtime
+   mismatch.
+7. Define verification for rendered semantics, canonical identity, locale
+   alternates, structured-data/source agreement, and public no-agent behavior.
 
 ## Non-Goals
 
-- Menus, shared site chrome, a Website product or platform-specific adapters.
-- Multi-locale Pages, locale URL trees, `hreflang` or country routing.
-- A separate SEO content tree or Page-specific Widget overrides.
-- Visitor-time generation, optimization or model calls.
+- A new customer page-composition product or customer page runtime.
+- Moving Prague marketing content into account storage.
+- Replacing Prague's repo-authored JSON and Astro routes.
+- A separate SEO content tree or per-surface copy of source truth.
+- Visitor-time generation, optimization, or model calls.
 - Heuristic schema generation or silent content/metadata rewriting.
 - A central per-Widget SEO switchboard.
-- An agent, recommendation store, crawler, learning loop or ranking system.
-- New entitlement machinery or implicit reuse of `embed.seoGeo.enabled`.
-
-## Decisions To Carry Into PRD 127
-
-1. Minimal additional Page metadata fields for social previews.
-2. Generic Widget structured SEO contribution contract, or explicit first-slice
-   deferral of Widget JSON-LD.
-3. Blocking versus advisory whole-Page findings.
-4. Whether V1 needs any deterministic GEO/AEO gates beyond base-locale
-   `lang`/`dir` and declared source/schema. Default: no additional machinery
-   without a named objective rule.
-5. Whether an included materialized Instance must be independently published.
-6. Resolution or explicit deferral of the `embed.seoGeo.enabled` policy/runtime
-   mismatch without coupling it silently to Pages.
+- An agent, crawler, recommendation store, learning loop, or ranking system
+  without a separately approved operation and evidence contract.
+- New entitlement machinery or implicit reuse of `embed.seoGeo.enabled` beyond
+  its proven runtime consumer.
 
 ## Acceptance
 
-- All three planning PRDs use one source-faithful SEO/GEO/AEO vision.
-- Page source remains metadata plus ordered Instance references.
-- Page compilation produces one initial semantic document with one Page head and
-  deduplicated CSS/runtime.
-- One stable `clk.live` URL remains the Page's public identity.
-- Widget contributions remain Widget-owned; Page metadata remains Page-owned.
-- The compiler validates/materializes but never silently authors customer truth.
-- Pages V1 remains base-locale, standalone and free of Website/navigation
-  machinery.
-- Prague uses the same Page product and creates no separate compiler or SEO path.
-- No agent, crawler, recommendation store, learning loop or adapter is introduced.
-- Open decisions move once into PRD 127 before execution begins.
+- The program targets the two real surfaces: published Widget Instances and
+  repo-authored Prague marketing pages.
+- Each surface keeps its existing source, build, deploy, and runtime authority.
+- Public Widget requests start from generated package files and may inject only
+  exact saved locale context from R2; the browser never fetches overlay JSON
+  directly and no visitor-time agent/model runs.
+- Prague requests serve Astro output from repo-authored page source and locale
+  sidecars.
+- Widget schema remains Widget-owned and source-grounded.
+- Prague metadata and future structured data remain Prague-owned and
+  source-grounded.
+- Missing or conflicting truth fails visibly; no optimizer invents or silently
+  repairs it.
+- Visitor requests do not call agents, models, authoring routes, or optimization
+  pipelines.
+- Open work moves into an execution PRD only after its owner, input, mutation
+  path, failure semantics, and verification surface are named.

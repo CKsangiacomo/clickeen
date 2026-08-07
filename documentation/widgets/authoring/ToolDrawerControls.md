@@ -59,7 +59,8 @@ Product rules:
 - Related Core fields use `groupId`.
 - Conditional controls use structured `showIf`.
 - Repeated content uses `repeater` or `object-manager` with stable item ids.
-- Widget specs use shared nodes for Shell controls.
+- Widget specs use shared nodes for common controls; shared-node reuse does not
+  define DOM ownership.
 - Labels are authored as plain text, never as pre-encoded HTML entities.
 
 Current source node shapes:
@@ -156,11 +157,11 @@ The shared typography panel uses:
 }
 ```
 
-Widget Shell owns labels for `title`, `body`, `button`, and
+The common widget contract owns labels for `title`, `body`, `button`, and
 `localeSwitcher`. Widgets declare labels, in visible order, for every
-widget-specific typography role and may override a Shell label when its product
-meaning is broader. Missing, malformed, unknown, or unused labels fail widget
-compilation; roles are never silently omitted.
+widget-specific typography role and may override a common label when its
+product meaning is broader. Missing, malformed, unknown, or unused labels fail
+widget compilation; roles are never silently omitted.
 
 ## Structured Field Types
 

@@ -216,9 +216,9 @@ dynamic viewport units and safe areas. No UA sniffing or device registry.
   collapsing tablets and exposing an inline menu rather than an overlay drawer.
 - `.roma-layout--focus` has no current consumer.
 - `RomaNav` has a `compact` branch solely for the duplicate navigation tree.
-- Nine semantic tables use `.roma-table`: four Pages, two Assets, two Team, and
-  one Widgets table.
-- Ordinary text/select controls are spread across Pages, Widgets, Team, Team
+- Five semantic tables use `.roma-table`: two Assets, two Team, and one Widgets
+  table.
+- Ordinary text/select controls are spread across Widgets, Team, Team
   Member, Profile, Settings, and Account Locale Settings.
 - `.roma-input`, `.roma-select` absence, `.roma-instance-rename__input`, and
   `.roma-table` create inconsistent or duplicated visual bases.
@@ -250,13 +250,12 @@ Green gate: one navigation tree, complete tablet workspace, reachable compact
 drawer in narrow landscape and portrait, and route change without hidden
 controls.
 
-### M2 - Dieter Inputs And Nine Tables
+### M2 - Dieter Inputs And Five Tables
 
 1. Use Roma's existing direct `dieter/styles.css` source import in
    `roma/app/layout.tsx`; do not add another CSS delivery path.
 2. Replace ordinary controls with Dieter Textfield for single-line text,
    Dropdown Actions for choices, and Textedit for multiline content in:
-   - `pages-domain.tsx`;
    - `widgets-domain.tsx` rename input;
    - `team-domain.tsx`;
    - `team-member-domain.tsx`;
@@ -264,9 +263,9 @@ controls.
    - `settings-domain.tsx`;
    - `account-locale-settings-card.tsx`.
 3. Do not apply it to checkboxes or hidden file inputs.
-4. Wrap all nine tables in `.diet-operational-table` and put
-   `.diet-operational-table__table` on each semantic `<table>` in Pages,
-   Widgets, Assets, and Team.
+4. Wrap all five tables in `.diet-operational-table` and put
+   `.diet-operational-table__table` on each semantic `<table>` in Widgets,
+   Assets, and Team.
 5. Preserve domain-specific cell actions, selected rows, editable cells,
    column content, loading/error state, and all operations.
 6. Delete `.roma-input` and `.roma-table` visual bases. Keep only true local
@@ -314,7 +313,6 @@ control; no deleted selector has a source consumer.
 | `roma/components/roma-nav.tsx` | Delete compact duplicate-tree branch; keep one nav. |
 | `roma/app/roma.css` | Full/Compact shell including narrow portrait; Dieter component adoption cleanup; dead Widget Defaults deletion. |
 | `roma/app/layout.tsx` | Preserve direct `dieter/styles.css` source compilation and add viewport-fit support. |
-| `roma/components/pages-domain.tsx` | Dieter inputs; wrap four tables. Preserve K dialog changes. |
 | `roma/components/widgets-domain.tsx` | Rename field; wrap one table. Preserve K upsell/dialog changes. |
 | `roma/components/assets-domain.tsx` | Wrap two tables. Preserve K upload dialog behavior. |
 | `roma/components/team-domain.tsx` | Dieter inputs; wrap two tables. |

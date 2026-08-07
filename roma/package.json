@@ -9,7 +9,6 @@
     "build:cf": "node ../scripts/build-roma-cf.mjs",
     "start": "next start",
     "lint": "next lint",
-    "test:account-page-source": "tsx tests/run-account-page-source.ts",
     "test:account-limit-usage": "tsx tests/run-account-limit-usage.ts",
     "pretest:instance-package": "node ../scripts/widgets/generate-artifacts.mjs",
     "test:instance-package": "tsx tests/run-instance-package-reroute.ts",
@@ -28,7 +27,7 @@
     "@clickeen/ck-contracts": "workspace:*",
     "@clickeen/ck-runtime-materializer": "workspace:*",
     "@clickeen/l10n": "workspace:*",
-    "@clickeen/widget-shell": "workspace:*",
+    "@clickeen/widget-foundation": "workspace:*",
     "next": "15.5.2",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"

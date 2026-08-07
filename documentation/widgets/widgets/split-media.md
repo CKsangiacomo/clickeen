@@ -67,11 +67,12 @@ branding.remove -> behavior.showBacklink
 widget.socialShare.enabled -> behavior.socialShare.enabled
 ```
 
-## Shell Utilities
+## Shared Widget Utilities
 
-Split Media uses the shared Shell for Header, Header CTA, Stage/Pod, Core size,
-typography, branding, social share, and locale switcher. The media surface
-belongs to `splitMedia.*`.
+Split Media uses the presentation frame for Stage/Pod, the Shell for
+Header/Core composition, and shared utilities for Core sizing, typography,
+branding, social share, and locale switching. The media surface belongs to
+`splitMedia.*`.
 
 Runtime requires these Core DOM hooks:
 
@@ -81,7 +82,7 @@ Runtime requires these Core DOM hooks:
 ```
 
 `widget.client.js` registers as `split-media`, validates `splitMedia.*`, renders
-the media surface into `split-media-core`, applies shared Shell utilities, and
+the media surface into `split-media-core`, applies shared widget utilities, and
 binds `ck:state-update` for the current instance id.
 
 Runtime invariants:
@@ -98,13 +99,6 @@ Runtime invariants:
 - `splitMedia.appearance.cardwrapper` controls the visual frame through shared
   `CKSurface.applyCardWrapper`.
 - Auto core size uses a 16:9 shape with a 320px minimum height in current CSS.
-
-## Clickeen Pages Usage
-
-Split Media appears in Clickeen Page source as a saved account widget instance
-placement. The media fill object, alt text, fit, position, and visual frame
-config remain account-owned instance state. Public page package serving depends
-on Roma writing real page packages.
 
 ## Verification
 

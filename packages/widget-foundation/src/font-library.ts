@@ -187,7 +187,10 @@ export function parseGoogleFontWeights(spec: string): string[] {
   const idx = spec.indexOf('wght@');
   if (idx === -1) return ['400'];
   const segment = spec.slice(idx + 'wght@'.length);
-  const tokens = segment.split(';').map((token) => token.trim()).filter(Boolean);
+  const tokens = segment
+    .split(';')
+    .map((token) => token.trim())
+    .filter(Boolean);
   const weights = new Set<string>();
   for (const token of tokens) {
     const last = token.split(',').pop() || '';
@@ -236,23 +239,125 @@ export const SYSTEM_GOOGLE_FONT_RECORDS = {
     usage: 'body-safe',
     locked: true,
   }),
-  Manrope: googleFont({ label: 'Manrope', spec: 'Manrope:wght@200..800', category: 'sans', familyClass: 'sans', usage: 'body-safe' }),
-  'Open Sans': googleFont({ label: 'Open Sans', spec: 'Open+Sans:ital,wght@0,300..800;1,300..800', category: 'sans', familyClass: 'sans', usage: 'body-safe' }),
-  Lato: googleFont({ label: 'Lato', spec: 'Lato:ital,wght@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,700;1,900', category: 'sans', familyClass: 'sans', usage: 'body-safe' }),
-  Roboto: googleFont({ label: 'Roboto', spec: 'Roboto:ital,wght@0,100..900;1,100..900', category: 'sans', familyClass: 'sans', usage: 'body-safe' }),
-  Montserrat: googleFont({ label: 'Montserrat', spec: 'Montserrat:ital,wght@0,100..900;1,100..900', category: 'sans', familyClass: 'sans', usage: 'heading-only' }),
-  Raleway: googleFont({ label: 'Raleway', spec: 'Raleway:ital,wght@0,100..900;1,100..900', category: 'sans', familyClass: 'sans', usage: 'heading-only' }),
-  'Libre Baskerville': googleFont({ label: 'Libre Baskerville', spec: 'Libre+Baskerville:ital,wght@0,400..700;1,400..700', category: 'serif', familyClass: 'serif', usage: 'body-safe' }),
-  Lora: googleFont({ label: 'Lora', spec: 'Lora:ital,wght@0,400..700;1,400..700', category: 'serif', familyClass: 'serif', usage: 'body-safe' }),
-  'Cormorant Garamond': googleFont({ label: 'Cormorant Garamond', spec: 'Cormorant+Garamond:ital,wght@0,300..700;1,300..700', category: 'serif', familyClass: 'serif', usage: 'heading-only' }),
-  'Crimson Text': googleFont({ label: 'Crimson Text', spec: 'Crimson+Text:ital,wght@0,400;0,600;0,700;1,400;1,600;1,700', category: 'serif', familyClass: 'serif', usage: 'heading-only' }),
-  Gabriela: googleFont({ label: 'Gabriela', spec: 'Gabriela', category: 'serif', familyClass: 'serif', usage: 'heading-only' }),
-  Michroma: googleFont({ label: 'Michroma', spec: 'Michroma', category: 'display', familyClass: 'sans', usage: 'heading-only' }),
-  'Playfair Display': googleFont({ label: 'Playfair Display', spec: 'Playfair+Display:ital,wght@0,400..900;1,400..900', category: 'display', familyClass: 'serif', usage: 'heading-only' }),
-  Cookie: googleFont({ label: 'Cookie', spec: 'Cookie', category: 'script', familyClass: 'sans', usage: 'heading-only' }),
-  'Homemade Apple': googleFont({ label: 'Homemade Apple', spec: 'Homemade+Apple', category: 'handwritten', familyClass: 'sans', usage: 'heading-only' }),
-  'Permanent Marker': googleFont({ label: 'Permanent Marker', spec: 'Permanent+Marker', category: 'handwritten', familyClass: 'sans', usage: 'heading-only' }),
-  'Shadows Into Light': googleFont({ label: 'Shadows Into Light', spec: 'Shadows+Into+Light', category: 'handwritten', familyClass: 'sans', usage: 'heading-only' }),
+  Manrope: googleFont({
+    label: 'Manrope',
+    spec: 'Manrope:wght@200..800',
+    category: 'sans',
+    familyClass: 'sans',
+    usage: 'body-safe',
+  }),
+  'Open Sans': googleFont({
+    label: 'Open Sans',
+    spec: 'Open+Sans:ital,wght@0,300..800;1,300..800',
+    category: 'sans',
+    familyClass: 'sans',
+    usage: 'body-safe',
+  }),
+  Lato: googleFont({
+    label: 'Lato',
+    spec: 'Lato:ital,wght@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,700;1,900',
+    category: 'sans',
+    familyClass: 'sans',
+    usage: 'body-safe',
+  }),
+  Roboto: googleFont({
+    label: 'Roboto',
+    spec: 'Roboto:ital,wght@0,100..900;1,100..900',
+    category: 'sans',
+    familyClass: 'sans',
+    usage: 'body-safe',
+  }),
+  Montserrat: googleFont({
+    label: 'Montserrat',
+    spec: 'Montserrat:ital,wght@0,100..900;1,100..900',
+    category: 'sans',
+    familyClass: 'sans',
+    usage: 'heading-only',
+  }),
+  Raleway: googleFont({
+    label: 'Raleway',
+    spec: 'Raleway:ital,wght@0,100..900;1,100..900',
+    category: 'sans',
+    familyClass: 'sans',
+    usage: 'heading-only',
+  }),
+  'Libre Baskerville': googleFont({
+    label: 'Libre Baskerville',
+    spec: 'Libre+Baskerville:ital,wght@0,400..700;1,400..700',
+    category: 'serif',
+    familyClass: 'serif',
+    usage: 'body-safe',
+  }),
+  Lora: googleFont({
+    label: 'Lora',
+    spec: 'Lora:ital,wght@0,400..700;1,400..700',
+    category: 'serif',
+    familyClass: 'serif',
+    usage: 'body-safe',
+  }),
+  'Cormorant Garamond': googleFont({
+    label: 'Cormorant Garamond',
+    spec: 'Cormorant+Garamond:ital,wght@0,300..700;1,300..700',
+    category: 'serif',
+    familyClass: 'serif',
+    usage: 'heading-only',
+  }),
+  'Crimson Text': googleFont({
+    label: 'Crimson Text',
+    spec: 'Crimson+Text:ital,wght@0,400;0,600;0,700;1,400;1,600;1,700',
+    category: 'serif',
+    familyClass: 'serif',
+    usage: 'heading-only',
+  }),
+  Gabriela: googleFont({
+    label: 'Gabriela',
+    spec: 'Gabriela',
+    category: 'serif',
+    familyClass: 'serif',
+    usage: 'heading-only',
+  }),
+  Michroma: googleFont({
+    label: 'Michroma',
+    spec: 'Michroma',
+    category: 'display',
+    familyClass: 'sans',
+    usage: 'heading-only',
+  }),
+  'Playfair Display': googleFont({
+    label: 'Playfair Display',
+    spec: 'Playfair+Display:ital,wght@0,400..900;1,400..900',
+    category: 'display',
+    familyClass: 'serif',
+    usage: 'heading-only',
+  }),
+  Cookie: googleFont({
+    label: 'Cookie',
+    spec: 'Cookie',
+    category: 'script',
+    familyClass: 'sans',
+    usage: 'heading-only',
+  }),
+  'Homemade Apple': googleFont({
+    label: 'Homemade Apple',
+    spec: 'Homemade+Apple',
+    category: 'handwritten',
+    familyClass: 'sans',
+    usage: 'heading-only',
+  }),
+  'Permanent Marker': googleFont({
+    label: 'Permanent Marker',
+    spec: 'Permanent+Marker',
+    category: 'handwritten',
+    familyClass: 'sans',
+    usage: 'heading-only',
+  }),
+  'Shadows Into Light': googleFont({
+    label: 'Shadows Into Light',
+    spec: 'Shadows+Into+Light',
+    category: 'handwritten',
+    familyClass: 'sans',
+    usage: 'heading-only',
+  }),
 } as const satisfies Record<string, GoogleAccountFontRecord>;
 
 export function createDefaultAccountFontLibrary(): AccountFontLibrary {
@@ -279,7 +384,17 @@ function normalizeFontRecord(family: string, value: unknown): AccountFontRecord 
   const usage = normalizeUsage(value.usage);
   const weights = normalizeStringList(value.weights, normalizeWeight);
   const styles = normalizeStringList(value.styles, normalizeStyle);
-  if (!label || label !== family || !source || !category || !familyClass || !usage || !weights || !styles) return null;
+  if (
+    !label ||
+    label !== family ||
+    !source ||
+    !category ||
+    !familyClass ||
+    !usage ||
+    !weights ||
+    !styles
+  )
+    return null;
   const locked = typeof value.locked === 'boolean' ? value.locked : undefined;
   const base = {
     label,
@@ -304,7 +419,13 @@ function normalizeFontRecord(family: string, value: unknown): AccountFontRecord 
   if (source === 'account-asset') {
     const assetRef = normalizeNonEmptyString(value.assetRef);
     const contentType = normalizeNonEmptyString(value.contentType);
-    if (!assetRef || !contentType || !isAcceptedAccountFontUpload(assetRef, contentType) || hasForbiddenAccountAssetFields(value)) return null;
+    if (
+      !assetRef ||
+      !contentType ||
+      !isAcceptedAccountFontUpload(assetRef, contentType) ||
+      hasForbiddenAccountAssetFields(value)
+    )
+      return null;
     return {
       ...base,
       source,
@@ -337,15 +458,24 @@ export function isAccountFontFamily(fontLibrary: AccountFontLibrary, family: str
   return Object.prototype.hasOwnProperty.call(fontLibrary.fonts, family);
 }
 
-export function getAccountFontRecord(fontLibrary: AccountFontLibrary, family: string): AccountFontRecord | null {
+export function getAccountFontRecord(
+  fontLibrary: AccountFontLibrary,
+  family: string,
+): AccountFontRecord | null {
   return isAccountFontFamily(fontLibrary, family) ? fontLibrary.fonts[family]! : null;
 }
 
-export function getAccountFontAllowedWeights(fontLibrary: AccountFontLibrary, family: string): string[] {
+export function getAccountFontAllowedWeights(
+  fontLibrary: AccountFontLibrary,
+  family: string,
+): string[] {
   return getAccountFontRecord(fontLibrary, family)?.weights ?? [];
 }
 
-export function getAccountFontAllowedStyles(fontLibrary: AccountFontLibrary, family: string): AccountFontStyle[] {
+export function getAccountFontAllowedStyles(
+  fontLibrary: AccountFontLibrary,
+  family: string,
+): AccountFontStyle[] {
   return getAccountFontRecord(fontLibrary, family)?.styles ?? [];
 }
 
@@ -436,7 +566,9 @@ export function validateAccountTypographyFontSelections(args: {
   return invalidPaths;
 }
 
-export function accountFontLibraryToFamilyOptions(fontLibrary: AccountFontLibrary): AccountFontFamilyOption[] {
+export function accountFontLibraryToFamilyOptions(
+  fontLibrary: AccountFontLibrary,
+): AccountFontFamilyOption[] {
   const options: AccountFontFamilyOption[] = [];
   ACCOUNT_FONT_CATEGORY_ORDER.forEach((category) => {
     const families = Object.keys(fontLibrary.fonts)
@@ -458,7 +590,9 @@ export function accountFontLibraryToFamilyOptions(fontLibrary: AccountFontLibrar
   return options;
 }
 
-export function accountFontLibraryToGoogleSpecs(fontLibrary: AccountFontLibrary): Readonly<Record<string, string>> {
+export function accountFontLibraryToGoogleSpecs(
+  fontLibrary: AccountFontLibrary,
+): Readonly<Record<string, string>> {
   const specs: Record<string, string> = {};
   Object.entries(fontLibrary.fonts).forEach(([family, record]) => {
     if (record.source === 'google') specs[family] = record.spec;

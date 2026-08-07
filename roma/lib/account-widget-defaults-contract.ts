@@ -1,12 +1,12 @@
 import { isRecord } from '@clickeen/ck-contracts';
 import {
   ACCOUNT_TYPOGRAPHY_SELECTION_INVALID_REASON_KEY,
-  listWidgetShellAccountDefaultMetadataPaths,
-  listWidgetShellControlPaths,
+  isCommonWidgetControlPath,
+  listCommonWidgetAccountDefaultMetadataPaths,
+  listCommonWidgetControlPaths,
   normalizeAccountFontLibrary,
-  pathBelongsToShell,
   validateAccountTypographyFontSelections,
-} from '@clickeen/widget-shell';
+} from '@clickeen/widget-foundation';
 import type { NextRequest } from 'next/server';
 import {
   readWidgetForInstancePackage,
@@ -56,7 +56,7 @@ function typographyValidationFailure(paths: string[]): InstancePackageFailure {
 function compiledCoreDefaultControlPaths(controls: Array<{ path?: string }> | undefined): string[] {
   return (controls ?? [])
     .map((control) => (typeof control.path === 'string' ? control.path.trim() : ''))
-    .filter((path) => path && !pathBelongsToShell(path))
+    .filter((path) => path && !isCommonWidgetControlPath(path))
     .sort((left, right) => left.localeCompare(right));
 }
 
@@ -72,13 +72,13 @@ export async function validateAccountWidgetDefaultsContract(args: {
   const widgetTypes = args.widgetTypes ?? Object.keys(args.widgetDefaults.widgets);
   const invalidTypographyPaths = validateAccountTypographyFontSelections({
     fontLibrary,
-    typography: args.widgetDefaults.shell.typography,
+    typography: args.widgetDefaults.common.typography,
     required: true,
-  }).map((path) => `shell:${path}`);
-  const unmappedPaths: string[] = collectDefaultPaths(args.widgetDefaults.shell)
-    .filter((path) => !pathIsCovered(path, listWidgetShellControlPaths()))
-    .filter((path) => !pathIsCovered(path, listWidgetShellAccountDefaultMetadataPaths()))
-    .map((path) => `shell:${path}`);
+  }).map((path) => `common:${path}`);
+  const unmappedPaths: string[] = collectDefaultPaths(args.widgetDefaults.common)
+    .filter((path) => !pathIsCovered(path, listCommonWidgetControlPaths()))
+    .filter((path) => !pathIsCovered(path, listCommonWidgetAccountDefaultMetadataPaths()))
+    .map((path) => `common:${path}`);
 
   for (const widgetType of widgetTypes) {
     const widgetDefaults = args.widgetDefaults.widgets[widgetType];

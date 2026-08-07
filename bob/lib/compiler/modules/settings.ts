@@ -1,5 +1,5 @@
-// Bob module: builds shared Settings controls for shell-owned widget behavior.
-// Widgets declare this shared node in the Settings panel; the shell owns the paths and labels.
+// Bob module: builds common Settings controls used by every widget type.
+// Widgets declare this shared node; each setting remains owned by its named runtime accessory.
 
 import { encodeHtmlEntities } from '../../compiler.shared';
 

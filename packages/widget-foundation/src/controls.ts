@@ -1,13 +1,12 @@
-import { SHELL_EDITOR_CLUSTER_IDS } from './contract';
+import { COMMON_WIDGET_CONTROL_CLUSTER_IDS } from './contract';
 
-export type WidgetShellControlPath = string;
+export type CommonWidgetControlPath = string;
 
-export type WidgetShellControlCluster = (typeof SHELL_EDITOR_CLUSTER_IDS)[number];
+export type CommonWidgetControlCluster = (typeof COMMON_WIDGET_CONTROL_CLUSTER_IDS)[number];
 
-export type WidgetShellControlDefinition = {
-  clusterId: WidgetShellControlCluster;
-  path: WidgetShellControlPath;
-  owner: 'widget-shell';
+export type CommonWidgetControlDefinition = {
+  clusterId: CommonWidgetControlCluster;
+  path: CommonWidgetControlPath;
 };
 
 const TYPOGRAPHY_CONTROL_LEAVES = [
@@ -23,28 +22,28 @@ const TYPOGRAPHY_CONTROL_LEAVES = [
   'trackingCustom',
 ] as const;
 
-export const WIDGET_SHELL_TYPOGRAPHY_ROLE_LABELS = {
+export const COMMON_WIDGET_TYPOGRAPHY_ROLE_LABELS = {
   title: 'Title',
   body: 'Subtitle',
   button: 'Button text',
   localeSwitcher: 'Locale switcher',
 } as const;
 
-const SHELL_TYPOGRAPHY_ROLES = Object.keys(
-  WIDGET_SHELL_TYPOGRAPHY_ROLE_LABELS,
-) as Array<keyof typeof WIDGET_SHELL_TYPOGRAPHY_ROLE_LABELS>;
+const COMMON_WIDGET_TYPOGRAPHY_ROLES = Object.keys(COMMON_WIDGET_TYPOGRAPHY_ROLE_LABELS) as Array<
+  keyof typeof COMMON_WIDGET_TYPOGRAPHY_ROLE_LABELS
+>;
 
 function control(
-  clusterId: WidgetShellControlCluster,
-  path: WidgetShellControlPath,
-): WidgetShellControlDefinition {
-  return { clusterId, path, owner: 'widget-shell' };
+  clusterId: CommonWidgetControlCluster,
+  path: CommonWidgetControlPath,
+): CommonWidgetControlDefinition {
+  return { clusterId, path };
 }
 
-function typographyControls(): WidgetShellControlDefinition[] {
+function typographyControls(): CommonWidgetControlDefinition[] {
   return [
     control('typography', 'typography.globalFamily'),
-    ...SHELL_TYPOGRAPHY_ROLES.flatMap((role) =>
+    ...COMMON_WIDGET_TYPOGRAPHY_ROLES.flatMap((role) =>
       TYPOGRAPHY_CONTROL_LEAVES.map((leaf) =>
         control('typography', `typography.roles.${role}.${leaf}`),
       ),
@@ -52,9 +51,9 @@ function typographyControls(): WidgetShellControlDefinition[] {
   ];
 }
 
-export const WIDGET_SHELL_ACCOUNT_DEFAULT_METADATA_PATHS = ['typography.roleScales'] as const;
+export const COMMON_WIDGET_ACCOUNT_DEFAULT_METADATA_PATHS = ['typography.roleScales'] as const;
 
-export const WIDGET_SHELL_CONTROL_DEFINITIONS: readonly WidgetShellControlDefinition[] = [
+export const COMMON_WIDGET_CONTROL_DEFINITIONS: readonly CommonWidgetControlDefinition[] = [
   control('header-content', 'header.enabled'),
   control('header-content', 'header.title'),
   control('header-content', 'header.showSubtitle'),
@@ -183,10 +182,18 @@ export const WIDGET_SHELL_CONTROL_DEFINITIONS: readonly WidgetShellControlDefini
   control('settings', 'behavior.socialShare.channels.tiktok'),
 ];
 
-export function listWidgetShellControlPaths(): WidgetShellControlPath[] {
-  return WIDGET_SHELL_CONTROL_DEFINITIONS.map((control) => control.path);
+const COMMON_WIDGET_CONTROL_PATHS = new Set(
+  COMMON_WIDGET_CONTROL_DEFINITIONS.map((definition) => definition.path),
+);
+
+export function isCommonWidgetControlPath(path: string): boolean {
+  return COMMON_WIDGET_CONTROL_PATHS.has(path);
 }
 
-export function listWidgetShellAccountDefaultMetadataPaths(): string[] {
-  return [...WIDGET_SHELL_ACCOUNT_DEFAULT_METADATA_PATHS];
+export function listCommonWidgetControlPaths(): CommonWidgetControlPath[] {
+  return COMMON_WIDGET_CONTROL_DEFINITIONS.map((control) => control.path);
+}
+
+export function listCommonWidgetAccountDefaultMetadataPaths(): string[] {
+  return [...COMMON_WIDGET_ACCOUNT_DEFAULT_METADATA_PATHS];
 }

@@ -6,7 +6,7 @@ import { AccountCopilotPane } from './CopilotPane';
 import { useWidgetSession } from '../lib/session/useWidgetSession';
 import { TranslationsPanel } from './TranslationsPanel';
 import type { TranslatedLocalesData, TranslationSetup } from './useTranslationPreviewState';
-import { ACCOUNT_TYPOGRAPHY_SELECTION_INVALID_REASON_KEY } from '@clickeen/widget-shell';
+import { ACCOUNT_TYPOGRAPHY_SELECTION_INVALID_REASON_KEY } from '@clickeen/widget-foundation';
 import { dieterIconStyle } from './dieterIcon';
 
 const BUILDER_ERROR_COPY: Record<string, string> = {

@@ -5,9 +5,10 @@ import {
   BOB_WIDGET_PANEL_IDS,
 } from '@clickeen/bob/control-host';
 import {
-  listWidgetShellAccountDefaultMetadataPaths,
+  isCommonWidgetControlPath,
+  listCommonWidgetAccountDefaultMetadataPaths,
   type AccountFontLibrary,
-} from '@clickeen/widget-shell';
+} from '@clickeen/widget-foundation';
 import { useRomaAccountApi } from './account-api';
 import { getWidgetEditorArtifact } from './widget-editor-artifact';
 import {
@@ -19,7 +20,7 @@ import { RomaUnsavedChangesDialog } from './roma-unsaved-changes-dialog';
 type AccountWidgetDefaultsDocument = {
   accountId: string;
   fontLibrary: AccountFontLibrary;
-  shell: Record<string, unknown>;
+  common: Record<string, unknown>;
   widgets: Record<
     string,
     {
@@ -54,16 +55,7 @@ type WidgetDefaultsEntry = {
   payload?: BuilderControlPayload;
 };
 
-const SHELL_TOP_LEVEL_PATHS = new Set([
-  'header',
-  'headerCta',
-  'stage',
-  'pod',
-  'coreSize',
-  'localeSwitcher',
-]);
-const SHELL_TYPOGRAPHY_ROLES = new Set(['title', 'body', 'button', 'localeSwitcher']);
-const SHELL_SOFTWARE_METADATA_PATHS = new Set(listWidgetShellAccountDefaultMetadataPaths());
+const COMMON_SOFTWARE_METADATA_PATHS = new Set(listCommonWidgetAccountDefaultMetadataPaths());
 const CORE_SOFTWARE_METADATA_PATHS = new Set(['uiLabels.core', 'typography.roleScales']);
 const WIDGET_DEFAULTS_LOAD_ERROR_COPY = 'Widget defaults could not be loaded. Please try again.';
 const WIDGET_CONTROLS_LOAD_ERROR_COPY = 'Builder controls could not be loaded. Please try again.';
@@ -150,40 +142,6 @@ function removeRecordKey<T>(record: Record<string, T>, key: string): Record<stri
   const next = { ...record };
   delete next[key];
   return next;
-}
-
-function isShellTypographyPath(parts: string[]): boolean {
-  if (parts[0] !== 'typography') return false;
-  if (parts[1] === 'globalFamily') return true;
-  if (parts[1] === 'roles' || parts[1] === 'roleScales') {
-    return SHELL_TYPOGRAPHY_ROLES.has(parts[2] ?? '');
-  }
-  return false;
-}
-
-function isShellAppearancePath(parts: string[]): boolean {
-  if (parts[0] !== 'appearance') return false;
-  const joined = parts.join('.');
-  return (
-    joined.startsWith('appearance.headerCta.') ||
-    joined.startsWith('appearance.localeSwitcher') ||
-    joined === 'appearance.podBorder'
-  );
-}
-
-function isShellBehaviorPath(parts: string[]): boolean {
-  const joined = parts.join('.');
-  return joined === 'behavior.showBacklink' || joined.startsWith('behavior.socialShare.');
-}
-
-function isShellControlPath(path: string): boolean {
-  const parts = path.split('.').filter(Boolean);
-  if (parts.length === 0) return false;
-  if (SHELL_TOP_LEVEL_PATHS.has(parts[0]!)) return true;
-  if (isShellTypographyPath(parts)) return true;
-  if (isShellAppearancePath(parts)) return true;
-  if (isShellBehaviorPath(parts)) return true;
-  return false;
 }
 
 function normalizeCompiledControl(raw: unknown, order: number): DefaultsControl | null {
@@ -305,8 +263,8 @@ export function WidgetDefaultsDomain() {
   const [compiledControls, setCompiledControls] = useState<Record<string, DefaultsControl[]>>({});
   const [compiledPayloads, setCompiledPayloads] = useState<Record<string, BuilderControlPayload>>({});
   const [compiledWidgetLabels, setCompiledWidgetLabels] = useState<Record<string, string>>({});
-  const [shellControlsReady, setShellControlsReady] = useState(false);
-  const [shellContractError, setShellContractError] = useState('');
+  const [commonControlsReady, setCommonControlsReady] = useState(false);
+  const [commonContractError, setCommonContractError] = useState('');
   const [coreControlsReady, setCoreControlsReady] = useState<Record<string, boolean>>({});
   const [coreContractErrors, setCoreContractErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
@@ -330,8 +288,8 @@ export function WidgetDefaultsDomain() {
   const coreControlsReadyForAll =
     widgetTypes.length > 0 && widgetTypes.every((widgetType) => coreControlsReady[widgetType] === true);
   const saveBlocked =
-    Boolean(shellContractError) ||
-    !shellControlsReady ||
+    Boolean(commonContractError) ||
+    !commonControlsReady ||
     coreContractErrorEntries.length > 0 ||
     !coreControlsReadyForAll;
   const controlsLoaded =
@@ -395,8 +353,8 @@ export function WidgetDefaultsDomain() {
         setCompiledPayloads(
           Object.fromEntries(entries.map(([widgetType, , , payload]) => [widgetType, payload])),
         );
-        setShellControlsReady(false);
-        setShellContractError('');
+        setCommonControlsReady(false);
+        setCommonContractError('');
         setCoreControlsReady(Object.fromEntries(entries.map(([widgetType]) => [widgetType, false])));
         setCoreContractErrors({});
       })
@@ -456,13 +414,14 @@ export function WidgetDefaultsDomain() {
     if (action) window.requestAnimationFrame(action);
   }, []);
 
-  const shellControls = useMemo(() => {
+  const commonControls = useMemo(() => {
     if (!draft) return [];
     return uniqueControls(
       Object.values(compiledControls)
         .flat()
         .filter(
-          (control) => isShellControlPath(control.path) && pathExists(draft.shell, control.path),
+          (control) =>
+            isCommonWidgetControlPath(control.path) && pathExists(draft.common, control.path),
         ),
     );
   }, [compiledControls, draft]);
@@ -473,7 +432,7 @@ export function WidgetDefaultsDomain() {
       const core = draft.widgets[widgetType]?.core ?? {};
       const compiledCoreControls = uniqueControls(
         (compiledControls[widgetType] ?? []).filter(
-          (control) => !isShellControlPath(control.path) && pathExists(core, control.path),
+          (control) => !isCommonWidgetControlPath(control.path) && pathExists(core, control.path),
         ),
       );
       return {
@@ -488,24 +447,25 @@ export function WidgetDefaultsDomain() {
 
   const unmappedDefaultPaths = useMemo(() => {
     if (!draft || !controlsLoaded) return [];
-    const compiledShellControls = uniqueControls(
+    const compiledCommonControls = uniqueControls(
       Object.values(compiledControls)
         .flat()
         .filter(
-          (control) => isShellControlPath(control.path) && pathExists(draft.shell, control.path),
+          (control) =>
+            isCommonWidgetControlPath(control.path) && pathExists(draft.common, control.path),
         ),
     );
-    const shellControlPaths = new Set(compiledShellControls.map((control) => control.path));
-    const shellPaths = collectDefaultPaths(draft.shell)
-      .filter((path) => !isPathCoveredByControl(path, shellControlPaths))
-      .filter((path) => !isPathCoveredByMetadata(path, SHELL_SOFTWARE_METADATA_PATHS))
-      .map((path) => `Shell: ${path}`);
+    const commonControlPaths = new Set(compiledCommonControls.map((control) => control.path));
+    const commonPaths = collectDefaultPaths(draft.common)
+      .filter((path) => !isPathCoveredByControl(path, commonControlPaths))
+      .filter((path) => !isPathCoveredByMetadata(path, COMMON_SOFTWARE_METADATA_PATHS))
+      .map((path) => `Common: ${path}`);
 
     const corePaths = widgetTypes.flatMap((widgetType) => {
       const core = draft.widgets[widgetType]?.core ?? {};
       const compiledCoreControls = uniqueControls(
         (compiledControls[widgetType] ?? []).filter(
-          (control) => !isShellControlPath(control.path) && pathExists(core, control.path),
+          (control) => !isCommonWidgetControlPath(control.path) && pathExists(core, control.path),
         ),
       );
       const coreControlPaths = new Set(compiledCoreControls.map((control) => control.path));
@@ -516,33 +476,33 @@ export function WidgetDefaultsDomain() {
         .map((path) => `${widgetLabel}: ${path}`);
     });
 
-    return [...shellPaths, ...corePaths].sort((left, right) => left.localeCompare(right));
+    return [...commonPaths, ...corePaths].sort((left, right) => left.localeCompare(right));
   }, [compiledControls, compiledWidgetLabels, controlsLoaded, draft, widgetTypes]);
 
-  const updateShellOps = useCallback((ops: Array<{ path: string; value: unknown }>) => {
+  const updateCommonOps = useCallback((ops: Array<{ path: string; value: unknown }>) => {
         setDraft((current) =>
           current
             ? {
                 ...current,
-                shell: ops.reduce(
-                  (shell, op) => setPathValue(shell, op.path, op.value),
-                  current.shell,
+                common: ops.reduce(
+                  (common, op) => setPathValue(common, op.path, op.value),
+                  current.common,
                 ),
               }
             : current,
     );
   }, []);
 
-  const reportShellContractError = useCallback((message: string) => {
-    setShellControlsReady(false);
-    setShellContractError(message);
+  const reportCommonContractError = useCallback((message: string) => {
+    setCommonControlsReady(false);
+    setCommonContractError(message);
     setError(message);
   }, []);
 
-  const setShellReady = useCallback((ready: boolean) => {
-    setShellControlsReady(ready);
+  const setCommonReady = useCallback((ready: boolean) => {
+    setCommonControlsReady(ready);
     if (ready) {
-      setShellContractError('');
+      setCommonContractError('');
       setError('');
     }
   }, []);
@@ -649,7 +609,7 @@ export function WidgetDefaultsDomain() {
             <p className="body-s widget-defaults-error">{error}</p>
           </div>
           <p className="body-m">
-            Widget defaults require compiled Builder metadata. Fix Widget Shell or the widget spec
+            Widget defaults require compiled Builder metadata. Fix the common controls or the widget spec
             before editing defaults.
           </p>
         </section>
@@ -667,7 +627,7 @@ export function WidgetDefaultsDomain() {
         </div>
         <p className="body-m">
           Account defaults contain paths that are not exposed by the compiled Builder control
-          contract. Fix Widget Shell or the widget spec before editing defaults.
+          contract. Fix the common controls or the widget spec before editing defaults.
         </p>
         <pre className="widget-defaults-contract-error__paths body-s">
           {unmappedDefaultPaths.join('\n')}
@@ -676,15 +636,15 @@ export function WidgetDefaultsDomain() {
     );
   }
 
-  if (shellContractError) {
+  if (commonContractError) {
     return (
       <section className="rd-canvas-module widget-defaults-contract-error" role="alert">
         <div>
           <h2 className="heading-4">Widget Defaults Contract Error</h2>
-          <p className="body-s widget-defaults-error">{shellContractError}</p>
+          <p className="body-s widget-defaults-error">{commonContractError}</p>
         </div>
         <p className="body-m">
-          Widget defaults require rendered Builder controls and Dieter hydration. Fix Widget Shell or
+          Widget defaults require rendered Builder controls and Dieter hydration. Fix the common controls or
           the widget spec before editing defaults.
         </p>
       </section>
@@ -744,15 +704,15 @@ export function WidgetDefaultsDomain() {
 
         <div className="widget-defaults-section">
           <WidgetDefaultsBuilderControls
-            controls={shellControls}
+            controls={commonControls}
             payloads={widgetTypes.map((widgetType) => compiledPayloads[widgetType]).filter(Boolean)}
             fontLibrary={draft.fontLibrary}
-            hostId="widget-defaults-shell"
-            scopeLabel="Shell"
-            values={draft.shell}
-            onOps={updateShellOps}
-            onContractError={reportShellContractError}
-            onReadyChange={setShellReady}
+            hostId="widget-defaults-common"
+            scopeLabel="All widgets"
+            values={draft.common}
+            onOps={updateCommonOps}
+            onContractError={reportCommonContractError}
+            onReadyChange={setCommonReady}
           />
         </div>
 

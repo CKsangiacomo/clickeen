@@ -298,12 +298,13 @@ engineering one.
 
 ## 1) Non-negotiables (architecture)
 
-1. **Shell + Core.** Calculator is `Widget Shell + Widget Core`. `spec.json.defaults`
-   authors Core only. Shell defaults come from `packages/widget-shell`. The banned
+1. **Common defaults + Core.** `spec.json.defaults` authors Calculator Core
+   only. Common defaults come from `packages/widget-foundation`. The banned
    list applies in full: no `header.*`, `headerCta.*`, `stage.*`, `pod.*`,
    `coreSize.*`, `localeSwitcher.*`, `appearance.headerCta.*`,
    `appearance.localeSwitcher*`, `appearance.podBorder`, `behavior.showBacklink`,
-   `behavior.socialShare.*`, or Shell typography roles in this spec.
+   `behavior.socialShare.*`, or common typography roles in this spec. Shell
+   remains only the Header/Core composition.
 2. **Namespace is `calculator.*`.** No `core.*`. No generic root paths. The
    forbidden aliases (`button`, `cta`, `ctaText`, `ctaUrl`, `copy`, `headline`,
    `layout.variant`, …) are not used.
@@ -721,26 +722,25 @@ settings cluster is auto-injected.
 ```text
 [data-role="stage"]
   [data-role="pod"]
-    [data-role="root"][data-ck-widget="calculator"]
-      .ck-headerLayout
-        .ck-header …
-        .ck-headerLayout__body
-          [data-role="calculator-body"][data-arrangement]
-            [data-role="form"]
-              [data-role="field"][data-field-id][data-field-type]
-                [data-role="field-label"]
-                [data-role="field-control"]
-                [data-role="field-help"]
-            [data-role="results"]
-              [data-role="results-title"]
-              [data-role="result"][data-result-id][data-rank][data-state]
-                [data-role="result-label"]
-                [data-role="result-value"]
-                [data-role="result-caption"]
-                [data-role="result-divider"]
-              [data-role="results-footer"]
-              [data-role="reset"]
-              [data-role="action"]
+    .ck-headerLayout[data-ck-widget="calculator"]
+      .ck-header …
+      .ck-headerLayout__body
+        [data-role="calculator-body"][data-arrangement]
+          [data-role="form"]
+            [data-role="field"][data-field-id][data-field-type]
+              [data-role="field-label"]
+              [data-role="field-control"]
+              [data-role="field-help"]
+          [data-role="results"]
+            [data-role="results-title"]
+            [data-role="result"][data-result-id][data-rank][data-state]
+              [data-role="result-label"]
+              [data-role="result-value"]
+              [data-role="result-caption"]
+              [data-role="result-divider"]
+            [data-role="results-footer"]
+            [data-role="reset"]
+            [data-role="action"]
 ```
 
 Core lives inside `[data-role="pod"]`. Header is a sibling of
@@ -771,8 +771,8 @@ Dieter tokens. Always consume with a fallback —
 `font-size: var(--typo-result-value-size, var(--fs-40));`. Dieter tokens only for
 spacing, type, and radius; no raw px except structural minimums. Variant switching
 via data attributes set by the client (`[data-arrangement]`, `[data-rank]`,
-`[data-state]`), never class toggling. Neutralize the widget root — the Pod owns
-chrome. End the file with
+`[data-state]`), never class toggling. Keep presentation chrome off the Shell —
+the Pod owns it. End the file with
 `[data-ck-widget='calculator'] [hidden] { display: none !important; }`.
 
 One breakpoint: `900px`.
@@ -949,16 +949,16 @@ runtime.bindStateUpdates('calculator', instanceId, handler, { requireWidgetName:
 
 applyState(state, runtimeContext):
    1. assertCalculatorState(state)        fail-fast, no repair
-   2. CKStagePod.applyStagePod(state.stage, state.pod, widgetRoot, state.appearance)
+   2. CKStagePod.applyStagePod(state.stage, state.pod, widgetShell, state.appearance)
    3. CKTypography.applyTypography(state.typography, coreScopeEl, roleMap, { locale, instanceId })
-   4. CKHeader.applyHeader(state, widgetRoot)
+   4. CKHeader.applyHeader(state, widgetShell)
    5. CKCoreSize.applyCoreSize(state.coreSize, coreEl)
-   6. CKLocaleSwitcher.applyLocaleSwitcher(state, widgetRoot, { … })
+   6. CKLocaleSwitcher.applyLocaleSwitcher(state, widgetShell, { … })
    7. applyAppearanceVars(state)          CKAppearance + CKSurface.applyCardWrapper
    8. applyLayoutVars(state)              Core CSS vars and data-attributes
    9. renderCore(state)                   form + results DOM, seed inputs, then recompute()
-  10. CKBranding.applyBacklink(widgetRoot, state)
-  11. CKSocialShare.apply(widgetRoot, state, { instanceId, widgetType, widgetLabel, previewMode })
+  10. CKBranding.applyBacklink(widgetShell, state)
+  11. CKSocialShare.apply(widgetShell, state, { instanceId, widgetType, widgetLabel, previewMode })
 ```
 
 Typography role map — `varKey` drives the emitted CSS variable name:

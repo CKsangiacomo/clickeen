@@ -248,15 +248,15 @@
     );
   }
 
-  function initCallToAction(widgetRoot, runtimeContext) {
-    var callToActionRoot = queryElement(widgetRoot, '[data-role="calltoaction"]', '[data-role="calltoaction"]');
-    var contentEl = queryElement(widgetRoot, '[data-role="calltoaction-content"]', '[data-role="calltoaction-content"]');
-    var eyebrowEl = queryElement(widgetRoot, '[data-role="calltoaction-eyebrow"]', '[data-role="calltoaction-eyebrow"]');
-    var titleEl = queryElement(widgetRoot, '[data-role="calltoaction-headline"]', '[data-role="calltoaction-headline"]');
-    var copyEl = queryElement(widgetRoot, '[data-role="calltoaction-supporting-text"]', '[data-role="calltoaction-supporting-text"]');
-    var actionEl = queryElement(widgetRoot, '[data-role="calltoaction-action"]', '[data-role="calltoaction-action"]');
-    var actionLabelEl = queryElement(widgetRoot, '[data-role="calltoaction-action-label"]', '[data-role="calltoaction-action-label"]');
-    var actionIconEl = queryElement(widgetRoot, '[data-role="calltoaction-action-icon"]', '[data-role="calltoaction-action-icon"]');
+  function initCallToAction(widgetShell, runtimeContext) {
+    var callToActionShell = widgetShell;
+    var contentEl = queryElement(widgetShell, '[data-role="calltoaction-content"]', '[data-role="calltoaction-content"]');
+    var eyebrowEl = queryElement(widgetShell, '[data-role="calltoaction-eyebrow"]', '[data-role="calltoaction-eyebrow"]');
+    var titleEl = queryElement(widgetShell, '[data-role="calltoaction-headline"]', '[data-role="calltoaction-headline"]');
+    var copyEl = queryElement(widgetShell, '[data-role="calltoaction-supporting-text"]', '[data-role="calltoaction-supporting-text"]');
+    var actionEl = queryElement(widgetShell, '[data-role="calltoaction-action"]', '[data-role="calltoaction-action"]');
+    var actionLabelEl = queryElement(widgetShell, '[data-role="calltoaction-action-label"]', '[data-role="calltoaction-action-label"]');
+    var actionIconEl = queryElement(widgetShell, '[data-role="calltoaction-action-icon"]', '[data-role="calltoaction-action-icon"]');
     var resolvedInstanceId = runtimeContext.instanceId;
 
     function renderCallToAction(state) {
@@ -297,7 +297,7 @@
       if (!window.CKStagePod?.applyStagePod) {
         throw new Error('[CallToAction] Missing CKStagePod.applyStagePod');
       }
-      window.CKStagePod.applyStagePod(state.stage, state.pod, widgetRoot, state.appearance);
+      window.CKStagePod.applyStagePod(state.stage, state.pod, widgetShell, state.appearance);
 
       if (!window.CKTypography?.applyTypography) {
         throw new Error('[CallToAction] Missing CKTypography.applyTypography');
@@ -313,7 +313,7 @@
       }
       window.CKTypography.applyTypography(
         state.typography,
-        callToActionRoot,
+        callToActionShell,
         typographyRoles,
         { locale: context && context.locale, instanceId: context && context.instanceId },
       );
@@ -321,7 +321,7 @@
       if (!window.CKHeader?.applyHeader) {
         throw new Error('[CallToAction] Missing CKHeader.applyHeader');
       }
-      window.CKHeader.applyHeader(state, widgetRoot);
+      window.CKHeader.applyHeader(state, widgetShell);
 
       if (!window.CKCoreSize?.applyCoreSize) {
         throw new Error('[CallToAction] Missing CKCoreSize.applyCoreSize');
@@ -333,21 +333,21 @@
       if (!window.CKLocaleSwitcher?.applyLocaleSwitcher) {
         throw new Error('[CallToAction] Missing CKLocaleSwitcher.applyLocaleSwitcher');
       }
-      window.CKLocaleSwitcher.applyLocaleSwitcher(state, widgetRoot, {
-        composedPage: context && context.composedPage === true,
+      window.CKLocaleSwitcher.applyLocaleSwitcher(state, widgetShell, {
         locale: context && context.locale,
         previewMode: context && context.previewMode,
-        typographyScope: callToActionRoot,
+        typographyScope: callToActionShell,
       });
 
-      if (window.CKBranding && typeof window.CKBranding.applyBacklink === 'function') {
-        window.CKBranding.applyBacklink(widgetRoot, state);
+      if (!window.CKBranding?.applyBacklink) {
+        throw new Error('[CallToAction] Missing CKBranding.applyBacklink');
       }
+      window.CKBranding.applyBacklink(widgetShell, state);
 
       if (!window.CKSocialShare?.apply) {
         throw new Error('[CallToAction] Missing CKSocialShare.apply');
       }
-      window.CKSocialShare.apply(widgetRoot, state, {
+      window.CKSocialShare.apply(widgetShell, state, {
         instanceId: context && context.instanceId,
         widgetType: 'calltoaction',
         widgetLabel: document.title || 'Call to Action',
@@ -395,7 +395,6 @@
       applyState(localizedState, {
         locale,
         previewMode,
-        composedPage: runtimeContext && runtimeContext.composedPage === true,
         instanceId: typeof instanceId === 'string' ? instanceId : resolvedInstanceId,
       });
     }

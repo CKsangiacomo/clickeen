@@ -35,12 +35,6 @@ accounts/{accountPublicId}/
     index.html
     styles.css
     runtime.js
-  pages/{pageId}/
-    source.json
-    serve-state.json
-    index.html
-    styles.css
-    runtime.js
 ```
 
 Rules:
@@ -48,8 +42,8 @@ Rules:
 - `accountPublicId` and `instanceId` are stable compact coordinates.
 - Widget codes and display names are metadata, not folders.
 - Overlay JSON is durable translated value truth.
-- Each instance has one root browser artifact.
-- Tokyo-worker stores exact submitted root bytes. It does not compile,
+- Each instance has one base browser artifact.
+- Tokyo-worker stores exact submitted base bytes. It does not compile,
   translate, infer, or repair them.
 - A locale never owns HTML, CSS, JavaScript, publication state, or another
   artifact root.
@@ -63,8 +57,8 @@ https://clk.live/{accountPublicId}/{instanceId}?locale={locale}
 
 Cloud-dev uses `https://dev.clk.live`.
 
-Tokyo-worker serves a published instance only after root artifact fingerprint
-checks pass. Root HTML references:
+Tokyo-worker serves a published instance only after base package fingerprint
+checks pass. Base HTML references:
 
 ```text
 /{accountPublicId}/{instanceId}/styles.css
@@ -72,13 +66,10 @@ checks pass. Root HTML references:
 ```
 
 For `?locale=`, Tokyo-worker reads and validates the exact overlay against
-saved instance content, injects it into the root index response, and uses
-`no-store`. The root runtime resolves the overlay before widget modules start.
+saved instance content, injects it into the base index response, and uses
+`no-store`. The base runtime resolves the overlay before widget modules start.
 Missing locale truth is `404`; corrupt locale truth is `500`; neither falls
 back to base content.
-
-Public account page serving remains `404` until Roma writes real page
-artifacts.
 
 ## Static Read Paths
 

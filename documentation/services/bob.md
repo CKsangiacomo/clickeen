@@ -84,9 +84,8 @@ chrome, not a Roma Page header. It holds the instance label and publish state,
 Save as the primary editor action, Open public widget as the applicable
 secondary action, and one Copy code host intent under More. Roma presents the
 shared public-code Popup and performs the browser copy; Bob neither reconstructs
-nor copies public values. A return control is context navigation rather than
-another CTA. In Compact mode TopDrawer also
-exposes the control that opens Roma's existing navigation drawer.
+nor copies public values. In Compact mode TopDrawer also exposes the control
+that opens Roma's existing navigation drawer.
 
 ## Authoring Flow
 
@@ -145,13 +144,17 @@ Roma opens Bob:
   "baseLocale": "[baseLocale]",
   "compiled": "[compiledWidgetPayload]",
   "instanceData": "[savedInstanceData]",
+  "publicPackage": {
+    "indexHtml": "[exact saved index.html]",
+    "stylesCss": "[exact saved styles.css]",
+    "runtimeJs": "[exact saved runtime.js]"
+  },
   "fontLibrary": "[accountFontLibrary]",
   "policy": "[policySnapshot]",
   "accountPublicId": "[accountPublicId]",
   "instanceId": "[instanceId]",
   "publishStatus": "[published|unpublished]",
   "label": "[displayName]",
-  "returnLabel": "[optional host return label]",
   "publicActions": {
     "publicUrl": "[exact published URL]",
     "iframeSnippet": "[exact iframe snippet]",
@@ -202,15 +205,14 @@ Bob sends host navigation intents without owning Roma routes:
 ```json
 {
   "type": "bob:host-action",
-  "action": "[open-navigation|return|copy-code]"
+  "action": "[open-navigation|copy-code]"
 }
 ```
 
 Roma validates the Bob origin and frame source. `open-navigation` opens the
-existing Roma navigation drawer. `return` follows Roma's sanitized return
-coordinate and existing unsaved-work guard. `copy-code` asks Roma to open the
-shared public-code Popup for the exact published values already supplied in the
-current Builder-open envelope.
+existing Roma navigation drawer. `copy-code` asks Roma to open the shared
+public-code Popup for the exact published values already supplied in the current
+Builder-open envelope.
 
 Roma replies to account commands with:
 
@@ -277,7 +279,8 @@ accounts/{accountPublicId}/instances/{instanceId}/
 Save is separate from manual translation generation, publish, unpublish, rename,
 duplicate, and delete. Roma does not generate translations, regenerate
 translations, or mutate locale overlays from the `update-instance` command.
-Bob treats the save response as source/root persistence truth only.
+Bob treats the save response as base-source and base-package persistence truth
+only.
 
 When translations need update, that attention belongs to the Translations panel.
 [`interactions.md`](../engineering/UI/interactions.md) owns interaction feedback
@@ -586,7 +589,7 @@ does not send locale authority for generation.
 
 The normal save command is source/base persistence only. Roma does not generate
 translations, regenerate translations, or mutate locale overlays. Bob treats
-the save response as source/root persistence truth.
+the save response as base-source and base-package persistence truth.
 
 After Roma returns, Bob refreshes the overlay list only when at least one locale
 translated and lets the user preview active locales that have saved overlay

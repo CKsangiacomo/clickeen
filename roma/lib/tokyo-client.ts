@@ -18,7 +18,6 @@ export type TokyoCallFailure = {
     kind: 'VALIDATION' | 'AUTH' | 'DENY' | 'NOT_FOUND' | 'UPSTREAM_UNAVAILABLE';
     reasonKey: string;
     detail?: string;
-    pageIds?: string[];
   };
 };
 
@@ -46,9 +45,6 @@ function buildTokyoFailure(args: {
   const upstreamError = isRecord(args.payload) && isRecord(args.payload.error) ? args.payload.error : null;
   const detail = resolveTokyoErrorDetail(args.payload, args.fallbackDetail);
   const upstreamReasonKey = upstreamError ? asTrimmedString(upstreamError.reasonKey) : null;
-  const pageIds = Array.isArray(upstreamError?.pageIds)
-    ? upstreamError.pageIds.filter((pageId): pageId is string => typeof pageId === 'string' && pageId.length > 0)
-    : undefined;
   const mapped =
     args.response.status === 401
       ? { kind: 'AUTH' as const, status: 401 }
@@ -70,7 +66,6 @@ function buildTokyoFailure(args: {
           ? (upstreamReasonKey ?? args.fallbackReasonKey)
           : (upstreamReasonKey ?? detail),
       detail,
-      ...(pageIds?.length ? { pageIds } : {}),
     },
   };
 }

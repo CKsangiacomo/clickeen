@@ -32,8 +32,8 @@ That is the strategic difference.
 
 Clickeen serves content.
 
-Current Clickeen product work proves this through account-owned widgets and
-Clickeen Pages. Other content surfaces become eligible only when they have a
+Current Clickeen product work proves this through account-owned widgets.
+Other content surfaces become eligible only when they have a
 named source authority, structured fields, a storage/runtime boundary, and an
 operator doc. The web is content delivery; Clickeen makes content structured and
 agent-operable before it makes it broad.

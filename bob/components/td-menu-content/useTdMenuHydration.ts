@@ -9,7 +9,7 @@ import {
   runHydrators,
 } from './dom';
 import type { AccountAssetsClient } from '../../../dieter/components/shared/account-assets';
-import type { AccountFontLibrary } from '@clickeen/widget-shell';
+import type { AccountFontLibrary } from '@clickeen/widget-foundation';
 import { applyAccountFontLibraryToTypographyMenus } from './accountFonts';
 import { applyShowIfVisibility, buildShowIfEntries, type ShowIfEntry } from './showIf';
 

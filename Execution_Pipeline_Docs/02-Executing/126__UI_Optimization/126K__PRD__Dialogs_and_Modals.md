@@ -275,7 +275,7 @@ upsell scaffold; no product route or persistence behavior changes.
 | Object Manager | `dieter/components/object-manager/object-manager.{html,css,spec.json}` plus new `.ts` |
 | Popovers | `dieter/components/shared/dropdownToggle.ts`; `dieter/components/textedit/textedit.ts`; `dieter/components/dropdown-{fill,border,shadow}/*.html` |
 | Bob | `bob/components/UpsellPopup.tsx`; `bob/app/bob_app.css` |
-| Roma | `roma/components/pages-domain.tsx`; `assets-domain.tsx`; `roma-account-notice-modal.tsx`; `widgets-domain.tsx`; `builder-domain.tsx`; `widget-defaults-domain.tsx`; `roma/app/roma.css` |
+| Roma | `roma/components/assets-domain.tsx`; `roma-account-notice-modal.tsx`; `widgets-domain.tsx`; `builder-domain.tsx`; `widget-defaults-domain.tsx`; `roma/app/roma.css` |
 | DevStudio | `admin/src/main.ts`; `admin/src/css/utilities.css`; generated registries/pages produced by the DevStudio generators |
 | Tests | `roma/tests/run-widget-command-gates.ts` |
 | Docs | `documentation/engineering/UI/{dialogs-and-modals,interactions,components}.md`; `documentation/services/{bob,roma,devstudio}.md` |

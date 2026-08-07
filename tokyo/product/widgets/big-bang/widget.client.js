@@ -80,13 +80,11 @@
     };
   }
 
-  function initBigBang(widgetRoot, runtimeContext) {
-    const bigBangRoot = widgetRoot.querySelector('[data-role="big-bang"]');
-    const coreEl = widgetRoot.querySelector('[data-role="big-bang-core"]');
-    const statementEl = widgetRoot.querySelector('[data-role="big-bang-statement"]');
-    const supportEl = widgetRoot.querySelector('[data-role="big-bang-support"]');
-    if (!(bigBangRoot instanceof HTMLElement))
-      throw new Error('[BigBang] Missing [data-role="big-bang"]');
+  function initBigBang(widgetShell, runtimeContext) {
+    const bigBangShell = widgetShell;
+    const coreEl = widgetShell.querySelector('[data-role="big-bang-core"]');
+    const statementEl = widgetShell.querySelector('[data-role="big-bang-statement"]');
+    const supportEl = widgetShell.querySelector('[data-role="big-bang-support"]');
     if (!(coreEl instanceof HTMLElement))
       throw new Error('[BigBang] Missing [data-role="big-bang-core"]');
     if (!(statementEl instanceof HTMLElement))
@@ -99,13 +97,13 @@
       const bigBang = validateBigBangState(state);
       if (!window.CKStagePod?.applyStagePod)
         throw new Error('[BigBang] Missing CKStagePod.applyStagePod');
-      window.CKStagePod.applyStagePod(state.stage, state.pod, widgetRoot, state.appearance);
+      window.CKStagePod.applyStagePod(state.stage, state.pod, widgetShell, state.appearance);
 
       if (!window.CKTypography?.applyTypography)
         throw new Error('[BigBang] Missing CKTypography.applyTypography');
       window.CKTypography.applyTypography(
         state.typography,
-        bigBangRoot,
+        bigBangShell,
         {
           title: { varKey: 'title' },
           body: { varKey: 'body' },
@@ -117,7 +115,7 @@
       );
 
       if (!window.CKHeader?.applyHeader) throw new Error('[BigBang] Missing CKHeader.applyHeader');
-      window.CKHeader.applyHeader(state, widgetRoot);
+      window.CKHeader.applyHeader(state, widgetShell);
 
       if (!window.CKCoreSize?.applyCoreSize)
         throw new Error('[BigBang] Missing CKCoreSize.applyCoreSize');
@@ -133,22 +131,21 @@
       if (!window.CKLocaleSwitcher?.applyLocaleSwitcher) {
         throw new Error('[BigBang] Missing CKLocaleSwitcher.applyLocaleSwitcher');
       }
-      window.CKLocaleSwitcher.applyLocaleSwitcher(state, widgetRoot, {
-        composedPage: context && context.composedPage === true,
+      window.CKLocaleSwitcher.applyLocaleSwitcher(state, widgetShell, {
         locale: context && context.locale,
         previewMode: context && context.previewMode,
-        typographyScope: bigBangRoot,
+        typographyScope: bigBangShell,
       });
 
       if (!window.CKBranding?.applyBacklink) {
         throw new Error('[BigBang] Missing CKBranding.applyBacklink');
       }
-      window.CKBranding.applyBacklink(widgetRoot, state);
+      window.CKBranding.applyBacklink(widgetShell, state);
 
       if (!window.CKSocialShare?.apply) {
         throw new Error('[BigBang] Missing CKSocialShare.apply');
       }
-      window.CKSocialShare.apply(widgetRoot, state, {
+      window.CKSocialShare.apply(widgetShell, state, {
         instanceId: context && context.instanceId,
         widgetType: 'big-bang',
         widgetLabel: document.title || 'Big Bang',
@@ -196,7 +193,6 @@
       applyState(localizedState, {
         locale,
         previewMode,
-        composedPage: runtimeContext && runtimeContext.composedPage === true,
         instanceId: typeof instanceId === 'string' ? instanceId : resolvedInstanceId,
       });
     }

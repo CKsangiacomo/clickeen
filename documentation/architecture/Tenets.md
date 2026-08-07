@@ -31,7 +31,6 @@ Clickeen is a simple account product.
 - `accountPublicId` is the API/embed/authz field name for that same value.
 - Widgets are software and live in the system.
 - Users create widget instances in Roma/Bob and save them in their account.
-- Pages are account-owned stacks of saved instances.
 - Bob edits in browser memory; user save is the persistence boundary.
 - Roma is the account app; it routes the user, enforces tier/product policy,
   and saves account work through owner services.
@@ -59,7 +58,6 @@ Examples:
 - editable/translatable field contracts;
 - account instance config/content files;
 - locale overlay value maps;
-- page source files;
 - account asset references;
 - policy matrices and grants;
 - service-owned route contracts.
@@ -105,7 +103,6 @@ This applies to:
 - storage paths;
 - public artifacts;
 - account assets;
-- page source and package files.
 
 If requested truth is unavailable, the system returns an explicit error or
 serves nothing at that boundary. It does not substitute another account,
@@ -195,7 +192,7 @@ prague/
 ```
 
 Only `accounts/` is runtime-managed account storage. It owns account instances,
-uploaded account assets, overlays, account pages, and generated account-scoped
+uploaded account assets, overlays, and generated account-scoped
 browser files.
 
 The non-account roots are git-authored deploy artifacts. Account operations must
@@ -264,10 +261,6 @@ Visitor requests must not:
 
 If the requested public artifact is not available, the boundary returns an
 explicit failure such as 404.
-
-Page source is current account-owned product data. Page publish and page public
-serving are currently unavailable until Roma writes page packages. Tokyo-worker
-must not compose pages from source on visitor requests.
 
 ## Tenet 12: Dieter Tokens First
 

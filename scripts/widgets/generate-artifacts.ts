@@ -7,16 +7,13 @@ import {
 } from '../../packages/ck-contracts/src/translated-value-primitives';
 import { parseLimitsSpec, type LimitsSpec } from '../../packages/ck-policy/src';
 import {
-  WIDGET_SHELL_CSS_MODULE_KEYS,
-  WIDGET_SHELL_RUNTIME_MODULE_KEYS,
-} from '../../packages/widget-shell/src';
+  WIDGET_SHARED_CSS_MODULE_KEYS,
+  WIDGET_SHARED_RUNTIME_MODULE_KEYS,
+} from '../../packages/widget-foundation/src';
 import { extractStylesheetSources } from '../../packages/ck-runtime-materializer/src/html';
 import { compileWidgetServer } from '../../bob/lib/compiler.server';
 import type { RawWidget } from '../../bob/lib/compiler.shared';
-import type {
-  ComponentStencil,
-  ComponentStencilLoader,
-} from '../../bob/lib/compiler/stencils';
+import type { ComponentStencil, ComponentStencilLoader } from '../../bob/lib/compiler/stencils';
 import type {
   CompiledWidget,
   WidgetPackageContext,
@@ -51,6 +48,125 @@ function discoverWidgetTypes(): string[] {
 
 function readText(relativePath: string): string {
   return fs.readFileSync(path.join(repoRoot, relativePath), 'utf8');
+}
+
+function readHtmlAttribute(openingTag: string, attrName: string): string {
+  const escapedAttr = attrName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const match = openingTag.match(
+    new RegExp(`\\s${escapedAttr}\\s*=\\s*(?:"([^"]*)"|'([^']*)'|([^\\s>]+))`, 'i'),
+  );
+  return String(match?.[1] ?? match?.[2] ?? match?.[3] ?? '').trim();
+}
+
+function assertWidgetShellContract(
+  widgetType: string,
+  widgetHtml: string,
+  widgetCss: string,
+): void {
+  const shellTags = [...widgetHtml.matchAll(/<[a-z][\w:-]*(?:\s[^<>]*)?>/gi)]
+    .map((match) => match[0])
+    .filter((tag) => readHtmlAttribute(tag, 'data-ck-widget') === widgetType)
+    .filter((tag) => readHtmlAttribute(tag, 'class').split(/\s+/).includes('ck-headerLayout'));
+  if (shellTags.length !== 1) {
+    throw new Error(
+      `[generate-widget-artifacts] ${widgetType} must have exactly one .ck-headerLayout[data-ck-widget="${widgetType}"] Shell`,
+    );
+  }
+  if (/\bdata-role\s*=\s*(?:"root"|'root'|root(?:\s|>))/i.test(widgetHtml)) {
+    throw new Error(`[generate-widget-artifacts] ${widgetType} must not declare a Root role`);
+  }
+
+  const directChildren: string[] = [];
+  const voidTags = new Set([
+    'area',
+    'base',
+    'br',
+    'col',
+    'embed',
+    'hr',
+    'img',
+    'input',
+    'link',
+    'meta',
+    'source',
+    'track',
+    'wbr',
+  ]);
+  const tagPattern = /<\/?([a-z][\w:-]*)(?:\s[^<>]*)?>/gi;
+  let shellDepth = 0;
+  let tagMatch: RegExpExecArray | null;
+  while ((tagMatch = tagPattern.exec(widgetHtml))) {
+    const tag = tagMatch[0];
+    const tagName = String(tagMatch[1] || '').toLowerCase();
+    const isClosing = tag.startsWith('</');
+    if (shellDepth === 0) {
+      if (
+        !isClosing &&
+        readHtmlAttribute(tag, 'data-ck-widget') === widgetType &&
+        readHtmlAttribute(tag, 'class').split(/\s+/).includes('ck-headerLayout')
+      ) {
+        shellDepth = 1;
+      }
+      continue;
+    }
+    if (isClosing) {
+      shellDepth -= 1;
+      if (shellDepth === 0) break;
+      continue;
+    }
+    if (shellDepth === 1) directChildren.push(tag);
+    if (!tag.endsWith('/>') && !voidTags.has(tagName)) shellDepth += 1;
+  }
+  const childClasses = directChildren.map(
+    (tag) => new Set(readHtmlAttribute(tag, 'class').split(/\s+/).filter(Boolean)),
+  );
+  if (
+    childClasses.length !== 2 ||
+    !childClasses.some((classes) => classes.has('ck-header')) ||
+    !childClasses.some((classes) => classes.has('ck-headerLayout__body'))
+  ) {
+    throw new Error(
+      `[generate-widget-artifacts] ${widgetType} Shell must contain exactly one Header and one Core`,
+    );
+  }
+
+  const shellClasses = new Set(
+    readHtmlAttribute(shellTags[0]!, 'class').split(/\s+/).filter(Boolean),
+  );
+  for (const rule of widgetCss.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
+    const declarations = String(rule[2] || '');
+    if (!/(?:^|;)\s*display\s*:/i.test(declarations)) continue;
+    for (const selector of String(rule[1] || '').split(',')) {
+      const target =
+        selector
+          .trim()
+          .split(/\s+|>|\+|~/)
+          .filter(Boolean)
+          .at(-1) || '';
+      const targetClasses = new Set(
+        [...target.matchAll(/\.([_a-zA-Z]+[\w-]*)/g)].map((match) => String(match[1])),
+      );
+      const targetsShell = [...shellClasses].some((className) => targetClasses.has(className));
+      if (targetsShell) {
+        throw new Error(
+          `[generate-widget-artifacts] ${widgetType} widget.css must not set display on its Shell; shared/header.css owns .ck-headerLayout layout`,
+        );
+      }
+    }
+  }
+}
+
+function assertWidgetSharedRuntimeContract(widgetType: string, widgetClient: string): void {
+  for (const sharedCall of ['CKBranding.applyBacklink', 'CKSocialShare.apply'] as const) {
+    if (
+      !widgetClient.includes(`Missing ${sharedCall}`) ||
+      !widgetClient.includes(`window.${sharedCall}(`)
+    ) {
+      throw new Error(
+        `[generate-widget-artifacts] ${widgetType} must fail closed and call ${sharedCall}`,
+      );
+    }
+  }
 }
 
 function readCssEntry(relativePath: string): string {
@@ -88,8 +204,12 @@ function buildWidgetPackage(args: {
   editableFieldsSource: string;
 }): WidgetPackageContext {
   const files: WidgetPackageContext['files'] = {};
-  const widgetRoot = `tokyo/product/widgets/${args.widgetType}`;
-  const widgetHtml = readText(`${widgetRoot}/widget.html`);
+  const widgetDirectory = `tokyo/product/widgets/${args.widgetType}`;
+  const widgetHtml = readText(`${widgetDirectory}/widget.html`);
+  const widgetCss = readText(`${widgetDirectory}/widget.css`);
+  const widgetClient = readText(`${widgetDirectory}/widget.client.js`);
+  assertWidgetShellContract(args.widgetType, widgetHtml, widgetCss);
+  assertWidgetSharedRuntimeContract(args.widgetType, widgetClient);
   for (const filename of ['spec.json', 'widget.html', 'widget.css', 'widget.client.js'] as const) {
     files[filename] = {
       mediaType: mediaTypeForPath(filename),
@@ -98,14 +218,20 @@ function buildWidgetPackage(args: {
           ? args.specSource
           : filename === 'widget.html'
             ? widgetHtml
-            : readText(`${widgetRoot}/${filename}`),
+            : filename === 'widget.css'
+              ? widgetCss
+              : filename === 'widget.client.js'
+                ? widgetClient
+                : readText(`${widgetDirectory}/${filename}`),
     };
   }
   files['editable-fields.json'] = {
     mediaType: 'application/json',
     source: args.editableFieldsSource,
   };
-  for (const href of extractStylesheetSources(widgetHtml).filter((source) => source.startsWith('/dieter/'))) {
+  for (const href of extractStylesheetSources(widgetHtml).filter((source) =>
+    source.startsWith('/dieter/'),
+  )) {
     files[href] = {
       mediaType: 'text/css',
       source: readCssEntry(href.slice(1)),
@@ -113,8 +239,8 @@ function buildWidgetPackage(args: {
   }
 
   const supportKeys = new Set<string>([
-    ...WIDGET_SHELL_CSS_MODULE_KEYS,
-    ...WIDGET_SHELL_RUNTIME_MODULE_KEYS,
+    ...WIDGET_SHARED_CSS_MODULE_KEYS,
+    ...WIDGET_SHARED_RUNTIME_MODULE_KEYS,
     `product/widgets/${args.widgetType}/widget.css`,
     `product/widgets/${args.widgetType}/widget.client.js`,
   ]);
@@ -131,7 +257,9 @@ function writeOrCheck(filePath: string, source: string): void {
   const current = fs.existsSync(filePath) ? fs.readFileSync(filePath, 'utf8') : '';
   if (checkOnly) {
     if (current !== source) {
-      throw new Error(`[generate-widget-artifacts] ${path.relative(repoRoot, filePath)} is out of date`);
+      throw new Error(
+        `[generate-widget-artifacts] ${path.relative(repoRoot, filePath)} is out of date`,
+      );
     }
     return;
   }
@@ -201,12 +329,12 @@ async function buildArtifacts(widgetType: string): Promise<{
   editor: CompiledWidget;
   materializer: MaterializerArtifact;
 }> {
-  const widgetRoot = `tokyo/product/widgets/${widgetType}`;
-  const specSource = readText(`${widgetRoot}/spec.json`);
-  const editableFieldsSource = readText(`${widgetRoot}/editable-fields.json`);
+  const widgetDirectory = `tokyo/product/widgets/${widgetType}`;
+  const specSource = readText(`${widgetDirectory}/spec.json`);
+  const editableFieldsSource = readText(`${widgetDirectory}/editable-fields.json`);
   const spec = JSON.parse(specSource) as RawWidget;
   const editableFields = readWidgetEditableFieldsContract(JSON.parse(editableFieldsSource));
-  const limits = parseLimitsSpec(JSON.parse(readText(`${widgetRoot}/limits.json`)));
+  const limits = parseLimitsSpec(JSON.parse(readText(`${widgetDirectory}/limits.json`)));
   const compiled = await compileWidgetServer(spec, {
     loadComponentStencil: loadLocalStencil,
     tokyoBaseUrl: '',

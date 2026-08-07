@@ -1,6 +1,12 @@
 import { buildRuntimePackageFingerprint } from './fingerprint';
 import { packageSource } from './files';
-import { buildIndexHtml, extractBody, stampPackageRoot, stripScripts, stripStylesheetLinks } from './html';
+import {
+  buildIndexHtml,
+  extractBody,
+  stampPackageShell,
+  stripScripts,
+  stripStylesheetLinks,
+} from './html';
 import { buildRuntime, buildStyles, socialShareEnabled } from './runtime';
 import { materializerFailure } from './errors';
 import {
@@ -60,7 +66,7 @@ function buildPackage(args: {
   if (!widgetHtml) return materializerFailure('widget_package_missing');
 
   const includeSocialShare = socialShareEnabled(args.baseState);
-  const stamped = stampPackageRoot({
+  const stamped = stampPackageShell({
     html: extractBody(widgetHtml),
     widgetType: args.compiled.widgetname,
     instanceId: args.instanceId,
@@ -101,8 +107,11 @@ function buildPackage(args: {
   };
 }
 
-export async function materializeRuntimePackage(input: RuntimeMaterializerInput): Promise<RuntimeMaterializerResult> {
-  if (!validCoordinate(input.artifactCoordinate)) return materializerFailure('artifact_coordinate_invalid');
+export async function materializeRuntimePackage(
+  input: RuntimeMaterializerInput,
+): Promise<RuntimeMaterializerResult> {
+  if (!validCoordinate(input.artifactCoordinate))
+    return materializerFailure('artifact_coordinate_invalid');
   if (!validCompiledWidget(input.compiled)) return materializerFailure('compiled_widget_invalid');
   if (!isRecord(input.state)) return materializerFailure('source_state_invalid');
 

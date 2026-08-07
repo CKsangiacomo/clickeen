@@ -17,8 +17,8 @@ Elfsight side: a live authenticated Elfsight account driven in-browser on
 2026-07-31. Every panel, every disclosure, every dropdown in the FAQ editor was
 opened and read. Editor URL pattern `dash.elfsight.com/widget/{uuid}`.
 
-Clickeen side: full source read of `tokyo/product/widgets/faq/` plus the shared
-shell (`packages/widget-shell/src/`) and the Builder compiler
+Clickeen side: full source read of `tokyo/product/widgets/faq/` plus the widget
+foundation (`packages/widget-foundation/src/`) and the Builder compiler
 (`bob/lib/compiler/`). Control counts are the **composed** counts the Builder
 actually renders, not the `spec.json` declaration count.
 

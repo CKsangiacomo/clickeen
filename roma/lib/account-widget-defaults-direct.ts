@@ -1,24 +1,28 @@
 import { isRecord } from '@clickeen/ck-contracts';
-import {
-  normalizeAccountFontLibrary,
-  type AccountFontLibrary,
-} from '@clickeen/widget-shell';
+import { normalizeAccountFontLibrary, type AccountFontLibrary } from '@clickeen/widget-foundation';
 import { callTokyo, type TokyoCallContext } from './tokyo-client';
 
 export type AccountWidgetDefaultsDocument = {
   accountId: string;
   fontLibrary: AccountFontLibrary;
-  shell: Record<string, unknown>;
-  widgets: Record<string, {
-    core: Record<string, unknown>;
-  }>;
+  common: Record<string, unknown>;
+  widgets: Record<
+    string,
+    {
+      core: Record<string, unknown>;
+    }
+  >;
   seededAt: string;
   updatedAt: string;
 };
 
-function normalizeAccountWidgetDefaults(raw: unknown): AccountWidgetDefaultsDocument | null {
+export function normalizeAccountWidgetDefaultsDocument(
+  raw: unknown,
+): AccountWidgetDefaultsDocument | null {
   if (!isRecord(raw)) return null;
-  if (typeof raw.accountId !== 'string' || !isRecord(raw.shell) || !isRecord(raw.widgets)) return null;
+  if (Object.prototype.hasOwnProperty.call(raw, 'shell')) return null;
+  if (typeof raw.accountId !== 'string' || !isRecord(raw.common) || !isRecord(raw.widgets))
+    return null;
   const fontLibrary = normalizeAccountFontLibrary(raw.fontLibrary);
   if (!fontLibrary) return null;
   const widgets: AccountWidgetDefaultsDocument['widgets'] = {};
@@ -31,7 +35,7 @@ function normalizeAccountWidgetDefaults(raw: unknown): AccountWidgetDefaultsDocu
   return {
     accountId: raw.accountId,
     fontLibrary,
-    shell: raw.shell,
+    common: raw.common,
     widgets,
     seededAt: typeof raw.seededAt === 'string' ? raw.seededAt : '',
     updatedAt: typeof raw.updatedAt === 'string' ? raw.updatedAt : '',
@@ -45,7 +49,7 @@ function decodeWidgetDefaultsPayload(payload: unknown): {
   if (!isRecord(payload) || typeof payload.accountId !== 'string') {
     throw new Error('invalid Tokyo account widget defaults payload');
   }
-  const widgetDefaults = normalizeAccountWidgetDefaults(payload.widgetDefaults);
+  const widgetDefaults = normalizeAccountWidgetDefaultsDocument(payload.widgetDefaults);
   if (!widgetDefaults) throw new Error('invalid Tokyo account widget defaults document');
   return {
     accountId: payload.accountId,

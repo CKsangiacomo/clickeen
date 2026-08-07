@@ -113,7 +113,7 @@ Never do these to "make Cloudflare work":
 Passing one preflight proves only that plane. R2 preflight does not prove
 Pages/DNS access. REST preflight does not prove R2 object access.
 
-Normal account assets, instances, pages, and translations mutate through
+Normal account assets, instances, and translations mutate through
 Roma/Tokyo-worker product routes. Direct `accounts/**` R2 writes are exceptional
 repair operations and must be named as product data repair, not normal product
 flow.
@@ -172,7 +172,7 @@ Report that path in the execution evidence when it happens.
 
 Direct R2 mutation is not normal product operation. Use it only for explicit
 product-data repair or git-authored product-root sync. For account assets,
-instances, pages, and translation overlays, prefer the product route or owning
+instances and translation overlays, prefer the product route or owning
 agent path unless the task explicitly names remote data repair.
 
 ## Tokyo Product-Root R2 Sync

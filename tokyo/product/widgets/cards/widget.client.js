@@ -509,10 +509,9 @@
     return between;
   }
 
-  function initCards(widgetRoot, runtimeContext) {
-    const cardsRoot = widgetRoot.querySelector('[data-role="cards"]');
-    const coreEl = widgetRoot.querySelector('[data-role="cards-core"]');
-    if (!(cardsRoot instanceof HTMLElement)) throw new Error('[Cards] Missing [data-role="cards"]');
+  function initCards(widgetShell, runtimeContext) {
+    const cardsShell = widgetShell;
+    const coreEl = widgetShell.querySelector('[data-role="cards-core"]');
     if (!(coreEl instanceof HTMLElement))
       throw new Error('[Cards] Missing [data-role="cards-core"]');
     const resolvedInstanceId = runtimeContext.instanceId;
@@ -521,13 +520,13 @@
       const cards = validateCardsState(state);
       if (!window.CKStagePod?.applyStagePod)
         throw new Error('[Cards] Missing CKStagePod.applyStagePod');
-      window.CKStagePod.applyStagePod(state.stage, state.pod, widgetRoot, state.appearance);
+      window.CKStagePod.applyStagePod(state.stage, state.pod, widgetShell, state.appearance);
 
       if (!window.CKTypography?.applyTypography)
         throw new Error('[Cards] Missing CKTypography.applyTypography');
       window.CKTypography.applyTypography(
         state.typography,
-        cardsRoot,
+        cardsShell,
         {
           title: { varKey: 'title' },
           body: { varKey: 'body' },
@@ -540,7 +539,7 @@
       );
 
       if (!window.CKHeader?.applyHeader) throw new Error('[Cards] Missing CKHeader.applyHeader');
-      window.CKHeader.applyHeader(state, widgetRoot);
+      window.CKHeader.applyHeader(state, widgetShell);
 
       if (!window.CKCoreSize?.applyCoreSize)
         throw new Error('[Cards] Missing CKCoreSize.applyCoreSize');
@@ -549,11 +548,10 @@
       if (!window.CKLocaleSwitcher?.applyLocaleSwitcher) {
         throw new Error('[Cards] Missing CKLocaleSwitcher.applyLocaleSwitcher');
       }
-      window.CKLocaleSwitcher.applyLocaleSwitcher(state, widgetRoot, {
-        composedPage: context && context.composedPage === true,
+      window.CKLocaleSwitcher.applyLocaleSwitcher(state, widgetShell, {
         locale: context && context.locale,
         previewMode: context && context.previewMode,
-        typographyScope: cardsRoot,
+        typographyScope: cardsShell,
       });
 
       const grid = document.createElement(cards.treatment === 'steps' ? 'ol' : 'div');
@@ -578,12 +576,12 @@
       if (!window.CKBranding?.applyBacklink) {
         throw new Error('[Cards] Missing CKBranding.applyBacklink');
       }
-      window.CKBranding.applyBacklink(widgetRoot, state);
+      window.CKBranding.applyBacklink(widgetShell, state);
 
       if (!window.CKSocialShare?.apply) {
         throw new Error('[Cards] Missing CKSocialShare.apply');
       }
-      window.CKSocialShare.apply(widgetRoot, state, {
+      window.CKSocialShare.apply(widgetShell, state, {
         instanceId: context && context.instanceId,
         widgetType: 'cards',
         widgetLabel: document.title || 'Cards',
@@ -631,7 +629,6 @@
       applyState(localizedState, {
         locale,
         previewMode,
-        composedPage: runtimeContext && runtimeContext.composedPage === true,
         instanceId: typeof instanceId === 'string' ? instanceId : resolvedInstanceId,
       });
     }

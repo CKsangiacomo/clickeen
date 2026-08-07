@@ -9,6 +9,13 @@ editor bundles, generated token/component mirrors, or
 `tokyo/product/dieter/**` describe the historical execution environment. They
 are not current instructions. Current consumers compile/materialize Dieter
 source directly.
+
+2026-08-07 widget-architecture note: references below to
+`packages/widget-shell`, `@clickeen/widget-shell`, or broad “Shell-owned”
+typography describe the historical implementation. Current shared widget code
+lives in `packages/widget-foundation`; account defaults use `common`; and Shell
+means only the Header/Core composition described in
+`documentation/widgets/shared/ShellCore.md`.
 Parent: `126__PRD__UI_Optimization_Program.md` (MAMA).
 Series order: 126D of 126A-126M.
 KB doc: `documentation/engineering/UI/typography.md`.

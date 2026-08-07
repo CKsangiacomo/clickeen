@@ -32,20 +32,21 @@ Verification surface
 
 1. Confirm the widget source folder contains exactly six files.
 2. Confirm every Core control path exists in `spec.json.defaults`.
-3. Confirm Shell paths remain Shell-owned.
-4. Confirm Shell/shared paths resolve through composed Shell defaults.
-5. Confirm every customer-visible text path, including Shell Header text paths,
+3. Confirm Shell contains exactly Header and Core; Stage and Pod remain the
+   presentation frame outside it.
+4. Confirm cross-widget defaults resolve through the common-default contract,
+   independently of DOM ownership.
+5. Confirm every customer-visible text path, including Header text paths,
    is listed in `editable-fields.json`.
 6. Confirm plan limits map through `limits.json`.
-7. Confirm `widget.html` uses the Shell/Core DOM shape.
-8. Confirm `widget.client.js` uses shared Shell utilities for runtime,
+7. Confirm `widget.html` uses the Stage/Pod/Shell/Header/Core DOM shape.
+8. Confirm `widget.client.js` uses shared widget utilities for runtime,
    appearance/fill/surface, branding, share, preview localization, locale
    switcher, Header, Stage/Pod, Core size, and typography as relevant.
 9. Confirm no widget-local fallbacks were added for required shared helpers.
-10. Confirm Clickeen Pages references use saved account widget instances.
-11. Confirm every editor cluster has one plain-text section label, with no
+10. Confirm every editor cluster has one plain-text section label, with no
     pre-encoded HTML entities or duplicate section/group heading.
-12. Confirm only shared Header and the widget's primary Content section declare
+11. Confirm only shared Header and the widget's primary Content section declare
     `initiallyOpen: true`; every other section relies on the collapsed default.
 
 ## Edit Boundaries
@@ -57,7 +58,7 @@ Verification surface
 | New repeatable item text | Same as customer-visible text, plus stable `arrayItemIdentity`. |
 | New entitlement-limited behavior | `limits.json`, Roma policy path if needed, and docs for that widget. |
 | New Core DOM hook | `widget.html`, `widget.client.js`, and docs for that widget. |
-| Shared Shell behavior | Shared file under `tokyo/product/widgets/shared/`, not a widget-local helper. |
+| Shared widget behavior | Shared file under `tokyo/product/widgets/shared/`, not a widget-local helper. |
 
 Do not move a change across these boundaries by hiding it in a generated package
 or a local fallback. The source contract is what agents operate.

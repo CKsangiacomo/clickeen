@@ -273,6 +273,7 @@ export async function saveAccountInstanceTransition(args: {
       detail: `submitted widgetType "${submittedWidgetType}" does not match Tokyo instance widgetType "${existingWidgetType}"`,
     });
   }
+  const live = existing.value.pointer.publishStatus === 'published';
   const packaged = await writeInstancePublicPackage({
     env: args.env,
     accountId,
@@ -298,12 +299,9 @@ export async function saveAccountInstanceTransition(args: {
     baseLocale: args.baseLocale,
     publicPackageFingerprint: packaged.fingerprint,
   });
-  const live = (await readInstanceServeState({
-    env: args.env,
-    accountId,
-    instanceId,
-    widgetCode: saved.pointer.widgetCode,
-  })) === 'published';
+  if (live) {
+    await purgeClkLiveEntryCache({ env: args.env, accountId, instanceId });
+  }
 
   return {
     ok: true,
@@ -377,4 +375,22 @@ export async function unpublishAccountInstanceTransition(args: {
     });
   }
   return { instanceId, status: 'unpublished', changed: liveStatus !== 'unpublished' };
+}
+
+export async function deleteAccountInstanceTransition(args: {
+  env: Env;
+  accountId: string;
+  instanceId: string;
+}): Promise<{ existed: boolean }> {
+  const { accountId, instanceId } = assertScopedIds(args.accountId, args.instanceId);
+  const existing = await readAccountInstanceSource({ env: args.env, accountId, instanceId });
+  if (!existing.ok) {
+    if (existing.kind === 'NOT_FOUND') return { existed: false };
+    transitionFailureFromSavedRead(existing);
+  }
+  const live = existing.value.pointer.publishStatus === 'published';
+  if (live) {
+    await purgeClkLiveEntryCache({ env: args.env, accountId, instanceId });
+  }
+  return deleteAccountInstanceSubtree(args.env, instanceId, accountId);
 }

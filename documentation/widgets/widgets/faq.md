@@ -79,14 +79,13 @@ items.group.medium.max -> faq.sections[].faqs[]
 items.group.large.max -> faq.sections[].faqs[]
 ```
 
-## Shell Utilities
+## Shared Widget Utilities
 
-FAQ uses the shared Shell for Header, Header CTA, Stage/Pod, Core size,
-typography, and locale switcher. Current runtime applies branding only when
-`CKBranding.applyBacklink` is present; it does not fail when branding is
-missing. `widget.html` loads the shared social-share asset and `limits.json`
-contains the social-share entitlement path, but current FAQ runtime does not
-call `CKSocialShare.apply`.
+FAQ uses the presentation frame for Stage/Pod, the Shell for Header/Core
+composition, and shared utilities for Core sizing, typography, and locale
+switching. Branding and social share are required shared runtime contracts; a
+missing `CKBranding.applyBacklink` or `CKSocialShare.apply` fails closed, and
+FAQ applies both on every state render.
 
 Runtime requires these Core DOM hooks:
 
@@ -98,7 +97,7 @@ Runtime requires these Core DOM hooks:
 ```
 
 `widget.client.js` registers as `faq`, validates `faq.*`, renders section and
-question DOM into `faq-list`, applies shared Shell utilities, and binds
+question DOM into `faq-list`, applies shared widget utilities, and binds
 `ck:state-update` for the current instance id.
 
 Runtime invariants:
@@ -132,13 +131,6 @@ items.group.small.max -> faq.sections[] count
 items.group.medium.max -> faq.sections[].faqs[] per-section count
 items.group.large.max -> faq.sections[].faqs[] total count
 ```
-
-## Clickeen Pages Usage
-
-FAQ appears in Clickeen Page source as a saved account widget instance
-placement. FAQ sections and questions remain widget Core state inside the
-instance. Public page package serving depends on Roma writing real page
-packages.
 
 ## Verification
 

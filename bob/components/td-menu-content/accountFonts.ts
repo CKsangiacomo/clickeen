@@ -4,7 +4,7 @@ import {
   accountFontLibraryToFamilyOptions,
   type AccountFontFamilyOption,
   type AccountFontLibrary,
-} from '@clickeen/widget-shell';
+} from '@clickeen/widget-foundation';
 
 function createTextSpan(document: Document, className: string, text: string): HTMLSpanElement {
   const span = document.createElement('span');

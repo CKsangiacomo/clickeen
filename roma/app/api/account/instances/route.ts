@@ -90,10 +90,10 @@ function mergeDefaultsInto(
 }
 
 function materializeInstanceConfigFromAccountDefaults(args: {
-  shell: Record<string, unknown>;
+  common: Record<string, unknown>;
   core: Record<string, unknown>;
 }): { ok: true; config: Record<string, unknown> } | { ok: false; conflicts: string[] } {
-  const config = cloneValue(args.shell);
+  const config = cloneValue(args.common);
   const conflicts: string[] = [];
   mergeDefaultsInto(config, args.core, '', conflicts);
   return conflicts.length > 0 ? { ok: false, conflicts } : { ok: true, config };
@@ -234,7 +234,7 @@ export async function POST(request: NextRequest) {
     );
   }
   const materialized = materializeInstanceConfigFromAccountDefaults({
-    shell: accountWidgetDefaults.value.widgetDefaults.shell,
+    common: accountWidgetDefaults.value.widgetDefaults.common,
     core: widgetDefaults.core,
   });
   if (!materialized.ok) {
@@ -244,7 +244,7 @@ export async function POST(request: NextRequest) {
         {
           error: {
             kind: 'VALIDATION',
-            reasonKey: 'coreui.errors.widgetDefaults.shellCoreConflict',
+            reasonKey: 'coreui.errors.widgetDefaults.commonCoreConflict',
             paths: materialized.conflicts,
           },
         },

@@ -9,23 +9,20 @@
     throw new Error('[FAQ] Missing CKWidgetRuntime.register');
   }
 
-  function initFaq(widgetRoot, runtimeContext) {
-  const faqRoot = widgetRoot.querySelector('[data-role="faq"]');
-  if (!(faqRoot instanceof HTMLElement)) {
-    throw new Error('[FAQ] Missing [data-role="faq"] root');
-  }
+  function initFaq(widgetShell, runtimeContext) {
+  const faqShell = widgetShell;
 
-  const coreEl = faqRoot.querySelector('[data-role="faq-core"]');
+  const coreEl = faqShell.querySelector('[data-role="faq-core"]');
   if (!(coreEl instanceof HTMLElement)) {
     throw new Error('[FAQ] Missing [data-role="faq-core"]');
   }
 
-  const emptyEl = faqRoot.querySelector('[data-role="faq-empty"]');
+  const emptyEl = faqShell.querySelector('[data-role="faq-empty"]');
   if (!(emptyEl instanceof HTMLElement)) {
     throw new Error('[FAQ] Missing [data-role="faq-empty"]');
   }
 
-  const listEl = faqRoot.querySelector('[data-role="faq-list"]');
+  const listEl = faqShell.querySelector('[data-role="faq-list"]');
   if (!(listEl instanceof HTMLElement)) {
     throw new Error('[FAQ] Missing [data-role="faq-list"]');
   }
@@ -383,32 +380,32 @@
 
   function applyAppearance(appearance) {
     const helpers = resolveAppearanceHelpers();
-    faqRoot.style.setProperty('--faq-item-bg', helpers.toCssBackground(appearance.itemBackground));
+    faqShell.style.setProperty('--faq-item-bg', helpers.toCssBackground(appearance.itemBackground));
     if (!window.CKSurface?.applyCardWrapper) {
       throw new Error('[FAQ] Missing CKSurface.applyCardWrapper');
     }
-    window.CKSurface.applyCardWrapper(appearance.cardwrapper, faqRoot);
-    faqRoot.setAttribute('data-link-style', appearance.linkStyle);
-    faqRoot.style.setProperty('--faq-link-underline-color', helpers.toCssColor(appearance.linkUnderlineColor));
-    faqRoot.style.setProperty('--faq-link-highlight-color', helpers.toCssBackground(appearance.linkHighlightColor));
-    faqRoot.style.setProperty('--faq-link-text-color', helpers.toCssColor(appearance.linkTextColor));
-    faqRoot.style.setProperty('--faq-icon-color', helpers.toCssColor(appearance.iconColor));
+    window.CKSurface.applyCardWrapper(appearance.cardwrapper, faqShell);
+    faqShell.setAttribute('data-link-style', appearance.linkStyle);
+    faqShell.style.setProperty('--faq-link-underline-color', helpers.toCssColor(appearance.linkUnderlineColor));
+    faqShell.style.setProperty('--faq-link-highlight-color', helpers.toCssBackground(appearance.linkHighlightColor));
+    faqShell.style.setProperty('--faq-link-text-color', helpers.toCssColor(appearance.linkTextColor));
+    faqShell.style.setProperty('--faq-icon-color', helpers.toCssColor(appearance.iconColor));
   }
 
   function applyLayout(layout) {
-    faqRoot.style.setProperty('--layout-gap', `${layout.gap}px`);
+    faqShell.style.setProperty('--layout-gap', `${layout.gap}px`);
     const qaGapValue =
       layout.itemQaGapPreset === 'custom'
         ? `${layout.itemQaGapCustom}px`
         : QA_GAP_PRESETS[layout.itemQaGapPreset];
-    faqRoot.style.setProperty('--faq-qa-gap', qaGapValue);
-    faqRoot.style.setProperty('--faq-columns-desktop', String(layout.columns.desktop));
-    faqRoot.style.setProperty('--faq-columns-mobile', String(layout.columns.mobile));
-    faqRoot.setAttribute('data-layout', layout.type);
+    faqShell.style.setProperty('--faq-qa-gap', qaGapValue);
+    faqShell.style.setProperty('--faq-columns-desktop', String(layout.columns.desktop));
+    faqShell.style.setProperty('--faq-columns-mobile', String(layout.columns.mobile));
+    faqShell.setAttribute('data-layout', layout.type);
     if (layout.type === 'multicolumn') {
-      faqRoot.setAttribute('data-cards-layout', layout.cardsLayout);
+      faqShell.setAttribute('data-cards-layout', layout.cardsLayout);
     } else {
-      faqRoot.removeAttribute('data-cards-layout');
+      faqShell.removeAttribute('data-cards-layout');
     }
 
     const pad =
@@ -425,10 +422,10 @@
             bottom: layout.itemPadding,
             left: layout.itemPadding,
           };
-    faqRoot.style.setProperty('--faq-item-pad-top', `${pad.top}px`);
-    faqRoot.style.setProperty('--faq-item-pad-right', `${pad.right}px`);
-    faqRoot.style.setProperty('--faq-item-pad-bottom', `${pad.bottom}px`);
-    faqRoot.style.setProperty('--faq-item-pad-left', `${pad.left}px`);
+    faqShell.style.setProperty('--faq-item-pad-top', `${pad.top}px`);
+    faqShell.style.setProperty('--faq-item-pad-right', `${pad.right}px`);
+    faqShell.style.setProperty('--faq-item-pad-bottom', `${pad.bottom}px`);
+    faqShell.style.setProperty('--faq-item-pad-left', `${pad.left}px`);
   }
 
   const ICON_PAIRS = {
@@ -443,8 +440,8 @@
     if (!pair) {
       throw new Error(`[FAQ] Unknown accordion icon style "${iconStyle}"`);
     }
-    faqRoot.style.setProperty('--faq-icon-expand', `url("/dieter/icons/svg/${pair.expand}.svg")`);
-    faqRoot.style.setProperty('--faq-icon-collapse', `url("/dieter/icons/svg/${pair.collapse}.svg")`);
+    faqShell.style.setProperty('--faq-icon-expand', `url("/dieter/icons/svg/${pair.expand}.svg")`);
+    faqShell.style.setProperty('--faq-icon-collapse', `url("/dieter/icons/svg/${pair.collapse}.svg")`);
   }
 
   // Avoid DOM churn on unrelated state updates (e.g. stage sizing). The state object sent
@@ -479,14 +476,14 @@
     if (!window.CKStagePod?.applyStagePod) {
       throw new Error('[FAQ] Missing CKStagePod.applyStagePod');
     }
-    window.CKStagePod.applyStagePod(state.stage, state.pod, widgetRoot, state.appearance);
+    window.CKStagePod.applyStagePod(state.stage, state.pod, widgetShell, state.appearance);
 
     if (!window.CKTypography?.applyTypography) {
       throw new Error('[FAQ] Missing CKTypography.applyTypography');
     }
     window.CKTypography.applyTypography(
       state.typography,
-      faqRoot,
+      faqShell,
       {
         title: { varKey: 'title' },
         body: { varKey: 'body' },
@@ -502,7 +499,7 @@
     if (!window.CKHeader?.applyHeader) {
       throw new Error('[FAQ] Missing CKHeader.applyHeader');
     }
-    window.CKHeader.applyHeader(state, widgetRoot);
+    window.CKHeader.applyHeader(state, widgetShell);
 
     if (!window.CKCoreSize?.applyCoreSize) {
       throw new Error('[FAQ] Missing CKCoreSize.applyCoreSize');
@@ -512,16 +509,26 @@
     if (!window.CKLocaleSwitcher?.applyLocaleSwitcher) {
       throw new Error('[FAQ] Missing CKLocaleSwitcher.applyLocaleSwitcher');
     }
-    window.CKLocaleSwitcher.applyLocaleSwitcher(state, widgetRoot, {
-      composedPage: runtimeContext && runtimeContext.composedPage === true,
+    window.CKLocaleSwitcher.applyLocaleSwitcher(state, widgetShell, {
       locale: runtimeContext && runtimeContext.locale,
       previewMode: runtimeContext && runtimeContext.previewMode,
-      typographyScope: faqRoot,
+      typographyScope: faqShell,
     });
 
-    if (window.CKBranding && typeof window.CKBranding.applyBacklink === 'function') {
-      window.CKBranding.applyBacklink(widgetRoot, state);
+    if (!window.CKBranding?.applyBacklink) {
+      throw new Error('[FAQ] Missing CKBranding.applyBacklink');
     }
+    window.CKBranding.applyBacklink(widgetShell, state);
+
+    if (!window.CKSocialShare?.apply) {
+      throw new Error('[FAQ] Missing CKSocialShare.apply');
+    }
+    window.CKSocialShare.apply(widgetShell, state, {
+      instanceId: runtimeContext && runtimeContext.instanceId,
+      widgetType: 'faq',
+      widgetLabel: document.title || 'FAQ',
+      previewMode: runtimeContext && runtimeContext.previewMode,
+    });
 
     applyAccordionIcons(state.faq.appearance.iconStyle);
 
@@ -567,7 +574,7 @@
     }
 
     const hasAny = state.faq.sections.some((section) => section.faqs.length > 0);
-    faqRoot.setAttribute('data-state', hasAny ? 'ready' : 'empty');
+    faqShell.setAttribute('data-state', hasAny ? 'ready' : 'empty');
     emptyEl.hidden = hasAny;
 
     if (state.faq.layout.type === 'list' || state.faq.layout.type === 'multicolumn') {

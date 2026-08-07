@@ -30,8 +30,7 @@ Michael does not own:
 - widget instance source documents;
 - account assets;
 - translated locale overlay files;
-- generated public packages;
-- page package files;
+- generated public widget packages;
 - public serving bytes.
 
 Those are Tokyo/R2-owned runtime files under `accounts/{accountPublicId}/...`.

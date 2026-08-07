@@ -90,18 +90,21 @@ export async function resolveSigningContext(env: Env): Promise<SigningContext> {
 
   const privateKey = await importRsaPrivateKeyFromPem(privatePem);
   const publicKey = await importRsaPublicKeyFromPem(publicPem);
-  const currentKid = claimAsString(env.BERLIN_ACCESS_PREVIOUS_KID) || null;
-  const current = await exportSigningPublic(publicKey, currentKid);
+  const current = await exportSigningPublic(publicKey, null);
 
   let previous: SigningPublic | undefined;
   const prevPublicPem = normalizePem(env.BERLIN_ACCESS_PREVIOUS_PUBLIC_KEY_PEM || '');
   if (prevPublicPem) {
-    try {
-      const prevPublicKey = await importRsaPublicKeyFromPem(prevPublicPem);
-      previous = await exportSigningPublic(prevPublicKey, env.BERLIN_ACCESS_PREVIOUS_KID || null);
-    } catch {
-      previous = undefined;
-    }
+    const prevPublicKey = await importRsaPublicKeyFromPem(prevPublicPem);
+    previous = await exportSigningPublic(
+      prevPublicKey,
+      claimAsString(env.BERLIN_ACCESS_PREVIOUS_KID) || null,
+    );
+  }
+  if (previous?.kid === current.kid) {
+    throw new Error(
+      '[berlin] Current and previous access signing keys must use distinct kid values',
+    );
   }
 
   const context: SigningContext = {

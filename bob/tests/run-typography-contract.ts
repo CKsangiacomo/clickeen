@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 import {
   createDefaultAccountFontLibrary,
   type AccountFontLibrary,
-} from '@clickeen/widget-shell';
+} from '@clickeen/widget-foundation';
 import { compileWidgetServer } from '../lib/compiler.server';
 import type { RawWidget } from '../lib/compiler.shared';
 import type {

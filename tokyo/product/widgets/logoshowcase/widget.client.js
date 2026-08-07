@@ -8,19 +8,16 @@
     throw new Error('[LogoShowcase] Missing CKWidgetRuntime.register');
   }
 
-  function initLogoShowcase(widgetRoot, runtimeContext) {
-  const lsRoot = widgetRoot.querySelector('[data-role="logoshowcase"]');
-  if (!(lsRoot instanceof HTMLElement)) {
-    throw new Error('[LogoShowcase] Missing [data-role="logoshowcase"] root');
-  }
+  function initLogoShowcase(widgetShell, runtimeContext) {
+  const logoShowcaseShell = widgetShell;
 
-  const stripsEl = lsRoot.querySelector('[data-role="logoshowcase-core"]');
+  const stripsEl = logoShowcaseShell.querySelector('[data-role="logoshowcase-core"]');
   if (!(stripsEl instanceof HTMLElement)) {
     throw new Error('[LogoShowcase] Missing [data-role="logoshowcase-core"]');
   }
 
-  widgetRoot.style.setProperty('--ls-icon-prev', 'url("/dieter/icons/svg/chevron.left.svg")');
-  widgetRoot.style.setProperty('--ls-icon-next', 'url("/dieter/icons/svg/chevron.right.svg")');
+  widgetShell.style.setProperty('--ls-icon-prev', 'url("/dieter/icons/svg/chevron.left.svg")');
+  widgetShell.style.setProperty('--ls-icon-next', 'url("/dieter/icons/svg/chevron.right.svg")');
 
   const resolvedInstanceId = runtimeContext.instanceId;
   function assertBoolean(value, path) {
@@ -405,24 +402,24 @@
   }
 
   function applyLayoutVars(state) {
-    lsRoot.style.setProperty('--ls-gap', `${state.logoshowcase.spacing.gap}px`);
-    lsRoot.style.setProperty('--ls-gap-mobile', `${state.logoshowcase.spacing.mobileGap}px`);
-    lsRoot.style.setProperty('--ls-strip-gap', `${state.logoshowcase.spacing.stripGap}px`);
-    lsRoot.style.setProperty('--ls-strip-gap-mobile', `${state.logoshowcase.spacing.mobileStripGap}px`);
-    lsRoot.style.setProperty('--ls-row-gap', `${state.logoshowcase.spacing.rowGap}px`);
-    lsRoot.style.setProperty('--ls-logo-h', `${state.logoshowcase.spacing.logoHeight}px`);
-    lsRoot.style.setProperty('--ls-logo-h-mobile', `${state.logoshowcase.spacing.logoHeight}px`);
+    logoShowcaseShell.style.setProperty('--ls-gap', `${state.logoshowcase.spacing.gap}px`);
+    logoShowcaseShell.style.setProperty('--ls-gap-mobile', `${state.logoshowcase.spacing.mobileGap}px`);
+    logoShowcaseShell.style.setProperty('--ls-strip-gap', `${state.logoshowcase.spacing.stripGap}px`);
+    logoShowcaseShell.style.setProperty('--ls-strip-gap-mobile', `${state.logoshowcase.spacing.mobileStripGap}px`);
+    logoShowcaseShell.style.setProperty('--ls-row-gap', `${state.logoshowcase.spacing.rowGap}px`);
+    logoShowcaseShell.style.setProperty('--ls-logo-h', `${state.logoshowcase.spacing.logoHeight}px`);
+    logoShowcaseShell.style.setProperty('--ls-logo-h-mobile', `${state.logoshowcase.spacing.logoHeight}px`);
   }
 
   function applyAppearanceVars(state) {
-    lsRoot.style.setProperty('--ls-logo-opacity', String(state.logoshowcase.appearance.logoOpacity));
-    lsRoot.style.setProperty('--ls-logo-filter', state.logoshowcase.appearance.logoLook === 'grayscale' ? 'grayscale(1)' : 'none');
+    logoShowcaseShell.style.setProperty('--ls-logo-opacity', String(state.logoshowcase.appearance.logoOpacity));
+    logoShowcaseShell.style.setProperty('--ls-logo-filter', state.logoshowcase.appearance.logoLook === 'grayscale' ? 'grayscale(1)' : 'none');
 
-    lsRoot.style.setProperty('--ls-item-bg', resolveAppearanceHelpers().toCssBackground(state.logoshowcase.appearance.itemBackground));
+    logoShowcaseShell.style.setProperty('--ls-item-bg', resolveAppearanceHelpers().toCssBackground(state.logoshowcase.appearance.itemBackground));
     if (!window.CKSurface?.applyCardWrapper) {
       throw new Error('[LogoShowcase] Missing CKSurface.applyCardWrapper');
     }
-    window.CKSurface.applyCardWrapper(state.logoshowcase.appearance.cardwrapper, lsRoot);
+    window.CKSurface.applyCardWrapper(state.logoshowcase.appearance.cardwrapper, logoShowcaseShell);
   }
 
   function renderLogoTile(logo) {
@@ -844,14 +841,14 @@
     if (!window.CKStagePod?.applyStagePod) {
       throw new Error('[LogoShowcase] Missing CKStagePod.applyStagePod');
     }
-    window.CKStagePod.applyStagePod(state.stage, state.pod, widgetRoot, state.appearance);
+    window.CKStagePod.applyStagePod(state.stage, state.pod, widgetShell, state.appearance);
 
     if (!window.CKTypography?.applyTypography) {
       throw new Error('[LogoShowcase] Missing CKTypography.applyTypography');
     }
     window.CKTypography.applyTypography(
       state.typography,
-      lsRoot,
+      logoShowcaseShell,
       {
         title: { varKey: 'title' },
         body: { varKey: 'body' },
@@ -864,7 +861,7 @@
     if (!window.CKHeader?.applyHeader) {
       throw new Error('[LogoShowcase] Missing CKHeader.applyHeader');
     }
-    window.CKHeader.applyHeader(state, widgetRoot);
+    window.CKHeader.applyHeader(state, widgetShell);
 
     if (!window.CKCoreSize?.applyCoreSize) {
       throw new Error('[LogoShowcase] Missing CKCoreSize.applyCoreSize');
@@ -874,18 +871,17 @@
     if (!window.CKLocaleSwitcher?.applyLocaleSwitcher) {
       throw new Error('[LogoShowcase] Missing CKLocaleSwitcher.applyLocaleSwitcher');
     }
-    window.CKLocaleSwitcher.applyLocaleSwitcher(state, widgetRoot, {
-      composedPage: runtimeContext && runtimeContext.composedPage === true,
+    window.CKLocaleSwitcher.applyLocaleSwitcher(state, widgetShell, {
       locale: runtimeContext && runtimeContext.locale,
       previewMode: runtimeContext && runtimeContext.previewMode,
-      typographyScope: lsRoot,
+      typographyScope: logoShowcaseShell,
     });
 
-    lsRoot.setAttribute('data-type', state.logoshowcase.type);
+    logoShowcaseShell.setAttribute('data-type', state.logoshowcase.type);
     if (state.logoshowcase.type === 'carousel') {
-      lsRoot.setAttribute('data-motion', state.logoshowcase.typeConfig.carousel.mode);
+      logoShowcaseShell.setAttribute('data-motion', state.logoshowcase.typeConfig.carousel.mode);
     } else {
-      lsRoot.removeAttribute('data-motion');
+      logoShowcaseShell.removeAttribute('data-motion');
     }
 
     applyLayoutVars(state);
@@ -907,12 +903,12 @@
     if (!window.CKBranding || typeof window.CKBranding.applyBacklink !== 'function') {
       throw new Error('[LogoShowcase] Missing CKBranding.applyBacklink');
     }
-    window.CKBranding.applyBacklink(widgetRoot, state);
+    window.CKBranding.applyBacklink(widgetShell, state);
 
     if (!window.CKSocialShare || typeof window.CKSocialShare.apply !== 'function') {
       throw new Error('[LogoShowcase] Missing CKSocialShare.apply');
     }
-    window.CKSocialShare.apply(widgetRoot, state, {
+    window.CKSocialShare.apply(widgetShell, state, {
       instanceId: resolvedInstanceId,
       widgetType: 'logoshowcase',
       widgetLabel: 'Logo Showcase',

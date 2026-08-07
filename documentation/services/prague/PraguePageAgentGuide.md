@@ -4,7 +4,7 @@ STATUS: CURRENT SYSTEM OPERATOR SPEC
 
 Use this guide only for bounded edits to Prague marketing page JSON.
 
-Prague pages are marketing pages. Account Pages are a different product surface: stacks of saved widget instances owned by Roma and Tokyo-worker.
+Prague pages are repo-authored marketing pages.
 
 ## Read First
 

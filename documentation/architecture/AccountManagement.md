@@ -18,8 +18,8 @@ For product/system context, see [CONTEXT.md](./CONTEXT.md) and [Overview.md](./O
 | Account runtime root | `accounts/{accountPublicId}/`. |
 | Role authority | `users.role` in the one-account user model. |
 | Tier/product policy | Roma/product policy, not Tokyo-worker. |
-| Account files | Tokyo-worker stores exact account instance/page/asset files under the account root. |
-| Public references | `accountPublicId + instanceId` or `accountPublicId + pageId`, depending on surface. |
+| Account files | Tokyo-worker stores exact account instance and asset files under the account root. |
+| Public references | `accountPublicId + instanceId`. |
 
 If an operator needs account truth, start at Berlin/Roma session bootstrap. If
 an operator needs account files, start at the Roma account route and
@@ -113,18 +113,6 @@ Public widget references use:
 
 ```text
 accountPublicId + instanceId
-```
-
-Page references use:
-
-```text
-accountPublicId + pageId
-```
-
-When page public serving is enabled, the public route shape is:
-
-```text
-/{accountPublicId}/pages/{pageId}
 ```
 
 ## User
@@ -271,16 +259,19 @@ Berlin must not preserve old `user_profiles`, `account_members`, `active_account
 
 ### Tokyo
 
-Tokyo owns widget definitions, exact account instance/page storage operations,
-translated locale overlay storage, and submitted public package
-storage/readiness for widgets and pages. Tokyo consumes account/user authz
-context; it does not decide billing or account identity, does not render widget
-package bytes from saved source, does not compose pages, and does not own
-translation generation.
+Tokyo owns widget definitions, exact account instance storage operations,
+translated locale overlay storage, and submitted public widget package
+storage/readiness. Tokyo consumes account/user authz context; it does not decide
+billing or account identity, does not render widget package bytes from saved
+source, and does not own translation generation.
 
 ### Public Serving
 
-Public serving reads generated R2/CDN artifacts. It does not read authoring/account DB state.
+Public serving validates the saved instance source pointer, serve state, and
+generated package in R2. For an explicit non-base locale it also reads and
+validates the exact saved overlay before injecting locale context into the base
+index response. It does not read relational account DB state or call an agent
+or model on a visitor request.
 
 ## Verification
 
@@ -290,7 +281,7 @@ Verify account behavior through the owning authority:
 | --- | --- |
 | Auth/session/account bootstrap | Berlin/Roma session bootstrap response |
 | Current account UI behavior | Roma authenticated account shell |
-| Account instance/page files | Roma account routes plus Tokyo-worker storage evidence |
+| Account instance files | Roma account routes plus Tokyo-worker storage evidence |
 | Account assets | Roma `/api/account/assets` or Roma Assets UI |
 | Account storage bytes | R2 evidence after `pnpm cf:preflight` |
 | Supabase account schema changes | reviewed migration and Supabase migration workflow |

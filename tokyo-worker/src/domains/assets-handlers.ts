@@ -1,6 +1,6 @@
 import type { RomaAccountAuthzCapsulePayload } from '@clickeen/ck-policy';
 import { parseAccountAssetKey } from '@clickeen/ck-contracts';
-import { isAcceptedAccountFontUpload } from '@clickeen/widget-shell';
+import { isAcceptedAccountFontUpload } from '@clickeen/widget-foundation';
 import {
   buildAccountAssetKey,
   buildAccountAssetPublicPath,

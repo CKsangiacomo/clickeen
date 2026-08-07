@@ -1,7 +1,7 @@
 import { isRecord as isPlainRecord } from '@clickeen/ck-contracts';
 import type { CompiledWidget } from '../../lib/types';
 import type { WidgetOp } from '../../lib/ops';
-import type { AccountFontLibrary } from '@clickeen/widget-shell';
+import type { AccountFontLibrary } from '@clickeen/widget-foundation';
 import { getAt } from '../../lib/utils/paths';
 import { findBestControlForPath } from '../../lib/edit/controls';
 import { expandTypographyFamilyOps } from '../../lib/edit/typography-family-ops';

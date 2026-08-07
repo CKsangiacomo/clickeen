@@ -2,9 +2,9 @@
 
 import { parseAccountLocaleListStrict, parseAccountLocalePolicyStrict } from '@clickeen/ck-contracts';
 import type { AccountAssetHostCommand } from '@clickeen/ck-contracts';
-import type { AccountFontLibrary } from '@clickeen/widget-shell';
+import type { AccountFontLibrary } from '@clickeen/widget-foundation';
 import Link from 'next/link';
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { resolveBobBaseUrl } from '../lib/env/bob';
 import { buildWidgetPublicActions, type WidgetPublicActions } from '../lib/public-widget-actions';
@@ -70,7 +70,7 @@ type BobUpsellMessage = {
 
 type BobHostActionMessage = {
   type: 'bob:host-action';
-  action?: 'open-navigation' | 'return' | 'copy-code' | string | null;
+  action?: 'open-navigation' | 'copy-code' | string | null;
 };
 
 function resolveBobUpsellReason(reasonKey: string | null | undefined): string {
@@ -119,7 +119,6 @@ type BobOpenEditorMessage = {
   };
   fontLibrary: AccountFontLibrary;
   publishStatus?: 'published' | 'unpublished';
-  returnLabel?: string;
   publicActions: WidgetPublicActions | null;
   policy?: unknown;
   copilot?: unknown;
@@ -356,20 +355,11 @@ function decodeBuilderPathInstanceId(pathname: string): string {
   }
 }
 
-function normalizeReturnTo(value: string | null): string {
-  const normalized = String(value || '').trim();
-  if (!normalized || !normalized.startsWith('/') || normalized.startsWith('//') || normalized.includes('\\')) {
-    return '';
-  }
-  return normalized;
-}
-
 export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
   const { activeAccount, accountPolicy } = useRomaAccountContext();
   const accountApi = useRomaAccountApi();
   const router = useRouter();
   const pathname = usePathname();
-  const searchParams = useSearchParams();
   const { openNavigation } = useRomaShellActions();
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
   const bobReadyRef = useRef(false);
@@ -397,7 +387,6 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
   const bobBaseUrl = useMemo(() => resolveBobBaseUrl(), []);
   const currentUrl = pathname;
   const pathInstanceId = useMemo(() => decodeBuilderPathInstanceId(pathname), [pathname]);
-  const returnTo = useMemo(() => normalizeReturnTo(searchParams.get('returnTo')), [searchParams]);
 
   const keepEditing = useCallback(() => {
     pendingDiscardActionRef.current = null;
@@ -697,9 +686,6 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
         publicPackage: builderOpen.publicPackage,
         fontLibrary: builderOpen.fontLibrary,
         publishStatus: builderOpen.publishStatus,
-        returnLabel: returnTo
-          ? (returnTo.startsWith('/pages') ? 'Return to page' : 'Return')
-          : undefined,
         publicActions: nextPublicActions,
         policy: accountPolicy,
         copilot: builderOpen.copilot ?? null,
@@ -728,7 +714,7 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
       }
       setOpenError(message);
     }
-  }, [accountApi, accountPolicy, activeAccount, activeInstanceId, currentUrl, postOpenEditorAndWait, returnTo, router]);
+  }, [accountApi, accountPolicy, activeAccount, activeInstanceId, currentUrl, postOpenEditorAndWait, router]);
 
   const openActiveInstanceInBobRef = useRef(openActiveInstanceInBob);
   useEffect(() => {
@@ -766,8 +752,6 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
       if (data.type === 'bob:host-action') {
         if (data.action === 'open-navigation') {
           openNavigation(iframeRef.current);
-        } else if (data.action === 'return' && returnTo) {
-          requestGuardedNavigation(() => router.push(returnTo));
         } else if (data.action === 'copy-code') {
           if (publicActionContext) setCopyCodeOpen(true);
           else setOpenError('coreui.errors.builder.publicActions.invalid');
@@ -795,7 +779,7 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
 
     window.addEventListener('message', listener);
     return () => window.removeEventListener('message', listener);
-  }, [activeInstanceId, bobBaseUrl, openNavigation, publicActionContext, requestGuardedNavigation, returnTo, router, runBobAccountCommand]);
+  }, [activeInstanceId, bobBaseUrl, openNavigation, publicActionContext, runBobAccountCommand]);
 
   useEffect(() => {
     bobReadyRef.current = false;

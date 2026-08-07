@@ -1,7 +1,7 @@
 'use client';
 
 import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import type { AccountFontLibrary } from '@clickeen/widget-shell';
+import type { AccountFontLibrary } from '@clickeen/widget-foundation';
 import { createInitialSessionState, type SessionState } from './sessionTypes';
 import { useSessionTransport } from './sessionTransport';
 import { useSessionEditing } from './useSessionEditing';

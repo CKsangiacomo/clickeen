@@ -79,11 +79,12 @@ items.group.medium.max -> logoshowcase.strips[].logos[]
 items.group.large.max -> logoshowcase.strips[].logos[]
 ```
 
-## Shell Utilities
+## Shared Widget Utilities
 
-Logo Showcase uses the shared Shell for Header, Header CTA, Stage/Pod, Core
-size, typography, branding, social share, and locale switcher. Logo strips and
-logo items belong to `logoshowcase.*`.
+Logo Showcase uses the presentation frame for Stage/Pod, the Shell for
+Header/Core composition, and shared utilities for Core sizing, typography,
+branding, social share, and locale switching. Logo strips and logo items belong
+to `logoshowcase.*`.
 
 Runtime requires these Core DOM hooks:
 
@@ -93,7 +94,7 @@ Runtime requires these Core DOM hooks:
 ```
 
 `widget.client.js` registers as `logoshowcase`, validates `logoshowcase.*`,
-renders strips/logos into `logoshowcase-core`, applies shared Shell utilities,
+renders strips/logos into `logoshowcase-core`, applies shared widget utilities,
 and binds `ck:state-update` for the current instance id.
 
 Runtime invariants:
@@ -126,13 +127,6 @@ logoshowcase.spacing -> logo size and gaps
 logoshowcase.appearance -> logo look, opacity, item background, cardwrapper
 logoshowcase.behavior -> random order and carousel behavior
 ```
-
-## Clickeen Pages Usage
-
-Logo Showcase appears in Clickeen Page source as a saved account widget
-instance placement. Uploaded logo assets remain account assets; the widget
-instance stores references and text metadata. Public page package serving
-depends on Roma writing real page packages.
 
 ## Verification
 

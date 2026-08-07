@@ -1,5 +1,5 @@
 import { isRecord as isPlainObject } from '@clickeen/ck-contracts';
-import type { ShellEditorSharedNodeId } from '@clickeen/widget-shell';
+import type { WidgetSharedEditorNodeId } from '@clickeen/widget-foundation';
 import { buildCoreSizeLayoutPanelFields } from './modules/coreSize';
 import {
   buildHeaderAppearancePanelFields,
@@ -56,7 +56,7 @@ export type EditorFieldNode = {
 
 export type EditorSharedNode = {
   kind: 'shared';
-  id: ShellEditorSharedNodeId;
+  id: WidgetSharedEditorNodeId;
 };
 
 export type EditorTemplateNode = EditorTextNode | EditorElementNode | EditorFieldNode;

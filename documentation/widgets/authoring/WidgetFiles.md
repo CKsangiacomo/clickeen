@@ -24,9 +24,9 @@ Shared runtime utilities live in `tokyo/product/widgets/shared/`.
 | `spec.json` | Widget identity, defaults, presets when present, Bob editor panels, ToolDrawer controls, `itemKey`, and widget-local normalization when present. |
 | `editable-fields.json` | Customer-visible text paths that Bob and Translation Agent can edit or translate. |
 | `limits.json` | Mapping from widget paths/operations to account entitlement keys. |
-| `widget.html` | Static Shell/Core DOM skeleton, shared CSS/script includes, stable `data-role` hooks. |
+| `widget.html` | Static Stage/Pod/Shell/Header/Core DOM skeleton, shared CSS/script includes, and stable hooks. |
 | `widget.css` | Widget-scoped visual styles and CSS variable consumption. |
-| `widget.client.js` | Deterministic browser runtime that validates state, applies Shell utilities, and updates Core DOM. |
+| `widget.client.js` | Deterministic browser runtime that validates state, applies shared widget utilities, and updates Core DOM. |
 
 ## Consumers
 
@@ -49,7 +49,7 @@ uses it, `widget.client.js` must validate and render it.
 The six-file contract is the widget source contract. It is not the compiled Bob
 payload and it is not the saved public package.
 
-Compiled/saved packages may include shared Shell CSS/JS, Dieter assets, and
+Compiled/saved packages may include shared widget CSS/JS, Dieter assets, and
 generated package files. Roma materializes saved account instance packages as:
 
 ```text
@@ -99,7 +99,7 @@ folder.
 ## Hard Stops
 
 - Do not add widget-local helper files.
-- Do not move shared Shell behavior into a widget folder.
+- Do not move shared widget behavior into a widget folder.
 - Do not add fallback package files that mask a bad save.
 - Do not document generated account package files as widget source files.
 - Do not make `editable-fields.json` broader than actual customer-visible text.

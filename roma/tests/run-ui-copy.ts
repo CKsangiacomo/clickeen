@@ -53,11 +53,11 @@ assert.equal(
 );
 assert.equal(
   resolveAccountShellErrorCopy('tokyo.errors.publicCache.purgeConfigMissing', 'fallback'),
-  'Public delivery is not configured, so publishing status was not changed.',
+  'Public delivery cache is not configured. Please try again after it is configured.',
 );
 assert.equal(
   resolveAccountShellErrorCopy('tokyo.errors.publicCache.purgeFailed', 'fallback'),
-  'Public delivery could not be refreshed, so publishing status was not changed. Please try again.',
+  'Public delivery could not be refreshed. Please try again.',
 );
 
 console.log('PASS account plan, role, and locale cleanup display labels');

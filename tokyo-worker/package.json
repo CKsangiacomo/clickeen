@@ -6,6 +6,8 @@
   "scripts": {
     "deploy": "wrangler deploy --routes \"\"",
     "test:auth-config": "tsx tests/run-auth-config.ts",
+    "test:instance-cache": "tsx tests/run-account-instance-cache-purge.ts",
+    "test:widget-defaults": "tsx tests/run-account-widget-defaults.ts",
     "test:clk-live": "tsx tests/run-clk-live-locale-serving.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
@@ -13,7 +15,7 @@
     "@clickeen/ck-contracts": "workspace:*",
     "@clickeen/ck-policy": "workspace:*",
     "@clickeen/l10n": "workspace:*",
-    "@clickeen/widget-shell": "workspace:*"
+    "@clickeen/widget-foundation": "workspace:*"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20251228.0",

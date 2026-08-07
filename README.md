@@ -64,7 +64,7 @@ Francisco. There is no provider/model fallback in product requests.
 - `agents/translation-agent/` - saved-instance overlay translation agent.
 - `packages/ck-contracts/` - shared product contracts and typed primitives.
 - `packages/ck-policy/` - entitlement, policy, authz, and AI runtime policy.
-- `packages/widget-shell/` - shell-owned widget defaults, paths, and runtime
+- `packages/widget-foundation/` - common widget defaults, shared controls, and runtime contracts
   helpers.
 - `packages/l10n/` - locale and localization helpers.
 - `dieter/` - design-system source tokens and build scripts.
@@ -96,7 +96,6 @@ Account-owned files live under the account coordinate:
 ```text
 accounts/{accountPublicId}/assets/{filename}
 accounts/{accountPublicId}/instances/{instanceId}/...
-accounts/{accountPublicId}/pages/{pageId}/...
 ```
 
 Deploy-managed roots are separate:

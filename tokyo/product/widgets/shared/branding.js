@@ -88,53 +88,53 @@
     document.head.appendChild(style);
   }
 
-  function resolveConfig(widgetRoot) {
+  function resolveConfig(widgetShell) {
     const globalCfg = window.CK_BRANDING && typeof window.CK_BRANDING === 'object' ? window.CK_BRANDING : {};
-    const alignRaw = widgetRoot.getAttribute('data-ck-branding-align') || globalCfg.align;
-    const anchorRaw = widgetRoot.getAttribute('data-ck-branding-anchor') || globalCfg.anchor;
+    const alignRaw = widgetShell.getAttribute('data-ck-branding-align') || globalCfg.align;
+    const anchorRaw = widgetShell.getAttribute('data-ck-branding-anchor') || globalCfg.anchor;
 
     const align = alignRaw === 'center' ? 'center' : 'right';
     const anchor = anchorRaw === 'outside' ? 'outside' : 'inside';
     return { align, anchor };
   }
 
-  function resolveRuntimeContext(widgetRoot) {
+  function resolveRuntimeContext(widgetShell) {
     const runtime = window.CKWidgetRuntime;
     if (!runtime || typeof runtime.contextFor !== 'function') {
       throw new Error('[CKBranding] Missing CKWidgetRuntime.contextFor');
     }
-    const widgetType = widgetRoot.getAttribute('data-ck-widget') || '';
-    return runtime.contextFor(widgetRoot, widgetType);
+    const widgetType = widgetShell.getAttribute('data-ck-widget') || '';
+    return runtime.contextFor(widgetShell, widgetType);
   }
 
-  function findBranding(widgetRoot) {
-    if (!(widgetRoot instanceof HTMLElement)) return null;
-    const pod = widgetRoot.closest('.pod');
+  function findBranding(widgetShell) {
+    if (!(widgetShell instanceof HTMLElement)) return null;
+    const pod = widgetShell.closest('.pod');
     if (!(pod instanceof HTMLElement)) return null;
-    const existing = pod.querySelector(`:scope > .ck-branding[data-ck-branding-for="${widgetRoot.dataset.ckWidget}"]`);
+    const existing = pod.querySelector(`:scope > .ck-branding[data-ck-branding-for="${widgetShell.dataset.ckWidget}"]`);
     return existing instanceof HTMLElement ? existing : null;
   }
 
-  function removeBranding(widgetRoot) {
-    const badge = findBranding(widgetRoot);
+  function removeBranding(widgetShell) {
+    const badge = findBranding(widgetShell);
     if (badge) badge.remove();
   }
 
-  function ensureBranding(widgetRoot) {
-    if (!(widgetRoot instanceof HTMLElement)) return null;
-    const pod = widgetRoot.closest('.pod');
+  function ensureBranding(widgetShell) {
+    if (!(widgetShell instanceof HTMLElement)) return null;
+    const pod = widgetShell.closest('.pod');
     if (!(pod instanceof HTMLElement)) return null;
 
-    const existing = findBranding(widgetRoot);
+    const existing = findBranding(widgetShell);
     if (existing instanceof HTMLElement) return existing;
 
     pod.style.position = 'relative';
 
-    const cfg = resolveConfig(widgetRoot);
+    const cfg = resolveConfig(widgetShell);
 
     const badge = document.createElement('div');
     badge.className = 'ck-branding';
-    badge.setAttribute('data-ck-branding-for', widgetRoot.dataset.ckWidget || '');
+    badge.setAttribute('data-ck-branding-for', widgetShell.dataset.ckWidget || '');
     badge.setAttribute('data-ck-align', cfg.align);
     badge.setAttribute('data-ck-anchor', cfg.anchor);
 
@@ -150,10 +150,10 @@
     return badge;
   }
 
-  function applyVisibility(widgetRoot, state) {
+  function applyVisibility(widgetShell, state) {
     const show = state?.behavior?.showBacklink;
     if (show == null) {
-      const badge = ensureBranding(widgetRoot);
+      const badge = ensureBranding(widgetShell);
       if (!badge) return;
       badge.hidden = false;
       return;
@@ -162,25 +162,25 @@
       throw new Error('[CKBranding] state.behavior.showBacklink must be a boolean');
     }
     if (!show) {
-      removeBranding(widgetRoot);
+      removeBranding(widgetShell);
       return;
     }
-    const badge = ensureBranding(widgetRoot);
+    const badge = ensureBranding(widgetShell);
     if (badge) badge.hidden = false;
   }
 
-  function applyBacklink(widgetRoot, state) {
+  function applyBacklink(widgetShell, state) {
     ensureStyle(document);
-    applyVisibility(widgetRoot, state);
+    applyVisibility(widgetShell, state);
   }
 
   function applyInitial() {
     ensureStyle(document);
-    const roots = Array.from(document.querySelectorAll('[data-ck-widget]'));
-    roots.forEach((root) => ensureBranding(root));
-    roots.forEach((root) => {
-      const context = resolveRuntimeContext(root);
-      if (context.state) applyVisibility(root, context.state);
+    const shells = Array.from(document.querySelectorAll('.ck-headerLayout[data-ck-widget]'));
+    shells.forEach((shell) => ensureBranding(shell));
+    shells.forEach((shell) => {
+      const context = resolveRuntimeContext(shell);
+      if (context.state) applyVisibility(shell, context.state);
     });
   }
 
@@ -192,10 +192,10 @@
     const widgetname = data.widgetname;
     const state = data.state;
 
-    const roots = widgetname
-      ? Array.from(document.querySelectorAll(`[data-ck-widget="${widgetname}"]`))
-      : Array.from(document.querySelectorAll('[data-ck-widget]'));
-    roots.forEach((root) => applyVisibility(root, state));
+    const shells = widgetname
+      ? Array.from(document.querySelectorAll(`.ck-headerLayout[data-ck-widget="${widgetname}"]`))
+      : Array.from(document.querySelectorAll('.ck-headerLayout[data-ck-widget]'));
+    shells.forEach((shell) => applyVisibility(shell, state));
   });
 
   window.CKBranding = Object.assign({}, window.CKBranding || {}, {

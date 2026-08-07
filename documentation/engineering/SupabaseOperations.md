@@ -7,8 +7,7 @@ product data: accounts, users, account invitations, account locale settings,
 instance registry rows, and translation generation operation rows.
 
 Supabase does not own widget instance source, account assets, translated locale
-overlays, generated public packages, or page package files. Those live in
-Tokyo/R2.
+overlays, or generated public widget packages. Those live in Tokyo/R2.
 
 Additional billing, support, usage, reporting, or governance tables may belong
 in Michael only after a reviewed migration introduces them. They are not
@@ -183,8 +182,7 @@ Tokyo/R2 owns account runtime files:
 - `accounts/{accountPublicId}/instances/{instanceId}/overlays/locales/**`;
 - `accounts/{accountPublicId}/instances/{instanceId}/index.html`;
 - `accounts/{accountPublicId}/instances/{instanceId}/styles.css`;
-- `accounts/{accountPublicId}/instances/{instanceId}/runtime.js`;
-- `accounts/{accountPublicId}/pages/**`.
+- `accounts/{accountPublicId}/instances/{instanceId}/runtime.js`.
 
 Do not move runtime file ownership into Supabase.
 

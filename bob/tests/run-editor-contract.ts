@@ -128,7 +128,7 @@ async function testEveryWidgetEditorContract(): Promise<void> {
   const widgets = discoverWidgetSpecs();
   assert.ok(widgets.length > 0, 'at least one widget spec is discovered');
   const widgetDefaultsDocumentIds: string[] = [];
-  let shellBodyIds: string[] | null = null;
+  let commonBodyIds: string[] | null = null;
 
   for (const { widgetType, spec } of widgets) {
     const panels = readAuthoredPanels(spec, widgetType);
@@ -184,7 +184,7 @@ async function testEveryWidgetEditorContract(): Promise<void> {
       combinedBodyIds.length,
       `${widgetType} cluster body ids remain unique when consumers combine panels`,
     );
-    shellBodyIds ??= combinedBodyIds;
+    commonBodyIds ??= combinedBodyIds;
     combinedBodyIds.forEach((id) => {
       widgetDefaultsDocumentIds.push(
         controlHostClusterId(`widget-defaults-core-${widgetType}`, id),
@@ -200,9 +200,9 @@ async function testEveryWidgetEditorContract(): Promise<void> {
     });
   }
 
-  assert.ok(shellBodyIds, 'Widget Defaults has a Shell control artifact');
-  shellBodyIds.forEach((id) => {
-    widgetDefaultsDocumentIds.push(controlHostClusterId('widget-defaults-shell', id));
+  assert.ok(commonBodyIds, 'Widget Defaults has a common control artifact');
+  commonBodyIds.forEach((id) => {
+    widgetDefaultsDocumentIds.push(controlHostClusterId('widget-defaults-common', id));
   });
   assert.equal(
     new Set(widgetDefaultsDocumentIds).size,

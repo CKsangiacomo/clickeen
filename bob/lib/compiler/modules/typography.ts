@@ -1,7 +1,7 @@
 // Bob module: builds standardized Typography panel markup for widgets that declare typography roles.
 // Specs declare the shared typography panel explicitly in spec.json.editor; this helper renders that declared panel.
 
-import { WIDGET_SHELL_TYPOGRAPHY_ROLE_LABELS } from '@clickeen/widget-shell';
+import { COMMON_WIDGET_TYPOGRAPHY_ROLE_LABELS } from '@clickeen/widget-foundation';
 import { encodeHtmlEntities } from '../../compiler.shared';
 
 export const TYPOGRAPHY_SIZE_OPTIONS = [
@@ -74,7 +74,7 @@ export function buildTypographyPanel(args: {
   }
   const composedRoleKeys = Object.keys(args.roles);
   const composedWidgetRoleKeys = composedRoleKeys.filter(
-    (key) => !Object.prototype.hasOwnProperty.call(WIDGET_SHELL_TYPOGRAPHY_ROLE_LABELS, key),
+    (key) => !Object.prototype.hasOwnProperty.call(COMMON_WIDGET_TYPOGRAPHY_ROLE_LABELS, key),
   );
   const declaredWidgetRoleKeys = Object.keys(suppliedRoleLabels).filter((key) =>
     composedWidgetRoleKeys.includes(key),
@@ -93,7 +93,7 @@ export function buildTypographyPanel(args: {
     }
     const label =
       suppliedRoleLabels[key] ??
-      WIDGET_SHELL_TYPOGRAPHY_ROLE_LABELS[key as keyof typeof WIDGET_SHELL_TYPOGRAPHY_ROLE_LABELS];
+      COMMON_WIDGET_TYPOGRAPHY_ROLE_LABELS[key as keyof typeof COMMON_WIDGET_TYPOGRAPHY_ROLE_LABELS];
     if (!label) {
       throw new Error(`[BobCompiler] typography role "${key}" requires a product label`);
     }

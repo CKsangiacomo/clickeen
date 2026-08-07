@@ -25,8 +25,8 @@ compatibility paths, validation layers, state machines, and fallback behavior.
 
 Clickeen is the opposite. The system stays lean, structured, typed, and
 AI-legible. Widget specs, control maps, field maps, account files, overlays,
-page files, policy files, routes, and storage folders are product artifacts
-agents can understand and operate. The intelligence lives in the agents and in
+policy files, routes, and storage folders are product artifacts agents can
+understand and operate. The intelligence lives in the agents and in
 their ability to operate the structured substrate through named authorities.
 
 The architecture exists to protect that model:
@@ -52,7 +52,6 @@ Clickeen is a simple account product.
 - `accountPublicId` is the API/embed/authz field name for that same value.
 - Widgets are software and live in the system.
 - Users create widget instances in Roma/Bob and save them in their account.
-- Pages are account-owned stacks of saved instances.
 - Bob is an editor. Open/edit work is browser memory. Save is the persistence
   boundary.
 - Roma is the account app. Roma routes the user to the current account,
@@ -78,7 +77,7 @@ CLICKEEN
 | Builder editing state | Bob | `bob/` browser-memory session |
 | Account runtime storage | Tokyo-worker | `tokyo-worker/` over Tokyo R2 |
 | Product widget software | Git-authored Tokyo product root | `tokyo/product/widgets/` deployed to `product/widgets/` |
-| Public widget serving | Tokyo-worker public serving | generated instance files under `accounts/{accountPublicId}/...`; page public serving is disabled until Roma writes page packages |
+| Public widget serving | Tokyo-worker public serving | generated instance files under `accounts/{accountPublicId}/...` |
 | Relational account/support data | Michael/Supabase | `supabase/migrations/` and service-owned routes |
 | Model execution | San Francisco | `sanfrancisco/` |
 | Product Copilot brain | Product Copilot Worker | `agents/product-copilot/` |
@@ -139,13 +138,6 @@ accounts/{accountPublicId}/
       index.html
       styles.css
       runtime.js
-  pages/
-    {pageId}/
-      source.json
-      serve-state.json              # when submitted
-      index.html                    # when submitted
-      styles.css                    # when submitted
-      runtime.js                    # when submitted
 ```
 
 The non-account roots are git-authored deploy artifacts:
@@ -210,20 +202,6 @@ Bob/Roma asset UI
 
 See `documentation/architecture/AssetManagement.md` for the full asset
 contract.
-
-### Account Pages
-
-Pages are account-owned stacks of saved instances. Roma owns page source rules
-and product actions. Tokyo-worker stores the exact page source/package files
-that Roma submits under:
-
-```text
-accounts/{accountPublicId}/pages/{pageId}/
-```
-
-Page publish and public page serving are currently disabled. Tokyo-worker parses
-page public routes but returns `404`, and internal publish returns
-`coreui.errors.page.publishUnavailable` until Roma writes page packages.
 
 ### Translation Overlays
 

@@ -139,9 +139,9 @@
     'arrowshape.turn.up.right',
   ];
 
-  function applyHeader(state, widgetRoot) {
-    if (!(widgetRoot instanceof HTMLElement)) {
-      throw new Error('[CKHeader] applyHeader expects widgetRoot HTMLElement');
+  function applyHeader(state, widgetShell) {
+    if (!(widgetShell instanceof HTMLElement) || !widgetShell.classList.contains('ck-headerLayout')) {
+      throw new Error('[CKHeader] applyHeader expects .ck-headerLayout Shell');
     }
 
     assertObject(state, 'state');
@@ -184,10 +184,7 @@
       throw new Error('[CKHeader] state.headerCta.iconPlacement must be left|right');
     }
 
-    var layoutEl = widgetRoot.querySelector('.ck-headerLayout');
-    if (!(layoutEl instanceof HTMLElement)) {
-      throw new Error('[CKHeader] Missing .ck-headerLayout');
-    }
+    var layoutEl = widgetShell;
 
     applyOptionalPxVar(layoutEl, '--ck-header-gap', state.header.gap, 'state.header.gap');
     applyOptionalPxVar(layoutEl, '--ck-header-inner-gap', state.header.innerGap, 'state.header.innerGap');

@@ -145,6 +145,9 @@ importers:
       '@cloudflare/workers-types':
         specifier: ^4.20251228.0
         version: 4.20251228.0
+      tsx:
+        specifier: ^4.20.6
+        version: 4.20.6
       wrangler:
         specifier: ^4.54.0
         version: 4.54.0(@cloudflare/workers-types@4.20251228.0)
@@ -160,9 +163,9 @@ importers:
       '@clickeen/l10n':
         specifier: workspace:*
         version: link:../packages/l10n
-      '@clickeen/widget-shell':
+      '@clickeen/widget-foundation':
         specifier: workspace:*
-        version: link:../packages/widget-shell
+        version: link:../packages/widget-foundation
       next:
         specifier: 15.5.2
         version: 15.5.2(@playwright/test@1.60.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -221,9 +224,9 @@ importers:
       '@clickeen/ck-contracts':
         specifier: workspace:*
         version: link:../ck-contracts
-      '@clickeen/widget-shell':
+      '@clickeen/widget-foundation':
         specifier: workspace:*
-        version: link:../widget-shell
+        version: link:../widget-foundation
     devDependencies:
       '@types/node':
         specifier: ^20.16.5
@@ -237,7 +240,7 @@ importers:
 
   packages/l10n: {}
 
-  packages/widget-shell: {}
+  packages/widget-foundation: {}
 
   prague:
     dependencies:
@@ -278,9 +281,9 @@ importers:
       '@clickeen/l10n':
         specifier: workspace:*
         version: link:../packages/l10n
-      '@clickeen/widget-shell':
+      '@clickeen/widget-foundation':
         specifier: workspace:*
-        version: link:../packages/widget-shell
+        version: link:../packages/widget-foundation
       next:
         specifier: 15.5.2
         version: 15.5.2(@playwright/test@1.60.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -343,9 +346,9 @@ importers:
       '@clickeen/l10n':
         specifier: workspace:*
         version: link:../packages/l10n
-      '@clickeen/widget-shell':
+      '@clickeen/widget-foundation':
         specifier: workspace:*
-        version: link:../packages/widget-shell
+        version: link:../packages/widget-foundation
     devDependencies:
       '@cloudflare/workers-types':
         specifier: ^4.20251228.0

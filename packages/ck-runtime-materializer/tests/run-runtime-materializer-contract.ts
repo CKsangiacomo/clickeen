@@ -61,7 +61,11 @@ async function assertForbiddenImports(): Promise<void> {
   for (const file of srcFiles) {
     const content = await readFile(file, 'utf8');
     for (const needle of forbidden) {
-      assert.equal(content.includes(needle), false, `${needle} found in ${path.relative(repoRoot, file)}`);
+      assert.equal(
+        content.includes(needle),
+        false,
+        `${needle} found in ${path.relative(repoRoot, file)}`,
+      );
     }
   }
 }
@@ -72,7 +76,7 @@ async function materializeBase() {
   return result;
 }
 
-async function testOneRootPackageContract(): Promise<void> {
+async function testPackageWithOneShellContract(): Promise<void> {
   const result = await materializeBase();
   assert.match(result.files.indexHtml, /window\.CK_LOCALE_CONTEXT = null;/);
   assert.match(result.files.indexHtml, /href="\/CLICKEEN\/inst_contract\/styles\.css"/);
@@ -85,8 +89,14 @@ async function testOneRootPackageContract(): Promise<void> {
 async function testEvidenceContract(): Promise<void> {
   const first = await materializeBase();
   const second = await materializeBase();
-  assert.equal(first.evidence.generatedPackageFingerprint, second.evidence.generatedPackageFingerprint);
-  assert.equal(first.evidence.generatedPackageFingerprint, await buildRuntimePackageFingerprint(first.files));
+  assert.equal(
+    first.evidence.generatedPackageFingerprint,
+    second.evidence.generatedPackageFingerprint,
+  );
+  assert.equal(
+    first.evidence.generatedPackageFingerprint,
+    await buildRuntimePackageFingerprint(first.files),
+  );
   assert.deepEqual(first.evidence.artifactCoordinate, baseMaterializerInput.artifactCoordinate);
   assert.equal(first.evidence.materializerContractVersion, RUNTIME_MATERIALIZER_CONTRACT_VERSION);
   assert.deepEqual(first.evidence.supportFileFingerprints, []);
@@ -143,17 +153,28 @@ async function testInvalidInputsFail(): Promise<void> {
   const missingHtml = cloneInput(baseMaterializerInput);
   delete missingHtml.compiled.widgetPackage.files['widget.html'];
   assertFailure(await materializeRuntimePackage(missingHtml), 'widget_package_missing');
-  const wrongRoot = cloneInput(baseMaterializerInput);
-  wrongRoot.compiled.widgetPackage.files['widget.html']!.source =
-    '<body><section data-ck-widget="wrong" data-role="root"></section></body>';
-  assertFailure(await materializeRuntimePackage(wrongRoot), 'widget_package_root_invalid');
+  const wrongShell = cloneInput(baseMaterializerInput);
+  wrongShell.compiled.widgetPackage.files['widget.html']!.source =
+    '<body><section class="ck-headerLayout" data-ck-widget="wrong"></section></body>';
+  assertFailure(await materializeRuntimePackage(wrongShell), 'widget_package_shell_invalid');
+
+  const missingShellClass = cloneInput(baseMaterializerInput);
+  missingShellClass.compiled.widgetPackage.files['widget.html']!.source =
+    '<body><section data-ck-widget="contract-widget"></section></body>';
+  assertFailure(await materializeRuntimePackage(missingShellClass), 'widget_package_shell_invalid');
 }
 
 const testCases: Array<{ name: string; run: () => Promise<void> }> = [
-  { name: 'one root package contract', run: testOneRootPackageContract },
+  { name: 'package with one Shell contract', run: testPackageWithOneShellContract },
   { name: 'evidence contract', run: testEvidenceContract },
-  { name: 'runtime applies injected overlay before modules', run: testRuntimeAppliesInjectedOverlayBeforeModules },
-  { name: 'runtime rejects invalid overlay before modules', run: testRuntimeRejectsInvalidOverlayWithoutStartingModules },
+  {
+    name: 'runtime applies injected overlay before modules',
+    run: testRuntimeAppliesInjectedOverlayBeforeModules,
+  },
+  {
+    name: 'runtime rejects invalid overlay before modules',
+    run: testRuntimeRejectsInvalidOverlayWithoutStartingModules,
+  },
   { name: 'invalid inputs fail', run: testInvalidInputsFail },
   { name: 'forbidden imports guard', run: assertForbiddenImports },
 ];

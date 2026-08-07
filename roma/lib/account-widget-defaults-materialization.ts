@@ -1,8 +1,8 @@
 import { isRecord } from '@clickeen/ck-contracts';
 import {
   createDefaultAccountFontLibrary,
-  WIDGET_SHELL_FACTORY_DEFAULTS,
-} from '@clickeen/widget-shell';
+  COMMON_WIDGET_FACTORY_DEFAULTS,
+} from '@clickeen/widget-foundation';
 import type { NextRequest } from 'next/server';
 import {
   readWidgetForInstancePackage,
@@ -74,7 +74,7 @@ export async function materializeInitialAccountWidgetDefaults(args: {
   const widgetDefaults: AccountWidgetDefaultsDocument = {
     accountId: args.accountId,
     fontLibrary: createDefaultAccountFontLibrary(),
-    shell: cloneRecord(WIDGET_SHELL_FACTORY_DEFAULTS as unknown as Record<string, unknown>),
+    common: cloneRecord(COMMON_WIDGET_FACTORY_DEFAULTS as unknown as Record<string, unknown>),
     widgets,
     seededAt: now,
     updatedAt: now,

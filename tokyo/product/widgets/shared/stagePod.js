@@ -360,9 +360,9 @@
     if (state.readySent) return;
     state.readySent = true;
 
-    const widgetRoot = scopeEl.closest('[data-ck-widget]');
-    const widgetname = widgetRoot instanceof HTMLElement ? widgetRoot.getAttribute('data-ck-widget') || '' : '';
-    const instanceId = widgetRoot instanceof HTMLElement ? widgetRoot.getAttribute('data-ck-instance-id') || '' : '';
+    const widgetShell = scopeEl.closest('.ck-headerLayout[data-ck-widget]');
+    const widgetname = widgetShell instanceof HTMLElement ? widgetShell.getAttribute('data-ck-widget') || '' : '';
+    const instanceId = widgetShell instanceof HTMLElement ? widgetShell.getAttribute('data-ck-instance-id') || '' : '';
 
     window.parent.postMessage({ type: 'ck:ready', widgetname, instanceId }, '*');
   }

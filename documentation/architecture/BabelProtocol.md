@@ -50,7 +50,7 @@ cache, or delete runtime files.
 
 ## Resolution
 
-Bob preview and the public root runtime both resolve:
+Bob preview and the public base runtime both resolve:
 
 ```text
 saved base state + exact requested overlay values
@@ -58,7 +58,7 @@ saved base state + exact requested overlay values
 
 Bob uses the translated-value contract directly. Public serving is gated by the
 one instance publication state; Tokyo-worker injects the validated overlay into
-the one root index, and the one root runtime resolves it before widget modules
+the one base index, and the one base runtime resolves it before widget modules
 start.
 
 ## Failure Semantics
@@ -77,4 +77,4 @@ start.
 4. Read each overlay and prove exact path equality with saved content.
 5. Confirm no instance HTML, CSS, or JavaScript object was created.
 6. Open `/{account}/{instance}?locale={locale}` and verify translated output
-   uses the root stylesheet and runtime.
+   uses the package stylesheet and runtime.

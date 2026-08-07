@@ -11,8 +11,7 @@ Each spec documents:
 - customer-visible editable fields;
 - entitlement limits;
 - Core state families;
-- runtime DOM hooks and invariants;
-- Clickeen Pages placement behavior.
+- runtime DOM hooks and invariants.
 
 Current built widgets:
 
@@ -26,4 +25,3 @@ logoshowcase
 split-carousel-media
 split-media
 ```
-

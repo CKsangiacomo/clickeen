@@ -3,8 +3,8 @@
 STATUS: CURRENT SYSTEM OPERATOR SPEC
 
 Tokyo-worker is the Tokyo R2/storage/CDN boundary for account runtime data,
-account assets, saved widget instance files, translated locale values, page
-files, generated public packages, and public artifact serving.
+account assets, saved widget instance files, translated locale values,
+generated public packages, and public artifact serving.
 
 Tokyo-worker stores and serves bytes. Roma owns account product decisions.
 
@@ -26,7 +26,6 @@ Tokyo-worker owns:
 - account asset R2 operations
 - account widget instance R2 operations
 - translated locale value R2 operations
-- page source and page package R2 operations
 - public package file serving
 - `clk.live` and `dev.clk.live` static artifact serving
 - `GET /healthz`
@@ -126,37 +125,19 @@ On source save, Tokyo-worker writes `instance.content.json` before
 is the source commit marker, so readers cannot accept a new package with
 partially written source.
 
+When the saved instance is published, Save purges the five existing public URL
+forms for that exact instance after the R2 write and returns success only after
+the purge succeeds. Published Delete purges those same URLs before removing the
+instance subtree, so a purge failure leaves the instance intact and the same
+Delete can be retried. Unpublished Save and Delete do not depend on a public
+cache purge. No new URL, version, or cache identity is created for these
+mutations.
+
 The stable public coordinate is:
 
 ```text
 accountPublicId + instanceId
 ```
-
-## Pages
-
-Account pages are stacks of saved widget instances. Page source lives at:
-
-```text
-accounts/{accountPublicId}/pages/{pageId}/source.json
-```
-
-Generated page package files live beside the page source under:
-
-```text
-accounts/{accountPublicId}/pages/{pageId}/
-```
-
-Roma owns page product decisions, page source validation, page source save
-stamps, list summaries, and placement rules. Tokyo-worker stores page source,
-any submitted page package files, and serve state under the account path Roma
-names. Current account page publish is unavailable until Roma writes page
-packages. Tokyo-worker rejects save/delete operations against published page
-source until Roma unpublishes the page.
-
-Current page source is a source document with widget placement references. It is
-not a generated page artifact and it does not duplicate child widget source.
-Tokyo-worker does not compose pages from child widget packages on public
-requests.
 
 ## Public Serving
 
@@ -172,11 +153,9 @@ Cloud-dev public serving uses:
 https://dev.clk.live/{accountPublicId}/{instanceId}
 ```
 
-Serving reads the one root widget artifact from the account folder after
+Serving reads the one base widget artifact from the account folder after
 `accounts/{accountPublicId}/instances/{instanceId}/serve-state.json` is
-published. Account page public serving is
-unavailable until Roma writes page packages. Tokyo-worker does not generate page
-package files.
+published.
 
 Public support files are:
 
@@ -202,13 +181,10 @@ https://clk.live/{accountPublicId}/{instanceId}?locale={locale}
 
 Cloud-dev uses the same query under `https://dev.clk.live`. Tokyo-worker reads
 and validates the exact overlay against saved content, injects the locale
-context into the root index response, and returns it with `no-store`. The HTML
-references only root support files. Missing overlays return `404 Locale not
+context into the base index response, and returns it with `no-store`. The HTML
+references only package support files. Missing overlays return `404 Locale not
 available`; corrupt overlays return `500 Locale data invalid`; neither falls
 back to base content.
-
-Public page-serving URL shape is parsed by Tokyo-worker, but current page
-public serving returns `404` until Roma writes real page packages.
 
 ## Private Roma Routes
 
@@ -227,7 +203,6 @@ Storage command routes cover:
 - publish and unpublish
 - translated locale reads and writes
 - account asset list/upload/resolve/delete
-- page source/package/serve-state operations
 
 Account instance inventory is split by authority:
 
@@ -254,16 +229,17 @@ Current internal route families:
 | `/__internal/instances/{instanceId}/package` | `GET` | read generated package metadata/files where supported |
 | `/__internal/instances/{instanceId}/translations` | `GET` | list saved translated locale value files |
 | `/__internal/instances/{instanceId}/translations/{locale}` | `GET`, `PUT`, `DELETE` | read/write/delete one translated value file |
-| `/__internal/accounts/{accountPublicId}/pages` | `GET` | list account pages |
-| `/__internal/pages` | `POST` | create account page source |
-| `/__internal/pages/{pageId}` | `GET`, `PUT`, `DELETE` | read/save/delete account page source |
-| `/__internal/pages/{pageId}/{publish|unpublish}` | `POST` | update page serve state |
 | `/__internal/accounts/{accountPublicId}/widget-defaults` | `GET`, `POST`, `PUT` | read/create/write account widget defaults |
 | `/__internal/assets/upload` | `POST` | upload account asset bytes |
 | `/__internal/assets/account/{accountPublicId}` | `GET` | list account asset metadata |
 | `/__internal/assets/account/{accountPublicId}/usage` | `GET` | account asset usage facts |
 | `/__internal/assets/account/{accountPublicId}/resolve` | `POST` | resolve account asset references |
 | `/__internal/assets/account/{accountPublicId}/asset/{assetRef}` | `DELETE` | delete exact account asset |
+
+The account widget-defaults document stores `common` and
+`widgets.{widgetType}.core`. Tokyo-worker validates that exact shape. It does
+not reinterpret the removed `shell` key as `common` or repair an old document
+on read.
 
 Health route:
 
@@ -301,7 +277,7 @@ approved internal callers. It does not own translation generation, AI runtime
 policy, active-locale authority, or completion/failure state.
 
 Public localized serving reads this exact overlay state after publication and
-root artifact checks. It does not write, regenerate, heal, call Roma, or call a
+base package checks. It does not write, regenerate, heal, call Roma, or call a
 model on visitor requests.
 
 Roma calls the Translation Agent Worker for account-widget translation

@@ -181,7 +181,7 @@ Runtime package behavior:
 - Save/package materialization reads saved typography and account font library
   together.
 - Materialization validates every role's family, weight, and style before asset
-  resolution. Instance typography and Shell defaults are required. A widget
+  resolution. Instance typography and common defaults are required. A widget
   with no widget-core typography roles does not invent a core typography block.
 - Packages include only the font records used by the saved instance plus Inter.
 - Google records load from Google.
@@ -191,7 +191,7 @@ Runtime package behavior:
 
 Shared widget runtime behavior:
 
-- Shell typography labels are owned by `@clickeen/widget-shell`. Widgets declare
+- Common typography labels are owned by the widget foundation. Widgets declare
   labels and display order for widget-specific roles in
   `editor.panels[].shared.roleLabels`.
 - `CKTypography` reads `CK_WIDGET_TYPOGRAPHY_DATA`.

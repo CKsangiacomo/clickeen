@@ -9,7 +9,7 @@
   },
   "dependencies": {
     "@clickeen/ck-contracts": "workspace:*",
-    "@clickeen/widget-shell": "workspace:*"
+    "@clickeen/widget-foundation": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^20.16.5",

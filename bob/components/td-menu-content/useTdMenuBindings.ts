@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useLayoutEffect, useRef, type MutableRefObject } from 'react';
-import type { AccountFontLibrary } from '@clickeen/widget-shell';
+import type { AccountFontLibrary } from '@clickeen/widget-foundation';
 import type { ApplyWidgetOpsResult, WidgetOp } from '../../lib/ops';
 import type { CompiledWidget } from '../../lib/types';
 import { getAt } from '../../lib/utils/paths';

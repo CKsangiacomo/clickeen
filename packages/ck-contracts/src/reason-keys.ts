@@ -78,7 +78,6 @@ export const REASON_KEY_VALUES = [
   'coreui.errors.instance.instanceIdRequired',
   'coreui.errors.instance.invalidPayload',
   'coreui.errors.instance.notFound',
-  'coreui.errors.instance.placedOnPage',
   'coreui.errors.instance.publicPackageNotFound',
   'coreui.errors.instance.widgetMismatch',
   'coreui.errors.instance.widgetMissing',

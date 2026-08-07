@@ -2,14 +2,14 @@ import { isRecord } from '@clickeen/ck-contracts';
 import {
   normalizeAccountFontLibrary,
   type AccountFontLibrary,
-} from '@clickeen/widget-shell';
+} from '@clickeen/widget-foundation';
 import type { Env } from '../types';
 import { putJson } from './storage';
 
 export type AccountWidgetDefaultsDocument = {
   accountId: string;
   fontLibrary: AccountFontLibrary;
-  shell: Record<string, unknown>;
+  common: Record<string, unknown>;
   widgets: Record<
     string,
     {
@@ -46,13 +46,14 @@ export function normalizeAccountWidgetDefaultsDocument(
   accountId: string,
 ): AccountWidgetDefaultsDocument | null {
   if (!isRecord(value) || value.accountId !== accountId) return null;
-  if (!isRecord(value.shell) || !isRecord(value.widgets)) return null;
+  if (Object.prototype.hasOwnProperty.call(value, 'shell')) return null;
+  if (!isRecord(value.common) || !isRecord(value.widgets)) return null;
   if (typeof value.seededAt !== 'string' || !value.seededAt.trim()) return null;
   if (typeof value.updatedAt !== 'string' || !value.updatedAt.trim()) return null;
   const fontLibrary = normalizeAccountFontLibrary(value.fontLibrary);
   if (!fontLibrary) return null;
 
-  const shell = cloneRecord(value.shell);
+  const common = cloneRecord(value.common);
   const widgets: AccountWidgetDefaultsDocument['widgets'] = {};
   for (const [widgetType, widgetDefaults] of Object.entries(value.widgets)) {
     if (!isRecord(widgetDefaults) || !isRecord(widgetDefaults.core)) return null;
@@ -65,7 +66,7 @@ export function normalizeAccountWidgetDefaultsDocument(
   return {
     accountId,
     fontLibrary,
-    shell,
+    common,
     widgets,
     seededAt: value.seededAt,
     updatedAt: value.updatedAt,

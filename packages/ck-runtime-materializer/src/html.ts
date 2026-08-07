@@ -29,7 +29,9 @@ export function extractBody(html: string): string {
 
 function readHtmlAttribute(openingTag: string, attrName: string): string {
   const escapedAttr = attrName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  const match = openingTag.match(new RegExp(`\\s${escapedAttr}\\s*=\\s*(?:"([^"]*)"|'([^']*)'|([^\\s>]+))`, 'i'));
+  const match = openingTag.match(
+    new RegExp(`\\s${escapedAttr}\\s*=\\s*(?:"([^"]*)"|'([^']*)'|([^\\s>]+))`, 'i'),
+  );
   return String(match?.[1] ?? match?.[2] ?? match?.[3] ?? '').trim();
 }
 
@@ -41,10 +43,13 @@ export function extractStylesheetSources(html: string): string[] {
 
 export function stripScripts(body: string): { body: string; scriptSources: string[] } {
   const scriptSources: string[] = [];
-  const nextBody = body.replace(/<script\b[^>]*\bsrc=["']([^"']+)["'][^>]*>\s*<\/script>/gi, (_full, src) => {
-    scriptSources.push(String(src));
-    return '';
-  });
+  const nextBody = body.replace(
+    /<script\b[^>]*\bsrc=["']([^"']+)["'][^>]*>\s*<\/script>/gi,
+    (_full, src) => {
+      scriptSources.push(String(src));
+      return '';
+    },
+  );
   return { body: nextBody, scriptSources };
 }
 
@@ -52,14 +57,34 @@ export function stripStylesheetLinks(body: string): string {
   return body.replace(/<link\b[^>]*rel=["']stylesheet["'][^>]*>\s*/gi, '');
 }
 
-export function stampPackageRoot(args: {
+export function stampPackageShell(args: {
   html: string;
   widgetType: string;
   instanceId: string;
 }): { ok: true; body: string } | RuntimeMaterializerFailure {
-  const roots: Array<{ start: number; end: number; tag: string; widgetType: string; insideRoot: boolean }> = [];
-  const stack: Array<{ tagName: string; isRoot: boolean }> = [];
-  const voidTags = new Set(['area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'source', 'track', 'wbr']);
+  const shells: Array<{
+    start: number;
+    end: number;
+    tag: string;
+    widgetType: string;
+    insideShell: boolean;
+  }> = [];
+  const stack: Array<{ tagName: string; isShell: boolean }> = [];
+  const voidTags = new Set([
+    'area',
+    'base',
+    'br',
+    'col',
+    'embed',
+    'hr',
+    'img',
+    'input',
+    'link',
+    'meta',
+    'source',
+    'track',
+    'wbr',
+  ]);
   const tagPattern = /<\/?([a-z][\w:-]*)(?:\s[^<>]*)?>/gi;
   let match: RegExpExecArray | null;
   while ((match = tagPattern.exec(args.html))) {
@@ -74,27 +99,43 @@ export function stampPackageRoot(args: {
       continue;
     }
 
-    const rootWidgetType = readHtmlAttribute(tag, 'data-ck-widget');
-    const isRoot = Boolean(rootWidgetType) && readHtmlAttribute(tag, 'data-role') === 'root';
-    const insideRoot = stack.some((entry) => entry.isRoot);
-    if (isRoot) {
-      roots.push({ start: match.index, end: match.index + tag.length, tag, widgetType: rootWidgetType, insideRoot });
+    const shellWidgetType = readHtmlAttribute(tag, 'data-ck-widget');
+    const classTokens = readHtmlAttribute(tag, 'class').split(/\s+/).filter(Boolean);
+    const isShell = Boolean(shellWidgetType) && classTokens.includes('ck-headerLayout');
+    const insideShell = stack.some((entry) => entry.isShell);
+    if (isShell) {
+      shells.push({
+        start: match.index,
+        end: match.index + tag.length,
+        tag,
+        widgetType: shellWidgetType,
+        insideShell,
+      });
     }
 
     if (!tag.endsWith('/>') && !voidTags.has(tagName)) {
-      stack.push({ tagName, isRoot });
+      stack.push({ tagName, isShell });
     }
   }
 
-  const topLevelRoots = roots.filter((root) => !root.insideRoot);
-  if (topLevelRoots.length !== 1 || topLevelRoots[0]?.widgetType !== args.widgetType) {
-    return materializerFailure('widget_package_root_invalid');
+  const topLevelShells = shells.filter((shell) => !shell.insideShell);
+  if (topLevelShells.length !== 1 || topLevelShells[0]?.widgetType !== args.widgetType) {
+    return materializerFailure('widget_package_shell_invalid');
   }
 
-  const root = topLevelRoots[0]!;
-  const withoutExistingInstanceId = root.tag.replace(/\sdata-ck-instance-id\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]+)/i, '');
-  const stampedTag = withoutExistingInstanceId.replace(/>$/, ` data-ck-instance-id="${escapeAttribute(args.instanceId)}">`);
-  return { ok: true, body: `${args.html.slice(0, root.start)}${stampedTag}${args.html.slice(root.end)}` };
+  const shell = topLevelShells[0]!;
+  const withoutExistingInstanceId = shell.tag.replace(
+    /\sdata-ck-instance-id\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]+)/i,
+    '',
+  );
+  const stampedTag = withoutExistingInstanceId.replace(
+    />$/,
+    ` data-ck-instance-id="${escapeAttribute(args.instanceId)}">`,
+  );
+  return {
+    ok: true,
+    body: `${args.html.slice(0, shell.start)}${stampedTag}${args.html.slice(shell.end)}`,
+  };
 }
 
 export function buildIndexHtml(args: {

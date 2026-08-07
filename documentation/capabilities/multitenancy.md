@@ -27,7 +27,6 @@ Canonical account-management architecture:
 | Roma tier-drop dismiss route | `roma/app/api/account/lifecycle/tier-drop/dismiss/route.ts` |
 | Roma account asset upload | `roma/app/api/account/assets/upload/route.ts` |
 | Roma instance create/save/publish routes | `roma/app/api/account/instances/**` |
-| Roma page publish disabled route | `roma/app/api/account/pages/[pageId]/publish/route.ts` |
 | Roma instance save policy | `roma/lib/account-instance-save-policy.ts` |
 | Policy resolver | `packages/ck-policy/src/policy.ts` |
 | Policy registry/matrix | `packages/ck-policy/src/registry.ts`, `packages/ck-policy/entitlements.matrix.json` |
@@ -73,7 +72,7 @@ users.role -> role inside that account
 | Login/session/account bootstrap | Berlin |
 | Current account shell and product routes | Roma |
 | Relational account/user/team data | Michael/Supabase |
-| Account assets/instances/pages files | Tokyo-worker over Tokyo R2 |
+| Account asset and instance files | Tokyo-worker over Tokyo R2 |
 | Account product policy | Roma using `@clickeen/ck-policy` |
 | Public widget serving | Tokyo-worker generated package serving |
 
@@ -275,7 +274,6 @@ These are not active runtime truth:
 - customer account switching;
 - core `account_members` role authority;
 - public monthly view denial/upsell behavior for `views.monthly.max`;
-- page publish is disabled; Roma returns `422 coreui.errors.page.publishUnavailable`, and public page copy/open is not active.
 
 ## Verification
 
@@ -288,7 +286,6 @@ These are not active runtime truth:
 | Entitlement keys/values | `packages/ck-policy/entitlements.matrix.json` |
 | Entitlement metadata/enforcement status | runtime owner evidence plus `packages/ck-policy/src/registry.ts`; `embed.seoGeo.enabled` currently conflicts |
 | Account files | Roma routes first; raw bytes require `pnpm cf:preflight` and R2 evidence |
-| Page publish disabled | `POST /api/account/pages/{pageId}/publish` returns `422 coreui.errors.page.publishUnavailable` |
 
 ## Not Current Product Truth
 

@@ -5,12 +5,12 @@
     return String(widgetType || '').trim();
   }
 
-  function assertWidgetRoot(widgetRoot, widgetType) {
-    if (!(widgetRoot instanceof HTMLElement)) {
-      throw new Error('[CKWidgetRuntime] widget root must be an HTMLElement');
+  function assertWidgetShell(widgetShell, widgetType) {
+    if (!(widgetShell instanceof HTMLElement)) {
+      throw new Error('[CKWidgetRuntime] widget Shell must be an HTMLElement');
     }
-    if (widgetRoot.getAttribute('data-ck-widget') !== widgetType) {
-      throw new Error(`[CKWidgetRuntime] expected [data-ck-widget="${widgetType}"]`);
+    if (!widgetShell.classList.contains('ck-headerLayout') || widgetShell.getAttribute('data-ck-widget') !== widgetType) {
+      throw new Error(`[CKWidgetRuntime] expected .ck-headerLayout[data-ck-widget="${widgetType}"]`);
     }
   }
 
@@ -18,25 +18,25 @@
     return `data-ck-${widgetType.replace(/[^a-z0-9_-]+/gi, '-').toLowerCase()}-runtime-bound`;
   }
 
-  function roots(widgetType) {
-    return Array.from(document.querySelectorAll(`[data-ck-widget="${widgetType}"]`))
-      .filter((root) => root instanceof HTMLElement);
+  function shells(widgetType) {
+    return Array.from(document.querySelectorAll(`.ck-headerLayout[data-ck-widget="${widgetType}"]`))
+      .filter((shell) => shell instanceof HTMLElement);
   }
 
-  function resolveInstanceId(widgetRoot) {
-    if (!(widgetRoot instanceof HTMLElement)) return '';
+  function resolveInstanceId(widgetShell) {
+    if (!(widgetShell instanceof HTMLElement)) return '';
 
-    const direct = widgetRoot.getAttribute('data-ck-instance-id');
+    const direct = widgetShell.getAttribute('data-ck-instance-id');
     if (typeof direct === 'string' && direct.trim()) return direct.trim();
 
-    const rootNode = widgetRoot.getRootNode();
-    if (rootNode instanceof ShadowRoot) {
-      const host = rootNode.host;
+    const treeNode = widgetShell.getRootNode();
+    if (treeNode instanceof ShadowRoot) {
+      const host = treeNode.host;
       const fromHost = host instanceof HTMLElement ? host.getAttribute('data-ck-instance-id') : '';
       if (typeof fromHost === 'string' && fromHost.trim()) return fromHost.trim();
     }
 
-    const ancestor = widgetRoot.closest('[data-ck-instance-id]');
+    const ancestor = widgetShell.closest('[data-ck-instance-id]');
     const fromAncestor = ancestor instanceof HTMLElement ? ancestor.getAttribute('data-ck-instance-id') : '';
     if (typeof fromAncestor === 'string' && fromAncestor.trim()) return fromAncestor.trim();
 
@@ -49,19 +49,13 @@
     return payload && typeof payload === 'object' ? payload : null;
   }
 
-  function isComposedPage(widgetRoot) {
-    if (!(widgetRoot instanceof HTMLElement)) return false;
-    return widgetRoot.closest('[data-ck-composed-page="true"]') instanceof HTMLElement;
-  }
-
-  function contextFor(widgetRoot, widgetType) {
-    assertWidgetRoot(widgetRoot, widgetType);
-    const instanceId = resolveInstanceId(widgetRoot);
-    if (instanceId) widgetRoot.setAttribute('data-ck-instance-id', instanceId);
+  function contextFor(widgetShell, widgetType) {
+    assertWidgetShell(widgetShell, widgetType);
+    const instanceId = resolveInstanceId(widgetShell);
+    if (instanceId) widgetShell.setAttribute('data-ck-instance-id', instanceId);
     const payload = readPayload(instanceId);
     return {
-      widgetRoot,
-      composedPage: isComposedPage(widgetRoot),
+      widgetShell,
       instanceId,
       payload,
       locale: payload && typeof payload.locale === 'string' ? payload.locale : '',
@@ -75,16 +69,16 @@
     if (typeof init !== 'function') throw new Error('[CKWidgetRuntime] init must be a function');
 
     const attr = bindingAttr(normalized);
-    const initializer = function (widgetRoot) {
-      assertWidgetRoot(widgetRoot, normalized);
-      if (widgetRoot.getAttribute(attr) === 'true') return null;
-      widgetRoot.setAttribute(attr, 'true');
-      return init(widgetRoot, contextFor(widgetRoot, normalized));
+    const initializer = function (widgetShell) {
+      assertWidgetShell(widgetShell, normalized);
+      if (widgetShell.getAttribute(attr) === 'true') return null;
+      widgetShell.setAttribute(attr, 'true');
+      return init(widgetShell, contextFor(widgetShell, normalized));
     };
 
     window.CK_WIDGET_INITIALIZERS = Object.assign({}, window.CK_WIDGET_INITIALIZERS || {});
     window.CK_WIDGET_INITIALIZERS[normalized] = initializer;
-    roots(normalized).forEach((root) => initializer(root));
+    shells(normalized).forEach((shell) => initializer(shell));
     return initializer;
   }
 
@@ -112,13 +106,12 @@
   }
 
   window.CKWidgetRuntime = Object.freeze({
-    assertWidgetRoot,
+    assertWidgetShell,
     bindStateUpdates,
     contextFor,
-    isComposedPage,
     readPayload,
     register,
     resolveInstanceId,
-    roots,
+    shells,
   });
 })();

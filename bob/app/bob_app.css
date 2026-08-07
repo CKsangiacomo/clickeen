@@ -160,10 +160,6 @@ body {
   flex-wrap: wrap;
 }
 
-.topdrawer-return {
-  flex: none;
-}
-
 .topdrawer-publish-status {
   color: var(--color-text-secondary);
 }

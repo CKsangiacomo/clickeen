@@ -5,7 +5,7 @@ import {
   resolveTranslatedValues,
   type ResolvedAccountAsset,
 } from '@clickeen/ck-contracts';
-import type { AccountFontLibrary, RuntimeTypographyData } from '@clickeen/widget-shell';
+import type { AccountFontLibrary, RuntimeTypographyData } from '@clickeen/widget-foundation';
 import type { InstancePublicPackage } from '../lib/session/sessionTypes';
 import { useWidgetSession, useWidgetSessionChrome } from '../lib/session/useWidgetSession';
 import { dieterIconStyle } from './dieterIcon';

@@ -53,7 +53,7 @@
     'bottom-left': true,
     'left-middle': true
   };
-  var ROOT_SHARE_IDS = new WeakMap();
+  var SHELL_SHARE_IDS = new WeakMap();
   var shareSequence = 0;
 
   function normalizeLocale(value) {
@@ -64,28 +64,28 @@
     return COPY[normalizeLocale(locale)] || COPY.en;
   }
 
-  function closestWidgetRoot(node) {
+  function closestWidgetShell(node) {
     while (node && node instanceof HTMLElement) {
-      if (node.hasAttribute('data-ck-widget') && node.getAttribute('data-role') === 'root') return node;
+      if (node.hasAttribute('data-ck-widget') && node.classList.contains('ck-headerLayout')) return node;
       node = node.parentElement;
     }
     return null;
   }
 
-  function shareKeyForWidget(root, options) {
-    var instanceId = String(options && options.instanceId || root.getAttribute('data-ck-instance-id') || '').trim();
-    var widgetType = String(options && options.widgetType || root.getAttribute('data-ck-widget') || 'widget').trim();
+  function shareKeyForWidget(shell, options) {
+    var instanceId = String(options && options.instanceId || shell.getAttribute('data-ck-instance-id') || '').trim();
+    var widgetType = String(options && options.widgetType || shell.getAttribute('data-ck-widget') || 'widget').trim();
     if (instanceId) return instanceId;
-    var existing = ROOT_SHARE_IDS.get(root) || root.getAttribute('data-ck-social-share-key');
+    var existing = SHELL_SHARE_IDS.get(shell) || shell.getAttribute('data-ck-social-share-key');
     if (existing) return existing;
     shareSequence += 1;
     var key = (widgetType || 'widget') + '__' + String(shareSequence);
-    ROOT_SHARE_IDS.set(root, key);
+    SHELL_SHARE_IDS.set(shell, key);
     return key;
   }
 
-  function shareRootForWidget(root) {
-    var key = root.getAttribute('data-ck-social-share-key') || root.getAttribute('data-ck-instance-id') || root.getAttribute('data-ck-widget') || '';
+  function shareRootForWidget(shell) {
+    var key = shell.getAttribute('data-ck-social-share-key') || shell.getAttribute('data-ck-instance-id') || shell.getAttribute('data-ck-widget') || '';
     if (key) {
       var escaped = window.CSS && typeof window.CSS.escape === 'function'
         ? window.CSS.escape(key)
@@ -96,7 +96,7 @@
     var candidates = document.querySelectorAll('[data-ck-social-share-root]');
     for (var i = 0; i < candidates.length; i += 1) {
       var candidate = candidates[i];
-      if (candidate instanceof HTMLElement && closestWidgetRoot(candidate) === root) return candidate;
+      if (candidate instanceof HTMLElement && closestWidgetShell(candidate) === shell) return candidate;
     }
     return null;
   }
@@ -212,9 +212,9 @@
     return { attachTo: attachTo, position: position };
   }
 
-  function ensureHost(root, attachTo) {
+  function ensureHost(shell, attachTo) {
     var selector = attachTo === 'pod' ? '.pod' : '.stage';
-    var host = root.closest(selector);
+    var host = shell.closest(selector);
     if (!(host instanceof HTMLElement)) {
       throw new Error('[CKSocialShare] Missing ' + selector);
     }
@@ -222,33 +222,33 @@
     return host;
   }
 
-  function ensureShareRoot(root, options) {
-    var existing = shareRootForWidget(root);
-    var host = ensureHost(root, options.attachTo);
+  function ensureShareRoot(shell, options) {
+    var existing = shareRootForWidget(shell);
+    var host = ensureHost(shell, options.attachTo);
     if (existing) {
       applyCards(existing, options.messageCards || [], options.socialCards || []);
       if (existing.parentElement !== host) host.appendChild(existing);
       return existing;
     }
 
-    var instanceId = String(options && options.instanceId || root.getAttribute('data-ck-instance-id') || '').trim();
-    var widgetType = String(options && options.widgetType || root.getAttribute('data-ck-widget') || 'widget').trim();
-    if (instanceId) root.setAttribute('data-ck-instance-id', instanceId);
-    if (!root.id) {
+    var instanceId = String(options && options.instanceId || shell.getAttribute('data-ck-instance-id') || '').trim();
+    var widgetType = String(options && options.widgetType || shell.getAttribute('data-ck-widget') || 'widget').trim();
+    if (instanceId) shell.setAttribute('data-ck-instance-id', instanceId);
+    if (!shell.id) {
       var idSource = instanceId || widgetType || 'widget';
-      root.id = 'ck-instance-' + normalizeAnchorId(idSource);
+      shell.id = 'ck-instance-' + normalizeAnchorId(idSource);
     }
 
     var holder = document.createElement('div');
     holder.innerHTML = shareMarkup({
-      anchorId: root.id,
+      anchorId: shell.id,
       widgetLabel: String(options && options.widgetLabel || widgetType || 'widget')
     });
     var shareRoot = holder.firstElementChild;
     if (!(shareRoot instanceof HTMLElement)) return null;
     applyCards(shareRoot, options.messageCards || [], options.socialCards || []);
-    var key = shareKeyForWidget(root, options);
-    root.setAttribute('data-ck-social-share-key', key);
+    var key = shareKeyForWidget(shell, options);
+    shell.setAttribute('data-ck-social-share-key', key);
     shareRoot.setAttribute('data-ck-social-share-for', key);
     host.appendChild(shareRoot);
     return shareRoot;
@@ -268,44 +268,44 @@
     }
   }
 
-  function removeShareRoot(root) {
-    var shareRoot = shareRootForWidget(root);
+  function removeShareRoot(shell) {
+    var shareRoot = shareRootForWidget(shell);
     if (shareRoot) shareRoot.remove();
   }
 
-  function resolveRuntimeContext(root) {
+  function resolveRuntimeContext(shell) {
     var runtime = window.CKWidgetRuntime;
     if (!runtime || typeof runtime.contextFor !== 'function') return null;
-    var widgetType = root.getAttribute('data-ck-widget') || '';
+    var widgetType = shell.getAttribute('data-ck-widget') || '';
     if (!widgetType) return null;
     try {
-      return runtime.contextFor(root, widgetType);
+      return runtime.contextFor(shell, widgetType);
     } catch (_error) {
       return null;
     }
   }
 
-  function applySocialShare(root, state, options) {
-    if (!(root instanceof HTMLElement)) return;
+  function applySocialShare(shell, state, options) {
+    if (!(shell instanceof HTMLElement)) return;
     var behavior = state && typeof state === 'object' ? state.behavior : null;
     var socialShare = behavior && typeof behavior === 'object' ? behavior.socialShare : null;
     var enabled = socialShare && socialShare.enabled;
     if (enabled == null) {
-      removeShareRoot(root);
+      removeShareRoot(shell);
       return;
     }
     if (typeof enabled !== 'boolean') {
       throw new Error('[CKSocialShare] state.behavior.socialShare.enabled must be a boolean');
     }
     if (!enabled) {
-      removeShareRoot(root);
+      removeShareRoot(shell);
       return;
     }
     var placement = resolvePlacement(socialShare);
     var messageCards = enabledCardsFor(socialShare, MESSAGE_CARDS);
     var socialCards = enabledCardsFor(socialShare, SOCIAL_CARDS);
     if (messageCards.length === 0 && socialCards.length === 0) {
-      removeShareRoot(root);
+      removeShareRoot(shell);
       return;
     }
     var shareOptions = Object.assign({}, options || {}, {
@@ -314,11 +314,11 @@
       position: placement.position,
       socialCards: socialCards
     });
-    var shareRoot = ensureShareRoot(root, shareOptions);
+    var shareRoot = ensureShareRoot(shell, shareOptions);
     if (!shareRoot) return;
     applyShareRootContext(shareRoot, shareOptions);
     shareRoot.hidden = false;
-    bindRoot(root);
+    bindShell(shell);
   }
 
   function applyCopy(root, copy) {
@@ -459,11 +459,11 @@
     if (appUrls[action]) openUrl(appUrls[action]);
   }
 
-  function bindRoot(root) {
-    var shareRoot = shareRootForWidget(root);
+  function bindShell(shell) {
+    var shareRoot = shareRootForWidget(shell);
     if (!shareRoot) return;
 
-    var instanceId = root.getAttribute('data-ck-instance-id') || '';
+    var instanceId = shell.getAttribute('data-ck-instance-id') || '';
     var context = instanceId && window.CK_WIDGETS ? window.CK_WIDGETS[instanceId] : null;
     var copy = copyForLocale(context && context.locale);
     applyCopy(shareRoot, copy);
@@ -501,7 +501,7 @@
       try {
         await handleShare({
           action: action,
-          anchorId: shareRoot.getAttribute('data-ck-share-anchor-id') || root.id || '',
+          anchorId: shareRoot.getAttribute('data-ck-share-anchor-id') || shell.id || '',
           widgetLabel: shareRoot.getAttribute('data-ck-widget-label') || '',
           channelLabel: button.getAttribute('data-ck-share-label') || button.textContent || action,
           toast: toast,
@@ -515,18 +515,18 @@
   }
 
   function bindAll() {
-    document.querySelectorAll('[data-ck-widget][data-role="root"][data-ck-instance-id]').forEach(function (root) {
-      if (!(root instanceof HTMLElement)) return;
-      var context = resolveRuntimeContext(root);
+    document.querySelectorAll('.ck-headerLayout[data-ck-widget][data-ck-instance-id]').forEach(function (shell) {
+      if (!(shell instanceof HTMLElement)) return;
+      var context = resolveRuntimeContext(shell);
       if (context && context.state) {
-        applySocialShare(root, context.state, {
+        applySocialShare(shell, context.state, {
           instanceId: context.instanceId,
-          widgetType: root.getAttribute('data-ck-widget') || '',
-          widgetLabel: document.title || root.getAttribute('data-ck-widget') || 'widget'
+          widgetType: shell.getAttribute('data-ck-widget') || '',
+          widgetLabel: document.title || shell.getAttribute('data-ck-widget') || 'widget'
         });
         return;
       }
-      bindRoot(root);
+      bindShell(shell);
     });
   }
 
@@ -536,17 +536,17 @@
     if (data.type !== 'ck:state-update') return;
     var state = data.state;
     var widgetname = typeof data.widgetname === 'string' ? data.widgetname : '';
-    var roots = widgetname
-      ? document.querySelectorAll('[data-ck-widget="' + widgetname + '"][data-role="root"]')
-      : document.querySelectorAll('[data-ck-widget][data-role="root"]');
-    roots.forEach(function (root) {
-      if (!(root instanceof HTMLElement)) return;
-      var rootInstanceId = root.getAttribute('data-ck-instance-id') || '';
-      if (rootInstanceId && data.instanceId && rootInstanceId !== data.instanceId) return;
-      applySocialShare(root, state, {
+    var shells = widgetname
+      ? document.querySelectorAll('.ck-headerLayout[data-ck-widget="' + widgetname + '"]')
+      : document.querySelectorAll('.ck-headerLayout[data-ck-widget]');
+    shells.forEach(function (shell) {
+      if (!(shell instanceof HTMLElement)) return;
+      var shellInstanceId = shell.getAttribute('data-ck-instance-id') || '';
+      if (shellInstanceId && data.instanceId && shellInstanceId !== data.instanceId) return;
+      applySocialShare(shell, state, {
         instanceId: data.instanceId,
-        widgetType: widgetname || root.getAttribute('data-ck-widget') || '',
-        widgetLabel: document.title || widgetname || root.getAttribute('data-ck-widget') || 'widget',
+        widgetType: widgetname || shell.getAttribute('data-ck-widget') || '',
+        widgetLabel: document.title || widgetname || shell.getAttribute('data-ck-widget') || 'widget',
         previewMode: data.previewMode
       });
     });

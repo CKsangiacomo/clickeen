@@ -208,7 +208,7 @@ If you change runtime behavior, update docs in the same PR/commit:
 - **Widget spec/runtime changes**
   - Update the widget operator spec under `documentation/widgets/widgets/`
   - Update authoring manuals under `documentation/widgets/authoring/` when source, Bob controls, or package boundaries change
-  - Update shared Shell manuals under `documentation/widgets/shared/` when stage/pod/typography/branding/share/locale behavior changes
+  - Update shared widget manuals under `documentation/widgets/shared/` when Stage/Pod/Shell/typography/branding/share/locale behavior changes
 - **Capability changes (Supernova, SEO/GEO, multitenancy)**
   - Update `documentation/capabilities/{capability}.md`
 - **Prague strings localization pipeline**

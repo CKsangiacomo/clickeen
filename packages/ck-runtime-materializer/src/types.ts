@@ -1,7 +1,7 @@
 import type { WidgetEditableFieldsContract } from '@clickeen/ck-contracts/translated-value-primitives';
-import type { RuntimeTypographyData } from '@clickeen/widget-shell';
+import type { RuntimeTypographyData } from '@clickeen/widget-foundation';
 
-export const RUNTIME_MATERIALIZER_CONTRACT_VERSION = 'ck-runtime-materializer:126-overlay-runtime';
+export const RUNTIME_MATERIALIZER_CONTRACT_VERSION = 'ck-runtime-materializer:shell-anchor';
 
 export type RuntimeMaterializerFileContext = {
   mediaType: 'application/json' | 'text/html' | 'text/css' | 'text/javascript';
@@ -63,7 +63,7 @@ export type RuntimeMaterializerErrorReason =
   | 'compiled_widget_invalid'
   | 'widget_package_missing'
   | 'widget_package_file_missing'
-  | 'widget_package_root_invalid'
+  | 'widget_package_shell_invalid'
   | 'artifact_coordinate_invalid'
   | 'typography_data_invalid'
   | 'source_state_invalid';
@@ -84,6 +84,4 @@ export type RuntimeMaterializerSuccess = {
   evidence: RuntimeMaterializerEvidence;
 };
 
-export type RuntimeMaterializerResult =
-  | RuntimeMaterializerSuccess
-  | RuntimeMaterializerFailure;
+export type RuntimeMaterializerResult = RuntimeMaterializerSuccess | RuntimeMaterializerFailure;

@@ -79,10 +79,11 @@ branding.remove -> behavior.showBacklink
 widget.socialShare.enabled -> behavior.socialShare.enabled
 ```
 
-## Shell Utilities
+## Shared Widget Utilities
 
-Big Bang uses the shared Shell for Header, Header CTA, Stage/Pod, Core size,
-typography, branding, social share, and locale switcher.
+Big Bang uses the presentation frame for Stage/Pod, the Shell for Header/Core
+composition, and shared utilities for Core sizing, typography, branding,
+social share, and locale switching.
 
 Runtime requires these Core DOM hooks:
 
@@ -94,7 +95,7 @@ Runtime requires these Core DOM hooks:
 ```
 
 `widget.client.js` registers as `big-bang`, validates `bigBang.*`, requires a
-non-empty `bigBang.statement`, applies shared Shell utilities, and binds
+non-empty `bigBang.statement`, applies shared widget utilities, and binds
 `ck:state-update` for the current instance id.
 
 Runtime constraints:
@@ -109,13 +110,6 @@ bigBang.gap -> 8..80
 Do not add a local Header, typography, branding, share, or locale switcher
 path. Missing shared helpers or missing required DOM hooks must remain explicit
 runtime errors.
-
-## Clickeen Pages Usage
-
-Big Bang appears in Clickeen Page source as a saved account widget instance
-placement. The page stores a placement reference to the instance; the widget
-software remains under `tokyo/product/widgets/big-bang/`. Public page package
-serving depends on Roma writing real page packages.
 
 ## Verification
 

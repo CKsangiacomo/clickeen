@@ -1,7 +1,4 @@
-import type {
-  RuntimeMaterializerCompiledWidget,
-  RuntimeMaterializerInput,
-} from '../../src/types';
+import type { RuntimeMaterializerCompiledWidget, RuntimeMaterializerInput } from '../../src/types';
 
 export const baseState = {
   headline: 'Clickeen helps teams launch fast.',
@@ -59,7 +56,7 @@ export const baseCompiledWidget = {
         source: `<body>
 <link rel="stylesheet" href="/dieter/tokens/tokens.css" />
 <link rel="stylesheet" href="./widget.css" />
-<section data-ck-widget="contract-widget" data-role="root">
+<section class="ck-headerLayout" data-ck-widget="contract-widget">
   <p data-bind="nested.eyebrow"></p>
   <h1 data-bind="headline"></h1>
   <ul data-bind="items"></ul>

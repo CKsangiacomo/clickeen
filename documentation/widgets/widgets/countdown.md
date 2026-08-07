@@ -77,7 +77,7 @@ widget.socialShare.enabled -> behavior.socialShare.enabled
 ## Runtime Notes
 
 `widget.client.js` validates state, resolves required Countdown DOM hooks,
-applies shared Shell utilities, and updates timer/number/action DOM. Personal
+applies shared widget utilities, and updates timer/number/action DOM. Personal
 countdown storage requires an instance id.
 
 Timer modes:
@@ -111,7 +111,7 @@ Runtime requires these Core DOM hooks:
 ```
 
 `widget.client.js` registers as `countdown`, validates `countdown.*`, validates
-date/timezone/action URL state, applies shared Shell utilities, and binds
+date/timezone/action URL state, applies shared widget utilities, and binds
 `ck:state-update` for the current instance id.
 
 The DOM resolver is part of `widget.client.js`. Do not reintroduce
@@ -131,18 +131,12 @@ Timer failure rules:
 Appearance state includes timer style, time format, labels, separator, text
 color, item background, and card-wrapper radius/border/shadow.
 
-## Shell Utilities
+## Shared Widget Utilities
 
-Countdown uses the shared Shell for Header, Header CTA, Stage/Pod, Core size,
-typography, branding, social share, and locale switcher. Timer tile surfaces
-are Core-owned under `countdown.appearance.*`.
-
-## Clickeen Pages Usage
-
-Countdown appears in Clickeen Page source as a saved account widget instance
-placement. Timer runtime behavior belongs to the instance package served from
-the account folder. Public page package serving depends on Roma writing real
-page packages.
+Countdown uses the presentation frame for Stage/Pod, the Shell for Header/Core
+composition, and shared utilities for Core sizing, typography, branding,
+social share, and locale switching. Timer tile surfaces are Core-owned under
+`countdown.appearance.*`.
 
 ## Verification
 

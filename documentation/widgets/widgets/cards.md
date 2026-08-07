@@ -77,11 +77,12 @@ branding.remove -> behavior.showBacklink
 widget.socialShare.enabled -> behavior.socialShare.enabled
 ```
 
-## Shell Utilities
+## Shared Widget Utilities
 
-Cards uses the shared Shell for Header, Header CTA, Stage/Pod, Core size,
-typography, branding, social share, and locale switcher. Card visual surfaces
-are Core-owned under `cards.*`.
+Cards uses the presentation frame for Stage/Pod, the Shell for Header/Core
+composition, and shared utilities for Core sizing, typography, branding,
+social share, and locale switching. Card visual surfaces are Core-owned under
+`cards.*`.
 
 Runtime requires these Core DOM hooks:
 
@@ -91,7 +92,7 @@ Runtime requires these Core DOM hooks:
 ```
 
 `widget.client.js` registers as `cards`, validates `cards.*`, renders cards
-into `cards-core`, applies shared Shell utilities, and binds `ck:state-update`
+into `cards-core`, applies shared widget utilities, and binds `ck:state-update`
 for the current instance id.
 
 Runtime invariants:
@@ -119,12 +120,6 @@ cards.betweenCards
 cards.customCardStyles
 cards.appearance.cardwrapper
 ```
-
-## Clickeen Pages Usage
-
-Cards appears in Clickeen Page source as a saved account widget instance
-placement. Repeated card items remain widget Core state inside the instance.
-Public page package serving depends on Roma writing real page packages.
 
 ## Verification
 

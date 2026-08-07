@@ -4,7 +4,7 @@ import { useCallback, useEffect, type Dispatch, type MutableRefObject, type SetS
 import type { Policy } from '@clickeen/ck-policy';
 import {
   normalizeAccountFontLibrary,
-} from '@clickeen/widget-shell';
+} from '@clickeen/widget-foundation';
 import {
   type BobOpenEditorAppliedMessage,
   type BobOpenEditorFailedMessage,
@@ -118,10 +118,6 @@ export function useSessionBoot(args: {
           widgetname: compiled.widgetname,
           publishStatus: message.publishStatus,
           label: nextLabel,
-          returnLabel:
-            typeof message.returnLabel === 'string' && message.returnLabel.trim()
-              ? message.returnLabel.trim()
-              : undefined,
           publicActions,
           fontLibrary,
           translationSetup: message.translationSetup ?? null,
