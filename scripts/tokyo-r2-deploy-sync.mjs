@@ -20,11 +20,12 @@ const maxUploadAttempts = Number.parseInt(process.env.TOKYO_R2_DEPLOY_SYNC_ATTEM
 const mappings = [
   { source: 'tokyo/product/widgets', target: 'product/widgets' },
   { source: 'dieter/icons/svg', target: 'dieter/icons/svg' },
+  { source: 'tokyo/product/fonts', target: 'fonts' },
   { source: 'tokyo/roma', target: 'product/roma' },
   { source: 'tokyo/prague', target: 'prague' },
 ];
 
-const allowedRoots = new Set(['dieter', 'product', 'prague']);
+const allowedRoots = new Set(['dieter', 'fonts', 'product', 'prague']);
 const contentTypes = new Map([
   ['.css', 'text/css; charset=utf-8'],
   ['.html', 'text/html; charset=utf-8'],
@@ -34,6 +35,8 @@ const contentTypes = new Map([
   ['.jpg', 'image/jpeg'],
   ['.png', 'image/png'],
   ['.svg', 'image/svg+xml'],
+  ['.woff', 'font/woff'],
+  ['.woff2', 'font/woff2'],
 ]);
 
 function deployContentType(file) {

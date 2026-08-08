@@ -26,6 +26,11 @@ Tokyo-worker stores them under:
 accounts/CLICKEEN/assets/{filename}
 ```
 
+Fonts uploaded by an account are also account assets. The global Clickeen font
+set is different: it is product-owned, available to every account, and lives
+under `fonts/special/**`. Global font files must not be copied into an account
+asset library to make them available.
+
 ## Naming Boundary
 
 Use `assets` for account-owned uploads in Tokyo:
@@ -37,6 +42,8 @@ accounts/{accountPublicId}/assets/
 Use `media` for Clickeen-owned product files used by Prague, Roma, Bob, Dieter,
 widget software, marketing surfaces, app UI, screenshots, icons, and other
 product-owned files.
+
+Use the canonical `fonts/` root for global Clickeen font files.
 
 ## Authority Chain
 

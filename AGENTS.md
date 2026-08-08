@@ -1,311 +1,245 @@
 # Clickeen Agent Guidelines
 
-This repo is an AI-native build. Agents win here by following current product
-truth, executing through named authorities, and leaving documentation sharper
-than they found it.
+## Read This First
 
-## What This System Is
-
-Clickeen is an agent-operated product. This is the premise; read it before
-anything below.
-
-The codebase is deliberately lean and built around a structured, AI-legible
-schema so that agents can operate the system directly. Agents are the
-operators — they know what to do, where, and how, and they execute operations
-on the structured substrate. Agents are not features bolted onto a SaaS. The
-intelligence lives in the agents, not in hardcoded pipelines.
-
-This is the moat. Legacy SaaS and incumbents have large, complex codebases that
-humans operate through UIs and APIs, with AI added as a feature. Clickeen is the
-opposite: a lean, schema-structured, AI-legible system that agents operate.
-That operability is what competitors cannot copy without rebuilding from zero.
-
-## Operating Model
-
-Clickeen is operated by one human product owner/architect plus an AI workforce.
+Clickeen is built and operated by AI under one human product owner/architect.
 
 The human owns product direction, architecture judgment, and final authority.
-AI coding and devops agents operate the repo, implementation, documentation,
-verification, and managed-service workflows through the gates in this file.
-Runtime product agents operate customer/product artifacts through named product
-authorities.
+AI coding, devops, and runtime agents perform the implementation, operation,
+documentation, and verification work through the product's named authorities.
 
-Clickeen is still a self-serve SaaS for customers, but the company and product
-are designed around agent operation rather than a large human operations team.
+This operating model makes two things non-negotiable:
 
-For any agent (AI or human) working in this tree:
+1. Agents must reason deeply without expanding the requested scope.
+2. Agents must understand and preserve the Clickeen tenets.
 
-- The first instinct is: keep the system lean and agent-operable. A change
-  either increases agent-operability or adds legacy weight.
-- A hardcoded flow with an AI call in the middle (service A calls service B,
-  validates, writes) is a legacy pipeline, not an agent. Do not build it and
-  call it an agent.
-- Do not add framework machinery, compatibility wrappers, broad registries,
-  phasing labels ("V1", "floor", "ship the wire first"), or ceremony. These
-  turn this into a legacy SaaS and destroy the moat.
-- The structured schema (widget specs, control/field maps, the overlay model,
-  markers, product-law ownership boundaries) is the substrate agents operate.
-  Keep it structured, typed, and AI-legible.
-- When unsure: does this change let a smart agent operate the system better, or
-  does it hardcode a human-written flow around a model call? Prefer the former.
+Failure on either point does not merely produce a poor answer. It adds
+unrequested machinery, corrupts product boundaries, and makes a one-human,
+AI-operated company harder to operate.
 
-The gates and discipline below exist to protect agent-operability — not to
-manage a legacy codebase.
+## Understand The System Before Doing Anything
 
-## Content Source Authority
+Before doing any Clickeen investigation, plan, review, explanation, code change,
+product-data operation, documentation change, or managed-service operation:
 
-Clickeen serves content. That is the end product of websites, widgets, pages,
-emails, reports, feeds, and future runtime surfaces.
+1. Read `documentation/README.md` completely.
+2. Read `documentation/architecture/CONTEXT.md` completely.
+3. Read `documentation/architecture/Tenets.md` completely.
+4. Read `documentation/strategy/WhyClickeen.md` completely.
+5. Follow the documentation router and read every document owned by the
+   affected surface completely.
+6. Only then inspect the runtime code, schema, workflow, stored data, or
+   deployed configuration that owns the behavior.
 
-Content in Clickeen has three source authorities:
+Do not skim the documentation. Do not rely on search snippets, a prior-memory
+summary, or a subagent's summary instead of reading the required documents
+yourself. Do not start from code and infer the product around it.
 
-1. Human-generated content: copy, pages, blogs, emails, widget text, product
-   descriptions, support articles, and other content authored by a person.
-2. AI-generated content: content written by agents from human direction,
-   account rules, brand rules, product rules, or approved system direction.
-3. Integration-sourced content: reviews, feeds, listings, CRM rows, analytics,
-   support data, aggregated records, and anything Clickeen pulls from another
-   system.
+Documentation defines intended product behavior and authority. Runtime code,
+migrations, stored data, and deployed configuration prove the current
+implementation. When they disagree, establish the concrete mismatch and fix
+the owning documentation with the behavior change that exposed it.
 
-Agents treat those sources differently:
+## Request Authority
 
-- For human-generated content, agents may recommend improvements, propose edits,
-  translate, optimize, restructure, and apply user-approved changes. Human
-  intent remains the source authority.
-- For AI-generated content, agents may operate autonomously inside the approved
-  product rules because the content is already agent-produced under Clickeen
-  direction.
-- For integration-sourced content, agents must not rewrite the source truth.
-  They may use it, summarize it, extract from it, route it, display it, analyze
-  it, and build product experiences around it. They may mutate it only through
-  an explicit authorized integration write path. Source truth is preserved;
-  derivatives and syncs are the work.
+The user's request defines both the outcome and the authorized action.
 
-The rule across all three sources is source-truth fidelity, not touch/no-touch:
-agents derive from and operate on content according to its source authority; a
-change to source truth is authorized by whoever owns it — the human, the
-product tenets, or the external
-system.
+- Analyze, explain, review, inspect, audit, verify, or report means read-only.
+  Do not edit files, mutate product data, deploy, or perform external writes.
+- Change, fix, build, implement, remove, or do authorizes only the changes
+  required for the explicitly requested outcome.
+- A staged request authorizes only the current stage. “Before we edit, verify”
+  authorizes verification, not the later edit.
+- A question, objection, or request for explanation does not authorize the
+  implementation of a proposed fix.
 
-Around the content, agents operate the Clickeen system itself: widgets, pages,
-reports, analytics, support tickets, locale overlays, runtime packages, account
-assets, routes, and storage folders. Different agents own different operational
-domains, but the rule is the same: operate structured artifacts directly through
-named authorities.
+More reasoning, time, tools, autonomy, or subagents never creates additional
+authority.
 
-This is the fundamental difference from legacy SaaS. Legacy SaaS builds heavy
-application code and adds AI as a feature. Clickeen structures content and the
-system around it so agents can operate the product.
+## Reasoning Is For Depth, Not Scope
 
-## Read Order
+More reasoning, time, tools, or subagents do not authorize broader scope.
 
-Before touching product-path code or data, read:
+Use additional reasoning to deepen work inside the requested outcome:
 
-1. `documentation/architecture/CONTEXT.md`
-2. `documentation/strategy/WhyClickeen.md`
-3. The detail doc for the surface being changed
-4. The runtime code that owns the behavior
+- read the applicable Clickeen documentation completely;
+- understand why the current product and architecture work as they do;
+- trace the actual code, data, runtime, and user flow;
+- verify claims with concrete repository or deployed-product evidence;
+- reduce uncertainty;
+- identify the smallest change that satisfies the request;
+- verify that change proportionally to its real risk.
 
-Examples:
+Do not use additional reasoning to:
 
-| Work Area                | Required Detail Doc                                        |
-| ------------------------ | ---------------------------------------------------------- |
-| Account assets           | `documentation/architecture/AssetManagement.md`            |
-| Roma routes or shell     | `documentation/services/roma.md`                           |
-| Bob Builder              | `documentation/services/bob.md`                            |
-| Tokyo-worker operations  | `documentation/services/tokyo-worker.md`                   |
-| Cloudflare/R2 operations | `documentation/engineering/CloudflareOperations.md`        |
-| Supabase/schema changes  | `documentation/engineering/SupabaseOperations.md`          |
-| Widget behavior          | relevant `documentation/widgets/**` doc plus widget source |
+- expand the user's request;
+- invent product requirements;
+- promote theoretical possibilities into product problems;
+- invent abstractions, terminology, containers, services, registries,
+  compatibility layers, migrations, or validation machinery;
+- redesign adjacent systems;
+- add future-proofing without a proven current need;
+- replace the product owner's stated architecture with an inferred one.
 
-## Authority Gate
+Before calling something a problem, state:
 
-Before making a product-path change, name the active authority for:
+1. The real current user or product flow that reaches it.
+2. The exact conditions required for it to happen.
+3. Whether it is happening now, concretely reachable, latent, or only
+   theoretical.
+4. The evidence proving that classification.
 
-- Product surface
-- Account/session coordinate
-- Storage coordinate
-- Route/API boundary
-- Runtime/deploy surface
-- Verification surface
+If no concrete current or reachable product scenario exists, label the finding
+theoretical and do not recommend or implement machinery for it unless the user
+explicitly asks.
 
-For account assets, the current authority chain is:
+Before proposing a fix, explain why the existing design exists and how it
+works. Prefer the smallest change through existing authorities. Stop when the
+requested outcome is complete.
 
-```text
-Roma current account -> accountPublicId -> Roma account asset route -> Tokyo-worker -> accounts/{accountPublicId}/assets/{filename}
-```
+## Before Inventing Anything
 
-The cloud-dev admin account coordinate is:
+Before introducing any new file, abstraction, term, container, service,
+registry, compatibility path, migration, workflow, validation layer, or other
+machinery, ask:
 
-```text
-CLICKEEN
-```
+1. Did the user request it?
+2. Is it required to complete the requested outcome now?
+3. Which concrete current or reachable product scenario proves the need?
+4. Can the existing authority, contract, or pattern solve the requirement?
+5. Is this product work, or is this AI reasoning derailing into invented work?
 
-## Plan Gate
+If it is not required, do not add it. If answering these questions would
+materially change the requested product or architecture, stop and ask the human
+architect before acting.
 
-Use a written checklist for cross-system changes, Cloudflare operations, remote
-product data repair, or anything that touches shared product contracts.
+## The Clickeen Tenets
 
-The checklist must separate:
+The canonical tenets are in `documentation/architecture/Tenets.md`. Read that
+document completely; this summary does not replace it.
 
-- Code changes
-- Product data changes
-- Deploy/runtime verification
-- Documentation changes
+1. **Agents operate structured artifacts.** Keep schemas, controls, field maps,
+   policies, grants, account files, overlays, and routes structured, typed, and
+   AI-legible. A hardcoded service pipeline with a model call in the middle is
+   not an agent.
+2. **Named authorities own boundaries.** Berlin owns authentication/bootstrap;
+   Roma owns current-account routes and product policy; Bob owns browser-memory
+   editing; Tokyo-worker owns account runtime storage and public serving;
+   Michael/Supabase owns relational truth; San Francisco owns governed model
+   execution; agent homes own their operational domains; Dieter owns the design
+   system. Do not bypass or duplicate those authorities.
+3. **No silent substitution or fallback.** Missing, invalid, stale, or
+   unavailable truth fails visibly. Do not replace it with another account,
+   locale, model, provider, storage path, compatibility shape, or invented
+   default.
+4. **No silent healing.** Invalid persisted or user state may be rejected or
+   repaired only through an explicit authorized operation. Never coerce or
+   rewrite it while pretending the original operation succeeded.
+5. **Product commands stay boring.** User intent travels through the current
+   account and the owning route/service to one explicit result. Do not add
+   orchestration machinery, broad registries, runtime discovery, compatibility
+   layers, or meta-frameworks around deterministic work.
+6. **Widget software is product truth.** Widget behavior lives in its
+   git-authored contract. Bob compiles editor controls, Roma saves/materializes
+   instances, and Tokyo-worker stores account runtime files; those systems do
+   not invent widget-specific semantics.
+7. **Bob edits in browser memory.** Draft edits, undo, preview, and Product
+   Copilot changes remain local until the user saves through Roma. Bob and
+   Product Copilot do not independently persist or publish.
+8. **Storage follows ownership.** `accounts/` is runtime-managed account data;
+   `dieter/`, `fonts/`, `product/`, and `prague/` are git-authored deploy
+   roots. Global Clickeen fonts live under `fonts/`; do not turn them into one
+   account's uploads or create alternate storage authorities.
+9. **Translation overlays are exact files.** Locale values live at the exact
+   account/instance/locale coordinate. Translation Agent generates them;
+   Tokyo-worker stores and serves them without inventing meaning.
+10. **Content source authority is preserved.** Human-generated content follows
+    human intent, AI-generated content may be operated inside approved product
+    rules, and integration-sourced truth changes only through an explicitly
+    authorized integration write path.
+11. **Public runtime serves saved truth.** Tokyo-worker serves the stored base
+    package and exact saved locale overlay under publication policy. Visitor
+    requests do not call models, read Supabase, rebuild widgets, regenerate
+    translations, repair state, or fall back to another identity.
+12. **Dieter tokens and primitives come first.** Use the existing design-system
+    contract before creating local UI styling or controls.
+13. **Documentation is operator truth.** `documentation/` describes the current
+    system. Planning and history live in `Execution_Pipeline_Docs/`. Confirmed
+    documentation/runtime mismatches are fixed with the change that exposes
+    them.
 
-If investigation changes any named authority, stop execution, restate the plan
-with the corrected authority, then continue from the updated checklist.
+These tenets are product law, not suggestions. A fix that violates them is not
+a valid fix.
 
-## Execution Gate
+## Authority And Plan Gates
 
-Use product routes for product mutations.
+Before a product-path change, name:
 
-- Account assets move through Roma account asset routes and Tokyo-worker.
-- Account instances move through Roma account instance routes and Tokyo-worker.
-- Auth/account context comes from Berlin/Roma session bootstrap.
+- product surface;
+- account/session coordinate;
+- storage coordinate;
+- route/API boundary;
+- runtime/deploy surface;
+- verification surface.
 
-Remote Cloudflare operations use the repo command path from
-`documentation/engineering/CloudflareOperations.md`.
+For cross-system work, shared contracts, managed services, or remote product
+data, use a written checklist that separates:
 
-Required preflight:
+- code changes;
+- product-data changes;
+- deploy/runtime verification;
+- documentation changes.
 
-```bash
-pnpm cf:preflight       # R2/Tokyo artifact operations
-pnpm cf:api:preflight   # Pages, domains, DNS, Worker/Page config
-```
+If investigation changes a named authority, stop, correct the authority
+statement and plan, and only then continue.
 
-If preflight fails, stop at that boundary and report the failed gate.
+## Execution Discipline
 
-## DevOps Gate
-
-Before claiming deploy or operating on managed services, identify the deploy or
-operation path:
-
-| Surface                           | Operation path                                                                    |
-| --------------------------------- | --------------------------------------------------------------------------------- |
-| Bob/Roma/Prague Pages             | Cloudflare Pages Git-connected build from `main`                                  |
-| DevStudio Pages                   | Cloudflare Pages project plus repo Cloudflare API commands for project/env checks |
-| Berlin/San Francisco/Tokyo-worker | GitHub Actions `cloud-dev workers deploy`                                         |
-| Tokyo product roots in R2         | `cloud-dev workers deploy` R2 sync step                                           |
-| R2 object reads/writes            | repo Cloudflare R2 commands after `pnpm cf:preflight`                             |
-| Pages/DNS/config reads/writes     | repo Cloudflare API commands after `pnpm cf:api:preflight`                        |
-| Supabase schema                   | reviewed SQL migration plus `supabase migrations deploy` workflow; see `documentation/engineering/SupabaseOperations.md` |
-
-Use GitHub Actions run status for Worker/R2 deploy evidence. Use Cloudflare
-Pages project state and cloud-dev surface checks for Pages runtime evidence.
-Use the Supabase migration workflow run for schema deployment evidence.
-
-## Code/Data Separation
-
-Treat source code and remote product data as different authorities.
-
-Code change means:
-
-- local diff
-- tests/checks
-- commit
-- push
-- deploy or build/runtime verification
-
-Product data repair means:
-
-- named product route or approved Cloudflare operation
-- preflight when Cloudflare is involved
-- API/R2 verification from the owning surface
-- explicit final statement that the git repo changed or did not change
-
-## Verification Gate
-
-Verify through the owner of the truth:
-
-| Concern                         | Verification                                                  |
-| ------------------------------- | ------------------------------------------------------------- |
-| Account assets visible to users | Roma `/api/account/assets` or Roma Assets UI                  |
-| Account asset bytes/metadata    | repo R2 commands after `pnpm cf:preflight`                    |
-| Account instances               | Roma account routes and Tokyo-worker evidence                 |
-| Pages app runtime               | Cloudflare Pages Git build state and cloud-dev surface checks |
-| Worker/R2 deploy                | GitHub Actions worker deploy runs and R2 evidence             |
-| Git state                       | local branch, tracking branch, remote branch                  |
-
-Final verification must reconcile each authority touched by the task.
+- Use the existing product route for product mutations.
+- Use the exact managed-service command path and preflight documented by the
+  owning engineering manual. If preflight fails, stop at that boundary.
+- Treat source code and remote product data as separate authorities. Verify and
+  report each independently.
+- Start from product behavior, then inspect file topology.
+- Preserve working behavior outside the requested change.
+- Keep diffs inside the named authority and affected surface.
+- Reuse existing patterns, helpers, Dieter tokens, and primitives before adding
+  anything new.
+- Run focused checks for the changed surface; broaden only when the actual
+  blast radius crosses systems.
+- Keep documentation current with behavior.
 
 ## Core Violation Audit
 
-After every execution task, verify the result against these eight core
-violations:
+After every execution task, verify the result against these eight violations:
 
-| ID  | Violation                  | Audit question                                                                                     |
-| --- | -------------------------- | -------------------------------------------------------------------------------------------------- |
-| V1  | Silent substitution        | Did the change replace missing, invalid, stale, or malformed truth with an invented value?         |
-| V2  | Silent healing             | Did the change normalize, coerce, repair, or rewrite invalid persisted/user state without failure? |
-| V3  | Silent omission            | Did the change drop a required input, artifact, operation, edit, module, event, or policy?         |
-| V4  | Fail-open control          | Did enforcement turn off when a dependency was missing, malformed, or unavailable?                 |
-| V5  | Corruption-as-absence      | Did corrupt stored state become treated as missing, new, empty, ignored, or overwritten?           |
-| V6  | Partial-success masquerade | Did the product claim full success after some requested work was dropped, rejected, or filtered?   |
-| V7  | Masquerade/redress         | Did the same failing workflow continue under a different wrapper, name, path, retry, or log?       |
-| V8  | Runtime test dependency    | Did normal product work start depending on tests, probes, helper checks, or validation rituals?    |
+| ID | Violation | Audit question |
+| --- | --- | --- |
+| V1 | Silent substitution | Did the change replace missing, invalid, stale, or malformed truth with an invented value? |
+| V2 | Silent healing | Did the change normalize, coerce, repair, or rewrite invalid persisted/user state without failure? |
+| V3 | Silent omission | Did the change drop a required input, artifact, operation, edit, module, event, or policy? |
+| V4 | Fail-open control | Did enforcement turn off when a dependency was missing, malformed, or unavailable? |
+| V5 | Corruption-as-absence | Did corrupt stored state become treated as missing, new, empty, ignored, or overwritten? |
+| V6 | Partial-success masquerade | Did the product claim full success after some requested work was dropped, rejected, or filtered? |
+| V7 | Masquerade/redress | Did the same failing workflow continue under a different wrapper, name, path, retry, or log? |
+| V8 | Runtime test dependency | Did normal product work start depending on tests, probes, helper checks, or validation rituals? |
 
-For product-path, cross-system, managed-service, deploy, or remote-data tasks,
-use at least one subagent for an independent V1-V8 audit after implementation
-and before final response. If subagent tools are unavailable, run the audit
-locally and state that no independent subagent audit was available.
+For product-path, cross-system, managed-service, deploy, remote-data, or shared
+architecture work, use an independent subagent for the post-implementation
+V1-V8 audit when available. If unavailable, run it locally and say so.
 
-The final response must include the V1-V8 result when the task changed product
-behavior, product data, deploy state, managed-service state, or shared
-architecture docs.
+## Verification And Completion
 
-## Documentation Discipline
+Verify through the owner of every truth touched. Product runtime evidence comes
+from cloud-dev and the owning surface; local commands are debugging and build
+evidence, not deployed-product proof.
 
-Docs are part of done.
+End execution work with a compact reconciliation:
 
-- `CONTEXT.md` stays short and current-system only.
-- Detail docs own surface-specific behavior.
-- PRDs, migrations, and service docs own history and execution detail.
-- Confirmed doc/runtime mismatch is fixed with the behavior change that exposed it.
-
-## Engineering Discipline
-
-- Start from product behavior, then inspect file topology.
-- Preserve working product behavior.
-- Keep diffs scoped to the named authority and surface.
-- Use existing local patterns and helpers before introducing new abstractions.
-- Reuse Dieter tokens and primitives for UI work.
-- Run focused checks for the changed surface; broaden checks when the blast
-  radius crosses systems.
-
-## Build And Check Commands
-
-Install:
-
-```bash
-pnpm install
-```
-
-Build:
-
-```bash
-pnpm build
-```
-
-Checks:
-
-```bash
-pnpm lint
-pnpm typecheck
-pnpm --filter @clickeen/bob lint
-pnpm --filter @clickeen/roma lint
-```
-
-Product runtime evidence comes from cloud-dev Cloudflare surfaces. Local app
-commands are for isolated debugging.
-
-## Final Response
-
-End every execution task with a compact reconciliation:
-
-- Files changed
-- Checks run
-- Commit/push/deploy state when code changed
-- Product data state when remote data changed
-- Verification result from the owning surface
-- Remaining work, only when proven
+- files changed;
+- checks and results;
+- commit, push, deploy, and live state when code changed;
+- product-data state when remote data changed;
+- verification through the owning surface;
+- V1-V8 result when required;
+- remaining work only when proven.

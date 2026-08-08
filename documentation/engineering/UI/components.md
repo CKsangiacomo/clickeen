@@ -62,6 +62,8 @@ The component-level product law is implemented:
   buttons.
 - `dropdown-actions` is one immediate-choice listbox workflow; its dead
   footer/apply branch is gone.
+- `dropdown-edit` shows the leading portion of long closed-trigger text and
+  applies an end ellipsis when the row cannot fit the complete value.
 - Object Manager dialog lifecycle remains owned by the dialog contract.
 
 Bulk Edit and Object Manager follow the exact dismissal contract in

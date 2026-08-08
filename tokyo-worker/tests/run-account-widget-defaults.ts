@@ -19,6 +19,7 @@ const valid = {
 };
 
 assert.ok(normalizeAccountWidgetDefaultsDocument(valid, 'CLICKEEN'));
+assert.equal(valid.fontLibrary.fonts.Orio?.source, 'tokyo');
 
 const retiredShellOnly = {
   ...valid,

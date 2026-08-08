@@ -54,15 +54,18 @@ No new owner choice is required for A-H:
 | 126A Accessibility | Semantic truth, native controls where behavior is preserved, accessible names, and honest state/copy. No certification or custom accessibility framework. |
 | 126B Color | Light mode, current palette, semantic roles, deterministic structural color, and legal user-authored color. No palette redesign or dark-mode prework. |
 | 126C Iconography | Keep the approved 157-icon human-originated set, numeric sizing, `currentColor`, and deterministic consumer lanes. Agents do not originate or reshape icons. |
-| 126D Typography | Keep operational UI typography separate from public-widget typography. Custom fonts are account assets. The seven-font migration is proven complete. |
+| 126D Typography | Keep operational UI typography separate from public-widget typography. User-uploaded custom fonts are account assets. The seven Clickeen special fonts are global product fonts under `fonts/special/**`, available to every account. |
 | 126E Interactions | Explicit Save, immediate in-memory preview, confirmed persistence, durable failures/partial success, and Agent Activity only for real agent work. |
 | 126F Motion | Small system motion using `140ms`, `160ms`, and `ease`, with reduced-motion behavior. Public-widget motion stays widget-owned. |
 | 126G Ops | Git source -> deterministic build -> generated Tokyo product output -> Cloudflare deploy. R2 is not source truth. |
 | 126H Dieter | Existing spacing, `--control-radius-*`, icon, motion, and shadow substrate by reference. No new elevation, focus/touch, or z-index system. |
 
-The seven untracked files under `tokyo/product/fonts/special/` are neither
-source nor deploy inputs. Their deletion is mechanical step-9 cleanup after the
-final plan records the already-proven account-asset state.
+The earlier 126D account-only classification of the seven Clickeen special
+fonts was rejected by the product owner on 2026-08-08. They are global product
+fonts, not `CLICKEEN` account uploads. The original files and `/fonts/special/**`
+delivery path are restored through the existing Tokyo font authority; the
+mistaken account copies are removed only after the affected saved instance is
+rematerialized through Roma.
 
 ## Mandatory Execution Law - Not Owner Choices
 
@@ -171,7 +174,6 @@ running operation, or a required notice exists.
 |---|---|---|---|
 | Dieter Bulk Edit | Close if unchanged; otherwise open discard confirmation | Never | Cancel follows the same dirty rule; Save applies edits |
 | Dieter Object Manager | Close if unchanged; otherwise open discard confirmation | Never | Cancel follows the same dirty rule; Save applies reorder/delete |
-| Roma Add Instances | Close and discard the temporary selection | Never | Cancel discards; Add selected persists |
 | Roma Bulk Upload | Disabled while any upload is active; close after terminal | Never | Close available only after the run is terminal |
 | Roma account tier-drop notice | Never | Never | Only Open settings or persisted Dismiss resolves the notice |
 | Roma plan-limit prompt | Close | Close | Close loses no work; plan enforcement and CTA behavior are outside D1 |

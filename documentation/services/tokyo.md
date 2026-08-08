@@ -16,6 +16,7 @@ Tokyo has two forms:
 ```text
 accounts/   runtime-managed account storage
 dieter/     git-authored shared SVG icon media
+fonts/      git-authored global Clickeen fonts
 product/    git-authored product software and media
 prague/     git-authored marketing/site/GTM content
 ```
@@ -77,6 +78,7 @@ back to base content.
 | --- | --- |
 | `/widgets/**` | `product/widgets/**` |
 | `/dieter/icons/svg/**` | `dieter/icons/svg/**` |
+| `/fonts/special/**` | `fonts/special/**` |
 | `/i18n/**` | `product/roma/i18n/public/**` |
 | `/assets/account/**` | account asset reads allowed by Tokyo-worker |
 | `/prague/l10n/**` | Prague l10n static path |
@@ -100,7 +102,7 @@ Remote R2 operations must use the repo paths documented in
 Stop if a change would:
 
 - write git-authored product artifacts into `accounts/`;
-- write account runtime artifacts into `dieter/`, `product/`, or `prague/`;
+- write account runtime artifacts into `dieter/`, `fonts/`, `product/`, or `prague/`;
 - introduce a second artifact root for one instance;
 - use UUID account folders;
 - treat Prague translations as account instance overlays;

@@ -67,7 +67,7 @@ async function proxyTokyoUrl(request: NextRequest, url: string, method: ProxyMet
 
 export async function proxyTokyoStaticPath(
   request: NextRequest,
-  prefix: 'dieter' | 'l10n',
+  prefix: 'dieter' | 'fonts' | 'l10n',
   pathSegments: string[],
   method: ProxyMethod,
 ) {

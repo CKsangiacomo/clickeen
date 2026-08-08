@@ -83,6 +83,7 @@ CLICKEEN
 | Product Copilot brain | Product Copilot Worker | `agents/product-copilot/` |
 | Translation brain | Translation Agent Worker | `agents/translation-agent/` |
 | Design system | Dieter | `dieter/` source; only `dieter/icons/svg/**` is deployed to the R2 `dieter/` root |
+| Global Clickeen fonts | Git-authored Tokyo font source | deployed to the R2 `fonts/` root and available to every account |
 | Marketing/demo pages | Prague | `prague/` and `prague/` R2 root |
 | Internal cockpit | DevStudio | `admin/` |
 
@@ -117,6 +118,7 @@ Tokyo R2 has these current roots:
 ```text
 accounts/
 dieter/
+fonts/
 product/
 prague/
 ```
@@ -145,6 +147,7 @@ The non-account roots are git-authored deploy artifacts:
 - `product/widgets/**` for widget software;
 - `product/roma/**` for Roma public i18n/static support artifacts;
 - `dieter/**` for design-system artifacts;
+- `fonts/special/**` for global Clickeen font files available to every account;
 - `prague/**` for Prague content/media.
 
 Root `widgets/`, `public/`, `published/`, and `l10n/` are not storage

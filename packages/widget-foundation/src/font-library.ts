@@ -1,4 +1,4 @@
-export type AccountFontLibrarySource = 'google' | 'account-asset';
+export type AccountFontLibrarySource = 'google' | 'tokyo' | 'account-asset';
 export type AccountFontCategory = 'sans' | 'serif' | 'display' | 'script' | 'handwritten';
 export type AccountFontFamilyClass = 'sans' | 'serif';
 export type AccountFontUsage = 'body-safe' | 'heading-only';
@@ -29,7 +29,19 @@ export type AccountAssetFontRecord = {
   locked?: boolean;
 };
 
-export type AccountFontRecord = GoogleAccountFontRecord | AccountAssetFontRecord;
+export type TokyoFontRecord = {
+  label: string;
+  source: 'tokyo';
+  category: AccountFontCategory;
+  familyClass: AccountFontFamilyClass;
+  usage: AccountFontUsage;
+  weights: string[];
+  styles: AccountFontStyle[];
+  filePath: string;
+  locked?: boolean;
+};
+
+export type AccountFontRecord = GoogleAccountFontRecord | TokyoFontRecord | AccountAssetFontRecord;
 
 export type AccountFontLibrary = {
   version: 1;
@@ -48,6 +60,13 @@ export type RuntimeTypographyFontRecord =
       source: 'account-asset';
       url: string;
       contentType: string;
+      familyClass: AccountFontFamilyClass;
+      weights: string[];
+      styles: AccountFontStyle[];
+    }
+  | {
+      source: 'tokyo';
+      url: string;
       familyClass: AccountFontFamilyClass;
       weights: string[];
       styles: AccountFontStyle[];
@@ -230,6 +249,25 @@ function googleFont(args: {
   };
 }
 
+function tokyoFont(args: {
+  label: string;
+  filePath: string;
+  category: AccountFontCategory;
+  familyClass: AccountFontFamilyClass;
+  usage: AccountFontUsage;
+}): TokyoFontRecord {
+  return {
+    label: args.label,
+    source: 'tokyo',
+    category: args.category,
+    familyClass: args.familyClass,
+    usage: args.usage,
+    weights: ['400'],
+    styles: ['normal'],
+    filePath: args.filePath,
+  };
+}
+
 export const SYSTEM_GOOGLE_FONT_RECORDS = {
   Inter: googleFont({
     label: 'Inter',
@@ -360,25 +398,123 @@ export const SYSTEM_GOOGLE_FONT_RECORDS = {
   }),
 } as const satisfies Record<string, GoogleAccountFontRecord>;
 
+export const SYSTEM_TOKYO_FONT_RECORDS = {
+  Frari: tokyoFont({
+    label: 'Frari',
+    filePath: '/fonts/special/Frari.woff2',
+    category: 'display',
+    familyClass: 'serif',
+    usage: 'heading-only',
+  }),
+  Giudecca: tokyoFont({
+    label: 'Giudecca',
+    filePath: '/fonts/special/Giudecca.woff',
+    category: 'display',
+    familyClass: 'serif',
+    usage: 'heading-only',
+  }),
+  Marin: tokyoFont({
+    label: 'Marin',
+    filePath: '/fonts/special/Marin.woff',
+    category: 'display',
+    familyClass: 'serif',
+    usage: 'heading-only',
+  }),
+  Orio: tokyoFont({
+    label: 'Orio',
+    filePath: '/fonts/special/Orio.woff',
+    category: 'display',
+    familyClass: 'serif',
+    usage: 'heading-only',
+  }),
+  Pachuka: tokyoFont({
+    label: 'Pachuka',
+    filePath: '/fonts/special/Pachuka.woff2',
+    category: 'display',
+    familyClass: 'serif',
+    usage: 'heading-only',
+  }),
+  'Pachuka Line': tokyoFont({
+    label: 'Pachuka Line',
+    filePath: '/fonts/special/Pachuka_line.woff2',
+    category: 'display',
+    familyClass: 'serif',
+    usage: 'heading-only',
+  }),
+  Rialto: tokyoFont({
+    label: 'Rialto',
+    filePath: '/fonts/special/Rialto.woff2',
+    category: 'display',
+    familyClass: 'serif',
+    usage: 'heading-only',
+  }),
+} as const satisfies Record<string, TokyoFontRecord>;
+
+function sameOrderedStrings(left: readonly string[], right: readonly string[]): boolean {
+  return left.length === right.length && left.every((value, index) => value === right[index]);
+}
+
+function isExactRawSystemTokyoFontRecord(
+  family: string,
+  value: Record<string, unknown>,
+): value is TokyoFontRecord {
+  const expected = (SYSTEM_TOKYO_FONT_RECORDS as Record<string, TokyoFontRecord>)[family];
+  if (!expected) return false;
+  const expectedKeys = Object.keys(expected).sort();
+  if (!sameOrderedStrings(Object.keys(value).sort(), expectedKeys)) return false;
+  return expectedKeys.every((key) => {
+    const expectedValue = expected[key as keyof TokyoFontRecord];
+    const actualValue = value[key];
+    return Array.isArray(expectedValue)
+      ? Array.isArray(actualValue) && sameOrderedStrings(actualValue, expectedValue)
+      : actualValue === expectedValue;
+  });
+}
+
+function isExactSystemTokyoFontRecord(family: string, record: AccountFontRecord): boolean {
+  const expected = (SYSTEM_TOKYO_FONT_RECORDS as Record<string, TokyoFontRecord>)[family];
+  if (!expected || record.source !== 'tokyo') return false;
+  return (
+    record.label === expected.label &&
+    record.category === expected.category &&
+    record.familyClass === expected.familyClass &&
+    record.usage === expected.usage &&
+    record.filePath === expected.filePath &&
+    record.locked === expected.locked &&
+    sameOrderedStrings(record.weights, expected.weights) &&
+    sameOrderedStrings(record.styles, expected.styles)
+  );
+}
+
 export function createDefaultAccountFontLibrary(): AccountFontLibrary {
   return {
     version: 1,
-    fonts: cloneRecord(SYSTEM_GOOGLE_FONT_RECORDS),
+    fonts: cloneRecord({
+      ...SYSTEM_GOOGLE_FONT_RECORDS,
+      ...SYSTEM_TOKYO_FONT_RECORDS,
+    }),
   };
 }
 
 function hasForbiddenGoogleFields(value: Record<string, unknown>): boolean {
-  return value.assetRef != null || value.contentType != null || value.url != null;
+  return value.assetRef != null || value.contentType != null || value.filePath != null || value.url != null;
 }
 
 function hasForbiddenAccountAssetFields(value: Record<string, unknown>): boolean {
-  return value.spec != null || value.url != null;
+  return value.spec != null || value.filePath != null || value.url != null;
 }
 
 function normalizeFontRecord(family: string, value: unknown): AccountFontRecord | null {
   if (!isRecord(value)) return null;
+  const normalizedSource = normalizeNonEmptyString(value.source);
+  if (normalizedSource === 'tokyo') {
+    const expected = (SYSTEM_TOKYO_FONT_RECORDS as Record<string, TokyoFontRecord>)[family];
+    return expected && isExactRawSystemTokyoFontRecord(family, value)
+      ? cloneRecord(expected)
+      : null;
+  }
   const label = normalizeNonEmptyString(value.label);
-  const source = normalizeNonEmptyString(value.source);
+  const source = normalizedSource;
   const category = normalizeCategory(value.category);
   const familyClass = normalizeFamilyClass(value.familyClass);
   const usage = normalizeUsage(value.usage);
@@ -448,6 +584,10 @@ export function normalizeAccountFontLibrary(raw: unknown): AccountFontLibrary | 
   }
   const inter = fonts.Inter;
   if (!inter || inter.source !== 'google' || inter.locked !== true) return null;
+  for (const family of Object.keys(SYSTEM_TOKYO_FONT_RECORDS)) {
+    const record = fonts[family];
+    if (!record || !isExactSystemTokyoFontRecord(family, record)) return null;
+  }
   return {
     version: 1,
     fonts,

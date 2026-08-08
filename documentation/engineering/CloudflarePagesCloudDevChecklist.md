@@ -9,7 +9,8 @@ secrets.
 
 Rules:
 - Cloudflare Pages Git build is the deploy plane for Bob, Roma, and Prague.
-- Tokyo/R2 git-authored deploy roots are `dieter/`, `product/`, and `prague/`; only `accounts/` is runtime-managed account storage.
+- Tokyo/R2 git-authored deploy roots are `dieter/`, `fonts/`, `product/`, and
+  `prague/`; only `accounts/` is runtime-managed account storage.
 - Tokyo-worker/R2 is the source/deploy and friendly-serving boundary for
   Tokyo-owned static product roots. It must not become a second authority for
   product widget software, Dieter media, product media, or Prague
@@ -328,6 +329,7 @@ These roots are deployed from git-authored repo sources into R2. They are not mu
 | --- | --- | --- |
 | `dieter/icons/svg/**` | `dieter/icons/svg/**` | Approved shared SVG icon bytes only. |
 | `tokyo/product/widgets/**` | `product/widgets/**` | Widget software. Friendly `/widgets/**` routes must serve these objects. |
+| `tokyo/product/fonts/special/**` | `fonts/special/**` | Global Clickeen fonts available to every account. Friendly `/fonts/special/**` routes serve these objects. |
 | `tokyo/roma/**` | `product/roma/**` | Product app/static support media. |
 | `tokyo/prague/**` | `prague/**` | Prague page/content/GTM media, including page-local translation sidecars. |
 

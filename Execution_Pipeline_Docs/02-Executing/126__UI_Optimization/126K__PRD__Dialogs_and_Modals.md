@@ -157,7 +157,6 @@ not stack a second modal. `Keep editing` restores the work body and focus;
 | --- | --- | --- | --- |
 | Dieter Bulk Edit | Clean closes; dirty shows discard state | Never | Cancel follows dirty rule; Save applies to Bob working state |
 | Dieter Object Manager | Clean closes; dirty shows discard state | Never | Cancel follows dirty rule; Save applies reorder/delete |
-| Roma Add Instances | Closes and discards selection | Never | Cancel discards; Add selected persists |
 | Roma Bulk Upload | Disabled while any upload is active | Never | Close exists after terminal state |
 | Roma tier-drop notice | Never | Never | Open settings or persisted Dismiss only |
 | Roma plan-limit prompt | Closes | Closes | Upgrade replaces prompt with upsell scaffold |

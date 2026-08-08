@@ -89,7 +89,6 @@ future execution targets.
 | `bob/components/UpsellPopup.tsx` | Known upsell reasons map to product copy and raw reason keys never render. |
 | `bob/components/CopilotPane.tsx` | HTML/backend failures, empty responses, and timeouts use user-facing recovery copy; sending uses `Sending...`. |
 | `roma/components/usage-domain.tsx` | A failed usage read shows `Storage usage could not be loaded.`; genuinely unavailable data remains `Unavailable`. |
-| `roma/components/pages-domain.tsx` | The unavailable publish path says `Publishing is not available yet.` |
 | `roma/components/widgets-domain.tsx` | Create, duplicate, and publish limits use operation-specific titles plus the truthful `{current} of {limit}` count. |
 | `roma/components/accept-invite-domain.tsx` | Invite mismatch says `The signed-in email must match the invited email.` |
 | `roma/components/roma-account-notice-modal.tsx` | Plan changes use product labels and dismiss failure uses stable recovery copy; raw tier ids/errors do not render. |
@@ -232,10 +231,6 @@ preservation requirements if an owning 126M surface changes them.
 | `roma/components/assets-domain.tsx:332-360,403-404,439-445` | Preserve alert/status semantics around existing load/upload/delete errors. | No asset route or upload/delete behavior change. |
 | `roma/components/assets-domain.tsx:332-343,458-490` | Preserve partial-success truth and user-facing per-item status. | No bulk upload processing change. |
 | `roma/lib/account-shell-copy.ts:21-30` | Shared account-shell error copy returns mapped product copy or the caller fallback; unknown backend namespaces do not render as user copy. | No account route/client/storage behavior change. |
-| `roma/components/pages-domain.tsx:35-42` | Show user-facing locale labels in page UI; do not show backend locale codes as page copy. | No locale storage change. |
-| `roma/components/pages-domain.tsx:619-621,783-793` | Preserve status/alert semantics for data/mutation/loading/blocker copy and `Publishing is not available yet.` | Do not enable or change publishing. |
-| `roma/components/pages-domain.tsx:638` | Preserve active/selected page-row truth. | No table redesign. |
-| `roma/components/pages-domain.tsx:947` | Preserve Add instances dialog semantics. | No modal mechanics. |
 | `roma/components/widgets-domain.tsx:383-397` | Preserve status/alert semantics for load/mutation/rename/loading states. | No widget route change. |
 | `roma/components/widgets-domain.tsx:449` | Expose selected/current widget row truth semantically. | No table redesign. |
 | `roma/components/widgets-domain.tsx:593-600` | Preserve upgrade dialog and apply widget-instance limit copy from "Exact Copy And State Targets". | No entitlement flow change. |

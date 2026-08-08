@@ -448,6 +448,24 @@
     loadedFonts.add(family);
   }
 
+  function resolveTokyoFontUrl(rawUrl) {
+    const normalizedUrl = String(rawUrl || '').trim();
+    if (!normalizedUrl) return '';
+    if (/^https?:\/\//i.test(normalizedUrl)) return normalizedUrl;
+    const rootedPath = normalizedUrl.startsWith('/') ? normalizedUrl : `/${normalizedUrl}`;
+    try {
+      const baseEl = document.querySelector('base[href]');
+      if (baseEl && typeof baseEl.href === 'string' && baseEl.href.trim()) {
+        return new URL(rootedPath, baseEl.href).toString();
+      }
+    } catch {}
+    try {
+      return new URL(rootedPath, window.location.origin).toString();
+    } catch {
+      return rootedPath;
+    }
+  }
+
   function resolveFontFormat(url, contentType) {
     const mime = String(contentType || '').split(';')[0].trim().toLowerCase();
     if (mime === 'font/woff2') return 'woff2';
@@ -461,6 +479,36 @@
     if (ext === 'ttf') return 'truetype';
     if (ext === 'otf') return 'opentype';
     return '';
+  }
+
+  function ensureTokyoFontLoaded(family, meta) {
+    const url = resolveTokyoFontUrl(meta && meta.url);
+    if (!url) return;
+    if (loadedFonts.has(family)) return;
+    const id = `ck-font-face-${String(family).replace(/\s+/g, '-').toLowerCase()}`;
+    if (document.getElementById(id)) {
+      loadedFonts.add(family);
+      return;
+    }
+
+    const style = document.createElement('style');
+    style.id = id;
+    const nonce =
+      window.CK_CSP_NONCE && typeof window.CK_CSP_NONCE === 'string' ? window.CK_CSP_NONCE.trim() : '';
+    if (nonce) style.setAttribute('nonce', nonce);
+    const format = resolveFontFormat(url, '');
+    const src = format ? `url("${url}") format("${format}")` : `url("${url}")`;
+    const weights = Array.isArray(meta.weights) && meta.weights.length ? meta.weights : ['400'];
+    const styles = Array.isArray(meta.styles) && meta.styles.length ? meta.styles : ['normal'];
+    style.textContent = styles
+      .flatMap((fontStyle) =>
+        weights.map((fontWeight) =>
+          `@font-face{font-family:${toFontFamilyToken(family)};src:${src};font-style:${fontStyle};font-weight:${fontWeight};font-display:swap;}`,
+        ),
+      )
+      .join('');
+    document.head.appendChild(style);
+    loadedFonts.add(family);
   }
 
   function ensureAccountAssetFontLoaded(family, meta) {
@@ -497,6 +545,13 @@
     const meta = curatedFonts[family];
     if (!meta) {
       throw new Error(`[CKTypography] Unknown font family "${family}"`);
+    }
+    if (meta.source === 'tokyo') {
+      if (!meta.url) {
+        throw new Error(`[CKTypography] Missing Tokyo font URL for family "${family}"`);
+      }
+      ensureTokyoFontLoaded(family, meta);
+      return;
     }
     if (meta.source === 'account-asset') {
       if (!meta.url) {

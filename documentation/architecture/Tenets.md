@@ -187,6 +187,7 @@ Tokyo R2 roots encode ownership and deploy boundaries:
 ```text
 accounts/
 dieter/
+fonts/
 product/
 prague/
 ```
@@ -195,8 +196,10 @@ Only `accounts/` is runtime-managed account storage. It owns account instances,
 uploaded account assets, overlays, and generated account-scoped
 browser files.
 
-The non-account roots are git-authored deploy artifacts. Account operations must
-not mutate them as runtime state.
+The non-account roots are git-authored deploy artifacts. `fonts/` owns the
+global Clickeen fonts available to every account; account-uploaded custom fonts
+remain account assets. Account operations must not mutate the deploy roots as
+runtime state.
 
 Root `widgets/`, `public/`, `published/`, and `l10n/` are not product storage
 boundaries.

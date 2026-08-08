@@ -236,8 +236,13 @@ storage:
 ```text
 product/widgets/{widgetType}/
 dieter/
+fonts/special/
 prague/
 ```
+
+`fonts/special/` contains global Clickeen fonts available to every account.
+Fonts uploaded by an account remain account assets under that account; the two
+authorities are distinct.
 
 The active account asset file shape is:
 

@@ -204,7 +204,7 @@ Packages/deletions/docs:
 - `bob/package.json`
 - `pnpm-lock.yaml`
 - `.gitignore`
-- root `AGENTS.md` and `README.md`
+- root `AGENTS.md`
 - current architecture, Cloudflare, Dieter, Tokyo, widget, and iconography docs
 - active downstream 126 PRDs that still mention generated manifests,
   generated Dieter output, or remote Dieter CSS/JS

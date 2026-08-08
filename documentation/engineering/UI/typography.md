@@ -109,6 +109,9 @@ Inter is always present and locked. Accounts cannot remove Inter.
 Account font records are either:
 
 - Google font records, loaded from Google font delivery with the stored `spec`.
+- Global Clickeen font records, loaded from the Tokyo `/fonts/special/**`
+  product path. These records use `source: "tokyo"` and are available to every
+  account.
 - Account-uploaded font records, stored as account assets under
   `accounts/{accountPublicId}/assets/{filename}` and served by Clickeen account
   asset CDN URLs at runtime.
@@ -119,8 +122,17 @@ The admin account is a normal account:
 CLICKEEN
 ```
 
-Custom fonts uploaded by `CLICKEEN` are `CLICKEEN` account assets. They are not
-global product fonts.
+Fonts uploaded by `CLICKEEN` are still `CLICKEEN` account assets. The seven
+Clickeen-owned special fonts—Frari, Giudecca, Marin, Orio, Pachuka, Pachuka
+Line, and Rialto—are not uploads: their git source is
+`tokyo/product/fonts/special/**`, their R2 home is `fonts/special/**`, and their
+friendly Tokyo path is `/fonts/special/**`.
+
+Those seven `source: "tokyo"` records are required product records and must
+match the system definitions exactly. Account documents cannot remove them,
+replace them with account assets, add arbitrary Tokyo font paths, or attach
+unknown fields. Other Google and account-uploaded records remain account font
+library data.
 
 ## Account Font Library Shape
 
@@ -132,7 +144,7 @@ fontLibrary: {
   fonts: {
     [family]: {
       label,
-      source,       // google | account-asset
+      source,       // google | tokyo | account-asset
       category,     // sans | serif | display | script | handwritten
       familyClass,  // sans | serif
       usage,        // body-safe | heading-only
@@ -140,6 +152,7 @@ fontLibrary: {
       styles,
       locked?,
       spec?,        // google only
+      filePath?,    // tokyo only; /fonts/special/{filename}
       assetRef?,    // account-asset only
       contentType?  // account-asset only
     }
@@ -172,6 +185,8 @@ Bob behavior:
 - Bob preview resolves account-uploaded font `assetRef` values through the
   current account asset route and posts runtime typography data into the widget
   iframe with preview state.
+- Bob preview passes global Tokyo font paths through its same-origin `/fonts/**`
+  proxy; it does not resolve those files as account assets.
 - Inter is always available when account data is valid.
 - Missing or malformed `fontLibrary` fails editor open explicitly.
 - Bob must not show or preview font choices the runtime cannot load.
@@ -185,6 +200,9 @@ Runtime package behavior:
   with no widget-core typography roles does not invent a core typography block.
 - Packages include only the font records used by the saved instance plus Inter.
 - Google records load from Google.
+- Global Tokyo records materialize to an absolute URL on the configured Tokyo
+  origin, such as `https://tokyo.dev.clickeen.com/fonts/special/Orio.woff`.
+  Public packages never resolve them through `clk.live` or an account folder.
 - Account-uploaded records emit `@font-face` from resolved account asset URLs.
 - Unknown font families, missing font records, or missing account font assets
   fail materialization. They are not silently replaced with Inter.

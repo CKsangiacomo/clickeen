@@ -14,6 +14,14 @@ Scope: premature A-H code-change reality, final A-M current-source audits,
 executable PRDs, exact-tree peer reviews, and current Step-9 execution state.
 Parent: `126__PRD__UI_Optimization_Program.md` (MAMA).
 
+## 2026-08-08 Product-Owner Global Font Correction
+
+The prior 126D conclusion that the seven Clickeen special fonts were admin
+account assets was incorrect. They are global product fonts under
+`fonts/special/**`, available to every account. The historical sections below
+remain evidence of the mistaken account-asset migration; they no longer define
+current product law.
+
 ## 2026-07-31 Shared Canvas Background Correction
 
 The product owner required the background beneath Roma Page, the floating

@@ -83,10 +83,8 @@ controls retain their Dieter component typography.
 
 Under accepted 126 law, Roma's blocking dialogs consume Dieter Popup and follow
 the dismissal matrix in `documentation/engineering/UI/dialogs-and-modals.md`.
-Add Instances discards its temporary selection on Escape/Cancel and never
-closes by backdrop. Bulk Upload
-cannot dismiss while work is active. The tier-drop notice resolves only through
-Open settings or persisted Dismiss. A plan-limit prompt may close through
+Bulk Upload cannot dismiss while work is active. The tier-drop notice resolves
+only through Open settings or persisted Dismiss. A plan-limit prompt may close through
 Escape, backdrop, or its explicit Close action because no work is lost. Unsaved
 Builder/defaults confirmation treats Escape as Keep editing and requires
 explicit Discard. Native `beforeunload` remains only at the browser boundary;
@@ -237,6 +235,14 @@ instance. Tokyo-worker stores the submitted files; it does not render, compile,
 infer, or repair widget package bytes. Tokyo-worker records a package
 fingerprint on newly saved source and package objects so package reads, publish,
 and public serving can reject mixed package state deterministically.
+
+Typography materialization preserves each font authority. Google records keep
+their Google specification. Global `source: "tokyo"` records convert their
+declared `/fonts/special/**` path to an absolute URL under the configured
+`NEXT_PUBLIC_TOKYO_URL` origin. Account-uploaded records resolve through the
+current account asset authority. Roma does not rewrite a global font as an
+account asset, and saved public packages do not point global fonts at
+`clk.live`.
 
 When the existing source-save command changes a saved instance, Roma saves the
 source and base package only. It does not generate translations, regenerate
@@ -449,6 +455,12 @@ family/weight/style validator as Bob for both common and widget Core defaults.
 Each accepted family transition updates all three values in one draft-state
 update. GET and PUT reject exact invalid typography paths before Tokyo
 persistence. The account-backed controls expose only available choices.
+
+Every initial account font library includes the seven global Clickeen special
+fonts as `source: "tokyo"` records. Account-uploaded fonts remain separate
+`source: "account-asset"` records owned by that account.
+Roma rejects a Widget Defaults document unless all seven product records are
+present and exact, and rejects any additional Tokyo font record.
 
 Account instance create, save, and duplicate materialize the candidate public
 package before the Tokyo write. Package materialization applies the same

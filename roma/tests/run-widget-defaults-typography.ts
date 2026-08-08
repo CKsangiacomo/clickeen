@@ -14,17 +14,17 @@ import {
   type AccountWidgetDefaultsDocument,
 } from '../lib/account-widget-defaults-direct';
 
-function fontLibraryWithOrio(): AccountFontLibrary {
+function fontLibraryWithAccountFont(): AccountFontLibrary {
   const library = createDefaultAccountFontLibrary();
-  library.fonts.Orio = {
-    label: 'Orio',
+  library.fonts['Custom Display'] = {
+    label: 'Custom Display',
     source: 'account-asset',
     category: 'display',
     familyClass: 'sans',
     usage: 'heading-only',
     weights: ['400'],
     styles: ['normal'],
-    assetRef: 'Orio.woff2',
+    assetRef: 'CustomDisplay.woff2',
     contentType: 'font/woff2',
   };
   return library;
@@ -53,7 +53,7 @@ async function document(): Promise<AccountWidgetDefaultsDocument> {
   ) as { defaults: Record<string, unknown> };
   return {
     accountId: 'CLICKEEN',
-    fontLibrary: fontLibraryWithOrio(),
+    fontLibrary: fontLibraryWithAccountFont(),
     common: structuredClone(COMMON_WIDGET_FACTORY_DEFAULTS as unknown as Record<string, unknown>),
     widgets: { calltoaction: { core: structuredClone(spec.defaults) } },
     seededAt: '2026-01-01T00:00:00.000Z',
@@ -63,6 +63,11 @@ async function document(): Promise<AccountWidgetDefaultsDocument> {
 
 async function main(): Promise<void> {
   const request = new NextRequest('https://roma.test/api/account/widget-defaults');
+  const globalOrio = createDefaultAccountFontLibrary().fonts.Orio;
+  assert.equal(globalOrio?.source, 'tokyo');
+  if (globalOrio?.source === 'tokyo') {
+    assert.equal(globalOrio.filePath, '/fonts/special/Orio.woff');
+  }
   const valid = await document();
   assert.ok(valid.common.coreSize);
   assert.equal(isCommonWidgetControlPath('coreSize.mode'), true);
@@ -88,7 +93,7 @@ async function main(): Promise<void> {
     }),
     [],
   );
-  setRoleFont(valid.common, 'title', 'Orio', '400');
+  setRoleFont(valid.common, 'title', 'Custom Display', '400');
   assert.deepEqual(
     await validateAccountWidgetDefaultsContract({ request, widgetDefaults: valid }),
     { ok: true },
@@ -107,7 +112,7 @@ async function main(): Promise<void> {
     assert.ok(misplacedCoreSizeResult.error.paths?.includes('calltoaction:coreSize.mode'));
   }
 
-  setRoleFont(valid.widgets.calltoaction!.core, 'eyebrow', 'Orio', '700');
+  setRoleFont(valid.widgets.calltoaction!.core, 'eyebrow', 'Custom Display', '700');
   const invalid = await validateAccountWidgetDefaultsContract({
     request,
     widgetDefaults: valid,

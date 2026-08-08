@@ -52,6 +52,16 @@ function buildPreviewTypographyData(args: {
       };
       continue;
     }
+    if (record.source === 'tokyo') {
+      curatedFonts[family] = {
+        source: 'tokyo',
+        url: record.filePath,
+        familyClass: record.familyClass,
+        weights: record.weights,
+        styles: record.styles,
+      };
+      continue;
+    }
     const resolved = args.resolvedAssets.get(record.assetRef);
     if (!resolved) return { ok: false, error: null };
     if (resolved.assetType !== 'font' || resolved.contentType !== record.contentType) {

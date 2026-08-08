@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { createDefaultAccountFontLibrary } from '@clickeen/widget-foundation';
 import {
   buildAccountDefaultStateFixture,
   PACKAGE_PARITY_WIDGETS,
@@ -9,11 +10,13 @@ import {
 } from './instance-package-fixtures';
 import {
   buildSavedWidgetPublicPackageResult,
+  prepareAccountInstancePublicPackage,
   readWidgetForInstancePackage,
 } from '../lib/account-instance-public-package';
 import { runRemovedLocaleCleanup } from '../lib/account-locale-cleanup';
 
 const repoRoot = path.resolve(fileURLToPath(new URL('../..', import.meta.url)));
+const CLOUDFLARE_REQUEST_CONTEXT_SYMBOL = Symbol.for('__cloudflare-request-context__');
 
 async function readSource(relativePath: string): Promise<string> {
   return readFile(path.join(repoRoot, relativePath), 'utf8');
@@ -53,6 +56,80 @@ async function testEveryWidgetBuildsPackageWithOneShell(): Promise<void> {
       baseLocale: coordinate.baseLocale,
     });
     assert.equal(result.value.evidence.materializerContractVersion, 'ck-runtime-materializer:shell-anchor');
+  }
+}
+
+async function testTokyoFontUsesTokyoOriginInSavedRuntime(): Promise<void> {
+  const accountId = 'CLICKEEN';
+  const instanceId = 'inst_faq_tokyo_font';
+  const state = await buildAccountDefaultStateFixture('faq');
+  const typography = state.typography as Record<string, unknown>;
+  const roles = typography.roles as Record<string, unknown>;
+  Object.assign(roles.title as Record<string, unknown>, {
+    family: 'Orio',
+    weight: '400',
+    fontStyle: 'normal',
+  });
+
+  const widgetDefaults = {
+    accountId,
+    fontLibrary: createDefaultAccountFontLibrary(),
+    common: {},
+    widgets: {},
+    seededAt: '2026-01-01T00:00:00.000Z',
+    updatedAt: '2026-01-01T00:00:00.000Z',
+  };
+  const globalRecord = globalThis as Record<PropertyKey, unknown>;
+  const previousContext = globalRecord[CLOUDFLARE_REQUEST_CONTEXT_SYMBOL];
+  const previousTokyoUrl = process.env.NEXT_PUBLIC_TOKYO_URL;
+  globalRecord[CLOUDFLARE_REQUEST_CONTEXT_SYMBOL] = {
+    env: {
+      TOKYO_PRODUCT_CONTROL: {
+        async fetch() {
+          return Response.json({ accountId, widgetDefaults });
+        },
+      },
+    },
+  };
+  process.env.NEXT_PUBLIC_TOKYO_URL = 'https://tokyo.dev.clickeen.com';
+
+  try {
+    const prepared = await prepareAccountInstancePublicPackage({
+      accountId,
+      accountCapsule: 'capsule',
+      requestId: 'font-origin-test',
+      config: state,
+    });
+    assert.equal(prepared.ok, true, JSON.stringify(prepared));
+    if (!prepared.ok) return;
+
+    const compiled = readWidgetForInstancePackage('faq');
+    assert.equal(compiled.ok, true, JSON.stringify(compiled));
+    if (!compiled.ok) return;
+    const result = await buildSavedWidgetPublicPackageResult({
+      compiled: compiled.value,
+      accountId,
+      instanceId,
+      baseLocale: 'en',
+      displayName: 'FAQ Tokyo font',
+      state: prepared.value.state,
+      typographyData: prepared.value.typographyData,
+    });
+    assert.equal(result.ok, true, JSON.stringify(result));
+    if (!result.ok) return;
+    assert.match(
+      result.value.package.runtimeJs,
+      /"url":"https:\/\/tokyo\.dev\.clickeen\.com\/fonts\/special\/Orio\.woff"/,
+    );
+    assert.doesNotMatch(
+      result.value.package.runtimeJs,
+      /https:\/\/dev\.clk\.live\/fonts\//,
+    );
+  } finally {
+    if (previousContext === undefined) delete globalRecord[CLOUDFLARE_REQUEST_CONTEXT_SYMBOL];
+    else globalRecord[CLOUDFLARE_REQUEST_CONTEXT_SYMBOL] = previousContext;
+    if (previousTokyoUrl === undefined) delete process.env.NEXT_PUBLIC_TOKYO_URL;
+    else process.env.NEXT_PUBLIC_TOKYO_URL = previousTokyoUrl;
   }
 }
 
@@ -131,6 +208,7 @@ async function testNoActiveLocalePackageAuthority(): Promise<void> {
 
 const tests = [
   ['every widget builds a package with one Shell', testEveryWidgetBuildsPackageWithOneShell],
+  ['Tokyo fonts use the Tokyo origin in saved runtime', testTokyoFontUsesTokyoOriginInSavedRuntime],
   ['translation and settings are overlay-only', testTranslationAndSettingsAreOverlayOnly],
   ['removed locale cleanup attempts every overlay', testRemovedLocaleCleanupAttemptsEveryOverlay],
   ['no active locale package authority', testNoActiveLocalePackageAuthority],

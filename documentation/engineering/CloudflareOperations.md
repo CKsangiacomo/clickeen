@@ -182,6 +182,7 @@ Git-authored Tokyo product roots sync to canonical R2 roots:
 | Repo input | Canonical R2 root |
 | --- | --- |
 | `tokyo/product/widgets/**` | `product/widgets/**` |
+| `tokyo/product/fonts/special/**` | `fonts/special/**` |
 | `dieter/icons/svg/**` | `dieter/icons/svg/**` |
 | `tokyo/roma/**` | `product/roma/**` |
 | `tokyo/prague/**` | `prague/**` |
@@ -199,7 +200,8 @@ reconciliation, orphan cleanup, or rollback.
 Remote product-root deployment runs only through GitHub Actions
 `cloud-dev workers deploy` after a push to `main`. That workflow runs the repo
 checks, which regenerate widget product packages from current source, then
-syncs all four roots. The workflow run is the deployment evidence.
+syncs all four git-authored R2 roots. The workflow run is the deployment
+evidence.
 
 Auth boundary: the GitHub Actions sync path may use the workflow
 `CLOUDFLARE_API_TOKEN` because it is a CI/Wrangler deploy workflow. Local repo

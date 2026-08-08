@@ -26,6 +26,7 @@ import {
   buildTokyoAssetControlHeaders,
   fetchTokyoAssetControl,
 } from './tokyo-asset-control';
+import { resolveTokyoBaseUrl } from './env/tokyo';
 import { loadAccountWidgetDefaultsInTokyo } from './account-widget-defaults-direct';
 
 type WidgetPackageFileContext = {
@@ -289,6 +290,16 @@ async function resolveRuntimeTypographyData(args: {
       curatedFonts[family] = {
         source: 'google',
         spec: record.spec,
+        familyClass: record.familyClass,
+        weights: record.weights,
+        styles: record.styles,
+      };
+      continue;
+    }
+    if (record.source === 'tokyo') {
+      curatedFonts[family] = {
+        source: 'tokyo',
+        url: new URL(record.filePath, `${resolveTokyoBaseUrl()}/`).toString(),
         familyClass: record.familyClass,
         weights: record.weights,
         styles: record.styles,

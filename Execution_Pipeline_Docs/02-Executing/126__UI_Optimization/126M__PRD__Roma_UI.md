@@ -144,8 +144,8 @@ TopDrawer owns editor presentation. Save is the one primary action; Open public
 widget is the applicable secondary action; Copy URL, Copy embed, and Copy script
 live under More. Roma remains authority for the exact URL/snippet values and
 sends the complete set or `null` in `ck:open-editor`; Bob must not reconstruct
-them. The optional return control and Compact Roma-navigation control send only
-typed host intents. Roma retains route ownership and the unsaved-work guard.
+them. The Compact Roma-navigation control sends only a typed host intent. Roma
+retains route ownership and the unsaved-work guard.
 
 This correction changes no account/session coordinate, product data, API route,
 save/publish/translation operation, Tokyo/R2 state, or Bob working-state model.

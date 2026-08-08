@@ -68,8 +68,6 @@ The strong current evidence:
   refreshing, error, mutation, rename, action, and upgrade state.
 - `roma/components/assets-domain.tsx:131-141` defines asset loading, error,
   upload/delete, and bulk-upload state.
-- `roma/components/pages-domain.tsx:129-144` defines page loading, error,
-  selected source, draft/source, copy, and action state.
 - `bob/lib/session/useSessionSaving.ts:45-116` confirms save success before
   clearing dirty/saving state.
 - `bob/components/TranslationsPanel.tsx:251-271` renders Agent Activity with
@@ -81,7 +79,7 @@ The split current reality:
 
 - `home`, `ai`, and `billing` inherit account-shell state but have no local
   screen-level async state model.
-- Widgets/assets/pages/settings/team/profile/usage each use local state fields.
+- Widgets/assets/settings/team/profile/usage each use local state fields.
 - Roma widget monetization uses HTTP 402 `UPGRADE_REQUIRED` into a Roma modal.
 - Bob entitlement upsell consumes the shared Dieter Popup visual contract.
 - Asset upload/limit failures render inline error copy. Assets currently has no
@@ -622,7 +620,7 @@ shaped the final product law.
 Confirmed findings:
 
 - Codex's broad audit found the real cross-surface shape: Roma account shell,
-  widgets/assets/pages local state, Bob save, Translation Agent activity,
+  widgets/assets local state, Bob save, Translation Agent activity,
   Copilot apply/undo, and fragmented monetization/copy behavior.
 - GLM correctly found two Upgrade paths, Assets inline limit/error copy,
   multiple reason-key copy maps, no shared toast/snackbar layer, and no Copilot

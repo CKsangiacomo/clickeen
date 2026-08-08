@@ -27,6 +27,7 @@ Tokyo-worker owns:
 - account widget instance R2 operations
 - translated locale value R2 operations
 - public package file serving
+- global Clickeen font file serving
 - `clk.live` and `dev.clk.live` static artifact serving
 - `GET /healthz`
 
@@ -67,6 +68,10 @@ live at:
 ```text
 accounts/CLICKEEN/assets/{filename}
 ```
+
+Account-uploaded custom fonts use this same account asset authority. The global
+Clickeen font set does not: it is served from `fonts/special/**` and is
+available to every account.
 
 Tokyo-worker supports the asset operations Roma calls:
 
@@ -264,6 +269,15 @@ product/widgets/{widgetType}/
 Account instances store references and user data. Widget software remains in
 the system product tree.
 
+Global Clickeen font files are authored in git and deployed separately to:
+
+```text
+fonts/special/{filename}
+```
+
+The public friendly route is `/fonts/special/{filename}`. These files are not
+owned by the `CLICKEEN` account.
+
 ## Translated Locale Values
 
 Tokyo-worker stores translated locale values as exact overlay artifacts under:
@@ -308,6 +322,7 @@ routes:
   tokyo.dev.clickeen.com/healthz
   tokyo.dev.clickeen.com/widgets/*
   tokyo.dev.clickeen.com/dieter/*
+  tokyo.dev.clickeen.com/fonts/special/*
   tokyo.dev.clickeen.com/i18n/*
   tokyo.dev.clickeen.com/prague/l10n/*
   tokyo.dev.clickeen.com/prague/assets/*

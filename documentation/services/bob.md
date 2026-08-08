@@ -384,6 +384,7 @@ Bob has same-origin static proxy routes for shared runtime resources:
 
 ```text
 GET /dieter/icons/svg/{icon}
+GET /fonts/**
 GET /l10n/**
 ```
 
@@ -440,8 +441,10 @@ initial-state, and entity round-trip rules.
 Typography family controls are account-independent in compiled widget
 artifacts. Session open binds them to the current account `fontLibrary`; that
 bound contract drives manual controls, Copilot choices, and normal config
-validation. Bob contains no default-account font catalog. A family change
-is expanded through the shared account-font resolver into one atomic
+validation. The library includes the system Google fonts and seven global
+`source: "tokyo"` special fonts for every account, plus any account-uploaded
+font records. Bob contains no separate default-account font catalog. A family
+change is expanded through the shared account-font resolver into one atomic
 family/weight/style edit.
 
 Bob also exposes a narrow `@clickeen/bob/control-host` module and paired
@@ -533,6 +536,9 @@ updated state to the existing iframe. Resolution failure is an explicit preview
 error. A later valid dependency resolution clears that dependency error; Bob
 does not reload the iframe, repeat `ck:ready`, or present an iframe failure as a
 ready preview.
+
+Global `source: "tokyo"` fonts are not account dependencies. Preview loads their
+declared `/fonts/special/**` paths through Bob's same-origin Tokyo proxy.
 
 Preview represents the in-memory working copy. Public snippets point at the
 published static URL:

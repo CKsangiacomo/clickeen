@@ -16,6 +16,13 @@ typography describe the historical implementation. Current shared widget code
 lives in `packages/widget-foundation`; account defaults use `common`; and Shell
 means only the Header/Core composition described in
 `documentation/widgets/shared/ShellCore.md`.
+
+2026-08-08 product-owner font correction: the earlier 126D conclusion that the
+seven Clickeen special fonts were `CLICKEEN` account assets was wrong. Frari,
+Giudecca, Marin, Orio, Pachuka, Pachuka Line, and Rialto are global product
+fonts under `fonts/special/**`, available to every account. Historical
+account-asset migration evidence below records what the earlier execution did;
+it is not current product direction.
 Parent: `126__PRD__UI_Optimization_Program.md` (MAMA).
 Series order: 126D of 126A-126M.
 KB doc: `documentation/engineering/UI/typography.md`.

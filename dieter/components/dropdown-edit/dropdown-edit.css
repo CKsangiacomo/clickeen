@@ -31,8 +31,10 @@
 }
 
 .diet-dropdown-edit .diet-dropdown-header-value {
+  display: block;
   width: 0;
   color: var(--color-system-black);
+  text-align: start;
 }
 
 .diet-dropdown-edit .diet-dropdown-header-value[data-muted='true'] {

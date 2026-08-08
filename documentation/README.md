@@ -103,6 +103,19 @@ This repo is operated by **1 human architect + multiple AI dev teams**. The syst
 - **Automation intent:** local support-stack changes are local only. Cloud-dev propagation is explicit (promote/deploy).
 - **Agent expectation:** AIs must understand the end-to-end journey below. If you do not, stop and re-trace from code before editing.
 
+## Baseline Repository Commands
+
+```bash
+pnpm install
+pnpm build
+pnpm lint
+pnpm typecheck
+```
+
+Use the owning service, capability, or widget manual for additional focused
+checks. Cloud-dev runtime evidence is defined in
+`documentation/architecture/RuntimeProfiles.md`.
+
 ## Tokyo R2 Storage Contract
 
 Tokyo R2 is an ownership model, not a URL map. The only canonical roots are:
@@ -110,6 +123,7 @@ Tokyo R2 is an ownership model, not a URL map. The only canonical roots are:
 ```text
 accounts/
 dieter/
+fonts/
 product/
 prague/
 ```
@@ -119,6 +133,7 @@ Only `accounts/` is runtime-managed by account/product operations. It stores acc
 The other roots are git-authored deploy artifacts synced to R2:
 
 - `dieter/` for shared design-system media
+- `fonts/` for global Clickeen font files available to every account
 - `product/` for logged-in product media and widget software
 - `prague/` for marketing/site/GTM content; Prague page translations stay beside each page JSON as `{page}.translations/{locale}.json`
 
@@ -217,7 +232,7 @@ If you change runtime behavior, update docs in the same PR/commit:
   - Update `documentation/capabilities/localization.md` + `documentation/services/tokyo-worker.md` (and `documentation/capabilities/seo-geo.md` when schema/excerpt behavior changes)
 - **Tokyo R2 root/storage changes**
   - Update `documentation/architecture/Overview.md`, `documentation/architecture/Tenets.md`, and the owning system docs
-  - Re-check that only `accounts/` is runtime-managed and that `dieter/`, `product/`, and `prague/` remain deploy-managed roots
+  - Re-check that only `accounts/` is runtime-managed and that `dieter/`, `fonts/`, `product/`, and `prague/` remain deploy-managed roots
 
 ---
 
