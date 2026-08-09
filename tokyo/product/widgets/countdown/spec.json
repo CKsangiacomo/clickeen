@@ -2,7 +2,6 @@
   "widgetname": "countdown",
   "displayName": "Countdown",
   "description": "",
-  "itemKey": "countdown.item",
   "defaults": {
     "uiLabels": {
       "core": {

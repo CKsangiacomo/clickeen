@@ -3,7 +3,6 @@ import { isPanelId, type CompiledPanel } from './types';
 export type RawWidget = {
   widgetname?: unknown;
   displayName?: unknown;
-  itemKey?: unknown;
   defaults?: Record<string, unknown>;
   editor?: unknown;
   presets?: unknown;

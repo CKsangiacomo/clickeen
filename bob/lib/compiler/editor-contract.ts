@@ -63,10 +63,7 @@ export type EditorTemplateNode = EditorTextNode | EditorElementNode | EditorFiel
 type EditorNode = EditorTemplateNode | EditorSharedNode;
 
 type EditorCluster = {
-  label?: string;
-  labelKey?: string;
-  labelParams?: JsonObject;
-  labelCount?: string | number;
+  label: string;
   initiallyOpen?: boolean;
   showIf?: EditorCondition;
   attrs?: JsonObject;
@@ -317,37 +314,15 @@ function renderCluster(cluster: EditorCluster, defaults: JsonObject): string[] {
   if (!Array.isArray(cluster.nodes))
     throw new Error('[BobCompiler] editor cluster missing nodes array');
   const hasLabel = typeof cluster.label === 'string' && Boolean(cluster.label.trim());
-  const hasLabelKey = typeof cluster.labelKey === 'string' && Boolean(cluster.labelKey.trim());
-  if (cluster.label !== undefined && !hasLabel) {
+  if (!hasLabel) {
     throw new Error('[BobCompiler] editor cluster label must be a non-empty string');
-  }
-  if (cluster.labelKey !== undefined && !hasLabelKey) {
-    throw new Error('[BobCompiler] editor cluster labelKey must be a non-empty string');
-  }
-  if (!hasLabel && !hasLabelKey) {
-    throw new Error('[BobCompiler] editor cluster requires label or labelKey');
   }
   if (cluster.initiallyOpen !== undefined && typeof cluster.initiallyOpen !== 'boolean') {
     throw new Error('[BobCompiler] editor cluster initiallyOpen must be boolean');
   }
-  if (cluster.labelParams !== undefined && !isPlainObject(cluster.labelParams)) {
-    throw new Error('[BobCompiler] editor cluster labelParams must be an object');
-  }
-  if (
-    cluster.labelCount !== undefined &&
-    !(
-      (typeof cluster.labelCount === 'number' && Number.isFinite(cluster.labelCount)) ||
-      (typeof cluster.labelCount === 'string' && Boolean(cluster.labelCount.trim()))
-    )
-  ) {
-    throw new Error('[BobCompiler] editor cluster labelCount must be finite or non-empty');
-  }
   const attrs: JsonObject = {
     ...(cluster.attrs ?? {}),
-    ...(cluster.label ? { label: cluster.label } : {}),
-    ...(cluster.labelKey ? { 'label-key': cluster.labelKey } : {}),
-    ...(cluster.labelParams ? { 'label-params': cluster.labelParams } : {}),
-    ...(cluster.labelCount !== undefined ? { 'label-count': cluster.labelCount } : {}),
+    label: cluster.label,
     ...(cluster.initiallyOpen === true ? { 'initially-open': true } : {}),
   };
   if (cluster.showIf) attrs['show-if'] = renderEditorShowIf(cluster.showIf);

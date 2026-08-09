@@ -78,8 +78,7 @@ function getValueAtPath(root: Record<string, unknown>, pathParts: string[]): unk
   return cur;
 }
 
-// IMPORTANT: Do NOT name this function `t()` — the repo-wide i18n validator extracts `t("...")`
-// calls across the monorepo. Prague chrome uses its own mechanism and must not pollute Bob's i18n keyset.
+// Prague chrome uses its own repo-authored content mechanism.
 export async function pragueT(locale: string, key: PragueI18nKey): Promise<string> {
   const resolved = resolveLocale(String(locale || '').trim() as PragueLocale);
   const strings = getChromeStrings(resolved);

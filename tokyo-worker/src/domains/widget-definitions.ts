@@ -18,10 +18,6 @@ export type WidgetDefinition = {
   editableFields: WidgetEditableFieldsContract;
 };
 
-type WidgetDefinitionInternal = WidgetDefinition & {
-  itemKey?: string | null;
-};
-
 function asNonEmptyString(value: unknown): string | null {
   const normalized = typeof value === 'string' ? value.trim() : '';
   return normalized || null;
@@ -31,7 +27,7 @@ function asExactString(value: unknown): string | null {
   return typeof value === 'string' ? value : null;
 }
 
-function readWidgetDefinitionSource(source: WidgetDefinitionSource): WidgetDefinitionInternal {
+function readWidgetDefinitionSource(source: WidgetDefinitionSource): WidgetDefinition {
   const spec = isRecord(source.spec) ? source.spec : null;
   if (!spec) {
     throw new Error(`widget_definition_source_invalid:${source.widgetType}`);
@@ -63,16 +59,15 @@ function readWidgetDefinitionSource(source: WidgetDefinitionSource): WidgetDefin
     widgetCode,
     displayName,
     description,
-    itemKey: asNonEmptyString(spec.itemKey),
     editableFields,
   };
 }
 
-const WIDGET_DEFINITIONS: WidgetDefinitionInternal[] = WIDGET_DEFINITION_SOURCES.map(
+const WIDGET_DEFINITIONS: WidgetDefinition[] = WIDGET_DEFINITION_SOURCES.map(
   readWidgetDefinitionSource,
 ).sort((a, b) => a.widgetType.localeCompare(b.widgetType));
 
-function publicEntry(entry: WidgetDefinitionInternal): WidgetDefinition {
+function publicEntry(entry: WidgetDefinition): WidgetDefinition {
   return {
     widgetType: entry.widgetType,
     widgetCode: entry.widgetCode,
@@ -82,7 +77,7 @@ function publicEntry(entry: WidgetDefinitionInternal): WidgetDefinition {
   };
 }
 
-function resolveDefinitionInternal(widgetType: string): WidgetDefinitionInternal | null {
+function resolveDefinitionInternal(widgetType: string): WidgetDefinition | null {
   const normalized = String(widgetType || '').trim();
   return WIDGET_DEFINITIONS.find((candidate) => candidate.widgetType === normalized) || null;
 }

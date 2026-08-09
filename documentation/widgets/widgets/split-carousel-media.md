@@ -31,7 +31,6 @@ widget.client.js
 | `widgetname` | `split-carousel-media` |
 | display name | Split Carousel Media |
 | Core namespace | `splitCarouselMedia.*` |
-| `itemKey` | `split-carousel-media.item` |
 | panels | `content`, `typography`, `layout`, `appearance`, `settings` |
 
 Core defaults live under:

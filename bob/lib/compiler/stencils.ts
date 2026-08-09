@@ -10,10 +10,6 @@ type ComponentSpec = {
   }>;
 };
 
-type WidgetI18nContext = {
-  itemKey?: string | null;
-};
-
 export type ComponentStencil = { stencil: string; spec: ComponentSpec };
 export type ComponentStencilLoader = (type: string) => Promise<ComponentStencil>;
 
@@ -56,7 +52,6 @@ function sanitizeId(input: string): string {
 
 async function renderNestedTooldrawerFields(
   markup: string,
-  widgetContext?: WidgetI18nContext,
   loadStencil?: ComponentStencilLoader,
 ): Promise<string> {
   if (!loadStencil) throw new Error('[BobCompiler] Missing component stencil loader');
@@ -95,7 +90,6 @@ async function renderNestedTooldrawerFields(
       typeInner,
       attrsInner,
       nestedSpec,
-      widgetContext,
       loadStencil,
     );
     let rendered = renderComponentStencil(nestedStencil, nestedContext);
@@ -116,7 +110,6 @@ export async function buildContext(
   component: string,
   attrs: TooldrawerAttrs,
   spec: ComponentSpec,
-  widgetContext?: WidgetI18nContext,
   loadStencil?: ComponentStencilLoader,
 ): Promise<Record<string, unknown>> {
   const defaults = spec.defaults?.[0];
@@ -167,10 +160,6 @@ export async function buildContext(
   const defaultItemRaw =
     attrs.defaultItem || attrs['default-item'] || (merged.defaultItem as string) || '';
   const defaultItem = normalizeJsonAttrValue(defaultItemRaw);
-  let labelKey = attrs.labelKey || attrs['label-key'] || (merged.labelKey as string) || '';
-  const labelParamsRaw =
-    attrs.labelParams || attrs['label-params'] || (merged.labelParams as string) || '';
-  let labelParams = normalizeJsonAttrValue(labelParamsRaw);
   const addLabel =
     attrs.addLabel || attrs['add-label'] || (merged.addLabel as string) || 'Add item';
   const removeLabel =
@@ -180,28 +169,7 @@ export async function buildContext(
     'Remove item {index}';
   const moveLabel =
     attrs.moveLabel || attrs['move-label'] || (merged.moveLabel as string) || 'Move item {index}';
-  let addLabelKey =
-    attrs.addLabelKey || attrs['add-label-key'] || (merged.addLabelKey as string) || '';
-  const addLabelParamsRaw =
-    attrs.addLabelParams || attrs['add-label-params'] || (merged.addLabelParams as string) || '';
-  let addLabelParams = normalizeJsonAttrValue(addLabelParamsRaw);
   const addOpen = attrs.addOpen || attrs['add-open'] || (merged.addOpen as string) || '';
-  let reorderLabelKey =
-    attrs.reorderLabelKey || attrs['reorder-label-key'] || (merged.reorderLabelKey as string) || '';
-  const reorderLabelParamsRaw =
-    attrs.reorderLabelParams ||
-    attrs['reorder-label-params'] ||
-    (merged.reorderLabelParams as string) ||
-    '';
-  let reorderLabelParams = normalizeJsonAttrValue(reorderLabelParamsRaw);
-  let reorderTitleKey =
-    attrs.reorderTitleKey || attrs['reorder-title-key'] || (merged.reorderTitleKey as string) || '';
-  const reorderTitleParamsRaw =
-    attrs.reorderTitleParams ||
-    attrs['reorder-title-params'] ||
-    (merged.reorderTitleParams as string) ||
-    '';
-  let reorderTitleParams = normalizeJsonAttrValue(reorderTitleParamsRaw);
   const rowPath = attrs.rowPath || attrs['row-path'] || (merged.rowPath as string) || '';
   const metaPath = attrs.metaPath || attrs['meta-path'] || (merged.metaPath as string) || '';
   const columnsRaw = attrs.columns || (merged.columns as string) || '';
@@ -271,65 +239,11 @@ export async function buildContext(
 
   let templateValue = attrs.template || (merged.template as string) || '';
   if (templateValue) {
-    templateValue = await renderNestedTooldrawerFields(templateValue, widgetContext, loadStencil);
-  }
-
-  const itemKey = typeof widgetContext?.itemKey === 'string' ? widgetContext.itemKey.trim() : '';
-  if (itemKey) {
-    const hasAttr = (key: string) => Object.prototype.hasOwnProperty.call(attrs, key);
-    const hasLabelAttr = hasAttr('label');
-    const hasAddLabelAttr = hasAttr('add-label') || hasAttr('addLabel');
-    const hasReorderLabelAttr = hasAttr('reorder-label') || hasAttr('reorderLabel');
-    const hasReorderTitleAttr = hasAttr('reorder-title') || hasAttr('reorderTitle');
-    const isRepeater = component === 'repeater';
-    const isObjectManager = component === 'object-manager';
-
-    const singularItemParam = normalizeJsonAttrValue(
-      JSON.stringify({ item: { $t: itemKey, count: 1 } }),
-    );
-    const pluralItemParam = normalizeJsonAttrValue(
-      JSON.stringify({ item: { $t: itemKey, count: 2 } }),
-    );
-
-    if (!labelKey && !hasLabelAttr && label === 'Items') {
-      labelKey = itemKey;
-      labelParams = normalizeJsonAttrValue(JSON.stringify({ count: 2 }));
-    }
-
-    if (
-      !addLabelKey &&
-      !hasAddLabelAttr &&
-      (addLabel === 'Add item' || addLabel === 'Add object')
-    ) {
-      addLabelKey = 'coreui.actions.addItem';
-      addLabelParams = singularItemParam;
-    }
-
-    if (!reorderLabelKey && !hasReorderLabelAttr) {
-      if (isObjectManager && reorderLabel === 'Manage objects') {
-        reorderLabelKey = 'coreui.actions.manageItems';
-        reorderLabelParams = pluralItemParam;
-      } else if (isRepeater && reorderLabel === 'Reorder items') {
-        reorderLabelKey = 'coreui.actions.reorderItems';
-        reorderLabelParams = pluralItemParam;
-      }
-    }
-
-    if (!reorderTitleKey && !hasReorderTitleAttr) {
-      if (isObjectManager && reorderTitle === 'Manage objects') {
-        reorderTitleKey = 'coreui.actions.manageItems';
-        reorderTitleParams = pluralItemParam;
-      } else if (isRepeater && reorderTitle === 'Reorder items') {
-        reorderTitleKey = 'coreui.actions.reorderItems';
-        reorderTitleParams = pluralItemParam;
-      }
-    }
+    templateValue = await renderNestedTooldrawerFields(templateValue, loadStencil);
   }
 
   Object.assign(merged, {
     label,
-    labelKey,
-    labelParams,
     placeholder,
     value,
     path: pathAttr,
@@ -353,8 +267,6 @@ export async function buildContext(
     addLabel,
     removeLabel,
     moveLabel,
-    addLabelKey,
-    addLabelParams,
     addOpen,
     labelPath: attrs.labelPath || attrs['label-path'] || (merged.labelPath as string) || '',
     labelInputLabel:
@@ -372,11 +284,7 @@ export async function buildContext(
     toggleLabel: attrs.toggleLabel || attrs['toggle-label'] || (merged.toggleLabel as string) || '',
     togglePath: attrs.togglePath || attrs['toggle-path'] || (merged.togglePath as string) || '',
     reorderLabel,
-    reorderLabelKey,
-    reorderLabelParams,
     reorderTitle,
-    reorderTitleKey,
-    reorderTitleParams,
     reorderLabelPath,
     reorderMode,
     reorderThreshold,

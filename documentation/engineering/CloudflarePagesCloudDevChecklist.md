@@ -330,7 +330,6 @@ These roots are deployed from git-authored repo sources into R2. They are not mu
 | `dieter/icons/svg/**` | `dieter/icons/svg/**` | Approved shared SVG icon bytes only. |
 | `tokyo/product/widgets/**` | `product/widgets/**` | Widget software. Friendly `/widgets/**` routes must serve these objects. |
 | `tokyo/product/fonts/special/**` | `fonts/special/**` | Global Clickeen fonts available to every account. Friendly `/fonts/special/**` routes serve these objects. |
-| `tokyo/roma/**` | `product/roma/**` | Product app/static support media. |
 | `tokyo/prague/**` | `prague/**` | Prague page/content/GTM media, including page-local translation sidecars. |
 
 Do not add deploy targets outside the current source-to-R2 roots above unless a

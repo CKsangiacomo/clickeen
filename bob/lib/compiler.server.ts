@@ -204,8 +204,6 @@ export async function compileWidgetServer(
   if (!displayName) {
     throw new Error(`[BobCompiler] ${widgetname} widget JSON missing displayName`);
   }
-  const rawItemKey = widgetJson.itemKey;
-  const itemKey = typeof rawItemKey === 'string' && rawItemKey.trim() ? rawItemKey.trim() : null;
   const normalization = normalizeWidgetNormalizationSpec(widgetJson.normalization);
 
   const defaults = composeWidgetFactoryDefaults(coreDefaults as Record<string, unknown>);
@@ -238,10 +236,6 @@ export async function compileWidgetServer(
     defaults: defaultsWithAssets,
   });
 
-  const widgetContext = {
-    itemKey,
-  };
-
   const renderedPanels: CompiledPanel[] = await Promise.all(
     parsedPanels.map(async (panel) => {
       let html = panel.html;
@@ -271,7 +265,7 @@ export async function compileWidgetServer(
         }
 
         const { stencil, spec } = await stencilLoader(type);
-        const context = await buildContext(type, attrs, spec, widgetContext, stencilLoader);
+        const context = await buildContext(type, attrs, spec, stencilLoader);
         let rendered = renderComponentStencil(stencil, context);
         if (context.path) {
           rendered = rendered.replace(/data-path="/g, 'data-bob-path="');

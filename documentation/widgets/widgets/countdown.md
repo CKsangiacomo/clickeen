@@ -34,7 +34,6 @@ Countdown has no widget-local runtime files outside the six-file contract.
 | `widgetname` | `countdown` |
 | display name | Countdown |
 | Core namespace | `countdown.*` |
-| `itemKey` | `countdown.item` |
 | panels | `content`, `typography`, `layout`, `appearance`, `settings` |
 
 Core defaults live under:

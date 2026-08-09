@@ -322,9 +322,8 @@ We have all three: `date`, `personal` (localStorage-anchored), `number`.
 | 7 | Personal timer **throws** when `localStorage` is unavailable — common in embedded iframes | `widget.client.js` |
 | 8 | DST edge — offset sampled at wall-clock-as-UTC, not the true target instant | `resolveTargetTimestamp` |
 | 9 | During-CTA appearance hardcoded; shared header CTA has 11 controls | `widget.css` |
-| 10 | `itemKey: "countdown.item"` is inert | `spec.json` |
-| 11 | Per-unit show/hide specified in `Countdown_PRD.md:185`, never built | PRD vs spec |
-| 12 | `timer`/`label` roles omit line-height and tracking defaults yet render those controls | `spec.json` |
+| 10 | Per-unit show/hide specified in `Countdown_PRD.md:185`, never built | PRD vs spec |
+| 11 | `timer`/`label` roles omit line-height and tracking defaults yet render those controls | `spec.json` |
 
 Fix 1–4 before any competitive feature work. 1 is a visible failure on defaults,
 3 is a zero-dead-controls violation, 4 is the accessibility and answer-engine

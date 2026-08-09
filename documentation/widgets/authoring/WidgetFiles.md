@@ -21,7 +21,7 @@ Shared runtime utilities live in `tokyo/product/widgets/shared/`.
 
 | File | Responsibility |
 | --- | --- |
-| `spec.json` | Widget identity, defaults, presets when present, Bob editor panels, ToolDrawer controls, `itemKey`, and widget-local normalization when present. |
+| `spec.json` | Widget identity, defaults, presets when present, Bob editor panels, ToolDrawer controls, and widget-local normalization when present. |
 | `editable-fields.json` | Customer-visible text paths that Bob and Translation Agent can edit or translate. |
 | `limits.json` | Mapping from widget paths/operations to account entitlement keys. |
 | `widget.html` | Static Stage/Pod/Shell/Header/Core DOM skeleton, shared CSS/script includes, and stable hooks. |

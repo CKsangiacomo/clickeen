@@ -2,7 +2,6 @@
   "widgetname": "cards",
   "displayName": "Cards",
   "description": "",
-  "itemKey": "cards.item",
   "defaults": {
     "uiLabels": {
       "core": {

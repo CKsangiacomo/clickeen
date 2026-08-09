@@ -2,7 +2,6 @@
   "widgetname": "logoshowcase",
   "displayName": "Logo Showcase",
   "description": "",
-  "itemKey": "logoshowcase.item",
   "normalization": {
     "idRules": [
       {
@@ -726,13 +725,6 @@
                   "group-label": "",
                   "size": "md",
                   "fill-modes": "color,gradient",
-                  "label-key": "logoshowcase.labels.itemBackground",
-                  "label-params": {
-                    "item": {
-                      "$t": "logoshowcase.item",
-                      "count": 1
-                    }
-                  },
                   "value": "{{logoshowcase.appearance.itemBackground}}"
                 }
               },
@@ -745,13 +737,6 @@
                 "attrs": {
                   "group-label": "",
                   "size": "md",
-                  "label-key": "logoshowcase.labels.linkItemRadius",
-                  "label-params": {
-                    "item": {
-                      "$t": "logoshowcase.item",
-                      "count": 1
-                    }
-                  },
                   "value": "{{logoshowcase.appearance.cardwrapper.radiusLinked}}",
                   "default": true
                 }
@@ -769,13 +754,6 @@
                 "attrs": {
                   "group-label": "",
                   "size": "md",
-                  "label-key": "logoshowcase.labels.itemRadius",
-                  "label-params": {
-                    "item": {
-                      "$t": "logoshowcase.item",
-                      "count": 1
-                    }
-                  },
                   "placeholder": "Choose radius",
                   "value": "{{logoshowcase.appearance.cardwrapper.radius}}",
                   "options": [
@@ -815,13 +793,6 @@
                 "attrs": {
                   "group-label": "",
                   "size": "md",
-                  "label-key": "logoshowcase.labels.itemTopLeftRadius",
-                  "label-params": {
-                    "item": {
-                      "$t": "logoshowcase.item",
-                      "count": 1
-                    }
-                  },
                   "placeholder": "Choose radius",
                   "value": "{{logoshowcase.appearance.cardwrapper.radiusTL}}",
                   "options": [
@@ -861,13 +832,6 @@
                 "attrs": {
                   "group-label": "",
                   "size": "md",
-                  "label-key": "logoshowcase.labels.itemTopRightRadius",
-                  "label-params": {
-                    "item": {
-                      "$t": "logoshowcase.item",
-                      "count": 1
-                    }
-                  },
                   "placeholder": "Choose radius",
                   "value": "{{logoshowcase.appearance.cardwrapper.radiusTR}}",
                   "options": [
@@ -907,13 +871,6 @@
                 "attrs": {
                   "group-label": "",
                   "size": "md",
-                  "label-key": "logoshowcase.labels.itemBottomRightRadius",
-                  "label-params": {
-                    "item": {
-                      "$t": "logoshowcase.item",
-                      "count": 1
-                    }
-                  },
                   "placeholder": "Choose radius",
                   "value": "{{logoshowcase.appearance.cardwrapper.radiusBR}}",
                   "options": [
@@ -953,13 +910,6 @@
                 "attrs": {
                   "group-label": "",
                   "size": "md",
-                  "label-key": "logoshowcase.labels.itemBottomLeftRadius",
-                  "label-params": {
-                    "item": {
-                      "$t": "logoshowcase.item",
-                      "count": 1
-                    }
-                  },
                   "placeholder": "Choose radius",
                   "value": "{{logoshowcase.appearance.cardwrapper.radiusBL}}",
                   "options": [
@@ -995,13 +945,6 @@
                 "attrs": {
                   "group-label": "",
                   "size": "md",
-                  "label-key": "logoshowcase.labels.itemBorder",
-                  "label-params": {
-                    "item": {
-                      "$t": "logoshowcase.item",
-                      "count": 1
-                    }
-                  },
                   "value": "{{logoshowcase.appearance.cardwrapper.border}}"
                 }
               },
@@ -1014,13 +957,6 @@
                 "attrs": {
                   "group-label": "",
                   "size": "md",
-                  "label-key": "logoshowcase.labels.itemOutsideShadow",
-                  "label-params": {
-                    "item": {
-                      "$t": "logoshowcase.item",
-                      "count": 1
-                    }
-                  },
                   "value": "{{logoshowcase.appearance.cardwrapper.shadow}}"
                 }
               }

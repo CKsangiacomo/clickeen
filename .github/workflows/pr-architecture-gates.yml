@@ -7,7 +7,6 @@ on:
       - "roma/**"
       - "bob/**"
       - "tokyo/product/**"
-      - "tokyo/roma/**"
       - "tokyo/prague/**"
       - "tokyo/accounts/**"
       - "dieter/**"

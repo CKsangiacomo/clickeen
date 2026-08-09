@@ -31,7 +31,6 @@ widget.client.js
 | `widgetname` | `calltoaction` |
 | display name | Call to Action |
 | Core namespace | `calltoaction.*` |
-| `itemKey` | `calltoaction.item` |
 | panels | `content`, `typography`, `layout`, `appearance`, `settings` |
 
 Core defaults live under:

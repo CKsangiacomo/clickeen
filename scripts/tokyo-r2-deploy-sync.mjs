@@ -21,7 +21,6 @@ const mappings = [
   { source: 'tokyo/product/widgets', target: 'product/widgets' },
   { source: 'dieter/icons/svg', target: 'dieter/icons/svg' },
   { source: 'tokyo/product/fonts', target: 'fonts' },
-  { source: 'tokyo/roma', target: 'product/roma' },
   { source: 'tokyo/prague', target: 'prague' },
 ];
 

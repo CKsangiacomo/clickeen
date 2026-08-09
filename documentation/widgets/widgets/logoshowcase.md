@@ -31,7 +31,6 @@ widget.client.js
 | `widgetname` | `logoshowcase` |
 | display name | Logo Showcase |
 | Core namespace | `logoshowcase.*` |
-| `itemKey` | `logoshowcase.item` |
 | panels | `content`, `typography`, `layout`, `appearance`, `settings` |
 
 Core defaults live under:

@@ -2,7 +2,6 @@
   "widgetname": "faq",
   "displayName": "FAQ",
   "description": "",
-  "itemKey": "faq.item",
   "normalization": {
     "idRules": [
       {
@@ -1323,20 +1322,9 @@
                       }
                     ],
                     "attrs": {
-                      "label-key": "faq.item",
-                      "label-params": {
-                        "count": 2
-                      },
                       "add-label": "Add question",
                       "remove-label": "Remove question {index}",
                       "move-label": "Move question {index}",
-                      "add-label-key": "faq.actions.addItem",
-                      "add-label-params": {
-                        "item": {
-                          "$t": "faq.item",
-                          "count": 1
-                        }
-                      },
                       "labelPath": "faq.sections.__SECTION__.title",
                       "labelInputLabel": "Section",
                       "labelPlaceholder": "All Questions",
@@ -1641,13 +1629,6 @@
                 "attrs": {
                   "group-label": "",
                   "size": "md",
-                  "label-key": "faq.labels.linkItemPadding",
-                  "label-params": {
-                    "item": {
-                      "$t": "faq.item",
-                      "count": 1
-                    }
-                  },
                   "value": "{{faq.layout.itemPaddingLinked}}",
                   "default": true
                 }
@@ -1664,14 +1645,7 @@
                 },
                 "attrs": {
                   "group-label": "",
-                  "size": "md",
-                  "label-key": "faq.labels.itemPadding",
-                  "label-params": {
-                    "item": {
-                      "$t": "faq.item",
-                      "count": 1
-                    }
-                  }
+                  "size": "md"
                 }
               },
               {
@@ -1686,14 +1660,7 @@
                 },
                 "attrs": {
                   "group-label": "",
-                  "size": "md",
-                  "label-key": "faq.labels.itemPaddingTop",
-                  "label-params": {
-                    "item": {
-                      "$t": "faq.item",
-                      "count": 1
-                    }
-                  }
+                  "size": "md"
                 }
               },
               {
@@ -1708,14 +1675,7 @@
                 },
                 "attrs": {
                   "group-label": "",
-                  "size": "md",
-                  "label-key": "faq.labels.itemPaddingRight",
-                  "label-params": {
-                    "item": {
-                      "$t": "faq.item",
-                      "count": 1
-                    }
-                  }
+                  "size": "md"
                 }
               },
               {
@@ -1730,14 +1690,7 @@
                 },
                 "attrs": {
                   "group-label": "",
-                  "size": "md",
-                  "label-key": "faq.labels.itemPaddingBottom",
-                  "label-params": {
-                    "item": {
-                      "$t": "faq.item",
-                      "count": 1
-                    }
-                  }
+                  "size": "md"
                 }
               },
               {
@@ -1752,14 +1705,7 @@
                 },
                 "attrs": {
                   "group-label": "",
-                  "size": "md",
-                  "label-key": "faq.labels.itemPaddingLeft",
-                  "label-params": {
-                    "item": {
-                      "$t": "faq.item",
-                      "count": 1
-                    }
-                  }
+                  "size": "md"
                 }
               }
             ],
@@ -1942,13 +1888,6 @@
                   "group-label": "",
                   "size": "md",
                   "fill-modes": "color,gradient",
-                  "label-key": "faq.labels.itemBackground",
-                  "label-params": {
-                    "item": {
-                      "$t": "faq.item",
-                      "count": 1
-                    }
-                  },
                   "value": "{{faq.appearance.itemBackground}}"
                 }
               },
@@ -1961,13 +1900,6 @@
                 "attrs": {
                   "group-label": "",
                   "size": "md",
-                  "label-key": "faq.labels.linkItemCorners",
-                  "label-params": {
-                    "item": {
-                      "$t": "faq.item",
-                      "count": 1
-                    }
-                  },
                   "value": "{{faq.appearance.cardwrapper.radiusLinked}}",
                   "default": true
                 }
@@ -2024,13 +1956,6 @@
                 "attrs": {
                   "group-label": "",
                   "size": "md",
-                  "label-key": "faq.labels.itemTopLeftRadius",
-                  "label-params": {
-                    "item": {
-                      "$t": "faq.item",
-                      "count": 1
-                    }
-                  },
                   "placeholder": "Choose radius",
                   "value": "{{faq.appearance.cardwrapper.radiusTL}}",
                   "options": [
@@ -2070,13 +1995,6 @@
                 "attrs": {
                   "group-label": "",
                   "size": "md",
-                  "label-key": "faq.labels.itemTopRightRadius",
-                  "label-params": {
-                    "item": {
-                      "$t": "faq.item",
-                      "count": 1
-                    }
-                  },
                   "placeholder": "Choose radius",
                   "value": "{{faq.appearance.cardwrapper.radiusTR}}",
                   "options": [
@@ -2116,13 +2034,6 @@
                 "attrs": {
                   "group-label": "",
                   "size": "md",
-                  "label-key": "faq.labels.itemBottomRightRadius",
-                  "label-params": {
-                    "item": {
-                      "$t": "faq.item",
-                      "count": 1
-                    }
-                  },
                   "placeholder": "Choose radius",
                   "value": "{{faq.appearance.cardwrapper.radiusBR}}",
                   "options": [
@@ -2162,13 +2073,6 @@
                 "attrs": {
                   "group-label": "",
                   "size": "md",
-                  "label-key": "faq.labels.itemBottomLeftRadius",
-                  "label-params": {
-                    "item": {
-                      "$t": "faq.item",
-                      "count": 1
-                    }
-                  },
                   "placeholder": "Choose radius",
                   "value": "{{faq.appearance.cardwrapper.radiusBL}}",
                   "options": [
@@ -2204,13 +2108,6 @@
                 "attrs": {
                   "group-label": "",
                   "size": "md",
-                  "label-key": "faq.labels.itemBorder",
-                  "label-params": {
-                    "item": {
-                      "$t": "faq.item",
-                      "count": 1
-                    }
-                  },
                   "value": "{{faq.appearance.cardwrapper.border}}"
                 }
               },
@@ -2223,13 +2120,6 @@
                 "attrs": {
                   "group-label": "",
                   "size": "md",
-                  "label-key": "faq.labels.itemOutsideShadow",
-                  "label-params": {
-                    "item": {
-                      "$t": "faq.item",
-                      "count": 1
-                    }
-                  },
                   "value": "{{faq.appearance.cardwrapper.shadow}}"
                 }
               }

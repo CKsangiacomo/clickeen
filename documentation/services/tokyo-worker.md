@@ -323,7 +323,6 @@ routes:
   tokyo.dev.clickeen.com/widgets/*
   tokyo.dev.clickeen.com/dieter/*
   tokyo.dev.clickeen.com/fonts/*
-  tokyo.dev.clickeen.com/i18n/*
   tokyo.dev.clickeen.com/prague/l10n/*
   tokyo.dev.clickeen.com/prague/assets/*
   tokyo.dev.clickeen.com/assets/account/*

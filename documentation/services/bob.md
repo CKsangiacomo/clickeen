@@ -385,7 +385,6 @@ Bob has same-origin static proxy routes for shared runtime resources:
 ```text
 GET /dieter/icons/svg/{icon}
 GET /fonts/**
-GET /l10n/**
 ```
 
 Builder preview does not load widget source through a Bob `/widgets/**` proxy.

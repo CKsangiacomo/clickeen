@@ -70,7 +70,6 @@ export function TdMenuContent({
   useTdMenuHydration({
     containerRef,
     panelHtml,
-    widgetName: session.compiled?.widgetname ?? null,
     accountAssets: session.accountAssets,
     fontLibrary: session.fontLibrary,
     instanceDataRef,

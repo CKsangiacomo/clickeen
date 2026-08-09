@@ -8,7 +8,6 @@ on:
       - "bob/**"
       - "tokyo/product/widgets/**"
       - "tokyo/product/themes/**"
-      - "tokyo/roma/**"
       - "dieter/**"
       - "packages/**"
       - "scripts/build-bob-cf.mjs"

@@ -184,7 +184,6 @@ Git-authored Tokyo product roots sync to canonical R2 roots:
 | `tokyo/product/widgets/**` | `product/widgets/**` |
 | `tokyo/product/fonts/special/**` | `fonts/special/**` |
 | `dieter/icons/svg/**` | `dieter/icons/svg/**` |
-| `tokyo/roma/**` | `product/roma/**` |
 | `tokyo/prague/**` | `prague/**` |
 
 Local inspection command:
@@ -208,8 +207,8 @@ Auth boundary: the GitHub Actions sync path may use the workflow
 helper commands must not use that ambiguous token name; local R2 commands use
 the typed env names above.
 
-Changes to Dieter source, widget product source, Roma product media, Prague
-product media, or the sync workflow trigger that product-root path. Dieter
+Changes to Dieter source, widget product source, Prague product media, or the
+sync workflow trigger that product-root path. Dieter
 source is watched because widget product packages consume its token/component
 CSS; only SVG icon bytes are written under the R2 `dieter/` root. Use the repo
 R2 read commands after deployment when an exact remote key must be verified.

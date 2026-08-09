@@ -347,13 +347,12 @@ tokyo-worker at module init with `widget_definition_description_missing`.
 ### 2.1 Registration outside the widget folder
 
 Both generators auto-discover `tokyo/product/widgets/*/`, so Bob's editor, Roma's
-catalog, and Tokyo-worker's definitions need no edits. Three files do, and all
-three are blocking.
+catalog, and Tokyo-worker's definitions need no edits. Two files do, and both
+are blocking.
 
 | File | Change | Failure if omitted |
 | --- | --- | --- |
 | `packages/ck-contracts/src/overlay-codebooks.ts` | add `calculator: 'CLC'` to `WIDGET_OVERLAY_CODES` — 3 chars, `^[0-9A-Z]{3}$`, unique | **tokyo-worker will not boot**: `widget_definition_widget_code_missing:calculator` at module init |
-| `tokyo/roma/i18n/source/en/calculator.json` | new file; every key prefixed `calculator.`; `itemKey` needs plural forms: `"calculator.item": {"one":"Field","other":"Fields"}` | `pnpm build:i18n` fails |
 | `tokyo-worker/src/generated/widget-definition-sources.ts` | regenerate **and commit** — it is generated but git-tracked | `pnpm validate:widgets` fails CI on drift |
 
 Expected but not build-blocking, and silently skipped if forgotten:
@@ -485,10 +484,9 @@ Declaring `calculator.appearance.cardwrapper` (with `insideShadow`) auto-injects
 the `&lt;singular&gt; surface` cluster into the appearance panel. Do **not** hand-declare
 those fields.
 
-### 4.6 UI labels and item key
+### 4.6 UI labels
 
 ```json
-"itemKey": "calculator.item",
 "uiLabels": { "core": { "singular": "Field", "plural": "Fields", "sizeCluster": "Calculator size" } }
 ```
 
@@ -664,7 +662,7 @@ Five panels, mixed, Shell shared nodes before Core controls.
 
 1. `{ "kind": "shared", "id": "header-content" }`
 2. Cluster **Fields** — `repeater` on `calculator.fields`, `index-token`
-   `__INDEX__`, `label-path` `label`, add/remove/move labels from `itemKey`.
+   `__INDEX__`, `label-path` `label`, with literal English add/remove/move labels.
    Row template: `dropdown-actions` (type), `textfield` (label), `textfield`
    (token), `dropdown-edit` (help text), `valuefield` ×4 (default, min, max,
    step — `showIf` type `in` `["slider","number"]`), nested `repeater` on
@@ -1078,18 +1076,18 @@ Gated. Do not start a step until the previous one has its named evidence.
 | 5 | Editor panels per §7 | zero dead controls; conditional rows reveal correctly |
 | 6 | `editable-fields.json` + `limits.json` | validate:widgets; entitlement rejection verified at free tier **on save**, per §11.1 |
 | 7 | Save-time formula validation in Roma | invalid formula rejected with exact error; valid AST stored |
-| 8 | Registration (§2.1) | overlay code added; `calculator.json` i18n source with plural forms; `widget-definition-sources.ts` regenerated and committed; tokyo-worker boots |
+| 8 | Registration (§2.1) | overlay code added; `widget-definition-sources.ts` regenerated and committed; tokyo-worker boots |
 | 9 | **Starter library (§14.1)** | all eight authored through Builder under `CLICKEEN`, published, and copy-tested into a second account; each renders correct results against hand-checked figures |
-| 10 | Verification | full Step 8 battery from `WidgetComplianceSteps.md`, plus `pnpm build:i18n` |
+| 10 | Verification | full Step 8 battery from `WidgetComplianceSteps.md` |
 
 Step 9 is a real gate, not a content chore. Authoring eight calculators through
 the Builder is the first honest test of whether the authoring surface works —
 if writing the mortgage formula in a `textfield` is painful for us, §17.1 is
 answered, and it is answered before a customer finds out.
 
-Step 8 is called out separately because two of its three items are silent
-failures — the overlay code stops tokyo-worker from booting, and a missing i18n
-source file fails a build most widget work never touches.
+Step 8 is called out separately because the overlay code stops tokyo-worker
+from booting and the generated source index must remain in sync with the widget
+folder.
 
 Step 1 is deliberately first and independent — the evaluator is the only genuinely
 novel engineering, and it can be built and proven before any widget scaffolding

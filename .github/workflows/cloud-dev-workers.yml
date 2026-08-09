@@ -11,7 +11,6 @@ on:
       - "tokyo-worker/**"
       - "tokyo/product/widgets/**"
       - "tokyo/product/fonts/**"
-      - "tokyo/roma/**"
       - "tokyo/prague/**"
       - "dieter/**"
       - "packages/ck-contracts/**"
@@ -137,7 +136,7 @@ jobs:
             tokyo=true
           fi
 
-          if [ "$workflow_changed" = "true" ] || path_changed '^(dieter/|tokyo/product/(widgets|fonts)/|tokyo/roma/|tokyo/prague/|scripts/widgets/|scripts/tokyo-r2-deploy-sync\.mjs$)'; then
+          if [ "$workflow_changed" = "true" ] || path_changed '^(dieter/|tokyo/product/(widgets|fonts)/|tokyo/prague/|scripts/widgets/|scripts/tokyo-r2-deploy-sync\.mjs$)'; then
             tokyo_assets=true
           fi
 

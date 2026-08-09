@@ -15,11 +15,7 @@
           </label>
         </div>
       {{else}}
-        <span
-          class="diet-repeater__label label-s"
-          {{#if labelKey}} data-i18n-key="{{labelKey}}"{{/if}}
-          {{#if labelParams}} data-i18n-params="{{labelParams}}"{{/if}}
-        >{{label}}</span>
+        <span class="diet-repeater__label label-s">{{label}}</span>
       {{/if}}
 
       <div class="diet-repeater__actions">
@@ -57,11 +53,7 @@
   </div>
 
   <button class="diet-btn-txt diet-repeater__add" type="button" data-size="md" data-variant="secondary">
-    <span
-      class="diet-btn-txt__label"
-      {{#if addLabelKey}} data-i18n-key="{{addLabelKey}}"{{/if}}
-      {{#if addLabelParams}} data-i18n-params="{{addLabelParams}}"{{/if}}
-    >{{addLabel}}</span>
+    <span class="diet-btn-txt__label">{{addLabel}}</span>
   </button>
 
   <input type="hidden" class="diet-repeater__field" value="[]"{{#if path}} data-path="{{path}}"{{/if}} data-bob-json />

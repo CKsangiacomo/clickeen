@@ -31,7 +31,6 @@ widget.client.js
 | `widgetname` | `split-media` |
 | display name | Split Media |
 | Core namespace | `splitMedia.*` |
-| `itemKey` | `split-media.item` |
 | panels | `content`, `typography`, `layout`, `appearance`, `settings` |
 
 Core defaults live under:

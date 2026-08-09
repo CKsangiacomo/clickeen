@@ -50,7 +50,7 @@ Compiler-enforced rules:
 - Path-bound fields must resolve against composed defaults.
 - `dropdown-upload` requires `meta-path`; missing upload metadata fails compile.
 - Panel ids must be one of the five current widget panels; unknown ids fail compile.
-- Every cluster must have `label` or `labelKey`; unlabeled clusters fail compile.
+- Every cluster must have a non-empty plain-text `label`; unlabeled clusters fail compile.
 - Malformed source nodes fail compilation.
 
 Product rules:

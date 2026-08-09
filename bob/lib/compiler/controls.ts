@@ -48,9 +48,6 @@ export function expandTooldrawerClusters(html: string, idNamespace = ''): string
     const attrsRaw = html.slice(start + openTag.length, openEnd);
     const attrs = parseTooldrawerAttributes(attrsRaw);
     const label = attrs.label || '';
-    const labelKey = attrs.labelKey || attrs['label-key'] || '';
-    const labelParams = attrs.labelParams || attrs['label-params'] || '';
-    const labelCount = attrs.labelCount || attrs['label-count'] || '';
     const initiallyOpen = parseBooleanAttr(attrs.initiallyOpen || attrs['initially-open']) === true;
 
     let depth = 1;
@@ -82,8 +79,8 @@ export function expandTooldrawerClusters(html: string, idNamespace = ''): string
         const showIf = attrs['show-if'] || '';
         if (showIf) validateShowIfExpression(showIf);
 
-        if (!label && !labelKey) {
-          throw new Error('[BobCompiler] <tooldrawer-cluster> requires label or label-key');
+        if (!label) {
+          throw new Error('[BobCompiler] <tooldrawer-cluster> requires label');
         }
 
         if (attrs.gap || attrs['space-after'] || attrs.spaceAfter) {
@@ -103,9 +100,6 @@ export function expandTooldrawerClusters(html: string, idNamespace = ''): string
         const bodyId = `td-${idNamespace ? `${idNamespace}-` : ''}cluster-body-${nextClusterId}`;
         let headerMarkup = '';
         const labelAttrs: string[] = ['class="overline-small tdmenucontent__cluster-label"'];
-        if (labelKey) labelAttrs.push(`data-i18n-key="${encodeHtmlEntities(labelKey)}"`);
-        if (labelParams) labelAttrs.push(`data-i18n-params="${encodeHtmlEntities(labelParams)}"`);
-        if (labelCount) labelAttrs.push(`data-i18n-count="${encodeHtmlEntities(labelCount)}"`);
 
         const toggleMarkup = [
           `<button type="button" class="diet-btn-ic tdmenucontent__cluster-toggle" data-size="xs" data-variant="neutral" aria-label="Toggle section" aria-expanded="${initiallyOpen ? 'true' : 'false'}" aria-controls="${bodyId}">`,

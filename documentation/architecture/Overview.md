@@ -145,7 +145,6 @@ accounts/{accountPublicId}/
 The non-account roots are git-authored deploy artifacts:
 
 - `product/widgets/**` for widget software;
-- `product/roma/**` for Roma public i18n/static support artifacts;
 - `dieter/**` for design-system artifacts;
 - `fonts/special/**` for global Clickeen font files available to every account;
 - `prague/**` for Prague content/media.

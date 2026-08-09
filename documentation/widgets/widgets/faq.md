@@ -31,7 +31,6 @@ widget.client.js
 | `widgetname` | `faq` |
 | display name | FAQ |
 | Core namespace | `faq.*` |
-| `itemKey` | `faq.item` |
 | panels | `content`, `typography`, `layout`, `appearance`, `settings` |
 
 Core defaults live under:

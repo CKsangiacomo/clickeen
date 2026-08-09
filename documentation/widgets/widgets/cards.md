@@ -31,7 +31,6 @@ widget.client.js
 | `widgetname` | `cards` |
 | display name | Cards |
 | Core namespace | `cards.*` |
-| `itemKey` | `cards.item` |
 | panels | `content`, `typography`, `layout`, `appearance`, `settings` |
 
 Core defaults live under:

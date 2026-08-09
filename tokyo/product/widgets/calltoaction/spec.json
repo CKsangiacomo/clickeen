@@ -2,7 +2,6 @@
   "widgetname": "calltoaction",
   "displayName": "Call to Action",
   "description": "",
-  "itemKey": "calltoaction.item",
   "defaults": {
     "uiLabels": {
       "core": {

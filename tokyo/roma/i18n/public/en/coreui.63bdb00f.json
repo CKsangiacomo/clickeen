@@ -1,7 +1,0 @@
-{
-  "coreui.actions.addItem": "Add {item}",
-  "coreui.actions.cancel": "Cancel",
-  "coreui.actions.manageItems": "Manage {item}",
-  "coreui.actions.reorderItems": "Reorder {item}",
-  "coreui.actions.save": "Save"
-}

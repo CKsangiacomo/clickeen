@@ -79,7 +79,6 @@ back to base content.
 | `/widgets/**` | `product/widgets/**` |
 | `/dieter/icons/svg/**` | `dieter/icons/svg/**` |
 | `/fonts/special/**` | `fonts/special/**` |
-| `/i18n/**` | `product/roma/i18n/public/**` |
 | `/assets/account/**` | account asset reads allowed by Tokyo-worker |
 | `/prague/l10n/**` | Prague l10n static path |
 | `/prague/assets/**` | Prague static assets |

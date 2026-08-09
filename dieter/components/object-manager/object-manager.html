@@ -10,18 +10,10 @@
 
   <div class="diet-object-manager__footer">
     <button class="diet-btn-txt" type="button" data-size="md" data-variant="secondary" data-objects-add>
-      <span
-        class="diet-btn-txt__label"
-        {{#if addLabelKey}} data-i18n-key="{{addLabelKey}}"{{/if}}
-        {{#if addLabelParams}} data-i18n-params="{{addLabelParams}}"{{/if}}
-      >{{addLabel}}</span>
+      <span class="diet-btn-txt__label">{{addLabel}}</span>
     </button>
     <button class="diet-btn-txt" type="button" data-size="md" data-variant="secondary" data-objects-manage hidden>
-      <span
-        class="diet-btn-txt__label"
-        {{#if reorderLabelKey}} data-i18n-key="{{reorderLabelKey}}"{{/if}}
-        {{#if reorderLabelParams}} data-i18n-params="{{reorderLabelParams}}"{{/if}}
-      >{{reorderLabel}}</span>
+      <span class="diet-btn-txt__label">{{reorderLabel}}</span>
     </button>
   </div>
 
@@ -38,11 +30,7 @@
   <dialog class="diet-popup" data-size="medium" aria-label="{{reorderTitle}}" data-objects-modal>
     <div class="diet-object-manager__editor" data-objects-editor>
       <header class="diet-popup__header">
-        <h2
-          class="diet-object-manager__title heading-5"
-          {{#if reorderTitleKey}} data-i18n-key="{{reorderTitleKey}}"{{/if}}
-          {{#if reorderTitleParams}} data-i18n-params="{{reorderTitleParams}}"{{/if}}
-        >{{reorderTitle}}</h2>
+        <h2 class="diet-object-manager__title heading-5">{{reorderTitle}}</h2>
       </header>
       <div class="diet-popup__body">
         <div class="diet-object-manager__modal-list" data-objects-modal-list></div>
@@ -50,10 +38,10 @@
       <footer class="diet-popup__footer">
         <div class="diet-popup__actions">
           <button type="button" class="diet-btn-txt" data-size="md" data-variant="secondary" data-objects-cancel>
-            <span class="diet-btn-txt__label" data-i18n-key="coreui.actions.cancel">Cancel</span>
+            <span class="diet-btn-txt__label">Cancel</span>
           </button>
           <button type="button" class="diet-btn-txt" data-size="md" data-variant="primary" data-objects-save>
-            <span class="diet-btn-txt__label" data-i18n-key="coreui.actions.save">Save</span>
+            <span class="diet-btn-txt__label">Save</span>
           </button>
         </div>
       </footer>

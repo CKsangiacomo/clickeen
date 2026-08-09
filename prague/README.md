@@ -23,7 +23,7 @@ Canonical routes in this repo snapshot:
 
 Prague is strict: these env vars are required at build/runtime (because they are used in `*.astro`):
 
-- `PUBLIC_TOKYO_URL` — base URL for Tokyo assets (Dieter + widget specs + i18n)
+- `PUBLIC_TOKYO_URL` — base URL for Tokyo-hosted static assets
 - `PUBLIC_CLK_LIVE_URL` — optional base URL for static account instance mini-sites (defaults to `https://clk.live`)
 
 Optional:

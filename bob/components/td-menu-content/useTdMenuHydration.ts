@@ -1,7 +1,6 @@
 'use client';
 
 import { useLayoutEffect, type Dispatch, type MutableRefObject, type SetStateAction } from 'react';
-import { applyI18nToDom } from '../../lib/i18n/dom';
 import {
   applyClusterGroupHeaders,
   applyGroupHeaders,
@@ -16,7 +15,6 @@ import { applyShowIfVisibility, buildShowIfEntries, type ShowIfEntry } from './s
 export function useTdMenuHydration(args: {
   containerRef: MutableRefObject<HTMLDivElement | null>;
   panelHtml: string;
-  widgetName: string | null;
   accountAssets: AccountAssetsClient;
   fontLibrary: AccountFontLibrary | null;
   instanceDataRef: MutableRefObject<Record<string, unknown>>;
@@ -31,14 +29,12 @@ export function useTdMenuHydration(args: {
     panelHtml,
     setRenderKey,
     showIfEntriesRef,
-    widgetName,
   } = args;
 
   useLayoutEffect(() => {
     const container = containerRef.current;
     if (!container) return;
 
-    let cancelled = false;
     container.innerHTML = panelHtml || '';
     applyGroupHeaders(container);
     container.querySelectorAll<HTMLElement>('.tdmenucontent__cluster').forEach((cluster) => {
@@ -60,28 +56,20 @@ export function useTdMenuHydration(args: {
     };
     container.addEventListener('dieter-controls-rendered', handleControlsRendered);
 
-    const hydrate = async () => {
-      try {
-        if (cancelled) return;
-        applyAccountFontLibraryToTypographyMenus({ container, fontLibrary });
-        runHydrators(container, { accountAssets });
-        await applyI18nToDom(container, widgetName);
-        if (cancelled) return;
-        showIfEntriesRef.current = buildShowIfEntries(container);
-        applyShowIfVisibility(showIfEntriesRef.current, instanceDataRef.current);
-        setRenderKey((current) => current + 1);
-      } catch {
-        if (cancelled) return;
-        container.innerHTML =
-          '<div class="settings-panel__error" role="alert">Builder controls failed to load.</div>';
-        showIfEntriesRef.current = [];
-        setRenderKey((current) => current + 1);
-      }
-    };
-    void hydrate();
+    try {
+      applyAccountFontLibraryToTypographyMenus({ container, fontLibrary });
+      runHydrators(container, { accountAssets });
+      showIfEntriesRef.current = buildShowIfEntries(container);
+      applyShowIfVisibility(showIfEntriesRef.current, instanceDataRef.current);
+      setRenderKey((current) => current + 1);
+    } catch {
+      container.innerHTML =
+        '<div class="settings-panel__error" role="alert">Builder controls failed to load.</div>';
+      showIfEntriesRef.current = [];
+      setRenderKey((current) => current + 1);
+    }
 
     return () => {
-      cancelled = true;
       container.removeEventListener('dieter-controls-rendered', handleControlsRendered);
       if (controlsRenderedFrame != null) {
         window.cancelAnimationFrame(controlsRenderedFrame);
@@ -96,6 +84,5 @@ export function useTdMenuHydration(args: {
     panelHtml,
     setRenderKey,
     showIfEntriesRef,
-    widgetName,
   ]);
 }

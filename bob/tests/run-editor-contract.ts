@@ -21,7 +21,6 @@ type JsonObject = Record<string, unknown>;
 type AuthoredCluster = {
   kind?: unknown;
   label?: unknown;
-  labelKey?: unknown;
   initiallyOpen?: unknown;
 };
 
@@ -148,12 +147,10 @@ async function testEveryWidgetEditorContract(): Promise<void> {
     panels.forEach((panel) => {
       readAuthoredClusters(panel).forEach((cluster) => {
         const hasLabel = typeof cluster.label === 'string' && Boolean(cluster.label.trim());
-        const hasLabelKey =
-          typeof cluster.labelKey === 'string' && Boolean(cluster.labelKey.trim());
         assert.equal(
-          hasLabel || hasLabelKey,
+          hasLabel,
           true,
-          `${widgetType}:${String(panel.id)} cluster has label or labelKey`,
+          `${widgetType}:${String(panel.id)} cluster has an authored label`,
         );
         if (cluster.initiallyOpen === true) {
           openedAuthoredClusters.push({ panelId: panel.id, label: cluster.label });
@@ -236,15 +233,9 @@ function fixtureDefaults(): JsonObject {
 
 function testSpecialCharactersRoundTripOnce(): void {
   const label = `R&D <Cards> "quotes" apostrophe's; use &amp; &lt; &quot; literally`;
-  const labelParams = {
-    subject: label,
-    owner: `Dieter's "Cards"`,
-    literal: '&amp; &lt; &quot;',
-  };
   const editor = {
     panels: fixturePanels({
       label,
-      labelParams,
       initiallyOpen: true,
       nodes: [{ kind: 'field', type: 'textfield', path: 'title', label: 'Title' }],
     }),
@@ -256,13 +247,6 @@ function testSpecialCharactersRoundTripOnce(): void {
   );
   assert.ok(renderedLabel, 'compiled section label exists');
   assert.equal(decodeHtmlEntities(renderedLabel[1]), label, 'browser-visible label matches source');
-  const renderedParams = expandedHtml.match(/data-i18n-params="([^"]*)"/);
-  assert.ok(renderedParams, 'compiled labelParams exist');
-  assert.deepEqual(
-    JSON.parse(decodeHtmlEntities(renderedParams[1])),
-    labelParams,
-    'DOM labelParams match source',
-  );
   assert.doesNotMatch(expandedHtml, /<tooldrawer-cluster\b/i, 'cluster source tag is consumed');
 }
 
@@ -282,7 +266,7 @@ function testInvalidEditorContractsFail(): void {
       ).join('\n');
       expandTooldrawerClusters(unlabeledHtml);
     },
-    /requires label or label(?:-key|Key)/,
+    /label must be a non-empty string|requires label/,
     'unlabeled cluster fails closed',
   );
 
@@ -304,7 +288,7 @@ async function main(): Promise<void> {
   await testEveryWidgetEditorContract();
   console.log('PASS every widget conforms to the authored and compiled editor contract');
   testSpecialCharactersRoundTripOnce();
-  console.log('PASS editor labels and labelParams round-trip special characters exactly once');
+  console.log('PASS editor labels round-trip special characters exactly once');
   testInvalidEditorContractsFail();
   console.log('PASS invalid editor contracts fail closed');
 }

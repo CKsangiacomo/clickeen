@@ -31,7 +31,6 @@ widget.client.js
 | `widgetname` | `big-bang` |
 | display name | Big Bang |
 | Core namespace | `bigBang.*` |
-| `itemKey` | `bigBang.item` |
 | panels | `content`, `typography`, `layout`, `appearance`, `settings` |
 
 Core defaults live under:

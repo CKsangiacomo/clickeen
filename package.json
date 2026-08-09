@@ -6,9 +6,8 @@
   "scripts": {
     "generate:widgets": "node scripts/generate-widget-definition-sources.mjs && node scripts/widgets/generate-artifacts.mjs",
     "validate:widgets": "node scripts/generate-widget-definition-sources.mjs --check && node scripts/widgets/generate-artifacts.mjs && node scripts/widgets/generate-artifacts.mjs --check",
-    "build:i18n": "node scripts/i18n/build.mjs && node scripts/i18n/validate.mjs",
     "build:l10n": "node scripts/l10n/build.mjs && node scripts/l10n/validate.mjs",
-    "build": "pnpm validate:widgets && pnpm build:i18n && pnpm build:l10n && turbo build",
+    "build": "pnpm validate:widgets && pnpm build:l10n && turbo build",
     "lint": "pnpm validate:widgets && turbo lint",
     "typecheck": "pnpm validate:widgets && turbo typecheck",
     "tokyo:r2:sync:check": "node scripts/tokyo-r2-deploy-sync.mjs --dry-run --json",
