@@ -5,9 +5,9 @@
   "defaults": {
     "uiLabels": {
       "core": {
-        "singular": "Timer tile",
-        "plural": "Timer tiles",
-        "sizeCluster": "Timer size"
+        "singular": "$label:core.singular",
+        "plural": "$label:core.plural",
+        "sizeCluster": "$label:core.size-cluster"
       }
     },
     "typography": {
@@ -138,24 +138,24 @@
                 "type": "choice-tiles",
                 "groupId": "content-timer-mode",
                 "path": "countdown.timer.mode",
-                "label": "Select timer type",
+                "label": "$label:content.field.countdown.timer.mode.choice-tiles.label",
                 "attrs": {
                   "group-label": "",
                   "size": "md",
                   "value": "{{countdown.timer.mode}}",
                   "options": [
                     {
-                      "label": "Date",
+                      "label": "$label:content.field.countdown.timer.mode.choice-tiles.option.date.label",
                       "value": "date",
                       "icon": "calendar"
                     },
                     {
-                      "label": "Countdown",
+                      "label": "$label:content.field.countdown.timer.mode.choice-tiles.option.personal.label",
                       "value": "personal",
                       "icon": "person"
                     },
                     {
-                      "label": "Counter",
+                      "label": "$label:content.field.countdown.timer.mode.choice-tiles.option.number.label",
                       "value": "number",
                       "icon": "plus"
                     }
@@ -163,7 +163,7 @@
                 }
               }
             ],
-            "label": "Content",
+            "label": "$label:content.cluster.content.label",
             "initiallyOpen": true
           },
           {
@@ -173,7 +173,7 @@
                 "type": "textfield",
                 "groupId": "content-timer-labels",
                 "path": "countdown.timer.labels.days",
-                "label": "Days label",
+                "label": "$label:content.field.countdown.timer.labels.days.textfield.label",
                 "attrs": {
                   "group-label": "",
                   "size": "md",
@@ -185,7 +185,7 @@
                 "type": "textfield",
                 "groupId": "content-timer-labels",
                 "path": "countdown.timer.labels.hours",
-                "label": "Hours label",
+                "label": "$label:content.field.countdown.timer.labels.hours.textfield.label",
                 "attrs": {
                   "group-label": "",
                   "size": "md",
@@ -197,7 +197,7 @@
                 "type": "textfield",
                 "groupId": "content-timer-labels",
                 "path": "countdown.timer.labels.minutes",
-                "label": "Minutes label",
+                "label": "$label:content.field.countdown.timer.labels.minutes.textfield.label",
                 "attrs": {
                   "group-label": "",
                   "size": "md",
@@ -209,7 +209,7 @@
                 "type": "textfield",
                 "groupId": "content-timer-labels",
                 "path": "countdown.timer.labels.seconds",
-                "label": "Seconds label",
+                "label": "$label:content.field.countdown.timer.labels.seconds.textfield.label",
                 "attrs": {
                   "group-label": "",
                   "size": "md",
@@ -217,7 +217,7 @@
                 }
               }
             ],
-            "label": "Time unit labels",
+            "label": "$label:content.cluster.time-unit-labels.label",
             "showIf": {
               "path": "countdown.timer.mode",
               "op": "notEquals",
@@ -231,12 +231,12 @@
                 "type": "textfield",
                 "groupId": "timer-date",
                 "path": "countdown.timer.targetDate",
-                "label": "Target date & time",
+                "label": "$label:content.field.countdown.timer.target-date.textfield.label",
                 "attrs": {
                   "group-label": "",
                   "size": "md",
                   "value": "{{countdown.timer.targetDate}}",
-                  "placeholder": "2026-01-20T12:00"
+                  "placeholder": "$label:content.field.countdown.timer.target-date.textfield.attr.placeholder"
                 }
               },
               {
@@ -244,16 +244,16 @@
                 "type": "textfield",
                 "groupId": "timer-date",
                 "path": "countdown.timer.timezone",
-                "label": "Time zone",
+                "label": "$label:content.field.countdown.timer.timezone.textfield.label",
                 "attrs": {
                   "group-label": "",
                   "size": "md",
                   "value": "{{countdown.timer.timezone}}",
-                  "placeholder": "browser"
+                  "placeholder": "$label:content.field.countdown.timer.timezone.textfield.attr.placeholder"
                 }
               }
             ],
-            "label": "Date settings",
+            "label": "$label:content.cluster.date-settings.label",
             "showIf": {
               "path": "countdown.timer.mode",
               "op": "equals",
@@ -267,7 +267,7 @@
                 "type": "valuefield",
                 "groupId": "timer-personal",
                 "path": "countdown.timer.timeAmount",
-                "label": "Time amount",
+                "label": "$label:content.field.countdown.timer.time-amount.valuefield.label",
                 "attrs": {
                   "group-label": "",
                   "size": "md",
@@ -279,30 +279,30 @@
                 "type": "dropdown-actions",
                 "groupId": "timer-personal",
                 "path": "countdown.timer.timeUnit",
-                "label": "Time unit",
+                "label": "$label:content.field.countdown.timer.time-unit.dropdown-actions.label",
                 "attrs": {
                   "group-label": "",
                   "size": "md",
                   "value": "{{countdown.timer.timeUnit}}",
                   "options": [
                     {
-                      "label": "Hours",
+                      "label": "$label:content.field.countdown.timer.time-unit.dropdown-actions.option.hours.label",
                       "value": "hours"
                     },
                     {
-                      "label": "Minutes",
+                      "label": "$label:content.field.countdown.timer.time-unit.dropdown-actions.option.minutes.label",
                       "value": "minutes"
                     },
                     {
-                      "label": "Days",
+                      "label": "$label:content.field.countdown.timer.time-unit.dropdown-actions.option.days.label",
                       "value": "days"
                     },
                     {
-                      "label": "Weeks",
+                      "label": "$label:content.field.countdown.timer.time-unit.dropdown-actions.option.weeks.label",
                       "value": "weeks"
                     },
                     {
-                      "label": "Months",
+                      "label": "$label:content.field.countdown.timer.time-unit.dropdown-actions.option.months.label",
                       "value": "months"
                     }
                   ]
@@ -313,41 +313,41 @@
                 "type": "dropdown-actions",
                 "groupId": "timer-personal",
                 "path": "countdown.timer.repeat",
-                "label": "Repeat",
+                "label": "$label:content.field.countdown.timer.repeat.dropdown-actions.label",
                 "attrs": {
                   "group-label": "",
                   "size": "md",
                   "value": "{{countdown.timer.repeat}}",
                   "options": [
                     {
-                      "label": "Never",
+                      "label": "$label:content.field.countdown.timer.repeat.dropdown-actions.option.never.label",
                       "value": "never"
                     },
                     {
-                      "label": "1 minute",
+                      "label": "$label:content.field.countdown.timer.repeat.dropdown-actions.option.1-minute.label",
                       "value": "1 minute"
                     },
                     {
-                      "label": "5 minutes",
+                      "label": "$label:content.field.countdown.timer.repeat.dropdown-actions.option.5-minutes.label",
                       "value": "5 minutes"
                     },
                     {
-                      "label": "1 hour",
+                      "label": "$label:content.field.countdown.timer.repeat.dropdown-actions.option.1-hour.label",
                       "value": "1 hour"
                     },
                     {
-                      "label": "1 day",
+                      "label": "$label:content.field.countdown.timer.repeat.dropdown-actions.option.1-day.label",
                       "value": "1 day"
                     },
                     {
-                      "label": "1 week",
+                      "label": "$label:content.field.countdown.timer.repeat.dropdown-actions.option.1-week.label",
                       "value": "1 week"
                     }
                   ]
                 }
               }
             ],
-            "label": "Countdown settings",
+            "label": "$label:content.cluster.countdown-settings.label",
             "showIf": {
               "path": "countdown.timer.mode",
               "op": "equals",
@@ -361,7 +361,7 @@
                 "type": "valuefield",
                 "groupId": "timer-number",
                 "path": "countdown.timer.targetNumber",
-                "label": "Target number",
+                "label": "$label:content.field.countdown.timer.target-number.valuefield.label",
                 "attrs": {
                   "group-label": "",
                   "size": "md",
@@ -373,7 +373,7 @@
                 "type": "valuefield",
                 "groupId": "timer-number",
                 "path": "countdown.timer.startingNumber",
-                "label": "Starting number",
+                "label": "$label:content.field.countdown.timer.starting-number.valuefield.label",
                 "attrs": {
                   "group-label": "",
                   "size": "md",
@@ -385,7 +385,7 @@
                 "type": "valuefield",
                 "groupId": "timer-number",
                 "path": "countdown.timer.countDuration",
-                "label": "Count duration (seconds)",
+                "label": "$label:content.field.countdown.timer.count-duration.valuefield.label",
                 "attrs": {
                   "group-label": "",
                   "size": "md",
@@ -393,7 +393,7 @@
                 }
               }
             ],
-            "label": "Counter settings",
+            "label": "$label:content.cluster.counter-settings.label",
             "showIf": {
               "path": "countdown.timer.mode",
               "op": "equals",
@@ -407,12 +407,12 @@
                 "type": "textfield",
                 "groupId": "actions-during",
                 "path": "countdown.actions.during.url",
-                "label": "Countdown action link",
+                "label": "$label:content.field.countdown.actions.during.url.textfield.label",
                 "attrs": {
                   "group-label": "",
                   "size": "md",
                   "value": "{{countdown.actions.during.url}}",
-                  "placeholder": "https://example.com"
+                  "placeholder": "$label:content.field.countdown.actions.during.url.textfield.attr.placeholder"
                 }
               },
               {
@@ -420,7 +420,7 @@
                 "type": "textfield",
                 "groupId": "actions-during",
                 "path": "countdown.actions.during.text",
-                "label": "Countdown action label",
+                "label": "$label:content.field.countdown.actions.during.text.textfield.label",
                 "attrs": {
                   "group-label": "",
                   "size": "md",
@@ -432,18 +432,18 @@
                 "type": "dropdown-actions",
                 "groupId": "actions-during",
                 "path": "countdown.actions.during.style",
-                "label": "Countdown action style",
+                "label": "$label:content.field.countdown.actions.during.style.dropdown-actions.label",
                 "attrs": {
                   "group-label": "",
                   "size": "md",
                   "value": "{{countdown.actions.during.style}}",
                   "options": [
                     {
-                      "label": "Primary",
+                      "label": "$label:content.field.countdown.actions.during.style.dropdown-actions.option.primary.label",
                       "value": "primary"
                     },
                     {
-                      "label": "Secondary",
+                      "label": "$label:content.field.countdown.actions.during.style.dropdown-actions.option.secondary.label",
                       "value": "secondary"
                     }
                   ]
@@ -454,14 +454,14 @@
                 "type": "toggle",
                 "groupId": "actions-during",
                 "path": "countdown.actions.during.newTab",
-                "label": "Open in new tab",
+                "label": "$label:content.field.countdown.actions.during.new-tab.toggle.label",
                 "attrs": {
                   "group-label": "",
                   "size": "md"
                 }
               }
             ],
-            "label": "Actions - During countdown"
+            "label": "$label:content.cluster.actions-during-countdown.label"
           },
           {
             "nodes": [
@@ -470,18 +470,18 @@
                 "type": "dropdown-actions",
                 "groupId": "actions-after",
                 "path": "countdown.actions.after.type",
-                "label": "After timer ends",
+                "label": "$label:content.field.countdown.actions.after.type.dropdown-actions.label",
                 "attrs": {
                   "group-label": "",
                   "size": "md",
                   "value": "{{countdown.actions.after.type}}",
                   "options": [
                     {
-                      "label": "Hide timer",
+                      "label": "$label:content.field.countdown.actions.after.type.dropdown-actions.option.hide.label",
                       "value": "hide"
                     },
                     {
-                      "label": "Link",
+                      "label": "$label:content.field.countdown.actions.after.type.dropdown-actions.option.link.label",
                       "value": "link"
                     }
                   ]
@@ -492,7 +492,7 @@
                 "type": "textfield",
                 "groupId": "actions-after",
                 "path": "countdown.actions.after.url",
-                "label": "Finished action link",
+                "label": "$label:content.field.countdown.actions.after.url.textfield.label",
                 "showIf": {
                   "path": "countdown.actions.after.type",
                   "op": "equals",
@@ -502,7 +502,7 @@
                   "group-label": "",
                   "size": "md",
                   "value": "{{countdown.actions.after.url}}",
-                  "placeholder": "https://example.com"
+                  "placeholder": "$label:content.field.countdown.actions.after.url.textfield.attr.placeholder"
                 }
               },
               {
@@ -510,7 +510,7 @@
                 "type": "textfield",
                 "groupId": "actions-after",
                 "path": "countdown.actions.after.text",
-                "label": "Finished action label",
+                "label": "$label:content.field.countdown.actions.after.text.textfield.label",
                 "showIf": {
                   "path": "countdown.actions.after.type",
                   "op": "equals",
@@ -523,7 +523,7 @@
                 }
               }
             ],
-            "label": "Actions - After countdown"
+            "label": "$label:content.cluster.actions-after-countdown.label"
           }
         ]
       },
@@ -532,8 +532,8 @@
         "shared": {
           "id": "typography",
           "roleLabels": {
-            "timer": "Timer",
-            "label": "Labels"
+            "timer": "$label:typography.role.timer.label",
+            "label": "$label:typography.role.label.label"
           }
         }
       },
@@ -564,7 +564,7 @@
                 "type": "dropdown-actions",
                 "groupId": "appearance-timer",
                 "path": "countdown.appearance.timerStyle",
-                "label": "Timer style",
+                "label": "$label:appearance.field.countdown.appearance.timer-style.dropdown-actions.label",
                 "showIf": {
                   "path": "countdown.timer.mode",
                   "op": "notEquals",
@@ -576,11 +576,11 @@
                   "value": "{{countdown.appearance.timerStyle}}",
                   "options": [
                     {
-                      "label": "Separated",
+                      "label": "$label:appearance.field.countdown.appearance.timer-style.dropdown-actions.option.separated.label",
                       "value": "separated"
                     },
                     {
-                      "label": "Inline",
+                      "label": "$label:appearance.field.countdown.appearance.timer-style.dropdown-actions.option.inline.label",
                       "value": "inline"
                     }
                   ]
@@ -591,7 +591,7 @@
                 "type": "dropdown-actions",
                 "groupId": "appearance-timer",
                 "path": "countdown.appearance.timeFormat",
-                "label": "Time format",
+                "label": "$label:appearance.field.countdown.appearance.time-format.dropdown-actions.label",
                 "showIf": {
                   "path": "countdown.timer.mode",
                   "op": "notEquals",
@@ -603,15 +603,15 @@
                   "value": "{{countdown.appearance.timeFormat}}",
                   "options": [
                     {
-                      "label": "Auto",
+                      "label": "$label:appearance.field.countdown.appearance.time-format.dropdown-actions.option.auto.label",
                       "value": "auto"
                     },
                     {
-                      "label": "Days, Hours, Minutes, Seconds",
+                      "label": "$label:appearance.field.countdown.appearance.time-format.dropdown-actions.option.d-h-m-s.label",
                       "value": "D:H:M:S"
                     },
                     {
-                      "label": "Hours, Minutes, Seconds",
+                      "label": "$label:appearance.field.countdown.appearance.time-format.dropdown-actions.option.h-m-s.label",
                       "value": "H:M:S"
                     }
                   ]
@@ -622,7 +622,7 @@
                 "type": "toggle",
                 "groupId": "appearance-timer",
                 "path": "countdown.appearance.showLabels",
-                "label": "Show unit labels",
+                "label": "$label:appearance.field.countdown.appearance.show-labels.toggle.label",
                 "showIf": {
                   "path": "countdown.timer.mode",
                   "op": "notEquals",
@@ -639,7 +639,7 @@
                 "type": "dropdown-fill",
                 "groupId": "appearance-settings",
                 "path": "countdown.appearance.textColor",
-                "label": "Text color",
+                "label": "$label:appearance.field.countdown.appearance.text-color.dropdown-fill.label",
                 "attrs": {
                   "group-label": "",
                   "size": "md",
@@ -652,7 +652,7 @@
                 "type": "dropdown-actions",
                 "groupId": "appearance-settings",
                 "path": "countdown.appearance.separator",
-                "label": "Separator",
+                "label": "$label:appearance.field.countdown.appearance.separator.dropdown-actions.label",
                 "showIf": {
                   "path": "countdown.timer.mode",
                   "op": "notEquals",
@@ -664,22 +664,22 @@
                   "value": "{{countdown.appearance.separator}}",
                   "options": [
                     {
-                      "label": "Colon",
+                      "label": "$label:appearance.field.countdown.appearance.separator.dropdown-actions.option.copy.label",
                       "value": ":"
                     },
                     {
-                      "label": "Slash",
+                      "label": "$label:appearance.field.countdown.appearance.separator.dropdown-actions.option.copy.label-2",
                       "value": "/"
                     },
                     {
-                      "label": "Dash",
+                      "label": "$label:appearance.field.countdown.appearance.separator.dropdown-actions.option.copy.label-3",
                       "value": "-"
                     }
                   ]
                 }
               }
             ],
-            "label": "Timer text"
+            "label": "$label:appearance.cluster.timer-text.label"
           },
           {
             "kind": "shared",
@@ -692,7 +692,7 @@
                 "type": "dropdown-fill",
                 "groupId": "appearance-item",
                 "path": "countdown.appearance.itemBackground",
-                "label": "Timer tile background",
+                "label": "$label:appearance.field.countdown.appearance.item-background.dropdown-fill.label",
                 "attrs": {
                   "group-label": "",
                   "size": "md",
@@ -705,7 +705,7 @@
                 "type": "toggle",
                 "groupId": "appearance-item",
                 "path": "countdown.appearance.cardwrapper.radiusLinked",
-                "label": "Link timer tile corners",
+                "label": "$label:appearance.field.countdown.appearance.cardwrapper.radius-linked.toggle.label",
                 "attrs": {
                   "group-label": "",
                   "size": "md",
@@ -718,7 +718,7 @@
                 "type": "dropdown-actions",
                 "groupId": "appearance-item",
                 "path": "countdown.appearance.cardwrapper.radius",
-                "label": "Corner radius",
+                "label": "$label:appearance.field.countdown.appearance.cardwrapper.radius.dropdown-actions.label",
                 "showIf": {
                   "path": "countdown.appearance.cardwrapper.radiusLinked",
                   "op": "isTrue"
@@ -726,27 +726,27 @@
                 "attrs": {
                   "group-label": "",
                   "size": "md",
-                  "placeholder": "Choose radius",
+                  "placeholder": "$label:appearance.field.countdown.appearance.cardwrapper.radius.dropdown-actions.attr.placeholder",
                   "value": "{{countdown.appearance.cardwrapper.radius}}",
                   "options": [
                     {
-                      "label": "None",
+                      "label": "$label:appearance.field.countdown.appearance.cardwrapper.radius.dropdown-actions.option.none.label",
                       "value": "none"
                     },
                     {
-                      "label": "Small",
+                      "label": "$label:appearance.field.countdown.appearance.cardwrapper.radius.dropdown-actions.option.2xl.label",
                       "value": "2xl"
                     },
                     {
-                      "label": "Medium",
+                      "label": "$label:appearance.field.countdown.appearance.cardwrapper.radius.dropdown-actions.option.4xl.label",
                       "value": "4xl"
                     },
                     {
-                      "label": "Large",
+                      "label": "$label:appearance.field.countdown.appearance.cardwrapper.radius.dropdown-actions.option.6xl.label",
                       "value": "6xl"
                     },
                     {
-                      "label": "X-Large",
+                      "label": "$label:appearance.field.countdown.appearance.cardwrapper.radius.dropdown-actions.option.10xl.label",
                       "value": "10xl"
                     }
                   ]
@@ -757,7 +757,7 @@
                 "type": "dropdown-actions",
                 "groupId": "appearance-item",
                 "path": "countdown.appearance.cardwrapper.radiusTL",
-                "label": "Tile top-left corner",
+                "label": "$label:appearance.field.countdown.appearance.cardwrapper.radius-tl.dropdown-actions.label",
                 "showIf": {
                   "path": "countdown.appearance.cardwrapper.radiusLinked",
                   "op": "isFalse"
@@ -765,27 +765,27 @@
                 "attrs": {
                   "group-label": "",
                   "size": "md",
-                  "placeholder": "Choose radius",
+                  "placeholder": "$label:appearance.field.countdown.appearance.cardwrapper.radius-tl.dropdown-actions.attr.placeholder",
                   "value": "{{countdown.appearance.cardwrapper.radiusTL}}",
                   "options": [
                     {
-                      "label": "None",
+                      "label": "$label:appearance.field.countdown.appearance.cardwrapper.radius-tl.dropdown-actions.option.none.label",
                       "value": "none"
                     },
                     {
-                      "label": "Small",
+                      "label": "$label:appearance.field.countdown.appearance.cardwrapper.radius-tl.dropdown-actions.option.2xl.label",
                       "value": "2xl"
                     },
                     {
-                      "label": "Medium",
+                      "label": "$label:appearance.field.countdown.appearance.cardwrapper.radius-tl.dropdown-actions.option.4xl.label",
                       "value": "4xl"
                     },
                     {
-                      "label": "Large",
+                      "label": "$label:appearance.field.countdown.appearance.cardwrapper.radius-tl.dropdown-actions.option.6xl.label",
                       "value": "6xl"
                     },
                     {
-                      "label": "X-Large",
+                      "label": "$label:appearance.field.countdown.appearance.cardwrapper.radius-tl.dropdown-actions.option.10xl.label",
                       "value": "10xl"
                     }
                   ]
@@ -796,7 +796,7 @@
                 "type": "dropdown-actions",
                 "groupId": "appearance-item",
                 "path": "countdown.appearance.cardwrapper.radiusTR",
-                "label": "Tile top-right corner",
+                "label": "$label:appearance.field.countdown.appearance.cardwrapper.radius-tr.dropdown-actions.label",
                 "showIf": {
                   "path": "countdown.appearance.cardwrapper.radiusLinked",
                   "op": "isFalse"
@@ -804,27 +804,27 @@
                 "attrs": {
                   "group-label": "",
                   "size": "md",
-                  "placeholder": "Choose radius",
+                  "placeholder": "$label:appearance.field.countdown.appearance.cardwrapper.radius-tr.dropdown-actions.attr.placeholder",
                   "value": "{{countdown.appearance.cardwrapper.radiusTR}}",
                   "options": [
                     {
-                      "label": "None",
+                      "label": "$label:appearance.field.countdown.appearance.cardwrapper.radius-tr.dropdown-actions.option.none.label",
                       "value": "none"
                     },
                     {
-                      "label": "Small",
+                      "label": "$label:appearance.field.countdown.appearance.cardwrapper.radius-tr.dropdown-actions.option.2xl.label",
                       "value": "2xl"
                     },
                     {
-                      "label": "Medium",
+                      "label": "$label:appearance.field.countdown.appearance.cardwrapper.radius-tr.dropdown-actions.option.4xl.label",
                       "value": "4xl"
                     },
                     {
-                      "label": "Large",
+                      "label": "$label:appearance.field.countdown.appearance.cardwrapper.radius-tr.dropdown-actions.option.6xl.label",
                       "value": "6xl"
                     },
                     {
-                      "label": "X-Large",
+                      "label": "$label:appearance.field.countdown.appearance.cardwrapper.radius-tr.dropdown-actions.option.10xl.label",
                       "value": "10xl"
                     }
                   ]
@@ -835,7 +835,7 @@
                 "type": "dropdown-actions",
                 "groupId": "appearance-item",
                 "path": "countdown.appearance.cardwrapper.radiusBR",
-                "label": "Tile bottom-right corner",
+                "label": "$label:appearance.field.countdown.appearance.cardwrapper.radius-br.dropdown-actions.label",
                 "showIf": {
                   "path": "countdown.appearance.cardwrapper.radiusLinked",
                   "op": "isFalse"
@@ -843,27 +843,27 @@
                 "attrs": {
                   "group-label": "",
                   "size": "md",
-                  "placeholder": "Choose radius",
+                  "placeholder": "$label:appearance.field.countdown.appearance.cardwrapper.radius-br.dropdown-actions.attr.placeholder",
                   "value": "{{countdown.appearance.cardwrapper.radiusBR}}",
                   "options": [
                     {
-                      "label": "None",
+                      "label": "$label:appearance.field.countdown.appearance.cardwrapper.radius-br.dropdown-actions.option.none.label",
                       "value": "none"
                     },
                     {
-                      "label": "Small",
+                      "label": "$label:appearance.field.countdown.appearance.cardwrapper.radius-br.dropdown-actions.option.2xl.label",
                       "value": "2xl"
                     },
                     {
-                      "label": "Medium",
+                      "label": "$label:appearance.field.countdown.appearance.cardwrapper.radius-br.dropdown-actions.option.4xl.label",
                       "value": "4xl"
                     },
                     {
-                      "label": "Large",
+                      "label": "$label:appearance.field.countdown.appearance.cardwrapper.radius-br.dropdown-actions.option.6xl.label",
                       "value": "6xl"
                     },
                     {
-                      "label": "X-Large",
+                      "label": "$label:appearance.field.countdown.appearance.cardwrapper.radius-br.dropdown-actions.option.10xl.label",
                       "value": "10xl"
                     }
                   ]
@@ -874,7 +874,7 @@
                 "type": "dropdown-actions",
                 "groupId": "appearance-item",
                 "path": "countdown.appearance.cardwrapper.radiusBL",
-                "label": "Tile bottom-left corner",
+                "label": "$label:appearance.field.countdown.appearance.cardwrapper.radius-bl.dropdown-actions.label",
                 "showIf": {
                   "path": "countdown.appearance.cardwrapper.radiusLinked",
                   "op": "isFalse"
@@ -882,27 +882,27 @@
                 "attrs": {
                   "group-label": "",
                   "size": "md",
-                  "placeholder": "Choose radius",
+                  "placeholder": "$label:appearance.field.countdown.appearance.cardwrapper.radius-bl.dropdown-actions.attr.placeholder",
                   "value": "{{countdown.appearance.cardwrapper.radiusBL}}",
                   "options": [
                     {
-                      "label": "None",
+                      "label": "$label:appearance.field.countdown.appearance.cardwrapper.radius-bl.dropdown-actions.option.none.label",
                       "value": "none"
                     },
                     {
-                      "label": "Small",
+                      "label": "$label:appearance.field.countdown.appearance.cardwrapper.radius-bl.dropdown-actions.option.2xl.label",
                       "value": "2xl"
                     },
                     {
-                      "label": "Medium",
+                      "label": "$label:appearance.field.countdown.appearance.cardwrapper.radius-bl.dropdown-actions.option.4xl.label",
                       "value": "4xl"
                     },
                     {
-                      "label": "Large",
+                      "label": "$label:appearance.field.countdown.appearance.cardwrapper.radius-bl.dropdown-actions.option.6xl.label",
                       "value": "6xl"
                     },
                     {
-                      "label": "X-Large",
+                      "label": "$label:appearance.field.countdown.appearance.cardwrapper.radius-bl.dropdown-actions.option.10xl.label",
                       "value": "10xl"
                     }
                   ]
@@ -913,7 +913,7 @@
                 "type": "dropdown-border",
                 "groupId": "appearance-item",
                 "path": "countdown.appearance.cardwrapper.border",
-                "label": "Timer tile border",
+                "label": "$label:appearance.field.countdown.appearance.cardwrapper.border.dropdown-border.label",
                 "attrs": {
                   "group-label": "",
                   "size": "md",
@@ -925,7 +925,7 @@
                 "type": "dropdown-shadow",
                 "groupId": "appearance-item",
                 "path": "countdown.appearance.cardwrapper.shadow",
-                "label": "Timer tile outside shadow",
+                "label": "$label:appearance.field.countdown.appearance.cardwrapper.shadow.dropdown-shadow.label",
                 "attrs": {
                   "group-label": "",
                   "size": "md",
@@ -933,7 +933,7 @@
                 }
               }
             ],
-            "label": "Timer background",
+            "label": "$label:appearance.cluster.timer-background.label",
             "showIf": {
               "any": [
                 {

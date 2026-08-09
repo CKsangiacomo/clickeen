@@ -6,6 +6,7 @@
   "scripts": {
     "deploy": "wrangler deploy",
     "test:key-rotation": "tsx tests/run-signing-key-rotation.ts",
+    "test:user-settings": "tsx tests/run-user-settings-contract.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "verify:auth-boundary": "node ./verify-auth-boundary.mjs"
   },

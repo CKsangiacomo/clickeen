@@ -1,0 +1,263 @@
+import { isRecord } from '@clickeen/ck-contracts';
+import type { RawWidget } from '../compiler.shared';
+import { BOB_WIDGET_PANEL_IDS } from '../types';
+
+const LABEL_TOKEN_PREFIX = '$label:';
+const LABEL_KEY_PATTERN = /^[a-z][a-z0-9]*(?:[.-][a-z0-9]+)*$/;
+const COPY_ATTRIBUTE_NAMES = new Set([
+  'add-label',
+  'aria-label',
+  'data-placeholder',
+  'group-label',
+  'labelInputLabel',
+  'labelPlaceholder',
+  'move-label',
+  'placeholder',
+  'remove-label',
+  'reorder-label',
+  'reorder-title',
+  'title',
+]);
+
+export type TooldrawerLabels = {
+  widgetType: string;
+  locale: 'en';
+  labels: Record<string, string>;
+};
+
+export type ResolvedWidgetTooldrawerLabels = {
+  widget: RawWidget;
+  panelLabels: Record<(typeof BOB_WIDGET_PANEL_IDS)[number], string>;
+};
+
+function cloneJson<T>(value: T): T {
+  return JSON.parse(JSON.stringify(value)) as T;
+}
+
+function readTooldrawerLabels(value: unknown, widgetType: string): TooldrawerLabels {
+  if (!isRecord(value)) {
+    throw new Error(`[BobCompiler] ${widgetType} ToolDrawer labels must be an object`);
+  }
+  const rootKeys = Object.keys(value).sort();
+  if (
+    rootKeys.length !== 3 ||
+    rootKeys[0] !== 'labels' ||
+    rootKeys[1] !== 'locale' ||
+    rootKeys[2] !== 'widgetType'
+  ) {
+    throw new Error(`[BobCompiler] ${widgetType} ToolDrawer labels have invalid root fields`);
+  }
+  if (value.widgetType !== widgetType) {
+    throw new Error(`[BobCompiler] ${widgetType} ToolDrawer labels widgetType mismatch`);
+  }
+  if (value.locale !== 'en') {
+    throw new Error(`[BobCompiler] ${widgetType} ToolDrawer labels must declare locale "en"`);
+  }
+  if (!isRecord(value.labels)) {
+    throw new Error(`[BobCompiler] ${widgetType} ToolDrawer labels missing labels object`);
+  }
+
+  const labels: Record<string, string> = {};
+  for (const [key, rawLabel] of Object.entries(value.labels)) {
+    if (!LABEL_KEY_PATTERN.test(key)) {
+      throw new Error(`[BobCompiler] ${widgetType} ToolDrawer label key is invalid: ${key}`);
+    }
+    if (typeof rawLabel !== 'string' || !rawLabel.trim() || rawLabel !== rawLabel.trim()) {
+      throw new Error(`[BobCompiler] ${widgetType} ToolDrawer label is invalid: ${key}`);
+    }
+    labels[key] = rawLabel;
+  }
+  return { widgetType, locale: 'en', labels };
+}
+
+function assertLabelToken(value: unknown, path: string, widgetType: string): void {
+  if (typeof value !== 'string' || !value.trim()) return;
+  if (!value.startsWith(LABEL_TOKEN_PREFIX)) {
+    throw new Error(
+      `[BobCompiler] ${widgetType} ToolDrawer copy must use a label token at ${path}`,
+    );
+  }
+}
+
+function assertCopyAttributes(attrs: unknown, path: string, widgetType: string, element: boolean): void {
+  if (!isRecord(attrs)) return;
+  for (const name of COPY_ATTRIBUTE_NAMES) {
+    assertLabelToken(attrs[name], `${path}.${name}`, widgetType);
+  }
+  if (
+    element &&
+    typeof attrs.value === 'string' &&
+    attrs.value.trim() &&
+    !attrs.value.includes('{{')
+  ) {
+    assertLabelToken(attrs.value, `${path}.value`, widgetType);
+  }
+  if (Array.isArray(attrs.options)) {
+    attrs.options.forEach((option, index) => {
+      if (isRecord(option)) {
+        assertLabelToken(option.label, `${path}.options[${index}].label`, widgetType);
+      }
+    });
+  }
+  if (Array.isArray(attrs.columns)) {
+    attrs.columns.forEach((column, index) => {
+      if (!isRecord(column)) return;
+      assertLabelToken(column.label, `${path}.columns[${index}].label`, widgetType);
+      assertLabelToken(column.placeholder, `${path}.columns[${index}].placeholder`, widgetType);
+    });
+  }
+}
+
+function assertEditorNodeCopy(node: unknown, path: string, widgetType: string): void {
+  if (!isRecord(node)) return;
+  if (node.kind === 'field') {
+    assertLabelToken(node.label, `${path}.label`, widgetType);
+    assertCopyAttributes(node.attrs, `${path}.attrs`, widgetType, false);
+    if (Array.isArray(node.template)) {
+      node.template.forEach((child, index) =>
+        assertEditorNodeCopy(child, `${path}.template[${index}]`, widgetType),
+      );
+    }
+    return;
+  }
+  if (node.kind === 'element') {
+    assertCopyAttributes(node.attrs, `${path}.attrs`, widgetType, true);
+    if (Array.isArray(node.children)) {
+      node.children.forEach((child, index) =>
+        assertEditorNodeCopy(child, `${path}.children[${index}]`, widgetType),
+      );
+    }
+    return;
+  }
+  if (node.kind === 'text') {
+    assertLabelToken(node.text, `${path}.text`, widgetType);
+  }
+}
+
+function assertWidgetCopyUsesLabelTokens(widget: RawWidget, widgetType: string): void {
+  const editor = isRecord(widget.editor) ? widget.editor : null;
+  const panels = editor && Array.isArray(editor.panels) ? editor.panels : [];
+  panels.forEach((panel, panelIndex) => {
+    if (!isRecord(panel)) return;
+    if (isRecord(panel.shared) && isRecord(panel.shared.roleLabels)) {
+      for (const [role, label] of Object.entries(panel.shared.roleLabels)) {
+        assertLabelToken(label, `editor.panels[${panelIndex}].shared.roleLabels.${role}`, widgetType);
+      }
+    }
+    if (!Array.isArray(panel.clusters)) return;
+    panel.clusters.forEach((cluster, clusterIndex) => {
+      if (!isRecord(cluster) || cluster.kind === 'shared') return;
+      assertLabelToken(cluster.label, `editor.panels[${panelIndex}].clusters[${clusterIndex}].label`, widgetType);
+      assertCopyAttributes(
+        cluster.attrs,
+        `editor.panels[${panelIndex}].clusters[${clusterIndex}].attrs`,
+        widgetType,
+        false,
+      );
+      if (Array.isArray(cluster.nodes)) {
+        cluster.nodes.forEach((node, nodeIndex) =>
+          assertEditorNodeCopy(
+            node,
+            `editor.panels[${panelIndex}].clusters[${clusterIndex}].nodes[${nodeIndex}]`,
+            widgetType,
+          ),
+        );
+      }
+    });
+  });
+
+  const visitUiLabels = (value: unknown, path: string): void => {
+    if (typeof value === 'string') {
+      assertLabelToken(value, path, widgetType);
+      return;
+    }
+    if (Array.isArray(value)) {
+      value.forEach((entry, index) => visitUiLabels(entry, `${path}[${index}]`));
+      return;
+    }
+    if (!isRecord(value)) return;
+    for (const [key, entry] of Object.entries(value)) visitUiLabels(entry, `${path}.${key}`);
+  };
+  visitUiLabels(widget.defaults?.uiLabels, 'defaults.uiLabels');
+}
+
+function resolveLabelTokens(
+  value: unknown,
+  labels: TooldrawerLabels,
+  usedKeys: Set<string>,
+  path: string,
+): unknown {
+  if (typeof value === 'string') {
+    if (!value.startsWith(LABEL_TOKEN_PREFIX)) return value;
+    const key = value.slice(LABEL_TOKEN_PREFIX.length);
+    if (!LABEL_KEY_PATTERN.test(key)) {
+      throw new Error(`[BobCompiler] ${labels.widgetType} ToolDrawer label token is invalid at ${path}`);
+    }
+    const label = labels.labels[key];
+    if (label === undefined) {
+      throw new Error(
+        `[BobCompiler] ${labels.widgetType} ToolDrawer label is missing at ${path}: ${key}`,
+      );
+    }
+    usedKeys.add(key);
+    return label;
+  }
+  if (Array.isArray(value)) {
+    return value.map((entry, index) =>
+      resolveLabelTokens(entry, labels, usedKeys, `${path}[${index}]`),
+    );
+  }
+  if (!isRecord(value)) return value;
+
+  const next: Record<string, unknown> = {};
+  for (const [key, entry] of Object.entries(value)) {
+    next[key] = resolveLabelTokens(entry, labels, usedKeys, `${path}.${key}`);
+  }
+  return next;
+}
+
+export function resolveWidgetTooldrawerLabels(
+  widgetJson: RawWidget,
+  labelsRaw: unknown,
+): ResolvedWidgetTooldrawerLabels {
+  const widgetType =
+    typeof widgetJson.widgetname === 'string' && widgetJson.widgetname.trim()
+      ? widgetJson.widgetname.trim()
+      : '';
+  if (!widgetType) throw new Error('[BobCompiler] widget JSON missing widgetname');
+
+  const labels = readTooldrawerLabels(labelsRaw, widgetType);
+  assertWidgetCopyUsesLabelTokens(widgetJson, widgetType);
+  const usedKeys = new Set<string>();
+  const widget = cloneJson(widgetJson);
+  widget.editor = resolveLabelTokens(widget.editor, labels, usedKeys, 'editor');
+
+  if (widget.defaults && isRecord(widget.defaults.uiLabels)) {
+    widget.defaults.uiLabels = resolveLabelTokens(
+      widget.defaults.uiLabels,
+      labels,
+      usedKeys,
+      'defaults.uiLabels',
+    ) as Record<string, unknown>;
+  }
+
+  const panelLabels = {} as Record<(typeof BOB_WIDGET_PANEL_IDS)[number], string>;
+  for (const panelId of BOB_WIDGET_PANEL_IDS) {
+    const key = `panel.${panelId}`;
+    const label = labels.labels[key];
+    if (label === undefined) {
+      throw new Error(`[BobCompiler] ${widgetType} ToolDrawer panel label is missing: ${key}`);
+    }
+    usedKeys.add(key);
+    panelLabels[panelId] = label;
+  }
+
+  const unusedKeys = Object.keys(labels.labels).filter((key) => !usedKeys.has(key));
+  if (unusedKeys.length > 0) {
+    throw new Error(
+      `[BobCompiler] ${widgetType} ToolDrawer labels contain unused keys: ${unusedKeys.join(', ')}`,
+    );
+  }
+
+  return { widget, panelLabels };
+}

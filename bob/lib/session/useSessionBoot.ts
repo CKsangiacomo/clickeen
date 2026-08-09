@@ -16,6 +16,7 @@ import {
   serializeInstanceDataSignature,
 } from './sessionTypes';
 import {
+  assertCompiledEditorContract,
   assertSessionConfigContract,
   bindSessionTypographyControls,
 } from './sessionConfig';
@@ -100,6 +101,7 @@ export function useSessionBoot(args: {
             error: 'coreui.errors.typography.fontLibrary.invalid',
           };
         }
+        assertCompiledEditorContract(rawCompiled);
         const compiled = bindSessionTypographyControls(rawCompiled, fontLibrary);
         const instanceData = rawInstanceData as Record<string, unknown>;
         assertSessionConfigContract(instanceData, compiled);

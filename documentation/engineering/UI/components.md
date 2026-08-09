@@ -129,9 +129,9 @@ uses its role tokens and state formulas; user-authored color controls keep their
 own product values. This document owns the component contract; the 126I
 execution PRD maps component-by-component adoption.
 
-Component icon slots follow [`iconography.md`](iconography.md): use approved
-Dieter icon names through the owning consumer lane, keep `currentColor`, keep
-state on the parent/control, and put icon-only control names on the control.
+Component icon slots follow [`iconography.md`](iconography.md): declare Dieter
+icon names through the owning component input, keep `currentColor`, keep state
+on the parent/control, and put icon-only control names on the control.
 The `icon` component is a CSS-only `diet-icon` wrapper with numeric glyph sizes.
 The 126I execution PRD owns component-by-component API cleanup beyond those
 iconography rules.

@@ -1,0 +1,28 @@
+{
+  "widgetType": "big-bang",
+  "locale": "en",
+  "labels": {
+    "content.cluster.content.label": "Content",
+    "content.field.big-bang.show-supporting-copy.toggle.label": "Show supporting copy",
+    "content.field.big-bang.statement.dropdown-edit.attr.placeholder": "Add statement text",
+    "content.field.big-bang.statement.dropdown-edit.label": "Statement",
+    "content.field.big-bang.supporting-copy.dropdown-edit.attr.placeholder": "Add supporting copy",
+    "content.field.big-bang.supporting-copy.dropdown-edit.label": "Supporting copy",
+    "core.plural": "Statements",
+    "core.singular": "Statement",
+    "core.size-cluster": "Statement size",
+    "layout.cluster.big-bang-layout.label": "Big Bang layout",
+    "layout.field.big-bang.alignment.choice-tiles.label": "Statement alignment",
+    "layout.field.big-bang.alignment.choice-tiles.option.center.label": "Center",
+    "layout.field.big-bang.alignment.choice-tiles.option.left.label": "Left",
+    "layout.field.big-bang.gap.valuefield.label": "Statement/copy gap (px)",
+    "layout.field.big-bang.text-width.valuefield.label": "Statement width (px)",
+    "panel.appearance": "Appearance",
+    "panel.content": "Content",
+    "panel.layout": "Layout",
+    "panel.settings": "Settings",
+    "panel.typography": "Typography",
+    "typography.role.big-bang.label": "Big Bang statement",
+    "typography.role.body.label": "Subtitle and supporting copy"
+  }
+}

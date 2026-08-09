@@ -40,6 +40,7 @@ export type RomaMeResponse = {
     givenName: string | null;
     familyName: string | null;
     primaryLanguage: string | null;
+    usePrimaryLanguageForUi: boolean;
     country: string | null;
     timezone: string | null;
   } | null;

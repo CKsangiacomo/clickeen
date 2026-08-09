@@ -17,6 +17,7 @@ import type { ComponentStencilLoader } from './compiler/stencils';
 import { normalizeWidgetNormalizationSpec } from './compiler/modules/normalization';
 import { buildHeaderPresets } from './compiler/modules/header';
 import { validateShowIfExpression } from '../components/td-menu-content/showIf';
+import { resolveWidgetTooldrawerLabels } from './compiler/tooldrawer-labels';
 
 function extractPrimaryUrl(raw: string): string | null {
   const v = String(raw || '').trim();
@@ -181,18 +182,22 @@ export async function compileWidgetServer(
   sources: {
     loadComponentStencil: ComponentStencilLoader;
     tokyoBaseUrl?: string;
+    tooldrawerLabels: unknown;
   },
 ): Promise<CompiledWidgetCore> {
   if (!widgetJson || typeof widgetJson !== 'object') {
     throw new Error('[BobCompiler] Invalid widget JSON payload');
   }
 
-  const coreDefaults = widgetJson.defaults;
+  const resolved = resolveWidgetTooldrawerLabels(widgetJson, sources.tooldrawerLabels);
+  const resolvedWidget = resolved.widget;
+
+  const coreDefaults = resolvedWidget.defaults;
   if (!coreDefaults || typeof coreDefaults !== 'object' || Array.isArray(coreDefaults)) {
     throw new Error('[BobCompiler] widget JSON missing defaults object');
   }
 
-  const rawWidgetName = widgetJson.widgetname;
+  const rawWidgetName = resolvedWidget.widgetname;
   const widgetname =
     typeof rawWidgetName === 'string' && rawWidgetName.trim() ? rawWidgetName : null;
   if (!widgetname) {
@@ -200,25 +205,25 @@ export async function compileWidgetServer(
   }
 
   const displayName =
-    typeof widgetJson.displayName === 'string' ? widgetJson.displayName.trim() : '';
+    typeof resolvedWidget.displayName === 'string' ? resolvedWidget.displayName.trim() : '';
   if (!displayName) {
     throw new Error(`[BobCompiler] ${widgetname} widget JSON missing displayName`);
   }
-  const normalization = normalizeWidgetNormalizationSpec(widgetJson.normalization);
+  const normalization = normalizeWidgetNormalizationSpec(resolvedWidget.normalization);
 
   const defaults = composeWidgetFactoryDefaults(coreDefaults as Record<string, unknown>);
 
   const tokyoBase = sources.tokyoBaseUrl ?? '';
   const stencilLoader = sources.loadComponentStencil;
-  const editorHtml = buildEditorHtmlLines(widgetJson.editor, defaults, widgetname);
-  const parsedPanels = parsePanels(editorHtml);
+  const editorHtml = buildEditorHtmlLines(resolvedWidget.editor, defaults, widgetname);
+  const parsedPanels = parsePanels(editorHtml, resolved.panelLabels);
   const defaultsWithAssets = rewriteAssetUrlsInDefaults(defaults, tokyoBase);
 
   const hasHeader = defaults.header != null;
   const hasCta = defaults.headerCta != null;
   const headerPresets = hasHeader && hasCta ? buildHeaderPresets() : undefined;
 
-  const presetsRaw = normalizePresets(widgetJson.presets);
+  const presetsRaw = normalizePresets(resolvedWidget.presets);
   const presetsBase = {
     ...(headerPresets ?? {}),
     ...(presetsRaw ?? {}),
@@ -293,6 +298,7 @@ export async function compileWidgetServer(
 
       return {
         id: panel.id,
+        label: panel.label,
         html,
       };
     }),

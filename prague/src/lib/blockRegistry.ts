@@ -10,12 +10,10 @@ import Split from '../blocks/split/split.astro';
 import Steps from '../blocks/steps/steps.astro';
 import SubpageCards from '../blocks/subpage-cards/subpage-cards.astro';
 import SplitCarousel from '../blocks/split-carousel/SplitCarousel.astro';
-import dietIconsManifest from '../../../dieter/icons/icons.json';
 
 type StringType = 'string' | 'array';
 type RequiredString = { key: string; type: StringType };
 const ACCOUNT_INSTANCE_REF_KEYS = new Set(['accountPublicId', 'instanceId', 'locale']);
-const APPROVED_DIETER_ICON_NAMES = new Set(Object.keys((dietIconsManifest as { symbols?: Record<string, unknown> }).symbols ?? {}));
 
 export type BlockType =
   | 'big-bang'
@@ -273,14 +271,10 @@ function validateWidgetItemRefs(args: { block: Record<string, unknown>; pagePath
   }
 }
 
-function validateDieterIconName(iconName: unknown, context: string) {
+function validateIconName(iconName: unknown, context: string) {
   if (iconName == null) return;
   if (typeof iconName !== 'string') {
     throw new Error(`[prague] ${context} must be a string`);
-  }
-  const value = iconName.trim();
-  if (value && !APPROVED_DIETER_ICON_NAMES.has(value)) {
-    throw new Error(`[prague] ${context} must be an approved Dieter icon name`);
   }
 }
 
@@ -329,7 +323,7 @@ export function validateBlockMeta(args: { block: Record<string, unknown>; pagePa
       }
 
       const iconName = (link as any).iconName;
-      validateDieterIconName(iconName, `${pagePath}: block "${type}" links[${i}].iconName`);
+      validateIconName(iconName, `${pagePath}: block "${type}" links[${i}].iconName`);
     }
   }
 }
@@ -392,7 +386,7 @@ export function validateBlockStrings(args: { blockType: string; strings: Record<
         throw new Error(`[prague] ${pagePath}: block "${blockId}" items[${i}].iconEnabled must be boolean`);
       }
       const iconName = (item as any).iconName;
-      validateDieterIconName(iconName, `${pagePath}: block "${blockId}" items[${i}].iconName`);
+      validateIconName(iconName, `${pagePath}: block "${blockId}" items[${i}].iconName`);
 
       const backgroundEnabled = (item as any).backgroundEnabled;
       if (backgroundEnabled != null && typeof backgroundEnabled !== 'boolean') {

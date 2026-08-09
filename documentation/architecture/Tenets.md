@@ -159,6 +159,8 @@ product/widgets/{widgetType}/
 A widget's files define its behavior:
 
 - `spec.json`;
+- `{widgetType}_tooldrawer_l10n_labels/en.json` for widget-authored English
+  ToolDrawer copy;
 - `widget.html`;
 - `widget.css`;
 - `widget.client.js`;

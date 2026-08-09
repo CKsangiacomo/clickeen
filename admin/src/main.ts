@@ -327,14 +327,7 @@ function setActive(path: string) {
 function hydrateIcons(scope: ParentNode) {
   scope.querySelectorAll<HTMLElement>('[data-icon]').forEach((node) => {
     const name = node.getAttribute('data-icon') ?? '';
-    const markup = getIcon(name);
-    if (!markup) {
-      node.textContent = `[missing icon: ${name}]`;
-      node.setAttribute('data-icon-missing', name);
-      node.removeAttribute('data-icon');
-      return;
-    }
-    node.innerHTML = markup;
+    node.innerHTML = getIcon(name);
     node.removeAttribute('data-icon');
   });
 }

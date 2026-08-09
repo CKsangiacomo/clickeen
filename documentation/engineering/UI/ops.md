@@ -33,8 +33,9 @@ dieter/icons/svg/** -> R2 dieter/icons/svg/**
 ```
 
 The Tokyo product-root sync deploys the committed SVG files directly.
-`dieter/icons/icons.json` remains source/compile-time data. There is no deployed
-manifest, editor bundle, component tree, or token tree.
+`dieter/icons/icons.json` is used only by the human-operated SF extraction
+tool. There is no deployed manifest, runtime approval registry, editor bundle,
+component tree, or token tree.
 
 The `cloud-dev workers deploy` workflow watches Dieter source because the root
 checks regenerate widget product packages before the product-root sync. Tokyo
@@ -60,6 +61,9 @@ pnpm validate:widgets
 pnpm tokyo:r2:sync:check
 ```
 
+The Dieter governance command checks the remaining token/component source
+contracts. It does not count, approve, or compare icons against `icons.json`.
+
 The sync dry run must contain only SVG files under its Dieter root. Consumer
 changes also require the focused Bob, Roma, Prague, DevStudio, or widget
 package build.
@@ -71,5 +75,5 @@ package build.
 - Do not add browser globals, manifests, registries, compatibility bundles, or
   a second Dieter edit path.
 - Keep icon origination human-owned through `tooling/sf-symbols/**`.
-- Agents consume approved icons; they do not originate or silently substitute
-  them.
+- Agents consume the human-selected icon source; they do not originate or
+  silently substitute icons.

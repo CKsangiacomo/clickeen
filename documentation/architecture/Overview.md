@@ -76,7 +76,7 @@ CLICKEEN
 | Current account and account product routes | Roma | `roma/` |
 | Builder editing state | Bob | `bob/` browser-memory session |
 | Account runtime storage | Tokyo-worker | `tokyo-worker/` over Tokyo R2 |
-| Product widget software | Git-authored Tokyo product root | `tokyo/product/widgets/` deployed to `product/widgets/` |
+| Product widget software | Git-authored Tokyo product root | `tokyo/product/widgets/`, including adjacent English ToolDrawer labels, deployed to `product/widgets/` |
 | Public widget serving | Tokyo-worker public serving | generated instance files under `accounts/{accountPublicId}/...` |
 | Relational account/support data | Michael/Supabase | `supabase/migrations/` and service-owned routes |
 | Model execution | San Francisco | `sanfrancisco/` |

@@ -34,6 +34,7 @@ export function isPanelId(value: string): value is PanelId {
 
 export interface CompiledPanel {
   id: PanelId;
+  label: string;
   html: string;
 }
 

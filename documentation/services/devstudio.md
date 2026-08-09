@@ -153,9 +153,8 @@ masquerade as writable DevStudio controls.
 ## Icon Reveal Truth
 
 DevStudio/Admin uses generated raw Dieter SVG imports for tooling and reveal.
-That path is not a product runtime icon system. Missing `[data-icon]` truth is
-rendered visibly as `[missing icon: name]` with `data-icon-missing`, not silently
-omitted or replaced.
+The generator enumerates `dieter/icons/svg/**` directly. That path is not a
+product runtime icon system, registry, approval gate, or second icon authority.
 
 ## Auth And Safety Gates
 

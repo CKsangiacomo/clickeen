@@ -20,12 +20,15 @@ Files:
 spec.json
 editable-fields.json
 limits.json
+countdown_tooldrawer_l10n_labels/
+  en.json
 widget.html
 widget.css
 widget.client.js
 ```
 
-Countdown has no widget-local runtime files outside the six-file contract.
+Countdown has no widget-local runtime files outside the canonical six files;
+its adjacent English label file is compiler input, not runtime code.
 
 ## Contract
 

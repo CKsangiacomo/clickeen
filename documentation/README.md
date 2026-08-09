@@ -99,7 +99,9 @@ Use `documentation/` for authoritative behavior; use `Execution_Pipeline_Docs/` 
 This repo is operated by **1 human architect + multiple AI dev teams**. The system is modular and contract-driven so AIs can work in parallel safely.
 
 - **Modular surfaces:** widgets in `tokyo/product/widgets/`; services isolated under `bob/`, `roma/`, `admin/`, `prague/`, `tokyo-worker/`, `sanfrancisco/`.
-- **Explicit contracts:** `spec.json`, `editable-fields.json`, `*.allowlist.json`, PRDs, and service docs define what is safe to change. If it is not in a contract, assume it is unsafe.
+- **Explicit contracts:** `spec.json`, adjacent widget ToolDrawer label files,
+  `editable-fields.json`, `*.allowlist.json`, PRDs, and service docs define what
+  is safe to change. If it is not in a contract, assume it is unsafe.
 - **Automation intent:** local support-stack changes are local only. Cloud-dev propagation is explicit (promote/deploy).
 - **Agent expectation:** AIs must understand the end-to-end journey below. If you do not, stop and re-trace from code before editing.
 
@@ -150,7 +152,9 @@ Runtime profile:
 
 ### A) Widget definition path
 
-Source of truth: `tokyo/product/widgets/{widget}/` (spec + runtime + widget contract). Deployed R2 storage home: `product/widgets/{widget}/`.
+Source of truth: `tokyo/product/widgets/{widget}/` (spec + adjacent ToolDrawer
+labels + runtime + widget contract). Deployed R2 storage home:
+`product/widgets/{widget}/`.
 
 1. **Tokyo R2/Tokyo-worker** serves the widget deploy roots:
    - canonical widget software path is `product/widgets/{widget}/`

@@ -94,7 +94,7 @@ Core table columns:
 | Table | Columns |
 | --- | --- |
 | `public.accounts` | `id`, `status`, `status_changed_at`, `tier`, `created_at`, `selected_target_locales`, `locale_policy` |
-| `public.users` | `user_id`, `account_id`, `role`, `primary_email`, `login_provider`, `login_subject`, `first_name`, `middle_name`, `last_name`, `primary_language`, `country`, `timezone`, `phone`, `whatsapp`, `created_at` |
+| `public.users` | `user_id`, `account_id`, `role`, `primary_email`, `login_provider`, `login_subject`, `first_name`, `middle_name`, `last_name`, `primary_language`, `use_primary_language_for_ui`, `country`, `timezone`, `phone`, `whatsapp`, `created_at` |
 | `public.account_invitations` | `id`, `account_id`, `email`, `role`, `status`, `created_at`, `expires_at`, `accepted_at`, `revoked_at` |
 | `public.instances` | `id`, `account_id`, `widget_type`, `publish_status`, `translation_status`, `created_at`, `edited_at` |
 | `public.translation_generation_operations` | schema-present operation table from `supabase/migrations/20260528120000__prd105_translation_generation_operations.sql`; no current product-path runtime consumer found |

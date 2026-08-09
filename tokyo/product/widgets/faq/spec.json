@@ -17,9 +17,9 @@
   "defaults": {
     "uiLabels": {
       "core": {
-        "singular": "Q&A card",
-        "plural": "Q&A cards",
-        "sizeCluster": "FAQs size"
+        "singular": "$label:core.singular",
+        "plural": "$label:core.plural",
+        "sizeCluster": "$label:core.size-cluster"
       }
     },
     "typography": {
@@ -266,7 +266,7 @@
             "id": "header-content"
           },
           {
-            "label": "Content",
+            "label": "$label:content.cluster.content.label",
             "initiallyOpen": true,
             "nodes": [
               {
@@ -274,13 +274,13 @@
                 "type": "object-manager",
                 "groupId": "content-sections",
                 "path": "faq.sections",
-                "label": "Sections",
+                "label": "$label:content.field.faq.sections.object-manager.label",
                 "template": [
                   {
                     "kind": "field",
                     "type": "repeater",
                     "path": "faq.sections.__SECTION__.faqs",
-                    "label": "Questions",
+                    "label": "$label:content.field.faq.sections.section.faqs.repeater.label",
                     "template": [
                       {
                         "kind": "element",
@@ -318,7 +318,7 @@
                                     "children": [
                                       {
                                         "kind": "text",
-                                        "text": "Q:"
+                                        "text": "$label:content.template.q"
                                       }
                                     ]
                                   },
@@ -328,12 +328,12 @@
                                     "attrs": {
                                       "class": "diet-dropdown-header-value body-s",
                                       "data-muted": true,
-                                      "data-placeholder": "Type your question"
+                                      "data-placeholder": "$label:content.template.type-your-question"
                                     },
                                     "children": [
                                       {
                                         "kind": "text",
-                                        "text": "Type your question"
+                                        "text": "$label:content.template.type-your-question"
                                       }
                                     ]
                                   }
@@ -345,7 +345,7 @@
                                 "attrs": {
                                   "class": "diet-popover",
                                   "role": "dialog",
-                                  "aria-label": "Question"
+                                  "aria-label": "$label:content.template.question"
                                 },
                                 "children": [
                                   {
@@ -364,7 +364,7 @@
                                         "children": [
                                           {
                                             "kind": "text",
-                                            "text": "Q:"
+                                            "text": "$label:content.template.q"
                                           }
                                         ]
                                       },
@@ -417,7 +417,7 @@
                                             "children": [
                                               {
                                                 "kind": "text",
-                                                "text": "Type your question"
+                                                "text": "$label:content.template.type-your-question"
                                               }
                                             ]
                                           },
@@ -649,7 +649,7 @@
                                                             "children": [
                                                               {
                                                                 "kind": "text",
-                                                                "text": "Add URL"
+                                                                "text": "$label:content.template.add-url"
                                                               }
                                                             ]
                                                           },
@@ -709,7 +709,7 @@
                                                                     "children": [
                                                                       {
                                                                         "kind": "text",
-                                                                        "text": "URL:"
+                                                                        "text": "$label:content.template.url"
                                                                       }
                                                                     ]
                                                                   },
@@ -719,8 +719,8 @@
                                                                     "attrs": {
                                                                       "type": "text",
                                                                       "class": "diet-textfield__field body-s diet-popaddlink__input",
-                                                                      "aria-label": "URL",
-                                                                      "placeholder": "https://example.com"
+                                                                      "aria-label": "$label:content.template.url-2",
+                                                                      "placeholder": "$label:content.template.https-example-com"
                                                                     },
                                                                     "children": []
                                                                   }
@@ -762,7 +762,7 @@
                                                                     "children": [
                                                                       {
                                                                         "kind": "text",
-                                                                        "text": "Apply"
+                                                                        "text": "$label:content.template.apply"
                                                                       }
                                                                     ]
                                                                   }
@@ -788,7 +788,7 @@
                                     "attrs": {
                                       "type": "hidden",
                                       "class": "diet-dropdown-edit__field",
-                                      "value": "Type your question",
+                                      "value": "$label:content.template.type-your-question",
                                       "data-bob-path": "faq.sections.__SECTION__.faqs.__INDEX__.question"
                                     },
                                     "children": []
@@ -823,7 +823,7 @@
                                         "children": [
                                           {
                                             "kind": "text",
-                                            "text": "A:"
+                                            "text": "$label:content.template.a"
                                           }
                                         ]
                                       },
@@ -833,12 +833,12 @@
                                         "attrs": {
                                           "class": "diet-dropdown-header-value body-s",
                                           "data-muted": true,
-                                          "data-placeholder": "Type your answer"
+                                          "data-placeholder": "$label:content.template.type-your-answer"
                                         },
                                         "children": [
                                           {
                                             "kind": "text",
-                                            "text": "Type your answer"
+                                            "text": "$label:content.template.type-your-answer"
                                           }
                                         ]
                                       }
@@ -850,7 +850,7 @@
                                     "attrs": {
                                       "class": "diet-popover",
                                       "role": "dialog",
-                                      "aria-label": "Answer"
+                                      "aria-label": "$label:content.template.answer"
                                     },
                                     "children": [
                                       {
@@ -869,7 +869,7 @@
                                             "children": [
                                               {
                                                 "kind": "text",
-                                                "text": "A:"
+                                                "text": "$label:content.template.a"
                                               }
                                             ]
                                           },
@@ -922,7 +922,7 @@
                                                 "children": [
                                                   {
                                                     "kind": "text",
-                                                    "text": "Type your answer"
+                                                    "text": "$label:content.template.type-your-answer"
                                                   }
                                                 ]
                                               },
@@ -1154,7 +1154,7 @@
                                                                 "children": [
                                                                   {
                                                                     "kind": "text",
-                                                                    "text": "Add URL"
+                                                                    "text": "$label:content.template.add-url"
                                                                   }
                                                                 ]
                                                               },
@@ -1214,7 +1214,7 @@
                                                                         "children": [
                                                                           {
                                                                             "kind": "text",
-                                                                            "text": "URL:"
+                                                                            "text": "$label:content.template.url"
                                                                           }
                                                                         ]
                                                                       },
@@ -1224,8 +1224,8 @@
                                                                         "attrs": {
                                                                           "type": "text",
                                                                           "class": "diet-textfield__field body-s diet-popaddlink__input",
-                                                                          "aria-label": "URL",
-                                                                          "placeholder": "https://example.com"
+                                                                          "aria-label": "$label:content.template.url-2",
+                                                                          "placeholder": "$label:content.template.https-example-com"
                                                                         },
                                                                         "children": []
                                                                       }
@@ -1267,7 +1267,7 @@
                                                                         "children": [
                                                                           {
                                                                             "kind": "text",
-                                                                            "text": "Apply"
+                                                                            "text": "$label:content.template.apply"
                                                                           }
                                                                         ]
                                                                       }
@@ -1293,7 +1293,7 @@
                                         "attrs": {
                                           "type": "hidden",
                                           "class": "diet-dropdown-edit__field",
-                                          "value": "Type your answer",
+                                          "value": "$label:content.template.type-your-answer",
                                           "data-bob-path": "faq.sections.__SECTION__.faqs.__INDEX__.answer"
                                         },
                                         "children": []
@@ -1308,7 +1308,7 @@
                             "kind": "field",
                             "type": "toggle",
                             "path": "faq.sections.__SECTION__.faqs.__INDEX__.defaultOpen",
-                            "label": "Open by default",
+                            "label": "$label:content.field.faq.sections.section.faqs.index.default-open.toggle.label",
                             "showIf": {
                               "path": "faq.layout.type",
                               "op": "equals",
@@ -1322,12 +1322,12 @@
                       }
                     ],
                     "attrs": {
-                      "add-label": "Add question",
-                      "remove-label": "Remove question {index}",
-                      "move-label": "Move question {index}",
+                      "add-label": "$label:content.field.faq.sections.section.faqs.repeater.attr.add-label",
+                      "remove-label": "$label:content.field.faq.sections.section.faqs.repeater.attr.remove-label",
+                      "move-label": "$label:content.field.faq.sections.section.faqs.repeater.attr.move-label",
                       "labelPath": "faq.sections.__SECTION__.title",
-                      "labelInputLabel": "Section",
-                      "labelPlaceholder": "All Questions",
+                      "labelInputLabel": "$label:content.field.faq.sections.section.faqs.repeater.attr.label-input-label",
+                      "labelPlaceholder": "$label:content.field.faq.sections.section.faqs.repeater.attr.label-placeholder",
                       "labelSize": "lg",
                       "default-item": {
                         "question": "New question",
@@ -1340,9 +1340,9 @@
                 "attrs": {
                   "group-label": "",
                   "class": "diet-object-manager",
-                  "add-label": "Add section",
-                  "reorder-label": "Manage sections",
-                  "reorder-title": "Manage sections",
+                  "add-label": "$label:content.field.faq.sections.object-manager.attr.add-label",
+                  "reorder-label": "$label:content.field.faq.sections.object-manager.attr.reorder-label",
+                  "reorder-title": "$label:content.field.faq.sections.object-manager.attr.reorder-title",
                   "label-path": "title",
                   "index-token": "__SECTION__",
                   "default-item": {
@@ -1360,14 +1360,14 @@
             ]
           },
           {
-            "label": "Section titles",
+            "label": "$label:content.cluster.section-titles.label",
             "nodes": [
               {
                 "kind": "field",
                 "type": "toggle",
                 "groupId": "title-settings",
                 "path": "faq.displayCategoryTitles",
-                "label": "Show section title",
+                "label": "$label:content.field.faq.display-category-titles.toggle.label",
                 "attrs": {
                   "group-label": "",
                   "size": "md"
@@ -1382,9 +1382,9 @@
         "shared": {
           "id": "typography",
           "roleLabels": {
-            "section": "Section title",
-            "question": "Question",
-            "answer": "Answer"
+            "section": "$label:typography.role.section.label",
+            "question": "$label:typography.role.question.label",
+            "answer": "$label:typography.role.answer.label"
           }
         }
       },
@@ -1406,24 +1406,24 @@
                 "type": "choice-tiles",
                 "groupId": "layout-choice",
                 "path": "faq.layout.type",
-                "label": "Layout",
+                "label": "$label:layout.field.faq.layout.type.choice-tiles.label",
                 "attrs": {
                   "group-label": "",
                   "size": "md",
                   "value": "{{faq.layout.type}}",
                   "options": [
                     {
-                      "label": "Accordion",
+                      "label": "$label:layout.field.faq.layout.type.choice-tiles.option.accordion.label",
                       "value": "accordion",
                       "icon": "chevron.down.2"
                     },
                     {
-                      "label": "List",
+                      "label": "$label:layout.field.faq.layout.type.choice-tiles.option.list.label",
                       "value": "list",
                       "icon": "square.stack.3d.up"
                     },
                     {
-                      "label": "Cards",
+                      "label": "$label:layout.field.faq.layout.type.choice-tiles.option.multicolumn.label",
                       "value": "multicolumn",
                       "icon": "circle.grid.2x2"
                     }
@@ -1435,7 +1435,7 @@
                 "type": "valuefield",
                 "groupId": "type-settings",
                 "path": "faq.layout.gap",
-                "label": "Gap (px)",
+                "label": "$label:layout.field.faq.layout.gap.valuefield.label",
                 "attrs": {
                   "group-label": "",
                   "size": "md"
@@ -1446,7 +1446,7 @@
                 "type": "toggle",
                 "groupId": "type-settings",
                 "path": "faq.behavior.expandFirst",
-                "label": "Open first question by default",
+                "label": "$label:layout.field.faq.behavior.expand-first.toggle.label",
                 "showIf": {
                   "all": [
                     {
@@ -1470,7 +1470,7 @@
                 "type": "toggle",
                 "groupId": "type-settings",
                 "path": "faq.behavior.multiOpen",
-                "label": "Allow multiple open",
+                "label": "$label:layout.field.faq.behavior.multi-open.toggle.label",
                 "showIf": {
                   "path": "faq.layout.type",
                   "op": "equals",
@@ -1486,7 +1486,7 @@
                 "type": "toggle",
                 "groupId": "type-settings",
                 "path": "faq.behavior.expandAll",
-                "label": "Expand all questions",
+                "label": "$label:layout.field.faq.behavior.expand-all.toggle.label",
                 "showIf": {
                   "path": "faq.layout.type",
                   "op": "equals",
@@ -1502,7 +1502,7 @@
                 "type": "valuefield",
                 "groupId": "type-settings",
                 "path": "faq.layout.columns.desktop",
-                "label": "Columns (desktop)",
+                "label": "$label:layout.field.faq.layout.columns.desktop.valuefield.label",
                 "showIf": {
                   "path": "faq.layout.type",
                   "op": "equals",
@@ -1518,7 +1518,7 @@
                 "type": "valuefield",
                 "groupId": "type-settings",
                 "path": "faq.layout.columns.mobile",
-                "label": "Columns (mobile)",
+                "label": "$label:layout.field.faq.layout.columns.mobile.valuefield.label",
                 "showIf": {
                   "path": "faq.layout.type",
                   "op": "equals",
@@ -1534,7 +1534,7 @@
                 "type": "dropdown-actions",
                 "groupId": "type-settings",
                 "path": "faq.layout.cardsLayout",
-                "label": "Cards layout",
+                "label": "$label:layout.field.faq.layout.cards-layout.dropdown-actions.label",
                 "showIf": {
                   "path": "faq.layout.type",
                   "op": "equals",
@@ -1543,22 +1543,22 @@
                 "attrs": {
                   "group-label": "",
                   "size": "md",
-                  "placeholder": "Choose layout",
+                  "placeholder": "$label:layout.field.faq.layout.cards-layout.dropdown-actions.attr.placeholder",
                   "value": "{{faq.layout.cardsLayout}}",
                   "options": [
                     {
-                      "label": "Grid",
+                      "label": "$label:layout.field.faq.layout.cards-layout.dropdown-actions.option.grid.label",
                       "value": "grid"
                     },
                     {
-                      "label": "Masonry",
+                      "label": "$label:layout.field.faq.layout.cards-layout.dropdown-actions.option.masonry.label",
                       "value": "masonry"
                     }
                   ]
                 }
               }
             ],
-            "label": "Widget layout"
+            "label": "$label:layout.cluster.widget-layout.label"
           },
           {
             "nodes": [
@@ -1567,34 +1567,34 @@
                 "type": "dropdown-actions",
                 "groupId": "item-spacing",
                 "path": "faq.layout.itemQaGapPreset",
-                "label": "Q/A spacing",
+                "label": "$label:layout.field.faq.layout.item-qa-gap-preset.dropdown-actions.label",
                 "attrs": {
                   "group-label": "",
                   "size": "md",
                   "value": "{{faq.layout.itemQaGapPreset}}",
                   "options": [
                     {
-                      "label": "X-Small",
+                      "label": "$label:layout.field.faq.layout.item-qa-gap-preset.dropdown-actions.option.xs.label",
                       "value": "xs"
                     },
                     {
-                      "label": "Small",
+                      "label": "$label:layout.field.faq.layout.item-qa-gap-preset.dropdown-actions.option.s.label",
                       "value": "s"
                     },
                     {
-                      "label": "Medium",
+                      "label": "$label:layout.field.faq.layout.item-qa-gap-preset.dropdown-actions.option.m.label",
                       "value": "m"
                     },
                     {
-                      "label": "Large",
+                      "label": "$label:layout.field.faq.layout.item-qa-gap-preset.dropdown-actions.option.l.label",
                       "value": "l"
                     },
                     {
-                      "label": "X-Large",
+                      "label": "$label:layout.field.faq.layout.item-qa-gap-preset.dropdown-actions.option.xl.label",
                       "value": "xl"
                     },
                     {
-                      "label": "Custom",
+                      "label": "$label:layout.field.faq.layout.item-qa-gap-preset.dropdown-actions.option.custom.label",
                       "value": "custom"
                     }
                   ]
@@ -1605,7 +1605,7 @@
                 "type": "valuefield",
                 "groupId": "item-spacing",
                 "path": "faq.layout.itemQaGapCustom",
-                "label": "Custom Q/A spacing (px)",
+                "label": "$label:layout.field.faq.layout.item-qa-gap-custom.valuefield.label",
                 "showIf": {
                   "path": "faq.layout.itemQaGapPreset",
                   "op": "equals",
@@ -1625,7 +1625,7 @@
                 "type": "toggle",
                 "groupId": "item-padding",
                 "path": "faq.layout.itemPaddingLinked",
-                "label": "Link Q&A card padding",
+                "label": "$label:layout.field.faq.layout.item-padding-linked.toggle.label",
                 "attrs": {
                   "group-label": "",
                   "size": "md",
@@ -1638,7 +1638,7 @@
                 "type": "valuefield",
                 "groupId": "item-padding",
                 "path": "faq.layout.itemPadding",
-                "label": "Q&A card padding (px)",
+                "label": "$label:layout.field.faq.layout.item-padding.valuefield.label",
                 "showIf": {
                   "path": "faq.layout.itemPaddingLinked",
                   "op": "isTrue"
@@ -1653,7 +1653,7 @@
                 "type": "valuefield",
                 "groupId": "item-padding",
                 "path": "faq.layout.itemPaddingTop",
-                "label": "Q&A card top padding (px)",
+                "label": "$label:layout.field.faq.layout.item-padding-top.valuefield.label",
                 "showIf": {
                   "path": "faq.layout.itemPaddingLinked",
                   "op": "isFalse"
@@ -1668,7 +1668,7 @@
                 "type": "valuefield",
                 "groupId": "item-padding",
                 "path": "faq.layout.itemPaddingRight",
-                "label": "Q&A card right padding (px)",
+                "label": "$label:layout.field.faq.layout.item-padding-right.valuefield.label",
                 "showIf": {
                   "path": "faq.layout.itemPaddingLinked",
                   "op": "isFalse"
@@ -1683,7 +1683,7 @@
                 "type": "valuefield",
                 "groupId": "item-padding",
                 "path": "faq.layout.itemPaddingBottom",
-                "label": "Q&A card bottom padding (px)",
+                "label": "$label:layout.field.faq.layout.item-padding-bottom.valuefield.label",
                 "showIf": {
                   "path": "faq.layout.itemPaddingLinked",
                   "op": "isFalse"
@@ -1698,7 +1698,7 @@
                 "type": "valuefield",
                 "groupId": "item-padding",
                 "path": "faq.layout.itemPaddingLeft",
-                "label": "Q&A card left padding (px)",
+                "label": "$label:layout.field.faq.layout.item-padding-left.valuefield.label",
                 "showIf": {
                   "path": "faq.layout.itemPaddingLinked",
                   "op": "isFalse"
@@ -1709,7 +1709,7 @@
                 }
               }
             ],
-            "label": "Item layout"
+            "label": "$label:layout.cluster.item-layout.label"
           },
           {
             "kind": "shared",
@@ -1721,14 +1721,14 @@
         "id": "appearance",
         "clusters": [
           {
-            "label": "Accordion",
+            "label": "$label:appearance.cluster.accordion.label",
             "nodes": [
               {
                 "kind": "field",
                 "type": "dropdown-actions",
                 "groupId": "appearance-accordion",
                 "path": "faq.appearance.iconStyle",
-                "label": "Accordion icon",
+                "label": "$label:appearance.field.faq.appearance.icon-style.dropdown-actions.label",
                 "showIf": {
                   "path": "faq.layout.type",
                   "op": "equals",
@@ -1737,23 +1737,23 @@
                 "attrs": {
                   "group-label": "",
                   "size": "md",
-                  "placeholder": "Choose icon",
+                  "placeholder": "$label:appearance.field.faq.appearance.icon-style.dropdown-actions.attr.placeholder",
                   "value": "{{faq.appearance.iconStyle}}",
                   "options": [
                     {
-                      "label": "Plus",
+                      "label": "$label:appearance.field.faq.appearance.icon-style.dropdown-actions.option.plus.label",
                       "value": "plus"
                     },
                     {
-                      "label": "Chevron",
+                      "label": "$label:appearance.field.faq.appearance.icon-style.dropdown-actions.option.chevron.label",
                       "value": "chevron"
                     },
                     {
-                      "label": "Arrow",
+                      "label": "$label:appearance.field.faq.appearance.icon-style.dropdown-actions.option.arrow.label",
                       "value": "arrow"
                     },
                     {
-                      "label": "Arrowshape",
+                      "label": "$label:appearance.field.faq.appearance.icon-style.dropdown-actions.option.arrowshape.label",
                       "value": "arrowshape"
                     }
                   ]
@@ -1764,7 +1764,7 @@
                 "type": "dropdown-fill",
                 "groupId": "appearance-accordion",
                 "path": "faq.appearance.iconColor",
-                "label": "Accordion icon color",
+                "label": "$label:appearance.field.faq.appearance.icon-color.dropdown-fill.label",
                 "showIf": {
                   "path": "faq.layout.type",
                   "op": "equals",
@@ -1790,22 +1790,22 @@
                 "type": "dropdown-actions",
                 "groupId": "appearance-links",
                 "path": "faq.appearance.linkStyle",
-                "label": "Link style",
+                "label": "$label:appearance.field.faq.appearance.link-style.dropdown-actions.label",
                 "attrs": {
                   "group-label": "",
                   "size": "md",
                   "value": "{{faq.appearance.linkStyle}}",
                   "options": [
                     {
-                      "label": "Underline",
+                      "label": "$label:appearance.field.faq.appearance.link-style.dropdown-actions.option.underline.label",
                       "value": "underline"
                     },
                     {
-                      "label": "Highlight",
+                      "label": "$label:appearance.field.faq.appearance.link-style.dropdown-actions.option.highlight.label",
                       "value": "highlight"
                     },
                     {
-                      "label": "Color",
+                      "label": "$label:appearance.field.faq.appearance.link-style.dropdown-actions.option.color.label",
                       "value": "color"
                     }
                   ]
@@ -1816,7 +1816,7 @@
                 "type": "dropdown-fill",
                 "groupId": "appearance-links",
                 "path": "faq.appearance.linkUnderlineColor",
-                "label": "Underline color",
+                "label": "$label:appearance.field.faq.appearance.link-underline-color.dropdown-fill.label",
                 "showIf": {
                   "path": "faq.appearance.linkStyle",
                   "op": "equals",
@@ -1834,7 +1834,7 @@
                 "type": "dropdown-fill",
                 "groupId": "appearance-links",
                 "path": "faq.appearance.linkHighlightColor",
-                "label": "Highlight color",
+                "label": "$label:appearance.field.faq.appearance.link-highlight-color.dropdown-fill.label",
                 "showIf": {
                   "path": "faq.appearance.linkStyle",
                   "op": "equals",
@@ -1852,7 +1852,7 @@
                 "type": "dropdown-fill",
                 "groupId": "appearance-links",
                 "path": "faq.appearance.linkTextColor",
-                "label": "Link text color",
+                "label": "$label:appearance.field.faq.appearance.link-text-color.dropdown-fill.label",
                 "showIf": {
                   "path": "faq.appearance.linkStyle",
                   "op": "equals",
@@ -1866,7 +1866,7 @@
                 }
               }
             ],
-            "label": "Links",
+            "label": "$label:appearance.cluster.links.label",
             "showIf": {
               "call": "hasLinks",
               "args": [
@@ -1883,7 +1883,7 @@
                 "type": "dropdown-fill",
                 "groupId": "appearance-card",
                 "path": "faq.appearance.itemBackground",
-                "label": "Q&A card background",
+                "label": "$label:appearance.field.faq.appearance.item-background.dropdown-fill.label",
                 "attrs": {
                   "group-label": "",
                   "size": "md",
@@ -1896,7 +1896,7 @@
                 "type": "toggle",
                 "groupId": "appearance-card",
                 "path": "faq.appearance.cardwrapper.radiusLinked",
-                "label": "Link Q&A card corners",
+                "label": "$label:appearance.field.faq.appearance.cardwrapper.radius-linked.toggle.label",
                 "attrs": {
                   "group-label": "",
                   "size": "md",
@@ -1909,7 +1909,7 @@
                 "type": "dropdown-actions",
                 "groupId": "appearance-card",
                 "path": "faq.appearance.cardwrapper.radius",
-                "label": "Corner radius",
+                "label": "$label:appearance.field.faq.appearance.cardwrapper.radius.dropdown-actions.label",
                 "showIf": {
                   "path": "faq.appearance.cardwrapper.radiusLinked",
                   "op": "isTrue"
@@ -1917,27 +1917,27 @@
                 "attrs": {
                   "group-label": "",
                   "size": "md",
-                  "placeholder": "Choose radius",
+                  "placeholder": "$label:appearance.field.faq.appearance.cardwrapper.radius.dropdown-actions.attr.placeholder",
                   "value": "{{faq.appearance.cardwrapper.radius}}",
                   "options": [
                     {
-                      "label": "None",
+                      "label": "$label:appearance.field.faq.appearance.cardwrapper.radius.dropdown-actions.option.none.label",
                       "value": "none"
                     },
                     {
-                      "label": "Small",
+                      "label": "$label:appearance.field.faq.appearance.cardwrapper.radius.dropdown-actions.option.2xl.label",
                       "value": "2xl"
                     },
                     {
-                      "label": "Medium",
+                      "label": "$label:appearance.field.faq.appearance.cardwrapper.radius.dropdown-actions.option.4xl.label",
                       "value": "4xl"
                     },
                     {
-                      "label": "Large",
+                      "label": "$label:appearance.field.faq.appearance.cardwrapper.radius.dropdown-actions.option.6xl.label",
                       "value": "6xl"
                     },
                     {
-                      "label": "X-Large",
+                      "label": "$label:appearance.field.faq.appearance.cardwrapper.radius.dropdown-actions.option.10xl.label",
                       "value": "10xl"
                     }
                   ]
@@ -1948,7 +1948,7 @@
                 "type": "dropdown-actions",
                 "groupId": "appearance-card",
                 "path": "faq.appearance.cardwrapper.radiusTL",
-                "label": "Q&A card top-left corner",
+                "label": "$label:appearance.field.faq.appearance.cardwrapper.radius-tl.dropdown-actions.label",
                 "showIf": {
                   "path": "faq.appearance.cardwrapper.radiusLinked",
                   "op": "isFalse"
@@ -1956,27 +1956,27 @@
                 "attrs": {
                   "group-label": "",
                   "size": "md",
-                  "placeholder": "Choose radius",
+                  "placeholder": "$label:appearance.field.faq.appearance.cardwrapper.radius-tl.dropdown-actions.attr.placeholder",
                   "value": "{{faq.appearance.cardwrapper.radiusTL}}",
                   "options": [
                     {
-                      "label": "None",
+                      "label": "$label:appearance.field.faq.appearance.cardwrapper.radius-tl.dropdown-actions.option.none.label",
                       "value": "none"
                     },
                     {
-                      "label": "Small",
+                      "label": "$label:appearance.field.faq.appearance.cardwrapper.radius-tl.dropdown-actions.option.2xl.label",
                       "value": "2xl"
                     },
                     {
-                      "label": "Medium",
+                      "label": "$label:appearance.field.faq.appearance.cardwrapper.radius-tl.dropdown-actions.option.4xl.label",
                       "value": "4xl"
                     },
                     {
-                      "label": "Large",
+                      "label": "$label:appearance.field.faq.appearance.cardwrapper.radius-tl.dropdown-actions.option.6xl.label",
                       "value": "6xl"
                     },
                     {
-                      "label": "X-Large",
+                      "label": "$label:appearance.field.faq.appearance.cardwrapper.radius-tl.dropdown-actions.option.10xl.label",
                       "value": "10xl"
                     }
                   ]
@@ -1987,7 +1987,7 @@
                 "type": "dropdown-actions",
                 "groupId": "appearance-card",
                 "path": "faq.appearance.cardwrapper.radiusTR",
-                "label": "Q&A card top-right corner",
+                "label": "$label:appearance.field.faq.appearance.cardwrapper.radius-tr.dropdown-actions.label",
                 "showIf": {
                   "path": "faq.appearance.cardwrapper.radiusLinked",
                   "op": "isFalse"
@@ -1995,27 +1995,27 @@
                 "attrs": {
                   "group-label": "",
                   "size": "md",
-                  "placeholder": "Choose radius",
+                  "placeholder": "$label:appearance.field.faq.appearance.cardwrapper.radius-tr.dropdown-actions.attr.placeholder",
                   "value": "{{faq.appearance.cardwrapper.radiusTR}}",
                   "options": [
                     {
-                      "label": "None",
+                      "label": "$label:appearance.field.faq.appearance.cardwrapper.radius-tr.dropdown-actions.option.none.label",
                       "value": "none"
                     },
                     {
-                      "label": "Small",
+                      "label": "$label:appearance.field.faq.appearance.cardwrapper.radius-tr.dropdown-actions.option.2xl.label",
                       "value": "2xl"
                     },
                     {
-                      "label": "Medium",
+                      "label": "$label:appearance.field.faq.appearance.cardwrapper.radius-tr.dropdown-actions.option.4xl.label",
                       "value": "4xl"
                     },
                     {
-                      "label": "Large",
+                      "label": "$label:appearance.field.faq.appearance.cardwrapper.radius-tr.dropdown-actions.option.6xl.label",
                       "value": "6xl"
                     },
                     {
-                      "label": "X-Large",
+                      "label": "$label:appearance.field.faq.appearance.cardwrapper.radius-tr.dropdown-actions.option.10xl.label",
                       "value": "10xl"
                     }
                   ]
@@ -2026,7 +2026,7 @@
                 "type": "dropdown-actions",
                 "groupId": "appearance-card",
                 "path": "faq.appearance.cardwrapper.radiusBR",
-                "label": "Q&A card bottom-right corner",
+                "label": "$label:appearance.field.faq.appearance.cardwrapper.radius-br.dropdown-actions.label",
                 "showIf": {
                   "path": "faq.appearance.cardwrapper.radiusLinked",
                   "op": "isFalse"
@@ -2034,27 +2034,27 @@
                 "attrs": {
                   "group-label": "",
                   "size": "md",
-                  "placeholder": "Choose radius",
+                  "placeholder": "$label:appearance.field.faq.appearance.cardwrapper.radius-br.dropdown-actions.attr.placeholder",
                   "value": "{{faq.appearance.cardwrapper.radiusBR}}",
                   "options": [
                     {
-                      "label": "None",
+                      "label": "$label:appearance.field.faq.appearance.cardwrapper.radius-br.dropdown-actions.option.none.label",
                       "value": "none"
                     },
                     {
-                      "label": "Small",
+                      "label": "$label:appearance.field.faq.appearance.cardwrapper.radius-br.dropdown-actions.option.2xl.label",
                       "value": "2xl"
                     },
                     {
-                      "label": "Medium",
+                      "label": "$label:appearance.field.faq.appearance.cardwrapper.radius-br.dropdown-actions.option.4xl.label",
                       "value": "4xl"
                     },
                     {
-                      "label": "Large",
+                      "label": "$label:appearance.field.faq.appearance.cardwrapper.radius-br.dropdown-actions.option.6xl.label",
                       "value": "6xl"
                     },
                     {
-                      "label": "X-Large",
+                      "label": "$label:appearance.field.faq.appearance.cardwrapper.radius-br.dropdown-actions.option.10xl.label",
                       "value": "10xl"
                     }
                   ]
@@ -2065,7 +2065,7 @@
                 "type": "dropdown-actions",
                 "groupId": "appearance-card",
                 "path": "faq.appearance.cardwrapper.radiusBL",
-                "label": "Q&A card bottom-left corner",
+                "label": "$label:appearance.field.faq.appearance.cardwrapper.radius-bl.dropdown-actions.label",
                 "showIf": {
                   "path": "faq.appearance.cardwrapper.radiusLinked",
                   "op": "isFalse"
@@ -2073,27 +2073,27 @@
                 "attrs": {
                   "group-label": "",
                   "size": "md",
-                  "placeholder": "Choose radius",
+                  "placeholder": "$label:appearance.field.faq.appearance.cardwrapper.radius-bl.dropdown-actions.attr.placeholder",
                   "value": "{{faq.appearance.cardwrapper.radiusBL}}",
                   "options": [
                     {
-                      "label": "None",
+                      "label": "$label:appearance.field.faq.appearance.cardwrapper.radius-bl.dropdown-actions.option.none.label",
                       "value": "none"
                     },
                     {
-                      "label": "Small",
+                      "label": "$label:appearance.field.faq.appearance.cardwrapper.radius-bl.dropdown-actions.option.2xl.label",
                       "value": "2xl"
                     },
                     {
-                      "label": "Medium",
+                      "label": "$label:appearance.field.faq.appearance.cardwrapper.radius-bl.dropdown-actions.option.4xl.label",
                       "value": "4xl"
                     },
                     {
-                      "label": "Large",
+                      "label": "$label:appearance.field.faq.appearance.cardwrapper.radius-bl.dropdown-actions.option.6xl.label",
                       "value": "6xl"
                     },
                     {
-                      "label": "X-Large",
+                      "label": "$label:appearance.field.faq.appearance.cardwrapper.radius-bl.dropdown-actions.option.10xl.label",
                       "value": "10xl"
                     }
                   ]
@@ -2104,7 +2104,7 @@
                 "type": "dropdown-border",
                 "groupId": "appearance-card",
                 "path": "faq.appearance.cardwrapper.border",
-                "label": "Q&A card border",
+                "label": "$label:appearance.field.faq.appearance.cardwrapper.border.dropdown-border.label",
                 "attrs": {
                   "group-label": "",
                   "size": "md",
@@ -2116,7 +2116,7 @@
                 "type": "dropdown-shadow",
                 "groupId": "appearance-card",
                 "path": "faq.appearance.cardwrapper.shadow",
-                "label": "Q&A card outside shadow",
+                "label": "$label:appearance.field.faq.appearance.cardwrapper.shadow.dropdown-shadow.label",
                 "attrs": {
                   "group-label": "",
                   "size": "md",
@@ -2124,7 +2124,7 @@
                 }
               }
             ],
-            "label": "Q&A card"
+            "label": "$label:appearance.cluster.q-a-card.label"
           },
           {
             "kind": "shared",
@@ -2141,7 +2141,7 @@
                 "kind": "field",
                 "type": "toggle",
                 "path": "faq.geo.enableDeepLinks",
-                "label": "Allow question deep links",
+                "label": "$label:settings.field.faq.geo.enable-deep-links.toggle.label",
                 "showIf": {
                   "path": "faq.layout.type",
                   "op": "equals",
@@ -2153,7 +2153,7 @@
                 }
               }
             ],
-            "label": "FAQ behavior"
+            "label": "$label:settings.cluster.faq-behavior.label"
           },
           {
             "kind": "shared",

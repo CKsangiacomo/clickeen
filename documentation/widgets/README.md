@@ -34,7 +34,7 @@ utilities live under `tokyo/product/widgets/shared/`.
 | Widget software source | `tokyo/product/widgets/{widgetType}/` |
 | Common defaults and shared control contracts | `packages/widget-foundation/src/` |
 | Shared widget utilities | `tokyo/product/widgets/shared/` |
-| Bob editor panels and controls | `spec.json.editor.panels[]`, `bob/lib/compiler*` |
+| Bob editor panels and controls | structural declarations in `spec.json.editor.panels[]`, adjacent `{widgetType}_tooldrawer_l10n_labels/en.json`, and `bob/lib/compiler*` |
 | Dieter controls | `dieter/components/**` source |
 | Customer-visible text paths | `editable-fields.json` |
 | Account entitlement limits | `limits.json` |
@@ -86,7 +86,7 @@ runtime in the same change that exposes the mismatch.
 
 | Manual | Purpose |
 | --- | --- |
-| `authoring/WidgetFiles.md` | Exact six-file widget source contract. |
+| `authoring/WidgetFiles.md` | Six canonical widget files plus the required English ToolDrawer-label folder. |
 | `authoring/ToolDrawerControls.md` | Bob panels, ToolDrawer fields, and Dieter controls. |
 | `authoring/WidgetAuthoringChecklist.md` | Current execution checklist for widget edits. |
 | `shared/ShellCore.md` | Presentation frame and Shell/Header/Core ownership, state paths, and DOM shape. |

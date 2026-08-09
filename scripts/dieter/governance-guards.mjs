@@ -15,8 +15,6 @@ const layoutsRoot = path.join(repoRoot, 'dieter', 'layouts');
 const colorTokenPath = path.join(repoRoot, 'dieter', 'tokens', 'dieter-color-tokens.css');
 const foundationTokenPath = path.join(repoRoot, TOKEN_FILES.foundation.path);
 const typographyJsonPath = path.join(repoRoot, 'admin', 'src', 'data', 'typography.generated.json');
-const iconsManifestPath = path.join(repoRoot, 'dieter', 'icons', 'icons.json');
-const iconsSvgRoot = path.join(repoRoot, 'dieter', 'icons', 'svg');
 const tokenRoot = path.join(repoRoot, 'dieter', 'tokens');
 const dieterStylesPath = path.join(repoRoot, 'dieter', 'styles.css');
 
@@ -56,8 +54,6 @@ function parseCustomProperties(css) {
 }
 
 function isColorToken(declaration) {
-  if (declaration.name.startsWith('--state-') && !declaration.name.endsWith('-target'))
-    return false;
   return /^(--color-|--role-|--focus-|--state-)/.test(declaration.name);
 }
 
@@ -137,15 +133,6 @@ function assertFoundationCounts() {
   if (typographyCount !== 31)
     fail(`typography source count changed from locked Step 0 count 31 to ${typographyCount}`);
 
-  const icons = JSON.parse(read(iconsManifestPath));
-  const iconCount = Object.keys(icons.symbols ?? {}).length;
-  const svgCount = fs.readdirSync(iconsSvgRoot).filter((name) => name.endsWith('.svg')).length;
-  if (iconCount !== svgCount)
-    fail(`icons.json symbol count (${iconCount}) does not match SVG count (${svgCount})`);
-  const iconsHtml = read(path.join(adminHtmlRoot, 'foundations', 'icons.html'));
-  if (!iconsHtml.includes(`data-governance-count="${iconCount}"`)) {
-    fail(`icons page count does not match source icon count (${iconCount})`);
-  }
 }
 
 function assertComponentCoverage() {

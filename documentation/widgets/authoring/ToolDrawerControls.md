@@ -2,7 +2,15 @@
 
 STATUS: CURRENT SYSTEM OPERATOR SPEC
 
-Bob renders widget controls from structured `spec.json.editor.panels[]`.
+Bob renders widget controls from structural `spec.json.editor.panels[]`
+declarations plus the widget's adjacent English ToolDrawer labels:
+
+```text
+tokyo/product/widgets/{widgetType}/
+  spec.json
+  {widgetType}_tooldrawer_l10n_labels/
+    en.json
+```
 
 Widgets declare controls. Bob compiles them. Dieter supplies the UI components.
 
@@ -33,6 +41,8 @@ fail compilation. Bob emits them in the canonical order shown above.
 
 Widget specs are structured JSON. Authors use panel, cluster, field, shared
 node, and template objects in `spec.json`; they do not write raw editor HTML.
+Widget-authored visible copy in those objects uses exact `$label:{key}` tokens.
+The matching English value lives once in the widget's `en.json` label file.
 
 Bob compiles those structured nodes into internal ToolDrawer markup such as:
 
@@ -50,7 +60,10 @@ Compiler-enforced rules:
 - Path-bound fields must resolve against composed defaults.
 - `dropdown-upload` requires `meta-path`; missing upload metadata fails compile.
 - Panel ids must be one of the five current widget panels; unknown ids fail compile.
-- Every cluster must have a non-empty plain-text `label`; unlabeled clusters fail compile.
+- Every resolved cluster must have a non-empty plain-text label; missing label
+  keys and unlabeled clusters fail compile.
+- Every label file must declare the exact widget type, locale `en`, all five
+  widget panel labels, and no missing or unused label keys.
 - Malformed source nodes fail compilation.
 
 Product rules:
@@ -61,16 +74,42 @@ Product rules:
 - Repeated content uses `repeater` or `object-manager` with stable item ids.
 - Widget specs use shared nodes for common controls; shared-node reuse does not
   define DOM ownership.
-- Labels are authored as plain text, never as pre-encoded HTML entities.
+- English labels are authored as plain text in the adjacent label file, never
+  as pre-encoded HTML entities.
 
 Current source node shapes:
 
 ```text
 panel:   { "id": "...", "clusters": [...] }
-cluster: { "label": "...", "initiallyOpen": true, "nodes": [...] }
+cluster: { "label": "$label:content.cluster.content.label", "initiallyOpen": true, "nodes": [...] }
 shared:  { "kind": "shared", "id": "..." }
-field:   { "kind": "field", "type": "...", "path": "...", "attrs": {...} }
+field:   { "kind": "field", "type": "...", "path": "...", "label": "$label:content.field.example.label", "attrs": {...} }
 ```
+
+The current label-file shape is deliberately small:
+
+```json
+{
+  "widgetType": "faq",
+  "locale": "en",
+  "labels": {
+    "panel.content": "Content",
+    "content.cluster.content.label": "Content"
+  }
+}
+```
+
+It is not a Bob-wide catalog and it is not fetched at runtime. The build reads
+the exact adjacent file, resolves the tokens, and emits the current English
+widget artifact at `/widget-editors/{widgetType}.json`. No non-English
+ToolDrawer artifact or UI-language selection exists in the current implementation.
+
+The current boundary covers widget-declared labels and widget panel names. Copy
+inside reusable Dieter stencils and shared compiler modules remains owned by
+those current sources; it has not been duplicated into every widget label file.
+
+`default-item` values remain widget content defaults, not ToolDrawer labels.
+They stay in `spec.json` and follow the widget content/editable-field contract.
 
 ## Visible Hierarchy And Initial State
 
@@ -80,8 +119,8 @@ The authoring hierarchy is fixed:
 Panel > Section (cluster) > optional Group > Control
 ```
 
-A panel title names the domain once. Every cluster supplies one visible section
-name. A control group supplies a heading only when it adds meaning below the
+A panel title names the domain once. Every resolved cluster supplies one
+visible section name. A control group supplies a heading only when it adds meaning below the
 section; if its label equals the section label, Bob suppresses the duplicate
 visible heading while retaining the control metadata used by Copilot.
 Blank or omitted group labels remain absent; Bob never turns a technical
@@ -94,11 +133,11 @@ explicitly open when a widget is opened. They remain ordinary collapsible
 sections after that initial render. All sections in Layout, Appearance,
 Typography, and Settings start collapsed.
 
-Bob owns the HTML boundary: structured source values are plain strings, the
+Bob owns the HTML boundary: resolved label values are plain strings, the
 shared codec escapes them when compiler modules serialize internal ToolDrawer
 attributes, the parser decodes each internal attribute exactly once, and final
-rendered markup escapes it exactly once. Specs must not contain pre-encoded
-labels, options, parameters, or conditions; compiler modules must use the one
+rendered markup escapes it exactly once. Label files must not contain
+pre-encoded labels, options, or parameters; compiler modules must use the one
 shared codec rather than local replacements.
 
 Do not add code that silently drops unknown fields, missing state paths, or
@@ -151,17 +190,18 @@ The shared typography panel uses:
   "shared": {
     "id": "typography",
     "roleLabels": {
-      "widgetRole": "Product-readable label"
+      "widgetRole": "$label:typography.role.widget-role.label"
     }
   }
 }
 ```
 
 The common widget contract owns labels for `title`, `body`, `button`, and
-`localeSwitcher`. Widgets declare labels, in visible order, for every
+`localeSwitcher`. Widgets declare label tokens, in visible order, for every
 widget-specific typography role and may override a common label when its
-product meaning is broader. Missing, malformed, unknown, or unused labels fail
-widget compilation; roles are never silently omitted.
+product meaning is broader. The adjacent English file owns those resolved
+widget-role values. Missing, malformed, unknown, or unused labels fail widget
+compilation; roles are never silently omitted.
 
 ## Structured Field Types
 
@@ -236,3 +276,7 @@ literal SVG markup.
 - Do not place content controls in `appearance`.
 - Do not place styling controls in `content`.
 - Do not add unbound controls.
+- Do not place English widget-authored ToolDrawer copy directly in `spec.json`.
+- Do not create a central all-widget ToolDrawer catalog.
+- Do not add non-English files until a separately approved localization stage
+  defines and verifies their exact runtime use.

@@ -10,6 +10,7 @@ export type UserRow = {
   first_name?: unknown;
   last_name?: unknown;
   primary_language?: unknown;
+  use_primary_language_for_ui?: unknown;
   country?: unknown;
   timezone?: unknown;
 };
@@ -33,7 +34,7 @@ export function normalizeUserSettingsPayload(
   row: UserRow | null,
 ): BerlinUserProfilePayload | null {
   const primaryEmail = asTrimmedString(row?.primary_email);
-  if (!primaryEmail) return null;
+  if (!primaryEmail || typeof row?.use_primary_language_for_ui !== 'boolean') return null;
   const location = normalizeUserLocation(row?.country, row?.timezone);
   return {
     userId,
@@ -41,6 +42,7 @@ export function normalizeUserSettingsPayload(
     givenName: asTrimmedString(row?.first_name),
     familyName: asTrimmedString(row?.last_name),
     primaryLanguage: asTrimmedString(row?.primary_language),
+    usePrimaryLanguageForUi: row.use_primary_language_for_ui,
     country: location.country,
     timezone: location.timezone,
   };

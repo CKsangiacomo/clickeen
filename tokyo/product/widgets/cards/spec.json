@@ -5,9 +5,9 @@
   "defaults": {
     "uiLabels": {
       "core": {
-        "singular": "Card",
-        "plural": "Cards",
-        "sizeCluster": "Cards size"
+        "singular": "$label:core.singular",
+        "plural": "$label:core.plural",
+        "sizeCluster": "$label:core.size-cluster"
       }
     },
     "typography": {
@@ -216,7 +216,7 @@
             "id": "header-content"
           },
           {
-            "label": "Content",
+            "label": "$label:content.cluster.content.label",
             "initiallyOpen": true,
             "nodes": [
               {
@@ -224,16 +224,16 @@
                 "type": "repeater",
                 "groupId": "content-cards",
                 "path": "cards.items",
-                "label": "Cards",
+                "label": "$label:content.field.cards.items.repeater.label",
                 "template": [
                   {
                     "kind": "field",
                     "type": "dropdown-edit",
                     "path": "cards.items.__INDEX__.title",
-                    "label": "Card title",
+                    "label": "$label:content.field.cards.items.index.title.dropdown-edit.label",
                     "attrs": {
                       "size": "md",
-                      "placeholder": "Add card title",
+                      "placeholder": "$label:content.field.cards.items.index.title.dropdown-edit.attr.placeholder",
                       "allow-links": "false",
                       "required": true
                     }
@@ -242,10 +242,10 @@
                     "kind": "field",
                     "type": "dropdown-edit",
                     "path": "cards.items.__INDEX__.copy",
-                    "label": "Card copy",
+                    "label": "$label:content.field.cards.items.index.copy.dropdown-edit.label",
                     "attrs": {
                       "size": "md",
-                      "placeholder": "Add card copy",
+                      "placeholder": "$label:content.field.cards.items.index.copy.dropdown-edit.attr.placeholder",
                       "allow-links": "false",
                       "required": true
                     }
@@ -254,20 +254,20 @@
                     "kind": "field",
                     "type": "dropdown-actions",
                     "path": "cards.items.__INDEX__.media.kind",
-                    "label": "Media",
+                    "label": "$label:content.field.cards.items.index.media.kind.dropdown-actions.label",
                     "attrs": {
                       "size": "md",
                       "options": [
                         {
-                          "label": "None",
+                          "label": "$label:content.field.cards.items.index.media.kind.dropdown-actions.option.none.label",
                           "value": "none"
                         },
                         {
-                          "label": "Icon",
+                          "label": "$label:content.field.cards.items.index.media.kind.dropdown-actions.option.icon.label",
                           "value": "icon"
                         },
                         {
-                          "label": "Image",
+                          "label": "$label:content.field.cards.items.index.media.kind.dropdown-actions.option.image.label",
                           "value": "image"
                         }
                       ]
@@ -277,36 +277,36 @@
                     "kind": "field",
                     "type": "dropdown-actions",
                     "path": "cards.items.__INDEX__.media.iconName",
-                    "label": "Card icon",
+                    "label": "$label:content.field.cards.items.index.media.icon-name.dropdown-actions.label",
                     "attrs": {
                       "size": "md",
                       "options": [
                         {
-                          "label": "Checkmark",
+                          "label": "$label:content.field.cards.items.index.media.icon-name.dropdown-actions.option.checkmark.label",
                           "value": "checkmark"
                         },
                         {
-                          "label": "Globe",
+                          "label": "$label:content.field.cards.items.index.media.icon-name.dropdown-actions.option.globe.label",
                           "value": "globe"
                         },
                         {
-                          "label": "Stack",
+                          "label": "$label:content.field.cards.items.index.media.icon-name.dropdown-actions.option.square.stack.3d.up.label",
                           "value": "square.stack.3d.up"
                         },
                         {
-                          "label": "Arrow right",
+                          "label": "$label:content.field.cards.items.index.media.icon-name.dropdown-actions.option.arrow.right.label",
                           "value": "arrow.right"
                         },
                         {
-                          "label": "Chevron right",
+                          "label": "$label:content.field.cards.items.index.media.icon-name.dropdown-actions.option.chevron.right.label",
                           "value": "chevron.right"
                         },
                         {
-                          "label": "Arrowshape forward",
+                          "label": "$label:content.field.cards.items.index.media.icon-name.dropdown-actions.option.arrowshape.forward.label",
                           "value": "arrowshape.forward"
                         },
                         {
-                          "label": "Arrowshape turn up right",
+                          "label": "$label:content.field.cards.items.index.media.icon-name.dropdown-actions.option.arrowshape.turn.up.right.label",
                           "value": "arrowshape.turn.up.right"
                         }
                       ]
@@ -321,7 +321,7 @@
                     "kind": "field",
                     "type": "dropdown-fill",
                     "path": "cards.items.__INDEX__.media.image",
-                    "label": "Image",
+                    "label": "$label:content.field.cards.items.index.media.image.dropdown-fill.label",
                     "attrs": {
                       "size": "md",
                       "fill-modes": "image",
@@ -337,7 +337,7 @@
                     "kind": "field",
                     "type": "textfield",
                     "path": "cards.items.__INDEX__.media.imageAlt",
-                    "label": "Image alt text",
+                    "label": "$label:content.field.cards.items.index.media.image-alt.textfield.label",
                     "showIf": {
                       "path": "cards.items.__INDEX__.media.kind",
                       "op": "equals",
@@ -348,7 +348,7 @@
                     "kind": "field",
                     "type": "toggle",
                     "path": "cards.items.__INDEX__.link.enabled",
-                    "label": "Enable card link",
+                    "label": "$label:content.field.cards.items.index.link.enabled.toggle.label",
                     "attrs": {
                       "size": "md"
                     }
@@ -357,7 +357,7 @@
                     "kind": "field",
                     "type": "textfield",
                     "path": "cards.items.__INDEX__.link.href",
-                    "label": "Card link URL",
+                    "label": "$label:content.field.cards.items.index.link.href.textfield.label",
                     "showIf": {
                       "path": "cards.items.__INDEX__.link.enabled",
                       "op": "isTrue"
@@ -367,7 +367,7 @@
                     "kind": "field",
                     "type": "textfield",
                     "path": "cards.items.__INDEX__.link.label",
-                    "label": "Card link label",
+                    "label": "$label:content.field.cards.items.index.link.label.textfield.label",
                     "showIf": {
                       "path": "cards.items.__INDEX__.link.enabled",
                       "op": "isTrue"
@@ -377,11 +377,11 @@
                 "attrs": {
                   "group-label": "",
                   "size": "md",
-                  "add-label": "Add card",
-                  "remove-label": "Remove card {index}",
-                  "move-label": "Move card {index}",
-                  "reorder-label": "Manage cards",
-                  "reorder-title": "Manage cards",
+                  "add-label": "$label:content.field.cards.items.repeater.attr.add-label",
+                  "remove-label": "$label:content.field.cards.items.repeater.attr.remove-label",
+                  "move-label": "$label:content.field.cards.items.repeater.attr.move-label",
+                  "reorder-label": "$label:content.field.cards.items.repeater.attr.reorder-label",
+                  "reorder-title": "$label:content.field.cards.items.repeater.attr.reorder-title",
                   "index-token": "__INDEX__",
                   "min": "2",
                   "max": "16",
@@ -423,8 +423,8 @@
         "shared": {
           "id": "typography",
           "roleLabels": {
-            "cardTitle": "Card title",
-            "cardCopy": "Card copy"
+            "cardTitle": "$label:typography.role.card-title.label",
+            "cardCopy": "$label:typography.role.card-copy.label"
           }
         }
       },
@@ -440,26 +440,26 @@
             "id": "core-size"
           },
           {
-            "label": "Cards layout",
+            "label": "$label:layout.cluster.cards-layout.label",
             "nodes": [
               {
                 "kind": "field",
                 "type": "choice-tiles",
                 "path": "cards.treatment",
-                "label": "Cards treatment",
+                "label": "$label:layout.field.cards.treatment.choice-tiles.label",
                 "attrs": {
                   "size": "md",
                   "options": [
                     {
-                      "label": "Cards",
+                      "label": "$label:layout.field.cards.treatment.choice-tiles.option.cards.label",
                       "value": "cards"
                     },
                     {
-                      "label": "Linked cards",
+                      "label": "$label:layout.field.cards.treatment.choice-tiles.option.linked-cards.label",
                       "value": "linked-cards"
                     },
                     {
-                      "label": "Steps",
+                      "label": "$label:layout.field.cards.treatment.choice-tiles.option.steps.label",
                       "value": "steps"
                     }
                   ]
@@ -469,20 +469,20 @@
                 "kind": "field",
                 "type": "choice-tiles",
                 "path": "cards.columns",
-                "label": "Card columns",
+                "label": "$label:layout.field.cards.columns.choice-tiles.label",
                 "attrs": {
                   "size": "md",
                   "options": [
                     {
-                      "label": "2",
+                      "label": "$label:layout.field.cards.columns.choice-tiles.option.2.label",
                       "value": 2
                     },
                     {
-                      "label": "3",
+                      "label": "$label:layout.field.cards.columns.choice-tiles.option.3.label",
                       "value": 3
                     },
                     {
-                      "label": "4",
+                      "label": "$label:layout.field.cards.columns.choice-tiles.option.4.label",
                       "value": 4
                     }
                   ]
@@ -492,7 +492,7 @@
                 "kind": "field",
                 "type": "valuefield",
                 "path": "cards.gap",
-                "label": "Card gap",
+                "label": "$label:layout.field.cards.gap.valuefield.label",
                 "attrs": {
                   "min": 8,
                   "max": 64,
@@ -503,7 +503,7 @@
                 "kind": "field",
                 "type": "valuefield",
                 "path": "cards.cardPadding",
-                "label": "Card padding",
+                "label": "$label:layout.field.cards.card-padding.valuefield.label",
                 "attrs": {
                   "min": 16,
                   "max": 64,
@@ -513,13 +513,13 @@
             ]
           },
           {
-            "label": "Graphic between cards",
+            "label": "$label:layout.cluster.graphic-between-cards.label",
             "nodes": [
               {
                 "kind": "field",
                 "type": "toggle",
                 "path": "cards.betweenCards.enabled",
-                "label": "Show graphic",
+                "label": "$label:layout.field.cards.between-cards.enabled.toggle.label",
                 "attrs": {
                   "size": "md"
                 }
@@ -528,16 +528,16 @@
                 "kind": "field",
                 "type": "dropdown-actions",
                 "path": "cards.betweenCards.kind",
-                "label": "Graphic type",
+                "label": "$label:layout.field.cards.between-cards.kind.dropdown-actions.label",
                 "attrs": {
                   "size": "md",
                   "options": [
                     {
-                      "label": "Line",
+                      "label": "$label:layout.field.cards.between-cards.kind.dropdown-actions.option.line.label",
                       "value": "line"
                     },
                     {
-                      "label": "Icon",
+                      "label": "$label:layout.field.cards.between-cards.kind.dropdown-actions.option.icon.label",
                       "value": "icon"
                     }
                   ]
@@ -551,7 +551,7 @@
                 "kind": "field",
                 "type": "valuefield",
                 "path": "cards.betweenCards.line.widthPt",
-                "label": "Line width (pt)",
+                "label": "$label:layout.field.cards.between-cards.line.width-pt.valuefield.label",
                 "attrs": {
                   "min": 1,
                   "max": 24,
@@ -575,7 +575,7 @@
                 "kind": "field",
                 "type": "dropdown-fill",
                 "path": "cards.betweenCards.line.color",
-                "label": "Line color",
+                "label": "$label:layout.field.cards.between-cards.line.color.dropdown-fill.label",
                 "attrs": {
                   "size": "md",
                   "fill-modes": "color",
@@ -599,28 +599,28 @@
                 "kind": "field",
                 "type": "dropdown-actions",
                 "path": "cards.betweenCards.icon.name",
-                "label": "Connector icon",
+                "label": "$label:layout.field.cards.between-cards.icon.name.dropdown-actions.label",
                 "attrs": {
                   "size": "md",
                   "options": [
                     {
-                      "label": "Checkmark",
+                      "label": "$label:layout.field.cards.between-cards.icon.name.dropdown-actions.option.checkmark.label",
                       "value": "checkmark"
                     },
                     {
-                      "label": "Arrow right",
+                      "label": "$label:layout.field.cards.between-cards.icon.name.dropdown-actions.option.arrow.right.label",
                       "value": "arrow.right"
                     },
                     {
-                      "label": "Chevron right",
+                      "label": "$label:layout.field.cards.between-cards.icon.name.dropdown-actions.option.chevron.right.label",
                       "value": "chevron.right"
                     },
                     {
-                      "label": "Arrowshape forward",
+                      "label": "$label:layout.field.cards.between-cards.icon.name.dropdown-actions.option.arrowshape.forward.label",
                       "value": "arrowshape.forward"
                     },
                     {
-                      "label": "Arrowshape turn up right",
+                      "label": "$label:layout.field.cards.between-cards.icon.name.dropdown-actions.option.arrowshape.turn.up.right.label",
                       "value": "arrowshape.turn.up.right"
                     }
                   ]
@@ -643,7 +643,7 @@
                 "kind": "field",
                 "type": "valuefield",
                 "path": "cards.betweenCards.icon.sizePt",
-                "label": "Icon size (pt)",
+                "label": "$label:layout.field.cards.between-cards.icon.size-pt.valuefield.label",
                 "attrs": {
                   "min": 8,
                   "max": 96,
@@ -667,7 +667,7 @@
                 "kind": "field",
                 "type": "dropdown-fill",
                 "path": "cards.betweenCards.icon.color",
-                "label": "Icon color",
+                "label": "$label:layout.field.cards.between-cards.icon.color.dropdown-fill.label",
                 "attrs": {
                   "size": "md",
                   "fill-modes": "color",
@@ -703,13 +703,13 @@
             "id": "header-appearance"
           },
           {
-            "label": "Card styles",
+            "label": "$label:appearance.cluster.card-styles.label",
             "nodes": [
               {
                 "kind": "field",
                 "type": "toggle",
                 "path": "cards.customCardStyles.enabled",
-                "label": "Custom card styles",
+                "label": "$label:appearance.field.cards.custom-card-styles.enabled.toggle.label",
                 "attrs": {
                   "size": "md"
                 }
@@ -724,7 +724,7 @@
                     "kind": "field",
                     "type": "dropdown-fill",
                     "path": "cards.items.__INDEX__.style.background",
-                    "label": "Card background",
+                    "label": "$label:appearance.field.cards.items.index.style.background.dropdown-fill.label",
                     "attrs": {
                       "size": "md",
                       "fill-modes": "color",
@@ -735,7 +735,7 @@
                     "kind": "field",
                     "type": "dropdown-fill",
                     "path": "cards.items.__INDEX__.style.borderColor",
-                    "label": "Card border color",
+                    "label": "$label:appearance.field.cards.items.index.style.border-color.dropdown-fill.label",
                     "attrs": {
                       "size": "md",
                       "fill-modes": "color",
@@ -746,7 +746,7 @@
                     "kind": "field",
                     "type": "dropdown-fill",
                     "path": "cards.items.__INDEX__.style.accentColor",
-                    "label": "Card accent color",
+                    "label": "$label:appearance.field.cards.items.index.style.accent-color.dropdown-fill.label",
                     "attrs": {
                       "size": "md",
                       "fill-modes": "color",
@@ -757,24 +757,24 @@
                     "kind": "field",
                     "type": "dropdown-actions",
                     "path": "cards.items.__INDEX__.style.textTone",
-                    "label": "Card text tone",
+                    "label": "$label:appearance.field.cards.items.index.style.text-tone.dropdown-actions.label",
                     "attrs": {
                       "size": "md",
                       "options": [
                         {
-                          "label": "Inherit",
+                          "label": "$label:appearance.field.cards.items.index.style.text-tone.dropdown-actions.option.inherit.label",
                           "value": "inherit"
                         },
                         {
-                          "label": "Default",
+                          "label": "$label:appearance.field.cards.items.index.style.text-tone.dropdown-actions.option.default.label",
                           "value": "default"
                         },
                         {
-                          "label": "Muted",
+                          "label": "$label:appearance.field.cards.items.index.style.text-tone.dropdown-actions.option.muted.label",
                           "value": "muted"
                         },
                         {
-                          "label": "Inverse",
+                          "label": "$label:appearance.field.cards.items.index.style.text-tone.dropdown-actions.option.inverse.label",
                           "value": "inverse"
                         }
                       ]
@@ -784,9 +784,9 @@
                 "attrs": {
                   "group-label": "",
                   "class": "diet-object-manager",
-                  "add-label": "Add card",
-                  "reorder-label": "Manage card styles",
-                  "reorder-title": "Manage card styles",
+                  "add-label": "$label:appearance.field.cards.items.object-manager.attr.add-label",
+                  "reorder-label": "$label:appearance.field.cards.items.object-manager.attr.reorder-label",
+                  "reorder-title": "$label:appearance.field.cards.items.object-manager.attr.reorder-title",
                   "label-path": "title",
                   "index-token": "__INDEX__",
                   "allow-structure": "false"

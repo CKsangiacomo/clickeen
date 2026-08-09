@@ -148,6 +148,11 @@ Roma uses the Berlin-issued current account as the product account context.
 Browser code uses same-origin Roma APIs. Shared httpOnly cookies carry session
 truth across Roma and Bob on the custom `*.clickeen.com` domain.
 
+The Berlin profile also carries `primaryLanguage` and dormant
+`usePrimaryLanguageForUi`. Roma currently displays/edits primary language but
+does not expose the boolean, choose a product UI locale, fetch UI translations,
+or pass a UI locale into Bob.
+
 The authenticated layout keeps one bootstrap provider mounted across Roma
 route transitions. The shared `main-container`, `left-nav`, and page frame render
 immediately; only `page__content` waits for the first complete, internally
@@ -225,7 +230,9 @@ not provide a second source-widget preview package.
 
 Create, save, and duplicate all use the same package contract: Roma reads the
 server-only materializer artifact generated from canonical widget source at
-deploy time, materializes account asset references in the current account
+deploy time. That artifact carries English-resolved Core defaults and the exact
+adjacent ToolDrawer label source while raw `spec.json` retains its label
+tokens. Roma materializes account asset references in the current account
 config, then delegates deterministic base byte generation to
 `@clickeen/ck-runtime-materializer` for `index.html`, `styles.css`, and
 `runtime.js`. Roma submits those exact files with the source to Tokyo-worker.

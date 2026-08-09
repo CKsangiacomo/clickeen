@@ -15,6 +15,7 @@ type TeamMemberProfile = {
   givenName: string | null;
   familyName: string | null;
   primaryLanguage: string | null;
+  usePrimaryLanguageForUi: boolean;
   country: string | null;
   timezone: string | null;
 };

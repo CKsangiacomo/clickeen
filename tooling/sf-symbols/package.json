@@ -6,7 +6,8 @@
   "scripts": {
     "makeSymbols": "node ./scripts/makeSymbols.js",
     "makeTypes": "node ./scripts/makeTypes.js",
-    "make": "pnpm run makeSymbols && pnpm run makeTypes"
+    "makeSvgs": "python3 ./scripts/extract_all_svgs.py",
+    "make": "pnpm run makeSymbols && pnpm run makeTypes && pnpm run makeSvgs"
   },
   "keywords": [],
   "author": "",

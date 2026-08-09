@@ -31,8 +31,8 @@ There is no Dieter build bundle, generated Tokyo mirror, browser manifest, or
 | `dieter/components/{component}/` | Component CSS, stencil, spec, and optional hydrator. |
 | `dieter/components/shared/` | Small source helpers shared by existing components, including compact property-row geometry. |
 | `dieter/components/index.ts` | Explicit component-hydrator exports. |
-| `dieter/icons/svg/` | Approved SVG icon bytes deployed to R2. |
-| `dieter/icons/icons.json` | Source registry used by authoring and compile-time consumers. |
+| `dieter/icons/svg/` | Generated SVG icon source deployed to R2 and consumed by product surfaces. |
+| `dieter/icons/icons.json` | Input to the human-operated SF extraction tool; not a product registry. |
 | `dieter/styles.css` | Bob/Roma source CSS entrypoint. |
 | `tooling/sf-symbols/` | Manual SF Symbols extraction/generation tool. |
 
@@ -128,9 +128,11 @@ The Tokyo product-root sync deploys the SVG source files directly to:
 /dieter/icons/svg/{name}.svg
 ```
 
-`icons.json` is not deployed. Product controls keep their accessible name on
-the control; decorative icons are painted from the approved SVG URL and remain
-semantically hidden.
+The exporter gives every selected SF glyph the same optical-canvas treatment,
+so consumers use ordinary Dieter size tokens without icon-specific correction.
+`icons.json` is not deployed or consulted by product runtime. Product controls
+keep their accessible name on the control; decorative icons are painted from
+the declared SVG URL and remain semantically hidden.
 
 Account-uploaded assets and fonts remain under
 `accounts/{accountPublicId}/...`; they are not Dieter icons.
@@ -159,5 +161,5 @@ consumer changed. `pnpm tokyo:r2:sync:check` must list only
   outside spacing.
 - Do not use runtime CSS `@import` in generated widget packages.
 - Do not inline repeated SVG bytes into compiled panels or application chrome.
-- Public widgets may use approved icon URLs; they do not fetch shared Dieter
+- Public widgets may use declared Dieter icon URLs; they do not fetch shared Dieter
   CSS or JavaScript.

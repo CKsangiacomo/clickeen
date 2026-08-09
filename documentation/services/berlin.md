@@ -51,6 +51,10 @@ The signed account authz capsule carries stable account authz truth only. Mutabl
 - Missing canonical user, role, login mapping, or account state at bootstrap is a producer bug and must fail explicitly.
 - Current account resolution comes from `users.account_id`. Berlin must never open a privileged alternate account.
 - Invalid persisted profile/account locale-policy truth must fail explicitly in canonical product/account routes. Berlin logs the defect and does not silently default it away.
+- User profile payloads carry exact `primaryLanguage` and the dormant boolean
+  `usePrimaryLanguageForUi`. Berlin accepts only a real boolean on profile
+  update; it does not infer the preference from language, country, or browser
+  headers.
 - Product shells must not treat login provider summaries as connector/account linkage. Login is not connector authorization.
 - Additional login providers plug into the same provider adapter shape: provider verifies identity; Berlin maps identity to Clickeen account/session truth.
 

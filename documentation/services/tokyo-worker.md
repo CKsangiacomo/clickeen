@@ -266,6 +266,11 @@ It is deployed to R2 under:
 product/widgets/{widgetType}/
 ```
 
+That product folder includes the widget's canonical source and its adjacent
+English `{widgetType}_tooldrawer_l10n_labels/en.json` build input. The file is
+git-authored product software, not account data or a visitor-time locale
+overlay. Tokyo-worker does not resolve its labels at runtime.
+
 Account instances store references and user data. Widget software remains in
 the system product tree.
 

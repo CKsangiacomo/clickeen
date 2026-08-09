@@ -5,9 +5,9 @@
   "defaults": {
     "uiLabels": {
       "core": {
-        "singular": "Call to Action",
-        "plural": "Calls to Action",
-        "sizeCluster": "Call to Action size"
+        "singular": "$label:core.singular",
+        "plural": "$label:core.plural",
+        "sizeCluster": "$label:core.size-cluster"
       }
     },
     "typography": {
@@ -89,7 +89,7 @@
             "id": "header-content"
           },
           {
-            "label": "Content",
+            "label": "$label:content.cluster.content.label",
             "initiallyOpen": true,
             "nodes": [
               {
@@ -97,7 +97,7 @@
                 "groupId": "calltoaction-content",
                 "type": "toggle",
                 "path": "calltoaction.showEyebrow",
-                "label": "Show eyebrow",
+                "label": "$label:content.field.calltoaction.show-eyebrow.toggle.label",
                 "attrs": {
                   "group-label": "",
                   "size": "md"
@@ -108,11 +108,11 @@
                 "groupId": "calltoaction-content",
                 "type": "textfield",
                 "path": "calltoaction.eyebrow",
-                "label": "Eyebrow",
+                "label": "$label:content.field.calltoaction.eyebrow.textfield.label",
                 "attrs": {
                   "group-label": "",
                   "size": "md",
-                  "placeholder": "Add eyebrow text"
+                  "placeholder": "$label:content.field.calltoaction.eyebrow.textfield.attr.placeholder"
                 },
                 "showIf": {
                   "path": "calltoaction.showEyebrow",
@@ -124,11 +124,11 @@
                 "groupId": "calltoaction-content",
                 "type": "dropdown-edit",
                 "path": "calltoaction.headline",
-                "label": "Action headline",
+                "label": "$label:content.field.calltoaction.headline.dropdown-edit.label",
                 "attrs": {
                   "group-label": "",
                   "size": "lg",
-                  "placeholder": "Add action headline",
+                  "placeholder": "$label:content.field.calltoaction.headline.dropdown-edit.attr.placeholder",
                   "allow-links": "false"
                 }
               },
@@ -137,7 +137,7 @@
                 "groupId": "calltoaction-content",
                 "type": "toggle",
                 "path": "calltoaction.showSupportingText",
-                "label": "Show supporting text",
+                "label": "$label:content.field.calltoaction.show-supporting-text.toggle.label",
                 "attrs": {
                   "group-label": "",
                   "size": "md"
@@ -148,11 +148,11 @@
                 "groupId": "calltoaction-content",
                 "type": "dropdown-edit",
                 "path": "calltoaction.supportingTextHtml",
-                "label": "Supporting text",
+                "label": "$label:content.field.calltoaction.supporting-text-html.dropdown-edit.label",
                 "attrs": {
                   "group-label": "",
                   "size": "md",
-                  "placeholder": "Add supporting copy",
+                  "placeholder": "$label:content.field.calltoaction.supporting-text-html.dropdown-edit.attr.placeholder",
                   "allow-links": "true"
                 },
                 "showIf": {
@@ -165,7 +165,7 @@
                 "groupId": "calltoaction-content",
                 "type": "toggle",
                 "path": "calltoaction.action.enabled",
-                "label": "Show action button",
+                "label": "$label:content.field.calltoaction.action.enabled.toggle.label",
                 "attrs": {
                   "group-label": "",
                   "size": "md"
@@ -176,7 +176,7 @@
                 "groupId": "calltoaction-content",
                 "type": "textfield",
                 "path": "calltoaction.action.label",
-                "label": "Action label",
+                "label": "$label:content.field.calltoaction.action.label.textfield.label",
                 "attrs": {
                   "group-label": "",
                   "size": "md"
@@ -191,11 +191,11 @@
                 "groupId": "calltoaction-content",
                 "type": "textfield",
                 "path": "calltoaction.action.href",
-                "label": "Action link",
+                "label": "$label:content.field.calltoaction.action.href.textfield.label",
                 "attrs": {
                   "group-label": "",
                   "size": "lg",
-                  "placeholder": "https://example.com"
+                  "placeholder": "$label:content.field.calltoaction.action.href.textfield.attr.placeholder"
                 },
                 "showIf": {
                   "path": "calltoaction.action.enabled",
@@ -207,21 +207,21 @@
                 "groupId": "calltoaction-content",
                 "type": "dropdown-actions",
                 "path": "calltoaction.action.openMode",
-                "label": "Open link in",
+                "label": "$label:content.field.calltoaction.action.open-mode.dropdown-actions.label",
                 "attrs": {
                   "group-label": "",
                   "size": "md",
                   "options": [
                     {
-                      "label": "Same tab",
+                      "label": "$label:content.field.calltoaction.action.open-mode.dropdown-actions.option.same-tab.label",
                       "value": "same-tab"
                     },
                     {
-                      "label": "New tab",
+                      "label": "$label:content.field.calltoaction.action.open-mode.dropdown-actions.option.new-tab.label",
                       "value": "new-tab"
                     },
                     {
-                      "label": "New window",
+                      "label": "$label:content.field.calltoaction.action.open-mode.dropdown-actions.option.new-window.label",
                       "value": "new-window"
                     }
                   ]
@@ -236,7 +236,7 @@
                 "groupId": "calltoaction-content",
                 "type": "toggle",
                 "path": "calltoaction.action.iconEnabled",
-                "label": "Show icon",
+                "label": "$label:content.field.calltoaction.action.icon-enabled.toggle.label",
                 "attrs": {
                   "group-label": "",
                   "size": "md"
@@ -251,17 +251,17 @@
                 "groupId": "calltoaction-content",
                 "type": "dropdown-actions",
                 "path": "calltoaction.action.iconPlacement",
-                "label": "Icon position",
+                "label": "$label:content.field.calltoaction.action.icon-placement.dropdown-actions.label",
                 "attrs": {
                   "group-label": "",
                   "size": "md",
                   "options": [
                     {
-                      "label": "Left",
+                      "label": "$label:content.field.calltoaction.action.icon-placement.dropdown-actions.option.left.label",
                       "value": "left"
                     },
                     {
-                      "label": "Right",
+                      "label": "$label:content.field.calltoaction.action.icon-placement.dropdown-actions.option.right.label",
                       "value": "right"
                     }
                   ]
@@ -284,29 +284,29 @@
                 "groupId": "calltoaction-content",
                 "type": "dropdown-actions",
                 "path": "calltoaction.action.iconName",
-                "label": "Icon",
+                "label": "$label:content.field.calltoaction.action.icon-name.dropdown-actions.label",
                 "attrs": {
                   "group-label": "",
                   "size": "md",
                   "options": [
                     {
-                      "label": "Checkmark",
+                      "label": "$label:content.field.calltoaction.action.icon-name.dropdown-actions.option.checkmark.label",
                       "value": "checkmark"
                     },
                     {
-                      "label": "Arrow right",
+                      "label": "$label:content.field.calltoaction.action.icon-name.dropdown-actions.option.arrow.right.label",
                       "value": "arrow.right"
                     },
                     {
-                      "label": "Chevron right",
+                      "label": "$label:content.field.calltoaction.action.icon-name.dropdown-actions.option.chevron.right.label",
                       "value": "chevron.right"
                     },
                     {
-                      "label": "Arrowshape forward",
+                      "label": "$label:content.field.calltoaction.action.icon-name.dropdown-actions.option.arrowshape.forward.label",
                       "value": "arrowshape.forward"
                     },
                     {
-                      "label": "Arrowshape turn up right",
+                      "label": "$label:content.field.calltoaction.action.icon-name.dropdown-actions.option.arrowshape.turn.up.right.label",
                       "value": "arrowshape.turn.up.right"
                     }
                   ]
@@ -333,9 +333,9 @@
         "shared": {
           "id": "typography",
           "roleLabels": {
-            "body": "Subtitle and supporting text",
-            "eyebrow": "Eyebrow",
-            "title": "Title and action headline"
+            "body": "$label:typography.role.body.label",
+            "eyebrow": "$label:typography.role.eyebrow.label",
+            "title": "$label:typography.role.title.label"
           }
         }
       },
@@ -351,28 +351,28 @@
             "id": "core-size"
           },
           {
-            "label": "Call to Action layout",
+            "label": "$label:layout.cluster.call-to-action-layout.label",
             "nodes": [
               {
                 "kind": "field",
                 "groupId": "calltoaction-layout",
                 "type": "choice-tiles",
                 "path": "calltoaction.layout.alignment",
-                "label": "Alignment",
+                "label": "$label:layout.field.calltoaction.layout.alignment.choice-tiles.label",
                 "attrs": {
                   "group-label": "",
                   "size": "md",
                   "options": [
                     {
-                      "label": "Left",
+                      "label": "$label:layout.field.calltoaction.layout.alignment.choice-tiles.option.left.label",
                       "value": "left"
                     },
                     {
-                      "label": "Center",
+                      "label": "$label:layout.field.calltoaction.layout.alignment.choice-tiles.option.center.label",
                       "value": "center"
                     },
                     {
-                      "label": "Right",
+                      "label": "$label:layout.field.calltoaction.layout.alignment.choice-tiles.option.right.label",
                       "value": "right"
                     }
                   ]
@@ -383,7 +383,7 @@
                 "groupId": "calltoaction-layout",
                 "type": "valuefield",
                 "path": "calltoaction.layout.textWidth",
-                "label": "Text width",
+                "label": "$label:layout.field.calltoaction.layout.text-width.valuefield.label",
                 "attrs": {
                   "group-label": "",
                   "min": 280,
@@ -396,7 +396,7 @@
                 "groupId": "calltoaction-layout",
                 "type": "valuefield",
                 "path": "calltoaction.layout.gap",
-                "label": "Content gap",
+                "label": "$label:layout.field.calltoaction.layout.gap.valuefield.label",
                 "attrs": {
                   "group-label": "",
                   "min": 0,
@@ -420,14 +420,14 @@
             "id": "header-appearance"
           },
           {
-            "label": "Action button",
+            "label": "$label:appearance.cluster.action-button.label",
             "nodes": [
               {
                 "kind": "field",
                 "groupId": "calltoaction-action",
                 "type": "dropdown-fill",
                 "path": "calltoaction.actionStyle.background",
-                "label": "Background",
+                "label": "$label:appearance.field.calltoaction.action-style.background.dropdown-fill.label",
                 "attrs": {
                   "group-label": "",
                   "size": "md",
@@ -444,7 +444,7 @@
                 "groupId": "calltoaction-action",
                 "type": "dropdown-fill",
                 "path": "calltoaction.actionStyle.textColor",
-                "label": "Text color",
+                "label": "$label:appearance.field.calltoaction.action-style.text-color.dropdown-fill.label",
                 "attrs": {
                   "group-label": "",
                   "size": "md",
@@ -461,7 +461,7 @@
                 "groupId": "calltoaction-action",
                 "type": "dropdown-border",
                 "path": "calltoaction.actionStyle.border",
-                "label": "Border",
+                "label": "$label:appearance.field.calltoaction.action-style.border.dropdown-border.label",
                 "attrs": {
                   "group-label": "",
                   "size": "md"
@@ -476,33 +476,33 @@
                 "groupId": "calltoaction-action",
                 "type": "dropdown-actions",
                 "path": "calltoaction.actionStyle.radius",
-                "label": "Corner radius",
+                "label": "$label:appearance.field.calltoaction.action-style.radius.dropdown-actions.label",
                 "attrs": {
                   "group-label": "",
                   "size": "md",
                   "options": [
                     {
-                      "label": "None",
+                      "label": "$label:appearance.field.calltoaction.action-style.radius.dropdown-actions.option.none.label",
                       "value": "none"
                     },
                     {
-                      "label": "Small",
+                      "label": "$label:appearance.field.calltoaction.action-style.radius.dropdown-actions.option.sm.label",
                       "value": "sm"
                     },
                     {
-                      "label": "Medium",
+                      "label": "$label:appearance.field.calltoaction.action-style.radius.dropdown-actions.option.md.label",
                       "value": "md"
                     },
                     {
-                      "label": "Large",
+                      "label": "$label:appearance.field.calltoaction.action-style.radius.dropdown-actions.option.lg.label",
                       "value": "lg"
                     },
                     {
-                      "label": "X-Large",
+                      "label": "$label:appearance.field.calltoaction.action-style.radius.dropdown-actions.option.xl.label",
                       "value": "xl"
                     },
                     {
-                      "label": "2XL",
+                      "label": "$label:appearance.field.calltoaction.action-style.radius.dropdown-actions.option.2xl.label",
                       "value": "2xl"
                     }
                   ]
@@ -517,7 +517,7 @@
                 "groupId": "calltoaction-action",
                 "type": "valuefield",
                 "path": "calltoaction.actionStyle.paddingInline",
-                "label": "Horizontal padding (px)",
+                "label": "$label:appearance.field.calltoaction.action-style.padding-inline.valuefield.label",
                 "attrs": {
                   "group-label": "",
                   "min": 8,
@@ -534,7 +534,7 @@
                 "groupId": "calltoaction-action",
                 "type": "valuefield",
                 "path": "calltoaction.actionStyle.paddingBlock",
-                "label": "Vertical padding (px)",
+                "label": "$label:appearance.field.calltoaction.action-style.padding-block.valuefield.label",
                 "attrs": {
                   "group-label": "",
                   "min": 6,
@@ -551,7 +551,7 @@
                 "groupId": "calltoaction-action",
                 "type": "valuefield",
                 "path": "calltoaction.actionStyle.iconSize",
-                "label": "Icon size (px)",
+                "label": "$label:appearance.field.calltoaction.action-style.icon-size.valuefield.label",
                 "attrs": {
                   "group-label": "",
                   "min": 10,

@@ -14,7 +14,6 @@ const repoRoot = path.resolve(adminRoot, '..');
 const foundationsRoot = path.join(adminRoot, 'src', 'html', 'foundations');
 const colorTokenPath = path.join(repoRoot, 'dieter', 'tokens', 'dieter-color-tokens.css');
 const foundationTokenPath = path.join(repoRoot, TOKEN_FILES.foundation.path);
-const iconsManifestPath = path.join(repoRoot, 'dieter', 'icons', 'icons.json');
 const iconsSvgRoot = path.join(repoRoot, 'dieter', 'icons', 'svg');
 const layoutRoot = path.join(repoRoot, 'dieter', 'layouts', 'main-container');
 const layoutHtmlPath = path.join(layoutRoot, 'main-container.html');
@@ -66,7 +65,6 @@ function parseCustomProperties(css) {
 }
 
 function isColorToken(declaration) {
-  if (declaration.name.startsWith('--state-') && !declaration.name.endsWith('-target')) return false;
   return /^(--color-|--role-|--focus-|--state-)/.test(declaration.name);
 }
 
@@ -180,6 +178,14 @@ function isWritableColorToken(token) {
 }
 
 function renderColorChip(entry) {
+  if (/^--state-(?:hover|pressed|muted|inactive)-mix$/.test(entry.name)) {
+    const target = /--state-(?:muted|inactive)-mix$/.test(entry.name)
+      ? '--state-lighten-target'
+      : '--state-darken-target';
+    return `<span class="token-readonly" aria-hidden="true">
+          <span class="chip" style="background:color-mix(in oklab, var(--color-system-blue), var(${target}) var(${entry.name}));"></span>
+        </span>`;
+  }
   if (isWritableColorToken(entry)) {
     return `<span class="token-readonly" aria-hidden="true">
           <span class="chip" style="background:var(${entry.name});"></span>
@@ -225,21 +231,11 @@ ${entries
     .join('\n');
 }
 
-async function loadVerifiedIconNames() {
-  const manifest = JSON.parse(await fs.readFile(iconsManifestPath, 'utf8'));
-  const manifestNames = Object.keys(manifest.symbols ?? {}).sort((a, b) => a.localeCompare(b));
-  const sourceFiles = (await fs.readdir(iconsSvgRoot)).filter((name) => name.endsWith('.svg')).sort((a, b) => a.localeCompare(b));
-  const sourceNames = sourceFiles.map((name) => path.basename(name, '.svg')).sort((a, b) => a.localeCompare(b));
-  const missingSource = manifestNames.filter((name) => !sourceNames.includes(name));
-  const missingManifest = sourceNames.filter((name) => !manifestNames.includes(name));
-  if (missingSource.length || missingManifest.length) {
-    const detail = [
-      missingSource.length ? `missing source SVGs: ${missingSource.join(', ')}` : '',
-      missingManifest.length ? `source SVGs missing manifest symbols: ${missingManifest.join(', ')}` : '',
-    ].filter(Boolean).join('; ');
-    throw new Error(`Dieter icon manifest/source mismatch: ${detail}`);
-  }
-  return manifestNames;
+async function loadIconNames() {
+  return (await fs.readdir(iconsSvgRoot))
+    .filter((name) => name.endsWith('.svg'))
+    .map((name) => path.basename(name, '.svg'))
+    .sort((a, b) => a.localeCompare(b));
 }
 
 async function generateColorsPage() {
@@ -306,7 +302,7 @@ ${renderCoreStyleRows(tokens)}
 }
 
 async function generateIconsPage() {
-  const names = await loadVerifiedIconNames();
+  const names = await loadIconNames();
 
   const rows = names
     .map(
@@ -319,7 +315,7 @@ async function generateIconsPage() {
     .join('\n');
 
   const html = `${GENERATED_HEADER}
-<div class="icon-page-wrapper" data-governance-count="${names.length}">
+<div class="icon-page-wrapper">
   <style>
     .icon-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr)); gap: var(--space-3); }
     .icon-card { display: grid; grid-template-columns: var(--icon-size-24) minmax(0, 1fr); align-items: center; gap: var(--space-3); min-block-size: var(--control-size-xl); }

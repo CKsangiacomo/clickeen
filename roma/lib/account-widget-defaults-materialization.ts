@@ -27,15 +27,6 @@ function validationFailure(reasonKey: string, detail?: string): InstancePackageF
   };
 }
 
-function readCompiledSpecDefaults(args: {
-  widgetType: string;
-  specSource: string;
-}): Record<string, unknown> | null {
-  const spec = JSON.parse(args.specSource) as unknown;
-  if (!isRecord(spec) || spec.widgetname !== args.widgetType || !isRecord(spec.defaults)) return null;
-  return spec.defaults;
-}
-
 export async function materializeInitialAccountWidgetDefaults(args: {
   request: NextRequest;
   accountId: string;
@@ -47,21 +38,14 @@ export async function materializeInitialAccountWidgetDefaults(args: {
   for (const widgetType of args.widgetTypes) {
     const compiled = readWidgetForInstancePackage(widgetType);
     if (!compiled.ok) return compiled;
-    const specSource = compiled.value.widgetPackage?.files['spec.json']?.source;
-    if (typeof specSource !== 'string' || !specSource.trim()) {
+    const defaults = compiled.value.coreDefaults;
+    if (!isRecord(defaults)) {
       return validationFailure(
         'coreui.errors.widget.compiled.invalid',
-        `missing product widget spec source for ${widgetType}`,
+        `missing resolved product widget defaults for ${widgetType}`,
       );
     }
     try {
-      const defaults = readCompiledSpecDefaults({ widgetType, specSource });
-      if (!defaults) {
-        return validationFailure(
-          'coreui.errors.widget.compiled.invalid',
-          `invalid product widget defaults for ${widgetType}`,
-        );
-      }
       widgets[widgetType] = { core: cloneRecord(defaults) };
     } catch (error) {
       return validationFailure(

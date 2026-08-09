@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
-import { BOB_PANEL_LABELS, type PanelId } from '../lib/types';
+import { type PanelId } from '../lib/types';
 import type { ApplyWidgetOpsResult, WidgetOp } from '../lib/ops';
 import { useWidgetSession, useWidgetSessionChrome } from '../lib/session/useWidgetSession';
 import { resolvePathFromTarget } from './td-menu-content/fieldValue';
@@ -10,6 +10,7 @@ import { useTdMenuHydration } from './td-menu-content/useTdMenuHydration';
 
 type TdMenuContentProps = {
   panelId: PanelId | null;
+  panelLabel: string;
   panelHtml: string;
   instanceData: Record<string, unknown>;
   applyOps: (ops: WidgetOp[]) => ApplyWidgetOpsResult;
@@ -25,6 +26,7 @@ type TdMenuContentProps = {
 
 export function TdMenuContent({
   panelId,
+  panelLabel,
   panelHtml,
   instanceData,
   applyOps,
@@ -103,7 +105,7 @@ export function TdMenuContent({
   return (
     <div className="tdmenucontent">
       <div className="tdmenucontent__header">
-        <div className="heading-3">{BOB_PANEL_LABELS[panelId]}</div>
+        <div className="heading-3">{panelLabel}</div>
         {header}
       </div>
       <div className="tdmenucontent__fields" ref={containerRef} />

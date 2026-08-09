@@ -19,6 +19,7 @@ export type UserSettingsPatch = {
   first_name?: string | null;
   last_name?: string | null;
   primary_language?: string | null;
+  use_primary_language_for_ui?: boolean;
   country?: string | null;
   timezone?: string | null;
 };
@@ -65,10 +66,18 @@ export function parseUserSettingsPatchPayload(value: unknown): ParseUserSettings
   const givenName = normalizeNullableField(record.givenName, 120);
   const familyName = normalizeNullableField(record.familyName, 120);
   const primaryLanguage = normalizePrimaryLanguage(record.primaryLanguage);
+  const usePrimaryLanguageForUi =
+    typeof record.usePrimaryLanguageForUi === 'boolean'
+      ? record.usePrimaryLanguageForUi
+      : undefined;
   const country = normalizeCountry(record.country);
   const timezone = normalizeNullableField(record.timezone, 120);
 
-  if ([givenName, familyName, primaryLanguage, country, timezone].every((entry) => entry === undefined)) {
+  if (
+    [givenName, familyName, primaryLanguage, usePrimaryLanguageForUi, country, timezone].every(
+      (entry) => entry === undefined,
+    )
+  ) {
     return {
       ok: false,
       response: validationError('coreui.errors.payload.invalid', 'at least one user settings field must be provided'),
@@ -79,6 +88,8 @@ export function parseUserSettingsPatchPayload(value: unknown): ParseUserSettings
     (Object.prototype.hasOwnProperty.call(record, 'givenName') && givenName === undefined) ||
     (Object.prototype.hasOwnProperty.call(record, 'familyName') && familyName === undefined) ||
     (Object.prototype.hasOwnProperty.call(record, 'primaryLanguage') && primaryLanguage === undefined) ||
+    (Object.prototype.hasOwnProperty.call(record, 'usePrimaryLanguageForUi') &&
+      usePrimaryLanguageForUi === undefined) ||
     (Object.prototype.hasOwnProperty.call(record, 'country') && country === undefined) ||
     (Object.prototype.hasOwnProperty.call(record, 'timezone') && timezone === undefined)
   ) {
@@ -94,6 +105,9 @@ export function parseUserSettingsPatchPayload(value: unknown): ParseUserSettings
       ...(givenName !== undefined ? { first_name: givenName } : {}),
       ...(familyName !== undefined ? { last_name: familyName } : {}),
       ...(primaryLanguage !== undefined ? { primary_language: primaryLanguage } : {}),
+      ...(usePrimaryLanguageForUi !== undefined
+        ? { use_primary_language_for_ui: usePrimaryLanguageForUi }
+        : {}),
       ...(country !== undefined ? { country } : {}),
       ...(timezone !== undefined ? { timezone } : {}),
     },

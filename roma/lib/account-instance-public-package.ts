@@ -51,6 +51,7 @@ export type CompiledWidgetForPublicPackage = {
   controls?: Array<{
     path?: string;
   }>;
+  coreDefaults?: Record<string, unknown>;
   widgetPackage?: {
     files: Partial<Record<string, WidgetPackageFileContext>>;
   };

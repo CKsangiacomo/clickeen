@@ -109,7 +109,7 @@ Do not infer role permission from UI visibility alone.
 | Product operation | Roma route | Berlin backing route | Current behavior |
 | --- | --- | --- | --- |
 | Bootstrap current account | `/api/bootstrap` | `GET /session/bootstrap` | resolves session/current account and writes account authz cookie |
-| Current user/account view | `/api/me` | `/me` | read/update current user profile |
+| Current user/account view | `/api/me` | `/me` | read/update current user profile, including dormant exact `usePrimaryLanguageForUi` data |
 | Team overview | `/api/account/team` | `GET /accounts/:id/members` | viewer+ lists account users |
 | Member read | `/api/account/team/members/:memberId` | `GET /accounts/:id/members/:memberId` | viewer+ reads member |
 | Member update | `/api/account/team/members/:memberId` | `PATCH /accounts/:id/members/:memberId` | admin+; cannot mutate owner illegally |

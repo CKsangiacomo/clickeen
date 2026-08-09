@@ -5,9 +5,9 @@
   "defaults": {
     "uiLabels": {
       "core": {
-        "singular": "Statement",
-        "plural": "Statements",
-        "sizeCluster": "Statement size"
+        "singular": "$label:core.singular",
+        "plural": "$label:core.plural",
+        "sizeCluster": "$label:core.size-cluster"
       }
     },
     "typography": {
@@ -57,17 +57,17 @@
             "id": "header-content"
           },
           {
-            "label": "Content",
+            "label": "$label:content.cluster.content.label",
             "initiallyOpen": true,
             "nodes": [
               {
                 "kind": "field",
                 "type": "dropdown-edit",
                 "path": "bigBang.statement",
-                "label": "Statement",
+                "label": "$label:content.field.big-bang.statement.dropdown-edit.label",
                 "attrs": {
                   "size": "lg",
-                  "placeholder": "Add statement text",
+                  "placeholder": "$label:content.field.big-bang.statement.dropdown-edit.attr.placeholder",
                   "allow-links": "false",
                   "required": true
                 }
@@ -76,7 +76,7 @@
                 "kind": "field",
                 "type": "toggle",
                 "path": "bigBang.showSupportingCopy",
-                "label": "Show supporting copy",
+                "label": "$label:content.field.big-bang.show-supporting-copy.toggle.label",
                 "attrs": {
                   "size": "md"
                 }
@@ -85,10 +85,10 @@
                 "kind": "field",
                 "type": "dropdown-edit",
                 "path": "bigBang.supportingCopy",
-                "label": "Supporting copy",
+                "label": "$label:content.field.big-bang.supporting-copy.dropdown-edit.label",
                 "attrs": {
                   "size": "md",
-                  "placeholder": "Add supporting copy",
+                  "placeholder": "$label:content.field.big-bang.supporting-copy.dropdown-edit.attr.placeholder",
                   "allow-links": "false"
                 },
                 "showIf": {
@@ -105,8 +105,8 @@
         "shared": {
           "id": "typography",
           "roleLabels": {
-            "bigBang": "Big Bang statement",
-            "body": "Subtitle and supporting copy"
+            "bigBang": "$label:typography.role.big-bang.label",
+            "body": "$label:typography.role.body.label"
           }
         }
       },
@@ -122,22 +122,22 @@
             "id": "core-size"
           },
           {
-            "label": "Big Bang layout",
+            "label": "$label:layout.cluster.big-bang-layout.label",
             "nodes": [
               {
                 "kind": "field",
                 "type": "choice-tiles",
                 "path": "bigBang.alignment",
-                "label": "Statement alignment",
+                "label": "$label:layout.field.big-bang.alignment.choice-tiles.label",
                 "attrs": {
                   "size": "md",
                   "options": [
                     {
-                      "label": "Left",
+                      "label": "$label:layout.field.big-bang.alignment.choice-tiles.option.left.label",
                       "value": "left"
                     },
                     {
-                      "label": "Center",
+                      "label": "$label:layout.field.big-bang.alignment.choice-tiles.option.center.label",
                       "value": "center"
                     }
                   ]
@@ -147,7 +147,7 @@
                 "kind": "field",
                 "type": "valuefield",
                 "path": "bigBang.textWidth",
-                "label": "Statement width (px)",
+                "label": "$label:layout.field.big-bang.text-width.valuefield.label",
                 "attrs": {
                   "min": 480,
                   "max": 1280,
@@ -158,7 +158,7 @@
                 "kind": "field",
                 "type": "valuefield",
                 "path": "bigBang.gap",
-                "label": "Statement/copy gap (px)",
+                "label": "$label:layout.field.big-bang.gap.valuefield.label",
                 "attrs": {
                   "min": 8,
                   "max": 80,

@@ -30,7 +30,8 @@ Verification surface
 
 ## Execution
 
-1. Confirm the widget source folder contains exactly six files.
+1. Confirm the widget source folder contains the six canonical files and exact
+   `{widgetType}_tooldrawer_l10n_labels/en.json` folder/file.
 2. Confirm every Core control path exists in `spec.json.defaults`.
 3. Confirm Shell contains exactly Header and Core; Stage and Pod remain the
    presentation frame outside it.
@@ -44,9 +45,12 @@ Verification surface
    appearance/fill/surface, branding, share, preview localization, locale
    switcher, Header, Stage/Pod, Core size, and typography as relevant.
 9. Confirm no widget-local fallbacks were added for required shared helpers.
-10. Confirm every editor cluster has one plain-text section label, with no
-    pre-encoded HTML entities or duplicate section/group heading.
-11. Confirm only shared Header and the widget's primary Content section declare
+10. Confirm every widget-authored ToolDrawer copy value is a `$label:{key}`
+    token and every token resolves from the adjacent English label file, with
+    no missing or unused entries.
+11. Confirm every resolved editor cluster has one plain-text section label,
+    with no pre-encoded HTML entities or duplicate section/group heading.
+12. Confirm only shared Header and the widget's primary Content section declare
     `initiallyOpen: true`; every other section relies on the collapsed default.
 
 ## Edit Boundaries
@@ -54,6 +58,7 @@ Verification surface
 | Change | Required files |
 | --- | --- |
 | New Core state path | `spec.json`, `widget.client.js`, and docs for that widget. |
+| New or changed widget-authored ToolDrawer copy | `spec.json` label token plus `{widgetType}_tooldrawer_l10n_labels/en.json`. |
 | New customer-visible text | `spec.json`, `editable-fields.json`, `widget.client.js`, and docs for that widget. |
 | New repeatable item text | Same as customer-visible text, plus stable `arrayItemIdentity`. |
 | New entitlement-limited behavior | `limits.json`, Roma policy path if needed, and docs for that widget. |

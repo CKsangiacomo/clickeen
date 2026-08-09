@@ -6,6 +6,7 @@ import { compileWidgetServer } from '../lib/compiler.server';
 import { decodeHtmlEntities, type RawWidget } from '../lib/compiler.shared';
 import { expandTooldrawerClusters } from '../lib/compiler/controls';
 import { buildEditorHtmlLines } from '../lib/compiler/editor-contract';
+import { resolveWidgetTooldrawerLabels } from '../lib/compiler/tooldrawer-labels';
 import type {
   ComponentStencil,
   ComponentStencilLoader,
@@ -13,6 +14,7 @@ import type {
 import { DEFAULT_PANELS } from '../components/TdMenu';
 import { controlHostClusterId } from '../components/td-menu-content/dom';
 import { BOB_MENU_PANEL_IDS, BOB_WIDGET_PANEL_IDS } from '../lib/types';
+import { assertCompiledEditorContract } from '../lib/session/sessionConfig';
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const widgetsRoot = path.join(repoRoot, 'tokyo/product/widgets');
@@ -39,7 +41,16 @@ const loadStencil: ComponentStencilLoader = async (type): Promise<ComponentStenc
   };
 };
 
-function discoverWidgetSpecs(): Array<{ widgetType: string; spec: RawWidget }> {
+function readTooldrawerLabels(widgetType: string): unknown {
+  return JSON.parse(
+    fs.readFileSync(
+      path.join(widgetsRoot, widgetType, `${widgetType}_tooldrawer_l10n_labels`, 'en.json'),
+      'utf8',
+    ),
+  ) as unknown;
+}
+
+function discoverWidgetSpecs(): Array<{ widgetType: string; spec: RawWidget; labels: unknown }> {
   return fs
     .readdirSync(widgetsRoot, { withFileTypes: true })
     .filter((entry) => entry.isDirectory() && entry.name !== 'shared')
@@ -52,6 +63,7 @@ function discoverWidgetSpecs(): Array<{ widgetType: string; spec: RawWidget }> {
     .map(({ widgetType, specPath }) => ({
       widgetType,
       spec: JSON.parse(fs.readFileSync(specPath, 'utf8')) as RawWidget,
+      labels: readTooldrawerLabels(widgetType),
     }));
 }
 
@@ -129,8 +141,9 @@ async function testEveryWidgetEditorContract(): Promise<void> {
   const widgetDefaultsDocumentIds: string[] = [];
   let commonBodyIds: string[] | null = null;
 
-  for (const { widgetType, spec } of widgets) {
-    const panels = readAuthoredPanels(spec, widgetType);
+  for (const { widgetType, spec, labels } of widgets) {
+    const resolved = resolveWidgetTooldrawerLabels(spec, labels);
+    const panels = readAuthoredPanels(resolved.widget, widgetType);
     const authoredPanelIds = panels.map((panel) => panel.id);
     assert.equal(
       new Set(authoredPanelIds).size,
@@ -166,11 +179,17 @@ async function testEveryWidgetEditorContract(): Promise<void> {
     const compiled = await compileWidgetServer(spec, {
       loadComponentStencil: loadStencil,
       tokyoBaseUrl: '',
+      tooldrawerLabels: labels,
     });
     assert.deepEqual(
       compiled.panels.map((panel) => panel.id),
       BOB_WIDGET_PANEL_IDS,
       `${widgetType} compiles the canonical panel order`,
+    );
+    assert.deepEqual(
+      compiled.panels.map((panel) => panel.label),
+      BOB_WIDGET_PANEL_IDS.map((panelId) => String((labels as any).labels[`panel.${panelId}`])),
+      `${widgetType} compiles its exact English panel labels`,
     );
     const combinedBodyIds = captureAll(
       compiled.panels.map((panel) => panel.html).join('\n'),
@@ -205,6 +224,51 @@ async function testEveryWidgetEditorContract(): Promise<void> {
     new Set(widgetDefaultsDocumentIds).size,
     widgetDefaultsDocumentIds.length,
     'Widget Defaults host namespaces keep all document cluster ids unique',
+  );
+}
+
+function testTooldrawerLabelContractsFailClosed(): void {
+  const widgetType = 'faq';
+  const spec = JSON.parse(
+    fs.readFileSync(path.join(widgetsRoot, widgetType, 'spec.json'), 'utf8'),
+  ) as RawWidget;
+  const labels = readTooldrawerLabels(widgetType) as {
+    widgetType: string;
+    locale: string;
+    labels: Record<string, string>;
+  };
+  const firstKey = Object.keys(labels.labels)[0];
+  assert.ok(firstKey);
+
+  const missing = structuredClone(labels);
+  delete missing.labels[firstKey];
+  assert.throws(
+    () => resolveWidgetTooldrawerLabels(spec, missing),
+    /label is missing/,
+    'missing English ToolDrawer copy fails closed',
+  );
+
+  const extra = structuredClone(labels);
+  extra.labels['content.unused.label'] = 'Unused';
+  assert.throws(
+    () => resolveWidgetTooldrawerLabels(spec, extra),
+    /unused keys/,
+    'unused English ToolDrawer copy fails closed',
+  );
+
+  const extraRoot = { ...structuredClone(labels), fallbackLocale: 'en' };
+  assert.throws(
+    () => resolveWidgetTooldrawerLabels(spec, extraRoot),
+    /invalid root fields/,
+    'unexpected ToolDrawer label schema fields fail closed',
+  );
+
+  const hardcoded = structuredClone(spec) as any;
+  hardcoded.editor.panels[0].clusters.find((entry: any) => entry?.kind !== 'shared').label = 'Content';
+  assert.throws(
+    () => resolveWidgetTooldrawerLabels(hardcoded, labels),
+    /must use a label token/,
+    'hardcoded widget-authored ToolDrawer copy fails closed',
   );
 }
 
@@ -279,6 +343,21 @@ function testInvalidEditorContractsFail(): void {
   );
 }
 
+function testCompiledPanelLabelsFailClosed(): void {
+  assert.throws(
+    () =>
+      assertCompiledEditorContract({
+        panels: BOB_WIDGET_PANEL_IDS.map((id) => ({
+          id,
+          label: id === 'content' ? '' : id,
+          html: '',
+        })),
+      }),
+    /coreui\.errors\.builder\.open\.invalidRequest/,
+    'missing compiled panel label fails Builder open',
+  );
+}
+
 async function main(): Promise<void> {
   assert.deepEqual(
     DEFAULT_PANELS.map((panel) => panel.id),
@@ -287,10 +366,14 @@ async function main(): Promise<void> {
   );
   await testEveryWidgetEditorContract();
   console.log('PASS every widget conforms to the authored and compiled editor contract');
+  testTooldrawerLabelContractsFailClosed();
+  console.log('PASS ToolDrawer English label contracts fail closed');
   testSpecialCharactersRoundTripOnce();
   console.log('PASS editor labels round-trip special characters exactly once');
   testInvalidEditorContractsFail();
   console.log('PASS invalid editor contracts fail closed');
+  testCompiledPanelLabelsFailClosed();
+  console.log('PASS invalid compiled panel labels fail Builder open');
 }
 
 void main();

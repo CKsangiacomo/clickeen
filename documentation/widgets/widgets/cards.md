@@ -19,6 +19,8 @@ Files:
 spec.json
 editable-fields.json
 limits.json
+cards_tooldrawer_l10n_labels/
+  en.json
 widget.html
 widget.css
 widget.client.js

@@ -50,7 +50,18 @@ function readSpec(widgetType: string): RawWidget {
 }
 
 function compile(spec: RawWidget) {
-  return compileWidgetServer(spec, { loadComponentStencil: loadStencil, tokyoBaseUrl: '' });
+  const widgetType = String(spec.widgetname || '').trim();
+  const tooldrawerLabels = JSON.parse(
+    fs.readFileSync(
+      path.join(widgetsRoot, widgetType, `${widgetType}_tooldrawer_l10n_labels`, 'en.json'),
+      'utf8',
+    ),
+  ) as unknown;
+  return compileWidgetServer(spec, {
+    loadComponentStencil: loadStencil,
+    tokyoBaseUrl: '',
+    tooldrawerLabels,
+  });
 }
 
 function fontLibraryWithAccountFont(): AccountFontLibrary {

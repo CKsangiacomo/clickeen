@@ -1,4 +1,4 @@
-import type { CompiledControl, CompiledWidget } from '../types';
+import { BOB_WIDGET_PANEL_IDS, type CompiledControl, type CompiledWidget } from '../types';
 import {
   accountFontLibraryToFamilyOptions,
   type AccountFontLibrary,
@@ -6,6 +6,31 @@ import {
 const TOKEN_SEGMENT = /^__[^.]+__$/;
 function isPlainRecord(value: unknown): value is Record<string, unknown> { return Boolean(value) && typeof value === 'object' && !Array.isArray(value); }
 function invalid(path: string): never { throw new Error(`coreui.errors.instance.config.invalid:${path}`); }
+
+export function assertCompiledEditorContract(
+  compiled: Pick<CompiledWidget, 'panels'>,
+): void {
+  if (!Array.isArray(compiled.panels) || compiled.panels.length !== BOB_WIDGET_PANEL_IDS.length) {
+    throw new Error('coreui.errors.builder.open.invalidRequest');
+  }
+  const panelIds = compiled.panels.map((panel) => panel.id);
+  if (
+    new Set(panelIds).size !== panelIds.length ||
+    BOB_WIDGET_PANEL_IDS.some((panelId) => !panelIds.includes(panelId))
+  ) {
+    throw new Error('coreui.errors.builder.open.invalidRequest');
+  }
+  compiled.panels.forEach((panel) => {
+    if (
+      typeof panel.label !== 'string' ||
+      !panel.label.trim() ||
+      panel.label !== panel.label.trim() ||
+      typeof panel.html !== 'string'
+    ) {
+      throw new Error('coreui.errors.builder.open.invalidRequest');
+    }
+  });
+}
 function pathMatchesPattern(pattern: string, path: string): boolean {
   const patternParts = pattern.split('.').filter(Boolean);
   const pathParts = path.split('.').filter(Boolean);

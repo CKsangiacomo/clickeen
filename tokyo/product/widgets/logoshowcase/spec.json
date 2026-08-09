@@ -17,9 +17,9 @@
   "defaults": {
     "uiLabels": {
       "core": {
-        "singular": "Logo tile",
-        "plural": "Logo tiles",
-        "sizeCluster": "Logo showcase size"
+        "singular": "$label:core.singular",
+        "plural": "$label:core.plural",
+        "sizeCluster": "$label:core.size-cluster"
       }
     },
     "logoshowcase": {
@@ -176,7 +176,7 @@
             "id": "header-content"
           },
           {
-            "label": "Content",
+            "label": "$label:content.cluster.content.label",
             "initiallyOpen": true,
             "nodes": [
               {
@@ -184,19 +184,19 @@
                 "type": "segmented",
                 "groupId": "content-type",
                 "path": "logoshowcase.type",
-                "label": "Type",
+                "label": "$label:content.field.logoshowcase.type.segmented.label",
                 "attrs": {
                   "group-label": "",
                   "size": "md",
                   "value": "{{logoshowcase.type}}",
                   "options": [
                     {
-                      "label": "Grid",
+                      "label": "$label:content.field.logoshowcase.type.segmented.option.grid.label",
                       "value": "grid",
                       "icon": "circle.grid.2x2"
                     },
                     {
-                      "label": "Carousel",
+                      "label": "$label:content.field.logoshowcase.type.segmented.option.carousel.label",
                       "value": "carousel",
                       "icon": "ellipsis"
                     }
@@ -208,38 +208,38 @@
                 "type": "object-manager",
                 "groupId": "content-logos",
                 "path": "logoshowcase.strips",
-                "label": "Logo strips",
+                "label": "$label:content.field.logoshowcase.strips.object-manager.label",
                 "template": [
                   {
                     "kind": "field",
                     "type": "repeater",
                     "path": "logoshowcase.strips.__STRIP__.logos",
-                    "label": "Logos",
+                    "label": "$label:content.field.logoshowcase.strips.strip.logos.repeater.label",
                     "template": [
                       {
                         "kind": "field",
                         "type": "dropdown-fill",
                         "path": "logoshowcase.strips.__STRIP__.logos.__INDEX__.logoFill",
-                        "label": "Logo",
+                        "label": "$label:content.field.logoshowcase.strips.strip.logos.index.logo-fill.dropdown-fill.label",
                         "template": [
                           {
                             "kind": "field",
                             "type": "textfield",
                             "path": "logoshowcase.strips.__STRIP__.logos.__INDEX__.name",
-                            "label": "Name",
+                            "label": "$label:content.field.logoshowcase.strips.strip.logos.index.name.textfield.label",
                             "attrs": {
                               "size": "sm",
-                              "placeholder": "Logo name"
+                              "placeholder": "$label:content.field.logoshowcase.strips.strip.logos.index.name.textfield.attr.placeholder"
                             }
                           },
                           {
                             "kind": "field",
                             "type": "textfield",
                             "path": "logoshowcase.strips.__STRIP__.logos.__INDEX__.caption",
-                            "label": "Caption",
+                            "label": "$label:content.field.logoshowcase.strips.strip.logos.index.caption.textfield.label",
                             "attrs": {
                               "size": "sm",
-                              "placeholder": "Optional caption"
+                              "placeholder": "$label:content.field.logoshowcase.strips.strip.logos.index.caption.textfield.attr.placeholder"
                             }
                           }
                         ],
@@ -247,17 +247,17 @@
                           "size": "md",
                           "fill-modes": "image",
                           "allow-image": "true",
-                          "placeholder": "Choose logo"
+                          "placeholder": "$label:content.field.logoshowcase.strips.strip.logos.index.logo-fill.dropdown-fill.attr.placeholder"
                         }
                       }
                     ],
                     "attrs": {
                       "size": "md",
-                      "add-label": "Add logo",
-                      "remove-label": "Remove logo {index}",
-                      "move-label": "Move logo {index}",
-                      "reorder-label": "Manage logos",
-                      "reorder-title": "Manage logos",
+                      "add-label": "$label:content.field.logoshowcase.strips.strip.logos.repeater.attr.add-label",
+                      "remove-label": "$label:content.field.logoshowcase.strips.strip.logos.repeater.attr.remove-label",
+                      "move-label": "$label:content.field.logoshowcase.strips.strip.logos.repeater.attr.move-label",
+                      "reorder-label": "$label:content.field.logoshowcase.strips.strip.logos.repeater.attr.reorder-label",
+                      "reorder-title": "$label:content.field.logoshowcase.strips.strip.logos.repeater.attr.reorder-title",
                       "add-open": "bulk-edit",
                       "min": "1",
                       "default-item": {
@@ -278,9 +278,9 @@
                 "attrs": {
                   "group-label": "",
                   "class": "diet-object-manager",
-                  "add-label": "Add strip",
-                  "reorder-label": "Manage strips",
-                  "reorder-title": "Manage strips",
+                  "add-label": "$label:content.field.logoshowcase.strips.object-manager.attr.add-label",
+                  "reorder-label": "$label:content.field.logoshowcase.strips.object-manager.attr.reorder-label",
+                  "reorder-title": "$label:content.field.logoshowcase.strips.object-manager.attr.reorder-title",
                   "label-path": "logos.0.name",
                   "index-token": "__STRIP__",
                   "min": "1",
@@ -307,46 +307,46 @@
                 "type": "bulk-edit",
                 "groupId": "content-logos",
                 "path": "logoshowcase.strips",
-                "label": "Logo details...",
+                "label": "$label:content.field.logoshowcase.strips.bulk-edit.label",
                 "attrs": {
                   "group-label": "",
                   "size": "md",
                   "row-path": "logos",
-                  "title": "Logo details",
+                  "title": "$label:content.field.logoshowcase.strips.bulk-edit.attr.title",
                   "columns": [
                     {
-                      "label": "Name",
+                      "label": "$label:content.field.logoshowcase.strips.bulk-edit.column.name.label",
                       "path": "name",
                       "control": "text"
                     },
                     {
-                      "label": "Caption",
+                      "label": "$label:content.field.logoshowcase.strips.bulk-edit.column.caption.label",
                       "path": "caption",
                       "control": "text"
                     },
                     {
-                      "label": "URL",
+                      "label": "$label:content.field.logoshowcase.strips.bulk-edit.column.href.label",
                       "path": "href",
                       "control": "text",
-                      "placeholder": "https://example.com"
+                      "placeholder": "$label:content.field.logoshowcase.strips.bulk-edit.column.href.placeholder"
                     },
                     {
-                      "label": "Open in new tab",
+                      "label": "$label:content.field.logoshowcase.strips.bulk-edit.column.target-blank.label",
                       "path": "targetBlank",
                       "control": "checkbox"
                     },
                     {
-                      "label": "Nofollow",
+                      "label": "$label:content.field.logoshowcase.strips.bulk-edit.column.nofollow.label",
                       "path": "nofollow",
                       "control": "checkbox"
                     },
                     {
-                      "label": "Alt text",
+                      "label": "$label:content.field.logoshowcase.strips.bulk-edit.column.alt.label",
                       "path": "alt",
                       "control": "text"
                     },
                     {
-                      "label": "Title (tooltip)",
+                      "label": "$label:content.field.logoshowcase.strips.bulk-edit.column.title.label",
                       "path": "title",
                       "control": "text"
                     }
@@ -356,24 +356,24 @@
             ]
           },
           {
-            "label": "Carousel",
+            "label": "$label:content.cluster.carousel.label",
             "nodes": [
               {
                 "kind": "field",
                 "type": "segmented",
                 "groupId": "carousel-settings",
                 "path": "logoshowcase.typeConfig.carousel.mode",
-                "label": "Mode",
+                "label": "$label:content.field.logoshowcase.type-config.carousel.mode.segmented.label",
                 "attrs": {
                   "group-label": "",
                   "size": "md",
                   "options": [
                     {
-                      "label": "Paged",
+                      "label": "$label:content.field.logoshowcase.type-config.carousel.mode.segmented.option.paged.label",
                       "value": "paged"
                     },
                     {
-                      "label": "Continuous",
+                      "label": "$label:content.field.logoshowcase.type-config.carousel.mode.segmented.option.continuous.label",
                       "value": "continuous"
                     }
                   ]
@@ -384,7 +384,7 @@
                 "type": "segmented",
                 "groupId": "carousel-settings",
                 "path": "logoshowcase.typeConfig.carousel.step",
-                "label": "Step",
+                "label": "$label:content.field.logoshowcase.type-config.carousel.step.segmented.label",
                 "showIf": {
                   "path": "logoshowcase.typeConfig.carousel.mode",
                   "op": "equals",
@@ -395,11 +395,11 @@
                   "size": "md",
                   "options": [
                     {
-                      "label": "By logo",
+                      "label": "$label:content.field.logoshowcase.type-config.carousel.step.segmented.option.logo.label",
                       "value": "logo"
                     },
                     {
-                      "label": "By page",
+                      "label": "$label:content.field.logoshowcase.type-config.carousel.step.segmented.option.page.label",
                       "value": "page"
                     }
                   ]
@@ -410,7 +410,7 @@
                 "type": "toggle",
                 "groupId": "carousel-settings",
                 "path": "logoshowcase.typeConfig.carousel.showArrows",
-                "label": "Show arrows",
+                "label": "$label:content.field.logoshowcase.type-config.carousel.show-arrows.toggle.label",
                 "showIf": {
                   "path": "logoshowcase.typeConfig.carousel.mode",
                   "op": "equals",
@@ -426,7 +426,7 @@
                 "type": "toggle",
                 "groupId": "carousel-settings",
                 "path": "logoshowcase.typeConfig.carousel.allowSwipe",
-                "label": "Allow swipe/drag",
+                "label": "$label:content.field.logoshowcase.type-config.carousel.allow-swipe.toggle.label",
                 "showIf": {
                   "path": "logoshowcase.typeConfig.carousel.mode",
                   "op": "equals",
@@ -442,7 +442,7 @@
                 "type": "toggle",
                 "groupId": "carousel-settings",
                 "path": "logoshowcase.typeConfig.carousel.autoplay",
-                "label": "Autoplay",
+                "label": "$label:content.field.logoshowcase.type-config.carousel.autoplay.toggle.label",
                 "showIf": {
                   "path": "logoshowcase.typeConfig.carousel.mode",
                   "op": "equals",
@@ -458,7 +458,7 @@
                 "type": "valuefield",
                 "groupId": "carousel-settings",
                 "path": "logoshowcase.typeConfig.carousel.autoSlideDelayMs",
-                "label": "Autoplay delay (ms)",
+                "label": "$label:content.field.logoshowcase.type-config.carousel.auto-slide-delay-ms.valuefield.label",
                 "showIf": {
                   "all": [
                     {
@@ -482,7 +482,7 @@
                 "type": "valuefield",
                 "groupId": "carousel-settings",
                 "path": "logoshowcase.typeConfig.carousel.transitionMs",
-                "label": "Transition (ms)",
+                "label": "$label:content.field.logoshowcase.type-config.carousel.transition-ms.valuefield.label",
                 "showIf": {
                   "path": "logoshowcase.typeConfig.carousel.mode",
                   "op": "equals",
@@ -498,7 +498,7 @@
                 "type": "valuefield",
                 "groupId": "carousel-settings",
                 "path": "logoshowcase.typeConfig.carousel.speed",
-                "label": "Speed (px/sec)",
+                "label": "$label:content.field.logoshowcase.type-config.carousel.speed.valuefield.label",
                 "showIf": {
                   "path": "logoshowcase.typeConfig.carousel.mode",
                   "op": "equals",
@@ -514,7 +514,7 @@
                 "type": "dropdown-actions",
                 "groupId": "carousel-settings",
                 "path": "logoshowcase.typeConfig.carousel.direction",
-                "label": "Direction",
+                "label": "$label:content.field.logoshowcase.type-config.carousel.direction.dropdown-actions.label",
                 "showIf": {
                   "path": "logoshowcase.typeConfig.carousel.mode",
                   "op": "equals",
@@ -526,11 +526,11 @@
                   "value": "{{logoshowcase.typeConfig.carousel.direction}}",
                   "options": [
                     {
-                      "label": "Left",
+                      "label": "$label:content.field.logoshowcase.type-config.carousel.direction.dropdown-actions.option.left.label",
                       "value": "left"
                     },
                     {
-                      "label": "Right",
+                      "label": "$label:content.field.logoshowcase.type-config.carousel.direction.dropdown-actions.option.right.label",
                       "value": "right"
                     }
                   ]
@@ -541,7 +541,7 @@
                 "type": "toggle",
                 "groupId": "carousel-settings",
                 "path": "logoshowcase.typeConfig.carousel.pauseOnHover",
-                "label": "Pause on hover",
+                "label": "$label:content.field.logoshowcase.type-config.carousel.pause-on-hover.toggle.label",
                 "attrs": {
                   "group-label": "",
                   "size": "md"
@@ -580,7 +580,7 @@
                 "type": "slider",
                 "groupId": "spacing-settings",
                 "path": "logoshowcase.spacing.logoHeight",
-                "label": "Logo size",
+                "label": "$label:layout.field.logoshowcase.spacing.logo-height.slider.label",
                 "attrs": {
                   "group-label": "",
                   "size": "md",
@@ -593,7 +593,7 @@
                 "type": "valuefield",
                 "groupId": "spacing-settings",
                 "path": "logoshowcase.spacing.gap",
-                "label": "Logo gap (px)",
+                "label": "$label:layout.field.logoshowcase.spacing.gap.valuefield.label",
                 "attrs": {
                   "group-label": "",
                   "size": "md"
@@ -604,7 +604,7 @@
                 "type": "valuefield",
                 "groupId": "spacing-settings",
                 "path": "logoshowcase.spacing.rowGap",
-                "label": "Row gap (px)",
+                "label": "$label:layout.field.logoshowcase.spacing.row-gap.valuefield.label",
                 "showIf": {
                   "path": "logoshowcase.type",
                   "op": "equals",
@@ -620,7 +620,7 @@
                 "type": "valuefield",
                 "groupId": "spacing-settings",
                 "path": "logoshowcase.spacing.stripGap",
-                "label": "Strip gap (px)",
+                "label": "$label:layout.field.logoshowcase.spacing.strip-gap.valuefield.label",
                 "attrs": {
                   "group-label": "",
                   "size": "md"
@@ -631,7 +631,7 @@
                 "type": "valuefield",
                 "groupId": "spacing-mobile",
                 "path": "logoshowcase.spacing.mobileGap",
-                "label": "Logo gap (mobile px)",
+                "label": "$label:layout.field.logoshowcase.spacing.mobile-gap.valuefield.label",
                 "attrs": {
                   "group-label": "",
                   "size": "md"
@@ -642,7 +642,7 @@
                 "type": "valuefield",
                 "groupId": "spacing-mobile",
                 "path": "logoshowcase.spacing.mobileStripGap",
-                "label": "Strip gap (mobile px)",
+                "label": "$label:layout.field.logoshowcase.spacing.mobile-strip-gap.valuefield.label",
                 "attrs": {
                   "group-label": "",
                   "size": "md"
@@ -653,14 +653,14 @@
                 "type": "toggle",
                 "groupId": "layout-behavior",
                 "path": "logoshowcase.behavior.randomOrder",
-                "label": "Randomize logo order",
+                "label": "$label:layout.field.logoshowcase.behavior.random-order.toggle.label",
                 "attrs": {
                   "group-label": "",
                   "size": "md"
                 }
               }
             ],
-            "label": "Widget layout"
+            "label": "$label:layout.cluster.widget-layout.label"
           },
           {
             "kind": "shared",
@@ -672,25 +672,25 @@
         "id": "appearance",
         "clusters": [
           {
-            "label": "Logos",
+            "label": "$label:appearance.cluster.logos.label",
             "nodes": [
               {
                 "kind": "field",
                 "type": "dropdown-actions",
                 "groupId": "appearance-logos",
                 "path": "logoshowcase.appearance.logoLook",
-                "label": "Logo look",
+                "label": "$label:appearance.field.logoshowcase.appearance.logo-look.dropdown-actions.label",
                 "attrs": {
                   "group-label": "",
                   "size": "md",
                   "value": "{{logoshowcase.appearance.logoLook}}",
                   "options": [
                     {
-                      "label": "Original",
+                      "label": "$label:appearance.field.logoshowcase.appearance.logo-look.dropdown-actions.option.original.label",
                       "value": "original"
                     },
                     {
-                      "label": "Grayscale",
+                      "label": "$label:appearance.field.logoshowcase.appearance.logo-look.dropdown-actions.option.grayscale.label",
                       "value": "grayscale"
                     }
                   ]
@@ -701,7 +701,7 @@
                 "type": "valuefield",
                 "groupId": "appearance-logos",
                 "path": "logoshowcase.appearance.logoOpacity",
-                "label": "Logo opacity (0-1)",
+                "label": "$label:appearance.field.logoshowcase.appearance.logo-opacity.valuefield.label",
                 "attrs": {
                   "group-label": "",
                   "size": "md"
@@ -720,7 +720,7 @@
                 "type": "dropdown-fill",
                 "groupId": "appearance-item-card",
                 "path": "logoshowcase.appearance.itemBackground",
-                "label": "Logo tile background",
+                "label": "$label:appearance.field.logoshowcase.appearance.item-background.dropdown-fill.label",
                 "attrs": {
                   "group-label": "",
                   "size": "md",
@@ -733,7 +733,7 @@
                 "type": "toggle",
                 "groupId": "appearance-item-card",
                 "path": "logoshowcase.appearance.cardwrapper.radiusLinked",
-                "label": "Link logo tile corners",
+                "label": "$label:appearance.field.logoshowcase.appearance.cardwrapper.radius-linked.toggle.label",
                 "attrs": {
                   "group-label": "",
                   "size": "md",
@@ -746,7 +746,7 @@
                 "type": "dropdown-actions",
                 "groupId": "appearance-item-card",
                 "path": "logoshowcase.appearance.cardwrapper.radius",
-                "label": "Logo tile corner radius",
+                "label": "$label:appearance.field.logoshowcase.appearance.cardwrapper.radius.dropdown-actions.label",
                 "showIf": {
                   "path": "logoshowcase.appearance.cardwrapper.radiusLinked",
                   "op": "isTrue"
@@ -754,27 +754,27 @@
                 "attrs": {
                   "group-label": "",
                   "size": "md",
-                  "placeholder": "Choose radius",
+                  "placeholder": "$label:appearance.field.logoshowcase.appearance.cardwrapper.radius.dropdown-actions.attr.placeholder",
                   "value": "{{logoshowcase.appearance.cardwrapper.radius}}",
                   "options": [
                     {
-                      "label": "None",
+                      "label": "$label:appearance.field.logoshowcase.appearance.cardwrapper.radius.dropdown-actions.option.none.label",
                       "value": "none"
                     },
                     {
-                      "label": "Small",
+                      "label": "$label:appearance.field.logoshowcase.appearance.cardwrapper.radius.dropdown-actions.option.2xl.label",
                       "value": "2xl"
                     },
                     {
-                      "label": "Medium",
+                      "label": "$label:appearance.field.logoshowcase.appearance.cardwrapper.radius.dropdown-actions.option.4xl.label",
                       "value": "4xl"
                     },
                     {
-                      "label": "Large",
+                      "label": "$label:appearance.field.logoshowcase.appearance.cardwrapper.radius.dropdown-actions.option.6xl.label",
                       "value": "6xl"
                     },
                     {
-                      "label": "X-Large",
+                      "label": "$label:appearance.field.logoshowcase.appearance.cardwrapper.radius.dropdown-actions.option.10xl.label",
                       "value": "10xl"
                     }
                   ]
@@ -785,7 +785,7 @@
                 "type": "dropdown-actions",
                 "groupId": "appearance-item-card",
                 "path": "logoshowcase.appearance.cardwrapper.radiusTL",
-                "label": "Logo tile top-left corner",
+                "label": "$label:appearance.field.logoshowcase.appearance.cardwrapper.radius-tl.dropdown-actions.label",
                 "showIf": {
                   "path": "logoshowcase.appearance.cardwrapper.radiusLinked",
                   "op": "isFalse"
@@ -793,27 +793,27 @@
                 "attrs": {
                   "group-label": "",
                   "size": "md",
-                  "placeholder": "Choose radius",
+                  "placeholder": "$label:appearance.field.logoshowcase.appearance.cardwrapper.radius-tl.dropdown-actions.attr.placeholder",
                   "value": "{{logoshowcase.appearance.cardwrapper.radiusTL}}",
                   "options": [
                     {
-                      "label": "None",
+                      "label": "$label:appearance.field.logoshowcase.appearance.cardwrapper.radius-tl.dropdown-actions.option.none.label",
                       "value": "none"
                     },
                     {
-                      "label": "Small",
+                      "label": "$label:appearance.field.logoshowcase.appearance.cardwrapper.radius-tl.dropdown-actions.option.2xl.label",
                       "value": "2xl"
                     },
                     {
-                      "label": "Medium",
+                      "label": "$label:appearance.field.logoshowcase.appearance.cardwrapper.radius-tl.dropdown-actions.option.4xl.label",
                       "value": "4xl"
                     },
                     {
-                      "label": "Large",
+                      "label": "$label:appearance.field.logoshowcase.appearance.cardwrapper.radius-tl.dropdown-actions.option.6xl.label",
                       "value": "6xl"
                     },
                     {
-                      "label": "X-Large",
+                      "label": "$label:appearance.field.logoshowcase.appearance.cardwrapper.radius-tl.dropdown-actions.option.10xl.label",
                       "value": "10xl"
                     }
                   ]
@@ -824,7 +824,7 @@
                 "type": "dropdown-actions",
                 "groupId": "appearance-item-card",
                 "path": "logoshowcase.appearance.cardwrapper.radiusTR",
-                "label": "Logo tile top-right corner",
+                "label": "$label:appearance.field.logoshowcase.appearance.cardwrapper.radius-tr.dropdown-actions.label",
                 "showIf": {
                   "path": "logoshowcase.appearance.cardwrapper.radiusLinked",
                   "op": "isFalse"
@@ -832,27 +832,27 @@
                 "attrs": {
                   "group-label": "",
                   "size": "md",
-                  "placeholder": "Choose radius",
+                  "placeholder": "$label:appearance.field.logoshowcase.appearance.cardwrapper.radius-tr.dropdown-actions.attr.placeholder",
                   "value": "{{logoshowcase.appearance.cardwrapper.radiusTR}}",
                   "options": [
                     {
-                      "label": "None",
+                      "label": "$label:appearance.field.logoshowcase.appearance.cardwrapper.radius-tr.dropdown-actions.option.none.label",
                       "value": "none"
                     },
                     {
-                      "label": "Small",
+                      "label": "$label:appearance.field.logoshowcase.appearance.cardwrapper.radius-tr.dropdown-actions.option.2xl.label",
                       "value": "2xl"
                     },
                     {
-                      "label": "Medium",
+                      "label": "$label:appearance.field.logoshowcase.appearance.cardwrapper.radius-tr.dropdown-actions.option.4xl.label",
                       "value": "4xl"
                     },
                     {
-                      "label": "Large",
+                      "label": "$label:appearance.field.logoshowcase.appearance.cardwrapper.radius-tr.dropdown-actions.option.6xl.label",
                       "value": "6xl"
                     },
                     {
-                      "label": "X-Large",
+                      "label": "$label:appearance.field.logoshowcase.appearance.cardwrapper.radius-tr.dropdown-actions.option.10xl.label",
                       "value": "10xl"
                     }
                   ]
@@ -863,7 +863,7 @@
                 "type": "dropdown-actions",
                 "groupId": "appearance-item-card",
                 "path": "logoshowcase.appearance.cardwrapper.radiusBR",
-                "label": "Logo tile bottom-right corner",
+                "label": "$label:appearance.field.logoshowcase.appearance.cardwrapper.radius-br.dropdown-actions.label",
                 "showIf": {
                   "path": "logoshowcase.appearance.cardwrapper.radiusLinked",
                   "op": "isFalse"
@@ -871,27 +871,27 @@
                 "attrs": {
                   "group-label": "",
                   "size": "md",
-                  "placeholder": "Choose radius",
+                  "placeholder": "$label:appearance.field.logoshowcase.appearance.cardwrapper.radius-br.dropdown-actions.attr.placeholder",
                   "value": "{{logoshowcase.appearance.cardwrapper.radiusBR}}",
                   "options": [
                     {
-                      "label": "None",
+                      "label": "$label:appearance.field.logoshowcase.appearance.cardwrapper.radius-br.dropdown-actions.option.none.label",
                       "value": "none"
                     },
                     {
-                      "label": "Small",
+                      "label": "$label:appearance.field.logoshowcase.appearance.cardwrapper.radius-br.dropdown-actions.option.2xl.label",
                       "value": "2xl"
                     },
                     {
-                      "label": "Medium",
+                      "label": "$label:appearance.field.logoshowcase.appearance.cardwrapper.radius-br.dropdown-actions.option.4xl.label",
                       "value": "4xl"
                     },
                     {
-                      "label": "Large",
+                      "label": "$label:appearance.field.logoshowcase.appearance.cardwrapper.radius-br.dropdown-actions.option.6xl.label",
                       "value": "6xl"
                     },
                     {
-                      "label": "X-Large",
+                      "label": "$label:appearance.field.logoshowcase.appearance.cardwrapper.radius-br.dropdown-actions.option.10xl.label",
                       "value": "10xl"
                     }
                   ]
@@ -902,7 +902,7 @@
                 "type": "dropdown-actions",
                 "groupId": "appearance-item-card",
                 "path": "logoshowcase.appearance.cardwrapper.radiusBL",
-                "label": "Logo tile bottom-left corner",
+                "label": "$label:appearance.field.logoshowcase.appearance.cardwrapper.radius-bl.dropdown-actions.label",
                 "showIf": {
                   "path": "logoshowcase.appearance.cardwrapper.radiusLinked",
                   "op": "isFalse"
@@ -910,27 +910,27 @@
                 "attrs": {
                   "group-label": "",
                   "size": "md",
-                  "placeholder": "Choose radius",
+                  "placeholder": "$label:appearance.field.logoshowcase.appearance.cardwrapper.radius-bl.dropdown-actions.attr.placeholder",
                   "value": "{{logoshowcase.appearance.cardwrapper.radiusBL}}",
                   "options": [
                     {
-                      "label": "None",
+                      "label": "$label:appearance.field.logoshowcase.appearance.cardwrapper.radius-bl.dropdown-actions.option.none.label",
                       "value": "none"
                     },
                     {
-                      "label": "Small",
+                      "label": "$label:appearance.field.logoshowcase.appearance.cardwrapper.radius-bl.dropdown-actions.option.2xl.label",
                       "value": "2xl"
                     },
                     {
-                      "label": "Medium",
+                      "label": "$label:appearance.field.logoshowcase.appearance.cardwrapper.radius-bl.dropdown-actions.option.4xl.label",
                       "value": "4xl"
                     },
                     {
-                      "label": "Large",
+                      "label": "$label:appearance.field.logoshowcase.appearance.cardwrapper.radius-bl.dropdown-actions.option.6xl.label",
                       "value": "6xl"
                     },
                     {
-                      "label": "X-Large",
+                      "label": "$label:appearance.field.logoshowcase.appearance.cardwrapper.radius-bl.dropdown-actions.option.10xl.label",
                       "value": "10xl"
                     }
                   ]
@@ -941,7 +941,7 @@
                 "type": "dropdown-border",
                 "groupId": "appearance-item-card",
                 "path": "logoshowcase.appearance.cardwrapper.border",
-                "label": "Logo tile border",
+                "label": "$label:appearance.field.logoshowcase.appearance.cardwrapper.border.dropdown-border.label",
                 "attrs": {
                   "group-label": "",
                   "size": "md",
@@ -953,7 +953,7 @@
                 "type": "dropdown-shadow",
                 "groupId": "appearance-item-card",
                 "path": "logoshowcase.appearance.cardwrapper.shadow",
-                "label": "Logo tile outside shadow",
+                "label": "$label:appearance.field.logoshowcase.appearance.cardwrapper.shadow.dropdown-shadow.label",
                 "attrs": {
                   "group-label": "",
                   "size": "md",
@@ -961,7 +961,7 @@
                 }
               }
             ],
-            "label": "Logo tile"
+            "label": "$label:appearance.cluster.logo-tile.label"
           },
           {
             "kind": "shared",

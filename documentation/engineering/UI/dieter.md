@@ -5,8 +5,9 @@
 - Canonical doctrine: this document.
 - Execution PRD: [`126H__PRD__Dieter.md`](../../../Execution_Pipeline_Docs/02-Executing/126__UI_Optimization/126H__PRD__Dieter.md).
 - **Source of truth:** `dieter/tokens/*`, `dieter/layouts/*`,
-  `dieter/components/*`, `dieter/icons/icons.json`, and
-  `dieter/icons/svg/*`. Consumers compile or materialize this source directly.
+  `dieter/components/*`, and `dieter/icons/svg/*`. `dieter/icons/icons.json`
+  is input to the human-operated SF extraction tool. Consumers compile or
+  materialize Dieter source directly.
   Only the SVG icon bytes are deployed as shared CDN files. The code is
   authoritative; this doc explains it.
 - Sibling references: [`color.md`](color.md), [`typography.md`](typography.md), [`motion.md`](motion.md), [`iconography.md`](iconography.md), [`components.md`](components.md).
@@ -109,7 +110,7 @@ layering are owned by their own UI docs.
 
 Dieter has no generated runtime mirror or browser manifest. App builds consume
 source, and public widget packages contain the CSS they require. The CDN is
-used only for approved SVG icon bytes.
+used only for committed SVG icon bytes.
 
 For account-font controls, Dieter owns dropdown presentation and emits the
 selected family as raw control intent. It may filter visible weight/style

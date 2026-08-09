@@ -187,9 +187,11 @@ export function ToolDrawer({
     return DEFAULT_PANELS.filter((panel) => {
       if (panel.id === 'translations') return true;
       return availableIds.has(panel.id);
-    });
-  }, [compiled?.panels]);
-  const activePanelHtml = panelsById[activePanel]?.html ?? null;
+    }).map((panel) => ({
+      ...panel,
+      label: panel.id === 'translations' ? panel.label : panelsById[panel.id]!.label,
+    }));
+  }, [compiled?.panels, panelsById]);
   const alertBorderColor = '1px solid color-mix(in oklab, var(--role-error), transparent 55%)';
   const alertBackground = 'color-mix(in oklab, var(--color-system-red-5), transparent 85%)';
   const alertLabelColor = 'var(--role-error)';
@@ -212,7 +214,8 @@ export function ToolDrawer({
   ) : (
     <TdMenuContent
       panelId={activePanel}
-      panelHtml={activePanelHtml ?? ''}
+      panelLabel={panelsById[activePanel]!.label}
+      panelHtml={panelsById[activePanel]!.html}
       instanceData={session.instanceData}
       applyOps={session.applyOps}
       lastUpdate={session.lastUpdate}

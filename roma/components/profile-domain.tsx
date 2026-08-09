@@ -24,6 +24,7 @@ type UserSettingsProfile = {
   givenName: string | null;
   familyName: string | null;
   primaryLanguage: string | null;
+  usePrimaryLanguageForUi: boolean;
   country: string | null;
   timezone: string | null;
   primaryEmail: string;

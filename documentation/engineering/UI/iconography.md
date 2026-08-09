@@ -4,32 +4,37 @@ Living reference for iconography doctrine.
 
 - Canonical doctrine: this document.
 - Execution PRD: [`126C__PRD__Iconography.md`](../../../Execution_Pipeline_Docs/02-Executing/126__UI_Optimization/126C__PRD__Iconography.md).
-- Source artifact pair: `dieter/icons/icons.json` and `dieter/icons/svg/*`.
+- Source SVGs: `dieter/icons/svg/*`.
+- SF extraction input: `dieter/icons/icons.json`.
 - Human origination tool: `tooling/sf-symbols`.
 - Deploy propagation: the Tokyo product-root sync copies
   `dieter/icons/svg/**` directly to R2 `dieter/icons/svg/**`.
 
-This document is not an icon-redesign program. The current 157 Dieter icons are the
-approved operational icon set. Agents consume existing icons; they do not add,
-rename, reshape, replace, or originate icons.
+The current 159 Dieter icons are the human-selected operational icon library.
+Agents consume that library; icon selection and origination remain human-owned.
+The system does not maintain a second approval list, ask whether an icon may be
+used, or validate the library against itself.
 
-The approved set is the current SF Symbols port. Its dot-notation names and
-manifest geometry format are product source truth; agents do not rename,
-reshape, or reinterpret that format.
+The selected icons are the current SF Symbols port. Their dot-notation names
+and generated SVG geometry are product source truth.
 
 ## Source And Delivery
 
-New Dieter icons are human-originated through `tooling/sf-symbols`, then
-committed as the source artifact pair:
+New Dieter icons are human-originated through `tooling/sf-symbols`.
+`icons.json` is the extraction input and the generated SVG files are the Dieter
+source consumed by the product:
 
 ```text
 dieter/icons/icons.json
 dieter/icons/svg/{icon.name}.svg
 ```
 
-There is no Dieter icon build or generated Tokyo copy. The GitHub product-root
-deployment copies committed SVG source bytes directly to R2. `icons.json`
-remains source/compile-time data and is not deployed.
+The exporter places every SF path on the same optical coordinate canvas rather
+than cropping each icon to its ink bounds. Consumers therefore get consistent
+relative sizing from the SVG itself; they do not compensate icon by icon.
+
+The GitHub product-root deployment copies committed SVG source bytes directly
+to R2. `icons.json` is not a runtime registry and is not deployed.
 
 ## Consumer Lanes
 
@@ -37,13 +42,13 @@ Agents must use the lane that owns the UI they are editing:
 
 | Lane | Consumption rule |
 | --- | --- |
-| Dieter component source | Use approved icon slots such as `data-icon="approved.name"`; no raw SVG drops. |
+| Dieter component source | Declare the selected icon name in the component's existing `data-icon` input; no raw SVG copies. |
 | Bob compiler/output | Bob preserves Dieter `data-icon` slots; source hydration points them at `/dieter/icons/svg/{name}.svg`. |
 | Bob app chrome | Use the same Dieter `data-icon` contract; icons stay decorative and control names live on controls. |
-| DevStudio/Admin | Generated raw SVG imports are Admin tooling/reveal only, not product runtime doctrine. Missing icons render an explicit `[missing icon: name]` marker. |
+| DevStudio/Admin | Generate the reveal and raw SVG imports directly from `dieter/icons/svg/**`; this is tooling, not a product runtime icon system. |
 | Roma product UI | Use the same Dieter operational-icon contract through the implementation lane specified by the 126M execution PRD; do not create a Roma-only icon system. |
-| Prague static site | `DieterIcon.astro` paints approved Tokyo `/dieter/icons/svg/name.svg` URLs through a CSS mask so icons inherit `currentColor`; Prague validates rendered Dieter names against the manifest and uses numeric Dieter sizes only. |
-| Public widgets | Widget-owned code may use approved Dieter names as CSS masks/static URLs where that widget schema exposes operational Dieter icons. Do not create a shared widget icon service. |
+| Prague static site | `DieterIcon.astro` paints the declared Tokyo `/dieter/icons/svg/name.svg` URL through a CSS mask so icons inherit `currentColor`; Prague uses numeric Dieter sizes only. |
+| Public widgets | Widget-owned schemas may offer field-specific icon choices and widget code renders those declared Dieter names as CSS masks/static URLs. Do not create a shared widget icon service or global approval catalog. |
 | Account assets | SVG assets uploaded by accounts, including the admin account, are account assets. They are not Dieter icons. |
 
 ## Sizing
@@ -69,8 +74,9 @@ icon glyph sizing and stay with their owning component PRDs.
 Dieter source SVGs and rendered operational icons use `currentColor`.
 
 Icon hover, active, selected, disabled, and pressed appearance comes from the
-owning parent/control state. This doctrine does not create icon-specific color variants,
-filled/outlined variants, optical sizes, weights, or scales.
+owning parent/control state. The common SVG canvas supplies optical sizing; the
+system does not add icon-specific size overrides, color variants, weights, or
+consumer compensation tables.
 
 ## Semantics
 
@@ -81,8 +87,6 @@ Source SVGs do not carry product semantics.
 - Icons next to visible text are decorative unless the icon adds independent
   product meaning.
 - Meaningful standalone icons require an explicit label rule in the consumer.
-- Missing icons in tooling/reveal paths must be visible as missing truth, not
-  silently omitted.
 
 ## Account Asset Boundary
 

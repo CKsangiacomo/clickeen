@@ -1,6 +1,6 @@
 # Localization Capability
 
-Last updated: 2026-07-30
+Last updated: 2026-08-09
 
 ## Product Contract
 
@@ -16,6 +16,27 @@ one saved base source
 Translation is content work. It does not create another widget artifact,
 publication state, delivery file, or cache lifecycle.
 
+Product UI language is a separate concern from saved widget-content overlays.
+The current product UI remains English. Current source scaffolding exists for
+widget-authored ToolDrawer labels only:
+
+```text
+tokyo/product/widgets/{widgetType}/
+  {widgetType}_tooldrawer_l10n_labels/
+    en.json
+```
+
+The Bob compiler resolves that exact English file at build time into the
+existing `/widget-editors/{widgetType}.json` artifact. English users perform no
+UI-locale lookup or runtime label fetch. There are no non-English ToolDrawer
+files, Roma/Bob chrome locale files, UI-language dropdown, or active UI-locale
+selection in the current product.
+
+Michael's person row has a dormant `use_primary_language_for_ui` boolean whose
+default is `false`; Berlin/Roma expose it only as profile data. It does not
+currently affect Roma, Bob, Dieter, widget content, account base locale, public
+widget locale selection, or an open Builder session.
+
 ## Code Authority
 
 | Concern | Authority |
@@ -28,6 +49,7 @@ publication state, delivery file, or cache lifecycle.
 | Bob translated preview | translated-value primitives over saved base state |
 | Public localized serving | Tokyo-worker base index response plus base runtime |
 | Base package construction | `@clickeen/ck-runtime-materializer` |
+| English widget-authored ToolDrawer labels | Adjacent widget `en.json`, resolved by the Bob compiler at build time |
 
 ## Authority Chain
 

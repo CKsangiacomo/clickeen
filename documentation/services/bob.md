@@ -118,8 +118,8 @@ panel control surface remains mounted.
 
 Bob preserves Dieter `data-icon` names in compiled controls and application
 chrome. Bob compiles Dieter CSS and hydrators from source. Hydration points each
-approved icon slot at `/dieter/icons/svg/{name}.svg`; Bob does not import the
-icon registry at runtime or inline SVG source. Decorative icons use
+declared icon slot at `/dieter/icons/svg/{name}.svg`; Bob does not import or
+validate against an icon registry at runtime and does not inline SVG source. Decorative icons use
 `aria-hidden="true"`; icon-only controls keep the accessible name on the
 control. Unfamiliar ToolDrawer icon actions use the Dieter CSS tooltip contract
 on hover and keyboard focus without changing their command behavior.
@@ -327,6 +327,15 @@ Tokyo-worker/R2 state.
 Agent Activity is a core product UI concept. Bob renders the agent's narration;
 it does not summarize, reinterpret, probe, reconcile, or persist it.
 
+## Product UI Language Scaffold
+
+Bob's current product UI is English. Widget-authored ToolDrawer labels compile
+from each widget's adjacent English label file; Bob chrome and reusable Dieter
+component copy remain their current English source. Bob receives no UI locale,
+loads no UI-language file at runtime, and does not change an open editor
+session's UI language. The person preference stored by Berlin/Michael is
+dormant and is not a current Bob session input.
+
 ## Widget Software
 
 Widget software is system software stored in:
@@ -347,19 +356,23 @@ Each widget package contains:
 spec.json
 editable-fields.json
 limits.json
+{widgetType}_tooldrawer_l10n_labels/en.json
 widget.html
 widget.css
 widget.client.js
 declared support files
 ```
 
-`spec.json` carries defaults and editor structure. `editable-fields.json`
+`spec.json` carries defaults, editor structure, and widget-local ToolDrawer
+label tokens. `{widgetType}_tooldrawer_l10n_labels/en.json` carries the exact
+English values for those tokens and the five widget panel names. `editable-fields.json`
 carries editable/translatable field contracts. `limits.json` carries widget
 capability context.
 
 ## Editor Artifact Build
 
-The widget build compiles each canonical `spec.json` once into:
+The widget build compiles each canonical `spec.json` with its exact adjacent
+English ToolDrawer label file into:
 
 - `compiled.panels[]`
 - `compiled.controls[]`
@@ -373,6 +386,11 @@ from the repo and emits ignored editor artifacts under
 `roma/generated/`.
 Normal product requests do not fetch Tokyo source, fetch Dieter stencils, or
 compile controls.
+
+The current editor artifact remains the English artifact at the existing URL.
+Label files are build input; Bob does not fetch them, choose a locale, or
+resolve label tokens at runtime. The compiler rejects missing and unused label
+keys instead of substituting copy.
 
 The editor artifact API is:
 
@@ -418,9 +436,11 @@ Controls emit edit operations. The edit engine applies those operations to the
 current in-memory instance state.
 
 Bob's visible control taxonomy is `Panel > Section > optional Group > Control`.
-Widget specs own the five fixed widget panel ids and plain-text section labels;
-Bob rejects unknown panels and unlabeled sections. Panel labels have one Bob
-authority rather than being re-created by compiler and UI consumers. Group
+Widget specs own the five fixed widget panel ids and label-token coordinates;
+the adjacent English file owns widget-authored ToolDrawer copy. Bob rejects
+unknown panels, unresolved labels, unused English entries, and unlabeled
+sections. Resolved panel labels travel in the compiled artifact instead of
+being re-created by compiler and UI consumers. Group
 labels remain semantic control metadata, but the UI does not repeat a group
 heading when it is identical to its enclosing section label.
 Technical group ids are never converted into UI or Copilot labels; an absent
@@ -432,7 +452,7 @@ primary Content section are open; both remain user-collapsible. Layout,
 Appearance, Typography, and Settings sections start collapsed. This policy is
 compiled once and is shared by Builder and Roma's compiled-control consumers.
 
-Source labels and attribute values are never HTML-encoded. Bob parses each
+Resolved labels and source attribute values are never HTML-encoded. Bob parses each
 internal ToolDrawer attribute into its raw value once and escapes it once when
 rendering final markup. Every-widget contract tests enforce the taxonomy,
 initial-state, and entity round-trip rules.

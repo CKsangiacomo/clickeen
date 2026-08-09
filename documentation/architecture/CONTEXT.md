@@ -155,7 +155,7 @@ paths and product routes as any other account.
 | Current account session and account policy | Roma from Berlin bootstrap/authz                                |
 | Builder host and product routing           | Roma                                                            |
 | In-browser editing state                   | Bob                                                             |
-| Widget software                            | `tokyo/product/widgets/{widgetType}/` in git, deployed to Tokyo |
+| Widget software                            | `tokyo/product/widgets/{widgetType}/` in git, including adjacent English ToolDrawer labels, deployed to Tokyo |
 | Account instances                          | Tokyo-worker over `accounts/{accountPublicId}/instances/`       |
 | Account assets                             | Tokyo-worker over `accounts/{accountPublicId}/assets/`          |
 | Public serving state                       | Tokyo-worker                                                    |

@@ -92,7 +92,7 @@ Current account truth uses these relational tables/functions:
 | Relational object | Operator meaning |
 | --- | --- |
 | `accounts(id,status,status_changed_at,tier,created_at)` | Account existence, status, tier, lifecycle timing. |
-| `users(user_id,account_id,role,primary_email,login_provider,login_subject,first_name,last_name,primary_language,country,timezone,phone,whatsapp,created_at)` | One-account user, role, login mapping, accepted user fields. |
+| `users(user_id,account_id,role,primary_email,login_provider,login_subject,first_name,last_name,primary_language,use_primary_language_for_ui,country,timezone,phone,whatsapp,created_at)` | One-account user, role, login mapping, accepted user fields, and dormant person-scoped UI-language preference. |
 | `account_invitations(...)` | Account-scoped invitation lifecycle. |
 | `resolve_login_identity` | Login identity resolution. |
 | `accept_login_invitation_identity` | Invite acceptance plus user creation. |
@@ -123,6 +123,9 @@ The user row answers:
 - which one account they belong to;
 - what role they have in that account;
 - the accepted/current person fields shown in User Settings;
+- whether future product UI may use the person's primary language
+  (`use_primary_language_for_ui`, default `false`; no current UI/runtime
+  consumer);
 - the minimum login mapping needed by the active sign-in flow.
 
 The user row must not contain:

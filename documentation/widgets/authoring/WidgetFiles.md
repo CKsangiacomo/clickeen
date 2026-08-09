@@ -2,26 +2,31 @@
 
 STATUS: CURRENT SYSTEM OPERATOR SPEC
 
-Every Clickeen widget source folder contains exactly six source files:
+Every Clickeen widget source folder contains six canonical widget files and one
+required English ToolDrawer-label folder:
 
 ```text
 tokyo/product/widgets/{widgetType}/
   spec.json
   editable-fields.json
   limits.json
+  {widgetType}_tooldrawer_l10n_labels/
+    en.json
   widget.html
   widget.css
   widget.client.js
 ```
 
-No widget-local source runtime files exist outside this six-file contract.
+No widget-local source runtime files exist outside this contract. The label
+folder is build input, not widget runtime code.
 Shared runtime utilities live in `tokyo/product/widgets/shared/`.
 
 ## File Responsibilities
 
 | File | Responsibility |
 | --- | --- |
-| `spec.json` | Widget identity, defaults, presets when present, Bob editor panels, ToolDrawer controls, and widget-local normalization when present. |
+| `spec.json` | Widget identity, defaults, presets when present, structural Bob editor declarations, ToolDrawer label tokens, and widget-local normalization when present. |
+| `{widgetType}_tooldrawer_l10n_labels/en.json` | Exact English copy for the five widget ToolDrawer panel names and every widget-authored label token used by `spec.json`. |
 | `editable-fields.json` | Customer-visible text paths that Bob and Translation Agent can edit or translate. |
 | `limits.json` | Mapping from widget paths/operations to account entitlement keys. |
 | `widget.html` | Static Stage/Pod/Shell/Header/Core DOM skeleton, shared CSS/script includes, and stable hooks. |
@@ -33,20 +38,21 @@ Shared runtime utilities live in `tokyo/product/widgets/shared/`.
 | File | Consumed by |
 | --- | --- |
 | `spec.json` | Bob compiler, Roma package materialization, widget default composition. |
+| `{widgetType}_tooldrawer_l10n_labels/en.json` | Bob compiler and the server-only Roma materializer artifact. |
 | `editable-fields.json` | Bob copy-edit surfaces and Translation Agent field selection. |
 | `limits.json` | Roma account policy and publish/save enforcement. |
 | `widget.html` | Roma package materialization for Builder preview and public serving. |
 | `widget.css` | Roma package materialization into generated `styles.css`. |
 | `widget.client.js` | Roma package materialization into generated `runtime.js`. |
 
-Operators must keep the six files internally consistent. A new Core path in
+Operators must keep the source contract internally consistent. A new Core path in
 `spec.json.defaults` is not enough: if it is customer-visible text it also needs
 `editable-fields.json`; if it is tier-limited it needs `limits.json`; if runtime
 uses it, `widget.client.js` must validate and render it.
 
 ## Source Vs Compiled Package
 
-The six-file contract is the widget source contract. It is not the compiled Bob
+The widget source contract is not the compiled Bob
 payload and it is not the saved public package.
 
 Compiled/saved packages may include shared widget CSS/JS, Dieter assets, and
@@ -67,9 +73,13 @@ serving requires publish state and package/source agreement.
 Current package materialization seals widget-local `widget.css`,
 `widget.client.js`, and selected shared widget modules into generated
 `styles.css` and `runtime.js`. Required Dieter token/component CSS is also
-sealed into `styles.css`; account assets and approved Dieter icon URLs remain
+sealed into `styles.css`; account assets and declared Dieter icon URLs remain
 external delivery references. Changing sealed source files after an account
 package is written does not rewrite that stored package.
+
+The server-only materializer artifact also carries the English-resolved Core
+defaults. Raw `spec.json` keeps label tokens; account defaults never persist
+those tokens.
 
 ## Runtime Path
 
@@ -98,7 +108,7 @@ folder.
 
 ## Hard Stops
 
-- Do not add widget-local helper files.
+- Do not add widget-local helper files or alternate label catalogs.
 - Do not move shared widget behavior into a widget folder.
 - Do not add fallback package files that mask a bad save.
 - Do not document generated account package files as widget source files.

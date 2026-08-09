@@ -1,0 +1,493 @@
+# PRD 127 — UI Localization And Design-System Passes
+
+Status: **EXECUTING — STAGE 1 IMPLEMENTED LOCALLY; STAGE 2 IN PROGRESS**
+
+Owner: Clickeen product owner/architect
+
+Date: 2026-08-09
+
+## 1. Purpose Of This Memo
+
+This PRD is the execution memory for Clickeen's UI-language foundation and the
+three planned UI improvement passes.
+
+It exists so every AI agent returns to the same product decisions, folder
+ownership, stage boundary, and explicit exclusions before changing UI copy,
+Dieter components, Bob, Roma, generated Widget editor artifacts, or user UI
+language preferences.
+
+This is not authorization to execute every stage at once. The human product
+owner/architect authorizes one stage and one UI pass at a time. A later stage
+must not begin because an earlier stage made it technically possible.
+
+## 2. Product Outcome
+
+Clickeen will support a dependable product UI language without building a
+second design system, spreading Widget labels into Bob, or making an open Bob
+session recompile itself.
+
+English remains the direct default. The majority English experience must not
+wait for locale selection, fetch a translation file, or take a fallback path.
+Non-English UI is selected only when the user explicitly enables the existing
+primary-language preference for product UI.
+
+The work is deliberately combined with the planned Dieter, Bob, and Roma UI
+passes so the product finalizes English source, component contracts, and UI
+behavior before translations are generated.
+
+## 3. Product Laws
+
+### 3.1 Two Categories Of Product UI Copy
+
+All product UI copy belongs to one of two categories:
+
+1. **Chrome copy** — copy outside Widget ToolDrawer panels. The surface that
+   renders it owns it. Bob Chrome lives with Bob. Roma Chrome lives with Roma.
+2. **Widget ToolDrawer labels** — every visible word rendered inside a
+   ToolDrawer panel. The Widget owns those labels in its own adjacent label
+   folder.
+
+There is no third shared-copy category and no all-Widget label catalog.
+
+### 3.2 Widget ToolDrawer Ownership
+
+Each Widget declares the ToolDrawer structure it needs in `spec.json` using
+label tokens. Its adjacent label folder owns the resolved copy:
+
+```text
+tokyo/product/widgets/{widgetType}/
+  spec.json
+  {widgetType}_tooldrawer_l10n_labels/
+    en.json
+```
+
+The Bob compiler joins:
+
+```text
+Widget structure
++ exact Widget ToolDrawer labels
++ Dieter stencils
+→ generated Widget editor artifact
+```
+
+The Widget does not implement Widget-specific UI. It declares panels,
+sections, controls, options, placeholders, and actions using the supported Bob
+compiler and Dieter component vocabulary.
+
+### 3.3 Dieter Ownership
+
+Dieter owns:
+
+- tokens;
+- component structure;
+- component styling;
+- component behavior;
+- stencil inputs;
+- supported states, sizes, and variants.
+
+Dieter does not own caller copy. It has no translation catalog and no locale
+folder. A Dieter component receives its visible wording from the surface or
+Widget instance using it.
+
+### 3.4 English Direct Default
+
+English is the direct source and direct artifact path:
+
+- English Widget ToolDrawer labels compile to the existing
+  `/widget-editors/{widgetType}.json` path.
+- English Roma and Bob Chrome do not require a locale lookup or translation
+  fetch.
+- Missing or invalid non-English truth must not silently fall back while
+  claiming the selected language is active.
+- No non-English experience is exposed until the final translation stage is
+  structurally complete and verified.
+
+### 3.5 User Preference
+
+The existing person profile authority carries:
+
+```text
+primary_language
+use_primary_language_for_ui
+```
+
+`use_primary_language_for_ui` defaults to `false`.
+
+When it is false, product UI uses English directly. When it is true, Roma may
+resolve the product UI language from the user's primary language after Stage 4
+installs the complete product flow. The preference does not change Widget
+content locale, account base locale, public Widget locale, or translation
+overlays.
+
+### 3.6 One UI Language Per Bob Session
+
+Bob receives one resolved UI language when a Widget is opened. That language
+is immutable for the lifetime of that open Bob session.
+
+If the user changes UI language while Bob is open, Bob does not hot-swap,
+recompile, or replace ToolDrawer state. The user sees this notice:
+
+> Reopen this widget to use the UI language you selected.
+
+The next open resolves the new language. This protects browser-memory edits,
+dirty state, undo, preview, panel state, dialogs, and Product Copilot from an
+unnecessary live editor rebuild.
+
+## 4. Authority Map
+
+| Concern | Authority |
+| --- | --- |
+| User primary language and UI-language preference persistence | Michael/Supabase person truth |
+| Profile normalization and bootstrap identity | Berlin |
+| User-facing preference command and Bob-open coordination | Roma |
+| Bob Chrome source | `bob/l10n/` when installed in Stage 3 |
+| Roma Chrome source | `roma/l10n/` when installed in Stage 4 |
+| ToolDrawer structure | Widget `spec.json` |
+| ToolDrawer copy | Adjacent Widget `{widgetType}_tooldrawer_l10n_labels/` |
+| Component structure, appearance, and behavior | Dieter |
+| Widget editor compilation | Bob compiler and existing artifact generation |
+| Open-editor draft state | Bob browser memory |
+| Current documentation | `documentation/` |
+| Execution memory and evidence | This PRD 127 folder |
+
+No stage may move one of these concerns into another authority merely because
+the code is convenient there.
+
+## 5. Stage Status
+
+| Stage | Status | Release state |
+| --- | --- | --- |
+| Stage 1 — Scaffold only | Implemented and verified in the local worktree | Not committed, pushed, deployed, or exposed as a non-English experience |
+| Stage 2 — Dieter UI pass | In progress: Core styles, Colors, and Icons passed | Local only; not committed, pushed, or deployed |
+| Stage 3 — Bob UI pass | Not started | No authority to begin until explicitly directed |
+| Stage 4 — Roma UI pass | Not started | No authority to begin until explicitly directed |
+| Stage 5 — Translation pass | Not started | No translations may be generated yet |
+
+Update this table when a stage actually changes state. Do not infer completion
+from the presence of scaffolding.
+
+## 6. Stage 1 — Scaffold Only
+
+### Objective
+
+Build the English foundation without generating or exposing non-English UI.
+
+### Required Work
+
+- Define the two-category copy rule.
+- Define the future Roma Chrome schema boundary.
+- Define the future Bob Chrome schema boundary.
+- Define the per-Widget ToolDrawer-label schema.
+- Create English label files for the eight current Widgets.
+- Move English ToolDrawer literals from `spec.json` into those Widget-owned
+  files.
+- Update the compiler to join Widget structure, English labels, and Dieter
+  stencils.
+- Preserve the existing English artifact path.
+- Prove generated English ToolDrawer output and behavior remain unchanged.
+- Define `use_primary_language_for_ui`, defaulting to `false`.
+- Document the immutable-language-per-Bob-session rule.
+- Keep every non-English UI path dormant.
+
+### Current Local Implementation Shape
+
+The eight current Widget folders contain one adjacent English label file. Raw
+specs carry `$label:{key}` tokens. The compiler rejects missing, malformed, or
+unused label entries and emits resolved English artifacts through the existing
+artifact path. Resolved defaults and browser artifacts do not persist label
+tokens.
+
+The person preference is present as dormant profile data. Roma does not expose
+the toggle, choose a UI locale, or pass a UI locale into Bob. Bob does not load
+UI-language files or change an open session's UI language.
+
+### Stage 1 Hard Stops
+
+- No non-English translation generation.
+- No non-English artifact path.
+- No unfinished UI-language control.
+- No remote product-data mutation.
+- No Cloudflare change.
+- No deployment unless separately authorized.
+- No assumption that Stages 2–5 are already authorized.
+
+## 7. Stage 2 — Dieter And DevStudio UI Pass
+
+### Objective
+
+Review the design system through DevStudio one tab at a time while making the
+planned Dieter UI improvements. For each tab, prove both that the owning source
+is coded properly and that the real product consumes it properly.
+
+DevStudio is the human cockpit and visual execution agenda. It reveals source
+truth; it is not a second design-system, Widget, catalog, entitlement, or model
+authority.
+
+### Execution Record
+
+- **Core styles — passed, 2026-08-09.** The 53 non-layout source tokens are
+  generated from the canonical Dieter foundation file, use the same validation
+  contract as the write route, and all have active consumers.
+- **Colors — passed after correction, 2026-08-09.** The reveal now includes all
+  138 color, role, focus, and state declarations. The four existing state-mix
+  percentages are visible as read-only rows with representative color samples;
+  color edit authority remains limited to literal `--color-*` hex values.
+- **Icons — passed after systemic correction, 2026-08-09.** The human-selected
+  source contains 159 icons. One SF exporter now generates every SVG with
+  `currentColor` and a shared optical-canvas formula, so component slots no
+  longer magnify tightly cropped glyphs differently. DevStudio reveals the SVG
+  directory directly. Dieter, DevStudio, Bob, Roma, Prague, and Widgets do not
+  maintain a second global approval list, compare the icon library against
+  itself, or ask whether a declared Dieter icon is allowed. Product fields may
+  still declare the exact choices that field offers.
+
+### Per-Tab Execution Loop
+
+For each DevStudio tab:
+
+1. State what the tab is intended to own and which source is authoritative.
+2. Inspect the complete canonical source contract.
+3. Review every supported state, size, variant, interaction, and planned UI
+   improvement represented by that tab.
+4. Confirm DevStudio demonstrates the real source rather than a local imitation.
+5. Inventory every real consumer in Bob, Roma, DevStudio, Widgets, Prague, or
+   another current surface.
+6. Confirm consumers use the canonical contract without unnecessary local
+   reimplementation or override.
+7. Identify only concrete current or reachable problems.
+8. Make the smallest fix through the owning authority.
+9. Verify the DevStudio reveal and every affected real consumer.
+10. Record the result before advancing to the next tab.
+
+A tab may pass unchanged. Listing a tab does not authorize redesigning it.
+
+### Foundations Pass
+
+Review in this order:
+
+1. Core styles
+2. Colors
+3. Icons
+4. Typography
+5. Layouts
+
+For Foundations, verify that DevStudio renders real Dieter source and that
+product surfaces use the canonical tokens, icon contract, typography classes,
+and layouts without parallel local systems.
+
+### Dieter Components Pass
+
+Review in this order:
+
+1. Agent Activity
+2. Bulk Edit
+3. Button
+4. Choice Tiles
+5. Dropdown Actions
+6. Dropdown Border
+7. Dropdown Edit
+8. Dropdown Fill
+9. Dropdown Shadow
+10. Dropdown Upload
+11. Menuactions
+12. Object Manager
+13. Popaddlink
+14. Popover
+15. Popup
+16. Repeater
+17. Segmented
+18. Slider
+19. Table
+20. Tabs
+21. Textedit
+22. Textfield
+23. Toggle
+24. Valuefield
+
+For every component used inside ToolDrawer panels:
+
+- inventory every visible word it can render;
+- remove wording internally hardcoded by Dieter;
+- expose that wording through the component's existing stencil inputs;
+- make the applicable Widget ToolDrawer label file provide the value;
+- keep component structure, styling, behavior, and states in Dieter;
+- keep all ToolDrawer copy ownership outside Dieter;
+- regenerate the existing English Widget editor artifacts;
+- verify the component in DevStudio and in real Bob/ToolDrawer use.
+
+The same Dieter component may receive Bob Chrome, Roma Chrome, DevStudio, or
+Widget-owned copy depending on where that component instance is rendered. The
+component itself does not decide the language or source of that text.
+
+### Catalog And Policy Pass
+
+The DevStudio navigation also includes:
+
+- Widget catalog;
+- Entitlements;
+- LLM Management.
+
+These are reviewed in the same one-tab-at-a-time pass, but they are not Dieter
+component authorities.
+
+Widget catalog must reflect the real Widget authority and generation flow; it
+must not become another Widget registry. Entitlements must reflect the existing
+policy authority. LLM Management must reflect the existing managed-model
+authority. Any correction remains with the named owner rather than being moved
+into Dieter or DevStudio.
+
+### Stage 2 Completion Gate
+
+Stage 2 is complete only when:
+
+- every listed DevStudio tab has an explicit pass result;
+- every approved UI improvement is implemented through the correct owner;
+- DevStudio truthfully demonstrates the real source;
+- every affected product consumer uses the canonical Dieter contract;
+- Dieter owns no caller-specific ToolDrawer wording;
+- every visible ToolDrawer-panel string is supplied by its Widget label file;
+- the generated English artifacts and real English behavior remain dependable;
+- affected current documentation matches the implementation.
+
+### Stage 2 Hard Stops
+
+- No Dieter translation catalog.
+- No Dieter locale folder.
+- No bulk redesign merely because a component has a tab.
+- No global Widget-label catalog.
+- No locale selection or non-English generation.
+- No unrelated Roma Home or navigation change. Roma Home is intentionally
+  empty.
+- No keyboard-navigation program or focus-system work unless the human product
+  owner explicitly requests it.
+
+## 8. Stage 3 — Bob UI Pass
+
+### Objective
+
+Complete Bob's planned UI improvements and install Bob UI-language ownership
+without changing Bob's browser-memory editing model.
+
+### Required Work
+
+- Move all Bob Chrome strings into `bob/l10n`.
+- Complete compilation of locale-specific Widget editor artifacts.
+- Ensure every ToolDrawer string is supplied by its Widget label file.
+- Open Bob with one resolved UI language.
+- Keep that language immutable for the session.
+- Implement the reopen-this-widget notice when the selected language changes
+  during an open Bob session.
+- Verify save, dirty state, undo, preview, panels, dialogs, and Product Copilot
+  remain unchanged.
+
+### Stage 3 Hard Stops
+
+- No live Bob language swapping.
+- No editor remount or draft replacement when preference changes.
+- No Bob-owned all-Widget translation catalog.
+- No persistence from Bob outside the existing Roma save command.
+- No translation generation yet.
+
+## 9. Stage 4 — Roma UI Pass
+
+### Objective
+
+Complete Roma's planned UI improvements and install the user-facing product UI
+language choice through the existing user profile authority.
+
+### Required Work
+
+- Move Roma Chrome strings into `roma/l10n`.
+- Use the existing `use_primary_language_for_ui` user-profile field.
+- Expose the toggle in Settings and the appropriate main-navigation language
+  control.
+- Use `primary_language` for UI only when the toggle is on.
+- Retain English as the direct default.
+- Select the correct Bob artifact when opening a Widget.
+- Show the reopen notice when preference changes during an open Bob session.
+- Keep product UI language separate from account, Widget-content, and public
+  locale authorities.
+
+### Stage 4 Hard Stops
+
+- No new profile or locale authority.
+- No change to account base locale or saved content overlays.
+- No English performance penalty through an unnecessary locale-resolution
+  path.
+- No translation generation yet.
+
+## 10. Stage 5 — Translation Pass
+
+### Objective
+
+Generate non-English product UI only after English copy, component contracts,
+and the Dieter, Bob, and Roma UI passes are stable.
+
+### Required Work
+
+- Translate Roma Chrome files.
+- Translate Bob Chrome files.
+- Translate each Widget's ToolDrawer-label file in that Widget's own folder.
+- Verify every locale has exact structural coverage.
+- Generate non-English Widget editor artifacts.
+- Run the complete UI, compiler, artifact, build, and product-flow checks.
+- Deploy through the existing authorities.
+- Verify language selection through Roma and a newly opened Bob session.
+- Verify an already-open Bob session retains its original language and shows
+  the reopen notice after a preference change.
+
+No translation is generated before the English folder structure and source
+copy are final.
+
+## 11. Explicitly Outside This Program
+
+PRD 127 does not change or create:
+
+- Prague localization;
+- account Widget-content overlays;
+- Translation Agent behavior;
+- public Widget translation;
+- Dieter locale catalogs;
+- live Bob language swapping;
+- a global Widget-label catalog;
+- a new service or package;
+- a locale registry;
+- a compatibility layer;
+- a new R2 root;
+- Cloudflare topology or deployment machinery;
+- Account Pages or Page Builder;
+- a general accessibility or keyboard-navigation program;
+- Roma Home content or landing-route behavior.
+
+## 12. Verification Law
+
+Every stage must prove its result through each owner it changes:
+
+- source/schema verification;
+- compiler and generated-artifact verification;
+- Dieter and DevStudio verification when affected;
+- Bob and Roma focused tests when affected;
+- build verification for the changed surfaces;
+- cloud-dev verification only after deployment is separately authorized and
+  performed;
+- documentation reconciliation;
+- independent V1–V8 review for cross-system, shared-contract, deployment, or
+  product-data work.
+
+Local tests do not prove a live deployment. Source changes do not prove remote
+product-data changes. Each stage closeout must say explicitly what changed,
+what was verified, and what was not committed, pushed, deployed, or mutated.
+
+## 13. Stage Transition Rule
+
+At the end of a stage:
+
+1. Update the stage status table.
+2. Record exact files and authorities changed.
+3. Record checks and runtime evidence.
+4. Reconcile current documentation.
+5. Complete V1–V8 when required.
+6. Stop.
+
+Do not start the next stage until the human product owner/architect explicitly
+authorizes it.

@@ -5,9 +5,9 @@
   "defaults": {
     "uiLabels": {
       "core": {
-        "singular": "Visual",
-        "plural": "Visuals",
-        "sizeCluster": "Visual size"
+        "singular": "$label:core.singular",
+        "plural": "$label:core.plural",
+        "sizeCluster": "$label:core.size-cluster"
       }
     },
     "splitMedia": {
@@ -54,7 +54,7 @@
             "id": "header-content"
           },
           {
-            "label": "Content",
+            "label": "$label:content.cluster.content.label",
             "initiallyOpen": true,
             "nodes": [
               {
@@ -62,7 +62,7 @@
                 "type": "dropdown-fill",
                 "groupId": "content-visual",
                 "path": "splitMedia.media",
-                "label": "Media",
+                "label": "$label:content.field.split-media.media.dropdown-fill.label",
                 "attrs": {
                   "group-label": "",
                   "size": "md",
@@ -75,7 +75,7 @@
                 "type": "textfield",
                 "groupId": "content-visual",
                 "path": "splitMedia.alt",
-                "label": "Alt text",
+                "label": "$label:content.field.split-media.alt.textfield.label",
                 "attrs": {
                   "group-label": ""
                 }
@@ -102,24 +102,24 @@
             "id": "core-size"
           },
           {
-            "label": "Media fit",
+            "label": "$label:layout.cluster.media-fit.label",
             "nodes": [
               {
                 "kind": "field",
                 "type": "dropdown-actions",
                 "groupId": "layout-media-fit",
                 "path": "splitMedia.fit",
-                "label": "Fit",
+                "label": "$label:layout.field.split-media.fit.dropdown-actions.label",
                 "attrs": {
                   "group-label": "",
                   "size": "md",
                   "options": [
                     {
-                      "label": "Cover",
+                      "label": "$label:layout.field.split-media.fit.dropdown-actions.option.cover.label",
                       "value": "cover"
                     },
                     {
-                      "label": "Contain",
+                      "label": "$label:layout.field.split-media.fit.dropdown-actions.option.contain.label",
                       "value": "contain"
                     }
                   ]
@@ -130,29 +130,29 @@
                 "type": "dropdown-actions",
                 "groupId": "layout-media-fit",
                 "path": "splitMedia.position",
-                "label": "Position",
+                "label": "$label:layout.field.split-media.position.dropdown-actions.label",
                 "attrs": {
                   "group-label": "",
                   "size": "md",
                   "options": [
                     {
-                      "label": "Center",
+                      "label": "$label:layout.field.split-media.position.dropdown-actions.option.center.label",
                       "value": "center"
                     },
                     {
-                      "label": "Top",
+                      "label": "$label:layout.field.split-media.position.dropdown-actions.option.top.label",
                       "value": "top"
                     },
                     {
-                      "label": "Bottom",
+                      "label": "$label:layout.field.split-media.position.dropdown-actions.option.bottom.label",
                       "value": "bottom"
                     },
                     {
-                      "label": "Left",
+                      "label": "$label:layout.field.split-media.position.dropdown-actions.option.left.label",
                       "value": "left"
                     },
                     {
-                      "label": "Right",
+                      "label": "$label:layout.field.split-media.position.dropdown-actions.option.right.label",
                       "value": "right"
                     }
                   ]
@@ -174,14 +174,14 @@
             "id": "header-appearance"
           },
           {
-            "label": "Visual frame",
+            "label": "$label:appearance.cluster.visual-frame.label",
             "nodes": [
               {
                 "kind": "field",
                 "type": "toggle",
                 "groupId": "appearance-visual-frame",
                 "path": "splitMedia.appearance.cardwrapper.radiusLinked",
-                "label": "Link visual corners",
+                "label": "$label:appearance.field.split-media.appearance.cardwrapper.radius-linked.toggle.label",
                 "attrs": {
                   "group-label": "",
                   "size": "md",
@@ -194,7 +194,7 @@
                 "type": "dropdown-actions",
                 "groupId": "appearance-visual-frame",
                 "path": "splitMedia.appearance.cardwrapper.radius",
-                "label": "Corner radius",
+                "label": "$label:appearance.field.split-media.appearance.cardwrapper.radius.dropdown-actions.label",
                 "showIf": {
                   "path": "splitMedia.appearance.cardwrapper.radiusLinked",
                   "op": "isTrue"
@@ -202,27 +202,27 @@
                 "attrs": {
                   "group-label": "",
                   "size": "md",
-                  "placeholder": "Choose radius",
+                  "placeholder": "$label:appearance.field.split-media.appearance.cardwrapper.radius.dropdown-actions.attr.placeholder",
                   "value": "{{splitMedia.appearance.cardwrapper.radius}}",
                   "options": [
                     {
-                      "label": "None",
+                      "label": "$label:appearance.field.split-media.appearance.cardwrapper.radius.dropdown-actions.option.none.label",
                       "value": "none"
                     },
                     {
-                      "label": "Small",
+                      "label": "$label:appearance.field.split-media.appearance.cardwrapper.radius.dropdown-actions.option.2xl.label",
                       "value": "2xl"
                     },
                     {
-                      "label": "Medium",
+                      "label": "$label:appearance.field.split-media.appearance.cardwrapper.radius.dropdown-actions.option.4xl.label",
                       "value": "4xl"
                     },
                     {
-                      "label": "Large",
+                      "label": "$label:appearance.field.split-media.appearance.cardwrapper.radius.dropdown-actions.option.6xl.label",
                       "value": "6xl"
                     },
                     {
-                      "label": "X-Large",
+                      "label": "$label:appearance.field.split-media.appearance.cardwrapper.radius.dropdown-actions.option.10xl.label",
                       "value": "10xl"
                     }
                   ]
@@ -233,7 +233,7 @@
                 "type": "dropdown-actions",
                 "groupId": "appearance-visual-frame",
                 "path": "splitMedia.appearance.cardwrapper.radiusTL",
-                "label": "Visual top-left corner",
+                "label": "$label:appearance.field.split-media.appearance.cardwrapper.radius-tl.dropdown-actions.label",
                 "showIf": {
                   "path": "splitMedia.appearance.cardwrapper.radiusLinked",
                   "op": "isFalse"
@@ -241,27 +241,27 @@
                 "attrs": {
                   "group-label": "",
                   "size": "md",
-                  "placeholder": "Choose radius",
+                  "placeholder": "$label:appearance.field.split-media.appearance.cardwrapper.radius-tl.dropdown-actions.attr.placeholder",
                   "value": "{{splitMedia.appearance.cardwrapper.radiusTL}}",
                   "options": [
                     {
-                      "label": "None",
+                      "label": "$label:appearance.field.split-media.appearance.cardwrapper.radius-tl.dropdown-actions.option.none.label",
                       "value": "none"
                     },
                     {
-                      "label": "Small",
+                      "label": "$label:appearance.field.split-media.appearance.cardwrapper.radius-tl.dropdown-actions.option.2xl.label",
                       "value": "2xl"
                     },
                     {
-                      "label": "Medium",
+                      "label": "$label:appearance.field.split-media.appearance.cardwrapper.radius-tl.dropdown-actions.option.4xl.label",
                       "value": "4xl"
                     },
                     {
-                      "label": "Large",
+                      "label": "$label:appearance.field.split-media.appearance.cardwrapper.radius-tl.dropdown-actions.option.6xl.label",
                       "value": "6xl"
                     },
                     {
-                      "label": "X-Large",
+                      "label": "$label:appearance.field.split-media.appearance.cardwrapper.radius-tl.dropdown-actions.option.10xl.label",
                       "value": "10xl"
                     }
                   ]
@@ -272,7 +272,7 @@
                 "type": "dropdown-actions",
                 "groupId": "appearance-visual-frame",
                 "path": "splitMedia.appearance.cardwrapper.radiusTR",
-                "label": "Visual top-right corner",
+                "label": "$label:appearance.field.split-media.appearance.cardwrapper.radius-tr.dropdown-actions.label",
                 "showIf": {
                   "path": "splitMedia.appearance.cardwrapper.radiusLinked",
                   "op": "isFalse"
@@ -280,27 +280,27 @@
                 "attrs": {
                   "group-label": "",
                   "size": "md",
-                  "placeholder": "Choose radius",
+                  "placeholder": "$label:appearance.field.split-media.appearance.cardwrapper.radius-tr.dropdown-actions.attr.placeholder",
                   "value": "{{splitMedia.appearance.cardwrapper.radiusTR}}",
                   "options": [
                     {
-                      "label": "None",
+                      "label": "$label:appearance.field.split-media.appearance.cardwrapper.radius-tr.dropdown-actions.option.none.label",
                       "value": "none"
                     },
                     {
-                      "label": "Small",
+                      "label": "$label:appearance.field.split-media.appearance.cardwrapper.radius-tr.dropdown-actions.option.2xl.label",
                       "value": "2xl"
                     },
                     {
-                      "label": "Medium",
+                      "label": "$label:appearance.field.split-media.appearance.cardwrapper.radius-tr.dropdown-actions.option.4xl.label",
                       "value": "4xl"
                     },
                     {
-                      "label": "Large",
+                      "label": "$label:appearance.field.split-media.appearance.cardwrapper.radius-tr.dropdown-actions.option.6xl.label",
                       "value": "6xl"
                     },
                     {
-                      "label": "X-Large",
+                      "label": "$label:appearance.field.split-media.appearance.cardwrapper.radius-tr.dropdown-actions.option.10xl.label",
                       "value": "10xl"
                     }
                   ]
@@ -311,7 +311,7 @@
                 "type": "dropdown-actions",
                 "groupId": "appearance-visual-frame",
                 "path": "splitMedia.appearance.cardwrapper.radiusBR",
-                "label": "Visual bottom-right corner",
+                "label": "$label:appearance.field.split-media.appearance.cardwrapper.radius-br.dropdown-actions.label",
                 "showIf": {
                   "path": "splitMedia.appearance.cardwrapper.radiusLinked",
                   "op": "isFalse"
@@ -319,27 +319,27 @@
                 "attrs": {
                   "group-label": "",
                   "size": "md",
-                  "placeholder": "Choose radius",
+                  "placeholder": "$label:appearance.field.split-media.appearance.cardwrapper.radius-br.dropdown-actions.attr.placeholder",
                   "value": "{{splitMedia.appearance.cardwrapper.radiusBR}}",
                   "options": [
                     {
-                      "label": "None",
+                      "label": "$label:appearance.field.split-media.appearance.cardwrapper.radius-br.dropdown-actions.option.none.label",
                       "value": "none"
                     },
                     {
-                      "label": "Small",
+                      "label": "$label:appearance.field.split-media.appearance.cardwrapper.radius-br.dropdown-actions.option.2xl.label",
                       "value": "2xl"
                     },
                     {
-                      "label": "Medium",
+                      "label": "$label:appearance.field.split-media.appearance.cardwrapper.radius-br.dropdown-actions.option.4xl.label",
                       "value": "4xl"
                     },
                     {
-                      "label": "Large",
+                      "label": "$label:appearance.field.split-media.appearance.cardwrapper.radius-br.dropdown-actions.option.6xl.label",
                       "value": "6xl"
                     },
                     {
-                      "label": "X-Large",
+                      "label": "$label:appearance.field.split-media.appearance.cardwrapper.radius-br.dropdown-actions.option.10xl.label",
                       "value": "10xl"
                     }
                   ]
@@ -350,7 +350,7 @@
                 "type": "dropdown-actions",
                 "groupId": "appearance-visual-frame",
                 "path": "splitMedia.appearance.cardwrapper.radiusBL",
-                "label": "Visual bottom-left corner",
+                "label": "$label:appearance.field.split-media.appearance.cardwrapper.radius-bl.dropdown-actions.label",
                 "showIf": {
                   "path": "splitMedia.appearance.cardwrapper.radiusLinked",
                   "op": "isFalse"
@@ -358,27 +358,27 @@
                 "attrs": {
                   "group-label": "",
                   "size": "md",
-                  "placeholder": "Choose radius",
+                  "placeholder": "$label:appearance.field.split-media.appearance.cardwrapper.radius-bl.dropdown-actions.attr.placeholder",
                   "value": "{{splitMedia.appearance.cardwrapper.radiusBL}}",
                   "options": [
                     {
-                      "label": "None",
+                      "label": "$label:appearance.field.split-media.appearance.cardwrapper.radius-bl.dropdown-actions.option.none.label",
                       "value": "none"
                     },
                     {
-                      "label": "Small",
+                      "label": "$label:appearance.field.split-media.appearance.cardwrapper.radius-bl.dropdown-actions.option.2xl.label",
                       "value": "2xl"
                     },
                     {
-                      "label": "Medium",
+                      "label": "$label:appearance.field.split-media.appearance.cardwrapper.radius-bl.dropdown-actions.option.4xl.label",
                       "value": "4xl"
                     },
                     {
-                      "label": "Large",
+                      "label": "$label:appearance.field.split-media.appearance.cardwrapper.radius-bl.dropdown-actions.option.6xl.label",
                       "value": "6xl"
                     },
                     {
-                      "label": "X-Large",
+                      "label": "$label:appearance.field.split-media.appearance.cardwrapper.radius-bl.dropdown-actions.option.10xl.label",
                       "value": "10xl"
                     }
                   ]
@@ -389,7 +389,7 @@
                 "type": "dropdown-border",
                 "groupId": "appearance-visual-frame",
                 "path": "splitMedia.appearance.cardwrapper.border",
-                "label": "Visual border",
+                "label": "$label:appearance.field.split-media.appearance.cardwrapper.border.dropdown-border.label",
                 "attrs": {
                   "group-label": "",
                   "size": "md",
@@ -401,7 +401,7 @@
                 "type": "dropdown-shadow",
                 "groupId": "appearance-visual-frame",
                 "path": "splitMedia.appearance.cardwrapper.shadow",
-                "label": "Visual outside shadow",
+                "label": "$label:appearance.field.split-media.appearance.cardwrapper.shadow.dropdown-shadow.label",
                 "attrs": {
                   "group-label": "",
                   "size": "md",

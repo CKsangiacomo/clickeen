@@ -166,7 +166,7 @@ async function loadUserRow(
 ): Promise<Result<BerlinUserRow | null>> {
   const params = new URLSearchParams({
     select:
-      'user_id,account_id,primary_email,first_name,last_name,primary_language,country,timezone,phone,whatsapp',
+      'user_id,account_id,primary_email,first_name,last_name,primary_language,use_primary_language_for_ui,country,timezone,phone,whatsapp',
     user_id: `eq.${userId}`,
     limit: '1',
   });
@@ -209,6 +209,9 @@ function normalizeUserSettings(
   const primaryEmail = asTrimmedString(row?.primary_email);
   if (!primaryEmail) return { ok: true, value: null };
   const issues = validateProfileLocation(row?.country, row?.timezone, `users.${userId}`);
+  if (typeof row?.use_primary_language_for_ui !== 'boolean') {
+    issues.push(`users.${userId}.use_primary_language_for_ui_invalid`);
+  }
   if (issues.length) {
     return { ok: false, response: invalidPersistedStateResponse(issues.join('|')) };
   }
@@ -364,7 +367,7 @@ async function loadUsersByIds(
   for (const chunk of chunkValues(uniqueUserIds, USER_QUERY_CHUNK_SIZE)) {
     const params = new URLSearchParams({
       select:
-        'user_id,primary_email,first_name,last_name,primary_language,country,timezone',
+        'user_id,primary_email,first_name,last_name,primary_language,use_primary_language_for_ui,country,timezone',
       user_id: `in.(${encodeInFilter(chunk)})`,
       limit: String(chunk.length),
     });
@@ -386,6 +389,9 @@ async function loadUsersByIds(
       const userId = asTrimmedString(row.user_id);
       if (!userId) continue;
       const issues = validateProfileLocation(row.country, row.timezone, `users.${userId}`);
+      if (typeof row.use_primary_language_for_ui !== 'boolean') {
+        issues.push(`users.${userId}.use_primary_language_for_ui_invalid`);
+      }
       if (issues.length) {
         return { ok: false, response: invalidPersistedStateResponse(issues.join('|')) };
       }

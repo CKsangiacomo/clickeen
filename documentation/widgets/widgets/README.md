@@ -8,6 +8,7 @@ Each spec documents:
 
 - widget source folder;
 - `spec.json` identity and Core namespace;
+- adjacent English ToolDrawer label source;
 - customer-visible editable fields;
 - entitlement limits;
 - Core state families;

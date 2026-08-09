@@ -190,6 +190,11 @@ Boundary: `public.instances` can identify and relate an instance to an account,
 but it is not the Builder source document, generated package, translated
 overlay store, public serving package, or account asset store.
 
+`public.users.use_primary_language_for_ui` is a person-scoped boolean with
+database default `false`. It is profile preference scaffolding only; it does
+not select account content locales, create translation work, or change current
+Roma/Bob UI language.
+
 ## Current Account Coordinate
 
 Current account product/storage coordinate:

@@ -12,7 +12,6 @@ for (const [path, markup] of Object.entries(iconModules)) {
 }
 
 export const ICONS = icons;
-export type IconName = keyof typeof icons;
 
 export function getIcon(name: string) {
   return icons[name];

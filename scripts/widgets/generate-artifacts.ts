@@ -14,6 +14,7 @@ import { extractStylesheetSources } from '../../packages/ck-runtime-materializer
 import { compileWidgetServer } from '../../bob/lib/compiler.server';
 import type { RawWidget } from '../../bob/lib/compiler.shared';
 import type { ComponentStencil, ComponentStencilLoader } from '../../bob/lib/compiler/stencils';
+import { resolveWidgetTooldrawerLabels } from '../../bob/lib/compiler/tooldrawer-labels';
 import type {
   CompiledWidget,
   WidgetPackageContext,
@@ -34,6 +35,7 @@ type MaterializerArtifact = {
   limits: LimitsSpec;
   editableFields: WidgetEditableFieldsContract;
   controls: Array<{ path?: string }>;
+  coreDefaults: Record<string, unknown>;
   widgetPackage: WidgetPackageContext;
 };
 
@@ -202,6 +204,7 @@ function buildWidgetPackage(args: {
   widgetType: string;
   specSource: string;
   editableFieldsSource: string;
+  tooldrawerLabelsSource: string;
 }): WidgetPackageContext {
   const files: WidgetPackageContext['files'] = {};
   const widgetDirectory = `tokyo/product/widgets/${args.widgetType}`;
@@ -228,6 +231,10 @@ function buildWidgetPackage(args: {
   files['editable-fields.json'] = {
     mediaType: 'application/json',
     source: args.editableFieldsSource,
+  };
+  files[`${args.widgetType}_tooldrawer_l10n_labels/en.json`] = {
+    mediaType: 'application/json',
+    source: args.tooldrawerLabelsSource,
   };
   for (const href of extractStylesheetSources(widgetHtml).filter((source) =>
     source.startsWith('/dieter/'),
@@ -312,6 +319,7 @@ export type WidgetMaterializerArtifact = {
   limits: CompiledWidget['limits'];
   editableFields: NonNullable<CompiledWidget['editableFields']>;
   controls: Array<{ path?: string }>;
+  coreDefaults: Record<string, unknown>;
   widgetPackage: WidgetPackageContext;
 };
 
@@ -332,12 +340,20 @@ async function buildArtifacts(widgetType: string): Promise<{
   const widgetDirectory = `tokyo/product/widgets/${widgetType}`;
   const specSource = readText(`${widgetDirectory}/spec.json`);
   const editableFieldsSource = readText(`${widgetDirectory}/editable-fields.json`);
+  const tooldrawerLabelsRelativePath = `${widgetType}_tooldrawer_l10n_labels/en.json`;
+  const tooldrawerLabelsSource = readText(`${widgetDirectory}/${tooldrawerLabelsRelativePath}`);
   const spec = JSON.parse(specSource) as RawWidget;
+  const tooldrawerLabels = JSON.parse(tooldrawerLabelsSource) as unknown;
+  const resolvedWidget = resolveWidgetTooldrawerLabels(spec, tooldrawerLabels).widget;
+  if (!resolvedWidget.defaults) {
+    throw new Error(`[generate-widget-artifacts] ${widgetType} resolved defaults are missing`);
+  }
   const editableFields = readWidgetEditableFieldsContract(JSON.parse(editableFieldsSource));
   const limits = parseLimitsSpec(JSON.parse(readText(`${widgetDirectory}/limits.json`)));
   const compiled = await compileWidgetServer(spec, {
     loadComponentStencil: loadLocalStencil,
     tokyoBaseUrl: '',
+    tooldrawerLabels,
   });
   assertProductReadableControls(widgetType, compiled.controls);
   return {
@@ -348,7 +364,13 @@ async function buildArtifacts(widgetType: string): Promise<{
       limits,
       editableFields,
       controls: compiled.controls.map(({ path }) => ({ path })),
-      widgetPackage: buildWidgetPackage({ widgetType, specSource, editableFieldsSource }),
+      coreDefaults: resolvedWidget.defaults,
+      widgetPackage: buildWidgetPackage({
+        widgetType,
+        specSource,
+        editableFieldsSource,
+        tooldrawerLabelsSource,
+      }),
     },
   };
 }
