@@ -1,3 +1,12 @@
+-- Michael/public.users owns the login-provider and account-role truth changed
+-- here. This cloud-dev cut retains the configured Google E2E identity as the
+-- sole CLICKEEN owner and retires only the two exact email-provider identities.
+--
+-- Recovery: every assertion, role update, user deletion, function change, and
+-- enum replacement is inside this transaction, so any failure rolls the whole
+-- migration back. After a successful commit the retired email-provider rows
+-- are deliberately not restored; a later ownership change must use Berlin's
+-- reviewed owner-transfer authority and must not reintroduce email login.
 BEGIN;
 
 DO $$
