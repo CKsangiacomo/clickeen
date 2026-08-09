@@ -199,7 +199,8 @@ Dispatch/read-back commands:
 gh workflow run supabase-migrations.yml \
   -f target=cloud-dev \
   -f confirm=APPLY_MIGRATIONS \
-  -f repair_applied_versions=
+  -f repair_applied_versions= \
+  -f repair_reverted_versions=
 
 gh run list --workflow supabase-migrations.yml --limit 5
 gh run view [run id] --log
@@ -210,6 +211,9 @@ Failure triage:
 - Workflow uses `SUPABASE_URL_CLOUD_DEV` to derive the project ref.
 - Workflow credentials and CLI sequence are documented in `documentation/engineering/SupabaseOperations.md`.
 - Use `repair_applied_versions` only when the exact migration file exists and the repair reason is recorded.
+- Use `repair_reverted_versions` only for exact remote-only migration versions
+  reported by the migration push after those files were deliberately retired;
+  it changes the migration ledger, not schema or product data.
 
 ## Verification
 

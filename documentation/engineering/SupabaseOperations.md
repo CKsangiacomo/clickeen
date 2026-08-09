@@ -40,6 +40,7 @@ Required dispatch inputs:
 target = cloud-dev
 confirm = APPLY_MIGRATIONS
 repair_applied_versions = [optional comma-separated migration versions]
+repair_reverted_versions = [optional comma-separated remote-only retired migration versions]
 ```
 
 CLI dispatch/read-back path:
@@ -48,7 +49,8 @@ CLI dispatch/read-back path:
 gh workflow run supabase-migrations.yml \
   -f target=cloud-dev \
   -f confirm=APPLY_MIGRATIONS \
-  -f repair_applied_versions=
+  -f repair_applied_versions= \
+  -f repair_reverted_versions=
 
 gh run list --workflow supabase-migrations.yml --limit 5
 gh run view [run id] --log
@@ -114,7 +116,9 @@ The workflow:
 5. verifies required secrets/env as part of target selection;
 6. runs `supabase link --project-ref [project ref]`;
 7. optionally runs reviewed `supabase migration repair [version] --status applied --linked`;
-8. runs `supabase db push --linked`.
+8. optionally removes exact retired remote-only migration records with
+   `supabase migration repair [version] --status reverted --linked`;
+9. runs `supabase db push --linked`.
 
 Required GitHub environment:
 
@@ -255,6 +259,18 @@ supabase migration repair [version] --status applied --linked
 ```
 
 This is not a general bypass. It must name exact reviewed versions.
+
+The workflow also supports:
+
+```text
+repair_reverted_versions = [comma-separated versions]
+```
+
+Use it only when `supabase db push --linked` identifies exact remote migration
+versions whose migration files were deliberately retired from the current
+repository. The workflow marks only those named ledger entries reverted before
+running the normal migration push. It does not reverse schema or product data;
+the current schema must already be owned by later reviewed migrations.
 
 ## Runtime Verification
 

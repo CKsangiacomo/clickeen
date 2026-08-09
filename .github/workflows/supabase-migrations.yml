@@ -18,6 +18,11 @@ on:
         required: false
         type: string
         default: ""
+      repair_reverted_versions:
+        description: Optional comma-separated remote-only migration versions to mark reverted before push
+        required: false
+        type: string
+        default: ""
 
 concurrency:
   group: supabase-migrations-${{ inputs.target }}
@@ -89,6 +94,18 @@ jobs:
             version="$(echo "$raw_version" | xargs)"
             if [ -n "$version" ]; then
               supabase migration repair "$version" --status applied --linked
+            fi
+          done
+
+      - name: Remove retired migration history
+        if: ${{ inputs.repair_reverted_versions != '' }}
+        shell: bash
+        run: |
+          IFS=',' read -ra versions <<< "${{ inputs.repair_reverted_versions }}"
+          for raw_version in "${versions[@]}"; do
+            version="$(echo "$raw_version" | xargs)"
+            if [ -n "$version" ]; then
+              supabase migration repair "$version" --status reverted --linked
             fi
           done
 
