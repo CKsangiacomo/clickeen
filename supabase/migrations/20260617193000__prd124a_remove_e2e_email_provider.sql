@@ -1,7 +1,49 @@
 BEGIN;
 
 DO $$
+DECLARE
+  removed_users integer;
 BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM public.users u
+    WHERE u.user_id = '02d9e992-7b40-4098-bdb1-55a8ae922764'::uuid
+      AND u.account_id = 'CLICKEEN'
+      AND u.role = 'admin'
+      AND u.login_provider::text = 'google'
+  ) THEN
+    RAISE EXCEPTION 'prd124a_remove_e2e_email_provider retained_google_admin_invalid';
+  END IF;
+
+  IF (
+    SELECT count(*)
+    FROM public.users u
+    WHERE u.user_id IN (
+      '11111111-1111-1111-1111-111111111111'::uuid,
+      'e3c6f250-7493-4711-95ee-42c77251bf76'::uuid
+    )
+      AND u.account_id = 'CLICKEEN'
+      AND u.role = 'owner'
+      AND u.login_provider::text = 'email'
+  ) <> 2 THEN
+    RAISE EXCEPTION 'prd124a_remove_e2e_email_provider legacy_email_owners_invalid';
+  END IF;
+
+  UPDATE public.users
+  SET role = 'owner'
+  WHERE user_id = '02d9e992-7b40-4098-bdb1-55a8ae922764'::uuid;
+
+  DELETE FROM public.users
+  WHERE user_id IN (
+    '11111111-1111-1111-1111-111111111111'::uuid,
+    'e3c6f250-7493-4711-95ee-42c77251bf76'::uuid
+  );
+
+  GET DIAGNOSTICS removed_users = ROW_COUNT;
+  IF removed_users <> 2 THEN
+    RAISE EXCEPTION 'prd124a_remove_e2e_email_provider legacy_email_owner_delete_count_invalid';
+  END IF;
+
   IF EXISTS (
     SELECT 1
     FROM public.users u
@@ -9,6 +51,15 @@ BEGIN
     LIMIT 1
   ) THEN
     RAISE EXCEPTION 'prd124a_remove_e2e_email_provider non_google_login_provider_exists';
+  END IF;
+
+  IF (
+    SELECT count(*)
+    FROM public.users u
+    WHERE u.account_id = 'CLICKEEN'
+      AND u.role = 'owner'
+  ) <> 1 THEN
+    RAISE EXCEPTION 'prd124a_remove_e2e_email_provider clickeen_owner_count_invalid';
   END IF;
 END $$;
 

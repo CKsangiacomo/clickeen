@@ -83,7 +83,7 @@ Berlin does not own:
 - BER-05: deleted Roma `/api/e2e/session` and DevStudio `/api/e2e/session` because they only proxied the removed Berlin runtime test helper.
 - BER-05: removed E2E runtime env/config requirements from Berlin, Roma, DevStudio, and Cloudflare helper docs.
 - BER-05: changed Playwright setup to use an ignored storage-state file only; missing auth state skips authenticated specs instead of minting product runtime sessions.
-- BER-05: added Supabase migration `20260617193000__prd124a_remove_e2e_email_provider.sql` to make login providers Google-only. The migration fails explicitly if existing rows still use a non-Google login provider; it does not delete or rewrite account data.
+- BER-05: added Supabase migration `20260617193000__prd124a_remove_e2e_email_provider.sql` to make login providers Google-only. Before replacing the enum, the migration explicitly promotes the retained CLICKEEN Google E2E/admin identity to owner and removes the two exact retired email-provider owner rows; every expected identity, role, account, provider, delete count, and final owner count fails closed on mismatch.
 - Boundary rationale: Berlin owns product auth/session/bootstrap, not runtime test session minting. Product login remains Google-only. E2E state is external test material, not a product service.
 - Closure verification: independent BER-05 audit confirmed no active runtime E2E session mint route/config, no active `email` provider runtime path, fail-closed migration behavior for existing non-Google rows, and a clean V1-V8/product-law assessment.
 
