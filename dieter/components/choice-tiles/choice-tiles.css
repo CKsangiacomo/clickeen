@@ -1,8 +1,8 @@
 .diet-choice-tiles {
   display: grid;
   inline-size: 100%;
-  --choice-tile-min-block-size: 5rem;
-  --choice-tile-padding-block: var(--space-3);
+  --choice-tile-min-block-size: 4.5rem;
+  --choice-tile-padding-block: var(--space-2);
   --choice-tile-padding-inline: var(--space-2);
   --choice-tile-gap: var(--space-2);
   --choice-tile-row-gap: var(--space-2);
@@ -20,11 +20,11 @@
 }
 
 .diet-choice-tiles[data-size="lg"] {
-  --choice-tile-min-block-size: 6rem;
-  --choice-tile-padding-block: var(--space-4);
-  --choice-tile-gap: var(--space-3);
+  --choice-tile-min-block-size: 5rem;
+  --choice-tile-padding-block: var(--space-3);
+  --choice-tile-gap: var(--space-2);
   --choice-tile-radius: var(--control-radius-lg);
-  --choice-tile-icon-size: var(--icon-size-24);
+  --choice-tile-icon-size: var(--icon-size-20);
 }
 
 .diet-choice-tiles__row {
@@ -58,6 +58,11 @@
   flex-direction: column;
   gap: var(--choice-tile-gap);
   text-align: center;
+}
+
+.diet-choice-tiles[data-size="lg"] .diet-choice-tiles__option.diet-button {
+  --button-font-size: var(--fs-15);
+  --button-line-height: 1.25rem;
 }
 
 .diet-choice-tiles__option.diet-button > .diet-icon:not([data-size]) {

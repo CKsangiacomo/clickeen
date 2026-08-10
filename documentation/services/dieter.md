@@ -96,7 +96,8 @@ artifact and renders Translation Agent event messages as the rows.
 
 Choice Tiles owns two- and three-option selection structure, interaction,
 selected presentation, and one proportional `sm|md|lg` tile geometry. Its
-Icon ladder is `1rem/1.25rem/1.5rem`; labels wrap instead of truncating. The
+minimum-height ladder is `4rem/4.5rem/5rem` and its Icon ladder is
+`1rem/1.25rem/1.25rem`; labels wrap instead of truncating. The
 component owns no visible wording. Widget ToolDrawer instances supply the
 group label and every option label from the Widget's adjacent ToolDrawer label
 file.

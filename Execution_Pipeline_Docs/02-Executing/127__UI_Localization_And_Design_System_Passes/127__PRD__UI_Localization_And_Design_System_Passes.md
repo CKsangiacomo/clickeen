@@ -294,9 +294,11 @@ authority.
   `sm|md|lg` API changed only Button text and an explicitly injected
   `12/16/20` Icon while every tile retained one fixed height, padding, gap, and
   radius. Choice Tiles now owns one proportional size authority:
-  `4rem/5rem/6rem` minimum heights, `.5rem/.75rem/1rem` block padding,
-  `.25rem/.5rem/.75rem` internal gaps, `.25rem/.375rem/.5rem` radii, and
-  `1rem/1.25rem/1.5rem` unsized Icons. Inline padding remains `.5rem`; the row
+  `4rem/4.5rem/5rem` minimum heights, `.5rem/.5rem/.75rem` block padding,
+  `.25rem/.5rem/.5rem` internal gaps, `.25rem/.375rem/.5rem` radii, and
+  `1rem/1.25rem/1.25rem` unsized Icons. Large uses `0.9375rem` text with a
+  `1.25rem` line height; small and medium retain their corresponding Button
+  typography. Inline padding remains `.5rem`; the row
   gap is `.25rem` at small and `.5rem` at medium/large so ordinary labels retain
   useful width in the ToolDrawer. The separate rendered Icon-size input is
   removed. Exact caller labels wrap rather than truncate. DevStudio
