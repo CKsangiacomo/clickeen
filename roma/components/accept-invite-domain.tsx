@@ -94,8 +94,8 @@ export function AcceptInviteDomain({ token }: AcceptInviteDomainProps) {
             <h1 className="heading-3">Accept invitation</h1>
             <p className="body-m">Sign in with the invited email address before accepting this account invitation.</p>
             <div className="rd-canvas-module__actions" style={{ justifyContent: 'flex-start' }}>
-              <Link className="diet-btn-txt" data-size="md" data-variant="solid" href={`/login?next=${encodeURIComponent(nextPath)}`}>
-                <span className="diet-btn-txt__label">Go to login</span>
+              <Link className="diet-button" data-size="medium" data-type="primary" href={`/login?next=${encodeURIComponent(nextPath)}`}>
+                <span className="diet-button__label">Go to login</span>
               </Link>
             </div>
           </section>
@@ -114,17 +114,17 @@ export function AcceptInviteDomain({ token }: AcceptInviteDomainProps) {
           {error ? <p className="body-m" role="alert">{error}</p> : null}
           <div className="rd-canvas-module__actions" style={{ justifyContent: 'flex-start' }}>
             <button
-              className="diet-btn-txt"
-              data-size="md"
-              data-variant="solid"
+              className="diet-button"
+              data-size="medium"
+              data-type="primary"
               type="button"
               onClick={() => void acceptInvitation()}
               disabled={loading}
             >
-              <span className="diet-btn-txt__label">{loading ? 'Accepting...' : 'Accept invitation'}</span>
+              <span className="diet-button__label">{loading ? 'Accepting...' : 'Accept invitation'}</span>
             </button>
-            <Link className="diet-btn-txt" data-size="md" data-variant="line2" href="/home">
-              <span className="diet-btn-txt__label">Cancel</span>
+            <Link className="diet-button" data-size="medium" data-type="secondary" href="/home">
+              <span className="diet-button__label">Cancel</span>
             </Link>
           </div>
         </section>

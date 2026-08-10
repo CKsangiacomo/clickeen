@@ -1,7 +1,0 @@
-/* Keyboard focus for Dieter buttons on authoring and dashboard surfaces. */
-.diet-btn-ictxt:focus-visible,
-.diet-btn-txt:focus-visible,
-.diet-btn-ic:focus-visible {
-  outline: 2px solid var(--color-system-blue);
-  outline-offset: 2px;
-}

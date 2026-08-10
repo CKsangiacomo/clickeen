@@ -158,7 +158,7 @@ the code is convenient there.
 | Stage | Status | Release state |
 | --- | --- | --- |
 | Stage 1 — Scaffold only | Complete | Committed, pushed, and deployed; no non-English experience is exposed |
-| Stage 2 — Dieter UI pass | In progress: Foundations, Agent Activity, Bulk Edit, and Button complete | Button size authority is committed and pushed for exact-SHA cloud-dev QA |
+| Stage 2 — Dieter UI pass | In progress: Foundations, Agent Activity, Bulk Edit, and Button complete | Unified Button contract is ready for exact-SHA cloud-dev QA |
 | Stage 3 — Bob UI pass | Not started | No authority to begin until explicitly directed |
 | Stage 4 — Roma UI pass | Not started | No authority to begin until explicitly directed |
 | Stage 5 — Translation pass | Not started | No translations may be generated yet |
@@ -268,23 +268,16 @@ authority.
   the dynamic row authority. DevStudio renders the source contract directly.
   No translation, locale, Translation Agent, product-data, Cloudflare, or
   deployment work is included in this component slice.
-- **Bulk Edit / Button shared size contract — corrected, 2026-08-09.** The
-  Bulk Edit reveal proved that composite text buttons received height and
-  radius from `data-size` but silently retained the browser's native Arial
-  typography. Button now owns the complete size contract for text and
-  icon-plus-text variants: one `data-size` selects dimensions, spacing, icons,
-  Dieter font family, font size, and line height. The redundant generated
-  `body-*` label-class mapping and parallel Bob, Roma, Segmented, Choice Tiles,
-  and Dropdown Fill label overrides are removed. DevStudio's Button page
-  proves the primitive and Bulk Edit proves that a composite consumes it
-  without a local typography override.
-- **Button size ladder — compressed, 2026-08-10.** Button and Menu Actions now
-  expose only `sm`, `md`, and `lg`. Those names select the former `xs`, `sm`,
-  and `md` presentations respectively, yielding a 16/20/24px control ladder
-  and 11/13/14px Button text. Existing `xs` consumers moved to `sm`; existing
-  `xl` consumers moved to `lg`; no alias, compatibility selector, or fallback
-  remains. Other Dieter geometry tokens were not redefined as public size
-  options.
+- **Button — unified after the Bulk Edit audit, 2026-08-10.** The three old
+  text, icon, and icon-text Button classes were deleted. One `.diet-button`
+  now composes optional direct Icon and label children, requires
+  `data-size="small|medium|large"`, and uses semantic
+  `data-type="primary|secondary|destructive"`. The existing 16/20/24px box and
+  11/13/14px text ladder is preserved. Icon children declare independent
+  numeric sizes, normally 12/16/20px for those three Button sizes. Dieter
+  composites, DevStudio, Bob, Roma, and current Widget source use the same
+  contract; no old alias, wrapper, compatibility selector, or inferred Icon
+  size remains. Menu Actions remains its separate menu-row component.
 
 ### Per-Tab Execution Loop
 

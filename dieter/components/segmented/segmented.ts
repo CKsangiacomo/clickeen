@@ -1,7 +1,7 @@
 function syncButtonState(input: HTMLInputElement) {
   const button = input
     .closest('.diet-segment')
-    ?.querySelector<HTMLButtonElement>('.diet-btn-ictxt, .diet-btn-ic, .diet-btn-txt');
+    ?.querySelector<HTMLButtonElement>('.diet-button');
   if (!button) return;
   button.setAttribute('aria-pressed', input.checked ? 'true' : 'false');
 }

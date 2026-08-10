@@ -102,8 +102,8 @@ export function expandTooldrawerClusters(html: string, idNamespace = ''): string
         const labelAttrs: string[] = ['class="overline-small tdmenucontent__cluster-label"'];
 
         const toggleMarkup = [
-          `<button type="button" class="diet-btn-ic tdmenucontent__cluster-toggle" data-size="sm" data-variant="neutral" aria-label="Toggle section" aria-expanded="${initiallyOpen ? 'true' : 'false'}" aria-controls="${bodyId}">`,
-          `  <span class="diet-btn-ic__icon tdmenucontent__cluster-toggle-icon" data-icon="chevron.up" aria-hidden="true"></span>`,
+          `<button type="button" class="diet-button tdmenucontent__cluster-toggle" data-size="small" data-type="secondary" aria-label="Toggle section" aria-expanded="${initiallyOpen ? 'true' : 'false'}" aria-controls="${bodyId}">`,
+          `  <span class="diet-icon tdmenucontent__cluster-toggle-icon" data-icon="chevron.up" aria-hidden="true" data-size="12"></span>`,
           `</button>`,
         ].join('');
 

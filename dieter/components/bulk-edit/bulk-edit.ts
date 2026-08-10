@@ -491,13 +491,13 @@ function buildUploadControl(args: {
         <span class="diet-popover__header-label label-s">${label}</span>
         <button
           type="button"
-          class="diet-btn-ic diet-popover__header-trigger"
-          data-size="sm"
-          data-variant="neutral"
+          class="diet-button diet-popover__header-trigger"
+          data-size="small"
+          data-type="secondary"
           aria-hidden="true"
           tabindex="-1"
         >
-          <span class="diet-btn-ic__icon" data-icon="paintbrush"></span>
+          <span class="diet-icon" data-icon="paintbrush" data-size="12"></span>
         </button>
       </div>
       <div class="diet-popover__body">
@@ -516,16 +516,7 @@ function buildUploadControl(args: {
                 <div class="diet-dropdown-upload__preview-video-badge label-s">Video</div>
               </div>
               <div class="diet-dropdown-upload__preview-doc" data-role="doc">
-                <button
-                  type="button"
-                  class="diet-btn-ic diet-dropdown-upload__preview-doc-icon"
-                  data-size="lg"
-                  data-variant="neutral"
-                  aria-hidden="true"
-                  tabindex="-1"
-                >
-                  <span class="diet-btn-ic__icon" data-icon="document"></span>
-                </button>
+                <span class="diet-icon diet-dropdown-upload__preview-doc-icon" data-icon="document" aria-hidden="true"></span>
                 <div class="diet-dropdown-upload__preview-doc-ext label-s" data-role="ext"></div>
               </div>
               <div class="diet-dropdown-upload__preview-empty" data-role="empty">
@@ -538,15 +529,15 @@ function buildUploadControl(args: {
             </div>
           </div>
           <div class="diet-dropdown-upload__actions">
-            <button type="button" class="diet-btn-txt diet-dropdown-upload__upload-btn" data-size="lg" data-variant="line1">
-              <span class="diet-btn-txt__label">Upload</span>
+            <button type="button" class="diet-button diet-dropdown-upload__upload-btn" data-size="large" data-type="secondary">
+              <span class="diet-button__label">Upload</span>
             </button>
             <div class="diet-dropdown-upload__file-controls">
-              <button type="button" class="diet-btn-txt diet-dropdown-upload__replace-btn" data-size="lg" data-variant="line1">
-                <span class="diet-btn-txt__label">Replace</span>
+              <button type="button" class="diet-button diet-dropdown-upload__replace-btn" data-size="large" data-type="secondary">
+                <span class="diet-button__label">Replace</span>
               </button>
-              <button type="button" class="diet-btn-txt diet-dropdown-upload__remove-btn" data-size="lg" data-variant="neutral">
-                <span class="diet-btn-txt__label">Remove</span>
+              <button type="button" class="diet-button diet-dropdown-upload__remove-btn" data-size="large" data-type="destructive">
+                <span class="diet-button__label">Remove</span>
               </button>
             </div>
           </div>

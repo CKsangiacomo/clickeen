@@ -377,11 +377,11 @@
     const actions = document.querySelector('[data-page-actions]');
     if (!actions) return;
     const reloadBtn = document.createElement('button');
-    reloadBtn.className = 'diet-btn-txt';
+    reloadBtn.className = 'diet-button';
     reloadBtn.setAttribute('data-size', 'md');
     reloadBtn.setAttribute('data-variant', 'secondary');
     reloadBtn.type = 'button';
-    reloadBtn.innerHTML = '<span class="diet-btn-txt__label">Reload</span>';
+    reloadBtn.innerHTML = '<span class="diet-button__label">Reload</span>';
     reloadBtn.disabled = state.busy;
     reloadBtn.addEventListener('click', async () => {
       if (state.busy) return;

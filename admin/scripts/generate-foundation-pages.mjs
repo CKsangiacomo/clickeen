@@ -124,8 +124,8 @@ function renderCoreStyleAction(entry) {
   if (!entry.editable) {
     return '<span class="core-style-readonly label-xs">Read only</span>';
   }
-  return `<button class="diet-btn-txt core-style-edit" data-size="md" data-variant="secondary" type="button" data-token-edit="foundation" data-token="${escapeHtml(entry.name)}" data-value="${escapeHtml(entry.value)}" aria-label="Edit ${escapeHtml(entry.name)}">
-          <span class="diet-btn-txt__label">Edit</span>
+  return `<button class="diet-button core-style-edit" data-size="medium" data-type="secondary" type="button" data-token-edit="foundation" data-token="${escapeHtml(entry.name)}" data-value="${escapeHtml(entry.value)}" aria-label="Edit ${escapeHtml(entry.name)}">
+          <span class="diet-button__label">Edit</span>
         </button>`;
 }
 
@@ -208,7 +208,7 @@ ${entries
             <th class="body-s" scope="row"><code class="body-s">${entry.name}</code></th>
             <td class="body-s"><code class="body-s" data-token-value="${entry.name}">${entry.value}</code></td>
             <td class="body-s diet-table__cell--preview"><span class="color-preview">${renderColorChip(entry)}</span></td>
-            <td class="body-s diet-table__cell--action">${isWritableColorToken(entry) ? `<button class="diet-btn-txt" data-size="md" data-variant="secondary" type="button" data-token-edit="color" data-token="${entry.name}" data-value="${entry.value}" aria-label="Edit ${entry.name}"><span class="diet-btn-txt__label">Edit</span></button>` : '<span class="label-xs">Read only</span>'}</td>
+            <td class="body-s diet-table__cell--action">${isWritableColorToken(entry) ? `<button class="diet-button" data-size="medium" data-type="secondary" type="button" data-token-edit="color" data-token="${entry.name}" data-value="${entry.value}" aria-label="Edit ${entry.name}"><span class="diet-button__label">Edit</span></button>` : '<span class="label-xs">Read only</span>'}</td>
           </tr>`,
     )
     .join('\n')}
@@ -351,7 +351,7 @@ async function generateLayoutsPage() {
           <tr data-token="${escapeHtml(token)}">
             <th class="body-s" scope="row"><code class="body-s">${escapeHtml(token)}</code></th>
             <td class="body-s"><code class="body-s" data-token-value="${escapeHtml(token)}">${escapeHtml(entry.value)}</code></td>
-            <td class="body-s diet-table__cell--action"><button class="diet-btn-txt" data-size="md" data-variant="secondary" type="button" data-token-edit="foundation" data-token="${escapeHtml(token)}" data-value="${escapeHtml(entry.value)}" aria-label="Edit ${escapeHtml(token)}"><span class="diet-btn-txt__label">Edit</span></button></td>
+            <td class="body-s diet-table__cell--action"><button class="diet-button" data-size="medium" data-type="secondary" type="button" data-token-edit="foundation" data-token="${escapeHtml(token)}" data-value="${escapeHtml(entry.value)}" aria-label="Edit ${escapeHtml(token)}"><span class="diet-button__label">Edit</span></button></td>
           </tr>`;
   }).join('\n');
   const presentation = spec.presentation ?? {};

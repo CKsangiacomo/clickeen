@@ -176,34 +176,34 @@ export function AssetsPage() {
       headerRight={headerActions ? (
         <>
           <button
-            className="diet-btn-txt"
-            data-size="md"
-            data-variant="primary"
+            className="diet-button"
+            data-size="medium"
+            data-type="primary"
             type="button"
             onClick={headerActions.uploadAsset}
             disabled={actionsBusy}
           >
-            <span className="diet-btn-txt__label">{headerActions.singleUploadBusy ? 'Uploading…' : 'Upload asset'}</span>
+            <span className="diet-button__label">{headerActions.singleUploadBusy ? 'Uploading…' : 'Upload asset'}</span>
           </button>
           <button
-            className="diet-btn-txt"
-            data-size="md"
-            data-variant="secondary"
+            className="diet-button"
+            data-size="medium"
+            data-type="secondary"
             type="button"
             onClick={headerActions.uploadBulk}
             disabled={actionsBusy}
           >
-            <span className="diet-btn-txt__label">{headerActions.bulkUploadBusy ? 'Uploading…' : 'Upload in bulk'}</span>
+            <span className="diet-button__label">{headerActions.bulkUploadBusy ? 'Uploading…' : 'Upload in bulk'}</span>
           </button>
           <button
-            className="diet-btn-txt"
-            data-size="md"
-            data-variant="line2"
+            className="diet-button"
+            data-size="medium"
+            data-type="secondary"
             type="button"
             onClick={headerActions.refresh}
             disabled={headerActions.listLoading || actionsBusy}
           >
-            <span className="diet-btn-txt__label">{headerActions.listLoading ? 'Refreshing…' : 'Refresh list'}</span>
+            <span className="diet-button__label">{headerActions.listLoading ? 'Refreshing…' : 'Refresh list'}</span>
           </button>
         </>
       ) : null}
@@ -513,8 +513,8 @@ export function AssetsDomain({
         {error ? (
           <div className="roma-inline-stack" role="alert">
             <p className="body-m">{error}</p>
-            <button className="diet-btn-txt" data-size="md" data-variant="line2" type="button" onClick={() => void refreshAssets()} disabled={loading}>
-              <span className="diet-btn-txt__label">Retry</span>
+            <button className="diet-button" data-size="medium" data-type="secondary" type="button" onClick={() => void refreshAssets()} disabled={loading}>
+              <span className="diet-button__label">Retry</span>
             </button>
           </div>
         ) : null}
@@ -539,15 +539,16 @@ export function AssetsDomain({
               <th className="label-s" scope="col" aria-sort={sort.key === 'filename' ? sort.direction : 'none'}>
                 <span>Asset</span>{' '}
                 <button
-                  className="diet-btn-ic"
-                  data-size="sm"
-                  data-variant="neutral"
+                  className="diet-button"
+                  data-size="small"
+                  data-type="secondary"
                   type="button"
                   aria-label="Sort by asset name"
                   onClick={() => changeSort('filename')}
                 >
                   <span
-                    className="diet-btn-ic__icon diet-icon-mask"
+                    className="diet-icon diet-icon-mask"
+                    data-size="12"
                     style={{
                       '--diet-icon-source': `url("/dieter/icons/svg/${sort.key === 'filename'
                         ? sort.direction === 'ascending' ? 'arrow.up.svg' : 'arrow.down.svg'
@@ -560,15 +561,16 @@ export function AssetsDomain({
               <th className="label-s" scope="col" aria-sort={sort.key === 'assetType' ? sort.direction : 'none'}>
                 <span>Type</span>{' '}
                 <button
-                  className="diet-btn-ic"
-                  data-size="sm"
-                  data-variant="neutral"
+                  className="diet-button"
+                  data-size="small"
+                  data-type="secondary"
                   type="button"
                   aria-label="Sort by type"
                   onClick={() => changeSort('assetType')}
                 >
                   <span
-                    className="diet-btn-ic__icon diet-icon-mask"
+                    className="diet-icon diet-icon-mask"
+                    data-size="12"
                     style={{
                       '--diet-icon-source': `url("/dieter/icons/svg/${sort.key === 'assetType'
                         ? sort.direction === 'ascending' ? 'arrow.up.svg' : 'arrow.down.svg'
@@ -582,15 +584,16 @@ export function AssetsDomain({
               <th className="label-s" scope="col" aria-sort={sort.key === 'sizeBytes' ? sort.direction : 'none'}>
                 <span>Size</span>{' '}
                 <button
-                  className="diet-btn-ic"
-                  data-size="sm"
-                  data-variant="neutral"
+                  className="diet-button"
+                  data-size="small"
+                  data-type="secondary"
                   type="button"
                   aria-label="Sort by size"
                   onClick={() => changeSort('sizeBytes')}
                 >
                   <span
-                    className="diet-btn-ic__icon diet-icon-mask"
+                    className="diet-icon diet-icon-mask"
+                    data-size="12"
                     style={{
                       '--diet-icon-source': `url("/dieter/icons/svg/${sort.key === 'sizeBytes'
                         ? sort.direction === 'ascending' ? 'arrow.up.svg' : 'arrow.down.svg'
@@ -612,14 +615,14 @@ export function AssetsDomain({
                 <td className="body-s">{formatBytes(asset.sizeBytes)}</td>
                 <td className="body-s diet-table__cell--action">
                   <button
-                    className="diet-btn-txt"
-                    data-size="md"
-                    data-variant="secondary"
+                    className="diet-button"
+                    data-size="medium"
+                    data-type="destructive"
                     type="button"
                     onClick={() => handleDeleteAsset(asset)}
                     disabled={deletingAssetRef === asset.assetRef}
                   >
-                    <span className="diet-btn-txt__label">{deletingAssetRef === asset.assetRef ? 'Deleting...' : 'Delete'}</span>
+                    <span className="diet-button__label">{deletingAssetRef === asset.assetRef ? 'Deleting...' : 'Delete'}</span>
                   </button>
                 </td>
               </tr>
@@ -694,24 +697,24 @@ export function AssetsDomain({
             <div className="diet-popup__actions">
               <button
                 ref={bulkUploadCloseRef}
-                className="diet-btn-txt"
-                data-size="md"
-                data-variant="line2"
+                className="diet-button"
+                data-size="medium"
+                data-type="secondary"
                 type="button"
                 onClick={() => bulkUploadInputRef.current?.click()}
                 disabled={bulkUploadBusy}
               >
-                <span className="diet-btn-txt__label">Add more files</span>
+                <span className="diet-button__label">Add more files</span>
               </button>
               <button
-                className="diet-btn-txt"
-                data-size="md"
-                data-variant="secondary"
+                className="diet-button"
+                data-size="medium"
+                data-type="secondary"
                 type="button"
                 onClick={() => setBulkUploadOpen(false)}
                 disabled={bulkUploadBusy}
               >
-                <span className="diet-btn-txt__label">Close</span>
+                <span className="diet-button__label">Close</span>
               </button>
             </div>
           </footer>

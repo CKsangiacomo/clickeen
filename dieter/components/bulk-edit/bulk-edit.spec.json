@@ -19,12 +19,18 @@
       "spec": ["bulk-edit"],
       "context": {
         "size": "md",
+        "buttonSize": "medium",
         "path": "",
         "rowPath": "",
         "label": "Bulk edit",
         "title": "Bulk edit",
         "columns": "[]",
         "emptyLabel": "No rows available"
+      },
+      "sizeContext": {
+        "sm": { "buttonSize": "small" },
+        "md": { "buttonSize": "medium" },
+        "lg": { "buttonSize": "large" }
       }
     }
   ]

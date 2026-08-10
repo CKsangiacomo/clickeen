@@ -58,13 +58,13 @@ export function RomaUpsellDialog({
         <div className="diet-popup__actions">
           <button
             ref={closeButtonRef}
-            className="diet-btn-txt"
-            data-size="md"
-            data-variant="primary"
+            className="diet-button"
+            data-size="medium"
+            data-type="primary"
             type="button"
             onClick={onClose}
           >
-            <span className="diet-btn-txt__label">Close</span>
+            <span className="diet-button__label">Close</span>
           </button>
         </div>
       </footer>

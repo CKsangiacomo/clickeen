@@ -117,7 +117,8 @@ borderless `2xl` surface with floating elevation, `--space-2`/`--space-4` cell
 padding, direct role-border horizontal dividers, no vertical rules or zebra
 stripes, and small preview and action column composition classes. Apps own
 data and behavior, not another table presentation. When an app makes a column
-sortable, its header uses an `sm` Dieter icon button. Dieter renders inactive
+sortable, its header uses a `small` secondary Dieter Button containing a 12px
+Dieter Icon. Dieter renders inactive
 sort controls with `--color-system-gray-3` and the active ascending or
 descending control with `--color-system-black`; the app still owns sort state
 and direction.
@@ -142,7 +143,9 @@ The exporter gives every selected SF glyph the same optical-canvas treatment,
 so consumers use ordinary Dieter size tokens without icon-specific correction.
 `icons.json` is not deployed or consulted by product runtime. Product controls
 keep their accessible name on the control; decorative icons are painted from
-the declared SVG URL and remain semantically hidden.
+the declared SVG URL and remain semantically hidden. Button and Icon are
+independent contracts: Button owns action geometry and semantic type; its Icon
+child owns numeric glyph size.
 
 Account-uploaded assets and fonts remain under
 `accounts/{accountPublicId}/...`; they are not Dieter icons.

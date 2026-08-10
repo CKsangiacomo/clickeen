@@ -545,13 +545,13 @@
 
       const prevBtn = document.createElement('button');
       prevBtn.type = 'button';
-      prevBtn.className = 'diet-btn-ic ck-logoshowcase__arrow';
-      prevBtn.setAttribute('data-size', 'md');
-      prevBtn.setAttribute('data-variant', 'neutral');
+      prevBtn.className = 'diet-button ck-logoshowcase__arrow';
+      prevBtn.setAttribute('data-size', 'medium');
+      prevBtn.setAttribute('data-type', 'secondary');
       prevBtn.setAttribute('data-role', 'arrow');
       prevBtn.setAttribute('data-dir', 'prev');
       prevBtn.setAttribute('aria-label', 'Previous');
-      prevBtn.innerHTML = '<span class="diet-btn-ic__icon"></span>';
+      prevBtn.innerHTML = '<span class="diet-icon" data-size="16"></span>';
 
       const dotsEl = document.createElement('div');
       dotsEl.className = 'ck-logoshowcase__dots';
@@ -559,13 +559,13 @@
 
       const nextBtn = document.createElement('button');
       nextBtn.type = 'button';
-      nextBtn.className = 'diet-btn-ic ck-logoshowcase__arrow';
-      nextBtn.setAttribute('data-size', 'md');
-      nextBtn.setAttribute('data-variant', 'neutral');
+      nextBtn.className = 'diet-button ck-logoshowcase__arrow';
+      nextBtn.setAttribute('data-size', 'medium');
+      nextBtn.setAttribute('data-type', 'secondary');
       nextBtn.setAttribute('data-role', 'arrow');
       nextBtn.setAttribute('data-dir', 'next');
       nextBtn.setAttribute('aria-label', 'Next');
-      nextBtn.innerHTML = '<span class="diet-btn-ic__icon"></span>';
+      nextBtn.innerHTML = '<span class="diet-icon" data-size="16"></span>';
 
       navEl.appendChild(prevBtn);
       navEl.appendChild(dotsEl);

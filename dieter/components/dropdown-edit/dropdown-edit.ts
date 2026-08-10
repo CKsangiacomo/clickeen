@@ -105,12 +105,6 @@ function createState(root: HTMLElement): DropdownEditState {
     throw new Error('[textedit] missing DOM nodes');
   }
 
-  const iconButton = root.querySelector<HTMLSpanElement>('.diet-dropdown-edit__icon .diet-btn-ic');
-  if (iconButton) {
-    const iconSize = root.dataset.size === 'lg' ? 'md' : 'sm';
-    iconButton.setAttribute('data-size', iconSize);
-  }
-
   const paletteButtons = new Map<Command, HTMLButtonElement>();
   palette.querySelectorAll<HTMLButtonElement>('button[data-command]').forEach((btn) => {
     paletteButtons.set(btn.dataset.command as Command, btn);

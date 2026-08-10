@@ -11,16 +11,17 @@
     {{#each options}}
       <button
         type="button"
-        class="diet-btn-ictxt diet-choice-tiles__option{{#if selected}} is-selected{{/if}}"
-        data-size="{{../size}}"
+        class="diet-button diet-choice-tiles__option{{#if selected}} is-selected{{/if}}"
+        data-size="{{../buttonSize}}"
+        data-type="secondary"
         data-value="{{value}}"
         role="radio"
         {{#if selected}}aria-checked="true"{{else}}aria-checked="false"{{/if}}
       >
         {{#if icon}}
-          <span class="diet-btn-ictxt__icon" aria-hidden="true" data-icon="{{icon}}"></span>
+          <span class="diet-icon" aria-hidden="true" data-icon="{{icon}}" data-size="{{../buttonIconSize}}"></span>
         {{/if}}
-        <span class="diet-btn-ictxt__label">{{label}}</span>
+        <span class="diet-button__label">{{label}}</span>
       </button>
     {{/each}}
   </div>

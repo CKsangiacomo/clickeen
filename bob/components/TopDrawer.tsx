@@ -60,15 +60,16 @@ export function TopDrawer({
     <section className="topdrawer">
       <div className="topdrawer-leading">
         <button
-          className="host-navigation-open diet-btn-ic"
-          data-size="lg"
-          data-variant="neutral"
+          className="host-navigation-open diet-button"
+          data-size="large"
+          data-type="secondary"
           type="button"
           aria-label="Open Clickeen navigation"
           onClick={() => requestHostAction('open-navigation')}
         >
           <span
-            className="diet-btn-ic__icon"
+            className="diet-icon"
+            data-size="20"
             data-icon="rectangle.portrait.and.arrow.right"
             style={dieterIconStyle('rectangle.portrait.and.arrow.right')}
             aria-hidden="true"
@@ -76,9 +77,9 @@ export function TopDrawer({
         </button>
         <button
           ref={toolsButtonRef}
-          className="tooldrawer-open diet-btn-ic"
-          data-size="lg"
-          data-variant="neutral"
+          className="tooldrawer-open diet-button"
+          data-size="large"
+          data-type="secondary"
           type="button"
           aria-label="Open tools"
           aria-expanded={toolsOpen}
@@ -86,7 +87,8 @@ export function TopDrawer({
           onClick={onOpenTools}
         >
           <span
-            className="diet-btn-ic__icon"
+            className="diet-icon"
+            data-size="20"
             data-icon="line.3.horizontal.decrease.circle"
             style={dieterIconStyle('line.3.horizontal.decrease.circle')}
             aria-hidden="true"
@@ -112,14 +114,14 @@ export function TopDrawer({
         {publicActions ? (
           <>
             <a
-              className="diet-btn-txt"
-              data-size="lg"
-              data-variant="line2"
+              className="diet-button"
+              data-size="large"
+              data-type="secondary"
               href={publicActions.publicUrl}
               target="_blank"
               rel="noreferrer"
             >
-              <span className="diet-btn-txt__label">Open public widget</span>
+              <span className="diet-button__label">Open public widget</span>
             </a>
             <div
               className="topdrawer-more diet-popover-host"
@@ -128,15 +130,15 @@ export function TopDrawer({
             >
               <button
                 ref={moreButtonRef}
-                className="diet-btn-txt"
-                data-size="lg"
-                data-variant="line2"
+                className="diet-button"
+                data-size="large"
+                data-type="secondary"
                 type="button"
                 aria-haspopup="menu"
                 aria-expanded={moreOpen}
                 onClick={() => setMoreOpen((open) => !open)}
               >
-                <span className="diet-btn-txt__label">More</span>
+                <span className="diet-button__label">More</span>
               </button>
               <div className="topdrawer-more__menu diet-popover" role="menu">
                 <button
@@ -158,14 +160,14 @@ export function TopDrawer({
         ) : null}
         {showSaveAction ? (
           <button
-            className="diet-btn-txt"
-            data-size="lg"
-            data-variant="primary"
+            className="diet-button"
+            data-size="large"
+            data-type="primary"
             type="button"
             disabled={isSaving}
             onClick={() => save()}
           >
-            <span className="diet-btn-txt__label">{isSaving ? 'Saving…' : 'Save'}</span>
+            <span className="diet-button__label">{isSaving ? 'Saving…' : 'Save'}</span>
           </button>
         ) : null}
       </div>

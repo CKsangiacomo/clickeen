@@ -231,8 +231,8 @@ export function AccountLocaleSettingsCard(args: {
         <div className="roma-inline-stack">
           {!error ? <p className="body-m" role="status">Loading account languages...</p> : null}
           <div className="rd-canvas-module__actions">
-            <button className="diet-btn-txt" data-size="md" data-variant="line2" type="button" disabled={loading || saving} onClick={() => void loadSettings()}>
-              <span className="diet-btn-txt__label">{loading ? 'Refreshing…' : 'Refresh'}</span>
+            <button className="diet-button" data-size="medium" data-type="secondary" type="button" disabled={loading || saving} onClick={() => void loadSettings()}>
+              <span className="diet-button__label">{loading ? 'Refreshing…' : 'Refresh'}</span>
             </button>
           </div>
         </div>
@@ -301,18 +301,18 @@ export function AccountLocaleSettingsCard(args: {
           </div>
 
           <div className="rd-canvas-module__actions">
-            <button className="diet-btn-txt" data-size="md" data-variant="line2" type="button" disabled={loading || saving} onClick={() => void loadSettings()}>
-              <span className="diet-btn-txt__label">{loading ? 'Refreshing…' : 'Refresh'}</span>
+            <button className="diet-button" data-size="medium" data-type="secondary" type="button" disabled={loading || saving} onClick={() => void loadSettings()}>
+              <span className="diet-button__label">{loading ? 'Refreshing…' : 'Refresh'}</span>
             </button>
             <button
-              className="diet-btn-txt"
-              data-size="md"
-              data-variant="primary"
+              className="diet-button"
+              data-size="medium"
+              data-type="primary"
               type="button"
               disabled={loading || saving || !args.canEdit}
               onClick={() => void saveSettings()}
             >
-              <span className="diet-btn-txt__label">{saving ? 'Saving…' : 'Save languages'}</span>
+              <span className="diet-button__label">{saving ? 'Saving…' : 'Save languages'}</span>
             </button>
           </div>
         </div>

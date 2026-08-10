@@ -435,14 +435,14 @@ export function TranslationsPanel({
         </div>
         <div className="tdmenucontent__cluster">
           <button
-            className="diet-btn-txt"
-            data-size="sm"
-            data-variant="primary"
+            className="diet-button"
+            data-size="small"
+            data-type="primary"
             type="button"
             disabled={generateButton.disabled}
             onClick={() => void runGenerateTranslations()}
           >
-            <span className="diet-btn-txt__label">{generateButton.label}</span>
+            <span className="diet-button__label">{generateButton.label}</span>
           </button>
           {generateButton.message ? (
             <div className="label-s label-muted">{generateButton.message}</div>

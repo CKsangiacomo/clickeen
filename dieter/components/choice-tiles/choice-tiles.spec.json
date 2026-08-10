@@ -17,6 +17,8 @@
       "spec": ["diet-choice-tiles", "data-size='{{size}}'"],
       "context": {
         "size": "md",
+        "buttonSize": "medium",
+        "buttonIconSize": "16",
         "id": "choice-tiles-{{size}}",
         "label": "Layout",
         "value": "accordion",
@@ -26,6 +28,11 @@
           { "label": "List", "value": "list", "icon": "circle.grid.2x2" },
           { "label": "Multicolumn", "value": "multicolumn", "icon": "circle.grid.2x2" }
         ]
+      },
+      "sizeContext": {
+        "sm": { "buttonSize": "small", "buttonIconSize": "12" },
+        "md": { "buttonSize": "medium", "buttonIconSize": "16" },
+        "lg": { "buttonSize": "large", "buttonIconSize": "20" }
       }
     }
   ]

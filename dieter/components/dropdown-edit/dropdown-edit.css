@@ -133,12 +133,12 @@
   gap: var(--space-1, 0.5rem);
 }
 
-.diet-dropdown-edit__palette .diet-btn-ic {
+.diet-dropdown-edit__palette .diet-button {
   margin: 0;
 }
 
 /* Reset toolbar icon buttons (same as textfield icon reset) */
-.diet-dropdown-edit__palette button.diet-btn-ic {
+.diet-dropdown-edit__palette button.diet-button {
   border: 0;
   background: transparent;
   padding: 0;
@@ -147,22 +147,22 @@
   cursor: pointer;
 }
 
-.diet-dropdown-edit.has-linksheet .diet-dropdown-edit__toolbarrow button.diet-btn-ic {
+.diet-dropdown-edit.has-linksheet .diet-dropdown-edit__toolbarrow button.diet-button {
   opacity: 0.4;
   cursor: default;
   pointer-events: none;
 }
 
-.diet-dropdown-edit.has-linksheet .diet-dropdown-edit__toolbarrow button.diet-btn-ic[data-command='link'] {
+.diet-dropdown-edit.has-linksheet .diet-dropdown-edit__toolbarrow button.diet-button[data-command='link'] {
   opacity: 1;
   pointer-events: none;
 }
 
-.diet-dropdown-edit__group--clear .diet-btn-ic {
+.diet-dropdown-edit__group--clear .diet-button {
   color: color-mix(in oklab, var(--color-system-black), transparent 20%);
 }
 
-.diet-dropdown-edit__group--clear .diet-btn-ic:hover {
+.diet-dropdown-edit__group--clear .diet-button:hover {
   color: var(--color-system-black);
 }
 

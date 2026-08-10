@@ -99,22 +99,22 @@ function WidgetUpgradePromptDialog({
         <div className="diet-popup__actions">
           <button
             ref={closeButtonRef}
-            className="diet-btn-txt"
-            data-size="md"
-            data-variant="neutral"
+            className="diet-button"
+            data-size="medium"
+            data-type="secondary"
             type="button"
             onClick={onClose}
           >
-            <span className="diet-btn-txt__label">Close</span>
+            <span className="diet-button__label">Close</span>
           </button>
           <button
-            className="diet-btn-txt"
-            data-size="md"
-            data-variant="primary"
+            className="diet-button"
+            data-size="medium"
+            data-type="primary"
             type="button"
             onClick={() => prompt && onUpgrade(prompt.message)}
           >
-            <span className="diet-btn-txt__label">Upgrade</span>
+            <span className="diet-button__label">Upgrade</span>
           </button>
         </div>
       </footer>
@@ -671,8 +671,8 @@ export function WidgetsDomain({
           {widgetDataError ? (
             <div className="roma-inline-stack">
               <p className="body-m">{widgetDataError}</p>
-              <button className="diet-btn-txt" data-size="md" data-variant="line2" type="button" onClick={() => void refreshWidgets({ force: true })} disabled={domainLoading || domainRefreshing}>
-                <span className="diet-btn-txt__label">Retry</span>
+              <button className="diet-button" data-size="medium" data-type="secondary" type="button" onClick={() => void refreshWidgets({ force: true })} disabled={domainLoading || domainRefreshing}>
+                <span className="diet-button__label">Retry</span>
               </button>
             </div>
           ) : null}
@@ -691,12 +691,12 @@ export function WidgetsDomain({
                 {canMutateWidgets && catalog.length > 0 ? (
                   <div className="rd-canvas-module__actions">
                     <Link
-                      className="diet-btn-txt"
-                      data-size="md"
-                      data-variant="primary"
+                      className="diet-button"
+                      data-size="medium"
+                      data-type="primary"
                       href="/widgets/catalog"
                     >
-                      <span className="diet-btn-txt__label">Browse widget catalog</span>
+                      <span className="diet-button__label">Browse widget catalog</span>
                     </Link>
                   </div>
                 ) : null}
@@ -718,15 +718,16 @@ export function WidgetsDomain({
                     <th className="label-s" scope="col" aria-sort={sort.key === 'widget' ? sort.direction : 'none'}>
                       <span>Widget</span>{' '}
                       <button
-                        className="diet-btn-ic"
-                        data-size="sm"
-                        data-variant="neutral"
+                        className="diet-button"
+                        data-size="small"
+                        data-type="secondary"
                         type="button"
                         aria-label="Sort by widget"
                         onClick={() => changeSort('widget')}
                       >
                         <span
-                          className="diet-btn-ic__icon diet-icon-mask"
+                          className="diet-icon diet-icon-mask"
+                          data-size="12"
                           style={{
                             '--diet-icon-source': `url("/dieter/icons/svg/${sort.key === 'widget'
                               ? sort.direction === 'ascending' ? 'arrow.up.svg' : 'arrow.down.svg'
@@ -739,15 +740,16 @@ export function WidgetsDomain({
                     <th className="label-s" scope="col" aria-sort={sort.key === 'name' ? sort.direction : 'none'}>
                       <span>Instance name</span>{' '}
                       <button
-                        className="diet-btn-ic"
-                        data-size="sm"
-                        data-variant="neutral"
+                        className="diet-button"
+                        data-size="small"
+                        data-type="secondary"
                         type="button"
                         aria-label="Sort by instance name"
                         onClick={() => changeSort('name')}
                       >
                         <span
-                          className="diet-btn-ic__icon diet-icon-mask"
+                          className="diet-icon diet-icon-mask"
+                          data-size="12"
                           style={{
                             '--diet-icon-source': `url("/dieter/icons/svg/${sort.key === 'name'
                               ? sort.direction === 'ascending' ? 'arrow.up.svg' : 'arrow.down.svg'
@@ -760,15 +762,16 @@ export function WidgetsDomain({
                     <th className="label-s" scope="col" aria-sort={sort.key === 'status' ? sort.direction : 'none'}>
                       <span>Published</span>{' '}
                       <button
-                        className="diet-btn-ic"
-                        data-size="sm"
-                        data-variant="neutral"
+                        className="diet-button"
+                        data-size="small"
+                        data-type="secondary"
                         type="button"
                         aria-label="Sort by published status"
                         onClick={() => changeSort('status')}
                       >
                         <span
-                          className="diet-btn-ic__icon diet-icon-mask"
+                          className="diet-icon diet-icon-mask"
+                          data-size="12"
                           style={{
                             '--diet-icon-source': `url("/dieter/icons/svg/${sort.key === 'status'
                               ? sort.direction === 'ascending' ? 'arrow.up.svg' : 'arrow.down.svg'
@@ -824,24 +827,24 @@ export function WidgetsDomain({
                               />
                               <div className="roma-instance-rename__actions">
                                 <button
-                                  className="diet-btn-txt"
-                                  data-size="md"
-                                  data-variant="neutral"
+                                  className="diet-button"
+                                  data-size="medium"
+                                  data-type="secondary"
                                   type="button"
                                   onClick={cancelRename}
                                   disabled={Boolean(activeActionKey)}
                                 >
-                                  <span className="diet-btn-txt__label">Cancel</span>
+                                  <span className="diet-button__label">Cancel</span>
                                 </button>
                                 <button
-                                  className="diet-btn-txt"
-                                  data-size="md"
-                                  data-variant="primary"
+                                  className="diet-button"
+                                  data-size="medium"
+                                  data-type="primary"
                                   type="button"
                                   onClick={() => void handleRenameInstance(instance)}
                                   disabled={Boolean(activeActionKey)}
                                 >
-                                  <span className="diet-btn-txt__label">{activeActionKey === renameActionKey ? 'Renaming...' : 'Rename'}</span>
+                                  <span className="diet-button__label">{activeActionKey === renameActionKey ? 'Renaming...' : 'Rename'}</span>
                                 </button>
                               </div>
                             </div>
@@ -872,13 +875,13 @@ export function WidgetsDomain({
                             </label>
                             {instance.status === 'published' ? (
                               <button
-                                className="diet-btn-txt"
-                                data-size="sm"
-                                data-variant="line2"
+                                className="diet-button"
+                                data-size="small"
+                                data-type="secondary"
                                 type="button"
                                 onClick={() => openCopyCode(instance)}
                               >
-                                <span className="diet-btn-txt__label">Copy code</span>
+                                <span className="diet-button__label">Copy code</span>
                               </button>
                             ) : null}
                           </div>
@@ -894,19 +897,19 @@ export function WidgetsDomain({
                                   instanceId: instance.instanceId,
                                   widgetType: instance.widgetType,
                                 })}
-                                className="diet-btn-txt"
-                                data-size="md"
-                                data-variant="line2"
+                                className="diet-button"
+                                data-size="medium"
+                                data-type="secondary"
                               >
-                                <span className="diet-btn-txt__label">Edit</span>
+                                <span className="diet-button__label">Edit</span>
                               </Link>
                               {secondaryActionStatus ? (
                                 <span className="body-xs roma-widget-action-status" role="status">{secondaryActionStatus}</span>
                               ) : null}
                               <button
-                                className="diet-btn-ic"
-                                data-size="md"
-                                data-variant="neutral"
+                                className="diet-button"
+                                data-size="medium"
+                                data-type="secondary"
                                 type="button"
                                 aria-label={`More actions for ${instanceName}`}
                                 aria-haspopup="menu"
@@ -922,7 +925,7 @@ export function WidgetsDomain({
                                   setOpenWidgetActions({ instanceId: instance.instanceId, position: null });
                                 }}
                               >
-                                <Image className="diet-btn-ic__icon" src="/dieter/icons/svg/ellipsis.svg" alt="" width={16} height={16} aria-hidden="true" />
+                                <Image className="diet-icon" src="/dieter/icons/svg/ellipsis.svg" alt="" width={16} height={16} aria-hidden="true" />
                               </button>
                             </div>
                           ) : (
@@ -950,14 +953,14 @@ export function WidgetsDomain({
                       {canMutateWidgets ? (
                         <div className="rd-canvas-module__actions">
                           <button
-                            className="diet-btn-txt"
-                            data-size="md"
-                            data-variant="primary"
+                            className="diet-button"
+                            data-size="medium"
+                            data-type="primary"
                             type="button"
                             onClick={() => void handleCreateInstance(option.widgetType)}
                             disabled={Boolean(activeActionKey)}
                           >
-                            <span className="diet-btn-txt__label">
+                            <span className="diet-button__label">
                               {activeActionKey === createActionKey ? 'Creating...' : 'Create instance'}
                             </span>
                           </button>

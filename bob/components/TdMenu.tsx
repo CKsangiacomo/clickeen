@@ -53,14 +53,15 @@ export function TdMenu({ active, onSelect, panels }: TdMenuProps) {
             data-tooltip={panel.label}
             data-tooltip-placement="right"
             onClick={() => handleSelect(panel.id)}
-            className="diet-btn-ic diet-tooltip"
-            data-size="lg"
-            data-variant={isActive ? 'primary' : 'neutral'}
+            className="diet-button diet-tooltip"
+            data-size="large"
+            data-type={isActive ? 'primary' : 'secondary'}
             data-panel={panel.id}
           >
             {panel.icon ? (
               <span
-                className="diet-btn-ic__icon"
+                className="diet-icon"
+                data-size="20"
                 data-icon={panel.icon}
                 style={dieterIconStyle(panel.icon)}
                 aria-hidden="true"

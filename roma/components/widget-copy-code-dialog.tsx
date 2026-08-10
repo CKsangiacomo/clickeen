@@ -85,14 +85,14 @@ export function WidgetCopyCodeDialog({
                 <div className="roma-widget-code-item__header">
                   <h3 className="label-s">{option.label}</h3>
                   <button
-                    className="diet-btn-txt"
-                    data-size="sm"
-                    data-variant="line2"
+                    className="diet-button"
+                    data-size="small"
+                    data-type="secondary"
                     type="button"
                     aria-label={`Copy ${option.label}`}
                     onClick={() => void copy(option.label, actions[option.key])}
                   >
-                    <span className="diet-btn-txt__label">Copy</span>
+                    <span className="diet-button__label">Copy</span>
                   </button>
                 </div>
                 <pre className="roma-widget-code-value body-s"><code>{actions[option.key]}</code></pre>
@@ -108,13 +108,13 @@ export function WidgetCopyCodeDialog({
         <div className="diet-popup__actions">
           <button
             ref={closeButtonRef}
-            className="diet-btn-txt"
-            data-size="md"
-            data-variant="primary"
+            className="diet-button"
+            data-size="medium"
+            data-type="primary"
             type="button"
             onClick={onClose}
           >
-            <span className="diet-btn-txt__label">Close</span>
+            <span className="diet-button__label">Close</span>
           </button>
         </div>
       </footer>

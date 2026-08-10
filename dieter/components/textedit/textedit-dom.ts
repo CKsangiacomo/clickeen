@@ -14,8 +14,8 @@ const COMMAND_LABELS: Record<TexteditCommand, string> = {
 
 function buttonHTML(command: Command, icon: string): string {
   return `
-    <button type="button" class="diet-btn-ic" data-size="sm" data-variant="neutral" data-command="${command}" aria-label="${COMMAND_LABELS[command]}">
-      <span class="diet-btn-ic__icon" aria-hidden="true" data-icon="${icon}"></span>
+    <button type="button" class="diet-button" data-size="small" data-type="secondary" data-command="${command}" aria-label="${COMMAND_LABELS[command]}">
+      <span class="diet-icon" aria-hidden="true" data-icon="${icon}" data-size="12"></span>
     </button>
   `;
 }
@@ -58,7 +58,7 @@ export function createState(root: HTMLElement): TexteditState {
       <div class="diet-textedit__linkinner">
         <div class="diet-textedit__linkheader">
           <span class="diet-textedit__linktitle label">Link this text</span>
-          <button type="button" class="diet-btn-txt diet-textedit__linkapply" data-size="sm" data-variant="primary"><span class="diet-btn-txt__label">Apply link</span></button>
+          <button type="button" class="diet-button diet-textedit__linkapply" data-size="small" data-type="primary"><span class="diet-button__label">Apply link</span></button>
         </div>
         <div class="diet-textfield" data-size="md">
           <label class="diet-textfield__control">
@@ -78,17 +78,11 @@ export function createState(root: HTMLElement): TexteditState {
             <span class="diet-toggle__switch"><span class="diet-toggle__knob"></span></span>
           </label>
         </div>
-        <button type="button" class="diet-btn-txt diet-textedit__linkremove" data-size="sm" data-variant="secondary"><span class="diet-btn-txt__label">Remove link</span></button>
+        <button type="button" class="diet-button diet-textedit__linkremove" data-size="small" data-type="destructive"><span class="diet-button__label">Remove link</span></button>
       </div>
     </div>
   `;
   popover.appendChild(palette);
-
-  const iconButton = root.querySelector<HTMLSpanElement>('.diet-textedit__icon .diet-btn-ic');
-  if (iconButton) {
-    const iconSize = root.dataset.size === 'lg' ? 'md' : 'sm';
-    iconButton.setAttribute('data-size', iconSize);
-  }
 
   const paletteButtons = new Map<Command, HTMLButtonElement>();
   palette.querySelectorAll<HTMLButtonElement>('button[data-command]').forEach((btn) => {

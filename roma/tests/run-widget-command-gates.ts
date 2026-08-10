@@ -131,7 +131,7 @@ async function testBuilderUsesBobTopDrawerAsItsOnlyEditorChrome(): Promise<void>
   assert.match(topDrawer, /className="topdrawer-more diet-popover-host"/);
   assert.match(topDrawer, /requestHostAction\('open-navigation'\)/);
   assert.doesNotMatch(topDrawer, /requestHostAction\('return'\)|returnLabel|topdrawer-return/);
-  assert.equal((topDrawer.match(/data-variant="primary"/g) ?? []).length, 1);
+  assert.equal((topDrawer.match(/data-type="primary"/g) ?? []).length, 1);
   assert.match(bobBoot, /message\.publishStatus === 'published'/);
   assert.match(bobBoot, /coreui\.errors\.builder\.publicActions\.invalid/);
   assert.doesNotMatch(bobBoot, /returnLabel/);
@@ -188,9 +188,9 @@ async function testWidgetsListComposition(): Promise<void> {
   assert.doesNotMatch(source, /WidgetSortHeader|roma-widget-sort/);
   assert.doesNotMatch(romaCss, /roma-widget-sort/);
   assert.match(source, /type WidgetSortKey = 'widget' \| 'name' \| 'status'/);
-  assert.match(source, /<span>Widget<\/span>\{' '\}[\s\S]*?className="diet-btn-ic"[\s\S]*?data-size="sm"[\s\S]*?aria-label="Sort by widget"[\s\S]*?changeSort\('widget'\)/);
-  assert.match(source, /<span>Instance name<\/span>\{' '\}[\s\S]*?className="diet-btn-ic"[\s\S]*?data-size="sm"[\s\S]*?aria-label="Sort by instance name"[\s\S]*?changeSort\('name'\)/);
-  assert.match(source, /<span>Published<\/span>\{' '\}[\s\S]*?className="diet-btn-ic"[\s\S]*?data-size="sm"[\s\S]*?aria-label="Sort by published status"[\s\S]*?changeSort\('status'\)/);
+  assert.match(source, /<span>Widget<\/span>\{' '\}[\s\S]*?className="diet-button"[\s\S]*?data-size="small"[\s\S]*?aria-label="Sort by widget"[\s\S]*?changeSort\('widget'\)/);
+  assert.match(source, /<span>Instance name<\/span>\{' '\}[\s\S]*?className="diet-button"[\s\S]*?data-size="small"[\s\S]*?aria-label="Sort by instance name"[\s\S]*?changeSort\('name'\)/);
+  assert.match(source, /<span>Published<\/span>\{' '\}[\s\S]*?className="diet-button"[\s\S]*?data-size="small"[\s\S]*?aria-label="Sort by published status"[\s\S]*?changeSort\('status'\)/);
   assert.match(source, /aria-sort=\{sort\.key === 'widget' \? sort\.direction : 'none'\}/);
   assert.match(source, /aria-sort=\{sort\.key === 'name' \? sort\.direction : 'none'\}/);
   assert.match(source, /aria-sort=\{sort\.key === 'status' \? sort\.direction : 'none'\}/);
@@ -254,14 +254,14 @@ async function testDieterLayoutTableAndPopupConsumption(): Promise<void> {
     /\.roma-layout|\.roma-modal|\.rd-header|\.rd-domain|\.roma-portrait-boundary/,
   );
   assert.doesNotMatch(romaCss, /pointer:\s*coarse|orientation:\s*portrait/);
-  assert.match(tableCss, /th\[aria-sort\] > \.diet-btn-ic \{\s+--btn-color: var\(--color-system-gray-3\);/);
-  assert.match(tableCss, /th\[aria-sort='ascending'\] > \.diet-btn-ic,[\s\S]*?th\[aria-sort='descending'\] > \.diet-btn-ic \{\s+--btn-color: var\(--color-system-black\);/);
+  assert.match(tableCss, /th\[aria-sort\] > \.diet-button \{\s+--button-color: var\(--color-system-gray-3\);/);
+  assert.match(tableCss, /th\[aria-sort='ascending'\] > \.diet-button,[\s\S]*?th\[aria-sort='descending'\] > \.diet-button \{\s+--button-color: var\(--color-system-black\);/);
 
   assert.match(assetsPage, /<AssetsDomain assetFilter=\{assetFilter\} onHeaderActions=\{setHeaderActions\} \/>/);
   assert.doesNotMatch(assetsPage, /useRomaAccountContext|useRomaAccountApi|refreshToken|onLoadingChange/);
 
   assert.match(dropdownActions, /className=\{`diet-dropdown-actions diet-popover-host/);
-  assert.match(dropdownActions, /triggerStyle === 'button' \? 'diet-btn-ictxt' : 'diet-dropdown-header diet-dropdown-actions__control'/);
+  assert.match(dropdownActions, /triggerStyle === 'button' \? 'diet-button' : 'diet-dropdown-header diet-dropdown-actions__control'/);
   assert.match(dropdownActions, /className="diet-popover diet-dropdown-actions__popover" role="listbox"/);
   assert.match(dropdownActions, /triggerStyle === 'field' \? \(/);
   assert.match(dropdownActions, /const labelClass = size === 'sm' \? 'label-xs' : size === 'lg' \? 'label-m' : 'label-s'/);
@@ -296,8 +296,8 @@ async function testDieterLayoutTableAndPopupConsumption(): Promise<void> {
     const sortableHeaders = source.match(/<th[^>]*aria-sort=[\s\S]*?<\/th>/g) ?? [];
     assert.ok(sortableHeaders.length > 0, `${domain} must have sortable headers`);
     for (const header of sortableHeaders) {
-      assert.match(header, /className="diet-btn-ic"[\s\S]*?data-size="sm"/);
-      assert.match(header, /className="diet-btn-ic__icon diet-icon-mask"/);
+      assert.match(header, /className="diet-button"[\s\S]*?data-size="small"/);
+      assert.match(header, /className="diet-icon diet-icon-mask"/);
     }
   }
 
@@ -308,7 +308,7 @@ async function testDieterLayoutTableAndPopupConsumption(): Promise<void> {
   ] as const) {
     assert.match(
       assets,
-      new RegExp(`<span>${label}<\\/span>\\{' '\\}[\\s\\S]*?className="diet-btn-ic"[\\s\\S]*?data-size="sm"[\\s\\S]*?changeSort\\('${key}'\\)`),
+      new RegExp(`<span>${label}<\\/span>\\{' '\\}[\\s\\S]*?className="diet-button"[\\s\\S]*?data-size="small"[\\s\\S]*?changeSort\\('${key}'\\)`),
     );
     assert.match(assets, new RegExp(`aria-sort=\\{sort\\.key === '${key}' \\? sort\\.direction : 'none'\\}`));
   }

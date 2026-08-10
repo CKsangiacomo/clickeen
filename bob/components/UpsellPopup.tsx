@@ -79,9 +79,9 @@ export function UpsellPopup({ open, reasonKey, cta, onClose }: UpsellPopupProps)
       <footer className="diet-popup__footer">
         <div className="diet-popup__actions">
           <button
-            className="diet-btn-txt"
-            data-size="lg"
-            data-variant="primary"
+            className="diet-button"
+            data-size="large"
+            data-type="primary"
             type="button"
             onClick={() => {
               if (typeof window !== 'undefined' && window.parent) {
@@ -90,17 +90,17 @@ export function UpsellPopup({ open, reasonKey, cta, onClose }: UpsellPopupProps)
               close();
             }}
           >
-            <span className="diet-btn-txt__label">{primaryLabel}</span>
+            <span className="diet-button__label">{primaryLabel}</span>
           </button>
           <button
             ref={closeButtonRef}
-            className="diet-btn-txt"
-            data-size="lg"
-            data-variant="neutral"
+            className="diet-button"
+            data-size="large"
+            data-type="secondary"
             type="button"
             onClick={close}
           >
-            <span className="diet-btn-txt__label">Not now</span>
+            <span className="diet-button__label">Not now</span>
           </button>
         </div>
       </footer>

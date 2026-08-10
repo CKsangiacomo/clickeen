@@ -105,7 +105,7 @@ function assertCompiledClusterState(args: {
   ).map(([value]) => value);
   const toggles = captureAll(
     args.html,
-    /class="diet-btn-ic tdmenucontent__cluster-toggle"[^>]*aria-expanded="(true|false)"[^>]*aria-controls="([^"]+)"/g,
+    /class="diet-button tdmenucontent__cluster-toggle"[^>]*aria-expanded="(true|false)"[^>]*aria-controls="([^"]+)"/g,
   );
   const bodies = captureAll(
     args.html,

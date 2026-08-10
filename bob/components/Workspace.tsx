@@ -517,15 +517,16 @@ export function Workspace({
             />
             <span className="diet-segment__surface" />
             <button
-              className="diet-btn-ic"
-              data-size="lg"
-              data-variant="neutral"
+              className="diet-button"
+              data-size="large"
+              data-type="secondary"
               tabIndex={-1}
               type="button"
               aria-pressed={device === 'desktop'}
             >
               <span
-                className="diet-btn-ic__icon"
+                className="diet-icon"
+                data-size="20"
                 data-icon="desktopcomputer"
                 style={dieterIconStyle('desktopcomputer')}
                 aria-hidden="true"
@@ -544,15 +545,16 @@ export function Workspace({
             />
             <span className="diet-segment__surface" />
             <button
-              className="diet-btn-ic"
-              data-size="lg"
-              data-variant="neutral"
+              className="diet-button"
+              data-size="large"
+              data-type="secondary"
               tabIndex={-1}
               type="button"
               aria-pressed={device === 'mobile'}
             >
               <span
-                className="diet-btn-ic__icon"
+                className="diet-icon"
+                data-size="20"
                 data-icon="iphone"
                 style={dieterIconStyle('iphone')}
                 aria-hidden="true"

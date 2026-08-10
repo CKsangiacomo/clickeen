@@ -188,16 +188,16 @@ export function TeamMemberDomain({ memberId }: TeamMemberDomainProps) {
           <p className="body-m">Account: {accountContext.accountLabel}</p>
           <p className="body-s">Team manages memberships. Personal details stay with the member in User Settings.</p>
         </div>
-        <Link className="diet-btn-txt" data-size="md" data-variant="line2" href="/team">
-          <span className="diet-btn-txt__label">Back to team</span>
+        <Link className="diet-button" data-size="medium" data-type="secondary" href="/team">
+          <span className="diet-button__label">Back to team</span>
         </Link>
       </section>
 
       {error ? (
         <section className="rd-canvas-module" role="alert">
           <p className="body-m">{error}</p>
-          <button className="diet-btn-txt" data-size="md" data-variant="line2" type="button" onClick={() => void refreshMember()} disabled={loading}>
-            <span className="diet-btn-txt__label">Retry</span>
+          <button className="diet-button" data-size="medium" data-type="secondary" type="button" onClick={() => void refreshMember()} disabled={loading}>
+            <span className="diet-button__label">Retry</span>
           </button>
         </section>
       ) : null}
@@ -243,24 +243,24 @@ export function TeamMemberDomain({ memberId }: TeamMemberDomainProps) {
                 ]}
               />
               <button
-                className="diet-btn-txt"
-                data-size="md"
-                data-variant="solid"
+                className="diet-button"
+                data-size="medium"
+                data-type="primary"
                 type="button"
                 onClick={() => void saveRole()}
                 disabled={!canManage || member.member.role === 'owner' || savingRole || !isAccountRoleValue(roleDraft) || roleDraft === member.member.role}
               >
-                <span className="diet-btn-txt__label">{savingRole ? 'Saving...' : 'Save role'}</span>
+                <span className="diet-button__label">{savingRole ? 'Saving...' : 'Save role'}</span>
               </button>
               <button
-                className="diet-btn-txt"
-                data-size="md"
-                data-variant="line2"
+                className="diet-button"
+                data-size="medium"
+                data-type="destructive"
                 type="button"
                 onClick={() => void removeMember()}
                 disabled={!canManage || member.member.role === 'owner' || removingMember}
               >
-                <span className="diet-btn-txt__label">{removingMember ? 'Removing...' : 'Remove member'}</span>
+                <span className="diet-button__label">{removingMember ? 'Removing...' : 'Remove member'}</span>
               </button>
             </div>
           </section>

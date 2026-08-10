@@ -541,9 +541,9 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
             {m.hasUndoAction && undoAvailable && m.undoToken === activeUndoToken ? (
               <div style={{ display: 'flex', gap: 'var(--space-2)', marginTop: 'var(--space-1)' }}>
                 <button
-                  className="diet-btn-txt"
-                  data-size="md"
-                  data-variant="neutral"
+                  className="diet-button"
+                  data-size="medium"
+                  data-type="secondary"
                   type="button"
                   onClick={() => {
                     const undo = undoRef.current;
@@ -569,7 +569,7 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
                     pushMessage({ role: 'assistant', text: 'Undone.' });
                   }}
                 >
-                  <span className="diet-btn-txt__label">Undo</span>
+                  <span className="diet-button__label">Undo</span>
                 </button>
               </div>
             ) : null}
@@ -637,16 +637,16 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
             aria-label="Copilot prompt"
           />
           <button
-            className="diet-btn-txt"
-            data-size="md"
-            data-variant="primary"
+            className="diet-button"
+            data-size="medium"
+            data-type="primary"
             type="button"
             onClick={() => {
               void handleSend();
             }}
             disabled={status === 'loading' || Boolean(uiDisabledReason) || !draft.trim()}
           >
-            <span className="diet-btn-txt__label">{status === 'loading' ? 'Sending...' : 'Send'}</span>
+            <span className="diet-button__label">{status === 'loading' ? 'Sending...' : 'Send'}</span>
           </button>
         </div>
       </div>

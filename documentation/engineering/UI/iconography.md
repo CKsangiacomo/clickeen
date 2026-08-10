@@ -66,8 +66,10 @@ These map to `--icon-size-12` through `--icon-size-40`. Non-numeric
 `diet-icon` size aliases are not supported.
 
 Icon glyph size is separate from wrapper size, component slot size, and
-interactive control size. Component/control `data-size="sm|md|lg"` APIs are not
-icon glyph sizing and stay with their owning component PRDs.
+interactive control size. Button uses `small|medium|large`; other components
+may retain their own `sm|md|lg` APIs. Neither is an Icon glyph size. A Button
+containing an Icon declares both the Button size and the numeric Icon size; no
+Button class, runtime, or CSS inference chooses the glyph size.
 
 ## Color And State
 

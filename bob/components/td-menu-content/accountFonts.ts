@@ -56,11 +56,10 @@ function createMenuAction(args: {
 
   const iconWrap = createTextSpan(args.document, 'diet-btn-menuactions__icon', '');
   iconWrap.setAttribute('aria-hidden', 'true');
-  const check = createTextSpan(args.document, 'diet-dropdown-actions__check diet-btn-ic', '');
-  check.dataset.size = 'sm';
-  check.dataset.variant = 'neutral';
+  const check = createTextSpan(args.document, 'diet-dropdown-actions__check', '');
   check.setAttribute('aria-hidden', 'true');
-  const icon = createTextSpan(args.document, 'diet-btn-ic__icon', '');
+  const icon = createTextSpan(args.document, 'diet-icon', '');
+  icon.dataset.size = '12';
   icon.dataset.icon = 'checkmark';
   check.appendChild(icon);
   iconWrap.appendChild(check);

@@ -1,6 +1,5 @@
 @import url('./tokens/tokens.css');
 @import url('./components/shared/property-row.css');
-@import url('./components/shared/authoring-focus.css');
 @import url('./components/agent-activity/agent-activity.css');
 @import url('./components/bulk-edit/bulk-edit.css');
 @import url('./components/button/button.css');

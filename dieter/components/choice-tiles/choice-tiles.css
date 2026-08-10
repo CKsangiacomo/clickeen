@@ -10,19 +10,19 @@
   inline-size: 100%;
 }
 
-.diet-choice-tiles__option.diet-btn-ictxt,
-.diet-choice-tiles__option.diet-btn-ictxt[data-variant] {
-  --btn-bg: var(--color-system-gray-step5);
-  --btn-color: var(--color-system-black);
-  --btn-border-width: 1px;
-  --btn-border-color: transparent;
-  --btn-radius: var(--control-radius-md);
-  --btn-hover-bg: color-mix(
+.diet-choice-tiles__option.diet-button,
+.diet-choice-tiles__option.diet-button[data-type] {
+  --button-bg: var(--color-system-gray-step5);
+  --button-color: var(--color-system-black);
+  --button-border-width: 1px;
+  --button-border-color: transparent;
+  --button-radius: var(--control-radius-md);
+  --button-hover-bg: color-mix(
     in oklab,
     var(--color-system-gray-step5),
     var(--state-darken-target) var(--state-hover-mix)
   );
-  --btn-clicked-bg: color-mix(
+  --button-active-bg: color-mix(
     in oklab,
     var(--color-system-gray-step5),
     var(--state-darken-target) var(--state-pressed-mix)
@@ -38,11 +38,11 @@
   text-align: center;
 }
 
-.diet-choice-tiles__option.diet-btn-ictxt .diet-btn-ictxt__icon {
+.diet-choice-tiles__option.diet-button .diet-icon {
   color: color-mix(in oklab, var(--color-system-black), transparent 15%);
 }
 
-.diet-choice-tiles__option.diet-btn-ictxt .diet-btn-ictxt__label {
+.diet-choice-tiles__option.diet-button .diet-button__label {
   padding-inline: 0;
   max-inline-size: 100%;
   overflow: hidden;
@@ -50,11 +50,11 @@
   white-space: nowrap;
 }
 
-.diet-choice-tiles__option.is-selected.diet-btn-ictxt,
-.diet-choice-tiles__option.is-selected.diet-btn-ictxt[data-variant] {
-  --btn-bg: var(--color-system-white);
-  --btn-border-color: var(--color-system-blue);
-  --btn-hover-bg: color-mix(in oklab, var(--color-system-white), var(--color-system-blue) 6%);
-  --btn-clicked-bg: color-mix(in oklab, var(--color-system-white), var(--color-system-blue) 10%);
+.diet-choice-tiles__option.is-selected.diet-button,
+.diet-choice-tiles__option.is-selected.diet-button[data-type] {
+  --button-bg: var(--color-system-white);
+  --button-border-color: var(--color-system-blue);
+  --button-hover-bg: color-mix(in oklab, var(--color-system-white), var(--color-system-blue) 6%);
+  --button-active-bg: color-mix(in oklab, var(--color-system-white), var(--color-system-blue) 10%);
   box-shadow: var(--shadow-inset-control);
 }

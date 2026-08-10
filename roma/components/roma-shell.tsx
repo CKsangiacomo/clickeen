@@ -41,11 +41,11 @@ export function useRomaShellActions(): RomaShellActions {
 export function RomaShellDefaultActions() {
   return (
     <>
-      <Link className="diet-btn-txt" data-size="lg" data-variant="line2" href="/team">
-        <span className="diet-btn-txt__label">Invite members</span>
+      <Link className="diet-button" data-size="large" data-type="secondary" href="/team">
+        <span className="diet-button__label">Invite members</span>
       </Link>
-      <Link className="diet-btn-txt" data-size="lg" data-variant="primary" href="/widgets">
-        <span className="diet-btn-txt__label">Widgets</span>
+      <Link className="diet-button" data-size="large" data-type="primary" href="/widgets">
+        <span className="diet-button__label">Widgets</span>
       </Link>
     </>
   );
@@ -116,9 +116,9 @@ export function RomaShell({
   const renderNavigationTrigger = (standalone = false) => (
     <button
       ref={openerRef}
-      className={`roma-nav-trigger diet-btn-ic${standalone ? ' roma-nav-trigger--standalone' : ''}`}
-      data-size="md"
-      data-variant="neutral"
+      className={`roma-nav-trigger diet-button${standalone ? ' roma-nav-trigger--standalone' : ''}`}
+      data-size="medium"
+      data-type="secondary"
       type="button"
       aria-label={navigationOpen ? 'Close navigation' : 'Open navigation'}
       aria-controls="roma-primary-navigation"

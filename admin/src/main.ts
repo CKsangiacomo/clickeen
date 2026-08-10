@@ -3,7 +3,6 @@ import '@dieter/layouts/main-container/main-container.css';
 import '@dieter/components/button/button.css';
 import '@dieter/components/popup/popup.css';
 import '@dieter/components/shared/property-row.css';
-import '@dieter/components/shared/authoring-focus.css';
 import '@dieter/components/popover/popover.css';
 import '@dieter/components/dropdown-actions/dropdown-actions.css';
 import '@dieter/components/menuactions/menuactions.css';
@@ -183,16 +182,16 @@ const main = document.createElement('main');
 main.className = 'page';
 
 const menuButton = document.createElement('button');
-menuButton.className = 'devstudio-navigation-trigger diet-btn-ic';
+menuButton.className = 'devstudio-navigation-trigger diet-button';
 menuButton.type = 'button';
 menuButton.dataset.navigationTrigger = '';
-menuButton.dataset.size = 'md';
-menuButton.dataset.variant = 'neutral';
+menuButton.dataset.size = 'medium';
+menuButton.dataset.type = 'secondary';
 menuButton.setAttribute('aria-label', 'Open navigation');
 menuButton.setAttribute('aria-controls', sidebar.id);
 menuButton.setAttribute('aria-expanded', 'false');
 menuButton.innerHTML =
-  '<span class="diet-btn-ic__icon" aria-hidden="true" data-icon="line.3.horizontal.decrease.circle"></span>';
+  '<span class="diet-icon" data-size="16" aria-hidden="true" data-icon="line.3.horizontal.decrease.circle"></span>';
 
 const compactBar = document.createElement('header');
 compactBar.className = 'devstudio-compact-bar';
@@ -452,8 +451,8 @@ async function openTokenEditor(
             <h2 class="heading-4" id="devstudio-token-editor-title">Edit token</h2>
             <p class="body-xs">Update the source-controlled Dieter value.</p>
           </div>
-          <button class="diet-btn-ic" data-size="sm" data-variant="neutral" type="button" data-token-editor-close aria-label="Close">
-            <span class="diet-btn-ic__icon" aria-hidden="true" data-icon="multiply"></span>
+          <button class="diet-button" data-size="small" data-type="secondary" type="button" data-token-editor-close aria-label="Close">
+            <span class="diet-icon" aria-hidden="true" data-icon="multiply" data-size="12"></span>
           </button>
         </header>
         <div class="diet-popup__body devstudio-token-editor__body">
@@ -480,11 +479,11 @@ async function openTokenEditor(
         </div>
         <footer class="diet-popup__footer">
           <div class="diet-popup__actions">
-            <button class="diet-btn-txt" data-size="md" data-variant="secondary" type="button" data-token-editor-close>
-              <span class="diet-btn-txt__label">Cancel</span>
+            <button class="diet-button" data-size="medium" data-type="secondary" type="button" data-token-editor-close>
+              <span class="diet-button__label">Cancel</span>
             </button>
-            <button class="diet-btn-txt" data-size="md" data-variant="primary" type="submit" data-token-editor-commit disabled>
-              <span class="diet-btn-txt__label">Confirm commit</span>
+            <button class="diet-button" data-size="medium" data-type="primary" type="submit" data-token-editor-commit disabled>
+              <span class="diet-button__label">Confirm commit</span>
             </button>
           </div>
         </footer>
@@ -498,11 +497,11 @@ async function openTokenEditor(
         </div>
         <footer class="diet-popup__footer">
           <div class="diet-popup__actions">
-            <button class="diet-btn-txt" data-size="md" data-variant="secondary" type="button" data-token-editor-keep>
-              <span class="diet-btn-txt__label">Keep editing</span>
+            <button class="diet-button" data-size="medium" data-type="secondary" type="button" data-token-editor-keep>
+              <span class="diet-button__label">Keep editing</span>
             </button>
-            <button class="diet-btn-txt" data-size="md" data-variant="primary" type="button" data-token-editor-discard>
-              <span class="diet-btn-txt__label">Discard</span>
+            <button class="diet-button" data-size="medium" data-type="destructive" type="button" data-token-editor-discard>
+              <span class="diet-button__label">Discard</span>
             </button>
           </div>
         </footer>
@@ -637,12 +636,11 @@ async function openTokenEditor(
         actionIcon.className = 'diet-btn-menuactions__icon';
         actionIcon.setAttribute('aria-hidden', 'true');
         const check = document.createElement('span');
-        check.className = 'diet-dropdown-actions__check diet-btn-ic';
-        check.dataset.size = 'sm';
-        check.dataset.variant = 'neutral';
+        check.className = 'diet-dropdown-actions__check';
         check.setAttribute('aria-hidden', 'true');
         const checkIcon = document.createElement('span');
-        checkIcon.className = 'diet-btn-ic__icon';
+        checkIcon.className = 'diet-icon';
+        checkIcon.dataset.size = '12';
         checkIcon.dataset.icon = 'checkmark';
         check.append(checkIcon);
         actionIcon.append(check);
@@ -837,12 +835,12 @@ function hydrateTypographyPage(scope: ParentNode) {
   const pageActions = scope.querySelector<HTMLElement>('.page__actions');
   if (pageActions) {
     const editButton = doc.createElement('button');
-    editButton.className = 'diet-btn-txt';
+    editButton.className = 'diet-button';
     editButton.type = 'button';
-    editButton.dataset.size = 'md';
-    editButton.dataset.variant = 'secondary';
+    editButton.dataset.size = 'medium';
+    editButton.dataset.type = 'secondary';
     editButton.setAttribute('data-token-edit', 'typography');
-    editButton.innerHTML = '<span class="diet-btn-txt__label">Edit typography tokens</span>';
+    editButton.innerHTML = '<span class="diet-button__label">Edit typography tokens</span>';
     pageActions.replaceChildren(editButton);
     pageActions.hidden = false;
   }

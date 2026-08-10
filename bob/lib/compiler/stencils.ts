@@ -318,18 +318,23 @@ export async function buildContext(
 
     const hasAnyIcon = segments.some((s) => Boolean(s.icon));
     const hasAnyLabel = segments.some((s) => Boolean(s.label));
-    const buttonLayout = hasAnyIcon ? (hasAnyLabel ? 'ictxt' : 'ic') : 'txt';
+    const segmentVariant = hasAnyIcon ? (hasAnyLabel ? 'ictxt' : 'ic') : 'txt';
+    const buttonByControlSize = {
+      sm: { buttonSize: 'small', buttonIconSize: '12' },
+      md: { buttonSize: 'medium', buttonIconSize: '16' },
+      lg: { buttonSize: 'large', buttonIconSize: '20' },
+    } as const;
+    const buttonContext = buttonByControlSize[size as keyof typeof buttonByControlSize] ?? buttonByControlSize.md;
 
     Object.assign(merged, {
       // Defaults to a good a11y label for widget controls.
       ariaLabel: label,
       // Use stable, per-control groupName so radio inputs don't conflict across multiple segmented controls.
       groupName: `${id}-seg`,
-      variant: buttonLayout,
-      buttonLayout,
-      buttonClass: `diet-btn-${buttonLayout}`,
-      buttonSize: size,
-      buttonVariant: 'neutral',
+      variant: segmentVariant,
+      buttonSize: buttonContext.buttonSize,
+      buttonType: 'secondary',
+      buttonIconSize: buttonContext.buttonIconSize,
       segments,
     });
   }

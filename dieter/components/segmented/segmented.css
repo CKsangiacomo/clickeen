@@ -216,10 +216,8 @@
 }
 
 /* Ensure readable foreground atop active background */
-.diet-segment__input:checked ~ .diet-btn-ic,
-.diet-segment__input:checked ~ .diet-btn-txt,
-.diet-segment__input:checked ~ .diet-btn-ictxt {
-  --btn-color: var(--seg-active-fg);
+.diet-segment__input:checked ~ .diet-button {
+  --button-color: var(--seg-active-fg);
   color: var(--seg-active-fg);
 }
 
@@ -238,13 +236,11 @@
 }
 
 /* Button inside segment - set inactive color to gray */
-.diet-segment > .diet-btn-ic,
-.diet-segment > .diet-btn-txt,
-.diet-segment > .diet-btn-ictxt {
+.diet-segment > .diet-button {
   position: relative;
   z-index: 2;
   pointer-events: none;
-  --btn-color: var(--color-system-gray-contrast);
+  --button-color: var(--color-system-gray-contrast);
 }
 
 /* Screen reader only text */

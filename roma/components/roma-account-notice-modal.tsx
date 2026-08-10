@@ -116,11 +116,11 @@ export function RomaAccountNoticeModal() {
       </div>
       <footer className="diet-popup__footer">
         <div className="diet-popup__actions">
-          <Link className="diet-btn-txt" data-size="md" data-variant="line2" href="/settings">
-            <span className="diet-btn-txt__label">Open settings</span>
+          <Link className="diet-button" data-size="medium" data-type="secondary" href="/settings">
+            <span className="diet-button__label">Open settings</span>
           </Link>
-          <button className="diet-btn-txt" data-size="md" data-variant="primary" type="button" onClick={() => void dismiss()} disabled={dismissLoading}>
-            <span className="diet-btn-txt__label">{dismissLoading ? 'Dismissing...' : 'Dismiss'}</span>
+          <button className="diet-button" data-size="medium" data-type="primary" type="button" onClick={() => void dismiss()} disabled={dismissLoading}>
+            <span className="diet-button__label">{dismissLoading ? 'Dismissing...' : 'Dismiss'}</span>
           </button>
         </div>
       </footer>

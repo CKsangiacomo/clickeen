@@ -149,22 +149,8 @@
   text-align: center;
 }
 
-.diet-dropdown-upload__preview-doc-icon.diet-btn-ic {
-  /* Use Dieter button/icon wiring but scale it for the preview frame. */
+.diet-dropdown-upload__preview-doc-icon.diet-icon {
   --preview-icon-size: 64px;
-  --btn-height: var(--preview-icon-size);
-  --btn-radius: 12px;
-  cursor: default;
-}
-
-.diet-dropdown-upload__preview-doc-icon.diet-btn-ic:hover,
-.diet-dropdown-upload__preview-doc-icon.diet-btn-ic:active {
-  background: transparent;
-  border-color: transparent;
-  transform: none;
-}
-
-.diet-dropdown-upload__preview-doc-icon.diet-btn-ic .diet-btn-ic__icon {
   inline-size: var(--preview-icon-size);
   block-size: var(--preview-icon-size);
 }

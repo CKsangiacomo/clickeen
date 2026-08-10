@@ -111,13 +111,13 @@ export function RomaAccountBoundary({ children }: { children: ReactNode }) {
         </p>
         <div className="rd-canvas-module__actions">
           <button
-            className="diet-btn-txt"
-            data-size="md"
-            data-variant="primary"
+            className="diet-button"
+            data-size="medium"
+            data-type="primary"
             type="button"
             onClick={() => void me.reload()}
           >
-            <span className="diet-btn-txt__label">Retry</span>
+            <span className="diet-button__label">Retry</span>
           </button>
         </div>
       </section>

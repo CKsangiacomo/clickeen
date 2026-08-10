@@ -1,8 +1,8 @@
-<button class="{{className}}" data-size="{{size}}" data-variant="{{variant}}" type="button"{{#if ariaLabel}} aria-label="{{ariaLabel}}"{{/if}}{{#if disabled}} disabled{{/if}}{{#if tabIndex}} tabindex="{{tabIndex}}"{{/if}}{{#if path}} data-path="{{path}}"{{/if}}>
+<button class="diet-button" data-size="{{size}}" data-type="{{type}}" type="button"{{#if ariaLabel}} aria-label="{{ariaLabel}}"{{/if}}{{#if disabled}} disabled{{/if}}{{#if tabIndex}} tabindex="{{tabIndex}}"{{/if}}{{#if path}} data-path="{{path}}"{{/if}}>
   {{#if icon}}
-  <span class="{{iconClass}}" data-icon="{{icon}}" aria-hidden="true"></span>
+  <span class="diet-icon" data-size="{{iconSize}}" data-icon="{{icon}}" aria-hidden="true"></span>
   {{/if}}
   {{#if label}}
-  <span class="{{labelClass}}">{{label}}</span>
+  <span class="diet-button__label">{{label}}</span>
   {{/if}}
 </button>

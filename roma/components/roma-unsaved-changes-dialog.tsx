@@ -61,22 +61,22 @@ export function RomaUnsavedChangesDialog({
         <div className="diet-popup__actions">
           <button
             ref={keepButtonRef}
-            className="diet-btn-txt"
-            data-size="md"
-            data-variant="secondary"
+            className="diet-button"
+            data-size="medium"
+            data-type="secondary"
             type="button"
             onClick={onKeepEditing}
           >
-            <span className="diet-btn-txt__label">Keep editing</span>
+            <span className="diet-button__label">Keep editing</span>
           </button>
           <button
-            className="diet-btn-txt"
-            data-size="md"
-            data-variant="primary"
+            className="diet-button"
+            data-size="medium"
+            data-type="destructive"
             type="button"
             onClick={onDiscard}
           >
-            <span className="diet-btn-txt__label">Discard</span>
+            <span className="diet-button__label">Discard</span>
           </button>
         </div>
       </footer>

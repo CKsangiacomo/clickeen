@@ -243,20 +243,21 @@ export function ToolDrawer({
             />
             <span className="diet-segment__surface" />
             <button
-              className="diet-btn-ictxt"
-              data-size="lg"
-              data-variant="neutral"
+              className="diet-button"
+              data-size="large"
+              data-type="secondary"
               tabIndex={-1}
               type="button"
               aria-pressed={mode === 'manual'}
             >
               <span
-                className="diet-btn-ictxt__icon"
+                className="diet-icon"
+                data-size="20"
                 data-icon="pencil"
                 style={dieterIconStyle('pencil')}
                 aria-hidden="true"
               />
-              <span className="diet-btn-ictxt__label">Manual</span>
+              <span className="diet-button__label">Manual</span>
             </button>
           </label>
           <label className="diet-segment">
@@ -270,34 +271,36 @@ export function ToolDrawer({
             />
             <span className="diet-segment__surface" />
             <button
-              className="diet-btn-ictxt"
-              data-size="lg"
-              data-variant="neutral"
+              className="diet-button"
+              data-size="large"
+              data-type="secondary"
               tabIndex={-1}
               type="button"
               aria-pressed={mode === 'copilot'}
             >
               <span
-                className="diet-btn-ictxt__icon"
+                className="diet-icon"
+                data-size="20"
                 data-icon="sparkles"
                 style={dieterIconStyle('sparkles')}
                 aria-hidden="true"
               />
-              <span className="diet-btn-ictxt__label">Copilot</span>
+              <span className="diet-button__label">Copilot</span>
             </button>
           </label>
         </div>
         <button
           ref={closeButtonRef}
-          className="tooldrawer-close diet-btn-ic"
-          data-size="lg"
-          data-variant="neutral"
+          className="tooldrawer-close diet-button"
+          data-size="large"
+          data-type="secondary"
           type="button"
           aria-label="Close tools"
           onClick={onCompactClose}
         >
           <span
-            className="diet-btn-ic__icon"
+            className="diet-icon"
+            data-size="20"
             data-icon="multiply"
             style={dieterIconStyle('multiply')}
             aria-hidden="true"

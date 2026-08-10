@@ -20,6 +20,7 @@ type Preview = {
   title?: string;
   sizes?: string[];
   variants?: string[];
+  types?: string[];
   sizeContext?: Record<string, StencilContext>;
 };
 
@@ -71,10 +72,13 @@ const renderVariantTiles = (
 ): string | null => {
   const sizeVariants = Array.isArray(preview.sizes) && preview.sizes.length > 0 ? preview.sizes : [undefined];
 
-  let variantValues: (string | undefined)[] = [undefined];
+  const axisKey = Array.isArray(preview.types) && preview.types.length > 0 ? 'type' : 'variant';
+  let axisValues: (string | undefined)[] = [undefined];
 
-  if (Array.isArray(preview.variants) && preview.variants.length > 0) {
-    variantValues = preview.variants;
+  if (axisKey === 'type') {
+    axisValues = preview.types ?? [];
+  } else if (Array.isArray(preview.variants) && preview.variants.length > 0) {
+    axisValues = preview.variants;
   } else if (Array.isArray(preview.spec)) {
     const variantRegex = /data-variant=['"]\{\{(\w+)\}\}['"]/;
     const match = preview.spec.find((line) => variantRegex.test(line));
@@ -83,7 +87,7 @@ const renderVariantTiles = (
       if (key) {
         const value = preview.context?.[key];
         if (typeof value === 'string') {
-          variantValues = value
+          axisValues = value
             .split(',')
             .map((entry) => entry.trim())
             .filter(Boolean);
@@ -93,15 +97,15 @@ const renderVariantTiles = (
   }
 
   if (
-    variantValues.length === 1 &&
-    variantValues[0] === undefined &&
-    typeof preview.context?.variant === 'string'
+    axisValues.length === 1 &&
+    axisValues[0] === undefined &&
+    typeof preview.context?.[axisKey] === 'string'
   ) {
-    variantValues = [preview.context.variant];
+    axisValues = [preview.context[axisKey] as string];
   }
 
-  const rows = variantValues
-    .map((variant) => {
+  const rows = axisValues
+    .map((axisValue) => {
       const tiles = sizeVariants
         .map((size) => {
           const sizeOverrides =
@@ -110,7 +114,7 @@ const renderVariantTiles = (
               : undefined;
           const context = resolveContext(preview.context ?? {}, {
             ...(size ? { size } : {}),
-            ...(variant ? { variant } : {}),
+            ...(axisValue ? { [axisKey]: axisValue } : {}),
             ...(sizeOverrides ?? {}),
           });
 

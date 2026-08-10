@@ -110,7 +110,7 @@ a {
   flex: 1;
 }
 
-.roma-nav-trigger.diet-btn-ic {
+.roma-nav-trigger.diet-button {
   display: none;
 }
 
@@ -492,7 +492,7 @@ a {
 }
 
 @media (max-width: 599px), (max-height: 599px) {
-  .roma-nav-trigger.diet-btn-ic {
+  .roma-nav-trigger.diet-button {
     display: inline-flex;
   }
 

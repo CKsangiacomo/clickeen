@@ -11,11 +11,11 @@
 
 ## Catalog (27 non-empty source directories including `shared`)
 
-Legend: ✅ exported from `index.ts` · Direct host import · ⊘ CSS/HTML only.
+Legend: ✅ exported from `index.ts` · Direct host import · ⊘ no custom hydrator.
 
 | Group | Component | Hydrate / binding | Status |
 | --- | --- | --- | --- |
-| atoms | `button` | `hydrateButton`, spec `string`, `data-size`/`data-variant` | ✅ |
+| atoms | `button` | Native button/link, spec `string`, `data-size`/`data-type` | ⊘ |
 | atoms | `icon` | — (CSS-only wrapper) | ⊘ |
 | atoms | `tabs` | `hydrateTabs`, `no-binding`, `role=tablist` | ✅ |
 | atoms | `segmented` | `hydrateSegmented`, `no-binding` | ✅ |
@@ -52,16 +52,19 @@ primitives such as `icon` are named exceptions, not a second contract.
 
 The component-level product law is implemented:
 
-- Text and icon-plus-text buttons use `data-size` as their complete size
-  authority. The Button component derives height, radius, spacing, icon size,
-  font family, font size, and line height from that one attribute; composites
-  do not add parallel `body-*` typography classes to make a Button size work.
-- Button and Menu Actions expose only `data-size="sm|md|lg"`. The compact
-  ladder is intentionally 16/20/24px with 11/13/14px Button text: `sm` uses
-  the former `xs` presentation, `md` uses the former `sm` presentation, and
-  `lg` uses the former `md` presentation. `xs` and `xl` are not component
-  size values. Low-level Dieter geometry tokens remain internal source
-  mechanics and are not public `data-size` options.
+- Button is one `.diet-button` primitive. Its direct children determine whether
+  it is text-only, icon-only, or icon-and-text; those are not separate Button
+  classes or variants.
+- Button requires `data-size="small|medium|large"` and
+  `data-type="primary|secondary|destructive"`. Size owns the Button box,
+  spacing, radius, and text typography. The exact 16/20/24px height and
+  11/13/14px text ladder is unchanged.
+- A child `.diet-icon` owns its glyph size independently through numeric
+  `data-size`. Standard Button compositions use 12/16/20px Icons inside
+  small/medium/large Buttons, but Button CSS does not infer or rewrite that
+  value. Composites must author both contracts explicitly.
+- Menu Actions remains a separate menu-row primitive with its existing
+  `sm|md|lg` API. Low-level geometry tokens remain internal source mechanics.
 - `textrename` is deleted because it had no product consumer.
 - Toggle is a native checkbox HTML/CSS/spec contract with no custom hydrator.
 - Keep `repeater` and `object-manager` distinct. Repeater edits nested items
@@ -110,7 +113,8 @@ monospace treatment. Preview and action columns use the small Table-owned
 composition classes rather than consumer-local base styling.
 
 Sortable headers remain app-owned behavior composed inside Dieter Table. Their
-control is an `sm` `diet-btn-ic`: inactive columns use
+control is a `small` secondary `.diet-button` with a 12px `.diet-icon`:
+inactive columns use
 `--color-system-gray-3`, while the active ascending or descending column uses
 `--color-system-black`. Dieter owns that presentation through `aria-sort`; apps
 own the selected column, direction, and row ordering.
@@ -138,8 +142,8 @@ guard applies to the animation.
 ## Tooltip Contract
 
 Unfamiliar icon-only actions use one small Dieter tooltip contract. The tooltip
-appears on hover and keyboard focus while the control retains its accessible
-name. Native `title` is not the designed tooltip system. This contract does not
+appears on hover while the control retains its accessible name. Native `title`
+is not the designed tooltip system. This contract does not
 create a tooltip framework or move product copy into Dieter.
 
 ## Per-Component Consumption

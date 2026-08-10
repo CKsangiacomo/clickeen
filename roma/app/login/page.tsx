@@ -55,8 +55,8 @@ export default function RomaLoginPage() {
             <form action="/api/session/login/google" method="get" className="rd-canvas-module__actions" style={{ justifyContent: 'flex-start' }}>
               <input name="next" type="hidden" value={nextPath} />
               {intent ? <input name="intent" type="hidden" value={intent} /> : null}
-              <button aria-label="Continue with Google" className="diet-btn-txt" data-size="lg" data-variant="primary" type="submit">
-                <span className="diet-btn-txt__label">Continue with Google</span>
+              <button aria-label="Continue with Google" className="diet-button" data-size="large" data-type="primary" type="submit">
+                <span className="diet-button__label">Continue with Google</span>
               </button>
             </form>
           </div>

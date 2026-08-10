@@ -336,9 +336,7 @@
               : 'role="heading" aria-level="3"';
             const iconMarkup = isAccordion
               ? `
-                  <span class="ck-faq__q-icon diet-btn-ic" data-size="md" data-variant="neutral" aria-hidden="true">
-                    <span class="diet-btn-ic__icon"></span>
-                  </span>
+                  <span class="ck-faq__q-icon diet-icon" data-size="16" aria-hidden="true"></span>
                 `
               : '';
             return `

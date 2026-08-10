@@ -147,7 +147,8 @@ State: `faq.appearance.iconStyle`
 - `arrow` → expand `arrow.down`, collapse `arrow.up`
 - `arrowshape` → expand `arrowshape.down`, collapse `arrowshape.up`
 
-Icons are Dieter icons and should be rendered as `diet-btn-ic` (neutral).
+Icons are non-interactive `.diet-icon` indicators inside the FAQ question
+control; they are not Buttons.
 Icon color is controlled via `faq.appearance.iconColor` (color fill).
 
 ## 4) Canonical state (current)

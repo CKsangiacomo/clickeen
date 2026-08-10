@@ -378,19 +378,20 @@
                                         "tag": "button",
                                         "attrs": {
                                           "type": "button",
-                                          "class": "diet-btn-ic diet-popover__header-trigger",
-                                          "data-size": "sm",
-                                          "data-variant": "neutral",
+                                          "class": "diet-button diet-popover__header-trigger",
+                                          "data-size": "small",
                                           "aria-hidden": true,
-                                          "tabindex": -1
+                                          "tabindex": -1,
+                                          "data-type": "secondary"
                                         },
                                         "children": [
                                           {
                                             "kind": "element",
                                             "tag": "span",
                                             "attrs": {
-                                              "class": "diet-btn-ic__icon",
-                                              "data-icon": "textformat.size.larger"
+                                              "class": "diet-icon",
+                                              "data-icon": "textformat.size.larger",
+                                              "data-size": "12"
                                             },
                                             "children": []
                                           }
@@ -452,18 +453,19 @@
                                                         "tag": "button",
                                                         "attrs": {
                                                           "type": "button",
-                                                          "class": "diet-btn-ic",
-                                                          "data-size": "sm",
-                                                          "data-variant": "neutral",
-                                                          "data-command": "bold"
+                                                          "class": "diet-button",
+                                                          "data-size": "small",
+                                                          "data-command": "bold",
+                                                          "data-type": "secondary"
                                                         },
                                                         "children": [
                                                           {
                                                             "kind": "element",
                                                             "tag": "span",
                                                             "attrs": {
-                                                              "class": "diet-btn-ic__icon",
-                                                              "data-icon": "bold"
+                                                              "class": "diet-icon",
+                                                              "data-icon": "bold",
+                                                              "data-size": "12"
                                                             },
                                                             "children": []
                                                           }
@@ -474,18 +476,19 @@
                                                         "tag": "button",
                                                         "attrs": {
                                                           "type": "button",
-                                                          "class": "diet-btn-ic",
-                                                          "data-size": "sm",
-                                                          "data-variant": "neutral",
-                                                          "data-command": "italic"
+                                                          "class": "diet-button",
+                                                          "data-size": "small",
+                                                          "data-command": "italic",
+                                                          "data-type": "secondary"
                                                         },
                                                         "children": [
                                                           {
                                                             "kind": "element",
                                                             "tag": "span",
                                                             "attrs": {
-                                                              "class": "diet-btn-ic__icon",
-                                                              "data-icon": "italic"
+                                                              "class": "diet-icon",
+                                                              "data-icon": "italic",
+                                                              "data-size": "12"
                                                             },
                                                             "children": []
                                                           }
@@ -496,18 +499,19 @@
                                                         "tag": "button",
                                                         "attrs": {
                                                           "type": "button",
-                                                          "class": "diet-btn-ic",
-                                                          "data-size": "sm",
-                                                          "data-variant": "neutral",
-                                                          "data-command": "underline"
+                                                          "class": "diet-button",
+                                                          "data-size": "small",
+                                                          "data-command": "underline",
+                                                          "data-type": "secondary"
                                                         },
                                                         "children": [
                                                           {
                                                             "kind": "element",
                                                             "tag": "span",
                                                             "attrs": {
-                                                              "class": "diet-btn-ic__icon",
-                                                              "data-icon": "underline"
+                                                              "class": "diet-icon",
+                                                              "data-icon": "underline",
+                                                              "data-size": "12"
                                                             },
                                                             "children": []
                                                           }
@@ -518,18 +522,19 @@
                                                         "tag": "button",
                                                         "attrs": {
                                                           "type": "button",
-                                                          "class": "diet-btn-ic",
-                                                          "data-size": "sm",
-                                                          "data-variant": "neutral",
-                                                          "data-command": "strike"
+                                                          "class": "diet-button",
+                                                          "data-size": "small",
+                                                          "data-command": "strike",
+                                                          "data-type": "secondary"
                                                         },
                                                         "children": [
                                                           {
                                                             "kind": "element",
                                                             "tag": "span",
                                                             "attrs": {
-                                                              "class": "diet-btn-ic__icon",
-                                                              "data-icon": "strikethrough"
+                                                              "class": "diet-icon",
+                                                              "data-icon": "strikethrough",
+                                                              "data-size": "12"
                                                             },
                                                             "children": []
                                                           }
@@ -540,18 +545,19 @@
                                                         "tag": "button",
                                                         "attrs": {
                                                           "type": "button",
-                                                          "class": "diet-btn-ic",
-                                                          "data-size": "sm",
-                                                          "data-variant": "neutral",
-                                                          "data-command": "link"
+                                                          "class": "diet-button",
+                                                          "data-size": "small",
+                                                          "data-command": "link",
+                                                          "data-type": "secondary"
                                                         },
                                                         "children": [
                                                           {
                                                             "kind": "element",
                                                             "tag": "span",
                                                             "attrs": {
-                                                              "class": "diet-btn-ic__icon",
-                                                              "data-icon": "link"
+                                                              "class": "diet-icon",
+                                                              "data-icon": "link",
+                                                              "data-size": "12"
                                                             },
                                                             "children": []
                                                           }
@@ -579,18 +585,19 @@
                                                         "tag": "button",
                                                         "attrs": {
                                                           "type": "button",
-                                                          "class": "diet-btn-ic",
-                                                          "data-size": "sm",
-                                                          "data-variant": "neutral",
-                                                          "data-command": "clear-format"
+                                                          "class": "diet-button",
+                                                          "data-size": "small",
+                                                          "data-command": "clear-format",
+                                                          "data-type": "secondary"
                                                         },
                                                         "children": [
                                                           {
                                                             "kind": "element",
                                                             "tag": "span",
                                                             "attrs": {
-                                                              "class": "diet-btn-ic__icon",
-                                                              "data-icon": "arrow.counterclockwise"
+                                                              "class": "diet-icon",
+                                                              "data-icon": "arrow.counterclockwise",
+                                                              "data-size": "12"
                                                             },
                                                             "children": []
                                                           }
@@ -601,18 +608,19 @@
                                                         "tag": "button",
                                                         "attrs": {
                                                           "type": "button",
-                                                          "class": "diet-btn-ic",
-                                                          "data-size": "sm",
-                                                          "data-variant": "neutral",
-                                                          "data-command": "clear-links"
+                                                          "class": "diet-button",
+                                                          "data-size": "small",
+                                                          "data-command": "clear-links",
+                                                          "data-type": "secondary"
                                                         },
                                                         "children": [
                                                           {
                                                             "kind": "element",
                                                             "tag": "span",
                                                             "attrs": {
-                                                              "class": "diet-btn-ic__icon",
-                                                              "data-icon": "personalhotspot.slash"
+                                                              "class": "diet-icon",
+                                                              "data-icon": "personalhotspot.slash",
+                                                              "data-size": "12"
                                                             },
                                                             "children": []
                                                           }
@@ -663,19 +671,20 @@
                                                             "tag": "button",
                                                             "attrs": {
                                                               "type": "button",
-                                                              "class": "diet-btn-ic diet-popover__header-trigger diet-popaddlink__close",
-                                                              "data-size": "sm",
-                                                              "data-variant": "neutral",
+                                                              "class": "diet-button diet-popover__header-trigger diet-popaddlink__close",
+                                                              "data-size": "small",
                                                               "aria-hidden": true,
-                                                              "tabindex": -1
+                                                              "tabindex": -1,
+                                                              "data-type": "secondary"
                                                             },
                                                             "children": [
                                                               {
                                                                 "kind": "element",
                                                                 "tag": "span",
                                                                 "attrs": {
-                                                                  "class": "diet-btn-ic__icon",
-                                                                  "data-icon": "multiply"
+                                                                  "class": "diet-icon",
+                                                                  "data-icon": "multiply",
+                                                                  "data-size": "12"
                                                                 },
                                                                 "children": []
                                                               }
@@ -753,16 +762,16 @@
                                                                 "tag": "button",
                                                                 "attrs": {
                                                                   "type": "button",
-                                                                  "class": "diet-btn-txt diet-popaddlink__apply",
-                                                                  "data-size": "md",
-                                                                  "data-variant": "primary"
+                                                                  "class": "diet-button diet-popaddlink__apply",
+                                                                  "data-size": "medium",
+                                                                  "data-type": "primary"
                                                                 },
                                                                 "children": [
                                                                   {
                                                                     "kind": "element",
                                                                     "tag": "span",
                                                                     "attrs": {
-                                                                      "class": "diet-btn-txt__label"
+                                                                      "class": "diet-button__label"
                                                                     },
                                                                     "children": [
                                                                       {
@@ -883,19 +892,20 @@
                                             "tag": "button",
                                             "attrs": {
                                               "type": "button",
-                                              "class": "diet-btn-ic diet-popover__header-trigger",
-                                              "data-size": "sm",
-                                              "data-variant": "neutral",
+                                              "class": "diet-button diet-popover__header-trigger",
+                                              "data-size": "small",
                                               "aria-hidden": true,
-                                              "tabindex": -1
+                                              "tabindex": -1,
+                                              "data-type": "secondary"
                                             },
                                             "children": [
                                               {
                                                 "kind": "element",
                                                 "tag": "span",
                                                 "attrs": {
-                                                  "class": "diet-btn-ic__icon",
-                                                  "data-icon": "textformat.size.larger"
+                                                  "class": "diet-icon",
+                                                  "data-icon": "textformat.size.larger",
+                                                  "data-size": "12"
                                                 },
                                                 "children": []
                                               }
@@ -957,18 +967,19 @@
                                                             "tag": "button",
                                                             "attrs": {
                                                               "type": "button",
-                                                              "class": "diet-btn-ic",
-                                                              "data-size": "sm",
-                                                              "data-variant": "neutral",
-                                                              "data-command": "bold"
+                                                              "class": "diet-button",
+                                                              "data-size": "small",
+                                                              "data-command": "bold",
+                                                              "data-type": "secondary"
                                                             },
                                                             "children": [
                                                               {
                                                                 "kind": "element",
                                                                 "tag": "span",
                                                                 "attrs": {
-                                                                  "class": "diet-btn-ic__icon",
-                                                                  "data-icon": "bold"
+                                                                  "class": "diet-icon",
+                                                                  "data-icon": "bold",
+                                                                  "data-size": "12"
                                                                 },
                                                                 "children": []
                                                               }
@@ -979,18 +990,19 @@
                                                             "tag": "button",
                                                             "attrs": {
                                                               "type": "button",
-                                                              "class": "diet-btn-ic",
-                                                              "data-size": "sm",
-                                                              "data-variant": "neutral",
-                                                              "data-command": "italic"
+                                                              "class": "diet-button",
+                                                              "data-size": "small",
+                                                              "data-command": "italic",
+                                                              "data-type": "secondary"
                                                             },
                                                             "children": [
                                                               {
                                                                 "kind": "element",
                                                                 "tag": "span",
                                                                 "attrs": {
-                                                                  "class": "diet-btn-ic__icon",
-                                                                  "data-icon": "italic"
+                                                                  "class": "diet-icon",
+                                                                  "data-icon": "italic",
+                                                                  "data-size": "12"
                                                                 },
                                                                 "children": []
                                                               }
@@ -1001,18 +1013,19 @@
                                                             "tag": "button",
                                                             "attrs": {
                                                               "type": "button",
-                                                              "class": "diet-btn-ic",
-                                                              "data-size": "sm",
-                                                              "data-variant": "neutral",
-                                                              "data-command": "underline"
+                                                              "class": "diet-button",
+                                                              "data-size": "small",
+                                                              "data-command": "underline",
+                                                              "data-type": "secondary"
                                                             },
                                                             "children": [
                                                               {
                                                                 "kind": "element",
                                                                 "tag": "span",
                                                                 "attrs": {
-                                                                  "class": "diet-btn-ic__icon",
-                                                                  "data-icon": "underline"
+                                                                  "class": "diet-icon",
+                                                                  "data-icon": "underline",
+                                                                  "data-size": "12"
                                                                 },
                                                                 "children": []
                                                               }
@@ -1023,18 +1036,19 @@
                                                             "tag": "button",
                                                             "attrs": {
                                                               "type": "button",
-                                                              "class": "diet-btn-ic",
-                                                              "data-size": "sm",
-                                                              "data-variant": "neutral",
-                                                              "data-command": "strike"
+                                                              "class": "diet-button",
+                                                              "data-size": "small",
+                                                              "data-command": "strike",
+                                                              "data-type": "secondary"
                                                             },
                                                             "children": [
                                                               {
                                                                 "kind": "element",
                                                                 "tag": "span",
                                                                 "attrs": {
-                                                                  "class": "diet-btn-ic__icon",
-                                                                  "data-icon": "strikethrough"
+                                                                  "class": "diet-icon",
+                                                                  "data-icon": "strikethrough",
+                                                                  "data-size": "12"
                                                                 },
                                                                 "children": []
                                                               }
@@ -1045,18 +1059,19 @@
                                                             "tag": "button",
                                                             "attrs": {
                                                               "type": "button",
-                                                              "class": "diet-btn-ic",
-                                                              "data-size": "sm",
-                                                              "data-variant": "neutral",
-                                                              "data-command": "link"
+                                                              "class": "diet-button",
+                                                              "data-size": "small",
+                                                              "data-command": "link",
+                                                              "data-type": "secondary"
                                                             },
                                                             "children": [
                                                               {
                                                                 "kind": "element",
                                                                 "tag": "span",
                                                                 "attrs": {
-                                                                  "class": "diet-btn-ic__icon",
-                                                                  "data-icon": "link"
+                                                                  "class": "diet-icon",
+                                                                  "data-icon": "link",
+                                                                  "data-size": "12"
                                                                 },
                                                                 "children": []
                                                               }
@@ -1084,18 +1099,19 @@
                                                             "tag": "button",
                                                             "attrs": {
                                                               "type": "button",
-                                                              "class": "diet-btn-ic",
-                                                              "data-size": "sm",
-                                                              "data-variant": "neutral",
-                                                              "data-command": "clear-format"
+                                                              "class": "diet-button",
+                                                              "data-size": "small",
+                                                              "data-command": "clear-format",
+                                                              "data-type": "secondary"
                                                             },
                                                             "children": [
                                                               {
                                                                 "kind": "element",
                                                                 "tag": "span",
                                                                 "attrs": {
-                                                                  "class": "diet-btn-ic__icon",
-                                                                  "data-icon": "arrow.counterclockwise"
+                                                                  "class": "diet-icon",
+                                                                  "data-icon": "arrow.counterclockwise",
+                                                                  "data-size": "12"
                                                                 },
                                                                 "children": []
                                                               }
@@ -1106,18 +1122,19 @@
                                                             "tag": "button",
                                                             "attrs": {
                                                               "type": "button",
-                                                              "class": "diet-btn-ic",
-                                                              "data-size": "sm",
-                                                              "data-variant": "neutral",
-                                                              "data-command": "clear-links"
+                                                              "class": "diet-button",
+                                                              "data-size": "small",
+                                                              "data-command": "clear-links",
+                                                              "data-type": "secondary"
                                                             },
                                                             "children": [
                                                               {
                                                                 "kind": "element",
                                                                 "tag": "span",
                                                                 "attrs": {
-                                                                  "class": "diet-btn-ic__icon",
-                                                                  "data-icon": "personalhotspot.slash"
+                                                                  "class": "diet-icon",
+                                                                  "data-icon": "personalhotspot.slash",
+                                                                  "data-size": "12"
                                                                 },
                                                                 "children": []
                                                               }
@@ -1168,19 +1185,20 @@
                                                                 "tag": "button",
                                                                 "attrs": {
                                                                   "type": "button",
-                                                                  "class": "diet-btn-ic diet-popover__header-trigger diet-popaddlink__close",
-                                                                  "data-size": "sm",
-                                                                  "data-variant": "neutral",
+                                                                  "class": "diet-button diet-popover__header-trigger diet-popaddlink__close",
+                                                                  "data-size": "small",
                                                                   "aria-hidden": true,
-                                                                  "tabindex": -1
+                                                                  "tabindex": -1,
+                                                                  "data-type": "secondary"
                                                                 },
                                                                 "children": [
                                                                   {
                                                                     "kind": "element",
                                                                     "tag": "span",
                                                                     "attrs": {
-                                                                      "class": "diet-btn-ic__icon",
-                                                                      "data-icon": "multiply"
+                                                                      "class": "diet-icon",
+                                                                      "data-icon": "multiply",
+                                                                      "data-size": "12"
                                                                     },
                                                                     "children": []
                                                                   }
@@ -1258,16 +1276,16 @@
                                                                     "tag": "button",
                                                                     "attrs": {
                                                                       "type": "button",
-                                                                      "class": "diet-btn-txt diet-popaddlink__apply",
-                                                                      "data-size": "md",
-                                                                      "data-variant": "primary"
+                                                                      "class": "diet-button diet-popaddlink__apply",
+                                                                      "data-size": "medium",
+                                                                      "data-type": "primary"
                                                                     },
                                                                     "children": [
                                                                       {
                                                                         "kind": "element",
                                                                         "tag": "span",
                                                                         "attrs": {
-                                                                          "class": "diet-btn-txt__label"
+                                                                          "class": "diet-button__label"
                                                                         },
                                                                         "children": [
                                                                           {

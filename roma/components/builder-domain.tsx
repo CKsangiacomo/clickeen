@@ -882,8 +882,8 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
         <p className="body-m">No instance selected for Builder.</p>
         <p className="body-m">Select a concrete instance from Widgets and open Edit.</p>
         <div className="rd-canvas-module__actions">
-          <Link className="diet-btn-txt" data-size="md" data-variant="primary" href="/widgets">
-            <span className="diet-btn-txt__label">Open widgets</span>
+          <Link className="diet-button" data-size="medium" data-type="primary" href="/widgets">
+            <span className="diet-button__label">Open widgets</span>
           </Link>
         </div>
       </div>
@@ -896,8 +896,8 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
         <div className="rd-canvas-module roma-builder-error">
           <p className="body-m">{builderOpenErrorCopy}</p>
           <div className="rd-canvas-module__actions">
-            <button className="diet-btn-txt" data-size="md" data-variant="primary" type="button" onClick={() => void openActiveInstanceInBob()}>
-              <span className="diet-btn-txt__label">Retry</span>
+            <button className="diet-button" data-size="medium" data-type="primary" type="button" onClick={() => void openActiveInstanceInBob()}>
+              <span className="diet-button__label">Retry</span>
             </button>
           </div>
         </div>

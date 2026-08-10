@@ -1,7 +1,6 @@
 import type { AccountAssetsClient } from '../../../dieter/components/shared/account-assets';
 import {
   hydrateBulkEdit,
-  hydrateButton,
   hydrateChoiceTiles,
   hydrateDropdownActions,
   hydrateDropdownBorder,
@@ -40,7 +39,6 @@ export function runHydrators(scope: HTMLElement, deps: DieterHydratorDeps): void
 
   hydrateIcons(scope);
   hydrateBulkEdit(scope, nestedDeps);
-  hydrateButton(scope);
   hydrateChoiceTiles(scope);
   hydrateDropdownActions(scope);
   hydrateDropdownBorder(scope);
@@ -63,7 +61,7 @@ export function runHydrators(scope: HTMLElement, deps: DieterHydratorDeps): void
 export function syncSegmentedPressedState(input: HTMLInputElement) {
   const segment = input.closest('.diet-segment');
   if (!segment) return;
-  const button = segment.querySelector<HTMLElement>('.diet-btn-ictxt, .diet-btn-ic, .diet-btn-txt');
+  const button = segment.querySelector<HTMLElement>('.diet-button, .diet-button, .diet-button');
   if (!button) return;
   button.setAttribute('aria-pressed', input.checked ? 'true' : 'false');
 }

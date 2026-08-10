@@ -58,22 +58,22 @@ export class RomaDomainErrorBoundary extends Component<
         </p>
         <div className="rd-canvas-module__actions">
           <button
-            className="diet-btn-txt"
-            data-size="md"
-            data-variant="primary"
+            className="diet-button"
+            data-size="medium"
+            data-type="primary"
             type="button"
             onClick={() => this.setState({ error: null })}
           >
-            <span className="diet-btn-txt__label">Retry view</span>
+            <span className="diet-button__label">Retry view</span>
           </button>
           <button
-            className="diet-btn-txt"
-            data-size="md"
-            data-variant="line2"
+            className="diet-button"
+            data-size="medium"
+            data-type="secondary"
             type="button"
             onClick={() => window.location.reload()}
           >
-            <span className="diet-btn-txt__label">Reload page</span>
+            <span className="diet-button__label">Reload page</span>
           </button>
         </div>
       </section>

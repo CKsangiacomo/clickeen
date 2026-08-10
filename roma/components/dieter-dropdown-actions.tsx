@@ -37,6 +37,8 @@ export function DieterDropdownActions({
   const accessibleLabel = ariaLabel ?? label ?? 'Choose an option';
   const labelClass = size === 'sm' ? 'label-xs' : size === 'lg' ? 'label-m' : 'label-s';
   const bodyClass = size === 'sm' ? 'body-xs' : size === 'lg' ? 'body-m' : 'body-s';
+  const buttonSize = size === 'sm' ? 'small' : size === 'lg' ? 'large' : 'medium';
+  const buttonIconSize = size === 'sm' ? '12' : size === 'lg' ? '20' : '16';
 
   useEffect(() => {
     if (!open) return;
@@ -77,9 +79,9 @@ export function DieterDropdownActions({
       <button
         ref={triggerRef}
         type="button"
-        className={triggerStyle === 'button' ? 'diet-btn-ictxt' : 'diet-dropdown-header diet-dropdown-actions__control'}
-        data-size={triggerStyle === 'button' ? size : undefined}
-        data-variant={triggerStyle === 'button' ? 'secondary' : undefined}
+        className={triggerStyle === 'button' ? 'diet-button' : 'diet-dropdown-header diet-dropdown-actions__control'}
+        data-size={triggerStyle === 'button' ? buttonSize : undefined}
+        data-type={triggerStyle === 'button' ? 'secondary' : undefined}
         aria-haspopup="listbox"
         aria-expanded={open}
         aria-labelledby={triggerStyle === 'field' && label ? labelId : undefined}
@@ -92,11 +94,12 @@ export function DieterDropdownActions({
         {triggerStyle === 'button' ? (
           <>
             <span
-              className="diet-btn-ictxt__icon diet-icon-mask"
+              className="diet-icon diet-icon-mask"
+              data-size={buttonIconSize}
               style={{ '--diet-icon-source': 'url("/dieter/icons/svg/line.3.horizontal.decrease.circle.svg")' } as CSSProperties}
               aria-hidden="true"
             />
-            <span className="diet-btn-ictxt__label">{selectedOption?.label ?? accessibleLabel}</span>
+            <span className="diet-button__label">{selectedOption?.label ?? accessibleLabel}</span>
           </>
         ) : (
           <>
@@ -142,9 +145,10 @@ export function DieterDropdownActions({
                   <span className="diet-dropdown-actions__menuaction-text">{option.label}</span>
                 </span>
                 <span className="diet-btn-menuactions__icon" aria-hidden="true">
-                  <span className="diet-dropdown-actions__check diet-btn-ic" data-size="sm" data-variant="neutral" aria-hidden="true">
+                  <span className="diet-dropdown-actions__check" aria-hidden="true">
                     <span
-                      className="diet-btn-ic__icon diet-icon-mask"
+                      className="diet-icon diet-icon-mask"
+                      data-size="12"
                       style={{ '--diet-icon-source': 'url("/dieter/icons/svg/checkmark.svg")' } as CSSProperties}
                       aria-hidden="true"
                     />

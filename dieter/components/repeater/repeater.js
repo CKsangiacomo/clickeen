@@ -247,7 +247,7 @@ const registry = new WeakMap();
       const syncReorderControls = () => {
         root.dataset.reorder = state.reorder ? "on" : "off";
         reorderBtn.setAttribute("aria-pressed", state.reorder ? "true" : "false");
-        reorderBtn.setAttribute("data-variant", state.reorder ? "secondary" : "neutral");
+        reorderBtn.setAttribute("data-type", "secondary");
         reorderBtn.setAttribute("aria-label", state.reorderLabel);
         reorderBtn.setAttribute("data-tooltip", state.reorderLabel);
       };
@@ -405,9 +405,9 @@ const registry = new WeakMap();
 
       const handle = document.createElement("button");
       handle.type = "button";
-      handle.className = "diet-btn-ic diet-tooltip diet-repeater__item-handle";
-      handle.setAttribute("data-size", "sm");
-      handle.setAttribute("data-variant", "neutral");
+      handle.className = "diet-button diet-tooltip diet-repeater__item-handle";
+      handle.setAttribute("data-size", "small");
+      handle.setAttribute("data-type", "secondary");
       handle.setAttribute("aria-label", labelWithIndex(state.moveLabel, index));
       handle.setAttribute("data-tooltip", labelWithIndex(state.moveLabel, index));
       handle.setAttribute("data-tooltip-placement", "right");
@@ -422,9 +422,9 @@ const registry = new WeakMap();
 
       const remove = document.createElement("button");
       remove.type = "button";
-      remove.className = "diet-btn-ic diet-tooltip diet-repeater__item-remove";
-      remove.setAttribute("data-size", "sm");
-      remove.setAttribute("data-variant", "neutral");
+      remove.className = "diet-button diet-tooltip diet-repeater__item-remove";
+      remove.setAttribute("data-size", "small");
+      remove.setAttribute("data-type", "destructive");
       remove.setAttribute("aria-label", labelWithIndex(state.removeLabel, index));
       remove.setAttribute("data-tooltip", labelWithIndex(state.removeLabel, index));
       remove.setAttribute("data-tooltip-placement", "left");

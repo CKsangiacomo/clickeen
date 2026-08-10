@@ -132,14 +132,14 @@ export function SettingsDomain() {
         </p>
         {activeAccount.websiteUrl ? <p className="body-s">Website: {activeAccount.websiteUrl}</p> : null}
         <div className="rd-canvas-module__actions">
-          <Link className="diet-btn-txt" data-size="md" data-variant="line2" href="/widgets">
-            <span className="diet-btn-txt__label">Open widgets</span>
+          <Link className="diet-button" data-size="medium" data-type="secondary" href="/widgets">
+            <span className="diet-button__label">Open widgets</span>
           </Link>
-          <Link className="diet-btn-txt" data-size="md" data-variant="line2" href="/assets">
-            <span className="diet-btn-txt__label">Open assets</span>
+          <Link className="diet-button" data-size="medium" data-type="secondary" href="/assets">
+            <span className="diet-button__label">Open assets</span>
           </Link>
-          <Link className="diet-btn-txt" data-size="md" data-variant="line2" href="/billing">
-            <span className="diet-btn-txt__label">Open billing</span>
+          <Link className="diet-button" data-size="medium" data-type="secondary" href="/billing">
+            <span className="diet-button__label">Open billing</span>
           </Link>
         </div>
       </section>
@@ -173,14 +173,14 @@ export function SettingsDomain() {
             ]}
           />
           <button
-            className="diet-btn-txt"
-            data-size="md"
-            data-variant="primary"
+            className="diet-button"
+            data-size="medium"
+            data-type="primary"
             type="button"
             onClick={() => void transferOwner()}
             disabled={!canManageAccount || ownerTransferLoading || !nextOwnerUserId}
           >
-            <span className="diet-btn-txt__label">{ownerTransferLoading ? 'Transferring…' : 'Transfer ownership'}</span>
+            <span className="diet-button__label">{ownerTransferLoading ? 'Transferring…' : 'Transfer ownership'}</span>
           </button>
         </div>
         {ownerTransferLoading ? <p className="body-s" role="status">Transferring ownership...</p> : null}

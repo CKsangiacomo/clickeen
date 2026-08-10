@@ -587,13 +587,13 @@ export function WidgetDefaultsDomain() {
         <p className="body-m">{error || 'Widget defaults are unavailable.'}</p>
         <div className="rd-canvas-module__actions">
           <button
-            className="diet-btn-txt"
-            data-size="md"
-            data-variant="primary"
+            className="diet-button"
+            data-size="medium"
+            data-type="primary"
             type="button"
             onClick={() => void loadDefaults()}
           >
-            <span className="diet-btn-txt__label">Reload</span>
+            <span className="diet-button__label">Reload</span>
           </button>
         </div>
       </section>
@@ -680,24 +680,24 @@ export function WidgetDefaultsDomain() {
           </div>
           <div className="widget-defaults-actions">
             <button
-              className="diet-btn-txt"
-              data-size="md"
-              data-variant="line2"
+              className="diet-button"
+              data-size="medium"
+              data-type="destructive"
               type="button"
               disabled={!dirty || saving}
               onClick={discard}
             >
-              <span className="diet-btn-txt__label">Discard</span>
+              <span className="diet-button__label">Discard</span>
             </button>
             <button
-              className="diet-btn-txt"
-              data-size="md"
-              data-variant="primary"
+              className="diet-button"
+              data-size="medium"
+              data-type="primary"
               type="button"
               disabled={!dirty || saving || saveBlocked}
               onClick={() => void save()}
             >
-              <span className="diet-btn-txt__label">{saving ? 'Saving...' : 'Save'}</span>
+              <span className="diet-button__label">{saving ? 'Saving...' : 'Save'}</span>
             </button>
           </div>
         </div>

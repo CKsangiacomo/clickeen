@@ -255,11 +255,11 @@ a.ck-logoshowcase__logo {
   width: 100%;
 }
 
-.ck-logoshowcase__arrow.diet-btn-ic {
-  --btn-color: var(--color-system-gray-2);
+.ck-logoshowcase__arrow.diet-button {
+  --button-color: var(--color-system-gray-2);
 }
 
-.ck-logoshowcase__arrow .diet-btn-ic__icon {
+.ck-logoshowcase__arrow .diet-icon {
   background-color: currentColor;
   -webkit-mask-repeat: no-repeat;
   mask-repeat: no-repeat;
@@ -269,12 +269,12 @@ a.ck-logoshowcase__logo {
   mask-size: contain;
 }
 
-.ck-logoshowcase__arrow[data-dir='prev'] .diet-btn-ic__icon {
+.ck-logoshowcase__arrow[data-dir='prev'] .diet-icon {
   -webkit-mask-image: var(--ls-icon-prev, url("/dieter/icons/svg/chevron.left.svg"));
   mask-image: var(--ls-icon-prev, url("/dieter/icons/svg/chevron.left.svg"));
 }
 
-.ck-logoshowcase__arrow[data-dir='next'] .diet-btn-ic__icon {
+.ck-logoshowcase__arrow[data-dir='next'] .diet-icon {
   -webkit-mask-image: var(--ls-icon-next, url("/dieter/icons/svg/chevron.right.svg"));
   mask-image: var(--ls-icon-next, url("/dieter/icons/svg/chevron.right.svg"));
 }

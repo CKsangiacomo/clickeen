@@ -3,19 +3,15 @@
     <span class="diet-textedit__preview">
       <span class="diet-textedit__previewin body-s">{{placeholder}}</span>
     </span>
-    <span class="diet-textedit__icon" aria-hidden="true">
-      <span class="diet-btn-ic" data-size="sm" data-variant="neutral">
-        <span class="diet-btn-ic__icon" data-icon="pencil"></span>
-      </span>
-    </span>
+    <span class="diet-icon diet-textedit__icon" data-size="16" data-icon="pencil" aria-hidden="true"></span>
   </button>
 
   <div class="diet-popover" role="dialog" aria-label="Edit text">
     <div class="diet-popover__header">
       <span class="diet-popover__title label-m">{{label}}</span>
       <div class="diet-popover__actions">
-        <button class="diet-btn-ic" data-size="sm" data-variant="neutral" type="button" aria-label="Delete">
-          <span class="diet-btn-ic__icon" aria-hidden="true" data-icon="trash"></span>
+        <button class="diet-button" data-size="small" data-type="destructive" type="button" aria-label="Delete">
+          <span class="diet-icon" aria-hidden="true" data-icon="trash" data-size="12"></span>
         </button>
       </div>
     </div>
@@ -25,8 +21,8 @@
         <div class="diet-textedit__linkinner">
           <div class="diet-textedit__linkheader">
             <span class="diet-textedit__linktitle label-s">Link this text</span>
-            <button class="diet-btn-txt diet-textedit__linkapply" data-size="sm" data-variant="primary" type="button">
-              <span class="diet-btn-txt__label">Apply link</span>
+            <button class="diet-button diet-textedit__linkapply" data-size="small" data-type="primary" type="button">
+              <span class="diet-button__label">Apply link</span>
             </button>
           </div>
           <div class="diet-textfield" data-size="md">
@@ -47,8 +43,8 @@
               <span class="diet-toggle__switch"><span class="diet-toggle__knob"></span></span>
             </label>
           </div>
-          <button class="diet-btn-txt diet-textedit__linkremove" data-size="sm" data-variant="secondary" type="button">
-            <span class="diet-btn-txt__label">Remove link</span>
+          <button class="diet-button diet-textedit__linkremove" data-size="small" data-type="destructive" type="button">
+            <span class="diet-button__label">Remove link</span>
           </button>
         </div>
       </div>

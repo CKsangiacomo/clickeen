@@ -83,12 +83,12 @@
   letter-spacing: var(--typo-question-tracking, 0em);
 }
 
-.ck-faq__q-icon.diet-btn-ic {
+.ck-faq__q-icon.diet-icon {
   flex: none;
-  --btn-color: var(--faq-icon-color, var(--color-system-gray-2));
+  color: var(--faq-icon-color, var(--color-system-gray-2));
 }
 
-.ck-faq__q-icon .diet-btn-ic__icon {
+.ck-faq__q-icon {
   background-color: currentColor;
   /* Default to same-origin Dieter icons. Runtime may override via --faq-icon-expand/--faq-icon-collapse. */
   -webkit-mask-image: var(--faq-icon-expand, url("/dieter/icons/svg/plus.svg"));
@@ -101,7 +101,7 @@
   mask-size: contain;
 }
 
-.ck-faq__q[aria-expanded='true'] .ck-faq__q-icon .diet-btn-ic__icon {
+.ck-faq__q[aria-expanded='true'] .ck-faq__q-icon {
   -webkit-mask-image: var(--faq-icon-collapse, url("/dieter/icons/svg/minus.svg"));
   mask-image: var(--faq-icon-collapse, url("/dieter/icons/svg/minus.svg"));
 }

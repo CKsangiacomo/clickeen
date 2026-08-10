@@ -79,26 +79,6 @@
   pointer-events: none;
 }
 
-.diet-textedit__icon .diet-btn-ic[data-size="md"] {
-  inline-size: var(--control-icon-sm, 1.25rem);
-  block-size: var(--control-icon-sm, 1.25rem);
-}
-
-.diet-textedit__icon .diet-btn-ic[data-size="sm"] {
-  inline-size: var(--control-icon-xs, 1rem);
-  block-size: var(--control-icon-xs, 1rem);
-}
-
-.diet-textedit__icon .diet-btn-ic {
-  pointer-events: none;
-  opacity: 1;
-}
-
-.diet-textedit__icon .diet-btn-ic .diet-btn-ic__icon {
-  inline-size: 100%;
-  block-size: 100%;
-}
-
 .diet-textedit > .diet-popover {
   display: none;
   position: absolute;
@@ -181,13 +161,13 @@
   pointer-events: none;
 }
 
-.diet-textedit__palette .diet-btn-ic { margin: 0; }
+.diet-textedit__palette .diet-button { margin: 0; }
 
-.diet-textedit__group--clear .diet-btn-ic {
+.diet-textedit__group--clear .diet-button {
   color: color-mix(in oklab, var(--color-system-black), transparent 20%);
 }
 
-.diet-textedit__group--clear .diet-btn-ic:hover {
+.diet-textedit__group--clear .diet-button:hover {
   color: var(--color-system-black);
 }
 
