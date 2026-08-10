@@ -120,7 +120,7 @@ sizes, active presentation, and transient status semantics; it owns none of the
 visible words. In Bob's ToolDrawer, the open widget artifact supplies the
 static title and Translation Agent events supply the dynamic rows.
 
-The active component uses `--color-system-purple-4` as its surface and a thin
+The active component uses `--color-system-purple-5` as its surface and a thin
 animated gradient stroke composed from existing system colors. The gradient is
 activity presentation, not progress measurement. Dieter's global reduced-motion
 guard applies to the animation.

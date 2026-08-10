@@ -158,7 +158,7 @@ the code is convenient there.
 | Stage | Status | Release state |
 | --- | --- | --- |
 | Stage 1 — Scaffold only | Complete | Committed, pushed, and deployed; no non-English experience is exposed |
-| Stage 2 — Dieter UI pass | In progress: Foundations complete; Agent Activity verified locally | Foundations are live; Agent Activity is not committed, pushed, or deployed |
+| Stage 2 — Dieter UI pass | In progress: Foundations and Agent Activity complete | Agent Activity is committed and pushed; exact-SHA cloud-dev deployment must be verified separately |
 | Stage 3 — Bob UI pass | Not started | No authority to begin until explicitly directed |
 | Stage 4 — Roma UI pass | Not started | No authority to begin until explicitly directed |
 | Stage 5 — Translation pass | Not started | No translations may be generated yet |
@@ -258,9 +258,9 @@ authority.
   classes, owner, consumers, and source path. The four real application-layout
   tokens retain their existing validated edit path; no product layout behavior
   changed.
-- **Agent Activity — passed locally after correction, 2026-08-09.** Dieter now
+- **Agent Activity — passed after correction, 2026-08-09.** Dieter now
   exposes the real required title plus multi-row narration contract used by
-  Bob, with `sm`/`md` sizes, `--color-system-purple-4` active surface, and one
+  Bob, with `sm`/`md` sizes, `--color-system-purple-5` active surface, and one
   thin animated system-color gradient stroke. The component owns no visible
   words. Every current Widget declares the static title token and resolves it
   from its adjacent English ToolDrawer label file into the existing editor

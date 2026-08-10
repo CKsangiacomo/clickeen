@@ -21,7 +21,7 @@
 }
 
 .diet-agent-activity[data-tone="active"] {
-  background: var(--color-system-purple-4);
+  background: var(--color-system-purple-5);
 }
 
 .diet-agent-activity[data-tone="active"]::after {
