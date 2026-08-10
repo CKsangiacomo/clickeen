@@ -1,5 +1,6 @@
 import '@dieter/tokens/tokens.css';
 import '@dieter/layouts/main-container/main-container.css';
+import '@dieter/components/icon/icon.css';
 import '@dieter/components/button/button.css';
 import '@dieter/components/popup/popup.css';
 import '@dieter/components/shared/property-row.css';
@@ -36,7 +37,6 @@ import {
 } from '@dieter/components';
 import { hydrateObjectManager } from '@dieter/components/object-manager/object-manager';
 import { createDialogLifecycle } from '@dieter/components/shared/dialog-lifecycle';
-import dietIconCss from '@dieter/components/icon/icon.css?raw';
 import { typographySections, typographyRoleCount, getTypographySampleText } from './data/typography';
 import {
   ENTITLEMENT_META,
@@ -919,9 +919,6 @@ function renderFromHash() {
   }
 
   const pageStyles = page.css ? [...page.css] : [];
-  if (page.slug === 'icons') {
-    pageStyles.push(dietIconCss);
-  }
 
   const content = renderHtmlPage(page.htmlPath, pageStyles);
 

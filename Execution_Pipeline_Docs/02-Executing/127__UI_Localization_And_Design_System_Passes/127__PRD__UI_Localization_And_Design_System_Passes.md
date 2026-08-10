@@ -277,7 +277,10 @@ authority.
   numeric sizes, normally 12/16/20px for those three Button sizes. Dieter
   composites, DevStudio, Bob, Roma, and current Widget source use the same
   contract; no old alias, wrapper, compatibility selector, or inferred Icon
-  size remains. Menu Actions remains its separate menu-row component.
+  size remains. DevStudio loads the Icon primitive once at its application
+  boundary so every component reveal honors the authored numeric glyph size;
+  it does not inject Icon CSS only for the Icons foundation page. Menu Actions
+  remains its separate menu-row component.
 
 ### Per-Tab Execution Loop
 

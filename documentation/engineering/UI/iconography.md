@@ -45,7 +45,7 @@ Agents must use the lane that owns the UI they are editing:
 | Dieter component source | Declare the selected icon name in the component's existing `data-icon` input; no raw SVG copies. |
 | Bob compiler/output | Bob preserves Dieter `data-icon` slots; source hydration points them at `/dieter/icons/svg/{name}.svg`. |
 | Bob app chrome | Use the same Dieter `data-icon` contract; icons stay decorative and control names live on controls. |
-| DevStudio/Admin | Generate the reveal and raw SVG imports directly from `dieter/icons/svg/**`; this is tooling, not a product runtime icon system. |
+| DevStudio/Admin | Generate the reveal and raw SVG imports directly from `dieter/icons/svg/**`; load Dieter's Icon CSS once at the DevStudio application boundary because any component reveal may compose an Icon. This is tooling, not a product runtime icon system. |
 | Roma product UI | Use the same Dieter operational-icon contract through the implementation lane specified by the 126M execution PRD; do not create a Roma-only icon system. |
 | Prague static site | `DieterIcon.astro` paints the declared Tokyo `/dieter/icons/svg/name.svg` URL through a CSS mask so icons inherit `currentColor`; Prague uses numeric Dieter sizes only. |
 | Public widgets | Widget-owned schemas may offer field-specific icon choices and widget code renders those declared Dieter names as CSS masks/static URLs. Do not create a shared widget icon service or global approval catalog. |
