@@ -245,7 +245,7 @@ export function ToolDrawer({
             <button
               className="diet-button"
               data-size="large"
-              data-type="secondary"
+              data-type="quaternary"
               tabIndex={-1}
               type="button"
               aria-pressed={mode === 'manual'}
@@ -273,7 +273,7 @@ export function ToolDrawer({
             <button
               className="diet-button"
               data-size="large"
-              data-type="secondary"
+              data-type="quaternary"
               tabIndex={-1}
               type="button"
               aria-pressed={mode === 'copilot'}
@@ -293,7 +293,7 @@ export function ToolDrawer({
           ref={closeButtonRef}
           className="tooldrawer-close diet-button"
           data-size="large"
-          data-type="secondary"
+          data-type="quaternary"
           type="button"
           aria-label="Close tools"
           onClick={onCompactClose}

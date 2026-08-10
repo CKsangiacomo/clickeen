@@ -56,12 +56,19 @@ The component-level product law is implemented:
   it is text-only, icon-only, or icon-and-text; those are not separate Button
   classes or variants.
 - Button requires `data-size="small|medium|large"` and
-  `data-type="primary|secondary|tertiary"`. Type expresses visual hierarchy,
-  not the wording or function of the action: primary is the filled blue
-  emphasis, secondary is the quiet gray treatment, and tertiary is the blue
-  outlined treatment inherited from the former line Button. Size owns the
-  Button box, spacing, radius, and text typography. The exact 16/20/24px
-  height and 11/13/14px text ladder is unchanged.
+  `data-type="primary|secondary|tertiary|quaternary"`. Type expresses visual
+  hierarchy, not the wording or function of the action: primary is the filled
+  blue emphasis, secondary is the quiet gray treatment, and tertiary is the
+  blue outlined treatment inherited from the former line Button. Quaternary
+  has no resting background or border and reveals its state treatment on
+  interaction. Size owns the Button box, spacing, radius, and text typography.
+  The exact 16/20/24px height and 11/13/14px text ladder is unchanged.
+- Button composition is explicit and bounded: omit Icon for text-only, omit
+  label for icon-only, or compose both. Icon-and-text Buttons declare
+  `iconPosition="start|end"`; start is the source default. Icon-only Buttons
+  put their accessible name on the Button. Consumers do not pass arbitrary
+  children, invent another visual type in local CSS, or create a separate
+  icon-button component.
 - A child `.diet-icon` owns its glyph size independently through numeric
   `data-size`. Standard Button compositions use 12/16/20px Icons inside
   small/medium/large Buttons, but Button CSS does not infer or rewrite that
@@ -116,7 +123,7 @@ monospace treatment. Preview and action columns use the small Table-owned
 composition classes rather than consumer-local base styling.
 
 Sortable headers remain app-owned behavior composed inside Dieter Table. Their
-control is a `small` secondary `.diet-button` with a 12px `.diet-icon`:
+control is a `small` quaternary `.diet-button` with a 12px `.diet-icon`:
 inactive columns use
 `--color-system-gray-3`, while the active ascending or descending column uses
 `--color-system-black`. Dieter owns that presentation through `aria-sort`; apps

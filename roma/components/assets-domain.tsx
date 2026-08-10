@@ -541,7 +541,7 @@ export function AssetsDomain({
                 <button
                   className="diet-button"
                   data-size="small"
-                  data-type="secondary"
+                  data-type="quaternary"
                   type="button"
                   aria-label="Sort by asset name"
                   onClick={() => changeSort('filename')}
@@ -563,7 +563,7 @@ export function AssetsDomain({
                 <button
                   className="diet-button"
                   data-size="small"
-                  data-type="secondary"
+                  data-type="quaternary"
                   type="button"
                   aria-label="Sort by type"
                   onClick={() => changeSort('assetType')}
@@ -586,7 +586,7 @@ export function AssetsDomain({
                 <button
                   className="diet-button"
                   data-size="small"
-                  data-type="secondary"
+                  data-type="quaternary"
                   type="button"
                   aria-label="Sort by size"
                   onClick={() => changeSort('sizeBytes')}

@@ -70,6 +70,10 @@
   padding-inline: var(--space-0);
 }
 
+.diet-button[data-icon-position="end"] > .diet-icon {
+  order: 1;
+}
+
 .diet-button:has(> .diet-icon):not(:has(> .diet-button__label)) {
   inline-size: var(--button-height);
   block-size: var(--button-height);
@@ -116,4 +120,11 @@
   --button-border-width: 1px;
   --button-hover-bg: color-mix(in oklab, var(--color-system-blue), transparent 60%);
   --button-active-bg: color-mix(in oklab, var(--color-system-blue), transparent 30%);
+}
+
+.diet-button[data-type="quaternary"] {
+  --button-bg: transparent;
+  --button-border-color: transparent;
+  --button-hover-bg: color-mix(in oklab, var(--color-text), transparent 88%);
+  --button-active-bg: color-mix(in oklab, var(--color-text), transparent 75%);
 }

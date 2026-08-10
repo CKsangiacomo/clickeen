@@ -118,7 +118,7 @@ export function RomaShell({
       ref={openerRef}
       className={`roma-nav-trigger diet-button${standalone ? ' roma-nav-trigger--standalone' : ''}`}
       data-size="medium"
-      data-type="secondary"
+      data-type="quaternary"
       type="button"
       aria-label={navigationOpen ? 'Close navigation' : 'Open navigation'}
       aria-controls="roma-primary-navigation"

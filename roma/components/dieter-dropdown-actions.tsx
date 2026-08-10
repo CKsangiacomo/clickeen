@@ -81,7 +81,7 @@ export function DieterDropdownActions({
         type="button"
         className={triggerStyle === 'button' ? 'diet-button' : 'diet-dropdown-header diet-dropdown-actions__control'}
         data-size={triggerStyle === 'button' ? buttonSize : undefined}
-        data-type={triggerStyle === 'button' ? 'secondary' : undefined}
+        data-type={triggerStyle === 'button' ? 'quaternary' : undefined}
         aria-haspopup="listbox"
         aria-expanded={open}
         aria-labelledby={triggerStyle === 'field' && label ? labelId : undefined}

@@ -8,7 +8,7 @@
     "ariaLabel": { "type": "string", "required": true },
     "groupName": { "type": "string", "required": true },
     "buttonSize": { "type": "enum", "values": ["small", "medium", "large"], "default": "medium", "required": false },
-    "buttonType": { "type": "enum", "values": ["primary", "secondary", "tertiary"], "default": "secondary", "required": false },
+    "buttonType": { "type": "enum", "values": ["primary", "secondary", "tertiary", "quaternary"], "default": "quaternary", "required": false },
     "buttonIconSize": { "type": "enum", "values": ["12", "16", "20", "24", "28", "32", "36", "40"], "default": "16", "required": false },
     "segments": {
       "type": "array",
@@ -33,7 +33,7 @@
       "spec": ["diet-segmented", "data-size='{{size}}'"],
       "context": {
         "variant": "txt", "size": "md", "ariaLabel": "Selection", "groupName": "selection-{{size}}",
-        "buttonSize": "medium", "buttonType": "secondary", "buttonIconSize": "16",
+        "buttonSize": "medium", "buttonType": "quaternary", "buttonIconSize": "16",
         "segments": [{ "value": "one", "label": "One", "checked": true }, { "value": "two", "label": "Two" }]
       },
       "sizeContext": {
@@ -48,7 +48,7 @@
       "spec": ["diet-segmented-ictxt", "data-size='{{size}}'"],
       "context": {
         "variant": "ictxt", "size": "md", "ariaLabel": "Assist mode", "groupName": "assist-mode-{{size}}",
-        "buttonSize": "medium", "buttonType": "secondary", "buttonIconSize": "16",
+        "buttonSize": "medium", "buttonType": "quaternary", "buttonIconSize": "16",
         "segments": [
           { "value": "manual", "label": "Manual", "icon": "hand.tap", "checked": true },
           { "value": "copilot", "label": "Copilot", "icon": "sparkles" }
@@ -66,7 +66,7 @@
       "spec": ["diet-segmented-ic", "data-size='{{size}}'"],
       "context": {
         "variant": "ic", "size": "md", "ariaLabel": "View selection", "groupName": "view-{{size}}",
-        "buttonSize": "medium", "buttonType": "secondary", "buttonIconSize": "16",
+        "buttonSize": "medium", "buttonType": "quaternary", "buttonIconSize": "16",
         "segments": [
           { "value": "grid", "icon": "circle.grid.2x2", "srLabel": "Grid", "checked": true },
           { "value": "list", "icon": "line.3.horizontal.decrease.circle", "srLabel": "List" }
@@ -84,7 +84,7 @@
       "spec": ["diet-segmented-txt", "data-size='{{size}}'"],
       "context": {
         "variant": "txt", "size": "md", "ariaLabel": "Alignment", "groupName": "alignment-{{size}}",
-        "buttonSize": "medium", "buttonType": "secondary", "buttonIconSize": "16",
+        "buttonSize": "medium", "buttonType": "quaternary", "buttonIconSize": "16",
         "segments": [
           { "value": "left", "label": "Left", "checked": true },
           { "value": "center", "label": "Center" },

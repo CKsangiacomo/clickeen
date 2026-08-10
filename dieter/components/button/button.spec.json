@@ -3,11 +3,12 @@
   "syntax": "<button class='diet-button' data-size='{{SIZE}}' data-type='{{TYPE}}'>…</button>",
   "attributes": {
     "size": { "enum": ["small", "medium", "large"], "required": true },
-    "type": { "enum": ["primary", "secondary", "tertiary"], "required": true },
+    "type": { "enum": ["primary", "secondary", "tertiary", "quaternary"], "required": true },
     "ariaLabel": { "optional": true },
     "label": { "optional": true },
     "icon": { "optional": true },
     "iconSize": { "enum": ["12", "16", "20", "24", "28", "32", "36", "40"], "optional": true },
+    "iconPosition": { "enum": ["start", "end"], "default": "start", "optional": true },
     "tabIndex": { "optional": true },
     "disabled": { "optional": true },
     "path": { "optional": true }
@@ -15,13 +16,14 @@
   "binding": { "path": "instanceData[PATH]", "type": "string" },
   "defaults": [
     {
-      "id": "button-icon-text",
+      "id": "button-icon-text-start",
       "sizes": ["small", "medium", "large"],
-      "types": ["primary", "secondary", "tertiary"],
+      "types": ["primary", "secondary", "tertiary", "quaternary"],
       "spec": [
         "diet-button",
         "data-size='{{size}}'",
         "data-type='{{type}}'",
+        "data-icon-position='{{iconPosition}}'",
         "diet-icon data-size='{{iconSize}}'"
       ],
       "context": {
@@ -29,7 +31,33 @@
         "type": "primary",
         "label": "Button",
         "icon": "sparkles",
-        "iconSize": "16"
+        "iconSize": "16",
+        "iconPosition": "start"
+      },
+      "sizeContext": {
+        "small": { "iconSize": "12" },
+        "medium": { "iconSize": "16" },
+        "large": { "iconSize": "20" }
+      }
+    },
+    {
+      "id": "button-icon-text-end",
+      "sizes": ["small", "medium", "large"],
+      "types": ["primary", "secondary", "tertiary", "quaternary"],
+      "spec": [
+        "diet-button",
+        "data-size='{{size}}'",
+        "data-type='{{type}}'",
+        "data-icon-position='{{iconPosition}}'",
+        "diet-icon data-size='{{iconSize}}'"
+      ],
+      "context": {
+        "size": "medium",
+        "type": "primary",
+        "label": "Button",
+        "icon": "chevron.right",
+        "iconSize": "16",
+        "iconPosition": "end"
       },
       "sizeContext": {
         "small": { "iconSize": "12" },
@@ -40,7 +68,7 @@
     {
       "id": "button-icon",
       "sizes": ["small", "medium", "large"],
-      "types": ["primary", "secondary", "tertiary"],
+      "types": ["primary", "secondary", "tertiary", "quaternary"],
       "spec": [
         "diet-button",
         "data-size='{{size}}'",
@@ -63,7 +91,7 @@
     {
       "id": "button-text",
       "sizes": ["small", "medium", "large"],
-      "types": ["primary", "secondary", "tertiary"],
+      "types": ["primary", "secondary", "tertiary", "quaternary"],
       "spec": [
         "diet-button",
         "data-size='{{size}}'",

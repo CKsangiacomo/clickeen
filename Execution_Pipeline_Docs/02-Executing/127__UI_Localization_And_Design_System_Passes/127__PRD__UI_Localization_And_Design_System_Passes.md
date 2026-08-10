@@ -272,10 +272,13 @@ authority.
   text, icon, and icon-text Button classes were deleted. One `.diet-button`
   now composes optional direct Icon and label children, requires
   `data-size="small|medium|large"`, and uses visual-hierarchy
-  `data-type="primary|secondary|tertiary"`. Primary is filled blue, secondary
-  is quiet gray, and tertiary inherits the former outlined line treatment;
-  action wording does not create another Button type. The existing 16/20/24px
-  box and 11/13/14px text ladder is preserved. Icon children declare independent
+  `data-type="primary|secondary|tertiary|quaternary"`. Primary is filled blue,
+  secondary is quiet gray, tertiary inherits the former outlined line
+  treatment, and quaternary has no resting background or border; action wording
+  does not create another Button type. Button composition explicitly supports
+  no Icon, an Icon at the start or end of its label, or an accessible icon-only
+  control without creating another Button class. The existing 16/20/24px box
+  and 11/13/14px text ladder is preserved. Icon children declare independent
   numeric sizes, normally 12/16/20px for those three Button sizes. Dieter
   composites, DevStudio, Bob, Roma, and current Widget source use the same
   contract; no old alias, wrapper, compatibility selector, or inferred Icon

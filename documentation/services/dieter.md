@@ -117,7 +117,7 @@ borderless `2xl` surface with floating elevation, `--space-2`/`--space-4` cell
 padding, direct role-border horizontal dividers, no vertical rules or zebra
 stripes, and small preview and action column composition classes. Apps own
 data and behavior, not another table presentation. When an app makes a column
-sortable, its header uses a `small` secondary Dieter Button containing a 12px
+sortable, its header uses a `small` quaternary Dieter Button containing a 12px
 Dieter Icon. Dieter renders inactive
 sort controls with `--color-system-gray-3` and the active ascending or
 descending control with `--color-system-black`; the app still owns sort state
@@ -144,8 +144,10 @@ so consumers use ordinary Dieter size tokens without icon-specific correction.
 `icons.json` is not deployed or consulted by product runtime. Product controls
 keep their accessible name on the control; decorative icons are painted from
 the declared SVG URL and remain semantically hidden. Button and Icon are
-independent contracts: Button owns action geometry and visual hierarchy; its Icon
-child owns numeric glyph size.
+independent contracts: Button owns action geometry, its
+primary/secondary/tertiary/quaternary visual hierarchy, and the structured
+start/end position of an optional Icon. Its Icon child owns numeric glyph size;
+omitting Icon or label yields the text-only or icon-only Button composition.
 
 Account-uploaded assets and fonts remain under
 `accounts/{accountPublicId}/...`; they are not Dieter icons.

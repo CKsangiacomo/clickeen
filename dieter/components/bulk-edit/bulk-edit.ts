@@ -493,7 +493,7 @@ function buildUploadControl(args: {
           type="button"
           class="diet-button diet-popover__header-trigger"
           data-size="small"
-          data-type="secondary"
+          data-type="quaternary"
           aria-hidden="true"
           tabindex="-1"
         >
@@ -536,7 +536,7 @@ function buildUploadControl(args: {
               <button type="button" class="diet-button diet-dropdown-upload__replace-btn" data-size="large" data-type="tertiary">
                 <span class="diet-button__label">Replace</span>
               </button>
-              <button type="button" class="diet-button diet-dropdown-upload__remove-btn" data-size="large" data-type="secondary">
+              <button type="button" class="diet-button diet-dropdown-upload__remove-btn" data-size="large" data-type="quaternary">
                 <span class="diet-button__label">Remove</span>
               </button>
             </div>

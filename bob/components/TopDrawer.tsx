@@ -62,7 +62,7 @@ export function TopDrawer({
         <button
           className="host-navigation-open diet-button"
           data-size="large"
-          data-type="secondary"
+          data-type="quaternary"
           type="button"
           aria-label="Open Clickeen navigation"
           onClick={() => requestHostAction('open-navigation')}
@@ -79,7 +79,7 @@ export function TopDrawer({
           ref={toolsButtonRef}
           className="tooldrawer-open diet-button"
           data-size="large"
-          data-type="secondary"
+          data-type="quaternary"
           type="button"
           aria-label="Open tools"
           aria-expanded={toolsOpen}

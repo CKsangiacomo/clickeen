@@ -333,7 +333,7 @@ export async function buildContext(
       groupName: `${id}-seg`,
       variant: segmentVariant,
       buttonSize: buttonContext.buttonSize,
-      buttonType: 'secondary',
+      buttonType: 'quaternary',
       buttonIconSize: buttonContext.buttonIconSize,
       segments,
     });

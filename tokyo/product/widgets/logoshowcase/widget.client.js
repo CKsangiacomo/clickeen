@@ -547,7 +547,7 @@
       prevBtn.type = 'button';
       prevBtn.className = 'diet-button ck-logoshowcase__arrow';
       prevBtn.setAttribute('data-size', 'medium');
-      prevBtn.setAttribute('data-type', 'secondary');
+      prevBtn.setAttribute('data-type', 'quaternary');
       prevBtn.setAttribute('data-role', 'arrow');
       prevBtn.setAttribute('data-dir', 'prev');
       prevBtn.setAttribute('aria-label', 'Previous');
@@ -561,7 +561,7 @@
       nextBtn.type = 'button';
       nextBtn.className = 'diet-button ck-logoshowcase__arrow';
       nextBtn.setAttribute('data-size', 'medium');
-      nextBtn.setAttribute('data-type', 'secondary');
+      nextBtn.setAttribute('data-type', 'quaternary');
       nextBtn.setAttribute('data-role', 'arrow');
       nextBtn.setAttribute('data-dir', 'next');
       nextBtn.setAttribute('aria-label', 'Next');

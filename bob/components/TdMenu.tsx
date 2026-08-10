@@ -55,7 +55,7 @@ export function TdMenu({ active, onSelect, panels }: TdMenuProps) {
             onClick={() => handleSelect(panel.id)}
             className="diet-button diet-tooltip"
             data-size="large"
-            data-type={isActive ? 'primary' : 'secondary'}
+            data-type={isActive ? 'primary' : 'quaternary'}
             data-panel={panel.id}
           >
             {panel.icon ? (

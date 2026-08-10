@@ -382,7 +382,7 @@
                                           "data-size": "small",
                                           "aria-hidden": true,
                                           "tabindex": -1,
-                                          "data-type": "secondary"
+                                          "data-type": "quaternary"
                                         },
                                         "children": [
                                           {
@@ -456,7 +456,8 @@
                                                           "class": "diet-button",
                                                           "data-size": "small",
                                                           "data-command": "bold",
-                                                          "data-type": "secondary"
+                                                          "aria-label": "$label:content.template.bold",
+                                                          "data-type": "quaternary"
                                                         },
                                                         "children": [
                                                           {
@@ -479,7 +480,8 @@
                                                           "class": "diet-button",
                                                           "data-size": "small",
                                                           "data-command": "italic",
-                                                          "data-type": "secondary"
+                                                          "aria-label": "$label:content.template.italic",
+                                                          "data-type": "quaternary"
                                                         },
                                                         "children": [
                                                           {
@@ -502,7 +504,8 @@
                                                           "class": "diet-button",
                                                           "data-size": "small",
                                                           "data-command": "underline",
-                                                          "data-type": "secondary"
+                                                          "aria-label": "$label:content.template.underline",
+                                                          "data-type": "quaternary"
                                                         },
                                                         "children": [
                                                           {
@@ -525,7 +528,8 @@
                                                           "class": "diet-button",
                                                           "data-size": "small",
                                                           "data-command": "strike",
-                                                          "data-type": "secondary"
+                                                          "aria-label": "$label:content.template.strikethrough",
+                                                          "data-type": "quaternary"
                                                         },
                                                         "children": [
                                                           {
@@ -548,7 +552,8 @@
                                                           "class": "diet-button",
                                                           "data-size": "small",
                                                           "data-command": "link",
-                                                          "data-type": "secondary"
+                                                          "aria-label": "$label:content.template.link",
+                                                          "data-type": "quaternary"
                                                         },
                                                         "children": [
                                                           {
@@ -588,7 +593,8 @@
                                                           "class": "diet-button",
                                                           "data-size": "small",
                                                           "data-command": "clear-format",
-                                                          "data-type": "secondary"
+                                                          "aria-label": "$label:content.template.clear-formatting",
+                                                          "data-type": "quaternary"
                                                         },
                                                         "children": [
                                                           {
@@ -611,7 +617,8 @@
                                                           "class": "diet-button",
                                                           "data-size": "small",
                                                           "data-command": "clear-links",
-                                                          "data-type": "secondary"
+                                                          "aria-label": "$label:content.template.clear-links",
+                                                          "data-type": "quaternary"
                                                         },
                                                         "children": [
                                                           {
@@ -675,7 +682,7 @@
                                                               "data-size": "small",
                                                               "aria-hidden": true,
                                                               "tabindex": -1,
-                                                              "data-type": "secondary"
+                                                              "data-type": "quaternary"
                                                             },
                                                             "children": [
                                                               {
@@ -896,7 +903,7 @@
                                               "data-size": "small",
                                               "aria-hidden": true,
                                               "tabindex": -1,
-                                              "data-type": "secondary"
+                                              "data-type": "quaternary"
                                             },
                                             "children": [
                                               {
@@ -970,7 +977,8 @@
                                                               "class": "diet-button",
                                                               "data-size": "small",
                                                               "data-command": "bold",
-                                                              "data-type": "secondary"
+                                                              "aria-label": "$label:content.template.bold",
+                                                              "data-type": "quaternary"
                                                             },
                                                             "children": [
                                                               {
@@ -993,7 +1001,8 @@
                                                               "class": "diet-button",
                                                               "data-size": "small",
                                                               "data-command": "italic",
-                                                              "data-type": "secondary"
+                                                              "aria-label": "$label:content.template.italic",
+                                                              "data-type": "quaternary"
                                                             },
                                                             "children": [
                                                               {
@@ -1016,7 +1025,8 @@
                                                               "class": "diet-button",
                                                               "data-size": "small",
                                                               "data-command": "underline",
-                                                              "data-type": "secondary"
+                                                              "aria-label": "$label:content.template.underline",
+                                                              "data-type": "quaternary"
                                                             },
                                                             "children": [
                                                               {
@@ -1039,7 +1049,8 @@
                                                               "class": "diet-button",
                                                               "data-size": "small",
                                                               "data-command": "strike",
-                                                              "data-type": "secondary"
+                                                              "aria-label": "$label:content.template.strikethrough",
+                                                              "data-type": "quaternary"
                                                             },
                                                             "children": [
                                                               {
@@ -1062,7 +1073,8 @@
                                                               "class": "diet-button",
                                                               "data-size": "small",
                                                               "data-command": "link",
-                                                              "data-type": "secondary"
+                                                              "aria-label": "$label:content.template.link",
+                                                              "data-type": "quaternary"
                                                             },
                                                             "children": [
                                                               {
@@ -1102,7 +1114,8 @@
                                                               "class": "diet-button",
                                                               "data-size": "small",
                                                               "data-command": "clear-format",
-                                                              "data-type": "secondary"
+                                                              "aria-label": "$label:content.template.clear-formatting",
+                                                              "data-type": "quaternary"
                                                             },
                                                             "children": [
                                                               {
@@ -1125,7 +1138,8 @@
                                                               "class": "diet-button",
                                                               "data-size": "small",
                                                               "data-command": "clear-links",
-                                                              "data-type": "secondary"
+                                                              "aria-label": "$label:content.template.clear-links",
+                                                              "data-type": "quaternary"
                                                             },
                                                             "children": [
                                                               {
@@ -1189,7 +1203,7 @@
                                                                   "data-size": "small",
                                                                   "aria-hidden": true,
                                                                   "tabindex": -1,
-                                                                  "data-type": "secondary"
+                                                                  "data-type": "quaternary"
                                                                 },
                                                                 "children": [
                                                                   {

@@ -14,7 +14,7 @@ const COMMAND_LABELS: Record<TexteditCommand, string> = {
 
 function buttonHTML(command: Command, icon: string): string {
   return `
-    <button type="button" class="diet-button" data-size="small" data-type="secondary" data-command="${command}" aria-label="${COMMAND_LABELS[command]}">
+    <button type="button" class="diet-button" data-size="small" data-type="quaternary" data-command="${command}" aria-label="${COMMAND_LABELS[command]}">
       <span class="diet-icon" aria-hidden="true" data-icon="${icon}" data-size="12"></span>
     </button>
   `;

@@ -543,7 +543,7 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
                 <button
                   className="diet-button"
                   data-size="medium"
-                  data-type="secondary"
+                  data-type="quaternary"
                   type="button"
                   onClick={() => {
                     const undo = undoRef.current;

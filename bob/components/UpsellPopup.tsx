@@ -96,7 +96,7 @@ export function UpsellPopup({ open, reasonKey, cta, onClose }: UpsellPopupProps)
             ref={closeButtonRef}
             className="diet-button"
             data-size="large"
-            data-type="secondary"
+            data-type="quaternary"
             type="button"
             onClick={close}
           >

@@ -71,6 +71,11 @@ may retain their own `sm|md|lg` APIs. Neither is an Icon glyph size. A Button
 containing an Icon declares both the Button size and the numeric Icon size; no
 Button class, runtime, or CSS inference chooses the glyph size.
 
+Button composition places an optional Icon at the structured `start` or `end`
+position; omitting the Icon produces a text-only Button. Position never changes
+the Icon's numeric glyph-size authority. Icon-only Buttons remain the same
+Button primitive and require an accessible name on the control.
+
 ## Color And State
 
 Dieter source SVGs and rendered operational icons use `currentColor`.

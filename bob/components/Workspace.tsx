@@ -519,9 +519,10 @@ export function Workspace({
             <button
               className="diet-button"
               data-size="large"
-              data-type="secondary"
+              data-type="quaternary"
               tabIndex={-1}
               type="button"
+              aria-label="Desktop"
               aria-pressed={device === 'desktop'}
             >
               <span
@@ -547,9 +548,10 @@ export function Workspace({
             <button
               className="diet-button"
               data-size="large"
-              data-type="secondary"
+              data-type="quaternary"
               tabIndex={-1}
               type="button"
+              aria-label="Mobile"
               aria-pressed={device === 'mobile'}
             >
               <span

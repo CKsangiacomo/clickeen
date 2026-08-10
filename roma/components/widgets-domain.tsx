@@ -101,7 +101,7 @@ function WidgetUpgradePromptDialog({
             ref={closeButtonRef}
             className="diet-button"
             data-size="medium"
-            data-type="secondary"
+            data-type="quaternary"
             type="button"
             onClick={onClose}
           >
@@ -720,7 +720,7 @@ export function WidgetsDomain({
                       <button
                         className="diet-button"
                         data-size="small"
-                        data-type="secondary"
+                        data-type="quaternary"
                         type="button"
                         aria-label="Sort by widget"
                         onClick={() => changeSort('widget')}
@@ -742,7 +742,7 @@ export function WidgetsDomain({
                       <button
                         className="diet-button"
                         data-size="small"
-                        data-type="secondary"
+                        data-type="quaternary"
                         type="button"
                         aria-label="Sort by instance name"
                         onClick={() => changeSort('name')}
@@ -764,7 +764,7 @@ export function WidgetsDomain({
                       <button
                         className="diet-button"
                         data-size="small"
-                        data-type="secondary"
+                        data-type="quaternary"
                         type="button"
                         aria-label="Sort by published status"
                         onClick={() => changeSort('status')}
@@ -829,7 +829,7 @@ export function WidgetsDomain({
                                 <button
                                   className="diet-button"
                                   data-size="medium"
-                                  data-type="secondary"
+                                  data-type="quaternary"
                                   type="button"
                                   onClick={cancelRename}
                                   disabled={Boolean(activeActionKey)}
@@ -909,7 +909,7 @@ export function WidgetsDomain({
                               <button
                                 className="diet-button"
                                 data-size="medium"
-                                data-type="secondary"
+                                data-type="quaternary"
                                 type="button"
                                 aria-label={`More actions for ${instanceName}`}
                                 aria-haspopup="menu"
