@@ -21,6 +21,10 @@ The widget foundation owns their default product labels. A widget declares label
 and visible order for its additional roles in its structured typography panel.
 Bob composes those declared roles into the editor. The widget runtime consumes
 the same structured typography state through `CKTypography.applyTypography`.
+Saved `typography.roleScales` is the sole size-scale authority for both common
+and widget-specific roles. Required roles, scales, tracking presets, and
+line-height presets are explicit state; shared runtime does not supply a second
+scale table or treat a missing preset as `normal`.
 
 ## Branding
 

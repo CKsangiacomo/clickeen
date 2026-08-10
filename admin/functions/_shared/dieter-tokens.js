@@ -225,7 +225,7 @@ export async function handleDieterTokenValueRequest(context, kind) {
       return json({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.invalidJson' } }, 422);
     }
     const token = stringValue(payload.token);
-    const value = stringValue(payload.value);
+    const value = typeof payload.value === 'string' ? payload.value : '';
     if (!token || !value) {
       return json({ error: { kind: 'VALIDATION', reasonKey: 'devstudio.errors.dieterTokens.required' } }, 422);
     }

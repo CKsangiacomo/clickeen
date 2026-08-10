@@ -12,6 +12,7 @@ import {
   buildSavedWidgetPublicPackageResult,
   prepareAccountInstancePublicPackage,
   readWidgetForInstancePackage,
+  validateInstanceTypographyStructure,
 } from '../lib/account-instance-public-package';
 import { runRemovedLocaleCleanup } from '../lib/account-locale-cleanup';
 
@@ -57,6 +58,49 @@ async function testEveryWidgetBuildsPackageWithOneShell(): Promise<void> {
     });
     assert.equal(result.value.evidence.materializerContractVersion, 'ck-runtime-materializer:shell-anchor');
   }
+}
+
+async function testMaterializationRequiresCompleteTypography(): Promise<void> {
+  for (const widgetType of PACKAGE_PARITY_WIDGETS) {
+    const compiled = readWidgetForInstancePackage(widgetType);
+    assert.equal(compiled.ok, true, JSON.stringify(compiled));
+    if (!compiled.ok) continue;
+    const state = await buildAccountDefaultStateFixture(widgetType);
+    assert.deepEqual(
+      validateInstanceTypographyStructure({ compiled: compiled.value, state }),
+      [],
+      widgetType,
+    );
+  }
+
+  const compiled = readWidgetForInstancePackage('calltoaction');
+  assert.equal(compiled.ok, true, JSON.stringify(compiled));
+  if (!compiled.ok) return;
+
+  const missingRole = await buildAccountDefaultStateFixture('calltoaction');
+  const missingRoleTypography = missingRole.typography as Record<string, unknown>;
+  delete (missingRoleTypography.roles as Record<string, unknown>).eyebrow;
+  assert.deepEqual(
+    validateInstanceTypographyStructure({ compiled: compiled.value, state: missingRole }),
+    ['typography.roles.eyebrow'],
+  );
+
+  const missingPreset = await buildAccountDefaultStateFixture('calltoaction');
+  const missingPresetTypography = missingPreset.typography as Record<string, unknown>;
+  const missingPresetRoles = missingPresetTypography.roles as Record<string, unknown>;
+  delete (missingPresetRoles.title as Record<string, unknown>).trackingPreset;
+  assert.deepEqual(
+    validateInstanceTypographyStructure({ compiled: compiled.value, state: missingPreset }),
+    ['typography.roles.title.trackingPreset'],
+  );
+
+  const missingScale = await buildAccountDefaultStateFixture('calltoaction');
+  const missingScaleTypography = missingScale.typography as Record<string, unknown>;
+  delete (missingScaleTypography.roleScales as Record<string, unknown>).title;
+  assert.deepEqual(
+    validateInstanceTypographyStructure({ compiled: compiled.value, state: missingScale }),
+    ['typography.roleScales.title'],
+  );
 }
 
 async function testTokyoFontUsesTokyoOriginInSavedRuntime(): Promise<void> {
@@ -208,6 +252,7 @@ async function testNoActiveLocalePackageAuthority(): Promise<void> {
 
 const tests = [
   ['every widget builds a package with one Shell', testEveryWidgetBuildsPackageWithOneShell],
+  ['materialization requires complete typography', testMaterializationRequiresCompleteTypography],
   ['Tokyo fonts use the Tokyo origin in saved runtime', testTokyoFontUsesTokyoOriginInSavedRuntime],
   ['translation and settings are overlay-only', testTranslationAndSettingsAreOverlayOnly],
   ['removed locale cleanup attempts every overlay', testRemovedLocaleCleanupAttemptsEveryOverlay],

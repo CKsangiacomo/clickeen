@@ -10,6 +10,7 @@ import {
 } from '@clickeen/ck-runtime-materializer';
 import {
   ACCOUNT_TYPOGRAPHY_SELECTION_INVALID_REASON_KEY,
+  COMMON_WIDGET_TYPOGRAPHY_ROLE_LABELS,
   getAccountFontRecord,
   isAcceptedAccountFontUpload,
   isAccountFontFamily,
@@ -183,6 +184,45 @@ function collectTypographyFamilies(state: Record<string, unknown>): string[] {
     if (typeof role.family === 'string' && role.family.trim()) families.add(role.family.trim());
   });
   return Array.from(families);
+}
+
+export function validateInstanceTypographyStructure(args: {
+  compiled: CompiledWidgetForPublicPackage;
+  state: Record<string, unknown>;
+}): string[] {
+  const typography = isRecord(args.state.typography) ? args.state.typography : null;
+  if (!typography) return ['typography'];
+  const roles = isRecord(typography.roles) ? typography.roles : null;
+  if (!roles) return ['typography.roles'];
+  const roleScales = isRecord(typography.roleScales) ? typography.roleScales : null;
+  if (!roleScales) return ['typography.roleScales'];
+
+  const expectedRoles = new Set(Object.keys(COMMON_WIDGET_TYPOGRAPHY_ROLE_LABELS));
+  const coreTypography = isRecord(args.compiled.coreDefaults?.typography)
+    ? args.compiled.coreDefaults.typography
+    : null;
+  const coreRoles = coreTypography && isRecord(coreTypography.roles) ? coreTypography.roles : null;
+  Object.keys(coreRoles ?? {}).forEach((roleKey) => expectedRoles.add(roleKey));
+
+  const invalidPaths: string[] = [];
+  expectedRoles.forEach((roleKey) => {
+    const rolePath = `typography.roles.${roleKey}`;
+    const role = isRecord(roles[roleKey]) ? roles[roleKey] : null;
+    if (!role) {
+      invalidPaths.push(rolePath);
+    } else {
+      if (typeof role.trackingPreset !== 'string' || !role.trackingPreset) {
+        invalidPaths.push(`${rolePath}.trackingPreset`);
+      }
+      if (typeof role.lineHeightPreset !== 'string' || !role.lineHeightPreset) {
+        invalidPaths.push(`${rolePath}.lineHeightPreset`);
+      }
+    }
+    if (!isRecord(roleScales[roleKey])) {
+      invalidPaths.push(`typography.roleScales.${roleKey}`);
+    }
+  });
+  return invalidPaths;
 }
 
 async function resolveRuntimeTypographyData(args: {
@@ -506,6 +546,17 @@ export async function materializeAccountInstancePublicPackage(args: {
   | { ok: true; value: SavedWidgetPublicPackage }
   | InstancePackageFailure
 > {
+  const invalidTypographyPaths = validateInstanceTypographyStructure({
+    compiled: args.compiled,
+    state: args.config,
+  });
+  if (invalidTypographyPaths.length) {
+    return validationFailure(
+      ACCOUNT_TYPOGRAPHY_SELECTION_INVALID_REASON_KEY,
+      undefined,
+      invalidTypographyPaths,
+    );
+  }
   const prepared = await prepareAccountInstancePublicPackage({
     accountId: args.accountId,
     accountCapsule: args.accountCapsule,

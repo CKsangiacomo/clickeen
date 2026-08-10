@@ -183,14 +183,6 @@ function assertLayoutCoverage() {
   if (JSON.stringify(spec.editableTokens) !== JSON.stringify(MAIN_CONTAINER_EDITABLE_TOKENS)) {
     fail('main-container layout spec does not expose the exact editable Layout token set');
   }
-  const expectedExamples = ['full', 'compact-closed', 'compact-open'];
-  const actualExamples = Array.isArray(spec.examples)
-    ? spec.examples.map(({ id }) => id)
-    : [];
-  if (JSON.stringify(actualExamples) !== JSON.stringify(expectedExamples)) {
-    fail('main-container layout spec does not expose the exact example states');
-  }
-
   const layoutHtml = read(path.join(layoutRoot, `${layoutName}.html`));
   const requiredMarkup = [
     'class="main-container"',

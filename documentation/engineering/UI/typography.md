@@ -62,6 +62,14 @@ Raw semantic headings remain HTML semantics. Visual scale is explicit through
 classes, for example `<h2 class="heading-3">` when the semantic level and visual
 scale differ.
 
+DevStudio reveals all 31 visual classes and exposes one page-level
+**Edit typography tokens** action. The source currently contains 17 live
+font-size and line-height tokens. Font-size writes accept only positive
+`rem`/`em`/`px` lengths or the existing positive `clamp(...)` shape;
+line-height writes accept only positive unitless numbers. DevStudio submits the
+exact entered value. Invalid input is rejected visibly and is never trimmed,
+normalized, or committed as a different value.
+
 ## Public Widget Typography
 
 Public widget typography is account content typography.
@@ -85,6 +93,13 @@ Runtime emits `--typo-*` variables for the widget scope. Widget typography may
 include account-authored content colors, role scales, custom sizes, weights,
 styles, tracking presets, line-height presets, and locale/script-aware fallback
 behavior. That is widget content authority, not Dieter chrome authority.
+
+Saved `typography.roleScales` is the only role-scale authority used by the
+runtime. Shared runtime code does not carry a second copy of common role
+scales. Before materialization, Roma requires every common and widget-declared
+role, its scale, and its explicit tracking and line-height presets. Missing
+state fails the save instead of becoming an implicit `normal` value or a
+partially styled public package.
 
 Widget content may use container-query fluid sizing because widgets run inside
 variable embed containers. Operational UI chrome must not use viewport-fluid

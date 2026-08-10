@@ -43,8 +43,10 @@ main-container
 compact-navigation scrim is a control inside `page`, not a third layout child.
 The source contract is
 `dieter/layouts/main-container/main-container.{html,css,spec.json}`. DevStudio
-reveals its Full, Compact-closed, and Compact-open examples and edits its four
-layout tokens through the existing foundation-token write path.
+maps this shared shell beside Bob's separate editor layout and the public
+Widget layout, including exact class taxonomy, owners, consumers, and source
+paths. Its four application-layout tokens remain editable through the existing
+foundation-token write path.
 `main-container` and `page` use `--role-surface-muted`; `left-nav` uses
 `--role-surface`. In Full mode `left-nav` is `16rem` wide, inset by
 `--space-2` on all four sides, borderless, and uses `3xl` radius plus the

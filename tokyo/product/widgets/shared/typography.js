@@ -3,15 +3,6 @@
 
   const SIZE_PRESETS = new Set(['xs', 's', 'm', 'l', 'xl', 'custom']);
   const LOCALE_PARAM = 'locale';
-  const GLOBAL_ROLE_SCALES = Object.freeze({
-    title: Object.freeze({ xs: '20px', s: '28px', m: '36px', l: '44px', xl: '60px' }),
-    body: Object.freeze({ xs: '14px', s: '16px', m: '18px', l: '22px', xl: '24px' }),
-    section: Object.freeze({ xs: '12px', s: '13px', m: '14px', l: '16px', xl: '18px' }),
-    question: Object.freeze({ xs: '14px', s: '16px', m: '18px', l: '22px', xl: '24px' }),
-    answer: Object.freeze({ xs: '14px', s: '16px', m: '18px', l: '22px', xl: '24px' }),
-    button: Object.freeze({ xs: '13px', s: '15px', m: '18px', l: '20px', xl: '24px' }),
-    localeSwitcher: Object.freeze({ xs: '13px', s: '15px', m: '18px', l: '20px', xl: '24px' }),
-  });
   const TRACKING_PRESETS = Object.freeze({
     tighter: '-0.03em',
     tight: '-0.015em',
@@ -333,8 +324,10 @@
   }
 
   function resolveTrackingValue(roleKey, role) {
-    const presetValue =
-      typeof role.trackingPreset === 'string' && role.trackingPreset.trim() ? role.trackingPreset.trim() : 'normal';
+    const presetValue = role.trackingPreset;
+    if (typeof presetValue !== 'string' || !presetValue) {
+      throw new Error(`[CKTypography] Role "${roleKey}" is missing trackingPreset`);
+    }
     if (!Object.prototype.hasOwnProperty.call(TRACKING_PRESETS, presetValue)) {
       throw new Error(`[CKTypography] Unknown trackingPreset "${presetValue}" for role "${roleKey}"`);
     }
@@ -369,10 +362,10 @@
   }
 
   function resolveLineHeightValue(roleKey, role, script) {
-    const presetValue =
-      typeof role.lineHeightPreset === 'string' && role.lineHeightPreset.trim()
-        ? role.lineHeightPreset.trim()
-        : 'normal';
+    const presetValue = role.lineHeightPreset;
+    if (typeof presetValue !== 'string' || !presetValue) {
+      throw new Error(`[CKTypography] Role "${roleKey}" is missing lineHeightPreset`);
+    }
     if (!Object.prototype.hasOwnProperty.call(LINE_HEIGHT_PRESETS, presetValue)) {
       throw new Error(`[CKTypography] Unknown lineHeightPreset "${presetValue}" for role "${roleKey}"`);
     }
@@ -826,7 +819,7 @@
         throw new Error(`[CKTypography] Unknown sizePreset "${sizePreset}" for role "${roleKey}"`);
       }
 
-      const scale = GLOBAL_ROLE_SCALES[roleKey] || roleScales[roleKey];
+      const scale = roleScales[roleKey];
       if (!scale || typeof scale !== 'object') {
         throw new Error(`[CKTypography] Missing roleScales for "${roleKey}"`);
       }

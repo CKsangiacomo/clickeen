@@ -249,7 +249,10 @@ declared `/fonts/special/**` path to an absolute URL under the configured
 `NEXT_PUBLIC_TOKYO_URL` origin. Account-uploaded records resolve through the
 current account asset authority. Roma does not rewrite a global font as an
 account asset, and saved public packages do not point global fonts at
-`clk.live`.
+`clk.live`. Materialization also requires every common and widget-declared
+typography role, its saved role scale, and explicit tracking and line-height
+presets. Missing required typography structure and invalid account-font
+selections fail before Tokyo persistence.
 
 When the existing source-save command changes a saved instance, Roma saves the
 source and base package only. It does not generate translations, regenerate

@@ -375,6 +375,7 @@ let tokenEditorLifecycle: ReturnType<typeof createDialogLifecycle> | null = null
 
 const DIETER_TOKEN_LOAD_ERROR_COPY = 'Dieter tokens could not be loaded. Please try again.';
 const DIETER_TOKEN_SAVE_ERROR_COPY = 'Dieter token could not be saved. Please try again.';
+const DIETER_TYPOGRAPHY_TOKEN_INVALID_COPY = 'Invalid typography value. Nothing was changed.';
 
 async function fetchDieterTokens(kind: DieterTokenKind): Promise<DieterToken[]> {
   const cached = tokenCache.get(kind);
@@ -399,6 +400,13 @@ async function saveDieterToken(kind: DieterTokenKind, token: string, value: stri
   });
   const payload = await res.json().catch(() => null);
   if (!res.ok || !payload?.ok || !Array.isArray(payload.tokens)) {
+    if (
+      kind === 'typography' &&
+      res.status === 422 &&
+      payload?.error?.reasonKey === 'devstudio.errors.dieterTokens.typographyInvalid'
+    ) {
+      throw new Error(DIETER_TYPOGRAPHY_TOKEN_INVALID_COPY);
+    }
     throw new Error(DIETER_TOKEN_SAVE_ERROR_COPY);
   }
   tokenCache.set(kind, payload.tokens);
@@ -486,7 +494,7 @@ async function openTokenEditor(
           <h2 class="heading-4" id="devstudio-token-editor-discard-title">Discard changes?</h2>
         </header>
         <div class="diet-popup__body devstudio-token-editor__body">
-          <p class="body-sm">Your uncommitted token value will be lost.</p>
+          <p class="body-s">Your uncommitted token value will be lost.</p>
         </div>
         <footer class="diet-popup__footer">
           <div class="diet-popup__actions">
@@ -535,7 +543,7 @@ async function openTokenEditor(
   let editorFocus: HTMLElement | null = null;
   const isDirty = () => {
     const current = tokens.find((entry) => entry.token === tokenInput.value);
-    return Boolean(current && input.value.trim() !== current.value);
+    return Boolean(current && input.value !== current.value);
   };
   const setSaving = (next: boolean) => {
     saving = next;
@@ -657,10 +665,10 @@ async function openTokenEditor(
     const syncDiff = () => {
       const current = tokens.find((entry) => entry.token === tokenInput.value);
       if (!current) return;
-      if (input.value.trim() === current.value) {
+      if (input.value === current.value) {
         setStatus('No changes to commit.');
       } else {
-        setStatus(`${current.value} → ${input.value.trim()}`);
+        setStatus(`${current.value} → ${input.value}`);
       }
       commitButton.disabled = saving || !isDirty();
     };
@@ -677,7 +685,7 @@ async function openTokenEditor(
       event.preventDefault();
       if (saving) return;
       const token = tokenInput.value;
-      const value = input.value.trim();
+      const value = input.value;
       const current = tokens.find((entry) => entry.token === token);
       if (!current || !value || value === current.value) {
         syncDiff();
@@ -696,9 +704,12 @@ async function openTokenEditor(
         updateVisibleTokenValue(token, next.value);
         setSaving(false);
         setStatus('Committed. CI will rebuild Dieter artifacts.', 'saved');
-      } catch {
+      } catch (error) {
         setSaving(false);
-        setStatus(DIETER_TOKEN_SAVE_ERROR_COPY, 'error');
+        setStatus(
+          error instanceof Error ? error.message : DIETER_TOKEN_SAVE_ERROR_COPY,
+          'error',
+        );
       }
     });
   } catch {
@@ -823,6 +834,19 @@ function hydrateTypographyPage(scope: ParentNode) {
 
   const doc = container.ownerDocument;
 
+  const pageActions = scope.querySelector<HTMLElement>('.page__actions');
+  if (pageActions) {
+    const editButton = doc.createElement('button');
+    editButton.className = 'diet-btn-txt';
+    editButton.type = 'button';
+    editButton.dataset.size = 'md';
+    editButton.dataset.variant = 'secondary';
+    editButton.setAttribute('data-token-edit', 'typography');
+    editButton.innerHTML = '<span class="diet-btn-txt__label">Edit typography tokens</span>';
+    pageActions.replaceChildren(editButton);
+    pageActions.hidden = false;
+  }
+
   typographySections.forEach(({ title, samples }) => {
     const section = doc.createElement('section');
     section.className = 'foundation-section';
@@ -842,7 +866,6 @@ function hydrateTypographyPage(scope: ParentNode) {
           <th class="label-s" scope="col">Role</th>
           <th class="label-s" scope="col">Source class</th>
           <th class="label-s diet-table__cell--preview" scope="col">Preview</th>
-          <th class="label-s diet-table__cell--action" scope="col">Action</th>
         </tr>
       </thead>
     `;
@@ -872,19 +895,6 @@ function hydrateTypographyPage(scope: ParentNode) {
       sampleElement.textContent = getTypographySampleText(sample.sample);
       previewCell.appendChild(sampleElement);
       row.appendChild(previewCell);
-
-      const actionCell = doc.createElement('td');
-      actionCell.className = 'body-s diet-table__cell--action';
-      const editButton = doc.createElement('button');
-      editButton.className = 'diet-btn-txt';
-      editButton.type = 'button';
-      editButton.dataset.size = 'md';
-      editButton.dataset.variant = 'secondary';
-      editButton.setAttribute('data-token-edit', 'typography');
-      editButton.setAttribute('aria-label', `Edit typography tokens for ${sample.name}`);
-      editButton.innerHTML = '<span class="diet-btn-txt__label">Edit</span>';
-      actionCell.appendChild(editButton);
-      row.appendChild(actionCell);
 
       body.appendChild(row);
     });

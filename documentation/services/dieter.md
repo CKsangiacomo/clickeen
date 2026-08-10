@@ -65,8 +65,10 @@ DevStudio reads Dieter source through its existing source generators. Its
 generated reveal pages are tooling output, not a deployable Dieter runtime.
 The generated Core styles page reads spacing, control geometry, radius, shadow,
 and motion values from `dieter-foundation-tokens.css`. The separate Layouts
-page reads the real layout HTML/CSS/spec, exposes its four source tokens, and
-renders the inset navigation presentation declared by the source spec.
+page uses the structured `main-container` contract for the shared application
+shell and maps it beside Bob's separate editor composition and the public
+Widget Stage/Pod/Shell/Header/Core composition. It exposes the four real
+application-layout source tokens without creating another layout authority.
 Authenticated edits commit back to that same foundation token file through
 DevStudio's validated GitHub write path.
 
@@ -98,7 +100,10 @@ Operational typography is selected only through the complete visual classes
 revealed by DevStudio Typography: `display-*`, `heading-*`, `body-*`,
 `label-*`, `caption*`, and `overline*`. Consumers do not assemble typography
 from font-family, size, weight, line-height, or tracking values and do not add a
-monospace exception for technical strings.
+monospace exception for technical strings. The source contains only live
+font-size and line-height tokens; DevStudio edits those shared values through
+one Typography-page action rather than attaching a misleading editor to every
+visual-class row.
 
 Dieter Table uses `label-s` for column headers and `body-s` for every body
 header/data cell. Its body and row-header cells use `--role-surface`; only the

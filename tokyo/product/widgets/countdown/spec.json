@@ -21,7 +21,11 @@
           "weight": "400",
           "fontStyle": "normal",
           "sizeCustom": 14,
-          "sizePreset": "custom"
+          "sizePreset": "custom",
+          "trackingCustom": 0,
+          "trackingPreset": "normal",
+          "lineHeightCustom": 1.15,
+          "lineHeightPreset": "normal"
         },
         "timer": {
           "color": {
@@ -32,7 +36,11 @@
           "weight": "700",
           "fontStyle": "normal",
           "sizeCustom": 48,
-          "sizePreset": "custom"
+          "sizePreset": "custom",
+          "trackingCustom": 0,
+          "trackingPreset": "normal",
+          "lineHeightCustom": 1,
+          "lineHeightPreset": "normal"
         }
       },
       "roleScales": {

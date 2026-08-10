@@ -55,6 +55,10 @@ countdown.appearance
 countdown.timer
 ```
 
+Countdown declares complete `label` and `timer` typography roles, including
+explicit normal tracking and line-height presets. Runtime does not infer those
+values when state is incomplete.
+
 ## Editable Fields
 
 ```text

@@ -18,15 +18,15 @@
     }
   },
   "presentation": {
-    "inset": "--space-2",
-    "canvas": "--role-surface-muted",
-    "navigationSurface": "--role-surface",
+    "inset": "var(--space-2)",
+    "canvas": "var(--role-surface-muted)",
+    "navigationSurface": "var(--role-surface)",
     "border": "none",
-    "radius": "--control-radius-3xl",
-    "widePanelWidth": "--layout-left-nav-width",
-    "compactPanelWidth": "min(--layout-compact-left-nav-width, calc(100vw - --space-4))",
-    "wideElevation": "--shadow-floating",
-    "compactElevation": "--shadow-elevated",
+    "radius": "var(--control-radius-3xl)",
+    "widePanelWidth": "var(--layout-left-nav-width)",
+    "compactPanelWidth": "min(var(--layout-compact-left-nav-width), calc(100vw - var(--space-4)))",
+    "wideElevation": "var(--shadow-floating)",
+    "compactElevation": "var(--shadow-elevated)",
     "pageContentMaxWidth": "80rem",
     "widePageRhythm": "--layout-page-padding / --space-4 / --space-4",
     "compactPageRhythm": "--space-4 / --space-3 / --space-3",
@@ -37,22 +37,5 @@
     "--layout-left-nav-padding",
     "--layout-page-padding",
     "--layout-compact-left-nav-width"
-  ],
-  "examples": [
-    {
-      "id": "full",
-      "label": "Full"
-    },
-    {
-      "id": "compact-closed",
-      "label": "Compact closed"
-    },
-    {
-      "id": "compact-open",
-      "label": "Compact open",
-      "attributes": {
-        "data-navigation-open": "true"
-      }
-    }
   ]
 }

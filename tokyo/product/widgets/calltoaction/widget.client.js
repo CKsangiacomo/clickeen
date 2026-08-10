@@ -62,15 +62,6 @@
     return el;
   }
 
-  function hasTypographyRole(state, roleKey) {
-    return (
-      isRecord(state) &&
-      isRecord(state.typography) &&
-      isRecord(state.typography.roles) &&
-      isRecord(state.typography.roles[roleKey])
-    );
-  }
-
   function unwrapElement(el) {
     var parent = el.parentNode;
     if (!parent) return;
@@ -307,10 +298,8 @@
         body: { varKey: 'body' },
         button: { varKey: 'button' },
         localeSwitcher: { varKey: 'locale-switcher' },
+        eyebrow: { varKey: 'eyebrow' },
       };
-      if (hasTypographyRole(state, 'eyebrow')) {
-        typographyRoles.eyebrow = { varKey: 'eyebrow' };
-      }
       window.CKTypography.applyTypography(
         state.typography,
         callToActionShell,

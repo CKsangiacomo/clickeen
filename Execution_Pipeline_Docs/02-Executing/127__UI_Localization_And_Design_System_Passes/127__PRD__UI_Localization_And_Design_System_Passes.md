@@ -158,7 +158,7 @@ the code is convenient there.
 | Stage | Status | Release state |
 | --- | --- | --- |
 | Stage 1 — Scaffold only | Implemented and verified in the local worktree | Not committed, pushed, deployed, or exposed as a non-English experience |
-| Stage 2 — Dieter UI pass | In progress: Core styles, Colors, and Icons passed | Local only; not committed, pushed, or deployed |
+| Stage 2 — Dieter UI pass | In progress: Foundations pass complete; Dieter Components not started | Local only; not committed, pushed, or deployed |
 | Stage 3 — Bob UI pass | Not started | No authority to begin until explicitly directed |
 | Stage 4 — Roma UI pass | Not started | No authority to begin until explicitly directed |
 | Stage 5 — Translation pass | Not started | No translations may be generated yet |
@@ -240,6 +240,24 @@ authority.
   maintain a second global approval list, compare the icon library against
   itself, or ask whether a declared Dieter icon is allowed. Product fields may
   still declare the exact choices that field offers.
+- **Typography — passed after correction, 2026-08-09.** DevStudio reveals the
+  31 real Dieter visual classes and uses one page-level editor for their 17
+  shared live source tokens. Four unused tokens and one invalid DevStudio class
+  were removed. The existing write boundary now preserves exact typed input and
+  visibly rejects invalid sizes or line heights instead of trimming or
+  committing a changed value. Public Widget runtime now uses saved
+  `typography.roleScales` as its sole scale authority; Roma rejects missing
+  declared roles, scales, tracking presets, or line-height presets before save,
+  and Countdown's formerly implicit values are explicit. Prague font delivery
+  remains deferred to the Prague pass by owner direction.
+- **Layouts — passed after correction, 2026-08-09.** The artificial three-frame
+  placeholder showcase was removed completely. DevStudio now serves the actual
+  purpose of this tab: an AI-operable architecture map of the shared
+  Roma/DevStudio application shell, Bob's separate editor composition, and the
+  public Widget Stage/Pod/Shell/Header/Core composition. Each map names exact
+  classes, owner, consumers, and source path. The four real application-layout
+  tokens retain their existing validated edit path; no product layout behavior
+  changed.
 
 ### Per-Tab Execution Loop
 

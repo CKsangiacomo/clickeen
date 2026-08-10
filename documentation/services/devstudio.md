@@ -70,14 +70,18 @@ and commit only recognized spacing, layout, control geometry, radius, shadow,
 duration, and easing tokens in `dieter-foundation-tokens.css`. Each page scopes
 the editor dropdown to the tokens visible on that page. The validation contract
 used to generate editable rows is the same contract enforced by the Pages
-Function. Samples are decorative. Each editable row exposes a separate, named
-Edit action so the preview itself does not masquerade as a control.
+Function. Samples are decorative. Core styles, Colors, and Layouts expose
+token-owned row actions. Typography exposes one page-level token action because
+its source tokens are shared by multiple visual classes; its class rows remain
+reveal and preview truth rather than pretending each class owns a private token.
+Typography values are submitted exactly as entered. Invalid values are rejected
+without trimming, normalization, substitution, or a Git commit.
 
 ## Current Sections
 
 | Section | Runtime source |
 | --- | --- |
-| Foundations: Core styles, Colors, Icons, Typography, Layouts | Generated from Dieter token, icon, and layout source through DevStudio static page generation. Core styles groups 53 non-layout foundation tokens. Layouts reveals the real `main-container` contract, three source-derived examples, and its four editable properties. |
+| Foundations: Core styles, Colors, Icons, Typography, Layouts | Generated from Dieter token, icon, and layout source through DevStudio static page generation. Core styles groups 53 non-layout foundation tokens. Layouts maps the three current layout families: the Roma/DevStudio application shell, Bob editor, and public Widget composition. It shows exact class taxonomy, owners, consumers, source paths, and the four editable application-layout properties. |
 | Dieter Components | Generated/static component showcase pages from Dieter component specs and snippets. |
 | Entitlements | Pages Functions read/write entitlement policy files through GitHub. The same tool also renders AI runtime policy editing backed by `/api/ai-runtime/*`. |
 | LLM Management | Read-only generated visibility into managed model configuration. It is not a runtime API-backed editor. |

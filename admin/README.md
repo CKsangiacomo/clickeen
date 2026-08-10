@@ -15,10 +15,11 @@ superadmin account browser.
   shadows, and motion through the existing validated GitHub token write path.
   Decorative samples remain previews; named Edit actions open the shared
   native-dialog lifecycle with mutually exclusive work/discard states.
-- Layouts reads Dieter's actual `main-container` HTML, CSS, and spec; renders
-  the inset navigation panel in isolated Full, Compact-closed, and Compact-open
-  examples; and exposes the four layout tokens through that same validated
-  token write path.
+- Layouts is the architecture map for the three current layout families. It
+  shows the shared Roma/DevStudio application shell, Bob's separate editor
+  composition, and the public Widget Stage/Pod/Shell/Header/Core contract with
+  their exact class taxonomy, owners, consumers, and source paths. The four
+  application-layout tokens remain editable through the validated token path.
 - Dieter Components: 24 generated component pages, including the shared Table
   and blocking Popup contracts.
 - Policy: entitlements + AI runtime Policy Editor at `/#/policy/entitlements`.

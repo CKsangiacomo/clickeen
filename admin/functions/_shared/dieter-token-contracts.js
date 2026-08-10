@@ -1,6 +1,10 @@
 const COLOR_LITERAL_PATTERN = /^#[0-9a-fA-F]{3}(?:[0-9a-fA-F]{3})?$/;
-const TYPOGRAPHY_VALUE_PATTERN =
-  /^(?:-?\d+(?:\.\d+)?(?:rem|em|px|%)?|-?\d+(?:\.\d+)?|clamp\(-?\d+(?:\.\d+)?(?:rem|em|px|%)?,\s*-?\d+(?:\.\d+)?(?:rem|em|px|%)?\s*\+\s*-?\d+(?:\.\d+)?vw,\s*-?\d+(?:\.\d+)?(?:rem|em|px|%)?\))$/;
+const POSITIVE_NUMBER_SOURCE = String.raw`(?:\d+(?:\.\d+)?|\.\d+)`;
+const POSITIVE_LENGTH_PATTERN = new RegExp(`^(${POSITIVE_NUMBER_SOURCE})(?:rem|em|px)$`);
+const POSITIVE_LINE_HEIGHT_PATTERN = new RegExp(`^${POSITIVE_NUMBER_SOURCE}$`);
+const POSITIVE_FONT_SIZE_CLAMP_PATTERN = new RegExp(
+  `^clamp\\((${POSITIVE_NUMBER_SOURCE})(rem|em|px),\\s*(${POSITIVE_NUMBER_SOURCE})(rem|em|px)\\s*\\+\\s*(${POSITIVE_NUMBER_SOURCE})vw,\\s*(${POSITIVE_NUMBER_SOURCE})(rem|em|px)\\)$`,
+);
 const FOUNDATION_TOKEN_PATTERN =
   /^--(?:space-\d+|vertspace-\d+|layout-(?:left-nav-width|left-nav-padding|page-padding|compact-left-nav-width)|control-size-[a-z0-9-]+|control-padding-inline|control-inline-gap-[a-z0-9-]+|control-radius-[a-z0-9-]+|shadow-[a-z0-9-]+|duration-[a-z0-9-]+|easing-standard)$/;
 const LENGTH_VALUE_PATTERN = /^(?:0|(?:\d+(?:\.\d+)?|\.\d+)(?:rem|em|px))$/;
@@ -106,6 +110,23 @@ function isValidFoundationValue(token, value, context) {
   return resolvesLengthReference(token, candidateValues);
 }
 
+function isPositiveNumber(value) {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed > 0;
+}
+
+function isValidTypographyValue(token, value) {
+  if (token.startsWith('--lh-')) {
+    return POSITIVE_LINE_HEIGHT_PATTERN.test(value) && isPositiveNumber(value);
+  }
+  if (!token.startsWith('--fs-')) return false;
+  const length = value.match(POSITIVE_LENGTH_PATTERN);
+  if (length) return isPositiveNumber(length[1]);
+  const clamp = value.match(POSITIVE_FONT_SIZE_CLAMP_PATTERN);
+  if (!clamp) return false;
+  return [clamp[1], clamp[3], clamp[5], clamp[6]].every(isPositiveNumber);
+}
+
 export const TOKEN_FILES = {
   colors: {
     path: 'dieter/tokens/dieter-color-tokens.css',
@@ -122,7 +143,7 @@ export const TOKEN_FILES = {
   typography: {
     path: 'dieter/tokens/dieter-typography.css',
     tokenPattern: /^--(?:fs|lh)-/,
-    valuePattern: TYPOGRAPHY_VALUE_PATTERN,
+    valueValidator: isValidTypographyValue,
     reasonKey: 'devstudio.errors.dieterTokens.typographyInvalid',
   },
 };
