@@ -198,7 +198,7 @@ export function AssetsPage() {
           <button
             className="diet-button"
             data-size="medium"
-            data-type="secondary"
+            data-type="tertiary"
             type="button"
             onClick={headerActions.refresh}
             disabled={headerActions.listLoading || actionsBusy}
@@ -513,7 +513,7 @@ export function AssetsDomain({
         {error ? (
           <div className="roma-inline-stack" role="alert">
             <p className="body-m">{error}</p>
-            <button className="diet-button" data-size="medium" data-type="secondary" type="button" onClick={() => void refreshAssets()} disabled={loading}>
+            <button className="diet-button" data-size="medium" data-type="tertiary" type="button" onClick={() => void refreshAssets()} disabled={loading}>
               <span className="diet-button__label">Retry</span>
             </button>
           </div>
@@ -617,7 +617,7 @@ export function AssetsDomain({
                   <button
                     className="diet-button"
                     data-size="medium"
-                    data-type="destructive"
+                    data-type="secondary"
                     type="button"
                     onClick={() => handleDeleteAsset(asset)}
                     disabled={deletingAssetRef === asset.assetRef}
@@ -699,7 +699,7 @@ export function AssetsDomain({
                 ref={bulkUploadCloseRef}
                 className="diet-button"
                 data-size="medium"
-                data-type="secondary"
+                data-type="tertiary"
                 type="button"
                 onClick={() => bulkUploadInputRef.current?.click()}
                 disabled={bulkUploadBusy}

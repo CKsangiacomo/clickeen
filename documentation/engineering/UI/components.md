@@ -56,9 +56,12 @@ The component-level product law is implemented:
   it is text-only, icon-only, or icon-and-text; those are not separate Button
   classes or variants.
 - Button requires `data-size="small|medium|large"` and
-  `data-type="primary|secondary|destructive"`. Size owns the Button box,
-  spacing, radius, and text typography. The exact 16/20/24px height and
-  11/13/14px text ladder is unchanged.
+  `data-type="primary|secondary|tertiary"`. Type expresses visual hierarchy,
+  not the wording or function of the action: primary is the filled blue
+  emphasis, secondary is the quiet gray treatment, and tertiary is the blue
+  outlined treatment inherited from the former line Button. Size owns the
+  Button box, spacing, radius, and text typography. The exact 16/20/24px
+  height and 11/13/14px text ladder is unchanged.
 - A child `.diet-icon` owns its glyph size independently through numeric
   `data-size`. Standard Button compositions use 12/16/20px Icons inside
   small/medium/large Buttons, but Button CSS does not infer or rewrite that

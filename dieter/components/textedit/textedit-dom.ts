@@ -78,7 +78,7 @@ export function createState(root: HTMLElement): TexteditState {
             <span class="diet-toggle__switch"><span class="diet-toggle__knob"></span></span>
           </label>
         </div>
-        <button type="button" class="diet-button diet-textedit__linkremove" data-size="small" data-type="destructive"><span class="diet-button__label">Remove link</span></button>
+        <button type="button" class="diet-button diet-textedit__linkremove" data-size="small" data-type="secondary"><span class="diet-button__label">Remove link</span></button>
       </div>
     </div>
   `;

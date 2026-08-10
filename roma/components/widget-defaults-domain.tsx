@@ -682,7 +682,7 @@ export function WidgetDefaultsDomain() {
             <button
               className="diet-button"
               data-size="medium"
-              data-type="destructive"
+              data-type="tertiary"
               type="button"
               disabled={!dirty || saving}
               onClick={discard}

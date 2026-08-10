@@ -41,7 +41,7 @@ export function useRomaShellActions(): RomaShellActions {
 export function RomaShellDefaultActions() {
   return (
     <>
-      <Link className="diet-button" data-size="large" data-type="secondary" href="/team">
+      <Link className="diet-button" data-size="large" data-type="tertiary" href="/team">
         <span className="diet-button__label">Invite members</span>
       </Link>
       <Link className="diet-button" data-size="large" data-type="primary" href="/widgets">

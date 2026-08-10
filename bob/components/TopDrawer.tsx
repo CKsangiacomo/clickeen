@@ -116,7 +116,7 @@ export function TopDrawer({
             <a
               className="diet-button"
               data-size="large"
-              data-type="secondary"
+              data-type="tertiary"
               href={publicActions.publicUrl}
               target="_blank"
               rel="noreferrer"
@@ -132,7 +132,7 @@ export function TopDrawer({
                 ref={moreButtonRef}
                 className="diet-button"
                 data-size="large"
-                data-type="secondary"
+                data-type="tertiary"
                 type="button"
                 aria-haspopup="menu"
                 aria-expanded={moreOpen}

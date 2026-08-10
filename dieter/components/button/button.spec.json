@@ -3,7 +3,7 @@
   "syntax": "<button class='diet-button' data-size='{{SIZE}}' data-type='{{TYPE}}'>…</button>",
   "attributes": {
     "size": { "enum": ["small", "medium", "large"], "required": true },
-    "type": { "enum": ["primary", "secondary", "destructive"], "required": true },
+    "type": { "enum": ["primary", "secondary", "tertiary"], "required": true },
     "ariaLabel": { "optional": true },
     "label": { "optional": true },
     "icon": { "optional": true },
@@ -17,7 +17,7 @@
     {
       "id": "button-icon-text",
       "sizes": ["small", "medium", "large"],
-      "types": ["primary", "secondary", "destructive"],
+      "types": ["primary", "secondary", "tertiary"],
       "spec": [
         "diet-button",
         "data-size='{{size}}'",
@@ -40,7 +40,7 @@
     {
       "id": "button-icon",
       "sizes": ["small", "medium", "large"],
-      "types": ["primary", "secondary", "destructive"],
+      "types": ["primary", "secondary", "tertiary"],
       "spec": [
         "diet-button",
         "data-size='{{size}}'",
@@ -63,7 +63,7 @@
     {
       "id": "button-text",
       "sizes": ["small", "medium", "large"],
-      "types": ["primary", "secondary", "destructive"],
+      "types": ["primary", "secondary", "tertiary"],
       "spec": [
         "diet-button",
         "data-size='{{size}}'",

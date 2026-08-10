@@ -123,7 +123,7 @@ export function AcceptInviteDomain({ token }: AcceptInviteDomainProps) {
             >
               <span className="diet-button__label">{loading ? 'Accepting...' : 'Accept invitation'}</span>
             </button>
-            <Link className="diet-button" data-size="medium" data-type="secondary" href="/home">
+            <Link className="diet-button" data-size="medium" data-type="tertiary" href="/home">
               <span className="diet-button__label">Cancel</span>
             </Link>
           </div>

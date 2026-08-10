@@ -671,7 +671,7 @@ export function WidgetsDomain({
           {widgetDataError ? (
             <div className="roma-inline-stack">
               <p className="body-m">{widgetDataError}</p>
-              <button className="diet-button" data-size="medium" data-type="secondary" type="button" onClick={() => void refreshWidgets({ force: true })} disabled={domainLoading || domainRefreshing}>
+              <button className="diet-button" data-size="medium" data-type="tertiary" type="button" onClick={() => void refreshWidgets({ force: true })} disabled={domainLoading || domainRefreshing}>
                 <span className="diet-button__label">Retry</span>
               </button>
             </div>
@@ -877,7 +877,7 @@ export function WidgetsDomain({
                               <button
                                 className="diet-button"
                                 data-size="small"
-                                data-type="secondary"
+                                data-type="tertiary"
                                 type="button"
                                 onClick={() => openCopyCode(instance)}
                               >
@@ -899,7 +899,7 @@ export function WidgetsDomain({
                                 })}
                                 className="diet-button"
                                 data-size="medium"
-                                data-type="secondary"
+                                data-type="tertiary"
                               >
                                 <span className="diet-button__label">Edit</span>
                               </Link>

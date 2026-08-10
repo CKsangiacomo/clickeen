@@ -116,7 +116,7 @@ export function RomaAccountNoticeModal() {
       </div>
       <footer className="diet-popup__footer">
         <div className="diet-popup__actions">
-          <Link className="diet-button" data-size="medium" data-type="secondary" href="/settings">
+          <Link className="diet-button" data-size="medium" data-type="tertiary" href="/settings">
             <span className="diet-button__label">Open settings</span>
           </Link>
           <button className="diet-button" data-size="medium" data-type="primary" type="button" onClick={() => void dismiss()} disabled={dismissLoading}>

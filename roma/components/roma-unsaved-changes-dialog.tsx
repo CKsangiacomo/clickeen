@@ -72,7 +72,7 @@ export function RomaUnsavedChangesDialog({
           <button
             className="diet-button"
             data-size="medium"
-            data-type="destructive"
+            data-type="primary"
             type="button"
             onClick={onDiscard}
           >

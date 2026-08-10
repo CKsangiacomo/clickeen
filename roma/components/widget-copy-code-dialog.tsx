@@ -87,7 +87,7 @@ export function WidgetCopyCodeDialog({
                   <button
                     className="diet-button"
                     data-size="small"
-                    data-type="secondary"
+                    data-type="tertiary"
                     type="button"
                     aria-label={`Copy ${option.label}`}
                     onClick={() => void copy(option.label, actions[option.key])}

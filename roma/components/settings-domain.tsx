@@ -132,13 +132,13 @@ export function SettingsDomain() {
         </p>
         {activeAccount.websiteUrl ? <p className="body-s">Website: {activeAccount.websiteUrl}</p> : null}
         <div className="rd-canvas-module__actions">
-          <Link className="diet-button" data-size="medium" data-type="secondary" href="/widgets">
+          <Link className="diet-button" data-size="medium" data-type="tertiary" href="/widgets">
             <span className="diet-button__label">Open widgets</span>
           </Link>
-          <Link className="diet-button" data-size="medium" data-type="secondary" href="/assets">
+          <Link className="diet-button" data-size="medium" data-type="tertiary" href="/assets">
             <span className="diet-button__label">Open assets</span>
           </Link>
-          <Link className="diet-button" data-size="medium" data-type="secondary" href="/billing">
+          <Link className="diet-button" data-size="medium" data-type="tertiary" href="/billing">
             <span className="diet-button__label">Open billing</span>
           </Link>
         </div>

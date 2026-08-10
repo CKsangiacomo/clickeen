@@ -271,9 +271,11 @@ authority.
 - **Button — unified after the Bulk Edit audit, 2026-08-10.** The three old
   text, icon, and icon-text Button classes were deleted. One `.diet-button`
   now composes optional direct Icon and label children, requires
-  `data-size="small|medium|large"`, and uses semantic
-  `data-type="primary|secondary|destructive"`. The existing 16/20/24px box and
-  11/13/14px text ladder is preserved. Icon children declare independent
+  `data-size="small|medium|large"`, and uses visual-hierarchy
+  `data-type="primary|secondary|tertiary"`. Primary is filled blue, secondary
+  is quiet gray, and tertiary inherits the former outlined line treatment;
+  action wording does not create another Button type. The existing 16/20/24px
+  box and 11/13/14px text ladder is preserved. Icon children declare independent
   numeric sizes, normally 12/16/20px for those three Button sizes. Dieter
   composites, DevStudio, Bob, Roma, and current Widget source use the same
   contract; no old alias, wrapper, compatibility selector, or inferred Icon

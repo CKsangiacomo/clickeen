@@ -8,7 +8,7 @@
     "ariaLabel": { "type": "string", "required": true },
     "groupName": { "type": "string", "required": true },
     "buttonSize": { "type": "enum", "values": ["small", "medium", "large"], "default": "medium", "required": false },
-    "buttonType": { "type": "enum", "values": ["primary", "secondary", "destructive"], "default": "secondary", "required": false },
+    "buttonType": { "type": "enum", "values": ["primary", "secondary", "tertiary"], "default": "secondary", "required": false },
     "buttonIconSize": { "type": "enum", "values": ["12", "16", "20", "24", "28", "32", "36", "40"], "default": "16", "required": false },
     "segments": {
       "type": "array",

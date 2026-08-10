@@ -231,7 +231,7 @@ export function AccountLocaleSettingsCard(args: {
         <div className="roma-inline-stack">
           {!error ? <p className="body-m" role="status">Loading account languages...</p> : null}
           <div className="rd-canvas-module__actions">
-            <button className="diet-button" data-size="medium" data-type="secondary" type="button" disabled={loading || saving} onClick={() => void loadSettings()}>
+            <button className="diet-button" data-size="medium" data-type="tertiary" type="button" disabled={loading || saving} onClick={() => void loadSettings()}>
               <span className="diet-button__label">{loading ? 'Refreshing…' : 'Refresh'}</span>
             </button>
           </div>
@@ -301,7 +301,7 @@ export function AccountLocaleSettingsCard(args: {
           </div>
 
           <div className="rd-canvas-module__actions">
-            <button className="diet-button" data-size="medium" data-type="secondary" type="button" disabled={loading || saving} onClick={() => void loadSettings()}>
+            <button className="diet-button" data-size="medium" data-type="tertiary" type="button" disabled={loading || saving} onClick={() => void loadSettings()}>
               <span className="diet-button__label">{loading ? 'Refreshing…' : 'Refresh'}</span>
             </button>
             <button

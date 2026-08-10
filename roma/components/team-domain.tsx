@@ -177,7 +177,7 @@ export function TeamDomain() {
         {error ? (
           <div className="roma-inline-stack" role="alert">
             <p className="body-m">{error}</p>
-            <button className="diet-button" data-size="medium" data-type="secondary" type="button" onClick={() => void refreshMembers()} disabled={loading}>
+            <button className="diet-button" data-size="medium" data-type="tertiary" type="button" onClick={() => void refreshMembers()} disabled={loading}>
               <span className="diet-button__label">Retry</span>
             </button>
           </div>
@@ -201,7 +201,7 @@ export function TeamDomain() {
               {members.members.map((member) => (
                 <tr key={member.userId}>
                   <td className="body-s">
-                    <Link href={`/team/${encodeURIComponent(member.userId)}`} className="diet-button" data-size="medium" data-type="secondary">
+                    <Link href={`/team/${encodeURIComponent(member.userId)}`} className="diet-button" data-size="medium" data-type="tertiary">
                       <span className="diet-button__label">{resolveMemberLabel(member)}</span>
                     </Link>
                     <div className="body-s">{member.profile?.primaryEmail ?? 'No primary email recorded'}</div>
@@ -291,7 +291,7 @@ export function TeamDomain() {
                       <button
                         className="diet-button"
                         data-size="medium"
-                        data-type="destructive"
+                        data-type="tertiary"
                         type="button"
                         onClick={() => void revokeInvitation(invitation.invitationId)}
                         disabled={inviteLoading}

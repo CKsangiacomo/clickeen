@@ -500,7 +500,7 @@ async function openTokenEditor(
             <button class="diet-button" data-size="medium" data-type="secondary" type="button" data-token-editor-keep>
               <span class="diet-button__label">Keep editing</span>
             </button>
-            <button class="diet-button" data-size="medium" data-type="destructive" type="button" data-token-editor-discard>
+            <button class="diet-button" data-size="medium" data-type="primary" type="button" data-token-editor-discard>
               <span class="diet-button__label">Discard</span>
             </button>
           </div>

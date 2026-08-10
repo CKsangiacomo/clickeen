@@ -188,7 +188,7 @@ export function TeamMemberDomain({ memberId }: TeamMemberDomainProps) {
           <p className="body-m">Account: {accountContext.accountLabel}</p>
           <p className="body-s">Team manages memberships. Personal details stay with the member in User Settings.</p>
         </div>
-        <Link className="diet-button" data-size="medium" data-type="secondary" href="/team">
+        <Link className="diet-button" data-size="medium" data-type="tertiary" href="/team">
           <span className="diet-button__label">Back to team</span>
         </Link>
       </section>
@@ -196,7 +196,7 @@ export function TeamMemberDomain({ memberId }: TeamMemberDomainProps) {
       {error ? (
         <section className="rd-canvas-module" role="alert">
           <p className="body-m">{error}</p>
-          <button className="diet-button" data-size="medium" data-type="secondary" type="button" onClick={() => void refreshMember()} disabled={loading}>
+          <button className="diet-button" data-size="medium" data-type="tertiary" type="button" onClick={() => void refreshMember()} disabled={loading}>
             <span className="diet-button__label">Retry</span>
           </button>
         </section>
@@ -255,7 +255,7 @@ export function TeamMemberDomain({ memberId }: TeamMemberDomainProps) {
               <button
                 className="diet-button"
                 data-size="medium"
-                data-type="destructive"
+                data-type="tertiary"
                 type="button"
                 onClick={() => void removeMember()}
                 disabled={!canManage || member.member.role === 'owner' || removingMember}

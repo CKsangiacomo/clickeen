@@ -424,7 +424,7 @@ const registry = new WeakMap();
       remove.type = "button";
       remove.className = "diet-button diet-tooltip diet-repeater__item-remove";
       remove.setAttribute("data-size", "small");
-      remove.setAttribute("data-type", "destructive");
+      remove.setAttribute("data-type", "secondary");
       remove.setAttribute("aria-label", labelWithIndex(state.removeLabel, index));
       remove.setAttribute("data-tooltip", labelWithIndex(state.removeLabel, index));
       remove.setAttribute("data-tooltip-placement", "left");

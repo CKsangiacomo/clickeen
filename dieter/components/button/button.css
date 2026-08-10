@@ -1,5 +1,5 @@
 /* Dieter Button
-   The Button owns action geometry and semantic type. Child Icons own glyph size. */
+   The Button owns action geometry and visual hierarchy. Child Icons own glyph size. */
 
 .diet-button {
   --button-bg: var(--role-surface);
@@ -109,9 +109,11 @@
   --button-active-bg: color-mix(in oklab, var(--color-text) 20%, transparent);
 }
 
-.diet-button[data-type="destructive"] {
-  --button-bg: var(--color-system-red);
-  --button-color: var(--color-system-white);
-  --button-hover-bg: color-mix(in oklab, var(--color-system-red), var(--state-darken-target) 22%);
-  --button-active-bg: color-mix(in oklab, var(--color-system-red), var(--state-darken-target) 40%);
+.diet-button[data-type="tertiary"] {
+  --button-bg: transparent;
+  --button-color: var(--color-system-blue);
+  --button-border-color: var(--color-system-blue);
+  --button-border-width: 1px;
+  --button-hover-bg: color-mix(in oklab, var(--color-system-blue), transparent 60%);
+  --button-active-bg: color-mix(in oklab, var(--color-system-blue), transparent 30%);
 }

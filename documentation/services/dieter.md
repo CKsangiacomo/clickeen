@@ -144,7 +144,7 @@ so consumers use ordinary Dieter size tokens without icon-specific correction.
 `icons.json` is not deployed or consulted by product runtime. Product controls
 keep their accessible name on the control; decorative icons are painted from
 the declared SVG URL and remain semantically hidden. Button and Icon are
-independent contracts: Button owns action geometry and semantic type; its Icon
+independent contracts: Button owns action geometry and visual hierarchy; its Icon
 child owns numeric glyph size.
 
 Account-uploaded assets and fonts remain under

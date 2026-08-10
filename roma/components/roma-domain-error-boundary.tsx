@@ -69,7 +69,7 @@ export class RomaDomainErrorBoundary extends Component<
           <button
             className="diet-button"
             data-size="medium"
-            data-type="secondary"
+            data-type="tertiary"
             type="button"
             onClick={() => window.location.reload()}
           >
