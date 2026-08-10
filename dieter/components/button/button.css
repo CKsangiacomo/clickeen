@@ -44,7 +44,7 @@
 
 .diet-button[data-size="small"] {
   --button-height: var(--control-size-md, 1.5rem);
-  --button-radius: var(--control-radius-md, 0.375rem);
+  --button-radius: var(--control-radius-xs, 0.1875rem);
   --button-font-size: var(--fs-12, 0.75rem);
   --button-line-height: 1rem;
   --button-gap: var(--control-inline-gap-sm, 0.25rem);
@@ -55,7 +55,7 @@
 
 .diet-button[data-size="medium"] {
   --button-height: var(--control-size-lg, 1.75rem);
-  --button-radius: var(--control-radius-md, 0.375rem);
+  --button-radius: var(--control-radius-sm, 0.25rem);
   --button-font-size: var(--fs-14, 0.875rem);
   --button-line-height: 1.25rem;
   --button-gap: var(--control-inline-gap-md, 0.375rem);

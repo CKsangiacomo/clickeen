@@ -65,7 +65,7 @@ The component-level product law is implemented:
   Small, medium, and large use the measured proportion set respectively:
   `1.5rem/1.75rem/2.5rem` height, `.75rem/.875rem/1rem` text,
   `.25rem/.375rem/.5rem` child gap, and `.5rem/.5rem/1rem` inline padding.
-  All three use a `.375rem` radius.
+  Their proportional radii are `.1875rem/.25rem/.375rem`.
 - Button composition is explicit and bounded: omit Icon for text-only, omit
   label for icon-only, or compose both. Direct child order places an Icon before
   or after the label; Button CSS does not reorder children. Icon-only Buttons
