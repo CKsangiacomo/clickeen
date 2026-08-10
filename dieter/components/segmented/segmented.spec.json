@@ -49,7 +49,6 @@
     "buttonSize": {
       "type": "enum",
       "values": [
-        "xs",
         "sm",
         "md",
         "lg"
@@ -241,7 +240,7 @@
     },
     {
       "description": "Icon-only segmented control",
-      "code": "<div class=\"diet-segmented-ic\" role=\"radiogroup\" data-size=\"sm\" aria-label=\"View\"><label class=\"diet-segment\"><input class=\"diet-segment__input\" type=\"radio\" name=\"view\" value=\"grid\" checked><span class=\"diet-segment__surface\"></span><button class=\"diet-btn-ic\" data-size=\"xs\" data-variant=\"neutral\" tabindex=\"-1\" type=\"button\"><span class=\"diet-btn-ic__icon\" data-icon=\"circle.grid.2x2\"></span></button><span class=\"diet-segment__sr\">Grid</span></label><label class=\"diet-segment\"><input class=\"diet-segment__input\" type=\"radio\" name=\"view\" value=\"list\"><span class=\"diet-segment__surface\"></span><button class=\"diet-btn-ic\" data-size=\"xs\" data-variant=\"neutral\" tabindex=\"-1\" type=\"button\"><span class=\"diet-btn-ic__icon\" data-icon=\"line.3.horizontal.decrease.circle\"></span></button><span class=\"diet-segment__sr\">List</span></label></div>"
+      "code": "<div class=\"diet-segmented-ic\" role=\"radiogroup\" data-size=\"sm\" aria-label=\"View\"><label class=\"diet-segment\"><input class=\"diet-segment__input\" type=\"radio\" name=\"view\" value=\"grid\" checked><span class=\"diet-segment__surface\"></span><button class=\"diet-btn-ic\" data-size=\"sm\" data-variant=\"neutral\" tabindex=\"-1\" type=\"button\"><span class=\"diet-btn-ic__icon\" data-icon=\"circle.grid.2x2\"></span></button><span class=\"diet-segment__sr\">Grid</span></label><label class=\"diet-segment\"><input class=\"diet-segment__input\" type=\"radio\" name=\"view\" value=\"list\"><span class=\"diet-segment__surface\"></span><button class=\"diet-btn-ic\" data-size=\"sm\" data-variant=\"neutral\" tabindex=\"-1\" type=\"button\"><span class=\"diet-btn-ic__icon\" data-icon=\"line.3.horizontal.decrease.circle\"></span></button><span class=\"diet-segment__sr\">List</span></label></div>"
     }
   ]
 }

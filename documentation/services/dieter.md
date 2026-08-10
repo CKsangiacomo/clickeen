@@ -117,7 +117,7 @@ borderless `2xl` surface with floating elevation, `--space-2`/`--space-4` cell
 padding, direct role-border horizontal dividers, no vertical rules or zebra
 stripes, and small preview and action column composition classes. Apps own
 data and behavior, not another table presentation. When an app makes a column
-sortable, its header uses an `xs` Dieter icon button. Dieter renders inactive
+sortable, its header uses an `sm` Dieter icon button. Dieter renders inactive
 sort controls with `--color-system-gray-3` and the active ascending or
 descending control with `--color-system-black`; the app still owns sort state
 and direction.

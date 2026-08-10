@@ -719,7 +719,7 @@ export function WidgetsDomain({
                       <span>Widget</span>{' '}
                       <button
                         className="diet-btn-ic"
-                        data-size="xs"
+                        data-size="sm"
                         data-variant="neutral"
                         type="button"
                         aria-label="Sort by widget"
@@ -740,7 +740,7 @@ export function WidgetsDomain({
                       <span>Instance name</span>{' '}
                       <button
                         className="diet-btn-ic"
-                        data-size="xs"
+                        data-size="sm"
                         data-variant="neutral"
                         type="button"
                         aria-label="Sort by instance name"
@@ -761,7 +761,7 @@ export function WidgetsDomain({
                       <span>Published</span>{' '}
                       <button
                         className="diet-btn-ic"
-                        data-size="xs"
+                        data-size="sm"
                         data-variant="neutral"
                         type="button"
                         aria-label="Sort by published status"

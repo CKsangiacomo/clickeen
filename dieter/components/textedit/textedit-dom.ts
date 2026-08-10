@@ -58,7 +58,7 @@ export function createState(root: HTMLElement): TexteditState {
       <div class="diet-textedit__linkinner">
         <div class="diet-textedit__linkheader">
           <span class="diet-textedit__linktitle label">Link this text</span>
-          <button type="button" class="diet-btn-txt diet-textedit__linkapply" data-size="xs" data-variant="primary"><span class="diet-btn-txt__label">Apply link</span></button>
+          <button type="button" class="diet-btn-txt diet-textedit__linkapply" data-size="sm" data-variant="primary"><span class="diet-btn-txt__label">Apply link</span></button>
         </div>
         <div class="diet-textfield" data-size="md">
           <label class="diet-textfield__control">
@@ -78,7 +78,7 @@ export function createState(root: HTMLElement): TexteditState {
             <span class="diet-toggle__switch"><span class="diet-toggle__knob"></span></span>
           </label>
         </div>
-        <button type="button" class="diet-btn-txt diet-textedit__linkremove" data-size="xs" data-variant="secondary"><span class="diet-btn-txt__label">Remove link</span></button>
+        <button type="button" class="diet-btn-txt diet-textedit__linkremove" data-size="sm" data-variant="secondary"><span class="diet-btn-txt__label">Remove link</span></button>
       </div>
     </div>
   `;
@@ -86,7 +86,7 @@ export function createState(root: HTMLElement): TexteditState {
 
   const iconButton = root.querySelector<HTMLSpanElement>('.diet-textedit__icon .diet-btn-ic');
   if (iconButton) {
-    const iconSize = root.dataset.size === 'lg' ? 'sm' : 'xs';
+    const iconSize = root.dataset.size === 'lg' ? 'md' : 'sm';
     iconButton.setAttribute('data-size', iconSize);
   }
 

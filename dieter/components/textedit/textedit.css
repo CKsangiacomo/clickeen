@@ -79,12 +79,12 @@
   pointer-events: none;
 }
 
-.diet-textedit__icon .diet-btn-ic[data-size="sm"] {
+.diet-textedit__icon .diet-btn-ic[data-size="md"] {
   inline-size: var(--control-icon-sm, 1.25rem);
   block-size: var(--control-icon-sm, 1.25rem);
 }
 
-.diet-textedit__icon .diet-btn-ic[data-size="xs"] {
+.diet-textedit__icon .diet-btn-ic[data-size="sm"] {
   inline-size: var(--control-icon-xs, 1rem);
   block-size: var(--control-icon-xs, 1rem);
 }

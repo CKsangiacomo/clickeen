@@ -107,7 +107,7 @@ function createState(root: HTMLElement): DropdownEditState {
 
   const iconButton = root.querySelector<HTMLSpanElement>('.diet-dropdown-edit__icon .diet-btn-ic');
   if (iconButton) {
-    const iconSize = root.dataset.size === 'lg' ? 'sm' : 'xs';
+    const iconSize = root.dataset.size === 'lg' ? 'md' : 'sm';
     iconButton.setAttribute('data-size', iconSize);
   }
 

@@ -540,7 +540,7 @@ export function AssetsDomain({
                 <span>Asset</span>{' '}
                 <button
                   className="diet-btn-ic"
-                  data-size="xs"
+                  data-size="sm"
                   data-variant="neutral"
                   type="button"
                   aria-label="Sort by asset name"
@@ -561,7 +561,7 @@ export function AssetsDomain({
                 <span>Type</span>{' '}
                 <button
                   className="diet-btn-ic"
-                  data-size="xs"
+                  data-size="sm"
                   data-variant="neutral"
                   type="button"
                   aria-label="Sort by type"
@@ -583,7 +583,7 @@ export function AssetsDomain({
                 <span>Size</span>{' '}
                 <button
                   className="diet-btn-ic"
-                  data-size="xs"
+                  data-size="sm"
                   data-variant="neutral"
                   type="button"
                   aria-label="Sort by size"

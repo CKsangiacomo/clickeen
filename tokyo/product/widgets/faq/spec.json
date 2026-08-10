@@ -664,7 +664,7 @@
                                                             "attrs": {
                                                               "type": "button",
                                                               "class": "diet-btn-ic diet-popover__header-trigger diet-popaddlink__close",
-                                                              "data-size": "xs",
+                                                              "data-size": "sm",
                                                               "data-variant": "neutral",
                                                               "aria-hidden": true,
                                                               "tabindex": -1
@@ -1169,7 +1169,7 @@
                                                                 "attrs": {
                                                                   "type": "button",
                                                                   "class": "diet-btn-ic diet-popover__header-trigger diet-popaddlink__close",
-                                                                  "data-size": "xs",
+                                                                  "data-size": "sm",
                                                                   "data-variant": "neutral",
                                                                   "aria-hidden": true,
                                                                   "tabindex": -1

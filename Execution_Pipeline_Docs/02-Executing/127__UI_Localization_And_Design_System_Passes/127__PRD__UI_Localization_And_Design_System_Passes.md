@@ -158,7 +158,7 @@ the code is convenient there.
 | Stage | Status | Release state |
 | --- | --- | --- |
 | Stage 1 — Scaffold only | Complete | Committed, pushed, and deployed; no non-English experience is exposed |
-| Stage 2 — Dieter UI pass | In progress: Foundations and Agent Activity complete | Agent Activity is committed and pushed; exact-SHA cloud-dev deployment must be verified separately |
+| Stage 2 — Dieter UI pass | In progress: Foundations, Agent Activity, Bulk Edit, and Button complete | Button size authority is committed and pushed for exact-SHA cloud-dev QA |
 | Stage 3 — Bob UI pass | Not started | No authority to begin until explicitly directed |
 | Stage 4 — Roma UI pass | Not started | No authority to begin until explicitly directed |
 | Stage 5 — Translation pass | Not started | No translations may be generated yet |
@@ -278,6 +278,13 @@ authority.
   and Dropdown Fill label overrides are removed. DevStudio's Button page
   proves the primitive and Bulk Edit proves that a composite consumes it
   without a local typography override.
+- **Button size ladder — compressed, 2026-08-10.** Button and Menu Actions now
+  expose only `sm`, `md`, and `lg`. Those names select the former `xs`, `sm`,
+  and `md` presentations respectively, yielding a 16/20/24px control ladder
+  and 11/13/14px Button text. Existing `xs` consumers moved to `sm`; existing
+  `xl` consumers moved to `lg`; no alias, compatibility selector, or fallback
+  remains. Other Dieter geometry tokens were not redefined as public size
+  options.
 
 ### Per-Tab Execution Loop
 

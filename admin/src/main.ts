@@ -638,7 +638,7 @@ async function openTokenEditor(
         actionIcon.setAttribute('aria-hidden', 'true');
         const check = document.createElement('span');
         check.className = 'diet-dropdown-actions__check diet-btn-ic';
-        check.dataset.size = 'xs';
+        check.dataset.size = 'sm';
         check.dataset.variant = 'neutral';
         check.setAttribute('aria-hidden', 'true');
         const checkIcon = document.createElement('span');

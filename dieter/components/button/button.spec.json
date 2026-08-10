@@ -3,7 +3,7 @@
   "syntax": "<button class='{{CLASSNAME}}' data-size='{{SIZE}}' data-variant='{{VARIANT}}'>…</button>",
   "attributes": {
     "className": { "required": true },
-    "size": { "enum": ["xs", "sm", "md", "lg", "xl"], "required": true },
+    "size": { "enum": ["sm", "md", "lg"], "required": true },
     "variant": { "enum": ["primary", "secondary", "neutral", "line1", "line2"], "default": "primary" },
     "ariaLabel": { "optional": true },
     "label": { "optional": true },
@@ -18,7 +18,7 @@
   "defaults": [
     {
       "id": "button-ictxt",
-      "sizes": ["xs", "sm", "md", "lg", "xl"],
+      "sizes": ["sm", "md", "lg"],
       "variants": ["primary", "secondary", "neutral", "line1", "line2"],
       "spec": [
         "diet-btn-ictxt",
@@ -37,7 +37,7 @@
     },
     {
       "id": "button-ic",
-      "sizes": ["xs", "sm", "md", "lg", "xl"],
+      "sizes": ["sm", "md", "lg"],
       "variants": ["primary", "secondary", "neutral", "line1"],
       "spec": [
         "diet-btn-ic",
@@ -56,7 +56,7 @@
     },
     {
       "id": "button-txt",
-      "sizes": ["xs", "sm", "md", "lg", "xl"],
+      "sizes": ["sm", "md", "lg"],
       "variants": ["primary", "secondary", "neutral", "line1", "line2"],
       "spec": [
         "diet-btn-txt",

@@ -61,7 +61,7 @@ export function TopDrawer({
       <div className="topdrawer-leading">
         <button
           className="host-navigation-open diet-btn-ic"
-          data-size="xl"
+          data-size="lg"
           data-variant="neutral"
           type="button"
           aria-label="Open Clickeen navigation"
@@ -77,7 +77,7 @@ export function TopDrawer({
         <button
           ref={toolsButtonRef}
           className="tooldrawer-open diet-btn-ic"
-          data-size="xl"
+          data-size="lg"
           data-variant="neutral"
           type="button"
           aria-label="Open tools"
@@ -159,7 +159,7 @@ export function TopDrawer({
         {showSaveAction ? (
           <button
             className="diet-btn-txt"
-            data-size="xl"
+            data-size="lg"
             data-variant="primary"
             type="button"
             disabled={isSaving}

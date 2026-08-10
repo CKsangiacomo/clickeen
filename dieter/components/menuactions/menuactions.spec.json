@@ -2,7 +2,7 @@
   "component": "menuactions",
   "syntax": "<button class='diet-btn-menuactions' data-size='{{SIZE}}' data-variant='{{VARIANT}}'>…</button>",
   "attributes": {
-    "size": { "enum": ["xs", "sm", "md"], "default": "sm" },
+    "size": { "enum": ["sm", "md", "lg"], "default": "sm" },
     "variant": { "enum": ["neutral", "primary", "aimenuactions"], "default": "neutral" },
     "label": { "required": true },
     "icon": { "optional": true },
@@ -13,7 +13,7 @@
   "previews": [
     {
       "id": "menuactions",
-      "sizes": ["xs", "sm", "md"],
+      "sizes": ["sm", "md", "lg"],
       "variants": ["neutral", "aimenuactions"],
       "spec": [
         "diet-btn-menuactions",
@@ -28,9 +28,9 @@
         "path": ""
       },
       "sizeContext": {
-        "xs": { "labelClass": "label-xs" },
-        "sm": { "labelClass": "label-s" },
-        "md": { "labelClass": "label-m" }
+        "sm": { "labelClass": "label-xs" },
+        "md": { "labelClass": "label-s" },
+        "lg": { "labelClass": "label-m" }
       }
     }
   ]

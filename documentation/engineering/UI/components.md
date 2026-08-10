@@ -56,6 +56,12 @@ The component-level product law is implemented:
   authority. The Button component derives height, radius, spacing, icon size,
   font family, font size, and line height from that one attribute; composites
   do not add parallel `body-*` typography classes to make a Button size work.
+- Button and Menu Actions expose only `data-size="sm|md|lg"`. The compact
+  ladder is intentionally 16/20/24px with 11/13/14px Button text: `sm` uses
+  the former `xs` presentation, `md` uses the former `sm` presentation, and
+  `lg` uses the former `md` presentation. `xs` and `xl` are not component
+  size values. Low-level Dieter geometry tokens remain internal source
+  mechanics and are not public `data-size` options.
 - `textrename` is deleted because it had no product consumer.
 - Toggle is a native checkbox HTML/CSS/spec contract with no custom hydrator.
 - Keep `repeater` and `object-manager` distinct. Repeater edits nested items
@@ -104,7 +110,7 @@ monospace treatment. Preview and action columns use the small Table-owned
 composition classes rather than consumer-local base styling.
 
 Sortable headers remain app-owned behavior composed inside Dieter Table. Their
-control is an `xs` `diet-btn-ic`: inactive columns use
+control is an `sm` `diet-btn-ic`: inactive columns use
 `--color-system-gray-3`, while the active ascending or descending column uses
 `--color-system-black`. Dieter owns that presentation through `aria-sort`; apps
 own the selected column, direction, and row ordering.

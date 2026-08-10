@@ -519,7 +519,7 @@ function buildUploadControl(args: {
                 <button
                   type="button"
                   class="diet-btn-ic diet-dropdown-upload__preview-doc-icon"
-                  data-size="xl"
+                  data-size="lg"
                   data-variant="neutral"
                   aria-hidden="true"
                   tabindex="-1"

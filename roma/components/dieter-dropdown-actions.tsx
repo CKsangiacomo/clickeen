@@ -142,7 +142,7 @@ export function DieterDropdownActions({
                   <span className="diet-dropdown-actions__menuaction-text">{option.label}</span>
                 </span>
                 <span className="diet-btn-menuactions__icon" aria-hidden="true">
-                  <span className="diet-dropdown-actions__check diet-btn-ic" data-size="xs" data-variant="neutral" aria-hidden="true">
+                  <span className="diet-dropdown-actions__check diet-btn-ic" data-size="sm" data-variant="neutral" aria-hidden="true">
                     <span
                       className="diet-btn-ic__icon diet-icon-mask"
                       style={{ '--diet-icon-source': 'url("/dieter/icons/svg/checkmark.svg")' } as CSSProperties}
