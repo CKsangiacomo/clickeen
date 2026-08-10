@@ -76,6 +76,7 @@
     "panel.content": "Content",
     "panel.layout": "Layout",
     "panel.settings": "Settings",
-    "panel.typography": "Typography"
+    "panel.typography": "Typography",
+    "translations.agent-activity.title": "Translation Agent"
   }
 }

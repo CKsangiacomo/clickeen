@@ -3,8 +3,10 @@
     <span class="diet-agent-activity__title {{#if titleClass}}{{titleClass}}{{else}}label-s{{/if}}">{{title}}</span>
   </div>
   <div class="diet-agent-activity__rows">
+    {{#each rows}}
     <div class="diet-agent-activity__row">
       <span class="diet-agent-activity__text {{#if rowClass}}{{rowClass}}{{else}}body-s{{/if}}">{{message}}</span>
     </div>
+    {{/each}}
   </div>
 </div>

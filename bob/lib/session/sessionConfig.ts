@@ -8,8 +8,24 @@ function isPlainRecord(value: unknown): value is Record<string, unknown> { retur
 function invalid(path: string): never { throw new Error(`coreui.errors.instance.config.invalid:${path}`); }
 
 export function assertCompiledEditorContract(
-  compiled: Pick<CompiledWidget, 'panels'>,
+  compiled: Pick<CompiledWidget, 'panels' | 'toolDrawerLabels'>,
 ): void {
+  const toolDrawerLabels = compiled.toolDrawerLabels;
+  const translations = isPlainRecord(toolDrawerLabels) ? toolDrawerLabels.translations : null;
+  const agentActivityTitle = isPlainRecord(translations)
+    ? translations.agentActivityTitle
+    : null;
+  if (
+    !isPlainRecord(toolDrawerLabels) ||
+    Object.keys(toolDrawerLabels).length !== 1 ||
+    !isPlainRecord(translations) ||
+    Object.keys(translations).length !== 1 ||
+    typeof agentActivityTitle !== 'string' ||
+    !agentActivityTitle.trim() ||
+    agentActivityTitle !== agentActivityTitle.trim()
+  ) {
+    throw new Error('coreui.errors.builder.open.invalidRequest');
+  }
   if (!Array.isArray(compiled.panels) || compiled.panels.length !== BOB_WIDGET_PANEL_IDS.length) {
     throw new Error('coreui.errors.builder.open.invalidRequest');
   }

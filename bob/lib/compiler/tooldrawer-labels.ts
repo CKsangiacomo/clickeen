@@ -1,6 +1,6 @@
 import { isRecord } from '@clickeen/ck-contracts';
 import type { RawWidget } from '../compiler.shared';
-import { BOB_WIDGET_PANEL_IDS } from '../types';
+import { BOB_WIDGET_PANEL_IDS, type CompiledToolDrawerLabels } from '../types';
 
 const LABEL_TOKEN_PREFIX = '$label:';
 const LABEL_KEY_PATTERN = /^[a-z][a-z0-9]*(?:[.-][a-z0-9]+)*$/;
@@ -28,6 +28,7 @@ export type TooldrawerLabels = {
 export type ResolvedWidgetTooldrawerLabels = {
   widget: RawWidget;
   panelLabels: Record<(typeof BOB_WIDGET_PANEL_IDS)[number], string>;
+  toolDrawerLabels: CompiledToolDrawerLabels;
 };
 
 function cloneJson<T>(value: T): T {
@@ -136,6 +137,21 @@ function assertEditorNodeCopy(node: unknown, path: string, widgetType: string): 
 
 function assertWidgetCopyUsesLabelTokens(widget: RawWidget, widgetType: string): void {
   const editor = isRecord(widget.editor) ? widget.editor : null;
+  const editorLabels = editor?.labels;
+  if (
+    !isRecord(editorLabels) ||
+    Object.keys(editorLabels).length !== 1 ||
+    !isRecord(editorLabels.translations) ||
+    Object.keys(editorLabels.translations).length !== 1
+  ) {
+    throw new Error(`[BobCompiler] ${widgetType} ToolDrawer labels contract is invalid`);
+  }
+  assertLabelToken(
+    editorLabels.translations.agentActivityTitle,
+    'editor.labels.translations.agentActivityTitle',
+    widgetType,
+  );
+
   const panels = editor && Array.isArray(editor.panels) ? editor.panels : [];
   panels.forEach((panel, panelIndex) => {
     if (!isRecord(panel)) return;
@@ -179,6 +195,32 @@ function assertWidgetCopyUsesLabelTokens(widget: RawWidget, widgetType: string):
     for (const [key, entry] of Object.entries(value)) visitUiLabels(entry, `${path}.${key}`);
   };
   visitUiLabels(widget.defaults?.uiLabels, 'defaults.uiLabels');
+}
+
+function readResolvedToolDrawerLabels(
+  editor: unknown,
+  widgetType: string,
+): CompiledToolDrawerLabels {
+  if (!isRecord(editor) || !isRecord(editor.labels)) {
+    throw new Error(`[BobCompiler] ${widgetType} resolved ToolDrawer labels are missing`);
+  }
+  const labels = editor.labels;
+  const translations = labels.translations;
+  if (
+    Object.keys(labels).length !== 1 ||
+    !isRecord(translations) ||
+    Object.keys(translations).length !== 1 ||
+    typeof translations.agentActivityTitle !== 'string' ||
+    !translations.agentActivityTitle.trim() ||
+    translations.agentActivityTitle !== translations.agentActivityTitle.trim()
+  ) {
+    throw new Error(`[BobCompiler] ${widgetType} resolved ToolDrawer labels contract is invalid`);
+  }
+  return {
+    translations: {
+      agentActivityTitle: translations.agentActivityTitle,
+    },
+  };
 }
 
 function resolveLabelTokens(
@@ -259,5 +301,9 @@ export function resolveWidgetTooldrawerLabels(
     );
   }
 
-  return { widget, panelLabels };
+  return {
+    widget,
+    panelLabels,
+    toolDrawerLabels: readResolvedToolDrawerLabels(widget.editor, widgetType),
+  };
 }

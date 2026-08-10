@@ -1,6 +1,6 @@
 # PRD 127 — UI Localization And Design-System Passes
 
-Status: **EXECUTING — STAGE 1 IMPLEMENTED LOCALLY; STAGE 2 IN PROGRESS**
+Status: **EXECUTING — STAGE 1 COMPLETE; STAGE 2 IN PROGRESS**
 
 Owner: Clickeen product owner/architect
 
@@ -157,8 +157,8 @@ the code is convenient there.
 
 | Stage | Status | Release state |
 | --- | --- | --- |
-| Stage 1 — Scaffold only | Implemented and verified in the local worktree | Not committed, pushed, deployed, or exposed as a non-English experience |
-| Stage 2 — Dieter UI pass | In progress: Foundations pass complete; Dieter Components not started | Local only; not committed, pushed, or deployed |
+| Stage 1 — Scaffold only | Complete | Committed, pushed, and deployed; no non-English experience is exposed |
+| Stage 2 — Dieter UI pass | In progress: Foundations complete; Agent Activity verified locally | Foundations are live; Agent Activity is not committed, pushed, or deployed |
 | Stage 3 — Bob UI pass | Not started | No authority to begin until explicitly directed |
 | Stage 4 — Roma UI pass | Not started | No authority to begin until explicitly directed |
 | Stage 5 — Translation pass | Not started | No translations may be generated yet |
@@ -189,7 +189,7 @@ Build the English foundation without generating or exposing non-English UI.
 - Document the immutable-language-per-Bob-session rule.
 - Keep every non-English UI path dormant.
 
-### Current Local Implementation Shape
+### Current Implementation Shape
 
 The eight current Widget folders contain one adjacent English label file. Raw
 specs carry `$label:{key}` tokens. The compiler rejects missing, malformed, or
@@ -258,6 +258,16 @@ authority.
   classes, owner, consumers, and source path. The four real application-layout
   tokens retain their existing validated edit path; no product layout behavior
   changed.
+- **Agent Activity — passed locally after correction, 2026-08-09.** Dieter now
+  exposes the real required title plus multi-row narration contract used by
+  Bob, with `sm`/`md` sizes, `--color-system-purple-4` active surface, and one
+  thin animated system-color gradient stroke. The component owns no visible
+  words. Every current Widget declares the static title token and resolves it
+  from its adjacent English ToolDrawer label file into the existing editor
+  artifact; Bob consumes that exact value while Translation Agent events remain
+  the dynamic row authority. DevStudio renders the source contract directly.
+  No translation, locale, Translation Agent, product-data, Cloudflare, or
+  deployment work is included in this component slice.
 
 ### Per-Tab Execution Loop
 

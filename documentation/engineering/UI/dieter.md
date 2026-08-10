@@ -60,7 +60,7 @@ layering are owned by their own UI docs.
   for its fixed presentation: `--space-2` inset, muted application backdrop,
   shared navigation surface, no border, `--control-radius-3xl`, and
   floating/elevated shadows. Header and content align to one centered `80rem`
-  maximum width. Full Page rhythm is `--space-6` outer padding with
+  maximum width. Full Page rhythm is `--space-4` outer padding with
   `--space-4` header and content separation. Compact uses `--space-4` outer
   padding with `--space-3` header and content separation. These are not
   duplicated as layout aliases.

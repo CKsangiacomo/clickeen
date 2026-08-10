@@ -80,6 +80,7 @@ Product rules:
 Current source node shapes:
 
 ```text
+labels:  { "translations": { "agentActivityTitle": "$label:translations.agent-activity.title" } }
 panel:   { "id": "...", "clusters": [...] }
 cluster: { "label": "$label:content.cluster.content.label", "initiallyOpen": true, "nodes": [...] }
 shared:  { "kind": "shared", "id": "..." }
@@ -104,9 +105,13 @@ the exact adjacent file, resolves the tokens, and emits the current English
 widget artifact at `/widget-editors/{widgetType}.json`. No non-English
 ToolDrawer artifact or UI-language selection exists in the current implementation.
 
-The current boundary covers widget-declared labels and widget panel names. Copy
-inside reusable Dieter stencils and shared compiler modules remains owned by
-those current sources; it has not been duplicated into every widget label file.
+The current boundary covers every visible ToolDrawer label already migrated in
+this staged pass, including widget-declared labels, widget panel names, and the
+static Agent Activity title. The compiler emits that title as
+`compiled.toolDrawerLabels.translations.agentActivityTitle`; Bob renders it
+while the Translation Agent continues to own the dynamic activity-row words.
+Copy inside other reusable Dieter stencils and shared compiler modules remains
+with those current sources until its component pass moves it deliberately.
 
 `default-item` values remain widget content defaults, not ToolDrawer labels.
 They stay in `spec.json` and follow the widget content/editable-field contract.

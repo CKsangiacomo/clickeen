@@ -191,6 +191,11 @@ async function testEveryWidgetEditorContract(): Promise<void> {
       BOB_WIDGET_PANEL_IDS.map((panelId) => String((labels as any).labels[`panel.${panelId}`])),
       `${widgetType} compiles its exact English panel labels`,
     );
+    assert.equal(
+      compiled.toolDrawerLabels.translations.agentActivityTitle,
+      'Translation Agent',
+      `${widgetType} compiles its exact Agent Activity title`,
+    );
     const combinedBodyIds = captureAll(
       compiled.panels.map((panel) => panel.html).join('\n'),
       /class="tdmenucontent__cluster-body" id="([^"]+)"/g,
@@ -270,6 +275,14 @@ function testTooldrawerLabelContractsFailClosed(): void {
     /must use a label token/,
     'hardcoded widget-authored ToolDrawer copy fails closed',
   );
+
+  const hardcodedActivityTitle = structuredClone(spec) as any;
+  hardcodedActivityTitle.editor.labels.translations.agentActivityTitle = 'Translation Agent';
+  assert.throws(
+    () => resolveWidgetTooldrawerLabels(hardcodedActivityTitle, labels),
+    /must use a label token/,
+    'hardcoded Agent Activity title fails closed',
+  );
 }
 
 function fixturePanels(contentCluster: JsonObject): JsonObject[] {
@@ -344,9 +357,15 @@ function testInvalidEditorContractsFail(): void {
 }
 
 function testCompiledPanelLabelsFailClosed(): void {
+  const toolDrawerLabels = {
+    translations: {
+      agentActivityTitle: 'Translation Agent',
+    },
+  };
   assert.throws(
     () =>
       assertCompiledEditorContract({
+        toolDrawerLabels,
         panels: BOB_WIDGET_PANEL_IDS.map((id) => ({
           id,
           label: id === 'content' ? '' : id,
@@ -355,6 +374,24 @@ function testCompiledPanelLabelsFailClosed(): void {
       }),
     /coreui\.errors\.builder\.open\.invalidRequest/,
     'missing compiled panel label fails Builder open',
+  );
+
+  assert.throws(
+    () =>
+      assertCompiledEditorContract({
+        toolDrawerLabels: {
+          translations: {
+            agentActivityTitle: '',
+          },
+        },
+        panels: BOB_WIDGET_PANEL_IDS.map((id) => ({
+          id,
+          label: id,
+          html: '',
+        })),
+      }),
+    /coreui\.errors\.builder\.open\.invalidRequest/,
+    'missing compiled Agent Activity title fails Builder open',
   );
 }
 
@@ -373,7 +410,7 @@ async function main(): Promise<void> {
   testInvalidEditorContractsFail();
   console.log('PASS invalid editor contracts fail closed');
   testCompiledPanelLabelsFailClosed();
-  console.log('PASS invalid compiled panel labels fail Builder open');
+  console.log('PASS invalid compiled panel and ToolDrawer labels fail Builder open');
 }
 
 void main();

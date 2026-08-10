@@ -140,6 +140,12 @@ the operation while it runs; they are not the durable command result. After the
 operation ends, Bob shows durable feedback for command failure, no accepted
 work, partial per-locale translation failures, or success.
 
+The static Agent Activity title inside the ToolDrawer comes from the open
+widget's compiled ToolDrawer labels. The Translation Agent owns only the live
+narration rows. Dieter owns the purple active surface and animated system-color
+stroke; that motion communicates that the direct agent operation is active and
+does not claim percentage progress.
+
 Translation-sync attention stays in Bob's Translations panel beside Tokyo's
 authoritative summary and Generate action. Roma must not derive or display a
 second translation-sync state.

@@ -5,7 +5,7 @@
     "size": { "enum": ["sm", "md"], "default": "sm" },
     "tone": { "enum": ["active"], "default": "active" },
     "title": { "required": true },
-    "message": { "required": true }
+    "rows": { "required": true }
   },
   "binding": { "type": "transient-agent-narration" },
   "defaults": [
@@ -22,9 +22,17 @@
         "size": "sm",
         "tone": "active",
         "title": "Translation Agent",
-        "message": "Writing translations",
-        "titleClass": "label-s",
-        "rowClass": "body-s"
+        "rows": [
+          {
+            "message": "Writing translations",
+            "rowClass": "body-s"
+          },
+          {
+            "message": "Saving locale overlays",
+            "rowClass": "body-s"
+          }
+        ],
+        "titleClass": "label-s"
       }
     }
   ]

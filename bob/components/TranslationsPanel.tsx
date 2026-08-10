@@ -299,6 +299,7 @@ function AgentActivity({
 const TRANSLATION_GENERATION_FAILED_COPY = 'Translation generation failed. Please try again.';
 
 export function TranslationsPanel({
+  agentActivityTitle,
   translationPreviewLocale,
   onTranslationPreviewLocaleChange,
   onRequestTranslationsRefresh,
@@ -307,6 +308,7 @@ export function TranslationsPanel({
   savedTranslationsLoading,
   savedTranslationsError,
 }: {
+  agentActivityTitle: string;
   translationPreviewLocale: string;
   onTranslationPreviewLocaleChange: (locale: string) => void;
   onRequestTranslationsRefresh: () => void;
@@ -446,7 +448,7 @@ export function TranslationsPanel({
             <div className="label-s label-muted">{generateButton.message}</div>
           ) : null}
           {isGeneratingTranslations ? (
-            <AgentActivity title="Translation Agent" rows={activityRows} />
+            <AgentActivity title={agentActivityTitle} rows={activityRows} />
           ) : null}
           {generationFeedback ? (
             <div

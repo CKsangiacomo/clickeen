@@ -45,6 +45,11 @@ System UI must not hardcode local `ms`, `s`, `ease`, or `cubic-bezier(...)`
 values for ordinary transitions. If a future component needs different motion,
 that need must be named by the owning product/component PRD first.
 
+Agent Activity is the named exception installed by PRD 127: while a real agent
+operation is active, its gradient stroke uses one `3s ease alternate` cycle.
+This is continuous activity communication, not an ordinary state transition or
+a progress estimate, so it does not create a shared duration token.
+
 ## Reduced Motion
 
 Dieter ships the global reduced-motion guard from

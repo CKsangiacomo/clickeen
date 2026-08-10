@@ -48,13 +48,13 @@ Widget layout, including exact class taxonomy, owners, consumers, and source
 paths. Its four application-layout tokens remain editable through the existing
 foundation-token write path.
 `main-container` and `page` use `--role-surface-muted`; `left-nav` uses
-`--role-surface`. In Full mode `left-nav` is `16rem` wide, inset by
+`--role-surface`. In Full mode `left-nav` is `12rem` wide, inset by
 `--space-2` on all four sides, borderless, and uses `3xl` radius plus the
 floating shadow. The Page header and content share one centered `80rem`
-maximum width. Full Page rhythm uses `--space-6` outer padding with
+maximum width. Full Page rhythm uses `--space-4` outer padding with
 `--space-4` header and content separation. Compact uses `--space-4` outer
 padding with `--space-3` header and content separation. In Compact mode the
-same panel DOM uses its separate `20rem` maximum-width token, overlays the
+same panel DOM uses its separate `12rem` maximum-width token, overlays the
 full-width page, and uses the existing elevated shadow. Consumer content uses
 `--role-surface` for contained primary surfaces.
 

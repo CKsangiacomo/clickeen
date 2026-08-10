@@ -26,7 +26,7 @@ Shared runtime utilities live in `tokyo/product/widgets/shared/`.
 | File | Responsibility |
 | --- | --- |
 | `spec.json` | Widget identity, defaults, presets when present, structural Bob editor declarations, ToolDrawer label tokens, and widget-local normalization when present. |
-| `{widgetType}_tooldrawer_l10n_labels/en.json` | Exact English copy for the five widget ToolDrawer panel names and every widget-authored label token used by `spec.json`. |
+| `{widgetType}_tooldrawer_l10n_labels/en.json` | Exact English copy for the five widget ToolDrawer panel names and every visible ToolDrawer label token used by `spec.json`, including static labels outside the five widget panels. |
 | `editable-fields.json` | Customer-visible text paths that Bob and Translation Agent can edit or translate. |
 | `limits.json` | Mapping from widget paths/operations to account entitlement keys. |
 | `widget.html` | Static Stage/Pod/Shell/Header/Core DOM skeleton, shared CSS/script includes, and stable hooks. |
@@ -77,9 +77,10 @@ sealed into `styles.css`; account assets and declared Dieter icon URLs remain
 external delivery references. Changing sealed source files after an account
 package is written does not rewrite that stored package.
 
-The server-only materializer artifact also carries the English-resolved Core
-defaults. Raw `spec.json` keeps label tokens; account defaults never persist
-those tokens.
+The browser editor artifact carries the resolved panel labels and exact
+`toolDrawerLabels` contract used by Bob. The server-only materializer artifact
+also carries the English-resolved Core defaults. Raw `spec.json` keeps label
+tokens; account defaults never persist those tokens.
 
 ## Runtime Path
 

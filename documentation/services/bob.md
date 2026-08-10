@@ -312,8 +312,10 @@ choose generation locales or write translation files.
 The panel sends one Generate translations command with the open `instanceId`.
 Roma resolves active locales and calls the Translation Agent Worker. While the
 operation is running, Bob disables the button and displays transient Agent
-Activity rows authored by the Translation Agent while overlays are written. When
-the operation returns, the transient Agent Activity UI disappears and Bob shows
+Activity. Its static title comes from the open widget artifact's exact
+`toolDrawerLabels.translations.agentActivityTitle`; its dynamic rows are authored
+by the Translation Agent while overlays are written. When the operation returns,
+the transient Agent Activity UI disappears and Bob shows
 durable command-result feedback from Roma's response: success, no accepted
 work, command failure, or exact per-locale translation failures. Bob refreshes
 previewable translated locales only when
@@ -329,9 +331,10 @@ it does not summarize, reinterpret, probe, reconcile, or persist it.
 
 ## Product UI Language Scaffold
 
-Bob's current product UI is English. Widget-authored ToolDrawer labels compile
-from each widget's adjacent English label file; Bob chrome and reusable Dieter
-component copy remain their current English source. Bob receives no UI locale,
+Bob's current product UI is English. ToolDrawer labels compile from each
+widget's adjacent English label file, including the static Agent Activity title;
+Bob chrome and other reusable Dieter component copy remain their current
+English source. Bob receives no UI locale,
 loads no UI-language file at runtime, and does not change an open editor
 session's UI language. The person preference stored by Berlin/Michael is
 dormant and is not a current Bob session input.
@@ -363,9 +366,10 @@ widget.client.js
 declared support files
 ```
 
-`spec.json` carries defaults, editor structure, and widget-local ToolDrawer
-label tokens. `{widgetType}_tooldrawer_l10n_labels/en.json` carries the exact
-English values for those tokens and the five widget panel names. `editable-fields.json`
+`spec.json` carries defaults, editor structure, and ToolDrawer label tokens.
+`{widgetType}_tooldrawer_l10n_labels/en.json` carries the exact English values
+for those tokens, the five widget panel names, and migrated static ToolDrawer
+labels such as Agent Activity's title. `editable-fields.json`
 carries editable/translatable field contracts. `limits.json` carries widget
 capability context.
 
@@ -376,6 +380,7 @@ English ToolDrawer label file into:
 
 - `compiled.panels[]`
 - `compiled.controls[]`
+- `compiled.toolDrawerLabels`
 - editor binding metadata
 - AI context metadata
 

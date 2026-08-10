@@ -308,6 +308,7 @@ export async function compileWidgetServer(
     widgetname,
     displayName,
     defaults: defaultsWithAssets,
+    toolDrawerLabels: resolved.toolDrawerLabels,
     panels: renderedPanels,
     controls,
     ...(presets ? { presets } : {}),

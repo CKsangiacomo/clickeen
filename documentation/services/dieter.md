@@ -75,19 +75,24 @@ DevStudio's validated GitHub write path.
 The shared application shell keeps the exact
 `main-container > left-nav + page` taxonomy. In Full mode the navigation is a
 foreground panel inset by `--space-2` on all sides over the application
-muted backdrop. It is `16rem` wide and uses the shared surface, no border,
+muted backdrop. It is `12rem` wide and uses the shared surface, no border,
 `3xl` radius, and floating shadow. The page header and content share one
-centered `80rem` maximum width. Full Page padding is `--space-6`; header and
+centered `80rem` maximum width. Full Page padding is `--space-4`; header and
 content separation use `--space-4`. Compact Page padding is `--space-4`;
 header and content separation use `--space-3`. In Compact mode the same panel
 DOM becomes an inset overlay over a full-width page, retains its separate
-`20rem` maximum-width token, and uses the existing elevated shadow.
+`12rem` maximum-width token, and uses the existing elevated shadow.
 Roma and DevStudio use that Compact composition in narrow landscape and
 portrait; consumer code owns only open state and navigation/page content.
 
 Compact property controls share row geometry through
 `dieter/components/shared/property-row.css`. Components continue to own their
 specific input, switch, dropdown, popover, hover, focus, and disabled behavior.
+
+Agent Activity owns a required caller-supplied title, a required array of
+narration rows, its `sm`/`md` structure, and its active presentation. It does
+not own caller wording. Bob supplies the static title from the open widget
+artifact and renders Translation Agent event messages as the rows.
 
 Color source keeps one small shared role layer:
 `--role-surface-bg`, `--role-surface`, `--role-surface-muted`,

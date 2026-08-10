@@ -38,6 +38,12 @@ export interface CompiledPanel {
   html: string;
 }
 
+export type CompiledToolDrawerLabels = {
+  translations: {
+    agentActivityTitle: string;
+  };
+};
+
 export interface CompiledControlOption {
   label: string;
   value: string | number | boolean;
@@ -111,6 +117,7 @@ export interface CompiledWidgetCore {
   widgetname: string;
   displayName: string;
   defaults: Record<string, unknown>;
+  toolDrawerLabels: CompiledToolDrawerLabels;
   panels: CompiledPanel[];
   controls: CompiledControl[];
   presets?: WidgetPresets;

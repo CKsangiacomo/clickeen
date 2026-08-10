@@ -207,6 +207,11 @@
     }
   },
   "editor": {
+    "labels": {
+      "translations": {
+        "agentActivityTitle": "$label:translations.agent-activity.title"
+      }
+    },
     "panels": [
       {
         "id": "content",

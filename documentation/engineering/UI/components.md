@@ -112,6 +112,19 @@ accepted dismissal behavior. Bulk Edit, Object Manager, DevStudio token
 editing, Roma blocking dialogs, and Bob's plan-limit prompt consume Popup
 without adding a second modal framework.
 
+## Agent Activity Contract
+
+Agent Activity renders one caller-supplied title and one or more
+caller-supplied narration rows. Dieter owns the multi-row structure, `sm`/`md`
+sizes, active presentation, and transient status semantics; it owns none of the
+visible words. In Bob's ToolDrawer, the open widget artifact supplies the
+static title and Translation Agent events supply the dynamic rows.
+
+The active component uses `--color-system-purple-4` as its surface and a thin
+animated gradient stroke composed from existing system colors. The gradient is
+activity presentation, not progress measurement. Dieter's global reduced-motion
+guard applies to the animation.
+
 ## Tooltip Contract
 
 Unfamiliar icon-only actions use one small Dieter tooltip contract. The tooltip

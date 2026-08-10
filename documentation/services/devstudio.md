@@ -104,6 +104,10 @@ current generated inventory is 5 Foundation routes, 24 Dieter Component routes,
 and 2 Policy routes. CSS-only Dieter contracts do not create empty showcase
 routes.
 
+The Agent Activity route is generated from its real Dieter spec, stencil, and
+CSS. It reveals both supported sizes with the actual multi-row contract and
+active presentation; it does not maintain a DevStudio-only imitation.
+
 ## Pages Functions
 
 | Route | Purpose |

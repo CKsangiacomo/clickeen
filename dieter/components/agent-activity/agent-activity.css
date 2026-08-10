@@ -2,11 +2,13 @@
    The agent owns the words; surfaces render them while the agent operates. */
 
 .diet-agent-activity {
+  position: relative;
+  isolation: isolate;
   display: grid;
   gap: var(--space-2, 0.5rem);
   inline-size: 100%;
   padding: var(--space-3, 0.75rem);
-  border: 1px solid var(--color-system-gray-5);
+  border: 1px solid transparent;
   border-radius: var(--control-radius-md, 0.375rem);
   background: var(--color-system-white);
   color: var(--color-system-black);
@@ -19,8 +21,38 @@
 }
 
 .diet-agent-activity[data-tone="active"] {
-  border-color: color-mix(in oklab, var(--color-system-blue), var(--color-system-white) 45%);
-  background: color-mix(in oklab, var(--color-system-blue), var(--color-system-white) 90%);
+  background: var(--color-system-purple-4);
+}
+
+.diet-agent-activity[data-tone="active"]::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  padding: 1px;
+  border-radius: inherit;
+  background: linear-gradient(
+    60deg,
+    var(--color-system-orange),
+    var(--color-system-pink),
+    var(--color-system-purple),
+    var(--color-system-indigo),
+    var(--color-system-blue),
+    var(--color-system-cyan),
+    var(--color-system-teal),
+    var(--color-system-green)
+  );
+  background-size: 300% 300%;
+  -webkit-mask:
+    linear-gradient(var(--color-system-black) 0 0) content-box,
+    linear-gradient(var(--color-system-black) 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(var(--color-system-black) 0 0) content-box,
+    linear-gradient(var(--color-system-black) 0 0);
+  mask-composite: exclude;
+  pointer-events: none;
+  animation: diet-agent-activity-gradient 3s ease alternate infinite;
 }
 
 .diet-agent-activity__header,
@@ -48,4 +80,18 @@
 .diet-agent-activity__row {
   gap: var(--control-inline-gap-xs, 0.25rem);
   color: color-mix(in oklab, var(--color-system-black), transparent 30%);
+}
+
+@keyframes diet-agent-activity-gradient {
+  0% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
+
+  100% {
+    background-position: 0% 50%;
+  }
 }
