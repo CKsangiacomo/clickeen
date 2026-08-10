@@ -68,8 +68,9 @@ These map to `--icon-size-12` through `--icon-size-40`. Non-numeric
 Icon glyph size is separate from wrapper size, component slot size, and
 interactive control size. Button uses `small|medium|large`; other components
 may retain their own `sm|md|lg` APIs. Neither is an Icon glyph size. An unsized
-Icon that is a direct Button child receives the Button-context `.75rem` glyph
-size. Supplying numeric `data-size` deliberately overrides that context and
+Icon that is a direct Button child receives the Button's proportional default:
+`.75rem` in a small Button, `1rem` in a medium Button, and `1.25rem` in a large
+Button. Supplying numeric `data-size` deliberately overrides that context and
 remains the Icon's own authority.
 
 Button composition uses direct child order: an Icon authored before the label

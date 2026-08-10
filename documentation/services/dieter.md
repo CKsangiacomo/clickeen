@@ -147,8 +147,9 @@ the declared SVG URL and remain semantically hidden. Button and Icon are
 independent contracts: Button owns action geometry, its
 primary/secondary/tertiary/quaternary visual hierarchy, spacing, and centered
 child layout. Direct child order places an optional Icon before or after the
-label. An unsized direct Icon receives the compact Button-context size, while
-an explicit numeric Icon size remains authoritative. Omitting Icon or label
+label. An unsized direct Icon receives the Button-size default of
+`.75rem`/`1rem`/`1.25rem` for small/medium/large, while an explicit numeric Icon
+size remains authoritative. Omitting Icon or label
 yields the text-only or icon-only Button composition.
 
 Account-uploaded assets and fonts remain under

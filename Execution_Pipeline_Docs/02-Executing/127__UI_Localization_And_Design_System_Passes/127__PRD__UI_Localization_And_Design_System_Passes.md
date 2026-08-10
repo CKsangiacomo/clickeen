@@ -281,8 +281,8 @@ authority.
   placement; there is no position attribute or CSS reordering. The corrected
   small/medium/large geometry is `1.5rem/1.75rem/2.5rem` high with
   `.75rem/.875rem/1rem` text, `.25rem/.375rem/.5rem` child gaps, and
-  `.5rem/.5rem/1rem` inline padding. An unsized direct Icon uses the compact
-  `.75rem` Button-context size; an explicit numeric Icon size remains available
+  `.5rem/.5rem/1rem` inline padding. An unsized direct Icon scales with Button
+  size at `.75rem/1rem/1.25rem`; an explicit numeric Icon size remains available
   and authoritative. Hidden label padding, repeated Icon dimension rules,
   redundant composite Button resets, and duplicate Button selectors were
   removed. Dieter composites, DevStudio, Bob, Roma, and current Widget source

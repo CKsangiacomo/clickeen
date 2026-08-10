@@ -71,11 +71,11 @@ The component-level product law is implemented:
   or after the label; Button CSS does not reorder children. Icon-only Buttons
   put their accessible name on the Button. Consumers do not invent another
   visual type in local CSS or create a separate icon-button component.
-- A child `.diet-icon` owns its glyph size independently through numeric
-  `data-size`. An unsized direct Button Icon receives the Button-context
-  `.75rem` size; an explicit numeric Icon size remains authoritative when a
-  composition deliberately needs it. The Button does not rewrite explicit Icon
-  size. Button labels have no hidden padding.
+- A child `.diet-icon` owns an explicit glyph size independently through numeric
+  `data-size`. When that attribute is absent, Button size supplies the direct
+  Icon's proportional default: `.75rem` for small, `1rem` for medium, and
+  `1.25rem` for large. An explicit numeric Icon size remains authoritative when
+  a composition deliberately needs it. Button labels have no hidden padding.
 - Menu Actions remains a separate menu-row primitive with its existing
   `sm|md|lg` API. Low-level geometry tokens remain internal source mechanics.
 - `textrename` is deleted because it had no product consumer.
