@@ -6,9 +6,9 @@
     "type": { "enum": ["primary", "secondary", "tertiary", "quaternary"], "required": true },
     "ariaLabel": { "optional": true },
     "label": { "optional": true },
-    "icon": { "optional": true },
+    "iconStart": { "optional": true },
+    "iconEnd": { "optional": true },
     "iconSize": { "enum": ["12", "16", "20", "24", "28", "32", "36", "40"], "optional": true },
-    "iconPosition": { "enum": ["start", "end"], "default": "start", "optional": true },
     "tabIndex": { "optional": true },
     "disabled": { "optional": true },
     "path": { "optional": true }
@@ -23,21 +23,13 @@
         "diet-button",
         "data-size='{{size}}'",
         "data-type='{{type}}'",
-        "data-icon-position='{{iconPosition}}'",
-        "diet-icon data-size='{{iconSize}}'"
+        "diet-icon before label"
       ],
       "context": {
         "size": "medium",
         "type": "primary",
         "label": "Button",
-        "icon": "sparkles",
-        "iconSize": "16",
-        "iconPosition": "start"
-      },
-      "sizeContext": {
-        "small": { "iconSize": "12" },
-        "medium": { "iconSize": "16" },
-        "large": { "iconSize": "20" }
+        "iconStart": "sparkles"
       }
     },
     {
@@ -48,21 +40,13 @@
         "diet-button",
         "data-size='{{size}}'",
         "data-type='{{type}}'",
-        "data-icon-position='{{iconPosition}}'",
-        "diet-icon data-size='{{iconSize}}'"
+        "diet-icon after label"
       ],
       "context": {
         "size": "medium",
         "type": "primary",
         "label": "Button",
-        "icon": "chevron.right",
-        "iconSize": "16",
-        "iconPosition": "end"
-      },
-      "sizeContext": {
-        "small": { "iconSize": "12" },
-        "medium": { "iconSize": "16" },
-        "large": { "iconSize": "20" }
+        "iconEnd": "chevron.right"
       }
     },
     {
@@ -73,19 +57,13 @@
         "diet-button",
         "data-size='{{size}}'",
         "data-type='{{type}}'",
-        "diet-icon data-size='{{iconSize}}'"
+        "diet-icon without label"
       ],
       "context": {
         "size": "medium",
         "type": "secondary",
-        "icon": "gearshape",
-        "iconSize": "16",
+        "iconStart": "gearshape",
         "ariaLabel": "Icon button"
-      },
-      "sizeContext": {
-        "small": { "iconSize": "12" },
-        "medium": { "iconSize": "16" },
-        "large": { "iconSize": "20" }
       }
     },
     {

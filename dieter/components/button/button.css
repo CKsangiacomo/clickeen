@@ -1,28 +1,32 @@
 /* Dieter Button
-   The Button owns action geometry and visual hierarchy. Child Icons own glyph size. */
+   The Button owns action geometry and visual hierarchy. Direct child order owns
+   composition; an unsized direct Icon uses the compact Button context size. */
 
 .diet-button {
   --button-bg: var(--role-surface);
   --button-color: var(--color-text);
-  --button-border-color: transparent;
-  --button-border-width: 0px;
+  --button-shadow: none;
   --button-hover-bg: color-mix(in oklab, var(--button-bg), var(--button-color) 6%);
   --button-hover-color: var(--button-color);
-  --button-hover-border-color: var(--button-border-color);
+  --button-hover-shadow: var(--button-shadow);
   --button-active-bg: color-mix(in oklab, var(--button-bg), var(--button-color) 14%);
   --button-active-color: var(--button-color);
-  --button-active-border-color: var(--button-border-color);
+  --button-active-shadow: var(--button-shadow);
   display: inline-flex;
+  box-sizing: border-box;
+  appearance: none;
   align-items: center;
   justify-content: center;
   min-block-size: var(--button-height);
   gap: var(--button-gap);
-  padding-block: 0;
-  padding-inline: var(--control-padding-inline);
-  border: var(--button-border-width) solid var(--button-border-color);
+  padding-block: var(--button-padding-block);
+  padding-inline: var(--button-padding-inline);
+  border: 0;
   border-radius: var(--button-radius);
   background: var(--button-bg);
   color: var(--button-color);
+  box-shadow: var(--button-shadow);
+  margin: 0;
   font: 400 var(--button-font-size)/var(--button-line-height) "Inter Tight", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
   text-decoration: none;
   white-space: nowrap;
@@ -30,7 +34,6 @@
   transition:
     background-color var(--duration-base) var(--easing-standard),
     color var(--duration-base) var(--easing-standard),
-    border-color var(--duration-base) var(--easing-standard),
     box-shadow var(--duration-base) var(--easing-standard),
     transform var(--duration-base) var(--easing-standard);
 }
@@ -40,38 +43,41 @@
 }
 
 .diet-button[data-size="small"] {
-  --button-height: var(--control-size-xs, 1rem);
-  --button-radius: var(--control-radius-xs, 0.25rem);
-  --button-font-size: var(--fs-11);
-  --button-line-height: var(--lh-tight);
-  --button-gap: var(--control-inline-gap-xs);
+  --button-height: var(--control-size-md, 1.5rem);
+  --button-radius: var(--control-radius-md, 0.375rem);
+  --button-font-size: var(--fs-12, 0.75rem);
+  --button-line-height: 1rem;
+  --button-gap: var(--control-inline-gap-sm, 0.25rem);
+  --button-padding-block: var(--space-1, 0.25rem);
+  --button-padding-inline: var(--space-2, 0.5rem);
 }
 
 .diet-button[data-size="medium"] {
-  --button-height: var(--control-size-sm, 1.25rem);
-  --button-radius: var(--control-radius-sm, 0.3125rem);
-  --button-font-size: var(--fs-13);
-  --button-line-height: var(--lh-body-ui);
-  --button-gap: var(--control-inline-gap-xs);
+  --button-height: var(--control-size-lg, 1.75rem);
+  --button-radius: var(--control-radius-md, 0.375rem);
+  --button-font-size: var(--fs-14, 0.875rem);
+  --button-line-height: 1.25rem;
+  --button-gap: var(--control-inline-gap-md, 0.375rem);
+  --button-padding-block: var(--space-1, 0.25rem);
+  --button-padding-inline: var(--space-2, 0.5rem);
 }
 
 .diet-button[data-size="large"] {
-  --button-height: var(--control-size-md, 1.5rem);
-  --button-radius: var(--control-radius-sm, 0.25rem);
-  --button-font-size: var(--fs-14);
-  --button-line-height: var(--lh-body-ui);
-  --button-gap: var(--control-inline-gap-sm);
+  --button-height: 2.5rem;
+  --button-radius: var(--control-radius-md, 0.375rem);
+  --button-font-size: var(--fs-16, 1rem);
+  --button-line-height: 1.5rem;
+  --button-gap: var(--control-inline-gap-lg, 0.5rem);
+  --button-padding-block: var(--space-2, 0.5rem);
+  --button-padding-inline: var(--space-4, 1rem);
 }
 
 .diet-button__label {
-  display: inline-flex;
-  align-items: center;
   white-space: nowrap;
-  padding-inline: var(--space-0);
 }
 
-.diet-button[data-icon-position="end"] > .diet-icon {
-  order: 1;
+.diet-button > .diet-icon:not([data-size]) {
+  --diet-icon-size: var(--icon-size-12, 0.75rem);
 }
 
 .diet-button:has(> .diet-icon):not(:has(> .diet-button__label)) {
@@ -84,13 +90,13 @@
 .diet-button:hover:not(:disabled):not([aria-disabled="true"]) {
   background: var(--button-hover-bg);
   color: var(--button-hover-color);
-  border-color: var(--button-hover-border-color);
+  box-shadow: var(--button-hover-shadow);
 }
 
 .diet-button:active:not(:disabled):not([aria-disabled="true"]) {
   background: var(--button-active-bg);
   color: var(--button-active-color);
-  border-color: var(--button-active-border-color);
+  box-shadow: var(--button-active-shadow);
   transform: translateY(1px);
 }
 
@@ -116,15 +122,13 @@
 .diet-button[data-type="tertiary"] {
   --button-bg: transparent;
   --button-color: var(--color-system-blue);
-  --button-border-color: var(--color-system-blue);
-  --button-border-width: 1px;
+  --button-shadow: inset 0 0 0 0.0625rem var(--color-system-blue);
   --button-hover-bg: color-mix(in oklab, var(--color-system-blue), transparent 60%);
   --button-active-bg: color-mix(in oklab, var(--color-system-blue), transparent 30%);
 }
 
 .diet-button[data-type="quaternary"] {
   --button-bg: transparent;
-  --button-border-color: transparent;
   --button-hover-bg: color-mix(in oklab, var(--color-text), transparent 88%);
   --button-active-bg: color-mix(in oklab, var(--color-text), transparent 75%);
 }

@@ -133,20 +133,6 @@
   gap: var(--space-1, 0.5rem);
 }
 
-.diet-dropdown-edit__palette .diet-button {
-  margin: 0;
-}
-
-/* Reset toolbar icon buttons (same as textfield icon reset) */
-.diet-dropdown-edit__palette button.diet-button {
-  border: 0;
-  background: transparent;
-  padding: 0;
-  -webkit-appearance: none;
-  appearance: none;
-  cursor: pointer;
-}
-
 .diet-dropdown-edit.has-linksheet .diet-dropdown-edit__toolbarrow button.diet-button {
   opacity: 0.4;
   cursor: default;

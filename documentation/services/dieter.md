@@ -145,9 +145,11 @@ so consumers use ordinary Dieter size tokens without icon-specific correction.
 keep their accessible name on the control; decorative icons are painted from
 the declared SVG URL and remain semantically hidden. Button and Icon are
 independent contracts: Button owns action geometry, its
-primary/secondary/tertiary/quaternary visual hierarchy, and the structured
-start/end position of an optional Icon. Its Icon child owns numeric glyph size;
-omitting Icon or label yields the text-only or icon-only Button composition.
+primary/secondary/tertiary/quaternary visual hierarchy, spacing, and centered
+child layout. Direct child order places an optional Icon before or after the
+label. An unsized direct Icon receives the compact Button-context size, while
+an explicit numeric Icon size remains authoritative. Omitting Icon or label
+yields the text-only or icon-only Button composition.
 
 Account-uploaded assets and fonts remain under
 `accounts/{accountPublicId}/...`; they are not Dieter icons.

@@ -67,14 +67,16 @@ These map to `--icon-size-12` through `--icon-size-40`. Non-numeric
 
 Icon glyph size is separate from wrapper size, component slot size, and
 interactive control size. Button uses `small|medium|large`; other components
-may retain their own `sm|md|lg` APIs. Neither is an Icon glyph size. A Button
-containing an Icon declares both the Button size and the numeric Icon size; no
-Button class, runtime, or CSS inference chooses the glyph size.
+may retain their own `sm|md|lg` APIs. Neither is an Icon glyph size. An unsized
+Icon that is a direct Button child receives the Button-context `.75rem` glyph
+size. Supplying numeric `data-size` deliberately overrides that context and
+remains the Icon's own authority.
 
-Button composition places an optional Icon at the structured `start` or `end`
-position; omitting the Icon produces a text-only Button. Position never changes
-the Icon's numeric glyph-size authority. Icon-only Buttons remain the same
-Button primitive and require an accessible name on the control.
+Button composition uses direct child order: an Icon authored before the label
+renders before it, and an Icon authored after the label renders after it.
+Omitting the Icon produces a text-only Button. There is no position attribute
+or CSS reordering. Icon-only Buttons remain the same Button primitive and
+require an accessible name on the control.
 
 ## Color And State
 

@@ -62,17 +62,20 @@ The component-level product law is implemented:
   blue outlined treatment inherited from the former line Button. Quaternary
   has no resting background or border and reveals its state treatment on
   interaction. Size owns the Button box, spacing, radius, and text typography.
-  The exact 16/20/24px height and 11/13/14px text ladder is unchanged.
+  Small, medium, and large use the measured proportion set respectively:
+  `1.5rem/1.75rem/2.5rem` height, `.75rem/.875rem/1rem` text,
+  `.25rem/.375rem/.5rem` child gap, and `.5rem/.5rem/1rem` inline padding.
+  All three use a `.375rem` radius.
 - Button composition is explicit and bounded: omit Icon for text-only, omit
-  label for icon-only, or compose both. Icon-and-text Buttons declare
-  `iconPosition="start|end"`; start is the source default. Icon-only Buttons
-  put their accessible name on the Button. Consumers do not pass arbitrary
-  children, invent another visual type in local CSS, or create a separate
-  icon-button component.
+  label for icon-only, or compose both. Direct child order places an Icon before
+  or after the label; Button CSS does not reorder children. Icon-only Buttons
+  put their accessible name on the Button. Consumers do not invent another
+  visual type in local CSS or create a separate icon-button component.
 - A child `.diet-icon` owns its glyph size independently through numeric
-  `data-size`. Standard Button compositions use 12/16/20px Icons inside
-  small/medium/large Buttons, but Button CSS does not infer or rewrite that
-  value. Composites must author both contracts explicitly.
+  `data-size`. An unsized direct Button Icon receives the Button-context
+  `.75rem` size; an explicit numeric Icon size remains authoritative when a
+  composition deliberately needs it. The Button does not rewrite explicit Icon
+  size. Button labels have no hidden padding.
 - Menu Actions remains a separate menu-row primitive with its existing
   `sm|md|lg` API. Low-level geometry tokens remain internal source mechanics.
 - `textrename` is deleted because it had no product consumer.

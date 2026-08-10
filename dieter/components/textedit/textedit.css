@@ -161,8 +161,6 @@
   pointer-events: none;
 }
 
-.diet-textedit__palette .diet-button { margin: 0; }
-
 .diet-textedit__group--clear .diet-button {
   color: color-mix(in oklab, var(--color-system-black), transparent 20%);
 }

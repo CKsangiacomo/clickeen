@@ -277,15 +277,18 @@ authority.
   treatment, and quaternary has no resting background or border; action wording
   does not create another Button type. Button composition explicitly supports
   no Icon, an Icon at the start or end of its label, or an accessible icon-only
-  control without creating another Button class. The existing 16/20/24px box
-  and 11/13/14px text ladder is preserved. Icon children declare independent
-  numeric sizes, normally 12/16/20px for those three Button sizes. Dieter
-  composites, DevStudio, Bob, Roma, and current Widget source use the same
-  contract; no old alias, wrapper, compatibility selector, or inferred Icon
-  size remains. DevStudio loads the Icon primitive once at its application
-  boundary so every component reveal honors the authored numeric glyph size;
-  it does not inject Icon CSS only for the Icons foundation page. Menu Actions
-  remains its separate menu-row component.
+  control without creating another Button class. Direct child order owns Icon
+  placement; there is no position attribute or CSS reordering. The corrected
+  small/medium/large geometry is `1.5rem/1.75rem/2.5rem` high with
+  `.75rem/.875rem/1rem` text, `.25rem/.375rem/.5rem` child gaps, and
+  `.5rem/.5rem/1rem` inline padding. An unsized direct Icon uses the compact
+  `.75rem` Button-context size; an explicit numeric Icon size remains available
+  and authoritative. Hidden label padding, repeated Icon dimension rules,
+  redundant composite Button resets, and duplicate Button selectors were
+  removed. Dieter composites, DevStudio, Bob, Roma, and current Widget source
+  use the same contract. DevStudio loads the Icon primitive once at its
+  application boundary so every component reveal honors the source contract.
+  Menu Actions remains its separate menu-row component.
 
 ### Per-Tab Execution Loop
 

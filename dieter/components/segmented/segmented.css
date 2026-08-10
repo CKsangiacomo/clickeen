@@ -200,7 +200,7 @@
 .diet-segmented-ic[data-size="lg"],
 .diet-segmented-txt[data-size="lg"],
 .diet-segmented-ictxt[data-size="lg"] {
-  --seg-rail-height: 32px;
+  --seg-rail-height: 2.5rem;
 }
 
 /* Hover state */

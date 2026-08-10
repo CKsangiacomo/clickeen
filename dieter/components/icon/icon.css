@@ -1,9 +1,11 @@
 .diet-icon {
+  --diet-icon-size: var(--icon-size-20, 1.25rem);
   display: inline-flex;
+  flex: none;
   align-items: center;
   justify-content: center;
-  inline-size: var(--icon-size-20, 1.25rem);
-  block-size: var(--icon-size-20, 1.25rem);
+  inline-size: var(--diet-icon-size);
+  block-size: var(--diet-icon-size);
   line-height: 1;
 }
 
@@ -24,41 +26,33 @@
 }
 
 .diet-icon[data-size="12"] {
-  inline-size: var(--icon-size-12, 0.75rem);
-  block-size: var(--icon-size-12, 0.75rem);
+  --diet-icon-size: var(--icon-size-12, 0.75rem);
 }
 
 .diet-icon[data-size="16"] {
-  inline-size: var(--icon-size-16, 1rem);
-  block-size: var(--icon-size-16, 1rem);
+  --diet-icon-size: var(--icon-size-16, 1rem);
 }
 
 .diet-icon[data-size="20"] {
-  inline-size: var(--icon-size-20, 1.25rem);
-  block-size: var(--icon-size-20, 1.25rem);
+  --diet-icon-size: var(--icon-size-20, 1.25rem);
 }
 
 .diet-icon[data-size="24"] {
-  inline-size: var(--icon-size-24, 1.5rem);
-  block-size: var(--icon-size-24, 1.5rem);
+  --diet-icon-size: var(--icon-size-24, 1.5rem);
 }
 
 .diet-icon[data-size="28"] {
-  inline-size: var(--icon-size-28, 1.75rem);
-  block-size: var(--icon-size-28, 1.75rem);
+  --diet-icon-size: var(--icon-size-28, 1.75rem);
 }
 
 .diet-icon[data-size="32"] {
-  inline-size: var(--icon-size-32, 2rem);
-  block-size: var(--icon-size-32, 2rem);
+  --diet-icon-size: var(--icon-size-32, 2rem);
 }
 
 .diet-icon[data-size="36"] {
-  inline-size: var(--icon-size-36, 2.25rem);
-  block-size: var(--icon-size-36, 2.25rem);
+  --diet-icon-size: var(--icon-size-36, 2.25rem);
 }
 
 .diet-icon[data-size="40"] {
-  inline-size: var(--icon-size-40, 2.5rem);
-  block-size: var(--icon-size-40, 2.5rem);
+  --diet-icon-size: var(--icon-size-40, 2.5rem);
 }

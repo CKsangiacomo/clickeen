@@ -10,12 +10,10 @@
   inline-size: 100%;
 }
 
-.diet-choice-tiles__option.diet-button,
-.diet-choice-tiles__option.diet-button[data-type] {
+.diet-choice-tiles__option.diet-button {
   --button-bg: var(--color-system-gray-step5);
   --button-color: var(--color-system-black);
-  --button-border-width: 1px;
-  --button-border-color: transparent;
+  --button-shadow: inset 0 0 0 0.0625rem transparent;
   --button-radius: var(--control-radius-md);
   --button-hover-bg: color-mix(
     in oklab,
@@ -43,18 +41,15 @@
 }
 
 .diet-choice-tiles__option.diet-button .diet-button__label {
-  padding-inline: 0;
   max-inline-size: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.diet-choice-tiles__option.is-selected.diet-button,
-.diet-choice-tiles__option.is-selected.diet-button[data-type] {
+.diet-choice-tiles__option.is-selected.diet-button {
   --button-bg: var(--color-system-white);
-  --button-border-color: var(--color-system-blue);
+  --button-shadow: inset 0 0 0 0.0625rem var(--color-system-blue), var(--shadow-inset-control);
   --button-hover-bg: color-mix(in oklab, var(--color-system-white), var(--color-system-blue) 6%);
   --button-active-bg: color-mix(in oklab, var(--color-system-white), var(--color-system-blue) 10%);
-  box-shadow: var(--shadow-inset-control);
 }
