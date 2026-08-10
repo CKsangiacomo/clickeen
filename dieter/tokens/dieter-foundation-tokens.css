@@ -14,7 +14,7 @@
   --space-10: 2.5rem;   /* 40px */
 
   /* Shared application layout */
-  --layout-left-nav-width: 16rem;
+  --layout-left-nav-width: 8rem;
   --layout-left-nav-padding: var(--space-6);
   --layout-page-padding: var(--space-6);
   --layout-compact-left-nav-width: 20rem;
