@@ -133,13 +133,13 @@ export function SettingsDomain() {
         {activeAccount.websiteUrl ? <p className="body-s">Website: {activeAccount.websiteUrl}</p> : null}
         <div className="rd-canvas-module__actions">
           <Link className="diet-btn-txt" data-size="md" data-variant="line2" href="/widgets">
-            <span className="diet-btn-txt__label body-m">Open widgets</span>
+            <span className="diet-btn-txt__label">Open widgets</span>
           </Link>
           <Link className="diet-btn-txt" data-size="md" data-variant="line2" href="/assets">
-            <span className="diet-btn-txt__label body-m">Open assets</span>
+            <span className="diet-btn-txt__label">Open assets</span>
           </Link>
           <Link className="diet-btn-txt" data-size="md" data-variant="line2" href="/billing">
-            <span className="diet-btn-txt__label body-m">Open billing</span>
+            <span className="diet-btn-txt__label">Open billing</span>
           </Link>
         </div>
       </section>
@@ -180,7 +180,7 @@ export function SettingsDomain() {
             onClick={() => void transferOwner()}
             disabled={!canManageAccount || ownerTransferLoading || !nextOwnerUserId}
           >
-            <span className="diet-btn-txt__label body-m">{ownerTransferLoading ? 'Transferring…' : 'Transfer ownership'}</span>
+            <span className="diet-btn-txt__label">{ownerTransferLoading ? 'Transferring…' : 'Transfer ownership'}</span>
           </button>
         </div>
         {ownerTransferLoading ? <p className="body-s" role="status">Transferring ownership...</p> : null}

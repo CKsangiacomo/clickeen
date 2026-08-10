@@ -268,6 +268,16 @@ authority.
   the dynamic row authority. DevStudio renders the source contract directly.
   No translation, locale, Translation Agent, product-data, Cloudflare, or
   deployment work is included in this component slice.
+- **Bulk Edit / Button shared size contract — corrected, 2026-08-09.** The
+  Bulk Edit reveal proved that composite text buttons received height and
+  radius from `data-size` but silently retained the browser's native Arial
+  typography. Button now owns the complete size contract for text and
+  icon-plus-text variants: one `data-size` selects dimensions, spacing, icons,
+  Dieter font family, font size, and line height. The redundant generated
+  `body-*` label-class mapping and parallel Bob, Roma, Segmented, Choice Tiles,
+  and Dropdown Fill label overrides are removed. DevStudio's Button page
+  proves the primitive and Bulk Edit proves that a composite consumes it
+  without a local typography override.
 
 ### Per-Tab Execution Loop
 

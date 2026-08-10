@@ -56,7 +56,7 @@ export default function RomaLoginPage() {
               <input name="next" type="hidden" value={nextPath} />
               {intent ? <input name="intent" type="hidden" value={intent} /> : null}
               <button aria-label="Continue with Google" className="diet-btn-txt" data-size="lg" data-variant="primary" type="submit">
-                <span className="diet-btn-txt__label body-l">Continue with Google</span>
+                <span className="diet-btn-txt__label">Continue with Google</span>
               </button>
             </form>
           </div>

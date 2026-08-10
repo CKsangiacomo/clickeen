@@ -252,7 +252,7 @@ export function ProfileDomain() {
         ) : null}
         <div className="roma-inline-stack" style={{ justifyContent: 'flex-end', gap: '12px', marginTop: '12px' }}>
           <button className="diet-btn-txt" data-size="md" data-variant="solid" type="button" onClick={() => void saveProfile()} disabled={saving}>
-            <span className="diet-btn-txt__label body-m">{saving ? 'Saving...' : 'Save settings'}</span>
+            <span className="diet-btn-txt__label">{saving ? 'Saving...' : 'Save settings'}</span>
           </button>
         </div>
       </section>

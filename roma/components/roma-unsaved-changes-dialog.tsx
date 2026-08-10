@@ -67,7 +67,7 @@ export function RomaUnsavedChangesDialog({
             type="button"
             onClick={onKeepEditing}
           >
-            <span className="diet-btn-txt__label body-m">Keep editing</span>
+            <span className="diet-btn-txt__label">Keep editing</span>
           </button>
           <button
             className="diet-btn-txt"
@@ -76,7 +76,7 @@ export function RomaUnsavedChangesDialog({
             type="button"
             onClick={onDiscard}
           >
-            <span className="diet-btn-txt__label body-m">Discard</span>
+            <span className="diet-btn-txt__label">Discard</span>
           </button>
         </div>
       </footer>

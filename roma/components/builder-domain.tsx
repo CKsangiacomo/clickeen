@@ -883,7 +883,7 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
         <p className="body-m">Select a concrete instance from Widgets and open Edit.</p>
         <div className="rd-canvas-module__actions">
           <Link className="diet-btn-txt" data-size="md" data-variant="primary" href="/widgets">
-            <span className="diet-btn-txt__label body-m">Open widgets</span>
+            <span className="diet-btn-txt__label">Open widgets</span>
           </Link>
         </div>
       </div>
@@ -897,7 +897,7 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
           <p className="body-m">{builderOpenErrorCopy}</p>
           <div className="rd-canvas-module__actions">
             <button className="diet-btn-txt" data-size="md" data-variant="primary" type="button" onClick={() => void openActiveInstanceInBob()}>
-              <span className="diet-btn-txt__label body-m">Retry</span>
+              <span className="diet-btn-txt__label">Retry</span>
             </button>
           </div>
         </div>

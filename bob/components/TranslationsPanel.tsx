@@ -442,7 +442,7 @@ export function TranslationsPanel({
             disabled={generateButton.disabled}
             onClick={() => void runGenerateTranslations()}
           >
-            <span className="diet-btn-txt__label body-s">{generateButton.label}</span>
+            <span className="diet-btn-txt__label">{generateButton.label}</span>
           </button>
           {generateButton.message ? (
             <div className="label-s label-muted">{generateButton.message}</div>

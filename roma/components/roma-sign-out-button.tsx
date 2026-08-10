@@ -34,7 +34,7 @@ export function RomaSignOutButton() {
       disabled={pending}
       aria-busy={pending}
     >
-      <span className="roma-nav__label diet-btn-txt__label label-s">
+      <span className="roma-nav__label diet-btn-txt__label">
         {pending ? 'Signing out...' : 'Sign out'}
       </span>
     </button>

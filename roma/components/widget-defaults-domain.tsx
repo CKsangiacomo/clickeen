@@ -593,7 +593,7 @@ export function WidgetDefaultsDomain() {
             type="button"
             onClick={() => void loadDefaults()}
           >
-            <span className="diet-btn-txt__label body-m">Reload</span>
+            <span className="diet-btn-txt__label">Reload</span>
           </button>
         </div>
       </section>
@@ -687,7 +687,7 @@ export function WidgetDefaultsDomain() {
               disabled={!dirty || saving}
               onClick={discard}
             >
-              <span className="diet-btn-txt__label body-m">Discard</span>
+              <span className="diet-btn-txt__label">Discard</span>
             </button>
             <button
               className="diet-btn-txt"
@@ -697,7 +697,7 @@ export function WidgetDefaultsDomain() {
               disabled={!dirty || saving || saveBlocked}
               onClick={() => void save()}
             >
-              <span className="diet-btn-txt__label body-m">{saving ? 'Saving...' : 'Save'}</span>
+              <span className="diet-btn-txt__label">{saving ? 'Saving...' : 'Save'}</span>
             </button>
           </div>
         </div>

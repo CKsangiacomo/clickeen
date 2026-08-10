@@ -52,6 +52,10 @@ primitives such as `icon` are named exceptions, not a second contract.
 
 The component-level product law is implemented:
 
+- Text and icon-plus-text buttons use `data-size` as their complete size
+  authority. The Button component derives height, radius, spacing, icon size,
+  font family, font size, and line height from that one attribute; composites
+  do not add parallel `body-*` typography classes to make a Button size work.
 - `textrename` is deleted because it had no product consumer.
 - Toggle is a native checkbox HTML/CSS/spec contract with no custom hydrator.
 - Keep `repeater` and `object-manager` distinct. Repeater edits nested items

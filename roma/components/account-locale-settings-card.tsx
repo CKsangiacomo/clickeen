@@ -232,7 +232,7 @@ export function AccountLocaleSettingsCard(args: {
           {!error ? <p className="body-m" role="status">Loading account languages...</p> : null}
           <div className="rd-canvas-module__actions">
             <button className="diet-btn-txt" data-size="md" data-variant="line2" type="button" disabled={loading || saving} onClick={() => void loadSettings()}>
-              <span className="diet-btn-txt__label body-m">{loading ? 'Refreshing…' : 'Refresh'}</span>
+              <span className="diet-btn-txt__label">{loading ? 'Refreshing…' : 'Refresh'}</span>
             </button>
           </div>
         </div>
@@ -302,7 +302,7 @@ export function AccountLocaleSettingsCard(args: {
 
           <div className="rd-canvas-module__actions">
             <button className="diet-btn-txt" data-size="md" data-variant="line2" type="button" disabled={loading || saving} onClick={() => void loadSettings()}>
-              <span className="diet-btn-txt__label body-m">{loading ? 'Refreshing…' : 'Refresh'}</span>
+              <span className="diet-btn-txt__label">{loading ? 'Refreshing…' : 'Refresh'}</span>
             </button>
             <button
               className="diet-btn-txt"
@@ -312,7 +312,7 @@ export function AccountLocaleSettingsCard(args: {
               disabled={loading || saving || !args.canEdit}
               onClick={() => void saveSettings()}
             >
-              <span className="diet-btn-txt__label body-m">{saving ? 'Saving…' : 'Save languages'}</span>
+              <span className="diet-btn-txt__label">{saving ? 'Saving…' : 'Save languages'}</span>
             </button>
           </div>
         </div>

@@ -178,7 +178,7 @@ export function TeamDomain() {
           <div className="roma-inline-stack" role="alert">
             <p className="body-m">{error}</p>
             <button className="diet-btn-txt" data-size="md" data-variant="line2" type="button" onClick={() => void refreshMembers()} disabled={loading}>
-              <span className="diet-btn-txt__label body-m">Retry</span>
+              <span className="diet-btn-txt__label">Retry</span>
             </button>
           </div>
         ) : null}
@@ -202,7 +202,7 @@ export function TeamDomain() {
                 <tr key={member.userId}>
                   <td className="body-s">
                     <Link href={`/team/${encodeURIComponent(member.userId)}`} className="diet-btn-txt" data-size="md" data-variant="line2">
-                      <span className="diet-btn-txt__label body-m">{resolveMemberLabel(member)}</span>
+                      <span className="diet-btn-txt__label">{resolveMemberLabel(member)}</span>
                     </Link>
                     <div className="body-s">{member.profile?.primaryEmail ?? 'No primary email recorded'}</div>
                   </td>
@@ -263,7 +263,7 @@ export function TeamDomain() {
                 onClick={() => void issueInvitation()}
                 disabled={inviteLoading || !inviteEmail.trim()}
               >
-                <span className="diet-btn-txt__label body-m">{inviteLoading ? 'Saving...' : 'Create invitation'}</span>
+                <span className="diet-btn-txt__label">{inviteLoading ? 'Saving...' : 'Create invitation'}</span>
               </button>
             </div>
           </section>
@@ -296,7 +296,7 @@ export function TeamDomain() {
                         onClick={() => void revokeInvitation(invitation.invitationId)}
                         disabled={inviteLoading}
                       >
-                        <span className="diet-btn-txt__label body-m">Revoke</span>
+                        <span className="diet-btn-txt__label">Revoke</span>
                       </button>
                     </td>
                   </tr>

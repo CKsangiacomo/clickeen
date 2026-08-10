@@ -105,7 +105,7 @@ function WidgetUpgradePromptDialog({
             type="button"
             onClick={onClose}
           >
-            <span className="diet-btn-txt__label body-m">Close</span>
+            <span className="diet-btn-txt__label">Close</span>
           </button>
           <button
             className="diet-btn-txt"
@@ -114,7 +114,7 @@ function WidgetUpgradePromptDialog({
             type="button"
             onClick={() => prompt && onUpgrade(prompt.message)}
           >
-            <span className="diet-btn-txt__label body-m">Upgrade</span>
+            <span className="diet-btn-txt__label">Upgrade</span>
           </button>
         </div>
       </footer>
@@ -672,7 +672,7 @@ export function WidgetsDomain({
             <div className="roma-inline-stack">
               <p className="body-m">{widgetDataError}</p>
               <button className="diet-btn-txt" data-size="md" data-variant="line2" type="button" onClick={() => void refreshWidgets({ force: true })} disabled={domainLoading || domainRefreshing}>
-                <span className="diet-btn-txt__label body-m">Retry</span>
+                <span className="diet-btn-txt__label">Retry</span>
               </button>
             </div>
           ) : null}
@@ -696,7 +696,7 @@ export function WidgetsDomain({
                       data-variant="primary"
                       href="/widgets/catalog"
                     >
-                      <span className="diet-btn-txt__label body-m">Browse widget catalog</span>
+                      <span className="diet-btn-txt__label">Browse widget catalog</span>
                     </Link>
                   </div>
                 ) : null}
@@ -831,7 +831,7 @@ export function WidgetsDomain({
                                   onClick={cancelRename}
                                   disabled={Boolean(activeActionKey)}
                                 >
-                                  <span className="diet-btn-txt__label body-m">Cancel</span>
+                                  <span className="diet-btn-txt__label">Cancel</span>
                                 </button>
                                 <button
                                   className="diet-btn-txt"
@@ -841,7 +841,7 @@ export function WidgetsDomain({
                                   onClick={() => void handleRenameInstance(instance)}
                                   disabled={Boolean(activeActionKey)}
                                 >
-                                  <span className="diet-btn-txt__label body-m">{activeActionKey === renameActionKey ? 'Renaming...' : 'Rename'}</span>
+                                  <span className="diet-btn-txt__label">{activeActionKey === renameActionKey ? 'Renaming...' : 'Rename'}</span>
                                 </button>
                               </div>
                             </div>
@@ -878,7 +878,7 @@ export function WidgetsDomain({
                                 type="button"
                                 onClick={() => openCopyCode(instance)}
                               >
-                                <span className="diet-btn-txt__label body-s">Copy code</span>
+                                <span className="diet-btn-txt__label">Copy code</span>
                               </button>
                             ) : null}
                           </div>
@@ -898,7 +898,7 @@ export function WidgetsDomain({
                                 data-size="md"
                                 data-variant="line2"
                               >
-                                <span className="diet-btn-txt__label body-m">Edit</span>
+                                <span className="diet-btn-txt__label">Edit</span>
                               </Link>
                               {secondaryActionStatus ? (
                                 <span className="body-xs roma-widget-action-status" role="status">{secondaryActionStatus}</span>
@@ -957,7 +957,7 @@ export function WidgetsDomain({
                             onClick={() => void handleCreateInstance(option.widgetType)}
                             disabled={Boolean(activeActionKey)}
                           >
-                            <span className="diet-btn-txt__label body-m">
+                            <span className="diet-btn-txt__label">
                               {activeActionKey === createActionKey ? 'Creating...' : 'Create instance'}
                             </span>
                           </button>

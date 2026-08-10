@@ -64,7 +64,7 @@ export class RomaDomainErrorBoundary extends Component<
             type="button"
             onClick={() => this.setState({ error: null })}
           >
-            <span className="diet-btn-txt__label body-m">Retry view</span>
+            <span className="diet-btn-txt__label">Retry view</span>
           </button>
           <button
             className="diet-btn-txt"
@@ -73,7 +73,7 @@ export class RomaDomainErrorBoundary extends Component<
             type="button"
             onClick={() => window.location.reload()}
           >
-            <span className="diet-btn-txt__label body-m">Reload page</span>
+            <span className="diet-btn-txt__label">Reload page</span>
           </button>
         </div>
       </section>

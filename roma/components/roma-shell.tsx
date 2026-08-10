@@ -42,10 +42,10 @@ export function RomaShellDefaultActions() {
   return (
     <>
       <Link className="diet-btn-txt" data-size="lg" data-variant="line2" href="/team">
-        <span className="diet-btn-txt__label body-l">Invite members</span>
+        <span className="diet-btn-txt__label">Invite members</span>
       </Link>
       <Link className="diet-btn-txt" data-size="lg" data-variant="primary" href="/widgets">
-        <span className="diet-btn-txt__label body-l">Widgets</span>
+        <span className="diet-btn-txt__label">Widgets</span>
       </Link>
     </>
   );

@@ -117,7 +117,7 @@ export function RomaAccountBoundary({ children }: { children: ReactNode }) {
             type="button"
             onClick={() => void me.reload()}
           >
-            <span className="diet-btn-txt__label body-m">Retry</span>
+            <span className="diet-btn-txt__label">Retry</span>
           </button>
         </div>
       </section>

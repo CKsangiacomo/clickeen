@@ -64,7 +64,7 @@ export function RomaUpsellDialog({
             type="button"
             onClick={onClose}
           >
-            <span className="diet-btn-txt__label body-m">Close</span>
+            <span className="diet-btn-txt__label">Close</span>
           </button>
         </div>
       </footer>

@@ -189,7 +189,7 @@ export function TeamMemberDomain({ memberId }: TeamMemberDomainProps) {
           <p className="body-s">Team manages memberships. Personal details stay with the member in User Settings.</p>
         </div>
         <Link className="diet-btn-txt" data-size="md" data-variant="line2" href="/team">
-          <span className="diet-btn-txt__label body-m">Back to team</span>
+          <span className="diet-btn-txt__label">Back to team</span>
         </Link>
       </section>
 
@@ -197,7 +197,7 @@ export function TeamMemberDomain({ memberId }: TeamMemberDomainProps) {
         <section className="rd-canvas-module" role="alert">
           <p className="body-m">{error}</p>
           <button className="diet-btn-txt" data-size="md" data-variant="line2" type="button" onClick={() => void refreshMember()} disabled={loading}>
-            <span className="diet-btn-txt__label body-m">Retry</span>
+            <span className="diet-btn-txt__label">Retry</span>
           </button>
         </section>
       ) : null}
@@ -250,7 +250,7 @@ export function TeamMemberDomain({ memberId }: TeamMemberDomainProps) {
                 onClick={() => void saveRole()}
                 disabled={!canManage || member.member.role === 'owner' || savingRole || !isAccountRoleValue(roleDraft) || roleDraft === member.member.role}
               >
-                <span className="diet-btn-txt__label body-m">{savingRole ? 'Saving...' : 'Save role'}</span>
+                <span className="diet-btn-txt__label">{savingRole ? 'Saving...' : 'Save role'}</span>
               </button>
               <button
                 className="diet-btn-txt"
@@ -260,7 +260,7 @@ export function TeamMemberDomain({ memberId }: TeamMemberDomainProps) {
                 onClick={() => void removeMember()}
                 disabled={!canManage || member.member.role === 'owner' || removingMember}
               >
-                <span className="diet-btn-txt__label body-m">{removingMember ? 'Removing...' : 'Remove member'}</span>
+                <span className="diet-btn-txt__label">{removingMember ? 'Removing...' : 'Remove member'}</span>
               </button>
             </div>
           </section>

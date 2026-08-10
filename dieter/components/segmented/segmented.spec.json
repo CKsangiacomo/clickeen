@@ -124,11 +124,6 @@
         "buttonClass": "diet-btn-{{buttonLayout}}",
         "buttonSize": "{{size}}",
         "buttonVariant": "neutral"
-      },
-      "sizeContext": {
-        "sm": { "labelClass": "body-xs" },
-        "md": { "labelClass": "body-s" },
-        "lg": { "labelClass": "body-m" }
       }
     },
     {
@@ -164,11 +159,6 @@
             "icon": "sparkles"
           }
         ]
-      },
-      "sizeContext": {
-        "sm": { "labelClass": "body-xs" },
-        "md": { "labelClass": "body-s" },
-        "lg": { "labelClass": "body-m" }
       }
     },
     {
@@ -204,11 +194,6 @@
             "srLabel": "List"
           }
         ]
-      },
-      "sizeContext": {
-        "sm": { "labelClass": "body-xs" },
-        "md": { "labelClass": "body-s" },
-        "lg": { "labelClass": "body-m" }
       }
     },
     {
@@ -246,11 +231,6 @@
             "label": "Right"
           }
         ]
-      },
-      "sizeContext": {
-        "sm": { "labelClass": "body-xs" },
-        "md": { "labelClass": "body-s" },
-        "lg": { "labelClass": "body-m" }
       }
     }
   ],

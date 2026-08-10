@@ -183,7 +183,7 @@ export function AssetsPage() {
             onClick={headerActions.uploadAsset}
             disabled={actionsBusy}
           >
-            <span className="diet-btn-txt__label body-m">{headerActions.singleUploadBusy ? 'Uploading…' : 'Upload asset'}</span>
+            <span className="diet-btn-txt__label">{headerActions.singleUploadBusy ? 'Uploading…' : 'Upload asset'}</span>
           </button>
           <button
             className="diet-btn-txt"
@@ -193,7 +193,7 @@ export function AssetsPage() {
             onClick={headerActions.uploadBulk}
             disabled={actionsBusy}
           >
-            <span className="diet-btn-txt__label body-m">{headerActions.bulkUploadBusy ? 'Uploading…' : 'Upload in bulk'}</span>
+            <span className="diet-btn-txt__label">{headerActions.bulkUploadBusy ? 'Uploading…' : 'Upload in bulk'}</span>
           </button>
           <button
             className="diet-btn-txt"
@@ -203,7 +203,7 @@ export function AssetsPage() {
             onClick={headerActions.refresh}
             disabled={headerActions.listLoading || actionsBusy}
           >
-            <span className="diet-btn-txt__label body-m">{headerActions.listLoading ? 'Refreshing…' : 'Refresh list'}</span>
+            <span className="diet-btn-txt__label">{headerActions.listLoading ? 'Refreshing…' : 'Refresh list'}</span>
           </button>
         </>
       ) : null}
@@ -514,7 +514,7 @@ export function AssetsDomain({
           <div className="roma-inline-stack" role="alert">
             <p className="body-m">{error}</p>
             <button className="diet-btn-txt" data-size="md" data-variant="line2" type="button" onClick={() => void refreshAssets()} disabled={loading}>
-              <span className="diet-btn-txt__label body-m">Retry</span>
+              <span className="diet-btn-txt__label">Retry</span>
             </button>
           </div>
         ) : null}
@@ -619,7 +619,7 @@ export function AssetsDomain({
                     onClick={() => handleDeleteAsset(asset)}
                     disabled={deletingAssetRef === asset.assetRef}
                   >
-                    <span className="diet-btn-txt__label body-m">{deletingAssetRef === asset.assetRef ? 'Deleting...' : 'Delete'}</span>
+                    <span className="diet-btn-txt__label">{deletingAssetRef === asset.assetRef ? 'Deleting...' : 'Delete'}</span>
                   </button>
                 </td>
               </tr>
@@ -701,7 +701,7 @@ export function AssetsDomain({
                 onClick={() => bulkUploadInputRef.current?.click()}
                 disabled={bulkUploadBusy}
               >
-                <span className="diet-btn-txt__label body-m">Add more files</span>
+                <span className="diet-btn-txt__label">Add more files</span>
               </button>
               <button
                 className="diet-btn-txt"
@@ -711,7 +711,7 @@ export function AssetsDomain({
                 onClick={() => setBulkUploadOpen(false)}
                 disabled={bulkUploadBusy}
               >
-                <span className="diet-btn-txt__label body-m">Close</span>
+                <span className="diet-btn-txt__label">Close</span>
               </button>
             </div>
           </footer>

@@ -33,13 +33,6 @@
         "variant": "primary",
         "label": "Button",
         "icon": "sparkles"
-      },
-      "sizeContext": {
-        "xs": { "labelClass": "diet-btn-ictxt__label body-xs" },
-        "sm": { "labelClass": "diet-btn-ictxt__label body-s" },
-        "md": { "labelClass": "diet-btn-ictxt__label body-m" },
-        "lg": { "labelClass": "diet-btn-ictxt__label body-l" },
-        "xl": { "labelClass": "diet-btn-ictxt__label body-xl" }
       }
     },
     {
@@ -77,13 +70,6 @@
         "size": "md",
         "variant": "primary",
         "label": "Text button"
-      },
-      "sizeContext": {
-        "xs": { "labelClass": "diet-btn-txt__label body-xs" },
-        "sm": { "labelClass": "diet-btn-txt__label body-s" },
-        "md": { "labelClass": "diet-btn-txt__label body-m" },
-        "lg": { "labelClass": "diet-btn-txt__label body-l" },
-        "xl": { "labelClass": "diet-btn-txt__label body-xl" }
       }
     }
   ]

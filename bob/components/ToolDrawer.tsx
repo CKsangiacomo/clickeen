@@ -256,7 +256,7 @@ export function ToolDrawer({
                 style={dieterIconStyle('pencil')}
                 aria-hidden="true"
               />
-              <span className="diet-btn-ictxt__label body-s">Manual</span>
+              <span className="diet-btn-ictxt__label">Manual</span>
             </button>
           </label>
           <label className="diet-segment">
@@ -283,7 +283,7 @@ export function ToolDrawer({
                 style={dieterIconStyle('sparkles')}
                 aria-hidden="true"
               />
-              <span className="diet-btn-ictxt__label body-s">Copilot</span>
+              <span className="diet-btn-ictxt__label">Copilot</span>
             </button>
           </label>
         </div>

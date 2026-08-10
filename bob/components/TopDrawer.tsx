@@ -119,7 +119,7 @@ export function TopDrawer({
               target="_blank"
               rel="noreferrer"
             >
-              <span className="diet-btn-txt__label body-s">Open public widget</span>
+              <span className="diet-btn-txt__label">Open public widget</span>
             </a>
             <div
               className="topdrawer-more diet-popover-host"
@@ -136,7 +136,7 @@ export function TopDrawer({
                 aria-expanded={moreOpen}
                 onClick={() => setMoreOpen((open) => !open)}
               >
-                <span className="diet-btn-txt__label body-s">More</span>
+                <span className="diet-btn-txt__label">More</span>
               </button>
               <div className="topdrawer-more__menu diet-popover" role="menu">
                 <button

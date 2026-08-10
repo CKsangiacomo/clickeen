@@ -246,7 +246,7 @@ function renderAssetBrowserRows(args: {
     button.className = 'diet-btn-txt diet-dropdown-fill__asset-browser-use';
     button.setAttribute('data-size', 'sm');
     button.setAttribute('data-variant', 'line1');
-    button.innerHTML = '<span class="diet-btn-txt__label body-s">Use</span>';
+    button.innerHTML = '<span class="diet-btn-txt__label">Use</span>';
     button.addEventListener('click', (event) => {
       event.preventDefault();
       if (args.kind === 'image') {

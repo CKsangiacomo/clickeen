@@ -92,7 +92,7 @@ export function WidgetCopyCodeDialog({
                     aria-label={`Copy ${option.label}`}
                     onClick={() => void copy(option.label, actions[option.key])}
                   >
-                    <span className="diet-btn-txt__label body-s">Copy</span>
+                    <span className="diet-btn-txt__label">Copy</span>
                   </button>
                 </div>
                 <pre className="roma-widget-code-value body-s"><code>{actions[option.key]}</code></pre>
@@ -114,7 +114,7 @@ export function WidgetCopyCodeDialog({
             type="button"
             onClick={onClose}
           >
-            <span className="diet-btn-txt__label body-m">Close</span>
+            <span className="diet-btn-txt__label">Close</span>
           </button>
         </div>
       </footer>
