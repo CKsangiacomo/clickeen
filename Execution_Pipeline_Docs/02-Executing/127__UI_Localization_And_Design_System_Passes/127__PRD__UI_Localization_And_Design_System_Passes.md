@@ -158,7 +158,7 @@ the code is convenient there.
 | Stage | Status | Release state |
 | --- | --- | --- |
 | Stage 1 — Scaffold only | Complete | Committed, pushed, and deployed; no non-English experience is exposed |
-| Stage 2 — Dieter UI pass | In progress: Foundations, Agent Activity, Bulk Edit, and Button complete | Unified Button contract is ready for exact-SHA cloud-dev QA |
+| Stage 2 — Dieter UI pass | In progress: Foundations, Agent Activity, Bulk Edit, Button, and Choice Tiles complete | Choice Tiles contract is ready for exact-SHA cloud-dev QA |
 | Stage 3 — Bob UI pass | Not started | No authority to begin until explicitly directed |
 | Stage 4 — Roma UI pass | Not started | No authority to begin until explicitly directed |
 | Stage 5 — Translation pass | Not started | No translations may be generated yet |
@@ -290,6 +290,22 @@ authority.
   use the same contract. DevStudio loads the Icon primitive once at its
   application boundary so every component reveal honors the source contract.
   Menu Actions remains its separate menu-row component.
+- **Choice Tiles — passed after correction, 2026-08-10.** The previous
+  `sm|md|lg` API changed only Button text and an explicitly injected
+  `12/16/20` Icon while every tile retained one fixed height, padding, gap, and
+  radius. Choice Tiles now owns one proportional size authority:
+  `4rem/5rem/6rem` minimum heights, `.5rem/.75rem/1rem` block padding,
+  `.25rem/.5rem/.75rem` internal gaps, `.25rem/.375rem/.5rem` radii, and
+  `1rem/1.25rem/1.5rem` unsized Icons. Inline padding remains `.5rem`; the row
+  gap is `.25rem` at small and `.5rem` at medium/large so ordinary labels retain
+  useful width in the ToolDrawer. The separate rendered Icon-size input is
+  removed. Exact caller labels wrap rather than truncate. DevStudio
+  reveals three distinct real Icons across all sizes plus the current
+  two-option text-only composition. All six current Widget controls across Big
+  Bang, Call to Action, Cards, Countdown, and FAQ already supply the group and
+  option copy through their adjacent English ToolDrawer label files; no Dieter
+  copy, catalog, locale folder, non-English artifact, or runtime locale path was
+  added. Selection and string binding remain unchanged.
 
 ### Per-Tab Execution Loop
 

@@ -110,6 +110,9 @@ this staged pass, including widget-declared labels, widget panel names, and the
 static Agent Activity title. The compiler emits that title as
 `compiled.toolDrawerLabels.translations.agentActivityTitle`; Bob renders it
 while the Translation Agent continues to own the dynamic activity-row words.
+Choice Tiles likewise receives its group label and every option label from the
+same resolved Widget label file; the Dieter stencil owns no words and allows
+those exact values to wrap inside the tile.
 Copy inside other reusable Dieter stencils and shared compiler modules remains
 with those current sources until its component pass moves it deliberately.
 

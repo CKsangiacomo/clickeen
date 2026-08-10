@@ -1,12 +1,36 @@
 .diet-choice-tiles {
   display: grid;
   inline-size: 100%;
+  --choice-tile-min-block-size: 5rem;
+  --choice-tile-padding-block: var(--space-3);
+  --choice-tile-padding-inline: var(--space-2);
+  --choice-tile-gap: var(--space-2);
+  --choice-tile-row-gap: var(--space-2);
+  --choice-tile-radius: var(--control-radius-md);
+  --choice-tile-icon-size: var(--icon-size-20);
+}
+
+.diet-choice-tiles[data-size="sm"] {
+  --choice-tile-min-block-size: 4rem;
+  --choice-tile-padding-block: var(--space-2);
+  --choice-tile-gap: var(--space-1);
+  --choice-tile-row-gap: var(--space-1);
+  --choice-tile-radius: var(--control-radius-sm);
+  --choice-tile-icon-size: var(--icon-size-16);
+}
+
+.diet-choice-tiles[data-size="lg"] {
+  --choice-tile-min-block-size: 6rem;
+  --choice-tile-padding-block: var(--space-4);
+  --choice-tile-gap: var(--space-3);
+  --choice-tile-radius: var(--control-radius-lg);
+  --choice-tile-icon-size: var(--icon-size-24);
 }
 
 .diet-choice-tiles__row {
   display: flex;
   flex-wrap: nowrap;
-  gap: var(--space-2);
+  gap: var(--choice-tile-row-gap);
   inline-size: 100%;
 }
 
@@ -14,7 +38,7 @@
   --button-bg: var(--color-system-gray-step5);
   --button-color: var(--color-system-black);
   --button-shadow: inset 0 0 0 0.0625rem transparent;
-  --button-radius: var(--control-radius-md);
+  --button-radius: var(--choice-tile-radius);
   --button-hover-bg: color-mix(
     in oklab,
     var(--color-system-gray-step5),
@@ -28,23 +52,23 @@
 
   flex: 1 1 0%;
   min-inline-size: 0;
-  min-block-size: 5.125rem; /* ~82px tile height */
-  padding-inline: var(--space-3);
-  padding-block: var(--space-3);
+  min-block-size: var(--choice-tile-min-block-size);
+  padding-block: var(--choice-tile-padding-block);
+  padding-inline: var(--choice-tile-padding-inline);
   flex-direction: column;
-  gap: var(--space-2);
+  gap: var(--choice-tile-gap);
   text-align: center;
 }
 
-.diet-choice-tiles__option.diet-button .diet-icon {
+.diet-choice-tiles__option.diet-button > .diet-icon:not([data-size]) {
+  --diet-icon-size: var(--choice-tile-icon-size);
   color: color-mix(in oklab, var(--color-system-black), transparent 15%);
 }
 
 .diet-choice-tiles__option.diet-button .diet-button__label {
   max-inline-size: 100%;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 
 .diet-choice-tiles__option.is-selected.diet-button {

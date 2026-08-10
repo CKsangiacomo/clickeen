@@ -76,6 +76,17 @@ The component-level product law is implemented:
   Icon's proportional default: `.75rem` for small, `1rem` for medium, and
   `1.25rem` for large. An explicit numeric Icon size remains authoritative when
   a composition deliberately needs it. Button labels have no hidden padding.
+- Choice Tiles is a two- or three-option string chooser with one `sm|md|lg`
+  size authority on its root. Small, medium, and large use proportional
+  `4rem/5rem/6rem` minimum heights, `.5rem/.75rem/1rem` block padding,
+  `.25rem/.5rem/.75rem` internal gaps, and `.25rem/.375rem/.5rem` radii.
+  Inline padding remains `.5rem`; the row gap is `.25rem` at small and `.5rem`
+  at medium/large so the constrained ToolDrawer width remains usable. Its
+  unsized Icons use the tile-specific
+  `1rem/1.25rem/1.5rem` ladder instead of a second rendered Icon-size input.
+  Labels wrap rather than truncate, so the caller's exact wording remains
+  visible. Dieter owns no group or option words; Widget ToolDrawer instances
+  supply both from their adjacent label file.
 - Menu Actions remains a separate menu-row primitive with its existing
   `sm|md|lg` API. Low-level geometry tokens remain internal source mechanics.
 - `textrename` is deleted because it had no product consumer.

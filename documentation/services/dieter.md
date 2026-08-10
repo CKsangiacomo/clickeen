@@ -94,6 +94,13 @@ narration rows, its `sm`/`md` structure, and its active presentation. It does
 not own caller wording. Bob supplies the static title from the open widget
 artifact and renders Translation Agent event messages as the rows.
 
+Choice Tiles owns two- and three-option selection structure, interaction,
+selected presentation, and one proportional `sm|md|lg` tile geometry. Its
+Icon ladder is `1rem/1.25rem/1.5rem`; labels wrap instead of truncating. The
+component owns no visible wording. Widget ToolDrawer instances supply the
+group label and every option label from the Widget's adjacent ToolDrawer label
+file.
+
 Color source keeps one small shared role layer:
 `--role-surface-bg`, `--role-surface`, `--role-surface-muted`,
 `--role-border`, and `--role-error`. Text and focus retain their existing
