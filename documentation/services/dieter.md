@@ -113,6 +113,18 @@ control does not add a separate blue border or tint to the covered row.
 All visible wording remains caller input. Its selected checkmark inherits the
 Menu Actions `sm|md|lg` Icon size instead of carrying a fixed size.
 
+Dropdown Border owns one global border-editing component, not a family of
+Widget-specific border controls. Its exact value is
+`{enabled:boolean,width:number,color:string}`. Root `sm|md|lg` sizing applies
+to the trigger, attached Popover, text, `square.slash` no-border Icon, and
+nested controls. Enabled sits immediately below the caller-supplied Popover
+header; disabling it hides but does not replace the stored color and width.
+Invalid source or Hex input remains visible and does not silently restore,
+clamp, or invent a border. Dieter owns structure, styling, and behavior but no
+visible words. Widget specs declare use and exact state paths, while their
+adjacent ToolDrawer label files supply field and component labels through
+Bob's existing compiler.
+
 Popover owns only the floating surface and label/body structure. Its standard
 header contains the caller-supplied label and no decorative Icon. Header and
 body align through the same outer Popover padding. Callers own trigger state,

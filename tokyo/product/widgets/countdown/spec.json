@@ -132,6 +132,24 @@
   },
   "editor": {
     "labels": {
+      "components": {
+        "dropdown-border": {
+          "color": "$label:component.dropdown-border.color.label",
+          "defaultColors": "$label:component.dropdown-border.default-colors.label",
+          "enabled": "$label:component.dropdown-border.enabled.label",
+          "hex": "$label:component.dropdown-border.hex.label",
+          "hue": "$label:component.dropdown-border.hue.label",
+          "invalid": "$label:component.dropdown-border.invalid.label",
+          "width": "$label:component.dropdown-border.width.label"
+        }
+      },
+      "fields": {
+        "dropdown-border": {
+          "appearance.headerCta.border": "$label:appearance.header-cta.border.dropdown-border.label",
+          "appearance.localeSwitcherBorder": "$label:appearance.locale-switcher.border.dropdown-border.label",
+          "appearance.podBorder": "$label:appearance.pod-border.dropdown-border.label"
+        }
+      },
       "translations": {
         "agentActivityTitle": "$label:translations.agent-activity.title"
       }

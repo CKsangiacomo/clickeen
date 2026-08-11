@@ -162,7 +162,7 @@ export function buildLocaleSwitcherAppearancePanelFields(
   );
   push(
     'appearance.localeSwitcherBorder',
-    "    <tooldrawer-field-podstageappearance group-label='' type='dropdown-border' size='md' path='appearance.localeSwitcherBorder' label='Border' value='{{appearance.localeSwitcherBorder}}' show-if=\"localeSwitcher.enabled == true\" />",
+    "    <tooldrawer-field-podstageappearance group-label='' type='dropdown-border' size='md' path='appearance.localeSwitcherBorder' label='' value='{{appearance.localeSwitcherBorder}}' show-if=\"localeSwitcher.enabled == true\" />",
   );
   push(
     'appearance.localeSwitcherRadius',
@@ -227,7 +227,7 @@ export function buildCoreCardWrapperAppearancePanelFields(args: {
   );
   push(
     `${basePath}.border`,
-    `    <tooldrawer-field-podstageappearance group-label='' type='dropdown-border' size='md' path='${basePath}.border' label='${label} border' value='{{${basePath}.border}}' />`,
+    `    <tooldrawer-field-podstageappearance group-label='' type='dropdown-border' size='md' path='${basePath}.border' label='' value='{{${basePath}.border}}' />`,
   );
   push(
     `${basePath}.shadow`,
@@ -252,7 +252,7 @@ export function buildStagePodAppearancePanelFields(
 ): string[] {
   const podBorderFields = options.includePodBorder
     ? [
-        "    <tooldrawer-field-podstageappearance group-label='' type='dropdown-border' size='md' path='appearance.podBorder' label='Pod border' value='{{appearance.podBorder}}' />",
+        "    <tooldrawer-field-podstageappearance group-label='' type='dropdown-border' size='md' path='appearance.podBorder' label='' value='{{appearance.podBorder}}' />",
       ]
     : [];
 

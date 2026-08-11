@@ -11,15 +11,19 @@
         <span class="spec-line body-xs">diet-dropdown-border</span><span class="spec-line body-xs">data-size='sm'</span>
       </figcaption>
       <div class="dieter-preview">
-        <div class="diet-dropdown-border diet-popover-host" data-size="sm" data-state="closed">
+        <div
+  class="diet-dropdown-border diet-popover-host"
+  data-size="sm"
+  data-state="closed"
+  data-invalid-label="Invalid border"
+>
   <input
     id="dropdown-border-sm"
     type="hidden"
     class="diet-dropdown-border__value-field"
-    value=""
+    value='{"enabled":true,"width":1,"color":"#c7c7cc"}'
 
     data-bob-json
-    data-placeholder="Select a border"
   />
 
   <button
@@ -29,44 +33,52 @@
     aria-expanded="false"
     aria-labelledby="dropdown-border-sm-label"
   >
-
-      <span
-        class="diet-dropdown-header-label label-xs"
-        id="dropdown-border-sm-label"
-      >Label</span>
-
-    <span class="diet-dropdown-header-value body-xs" data-muted="true" data-placeholder="Select a border">
+    <span class="diet-dropdown-header-label" id="dropdown-border-sm-label">Border</span>
+    <span class="diet-dropdown-header-value">
       <span class="diet-dropdown-border__chip" aria-hidden="true"></span>
-      <span class="diet-dropdown-border__label">Select a border</span>
+      <span
+        class="diet-icon diet-dropdown-border__none-icon"
+        data-icon="square.slash"
+        aria-hidden="true"
+        hidden
+      ></span>
+      <span class="diet-dropdown-border__label"></span>
     </span>
   </button>
 
   <div
     class="diet-popover diet-dropdown-border__popover"
     role="dialog"
-    aria-label="Border options"
+    aria-labelledby="dropdown-border-sm-popover-label"
     data-state="closed"
   >
     <div class="diet-popover__header">
-      <span class="diet-popover__header-label label-s">
-        Border
-      </span>
-      <button
-        type="button"
-        class="diet-button diet-popover__header-trigger"
-        data-size="small"
-        data-type="quaternary"
-        aria-hidden="true"
-        tabindex="-1"
-      >
-        <span class="diet-icon" data-icon="square.dashed" data-size="12"></span>
-      </button>
+      <span class="diet-popover__header-label" id="dropdown-border-sm-popover-label">Border</span>
     </div>
     <div class="diet-popover__body">
-      <div class="diet-dropdown-border__panel body-xs">
-        <div class="diet-dropdown-border__preview" aria-label="Pick border color">
+      <label class="diet-toggle diet-toggle--block" data-size="sm">
+        <span class="diet-toggle__label" id="dropdown-border-sm-enabled-label">Enabled</span>
+        <input
+          id="dropdown-border-sm-enabled"
+          class="diet-toggle__input sr-only diet-dropdown-border__enabled"
+          type="checkbox"
+          role="switch"
+          aria-labelledby="dropdown-border-sm-enabled-label"
+        />
+        <span class="diet-toggle__switch" aria-hidden="true">
+          <span class="diet-toggle__knob"></span>
+        </span>
+      </label>
+
+      <div class="diet-dropdown-border__dependent-controls">
+        <div class="diet-dropdown-border__preview" aria-label="Border color">
           <div class="diet-dropdown-border__color-preview"></div>
-          <input type="color" class="diet-dropdown-border__native-color" aria-label="Native color picker" tabindex="-1" />
+          <input
+            type="color"
+            class="diet-dropdown-border__native-color"
+            aria-label="Border color"
+            tabindex="-1"
+          />
         </div>
 
         <div class="diet-dropdown-border__sv" data-role="sv">
@@ -75,131 +87,90 @@
           </div>
         </div>
 
-        <div class="diet-dropdown-border__sliders">
-          <div class="diet-dropdown-border__slider diet-dropdown-border__slider--hue diet-slider" data-size="md">
-            <span class="diet-slider__label">Hue</span>
+        <div
+          class="diet-dropdown-border__slider diet-dropdown-border__slider--hue diet-slider"
+          data-size="sm"
+        >
+          <span class="diet-slider__label" id="dropdown-border-sm-hue-label">Hue</span>
+          <input
+            type="range"
+            min="0"
+            max="360"
+            step="1"
+            class="diet-slider__input diet-dropdown-border__hue"
+            aria-labelledby="dropdown-border-sm-hue-label"
+          />
+        </div>
+
+        <div
+          class="diet-textfield diet-dropdown-border__hex-control"
+          data-size="sm"
+          data-role="hex"
+        >
+          <label class="diet-textfield__control">
+            <span class="diet-textfield__display-label" id="dropdown-border-sm-hex-label">Hex</span>
             <input
-              type="range"
-              min="0"
-              max="360"
-              step="1"
-              class="diet-slider__input diet-dropdown-border__hue"
-              aria-label="Hue"
+              type="text"
+              class="diet-textfield__field diet-dropdown-border__hex"
+              aria-labelledby="dropdown-border-sm-hex-label"
+              placeholder="RRGGBB"
+              inputmode="text"
+              autocapitalize="off"
+              autocomplete="off"
+              spellcheck="false"
+              maxlength="6"
+              pattern="^[0-9a-fA-F]{0,6}$"
             />
-          </div>
-        </div>
-
-        <div class="diet-dropdown-border__inputs">
-          <div class="diet-textfield" data-size="md" data-role="hex">
-            <label class="diet-textfield__control">
-              <span class="diet-textfield__display-label label-s">Hex</span>
-              <input
-                type="text"
-                class="diet-textfield__field body-s diet-dropdown-border__hex"
-                aria-label="Hex value"
-                placeholder="RRGGBB"
-                inputmode="text"
-                autocapitalize="off"
-                autocomplete="off"
-                spellcheck="false"
-                maxlength="6"
-                pattern="^[0-9a-fA-F]{0,6}$"
-              />
-            </label>
-          </div>
-        </div>
-
-        <div class="diet-dropdown-border__swatches" role="group" aria-label="Default colors">
-          <div class="diet-dropdown-border__swatch-row">
-            <button type="button" class="diet-dropdown-border__swatch" data-color="#ff3b30" aria-label="Color #ff3b30" aria-pressed="false">
-              <span class="diet-dropdown-border__swatch-dot" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="diet-dropdown-border__swatch" data-color="#ff9500" aria-label="Color #ff9500" aria-pressed="false">
-              <span class="diet-dropdown-border__swatch-dot" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="diet-dropdown-border__swatch" data-color="#ffcc00" aria-label="Color #ffcc00" aria-pressed="false">
-              <span class="diet-dropdown-border__swatch-dot" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="diet-dropdown-border__swatch" data-color="#34c759" aria-label="Color #34c759" aria-pressed="false">
-              <span class="diet-dropdown-border__swatch-dot" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="diet-dropdown-border__swatch" data-color="#30b0c7" aria-label="Color #30b0c7" aria-pressed="false">
-              <span class="diet-dropdown-border__swatch-dot" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="diet-dropdown-border__swatch" data-color="#007aff" aria-label="Color #007aff" aria-pressed="false">
-              <span class="diet-dropdown-border__swatch-dot" aria-hidden="true"></span>
-            </button>
-          </div>
-          <div class="diet-dropdown-border__swatch-row">
-            <button type="button" class="diet-dropdown-border__swatch" data-color="#32ade6" aria-label="Color #32ade6" aria-pressed="false">
-              <span class="diet-dropdown-border__swatch-dot" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="diet-dropdown-border__swatch" data-color="#00c7be" aria-label="Color #00c7be" aria-pressed="false">
-              <span class="diet-dropdown-border__swatch-dot" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="diet-dropdown-border__swatch" data-color="#5856d6" aria-label="Color #5856d6" aria-pressed="false">
-              <span class="diet-dropdown-border__swatch-dot" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="diet-dropdown-border__swatch" data-color="#af52de" aria-label="Color #af52de" aria-pressed="false">
-              <span class="diet-dropdown-border__swatch-dot" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="diet-dropdown-border__swatch" data-color="#ff2d55" aria-label="Color #ff2d55" aria-pressed="false">
-              <span class="diet-dropdown-border__swatch-dot" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="diet-dropdown-border__swatch" data-color="#a2845e" aria-label="Color #a2845e" aria-pressed="false">
-              <span class="diet-dropdown-border__swatch-dot" aria-hidden="true"></span>
-            </button>
-          </div>
-          <div class="diet-dropdown-border__swatch-row">
-            <button type="button" class="diet-dropdown-border__swatch" data-color="#212121" aria-label="Color #212121" aria-pressed="false">
-              <span class="diet-dropdown-border__swatch-dot" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="diet-dropdown-border__swatch" data-color="#aeaeb2" aria-label="Color #aeaeb2" aria-pressed="false">
-              <span class="diet-dropdown-border__swatch-dot" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="diet-dropdown-border__swatch" data-color="#c7c7cc" aria-label="Color #c7c7cc" aria-pressed="false">
-              <span class="diet-dropdown-border__swatch-dot" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="diet-dropdown-border__swatch" data-color="#d1d1d6" aria-label="Color #d1d1d6" aria-pressed="false">
-              <span class="diet-dropdown-border__swatch-dot" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="diet-dropdown-border__swatch" data-color="#e5e5ea" aria-label="Color #e5e5ea" aria-pressed="false">
-              <span class="diet-dropdown-border__swatch-dot" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="diet-dropdown-border__swatch" data-color="#ffffff" aria-label="Color #ffffff" aria-pressed="false">
-              <span class="diet-dropdown-border__swatch-dot" aria-hidden="true"></span>
-            </button>
-          </div>
-        </div>
-
-        <div class="diet-dropdown-border__border-controls">
-          <label class="diet-toggle diet-toggle--block" data-size="sm">
-            <span class="diet-toggle__label label-s" id="dropdown-border-sm-enabled-label">Enabled</span>
-            <input
-              id="dropdown-border-sm-enabled"
-              class="diet-toggle__input sr-only diet-dropdown-border__enabled"
-              type="checkbox"
-              role="switch"
-              aria-labelledby="dropdown-border-sm-enabled-label"
-            />
-            <span class="diet-toggle__switch" aria-hidden="true">
-              <span class="diet-toggle__knob"></span>
-            </span>
           </label>
+        </div>
 
-          <div class="diet-dropdown-border__slider diet-dropdown-border__slider--width diet-slider" data-size="md">
-            <span class="diet-slider__label">Width</span>
-            <input
-              id="dropdown-border-sm-width"
-              class="diet-slider__input diet-dropdown-border__width"
-              type="range"
-              min="0"
-              max="12"
-              value="1"
-              style="--value: 1; --min: 0; --max: 12;"
-              oninput="this.style.setProperty('--value', this.value)"
-            />
+        <div
+          class="diet-dropdown-border__swatches"
+          role="group"
+          aria-label="Default colors"
+        >
+          <div class="diet-dropdown-border__swatch-row">
+            <button type="button" class="diet-dropdown-border__swatch" data-color="#ff3b30" aria-label="Border color #ff3b30" aria-pressed="false"><span class="diet-dropdown-border__swatch-dot" aria-hidden="true"></span></button>
+            <button type="button" class="diet-dropdown-border__swatch" data-color="#ff9500" aria-label="Border color #ff9500" aria-pressed="false"><span class="diet-dropdown-border__swatch-dot" aria-hidden="true"></span></button>
+            <button type="button" class="diet-dropdown-border__swatch" data-color="#ffcc00" aria-label="Border color #ffcc00" aria-pressed="false"><span class="diet-dropdown-border__swatch-dot" aria-hidden="true"></span></button>
+            <button type="button" class="diet-dropdown-border__swatch" data-color="#34c759" aria-label="Border color #34c759" aria-pressed="false"><span class="diet-dropdown-border__swatch-dot" aria-hidden="true"></span></button>
+            <button type="button" class="diet-dropdown-border__swatch" data-color="#30b0c7" aria-label="Border color #30b0c7" aria-pressed="false"><span class="diet-dropdown-border__swatch-dot" aria-hidden="true"></span></button>
+            <button type="button" class="diet-dropdown-border__swatch" data-color="#007aff" aria-label="Border color #007aff" aria-pressed="false"><span class="diet-dropdown-border__swatch-dot" aria-hidden="true"></span></button>
           </div>
+          <div class="diet-dropdown-border__swatch-row">
+            <button type="button" class="diet-dropdown-border__swatch" data-color="#32ade6" aria-label="Border color #32ade6" aria-pressed="false"><span class="diet-dropdown-border__swatch-dot" aria-hidden="true"></span></button>
+            <button type="button" class="diet-dropdown-border__swatch" data-color="#00c7be" aria-label="Border color #00c7be" aria-pressed="false"><span class="diet-dropdown-border__swatch-dot" aria-hidden="true"></span></button>
+            <button type="button" class="diet-dropdown-border__swatch" data-color="#5856d6" aria-label="Border color #5856d6" aria-pressed="false"><span class="diet-dropdown-border__swatch-dot" aria-hidden="true"></span></button>
+            <button type="button" class="diet-dropdown-border__swatch" data-color="#af52de" aria-label="Border color #af52de" aria-pressed="false"><span class="diet-dropdown-border__swatch-dot" aria-hidden="true"></span></button>
+            <button type="button" class="diet-dropdown-border__swatch" data-color="#ff2d55" aria-label="Border color #ff2d55" aria-pressed="false"><span class="diet-dropdown-border__swatch-dot" aria-hidden="true"></span></button>
+            <button type="button" class="diet-dropdown-border__swatch" data-color="#a2845e" aria-label="Border color #a2845e" aria-pressed="false"><span class="diet-dropdown-border__swatch-dot" aria-hidden="true"></span></button>
+          </div>
+          <div class="diet-dropdown-border__swatch-row">
+            <button type="button" class="diet-dropdown-border__swatch" data-color="#212121" aria-label="Border color #212121" aria-pressed="false"><span class="diet-dropdown-border__swatch-dot" aria-hidden="true"></span></button>
+            <button type="button" class="diet-dropdown-border__swatch" data-color="#aeaeb2" aria-label="Border color #aeaeb2" aria-pressed="false"><span class="diet-dropdown-border__swatch-dot" aria-hidden="true"></span></button>
+            <button type="button" class="diet-dropdown-border__swatch" data-color="#c7c7cc" aria-label="Border color #c7c7cc" aria-pressed="false"><span class="diet-dropdown-border__swatch-dot" aria-hidden="true"></span></button>
+            <button type="button" class="diet-dropdown-border__swatch" data-color="#d1d1d6" aria-label="Border color #d1d1d6" aria-pressed="false"><span class="diet-dropdown-border__swatch-dot" aria-hidden="true"></span></button>
+            <button type="button" class="diet-dropdown-border__swatch" data-color="#e5e5ea" aria-label="Border color #e5e5ea" aria-pressed="false"><span class="diet-dropdown-border__swatch-dot" aria-hidden="true"></span></button>
+            <button type="button" class="diet-dropdown-border__swatch" data-color="#ffffff" aria-label="Border color #ffffff" aria-pressed="false"><span class="diet-dropdown-border__swatch-dot" aria-hidden="true"></span></button>
+          </div>
+        </div>
+
+        <div
+          class="diet-dropdown-border__slider diet-dropdown-border__slider--width diet-slider"
+          data-size="sm"
+        >
+          <span class="diet-slider__label" id="dropdown-border-sm-width-label">Width</span>
+          <input
+            id="dropdown-border-sm-width"
+            class="diet-slider__input diet-dropdown-border__width"
+            type="range"
+            min="0"
+            max="12"
+            step="1"
+            value="1"
+            aria-labelledby="dropdown-border-sm-width-label"
+            style="--value: 1; --min: 0; --max: 12;"
+          />
         </div>
       </div>
     </div>
@@ -214,15 +185,19 @@
         <span class="spec-line body-xs">diet-dropdown-border</span><span class="spec-line body-xs">data-size='md'</span>
       </figcaption>
       <div class="dieter-preview">
-        <div class="diet-dropdown-border diet-popover-host" data-size="md" data-state="closed">
+        <div
+  class="diet-dropdown-border diet-popover-host"
+  data-size="md"
+  data-state="closed"
+  data-invalid-label="Invalid border"
+>
   <input
     id="dropdown-border-md"
     type="hidden"
     class="diet-dropdown-border__value-field"
-    value=""
+    value='{"enabled":true,"width":1,"color":"#c7c7cc"}'
 
     data-bob-json
-    data-placeholder="Select a border"
   />
 
   <button
@@ -232,44 +207,52 @@
     aria-expanded="false"
     aria-labelledby="dropdown-border-md-label"
   >
-
-      <span
-        class="diet-dropdown-header-label label-s"
-        id="dropdown-border-md-label"
-      >Label</span>
-
-    <span class="diet-dropdown-header-value body-s" data-muted="true" data-placeholder="Select a border">
+    <span class="diet-dropdown-header-label" id="dropdown-border-md-label">Border</span>
+    <span class="diet-dropdown-header-value">
       <span class="diet-dropdown-border__chip" aria-hidden="true"></span>
-      <span class="diet-dropdown-border__label">Select a border</span>
+      <span
+        class="diet-icon diet-dropdown-border__none-icon"
+        data-icon="square.slash"
+        aria-hidden="true"
+        hidden
+      ></span>
+      <span class="diet-dropdown-border__label"></span>
     </span>
   </button>
 
   <div
     class="diet-popover diet-dropdown-border__popover"
     role="dialog"
-    aria-label="Border options"
+    aria-labelledby="dropdown-border-md-popover-label"
     data-state="closed"
   >
     <div class="diet-popover__header">
-      <span class="diet-popover__header-label label-s">
-        Border
-      </span>
-      <button
-        type="button"
-        class="diet-button diet-popover__header-trigger"
-        data-size="small"
-        data-type="quaternary"
-        aria-hidden="true"
-        tabindex="-1"
-      >
-        <span class="diet-icon" data-icon="square.dashed" data-size="12"></span>
-      </button>
+      <span class="diet-popover__header-label" id="dropdown-border-md-popover-label">Border</span>
     </div>
     <div class="diet-popover__body">
-      <div class="diet-dropdown-border__panel body-xs">
-        <div class="diet-dropdown-border__preview" aria-label="Pick border color">
+      <label class="diet-toggle diet-toggle--block" data-size="md">
+        <span class="diet-toggle__label" id="dropdown-border-md-enabled-label">Enabled</span>
+        <input
+          id="dropdown-border-md-enabled"
+          class="diet-toggle__input sr-only diet-dropdown-border__enabled"
+          type="checkbox"
+          role="switch"
+          aria-labelledby="dropdown-border-md-enabled-label"
+        />
+        <span class="diet-toggle__switch" aria-hidden="true">
+          <span class="diet-toggle__knob"></span>
+        </span>
+      </label>
+
+      <div class="diet-dropdown-border__dependent-controls">
+        <div class="diet-dropdown-border__preview" aria-label="Border color">
           <div class="diet-dropdown-border__color-preview"></div>
-          <input type="color" class="diet-dropdown-border__native-color" aria-label="Native color picker" tabindex="-1" />
+          <input
+            type="color"
+            class="diet-dropdown-border__native-color"
+            aria-label="Border color"
+            tabindex="-1"
+          />
         </div>
 
         <div class="diet-dropdown-border__sv" data-role="sv">
@@ -278,131 +261,90 @@
           </div>
         </div>
 
-        <div class="diet-dropdown-border__sliders">
-          <div class="diet-dropdown-border__slider diet-dropdown-border__slider--hue diet-slider" data-size="md">
-            <span class="diet-slider__label">Hue</span>
+        <div
+          class="diet-dropdown-border__slider diet-dropdown-border__slider--hue diet-slider"
+          data-size="md"
+        >
+          <span class="diet-slider__label" id="dropdown-border-md-hue-label">Hue</span>
+          <input
+            type="range"
+            min="0"
+            max="360"
+            step="1"
+            class="diet-slider__input diet-dropdown-border__hue"
+            aria-labelledby="dropdown-border-md-hue-label"
+          />
+        </div>
+
+        <div
+          class="diet-textfield diet-dropdown-border__hex-control"
+          data-size="md"
+          data-role="hex"
+        >
+          <label class="diet-textfield__control">
+            <span class="diet-textfield__display-label" id="dropdown-border-md-hex-label">Hex</span>
             <input
-              type="range"
-              min="0"
-              max="360"
-              step="1"
-              class="diet-slider__input diet-dropdown-border__hue"
-              aria-label="Hue"
+              type="text"
+              class="diet-textfield__field diet-dropdown-border__hex"
+              aria-labelledby="dropdown-border-md-hex-label"
+              placeholder="RRGGBB"
+              inputmode="text"
+              autocapitalize="off"
+              autocomplete="off"
+              spellcheck="false"
+              maxlength="6"
+              pattern="^[0-9a-fA-F]{0,6}$"
             />
-          </div>
-        </div>
-
-        <div class="diet-dropdown-border__inputs">
-          <div class="diet-textfield" data-size="md" data-role="hex">
-            <label class="diet-textfield__control">
-              <span class="diet-textfield__display-label label-s">Hex</span>
-              <input
-                type="text"
-                class="diet-textfield__field body-s diet-dropdown-border__hex"
-                aria-label="Hex value"
-                placeholder="RRGGBB"
-                inputmode="text"
-                autocapitalize="off"
-                autocomplete="off"
-                spellcheck="false"
-                maxlength="6"
-                pattern="^[0-9a-fA-F]{0,6}$"
-              />
-            </label>
-          </div>
-        </div>
-
-        <div class="diet-dropdown-border__swatches" role="group" aria-label="Default colors">
-          <div class="diet-dropdown-border__swatch-row">
-            <button type="button" class="diet-dropdown-border__swatch" data-color="#ff3b30" aria-label="Color #ff3b30" aria-pressed="false">
-              <span class="diet-dropdown-border__swatch-dot" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="diet-dropdown-border__swatch" data-color="#ff9500" aria-label="Color #ff9500" aria-pressed="false">
-              <span class="diet-dropdown-border__swatch-dot" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="diet-dropdown-border__swatch" data-color="#ffcc00" aria-label="Color #ffcc00" aria-pressed="false">
-              <span class="diet-dropdown-border__swatch-dot" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="diet-dropdown-border__swatch" data-color="#34c759" aria-label="Color #34c759" aria-pressed="false">
-              <span class="diet-dropdown-border__swatch-dot" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="diet-dropdown-border__swatch" data-color="#30b0c7" aria-label="Color #30b0c7" aria-pressed="false">
-              <span class="diet-dropdown-border__swatch-dot" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="diet-dropdown-border__swatch" data-color="#007aff" aria-label="Color #007aff" aria-pressed="false">
-              <span class="diet-dropdown-border__swatch-dot" aria-hidden="true"></span>
-            </button>
-          </div>
-          <div class="diet-dropdown-border__swatch-row">
-            <button type="button" class="diet-dropdown-border__swatch" data-color="#32ade6" aria-label="Color #32ade6" aria-pressed="false">
-              <span class="diet-dropdown-border__swatch-dot" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="diet-dropdown-border__swatch" data-color="#00c7be" aria-label="Color #00c7be" aria-pressed="false">
-              <span class="diet-dropdown-border__swatch-dot" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="diet-dropdown-border__swatch" data-color="#5856d6" aria-label="Color #5856d6" aria-pressed="false">
-              <span class="diet-dropdown-border__swatch-dot" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="diet-dropdown-border__swatch" data-color="#af52de" aria-label="Color #af52de" aria-pressed="false">
-              <span class="diet-dropdown-border__swatch-dot" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="diet-dropdown-border__swatch" data-color="#ff2d55" aria-label="Color #ff2d55" aria-pressed="false">
-              <span class="diet-dropdown-border__swatch-dot" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="diet-dropdown-border__swatch" data-color="#a2845e" aria-label="Color #a2845e" aria-pressed="false">
-              <span class="diet-dropdown-border__swatch-dot" aria-hidden="true"></span>
-            </button>
-          </div>
-          <div class="diet-dropdown-border__swatch-row">
-            <button type="button" class="diet-dropdown-border__swatch" data-color="#212121" aria-label="Color #212121" aria-pressed="false">
-              <span class="diet-dropdown-border__swatch-dot" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="diet-dropdown-border__swatch" data-color="#aeaeb2" aria-label="Color #aeaeb2" aria-pressed="false">
-              <span class="diet-dropdown-border__swatch-dot" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="diet-dropdown-border__swatch" data-color="#c7c7cc" aria-label="Color #c7c7cc" aria-pressed="false">
-              <span class="diet-dropdown-border__swatch-dot" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="diet-dropdown-border__swatch" data-color="#d1d1d6" aria-label="Color #d1d1d6" aria-pressed="false">
-              <span class="diet-dropdown-border__swatch-dot" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="diet-dropdown-border__swatch" data-color="#e5e5ea" aria-label="Color #e5e5ea" aria-pressed="false">
-              <span class="diet-dropdown-border__swatch-dot" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="diet-dropdown-border__swatch" data-color="#ffffff" aria-label="Color #ffffff" aria-pressed="false">
-              <span class="diet-dropdown-border__swatch-dot" aria-hidden="true"></span>
-            </button>
-          </div>
-        </div>
-
-        <div class="diet-dropdown-border__border-controls">
-          <label class="diet-toggle diet-toggle--block" data-size="sm">
-            <span class="diet-toggle__label label-s" id="dropdown-border-md-enabled-label">Enabled</span>
-            <input
-              id="dropdown-border-md-enabled"
-              class="diet-toggle__input sr-only diet-dropdown-border__enabled"
-              type="checkbox"
-              role="switch"
-              aria-labelledby="dropdown-border-md-enabled-label"
-            />
-            <span class="diet-toggle__switch" aria-hidden="true">
-              <span class="diet-toggle__knob"></span>
-            </span>
           </label>
+        </div>
 
-          <div class="diet-dropdown-border__slider diet-dropdown-border__slider--width diet-slider" data-size="md">
-            <span class="diet-slider__label">Width</span>
-            <input
-              id="dropdown-border-md-width"
-              class="diet-slider__input diet-dropdown-border__width"
-              type="range"
-              min="0"
-              max="12"
-              value="1"
-              style="--value: 1; --min: 0; --max: 12;"
-              oninput="this.style.setProperty('--value', this.value)"
-            />
+        <div
+          class="diet-dropdown-border__swatches"
+          role="group"
+          aria-label="Default colors"
+        >
+          <div class="diet-dropdown-border__swatch-row">
+            <button type="button" class="diet-dropdown-border__swatch" data-color="#ff3b30" aria-label="Border color #ff3b30" aria-pressed="false"><span class="diet-dropdown-border__swatch-dot" aria-hidden="true"></span></button>
+            <button type="button" class="diet-dropdown-border__swatch" data-color="#ff9500" aria-label="Border color #ff9500" aria-pressed="false"><span class="diet-dropdown-border__swatch-dot" aria-hidden="true"></span></button>
+            <button type="button" class="diet-dropdown-border__swatch" data-color="#ffcc00" aria-label="Border color #ffcc00" aria-pressed="false"><span class="diet-dropdown-border__swatch-dot" aria-hidden="true"></span></button>
+            <button type="button" class="diet-dropdown-border__swatch" data-color="#34c759" aria-label="Border color #34c759" aria-pressed="false"><span class="diet-dropdown-border__swatch-dot" aria-hidden="true"></span></button>
+            <button type="button" class="diet-dropdown-border__swatch" data-color="#30b0c7" aria-label="Border color #30b0c7" aria-pressed="false"><span class="diet-dropdown-border__swatch-dot" aria-hidden="true"></span></button>
+            <button type="button" class="diet-dropdown-border__swatch" data-color="#007aff" aria-label="Border color #007aff" aria-pressed="false"><span class="diet-dropdown-border__swatch-dot" aria-hidden="true"></span></button>
           </div>
+          <div class="diet-dropdown-border__swatch-row">
+            <button type="button" class="diet-dropdown-border__swatch" data-color="#32ade6" aria-label="Border color #32ade6" aria-pressed="false"><span class="diet-dropdown-border__swatch-dot" aria-hidden="true"></span></button>
+            <button type="button" class="diet-dropdown-border__swatch" data-color="#00c7be" aria-label="Border color #00c7be" aria-pressed="false"><span class="diet-dropdown-border__swatch-dot" aria-hidden="true"></span></button>
+            <button type="button" class="diet-dropdown-border__swatch" data-color="#5856d6" aria-label="Border color #5856d6" aria-pressed="false"><span class="diet-dropdown-border__swatch-dot" aria-hidden="true"></span></button>
+            <button type="button" class="diet-dropdown-border__swatch" data-color="#af52de" aria-label="Border color #af52de" aria-pressed="false"><span class="diet-dropdown-border__swatch-dot" aria-hidden="true"></span></button>
+            <button type="button" class="diet-dropdown-border__swatch" data-color="#ff2d55" aria-label="Border color #ff2d55" aria-pressed="false"><span class="diet-dropdown-border__swatch-dot" aria-hidden="true"></span></button>
+            <button type="button" class="diet-dropdown-border__swatch" data-color="#a2845e" aria-label="Border color #a2845e" aria-pressed="false"><span class="diet-dropdown-border__swatch-dot" aria-hidden="true"></span></button>
+          </div>
+          <div class="diet-dropdown-border__swatch-row">
+            <button type="button" class="diet-dropdown-border__swatch" data-color="#212121" aria-label="Border color #212121" aria-pressed="false"><span class="diet-dropdown-border__swatch-dot" aria-hidden="true"></span></button>
+            <button type="button" class="diet-dropdown-border__swatch" data-color="#aeaeb2" aria-label="Border color #aeaeb2" aria-pressed="false"><span class="diet-dropdown-border__swatch-dot" aria-hidden="true"></span></button>
+            <button type="button" class="diet-dropdown-border__swatch" data-color="#c7c7cc" aria-label="Border color #c7c7cc" aria-pressed="false"><span class="diet-dropdown-border__swatch-dot" aria-hidden="true"></span></button>
+            <button type="button" class="diet-dropdown-border__swatch" data-color="#d1d1d6" aria-label="Border color #d1d1d6" aria-pressed="false"><span class="diet-dropdown-border__swatch-dot" aria-hidden="true"></span></button>
+            <button type="button" class="diet-dropdown-border__swatch" data-color="#e5e5ea" aria-label="Border color #e5e5ea" aria-pressed="false"><span class="diet-dropdown-border__swatch-dot" aria-hidden="true"></span></button>
+            <button type="button" class="diet-dropdown-border__swatch" data-color="#ffffff" aria-label="Border color #ffffff" aria-pressed="false"><span class="diet-dropdown-border__swatch-dot" aria-hidden="true"></span></button>
+          </div>
+        </div>
+
+        <div
+          class="diet-dropdown-border__slider diet-dropdown-border__slider--width diet-slider"
+          data-size="md"
+        >
+          <span class="diet-slider__label" id="dropdown-border-md-width-label">Width</span>
+          <input
+            id="dropdown-border-md-width"
+            class="diet-slider__input diet-dropdown-border__width"
+            type="range"
+            min="0"
+            max="12"
+            step="1"
+            value="1"
+            aria-labelledby="dropdown-border-md-width-label"
+            style="--value: 1; --min: 0; --max: 12;"
+          />
         </div>
       </div>
     </div>
@@ -417,15 +359,19 @@
         <span class="spec-line body-xs">diet-dropdown-border</span><span class="spec-line body-xs">data-size='lg'</span>
       </figcaption>
       <div class="dieter-preview">
-        <div class="diet-dropdown-border diet-popover-host" data-size="lg" data-state="closed">
+        <div
+  class="diet-dropdown-border diet-popover-host"
+  data-size="lg"
+  data-state="closed"
+  data-invalid-label="Invalid border"
+>
   <input
     id="dropdown-border-lg"
     type="hidden"
     class="diet-dropdown-border__value-field"
-    value=""
+    value='{"enabled":true,"width":1,"color":"#c7c7cc"}'
 
     data-bob-json
-    data-placeholder="Select a border"
   />
 
   <button
@@ -435,44 +381,52 @@
     aria-expanded="false"
     aria-labelledby="dropdown-border-lg-label"
   >
-
-      <span
-        class="diet-dropdown-header-label label-m"
-        id="dropdown-border-lg-label"
-      >Label</span>
-
-    <span class="diet-dropdown-header-value body-m" data-muted="true" data-placeholder="Select a border">
+    <span class="diet-dropdown-header-label" id="dropdown-border-lg-label">Border</span>
+    <span class="diet-dropdown-header-value">
       <span class="diet-dropdown-border__chip" aria-hidden="true"></span>
-      <span class="diet-dropdown-border__label">Select a border</span>
+      <span
+        class="diet-icon diet-dropdown-border__none-icon"
+        data-icon="square.slash"
+        aria-hidden="true"
+        hidden
+      ></span>
+      <span class="diet-dropdown-border__label"></span>
     </span>
   </button>
 
   <div
     class="diet-popover diet-dropdown-border__popover"
     role="dialog"
-    aria-label="Border options"
+    aria-labelledby="dropdown-border-lg-popover-label"
     data-state="closed"
   >
     <div class="diet-popover__header">
-      <span class="diet-popover__header-label label-s">
-        Border
-      </span>
-      <button
-        type="button"
-        class="diet-button diet-popover__header-trigger"
-        data-size="small"
-        data-type="quaternary"
-        aria-hidden="true"
-        tabindex="-1"
-      >
-        <span class="diet-icon" data-icon="square.dashed" data-size="12"></span>
-      </button>
+      <span class="diet-popover__header-label" id="dropdown-border-lg-popover-label">Border</span>
     </div>
     <div class="diet-popover__body">
-      <div class="diet-dropdown-border__panel body-xs">
-        <div class="diet-dropdown-border__preview" aria-label="Pick border color">
+      <label class="diet-toggle diet-toggle--block" data-size="lg">
+        <span class="diet-toggle__label" id="dropdown-border-lg-enabled-label">Enabled</span>
+        <input
+          id="dropdown-border-lg-enabled"
+          class="diet-toggle__input sr-only diet-dropdown-border__enabled"
+          type="checkbox"
+          role="switch"
+          aria-labelledby="dropdown-border-lg-enabled-label"
+        />
+        <span class="diet-toggle__switch" aria-hidden="true">
+          <span class="diet-toggle__knob"></span>
+        </span>
+      </label>
+
+      <div class="diet-dropdown-border__dependent-controls">
+        <div class="diet-dropdown-border__preview" aria-label="Border color">
           <div class="diet-dropdown-border__color-preview"></div>
-          <input type="color" class="diet-dropdown-border__native-color" aria-label="Native color picker" tabindex="-1" />
+          <input
+            type="color"
+            class="diet-dropdown-border__native-color"
+            aria-label="Border color"
+            tabindex="-1"
+          />
         </div>
 
         <div class="diet-dropdown-border__sv" data-role="sv">
@@ -481,131 +435,90 @@
           </div>
         </div>
 
-        <div class="diet-dropdown-border__sliders">
-          <div class="diet-dropdown-border__slider diet-dropdown-border__slider--hue diet-slider" data-size="md">
-            <span class="diet-slider__label">Hue</span>
+        <div
+          class="diet-dropdown-border__slider diet-dropdown-border__slider--hue diet-slider"
+          data-size="lg"
+        >
+          <span class="diet-slider__label" id="dropdown-border-lg-hue-label">Hue</span>
+          <input
+            type="range"
+            min="0"
+            max="360"
+            step="1"
+            class="diet-slider__input diet-dropdown-border__hue"
+            aria-labelledby="dropdown-border-lg-hue-label"
+          />
+        </div>
+
+        <div
+          class="diet-textfield diet-dropdown-border__hex-control"
+          data-size="lg"
+          data-role="hex"
+        >
+          <label class="diet-textfield__control">
+            <span class="diet-textfield__display-label" id="dropdown-border-lg-hex-label">Hex</span>
             <input
-              type="range"
-              min="0"
-              max="360"
-              step="1"
-              class="diet-slider__input diet-dropdown-border__hue"
-              aria-label="Hue"
+              type="text"
+              class="diet-textfield__field diet-dropdown-border__hex"
+              aria-labelledby="dropdown-border-lg-hex-label"
+              placeholder="RRGGBB"
+              inputmode="text"
+              autocapitalize="off"
+              autocomplete="off"
+              spellcheck="false"
+              maxlength="6"
+              pattern="^[0-9a-fA-F]{0,6}$"
             />
-          </div>
-        </div>
-
-        <div class="diet-dropdown-border__inputs">
-          <div class="diet-textfield" data-size="md" data-role="hex">
-            <label class="diet-textfield__control">
-              <span class="diet-textfield__display-label label-s">Hex</span>
-              <input
-                type="text"
-                class="diet-textfield__field body-s diet-dropdown-border__hex"
-                aria-label="Hex value"
-                placeholder="RRGGBB"
-                inputmode="text"
-                autocapitalize="off"
-                autocomplete="off"
-                spellcheck="false"
-                maxlength="6"
-                pattern="^[0-9a-fA-F]{0,6}$"
-              />
-            </label>
-          </div>
-        </div>
-
-        <div class="diet-dropdown-border__swatches" role="group" aria-label="Default colors">
-          <div class="diet-dropdown-border__swatch-row">
-            <button type="button" class="diet-dropdown-border__swatch" data-color="#ff3b30" aria-label="Color #ff3b30" aria-pressed="false">
-              <span class="diet-dropdown-border__swatch-dot" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="diet-dropdown-border__swatch" data-color="#ff9500" aria-label="Color #ff9500" aria-pressed="false">
-              <span class="diet-dropdown-border__swatch-dot" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="diet-dropdown-border__swatch" data-color="#ffcc00" aria-label="Color #ffcc00" aria-pressed="false">
-              <span class="diet-dropdown-border__swatch-dot" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="diet-dropdown-border__swatch" data-color="#34c759" aria-label="Color #34c759" aria-pressed="false">
-              <span class="diet-dropdown-border__swatch-dot" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="diet-dropdown-border__swatch" data-color="#30b0c7" aria-label="Color #30b0c7" aria-pressed="false">
-              <span class="diet-dropdown-border__swatch-dot" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="diet-dropdown-border__swatch" data-color="#007aff" aria-label="Color #007aff" aria-pressed="false">
-              <span class="diet-dropdown-border__swatch-dot" aria-hidden="true"></span>
-            </button>
-          </div>
-          <div class="diet-dropdown-border__swatch-row">
-            <button type="button" class="diet-dropdown-border__swatch" data-color="#32ade6" aria-label="Color #32ade6" aria-pressed="false">
-              <span class="diet-dropdown-border__swatch-dot" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="diet-dropdown-border__swatch" data-color="#00c7be" aria-label="Color #00c7be" aria-pressed="false">
-              <span class="diet-dropdown-border__swatch-dot" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="diet-dropdown-border__swatch" data-color="#5856d6" aria-label="Color #5856d6" aria-pressed="false">
-              <span class="diet-dropdown-border__swatch-dot" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="diet-dropdown-border__swatch" data-color="#af52de" aria-label="Color #af52de" aria-pressed="false">
-              <span class="diet-dropdown-border__swatch-dot" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="diet-dropdown-border__swatch" data-color="#ff2d55" aria-label="Color #ff2d55" aria-pressed="false">
-              <span class="diet-dropdown-border__swatch-dot" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="diet-dropdown-border__swatch" data-color="#a2845e" aria-label="Color #a2845e" aria-pressed="false">
-              <span class="diet-dropdown-border__swatch-dot" aria-hidden="true"></span>
-            </button>
-          </div>
-          <div class="diet-dropdown-border__swatch-row">
-            <button type="button" class="diet-dropdown-border__swatch" data-color="#212121" aria-label="Color #212121" aria-pressed="false">
-              <span class="diet-dropdown-border__swatch-dot" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="diet-dropdown-border__swatch" data-color="#aeaeb2" aria-label="Color #aeaeb2" aria-pressed="false">
-              <span class="diet-dropdown-border__swatch-dot" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="diet-dropdown-border__swatch" data-color="#c7c7cc" aria-label="Color #c7c7cc" aria-pressed="false">
-              <span class="diet-dropdown-border__swatch-dot" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="diet-dropdown-border__swatch" data-color="#d1d1d6" aria-label="Color #d1d1d6" aria-pressed="false">
-              <span class="diet-dropdown-border__swatch-dot" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="diet-dropdown-border__swatch" data-color="#e5e5ea" aria-label="Color #e5e5ea" aria-pressed="false">
-              <span class="diet-dropdown-border__swatch-dot" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="diet-dropdown-border__swatch" data-color="#ffffff" aria-label="Color #ffffff" aria-pressed="false">
-              <span class="diet-dropdown-border__swatch-dot" aria-hidden="true"></span>
-            </button>
-          </div>
-        </div>
-
-        <div class="diet-dropdown-border__border-controls">
-          <label class="diet-toggle diet-toggle--block" data-size="sm">
-            <span class="diet-toggle__label label-s" id="dropdown-border-lg-enabled-label">Enabled</span>
-            <input
-              id="dropdown-border-lg-enabled"
-              class="diet-toggle__input sr-only diet-dropdown-border__enabled"
-              type="checkbox"
-              role="switch"
-              aria-labelledby="dropdown-border-lg-enabled-label"
-            />
-            <span class="diet-toggle__switch" aria-hidden="true">
-              <span class="diet-toggle__knob"></span>
-            </span>
           </label>
+        </div>
 
-          <div class="diet-dropdown-border__slider diet-dropdown-border__slider--width diet-slider" data-size="md">
-            <span class="diet-slider__label">Width</span>
-            <input
-              id="dropdown-border-lg-width"
-              class="diet-slider__input diet-dropdown-border__width"
-              type="range"
-              min="0"
-              max="12"
-              value="1"
-              style="--value: 1; --min: 0; --max: 12;"
-              oninput="this.style.setProperty('--value', this.value)"
-            />
+        <div
+          class="diet-dropdown-border__swatches"
+          role="group"
+          aria-label="Default colors"
+        >
+          <div class="diet-dropdown-border__swatch-row">
+            <button type="button" class="diet-dropdown-border__swatch" data-color="#ff3b30" aria-label="Border color #ff3b30" aria-pressed="false"><span class="diet-dropdown-border__swatch-dot" aria-hidden="true"></span></button>
+            <button type="button" class="diet-dropdown-border__swatch" data-color="#ff9500" aria-label="Border color #ff9500" aria-pressed="false"><span class="diet-dropdown-border__swatch-dot" aria-hidden="true"></span></button>
+            <button type="button" class="diet-dropdown-border__swatch" data-color="#ffcc00" aria-label="Border color #ffcc00" aria-pressed="false"><span class="diet-dropdown-border__swatch-dot" aria-hidden="true"></span></button>
+            <button type="button" class="diet-dropdown-border__swatch" data-color="#34c759" aria-label="Border color #34c759" aria-pressed="false"><span class="diet-dropdown-border__swatch-dot" aria-hidden="true"></span></button>
+            <button type="button" class="diet-dropdown-border__swatch" data-color="#30b0c7" aria-label="Border color #30b0c7" aria-pressed="false"><span class="diet-dropdown-border__swatch-dot" aria-hidden="true"></span></button>
+            <button type="button" class="diet-dropdown-border__swatch" data-color="#007aff" aria-label="Border color #007aff" aria-pressed="false"><span class="diet-dropdown-border__swatch-dot" aria-hidden="true"></span></button>
           </div>
+          <div class="diet-dropdown-border__swatch-row">
+            <button type="button" class="diet-dropdown-border__swatch" data-color="#32ade6" aria-label="Border color #32ade6" aria-pressed="false"><span class="diet-dropdown-border__swatch-dot" aria-hidden="true"></span></button>
+            <button type="button" class="diet-dropdown-border__swatch" data-color="#00c7be" aria-label="Border color #00c7be" aria-pressed="false"><span class="diet-dropdown-border__swatch-dot" aria-hidden="true"></span></button>
+            <button type="button" class="diet-dropdown-border__swatch" data-color="#5856d6" aria-label="Border color #5856d6" aria-pressed="false"><span class="diet-dropdown-border__swatch-dot" aria-hidden="true"></span></button>
+            <button type="button" class="diet-dropdown-border__swatch" data-color="#af52de" aria-label="Border color #af52de" aria-pressed="false"><span class="diet-dropdown-border__swatch-dot" aria-hidden="true"></span></button>
+            <button type="button" class="diet-dropdown-border__swatch" data-color="#ff2d55" aria-label="Border color #ff2d55" aria-pressed="false"><span class="diet-dropdown-border__swatch-dot" aria-hidden="true"></span></button>
+            <button type="button" class="diet-dropdown-border__swatch" data-color="#a2845e" aria-label="Border color #a2845e" aria-pressed="false"><span class="diet-dropdown-border__swatch-dot" aria-hidden="true"></span></button>
+          </div>
+          <div class="diet-dropdown-border__swatch-row">
+            <button type="button" class="diet-dropdown-border__swatch" data-color="#212121" aria-label="Border color #212121" aria-pressed="false"><span class="diet-dropdown-border__swatch-dot" aria-hidden="true"></span></button>
+            <button type="button" class="diet-dropdown-border__swatch" data-color="#aeaeb2" aria-label="Border color #aeaeb2" aria-pressed="false"><span class="diet-dropdown-border__swatch-dot" aria-hidden="true"></span></button>
+            <button type="button" class="diet-dropdown-border__swatch" data-color="#c7c7cc" aria-label="Border color #c7c7cc" aria-pressed="false"><span class="diet-dropdown-border__swatch-dot" aria-hidden="true"></span></button>
+            <button type="button" class="diet-dropdown-border__swatch" data-color="#d1d1d6" aria-label="Border color #d1d1d6" aria-pressed="false"><span class="diet-dropdown-border__swatch-dot" aria-hidden="true"></span></button>
+            <button type="button" class="diet-dropdown-border__swatch" data-color="#e5e5ea" aria-label="Border color #e5e5ea" aria-pressed="false"><span class="diet-dropdown-border__swatch-dot" aria-hidden="true"></span></button>
+            <button type="button" class="diet-dropdown-border__swatch" data-color="#ffffff" aria-label="Border color #ffffff" aria-pressed="false"><span class="diet-dropdown-border__swatch-dot" aria-hidden="true"></span></button>
+          </div>
+        </div>
+
+        <div
+          class="diet-dropdown-border__slider diet-dropdown-border__slider--width diet-slider"
+          data-size="lg"
+        >
+          <span class="diet-slider__label" id="dropdown-border-lg-width-label">Width</span>
+          <input
+            id="dropdown-border-lg-width"
+            class="diet-slider__input diet-dropdown-border__width"
+            type="range"
+            min="0"
+            max="12"
+            step="1"
+            value="1"
+            aria-labelledby="dropdown-border-lg-width-label"
+            style="--value: 1; --min: 0; --max: 12;"
+          />
         </div>
       </div>
     </div>

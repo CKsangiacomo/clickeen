@@ -79,7 +79,21 @@ type EditorPanel = {
 };
 
 type EditorContract = {
+  labels?: unknown;
   panels: EditorPanel[];
+};
+
+type DropdownBorderEditorLabels = {
+  component: {
+    color: string;
+    defaultColors: string;
+    enabled: string;
+    hex: string;
+    hue: string;
+    invalid: string;
+    width: string;
+  };
+  fields: Record<string, string>;
 };
 
 function renderAttrValue(value: unknown): string {
@@ -467,7 +481,104 @@ export function buildEditorHtmlLines(
   }
   const editorFieldPaths = collectEditorFieldPaths(editor);
   const panelsById = new Map(editor.panels.map((panel) => [panel.id, panel]));
-  return BOB_WIDGET_PANEL_IDS.flatMap((panelId) =>
+  const lines = BOB_WIDGET_PANEL_IDS.flatMap((panelId) =>
     renderPanel(panelsById.get(panelId)!, defaults, widgetname, editorFieldPaths),
   );
+  return applyDropdownBorderEditorLabels(lines, editor.labels, widgetname);
+}
+
+function readDropdownBorderEditorLabels(
+  labelsRaw: unknown,
+  widgetname: string,
+): DropdownBorderEditorLabels | null {
+  if (labelsRaw === undefined) return null;
+  if (!isPlainObject(labelsRaw)) {
+    throw new Error(`[BobCompiler] ${widgetname} resolved editor labels must be an object`);
+  }
+  const components = labelsRaw.components;
+  const fields = labelsRaw.fields;
+  const component = isPlainObject(components) ? components['dropdown-border'] : null;
+  const fieldLabels = isPlainObject(fields) ? fields['dropdown-border'] : null;
+  if (component == null && fieldLabels == null) return null;
+  const componentKeys = [
+    'color',
+    'defaultColors',
+    'enabled',
+    'hex',
+    'hue',
+    'invalid',
+    'width',
+  ] as const;
+  if (
+    !isPlainObject(component) ||
+    Object.keys(component).sort().join('\0') !== [...componentKeys].sort().join('\0') ||
+    !isPlainObject(fieldLabels)
+  ) {
+    throw new Error(`[BobCompiler] ${widgetname} Dropdown Border labels are invalid`);
+  }
+  const readLabel = (value: unknown, path: string): string => {
+    if (typeof value !== 'string' || !value.trim() || value !== value.trim()) {
+      throw new Error(`[BobCompiler] ${widgetname} Dropdown Border label is invalid: ${path}`);
+    }
+    return value;
+  };
+  const resolvedComponent = {} as DropdownBorderEditorLabels['component'];
+  for (const key of componentKeys) {
+    resolvedComponent[key] = readLabel(component[key], `components.dropdown-border.${key}`);
+  }
+  const resolvedFields: Record<string, string> = {};
+  for (const [path, value] of Object.entries(fieldLabels)) {
+    if (!path.trim() || path !== path.trim()) {
+      throw new Error(`[BobCompiler] ${widgetname} Dropdown Border field path is invalid`);
+    }
+    resolvedFields[path] = readLabel(value, `fields.${path}`);
+  }
+  return { component: resolvedComponent, fields: resolvedFields };
+}
+
+function applyDropdownBorderEditorLabels(
+  lines: string[],
+  labelsRaw: unknown,
+  widgetname: string,
+): string[] {
+  const labels = readDropdownBorderEditorLabels(labelsRaw, widgetname);
+  const usedFieldPaths = new Set<string>();
+  const rendered = lines.map((line) => {
+    if (!/\btype='dropdown-border'/.test(line)) return line;
+    if (!labels) {
+      throw new Error(`[BobCompiler] ${widgetname} Dropdown Border labels are missing`);
+    }
+    const path = line.match(/\bpath='([^']+)'/)?.[1] ?? '';
+    const authoredLabel = line.match(/(?:^|\s)label='([^']*)'/)?.[1] ?? '';
+    let next = line;
+    if (!authoredLabel) {
+      const fieldLabel = labels.fields[path];
+      if (!fieldLabel) {
+        throw new Error(`[BobCompiler] ${widgetname} Dropdown Border field label is missing: ${path}`);
+      }
+      usedFieldPaths.add(path);
+      next = next.replace(/(^|\s)label=''/, `$1label='${encodeHtmlEntities(fieldLabel)}'`);
+    }
+    const componentAttrs = [
+      ['color-label', labels.component.color],
+      ['default-colors-label', labels.component.defaultColors],
+      ['enabled-label', labels.component.enabled],
+      ['hex-label', labels.component.hex],
+      ['hue-label', labels.component.hue],
+      ['invalid-label', labels.component.invalid],
+      ['width-label', labels.component.width],
+    ]
+      .map(([name, value]) => `${name}='${encodeHtmlEntities(value)}'`)
+      .join(' ');
+    return next.replace(/\s*\/>$/, ` ${componentAttrs} />`);
+  });
+  if (labels) {
+    const unusedPaths = Object.keys(labels.fields).filter((path) => !usedFieldPaths.has(path));
+    if (unusedPaths.length > 0) {
+      throw new Error(
+        `[BobCompiler] ${widgetname} Dropdown Border field labels are unused: ${unusedPaths.join(', ')}`,
+      );
+    }
+  }
+  return rendered;
 }

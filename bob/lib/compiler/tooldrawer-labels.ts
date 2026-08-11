@@ -140,9 +140,11 @@ function assertWidgetCopyUsesLabelTokens(widget: RawWidget, widgetType: string):
   const editorLabels = editor?.labels;
   if (
     !isRecord(editorLabels) ||
-    Object.keys(editorLabels).length !== 1 ||
+    Object.keys(editorLabels).length !== 3 ||
     !isRecord(editorLabels.translations) ||
-    Object.keys(editorLabels.translations).length !== 1
+    Object.keys(editorLabels.translations).length !== 1 ||
+    !isRecord(editorLabels.components) ||
+    !isRecord(editorLabels.fields)
   ) {
     throw new Error(`[BobCompiler] ${widgetType} ToolDrawer labels contract is invalid`);
   }
@@ -151,6 +153,25 @@ function assertWidgetCopyUsesLabelTokens(widget: RawWidget, widgetType: string):
     'editor.labels.translations.agentActivityTitle',
     widgetType,
   );
+  for (const [component, values] of Object.entries(editorLabels.components)) {
+    if (!isRecord(values)) {
+      throw new Error(`[BobCompiler] ${widgetType} ToolDrawer component labels are invalid`);
+    }
+    for (const [key, value] of Object.entries(values)) {
+      assertLabelToken(value, `editor.labels.components.${component}.${key}`, widgetType);
+    }
+  }
+  for (const [component, values] of Object.entries(editorLabels.fields)) {
+    if (!isRecord(values)) {
+      throw new Error(`[BobCompiler] ${widgetType} ToolDrawer field labels are invalid`);
+    }
+    for (const [path, value] of Object.entries(values)) {
+      if (!path.trim()) {
+        throw new Error(`[BobCompiler] ${widgetType} ToolDrawer field label path is invalid`);
+      }
+      assertLabelToken(value, `editor.labels.fields.${component}.${path}`, widgetType);
+    }
+  }
 
   const panels = editor && Array.isArray(editor.panels) ? editor.panels : [];
   panels.forEach((panel, panelIndex) => {
@@ -207,7 +228,7 @@ function readResolvedToolDrawerLabels(
   const labels = editor.labels;
   const translations = labels.translations;
   if (
-    Object.keys(labels).length !== 1 ||
+    Object.keys(labels).length !== 3 ||
     !isRecord(translations) ||
     Object.keys(translations).length !== 1 ||
     typeof translations.agentActivityTitle !== 'string' ||

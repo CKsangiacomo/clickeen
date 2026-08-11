@@ -295,6 +295,13 @@ export async function buildContext(
     emptyLabel,
     template: templateValue,
     defaultItem,
+    colorLabel: attrs.colorLabel || attrs['color-label'] || '',
+    defaultColorsLabel: attrs.defaultColorsLabel || attrs['default-colors-label'] || '',
+    enabledLabel: attrs.enabledLabel || attrs['enabled-label'] || '',
+    hexLabel: attrs.hexLabel || attrs['hex-label'] || '',
+    hueLabel: attrs.hueLabel || attrs['hue-label'] || '',
+    invalidLabel: attrs.invalidLabel || attrs['invalid-label'] || '',
+    widthLabel: attrs.widthLabel || attrs['width-label'] || '',
   });
 
   // Segmented is special: the Dieter stencil expects `segments` (not `options`), and the radio group name

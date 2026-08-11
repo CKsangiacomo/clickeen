@@ -332,7 +332,8 @@ it does not summarize, reinterpret, probe, reconcile, or persist it.
 ## Product UI Language Scaffold
 
 Bob's current product UI is English. ToolDrawer labels compile from each
-widget's adjacent English label file, including the static Agent Activity title;
+widget's adjacent English label file, including the static Agent Activity title
+and the field/component labels used by the global Dropdown Border stencil;
 Bob chrome and other reusable Dieter component copy remain their current
 English source. Bob receives no UI locale,
 loads no UI-language file at runtime, and does not change an open editor
@@ -368,8 +369,11 @@ declared support files
 
 `spec.json` carries defaults, editor structure, and ToolDrawer label tokens.
 `{widgetType}_tooldrawer_l10n_labels/en.json` carries the exact English values
-for those tokens, the five widget panel names, and migrated static ToolDrawer
-labels such as Agent Activity's title. `editable-fields.json`
+for those tokens, the five widget panel names, and migrated ToolDrawer copy
+such as Agent Activity's title and Dropdown Border's field/component labels.
+The Widget spec declares the exact state path and label-token coordinates; Bob
+joins them with the one Dieter component without Widget-specific compiler
+branches. `editable-fields.json`
 carries editable/translatable field contracts. `limits.json` carries widget
 capability context.
 

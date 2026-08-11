@@ -30,7 +30,7 @@ Legend: ✅ exported from `index.ts` · Direct host import · ⊘ no custom hydr
 | choosers | `bulk-edit` | `hydrateBulkEdit`, `row-path` | ✅ |
 | dropdowns | `dropdown-fill` | `hydrateDropdownFill` (color/fill; largest dropdown) | ✅ |
 | dropdowns | `dropdown-actions` | `hydrateDropdownActions` / `destroyDropdownActions`, `string` | ✅ |
-| dropdowns | `dropdown-border` | `hydrateDropdownBorder`, `string` | ✅ |
+| dropdowns | `dropdown-border` | `hydrateDropdownBorder`, exact border JSON | ✅ |
 | dropdowns | `dropdown-shadow` | `hydrateDropdownShadow`, `string` | ✅ |
 | dropdowns | `dropdown-upload` | `hydrateDropdownUpload`, `meta-path` | ✅ |
 | dropdowns | `dropdown-edit` | `hydrateDropdownEdit`, `no-binding` | ✅ |
@@ -105,6 +105,20 @@ The component-level product law is implemented:
   option labels, and badges are caller inputs. Its selected checkmark follows
   the Menu Actions size ladder at `.75rem/1rem/1.25rem`; it is not pinned to a
   separate glyph size.
+- Dropdown Border edits one exact object:
+  `{enabled:boolean,width:number,color:string}`. Root `sm|md|lg` owns the
+  trigger, Popover radius, typography, Icon, and nested-control sizing at
+  `1.25rem/1.5rem/1.75rem` row heights, `.25rem/.375rem/.5rem` radii,
+  `.6875rem/.8125rem/.875rem` text, and `.75rem/1rem/1.25rem` Icons. The
+  closed trigger shows color plus width for an active border and the existing
+  `square.slash` Icon when there is no border. Its Popover repeats only the
+  caller's field label, places Enabled directly below the header, and hides the
+  color and width controls while disabled. Disabling preserves the exact
+  stored width and color; changing one property does not rewrite another.
+  Missing, malformed, partial, or legacy-shaped values remain visibly invalid
+  instead of becoming a default border. Dieter owns no visible words. Each
+  Widget's adjacent ToolDrawer label file supplies the component labels and
+  exact field labels; Bob joins those labels with the global Dieter stencil.
 - Menu Actions remains a separate menu-row primitive with its existing
   `sm|md|lg` API. Low-level geometry tokens remain internal source mechanics.
 - `textrename` is deleted because it had no product consumer.

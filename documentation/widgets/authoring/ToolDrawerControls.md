@@ -80,7 +80,23 @@ Product rules:
 Current source node shapes:
 
 ```text
-labels:  { "translations": { "agentActivityTitle": "$label:translations.agent-activity.title" } }
+labels:  {
+  "translations": { "agentActivityTitle": "$label:translations.agent-activity.title" },
+  "components": {
+    "dropdown-border": {
+      "color": "$label:component.dropdown-border.color.label",
+      "defaultColors": "$label:component.dropdown-border.default-colors.label",
+      "enabled": "$label:component.dropdown-border.enabled.label",
+      "hex": "$label:component.dropdown-border.hex.label",
+      "hue": "$label:component.dropdown-border.hue.label",
+      "invalid": "$label:component.dropdown-border.invalid.label",
+      "width": "$label:component.dropdown-border.width.label"
+    }
+  },
+  "fields": {
+    "dropdown-border": { "appearance.podBorder": "$label:appearance.pod-border.dropdown-border.label" }
+  }
+}
 panel:   { "id": "...", "clusters": [...] }
 cluster: { "label": "$label:content.cluster.content.label", "initiallyOpen": true, "nodes": [...] }
 shared:  { "kind": "shared", "id": "..." }
@@ -113,6 +129,12 @@ while the Translation Agent continues to own the dynamic activity-row words.
 Choice Tiles likewise receives its group label and every option label from the
 same resolved Widget label file; the Dieter stencil owns no words and allows
 those exact values to wrap inside the tile.
+Dropdown Border follows the same ownership rule for everything visible inside
+the ToolDrawer. `editor.labels.components.dropdown-border` names its global
+stencil inputs; `editor.labels.fields.dropdown-border` maps only
+compiler-generated field paths to their caller labels. Widget-authored fields
+keep their ordinary adjacent `label` token. Bob joins these sources without
+teaching Dieter or the compiler which Widget is using the component.
 Copy inside other reusable Dieter stencils and shared compiler modules remains
 with those current sources until its component pass moves it deliberately.
 

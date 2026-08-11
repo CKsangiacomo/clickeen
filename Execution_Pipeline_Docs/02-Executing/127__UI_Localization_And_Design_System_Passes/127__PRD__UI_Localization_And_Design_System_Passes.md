@@ -593,3 +593,28 @@ authorizes it.
   Actions. Their redundant `data-size="12"` attributes remain explicitly
   deferred to the Bob and Roma consumer passes rather than expanding this
   component-source correction.
+
+- **Dropdown Border — passed after correction, 2026-08-11.** The former
+  component mixed fixed medium typography, mismatched trigger/Popover radii,
+  an open-state blue treatment, internally owned words, a decorative header
+  Icon, and permissive value repair. It is now one global Dieter component with
+  no Widget-specific modes or compiler branches. Its exact value is
+  `{enabled:boolean,width:number,color:string}`; malformed, partial, or legacy
+  shapes remain visibly invalid. Root `sm|md|lg` coherently owns
+  `1.25rem/1.5rem/1.75rem` trigger heights, `.25rem/.375rem/.5rem` trigger and
+  Popover radii, `.6875rem/.8125rem/.875rem` text, and
+  `.75rem/1rem/1.25rem` Icons. The closed trigger shows color plus width for an
+  active border and the existing `square.slash` Icon for no border. The
+  Popover header contains only the caller field label; Enabled sits directly
+  below it, and its false state hides the dependent color and width controls
+  without replacing their exact stored values. Color, width, and enabled
+  operations change only their own property; invalid Hex stays visible and is
+  not committed.
+  All visible words now come from each Widget's adjacent English ToolDrawer
+  label file. Widget specs declare the component labels and exact generated
+  field-path labels; directly authored Dropdown Border fields retain their
+  ordinary label tokens. Bob generically joins those inputs with the Dieter
+  stencil. All eight current Widgets regenerate against that same contract,
+  and all 31 current ToolDrawer uses remain `md`. No global label catalog,
+  Dieter locale folder, Widget exception, compatibility path, translation,
+  product-data mutation, Cloudflare change, or deployment machinery was added.
