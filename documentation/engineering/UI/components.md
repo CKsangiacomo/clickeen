@@ -111,6 +111,12 @@ The component-level product law is implemented:
   any fixed chip or Icon. When text and a visual are both present, the text is
   authored first and the visual second. Rest and hover keep identical rail
   geometry; hover belongs to the complete row.
+  Dropdown Actions, Border, Edit, Fill, Shadow, and Upload all use this rest
+  structure. Their standard top-level Popovers repeat only the caller label
+  and inherit the trigger's `sm|md|lg` radius. This shared presentation does
+  not merge the components' jobs: immediate selection, rich-text editing, fill
+  editing, shadow editing, and single-file upload remain their existing
+  component behaviors.
 - Dropdown Border edits one exact object:
   `{enabled:boolean,width:number,color:string}`. Root `sm|md|lg` owns the
   trigger, Popover radius, typography, Icon, and nested-control sizing at

@@ -1,7 +1,9 @@
   <div class="diet-dropdown-edit diet-popover-host" data-size="{{size}}" data-state="closed" data-allow-links="{{allowLinks}}">
   <button type="button" class="diet-dropdown-header diet-dropdown-edit__control" aria-haspopup="dialog" aria-expanded="false">
     <span class="diet-dropdown-header-label {{#if labelClass}}{{labelClass}}{{else}}label-s{{/if}}">{{label}}</span>
-    <span class="diet-dropdown-header-value {{#if bodyClass}}{{bodyClass}}{{else}}body-s{{/if}}" data-muted="true" data-placeholder="{{placeholder}}">{{placeholder}}</span>
+    <span class="diet-dropdown-header-value {{#if bodyClass}}{{bodyClass}}{{else}}body-s{{/if}}" data-muted="true" data-placeholder="{{placeholder}}">
+      <span class="diet-dropdown-edit__label">{{placeholder}}</span>
+    </span>
   </button>
 
   <div class="diet-popover" role="dialog" aria-label="{{label}}">
@@ -9,16 +11,6 @@
       <span class="diet-popover__header-label {{#if headerLabelClass}}{{headerLabelClass}}{{else}}label-s{{/if}}">
         {{#if headerLabel}}{{headerLabel}}{{else}}{{label}}{{/if}}
       </span>
-      <button
-        type="button"
-        class="diet-button diet-popover__header-trigger"
-        data-size="small"
-        data-type="quaternary"
-        aria-hidden="true"
-        tabindex="-1"
-      >
-        <span class="diet-icon" data-icon="{{#if headerIcon}}{{headerIcon}}{{else}}textformat.size.larger{{/if}}" aria-hidden="true" data-size="12"></span>
-      </button>
     </div>
     <div class="diet-popover__body diet-dropdown-edit__body">
       <div class="diet-dropdown-edit__main">

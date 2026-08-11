@@ -1,63 +1,58 @@
 .diet-dropdown-upload {
+  --dropdown-upload-height: var(--control-size-md, 1.5rem);
+  --dropdown-upload-radius: var(--control-radius-md, 0.375rem);
+  --dropdown-upload-font-size: var(--fs-13, 0.8125rem);
+  --dropdown-upload-label-line-height: var(--lh-tight, 1rem);
+  --dropdown-upload-value-line-height: var(--lh-body-ui, 1.25rem);
   position: relative;
   display: grid;
   gap: var(--vertspace-2, 0.1rem);
   inline-size: 100%;
 }
 
-.diet-dropdown-upload .diet-dropdown-header {
-  appearance: none;
-  position: relative;
-  border: 1px solid transparent;
-  border-radius: var(--control-radius-md, 0.375rem);
-  background: var(--color-system-white);
-  color: inherit;
-  font: inherit;
-  text-align: inherit;
-  transition: background-color var(--duration-base) var(--easing-standard), border-color var(--duration-base) var(--easing-standard);
-  cursor: pointer;
+.diet-dropdown-upload[data-size='sm'] {
+  --dropdown-upload-height: var(--control-size-sm, 1.25rem);
+  --dropdown-upload-radius: var(--control-radius-sm, 0.25rem);
+  --dropdown-upload-font-size: var(--fs-11, 0.6875rem);
+  --dropdown-upload-value-line-height: var(--lh-tight, 1rem);
 }
 
-.diet-dropdown-upload .diet-dropdown-header:hover {
-  background: color-mix(in oklab, var(--color-system-white), var(--color-system-black) 6%);
+.diet-dropdown-upload[data-size='lg'] {
+  --dropdown-upload-height: var(--control-size-lg, 1.75rem);
+  --dropdown-upload-radius: var(--control-radius-lg, 0.5rem);
+  --dropdown-upload-font-size: var(--fs-14, 0.875rem);
+  --dropdown-upload-value-line-height: var(--lh-body-ui, 1.25rem);
 }
 
-.diet-dropdown-upload .diet-dropdown-header:focus-visible {
+.diet-dropdown-upload > .diet-dropdown-header {
+  min-block-size: var(--dropdown-upload-height);
+  border-radius: var(--dropdown-upload-radius);
+}
+
+.diet-dropdown-upload > .diet-dropdown-header .diet-dropdown-header-label,
+.diet-dropdown-upload > .diet-popover > .diet-popover__header > .diet-popover__header-label {
+  font: 500 var(--dropdown-upload-font-size)/var(--dropdown-upload-label-line-height) "Inter Tight", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  letter-spacing: -0.02em;
+}
+
+.diet-dropdown-upload > .diet-dropdown-header .diet-dropdown-header-value {
+  font: 400 var(--dropdown-upload-font-size)/var(--dropdown-upload-value-line-height) "Inter Tight", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+}
+
+.diet-dropdown-upload > .diet-dropdown-header:focus-visible {
   outline: none;
   background: var(--color-system-white);
   border-color: var(--color-system-blue);
 }
 
-.diet-dropdown-upload .diet-dropdown-header-label {
+.diet-dropdown-upload > .diet-dropdown-header .diet-dropdown-header-value {
   flex: 0 1 auto;
-}
-
-.diet-dropdown-upload__header-icon {
-  inline-size: 14px;
-  block-size: 14px;
-  flex: 0 0 14px;
-  color: color-mix(in oklab, var(--color-system-black), transparent 45%);
-  background-color: currentColor;
-  opacity: 0.72;
-  -webkit-mask: url('/dieter/icons/svg/photo.svg') center / contain no-repeat;
-  mask: url('/dieter/icons/svg/photo.svg') center / contain no-repeat;
-}
-
-.diet-dropdown-upload[data-has-file='true'] .diet-dropdown-upload__header-icon {
-  display: none;
-}
-
-.diet-dropdown-upload .diet-dropdown-header-value {
+  max-inline-size: 100%;
   color: var(--color-system-black);
 }
 
-.diet-dropdown-upload .diet-dropdown-header-value[data-muted='true'] {
+.diet-dropdown-upload > .diet-dropdown-header .diet-dropdown-header-value[data-muted='true'] {
   color: color-mix(in oklab, var(--color-system-black), var(--state-muted-mix, 50%));
-}
-
-.diet-dropdown-upload[data-state='open'] .diet-dropdown-header {
-  background: color-mix(in oklab, var(--color-system-white), var(--color-system-blue) 3%);
-  border-color: var(--color-system-blue);
 }
 
 .diet-dropdown-upload__value-field {
@@ -72,16 +67,19 @@
 }
 
 .diet-dropdown-upload__label {
-  flex: 1 1 auto;
+  flex: 0 1 auto;
   min-inline-size: 0;
+  max-inline-size: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  text-align: end;
 }
 
 /* Header no longer uses a "chip" indicator. Right side shows placeholder or filename. */
 
-.diet-dropdown-upload__popover {
+.diet-dropdown-upload .diet-dropdown-upload__popover {
+  border-radius: var(--dropdown-upload-radius);
   outline: none;
 }
 

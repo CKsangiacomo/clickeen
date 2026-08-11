@@ -30,7 +30,6 @@
   background: color-mix(in oklab, var(--color-system-white), var(--color-system-black) 6%);
 }
 
-.diet-dropdown-header-label,
 .diet-textfield__display-label,
 .diet-toggle__label,
 .diet-valuefield__label {
@@ -38,6 +37,14 @@
   min-inline-size: 0;
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.diet-dropdown-header-label {
+  flex: 0 0 auto;
+  min-inline-size: auto;
+  overflow: visible;
+  text-overflow: clip;
   white-space: nowrap;
 }
 
@@ -59,12 +66,4 @@
   text-align: end;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.diet-dropdown-actions .diet-dropdown-header-label,
-.diet-dropdown-border .diet-dropdown-header-label {
-  flex: 0 0 auto;
-  min-inline-size: auto;
-  overflow: visible;
-  text-overflow: clip;
 }

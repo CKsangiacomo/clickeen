@@ -1,5 +1,10 @@
 /* Base layout (mirrors diet-textfield) */
 .diet-dropdown-edit {
+  --dropdown-edit-height: var(--control-size-md, 1.5rem);
+  --dropdown-edit-radius: var(--control-radius-md, 0.375rem);
+  --dropdown-edit-font-size: var(--fs-13, 0.8125rem);
+  --dropdown-edit-label-line-height: var(--lh-tight, 1rem);
+  --dropdown-edit-value-line-height: var(--lh-body-ui, 1.25rem);
   position: relative;
   display: grid;
   gap: var(--vertspace-2, 0.1rem);
@@ -7,62 +12,63 @@
   color: var(--color-system-black);
 }
 
-.diet-dropdown-edit .diet-dropdown-header {
-  appearance: none;
-  position: relative;
-  border: 1px solid transparent;
-  border-radius: var(--control-radius-md, 0.375rem);
-  background: var(--color-system-white);
-  color: inherit;
-  font: inherit;
-  text-align: inherit;
-  transition: background-color var(--duration-base) var(--easing-standard), border-color var(--duration-base) var(--easing-standard);
-  cursor: pointer;
+.diet-dropdown-edit[data-size='sm'] {
+  --dropdown-edit-height: var(--control-size-sm, 1.25rem);
+  --dropdown-edit-radius: var(--control-radius-sm, 0.25rem);
+  --dropdown-edit-font-size: var(--fs-11, 0.6875rem);
+  --dropdown-edit-value-line-height: var(--lh-tight, 1rem);
 }
 
-.diet-dropdown-edit .diet-dropdown-header:hover {
-  background: color-mix(in oklab, var(--color-system-white), var(--color-system-black) 6%);
+.diet-dropdown-edit[data-size='lg'] {
+  --dropdown-edit-height: var(--control-size-lg, 1.75rem);
+  --dropdown-edit-radius: var(--control-radius-lg, 0.5rem);
+  --dropdown-edit-font-size: var(--fs-14, 0.875rem);
+  --dropdown-edit-value-line-height: var(--lh-body-ui, 1.25rem);
 }
 
-.diet-dropdown-edit .diet-dropdown-header:focus-visible {
+.diet-dropdown-edit > .diet-dropdown-header {
+  min-block-size: var(--dropdown-edit-height);
+  border-radius: var(--dropdown-edit-radius);
+}
+
+.diet-dropdown-edit > .diet-dropdown-header .diet-dropdown-header-label,
+.diet-dropdown-edit > .diet-popover > .diet-popover__header > .diet-popover__header-label {
+  font: 500 var(--dropdown-edit-font-size)/var(--dropdown-edit-label-line-height) "Inter Tight", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  letter-spacing: -0.02em;
+}
+
+.diet-dropdown-edit > .diet-dropdown-header .diet-dropdown-header-value {
+  font: 400 var(--dropdown-edit-font-size)/var(--dropdown-edit-value-line-height) "Inter Tight", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+}
+
+.diet-dropdown-edit > .diet-dropdown-header:focus-visible {
   outline: none;
   background: var(--color-system-white);
   border-color: var(--color-system-blue);
 }
 
-.diet-dropdown-edit .diet-dropdown-header-value {
-  display: block;
-  width: 0;
+.diet-dropdown-edit > .diet-dropdown-header .diet-dropdown-header-value {
+  flex: 0 1 auto;
+  max-inline-size: 100%;
   color: var(--color-system-black);
-  text-align: start;
 }
 
-.diet-dropdown-edit .diet-dropdown-header-value[data-muted='true'] {
+.diet-dropdown-edit > .diet-dropdown-header .diet-dropdown-header-value[data-muted='true'] {
   color: color-mix(in oklab, var(--color-system-black), var(--state-muted-mix, 50%));
 }
 
 .diet-dropdown-edit__label {
-  flex: 0 0 auto;
-  display: inline-flex;
-  align-items: center;
+  flex: 0 1 auto;
+  min-inline-size: 0;
+  max-inline-size: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  text-align: end;
 }
 
-.diet-dropdown-edit[data-size='sm'] .diet-dropdown-header {
-  min-block-size: var(--control-size-sm, 1.25rem);
-  border-radius: var(--control-radius-sm, 0.25rem);
-}
-
-.diet-dropdown-edit[data-size='md'] .diet-dropdown-header {
-  min-block-size: var(--control-size-md, 1.5rem);
-  border-radius: var(--control-radius-md, 0.25rem);
-}
-
-.diet-dropdown-edit[data-size='lg'] .diet-dropdown-header {
-  min-block-size: var(--control-size-lg, 1.75rem);
-  border-radius: var(--control-radius-lg, 0.3125rem);
+.diet-dropdown-edit > .diet-popover {
+  border-radius: var(--dropdown-edit-radius);
 }
 
 .diet-dropdown-edit__editor {

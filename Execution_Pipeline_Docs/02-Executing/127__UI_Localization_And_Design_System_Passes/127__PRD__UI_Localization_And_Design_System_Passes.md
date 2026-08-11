@@ -158,7 +158,7 @@ the code is convenient there.
 | Stage | Status | Release state |
 | --- | --- | --- |
 | Stage 1 — Scaffold only | Complete | Committed, pushed, and deployed; no non-English experience is exposed |
-| Stage 2 — Dieter UI pass | In progress: Foundations, Agent Activity, Bulk Edit, Button, Choice Tiles, Dropdown Actions, Popover, and Dropdown Border complete | Dropdown Actions, Popover, Dropdown Border, and the shared property-menu rails are ready for exact-SHA cloud-dev QA |
+| Stage 2 — Dieter UI pass | In progress: Foundations, Agent Activity, Bulk Edit, Button, Choice Tiles, Dropdown Actions, Popover, and Dropdown Border complete; shared rest/Popover presentation is also applied to Dropdown Edit, Fill, Shadow, and Upload | The six-dropdown rest structure is ready for exact-SHA cloud-dev QA; the Edit, Fill, Shadow, and Upload behavior passes remain pending |
 | Stage 3 — Bob UI pass | Not started | No authority to begin until explicitly directed |
 | Stage 4 — Roma UI pass | Not started | No authority to begin until explicitly directed |
 | Stage 5 — Translation pass | Not started | No translations may be generated yet |
@@ -651,3 +651,25 @@ authorizes it.
   case, compatibility path, or new lifecycle system was added. The existing
   authenticated Builder smoke now opens Appearance and requires a rendered
   Dropdown Border with no controls-load error.
+
+- **Shared remaining-dropdown presentation — passed, 2026-08-11.** This
+  bounded slice extended the existing property-row authority from Dropdown
+  Actions and Dropdown Border to Dropdown Edit, Fill, Shadow, and Upload. The
+  complete caller label now stays on the leading rail; the right-aligned
+  trailing rail owns the dynamic value; only that value receives an end
+  ellipsis; and Fill and Shadow author value text before their fixed visual.
+  Rest and hover preserve the same rail positions. Root `sm|md|lg` now gives
+  all four triggers `1.25rem/1.5rem/1.75rem` heights and matching
+  `.25rem/.375rem/.5rem` attached-Popover radii. Opening Fill, Shadow, or
+  Upload no longer adds a separate blue trigger treatment. Their standard
+  Popover headers contain only the caller label; the dead decorative
+  `headerIcon` compiler/spec input and Upload's decorative rest Icon were
+  removed. Bulk Edit's existing copied single-file Upload composition was
+  brought to the same source structure. No selection, rich-text editing,
+  fill, shadow, upload, binding, persistence, copy, validation, translation,
+  Widget-specific behavior, or new shared component was added or changed.
+  Those four components still receive their own behavior and copy review in
+  the listed Stage 2 order. DevStudio source generation, all eight Widget
+  artifact pairs, Dieter governance/typecheck, Bob and Roma typechecks and
+  focused contracts, DevStudio typecheck/build, browser-computed rail/open/
+  radius proof, and diff checks passed.

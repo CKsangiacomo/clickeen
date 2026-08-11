@@ -26,7 +26,6 @@
     aria-expanded="false"
     aria-labelledby="{{id}}-label"
   >
-    <span class="diet-dropdown-upload__header-icon" aria-hidden="true"></span>
     <span class="diet-dropdown-header-label {{labelClass}}" id="{{id}}-label">
       {{#if label}}{{label}}{{else}}{{placeholder}}{{/if}}
     </span>
@@ -40,16 +39,6 @@
       <span class="diet-popover__header-label {{#if headerLabelClass}}{{headerLabelClass}}{{else}}label-s{{/if}}">
         {{#if headerLabel}}{{headerLabel}}{{else}}{{label}}{{/if}}
       </span>
-      <button
-        type="button"
-        class="diet-button diet-popover__header-trigger"
-        data-size="small"
-        data-type="quaternary"
-        aria-hidden="true"
-        tabindex="-1"
-      >
-        <span class="diet-icon" data-icon="paintbrush" data-size="12"></span>
-      </button>
     </div>
 
     <div class="diet-popover__body">

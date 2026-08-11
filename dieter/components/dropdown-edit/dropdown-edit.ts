@@ -40,6 +40,7 @@ interface DropdownEditState {
   popover: HTMLElement;
   editor: HTMLElement;
   headerValue: HTMLElement;
+  headerValueLabel: HTMLElement;
   hiddenInput: HTMLInputElement;
   isActive: boolean;
   pendingExternal?: string;
@@ -91,6 +92,7 @@ function createState(root: HTMLElement): DropdownEditState {
   const popover = root.querySelector<HTMLElement>('.diet-popover');
   const editor = root.querySelector<HTMLElement>('.diet-dropdown-edit__editor');
   const headerValue = root.querySelector<HTMLElement>('.diet-dropdown-header-value');
+  const headerValueLabel = root.querySelector<HTMLElement>('.diet-dropdown-edit__label');
   const hiddenInput = root.querySelector<HTMLInputElement>('.diet-dropdown-edit__field');
   const palette = root.querySelector<HTMLElement>('.diet-dropdown-edit__palette');
   const linkSheet = root.querySelector<HTMLElement>('.diet-dropdown-edit__linksheet');
@@ -101,7 +103,7 @@ function createState(root: HTMLElement): DropdownEditState {
       ? true
       : !['false', '0', 'no'].includes(allowLinksAttr.trim().toLowerCase());
 
-  if (!control || !popover || !editor || !headerValue || !hiddenInput || !palette) {
+  if (!control || !popover || !editor || !headerValue || !headerValueLabel || !hiddenInput || !palette) {
     throw new Error('[textedit] missing DOM nodes');
   }
 
@@ -133,6 +135,7 @@ function createState(root: HTMLElement): DropdownEditState {
     popover,
     editor,
     headerValue,
+    headerValueLabel,
     hiddenInput,
     allowLinks,
     palette,
@@ -537,13 +540,13 @@ function applyExternalValue(state: DropdownEditState, raw: string) {
   const value = raw || '';
   const sanitized = sanitizeInline(value, state.allowLinks);
   state.editor.innerHTML = sanitized;
-  const target = state.headerValue;
+  const target = state.headerValueLabel;
   if (sanitized) {
     target.textContent = toPreviewText(sanitized);
-    target.dataset.muted = 'false';
+    state.headerValue.dataset.muted = 'false';
   } else {
-    target.textContent = target.dataset.placeholder ?? '';
-    target.dataset.muted = 'true';
+    target.textContent = state.headerValue.dataset.placeholder ?? '';
+    state.headerValue.dataset.muted = 'true';
   }
   state.hiddenInput.value = sanitized;
   updateClearButtons(state);
@@ -552,16 +555,16 @@ function applyExternalValue(state: DropdownEditState, raw: string) {
 function syncPreview(state: DropdownEditState) {
   const raw = state.editor.innerHTML.trim();
   const sanitized = sanitizeInline(raw, state.allowLinks);
-  const target = state.headerValue;
+  const target = state.headerValueLabel;
   if (sanitized) {
     target.textContent = toPreviewText(sanitized);
   } else {
     target.textContent = state.editor.textContent ?? '';
   }
   const hasValue = raw.length > 0;
-  target.dataset.muted = hasValue ? 'false' : 'true';
+  state.headerValue.dataset.muted = hasValue ? 'false' : 'true';
   if (!hasValue) {
-    target.textContent = target.dataset.placeholder ?? '';
+    target.textContent = state.headerValue.dataset.placeholder ?? '';
   }
 
   state.hiddenInput.value = sanitized;

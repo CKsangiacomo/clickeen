@@ -480,7 +480,6 @@ function buildUploadControl(args: {
       aria-expanded="false"
       aria-labelledby="${id}-label"
     >
-      <span class="diet-dropdown-upload__header-icon" aria-hidden="true"></span>
       <span class="diet-dropdown-header-label label-s" id="${id}-label">${label}</span>
       <span class="diet-dropdown-header-value body-s" data-muted="true" data-placeholder="${placeholder}">
         <span class="diet-dropdown-upload__label">${placeholder}</span>
@@ -489,16 +488,6 @@ function buildUploadControl(args: {
     <div class="diet-popover diet-dropdown-upload__popover" role="dialog" aria-label="${label}" data-state="closed">
       <div class="diet-popover__header">
         <span class="diet-popover__header-label label-s">${label}</span>
-        <button
-          type="button"
-          class="diet-button diet-popover__header-trigger"
-          data-size="small"
-          data-type="quaternary"
-          aria-hidden="true"
-          tabindex="-1"
-        >
-          <span class="diet-icon" data-icon="paintbrush" data-size="12"></span>
-        </button>
       </div>
       <div class="diet-popover__body">
         <div class="diet-dropdown-upload__panel body-xs" data-has-file="false" data-kind="empty">

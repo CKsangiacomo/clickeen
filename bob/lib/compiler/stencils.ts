@@ -134,7 +134,6 @@ export async function buildContext(
   const value = pathAttr ? '' : attrs.value || '';
   const optionsRaw = attrs.options || '';
   let headerLabel = attrs.headerLabel || '';
-  const headerIcon = attrs.headerIcon || '';
   const reorderLabel =
     attrs.reorderLabel ||
     attrs['reorder-label'] ||
@@ -248,7 +247,6 @@ export async function buildContext(
     value,
     path: pathAttr,
     headerLabel,
-    headerIcon,
     allowImage,
     allowLinks,
     fillModes: component === 'dropdown-fill' ? fillModes : undefined,

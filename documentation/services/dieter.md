@@ -113,13 +113,15 @@ control does not add a separate blue border or tint to the covered row.
 All visible wording remains caller input. Its selected checkmark inherits the
 Menu Actions `sm|md|lg` Icon size instead of carrying a fixed size.
 
-Dropdown Actions and Dropdown Border begin the shared clickable property-menu
-row rule. The complete field label occupies the leading rail. The trailing
-rail is right aligned and contains dynamic value text followed by any fixed
-chip or Icon; only that dynamic text truncates. Rest and hover use the same
-rail geometry, and hover belongs to the complete row. Other components adopt
-this same existing shared-row authority during their own component pass rather
-than through parallel component-local row systems.
+Dropdown Actions, Dropdown Border, Dropdown Edit, Dropdown Fill, Dropdown
+Shadow, and Dropdown Upload use the shared clickable property-menu row rule.
+The complete field label occupies the leading rail. The trailing rail is right
+aligned and contains dynamic value text followed by any fixed chip or Icon;
+only that dynamic text truncates. Rest and hover use the same rail geometry,
+and hover belongs to the complete row. Each standard top-level Popover repeats
+only the caller label and follows the trigger's `sm|md|lg` radius. This is
+shared presentation authority, not shared component behavior: each dropdown
+retains its existing editing or selection job.
 
 Dropdown Border owns one global border-editing component, not a family of
 Widget-specific border controls. Its exact value is

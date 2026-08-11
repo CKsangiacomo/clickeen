@@ -28,8 +28,8 @@
       >{{label}}</span>
     {{/if}}
     <span class="diet-dropdown-header-value {{bodyClass}}" data-muted="true" data-placeholder="{{placeholder}}">
-      <span class="diet-dropdown-shadow__chip" aria-hidden="true"></span>
       <span class="diet-dropdown-shadow__label">{{placeholder}}</span>
+      <span class="diet-dropdown-shadow__chip" aria-hidden="true"></span>
     </span>
   </button>
 
@@ -43,16 +43,6 @@
       <span class="diet-popover__header-label {{#if headerLabelClass}}{{headerLabelClass}}{{else}}label-s{{/if}}">
         {{#if headerLabel}}{{headerLabel}}{{else}}{{label}}{{/if}}
       </span>
-      <button
-        type="button"
-        class="diet-button diet-popover__header-trigger"
-        data-size="small"
-        data-type="quaternary"
-        aria-hidden="true"
-        tabindex="-1"
-      >
-        <span class="diet-icon" data-icon="sparkles" data-size="12"></span>
-      </button>
     </div>
     <div class="diet-popover__body">
       <div class="diet-dropdown-shadow__panel body-xs">

@@ -19,11 +19,6 @@
       "optional": true,
       "description": "Label rendered in the shared popover header"
     },
-    "headerIcon": {
-      "type": "string",
-      "optional": true,
-      "description": "Icon token rendered to the right of the header label"
-    },
     "size": {
       "type": "enum",
       "values": ["sm", "md", "lg"],
@@ -72,7 +67,6 @@
         "id": "dropdown-edit-{{size}}",
         "label": "Label",
         "headerLabel": "Label",
-        "headerIcon": "textformat.size.larger",
         "placeholder": "The quick brown fox jumps over the lazy dog",
         "path": ""
       },

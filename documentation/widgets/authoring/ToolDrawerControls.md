@@ -268,8 +268,10 @@ terminate on the same trailing rail. On clickable property-menu rows, the
 complete field label never truncates. Dynamic trailing text yields first and
 receives the end ellipsis; a fixed chip or Icon remains visible. Compound
 trailing values author text before the visual, and rest and hover preserve the
-same geometry. Dropdown Actions and Dropdown Border implement that rule in the
-current pass; other components adopt it during their own pass. Numeric fields
+same geometry. Dropdown Actions, Border, Edit, Fill, Shadow, and Upload all use
+that shared rest structure; their standard top-level Popovers repeat only the
+caller label and inherit the row's `sm|md|lg` radius. Each dropdown's actual
+editing, selection, or upload workflow remains component-owned. Numeric fields
 use stable slots rather than content-measured widths. Toggle rows are native
 labels, so the complete visible row activates the checkbox. Component stencils
 render labels exactly as authored and do not inject punctuation. Text fields
