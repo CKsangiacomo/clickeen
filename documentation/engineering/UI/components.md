@@ -99,7 +99,9 @@ The component-level product law is implemented:
   authority: the trigger is `1.25rem/1.5rem/1.75rem` high and uses
   `.6875rem/.8125rem/.875rem` text. Current ToolDrawer instances use `md`.
   The component owns no visible wording: label, placeholder, group labels,
-  option labels, and badges are caller inputs.
+  option labels, and badges are caller inputs. Its selected checkmark follows
+  the Menu Actions size ladder at `.75rem/1rem/1.25rem`; it is not pinned to a
+  separate glyph size.
 - Menu Actions remains a separate menu-row primitive with its existing
   `sm|md|lg` API. Low-level geometry tokens remain internal source mechanics.
 - `textrename` is deleted because it had no product consumer.
@@ -124,10 +126,11 @@ Save command.
 Dieter Popover owns the attached floating surface, padding, radius, shadow,
 header/body structure, and open-state presentation. Its standard header is a
 caller-supplied label only; it does not invent a decorative header Icon or
-visible copy. The caller owns the trigger, open state, body content, selection,
-and any real workflow action. A component with a genuine close or command
-action composes that action explicitly rather than receiving a decorative
-Popover control.
+visible copy. Header and body share the Popover's outer inline alignment rather
+than applying a second header inset. The caller owns the trigger, open state,
+body content, selection, and any real workflow action. A component with a
+genuine close or command action composes that action explicitly rather than
+receiving a decorative Popover control.
 
 Per-component source documentation records markup, `data-*` attributes,
 binding, behavior/hydration, variants, sizes, states, and semantics. Step 6 maps

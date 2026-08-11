@@ -134,6 +134,11 @@
   color: color-mix(in oklab, var(--color-system-black), var(--state-muted-mix, 35%));
 }
 
+.diet-dropdown-actions .diet-dropdown-actions__check,
+.diet-dropdown-actions .diet-dropdown-actions__check > .diet-icon {
+  --diet-icon-size: var(--ma-icon-box);
+}
+
 .diet-dropdown-actions__check {
   opacity: 0;
   pointer-events: none;

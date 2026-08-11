@@ -329,6 +329,14 @@ authority.
   consumer source was rewritten. No validator, compilation guard, locale file,
   translation generation, runtime locale path, or adjacent component cleanup
   was added.
+  A visual-QA follow-up removed the selected checkmark's fixed `12px` size so
+  it now follows Menu Actions at `12/16/20px` for `sm/md/lg`, and removed the
+  Popover header's second inline inset so header and body share one left edge.
+  Dieter applies that size to both the canonical direct Icon and the nested
+  Icon shape still authored by Bob account-font menus and Roma Dropdown
+  Actions. Their redundant `data-size="12"` attributes remain explicitly
+  deferred to the Bob and Roma consumer passes rather than expanding this
+  component-source correction.
 
 ### Per-Tab Execution Loop
 

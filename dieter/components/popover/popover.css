@@ -42,7 +42,6 @@
 
 .diet-popover__header {
   padding: 0;
-  padding-inline: var(--control-padding-inline);
   background: transparent;
   border: none;
   display: flex;

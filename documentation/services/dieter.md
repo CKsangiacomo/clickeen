@@ -108,11 +108,13 @@ value, hover discloses interaction without a resting chevron, and choosing a
 Menu Action updates the value and closes immediately. Its root
 `data-size="sm|md|lg"` owns the `1.25rem/1.5rem/1.75rem` row heights and
 `.6875rem/.8125rem/.875rem` typography; current ToolDrawer instances use `md`.
-All visible wording remains caller input.
+All visible wording remains caller input. Its selected checkmark inherits the
+Menu Actions `sm|md|lg` Icon size instead of carrying a fixed size.
 
 Popover owns only the floating surface and label/body structure. Its standard
-header contains the caller-supplied label and no decorative Icon. Callers own
-trigger state, body content, selection, and any genuine action.
+header contains the caller-supplied label and no decorative Icon. Header and
+body align through the same outer Popover padding. Callers own trigger state,
+body content, selection, and any genuine action.
 
 Color source keeps one small shared role layer:
 `--role-surface-bg`, `--role-surface`, `--role-surface-muted`,
