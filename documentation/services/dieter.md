@@ -154,6 +154,19 @@ use and exact state paths, while their
 adjacent ToolDrawer label files supply field and component labels through
 Bob's existing compiler.
 
+Dropdown Edit owns one global inline rich-text editing component. Every
+`dropdown-edit` use supports Bold, Italic, Underline, Strikethrough, links,
+selected-only Clear formatting, line breaks, and pasted inline formatting.
+The link action operates on selected text or the current link; it is not a
+per-Widget capability. Opening the Popover does not select text. The pinned
+Lexical dependency is bundled with Dieter and runs locally in Bob; it makes no
+external runtime call. Dieter exports the existing compact inline HTML value
+instead of a Lexical document, so Bob's browser-memory and save contracts do
+not change. Every visible field, toolbar, and link-sheet word is caller input
+resolved from the consuming Widget's adjacent ToolDrawer label file. Dieter
+contains no Widget branch, Widget label catalog, locale folder, storage
+authority, or persistence behavior.
+
 Popover owns only the floating surface and label/body structure. Its standard
 header contains the caller-supplied label and no decorative Icon. Header and
 body align through the same outer Popover padding. Callers own trigger state,

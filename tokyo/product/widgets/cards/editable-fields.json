@@ -29,7 +29,7 @@
       "path": "cards.items[].title",
       "label": "Card title",
       "role": "card-title",
-      "type": "string",
+      "type": "richtext",
       "arrayItemIdentity": [
         "cards.items[].id"
       ],

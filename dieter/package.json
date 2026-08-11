@@ -5,6 +5,11 @@
   "packageManager": "pnpm@10.15.1",
   "dependencies": {
     "@clickeen/ck-contracts": "workspace:*",
+    "@lexical/html": "0.48.0",
+    "@lexical/link": "0.48.0",
+    "@lexical/rich-text": "0.48.0",
+    "@lexical/selection": "0.48.0",
+    "lexical": "0.48.0",
     "tldts": "^6.1.86"
   },
   "scripts": {

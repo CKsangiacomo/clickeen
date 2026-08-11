@@ -95,6 +95,23 @@ type DropdownBorderEditorLabels = {
   fields: Record<string, string>;
 };
 
+const DROPDOWN_EDIT_COMPONENT_LABEL_ATTRIBUTES = [
+  ['apply', 'apply-label'],
+  ['bold', 'bold-label'],
+  ['clearFormatting', 'clear-formatting-label'],
+  ['italic', 'italic-label'],
+  ['link', 'link-label'],
+  ['removeLink', 'remove-link-label'],
+  ['strikethrough', 'strikethrough-label'],
+  ['underline', 'underline-label'],
+  ['url', 'url-label'],
+] as const;
+
+type DropdownEditResolvedLabel = {
+  attribute: (typeof DROPDOWN_EDIT_COMPONENT_LABEL_ATTRIBUTES)[number][1];
+  value: string;
+};
+
 function renderAttrValue(value: unknown): string {
   if (value === undefined || value === null) return '';
   if (typeof value === 'string') return encodeHtmlEntities(value);
@@ -194,40 +211,56 @@ function assertFieldNode(node: unknown, widgetname: string): asserts node is Edi
   }
 }
 
-function renderFieldNode(node: EditorFieldNode): string {
+function renderFieldNode(
+  node: EditorFieldNode,
+  dropdownEditLabels: DropdownEditResolvedLabel[] | null,
+): string {
   assertFieldNode(node, 'widget');
   const attrs: JsonObject = {
     ...(node.attrs ?? {}),
+    ...(node.type === 'dropdown-edit' && dropdownEditLabels
+      ? Object.fromEntries(
+          dropdownEditLabels.map(({ attribute, value }) => [attribute, value]),
+        )
+      : {}),
     type: node.type,
     ...(node.path ? { path: node.path } : {}),
     ...(node.label ? { label: node.label } : {}),
   };
   if (node.showIf) attrs['show-if'] = renderEditorShowIf(node.showIf);
-  if (node.template) attrs.template = renderTemplateNodes(node.template);
+  if (node.template) attrs.template = renderTemplateNodes(node.template, dropdownEditLabels);
 
   const attrsText = renderAttrs(attrs);
   const tag = `tooldrawer-field${node.groupId ? `-${node.groupId}` : ''}`;
   return attrsText ? `<${tag} ${attrsText} />` : `<${tag} />`;
 }
 
-function renderElementNode(node: EditorElementNode): string {
+function renderElementNode(
+  node: EditorElementNode,
+  dropdownEditLabels: DropdownEditResolvedLabel[] | null,
+): string {
   if (typeof node.tag !== 'string' || !/^[a-z][a-z0-9-]*$/i.test(node.tag)) {
     throw new Error('[BobCompiler] editor template element tag is invalid');
   }
   const attrsText = renderAttrs(node.attrs);
-  const children = renderTemplateNodes(node.children ?? []);
+  const children = renderTemplateNodes(node.children ?? [], dropdownEditLabels);
   return `<${node.tag}${attrsText ? ` ${attrsText}` : ''}>${children}</${node.tag}>`;
 }
 
-function renderTemplateNodes(nodes: EditorTemplateNode[]): string {
+function renderTemplateNodes(
+  nodes: EditorTemplateNode[],
+  dropdownEditLabels: DropdownEditResolvedLabel[] | null,
+): string {
   return nodes
     .map((node) => {
       if (!isPlainObject(node))
         throw new Error('[BobCompiler] editor template node must be an object');
       if (node.kind === 'text')
         return encodeHtmlEntities(typeof node.text === 'string' ? node.text : '');
-      if (node.kind === 'element') return renderElementNode(node as EditorElementNode);
-      if (node.kind === 'field') return renderFieldNode(node as EditorFieldNode);
+      if (node.kind === 'element')
+        return renderElementNode(node as EditorElementNode, dropdownEditLabels);
+      if (node.kind === 'field')
+        return renderFieldNode(node as EditorFieldNode, dropdownEditLabels);
       throw new Error(
         `[BobCompiler] Unsupported editor template node kind: ${String((node as any).kind)}`,
       );
@@ -290,6 +323,13 @@ function collectEditorFieldPaths(value: unknown): Set<string> {
   return paths;
 }
 
+function containsEditorFieldType(value: unknown, type: string): boolean {
+  if (Array.isArray(value)) return value.some((item) => containsEditorFieldType(item, type));
+  if (!isPlainObject(value)) return false;
+  if (value.kind === 'field' && value.type === type) return true;
+  return Object.values(value).some((item) => containsEditorFieldType(item, type));
+}
+
 function readRecordPath(root: JsonObject, path: string): JsonObject | null {
   const parts = path.split('.').filter(Boolean);
   let cursor: unknown = root;
@@ -323,7 +363,11 @@ function resolveCardWrapperPath(
   return null;
 }
 
-function renderCluster(cluster: EditorCluster, defaults: JsonObject): string[] {
+function renderCluster(
+  cluster: EditorCluster,
+  defaults: JsonObject,
+  dropdownEditLabels: DropdownEditResolvedLabel[] | null,
+): string[] {
   if (!Array.isArray(cluster.nodes))
     throw new Error('[BobCompiler] editor cluster missing nodes array');
   const hasLabel = typeof cluster.label === 'string' && Boolean(cluster.label.trim());
@@ -350,7 +394,7 @@ function renderCluster(cluster: EditorCluster, defaults: JsonObject): string[] {
       return;
     }
     if (node.kind === 'field') {
-      lines.push(`    ${renderFieldNode(node as EditorFieldNode)}`);
+      lines.push(`    ${renderFieldNode(node as EditorFieldNode, dropdownEditLabels)}`);
       return;
     }
     if (node.kind === 'element' || node.kind === 'text') {
@@ -369,6 +413,7 @@ function renderPanel(
   defaults: JsonObject,
   widgetname: string,
   editorFieldPaths: ReadonlySet<string>,
+  dropdownEditLabels: DropdownEditResolvedLabel[] | null,
 ): string[] {
   if (typeof panel.id !== 'string' || !isPanelId(panel.id) || panel.id === 'translations') {
     throw new Error(`[BobCompiler] ${widgetname} editor panel has unsupported id`);
@@ -446,7 +491,7 @@ function renderPanel(
       }
       return [...injected, ...renderSharedNode(sharedNode, defaults)];
     }
-    return renderCluster(item as EditorCluster, defaults);
+    return renderCluster(item as EditorCluster, defaults, dropdownEditLabels);
   });
 
   return [`<bob-panel id='${encodeHtmlEntities(panel.id)}'>`, ...lines, '</bob-panel>'];
@@ -479,11 +524,66 @@ export function buildEditorHtmlLines(
     );
   }
   const editorFieldPaths = collectEditorFieldPaths(editor);
+  let dropdownEditLabels = containsEditorFieldType(editor, 'dropdown-edit')
+    ? readDropdownEditEditorLabels(editor.labels, widgetname)
+    : null;
   const panelsById = new Map(editor.panels.map((panel) => [panel.id, panel]));
   const lines = BOB_WIDGET_PANEL_IDS.flatMap((panelId) =>
-    renderPanel(panelsById.get(panelId)!, defaults, widgetname, editorFieldPaths),
+    renderPanel(
+      panelsById.get(panelId)!,
+      defaults,
+      widgetname,
+      editorFieldPaths,
+      dropdownEditLabels,
+    ),
   );
-  return applyDropdownBorderEditorLabels(lines, editor.labels, widgetname);
+  if (!dropdownEditLabels && lines.some((line) => /\btype='dropdown-edit'/.test(line))) {
+    dropdownEditLabels = readDropdownEditEditorLabels(editor.labels, widgetname);
+  }
+  return applyDropdownEditEditorLabels(
+    applyDropdownBorderEditorLabels(lines, editor.labels, widgetname),
+    dropdownEditLabels,
+  );
+}
+
+function readDropdownEditEditorLabels(
+  labelsRaw: unknown,
+  widgetname: string,
+): DropdownEditResolvedLabel[] {
+  if (!isPlainObject(labelsRaw) || !isPlainObject(labelsRaw.components)) {
+    throw new Error(`[BobCompiler] ${widgetname} resolved editor component labels are missing`);
+  }
+  const labels = labelsRaw.components['dropdown-edit'];
+  if (
+    !isPlainObject(labels) ||
+    Object.keys(labels).sort().join('\0') !==
+      DROPDOWN_EDIT_COMPONENT_LABEL_ATTRIBUTES.map(([key]) => key).sort().join('\0')
+  ) {
+    throw new Error(`[BobCompiler] ${widgetname} Dropdown Edit component labels are invalid`);
+  }
+  return DROPDOWN_EDIT_COMPONENT_LABEL_ATTRIBUTES.map(([key, attribute]) => {
+    const value = labels[key];
+    if (typeof value !== 'string' || !value.trim() || value !== value.trim()) {
+      throw new Error(`[BobCompiler] ${widgetname} Dropdown Edit label is invalid: ${key}`);
+    }
+    return { attribute, value };
+  });
+}
+
+function applyDropdownEditEditorLabels(
+  lines: string[],
+  resolvedLabels: DropdownEditResolvedLabel[] | null,
+): string[] {
+  if (!resolvedLabels) return lines;
+  const attributes = resolvedLabels
+    .map(({ attribute, value }) => `${attribute}='${encodeHtmlEntities(value)}'`)
+    .join(' ');
+
+  return lines.map((line) =>
+    /\btype='dropdown-edit'/.test(line) && !/\bapply-label=/.test(line)
+      ? line.replace(/\s*\/>$/, ` ${attributes} />`)
+      : line,
+  );
 }
 
 function readDropdownBorderEditorLabels(

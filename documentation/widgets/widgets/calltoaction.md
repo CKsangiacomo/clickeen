@@ -84,6 +84,10 @@ calltoaction.supportingTextHtml
 calltoaction.action.label
 ```
 
+`header.title`, `header.subtitleHtml`, `calltoaction.headline`, and
+`calltoaction.supportingTextHtml` are rich-text Dropdown Edit fields. Their
+saved inline HTML supports emphasis, `br`, and `http(s)` links.
+
 ## Limits
 
 ```text

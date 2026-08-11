@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { compileWidgetServer } from '../lib/compiler.server';
-import { decodeHtmlEntities, type RawWidget } from '../lib/compiler.shared';
+import { decodeHtmlEntities, encodeHtmlEntities, type RawWidget } from '../lib/compiler.shared';
 import { expandTooldrawerClusters } from '../lib/compiler/controls';
 import { buildEditorHtmlLines } from '../lib/compiler/editor-contract';
 import { resolveWidgetTooldrawerLabels } from '../lib/compiler/tooldrawer-labels';
@@ -135,6 +135,53 @@ function assertCompiledClusterState(args: {
   );
 }
 
+function assertDropdownEditLabels(args: {
+  widgetType: string;
+  html: string;
+  labels: Record<string, string>;
+}): void {
+  const roots = args.html
+    .split('<div class="diet-dropdown-edit diet-popover-host"')
+    .slice(1);
+  assert.ok(roots.length > 0, `${args.widgetType} compiles Dropdown Edit controls`);
+
+  const label = (key: string) => encodeHtmlEntities(args.labels[`component.dropdown-edit.${key}.label`]);
+  roots.forEach((root, index) => {
+    for (const [command, key] of [
+      ['bold', 'bold'],
+      ['italic', 'italic'],
+      ['underline', 'underline'],
+      ['strike', 'strikethrough'],
+      ['link', 'link'],
+      ['clear-format', 'clear-formatting'],
+    ]) {
+      const commandStart = root.indexOf(`data-command="${command}"`);
+      assert.ok(commandStart >= 0, `${args.widgetType} Dropdown Edit ${index} has ${command}`);
+      const commandEnd = root.indexOf('</button>', commandStart);
+      assert.ok(
+        root.slice(commandStart, commandEnd).includes(`aria-label="${label(key)}"`),
+        `${args.widgetType} Dropdown Edit ${index} labels ${command}`,
+      );
+    }
+    assert.ok(
+      root.includes(`diet-popover__header-label label-s">${label('link')}</span>`),
+      `${args.widgetType} Dropdown Edit ${index} labels Link sheet`,
+    );
+    assert.ok(
+      root.includes(`diet-textfield__display-label label-s">${label('url')}</span>`),
+      `${args.widgetType} Dropdown Edit ${index} labels URL`,
+    );
+    assert.ok(
+      root.includes(`diet-button__label">${label('remove-link')}</span>`),
+      `${args.widgetType} Dropdown Edit ${index} labels Remove link`,
+    );
+    assert.ok(
+      root.includes(`diet-button__label">${label('apply')}</span>`),
+      `${args.widgetType} Dropdown Edit ${index} labels Apply`,
+    );
+  });
+}
+
 async function testEveryWidgetEditorContract(): Promise<void> {
   const widgets = discoverWidgetSpecs();
   assert.ok(widgets.length > 0, 'at least one widget spec is discovered');
@@ -196,6 +243,11 @@ async function testEveryWidgetEditorContract(): Promise<void> {
       'Translation Agent',
       `${widgetType} compiles its exact Agent Activity title`,
     );
+    assertDropdownEditLabels({
+      widgetType,
+      html: compiled.panels.map((panel) => panel.html).join('\n'),
+      labels: (labels as { labels: Record<string, string> }).labels,
+    });
     const combinedBodyIds = captureAll(
       compiled.panels.map((panel) => panel.html).join('\n'),
       /class="tdmenucontent__cluster-body" id="([^"]+)"/g,

@@ -212,6 +212,13 @@ async function expectDropdownEditUsable(
   const editor = dropdownRoot.locator('.diet-dropdown-edit__editor').first();
   await expect(editor, `${control.label} editor should open`).toBeVisible({ timeout: 10_000 });
   await expect(editor, `${control.label} editor should be editable`).toBeEditable();
+  expect(await editor.evaluate(() => window.getSelection()?.toString() ?? '')).toBe('');
+  await expect(dropdownRoot.getByRole('button', { name: 'Bold' })).toBeVisible();
+  await expect(dropdownRoot.getByRole('button', { name: 'Italic' })).toBeVisible();
+  await expect(dropdownRoot.getByRole('button', { name: 'Underline' })).toBeVisible();
+  await expect(dropdownRoot.getByRole('button', { name: 'Strikethrough' })).toBeVisible();
+  await expect(dropdownRoot.getByRole('button', { name: 'Link' })).toBeDisabled();
+  await expect(dropdownRoot.getByRole('button', { name: 'Clear formatting' })).toBeDisabled();
   await editor.press('Escape');
   return true;
 }

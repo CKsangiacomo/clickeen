@@ -94,11 +94,10 @@
     throw new Error('[CallToAction] ' + path + ' must be empty, #, root-relative, http(s), mailto, or tel');
   }
 
-  function sanitizeInlineHtml(html, allowLinks) {
+  function sanitizeInlineHtml(html) {
     var wrapper = document.createElement('div');
     wrapper.innerHTML = String(html || '');
-    var allowed = { STRONG: true, B: true, EM: true, I: true, U: true, S: true, BR: true };
-    if (allowLinks) allowed.A = true;
+    var allowed = { STRONG: true, B: true, EM: true, I: true, U: true, S: true, A: true, BR: true };
 
     wrapper.querySelectorAll('*').forEach(function (node) {
       var el = node;
@@ -260,9 +259,9 @@
       var textWidth = assertNumber(layout.textWidth, 'state.calltoaction.layout.textWidth', 280, 1200);
       var showEyebrow = assertBoolean(calltoaction.showEyebrow, 'state.calltoaction.showEyebrow');
       var eyebrow = assertString(calltoaction.eyebrow, 'state.calltoaction.eyebrow');
-      var titleHtml = sanitizeInlineHtml(assertString(calltoaction.headline, 'state.calltoaction.headline'), false);
+      var titleHtml = sanitizeInlineHtml(assertString(calltoaction.headline, 'state.calltoaction.headline'));
       var showCopy = assertBoolean(calltoaction.showSupportingText, 'state.calltoaction.showSupportingText');
-      var copyHtml = sanitizeInlineHtml(assertString(calltoaction.supportingTextHtml, 'state.calltoaction.supportingTextHtml'), true);
+      var copyHtml = sanitizeInlineHtml(assertString(calltoaction.supportingTextHtml, 'state.calltoaction.supportingTextHtml'));
 
       contentEl.hidden = false;
       contentEl.dataset.align = alignment;

@@ -24,7 +24,7 @@
       "values": ["sm", "md", "lg"],
       "default": "md",
       "required": false,
-      "description": "Editor size - sm (20px), md (24px), lg (32px) height"
+      "description": "Closed control size - sm (20px), md (24px), lg (28px) height"
     },
     "path": {
       "type": "string",
@@ -37,25 +37,19 @@
       "required": false,
       "description": "Default text content shown in preview and editor"
     },
-    "allowLinks": {
-      "type": "boolean",
-      "default": true,
-      "required": false,
-      "description": "Whether to allow hyperlinks in the editor content. Use false for non-interactive text."
-    }
+    "applyLabel": { "type": "string", "required": true },
+    "boldLabel": { "type": "string", "required": true },
+    "clearFormattingLabel": { "type": "string", "required": true },
+    "italicLabel": { "type": "string", "required": true },
+    "linkLabel": { "type": "string", "required": true },
+    "removeLinkLabel": { "type": "string", "required": true },
+    "strikethroughLabel": { "type": "string", "required": true },
+    "underlineLabel": { "type": "string", "required": true },
+    "urlLabel": { "type": "string", "required": true }
   },
   "features": {
     "richTextFormatting": ["Bold", "Italic", "Underline", "Strikethrough"],
-    "linkPanel": "Add hyperlinks with URL validation, new tab option, and nofollow attribute",
-    "aiSuggestions": [
-      "Fix grammar",
-      "Shorten (keep meaning)",
-      "Expand (add detail)",
-      "Simplify reading",
-      "Make professional",
-      "Make friendly",
-      "Make persuasive"
-    ]
+    "linkPanel": "Add, edit, or remove a hyperlink on selected text"
   },
   "defaults": [
     {
@@ -68,12 +62,51 @@
         "label": "Label",
         "headerLabel": "Label",
         "placeholder": "The quick brown fox jumps over the lazy dog",
-        "path": ""
+        "path": "",
+        "applyLabel": "Apply",
+        "boldLabel": "Bold",
+        "clearFormattingLabel": "Clear formatting",
+        "italicLabel": "Italic",
+        "linkLabel": "Link",
+        "removeLinkLabel": "Remove link",
+        "strikethroughLabel": "Strikethrough",
+        "underlineLabel": "Underline",
+        "urlLabel": "URL",
+        "state": "closed",
+        "expanded": "false"
       },
       "sizeContext": {
         "sm": { "labelClass": "label-xs", "bodyClass": "body-xs" },
         "md": { "labelClass": "label-s", "bodyClass": "body-s" },
         "lg": { "labelClass": "label-m", "bodyClass": "body-m" }
+      }
+    },
+    {
+      "id": "dropdown-edit-open",
+      "title": "Open editor",
+      "sizes": ["md"],
+      "spec": ["diet-dropdown-edit", "data-size='md'", "data-state='open'"],
+      "context": {
+        "size": "md",
+        "id": "dropdown-edit-open",
+        "label": "Description",
+        "headerLabel": "Description",
+        "placeholder": "Make selected text bold, italic, underlined, struck through, or linked.",
+        "path": "",
+        "applyLabel": "Apply",
+        "boldLabel": "Bold",
+        "clearFormattingLabel": "Clear formatting",
+        "italicLabel": "Italic",
+        "linkLabel": "Link",
+        "removeLinkLabel": "Remove link",
+        "strikethroughLabel": "Strikethrough",
+        "underlineLabel": "Underline",
+        "urlLabel": "URL",
+        "state": "open",
+        "expanded": "true"
+      },
+      "sizeContext": {
+        "md": { "labelClass": "label-s", "bodyClass": "body-s" }
       }
     }
   ],

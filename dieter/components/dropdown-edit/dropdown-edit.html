@@ -1,5 +1,5 @@
-  <div class="diet-dropdown-edit diet-popover-host" data-size="{{size}}" data-state="closed" data-allow-links="{{allowLinks}}">
-  <button type="button" class="diet-dropdown-header diet-dropdown-edit__control" aria-haspopup="dialog" aria-expanded="false">
+<div class="diet-dropdown-edit diet-popover-host" data-size="{{size}}" data-state="{{state}}">
+  <button type="button" class="diet-dropdown-header diet-dropdown-edit__control" aria-haspopup="dialog" aria-expanded="{{expanded}}">
     <span class="diet-dropdown-header-label {{#if labelClass}}{{labelClass}}{{else}}label-s{{/if}}">{{label}}</span>
     <span class="diet-dropdown-header-value {{#if bodyClass}}{{bodyClass}}{{else}}body-s{{/if}}" data-muted="true" data-placeholder="{{placeholder}}">
       <span class="diet-dropdown-edit__label">{{placeholder}}</span>
@@ -14,7 +14,7 @@
     </div>
     <div class="diet-popover__body diet-dropdown-edit__body">
       <div class="diet-dropdown-edit__main">
-        <div class="diet-dropdown-edit__editor body-xs" contenteditable="true">{{placeholder}}</div>
+        <div class="diet-dropdown-edit__editor" contenteditable="true">{{placeholder}}</div>
         <div class="diet-dropdown-edit__palette">
           <div class="diet-dropdown-edit__toolbarrow">
             <div class="diet-dropdown-edit__group diet-dropdown-edit__group--format">
@@ -24,10 +24,10 @@
                 data-size="small"
                 data-type="quaternary"
                 data-command="bold"
-                aria-label="Bold"
+                aria-label="{{boldLabel}}"
                 aria-pressed="false"
               >
-                <span class="diet-icon" data-icon="bold" aria-hidden="true" data-size="12"></span>
+                <span class="diet-icon" data-icon="bold" aria-hidden="true"></span>
               </button>
               <button
                 type="button"
@@ -35,10 +35,10 @@
                 data-size="small"
                 data-type="quaternary"
                 data-command="italic"
-                aria-label="Italic"
+                aria-label="{{italicLabel}}"
                 aria-pressed="false"
               >
-                <span class="diet-icon" data-icon="italic" aria-hidden="true" data-size="12"></span>
+                <span class="diet-icon" data-icon="italic" aria-hidden="true"></span>
               </button>
               <button
                 type="button"
@@ -46,10 +46,10 @@
                 data-size="small"
                 data-type="quaternary"
                 data-command="underline"
-                aria-label="Underline"
+                aria-label="{{underlineLabel}}"
                 aria-pressed="false"
               >
-                <span class="diet-icon" data-icon="underline" aria-hidden="true" data-size="12"></span>
+                <span class="diet-icon" data-icon="underline" aria-hidden="true"></span>
               </button>
               <button
                 type="button"
@@ -57,10 +57,10 @@
                 data-size="small"
                 data-type="quaternary"
                 data-command="strike"
-                aria-label="Strikethrough"
+                aria-label="{{strikethroughLabel}}"
                 aria-pressed="false"
               >
-                <span class="diet-icon" data-icon="strikethrough" aria-hidden="true" data-size="12"></span>
+                <span class="diet-icon" data-icon="strikethrough" aria-hidden="true"></span>
               </button>
               <button
                 type="button"
@@ -68,12 +68,14 @@
                 data-size="small"
                 data-type="quaternary"
                 data-command="link"
-                aria-label="Link"
+                aria-label="{{linkLabel}}"
+                aria-pressed="false"
+                disabled
               >
-                <span class="diet-icon" data-icon="link" aria-hidden="true" data-size="12"></span>
+                <span class="diet-icon" data-icon="link" aria-hidden="true"></span>
               </button>
             </div>
-            <span class="diet-dropdown-edit__divider is-hidden"></span>
+            <span class="diet-dropdown-edit__divider"></span>
             <div class="diet-dropdown-edit__group diet-dropdown-edit__group--clear">
               <button
                 type="button"
@@ -81,19 +83,10 @@
                 data-size="small"
                 data-type="quaternary"
                 data-command="clear-format"
-                aria-label="Clear formatting"
+                aria-label="{{clearFormattingLabel}}"
+                disabled
               >
-                <span class="diet-icon" data-icon="arrow.counterclockwise" aria-hidden="true" data-size="12"></span>
-              </button>
-              <button
-                type="button"
-                class="diet-button"
-                data-size="small"
-                data-type="quaternary"
-                data-command="clear-links"
-                aria-label="Clear links"
-              >
-                <span class="diet-icon" data-icon="personalhotspot.slash" aria-hidden="true" data-size="12"></span>
+                <span class="diet-icon" data-icon="arrow.counterclockwise" aria-hidden="true"></span>
               </button>
             </div>
           </div>
@@ -101,7 +94,7 @@
           <div class="diet-dropdown-edit__linksheet" aria-hidden="true">
             <div class="diet-popaddlink diet-popover" data-state="empty">
               <div class="diet-popover__header">
-                <span class="diet-popover__header-label label-s">Add URL</span>
+                <span class="diet-popover__header-label label-s">{{linkLabel}}</span>
                 <button
                   type="button"
                   class="diet-button diet-popover__header-trigger diet-popaddlink__close"
@@ -110,17 +103,17 @@
                   aria-hidden="true"
                   tabindex="-1"
                 >
-                  <span class="diet-icon" data-icon="multiply" aria-hidden="true" data-size="12"></span>
+                  <span class="diet-icon" data-icon="multiply" aria-hidden="true"></span>
                 </button>
               </div>
               <div class="diet-popover__body">
                 <div class="diet-textfield" data-size="md">
                   <label class="diet-textfield__control">
-                    <span class="diet-textfield__display-label label-s">URL</span>
+                    <span class="diet-textfield__display-label label-s">{{urlLabel}}</span>
                     <input
                       type="text"
                       class="diet-textfield__field body-s diet-popaddlink__input"
-                      aria-label="URL"
+                      aria-label="{{urlLabel}}"
                       placeholder="https://example.com"
                     />
                   </label>
@@ -129,11 +122,20 @@
                 <div class="diet-popaddlink__actions">
                   <button
                     type="button"
+                    class="diet-button diet-dropdown-edit__remove-link"
+                    data-size="medium"
+                    data-type="secondary"
+                    hidden
+                  >
+                    <span class="diet-button__label">{{removeLinkLabel}}</span>
+                  </button>
+                  <button
+                    type="button"
                     class="diet-button diet-popaddlink__apply"
                     data-size="medium"
                     data-type="primary"
                   >
-                    <span class="diet-button__label">Apply</span>
+                    <span class="diet-button__label">{{applyLabel}}</span>
                   </button>
                 </div>
               </div>

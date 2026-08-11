@@ -47,11 +47,10 @@
       .replace(/'/g, '&#39;');
   }
 
-  function sanitizeInlineHtml(html, allowLinks) {
+  function sanitizeInlineHtml(html) {
     const wrapper = document.createElement('div');
     wrapper.innerHTML = String(html);
-    const allowed = new Set(['STRONG', 'B', 'EM', 'I', 'U', 'S', 'BR']);
-    if (allowLinks) allowed.add('A');
+    const allowed = new Set(['STRONG', 'B', 'EM', 'I', 'U', 'S', 'A', 'BR']);
     wrapper.querySelectorAll('*').forEach((node) => {
       const el = node;
       const tag = el.tagName;
@@ -275,17 +274,21 @@
   function renderAnswerHtml(html) {
     if (html == null) throw new Error('[FAQ] answer must be a string');
 
-    return sanitizeInlineHtml(html, true);
+    return sanitizeInlineHtml(html);
   }
 
   function collapseAll(listEl) {
-    listEl.querySelectorAll('[data-role="faq-question"]').forEach((button) => {
-      button.setAttribute('aria-expanded', 'false');
+    listEl.querySelectorAll('[data-role="faq-question"]').forEach((question) => {
+      setExpanded(question, false);
     });
   }
 
-  function setExpanded(button, expanded) {
-    button.setAttribute('aria-expanded', String(expanded));
+  function setExpanded(question, expanded) {
+    question.setAttribute('data-expanded', String(expanded));
+    const toggle = question.querySelector('[data-role="faq-question-toggle"]');
+    if (toggle instanceof HTMLButtonElement) {
+      toggle.setAttribute('aria-expanded', String(expanded));
+    }
   }
 
   const accordionRuntime = {
@@ -304,10 +307,10 @@
     for (const item of items) {
       if (!(item instanceof HTMLElement)) continue;
       if (item.id !== targetId) continue;
-      const button = item.querySelector('[data-role="faq-question"]');
-      if (!(button instanceof HTMLElement)) return;
+      const question = item.querySelector('[data-role="faq-question"]');
+      if (!(question instanceof HTMLElement)) return;
       if (!accordionRuntime.multiOpen) collapseAll(listEl);
-      setExpanded(button, true);
+      setExpanded(question, true);
       return;
     }
   }
@@ -326,25 +329,34 @@
 
         const items = section.faqs
           .map((item) => {
-            const qText = sanitizeInlineHtml(item.question, false);
+            const qText = sanitizeInlineHtml(item.question);
             const answerHtml = renderAnswerHtml(item.answer);
             const anchorId = instanceId ? `faq-q-${instanceId}-${item.id}` : `faq-q-${item.id}`;
             const answerId = instanceId ? `faq-a-${instanceId}-${item.id}` : `faq-a-${item.id}`;
-            const questionTag = isAccordion ? 'button' : 'div';
+            const questionTextId = `${anchorId}-text`;
             const questionAttrs = isAccordion
-              ? `type="button" aria-expanded="false" aria-controls="${escapeHtml(answerId)}"`
+              ? 'data-expanded="false"'
               : 'role="heading" aria-level="3"';
             const iconMarkup = isAccordion
               ? `
-                  <span class="ck-faq__q-icon diet-icon" data-size="16" aria-hidden="true"></span>
+                  <button
+                    type="button"
+                    class="ck-faq__q-toggle"
+                    data-role="faq-question-toggle"
+                    aria-expanded="false"
+                    aria-controls="${escapeHtml(answerId)}"
+                    aria-labelledby="${escapeHtml(questionTextId)}"
+                  >
+                    <span class="ck-faq__q-icon diet-icon" data-size="16" aria-hidden="true"></span>
+                  </button>
                 `
               : '';
             return `
               <li class="ck-faq__item" data-role="faq-item" id="${escapeHtml(anchorId)}">
-                <${questionTag} class="ck-faq__q" data-role="faq-question" ${questionAttrs}>
-                  <span class="ck-faq__q-text" data-role="faq-question-text">${qText}</span>
+                <div class="ck-faq__q" data-role="faq-question" ${questionAttrs}>
+                  <span id="${escapeHtml(questionTextId)}" class="ck-faq__q-text" data-role="faq-question-text">${qText}</span>
                   ${iconMarkup}
-                </${questionTag}>
+                </div>
                 <div class="ck-faq__a" data-role="faq-answer" role="region" id="${escapeHtml(
                   answerId,
                 )}">${answerHtml}</div>
@@ -453,14 +465,15 @@
     if (!accordionRuntime.isAccordion) return;
     const target = event.target;
     if (!(target instanceof HTMLElement)) return;
-    const button = target.closest('[data-role="faq-question"]');
-    if (!(button instanceof HTMLButtonElement)) return;
-    const isOpen = button.getAttribute('aria-expanded') === 'true';
+    if (target.closest('a')) return;
+    const question = target.closest('[data-role="faq-question"]');
+    if (!(question instanceof HTMLElement)) return;
+    const isOpen = question.getAttribute('data-expanded') === 'true';
     const next = !isOpen;
     if (!accordionRuntime.multiOpen) collapseAll(listEl);
-    setExpanded(button, next);
+    setExpanded(question, next);
     if (accordionRuntime.deepLinksEnabled && next) {
-      const item = button.closest('[data-role="faq-item"]');
+      const item = question.closest('[data-role="faq-item"]');
       if (item instanceof HTMLElement && item.id) {
         window.location.hash = item.id;
       }
@@ -539,10 +552,10 @@
     let desiredExpandedAnchorIds = null;
     const captureExpandedAnchors = () => {
       const expanded = [];
-      listEl.querySelectorAll('[data-role="faq-question"]').forEach((button) => {
-        if (!(button instanceof HTMLElement)) return;
-        if (button.getAttribute('aria-expanded') !== 'true') return;
-        const item = button.closest('[data-role="faq-item"]');
+      listEl.querySelectorAll('[data-role="faq-question"]').forEach((question) => {
+        if (!(question instanceof HTMLElement)) return;
+        if (question.getAttribute('data-expanded') !== 'true') return;
+        const item = question.closest('[data-role="faq-item"]');
         if (item instanceof HTMLElement && item.id) expanded.push(item.id);
       });
       return expanded;
@@ -581,7 +594,7 @@
       return;
     }
 
-    const buttons = listEl.querySelectorAll('[data-role="faq-question"]');
+    const questions = listEl.querySelectorAll('[data-role="faq-question"]');
     accordionRuntime.isAccordion = true;
     accordionRuntime.multiOpen = state.faq.behavior.multiOpen === true;
     const sig = JSON.stringify([
@@ -593,10 +606,6 @@
     ]);
     if (desiredExpandedAnchorIds && desiredExpandedAnchorIds.length) {
       lastAccordionSignature = sig;
-      buttons.forEach((button) => {
-        if (button instanceof HTMLButtonElement) button.disabled = false;
-        button.removeAttribute('tabindex');
-      });
       collapseAll(listEl);
 
       const escapeId = (id) => {
@@ -607,35 +616,25 @@
       want.forEach((anchorId) => {
         const item = listEl.querySelector(`#${escapeId(anchorId)}`);
         if (!(item instanceof HTMLElement)) return;
-        const button = item.querySelector('[data-role="faq-question"]');
-        if (!(button instanceof HTMLElement)) return;
-        setExpanded(button, true);
+        const question = item.querySelector('[data-role="faq-question"]');
+        if (!(question instanceof HTMLElement)) return;
+        setExpanded(question, true);
       });
     } else if (sig !== lastAccordionSignature) {
       lastAccordionSignature = sig;
-      buttons.forEach((button) => {
-        if (button instanceof HTMLButtonElement) button.disabled = false;
-        button.removeAttribute('tabindex');
-      });
       collapseAll(listEl);
 
       if (state.faq.behavior.expandAll === true) {
-        buttons.forEach((button) => setExpanded(button, true));
+        questions.forEach((question) => setExpanded(question, true));
       } else if (state.faq.sections.some((section) => section.faqs.some((faq) => faq.defaultOpen === true))) {
         const flat = state.faq.sections.flatMap((section) => section.faqs);
-        buttons.forEach((button, idx) => {
-          if (flat[idx]?.defaultOpen === true) setExpanded(button, true);
+        questions.forEach((question, idx) => {
+          if (flat[idx]?.defaultOpen === true) setExpanded(question, true);
         });
       } else if (state.faq.behavior.expandFirst === true) {
-        const first = buttons[0];
+        const first = questions[0];
         if (first) setExpanded(first, true);
       }
-    } else {
-      // Keep the currently expanded/collapsed state as-is; no churn on stage/pod changes.
-      buttons.forEach((button) => {
-        if (button instanceof HTMLButtonElement) button.disabled = false;
-        button.removeAttribute('tabindex');
-      });
     }
 
     applyDeepLink();

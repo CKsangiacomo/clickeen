@@ -60,6 +60,17 @@
           "hex": "$label:component.dropdown-border.hex.label",
           "hue": "$label:component.dropdown-border.hue.label",
           "width": "$label:component.dropdown-border.width.label"
+        },
+        "dropdown-edit": {
+          "apply": "$label:component.dropdown-edit.apply.label",
+          "bold": "$label:component.dropdown-edit.bold.label",
+          "clearFormatting": "$label:component.dropdown-edit.clear-formatting.label",
+          "italic": "$label:component.dropdown-edit.italic.label",
+          "link": "$label:component.dropdown-edit.link.label",
+          "removeLink": "$label:component.dropdown-edit.remove-link.label",
+          "strikethrough": "$label:component.dropdown-edit.strikethrough.label",
+          "underline": "$label:component.dropdown-edit.underline.label",
+          "url": "$label:component.dropdown-edit.url.label"
         }
       },
       "fields": {
@@ -90,7 +101,6 @@
                 "attrs": {
                   "size": "lg",
                   "placeholder": "$label:content.field.big-bang.statement.dropdown-edit.attr.placeholder",
-                  "allow-links": "false",
                   "required": true
                 }
               },
@@ -110,8 +120,7 @@
                 "label": "$label:content.field.big-bang.supporting-copy.dropdown-edit.label",
                 "attrs": {
                   "size": "md",
-                  "placeholder": "$label:content.field.big-bang.supporting-copy.dropdown-edit.attr.placeholder",
-                  "allow-links": "false"
+                  "placeholder": "$label:content.field.big-bang.supporting-copy.dropdown-edit.attr.placeholder"
                 },
                 "showIf": {
                   "path": "bigBang.showSupportingCopy",

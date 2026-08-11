@@ -377,7 +377,8 @@ declared support files
 `spec.json` carries defaults, editor structure, and ToolDrawer label tokens.
 `{widgetType}_tooldrawer_l10n_labels/en.json` carries the exact English values
 for those tokens, the five widget panel names, and migrated ToolDrawer copy
-such as Agent Activity's title and Dropdown Border's field/component labels.
+such as Agent Activity's title and Dropdown Border and Dropdown Edit
+field/component labels.
 The Widget spec declares the exact state path and label-token coordinates; Bob
 joins them with the one Dieter component without Widget-specific compiler
 branches. `editable-fields.json`
@@ -450,6 +451,15 @@ Common primitives include:
 
 Controls emit edit operations. The edit engine applies those operations to the
 current in-memory instance state.
+
+Dropdown Edit is the shared Dieter inline rich-text control. Bob compiles every
+Widget `type="dropdown-edit"` declaration with that Widget's adjacent English
+field and component labels, then binds its existing compact inline HTML string
+to the control. The locally bundled Lexical engine owns editing only; Bob still
+owns the browser-memory draft, undo, preview, and Save boundary. Every Dropdown
+Edit field supports inline emphasis, links, line breaks, selected-only format
+clearing, and pasted inline formatting. No per-field link flag, Widget branch,
+runtime catalog fetch, or Lexical storage document exists.
 
 Bob's visible control taxonomy is `Panel > Section > optional Group > Control`.
 Widget specs own the five fixed widget panel ids and label-token coordinates;

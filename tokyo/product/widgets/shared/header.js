@@ -38,11 +38,10 @@
     el.style.setProperty(cssVar, String(value) + 'px');
   }
 
-  function sanitizeInlineHtml(html, allowLinks) {
+  function sanitizeInlineHtml(html) {
     var wrapper = document.createElement('div');
     wrapper.innerHTML = String(html || '');
-    var allowed = { STRONG: true, B: true, EM: true, I: true, U: true, S: true, BR: true };
-    if (allowLinks) allowed.A = true;
+    var allowed = { STRONG: true, B: true, EM: true, I: true, U: true, S: true, A: true, BR: true };
 
     var nodes = wrapper.querySelectorAll('*');
     nodes.forEach(function (node) {
@@ -241,12 +240,12 @@
     headerEl.dataset.align = state.header.alignment;
     headerEl.dataset.ctaPlacement = state.header.ctaPlacement;
 
-    var titleHtml = sanitizeInlineHtml(state.header.title, false);
+    var titleHtml = sanitizeInlineHtml(state.header.title);
     titleEl.innerHTML = titleHtml;
     titleEl.hidden = !hasHeader || !titleHtml;
 
     var wantsSubtitle = hasHeader && state.header.showSubtitle === true;
-    var subtitleHtml = wantsSubtitle ? sanitizeInlineHtml(state.header.subtitleHtml, true) : '';
+    var subtitleHtml = wantsSubtitle ? sanitizeInlineHtml(state.header.subtitleHtml) : '';
     subtitleEl.innerHTML = subtitleHtml;
     subtitleEl.hidden = !wantsSubtitle || !subtitleHtml;
 

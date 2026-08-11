@@ -68,6 +68,10 @@ cards.items[].media.imageAlt
 cards.items[].link.label
 ```
 
+`header.title`, `header.subtitleHtml`, `cards.items[].title`, and
+`cards.items[].copy` are rich-text Dropdown Edit fields. Their saved inline
+HTML supports emphasis, `br`, and `http(s)` links.
+
 `cards.items[]` entries carry stable `id` values in widget Core state.
 
 ## Limits
@@ -100,7 +104,7 @@ Runtime invariants:
 
 - `cards.items[]` must contain 2-16 cards.
 - `cards.items[]` must contain stable, unique item ids.
-- Card `title` and `copy` are required non-empty values.
+- Card `title` and `copy` are required non-empty rich-text values.
 - `cards.items[].media.kind` is `none`, `icon`, or `image`.
 - Image cards require `cards.items[].media.image.src`.
 - Icon cards require a Dieter icon name.

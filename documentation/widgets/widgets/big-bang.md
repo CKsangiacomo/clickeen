@@ -73,6 +73,10 @@ bigBang.statement
 bigBang.supportingCopy
 ```
 
+`header.title`, `header.subtitleHtml`, `bigBang.statement`, and
+`bigBang.supportingCopy` are rich-text Dropdown Edit fields. Their saved inline
+HTML supports emphasis, `br`, and `http(s)` links.
+
 ## Limits
 
 ```text

@@ -13,7 +13,7 @@
   function sanitizeInlineHtml(html) {
     const wrapper = document.createElement('div');
     wrapper.innerHTML = String(html || '');
-    const allowed = new Set(['STRONG', 'B', 'EM', 'I', 'U', 'S', 'BR']);
+    const allowed = new Set(['STRONG', 'B', 'EM', 'I', 'U', 'S', 'BR', 'A']);
     wrapper.querySelectorAll('*').forEach(function (node) {
       const el = node;
       if (!allowed.has(el.tagName)) {
@@ -23,9 +23,27 @@
         parent.removeChild(el);
         return;
       }
-      Array.from(el.attributes).forEach(function (attr) {
-        el.removeAttribute(attr.name);
-      });
+      if (el.tagName === 'A') {
+        const href = el.getAttribute('href') || '';
+        if (!/^https?:\/\//i.test(href)) {
+          el.removeAttribute('href');
+          el.removeAttribute('target');
+          el.removeAttribute('rel');
+        } else if (el.getAttribute('target') === '_blank') {
+          el.setAttribute('rel', 'noopener');
+        } else {
+          el.removeAttribute('rel');
+        }
+        Array.from(el.attributes).forEach(function (attr) {
+          if (attr.name === 'href' || attr.name === 'target' || attr.name === 'rel') return;
+          if (attr.name === 'class' && /\bdiet-dropdown-edit-link\b/.test(attr.value)) return;
+          el.removeAttribute(attr.name);
+        });
+      } else {
+        Array.from(el.attributes).forEach(function (attr) {
+          el.removeAttribute(attr.name);
+        });
+      }
     });
     return wrapper.innerHTML;
   }

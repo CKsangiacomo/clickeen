@@ -169,8 +169,23 @@ The governing component product law is:
 - The six dropdown triggers are native buttons.
 - `dropdown-actions` is one immediate-choice listbox workflow; its dead
   footer/apply branch is gone.
-- `dropdown-edit` shows the leading portion of long closed-trigger text and
-  applies an end ellipsis when the row cannot fit the complete value.
+- Dropdown Edit is the consumer-agnostic inline rich-text primitive for every
+  ToolDrawer field declared with `type="dropdown-edit"`. Its closed row shows
+  the leading portion of the current value and applies an end ellipsis only
+  when the trailing rail cannot fit it. Its attached Popover contains a
+  writing surface plus Bold, Italic, Underline, Strikethrough, Link, and Clear
+  formatting actions. Link is available for every Dropdown Edit field: a text
+  selection can receive a link, and a selection or caret inside an existing
+  link can edit or remove it. Clear formatting affects the selected formatting
+  and does not remove links. The component does not preselect text when it
+  opens.
+  Dropdown Edit uses the pinned, locally bundled Lexical editor engine. It does
+  not call an external runtime service and does not introduce a new persisted
+  document format: Bob's browser-memory value remains the existing compact
+  inline HTML string using `strong`, `em`, `u`, `s`, `a`, and `br`. Empty is
+  exactly `""`. Widget-adjacent ToolDrawer label files supply every visible
+  component action and field word through the existing compiler join; Dieter
+  owns no product copy or Widget-specific behavior.
 - Object Manager dialog lifecycle remains owned by the dialog contract.
 
 Bulk Edit and Object Manager follow the exact dismissal contract in

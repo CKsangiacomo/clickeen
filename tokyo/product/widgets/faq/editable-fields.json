@@ -38,7 +38,7 @@
     {
       "path": "faq.sections[].faqs[].question",
       "label": "FAQ question",
-      "type": "string",
+      "type": "richtext",
       "role": "faq-question",
       "arrayItemIdentity": [
         "faq.sections[].id",

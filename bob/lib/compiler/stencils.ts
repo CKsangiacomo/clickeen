@@ -235,9 +235,6 @@ export async function buildContext(
   if (component === 'dropdown-fill' && !headerLabel) headerLabel = 'Color fill';
   if (component === 'dropdown-shadow' && !headerLabel) headerLabel = 'Shadow';
   const axis = attrs.axis || attrs['data-axis'] || (merged.axis as string) || '';
-  const allowLinks =
-    attrs.allowLinks ?? attrs['allow-links'] ?? (merged.allowLinks as string | undefined) ?? 'true';
-
   const min = attrs.min || (merged.min as string) || '';
   const max = attrs.max || (merged.max as string) || '';
   const step = attrs.step || (merged.step as string) || '';
@@ -265,7 +262,6 @@ export async function buildContext(
     path: pathAttr,
     headerLabel,
     allowImage,
-    allowLinks,
     fillModes: component === 'dropdown-fill' ? fillModes : undefined,
     min,
     max,
@@ -323,6 +319,16 @@ export async function buildContext(
     hexLabel: attrs.hexLabel || attrs['hex-label'] || '',
     hueLabel: attrs.hueLabel || attrs['hue-label'] || '',
     widthLabel: attrs.widthLabel || attrs['width-label'] || '',
+    applyLabel: attrs.applyLabel || attrs['apply-label'] || '',
+    boldLabel: attrs.boldLabel || attrs['bold-label'] || '',
+    clearFormattingLabel:
+      attrs.clearFormattingLabel || attrs['clear-formatting-label'] || '',
+    italicLabel: attrs.italicLabel || attrs['italic-label'] || '',
+    linkLabel: attrs.linkLabel || attrs['link-label'] || '',
+    removeLinkLabel: attrs.removeLinkLabel || attrs['remove-link-label'] || '',
+    strikethroughLabel: attrs.strikethroughLabel || attrs['strikethrough-label'] || '',
+    underlineLabel: attrs.underlineLabel || attrs['underline-label'] || '',
+    urlLabel: attrs.urlLabel || attrs['url-label'] || '',
   });
 
   // Segmented is special: the Dieter stencil expects `segments` (not `options`), and the radio group name

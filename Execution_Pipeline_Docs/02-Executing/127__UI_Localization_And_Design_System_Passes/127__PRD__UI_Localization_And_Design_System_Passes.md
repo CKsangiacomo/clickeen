@@ -158,7 +158,7 @@ the code is convenient there.
 | Stage | Status | Release state |
 | --- | --- | --- |
 | Stage 1 — Scaffold only | Complete | Committed, pushed, and deployed; no non-English experience is exposed |
-| Stage 2 — Dieter UI pass | In progress: Foundations, Agent Activity, Bulk Edit, Button, Choice Tiles, Dropdown Actions, Popover, and Dropdown Border complete and re-audited as consumer-agnostic primitives; shared rest/Popover presentation is also applied to Dropdown Edit, Fill, Shadow, and Upload | This completed primitive group is ready for exact-SHA cloud-dev QA; the Edit, Fill, Shadow, and Upload behavior passes remain pending |
+| Stage 2 — Dieter UI pass | In progress: Foundations, Agent Activity, Bulk Edit, Button, Choice Tiles, Dropdown Actions, Popover, Dropdown Border, and Dropdown Edit complete and re-audited as consumer-agnostic primitives; shared rest/Popover presentation is also applied to Fill, Shadow, and Upload | This completed primitive group is ready for exact-SHA cloud-dev QA; the Fill, Shadow, and Upload behavior passes remain pending |
 | Stage 3 — Bob UI pass | Not started | No authority to begin until explicitly directed |
 | Stage 4 — Roma UI pass | Not started | No authority to begin until explicitly directed |
 | Stage 5 — Translation pass | Not started | No translations may be generated yet |
@@ -697,3 +697,25 @@ authorizes it.
   typecheck/governance, Bob typecheck and full focused suite, Roma typecheck
   and Widget command gates, repository typecheck/lint, exact label-shape scans,
   and diff checks passed.
+
+- **Dropdown Edit — passed, 2026-08-11.** The global Dieter primitive now uses
+  pinned, locally bundled Lexical for its inline rich-text editing behavior;
+  no browser runtime request or new Clickeen package/service was introduced.
+  The Popover provides Bold, Italic, Underline, Strikethrough, Link, Remove
+  link, and selected-only Clear formatting, with no automatic text selection.
+  Every Dropdown Edit field supports links. The persisted value remains the
+  existing compact inline HTML string using `strong`, `em`, `u`, `s`, `a`,
+  and `br`; pasted block boundaries become `br`, and empty remains exactly
+  `""`. The closed-row summary presents those line breaks as spaces without
+  changing the bound HTML. Bob continues to own browser-memory draft, undo,
+  preview, and Save. All visible component and field words resolve
+  from each Widget's adjacent ToolDrawer English file through the existing
+  compiler and English artifact path. The duplicated FAQ editor markup was
+  replaced by shared structured Dropdown Edit declarations. FAQ questions and
+  Cards titles are now correctly declared as rich text, and saved Widget
+  renderers preserve links for every Dropdown Edit-backed field. FAQ accordion
+  markup keeps the rich-text question and its actual expand control as
+  siblings, so following a question link does not toggle the accordion. No
+  per-Widget editor mode, per-field link flag, global label catalog, locale
+  folder, compatibility path, storage migration, Translation Agent change,
+  Cloudflare change, or non-English generation was added.

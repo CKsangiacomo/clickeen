@@ -1,4 +1,3 @@
-/* Base layout (mirrors diet-textfield) */
 .diet-dropdown-edit {
   --dropdown-edit-height: var(--control-size-md, 1.5rem);
   --dropdown-edit-radius: var(--control-radius-md, 0.375rem);
@@ -38,19 +37,10 @@
 }
 
 .diet-dropdown-edit > .diet-dropdown-header .diet-dropdown-header-value {
-  font: 400 var(--dropdown-edit-font-size)/var(--dropdown-edit-value-line-height) "Inter Tight", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
-}
-
-.diet-dropdown-edit > .diet-dropdown-header:focus-visible {
-  outline: none;
-  background: var(--color-system-white);
-  border-color: var(--color-system-blue);
-}
-
-.diet-dropdown-edit > .diet-dropdown-header .diet-dropdown-header-value {
   flex: 0 1 auto;
   max-inline-size: 100%;
   color: var(--color-system-black);
+  font: 400 var(--dropdown-edit-font-size)/var(--dropdown-edit-value-line-height) "Inter Tight", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
 }
 
 .diet-dropdown-edit > .diet-dropdown-header .diet-dropdown-header-value[data-muted='true'] {
@@ -71,124 +61,113 @@
   border-radius: var(--dropdown-edit-radius);
 }
 
-.diet-dropdown-edit__editor {
-  width: 100%;
-  min-height: 120px;
-  margin: 0;
-  padding: var(--space-2, 0.75rem);
-  border-radius: var(--control-radius-md, 0.375rem);
-  background: var(--color-system-white);
-  color: var(--color-text);
-  overflow: auto;
-  outline: none;
-}
-
-.diet-dropdown-edit__palette {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2, 0.75rem);
-}
-
 .diet-dropdown-edit__body {
   display: block;
 }
 
 .diet-dropdown-edit__main {
-  flex: 1 1 auto;
-  min-width: 0;
   display: grid;
-  gap: var(--space-2, 0.75rem);
+  gap: var(--space-2, 0.5rem);
+  min-inline-size: 0;
+}
+
+.diet-dropdown-edit__editor {
+  box-sizing: border-box;
+  inline-size: 100%;
+  min-block-size: 8rem;
+  max-block-size: 16rem;
+  margin: 0;
+  padding: var(--space-3, 0.75rem);
+  overflow: auto;
+  outline: none;
+  border-radius: var(--control-radius-md, 0.375rem);
+  background: var(--color-system-white);
+  color: var(--color-text);
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--color-system-black), transparent 84%);
+  font: 400 var(--fs-14, 0.875rem)/var(--lh-body-ui, 1.35) "Inter Tight", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+}
+
+.diet-dropdown-edit__editor:focus {
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--color-system-black), transparent 68%);
+}
+
+.diet-dropdown-edit__editor p {
+  margin: 0;
+}
+
+.diet-dropdown-edit__editor a {
+  color: var(--color-system-blue);
+  text-decoration: underline;
+  text-underline-offset: 0.12em;
+}
+
+.diet-dropdown-edit__text--underline {
+  text-decoration: underline;
+}
+
+.diet-dropdown-edit__text--strikethrough {
+  text-decoration: line-through;
+}
+
+.diet-dropdown-edit__text--underline-strikethrough {
+  text-decoration: underline line-through;
+}
+
+.diet-dropdown-edit__palette {
+  display: grid;
+  gap: var(--space-2, 0.5rem);
+}
+
+.diet-dropdown-edit__toolbarrow {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: var(--space-1, 0.25rem);
+  padding: var(--space-1, 0.25rem);
+  border-radius: var(--control-radius-md, 0.375rem);
+  background: color-mix(in oklab, var(--color-system-black), transparent 96%);
+}
+
+.diet-dropdown-edit__group {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1, 0.25rem);
+}
+
+.diet-dropdown-edit__toolbarrow .diet-button.is-active {
+  background: var(--color-system-blue-4);
+  color: var(--color-system-blue);
+}
+
+.diet-dropdown-edit__divider {
+  flex: 0 0 auto;
+  inline-size: 1px;
+  block-size: 1rem;
+  margin-inline: var(--space-1, 0.25rem);
+  background: color-mix(in oklab, var(--color-system-black), transparent 84%);
+}
+
+.diet-dropdown-edit.has-linksheet .diet-dropdown-edit__toolbarrow {
+  opacity: 0.48;
+  pointer-events: none;
 }
 
 .diet-dropdown-edit__linksheet {
   display: none;
-  padding-block-start: var(--space-2, 0.75rem);
-}
-
-/* Ensure URL validation strokes carry through when PopAddLink
-   is hosted by Dropdown Edit. This mirrors the component's own
-   state styles but scoped to the embedded instance. */
-.diet-dropdown-edit__linksheet .diet-popaddlink[data-state='invalid'] .diet-textfield__control,
-.diet-dropdown-edit__linksheet .diet-popaddlink[data-state='invalid'] .diet-textfield__control:focus-within {
-  border-color: var(--color-system-orange);
-}
-
-.diet-dropdown-edit__linksheet .diet-popaddlink[data-state='valid'] .diet-textfield__control,
-.diet-dropdown-edit__linksheet .diet-popaddlink[data-state='valid'] .diet-textfield__control:focus-within {
-  border-color: var(--color-system-green);
+  padding-block-start: var(--space-2, 0.5rem);
 }
 
 .diet-dropdown-edit.has-linksheet .diet-dropdown-edit__linksheet {
   display: block;
 }
 
-.diet-dropdown-edit__palette.has-linkform {
-  gap: var(--space-2, 0.75rem);
+.diet-dropdown-edit__linksheet .diet-popaddlink {
+  inline-size: 100%;
+  max-inline-size: none;
+  padding: 0;
+  box-shadow: none;
 }
 
-.diet-dropdown-edit__toolbarrow {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-1, 0.5rem);
-}
-
-.diet-dropdown-edit__group {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-1, 0.5rem);
-}
-
-.diet-dropdown-edit.has-linksheet .diet-dropdown-edit__toolbarrow button.diet-button {
-  opacity: 0.4;
-  cursor: default;
-  pointer-events: none;
-}
-
-.diet-dropdown-edit.has-linksheet .diet-dropdown-edit__toolbarrow button.diet-button[data-command='link'] {
-  opacity: 1;
-  pointer-events: none;
-}
-
-.diet-dropdown-edit__group--clear .diet-button {
-  color: color-mix(in oklab, var(--color-system-black), transparent 20%);
-}
-
-.diet-dropdown-edit__group--clear .diet-button:hover {
-  color: var(--color-system-black);
-}
-
-.diet-dropdown-edit__group--clear .is-hidden {
-  display: none !important;
-}
-
-.diet-dropdown-edit__divider {
-  width: 1px;
-  height: 20px;
-  background: color-mix(in oklab, var(--color-system-black), transparent 85%);
-  display: inline-block;
-}
-
-.diet-dropdown-edit__divider.is-hidden {
-  display: none;
-}
-
-.diet-dropdown-edit__linkapply[disabled] {
-  opacity: 0.4;
-  pointer-events: none;
-}
-
-.diet-dropdown-edit__editor .diet-dropdown-edit-linktemp {
-  /* Orange.4 highlight while editing link (temp marker) */
-  background: var(--color-system-orange-4);
-}
-
-/* Applied links: subtle green.4 highlight (editor + preview) */
-.diet-dropdown-edit__editor a.diet-dropdown-edit-link,
-.diet-dropdown-edit .diet-dropdown-header-value a[data-preview-link] {
-  background: var(--color-system-green-4);
-  border-radius: 0.25rem;
-  padding: 0 var(--space-0, 0.25rem);
-  color: inherit;
-  text-decoration: none;
+.diet-dropdown-edit__linksheet .diet-popaddlink__actions {
+  gap: var(--space-1, 0.25rem);
 }

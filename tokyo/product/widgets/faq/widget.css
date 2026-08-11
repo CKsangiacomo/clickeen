@@ -83,6 +83,17 @@
   letter-spacing: var(--typo-question-tracking, 0em);
 }
 
+.ck-faq__q-toggle {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
 .ck-faq__q-icon.diet-icon {
   flex: none;
   color: var(--faq-icon-color, var(--color-system-gray-2));
@@ -101,7 +112,7 @@
   mask-size: contain;
 }
 
-.ck-faq__q[aria-expanded='true'] .ck-faq__q-icon {
+.ck-faq__q[data-expanded='true'] .ck-faq__q-icon {
   -webkit-mask-image: var(--faq-icon-collapse, url("/dieter/icons/svg/minus.svg"));
   mask-image: var(--faq-icon-collapse, url("/dieter/icons/svg/minus.svg"));
 }
@@ -161,7 +172,7 @@
   display: none;
 }
 
-.ck-faq__q[aria-expanded='true'] + .ck-faq__a {
+.ck-faq__q[data-expanded='true'] + .ck-faq__a {
   display: block;
 }
 

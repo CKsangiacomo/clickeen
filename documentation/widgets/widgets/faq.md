@@ -67,6 +67,10 @@ faq.sections[].faqs[].question
 faq.sections[].faqs[].answer
 ```
 
+`header.title`, `header.subtitleHtml`, `faq.sections[].faqs[].question`, and
+`faq.sections[].faqs[].answer` are rich-text Dropdown Edit fields. Their saved
+inline HTML supports emphasis, `br`, and `http(s)` links.
+
 `faq.sections[]` and `faq.sections[].faqs[]` entries carry stable `id` values
 in widget Core state.
 
@@ -106,10 +110,12 @@ Runtime invariants:
 - `faq.sections[]` ids must be stable and unique.
 - `faq.sections[].faqs[]` ids must be stable and unique inside each section.
 - Runtime validates 1-20 sections and 1-100 FAQs per section.
-- Question and answer fields are customer-visible text and must stay in
+- Question and answer fields are customer-visible rich text and must stay in
   `editable-fields.json`.
-- Answer HTML is sanitized to inline tags and `http(s)` links. Question display
-  strips unsafe link behavior.
+- Question and answer HTML is limited to the supported inline tags and
+  `http(s)` links. In accordion layout, the question row and its dedicated
+  expand control are siblings of the rich-text link target, so following a
+  question link does not toggle the accordion.
 - The runtime handles `ck:copy-overrides` for exact FAQ copy paths and replies
   with `ck:copy-overrides-applied`; do not turn that into a generic mutation
   channel.

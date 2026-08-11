@@ -1,27 +1,32 @@
+import { $generateHtmlFromNodes, $generateNodesFromDOM } from '@lexical/html';
+import { $isLinkNode, $toggleLink, LinkNode } from '@lexical/link';
+import { registerRichText } from '@lexical/rich-text';
+import { $forEachSelectedTextNode } from '@lexical/selection';
+import {
+  $getRoot,
+  $getSelection,
+  $isRangeSelection,
+  $setSelection,
+  COMMAND_PRIORITY_HIGH,
+  createEditor,
+  FORMAT_TEXT_COMMAND,
+  IS_BOLD,
+  IS_ITALIC,
+  IS_STRIKETHROUGH,
+  IS_UNDERLINE,
+  KEY_ENTER_COMMAND,
+  TextNode,
+  type LexicalEditor,
+  type LexicalNode,
+  type RangeSelection,
+  type TextFormatType,
+} from 'lexical';
 import { createDropdownHydrator } from '../shared/dropdownToggle';
-import { hydratePopAddLink } from '../popaddlink/popaddlink';
 
+const EXTERNAL_SYNC_TAG = 'clickeen-dropdown-edit-external-sync';
+const SUPPORTED_TEXT_FORMAT = IS_BOLD | IS_ITALIC | IS_UNDERLINE | IS_STRIKETHROUGH;
 const states = new Map<HTMLElement, DropdownEditState>();
 
-const hydrateHost = createDropdownHydrator({
-  rootSelector: '.diet-dropdown-edit',
-  triggerSelector: '.diet-dropdown-edit__control',
-  popoverSelector: '.diet-popover',
-  onOpen: (root) => {
-    const state = states.get(root);
-    if (!state) return;
-    state.editor.focus({ preventScroll: true });
-    preselectInitialText(state);
-  },
-  onClose: (root) => {
-    const state = states.get(root);
-    if (!state) return;
-    state.selection = null;
-    closeInternalLinkSheet(state);
-  },
-});
-
-// Formatting commands supported by the palette.
 const Command = {
   Bold: 'bold',
   Italic: 'italic',
@@ -29,7 +34,6 @@ const Command = {
   Strike: 'strike',
   Link: 'link',
   ClearFormat: 'clear-format',
-  ClearLinks: 'clear-links',
 } as const;
 
 type Command = (typeof Command)[keyof typeof Command];
@@ -38,45 +42,48 @@ interface DropdownEditState {
   root: HTMLElement;
   control: HTMLElement;
   popover: HTMLElement;
-  editor: HTMLElement;
+  editorElement: HTMLElement;
+  editor: LexicalEditor;
   headerValue: HTMLElement;
   headerValueLabel: HTMLElement;
   hiddenInput: HTMLInputElement;
-  isActive: boolean;
-  pendingExternal?: string;
-  allowLinks: boolean;
-
-  palette: HTMLElement;
   paletteButtons: Map<Command, HTMLButtonElement>;
-  paletteLinkButton: HTMLButtonElement | null;
-  linkSheet: HTMLElement | null;
-  linkPopover: HTMLElement | null;
-  selection: Range | null;
-  activeAnchor: HTMLAnchorElement | null;
-  tempMarker: HTMLElement | null;
-  clearFormatButton: HTMLButtonElement;
-  clearLinksButton: HTMLButtonElement;
-  toolbarDivider: HTMLElement;
+  linkSheet: HTMLElement;
+  linkPopover: HTMLElement;
+  removeLinkButton: HTMLButtonElement;
+  savedLinkSelection: RangeSelection | null;
+  pendingExternal?: string;
 }
 
-export function hydrateDropdownEdit(scope: Element | DocumentFragment): void {
-  const roots = scope.querySelectorAll<HTMLElement>('.diet-dropdown-edit');
-  if (!roots.length) return;
+const hydrateHost = createDropdownHydrator({
+  rootSelector: '.diet-dropdown-edit',
+  triggerSelector: '.diet-dropdown-edit__control',
+  popoverSelector: ':scope > .diet-popover',
+  onOpen: (root) => {
+    const state = states.get(root);
+    state?.editor.focus();
+  },
+  onClose: (root) => {
+    const state = states.get(root);
+    if (!state) return;
+    closeLinkSheet(state);
+    if (state.pendingExternal !== undefined) {
+      applyExternalValue(state, state.pendingExternal);
+      state.pendingExternal = undefined;
+    }
+  },
+});
 
-  roots.forEach((root) => {
+export function hydrateDropdownEdit(scope: Element | DocumentFragment): void {
+  scope.querySelectorAll<HTMLElement>('.diet-dropdown-edit').forEach((root) => {
     if (states.has(root)) return;
     const state = createState(root);
     states.set(root, state);
     installHandlers(state);
-    syncFromInstanceData(state);
-    state.hiddenInput.addEventListener('external-sync', (ev: Event) => {
-      const custom = ev as CustomEvent<{ value?: string }>;
-      const value =
-        (custom.detail && typeof custom.detail.value === 'string' && custom.detail.value) ||
-        state.hiddenInput.value ||
-        state.hiddenInput.getAttribute('value') ||
-        '';
-      if (state.isActive) {
+    applyExternalValue(state, state.hiddenInput.value);
+    state.hiddenInput.addEventListener('external-sync', (event) => {
+      const value = (event as CustomEvent<{ value: string }>).detail.value;
+      if (state.root.dataset.state === 'open') {
         state.pendingExternal = value;
         return;
       }
@@ -88,606 +95,292 @@ export function hydrateDropdownEdit(scope: Element | DocumentFragment): void {
 }
 
 function createState(root: HTMLElement): DropdownEditState {
-  const control = root.querySelector<HTMLElement>('.diet-dropdown-edit__control');
-  const popover = root.querySelector<HTMLElement>('.diet-popover');
-  const editor = root.querySelector<HTMLElement>('.diet-dropdown-edit__editor');
-  const headerValue = root.querySelector<HTMLElement>('.diet-dropdown-header-value');
-  const headerValueLabel = root.querySelector<HTMLElement>('.diet-dropdown-edit__label');
-  const hiddenInput = root.querySelector<HTMLInputElement>('.diet-dropdown-edit__field');
-  const palette = root.querySelector<HTMLElement>('.diet-dropdown-edit__palette');
-  const linkSheet = root.querySelector<HTMLElement>('.diet-dropdown-edit__linksheet');
-  const linkPopover = linkSheet?.querySelector<HTMLElement>('.diet-popaddlink') ?? null;
-  const allowLinksAttr = root.getAttribute('data-allow-links');
-  const allowLinks =
-    allowLinksAttr == null
-      ? true
-      : !['false', '0', 'no'].includes(allowLinksAttr.trim().toLowerCase());
-
-  if (!control || !popover || !editor || !headerValue || !headerValueLabel || !hiddenInput || !palette) {
-    throw new Error('[textedit] missing DOM nodes');
-  }
-
+  const control = root.querySelector<HTMLElement>('.diet-dropdown-edit__control')!;
+  const popover = root.querySelector<HTMLElement>(':scope > .diet-popover')!;
+  const editorElement = root.querySelector<HTMLElement>('.diet-dropdown-edit__editor')!;
+  const headerValue = root.querySelector<HTMLElement>('.diet-dropdown-header-value')!;
+  const headerValueLabel = root.querySelector<HTMLElement>('.diet-dropdown-edit__label')!;
+  const hiddenInput = root.querySelector<HTMLInputElement>('.diet-dropdown-edit__field')!;
+  const palette = root.querySelector<HTMLElement>('.diet-dropdown-edit__palette')!;
+  const linkSheet = root.querySelector<HTMLElement>('.diet-dropdown-edit__linksheet')!;
+  const linkPopover = linkSheet.querySelector<HTMLElement>('.diet-popaddlink')!;
+  const removeLinkButton = linkPopover.querySelector<HTMLButtonElement>(
+    '.diet-dropdown-edit__remove-link',
+  )!;
   const paletteButtons = new Map<Command, HTMLButtonElement>();
-  palette.querySelectorAll<HTMLButtonElement>('button[data-command]').forEach((btn) => {
-    paletteButtons.set(btn.dataset.command as Command, btn);
+  palette.querySelectorAll<HTMLButtonElement>('button[data-command]').forEach((button) => {
+    paletteButtons.set(button.dataset.command as Command, button);
   });
-  const paletteLinkButton = paletteButtons.get(Command.Link) ?? null;
-  const clearFormatButton = paletteButtons.get(Command.ClearFormat);
-  const clearLinksButton = paletteButtons.get(Command.ClearLinks);
-  const toolbarDivider = palette.querySelector<HTMLElement>('.diet-dropdown-edit__divider');
-  if (!clearFormatButton || !clearLinksButton || !toolbarDivider) {
-    throw new Error('[textedit] missing clear buttons or divider');
-  }
 
-  if (linkPopover && allowLinks) {
-    hydratePopAddLink(linkPopover);
-  }
-
-  if (!allowLinks) {
-    if (paletteLinkButton) paletteLinkButton.style.display = 'none';
-    clearLinksButton.classList.add('is-hidden');
-    if (linkSheet) linkSheet.style.display = 'none';
-  }
+  const editor = createEditor({
+    html: {
+      export: new Map([[TextNode, exportInlineText]]),
+    },
+    namespace: 'clickeen-dropdown-edit',
+    nodes: [LinkNode],
+    theme: {
+      text: {
+        strikethrough: 'diet-dropdown-edit__text--strikethrough',
+        underline: 'diet-dropdown-edit__text--underline',
+        underlineStrikethrough: 'diet-dropdown-edit__text--underline-strikethrough',
+      },
+    },
+    onError(error) {
+      throw error;
+    },
+  });
+  registerRichText(editor);
+  editor.registerNodeTransform(TextNode, (textNode) => {
+    const format = textNode.getFormat() & SUPPORTED_TEXT_FORMAT;
+    if (textNode.getFormat() !== format) textNode.setFormat(format);
+    if (textNode.getStyle()) textNode.setStyle('');
+  });
+  editor.registerCommand(
+    KEY_ENTER_COMMAND,
+    (event) => {
+      const selection = $getSelection();
+      if (!$isRangeSelection(selection)) return false;
+      event?.preventDefault();
+      selection.insertLineBreak(false);
+      return true;
+    },
+    COMMAND_PRIORITY_HIGH,
+  );
+  editor.setRootElement(editorElement);
 
   return {
     root,
     control,
     popover,
+    editorElement,
     editor,
     headerValue,
     headerValueLabel,
     hiddenInput,
-    allowLinks,
-    palette,
     paletteButtons,
-    paletteLinkButton,
-    linkSheet: linkSheet ?? null,
+    linkSheet,
     linkPopover,
-    tempMarker: null,
-    clearFormatButton: clearFormatButton!,
-    clearLinksButton: clearLinksButton!,
-    toolbarDivider: toolbarDivider!,
-    selection: null,
-    activeAnchor: null,
-    isActive: false,
+    removeLinkButton,
+    savedLinkSelection: null,
   };
 }
 
 function installHandlers(state: DropdownEditState): void {
-  const { editor, palette, clearFormatButton, clearLinksButton, linkPopover, root } = state;
+  const { editor, editorElement, linkPopover, paletteButtons, removeLinkButton } = state;
 
-  palette.addEventListener('click', (ev) => {
-    const target = (ev.target as HTMLElement).closest<HTMLButtonElement>('button[data-command]');
-    if (!target) return;
-    const command = target.dataset.command as Command;
-    handleCommand(state, command);
+  paletteButtons.forEach((button, command) => {
+    button.addEventListener('pointerdown', (event) => event.preventDefault());
+    button.addEventListener('click', () => handleCommand(state, command));
   });
 
-  clearFormatButton.addEventListener('click', (ev) => {
-    ev.preventDefault();
-    clearAllFormatting(state);
+  linkPopover.addEventListener('popaddlink:submit', (event) => {
+    const href = (event as CustomEvent<{ href: string }>).detail.href;
+    applyLink(state, href);
   });
-  clearLinksButton.addEventListener('click', (ev) => {
-    ev.preventDefault();
-    clearAllLinks(state);
+  linkPopover.addEventListener('popaddlink:cancel', () => closeLinkSheet(state));
+  removeLinkButton.addEventListener('click', () => removeLink(state));
+  state.root.addEventListener('diet-dropdown-edit:close-linksheet', () => closeLinkSheet(state));
+
+  editor.registerUpdateListener(({ dirtyElements, dirtyLeaves, tags }) => {
+    updateToolbar(state);
+    if (tags.has(EXTERNAL_SYNC_TAG) || (dirtyElements.size === 0 && dirtyLeaves.size === 0)) {
+      return;
+    }
+    commitValue(state, exportInline(editor));
   });
 
-  editor.addEventListener('input', () => {
-    state.isActive = true;
-    syncPreview(state);
-    updateSelectionFromEditor(state);
-  });
-  editor.addEventListener('focus', () => {
-    state.isActive = true;
-  });
-  editor.addEventListener('mouseup', () => {
-    // While the link sheet is open, keep the original selection stable.
-    if (!state.root.classList.contains('has-linksheet')) {
-      updateSelectionFromEditor(state);
-    }
-  });
-  editor.addEventListener('keyup', () => {
-    if (!state.root.classList.contains('has-linksheet')) {
-      updateSelectionFromEditor(state);
-    }
-  });
-  editor.addEventListener('blur', () => {
-    state.isActive = false;
-    if (state.pendingExternal !== undefined) {
-      applyExternalValue(state, state.pendingExternal);
-      state.pendingExternal = undefined;
-    }
-    if (!state.root.classList.contains('has-linksheet')) {
-      state.selection = null;
-      updatePaletteActiveStates(state);
-    }
-  });
+  editorElement.addEventListener('focus', () => updateToolbar(state));
+}
 
-  if (linkPopover && state.allowLinks) {
-    linkPopover.addEventListener('popaddlink:submit', (ev) => {
-      const href = (ev as CustomEvent<{ href: string }>).detail?.href;
-      if (!href) return;
-      applyLinkFromHost(state, href);
-      closeInternalLinkSheet(state);
-    });
-    linkPopover.addEventListener('popaddlink:cancel', () => {
-      closeInternalLinkSheet(state);
-    });
+function handleCommand(state: DropdownEditState, command: Command): void {
+  const formatByCommand: Partial<Record<Command, TextFormatType>> = {
+    [Command.Bold]: 'bold',
+    [Command.Italic]: 'italic',
+    [Command.Underline]: 'underline',
+    [Command.Strike]: 'strikethrough',
+  };
+  const format = formatByCommand[command];
+  if (format) {
+    state.editor.dispatchCommand(FORMAT_TEXT_COMMAND, format);
+    return;
   }
+  if (command === Command.Link) {
+    openLinkSheet(state);
+    return;
+  }
+  if (command === Command.ClearFormat) {
+    state.editor.update(
+      () => {
+        const selection = $getSelection();
+        if (!$isRangeSelection(selection) || selection.isCollapsed()) return;
+        $forEachSelectedTextNode((textNode) => {
+          textNode.setFormat(0);
+          textNode.setStyle('');
+        });
+      },
+      { discrete: true },
+    );
+  }
+}
 
-  // Close link sheet when popover host closes
-  root.addEventListener('diet-dropdown-edit:close-linksheet', () => {
-    closeInternalLinkSheet(state);
+function updateToolbar(state: DropdownEditState): void {
+  state.editor.read(() => {
+    const selection = $getSelection();
+    const rangeSelection = $isRangeSelection(selection) ? selection : null;
+    const selectedLink = rangeSelection ? $findSelectedLink(rangeSelection) : null;
+    const hasSelectedText = Boolean(rangeSelection && !rangeSelection.isCollapsed());
+    const formatByCommand: Partial<Record<Command, TextFormatType>> = {
+      [Command.Bold]: 'bold',
+      [Command.Italic]: 'italic',
+      [Command.Underline]: 'underline',
+      [Command.Strike]: 'strikethrough',
+    };
+
+    state.paletteButtons.forEach((button, command) => {
+      const format = formatByCommand[command];
+      if (format) {
+        const active = Boolean(rangeSelection?.hasFormat(format));
+        button.classList.toggle('is-active', active);
+        button.setAttribute('aria-pressed', active ? 'true' : 'false');
+      }
+    });
+
+    const linkButton = state.paletteButtons.get(Command.Link);
+    if (linkButton) {
+      linkButton.disabled = !hasSelectedText && !selectedLink;
+      linkButton.classList.toggle('is-active', Boolean(selectedLink));
+      linkButton.setAttribute('aria-pressed', selectedLink ? 'true' : 'false');
+    }
+    const clearButton = state.paletteButtons.get(Command.ClearFormat);
+    if (clearButton) clearButton.disabled = !hasSelectedText;
   });
 }
 
-function preselectInitialText(state: DropdownEditState) {
-  const selection = window.getSelection();
+function openLinkSheet(state: DropdownEditState): void {
+  let href = '';
+  let selection: RangeSelection | null = null;
+  state.editor.read(() => {
+    const current = $getSelection();
+    if (!$isRangeSelection(current)) return;
+    const selectedLink = $findSelectedLink(current);
+    if (current.isCollapsed() && !selectedLink) return;
+    selection = current.clone();
+    href = selectedLink?.getURL() ?? '';
+  });
   if (!selection) return;
-  const text = state.editor.textContent ?? '';
-  if (!text.trim()) {
-    selection.removeAllRanges();
-    return;
-  }
-  const walker = document.createTreeWalker(state.editor, NodeFilter.SHOW_TEXT, {
-    acceptNode(node) {
-      return node.textContent && node.textContent.trim() ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_SKIP;
-    }
-  });
-  const first = walker.nextNode() as Text | null;
-  if (!first) return;
-  const range = document.createRange();
-  const textValue = first.textContent || '';
-  const words = textValue.trim().split(/\s+/);
-  const firstWord = words[0] || '';
-  const startIndex = first.textContent!.indexOf(firstWord);
-  range.setStart(first, Math.max(0, startIndex));
-  range.setEnd(first, Math.min(first.length, startIndex + firstWord.length));
-  selection.removeAllRanges();
-  selection.addRange(range);
-  state.selection = range.cloneRange();
-  updatePaletteActiveStates(state);
+
+  state.savedLinkSelection = selection;
+  state.removeLinkButton.hidden = !href;
+  const input = state.linkPopover.querySelector<HTMLInputElement>('.diet-popaddlink__input')!;
+  input.value = href;
+  input.dispatchEvent(new Event('input', { bubbles: true }));
+  state.root.classList.add('has-linksheet');
+  state.linkSheet.setAttribute('aria-hidden', 'false');
+  input.focus();
+  input.setSelectionRange(input.value.length, input.value.length);
 }
 
-function handleCommand(state: DropdownEditState, command: Command) {
-  if (!state.allowLinks && (command === Command.Link || command === Command.ClearLinks)) {
-    return;
-  }
-  switch (command) {
-    case Command.Bold:
-    case Command.Italic:
-    case Command.Underline:
-    case Command.Strike: {
-      const selection = window.getSelection();
-      const range = selection && selection.rangeCount > 0 ? selection.getRangeAt(0) : null;
-      if (range && state.editor.contains(range.commonAncestorContainer) && !range.collapsed) {
-        state.selection = range.cloneRange();
-      }
-      break;
-    }
-    default:
-      break;
-  }
-
-  switch (command) {
-    case Command.Bold:
-      surroundSelection(state, 'strong');
-      break;
-    case Command.Italic:
-      surroundSelection(state, 'em');
-      break;
-    case Command.Underline:
-      surroundSelection(state, 'u');
-      break;
-    case Command.Strike:
-      surroundSelection(state, 's');
-      break;
-    case Command.Link:
-      if (!state.selection) {
-        updateSelectionFromEditor(state);
-      }
-      openInternalLinkSheet(state);
-      return;
-    case Command.ClearFormat:
-      clearAllFormatting(state);
-      return;
-    case Command.ClearLinks:
-      clearAllLinks(state);
-      return;
-    default:
-      break;
-  }
-
-  syncPreview(state);
-  updatePaletteActiveStates(state);
+function applyLink(state: DropdownEditState, href: string): void {
+  const selection = state.savedLinkSelection;
+  if (!selection) return;
+  state.editor.update(
+    () => {
+      $setSelection(selection.clone());
+      $toggleLink(href, { rel: null });
+    },
+    { discrete: true },
+  );
+  closeLinkSheet(state);
+  state.editor.focus();
 }
 
-function updatePaletteActiveStates(state: DropdownEditState) {
-  const tags = collectFormattingTags(state.selection);
-  state.paletteButtons.forEach((btn, command) => {
-    let tag: string | null = null;
-    if (command === Command.Bold) tag = 'STRONG';
-    if (command === Command.Italic) tag = 'EM';
-    if (command === Command.Underline) tag = 'U';
-    if (command === Command.Strike) tag = 'S';
-    if (!tag) return;
-    const isActive = tags.has(tag);
-    btn.classList.toggle('is-active', isActive);
-    btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
-  });
-  updateClearButtons(state);
+function removeLink(state: DropdownEditState): void {
+  const selection = state.savedLinkSelection;
+  if (!selection) return;
+  state.editor.update(
+    () => {
+      $setSelection(selection.clone());
+      $toggleLink(null);
+    },
+    { discrete: true },
+  );
+  closeLinkSheet(state);
+  state.editor.focus();
 }
 
-function collectFormattingTags(range: Range | null): Set<string> {
-  const tags = new Set<string>();
-  if (!range) return tags;
-  const frag = range.cloneContents();
-  frag.querySelectorAll('*').forEach((node) => tags.add(node.tagName));
-  return tags;
+function closeLinkSheet(state: DropdownEditState): void {
+  state.root.classList.remove('has-linksheet');
+  state.linkSheet.setAttribute('aria-hidden', 'true');
+  state.savedLinkSelection = null;
 }
 
-function surroundSelection(state: DropdownEditState, tag: 'strong' | 'em' | 'u' | 's') {
-  const selection = window.getSelection();
-  if (!selection || selection.rangeCount === 0) return;
-  const range = selection.getRangeAt(0);
-  if (!state.editor.contains(range.commonAncestorContainer) || range.collapsed) return;
-
-  const wrapper = document.createElement(tag);
-  try {
-    range.surroundContents(wrapper);
-  } catch {
-    const contents = range.extractContents();
-    wrapper.append(contents);
-    range.insertNode(wrapper);
-  }
-
-  const nextRange = document.createRange();
-  nextRange.selectNodeContents(wrapper);
-  selection.removeAllRanges();
-  selection.addRange(nextRange);
-  state.selection = nextRange.cloneRange();
-}
-
-function openInternalLinkSheet(state: DropdownEditState) {
-  if (!state.allowLinks) return;
-  const { linkSheet, linkPopover, root } = state;
-  if (!linkSheet || !linkPopover) return;
-  if (!state.selection) return;
-
-  const range = state.selection.cloneRange();
-  const anchor = findAnchor(range);
-  state.activeAnchor = anchor || null;
-
-   // If we're creating a new link (no existing anchor), visually mark the
-   // selection so the user understands which text is being linked.
-   if (!anchor) {
-     clearTempMarker(state);
-     const marker = wrapTempMarker(range);
-     if (marker) {
-       state.tempMarker = marker;
-     }
-   }
-
-  const input = linkPopover.querySelector<HTMLInputElement>('.diet-popaddlink__input');
-  if (input) {
-    input.value = anchor?.getAttribute('href') || '';
-    input.dispatchEvent(new Event('input', { bubbles: true }));
-    setTimeout(() => {
-      input.focus();
-      input.selectionStart = input.selectionEnd = input.value.length;
-    }, 0);
-  }
-
-  root.classList.add('has-linksheet');
-  linkSheet.setAttribute('aria-hidden', 'false');
-}
-
-function applyLinkFromHost(state: DropdownEditState, href: string) {
-  if (!state.selection) {
-    updateSelectionFromEditor(state);
-  }
-  if (!state.selection) return;
-
-  const range = state.selection.cloneRange();
-  let anchor = state.activeAnchor && isRangeInsideAnchor(range, state.activeAnchor)
-    ? state.activeAnchor
-    : document.createElement('a');
-
-  anchor.setAttribute('href', href);
-
-  if (state.tempMarker && !state.activeAnchor) {
-    const marker = state.tempMarker;
-    const parent = marker.parentNode;
-    if (parent) {
-      const frag = document.createDocumentFragment();
-      while (marker.firstChild) frag.appendChild(marker.firstChild);
-      anchor.append(frag);
-      parent.replaceChild(anchor, marker);
-    }
-    state.tempMarker = null;
-  } else if (!anchor.parentNode || anchor === state.activeAnchor && !anchor.contains(range.commonAncestorContainer)) {
-    try {
-      range.surroundContents(anchor);
-    } catch {
-      const frag = range.extractContents();
-      anchor.append(frag);
-      range.insertNode(anchor);
-    }
-  }
-
-  anchor.classList.add('diet-dropdown-edit-link');
-
-  const newRange = document.createRange();
-  newRange.selectNodeContents(anchor);
-  const selection = window.getSelection();
-  if (selection) {
-    selection.removeAllRanges();
-    selection.addRange(newRange);
-  }
-  state.selection = newRange.cloneRange();
-
-  syncPreview(state);
-  updateClearButtons(state);
-  updatePaletteActiveStates(state);
-}
-
-function closeInternalLinkSheet(state: DropdownEditState) {
-  const { linkSheet, root } = state;
-  if (!linkSheet) return;
-  root.classList.remove('has-linksheet');
-  linkSheet.setAttribute('aria-hidden', 'true');
-  clearTempMarker(state);
-}
-
-function findAnchor(range: Range): HTMLAnchorElement | null {
-  let node: Node | null = range.commonAncestorContainer;
-  if (node instanceof HTMLAnchorElement) return node;
-  node = node.parentNode;
+function $findSelectedLink(selection: RangeSelection): LinkNode | null {
+  let node: LexicalNode | null = selection.anchor.getNode();
   while (node) {
-    if (node instanceof HTMLAnchorElement) return node;
-    node = node.parentNode;
+    if ($isLinkNode(node)) return node;
+    node = node.getParent();
   }
   return null;
 }
 
-function isRangeInsideAnchor(range: Range, anchor: HTMLAnchorElement): boolean {
-  return anchor.contains(range.startContainer) && anchor.contains(range.endContainer);
+function applyExternalValue(state: DropdownEditState, value: string): void {
+  state.editor.update(
+    () => {
+      const parsed = new DOMParser().parseFromString(`<p>${value}</p>`, 'text/html');
+      const nodes = $generateNodesFromDOM(state.editor, parsed);
+      const root = $getRoot();
+      root.clear();
+      root.append(...nodes);
+    },
+    { discrete: true, tag: EXTERNAL_SYNC_TAG },
+  );
+  state.hiddenInput.value = value;
+  updatePreview(state, value);
+  updateToolbar(state);
 }
 
-function updateSelectionFromEditor(state: DropdownEditState): void {
-  const selection = window.getSelection();
-  if (!selection || selection.rangeCount === 0) {
-    state.selection = null;
-    updatePaletteActiveStates(state);
-    return;
-  }
-  const range = selection.getRangeAt(0);
-  const container = range.commonAncestorContainer;
-  if (!state.editor.contains(container)) {
-    state.selection = null;
-    updatePaletteActiveStates(state);
-    return;
-  }
-  state.selection = range.collapsed ? null : range.cloneRange();
-  updatePaletteActiveStates(state);
-}
-
-function updateClearButtons(state: DropdownEditState): void {
-  const hasFormatting = Boolean(state.editor.querySelector('strong, b, em, i, u, s'));
-  const hasLinks = state.allowLinks ? Boolean(state.editor.querySelector('a')) : false;
-  state.clearFormatButton?.classList.toggle('is-hidden', !hasFormatting);
-  state.clearLinksButton?.classList.toggle('is-hidden', !hasLinks);
-  const showDivider = (hasFormatting || hasLinks) && state.toolbarDivider;
-  if (state.toolbarDivider) {
-    state.toolbarDivider.classList.toggle('is-hidden', !showDivider);
-  }
-}
-
-function clearAllFormatting(state: DropdownEditState): void {
-  const nodes = state.editor.querySelectorAll('strong, b, em, i, u, s');
-  nodes.forEach((el) => unwrapElement(el));
-  syncPreview(state);
-  updateClearButtons(state);
-}
-
-function clearAllLinks(state: DropdownEditState): void {
-  const nodes = state.editor.querySelectorAll('a');
-  nodes.forEach((anchor) => {
-    anchor.classList.remove('diet-dropdown-edit-link');
-    unwrapElement(anchor);
-  });
-  syncPreview(state);
-  updateClearButtons(state);
-}
-
-function unwrapElement(el: Element): void {
-  const parent = el.parentNode;
-  if (!parent) return;
-  while (el.firstChild) parent.insertBefore(el.firstChild, el);
-  parent.removeChild(el);
-}
-
-function wrapTempMarker(range: Range): HTMLElement | null {
-  if (range.collapsed) return null;
-  const marker = document.createElement('span');
-  marker.className = 'diet-dropdown-edit-linktemp';
-  try {
-    range.surroundContents(marker);
-  } catch {
-    return null;
-  }
-  return marker;
-}
-
-function clearTempMarker(state: DropdownEditState): void {
-  if (!state.tempMarker) return;
-  const marker = state.tempMarker;
-  const parent = marker.parentNode;
-  if (parent) {
-    while (marker.firstChild) parent.insertBefore(marker.firstChild, marker);
-    parent.removeChild(marker);
-  }
-  state.tempMarker = null;
-}
-
-function syncFromInstanceData(state: DropdownEditState) {
-  const value = state.hiddenInput.value || state.hiddenInput.getAttribute('value') || '';
-  // Initial hydration should never emit editor change events. Only user edits should.
-  applyExternalValue(state, value);
-}
-
-function applyExternalValue(state: DropdownEditState, raw: string) {
-  const value = raw || '';
-  const sanitized = sanitizeInline(value, state.allowLinks);
-  state.editor.innerHTML = sanitized;
-  const target = state.headerValueLabel;
-  if (sanitized) {
-    target.textContent = toPreviewText(sanitized);
-    state.headerValue.dataset.muted = 'false';
-  } else {
-    target.textContent = state.headerValue.dataset.placeholder ?? '';
-    state.headerValue.dataset.muted = 'true';
-  }
-  state.hiddenInput.value = sanitized;
-  updateClearButtons(state);
-}
-
-function syncPreview(state: DropdownEditState) {
-  const raw = state.editor.innerHTML.trim();
-  const sanitized = sanitizeInline(raw, state.allowLinks);
-  const target = state.headerValueLabel;
-  if (sanitized) {
-    target.textContent = toPreviewText(sanitized);
-  } else {
-    target.textContent = state.editor.textContent ?? '';
-  }
-  const hasValue = raw.length > 0;
-  state.headerValue.dataset.muted = hasValue ? 'false' : 'true';
-  if (!hasValue) {
-    target.textContent = state.headerValue.dataset.placeholder ?? '';
-  }
-
-  state.hiddenInput.value = sanitized;
+function commitValue(state: DropdownEditState, value: string): void {
+  state.hiddenInput.value = value;
+  updatePreview(state, value);
   state.hiddenInput.dispatchEvent(new Event('input', { bubbles: true }));
 }
 
-function toPreviewText(sanitized: string) {
-  const tmp = document.createElement('div');
-  tmp.innerHTML = sanitized;
-  const text = tmp.textContent ?? '';
-  return text.replace(/\s+/g, ' ').trim();
+function updatePreview(state: DropdownEditState, value: string): void {
+  const body = new DOMParser().parseFromString(value, 'text/html').body;
+  body.querySelectorAll('br').forEach((lineBreak) => lineBreak.replaceWith(' '));
+  const preview = body.textContent!.replace(/\s+/g, ' ').trim();
+  const hasValue = value.length > 0;
+  state.headerValue.dataset.muted = hasValue ? 'false' : 'true';
+  state.headerValueLabel.textContent = hasValue
+    ? preview
+    : state.headerValue.dataset.placeholder!;
 }
 
-type SanitizedNode =
-  | { type: 'text'; value: string }
-  | { type: 'br' }
-  | { type: 'tag'; tag: 'strong' | 'b' | 'em' | 'i' | 'u' | 's' | 'a'; attrs: Record<string, string>; children: SanitizedNode[] };
-
-function sanitizeInline(html: string, allowLinks = true): string {
-  const wrapper = document.createElement('div');
-  wrapper.innerHTML = html;
-  const allowed = new Set(['STRONG', 'B', 'EM', 'I', 'U', 'S', 'BR']);
-  if (allowLinks) allowed.add('A');
-
-  const sanitizeNode = (node: Node): SanitizedNode | SanitizedNode[] | null => {
-    if (node.nodeType === Node.TEXT_NODE) {
-      return { type: 'text', value: node.textContent || '' };
-    }
-    if (!(node instanceof HTMLElement)) return null;
-    const tag = node.tagName.toUpperCase();
-    if (!allowed.has(tag)) {
-      return Array.from(node.childNodes)
-        .map((child) => sanitizeNode(child))
-        .flat()
-        .filter(Boolean) as SanitizedNode[];
-    }
-    if (tag === 'BR') return { type: 'br' };
-
-    const attrs: Record<string, string> = {};
-    if (tag === 'A') {
-      const href = node.getAttribute('href') || '';
-      if (/^https?:\/\//i.test(href)) {
-        attrs.href = href;
-        if (node.getAttribute('target') === '_blank') {
-          attrs.target = '_blank';
-          attrs.rel = 'noopener';
-        }
-      }
-      const cls = node.getAttribute('class') || '';
-      if (/\bdiet-dropdown-edit-link\b/.test(cls)) {
-        attrs.class = 'diet-dropdown-edit-link';
-      }
-    }
-
-    const children = Array.from(node.childNodes)
-      .map((child) => sanitizeNode(child))
-      .flat()
-      .filter(Boolean) as SanitizedNode[];
-
-    return { type: 'tag', tag: tag.toLowerCase() as any, attrs, children };
-  };
-
-  const sanitizedChildren = Array.from(wrapper.childNodes)
-    .map((child) => sanitizeNode(child))
-    .flat()
-    .filter(Boolean) as SanitizedNode[];
-
-  const parts: string[] = [];
-
-  const startsWithNonSpace = (node: SanitizedNode | null): boolean => {
-    if (!node) return false;
-    if (node.type === 'text') return /^\S/.test(node.value);
-    if (node.type === 'br') return false;
-    return node.children.some((child) => startsWithNonSpace(child));
-  };
-  const endsWithNonSpace = (node: SanitizedNode | null): boolean => {
-    if (!node) return false;
-    if (node.type === 'text') return /\S$/.test(node.value);
-    if (node.type === 'br') return false;
-    for (let i = node.children.length - 1; i >= 0; i--) {
-      if (endsWithNonSpace(node.children[i])) return true;
-    }
-    return false;
-  };
-
-  const appendWithSpace = (node: SanitizedNode, prev: SanitizedNode | null) => {
-    const needSpace =
-      prev &&
-      prev.type !== 'br' &&
-      node.type !== 'br' &&
-      endsWithNonSpace(prev) &&
-      startsWithNonSpace(node);
-
-    if (needSpace) parts.push(' ');
-
-    if (node.type === 'text') {
-      parts.push(node.value);
-      return;
-    }
-    if (node.type === 'br') {
-      parts.push('<br>');
-      return;
-    }
-    if (node.type === 'tag') {
-      const attrs = Object.entries(node.attrs)
-        .map(([k, v]) => `${k}="${v.replace(/"/g, '&quot;')}"`)
-        .join(' ');
-      const open = attrs ? `<${node.tag} ${attrs}>` : `<${node.tag}>`;
-      parts.push(open);
-      let prevChild: SanitizedNode | null = null;
-      node.children.forEach((child) => {
-        appendWithSpace(child, prevChild);
-        prevChild = child;
-      });
-      parts.push(`</${node.tag}>`);
-    }
-  };
-
-  let prev: SanitizedNode | null = null;
-  sanitizedChildren.forEach((child) => {
-    appendWithSpace(child, prev);
-    prev = child;
+function exportInline(editor: LexicalEditor): string {
+  return editor.read(() => {
+    const root = $getRoot();
+    if (root.getTextContent() === '') return '';
+    const html = $generateHtmlFromNodes(editor, null);
+    const body = new DOMParser().parseFromString(html, 'text/html').body;
+    return Array.from(body.children)
+      .map((block) => (block.innerHTML === '<br>' ? '' : block.innerHTML))
+      .join('<br>');
   });
+}
 
-  return parts.join('');
+function exportInlineText(_editor: LexicalEditor, target: LexicalNode) {
+  const textNode = target as TextNode;
+  let element: Text | HTMLElement = document.createTextNode(textNode.getTextContent());
+  for (const [format, tagName] of [
+    ['bold', 'strong'],
+    ['italic', 'em'],
+    ['underline', 'u'],
+    ['strikethrough', 's'],
+  ] as const) {
+    if (!textNode.hasFormat(format)) continue;
+    const wrapper = document.createElement(tagName);
+    wrapper.append(element);
+    element = wrapper;
+  }
+  return { element };
 }

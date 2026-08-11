@@ -268,6 +268,15 @@ source fails widget generation. Toggle uses its native checkbox behavior.
 Dropdown triggers are native buttons, and `dropdown-actions` applies the
 selected value immediately.
 
+`dropdown-edit` declares an inline rich-text field. Every such field has the
+same Dieter behavior: Bold, Italic, Underline, Strikethrough, Link, selected-
+only Clear formatting, line breaks, and pasted inline formatting. Widgets do
+not opt individual fields into or out of links. The field value remains the
+existing compact inline HTML string; empty is exactly `""`. Each Widget's
+adjacent ToolDrawer label file supplies the field label, placeholder, and the
+exact Dropdown Edit component labels. Bob joins those values to the global
+Dieter stencil during the existing editor-artifact build.
+
 Compact property rows use one Dieter geometry contract: labels occupy the
 leading side and dropdown values, switches, text fields, and numeric fields
 terminate on the same trailing rail. On clickable property-menu rows, the
