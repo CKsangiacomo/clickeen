@@ -158,7 +158,7 @@ the code is convenient there.
 | Stage | Status | Release state |
 | --- | --- | --- |
 | Stage 1 — Scaffold only | Complete | Committed, pushed, and deployed; no non-English experience is exposed |
-| Stage 2 — Dieter UI pass | In progress: Foundations, Agent Activity, Bulk Edit, Button, Choice Tiles, Dropdown Actions, and Popover complete | Dropdown Actions and Popover are ready for exact-SHA cloud-dev QA |
+| Stage 2 — Dieter UI pass | In progress: Foundations, Agent Activity, Bulk Edit, Button, Choice Tiles, Dropdown Actions, Popover, and Dropdown Border complete | Dropdown Actions, Popover, Dropdown Border, and the shared property-menu rails are ready for exact-SHA cloud-dev QA |
 | Stage 3 — Bob UI pass | Not started | No authority to begin until explicitly directed |
 | Stage 4 — Roma UI pass | Not started | No authority to begin until explicitly directed |
 | Stage 5 — Translation pass | Not started | No translations may be generated yet |
@@ -599,17 +599,15 @@ authorizes it.
   an open-state blue treatment, internally owned words, a decorative header
   Icon, and permissive value repair. It is now one global Dieter component with
   no Widget-specific modes or compiler branches. Its exact value is
-  `{enabled:boolean,width:number,color:string}`; malformed, partial, or legacy
-  shapes remain visibly invalid. Root `sm|md|lg` coherently owns
+  `{enabled:boolean,width:number,color:string}`. Root `sm|md|lg` coherently owns
   `1.25rem/1.5rem/1.75rem` trigger heights, `.25rem/.375rem/.5rem` trigger and
   Popover radii, `.6875rem/.8125rem/.875rem` text, and
-  `.75rem/1rem/1.25rem` Icons. The closed trigger shows color plus width for an
-  active border and the existing `square.slash` Icon for no border. The
-  Popover header contains only the caller field label; Enabled sits directly
-  below it, and its false state hides the dependent color and width controls
-  without replacing their exact stored values. Color, width, and enabled
-  operations change only their own property; invalid Hex stays visible and is
-  not committed.
+  `.75rem/1rem/1.25rem` Icons. The closed trigger shows width followed by the
+  color chip for an active border and the existing `square.slash` Icon for no
+  border. The Popover header contains only the caller field label; Enabled
+  sits directly below it, and its false state hides the dependent color and
+  width controls without replacing their exact stored values. Color, width,
+  and enabled operations change only their own property.
   All visible words now come from each Widget's adjacent English ToolDrawer
   label file. Widget specs declare the component labels and exact generated
   field-path labels; directly authored Dropdown Border fields retain their
@@ -618,3 +616,24 @@ authorizes it.
   and all 31 current ToolDrawer uses remain `md`. No global label catalog,
   Dieter locale folder, Widget exception, compatibility path, translation,
   product-data mutation, Cloudflare change, or deployment machinery was added.
+
+- **Shared property-menu row rails — passed after correction, 2026-08-11.**
+  This component slice reused `components/shared/property-row.css`; it did not
+  add a row component, wrapper, schema, hydrator, compatibility path, or
+  validation layer. Dropdown Actions and Dropdown Border now keep the complete
+  caller field label on the leading rail and a right-aligned trailing rail.
+  Dynamic value text yields first and receives the end ellipsis; a fixed chip
+  or Icon remains visible. Compound values author text before the visual.
+  Rest and hover preserve identical geometry and hover applies to the complete
+  clickable row. Dropdown Actions is the simple label/value reference.
+  Dropdown Border is the compound reference: `1px` followed by the color chip,
+  or only `square.slash` for no border.
+  The Border hydrator now consumes its exact three-property Widget value
+  directly. Its former fallback value, malformed-source mode, invalid-Hex UI,
+  diagnostic label, compiler attribute, Widget label tokens, and matching CSS
+  were removed. The existing picker conversions and native interaction math
+  remain component behavior; runtime product work does not depend on a new
+  validator or test path. All eight English Widget artifact pairs and the two
+  DevStudio component reveals were regenerated from the existing authorities.
+  Dropdown Upload remains the separate single-file workflow and other
+  property-menu components remain unchanged for their own passes.

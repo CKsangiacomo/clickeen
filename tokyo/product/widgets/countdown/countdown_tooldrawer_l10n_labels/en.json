@@ -10,7 +10,6 @@
     "component.dropdown-border.enabled.label": "Enabled",
     "component.dropdown-border.hex.label": "Hex",
     "component.dropdown-border.hue.label": "Hue",
-    "component.dropdown-border.invalid.label": "Invalid border",
     "component.dropdown-border.width.label": "Width",
     "appearance.cluster.timer-background.label": "Timer background",
     "appearance.cluster.timer-text.label": "Timer text",

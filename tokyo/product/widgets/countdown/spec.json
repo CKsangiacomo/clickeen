@@ -139,7 +139,6 @@
           "enabled": "$label:component.dropdown-border.enabled.label",
           "hex": "$label:component.dropdown-border.hex.label",
           "hue": "$label:component.dropdown-border.hue.label",
-          "invalid": "$label:component.dropdown-border.invalid.label",
           "width": "$label:component.dropdown-border.width.label"
         }
       },

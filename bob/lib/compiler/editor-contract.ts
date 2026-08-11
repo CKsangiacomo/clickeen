@@ -90,7 +90,6 @@ type DropdownBorderEditorLabels = {
     enabled: string;
     hex: string;
     hue: string;
-    invalid: string;
     width: string;
   };
   fields: Record<string, string>;
@@ -506,7 +505,6 @@ function readDropdownBorderEditorLabels(
     'enabled',
     'hex',
     'hue',
-    'invalid',
     'width',
   ] as const;
   if (
@@ -565,7 +563,6 @@ function applyDropdownBorderEditorLabels(
       ['enabled-label', labels.component.enabled],
       ['hex-label', labels.component.hex],
       ['hue-label', labels.component.hue],
-      ['invalid-label', labels.component.invalid],
       ['width-label', labels.component.width],
     ]
       .map(([name, value]) => `${name}='${encodeHtmlEntities(value)}'`)

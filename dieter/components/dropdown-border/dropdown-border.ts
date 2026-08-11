@@ -9,12 +9,12 @@ type BorderValue = {
 type DropdownBorderState = {
   root: HTMLElement;
   input: HTMLInputElement;
-  headerValue: HTMLElement | null;
-  headerValueLabel: HTMLElement | null;
-  headerValueChip: HTMLElement | null;
-  headerValueNoneIcon: HTMLElement | null;
-  previewContainer: HTMLElement | null;
-  nativeColorInput: HTMLInputElement | null;
+  headerValue: HTMLElement;
+  headerValueLabel: HTMLElement;
+  headerValueChip: HTMLElement;
+  headerValueNoneIcon: HTMLElement;
+  previewContainer: HTMLElement;
+  nativeColorInput: HTMLInputElement;
   hueInput: HTMLInputElement;
   hexField: HTMLInputElement;
   svCanvas: HTMLElement;
@@ -24,13 +24,9 @@ type DropdownBorderState = {
   widthInput: HTMLInputElement;
   hsv: { h: number; s: number; v: number };
   border: BorderValue;
-  sourceValid: boolean;
-  hexDraftInvalid: boolean;
-  nativeValue?: { get: () => string; set: (next: string) => void };
+  nativeValue: { get: () => string; set: (next: string) => void };
   internalWrite: boolean;
 };
-
-const EMPTY_UI_BORDER: BorderValue = { enabled: false, width: 0, color: 'transparent' };
 
 const states = new Map<HTMLElement, DropdownBorderState>();
 
@@ -46,39 +42,34 @@ export function hydrateDropdownBorder(scope: Element | DocumentFragment): void {
   roots.forEach((root) => {
     if (states.has(root)) return;
     const state = createState(root);
-    if (!state) return;
     states.set(root, state);
     installHandlers(state);
-    const initialValue = state.input.value || state.input.getAttribute('value') || '';
-    syncFromValue(state, initialValue);
+    syncUI(state, false);
   });
 
   hydrateHost(scope);
 }
 
-function createState(root: HTMLElement): DropdownBorderState | null {
-  const input = root.querySelector<HTMLInputElement>('.diet-dropdown-border__value-field');
-  const headerValue = root.querySelector<HTMLElement>('.diet-dropdown-header-value');
-  const headerValueLabel = root.querySelector<HTMLElement>('.diet-dropdown-border__label');
-  const headerValueChip = root.querySelector<HTMLElement>('.diet-dropdown-border__chip');
-  const headerValueNoneIcon = root.querySelector<HTMLElement>('.diet-dropdown-border__none-icon');
-  const previewContainer = root.querySelector<HTMLElement>('.diet-dropdown-border__preview');
-  const nativeColorInput = root.querySelector<HTMLInputElement>('.diet-dropdown-border__native-color');
-  const hueInput = root.querySelector<HTMLInputElement>('.diet-dropdown-border__hue');
-  const hexField = root.querySelector<HTMLInputElement>('.diet-dropdown-border__hex');
-  const svCanvas = root.querySelector<HTMLElement>('.diet-dropdown-border__sv-canvas');
-  const svThumb = root.querySelector<HTMLElement>('.diet-dropdown-border__sv-thumb');
+function createState(root: HTMLElement): DropdownBorderState {
+  const input = root.querySelector<HTMLInputElement>('.diet-dropdown-border__value-field')!;
+  const headerValue = root.querySelector<HTMLElement>('.diet-dropdown-header-value')!;
+  const headerValueLabel = root.querySelector<HTMLElement>('.diet-dropdown-border__label')!;
+  const headerValueChip = root.querySelector<HTMLElement>('.diet-dropdown-border__chip')!;
+  const headerValueNoneIcon = root.querySelector<HTMLElement>('.diet-dropdown-border__none-icon')!;
+  const previewContainer = root.querySelector<HTMLElement>('.diet-dropdown-border__preview')!;
+  const nativeColorInput = root.querySelector<HTMLInputElement>('.diet-dropdown-border__native-color')!;
+  const hueInput = root.querySelector<HTMLInputElement>('.diet-dropdown-border__hue')!;
+  const hexField = root.querySelector<HTMLInputElement>('.diet-dropdown-border__hex')!;
+  const svCanvas = root.querySelector<HTMLElement>('.diet-dropdown-border__sv-canvas')!;
+  const svThumb = root.querySelector<HTMLElement>('.diet-dropdown-border__sv-thumb')!;
   const swatches = Array.from(root.querySelectorAll<HTMLButtonElement>('.diet-dropdown-border__swatch'));
-  const enabledInput = root.querySelector<HTMLInputElement>('.diet-dropdown-border__enabled');
-  const widthInput = root.querySelector<HTMLInputElement>('.diet-dropdown-border__width');
-
-  if (!input || !hueInput || !hexField || !svCanvas || !svThumb || !enabledInput || !widthInput) {
-    return null;
-  }
+  const enabledInput = root.querySelector<HTMLInputElement>('.diet-dropdown-border__enabled')!;
+  const widthInput = root.querySelector<HTMLInputElement>('.diet-dropdown-border__width')!;
+  const border = JSON.parse(input.value) as BorderValue;
 
   const nativeValue = captureNativeValue(input);
   swatches.forEach((swatch) => {
-    const color = swatch.dataset.color || '';
+    const color = swatch.dataset.color!;
     swatch.style.setProperty('--swatch-color', color);
   });
 
@@ -98,41 +89,32 @@ function createState(root: HTMLElement): DropdownBorderState | null {
     swatches,
     enabledInput,
     widthInput,
-    hsv: { h: 0, s: 0, v: 0 },
-    border: { ...EMPTY_UI_BORDER },
-    sourceValid: false,
-    hexDraftInvalid: false,
+    hsv: colorToHsv(border.color),
+    border,
     nativeValue,
     internalWrite: false,
   };
 }
 
 function installHandlers(state: DropdownBorderState) {
-  if (state.nativeValue) {
-    Object.defineProperty(state.input, 'value', {
-      configurable: true,
-      get: () => state.nativeValue?.get() ?? '',
-      set: (next: string) => {
-        state.nativeValue?.set(String(next ?? ''));
-        if (!state.internalWrite) syncFromValue(state, String(next ?? ''));
-      },
-    });
-  }
+  Object.defineProperty(state.input, 'value', {
+    configurable: true,
+    get: () => state.nativeValue.get(),
+    set: (next: string) => {
+      state.nativeValue.set(next);
+      if (!state.internalWrite) syncFromValue(state, next);
+    },
+  });
 
   state.input.addEventListener('external-sync', () => syncFromValue(state, state.input.value));
   state.input.addEventListener('input', () => syncFromValue(state, state.input.value));
 
   state.hueInput.addEventListener('input', () => {
-    if (!state.sourceValid) return;
-    state.hsv.h = clampNumber(Number(state.hueInput.value), 0, 360);
+    state.hsv.h = Number(state.hueInput.value);
     state.border.color = formatHex(state.hsv);
-    clearHexInvalid(state);
-    syncUI(state, { commit: true });
+    syncUI(state, true);
   });
 
-  state.hexField.addEventListener('input', () => {
-    setHexInvalid(state, !normalizeHex(state.hexField.value));
-  });
   state.hexField.addEventListener('change', () => handleHexInput(state));
   state.hexField.addEventListener('blur', () => handleHexInput(state));
 
@@ -141,47 +123,35 @@ function installHandlers(state: DropdownBorderState) {
   installNativeColorPicker(state);
 
   state.enabledInput.addEventListener('input', () => {
-    if (!state.sourceValid) return;
     state.border.enabled = state.enabledInput.checked;
-    syncUI(state, { commit: true });
+    syncUI(state, true);
   });
 
   state.widthInput.addEventListener('input', () => {
-    if (!state.sourceValid) return;
-    const parsed = Number(state.widthInput.value);
-    if (!Number.isFinite(parsed) || parsed < 0 || parsed > 12) return;
-    state.border.width = parsed;
-    syncUI(state, { commit: true });
+    state.border.width = Number(state.widthInput.value);
+    syncUI(state, true);
   });
 }
 
 function installNativeColorPicker(state: DropdownBorderState) {
   const { previewContainer, nativeColorInput } = state;
-  if (!previewContainer || !nativeColorInput) return;
 
   previewContainer.addEventListener('click', (event) => {
     event.preventDefault();
-    if (!state.sourceValid) return;
     nativeColorInput.value = formatHex(state.hsv);
     nativeColorInput.click();
   });
 
   nativeColorInput.addEventListener('input', () => {
-    if (!state.sourceValid) return;
-    const next = String(nativeColorInput.value || '').trim();
-    if (!next) return;
-    const hsv = parseColor(next, state.root);
-    if (!hsv) return;
-    state.hsv = hsv;
+    const next = nativeColorInput.value;
+    state.hsv = colorToHsv(next);
     state.border.color = next;
-    clearHexInvalid(state);
-    syncUI(state, { commit: true });
+    syncUI(state, true);
   });
 }
 
 function installSvCanvasHandlers(state: DropdownBorderState) {
   const move = (event: PointerEvent) => {
-    if (!state.sourceValid) return;
     const rect = state.svCanvas.getBoundingClientRect();
     const x = clampNumber(event.clientX - rect.left, 0, rect.width);
     const y = clampNumber(event.clientY - rect.top, 0, rect.height);
@@ -190,8 +160,7 @@ function installSvCanvasHandlers(state: DropdownBorderState) {
     state.hsv.s = clampNumber(s, 0, 1);
     state.hsv.v = clampNumber(v, 0, 1);
     state.border.color = formatHex(state.hsv);
-    clearHexInvalid(state);
-    syncUI(state, { commit: true });
+    syncUI(state, true);
   };
 
   const handlePointerDown = (event: PointerEvent) => {
@@ -211,43 +180,21 @@ function installSwatchHandlers(state: DropdownBorderState) {
   state.swatches.forEach((swatch) => {
     swatch.addEventListener('click', (event) => {
       event.preventDefault();
-      if (!state.sourceValid) return;
-      const color = swatch.dataset.color || '';
-      const parsed = parseColor(color, state.root);
-      if (!parsed) return;
-      state.hsv = parsed;
+      const color = swatch.dataset.color!;
+      state.hsv = colorToHsv(color);
       state.border.color = color;
-      clearHexInvalid(state);
-      syncUI(state, { commit: true });
+      syncUI(state, true);
     });
   });
 }
 
 function syncFromValue(state: DropdownBorderState, raw: string) {
-  const value = String(raw ?? '').trim();
-  const parsed = parseBorderJson(value);
-  if (!parsed) {
-    state.sourceValid = false;
-    state.root.dataset.invalid = 'true';
-    state.root.dataset.borderEnabled = 'false';
-    state.enabledInput.checked = false;
-    state.enabledInput.disabled = true;
-    state.widthInput.disabled = true;
-    clearHexInvalid(state);
-    updateHeader(state, 'invalid');
-    return;
-  }
-
-  state.sourceValid = true;
-  delete state.root.dataset.invalid;
-  state.enabledInput.disabled = false;
-  state.border = parsed.border;
-  state.hsv = parsed.hsv;
-  clearHexInvalid(state);
-  syncUI(state, { commit: false });
+  state.border = JSON.parse(raw) as BorderValue;
+  state.hsv = colorToHsv(state.border.color);
+  syncUI(state, false);
 }
 
-function syncUI(state: DropdownBorderState, opts: { commit: boolean }) {
+function syncUI(state: DropdownBorderState, commit: boolean) {
   const { h, s, v } = state.hsv;
   const rgb = hsvToRgb(h, s, v);
   const hex = formatHex({ h, s, v });
@@ -263,7 +210,7 @@ function syncUI(state: DropdownBorderState, opts: { commit: boolean }) {
   state.hueInput.style.setProperty('--min', '0');
   state.hueInput.style.setProperty('--max', '360');
 
-  if (!state.hexDraftInvalid) state.hexField.value = hex.replace(/^#/, '');
+  state.hexField.value = hex.replace(/^#/, '');
 
   const left = `${s * 100}%`;
   const top = `${(1 - v) * 100}%`;
@@ -275,10 +222,8 @@ function syncUI(state: DropdownBorderState, opts: { commit: boolean }) {
 
   setRangeValue(state.widthInput, state.border.width);
 
-  if (state.previewContainer) {
-    const preview = state.previewContainer.querySelector<HTMLElement>('.diet-dropdown-border__color-preview');
-    if (preview) preview.style.background = previewColor;
-  }
+  const preview = state.previewContainer.querySelector<HTMLElement>('.diet-dropdown-border__color-preview')!;
+  preview.style.background = previewColor;
 
   const borderValue: BorderValue = { ...state.border };
 
@@ -291,13 +236,13 @@ function syncUI(state: DropdownBorderState, opts: { commit: boolean }) {
 
   const normalizedCurrent = normalizeHex(hex);
   state.swatches.forEach((swatch) => {
-    const swatchHex = normalizeHex(swatch.dataset.color || '');
+    const swatchHex = normalizeHex(swatch.dataset.color!);
     const match = Boolean(normalizedCurrent && swatchHex && swatchHex === normalizedCurrent);
     swatch.classList.toggle('is-selected', match);
     swatch.setAttribute('aria-pressed', match ? 'true' : 'false');
   });
 
-  if (opts.commit) {
+  if (commit) {
     setInputValue(state, borderValue, true);
   }
 }
@@ -313,30 +258,19 @@ function setRangeValue(input: HTMLInputElement, value: number) {
   input.style.setProperty('--value', String(value));
 }
 
-function updateHeader(state: DropdownBorderState, mode: 'border' | 'none' | 'invalid'): void {
+function updateHeader(state: DropdownBorderState, mode: 'border' | 'none'): void {
   const { headerValue, headerValueLabel, headerValueChip, headerValueNoneIcon } = state;
-  if (headerValueLabel) {
-    headerValueLabel.textContent =
-      mode === 'invalid'
-        ? state.root.dataset.invalidLabel ?? ''
-        : mode === 'border'
-          ? `${state.border.width}px`
-          : '';
-  }
-  if (headerValue) {
-    headerValue.dataset.muted = mode === 'border' ? 'false' : 'true';
-  }
-  if (headerValueChip) {
-    const showChip = mode === 'border';
-    headerValueChip.hidden = !showChip;
-    headerValueChip.style.background = showChip ? state.border.color : 'transparent';
-    const normalized = state.border.color.trim().toLowerCase();
-    headerValueChip.classList.toggle(
-      'is-white',
-      showChip && (normalized === '#ffffff' || normalized === 'white'),
-    );
-  }
-  if (headerValueNoneIcon) headerValueNoneIcon.hidden = mode !== 'none';
+  const showBorder = mode === 'border';
+  headerValueLabel.textContent = showBorder ? `${state.border.width}px` : '';
+  headerValue.dataset.muted = showBorder ? 'false' : 'true';
+  headerValueChip.hidden = !showBorder;
+  headerValueChip.style.background = showBorder ? state.border.color : 'transparent';
+  const normalized = state.border.color.trim().toLowerCase();
+  headerValueChip.classList.toggle(
+    'is-white',
+    showBorder && (normalized === '#ffffff' || normalized === 'white'),
+  );
+  headerValueNoneIcon.hidden = showBorder;
 }
 
 function setInputValue(state: DropdownBorderState, value: BorderValue, emit: boolean) {
@@ -350,77 +284,18 @@ function setInputValue(state: DropdownBorderState, value: BorderValue, emit: boo
   }
 }
 
-function parseBorderJson(
-  raw: string,
-): { border: BorderValue; hsv: { h: number; s: number; v: number } } | null {
-  let parsed: unknown;
-  try {
-    parsed = JSON.parse(raw) as unknown;
-  } catch {
-    return null;
-  }
-  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return null;
-
-  const obj = parsed as Record<string, unknown>;
-  if (Object.keys(obj).sort().join('\0') !== ['color', 'enabled', 'width'].join('\0')) return null;
-  if (
-    typeof obj.enabled !== 'boolean' ||
-    typeof obj.width !== 'number' ||
-    !Number.isFinite(obj.width) ||
-    obj.width < 0 ||
-    obj.width > 12 ||
-    typeof obj.color !== 'string' ||
-    !obj.color.trim() ||
-    obj.color !== obj.color.trim()
-  ) {
-    return null;
-  }
-
-  const hsv = parseColor(obj.color, document.documentElement);
-  if (!hsv) return null;
-
-  const border: BorderValue = {
-    enabled: obj.enabled,
-    width: obj.width,
-    color: obj.color,
-  };
-
-  return { border, hsv };
-}
-
 function handleHexInput(state: DropdownBorderState) {
-  if (!state.sourceValid) return;
   const raw = state.hexField.value.trim();
   const normalized = normalizeHex(raw);
-  if (!normalized) {
-    setHexInvalid(state, true);
-    return;
-  }
-  const rgba = hexToRgba(normalized);
-  if (!rgba) {
-    setHexInvalid(state, true);
-    return;
-  }
-  clearHexInvalid(state);
-  state.hsv = rgbToHsv(rgba.r, rgba.g, rgba.b);
+  if (!normalized) return;
+  const rgb = hexToRgb(normalized);
+  state.hsv = rgbToHsv(rgb.r, rgb.g, rgb.b);
   state.border.color = raw.startsWith('#') ? raw : `#${raw}`;
-  syncUI(state, { commit: true });
+  syncUI(state, true);
 }
 
-function setHexInvalid(state: DropdownBorderState, invalid: boolean): void {
-  state.hexDraftInvalid = invalid;
-  const control = state.hexField.closest<HTMLElement>('.diet-dropdown-border__hex-control');
-  if (control) control.dataset.invalid = invalid ? 'true' : 'false';
-  state.hexField.setAttribute('aria-invalid', invalid ? 'true' : 'false');
-}
-
-function clearHexInvalid(state: DropdownBorderState): void {
-  setHexInvalid(state, false);
-}
-
-function parseColor(value: string, root: HTMLElement): { h: number; s: number; v: number } | null {
-  const rgba = colorStringToRgba(value, root);
-  if (!rgba) return null;
+function colorToHsv(value: string): { h: number; s: number; v: number } {
+  const rgba = colorStringToRgba(value);
   return rgbToHsv(rgba.r, rgba.g, rgba.b);
 }
 
@@ -441,55 +316,34 @@ function clampNumber(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value));
 }
 
-function hexToRgba(value: string): { r: number; g: number; b: number } | null {
-  const raw = value.trim().replace(/^#/, '');
-  if (!/^[0-9a-f]+$/i.test(raw)) return null;
-  if (raw.length === 3) {
-    const r = parseInt(raw[0] + raw[0], 16);
-    const g = parseInt(raw[1] + raw[1], 16);
-    const b = parseInt(raw[2] + raw[2], 16);
-    return { r, g, b };
-  }
-  if (raw.length === 6) {
-    const r = parseInt(raw.slice(0, 2), 16);
-    const g = parseInt(raw.slice(2, 4), 16);
-    const b = parseInt(raw.slice(4, 6), 16);
-    return { r, g, b };
-  }
-  return null;
+function hexToRgb(value: string): { r: number; g: number; b: number } {
+  const raw = value.slice(1);
+  return {
+    r: parseInt(raw.slice(0, 2), 16),
+    g: parseInt(raw.slice(2, 4), 16),
+    b: parseInt(raw.slice(4, 6), 16),
+  };
 }
 
-function captureNativeValue(input: HTMLInputElement): { get: () => string; set: (next: string) => void } | undefined {
-  const desc = Object.getOwnPropertyDescriptor(Object.getPrototypeOf(input), 'value');
-  if (!desc || !desc.get || !desc.set) return undefined;
-  return { get: () => desc.get?.call(input) ?? '', set: (next) => desc.set?.call(input, next) };
+function captureNativeValue(input: HTMLInputElement): { get: () => string; set: (next: string) => void } {
+  const desc = Object.getOwnPropertyDescriptor(Object.getPrototypeOf(input), 'value')!;
+  return { get: () => desc.get!.call(input), set: (next) => desc.set!.call(input, next) };
 }
 
-function colorStringToRgba(
-  value: string,
-  root: HTMLElement,
-): { r: number; g: number; b: number; a: number } | null {
-  const raw = String(value || '').trim();
-  if (!raw) return null;
+function colorStringToRgba(value: string): { r: number; g: number; b: number; a: number } {
   const probe = document.createElement('span');
-  probe.style.color = raw;
-  if (!probe.style.color) return null;
-  root.appendChild(probe);
+  probe.style.color = value;
+  document.documentElement.appendChild(probe);
   const computed = getComputedStyle(probe).color;
-  root.removeChild(probe);
-  const match = computed.match(/rgba?\(([^)]+)\)/i);
-  if (!match) return null;
-  const parts = match[1]
-    .split(',')
-    .map((p) => p.trim())
-    .filter(Boolean);
-  if (parts.length < 3) return null;
-  const r = Number(parts[0]);
-  const g = Number(parts[1]);
-  const b = Number(parts[2]);
-  const a = parts.length >= 4 ? Number(parts[3]) : 1;
-  if (![r, g, b, a].every((n) => Number.isFinite(n))) return null;
-  return { r, g, b, a };
+  probe.remove();
+  const canvas = document.createElement('canvas');
+  canvas.width = 1;
+  canvas.height = 1;
+  const context = canvas.getContext('2d')!;
+  context.fillStyle = computed;
+  context.fillRect(0, 0, 1, 1);
+  const [r, g, b, alpha] = context.getImageData(0, 0, 1, 1).data;
+  return { r, g, b, a: alpha / 255 };
 }
 
 function rgbToHsv(r: number, g: number, b: number): { h: number; s: number; v: number } {

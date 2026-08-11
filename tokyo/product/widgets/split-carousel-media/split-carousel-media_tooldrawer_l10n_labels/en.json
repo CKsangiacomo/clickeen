@@ -10,7 +10,6 @@
     "component.dropdown-border.enabled.label": "Enabled",
     "component.dropdown-border.hex.label": "Hex",
     "component.dropdown-border.hue.label": "Hue",
-    "component.dropdown-border.invalid.label": "Invalid border",
     "component.dropdown-border.width.label": "Width",
     "appearance.cluster.visual-frame.label": "Visual frame",
     "appearance.field.split-carousel-media.appearance.cardwrapper.border.dropdown-border.label": "Visual border",

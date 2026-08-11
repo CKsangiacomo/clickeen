@@ -300,7 +300,6 @@ export async function buildContext(
     enabledLabel: attrs.enabledLabel || attrs['enabled-label'] || '',
     hexLabel: attrs.hexLabel || attrs['hex-label'] || '',
     hueLabel: attrs.hueLabel || attrs['hue-label'] || '',
-    invalidLabel: attrs.invalidLabel || attrs['invalid-label'] || '',
     widthLabel: attrs.widthLabel || attrs['width-label'] || '',
   });
 

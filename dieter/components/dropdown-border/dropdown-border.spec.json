@@ -11,7 +11,6 @@
     "enabledLabel": { "required": true },
     "hexLabel": { "required": true },
     "hueLabel": { "required": true },
-    "invalidLabel": { "required": true },
     "widthLabel": { "required": true }
   },
   "binding": { "path": "instanceData[PATH]", "type": "json" },
@@ -31,7 +30,6 @@
         "enabledLabel": "Enabled",
         "hexLabel": "Hex",
         "hueLabel": "Hue",
-        "invalidLabel": "Invalid border",
         "widthLabel": "Width"
       }
     }

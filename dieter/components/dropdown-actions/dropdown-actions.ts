@@ -42,7 +42,7 @@ export function destroyDropdownActions(root: HTMLElement): void {
 
 function createState(root: HTMLElement, scope: Element | DocumentFragment): DropdownActionsState | null {
   const input = root.querySelector<HTMLInputElement>('.diet-dropdown-actions__value-field');
-  const display = root.querySelector<HTMLElement>('.diet-dropdown-header-value');
+  const display = root.querySelector<HTMLElement>('.diet-dropdown-actions__value');
   const trigger = root.querySelector<HTMLElement>('.diet-dropdown-actions__control');
   const menuActions = Array.from(
     root.querySelectorAll<HTMLButtonElement>('.diet-dropdown-actions__menuaction'),

@@ -14,6 +14,22 @@
   box-sizing: border-box;
 }
 
+.diet-dropdown-header {
+  appearance: none;
+  position: relative;
+  border: 1px solid transparent;
+  background: var(--color-system-white);
+  color: inherit;
+  font: inherit;
+  text-align: inherit;
+  transition: background-color var(--duration-base) var(--easing-standard), border-color var(--duration-base) var(--easing-standard);
+  cursor: pointer;
+}
+
+.diet-dropdown-header:hover {
+  background: color-mix(in oklab, var(--color-system-white), var(--color-system-black) 6%);
+}
+
 .diet-dropdown-header-label,
 .diet-textfield__display-label,
 .diet-toggle__label,
@@ -43,4 +59,12 @@
   text-align: end;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.diet-dropdown-actions .diet-dropdown-header-label,
+.diet-dropdown-border .diet-dropdown-header-label {
+  flex: 0 0 auto;
+  min-inline-size: auto;
+  overflow: visible;
+  text-overflow: clip;
 }

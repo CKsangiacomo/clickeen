@@ -89,7 +89,6 @@ labels:  {
       "enabled": "$label:component.dropdown-border.enabled.label",
       "hex": "$label:component.dropdown-border.hex.label",
       "hue": "$label:component.dropdown-border.hue.label",
-      "invalid": "$label:component.dropdown-border.invalid.label",
       "width": "$label:component.dropdown-border.width.label"
     }
   },
@@ -265,13 +264,18 @@ selected value immediately.
 
 Compact property rows use one Dieter geometry contract: labels occupy the
 leading side and dropdown values, switches, text fields, and numeric fields
-terminate on the same trailing rail. Numeric fields use stable slots rather
-than content-measured widths. Toggle rows are native labels, so the complete
-visible row activates the checkbox. Component stencils render labels exactly
-as authored and do not inject punctuation. Text fields and numeric fields share
-the same resting row geometry; text fields use the row as their editing surface,
-while numeric fields keep hover, focus, and editing inside the compact trailing
-value slot.
+terminate on the same trailing rail. On clickable property-menu rows, the
+complete field label never truncates. Dynamic trailing text yields first and
+receives the end ellipsis; a fixed chip or Icon remains visible. Compound
+trailing values author text before the visual, and rest and hover preserve the
+same geometry. Dropdown Actions and Dropdown Border implement that rule in the
+current pass; other components adopt it during their own pass. Numeric fields
+use stable slots rather than content-measured widths. Toggle rows are native
+labels, so the complete visible row activates the checkbox. Component stencils
+render labels exactly as authored and do not inject punctuation. Text fields
+and numeric fields share the same resting row geometry; text fields use the row
+as their editing surface, while numeric fields keep hover, focus, and editing
+inside the compact trailing value slot.
 
 `dropdown-fill` uses explicit fill modes in field attrs. Use the hyphenated
 attribute name `fill-modes` in authored specs. `dropdown-upload` requires a

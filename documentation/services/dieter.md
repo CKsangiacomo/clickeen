@@ -113,15 +113,25 @@ control does not add a separate blue border or tint to the covered row.
 All visible wording remains caller input. Its selected checkmark inherits the
 Menu Actions `sm|md|lg` Icon size instead of carrying a fixed size.
 
+Dropdown Actions and Dropdown Border begin the shared clickable property-menu
+row rule. The complete field label occupies the leading rail. The trailing
+rail is right aligned and contains dynamic value text followed by any fixed
+chip or Icon; only that dynamic text truncates. Rest and hover use the same
+rail geometry, and hover belongs to the complete row. Other components adopt
+this same existing shared-row authority during their own component pass rather
+than through parallel component-local row systems.
+
 Dropdown Border owns one global border-editing component, not a family of
 Widget-specific border controls. Its exact value is
 `{enabled:boolean,width:number,color:string}`. Root `sm|md|lg` sizing applies
 to the trigger, attached Popover, text, `square.slash` no-border Icon, and
 nested controls. Enabled sits immediately below the caller-supplied Popover
 header; disabling it hides but does not replace the stored color and width.
-Invalid source or Hex input remains visible and does not silently restore,
-clamp, or invent a border. Dieter owns structure, styling, and behavior but no
-visible words. Widget specs declare use and exact state paths, while their
+Its closed row renders width before the color chip, or only `square.slash`
+when no border is present. It consumes the exact structured Widget value and
+does not create fallback, repaired, or diagnostic states. Dieter owns
+structure, styling, and behavior but no visible words. Widget specs declare
+use and exact state paths, while their
 adjacent ToolDrawer label files supply field and component labels through
 Bob's existing compiler.
 

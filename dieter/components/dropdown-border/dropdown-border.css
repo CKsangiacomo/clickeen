@@ -38,17 +38,8 @@
 }
 
 .diet-dropdown-border .diet-dropdown-header {
-  appearance: none;
-  position: relative;
   min-block-size: var(--dropdown-border-height);
-  border: 1px solid transparent;
   border-radius: var(--dropdown-border-radius);
-  background: var(--color-system-white);
-  color: inherit;
-  font: inherit;
-  text-align: inherit;
-  transition: background-color var(--duration-base) var(--easing-standard), border-color var(--duration-base) var(--easing-standard);
-  cursor: pointer;
 }
 
 .diet-dropdown-border .diet-dropdown-header-label,
@@ -65,10 +56,6 @@
   font: 400 var(--dropdown-border-font-size)/var(--dropdown-border-line-height) "Inter Tight", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
 }
 
-.diet-dropdown-border .diet-dropdown-header:hover {
-  background: color-mix(in oklab, var(--color-system-white), var(--color-system-black) 6%);
-}
-
 .diet-dropdown-border .diet-dropdown-header:focus-visible {
   outline: none;
   background: var(--color-system-white);
@@ -83,15 +70,6 @@
 
 .diet-dropdown-border .diet-dropdown-header-value[data-muted='true'] {
   color: color-mix(in oklab, var(--color-system-black), var(--state-muted-mix, 50%));
-}
-
-.diet-dropdown-border[data-invalid='true'] .diet-dropdown-header {
-  border-color: var(--color-system-orange);
-  background: color-mix(in oklab, var(--color-system-white), var(--color-system-orange) 4%);
-}
-
-.diet-dropdown-border[data-invalid='true'] .diet-dropdown-header-value {
-  color: var(--color-system-orange);
 }
 
 .diet-dropdown-border__value-field {
@@ -130,7 +108,9 @@
 }
 
 .diet-dropdown-border__label {
+  flex: 0 1 auto;
   min-inline-size: 0;
+  max-inline-size: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -254,9 +234,4 @@
 .diet-dropdown-border__swatch.is-selected {
   outline: 2px solid var(--color-system-blue);
   outline-offset: 1px;
-}
-
-.diet-dropdown-border__hex-control[data-invalid='true'] .diet-textfield__control {
-  border-color: var(--color-system-orange);
-  background: color-mix(in oklab, var(--color-system-white), var(--color-system-orange) 4%);
 }

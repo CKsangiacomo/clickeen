@@ -105,18 +105,26 @@ The component-level product law is implemented:
   option labels, and badges are caller inputs. Its selected checkmark follows
   the Menu Actions size ladder at `.75rem/1rem/1.25rem`; it is not pinned to a
   separate glyph size.
+- Clickable property-menu rows use the existing shared two-rail structure.
+  The complete caller label stays on the leading rail. The trailing rail is
+  right aligned; its dynamic text yields and receives the end ellipsis before
+  any fixed chip or Icon. When text and a visual are both present, the text is
+  authored first and the visual second. Rest and hover keep identical rail
+  geometry; hover belongs to the complete row.
 - Dropdown Border edits one exact object:
   `{enabled:boolean,width:number,color:string}`. Root `sm|md|lg` owns the
   trigger, Popover radius, typography, Icon, and nested-control sizing at
   `1.25rem/1.5rem/1.75rem` row heights, `.25rem/.375rem/.5rem` radii,
   `.6875rem/.8125rem/.875rem` text, and `.75rem/1rem/1.25rem` Icons. The
-  closed trigger shows color plus width for an active border and the existing
-  `square.slash` Icon when there is no border. Its Popover repeats only the
+  closed trigger shows width followed by the fixed color chip for an active
+  border and only the existing `square.slash` Icon when there is no border.
+  Its Popover repeats only the
   caller's field label, places Enabled directly below the header, and hides the
   color and width controls while disabled. Disabling preserves the exact
   stored width and color; changing one property does not rewrite another.
-  Missing, malformed, partial, or legacy-shaped values remain visibly invalid
-  instead of becoming a default border. Dieter owns no visible words. Each
+  The component consumes the exact structured value supplied by the Widget
+  contract and does not create fallback, repaired, or diagnostic states.
+  Dieter owns no visible words. Each
   Widget's adjacent ToolDrawer label file supplies the component labels and
   exact field labels; Bob joins those labels with the global Dieter stencil.
 - Menu Actions remains a separate menu-row primitive with its existing

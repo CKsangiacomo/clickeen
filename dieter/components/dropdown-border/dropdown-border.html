@@ -2,7 +2,6 @@
   class="diet-dropdown-border diet-popover-host"
   data-size="{{size}}"
   data-state="closed"
-  data-invalid-label="{{invalidLabel}}"
 >
   <input
     id="{{id}}"
@@ -22,6 +21,7 @@
   >
     <span class="diet-dropdown-header-label" id="{{id}}-label">{{label}}</span>
     <span class="diet-dropdown-header-value">
+      <span class="diet-dropdown-border__label"></span>
       <span class="diet-dropdown-border__chip" aria-hidden="true"></span>
       <span
         class="diet-icon diet-dropdown-border__none-icon"
@@ -29,7 +29,6 @@
         aria-hidden="true"
         hidden
       ></span>
-      <span class="diet-dropdown-border__label"></span>
     </span>
   </button>
 

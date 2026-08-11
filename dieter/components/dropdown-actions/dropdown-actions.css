@@ -32,17 +32,8 @@
 }
 
 .diet-dropdown-actions .diet-dropdown-header {
-  appearance: none;
-  position: relative;
-  border: 1px solid transparent;
   min-block-size: var(--dropdown-actions-height);
   border-radius: var(--dropdown-actions-radius);
-  background: var(--color-system-white);
-  color: inherit;
-  font: inherit;
-  text-align: inherit;
-  transition: background-color var(--duration-base) var(--easing-standard), border-color var(--duration-base) var(--easing-standard);
-  cursor: pointer;
 }
 
 .diet-dropdown-actions .diet-dropdown-header-label,
@@ -54,10 +45,6 @@
 .diet-dropdown-actions .diet-dropdown-header-value,
 .diet-dropdown-actions__menuaction .diet-btn-menuactions__label {
   font: 400 var(--dropdown-actions-font-size)/var(--dropdown-actions-value-line-height) "Inter Tight", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
-}
-
-.diet-dropdown-actions .diet-dropdown-header:hover {
-  background: color-mix(in oklab, var(--color-system-white), var(--color-system-black) 6%);
 }
 
 .diet-dropdown-actions .diet-dropdown-header:focus-visible {
@@ -72,6 +59,15 @@
 
 .diet-dropdown-actions .diet-dropdown-header-value[data-muted='true'] {
   color: color-mix(in oklab, var(--color-system-black), var(--state-muted-mix, 50%));
+}
+
+.diet-dropdown-actions__value {
+  flex: 0 1 auto;
+  min-inline-size: 0;
+  max-inline-size: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .diet-dropdown-actions__value-field {
