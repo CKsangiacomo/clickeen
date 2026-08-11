@@ -233,7 +233,7 @@ authority.
   percentages are visible as read-only rows with representative color samples;
   color edit authority remains limited to literal `--color-*` hex values.
 - **Icons — passed after systemic correction, 2026-08-09.** The human-selected
-  source contains 159 icons. One SF exporter now generates every SVG with
+  source contains 165 icons. One SF exporter now generates every SVG with
   `currentColor` and a shared optical-canvas formula, so component slots no
   longer magnify tightly cropped glyphs differently. DevStudio reveals the SVG
   directory directly. Dieter, DevStudio, Bob, Roma, Prague, and Widgets do not

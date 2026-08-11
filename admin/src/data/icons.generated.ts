@@ -132,32 +132,38 @@ import icon129 from "../../../dieter/icons/svg/rectangle.portrait.and.arrow.righ
 import icon130 from "../../../dieter/icons/svg/repeat.svg?raw";
 import icon131 from "../../../dieter/icons/svg/scribble.svg?raw";
 import icon132 from "../../../dieter/icons/svg/selection.pin.in.out.svg?raw";
-import icon133 from "../../../dieter/icons/svg/signature.svg?raw";
-import icon134 from "../../../dieter/icons/svg/slider.vertical.3.svg?raw";
-import icon135 from "../../../dieter/icons/svg/slowmo.svg?raw";
-import icon136 from "../../../dieter/icons/svg/sparkles.svg?raw";
-import icon137 from "../../../dieter/icons/svg/square.and.arrow.down.svg?raw";
-import icon138 from "../../../dieter/icons/svg/square.and.arrow.up.svg?raw";
-import icon139 from "../../../dieter/icons/svg/square.and.pencil.svg?raw";
-import icon140 from "../../../dieter/icons/svg/square.dashed.svg?raw";
-import icon141 from "../../../dieter/icons/svg/square.on.square.svg?raw";
-import icon142 from "../../../dieter/icons/svg/square.stack.3d.down.right.svg?raw";
-import icon143 from "../../../dieter/icons/svg/square.stack.3d.up.svg?raw";
-import icon144 from "../../../dieter/icons/svg/star.svg?raw";
-import icon145 from "../../../dieter/icons/svg/stop.svg?raw";
-import icon146 from "../../../dieter/icons/svg/strikethrough.svg?raw";
-import icon147 from "../../../dieter/icons/svg/sun.max.svg?raw";
-import icon148 from "../../../dieter/icons/svg/sun.max.fill.svg?raw";
-import icon149 from "../../../dieter/icons/svg/tachometer.svg?raw";
-import icon150 from "../../../dieter/icons/svg/tag.svg?raw";
-import icon151 from "../../../dieter/icons/svg/textformat.characters.dottedunderline.svg?raw";
-import icon152 from "../../../dieter/icons/svg/textformat.size.larger.svg?raw";
-import icon153 from "../../../dieter/icons/svg/translate.svg?raw";
-import icon154 from "../../../dieter/icons/svg/trash.svg?raw";
-import icon155 from "../../../dieter/icons/svg/tray.svg?raw";
-import icon156 from "../../../dieter/icons/svg/underline.svg?raw";
-import icon157 from "../../../dieter/icons/svg/waveform.path.ecg.svg?raw";
-import icon158 from "../../../dieter/icons/svg/xmark.triangle.circle.square.svg?raw";
+import icon133 from "../../../dieter/icons/svg/sidebar.squares.left.svg?raw";
+import icon134 from "../../../dieter/icons/svg/signature.svg?raw";
+import icon135 from "../../../dieter/icons/svg/slider.vertical.3.svg?raw";
+import icon136 from "../../../dieter/icons/svg/slowmo.svg?raw";
+import icon137 from "../../../dieter/icons/svg/sparkles.svg?raw";
+import icon138 from "../../../dieter/icons/svg/square.3.layers.3d.down.left.svg?raw";
+import icon139 from "../../../dieter/icons/svg/square.and.arrow.down.svg?raw";
+import icon140 from "../../../dieter/icons/svg/square.and.arrow.up.svg?raw";
+import icon141 from "../../../dieter/icons/svg/square.and.pencil.svg?raw";
+import icon142 from "../../../dieter/icons/svg/square.dashed.svg?raw";
+import icon143 from "../../../dieter/icons/svg/square.dotted.svg?raw";
+import icon144 from "../../../dieter/icons/svg/square.on.square.svg?raw";
+import icon145 from "../../../dieter/icons/svg/square.on.square.dashed.svg?raw";
+import icon146 from "../../../dieter/icons/svg/square.slash.svg?raw";
+import icon147 from "../../../dieter/icons/svg/square.stack.svg?raw";
+import icon148 from "../../../dieter/icons/svg/square.stack.3d.down.right.svg?raw";
+import icon149 from "../../../dieter/icons/svg/square.stack.3d.up.svg?raw";
+import icon150 from "../../../dieter/icons/svg/star.svg?raw";
+import icon151 from "../../../dieter/icons/svg/stop.svg?raw";
+import icon152 from "../../../dieter/icons/svg/strikethrough.svg?raw";
+import icon153 from "../../../dieter/icons/svg/sun.max.svg?raw";
+import icon154 from "../../../dieter/icons/svg/sun.max.fill.svg?raw";
+import icon155 from "../../../dieter/icons/svg/tachometer.svg?raw";
+import icon156 from "../../../dieter/icons/svg/tag.svg?raw";
+import icon157 from "../../../dieter/icons/svg/textformat.characters.dottedunderline.svg?raw";
+import icon158 from "../../../dieter/icons/svg/textformat.size.larger.svg?raw";
+import icon159 from "../../../dieter/icons/svg/translate.svg?raw";
+import icon160 from "../../../dieter/icons/svg/trash.svg?raw";
+import icon161 from "../../../dieter/icons/svg/tray.svg?raw";
+import icon162 from "../../../dieter/icons/svg/underline.svg?raw";
+import icon163 from "../../../dieter/icons/svg/waveform.path.ecg.svg?raw";
+import icon164 from "../../../dieter/icons/svg/xmark.triangle.circle.square.svg?raw";
 
 export const iconModules: Record<string, string> = {
   "../../../dieter/icons/svg/app.background.dotted.svg": icon0,
@@ -293,30 +299,36 @@ export const iconModules: Record<string, string> = {
   "../../../dieter/icons/svg/repeat.svg": icon130,
   "../../../dieter/icons/svg/scribble.svg": icon131,
   "../../../dieter/icons/svg/selection.pin.in.out.svg": icon132,
-  "../../../dieter/icons/svg/signature.svg": icon133,
-  "../../../dieter/icons/svg/slider.vertical.3.svg": icon134,
-  "../../../dieter/icons/svg/slowmo.svg": icon135,
-  "../../../dieter/icons/svg/sparkles.svg": icon136,
-  "../../../dieter/icons/svg/square.and.arrow.down.svg": icon137,
-  "../../../dieter/icons/svg/square.and.arrow.up.svg": icon138,
-  "../../../dieter/icons/svg/square.and.pencil.svg": icon139,
-  "../../../dieter/icons/svg/square.dashed.svg": icon140,
-  "../../../dieter/icons/svg/square.on.square.svg": icon141,
-  "../../../dieter/icons/svg/square.stack.3d.down.right.svg": icon142,
-  "../../../dieter/icons/svg/square.stack.3d.up.svg": icon143,
-  "../../../dieter/icons/svg/star.svg": icon144,
-  "../../../dieter/icons/svg/stop.svg": icon145,
-  "../../../dieter/icons/svg/strikethrough.svg": icon146,
-  "../../../dieter/icons/svg/sun.max.svg": icon147,
-  "../../../dieter/icons/svg/sun.max.fill.svg": icon148,
-  "../../../dieter/icons/svg/tachometer.svg": icon149,
-  "../../../dieter/icons/svg/tag.svg": icon150,
-  "../../../dieter/icons/svg/textformat.characters.dottedunderline.svg": icon151,
-  "../../../dieter/icons/svg/textformat.size.larger.svg": icon152,
-  "../../../dieter/icons/svg/translate.svg": icon153,
-  "../../../dieter/icons/svg/trash.svg": icon154,
-  "../../../dieter/icons/svg/tray.svg": icon155,
-  "../../../dieter/icons/svg/underline.svg": icon156,
-  "../../../dieter/icons/svg/waveform.path.ecg.svg": icon157,
-  "../../../dieter/icons/svg/xmark.triangle.circle.square.svg": icon158,
+  "../../../dieter/icons/svg/sidebar.squares.left.svg": icon133,
+  "../../../dieter/icons/svg/signature.svg": icon134,
+  "../../../dieter/icons/svg/slider.vertical.3.svg": icon135,
+  "../../../dieter/icons/svg/slowmo.svg": icon136,
+  "../../../dieter/icons/svg/sparkles.svg": icon137,
+  "../../../dieter/icons/svg/square.3.layers.3d.down.left.svg": icon138,
+  "../../../dieter/icons/svg/square.and.arrow.down.svg": icon139,
+  "../../../dieter/icons/svg/square.and.arrow.up.svg": icon140,
+  "../../../dieter/icons/svg/square.and.pencil.svg": icon141,
+  "../../../dieter/icons/svg/square.dashed.svg": icon142,
+  "../../../dieter/icons/svg/square.dotted.svg": icon143,
+  "../../../dieter/icons/svg/square.on.square.svg": icon144,
+  "../../../dieter/icons/svg/square.on.square.dashed.svg": icon145,
+  "../../../dieter/icons/svg/square.slash.svg": icon146,
+  "../../../dieter/icons/svg/square.stack.svg": icon147,
+  "../../../dieter/icons/svg/square.stack.3d.down.right.svg": icon148,
+  "../../../dieter/icons/svg/square.stack.3d.up.svg": icon149,
+  "../../../dieter/icons/svg/star.svg": icon150,
+  "../../../dieter/icons/svg/stop.svg": icon151,
+  "../../../dieter/icons/svg/strikethrough.svg": icon152,
+  "../../../dieter/icons/svg/sun.max.svg": icon153,
+  "../../../dieter/icons/svg/sun.max.fill.svg": icon154,
+  "../../../dieter/icons/svg/tachometer.svg": icon155,
+  "../../../dieter/icons/svg/tag.svg": icon156,
+  "../../../dieter/icons/svg/textformat.characters.dottedunderline.svg": icon157,
+  "../../../dieter/icons/svg/textformat.size.larger.svg": icon158,
+  "../../../dieter/icons/svg/translate.svg": icon159,
+  "../../../dieter/icons/svg/trash.svg": icon160,
+  "../../../dieter/icons/svg/tray.svg": icon161,
+  "../../../dieter/icons/svg/underline.svg": icon162,
+  "../../../dieter/icons/svg/waveform.path.ecg.svg": icon163,
+  "../../../dieter/icons/svg/xmark.triangle.circle.square.svg": icon164,
 };

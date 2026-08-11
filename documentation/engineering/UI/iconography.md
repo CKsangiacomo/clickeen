@@ -10,7 +10,7 @@ Living reference for iconography doctrine.
 - Deploy propagation: the Tokyo product-root sync copies
   `dieter/icons/svg/**` directly to R2 `dieter/icons/svg/**`.
 
-The current 159 Dieter icons are the human-selected operational icon library.
+The current 165 Dieter icons are the human-selected operational icon library.
 Agents consume that library; icon selection and origination remain human-owned.
 The system does not maintain a second approval list, ask whether an icon may be
 used, or validate the library against itself.
