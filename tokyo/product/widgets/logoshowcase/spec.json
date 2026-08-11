@@ -169,6 +169,9 @@
   "editor": {
     "labels": {
       "components": {
+        "agent-activity": {
+          "title": "$label:component.agent-activity.title"
+        },
         "dropdown-border": {
           "color": "$label:component.dropdown-border.color.label",
           "defaultColors": "$label:component.dropdown-border.default-colors.label",
@@ -184,9 +187,6 @@
           "appearance.localeSwitcherBorder": "$label:appearance.locale-switcher.border.dropdown-border.label",
           "appearance.podBorder": "$label:appearance.pod-border.dropdown-border.label"
         }
-      },
-      "translations": {
-        "agentActivityTitle": "$label:translations.agent-activity.title"
       }
     },
     "panels": [
@@ -335,6 +335,14 @@
                   "size": "md",
                   "row-path": "logos",
                   "title": "$label:content.field.logoshowcase.strips.bulk-edit.attr.title",
+                  "empty-label": "$label:content.field.logoshowcase.strips.bulk-edit.attr.empty-label",
+                  "close-label": "$label:content.field.logoshowcase.strips.bulk-edit.attr.close-label",
+                  "cancel-label": "$label:content.field.logoshowcase.strips.bulk-edit.attr.cancel-label",
+                  "save-label": "$label:content.field.logoshowcase.strips.bulk-edit.attr.save-label",
+                  "discard-title": "$label:content.field.logoshowcase.strips.bulk-edit.attr.discard-title",
+                  "discard-message": "$label:content.field.logoshowcase.strips.bulk-edit.attr.discard-message",
+                  "keep-editing-label": "$label:content.field.logoshowcase.strips.bulk-edit.attr.keep-editing-label",
+                  "discard-label": "$label:content.field.logoshowcase.strips.bulk-edit.attr.discard-label",
                   "columns": [
                     {
                       "label": "$label:content.field.logoshowcase.strips.bulk-edit.column.name.label",

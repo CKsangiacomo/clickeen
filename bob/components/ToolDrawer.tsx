@@ -203,7 +203,7 @@ export function ToolDrawer({
     </div>
   ) : activePanel === 'translations' ? (
     <TranslationsPanel
-      agentActivityTitle={compiled.toolDrawerLabels.translations.agentActivityTitle}
+      agentActivityTitle={compiled.toolDrawerLabels.components['agent-activity'].title}
       translationPreviewLocale={translationPreviewLocale}
       onTranslationPreviewLocaleChange={onTranslationPreviewLocaleChange}
       onRequestTranslationsRefresh={onRequestTranslationsRefresh}

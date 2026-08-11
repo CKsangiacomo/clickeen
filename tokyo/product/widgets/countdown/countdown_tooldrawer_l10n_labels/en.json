@@ -122,7 +122,7 @@
     "panel.layout": "Layout",
     "panel.settings": "Settings",
     "panel.typography": "Typography",
-    "translations.agent-activity.title": "Translation Agent",
+    "component.agent-activity.title": "Translation Agent",
     "typography.role.label.label": "Labels",
     "typography.role.timer.label": "Timer"
   }

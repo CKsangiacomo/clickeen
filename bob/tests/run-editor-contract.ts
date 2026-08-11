@@ -192,7 +192,7 @@ async function testEveryWidgetEditorContract(): Promise<void> {
       `${widgetType} compiles its exact English panel labels`,
     );
     assert.equal(
-      compiled.toolDrawerLabels.translations.agentActivityTitle,
+      compiled.toolDrawerLabels.components['agent-activity'].title,
       'Translation Agent',
       `${widgetType} compiles its exact Agent Activity title`,
     );
@@ -277,7 +277,7 @@ function testTooldrawerLabelContractsFailClosed(): void {
   );
 
   const hardcodedActivityTitle = structuredClone(spec) as any;
-  hardcodedActivityTitle.editor.labels.translations.agentActivityTitle = 'Translation Agent';
+  hardcodedActivityTitle.editor.labels.components['agent-activity'].title = 'Translation Agent';
   assert.throws(
     () => resolveWidgetTooldrawerLabels(hardcodedActivityTitle, labels),
     /must use a label token/,
@@ -358,8 +358,10 @@ function testInvalidEditorContractsFail(): void {
 
 function testCompiledPanelLabelsFailClosed(): void {
   const toolDrawerLabels = {
-    translations: {
-      agentActivityTitle: 'Translation Agent',
+    components: {
+      'agent-activity': {
+        title: 'Translation Agent',
+      },
     },
   };
   assert.throws(
@@ -380,8 +382,10 @@ function testCompiledPanelLabelsFailClosed(): void {
     () =>
       assertCompiledEditorContract({
         toolDrawerLabels: {
-          translations: {
-            agentActivityTitle: '',
+          components: {
+            'agent-activity': {
+              title: '',
+            },
           },
         },
         panels: BOB_WIDGET_PANEL_IDS.map((id) => ({

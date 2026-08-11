@@ -176,6 +176,23 @@ export async function buildContext(
   const title = attrs.title || (merged.title as string) || label;
   const emptyLabel =
     attrs.emptyLabel || attrs['empty-label'] || (merged.emptyLabel as string) || '';
+  const closeLabel =
+    attrs.closeLabel || attrs['close-label'] || (merged.closeLabel as string) || '';
+  const cancelLabel =
+    attrs.cancelLabel || attrs['cancel-label'] || (merged.cancelLabel as string) || '';
+  const saveLabel =
+    attrs.saveLabel || attrs['save-label'] || (merged.saveLabel as string) || '';
+  const discardTitle =
+    attrs.discardTitle || attrs['discard-title'] || (merged.discardTitle as string) || '';
+  const discardMessage =
+    attrs.discardMessage || attrs['discard-message'] || (merged.discardMessage as string) || '';
+  const keepEditingLabel =
+    attrs.keepEditingLabel ||
+    attrs['keep-editing-label'] ||
+    (merged.keepEditingLabel as string) ||
+    '';
+  const discardLabel =
+    attrs.discardLabel || attrs['discard-label'] || (merged.discardLabel as string) || '';
   const idBase = pathAttr || label || `${component}-${size}`;
   const id = sanitizeId(`${component}-${idBase}`);
 
@@ -291,6 +308,13 @@ export async function buildContext(
     columns,
     title,
     emptyLabel,
+    closeLabel,
+    cancelLabel,
+    saveLabel,
+    discardTitle,
+    discardMessage,
+    keepEditingLabel,
+    discardLabel,
     template: templateValue,
     defaultItem,
     colorLabel: attrs.colorLabel || attrs['color-label'] || '',

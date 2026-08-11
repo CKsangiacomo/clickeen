@@ -38,7 +38,7 @@ export function runHydrators(scope: HTMLElement, deps: DieterHydratorDeps): void
   };
 
   hydrateIcons(scope);
-  hydrateBulkEdit(scope, nestedDeps);
+  hydrateBulkEdit(scope);
   hydrateChoiceTiles(scope);
   hydrateDropdownActions(scope);
   hydrateDropdownBorder(scope);

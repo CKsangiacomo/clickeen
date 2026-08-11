@@ -1,17 +1,25 @@
 {
   "component": "bulk-edit",
-  "syntax": "<tooldrawer-field type='bulk-edit' size='{{SIZE}}' path='{{PATH}}' row-path='{{ROW_PATH}}' label='{{LABEL}}' title='{{TITLE}}' columns='{{COLUMNS}}' empty-label='{{EMPTY_LABEL}}' />",
+  "syntax": "<tooldrawer-field type='bulk-edit' size='{{SIZE}}' path='{{PATH}}' row-path='{{ROW_PATH}}' label='{{LABEL}}' title='{{TITLE}}' columns='{{COLUMNS}}' empty-label='{{EMPTY_LABEL}}' close-label='{{CLOSE_LABEL}}' cancel-label='{{CANCEL_LABEL}}' save-label='{{SAVE_LABEL}}' discard-title='{{DISCARD_TITLE}}' discard-message='{{DISCARD_MESSAGE}}' keep-editing-label='{{KEEP_EDITING_LABEL}}' discard-label='{{DISCARD_LABEL}}' />",
   "attributes": {
     "size": { "enum": ["sm", "md", "lg"], "default": "md" },
-    "path": {},
-    "row-path": {},
-    "columns": {},
-    "label": { "optional": true },
-    "title": { "optional": true },
-    "empty-label": { "optional": true },
+    "path": { "required": true },
+    "row-path": { "required": true },
+    "columns": { "required": true },
+    "label": { "required": true },
+    "title": { "required": true },
+    "empty-label": { "required": true },
+    "close-label": { "required": true },
+    "cancel-label": { "required": true },
+    "save-label": { "required": true },
+    "discard-title": { "required": true },
+    "discard-message": { "required": true },
+    "keep-editing-label": { "required": true },
+    "discard-label": { "required": true },
     "show-if": { "optional": true },
     "show-when": { "optional": true }
   },
+  "binding": { "path": "instanceData[PATH]", "type": "array" },
   "defaults": [
     {
       "id": "bulk-edit",
@@ -25,7 +33,14 @@
         "label": "Bulk edit",
         "title": "Bulk edit",
         "columns": "[]",
-        "emptyLabel": "No rows available"
+        "emptyLabel": "No rows available",
+        "closeLabel": "Close",
+        "cancelLabel": "Cancel",
+        "saveLabel": "Save",
+        "discardTitle": "Discard changes?",
+        "discardMessage": "Your bulk edits have not been saved.",
+        "keepEditingLabel": "Keep editing",
+        "discardLabel": "Discard"
       },
       "sizeContext": {
         "sm": { "buttonSize": "small" },

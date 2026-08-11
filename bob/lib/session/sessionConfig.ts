@@ -11,15 +11,16 @@ export function assertCompiledEditorContract(
   compiled: Pick<CompiledWidget, 'panels' | 'toolDrawerLabels'>,
 ): void {
   const toolDrawerLabels = compiled.toolDrawerLabels;
-  const translations = isPlainRecord(toolDrawerLabels) ? toolDrawerLabels.translations : null;
-  const agentActivityTitle = isPlainRecord(translations)
-    ? translations.agentActivityTitle
-    : null;
+  const components = isPlainRecord(toolDrawerLabels) ? toolDrawerLabels.components : null;
+  const agentActivity = isPlainRecord(components) ? components['agent-activity'] : null;
+  const agentActivityTitle = isPlainRecord(agentActivity) ? agentActivity.title : null;
   if (
     !isPlainRecord(toolDrawerLabels) ||
     Object.keys(toolDrawerLabels).length !== 1 ||
-    !isPlainRecord(translations) ||
-    Object.keys(translations).length !== 1 ||
+    !isPlainRecord(components) ||
+    Object.keys(components).length !== 1 ||
+    !isPlainRecord(agentActivity) ||
+    Object.keys(agentActivity).length !== 1 ||
     typeof agentActivityTitle !== 'string' ||
     !agentActivityTitle.trim() ||
     agentActivityTitle !== agentActivityTitle.trim()

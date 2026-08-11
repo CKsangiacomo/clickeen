@@ -1,16 +1,10 @@
-import type { AccountAssetsClient } from '../shared/account-assets';
 import { createDialogLifecycle } from '../shared/dialog-lifecycle';
 
 type BulkColumn = {
-  label?: string;
-  path?: string;
-  metaPath?: string;
-  autoNamePath?: string;
-  control?: string;
-  flag?: string;
+  label: string;
+  path: string;
+  control: 'text' | 'checkbox';
   placeholder?: string;
-  labelPath?: string;
-  accept?: string;
 };
 
 type BulkRow = {
@@ -27,158 +21,35 @@ function decodeHtmlEntities(value: string): string {
     .replace(/&gt;/g, '>');
 }
 
-function escapeAttr(value: string): string {
-  return value
-    .replace(/&/g, '&amp;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;');
-}
-
-function parseMetaValue(raw: string): Record<string, unknown> | null {
-  const trimmed = raw.trim();
-  if (!trimmed) return null;
-  try {
-    const parsed = JSON.parse(trimmed);
-    if (!parsed || typeof parsed !== 'object') return null;
-    return parsed as Record<string, unknown>;
-  } catch {
-    return null;
-  }
-}
-
-function stripFileExtension(name: string): string {
-  const trimmed = name.trim();
-  if (!trimmed) return '';
-  const lastDot = trimmed.lastIndexOf('.');
-  if (lastDot <= 0) return trimmed;
-  return trimmed.slice(0, lastDot);
-}
-
-function findBulkInput(scope: HTMLElement, path: string): HTMLInputElement | null {
-  if (!path) return null;
-  const inputs = Array.from(scope.querySelectorAll<HTMLInputElement>('[data-bulk-path]'));
-  return inputs.find((input) => input.getAttribute('data-bulk-path') === path) || null;
-}
-
-function wireAutoNameSync(uploadRoot: HTMLElement, row: HTMLElement, namePath: string) {
-  const metaInput = uploadRoot.querySelector<HTMLInputElement>('.diet-dropdown-upload__meta-field');
-  if (!metaInput || !namePath) return;
-
-  const deriveName = () => {
-    const meta = parseMetaValue(metaInput.value || '');
-    const metaName = typeof meta?.name === 'string' ? meta.name.trim() : '';
-    return metaName ? stripFileExtension(metaName) : '';
-  };
-
-  const sync = () => {
-    const nameInput = findBulkInput(row, namePath);
-    if (!nameInput) return;
-    const nextName = deriveName();
-    if (!nextName) return;
-
-    const current = nameInput.value.trim();
-    const prevAuto = nameInput.dataset.autoName || '';
-    if (!prevAuto && current && current === nextName) {
-      nameInput.dataset.autoName = current;
-    }
-    const effectivePrev = nameInput.dataset.autoName || '';
-    if (!current || current === effectivePrev) {
-      if (current !== nextName) {
-        nameInput.value = nextName;
-        nameInput.dataset.autoName = nextName;
-        nameInput.dispatchEvent(new Event('input', { bubbles: true }));
-      } else if (!effectivePrev) {
-        nameInput.dataset.autoName = nextName;
-      }
-    }
-  };
-
-  const prime = () => {
-    const nameInput = findBulkInput(row, namePath);
-    if (!nameInput) return;
-    const nextName = deriveName();
-    if (!nextName) return;
-    const current = nameInput.value.trim();
-    if (!current || current === nextName) {
-      nameInput.dataset.autoName = nextName;
-    }
-  };
-
-  metaInput.addEventListener('input', sync);
-  metaInput.addEventListener('external-sync', sync as EventListener);
-  prime();
-  sync();
-}
-
-function parseColumns(raw: string | null): BulkColumn[] {
-  if (!raw) return [];
+function parseColumns(raw: string): BulkColumn[] {
   const decoded = decodeHtmlEntities(raw);
-  try {
-    const parsed = JSON.parse(decoded);
-    if (!Array.isArray(parsed)) return [];
-    return parsed.filter((entry): entry is BulkColumn =>
-      Boolean(entry && typeof entry === 'object'),
-    );
-  } catch {
-    return [];
-  }
-}
-
-function readPolicyFlags(root: HTMLElement): Record<string, boolean> | null {
-  const container = root.closest<HTMLElement>('[data-ck-policy-flags]');
-  if (!container) return null;
-  const raw = container.getAttribute('data-ck-policy-flags');
-  if (!raw) return null;
-  try {
-    const parsed = JSON.parse(raw);
-    if (!parsed || typeof parsed !== 'object') return null;
-    return parsed as Record<string, boolean>;
-  } catch {
-    return null;
-  }
-}
-
-function isFlagEnabled(flags: Record<string, boolean> | null, key: string): boolean {
-  if (!flags) return true;
-  return flags[key] === true;
+  return JSON.parse(decoded) as BulkColumn[];
 }
 
 function readJsonArray(input: HTMLInputElement): unknown[] {
-  const raw = input.value || input.getAttribute('data-bob-json') || '[]';
-  try {
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
+  return JSON.parse(input.value) as unknown[];
 }
 
 function buildRows(path: string, rowPath: string, strips: unknown[]): BulkRow[] {
   const rows: BulkRow[] = [];
-  if (!Array.isArray(strips)) return rows;
   strips.forEach((strip, stripIndex) => {
-    if (!strip || typeof strip !== 'object') return;
     const record = strip as Record<string, unknown>;
-    const nested = record[rowPath];
-    if (!Array.isArray(nested)) return;
+    const nested = record[rowPath] as Array<Record<string, unknown>>;
     nested.forEach((entry, rowIndex) => {
-      if (!entry || typeof entry !== 'object') return;
       rows.push({
         pathPrefix: `${path}.${stripIndex}.${rowPath}.${rowIndex}`,
-        data: entry as Record<string, unknown>,
+        data: entry,
       });
     });
   });
   return rows;
 }
 
-function renderEmpty(tableWrap: HTMLElement, label: string | null) {
+function renderEmpty(tableWrap: HTMLElement, label: string) {
   tableWrap.innerHTML = '';
   const empty = document.createElement('div');
   empty.className = 'diet-bulk-edit__empty body-s';
-  empty.textContent = label || 'No rows available';
+  empty.textContent = label;
   tableWrap.appendChild(empty);
 }
 
@@ -186,22 +57,11 @@ function renderTable(
   tableWrap: HTMLElement,
   rows: BulkRow[],
   columns: BulkColumn[],
-  flags: Record<string, boolean> | null,
-  emptyLabel: string | null,
+  emptyLabel: string,
 ) {
   tableWrap.innerHTML = '';
   if (rows.length === 0) {
     renderEmpty(tableWrap, emptyLabel);
-    return;
-  }
-
-  const visibleColumns = columns.filter((col) => {
-    if (!col.flag) return true;
-    return isFlagEnabled(flags, col.flag);
-  });
-
-  if (visibleColumns.length === 0) {
-    renderEmpty(tableWrap, 'No editable fields available');
     return;
   }
 
@@ -210,10 +70,10 @@ function renderTable(
 
   const thead = document.createElement('thead');
   const headRow = document.createElement('tr');
-  visibleColumns.forEach((col) => {
+  columns.forEach((col) => {
     const th = document.createElement('th');
     th.className = 'label-s';
-    th.textContent = col.label || '';
+    th.textContent = col.label;
     headRow.appendChild(th);
   });
   thead.appendChild(headRow);
@@ -221,64 +81,22 @@ function renderTable(
 
   const tbody = document.createElement('tbody');
 
-  rows.forEach((row, rowIndex) => {
+  rows.forEach((row) => {
     const tr = document.createElement('tr');
-    visibleColumns.forEach((col, colIndex) => {
+    columns.forEach((col) => {
       const td = document.createElement('td');
       td.className = 'body-s';
-      const controlType = (col.control || 'text').toLowerCase();
-      const path = col.path || '';
-      const value = path ? row.data[path] : undefined;
+      const controlType = col.control;
+      const path = col.path;
+      const value = row.data[path];
 
-      if (controlType === 'logo') {
-        const wrap = document.createElement('div');
-        wrap.className = 'diet-bulk-edit__logo';
-        const preview = document.createElement('div');
-        preview.className = 'diet-bulk-edit__logo-preview';
-        if (typeof value === 'string' && value.trim()) {
-          preview.style.background = value;
-        }
-        const name = document.createElement('div');
-        name.className = 'diet-bulk-edit__logo-name label-s';
-        const labelPath = col.labelPath || 'name';
-        const nameValue = row.data[labelPath];
-        name.textContent = typeof nameValue === 'string' ? nameValue : '';
-        wrap.appendChild(preview);
-        wrap.appendChild(name);
-        td.appendChild(wrap);
-        tr.appendChild(td);
-        return;
-      }
-
-      if (controlType === 'upload') {
-        const upload = buildUploadControl({
-          id: `bulk-upload-${rowIndex}-${colIndex}`,
-          label: col.label || 'Logo',
-          placeholder: col.placeholder || 'Upload logo',
-          path: path ? `${row.pathPrefix}.${path}` : '',
-          metaPath: col.metaPath ? `${row.pathPrefix}.${col.metaPath}` : '',
-          accept: col.accept || 'image/*,.svg',
-          value: typeof value === 'string' ? value : '',
-          meta: col.metaPath ? (row.data[col.metaPath] as Record<string, unknown>) : null,
-        });
-        const wrap = document.createElement('div');
-        wrap.className = 'diet-bulk-edit__upload';
-        wrap.appendChild(upload);
-        td.appendChild(wrap);
-        tr.appendChild(td);
-        if (col.autoNamePath) {
-          wireAutoNameSync(upload, tr, `${row.pathPrefix}.${col.autoNamePath}`);
-        }
-        return;
-      }
-
-      if (controlType === 'checkbox' || controlType === 'toggle') {
+      if (controlType === 'checkbox') {
         const input = document.createElement('input');
         input.type = 'checkbox';
         input.className = 'diet-bulk-edit__checkbox';
         input.checked = value === true;
-        if (path) input.setAttribute('data-bulk-path', `${row.pathPrefix}.${path}`);
-        input.setAttribute('aria-label', col.label || path);
+        input.setAttribute('data-bulk-path', `${row.pathPrefix}.${path}`);
+        input.setAttribute('aria-label', col.label);
         td.appendChild(input);
         tr.appendChild(td);
         return;
@@ -289,8 +107,8 @@ function renderTable(
       input.className = 'diet-bulk-edit__input body-s';
       input.value = value == null ? '' : String(value);
       if (col.placeholder) input.placeholder = col.placeholder;
-      if (path) input.setAttribute('data-bulk-path', `${row.pathPrefix}.${path}`);
-      input.setAttribute('aria-label', col.label || path);
+      input.setAttribute('data-bulk-path', `${row.pathPrefix}.${path}`);
+      input.setAttribute('aria-label', col.label);
       td.appendChild(input);
       tr.appendChild(td);
     });
@@ -301,13 +119,7 @@ function renderTable(
   tableWrap.appendChild(table);
 }
 
-export function hydrateBulkEdit(
-  scope: Element | DocumentFragment,
-  options?: {
-    accountAssets?: AccountAssetsClient;
-    hydrateChildren?: (scope: HTMLElement) => void;
-  },
-): void {
+export function hydrateBulkEdit(scope: Element | DocumentFragment): void {
   scope.querySelectorAll<HTMLElement>('.diet-bulk-edit').forEach((root) => {
     if (root.dataset.bulkEditHydrated === 'true') return;
     root.dataset.bulkEditHydrated = 'true';
@@ -337,17 +149,15 @@ export function hydrateBulkEdit(
     )
       return;
 
-    const columns = parseColumns(root.getAttribute('data-columns'));
-    const rowPath = root.getAttribute('data-row-path') || '';
-    const path = root.getAttribute('data-bulk-path') || root.getAttribute('data-path') || '';
+    const columns = parseColumns(root.dataset.columns!);
+    const rowPath = root.dataset.rowPath!;
+    const path = root.dataset.bulkPath!;
+    const emptyLabel = root.dataset.emptyLabel!;
 
     const render = () => {
       const strips = readJsonArray(hidden);
       const rows = buildRows(path, rowPath, strips);
-      const flags = readPolicyFlags(root);
-      const emptyLabel = root.getAttribute('data-empty-label');
-      renderTable(tableWrap, rows, columns, flags, emptyLabel);
-      options?.hydrateChildren?.(tableWrap);
+      renderTable(tableWrap, rows, columns, emptyLabel);
     };
 
     const captureWorkingState = () =>
@@ -426,115 +236,4 @@ export function hydrateBulkEdit(
     discardBtn.addEventListener('click', () => lifecycle.close());
     saveBtn.addEventListener('click', save);
   });
-}
-
-function buildUploadControl(args: {
-  id: string;
-  label: string;
-  placeholder: string;
-  path: string;
-  metaPath: string;
-  accept: string;
-  value: string;
-  meta: Record<string, unknown> | null;
-}): HTMLElement {
-  if (!String(args.metaPath || '').trim()) {
-    throw new Error('[Dieter] bulk-edit dropdown-upload requires metaPath');
-  }
-
-  const root = document.createElement('div');
-  root.className = 'diet-dropdown-upload diet-popover-host';
-  root.dataset.size = 'md';
-  root.dataset.state = 'closed';
-  root.dataset.hasFile = 'false';
-
-  const label = escapeAttr(args.label || 'Logo');
-  const placeholder = escapeAttr(args.placeholder || 'Upload');
-  const id = escapeAttr(args.id);
-  const path = escapeAttr(args.path || '');
-  const metaPath = escapeAttr(args.metaPath || '');
-  const accept = escapeAttr(args.accept || 'image/*');
-  const value = escapeAttr(args.value || '');
-  const metaValue = args.meta ? escapeAttr(JSON.stringify(args.meta)) : '';
-  root.innerHTML = `
-    <input
-      id="${id}"
-      type="hidden"
-      class="diet-dropdown-upload__value-field"
-      value="${value}"
-      data-bob-path="${path}"
-      data-placeholder="${placeholder}"
-      data-accept="${accept}"
-    />
-    <input
-      type="hidden"
-      class="diet-dropdown-upload__meta-field"
-      value="${metaValue}"
-      data-bob-path="${metaPath}"
-      data-bob-json
-    />
-    <button
-      type="button"
-      class="diet-dropdown-header diet-dropdown-upload__control"
-      aria-haspopup="dialog"
-      aria-expanded="false"
-      aria-labelledby="${id}-label"
-    >
-      <span class="diet-dropdown-header-label label-s" id="${id}-label">${label}</span>
-      <span class="diet-dropdown-header-value body-s" data-muted="true" data-placeholder="${placeholder}">
-        <span class="diet-dropdown-upload__label">${placeholder}</span>
-      </span>
-    </button>
-    <div class="diet-popover diet-dropdown-upload__popover" role="dialog" aria-label="${label}" data-state="closed">
-      <div class="diet-popover__header">
-        <span class="diet-popover__header-label label-s">${label}</span>
-      </div>
-      <div class="diet-popover__body">
-        <div class="diet-dropdown-upload__panel body-xs" data-has-file="false" data-kind="empty">
-          <div class="diet-dropdown-upload__preview" aria-hidden="true">
-            <div class="diet-dropdown-upload__preview-frame">
-              <img class="diet-dropdown-upload__preview-img" data-role="img" alt="" />
-              <div class="diet-dropdown-upload__preview-video" data-role="video">
-                <video
-                  class="diet-dropdown-upload__preview-video-el"
-                  data-role="videoEl"
-                  muted
-                  playsinline
-                  preload="metadata"
-                ></video>
-                <div class="diet-dropdown-upload__preview-video-badge label-s">Video</div>
-              </div>
-              <div class="diet-dropdown-upload__preview-doc" data-role="doc">
-                <span class="diet-icon diet-dropdown-upload__preview-doc-icon" data-icon="document" aria-hidden="true"></span>
-                <div class="diet-dropdown-upload__preview-doc-ext label-s" data-role="ext"></div>
-              </div>
-              <div class="diet-dropdown-upload__preview-empty" data-role="empty">
-                <span class="diet-dropdown-upload__preview-empty-icon" data-icon="photo"></span>
-              </div>
-            </div>
-            <div class="diet-dropdown-upload__preview-meta">
-              <div class="diet-dropdown-upload__preview-name label-s" data-role="name"></div>
-              <div class="diet-dropdown-upload__preview-error label-xs" data-role="error"></div>
-            </div>
-          </div>
-          <div class="diet-dropdown-upload__actions">
-            <button type="button" class="diet-button diet-dropdown-upload__upload-btn" data-size="large" data-type="tertiary">
-              <span class="diet-button__label">Upload</span>
-            </button>
-            <div class="diet-dropdown-upload__file-controls">
-              <button type="button" class="diet-button diet-dropdown-upload__replace-btn" data-size="large" data-type="tertiary">
-                <span class="diet-button__label">Replace</span>
-              </button>
-              <button type="button" class="diet-button diet-dropdown-upload__remove-btn" data-size="large" data-type="quaternary">
-                <span class="diet-button__label">Remove</span>
-              </button>
-            </div>
-          </div>
-          <input type="file" class="diet-dropdown-upload__file-input" accept="${accept}" aria-hidden="true" tabindex="-1" />
-        </div>
-      </div>
-    </div>
-  `;
-
-  return root;
 }

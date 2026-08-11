@@ -158,7 +158,7 @@ the code is convenient there.
 | Stage | Status | Release state |
 | --- | --- | --- |
 | Stage 1 — Scaffold only | Complete | Committed, pushed, and deployed; no non-English experience is exposed |
-| Stage 2 — Dieter UI pass | In progress: Foundations, Agent Activity, Bulk Edit, Button, Choice Tiles, Dropdown Actions, Popover, and Dropdown Border complete; shared rest/Popover presentation is also applied to Dropdown Edit, Fill, Shadow, and Upload | The six-dropdown rest structure is ready for exact-SHA cloud-dev QA; the Edit, Fill, Shadow, and Upload behavior passes remain pending |
+| Stage 2 — Dieter UI pass | In progress: Foundations, Agent Activity, Bulk Edit, Button, Choice Tiles, Dropdown Actions, Popover, and Dropdown Border complete and re-audited as consumer-agnostic primitives; shared rest/Popover presentation is also applied to Dropdown Edit, Fill, Shadow, and Upload | This completed primitive group is ready for exact-SHA cloud-dev QA; the Edit, Fill, Shadow, and Upload behavior passes remain pending |
 | Stage 3 — Bob UI pass | Not started | No authority to begin until explicitly directed |
 | Stage 4 — Roma UI pass | Not started | No authority to begin until explicitly directed |
 | Stage 5 — Translation pass | Not started | No translations may be generated yet |
@@ -673,3 +673,27 @@ authorizes it.
   artifact pairs, Dieter governance/typecheck, Bob and Roma typechecks and
   focused contracts, DevStudio typecheck/build, browser-computed rail/open/
   radius proof, and diff checks passed.
+
+- **Completed-component primitive and localization audit — passed after
+  correction, 2026-08-11.** Agent Activity, Bulk Edit, Button, Choice Tiles,
+  Dropdown Actions, and Dropdown Border were re-audited together against one
+  rule: Dieter owns reusable structure, presentation, and interaction; it does
+  not own consumer meaning or visible ToolDrawer words. Dropdown Actions no
+  longer inspects `typography.roles.*` or carries font weight/style metadata;
+  Bob's existing account-font binding owns that filtering. Bulk Edit no longer
+  contains unused Logo Showcase upload, account-asset, account-policy, or
+  auto-name branches. Its current generic text/checkbox table receives all
+  trigger, dialog, action, column, placeholder, and empty-state copy through
+  the consuming Widget's adjacent label file. Agent Activity's static title
+  now uses the same component-label shape as other global ToolDrawer component
+  inputs: `editor.labels.components["agent-activity"].title` in Widget source
+  and `compiled.toolDrawerLabels.components["agent-activity"].title` in the
+  English artifact. Button and Choice Tiles retain caller-supplied labels;
+  Dropdown Actions retains caller-supplied label/options; Dropdown Border
+  retains caller-supplied field/component labels. No Dieter copy catalog,
+  consumer branch, locale folder, compatibility path, service, runtime locale
+  path, product-data change, or Cloudflare change was introduced. All eight
+  English Widget artifact pairs, DevStudio source generation/build, Dieter
+  typecheck/governance, Bob typecheck and full focused suite, Roma typecheck
+  and Widget command gates, repository typecheck/lint, exact label-shape scans,
+  and diff checks passed.

@@ -8,7 +8,6 @@ const hydrateHost = createDropdownHydrator({
 });
 
 interface DropdownActionsState {
-  scope: Element | DocumentFragment;
   root: HTMLElement;
   input: HTMLInputElement;
   display: HTMLElement;
@@ -23,13 +22,11 @@ export function hydrateDropdownActions(scope: Element | DocumentFragment): void 
 
   roots.forEach((root) => {
     if (states.has(root)) return;
-    const state = createState(root, scope);
+    const state = createState(root);
     if (!state) return;
     states.set(root, state);
     installHandlers(state);
     initialize(state);
-    maybeInstallTypographyWeightFilter(state);
-    maybeInstallTypographyFontStyleFilter(state);
   });
 
   hydrateHost(scope);
@@ -40,7 +37,7 @@ export function destroyDropdownActions(root: HTMLElement): void {
   hydrateHost.destroy(root);
 }
 
-function createState(root: HTMLElement, scope: Element | DocumentFragment): DropdownActionsState | null {
+function createState(root: HTMLElement): DropdownActionsState | null {
   const input = root.querySelector<HTMLInputElement>('.diet-dropdown-actions__value-field');
   const display = root.querySelector<HTMLElement>('.diet-dropdown-actions__value');
   const trigger = root.querySelector<HTMLElement>('.diet-dropdown-actions__control');
@@ -55,7 +52,6 @@ function createState(root: HTMLElement, scope: Element | DocumentFragment): Drop
   const nativeValue = captureNativeValue(input);
 
   return {
-    scope,
     root,
     input,
     display,
@@ -142,76 +138,4 @@ function syncFromValue(state: DropdownActionsState, value: string, labelOverride
       delete action.dataset.selected;
     }
   });
-}
-
-function maybeInstallTypographyWeightFilter(state: DropdownActionsState) {
-  const path = state.input.dataset.bobPath;
-  if (!path || !path.startsWith('typography.roles.') || !path.endsWith('.weight')) return;
-
-  const familyPath = path.slice(0, -'.weight'.length) + '.family';
-  const familyInput = state.scope.querySelector<HTMLInputElement>(`[data-bob-path="${familyPath}"]`);
-  if (!familyInput) return;
-
-  const update = () => {
-    const familyRoot = familyInput.closest<HTMLElement>('.diet-dropdown-actions');
-    if (!familyRoot) return;
-
-    const familyAction = Array.from(
-      familyRoot.querySelectorAll<HTMLButtonElement>('.diet-dropdown-actions__menuaction'),
-    ).find((action) => (action.dataset.value ?? '') === familyInput.value);
-
-    const raw = familyAction?.dataset.weights ?? '';
-    const allowed = raw
-      .split(',')
-      .map((w) => w.trim())
-      .filter(Boolean);
-    if (allowed.length === 0) return;
-
-    state.menuActions.forEach((action) => {
-      const value = action.dataset.value ?? '';
-      const isAllowed = allowed.includes(value);
-      action.hidden = !isAllowed;
-      action.disabled = !isAllowed;
-    });
-  };
-
-  familyInput.addEventListener('input', update);
-  state.trigger.addEventListener('click', update);
-  update();
-}
-
-function maybeInstallTypographyFontStyleFilter(state: DropdownActionsState) {
-  const path = state.input.dataset.bobPath;
-  if (!path || !path.startsWith('typography.roles.') || !path.endsWith('.fontStyle')) return;
-
-  const familyPath = path.slice(0, -'.fontStyle'.length) + '.family';
-  const familyInput = state.scope.querySelector<HTMLInputElement>(`[data-bob-path="${familyPath}"]`);
-  if (!familyInput) return;
-
-  const update = () => {
-    const familyRoot = familyInput.closest<HTMLElement>('.diet-dropdown-actions');
-    if (!familyRoot) return;
-
-    const familyAction = Array.from(
-      familyRoot.querySelectorAll<HTMLButtonElement>('.diet-dropdown-actions__menuaction'),
-    ).find((action) => (action.dataset.value ?? '') === familyInput.value);
-
-    const raw = familyAction?.dataset.styles ?? '';
-    const allowed = raw
-      .split(',')
-      .map((s) => s.trim())
-      .filter(Boolean);
-    if (allowed.length === 0) return;
-
-    state.menuActions.forEach((action) => {
-      const value = action.dataset.value ?? '';
-      const isAllowed = allowed.includes(value);
-      action.hidden = !isAllowed;
-      action.disabled = !isAllowed;
-    });
-  };
-
-  familyInput.addEventListener('input', update);
-  state.trigger.addEventListener('click', update);
-  update();
 }

@@ -81,8 +81,10 @@ Current source node shapes:
 
 ```text
 labels:  {
-  "translations": { "agentActivityTitle": "$label:translations.agent-activity.title" },
   "components": {
+    "agent-activity": {
+      "title": "$label:component.agent-activity.title"
+    },
     "dropdown-border": {
       "color": "$label:component.dropdown-border.color.label",
       "defaultColors": "$label:component.dropdown-border.default-colors.label",
@@ -123,7 +125,7 @@ ToolDrawer artifact or UI-language selection exists in the current implementatio
 The current boundary covers every visible ToolDrawer label already migrated in
 this staged pass, including widget-declared labels, widget panel names, and the
 static Agent Activity title. The compiler emits that title as
-`compiled.toolDrawerLabels.translations.agentActivityTitle`; Bob renders it
+`compiled.toolDrawerLabels.components["agent-activity"].title`; Bob renders it
 while the Translation Agent continues to own the dynamic activity-row words.
 Choice Tiles likewise receives its group label and every option label from the
 same resolved Widget label file; the Dieter stencil owns no words and allows
@@ -134,6 +136,10 @@ stencil inputs; `editor.labels.fields.dropdown-border` maps only
 compiler-generated field paths to their caller labels. Widget-authored fields
 keep their ordinary adjacent `label` token. Bob joins these sources without
 teaching Dieter or the compiler which Widget is using the component.
+Bulk Edit follows the same rule: its trigger, dialog, actions, column labels,
+placeholders, and empty-state copy are ordinary `$label` inputs owned by the
+adjacent Widget label file. Dieter owns only the generic array-table workflow;
+it has no Logo Showcase, upload, account-asset, or policy branch.
 Copy inside other reusable Dieter stencils and shared compiler modules remains
 with those current sources until its component pass moves it deliberately.
 

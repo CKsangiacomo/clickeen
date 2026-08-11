@@ -139,7 +139,7 @@
     "panel.typography": "Typography",
     "settings.cluster.faq-behavior.label": "FAQ behavior",
     "settings.field.faq.geo.enable-deep-links.toggle.label": "Allow question deep links",
-    "translations.agent-activity.title": "Translation Agent",
+    "component.agent-activity.title": "Translation Agent",
     "typography.role.answer.label": "Answer",
     "typography.role.question.label": "Question",
     "typography.role.section.label": "Section title"

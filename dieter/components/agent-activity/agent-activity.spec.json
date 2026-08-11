@@ -24,15 +24,12 @@
         "title": "Translation Agent",
         "rows": [
           {
-            "message": "Writing translations",
-            "rowClass": "body-s"
+            "message": "Writing translations"
           },
           {
-            "message": "Saving locale overlays",
-            "rowClass": "body-s"
+            "message": "Saving locale overlays"
           }
-        ],
-        "titleClass": "label-s"
+        ]
       }
     }
   ]

@@ -39,8 +39,10 @@ export interface CompiledPanel {
 }
 
 export type CompiledToolDrawerLabels = {
-  translations: {
-    agentActivityTitle: string;
+  components: {
+    'agent-activity': {
+      title: string;
+    };
   };
 };
 

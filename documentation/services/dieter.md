@@ -89,6 +89,13 @@ Compact property controls share row geometry through
 `dieter/components/shared/property-row.css`. Components continue to own their
 specific input, switch, dropdown, popover, hover, focus, and disabled behavior.
 
+Dieter components are consumer-agnostic primitives. They own reusable
+structure, presentation, and interaction, not Widget paths, account policy, or
+Bob/Roma product meaning. Visible ToolDrawer copy is supplied through the same
+caller-input contract: Widget specs declare `$label:{key}` tokens and the
+adjacent Widget label file owns the words. Dieter has no component copy catalog
+and no consumer-specific localization shape.
+
 Agent Activity owns a required caller-supplied title, a required array of
 narration rows, its `sm`/`md` structure, and its active presentation. It does
 not own caller wording. Bob supplies the static title from the open widget
@@ -111,7 +118,9 @@ Menu Action updates the value and closes immediately. Its root
 The attached Popover inherits the row's size-specific radius. Opening the
 control does not add a separate blue border or tint to the covered row.
 All visible wording remains caller input. Its selected checkmark inherits the
-Menu Actions `sm|md|lg` Icon size instead of carrying a fixed size.
+Menu Actions `sm|md|lg` Icon size instead of carrying a fixed size. Bob owns
+the separate typography-family capability filter; the Dieter component does
+not inspect typography paths, weights, or styles.
 
 Dropdown Actions, Dropdown Border, Dropdown Edit, Dropdown Fill, Dropdown
 Shadow, and Dropdown Upload use the shared clickable property-menu row rule.
@@ -141,6 +150,12 @@ Popover owns only the floating surface and label/body structure. Its standard
 header contains the caller-supplied label and no decorative Icon. Header and
 body align through the same outer Popover padding. Callers own trigger state,
 body content, selection, and any genuine action.
+
+Bulk Edit is a generic array-table composite with caller-declared text and
+checkbox columns. It contains no Logo Showcase, upload, account-asset, or
+account-policy behavior. Its trigger, dialog, action, column, placeholder, and
+empty-state words are caller inputs; ToolDrawer consumers resolve them from
+their Widget-adjacent label file.
 
 Color source keeps one small shared role layer:
 `--role-surface-bg`, `--role-surface`, `--role-surface-muted`,

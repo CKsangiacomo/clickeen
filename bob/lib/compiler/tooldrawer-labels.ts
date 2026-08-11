@@ -7,8 +7,15 @@ const LABEL_KEY_PATTERN = /^[a-z][a-z0-9]*(?:[.-][a-z0-9]+)*$/;
 const COPY_ATTRIBUTE_NAMES = new Set([
   'add-label',
   'aria-label',
+  'cancel-label',
+  'close-label',
   'data-placeholder',
+  'discard-label',
+  'discard-message',
+  'discard-title',
+  'empty-label',
   'group-label',
+  'keep-editing-label',
   'labelInputLabel',
   'labelPlaceholder',
   'move-label',
@@ -16,6 +23,7 @@ const COPY_ATTRIBUTE_NAMES = new Set([
   'remove-label',
   'reorder-label',
   'reorder-title',
+  'save-label',
   'title',
 ]);
 
@@ -140,19 +148,12 @@ function assertWidgetCopyUsesLabelTokens(widget: RawWidget, widgetType: string):
   const editorLabels = editor?.labels;
   if (
     !isRecord(editorLabels) ||
-    Object.keys(editorLabels).length !== 3 ||
-    !isRecord(editorLabels.translations) ||
-    Object.keys(editorLabels.translations).length !== 1 ||
+    Object.keys(editorLabels).length !== 2 ||
     !isRecord(editorLabels.components) ||
     !isRecord(editorLabels.fields)
   ) {
     throw new Error(`[BobCompiler] ${widgetType} ToolDrawer labels contract is invalid`);
   }
-  assertLabelToken(
-    editorLabels.translations.agentActivityTitle,
-    'editor.labels.translations.agentActivityTitle',
-    widgetType,
-  );
   for (const [component, values] of Object.entries(editorLabels.components)) {
     if (!isRecord(values)) {
       throw new Error(`[BobCompiler] ${widgetType} ToolDrawer component labels are invalid`);
@@ -226,20 +227,24 @@ function readResolvedToolDrawerLabels(
     throw new Error(`[BobCompiler] ${widgetType} resolved ToolDrawer labels are missing`);
   }
   const labels = editor.labels;
-  const translations = labels.translations;
+  const components = labels.components;
+  const agentActivity = isRecord(components) ? components['agent-activity'] : null;
   if (
-    Object.keys(labels).length !== 3 ||
-    !isRecord(translations) ||
-    Object.keys(translations).length !== 1 ||
-    typeof translations.agentActivityTitle !== 'string' ||
-    !translations.agentActivityTitle.trim() ||
-    translations.agentActivityTitle !== translations.agentActivityTitle.trim()
+    Object.keys(labels).length !== 2 ||
+    !isRecord(components) ||
+    !isRecord(agentActivity) ||
+    Object.keys(agentActivity).length !== 1 ||
+    typeof agentActivity.title !== 'string' ||
+    !agentActivity.title.trim() ||
+    agentActivity.title !== agentActivity.title.trim()
   ) {
     throw new Error(`[BobCompiler] ${widgetType} resolved ToolDrawer labels contract is invalid`);
   }
   return {
-    translations: {
-      agentActivityTitle: translations.agentActivityTitle,
+    components: {
+      'agent-activity': {
+        title: agentActivity.title,
+      },
     },
   };
 }

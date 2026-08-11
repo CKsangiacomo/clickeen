@@ -4,7 +4,7 @@
   data-bulk-path="{{path}}"
   data-row-path="{{rowPath}}"
   data-columns="{{columns}}"
-  {{#if emptyLabel}} data-empty-label="{{emptyLabel}}"{{/if}}
+  data-empty-label="{{emptyLabel}}"
 >
   <div class="diet-bulk-edit__trigger">
     <button class="diet-button" type="button" data-size="{{buttonSize}}" data-type="secondary" data-bulk-open>
@@ -12,14 +12,14 @@
     </button>
   </div>
 
-  <input type="hidden" class="diet-bulk-edit__field" value="[]" {{#if path}}data-bob-path="{{path}}"{{/if}} data-bob-json />
+  <input type="hidden" class="diet-bulk-edit__field" value="[]" data-path="{{path}}" data-bob-json />
 
   <dialog class="diet-popup" data-size="large" aria-label="{{title}}" data-bulk-modal>
     <div class="diet-bulk-edit__editor" data-bulk-editor>
       <header class="diet-popup__header">
         <h2 class="diet-bulk-edit__title heading-5">{{title}}</h2>
         <button class="diet-button" type="button" data-size="small" data-type="quaternary" data-bulk-close>
-          <span class="diet-button__label">Close</span>
+          <span class="diet-button__label">{{closeLabel}}</span>
         </button>
       </header>
       <div class="diet-popup__body">
@@ -28,28 +28,28 @@
       <footer class="diet-popup__footer">
         <div class="diet-popup__actions">
           <button class="diet-button" type="button" data-size="medium" data-type="secondary" data-bulk-cancel>
-            <span class="diet-button__label">Cancel</span>
+            <span class="diet-button__label">{{cancelLabel}}</span>
           </button>
           <button class="diet-button" type="button" data-size="medium" data-type="primary" data-bulk-save>
-            <span class="diet-button__label">Save</span>
+            <span class="diet-button__label">{{saveLabel}}</span>
           </button>
         </div>
       </footer>
     </div>
     <div class="diet-bulk-edit__editor" data-bulk-discard hidden>
       <header class="diet-popup__header">
-        <h2 class="diet-bulk-edit__title heading-5">Discard changes?</h2>
+        <h2 class="diet-bulk-edit__title heading-5">{{discardTitle}}</h2>
       </header>
       <div class="diet-popup__body">
-        <p class="body-s">Your bulk edits have not been saved.</p>
+        <p class="body-s">{{discardMessage}}</p>
       </div>
       <footer class="diet-popup__footer">
         <div class="diet-popup__actions">
           <button class="diet-button" type="button" data-size="medium" data-type="secondary" data-bulk-keep-editing>
-            <span class="diet-button__label">Keep editing</span>
+            <span class="diet-button__label">{{keepEditingLabel}}</span>
           </button>
           <button class="diet-button" type="button" data-size="medium" data-type="primary" data-bulk-discard-changes>
-            <span class="diet-button__label">Discard</span>
+            <span class="diet-button__label">{{discardLabel}}</span>
           </button>
         </div>
       </footer>

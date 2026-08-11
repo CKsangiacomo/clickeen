@@ -47,6 +47,9 @@
   "editor": {
     "labels": {
       "components": {
+        "agent-activity": {
+          "title": "$label:component.agent-activity.title"
+        },
         "dropdown-border": {
           "color": "$label:component.dropdown-border.color.label",
           "defaultColors": "$label:component.dropdown-border.default-colors.label",
@@ -62,9 +65,6 @@
           "appearance.localeSwitcherBorder": "$label:appearance.locale-switcher.border.dropdown-border.label",
           "appearance.podBorder": "$label:appearance.pod-border.dropdown-border.label"
         }
-      },
-      "translations": {
-        "agentActivityTitle": "$label:translations.agent-activity.title"
       }
     },
     "panels": [

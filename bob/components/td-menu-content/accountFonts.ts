@@ -68,6 +68,51 @@ function createMenuAction(args: {
   return button;
 }
 
+function installTypographyCapabilityFilter(args: {
+  container: HTMLElement;
+  targetSuffix: '.weight' | '.fontStyle';
+  capability: 'weights' | 'styles';
+}): void {
+  const inputs = Array.from(
+    args.container.querySelectorAll<HTMLInputElement>(
+      `[data-bob-path^="typography.roles."][data-bob-path$="${args.targetSuffix}"]`,
+    ),
+  );
+
+  inputs.forEach((input) => {
+    const targetPath = input.dataset.bobPath!;
+    const familyPath = targetPath.slice(0, -args.targetSuffix.length) + '.family';
+    const familyInput = args.container.querySelector<HTMLInputElement>(
+      `[data-bob-path="${familyPath}"]`,
+    );
+    const root = input.closest<HTMLElement>('.diet-dropdown-actions');
+    const familyRoot = familyInput?.closest<HTMLElement>('.diet-dropdown-actions');
+    const trigger = root?.querySelector<HTMLElement>('.diet-dropdown-actions__control');
+    if (!familyInput || !familyRoot || !root || !trigger) return;
+
+    const update = () => {
+      const familyAction = Array.from(
+        familyRoot.querySelectorAll<HTMLButtonElement>('.diet-dropdown-actions__menuaction'),
+      ).find((action) => action.dataset.value === familyInput.value);
+      const allowed = (familyAction?.dataset[args.capability] ?? '')
+        .split(',')
+        .map((value) => value.trim())
+        .filter(Boolean);
+      if (allowed.length === 0) return;
+
+      root.querySelectorAll<HTMLButtonElement>('.diet-dropdown-actions__menuaction').forEach((action) => {
+        const isAllowed = allowed.includes(action.dataset.value ?? '');
+        action.hidden = !isAllowed;
+        action.disabled = !isAllowed;
+      });
+    };
+
+    familyInput.addEventListener('input', update);
+    trigger.addEventListener('click', update);
+    update();
+  });
+}
+
 export function applyAccountFontLibraryToTypographyMenus(args: {
   container: HTMLElement;
   fontLibrary: AccountFontLibrary | null;
@@ -95,5 +140,16 @@ export function applyAccountFontLibraryToTypographyMenus(args: {
       fragment.appendChild(createMenuAction({ document: input.ownerDocument, option, currentValue, size }));
     });
     menu.replaceChildren(fragment);
+  });
+
+  installTypographyCapabilityFilter({
+    container: args.container,
+    targetSuffix: '.weight',
+    capability: 'weights',
+  });
+  installTypographyCapabilityFilter({
+    container: args.container,
+    targetSuffix: '.fontStyle',
+    capability: 'styles',
   });
 }

@@ -52,6 +52,14 @@ primitives such as `icon` are named exceptions, not a second contract.
 
 The component-level product law is implemented:
 
+- Dieter components are consumer-agnostic primitives. They own reusable
+  structure, presentation, and interaction; they do not inspect Widget paths,
+  account policy, Bob domains, Roma domains, or another consumer's product
+  meaning.
+- Visible component copy is caller input. In the ToolDrawer, Widget specs use
+  `$label:{key}` tokens and the adjacent Widget label file supplies the exact
+  words. Components do not keep their own copy catalog or use a different
+  localization contract for each consumer.
 - Button is one `.diet-button` primitive. Its direct children determine whether
   it is text-only, icon-only, or icon-and-text; those are not separate Button
   classes or variants.
@@ -104,7 +112,9 @@ The component-level product law is implemented:
   The component owns no visible wording: label, placeholder, group labels,
   option labels, and badges are caller inputs. Its selected checkmark follows
   the Menu Actions size ladder at `.75rem/1rem/1.25rem`; it is not pinned to a
-  separate glyph size.
+  separate glyph size. Typography-family capability filtering is Bob-owned
+  consumer behavior; Dropdown Actions does not inspect typography paths or
+  font metadata.
 - Clickable property-menu rows use the existing shared two-rail structure.
   The complete caller label stays on the leading rail. The trailing rail is
   right aligned; its dynamic text yields and receives the end ellipsis before
@@ -141,8 +151,7 @@ The component-level product law is implemented:
   inline; Object Manager reorders/deletes top-level objects in a dialog. Their
   real component dependencies must be declared. A JS-to-TS rewrite requires a
   behavior reason.
-- The six dropdown triggers and Bulk Edit's copied upload trigger are native
-  buttons.
+- The six dropdown triggers are native buttons.
 - `dropdown-actions` is one immediate-choice listbox workflow; its dead
   footer/apply branch is gone.
 - `dropdown-edit` shows the leading portion of long closed-trigger text and
@@ -153,6 +162,12 @@ Bulk Edit and Object Manager follow the exact dismissal contract in
 [`dialogs-and-modals.md`](dialogs-and-modals.md). Saving either dialog applies
 local edits to Bob's working state; account persistence remains Bob's separate
 Save command.
+
+Bulk Edit is a generic array-table editor. Its current column controls are text
+and checkbox, declared by the caller. It does not contain Logo Showcase,
+upload, account-asset, or account-policy behavior. The caller supplies its
+trigger, dialog, action, column, placeholder, and empty-state words; a Widget
+ToolDrawer use supplies all of them through that Widget's adjacent label file.
 
 Dieter Popover owns the attached floating surface, padding, radius, shadow,
 header/body structure, and open-state presentation. Its standard header is a
@@ -211,7 +226,8 @@ Agent Activity renders one caller-supplied title and one or more
 caller-supplied narration rows. Dieter owns the multi-row structure, `sm`/`md`
 sizes, active presentation, and transient status semantics; it owns none of the
 visible words. In Bob's ToolDrawer, the open widget artifact supplies the
-static title and Translation Agent events supply the dynamic rows.
+static title from `compiled.toolDrawerLabels.components["agent-activity"].title`, and
+Translation Agent events supply the dynamic rows.
 
 The active component uses `--color-system-purple-5` as its surface and a thin
 animated gradient stroke composed from existing system colors. The gradient is

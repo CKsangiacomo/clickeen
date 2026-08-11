@@ -58,6 +58,14 @@
     "appearance.field.logoshowcase.appearance.logo-opacity.valuefield.label": "Logo opacity (0-1)",
     "content.cluster.carousel.label": "Carousel",
     "content.cluster.content.label": "Content",
+    "content.field.logoshowcase.strips.bulk-edit.attr.cancel-label": "Cancel",
+    "content.field.logoshowcase.strips.bulk-edit.attr.close-label": "Close",
+    "content.field.logoshowcase.strips.bulk-edit.attr.discard-label": "Discard",
+    "content.field.logoshowcase.strips.bulk-edit.attr.discard-message": "Your bulk edits have not been saved.",
+    "content.field.logoshowcase.strips.bulk-edit.attr.discard-title": "Discard changes?",
+    "content.field.logoshowcase.strips.bulk-edit.attr.empty-label": "No rows available",
+    "content.field.logoshowcase.strips.bulk-edit.attr.keep-editing-label": "Keep editing",
+    "content.field.logoshowcase.strips.bulk-edit.attr.save-label": "Save",
     "content.field.logoshowcase.strips.bulk-edit.attr.title": "Logo details",
     "content.field.logoshowcase.strips.bulk-edit.column.alt.label": "Alt text",
     "content.field.logoshowcase.strips.bulk-edit.column.caption.label": "Caption",
@@ -119,6 +127,6 @@
     "panel.layout": "Layout",
     "panel.settings": "Settings",
     "panel.typography": "Typography",
-    "translations.agent-activity.title": "Translation Agent"
+    "component.agent-activity.title": "Translation Agent"
   }
 }

@@ -332,7 +332,7 @@ function hydrateIcons(scope: ParentNode) {
 }
 
 function hydrateDieterComponents(scope: Element | DocumentFragment): void {
-  hydrateBulkEdit(scope, { accountAssets: showcaseAccountAssets });
+  hydrateBulkEdit(scope);
   hydrateChoiceTiles(scope);
   hydrateObjectManager(scope);
   hydrateTextfield(scope);

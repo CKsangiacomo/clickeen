@@ -316,7 +316,7 @@ The panel sends one Generate translations command with the open `instanceId`.
 Roma resolves active locales and calls the Translation Agent Worker. While the
 operation is running, Bob disables the button and displays transient Agent
 Activity. Its static title comes from the open widget artifact's exact
-`toolDrawerLabels.translations.agentActivityTitle`; its dynamic rows are authored
+`toolDrawerLabels.components["agent-activity"].title`; its dynamic rows are authored
 by the Translation Agent while overlays are written. When the operation returns,
 the transient Agent Activity UI disappears and Bob shows
 durable command-result feedback from Roma's response: success, no accepted
@@ -336,8 +336,12 @@ it does not summarize, reinterpret, probe, reconcile, or persist it.
 
 Bob's current product UI is English. ToolDrawer labels compile from each
 widget's adjacent English label file, including the static Agent Activity title
-and the field/component labels used by the global Dropdown Border stencil;
-Bob chrome and other reusable Dieter component copy remain their current
+and the field/component labels used by global Dieter stencils. Bulk Edit's
+trigger, dialog, action, column, placeholder, and empty-state words use that
+same Widget-adjacent contract. Bob also owns the account-font capability
+filtering applied to generic Dropdown Actions; Dieter does not inspect
+typography paths or font metadata. Bob chrome and other reusable Dieter
+component copy remain their current
 English source. Bob receives no UI locale,
 loads no UI-language file at runtime, and does not change an open editor
 session's UI language. The person preference stored by Berlin/Michael is

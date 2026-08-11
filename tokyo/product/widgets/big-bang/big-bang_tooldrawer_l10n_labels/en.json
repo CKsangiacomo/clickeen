@@ -31,7 +31,7 @@
     "panel.layout": "Layout",
     "panel.settings": "Settings",
     "panel.typography": "Typography",
-    "translations.agent-activity.title": "Translation Agent",
+    "component.agent-activity.title": "Translation Agent",
     "typography.role.big-bang.label": "Big Bang statement",
     "typography.role.body.label": "Subtitle and supporting copy"
   }
