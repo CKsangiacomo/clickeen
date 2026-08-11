@@ -1,28 +1,9 @@
 <div class="diet-popover">
   <div class="diet-popover__header">
-    <span class="diet-popover__header-label {{#if headerLabelClass}}{{headerLabelClass}}{{else}}label-s{{/if}}">
-      {{#if headerLabel}}{{headerLabel}}{{else}}Popover{{/if}}
-    </span>
-    <button
-      type="button"
-      class="diet-button diet-popover__header-trigger"
-      data-size="small"
-      data-type="quaternary"
-      aria-hidden="true"
-      tabindex="-1"
-    >
-      <span
-        class="diet-icon"
-        data-icon="{{#if headerIcon}}{{headerIcon}}{{else}}textformat.characters.dottedunderline{{/if}}"
-       data-size="12"></span>
-    </button>
+    <span class="diet-popover__header-label label-s">{{headerLabel}}</span>
   </div>
   <div class="diet-popover__body">
-    <p class="{{#if bodyClass}}{{bodyClass}}{{else}}body-s{{/if}}">
-      This is a sample block of content inside the popover. The body stretches to fit whatever nodes you render here.
-    </p>
-    <p class="{{#if bodyClass}}{{bodyClass}}{{else}}body-s{{/if}}">
-      Use the popover body to stack menu actions, form controls, or informational text.
-    </p>
+    <p class="body-s">{{bodyLineOne}}</p>
+    <p class="body-s">{{bodyLineTwo}}</p>
   </div>
 </div>

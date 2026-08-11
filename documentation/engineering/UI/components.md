@@ -89,6 +89,17 @@ The component-level product law is implemented:
   Labels wrap rather than truncate, so the caller's exact wording remains
   visible. Dieter owns no group or option words; Widget ToolDrawer instances
   supply both from their adjacent label file.
+- Dropdown Actions is an immediate string chooser. At rest it shows the
+  caller-supplied field label and current value; its hover treatment discloses
+  the control without adding a permanent chevron. Opening it places the
+  existing Popover over the row, repeats only the caller-supplied label in the
+  header, and presents Menu Actions. Choosing an option updates the bound
+  value and closes the Popover immediately; there is no Apply footer.
+  `data-size="sm|md|lg"` is the component's single geometry and typography
+  authority: the trigger is `1.25rem/1.5rem/1.75rem` high and uses
+  `.6875rem/.8125rem/.875rem` text. Current ToolDrawer instances use `md`.
+  The component owns no visible wording: label, placeholder, group labels,
+  option labels, and badges are caller inputs.
 - Menu Actions remains a separate menu-row primitive with its existing
   `sm|md|lg` API. Low-level geometry tokens remain internal source mechanics.
 - `textrename` is deleted because it had no product consumer.
@@ -109,6 +120,14 @@ Bulk Edit and Object Manager follow the exact dismissal contract in
 [`dialogs-and-modals.md`](dialogs-and-modals.md). Saving either dialog applies
 local edits to Bob's working state; account persistence remains Bob's separate
 Save command.
+
+Dieter Popover owns the attached floating surface, padding, radius, shadow,
+header/body structure, and open-state presentation. Its standard header is a
+caller-supplied label only; it does not invent a decorative header Icon or
+visible copy. The caller owns the trigger, open state, body content, selection,
+and any real workflow action. A component with a genuine close or command
+action composes that action explicitly rather than receiving a decorative
+Popover control.
 
 Per-component source documentation records markup, `data-*` attributes,
 binding, behavior/hydration, variants, sizes, states, and semantics. Step 6 maps

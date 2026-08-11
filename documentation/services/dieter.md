@@ -102,6 +102,18 @@ component owns no visible wording. Widget ToolDrawer instances supply the
 group label and every option label from the Widget's adjacent ToolDrawer label
 file.
 
+Dropdown Actions owns the compact immediate-choice row and its attached
+Popover composition. The closed row shows caller-supplied label and current
+value, hover discloses interaction without a resting chevron, and choosing a
+Menu Action updates the value and closes immediately. Its root
+`data-size="sm|md|lg"` owns the `1.25rem/1.5rem/1.75rem` row heights and
+`.6875rem/.8125rem/.875rem` typography; current ToolDrawer instances use `md`.
+All visible wording remains caller input.
+
+Popover owns only the floating surface and label/body structure. Its standard
+header contains the caller-supplied label and no decorative Icon. Callers own
+trigger state, body content, selection, and any genuine action.
+
 Color source keeps one small shared role layer:
 `--role-surface-bg`, `--role-surface`, `--role-surface-muted`,
 `--role-border`, and `--role-error`. Text and focus retain their existing

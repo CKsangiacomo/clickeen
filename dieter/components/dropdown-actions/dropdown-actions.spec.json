@@ -5,9 +5,7 @@
     "size": { "enum": ["sm", "md", "lg"], "default": "md" },
     "path": { "optional": true },
     "label": { "optional": true },
-    "headerLabel": { "optional": true },
-    "headerIcon": { "optional": true },
-    "placeholder": { "optional": true, "default": "Hint text" },
+    "placeholder": { "optional": true },
     "value": { "optional": true }
   },
   "binding": { "path": "instanceData[PATH]", "type": "string" },
@@ -23,22 +21,34 @@
         "placeholder": "Select a color",
         "value": "value-one",
         "path": "",
-        "popoverLabel": "Color options",
-        "labelClass": "label-s",
-        "bodyClass": "body-s",
-        "headerLabel": "Label",
-        "headerIcon": "textformat.size.larger",
-        "headerLabelClass": "label-s",
+        "state": "closed",
+        "expanded": "false",
         "options": [
           { "label": "Value one", "value": "value-one", "selected": true },
           { "label": "Value two", "value": "value-two" },
           { "label": "Value three", "value": "value-three" }
         ]
-      },
-      "sizeContext": {
-        "sm": { "labelClass": "label-xs", "bodyClass": "body-xs" },
-        "md": { "labelClass": "label-s", "bodyClass": "body-s" },
-        "lg": { "labelClass": "label-m", "bodyClass": "body-m" }
+      }
+    },
+    {
+      "id": "dropdown-actions-open",
+      "title": "Open selection",
+      "sizes": ["md"],
+      "spec": ["diet-dropdown-actions", "data-size='md'", "data-state='open'"],
+      "context": {
+        "size": "md",
+        "id": "dropdown-actions-open",
+        "label": "Label",
+        "placeholder": "Select a color",
+        "value": "value-one",
+        "path": "",
+        "state": "open",
+        "expanded": "true",
+        "options": [
+          { "label": "Value one", "value": "value-one", "selected": true },
+          { "label": "Value two", "value": "value-two" },
+          { "label": "Value three", "value": "value-three" }
+        ]
       }
     }
   ]

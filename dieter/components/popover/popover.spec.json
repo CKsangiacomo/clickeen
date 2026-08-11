@@ -2,8 +2,7 @@
   "component": "popover",
   "syntax": "<div class='diet-popover'>…</div>",
   "attributes": {
-    "headerLabel": { "optional": true },
-    "headerIcon": { "optional": true }
+    "headerLabel": { "optional": true }
   },
   "defaults": [
     {
@@ -12,14 +11,9 @@
       "spec": ["diet-popover"],
       "context": {
         "size": "default",
-        "headerLabel": "Delete",
-        "headerIcon": "trash"
-      },
-      "sizeContext": {
-        "default": {
-          "headerLabelClass": "label-s",
-          "bodyClass": "body-s"
-        }
+        "headerLabel": "Property",
+        "bodyLineOne": "Caller-provided content belongs in the Popover body.",
+        "bodyLineTwo": "Popover owns the floating surface and its structure."
       }
     }
   ]

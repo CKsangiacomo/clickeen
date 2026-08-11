@@ -158,7 +158,7 @@ the code is convenient there.
 | Stage | Status | Release state |
 | --- | --- | --- |
 | Stage 1 — Scaffold only | Complete | Committed, pushed, and deployed; no non-English experience is exposed |
-| Stage 2 — Dieter UI pass | In progress: Foundations, Agent Activity, Bulk Edit, Button, and Choice Tiles complete | Choice Tiles contract is ready for exact-SHA cloud-dev QA |
+| Stage 2 — Dieter UI pass | In progress: Foundations, Agent Activity, Bulk Edit, Button, Choice Tiles, Dropdown Actions, and Popover complete | Dropdown Actions and Popover are ready for exact-SHA cloud-dev QA |
 | Stage 3 — Bob UI pass | Not started | No authority to begin until explicitly directed |
 | Stage 4 — Roma UI pass | Not started | No authority to begin until explicitly directed |
 | Stage 5 — Translation pass | Not started | No translations may be generated yet |
@@ -308,6 +308,27 @@ authority.
   option copy through their adjacent English ToolDrawer label files; no Dieter
   copy, catalog, locale folder, non-English artifact, or runtime locale path was
   added. Selection and string binding remain unchanged.
+
+- **Dropdown Actions and Popover — passed after correction, 2026-08-10.** This
+  was a component-only slice; it did not migrate Widget, Bob, or Roma
+  consumers. Dropdown Actions retains the intended closed-state UX: the row
+  shows its caller-supplied label and current value, hover discloses the
+  interaction, and no resting chevron was added. Opening replaces the row with
+  its attached Popover; selecting a Menu Action updates the bound value and
+  closes immediately without an Apply footer. The root `sm|md|lg` value is now
+  the sole component geometry and typography authority, using
+  `1.25rem/1.5rem/1.75rem` trigger heights and
+  `.6875rem/.8125rem/.875rem` text. Current ToolDrawer instances remain `md`.
+  The standard Popover header now contains only its caller-supplied label; the
+  useless decorative Icon was removed. Popover structure owns no example or
+  fallback words, and Dropdown Actions continues to receive its label,
+  placeholder, group labels, option labels, and badges through its existing
+  inputs. DevStudio reveals closed `sm|md|lg`, open `md`, and generic Popover
+  source states. The eight existing English Widget artifact pairs were
+  regenerated from that canonical component source; no Widget, Bob, or Roma
+  consumer source was rewritten. No validator, compilation guard, locale file,
+  translation generation, runtime locale path, or adjacent component cleanup
+  was added.
 
 ### Per-Tab Execution Loop
 

@@ -1,4 +1,4 @@
-<div class="diet-dropdown-actions diet-popover-host" data-size="{{size}}" data-state="closed">
+<div class="diet-dropdown-actions diet-popover-host" data-size="{{size}}" data-state="{{state}}">
   <input
     id="{{id}}"
     type="hidden"
@@ -12,28 +12,26 @@
     type="button"
     class="diet-dropdown-header diet-dropdown-actions__control"
     aria-haspopup="listbox"
-    aria-expanded="false"
+    aria-expanded="{{expanded}}"
     {{#if label}}aria-labelledby="{{id}}-label"{{/if}}
   >
     {{#if label}}
       <span
-        class="diet-dropdown-header-label {{labelClass}}"
+        class="diet-dropdown-header-label"
         id="{{id}}-label"
       >{{label}}</span>
     {{/if}}
-    <span class="diet-dropdown-header-value {{bodyClass}}" data-muted="true" data-placeholder="{{placeholder}}">{{placeholder}}</span>
+    <span class="diet-dropdown-header-value" data-muted="true" data-placeholder="{{placeholder}}">{{placeholder}}</span>
   </button>
 
   <div
     class="diet-popover diet-dropdown-actions__popover"
     role="listbox"
-    aria-label="{{popoverLabel}}"
-    data-state="closed"
+    aria-label="{{label}}"
+    data-state="{{state}}"
   >
     <div class="diet-popover__header">
-      <span class="diet-popover__header-label {{#if headerLabelClass}}{{headerLabelClass}}{{else}}label-s{{/if}}">
-        {{#if headerLabel}}{{headerLabel}}{{else}}{{label}}{{/if}}
-      </span>
+      <span class="diet-popover__header-label">{{label}}</span>
     </div>
     <div class="diet-popover__body diet-dropdown-actions__menu">
       {{#each options}}
@@ -52,7 +50,7 @@
         role="option"
         {{#if selected}}aria-selected="true" data-selected="true"{{/if}}
       >
-        <span class="diet-btn-menuactions__label {{bodyClass}}">
+        <span class="diet-btn-menuactions__label">
           <span class="diet-dropdown-actions__menuaction-text">{{label}}</span>
           {{#if badge}}
           <span class="diet-dropdown-actions__badge caption">{{badge}}</span>
