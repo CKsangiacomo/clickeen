@@ -96,6 +96,14 @@ caller-input contract: Widget specs declare `$label:{key}` tokens and the
 adjacent Widget label file owns the words. Dieter has no component copy catalog
 and no consumer-specific localization shape.
 
+This boundary is the localization support: Dieter receives exact resolved
+human-language strings. It does not load a locale or choose a translation.
+Bob/Roma Chrome resolves its own application copy before composing the same
+primitive. Consumer-specific data, capability filtering, and state changes
+stay with the owning consumer; they do not become Dieter variants or branches.
+Generic binding inputs and events connect a primitive to its host without
+giving Dieter ownership of the host's product meaning.
+
 Agent Activity owns a required caller-supplied title, a required array of
 narration rows, its `sm`/`md` structure, and its active presentation. It does
 not own caller wording. Bob supplies the static title from the open widget

@@ -267,7 +267,7 @@ Visitor requests must not:
 If the requested public artifact is not available, the boundary returns an
 explicit failure such as 404.
 
-## Tenet 12: Dieter Tokens First
+## Tenet 12: Dieter Tokens And Consumer-Agnostic Primitives First
 
 Widget configs use Dieter tokens by default for styling. User overrides are
 allowed through explicit controls when the widget contract permits them.
@@ -292,6 +292,25 @@ Example explicit user override:
   }
 }
 ```
+
+Dieter components are primitives. They own reusable structure, presentation,
+and component-generic interaction only. They must not contain branches,
+defaults, capability filtering, policy, state paths, copy, or behavior for a
+particular Widget, account, Bob domain, Roma domain, or other consumer.
+Consumer-specific composition and product behavior remain with the authority
+that owns that consumer.
+
+Components support localization through one boundary: callers supply exact
+resolved human-language strings. A component does not load a locale, choose a
+translation, keep a copy catalog, or define a consumer-specific localization
+shape. In the ToolDrawer, Widget specs declare `$label:{key}` and the adjacent
+Widget label file owns the words; Bob compiles the resolved strings into the
+Widget editor artifact. Application Chrome resolves its own copy before
+composing the same Dieter primitive.
+
+Shared component presentation belongs in an existing Dieter primitive or
+shared Dieter source. A consumer-specific exception remains consumer
+composition; it does not become a new Dieter variant, branch, or special case.
 
 ## Tenet 13: Documentation Is Operator Truth
 

@@ -50,16 +50,31 @@ CSS, and behavior source only when native behavior is insufficient. A missing
 required spec is a failure, not optional success. Explicit presentation-only
 primitives such as `icon` are named exceptions, not a second contract.
 
-The component-level product law is implemented:
+The governing component product law is:
 
 - Dieter components are consumer-agnostic primitives. They own reusable
   structure, presentation, and interaction; they do not inspect Widget paths,
   account policy, Bob domains, Roma domains, or another consumer's product
   meaning.
-- Visible component copy is caller input. In the ToolDrawer, Widget specs use
-  `$label:{key}` tokens and the adjacent Widget label file supplies the exact
-  words. Components do not keep their own copy catalog or use a different
-  localization contract for each consumer.
+- Consumer-specific data, capability filtering, state transitions, and product
+  composition remain in the owning consumer. A consumer-specific need does not
+  create a Dieter branch, special case, or variant.
+- Visible and accessible human-language copy is caller input. Components
+  receive exact resolved strings; they do not load a locale, select a
+  translation, keep a copy catalog, or use a different localization contract
+  for each consumer.
+- ToolDrawer copy always follows the same route: Widget specs use
+  `$label:{key}`, the adjacent Widget label file supplies the exact words, Bob
+  resolves them while compiling the Widget editor artifact, and the component
+  receives the resolved string. Bob/Roma Chrome resolves its own application
+  copy before composing the same primitive.
+- A component may expose generic values, events, slots, and binding inputs. A
+  host adapter may connect those to its state, but the component must not
+  interpret the host's product domain.
+- Shared presentation belongs in an existing Dieter primitive or shared Dieter
+  source. Components may share geometry without merging their distinct jobs.
+  Any source that violates these rules is a component defect to correct in its
+  owning pass, not a precedent for another exception.
 - Button is one `.diet-button` primitive. Its direct children determine whether
   it is text-only, icon-only, or icon-and-text; those are not separate Button
   classes or variants.

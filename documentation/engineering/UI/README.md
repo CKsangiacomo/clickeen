@@ -21,6 +21,36 @@ Every doc points inward at its owning source and outward to the consumers in
 its blast radius. Product law lives in the domain doctrine; current runtime
 behavior lives in source.
 
+## Governing component law
+
+These rules govern every Dieter component and every UI surface that consumes
+one:
+
+- A Dieter component is a consumer-agnostic primitive. It owns reusable
+  structure, presentation, and component-generic interaction—not Widget,
+  account, Bob, Roma, policy, or another consumer's product meaning.
+- Consumer-specific data, capability rules, state transitions, and composition
+  remain in the owning consumer. They do not create Dieter branches or ad hoc
+  component variants.
+- Human-language copy is caller input. The caller resolves the exact string;
+  Dieter does not load locales, choose translations, or keep a component copy
+  catalog.
+- ToolDrawer copy uses one shape: `$label:{key}` in the Widget spec, the exact
+  value in that Widget's adjacent label file, compiler resolution into the
+  Widget editor artifact, and the resolved string passed to the Dieter
+  primitive.
+- Bob and Roma Chrome use the same component boundary: their owning UI
+  localization source resolves the string before the component receives it.
+  A component never gets a Bob-, Roma-, or Widget-specific localization API.
+- Shared presentation is fixed in the existing Dieter primitive or shared
+  Dieter source. Different product jobs remain separate consumer composition;
+  visual consistency is not permission to merge their behavior.
+
+[`components.md`](components.md) owns exact component APIs and
+[`dieter.md`](dieter.md) owns the system mechanics. A source violation is a
+component defect to correct in its owning pass, not a precedent for another
+exception.
+
 ## The docs
 
 **System**

@@ -89,6 +89,17 @@ layering are owned by their own UI docs.
 
 ## How the component system works
 
+- **Primitive boundary.** A Dieter component owns reusable structure,
+  presentation, and component-generic interaction. It does not inspect a
+  Widget path, account policy, font capability, Bob/Roma domain, or another
+  consumer's product meaning. Consumer-specific behavior stays in the owning
+  consumer and composes the primitive through its declared inputs and outputs.
+- **Copy and localization boundary.** Visible and accessible human-language
+  copy is resolved by the caller before it reaches the component. Dieter does
+  not load locales, choose translations, or keep a copy catalog. ToolDrawer
+  callers use `$label:{key}` plus the adjacent Widget label file; application
+  Chrome uses its owning application copy source while preserving the same
+  component input boundary.
 - **Stencil + spec where the component is field-rendered.** Rendered editor
   components normally pair an `.html` stencil with a `.spec.json` binding
   model. CSS-only primitives and specialized components may intentionally have
@@ -112,11 +123,11 @@ Dieter has no generated runtime mirror or browser manifest. App builds consume
 source, and public widget packages contain the CSS they require. The CDN is
 used only for committed SVG icon bytes.
 
-For account-font controls, Dieter owns dropdown presentation and emits the
-selected family as raw control intent. It may filter visible weight/style
-options from supplied metadata, but it does not choose companion values or emit
-a three-field typography operation. Bob and Roma resolve the family transition
-through the shared account-font product law.
+For account-font controls, Dieter owns generic dropdown presentation and emits
+the selected value as raw control intent. It does not inspect typography paths
+or font metadata and does not filter available weights or styles. Bob owns the
+account-font capability filter used by Builder; Bob and Roma own their product
+state transitions through the shared account-font product law.
 
 `@ck/dieter` is a source/typecheck task package, not a separately shipped
 runtime. Consumers use the source entrypoints named above. Do not invent a
