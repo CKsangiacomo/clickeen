@@ -7,6 +7,8 @@ import {
   installClusterCollapseBehavior,
   runHydrators,
 } from './dom';
+import { serializeBobJsonFieldValue } from './fieldValue';
+import { getAt } from '../../lib/utils/paths';
 import type { AccountAssetsClient } from '../../../dieter/components/shared/account-assets';
 import type { AccountFontLibrary } from '@clickeen/widget-foundation';
 import { applyAccountFontLibraryToTypographyMenus } from './accountFonts';
@@ -58,6 +60,12 @@ export function useTdMenuHydration(args: {
 
     try {
       applyAccountFontLibraryToTypographyMenus({ container, fontLibrary });
+      container
+        .querySelectorAll<HTMLInputElement>('input[data-bob-path][data-bob-json]')
+        .forEach((field) => {
+          const path = field.getAttribute('data-bob-path')!;
+          field.value = serializeBobJsonFieldValue(field, getAt(instanceDataRef.current, path));
+        });
       runHydrators(container, { accountAssets });
       showIfEntriesRef.current = buildShowIfEntries(container);
       applyShowIfVisibility(showIfEntriesRef.current, instanceDataRef.current);

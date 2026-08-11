@@ -27,6 +27,9 @@ test.describe('Roma Builder authenticated smoke', () => {
     await expect(bobFrame.locator('section.workspace[data-widget-ready="true"]')).toBeVisible({
       timeout: 30_000,
     });
+    await bobFrame.getByRole('tab', { name: 'Appearance' }).click();
+    await expect(bobFrame.getByText('Builder controls failed to load.')).toHaveCount(0);
+    await expect(bobFrame.locator('.diet-dropdown-border').first()).toBeVisible();
     const iframeBox = await bobIframe.boundingBox();
     expect(iframeBox?.width ?? 0).toBeGreaterThan(900);
     expect(iframeBox?.height ?? 0).toBeGreaterThan(600);

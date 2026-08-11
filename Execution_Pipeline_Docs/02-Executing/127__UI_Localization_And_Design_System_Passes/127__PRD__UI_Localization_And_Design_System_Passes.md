@@ -637,3 +637,17 @@ authorizes it.
   DevStudio component reveals were regenerated from the existing authorities.
   Dropdown Upload remains the separate single-file workflow and other
   property-menu components remain unchanged for their own passes.
+
+- **Builder hydration correction — passed, 2026-08-11.** The deployed
+  component pass exposed an existing host-order fact: compiled ToolDrawer JSON
+  inputs begin empty because their current values belong to the opened Widget
+  instance, while Dieter hydration previously ran before Bob supplied those
+  values. Dropdown Border now consumes exact state directly, so parsing the
+  empty compiled placeholder correctly failed the Appearance panel instead of
+  inventing a border. Bob now writes its already-loaded instance JSON values
+  into the existing `data-bob-path` fields before activating Dieter controls.
+  Roma Widget Defaults performs the same existing value sync before its shared
+  control-host hydration. No default, fallback, repaired state, Widget special
+  case, compatibility path, or new lifecycle system was added. The existing
+  authenticated Builder smoke now opens Appearance and requires a rendered
+  Dropdown Border with no controls-load error.

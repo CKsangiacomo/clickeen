@@ -296,6 +296,11 @@ dieter/components/{type}/{type}.spec.json
 
 Bob and Roma compile Dieter CSS and hydrators from source. Compiled widget
 artifacts contain panel HTML and do not contain per-control Dieter media lists.
+They also do not contain current instance or account-default values. The host
+projects exact current JSON values into `data-bob-path` fields before running
+Dieter hydrators, so a compiled empty JSON field is only an unbound placeholder
+and never a runtime default or fallback. Other control values remain on their
+existing host binding path.
 
 Dieter stencil icon names remain `data-icon` references in compiled panel HTML.
 Source hydration renders them as CDN-backed CSS masks from

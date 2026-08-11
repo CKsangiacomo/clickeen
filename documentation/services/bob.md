@@ -111,8 +111,11 @@ working state to the preview. Object, JSON, array, insert, remove, and move
 operations revalidate the complete document because they can change its shape.
 Bob also validates the complete document when opening and before saving.
 Opening or rebuilding a panel projects the complete browser-memory working
-state into that panel's controls. Changed-path updates apply only while the same
-panel control surface remains mounted.
+state into that panel's controls. For JSON-bound Dieter controls, Bob writes the
+exact value from that working state into the compiled `data-bob-path` field
+before running the Dieter hydrator; the empty value authored in compiled panel
+HTML is only an unbound placeholder, not product truth or a default. Changed-path
+updates apply only while the same panel control surface remains mounted.
 
 ## Dieter Icons
 

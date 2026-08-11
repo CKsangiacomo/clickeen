@@ -445,7 +445,10 @@ document, and saves the full document back through the same Roma route. It uses
 Bob's paired `@clickeen/bob/control-host` and
 `@clickeen/bob/control-host.css` exports for compiled-control behavior and
 presentation; Roma owns the surrounding page and draft state, not a second copy
-of the control host.
+of the control host. Before running Dieter hydrators, the shared host projects
+the exact current draft values into the compiled controls. It then synchronizes
+the hydrated control surface from that same draft; compiled empty fields are not
+defaults or fallback values.
 
 The persisted defaults split is `common` plus
 `widgets.{widgetType}.core`. `common` means one account default reused across

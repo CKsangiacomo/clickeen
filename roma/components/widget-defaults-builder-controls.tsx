@@ -361,6 +361,7 @@ export function WidgetDefaultsBuilderControls({
 
     try {
       applyAccountFontLibraryToTypographyMenus({ container, fontLibrary });
+      syncControlValues(container, valuesRef.current, showIfEntriesRef.current);
       runHydrators(container, { accountAssets: stubAccountAssets });
       showIfEntriesRef.current = buildShowIfEntries(container);
       syncControlValues(container, valuesRef.current, showIfEntriesRef.current);
