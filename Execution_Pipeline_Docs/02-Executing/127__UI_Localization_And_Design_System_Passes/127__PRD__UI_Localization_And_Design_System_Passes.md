@@ -332,6 +332,9 @@ authority.
   A visual-QA follow-up removed the selected checkmark's fixed `12px` size so
   it now follows Menu Actions at `12/16/20px` for `sm/md/lg`, and removed the
   Popover header's second inline inset so header and body share one left edge.
+  The attached Popover now inherits the Dropdown Actions `sm|md|lg` radius,
+  and opening the control no longer adds a separate blue border or tint to the
+  covered trigger.
   Dieter applies that size to both the canonical direct Icon and the nested
   Icon shape still authored by Bob account-font menus and Roma Dropdown
   Actions. Their redundant `data-size="12"` attributes remain explicitly

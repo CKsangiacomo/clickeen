@@ -108,6 +108,8 @@ value, hover discloses interaction without a resting chevron, and choosing a
 Menu Action updates the value and closes immediately. Its root
 `data-size="sm|md|lg"` owns the `1.25rem/1.5rem/1.75rem` row heights and
 `.6875rem/.8125rem/.875rem` typography; current ToolDrawer instances use `md`.
+The attached Popover inherits the row's size-specific radius. Opening the
+control does not add a separate blue border or tint to the covered row.
 All visible wording remains caller input. Its selected checkmark inherits the
 Menu Actions `sm|md|lg` Icon size instead of carrying a fixed size.
 

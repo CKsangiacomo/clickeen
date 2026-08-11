@@ -95,6 +95,9 @@ The component-level product law is implemented:
   existing Popover over the row, repeats only the caller-supplied label in the
   header, and presents Menu Actions. Choosing an option updates the bound
   value and closes the Popover immediately; there is no Apply footer.
+  The attached Popover inherits the row's `sm|md|lg` radius. Opening the
+  control does not add a separate blue border or tint to the covered row; the
+  Popover itself communicates the open state.
   `data-size="sm|md|lg"` is the component's single geometry and typography
   authority: the trigger is `1.25rem/1.5rem/1.75rem` high and uses
   `.6875rem/.8125rem/.875rem` text. Current ToolDrawer instances use `md`.
