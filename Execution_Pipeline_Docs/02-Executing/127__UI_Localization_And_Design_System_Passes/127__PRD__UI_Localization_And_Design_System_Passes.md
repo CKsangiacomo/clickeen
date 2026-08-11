@@ -223,124 +223,6 @@ DevStudio is the human cockpit and visual execution agenda. It reveals source
 truth; it is not a second design-system, Widget, catalog, entitlement, or model
 authority.
 
-### Execution Record
-
-- **Core styles — passed, 2026-08-09.** The 53 non-layout source tokens are
-  generated from the canonical Dieter foundation file, use the same validation
-  contract as the write route, and all have active consumers.
-- **Colors — passed after correction, 2026-08-09.** The reveal now includes all
-  138 color, role, focus, and state declarations. The four existing state-mix
-  percentages are visible as read-only rows with representative color samples;
-  color edit authority remains limited to literal `--color-*` hex values.
-- **Icons — passed after systemic correction, 2026-08-09.** The human-selected
-  source contains 165 icons. One SF exporter now generates every SVG with
-  `currentColor` and a shared optical-canvas formula, so component slots no
-  longer magnify tightly cropped glyphs differently. DevStudio reveals the SVG
-  directory directly. Dieter, DevStudio, Bob, Roma, Prague, and Widgets do not
-  maintain a second global approval list, compare the icon library against
-  itself, or ask whether a declared Dieter icon is allowed. Product fields may
-  still declare the exact choices that field offers.
-- **Typography — passed after correction, 2026-08-09.** DevStudio reveals the
-  31 real Dieter visual classes and uses one page-level editor for their 17
-  shared live source tokens. Four unused tokens and one invalid DevStudio class
-  were removed. The existing write boundary now preserves exact typed input and
-  visibly rejects invalid sizes or line heights instead of trimming or
-  committing a changed value. Public Widget runtime now uses saved
-  `typography.roleScales` as its sole scale authority; Roma rejects missing
-  declared roles, scales, tracking presets, or line-height presets before save,
-  and Countdown's formerly implicit values are explicit. Prague font delivery
-  remains deferred to the Prague pass by owner direction.
-- **Layouts — passed after correction, 2026-08-09.** The artificial three-frame
-  placeholder showcase was removed completely. DevStudio now serves the actual
-  purpose of this tab: an AI-operable architecture map of the shared
-  Roma/DevStudio application shell, Bob's separate editor composition, and the
-  public Widget Stage/Pod/Shell/Header/Core composition. Each map names exact
-  classes, owner, consumers, and source path. The four real application-layout
-  tokens retain their existing validated edit path; no product layout behavior
-  changed.
-- **Agent Activity — passed after correction, 2026-08-09.** Dieter now
-  exposes the real required title plus multi-row narration contract used by
-  Bob, with `sm`/`md` sizes, `--color-system-purple-5` active surface, and one
-  thin animated system-color gradient stroke. The component owns no visible
-  words. Every current Widget declares the static title token and resolves it
-  from its adjacent English ToolDrawer label file into the existing editor
-  artifact; Bob consumes that exact value while Translation Agent events remain
-  the dynamic row authority. DevStudio renders the source contract directly.
-  No translation, locale, Translation Agent, product-data, Cloudflare, or
-  deployment work is included in this component slice.
-- **Button — unified after the Bulk Edit audit, 2026-08-10.** The three old
-  text, icon, and icon-text Button classes were deleted. One `.diet-button`
-  now composes optional direct Icon and label children, requires
-  `data-size="small|medium|large"`, and uses visual-hierarchy
-  `data-type="primary|secondary|tertiary|quaternary"`. Primary is filled blue,
-  secondary is quiet gray, tertiary inherits the former outlined line
-  treatment, and quaternary has no resting background or border; action wording
-  does not create another Button type. Button composition explicitly supports
-  no Icon, an Icon at the start or end of its label, or an accessible icon-only
-  control without creating another Button class. Direct child order owns Icon
-  placement; there is no position attribute or CSS reordering. The corrected
-  small/medium/large geometry is `1.5rem/1.75rem/2.5rem` high with
-  `.75rem/.875rem/1rem` text, `.25rem/.375rem/.5rem` child gaps, and
-  `.5rem/.5rem/1rem` inline padding. Their radii scale at
-  `.1875rem/.25rem/.375rem`. An unsized direct Icon scales with Button size at
-  `.75rem/1rem/1.25rem`; an explicit numeric Icon size remains available and
-  authoritative. Hidden label padding, repeated Icon dimension rules,
-  redundant composite Button resets, and duplicate Button selectors were
-  removed. Dieter composites, DevStudio, Bob, Roma, and current Widget source
-  use the same contract. DevStudio loads the Icon primitive once at its
-  application boundary so every component reveal honors the source contract.
-  Menu Actions remains its separate menu-row component.
-- **Choice Tiles — passed after correction, 2026-08-10.** The previous
-  `sm|md|lg` API changed only Button text and an explicitly injected
-  `12/16/20` Icon while every tile retained one fixed height, padding, gap, and
-  radius. Choice Tiles now owns one proportional size authority:
-  `4rem/4.5rem/5rem` minimum heights, `.5rem/.5rem/.75rem` block padding,
-  `.25rem/.5rem/.5rem` internal gaps, `.25rem/.375rem/.5rem` radii, and
-  `1rem/1.25rem/1.25rem` unsized Icons. Large uses `0.9375rem` text with a
-  `1.25rem` line height; small and medium retain their corresponding Button
-  typography. Inline padding remains `.5rem`; the row
-  gap is `.25rem` at small and `.5rem` at medium/large so ordinary labels retain
-  useful width in the ToolDrawer. The separate rendered Icon-size input is
-  removed. Exact caller labels wrap rather than truncate. DevStudio
-  reveals three distinct real Icons across all sizes plus the current
-  two-option text-only composition. All six current Widget controls across Big
-  Bang, Call to Action, Cards, Countdown, and FAQ already supply the group and
-  option copy through their adjacent English ToolDrawer label files; no Dieter
-  copy, catalog, locale folder, non-English artifact, or runtime locale path was
-  added. Selection and string binding remain unchanged.
-
-- **Dropdown Actions and Popover — passed after correction, 2026-08-10.** This
-  was a component-only slice; it did not migrate Widget, Bob, or Roma
-  consumers. Dropdown Actions retains the intended closed-state UX: the row
-  shows its caller-supplied label and current value, hover discloses the
-  interaction, and no resting chevron was added. Opening replaces the row with
-  its attached Popover; selecting a Menu Action updates the bound value and
-  closes immediately without an Apply footer. The root `sm|md|lg` value is now
-  the sole component geometry and typography authority, using
-  `1.25rem/1.5rem/1.75rem` trigger heights and
-  `.6875rem/.8125rem/.875rem` text. Current ToolDrawer instances remain `md`.
-  The standard Popover header now contains only its caller-supplied label; the
-  useless decorative Icon was removed. Popover structure owns no example or
-  fallback words, and Dropdown Actions continues to receive its label,
-  placeholder, group labels, option labels, and badges through its existing
-  inputs. DevStudio reveals closed `sm|md|lg`, open `md`, and generic Popover
-  source states. The eight existing English Widget artifact pairs were
-  regenerated from that canonical component source; no Widget, Bob, or Roma
-  consumer source was rewritten. No validator, compilation guard, locale file,
-  translation generation, runtime locale path, or adjacent component cleanup
-  was added.
-  A visual-QA follow-up removed the selected checkmark's fixed `12px` size so
-  it now follows Menu Actions at `12/16/20px` for `sm/md/lg`, and removed the
-  Popover header's second inline inset so header and body share one left edge.
-  The attached Popover now inherits the Dropdown Actions `sm|md|lg` radius,
-  and opening the control no longer adds a separate blue border or tint to the
-  covered trigger.
-  Dieter applies that size to both the canonical direct Icon and the nested
-  Icon shape still authored by Bob account-font menus and Roma Dropdown
-  Actions. Their redundant `data-size="12"` attributes remain explicitly
-  deferred to the Bob and Roma consumer passes rather than expanding this
-  component-source correction.
-
 ### Per-Tab Execution Loop
 
 For each DevStudio tab:
@@ -591,3 +473,123 @@ At the end of a stage:
 
 Do not start the next stage until the human product owner/architect explicitly
 authorizes it.
+
+## 14. Execution Record
+
+### Stage 2 — Dieter And DevStudio UI Pass
+
+- **Core styles — passed, 2026-08-09.** The 53 non-layout source tokens are
+  generated from the canonical Dieter foundation file, use the same validation
+  contract as the write route, and all have active consumers.
+- **Colors — passed after correction, 2026-08-09.** The reveal now includes all
+  138 color, role, focus, and state declarations. The four existing state-mix
+  percentages are visible as read-only rows with representative color samples;
+  color edit authority remains limited to literal `--color-*` hex values.
+- **Icons — passed after systemic correction, 2026-08-09.** The human-selected
+  source contains 165 icons. One SF exporter now generates every SVG with
+  `currentColor` and a shared optical-canvas formula, so component slots no
+  longer magnify tightly cropped glyphs differently. DevStudio reveals the SVG
+  directory directly. Dieter, DevStudio, Bob, Roma, Prague, and Widgets do not
+  maintain a second global approval list, compare the icon library against
+  itself, or ask whether a declared Dieter icon is allowed. Product fields may
+  still declare the exact choices that field offers.
+- **Typography — passed after correction, 2026-08-09.** DevStudio reveals the
+  31 real Dieter visual classes and uses one page-level editor for their 17
+  shared live source tokens. Four unused tokens and one invalid DevStudio class
+  were removed. The existing write boundary now preserves exact typed input and
+  visibly rejects invalid sizes or line heights instead of trimming or
+  committing a changed value. Public Widget runtime now uses saved
+  `typography.roleScales` as its sole scale authority; Roma rejects missing
+  declared roles, scales, tracking presets, or line-height presets before save,
+  and Countdown's formerly implicit values are explicit. Prague font delivery
+  remains deferred to the Prague pass by owner direction.
+- **Layouts — passed after correction, 2026-08-09.** The artificial three-frame
+  placeholder showcase was removed completely. DevStudio now serves the actual
+  purpose of this tab: an AI-operable architecture map of the shared
+  Roma/DevStudio application shell, Bob's separate editor composition, and the
+  public Widget Stage/Pod/Shell/Header/Core composition. Each map names exact
+  classes, owner, consumers, and source path. The four real application-layout
+  tokens retain their existing validated edit path; no product layout behavior
+  changed.
+- **Agent Activity — passed after correction, 2026-08-09.** Dieter now
+  exposes the real required title plus multi-row narration contract used by
+  Bob, with `sm`/`md` sizes, `--color-system-purple-5` active surface, and one
+  thin animated system-color gradient stroke. The component owns no visible
+  words. Every current Widget declares the static title token and resolves it
+  from its adjacent English ToolDrawer label file into the existing editor
+  artifact; Bob consumes that exact value while Translation Agent events remain
+  the dynamic row authority. DevStudio renders the source contract directly.
+  No translation, locale, Translation Agent, product-data, Cloudflare, or
+  deployment work is included in this component slice.
+- **Button — unified after the Bulk Edit audit, 2026-08-10.** The three old
+  text, icon, and icon-text Button classes were deleted. One `.diet-button`
+  now composes optional direct Icon and label children, requires
+  `data-size="small|medium|large"`, and uses visual-hierarchy
+  `data-type="primary|secondary|tertiary|quaternary"`. Primary is filled blue,
+  secondary is quiet gray, tertiary inherits the former outlined line
+  treatment, and quaternary has no resting background or border; action wording
+  does not create another Button type. Button composition explicitly supports
+  no Icon, an Icon at the start or end of its label, or an accessible icon-only
+  control without creating another Button class. Direct child order owns Icon
+  placement; there is no position attribute or CSS reordering. The corrected
+  small/medium/large geometry is `1.5rem/1.75rem/2.5rem` high with
+  `.75rem/.875rem/1rem` text, `.25rem/.375rem/.5rem` child gaps, and
+  `.5rem/.5rem/1rem` inline padding. Their radii scale at
+  `.1875rem/.25rem/.375rem`. An unsized direct Icon scales with Button size at
+  `.75rem/1rem/1.25rem`; an explicit numeric Icon size remains available and
+  authoritative. Hidden label padding, repeated Icon dimension rules,
+  redundant composite Button resets, and duplicate Button selectors were
+  removed. Dieter composites, DevStudio, Bob, Roma, and current Widget source
+  use the same contract. DevStudio loads the Icon primitive once at its
+  application boundary so every component reveal honors the source contract.
+  Menu Actions remains its separate menu-row component.
+- **Choice Tiles — passed after correction, 2026-08-10.** The previous
+  `sm|md|lg` API changed only Button text and an explicitly injected
+  `12/16/20` Icon while every tile retained one fixed height, padding, gap, and
+  radius. Choice Tiles now owns one proportional size authority:
+  `4rem/4.5rem/5rem` minimum heights, `.5rem/.5rem/.75rem` block padding,
+  `.25rem/.5rem/.5rem` internal gaps, `.25rem/.375rem/.5rem` radii, and
+  `1rem/1.25rem/1.25rem` unsized Icons. Large uses `0.9375rem` text with a
+  `1.25rem` line height; small and medium retain their corresponding Button
+  typography. Inline padding remains `.5rem`; the row
+  gap is `.25rem` at small and `.5rem` at medium/large so ordinary labels retain
+  useful width in the ToolDrawer. The separate rendered Icon-size input is
+  removed. Exact caller labels wrap rather than truncate. DevStudio
+  reveals three distinct real Icons across all sizes plus the current
+  two-option text-only composition. All six current Widget controls across Big
+  Bang, Call to Action, Cards, Countdown, and FAQ already supply the group and
+  option copy through their adjacent English ToolDrawer label files; no Dieter
+  copy, catalog, locale folder, non-English artifact, or runtime locale path was
+  added. Selection and string binding remain unchanged.
+
+- **Dropdown Actions and Popover — passed after correction, 2026-08-10.** This
+  was a component-only slice; it did not migrate Widget, Bob, or Roma
+  consumers. Dropdown Actions retains the intended closed-state UX: the row
+  shows its caller-supplied label and current value, hover discloses the
+  interaction, and no resting chevron was added. Opening replaces the row with
+  its attached Popover; selecting a Menu Action updates the bound value and
+  closes immediately without an Apply footer. The root `sm|md|lg` value is now
+  the sole component geometry and typography authority, using
+  `1.25rem/1.5rem/1.75rem` trigger heights and
+  `.6875rem/.8125rem/.875rem` text. Current ToolDrawer instances remain `md`.
+  The standard Popover header now contains only its caller-supplied label; the
+  useless decorative Icon was removed. Popover structure owns no example or
+  fallback words, and Dropdown Actions continues to receive its label,
+  placeholder, group labels, option labels, and badges through its existing
+  inputs. DevStudio reveals closed `sm|md|lg`, open `md`, and generic Popover
+  source states. The eight existing English Widget artifact pairs were
+  regenerated from that canonical component source; no Widget, Bob, or Roma
+  consumer source was rewritten. No validator, compilation guard, locale file,
+  translation generation, runtime locale path, or adjacent component cleanup
+  was added.
+  A visual-QA follow-up removed the selected checkmark's fixed `12px` size so
+  it now follows Menu Actions at `12/16/20px` for `sm/md/lg`, and removed the
+  Popover header's second inline inset so header and body share one left edge.
+  The attached Popover now inherits the Dropdown Actions `sm|md|lg` radius,
+  and opening the control no longer adds a separate blue border or tint to the
+  covered trigger.
+  Dieter applies that size to both the canonical direct Icon and the nested
+  Icon shape still authored by Bob account-font menus and Roma Dropdown
+  Actions. Their redundant `data-size="12"` attributes remain explicitly
+  deferred to the Bob and Roma consumer passes rather than expanding this
+  component-source correction.
