@@ -152,8 +152,10 @@ vertical rhythm. Hue and Width share one `2.5rem` label rail, and the shared
 Slider primitive gives its range input the complete remaining inline space so
 the two tracks align; Border only supplies the equal label rails. It uses the
 added width with a shallower `8rem/9rem/10rem` saturation/value canvas for
-`sm|md|lg`. Color swatches have no resting stroke except white, which keeps one
-gray edge; the selected swatch keeps the existing blue outline. It consumes
+`sm|md|lg`. Color swatches are centered and `0.125rem` smaller in both
+dimensions, with corners using the component radius minus `0.125rem`. They
+have no resting stroke except white, which keeps one gray edge; the selected
+swatch uses a one-pixel blue outline. It consumes
 the exact structured Widget value and
 does not create fallback, repaired, or diagnostic states. Dieter owns
 structure, styling, and behavior but no visible words. Widget specs declare

@@ -159,8 +159,10 @@ The governing component product law is:
   The shared Slider primitive provides that flexible range behavior; Border
   only owns its two equal label rails. The wider Popover uses a shallower
   saturation/value canvas at `8rem/9rem/10rem` for `sm|md|lg`. Color swatches
-  have no resting stroke except white, which retains one gray edge against the
-  white surface; selection remains the existing blue outline.
+  sit centered in their grid cells with `0.125rem` removed from each dimension.
+  Their corners use the component radius minus `0.125rem`. They have no resting
+  stroke except white, which retains one gray edge against the white surface;
+  selection uses a one-pixel blue outline.
   The component consumes the exact structured value supplied by the Widget
   contract and does not create fallback, repaired, or diagnostic states.
   Dieter owns no visible words. Each

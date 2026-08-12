@@ -790,3 +790,11 @@ authorizes it.
   toolbar that it already used inside the editor composition. No Widget,
   consumer, value, picker, rich-text, locale, persistence, or deployment
   contract changed.
+
+- **Dropdown Border swatch proportion follow-up — passed, 2026-08-11.** Each
+  swatch is centered in its existing nine-column grid cell with `0.125rem`
+  removed from both dimensions and from the component corner radius. Colored
+  swatches remain borderless, white retains its one-pixel gray resting edge,
+  and selection now uses a one-pixel blue outline instead of the former
+  two-pixel ring. No picker, color, value, Widget, locale, or consumer behavior
+  changed.

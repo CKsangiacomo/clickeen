@@ -214,11 +214,12 @@
 }
 
 .diet-dropdown-border__swatch {
-  inline-size: 100%;
-  block-size: var(--dropdown-border-height);
+  inline-size: calc(100% - 0.125rem);
+  block-size: calc(var(--dropdown-border-height) - 0.125rem);
+  justify-self: center;
   padding: 0;
   border: 1px solid transparent;
-  border-radius: var(--dropdown-border-radius);
+  border-radius: max(0px, calc(var(--dropdown-border-radius) - 0.125rem));
   background: transparent;
   cursor: pointer;
 }
@@ -231,11 +232,11 @@
   display: block;
   inline-size: 100%;
   block-size: 100%;
-  border-radius: calc(var(--dropdown-border-radius) - 1px);
+  border-radius: inherit;
   background: var(--swatch-color);
 }
 
 .diet-dropdown-border__swatch.is-selected {
-  outline: 2px solid var(--color-system-blue);
+  outline: 1px solid var(--color-system-blue);
   outline-offset: 1px;
 }
