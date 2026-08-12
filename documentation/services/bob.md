@@ -465,8 +465,11 @@ per-field link flag, Widget branch, runtime catalog fetch, or Lexical storage
 document exists.
 
 For Dropdown Border, Edit, Fill, and Shadow, Bob's existing stencil compiler
-passes the Widget field's optional `popover-width` value to Dieter. `rest`
-matches the closed row; `large` and `xl` add 40px or 80px to the open surface's
+passes Dieter's `row|wide|extra-wide` Popover width through the generated
+control. Border, Fill, and Shadow resolve their component-owned `wide` default;
+Edit resolves `extra-wide`. An explicit Widget field attr may select another
+contract value without changing the dropdown's actual job. `row` matches the
+closed row; `wide` and `extra-wide` add 40px or 80px to the open surface's
 right edge. Dieter's shared Popover positioning keeps the left edge on the row
 and overlays the workspace so Bob does not resize the ToolDrawer, workspace, or
 editor session. The width choice does not change the control's value or

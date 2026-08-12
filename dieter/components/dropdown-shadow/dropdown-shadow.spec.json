@@ -3,7 +3,7 @@
   "syntax": "<tooldrawer-field type='dropdown-shadow' size='{{SIZE}}' popover-width='{{POPOVER_WIDTH}}' path='{{PATH}}' label='{{LABEL}}' placeholder='{{PLACEHOLDER}}' value='{{VALUE}}' />",
   "attributes": {
     "size": { "enum": ["sm", "md", "lg"], "default": "md" },
-    "popoverWidth": { "enum": ["rest", "large", "xl"], "default": "rest" },
+    "popoverWidth": { "enum": ["row", "wide", "extra-wide"], "default": "wide" },
     "path": { "optional": true },
     "label": { "optional": true },
     "headerLabel": { "optional": true },
@@ -19,7 +19,7 @@
       "spec": ["diet-dropdown-shadow", "data-size='{{size}}'"],
       "context": {
         "size": "md",
-        "popoverWidth": "rest",
+        "popoverWidth": "wide",
         "state": "closed",
         "expanded": "false",
         "id": "dropdown-shadow-{{size}}",
@@ -40,16 +40,16 @@
       }
     },
     {
-      "id": "dropdown-shadow-large-popover",
-      "title": "Open Popover — row width + 40px",
+      "id": "dropdown-shadow-wide-popover",
+      "title": "Open Popover — wide (+40px)",
       "sizes": ["md"],
-      "spec": ["diet-dropdown-shadow", "popover-width='large'", "data-state='open'"],
+      "spec": ["diet-dropdown-shadow", "popover-width='wide'", "data-state='open'"],
       "context": {
         "size": "md",
-        "popoverWidth": "large",
+        "popoverWidth": "wide",
         "state": "open",
         "expanded": "true",
-        "id": "dropdown-shadow-large-popover",
+        "id": "dropdown-shadow-wide-popover",
         "label": "Shadow",
         "placeholder": "Select a shadow",
         "value": "",
@@ -62,16 +62,16 @@
       }
     },
     {
-      "id": "dropdown-shadow-xl-popover",
-      "title": "Open Popover — row width + 80px",
+      "id": "dropdown-shadow-extra-wide-popover",
+      "title": "Open Popover — extra-wide (+80px)",
       "sizes": ["md"],
-      "spec": ["diet-dropdown-shadow", "popover-width='xl'", "data-state='open'"],
+      "spec": ["diet-dropdown-shadow", "popover-width='extra-wide'", "data-state='open'"],
       "context": {
         "size": "md",
-        "popoverWidth": "xl",
+        "popoverWidth": "extra-wide",
         "state": "open",
         "expanded": "true",
-        "id": "dropdown-shadow-xl-popover",
+        "id": "dropdown-shadow-extra-wide-popover",
         "label": "Shadow",
         "placeholder": "Select a shadow",
         "value": "",

@@ -307,11 +307,13 @@ path. Template children are allowed only inside controls that already own that
 template behavior.
 
 Dropdown Border, Dropdown Edit, Dropdown Fill, and Dropdown Shadow may declare
-`attrs["popover-width"]` as `rest`, `large`, or `xl`. The default `rest` width
-matches the closed row; `large` and `xl` extend only the open Popover 40px or
-80px to the right. This width does not change the field's existing `sm|md|lg`
+`attrs["popover-width"]` as `row`, `wide`, or `extra-wide`. `row` matches the
+closed row; `wide` and `extra-wide` extend only the open Popover 40px or 80px
+to the right. Omit the attr for the component-owned default: `wide` for Border,
+Fill, and Shadow; `extra-wide` for Edit. Do not repeat those defaults through
+Widget specs. This width does not change the field's existing `sm|md|lg`
 control size, state path, labels, or editing behavior. Dropdown Actions and
-Dropdown Upload do not use this attribute.
+Dropdown Upload remain row-width and do not use this attribute.
 
 ## Dieter Mapping
 

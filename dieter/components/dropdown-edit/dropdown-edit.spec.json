@@ -28,10 +28,10 @@
     },
     "popoverWidth": {
       "type": "enum",
-      "values": ["rest", "large", "xl"],
-      "default": "rest",
+      "values": ["row", "wide", "extra-wide"],
+      "default": "extra-wide",
       "required": false,
-      "description": "Open Popover width: rest row, plus 40px, or plus 80px"
+      "description": "Open Popover width: row, wide (+40px), or extra-wide (+80px)"
     },
     "path": {
       "type": "string",
@@ -65,7 +65,7 @@
       "spec": ["diet-dropdown-edit", "data-size='{{size}}'"],
       "context": {
         "size": "sm",
-        "popoverWidth": "rest",
+        "popoverWidth": "extra-wide",
         "id": "dropdown-edit-{{size}}",
         "label": "Label",
         "headerLabel": "Label",
@@ -90,14 +90,14 @@
       }
     },
     {
-      "id": "dropdown-edit-large-popover",
-      "title": "Open editor — row width + 40px",
+      "id": "dropdown-edit-wide-popover",
+      "title": "Open editor — wide (+40px)",
       "sizes": ["md"],
-      "spec": ["diet-dropdown-edit", "data-size='md'", "popover-width='large'", "data-state='open'"],
+      "spec": ["diet-dropdown-edit", "data-size='md'", "popover-width='wide'", "data-state='open'"],
       "context": {
         "size": "md",
-        "popoverWidth": "large",
-        "id": "dropdown-edit-large-popover",
+        "popoverWidth": "wide",
+        "id": "dropdown-edit-wide-popover",
         "label": "Description",
         "headerLabel": "Description",
         "placeholder": "Make selected text bold, italic, underlined, struck through, or linked.",
@@ -119,14 +119,19 @@
       }
     },
     {
-      "id": "dropdown-edit-xl-popover",
-      "title": "Open editor — row width + 80px",
+      "id": "dropdown-edit-extra-wide-popover",
+      "title": "Open editor — extra-wide (+80px)",
       "sizes": ["md"],
-      "spec": ["diet-dropdown-edit", "data-size='md'", "popover-width='xl'", "data-state='open'"],
+      "spec": [
+        "diet-dropdown-edit",
+        "data-size='md'",
+        "popover-width='extra-wide'",
+        "data-state='open'"
+      ],
       "context": {
         "size": "md",
-        "popoverWidth": "xl",
-        "id": "dropdown-edit-xl-popover",
+        "popoverWidth": "extra-wide",
+        "id": "dropdown-edit-extra-wide-popover",
         "label": "Description",
         "headerLabel": "Description",
         "placeholder": "Make selected text bold, italic, underlined, struck through, or linked.",

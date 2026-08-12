@@ -126,7 +126,6 @@
   display: none;
 }
 
-
 .diet-dropdown-fill .diet-dropdown-fill__popover {
   border-radius: var(--dropdown-fill-radius);
   outline: none;
@@ -628,12 +627,7 @@
 
 .diet-dropdown-fill__swatches {
   display: grid;
-  gap: 0;
-}
-
-.diet-dropdown-fill__swatch-row {
-  display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
+  grid-template-columns: repeat(9, minmax(0, 1fr));
   gap: 0;
 }
 

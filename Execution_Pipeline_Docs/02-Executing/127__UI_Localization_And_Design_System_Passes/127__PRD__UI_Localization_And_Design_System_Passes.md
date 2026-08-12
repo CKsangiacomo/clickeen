@@ -158,7 +158,7 @@ the code is convenient there.
 | Stage | Status | Release state |
 | --- | --- | --- |
 | Stage 1 — Scaffold only | Complete | Committed, pushed, and deployed; no non-English experience is exposed |
-| Stage 2 — Dieter UI pass | In progress: Foundations, Agent Activity, Bulk Edit, Button, Choice Tiles, Dropdown Actions, Popover, Dropdown Border, and Dropdown Edit complete and re-audited as consumer-agnostic primitives; shared rest/Popover presentation is also applied to Fill, Shadow, and Upload | This completed primitive group is ready for exact-SHA cloud-dev QA; the Fill, Shadow, and Upload behavior passes remain pending |
+| Stage 2 — Dieter UI pass | In progress: Foundations, Agent Activity, Bulk Edit, Button, Choice Tiles, Dropdown Actions, Popover, Dropdown Border, and Dropdown Edit complete and re-audited as consumer-agnostic primitives; the shared row/Popover presentation is also applied to Fill, Shadow, and Upload | This completed primitive group is ready for exact-SHA cloud-dev QA; the Fill, Shadow, and Upload behavior passes remain pending |
 | Stage 3 — Bob UI pass | Not started | No authority to begin until explicitly directed |
 | Stage 4 — Roma UI pass | Not started | No authority to begin until explicitly directed |
 | Stage 5 — Translation pass | Not started | No translations may be generated yet |
@@ -732,16 +732,32 @@ authorizes it.
   route, product-data, or deployment machinery was added.
 
 - **Shared Popover work-area widths — passed, 2026-08-11.** Popover now owns
-  one independent `rest|large|xl` width contract for the four work-area
-  dropdowns: Border, Edit, Fill, and Shadow. Rest matches the closed row;
-  large and XL preserve its left edge and add exactly 40px or 80px to the open
+  one independent `row|wide|extra-wide` width contract for the four work-area
+  dropdowns: Border, Edit, Fill, and Shadow. Row matches the closed row; wide
+  and extra-wide preserve its left edge and add exactly 40px or 80px to the open
   surface's right edge over the workspace. The existing shared dropdown
   hydrator positions expanded Popovers above ToolDrawer clipping and keeps
   them aligned while the row scrolls or resizes. Widget field attrs pass the
   width through Bob's existing stencil context; the choice does not change
   `sm|md|lg` control geometry, copy, value binding, editor behavior, the
   ToolDrawer width, or the workspace layout. Dropdown Actions and Upload stay
-  at rest width. DevStudio generates the generic Popover widths and open
+  at row width. DevStudio generates the generic Popover widths and open
   Border/Edit/Fill/Shadow examples from the real Dieter specs. No portal,
   Widget branch, new component, locale path, validation layer, service,
   storage, product-data, Cloudflare, or deployment change was added.
+
+- **Popover width defaults and work-area optimization — passed,
+  2026-08-11.** The width vocabulary is now the final hard-cut
+  `row|wide|extra-wide` contract; the former names do not remain as aliases or
+  compatibility selectors. Dropdown Border, Fill, and Shadow own `wide`
+  (+40px) as their global component default. Dropdown Edit owns `extra-wide`
+  (+80px). Current Widgets therefore receive the intended work area from the
+  Dieter component specs without repeating attrs or adding Bob/Widget-specific
+  branches. Border, Fill, and Shadow removed their three six-column swatch-row
+  wrappers and now render one direct nine-column palette grid, producing two
+  rows at the default wide width. Edit gives its extra width directly to the
+  writing surface and toolbar. Actions and Upload remain row-width. DevStudio
+  and all eight English Widget artifact pairs were regenerated from the same
+  source contract. No component behavior, value binding, Widget meaning,
+  locale contract, validation layer, service, storage, product data, or
+  Cloudflare authority changed.

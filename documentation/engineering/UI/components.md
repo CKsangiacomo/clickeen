@@ -212,14 +212,19 @@ body content, selection, and any real workflow action. A component with a
 genuine close or command action composes that action explicitly rather than
 receiving a decorative Popover control.
 
-Popover width is independent from control size. Dropdown Border, Edit, Fill,
-and Shadow accept `popover-width="rest|large|xl"`: `rest` matches the closed
-row, `large` adds 40px to its right edge, and `xl` adds 80px. All three keep the
-same left edge. The expanded Popover overlays the workspace without resizing
-the ToolDrawer or changing the dropdown's `sm|md|lg` height, typography, Icon,
-or radius contract. This is one Popover geometry capability; the four
-dropdowns merely pass the caller's selection. Actions and Upload do not expose
-the wider-work-area option.
+Popover width is independent from control size. Its exact contract is
+`row|wide|extra-wide`: `row` matches the closed property row, `wide` adds 40px
+to its right edge, and `extra-wide` adds 80px. All three keep the same left
+edge. Dropdown Border, Fill, and Shadow own `wide` as their global component
+default; Dropdown Edit owns `extra-wide`. This gives current medium ToolDrawer
+uses the intended work area without repeating width attrs through every
+Widget. A caller may still choose another contract value for a concrete use.
+The expanded Popover overlays the workspace without resizing the ToolDrawer or
+changing the dropdown's `sm|md|lg` height, typography, Icon, or radius
+contract. Border, Fill, and Shadow render their 18-color palettes as one direct
+nine-column grid, yielding two rows in their default wide Popovers. Edit gives
+the extra width directly to its writing surface and toolbar. Actions and Upload
+remain row-width.
 
 Per-component source documentation records markup, `data-*` attributes,
 binding, behavior/hydration, variants, sizes, states, and semantics. Step 6 maps

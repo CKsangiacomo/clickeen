@@ -177,14 +177,16 @@ header contains the caller-supplied label and no decorative Icon. Header and
 body align through the same outer Popover padding. Callers own trigger state,
 body content, selection, and any genuine action.
 
-Dropdown Border, Dropdown Edit, Dropdown Fill, and Dropdown Shadow may give
-their attached Popover one independent width: `rest`, `large`, or `xl`.
-`rest` matches the closed property row, `large` extends the open surface 40px
-to the right, and `xl` extends it 80px. The left edge remains aligned with the
-closed row. The expanded surface is positioned above the ToolDrawer and
-workspace rather than resizing either one, and its position follows the row
-while the containing surface scrolls or resizes. Dropdown Actions and Dropdown
-Upload retain the standard rest width.
+Popover owns one independent width contract: `row`, `wide`, or `extra-wide`.
+`row` matches the closed property row, `wide` extends the open surface 40px to
+the right, and `extra-wide` extends it 80px. The left edge remains aligned with
+the closed row. Dropdown Border, Fill, and Shadow own `wide` as their global
+default; Dropdown Edit owns `extra-wide`. The expanded surface is positioned
+above the ToolDrawer and workspace rather than resizing either one, and its
+position follows the row while the containing surface scrolls or resizes.
+Border, Fill, and Shadow use their added width for one direct nine-column,
+two-row color palette. Edit gives its added width to the editor and toolbar.
+Dropdown Actions and Dropdown Upload retain row width.
 
 Bulk Edit is a generic array-table composite with caller-declared text and
 checkbox columns. It contains no Logo Showcase, upload, account-asset, or

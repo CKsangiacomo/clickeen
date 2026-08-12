@@ -204,12 +204,7 @@
 
 .diet-dropdown-border__swatches {
   display: grid;
-  gap: var(--space-1, 0.25rem);
-}
-
-.diet-dropdown-border__swatch-row {
-  display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
+  grid-template-columns: repeat(9, minmax(0, 1fr));
   gap: var(--space-1, 0.25rem);
 }
 

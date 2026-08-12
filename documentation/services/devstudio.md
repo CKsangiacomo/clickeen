@@ -109,9 +109,12 @@ CSS. It reveals both supported sizes with the actual multi-row contract and
 active presentation; it does not maintain a DevStudio-only imitation.
 
 The generated Popover and Dropdown Border, Edit, Fill, and Shadow routes expose
-the same `rest`, `large`, and `xl` Popover-width contract used by Dieter source.
+the same `row`, `wide`, and `extra-wide` Popover-width contract used by Dieter
+source.
 Their open examples show the unchanged left edge and the exact 40px/80px
-rightward extensions; DevStudio does not reimplement that geometry.
+rightward extensions; DevStudio does not reimplement that geometry. Border,
+Fill, and Shadow reveal their global `wide` default and two-row palettes; Edit
+reveals its `extra-wide` default.
 
 ## Pages Functions
 

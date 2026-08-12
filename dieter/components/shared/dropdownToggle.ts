@@ -19,10 +19,10 @@ type HostRecord = {
 function syncPopoverGeometry(record: HostRecord): void {
   const { popover, root } = record;
   const width = popover.dataset.width;
-  if (width !== 'large' && width !== 'xl') return;
+  if (width !== 'wide' && width !== 'extra-wide') return;
 
   const rect = root.getBoundingClientRect();
-  const extension = width === 'large' ? 40 : 80;
+  const extension = width === 'wide' ? 40 : 80;
   popover.style.setProperty('--popover-fixed-left', `${rect.left}px`);
   popover.style.setProperty('--popover-fixed-top', `${rect.top}px`);
   popover.style.setProperty('--popover-fixed-width', `${rect.width + extension}px`);

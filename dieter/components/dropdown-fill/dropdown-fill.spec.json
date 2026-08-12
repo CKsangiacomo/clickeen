@@ -3,7 +3,7 @@
   "syntax": "<tooldrawer-field type='dropdown-fill' size='{{SIZE}}' popover-width='{{POPOVER_WIDTH}}' path='{{PATH}}' label='{{LABEL}}' placeholder='{{PLACEHOLDER}}' value='{{VALUE}}' fillModes='{{FILL_MODES}}' allowImage='{{ALLOW_IMAGE}}' />",
   "attributes": {
     "size": { "enum": ["sm", "md", "lg"], "default": "md" },
-    "popoverWidth": { "enum": ["rest", "large", "xl"], "default": "rest" },
+    "popoverWidth": { "enum": ["row", "wide", "extra-wide"], "default": "wide" },
     "path": { "optional": true },
     "label": { "optional": true },
     "headerLabel": { "optional": true },
@@ -20,7 +20,7 @@
       "spec": ["diet-dropdown-fill", "data-size='{{size}}'"],
       "context": {
         "size": "md",
-        "popoverWidth": "rest",
+        "popoverWidth": "wide",
         "state": "closed",
         "expanded": "false",
         "id": "dropdown-fill-{{size}}",
@@ -43,16 +43,16 @@
       }
     },
     {
-      "id": "dropdown-fill-large-popover",
-      "title": "Open Popover — row width + 40px",
+      "id": "dropdown-fill-wide-popover",
+      "title": "Open Popover — wide (+40px)",
       "sizes": ["md"],
-      "spec": ["diet-dropdown-fill", "popover-width='large'", "data-state='open'"],
+      "spec": ["diet-dropdown-fill", "popover-width='wide'", "data-state='open'"],
       "context": {
         "size": "md",
-        "popoverWidth": "large",
+        "popoverWidth": "wide",
         "state": "open",
         "expanded": "true",
-        "id": "dropdown-fill-large-popover",
+        "id": "dropdown-fill-wide-popover",
         "label": "Fill",
         "placeholder": "Select a fill",
         "value": "",
@@ -67,16 +67,16 @@
       }
     },
     {
-      "id": "dropdown-fill-xl-popover",
-      "title": "Open Popover — row width + 80px",
+      "id": "dropdown-fill-extra-wide-popover",
+      "title": "Open Popover — extra-wide (+80px)",
       "sizes": ["md"],
-      "spec": ["diet-dropdown-fill", "popover-width='xl'", "data-state='open'"],
+      "spec": ["diet-dropdown-fill", "popover-width='extra-wide'", "data-state='open'"],
       "context": {
         "size": "md",
-        "popoverWidth": "xl",
+        "popoverWidth": "extra-wide",
         "state": "open",
         "expanded": "true",
-        "id": "dropdown-fill-xl-popover",
+        "id": "dropdown-fill-extra-wide-popover",
         "label": "Fill",
         "placeholder": "Select a fill",
         "value": "",

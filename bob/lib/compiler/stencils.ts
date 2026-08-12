@@ -245,7 +245,7 @@ export async function buildContext(
   const accept = attrs.accept || (merged.accept as string) || 'image/*';
   const maxSizeMb = attrs.maxSizeMb || attrs['max-size-mb'] || (merged.maxSizeMb as string) || '';
   const popoverWidth =
-    attrs.popoverWidth || attrs['popover-width'] || (merged.popoverWidth as string) || 'rest';
+    attrs.popoverWidth || attrs['popover-width'] || (merged.popoverWidth as string);
 
   if (component === 'dropdown-upload' && !metaPath.trim()) {
     const controlId = pathAttr || label || idBase || 'unknown';
