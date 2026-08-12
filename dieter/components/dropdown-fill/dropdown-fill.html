@@ -3,14 +3,22 @@
   data-size="{{size}}"
   data-state="{{state}}"
   data-mode="color"
-  data-allow-image="{{allowImage}}"
   data-fill-modes="{{fillModes}}"
+  data-copy-add-gradient-stop="{{addGradientStopLabel}}"
+  data-copy-edit-gradient-stop="{{editGradientStopLabel}}"
+  data-copy-load-assets-error="{{loadAssetsErrorLabel}}"
+  data-copy-loading-assets="{{loadingAssetsLabel}}"
+  data-copy-no-assets="{{noAssetsLabel}}"
+  data-copy-preview-asset-error="{{previewAssetErrorLabel}}"
+  data-copy-remove-gradient-stop="{{removeGradientStopLabel}}"
+  data-copy-upload-asset-error="{{uploadAssetErrorLabel}}"
+  data-copy-use-asset="{{useAssetLabel}}"
 >
   <input
     id="{{id}}"
     type="hidden"
     class="diet-dropdown-fill__value-field"
-    value="{{value}}"
+    value='{{value}}'
     {{#if path}}data-path="{{path}}"{{/if}}
     data-placeholder="{{placeholder}}"
     data-dieter-json
@@ -39,13 +47,11 @@
     class="diet-popover diet-dropdown-fill__popover"
     data-width="{{popoverWidth}}"
     role="dialog"
-    aria-label="{{popoverLabel}}"
+    aria-labelledby="{{id}}-popover-label"
     data-state="{{state}}"
   >
     <div class="diet-popover__header">
-      <span class="diet-popover__header-label {{#if headerLabelClass}}{{headerLabelClass}}{{else}}label-s{{/if}}">
-        {{#if headerLabel}}{{headerLabel}}{{else}}{{label}}{{/if}}
-      </span>
+      <span class="diet-popover__header-label" id="{{id}}-popover-label">{{label}}</span>
     </div>
     <div class="diet-popover__body">
       <div class="diet-dropdown-fill__modes">
@@ -55,10 +61,10 @@
           data-size="small"
           data-type="secondary"
           data-mode="color"
-          aria-label="Color fill"
+          aria-label="{{colorFillLabel}}"
           aria-pressed="true"
         >
-          <span class="diet-icon" aria-hidden="true" data-icon="circle.lefthalf.filled" data-size="12"></span>
+          <span class="diet-icon" aria-hidden="true" data-icon="circle.lefthalf.filled"></span>
         </button>
         <button
           type="button"
@@ -66,10 +72,10 @@
           data-size="small"
           data-type="secondary"
           data-mode="gradient"
-          aria-label="Gradient fill"
+          aria-label="{{gradientFillLabel}}"
           aria-pressed="false"
         >
-          <span class="diet-icon" aria-hidden="true" data-icon="circle.dotted" data-size="12"></span>
+          <span class="diet-icon" aria-hidden="true" data-icon="circle.dotted"></span>
         </button>
         <button
           type="button"
@@ -77,10 +83,10 @@
           data-size="small"
           data-type="secondary"
           data-mode="image"
-          aria-label="Image fill"
+          aria-label="{{imageFillLabel}}"
           aria-pressed="false"
         >
-          <span class="diet-icon" aria-hidden="true" data-icon="photo" data-size="12"></span>
+          <span class="diet-icon" aria-hidden="true" data-icon="photo"></span>
         </button>
         <button
           type="button"
@@ -88,17 +94,17 @@
           data-size="small"
           data-type="secondary"
           data-mode="video"
-          aria-label="Video fill"
+          aria-label="{{videoFillLabel}}"
           aria-pressed="false"
         >
-          <span class="diet-icon" aria-hidden="true" data-icon="play.square" data-size="12"></span>
+          <span class="diet-icon" aria-hidden="true" data-icon="play.square"></span>
         </button>
       </div>
 
       <div class="diet-dropdown-fill__panel diet-dropdown-fill__panel--color body-xs" data-panel="color">
-        <div class="diet-dropdown-fill__preview" aria-label="Pick color">
+        <div class="diet-dropdown-fill__preview" aria-label="{{colorLabel}}">
           <div class="diet-dropdown-fill__color-preview"></div>
-          <input type="color" class="diet-dropdown-fill__native-color" aria-label="Native color picker" tabindex="-1" />
+          <input type="color" class="diet-dropdown-fill__native-color" aria-label="{{colorLabel}}" tabindex="-1" />
         </div>
         <div class="diet-dropdown-fill__sv" data-role="sv">
           <div class="diet-dropdown-fill__sv-canvas">
@@ -108,25 +114,25 @@
 
         <div class="diet-dropdown-fill__sliders">
           <div class="diet-dropdown-fill__slider diet-dropdown-fill__slider--hue diet-slider" data-size="md">
-            <span class="diet-slider__label">Hue</span>
+            <span class="diet-slider__label" id="{{id}}-hue-label">{{hueLabel}}</span>
             <input
               type="range"
               min="0"
               max="360"
               step="1"
               class="diet-slider__input diet-dropdown-fill__hue"
-              aria-label="Hue"
+              aria-labelledby="{{id}}-hue-label"
             />
           </div>
           <div class="diet-dropdown-fill__slider diet-dropdown-fill__slider--alpha diet-slider" data-size="md">
-            <span class="diet-slider__label">Opacity</span>
+            <span class="diet-slider__label" id="{{id}}-opacity-label">{{opacityLabel}}</span>
             <input
               type="range"
               min="0"
               max="100"
               step="1"
               class="diet-slider__input diet-dropdown-fill__alpha"
-              aria-label="Opacity"
+              aria-labelledby="{{id}}-opacity-label"
             />
           </div>
         </div>
@@ -134,11 +140,11 @@
         <div class="diet-dropdown-fill__inputs">
           <div class="diet-textfield" data-size="md" data-role="hex">
             <label class="diet-textfield__control">
-              <span class="diet-textfield__display-label label-s">Hex</span>
+              <span class="diet-textfield__display-label label-s" id="{{id}}-hex-label">{{hexLabel}}</span>
               <input
                 type="text"
                 class="diet-textfield__field body-s diet-dropdown-fill__hex"
-                aria-label="Hex value"
+                aria-labelledby="{{id}}-hex-label"
                 placeholder="RRGGBB"
                 inputmode="text"
                 autocapitalize="off"
@@ -151,11 +157,11 @@
           </div>
           <div class="diet-textfield" data-size="md" data-role="alpha">
             <label class="diet-textfield__control">
-              <span class="diet-textfield__display-label label-s is-hidden">Alpha</span>
+              <span class="diet-textfield__display-label label-s is-hidden" id="{{id}}-opacity-value-label">{{opacityLabel}}</span>
               <input
                 type="text"
                 class="diet-textfield__field body-s diet-dropdown-fill__alpha-input"
-                aria-label="Opacity percent"
+                aria-labelledby="{{id}}-opacity-value-label"
                 placeholder="100%"
                 inputmode="decimal"
                 autocomplete="off"
@@ -167,59 +173,59 @@
           </div>
         </div>
 
-        <div class="diet-dropdown-fill__swatches" role="group" aria-label="Default colors" data-swatch-target="color">
-          <button type="button" class="diet-dropdown-fill__swatch" data-color="#ff3b30" aria-label="Color #ff3b30" aria-pressed="false">
+        <div class="diet-dropdown-fill__swatches" role="group" aria-label="{{defaultColorsLabel}}" data-swatch-target="color">
+          <button type="button" class="diet-dropdown-fill__swatch" data-color="#ff3b30" aria-label="{{colorLabel}} #ff3b30" aria-pressed="false">
             <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
           </button>
-          <button type="button" class="diet-dropdown-fill__swatch" data-color="#ff9500" aria-label="Color #ff9500" aria-pressed="false">
+          <button type="button" class="diet-dropdown-fill__swatch" data-color="#ff9500" aria-label="{{colorLabel}} #ff9500" aria-pressed="false">
             <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
           </button>
-          <button type="button" class="diet-dropdown-fill__swatch" data-color="#ffcc00" aria-label="Color #ffcc00" aria-pressed="false">
+          <button type="button" class="diet-dropdown-fill__swatch" data-color="#ffcc00" aria-label="{{colorLabel}} #ffcc00" aria-pressed="false">
             <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
           </button>
-          <button type="button" class="diet-dropdown-fill__swatch" data-color="#34c759" aria-label="Color #34c759" aria-pressed="false">
+          <button type="button" class="diet-dropdown-fill__swatch" data-color="#34c759" aria-label="{{colorLabel}} #34c759" aria-pressed="false">
             <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
           </button>
-          <button type="button" class="diet-dropdown-fill__swatch" data-color="#30b0c7" aria-label="Color #30b0c7" aria-pressed="false">
+          <button type="button" class="diet-dropdown-fill__swatch" data-color="#30b0c7" aria-label="{{colorLabel}} #30b0c7" aria-pressed="false">
             <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
           </button>
-          <button type="button" class="diet-dropdown-fill__swatch" data-color="#007aff" aria-label="Color #007aff" aria-pressed="false">
+          <button type="button" class="diet-dropdown-fill__swatch" data-color="#007aff" aria-label="{{colorLabel}} #007aff" aria-pressed="false">
             <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
           </button>
-          <button type="button" class="diet-dropdown-fill__swatch" data-color="#32ade6" aria-label="Color #32ade6" aria-pressed="false">
+          <button type="button" class="diet-dropdown-fill__swatch" data-color="#32ade6" aria-label="{{colorLabel}} #32ade6" aria-pressed="false">
             <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
           </button>
-          <button type="button" class="diet-dropdown-fill__swatch" data-color="#00c7be" aria-label="Color #00c7be" aria-pressed="false">
+          <button type="button" class="diet-dropdown-fill__swatch" data-color="#00c7be" aria-label="{{colorLabel}} #00c7be" aria-pressed="false">
             <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
           </button>
-          <button type="button" class="diet-dropdown-fill__swatch" data-color="#5856d6" aria-label="Color #5856d6" aria-pressed="false">
+          <button type="button" class="diet-dropdown-fill__swatch" data-color="#5856d6" aria-label="{{colorLabel}} #5856d6" aria-pressed="false">
             <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
           </button>
-          <button type="button" class="diet-dropdown-fill__swatch" data-color="#af52de" aria-label="Color #af52de" aria-pressed="false">
+          <button type="button" class="diet-dropdown-fill__swatch" data-color="#af52de" aria-label="{{colorLabel}} #af52de" aria-pressed="false">
             <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
           </button>
-          <button type="button" class="diet-dropdown-fill__swatch" data-color="#ff2d55" aria-label="Color #ff2d55" aria-pressed="false">
+          <button type="button" class="diet-dropdown-fill__swatch" data-color="#ff2d55" aria-label="{{colorLabel}} #ff2d55" aria-pressed="false">
             <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
           </button>
-          <button type="button" class="diet-dropdown-fill__swatch" data-color="#a2845e" aria-label="Color #a2845e" aria-pressed="false">
+          <button type="button" class="diet-dropdown-fill__swatch" data-color="#a2845e" aria-label="{{colorLabel}} #a2845e" aria-pressed="false">
             <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
           </button>
-          <button type="button" class="diet-dropdown-fill__swatch" data-color="#212121" aria-label="Color #212121" aria-pressed="false">
+          <button type="button" class="diet-dropdown-fill__swatch" data-color="#212121" aria-label="{{colorLabel}} #212121" aria-pressed="false">
             <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
           </button>
-          <button type="button" class="diet-dropdown-fill__swatch" data-color="#aeaeb2" aria-label="Color #aeaeb2" aria-pressed="false">
+          <button type="button" class="diet-dropdown-fill__swatch" data-color="#aeaeb2" aria-label="{{colorLabel}} #aeaeb2" aria-pressed="false">
             <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
           </button>
-          <button type="button" class="diet-dropdown-fill__swatch" data-color="#c7c7cc" aria-label="Color #c7c7cc" aria-pressed="false">
+          <button type="button" class="diet-dropdown-fill__swatch" data-color="#c7c7cc" aria-label="{{colorLabel}} #c7c7cc" aria-pressed="false">
             <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
           </button>
-          <button type="button" class="diet-dropdown-fill__swatch" data-color="#d1d1d6" aria-label="Color #d1d1d6" aria-pressed="false">
+          <button type="button" class="diet-dropdown-fill__swatch" data-color="#d1d1d6" aria-label="{{colorLabel}} #d1d1d6" aria-pressed="false">
             <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
           </button>
-          <button type="button" class="diet-dropdown-fill__swatch" data-color="#e5e5ea" aria-label="Color #e5e5ea" aria-pressed="false">
+          <button type="button" class="diet-dropdown-fill__swatch" data-color="#e5e5ea" aria-label="{{colorLabel}} #e5e5ea" aria-pressed="false">
             <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
           </button>
-          <button type="button" class="diet-dropdown-fill__swatch" data-color="#ffffff" aria-label="Color #ffffff" aria-pressed="false">
+          <button type="button" class="diet-dropdown-fill__swatch" data-color="#ffffff" aria-label="{{colorLabel}} #ffffff" aria-pressed="false">
             <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
           </button>
         </div>
@@ -231,7 +237,7 @@
             data-size="sm"
             data-variant="neutral"
           >
-            <span class="diet-btn-menuactions__label">Remove fill</span>
+            <span class="diet-btn-menuactions__label">{{removeFillLabel}}</span>
             <span class="diet-btn-menuactions__icon" aria-hidden="true">
               <span class="diet-btn-menuactions__icon-layer diet-btn-menuactions__icon-layer--idle" data-icon="square.dashed"></span>
             </span>
@@ -243,22 +249,24 @@
         <div class="diet-dropdown-fill__gradient-preview" aria-hidden="true"></div>
         <div class="diet-dropdown-fill__sliders">
           <div class="diet-dropdown-fill__slider diet-dropdown-fill__slider--angle diet-slider" data-size="md">
-            <span class="diet-slider__label">Angle</span>
+            <span class="diet-slider__label" id="{{id}}-angle-label">{{angleLabel}}</span>
             <input
               type="range"
               min="0"
               max="360"
               step="1"
               class="diet-slider__input diet-dropdown-fill__gradient-angle"
-              aria-label="Gradient angle"
+              aria-labelledby="{{id}}-angle-label"
             />
           </div>
         </div>
-        <div class="diet-dropdown-fill__gradient-stopbar" role="group" aria-label="Gradient stops">
+        <div class="diet-dropdown-fill__gradient-stopbar" role="group" aria-label="{{gradientStopsLabel}}">
           <div class="diet-dropdown-fill__gradient-stop-track">
             <span class="diet-dropdown-fill__gradient-stop-line" aria-hidden="true"></span>
           </div>
-          <button type="button" class="diet-dropdown-fill__gradient-stop-add label-xs" aria-label="Add color stop">+</button>
+          <button type="button" class="diet-button diet-dropdown-fill__gradient-stop-add" data-size="small" data-type="quaternary" aria-label="{{addGradientStopLabel}}">
+            <span class="diet-icon" data-icon="plus" aria-hidden="true"></span>
+          </button>
         </div>
         <div class="diet-dropdown-fill__gradient-editor">
           <div class="diet-dropdown-fill__gradient-sv" data-role="gradient-sv">
@@ -268,36 +276,36 @@
           </div>
           <div class="diet-dropdown-fill__gradient-sliders">
             <div class="diet-dropdown-fill__slider diet-dropdown-fill__slider--hue diet-slider" data-size="sm">
-              <span class="diet-slider__label">Hue</span>
+              <span class="diet-slider__label" id="{{id}}-gradient-hue-label">{{hueLabel}}</span>
               <input
                 type="range"
                 min="0"
                 max="360"
                 step="1"
                 class="diet-slider__input diet-dropdown-fill__gradient-hue"
-                aria-label="Gradient stop hue"
+                aria-labelledby="{{id}}-gradient-hue-label"
               />
             </div>
             <div class="diet-dropdown-fill__slider diet-dropdown-fill__slider--alpha diet-slider" data-size="sm">
-              <span class="diet-slider__label">Opacity</span>
+              <span class="diet-slider__label" id="{{id}}-gradient-opacity-label">{{opacityLabel}}</span>
               <input
                 type="range"
                 min="0"
                 max="100"
                 step="1"
                 class="diet-slider__input diet-dropdown-fill__gradient-alpha"
-                aria-label="Gradient stop opacity"
+                aria-labelledby="{{id}}-gradient-opacity-label"
               />
             </div>
           </div>
           <div class="diet-dropdown-fill__gradient-fields">
             <div class="diet-textfield" data-size="sm">
               <label class="diet-textfield__control">
-                <span class="diet-textfield__display-label label-xs">Hex</span>
+                <span class="diet-textfield__display-label label-xs" id="{{id}}-gradient-hex-label">{{hexLabel}}</span>
                 <input
                   type="text"
                   class="diet-textfield__field body-xs diet-dropdown-fill__gradient-hex"
-                  aria-label="Gradient stop hex"
+                  aria-labelledby="{{id}}-gradient-hex-label"
                   placeholder="#ff3b30"
                   inputmode="text"
                   autocapitalize="off"
@@ -310,11 +318,11 @@
             </div>
             <div class="diet-textfield" data-size="sm">
               <label class="diet-textfield__control">
-                <span class="diet-textfield__display-label label-xs">Opacity</span>
+                <span class="diet-textfield__display-label label-xs" id="{{id}}-gradient-opacity-value-label">{{opacityLabel}}</span>
                 <input
                   type="text"
                   class="diet-textfield__field body-xs diet-dropdown-fill__gradient-alpha-field"
-                  aria-label="Gradient stop opacity value"
+                  aria-labelledby="{{id}}-gradient-opacity-value-label"
                   placeholder="100%"
                   inputmode="numeric"
                   autocapitalize="off"
@@ -327,59 +335,59 @@
             </div>
           </div>
         </div>
-        <div class="diet-dropdown-fill__swatches" role="group" aria-label="Gradient colors" data-swatch-target="gradient">
-          <button type="button" class="diet-dropdown-fill__swatch" data-color="#ff3b30" aria-label="Color #ff3b30" aria-pressed="false">
+        <div class="diet-dropdown-fill__swatches" role="group" aria-label="{{defaultColorsLabel}}" data-swatch-target="gradient">
+          <button type="button" class="diet-dropdown-fill__swatch" data-color="#ff3b30" aria-label="{{colorLabel}} #ff3b30" aria-pressed="false">
             <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
           </button>
-          <button type="button" class="diet-dropdown-fill__swatch" data-color="#ff9500" aria-label="Color #ff9500" aria-pressed="false">
+          <button type="button" class="diet-dropdown-fill__swatch" data-color="#ff9500" aria-label="{{colorLabel}} #ff9500" aria-pressed="false">
             <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
           </button>
-          <button type="button" class="diet-dropdown-fill__swatch" data-color="#ffcc00" aria-label="Color #ffcc00" aria-pressed="false">
+          <button type="button" class="diet-dropdown-fill__swatch" data-color="#ffcc00" aria-label="{{colorLabel}} #ffcc00" aria-pressed="false">
             <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
           </button>
-          <button type="button" class="diet-dropdown-fill__swatch" data-color="#34c759" aria-label="Color #34c759" aria-pressed="false">
+          <button type="button" class="diet-dropdown-fill__swatch" data-color="#34c759" aria-label="{{colorLabel}} #34c759" aria-pressed="false">
             <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
           </button>
-          <button type="button" class="diet-dropdown-fill__swatch" data-color="#30b0c7" aria-label="Color #30b0c7" aria-pressed="false">
+          <button type="button" class="diet-dropdown-fill__swatch" data-color="#30b0c7" aria-label="{{colorLabel}} #30b0c7" aria-pressed="false">
             <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
           </button>
-          <button type="button" class="diet-dropdown-fill__swatch" data-color="#007aff" aria-label="Color #007aff" aria-pressed="false">
+          <button type="button" class="diet-dropdown-fill__swatch" data-color="#007aff" aria-label="{{colorLabel}} #007aff" aria-pressed="false">
             <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
           </button>
-          <button type="button" class="diet-dropdown-fill__swatch" data-color="#32ade6" aria-label="Color #32ade6" aria-pressed="false">
+          <button type="button" class="diet-dropdown-fill__swatch" data-color="#32ade6" aria-label="{{colorLabel}} #32ade6" aria-pressed="false">
             <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
           </button>
-          <button type="button" class="diet-dropdown-fill__swatch" data-color="#00c7be" aria-label="Color #00c7be" aria-pressed="false">
+          <button type="button" class="diet-dropdown-fill__swatch" data-color="#00c7be" aria-label="{{colorLabel}} #00c7be" aria-pressed="false">
             <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
           </button>
-          <button type="button" class="diet-dropdown-fill__swatch" data-color="#5856d6" aria-label="Color #5856d6" aria-pressed="false">
+          <button type="button" class="diet-dropdown-fill__swatch" data-color="#5856d6" aria-label="{{colorLabel}} #5856d6" aria-pressed="false">
             <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
           </button>
-          <button type="button" class="diet-dropdown-fill__swatch" data-color="#af52de" aria-label="Color #af52de" aria-pressed="false">
+          <button type="button" class="diet-dropdown-fill__swatch" data-color="#af52de" aria-label="{{colorLabel}} #af52de" aria-pressed="false">
             <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
           </button>
-          <button type="button" class="diet-dropdown-fill__swatch" data-color="#ff2d55" aria-label="Color #ff2d55" aria-pressed="false">
+          <button type="button" class="diet-dropdown-fill__swatch" data-color="#ff2d55" aria-label="{{colorLabel}} #ff2d55" aria-pressed="false">
             <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
           </button>
-          <button type="button" class="diet-dropdown-fill__swatch" data-color="#a2845e" aria-label="Color #a2845e" aria-pressed="false">
+          <button type="button" class="diet-dropdown-fill__swatch" data-color="#a2845e" aria-label="{{colorLabel}} #a2845e" aria-pressed="false">
             <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
           </button>
-          <button type="button" class="diet-dropdown-fill__swatch" data-color="#212121" aria-label="Color #212121" aria-pressed="false">
+          <button type="button" class="diet-dropdown-fill__swatch" data-color="#212121" aria-label="{{colorLabel}} #212121" aria-pressed="false">
             <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
           </button>
-          <button type="button" class="diet-dropdown-fill__swatch" data-color="#aeaeb2" aria-label="Color #aeaeb2" aria-pressed="false">
+          <button type="button" class="diet-dropdown-fill__swatch" data-color="#aeaeb2" aria-label="{{colorLabel}} #aeaeb2" aria-pressed="false">
             <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
           </button>
-          <button type="button" class="diet-dropdown-fill__swatch" data-color="#c7c7cc" aria-label="Color #c7c7cc" aria-pressed="false">
+          <button type="button" class="diet-dropdown-fill__swatch" data-color="#c7c7cc" aria-label="{{colorLabel}} #c7c7cc" aria-pressed="false">
             <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
           </button>
-          <button type="button" class="diet-dropdown-fill__swatch" data-color="#d1d1d6" aria-label="Color #d1d1d6" aria-pressed="false">
+          <button type="button" class="diet-dropdown-fill__swatch" data-color="#d1d1d6" aria-label="{{colorLabel}} #d1d1d6" aria-pressed="false">
             <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
           </button>
-          <button type="button" class="diet-dropdown-fill__swatch" data-color="#e5e5ea" aria-label="Color #e5e5ea" aria-pressed="false">
+          <button type="button" class="diet-dropdown-fill__swatch" data-color="#e5e5ea" aria-label="{{colorLabel}} #e5e5ea" aria-pressed="false">
             <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
           </button>
-          <button type="button" class="diet-dropdown-fill__swatch" data-color="#ffffff" aria-label="Color #ffffff" aria-pressed="false">
+          <button type="button" class="diet-dropdown-fill__swatch" data-color="#ffffff" aria-label="{{colorLabel}} #ffffff" aria-pressed="false">
             <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
           </button>
         </div>
@@ -390,7 +398,7 @@
             data-size="sm"
             data-variant="neutral"
           >
-            <span class="diet-btn-menuactions__label">Remove fill</span>
+            <span class="diet-btn-menuactions__label">{{removeFillLabel}}</span>
             <span class="diet-btn-menuactions__icon" aria-hidden="true">
               <span class="diet-btn-menuactions__icon-layer diet-btn-menuactions__icon-layer--idle" data-icon="square.dashed"></span>
             </span>
@@ -407,34 +415,34 @@
             <button
               type="button"
               class="diet-button diet-dropdown-fill__upload-btn"
-              data-size="large"
+              data-size="medium"
               data-type="tertiary"
-              aria-label="Upload"
-              title="Upload"
+              aria-label="{{uploadLabel}}"
+              title="{{uploadLabel}}"
             >
-              <span class="diet-icon" aria-hidden="true" data-icon="square.and.arrow.up" data-size="20"></span>
+              <span class="diet-icon" aria-hidden="true" data-icon="square.and.arrow.up"></span>
             </button>
             <button
               type="button"
               class="diet-button diet-dropdown-fill__choose-btn"
-              data-size="large"
+              data-size="medium"
               data-type="tertiary"
-              aria-label="Choose from assets"
-              title="Choose from assets"
+              aria-label="{{chooseAssetsLabel}}"
+              title="{{chooseAssetsLabel}}"
             >
-              <span class="diet-icon" aria-hidden="true" data-icon="tray" data-size="20"></span>
+              <span class="diet-icon" aria-hidden="true" data-icon="tray"></span>
             </button>
           </div>
           <div class="diet-dropdown-fill__image-controls-right">
             <button
               type="button"
               class="diet-button diet-dropdown-fill__remove-btn"
-              data-size="large"
+              data-size="medium"
               data-type="quaternary"
-              aria-label="Remove"
-              title="Remove"
+              aria-label="{{removeAssetLabel}}"
+              title="{{removeAssetLabel}}"
             >
-              <span class="diet-icon" aria-hidden="true" data-icon="trash" data-size="20"></span>
+              <span class="diet-icon" aria-hidden="true" data-icon="trash"></span>
             </button>
           </div>
         </div>
@@ -458,34 +466,34 @@
             <button
               type="button"
               class="diet-button diet-dropdown-fill__video-upload-btn"
-              data-size="large"
+              data-size="medium"
               data-type="tertiary"
-              aria-label="Upload"
-              title="Upload"
+              aria-label="{{uploadLabel}}"
+              title="{{uploadLabel}}"
             >
-              <span class="diet-icon" aria-hidden="true" data-icon="square.and.arrow.up" data-size="20"></span>
+              <span class="diet-icon" aria-hidden="true" data-icon="square.and.arrow.up"></span>
             </button>
             <button
               type="button"
               class="diet-button diet-dropdown-fill__video-choose-btn"
-              data-size="large"
+              data-size="medium"
               data-type="tertiary"
-              aria-label="Choose from assets"
-              title="Choose from assets"
+              aria-label="{{chooseAssetsLabel}}"
+              title="{{chooseAssetsLabel}}"
             >
-              <span class="diet-icon" aria-hidden="true" data-icon="tray" data-size="20"></span>
+              <span class="diet-icon" aria-hidden="true" data-icon="tray"></span>
             </button>
           </div>
           <div class="diet-dropdown-fill__video-controls-right">
             <button
               type="button"
               class="diet-button diet-dropdown-fill__video-remove-btn"
-              data-size="large"
+              data-size="medium"
               data-type="quaternary"
-              aria-label="Remove"
-              title="Remove"
+              aria-label="{{removeAssetLabel}}"
+              title="{{removeAssetLabel}}"
             >
-              <span class="diet-icon" aria-hidden="true" data-icon="trash" data-size="20"></span>
+              <span class="diet-icon" aria-hidden="true" data-icon="trash"></span>
             </button>
           </div>
         </div>

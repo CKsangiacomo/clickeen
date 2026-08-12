@@ -1,4 +1,4 @@
-import type { FillMode, FillValue } from './fill-types';
+import type { FillMode, FillValue, GradientKind } from './fill-types';
 import type { AccountAssetsClient } from '../shared/account-assets';
 
 export type GradientStopState = {
@@ -8,19 +8,30 @@ export type GradientStopState = {
   hsv: { h: number; s: number; v: number; a: number };
 };
 
+export type DropdownFillCopy = {
+  addGradientStop: string;
+  editGradientStop: string;
+  loadAssetsError: string;
+  loadingAssets: string;
+  noAssets: string;
+  previewAssetError: string;
+  removeGradientStop: string;
+  uploadAssetError: string;
+  useAsset: string;
+};
+
 export type DropdownFillState = {
   root: HTMLElement;
+  copy: DropdownFillCopy;
   accountAssets: AccountAssetsClient;
   input: HTMLInputElement;
   headerValue: HTMLElement | null;
   headerValueLabel: HTMLElement | null;
   headerValueChip: HTMLElement | null;
-  headerLabel: HTMLElement | null;
   preview: HTMLElement | null;
   nativeColorInput: HTMLInputElement | null;
   colorPreview: HTMLElement | null;
   removeFillActions: HTMLButtonElement[];
-  removeFillLabels: Array<HTMLElement | null>;
   hueInput: HTMLInputElement;
   alphaInput: HTMLInputElement;
   hexField: HTMLInputElement;
@@ -43,7 +54,7 @@ export type DropdownFillState = {
   gradientStopAlphaField: HTMLInputElement | null;
   gradientActiveStopId: string;
   gradientStops: GradientStopState[];
-  gradient: { angle: number };
+  gradient: { kind: GradientKind; angle: number };
   gradientDrag?: { id: string; pointerId: number };
   imagePanel: HTMLElement | null;
   imagePreview: HTMLElement | null;
@@ -58,7 +69,6 @@ export type DropdownFillState = {
   imageSrc: string | null;
   imageAssetRef: string | null;
   imageName: string | null;
-  imageObjectUrl: string | null;
   imageResolveRequestId: number;
   videoPanel: HTMLElement | null;
   videoPreview: HTMLVideoElement | null;
@@ -74,7 +84,6 @@ export type DropdownFillState = {
   videoAssetRef: string | null;
   videoPosterAssetRef: string | null;
   videoName: string | null;
-  videoObjectUrl: string | null;
   videoResolveRequestId: number;
   allowedModes: FillMode[];
   mode: FillMode;

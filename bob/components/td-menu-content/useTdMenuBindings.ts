@@ -187,13 +187,13 @@ export function useTdMenuBindings(args: {
     };
 
     container.addEventListener('dieter-ops', handleDieterOpsEvent as EventListener, true);
-    container.addEventListener('bob-upsell', handleUpsellEvent as EventListener, true);
+    container.addEventListener('dieter-upsell', handleUpsellEvent as EventListener, true);
     container.addEventListener('input', handleContainerEvent, true);
     container.addEventListener('change', handleContainerEvent, true);
 
     return () => {
       container.removeEventListener('dieter-ops', handleDieterOpsEvent as EventListener, true);
-      container.removeEventListener('bob-upsell', handleUpsellEvent as EventListener, true);
+      container.removeEventListener('dieter-upsell', handleUpsellEvent as EventListener, true);
       container.removeEventListener('input', handleContainerEvent, true);
       container.removeEventListener('change', handleContainerEvent, true);
     };

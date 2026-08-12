@@ -8,7 +8,7 @@ import {
   readVideoPosterAssetRef,
   resolveModeFromFill,
 } from './fill-parser';
-import { DEFAULT_GRADIENT, MODE_ORDER, type FillMode, type FillValue } from './fill-types';
+import { DEFAULT_GRADIENT, type FillMode, type FillValue } from './fill-types';
 import {
   createDefaultGradientStops,
   installGradientHandlers,
@@ -43,13 +43,6 @@ import {
 } from './color-utils';
 import type { AccountAssetsClient } from '../shared/account-assets';
 
-const MODE_LABELS: Record<FillMode, string> = {
-  color: 'Color fill',
-  gradient: 'Gradient fill',
-  image: 'Image fill',
-  video: 'Video fill',
-};
-
 const states = new Map<HTMLElement, DropdownFillState>();
 
 const hydrateHost = createDropdownHydrator({
@@ -68,53 +61,45 @@ export function hydrateDropdownFill(
   roots.forEach((root) => {
     if (states.has(root)) return;
     const state = createState(root, options.accountAssets);
-    if (!state) return;
     wireModes(state);
     states.set(root, state);
     installHandlers(state);
-    const initialValue =
-      state.input.value || state.input.getAttribute('data-dieter-json') || state.input.getAttribute('value') || '';
-    syncFromValue(state, initialValue);
+    syncFromValue(state, state.input.value);
   });
 
   hydrateHost(scope);
 }
 
-function parseAllowedModes(root: HTMLElement): FillMode[] {
-  const raw = (root.dataset.fillModes || '').trim();
-  if (raw) {
-    const modes = raw
-      .split(',')
-      .map((mode) => mode.trim().toLowerCase())
-      .filter((mode): mode is FillMode => MODE_ORDER.includes(mode as FillMode));
-    return modes.length ? modes : ['color'];
+export function destroyDropdownFill(root: HTMLElement): void {
+  const state = states.get(root);
+  if (state) {
+    state.imageResolveRequestId += 1;
+    state.videoResolveRequestId += 1;
+    state.videoPreview?.removeAttribute('src');
   }
-
-  const allowImageAttr = (root.dataset.allowImage || '').trim().toLowerCase();
-  const allowImage = allowImageAttr === '' || allowImageAttr === 'true' || allowImageAttr === '1' || allowImageAttr === 'yes';
-  if (!allowImage) return ['color'];
-  return ['color', 'gradient', 'image'];
+  states.delete(root);
+  hydrateHost.destroy(root);
 }
 
-function createState(root: HTMLElement, accountAssets: AccountAssetsClient): DropdownFillState | null {
-  const input = root.querySelector<HTMLInputElement>('.diet-dropdown-fill__value-field');
+function parseAllowedModes(root: HTMLElement): FillMode[] {
+  return root.dataset.fillModes!.split(',') as FillMode[];
+}
+
+function createState(root: HTMLElement, accountAssets: AccountAssetsClient): DropdownFillState {
+  const input = root.querySelector<HTMLInputElement>('.diet-dropdown-fill__value-field')!;
   const headerValue = root.querySelector<HTMLElement>('.diet-dropdown-header-value');
   const headerValueLabel = root.querySelector<HTMLElement>('.diet-dropdown-fill__label');
   const headerValueChip = root.querySelector<HTMLElement>('.diet-dropdown-fill__chip');
-  const headerLabel = root.querySelector<HTMLElement>('.diet-popover__header-label');
   const preview = root.querySelector<HTMLElement>('.diet-dropdown-fill__preview');
   const nativeColorInput = root.querySelector<HTMLInputElement>('.diet-dropdown-fill__native-color');
-  const hueInput = root.querySelector<HTMLInputElement>('.diet-dropdown-fill__hue');
-  const alphaInput = root.querySelector<HTMLInputElement>('.diet-dropdown-fill__alpha');
-  const hexField = root.querySelector<HTMLInputElement>('.diet-dropdown-fill__hex');
-  const alphaField = root.querySelector<HTMLInputElement>('.diet-dropdown-fill__alpha-input');
-  const svCanvas = root.querySelector<HTMLElement>('.diet-dropdown-fill__sv-canvas');
-  const svThumb = root.querySelector<HTMLElement>('.diet-dropdown-fill__sv-thumb');
+  const hueInput = root.querySelector<HTMLInputElement>('.diet-dropdown-fill__hue')!;
+  const alphaInput = root.querySelector<HTMLInputElement>('.diet-dropdown-fill__alpha')!;
+  const hexField = root.querySelector<HTMLInputElement>('.diet-dropdown-fill__hex')!;
+  const alphaField = root.querySelector<HTMLInputElement>('.diet-dropdown-fill__alpha-input')!;
+  const svCanvas = root.querySelector<HTMLElement>('.diet-dropdown-fill__sv-canvas')!;
+  const svThumb = root.querySelector<HTMLElement>('.diet-dropdown-fill__sv-thumb')!;
   const colorPreview = root.querySelector<HTMLElement>('.diet-dropdown-fill__color-preview');
   const removeFillActions = Array.from(root.querySelectorAll<HTMLButtonElement>('.diet-dropdown-fill__remove-fill'));
-  const removeFillLabels = removeFillActions.map(
-    (action) => action.querySelector<HTMLElement>('.diet-btn-menuactions__label') ?? null,
-  );
   const swatches = Array.from(root.querySelectorAll<HTMLButtonElement>('.diet-dropdown-fill__swatch'));
   const gradientPreview = root.querySelector<HTMLElement>('.diet-dropdown-fill__gradient-preview');
   const gradientAngleInput = root.querySelector<HTMLInputElement>('.diet-dropdown-fill__gradient-angle');
@@ -150,39 +135,39 @@ function createState(root: HTMLElement, accountAssets: AccountAssetsClient): Dro
   const videoRemoveButton = root.querySelector<HTMLButtonElement>('.diet-dropdown-fill__video-remove-btn');
   const videoFileInput = root.querySelector<HTMLInputElement>('.diet-dropdown-fill__video-file-input');
 
-  if (!input || !hueInput || !alphaInput || !hexField || !alphaField || !svCanvas || !svThumb) {
-    return null;
-  }
-
-  if (chooseButton) {
-    chooseButton.setAttribute('aria-expanded', 'false');
-  }
-  if (videoChooseButton) {
-    videoChooseButton.setAttribute('aria-expanded', 'false');
-  }
+  chooseButton?.setAttribute('aria-expanded', 'false');
+  videoChooseButton?.setAttribute('aria-expanded', 'false');
 
   const nativeValue = captureNativeValue(input);
   const allowedModes = parseAllowedModes(root);
-  const mode = allowedModes[0] || 'color';
+  const mode = allowedModes[0]!;
   swatches.forEach((swatch) => {
-    const color = swatch.dataset.color || '';
+    const color = swatch.dataset.color!;
     swatch.style.setProperty('--swatch-color', color);
-    if (color) swatch.setAttribute('aria-label', `Color ${color}`);
   });
 
   return {
     root,
+    copy: {
+      addGradientStop: root.dataset.copyAddGradientStop!,
+      editGradientStop: root.dataset.copyEditGradientStop!,
+      loadAssetsError: root.dataset.copyLoadAssetsError!,
+      loadingAssets: root.dataset.copyLoadingAssets!,
+      noAssets: root.dataset.copyNoAssets!,
+      previewAssetError: root.dataset.copyPreviewAssetError!,
+      removeGradientStop: root.dataset.copyRemoveGradientStop!,
+      uploadAssetError: root.dataset.copyUploadAssetError!,
+      useAsset: root.dataset.copyUseAsset!,
+    },
     accountAssets,
     input,
     headerValue,
     headerValueLabel,
     headerValueChip,
-    headerLabel,
     preview,
     nativeColorInput,
     colorPreview,
     removeFillActions,
-    removeFillLabels,
     hueInput,
     alphaInput,
     hexField,
@@ -205,7 +190,7 @@ function createState(root: HTMLElement, accountAssets: AccountAssetsClient): Dro
     gradientStopAlphaField,
     gradientActiveStopId,
     gradientStops,
-    gradient: { angle: DEFAULT_GRADIENT.angle },
+    gradient: { kind: DEFAULT_GRADIENT.kind, angle: DEFAULT_GRADIENT.angle },
     imagePanel,
     imagePreview,
     imageBrowser,
@@ -219,7 +204,6 @@ function createState(root: HTMLElement, accountAssets: AccountAssetsClient): Dro
     imageSrc: null,
     imageAssetRef: null,
     imageName: null,
-    imageObjectUrl: null,
     imageResolveRequestId: 0,
     videoPanel,
     videoPreview,
@@ -235,7 +219,6 @@ function createState(root: HTMLElement, accountAssets: AccountAssetsClient): Dro
     videoAssetRef: null,
     videoPosterAssetRef: null,
     videoName: null,
-    videoObjectUrl: null,
     videoResolveRequestId: 0,
     allowedModes,
     mode,
@@ -248,19 +231,18 @@ function installHandlers(state: DropdownFillState) {
   if (state.nativeValue) {
     Object.defineProperty(state.input, 'value', {
       configurable: true,
-      get: () => state.nativeValue?.get() ?? '',
+      get: () => state.nativeValue!.get(),
       set: (next: string) => {
-        state.nativeValue?.set(String(next ?? ''));
-        if (!state.internalWrite) syncFromValue(state, String(next ?? ''));
+        state.nativeValue!.set(next);
+        if (!state.internalWrite) syncFromValue(state, next);
       },
     });
   }
 
-  const readValue = () => state.input.value || state.input.getAttribute('data-dieter-json') || '';
-  state.input.addEventListener('external-sync', () => syncFromValue(state, readValue()));
+  state.input.addEventListener('external-sync', () => syncFromValue(state, state.input.value));
   state.input.addEventListener('input', () => {
     if (state.internalWrite) return;
-    syncFromValue(state, readValue());
+    syncFromValue(state, state.input.value);
   });
 
   state.hueInput.addEventListener('input', () => {
@@ -387,27 +369,22 @@ function setInputValue(state: DropdownFillState, value: FillValue, emit: boolean
 
 function setRemoveFillState(state: DropdownFillState, isEmpty: boolean) {
   if (!state.removeFillActions.length) return;
-  state.removeFillActions.forEach((action, index) => {
+  state.removeFillActions.forEach((action) => {
     action.disabled = isEmpty;
-    const label = state.removeFillLabels[index];
-    if (label) {
-      label.textContent = isEmpty ? 'No fill to remove' : 'Remove fill';
-    }
   });
 }
 
 function getSwatchTarget(swatch: HTMLButtonElement): 'color' | 'gradient' {
-  const container = swatch.closest<HTMLElement>('.diet-dropdown-fill__swatches');
-  return container?.dataset.swatchTarget === 'gradient' ? 'gradient' : 'color';
+  return swatch.closest<HTMLElement>('.diet-dropdown-fill__swatches')!.dataset
+    .swatchTarget as 'color' | 'gradient';
 }
 
 function installSwatchHandlers(state: DropdownFillState) {
   state.swatches.forEach((swatch) => {
     swatch.addEventListener('click', (event) => {
       event.preventDefault();
-      const color = swatch.dataset.color || '';
-      const parsed = parseColor(color, state.root);
-      if (!parsed) return;
+      const color = swatch.dataset.color!;
+      const parsed = parseColor(color, state.root)!;
       const target = getSwatchTarget(swatch);
       if (target === 'gradient') {
         applyGradientSwatch(state, parsed, mediaDeps());
@@ -422,48 +399,25 @@ function installSwatchHandlers(state: DropdownFillState) {
 
 function handleHexInput(state: DropdownFillState) {
   const raw = state.hexField.value.trim();
-  if (!raw) {
-    state.hexField.value = formatHex(state.hsv).replace(/^#/, '');
-    return;
-  }
   const normalized = raw.startsWith('#') ? raw : `#${raw}`;
   const rgba = hexToRgba(normalized);
-  if (!rgba) {
-    state.hexField.value = formatHex(state.hsv).replace(/^#/, '');
-    return;
-  }
+  if (!rgba) return;
   state.hsv = { ...rgbToHsv(rgba.r, rgba.g, rgba.b, 1), a: state.hsv.a || 1 };
   syncColorUI(state, { commit: true });
 }
 
 function handleAlphaField(state: DropdownFillState) {
   const raw = state.alphaField.value.trim().replace('%', '');
-  if (!raw) {
-    state.alphaField.value = `${Math.round(state.hsv.a * 100)}%`;
-    return;
-  }
   const parsed = Number(raw);
-  if (!Number.isFinite(parsed)) {
-    state.alphaField.value = `${Math.round(state.hsv.a * 100)}%`;
-    return;
-  }
-  const percent = clampNumber(parsed, 0, 100);
+  if (!Number.isFinite(parsed) || parsed < 0 || parsed > 100) return;
+  const percent = parsed;
   state.hsv.a = percent / 100;
   syncColorUI(state, { commit: true });
 }
 
 function syncFromValue(state: DropdownFillState, raw: string) {
-  const rawValue = String(raw ?? '');
-  const fill = rawValue === '' ? { type: 'none' as const } : parseFillValue(rawValue, state.root);
-  if (!fill) {
-    setInvalidFillState(state, true);
-    updateHeader(state, { text: 'Invalid', muted: false, chipColor: null, noneChip: true });
-    setRemoveFillState(state, true);
-    return;
-  }
-
-  setInvalidFillState(state, false);
-  const nextMode = resolveModeFromFill(state.mode, state.allowedModes, fill);
+  const fill = parseFillValue(raw);
+  const nextMode = resolveModeFromFill(state.mode, fill);
   setMode(state, nextMode);
 
   if (fill.type === 'none') {
@@ -483,7 +437,7 @@ function syncFromValue(state: DropdownFillState, raw: string) {
       return;
     }
     if (nextMode === 'gradient') {
-      state.gradient = { angle: DEFAULT_GRADIENT.angle };
+      state.gradient = { kind: DEFAULT_GRADIENT.kind, angle: DEFAULT_GRADIENT.angle };
       state.gradientStops = createDefaultGradientStops(state.root);
       state.gradientActiveStopId = state.gradientStops[0]?.id ?? '';
       syncGradientUI(state, { commit: false }, mediaDeps());
@@ -495,13 +449,7 @@ function syncFromValue(state: DropdownFillState, raw: string) {
   }
 
   if (fill.type === 'color') {
-    const parsed = parseColor(fill.color || '', state.root);
-    if (!parsed) {
-      setInvalidFillState(state, true);
-      state.hsv = { h: 0, s: 0, v: 0, a: 0 };
-      syncColorUI(state, { commit: false });
-      return;
-    }
+    const parsed = parseColor(fill.color, state.root)!;
     state.hsv = parsed;
     syncColorUI(state, { commit: false });
     return;
@@ -567,10 +515,7 @@ function syncColorUI(state: DropdownFillState, opts: { commit: boolean; updateHe
   }
 
   if (shouldUpdateHeader) {
-    const isInvalid = state.root.dataset.invalid === 'true';
-    if (isInvalid) {
-      updateHeader(state, { text: 'Invalid', muted: false, chipColor: null, noneChip: true });
-    } else if (alphaPercent === 0) {
+    if (alphaPercent === 0) {
       updateHeader(state, { text: '', muted: true, chipColor: null, noneChip: true });
     } else {
       const label = alphaPercent < 100 ? `${alphaPercent}%` : '';
@@ -588,7 +533,7 @@ function syncColorUI(state: DropdownFillState, opts: { commit: boolean; updateHe
   const normalizedCurrent = normalizeHex(hex);
   state.swatches.forEach((swatch) => {
     if (getSwatchTarget(swatch) !== 'color') return;
-    const swatchHex = normalizeHex(swatch.dataset.color || '');
+    const swatchHex = normalizeHex(swatch.dataset.color!);
     const match = Boolean(normalizedCurrent && swatchHex && swatchHex === normalizedCurrent);
     swatch.classList.toggle('is-selected', match);
     swatch.setAttribute('aria-pressed', match ? 'true' : 'false');
@@ -627,41 +572,21 @@ function updateHeader(
   }
 }
 
-function setInvalidFillState(state: DropdownFillState, invalid: boolean): void {
-  const control = state.root.querySelector<HTMLElement>('.diet-dropdown-fill__control');
-  if (invalid) {
-    state.root.dataset.invalid = 'true';
-    control?.setAttribute('aria-invalid', 'true');
-    state.headerValueLabel?.setAttribute('role', 'alert');
-    state.headerValueLabel?.setAttribute('aria-live', 'assertive');
-    return;
-  }
-  delete state.root.dataset.invalid;
-  control?.removeAttribute('aria-invalid');
-  state.headerValueLabel?.removeAttribute('role');
-  state.headerValueLabel?.removeAttribute('aria-live');
-}
-
 function setMode(state: DropdownFillState, mode: FillMode) {
-  const next = state.allowedModes.includes(mode) ? mode : state.allowedModes[0] || 'color';
-  state.mode = next;
-  state.root.dataset.mode = next;
+  state.mode = mode;
+  state.root.dataset.mode = mode;
   state.root.dataset.hasModes = state.allowedModes.length > 1 ? 'true' : 'false';
 
   const buttons = Array.from(state.root.querySelectorAll<HTMLButtonElement>('.diet-dropdown-fill__mode-btn'));
   buttons.forEach((btn) => {
-    const btnMode = (btn.dataset.mode || '') as FillMode;
+    const btnMode = btn.dataset.mode as FillMode;
     const isAllowed = state.allowedModes.includes(btnMode);
     btn.hidden = !isAllowed;
     btn.disabled = !isAllowed;
-    const isActive = isAllowed && btnMode === next;
+    const isActive = isAllowed && btnMode === mode;
     btn.classList.toggle('is-active', isActive);
     btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
   });
-
-  if (state.headerLabel) {
-    state.headerLabel.textContent = MODE_LABELS[next] || state.headerLabel.textContent;
-  }
 
 }
 
@@ -671,18 +596,16 @@ function syncModeUI(state: DropdownFillState, opts: { commit: boolean; updateHea
     return;
   }
   if (state.mode === 'image') {
-    const shouldCommit = opts.commit && Boolean(state.imageSrc);
     setImageSrc(state, state.imageSrc, {
-      commit: shouldCommit,
+      commit: opts.commit && Boolean(state.imageAssetRef),
       updateHeader: opts.updateHeader,
       updateRemove: opts.updateRemove,
     });
     return;
   }
   if (state.mode === 'video') {
-    const shouldCommit = opts.commit && Boolean(state.videoSrc);
     setVideoSrc(state, state.videoSrc, {
-      commit: shouldCommit,
+      commit: opts.commit && Boolean(state.videoAssetRef),
       updateHeader: opts.updateHeader,
       updateRemove: opts.updateRemove,
     });
@@ -697,13 +620,12 @@ function wireModes(state: DropdownFillState) {
   buttons.forEach((btn) => {
     btn.addEventListener('click', (event) => {
       event.preventDefault();
-      const mode = (btn.dataset.mode || 'color') as FillMode;
+      const mode = btn.dataset.mode as FillMode;
       setMode(state, mode);
       syncModeUI(state, { commit: true });
     });
   });
-  const initial = (state.root.dataset.mode || state.mode) as FillMode;
-  setMode(state, initial);
+  setMode(state, state.mode);
 }
 
 function captureNativeValue(input: HTMLInputElement): DropdownFillState['nativeValue'] {
@@ -711,7 +633,7 @@ function captureNativeValue(input: HTMLInputElement): DropdownFillState['nativeV
   const desc = Object.getOwnPropertyDescriptor(proto, 'value');
   if (!desc?.get || !desc?.set) return undefined;
   return {
-    get: () => String(desc.get?.call(input) ?? ''),
+    get: () => desc.get!.call(input),
     set: (next: string) => {
       desc.set?.call(input, next);
     },

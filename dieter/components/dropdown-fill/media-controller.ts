@@ -3,12 +3,9 @@ import type { DropdownFillHeaderUpdate, DropdownFillState } from './dropdown-fil
 import type { FillValue } from './fill-types';
 import {
   dispatchAccountAssetUpsell,
-  resolveAccountAssetErrorCopy,
   type AccountAssetRecord,
 } from '../shared/account-assets';
 import { resolveSingleAccountAsset } from '../shared/account-asset-resolve';
-
-const VIDEO_PREVIEW_FAILED_MESSAGE = 'Preview failed to load.';
 
 export type SetMediaSrcOptions = {
   commit: boolean;
@@ -33,7 +30,7 @@ function setFillUploadingState(state: DropdownFillState, uploading: boolean): vo
 }
 
 function formatSizeBytes(sizeBytes: number): string {
-  const size = Number.isFinite(sizeBytes) ? Math.max(0, Math.trunc(sizeBytes)) : 0;
+  const size = Math.trunc(sizeBytes);
   if (size >= 1024 * 1024) return `${(size / (1024 * 1024)).toFixed(1)} MB`;
   if (size >= 1024) return `${Math.max(1, Math.round(size / 1024))} KB`;
   return `${size} B`;
@@ -64,8 +61,7 @@ function filterAssetsForKind(assets: AccountAssetRecord[], kind: 'image' | 'vide
 
 function syncImageHeader(state: DropdownFillState, deps: MediaControllerDeps): void {
   if (state.imageSrc) {
-    const label = state.imageName || 'Image selected';
-    deps.updateHeader(state, { text: label, muted: false, chipColor: null });
+    deps.updateHeader(state, { text: state.imageName ?? '', muted: false, chipColor: null });
     return;
   }
   deps.updateHeader(state, { text: '', muted: true, chipColor: null, noneChip: true });
@@ -73,8 +69,7 @@ function syncImageHeader(state: DropdownFillState, deps: MediaControllerDeps): v
 
 function syncVideoHeader(state: DropdownFillState, deps: MediaControllerDeps): void {
   if (state.videoSrc) {
-    const label = state.videoName || 'Video selected';
-    deps.updateHeader(state, { text: label, muted: false, chipColor: null });
+    deps.updateHeader(state, { text: state.videoName ?? '', muted: false, chipColor: null });
     return;
   }
   deps.updateHeader(state, { text: '', muted: true, chipColor: null, noneChip: true });
@@ -141,14 +136,9 @@ export function setImageSrc(
 ): void {
   const shouldUpdateHeader = opts.updateHeader !== false;
   const shouldUpdateRemove = opts.updateRemove !== false;
-  const previousSrc = state.imageSrc;
-  if (state.imageObjectUrl && previousSrc && previousSrc === state.imageObjectUrl && src !== previousSrc) {
-    URL.revokeObjectURL(state.imageObjectUrl);
-    state.imageObjectUrl = null;
-  }
   state.imageSrc = src;
   if (opts.commit) {
-    const assetRef = state.imageAssetRef || '';
+    const assetRef = state.imageAssetRef;
     const fill: FillValue = assetRef
       ? {
           type: 'image',
@@ -174,14 +164,9 @@ export function setVideoSrc(
 ): void {
   const shouldUpdateHeader = opts.updateHeader !== false;
   const shouldUpdateRemove = opts.updateRemove !== false;
-  const previousSrc = state.videoSrc;
-  if (state.videoObjectUrl && previousSrc && previousSrc === state.videoObjectUrl && src !== previousSrc) {
-    URL.revokeObjectURL(state.videoObjectUrl);
-    state.videoObjectUrl = null;
-  }
   state.videoSrc = src;
   if (opts.commit) {
-    const assetRef = state.videoAssetRef || '';
+    const assetRef = state.videoAssetRef;
     const fill: FillValue = assetRef
       ? {
           type: 'video',
@@ -219,7 +204,7 @@ function renderAssetBrowserRows(args: {
   if (!args.assets.length) {
     const empty = document.createElement('div');
     empty.className = 'diet-dropdown-fill__asset-browser-empty body-s';
-    empty.textContent = 'No assets found.';
+    empty.textContent = args.state.copy.noAssets;
     browserList.appendChild(empty);
     return;
   }
@@ -238,7 +223,7 @@ function renderAssetBrowserRows(args: {
 
     const subline = document.createElement('div');
     subline.className = 'diet-dropdown-fill__asset-browser-subline body-xs';
-    subline.textContent = `${asset.assetType} • ${formatSizeBytes(asset.sizeBytes)}`;
+    subline.textContent = formatSizeBytes(asset.sizeBytes);
     meta.appendChild(subline);
 
     const button = document.createElement('button');
@@ -246,7 +231,10 @@ function renderAssetBrowserRows(args: {
     button.className = 'diet-button diet-dropdown-fill__asset-browser-use';
     button.setAttribute('data-size', 'small');
     button.setAttribute('data-type', 'secondary');
-    button.innerHTML = '<span class="diet-button__label">Use</span>';
+    const label = document.createElement('span');
+    label.className = 'diet-button__label';
+    label.textContent = args.state.copy.useAsset;
+    button.appendChild(label);
     button.addEventListener('click', (event) => {
       event.preventDefault();
       if (args.kind === 'image') {
@@ -287,26 +275,22 @@ async function openAssetBrowser(args: {
   setBrowserOpen(browser, button, true);
   setFillUploadingState(args.state, true);
   browserMessage?.setAttribute('role', 'status');
-  setAssetPanelMessage(browserMessage, 'Loading assets…');
+  setAssetPanelMessage(browserMessage, args.state.copy.loadingAssets);
   clearAssetBrowser(browserList);
 
   try {
     const assets = filterAssetsForKind(await args.state.accountAssets.listAssets(), args.kind);
     browserMessage?.setAttribute('role', 'status');
-    setAssetPanelMessage(browserMessage, assets.length ? '' : 'No assets available yet.');
+    setAssetPanelMessage(browserMessage, assets.length ? '' : args.state.copy.noAssets);
     renderAssetBrowserRows({
       state: args.state,
       kind: args.kind,
       assets,
       deps: args.deps,
     });
-  } catch (error) {
+  } catch {
     browserMessage?.setAttribute('role', 'alert');
-    const message = error instanceof Error ? error.message : 'coreui.errors.db.readFailed';
-    setAssetPanelMessage(
-      browserMessage,
-      resolveAccountAssetErrorCopy(message, 'Failed to load assets. Please try again.'),
-    );
+    setAssetPanelMessage(browserMessage, args.state.copy.loadAssetsError);
     clearAssetBrowser(browserList);
   } finally {
     setFillUploadingState(args.state, false);
@@ -338,7 +322,7 @@ async function handleAssetUpload(args: {
     }
     setAssetPanelMessage(
       args.kind === 'image' ? args.state.imageMessage : args.state.videoMessage,
-      resolveAccountAssetErrorCopy(message, 'Asset upload failed. Please try again.'),
+      args.state.copy.uploadAssetError,
     );
   } finally {
     setFillUploadingState(args.state, false);
@@ -376,7 +360,7 @@ function commitVideoAssetSelection(
 export async function resolveImageAsset(state: DropdownFillState, deps: MediaControllerDeps): Promise<void> {
   return resolveSingleAccountAsset({
     accountAssets: state.accountAssets,
-    getAssetRef: () => state.imageAssetRef || '',
+    getAssetRef: () => state.imageAssetRef!,
     beginRequest: () => {
       state.imageResolveRequestId += 1;
       return state.imageResolveRequestId;
@@ -387,8 +371,8 @@ export async function resolveImageAsset(state: DropdownFillState, deps: MediaCon
     onResolved: (asset) => {
       setImageSrc(state, asset.url, { commit: false }, deps);
     },
-    onError: (message) => {
-      setAssetPanelMessage(state.imageMessage, message);
+    onError: () => {
+      setAssetPanelMessage(state.imageMessage, state.copy.previewAssetError);
     },
   });
 }
@@ -396,7 +380,7 @@ export async function resolveImageAsset(state: DropdownFillState, deps: MediaCon
 export async function resolveVideoAsset(state: DropdownFillState, deps: MediaControllerDeps): Promise<void> {
   return resolveSingleAccountAsset({
     accountAssets: state.accountAssets,
-    getAssetRef: () => state.videoAssetRef || '',
+    getAssetRef: () => state.videoAssetRef!,
     beginRequest: () => {
       state.videoResolveRequestId += 1;
       return state.videoResolveRequestId;
@@ -407,8 +391,8 @@ export async function resolveVideoAsset(state: DropdownFillState, deps: MediaCon
     onResolved: (asset) => {
       setVideoSrc(state, asset.url, { commit: false }, deps);
     },
-    onError: (message) => {
-      setAssetPanelMessage(state.videoMessage, message);
+    onError: () => {
+      setAssetPanelMessage(state.videoMessage, state.copy.previewAssetError);
     },
   });
 }
@@ -441,10 +425,6 @@ export function installImageHandlers(state: DropdownFillState, deps: MediaContro
   if (removeButton) {
     removeButton.addEventListener('click', (event) => {
       event.preventDefault();
-      if (state.imageObjectUrl) {
-        URL.revokeObjectURL(state.imageObjectUrl);
-        state.imageObjectUrl = null;
-      }
       state.imageAssetRef = null;
       state.imageName = null;
       setAssetPanelMessage(state.imageMessage, '');
@@ -460,12 +440,12 @@ export function installVideoHandlers(state: DropdownFillState, deps: MediaContro
     state.videoPreview.addEventListener('error', () => {
       const currentSrc = state.videoPreview?.currentSrc || state.videoPreview?.src || '';
       if (!state.videoSrc || !sameAssetReferenceUrl(currentSrc, state.videoSrc)) return;
-      setAssetPanelMessage(state.videoMessage, VIDEO_PREVIEW_FAILED_MESSAGE);
+      setAssetPanelMessage(state.videoMessage, state.copy.previewAssetError);
     });
     state.videoPreview.addEventListener('loadeddata', () => {
       const currentSrc = state.videoPreview?.currentSrc || state.videoPreview?.src || '';
       if (!state.videoSrc || !sameAssetReferenceUrl(currentSrc, state.videoSrc)) return;
-      if ((state.videoMessage?.textContent || '').trim() !== VIDEO_PREVIEW_FAILED_MESSAGE) return;
+      if (state.videoMessage?.textContent !== state.copy.previewAssetError) return;
       setAssetPanelMessage(state.videoMessage, '');
     });
   }
@@ -495,10 +475,6 @@ export function installVideoHandlers(state: DropdownFillState, deps: MediaContro
   if (videoRemoveButton) {
     videoRemoveButton.addEventListener('click', (event) => {
       event.preventDefault();
-      if (state.videoObjectUrl) {
-        URL.revokeObjectURL(state.videoObjectUrl);
-        state.videoObjectUrl = null;
-      }
       state.videoAssetRef = null;
       state.videoPosterAssetRef = null;
       state.videoName = null;

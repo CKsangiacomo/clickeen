@@ -149,7 +149,6 @@ function assertFillValue(control: CompiledControl, value: unknown, path: string)
   if (value.type === 'gradient') {
     const gradient = value.gradient;
     if (Object.keys(value).some((key) => key !== 'type' && key !== 'gradient') || !isPlainRecord(gradient)) invalid(path);
-    if (typeof gradient.css === 'string' && gradient.css && Object.keys(gradient).length === 1) return;
     if ((gradient.kind !== 'linear' && gradient.kind !== 'radial' && gradient.kind !== 'conic') || typeof gradient.angle !== 'number' || !Number.isFinite(gradient.angle) || !Array.isArray(gradient.stops) || gradient.stops.length < 2) invalid(path);
     gradient.stops.forEach((stop) => { if (!isPlainRecord(stop) || Object.keys(stop).some((key) => key !== 'color' && key !== 'position') || typeof stop.color !== 'string' || !stop.color || typeof stop.position !== 'number' || !Number.isFinite(stop.position)) invalid(path); });
     return;

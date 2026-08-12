@@ -154,11 +154,11 @@ export function buildLocaleSwitcherAppearancePanelFields(
   };
   push(
     'appearance.localeSwitcherBackground',
-    "    <tooldrawer-field-podstageappearance group-label='' type='dropdown-fill' size='md' fill-modes='color' path='appearance.localeSwitcherBackground' label='Background' value='{{appearance.localeSwitcherBackground}}' show-if=\"localeSwitcher.enabled == true\" />",
+    "    <tooldrawer-field-podstageappearance group-label='' type='dropdown-fill' size='md' fill-modes='color' path='appearance.localeSwitcherBackground' label='' value='{{appearance.localeSwitcherBackground}}' show-if=\"localeSwitcher.enabled == true\" />",
   );
   push(
     'appearance.localeSwitcherTextColor',
-    "    <tooldrawer-field-podstageappearance group-label='' type='dropdown-fill' size='md' fill-modes='color' path='appearance.localeSwitcherTextColor' label='Text color' value='{{appearance.localeSwitcherTextColor}}' show-if=\"localeSwitcher.enabled == true\" />",
+    "    <tooldrawer-field-podstageappearance group-label='' type='dropdown-fill' size='md' fill-modes='color' path='appearance.localeSwitcherTextColor' label='' value='{{appearance.localeSwitcherTextColor}}' show-if=\"localeSwitcher.enabled == true\" />",
   );
   push(
     'appearance.localeSwitcherBorder',
@@ -258,12 +258,12 @@ export function buildStagePodAppearancePanelFields(
 
   return [
     "  <tooldrawer-cluster label='Stage appearance'>",
-    "    <tooldrawer-field-podstageappearance group-label='' type='dropdown-fill' size='md' fill-modes='color,gradient,image,video' path='stage.background' label='Stage background' value='{{stage.background}}' />",
+    "    <tooldrawer-field-podstageappearance group-label='' type='dropdown-fill' size='md' fill-modes='color,gradient,image,video' path='stage.background' label='' value='{{stage.background}}' />",
     "    <tooldrawer-field-podstageappearance group-label='' type='dropdown-shadow' size='md' path='stage.shadow' label='Stage outside shadow' value='{{stage.shadow}}' />",
     ...buildInsideShadowFields({ owner: 'stage', label: 'Stage' }),
     '  </tooldrawer-cluster>',
     "  <tooldrawer-cluster label='Pod appearance'>",
-    "    <tooldrawer-field-podstageappearance group-label='' type='dropdown-fill' size='md' fill-modes='color,gradient,image,video' path='pod.background' label='Pod background' value='{{pod.background}}' />",
+    "    <tooldrawer-field-podstageappearance group-label='' type='dropdown-fill' size='md' fill-modes='color,gradient,image,video' path='pod.background' label='' value='{{pod.background}}' />",
     ...podBorderFields,
     "    <tooldrawer-field-podstageappearance group-label='' type='dropdown-shadow' size='md' path='pod.shadow' label='Pod outside shadow' value='{{pod.shadow}}' />",
     ...buildInsideShadowFields({ owner: 'pod', label: 'Pod' }),

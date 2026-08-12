@@ -1,5 +1,5 @@
 import type { ResolvedAccountAsset } from '@clickeen/ck-contracts';
-import { resolveAccountAssetErrorCopy, type AccountAssetsClient } from './account-assets';
+import type { AccountAssetsClient } from './account-assets';
 
 type ResolveSingleAccountAssetArgs = {
   accountAssets: AccountAssetsClient;
@@ -25,7 +25,6 @@ export async function resolveSingleAccountAsset(args: ResolveSingleAccountAssetA
     args.onResolved(asset);
   } catch (error) {
     if (!args.isCurrent(requestId, assetRef)) return;
-    const message = error instanceof Error ? error.message : 'coreui.errors.db.readFailed';
-    args.onError(resolveAccountAssetErrorCopy(message, 'Asset preview could not be loaded.'));
+    args.onError(error instanceof Error ? error.message : 'coreui.errors.db.readFailed');
   }
 }

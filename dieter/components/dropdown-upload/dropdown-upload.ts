@@ -442,8 +442,8 @@ async function resolveStoredAssetPreview(state: DropdownUploadState, assetRef: s
       clearError(state);
       previewFromResolvedUrl(state, resolved.url, displayName, displayName);
     },
-    onError: (message) => {
-      setError(state, message);
+    onError: (reason) => {
+      setError(state, resolveAccountAssetErrorCopy(reason, 'Asset preview could not be loaded.'));
     },
   });
 }

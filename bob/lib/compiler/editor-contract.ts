@@ -95,6 +95,38 @@ type DropdownBorderEditorLabels = {
   fields: Record<string, string>;
 };
 
+const DROPDOWN_FILL_COMPONENT_LABEL_ATTRIBUTES = [
+  ['addGradientStop', 'add-gradient-stop-label'],
+  ['angle', 'angle-label'],
+  ['chooseAssets', 'choose-assets-label'],
+  ['color', 'color-label'],
+  ['colorFill', 'color-fill-label'],
+  ['defaultColors', 'default-colors-label'],
+  ['editGradientStop', 'edit-gradient-stop-label'],
+  ['gradientFill', 'gradient-fill-label'],
+  ['gradientStops', 'gradient-stops-label'],
+  ['hex', 'hex-label'],
+  ['hue', 'hue-label'],
+  ['imageFill', 'image-fill-label'],
+  ['loadAssetsError', 'load-assets-error-label'],
+  ['loadingAssets', 'loading-assets-label'],
+  ['noAssets', 'no-assets-label'],
+  ['opacity', 'opacity-label'],
+  ['previewAssetError', 'preview-asset-error-label'],
+  ['removeAsset', 'remove-asset-label'],
+  ['removeFill', 'remove-fill-label'],
+  ['removeGradientStop', 'remove-gradient-stop-label'],
+  ['upload', 'upload-label'],
+  ['uploadAssetError', 'upload-asset-error-label'],
+  ['useAsset', 'use-asset-label'],
+  ['videoFill', 'video-fill-label'],
+] as const;
+
+type DropdownFillEditorLabels = {
+  component: Record<(typeof DROPDOWN_FILL_COMPONENT_LABEL_ATTRIBUTES)[number][0], string>;
+  fields: Record<string, string>;
+};
+
 const DROPDOWN_EDIT_COMPONENT_LABEL_ATTRIBUTES = [
   ['addLink', 'add-link-label'],
   ['bold', 'bold-label'],
@@ -541,9 +573,85 @@ export function buildEditorHtmlLines(
     dropdownEditLabels = readDropdownEditEditorLabels(editor.labels, widgetname);
   }
   return applyDropdownEditEditorLabels(
-    applyDropdownBorderEditorLabels(lines, editor.labels, widgetname),
+    applyDropdownFillEditorLabels(
+      applyDropdownBorderEditorLabels(lines, editor.labels, widgetname),
+      editor.labels,
+      widgetname,
+    ),
     dropdownEditLabels,
   );
+}
+
+function readDropdownFillEditorLabels(
+  labelsRaw: unknown,
+  widgetname: string,
+): DropdownFillEditorLabels {
+  if (!isPlainObject(labelsRaw) || !isPlainObject(labelsRaw.components) || !isPlainObject(labelsRaw.fields)) {
+    throw new Error(`[BobCompiler] ${widgetname} Dropdown Fill labels are missing`);
+  }
+  const component = labelsRaw.components['dropdown-fill'];
+  const fields = labelsRaw.fields['dropdown-fill'];
+  const expectedKeys = DROPDOWN_FILL_COMPONENT_LABEL_ATTRIBUTES.map(([key]) => key).sort();
+  if (
+    !isPlainObject(component) ||
+    Object.keys(component).sort().join('\0') !== expectedKeys.join('\0') ||
+    !isPlainObject(fields)
+  ) {
+    throw new Error(`[BobCompiler] ${widgetname} Dropdown Fill labels are invalid`);
+  }
+  const readLabel = (value: unknown, path: string): string => {
+    if (typeof value !== 'string' || !value.trim() || value !== value.trim()) {
+      throw new Error(`[BobCompiler] ${widgetname} Dropdown Fill label is invalid: ${path}`);
+    }
+    return value;
+  };
+  const resolvedComponent = {} as DropdownFillEditorLabels['component'];
+  for (const [key] of DROPDOWN_FILL_COMPONENT_LABEL_ATTRIBUTES) {
+    resolvedComponent[key] = readLabel(component[key], `components.dropdown-fill.${key}`);
+  }
+  const resolvedFields: Record<string, string> = {};
+  for (const [path, value] of Object.entries(fields)) {
+    if (!path.trim() || path !== path.trim()) {
+      throw new Error(`[BobCompiler] ${widgetname} Dropdown Fill field path is invalid`);
+    }
+    resolvedFields[path] = readLabel(value, `fields.dropdown-fill.${path}`);
+  }
+  return { component: resolvedComponent, fields: resolvedFields };
+}
+
+function applyDropdownFillEditorLabels(
+  lines: string[],
+  labelsRaw: unknown,
+  widgetname: string,
+): string[] {
+  if (!lines.some((line) => /\btype='dropdown-fill'/.test(line))) return lines;
+  const labels = readDropdownFillEditorLabels(labelsRaw, widgetname);
+  const usedFieldPaths = new Set<string>();
+  const rendered = lines.map((line) => {
+    if (!/\btype='dropdown-fill'/.test(line)) return line;
+    const path = line.match(/\bpath='([^']+)'/)?.[1] ?? '';
+    const authoredLabel = line.match(/(?:^|\s)label='([^']*)'/)?.[1] ?? '';
+    let next = line;
+    if (!authoredLabel) {
+      const fieldLabel = labels.fields[path];
+      if (!fieldLabel) {
+        throw new Error(`[BobCompiler] ${widgetname} Dropdown Fill field label is missing: ${path}`);
+      }
+      usedFieldPaths.add(path);
+      next = next.replace(/(^|\s)label=''/, `$1label='${encodeHtmlEntities(fieldLabel)}'`);
+    }
+    const componentAttrs = DROPDOWN_FILL_COMPONENT_LABEL_ATTRIBUTES
+      .map(([key, attribute]) => `${attribute}='${encodeHtmlEntities(labels.component[key])}'`)
+      .join(' ');
+    return next.replace(/\s*\/>$/, ` ${componentAttrs} />`);
+  });
+  const unusedPaths = Object.keys(labels.fields).filter((path) => !usedFieldPaths.has(path));
+  if (unusedPaths.length > 0) {
+    throw new Error(
+      `[BobCompiler] ${widgetname} Dropdown Fill field labels are unused: ${unusedPaths.join(', ')}`,
+    );
+  }
+  return rendered;
 }
 
 function readDropdownEditEditorLabels(

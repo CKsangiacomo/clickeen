@@ -379,8 +379,8 @@ declared support files
 `spec.json` carries defaults, editor structure, and ToolDrawer label tokens.
 `{widgetType}_tooldrawer_l10n_labels/en.json` carries the exact English values
 for those tokens, the five widget panel names, and migrated ToolDrawer copy
-such as Agent Activity's title and Dropdown Border and Dropdown Edit
-field/component labels.
+such as Agent Activity's title and Dropdown Border, Dropdown Edit, and Dropdown
+Fill field/component labels.
 The Widget spec declares the exact state path and label-token coordinates; Bob
 joins them with the one Dieter component without Widget-specific compiler
 branches. `editable-fields.json`
@@ -465,6 +465,16 @@ Widget-labeled action: **Add link** for selected unlinked text or **Remove
 link** for an existing link; it has no Apply/Update or second link action. No
 per-field link flag, Widget branch, runtime catalog fetch, or Lexical storage
 document exists.
+
+Dropdown Fill is the shared Dieter exact-JSON fill control. Every source field
+declares its supported modes through `fill-modes`; Bob does not infer media
+capability from the field path, label, or Widget. The compiler joins the exact
+Dropdown Fill component-label shape and shared generated field labels from the
+Widget's adjacent ToolDrawer English file into the one Dieter stencil. Bob
+supplies the current account-assets client and continues to own only the
+browser-memory draft and existing asset commands. Gradient values retain their
+declared `linear|radial|conic` kind; the removed CSS-only gradient shape is not
+accepted as a compatibility value.
 
 For Dropdown Border, Edit, Fill, and Shadow, Bob's existing stencil compiler
 passes Dieter's `row|wide|extra-wide` Popover width through the generated

@@ -106,9 +106,10 @@ giving Dieter ownership of the host's product meaning.
 
 JSON-valued controls use `data-dieter-json`; Bulk Edit emits `dieter-ops` with
 its existing exact `{ops}` payload. Neither name belongs to Bob or Roma. Hosts
-must call the exported Dropdown Actions, Border, and Edit destroy functions
-before replacing hydrated roots; Dropdown Edit destruction also detaches the
-locally bundled Lexical editor from its DOM root.
+must call the exported Dropdown Actions, Border, Edit, and Fill destroy
+functions before replacing hydrated roots. Dropdown Edit destruction detaches
+the locally bundled Lexical editor from its DOM root; Dropdown Fill cancels
+pending media resolution and releases its retained dropdown state.
 
 Agent Activity owns a required caller-supplied title, a required array of
 narration rows, its `sm`/`md` structure, and its active presentation. It does
@@ -168,6 +169,21 @@ structure, styling, and behavior but no visible words. Widget specs declare
 use and exact state paths, while their
 adjacent ToolDrawer label files supply field and component labels through
 Bob's existing compiler.
+
+Dropdown Fill owns one global fill-editing component. The caller declares the
+exact supported modes through `fill-modes`; Dieter does not infer media
+capability from a field path, label, Widget, or host. Its exact JSON value is
+none, color, structured gradient, account image, or account video. The solid
+and gradient panels share the system Slider/Textfield geometry, the compact
+`8rem/9rem/10rem` saturation/value canvas ladder, and one nine-column palette.
+Only the white swatch has a gray resting edge; selection uses a one-pixel blue
+outline. Structured gradients keep their declared `linear|radial|conic` kind
+while their angle and stops are edited. Image and video use the caller-supplied
+account-assets client and the generic `dieter-upsell` host event when account
+policy denies an upload. The component does not own account policy, routes,
+persistence, Widget meanings, copy, or localization. Every visible and
+accessible word is caller input, resolved from the adjacent Widget ToolDrawer
+label file for product use.
 
 Dropdown Edit owns one global inline rich-text editing component. Every
 `dropdown-edit` use supports Bold, Italic, Underline, Strikethrough, links,

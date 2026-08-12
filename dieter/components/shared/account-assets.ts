@@ -63,7 +63,7 @@ export function dispatchAccountAssetUpsell(root: HTMLElement, reasonKey: unknown
   const normalizedReasonKey = typeof reasonKey === 'string' ? reasonKey : '';
   if (!ACCOUNT_ASSET_UPSELL_REASONS.has(normalizedReasonKey)) return false;
   root.dispatchEvent(
-    new CustomEvent('bob-upsell', {
+    new CustomEvent('dieter-upsell', {
       detail: { reasonKey: normalizedReasonKey },
       bubbles: true,
     }),

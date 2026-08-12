@@ -377,7 +377,7 @@ function fixturePanels(contentCluster: JsonObject): JsonObject[] {
     { id: 'content', clusters: [contentCluster] },
     {
       id: 'typography',
-      shared: { id: 'typography', roleLabels: { title: 'Title' } },
+      clusters: [{ label: 'Typography', nodes: [] }],
     },
     { id: 'layout', clusters: [{ label: 'Layout', nodes: [] }] },
     { id: 'appearance', clusters: [{ label: 'Appearance', nodes: [] }] },

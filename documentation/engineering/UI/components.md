@@ -28,7 +28,7 @@ Legend: ✅ exported from `index.ts` · Direct host import · ⊘ no custom hydr
 | choosers | `object-manager` | direct ESM `hydrateObjectManager`, array add/reorder/delete | Direct host import |
 | choosers | `repeater` | direct ESM `hydrateRepeater` | Direct host import |
 | choosers | `bulk-edit` | `hydrateBulkEdit`, `row-path` | ✅ |
-| dropdowns | `dropdown-fill` | `hydrateDropdownFill` (color/fill; largest dropdown) | ✅ |
+| dropdowns | `dropdown-fill` | `hydrateDropdownFill` / `destroyDropdownFill`, exact fill JSON | ✅ |
 | dropdowns | `dropdown-actions` | `hydrateDropdownActions` / `destroyDropdownActions`, `string` | ✅ |
 | dropdowns | `dropdown-border` | `hydrateDropdownBorder` / `destroyDropdownBorder`, exact border JSON | ✅ |
 | dropdowns | `dropdown-shadow` | `hydrateDropdownShadow`, `string` | ✅ |
@@ -78,9 +78,10 @@ The governing component product law is:
 - Dieter JSON controls expose the consumer-neutral `data-dieter-json` marker,
   and generic multi-path component edits emit `dieter-ops`. Host-owned paths
   remain separate from that component protocol.
-- Hosts destroy hydrated Dropdown Actions, Border, and Edit roots before their
-  rendered DOM is replaced. Dropdown Edit destruction detaches its Lexical
-  root as part of that same component lifecycle.
+- Hosts destroy hydrated Dropdown Actions, Border, Edit, and Fill roots before
+  their rendered DOM is replaced. Dropdown Edit destruction detaches its
+  Lexical root; Dropdown Fill cancels pending media resolution and releases
+  its dropdown state through that same component lifecycle.
 - Button is one `.diet-button` primitive. Its direct children determine whether
   it is text-only, icon-only, or icon-and-text; those are not separate Button
   classes or variants.
@@ -174,6 +175,23 @@ The governing component product law is:
   Dieter owns no visible words. Each
   Widget's adjacent ToolDrawer label file supplies the component labels and
   exact field labels; Bob joins those labels with the global Dieter stencil.
+- Dropdown Fill edits one exact fill object through one consumer-agnostic
+  component. The caller explicitly declares its allowed `color`, `gradient`,
+  `image`, and/or `video` modes through `fill-modes`; Dieter never infers a
+  mode from a Widget path, label, or consumer. The closed property row uses
+  the shared leading-label/trailing-value geometry, with value text before its
+  fixed chip. Its attached Popover repeats only the caller label and uses the
+  component-owned `wide` work area. Solid color and gradient editing use the
+  shared Slider/Textfield geometry, the compact `8rem/9rem/10rem` color-canvas
+  ladder, and one direct nine-column palette. Swatches are two pixels smaller
+  than their grid cells, only white retains a gray resting edge, and selection
+  uses a one-pixel blue outline. Gradient edits preserve the declared
+  `linear|radial|conic` kind and exact stop values. Image and video modes use
+  the supplied account-assets client; the primitive does not own an account,
+  route, policy, or Widget-specific media rule. All visible and accessible
+  words are caller inputs from the Widget-adjacent ToolDrawer label file.
+  There is no inferred media capability, component copy catalog, fallback
+  fill, repaired value, or compatibility value shape.
 - Menu Actions remains a separate menu-row primitive with its existing
   `sm|md|lg` API. Low-level geometry tokens remain internal source mechanics.
 - `textrename` is deleted because it had no product consumer.

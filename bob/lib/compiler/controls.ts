@@ -253,11 +253,12 @@ function parseNumberAttr(value: string | undefined): number | undefined {
 
 function parseFillModes(value: string | undefined): string[] | null {
   if (!value) return null;
-  const modes = value
-    .split(',')
-    .map((mode) => mode.trim().toLowerCase())
-    .filter(Boolean);
-  return modes.length ? modes : null;
+  const modes = value.split(',');
+  const allowed = new Set(['color', 'gradient', 'image', 'video']);
+  if (new Set(modes).size !== modes.length || modes.some((mode) => !allowed.has(mode))) {
+    throw new Error('[BobCompiler] dropdown-fill fill-modes are invalid');
+  }
+  return modes;
 }
 
 function collectControlsFromMarkup(markup: string, panelId: PanelId, controls: CompiledControl[]) {
@@ -292,20 +293,9 @@ function collectControlsFromMarkup(markup: string, panelId: PanelId, controls: C
       const required = parseBooleanAttr(attrs.required);
       const fillModes =
         type === 'dropdown-fill' ? parseFillModes(attrs.fillModes || attrs['fill-modes']) : null;
-      const allowImageOverride = parseBooleanAttr(attrs.allowImage || attrs['allow-image']);
-      const inferredAllowsImage = (() => {
-        const pathLower = path.toLowerCase();
-        if (pathLower.includes('background')) return true;
-        const labelLower = (attrs.label || '').toLowerCase();
-        return labelLower.includes('background');
-      })();
-      const allowImageFromModes = fillModes
-        ? fillModes.some((mode) => mode === 'image' || mode === 'video')
-        : undefined;
-      const allowImage =
-        type === 'dropdown-fill'
-          ? (allowImageOverride ?? allowImageFromModes ?? inferredAllowsImage)
-          : undefined;
+      if (type === 'dropdown-fill' && !fillModes) {
+        throw new Error(`[BobCompiler] dropdown-fill control "${path}" requires fill-modes`);
+      }
       const showIf = attrs['show-if'] || undefined;
       const explicitGroupLabel =
         typeof (attrs.groupLabel || attrs['group-label']) === 'string'
@@ -323,7 +313,6 @@ function collectControlsFromMarkup(markup: string, panelId: PanelId, controls: C
         options: attrs.options
           ? parseControlOptions({ controlPath: path, optionsRaw: attrs.options })
           : undefined,
-        allowImage,
         enumValues: fillModes ?? undefined,
         min,
         max,

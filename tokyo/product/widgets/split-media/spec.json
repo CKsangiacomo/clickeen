@@ -68,9 +68,47 @@
           "strikethrough": "$label:component.dropdown-edit.strikethrough.label",
           "underline": "$label:component.dropdown-edit.underline.label",
           "url": "$label:component.dropdown-edit.url.label"
+        },
+        "dropdown-fill": {
+          "addGradientStop": "$label:component.dropdown-fill.add-gradient-stop.label",
+          "angle": "$label:component.dropdown-fill.angle.label",
+          "chooseAssets": "$label:component.dropdown-fill.choose-assets.label",
+          "color": "$label:component.dropdown-fill.color.label",
+          "colorFill": "$label:component.dropdown-fill.color-fill.label",
+          "defaultColors": "$label:component.dropdown-fill.default-colors.label",
+          "editGradientStop": "$label:component.dropdown-fill.edit-gradient-stop.label",
+          "gradientFill": "$label:component.dropdown-fill.gradient-fill.label",
+          "gradientStops": "$label:component.dropdown-fill.gradient-stops.label",
+          "hex": "$label:component.dropdown-fill.hex.label",
+          "hue": "$label:component.dropdown-fill.hue.label",
+          "imageFill": "$label:component.dropdown-fill.image-fill.label",
+          "loadAssetsError": "$label:component.dropdown-fill.load-assets-error.label",
+          "loadingAssets": "$label:component.dropdown-fill.loading-assets.label",
+          "noAssets": "$label:component.dropdown-fill.no-assets.label",
+          "opacity": "$label:component.dropdown-fill.opacity.label",
+          "previewAssetError": "$label:component.dropdown-fill.preview-asset-error.label",
+          "removeAsset": "$label:component.dropdown-fill.remove-asset.label",
+          "removeFill": "$label:component.dropdown-fill.remove-fill.label",
+          "removeGradientStop": "$label:component.dropdown-fill.remove-gradient-stop.label",
+          "upload": "$label:component.dropdown-fill.upload.label",
+          "uploadAssetError": "$label:component.dropdown-fill.upload-asset-error.label",
+          "useAsset": "$label:component.dropdown-fill.use-asset.label",
+          "videoFill": "$label:component.dropdown-fill.video-fill.label"
         }
       },
       "fields": {
+        "dropdown-fill": {
+          "appearance.headerCta.background": "$label:appearance.header-cta.background.dropdown-fill.label",
+          "appearance.headerCta.textColor": "$label:appearance.header-cta.text-color.dropdown-fill.label",
+          "appearance.localeSwitcherBackground": "$label:appearance.locale-switcher.background.dropdown-fill.label",
+          "appearance.localeSwitcherTextColor": "$label:appearance.locale-switcher.text-color.dropdown-fill.label",
+          "pod.background": "$label:appearance.pod.background.dropdown-fill.label",
+          "stage.background": "$label:appearance.stage.background.dropdown-fill.label",
+          "typography.roles.body.color": "$label:typography.color.dropdown-fill.label",
+          "typography.roles.button.color": "$label:typography.color.dropdown-fill.label",
+          "typography.roles.localeSwitcher.color": "$label:typography.color.dropdown-fill.label",
+          "typography.roles.title.color": "$label:typography.color.dropdown-fill.label"
+        },
         "dropdown-border": {
           "appearance.headerCta.border": "$label:appearance.header-cta.border.dropdown-border.label",
           "appearance.localeSwitcherBorder": "$label:appearance.locale-switcher.border.dropdown-border.label",
@@ -99,8 +137,7 @@
                 "attrs": {
                   "group-label": "",
                   "size": "md",
-                  "fill-modes": "image,video",
-                  "allow-image": "true"
+                  "fill-modes": "image,video"
                 }
               },
               {

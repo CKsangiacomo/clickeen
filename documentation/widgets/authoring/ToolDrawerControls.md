@@ -299,8 +299,15 @@ as their editing surface, while numeric fields keep hover, focus, and editing
 inside the compact trailing value slot.
 
 `dropdown-fill` uses explicit fill modes in field attrs. Use the hyphenated
-attribute name `fill-modes` in authored specs. `dropdown-upload` requires a
-`meta-path`; the compiler rejects missing upload metadata paths.
+attribute name `fill-modes` in authored specs and list only the exact
+`color,gradient,image,video` modes that the field supports. The compiler does
+not infer media capability from a path or label. Each Widget declares the
+exact Dropdown Fill component-label shape under
+`editor.labels.components["dropdown-fill"]`, declares labels for shared
+generated Fill paths under `editor.labels.fields["dropdown-fill"]`, and owns
+those English values in its adjacent ToolDrawer label file. Dieter receives
+the resolved strings; it owns no visible Fill wording. `dropdown-upload`
+requires a `meta-path`; the compiler rejects missing upload metadata paths.
 
 State-bound fields use `path`. Visual grouping uses `groupId`; it is not a data
 path. Template children are allowed only inside controls that already own that

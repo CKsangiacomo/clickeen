@@ -20,13 +20,11 @@ function createGradientStopId(): string {
 }
 
 function createGradientStopState(root: HTMLElement, stop: GradientStop): GradientStopState {
-  const parsed = parseColor(stop.color, root);
-  const safeColor = parsed ? stop.color : DEFAULT_GRADIENT.stops[0].color;
-  const hsv = parsed || parseColor(safeColor, root) || { h: 0, s: 0, v: 0, a: 1 };
+  const hsv = parseColor(stop.color, root)!;
   return {
     id: createGradientStopId(),
-    color: safeColor,
-    position: clampNumber(stop.position, 0, 100),
+    color: stop.color,
+    position: stop.position,
     hsv,
   };
 }
@@ -60,16 +58,15 @@ export function applyGradientSwatch(
   commitGradientStopFromHsv(state, deps);
 }
 
-export function applyGradientFromFill(state: DropdownFillState, gradient: FillValue['gradient']): void {
-  state.gradient = { angle: DEFAULT_GRADIENT.angle };
-  state.gradientStops = createDefaultGradientStops(state.root);
-  state.gradientActiveStopId = state.gradientStops[0]?.id ?? '';
-  if (!gradient || typeof gradient !== 'object' || Array.isArray(gradient) || !('kind' in gradient) || gradient.kind !== 'linear') return;
-  state.gradient.angle = clampNumber(gradient.angle, 0, 360);
-  if (Array.isArray(gradient.stops) && gradient.stops.length >= 2) {
-    state.gradientStops = gradient.stops.map((stop: GradientStop) => createGradientStopState(state.root, stop));
-    state.gradientActiveStopId = state.gradientStops[0]?.id ?? '';
-  }
+export function applyGradientFromFill(
+  state: DropdownFillState,
+  gradient: Extract<FillValue, { type: 'gradient' }>['gradient'],
+): void {
+  state.gradient = { kind: gradient.kind, angle: gradient.angle };
+  state.gradientStops = gradient.stops.map((stop: GradientStop) =>
+    createGradientStopState(state.root, stop),
+  );
+  state.gradientActiveStopId = state.gradientStops[0]!.id;
 }
 
 export function syncGradientUI(
@@ -79,7 +76,6 @@ export function syncGradientUI(
 ): void {
   const shouldUpdateHeader = opts.updateHeader !== false;
   const shouldUpdateRemove = opts.updateRemove !== false;
-  ensureGradientStops(state);
   if (state.gradientAngleInput) {
     state.gradientAngleInput.value = String(clampNumber(state.gradient.angle, 0, 360));
     state.gradientAngleInput.style.setProperty('--value', state.gradientAngleInput.value);
@@ -92,24 +88,12 @@ export function syncGradientUI(
   updateGradientPreview(state, { commit: opts.commit, updateHeader: shouldUpdateHeader, updateRemove: shouldUpdateRemove }, deps);
 }
 
-function ensureGradientStops(state: DropdownFillState): void {
-  if (state.gradientStops.length >= 2) return;
-  state.gradientStops = createDefaultGradientStops(state.root);
-  state.gradientActiveStopId = state.gradientStops[0]?.id ?? '';
-}
-
 function getSortedGradientStops(stops: GradientStopState[]): GradientStopState[] {
   return [...stops].sort((a, b) => a.position - b.position);
 }
 
 function getActiveGradientStop(state: DropdownFillState): GradientStopState {
-  let active = state.gradientStops.find((stop) => stop.id === state.gradientActiveStopId);
-  if (!active) {
-    ensureGradientStops(state);
-    active = state.gradientStops[0];
-    state.gradientActiveStopId = active?.id ?? '';
-  }
-  return active as GradientStopState;
+  return state.gradientStops.find((stop) => stop.id === state.gradientActiveStopId)!;
 }
 
 function getGradientStopMetrics(state: DropdownFillState): { rect: DOMRect; minX: number; maxX: number } | null {
@@ -156,9 +140,13 @@ function updateGradientAddButton(state: DropdownFillState): void {
   if (!button) return;
   const { sorted, index } = getActiveGradientStopIndex(state);
   const removable = index > 0 && index < sorted.length - 1;
-  button.textContent = removable ? '-' : '+';
+  const icon = button.querySelector<HTMLElement>('.diet-icon')!;
+  icon.dataset.icon = removable ? 'minus' : 'plus';
   button.classList.toggle('is-remove', removable);
-  button.setAttribute('aria-label', removable ? 'Remove color stop' : 'Add color stop');
+  button.setAttribute(
+    'aria-label',
+    removable ? state.copy.removeGradientStop : state.copy.addGradientStop,
+  );
 }
 
 function syncGradientStopButtons(state: DropdownFillState): void {
@@ -182,7 +170,7 @@ function syncGradientStopButtons(state: DropdownFillState): void {
       btn.type = 'button';
       btn.className = 'diet-dropdown-fill__gradient-stop-btn';
       btn.dataset.stopId = stop.id;
-      btn.setAttribute('aria-label', 'Edit gradient stop');
+      btn.setAttribute('aria-label', state.copy.editGradientStop);
       bindGradientStopButton(state, btn, stop.id);
       existing.set(stop.id, btn);
       bar.appendChild(btn);
@@ -276,7 +264,6 @@ function updateGradientPreview(
 }
 
 function addGradientStop(state: DropdownFillState, deps: DropdownFillUiDeps): void {
-  ensureGradientStops(state);
   const sorted = getSortedGradientStops(state.gradientStops);
   const active = getActiveGradientStop(state);
   const activeIndex = sorted.findIndex((stop) => stop.id === active.id);
@@ -332,16 +319,10 @@ function handleGradientStopHexInput(state: DropdownFillState, deps: DropdownFill
   const stop = getActiveGradientStop(state);
   const hsv = stop.hsv;
   const raw = state.gradientStopHexInput.value.trim();
-  if (!raw) {
-    state.gradientStopHexInput.value = formatHex(hsv);
-    return;
-  }
+  if (!raw) return;
   const normalized = raw.startsWith('#') ? raw : `#${raw}`;
   const rgba = hexToRgba(normalized);
-  if (!rgba) {
-    state.gradientStopHexInput.value = formatHex(hsv);
-    return;
-  }
+  if (!rgba) return;
   const next = rgbToHsv(rgba.r, rgba.g, rgba.b, 1);
   hsv.h = next.h;
   hsv.s = next.s;
@@ -354,17 +335,10 @@ function handleGradientStopAlphaField(state: DropdownFillState, deps: DropdownFi
   const stop = getActiveGradientStop(state);
   const hsv = stop.hsv;
   const raw = state.gradientStopAlphaField.value.trim().replace('%', '');
-  if (!raw) {
-    state.gradientStopAlphaField.value = `${Math.round(hsv.a * 100)}%`;
-    return;
-  }
+  if (!raw) return;
   const parsed = Number(raw);
-  if (!Number.isFinite(parsed)) {
-    state.gradientStopAlphaField.value = `${Math.round(hsv.a * 100)}%`;
-    return;
-  }
-  const percent = clampNumber(parsed, 0, 100);
-  hsv.a = percent / 100;
+  if (!Number.isFinite(parsed) || parsed < 0 || parsed > 100) return;
+  hsv.a = parsed / 100;
   commitGradientStopFromHsv(state, deps);
 }
 
@@ -523,28 +497,28 @@ function installGradientEditorHandlers(state: DropdownFillState, deps: DropdownF
 function normalizeGradientStopsForOutput(state: DropdownFillState): GradientStop[] {
   return getSortedGradientStops(state.gradientStops).map((stop: GradientStopState) => ({
     color: stop.color,
-    position: clampNumber(stop.position, 0, 100),
+    position: stop.position,
   }));
 }
 
 function buildGradientFill(state: DropdownFillState): FillValue {
-  const angle = clampNumber(state.gradient.angle, 0, 360);
   const normalizedStops = normalizeGradientStopsForOutput(state);
   return {
     type: 'gradient',
     gradient: {
-      kind: 'linear',
-      angle,
+      kind: state.gradient.kind,
+      angle: state.gradient.angle,
       stops: normalizedStops,
     },
   };
 }
 
 function buildGradientCss(state: DropdownFillState): string {
-  const angle = clampNumber(state.gradient.angle, 0, 360);
   const normalizedStops = normalizeGradientStopsForOutput(state);
-  const stopList = normalizedStops.map((stop) => `${stop.color} ${clampNumber(stop.position, 0, 100)}%`).join(', ');
-  return `linear-gradient(${angle}deg, ${stopList})`;
+  const stopList = normalizedStops.map((stop) => `${stop.color} ${stop.position}%`).join(', ');
+  if (state.gradient.kind === 'radial') return `radial-gradient(circle, ${stopList})`;
+  if (state.gradient.kind === 'conic') return `conic-gradient(from ${state.gradient.angle}deg, ${stopList})`;
+  return `linear-gradient(${state.gradient.angle}deg, ${stopList})`;
 }
 
 function colorStringFromHsv(hsv: { h: number; s: number; v: number; a: number }): string {

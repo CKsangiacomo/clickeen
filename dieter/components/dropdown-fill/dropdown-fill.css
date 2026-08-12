@@ -5,6 +5,10 @@
   --dropdown-fill-label-line-height: var(--lh-tight, 1rem);
   --dropdown-fill-value-line-height: var(--lh-body-ui, 1.25rem);
   --dropdown-fill-visual-size: 1rem;
+  --dropdown-fill-gap: var(--space-2, 0.5rem);
+  --dropdown-fill-preview-height: 2rem;
+  --dropdown-fill-canvas-height: 9rem;
+  --dropdown-fill-media-height: 9rem;
   position: relative;
   display: grid;
   gap: var(--vertspace-2, 0.1rem);
@@ -17,6 +21,9 @@
   --dropdown-fill-font-size: var(--fs-11, 0.6875rem);
   --dropdown-fill-value-line-height: var(--lh-tight, 1rem);
   --dropdown-fill-visual-size: 0.75rem;
+  --dropdown-fill-preview-height: 1.75rem;
+  --dropdown-fill-canvas-height: 8rem;
+  --dropdown-fill-media-height: 8rem;
 }
 
 .diet-dropdown-fill[data-size='lg'] {
@@ -25,6 +32,10 @@
   --dropdown-fill-font-size: var(--fs-14, 0.875rem);
   --dropdown-fill-value-line-height: var(--lh-body-ui, 1.25rem);
   --dropdown-fill-visual-size: 1.25rem;
+  --dropdown-fill-gap: var(--space-4, 1rem);
+  --dropdown-fill-preview-height: 2.25rem;
+  --dropdown-fill-canvas-height: 10rem;
+  --dropdown-fill-media-height: 10rem;
 }
 
 .diet-dropdown-fill > .diet-dropdown-header {
@@ -33,12 +44,15 @@
 }
 
 .diet-dropdown-fill > .diet-dropdown-header .diet-dropdown-header-label,
-.diet-dropdown-fill > .diet-popover > .diet-popover__header > .diet-popover__header-label {
+.diet-dropdown-fill > .diet-popover > .diet-popover__header > .diet-popover__header-label,
+.diet-dropdown-fill .diet-slider__label,
+.diet-dropdown-fill .diet-textfield__display-label {
   font: 500 var(--dropdown-fill-font-size)/var(--dropdown-fill-label-line-height) "Inter Tight", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
   letter-spacing: -0.02em;
 }
 
-.diet-dropdown-fill > .diet-dropdown-header .diet-dropdown-header-value {
+.diet-dropdown-fill > .diet-dropdown-header .diet-dropdown-header-value,
+.diet-dropdown-fill .diet-textfield__field {
   font: 400 var(--dropdown-fill-font-size)/var(--dropdown-fill-value-line-height) "Inter Tight", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
 }
 
@@ -56,15 +70,6 @@
 
 .diet-dropdown-fill > .diet-dropdown-header .diet-dropdown-header-value[data-muted='true'] {
   color: color-mix(in oklab, var(--color-system-black), var(--state-muted-mix, 50%));
-}
-
-.diet-dropdown-fill[data-invalid='true'] .diet-dropdown-header {
-  border-color: var(--color-system-orange);
-  background: color-mix(in oklab, var(--color-system-white), var(--color-system-orange) 4%);
-}
-
-.diet-dropdown-fill[data-invalid='true'] .diet-dropdown-header-value {
-  color: var(--color-system-orange);
 }
 
 .diet-dropdown-fill__value-field {
@@ -127,8 +132,14 @@
 }
 
 .diet-dropdown-fill .diet-dropdown-fill__popover {
+  --popover-padding: var(--space-2, 0.5rem);
+  --popover-section-gap: var(--dropdown-fill-gap);
   border-radius: var(--dropdown-fill-radius);
   outline: none;
+}
+
+.diet-dropdown-fill[data-size='lg'] .diet-dropdown-fill__popover {
+  --popover-padding: var(--space-3, 0.75rem);
 }
 
 .diet-dropdown-fill__modes {
@@ -148,13 +159,17 @@
   width: 100%;
 }
 
+.diet-dropdown-fill__mode-btn.is-active {
+  color: var(--color-system-blue);
+  background: color-mix(in oklab, var(--color-system-white), var(--color-system-blue) 8%);
+}
+
 .diet-dropdown-fill__panel {
-  padding: var(--space-1, 0.25rem) var(--space-1, 0.25rem) 0 var(--space-1, 0.25rem);
-  border-radius: var(--control-radius-md, 0.375rem);
-  background: var(--color-system-white);
-  overflow: hidden;
+  padding: 0;
+  background: transparent;
+  overflow: visible;
   display: grid;
-  gap: var(--space-3, 0.75rem);
+  gap: var(--dropdown-fill-gap);
 }
 
 .diet-dropdown-fill[data-mode] .diet-dropdown-fill__panel {
@@ -170,10 +185,10 @@
 
 .diet-dropdown-fill__preview {
   inline-size: 100%;
-  block-size: 32px;
-  border-radius: var(--control-radius-md, 0.5rem);
-  background: repeating-conic-gradient(var(--color-system-gray-6-step4) 0% 25%, var(--color-system-white) 0% 50%) 50% / 12px 12px;
-  padding: 2px;
+  block-size: var(--dropdown-fill-preview-height);
+  border-radius: var(--dropdown-fill-radius);
+  background: repeating-conic-gradient(var(--color-system-gray-6-step4) 0% 25%, var(--color-system-white) 0% 50%) 50% / 0.75rem 0.75rem;
+  padding: 0.125rem;
   border: none;
   cursor: pointer;
   position: relative;
@@ -197,8 +212,8 @@
 
 .diet-dropdown-fill__gradient-preview {
   inline-size: 100%;
-  block-size: 56px;
-  border-radius: var(--control-radius-md, 0.375rem);
+  block-size: var(--dropdown-fill-preview-height);
+  border-radius: var(--dropdown-fill-radius);
   border: 1px solid color-mix(in oklab, var(--color-system-black), transparent 85%);
   background: linear-gradient(135deg, var(--color-system-gray-6), var(--color-system-gray-3));
 }
@@ -207,7 +222,7 @@
   display: grid;
   grid-template-columns: 1fr auto;
   align-items: center;
-  gap: var(--space-3, 0.75rem);
+  gap: var(--space-2, 0.5rem);
 }
 
 .diet-dropdown-fill__gradient-stop-track {
@@ -260,35 +275,11 @@
 }
 
 .diet-dropdown-fill__gradient-stop-add {
-  inline-size: calc(var(--control-size-md, 1.5rem) * 0.9);
-  block-size: calc(var(--control-size-md, 1.5rem) * 0.9);
-  border-radius: 999px;
-  border: 1px dashed color-mix(in oklab, var(--color-system-black), transparent 70%);
-  background: var(--color-system-white);
-  color: var(--color-system-gray-2);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: border-color var(--duration-base) var(--easing-standard);
+  flex: 0 0 auto;
 }
 
 .diet-dropdown-fill__gradient-stop-add.is-remove {
   color: var(--color-system-pink);
-  border-color: color-mix(in oklab, var(--color-system-pink), transparent 35%);
-}
-
-.diet-dropdown-fill__gradient-stop-add:hover {
-  border-color: color-mix(in oklab, var(--color-system-black), transparent 55%);
-}
-
-.diet-dropdown-fill__gradient-stop-add.is-remove:hover {
-  border-color: color-mix(in oklab, var(--color-system-pink), transparent 15%);
-}
-
-.diet-dropdown-fill__gradient-stop-add:focus-visible {
-  outline: 2px solid color-mix(in oklab, var(--color-system-blue), transparent 20%);
-  outline-offset: 2px;
 }
 
 .diet-dropdown-fill__gradient-editor {
@@ -299,8 +290,8 @@
 .diet-dropdown-fill__gradient-sv {
   position: relative;
   inline-size: 100%;
-  block-size: 120px;
-  border-radius: var(--control-radius-md, 0.375rem);
+  block-size: var(--dropdown-fill-canvas-height);
+  border-radius: var(--dropdown-fill-radius);
   overflow: hidden;
   box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--color-system-black), transparent 85%);
 }
@@ -343,7 +334,7 @@
 
 .diet-dropdown-fill__panel[data-panel='image'],
 .diet-dropdown-fill__panel[data-panel='video'] {
-  gap: var(--space-2, 0.5rem);
+  gap: var(--dropdown-fill-gap);
 }
 
 .diet-dropdown-fill__panel[data-panel='image'] {
@@ -354,8 +345,8 @@
 .diet-dropdown-fill__image-preview,
 .diet-dropdown-fill__video-frame {
   inline-size: 100%;
-  block-size: 160px;
-  border-radius: var(--control-radius-md, 0.375rem);
+  block-size: var(--dropdown-fill-media-height);
+  border-radius: var(--dropdown-fill-radius);
   background: color-mix(in oklab, var(--color-system-black), transparent 93%);
   border: 1px dashed color-mix(in oklab, var(--color-system-black), transparent 70%);
   position: relative;
@@ -485,7 +476,7 @@
   display: grid;
   gap: var(--space-2, 0.5rem);
   padding: var(--space-2, 0.5rem);
-  border-radius: var(--control-radius-md, 0.375rem);
+  border-radius: var(--dropdown-fill-radius);
   border: 1px solid color-mix(in oklab, var(--color-system-black), transparent 88%);
   background: color-mix(in oklab, var(--color-system-white), var(--color-system-black) 2%);
 }
@@ -547,8 +538,8 @@
 .diet-dropdown-fill__sv {
   position: relative;
   inline-size: 100%;
-  aspect-ratio: 4 / 3;
-  border-radius: var(--control-radius-md, 0.375rem);
+  block-size: var(--dropdown-fill-canvas-height);
+  border-radius: var(--dropdown-fill-radius);
   overflow: hidden;
   box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--color-system-black), transparent 85%);
 }
@@ -579,8 +570,8 @@
 }
 
 .diet-dropdown-fill__slider .diet-slider__label {
-  flex: 0 0 40px;
-  min-inline-size: 40px;
+  flex: 0 0 2.5rem;
+  min-inline-size: 2.5rem;
 }
 
 .diet-dropdown-fill__slider--hue .diet-slider__input {
@@ -599,7 +590,7 @@
 
 .diet-dropdown-fill__inputs {
   display: grid;
-  grid-template-columns: 132px minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr) 4rem;
   gap: var(--space-2, 0.5rem);
   inline-size: 100%;
 }
@@ -628,46 +619,35 @@
 .diet-dropdown-fill__swatches {
   display: grid;
   grid-template-columns: repeat(9, minmax(0, 1fr));
-  gap: 0;
+  gap: var(--space-1, 0.25rem);
 }
 
 .diet-dropdown-fill__swatch {
-  position: relative;
-  inline-size: 100%;
-  block-size: 28px;
-  border-radius: var(--control-radius-sm, 0.3125rem);
+  inline-size: calc(100% - 0.125rem);
+  block-size: calc(var(--dropdown-fill-height) - 0.125rem);
+  justify-self: center;
+  border-radius: max(0px, calc(var(--dropdown-fill-radius) - 0.125rem));
   border: 1px solid transparent;
-  background: transparent;
   padding: 0;
+  background: transparent;
   cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+}
+
+.diet-dropdown-fill__swatch[data-color='#ffffff'] {
+  border-color: var(--color-system-gray-5);
 }
 
 .diet-dropdown-fill__swatch-dot {
-  inline-size: calc(100% - 8px);
-  block-size: calc(100% - 8px);
+  display: block;
+  inline-size: 100%;
+  block-size: 100%;
   border-radius: inherit;
   background: var(--swatch-color, var(--color-system-gray-4));
 }
 
-.diet-dropdown-fill__swatch::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  border: 2px solid transparent;
-  pointer-events: none;
-  transition: border-color var(--duration-base) var(--easing-standard);
-}
-
-.diet-dropdown-fill__swatch:hover::after {
-  border-color: var(--color-system-gray-3);
-}
-
-.diet-dropdown-fill__swatch.is-selected::after {
-  border-color: var(--color-system-blue);
+.diet-dropdown-fill__swatch.is-selected {
+  outline: 1px solid var(--color-system-blue);
+  outline-offset: 1px;
 }
 
 .diet-dropdown-fill__actions {

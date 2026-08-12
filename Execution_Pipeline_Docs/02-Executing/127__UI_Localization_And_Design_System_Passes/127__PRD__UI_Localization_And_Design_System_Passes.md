@@ -158,7 +158,7 @@ the code is convenient there.
 | Stage | Status | Release state |
 | --- | --- | --- |
 | Stage 1 — Scaffold only | Complete | Committed, pushed, and deployed; no non-English experience is exposed |
-| Stage 2 — Dieter UI pass | In progress: Foundations, Agent Activity, Bulk Edit, Button, Choice Tiles, Dropdown Actions, Popover, Dropdown Border, and Dropdown Edit complete and re-audited as consumer-agnostic primitives; the shared row/Popover presentation is also applied to Fill, Shadow, and Upload | This completed primitive group is ready for exact-SHA cloud-dev QA; the Fill, Shadow, and Upload behavior passes remain pending |
+| Stage 2 — Dieter UI pass | In progress: Foundations, Agent Activity, Bulk Edit, Button, Choice Tiles, Dropdown Actions, Popover, Dropdown Border, Dropdown Edit, and Dropdown Fill complete and re-audited as consumer-agnostic primitives; the shared row/Popover presentation is also applied to Shadow and Upload | The completed primitive group is ready for exact-SHA cloud-dev QA; Dropdown Shadow and Dropdown Upload are the next behavior passes |
 | Stage 3 — Bob UI pass | Not started | No authority to begin until explicitly directed |
 | Stage 4 — Roma UI pass | Not started | No authority to begin until explicitly directed |
 | Stage 5 — Translation pass | Not started | No translations may be generated yet |
@@ -811,3 +811,37 @@ authorizes it.
   before replacing them, and Dropdown Edit detaches its local Lexical root.
   No new registry, validator, fallback, repair path, service, storage,
   translation, product-data, or Cloudflare machinery was added.
+
+- **Dropdown Fill — passed, 2026-08-12.** Dropdown Fill is now one
+  consumer-agnostic exact-JSON Dieter primitive. Every field declares its
+  supported `color|gradient|image|video` modes through `fill-modes`; the former
+  path/label-based image inference and `allow-image` compatibility input are
+  deleted. All visible and accessible component words are exact caller inputs.
+  The eight Widget specs declare one identical 24-key component-label shape,
+  shared generated Fill paths declare their field-label coordinates, and each
+  adjacent English ToolDrawer label file owns the corresponding words. Bob's
+  existing compiler joins that copy into the single Dieter stencil; it does
+  not read DevStudio example copy or add Widget-specific branches.
+
+  The closed row follows the existing shared leading-label/trailing-value
+  geometry. The component-owned `wide` Popover exposes solid, gradient, image,
+  and video panels with one coherent rhythm. Solid and gradient color editors
+  use the shared Slider/Textfield geometry, compact `8rem/9rem/10rem` canvases,
+  one direct nine-column palette, two-pixel-smaller swatches, a gray resting
+  edge only on white, and a one-pixel selected outline. Gradient edits retain
+  the declared `linear|radial|conic` kind instead of converting saved truth to
+  linear; the retired CSS-only gradient compatibility shape is removed. Image
+  and video reuse the existing account-assets client and existing product
+  command path. Their actions use Dieter Button/Icon contracts and their
+  dynamic statuses/errors come from caller copy. The shared asset denial event
+  is consumer-neutral `dieter-upsell` with the same payload and host behavior.
+
+  Dropdown Fill now exports `destroyDropdownFill`; Bob, Roma Widget Defaults,
+  and DevStudio call it before replacing hydrated roots, canceling pending
+  media resolution and releasing retained component state. DevStudio reveals
+  the real closed size ladder plus one open editor whose own controls exercise
+  all four modes without overlapping permanent Popovers. Generated English
+  editor artifacts remain at the existing path. No non-English
+  generation, new catalog, registry, component variant, route, storage,
+  product-data mutation, Cloudflare topology, fallback, repair path, or
+  compatibility layer was added.

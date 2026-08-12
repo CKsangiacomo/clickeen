@@ -32,11 +32,12 @@ function parseBooleanAttr(value: string | undefined): boolean | undefined {
 
 function parseFillModes(value: string | undefined): string[] | null {
   if (!value) return null;
-  const modes = value
-    .split(',')
-    .map((mode) => mode.trim().toLowerCase())
-    .filter(Boolean);
-  return modes.length ? modes : null;
+  const modes = value.split(',');
+  const allowed = new Set(['color', 'gradient', 'image', 'video']);
+  if (new Set(modes).size !== modes.length || modes.some((mode) => !allowed.has(mode))) {
+    throw new Error('[BobCompiler] dropdown-fill fill-modes are invalid');
+  }
+  return modes;
 }
 
 export function renderComponentStencil(stencil: string, context: Record<string, unknown>): string {
@@ -205,30 +206,11 @@ export async function buildContext(
     options = options.map((opt) => ({ bodyClass: merged.bodyClass, size, ...opt }));
   }
 
-  const allowImageOverride = parseBooleanAttr(attrs.allowImage || attrs['allow-image']);
-  const inferredAllowsImage = (() => {
-    const pathLower = pathAttr.toLowerCase();
-    if (pathLower.includes('background')) return true;
-    const labelLower = label.toLowerCase();
-    return labelLower.includes('background');
-  })();
   const fillModesAttr = attrs.fillModes || attrs['fill-modes'];
-  const mergedFillModes = (merged.fillModes as string) || '';
-  let fillModes = typeof fillModesAttr === 'string' ? fillModesAttr.trim() : '';
-  if (component === 'dropdown-fill' && !fillModes) {
-    if (allowImageOverride === false) fillModes = 'color';
-    else if (allowImageOverride === true) fillModes = mergedFillModes || 'color,gradient,image';
-    else fillModes = mergedFillModes;
+  const fillModes = component === 'dropdown-fill' ? fillModesAttr : undefined;
+  if (component === 'dropdown-fill' && !parseFillModes(fillModes)) {
+    throw new Error(`[BobCompiler] dropdown-fill control "${pathAttr}" requires fill-modes`);
   }
-  const allowImageFromModes = fillModes
-    ? parseFillModes(fillModes)?.some((mode) => mode === 'image' || mode === 'video')
-    : undefined;
-
-  const allowImage =
-    component === 'dropdown-fill'
-      ? (allowImageOverride ?? allowImageFromModes ?? inferredAllowsImage)
-      : undefined;
-  if (component === 'dropdown-fill' && !headerLabel) headerLabel = 'Color fill';
   if (component === 'dropdown-shadow' && !headerLabel) headerLabel = 'Shadow';
   const axis = attrs.axis || attrs['data-axis'] || (merged.axis as string) || '';
   const min = attrs.min || (merged.min as string) || '';
@@ -259,7 +241,6 @@ export async function buildContext(
     value,
     path: pathAttr,
     headerLabel,
-    allowImage,
     fillModes: component === 'dropdown-fill' ? fillModes : undefined,
     min,
     max,
@@ -328,6 +309,32 @@ export async function buildContext(
     strikethroughLabel: attrs.strikethroughLabel || attrs['strikethrough-label'] || '',
     underlineLabel: attrs.underlineLabel || attrs['underline-label'] || '',
     urlLabel: attrs.urlLabel || attrs['url-label'] || '',
+    colorFillLabel: attrs.colorFillLabel || attrs['color-fill-label'] || '',
+    gradientFillLabel: attrs.gradientFillLabel || attrs['gradient-fill-label'] || '',
+    imageFillLabel: attrs.imageFillLabel || attrs['image-fill-label'] || '',
+    videoFillLabel: attrs.videoFillLabel || attrs['video-fill-label'] || '',
+    angleLabel: attrs.angleLabel || attrs['angle-label'] || '',
+    gradientStopsLabel: attrs.gradientStopsLabel || attrs['gradient-stops-label'] || '',
+    addGradientStopLabel:
+      attrs.addGradientStopLabel || attrs['add-gradient-stop-label'] || '',
+    editGradientStopLabel:
+      attrs.editGradientStopLabel || attrs['edit-gradient-stop-label'] || '',
+    removeGradientStopLabel:
+      attrs.removeGradientStopLabel || attrs['remove-gradient-stop-label'] || '',
+    opacityLabel: attrs.opacityLabel || attrs['opacity-label'] || '',
+    removeFillLabel: attrs.removeFillLabel || attrs['remove-fill-label'] || '',
+    uploadLabel: attrs.uploadLabel || attrs['upload-label'] || '',
+    chooseAssetsLabel: attrs.chooseAssetsLabel || attrs['choose-assets-label'] || '',
+    removeAssetLabel: attrs.removeAssetLabel || attrs['remove-asset-label'] || '',
+    loadingAssetsLabel: attrs.loadingAssetsLabel || attrs['loading-assets-label'] || '',
+    noAssetsLabel: attrs.noAssetsLabel || attrs['no-assets-label'] || '',
+    useAssetLabel: attrs.useAssetLabel || attrs['use-asset-label'] || '',
+    loadAssetsErrorLabel:
+      attrs.loadAssetsErrorLabel || attrs['load-assets-error-label'] || '',
+    uploadAssetErrorLabel:
+      attrs.uploadAssetErrorLabel || attrs['upload-asset-error-label'] || '',
+    previewAssetErrorLabel:
+      attrs.previewAssetErrorLabel || attrs['preview-asset-error-label'] || '',
   });
 
   // Segmented is special: the Dieter stencil expects `segments` (not `options`), and the radio group name
