@@ -157,7 +157,10 @@ The governing component product law is:
   `.5rem` vertical rhythm. Hue and Width share a `2.5rem` label rail, and the
   Slider input consumes the complete remaining row width so both tracks align.
   The shared Slider primitive provides that flexible range behavior; Border
-  only owns its two equal label rails.
+  only owns its two equal label rails. The wider Popover uses a shallower
+  saturation/value canvas at `8rem/9rem/10rem` for `sm|md|lg`. Color swatches
+  have no resting stroke except white, which retains one gray edge against the
+  white surface; selection remains the existing blue outline.
   The component consumes the exact structured value supplied by the Widget
   contract and does not create fallback, repaired, or diagnostic states.
   Dieter owns no visible words. Each
@@ -188,7 +191,8 @@ The governing component product law is:
   existing `1.25rem` Icon size; the separate link-sheet close action keeps the
   medium Button's default `1rem` Icon. Clear formatting affects the selected
   formatting and does not remove links. The component does not preselect text
-  when it opens.
+  when it opens. Its Popover header, editor, and toolbar use one `.5rem`
+  vertical rhythm.
   Dropdown Edit uses the pinned, locally bundled Lexical editor engine. It does
   not call an external runtime service and does not introduce a new persisted
   document format: Bob's browser-memory value remains the existing compact

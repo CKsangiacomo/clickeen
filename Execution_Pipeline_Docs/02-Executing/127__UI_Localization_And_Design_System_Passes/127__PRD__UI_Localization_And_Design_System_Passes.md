@@ -779,3 +779,14 @@ authorizes it.
   Button's default 1rem Icon. No Widget branch, new size, component variant,
   validator, fallback, repair path, persistence behavior, locale contract,
   product data, or Cloudflare authority was added or changed.
+
+- **Dropdown work-area proportion correction — passed, 2026-08-11.** The
+  wider Dropdown Border work area no longer retains its former narrow-surface
+  spectrum height: the saturation/value canvas is now `8rem/9rem/10rem` for
+  `sm|md|lg`, making the current medium canvas 9rem. Its 18 color swatches no
+  longer carry gray boxes; only white retains one gray resting edge, while
+  every selected color keeps the existing blue outline. Dropdown Edit now
+  applies the same `.5rem` spacing between its Popover header, editor, and
+  toolbar that it already used inside the editor composition. No Widget,
+  consumer, value, picker, rich-text, locale, persistence, or deployment
+  contract changed.

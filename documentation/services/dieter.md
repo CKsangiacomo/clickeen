@@ -150,7 +150,10 @@ Its closed row renders width before the color chip, or only `square.slash`
 when no border is present. Its current medium work area uses one `.5rem`
 vertical rhythm. Hue and Width share one `2.5rem` label rail, and the shared
 Slider primitive gives its range input the complete remaining inline space so
-the two tracks align; Border only supplies the equal label rails. It consumes
+the two tracks align; Border only supplies the equal label rails. It uses the
+added width with a shallower `8rem/9rem/10rem` saturation/value canvas for
+`sm|md|lg`. Color swatches have no resting stroke except white, which keeps one
+gray edge; the selected swatch keeps the existing blue outline. It consumes
 the exact structured Widget value and
 does not create fallback, repaired, or diagnostic states. Dieter owns
 structure, styling, and behavior but no visible words. Widget specs declare
@@ -168,6 +171,7 @@ URL is remove then add. There is no Apply, Update, or second link action. The
 link action is not a per-Widget capability. Toolbar actions use the existing
 medium Button geometry with the existing 1.25rem Icon size. The separate
 link-sheet close action keeps the medium Button's default 1rem Icon.
+The Popover header, editor, and toolbar use one `.5rem` vertical rhythm.
 Opening the Popover does not select text. The pinned Lexical dependency is
 bundled with Dieter and runs locally in Bob; it makes no external runtime call.
 Dieter exports the existing compact inline HTML value instead of a Lexical
