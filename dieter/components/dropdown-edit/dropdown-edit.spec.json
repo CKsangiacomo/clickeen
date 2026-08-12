@@ -37,7 +37,7 @@
       "required": false,
       "description": "Default text content shown in preview and editor"
     },
-    "applyLabel": { "type": "string", "required": true },
+    "addLinkLabel": { "type": "string", "required": true },
     "boldLabel": { "type": "string", "required": true },
     "clearFormattingLabel": { "type": "string", "required": true },
     "italicLabel": { "type": "string", "required": true },
@@ -49,7 +49,7 @@
   },
   "features": {
     "richTextFormatting": ["Bold", "Italic", "Underline", "Strikethrough"],
-    "linkPanel": "Add, edit, or remove a hyperlink on selected text"
+    "linkPanel": "Add or remove a hyperlink on selected text"
   },
   "defaults": [
     {
@@ -63,7 +63,7 @@
         "headerLabel": "Label",
         "placeholder": "The quick brown fox jumps over the lazy dog",
         "path": "",
-        "applyLabel": "Apply",
+        "addLinkLabel": "Add link",
         "boldLabel": "Bold",
         "clearFormattingLabel": "Clear formatting",
         "italicLabel": "Italic",
@@ -93,7 +93,7 @@
         "headerLabel": "Description",
         "placeholder": "Make selected text bold, italic, underlined, struck through, or linked.",
         "path": "",
-        "applyLabel": "Apply",
+        "addLinkLabel": "Add link",
         "boldLabel": "Bold",
         "clearFormattingLabel": "Clear formatting",
         "italicLabel": "Italic",

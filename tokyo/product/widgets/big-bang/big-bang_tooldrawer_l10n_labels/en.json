@@ -11,7 +11,7 @@
     "component.dropdown-border.hex.label": "Hex",
     "component.dropdown-border.hue.label": "Hue",
     "component.dropdown-border.width.label": "Width",
-    "component.dropdown-edit.apply.label": "Apply",
+    "component.dropdown-edit.add-link.label": "Add link",
     "component.dropdown-edit.bold.label": "Bold",
     "component.dropdown-edit.clear-formatting.label": "Clear formatting",
     "component.dropdown-edit.italic.label": "Italic",

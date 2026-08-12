@@ -274,8 +274,12 @@ only Clear formatting, line breaks, and pasted inline formatting. Widgets do
 not opt individual fields into or out of links. The field value remains the
 existing compact inline HTML string; empty is exactly `""`. Each Widget's
 adjacent ToolDrawer label file supplies the field label, placeholder, and the
-exact Dropdown Edit component labels. Bob joins those values to the global
-Dieter stencil during the existing editor-artifact build.
+exact Dropdown Edit component labels, including **Add link** and **Remove
+link**. Bob joins those values to the global Dieter stencil during the existing
+editor-artifact build. A selected unlinked range gets one **Add link** action.
+An existing link shows its URL read-only and changes that same action to
+**Remove link**; changing the URL is remove then add. There is no Apply,
+Update, or second link action.
 
 Compact property rows use one Dieter geometry contract: labels occupy the
 leading side and dropdown values, switches, text fields, and numeric fields

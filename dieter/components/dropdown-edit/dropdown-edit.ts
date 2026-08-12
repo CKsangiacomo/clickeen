@@ -50,7 +50,8 @@ interface DropdownEditState {
   paletteButtons: Map<Command, HTMLButtonElement>;
   linkSheet: HTMLElement;
   linkPopover: HTMLElement;
-  removeLinkButton: HTMLButtonElement;
+  linkActionButton: HTMLButtonElement;
+  linkMode: 'add' | 'remove';
   savedLinkSelection: RangeSelection | null;
   pendingExternal?: string;
 }
@@ -104,8 +105,8 @@ function createState(root: HTMLElement): DropdownEditState {
   const palette = root.querySelector<HTMLElement>('.diet-dropdown-edit__palette')!;
   const linkSheet = root.querySelector<HTMLElement>('.diet-dropdown-edit__linksheet')!;
   const linkPopover = linkSheet.querySelector<HTMLElement>('.diet-popaddlink')!;
-  const removeLinkButton = linkPopover.querySelector<HTMLButtonElement>(
-    '.diet-dropdown-edit__remove-link',
+  const linkActionButton = linkPopover.querySelector<HTMLButtonElement>(
+    '.diet-dropdown-edit__link-action',
   )!;
   const paletteButtons = new Map<Command, HTMLButtonElement>();
   palette.querySelectorAll<HTMLButtonElement>('button[data-command]').forEach((button) => {
@@ -160,13 +161,14 @@ function createState(root: HTMLElement): DropdownEditState {
     paletteButtons,
     linkSheet,
     linkPopover,
-    removeLinkButton,
+    linkActionButton,
+    linkMode: 'add',
     savedLinkSelection: null,
   };
 }
 
 function installHandlers(state: DropdownEditState): void {
-  const { editor, editorElement, linkPopover, paletteButtons, removeLinkButton } = state;
+  const { editor, editorElement, linkPopover, paletteButtons } = state;
 
   paletteButtons.forEach((button, command) => {
     button.addEventListener('pointerdown', (event) => event.preventDefault());
@@ -174,11 +176,14 @@ function installHandlers(state: DropdownEditState): void {
   });
 
   linkPopover.addEventListener('popaddlink:submit', (event) => {
+    if (state.linkMode === 'remove') {
+      removeLink(state);
+      return;
+    }
     const href = (event as CustomEvent<{ href: string }>).detail.href;
     applyLink(state, href);
   });
   linkPopover.addEventListener('popaddlink:cancel', () => closeLinkSheet(state));
-  removeLinkButton.addEventListener('click', () => removeLink(state));
   state.root.addEventListener('diet-dropdown-edit:close-linksheet', () => closeLinkSheet(state));
 
   editor.registerUpdateListener(({ dirtyElements, dirtyLeaves, tags }) => {
@@ -270,9 +275,15 @@ function openLinkSheet(state: DropdownEditState): void {
   if (!selection) return;
 
   state.savedLinkSelection = selection;
-  state.removeLinkButton.hidden = !href;
   const input = state.linkPopover.querySelector<HTMLInputElement>('.diet-popaddlink__input')!;
+  const hasLink = href.length > 0;
+  state.linkMode = hasLink ? 'remove' : 'add';
+  state.linkActionButton.dataset.type = hasLink ? 'secondary' : 'primary';
+  state.linkActionButton.querySelector<HTMLElement>('.diet-button__label')!.textContent = hasLink
+    ? state.linkActionButton.dataset.removeLabel!
+    : state.linkActionButton.dataset.addLabel!;
   input.value = href;
+  input.readOnly = hasLink;
   input.dispatchEvent(new Event('input', { bubbles: true }));
   state.root.classList.add('has-linksheet');
   state.linkSheet.setAttribute('aria-hidden', 'false');

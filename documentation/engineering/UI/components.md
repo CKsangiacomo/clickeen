@@ -175,10 +175,14 @@ The governing component product law is:
   when the trailing rail cannot fit it. Its attached Popover contains a
   writing surface plus Bold, Italic, Underline, Strikethrough, Link, and Clear
   formatting actions. Link is available for every Dropdown Edit field: a text
-  selection can receive a link, and a selection or caret inside an existing
-  link can edit or remove it. Clear formatting affects the selected formatting
-  and does not remove links. The component does not preselect text when it
-  opens.
+  selection opens an editable URL field with one **Add link** action; a
+  selection or caret inside an existing link shows its URL read-only with that
+  same action position changed to **Remove link**. Changing a URL is the clear
+  remove-then-add flow. There is no Apply or Update action and no second link
+  button. Toolbar and link-sheet close actions use the existing medium Button
+  geometry and its 1rem Icon size. Clear formatting affects the selected
+  formatting and does not remove links. The component does not preselect text
+  when it opens.
   Dropdown Edit uses the pinned, locally bundled Lexical editor engine. It does
   not call an external runtime service and does not introduce a new persisted
   document format: Bob's browser-memory value remains the existing compact

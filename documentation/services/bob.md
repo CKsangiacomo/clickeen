@@ -458,8 +458,11 @@ field and component labels, then binds its existing compact inline HTML string
 to the control. The locally bundled Lexical engine owns editing only; Bob still
 owns the browser-memory draft, undo, preview, and Save boundary. Every Dropdown
 Edit field supports inline emphasis, links, line breaks, selected-only format
-clearing, and pasted inline formatting. No per-field link flag, Widget branch,
-runtime catalog fetch, or Lexical storage document exists.
+clearing, and pasted inline formatting. The link sheet presents one contextual
+Widget-labeled action: **Add link** for selected unlinked text or **Remove
+link** for an existing link; it has no Apply/Update or second link action. No
+per-field link flag, Widget branch, runtime catalog fetch, or Lexical storage
+document exists.
 
 Bob's visible control taxonomy is `Panel > Section > optional Group > Control`.
 Widget specs own the five fixed widget panel ids and label-token coordinates;

@@ -319,7 +319,7 @@ export async function buildContext(
     hexLabel: attrs.hexLabel || attrs['hex-label'] || '',
     hueLabel: attrs.hueLabel || attrs['hue-label'] || '',
     widthLabel: attrs.widthLabel || attrs['width-label'] || '',
-    applyLabel: attrs.applyLabel || attrs['apply-label'] || '',
+    addLinkLabel: attrs.addLinkLabel || attrs['add-link-label'] || '',
     boldLabel: attrs.boldLabel || attrs['bold-label'] || '',
     clearFormattingLabel:
       attrs.clearFormattingLabel || attrs['clear-formatting-label'] || '',

@@ -21,7 +21,7 @@
               <button
                 type="button"
                 class="diet-button"
-                data-size="small"
+                data-size="medium"
                 data-type="quaternary"
                 data-command="bold"
                 aria-label="{{boldLabel}}"
@@ -32,7 +32,7 @@
               <button
                 type="button"
                 class="diet-button"
-                data-size="small"
+                data-size="medium"
                 data-type="quaternary"
                 data-command="italic"
                 aria-label="{{italicLabel}}"
@@ -43,7 +43,7 @@
               <button
                 type="button"
                 class="diet-button"
-                data-size="small"
+                data-size="medium"
                 data-type="quaternary"
                 data-command="underline"
                 aria-label="{{underlineLabel}}"
@@ -54,7 +54,7 @@
               <button
                 type="button"
                 class="diet-button"
-                data-size="small"
+                data-size="medium"
                 data-type="quaternary"
                 data-command="strike"
                 aria-label="{{strikethroughLabel}}"
@@ -65,7 +65,7 @@
               <button
                 type="button"
                 class="diet-button"
-                data-size="small"
+                data-size="medium"
                 data-type="quaternary"
                 data-command="link"
                 aria-label="{{linkLabel}}"
@@ -80,7 +80,7 @@
               <button
                 type="button"
                 class="diet-button"
-                data-size="small"
+                data-size="medium"
                 data-type="quaternary"
                 data-command="clear-format"
                 aria-label="{{clearFormattingLabel}}"
@@ -98,7 +98,7 @@
                 <button
                   type="button"
                   class="diet-button diet-popover__header-trigger diet-popaddlink__close"
-                  data-size="small"
+                  data-size="medium"
                   data-type="quaternary"
                   aria-hidden="true"
                   tabindex="-1"
@@ -122,20 +122,13 @@
                 <div class="diet-popaddlink__actions">
                   <button
                     type="button"
-                    class="diet-button diet-dropdown-edit__remove-link"
-                    data-size="medium"
-                    data-type="secondary"
-                    hidden
-                  >
-                    <span class="diet-button__label">{{removeLinkLabel}}</span>
-                  </button>
-                  <button
-                    type="button"
-                    class="diet-button diet-popaddlink__apply"
+                    class="diet-button diet-popaddlink__apply diet-dropdown-edit__link-action"
                     data-size="medium"
                     data-type="primary"
+                    data-add-label="{{addLinkLabel}}"
+                    data-remove-label="{{removeLinkLabel}}"
                   >
-                    <span class="diet-button__label">{{applyLabel}}</span>
+                    <span class="diet-button__label">{{addLinkLabel}}</span>
                   </button>
                 </div>
               </div>

@@ -157,10 +157,15 @@ function assertDropdownEditLabels(args: {
     ]) {
       const commandStart = root.indexOf(`data-command="${command}"`);
       assert.ok(commandStart >= 0, `${args.widgetType} Dropdown Edit ${index} has ${command}`);
+      const buttonStart = root.lastIndexOf('<button', commandStart);
       const commandEnd = root.indexOf('</button>', commandStart);
       assert.ok(
-        root.slice(commandStart, commandEnd).includes(`aria-label="${label(key)}"`),
+        root.slice(buttonStart, commandEnd).includes(`aria-label="${label(key)}"`),
         `${args.widgetType} Dropdown Edit ${index} labels ${command}`,
+      );
+      assert.ok(
+        root.slice(buttonStart, commandEnd).includes('data-size="medium"'),
+        `${args.widgetType} Dropdown Edit ${index} sizes ${command} through medium Button geometry`,
       );
     }
     assert.ok(
@@ -171,13 +176,28 @@ function assertDropdownEditLabels(args: {
       root.includes(`diet-textfield__display-label label-s">${label('url')}</span>`),
       `${args.widgetType} Dropdown Edit ${index} labels URL`,
     );
+    const closeStart = root.indexOf('diet-popaddlink__close');
+    const closeEnd = root.indexOf('</button>', closeStart);
     assert.ok(
-      root.includes(`diet-button__label">${label('remove-link')}</span>`),
+      closeStart >= 0 && root.slice(closeStart, closeEnd).includes('data-size="medium"'),
+      `${args.widgetType} Dropdown Edit ${index} sizes link-sheet close through medium Button geometry`,
+    );
+    assert.equal(
+      root.match(/diet-dropdown-edit__link-action/g)?.length ?? 0,
+      1,
+      `${args.widgetType} Dropdown Edit ${index} has one link action`,
+    );
+    assert.ok(
+      root.includes(`data-add-label="${label('add-link')}"`),
+      `${args.widgetType} Dropdown Edit ${index} labels Add link`,
+    );
+    assert.ok(
+      root.includes(`data-remove-label="${label('remove-link')}"`),
       `${args.widgetType} Dropdown Edit ${index} labels Remove link`,
     );
     assert.ok(
-      root.includes(`diet-button__label">${label('apply')}</span>`),
-      `${args.widgetType} Dropdown Edit ${index} labels Apply`,
+      !root.includes('diet-dropdown-edit__remove-link'),
+      `${args.widgetType} Dropdown Edit ${index} has no second link action`,
     );
   });
 }

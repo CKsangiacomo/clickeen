@@ -271,7 +271,7 @@
           "width": "$label:component.dropdown-border.width.label"
         },
         "dropdown-edit": {
-          "apply": "$label:component.dropdown-edit.apply.label",
+          "addLink": "$label:component.dropdown-edit.add-link.label",
           "bold": "$label:component.dropdown-edit.bold.label",
           "clearFormatting": "$label:component.dropdown-edit.clear-formatting.label",
           "italic": "$label:component.dropdown-edit.italic.label",

@@ -96,7 +96,7 @@ type DropdownBorderEditorLabels = {
 };
 
 const DROPDOWN_EDIT_COMPONENT_LABEL_ATTRIBUTES = [
-  ['apply', 'apply-label'],
+  ['addLink', 'add-link-label'],
   ['bold', 'bold-label'],
   ['clearFormatting', 'clear-formatting-label'],
   ['italic', 'italic-label'],
@@ -580,7 +580,7 @@ function applyDropdownEditEditorLabels(
     .join(' ');
 
   return lines.map((line) =>
-    /\btype='dropdown-edit'/.test(line) && !/\bapply-label=/.test(line)
+    /\btype='dropdown-edit'/.test(line) && !/\badd-link-label=/.test(line)
       ? line.replace(/\s*\/>$/, ` ${attributes} />`)
       : line,
   );

@@ -719,3 +719,14 @@ authorizes it.
   per-Widget editor mode, per-field link flag, global label catalog, locale
   folder, compatibility path, storage migration, Translation Agent change,
   Cloudflare change, or non-English generation was added.
+- **Dropdown Edit link-action and Icon correction — passed, 2026-08-11.** The
+  toolbar and link-sheet close controls now use the existing medium Button
+  geometry and its 1rem Icon size. The link sheet now has one contextual action
+  in one position: selected unlinked text shows an editable URL with **Add
+  link**; an existing link shows its URL read-only and changes the same action
+  to **Remove link**. Changing a URL is remove then add. The former Apply and
+  second Remove-link buttons are deleted. All eight Widget-adjacent English
+  contracts replaced the old Apply key with the exact Add-link key; Bob's
+  existing compiler still joins those labels into the one Dieter stencil. No
+  new link workflow, catalog, compatibility alias, validation layer, storage,
+  route, product-data, or deployment machinery was added.
