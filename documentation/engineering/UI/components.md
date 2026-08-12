@@ -203,7 +203,9 @@ The governing component product law is:
   than their grid cells, only white retains a gray resting edge, and selection
   uses a one-pixel blue outline. Image and video use the same compact surface
   height ladder while retaining their existing upload, choose, and remove
-  behavior. Gradient edits preserve the declared
+  behavior. Selecting image or video without an asset writes exact `none` and
+  the closed row shows only the centered `square.slash` Icon; it does not retain
+  or display the prior mode's chip. Gradient edits preserve the declared
   `linear|radial|conic` kind and exact stop values. Image and video modes use
   the supplied account-assets client; the primitive does not own an account,
   route, policy, or Widget-specific media rule. All visible and accessible

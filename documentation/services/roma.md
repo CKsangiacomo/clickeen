@@ -447,8 +447,9 @@ Bob's paired `@clickeen/bob/control-host` and
 presentation; Roma owns the surrounding page and draft state, not a second copy
 of the control host. Before running Dieter hydrators, the shared host projects
 the exact current draft values into the compiled controls. It then synchronizes
-the hydrated control surface from that same draft; compiled empty fields are not
-defaults or fallback values.
+the hydrated control surface from that same draft, dispatching external control
+updates only when the projected value actually changes; compiled empty fields
+are not defaults or fallback values.
 JSON controls use Dieter's `data-dieter-json` marker and generic component
 operations use `dieter-ops`; `data-bob-path` remains the host-owned field
 coordinate. Roma destroys hydrated Dropdown Actions, Border, Edit, and Fill

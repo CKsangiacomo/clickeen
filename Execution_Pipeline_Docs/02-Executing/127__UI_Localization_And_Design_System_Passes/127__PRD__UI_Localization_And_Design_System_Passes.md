@@ -903,3 +903,17 @@ authorizes it.
   icon loader, component, fill behavior, Widget branch, locale key, value
   contract, compatibility path, service, storage, product data, or Cloudflare
   machinery was added.
+
+- **Dropdown Fill empty-media summary correction — passed locally,
+  2026-08-12.** Selecting image or video without choosing an asset now writes
+  the exact `none` fill and keeps that media editor open for the current
+  interaction. The closed property row therefore shows the existing
+  `square.slash` no-fill Icon instead of retaining the prior color chip. The
+  obsolete CSS rule that forced the hidden chip back into the trailing rail is
+  removed, so the no-fill Icon occupies the exact centered trailing position
+  by itself. Roma Widget Defaults' existing control synchronization now emits
+  `external-sync` only when the projected value actually changed; an unchanged
+  exact `none` therefore does not close the media editor that initiated it.
+  No new state shape, fallback, validator, repair path, Widget
+  branch, locale key, asset behavior, route, storage, or Cloudflare machinery
+  was added.

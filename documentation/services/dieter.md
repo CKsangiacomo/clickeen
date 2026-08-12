@@ -193,10 +193,13 @@ The solid and gradient
 panels share the system Slider/Textfield geometry, the
 compact `6rem/7rem/8rem` saturation/value canvas ladder, a trailing opacity
 value, one Hex row, and one nine-column two-row palette. Only the white swatch
-has a gray resting edge; selection uses a one-pixel blue outline. Structured
-Image and video use the same compact surface-height ladder while retaining
-their existing upload, choose, remove, and asset-browser behavior. Structured
-gradients keep their declared `linear|radial|conic` kind while their angle and
+has a gray resting edge; selection uses a one-pixel blue outline. Image and
+video use the same compact surface-height ladder while retaining their
+existing upload, choose, remove, and asset-browser behavior.
+Selecting image or video without an asset writes exact `none`; the closed row
+shows only the centered `square.slash` Icon rather than retaining the prior
+mode's chip.
+Structured gradients keep their declared `linear|radial|conic` kind while their angle and
 stops are edited. Image and video keep the same caller-supplied account-assets
 client, exact fill values, and generic `dieter-upsell` host event when account
 policy denies an upload. The component does not own account policy, routes,

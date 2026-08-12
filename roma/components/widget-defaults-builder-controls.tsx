@@ -189,6 +189,7 @@ function syncFieldValue(field: HTMLElement, values: Record<string, unknown>) {
     field instanceof HTMLInputElement && field.dataset.dieterJson != null
       ? serializeDieterJsonFieldValue(field, value)
       : valueForTextField(value);
+  const valueChanged = field.value !== nextValue;
 
   field.value = nextValue;
   if (field instanceof HTMLInputElement && field.dataset.dieterJson != null) {
@@ -196,6 +197,7 @@ function syncFieldValue(field: HTMLElement, values: Record<string, unknown>) {
   }
 
   if (
+    valueChanged &&
     field instanceof HTMLInputElement &&
     (field.dataset.dieterJson != null ||
       field.classList.contains('diet-dropdown-actions__value-field') ||

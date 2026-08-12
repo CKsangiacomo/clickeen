@@ -557,17 +557,37 @@ function syncModeUI(state: DropdownFillState, opts: { commit: boolean; updateHea
   }
   if (state.mode === 'image') {
     const hasAsset = Boolean(state.imageAssetRef);
+    if (!hasAsset) {
+      setImageSrc(state, null, { commit: false, updateHeader: false });
+      if (opts.commit) {
+        setInputValue(state, { type: 'none' }, true);
+        state.lastEnabledValue = null;
+        setEnabledState(state, true);
+      }
+      updateHeader(state, { text: '', muted: true, chipColor: null, noneChip: true });
+      return;
+    }
     setImageSrc(state, state.imageSrc, {
-      commit: opts.commit && hasAsset,
-      updateHeader: hasAsset ? opts.updateHeader : false,
+      commit: opts.commit,
+      updateHeader: opts.updateHeader,
     });
     return;
   }
   if (state.mode === 'video') {
     const hasAsset = Boolean(state.videoAssetRef);
+    if (!hasAsset) {
+      setVideoSrc(state, null, { commit: false, updateHeader: false });
+      if (opts.commit) {
+        setInputValue(state, { type: 'none' }, true);
+        state.lastEnabledValue = null;
+        setEnabledState(state, true);
+      }
+      updateHeader(state, { text: '', muted: true, chipColor: null, noneChip: true });
+      return;
+    }
     setVideoSrc(state, state.videoSrc, {
-      commit: opts.commit && hasAsset,
-      updateHeader: hasAsset ? opts.updateHeader : false,
+      commit: opts.commit,
+      updateHeader: opts.updateHeader,
     });
     return;
   }
