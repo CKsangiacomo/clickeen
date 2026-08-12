@@ -5,6 +5,7 @@
 @import url('./components/button/button.css');
 @import url('./components/choice-tiles/choice-tiles.css');
 @import url('./components/dropdown-actions/dropdown-actions.css');
+@import url('./components/slider/slider.css');
 @import url('./components/dropdown-border/dropdown-border.css');
 @import url('./components/dropdown-edit/dropdown-edit.css');
 @import url('./components/dropdown-fill/dropdown-fill.css');
@@ -18,7 +19,6 @@
 @import url('./components/popover/popover.css');
 @import url('./components/repeater/repeater.css');
 @import url('./components/segmented/segmented.css');
-@import url('./components/slider/slider.css');
 @import url('./components/tabs/tabs.css');
 @import url('./components/table/table.css');
 @import url('./components/textedit/textedit.css');

@@ -4,7 +4,7 @@
   --dropdown-border-font-size: var(--fs-13, 0.8125rem);
   --dropdown-border-line-height: var(--lh-body-ui, 1.25rem);
   --dropdown-border-icon-size: 1rem;
-  --dropdown-border-gap: var(--space-3, 0.75rem);
+  --dropdown-border-gap: var(--space-2, 0.5rem);
   --dropdown-border-preview-height: 2rem;
   --dropdown-border-canvas-height: 11.25rem;
   --picker-rgb: 0 0 0;
@@ -130,6 +130,11 @@
 .diet-dropdown-border__dependent-controls {
   display: grid;
   gap: var(--dropdown-border-gap);
+}
+
+.diet-dropdown-border__slider .diet-slider__label {
+  flex: 0 0 2.5rem;
+  min-inline-size: 2.5rem;
 }
 
 .diet-dropdown-border[data-border-enabled='false'] .diet-dropdown-border__dependent-controls {

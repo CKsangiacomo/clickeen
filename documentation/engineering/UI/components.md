@@ -152,7 +152,12 @@ The governing component product law is:
   Its Popover repeats only the
   caller's field label, places Enabled directly below the header, and hides the
   color and width controls while disabled. Disabling preserves the exact
-  stored width and color; changing one property does not rewrite another.
+  stored width and color; changing one property does not rewrite another. At
+  the current medium ToolDrawer size, its dependent controls use one
+  `.5rem` vertical rhythm. Hue and Width share a `2.5rem` label rail, and the
+  Slider input consumes the complete remaining row width so both tracks align.
+  The shared Slider primitive provides that flexible range behavior; Border
+  only owns its two equal label rails.
   The component consumes the exact structured value supplied by the Widget
   contract and does not create fallback, repaired, or diagnostic states.
   Dieter owns no visible words. Each
@@ -179,8 +184,9 @@ The governing component product law is:
   selection or caret inside an existing link shows its URL read-only with that
   same action position changed to **Remove link**. Changing a URL is the clear
   remove-then-add flow. There is no Apply or Update action and no second link
-  button. Toolbar and link-sheet close actions use the existing medium Button
-  geometry and its 1rem Icon size. Clear formatting affects the selected
+  button. Toolbar actions use the existing medium Button geometry with the
+  existing `1.25rem` Icon size; the separate link-sheet close action keeps the
+  medium Button's default `1rem` Icon. Clear formatting affects the selected
   formatting and does not remove links. The component does not preselect text
   when it opens.
   Dropdown Edit uses the pinned, locally bundled Lexical editor engine. It does

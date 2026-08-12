@@ -147,7 +147,11 @@ to the trigger, attached Popover, text, `square.slash` no-border Icon, and
 nested controls. Enabled sits immediately below the caller-supplied Popover
 header; disabling it hides but does not replace the stored color and width.
 Its closed row renders width before the color chip, or only `square.slash`
-when no border is present. It consumes the exact structured Widget value and
+when no border is present. Its current medium work area uses one `.5rem`
+vertical rhythm. Hue and Width share one `2.5rem` label rail, and the shared
+Slider primitive gives its range input the complete remaining inline space so
+the two tracks align; Border only supplies the equal label rails. It consumes
+the exact structured Widget value and
 does not create fallback, repaired, or diagnostic states. Dieter owns
 structure, styling, and behavior but no visible words. Widget specs declare
 use and exact state paths, while their
@@ -161,8 +165,9 @@ The link sheet has one contextual action in one stable position. Selected
 unlinked text gets an editable URL field and **Add link**; an existing link
 shows its URL read-only and changes that action to **Remove link**. Changing a
 URL is remove then add. There is no Apply, Update, or second link action. The
-link action is not a per-Widget capability. Toolbar and link-sheet close
-actions use the existing medium Button geometry and its 1rem Icon size.
+link action is not a per-Widget capability. Toolbar actions use the existing
+medium Button geometry with the existing 1.25rem Icon size. The separate
+link-sheet close action keeps the medium Button's default 1rem Icon.
 Opening the Popover does not select text. The pinned Lexical dependency is
 bundled with Dieter and runs locally in Bob; it makes no external runtime call.
 Dieter exports the existing compact inline HTML value instead of a Lexical

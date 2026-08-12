@@ -721,7 +721,9 @@ authorizes it.
   Cloudflare change, or non-English generation was added.
 - **Dropdown Edit link-action and Icon correction — passed, 2026-08-11.** The
   toolbar and link-sheet close controls now use the existing medium Button
-  geometry and its 1rem Icon size. The link sheet now has one contextual action
+  geometry. At this point both used its 1rem Icon size; the later toolbar-sizing
+  follow-up below moves only the six editor commands to 1.25rem. The link sheet
+  now has one contextual action
   in one position: selected unlinked text shows an editable URL with **Add
   link**; an existing link shows its URL read-only and changes the same action
   to **Remove link**. Changing a URL is remove then add. The former Apply and
@@ -761,3 +763,19 @@ authorizes it.
   source contract. No component behavior, value binding, Widget meaning,
   locale contract, validation layer, service, storage, product data, or
   Cloudflare authority changed.
+
+- **Dropdown Border rhythm and Dropdown Edit toolbar sizing — passed,
+  2026-08-11.** The shared Slider primitive now lets its range input consume
+  the complete remaining inline space instead of retaining the browser's
+  intrinsic range width. Dropdown Border applies that existing primitive with
+  one `2.5rem` Hue/Width label rail, so both tracks start and end together,
+  and its medium dependent controls use one `.5rem` vertical rhythm. Dieter's
+  stylesheet order now loads the Slider primitive before its dropdown
+  compositions, while DevStudio explicitly loads that shared primitive for
+  isolated component reveals. The
+  Dropdown Edit rich-text toolbar keeps its existing medium Button geometry
+  while its six command Icons explicitly use Dieter's existing 1.25rem Icon
+  size. The separate link-sheet close control remains unchanged at the medium
+  Button's default 1rem Icon. No Widget branch, new size, component variant,
+  validator, fallback, repair path, persistence behavior, locale contract,
+  product data, or Cloudflare authority was added or changed.

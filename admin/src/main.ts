@@ -12,6 +12,7 @@ import '@dieter/components/textfield/textfield.css';
 import '@dieter/components/tooltip/tooltip.css';
 import '@dieter/components/valuefield/valuefield.css';
 import '@dieter/components/toggle/toggle.css';
+import '@dieter/components/slider/slider.css';
 import './css/layout.css';
 import './css/dieter-previews.css';
 import './css/utilities.css';
