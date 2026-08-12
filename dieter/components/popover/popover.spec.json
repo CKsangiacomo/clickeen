@@ -1,8 +1,9 @@
 {
   "component": "popover",
-  "syntax": "<div class='diet-popover'>…</div>",
+  "syntax": "<div class='diet-popover' data-width='rest|large|xl'>…</div>",
   "attributes": {
-    "headerLabel": { "optional": true }
+    "headerLabel": { "optional": true },
+    "width": { "enum": ["rest", "large", "xl"], "default": "rest" }
   },
   "defaults": [
     {
@@ -11,6 +12,7 @@
       "spec": ["diet-popover"],
       "context": {
         "size": "default",
+        "width": "rest",
         "headerLabel": "Property",
         "bodyLineOne": "Caller-provided content belongs in the Popover body.",
         "bodyLineTwo": "Popover owns the floating surface and its structure."

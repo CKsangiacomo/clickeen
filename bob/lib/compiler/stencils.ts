@@ -244,6 +244,8 @@ export async function buildContext(
 
   const accept = attrs.accept || (merged.accept as string) || 'image/*';
   const maxSizeMb = attrs.maxSizeMb || attrs['max-size-mb'] || (merged.maxSizeMb as string) || '';
+  const popoverWidth =
+    attrs.popoverWidth || attrs['popover-width'] || (merged.popoverWidth as string) || 'rest';
 
   if (component === 'dropdown-upload' && !metaPath.trim()) {
     const controlId = pathAttr || label || idBase || 'unknown';
@@ -269,6 +271,7 @@ export async function buildContext(
     allowStructure,
     accept: component === 'dropdown-upload' ? accept : undefined,
     maxSizeMb: component === 'dropdown-upload' ? maxSizeMb : undefined,
+    popoverWidth,
     axis: component === 'dropdown-shadow' ? axis : undefined,
     indexToken,
     id,

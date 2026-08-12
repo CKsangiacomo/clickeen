@@ -730,3 +730,18 @@ authorizes it.
   existing compiler still joins those labels into the one Dieter stencil. No
   new link workflow, catalog, compatibility alias, validation layer, storage,
   route, product-data, or deployment machinery was added.
+
+- **Shared Popover work-area widths — passed, 2026-08-11.** Popover now owns
+  one independent `rest|large|xl` width contract for the four work-area
+  dropdowns: Border, Edit, Fill, and Shadow. Rest matches the closed row;
+  large and XL preserve its left edge and add exactly 40px or 80px to the open
+  surface's right edge over the workspace. The existing shared dropdown
+  hydrator positions expanded Popovers above ToolDrawer clipping and keeps
+  them aligned while the row scrolls or resizes. Widget field attrs pass the
+  width through Bob's existing stencil context; the choice does not change
+  `sm|md|lg` control geometry, copy, value binding, editor behavior, the
+  ToolDrawer width, or the workspace layout. Dropdown Actions and Upload stay
+  at rest width. DevStudio generates the generic Popover widths and open
+  Border/Edit/Fill/Shadow examples from the real Dieter specs. No portal,
+  Widget branch, new component, locale path, validation layer, service,
+  storage, product-data, Cloudflare, or deployment change was added.

@@ -1,7 +1,7 @@
 {
   "component": "dropdown-edit",
   "description": "Inline rich text editor with popover workflow",
-  "syntax": "<tooldrawer-field type='dropdown-edit' label='{{LABEL}}' size='{{SIZE}}' path='{{PATH}}' placeholder='{{PLACEHOLDER}}' />",
+  "syntax": "<tooldrawer-field type='dropdown-edit' label='{{LABEL}}' size='{{SIZE}}' popover-width='{{POPOVER_WIDTH}}' path='{{PATH}}' placeholder='{{PLACEHOLDER}}' />",
   "attributes": {
     "type": {
       "value": "dropdown-edit",
@@ -25,6 +25,13 @@
       "default": "md",
       "required": false,
       "description": "Closed control size - sm (20px), md (24px), lg (28px) height"
+    },
+    "popoverWidth": {
+      "type": "enum",
+      "values": ["rest", "large", "xl"],
+      "default": "rest",
+      "required": false,
+      "description": "Open Popover width: rest row, plus 40px, or plus 80px"
     },
     "path": {
       "type": "string",
@@ -58,6 +65,7 @@
       "spec": ["diet-dropdown-edit", "data-size='{{size}}'"],
       "context": {
         "size": "sm",
+        "popoverWidth": "rest",
         "id": "dropdown-edit-{{size}}",
         "label": "Label",
         "headerLabel": "Label",
@@ -82,13 +90,43 @@
       }
     },
     {
-      "id": "dropdown-edit-open",
-      "title": "Open editor",
+      "id": "dropdown-edit-large-popover",
+      "title": "Open editor — row width + 40px",
       "sizes": ["md"],
-      "spec": ["diet-dropdown-edit", "data-size='md'", "data-state='open'"],
+      "spec": ["diet-dropdown-edit", "data-size='md'", "popover-width='large'", "data-state='open'"],
       "context": {
         "size": "md",
-        "id": "dropdown-edit-open",
+        "popoverWidth": "large",
+        "id": "dropdown-edit-large-popover",
+        "label": "Description",
+        "headerLabel": "Description",
+        "placeholder": "Make selected text bold, italic, underlined, struck through, or linked.",
+        "path": "",
+        "addLinkLabel": "Add link",
+        "boldLabel": "Bold",
+        "clearFormattingLabel": "Clear formatting",
+        "italicLabel": "Italic",
+        "linkLabel": "Link",
+        "removeLinkLabel": "Remove link",
+        "strikethroughLabel": "Strikethrough",
+        "underlineLabel": "Underline",
+        "urlLabel": "URL",
+        "state": "open",
+        "expanded": "true"
+      },
+      "sizeContext": {
+        "md": { "labelClass": "label-s", "bodyClass": "body-s" }
+      }
+    },
+    {
+      "id": "dropdown-edit-xl-popover",
+      "title": "Open editor — row width + 80px",
+      "sizes": ["md"],
+      "spec": ["diet-dropdown-edit", "data-size='md'", "popover-width='xl'", "data-state='open'"],
+      "context": {
+        "size": "md",
+        "popoverWidth": "xl",
+        "id": "dropdown-edit-xl-popover",
         "label": "Description",
         "headerLabel": "Description",
         "placeholder": "Make selected text bold, italic, underlined, struck through, or linked.",

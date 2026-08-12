@@ -306,6 +306,13 @@ State-bound fields use `path`. Visual grouping uses `groupId`; it is not a data
 path. Template children are allowed only inside controls that already own that
 template behavior.
 
+Dropdown Border, Dropdown Edit, Dropdown Fill, and Dropdown Shadow may declare
+`attrs["popover-width"]` as `rest`, `large`, or `xl`. The default `rest` width
+matches the closed row; `large` and `xl` extend only the open Popover 40px or
+80px to the right. This width does not change the field's existing `sm|md|lg`
+control size, state path, labels, or editing behavior. Dropdown Actions and
+Dropdown Upload do not use this attribute.
+
 ## Dieter Mapping
 
 The widget artifact generator reads Dieter stencils from source:

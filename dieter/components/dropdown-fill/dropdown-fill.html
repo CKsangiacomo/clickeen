@@ -1,7 +1,7 @@
 <div
   class="diet-dropdown-fill diet-popover-host"
   data-size="{{size}}"
-  data-state="closed"
+  data-state="{{state}}"
   data-mode="color"
   data-allow-image="{{allowImage}}"
   data-fill-modes="{{fillModes}}"
@@ -20,7 +20,7 @@
     type="button"
     class="diet-dropdown-header diet-dropdown-fill__control"
     aria-haspopup="dialog"
-    aria-expanded="false"
+    aria-expanded="{{expanded}}"
     {{#if label}}aria-labelledby="{{id}}-label"{{/if}}
   >
     {{#if label}}
@@ -37,9 +37,10 @@
 
   <div
     class="diet-popover diet-dropdown-fill__popover"
+    data-width="{{popoverWidth}}"
     role="dialog"
     aria-label="{{popoverLabel}}"
-    data-state="closed"
+    data-state="{{state}}"
   >
     <div class="diet-popover__header">
       <span class="diet-popover__header-label {{#if headerLabelClass}}{{headerLabelClass}}{{else}}label-s{{/if}}">

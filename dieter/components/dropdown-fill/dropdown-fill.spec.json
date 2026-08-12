@@ -1,8 +1,9 @@
 {
   "component": "dropdown-fill",
-  "syntax": "<tooldrawer-field type='dropdown-fill' size='{{SIZE}}' path='{{PATH}}' label='{{LABEL}}' placeholder='{{PLACEHOLDER}}' value='{{VALUE}}' fillModes='{{FILL_MODES}}' allowImage='{{ALLOW_IMAGE}}' />",
+  "syntax": "<tooldrawer-field type='dropdown-fill' size='{{SIZE}}' popover-width='{{POPOVER_WIDTH}}' path='{{PATH}}' label='{{LABEL}}' placeholder='{{PLACEHOLDER}}' value='{{VALUE}}' fillModes='{{FILL_MODES}}' allowImage='{{ALLOW_IMAGE}}' />",
   "attributes": {
     "size": { "enum": ["sm", "md", "lg"], "default": "md" },
+    "popoverWidth": { "enum": ["rest", "large", "xl"], "default": "rest" },
     "path": { "optional": true },
     "label": { "optional": true },
     "headerLabel": { "optional": true },
@@ -19,6 +20,9 @@
       "spec": ["diet-dropdown-fill", "data-size='{{size}}'"],
       "context": {
         "size": "md",
+        "popoverWidth": "rest",
+        "state": "closed",
+        "expanded": "false",
         "id": "dropdown-fill-{{size}}",
         "label": "Label",
         "placeholder": "Select a fill",
@@ -36,6 +40,54 @@
         "sm": { "labelClass": "label-xs", "bodyClass": "body-xs" },
         "md": { "labelClass": "label-s", "bodyClass": "body-s" },
         "lg": { "labelClass": "label-m", "bodyClass": "body-m" }
+      }
+    },
+    {
+      "id": "dropdown-fill-large-popover",
+      "title": "Open Popover — row width + 40px",
+      "sizes": ["md"],
+      "spec": ["diet-dropdown-fill", "popover-width='large'", "data-state='open'"],
+      "context": {
+        "size": "md",
+        "popoverWidth": "large",
+        "state": "open",
+        "expanded": "true",
+        "id": "dropdown-fill-large-popover",
+        "label": "Fill",
+        "placeholder": "Select a fill",
+        "value": "",
+        "path": "",
+        "allowImage": true,
+        "fillModes": "color,gradient,image",
+        "popoverLabel": "Fill options",
+        "labelClass": "label-s",
+        "bodyClass": "body-s",
+        "headerLabel": "Fill",
+        "headerLabelClass": "label-s"
+      }
+    },
+    {
+      "id": "dropdown-fill-xl-popover",
+      "title": "Open Popover — row width + 80px",
+      "sizes": ["md"],
+      "spec": ["diet-dropdown-fill", "popover-width='xl'", "data-state='open'"],
+      "context": {
+        "size": "md",
+        "popoverWidth": "xl",
+        "state": "open",
+        "expanded": "true",
+        "id": "dropdown-fill-xl-popover",
+        "label": "Fill",
+        "placeholder": "Select a fill",
+        "value": "",
+        "path": "",
+        "allowImage": true,
+        "fillModes": "color,gradient,image",
+        "popoverLabel": "Fill options",
+        "labelClass": "label-s",
+        "bodyClass": "body-s",
+        "headerLabel": "Fill",
+        "headerLabelClass": "label-s"
       }
     }
   ]

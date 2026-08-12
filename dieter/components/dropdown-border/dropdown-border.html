@@ -1,7 +1,7 @@
 <div
   class="diet-dropdown-border diet-popover-host"
   data-size="{{size}}"
-  data-state="closed"
+  data-state="{{state}}"
 >
   <input
     id="{{id}}"
@@ -16,7 +16,7 @@
     type="button"
     class="diet-dropdown-header diet-dropdown-border__control"
     aria-haspopup="dialog"
-    aria-expanded="false"
+    aria-expanded="{{expanded}}"
     aria-labelledby="{{id}}-label"
   >
     <span class="diet-dropdown-header-label" id="{{id}}-label">{{label}}</span>
@@ -34,9 +34,10 @@
 
   <div
     class="diet-popover diet-dropdown-border__popover"
+    data-width="{{popoverWidth}}"
     role="dialog"
     aria-labelledby="{{id}}-popover-label"
-    data-state="closed"
+    data-state="{{state}}"
   >
     <div class="diet-popover__header">
       <span class="diet-popover__header-label" id="{{id}}-popover-label">{{label}}</span>

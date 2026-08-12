@@ -1,8 +1,9 @@
 {
   "component": "dropdown-border",
-  "syntax": "<tooldrawer-field type='dropdown-border' size='{{SIZE}}' path='{{PATH}}' label='{{LABEL}}' value='{{VALUE}}' />",
+  "syntax": "<tooldrawer-field type='dropdown-border' size='{{SIZE}}' popover-width='{{POPOVER_WIDTH}}' path='{{PATH}}' label='{{LABEL}}' value='{{VALUE}}' />",
   "attributes": {
     "size": { "enum": ["sm", "md", "lg"], "default": "md" },
+    "popoverWidth": { "enum": ["rest", "large", "xl"], "default": "rest" },
     "path": { "optional": true },
     "label": { "required": true },
     "value": { "optional": true },
@@ -21,7 +22,54 @@
       "spec": ["diet-dropdown-border", "data-size='{{size}}'"],
       "context": {
         "size": "md",
+        "popoverWidth": "rest",
+        "state": "closed",
+        "expanded": "false",
         "id": "dropdown-border-{{size}}",
+        "label": "Border",
+        "value": "{\"enabled\":true,\"width\":1,\"color\":\"#c7c7cc\"}",
+        "path": "",
+        "colorLabel": "Border color",
+        "defaultColorsLabel": "Default colors",
+        "enabledLabel": "Enabled",
+        "hexLabel": "Hex",
+        "hueLabel": "Hue",
+        "widthLabel": "Width"
+      }
+    },
+    {
+      "id": "dropdown-border-large-popover",
+      "title": "Open Popover — row width + 40px",
+      "sizes": ["md"],
+      "spec": ["diet-dropdown-border", "popover-width='large'", "data-state='open'"],
+      "context": {
+        "size": "md",
+        "popoverWidth": "large",
+        "state": "open",
+        "expanded": "true",
+        "id": "dropdown-border-large-popover",
+        "label": "Border",
+        "value": "{\"enabled\":true,\"width\":1,\"color\":\"#c7c7cc\"}",
+        "path": "",
+        "colorLabel": "Border color",
+        "defaultColorsLabel": "Default colors",
+        "enabledLabel": "Enabled",
+        "hexLabel": "Hex",
+        "hueLabel": "Hue",
+        "widthLabel": "Width"
+      }
+    },
+    {
+      "id": "dropdown-border-xl-popover",
+      "title": "Open Popover — row width + 80px",
+      "sizes": ["md"],
+      "spec": ["diet-dropdown-border", "popover-width='xl'", "data-state='open'"],
+      "context": {
+        "size": "md",
+        "popoverWidth": "xl",
+        "state": "open",
+        "expanded": "true",
+        "id": "dropdown-border-xl-popover",
         "label": "Border",
         "value": "{\"enabled\":true,\"width\":1,\"color\":\"#c7c7cc\"}",
         "path": "",

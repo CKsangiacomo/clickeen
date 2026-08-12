@@ -1,8 +1,9 @@
 {
   "component": "dropdown-shadow",
-  "syntax": "<tooldrawer-field type='dropdown-shadow' size='{{SIZE}}' path='{{PATH}}' label='{{LABEL}}' placeholder='{{PLACEHOLDER}}' value='{{VALUE}}' />",
+  "syntax": "<tooldrawer-field type='dropdown-shadow' size='{{SIZE}}' popover-width='{{POPOVER_WIDTH}}' path='{{PATH}}' label='{{LABEL}}' placeholder='{{PLACEHOLDER}}' value='{{VALUE}}' />",
   "attributes": {
     "size": { "enum": ["sm", "md", "lg"], "default": "md" },
+    "popoverWidth": { "enum": ["rest", "large", "xl"], "default": "rest" },
     "path": { "optional": true },
     "label": { "optional": true },
     "headerLabel": { "optional": true },
@@ -18,6 +19,9 @@
       "spec": ["diet-dropdown-shadow", "data-size='{{size}}'"],
       "context": {
         "size": "md",
+        "popoverWidth": "rest",
+        "state": "closed",
+        "expanded": "false",
         "id": "dropdown-shadow-{{size}}",
         "label": "Label",
         "placeholder": "Select a shadow",
@@ -33,6 +37,50 @@
         "sm": { "labelClass": "label-xs", "bodyClass": "body-xs" },
         "md": { "labelClass": "label-s", "bodyClass": "body-s" },
         "lg": { "labelClass": "label-m", "bodyClass": "body-m" }
+      }
+    },
+    {
+      "id": "dropdown-shadow-large-popover",
+      "title": "Open Popover — row width + 40px",
+      "sizes": ["md"],
+      "spec": ["diet-dropdown-shadow", "popover-width='large'", "data-state='open'"],
+      "context": {
+        "size": "md",
+        "popoverWidth": "large",
+        "state": "open",
+        "expanded": "true",
+        "id": "dropdown-shadow-large-popover",
+        "label": "Shadow",
+        "placeholder": "Select a shadow",
+        "value": "",
+        "path": "",
+        "popoverLabel": "Shadow options",
+        "labelClass": "label-s",
+        "bodyClass": "body-s",
+        "headerLabel": "Shadow",
+        "headerLabelClass": "label-s"
+      }
+    },
+    {
+      "id": "dropdown-shadow-xl-popover",
+      "title": "Open Popover — row width + 80px",
+      "sizes": ["md"],
+      "spec": ["diet-dropdown-shadow", "popover-width='xl'", "data-state='open'"],
+      "context": {
+        "size": "md",
+        "popoverWidth": "xl",
+        "state": "open",
+        "expanded": "true",
+        "id": "dropdown-shadow-xl-popover",
+        "label": "Shadow",
+        "placeholder": "Select a shadow",
+        "value": "",
+        "path": "",
+        "popoverLabel": "Shadow options",
+        "labelClass": "label-s",
+        "bodyClass": "body-s",
+        "headerLabel": "Shadow",
+        "headerLabelClass": "label-s"
       }
     }
   ]

@@ -16,6 +16,18 @@ type HostRecord = {
   onClose?: (root: HTMLElement, popover: HTMLElement, trigger: HTMLElement) => void;
 };
 
+function syncPopoverGeometry(record: HostRecord): void {
+  const { popover, root } = record;
+  const width = popover.dataset.width;
+  if (width !== 'large' && width !== 'xl') return;
+
+  const rect = root.getBoundingClientRect();
+  const extension = width === 'large' ? 40 : 80;
+  popover.style.setProperty('--popover-fixed-left', `${rect.left}px`);
+  popover.style.setProperty('--popover-fixed-top', `${rect.top}px`);
+  popover.style.setProperty('--popover-fixed-width', `${rect.width + extension}px`);
+}
+
 export type DropdownHydrator = {
   (scope: Element | DocumentFragment): void;
   setOpen: (root: HTMLElement, open: boolean) => void;
@@ -38,10 +50,14 @@ export function createDropdownHydrator(config: DropdownHydrateConfig): DropdownH
   const setOpen = (record: HostRecord, open: boolean) => {
     const { root, trigger, popover } = record;
     const next = open ? 'open' : 'closed';
-    if (root.dataset.state === next) return;
+    if (root.dataset.state === next) {
+      if (open) syncPopoverGeometry(record);
+      return;
+    }
     root.dataset.state = next;
     trigger.setAttribute('aria-expanded', open ? 'true' : 'false');
     if (open) {
+      syncPopoverGeometry(record);
       record.onOpen?.(root, popover, trigger);
     } else {
       record.onClose?.(root, popover, trigger);
@@ -54,7 +70,11 @@ export function createDropdownHydrator(config: DropdownHydrateConfig): DropdownH
     if (!roots.length) return;
 
     roots.forEach((root) => {
-      if (hostRegistry.has(root)) return;
+      const existingRecord = hostRegistry.get(root);
+      if (existingRecord) {
+        if (root.dataset.state === 'open') syncPopoverGeometry(existingRecord);
+        return;
+      }
 
       const trigger = root.querySelector<HTMLElement>(triggerSelector);
       const popover = root.querySelector<HTMLElement>(popoverSelector);
@@ -100,6 +120,14 @@ export function createDropdownHydrator(config: DropdownHydrateConfig): DropdownH
           if (root.dataset.state === 'open') setOpen(record, false);
         });
       });
+
+      const syncOpenPopovers = () => {
+        hostRegistry.forEach((record) => {
+          if (record.root.dataset.state === 'open') syncPopoverGeometry(record);
+        });
+      };
+      document.addEventListener('scroll', syncOpenPopovers, true);
+      window.addEventListener('resize', syncOpenPopovers);
     }
   };
 

@@ -464,6 +464,14 @@ link** for an existing link; it has no Apply/Update or second link action. No
 per-field link flag, Widget branch, runtime catalog fetch, or Lexical storage
 document exists.
 
+For Dropdown Border, Edit, Fill, and Shadow, Bob's existing stencil compiler
+passes the Widget field's optional `popover-width` value to Dieter. `rest`
+matches the closed row; `large` and `xl` add 40px or 80px to the open surface's
+right edge. Dieter's shared Popover positioning keeps the left edge on the row
+and overlays the workspace so Bob does not resize the ToolDrawer, workspace, or
+editor session. The width choice does not change the control's value or
+behavior.
+
 Bob's visible control taxonomy is `Panel > Section > optional Group > Control`.
 Widget specs own the five fixed widget panel ids and label-token coordinates;
 the adjacent English file owns widget-authored ToolDrawer copy. Bob rejects
