@@ -73,7 +73,7 @@
           <input class="diet-segment__input diet-dropdown-fill__mode-input" type="radio" name="{{id}}-mode" value="color" checked />
           <span class="diet-segment__surface"></span>
           <button class="diet-button" data-size="{{buttonSize}}" data-type="quaternary" tabindex="-1" type="button" aria-label="{{colorFillLabel}}">
-            <span class="diet-icon" data-icon="circle.lefthalf.filled" aria-hidden="true"></span>
+            <span class="diet-icon" data-size="20" data-icon="circle.lefthalf.filled" aria-hidden="true"></span>
           </button>
           <span class="diet-segment__sr">{{colorFillLabel}}</span>
         </label>
@@ -81,7 +81,7 @@
           <input class="diet-segment__input diet-dropdown-fill__mode-input" type="radio" name="{{id}}-mode" value="gradient" />
           <span class="diet-segment__surface"></span>
           <button class="diet-button" data-size="{{buttonSize}}" data-type="quaternary" tabindex="-1" type="button" aria-label="{{gradientFillLabel}}">
-            <span class="diet-icon" data-icon="circle.dotted" aria-hidden="true"></span>
+            <span class="diet-icon" data-size="20" data-icon="circle.dotted" aria-hidden="true"></span>
           </button>
           <span class="diet-segment__sr">{{gradientFillLabel}}</span>
         </label>
@@ -89,7 +89,7 @@
           <input class="diet-segment__input diet-dropdown-fill__mode-input" type="radio" name="{{id}}-mode" value="image" />
           <span class="diet-segment__surface"></span>
           <button class="diet-button" data-size="{{buttonSize}}" data-type="quaternary" tabindex="-1" type="button" aria-label="{{imageFillLabel}}">
-            <span class="diet-icon" data-icon="photo" aria-hidden="true"></span>
+            <span class="diet-icon" data-size="20" data-icon="photo" aria-hidden="true"></span>
           </button>
           <span class="diet-segment__sr">{{imageFillLabel}}</span>
         </label>
@@ -97,7 +97,7 @@
           <input class="diet-segment__input diet-dropdown-fill__mode-input" type="radio" name="{{id}}-mode" value="video" />
           <span class="diet-segment__surface"></span>
           <button class="diet-button" data-size="{{buttonSize}}" data-type="quaternary" tabindex="-1" type="button" aria-label="{{videoFillLabel}}">
-            <span class="diet-icon" data-icon="play.square" aria-hidden="true"></span>
+            <span class="diet-icon" data-size="20" data-icon="play.square" aria-hidden="true"></span>
           </button>
           <span class="diet-segment__sr">{{videoFillLabel}}</span>
         </label>
@@ -236,7 +236,8 @@
               <span class="diet-dropdown-fill__gradient-stop-line" aria-hidden="true"></span>
             </div>
             <button type="button" class="diet-button diet-dropdown-fill__gradient-stop-add" data-size="{{buttonSize}}" data-type="quaternary" aria-label="{{addGradientStopLabel}}">
-              <span class="diet-icon" data-icon="plus" aria-hidden="true"></span>
+              <span class="diet-icon diet-dropdown-fill__gradient-stop-add-icon" data-icon="plus" aria-hidden="true"></span>
+              <span class="diet-icon diet-dropdown-fill__gradient-stop-remove-icon" data-icon="minus" aria-hidden="true" hidden></span>
             </button>
           </div>
           <div class="diet-dropdown-fill__gradient-editor">

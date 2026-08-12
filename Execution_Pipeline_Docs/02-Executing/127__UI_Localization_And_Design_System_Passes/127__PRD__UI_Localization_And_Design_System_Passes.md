@@ -887,3 +887,19 @@ authorizes it.
   288px Popover, 272px editor, four equal mode segments, 112px color/media
   surfaces, exact `none` on disable, hidden dependent controls, and exact prior
   color restoration on re-enable.
+
+- **Dropdown Fill Icon correction — passed locally, 2026-08-12.** The Fill
+  mode selector remains the existing icon-only Segmented primitive, but its
+  glyphs now use the established 1.25rem rich-editor toolbar Icon size at every
+  Fill root size. The current medium ToolDrawer selector therefore matches the
+  established Dropdown Edit toolbar scale instead of the ordinary medium
+  Button's smaller default Icon. The gradient-stop action
+  remains one contextual Button, but its add and remove glyphs are now two
+  ordinary pre-rendered Dieter Icons whose visibility changes with the action;
+  the inactive Icon is explicitly removed from layout by one component-scoped
+  hidden rule.
+  The former post-hydration `data-icon` rewrite is deleted; it could expose an
+  unmasked color square in DevStudio after its inline-SVG hydration. No new
+  icon loader, component, fill behavior, Widget branch, locale key, value
+  contract, compatibility path, service, storage, product data, or Cloudflare
+  machinery was added.

@@ -182,7 +182,14 @@ so an explicit re-enable can restore it. There is no separate remove-fill
 action or second persisted enabled field.
 
 Toggle, Segmented, Slider, Textfield, and Button use the root component's
-`sm|md|lg` size; current product ToolDrawers use `md`. The solid and gradient
+`sm|md|lg` size; current product ToolDrawers use `md`. The icon-only mode
+selector uses the established 1.25rem toolbar Icon size at every root size,
+keeping its mode glyphs legible without changing the surrounding Segmented
+geometry.
+The gradient-stop action uses one Button and two normally rendered Dieter Icons
+for its add/remove states instead of rewriting an Icon source after hydration;
+the inactive Icon is removed from layout by the component's local hidden rule.
+The solid and gradient
 panels share the system Slider/Textfield geometry, the
 compact `6rem/7rem/8rem` saturation/value canvas ladder, a trailing opacity
 value, one Hex row, and one nine-column two-row palette. Only the white swatch

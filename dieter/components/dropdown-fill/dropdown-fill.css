@@ -253,6 +253,10 @@
   flex: 0 0 auto;
 }
 
+.diet-dropdown-fill__gradient-stop-add .diet-icon[hidden] {
+  display: none;
+}
+
 .diet-dropdown-fill__gradient-stop-add.is-remove {
   color: var(--color-system-pink);
 }

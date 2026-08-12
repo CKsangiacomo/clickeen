@@ -139,8 +139,10 @@ function updateGradientAddButton(state: DropdownFillState): void {
   if (!button) return;
   const { sorted, index } = getActiveGradientStopIndex(state);
   const removable = index > 0 && index < sorted.length - 1;
-  const icon = button.querySelector<HTMLElement>('.diet-icon')!;
-  icon.dataset.icon = removable ? 'minus' : 'plus';
+  const addIcon = button.querySelector<HTMLElement>('.diet-dropdown-fill__gradient-stop-add-icon')!;
+  const removeIcon = button.querySelector<HTMLElement>('.diet-dropdown-fill__gradient-stop-remove-icon')!;
+  addIcon.hidden = removable;
+  removeIcon.hidden = !removable;
   button.classList.toggle('is-remove', removable);
   button.setAttribute(
     'aria-label',

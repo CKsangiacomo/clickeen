@@ -189,7 +189,14 @@ The governing component product law is:
   remove-fill row, second enabled field, or Fill-only tab system.
 
   Toggle, Segmented, Slider, Textfield, and Button use the Dropdown Fill
-  root's `sm|md|lg` size; the current product ToolDrawer uses `md`. Solid color
+  root's `sm|md|lg` size; the current product ToolDrawer uses `md`. The
+  icon-only mode selector uses the established 1.25rem toolbar Icon size at
+  every root size, keeping those mode glyphs as legible as the rich-editor
+  toolbar without changing the surrounding Segmented geometry.
+  Gradient-stop add/remove is one Dieter Button with two ordinary pre-rendered
+  Dieter Icons; the component changes which Icon is visible without dynamically
+  replacing an Icon source, and its local hidden rule removes the inactive Icon
+  from layout. Solid color
   and gradient editing use the shared Slider/Textfield geometry,
   the compact `6rem/7rem/8rem` color-canvas ladder, a trailing opacity value,
   one Hex row, and one direct nine-column two-row palette. Swatches are two pixels smaller
