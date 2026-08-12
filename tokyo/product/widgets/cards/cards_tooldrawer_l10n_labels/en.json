@@ -26,7 +26,7 @@
     "component.dropdown-fill.opacity.label": "Opacity",
     "component.dropdown-fill.preview-asset-error.label": "Asset preview could not be loaded.",
     "component.dropdown-fill.remove-asset.label": "Remove asset",
-    "component.dropdown-fill.remove-fill.label": "Remove fill",
+    "component.dropdown-fill.enabled.label": "Enabled",
     "component.dropdown-fill.remove-gradient-stop.label": "Remove gradient stop",
     "component.dropdown-fill.upload-asset-error.label": "Asset upload failed.",
     "component.dropdown-fill.upload.label": "Upload",

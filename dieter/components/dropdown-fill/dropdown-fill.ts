@@ -89,17 +89,16 @@ function createState(root: HTMLElement, accountAssets: AccountAssetsClient): Dro
   const input = root.querySelector<HTMLInputElement>('.diet-dropdown-fill__value-field')!;
   const headerValue = root.querySelector<HTMLElement>('.diet-dropdown-header-value');
   const headerValueLabel = root.querySelector<HTMLElement>('.diet-dropdown-fill__label');
+  const headerValueNoneIcon = root.querySelector<HTMLElement>('.diet-dropdown-fill__none-icon');
   const headerValueChip = root.querySelector<HTMLElement>('.diet-dropdown-fill__chip');
-  const preview = root.querySelector<HTMLElement>('.diet-dropdown-fill__preview');
-  const nativeColorInput = root.querySelector<HTMLInputElement>('.diet-dropdown-fill__native-color');
+  const enabledInput = root.querySelector<HTMLInputElement>('.diet-dropdown-fill__enabled-input')!;
+  const editor = root.querySelector<HTMLElement>('.diet-dropdown-fill__editor')!;
   const hueInput = root.querySelector<HTMLInputElement>('.diet-dropdown-fill__hue')!;
   const alphaInput = root.querySelector<HTMLInputElement>('.diet-dropdown-fill__alpha')!;
+  const alphaValue = root.querySelector<HTMLOutputElement>('.diet-dropdown-fill__panel--color .diet-dropdown-fill__slider-value')!;
   const hexField = root.querySelector<HTMLInputElement>('.diet-dropdown-fill__hex')!;
-  const alphaField = root.querySelector<HTMLInputElement>('.diet-dropdown-fill__alpha-input')!;
   const svCanvas = root.querySelector<HTMLElement>('.diet-dropdown-fill__sv-canvas')!;
   const svThumb = root.querySelector<HTMLElement>('.diet-dropdown-fill__sv-thumb')!;
-  const colorPreview = root.querySelector<HTMLElement>('.diet-dropdown-fill__color-preview');
-  const removeFillActions = Array.from(root.querySelectorAll<HTMLButtonElement>('.diet-dropdown-fill__remove-fill'));
   const swatches = Array.from(root.querySelectorAll<HTMLButtonElement>('.diet-dropdown-fill__swatch'));
   const gradientPreview = root.querySelector<HTMLElement>('.diet-dropdown-fill__gradient-preview');
   const gradientAngleInput = root.querySelector<HTMLInputElement>('.diet-dropdown-fill__gradient-angle');
@@ -110,8 +109,8 @@ function createState(root: HTMLElement, accountAssets: AccountAssetsClient): Dro
   const gradientStopSvThumb = root.querySelector<HTMLElement>('.diet-dropdown-fill__gradient-sv-thumb');
   const gradientStopHueInput = root.querySelector<HTMLInputElement>('.diet-dropdown-fill__gradient-hue');
   const gradientStopAlphaInput = root.querySelector<HTMLInputElement>('.diet-dropdown-fill__gradient-alpha');
+  const gradientStopAlphaValue = root.querySelector<HTMLOutputElement>('.diet-dropdown-fill__panel--gradient .diet-dropdown-fill__slider-value');
   const gradientStopHexInput = root.querySelector<HTMLInputElement>('.diet-dropdown-fill__gradient-hex');
-  const gradientStopAlphaField = root.querySelector<HTMLInputElement>('.diet-dropdown-fill__gradient-alpha-field');
   const gradientStops = createDefaultGradientStops(root);
   const gradientActiveStopId = gradientStops[0]?.id ?? '';
   const imagePanel = root.querySelector<HTMLElement>(".diet-dropdown-fill__panel--image");
@@ -163,15 +162,14 @@ function createState(root: HTMLElement, accountAssets: AccountAssetsClient): Dro
     input,
     headerValue,
     headerValueLabel,
+    headerValueNoneIcon,
     headerValueChip,
-    preview,
-    nativeColorInput,
-    colorPreview,
-    removeFillActions,
+    enabledInput,
+    editor,
     hueInput,
     alphaInput,
+    alphaValue,
     hexField,
-    alphaField,
     svCanvas,
     svThumb,
     swatches,
@@ -186,8 +184,8 @@ function createState(root: HTMLElement, accountAssets: AccountAssetsClient): Dro
     gradientStopSvThumb,
     gradientStopHueInput,
     gradientStopAlphaInput,
+    gradientStopAlphaValue,
     gradientStopHexInput,
-    gradientStopAlphaField,
     gradientActiveStopId,
     gradientStops,
     gradient: { kind: DEFAULT_GRADIENT.kind, angle: DEFAULT_GRADIENT.angle },
@@ -222,6 +220,7 @@ function createState(root: HTMLElement, accountAssets: AccountAssetsClient): Dro
     videoResolveRequestId: 0,
     allowedModes,
     mode,
+    lastEnabledValue: null,
     nativeValue,
     internalWrite: false,
   };
@@ -261,46 +260,19 @@ function installHandlers(state: DropdownFillState) {
   state.hexField.addEventListener('change', () => handleHexInput(state));
   state.hexField.addEventListener('blur', () => handleHexInput(state));
 
-  state.alphaField.addEventListener('change', () => handleAlphaField(state));
-  state.alphaField.addEventListener('blur', () => handleAlphaField(state));
+  state.enabledInput.addEventListener('change', () => {
+    if (state.enabledInput.checked) {
+      enableFill(state);
+      return;
+    }
+    setInputValue(state, { type: 'none' }, true);
+  });
 
   installSvCanvasHandlers(state);
   installSwatchHandlers(state);
   installGradientHandlers(state, mediaDeps());
   installImageHandlers(state);
   installVideoHandlers(state);
-  installNativeColorPicker(state);
-
-  if (state.removeFillActions.length) {
-    state.removeFillActions.forEach((action) => {
-      action.addEventListener('click', (event) => {
-        event.preventDefault();
-        if (action.disabled) return;
-        setInputValue(state, { type: 'none' }, true);
-      });
-    });
-  }
-}
-
-function installNativeColorPicker(state: DropdownFillState) {
-  const { preview, nativeColorInput } = state;
-  if (!preview || !nativeColorInput) return;
-
-  preview.addEventListener('click', (event) => {
-    event.preventDefault();
-    // Keep the native picker in sync with the current color.
-    const hex = formatHex({ ...state.hsv, a: 1 });
-    nativeColorInput.value = hex;
-    nativeColorInput.click();
-  });
-
-  nativeColorInput.addEventListener('input', () => {
-    const rgba = hexToRgba(nativeColorInput.value);
-    if (!rgba) return;
-    // Preserve alpha; native color input only picks RGB.
-    state.hsv = { ...rgbToHsv(rgba.r, rgba.g, rgba.b, 1), a: state.hsv.a || 1 };
-    syncColorUI(state, { commit: true });
-  });
 }
 
 function installSvCanvasHandlers(state: DropdownFillState) {
@@ -336,7 +308,6 @@ function mediaDeps(): DropdownFillUiDeps {
   return {
     setInputValue,
     updateHeader,
-    setRemoveFillState,
   };
 }
 
@@ -357,6 +328,10 @@ function setVideoSrc(state: DropdownFillState, src: string | null, opts: SetMedi
 }
 
 function setInputValue(state: DropdownFillState, value: FillValue, emit: boolean) {
+  const current = parseFillValue(state.input.value);
+  if (value.type === 'none' && current.type !== 'none') {
+    state.lastEnabledValue = current;
+  }
   const json = JSON.stringify(value);
   state.internalWrite = true;
   state.input.value = json;
@@ -365,13 +340,12 @@ function setInputValue(state: DropdownFillState, value: FillValue, emit: boolean
     state.input.dispatchEvent(new Event('input', { bubbles: true }));
   }
   state.internalWrite = false;
-}
-
-function setRemoveFillState(state: DropdownFillState, isEmpty: boolean) {
-  if (!state.removeFillActions.length) return;
-  state.removeFillActions.forEach((action) => {
-    action.disabled = isEmpty;
-  });
+  setEnabledState(state, value.type !== 'none');
+  if (value.type === 'none') {
+    updateHeader(state, { text: '', muted: true, chipColor: null, noneChip: true });
+  } else {
+    state.lastEnabledValue = value;
+  }
 }
 
 function getSwatchTarget(swatch: HTMLButtonElement): 'color' | 'gradient' {
@@ -406,19 +380,11 @@ function handleHexInput(state: DropdownFillState) {
   syncColorUI(state, { commit: true });
 }
 
-function handleAlphaField(state: DropdownFillState) {
-  const raw = state.alphaField.value.trim().replace('%', '');
-  const parsed = Number(raw);
-  if (!Number.isFinite(parsed) || parsed < 0 || parsed > 100) return;
-  const percent = parsed;
-  state.hsv.a = percent / 100;
-  syncColorUI(state, { commit: true });
-}
-
 function syncFromValue(state: DropdownFillState, raw: string) {
   const fill = parseFillValue(raw);
   const nextMode = resolveModeFromFill(state.mode, fill);
   setMode(state, nextMode);
+  setEnabledState(state, fill.type !== 'none');
 
   if (fill.type === 'none') {
     if (nextMode === 'image') {
@@ -447,6 +413,8 @@ function syncFromValue(state: DropdownFillState, raw: string) {
     syncColorUI(state, { commit: false });
     return;
   }
+
+  state.lastEnabledValue = fill;
 
   if (fill.type === 'color') {
     const parsed = parseColor(fill.color, state.root)!;
@@ -479,9 +447,8 @@ function syncFromValue(state: DropdownFillState, raw: string) {
   }
 }
 
-function syncColorUI(state: DropdownFillState, opts: { commit: boolean; updateHeader?: boolean; updateRemove?: boolean }) {
+function syncColorUI(state: DropdownFillState, opts: { commit: boolean; updateHeader?: boolean }) {
   const shouldUpdateHeader = opts.updateHeader !== false;
-  const shouldUpdateRemove = opts.updateRemove !== false;
   const { h, s, v, a } = state.hsv;
   const rgb = hsvToRgb(h, s, v);
   const hex = formatHex({ h, s, v, a: 1 });
@@ -500,9 +467,9 @@ function syncColorUI(state: DropdownFillState, opts: { commit: boolean; updateHe
   state.alphaInput.style.setProperty('--value', state.alphaInput.value);
   state.alphaInput.style.setProperty('--min', '0');
   state.alphaInput.style.setProperty('--max', '100');
+  state.alphaValue.value = `${alphaPercent}%`;
 
   state.hexField.value = hex.replace(/^#/, '');
-  state.alphaField.value = `${alphaPercent}%`;
 
   const left = `${s * 100}%`;
   const top = `${(1 - v) * 100}%`;
@@ -523,13 +490,6 @@ function syncColorUI(state: DropdownFillState, opts: { commit: boolean; updateHe
     }
   }
 
-  if (state.colorPreview) {
-    state.colorPreview.style.backgroundColor = colorString;
-  }
-  if (shouldUpdateRemove) {
-    setRemoveFillState(state, alphaPercent === 0);
-  }
-
   const normalizedCurrent = normalizeHex(hex);
   state.swatches.forEach((swatch) => {
     if (getSwatchTarget(swatch) !== 'color') return;
@@ -544,7 +504,7 @@ function updateHeader(
   state: DropdownFillState,
   opts: DropdownFillHeaderUpdate,
 ): void {
-  const { headerValue, headerValueLabel, headerValueChip } = state;
+  const { headerValue, headerValueLabel, headerValueNoneIcon, headerValueChip } = state;
   if (headerValueLabel) headerValueLabel.textContent = opts.text;
   if (headerValue) {
     headerValue.dataset.muted = opts.muted ? 'true' : 'false';
@@ -553,21 +513,21 @@ function updateHeader(
   if (headerValueChip) {
     if (opts.noneChip === true) {
       headerValueChip.style.removeProperty('background');
-      headerValueChip.hidden = false;
-      headerValueChip.classList.add('is-none');
+      headerValueChip.hidden = true;
       headerValueChip.classList.remove('is-white');
+      if (headerValueNoneIcon) headerValueNoneIcon.hidden = false;
     } else if (opts.chipColor) {
       headerValueChip.style.background = opts.chipColor;
       headerValueChip.hidden = false;
-      headerValueChip.classList.remove('is-none');
+      if (headerValueNoneIcon) headerValueNoneIcon.hidden = true;
       const parsed = parseCssColor(opts.chipColor.trim());
       const isWhite = Boolean(parsed && parsed.r === 255 && parsed.g === 255 && parsed.b === 255);
       headerValueChip.classList.toggle('is-white', isWhite);
     } else {
       headerValueChip.style.background = 'transparent';
       headerValueChip.hidden = true;
-      headerValueChip.classList.remove('is-none');
       headerValueChip.classList.remove('is-white');
+      if (headerValueNoneIcon) headerValueNoneIcon.hidden = true;
     }
   }
 }
@@ -577,37 +537,37 @@ function setMode(state: DropdownFillState, mode: FillMode) {
   state.root.dataset.mode = mode;
   state.root.dataset.hasModes = state.allowedModes.length > 1 ? 'true' : 'false';
 
-  const buttons = Array.from(state.root.querySelectorAll<HTMLButtonElement>('.diet-dropdown-fill__mode-btn'));
-  buttons.forEach((btn) => {
-    const btnMode = btn.dataset.mode as FillMode;
-    const isAllowed = state.allowedModes.includes(btnMode);
-    btn.hidden = !isAllowed;
-    btn.disabled = !isAllowed;
-    const isActive = isAllowed && btnMode === mode;
-    btn.classList.toggle('is-active', isActive);
-    btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+  const segments = Array.from(state.root.querySelectorAll<HTMLElement>('.diet-dropdown-fill__mode'));
+  segments.forEach((segment) => {
+    const segmentMode = segment.dataset.mode as FillMode;
+    const isAllowed = state.allowedModes.includes(segmentMode);
+    segment.hidden = !isAllowed;
+    const input = segment.querySelector<HTMLInputElement>('.diet-dropdown-fill__mode-input')!;
+    const button = segment.querySelector<HTMLButtonElement>('.diet-button')!;
+    input.disabled = !isAllowed;
+    input.checked = isAllowed && segmentMode === mode;
+    button.setAttribute('aria-pressed', input.checked ? 'true' : 'false');
   });
-
 }
 
-function syncModeUI(state: DropdownFillState, opts: { commit: boolean; updateHeader?: boolean; updateRemove?: boolean }) {
+function syncModeUI(state: DropdownFillState, opts: { commit: boolean; updateHeader?: boolean }) {
   if (state.mode === 'gradient') {
     syncGradientUI(state, opts, mediaDeps());
     return;
   }
   if (state.mode === 'image') {
+    const hasAsset = Boolean(state.imageAssetRef);
     setImageSrc(state, state.imageSrc, {
-      commit: opts.commit && Boolean(state.imageAssetRef),
-      updateHeader: opts.updateHeader,
-      updateRemove: opts.updateRemove,
+      commit: opts.commit && hasAsset,
+      updateHeader: hasAsset ? opts.updateHeader : false,
     });
     return;
   }
   if (state.mode === 'video') {
+    const hasAsset = Boolean(state.videoAssetRef);
     setVideoSrc(state, state.videoSrc, {
-      commit: opts.commit && Boolean(state.videoAssetRef),
-      updateHeader: opts.updateHeader,
-      updateRemove: opts.updateRemove,
+      commit: opts.commit && hasAsset,
+      updateHeader: hasAsset ? opts.updateHeader : false,
     });
     return;
   }
@@ -615,17 +575,45 @@ function syncModeUI(state: DropdownFillState, opts: { commit: boolean; updateHea
 }
 
 function wireModes(state: DropdownFillState) {
-  const buttons = Array.from(state.root.querySelectorAll<HTMLButtonElement>('.diet-dropdown-fill__mode-btn'));
-  if (!buttons.length) return;
-  buttons.forEach((btn) => {
-    btn.addEventListener('click', (event) => {
-      event.preventDefault();
-      const mode = btn.dataset.mode as FillMode;
+  const inputs = Array.from(state.root.querySelectorAll<HTMLInputElement>('.diet-dropdown-fill__mode-input'));
+  inputs.forEach((input) => {
+    input.addEventListener('change', () => {
+      if (!input.checked) return;
+      const mode = input.value as FillMode;
       setMode(state, mode);
+      if (mode === 'color' && state.hsv.a === 0) state.hsv.a = 1;
       syncModeUI(state, { commit: true });
     });
   });
   setMode(state, state.mode);
+}
+
+function setEnabledState(state: DropdownFillState, enabled: boolean): void {
+  state.root.dataset.fillEnabled = enabled ? 'true' : 'false';
+  state.enabledInput.checked = enabled;
+  const modes = state.root.querySelector<HTMLElement>('.diet-dropdown-fill__modes')!;
+  const showModes = enabled && state.allowedModes.length > 1;
+  modes.hidden = !showModes;
+  state.editor.hidden = !enabled;
+}
+
+function enableFill(state: DropdownFillState): void {
+  if (state.lastEnabledValue) {
+    const value = state.lastEnabledValue;
+    setInputValue(state, value, true);
+    syncFromValue(state, JSON.stringify(value));
+    return;
+  }
+
+  setEnabledState(state, true);
+  if (state.mode === 'gradient') {
+    syncGradientUI(state, { commit: true }, mediaDeps());
+    return;
+  }
+  if (state.mode === 'color') {
+    state.hsv = { h: 0, s: 0, v: 0, a: 1 };
+    syncColorUI(state, { commit: true });
+  }
 }
 
 function captureNativeValue(input: HTMLInputElement): DropdownFillState['nativeValue'] {

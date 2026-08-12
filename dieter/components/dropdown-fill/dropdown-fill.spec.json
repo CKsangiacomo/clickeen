@@ -14,7 +14,9 @@
   "features": {
     "modes": "The caller declares the exact solid-color, gradient, image, and video modes it uses.",
     "copy": "The consuming Widget supplies all visible words through its adjacent ToolDrawer label file.",
-    "value": "One exact JSON fill value is projected by the host before hydration and emitted on each edit."
+    "value": "One exact JSON fill value is projected by the host before hydration and emitted on each edit.",
+    "enabled": "The Enabled toggle writes exact none when off and restores the same session's last exact fill when turned back on.",
+    "selector": "Multiple declared modes use the existing medium icon-only Segmented primitive; a single declared mode hides the selector."
   },
   "defaults": [
     {
@@ -46,7 +48,7 @@
         "addGradientStopLabel": "Add gradient stop",
         "editGradientStopLabel": "Edit gradient stop",
         "removeGradientStopLabel": "Remove gradient stop",
-        "removeFillLabel": "Remove fill",
+        "enabledLabel": "Enabled",
         "uploadLabel": "Upload",
         "chooseAssetsLabel": "Choose from assets",
         "removeAssetLabel": "Remove asset",
@@ -56,6 +58,11 @@
         "loadAssetsErrorLabel": "Assets could not be loaded.",
         "uploadAssetErrorLabel": "Asset upload failed.",
         "previewAssetErrorLabel": "Asset preview could not be loaded."
+      },
+      "sizeContext": {
+        "sm": { "buttonSize": "small" },
+        "md": { "buttonSize": "medium" },
+        "lg": { "buttonSize": "large" }
       }
     },
     {
@@ -88,7 +95,7 @@
         "addGradientStopLabel": "Add gradient stop",
         "editGradientStopLabel": "Edit gradient stop",
         "removeGradientStopLabel": "Remove gradient stop",
-        "removeFillLabel": "Remove fill",
+        "enabledLabel": "Enabled",
         "uploadLabel": "Upload",
         "chooseAssetsLabel": "Choose from assets",
         "removeAssetLabel": "Remove asset",
@@ -98,6 +105,9 @@
         "loadAssetsErrorLabel": "Assets could not be loaded.",
         "uploadAssetErrorLabel": "Asset upload failed.",
         "previewAssetErrorLabel": "Asset preview could not be loaded."
+      },
+      "sizeContext": {
+        "md": { "buttonSize": "medium" }
       }
     }
   ]

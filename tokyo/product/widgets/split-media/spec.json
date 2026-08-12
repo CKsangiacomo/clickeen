@@ -88,7 +88,7 @@
           "opacity": "$label:component.dropdown-fill.opacity.label",
           "previewAssetError": "$label:component.dropdown-fill.preview-asset-error.label",
           "removeAsset": "$label:component.dropdown-fill.remove-asset.label",
-          "removeFill": "$label:component.dropdown-fill.remove-fill.label",
+          "enabled": "$label:component.dropdown-fill.enabled.label",
           "removeGradientStop": "$label:component.dropdown-fill.remove-gradient-stop.label",
           "upload": "$label:component.dropdown-fill.upload.label",
           "uploadAssetError": "$label:component.dropdown-fill.upload-asset-error.label",

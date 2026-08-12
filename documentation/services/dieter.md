@@ -173,13 +173,25 @@ Bob's existing compiler.
 Dropdown Fill owns one global fill-editing component. The caller declares the
 exact supported modes through `fill-modes`; Dieter does not infer media
 capability from a field path, label, Widget, or host. Its exact JSON value is
-none, color, structured gradient, account image, or account video. The solid
-and gradient panels share the system Slider/Textfield geometry, the compact
-`8rem/9rem/10rem` saturation/value canvas ladder, and one nine-column palette.
-Only the white swatch has a gray resting edge; selection uses a one-pixel blue
-outline. Structured gradients keep their declared `linear|radial|conic` kind
-while their angle and stops are edited. Image and video use the caller-supplied
-account-assets client and the generic `dieter-upsell` host event when account
+none, color, structured gradient, account image, or account video. Its attached
+Popover has one fixed composition: caller label, Enabled, the existing
+icon-only Segmented mode selector when more than one declared mode exists, then
+the active editor. Turning Enabled off writes exact `none`, hides the selector
+and editor, and retains the exact prior fill only in that open component session
+so an explicit re-enable can restore it. There is no separate remove-fill
+action or second persisted enabled field.
+
+Toggle, Segmented, Slider, Textfield, and Button use the root component's
+`sm|md|lg` size; current product ToolDrawers use `md`. The solid and gradient
+panels share the system Slider/Textfield geometry, the
+compact `6rem/7rem/8rem` saturation/value canvas ladder, a trailing opacity
+value, one Hex row, and one nine-column two-row palette. Only the white swatch
+has a gray resting edge; selection uses a one-pixel blue outline. Structured
+Image and video use the same compact surface-height ladder while retaining
+their existing upload, choose, remove, and asset-browser behavior. Structured
+gradients keep their declared `linear|radial|conic` kind while their angle and
+stops are edited. Image and video keep the same caller-supplied account-assets
+client, exact fill values, and generic `dieter-upsell` host event when account
 policy denies an upload. The component does not own account policy, routes,
 persistence, Widget meanings, copy, or localization. Every visible and
 accessible word is caller input, resolved from the adjacent Widget ToolDrawer

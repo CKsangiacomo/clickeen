@@ -295,7 +295,6 @@ export async function buildContext(
     defaultItem,
     colorLabel: attrs.colorLabel || attrs['color-label'] || '',
     defaultColorsLabel: attrs.defaultColorsLabel || attrs['default-colors-label'] || '',
-    enabledLabel: attrs.enabledLabel || attrs['enabled-label'] || '',
     hexLabel: attrs.hexLabel || attrs['hex-label'] || '',
     hueLabel: attrs.hueLabel || attrs['hue-label'] || '',
     widthLabel: attrs.widthLabel || attrs['width-label'] || '',
@@ -319,10 +318,10 @@ export async function buildContext(
       attrs.addGradientStopLabel || attrs['add-gradient-stop-label'] || '',
     editGradientStopLabel:
       attrs.editGradientStopLabel || attrs['edit-gradient-stop-label'] || '',
+    enabledLabel: attrs.enabledLabel || attrs['enabled-label'] || '',
     removeGradientStopLabel:
       attrs.removeGradientStopLabel || attrs['remove-gradient-stop-label'] || '',
     opacityLabel: attrs.opacityLabel || attrs['opacity-label'] || '',
-    removeFillLabel: attrs.removeFillLabel || attrs['remove-fill-label'] || '',
     uploadLabel: attrs.uploadLabel || attrs['upload-label'] || '',
     chooseAssetsLabel: attrs.chooseAssetsLabel || attrs['choose-assets-label'] || '',
     removeAssetLabel: attrs.removeAssetLabel || attrs['remove-asset-label'] || '',

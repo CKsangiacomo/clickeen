@@ -7,8 +7,8 @@
   --dropdown-fill-visual-size: 1rem;
   --dropdown-fill-gap: var(--space-2, 0.5rem);
   --dropdown-fill-preview-height: 2rem;
-  --dropdown-fill-canvas-height: 9rem;
-  --dropdown-fill-media-height: 9rem;
+  --dropdown-fill-canvas-height: 7rem;
+  --dropdown-fill-media-height: 7rem;
   position: relative;
   display: grid;
   gap: var(--vertspace-2, 0.1rem);
@@ -22,8 +22,8 @@
   --dropdown-fill-value-line-height: var(--lh-tight, 1rem);
   --dropdown-fill-visual-size: 0.75rem;
   --dropdown-fill-preview-height: 1.75rem;
-  --dropdown-fill-canvas-height: 8rem;
-  --dropdown-fill-media-height: 8rem;
+  --dropdown-fill-canvas-height: 6rem;
+  --dropdown-fill-media-height: 6rem;
 }
 
 .diet-dropdown-fill[data-size='lg'] {
@@ -34,8 +34,8 @@
   --dropdown-fill-visual-size: 1.25rem;
   --dropdown-fill-gap: var(--space-4, 1rem);
   --dropdown-fill-preview-height: 2.25rem;
-  --dropdown-fill-canvas-height: 10rem;
-  --dropdown-fill-media-height: 10rem;
+  --dropdown-fill-canvas-height: 8rem;
+  --dropdown-fill-media-height: 8rem;
 }
 
 .diet-dropdown-fill > .diet-dropdown-header {
@@ -97,21 +97,14 @@
   border: 1px solid var(--color-system-gray-5);
 }
 
-.diet-dropdown-fill__chip.is-none {
-  border: 1px solid color-mix(in oklab, var(--color-system-black), transparent 80%);
-  background:
-    linear-gradient(
-      135deg,
-      transparent 44%,
-      color-mix(in oklab, var(--color-system-black), transparent 35%) 44%,
-      color-mix(in oklab, var(--color-system-black), transparent 35%) 56%,
-      transparent 56%
-    ),
-    color-mix(in oklab, var(--color-system-black), transparent 93%);
+.diet-dropdown-fill__chip[hidden],
+.diet-dropdown-fill__none-icon[hidden] {
+  display: none;
 }
 
-.diet-dropdown-fill__chip[hidden] {
-  display: none;
+.diet-dropdown-fill .diet-dropdown-fill__none-icon {
+  --diet-icon-size: var(--dropdown-fill-visual-size);
+  flex: 0 0 auto;
 }
 
 .diet-dropdown-fill__label {
@@ -142,26 +135,35 @@
   --popover-padding: var(--space-3, 0.75rem);
 }
 
-.diet-dropdown-fill__modes {
-  display: grid;
-  grid-auto-flow: column;
-  grid-auto-columns: minmax(0, 1fr);
-  gap: var(--space-2, 0.5rem);
+.diet-dropdown-fill__enabled {
+  border-radius: var(--dropdown-fill-radius);
 }
 
+.diet-dropdown-fill__modes {
+  display: flex;
+  inline-size: 100%;
+}
+
+.diet-dropdown-fill .diet-dropdown-fill__modes .diet-segment {
+  flex: 1 1 0;
+  inline-size: auto;
+}
+
+.diet-dropdown-fill .diet-dropdown-fill__modes .diet-segment__surface {
+  inset-inline: var(--seg-rail-padding);
+  transform: none;
+  inline-size: auto;
+}
+
+.diet-dropdown-fill__modes[hidden],
+.diet-dropdown-fill__editor[hidden],
 .diet-dropdown-fill[data-has-modes='false'] .diet-dropdown-fill__modes {
   display: none;
 }
 
-.diet-dropdown-fill__mode-btn {
-  justify-content: center;
-  gap: var(--space-1, 0.25rem);
-  width: 100%;
-}
-
-.diet-dropdown-fill__mode-btn.is-active {
-  color: var(--color-system-blue);
-  background: color-mix(in oklab, var(--color-system-white), var(--color-system-blue) 8%);
+.diet-dropdown-fill__editor {
+  display: grid;
+  gap: var(--dropdown-fill-gap);
 }
 
 .diet-dropdown-fill__panel {
@@ -181,33 +183,6 @@
 .diet-dropdown-fill[data-mode='image'] .diet-dropdown-fill__panel[data-panel='image'],
 .diet-dropdown-fill[data-mode='video'] .diet-dropdown-fill__panel[data-panel='video'] {
   display: grid;
-}
-
-.diet-dropdown-fill__preview {
-  inline-size: 100%;
-  block-size: var(--dropdown-fill-preview-height);
-  border-radius: var(--dropdown-fill-radius);
-  background: repeating-conic-gradient(var(--color-system-gray-6-step4) 0% 25%, var(--color-system-white) 0% 50%) 50% / 0.75rem 0.75rem;
-  padding: 0.125rem;
-  border: none;
-  cursor: pointer;
-  position: relative;
-}
-
-.diet-dropdown-fill__color-preview {
-  inline-size: 100%;
-  block-size: 100%;
-  border-radius: inherit;
-  background: transparent;
-}
-
-.diet-dropdown-fill__native-color {
-  position: absolute;
-  inset: 0;
-  inline-size: 1px;
-  block-size: 1px;
-  opacity: 0;
-  pointer-events: none;
 }
 
 .diet-dropdown-fill__gradient-preview {
@@ -319,17 +294,6 @@
 .diet-dropdown-fill__gradient-sliders {
   display: grid;
   gap: var(--space-2, 0.5rem);
-}
-
-.diet-dropdown-fill__gradient-fields {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--space-2, 0.5rem);
-}
-
-.diet-dropdown-fill__gradient-fields .diet-textfield {
-  inline-size: 100%;
-  max-inline-size: 100%;
 }
 
 .diet-dropdown-fill__panel[data-panel='image'],
@@ -574,6 +538,12 @@
   min-inline-size: 2.5rem;
 }
 
+.diet-dropdown-fill__slider-value {
+  flex: 0 0 2.5rem;
+  min-inline-size: 2.5rem;
+  text-align: end;
+}
+
 .diet-dropdown-fill__slider--hue .diet-slider__input {
   background: linear-gradient(
     90deg,
@@ -588,32 +558,18 @@
   );
 }
 
-.diet-dropdown-fill__inputs {
+.diet-dropdown-fill__fields {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 4rem;
-  gap: var(--space-2, 0.5rem);
   inline-size: 100%;
 }
 
-.diet-dropdown-fill__inputs .diet-textfield {
+.diet-dropdown-fill__fields .diet-textfield {
   inline-size: 100%;
   max-inline-size: 100%;
 }
 
-.diet-dropdown-fill__inputs .diet-textfield__control {
+.diet-dropdown-fill__fields .diet-textfield__control {
   gap: var(--space-1, 0.25rem);
-}
-
-.diet-dropdown-fill__inputs .diet-textfield__icon {
-  opacity: 0.5;
-}
-
-.diet-dropdown-fill__inputs [data-role='alpha'] .diet-textfield__display-label {
-  position: absolute;
-  inline-size: 1px;
-  block-size: 1px;
-  overflow: hidden;
-  clip: rect(0 0 0 0);
 }
 
 .diet-dropdown-fill__swatches {
@@ -648,13 +604,4 @@
 .diet-dropdown-fill__swatch.is-selected {
   outline: 1px solid var(--color-system-blue);
   outline-offset: 1px;
-}
-
-.diet-dropdown-fill__actions {
-  display: flex;
-  justify-content: flex-end;
-}
-
-.diet-dropdown-fill__remove-fill[disabled] .diet-btn-menuactions__icon-layer--hover {
-  display: none;
 }

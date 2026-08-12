@@ -10,13 +10,11 @@ import { resolveSingleAccountAsset } from '../shared/account-asset-resolve';
 export type SetMediaSrcOptions = {
   commit: boolean;
   updateHeader?: boolean;
-  updateRemove?: boolean;
 };
 
 export type MediaControllerDeps = {
   setInputValue: (state: DropdownFillState, value: FillValue, emit: boolean) => void;
   updateHeader: (state: DropdownFillState, opts: DropdownFillHeaderUpdate) => void;
-  setRemoveFillState: (state: DropdownFillState, isEmpty: boolean) => void;
 };
 
 function setFillUploadingState(state: DropdownFillState, uploading: boolean): void {
@@ -85,7 +83,7 @@ function hasAvailableVideo(state: DropdownFillState): boolean {
 
 function syncImageMediaState(
   state: DropdownFillState,
-  opts: { updateHeader?: boolean; updateRemove?: boolean },
+  opts: { updateHeader?: boolean },
   deps: MediaControllerDeps,
 ): void {
   const hasImage = hasAvailableImage(state);
@@ -102,14 +100,11 @@ function syncImageMediaState(
   if (opts.updateHeader !== false) {
     syncImageHeader(state, deps);
   }
-  if (opts.updateRemove !== false) {
-    deps.setRemoveFillState(state, !hasImage);
-  }
 }
 
 function syncVideoMediaState(
   state: DropdownFillState,
-  opts: { updateHeader?: boolean; updateRemove?: boolean },
+  opts: { updateHeader?: boolean },
   deps: MediaControllerDeps,
 ): void {
   const hasVideo = hasAvailableVideo(state);
@@ -123,9 +118,6 @@ function syncVideoMediaState(
   if (opts.updateHeader !== false) {
     syncVideoHeader(state, deps);
   }
-  if (opts.updateRemove !== false) {
-    deps.setRemoveFillState(state, !hasVideo);
-  }
 }
 
 export function setImageSrc(
@@ -135,7 +127,6 @@ export function setImageSrc(
   deps: MediaControllerDeps,
 ): void {
   const shouldUpdateHeader = opts.updateHeader !== false;
-  const shouldUpdateRemove = opts.updateRemove !== false;
   state.imageSrc = src;
   if (opts.commit) {
     const assetRef = state.imageAssetRef;
@@ -153,7 +144,7 @@ export function setImageSrc(
       : { type: 'none' };
     deps.setInputValue(state, fill, true);
   }
-  syncImageMediaState(state, { updateHeader: shouldUpdateHeader, updateRemove: shouldUpdateRemove }, deps);
+  syncImageMediaState(state, { updateHeader: shouldUpdateHeader }, deps);
 }
 
 export function setVideoSrc(
@@ -163,7 +154,6 @@ export function setVideoSrc(
   deps: MediaControllerDeps,
 ): void {
   const shouldUpdateHeader = opts.updateHeader !== false;
-  const shouldUpdateRemove = opts.updateRemove !== false;
   state.videoSrc = src;
   if (opts.commit) {
     const assetRef = state.videoAssetRef;
@@ -188,7 +178,7 @@ export function setVideoSrc(
     state.videoPreview.src = src || '';
     if (src) state.videoPreview.load();
   }
-  syncVideoMediaState(state, { updateHeader: shouldUpdateHeader, updateRemove: shouldUpdateRemove }, deps);
+  syncVideoMediaState(state, { updateHeader: shouldUpdateHeader }, deps);
 }
 
 function renderAssetBrowserRows(args: {
@@ -430,6 +420,7 @@ export function installImageHandlers(state: DropdownFillState, deps: MediaContro
       setAssetPanelMessage(state.imageMessage, '');
       setBrowserOpen(state.imageBrowser, state.chooseButton, false);
       setImageSrc(state, null, { commit: true }, deps);
+      state.lastEnabledValue = null;
     });
   }
 }
@@ -481,6 +472,7 @@ export function installVideoHandlers(state: DropdownFillState, deps: MediaContro
       setAssetPanelMessage(state.videoMessage, '');
       setBrowserOpen(state.videoBrowser, state.videoChooseButton, false);
       setVideoSrc(state, null, { commit: true }, deps);
+      state.lastEnabledValue = null;
     });
   }
 }

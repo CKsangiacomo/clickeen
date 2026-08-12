@@ -474,7 +474,10 @@ Widget's adjacent ToolDrawer English file into the one Dieter stencil. Bob
 supplies the current account-assets client and continues to own only the
 browser-memory draft and existing asset commands. Gradient values retain their
 declared `linear|radial|conic` kind; the removed CSS-only gradient shape is not
-accepted as a compatibility value.
+accepted as a compatibility value. The Dieter primitive owns Enabled and its
+existing Segmented mode selector. Bob receives only the exact fill input event;
+it does not own a parallel enabled field, remove-fill action, mode UI, or Fill
+layout rule.
 
 For Dropdown Border, Edit, Fill, and Shadow, Bob's existing stencil compiler
 passes Dieter's `row|wide|extra-wide` Popover width through the generated

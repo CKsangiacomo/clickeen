@@ -71,11 +71,10 @@ export function applyGradientFromFill(
 
 export function syncGradientUI(
   state: DropdownFillState,
-  opts: { commit: boolean; updateHeader?: boolean; updateRemove?: boolean },
+  opts: { commit: boolean; updateHeader?: boolean },
   deps: DropdownFillUiDeps,
 ): void {
   const shouldUpdateHeader = opts.updateHeader !== false;
-  const shouldUpdateRemove = opts.updateRemove !== false;
   if (state.gradientAngleInput) {
     state.gradientAngleInput.value = String(clampNumber(state.gradient.angle, 0, 360));
     state.gradientAngleInput.style.setProperty('--value', state.gradientAngleInput.value);
@@ -85,7 +84,7 @@ export function syncGradientUI(
   syncGradientStopButtons(state);
   syncActiveGradientStopUI(state);
   updateGradientAddButton(state);
-  updateGradientPreview(state, { commit: opts.commit, updateHeader: shouldUpdateHeader, updateRemove: shouldUpdateRemove }, deps);
+  updateGradientPreview(state, { commit: opts.commit, updateHeader: shouldUpdateHeader }, deps);
 }
 
 function getSortedGradientStops(stops: GradientStopState[]): GradientStopState[] {
@@ -213,11 +212,11 @@ function syncActiveGradientStopUI(state: DropdownFillState): void {
     state.gradientStopAlphaInput.style.setProperty('--min', '0');
     state.gradientStopAlphaInput.style.setProperty('--max', '100');
   }
+  if (state.gradientStopAlphaValue) {
+    state.gradientStopAlphaValue.value = `${alphaPercent}%`;
+  }
   if (state.gradientStopHexInput) {
     state.gradientStopHexInput.value = hex;
-  }
-  if (state.gradientStopAlphaField) {
-    state.gradientStopAlphaField.value = `${alphaPercent}%`;
   }
   if (state.gradientStopSvThumb) {
     const left = `${hsv.s * 100}%`;
@@ -245,11 +244,10 @@ function setActiveGradientStop(state: DropdownFillState, stopId: string): void {
 
 function updateGradientPreview(
   state: DropdownFillState,
-  opts: { commit: boolean; updateHeader?: boolean; updateRemove?: boolean },
+  opts: { commit: boolean; updateHeader?: boolean },
   deps: DropdownFillUiDeps,
 ): void {
   const shouldUpdateHeader = opts.updateHeader !== false;
-  const shouldUpdateRemove = opts.updateRemove !== false;
   const css = buildGradientCss(state);
   if (state.gradientPreview) state.gradientPreview.style.backgroundImage = css;
   if (opts.commit) {
@@ -257,9 +255,6 @@ function updateGradientPreview(
   }
   if (shouldUpdateHeader) {
     deps.updateHeader(state, { text: '', muted: false, chipColor: css });
-  }
-  if (shouldUpdateRemove) {
-    deps.setRemoveFillState(state, false);
   }
 }
 
@@ -330,17 +325,6 @@ function handleGradientStopHexInput(state: DropdownFillState, deps: DropdownFill
   commitGradientStopFromHsv(state, deps);
 }
 
-function handleGradientStopAlphaField(state: DropdownFillState, deps: DropdownFillUiDeps): void {
-  if (!state.gradientStopAlphaField) return;
-  const stop = getActiveGradientStop(state);
-  const hsv = stop.hsv;
-  const raw = state.gradientStopAlphaField.value.trim().replace('%', '');
-  if (!raw) return;
-  const parsed = Number(raw);
-  if (!Number.isFinite(parsed) || parsed < 0 || parsed > 100) return;
-  hsv.a = parsed / 100;
-  commitGradientStopFromHsv(state, deps);
-}
 
 function installGradientStopBarHandlers(state: DropdownFillState, deps: DropdownFillUiDeps): void {
   if (state.gradientStopAdd) {
@@ -386,7 +370,7 @@ function installGradientStopBarHandlers(state: DropdownFillState, deps: Dropdown
     if (!stop) return;
     stop.position = gradientPxToPercent(state, event.clientX);
     syncGradientStopButtons(state);
-    updateGradientPreview(state, { commit: true, updateHeader: true, updateRemove: false }, deps);
+    updateGradientPreview(state, { commit: true, updateHeader: true }, deps);
   };
 
   const finishDrag = (stopId: string, event: PointerEvent) => {
@@ -487,11 +471,6 @@ function installGradientEditorHandlers(state: DropdownFillState, deps: DropdownF
     state.gradientStopHexInput.addEventListener('blur', handler);
   }
 
-  if (state.gradientStopAlphaField) {
-    const handler = () => handleGradientStopAlphaField(state, deps);
-    state.gradientStopAlphaField.addEventListener('change', handler);
-    state.gradientStopAlphaField.addEventListener('blur', handler);
-  }
 }
 
 function normalizeGradientStopsForOutput(state: DropdownFillState): GradientStop[] {

@@ -158,7 +158,7 @@ the code is convenient there.
 | Stage | Status | Release state |
 | --- | --- | --- |
 | Stage 1 — Scaffold only | Complete | Committed, pushed, and deployed; no non-English experience is exposed |
-| Stage 2 — Dieter UI pass | In progress: Foundations, Agent Activity, Bulk Edit, Button, Choice Tiles, Dropdown Actions, Popover, Dropdown Border, Dropdown Edit, and Dropdown Fill complete and re-audited as consumer-agnostic primitives; the shared row/Popover presentation is also applied to Shadow and Upload | The completed primitive group is ready for exact-SHA cloud-dev QA; Dropdown Shadow and Dropdown Upload are the next behavior passes |
+| Stage 2 — Dieter UI pass | In progress: Foundations, Agent Activity, Bulk Edit, Button, Choice Tiles, Dropdown Actions, Popover, Dropdown Border, Dropdown Edit, and Dropdown Fill complete and re-audited as consumer-agnostic primitives; the shared row/Popover presentation is also applied to Shadow and Upload | Dropdown Shadow and Dropdown Upload are the next behavior passes |
 | Stage 3 — Bob UI pass | Not started | No authority to begin until explicitly directed |
 | Stage 4 — Roma UI pass | Not started | No authority to begin until explicitly directed |
 | Stage 5 — Translation pass | Not started | No translations may be generated yet |
@@ -845,3 +845,45 @@ authorizes it.
   generation, new catalog, registry, component variant, route, storage,
   product-data mutation, Cloudflare topology, fallback, repair path, or
   compatibility layer was added.
+
+- **Dropdown Fill systemic UI correction — passed locally, 2026-08-12.** The
+  first Fill pass established the exact value, l10n, account-assets, and host
+  lifecycle contract, but its open UI retained four unrelated mode Buttons,
+  a second remove-fill action, a duplicate native-color strip, and two-column
+  Hex/opacity fields. This correction keeps that behavior authority and
+  replaces only the wrong composition.
+
+  The Popover now follows one order: caller label, Enabled, the existing
+  icon-only Segmented primitive when multiple modes were declared, then
+  the active editor. Enabled off writes exact `none`, hides dependent controls,
+  and keeps the exact prior fill only in the open component session for an
+  explicit re-enable. The separate Remove fill action and label key are gone;
+  the exact shared 24-key shape now supplies Enabled instead. The closed none
+  state uses `square.slash`. The seven remaining obsolete `allow-color`
+  authoring attrs were removed; `fill-modes` is now the sole declared mode
+  contract in every current Widget.
+
+  Nested Toggle, Segmented, Slider, Textfield, and Button primitives use the
+  root component's `sm|md|lg` size; the current product use remains `md`.
+  Solid and gradient modes use a compact `6rem/7rem/8rem` canvas ladder,
+  full-width Slider tracks, trailing opacity values, one Hex row, and the
+  existing two-row palette. Image and video retain their exact fill values,
+  account-assets client, upload/choose/remove flows, and dynamic caller copy;
+  only their surface height follows the same compact ladder. Opening an empty
+  media mode does not rewrite or misreport the stored fill, while an explicit
+  Remove asset action remains final and is not resurrected by the session-only
+  Enabled memory. DevStudio uses
+  the actual Segmented dependency and reveals the real open medium component.
+  All eight generated English editor artifact pairs were regenerated. No new
+  picker primitive, shared color abstraction, Widget branch, validator,
+  fallback, compatibility path, route, storage, product-data operation, or
+  Cloudflare machinery was added.
+
+  Local verification passed: all 8 Widget artifact pairs and generated Widget
+  definition sources are exact; Dieter governance and typecheck, DevStudio
+  typecheck/build, Bob compiler contract/typecheck/build, Roma Widget Defaults
+  and command gates/typecheck/build, root typecheck/lint, and diff checks are
+  green. Chromium exercised all four modes at the real medium `wide` geometry:
+  288px Popover, 272px editor, four equal mode segments, 112px color/media
+  surfaces, exact `none` on disable, hidden dependent controls, and exact prior
+  color restoration on re-enable.

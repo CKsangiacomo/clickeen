@@ -306,7 +306,11 @@ exact Dropdown Fill component-label shape under
 `editor.labels.components["dropdown-fill"]`, declares labels for shared
 generated Fill paths under `editor.labels.fields["dropdown-fill"]`, and owns
 those English values in its adjacent ToolDrawer label file. Dieter receives
-the resolved strings; it owns no visible Fill wording. `dropdown-upload`
+the resolved strings; it owns no visible Fill wording. The exact component
+shape includes **Enabled**; there is no separate remove-fill label because the
+component's Enabled-off action writes exact `none`. Multiple declared modes use
+Dieter's existing Segmented primitive, while a single declared mode hides that
+selector without changing the field contract. `dropdown-upload`
 requires a `meta-path`; the compiler rejects missing upload metadata paths.
 
 State-bound fields use `path`. Visual grouping uses `groupId`; it is not a data

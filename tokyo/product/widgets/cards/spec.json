@@ -250,7 +250,7 @@
           "opacity": "$label:component.dropdown-fill.opacity.label",
           "previewAssetError": "$label:component.dropdown-fill.preview-asset-error.label",
           "removeAsset": "$label:component.dropdown-fill.remove-asset.label",
-          "removeFill": "$label:component.dropdown-fill.remove-fill.label",
+          "enabled": "$label:component.dropdown-fill.enabled.label",
           "removeGradientStop": "$label:component.dropdown-fill.remove-gradient-stop.label",
           "upload": "$label:component.dropdown-fill.upload.label",
           "uploadAssetError": "$label:component.dropdown-fill.upload-asset-error.label",
@@ -649,8 +649,7 @@
                 "label": "$label:layout.field.cards.between-cards.line.color.dropdown-fill.label",
                 "attrs": {
                   "size": "md",
-                  "fill-modes": "color",
-                  "allow-color": "true"
+                  "fill-modes": "color"
                 },
                 "showIf": {
                   "all": [
@@ -741,8 +740,7 @@
                 "label": "$label:layout.field.cards.between-cards.icon.color.dropdown-fill.label",
                 "attrs": {
                   "size": "md",
-                  "fill-modes": "color",
-                  "allow-color": "true"
+                  "fill-modes": "color"
                 },
                 "showIf": {
                   "all": [
@@ -798,8 +796,7 @@
                     "label": "$label:appearance.field.cards.items.index.style.background.dropdown-fill.label",
                     "attrs": {
                       "size": "md",
-                      "fill-modes": "color",
-                      "allow-color": "true"
+                      "fill-modes": "color"
                     }
                   },
                   {
@@ -809,8 +806,7 @@
                     "label": "$label:appearance.field.cards.items.index.style.border-color.dropdown-fill.label",
                     "attrs": {
                       "size": "md",
-                      "fill-modes": "color",
-                      "allow-color": "true"
+                      "fill-modes": "color"
                     }
                   },
                   {
@@ -820,8 +816,7 @@
                     "label": "$label:appearance.field.cards.items.index.style.accent-color.dropdown-fill.label",
                     "attrs": {
                       "size": "md",
-                      "fill-modes": "color",
-                      "allow-color": "true"
+                      "fill-modes": "color"
                     }
                   },
                   {

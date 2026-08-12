@@ -116,10 +116,13 @@ rightward extensions; DevStudio does not reimplement that geometry. Border,
 Fill, and Shadow reveal their global `wide` default and two-row palettes; Edit
 reveals its `extra-wide` default.
 Dropdown Fill exposes one real open editor where color, gradient, image, and
-video can be exercised through the component's own mode controls, in addition
-to its `sm|md|lg` closed rows. The page therefore reveals the exact system
-geometry and caller-copy inputs without overlapping permanent Popovers, a
-DevStudio-only imitation, or an account-specific branch.
+video can be exercised through its Enabled control and the existing icon-only
+Segmented mode selector, in addition to its `sm|md|lg` closed rows.
+Its open medium reveal uses the product-default `wide` Popover, compact color
+canvas, full-width Slider tracks, trailing opacity value, one Hex row, and the
+two-row palette. The page therefore reveals the exact system geometry and
+caller-copy inputs without overlapping permanent Popovers, a DevStudio-only
+imitation, or an account-specific branch.
 These routes retain Dieter's consumer-neutral `data-dieter-json` marker in
 their generated examples. Before hash navigation replaces the reveal,
 DevStudio destroys hydrated Dropdown Actions, Border, Edit, and Fill roots

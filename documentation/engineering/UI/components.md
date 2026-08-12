@@ -180,12 +180,23 @@ The governing component product law is:
   `image`, and/or `video` modes through `fill-modes`; Dieter never infers a
   mode from a Widget path, label, or consumer. The closed property row uses
   the shared leading-label/trailing-value geometry, with value text before its
-  fixed chip. Its attached Popover repeats only the caller label and uses the
-  component-owned `wide` work area. Solid color and gradient editing use the
-  shared Slider/Textfield geometry, the compact `8rem/9rem/10rem` color-canvas
-  ladder, and one direct nine-column palette. Swatches are two pixels smaller
+  fixed chip, and exact `none` uses the system `square.slash` Icon. Its attached
+  Popover uses the component-owned `wide` work area and exactly one vertical
+  composition: caller label, Enabled, the existing icon-only Segmented
+  selector when multiple modes were declared, then the active editor. Enabled
+  off writes exact `none` and hides dependent controls; re-enabling in the same
+  open component session restores the exact prior fill. There is no separate
+  remove-fill row, second enabled field, or Fill-only tab system.
+
+  Toggle, Segmented, Slider, Textfield, and Button use the Dropdown Fill
+  root's `sm|md|lg` size; the current product ToolDrawer uses `md`. Solid color
+  and gradient editing use the shared Slider/Textfield geometry,
+  the compact `6rem/7rem/8rem` color-canvas ladder, a trailing opacity value,
+  one Hex row, and one direct nine-column two-row palette. Swatches are two pixels smaller
   than their grid cells, only white retains a gray resting edge, and selection
-  uses a one-pixel blue outline. Gradient edits preserve the declared
+  uses a one-pixel blue outline. Image and video use the same compact surface
+  height ladder while retaining their existing upload, choose, and remove
+  behavior. Gradient edits preserve the declared
   `linear|radial|conic` kind and exact stop values. Image and video modes use
   the supplied account-assets client; the primitive does not own an account,
   route, policy, or Widget-specific media rule. All visible and accessible

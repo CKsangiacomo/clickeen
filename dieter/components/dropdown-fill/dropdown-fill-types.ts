@@ -27,15 +27,14 @@ export type DropdownFillState = {
   input: HTMLInputElement;
   headerValue: HTMLElement | null;
   headerValueLabel: HTMLElement | null;
+  headerValueNoneIcon: HTMLElement | null;
   headerValueChip: HTMLElement | null;
-  preview: HTMLElement | null;
-  nativeColorInput: HTMLInputElement | null;
-  colorPreview: HTMLElement | null;
-  removeFillActions: HTMLButtonElement[];
+  enabledInput: HTMLInputElement;
+  editor: HTMLElement;
   hueInput: HTMLInputElement;
   alphaInput: HTMLInputElement;
+  alphaValue: HTMLOutputElement;
   hexField: HTMLInputElement;
-  alphaField: HTMLInputElement;
   svCanvas: HTMLElement;
   svThumb: HTMLElement;
   swatches: HTMLButtonElement[];
@@ -50,8 +49,8 @@ export type DropdownFillState = {
   gradientStopSvThumb: HTMLElement | null;
   gradientStopHueInput: HTMLInputElement | null;
   gradientStopAlphaInput: HTMLInputElement | null;
+  gradientStopAlphaValue: HTMLOutputElement | null;
   gradientStopHexInput: HTMLInputElement | null;
-  gradientStopAlphaField: HTMLInputElement | null;
   gradientActiveStopId: string;
   gradientStops: GradientStopState[];
   gradient: { kind: GradientKind; angle: number };
@@ -87,6 +86,7 @@ export type DropdownFillState = {
   videoResolveRequestId: number;
   allowedModes: FillMode[];
   mode: FillMode;
+  lastEnabledValue: Exclude<FillValue, { type: 'none' }> | null;
   nativeValue?: { get: () => string; set: (next: string) => void };
   internalWrite: boolean;
 };
@@ -101,5 +101,4 @@ export type DropdownFillHeaderUpdate = {
 export type DropdownFillUiDeps = {
   setInputValue: (state: DropdownFillState, value: FillValue, emit: boolean) => void;
   updateHeader: (state: DropdownFillState, opts: DropdownFillHeaderUpdate) => void;
-  setRemoveFillState: (state: DropdownFillState, isEmpty: boolean) => void;
 };
