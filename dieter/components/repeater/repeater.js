@@ -209,7 +209,7 @@ const registry = new WeakMap();
         setAt(out, rel, false);
         return;
       }
-      if (node instanceof HTMLInputElement && node.dataset.bobJson != null) {
+      if (node instanceof HTMLInputElement && node.dataset.dieterJson != null) {
         setAt(out, rel, []);
         return;
       }
@@ -268,6 +268,7 @@ const registry = new WeakMap();
         removeLabel: root.dataset.removeLabel || "Remove item {index}",
         moveLabel: root.dataset.moveLabel || "Move item {index}",
         hydratorOptions: options,
+        cleanupChildren: null,
         iconHandle: cloneIcon(root, ".diet-repeater__icon-handle"),
         iconTrash: cloneIcon(root, ".diet-repeater__icon-trash"),
       };
@@ -307,7 +308,7 @@ const registry = new WeakMap();
         let nextValue;
         if (target instanceof HTMLInputElement && target.type === "checkbox") {
           nextValue = target.checked;
-        } else if (target instanceof HTMLInputElement && target.dataset.bobJson != null) {
+        } else if (target instanceof HTMLInputElement && target.dataset.dieterJson != null) {
           const parsed = parseJsonValue(target.value || "");
           if (parsed == null) return;
           nextValue = parsed;
@@ -395,6 +396,7 @@ const registry = new WeakMap();
 
   function render(state) {
     const { list, template, value, reorder, hidden, root } = state;
+    state.cleanupChildren?.();
     list.innerHTML = "";
     if (!Array.isArray(value)) return;
 
@@ -462,10 +464,10 @@ const registry = new WeakMap();
         if (el instanceof HTMLInputElement) {
           if (el.type === "checkbox") {
             el.checked = Boolean(val);
-          } else if (el.dataset.bobJson != null) {
+          } else if (el.dataset.dieterJson != null) {
             const json = stringify(val);
             el.value = json;
-            el.setAttribute("data-bob-json", json);
+            el.setAttribute("data-dieter-json", json);
           } else {
             el.value = String(val);
           }
@@ -486,10 +488,12 @@ const registry = new WeakMap();
       list.appendChild(item);
     });
 
-    runChildHydrators(list, state.hydratorOptions);
-    if (root) {
-      runChildHydrators(root, state.hydratorOptions);
-    }
+    const cleanupList = runChildHydrators(list, state.hydratorOptions);
+    const cleanupRoot = root ? runChildHydrators(root, state.hydratorOptions) : null;
+    state.cleanupChildren = () => {
+      cleanupRoot?.();
+      cleanupList?.();
+    };
 
     if (!reorder) {
       list.querySelectorAll(".diet-repeater__item").forEach((el) => {
@@ -531,11 +535,11 @@ const registry = new WeakMap();
           if (el.checked !== nextChecked) {
             el.checked = nextChecked;
           }
-        } else if (el.dataset.bobJson != null) {
+        } else if (el.dataset.dieterJson != null) {
           const nextVal = stringify(val);
           if (el.value !== nextVal) {
             el.value = nextVal;
-            el.setAttribute("data-bob-json", nextVal);
+            el.setAttribute("data-dieter-json", nextVal);
           }
         } else {
           const nextVal = String(val);
@@ -570,7 +574,7 @@ const registry = new WeakMap();
   function writeHidden(state) {
     const json = stringify(state.value);
     state.hidden.value = json;
-    state.hidden.setAttribute("data-bob-json", json);
+    state.hidden.setAttribute("data-dieter-json", json);
     const evt = new Event("input", { bubbles: true });
     state.hidden.dispatchEvent(evt);
   }
@@ -734,5 +738,5 @@ const registry = new WeakMap();
   }
 
   function runChildHydrators(scope, options) {
-    options?.hydrateChildren?.(scope);
+    return options?.hydrateChildren?.(scope) ?? null;
   }

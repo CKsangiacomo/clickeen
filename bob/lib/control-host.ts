@@ -32,9 +32,9 @@ export {
 } from '../components/td-menu-content/showIf';
 export type { ShowIfEntry } from '../components/td-menu-content/showIf';
 export {
-  parseBobJsonValue,
+  parseDieterJsonFieldValue,
   resolvePathFromTarget,
-  serializeBobJsonFieldValue,
+  serializeDieterJsonFieldValue,
 } from '../components/td-menu-content/fieldValue';
 export { applyAccountFontLibraryToTypographyMenus } from '../components/td-menu-content/accountFonts';
 export {

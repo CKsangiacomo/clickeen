@@ -1,7 +1,7 @@
 import { createDialogLifecycle } from '../shared/dialog-lifecycle';
 
 type ObjectManagerOptions = {
-  hydrateChildren?: (scope: HTMLElement) => void;
+  hydrateChildren?: (scope: HTMLElement) => (() => void) | void;
 };
 
 type JsonContainer = Record<string, unknown> | unknown[];
@@ -131,8 +131,8 @@ function setAt(value: Record<string, unknown>, path: string, nextValue: unknown)
   });
 }
 
-function runChildHydrators(scope: HTMLElement, options?: ObjectManagerOptions): void {
-  options?.hydrateChildren?.(scope);
+function runChildHydrators(scope: HTMLElement, options?: ObjectManagerOptions): (() => void) | null {
+  return options?.hydrateChildren?.(scope) ?? null;
 }
 
 function dispatchControlsRendered(root: HTMLElement, source: string): void {
@@ -206,7 +206,7 @@ export function hydrateObjectManager(
       const raw =
         hidden.value ||
         hidden.getAttribute('value') ||
-        hidden.getAttribute('data-bob-json') ||
+        hidden.getAttribute('data-dieter-json') ||
         '[]';
       return parseJsonArray(raw);
     };
@@ -214,7 +214,7 @@ export function hydrateObjectManager(
     const write = (value: unknown[]): void => {
       const json = stringify(value);
       hidden.value = json;
-      hidden.setAttribute('data-bob-json', json);
+      hidden.setAttribute('data-dieter-json', json);
       hidden.dispatchEvent(new Event('input', { bubbles: true }));
     };
 
@@ -227,10 +227,12 @@ export function hydrateObjectManager(
     };
 
     let lastSignature: string | null = null;
+    let cleanupChildren: (() => void) | null = null;
 
     const render = (): void => {
       const items = read();
       lastSignature = getSignature(items);
+      cleanupChildren?.();
       list.innerHTML = '';
       const templateHtml = itemTemplate.innerHTML || '';
       const basePath =
@@ -254,16 +256,16 @@ export function hydrateObjectManager(
               element.checked = Boolean(fieldValue);
               return;
             }
-            if (element.dataset.bobJson != null) {
+            if (element.dataset.dieterJson != null) {
               const json = stringify(fieldValue);
               element.value = json;
-              element.setAttribute('data-bob-json', json);
+              element.setAttribute('data-dieter-json', json);
               return;
             }
             if (element.type === 'hidden' && Array.isArray(fieldValue)) {
               const json = stringify(fieldValue);
               element.value = json;
-              element.setAttribute('data-bob-json', json);
+              element.setAttribute('data-dieter-json', json);
               return;
             }
             element.value = String(fieldValue);
@@ -277,7 +279,7 @@ export function hydrateObjectManager(
         list.appendChild(container);
       });
 
-      runChildHydrators(list, options);
+      cleanupChildren = runChildHydrators(list, options);
       const canManage = items.length > 1;
       manageBtn.hidden = !canManage;
       manageBtn.style.display = canManage ? '' : 'none';
@@ -291,7 +293,7 @@ export function hydrateObjectManager(
         const payload = detail && typeof detail.value !== 'undefined' ? detail.value : hidden.value;
         const nextJson = typeof payload === 'string' ? payload : stringify(payload);
         hidden.value = nextJson;
-        hidden.setAttribute('data-bob-json', nextJson);
+        hidden.setAttribute('data-dieter-json', nextJson);
 
         const nextItems = parseJsonArray(nextJson);
         if (getSignature(nextItems) !== lastSignature) {
@@ -334,7 +336,7 @@ export function hydrateObjectManager(
       let nextValue: unknown;
       if (target instanceof HTMLInputElement && target.type === 'checkbox') {
         nextValue = target.checked;
-      } else if (target instanceof HTMLInputElement && target.dataset.bobJson != null) {
+      } else if (target instanceof HTMLInputElement && target.dataset.dieterJson != null) {
         try {
           nextValue = JSON.parse(target.value) as unknown;
         } catch {

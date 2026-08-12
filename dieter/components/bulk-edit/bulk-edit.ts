@@ -12,18 +12,8 @@ type BulkRow = {
   data: Record<string, unknown>;
 };
 
-function decodeHtmlEntities(value: string): string {
-  return value
-    .replace(/&quot;/g, '"')
-    .replace(/&apos;/g, "'")
-    .replace(/&amp;/g, '&')
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>');
-}
-
 function parseColumns(raw: string): BulkColumn[] {
-  const decoded = decodeHtmlEntities(raw);
-  return JSON.parse(decoded) as BulkColumn[];
+  return JSON.parse(raw) as BulkColumn[];
 }
 
 function readJsonArray(input: HTMLInputElement): unknown[] {
@@ -216,7 +206,7 @@ export function hydrateBulkEdit(scope: Element | DocumentFragment): void {
 
       if (ops.length > 0) {
         root.dispatchEvent(
-          new CustomEvent('bob-ops', {
+          new CustomEvent('dieter-ops', {
             detail: { ops },
             bubbles: true,
           }),

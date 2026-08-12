@@ -1,5 +1,8 @@
 import type { AccountAssetsClient } from '../../../dieter/components/shared/account-assets';
 import {
+  destroyDropdownActions,
+  destroyDropdownBorder,
+  destroyDropdownEdit,
   hydrateBulkEdit,
   hydrateChoiceTiles,
   hydrateDropdownActions,
@@ -31,31 +34,46 @@ function hydrateIcons(scope: Element | DocumentFragment): void {
   });
 }
 
-export function runHydrators(scope: HTMLElement, deps: DieterHydratorDeps): void {
+export function runHydrators(scope: HTMLElement, deps: DieterHydratorDeps): () => void {
+  let destroyed = false;
+  const destroy = () => {
+    if (destroyed) return;
+    destroyed = true;
+    scope.querySelectorAll<HTMLElement>('.diet-dropdown-actions').forEach(destroyDropdownActions);
+    scope.querySelectorAll<HTMLElement>('.diet-dropdown-border').forEach(destroyDropdownBorder);
+    scope.querySelectorAll<HTMLElement>('.diet-dropdown-edit').forEach(destroyDropdownEdit);
+  };
   const nestedDeps = {
     ...deps,
     hydrateChildren: (childScope: HTMLElement) => runHydrators(childScope, deps),
   };
 
-  hydrateIcons(scope);
-  hydrateBulkEdit(scope);
-  hydrateChoiceTiles(scope);
-  hydrateDropdownActions(scope);
-  hydrateDropdownBorder(scope);
-  hydrateDropdownEdit(scope);
-  hydrateDropdownFill(scope, deps);
-  hydrateDropdownShadow(scope);
-  hydrateDropdownUpload(scope, deps);
-  hydrateMenuactions(scope);
-  hydrateObjectManager(scope, nestedDeps);
-  hydratePopAddLink(scope);
-  hydrateRepeater(scope, nestedDeps);
-  hydrateSegmented(scope);
-  hydrateTabs(scope);
-  hydrateTextedit(scope);
-  hydrateTextfield(scope);
-  hydrateValuefield(scope);
-  hydrateIcons(scope);
+  try {
+    hydrateIcons(scope);
+    hydrateBulkEdit(scope);
+    hydrateChoiceTiles(scope);
+    hydrateDropdownActions(scope);
+    hydrateDropdownBorder(scope);
+    hydrateDropdownEdit(scope);
+    hydrateDropdownFill(scope, deps);
+    hydrateDropdownShadow(scope);
+    hydrateDropdownUpload(scope, deps);
+    hydrateMenuactions(scope);
+    hydrateObjectManager(scope, nestedDeps);
+    hydratePopAddLink(scope);
+    hydrateRepeater(scope, nestedDeps);
+    hydrateSegmented(scope);
+    hydrateTabs(scope);
+    hydrateTextedit(scope);
+    hydrateTextfield(scope);
+    hydrateValuefield(scope);
+    hydrateIcons(scope);
+  } catch (error) {
+    destroy();
+    throw error;
+  }
+
+  return destroy;
 }
 
 export function syncSegmentedPressedState(input: HTMLInputElement) {

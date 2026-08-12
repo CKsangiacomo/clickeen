@@ -104,6 +104,12 @@ stay with the owning consumer; they do not become Dieter variants or branches.
 Generic binding inputs and events connect a primitive to its host without
 giving Dieter ownership of the host's product meaning.
 
+JSON-valued controls use `data-dieter-json`; Bulk Edit emits `dieter-ops` with
+its existing exact `{ops}` payload. Neither name belongs to Bob or Roma. Hosts
+must call the exported Dropdown Actions, Border, and Edit destroy functions
+before replacing hydrated roots; Dropdown Edit destruction also detaches the
+locally bundled Lexical editor from its DOM root.
+
 Agent Activity owns a required caller-supplied title, a required array of
 narration rows, its `sm`/`md` structure, and its active presentation. It does
 not own caller wording. Bob supplies the static title from the open widget
@@ -203,7 +209,9 @@ Bulk Edit is a generic array-table composite with caller-declared text and
 checkbox columns. It contains no Logo Showcase, upload, account-asset, or
 account-policy behavior. Its trigger, dialog, action, column, placeholder, and
 empty-state words are caller inputs; ToolDrawer consumers resolve them from
-their Widget-adjacent label file.
+their Widget-adjacent label file. Its column JSON is parsed directly from the
+browser-decoded attribute value; Dieter does not decode those exact words a
+second time.
 
 Color source keeps one small shared role layer:
 `--role-surface-bg`, `--role-surface`, `--role-surface-muted`,

@@ -2,10 +2,10 @@
 export { hydrateTextedit } from './textedit/textedit';
 export { destroyDropdownActions, hydrateDropdownActions } from './dropdown-actions/dropdown-actions';
 export { hydrateDropdownFill } from './dropdown-fill/dropdown-fill';
-export { hydrateDropdownBorder } from './dropdown-border/dropdown-border';
+export { destroyDropdownBorder, hydrateDropdownBorder } from './dropdown-border/dropdown-border';
 export { hydrateDropdownShadow } from './dropdown-shadow/dropdown-shadow';
 export { hydrateDropdownUpload } from './dropdown-upload/dropdown-upload';
-export { hydrateDropdownEdit } from './dropdown-edit/dropdown-edit';
+export { destroyDropdownEdit, hydrateDropdownEdit } from './dropdown-edit/dropdown-edit';
 export { hydrateTextfield } from './textfield/textfield';
 export { hydrateValuefield } from './valuefield/valuefield';
 export { hydrateBulkEdit } from './bulk-edit/bulk-edit';

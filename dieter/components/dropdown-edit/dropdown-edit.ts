@@ -95,6 +95,13 @@ export function hydrateDropdownEdit(scope: Element | DocumentFragment): void {
   hydrateHost(scope);
 }
 
+export function destroyDropdownEdit(root: HTMLElement): void {
+  const state = states.get(root);
+  state?.editor.setRootElement(null);
+  states.delete(root);
+  hydrateHost.destroy(root);
+}
+
 function createState(root: HTMLElement): DropdownEditState {
   const control = root.querySelector<HTMLElement>('.diet-dropdown-edit__control')!;
   const popover = root.querySelector<HTMLElement>(':scope > .diet-popover')!;

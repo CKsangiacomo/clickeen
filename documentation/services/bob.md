@@ -113,9 +113,11 @@ Bob also validates the complete document when opening and before saving.
 Opening or rebuilding a panel projects the complete browser-memory working
 state into that panel's controls. For JSON-bound Dieter controls, Bob writes the
 exact value from that working state into the compiled `data-bob-path` field
-before running the Dieter hydrator; the empty value authored in compiled panel
+marked with `data-dieter-json` before running the Dieter hydrator; the empty value authored in compiled panel
 HTML is only an unbound placeholder, not product truth or a default. Changed-path
 updates apply only while the same panel control surface remains mounted.
+Before Bob replaces or unmounts that surface, it invokes the owning Dropdown
+Actions, Border, and Edit destroy functions; Edit detaches its Lexical root.
 
 ## Dieter Icons
 
@@ -510,7 +512,8 @@ Bob also exposes a narrow `@clickeen/bob/control-host` module and paired
 `@clickeen/bob/control-host.css` stylesheet for non-editor surfaces that must
 reuse Builder control behavior and presentation. Those exports are limited to
 compiled-control DOM helpers and cluster/group presentation, Dieter hydrator
-execution, show-if visibility, field value serialization/parsing, and the pure
+execution and cleanup, show-if visibility, Dieter JSON field
+serialization/parsing, and the pure
 account-font family transition adapter. It does not export
 Bob session state, live edit application, preview binding, save behavior, or
 account persistence. Roma Widget Defaults uses this presentation seam to bind

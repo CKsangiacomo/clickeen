@@ -66,7 +66,7 @@ async function setStageImageFill(bobFrame: FrameLocator, assetRef: string) {
   await expect(fieldSurface).toHaveCount(1);
   await fieldSurface.evaluate((surface, nextAssetRef) => {
     surface.dispatchEvent(
-      new CustomEvent("bob-ops", {
+      new CustomEvent("dieter-ops", {
         bubbles: true,
         detail: {
           ops: [

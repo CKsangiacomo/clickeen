@@ -449,6 +449,10 @@ of the control host. Before running Dieter hydrators, the shared host projects
 the exact current draft values into the compiled controls. It then synchronizes
 the hydrated control surface from that same draft; compiled empty fields are not
 defaults or fallback values.
+JSON controls use Dieter's `data-dieter-json` marker and generic component
+operations use `dieter-ops`; `data-bob-path` remains the host-owned field
+coordinate. Roma destroys hydrated Dropdown Actions, Border, and Edit roots
+before replacing or unmounting the Widget Defaults control surface.
 
 The persisted defaults split is `common` plus
 `widgets.{widgetType}.core`. `common` means one account default reused across

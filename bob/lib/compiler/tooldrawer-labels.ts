@@ -15,6 +15,7 @@ const COPY_ATTRIBUTE_NAMES = new Set([
   'discard-title',
   'empty-label',
   'group-label',
+  'headerLabel',
   'keep-editing-label',
   'labelInputLabel',
   'labelPlaceholder',

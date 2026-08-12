@@ -50,6 +50,11 @@ export function hydrateDropdownBorder(scope: Element | DocumentFragment): void {
   hydrateHost(scope);
 }
 
+export function destroyDropdownBorder(root: HTMLElement): void {
+  states.delete(root);
+  hydrateHost.destroy(root);
+}
+
 function createState(root: HTMLElement): DropdownBorderState {
   const input = root.querySelector<HTMLInputElement>('.diet-dropdown-border__value-field')!;
   const headerValue = root.querySelector<HTMLElement>('.diet-dropdown-header-value')!;
@@ -277,7 +282,7 @@ function setInputValue(state: DropdownBorderState, value: BorderValue, emit: boo
   const json = JSON.stringify(value);
   state.internalWrite = true;
   state.input.value = json;
-  state.input.setAttribute('data-bob-json', json);
+  state.input.setAttribute('data-dieter-json', json);
   state.internalWrite = false;
   if (emit) {
     state.input.dispatchEvent(new Event('input', { bubbles: true }));

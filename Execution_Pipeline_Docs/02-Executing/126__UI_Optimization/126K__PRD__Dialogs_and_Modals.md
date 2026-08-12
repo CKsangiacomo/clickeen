@@ -213,7 +213,7 @@ nested focus containment. No new unit-test framework is added.
 ### K2 - Dieter Blocking Dialogs And Popover Semantics
 
 1. Convert Bulk Edit markup to native `<dialog>` and add its clean/dirty/discard
-   states without changing applied `bob-ops` behavior.
+   states without changing applied `dieter-ops` behavior.
 2. Replace `object-manager.js` with `object-manager.ts` because this behavior
    change must import the shared helper. Preserve its data contract and child
    hydration while deleting the accumulating backdrop listener.

@@ -73,7 +73,7 @@ export function hydrateDropdownFill(
     states.set(root, state);
     installHandlers(state);
     const initialValue =
-      state.input.value || state.input.getAttribute('data-bob-json') || state.input.getAttribute('value') || '';
+      state.input.value || state.input.getAttribute('data-dieter-json') || state.input.getAttribute('value') || '';
     syncFromValue(state, initialValue);
   });
 
@@ -256,7 +256,7 @@ function installHandlers(state: DropdownFillState) {
     });
   }
 
-  const readValue = () => state.input.value || state.input.getAttribute('data-bob-json') || '';
+  const readValue = () => state.input.value || state.input.getAttribute('data-dieter-json') || '';
   state.input.addEventListener('external-sync', () => syncFromValue(state, readValue()));
   state.input.addEventListener('input', () => {
     if (state.internalWrite) return;
@@ -378,7 +378,7 @@ function setInputValue(state: DropdownFillState, value: FillValue, emit: boolean
   const json = JSON.stringify(value);
   state.internalWrite = true;
   state.input.value = json;
-  state.input.setAttribute('data-bob-json', json);
+  state.input.setAttribute('data-dieter-json', json);
   if (emit) {
     state.input.dispatchEvent(new Event('input', { bubbles: true }));
   }

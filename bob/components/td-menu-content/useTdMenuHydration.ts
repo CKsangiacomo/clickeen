@@ -7,7 +7,7 @@ import {
   installClusterCollapseBehavior,
   runHydrators,
 } from './dom';
-import { serializeBobJsonFieldValue } from './fieldValue';
+import { serializeDieterJsonFieldValue } from './fieldValue';
 import { getAt } from '../../lib/utils/paths';
 import type { AccountAssetsClient } from '../../../dieter/components/shared/account-assets';
 import type { AccountFontLibrary } from '@clickeen/widget-foundation';
@@ -58,19 +58,21 @@ export function useTdMenuHydration(args: {
     };
     container.addEventListener('dieter-controls-rendered', handleControlsRendered);
 
+    let cleanupDieterControls: (() => void) | null = null;
     try {
       applyAccountFontLibraryToTypographyMenus({ container, fontLibrary });
       container
-        .querySelectorAll<HTMLInputElement>('input[data-bob-path][data-bob-json]')
+        .querySelectorAll<HTMLInputElement>('input[data-bob-path][data-dieter-json]')
         .forEach((field) => {
           const path = field.getAttribute('data-bob-path')!;
-          field.value = serializeBobJsonFieldValue(field, getAt(instanceDataRef.current, path));
+          field.value = serializeDieterJsonFieldValue(field, getAt(instanceDataRef.current, path));
         });
-      runHydrators(container, { accountAssets });
+      cleanupDieterControls = runHydrators(container, { accountAssets });
       showIfEntriesRef.current = buildShowIfEntries(container);
       applyShowIfVisibility(showIfEntriesRef.current, instanceDataRef.current);
       setRenderKey((current) => current + 1);
     } catch {
+      cleanupDieterControls?.();
       container.innerHTML =
         '<div class="settings-panel__error" role="alert">Builder controls failed to load.</div>';
       showIfEntriesRef.current = [];
@@ -78,6 +80,7 @@ export function useTdMenuHydration(args: {
     }
 
     return () => {
+      cleanupDieterControls?.();
       container.removeEventListener('dieter-controls-rendered', handleControlsRendered);
       if (controlsRenderedFrame != null) {
         window.cancelAnimationFrame(controlsRenderedFrame);

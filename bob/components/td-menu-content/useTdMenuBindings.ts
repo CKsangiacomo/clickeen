@@ -11,9 +11,9 @@ import {
   isFiniteNumber,
 } from './linkedOps';
 import {
-  parseBobJsonValue,
+  parseDieterJsonFieldValue,
   resolvePathFromTarget,
-  serializeBobJsonFieldValue,
+  serializeDieterJsonFieldValue,
 } from './fieldValue';
 import { applyShowIfVisibility, type ShowIfEntry } from './showIf';
 
@@ -82,7 +82,7 @@ export function useTdMenuBindings(args: {
       return applied;
     };
 
-    const handleBobOpsEvent = (event: Event) => {
+    const handleDieterOpsEvent = (event: Event) => {
       const detail = (event as any).detail;
       const ops = detail?.ops as WidgetOp[] | undefined;
       if (!Array.isArray(ops) || ops.length === 0) return;
@@ -133,12 +133,12 @@ export function useTdMenuBindings(args: {
       const rawValue = target.value;
       const currentValue = getAt(readInstanceData(), path);
 
-      if (target instanceof HTMLInputElement && target.dataset.bobJson != null) {
-        const parsed = parseBobJsonValue(target, rawValue);
+      if (target instanceof HTMLInputElement && target.dataset.dieterJson != null) {
+        const parsed = parseDieterJsonFieldValue(target, rawValue);
         const applied = applyExpandedOps([{ op: 'set', path, value: parsed.ok ? parsed.value : rawValue }]);
         if (!applied.ok) {
           const previousValue = getAt<unknown>(readInstanceData(), path);
-          const nextValue = serializeBobJsonFieldValue(target, previousValue);
+          const nextValue = serializeDieterJsonFieldValue(target, previousValue);
           target.value = nextValue;
           target.dispatchEvent(
             new CustomEvent('external-sync', {
@@ -186,13 +186,13 @@ export function useTdMenuBindings(args: {
       applySet(path, rawValue);
     };
 
-    container.addEventListener('bob-ops', handleBobOpsEvent as EventListener, true);
+    container.addEventListener('dieter-ops', handleDieterOpsEvent as EventListener, true);
     container.addEventListener('bob-upsell', handleUpsellEvent as EventListener, true);
     container.addEventListener('input', handleContainerEvent, true);
     container.addEventListener('change', handleContainerEvent, true);
 
     return () => {
-      container.removeEventListener('bob-ops', handleBobOpsEvent as EventListener, true);
+      container.removeEventListener('dieter-ops', handleDieterOpsEvent as EventListener, true);
       container.removeEventListener('bob-upsell', handleUpsellEvent as EventListener, true);
       container.removeEventListener('input', handleContainerEvent, true);
       container.removeEventListener('change', handleContainerEvent, true);
@@ -278,8 +278,8 @@ export function useTdMenuBindings(args: {
       }
 
       let nextValue =
-        field instanceof HTMLInputElement && field.dataset.bobJson != null
-          ? serializeBobJsonFieldValue(field, value)
+        field instanceof HTMLInputElement && field.dataset.dieterJson != null
+          ? serializeDieterJsonFieldValue(field, value)
           : value == null
             ? ''
             : String(value);
@@ -297,7 +297,7 @@ export function useTdMenuBindings(args: {
       field.value = nextValue;
       if (!(field instanceof HTMLInputElement)) return;
 
-      if (field.dataset.bobJson != null) {
+      if (field.dataset.dieterJson != null) {
         field.dispatchEvent(
           new CustomEvent('external-sync', {
             detail: { value: nextValue, source: 'tdmenu' },

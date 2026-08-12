@@ -9,10 +9,10 @@ import {
   buildShowIfEntries,
   installClusterCollapseBehavior,
   namespaceControlHostClusterIds,
-  parseBobJsonValue,
+  parseDieterJsonFieldValue,
   resolvePathFromTarget,
   runHydrators,
-  serializeBobJsonFieldValue,
+  serializeDieterJsonFieldValue,
   expandTypographyFamilyOps,
   type AccountAssetsClient,
   type ShowIfEntry,
@@ -186,18 +186,18 @@ function syncFieldValue(field: HTMLElement, values: Record<string, unknown>) {
   }
 
   const nextValue =
-    field instanceof HTMLInputElement && field.dataset.bobJson != null
-      ? serializeBobJsonFieldValue(field, value)
+    field instanceof HTMLInputElement && field.dataset.dieterJson != null
+      ? serializeDieterJsonFieldValue(field, value)
       : valueForTextField(value);
 
   field.value = nextValue;
-  if (field instanceof HTMLInputElement && field.dataset.bobJson != null) {
-    field.setAttribute('data-bob-json', nextValue);
+  if (field instanceof HTMLInputElement && field.dataset.dieterJson != null) {
+    field.setAttribute('data-dieter-json', nextValue);
   }
 
   if (
     field instanceof HTMLInputElement &&
-    (field.dataset.bobJson != null ||
+    (field.dataset.dieterJson != null ||
       field.classList.contains('diet-dropdown-actions__value-field') ||
       field.classList.contains('diet-dropdown-edit__field') ||
       field.classList.contains('diet-textedit__field') ||
@@ -222,8 +222,8 @@ function valueFromField(target: HTMLElement, values: Record<string, unknown>): u
   if (target instanceof HTMLInputElement && target.type === 'checkbox') return target.checked;
   if (target instanceof HTMLInputElement && target.type === 'radio') return target.value;
 
-  if (target instanceof HTMLInputElement && target.dataset.bobJson != null) {
-    const parsed = parseBobJsonValue(target, target.value);
+  if (target instanceof HTMLInputElement && target.dataset.dieterJson != null) {
+    const parsed = parseDieterJsonFieldValue(target, target.value);
     return parsed.ok ? parsed.value : target.value;
   }
 
@@ -284,6 +284,7 @@ export function WidgetDefaultsBuilderControls({
     const container = containerRef.current;
     if (!container) return;
     let cleanupListeners: (() => void) | null = null;
+    let cleanupDieterControls: (() => void) | null = null;
     setContractError('');
     onReadyChange(false);
     container.hidden = true;
@@ -306,7 +307,7 @@ export function WidgetDefaultsBuilderControls({
     const cleanupCollapse = installClusterCollapseBehavior(container);
     showIfEntriesRef.current = buildShowIfEntries(container);
 
-    const handleBobOps = (event: Event) => {
+    const handleDieterOps = (event: Event) => {
       const detail = (event as CustomEvent<{ ops?: unknown }>).detail;
       const ops = Array.isArray(detail?.ops) ? detail.ops : [];
       if (!ops.length) return;
@@ -362,14 +363,14 @@ export function WidgetDefaultsBuilderControls({
     try {
       applyAccountFontLibraryToTypographyMenus({ container, fontLibrary });
       syncControlValues(container, valuesRef.current, showIfEntriesRef.current);
-      runHydrators(container, { accountAssets: stubAccountAssets });
+      cleanupDieterControls = runHydrators(container, { accountAssets: stubAccountAssets });
       showIfEntriesRef.current = buildShowIfEntries(container);
       syncControlValues(container, valuesRef.current, showIfEntriesRef.current);
-      container.addEventListener('bob-ops', handleBobOps as EventListener, true);
+      container.addEventListener('dieter-ops', handleDieterOps as EventListener, true);
       container.addEventListener('input', handleInput, true);
       container.addEventListener('change', handleInput, true);
       cleanupListeners = () => {
-        container.removeEventListener('bob-ops', handleBobOps as EventListener, true);
+        container.removeEventListener('dieter-ops', handleDieterOps as EventListener, true);
         container.removeEventListener('input', handleInput, true);
         container.removeEventListener('change', handleInput, true);
       };
@@ -377,6 +378,7 @@ export function WidgetDefaultsBuilderControls({
       container.dataset.ready = 'true';
       onReadyChange(true);
     } catch {
+      cleanupDieterControls?.();
       const message = BUILDER_CONTROLS_LOAD_ERROR_COPY;
       setContractError(message);
       onContractError(message);
@@ -388,6 +390,7 @@ export function WidgetDefaultsBuilderControls({
 
     return () => {
       onReadyChange(false);
+      cleanupDieterControls?.();
       cleanupListeners?.();
       cleanupCollapse();
       container.dataset.ready = 'false';

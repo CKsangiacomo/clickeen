@@ -355,6 +355,21 @@ function testTooldrawerLabelContractsFailClosed(): void {
     /must use a label token/,
     'hardcoded Agent Activity title fails closed',
   );
+
+  const hardcodedDropdownHeader = structuredClone(spec) as any;
+  const objectManager = hardcodedDropdownHeader.editor.panels
+    .flatMap((panel: any) => panel.clusters ?? [])
+    .flatMap((cluster: any) => cluster.nodes ?? [])
+    .find((node: any) => node?.kind === 'field' && node?.type === 'object-manager');
+  const question = objectManager.template[0].template[0].children.find(
+    (node: any) => node?.type === 'dropdown-edit',
+  );
+  question.attrs.headerLabel = 'Question';
+  assert.throws(
+    () => resolveWidgetTooldrawerLabels(hardcodedDropdownHeader, labels),
+    /must use a label token/,
+    'hardcoded Dropdown Edit header label fails closed',
+  );
 }
 
 function fixturePanels(contentCluster: JsonObject): JsonObject[] {

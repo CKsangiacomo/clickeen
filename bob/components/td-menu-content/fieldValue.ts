@@ -19,8 +19,8 @@ function expectsJsonArrayField(input: HTMLElement): boolean {
   );
 }
 
-export function parseBobJsonValue(input: HTMLInputElement, rawValue: string): { ok: true; value: unknown } | { ok: false } {
-  if (input.dataset.bobJson == null) return { ok: false };
+export function parseDieterJsonFieldValue(input: HTMLInputElement, rawValue: string): { ok: true; value: unknown } | { ok: false } {
+  if (input.dataset.dieterJson == null) return { ok: false };
   const trimmed = rawValue.trim();
   if (!trimmed) return { ok: false };
   try {
@@ -32,7 +32,7 @@ export function parseBobJsonValue(input: HTMLInputElement, rawValue: string): { 
   }
 }
 
-function serializeBobJsonArrayValue(value: unknown): string {
+function serializeDieterJsonArrayValue(value: unknown): string {
   if (Array.isArray(value)) return JSON.stringify(value);
   if (typeof value === 'string') {
     const trimmed = value.trim();
@@ -47,7 +47,7 @@ function serializeBobJsonArrayValue(value: unknown): string {
   return '[]';
 }
 
-function serializeBobJsonValue(value: unknown, fallback = ''): string {
+function serializeDieterJsonValue(value: unknown, fallback = ''): string {
   if (value == null) return fallback;
   if (typeof value === 'string') {
     const trimmed = value.trim();
@@ -66,9 +66,9 @@ function serializeBobJsonValue(value: unknown, fallback = ''): string {
   }
 }
 
-export function serializeBobJsonFieldValue(input: HTMLInputElement, value: unknown): string {
+export function serializeDieterJsonFieldValue(input: HTMLInputElement, value: unknown): string {
   if (expectsJsonArrayField(input)) {
-    return serializeBobJsonArrayValue(value);
+    return serializeDieterJsonArrayValue(value);
   }
-  return serializeBobJsonValue(value);
+  return serializeDieterJsonValue(value);
 }

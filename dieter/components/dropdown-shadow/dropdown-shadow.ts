@@ -397,7 +397,7 @@ function setInputValue(state: DropdownShadowState, value: ShadowValue, emit: boo
   const json = JSON.stringify(value);
   state.internalWrite = true;
   state.input.value = json;
-  state.input.setAttribute('data-bob-json', json);
+  state.input.setAttribute('data-dieter-json', json);
   state.internalWrite = false;
   if (emit) {
     state.input.dispatchEvent(new Event('input', { bubbles: true }));

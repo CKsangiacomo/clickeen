@@ -20,6 +20,8 @@ import { navGroups, showcaseIndex, showcaseModules } from './data/routes';
 import { getIcon } from './data/icons';
 import {
   destroyDropdownActions,
+  destroyDropdownBorder,
+  destroyDropdownEdit,
   hydrateBulkEdit,
   hydrateChoiceTiles,
   hydrateDropdownActions,
@@ -349,6 +351,12 @@ function hydrateDieterComponents(scope: Element | DocumentFragment): void {
   hydrateMenuactions(scope);
   hydrateSegmented(scope);
   hydratePopAddLink(scope);
+}
+
+function destroyDieterComponents(scope: Element): void {
+  scope.querySelectorAll<HTMLElement>('.diet-dropdown-actions').forEach(destroyDropdownActions);
+  scope.querySelectorAll<HTMLElement>('.diet-dropdown-border').forEach(destroyDropdownBorder);
+  scope.querySelectorAll<HTMLElement>('.diet-dropdown-edit').forEach(destroyDropdownEdit);
 }
 
 function executeScripts(scope: DocumentFragment | Element) {
@@ -915,6 +923,7 @@ function renderFromHash() {
 
   const page = showcaseIndex.get(pagePath);
   if (!page) {
+    destroyDieterComponents(main);
     main.replaceChildren(compactBar, scrim, renderNotFound(pagePath));
     return;
   }
@@ -926,6 +935,7 @@ function renderFromHash() {
   const wrapped = wrapWithPageChrome(content, page.title);
   setActive(page.path);
   document.title = `DevStudio · ${page.title}`;
+  destroyDieterComponents(main);
   main.replaceChildren(compactBar, scrim, wrapped);
   hydrateDieterComponents(main);
   hydrateTypographyPage(main);

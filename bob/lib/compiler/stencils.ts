@@ -123,13 +123,11 @@ export async function buildContext(
     size,
   };
 
-  const label = attrs.label || (merged.label as string) || 'Label';
+  const label = attrs.label || '';
   const pathAttr = attrs.path || '';
-  // For path-bound ToolDrawer fields we avoid placeholder hint text entirely.
-  // Defaults must always be present in widget instance data; empty placeholder makes drift obvious.
-  const placeholder =
-    attrs.placeholder ??
-    (pathAttr ? '' : ((merged.placeholder as string | undefined) ?? 'Select a fill'));
+  // Visible product copy comes from the resolved caller contract, never a
+  // Dieter example context.
+  const placeholder = attrs.placeholder ?? '';
   const objectType = attrs.objectType || attrs['object-type'] || '';
   const value = pathAttr ? '' : attrs.value || '';
   const optionsRaw = attrs.options || '';
@@ -171,33 +169,31 @@ export async function buildContext(
   const addOpen = attrs.addOpen || attrs['add-open'] || (merged.addOpen as string) || '';
   const rowPath = attrs.rowPath || attrs['row-path'] || (merged.rowPath as string) || '';
   const metaPath = attrs.metaPath || attrs['meta-path'] || (merged.metaPath as string) || '';
-  const columnsRaw = attrs.columns || (merged.columns as string) || '';
+  const columnsRaw = attrs.columns || '';
   const columns = columnsRaw ? normalizeJsonAttrValue(columnsRaw) : '';
-  const title = attrs.title || (merged.title as string) || label;
+  const title = attrs.title || label;
   const emptyLabel =
-    attrs.emptyLabel || attrs['empty-label'] || (merged.emptyLabel as string) || '';
+    attrs.emptyLabel || attrs['empty-label'] || '';
   const closeLabel =
-    attrs.closeLabel || attrs['close-label'] || (merged.closeLabel as string) || '';
+    attrs.closeLabel || attrs['close-label'] || '';
   const cancelLabel =
-    attrs.cancelLabel || attrs['cancel-label'] || (merged.cancelLabel as string) || '';
+    attrs.cancelLabel || attrs['cancel-label'] || '';
   const saveLabel =
-    attrs.saveLabel || attrs['save-label'] || (merged.saveLabel as string) || '';
+    attrs.saveLabel || attrs['save-label'] || '';
   const discardTitle =
-    attrs.discardTitle || attrs['discard-title'] || (merged.discardTitle as string) || '';
+    attrs.discardTitle || attrs['discard-title'] || '';
   const discardMessage =
-    attrs.discardMessage || attrs['discard-message'] || (merged.discardMessage as string) || '';
+    attrs.discardMessage || attrs['discard-message'] || '';
   const keepEditingLabel =
     attrs.keepEditingLabel ||
     attrs['keep-editing-label'] ||
-    (merged.keepEditingLabel as string) ||
     '';
   const discardLabel =
-    attrs.discardLabel || attrs['discard-label'] || (merged.discardLabel as string) || '';
+    attrs.discardLabel || attrs['discard-label'] || '';
   const idBase = pathAttr || label || `${component}-${size}`;
   const id = sanitizeId(`${component}-${idBase}`);
 
-  const defaultOptions = (defaults?.context as any)?.options;
-  let options = defaultOptions;
+  let options: unknown;
   if (attrs.options) {
     const parsed = JSON.parse(attrs.options);
     if (!Array.isArray(parsed)) {

@@ -798,3 +798,16 @@ authorizes it.
   and selection now uses a one-pixel blue outline instead of the former
   two-pixel ring. No picker, color, value, Widget, locale, or consumer behavior
   changed.
+
+- **Completed-component contract cleanup — passed, 2026-08-12.** Product
+  compilation no longer borrows labels, placeholders, options, Bulk Edit
+  columns, or action words from Dieter DevStudio example contexts;
+  `headerLabel` now follows the same existing ToolDrawer label-token contract.
+  Bulk Edit parses the browser-decoded column JSON exactly once. The shared
+  JSON marker is now consumer-neutral `data-dieter-json`, and Bulk Edit's
+  existing multi-path event is `dieter-ops`; Bob and Roma consume the same
+  exact payload with no compatibility alias. Bob, Roma Widget Defaults, and
+  DevStudio now destroy hydrated Dropdown Actions, Border, and Edit roots
+  before replacing them, and Dropdown Edit detaches its local Lexical root.
+  No new registry, validator, fallback, repair path, service, storage,
+  translation, product-data, or Cloudflare machinery was added.

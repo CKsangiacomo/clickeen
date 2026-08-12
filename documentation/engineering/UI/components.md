@@ -30,10 +30,10 @@ Legend: ✅ exported from `index.ts` · Direct host import · ⊘ no custom hydr
 | choosers | `bulk-edit` | `hydrateBulkEdit`, `row-path` | ✅ |
 | dropdowns | `dropdown-fill` | `hydrateDropdownFill` (color/fill; largest dropdown) | ✅ |
 | dropdowns | `dropdown-actions` | `hydrateDropdownActions` / `destroyDropdownActions`, `string` | ✅ |
-| dropdowns | `dropdown-border` | `hydrateDropdownBorder`, exact border JSON | ✅ |
+| dropdowns | `dropdown-border` | `hydrateDropdownBorder` / `destroyDropdownBorder`, exact border JSON | ✅ |
 | dropdowns | `dropdown-shadow` | `hydrateDropdownShadow`, `string` | ✅ |
 | dropdowns | `dropdown-upload` | `hydrateDropdownUpload`, `meta-path` | ✅ |
-| dropdowns | `dropdown-edit` | `hydrateDropdownEdit`, `no-binding` | ✅ |
+| dropdowns | `dropdown-edit` | `hydrateDropdownEdit` / `destroyDropdownEdit`, `no-binding` | ✅ |
 | dropdowns | `menuactions` | `hydrateMenuactions`, `string` | ✅ |
 | dropdowns | `popaddlink` | `hydratePopAddLink` | ✅ |
 | composites | `popover` | — (CSS/HTML/spec; container) | ⊘ |
@@ -75,6 +75,12 @@ The governing component product law is:
   source. Components may share geometry without merging their distinct jobs.
   Any source that violates these rules is a component defect to correct in its
   owning pass, not a precedent for another exception.
+- Dieter JSON controls expose the consumer-neutral `data-dieter-json` marker,
+  and generic multi-path component edits emit `dieter-ops`. Host-owned paths
+  remain separate from that component protocol.
+- Hosts destroy hydrated Dropdown Actions, Border, and Edit roots before their
+  rendered DOM is replaced. Dropdown Edit destruction detaches its Lexical
+  root as part of that same component lifecycle.
 - Button is one `.diet-button` primitive. Its direct children determine whether
   it is text-only, icon-only, or icon-and-text; those are not separate Button
   classes or variants.
