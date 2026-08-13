@@ -44,7 +44,6 @@
         type="button"
         class="diet-btn-menuactions diet-dropdown-actions__menuaction{{#if selected}} is-selected{{/if}}"
         data-size="{{../size}}"
-        data-variant="neutral"
         data-value="{{value}}"
         data-label="{{label}}"
         role="option"
@@ -56,9 +55,7 @@
           <span class="diet-dropdown-actions__badge caption">{{badge}}</span>
           {{/if}}
         </span>
-        <span class="diet-btn-menuactions__icon" aria-hidden="true">
-          <span class="diet-dropdown-actions__check diet-icon" data-icon="checkmark" aria-hidden="true"></span>
-        </span>
+        <span class="diet-dropdown-actions__check diet-icon" data-icon="checkmark" aria-hidden="true"></span>
       </button>
       {{/if}}
       {{/each}}

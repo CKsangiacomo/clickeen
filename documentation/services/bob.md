@@ -455,6 +455,12 @@ Common primitives include:
 Controls emit edit operations. The edit engine applies those operations to the
 current in-memory instance state.
 
+Menu Actions is Dieter's unbound native action row. Bob supplies exact Chrome
+wording for application commands such as Copy code and uses the same primitive
+inside Dropdown Actions compiled from Widget-owned labels. Menu Actions does
+not write instance state or interpret those commands; the enclosing Bob or
+Dropdown Actions flow owns the action, selection, and dismissal.
+
 Dropdown Edit is the shared Dieter inline rich-text control. Bob compiles every
 Widget `type="dropdown-edit"` declaration with that Widget's adjacent English
 field and component labels, then binds its existing compact inline HTML string

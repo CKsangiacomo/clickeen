@@ -14,7 +14,6 @@ import {
   hydrateDropdownFill,
   hydrateDropdownShadow,
   hydrateDropdownUpload,
-  hydrateMenuactions,
   hydratePopAddLink,
   hydrateSegmented,
   hydrateTabs,
@@ -64,7 +63,6 @@ export function runHydrators(scope: HTMLElement, deps: DieterHydratorDeps): () =
     hydrateDropdownFill(scope, deps);
     hydrateDropdownShadow(scope);
     hydrateDropdownUpload(scope, deps);
-    hydrateMenuactions(scope);
     hydrateObjectManager(scope, nestedDeps);
     hydratePopAddLink(scope);
     hydrateRepeater(scope, nestedDeps);

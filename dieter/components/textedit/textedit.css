@@ -119,10 +119,6 @@
   display: grid;
   gap: var(--space-1);
 }
-.diet-textedit__aipanel .diet-btn-menuactions {
-  justify-content: space-between;
-}
-
 /* Floating palette */
 .diet-textedit__palette {
   position: absolute;

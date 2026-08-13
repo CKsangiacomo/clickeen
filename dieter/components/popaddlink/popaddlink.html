@@ -1,15 +1,10 @@
 <div class="diet-popaddlink diet-popover">
   <div class="diet-popover__header">
-    <button class="diet-btn-menuactions diet-popaddlink__close" data-size="sm" data-variant="neutral" type="button">
-      <span class="diet-btn-menuactions__label {{#if headerLabelClass}}{{headerLabelClass}}{{else}}label-xs{{/if}}">
+    <button class="diet-btn-menuactions diet-popaddlink__close" data-size="sm" type="button">
+      <span class="diet-btn-menuactions__label">
         {{#if headerLabel}}{{headerLabel}}{{else}}Add URL{{/if}}
       </span>
-      <span class="diet-btn-menuactions__icon">
-        <span
-          class="diet-btn-menuactions__icon-layer diet-btn-menuactions__icon-layer--idle"
-          data-icon="multiply"
-        ></span>
-      </span>
+      <span class="diet-icon" data-icon="multiply" aria-hidden="true"></span>
     </button>
   </div>
   <div class="diet-popover__body">

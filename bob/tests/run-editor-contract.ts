@@ -698,6 +698,17 @@ async function main(): Promise<void> {
   );
   await testEveryWidgetEditorContract();
   console.log('PASS every widget conforms to the authored and compiled editor contract');
+  for (const { widgetType } of discoverWidgetSpecs()) {
+    const artifact = fs.readFileSync(
+      path.join(repoRoot, 'roma/public/widget-editors', `${widgetType}.json`),
+      'utf8',
+    );
+    assert.doesNotMatch(artifact, /diet-btn-menuactions[^>]*data-variant=/, `${widgetType} has one Menu Actions treatment`);
+    assert.doesNotMatch(artifact, /diet-btn-menuactions__label (?:body|label)-/, `${widgetType} lets Menu Actions own typography`);
+    assert.doesNotMatch(artifact, /diet-btn-menuactions__icon/, `${widgetType} uses the direct Dieter Icon structure`);
+    assert.doesNotMatch(artifact, /diet-dropdown-actions__check[^>]*data-size=/, `${widgetType} lets Menu Actions own checkmark size`);
+  }
+  console.log('PASS compiled Menu Actions use one systemic unbound composition');
   testTooldrawerLabelContractsFailClosed();
   console.log('PASS ToolDrawer English label contracts fail closed');
   testSpecialCharactersRoundTripOnce();

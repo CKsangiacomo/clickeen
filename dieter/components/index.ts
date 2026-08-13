@@ -9,7 +9,6 @@ export { destroyDropdownEdit, hydrateDropdownEdit } from './dropdown-edit/dropdo
 export { hydrateTextfield } from './textfield/textfield';
 export { hydrateValuefield } from './valuefield/valuefield';
 export { hydrateBulkEdit } from './bulk-edit/bulk-edit';
-export { hydrateMenuactions } from './menuactions/menuactions';
 export { hydrateTabs } from './tabs/tabs';
 export { hydrateSegmented } from './segmented/segmented';
 export { hydratePopAddLink } from './popaddlink/popaddlink';

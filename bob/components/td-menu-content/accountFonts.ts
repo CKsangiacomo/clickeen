@@ -35,7 +35,6 @@ function createMenuAction(args: {
     ? 'diet-btn-menuactions diet-dropdown-actions__menuaction is-selected'
     : 'diet-btn-menuactions diet-dropdown-actions__menuaction';
   button.dataset.size = args.size;
-  button.dataset.variant = 'neutral';
   button.dataset.value = value;
   button.dataset.label = args.option.label;
   if (args.option.weights) button.dataset.weights = args.option.weights;
@@ -46,7 +45,7 @@ function createMenuAction(args: {
     button.dataset.selected = 'true';
   }
 
-  const label = createTextSpan(args.document, 'diet-btn-menuactions__label body-xs', '');
+  const label = createTextSpan(args.document, 'diet-btn-menuactions__label', '');
   label.appendChild(createTextSpan(args.document, 'diet-dropdown-actions__menuaction-text', args.option.label));
   if (args.option.badge) {
     const badge = createTextSpan(args.document, 'diet-dropdown-actions__badge caption', args.option.badge);
@@ -54,16 +53,10 @@ function createMenuAction(args: {
   }
   button.appendChild(label);
 
-  const iconWrap = createTextSpan(args.document, 'diet-btn-menuactions__icon', '');
-  iconWrap.setAttribute('aria-hidden', 'true');
-  const check = createTextSpan(args.document, 'diet-dropdown-actions__check', '');
+  const check = createTextSpan(args.document, 'diet-dropdown-actions__check diet-icon', '');
   check.setAttribute('aria-hidden', 'true');
-  const icon = createTextSpan(args.document, 'diet-icon', '');
-  icon.dataset.size = '12';
-  icon.dataset.icon = 'checkmark';
-  check.appendChild(icon);
-  iconWrap.appendChild(check);
-  button.appendChild(iconWrap);
+  check.dataset.icon = 'checkmark';
+  button.appendChild(check);
 
   return button;
 }

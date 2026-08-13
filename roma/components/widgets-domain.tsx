@@ -995,7 +995,6 @@ export function WidgetsDomain({
               <button
                 className="diet-btn-menuactions"
                 data-size="md"
-                data-variant="neutral"
                 type="button"
                 role="menuitem"
                 onClick={() => {
@@ -1003,12 +1002,11 @@ export function WidgetsDomain({
                   startRename(openWidgetActionsInstance);
                 }}
               >
-                <span className="diet-btn-menuactions__label body-s">Rename</span>
+                <span className="diet-btn-menuactions__label">Rename</span>
               </button>
               <button
                 className="diet-btn-menuactions"
                 data-size="md"
-                data-variant="neutral"
                 type="button"
                 role="menuitem"
                 onClick={() => {
@@ -1016,12 +1014,11 @@ export function WidgetsDomain({
                   void handleDuplicateInstance(openWidgetActionsInstance);
                 }}
               >
-                <span className="diet-btn-menuactions__label body-s">Duplicate</span>
+                <span className="diet-btn-menuactions__label">Duplicate</span>
               </button>
               <button
                 className="diet-btn-menuactions"
                 data-size="md"
-                data-variant="neutral"
                 type="button"
                 role="menuitem"
                 onClick={() => {
@@ -1029,7 +1026,7 @@ export function WidgetsDomain({
                   void handleDeleteInstance(openWidgetActionsInstance);
                 }}
               >
-                <span className="diet-btn-menuactions__label body-s">Delete</span>
+                <span className="diet-btn-menuactions__label">Delete</span>
               </button>
             </div>,
             document.body,

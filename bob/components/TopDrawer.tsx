@@ -144,7 +144,6 @@ export function TopDrawer({
                 <button
                   className="diet-btn-menuactions"
                   data-size="md"
-                  data-variant="neutral"
                   type="button"
                   role="menuitem"
                   onClick={() => {
@@ -152,7 +151,7 @@ export function TopDrawer({
                     requestHostAction('copy-code');
                   }}
                 >
-                  <span className="diet-btn-menuactions__label body-s">Copy code</span>
+                  <span className="diet-btn-menuactions__label">Copy code</span>
                 </button>
               </div>
             </div>

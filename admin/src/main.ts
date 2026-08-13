@@ -34,7 +34,6 @@ import {
   hydrateDropdownEdit,
   hydrateDropdownShadow,
   hydrateDropdownUpload,
-  hydrateMenuactions,
   hydratePopAddLink,
   hydrateSegmented,
   hydrateTabs,
@@ -391,7 +390,6 @@ function hydrateDieterComponents(scope: Element | DocumentFragment): void {
   hydrateDropdownUpload(scope, { accountAssets: showcaseAccountAssets });
   hydrateDropdownEdit(scope);
   hydrateTabs(scope);
-  hydrateMenuactions(scope);
   hydrateSegmented(scope);
   hydratePopAddLink(scope);
 }
@@ -675,31 +673,22 @@ async function openTokenEditor(
         action.className = 'diet-btn-menuactions diet-dropdown-actions__menuaction';
         action.type = 'button';
         action.dataset.size = 'sm';
-        action.dataset.variant = 'neutral';
         action.dataset.value = entry.token;
         action.dataset.label = entry.token;
         action.setAttribute('role', 'option');
 
         const actionLabel = document.createElement('span');
-        actionLabel.className = 'diet-btn-menuactions__label body-xs';
+        actionLabel.className = 'diet-btn-menuactions__label';
         const actionText = document.createElement('span');
         actionText.className = 'diet-dropdown-actions__menuaction-text';
         actionText.textContent = entry.token;
         actionLabel.append(actionText);
 
-        const actionIcon = document.createElement('span');
-        actionIcon.className = 'diet-btn-menuactions__icon';
-        actionIcon.setAttribute('aria-hidden', 'true');
         const check = document.createElement('span');
-        check.className = 'diet-dropdown-actions__check';
+        check.className = 'diet-dropdown-actions__check diet-icon';
         check.setAttribute('aria-hidden', 'true');
-        const checkIcon = document.createElement('span');
-        checkIcon.className = 'diet-icon';
-        checkIcon.dataset.size = '12';
-        checkIcon.dataset.icon = 'checkmark';
-        check.append(checkIcon);
-        actionIcon.append(check);
-        action.append(actionLabel, actionIcon);
+        check.dataset.icon = 'checkmark';
+        action.append(actionLabel, check);
         return action;
       }),
     );

@@ -33,8 +33,8 @@ Legend: ✅ exported from `index.ts` · Direct host import · ⊘ no custom hydr
 | dropdowns | `dropdown-border` | `hydrateDropdownBorder` / `destroyDropdownBorder`, exact border JSON | ✅ |
 | dropdowns | `dropdown-shadow` | `hydrateDropdownShadow` / `destroyDropdownShadow`, exact shadow JSON | ✅ |
 | dropdowns | `dropdown-upload` | `hydrateDropdownUpload` / `destroyDropdownUpload`, exact asset JSON | ✅ |
-| dropdowns | `dropdown-edit` | `hydrateDropdownEdit` / `destroyDropdownEdit`, `no-binding` | ✅ |
-| dropdowns | `menuactions` | `hydrateMenuactions`, `string` | ✅ |
+| dropdowns | `dropdown-edit` | `hydrateDropdownEdit` / `destroyDropdownEdit`, exact inline HTML string | ✅ |
+| dropdowns | `menuactions` | native action row, unbound | ⊘ |
 | dropdowns | `popaddlink` | `hydratePopAddLink` | ✅ |
 | composites | `popover` | — (CSS/HTML/spec; container) | ⊘ |
 | structural | `table` | semantic table visual base and overflow shell | ⊘ |
@@ -137,6 +137,15 @@ The governing component product law is:
   separate glyph size. Typography-family capability filtering is Bob-owned
   consumer behavior; Dropdown Actions does not inspect typography paths or
   font metadata.
+- Menu Actions is one native, unbound action row for menus and Popovers. It
+  owns only its `sm|md|lg` row geometry, typography, radius, padding, states,
+  and optional trailing Icon size. The size ladder is
+  `1rem/1.25rem/1.5rem` high, `.6875rem/.8125rem/.875rem` text, and
+  `.75rem/1rem/1.25rem` for an unsized direct Icon. The complete
+  caller-supplied label stays left aligned and the optional Icon/check stays
+  fixed on the right. The caller owns the action, semantic role, selection,
+  dismissal, disabled condition, and every visible word. Menu Actions has no
+  binding, hydrator, visual variant, AI-specific treatment, or locale source.
 - Clickable property-menu rows use the existing shared two-rail structure.
   The complete caller label stays on the leading rail. The trailing rail is
   right aligned; its dynamic text yields and receives the end ellipsis before
@@ -250,8 +259,9 @@ The governing component product law is:
   Preview kind is resolved from the account asset's exact content type rather
   than guessed from the filename. DevStudio examples are local component
   demonstrations, not account storage.
-- Menu Actions remains a separate menu-row primitive with its existing
-  `sm|md|lg` API. Low-level geometry tokens remain internal source mechanics.
+- Menu Actions remains a separate menu-row primitive with the single
+  `sm|md|lg` size API described above. Low-level geometry tokens remain
+  internal source mechanics.
 - `textrename` is deleted because it had no product consumer.
 - Toggle is a native checkbox HTML/CSS/spec contract with no custom hydrator.
 - Keep `repeater` and `object-manager` distinct. Repeater edits nested items

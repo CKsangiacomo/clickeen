@@ -1,36 +1,55 @@
 {
   "component": "menuactions",
-  "syntax": "<button class='diet-btn-menuactions' data-size='{{SIZE}}' data-variant='{{VARIANT}}'>…</button>",
+  "description": "Consumer-agnostic action row for menus and Popovers.",
+  "syntax": "<button class='diet-btn-menuactions' data-size='{{SIZE}}'>…</button>",
   "attributes": {
-    "size": { "enum": ["sm", "md", "lg"], "default": "sm" },
-    "variant": { "enum": ["neutral", "primary", "aimenuactions"], "default": "neutral" },
+    "size": { "enum": ["sm", "md", "lg"], "required": true },
     "label": { "required": true },
     "icon": { "optional": true },
-    "disabled": { "optional": true },
-    "path": { "optional": true }
+    "disabled": { "optional": true }
   },
-  "binding": { "path": "instanceData[PATH]", "type": "string" },
   "previews": [
     {
-      "id": "menuactions",
+      "id": "menuactions-label",
+      "title": "Label only",
       "sizes": ["sm", "md", "lg"],
-      "variants": ["neutral", "aimenuactions"],
       "spec": [
         "diet-btn-menuactions",
-        "data-size='{{size}}'",
-        "data-variant='{{variant}}'"
+        "data-size='{{size}}'"
       ],
       "context": {
         "size": "sm",
-        "variant": "neutral",
-        "label": "Action",
-        "icon": "square.on.square",
-        "path": ""
-      },
-      "sizeContext": {
-        "sm": { "labelClass": "label-xs" },
-        "md": { "labelClass": "label-s" },
-        "lg": { "labelClass": "label-m" }
+        "label": "Rename"
+      }
+    },
+    {
+      "id": "menuactions-trailing-icon",
+      "title": "Trailing Icon",
+      "sizes": ["sm", "md", "lg"],
+      "spec": [
+        "diet-btn-menuactions",
+        "data-size='{{size}}'",
+        "trailing diet-icon"
+      ],
+      "context": {
+        "size": "sm",
+        "label": "Selected option",
+        "icon": "checkmark"
+      }
+    },
+    {
+      "id": "menuactions-disabled",
+      "title": "Disabled",
+      "sizes": ["sm", "md", "lg"],
+      "spec": [
+        "diet-btn-menuactions",
+        "data-size='{{size}}'",
+        "disabled"
+      ],
+      "context": {
+        "size": "sm",
+        "label": "Unavailable action",
+        "disabled": true
       }
     }
   ]

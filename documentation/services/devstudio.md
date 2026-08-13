@@ -108,6 +108,11 @@ The Agent Activity route is generated from its real Dieter spec, stencil, and
 CSS. It reveals both supported sizes with the actual multi-row contract and
 active presentation; it does not maintain a DevStudio-only imitation.
 
+The generated Menuactions route reveals the one real unbound action-row
+contract at `sm|md|lg`: caller label only, caller label with one trailing
+Dieter Icon, and disabled. It does not expose the removed fake primary or
+AI-specific variants and does not maintain DevStudio-only Menuactions styling.
+
 The generated Popover and Dropdown Border, Edit, Fill, and Shadow routes expose
 the same `row`, `wide`, and `extra-wide` Popover-width contract used by Dieter
 source.

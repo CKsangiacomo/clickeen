@@ -1,101 +1,78 @@
-/* Dieter Menu Actions — list-style action button for popovers/menus
-   Contract:
-   - Root: .diet-btn-menuactions
-   - Size: data-size="sm|md|lg" (defaults to sm)
-   - Variant: data-variant="neutral|primary" (defaults to neutral)
-   - Children: .diet-btn-menuactions__label (.label utility recommended), .diet-btn-menuactions__icon
-*/
+/* Dieter Menu Actions — one consumer-agnostic action row for menus/Popovers.
+   The caller owns the label, optional trailing Icon, semantics, and action. */
 
 .diet-btn-menuactions {
-  --ma-bg: transparent;
-  --ma-color: var(--color-system-black);
-  --ma-hover-bg: color-mix(in oklab, var(--color-system-black), transparent 92%);
-  --ma-active-bg: color-mix(in oklab, var(--color-system-black), transparent 75%);
-  --ma-radius: var(--control-radius-xs, 0.25rem);
-  --ma-height: var(--control-size-xs, 1rem);
-  --ma-pad-inline: var(--control-padding-inline);
-  --ma-gap: var(--control-inline-gap-xs, 0.125rem);
-  --ma-icon-box: var(--icon-size-12, 0.75rem);
-  --ma-icon-glyph: calc(var(--ma-icon-box) * var(--icon-glyph-ratio-12, var(--icon-glyph-ratio, 1)));
-
   display: inline-flex;
+  box-sizing: border-box;
+  appearance: none;
   align-items: center;
-  justify-content: space-between; /* text left, icon right */
+  justify-content: space-between;
   inline-size: 100%;
-  min-height: var(--ma-height);
-  padding-inline: var(--ma-pad-inline);
+  min-block-size: var(--menu-action-height);
+  gap: var(--menu-action-gap);
   padding-block: 0;
+  padding-inline: var(--control-padding-inline);
   border: 0;
-  border-radius: var(--ma-radius);
-  background: var(--ma-bg);
-  color: var(--ma-color);
+  border-radius: var(--menu-action-radius);
+  background: transparent;
+  color: var(--color-system-black);
+  margin: 0;
+  font: 400 var(--menu-action-font-size)/var(--menu-action-line-height) "Inter Tight", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
   text-decoration: none;
   cursor: pointer;
-  transition: background-color var(--duration-base) var(--easing-standard), color var(--duration-base) var(--easing-standard);
+  transition:
+    background-color var(--duration-base) var(--easing-standard),
+    color var(--duration-base) var(--easing-standard);
 }
 
-.diet-btn-menuactions:hover { background: var(--ma-hover-bg); }
-.diet-btn-menuactions:active { background: var(--ma-active-bg); }
-.diet-btn-menuactions[aria-disabled="true"],
-.diet-btn-menuactions:disabled { opacity: 0.48; cursor: not-allowed; }
+.diet-btn-menuactions:hover:not(:disabled):not([aria-disabled="true"]) {
+  background: color-mix(in oklab, var(--color-system-black), transparent 92%);
+}
 
-/* Size variants to mirror diet-button */
+.diet-btn-menuactions:active:not(:disabled):not([aria-disabled="true"]) {
+  background: color-mix(in oklab, var(--color-system-black), transparent 75%);
+}
+
+.diet-btn-menuactions:disabled,
+.diet-btn-menuactions[aria-disabled="true"] {
+  opacity: 0.48;
+  cursor: not-allowed;
+}
+
 .diet-btn-menuactions[data-size="sm"] {
-  --ma-height: var(--control-size-xs, 1rem);
-  --ma-radius: var(--control-radius-xs, 0.25rem);
-  --ma-gap: var(--control-inline-gap-xs, 0.125rem);
-  --ma-icon-box: var(--icon-size-12, 0.75rem);
-  --ma-icon-glyph: calc(var(--ma-icon-box) * var(--icon-glyph-ratio-12, var(--icon-glyph-ratio, 1)));
+  --menu-action-height: var(--control-size-xs);
+  --menu-action-radius: var(--control-radius-xs);
+  --menu-action-font-size: var(--fs-11);
+  --menu-action-line-height: var(--lh-tight);
+  --menu-action-gap: var(--control-inline-gap-xs);
+  --menu-action-icon-size: var(--icon-size-12);
 }
 
 .diet-btn-menuactions[data-size="md"] {
-  --ma-height: var(--control-size-sm, 1.25rem);
-  --ma-radius: var(--control-radius-sm, 0.3125rem);
-  --ma-gap: var(--control-inline-gap-xs, 0.125rem);
-  --ma-icon-box: var(--icon-size-16, 1rem);
-  --ma-icon-glyph: calc(var(--ma-icon-box) * var(--icon-glyph-ratio-16, var(--icon-glyph-ratio, 1)));
+  --menu-action-height: var(--control-size-sm);
+  --menu-action-radius: var(--control-radius-sm);
+  --menu-action-font-size: var(--fs-13);
+  --menu-action-line-height: var(--lh-body-ui);
+  --menu-action-gap: var(--control-inline-gap-xs);
+  --menu-action-icon-size: var(--icon-size-16);
 }
 
 .diet-btn-menuactions[data-size="lg"] {
-  --ma-height: var(--control-size-md, 1.5rem);
-  --ma-radius: var(--control-radius-md, 0.375rem);
-  --ma-gap: var(--control-inline-gap-sm, 0.25rem);
-  --ma-icon-box: var(--icon-size-20, 1.25rem);
-  --ma-icon-glyph: calc(var(--ma-icon-box) * var(--icon-glyph-ratio-20, var(--icon-glyph-ratio, 1)));
+  --menu-action-height: var(--control-size-md);
+  --menu-action-radius: var(--control-radius-md);
+  --menu-action-font-size: var(--fs-14);
+  --menu-action-line-height: var(--lh-body-ui);
+  --menu-action-gap: var(--control-inline-gap-sm);
+  --menu-action-icon-size: var(--icon-size-20);
 }
 
 .diet-btn-menuactions__label {
   flex: 1 1 auto;
+  min-inline-size: 0;
   text-align: start;
-  padding-inline: 0; /* no side padding */
+  overflow-wrap: anywhere;
 }
 
-.diet-btn-menuactions__icon {
-  inline-size: var(--ma-icon-box);
-  block-size: var(--ma-icon-box);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  margin-inline-start: var(--ma-gap);
-  position: relative;
-  flex: none;
+.diet-btn-menuactions > .diet-icon:not([data-size]) {
+  --diet-icon-size: var(--menu-action-icon-size);
 }
-
-.diet-btn-menuactions__icon-layer {
-  inline-size: var(--ma-icon-box);
-  block-size: var(--ma-icon-box);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  color: currentColor;
-}
-
-.diet-btn-menuactions__icon-layer svg {
-  inline-size: var(--ma-icon-glyph);
-  block-size: var(--ma-icon-glyph);
-  display: block;
-}
-
-/* AI menu actions variant — purple icon */
-.diet-btn-aimenuactions .diet-btn-menuactions__icon { color: var(--color-system-purple); }
-.diet-btn-menuactions[data-variant="aimenuactions"] .diet-btn-menuactions__icon { color: var(--color-system-purple); }

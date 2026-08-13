@@ -20,7 +20,6 @@
       },
       "sizeContext": {
         "default": {
-          "headerLabelClass": "label-xs",
           "bodyClass": "body-s",
           "fieldLabelClass": "label-s"
         }

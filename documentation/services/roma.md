@@ -337,6 +337,10 @@ name, and Published sorts are client-side projections over the validated
 account list. Their headers use the shared `sm` Dieter sort control: the active
 sort is black and inactive sorts are gray.
 
+Rename, Duplicate, and Delete use the same unbound Dieter Menu Actions row.
+Roma owns their exact Chrome wording and command handlers; Menu Actions owns
+only the shared row presentation and does not interpret or persist the command.
+
 **Widget catalog** renders the canonical widget definitions as Dieter-styled
 cards. A catalog card creates an instance of that widget type; it does not
 represent, count, or group saved account instances. Roma renders only catalog

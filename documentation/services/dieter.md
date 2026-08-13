@@ -125,6 +125,16 @@ component owns no visible wording. Widget ToolDrawer instances supply the
 group label and every option label from the Widget's adjacent ToolDrawer label
 file.
 
+Menu Actions owns one compact native action row inside a menu or Popover. It is
+unbound and has no browser hydrator: the caller supplies `type="button"`, the
+complete label, optional trailing Icon, semantic role, disabled condition, and
+action. Its required `sm|md|lg` size is the sole row authority, respectively
+owning `1rem/1.25rem/1.5rem` height, `.6875rem/.8125rem/.875rem` text, and
+`.75rem/1rem/1.25rem` for an unsized direct Dieter Icon. Hover, active, and
+disabled presentation do not change geometry. There is one visual treatment;
+AI meaning, selection meaning, product commands, and caller copy do not become
+Dieter variants or locale entries.
+
 Dropdown Actions owns the compact immediate-choice row and its attached
 Popover composition. The closed row shows caller-supplied label and current
 value, hover discloses interaction without a resting chevron, and choosing a

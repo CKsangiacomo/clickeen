@@ -129,7 +129,6 @@ export function DieterDropdownActions({
                 type="button"
                 className={`diet-btn-menuactions diet-dropdown-actions__menuaction${selected ? ' is-selected' : ''}`}
                 data-size={size}
-                data-variant="neutral"
                 data-value={option.value}
                 data-label={option.label}
                 role="option"
@@ -141,19 +140,14 @@ export function DieterDropdownActions({
                   triggerRef.current?.focus();
                 }}
               >
-                <span className={`diet-btn-menuactions__label ${bodyClass}`}>
+                <span className="diet-btn-menuactions__label">
                   <span className="diet-dropdown-actions__menuaction-text">{option.label}</span>
                 </span>
-                <span className="diet-btn-menuactions__icon" aria-hidden="true">
-                  <span className="diet-dropdown-actions__check" aria-hidden="true">
-                    <span
-                      className="diet-icon diet-icon-mask"
-                      data-size="12"
-                      style={{ '--diet-icon-source': 'url("/dieter/icons/svg/checkmark.svg")' } as CSSProperties}
-                      aria-hidden="true"
-                    />
-                  </span>
-                </span>
+                <span
+                  className="diet-dropdown-actions__check diet-icon diet-icon-mask"
+                  style={{ '--diet-icon-source': 'url("/dieter/icons/svg/checkmark.svg")' } as CSSProperties}
+                  aria-hidden="true"
+                />
               </button>
             );
           })}

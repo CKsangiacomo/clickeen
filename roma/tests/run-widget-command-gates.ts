@@ -267,6 +267,9 @@ async function testDieterLayoutTableAndPopupConsumption(): Promise<void> {
   assert.match(dropdownActions, /const labelClass = size === 'sm' \? 'label-xs' : size === 'lg' \? 'label-m' : 'label-s'/);
   assert.match(dropdownActions, /const bodyClass = size === 'sm' \? 'body-xs' : size === 'lg' \? 'body-m' : 'body-s'/);
   assert.match(dropdownActions, /className=\{`diet-btn-menuactions diet-dropdown-actions__menuaction/);
+  assert.doesNotMatch(dropdownActions, /data-variant="neutral"/);
+  assert.match(dropdownActions, /className="diet-btn-menuactions__label"/);
+  assert.match(dropdownActions, /className="diet-dropdown-actions__check diet-icon diet-icon-mask"/);
   assert.match(dropdownActions, /removeEventListener\('pointerdown', closeOnPointerDown, true\)/);
   assert.match(dropdownActions, /removeEventListener\('keydown', closeOnEscape\)/);
   assert.doesNotMatch(dropdownActions, /chevron\.compact/);

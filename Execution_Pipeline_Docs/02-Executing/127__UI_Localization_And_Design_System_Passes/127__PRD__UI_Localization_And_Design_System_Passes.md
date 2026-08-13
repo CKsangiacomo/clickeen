@@ -158,7 +158,7 @@ the code is convenient there.
 | Stage | Status | Release state |
 | --- | --- | --- |
 | Stage 1 — Scaffold only | Complete | Committed, pushed, and deployed; no non-English experience is exposed |
-| Stage 2 — Dieter UI pass | In progress: Foundations, Agent Activity, Bulk Edit, Button, Choice Tiles, Dropdown Actions, Popover, Dropdown Border, Dropdown Edit, Dropdown Fill, Dropdown Shadow, and Dropdown Upload complete and re-audited as consumer-agnostic primitives | Menuactions is the next component pass |
+| Stage 2 — Dieter UI pass | In progress: Foundations, Agent Activity, Bulk Edit, Button, Choice Tiles, Dropdown Actions, Popover, Dropdown Border, Dropdown Edit, Dropdown Fill, Dropdown Shadow, Dropdown Upload, and Menuactions complete and re-audited as consumer-agnostic primitives | Object Manager is the next component pass |
 | Stage 3 — Bob UI pass | Not started | No authority to begin until explicitly directed |
 | Stage 4 — Roma UI pass | Not started | No authority to begin until explicitly directed |
 | Stage 5 — Translation pass | Not started | No translations may be generated yet |
@@ -1036,3 +1036,41 @@ authorizes it.
   `{assetRef,name}` value. No account data, route, storage, product data,
   Cloudflare configuration, deployment, translation generation, compatibility
   path, service, registry, or PRD 128 behavior changed.
+
+- **Menuactions — passed locally, 2026-08-13.** Menuactions is now one native,
+  unbound action row for menus and Popovers. Its required `sm|md|lg` size is
+  the sole authority for compact row height, typography, radius, spacing, and
+  the default size of one optional trailing Dieter Icon. The complete
+  caller-supplied label remains left aligned; the optional Icon/check remains a
+  fixed right-side element. Hover, active, and disabled states retain the same
+  geometry.
+
+  The fake `primary` option, consumer-specific `aimenuactions` option and purple
+  Icon rule, false instance-data string binding, unused path input, parallel
+  label typography inputs, old nested Icon layer/glyph-ratio sizing, and
+  redundant type-setting hydrator are deleted rather than wrapped or aliased.
+  Every live caller already emits an exact native `type="button"`, so no
+  replacement runtime machinery was required.
+
+  Dropdown Actions still owns its exact selected value, Popover lifecycle, and
+  immediate close. Bob's Copy code action, Roma's Rename/Duplicate/Delete
+  actions, Bob's account-font options, Popaddlink's current close composition,
+  and DevStudio's token chooser retain their existing caller-owned behavior.
+  Their redundant Menuactions variant, typography, nested Icon wrapper, and
+  fixed checkmark-size overrides are removed. DevStudio now reveals label-only,
+  trailing-Icon, and disabled rows at every size. All visible words remain
+  exact caller input: Widget option labels continue through adjacent Widget
+  ToolDrawer label files, while Bob and Roma Chrome stays with those
+  applications for their later passes. No Dieter locale, copy catalog, Widget
+  branch, persistence change, compatibility path, service, registry, route,
+  product-data mutation, Cloudflare change, or translation generation was
+  added.
+
+  Focused verification passed: Dieter typecheck/governance, DevStudio
+  generation/build/typecheck, Bob and Roma typechecks plus their focused
+  editor/command contract suites, Widget source generation, all eight editor
+  artifact pairs, and diff checks. Local Chromium computed the exact
+  `16/20/24px` row, `11/13/14px` text, `12/16/20px` trailing Icon, and
+  `3/4/6px` radius ladders; it also selected a real Dropdown Actions option,
+  observed the exact new value, and proved the Popover closed. The local
+  V1–V8 audit passed. This work is not committed, pushed, deployed, or live.
