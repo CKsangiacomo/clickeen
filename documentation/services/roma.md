@@ -185,7 +185,7 @@ service:
 | `/api/account/widget-defaults` | Roma defaults document backed by Tokyo-worker        |
 | `/api/builder/:instanceId/open` | Roma Builder-open envelope backed by Tokyo-worker    |
 | `/widget-editors/:widgetname.json` | Deploy-built static Bob editor artifact       |
-| `/api/account/instances/:instanceId/copilot` | San Francisco through Roma grants       |
+| `/api/account/instances/:instanceId/copilot` | Product Copilot `/turn` through Roma grants (SSE relay) |
 
 Roma attaches the account authz capsule and account public id to private
 Tokyo-worker calls.
@@ -492,20 +492,25 @@ and Tokyo/R2 account storage cleanup.
 
 ## AI
 
-Roma grants Builder Copilot access for the current account and calls San
-Francisco. Bob sends the Product Copilot request through Roma: `instanceId`,
-`sessionId`, `userMessage`, bounded `conversationHistory`, and a
-`product-copilot.context` capsule with widget identity, locale, draft
-signature, editable controls/current values, available draft actions, and
-unavailable capabilities. Roma validates that capsule, resolves account and
-widget identity from the saved instance context, mints the account grant, and
-forwards the request for governed model execution. Bob keeps apply and Undo in
-browser memory; Roma does not forward those editor actions to a separate
-outcome or learning route.
+Roma grants Builder Copilot access for the current account, calls Product
+Copilot `/turn`, and relays the SSE stream back to Bob. Bob sends a
+`CopilotTurnRequest` through Roma: an `initial` turn carries `userMessage`,
+while a `continuation` carries `priorModelStepId`, `toolCallId`, `toolName`,
+and `toolResult`. Both kinds carry `sessionId`, `userTurnId`, optional
+`selectedModel`, bounded `conversationHistory`, and a `currentDraftContext`
+capsule with widget identity, locale, draft signature, editable controls/current
+values, available draft actions, and unavailable capabilities. Roma resolves
+account and widget identity from the saved instance context, mints the account
+grant, and pipes the Product Copilot event stream through. Bob keeps apply and
+Undo in browser memory; Roma does not forward those editor actions to a
+separate outcome or learning route.
 
 Roma is the sole AI grant signing authority. It holds
 `ROMA_AI_GRANT_PRIVATE_KEY_PEM`; San Francisco, Translation Agent, and
 Tokyo-worker hold only the matching public key and accept only issuer `roma`.
+The Roma-issued grant is authoritative: `streamCopilotTurn` constructs the
+upstream `/turn` body from validated fields only and writes the grant last, so
+the caller cannot overwrite it.
 
 Product Copilot model selection is also Roma-owned. Bob may send a selected
 model from the UI, but Roma validates it against
@@ -516,17 +521,24 @@ managed config. Paid Product Copilot grant policy must include every managed
 Product Copilot model; free policy may remain narrower. The picker owns no model
 truth, and Roma does not silently substitute another provider or model.
 
-Roma validates current-account and widget authority plus the top-level Copilot
-envelope. It does not duplicate the Product Copilot brain's edit-control
-catalog validation. Invalid edit-control context travels to the Product Copilot
-contract as degraded edit context: conversation may continue, while
-`draft_edit` is unavailable until Bob supplies valid edit controls. Specific
-Copilot context failures are returned to Bob with their reason/issue details
-instead of being collapsed into a generic upstream failure.
+Roma validates current-account and widget authority plus the full
+`CopilotTurnRequest` through the shared `parseCopilotTurnRequest` parser in
+`@clickeen/ck-contracts/ai` before any usage reservation or grant issuance.
+The route instance id must match `currentDraftContext.instanceId`, and the
+context `widgetType` must match the loaded Tokyo instance row. Usage is
+reserved only on the initial turn; continuations pass `skipTurnReservation`.
+Roma does not duplicate the Product Copilot brain's edit-control catalog
+validation. Invalid edit-control context travels to the Product Copilot contract
+as degraded edit context: conversation may continue, while the
+`apply_widget_ops` tool is unavailable until Bob supplies valid edit controls.
+Specific Copilot context failures are returned to Bob with their reason/issue
+details instead of being collapsed into a generic upstream failure.
 
 Roma does not infer Copilot failure meaning from HTTP status alone. San
 Francisco/Product Copilot must return explicit reason keys for invalid Product
 Copilot requests; provider/upstream failures remain provider/upstream failures.
+The browser-facing response is `content-type: text/event-stream` with
+`cache-control: no-store`; Roma relays the Product Copilot frames transparently.
 
 ## Deploy Plane
 

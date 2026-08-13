@@ -6,7 +6,9 @@ body {
 
 body {
   margin: 0;
-  padding: 0;
+  padding: var(--stage-shadow-gutter-top, 0px) var(--stage-shadow-gutter-right, 0px)
+    var(--stage-shadow-gutter-bottom, 0px) var(--stage-shadow-gutter-left, 0px);
+  box-sizing: border-box;
   background: transparent;
   color: var(--color-system-black);
   font: 400 var(--fs-14)/var(--lh-body) "Inter", sans-serif;
@@ -26,7 +28,9 @@ body {
 }
 
 .stage[data-canvas-mode='viewport'] {
-  min-height: 100vh;
+  min-height: calc(
+    100vh - var(--stage-shadow-gutter-top, 0px) - var(--stage-shadow-gutter-bottom, 0px)
+  );
 }
 
 .stage[data-canvas-mode='fixed'] {

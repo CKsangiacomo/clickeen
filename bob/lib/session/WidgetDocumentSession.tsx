@@ -34,6 +34,8 @@ type WidgetSessionTransportValue = {
   listTranslations: ReturnType<typeof useSessionTransport>['listTranslations'];
   readTranslation: ReturnType<typeof useSessionTransport>['readTranslation'];
   generateTranslations: ReturnType<typeof useSessionTransport>['generateTranslations'];
+  runCopilot: ReturnType<typeof useSessionTransport>['runCopilot'];
+  cancelCopilot: ReturnType<typeof useSessionTransport>['cancelCopilot'];
 };
 
 const WidgetDocumentSessionContext = createContext<WidgetDocumentSessionValue | null>(null);
@@ -100,11 +102,15 @@ export function WidgetDocumentSessionProvider({ children }: { children: ReactNod
       listTranslations: transport.listTranslations,
       readTranslation: transport.readTranslation,
       generateTranslations: transport.generateTranslations,
+      runCopilot: transport.runCopilot,
+      cancelCopilot: transport.cancelCopilot,
     }),
     [
       transport.generateTranslations,
       transport.listTranslations,
       transport.readTranslation,
+      transport.runCopilot,
+      transport.cancelCopilot,
     ],
   );
 

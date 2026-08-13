@@ -1,6 +1,15 @@
 # Clickeen Context Compaction Service — Plan
 
-**Status:** PLANNING
+> **REALITY CHECK (August 2026):** This plan proposes enterprise ML
+> infrastructure (A/B holdout framework, inflation guards, parity fixture sets,
+> 5-step gated build) for a problem that has not been proven to exist. San
+> Francisco already captures token counts per call. The AI-native approach:
+> aggregate token usage by agent × task for a week. If cost is material, add a
+> JSON minifier at the model-call chokepoint. If not, do nothing. Do not build
+> this compaction service until measurement proves the need. The detailed plan
+> below is retained as reference, not as a build authorization.
+
+**Status:** PLANNING — MEASURE FIRST
 **Date:** June 25, 2026
 **Sibling:** `Headroom_Context_Compression_Eval_June2026.md` (the eval that motivates this)
 **Owner:** San Francisco (governed model execution)

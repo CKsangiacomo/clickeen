@@ -73,13 +73,27 @@ async function run(): Promise<void> {
             path: string;
             value: string;
           }>;
+          // PRD 128E: /model/turn structured-mode response shape.
+          // The output matches the TRANSLATION_OUTPUT_SCHEMA.
           return Response.json({
-            content: JSON.stringify(
-              items.map((item) => ({
+            ok: true,
+            version: 1,
+            modelStepId: crypto.randomUUID(),
+            output: {
+              translations: items.map((item) => ({
                 path: item.path,
                 value: `${item.value} ${request.trace.locale}`,
               })),
-            ),
+            },
+            finish: {
+              finishReason: 'stop',
+              requestedProvider: 'openai',
+              requestedModel: 'gpt-5.2',
+              reportedModel: 'gpt-5.2-2025-12-11',
+              promptTokens: 10,
+              completionTokens: 5,
+              latencyMs: 100,
+            },
           });
         },
       },

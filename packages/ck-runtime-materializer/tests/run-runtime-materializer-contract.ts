@@ -164,6 +164,79 @@ async function testInvalidInputsFail(): Promise<void> {
   assertFailure(await materializeRuntimePackage(missingShellClass), 'widget_package_shell_invalid');
 }
 
+async function testSharedShadowRenderingContract(): Promise<void> {
+  const appearanceSource = await readFile(
+    path.join(repoRoot, 'tokyo/product/widgets/shared/appearance.js'),
+    'utf8',
+  );
+  const context: Record<string, unknown> = {};
+  context.window = context;
+  vm.runInNewContext(appearanceSource, context);
+  const appearance = context.CKAppearance as {
+    insideShadowToBoxShadowList: (value: unknown, path: string) => string;
+    resolveOutsideShadowGutters: (value: unknown, path: string) => {
+      top: number;
+      right: number;
+      bottom: number;
+      left: number;
+    };
+    shadowToBoxShadow: (value: unknown, inset: boolean, path: string) => string;
+  };
+  const outside = {
+    enabled: true,
+    inset: false,
+    x: -6,
+    y: 8,
+    blur: 20,
+    spread: -4,
+    color: '#123456',
+    alpha: 35,
+  };
+  assert.equal(
+    appearance.shadowToBoxShadow(outside, false, 'stage.shadow'),
+    '-6px 8px 20px -4px color-mix(in oklab, #123456, transparent 65%)',
+    'outside shadow preserves the exact signed geometry and color',
+  );
+  assert.deepEqual(
+    { ...appearance.resolveOutsideShadowGutters(outside, 'stage.shadow') },
+    { top: 18, right: 20, bottom: 34, left: 32 },
+    'Stage gutter includes the browser blur painting extent around the exact outside shadow',
+  );
+
+  const inside = (overrides: Record<string, unknown>) => ({
+    enabled: true,
+    inset: true,
+    x: 0,
+    y: 0,
+    blur: 16,
+    spread: -12,
+    color: '#000000',
+    alpha: 12,
+    ...overrides,
+  });
+  const group = {
+    linked: false,
+    layer: 'above-content',
+    all: inside({ blur: 24, spread: 0 }),
+    top: inside({ y: 12 }),
+    right: inside({ x: -12 }),
+    bottom: inside({ y: -12 }),
+    left: inside({ x: 12 }),
+  };
+  const rendered = appearance.insideShadowToBoxShadowList(group, 'stage.insideShadow');
+  assert.equal(rendered.split(', inset ').length, 4, 'unlinked inside shadow renders four real inset shadows');
+  assert.match(rendered, /inset 0px 12px 16px -12px/, 'top signed geometry is preserved');
+  assert.match(rendered, /inset -12px 0px 16px -12px/, 'right signed geometry is preserved');
+  assert.match(rendered, /inset 0px -12px 16px -12px/, 'bottom signed geometry is preserved');
+  assert.match(rendered, /inset 12px 0px 16px -12px/, 'left signed geometry is preserved');
+  assert.doesNotMatch(rendered, /linear-gradient/, 'inside shadows are not gradient approximations');
+  assert.throws(
+    () => appearance.shadowToBoxShadow({ ...outside, inset: true }, false, 'stage.shadow'),
+    /stage\.shadow\.inset must be false/,
+    'outside context rejects an inset shadow instead of rewriting it',
+  );
+}
+
 const testCases: Array<{ name: string; run: () => Promise<void> }> = [
   { name: 'package with one Shell contract', run: testPackageWithOneShellContract },
   { name: 'evidence contract', run: testEvidenceContract },
@@ -176,6 +249,7 @@ const testCases: Array<{ name: string; run: () => Promise<void> }> = [
     run: testRuntimeRejectsInvalidOverlayWithoutStartingModules,
   },
   { name: 'invalid inputs fail', run: testInvalidInputsFail },
+  { name: 'shared shadow rendering contract', run: testSharedShadowRenderingContract },
   { name: 'forbidden imports guard', run: assertForbiddenImports },
 ];
 

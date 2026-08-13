@@ -89,7 +89,6 @@ export function buildSystemPrompt(args: {
     widgetType ? `Context: widgetType=${widgetType}.` : null,
     '',
     'Rules:',
-    '- Return ONLY JSON. No markdown, no extra text.',
     '- Keep the same item count and order as input.',
     '- Preserve paths exactly.',
     '- Preserve URLs, emails, brand names, and placeholders (e.g. {token}, {{token}}, :token).',
@@ -121,7 +120,6 @@ export function buildUserPrompt(items: TranslationItem[]): string {
   }));
   return [
     'Translate the following items.',
-    'Return JSON array: [{"path":"...","value":"..."},...]',
     '',
     JSON.stringify(payload),
   ].join('\n');
@@ -296,28 +294,28 @@ export function chunkTranslationEntries(entries: TranslationItem[]): Translation
   return batches;
 }
 
-export function parseTranslationResult(
-  raw: string,
+/**
+ * PRD 128E — domain validation for structured-output translated values.
+ *
+ * San Francisco /model/turn (structured mode) guarantees the output shape
+ * via the JSON Schema. This function owns the agent's domain checks that the
+ * schema cannot express: exact path equality, no duplicates, size match,
+ * brace-placeholder normalization, safety assertion, and expected-order
+ * normalization.
+ *
+ * The JSON.parse + shape validation from the old parseTranslationResult is
+ * removed — the structured output already provides parsed objects.
+ */
+export function validateStructuredTranslationResult(
+  items: Array<{ path: string; value: string }>,
   expected: TranslationItem[],
   provider: string,
 ): Array<{ path: string; value: string }> {
-  let json: unknown;
-  try {
-    json = JSON.parse(raw);
-  } catch {
-    throw providerError(provider, 'Invalid JSON response');
-  }
-
-  const items = Array.isArray(json) ? json : null;
-  if (!items) {
-    throw providerError(provider, 'Expected JSON array response');
-  }
-
   const expectedPaths = new Set(expected.map((item) => item.path));
   const seen = new Set<string>();
   const mapped = new Map<string, string>();
 
-  items.forEach((entry: unknown, index: number) => {
+  items.forEach((entry, index) => {
     if (!isRecord(entry)) {
       throw providerError(provider, `Item ${index} is not an object`);
     }

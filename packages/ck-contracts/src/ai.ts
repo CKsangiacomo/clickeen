@@ -188,6 +188,419 @@ export type ProductCopilotResponse = {
   };
 };
 
+// ---------------------------------------------------------------------------
+// PRD 128A/128C/128D — Copilot turn contract (shared parser, typed events)
+// ---------------------------------------------------------------------------
+
+/**
+ * The exact typed event union for Product Copilot turns.
+ * modelStepId is REQUIRED on text_delta, tool_call, model_step_finished,
+ * and step-level errors once model execution has begun.
+ * It is ABSENT only from agent-level events that occur before or outside
+ * a model step (agent_turn_started, agent_turn_finished, agent_turn_error
+ * from pre-execution failures, agent_turn_stopped).
+ */
+export type ProductCopilotTurnEvent =
+  | { version: 1; userTurnId: string; type: 'agent_turn_started'; data: Record<string, never> }
+  | { version: 1; userTurnId: string; modelStepId: string; type: 'text_delta'; data: { text: string } }
+  | {
+      version: 1;
+      userTurnId: string;
+      modelStepId: string;
+      type: 'tool_call';
+      data: { toolCallId: string; toolName: string; input: unknown };
+    }
+  | {
+      version: 1;
+      userTurnId: string;
+      modelStepId: string;
+      type: 'model_step_finished';
+      data: {
+        finishReason: string;
+        requestedProvider: string;
+        requestedModel: string;
+        reportedModel: string;
+        promptTokens: number;
+        completionTokens: number;
+        latencyMs: number;
+      };
+    }
+  | { version: 1; userTurnId: string; type: 'agent_turn_finished'; data: Record<string, never> }
+  | {
+      version: 1;
+      userTurnId: string;
+      type: 'agent_turn_error';
+      data: { code: string; reasonKey: string; message: string; requestId?: string };
+    }
+  | { version: 1; userTurnId: string; type: 'agent_turn_stopped'; data: Record<string, never> };
+
+const COPILOT_TURN_EVENT_TYPES = new Set([
+  'agent_turn_started',
+  'text_delta',
+  'tool_call',
+  'model_step_finished',
+  'agent_turn_finished',
+  'agent_turn_error',
+  'agent_turn_stopped',
+] as const);
+
+const COPILOT_TURN_EVENT_TYPES_REQUIRING_MODEL_STEP_ID = new Set([
+  'text_delta',
+  'tool_call',
+  'model_step_finished',
+]);
+
+function isCopilotTurnEventData(value: unknown, type: string): boolean {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) return false;
+  const data = value as Record<string, unknown>;
+  switch (type) {
+    case 'agent_turn_started':
+    case 'agent_turn_finished':
+    case 'agent_turn_stopped':
+      return true;
+    case 'text_delta':
+      return typeof data.text === 'string';
+    case 'tool_call':
+      return (
+        typeof data.toolCallId === 'string' && data.toolCallId.length > 0 &&
+        typeof data.toolName === 'string' && data.toolName.length > 0 &&
+        'input' in data
+      );
+    case 'model_step_finished':
+      return (
+        typeof data.finishReason === 'string' &&
+        typeof data.requestedProvider === 'string' &&
+        typeof data.requestedModel === 'string' &&
+        typeof data.reportedModel === 'string' && data.reportedModel.length > 0 &&
+        typeof data.promptTokens === 'number' && Number.isInteger(data.promptTokens) && data.promptTokens >= 0 &&
+        typeof data.completionTokens === 'number' && Number.isInteger(data.completionTokens) && data.completionTokens >= 0 &&
+        typeof data.latencyMs === 'number' && Number.isInteger(data.latencyMs) && data.latencyMs >= 0
+      );
+    case 'agent_turn_error':
+      return (
+        typeof data.code === 'string' &&
+        typeof data.reasonKey === 'string' &&
+        typeof data.message === 'string'
+      );
+    default:
+      return false;
+  }
+}
+
+export function isProductCopilotTurnEvent(value: unknown): value is ProductCopilotTurnEvent {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) return false;
+  const record = value as Record<string, unknown>;
+  if (record.version !== 1) return false;
+  if (typeof record.userTurnId !== 'string' || record.userTurnId.length === 0) return false;
+  const type = record.type;
+  if (typeof type !== 'string' || !COPILOT_TURN_EVENT_TYPES.has(type as never)) return false;
+  if (
+    COPILOT_TURN_EVENT_TYPES_REQUIRING_MODEL_STEP_ID.has(type as never) &&
+    (typeof record.modelStepId !== 'string' || record.modelStepId.length === 0)
+  ) {
+    return false;
+  }
+  return isCopilotTurnEventData(record.data, type);
+}
+
+// ---------------------------------------------------------------------------
+// PRD 128D — Copilot turn request contract (shared parser)
+// ---------------------------------------------------------------------------
+
+export type CopilotHistoryEntry =
+  | { role: 'user'; text: string }
+  | { role: 'assistant'; text: string }
+  | {
+      role: 'assistant';
+      text: string;
+      toolCall: { toolCallId: string; toolName: string; input: unknown };
+    }
+  | {
+      role: 'assistant';
+      text: string;
+      toolCall: { toolCallId: string; toolName: string; input: unknown };
+      toolResult: unknown;
+    };
+
+export type CopilotDraftContext = {
+  instanceId: string;
+  widgetType: string;
+  displayName: string;
+  activeLocale: string;
+  draftSignature: string;
+  controls: ProductCopilotControl[];
+  availableActions: string[];
+  unavailableCapabilities: string[];
+  selectedControlPath?: string;
+};
+
+export type CopilotTurnRequest =
+  | {
+      version: 1;
+      kind: 'initial';
+      sessionId: string;
+      userTurnId: string;
+      userMessage: string;
+      selectedModel?: { provider: string; model: string };
+      conversationHistory: CopilotHistoryEntry[];
+      currentDraftContext: CopilotDraftContext;
+    }
+  | {
+      version: 1;
+      kind: 'continuation';
+      sessionId: string;
+      userTurnId: string;
+      priorModelStepId: string;
+      toolCallId: string;
+      toolName: 'apply_widget_ops';
+      toolResult: unknown;
+      selectedModel?: { provider: string; model: string };
+      conversationHistory: CopilotHistoryEntry[];
+      currentDraftContext: CopilotDraftContext;
+    };
+
+export const COPILOT_MAX_HISTORY_ENTRIES = 8;
+export const COPILOT_MAX_HISTORY_TEXT_CHARS = 2000;
+
+function isNonEmptyTrimmedString(value: unknown): value is string {
+  return typeof value === 'string' && value.length > 0 && value === value.trim();
+}
+
+function parseCopilotHistoryEntry(
+  value: unknown,
+  path: string,
+): { ok: true; entry: CopilotHistoryEntry } | { ok: false; issue: { path: string; message: string } } {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) {
+    return { ok: false, issue: { path, message: 'History entry must be an object.' } };
+  }
+  const record = value as Record<string, unknown>;
+  const role = record.role;
+  if (role !== 'user' && role !== 'assistant') {
+    return { ok: false, issue: { path: `${path}.role`, message: 'Role must be user or assistant.' } };
+  }
+  const text = record.text;
+  if (!isNonEmptyTrimmedString(text)) {
+    return { ok: false, issue: { path: `${path}.text`, message: 'Text must be a non-empty trimmed string.' } };
+  }
+  if (text.length > COPILOT_MAX_HISTORY_TEXT_CHARS) {
+    return { ok: false, issue: { path: `${path}.text`, message: `Text must be at most ${COPILOT_MAX_HISTORY_TEXT_CHARS} characters.` } };
+  }
+
+  const toolCall = record.toolCall;
+  if (toolCall === undefined) {
+    return { ok: true, entry: { role, text } as CopilotHistoryEntry };
+  }
+  if (typeof toolCall !== 'object' || toolCall === null || Array.isArray(toolCall)) {
+    return { ok: false, issue: { path: `${path}.toolCall`, message: 'ToolCall must be an object when present.' } };
+  }
+  const tc = toolCall as Record<string, unknown>;
+  if (!isNonEmptyTrimmedString(tc.toolCallId)) {
+    return { ok: false, issue: { path: `${path}.toolCall.toolCallId`, message: 'toolCallId must be a non-empty trimmed string.' } };
+  }
+  if (!isNonEmptyTrimmedString(tc.toolName)) {
+    return { ok: false, issue: { path: `${path}.toolCall.toolName`, message: 'toolName must be a non-empty trimmed string.' } };
+  }
+  if (!('input' in tc)) {
+    return { ok: false, issue: { path: `${path}.toolCall.input`, message: 'input is required on toolCall.' } };
+  }
+
+  const toolResult = record.toolResult;
+  if (toolResult === undefined) {
+    return {
+      ok: true,
+      entry: {
+        role,
+        text,
+        toolCall: { toolCallId: tc.toolCallId, toolName: tc.toolName, input: tc.input },
+      } as CopilotHistoryEntry,
+    };
+  }
+  return {
+    ok: true,
+    entry: {
+      role,
+      text,
+      toolCall: { toolCallId: tc.toolCallId, toolName: tc.toolName, input: tc.input },
+      toolResult,
+    },
+  };
+}
+
+function parseCopilotDraftContext(
+  value: unknown,
+  routeInstanceId?: string,
+): { ok: true; context: CopilotDraftContext } | { ok: false; issues: Array<{ path: string; message: string }> } {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) {
+    return { ok: false, issues: [{ path: 'currentDraftContext', message: 'Draft context must be an object.' }] };
+  }
+  const record = value as Record<string, unknown>;
+  const issues: Array<{ path: string; message: string }> = [];
+
+  for (const field of ['instanceId', 'widgetType', 'displayName', 'activeLocale', 'draftSignature']) {
+    if (!isNonEmptyTrimmedString(record[field])) {
+      issues.push({ path: `currentDraftContext.${field}`, message: `${field} must be a non-empty trimmed string.` });
+    }
+  }
+  if (routeInstanceId && record.instanceId !== routeInstanceId) {
+    issues.push({ path: 'currentDraftContext.instanceId', message: 'Context instance must match the route instance.' });
+  }
+  if (!Array.isArray(record.controls)) {
+    issues.push({ path: 'currentDraftContext.controls', message: 'Controls must be an array.' });
+  }
+  if (!Array.isArray(record.availableActions)) {
+    issues.push({ path: 'currentDraftContext.availableActions', message: 'AvailableActions must be an array.' });
+  }
+  if (!Array.isArray(record.unavailableCapabilities) || !(record.unavailableCapabilities as unknown[]).every((c) => typeof c === 'string')) {
+    issues.push({ path: 'currentDraftContext.unavailableCapabilities', message: 'UnavailableCapabilities must be a string array.' });
+  }
+  if (record.selectedControlPath !== undefined && !isNonEmptyTrimmedString(record.selectedControlPath)) {
+    issues.push({ path: 'currentDraftContext.selectedControlPath', message: 'SelectedControlPath must be a non-empty trimmed string when present.' });
+  }
+  if (issues.length) return { ok: false, issues };
+
+  return {
+    ok: true,
+    context: {
+      instanceId: record.instanceId as string,
+      widgetType: record.widgetType as string,
+      displayName: record.displayName as string,
+      activeLocale: record.activeLocale as string,
+      draftSignature: record.draftSignature as string,
+      controls: record.controls as ProductCopilotControl[],
+      availableActions: record.availableActions as string[],
+      unavailableCapabilities: record.unavailableCapabilities as string[],
+      ...(record.selectedControlPath !== undefined ? { selectedControlPath: record.selectedControlPath as string } : {}),
+    },
+  };
+}
+
+function parseSelectedModel(
+  value: unknown,
+): { ok: true; model?: { provider: string; model: string } } | { ok: false; issue: { path: string; message: string } } {
+  if (value === undefined || value === null) return { ok: true };
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) {
+    return { ok: false, issue: { path: 'selectedModel', message: 'SelectedModel must be an object when present.' } };
+  }
+  const record = value as Record<string, unknown>;
+  if (!isNonEmptyTrimmedString(record.provider)) {
+    return { ok: false, issue: { path: 'selectedModel.provider', message: 'Provider must be a non-empty trimmed string.' } };
+  }
+  if (!isNonEmptyTrimmedString(record.model)) {
+    return { ok: false, issue: { path: 'selectedModel.model', message: 'Model must be a non-empty trimmed string.' } };
+  }
+  return { ok: true, model: { provider: record.provider, model: record.model } };
+}
+
+/**
+ * Shared parser for the Copilot turn request union.
+ * Used by BOTH Roma (route validation before grant issuance) and the
+ * Product Copilot Worker (request validation before model execution).
+ * One parser — no drifting validators.
+ */
+export function parseCopilotTurnRequest(
+  value: unknown,
+  options: { routeInstanceId?: string } = {},
+): { ok: true; request: CopilotTurnRequest } | { ok: false; issues: Array<{ path: string; message: string }> } {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) {
+    return { ok: false, issues: [{ path: '', message: 'Request must be an object.' }] };
+  }
+  const record = value as Record<string, unknown>;
+  const issues: Array<{ path: string; message: string }> = [];
+
+  if (record.version !== 1) {
+    issues.push({ path: 'version', message: 'Version must be 1.' });
+  }
+  const kind = record.kind;
+  if (kind !== 'initial' && kind !== 'continuation') {
+    issues.push({ path: 'kind', message: 'Kind must be "initial" or "continuation".' });
+  }
+  if (!isNonEmptyTrimmedString(record.sessionId)) {
+    issues.push({ path: 'sessionId', message: 'SessionId must be a non-empty trimmed string.' });
+  }
+  if (!isNonEmptyTrimmedString(record.userTurnId)) {
+    issues.push({ path: 'userTurnId', message: 'UserTurnId must be a non-empty trimmed string.' });
+  }
+
+  const selectedModelResult = parseSelectedModel(record.selectedModel);
+  if (!selectedModelResult.ok) {
+    issues.push(selectedModelResult.issue);
+  }
+
+  if (!Array.isArray(record.conversationHistory)) {
+    issues.push({ path: 'conversationHistory', message: 'ConversationHistory must be an array.' });
+  } else {
+    if (record.conversationHistory.length > COPILOT_MAX_HISTORY_ENTRIES) {
+      issues.push({ path: 'conversationHistory', message: `ConversationHistory must contain at most ${COPILOT_MAX_HISTORY_ENTRIES} entries.` });
+    }
+    for (let i = 0; i < record.conversationHistory.length; i++) {
+      const entryResult = parseCopilotHistoryEntry(record.conversationHistory[i], `conversationHistory[${i}]`);
+      if (!entryResult.ok) {
+        issues.push(entryResult.issue);
+      }
+    }
+  }
+
+  const contextResult = parseCopilotDraftContext(record.currentDraftContext, options.routeInstanceId);
+  if (!contextResult.ok) {
+    issues.push(...contextResult.issues);
+  }
+
+  if (kind === 'initial') {
+    if (!isNonEmptyTrimmedString(record.userMessage)) {
+      issues.push({ path: 'userMessage', message: 'UserMessage is required for initial turns.' });
+    }
+  }
+
+  if (kind === 'continuation') {
+    if (!isNonEmptyTrimmedString(record.priorModelStepId)) {
+      issues.push({ path: 'priorModelStepId', message: 'PriorModelStepId is required for continuation turns.' });
+    }
+    if (!isNonEmptyTrimmedString(record.toolCallId)) {
+      issues.push({ path: 'toolCallId', message: 'ToolCallId is required for continuation turns.' });
+    }
+    if (record.toolName !== 'apply_widget_ops') {
+      issues.push({ path: 'toolName', message: 'ToolName must be "apply_widget_ops".' });
+    }
+    if (record.toolResult === undefined) {
+      issues.push({ path: 'toolResult', message: 'ToolResult is required for continuation turns.' });
+    }
+  }
+
+  if (issues.length) return { ok: false, issues };
+
+  const base = {
+    version: 1 as const,
+    sessionId: record.sessionId as string,
+    userTurnId: record.userTurnId as string,
+    ...(selectedModelResult.ok && selectedModelResult.model ? { selectedModel: selectedModelResult.model } : {}),
+    conversationHistory: record.conversationHistory as CopilotHistoryEntry[],
+    currentDraftContext: contextResult.ok ? contextResult.context : ({} as CopilotDraftContext),
+  };
+
+  if (kind === 'initial') {
+    return {
+      ok: true,
+      request: {
+        ...base,
+        kind: 'initial',
+        userMessage: record.userMessage as string,
+      },
+    };
+  }
+
+  return {
+    ok: true,
+    request: {
+      ...base,
+      kind: 'continuation',
+      priorModelStepId: record.priorModelStepId as string,
+      toolCallId: record.toolCallId as string,
+      toolName: 'apply_widget_ops',
+      toolResult: record.toolResult,
+    },
+  };
+}
+
 const AI_AGENT_REGISTRY: AiRegistryEntry[] = [
   {
     agentId: 'product.copilot',

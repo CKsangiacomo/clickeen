@@ -315,11 +315,13 @@ requires a `meta-path`; the compiler rejects missing upload metadata paths.
 
 `dropdown-shadow` binds the exact object
 `{enabled,inset,x,y,blur,spread,color,alpha}`. Every Widget declares the exact
-eleven-key component-label shape under
+fourteen-key component/composition-label shape under
 `editor.labels.components["dropdown-shadow"]` and supplies generated Stage,
-Pod, and applicable card field labels under
+Pod, and applicable card field labels—including each inside-shadow link label—under
 `editor.labels.fields["dropdown-shadow"]`. The adjacent English file owns all
-of those words. Use `axis: "x"|"y"|"both"` only to hide irrelevant offset
+of those words. The component/composition shape includes the layer label and
+the below/above-content option labels; Bob does not author them. Use
+`axis: "x"|"y"|"both"` only to hide irrelevant offset
 rows; it does not change the stored object. Shadow owns no fallback value,
 label, validation state, or Widget-specific behavior.
 

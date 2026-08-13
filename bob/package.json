@@ -17,7 +17,9 @@
     "test:editor-contract": "tsx tests/run-editor-contract.ts",
     "test:translations-panel": "tsx tests/run-translations-panel.ts",
     "test:typography-contract": "tsx tests/run-typography-contract.ts",
-    "test": "pnpm test:accessibility-copy && pnpm test:editor-contract && pnpm test:translations-panel && pnpm test:typography-contract"
+    "test": "pnpm test:accessibility-copy && pnpm test:editor-contract && pnpm test:translations-panel && pnpm test:typography-contract",
+    "test:copilot-model-history": "tsx tests/run-copilot-model-history.ts",
+    "test:copilot-pane-gates": "tsx tests/run-copilot-pane-gates.ts"
   },
   "dependencies": {
     "@clickeen/ck-contracts": "workspace:*",

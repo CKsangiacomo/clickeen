@@ -7,11 +7,12 @@ import {
   type AgentRuntimePolicyUi,
   type RomaAccountAuthzCapsulePayload,
 } from '@clickeen/ck-policy';
-import { CK_REQUEST_ID_HEADER, asTrimmedString, looksLikeHtmlErrorPage } from '@clickeen/ck-contracts';
+import { CK_REQUEST_ID_HEADER, asTrimmedString, isRecord, looksLikeHtmlErrorPage } from '@clickeen/ck-contracts';
 import {
   resolveAiAgent,
   type AiGrantPolicy,
   type AiModelRef,
+  type CopilotTurnRequest,
 } from '@clickeen/ck-contracts/ai';
 import {
   isProductCopilotManagedModel,
@@ -77,6 +78,7 @@ export async function issueAccountCopilotGrant(args: {
   selectedModel?: AiModelRef | null;
   trace?: { sessionId?: string; instanceId?: string };
   usageKv?: RomaUsageKv | null;
+  skipTurnReservation?: boolean;
 }): Promise<
   | { ok: true; grant: string; exp: number; agentId: string }
   | { ok: false; status: number; reasonKey: string; detail?: string }
@@ -163,6 +165,7 @@ export async function issueAccountCopilotGrant(args: {
   const grant = await mintRomaAIGrant(grantPayload, resolveRomaAiGrantPrivateKeyPem());
 
   const copilotTurnLimit = policy.limits['copilot.turns.monthly.max'];
+  if (!args.skipTurnReservation) {
   try {
     const reservation = await reserveAccountCopilotTurn({
       accountId: args.authz.accountId,
@@ -184,6 +187,7 @@ export async function issueAccountCopilotGrant(args: {
       reasonKey: 'coreui.errors.auth.contextUnavailable',
       detail: error instanceof Error ? error.message : String(error),
     };
+  }
   }
 
   return { ok: true, grant, exp, agentId: resolvedAgent.canonicalId };
@@ -277,4 +281,91 @@ export async function executeCopilotOnProductCopilot(args: {
     requestId: asTrimmedString(payload?.requestId) ?? '',
     result: payload?.result ?? null,
   };
+}
+
+/**
+ * PRD 128D — Stream a copilot turn from the Product Copilot Worker.
+ *
+ * Calls POST /turn (SSE) and returns the raw streaming Response for the route
+ * to pipe through to Bob. Roma does NOT buffer or reinterpret the stream.
+ *
+ * PRD 128D correction: the upstream body is constructed from explicitly
+ * allowed fields of the ALREADY-VALIDATED CopilotTurnRequest. The
+ * Roma-issued grant is written authoritatively AFTER all caller input.
+ * Caller-supplied grant and trace fields NEVER cross this boundary.
+ */
+export async function streamCopilotTurn(args: {
+  grant: string;
+  turnRequest: CopilotTurnRequest;
+  requestId?: string | null;
+  signal?: AbortSignal;
+}): Promise<
+  | { ok: true; response: Response }
+  | { ok: false; status: number; message: string; reasonKey?: string }
+> {
+  const baseUrl = resolveProductCopilotBaseUrl().replace(/\/+$/, '');
+  const req = args.turnRequest;
+
+  // Construct from allowed fields only — no spread of caller-controlled input.
+  const upstream: Record<string, unknown> = {
+    version: req.version,
+    kind: req.kind,
+    sessionId: req.sessionId,
+    userTurnId: req.userTurnId,
+    ...(req.kind === 'initial' ? { userMessage: req.userMessage } : {}),
+    ...(req.kind === 'continuation'
+      ? {
+          priorModelStepId: req.priorModelStepId,
+          toolCallId: req.toolCallId,
+          toolName: req.toolName,
+          toolResult: req.toolResult,
+        }
+      : {}),
+    ...(req.selectedModel ? { selectedModel: req.selectedModel } : {}),
+    conversationHistory: req.conversationHistory,
+    currentDraftContext: req.currentDraftContext,
+    // Roma's minted grant and trace — authoritative, written last.
+    grant: args.grant,
+    trace: { client: 'roma', requestId: args.requestId ?? undefined },
+  };
+
+  let res: Response;
+  try {
+    res = await fetch(`${baseUrl}/turn`, {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        accept: 'text/event-stream',
+        ...(args.requestId ? { [CK_REQUEST_ID_HEADER]: args.requestId } : {}),
+      },
+      body: JSON.stringify(upstream),
+      cache: 'no-store',
+      signal: args.signal,
+    });
+  } catch (error) {
+    return {
+      ok: false,
+      status: 502,
+      message: `Product Copilot turn request failed: ${error instanceof Error ? error.message : String(error)}`,
+      reasonKey: 'coreui.errors.copilot.failed',
+    };
+  }
+
+  if (!res.ok) {
+    const text = await res.text().catch(() => '');
+    const payload = safeJsonParse(text);
+    return {
+      ok: false,
+      status: res.status,
+      message: summarizeUpstreamError({
+        serviceName: 'Product Copilot',
+        baseUrl,
+        status: res.status,
+        bodyText: isRecord(payload) ? asTrimmedString((payload as Record<string, unknown>).error) ?? text : text,
+      }),
+      reasonKey: 'coreui.errors.copilot.failed',
+    };
+  }
+
+  return { ok: true, response: res };
 }

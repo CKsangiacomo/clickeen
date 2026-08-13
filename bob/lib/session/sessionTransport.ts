@@ -1,5 +1,6 @@
 import { useCallback, useRef, type MutableRefObject } from 'react';
 import type { AccountAssetsTransport } from '../../../dieter/components/shared/account-assets';
+import type { ProductCopilotTurnEvent } from '@clickeen/ck-contracts/ai';
 import {
   type BobAccountCommand,
   type BobAccountCommandMessage,
@@ -45,6 +46,29 @@ export type GenerateTranslationsArgs = {
 export type GenerateTranslations = (
   args: GenerateTranslationsArgs
 ) => Promise<{ ok: boolean; status: number; json: any }>;
+
+type HostCopilotEventMessage = {
+  type: 'host:copilot-event';
+  requestId: string;
+  instanceId?: string;
+  event: ProductCopilotTurnEvent;
+};
+
+export type CopilotRequestHandle = {
+  requestId: string;
+  completed: Promise<{ ok: boolean; status: number; payload: unknown }>;
+};
+
+export type RunCopilotArgs = {
+  instanceId: string;
+  body?: unknown;
+  timeoutMs?: number;
+  onCopilotEvent?: (event: ProductCopilotTurnEvent) => void;
+};
+
+export type RunCopilot = (args: RunCopilotArgs) => CopilotRequestHandle;
+
+export type CancelCopilot = (requestId: string) => void;
 
 const HOST_ORIGIN_WAIT_MS = 3_000;
 const HOST_ORIGIN_POLL_MS = 25;
@@ -346,6 +370,90 @@ export function useSessionTransport(args: {
     [dispatchHostAccountCommand],
   );
 
+  const runCopilot: RunCopilot = useCallback(
+    (commandArgs: RunCopilotArgs) => {
+      const instanceId = String(commandArgs.instanceId || '').trim();
+      const requestId = crypto.randomUUID();
+
+      const completed = (async () => {
+        const targetOrigin = await waitForHostOrigin();
+        if (!targetOrigin) {
+          throw new Error('coreui.errors.builder.command.hostUnavailable');
+        }
+
+        const message: BobAccountCommandMessage = {
+          type: 'bob:account-command',
+          requestId,
+          command: 'run-copilot',
+          ...(instanceId ? { instanceId } : {}),
+          ...(typeof commandArgs.body === 'undefined' ? {} : { body: commandArgs.body }),
+        };
+
+        return new Promise<{ ok: boolean; status: number; payload: unknown }>((resolve, reject) => {
+          let timeoutTimer: number | null = null;
+
+          const cleanup = () => {
+            if (timeoutTimer != null) window.clearTimeout(timeoutTimer);
+            window.removeEventListener('message', onMessage);
+          };
+
+          const onMessage = (event: MessageEvent) => {
+            if (event.origin !== targetOrigin) return;
+            if (event.source !== window.parent) return;
+            const data = event.data as HostAccountCommandResultMessage | HostCopilotEventMessage | null;
+            if (!data || typeof data !== 'object') return;
+            if (data.requestId !== requestId) return;
+            if (data.type === 'host:copilot-event') {
+              if (data.event && typeof data.event === 'object') commandArgs.onCopilotEvent?.(data.event);
+              return;
+            }
+            if (data.type !== 'host:account-command-result') return;
+            cleanup();
+            resolve({
+              ok: data.ok === true,
+              status: typeof data.status === 'number' ? data.status : 500,
+              payload: data.payload ?? null,
+            });
+          };
+
+          window.addEventListener('message', onMessage);
+          timeoutTimer = window.setTimeout(() => {
+            cleanup();
+            reject(new Error('coreui.errors.builder.command.timeout'));
+          }, commandArgs.timeoutMs ?? 120_000);
+
+          try {
+            window.parent?.postMessage(message, targetOrigin);
+          } catch (error) {
+            cleanup();
+            reject(error instanceof Error ? error : new Error(String(error)));
+          }
+        });
+      })();
+
+      return { requestId, completed };
+    },
+    [waitForHostOrigin],
+  );
+
+  const cancelCopilot: CancelCopilot = useCallback(
+    (requestId: string) => {
+      void waitForHostOrigin().then((targetOrigin) => {
+        if (!targetOrigin) return;
+        const message: BobAccountCommandMessage = {
+          type: 'bob:account-command',
+          requestId: crypto.randomUUID(),
+          command: 'cancel-copilot',
+          body: { requestId },
+        };
+        try {
+          window.parent?.postMessage(message, targetOrigin);
+        } catch {}
+      });
+    },
+    [waitForHostOrigin],
+  );
+
   return {
     accountAssets: accountAssets.current,
     hostOriginRef,
@@ -354,5 +462,7 @@ export function useSessionTransport(args: {
     listTranslations,
     readTranslation,
     generateTranslations,
+    runCopilot,
+    cancelCopilot,
   };
 }

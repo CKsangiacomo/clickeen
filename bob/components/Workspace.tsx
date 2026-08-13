@@ -132,6 +132,7 @@ export function Workspace({
   const [iframeLoadError, setIframeLoadError] = useState<string | null>(null);
   const [assetResolutionError, setAssetResolutionError] = useState<string | null>(null);
   const [measuredHeight, setMeasuredHeight] = useState<number | null>(null);
+  const [measuredWidth, setMeasuredWidth] = useState<number | null>(null);
   const [switcherNotice, setSwitcherNotice] = useState<string | null>(null);
   const [resolvedAssets, setResolvedAssets] = useState<Map<string, ResolvedAccountAsset>>(() => new Map());
   const mediaAssets = useMemo(() => {
@@ -417,10 +418,17 @@ export function Workspace({
       if (data.type !== 'ck:resize') return;
       const h = Number(data.height);
       if (!Number.isFinite(h) || h <= 0) return;
+      const w = Number(data.width);
+      if (!Number.isFinite(w) || w <= 0) return;
       const next = Math.min(6000, Math.max(120, Math.round(h)));
+      const nextWidth = Math.min(6000, Math.max(120, Math.round(w)));
       setMeasuredHeight((prev) => {
         if (prev != null && Math.abs(prev - next) <= 1) return prev;
         return next;
+      });
+      setMeasuredWidth((prev) => {
+        if (prev != null && Math.abs(prev - nextWidth) <= 1) return prev;
+        return nextWidth;
       });
     };
     window.addEventListener('message', handleMessage);
@@ -430,25 +438,26 @@ export function Workspace({
   useEffect(() => {
     // When switching instances/devices/modes, allow the iframe to re-measure.
     setMeasuredHeight(null);
+    setMeasuredWidth(null);
   }, [device, host]);
 
   const isDesktopCanvas = host === 'canvas' && device === 'desktop';
   const shouldResizeCanvas = isDesktopCanvas && (stageMode === 'wrap' || stageMode === 'fixed');
-  const resolvedCanvasHeight =
+  const resolvedCanvasHeight = measuredHeight ?? (
     isDesktopCanvas &&
     stageMode === 'fixed' &&
     Number.isFinite(stageFixedHeight) &&
     stageFixedHeight > 0
       ? stageFixedHeight
-      : measuredHeight;
+      : null
+  );
   const canvasHeightPx =
     shouldResizeCanvas && resolvedCanvasHeight ? `${resolvedCanvasHeight}px` : null;
   const canvasWidthPx =
     shouldResizeCanvas &&
     stageMode === 'fixed' &&
-    Number.isFinite(stageFixedWidth) &&
-    stageFixedWidth > 0
-      ? `${stageFixedWidth}px`
+    (measuredWidth != null || (Number.isFinite(stageFixedWidth) && stageFixedWidth > 0))
+      ? `${measuredWidth ?? stageFixedWidth}px`
       : null;
   const shouldRenderCanvasCard = Boolean(shouldResizeCanvas && (canvasHeightPx || canvasWidthPx));
   const previewStatus = !hasWidget
@@ -487,7 +496,7 @@ export function Workspace({
         title="Widget preview"
         className="workspace-iframe"
         sandbox="allow-scripts allow-same-origin"
-        style={iframeBackdrop ? ({ background: iframeBackdrop } as any) : undefined}
+        style={!iframeHasState && iframeBackdrop ? ({ background: iframeBackdrop } as any) : undefined}
       />
       {previewStatus ? (
         <div

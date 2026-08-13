@@ -36,7 +36,14 @@
   function getResizeState(stageEl) {
     const existing = resizeState.get(stageEl);
     if (existing) return existing;
-    const next = { obs: null, raf: 0, lastHeight: null, readySent: false };
+    const next = {
+      obs: null,
+      raf: 0,
+      lastHeight: null,
+      lastWidth: null,
+      readySent: false,
+      shadowGutters: { top: 0, right: 0, bottom: 0, left: 0 },
+    };
     resizeState.set(stageEl, next);
     return next;
   }
@@ -78,7 +85,8 @@
     const appearance = window.CKAppearance;
     if (
       !appearance ||
-      typeof appearance.forceInset !== 'function' ||
+      typeof appearance.insideShadowToBoxShadowList !== 'function' ||
+      typeof appearance.resolveOutsideShadowGutters !== 'function' ||
       typeof appearance.resolveCornerRadii !== 'function' ||
       typeof appearance.shadowToBoxShadow !== 'function'
     ) {
@@ -127,58 +135,6 @@
   function clampNumber(value, min, max) {
     const n = typeof value === 'number' && Number.isFinite(value) ? value : min;
     return Math.min(max, Math.max(min, n));
-  }
-
-  function computeInsideFadeSizePx(side, shadow) {
-    if (!shadow || typeof shadow !== 'object') return 0;
-    const axis = side === 'left' || side === 'right' ? toNumber(shadow.x, 0) : toNumber(shadow.y, 0);
-    const blur = toNumber(shadow.blur, 0);
-    const spread = Math.max(0, toNumber(shadow.spread, 0));
-    return clampNumber(Math.abs(axis) + blur + spread, 0, 400);
-  }
-
-  function computeInsideFadeLayer(side, shadow) {
-    if (!shadow || typeof shadow !== 'object') return null;
-    if (shadow.enabled !== true) return null;
-    const alpha = clampNumber(shadow.alpha, 0, 100);
-    if (alpha <= 0) return null;
-    const color = typeof shadow.color === 'string' && shadow.color.trim() ? shadow.color.trim() : '#000000';
-    const alphaMix = 100 - alpha;
-    const mix = `color-mix(in oklab, ${color}, transparent ${alphaMix}%)`;
-    const sizePx = computeInsideFadeSizePx(side, shadow);
-    if (sizePx <= 0) return null;
-
-    if (side === 'left') {
-      return `linear-gradient(to right, ${mix}, transparent) left / ${sizePx}px 100% no-repeat`;
-    }
-    if (side === 'right') {
-      return `linear-gradient(to left, ${mix}, transparent) right / ${sizePx}px 100% no-repeat`;
-    }
-    if (side === 'top') {
-      return `linear-gradient(to bottom, ${mix}, transparent) top / 100% ${sizePx}px no-repeat`;
-    }
-    if (side === 'bottom') {
-      return `linear-gradient(to top, ${mix}, transparent) bottom / 100% ${sizePx}px no-repeat`;
-    }
-    return null;
-  }
-
-  function computeInsideFadeBackground(cfg) {
-    if (!cfg || typeof cfg !== 'object') return 'none';
-
-    const linked = cfg.linked !== false;
-    const resolved = linked
-      ? { top: cfg.all, right: cfg.all, bottom: cfg.all, left: cfg.all }
-      : { top: cfg.top, right: cfg.right, bottom: cfg.bottom, left: cfg.left };
-
-    const layers = [
-      computeInsideFadeLayer('top', resolved.top),
-      computeInsideFadeLayer('right', resolved.right),
-      computeInsideFadeLayer('bottom', resolved.bottom),
-      computeInsideFadeLayer('left', resolved.left),
-    ].filter(Boolean);
-
-    return layers.length ? layers.join(', ') : 'none';
   }
 
   function applyPaddingVars(el, key, pad) {
@@ -249,7 +205,7 @@
     return { enabled, anchor, offset };
   }
 
-  function applyFloatingLayout(stageEl, podEl, floating) {
+  function applyFloatingLayout(stageEl, podEl, floating, shadowGutters) {
     const fillLayer = stageEl.querySelector(':scope > .ck-fill-layer');
     const insideLayer = stageEl.querySelector(':scope > .ck-inside-shadow-layer');
 
@@ -259,7 +215,10 @@
       stageEl.setAttribute('data-stage-floating-offset', String(floating.offset));
 
       stageEl.style.position = 'fixed';
-      stageEl.style.inset = `${floating.offset}px`;
+      stageEl.style.top = `${floating.offset + shadowGutters.top}px`;
+      stageEl.style.right = `${floating.offset + shadowGutters.right}px`;
+      stageEl.style.bottom = `${floating.offset + shadowGutters.bottom}px`;
+      stageEl.style.left = `${floating.offset + shadowGutters.left}px`;
       stageEl.style.width = 'auto';
       stageEl.style.height = 'auto';
       stageEl.style.minHeight = '0';
@@ -268,7 +227,6 @@
       stageEl.style.zIndex = '1000';
       stageEl.style.pointerEvents = 'none';
       stageEl.style.background = isEditorPreview() ? EDITOR_CHECKERBOARD : 'transparent';
-      stageEl.style.boxShadow = 'none';
       podEl.style.pointerEvents = 'auto';
 
       if (fillLayer instanceof HTMLElement) fillLayer.style.display = 'none';
@@ -280,7 +238,10 @@
     stageEl.removeAttribute('data-stage-floating-anchor');
     stageEl.removeAttribute('data-stage-floating-offset');
     stageEl.style.removeProperty('position');
-    stageEl.style.removeProperty('inset');
+    stageEl.style.removeProperty('top');
+    stageEl.style.removeProperty('right');
+    stageEl.style.removeProperty('bottom');
+    stageEl.style.removeProperty('left');
     stageEl.style.removeProperty('width');
     stageEl.style.removeProperty('height');
     stageEl.style.removeProperty('min-height');
@@ -289,7 +250,6 @@
     stageEl.style.removeProperty('z-index');
     stageEl.style.removeProperty('pointer-events');
     stageEl.style.removeProperty('background');
-    stageEl.style.removeProperty('box-shadow');
     podEl.style.removeProperty('pointer-events');
 
     if (fillLayer instanceof HTMLElement) fillLayer.style.removeProperty('display');
@@ -312,8 +272,10 @@
   }
 
   function resolveInsideShadowLayer(raw) {
-    const value = typeof raw === 'string' ? raw.trim() : '';
-    return value === INSIDE_SHADOW_LAYER_ABOVE ? INSIDE_SHADOW_LAYER_ABOVE : INSIDE_SHADOW_LAYER_BELOW;
+    if (raw !== INSIDE_SHADOW_LAYER_BELOW && raw !== INSIDE_SHADOW_LAYER_ABOVE) {
+      throw new Error('[CKStagePod] inside shadow layer must be below-content or above-content');
+    }
+    return raw;
   }
 
   function applyInsideShadowLayer(container, shadow, opts) {
@@ -322,10 +284,13 @@
     container.style.isolation = 'isolate';
 
     const layer = ensureInsideShadowLayer(container);
-    const next = typeof shadow === 'string' && shadow.trim() ? shadow.trim() : 'none';
+    if (typeof shadow !== 'string' || !shadow.trim() || shadow !== shadow.trim()) {
+      throw new Error('[CKStagePod] rendered inside shadow must be an exact string');
+    }
+    const next = shadow;
     const layerPlacement = resolveInsideShadowLayer(opts && opts.layer);
     const isAbove = layerPlacement === INSIDE_SHADOW_LAYER_ABOVE;
-    layer.style.background = next;
+    layer.style.boxShadow = next;
     layer.style.zIndex = isAbove ? '20' : '1';
     layer.hidden = next === 'none';
 
@@ -336,6 +301,18 @@
     }
   }
 
+  function applyStageShadowGutters(stageEl, gutters, floatingEnabled) {
+    const body = document.body;
+    const applied = floatingEnabled
+      ? { top: 0, right: 0, bottom: 0, left: 0 }
+      : gutters;
+    body.style.setProperty('--stage-shadow-gutter-top', `${applied.top}px`);
+    body.style.setProperty('--stage-shadow-gutter-right', `${applied.right}px`);
+    body.style.setProperty('--stage-shadow-gutter-bottom', `${applied.bottom}px`);
+    body.style.setProperty('--stage-shadow-gutter-left', `${applied.left}px`);
+    getResizeState(stageEl).shadowGutters = applied;
+  }
+
   function postResize(stageEl) {
     if (!(stageEl instanceof HTMLElement)) return;
     if (typeof window === 'undefined' || !window.parent || window.parent === window) return;
@@ -344,11 +321,24 @@
     state.raf = requestAnimationFrame(() => {
       state.raf = 0;
       const rect = stageEl.getBoundingClientRect();
-      const height = Math.max(0, Math.ceil(rect.height));
-      if (state.lastHeight != null && Math.abs(height - state.lastHeight) <= 1) return;
+      const width = Math.max(
+        0,
+        Math.ceil(rect.width + state.shadowGutters.left + state.shadowGutters.right),
+      );
+      const height = Math.max(
+        0,
+        Math.ceil(rect.height + state.shadowGutters.top + state.shadowGutters.bottom),
+      );
+      if (
+        state.lastHeight != null &&
+        state.lastWidth != null &&
+        Math.abs(height - state.lastHeight) <= 1 &&
+        Math.abs(width - state.lastWidth) <= 1
+      ) return;
+      state.lastWidth = width;
       state.lastHeight = height;
       const canvasMode = String(stageEl.getAttribute('data-canvas-mode') || '');
-      window.parent.postMessage({ type: 'ck:resize', height, canvasMode }, '*');
+      window.parent.postMessage({ type: 'ck:resize', width, height, canvasMode }, '*');
     });
   }
 
@@ -383,11 +373,17 @@
 
     stageEl.style.setProperty('--stage-bg', appearance.toCssBackground(stageCfg.background));
     window.CKFill.applyMediaLayer(stageEl, stageCfg.background, { contentEl: podEl });
-    stageEl.style.setProperty('--stage-shadow', appearance.shadowToBoxShadow(appearance.forceInset(stageCfg.shadow, false)));
-    applyInsideShadowLayer(stageEl, computeInsideFadeBackground(stageCfg.insideShadow), {
-      contentEl: podEl,
-      layer: stageCfg && stageCfg.insideShadow ? stageCfg.insideShadow.layer : null,
-    });
+    const stageShadow = appearance.shadowToBoxShadow(stageCfg.shadow, false, 'stage.shadow');
+    const stageShadowGutters = appearance.resolveOutsideShadowGutters(stageCfg.shadow, 'stage.shadow');
+    stageEl.style.setProperty('--stage-shadow', stageShadow);
+    applyInsideShadowLayer(
+      stageEl,
+      appearance.insideShadowToBoxShadowList(stageCfg.insideShadow, 'stage.insideShadow'),
+      {
+        contentEl: podEl,
+        layer: stageCfg.insideShadow.layer,
+      },
+    );
     const stagePads = resolvePaddingV2(stageCfg);
     applyPaddingVars(stageEl, 'stage-pad-desktop', stagePads.desktop);
     applyPaddingVars(stageEl, 'stage-pad-mobile', stagePads.mobile);
@@ -398,7 +394,8 @@
     stageEl.style.setProperty('--stage-fixed-height', canvas.height > 0 ? `${canvas.height}px` : 'auto');
 
     const floating = resolveFloatingConfig(stageCfg);
-    applyFloatingLayout(stageEl, podEl, floating);
+    applyStageShadowGutters(stageEl, stageShadowGutters, floating.enabled);
+    applyFloatingLayout(stageEl, podEl, floating, stageShadowGutters);
 
     const alignMap = {
       left: { justify: 'flex-start', alignItems: 'center' },
@@ -427,11 +424,18 @@
 
     const radii = appearance.resolveCornerRadii(podCfg);
     podEl.style.setProperty('--pod-radius', `${radii.tl} ${radii.tr} ${radii.br} ${radii.bl}`);
-    podEl.style.setProperty('--pod-shadow', appearance.shadowToBoxShadow(appearance.forceInset(podCfg.shadow, false)));
-    applyInsideShadowLayer(podEl, computeInsideFadeBackground(podCfg.insideShadow), {
-      contentEl: scopeEl,
-      layer: podCfg && podCfg.insideShadow ? podCfg.insideShadow.layer : null,
-    });
+    podEl.style.setProperty(
+      '--pod-shadow',
+      appearance.shadowToBoxShadow(podCfg.shadow, false, 'pod.shadow'),
+    );
+    applyInsideShadowLayer(
+      podEl,
+      appearance.insideShadowToBoxShadowList(podCfg.insideShadow, 'pod.insideShadow'),
+      {
+        contentEl: scopeEl,
+        layer: podCfg.insideShadow.layer,
+      },
+    );
 
     podEl.setAttribute('data-width-mode', podCfg.widthMode);
     podEl.style.setProperty('--content-width', `${podCfg.contentWidth}px`);
@@ -446,7 +450,7 @@
       typeof window !== 'undefined' &&
       window.parent &&
       window.parent !== window &&
-      (canvas.mode === 'wrap' || canvas.mode === 'viewport' || (canvas.mode === 'fixed' && !(canvas.height > 0)));
+      (canvas.mode === 'wrap' || canvas.mode === 'viewport' || canvas.mode === 'fixed');
     const state = getResizeState(stageEl);
     if (!shouldReport) {
       if (state.obs) {

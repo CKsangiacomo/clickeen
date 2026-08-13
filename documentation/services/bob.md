@@ -480,13 +480,23 @@ it does not own a parallel enabled field, remove-fill action, mode UI, or Fill
 layout rule.
 
 Dropdown Shadow is the shared Dieter exact-JSON shadow editor. The compiler
-joins its exact eleven component labels and every generated Stage/Pod/card
+joins its exact fourteen component/composition labels and every generated Stage/Pod/card
 field label from the Widget-adjacent English file into the one global stencil.
 Bob prebinds the exact browser-memory object before hydration and receives one
-whole-object edit at the declared path. Existing linked-inside-shadow expansion
-remains Bob-owned; Dieter emits no multi-path edit and does not inspect Widget
-paths. Bob's shared host destroys Shadow with the other retained dropdowns
+whole-object edit at the declared path. The linked toggle and the active Shadow
+object each write only their own declared path; Bob does not copy `all` into the
+four side values or merge the side values back into `all`. Hidden linked and
+unlinked values therefore remain exact browser-memory truth. Dieter emits no
+multi-path edit and does not inspect Widget paths. Bob's shared host destroys Shadow with the other retained dropdowns
 before panel replacement.
+
+The shared Widget runtime renders Stage, Pod, and supported Core-card shadows
+from that exact object. Internal shadows are real comma-separated inset
+`box-shadow` values, never directional gradient substitutions. Stage outside
+shadow receives deterministic document gutters derived from its exact signed
+offset, blur, and spread; Bob accepts the resulting width/height resize message
+and removes only its loading backdrop after Widget ready so the Stage shadow is
+visible in preview.
 
 For Dropdown Border, Edit, Fill, and Shadow, Bob's existing stencil compiler
 passes Dieter's `row|wide|extra-wide` Popover width through the generated
@@ -546,26 +556,29 @@ the current account library.
 
 ## Builder Copilot
 
-Product Copilot turns route through Roma with a bounded
-`product-copilot context` capsule. Bob builds that capsule from the open
-browser-memory draft: `instanceId`, widget identity, active locale, draft
-signature, visible editable controls with current values, unavailable
-capabilities, and bounded `conversationHistory` from Bob's browser-memory
-Copilot thread. `showIf`-hidden controls are excluded from the capsule. Widget
-package source is not sent as Copilot prompt context.
+Product Copilot turns route through Roma with a bounded `currentDraftContext`
+capsule. Bob builds that capsule from the open browser-memory draft:
+`instanceId`, widget identity, active locale, draft signature, visible editable
+controls with current values, unavailable capabilities, and bounded
+`conversationHistory` from Bob's structured model history. `showIf`-hidden
+controls are excluded from the capsule. Widget package source is not sent as
+Copilot prompt context.
 
 Conversational Product Copilot turns require the widget/session orientation,
 but they do not require a valid edit-control catalog. If Builder control
 metadata is invalid or unavailable, Bob still allows the turn so Product
-Copilot can answer, clarify, suggest, refuse, or report an error. Draft edits
-remain unavailable until the edit context is valid.
+Copilot can answer, clarify, suggest, refuse, or report an error. The
+`apply_widget_ops` tool remains unavailable until the edit context is valid.
 
 Bob does not pre-route user language with regex/control matching before the
-agent sees the turn. The Product Copilot brain returns one typed result kind:
-`answer`, `clarification`, `suggestion`, `draft_edit`, `refusal`, or `error`.
-Bob remains the owner of the open working copy, model-visible Product Copilot
-thread context, terminal draft validation, and reversible draft apply.
-San Francisco does not store Product Copilot thread state.
+agent sees the turn. The Copilot turn streams `ProductCopilotTurnEvent` frames
+(`agent_turn_started`, `text_delta`, `tool_call`, `model_step_finished`,
+`agent_turn_finished`, `agent_turn_error`, `agent_turn_stopped`). Bob renders
+`text_delta` incrementally and executes a buffered `tool_call` only after the
+matching `model_step_finished`. Bob remains the owner of the open working copy,
+model-visible Product Copilot thread context, terminal draft validation, and
+reversible draft apply. San Francisco does not store Product Copilot thread
+state.
 
 Product Copilot model picker state is display/input state only. Bob renders the
 model options and default model that Roma sends in the Builder-open payload.
@@ -575,16 +588,41 @@ and Roma/San Francisco use the policy default. Bob does not own model lists,
 model availability, provider keys, provider catalog monitoring, or automatic
 alternate model selection.
 
-When San Francisco returns valid edit ops, Bob applies them immediately to the
-browser-memory working copy and preview through the same in-memory op path used
-by manual controls. Bob stores one inverse op set for a one-turn Undo. This does
-not save, publish, or mutate account persistence; the user still saves through
-the normal Roma save path.
+When a `tool_call` carries a valid `apply_widget_ops` batch and the matching
+`model_step_finished` arrives, Bob applies the batch to the browser-memory
+working copy and preview through the same in-memory op path used by manual
+controls. Bob then opens a continuation carrying the tool result and the
+`priorModelStepId`, so the agent can finish or request another step. Inverse
+undo ops accumulate across the steps of one turn so a single Undo reverses the
+whole applied batch. This does not save, publish, or mutate account persistence;
+the user still saves through the normal Roma save path.
 
 Repeatable controls preserve item identity. If a compiled array control exposes
 `itemIdPath`, Copilot insert values must include that id field and remove ops
 must name `itemId`; index-based remove is accepted only for array controls with
 no item identity.
+
+### Copilot turn lifecycle
+
+The CopilotPane tracks two facts per active turn: the active turn state
+(`userTurnId`, current `modelStepId`, buffered tool call, accumulated undo ops,
+step count, stop flag) and the active HTTP request handle. `session.runCopilot`
+returns a `CopilotRequestHandle` carrying the `requestId` and a `completed`
+promise; it does not block on the whole agent turn. `session.cancelCopilot`
+dispatches the `cancel-copilot` host command for that `requestId`.
+
+The input control is a single Send/Stop toggle. Send opens an initial turn;
+Stop is UI truth. Bob marks the active turn stopped immediately on its own Stop
+action and does not wait for a server `agent_turn_stopped` event through the
+stream it is about to abort. Late events for a stopped turn are ignored and no
+further continuation is sent. Already-applied ops remain and can be undone.
+
+Bob enforces a tier step limit read from the signed policy
+(`limits.maxTurnsPerThread`, default 30) and refuses a continuation past that
+limit with a visible assistant message. Bob keeps a structured model history
+(`bob/lib/copilot/model-history.ts`) of user/assistant entries plus tool calls
+and results; this is the history sent on each request and is separate from the
+visible text-only chat bubbles.
 
 ## Preview
 
@@ -700,9 +738,13 @@ Generate translations.
 ## Copilot
 
 Bob owns the chat surface and current in-memory context. Roma grants and routes
-AI execution for the current account. San Francisco executes the AI operation and
-returns the model result through Product Copilot. Bob applies valid editor
-operations locally and preserves request-id correlation in the conversation.
+AI execution for the current account and relays the Product Copilot SSE stream.
+San Francisco executes each model step and streams `text_delta`, `tool_call`,
+`model_step_finished`, and `model_step_error` through Product Copilot. Bob
+renders text deltas incrementally, executes a tool batch only after its
+`model_step_finished`, applies valid editor operations locally, accumulates
+inverse undo ops across the turn, and preserves `userTurnId`/`modelStepId`
+correlation in the conversation.
 
 ## Deploy Plane
 

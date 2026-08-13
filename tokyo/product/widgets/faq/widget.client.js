@@ -183,6 +183,17 @@
     assertString(shadow.color, `${path}.color`);
   }
 
+  function assertInsideShadow(value, path) {
+    const insideShadow = assertRecord(value, path);
+    assertBoolean(insideShadow.linked, `${path}.linked`);
+    assertEnum(insideShadow.layer, `${path}.layer`, ['below-content', 'above-content']);
+    assertShadow(insideShadow.all, `${path}.all`);
+    assertShadow(insideShadow.top, `${path}.top`);
+    assertShadow(insideShadow.right, `${path}.right`);
+    assertShadow(insideShadow.bottom, `${path}.bottom`);
+    assertShadow(insideShadow.left, `${path}.left`);
+  }
+
   function assertCardWrapper(value, path) {
     const cardwrapper = assertRecord(value, path);
     assertBoolean(cardwrapper.radiusLinked, `${path}.radiusLinked`);
@@ -193,6 +204,7 @@
     assertString(cardwrapper.radiusBL, `${path}.radiusBL`);
     assertBorder(cardwrapper.border, `${path}.border`);
     assertShadow(cardwrapper.shadow, `${path}.shadow`);
+    assertInsideShadow(cardwrapper.insideShadow, `${path}.insideShadow`);
   }
 
   function assertFaqState(state) {

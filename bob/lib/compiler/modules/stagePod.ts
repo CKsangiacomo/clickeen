@@ -37,10 +37,6 @@ type StagePodAppearancePanelOptions = {
   includePodBorder?: boolean;
 };
 
-const insideShadowLayerOptions = encodeOptions(
-  '[{\"label\":\"Show below content\",\"value\":\"below-content\"},{\"label\":\"Show above content\",\"value\":\"above-content\"}]',
-);
-
 export function buildStagePodLayoutPanelFields(options: StagePodLayoutPanelOptions = {}): string[] {
   const includeFloating = options.includeFloating === true;
   const floatingFields = includeFloating
@@ -103,11 +99,9 @@ export function buildStagePodCornerAppearanceFields(): string[] {
 
 function buildInsideShadowFields(args: {
   owner: string;
-  label: string;
   existingPaths?: ReadonlySet<string>;
 }): string[] {
   const owner = args.owner;
-  const label = args.label;
   const existingPaths = args.existingPaths;
   const shouldInclude = (path: string) => !existingPaths?.has(path);
   const fields: string[] = [];
@@ -116,11 +110,11 @@ function buildInsideShadowFields(args: {
   };
   push(
     `${owner}.insideShadow.linked`,
-    `    <tooldrawer-field-podstageappearance group-label='' type='toggle' size='md' path='${owner}.insideShadow.linked' label='Link ${label.toLowerCase()} inside shadows' value='{{${owner}.insideShadow.linked}}' default='true' />`,
+    `    <tooldrawer-field-podstageappearance group-label='' type='toggle' size='md' path='${owner}.insideShadow.linked' label='' value='{{${owner}.insideShadow.linked}}' default='true' />`,
   );
   push(
     `${owner}.insideShadow.layer`,
-    `    <tooldrawer-field-podstageappearance group-label='' type='dropdown-actions' size='md' path='${owner}.insideShadow.layer' label='Inside shadow layer' value='{{${owner}.insideShadow.layer}}' options='${insideShadowLayerOptions}' />`,
+    `    <tooldrawer-field-podstageappearance group-label='' type='dropdown-actions' size='md' path='${owner}.insideShadow.layer' label='' value='{{${owner}.insideShadow.layer}}' options='' />`,
   );
   push(
     `${owner}.insideShadow.all`,
@@ -237,7 +231,6 @@ export function buildCoreCardWrapperAppearancePanelFields(args: {
     fields.push(
       ...buildInsideShadowFields({
         owner: basePath,
-        label,
         existingPaths,
       }),
     );
@@ -260,13 +253,13 @@ export function buildStagePodAppearancePanelFields(
     "  <tooldrawer-cluster label='Stage appearance'>",
     "    <tooldrawer-field-podstageappearance group-label='' type='dropdown-fill' size='md' fill-modes='color,gradient,image,video' path='stage.background' label='' value='{{stage.background}}' />",
     "    <tooldrawer-field-podstageappearance group-label='' type='dropdown-shadow' size='md' path='stage.shadow' label='' value='{{stage.shadow}}' />",
-    ...buildInsideShadowFields({ owner: 'stage', label: 'Stage' }),
+    ...buildInsideShadowFields({ owner: 'stage' }),
     '  </tooldrawer-cluster>',
     "  <tooldrawer-cluster label='Pod appearance'>",
     "    <tooldrawer-field-podstageappearance group-label='' type='dropdown-fill' size='md' fill-modes='color,gradient,image,video' path='pod.background' label='' value='{{pod.background}}' />",
     ...podBorderFields,
     "    <tooldrawer-field-podstageappearance group-label='' type='dropdown-shadow' size='md' path='pod.shadow' label='' value='{{pod.shadow}}' />",
-    ...buildInsideShadowFields({ owner: 'pod', label: 'Pod' }),
+    ...buildInsideShadowFields({ owner: 'pod' }),
     ...buildStagePodCornerAppearanceFields(),
     '  </tooldrawer-cluster>',
   ];

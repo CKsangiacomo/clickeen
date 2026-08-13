@@ -17,10 +17,10 @@ Stage
 ```
 
 - **Stage** is the outer presentation canvas. It owns host placement, canvas
-  mode, alignment, outer padding, background, shadows, floating behavior, and
+  mode, alignment, outer padding, background, outside/inside shadows, floating behavior, and
   iframe resize reporting.
 - **Pod** is the inner presentation surface. It owns content width, inner
-  padding, background, border, radius, and shadows.
+  padding, background, border, radius, and outside/inside shadows.
 - **Shell** is the two-slot composition contract. Its direct product children
   are Header and Core, and nothing else.
 - **Header** owns title, subtitle, optional Header CTA, their appearance, and
@@ -89,6 +89,30 @@ Widget clients consume shared helpers from `tokyo/product/widgets/shared/`:
 
 Required helpers fail visibly when missing. Widget code must not create local
 fallback implementations.
+
+## Shadow Rendering
+
+Stage, Pod, and supported Core card surfaces retain one exact shadow shape:
+`{enabled,inset,x,y,blur,spread,color,alpha}`. Outside contexts require
+`inset:false`; inside contexts require `inset:true`. The shared appearance
+runtime rejects a mismatch instead of forcing or repairing it.
+
+Inside-shadow groups retain `linked`, `layer`, and exact `all/top/right/bottom/left`
+objects. Linked rendering uses `all`; unlinked rendering produces one ordered
+comma-separated inset `box-shadow` list from top, right, bottom, and left.
+Switching linked state changes only `linked`; it does not overwrite the hidden
+objects. `layer` selects below- or above-content composition without changing
+the shadow values. Directional gradients are not an internal-shadow runtime.
+
+Because Stage is the outer iframe surface, an enabled Stage outside shadow also
+sets document gutters derived from its exact signed offsets, blur, and spread.
+The Stage remains inside those gutters, and iframe resize reporting includes
+them. Disabled or zero-opacity outside shadow adds no gutter. Pod and Core-card
+outside shadows need no document gutter because they are already inside Stage.
+
+FAQ's existing Q&A-card `insideShadow` is applied to every generated card via
+the shared `CKSurface` variables and the card's existing presentation CSS; FAQ
+does not calculate or reinterpret shadow values.
 
 ## Core Namespaces
 

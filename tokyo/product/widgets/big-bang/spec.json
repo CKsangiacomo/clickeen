@@ -73,6 +73,8 @@
           "url": "$label:component.dropdown-edit.url.label"
         },
         "dropdown-shadow": {
+          "aboveContent": "$label:component.dropdown-shadow.above-content.label",
+          "belowContent": "$label:component.dropdown-shadow.below-content.label",
           "blur": "$label:component.dropdown-shadow.blur.label",
           "color": "$label:component.dropdown-shadow.color.label",
           "defaultColors": "$label:component.dropdown-shadow.default-colors.label",
@@ -80,6 +82,7 @@
           "hex": "$label:component.dropdown-shadow.hex.label",
           "horizontal": "$label:component.dropdown-shadow.horizontal.label",
           "hue": "$label:component.dropdown-shadow.hue.label",
+          "layer": "$label:component.dropdown-shadow.layer.label",
           "opacity": "$label:component.dropdown-shadow.opacity.label",
           "preview": "$label:component.dropdown-shadow.preview.label",
           "spread": "$label:component.dropdown-shadow.spread.label",
@@ -117,12 +120,14 @@
           "pod.insideShadow.all": "$label:appearance.pod.inside-shadow.all.dropdown-shadow.label",
           "pod.insideShadow.bottom": "$label:appearance.pod.inside-shadow.bottom.dropdown-shadow.label",
           "pod.insideShadow.left": "$label:appearance.pod.inside-shadow.left.dropdown-shadow.label",
+          "pod.insideShadow.linked": "$label:appearance.pod.inside-shadow.linked.toggle.label",
           "pod.insideShadow.right": "$label:appearance.pod.inside-shadow.right.dropdown-shadow.label",
           "pod.insideShadow.top": "$label:appearance.pod.inside-shadow.top.dropdown-shadow.label",
           "pod.shadow": "$label:appearance.pod.shadow.dropdown-shadow.label",
           "stage.insideShadow.all": "$label:appearance.stage.inside-shadow.all.dropdown-shadow.label",
           "stage.insideShadow.bottom": "$label:appearance.stage.inside-shadow.bottom.dropdown-shadow.label",
           "stage.insideShadow.left": "$label:appearance.stage.inside-shadow.left.dropdown-shadow.label",
+          "stage.insideShadow.linked": "$label:appearance.stage.inside-shadow.linked.toggle.label",
           "stage.insideShadow.right": "$label:appearance.stage.inside-shadow.right.dropdown-shadow.label",
           "stage.insideShadow.top": "$label:appearance.stage.inside-shadow.top.dropdown-shadow.label",
           "stage.shadow": "$label:appearance.stage.shadow.dropdown-shadow.label"

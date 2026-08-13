@@ -141,8 +141,18 @@ const DROPDOWN_SHADOW_COMPONENT_LABEL_ATTRIBUTES = [
   ['vertical', 'vertical-label'],
 ] as const;
 
+const DROPDOWN_SHADOW_COMPOSITION_LABEL_KEYS = [
+  'aboveContent',
+  'belowContent',
+  'layer',
+] as const;
+
 type DropdownShadowEditorLabels = {
-  component: Record<(typeof DROPDOWN_SHADOW_COMPONENT_LABEL_ATTRIBUTES)[number][0], string>;
+  component: Record<
+    | (typeof DROPDOWN_SHADOW_COMPONENT_LABEL_ATTRIBUTES)[number][0]
+    | (typeof DROPDOWN_SHADOW_COMPOSITION_LABEL_KEYS)[number],
+    string
+  >;
   fields: Record<string, string>;
 };
 
@@ -614,7 +624,10 @@ function readDropdownShadowEditorLabels(
   }
   const component = labelsRaw.components['dropdown-shadow'];
   const fields = labelsRaw.fields['dropdown-shadow'];
-  const expectedKeys = DROPDOWN_SHADOW_COMPONENT_LABEL_ATTRIBUTES.map(([key]) => key).sort();
+  const expectedKeys = [
+    ...DROPDOWN_SHADOW_COMPONENT_LABEL_ATTRIBUTES.map(([key]) => key),
+    ...DROPDOWN_SHADOW_COMPOSITION_LABEL_KEYS,
+  ].sort();
   if (
     !isPlainObject(component) ||
     Object.keys(component).sort().join('\0') !== expectedKeys.join('\0') ||
@@ -630,6 +643,9 @@ function readDropdownShadowEditorLabels(
   };
   const resolvedComponent = {} as DropdownShadowEditorLabels['component'];
   for (const [key] of DROPDOWN_SHADOW_COMPONENT_LABEL_ATTRIBUTES) {
+    resolvedComponent[key] = readLabel(component[key], `components.dropdown-shadow.${key}`);
+  }
+  for (const key of DROPDOWN_SHADOW_COMPOSITION_LABEL_KEYS) {
     resolvedComponent[key] = readLabel(component[key], `components.dropdown-shadow.${key}`);
   }
   const resolvedFields: Record<string, string> = {};
@@ -650,9 +666,28 @@ function applyDropdownShadowEditorLabels(
   if (!lines.some((line) => /\btype='dropdown-shadow'/.test(line))) return lines;
   const labels = readDropdownShadowEditorLabels(labelsRaw, widgetname);
   const usedFieldPaths = new Set<string>();
+  const insideShadowOptions = encodeHtmlEntities(
+    JSON.stringify([
+      { label: labels.component.belowContent, value: 'below-content' },
+      { label: labels.component.aboveContent, value: 'above-content' },
+    ]),
+  );
   const rendered = lines.map((line) => {
-    if (!/\btype='dropdown-shadow'/.test(line)) return line;
     const path = line.match(/\bpath='([^']+)'/)?.[1] ?? '';
+    if (path.endsWith('.insideShadow.linked')) {
+      const fieldLabel = labels.fields[path];
+      if (!fieldLabel) {
+        throw new Error(`[BobCompiler] ${widgetname} inside-shadow link label is missing: ${path}`);
+      }
+      usedFieldPaths.add(path);
+      return line.replace(/(^|\s)label='[^']*'/, `$1label='${encodeHtmlEntities(fieldLabel)}'`);
+    }
+    if (path.endsWith('.insideShadow.layer')) {
+      return line
+        .replace(/(^|\s)label='[^']*'/, `$1label='${encodeHtmlEntities(labels.component.layer)}'`)
+        .replace(/(^|\s)options='[^']*'/, `$1options='${insideShadowOptions}'`);
+    }
+    if (!/\btype='dropdown-shadow'/.test(line)) return line;
     const authoredLabel = line.match(/(?:^|\s)label='([^']*)'/)?.[1] ?? '';
     let next = line;
     if (!authoredLabel) {

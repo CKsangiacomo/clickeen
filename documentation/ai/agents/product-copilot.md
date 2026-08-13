@@ -10,6 +10,7 @@ Code authority:
 - `agents/product-copilot/`
 - `bob/components/CopilotPane.tsx`
 - `bob/lib/session/sessionTransport.ts`
+- `bob/lib/copilot/model-history.ts`
 - `roma/app/api/account/instances/[instanceId]/copilot/route.ts`
 - `roma/lib/ai/account-copilot.ts`
 
@@ -23,7 +24,7 @@ Code authority:
 | Brain contract | `agents/product-copilot/src/index.ts` |
 | Wrangler config | `agents/product-copilot/wrangler.toml` |
 | Product caller | Roma account Builder route |
-| Model executor | San Francisco `/model/chat` |
+| Model executor | San Francisco `/model/turn` (stream mode) |
 | Worker service binding | `SANFRANCISCO_AI_ENGINE -> sanfrancisco-dev` |
 
 ## Authority Matrix
@@ -32,7 +33,7 @@ Code authority:
 | --- | --- |
 | Bob | open Builder draft, visible controls, draft signature, browser-memory apply/undo |
 | Roma | current account/session/tier, instance route authority, model selection validation, AI grant minting, usage reservation |
-| Product Copilot Worker | Product Copilot reasoning, model prompts, output parsing, `draft_edit` structural validation, one bounded structural retry |
+| Product Copilot Worker | Product Copilot reasoning, model prompts, native `apply_widget_ops` tool definition, tool-call and step-boundary enforcement, San Francisco event relay |
 | San Francisco | grant/model enforcement, provider call, and returned usage metadata |
 | Tokyo-worker | saved account instance storage when the user saves through Roma |
 
@@ -43,27 +44,29 @@ keys, or decide account permissions.
 
 ```text
 Bob CopilotPane
--> session.apiFetch('/api/ai/widget-copilot')
 -> Bob hosted session dispatch command: run-copilot
--> Roma POST /api/account/instances/[instance id]/copilot
+-> Roma POST /api/account/instances/[instance id]/copilot (SSE relay)
 -> Roma loads current instance and validates account/instance authority
+-> Roma validates CopilotTurnRequest via shared parseCopilotTurnRequest
 -> Roma validates optional selectedModel
--> Roma mints AI grant and reserves copilot usage
--> Roma calls Product Copilot Worker POST /execute
--> Product Copilot calls San Francisco POST /model/chat
--> Product Copilot returns ProductCopilotResponse
--> Bob applies draft_edit in browser memory only, if valid and draft signature still matches
+-> Roma mints AI grant and reserves copilot usage (initial turn only)
+-> Roma calls Product Copilot Worker POST /turn and pipes the SSE stream through
+-> Product Copilot calls San Francisco POST /model/turn (stream mode)
+-> San Francisco streams text_delta / tool_call / model_step_finished / model_step_error
+-> Product Copilot relays as ProductCopilotTurnEvent (agent_turn_started, text_delta, tool_call, model_step_finished, agent_turn_finished, agent_turn_error, agent_turn_stopped)
+-> Bob executes apply_widget_ops only after model_step_finished, then sends a continuation with priorModelStepId
 ```
 
-Bob's `/api/ai/widget-copilot` is a synthetic session API inside the hosted
-Builder transport. In hosted Roma mode it is not a Bob HTTP route. Bob
-delegates it to the parent Roma host through a `postMessage` command:
+Bob's Copilot turn is dispatched through the hosted `run-copilot` command. In
+hosted Roma mode it is not a Bob HTTP route. Bob delegates it to the parent Roma
+host through a `postMessage` command:
 
-| Bob synthetic path | Hosted command | Roma route |
-| --- | --- | --- |
-| `/api/ai/widget-copilot` | `run-copilot` | `POST /api/account/instances/[instance id]/copilot` |
+| Bob command | Roma route |
+| --- | --- |
+| `run-copilot` | `POST /api/account/instances/[instance id]/copilot` |
 
-The hosted Copilot command timeout is `120_000ms`.
+The hosted Copilot command timeout is `120_000ms`. Copilot event frames are
+delivered to Bob through `host:copilot-event` messages keyed by `requestId`.
 
 ## Roma Grant And Model Policy
 
@@ -93,7 +96,8 @@ Roma route/operator requirements:
 - selected model must be Product Copilot managed;
 - the grant is minted before usage reservation, so missing signing configuration
   cannot consume a turn;
-- monthly Copilot turn usage is reserved before the worker call;
+- monthly Copilot turn usage is reserved before the worker call, initial turns
+  only (continuations pass `skipTurnReservation`);
 - grant TTL is 10 minutes;
 - grant budgets come from the runtime policy matrix;
 - Roma fails closed if `USAGE_KV` is unavailable or contains a malformed
@@ -103,7 +107,7 @@ Roma env/bindings involved in the Copilot path:
 
 | Roma env/binding | Required | Used for |
 | --- | --- | --- |
-| `PRODUCT_COPILOT_BASE_URL` | yes | Roma HTTP call to Product Copilot `/execute` |
+| `PRODUCT_COPILOT_BASE_URL` | yes | Roma HTTP call to Product Copilot `/turn` |
 | `ROMA_AI_GRANT_PRIVATE_KEY_PEM` | yes | Roma-only RS256 grant minting |
 | `USAGE_KV` | yes | monthly Copilot turn reservation |
 
@@ -116,59 +120,30 @@ GET /healthz
 HEAD /healthz
 ```
 
-Execute:
+Turn (the native tool agent streaming endpoint):
 
 ```text
-POST /execute
+POST /turn
 ```
 
-Worker request:
+The deprecated non-streaming endpoint is closed:
 
-```json
-{
-  "grant": "[signed grant]",
-  "agentId": "product.copilot",
-  "input": {
-    "instanceId": "[instance id]",
-    "sessionId": "[browser session id]",
-    "userMessage": "[user message]",
-    "context": {
-      "instanceId": "[instance id]",
-      "widgetType": "[widget type]",
-      "displayName": "[widget display name]",
-      "activeLocale": "[active locale]",
-      "draftSignature": "[draft signature]",
-      "controls": [],
-      "availableActions": ["draft_edit"],
-      "unavailableCapabilities": [
-        "saved-product-mutation",
-        "publish",
-        "translation-generation",
-        "analytics-lookup",
-        "child-agent-call"
-      ],
-      "traceRequestId": "[request id]",
-      "selectedControlPath": "[selected control path]"
-    },
-    "conversationHistory": [
-      { "role": "user", "text": "[previous user turn]" },
-      { "role": "assistant", "text": "[previous assistant turn]" }
-    ]
-  },
-  "trace": {
-    "client": "roma",
-    "requestId": "[request id]"
-  }
-}
+```text
+POST /execute -> 410
 ```
 
-`agentId` may be omitted in the Worker request. If present, it must be exactly
-`product.copilot`.
+`/turn` returns `content-type: text/event-stream` and never returns a single JSON
+body. Roma pipes the stream through to Bob transparently.
+
+Worker request is a `CopilotTurnRequest` (see Input Envelope below). The
+six-kind JSON `ProductCopilotResponse` protocol is deleted; the agent emits
+normal assistant text streams plus native `apply_widget_ops` tool calls.
 
 Required headers on Roma -> Product Copilot:
 
 ```text
 content-type: application/json
+accept: text/event-stream
 x-request-id: [current request id when available]
 ```
 
@@ -179,87 +154,81 @@ content-type: application/json
 x-request-id: [request id]
 ```
 
-Worker response shape:
+Worker response is an SSE stream of `ProductCopilotTurnEvent` frames. Each frame
+is one `event: [type]\ndata: [json]\n\n` block. The exact event union is
+`ProductCopilotTurnEvent` in `packages/ck-contracts/src/ai.ts`:
 
-```json
-{
-  "requestId": "[request id]",
-  "agentId": "product.copilot",
-  "result": {
-    "kind": "answer",
-    "message": "[assistant message]"
-  },
-  "usage": {
-    "provider": "[provider selected by signed grant]",
-    "model": "[model returned by provider]",
-    "promptTokens": "[prompt token count]",
-    "completionTokens": "[completion token count]",
-    "latencyMs": "[latency ms]"
-  }
-}
-```
+| Event type | Carries | `modelStepId` |
+| --- | --- | --- |
+| `agent_turn_started` | turn opened by the agent | absent |
+| `text_delta` | incremental assistant text | required |
+| `tool_call` | one `apply_widget_ops` invocation (`toolCallId`, `toolName`, `input`) | required |
+| `model_step_finished` | step terminal (`finishReason`, requested/reported model, token usage, latency) | required |
+| `agent_turn_finished` | turn completed (only on a `stop` finish) | absent |
+| `agent_turn_error` | turn failed visibly (`code`, `reasonKey`, `message`, optional `requestId`) | absent |
+| `agent_turn_stopped` | turn cancelled by caller Stop | absent |
 
-`usage` is not invented by Product Copilot. The worker passes through the
-successful San Francisco provider usage. A successful response must not be
-documented with zero token counts unless the upstream provider actually returns
-zero, and provider/model values must be read from the signed grant/provider
-result, not hardcoded in this operator doc.
+`agent_turn_started` is emitted only on the initial request, never on
+continuations. Every step-level event (`text_delta`, `tool_call`,
+`model_step_finished`) carries the `modelStepId` minted by San Francisco;
+frames missing it fail visibly as `agent_turn_error`.
 
-Roma's browser-facing response is not the raw Worker response. Roma strips
-Worker `usage` and returns the agent result with request metadata for Bob:
+Tool calls execute only after `model_step_finished`. Product Copilot rejects
+more than one tool call in a single step as a visible `agent_turn_error`; Bob
+sees the first `tool_call` followed by the error and does not execute. On a
+`tool-calls` finish reason the stream closes cleanly at the step boundary; Bob
+executes the tool and opens a continuation. On a `stop` finish reason
+`agent_turn_finished` follows.
 
-```json
-{
-  "kind": "answer",
-  "message": "[assistant message]",
-  "meta": {
-    "requestId": "[request id]"
-  }
-}
-```
+The Product Copilot SSE parser uses one streaming `TextDecoder` (preserving
+multibyte state across chunks), normalizes CRLF, and fails visibly on malformed
+JSON or unknown event types rather than silently dropping them. The SSE event
+name must agree with the payload `type`.
+
+Provider usage is not invented by Product Copilot. `model_step_finished`
+forwards the San Francisco reported model and token counts verbatim.
 
 ## Input Envelope
 
-Input type: `ProductCopilotRequestEnvelope` in
-`packages/ck-contracts/src/ai.ts`.
+Input type: `CopilotTurnRequest` in
+`packages/ck-contracts/src/ai.ts`. The request is one of two disjoint kinds:
 
-Required route-level fields:
+- `initial`: opens a new user turn. Carries `userMessage`.
+- `continuation`: resumes after a tool step. Carries `priorModelStepId`,
+  `toolCallId`, `toolName` (exactly `apply_widget_ops`), and `toolResult`.
 
-- `instanceId`
-- `sessionId`
-- `userMessage`
-- `context`
-
-Required context fields:
+Both kinds carry `version`, `sessionId`, `userTurnId`, optional `selectedModel`,
+`conversationHistory`, and `currentDraftContext`. Required `currentDraftContext`
+fields:
 
 - `instanceId`
 - `widgetType`
 - `displayName`
 - `activeLocale`
 - `draftSignature`
+- `controls`
 - `availableActions`
 - `unavailableCapabilities`
-- `traceRequestId`
 
-Optional route/runtime fields:
+Optional context field:
 
-- `context.selectedControlPath`
-- `conversationHistory`
-- Roma request `selectedModel`
+- `currentDraftContext.selectedControlPath`
 
-Roma validates the envelope before calling Product Copilot. Product Copilot also
-validates its input shape through `executeProductCopilot`.
+Roma and Product Copilot share one parser, `parseCopilotTurnRequest` in
+`@clickeen/ck-contracts/ai`, so request validation does not drift between them.
+The route instance id must match `currentDraftContext.instanceId`, and the
+context `widgetType` must match the loaded Tokyo instance row.
 
-The shared TypeScript contract requires `context.controls`. Current Roma route
-and Product Copilot runtime still tolerate missing, empty, or invalid controls;
-that degrades the edit context and may make `draft_edit` unavailable, but a
-conversational answer/clarification/refusal can still be a valid turn.
+The shared TypeScript contract requires `currentDraftContext.controls`. Missing,
+empty, or invalid controls degrade the edit context and may make
+`apply_widget_ops` unavailable for that step, but a conversational answer can
+still be a valid turn.
 
 Current input limits:
 
-- conversation history: at most 8 messages;
-- conversation message text: at most 2,000 characters per message;
-- edit context prompt: at most 120,000 characters.
+- conversation history: at most `COPILOT_MAX_HISTORY_ENTRIES` (8) entries;
+- conversation message text: at most `COPILOT_MAX_HISTORY_TEXT_CHARS` (2,000)
+  characters per entry.
 
 ## Context Capsule Rules
 
@@ -280,59 +249,69 @@ account data, widget package source, saved-product mutation authority, or other
 product domains.
 
 If required widget/session context is invalid, the turn fails. If edit controls
-are unavailable or invalid, `draft_edit` is unavailable for that turn; the agent
-may still return another valid output kind.
+are unavailable or invalid, the `apply_widget_ops` tool is unavailable for that
+step; the agent may still return a conversational text answer.
 
-## Output Union And Draft Ops
+## Tool Agent And Draft Ops
 
-Output type: `ProductCopilotResponse` in `packages/ck-contracts/src/ai.ts`.
+The agent emits normal assistant text (streamed as `text_delta`) and may invoke
+one native tool, `apply_widget_ops`, to edit the draft. The six-kind JSON
+`ProductCopilotResponse` output union is deleted; there are no
+`answer`/`clarification`/`suggestion`/`draft_edit`/`refusal`/`error` result
+kinds on the wire. Clarifications, suggestions, and refusals are plain assistant
+text.
 
-Allowed `kind` values:
-
-- `answer`
-- `clarification`
-- `suggestion`
-- `draft_edit`
-- `refusal`
-- `error`
-
-Allowed draft ops:
+Tool definition authority: `APPLY_WIDGET_OPS_TOOL` in
+`agents/product-copilot/src/index.ts`. Its input is one ordered `ops` array
+applied atomically. Allowed op types:
 
 - `set`
 - `insert`
 - `remove`
 - `move`
 
-Product Copilot validates returned draft ops structurally before returning them
-to Roma/Bob. It does not apply them.
+Each op targets a `path` from the provided editable controls. The model emits at
+most one `apply_widget_ops` call per model step; more than one is rejected as a
+visible `agent_turn_error`. Bob validates and applies the batch only after
+`model_step_finished` (see Bob Apply And Persistence Boundary). Product Copilot
+does not apply ops itself.
 
 ## Bob Apply And Persistence Boundary
 
-Bob applies `draft_edit` only when:
+Bob buffers a `tool_call` event and applies its `apply_widget_ops` batch only
+after the matching `model_step_finished` arrives (same `modelStepId`). Apply
+requires:
 
 - the current draft signature still matches the request signature;
 - inverse undo ops can be built;
 - `session.applyOps(ops)` succeeds.
 
-Apply is browser-memory only. User save remains a Roma account operation. Publish
-remains Roma-owned. Tokyo persistence is not touched by Product Copilot.
-Bob does not send apply or Undo activity to a separate outcome or learning
-route. Apply and Undo remain local editor operations.
+On success Bob opens a continuation with `priorModelStepId`, sending the tool
+result back so the agent can finish or request another step. Undo ops accumulate
+across the steps of one turn so a single Undo can reverse the whole applied
+batch. Bob's model history (`bob/lib/copilot/model-history.ts`) is the structured
+turn log sent on each request and is separate from the visible text-only chat
+bubbles.
+
+Apply is browser-memory only. User save remains a Roma account operation.
+Publish remains Roma-owned. Tokyo persistence is not touched by Product Copilot.
+Bob does not send apply or Undo activity to a separate outcome or learning route.
+Apply and Undo remain local editor operations.
 
 ## Error Contract
 
 | Surface | Status/result | Cause |
 | --- | --- | --- |
-| Roma route | `422` | invalid envelope or selected model |
+| Roma route | `422` | invalid turn request or selected model |
 | Roma route | `403` | account/tier/model/usage denial |
 | Roma route | `503` | usage reservation dependency unavailable |
 | Roma route | `502` | Product Copilot fetch failure or route catch failure |
-| Product Copilot Worker | `400 BAD_REQUEST` | invalid worker request or invalid Product Copilot input |
+| Product Copilot Worker | `410` | deprecated `POST /execute` |
+| Product Copilot Worker | `400 BAD_REQUEST` | invalid worker request or invalid Product Copilot turn request |
 | Product Copilot Worker | `404 BAD_REQUEST` | unknown worker path |
 | Product Copilot Worker | upstream status | San Francisco non-OK response is propagated |
-| Product Copilot Worker | `502 PROVIDER_ERROR` | invalid San Francisco model response |
 | Product Copilot Worker | `500 PROVIDER_ERROR` | missing San Francisco config or unexpected failure |
-| Product Copilot result | `kind: "error"` | brain could not produce valid output after bounded structural retry |
+| Product Copilot stream | `agent_turn_error` event | multiple tool calls in one step, missing modelStepId, malformed SSE, unknown event, `model_step_error`, or stream ended without a terminal event |
 | Bob | assistant message, no apply | stale draft signature, invalid ops, failed undo construction, failed apply |
 
 ## Runtime Config And Deploy
@@ -385,14 +364,20 @@ workflow file.
 
 ## Operator Debug Sequence
 
-1. Capture the Bob/Roma request id from UI logs or response metadata.
-2. If Bob cannot reach `/api/ai/widget-copilot`, verify hosted mode delegated the
-   `run-copilot` command to Roma and did not hit a raw Bob HTTP route.
-3. If Roma returns `422`, inspect envelope instance/widget/context validation.
+1. Capture the Bob/Roma request id from UI logs or `host:copilot-event` frames.
+2. If Bob shows no turn activity, verify hosted mode delegated the `run-copilot`
+   command to Roma rather than hitting the Bob-local `/api/ai/widget-copilot`
+   guard route (`409`).
+3. If Roma returns `422`, inspect the `parseCopilotTurnRequest` issues and the
+   instance/widget context validation.
 4. If Roma returns `403`, inspect tier/model/usage policy.
 5. If Roma returns `503`, inspect `USAGE_KV` availability and the exact account
    counter value.
-6. If Product Copilot returns provider/model error, inspect San Francisco health,
-   grant policy, and selected provider secret.
-7. If an edit response is visible but not applied, inspect Bob draft signature,
-   inverse undo construction, and `session.applyOps`.
+6. If the stream emits `agent_turn_error`, inspect the event `code`/`reasonKey`:
+   `PROVIDER_ERROR` points at San Francisco health, grant policy, and selected
+   provider secret; `BUDGET_EXCEEDED` points at the signed timeout or step/token
+   ceiling; other codes point at protocol enforcement (multiple tool calls,
+   missing `modelStepId`, malformed SSE).
+7. If a tool batch is visible but not applied, inspect Bob draft signature,
+   inverse undo construction, `model_step_finished` correlation, and
+   `session.applyOps`.

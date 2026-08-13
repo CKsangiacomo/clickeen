@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { asTrimmedString, isRecord } from '@clickeen/ck-contracts';
 import {
-  executeCopilotOnProductCopilot,
+  parseCopilotTurnRequest,
+  type CopilotTurnRequest,
+} from '@clickeen/ck-contracts/ai';
+import {
   issueAccountCopilotGrant,
+  streamCopilotTurn,
 } from '@roma/lib/ai/account-copilot';
 import { loadTokyoAccountInstanceDocument } from '@roma/lib/account-instance-direct';
 import { requireInstanceIdParam } from '@roma/lib/route-helpers';
@@ -10,15 +14,12 @@ import { resolveCurrentAccountRouteContext, withSession } from '../../../_lib/cu
 import {
   type AiModelRef,
   type AiProvider,
-  type ProductCopilotRequestEnvelope,
 } from '@clickeen/ck-contracts/ai';
 import { isProductCopilotManagedModel } from '@clickeen/ck-contracts/ai-model-management';
 
 export const runtime = 'edge';
 
 type RouteContext = { params: Promise<{ instanceId: string }> };
-
-const COPILOT_INVALID_EDIT_MESSAGE = "Copilot couldn't produce a valid edit for this widget. Nothing was changed.";
 
 type SelectedModelParseResult =
   | { ok: true; value: AiModelRef | null }
@@ -41,72 +42,6 @@ function parseSelectedModel(value: unknown): SelectedModelParseResult {
   return { ok: true, value: selected };
 }
 
-function isExactNonEmptyString(value: unknown): value is string {
-  return typeof value === 'string' && value.length > 0 && value === value.trim();
-}
-
-function isControlPath(value: unknown): value is string {
-  return isExactNonEmptyString(value) &&
-    !value.split('.').some((segment) => !segment || segment === '__proto__' || segment === 'prototype' || segment === 'constructor');
-}
-
-function validateConversationHistory(value: unknown): Array<{ path: string; message: string }> {
-  if (value === undefined) return [];
-  if (!Array.isArray(value)) return [{ path: 'conversationHistory', message: 'conversationHistory must be an array' }];
-  if (value.length > 8) return [{ path: 'conversationHistory', message: 'conversationHistory must contain at most 8 messages' }];
-  const issues: Array<{ path: string; message: string }> = [];
-  value.forEach((entry, index) => {
-    if (!isRecord(entry)) {
-      issues.push({ path: `conversationHistory[${index}]`, message: 'message must be an object' });
-      return;
-    }
-    if (entry.role !== 'user' && entry.role !== 'assistant') issues.push({ path: `conversationHistory[${index}].role`, message: 'role must be user or assistant' });
-    const text = asTrimmedString(entry.text);
-    if (!text) issues.push({ path: `conversationHistory[${index}].text`, message: 'text is required' });
-    if (text && text.length > 2000) issues.push({ path: `conversationHistory[${index}].text`, message: 'text must be at most 2000 characters' });
-  });
-  return issues;
-}
-
-function validateCopilotEnvelope(payload: Record<string, unknown>, routeInstanceId: string): { envelope: ProductCopilotRequestEnvelope | null; issues: Array<{ path: string; message: string }> } {
-  const issues: Array<{ path: string; message: string }> = [];
-  const context = isRecord(payload.context) ? payload.context : null;
-
-  for (const field of ['instanceId', 'userMessage', 'sessionId']) {
-    if (!isExactNonEmptyString(payload[field])) issues.push({ path: field, message: `${field} is required` });
-  }
-  if (payload.instanceId && payload.instanceId !== routeInstanceId) {
-    issues.push({ path: 'instanceId', message: 'instanceId must match the route instance' });
-  }
-  if (!context) {
-    issues.push({ path: 'context', message: 'context must be an object' });
-  } else {
-    for (const field of ['instanceId', 'widgetType', 'displayName', 'activeLocale', 'draftSignature', 'traceRequestId']) {
-      if (!isExactNonEmptyString(context[field])) issues.push({ path: `context.${field}`, message: `${field} is required` });
-    }
-    if (context.instanceId && context.instanceId !== routeInstanceId) {
-      issues.push({ path: 'context.instanceId', message: 'context instance must match the route instance' });
-    }
-    if (context.controls !== undefined && !Array.isArray(context.controls)) {
-      issues.push({ path: 'context.controls', message: 'context.controls must be an array when present' });
-    }
-    if (!Array.isArray(context.availableActions)) {
-      issues.push({ path: 'context.availableActions', message: 'availableActions must be an array' });
-    } else if (context.availableActions.some((entry) => entry !== 'draft_edit')) {
-      issues.push({ path: 'context.availableActions', message: 'availableActions contains an unsupported action' });
-    }
-    if (!Array.isArray(context.unavailableCapabilities) || !context.unavailableCapabilities.every((entry) => typeof entry === 'string')) {
-      issues.push({ path: 'context.unavailableCapabilities', message: 'unavailableCapabilities must be a string array' });
-    }
-    if (context.selectedControlPath !== undefined && !isControlPath(context.selectedControlPath)) {
-      issues.push({ path: 'context.selectedControlPath', message: 'selectedControlPath must be an exact path when present' });
-    }
-  }
-  issues.push(...validateConversationHistory(payload.conversationHistory));
-  if (issues.length || !context) return { envelope: null, issues };
-  return { envelope: payload as ProductCopilotRequestEnvelope, issues: [] };
-}
-
 export async function POST(request: NextRequest, context: RouteContext) {
   const current = await resolveCurrentAccountRouteContext({ request, minRole: 'editor' });
   if (!current.ok) return current.response;
@@ -122,20 +57,51 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
   try {
     const body = (await request.json().catch(() => null)) as unknown;
-    const payload = isRecord(body) ? body : null;
 
-    const selectedModelResult = parseSelectedModel(payload?.selectedModel);
-    const envelopeResult = payload ? validateCopilotEnvelope(payload, instanceId) : { envelope: null, issues: [{ path: 'body', message: 'body must be an object' }] };
-
-    const issues: Array<{ path: string; message: string }> = [];
-    if (!selectedModelResult.ok) issues.push({ path: 'selectedModel', message: selectedModelResult.message });
-    issues.push(...envelopeResult.issues);
-    if (issues.length) {
-      return withSession(request, NextResponse.json({ error: 'VALIDATION', issues }, { status: 422 }), current.value.setCookies);
+    // PRD 128D: full request validation via the SHARED parser BEFORE any
+    // usage reservation or grant issuance. One Clickeen-owned parser —
+    // no drifting validators between Roma and Product Copilot.
+    const parsed = parseCopilotTurnRequest(body, { routeInstanceId: instanceId });
+    if (!parsed.ok) {
+      return withSession(
+        request,
+        NextResponse.json(
+          {
+            error: {
+              kind: 'UPSTREAM_UNAVAILABLE',
+              reasonKey: 'coreui.errors.copilot.invalidRequest',
+              detail: 'Invalid Product Copilot turn request.',
+              issues: parsed.issues,
+            },
+          },
+          { status: 422 },
+        ),
+        current.value.setCookies,
+      );
     }
-    const selectedModel = selectedModelResult.ok ? selectedModelResult.value : null;
-    const envelope = envelopeResult.envelope!;
+    const turnRequest = parsed.request;
 
+    // Validate selected model against the managed set
+    const selectedModelResult = parseSelectedModel(turnRequest.selectedModel);
+    if (!selectedModelResult.ok) {
+      return withSession(
+        request,
+        NextResponse.json(
+          {
+            error: {
+              kind: 'UPSTREAM_UNAVAILABLE',
+              reasonKey: 'coreui.errors.copilot.invalidRequest',
+              detail: selectedModelResult.message,
+            },
+          },
+          { status: 422 },
+        ),
+        current.value.setCookies,
+      );
+    }
+    const selectedModel = selectedModelResult.value;
+
+    // Verify the instance exists and is accessible
     const currentInstance = await loadTokyoAccountInstanceDocument({
       accountId: current.value.authzPayload.accountPublicId,
       instanceId,
@@ -149,36 +115,41 @@ export async function POST(request: NextRequest, context: RouteContext) {
         current.value.setCookies,
       );
     }
+
+    // PRD 128D: context widgetType must match the loaded Tokyo instance row.
     const widgetType = currentInstance.value.row.widgetType;
-    if (envelope.context.widgetType !== widgetType) {
+    if (turnRequest.currentDraftContext.widgetType !== widgetType) {
       return withSession(
         request,
         NextResponse.json(
-          { error: 'VALIDATION', issues: [{ path: 'context.widgetType', message: 'widgetType must match the instance widget type' }] },
+          {
+            error: {
+              kind: 'UPSTREAM_UNAVAILABLE',
+              reasonKey: 'coreui.errors.copilot.invalidRequest',
+              detail: 'Draft context widgetType must match the instance widget type.',
+            },
+          },
           { status: 422 },
         ),
         current.value.setCookies,
       );
     }
 
+    // Issue grant — reserve turn only on initial (kind is already validated).
+    const isInitial = turnRequest.kind === 'initial';
     const issued = await issueAccountCopilotGrant({
       authz: current.value.authzPayload,
       ...(selectedModel ? { selectedModel } : {}),
-      trace: { sessionId: envelope.sessionId, instanceId },
+      trace: { sessionId: turnRequest.sessionId, instanceId },
       usageKv: current.value.usageKv,
+      ...(isInitial ? {} : { skipTurnReservation: true }),
     });
     if (!issued.ok) {
       if (issued.status === 403) {
         return withSession(
           request,
           NextResponse.json(
-            {
-              error: {
-                kind: 'DENY',
-                reasonKey: issued.reasonKey,
-                detail: issued.detail,
-              },
-            },
+            { error: { kind: 'DENY', reasonKey: issued.reasonKey, detail: issued.detail } },
             { status: 403 },
           ),
           current.value.setCookies,
@@ -191,50 +162,45 @@ export async function POST(request: NextRequest, context: RouteContext) {
       );
     }
 
-    const executed = await executeCopilotOnProductCopilot({
+    // Forward to Product Copilot Worker /turn and pipe the SSE stream through.
+    // streamCopilotTurn constructs the upstream body from validated fields
+    // only — the Roma-issued grant is authoritative and cannot be overwritten.
+    const streamResult = await streamCopilotTurn({
       grant: issued.grant,
-      agentId: issued.agentId,
-      traceClient: 'roma',
+      turnRequest,
       requestId: current.value.requestId,
-      input: envelope,
+      signal: request.signal,
     });
-    if (!executed.ok) {
-      const invalidEdit = executed.message.includes(COPILOT_INVALID_EDIT_MESSAGE);
-      const reasonKey =
-        invalidEdit
-          ? 'coreui.errors.copilot.invalidEdit'
-          : executed.reasonKey === 'coreui.errors.copilot.invalidContext' ||
-              executed.reasonKey === 'coreui.errors.copilot.invalidRequest'
-            ? executed.reasonKey
-            : 'coreui.errors.copilot.failed';
+
+    if (!streamResult.ok) {
       return withSession(
         request,
         NextResponse.json(
           {
             error: {
               kind: 'UPSTREAM_UNAVAILABLE',
-              reasonKey,
-              detail: invalidEdit ? COPILOT_INVALID_EDIT_MESSAGE : executed.message,
-              ...(executed.issues?.length ? { issues: executed.issues } : {}),
+              reasonKey: streamResult.reasonKey ?? 'coreui.errors.copilot.failed',
+              detail: streamResult.message,
             },
           },
-          { status: executed.status },
+          { status: streamResult.status },
         ),
         current.value.setCookies,
       );
     }
 
-    const result = executed.result ?? null;
-    if (executed.requestId && isRecord(result)) {
-      const baseMeta = isRecord(result.meta) ? (result.meta as Record<string, unknown>) : {};
-      return withSession(
-        request,
-        NextResponse.json({ ...result, meta: { ...baseMeta, requestId: executed.requestId } }),
-        current.value.setCookies,
-      );
-    }
-
-    return withSession(request, NextResponse.json(result), current.value.setCookies);
+    // Transparent SSE relay — pipe the Product Copilot stream through to Bob.
+    return withSession(
+      request,
+      new NextResponse(streamResult.response.body, {
+        status: 200,
+        headers: {
+          'content-type': 'text/event-stream',
+          'cache-control': 'no-store',
+        },
+      }),
+      current.value.setCookies,
+    );
   } catch (error) {
     const detail = error instanceof Error ? error.message : String(error);
     return withSession(

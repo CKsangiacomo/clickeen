@@ -20,9 +20,9 @@ outcome, or model-call telemetry plane in San Francisco.
 
 ```text
 Bob CopilotPane
--> Roma account copilot route
--> Product Copilot Worker /execute
--> San Francisco /model/chat
+-> Roma account copilot route (SSE relay)
+-> Product Copilot Worker /turn (SSE)
+-> San Francisco /model/turn (stream mode, SSE)
 -> provider API
 
 Bob Translations panel
@@ -76,7 +76,7 @@ An unregistered agent id is not a current Clickeen AI runtime.
 | San Francisco | `sanfrancisco-dev` | `DEEPSEEK_API_KEY`, `DEEPSEEK_BASE_URL` | DeepSeek calls and optional base URL override |
 | San Francisco | `sanfrancisco-dev` | `OPENAI_MODEL` | Prague system-copy translation model |
 | San Francisco | R2 bucket `sanfrancisco-logs-dev` | `SF_R2` | Prague translation request/response logs |
-| Product Copilot | `product-copilot-dev` | `SANFRANCISCO_AI_ENGINE -> sanfrancisco-dev` | Governed `/model/chat` calls |
+| Product Copilot | `product-copilot-dev` | `SANFRANCISCO_AI_ENGINE -> sanfrancisco-dev` | Governed `/model/turn` calls |
 | Translation Agent | `translation-agent-dev` | `SANFRANCISCO_AI_ENGINE -> sanfrancisco-dev` | Governed `/model/chat` calls |
 | Translation Agent | `translation-agent-dev` | `TOKYO_PRODUCT_CONTROL -> tokyo-assets-dev` | Locale-overlay writes through Tokyo-worker |
 

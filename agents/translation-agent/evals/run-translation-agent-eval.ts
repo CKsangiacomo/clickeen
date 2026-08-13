@@ -3,7 +3,7 @@ import {
   buildSystemPrompt,
   chunkTranslationEntries,
   isLikelyNonTranslatableLiteral,
-  parseTranslationResult,
+  validateStructuredTranslationResult,
   restoreStructuredTranslationResults,
   type TranslationItem,
 } from '../src/index';
@@ -80,11 +80,11 @@ const cases: CaseResult[] = [
     }
   }),
   expectPass('preserves exact string paths and placeholders', () => {
-    const result = parseTranslationResult(
-      JSON.stringify([
+    const result = validateStructuredTranslationResult(
+      [
         { path: 'content.title', value: 'Reserve sua estadia, { guestName }' },
         { path: 'content.cta', value: 'Reserve agora' },
-      ]),
+      ],
       stringItems,
       provider,
     );
@@ -94,11 +94,11 @@ const cases: CaseResult[] = [
     }
   }),
   expectPass('preserves expected output order when provider order differs', () => {
-    const result = parseTranslationResult(
-      JSON.stringify([
+    const result = validateStructuredTranslationResult(
+      [
         { path: 'content.cta', value: 'Reserve agora' },
         { path: 'content.title', value: 'Reserve sua estadia, {guestName}' },
-      ]),
+      ],
       stringItems,
       provider,
     );
@@ -123,58 +123,56 @@ const cases: CaseResult[] = [
     expectEqual(chunks[0]?.[0]?.path, 'content.items.0.label', 'first path preserved');
     expectEqual(chunks[1]?.[0]?.path, 'content.items.80.label', 'split path preserved');
   }),
-  expectThrows('fails on invalid json', () => {
-    parseTranslationResult('not json', stringItems, provider);
-  }, 'Invalid JSON response'),
-  expectThrows('fails on non-array json', () => {
-    parseTranslationResult(JSON.stringify({ path: 'content.title', value: 'Titulo' }), stringItems, provider);
-  }, 'Expected JSON array response'),
   expectThrows('fails on non-object item', () => {
-    parseTranslationResult(JSON.stringify(['bad']), stringItems, provider);
+    validateStructuredTranslationResult(
+      ['bad' as unknown as { path: string; value: string }],
+      stringItems,
+      provider,
+    );
   }, 'Item 0 is not an object'),
   expectThrows('fails on duplicate path', () => {
-    parseTranslationResult(
-      JSON.stringify([
+    validateStructuredTranslationResult(
+      [
         { path: 'content.title', value: 'Reserve sua estadia, {guestName}' },
         { path: 'content.title', value: 'Reserve sua estadia, {guestName}' },
-      ]),
+      ],
       stringItems,
       provider,
     );
   }, 'Duplicate path'),
   expectThrows('fails on unexpected path', () => {
-    parseTranslationResult(
-      JSON.stringify([
+    validateStructuredTranslationResult(
+      [
         { path: 'content.title', value: 'Reserve sua estadia, {guestName}' },
         { path: 'content.wrong', value: 'Reserve agora' },
-      ]),
+      ],
       stringItems,
       provider,
     );
   }, 'Unexpected path'),
   expectThrows('fails on output size mismatch', () => {
-    parseTranslationResult(
-      JSON.stringify([{ path: 'content.title', value: 'Reserve sua estadia, {guestName}' }]),
+    validateStructuredTranslationResult(
+      [{ path: 'content.title', value: 'Reserve sua estadia, {guestName}' }],
       stringItems,
       provider,
     );
   }, 'Translation output size mismatch'),
   expectThrows('fails on missing path value shape', () => {
-    parseTranslationResult(
-      JSON.stringify([
+    validateStructuredTranslationResult(
+      [
         { path: 'content.title', value: 'Reserve sua estadia, {guestName}' },
-        { path: 'content.cta', value: 123 },
-      ]),
+        { path: 'content.cta', value: 123 as unknown as string },
+      ],
       stringItems,
       provider,
     );
   }, 'Item 1 missing path/value'),
   expectThrows('fails on placeholder mismatch', () => {
-    parseTranslationResult(
-      JSON.stringify([
+    validateStructuredTranslationResult(
+      [
         { path: 'content.title', value: 'Reserve sua estadia' },
         { path: 'content.cta', value: 'Reserve agora' },
-      ]),
+      ],
       stringItems,
       provider,
     );

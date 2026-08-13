@@ -5,7 +5,7 @@ import {
   buildSystemPrompt,
   buildUserPrompt,
   chunkTranslationEntries,
-  parseTranslationResult,
+  validateStructuredTranslationResult,
   restoreStructuredTranslationResults,
   TranslationAgentError,
   type TranslationItem,
@@ -14,6 +14,34 @@ import {
 const TRANSLATION_AGENT_ID = 'widget.instance.translator';
 const TOKYO_INTERNAL_SERVICE_TRANSLATION_AGENT = 'translation-agent';
 const LOCALE_TRANSLATION_CONCURRENCY = 6;
+
+/**
+ * PRD 128E — structured-output schema for translated values.
+ * San Francisco /model/turn (structured mode) enforces this shape at the
+ * provider level. Translation Agent still owns domain validation:
+ * path equality, duplicates, size, safety, and expected-order normalization.
+ */
+const TRANSLATION_OUTPUT_SCHEMA = {
+  type: 'object',
+  properties: {
+    translations: {
+      type: 'array',
+      description: 'One translated item per input item, in input order.',
+      items: {
+        type: 'object',
+        properties: {
+          path: { type: 'string', description: 'The exact item path from the input.' },
+          value: { type: 'string', description: 'The translated value.' },
+        },
+        required: ['path', 'value'],
+        additionalProperties: false,
+      },
+      minItems: 1,
+    },
+  },
+  required: ['translations'],
+  additionalProperties: false,
+} as const;
 
 type Env = {
   ENVIRONMENT?: string;
@@ -298,17 +326,21 @@ async function readJsonResponse(response: Response): Promise<{ text: string; pay
   }
 }
 
-async function callSanFranciscoModel(args: {
+async function callSanFranciscoTurn(args: {
   env: Env;
   requestId: string;
   grant: string;
   locale: string;
   messages: Array<{ role: 'system' | 'user'; content: string }>;
-}): Promise<string> {
+  outputSchema: Record<string, unknown>;
+}): Promise<{ translations: Array<{ path: string; value: string }> }> {
   const body = JSON.stringify({
-    grant: args.grant,
+    version: 1,
     agentId: TRANSLATION_AGENT_ID,
+    grant: args.grant,
+    mode: 'structured',
     messages: args.messages,
+    output: { schema: args.outputSchema },
     temperature: 0.2,
     trace: { client: 'translation-agent', requestId: args.requestId, locale: args.locale },
   });
@@ -325,7 +357,7 @@ async function callSanFranciscoModel(args: {
       },
     });
   }
-  const response = await args.env.SANFRANCISCO_AI_ENGINE.fetch('https://sanfrancisco.internal/model/chat', {
+  const response = await args.env.SANFRANCISCO_AI_ENGINE.fetch('https://sanfrancisco.internal/model/turn', {
     method: 'POST',
     headers,
     body,
@@ -336,20 +368,30 @@ async function callSanFranciscoModel(args: {
       error: {
         code: 'PROVIDER_ERROR',
         provider: 'sanfrancisco',
-        message: text || `San Francisco model execution failed (${response.status})`,
+        message: text || `San Francisco model turn failed (${response.status})`,
       },
     });
   }
-  if (!isRecord(payload) || typeof payload.content !== 'string') {
+  if (!isRecord(payload) || payload.ok !== true || !isRecord(payload.output)) {
     throw new HttpError(502, {
       error: {
         code: 'PROVIDER_ERROR',
         provider: 'sanfrancisco',
-        message: 'San Francisco returned an invalid model execution response.',
+        message: 'San Francisco returned an invalid structured model turn response.',
       },
     });
   }
-  return payload.content;
+  const translations = payload.output.translations;
+  if (!Array.isArray(translations)) {
+    throw new HttpError(502, {
+      error: {
+        code: 'PROVIDER_ERROR',
+        provider: 'sanfrancisco',
+        message: 'San Francisco structured output missing translations array.',
+      },
+    });
+  }
+  return payload.output as { translations: Array<{ path: string; value: string }> };
 }
 
 async function writeTokyoOverlayValues(args: {
@@ -423,7 +465,7 @@ async function translateLocale(args: {
   }
   const translatedItems: Array<{ path: string; value: string }> = [];
   for (const chunk of chunkTranslationEntries(plan.modelEntries)) {
-    const content = await callSanFranciscoModel({
+    const result = await callSanFranciscoTurn({
       env: args.env,
       requestId: args.requestId,
       grant: args.request.grant,
@@ -439,8 +481,10 @@ async function translateLocale(args: {
         },
         { role: 'user', content: buildUserPrompt(chunk) },
       ],
+      outputSchema: TRANSLATION_OUTPUT_SCHEMA,
     });
-    translatedItems.push(...parseTranslationResult(content, chunk, 'sanfrancisco'));
+    // Domain validation stays agent-owned: paths, duplicates, size, safety, order.
+    translatedItems.push(...validateStructuredTranslationResult(result.translations, chunk, 'sanfrancisco'));
   }
   const restored = restoreStructuredTranslationResults({
     entries: args.request.items,

@@ -250,13 +250,24 @@ Translation Agent:
 - protects placeholder parity, richtext tag parity, and anchor href parity;
 - instructs the model to preserve URLs, emails, brand names, and structured
   tokens in normal strings;
-- parses structured model output;
+- validates structured model output through `validateStructuredTranslationResult`;
 - restores protected tokens;
 - validates that every requested path has exactly one translated value;
 - rejects unexpected output paths;
 - rejects missing requested paths.
 
-Model calls go through San Francisco `/model/chat` using the same Roma grant.
+Model execution goes through San Francisco `/model/turn` in structured mode
+(not `/model/chat`) using the same Roma grant. `TRANSLATION_OUTPUT_SCHEMA`
+defines the structured-output shape sent on each governed model turn.
+
+Structured output guarantees the shape; Translation Agent owns the domain
+validation. The old text-JSON extraction (`parseTranslationResult`, which
+performed `JSON.parse` on free-form model text) is replaced by
+`validateStructuredTranslationResult`, which performs domain checks only and no
+`JSON.parse`. Preserved domain checks: exact path equality, no duplicates, size
+match, brace-placeholder normalization, safety assertion, and expected-order
+normalization. Prompts no longer instruct the model to "Return ONLY JSON";
+structured output handles format.
 
 Current item limits in `agents/translation-agent/src/index.ts`:
 

@@ -24,7 +24,7 @@
   function resolveAppearance() {
     if (
       !window.CKAppearance ||
-      typeof window.CKAppearance.forceInset !== 'function' ||
+      typeof window.CKAppearance.insideShadowToBoxShadowList !== 'function' ||
       typeof window.CKAppearance.resolveCornerRadii !== 'function' ||
       typeof window.CKAppearance.shadowToBoxShadow !== 'function'
     ) {
@@ -82,12 +82,27 @@
     var border = resolveBorder(card.border);
     var radius = resolveRadius(card);
     assertShadow(card.shadow);
-    var outsideShadow = appearance.shadowToBoxShadow(appearance.forceInset(card.shadow, false));
+    var outsideShadow = appearance.shadowToBoxShadow(card.shadow, false, 'card.shadow');
 
     scopeEl.style.setProperty(baseVar + '-border-width', border.width);
     scopeEl.style.setProperty(baseVar + '-border-color', border.color);
     scopeEl.style.setProperty(baseVar + '-radius', radius);
     scopeEl.style.setProperty(baseVar + '-shadow', outsideShadow);
+
+    if (Object.prototype.hasOwnProperty.call(card, 'insideShadow')) {
+      var insideShadow = appearance.insideShadowToBoxShadowList(
+        card.insideShadow,
+        'card.insideShadow',
+      );
+      scopeEl.style.setProperty(baseVar + '-inside-shadow', insideShadow);
+      scopeEl.setAttribute(
+        'data-' + key + '-inside-shadow-layer',
+        card.insideShadow.layer,
+      );
+    } else {
+      scopeEl.style.removeProperty(baseVar + '-inside-shadow');
+      scopeEl.removeAttribute('data-' + key + '-inside-shadow-layer');
+    }
 
     return { border: border, radius: radius, shadow: outsideShadow };
   }

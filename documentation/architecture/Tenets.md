@@ -6,14 +6,26 @@ These tenets are the rules agents and developers use when changing Clickeen.
 They protect the agent-operated architecture described in
 `documentation/architecture/CONTEXT.md`.
 
-## Core Premise
+## Founding Tenet: AI-Native From First Principles
 
-Clickeen is an agent-operated product.
+Clickeen is an AI-native, agent-operated product built by AI and structured for
+AI operation from first principles. It is not a legacy SaaS product with AI
+chat, suggestions, or automation added after the product and its workflows were
+designed for human operators.
 
-The system is deliberately lean and structured so agents can operate it
-directly. Agents are the operators; the codebase and stored artifacts are the
-structured substrate. A change either improves agent-operability or adds legacy
-weight.
+The human product owner/architect owns product direction, architecture judgment,
+policy, and final authority. Agents are the normal implementation and
+operational workforce inside those boundaries. The system is deliberately lean
+and structured so agents can understand and operate it directly: the codebase,
+schemas, policies, and stored artifacts are the structured substrate, and the UI
+is a product surface rather than the only way to reach or understand product
+truth.
+
+AI-native does not mean inserting a model into authentication, storage, Save,
+serving, or other deterministic paths. Those paths remain direct and owned by
+their named authorities. Models reason where judgment is required; agents act
+through typed product capabilities; exact results return as observations. A
+change either improves that agent-operability or adds legacy weight.
 
 Do not build a hardcoded service pipeline with an AI call in the middle and
 call it an agent. Real Clickeen agents own an operational domain and operate

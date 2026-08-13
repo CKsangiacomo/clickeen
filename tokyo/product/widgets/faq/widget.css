@@ -46,6 +46,7 @@
 
 .ck-faq__item {
   position: relative;
+  isolation: isolate;
   border-radius: var(--ck-cardwrapper-radius, var(--control-radius-lg));
   border: var(--ck-cardwrapper-border-width) solid var(--ck-cardwrapper-border-color);
   background: var(--faq-item-bg, var(--color-system-gray-6-step5));
@@ -53,6 +54,29 @@
   overflow: hidden;
   padding: var(--faq-item-pad-top, var(--space-3)) var(--faq-item-pad-right, var(--space-4))
     var(--faq-item-pad-bottom, var(--space-3)) var(--faq-item-pad-left, var(--space-4));
+}
+
+.ck-faq[data-cardwrapper-inside-shadow-layer] .ck-faq__item::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: var(--ck-cardwrapper-inside-shadow, none);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.ck-faq[data-cardwrapper-inside-shadow-layer] .ck-faq__item > * {
+  position: relative;
+  z-index: 2;
+}
+
+.ck-faq[data-cardwrapper-inside-shadow-layer='above-content'] .ck-faq__item::after {
+  z-index: 20;
+}
+
+.ck-faq[data-cardwrapper-inside-shadow-layer='above-content'] .ck-faq__item > * {
+  z-index: 10;
 }
 
 .ck-faq__q {

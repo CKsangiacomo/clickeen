@@ -5,11 +5,6 @@
     return Boolean(value && typeof value === 'object' && !Array.isArray(value));
   }
 
-  function clampNumber(value, min, max) {
-    const n = typeof value === 'number' && Number.isFinite(value) ? value : min;
-    return Math.min(max, Math.max(min, n));
-  }
-
   function tokenizeRadius(value) {
     const normalized = String(value || '').trim();
     if (!normalized || normalized === 'none') return '0';
@@ -40,29 +35,78 @@
     return window.CKFill.toCssColor(value);
   }
 
-  function forceInset(shadow, inset) {
-    if (!isRecord(shadow)) return shadow;
-    return { ...shadow, inset };
+  function assertNumber(value, min, max, path) {
+    if (typeof value !== 'number' || !Number.isFinite(value) || value < min || value > max) {
+      throw new Error(`[CKAppearance] ${path} must be ${min}..${max}`);
+    }
   }
 
-  function shadowToBoxShadow(shadow) {
-    if (!isRecord(shadow)) return 'none';
+  function assertShadow(shadow, expectedInset, path) {
+    if (!isRecord(shadow)) throw new Error(`[CKAppearance] ${path} must be an object`);
+    if (typeof shadow.enabled !== 'boolean') throw new Error(`[CKAppearance] ${path}.enabled must be a boolean`);
+    if (shadow.inset !== expectedInset) {
+      throw new Error(`[CKAppearance] ${path}.inset must be ${String(expectedInset)}`);
+    }
+    assertNumber(shadow.x, -200, 200, `${path}.x`);
+    assertNumber(shadow.y, -200, 200, `${path}.y`);
+    assertNumber(shadow.blur, 0, 400, `${path}.blur`);
+    assertNumber(shadow.spread, -200, 200, `${path}.spread`);
+    assertNumber(shadow.alpha, 0, 100, `${path}.alpha`);
+    if (typeof shadow.color !== 'string' || !shadow.color.trim() || shadow.color !== shadow.color.trim()) {
+      throw new Error(`[CKAppearance] ${path}.color must be a non-empty exact string`);
+    }
+    return shadow;
+  }
+
+  function shadowToBoxShadow(shadow, expectedInset, path) {
+    assertShadow(shadow, expectedInset, path);
     if (shadow.enabled !== true) return 'none';
-    const alpha = clampNumber(shadow.alpha, 0, 100);
-    if (alpha <= 0) return 'none';
-    const x = clampNumber(shadow.x, -200, 200);
-    const y = clampNumber(shadow.y, -200, 200);
-    const blur = clampNumber(shadow.blur, 0, 400);
-    const spread = clampNumber(shadow.spread, -200, 200);
-    const color = typeof shadow.color === 'string' && shadow.color.trim() ? shadow.color.trim() : '#000000';
-    const alphaMix = 100 - alpha;
-    const mix = `color-mix(in oklab, ${color}, transparent ${alphaMix}%)`;
-    return `${shadow.inset === true ? 'inset ' : ''}${x}px ${y}px ${blur}px ${spread}px ${mix}`;
+    if (shadow.alpha === 0) return 'none';
+    const alphaMix = 100 - shadow.alpha;
+    const mix = `color-mix(in oklab, ${shadow.color}, transparent ${alphaMix}%)`;
+    return `${expectedInset ? 'inset ' : ''}${shadow.x}px ${shadow.y}px ${shadow.blur}px ${shadow.spread}px ${mix}`;
+  }
+
+  function insideShadowToBoxShadowList(group, path) {
+    if (!isRecord(group)) throw new Error(`[CKAppearance] ${path} must be an object`);
+    if (typeof group.linked !== 'boolean') throw new Error(`[CKAppearance] ${path}.linked must be a boolean`);
+    if (group.layer !== 'below-content' && group.layer !== 'above-content') {
+      throw new Error(`[CKAppearance] ${path}.layer must be below-content or above-content`);
+    }
+    const shadows = {
+      all: assertShadow(group.all, true, `${path}.all`),
+      top: assertShadow(group.top, true, `${path}.top`),
+      right: assertShadow(group.right, true, `${path}.right`),
+      bottom: assertShadow(group.bottom, true, `${path}.bottom`),
+      left: assertShadow(group.left, true, `${path}.left`),
+    };
+    const active = group.linked
+      ? [shadows.all]
+      : [shadows.top, shadows.right, shadows.bottom, shadows.left];
+    const rendered = active
+      .map((shadow, index) => shadowToBoxShadow(shadow, true, `${path}.${group.linked ? 'all' : ['top', 'right', 'bottom', 'left'][index]}`))
+      .filter((value) => value !== 'none');
+    return rendered.length > 0 ? rendered.join(', ') : 'none';
+  }
+
+  function resolveOutsideShadowGutters(shadow, path) {
+    assertShadow(shadow, false, path);
+    if (shadow.enabled !== true || shadow.alpha === 0) {
+      return { top: 0, right: 0, bottom: 0, left: 0 };
+    }
+    const extent = Math.max(0, Math.ceil(shadow.blur * 1.5 + shadow.spread));
+    return {
+      top: Math.max(0, extent - shadow.y),
+      right: Math.max(0, extent + shadow.x),
+      bottom: Math.max(0, extent + shadow.y),
+      left: Math.max(0, extent - shadow.x),
+    };
   }
 
   window.CKAppearance = Object.freeze({
-    forceInset,
+    insideShadowToBoxShadowList,
     resolveCornerRadii,
+    resolveOutsideShadowGutters,
     shadowToBoxShadow,
     toCssBackground,
     toCssColor,

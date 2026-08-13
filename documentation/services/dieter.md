@@ -148,6 +148,10 @@ shows opacity before the base-color chip, or only `square.slash` when disabled.
 The component consumes exact host-projected JSON, mutates only the interacted
 property, preserves `inset` and hidden coordinates, owns no fallback/default/
 diagnostic state, and receives every human-language string from its caller.
+The same Widget-owned Shadow label contract also supplies the surrounding
+inside-shadow composition: the link label, layer label, and below/above-content
+options. Dieter owns the editor primitive; it does not author those words or
+expand one shadow value into other state paths.
 
 Dropdown Actions, Dropdown Border, Dropdown Edit, Dropdown Fill, Dropdown
 Shadow, and Dropdown Upload use the shared clickable property-menu row rule.

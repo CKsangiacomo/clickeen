@@ -226,6 +226,14 @@ The governing component product law is:
   supplied through the Widget-adjacent ToolDrawer label contract. The
   component has no default shadow, invalid mode, repair, fallback, native
   color-picker shortcut, Widget branch, or consumer-specific behavior.
+  The same shaped Widget contract supplies the composition copy around internal
+  shadows: the caller-specific link label plus the common layer and
+  below/above-content option labels. Linking changes only the `linked` path;
+  it never copies `all` into side objects or merges side objects into `all`.
+  Shared Widget rendering uses the exact object as an outside or inset CSS
+  shadow and rejects an `inset` mismatch rather than repairing it. Stage adds
+  in-document visual gutters for its outside shadow; FAQ applies its declared
+  inside shadow to each Q&A card through the shared surface primitive.
 - Menu Actions remains a separate menu-row primitive with its existing
   `sm|md|lg` API. Low-level geometry tokens remain internal source mechanics.
 - `textrename` is deleted because it had no product consumer.

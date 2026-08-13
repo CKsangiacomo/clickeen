@@ -13,6 +13,7 @@ import type {
 } from '../lib/compiler/stencils';
 import { DEFAULT_PANELS } from '../components/TdMenu';
 import { controlHostClusterId } from '../components/td-menu-content/dom';
+import { expandLinkedOps } from '../components/td-menu-content/linkedOps';
 import { BOB_MENU_PANEL_IDS, BOB_WIDGET_PANEL_IDS } from '../lib/types';
 import { assertCompiledEditorContract } from '../lib/session/sessionConfig';
 
@@ -235,6 +236,56 @@ function assertDropdownShadowLabels(args: {
     assert.ok(root.includes('data-dieter-json'), `${args.widgetType} Shadow ${index} binds exact JSON`);
     assert.doesNotMatch(root, /\$label:/, `${args.widgetType} Shadow ${index} has no unresolved copy`);
   });
+
+  for (const [path, labelKey] of [
+    ['stage.insideShadow.linked', 'appearance.stage.inside-shadow.linked.toggle.label'],
+    ['pod.insideShadow.linked', 'appearance.pod.inside-shadow.linked.toggle.label'],
+  ]) {
+    assert.ok(
+      args.html.includes(`path="${path}"`) &&
+        args.html.includes(encodeHtmlEntities(args.labels[labelKey])),
+      `${args.widgetType} resolves ${path}`,
+    );
+  }
+  if (args.widgetType === 'faq') {
+    assert.ok(
+      args.html.includes('path="faq.appearance.cardwrapper.insideShadow.linked"') &&
+        args.html.includes(
+          encodeHtmlEntities(
+            args.labels['appearance.faq.cardwrapper.inside-shadow.linked.toggle.label'],
+          ),
+        ),
+      'faq resolves Q&A card inside-shadow link copy',
+    );
+  }
+  for (const key of ['above-content', 'below-content', 'layer']) {
+    assert.ok(
+      args.html.includes(
+        encodeHtmlEntities(args.labels[`component.dropdown-shadow.${key}.label`]),
+      ),
+      `${args.widgetType} resolves inside-shadow ${key}`,
+    );
+  }
+}
+
+function testInsideShadowLinkOpsPreserveHiddenValues(): void {
+  const all = { enabled: true, inset: true, x: 0, y: 0, blur: 24, spread: 0, color: '#111111', alpha: 20 };
+  const top = { enabled: true, inset: true, x: 1, y: 2, blur: 3, spread: 4, color: '#222222', alpha: 30 };
+  const right = { enabled: true, inset: true, x: -5, y: 6, blur: 7, spread: 8, color: '#333333', alpha: 40 };
+  const bottom = { enabled: true, inset: true, x: 9, y: -10, blur: 11, spread: 12, color: '#444444', alpha: 50 };
+  const left = { enabled: true, inset: true, x: 13, y: 14, blur: 15, spread: 16, color: '#555555', alpha: 60 };
+  const instanceData = {
+    stage: { insideShadow: { linked: false, layer: 'below-content', all, top, right, bottom, left } },
+  };
+  const requested = [
+    { op: 'set' as const, path: 'stage.insideShadow.linked', value: true },
+    { op: 'set' as const, path: 'stage.insideShadow.all', value: { ...all, blur: 40 } },
+  ];
+  assert.deepEqual(
+    expandLinkedOps({ compiled: null, instanceData, ops: requested, fontLibrary: null }),
+    requested,
+    'inside-shadow link and all-value edits do not overwrite hidden side values',
+  );
 }
 
 async function testEveryWidgetEditorContract(): Promise<void> {
@@ -542,6 +593,8 @@ async function main(): Promise<void> {
   console.log('PASS invalid editor contracts fail closed');
   testCompiledPanelLabelsFailClosed();
   console.log('PASS invalid compiled panel and ToolDrawer labels fail Builder open');
+  testInsideShadowLinkOpsPreserveHiddenValues();
+  console.log('PASS inside-shadow link edits preserve hidden shadow values');
 }
 
 void main();

@@ -2,6 +2,7 @@
 
 import { parseAccountLocaleListStrict, parseAccountLocalePolicyStrict } from '@clickeen/ck-contracts';
 import type { AccountAssetHostCommand } from '@clickeen/ck-contracts';
+import { isProductCopilotTurnEvent, type ProductCopilotTurnEvent } from '@clickeen/ck-contracts/ai';
 import type { AccountFontLibrary } from '@clickeen/widget-foundation';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
@@ -51,7 +52,8 @@ type BobAccountCommand =
   | 'list-translations'
   | 'read-translation'
   | 'generate-translations'
-  | 'run-copilot';
+  | 'run-copilot'
+  | 'cancel-copilot';
 
 type BobAccountCommandMessage = {
   type: 'bob:account-command';
@@ -100,6 +102,13 @@ type HostAgentActivityMessage = {
   command: BobAccountCommand;
   instanceId?: string;
   event: AgentActivityEvent;
+};
+
+type HostCopilotEventMessage = {
+  type: 'host:copilot-event';
+  requestId: string;
+  instanceId?: string;
+  event: ProductCopilotTurnEvent;
 };
 
 type BobOpenEditorMessage = {
@@ -241,6 +250,9 @@ function resolveBobAccountCommandRequest(args: {
         method: 'POST',
         path: `/api/account/instances/${encodeURIComponent(instanceId)}/copilot`,
       };
+    case 'cancel-copilot':
+      // Handled locally via the AbortController registry — does not map to a Roma route.
+      return null;
     default:
       return null;
   }
@@ -345,6 +357,140 @@ async function readJsonOrStreamedCommandResult(args: {
   return finalPayload;
 }
 
+type CopilotStreamOutcome =
+  | { ok: true; status: number }
+  | { ok: false; status: number; message: string }
+  | { ok: 'cancelled' };
+
+/**
+ * PRD 128D Phase 4/5 — Reads the Product Copilot SSE stream relayed by Roma
+ * and forwards each validated ProductCopilotTurnEvent to Bob as a
+ * host:copilot-event. Unlike readJsonOrStreamedCommandResult, this does NOT
+ * look for a terminal `result` frame: the stream is a turn event log whose
+ * terminal marker is agent_turn_finished / agent_turn_error / agent_turn_stopped.
+ *
+ * Rejection is terminal and visible: on a malformed frame Roma emits a final
+ * synthetic agent_turn_error (so Bob's UI shows the failure) and returns a
+ * non-ok outcome that the caller translates into host:account-command-result.
+ */
+async function readCopilotStreamedEvents(args: {
+  response: Response;
+  requestId: string;
+  instanceId?: string;
+  source: Window;
+  bobBaseUrl: string;
+  signal?: AbortSignal;
+}): Promise<CopilotStreamOutcome> {
+  const body = args.response.body;
+  if (!body) {
+    return { ok: false, status: 502, message: 'coreui.errors.copilot.failed' };
+  }
+
+  const reader = body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = '';
+  let lastUserTurnId = '';
+
+  const postEvent = (event: ProductCopilotTurnEvent) => {
+    const message: HostCopilotEventMessage = {
+      type: 'host:copilot-event',
+      requestId: args.requestId,
+      ...(args.instanceId ? { instanceId: args.instanceId } : {}),
+      event,
+    };
+    args.source.postMessage(message, args.bobBaseUrl);
+  };
+
+  const reject = (detail: string): CopilotStreamOutcome => {
+    postEvent({
+      version: 1,
+      userTurnId: lastUserTurnId || args.requestId,
+      type: 'agent_turn_error',
+      data: {
+        code: 'STREAM_INVALID',
+        reasonKey: 'coreui.errors.copilot.failed',
+        message: detail,
+        requestId: args.requestId,
+      },
+    });
+    return { ok: false, status: 502, message: 'coreui.errors.copilot.failed' };
+  };
+
+  const consumeFrame = (raw: string): CopilotStreamOutcome | null => {
+    const lines = raw.split('\n');
+    let eventName = 'message';
+    const dataLines: string[] = [];
+    for (const line of lines) {
+      if (line.startsWith('event:')) {
+        eventName = line.slice('event:'.length).trim();
+        continue;
+      }
+      if (line.startsWith('data:')) {
+        // Per SSE spec, a single leading space after the colon is stripped.
+        dataLines.push(line.slice('data:'.length).replace(/^ /, ''));
+      }
+    }
+    if (!dataLines.length) return null; // keepalive / comment frame
+
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(dataLines.join('\n'));
+    } catch {
+      return reject('Malformed JSON in copilot event frame.');
+    }
+    if (!isProductCopilotTurnEvent(parsed)) {
+      return reject('Invalid copilot turn event payload.');
+    }
+    if (eventName !== parsed.type) {
+      return reject(`Copilot event name mismatch (${eventName} vs ${parsed.type}).`);
+    }
+    lastUserTurnId = parsed.userTurnId;
+    postEvent(parsed);
+    return null;
+  };
+
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (value) {
+        buffer += decoder.decode(value, { stream: !done });
+        // CRLF-normalize the buffer so frame boundary detection is consistent
+        // regardless of which hop terminated its lines.
+        buffer = buffer.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+      }
+      let boundary = buffer.indexOf('\n\n');
+      while (boundary >= 0) {
+        const frame = buffer.slice(0, boundary);
+        buffer = buffer.slice(boundary + 2);
+        boundary = buffer.indexOf('\n\n');
+        const outcome = consumeFrame(frame);
+        if (outcome) {
+          await reader.cancel().catch(() => {});
+          return outcome;
+        }
+      }
+      if (done) break;
+    }
+    const tail = `${buffer}${decoder.decode()}`
+      .replace(/\r\n/g, '\n')
+      .replace(/\r/g, '\n')
+      .trim();
+    if (tail) {
+      const outcome = consumeFrame(tail);
+      if (outcome) return outcome;
+    }
+  } catch (error) {
+    // Downstream cancellation: release the reader without surfacing an error.
+    // The cancel-copilot handler owns the host:account-command-result reply.
+    if (args.signal?.aborted) {
+      return { ok: 'cancelled' };
+    }
+    return reject(error instanceof Error ? error.message : String(error));
+  }
+
+  return { ok: true, status: 200 };
+}
+
 function decodeBuilderPathInstanceId(pathname: string): string {
   const match = /^\/builder\/([^/?#]+)$/.exec(pathname);
   if (!match) return '';
@@ -370,6 +516,7 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
   const pendingDiscardActionRef = useRef<(() => void) | null>(null);
   const allowNavigationRef = useRef(false);
   const allowPopStateRef = useRef(false);
+  const copilotAbortControllers = useRef<Map<string, AbortController>>(new Map());
   const [activeInstanceId, setActiveInstanceId] = useState(() => {
     const fromPath = decodeBuilderPathInstanceId(pathname);
     if (fromPath) return fromPath;
@@ -491,6 +638,75 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
         return;
       }
 
+      if (args.command === 'run-copilot') {
+        const controller = new AbortController();
+        copilotAbortControllers.current.set(args.requestId, controller);
+        try {
+          const init: RequestInit = {
+            method: route.method,
+            signal: controller.signal,
+          };
+          const headers = new Headers(accountApi.buildHeaders());
+          for (const [key, value] of Object.entries(args.headers ?? {})) {
+            headers.set(key, value);
+          }
+          headers.set('accept', 'text/event-stream');
+          if (typeof args.body !== 'undefined' && route.method !== 'GET') {
+            if (!headers.has('content-type')) {
+              headers.set('content-type', 'application/json');
+            }
+            const body = args.body;
+            if (
+              typeof body === 'string' ||
+              body instanceof Blob ||
+              body instanceof ArrayBuffer ||
+              ArrayBuffer.isView(body) ||
+              body instanceof FormData ||
+              body instanceof URLSearchParams ||
+              body instanceof ReadableStream
+            ) {
+              init.body = body as BodyInit;
+            } else {
+              init.body = JSON.stringify(body);
+            }
+          }
+          init.headers = headers;
+
+          const response = await accountApi.fetchRaw(route.path, init);
+          const outcome = await readCopilotStreamedEvents({
+            response,
+            requestId: args.requestId,
+            ...(scopedInstanceId ? { instanceId: scopedInstanceId } : {}),
+            source: args.source,
+            bobBaseUrl,
+            signal: controller.signal,
+          });
+          if (outcome.ok === 'cancelled') return;
+          reply({
+            requestId: args.requestId,
+            command: args.command,
+            ...(scopedInstanceId ? { instanceId: scopedInstanceId } : {}),
+            ok: outcome.ok,
+            status: outcome.status,
+            ...(outcome.ok ? {} : { message: outcome.message }),
+          });
+        } catch (error) {
+          if (controller.signal.aborted) return;
+          const message = error instanceof Error ? error.message : String(error);
+          reply({
+            requestId: args.requestId,
+            command: args.command,
+            ...(scopedInstanceId ? { instanceId: scopedInstanceId } : {}),
+            ok: false,
+            status: 500,
+            message,
+          });
+        } finally {
+          copilotAbortControllers.current.delete(args.requestId);
+        }
+        return;
+      }
+
       try {
         const init: RequestInit = {
           method: route.method,
@@ -499,6 +715,8 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
         for (const [key, value] of Object.entries(args.headers ?? {})) {
           headers.set(key, value);
         }
+        // run-copilot is handled in its own streaming branch above; this path
+        // only needs to force the SSE accept header for generate-translations.
         if (args.command === 'generate-translations') {
           headers.set('accept', 'text/event-stream');
         }
@@ -728,6 +946,16 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
   }, []);
 
   useEffect(() => {
+    const controllers = copilotAbortControllers.current;
+    return () => {
+      for (const controller of controllers.values()) {
+        controller.abort();
+      }
+      controllers.clear();
+    };
+  }, []);
+
+  useEffect(() => {
     const listener = (event: MessageEvent) => {
       if (event.origin !== bobBaseUrl) return;
       const source = iframeRef.current?.contentWindow;
@@ -764,6 +992,32 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
         const command = message.command ?? null;
         const instanceId = typeof message.instanceId === 'string' ? message.instanceId.trim() : '';
         if (!requestId || !command) return;
+        if (command === 'cancel-copilot') {
+          const controller = copilotAbortControllers.current.get(requestId);
+          if (controller) {
+            controller.abort();
+            copilotAbortControllers.current.delete(requestId);
+            const result: HostAccountCommandResultMessage = {
+              type: 'host:account-command-result',
+              requestId,
+              command,
+              ok: true,
+              status: 200,
+            };
+            source.postMessage(result, bobBaseUrl);
+          } else {
+            const result: HostAccountCommandResultMessage = {
+              type: 'host:account-command-result',
+              requestId,
+              command,
+              ok: false,
+              status: 404,
+              message: 'coreui.errors.copilot.notFound',
+            };
+            source.postMessage(result, bobBaseUrl);
+          }
+          return;
+        }
         if (!instanceId && !isAccountAssetCommand(command)) return;
         void runBobAccountCommand({
           source,

@@ -84,7 +84,7 @@ without trimming, normalization, substitution, or a Git commit.
 | Foundations: Core styles, Colors, Icons, Typography, Layouts | Generated from Dieter token, icon, and layout source through DevStudio static page generation. Core styles groups 53 non-layout foundation tokens. Layouts maps the three current layout families: the Roma/DevStudio application shell, Bob editor, and public Widget composition. It shows exact class taxonomy, owners, consumers, source paths, and the four editable application-layout properties. |
 | Dieter Components | Generated/static component showcase pages from Dieter component specs and snippets. |
 | Entitlements | Pages Functions read/write entitlement policy files through GitHub. The same tool also renders AI runtime policy editing backed by `/api/ai-runtime/*`. |
-| LLM Management | Read-only generated visibility into managed model configuration. It is not a runtime API-backed editor. |
+| LLM Management | Read-only generated visibility into managed model configuration. It is not a runtime API-backed editor. The existing per-agent, per-tier AI runtime matrix (`packages/ck-policy/ai-runtime.matrix.json`) remains the model/token/timeout/turn-policy authority. Product Copilot preserves the existing 8/16/30/50 `maxTurnsPerThread` tier values, now applied to model steps in Bob's open Copilot thread. Translation Agent preserves one governed model call per chunk (`maxTurnsPerThread: 1`). The tier turn value is enforced in Bob's CopilotPane, which refuses continuation past the limit and terminates visibly as incomplete. |
 
 Foundation and Policy Editor tables use Dieter Table. DevStudio still owns
 their columns, editable cells, data, and mutation behavior. The token editor

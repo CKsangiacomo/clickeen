@@ -15,7 +15,8 @@ For current system truth, use:
 
 ## The Thesis
 
-Clickeen is an agent-operated product, not a legacy SaaS with AI features.
+Clickeen is an AI-native, agent-operated product built by AI and structured for
+AI operation from first principles. It is not a legacy SaaS with AI features.
 
 Legacy SaaS builds opaque workflow state that humans operate through screens,
 forms, process, and APIs that are not structured around agent-operable
@@ -25,6 +26,13 @@ Clickeen inverts that model. The codebase is deliberately lean and structured
 so agents can understand and operate the product directly. The product is not
 only the UI a human sees. The product is the structured substrate plus the
 agents operating it.
+
+One human product owner/architect sets product direction, architecture, policy,
+and final authority. Agents are the normal implementation and operational
+workforce inside that law. This is not permission to place models in every
+deterministic path; it is a requirement that product truth and product
+capabilities be structured so agents can operate them through their named
+authorities.
 
 That is the strategic difference.
 

@@ -12,6 +12,42 @@ providers remain replaceable execution dependencies. In the current system,
 Ombra is implemented through explicit agent registry, model capability, model
 management, and runtime policy files.
 
+## Strategy Boundary, Not A Deployed Service
+
+Ombra is a strategy boundary, not a deployed service. It has no Worker,
+endpoint, agent home, product service, deploy target, or runtime code of its
+own. It names the rule above and the proven insertion boundary below; it does
+not appear as a runtime authority in any agent home, grant, or San Francisco
+route.
+
+## Proven PRD 128 Insertion Boundary
+
+The current deployed foundation proves the Ombra insertion boundary at the
+model-execution seam:
+
+```text
+agent home
+-> Clickeen model-turn contract
+-> San Francisco exact model policy
+-> provider factory/adapter
+-> model endpoint
+```
+
+Proof in the current system:
+
+- both current agents (Product Copilot, Translation Agent) contain no provider
+  code;
+- Bob/Roma product contracts contain no OpenAI/DeepSeek response shapes;
+- provider factories are isolated inside San Francisco (`/model/turn` is the
+  only agent-facing model route);
+- provider/model unavailability fails explicitly without fallback;
+- a future self-hosted adapter addition would not change agent tools,
+  Translation Agent overlay semantics, Bob draft execution, or Roma Save.
+
+The boundary is proven only at the execution seam. There is no fake Ombra
+provider, placeholder endpoint, mock production route, GPU service, provider
+registry, or Ombra deployment target.
+
 ## Current Authorities
 
 | Concern | Source of truth |
@@ -22,7 +58,7 @@ management, and runtime policy files.
 | Runtime policy matrix minted into grants | `packages/ck-policy/ai-runtime.matrix.json` |
 | Runtime policy derivation and budget helpers | `packages/ck-policy/src/ai-runtime.ts` |
 | Grant enforcement | `sanfrancisco/src/grants.ts` |
-| Provider/model selection | `sanfrancisco/src/ai/modelRouter.ts`, `sanfrancisco/src/ai/chat.ts` |
+| Provider/model selection | `sanfrancisco/src/ai/modelRouter.ts`, `sanfrancisco/src/ai/model-turn.ts` |
 | Provider credentials | San Francisco Worker secrets |
 
 ## Runtime Resource Impact
@@ -38,7 +74,7 @@ and services below.
 | Change DevStudio model-management display data | `packages/ck-contracts/src/ai-model-management.ts` | changes operator-facing model information |
 | Change tier/runtime AI model policy | `packages/ck-policy/ai-runtime.matrix.json` | changes the policy Roma mints into grants |
 | Change grant enforcement | `sanfrancisco/src/grants.ts` | changes San Francisco runtime enforcement |
-| Change provider/model routing | `sanfrancisco/src/ai/modelRouter.ts`, `sanfrancisco/src/ai/chat.ts` | changes the selected provider/model execution path |
+| Change provider/model routing | `sanfrancisco/src/ai/modelRouter.ts`, `sanfrancisco/src/ai/model-turn.ts` | changes the selected provider/model execution path |
 | Change provider credentials | San Francisco Worker secrets | enables or disables model routes at runtime |
 
 ## Current Runtime Consumers

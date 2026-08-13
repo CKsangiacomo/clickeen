@@ -19,7 +19,8 @@
     "test:widget-defaults-typography": "tsx tests/run-widget-defaults-typography.ts",
     "test:widget-command-gates": "tsx tests/run-widget-command-gates.ts",
     "pretypecheck": "node ../scripts/widgets/generate-artifacts.mjs",
-    "typecheck": "tsc -p tsconfig.json --noEmit"
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test:copilot-route": "tsx tests/run-copilot-route-gates.ts"
   },
   "dependencies": {
     "@clickeen/bob": "workspace:*",

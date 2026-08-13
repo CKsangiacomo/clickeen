@@ -35,7 +35,8 @@ truth, product mutations, provider fallback, or a learning/outcome event plane.
 | Method | Path | Behavior |
 | --- | --- | --- |
 | `GET`/`HEAD` | `/healthz` | Worker health |
-| `POST` | `/model/chat` | One governed model call for a registered agent home |
+| `POST` | `/model/chat` | One governed non-streaming model call for a registered agent home |
+| `POST` | `/model/turn` | Governed streaming or structured model step for a registered agent home |
 | `POST` | `/execute` | `410`; agent brains execute in their agent homes |
 | `POST` | `/l10n/translate` | Prague system-copy translation tooling only |
 
@@ -53,6 +54,52 @@ tokens, and latency).
 Provider usage is returned to the caller; San Francisco does not persist a
 second interaction or outcome record.
 
+### `/model/turn`
+
+Request and response authority: `ModelTurnRequest`, `ModelTurnStreamRequest`,
+`ModelTurnStructuredRequest`, and `ModelTurnStructuredResponse` in
+`sanfrancisco/src/ai/model-turn-types.ts`.
+
+`/model/turn` executes one governed model step in `stream` or `structured` mode.
+A model step is one provider call that may emit text deltas and at most one tool
+call. Multi-step agent loops live in the agent home, not here. Each request
+carries a signed grant, registered `agentId`, one to 24 messages (system/user/
+assistant/tool), an optional finite temperature, optional tool definitions, and
+a `mode`. San Francisco mints one `modelStepId` per request and returns it on
+every event so callers can correlate steps across continuations.
+
+Internal execution uses the AI SDK (`ai`, `@ai-sdk/openai`,
+`@ai-sdk/deepseek`). The AI SDK is internal plumbing only; the wire contract is
+the Clickeen-owned `model-turn-types.ts`. San Francisco never exposes AI SDK
+types on the wire.
+
+Stream mode returns `content-type: text/event-stream` with these SSE events:
+
+| Event | Carries |
+| --- | --- |
+| `text_delta` | incremental assistant text |
+| `tool_call` | one tool invocation (`toolCallId`, `toolName`, `input`) |
+| `model_step_finished` | terminal success (`finishReason`, requested/reported model, token usage, latency) |
+| `model_step_error` | terminal failure (`code`, `reasonKey`, `message`) |
+
+Every event carries `version`, `modelStepId`, and the event `type`. A stream
+ends with exactly one terminal event. Caller cancellation (downstream abort)
+ends the stream cleanly without a timeout error.
+
+Structured mode returns one JSON `ModelTurnStructuredResponse` carrying either a
+successful `output` object plus `finish`, or an `error` object.
+
+Provider truth is required, not invented. If the provider does not report a
+model identity (`response.modelId`) or integer token usage (`inputTokens`,
+`outputTokens`), the step fails visibly as `model_step_error` /
+`PROVIDER_ERROR`. There is no fallback model, provider, or zeroed usage.
+
+Timeout and caller cancellation are distinguished abort causes. A signed
+per-call timeout exceeding is a budget failure (`BUDGET_EXCEEDED`). Caller
+cancellation (agent-home Stop) is a clean end: stream mode closes the stream
+without a terminal error event, and structured mode returns
+`CALLER_CANCELLED`. San Francisco never reports a user Stop as a timeout.
+
 ## Grant Contract
 
 Verification authority: `sanfrancisco/src/grants.ts`.
@@ -68,9 +115,10 @@ the complete AI policy. The AI policy includes agent and policy ids, tier,
 enabled state, default and allowed models, picker selection, per-call token and
 timeout budgets, and thread/monthly turn ceilings.
 
-For `/model/chat`, the grant agent must match the canonical registered agent;
-the capability must include `agent:<canonicalAgentId>`; selected/default model
-and provider must be allowed; and the selected provider credential must exist.
+For `/model/chat` and `/model/turn`, the grant agent must match the canonical
+registered agent; the capability must include `agent:<canonicalAgentId>`;
+selected/default model and provider must be allowed; and the selected provider
+credential must exist.
 
 ## Model Routing
 
@@ -85,8 +133,13 @@ The selected model wins when present; otherwise the signed default is used.
 San Francisco calls that exact allowed provider/model. Missing credentials or a
 provider failure fail explicitly. There is no provider or model fallback.
 
-`/model/chat` and `/l10n/translate` share the per-isolate inflight limit in
-`sanfrancisco/src/concurrency.ts` (eight concurrent executions).
+`/model/chat`, `/model/turn` (structured), and `/l10n/translate` share the
+per-isolate inflight limit in `sanfrancisco/src/concurrency.ts` (eight
+concurrent executions). `/model/turn` stream mode uses the streaming-aware
+variant that holds the lease until the stream body completes, errors, or is
+cancelled by the downstream consumer, then releases exactly once. The release is
+idempotent and runs on normal completion, stream error, and downstream
+cancellation.
 
 ## Bindings And Secrets
 
@@ -129,7 +182,7 @@ silently retried through another provider or model.
 
 | Caller | Path |
 | --- | --- |
-| Product Copilot Worker | `SANFRANCISCO_AI_ENGINE` service binding to `/model/chat` |
+| Product Copilot Worker | `SANFRANCISCO_AI_ENGINE` service binding to `/model/turn` |
 | Translation Agent Worker | `SANFRANCISCO_AI_ENGINE` service binding to `/model/chat` |
 | Prague translation script | signed HTTP request to `/l10n/translate` |
 

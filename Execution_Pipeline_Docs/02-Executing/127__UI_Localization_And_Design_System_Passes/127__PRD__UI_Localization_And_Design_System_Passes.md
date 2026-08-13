@@ -158,7 +158,7 @@ the code is convenient there.
 | Stage | Status | Release state |
 | --- | --- | --- |
 | Stage 1 — Scaffold only | Complete | Committed, pushed, and deployed; no non-English experience is exposed |
-| Stage 2 — Dieter UI pass | In progress: Foundations, Agent Activity, Bulk Edit, Button, Choice Tiles, Dropdown Actions, Popover, Dropdown Border, Dropdown Edit, Dropdown Fill, and Dropdown Shadow complete and re-audited as consumer-agnostic primitives; the shared row/Popover presentation is also applied to Upload | Dropdown Upload is the next behavior pass |
+| Stage 2 — Dieter UI pass | In progress: Foundations, Agent Activity, Bulk Edit, Button, Choice Tiles, Dropdown Actions, Popover, Dropdown Border, Dropdown Edit, Dropdown Fill, and Dropdown Shadow editor/runtime integration complete and re-audited as consumer-agnostic primitives; the shared row/Popover presentation is also applied to Upload | Dropdown Upload is the next behavior pass |
 | Stage 3 — Bob UI pass | Not started | No authority to begin until explicitly directed |
 | Stage 4 — Roma UI pass | Not started | No authority to begin until explicitly directed |
 | Stage 5 — Translation pass | Not started | No translations may be generated yet |
@@ -949,3 +949,49 @@ authorizes it.
   source generation, and all eight English editor artifact pairs. The
   independent post-implementation audit found no remaining defect and passed
   V1–V8.
+
+- **Dropdown Shadow runtime completion — passed locally, 2026-08-13.** The
+  editor pass exposed two real runtime defects: internal Stage/Pod shadows were
+  being converted into directional gradient strips, and Stage outside shadow
+  was drawn on the iframe boundary where it could not be seen. FAQ also
+  declared Q&A-card inside-shadow state without applying it to the cards.
+
+  The existing shared appearance runtime now consumes the exact
+  `{enabled,inset,x,y,blur,spread,color,alpha}` object. Outside contexts require
+  `inset:false`; inside contexts require `inset:true`; a mismatch fails instead
+  of being silently rewritten. Linked internal rendering uses the exact `all`
+  object. Unlinked rendering preserves the exact signed X/Y, blur, negative or
+  positive spread, color, and opacity of top/right/bottom/left and emits one
+  ordered comma-separated inset `box-shadow` list. The existing above/below
+  content layer remains the composition authority. Gradient approximations,
+  clamping, default-color substitution, and inset forcing are removed from the
+  shared shadow path.
+
+  Stage outside shadow remains a real Stage `box-shadow`. The widget document
+  now creates deterministic top/right/bottom/left gutters from that exact
+  shadow geometry, keeps viewport sizing inside those gutters, and includes
+  their width and height in the existing iframe resize message. Bob consumes
+  that existing resize event and removes only the temporary loading background
+  after Widget ready. Disabled or zero-opacity Stage shadow adds no gutter.
+
+  Bob no longer copies linked internal-shadow edits into hidden values. The
+  link toggle and active `all`/side object each write only their own path, so
+  switching between linked and unlinked preserves every previously edited
+  object. FAQ's existing Q&A-card `insideShadow` now renders on every generated
+  card through `CKSurface` variables and FAQ presentation CSS; no shadow math
+  or Widget-specific editor branch was added to FAQ.
+
+  The same Widget-owned Shadow label schema now includes the link labels and
+  the shared layer/below-content/above-content copy. All eight adjacent English
+  files and specs carry the same shaped contract, and the compiler no longer
+  writes those phrases. This current fourteen-key component/composition shape
+  supersedes the earlier editor-only eleven-key record above. All eight editor
+  artifact pairs were regenerated.
+
+  Focused verification passed: exact shared-shadow runtime tests; browser
+  computed proof for Stage outside gutters, Stage/Pod true inset shadows, FAQ
+  per-card inset shadows, and above/below layering; Bob linked-value
+  preservation and editor-contract tests; all eight artifact-pair checks; Bob
+  and Roma typechecks; and scoped diff checks. No new component, service,
+  registry, storage authority, route, product-data mutation, Cloudflare change,
+  deployment, or compatibility path was added.

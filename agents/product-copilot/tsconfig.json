@@ -10,5 +10,5 @@
     "types": ["node", "@cloudflare/workers-types"],
     "baseUrl": "."
   },
-  "include": ["src/**/*.ts", "evals/**/*.ts"]
+  "include": ["src/**/*.ts", "tests/**/*.ts"]
 }

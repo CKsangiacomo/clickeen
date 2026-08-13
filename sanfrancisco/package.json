@@ -6,12 +6,16 @@
   "scripts": {
     "deploy": "wrangler deploy",
     "test:grants": "tsx tests/run-grants.ts",
+    "test:model-turn": "tsx tests/run-model-turn.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
+    "@ai-sdk/deepseek": "^3.0.28",
+    "@ai-sdk/openai": "^4.0.41",
     "@clickeen/ck-contracts": "workspace:*",
     "@clickeen/ck-policy": "workspace:*",
-    "@clickeen/l10n": "workspace:*"
+    "@clickeen/l10n": "workspace:*",
+    "ai": "^7.0.64"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20251228.0",

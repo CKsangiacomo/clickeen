@@ -18,8 +18,6 @@ type PresetEntry = {
   targetPaths: string[];
 };
 
-const surfaceOwnerPattern = '(?:stage|pod|(?:[a-zA-Z0-9_-]+\\.)?appearance\\.cardwrapper)';
-
 export { isPlainRecord };
 
 export function isFiniteNumber(value: unknown): value is number {
@@ -85,21 +83,10 @@ function requireBoolean(value: unknown, path: string): boolean {
   throw new Error(`[BobLinkedOps] "${path}" must be a boolean`);
 }
 
-function requireShadowRecord(value: unknown, path: string): Record<string, unknown> {
-  if (!isPlainRecord(value)) throw new Error(`[BobLinkedOps] "${path}" must be an object`);
-  if (finiteNumber((value as Record<string, unknown>).x) == null) {
-    throw new Error(`[BobLinkedOps] "${path}.x" must be a number`);
-  }
-  if (finiteNumber((value as Record<string, unknown>).y) == null) {
-    throw new Error(`[BobLinkedOps] "${path}.y" must be a number`);
-  }
-  return value as Record<string, unknown>;
-}
-
 function isLinkedTogglePath(path: string): boolean {
   return (
     new RegExp(`^((?:pod|(?:[a-zA-Z0-9_-]+\\.)?appearance\\.cardwrapper))\\.radiusLinked$`).test(path) ||
-    new RegExp(`^(${surfaceOwnerPattern})\\.insideShadow\\.linked$`).test(path) ||
+    /^(stage|pod|(?:[a-zA-Z0-9_-]+\.)?appearance\.cardwrapper)\.insideShadow\.linked$/.test(path) ||
     /^(pod|stage)\.padding\.(desktop|mobile)\.linked$/.test(path) ||
     path === 'layout.itemPaddingLinked' ||
     path === 'appearance.headerCta.paddingLinked'
@@ -127,7 +114,6 @@ export function expandLinkedOps(args: {
   const expanded: WidgetOp[] = [];
   const presetByPath = new Map(presetEntries.map((entry) => [entry.sourcePath, entry]));
   const presetOps = new Map<string, WidgetOp>();
-  const insideShadowLinkedOverrides = new Map<string, boolean>();
   const requireAllowedPath = (path: string) => {
     if (!isAllowedPath(path)) throw new Error(`[BobLinkedOps] preset target path "${path}" has no compiled control`);
   };
@@ -147,10 +133,6 @@ export function expandLinkedOps(args: {
   for (const op of args.ops) {
     if (op.op === 'set' && typeof op.path === 'string' && presetByPath.has(op.path)) {
       presetOps.set(op.path, op);
-    }
-    if (op.op === 'set' && typeof op.path === 'string' && typeof op.value === 'boolean') {
-      const insideShadowLinkMatch = op.path.match(new RegExp(`^(${surfaceOwnerPattern})\\.insideShadow\\.linked$`));
-      if (insideShadowLinkMatch) insideShadowLinkedOverrides.set(insideShadowLinkMatch[1], op.value);
     }
   }
 
@@ -239,60 +221,6 @@ export function expandLinkedOps(args: {
         continue;
       }
 
-      const insideShadowLinkMatch = op.path.match(new RegExp(`^(${surfaceOwnerPattern})\\.insideShadow\\.linked$`));
-      if (insideShadowLinkMatch) {
-        const nextLinked = op.value;
-        const base = insideShadowLinkMatch[1];
-        const allPath = `${base}.insideShadow.all`;
-        const topPath = `${base}.insideShadow.top`;
-        const rightPath = `${base}.insideShadow.right`;
-        const bottomPath = `${base}.insideShadow.bottom`;
-        const leftPath = `${base}.insideShadow.left`;
-
-        const allValue = getAt<unknown>(args.instanceData, allPath);
-        const topValue = getAt<unknown>(args.instanceData, topPath);
-        const rightValue = getAt<unknown>(args.instanceData, rightPath);
-        const bottomValue = getAt<unknown>(args.instanceData, bottomPath);
-        const leftValue = getAt<unknown>(args.instanceData, leftPath);
-
-        const makeShadowFrom = (sourceShadow: Record<string, unknown>) => () => ({ ...sourceShadow });
-
-        if (!nextLinked) {
-          const makeShadow = makeShadowFrom(requireShadowRecord(allValue, allPath));
-          expanded.push(
-            setOp(op.path, nextLinked),
-            setOp(topPath, makeShadow()),
-            setOp(rightPath, makeShadow()),
-            setOp(bottomPath, makeShadow()),
-            setOp(leftPath, makeShadow()),
-          );
-          continue;
-        }
-
-        const topShadow = requireShadowRecord(topValue, topPath);
-        requireShadowRecord(rightValue, rightPath);
-        requireShadowRecord(bottomValue, bottomPath);
-        const leftShadow = requireShadowRecord(leftValue, leftPath);
-        const baseShadow = topShadow;
-        const mergedShadow: Record<string, unknown> = { ...baseShadow };
-        const xFromLeft = leftShadow.x as number;
-        const yFromTop = topShadow.y as number;
-        mergedShadow.x = xFromLeft;
-        mergedShadow.y = yFromTop;
-
-        const makeShadow = makeShadowFrom(mergedShadow);
-
-        expanded.push(
-          setOp(op.path, nextLinked),
-          setOp(allPath, makeShadow()),
-          setOp(topPath, makeShadow()),
-          setOp(rightPath, makeShadow()),
-          setOp(bottomPath, makeShadow()),
-          setOp(leftPath, makeShadow()),
-        );
-        continue;
-      }
-
       const v2PaddingMatch = op.path.match(/^(pod|stage)\.padding\.(desktop|mobile)\.linked$/);
       if (v2PaddingMatch) {
         const nextLinked = op.value;
@@ -377,26 +305,6 @@ export function expandLinkedOps(args: {
           setOp(`${base}.right`, numberValue),
           setOp(`${base}.bottom`, numberValue),
           setOp(`${base}.left`, numberValue),
-        );
-        continue;
-      }
-    }
-
-    const insideShadowAllMatch = op.path.match(new RegExp(`^(${surfaceOwnerPattern})\\.insideShadow\\.all$`));
-    if (insideShadowAllMatch) {
-      const base = insideShadowAllMatch[1];
-      const linkedOverride = insideShadowLinkedOverrides.get(base);
-      const linkedValue = linkedOverride != null ? linkedOverride : getAt<unknown>(args.instanceData, `${base}.insideShadow.linked`);
-      const linked = requireBoolean(linkedValue, `${base}.insideShadow.linked`);
-      if (linked) {
-        const sourceShadow = requireShadowRecord(op.value, op.path);
-        const makeShadow = () => ({ ...sourceShadow });
-        expanded.push(
-          setOp(op.path, makeShadow()),
-          setOp(`${base}.insideShadow.top`, makeShadow()),
-          setOp(`${base}.insideShadow.right`, makeShadow()),
-          setOp(`${base}.insideShadow.bottom`, makeShadow()),
-          setOp(`${base}.insideShadow.left`, makeShadow()),
         );
         continue;
       }
