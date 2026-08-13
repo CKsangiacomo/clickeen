@@ -79,6 +79,7 @@ export function validateValueStrict(control: CompiledControl, rawValue: unknown)
   }
 
   if (kind === 'json') {
+    if (control.type === 'dropdown-upload' && rawValue === null) return { ok: true };
     if (rawValue == null) return { ok: false, message: 'Value is required' };
     if (typeof rawValue !== 'string') return { ok: true };
     return { ok: false, message: 'Value must be JSON data, not a string' };

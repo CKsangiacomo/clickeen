@@ -157,7 +157,7 @@ export function applyWidgetOps(args: {
         control.kind === 'array' ||
         control.kind === 'object' ||
         control.type === 'dropdown-fill' ||
-        control.type === 'dropdown-upload-meta'
+        control.type === 'dropdown-upload'
       ) {
         requiresDocumentValidation = true;
       }

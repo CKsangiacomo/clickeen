@@ -61,9 +61,9 @@ owning PRD before changing it.
 - Dieter dropdown actions use native controls. The six current source families
   are
   `dropdown-actions`, `dropdown-fill`, `dropdown-border`, `dropdown-shadow`,
-  `dropdown-upload`, and `dropdown-edit`. The independently generated upload
-  control inside `bulk-edit` follows the same contract. Unconsumed
-  `textrename` is deleted.
+  `dropdown-upload`, and `dropdown-edit`. Bulk Edit's one-file import remains
+  its own composite workflow rather than a second Dropdown Upload producer.
+  Unconsumed `textrename` is deleted.
 - Dialog/popover mechanics belong to [`dialogs-and-modals.md`](dialogs-and-modals.md).
   This document only names existing surfaces and exposes truthful status/error
   state.

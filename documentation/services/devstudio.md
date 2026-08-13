@@ -123,9 +123,13 @@ canvas, full-width Slider tracks, trailing opacity value, one Hex row, and the
 two-row palette. The page therefore reveals the exact system geometry and
 caller-copy inputs without overlapping permanent Popovers, a DevStudio-only
 imitation, or an account-specific branch.
+Dropdown Upload reveals the real `sm|md|lg` empty property rows and one open
+selected-file example. Its local showcase account-assets client resolves that
+example and can preview a file selected during the local demonstration; it
+does not call Roma, write account storage, or represent product data.
 These routes retain Dieter's consumer-neutral `data-dieter-json` marker in
 their generated examples. Before hash navigation replaces the reveal,
-DevStudio destroys hydrated Dropdown Actions, Border, Edit, Fill, and Shadow roots
+DevStudio destroys hydrated Dropdown Actions, Border, Edit, Fill, Shadow, and Upload roots
 through the same exported component lifecycle used by product hosts.
 
 ## Pages Functions

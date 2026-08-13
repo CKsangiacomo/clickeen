@@ -58,7 +58,8 @@ for current widget specs.
 Compiler-enforced rules:
 
 - Path-bound fields must resolve against composed defaults.
-- `dropdown-upload` requires `meta-path`; missing upload metadata fails compile.
+- `dropdown-upload` binds one exact JSON path whose value is
+  `null | {assetRef:string,name:string}` and requires its caller-owned copy.
 - Panel ids must be one of the five current widget panels; unknown ids fail compile.
 - Every resolved cluster must have a non-empty plain-text label; missing label
   keys and unlabeled clusters fail compile.
@@ -176,7 +177,7 @@ pre-encoded labels, options, or parameters; compiler modules must use the one
 shared codec rather than local replacements.
 
 Do not add code that silently drops unknown fields, missing state paths, or
-missing upload metadata.
+required component copy.
 
 ## Conditional Controls
 
@@ -310,8 +311,19 @@ the resolved strings; it owns no visible Fill wording. The exact component
 shape includes **Enabled**; there is no separate remove-fill label because the
 component's Enabled-off action writes exact `none`. Multiple declared modes use
 Dieter's existing Segmented primitive, while a single declared mode hides that
-selector without changing the field contract. `dropdown-upload`
-requires a `meta-path`; the compiler rejects missing upload metadata paths.
+selector without changing the field contract.
+
+`dropdown-upload` is the single-file account-asset field. It binds one exact
+JSON path as `null | {assetRef:string,name:string}`; there is no companion
+metadata path. Its caller supplies the field label and placeholder. When a
+Widget declares the component, that Widget also declares the exact
+`editor.labels.components["dropdown-upload"]` keys `upload`, `replace`,
+`remove`, `uploadAssetError`, and `previewAssetError`, and its adjacent English
+ToolDrawer label file owns those five resolved strings. Dieter receives those
+words and uses the existing account-assets client; it does not own a locale,
+file policy, storage path, or Widget-specific rule. None of the eight current
+Widget specs declares this field, so do not add unused Widget labels or a fake
+product example merely to exercise the component.
 
 `dropdown-shadow` binds the exact object
 `{enabled,inset,x,y,blur,spread,color,alpha}`. Every Widget declares the exact

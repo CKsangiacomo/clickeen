@@ -25,6 +25,7 @@ import {
   destroyDropdownEdit,
   destroyDropdownFill,
   destroyDropdownShadow,
+  destroyDropdownUpload,
   hydrateBulkEdit,
   hydrateChoiceTiles,
   hydrateDropdownActions,
@@ -69,15 +70,54 @@ import type { AccountAssetsClient } from '@dieter/components/shared/account-asse
 
 const entitlements = getEntitlementsMatrix();
 
+const showcaseUploadedAssets = new Map<string, { url: string; assetType: string; contentType: string }>([
+  [
+    'devstudio-upload-sample',
+    {
+      url: 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"%3E%3Crect width="64" height="64" rx="8" fill="%23e5e5e5"/%3E%3Ccircle cx="22" cy="22" r="6" fill="%23979797"/%3E%3Cpath d="M8 51 25 34l9 9 8-8 14 16Z" fill="%23979797"/%3E%3C/svg%3E',
+      assetType: 'vector',
+      contentType: 'image/svg+xml',
+    },
+  ],
+]);
+
 const showcaseAccountAssets: AccountAssetsClient = {
   async listAssets() {
     return [];
   },
-  async resolveAssets() {
-    return { assetsByRef: new Map(), missingAssetRefs: [] };
+  async resolveAssets(assetRefs) {
+    const assetsByRef = new Map();
+    for (const assetRef of assetRefs) {
+      const asset = showcaseUploadedAssets.get(assetRef);
+      if (!asset) throw new Error('coreui.errors.assets.payloadInvalid');
+      assetsByRef.set(assetRef, { assetRef, ...asset });
+    }
+    return {
+      assetsByRef,
+    };
   },
-  async uploadAsset() {
-    throw new Error('Asset uploads are not available in the Dieter showcase.');
+  async uploadAsset(file) {
+    const url = await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.addEventListener('load', () => resolve(String(reader.result)));
+      reader.addEventListener('error', () => reject(reader.error));
+      reader.readAsDataURL(file);
+    });
+    const assetRef = `devstudio-upload-${crypto.randomUUID()}`;
+    const assetType = file.type.startsWith('image/')
+      ? 'image'
+      : file.type.startsWith('video/')
+        ? 'video'
+        : 'document';
+    showcaseUploadedAssets.set(assetRef, { url, assetType, contentType: file.type });
+    return {
+      assetRef,
+      assetType,
+      filename: file.name,
+      contentType: file.type,
+      sizeBytes: file.size,
+      createdAt: new Date().toISOString(),
+    };
   },
 };
 
@@ -362,6 +402,7 @@ function destroyDieterComponents(scope: Element): void {
   scope.querySelectorAll<HTMLElement>('.diet-dropdown-edit').forEach(destroyDropdownEdit);
   scope.querySelectorAll<HTMLElement>('.diet-dropdown-fill').forEach(destroyDropdownFill);
   scope.querySelectorAll<HTMLElement>('.diet-dropdown-shadow').forEach(destroyDropdownShadow);
+  scope.querySelectorAll<HTMLElement>('.diet-dropdown-upload').forEach(destroyDropdownUpload);
 }
 
 function executeScripts(scope: DocumentFragment | Element) {

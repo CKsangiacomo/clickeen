@@ -4,18 +4,19 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { compileWidgetServer } from '../lib/compiler.server';
 import { decodeHtmlEntities, encodeHtmlEntities, type RawWidget } from '../lib/compiler.shared';
-import { expandTooldrawerClusters } from '../lib/compiler/controls';
+import { compileControlsFromPanels, expandTooldrawerClusters } from '../lib/compiler/controls';
 import { buildEditorHtmlLines } from '../lib/compiler/editor-contract';
 import { resolveWidgetTooldrawerLabels } from '../lib/compiler/tooldrawer-labels';
 import type {
   ComponentStencil,
   ComponentStencilLoader,
 } from '../lib/compiler/stencils';
+import { buildContext } from '../lib/compiler/stencils';
 import { DEFAULT_PANELS } from '../components/TdMenu';
 import { controlHostClusterId } from '../components/td-menu-content/dom';
 import { expandLinkedOps } from '../components/td-menu-content/linkedOps';
 import { BOB_MENU_PANEL_IDS, BOB_WIDGET_PANEL_IDS } from '../lib/types';
-import { assertCompiledEditorContract } from '../lib/session/sessionConfig';
+import { assertCompiledEditorContract, assertSessionConfigContract } from '../lib/session/sessionConfig';
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const widgetsRoot = path.join(repoRoot, 'tokyo/product/widgets');
@@ -577,6 +578,118 @@ function testCompiledPanelLabelsFailClosed(): void {
   );
 }
 
+async function testDropdownUploadSingleValueContract(): Promise<void> {
+  const panels = [{
+    id: 'content' as const,
+    label: 'Content',
+    html: [
+      "<tooldrawer-field type='dropdown-upload' path='media.logo' label='Logo' placeholder='No file'",
+      "upload-label='Upload' replace-label='Replace' remove-label='Remove'",
+      "upload-asset-error-label='Asset upload failed.'",
+      "preview-asset-error-label='Asset preview could not be loaded.' />",
+    ].join(' '),
+  }];
+  const defaults = { media: { logo: null } };
+  const controls = compileControlsFromPanels({ panels, defaults });
+  assert.equal(controls.length, 1, 'Dropdown Upload compiles one control');
+  assert.equal(controls[0].type, 'dropdown-upload');
+  assert.equal(controls[0].kind, 'json');
+  assert.equal(controls[0].path, 'media.logo');
+
+  assert.doesNotThrow(() =>
+    assertSessionConfigContract({ media: { logo: null } }, { controls, defaults }),
+  );
+  assert.doesNotThrow(() =>
+    assertSessionConfigContract(
+      { media: { logo: { assetRef: 'asset-logo', name: 'logo.svg' } } },
+      { controls, defaults },
+    ),
+  );
+  assert.throws(
+    () =>
+      assertSessionConfigContract(
+        { media: { logo: { assetRef: 'asset-logo', name: 'logo.svg', source: 'user' } } },
+        { controls, defaults },
+      ),
+    /coreui\.errors\.instance\.config\.invalid:media\.logo/,
+    'retired split-metadata shape is rejected',
+  );
+
+  const uploadStencil = await loadStencil('dropdown-upload');
+  await assert.rejects(
+    () =>
+      buildContext(
+        'dropdown-upload',
+        {
+          type: 'dropdown-upload',
+          path: 'media.logo',
+          label: 'Logo',
+          placeholder: 'No file',
+          'upload-label': 'Upload',
+          'replace-label': 'Replace',
+          'remove-label': 'Remove',
+          'upload-asset-error-label': 'Asset upload failed.',
+          'preview-asset-error-label': 'Asset preview could not be loaded.',
+          template: '<div>retired nested preview</div>',
+        },
+        uploadStencil.spec,
+        loadStencil,
+      ),
+    /does not accept template content/,
+    'retired nested template composition is rejected',
+  );
+
+}
+
+function testDropdownUploadCopyJoin(): void {
+  const editor = {
+    labels: {
+      components: {
+        'dropdown-upload': {
+          previewAssetError: 'Preview failed.',
+          remove: 'Remove',
+          replace: 'Replace',
+          upload: 'Upload',
+          uploadAssetError: 'Upload failed.',
+        },
+      },
+    },
+    panels: fixturePanels({
+      label: 'Content',
+      initiallyOpen: true,
+      nodes: [
+        {
+          kind: 'field',
+          type: 'dropdown-upload',
+          path: 'media.logo',
+          label: 'Logo',
+          attrs: { placeholder: 'No file', accept: 'image/*,.svg' },
+        },
+      ],
+    }),
+  };
+  const lines = buildEditorHtmlLines(editor, { ...fixtureDefaults(), media: { logo: null } }, 'upload-fixture');
+  const uploadLine = lines.find((line) => /\btype='dropdown-upload'/.test(line));
+  assert.ok(uploadLine, 'Dropdown Upload compiles');
+  for (const expected of [
+    "preview-asset-error-label='Preview failed.'",
+    "remove-label='Remove'",
+    "replace-label='Replace'",
+    "upload-label='Upload'",
+    "upload-asset-error-label='Upload failed.'",
+  ]) {
+    assert.ok(uploadLine.includes(expected), `Dropdown Upload joins ${expected}`);
+  }
+
+  const missing = structuredClone(editor) as any;
+  delete missing.labels.components['dropdown-upload'].replace;
+  assert.throws(
+    () => buildEditorHtmlLines(missing, { ...fixtureDefaults(), media: { logo: null } }, 'upload-fixture'),
+    /Dropdown Upload labels are invalid/,
+    'incomplete Dropdown Upload component copy fails compilation',
+  );
+}
+
 async function main(): Promise<void> {
   assert.deepEqual(
     DEFAULT_PANELS.map((panel) => panel.id),
@@ -593,6 +706,10 @@ async function main(): Promise<void> {
   console.log('PASS invalid editor contracts fail closed');
   testCompiledPanelLabelsFailClosed();
   console.log('PASS invalid compiled panel and ToolDrawer labels fail Builder open');
+  await testDropdownUploadSingleValueContract();
+  console.log('PASS Dropdown Upload binds one exact structured value');
+  testDropdownUploadCopyJoin();
+  console.log('PASS Dropdown Upload joins its exact Widget-owned component copy');
   testInsideShadowLinkOpsPreserveHiddenValues();
   console.log('PASS inside-shadow link edits preserve hidden shadow values');
 }

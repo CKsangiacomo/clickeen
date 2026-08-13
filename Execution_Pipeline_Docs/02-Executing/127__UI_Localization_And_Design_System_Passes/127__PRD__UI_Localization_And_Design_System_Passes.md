@@ -158,7 +158,7 @@ the code is convenient there.
 | Stage | Status | Release state |
 | --- | --- | --- |
 | Stage 1 — Scaffold only | Complete | Committed, pushed, and deployed; no non-English experience is exposed |
-| Stage 2 — Dieter UI pass | In progress: Foundations, Agent Activity, Bulk Edit, Button, Choice Tiles, Dropdown Actions, Popover, Dropdown Border, Dropdown Edit, Dropdown Fill, and Dropdown Shadow editor/runtime integration complete and re-audited as consumer-agnostic primitives; the shared row/Popover presentation is also applied to Upload | Dropdown Upload is the next behavior pass |
+| Stage 2 — Dieter UI pass | In progress: Foundations, Agent Activity, Bulk Edit, Button, Choice Tiles, Dropdown Actions, Popover, Dropdown Border, Dropdown Edit, Dropdown Fill, Dropdown Shadow, and Dropdown Upload complete and re-audited as consumer-agnostic primitives | Menuactions is the next component pass |
 | Stage 3 — Bob UI pass | Not started | No authority to begin until explicitly directed |
 | Stage 4 — Roma UI pass | Not started | No authority to begin until explicitly directed |
 | Stage 5 — Translation pass | Not started | No translations may be generated yet |
@@ -995,3 +995,44 @@ authorizes it.
   and Roma typechecks; and scoped diff checks. No new component, service,
   registry, storage authority, route, product-data mutation, Cloudflare change,
   deployment, or compatibility path was added.
+
+- **Dropdown Upload — passed locally, 2026-08-13.** Dropdown Upload is now one
+  consumer-agnostic single-file editor with one exact JSON value:
+  `null | {assetRef:string,name:string}`. The retired primary-string plus
+  `meta-path` split, `source:"user"` value field, component-local file limits,
+  arbitrary nested preview template, hardcoded UI copy, and duplicate local
+  asset validation are deleted. Empty is exact `null`; a selected file retains
+  the account asset reference and exact filename together.
+
+  The component now follows the completed dropdown system: the shared
+  property row keeps the caller label on the leading rail and the placeholder
+  or filename on the right-aligned trailing rail; only the filename truncates.
+  Its row-width Popover repeats the caller label, contains one preview surface
+  and one native file input, and exposes Upload when empty or Replace and
+  Remove when selected. Root `sm|md|lg` owns the row, Popover, typography,
+  preview geometry, Icon, and nested Button size. The caller-supplied
+  account-assets client remains the only upload/resolve seam; Roma and Tokyo
+  retain policy and storage authority. DevStudio supplies a local in-memory
+  showcase client so the generated page can demonstrate selected, upload,
+  replace, preview, and remove behavior without remote data.
+
+  All visible and accessible wording is caller input. Bob joins the exact
+  five-key `dropdown-upload` component-copy shape only when a Widget declares
+  the field, using the same adjacent ToolDrawer label contract as the completed
+  components. None of the eight current Widget specs declares Dropdown Upload,
+  so this pass added no fake Widget field or unused Widget labels. Bob compiles
+  one JSON control, accepts only exact `null` or `{assetRef,name}` session
+  values, and its existing account-assets command path remains unchanged.
+  Dropdown Upload now exports `destroyDropdownUpload`; Bob and DevStudio release
+  its state and pending asset resolution through the existing Dieter host
+  teardown seam.
+
+  Focused verification passed: Dieter typecheck and governance, DevStudio
+  generation/build/typecheck, Bob editor-contract tests and typecheck, Widget
+  definition-source generation, all eight current Widget artifact pairs, and
+  diff checks. Local Chromium hydrated all four DevStudio examples without page
+  errors, resolved the selected SVG, wrote exact `null` on Remove, uploaded and
+  previewed a new SVG through the local showcase client, and wrote one exact
+  `{assetRef,name}` value. No account data, route, storage, product data,
+  Cloudflare configuration, deployment, translation generation, compatibility
+  path, service, registry, or PRD 128 behavior changed.

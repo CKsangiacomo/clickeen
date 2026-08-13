@@ -4,7 +4,7 @@ export { destroyDropdownActions, hydrateDropdownActions } from './dropdown-actio
 export { destroyDropdownFill, hydrateDropdownFill } from './dropdown-fill/dropdown-fill';
 export { destroyDropdownBorder, hydrateDropdownBorder } from './dropdown-border/dropdown-border';
 export { destroyDropdownShadow, hydrateDropdownShadow } from './dropdown-shadow/dropdown-shadow';
-export { hydrateDropdownUpload } from './dropdown-upload/dropdown-upload';
+export { destroyDropdownUpload, hydrateDropdownUpload } from './dropdown-upload/dropdown-upload';
 export { destroyDropdownEdit, hydrateDropdownEdit } from './dropdown-edit/dropdown-edit';
 export { hydrateTextfield } from './textfield/textfield';
 export { hydrateValuefield } from './valuefield/valuefield';

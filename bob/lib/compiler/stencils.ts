@@ -130,7 +130,11 @@ export async function buildContext(
   // Dieter example context.
   const placeholder = attrs.placeholder ?? '';
   const objectType = attrs.objectType || attrs['object-type'] || '';
-  const value = pathAttr ? '' : attrs.value || '';
+  const value = pathAttr
+    ? component === 'dropdown-upload'
+      ? 'null'
+      : ''
+    : attrs.value || '';
   const optionsRaw = attrs.options || '';
   const headerLabel = attrs.headerLabel || '';
   const reorderLabel =
@@ -169,7 +173,6 @@ export async function buildContext(
     attrs.moveLabel || attrs['move-label'] || (merged.moveLabel as string) || 'Move item {index}';
   const addOpen = attrs.addOpen || attrs['add-open'] || (merged.addOpen as string) || '';
   const rowPath = attrs.rowPath || attrs['row-path'] || (merged.rowPath as string) || '';
-  const metaPath = attrs.metaPath || attrs['meta-path'] || (merged.metaPath as string) || '';
   const columnsRaw = attrs.columns || '';
   const columns = columnsRaw ? normalizeJsonAttrValue(columnsRaw) : '';
   const title = attrs.title || label;
@@ -219,14 +222,28 @@ export async function buildContext(
     attrs.allowStructure || attrs['allow-structure'] || (merged.allowStructure as string) || 'true';
   const allowStructure = parseBooleanAttr(allowStructureRaw) === false ? 'false' : 'true';
 
-  const accept = attrs.accept || (merged.accept as string) || 'image/*';
-  const maxSizeMb = attrs.maxSizeMb || attrs['max-size-mb'] || (merged.maxSizeMb as string) || '';
+  const accept = attrs.accept || '';
   const popoverWidth =
     attrs.popoverWidth || attrs['popover-width'] || (merged.popoverWidth as string);
 
-  if (component === 'dropdown-upload' && !metaPath.trim()) {
-    const controlId = pathAttr || label || idBase || 'unknown';
-    throw new Error(`[BobCompiler] dropdown-upload control "${controlId}" requires meta-path`);
+  if (component === 'dropdown-upload') {
+    if (attrs.template) {
+      throw new Error('[BobCompiler] dropdown-upload does not accept template content');
+    }
+    const requiredUploadInputs = [
+      ['path', pathAttr],
+      ['label', label],
+      ['placeholder', placeholder],
+      ['upload-label', attrs.uploadLabel || attrs['upload-label']],
+      ['replace-label', attrs.replaceLabel || attrs['replace-label']],
+      ['remove-label', attrs.removeLabel || attrs['remove-label']],
+      ['upload-asset-error-label', attrs.uploadAssetErrorLabel || attrs['upload-asset-error-label']],
+      ['preview-asset-error-label', attrs.previewAssetErrorLabel || attrs['preview-asset-error-label']],
+    ] as const;
+    const missing = requiredUploadInputs.find(([, value]) => !value?.trim());
+    if (missing) {
+      throw new Error(`[BobCompiler] dropdown-upload requires ${missing[0]}`);
+    }
   }
 
   let templateValue = attrs.template || (merged.template as string) || '';
@@ -246,7 +263,6 @@ export async function buildContext(
     step,
     allowStructure,
     accept: component === 'dropdown-upload' ? accept : undefined,
-    maxSizeMb: component === 'dropdown-upload' ? maxSizeMb : undefined,
     popoverWidth,
     axis: component === 'dropdown-shadow' ? axis : undefined,
     indexToken,
@@ -255,7 +271,10 @@ export async function buildContext(
     optionsRaw,
     objectType,
     addLabel,
-    removeLabel,
+    removeLabel:
+      component === 'dropdown-upload'
+        ? attrs.removeLabel || attrs['remove-label'] || ''
+        : removeLabel,
     moveLabel,
     addOpen,
     labelPath: attrs.labelPath || attrs['label-path'] || (merged.labelPath as string) || '',
@@ -279,7 +298,6 @@ export async function buildContext(
     reorderMode,
     reorderThreshold,
     rowPath,
-    metaPath,
     columns,
     title,
     emptyLabel,
@@ -322,6 +340,7 @@ export async function buildContext(
       attrs.removeGradientStopLabel || attrs['remove-gradient-stop-label'] || '',
     opacityLabel: attrs.opacityLabel || attrs['opacity-label'] || '',
     uploadLabel: attrs.uploadLabel || attrs['upload-label'] || '',
+    replaceLabel: attrs.replaceLabel || attrs['replace-label'] || '',
     chooseAssetsLabel: attrs.chooseAssetsLabel || attrs['choose-assets-label'] || '',
     removeAssetLabel: attrs.removeAssetLabel || attrs['remove-asset-label'] || '',
     loadingAssetsLabel: attrs.loadingAssetsLabel || attrs['loading-assets-label'] || '',

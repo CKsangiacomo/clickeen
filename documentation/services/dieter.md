@@ -106,10 +106,11 @@ giving Dieter ownership of the host's product meaning.
 
 JSON-valued controls use `data-dieter-json`; Bulk Edit emits `dieter-ops` with
 its existing exact `{ops}` payload. Neither name belongs to Bob or Roma. Hosts
-must call the exported Dropdown Actions, Border, Edit, Fill, and Shadow destroy
+must call the exported Dropdown Actions, Border, Edit, Fill, Shadow, and Upload destroy
 functions before replacing hydrated roots. Dropdown Edit destruction detaches
 the locally bundled Lexical editor from its DOM root; Dropdown Fill cancels
-pending media resolution and releases its retained dropdown state.
+pending media resolution, and Dropdown Upload cancels pending asset resolution
+and releases its retained dropdown state.
 
 Agent Activity owns a required caller-supplied title, a required array of
 narration rows, its `sm`/`md` structure, and its active presentation. It does
@@ -152,6 +153,21 @@ The same Widget-owned Shadow label contract also supplies the surrounding
 inside-shadow composition: the link label, layer label, and below/above-content
 options. Dieter owns the editor primitive; it does not author those words or
 expand one shadow value into other state paths.
+
+Dropdown Upload owns one single-file editor and one exact value:
+`null | {assetRef:string,name:string}`. Its shared property row shows the
+complete caller label with either the caller placeholder or the exact filename
+on the trailing rail. Its row-width Popover repeats the caller label and shows
+one preview plus Upload when empty or Replace and Remove when selected. It uses
+the caller-supplied account-assets client for upload and exact asset resolution;
+it does not own account identity, route policy, file limits, storage, or Widget
+meaning. The component emits only the one JSON field, owns no second metadata
+path, derives preview kind only from resolved asset content type, and releases
+pending asset resolution through `destroyDropdownUpload`.
+Every visible and accessible word is caller input. A future Widget that uses
+the component owns the field label and placeholder plus the exact five-key
+component-copy shape in its adjacent ToolDrawer label file. None of the eight
+current Widget specs declares Dropdown Upload.
 
 Dropdown Actions, Dropdown Border, Dropdown Edit, Dropdown Fill, Dropdown
 Shadow, and Dropdown Upload use the shared clickable property-menu row rule.

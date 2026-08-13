@@ -117,7 +117,8 @@ marked with `data-dieter-json` before running the Dieter hydrator; the empty val
 HTML is only an unbound placeholder, not product truth or a default. Changed-path
 updates apply only while the same panel control surface remains mounted.
 Before Bob replaces or unmounts that surface, it invokes the owning Dropdown
-Actions, Border, and Edit destroy functions; Edit detaches its Lexical root.
+Actions, Border, Edit, Fill, Shadow, and Upload destroy functions; Edit detaches
+its Lexical root, while Fill and Upload invalidate pending asset resolution.
 
 ## Dieter Icons
 
@@ -380,7 +381,7 @@ declared support files
 `{widgetType}_tooldrawer_l10n_labels/en.json` carries the exact English values
 for those tokens, the five widget panel names, and migrated ToolDrawer copy
 such as Agent Activity's title and Dropdown Border, Dropdown Edit, Dropdown Fill,
-and Dropdown Shadow field/component labels.
+Dropdown Shadow, and—when declared—Dropdown Upload field/component labels.
 The Widget spec declares the exact state path and label-token coordinates; Bob
 joins them with the one Dieter component without Widget-specific compiler
 branches. `editable-fields.json`
@@ -489,6 +490,16 @@ four side values or merge the side values back into `all`. Hidden linked and
 unlinked values therefore remain exact browser-memory truth. Dieter emits no
 multi-path edit and does not inspect Widget paths. Bob's shared host destroys Shadow with the other retained dropdowns
 before panel replacement.
+
+Dropdown Upload is the shared Dieter single-file account-asset editor. It
+compiles as one JSON control at one Widget path and binds exact `null` or
+`{assetRef:string,name:string}` browser-memory truth. The compiler joins the
+exact five component words from the declaring Widget's adjacent English label
+file; it does not retain the retired second metadata path or source marker.
+The component uses Bob's existing account-assets client and current-account
+command chain. None of the eight current Widget specs declares it, so current
+editor artifacts contain no Upload control and this component pass does not
+invent one.
 
 The shared Widget runtime renders Stage, Pod, and supported Core-card shadows
 from that exact object. Internal shadows are real comma-separated inset
@@ -695,8 +706,11 @@ stores accepted files under:
 accounts/{accountPublicId}/assets/{filename}
 ```
 
-Dropdown fill controls use this route chain to upload and assign files. SVG
-logos are accepted vector assets when Roma/Tokyo-worker accept the upload.
+Dropdown Fill uses this route chain to upload and assign media. The
+consumer-agnostic Dropdown Upload component uses the same existing route chain
+when a Widget declares one single-file field; none of the eight current Widget
+specs does. SVG logos are accepted vector assets when Roma/Tokyo-worker accept
+the upload.
 
 Bob does not expose account asset proxy routes. Account asset list, upload,
 resolve, and delete operations stay behind Roma current-account routes.

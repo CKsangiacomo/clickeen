@@ -5,6 +5,7 @@ import {
   destroyDropdownEdit,
   destroyDropdownFill,
   destroyDropdownShadow,
+  destroyDropdownUpload,
   hydrateBulkEdit,
   hydrateChoiceTiles,
   hydrateDropdownActions,
@@ -46,6 +47,7 @@ export function runHydrators(scope: HTMLElement, deps: DieterHydratorDeps): () =
     scope.querySelectorAll<HTMLElement>('.diet-dropdown-edit').forEach(destroyDropdownEdit);
     scope.querySelectorAll<HTMLElement>('.diet-dropdown-fill').forEach(destroyDropdownFill);
     scope.querySelectorAll<HTMLElement>('.diet-dropdown-shadow').forEach(destroyDropdownShadow);
+    scope.querySelectorAll<HTMLElement>('.diet-dropdown-upload').forEach(destroyDropdownUpload);
   };
   const nestedDeps = {
     ...deps,

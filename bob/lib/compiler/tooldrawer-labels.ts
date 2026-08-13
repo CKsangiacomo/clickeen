@@ -45,6 +45,7 @@ const COPY_ATTRIBUTE_NAMES = new Set([
   'opacity-label',
   'preview-asset-error-label',
   'preview-label',
+  'replace-label',
   'remove-asset-label',
   'remove-gradient-stop-label',
   'upload-asset-error-label',

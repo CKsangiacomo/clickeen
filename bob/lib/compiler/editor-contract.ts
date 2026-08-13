@@ -127,6 +127,19 @@ type DropdownFillEditorLabels = {
   fields: Record<string, string>;
 };
 
+const DROPDOWN_UPLOAD_COMPONENT_LABEL_ATTRIBUTES = [
+  ['previewAssetError', 'preview-asset-error-label'],
+  ['remove', 'remove-label'],
+  ['replace', 'replace-label'],
+  ['upload', 'upload-label'],
+  ['uploadAssetError', 'upload-asset-error-label'],
+] as const;
+
+type DropdownUploadEditorLabels = Record<
+  (typeof DROPDOWN_UPLOAD_COMPONENT_LABEL_ATTRIBUTES)[number][0],
+  string
+>;
+
 const DROPDOWN_SHADOW_COMPONENT_LABEL_ATTRIBUTES = [
   ['blur', 'blur-label'],
   ['color', 'color-label'],
@@ -602,9 +615,13 @@ export function buildEditorHtmlLines(
     dropdownEditLabels = readDropdownEditEditorLabels(editor.labels, widgetname);
   }
   return applyDropdownEditEditorLabels(
-    applyDropdownShadowEditorLabels(
-      applyDropdownFillEditorLabels(
-        applyDropdownBorderEditorLabels(lines, editor.labels, widgetname),
+    applyDropdownUploadEditorLabels(
+      applyDropdownShadowEditorLabels(
+        applyDropdownFillEditorLabels(
+          applyDropdownBorderEditorLabels(lines, editor.labels, widgetname),
+          editor.labels,
+          widgetname,
+        ),
         editor.labels,
         widgetname,
       ),
@@ -612,6 +629,49 @@ export function buildEditorHtmlLines(
       widgetname,
     ),
     dropdownEditLabels,
+  );
+}
+
+function readDropdownUploadEditorLabels(
+  labelsRaw: unknown,
+  widgetname: string,
+): DropdownUploadEditorLabels {
+  if (!isPlainObject(labelsRaw) || !isPlainObject(labelsRaw.components)) {
+    throw new Error(`[BobCompiler] ${widgetname} Dropdown Upload labels are missing`);
+  }
+  const component = labelsRaw.components['dropdown-upload'];
+  const expectedKeys = DROPDOWN_UPLOAD_COMPONENT_LABEL_ATTRIBUTES.map(([key]) => key).sort();
+  if (
+    !isPlainObject(component) ||
+    Object.keys(component).sort().join('\0') !== expectedKeys.join('\0')
+  ) {
+    throw new Error(`[BobCompiler] ${widgetname} Dropdown Upload labels are invalid`);
+  }
+  const labels = {} as DropdownUploadEditorLabels;
+  for (const [key] of DROPDOWN_UPLOAD_COMPONENT_LABEL_ATTRIBUTES) {
+    const value = component[key];
+    if (typeof value !== 'string' || !value.trim() || value !== value.trim()) {
+      throw new Error(`[BobCompiler] ${widgetname} Dropdown Upload label is invalid: ${key}`);
+    }
+    labels[key] = value;
+  }
+  return labels;
+}
+
+function applyDropdownUploadEditorLabels(
+  lines: string[],
+  labelsRaw: unknown,
+  widgetname: string,
+): string[] {
+  if (!lines.some((line) => /\btype='dropdown-upload'/.test(line))) return lines;
+  const labels = readDropdownUploadEditorLabels(labelsRaw, widgetname);
+  const attributes = DROPDOWN_UPLOAD_COMPONENT_LABEL_ATTRIBUTES
+    .map(([key, attribute]) => `${attribute}='${encodeHtmlEntities(labels[key])}'`)
+    .join(' ');
+  return lines.map((line) =>
+    /\btype='dropdown-upload'/.test(line)
+      ? line.replace(/\s*\/>$/, ` ${attributes} />`)
+      : line,
   );
 }
 

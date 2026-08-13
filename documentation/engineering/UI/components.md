@@ -32,7 +32,7 @@ Legend: ✅ exported from `index.ts` · Direct host import · ⊘ no custom hydr
 | dropdowns | `dropdown-actions` | `hydrateDropdownActions` / `destroyDropdownActions`, `string` | ✅ |
 | dropdowns | `dropdown-border` | `hydrateDropdownBorder` / `destroyDropdownBorder`, exact border JSON | ✅ |
 | dropdowns | `dropdown-shadow` | `hydrateDropdownShadow` / `destroyDropdownShadow`, exact shadow JSON | ✅ |
-| dropdowns | `dropdown-upload` | `hydrateDropdownUpload`, `meta-path` | ✅ |
+| dropdowns | `dropdown-upload` | `hydrateDropdownUpload` / `destroyDropdownUpload`, exact asset JSON | ✅ |
 | dropdowns | `dropdown-edit` | `hydrateDropdownEdit` / `destroyDropdownEdit`, `no-binding` | ✅ |
 | dropdowns | `menuactions` | `hydrateMenuactions`, `string` | ✅ |
 | dropdowns | `popaddlink` | `hydratePopAddLink` | ✅ |
@@ -78,7 +78,7 @@ The governing component product law is:
 - Dieter JSON controls expose the consumer-neutral `data-dieter-json` marker,
   and generic multi-path component edits emit `dieter-ops`. Host-owned paths
   remain separate from that component protocol.
-- Hosts destroy hydrated Dropdown Actions, Border, Edit, Fill, and Shadow roots before
+- Hosts destroy hydrated Dropdown Actions, Border, Edit, Fill, Shadow, and Upload roots before
   their rendered DOM is replaced. Dropdown Edit destruction detaches its
   Lexical root; Dropdown Fill cancels pending media resolution and releases
   its dropdown state through that same component lifecycle.
@@ -234,6 +234,22 @@ The governing component product law is:
   shadow and rejects an `inset` mismatch rather than repairing it. Stage adds
   in-document visual gutters for its outside shadow; FAQ applies its declared
   inside shadow to each Q&A card through the shared surface primitive.
+- Dropdown Upload owns the single-file workflow for one caller-owned field. It
+  binds one exact value, `null | {assetRef:string,name:string}`: `null` means no
+  selected file, and the object identifies one account asset and its exact
+  filename. The closed property row shows the caller label and either the
+  caller placeholder or filename; only the trailing filename truncates. Its
+  row-width Popover repeats the caller label, presents one preview area and one
+  native file input, and exposes Upload for an empty value or Replace and
+  Remove for a selected value. Upload uses the supplied account-assets client;
+  Roma/Tokyo remain the policy and storage authorities. Dieter does not impose
+  file limits, infer a Widget path, persist a second metadata field, author
+  visible copy, or own a locale catalog. The caller supplies the label,
+  placeholder, action words, and failure copy. Product Widget use resolves the
+  five component words from that Widget's adjacent ToolDrawer label file.
+  Preview kind is resolved from the account asset's exact content type rather
+  than guessed from the filename. DevStudio examples are local component
+  demonstrations, not account storage.
 - Menu Actions remains a separate menu-row primitive with its existing
   `sm|md|lg` API. Low-level geometry tokens remain internal source mechanics.
 - `textrename` is deleted because it had no product consumer.

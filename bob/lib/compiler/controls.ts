@@ -212,8 +212,7 @@ function inferControlMetadata(
   )
     return { kind: 'string' };
   if (control.type === 'slider' || control.type === 'valuefield') return { kind: 'number' };
-  if (control.type === 'dropdown-upload-meta') return { kind: 'json' };
-  if (control.type === 'dropdown-fill') return { kind: 'json' };
+  if (control.type === 'dropdown-fill' || control.type === 'dropdown-upload') return { kind: 'json' };
 
   if (control.type === 'repeater' || control.type === 'object-manager') {
     const itemIdPath =
@@ -319,16 +318,6 @@ function collectControlsFromMarkup(markup: string, panelId: PanelId, controls: C
         step,
         required,
       });
-      const metaPath = attrs.metaPath || attrs['meta-path'];
-      if (type === 'dropdown-upload' && typeof metaPath === 'string' && metaPath.trim()) {
-        controls.push({
-          panelId,
-          groupId,
-          groupLabel: explicitGroupLabel || undefined,
-          type: 'dropdown-upload-meta',
-          path: metaPath.trim(),
-        });
-      }
       addDerivedPath(attrs.labelPath);
       addDerivedPath(attrs.reorderLabelPath || attrs['reorder-label-path']);
     }

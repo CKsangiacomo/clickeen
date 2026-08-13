@@ -1,24 +1,30 @@
 {
   "component": "dropdown-upload",
-  "syntax": "<tooldrawer-field type='dropdown-upload' size='{{SIZE}}' path='{{PATH}}' meta-path='{{META_PATH}}' label='{{LABEL}}' placeholder='{{PLACEHOLDER}}' value='{{VALUE}}' accept='{{ACCEPT}}' maxImageKb='{{MAX_IMAGE_KB}}' maxVideoKb='{{MAX_VIDEO_KB}}' maxOtherKb='{{MAX_OTHER_KB}}' template='{{TEMPLATE}}' />",
+  "syntax": "<tooldrawer-field type='dropdown-upload' size='{{SIZE}}' path='{{PATH}}' label='{{LABEL}}' placeholder='{{PLACEHOLDER}}' value='{{VALUE}}' accept='{{ACCEPT}}' upload-label='{{UPLOAD_LABEL}}' replace-label='{{REPLACE_LABEL}}' remove-label='{{REMOVE_LABEL}}' upload-asset-error-label='{{UPLOAD_ASSET_ERROR_LABEL}}' preview-asset-error-label='{{PREVIEW_ASSET_ERROR_LABEL}}' />",
   "attributes": {
     "size": { "enum": ["sm", "md", "lg"], "default": "md" },
     "path": { "optional": true },
-    "meta-path": { "required": true },
-    "label": { "optional": true },
-    "headerLabel": { "optional": true },
-    "placeholder": { "optional": true, "default": "Upload file" },
-    "value": { "optional": true },
-    "accept": {
-      "optional": true,
-      "default": "image/*,video/*,.svg,.lottie,application/json,application/pdf,.xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
-    },
-    "maxImageKb": { "optional": true, "type": "number", "default": 512 },
-    "maxVideoKb": { "optional": true, "type": "number", "default": 1536 },
-    "maxOtherKb": { "optional": true, "type": "number", "default": 1536 },
-    "template": { "optional": true }
+    "label": { "required": true },
+    "placeholder": { "required": true },
+    "value": { "optional": true, "default": "null" },
+    "accept": { "optional": true },
+    "uploadLabel": { "required": true },
+    "replaceLabel": { "required": true },
+    "removeLabel": { "required": true },
+    "uploadAssetErrorLabel": { "required": true },
+    "previewAssetErrorLabel": { "required": true }
   },
-  "binding": { "path": "instanceData[PATH]", "type": "string" },
+  "binding": {
+    "path": "instanceData[PATH]",
+    "type": "json",
+    "shape": "null | {assetRef:string,name:string}"
+  },
+  "features": {
+    "job": "Upload, preview, replace, or remove one account asset for one caller-owned field.",
+    "value": "One exact JSON value is projected before hydration and emitted after upload or remove.",
+    "copy": "The caller supplies every visible word; Dieter owns no product copy.",
+    "policy": "The account-assets route remains the upload and account-policy authority."
+  },
   "defaults": [
     {
       "id": "dropdown-upload",
@@ -26,27 +32,49 @@
       "spec": ["diet-dropdown-upload", "data-size='{{size}}'"],
       "context": {
         "size": "md",
+        "state": "closed",
+        "expanded": "false",
         "id": "dropdown-upload-{{size}}",
-        "label": "File",
-        "placeholder": "Upload file",
-        "value": "",
+        "label": "Logo",
+        "placeholder": "No file",
+        "value": "null",
         "path": "",
-        "metaPath": "asset",
-        "popoverLabel": "File upload",
-        "labelClass": "label-s",
-        "bodyClass": "body-s",
-        "headerLabel": "File",
-        "headerLabelClass": "label-s",
-        "accept": "image/*,video/*,.svg,.lottie,application/json,application/pdf,.xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel",
-        "maxImageKb": 512,
-        "maxVideoKb": 1536,
-        "maxOtherKb": 1536,
-        "template": ""
+        "accept": "image/*,.svg",
+        "uploadLabel": "Upload",
+        "replaceLabel": "Replace",
+        "removeLabel": "Remove",
+        "uploadAssetErrorLabel": "Asset upload failed.",
+        "previewAssetErrorLabel": "Asset preview could not be loaded."
       },
       "sizeContext": {
-        "sm": { "labelClass": "label-xs", "bodyClass": "body-xs" },
-        "md": { "labelClass": "label-s", "bodyClass": "body-s" },
-        "lg": { "labelClass": "label-m", "bodyClass": "body-m" }
+        "sm": { "labelClass": "label-xs", "bodyClass": "body-xs", "buttonSize": "small" },
+        "md": { "labelClass": "label-s", "bodyClass": "body-s", "buttonSize": "medium" },
+        "lg": { "labelClass": "label-m", "bodyClass": "body-m", "buttonSize": "large" }
+      }
+    },
+    {
+      "id": "dropdown-upload-open",
+      "title": "Open selected file",
+      "sizes": ["md"],
+      "spec": ["diet-dropdown-upload", "data-state='open'", "one structured asset value"],
+      "context": {
+        "size": "md",
+        "state": "open",
+        "expanded": "true",
+        "id": "dropdown-upload-open",
+        "label": "Logo",
+        "placeholder": "No file",
+        "value": "{\"assetRef\":\"devstudio-upload-sample\",\"name\":\"brand-mark.svg\"}",
+        "path": "",
+        "accept": "image/*,.svg",
+        "uploadLabel": "Upload",
+        "replaceLabel": "Replace",
+        "removeLabel": "Remove",
+        "uploadAssetErrorLabel": "Asset upload failed.",
+        "previewAssetErrorLabel": "Asset preview could not be loaded.",
+        "labelClass": "label-s",
+        "bodyClass": "body-s",
+        "buttonSize": "medium"
       }
     }
   ]

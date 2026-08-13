@@ -68,30 +68,25 @@ function assertShape(
   value: unknown,
   expected: unknown,
   path: string,
-  fillPaths: readonly string[],
-  optionalUploadMetaPaths: readonly string[],
+  structuredPaths: readonly string[],
 ): void {
-  if (path && fillPaths.some((fillPath) => pathMatchesPattern(fillPath, path))) {
-    if (typeof value === 'undefined') invalid(path);
-    return;
-  }
-  if (path && optionalUploadMetaPaths.some((jsonPath) => pathMatchesPattern(jsonPath, path))) {
+  if (path && structuredPaths.some((structuredPath) => pathMatchesPattern(structuredPath, path))) {
     if (typeof value === 'undefined') invalid(path);
     return;
   }
   if (Array.isArray(expected)) {
     if (!Array.isArray(value)) invalid(path);
-    if (expected.length) value.forEach((entry, index) => assertShape(entry, expected[0], `${path}.${index}`, fillPaths, optionalUploadMetaPaths));
+    if (expected.length) value.forEach((entry, index) => assertShape(entry, expected[0], `${path}.${index}`, structuredPaths));
     return;
   } else if (isPlainRecord(expected)) {
     if (!isPlainRecord(value)) invalid(path);
     for (const [key, child] of Object.entries(expected)) {
       if (!Object.prototype.hasOwnProperty.call(value, key)) invalid(path ? `${path}.${key}` : key);
-      assertShape(value[key], child, path ? `${path}.${key}` : key, fillPaths, optionalUploadMetaPaths);
+      assertShape(value[key], child, path ? `${path}.${key}` : key, structuredPaths);
     }
     Object.keys(value).forEach((key) => {
       const childPath = path ? `${path}.${key}` : key;
-      if (!Object.prototype.hasOwnProperty.call(expected, key) && !optionalUploadMetaPaths.some((jsonPath) => pathMatchesPattern(jsonPath, childPath))) invalid(childPath);
+      if (!Object.prototype.hasOwnProperty.call(expected, key)) invalid(childPath);
     });
     return;
   }
@@ -124,20 +119,20 @@ function assertControl(control: CompiledControl, value: unknown, path: string): 
   if ((control.kind === 'string' || control.kind === 'color') && typeof value !== 'string') invalid(path);
   if (control.kind === 'enum' && (typeof value !== 'string' || !control.enumValues?.includes(value))) invalid(path);
   if (control.kind === 'number' && (typeof value !== 'number' || !Number.isFinite(value) || (typeof control.min === 'number' && value < control.min) || (typeof control.max === 'number' && value > control.max))) invalid(path);
-  if ((control.kind === 'object' && !isPlainRecord(value)) || (control.kind === 'array' && !Array.isArray(value)) || (control.kind === 'json' && (value == null || typeof value === 'string'))) invalid(path);
-  if (control.kind === 'json' && control.type === 'dropdown-upload-meta') assertUploadAssetMetadata(value, path);
+  if ((control.kind === 'object' && !isPlainRecord(value)) || (control.kind === 'array' && !Array.isArray(value)) || (control.kind === 'json' && ((value == null && control.type !== 'dropdown-upload') || typeof value === 'string'))) invalid(path);
+  if (control.type === 'dropdown-upload') assertUploadAssetValue(value, path);
   if (control.kind === 'array' && control.itemIdPath) (value as unknown[]).forEach((item, index) => { if (!isPlainRecord(item)) invalid(`${path}.${index}`); const id = item[control.itemIdPath!]; if (typeof id !== 'string' || !id) invalid(`${path}.${index}.${control.itemIdPath}`); });
   if (control.type === 'dropdown-fill') assertFillValue(control, value, path);
 }
 
-function assertUploadAssetMetadata(value: unknown, path: string): void {
+function assertUploadAssetValue(value: unknown, path: string): void {
+  if (value === null) return;
   if (!isPlainRecord(value)) invalid(path);
-  const allowed = new Set(['assetRef', 'name', 'source']);
-  Object.keys(value).forEach((key) => { if (!allowed.has(key)) invalid(`${path}.${key}`); });
+  const keys = Object.keys(value).sort();
+  if (keys.length !== 2 || keys[0] !== 'assetRef' || keys[1] !== 'name') invalid(path);
   const assetRef = value.assetRef;
   if (typeof assetRef !== 'string' || !assetRef || assetRef !== assetRef.trim()) invalid(`${path}.assetRef`);
-  if (value.name != null && typeof value.name !== 'string') invalid(`${path}.name`);
-  if (value.source != null && typeof value.source !== 'string') invalid(`${path}.source`);
+  if (typeof value.name !== 'string' || !value.name || value.name !== value.name.trim()) invalid(`${path}.name`);
 }
 
 function assertFillValue(control: CompiledControl, value: unknown, path: string): void {
@@ -163,13 +158,10 @@ function assertFillValue(control: CompiledControl, value: unknown, path: string)
 }
 
 export function assertSessionConfigContract(config: Record<string, unknown>, compiled: Pick<CompiledWidget, 'controls' | 'defaults' | 'normalization'>): void {
-  const fillPaths = compiled.controls
-    .filter((control) => control.type === 'dropdown-fill' && typeof control.path === 'string' && control.path)
+  const structuredPaths = compiled.controls
+    .filter((control) => (control.type === 'dropdown-fill' || control.type === 'dropdown-upload') && typeof control.path === 'string' && control.path)
     .map((control) => control.path);
-  const optionalUploadMetaPaths = compiled.controls
-    .filter((control) => control.kind === 'json' && control.type === 'dropdown-upload-meta')
-    .map((control) => control.path);
-  assertShape(config, compiled.defaults, '', fillPaths, optionalUploadMetaPaths);
+  assertShape(config, compiled.defaults, '', structuredPaths);
   compiled.controls.forEach((control) => collectValues(config, control.path).forEach((entry) => assertControl(control, entry.value, entry.path)));
   compiled.normalization?.idRules?.forEach((rule) => collectValues(config, rule.arrayPath).forEach((entry) => {
     if (!Array.isArray(entry.value)) invalid(entry.path);

@@ -70,5 +70,8 @@ export function serializeDieterJsonFieldValue(input: HTMLInputElement, value: un
   if (expectsJsonArrayField(input)) {
     return serializeDieterJsonArrayValue(value);
   }
+  if (input.classList.contains('diet-dropdown-upload__value-field') && value === null) {
+    return 'null';
+  }
   return serializeDieterJsonValue(value);
 }

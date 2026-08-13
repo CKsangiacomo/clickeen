@@ -1,21 +1,17 @@
-<div class="diet-dropdown-upload diet-popover-host" data-size="{{size}}" data-state="closed" data-has-file="false">
+<div
+  class="diet-dropdown-upload diet-popover-host"
+  data-size="{{size}}"
+  data-state="{{state}}"
+  data-has-file="false"
+  data-copy-upload-asset-error="{{uploadAssetErrorLabel}}"
+  data-copy-preview-asset-error="{{previewAssetErrorLabel}}"
+>
   <input
     id="{{id}}"
     type="hidden"
     class="diet-dropdown-upload__value-field"
-    value="{{value}}"
+    value='{{value}}'
     {{#if path}}data-path="{{path}}"{{/if}}
-    data-placeholder="{{placeholder}}"
-    data-accept="{{accept}}"
-    data-max-image-kb="{{maxImageKb}}"
-    data-max-video-kb="{{maxVideoKb}}"
-    data-max-other-kb="{{maxOtherKb}}"
-  />
-  <input
-    type="hidden"
-    class="diet-dropdown-upload__meta-field"
-    value=""
-    {{#if metaPath}}data-bob-path="{{metaPath}}"{{/if}}
     data-dieter-json
   />
 
@@ -23,74 +19,87 @@
     type="button"
     class="diet-dropdown-header diet-dropdown-upload__control"
     aria-haspopup="dialog"
-    aria-expanded="false"
+    aria-expanded="{{expanded}}"
     aria-labelledby="{{id}}-label"
   >
-    <span class="diet-dropdown-header-label {{labelClass}}" id="{{id}}-label">
-      {{#if label}}{{label}}{{else}}{{placeholder}}{{/if}}
-    </span>
-    <span class="diet-dropdown-header-value {{bodyClass}}" data-muted="true" data-placeholder="{{placeholder}}">
-      <span class="diet-dropdown-upload__label">{{placeholder}}</span>
+    <span class="diet-dropdown-header-label {{labelClass}}" id="{{id}}-label">{{label}}</span>
+    <span class="diet-dropdown-header-value {{bodyClass}}" data-muted="true">
+      <span class="diet-dropdown-upload__label" data-placeholder="{{placeholder}}">{{placeholder}}</span>
     </span>
   </button>
 
-  <div class="diet-popover diet-dropdown-upload__popover" role="dialog" aria-label="{{popoverLabel}}" data-state="closed">
+  <div
+    class="diet-popover diet-dropdown-upload__popover"
+    data-width="row"
+    role="dialog"
+    aria-labelledby="{{id}}-popover-label"
+    data-state="{{state}}"
+  >
     <div class="diet-popover__header">
-      <span class="diet-popover__header-label {{#if headerLabelClass}}{{headerLabelClass}}{{else}}label-s{{/if}}">
-        {{#if headerLabel}}{{headerLabel}}{{else}}{{label}}{{/if}}
-      </span>
+      <span class="diet-popover__header-label" id="{{id}}-popover-label">{{label}}</span>
     </div>
 
     <div class="diet-popover__body">
-      <div class="diet-dropdown-upload__panel body-xs" data-has-file="false" data-kind="empty">
-        <div class="diet-dropdown-upload__preview">
-          <div class="diet-dropdown-upload__preview-frame" aria-hidden="true">
-            <img class="diet-dropdown-upload__preview-img" data-role="img" alt="" />
-            <div class="diet-dropdown-upload__preview-video" data-role="video">
-              <video
-                class="diet-dropdown-upload__preview-video-el"
-                data-role="videoEl"
-                muted
-                playsinline
-                preload="metadata"
-              ></video>
-              <div class="diet-dropdown-upload__preview-video-badge label-s">Video</div>
-            </div>
-            <div class="diet-dropdown-upload__preview-doc" data-role="doc">
-              <span class="diet-icon diet-dropdown-upload__preview-doc-icon" data-icon="document" aria-hidden="true"></span>
-              <div class="diet-dropdown-upload__preview-doc-ext label-s" data-role="ext"></div>
-            </div>
-            <div class="diet-dropdown-upload__preview-empty" data-role="empty">
-              <span class="diet-dropdown-upload__preview-empty-icon" data-icon="photo" aria-hidden="true"></span>
-            </div>
+      <div class="diet-dropdown-upload__panel" data-has-file="false" data-kind="empty">
+        <div class="diet-dropdown-upload__preview-frame">
+          <img class="diet-dropdown-upload__preview-img" alt="" />
+          <video
+            class="diet-dropdown-upload__preview-video"
+            muted
+            playsinline
+            preload="metadata"
+          ></video>
+          <div class="diet-dropdown-upload__preview-doc" aria-hidden="true">
+            <span class="diet-icon" data-icon="document"></span>
+            <span class="diet-dropdown-upload__preview-ext"></span>
           </div>
-          <div class="diet-dropdown-upload__preview-meta">
-            <div class="diet-dropdown-upload__preview-name label-s" data-role="name" role="status"></div>
-            <div class="diet-dropdown-upload__preview-error label-xs" data-role="error" role="alert"></div>
-          </div>
+          <span
+            class="diet-icon diet-dropdown-upload__preview-empty"
+            data-icon="photo"
+            aria-hidden="true"
+          ></span>
         </div>
+
+        <div class="diet-dropdown-upload__selected" hidden>
+          <span class="diet-dropdown-upload__preview-name" role="status"></span>
+        </div>
+        <div class="diet-dropdown-upload__preview-error" role="alert" hidden></div>
 
         <div class="diet-dropdown-upload__actions">
-          <button type="button" class="diet-button diet-dropdown-upload__upload-btn" data-size="large" data-type="tertiary">
-            <span class="diet-button__label">Upload</span>
+          <button
+            type="button"
+            class="diet-button diet-dropdown-upload__upload-btn"
+            data-size="{{buttonSize}}"
+            data-type="tertiary"
+          >
+            <span class="diet-button__label">{{uploadLabel}}</span>
           </button>
-          <div class="diet-dropdown-upload__file-controls">
-            <button type="button" class="diet-button diet-dropdown-upload__replace-btn" data-size="large" data-type="tertiary">
-              <span class="diet-button__label">Upload new file</span>
+          <div class="diet-dropdown-upload__file-actions" hidden>
+            <button
+              type="button"
+              class="diet-button diet-dropdown-upload__replace-btn"
+              data-size="{{buttonSize}}"
+              data-type="tertiary"
+            >
+              <span class="diet-button__label">{{replaceLabel}}</span>
             </button>
-            <button type="button" class="diet-button diet-dropdown-upload__remove-btn" data-size="large" data-type="quaternary">
-              <span class="diet-button__label">Remove</span>
+            <button
+              type="button"
+              class="diet-button diet-dropdown-upload__remove-btn"
+              data-size="{{buttonSize}}"
+              data-type="quaternary"
+            >
+              <span class="diet-button__label">{{removeLabel}}</span>
             </button>
           </div>
         </div>
 
-        <input type="file" class="diet-dropdown-upload__file-input" accept="{{accept}}" aria-hidden="true" tabindex="-1" />
-
-        {{#if template}}
-          <div class="diet-dropdown-upload__extras">
-            {{template}}
-          </div>
-        {{/if}}
+        <input
+          type="file"
+          class="diet-dropdown-upload__file-input"
+          {{#if accept}}accept="{{accept}}"{{/if}}
+          hidden
+        />
       </div>
     </div>
   </div>
