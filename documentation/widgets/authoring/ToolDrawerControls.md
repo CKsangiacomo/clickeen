@@ -313,6 +313,16 @@ Dieter's existing Segmented primitive, while a single declared mode hides that
 selector without changing the field contract. `dropdown-upload`
 requires a `meta-path`; the compiler rejects missing upload metadata paths.
 
+`dropdown-shadow` binds the exact object
+`{enabled,inset,x,y,blur,spread,color,alpha}`. Every Widget declares the exact
+eleven-key component-label shape under
+`editor.labels.components["dropdown-shadow"]` and supplies generated Stage,
+Pod, and applicable card field labels under
+`editor.labels.fields["dropdown-shadow"]`. The adjacent English file owns all
+of those words. Use `axis: "x"|"y"|"both"` only to hide irrelevant offset
+rows; it does not change the stored object. Shadow owns no fallback value,
+label, validation state, or Widget-specific behavior.
+
 State-bound fields use `path`. Visual grouping uses `groupId`; it is not a data
 path. Template children are allowed only inside controls that already own that
 template behavior.

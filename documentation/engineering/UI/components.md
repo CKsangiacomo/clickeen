@@ -31,7 +31,7 @@ Legend: ✅ exported from `index.ts` · Direct host import · ⊘ no custom hydr
 | dropdowns | `dropdown-fill` | `hydrateDropdownFill` / `destroyDropdownFill`, exact fill JSON | ✅ |
 | dropdowns | `dropdown-actions` | `hydrateDropdownActions` / `destroyDropdownActions`, `string` | ✅ |
 | dropdowns | `dropdown-border` | `hydrateDropdownBorder` / `destroyDropdownBorder`, exact border JSON | ✅ |
-| dropdowns | `dropdown-shadow` | `hydrateDropdownShadow`, `string` | ✅ |
+| dropdowns | `dropdown-shadow` | `hydrateDropdownShadow` / `destroyDropdownShadow`, exact shadow JSON | ✅ |
 | dropdowns | `dropdown-upload` | `hydrateDropdownUpload`, `meta-path` | ✅ |
 | dropdowns | `dropdown-edit` | `hydrateDropdownEdit` / `destroyDropdownEdit`, `no-binding` | ✅ |
 | dropdowns | `menuactions` | `hydrateMenuactions`, `string` | ✅ |
@@ -78,7 +78,7 @@ The governing component product law is:
 - Dieter JSON controls expose the consumer-neutral `data-dieter-json` marker,
   and generic multi-path component edits emit `dieter-ops`. Host-owned paths
   remain separate from that component protocol.
-- Hosts destroy hydrated Dropdown Actions, Border, Edit, and Fill roots before
+- Hosts destroy hydrated Dropdown Actions, Border, Edit, Fill, and Shadow roots before
   their rendered DOM is replaced. Dropdown Edit destruction detaches its
   Lexical root; Dropdown Fill cancels pending media resolution and releases
   its dropdown state through that same component lifecycle.
@@ -212,6 +212,20 @@ The governing component product law is:
   words are caller inputs from the Widget-adjacent ToolDrawer label file.
   There is no inferred media capability, component copy catalog, fallback
   fill, repaired value, or compatibility value shape.
+- Dropdown Shadow edits one exact object:
+  `{enabled:boolean,inset:boolean,x:number,y:number,blur:number,spread:number,color:string,alpha:number}`.
+  Its closed row shows exact opacity followed by the base-color chip while
+  enabled, including `0%`; disabled shows only `square.slash`. The attached
+  `wide` Popover repeats the caller label, places Enabled first, then reveals a
+  live non-clickable shadow preview, exact Horizontal/Vertical/Blur/Spread/
+  Opacity sliders with trailing `px`/`%` values, and the compact color editor.
+  `axis="x|y|both"` hides only the irrelevant offset row and never rewrites the
+  hidden coordinate. Disabling hides dependent controls and preserves every
+  exact property. Each interaction changes only its owned property; `inset`
+  and unrelated values remain untouched. All visible and accessible words are
+  supplied through the Widget-adjacent ToolDrawer label contract. The
+  component has no default shadow, invalid mode, repair, fallback, native
+  color-picker shortcut, Widget branch, or consumer-specific behavior.
 - Menu Actions remains a separate menu-row primitive with its existing
   `sm|md|lg` API. Low-level geometry tokens remain internal source mechanics.
 - `textrename` is deleted because it had no product consumer.

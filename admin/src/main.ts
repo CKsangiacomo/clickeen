@@ -24,6 +24,7 @@ import {
   destroyDropdownBorder,
   destroyDropdownEdit,
   destroyDropdownFill,
+  destroyDropdownShadow,
   hydrateBulkEdit,
   hydrateChoiceTiles,
   hydrateDropdownActions,
@@ -360,6 +361,7 @@ function destroyDieterComponents(scope: Element): void {
   scope.querySelectorAll<HTMLElement>('.diet-dropdown-border').forEach(destroyDropdownBorder);
   scope.querySelectorAll<HTMLElement>('.diet-dropdown-edit').forEach(destroyDropdownEdit);
   scope.querySelectorAll<HTMLElement>('.diet-dropdown-fill').forEach(destroyDropdownFill);
+  scope.querySelectorAll<HTMLElement>('.diet-dropdown-shadow').forEach(destroyDropdownShadow);
 }
 
 function executeScripts(scope: DocumentFragment | Element) {

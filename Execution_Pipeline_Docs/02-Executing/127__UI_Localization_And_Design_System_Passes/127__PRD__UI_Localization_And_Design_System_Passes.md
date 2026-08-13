@@ -158,7 +158,7 @@ the code is convenient there.
 | Stage | Status | Release state |
 | --- | --- | --- |
 | Stage 1 — Scaffold only | Complete | Committed, pushed, and deployed; no non-English experience is exposed |
-| Stage 2 — Dieter UI pass | In progress: Foundations, Agent Activity, Bulk Edit, Button, Choice Tiles, Dropdown Actions, Popover, Dropdown Border, Dropdown Edit, and Dropdown Fill complete and re-audited as consumer-agnostic primitives; the shared row/Popover presentation is also applied to Shadow and Upload | Dropdown Shadow and Dropdown Upload are the next behavior passes |
+| Stage 2 — Dieter UI pass | In progress: Foundations, Agent Activity, Bulk Edit, Button, Choice Tiles, Dropdown Actions, Popover, Dropdown Border, Dropdown Edit, Dropdown Fill, and Dropdown Shadow complete and re-audited as consumer-agnostic primitives; the shared row/Popover presentation is also applied to Upload | Dropdown Upload is the next behavior pass |
 | Stage 3 — Bob UI pass | Not started | No authority to begin until explicitly directed |
 | Stage 4 — Roma UI pass | Not started | No authority to begin until explicitly directed |
 | Stage 5 — Translation pass | Not started | No translations may be generated yet |
@@ -917,3 +917,35 @@ authorizes it.
   No new state shape, fallback, validator, repair path, Widget
   branch, locale key, asset behavior, route, storage, or Cloudflare machinery
   was added.
+
+- **Dropdown Shadow — passed locally, 2026-08-12.** Dropdown Shadow now edits
+  the existing exact `{enabled,inset,x,y,blur,spread,color,alpha}` object
+  directly through the established property-row and attached `wide` Popover.
+  The closed row shows exact opacity before its base-color chip whenever the
+  shadow is enabled, including `0%`, and only `square.slash` when disabled.
+  The Popover repeats the caller label, places Enabled first, then reveals a
+  live non-clickable shadow preview, axis-appropriate Horizontal/Vertical
+  controls, Blur, Spread, Opacity, and the compact Hue/Hex/two-row color editor.
+  Every numeric row has one complete leading label, one flexible Slider track,
+  and one fixed trailing `px`/`%` value.
+
+  The fake default shadow, missing-`inset` substitution, incoming clamps,
+  component-local invalid mode, native color-picker shortcut, and unrelated
+  color rewrite are deleted. Each interaction mutates only its exact property;
+  disabling and axis presentation preserve all other values. All eight Widget
+  specs now declare the same exact eleven-key Shadow component-label contract
+  plus exact generated Stage/Pod/card field labels, with English copy owned by
+  each adjacent ToolDrawer label file. Bob's hardcoded `Shadow` fallback and
+  generated Stage/Pod copy are gone. Shadow now exports the established destroy
+  function and joins Bob/Roma/DevStudio host teardown without a new lifecycle
+  system. DevStudio reveals real enabled, disabled, inset, x-only, and y-only
+  values. No Widget behavior, defaults, save route, storage, API, translation
+  generation, validator, compatibility path, product data, or Cloudflare
+  machinery changed.
+
+  Focused verification passed: Dieter typecheck/governance, DevStudio
+  typecheck/build and browser hydration/lifecycle, Bob typecheck and full
+  compiler suite, Roma typecheck/defaults/command/package/save checks, Widget
+  source generation, and all eight English editor artifact pairs. The
+  independent post-implementation audit found no remaining defect and passed
+  V1–V8.

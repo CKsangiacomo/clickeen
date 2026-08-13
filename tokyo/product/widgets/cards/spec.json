@@ -231,6 +231,19 @@
           "underline": "$label:component.dropdown-edit.underline.label",
           "url": "$label:component.dropdown-edit.url.label"
         },
+        "dropdown-shadow": {
+          "blur": "$label:component.dropdown-shadow.blur.label",
+          "color": "$label:component.dropdown-shadow.color.label",
+          "defaultColors": "$label:component.dropdown-shadow.default-colors.label",
+          "enabled": "$label:component.dropdown-shadow.enabled.label",
+          "hex": "$label:component.dropdown-shadow.hex.label",
+          "horizontal": "$label:component.dropdown-shadow.horizontal.label",
+          "hue": "$label:component.dropdown-shadow.hue.label",
+          "opacity": "$label:component.dropdown-shadow.opacity.label",
+          "preview": "$label:component.dropdown-shadow.preview.label",
+          "spread": "$label:component.dropdown-shadow.spread.label",
+          "vertical": "$label:component.dropdown-shadow.vertical.label"
+        },
         "dropdown-fill": {
           "addGradientStop": "$label:component.dropdown-fill.add-gradient-stop.label",
           "angle": "$label:component.dropdown-fill.angle.label",
@@ -259,6 +272,21 @@
         }
       },
       "fields": {
+        "dropdown-shadow": {
+          "cards.appearance.cardwrapper.shadow": "$label:appearance.cards.cardwrapper.shadow.dropdown-shadow.label",
+          "pod.insideShadow.all": "$label:appearance.pod.inside-shadow.all.dropdown-shadow.label",
+          "pod.insideShadow.bottom": "$label:appearance.pod.inside-shadow.bottom.dropdown-shadow.label",
+          "pod.insideShadow.left": "$label:appearance.pod.inside-shadow.left.dropdown-shadow.label",
+          "pod.insideShadow.right": "$label:appearance.pod.inside-shadow.right.dropdown-shadow.label",
+          "pod.insideShadow.top": "$label:appearance.pod.inside-shadow.top.dropdown-shadow.label",
+          "pod.shadow": "$label:appearance.pod.shadow.dropdown-shadow.label",
+          "stage.insideShadow.all": "$label:appearance.stage.inside-shadow.all.dropdown-shadow.label",
+          "stage.insideShadow.bottom": "$label:appearance.stage.inside-shadow.bottom.dropdown-shadow.label",
+          "stage.insideShadow.left": "$label:appearance.stage.inside-shadow.left.dropdown-shadow.label",
+          "stage.insideShadow.right": "$label:appearance.stage.inside-shadow.right.dropdown-shadow.label",
+          "stage.insideShadow.top": "$label:appearance.stage.inside-shadow.top.dropdown-shadow.label",
+          "stage.shadow": "$label:appearance.stage.shadow.dropdown-shadow.label"
+        },
         "dropdown-fill": {
           "appearance.headerCta.background": "$label:appearance.header-cta.background.dropdown-fill.label",
           "appearance.headerCta.textColor": "$label:appearance.header-cta.text-color.dropdown-fill.label",

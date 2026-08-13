@@ -3,7 +3,7 @@ export { hydrateTextedit } from './textedit/textedit';
 export { destroyDropdownActions, hydrateDropdownActions } from './dropdown-actions/dropdown-actions';
 export { destroyDropdownFill, hydrateDropdownFill } from './dropdown-fill/dropdown-fill';
 export { destroyDropdownBorder, hydrateDropdownBorder } from './dropdown-border/dropdown-border';
-export { hydrateDropdownShadow } from './dropdown-shadow/dropdown-shadow';
+export { destroyDropdownShadow, hydrateDropdownShadow } from './dropdown-shadow/dropdown-shadow';
 export { hydrateDropdownUpload } from './dropdown-upload/dropdown-upload';
 export { destroyDropdownEdit, hydrateDropdownEdit } from './dropdown-edit/dropdown-edit';
 export { hydrateTextfield } from './textfield/textfield';

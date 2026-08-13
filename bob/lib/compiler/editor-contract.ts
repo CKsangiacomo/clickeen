@@ -127,6 +127,25 @@ type DropdownFillEditorLabels = {
   fields: Record<string, string>;
 };
 
+const DROPDOWN_SHADOW_COMPONENT_LABEL_ATTRIBUTES = [
+  ['blur', 'blur-label'],
+  ['color', 'color-label'],
+  ['defaultColors', 'default-colors-label'],
+  ['enabled', 'enabled-label'],
+  ['hex', 'hex-label'],
+  ['horizontal', 'horizontal-label'],
+  ['hue', 'hue-label'],
+  ['opacity', 'opacity-label'],
+  ['preview', 'preview-label'],
+  ['spread', 'spread-label'],
+  ['vertical', 'vertical-label'],
+] as const;
+
+type DropdownShadowEditorLabels = {
+  component: Record<(typeof DROPDOWN_SHADOW_COMPONENT_LABEL_ATTRIBUTES)[number][0], string>;
+  fields: Record<string, string>;
+};
+
 const DROPDOWN_EDIT_COMPONENT_LABEL_ATTRIBUTES = [
   ['addLink', 'add-link-label'],
   ['bold', 'bold-label'],
@@ -573,13 +592,89 @@ export function buildEditorHtmlLines(
     dropdownEditLabels = readDropdownEditEditorLabels(editor.labels, widgetname);
   }
   return applyDropdownEditEditorLabels(
-    applyDropdownFillEditorLabels(
-      applyDropdownBorderEditorLabels(lines, editor.labels, widgetname),
+    applyDropdownShadowEditorLabels(
+      applyDropdownFillEditorLabels(
+        applyDropdownBorderEditorLabels(lines, editor.labels, widgetname),
+        editor.labels,
+        widgetname,
+      ),
       editor.labels,
       widgetname,
     ),
     dropdownEditLabels,
   );
+}
+
+function readDropdownShadowEditorLabels(
+  labelsRaw: unknown,
+  widgetname: string,
+): DropdownShadowEditorLabels {
+  if (!isPlainObject(labelsRaw) || !isPlainObject(labelsRaw.components) || !isPlainObject(labelsRaw.fields)) {
+    throw new Error(`[BobCompiler] ${widgetname} Dropdown Shadow labels are missing`);
+  }
+  const component = labelsRaw.components['dropdown-shadow'];
+  const fields = labelsRaw.fields['dropdown-shadow'];
+  const expectedKeys = DROPDOWN_SHADOW_COMPONENT_LABEL_ATTRIBUTES.map(([key]) => key).sort();
+  if (
+    !isPlainObject(component) ||
+    Object.keys(component).sort().join('\0') !== expectedKeys.join('\0') ||
+    !isPlainObject(fields)
+  ) {
+    throw new Error(`[BobCompiler] ${widgetname} Dropdown Shadow labels are invalid`);
+  }
+  const readLabel = (value: unknown, path: string): string => {
+    if (typeof value !== 'string' || !value.trim() || value !== value.trim()) {
+      throw new Error(`[BobCompiler] ${widgetname} Dropdown Shadow label is invalid: ${path}`);
+    }
+    return value;
+  };
+  const resolvedComponent = {} as DropdownShadowEditorLabels['component'];
+  for (const [key] of DROPDOWN_SHADOW_COMPONENT_LABEL_ATTRIBUTES) {
+    resolvedComponent[key] = readLabel(component[key], `components.dropdown-shadow.${key}`);
+  }
+  const resolvedFields: Record<string, string> = {};
+  for (const [path, value] of Object.entries(fields)) {
+    if (!path.trim() || path !== path.trim()) {
+      throw new Error(`[BobCompiler] ${widgetname} Dropdown Shadow field path is invalid`);
+    }
+    resolvedFields[path] = readLabel(value, `fields.dropdown-shadow.${path}`);
+  }
+  return { component: resolvedComponent, fields: resolvedFields };
+}
+
+function applyDropdownShadowEditorLabels(
+  lines: string[],
+  labelsRaw: unknown,
+  widgetname: string,
+): string[] {
+  if (!lines.some((line) => /\btype='dropdown-shadow'/.test(line))) return lines;
+  const labels = readDropdownShadowEditorLabels(labelsRaw, widgetname);
+  const usedFieldPaths = new Set<string>();
+  const rendered = lines.map((line) => {
+    if (!/\btype='dropdown-shadow'/.test(line)) return line;
+    const path = line.match(/\bpath='([^']+)'/)?.[1] ?? '';
+    const authoredLabel = line.match(/(?:^|\s)label='([^']*)'/)?.[1] ?? '';
+    let next = line;
+    if (!authoredLabel) {
+      const fieldLabel = labels.fields[path];
+      if (!fieldLabel) {
+        throw new Error(`[BobCompiler] ${widgetname} Dropdown Shadow field label is missing: ${path}`);
+      }
+      usedFieldPaths.add(path);
+      next = next.replace(/(^|\s)label=''/, `$1label='${encodeHtmlEntities(fieldLabel)}'`);
+    }
+    const componentAttrs = DROPDOWN_SHADOW_COMPONENT_LABEL_ATTRIBUTES
+      .map(([key, attribute]) => `${attribute}='${encodeHtmlEntities(labels.component[key])}'`)
+      .join(' ');
+    return next.replace(/\s*\/>$/, ` ${componentAttrs} />`);
+  });
+  const unusedPaths = Object.keys(labels.fields).filter((path) => !usedFieldPaths.has(path));
+  if (unusedPaths.length > 0) {
+    throw new Error(
+      `[BobCompiler] ${widgetname} Dropdown Shadow field labels are unused: ${unusedPaths.join(', ')}`,
+    );
+  }
+  return rendered;
 }
 
 function readDropdownFillEditorLabels(

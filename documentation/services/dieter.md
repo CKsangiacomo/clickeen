@@ -106,7 +106,7 @@ giving Dieter ownership of the host's product meaning.
 
 JSON-valued controls use `data-dieter-json`; Bulk Edit emits `dieter-ops` with
 its existing exact `{ops}` payload. Neither name belongs to Bob or Roma. Hosts
-must call the exported Dropdown Actions, Border, Edit, and Fill destroy
+must call the exported Dropdown Actions, Border, Edit, Fill, and Shadow destroy
 functions before replacing hydrated roots. Dropdown Edit destruction detaches
 the locally bundled Lexical editor from its DOM root; Dropdown Fill cancels
 pending media resolution and releases its retained dropdown state.
@@ -136,6 +136,18 @@ All visible wording remains caller input. Its selected checkmark inherits the
 Menu Actions `sm|md|lg` Icon size instead of carrying a fixed size. Bob owns
 the separate typography-family capability filter; the Dieter component does
 not inspect typography paths, weights, or styles.
+
+Dropdown Shadow owns one exact shadow object:
+`{enabled,inset,x,y,blur,spread,color,alpha}`. It uses the same property-row,
+caller-label Popover, root size, radius, and `wide` work-area rules as the
+other structured dropdowns while retaining its own job. Enabled is first and
+hides dependent controls without rewriting them. The enabled body contains a
+live preview, axis-appropriate offset rows, Blur, Spread, Opacity, and the
+compact color editor; numeric rows expose exact trailing units. The closed row
+shows opacity before the base-color chip, or only `square.slash` when disabled.
+The component consumes exact host-projected JSON, mutates only the interacted
+property, preserves `inset` and hidden coordinates, owns no fallback/default/
+diagnostic state, and receives every human-language string from its caller.
 
 Dropdown Actions, Dropdown Border, Dropdown Edit, Dropdown Fill, Dropdown
 Shadow, and Dropdown Upload use the shared clickable property-menu row rule.

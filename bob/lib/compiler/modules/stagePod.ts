@@ -124,23 +124,23 @@ function buildInsideShadowFields(args: {
   );
   push(
     `${owner}.insideShadow.all`,
-    `    <tooldrawer-field-podstageappearance group-label='' type='dropdown-shadow' size='md' path='${owner}.insideShadow.all' label='${label} inside shadow' show-if=\"${owner}.insideShadow.linked == true\" value='{{${owner}.insideShadow.all}}' />`,
+    `    <tooldrawer-field-podstageappearance group-label='' type='dropdown-shadow' size='md' path='${owner}.insideShadow.all' label='' show-if=\"${owner}.insideShadow.linked == true\" value='{{${owner}.insideShadow.all}}' />`,
   );
   push(
     `${owner}.insideShadow.top`,
-    `    <tooldrawer-field-podstageappearance group-label='' type='dropdown-shadow' size='md' axis='y' path='${owner}.insideShadow.top' label='${label} inside shadow (top)' show-if=\"${owner}.insideShadow.linked == false\" value='{{${owner}.insideShadow.top}}' />`,
+    `    <tooldrawer-field-podstageappearance group-label='' type='dropdown-shadow' size='md' axis='y' path='${owner}.insideShadow.top' label='' show-if=\"${owner}.insideShadow.linked == false\" value='{{${owner}.insideShadow.top}}' />`,
   );
   push(
     `${owner}.insideShadow.right`,
-    `    <tooldrawer-field-podstageappearance group-label='' type='dropdown-shadow' size='md' axis='x' path='${owner}.insideShadow.right' label='${label} inside shadow (right)' show-if=\"${owner}.insideShadow.linked == false\" value='{{${owner}.insideShadow.right}}' />`,
+    `    <tooldrawer-field-podstageappearance group-label='' type='dropdown-shadow' size='md' axis='x' path='${owner}.insideShadow.right' label='' show-if=\"${owner}.insideShadow.linked == false\" value='{{${owner}.insideShadow.right}}' />`,
   );
   push(
     `${owner}.insideShadow.bottom`,
-    `    <tooldrawer-field-podstageappearance group-label='' type='dropdown-shadow' size='md' axis='y' path='${owner}.insideShadow.bottom' label='${label} inside shadow (bottom)' show-if=\"${owner}.insideShadow.linked == false\" value='{{${owner}.insideShadow.bottom}}' />`,
+    `    <tooldrawer-field-podstageappearance group-label='' type='dropdown-shadow' size='md' axis='y' path='${owner}.insideShadow.bottom' label='' show-if=\"${owner}.insideShadow.linked == false\" value='{{${owner}.insideShadow.bottom}}' />`,
   );
   push(
     `${owner}.insideShadow.left`,
-    `    <tooldrawer-field-podstageappearance group-label='' type='dropdown-shadow' size='md' axis='x' path='${owner}.insideShadow.left' label='${label} inside shadow (left)' show-if=\"${owner}.insideShadow.linked == false\" value='{{${owner}.insideShadow.left}}' />`,
+    `    <tooldrawer-field-podstageappearance group-label='' type='dropdown-shadow' size='md' axis='x' path='${owner}.insideShadow.left' label='' show-if=\"${owner}.insideShadow.linked == false\" value='{{${owner}.insideShadow.left}}' />`,
   );
   return fields;
 }
@@ -231,7 +231,7 @@ export function buildCoreCardWrapperAppearancePanelFields(args: {
   );
   push(
     `${basePath}.shadow`,
-    `    <tooldrawer-field-podstageappearance group-label='' type='dropdown-shadow' size='md' path='${basePath}.shadow' label='${label} outside shadow' value='{{${basePath}.shadow}}' />`,
+    `    <tooldrawer-field-podstageappearance group-label='' type='dropdown-shadow' size='md' path='${basePath}.shadow' label='' value='{{${basePath}.shadow}}' />`,
   );
   if (args.includeInsideShadow) {
     fields.push(
@@ -259,13 +259,13 @@ export function buildStagePodAppearancePanelFields(
   return [
     "  <tooldrawer-cluster label='Stage appearance'>",
     "    <tooldrawer-field-podstageappearance group-label='' type='dropdown-fill' size='md' fill-modes='color,gradient,image,video' path='stage.background' label='' value='{{stage.background}}' />",
-    "    <tooldrawer-field-podstageappearance group-label='' type='dropdown-shadow' size='md' path='stage.shadow' label='Stage outside shadow' value='{{stage.shadow}}' />",
+    "    <tooldrawer-field-podstageappearance group-label='' type='dropdown-shadow' size='md' path='stage.shadow' label='' value='{{stage.shadow}}' />",
     ...buildInsideShadowFields({ owner: 'stage', label: 'Stage' }),
     '  </tooldrawer-cluster>',
     "  <tooldrawer-cluster label='Pod appearance'>",
     "    <tooldrawer-field-podstageappearance group-label='' type='dropdown-fill' size='md' fill-modes='color,gradient,image,video' path='pod.background' label='' value='{{pod.background}}' />",
     ...podBorderFields,
-    "    <tooldrawer-field-podstageappearance group-label='' type='dropdown-shadow' size='md' path='pod.shadow' label='Pod outside shadow' value='{{pod.shadow}}' />",
+    "    <tooldrawer-field-podstageappearance group-label='' type='dropdown-shadow' size='md' path='pod.shadow' label='' value='{{pod.shadow}}' />",
     ...buildInsideShadowFields({ owner: 'pod', label: 'Pod' }),
     ...buildStagePodCornerAppearanceFields(),
     '  </tooldrawer-cluster>',

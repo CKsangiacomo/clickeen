@@ -202,6 +202,41 @@ function assertDropdownEditLabels(args: {
   });
 }
 
+function assertDropdownShadowLabels(args: {
+  widgetType: string;
+  html: string;
+  labels: Record<string, string>;
+}): void {
+  const expectedCounts: Record<string, number> = {
+    'big-bang': 12,
+    calltoaction: 12,
+    cards: 13,
+    countdown: 13,
+    faq: 18,
+    logoshowcase: 13,
+    'split-carousel-media': 13,
+    'split-media': 13,
+  };
+  const roots = args.html.split('class="diet-dropdown-shadow diet-popover-host"').slice(1);
+  assert.equal(roots.length, expectedCounts[args.widgetType], `${args.widgetType} Shadow count`);
+  const componentKeys = [
+    'blur', 'color', 'default-colors', 'enabled', 'hex', 'horizontal',
+    'hue', 'opacity', 'preview', 'spread', 'vertical',
+  ];
+  roots.forEach((root, index) => {
+    assert.match(root, /class="diet-dropdown-header-label"[^>]*>[^<]+<\/span>/, `${args.widgetType} Shadow ${index} has its caller label`);
+    componentKeys.forEach((key) => {
+      const labelKey = `component.dropdown-shadow.${key}.label`;
+      assert.ok(
+        root.includes(encodeHtmlEntities(args.labels[labelKey])),
+        `${args.widgetType} Shadow ${index} resolves ${key}`,
+      );
+    });
+    assert.ok(root.includes('data-dieter-json'), `${args.widgetType} Shadow ${index} binds exact JSON`);
+    assert.doesNotMatch(root, /\$label:/, `${args.widgetType} Shadow ${index} has no unresolved copy`);
+  });
+}
+
 async function testEveryWidgetEditorContract(): Promise<void> {
   const widgets = discoverWidgetSpecs();
   assert.ok(widgets.length > 0, 'at least one widget spec is discovered');
@@ -264,6 +299,11 @@ async function testEveryWidgetEditorContract(): Promise<void> {
       `${widgetType} compiles its exact Agent Activity title`,
     );
     assertDropdownEditLabels({
+      widgetType,
+      html: compiled.panels.map((panel) => panel.html).join('\n'),
+      labels: (labels as { labels: Record<string, string> }).labels,
+    });
+    assertDropdownShadowLabels({
       widgetType,
       html: compiled.panels.map((panel) => panel.html).join('\n'),
       labels: (labels as { labels: Record<string, string> }).labels,

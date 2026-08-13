@@ -44,12 +44,17 @@ const COPY_ATTRIBUTE_NAMES = new Set([
   'no-assets-label',
   'opacity-label',
   'preview-asset-error-label',
+  'preview-label',
   'remove-asset-label',
   'remove-gradient-stop-label',
   'upload-asset-error-label',
   'upload-label',
   'use-asset-label',
   'video-fill-label',
+  'blur-label',
+  'horizontal-label',
+  'spread-label',
+  'vertical-label',
 ]);
 
 export type TooldrawerLabels = {

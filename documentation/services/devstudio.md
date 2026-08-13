@@ -125,7 +125,7 @@ caller-copy inputs without overlapping permanent Popovers, a DevStudio-only
 imitation, or an account-specific branch.
 These routes retain Dieter's consumer-neutral `data-dieter-json` marker in
 their generated examples. Before hash navigation replaces the reveal,
-DevStudio destroys hydrated Dropdown Actions, Border, Edit, and Fill roots
+DevStudio destroys hydrated Dropdown Actions, Border, Edit, Fill, and Shadow roots
 through the same exported component lifecycle used by product hosts.
 
 ## Pages Functions

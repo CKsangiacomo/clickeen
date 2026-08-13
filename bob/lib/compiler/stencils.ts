@@ -211,7 +211,6 @@ export async function buildContext(
   if (component === 'dropdown-fill' && !parseFillModes(fillModes)) {
     throw new Error(`[BobCompiler] dropdown-fill control "${pathAttr}" requires fill-modes`);
   }
-  if (component === 'dropdown-shadow' && !headerLabel) headerLabel = 'Shadow';
   const axis = attrs.axis || attrs['data-axis'] || (merged.axis as string) || '';
   const min = attrs.min || (merged.min as string) || '';
   const max = attrs.max || (merged.max as string) || '';
@@ -334,6 +333,11 @@ export async function buildContext(
       attrs.uploadAssetErrorLabel || attrs['upload-asset-error-label'] || '',
     previewAssetErrorLabel:
       attrs.previewAssetErrorLabel || attrs['preview-asset-error-label'] || '',
+    blurLabel: attrs.blurLabel || attrs['blur-label'] || '',
+    horizontalLabel: attrs.horizontalLabel || attrs['horizontal-label'] || '',
+    previewLabel: attrs.previewLabel || attrs['preview-label'] || '',
+    spreadLabel: attrs.spreadLabel || attrs['spread-label'] || '',
+    verticalLabel: attrs.verticalLabel || attrs['vertical-label'] || '',
   });
 
   // Segmented is special: the Dieter stencil expects `segments` (not `options`), and the radio group name

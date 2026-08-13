@@ -108,7 +108,8 @@ layering are owned by their own UI docs.
 - **Hydration.** Interactive components export source `hydrate*` functions.
   Bob imports the hydrators it uses and calls them explicitly. CSS/HTML-only
   components need no browser runtime. A dynamically removed Dropdown Actions
-  host calls `destroyDropdownActions` before its DOM is discarded so the shared
+  host calls the exported Dropdown Actions, Border, Edit, Fill, and Shadow
+  destroy functions before its DOM is discarded so the shared
   dropdown registry cannot retain detached controls.
 - **Consumption.** Bob and Roma compile `dieter/styles.css`; Prague compiles
   token source; widget materialization folds required Dieter CSS into instance

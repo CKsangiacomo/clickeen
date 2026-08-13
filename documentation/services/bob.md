@@ -379,8 +379,8 @@ declared support files
 `spec.json` carries defaults, editor structure, and ToolDrawer label tokens.
 `{widgetType}_tooldrawer_l10n_labels/en.json` carries the exact English values
 for those tokens, the five widget panel names, and migrated ToolDrawer copy
-such as Agent Activity's title and Dropdown Border, Dropdown Edit, and Dropdown
-Fill field/component labels.
+such as Agent Activity's title and Dropdown Border, Dropdown Edit, Dropdown Fill,
+and Dropdown Shadow field/component labels.
 The Widget spec declares the exact state path and label-token coordinates; Bob
 joins them with the one Dieter component without Widget-specific compiler
 branches. `editable-fields.json`
@@ -478,6 +478,15 @@ accepted as a compatibility value. The Dieter primitive owns Enabled and its
 existing Segmented mode selector. Bob receives only the exact fill input event;
 it does not own a parallel enabled field, remove-fill action, mode UI, or Fill
 layout rule.
+
+Dropdown Shadow is the shared Dieter exact-JSON shadow editor. The compiler
+joins its exact eleven component labels and every generated Stage/Pod/card
+field label from the Widget-adjacent English file into the one global stencil.
+Bob prebinds the exact browser-memory object before hydration and receives one
+whole-object edit at the declared path. Existing linked-inside-shadow expansion
+remains Bob-owned; Dieter emits no multi-path edit and does not inspect Widget
+paths. Bob's shared host destroys Shadow with the other retained dropdowns
+before panel replacement.
 
 For Dropdown Border, Edit, Fill, and Shadow, Bob's existing stencil compiler
 passes Dieter's `row|wide|extra-wide` Popover width through the generated
