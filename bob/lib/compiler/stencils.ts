@@ -132,7 +132,7 @@ export async function buildContext(
   const objectType = attrs.objectType || attrs['object-type'] || '';
   const value = pathAttr ? '' : attrs.value || '';
   const optionsRaw = attrs.options || '';
-  let headerLabel = attrs.headerLabel || '';
+  const headerLabel = attrs.headerLabel || '';
   const reorderLabel =
     attrs.reorderLabel ||
     attrs['reorder-label'] ||
