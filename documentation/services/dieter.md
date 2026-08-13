@@ -106,11 +106,12 @@ giving Dieter ownership of the host's product meaning.
 
 JSON-valued controls use `data-dieter-json`; Bulk Edit emits `dieter-ops` with
 its existing exact `{ops}` payload. Neither name belongs to Bob or Roma. Hosts
-must call the exported Dropdown Actions, Border, Edit, Fill, Shadow, and Upload destroy
-functions before replacing hydrated roots. Dropdown Edit destruction detaches
-the locally bundled Lexical editor from its DOM root; Dropdown Fill cancels
-pending media resolution, and Dropdown Upload cancels pending asset resolution
-and releases its retained dropdown state.
+must call the exported Dropdown Actions, Border, Edit, Fill, Shadow, Upload,
+Object Manager, and Repeater destroy functions before replacing hydrated
+roots. Dropdown Edit destruction detaches the locally bundled Lexical editor
+from its DOM root; Dropdown Fill and Dropdown Upload cancel pending asset work;
+Object Manager and Repeater destroy hydrated children and release their
+retained collection state and listeners.
 
 Agent Activity owns a required caller-supplied title, a required array of
 narration rows, its `sm`/`md` structure, and its active presentation. It does
@@ -134,6 +135,18 @@ owning `1rem/1.25rem/1.5rem` height, `.6875rem/.8125rem/.875rem` text, and
 disabled presentation do not change geometry. There is one visual treatment;
 AI meaning, selection meaning, product commands, and caller copy do not become
 Dieter variants or locale entries.
+
+Object Manager and Repeater share the collection mental model without merging
+their jobs. Object Manager renders caller-declared top-level object editors and
+only exposes Add/reorder/delete when its exact `allow-structure` input is true;
+reorder/delete are drafted in the existing Popup and committed as one exact
+array value. Repeater edits a nested collection inline, using the caller's
+exact item template and exact `default-item`, with one explicit reorder mode.
+Both require exact arrays of objects with stable ids, preserve caller-owned
+state, use one root `sm|md|lg` size, and release their child hydrators on
+destruction. They never derive item shapes, defaults, permissions, Widget
+paths, or copy. Every visible and accessible word is an exact caller input;
+Widget uses resolve it from the adjacent ToolDrawer label file.
 
 Dropdown Actions owns the compact immediate-choice row and its attached
 Popover composition. The closed row shows caller-supplied label and current

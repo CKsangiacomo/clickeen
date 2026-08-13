@@ -11,17 +11,17 @@
         <span class="spec-line body-xs">diet-repeater</span><span class="spec-line body-xs">data-size='sm'</span>
       </figcaption>
       <div class="dieter-preview">
-        <div class="diet-repeater" data-size="sm" data-reorder="off" data-reorder-label="Reorder items" data-remove-label="" data-move-label="Move item {index}">
+        <div class="diet-repeater" data-size="sm" data-reorder="off" data-reorder-label="Reorder items" data-remove-label="Remove item {index}" data-move-label="Move item {index}" data-default-item="{&quot;id&quot;:&quot;&quot;,&quot;name&quot;:&quot;New item&quot;}">
   <div class="diet-repeater__header ">
     <div class="diet-repeater__header-main">
 
-        <span class="diet-repeater__label label-s">Items</span>
+        <span class="diet-repeater__label label-xs">Items</span>
 
 
       <div class="diet-repeater__actions">
-        <button class="diet-button diet-tooltip diet-repeater__reorder" type="button" data-size="large" data-type="quaternary" aria-label="Reorder items" data-tooltip="Reorder items" data-tooltip-placement="left" aria-pressed="false">
-          <span class="diet-icon diet-repeater__reorder-icon" data-icon="pointer.arrow.and.square.on.square.dashed" aria-hidden="true" data-size="20"></span>
-          <span class="diet-icon diet-repeater__reorder-icon--active" data-icon="checkmark" aria-hidden="true" data-size="20"></span>
+        <button class="diet-button diet-tooltip diet-repeater__reorder" type="button" data-size="small" data-type="quaternary" aria-label="Reorder items" data-tooltip="Reorder items" data-tooltip-placement="left" aria-pressed="false">
+          <span class="diet-icon diet-repeater__reorder-icon" data-icon="pointer.arrow.and.square.on.square.dashed" aria-hidden="true"></span>
+          <span class="diet-icon diet-repeater__reorder-icon--active" data-icon="checkmark" aria-hidden="true"></span>
         </button>
       </div>
     </div>
@@ -32,17 +32,17 @@
   <div class="diet-repeater__list" data-repeater-list></div>
 
   <div class="diet-repeater__icon-stash" aria-hidden="true" hidden>
-    <span class="diet-icon diet-repeater__icon-handle" data-size="12" data-icon="arrow.up.arrow.down"></span>
-    <span class="diet-icon diet-repeater__icon-trash" data-size="12" data-icon="trash"></span>
+    <span class="diet-icon diet-repeater__icon-handle" data-icon="arrow.up.arrow.down"></span>
+    <span class="diet-icon diet-repeater__icon-trash" data-icon="trash"></span>
   </div>
 
-  <button class="diet-button diet-repeater__add" type="button" data-size="medium" data-type="secondary">
+  <button class="diet-button diet-repeater__add" type="button" data-size="small" data-type="secondary">
     <span class="diet-button__label">Add item</span>
   </button>
 
-  <input type="hidden" class="diet-repeater__field" value="[]" data-dieter-json />
+  <input type="hidden" class="diet-repeater__field" value="[{&quot;id&quot;:&quot;item-1&quot;,&quot;name&quot;:&quot;First item&quot;},{&quot;id&quot;:&quot;item-2&quot;,&quot;name&quot;:&quot;Second item&quot;}]" data-path="items" data-dieter-json />
 
-  <template data-repeater-item><div class=\"diet-repeater__item-body\"><div class=\"diet-textfield\" data-size=\"md\"><label class=\"diet-textfield__control\"><span class=\"diet-textfield__display-label label-s\">Item</span><input class=\"diet-textfield__field body-s\" type=\"text\" data-path=\"items.__INDEX__\" placeholder=\"Item\" /></label></div></div></template>
+  <template data-repeater-item><div class="diet-textfield" data-size="md"><label class="diet-textfield__control"><span class="diet-textfield__display-label label-s">Name</span><input class="diet-textfield__field body-s" type="text" data-bob-path="items.__INDEX__.name" /></label></div></template>
 </div>
 
       </div>
@@ -53,7 +53,7 @@
         <span class="spec-line body-xs">diet-repeater</span><span class="spec-line body-xs">data-size='md'</span>
       </figcaption>
       <div class="dieter-preview">
-        <div class="diet-repeater" data-size="md" data-reorder="off" data-reorder-label="Reorder items" data-remove-label="" data-move-label="Move item {index}">
+        <div class="diet-repeater" data-size="md" data-reorder="off" data-reorder-label="Reorder items" data-remove-label="Remove item {index}" data-move-label="Move item {index}" data-default-item="{&quot;id&quot;:&quot;&quot;,&quot;name&quot;:&quot;New item&quot;}">
   <div class="diet-repeater__header ">
     <div class="diet-repeater__header-main">
 
@@ -61,9 +61,9 @@
 
 
       <div class="diet-repeater__actions">
-        <button class="diet-button diet-tooltip diet-repeater__reorder" type="button" data-size="large" data-type="quaternary" aria-label="Reorder items" data-tooltip="Reorder items" data-tooltip-placement="left" aria-pressed="false">
-          <span class="diet-icon diet-repeater__reorder-icon" data-icon="pointer.arrow.and.square.on.square.dashed" aria-hidden="true" data-size="20"></span>
-          <span class="diet-icon diet-repeater__reorder-icon--active" data-icon="checkmark" aria-hidden="true" data-size="20"></span>
+        <button class="diet-button diet-tooltip diet-repeater__reorder" type="button" data-size="medium" data-type="quaternary" aria-label="Reorder items" data-tooltip="Reorder items" data-tooltip-placement="left" aria-pressed="false">
+          <span class="diet-icon diet-repeater__reorder-icon" data-icon="pointer.arrow.and.square.on.square.dashed" aria-hidden="true"></span>
+          <span class="diet-icon diet-repeater__reorder-icon--active" data-icon="checkmark" aria-hidden="true"></span>
         </button>
       </div>
     </div>
@@ -74,17 +74,17 @@
   <div class="diet-repeater__list" data-repeater-list></div>
 
   <div class="diet-repeater__icon-stash" aria-hidden="true" hidden>
-    <span class="diet-icon diet-repeater__icon-handle" data-size="12" data-icon="arrow.up.arrow.down"></span>
-    <span class="diet-icon diet-repeater__icon-trash" data-size="12" data-icon="trash"></span>
+    <span class="diet-icon diet-repeater__icon-handle" data-icon="arrow.up.arrow.down"></span>
+    <span class="diet-icon diet-repeater__icon-trash" data-icon="trash"></span>
   </div>
 
   <button class="diet-button diet-repeater__add" type="button" data-size="medium" data-type="secondary">
     <span class="diet-button__label">Add item</span>
   </button>
 
-  <input type="hidden" class="diet-repeater__field" value="[]" data-dieter-json />
+  <input type="hidden" class="diet-repeater__field" value="[{&quot;id&quot;:&quot;item-1&quot;,&quot;name&quot;:&quot;First item&quot;},{&quot;id&quot;:&quot;item-2&quot;,&quot;name&quot;:&quot;Second item&quot;}]" data-path="items" data-dieter-json />
 
-  <template data-repeater-item><div class=\"diet-repeater__item-body\"><div class=\"diet-textfield\" data-size=\"md\"><label class=\"diet-textfield__control\"><span class=\"diet-textfield__display-label label-s\">Item</span><input class=\"diet-textfield__field body-s\" type=\"text\" data-path=\"items.__INDEX__\" placeholder=\"Item\" /></label></div></div></template>
+  <template data-repeater-item><div class="diet-textfield" data-size="md"><label class="diet-textfield__control"><span class="diet-textfield__display-label label-s">Name</span><input class="diet-textfield__field body-s" type="text" data-bob-path="items.__INDEX__.name" /></label></div></template>
 </div>
 
       </div>
@@ -95,17 +95,17 @@
         <span class="spec-line body-xs">diet-repeater</span><span class="spec-line body-xs">data-size='lg'</span>
       </figcaption>
       <div class="dieter-preview">
-        <div class="diet-repeater" data-size="lg" data-reorder="off" data-reorder-label="Reorder items" data-remove-label="" data-move-label="Move item {index}">
+        <div class="diet-repeater" data-size="lg" data-reorder="off" data-reorder-label="Reorder items" data-remove-label="Remove item {index}" data-move-label="Move item {index}" data-default-item="{&quot;id&quot;:&quot;&quot;,&quot;name&quot;:&quot;New item&quot;}">
   <div class="diet-repeater__header ">
     <div class="diet-repeater__header-main">
 
-        <span class="diet-repeater__label label-s">Items</span>
+        <span class="diet-repeater__label label-m">Items</span>
 
 
       <div class="diet-repeater__actions">
         <button class="diet-button diet-tooltip diet-repeater__reorder" type="button" data-size="large" data-type="quaternary" aria-label="Reorder items" data-tooltip="Reorder items" data-tooltip-placement="left" aria-pressed="false">
-          <span class="diet-icon diet-repeater__reorder-icon" data-icon="pointer.arrow.and.square.on.square.dashed" aria-hidden="true" data-size="20"></span>
-          <span class="diet-icon diet-repeater__reorder-icon--active" data-icon="checkmark" aria-hidden="true" data-size="20"></span>
+          <span class="diet-icon diet-repeater__reorder-icon" data-icon="pointer.arrow.and.square.on.square.dashed" aria-hidden="true"></span>
+          <span class="diet-icon diet-repeater__reorder-icon--active" data-icon="checkmark" aria-hidden="true"></span>
         </button>
       </div>
     </div>
@@ -116,17 +116,17 @@
   <div class="diet-repeater__list" data-repeater-list></div>
 
   <div class="diet-repeater__icon-stash" aria-hidden="true" hidden>
-    <span class="diet-icon diet-repeater__icon-handle" data-size="12" data-icon="arrow.up.arrow.down"></span>
-    <span class="diet-icon diet-repeater__icon-trash" data-size="12" data-icon="trash"></span>
+    <span class="diet-icon diet-repeater__icon-handle" data-icon="arrow.up.arrow.down"></span>
+    <span class="diet-icon diet-repeater__icon-trash" data-icon="trash"></span>
   </div>
 
-  <button class="diet-button diet-repeater__add" type="button" data-size="medium" data-type="secondary">
+  <button class="diet-button diet-repeater__add" type="button" data-size="large" data-type="secondary">
     <span class="diet-button__label">Add item</span>
   </button>
 
-  <input type="hidden" class="diet-repeater__field" value="[]" data-dieter-json />
+  <input type="hidden" class="diet-repeater__field" value="[{&quot;id&quot;:&quot;item-1&quot;,&quot;name&quot;:&quot;First item&quot;},{&quot;id&quot;:&quot;item-2&quot;,&quot;name&quot;:&quot;Second item&quot;}]" data-path="items" data-dieter-json />
 
-  <template data-repeater-item><div class=\"diet-repeater__item-body\"><div class=\"diet-textfield\" data-size=\"md\"><label class=\"diet-textfield__control\"><span class=\"diet-textfield__display-label label-s\">Item</span><input class=\"diet-textfield__field body-s\" type=\"text\" data-path=\"items.__INDEX__\" placeholder=\"Item\" /></label></div></div></template>
+  <template data-repeater-item><div class="diet-textfield" data-size="md"><label class="diet-textfield__control"><span class="diet-textfield__display-label label-s">Name</span><input class="diet-textfield__field body-s" type="text" data-bob-path="items.__INDEX__.name" /></label></div></template>
 </div>
 
       </div>

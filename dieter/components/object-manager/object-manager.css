@@ -1,19 +1,44 @@
 .diet-object-manager {
+  --object-manager-gap: var(--space-2);
+  --object-manager-item-gap: var(--space-2);
+  --object-manager-row-padding-block: var(--space-2);
+  --object-manager-row-padding-inline: var(--space-3);
+  --object-manager-row-radius: var(--control-radius-md);
   display: grid;
-  gap: var(--space-3);
+  gap: var(--object-manager-gap);
   padding: 0;
   background: transparent;
   border: none;
 }
 
+.diet-object-manager[data-size='sm'] {
+  --object-manager-gap: var(--space-1);
+  --object-manager-item-gap: var(--space-1);
+  --object-manager-row-padding-block: var(--space-1);
+  --object-manager-row-padding-inline: var(--space-2);
+  --object-manager-row-radius: var(--control-radius-xs);
+}
+
+.diet-object-manager[data-size='lg'] {
+  --object-manager-gap: var(--space-3);
+  --object-manager-item-gap: var(--space-3);
+  --object-manager-row-padding-block: var(--space-3);
+  --object-manager-row-padding-inline: var(--space-4);
+  --object-manager-row-radius: var(--control-radius-lg);
+}
+
 .diet-object-manager__list {
   display: grid;
-  gap: var(--space-3);
+  gap: var(--object-manager-item-gap);
 }
 
 .diet-object-manager__footer {
   display: inline-flex;
   gap: var(--space-2);
+}
+
+.diet-object-manager [data-objects-manage][hidden] {
+  display: none;
 }
 
 .diet-object-manager__editor {
@@ -42,9 +67,9 @@
   grid-template-columns: 1fr auto;
   gap: var(--space-2);
   align-items: center;
-  padding: var(--space-2) var(--space-3);
+  padding: var(--object-manager-row-padding-block) var(--object-manager-row-padding-inline);
   border: 1px solid var(--color-system-gray-5);
-  border-radius: var(--control-radius-md);
+  border-radius: var(--object-manager-row-radius);
   background: var(--color-system-gray-6-step5);
 }
 
@@ -57,4 +82,8 @@
 .diet-object-manager__modal-controls {
   display: inline-flex;
   gap: var(--space-1);
+}
+
+.diet-object-manager__modal-controls .diet-button:disabled {
+  visibility: hidden;
 }

@@ -134,8 +134,12 @@ example and can preview a file selected during the local demonstration; it
 does not call Roma, write account storage, or represent product data.
 These routes retain Dieter's consumer-neutral `data-dieter-json` marker in
 their generated examples. Before hash navigation replaces the reveal,
-DevStudio destroys hydrated Dropdown Actions, Border, Edit, Fill, Shadow, and Upload roots
-through the same exported component lifecycle used by product hosts.
+DevStudio destroys hydrated Dropdown Actions, Border, Edit, Fill, Shadow,
+Upload, Object Manager, and Repeater roots through the same exported component
+lifecycle used by product hosts. Object Manager reveals all three sizes plus
+its exact structural Add/draft/save flow; Repeater reveals all three sizes,
+exact default-item add, and the inline reorder mode. These are the real Dieter
+stencils and hydrators, not DevStudio imitations.
 
 ## Pages Functions
 

@@ -213,7 +213,6 @@
                   "remove-label": "$label:content.field.split-carousel-media.items.repeater.attr.remove-label",
                   "move-label": "$label:content.field.split-carousel-media.items.repeater.attr.move-label",
                   "reorder-label": "$label:content.field.split-carousel-media.items.repeater.attr.reorder-label",
-                  "reorder-title": "$label:content.field.split-carousel-media.items.repeater.attr.reorder-title",
                   "min": "2",
                   "max": "6",
                   "default-item": {

@@ -26,6 +26,8 @@ import {
   destroyDropdownFill,
   destroyDropdownShadow,
   destroyDropdownUpload,
+  destroyObjectManager,
+  destroyRepeater,
   hydrateBulkEdit,
   hydrateChoiceTiles,
   hydrateDropdownActions,
@@ -40,8 +42,9 @@ import {
   hydrateTextedit,
   hydrateTextfield,
   hydrateValuefield,
+  hydrateObjectManager,
+  hydrateRepeater,
 } from '@dieter/components';
-import { hydrateObjectManager } from '@dieter/components/object-manager/object-manager';
 import { createDialogLifecycle } from '@dieter/components/shared/dialog-lifecycle';
 import { typographySections, typographyRoleCount, getTypographySampleText } from './data/typography';
 import {
@@ -376,10 +379,14 @@ function hydrateIcons(scope: ParentNode) {
   });
 }
 
-function hydrateDieterComponents(scope: Element | DocumentFragment): void {
+function hydrateDieterComponents(scope: Element | DocumentFragment): () => void {
+  const nested = {
+    hydrateChildren: (childScope: HTMLElement) => hydrateDieterComponents(childScope),
+  };
   hydrateBulkEdit(scope);
   hydrateChoiceTiles(scope);
-  hydrateObjectManager(scope);
+  hydrateObjectManager(scope, nested);
+  hydrateRepeater(scope, nested);
   hydrateTextfield(scope);
   hydrateValuefield(scope);
   hydrateTextedit(scope);
@@ -392,15 +399,18 @@ function hydrateDieterComponents(scope: Element | DocumentFragment): void {
   hydrateTabs(scope);
   hydrateSegmented(scope);
   hydratePopAddLink(scope);
+  return () => destroyDieterComponents(scope);
 }
 
-function destroyDieterComponents(scope: Element): void {
+function destroyDieterComponents(scope: Element | DocumentFragment): void {
   scope.querySelectorAll<HTMLElement>('.diet-dropdown-actions').forEach(destroyDropdownActions);
   scope.querySelectorAll<HTMLElement>('.diet-dropdown-border').forEach(destroyDropdownBorder);
   scope.querySelectorAll<HTMLElement>('.diet-dropdown-edit').forEach(destroyDropdownEdit);
   scope.querySelectorAll<HTMLElement>('.diet-dropdown-fill').forEach(destroyDropdownFill);
   scope.querySelectorAll<HTMLElement>('.diet-dropdown-shadow').forEach(destroyDropdownShadow);
   scope.querySelectorAll<HTMLElement>('.diet-dropdown-upload').forEach(destroyDropdownUpload);
+  scope.querySelectorAll<HTMLElement>('.diet-object-manager').forEach(destroyObjectManager);
+  scope.querySelectorAll<HTMLElement>('.diet-repeater').forEach(destroyRepeater);
 }
 
 function executeScripts(scope: DocumentFragment | Element) {

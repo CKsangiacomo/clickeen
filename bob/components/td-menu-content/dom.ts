@@ -6,6 +6,8 @@ import {
   destroyDropdownFill,
   destroyDropdownShadow,
   destroyDropdownUpload,
+  destroyObjectManager,
+  destroyRepeater,
   hydrateBulkEdit,
   hydrateChoiceTiles,
   hydrateDropdownActions,
@@ -20,9 +22,9 @@ import {
   hydrateTextedit,
   hydrateTextfield,
   hydrateValuefield,
+  hydrateObjectManager,
+  hydrateRepeater,
 } from '../../../dieter/components';
-import { hydrateObjectManager } from '../../../dieter/components/object-manager/object-manager';
-import { hydrateRepeater } from '../../../dieter/components/repeater/repeater';
 
 export type DieterHydratorDeps = {
   accountAssets: AccountAssetsClient;
@@ -47,6 +49,8 @@ export function runHydrators(scope: HTMLElement, deps: DieterHydratorDeps): () =
     scope.querySelectorAll<HTMLElement>('.diet-dropdown-fill').forEach(destroyDropdownFill);
     scope.querySelectorAll<HTMLElement>('.diet-dropdown-shadow').forEach(destroyDropdownShadow);
     scope.querySelectorAll<HTMLElement>('.diet-dropdown-upload').forEach(destroyDropdownUpload);
+    scope.querySelectorAll<HTMLElement>('.diet-object-manager').forEach(destroyObjectManager);
+    scope.querySelectorAll<HTMLElement>('.diet-repeater').forEach(destroyRepeater);
   };
   const nestedDeps = {
     ...deps,

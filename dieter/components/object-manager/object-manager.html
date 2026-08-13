@@ -1,33 +1,41 @@
 <div
   class="diet-object-manager"
-  data-size="md"
+  data-size="{{size}}"
+  data-allow-structure="{{allowStructure}}"
   data-label-path="{{labelPath}}"
   data-index-token="{{indexToken}}"
+  data-item-label="{{itemLabel}}"
+  data-move-up-label="{{moveUpLabel}}"
+  data-move-down-label="{{moveDownLabel}}"
+  data-delete-label="{{deleteLabel}}"
   {{#if min}} data-min-items="{{min}}"{{/if}}
   {{#if defaultItem}} data-default-item="{{defaultItem}}"{{/if}}
 >
   <div class="diet-object-manager__list" data-objects-list></div>
 
+  {{#if showStructure}}
   <div class="diet-object-manager__footer">
-    <button class="diet-button" type="button" data-size="medium" data-type="secondary" data-objects-add>
+    <button class="diet-button" type="button" data-size="{{buttonSize}}" data-type="secondary" data-objects-add>
       <span class="diet-button__label">{{addLabel}}</span>
     </button>
-    <button class="diet-button" type="button" data-size="medium" data-type="secondary" data-objects-manage hidden>
+    <button class="diet-button" type="button" data-size="{{buttonSize}}" data-type="secondary" data-objects-manage hidden>
       <span class="diet-button__label">{{reorderLabel}}</span>
     </button>
   </div>
+  {{/if}}
 
   <input
     type="hidden"
     class="diet-object-manager__field"
-    value="[]"
-    {{#if path}} data-bob-path="{{path}}"{{/if}}
+    value="{{value}}"
+    {{#if path}} data-path="{{path}}"{{/if}}
     data-dieter-json
   />
 
   <template data-objects-item>{{template}}</template>
 
-  <dialog class="diet-popup" data-size="medium" aria-label="{{reorderTitle}}" data-objects-modal>
+  {{#if showStructure}}
+  <dialog class="diet-popup" data-size="{{buttonSize}}" aria-label="{{reorderTitle}}" data-objects-modal>
     <div class="diet-object-manager__editor" data-objects-editor>
       <header class="diet-popup__header">
         <h2 class="diet-object-manager__title heading-5">{{reorderTitle}}</h2>
@@ -37,29 +45,29 @@
       </div>
       <footer class="diet-popup__footer">
         <div class="diet-popup__actions">
-          <button type="button" class="diet-button" data-size="medium" data-type="secondary" data-objects-cancel>
-            <span class="diet-button__label">Cancel</span>
+          <button type="button" class="diet-button" data-size="{{buttonSize}}" data-type="secondary" data-objects-cancel>
+            <span class="diet-button__label">{{cancelLabel}}</span>
           </button>
-          <button type="button" class="diet-button" data-size="medium" data-type="primary" data-objects-save>
-            <span class="diet-button__label">Save</span>
+          <button type="button" class="diet-button" data-size="{{buttonSize}}" data-type="primary" data-objects-save>
+            <span class="diet-button__label">{{saveLabel}}</span>
           </button>
         </div>
       </footer>
     </div>
     <div class="diet-object-manager__editor" data-objects-discard-panel hidden>
       <header class="diet-popup__header">
-        <h2 class="diet-object-manager__title heading-5">Discard changes?</h2>
+        <h2 class="diet-object-manager__title heading-5">{{discardTitle}}</h2>
       </header>
       <div class="diet-popup__body">
-        <p class="diet-object-manager__modal-message body-m">Your reorder and delete changes have not been saved.</p>
+        <p class="diet-object-manager__modal-message {{bodyClass}}">{{discardMessage}}</p>
       </div>
       <footer class="diet-popup__footer">
         <div class="diet-popup__actions">
-          <button type="button" class="diet-button" data-size="medium" data-type="secondary" data-objects-keep-editing>
-            <span class="diet-button__label">Keep editing</span>
+          <button type="button" class="diet-button" data-size="{{buttonSize}}" data-type="secondary" data-objects-keep-editing>
+            <span class="diet-button__label">{{keepEditingLabel}}</span>
           </button>
-          <button type="button" class="diet-button" data-size="medium" data-type="primary" data-objects-discard>
-            <span class="diet-button__label">Discard</span>
+          <button type="button" class="diet-button" data-size="{{buttonSize}}" data-type="primary" data-objects-discard>
+            <span class="diet-button__label">{{discardLabel}}</span>
           </button>
         </div>
       </footer>
@@ -68,18 +76,19 @@
 
   <template data-objects-row>
     <div class="diet-object-manager__modal-row">
-      <div class="diet-object-manager__modal-label label-m" data-objects-label></div>
+      <div class="diet-object-manager__modal-label {{labelClass}}" data-objects-label></div>
       <div class="diet-object-manager__modal-controls">
-        <button type="button" class="diet-button diet-tooltip" data-size="small" data-type="quaternary" aria-label="Move object up" data-tooltip="Move object up" data-tooltip-placement="top" data-objects-up>
-          <span class="diet-icon" aria-hidden="true" data-icon="chevron.up" data-size="12"></span>
+        <button type="button" class="diet-button diet-tooltip" data-size="small" data-type="quaternary" aria-label="{{moveUpLabel}}" data-tooltip="{{moveUpLabel}}" data-tooltip-placement="top" data-objects-up>
+          <span class="diet-icon" aria-hidden="true" data-icon="chevron.up"></span>
         </button>
-        <button type="button" class="diet-button diet-tooltip" data-size="small" data-type="quaternary" aria-label="Move object down" data-tooltip="Move object down" data-tooltip-placement="top" data-objects-down>
-          <span class="diet-icon" aria-hidden="true" data-icon="chevron.down" data-size="12"></span>
+        <button type="button" class="diet-button diet-tooltip" data-size="small" data-type="quaternary" aria-label="{{moveDownLabel}}" data-tooltip="{{moveDownLabel}}" data-tooltip-placement="top" data-objects-down>
+          <span class="diet-icon" aria-hidden="true" data-icon="chevron.down"></span>
         </button>
-        <button type="button" class="diet-button diet-tooltip" data-size="small" data-type="quaternary" aria-label="Delete object" data-tooltip="Delete object" data-tooltip-placement="top" data-objects-delete>
-          <span class="diet-icon" aria-hidden="true" data-icon="trash" data-size="12"></span>
+        <button type="button" class="diet-button diet-tooltip" data-size="small" data-type="quaternary" aria-label="{{deleteLabel}}" data-tooltip="{{deleteLabel}}" data-tooltip-placement="top" data-objects-delete>
+          <span class="diet-icon" aria-hidden="true" data-icon="trash"></span>
         </button>
       </div>
     </div>
   </template>
+  {{/if}}
 </div>

@@ -158,7 +158,7 @@ the code is convenient there.
 | Stage | Status | Release state |
 | --- | --- | --- |
 | Stage 1 — Scaffold only | Complete | Committed, pushed, and deployed; no non-English experience is exposed |
-| Stage 2 — Dieter UI pass | In progress: Foundations, Agent Activity, Bulk Edit, Button, Choice Tiles, Dropdown Actions, Popover, Dropdown Border, Dropdown Edit, Dropdown Fill, Dropdown Shadow, Dropdown Upload, and Menuactions complete and re-audited as consumer-agnostic primitives | Object Manager is the next component pass |
+| Stage 2 — Dieter UI pass | In progress: Foundations, Agent Activity, Bulk Edit, Button, Choice Tiles, Dropdown Actions, Popover, Dropdown Border, Dropdown Edit, Dropdown Fill, Dropdown Shadow, Dropdown Upload, Menuactions, Object Manager, and Repeater complete and re-audited as consumer-agnostic primitives | Popaddlink is the next component pass |
 | Stage 3 — Bob UI pass | Not started | No authority to begin until explicitly directed |
 | Stage 4 — Roma UI pass | Not started | No authority to begin until explicitly directed |
 | Stage 5 — Translation pass | Not started | No translations may be generated yet |
@@ -1074,3 +1074,51 @@ authorizes it.
   `3/4/6px` radius ladders; it also selected a real Dropdown Actions option,
   observed the exact new value, and proved the Popover closed. The local
   V1–V8 audit passed. This work is not committed, pushed, deployed, or live.
+
+- **Object Manager and Repeater — passed locally, 2026-08-13.** The two
+  collection components now follow one exact mental model without collapsing
+  their different jobs. Object Manager renders top-level caller-declared object
+  editors. `allow-structure="true"` exposes immediate Add plus one Popup draft
+  for reorder/delete and saves that draft as one exact array; false renders
+  only the object editors. Repeater owns nested inline add/remove/reorder using
+  one exact caller template and `default-item`. Both accept arrays of objects
+  with stable ids, assign ids only to declared empty id coordinates on new
+  items, preserve all other caller state, and reject rather than derive missing
+  item structure.
+
+  The old Repeater JavaScript is replaced by the typed source because it
+  concretely inferred new-item shapes and silently substituted values. The new
+  component retains the existing inline drag UX but moves its visual states to
+  Dieter CSS, uses the established Button/Icon/Textfield/Toggle contracts, and
+  makes the root `sm|md|lg` size the sole geometry and typography authority.
+  Object Manager now actually honors the existing structural-permission flag;
+  its dialog uses the existing Popup/dialog lifecycle and caller-owned dirty
+  discard copy. Neither component contains a Widget, account, Bob, Roma, route,
+  storage, or product-policy branch.
+
+  Widget copy follows the Stage 1 contract. Cards, FAQ, and Logo Showcase own
+  the exact Object Manager dialog/action shape and each Object Manager item
+  label in their adjacent English file. Repeater label/action inputs remain
+  adjacent Widget copy, and obsolete Repeater-only `reorder-title` entries were
+  removed. Bob only joins those existing structured inputs to the two global
+  stencils. No Dieter locale or global collection-copy catalog was added.
+
+  Object Manager and Repeater now export destroy functions and join the one
+  Bob/Roma/DevStudio control-host lifecycle, including nested child hydrators.
+  DevStudio hydrates and reveals the real three-size components plus Object
+  Manager's caller-owned-fields-only composition. Local
+  Chromium proved Object Manager add, structural draft, reorder, save, close,
+  and stable generated ids; Repeater add and reorder-mode transitions; and
+  clean hash-route replacement with no page error. The component pages also
+  exposed and closed malformed demonstration JSON attributes and a wrong modal
+  template lookup before completion.
+
+  Focused verification passed: full repository typecheck and lint; Dieter
+  governance; Bob's full focused suite and exact collection/l10n/editor
+  contract; Roma Widget Defaults, command-gate, and instance-package suites;
+  DevStudio generation/build and browser behavior; Widget source generation;
+  and all eight editor artifact pairs. The local V1-V8 audit passed.
+  No translation generation, product-data mutation, route, storage,
+  Cloudflare, compatibility path, service, registry, or PRD 128 change is part
+  of this pass. The source pass is committed and pushed through the normal
+  cloud-dev rollout; no direct deployment or remote-data operation is used.

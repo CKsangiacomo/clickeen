@@ -125,7 +125,6 @@
     "content.field.split-carousel-media.items.repeater.attr.move-label": "Move visual {index}",
     "content.field.split-carousel-media.items.repeater.attr.remove-label": "Remove visual {index}",
     "content.field.split-carousel-media.items.repeater.attr.reorder-label": "Reorder visuals",
-    "content.field.split-carousel-media.items.repeater.attr.reorder-title": "Reorder visuals",
     "content.field.split-carousel-media.items.repeater.label": "Visuals",
     "core.plural": "Carousel visuals",
     "core.singular": "Carousel visual",

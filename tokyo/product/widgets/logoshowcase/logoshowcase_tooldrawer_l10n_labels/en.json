@@ -147,6 +147,7 @@
     "content.field.logoshowcase.strips.object-manager.attr.add-label": "Add strip",
     "content.field.logoshowcase.strips.object-manager.attr.reorder-label": "Manage strips",
     "content.field.logoshowcase.strips.object-manager.attr.reorder-title": "Manage strips",
+    "content.field.logoshowcase.strips.object-manager.item-label": "Strip {index}",
     "content.field.logoshowcase.strips.object-manager.label": "Logo strips",
     "content.field.logoshowcase.strips.strip.logos.index.caption.textfield.attr.placeholder": "Optional caption",
     "content.field.logoshowcase.strips.strip.logos.index.caption.textfield.label": "Caption",
@@ -158,7 +159,6 @@
     "content.field.logoshowcase.strips.strip.logos.repeater.attr.move-label": "Move logo {index}",
     "content.field.logoshowcase.strips.strip.logos.repeater.attr.remove-label": "Remove logo {index}",
     "content.field.logoshowcase.strips.strip.logos.repeater.attr.reorder-label": "Manage logos",
-    "content.field.logoshowcase.strips.strip.logos.repeater.attr.reorder-title": "Manage logos",
     "content.field.logoshowcase.strips.strip.logos.repeater.label": "Logos",
     "content.field.logoshowcase.type-config.carousel.allow-swipe.toggle.label": "Allow swipe/drag",
     "content.field.logoshowcase.type-config.carousel.auto-slide-delay-ms.valuefield.label": "Autoplay delay (ms)",
@@ -195,6 +195,15 @@
     "panel.layout": "Layout",
     "panel.settings": "Settings",
     "panel.typography": "Typography",
-    "component.agent-activity.title": "Translation Agent"
+    "component.agent-activity.title": "Translation Agent",
+    "component.object-manager.cancel.label": "Cancel",
+    "component.object-manager.delete.label": "Delete {label}",
+    "component.object-manager.discard.label": "Discard",
+    "component.object-manager.discard-message.label": "Your reorder and delete changes have not been saved.",
+    "component.object-manager.discard-title.label": "Discard changes?",
+    "component.object-manager.keep-editing.label": "Keep editing",
+    "component.object-manager.move-down.label": "Move {label} down",
+    "component.object-manager.move-up.label": "Move {label} up",
+    "component.object-manager.save.label": "Save"
   }
 }

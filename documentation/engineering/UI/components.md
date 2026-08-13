@@ -25,8 +25,8 @@ Legend: ✅ exported from `index.ts` · Direct host import · ⊘ no custom hydr
 | inputs | `valuefield` | `hydrateValuefield` | ✅ |
 | inputs | `textedit` | `hydrateTextedit` (largest; 7 `.ts` modules) | ✅ |
 | choosers | `choice-tiles` | `hydrateChoiceTiles`, `string` | ✅ |
-| choosers | `object-manager` | direct ESM `hydrateObjectManager`, array add/reorder/delete | Direct host import |
-| choosers | `repeater` | direct ESM `hydrateRepeater` | Direct host import |
+| choosers | `object-manager` | `hydrateObjectManager` / `destroyObjectManager`, top-level object composition | ✅ |
+| choosers | `repeater` | `hydrateRepeater` / `destroyRepeater`, nested inline collection editing | ✅ |
 | choosers | `bulk-edit` | `hydrateBulkEdit`, `row-path` | ✅ |
 | dropdowns | `dropdown-fill` | `hydrateDropdownFill` / `destroyDropdownFill`, exact fill JSON | ✅ |
 | dropdowns | `dropdown-actions` | `hydrateDropdownActions` / `destroyDropdownActions`, `string` | ✅ |
@@ -78,10 +78,11 @@ The governing component product law is:
 - Dieter JSON controls expose the consumer-neutral `data-dieter-json` marker,
   and generic multi-path component edits emit `dieter-ops`. Host-owned paths
   remain separate from that component protocol.
-- Hosts destroy hydrated Dropdown Actions, Border, Edit, Fill, Shadow, and Upload roots before
-  their rendered DOM is replaced. Dropdown Edit destruction detaches its
-  Lexical root; Dropdown Fill cancels pending media resolution and releases
-  its dropdown state through that same component lifecycle.
+- Hosts destroy hydrated Dropdown Actions, Border, Edit, Fill, Shadow, Upload,
+  Object Manager, and Repeater roots before their rendered DOM is replaced.
+  Dropdown Edit destruction detaches its Lexical root; Fill and Upload cancel
+  pending media resolution; Object Manager and Repeater release their child
+  controls, listeners, dialogs, and active collection state.
 - Button is one `.diet-button` primitive. Its direct children determine whether
   it is text-only, icon-only, or icon-and-text; those are not separate Button
   classes or variants.
@@ -264,10 +265,28 @@ The governing component product law is:
   internal source mechanics.
 - `textrename` is deleted because it had no product consumer.
 - Toggle is a native checkbox HTML/CSS/spec contract with no custom hydrator.
-- Keep `repeater` and `object-manager` distinct. Repeater edits nested items
-  inline; Object Manager reorders/deletes top-level objects in a dialog. Their
-  real component dependencies must be declared. A JS-to-TS rewrite requires a
-  behavior reason.
+- Object Manager and Repeater are the two collection-editing primitives, with
+  deliberately separate jobs. Object Manager renders each top-level object's
+  caller-declared editor. `allow-structure="true"` adds one explicit top-level
+  workflow: immediate Add plus a Popup draft for reorder/delete, saved as one
+  exact array update. `allow-structure="false"` renders only the object
+  editors; it emits no structural controls or behavior. Cancel closes a clean
+  draft, while a dirty draft uses the existing caller-labelled
+  keep-editing/discard flow. Object Manager never infers an object shape,
+  label, Widget path, minimum, or structural permission.
+- Repeater owns the nested inline collection inside an object. It renders the
+  caller template for every exact item, adds an exact caller-supplied
+  `default-item`, removes subject to the declared `min`, and reorders through
+  one explicit drag mode. The exact array is its only bound value. Existing
+  values and every new default item must carry a stable non-empty `id`; the
+  component assigns new ids only into caller-declared empty `id` coordinates.
+  It does not derive an item shape from current values or template fields.
+- Both primitives require one `sm|md|lg` root size, use the existing Button,
+  Icon, Textfield, Toggle, Popup, Tooltip, and child-hydrator contracts, and
+  expose JSON only through `data-dieter-json`. All visible and accessible words
+  are caller inputs. Widget ToolDrawer uses receive those exact strings from
+  the adjacent Widget label file; Dieter has no collection copy catalog or
+  Widget branch.
 - The six dropdown triggers are native buttons.
 - `dropdown-actions` is one immediate-choice listbox workflow; its dead
   footer/apply branch is gone.

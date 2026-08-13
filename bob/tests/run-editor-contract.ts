@@ -7,16 +7,16 @@ import { decodeHtmlEntities, encodeHtmlEntities, type RawWidget } from '../lib/c
 import { compileControlsFromPanels, expandTooldrawerClusters } from '../lib/compiler/controls';
 import { buildEditorHtmlLines } from '../lib/compiler/editor-contract';
 import { resolveWidgetTooldrawerLabels } from '../lib/compiler/tooldrawer-labels';
-import type {
-  ComponentStencil,
-  ComponentStencilLoader,
-} from '../lib/compiler/stencils';
+import type { ComponentStencil, ComponentStencilLoader } from '../lib/compiler/stencils';
 import { buildContext } from '../lib/compiler/stencils';
 import { DEFAULT_PANELS } from '../components/TdMenu';
 import { controlHostClusterId } from '../components/td-menu-content/dom';
 import { expandLinkedOps } from '../components/td-menu-content/linkedOps';
 import { BOB_MENU_PANEL_IDS, BOB_WIDGET_PANEL_IDS } from '../lib/types';
-import { assertCompiledEditorContract, assertSessionConfigContract } from '../lib/session/sessionConfig';
+import {
+  assertCompiledEditorContract,
+  assertSessionConfigContract,
+} from '../lib/session/sessionConfig';
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const widgetsRoot = path.join(repoRoot, 'tokyo/product/widgets');
@@ -71,7 +71,10 @@ function discoverWidgetSpecs(): Array<{ widgetType: string; spec: RawWidget; lab
 
 function readAuthoredPanels(spec: RawWidget, widgetType: string): AuthoredPanel[] {
   const editor = spec.editor;
-  assert.ok(editor && typeof editor === 'object' && !Array.isArray(editor), `${widgetType} has editor`);
+  assert.ok(
+    editor && typeof editor === 'object' && !Array.isArray(editor),
+    `${widgetType} has editor`,
+  );
   const panels = (editor as JsonObject).panels;
   assert.ok(Array.isArray(panels), `${widgetType} has editor panels`);
   return panels as AuthoredPanel[];
@@ -115,18 +118,42 @@ function assertCompiledClusterState(args: {
   );
 
   assert.ok(collapsed.length > 0, `${args.widgetType}:${args.panelId} has compiled sections`);
-  assert.equal(labels.length, collapsed.length, `${args.widgetType}:${args.panelId} labels every section`);
-  assert.equal(toggles.length, collapsed.length, `${args.widgetType}:${args.panelId} toggles every section`);
-  assert.equal(bodies.length, collapsed.length, `${args.widgetType}:${args.panelId} bodies every section`);
+  assert.equal(
+    labels.length,
+    collapsed.length,
+    `${args.widgetType}:${args.panelId} labels every section`,
+  );
+  assert.equal(
+    toggles.length,
+    collapsed.length,
+    `${args.widgetType}:${args.panelId} toggles every section`,
+  );
+  assert.equal(
+    bodies.length,
+    collapsed.length,
+    `${args.widgetType}:${args.panelId} bodies every section`,
+  );
 
   const openLabels: string[] = [];
   collapsed.forEach((collapsedValue, index) => {
     const [expandedValue, controlledBodyId] = toggles[index];
     const [bodyId, hiddenAttribute] = bodies[index];
     const isOpen = collapsedValue === 'false';
-    assert.equal(expandedValue, isOpen ? 'true' : 'false', `${args.widgetType}:${args.panelId}:${labels[index]} expanded state`);
-    assert.equal(controlledBodyId, bodyId, `${args.widgetType}:${args.panelId}:${labels[index]} controls its body`);
-    assert.equal(Boolean(hiddenAttribute), !isOpen, `${args.widgetType}:${args.panelId}:${labels[index]} hidden state`);
+    assert.equal(
+      expandedValue,
+      isOpen ? 'true' : 'false',
+      `${args.widgetType}:${args.panelId}:${labels[index]} expanded state`,
+    );
+    assert.equal(
+      controlledBodyId,
+      bodyId,
+      `${args.widgetType}:${args.panelId}:${labels[index]} controls its body`,
+    );
+    assert.equal(
+      Boolean(hiddenAttribute),
+      !isOpen,
+      `${args.widgetType}:${args.panelId}:${labels[index]} hidden state`,
+    );
     if (isOpen) openLabels.push(labels[index]);
   });
 
@@ -142,12 +169,11 @@ function assertDropdownEditLabels(args: {
   html: string;
   labels: Record<string, string>;
 }): void {
-  const roots = args.html
-    .split('<div class="diet-dropdown-edit diet-popover-host"')
-    .slice(1);
+  const roots = args.html.split('<div class="diet-dropdown-edit diet-popover-host"').slice(1);
   assert.ok(roots.length > 0, `${args.widgetType} compiles Dropdown Edit controls`);
 
-  const label = (key: string) => encodeHtmlEntities(args.labels[`component.dropdown-edit.${key}.label`]);
+  const label = (key: string) =>
+    encodeHtmlEntities(args.labels[`component.dropdown-edit.${key}.label`]);
   roots.forEach((root, index) => {
     for (const [command, key] of [
       ['bold', 'bold'],
@@ -222,11 +248,24 @@ function assertDropdownShadowLabels(args: {
   const roots = args.html.split('class="diet-dropdown-shadow diet-popover-host"').slice(1);
   assert.equal(roots.length, expectedCounts[args.widgetType], `${args.widgetType} Shadow count`);
   const componentKeys = [
-    'blur', 'color', 'default-colors', 'enabled', 'hex', 'horizontal',
-    'hue', 'opacity', 'preview', 'spread', 'vertical',
+    'blur',
+    'color',
+    'default-colors',
+    'enabled',
+    'hex',
+    'horizontal',
+    'hue',
+    'opacity',
+    'preview',
+    'spread',
+    'vertical',
   ];
   roots.forEach((root, index) => {
-    assert.match(root, /class="diet-dropdown-header-label"[^>]*>[^<]+<\/span>/, `${args.widgetType} Shadow ${index} has its caller label`);
+    assert.match(
+      root,
+      /class="diet-dropdown-header-label"[^>]*>[^<]+<\/span>/,
+      `${args.widgetType} Shadow ${index} has its caller label`,
+    );
     componentKeys.forEach((key) => {
       const labelKey = `component.dropdown-shadow.${key}.label`;
       assert.ok(
@@ -234,8 +273,15 @@ function assertDropdownShadowLabels(args: {
         `${args.widgetType} Shadow ${index} resolves ${key}`,
       );
     });
-    assert.ok(root.includes('data-dieter-json'), `${args.widgetType} Shadow ${index} binds exact JSON`);
-    assert.doesNotMatch(root, /\$label:/, `${args.widgetType} Shadow ${index} has no unresolved copy`);
+    assert.ok(
+      root.includes('data-dieter-json'),
+      `${args.widgetType} Shadow ${index} binds exact JSON`,
+    );
+    assert.doesNotMatch(
+      root,
+      /\$label:/,
+      `${args.widgetType} Shadow ${index} has no unresolved copy`,
+    );
   });
 
   for (const [path, labelKey] of [
@@ -261,22 +307,176 @@ function assertDropdownShadowLabels(args: {
   }
   for (const key of ['above-content', 'below-content', 'layer']) {
     assert.ok(
-      args.html.includes(
-        encodeHtmlEntities(args.labels[`component.dropdown-shadow.${key}.label`]),
-      ),
+      args.html.includes(encodeHtmlEntities(args.labels[`component.dropdown-shadow.${key}.label`])),
       `${args.widgetType} resolves inside-shadow ${key}`,
     );
   }
 }
 
+function assertCollectionEditorContract(args: {
+  widgetType: string;
+  html: string;
+  labels: Record<string, string>;
+}): void {
+  const expected: Record<
+    string,
+    { objectManagers: number; repeaters: number; structural: boolean }
+  > = {
+    'big-bang': { objectManagers: 0, repeaters: 0, structural: false },
+    calltoaction: { objectManagers: 0, repeaters: 0, structural: false },
+    cards: { objectManagers: 1, repeaters: 1, structural: false },
+    countdown: { objectManagers: 0, repeaters: 0, structural: false },
+    faq: { objectManagers: 1, repeaters: 1, structural: true },
+    logoshowcase: { objectManagers: 1, repeaters: 1, structural: true },
+    'split-carousel-media': { objectManagers: 0, repeaters: 1, structural: false },
+    'split-media': { objectManagers: 0, repeaters: 0, structural: false },
+  };
+  const contract = expected[args.widgetType];
+  assert.ok(contract, `${args.widgetType} has a collection-editor expectation`);
+  assert.equal(
+    args.html.match(/class="diet-object-manager"/g)?.length ?? 0,
+    contract.objectManagers,
+    `${args.widgetType} Object Manager count`,
+  );
+  assert.equal(
+    args.html.match(/class="diet-repeater"/g)?.length ?? 0,
+    contract.repeaters,
+    `${args.widgetType} Repeater count`,
+  );
+
+  if (contract.objectManagers) {
+    assert.ok(
+      args.html.includes(`data-allow-structure="${contract.structural ? 'true' : 'false'}"`),
+      `${args.widgetType} compiles its exact structural authority`,
+    );
+    assert.equal(
+      args.html.includes('data-objects-modal'),
+      contract.structural,
+      `${args.widgetType} emits structural UI only when declared`,
+    );
+    if (contract.structural) {
+      for (const key of [
+        'cancel',
+        'delete',
+        'discard',
+        'discard-message',
+        'discard-title',
+        'keep-editing',
+        'move-down',
+        'move-up',
+        'save',
+      ]) {
+        assert.ok(
+          args.html.includes(
+            encodeHtmlEntities(args.labels[`component.object-manager.${key}.label`]),
+          ),
+          `${args.widgetType} resolves Object Manager ${key}`,
+        );
+      }
+    }
+    const itemLabels = Object.entries(args.labels)
+      .filter(([key]) => key.includes('.object-manager.item-label'))
+      .map(([, value]) => encodeHtmlEntities(value));
+    assert.equal(
+      itemLabels.length,
+      contract.objectManagers,
+      `${args.widgetType} owns each Object Manager item label`,
+    );
+    itemLabels.forEach((label) => {
+      assert.ok(
+        args.html.includes(`data-item-label="${label}"`),
+        `${args.widgetType} compiles ${label}`,
+      );
+    });
+  }
+
+  if (contract.repeaters) {
+    assert.equal(
+      args.html.match(/class="diet-repeater" data-size="md"/g)?.length ?? 0,
+      contract.repeaters,
+      `${args.widgetType} Repeaters use their declared medium size`,
+    );
+    const repeaters = args.html.split('<div class="diet-repeater"').slice(1);
+    repeaters.forEach((repeater, index) => {
+      assert.match(
+        repeater.slice(0, repeater.indexOf('>') + 1),
+        /data-default-item="\{&quot;id&quot;:&quot;&quot;/,
+        `${args.widgetType} Repeater ${index} declares exact new-item state with an empty id coordinate`,
+      );
+    });
+    assert.doesNotMatch(
+      args.html,
+      /diet-repeater[^>]*reorder-title/,
+      `${args.widgetType} has no retired Repeater copy`,
+    );
+    assert.doesNotMatch(
+      args.html,
+      /diet-repeater__[^"]*icon[^>]*data-size=/,
+      `${args.widgetType} lets Repeater size own its Icons`,
+    );
+  }
+  assert.doesNotMatch(
+    args.html,
+    /\$label:/,
+    `${args.widgetType} collection controls contain no raw label tokens`,
+  );
+}
+
 function testInsideShadowLinkOpsPreserveHiddenValues(): void {
-  const all = { enabled: true, inset: true, x: 0, y: 0, blur: 24, spread: 0, color: '#111111', alpha: 20 };
-  const top = { enabled: true, inset: true, x: 1, y: 2, blur: 3, spread: 4, color: '#222222', alpha: 30 };
-  const right = { enabled: true, inset: true, x: -5, y: 6, blur: 7, spread: 8, color: '#333333', alpha: 40 };
-  const bottom = { enabled: true, inset: true, x: 9, y: -10, blur: 11, spread: 12, color: '#444444', alpha: 50 };
-  const left = { enabled: true, inset: true, x: 13, y: 14, blur: 15, spread: 16, color: '#555555', alpha: 60 };
+  const all = {
+    enabled: true,
+    inset: true,
+    x: 0,
+    y: 0,
+    blur: 24,
+    spread: 0,
+    color: '#111111',
+    alpha: 20,
+  };
+  const top = {
+    enabled: true,
+    inset: true,
+    x: 1,
+    y: 2,
+    blur: 3,
+    spread: 4,
+    color: '#222222',
+    alpha: 30,
+  };
+  const right = {
+    enabled: true,
+    inset: true,
+    x: -5,
+    y: 6,
+    blur: 7,
+    spread: 8,
+    color: '#333333',
+    alpha: 40,
+  };
+  const bottom = {
+    enabled: true,
+    inset: true,
+    x: 9,
+    y: -10,
+    blur: 11,
+    spread: 12,
+    color: '#444444',
+    alpha: 50,
+  };
+  const left = {
+    enabled: true,
+    inset: true,
+    x: 13,
+    y: 14,
+    blur: 15,
+    spread: 16,
+    color: '#555555',
+    alpha: 60,
+  };
   const instanceData = {
-    stage: { insideShadow: { linked: false, layer: 'below-content', all, top, right, bottom, left } },
+    stage: {
+      insideShadow: { linked: false, layer: 'below-content', all, top, right, bottom, left },
+    },
   };
   const requested = [
     { op: 'set' as const, path: 'stage.insideShadow.linked', value: true },
@@ -360,6 +560,11 @@ async function testEveryWidgetEditorContract(): Promise<void> {
       html: compiled.panels.map((panel) => panel.html).join('\n'),
       labels: (labels as { labels: Record<string, string> }).labels,
     });
+    assertCollectionEditorContract({
+      widgetType,
+      html: compiled.panels.map((panel) => panel.html).join('\n'),
+      labels: (labels as { labels: Record<string, string> }).labels,
+    });
     const combinedBodyIds = captureAll(
       compiled.panels.map((panel) => panel.html).join('\n'),
       /class="tdmenucontent__cluster-body" id="([^"]+)"/g,
@@ -433,7 +638,8 @@ function testTooldrawerLabelContractsFailClosed(): void {
   );
 
   const hardcoded = structuredClone(spec) as any;
-  hardcoded.editor.panels[0].clusters.find((entry: any) => entry?.kind !== 'shared').label = 'Content';
+  hardcoded.editor.panels[0].clusters.find((entry: any) => entry?.kind !== 'shared').label =
+    'Content';
   assert.throws(
     () => resolveWidgetTooldrawerLabels(hardcoded, labels),
     /must use a label token/,
@@ -496,7 +702,11 @@ function testSpecialCharactersRoundTripOnce(): void {
       nodes: [{ kind: 'field', type: 'textfield', path: 'title', label: 'Title' }],
     }),
   };
-  const authoredHtml = buildEditorHtmlLines(editor, fixtureDefaults(), 'editor-contract-fixture').join('\n');
+  const authoredHtml = buildEditorHtmlLines(
+    editor,
+    fixtureDefaults(),
+    'editor-contract-fixture',
+  ).join('\n');
   const expandedHtml = expandTooldrawerClusters(authoredHtml);
   const renderedLabel = expandedHtml.match(
     /class="overline-small tdmenucontent__cluster-label"[^>]*>([^<]*)<\/div>/,
@@ -529,7 +739,8 @@ function testInvalidEditorContractsFail(): void {
   const inventedPanels = fixturePanels({ label: 'Content', initiallyOpen: true, nodes: [] });
   inventedPanels[2] = { id: 'governance', clusters: [{ label: 'Governance', nodes: [] }] };
   assert.throws(
-    () => buildEditorHtmlLines({ panels: inventedPanels }, fixtureDefaults(), 'invented-panel-fixture'),
+    () =>
+      buildEditorHtmlLines({ panels: inventedPanels }, fixtureDefaults(), 'invented-panel-fixture'),
     /unsupported id|canonical panels/,
     'invented panel fails closed',
   );
@@ -579,16 +790,18 @@ function testCompiledPanelLabelsFailClosed(): void {
 }
 
 async function testDropdownUploadSingleValueContract(): Promise<void> {
-  const panels = [{
-    id: 'content' as const,
-    label: 'Content',
-    html: [
-      "<tooldrawer-field type='dropdown-upload' path='media.logo' label='Logo' placeholder='No file'",
-      "upload-label='Upload' replace-label='Replace' remove-label='Remove'",
-      "upload-asset-error-label='Asset upload failed.'",
-      "preview-asset-error-label='Asset preview could not be loaded.' />",
-    ].join(' '),
-  }];
+  const panels = [
+    {
+      id: 'content' as const,
+      label: 'Content',
+      html: [
+        "<tooldrawer-field type='dropdown-upload' path='media.logo' label='Logo' placeholder='No file'",
+        "upload-label='Upload' replace-label='Replace' remove-label='Remove'",
+        "upload-asset-error-label='Asset upload failed.'",
+        "preview-asset-error-label='Asset preview could not be loaded.' />",
+      ].join(' '),
+    },
+  ];
   const defaults = { media: { logo: null } };
   const controls = compileControlsFromPanels({ panels, defaults });
   assert.equal(controls.length, 1, 'Dropdown Upload compiles one control');
@@ -638,7 +851,6 @@ async function testDropdownUploadSingleValueContract(): Promise<void> {
     /does not accept template content/,
     'retired nested template composition is rejected',
   );
-
 }
 
 function testDropdownUploadCopyJoin(): void {
@@ -668,7 +880,11 @@ function testDropdownUploadCopyJoin(): void {
       ],
     }),
   };
-  const lines = buildEditorHtmlLines(editor, { ...fixtureDefaults(), media: { logo: null } }, 'upload-fixture');
+  const lines = buildEditorHtmlLines(
+    editor,
+    { ...fixtureDefaults(), media: { logo: null } },
+    'upload-fixture',
+  );
   const uploadLine = lines.find((line) => /\btype='dropdown-upload'/.test(line));
   assert.ok(uploadLine, 'Dropdown Upload compiles');
   for (const expected of [
@@ -684,7 +900,12 @@ function testDropdownUploadCopyJoin(): void {
   const missing = structuredClone(editor) as any;
   delete missing.labels.components['dropdown-upload'].replace;
   assert.throws(
-    () => buildEditorHtmlLines(missing, { ...fixtureDefaults(), media: { logo: null } }, 'upload-fixture'),
+    () =>
+      buildEditorHtmlLines(
+        missing,
+        { ...fixtureDefaults(), media: { logo: null } },
+        'upload-fixture',
+      ),
     /Dropdown Upload labels are invalid/,
     'incomplete Dropdown Upload component copy fails compilation',
   );
@@ -703,10 +924,26 @@ async function main(): Promise<void> {
       path.join(repoRoot, 'roma/public/widget-editors', `${widgetType}.json`),
       'utf8',
     );
-    assert.doesNotMatch(artifact, /diet-btn-menuactions[^>]*data-variant=/, `${widgetType} has one Menu Actions treatment`);
-    assert.doesNotMatch(artifact, /diet-btn-menuactions__label (?:body|label)-/, `${widgetType} lets Menu Actions own typography`);
-    assert.doesNotMatch(artifact, /diet-btn-menuactions__icon/, `${widgetType} uses the direct Dieter Icon structure`);
-    assert.doesNotMatch(artifact, /diet-dropdown-actions__check[^>]*data-size=/, `${widgetType} lets Menu Actions own checkmark size`);
+    assert.doesNotMatch(
+      artifact,
+      /diet-btn-menuactions[^>]*data-variant=/,
+      `${widgetType} has one Menu Actions treatment`,
+    );
+    assert.doesNotMatch(
+      artifact,
+      /diet-btn-menuactions__label (?:body|label)-/,
+      `${widgetType} lets Menu Actions own typography`,
+    );
+    assert.doesNotMatch(
+      artifact,
+      /diet-btn-menuactions__icon/,
+      `${widgetType} uses the direct Dieter Icon structure`,
+    );
+    assert.doesNotMatch(
+      artifact,
+      /diet-dropdown-actions__check[^>]*data-size=/,
+      `${widgetType} lets Menu Actions own checkmark size`,
+    );
   }
   console.log('PASS compiled Menu Actions use one systemic unbound composition');
   testTooldrawerLabelContractsFailClosed();

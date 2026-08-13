@@ -212,6 +212,17 @@
         "agent-activity": {
           "title": "$label:component.agent-activity.title"
         },
+        "object-manager": {
+          "cancel": "$label:component.object-manager.cancel.label",
+          "delete": "$label:component.object-manager.delete.label",
+          "discard": "$label:component.object-manager.discard.label",
+          "discardMessage": "$label:component.object-manager.discard-message.label",
+          "discardTitle": "$label:component.object-manager.discard-title.label",
+          "keepEditing": "$label:component.object-manager.keep-editing.label",
+          "moveDown": "$label:component.object-manager.move-down.label",
+          "moveUp": "$label:component.object-manager.move-up.label",
+          "save": "$label:component.object-manager.save.label"
+        },
         "dropdown-border": {
           "color": "$label:component.dropdown-border.color.label",
           "defaultColors": "$label:component.dropdown-border.default-colors.label",
@@ -275,6 +286,9 @@
         }
       },
       "fields": {
+        "object-manager": {
+          "cards.items": "$label:appearance.field.cards.items.object-manager.item-label"
+        },
         "dropdown-shadow": {
           "cards.appearance.cardwrapper.shadow": "$label:appearance.cards.cardwrapper.shadow.dropdown-shadow.label",
           "pod.insideShadow.all": "$label:appearance.pod.inside-shadow.all.dropdown-shadow.label",
@@ -485,7 +499,6 @@
                   "remove-label": "$label:content.field.cards.items.repeater.attr.remove-label",
                   "move-label": "$label:content.field.cards.items.repeater.attr.move-label",
                   "reorder-label": "$label:content.field.cards.items.repeater.attr.reorder-label",
-                  "reorder-title": "$label:content.field.cards.items.repeater.attr.reorder-title",
                   "index-token": "__INDEX__",
                   "min": "2",
                   "max": "16",
@@ -883,6 +896,7 @@
                 "attrs": {
                   "group-label": "",
                   "class": "diet-object-manager",
+                  "size": "md",
                   "add-label": "$label:appearance.field.cards.items.object-manager.attr.add-label",
                   "reorder-label": "$label:appearance.field.cards.items.object-manager.attr.reorder-label",
                   "reorder-title": "$label:appearance.field.cards.items.object-manager.attr.reorder-title",

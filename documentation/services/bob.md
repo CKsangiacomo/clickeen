@@ -117,8 +117,10 @@ marked with `data-dieter-json` before running the Dieter hydrator; the empty val
 HTML is only an unbound placeholder, not product truth or a default. Changed-path
 updates apply only while the same panel control surface remains mounted.
 Before Bob replaces or unmounts that surface, it invokes the owning Dropdown
-Actions, Border, Edit, Fill, Shadow, and Upload destroy functions; Edit detaches
-its Lexical root, while Fill and Upload invalidate pending asset resolution.
+Actions, Border, Edit, Fill, Shadow, Upload, Object Manager, and Repeater
+destroy functions; Edit detaches its Lexical root, Fill and Upload invalidate
+pending asset resolution, and the collection controls release their nested
+hydrators and retained draft state.
 
 ## Dieter Icons
 
@@ -380,8 +382,9 @@ declared support files
 `spec.json` carries defaults, editor structure, and ToolDrawer label tokens.
 `{widgetType}_tooldrawer_l10n_labels/en.json` carries the exact English values
 for those tokens, the five widget panel names, and migrated ToolDrawer copy
-such as Agent Activity's title and Dropdown Border, Dropdown Edit, Dropdown Fill,
-Dropdown Shadow, and—when declared—Dropdown Upload field/component labels.
+such as Agent Activity's title; Dropdown Border, Dropdown Edit, Dropdown Fill,
+Dropdown Shadow and—when declared—Dropdown Upload field/component labels; and
+Object Manager/Repeater collection labels and actions.
 The Widget spec declares the exact state path and label-token coordinates; Bob
 joins them with the one Dieter component without Widget-specific compiler
 branches. `editable-fields.json`
@@ -460,6 +463,16 @@ wording for application commands such as Copy code and uses the same primitive
 inside Dropdown Actions compiled from Widget-owned labels. Menu Actions does
 not write instance state or interpret those commands; the enclosing Bob or
 Dropdown Actions flow owns the action, selection, and dismissal.
+
+Object Manager and Repeater compile from the same Widget-owned collection
+truth. The Widget declares the array path, item template, exact new-item
+object, stable-id coordinate, limits, structural permission, and every word.
+Bob resolves those `$label` inputs from the adjacent English ToolDrawer file
+and joins them to the global Dieter stencils. Object Manager owns top-level
+object editors and, only when declared, the Add plus drafted reorder/delete
+workflow. Repeater owns nested inline add/remove/reorder. Both emit one exact
+JSON array through the ordinary browser-memory control host; neither Bob nor
+Dieter infers an item shape, default, permission, or Widget-specific action.
 
 Dropdown Edit is the shared Dieter inline rich-text control. Bob compiles every
 Widget `type="dropdown-edit"` declaration with that Widget's adjacent English

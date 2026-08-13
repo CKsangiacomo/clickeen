@@ -52,6 +52,14 @@ Verification surface
     with no pre-encoded HTML entities or duplicate section/group heading.
 12. Confirm only shared Header and the widget's primary Content section declare
     `initiallyOpen: true`; every other section relies on the collapsed default.
+13. For Object Manager, declare `allow-structure` explicitly; when true,
+    declare an exact default object with `id: ""`, item/action copy through the
+    adjacent label file, and any real minimum. When false, do not rely on hidden
+    structural behavior.
+14. For Repeater, declare one exact object-shaped `default-item` with `id: ""`,
+    keep every saved item on a stable non-empty id, and route every visible or
+    accessible action word through the adjacent label file. Do not infer a new
+    item from current values or template controls.
 
 ## Edit Boundaries
 

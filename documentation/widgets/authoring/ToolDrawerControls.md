@@ -146,6 +146,10 @@ with those current sources until its component pass moves it deliberately.
 
 `default-item` values remain widget content defaults, not ToolDrawer labels.
 They stay in `spec.json` and follow the widget content/editable-field contract.
+Object Manager and Repeater do not derive or repair them. Every repeated object
+must carry a stable non-empty `id`; each declared new-item object carries the
+same shape with `id: ""`, and the owning collection component assigns the new
+id when the user adds it.
 
 ## Visible Hierarchy And Initial State
 
@@ -340,6 +344,22 @@ label, validation state, or Widget-specific behavior.
 State-bound fields use `path`. Visual grouping uses `groupId`; it is not a data
 path. Template children are allowed only inside controls that already own that
 template behavior.
+
+`object-manager` owns one top-level object array. Its caller declares
+`allow-structure` explicitly. `true` exposes Add and one Popup draft for
+reorder/delete; `false` renders only each object's declared editor and must not
+emit structural UI. The caller supplies the item-label template, label path,
+minimum when applicable, default object when structure is enabled, and every
+dialog/action word. Widget copy resolves from
+`editor.labels.components["object-manager"]` plus the exact path under
+`editor.labels.fields["object-manager"]`.
+
+`repeater` owns one nested inline object array. Its caller supplies the exact
+item template, exact `default-item`, `min`/`max` when applicable, and add,
+remove, move, reorder, optional editable-label, and optional toggle words. Add
+copies only that declared object and assigns only its declared empty id fields;
+no item schema is inferred from current data or markup. Reorder mode changes
+only order; ordinary nested controls continue to edit their existing paths.
 
 Dropdown Border, Dropdown Edit, Dropdown Fill, and Dropdown Shadow may declare
 `attrs["popover-width"]` as `row`, `wide`, or `extra-wide`. `row` matches the

@@ -172,6 +172,17 @@
         "agent-activity": {
           "title": "$label:component.agent-activity.title"
         },
+        "object-manager": {
+          "cancel": "$label:component.object-manager.cancel.label",
+          "delete": "$label:component.object-manager.delete.label",
+          "discard": "$label:component.object-manager.discard.label",
+          "discardMessage": "$label:component.object-manager.discard-message.label",
+          "discardTitle": "$label:component.object-manager.discard-title.label",
+          "keepEditing": "$label:component.object-manager.keep-editing.label",
+          "moveDown": "$label:component.object-manager.move-down.label",
+          "moveUp": "$label:component.object-manager.move-up.label",
+          "save": "$label:component.object-manager.save.label"
+        },
         "dropdown-border": {
           "color": "$label:component.dropdown-border.color.label",
           "defaultColors": "$label:component.dropdown-border.default-colors.label",
@@ -235,6 +246,9 @@
         }
       },
       "fields": {
+        "object-manager": {
+          "logoshowcase.strips": "$label:content.field.logoshowcase.strips.object-manager.item-label"
+        },
         "dropdown-shadow": {
           "pod.insideShadow.all": "$label:appearance.pod.inside-shadow.all.dropdown-shadow.label",
           "pod.insideShadow.bottom": "$label:appearance.pod.inside-shadow.bottom.dropdown-shadow.label",
@@ -359,10 +373,10 @@
                       "remove-label": "$label:content.field.logoshowcase.strips.strip.logos.repeater.attr.remove-label",
                       "move-label": "$label:content.field.logoshowcase.strips.strip.logos.repeater.attr.move-label",
                       "reorder-label": "$label:content.field.logoshowcase.strips.strip.logos.repeater.attr.reorder-label",
-                      "reorder-title": "$label:content.field.logoshowcase.strips.strip.logos.repeater.attr.reorder-title",
-                      "add-open": "bulk-edit",
+                      "add-open": ".diet-bulk-edit [data-bulk-open]",
                       "min": "1",
                       "default-item": {
+                        "id": "",
                         "name": "New logo",
                         "logoFill": {
                           "type": "none"
@@ -380,6 +394,8 @@
                 "attrs": {
                   "group-label": "",
                   "class": "diet-object-manager",
+                  "size": "md",
+                  "allow-structure": "true",
                   "add-label": "$label:content.field.logoshowcase.strips.object-manager.attr.add-label",
                   "reorder-label": "$label:content.field.logoshowcase.strips.object-manager.attr.reorder-label",
                   "reorder-title": "$label:content.field.logoshowcase.strips.object-manager.attr.reorder-title",
@@ -387,8 +403,10 @@
                   "index-token": "__STRIP__",
                   "min": "1",
                   "default-item": {
+                    "id": "",
                     "logos": [
                       {
+                        "id": "",
                         "name": "New logo",
                         "logoFill": {
                           "type": "none"

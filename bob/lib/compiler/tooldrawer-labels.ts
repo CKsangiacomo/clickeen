@@ -17,6 +17,10 @@ const COPY_ATTRIBUTE_NAMES = new Set([
   'group-label',
   'headerLabel',
   'keep-editing-label',
+  'item-label',
+  'move-up-label',
+  'move-down-label',
+  'delete-label',
   'labelInputLabel',
   'labelPlaceholder',
   'move-label',
@@ -119,7 +123,12 @@ function assertLabelToken(value: unknown, path: string, widgetType: string): voi
   }
 }
 
-function assertCopyAttributes(attrs: unknown, path: string, widgetType: string, element: boolean): void {
+function assertCopyAttributes(
+  attrs: unknown,
+  path: string,
+  widgetType: string,
+  element: boolean,
+): void {
   if (!isRecord(attrs)) return;
   for (const name of COPY_ATTRIBUTE_NAMES) {
     assertLabelToken(attrs[name], `${path}.${name}`, widgetType);
@@ -210,13 +219,21 @@ function assertWidgetCopyUsesLabelTokens(widget: RawWidget, widgetType: string):
     if (!isRecord(panel)) return;
     if (isRecord(panel.shared) && isRecord(panel.shared.roleLabels)) {
       for (const [role, label] of Object.entries(panel.shared.roleLabels)) {
-        assertLabelToken(label, `editor.panels[${panelIndex}].shared.roleLabels.${role}`, widgetType);
+        assertLabelToken(
+          label,
+          `editor.panels[${panelIndex}].shared.roleLabels.${role}`,
+          widgetType,
+        );
       }
     }
     if (!Array.isArray(panel.clusters)) return;
     panel.clusters.forEach((cluster, clusterIndex) => {
       if (!isRecord(cluster) || cluster.kind === 'shared') return;
-      assertLabelToken(cluster.label, `editor.panels[${panelIndex}].clusters[${clusterIndex}].label`, widgetType);
+      assertLabelToken(
+        cluster.label,
+        `editor.panels[${panelIndex}].clusters[${clusterIndex}].label`,
+        widgetType,
+      );
       assertCopyAttributes(
         cluster.attrs,
         `editor.panels[${panelIndex}].clusters[${clusterIndex}].attrs`,
@@ -290,7 +307,9 @@ function resolveLabelTokens(
     if (!value.startsWith(LABEL_TOKEN_PREFIX)) return value;
     const key = value.slice(LABEL_TOKEN_PREFIX.length);
     if (!LABEL_KEY_PATTERN.test(key)) {
-      throw new Error(`[BobCompiler] ${labels.widgetType} ToolDrawer label token is invalid at ${path}`);
+      throw new Error(
+        `[BobCompiler] ${labels.widgetType} ToolDrawer label token is invalid at ${path}`,
+      );
     }
     const label = labels.labels[key];
     if (label === undefined) {

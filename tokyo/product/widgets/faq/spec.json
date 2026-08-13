@@ -262,6 +262,17 @@
         "agent-activity": {
           "title": "$label:component.agent-activity.title"
         },
+        "object-manager": {
+          "cancel": "$label:component.object-manager.cancel.label",
+          "delete": "$label:component.object-manager.delete.label",
+          "discard": "$label:component.object-manager.discard.label",
+          "discardMessage": "$label:component.object-manager.discard-message.label",
+          "discardTitle": "$label:component.object-manager.discard-title.label",
+          "keepEditing": "$label:component.object-manager.keep-editing.label",
+          "moveDown": "$label:component.object-manager.move-down.label",
+          "moveUp": "$label:component.object-manager.move-up.label",
+          "save": "$label:component.object-manager.save.label"
+        },
         "dropdown-border": {
           "color": "$label:component.dropdown-border.color.label",
           "defaultColors": "$label:component.dropdown-border.default-colors.label",
@@ -325,6 +336,9 @@
         }
       },
       "fields": {
+        "object-manager": {
+          "faq.sections": "$label:content.field.faq.sections.object-manager.item-label"
+        },
         "dropdown-shadow": {
           "faq.appearance.cardwrapper.insideShadow.all": "$label:appearance.faq.cardwrapper.inside-shadow.all.dropdown-shadow.label",
           "faq.appearance.cardwrapper.insideShadow.bottom": "$label:appearance.faq.cardwrapper.inside-shadow.bottom.dropdown-shadow.label",
@@ -441,14 +455,17 @@
                       }
                     ],
                     "attrs": {
+                      "size": "md",
                       "add-label": "$label:content.field.faq.sections.section.faqs.repeater.attr.add-label",
                       "remove-label": "$label:content.field.faq.sections.section.faqs.repeater.attr.remove-label",
                       "move-label": "$label:content.field.faq.sections.section.faqs.repeater.attr.move-label",
+                      "reorder-label": "$label:content.field.faq.sections.section.faqs.repeater.attr.reorder-label",
                       "labelPath": "faq.sections.__SECTION__.title",
                       "labelInputLabel": "$label:content.field.faq.sections.section.faqs.repeater.attr.label-input-label",
                       "labelPlaceholder": "$label:content.field.faq.sections.section.faqs.repeater.attr.label-placeholder",
-                      "labelSize": "lg",
+                      "min": "1",
                       "default-item": {
+                        "id": "",
                         "question": "New question",
                         "answer": "New answer",
                         "defaultOpen": false
@@ -459,15 +476,20 @@
                 "attrs": {
                   "group-label": "",
                   "class": "diet-object-manager",
+                  "size": "md",
+                  "allow-structure": "true",
                   "add-label": "$label:content.field.faq.sections.object-manager.attr.add-label",
                   "reorder-label": "$label:content.field.faq.sections.object-manager.attr.reorder-label",
                   "reorder-title": "$label:content.field.faq.sections.object-manager.attr.reorder-title",
                   "label-path": "title",
                   "index-token": "__SECTION__",
+                  "min": "1",
                   "default-item": {
+                    "id": "",
                     "title": "All Questions",
                     "faqs": [
                       {
+                        "id": "",
                         "question": "New question",
                         "answer": "New answer",
                         "defaultOpen": false

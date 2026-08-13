@@ -1,153 +1,114 @@
-import { createDialogLifecycle } from '../shared/dialog-lifecycle';
+import { createDialogLifecycle, type DialogLifecycle } from '../shared/dialog-lifecycle';
 
 type ObjectManagerOptions = {
   hydrateChildren?: (scope: HTMLElement) => (() => void) | void;
 };
 
+type ObjectManagerState = {
+  manageButton: HTMLButtonElement | null;
+  lifecycle: DialogLifecycle | null;
+  valueJson: string;
+  cleanupChildren: (() => void) | null;
+  removeListeners: Array<() => void>;
+};
+
 type JsonContainer = Record<string, unknown> | unknown[];
+
+const states = new Map<HTMLElement, ObjectManagerState>();
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value && typeof value === 'object' && !Array.isArray(value));
 }
 
 function createId(): string {
-  if (typeof crypto === 'undefined' || !crypto) {
-    throw new Error('[object-manager] crypto unavailable');
+  if (typeof crypto === 'undefined' || typeof crypto.randomUUID !== 'function') {
+    throw new Error('[object-manager] crypto.randomUUID unavailable');
   }
-  if (typeof crypto.randomUUID === 'function') {
-    return crypto.randomUUID();
-  }
-  if (typeof crypto.getRandomValues !== 'function') {
-    throw new Error('[object-manager] crypto.getRandomValues unavailable');
-  }
-  const bytes = new Uint8Array(16);
-  crypto.getRandomValues(bytes);
-  bytes[6] = (bytes[6] & 15) | 64;
-  bytes[8] = (bytes[8] & 63) | 128;
-  const hex = Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0')).join('');
-  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
+  return crypto.randomUUID();
 }
 
-function ensureIdsDeep(value: unknown): void {
+function assignDeclaredIds(value: unknown): void {
   if (Array.isArray(value)) {
-    value.forEach((item) => {
-      if (!isRecord(item)) return;
-      if (!item.id) item.id = createId();
-      Object.values(item).forEach(ensureIdsDeep);
-    });
+    value.forEach(assignDeclaredIds);
     return;
   }
-  if (isRecord(value)) {
-    Object.values(value).forEach(ensureIdsDeep);
+  if (!isRecord(value)) return;
+  if (Object.hasOwn(value, 'id')) {
+    if (value.id !== '') throw new Error('[object-manager] New-item id must be empty');
+    value.id = createId();
   }
+  Object.values(value).forEach(assignDeclaredIds);
 }
 
-function deepClone<T>(value: T): T {
-  if (typeof structuredClone === 'function') return structuredClone(value);
-  try {
-    return JSON.parse(JSON.stringify(value)) as T;
-  } catch {
-    return value;
-  }
-}
-
-function parseJsonArray(value: string): unknown[] {
-  if (!value.trim()) {
-    throw new Error('[object-manager] Missing JSON array value');
-  }
+function parseJsonArray(value: string): Array<Record<string, unknown>> {
+  if (!value.trim()) throw new Error('[object-manager] Missing JSON array value');
   const parsed: unknown = JSON.parse(value);
-  if (!Array.isArray(parsed)) {
-    throw new Error('[object-manager] Expected JSON array');
+  if (!Array.isArray(parsed) || parsed.some((item) => !isRecord(item))) {
+    throw new Error('[object-manager] Expected an array of objects');
+  }
+  if (parsed.some((item) => typeof item.id !== 'string' || !item.id.trim())) {
+    throw new Error('[object-manager] Every item must have a stable id');
   }
   return parsed;
-}
-
-function stringify(value: unknown): string {
-  return JSON.stringify(value);
 }
 
 function parseItemLimit(value: string | null): number | null {
-  if (value == null || value === '') return null;
-  const parsed = Number(value);
-  if (!Number.isInteger(parsed) || parsed < 0) return null;
-  return parsed;
-}
-
-function decodeHtmlEntities(value: string): string {
-  return value
-    .replace(/&quot;/g, '"')
-    .replace(/&apos;/g, "'")
-    .replace(/&amp;/g, '&')
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>');
+  if (value == null) return null;
+  if (!/^\d+$/.test(value)) throw new Error('[object-manager] Item limit is invalid');
+  return Number(value);
 }
 
 function getAt(value: unknown, path: string): unknown {
-  if (!path) return undefined;
   let current = value;
-  for (const part of path.split('.').filter(Boolean)) {
-    if (!current || typeof current !== 'object') return undefined;
+  for (const part of path.split('.')) {
+    if (!part || !current || typeof current !== 'object' || !Object.hasOwn(current, part)) {
+      return undefined;
+    }
     current = (current as Record<string, unknown>)[part];
   }
   return current;
 }
 
-function isIndex(segment: string): boolean {
-  return /^\d+$/.test(segment);
-}
-
-function getContainerValue(container: JsonContainer, key: string | number): unknown {
-  return (container as Record<string, unknown>)[String(key)];
-}
-
-function setContainerValue(container: JsonContainer, key: string | number, value: unknown): void {
-  (container as Record<string, unknown>)[String(key)] = value;
-}
-
-function setAt(value: Record<string, unknown>, path: string, nextValue: unknown): void {
+function setExistingAt(value: Record<string, unknown>, path: string, nextValue: unknown): void {
   const parts = path.split('.').filter(Boolean);
-  if (!parts.length) return;
+  if (!parts.length) throw new Error('[object-manager] Nested field path is missing');
   let current: JsonContainer = value;
-
-  parts.forEach((part, index) => {
-    const key = isIndex(part) ? Number(part) : part;
+  for (let index = 0; index < parts.length; index += 1) {
+    const key = parts[index];
+    if (!Object.hasOwn(current, key)) {
+      throw new Error(`[object-manager] Nested field path does not exist: ${path}`);
+    }
     if (index === parts.length - 1) {
-      setContainerValue(current, key, nextValue);
+      (current as Record<string, unknown>)[key] = nextValue;
       return;
     }
-
-    const existing = getContainerValue(current, key);
-    const nextPart = parts[index + 1];
-    const wantsArray = Boolean(nextPart && isIndex(nextPart));
-    const nextContainer: JsonContainer = wantsArray
-      ? Array.isArray(existing)
-        ? existing
-        : []
-      : isRecord(existing)
-        ? existing
-        : {};
-    setContainerValue(current, key, nextContainer);
-    current = nextContainer;
-  });
+    const next: unknown = (current as Record<string, unknown>)[key];
+    if (!isRecord(next) && !Array.isArray(next)) {
+      throw new Error(`[object-manager] Nested field path does not exist: ${path}`);
+    }
+    current = next;
+  }
 }
 
-function runChildHydrators(scope: HTMLElement, options?: ObjectManagerOptions): (() => void) | null {
-  return options?.hydrateChildren?.(scope) ?? null;
+function requiredElement<T extends Element>(root: ParentNode, selector: string): T {
+  const element = root.querySelector<T>(selector);
+  if (!element) throw new Error(`[object-manager] Missing required element: ${selector}`);
+  return element;
 }
 
-function dispatchControlsRendered(root: HTMLElement, source: string): void {
-  root.dispatchEvent(
-    new CustomEvent('dieter-controls-rendered', {
-      bubbles: true,
-      detail: { source },
-    }),
-  );
+function registerListener(
+  state: ObjectManagerState,
+  target: EventTarget,
+  type: string,
+  listener: EventListener,
+  options?: boolean | AddEventListenerOptions,
+): void {
+  target.addEventListener(type, listener, options);
+  state.removeListeners.push(() => target.removeEventListener(type, listener, options));
 }
 
-function setActionLabel(button: HTMLButtonElement | null, label: string): void {
-  if (!button) return;
-  button.setAttribute('aria-label', label);
-  button.setAttribute('data-tooltip', label);
+function fillTemplate(template: string, label: string, index: number): string {
+  return template.replaceAll('{label}', label).replaceAll('{index}', String(index + 1));
 }
 
 export function hydrateObjectManager(
@@ -155,325 +116,277 @@ export function hydrateObjectManager(
   options?: ObjectManagerOptions,
 ): void {
   scope.querySelectorAll<HTMLElement>('.diet-object-manager').forEach((root) => {
-    if (root.dataset.hydrated === 'true') return;
-    root.dataset.hydrated = 'true';
+    if (states.has(root)) return;
 
-    const hidden = root.querySelector<HTMLInputElement>('.diet-object-manager__field');
-    const list = root.querySelector<HTMLElement>('[data-objects-list]');
-    const addBtn = root.querySelector<HTMLButtonElement>('[data-objects-add]');
-    const manageBtn = root.querySelector<HTMLButtonElement>('[data-objects-manage]');
-    const itemTemplate = root.querySelector<HTMLTemplateElement>('template[data-objects-item]');
-    const dialog = root.querySelector<HTMLDialogElement>('[data-objects-modal]');
-    const editor = root.querySelector<HTMLElement>('[data-objects-editor]');
-    const modalList = root.querySelector<HTMLElement>('[data-objects-modal-list]');
-    const rowTemplate = root.querySelector<HTMLTemplateElement>('template[data-objects-row]');
-    const saveBtn = root.querySelector<HTMLButtonElement>('[data-objects-save]');
-    const cancelBtn = root.querySelector<HTMLButtonElement>('[data-objects-cancel]');
-    const discardPanel = root.querySelector<HTMLElement>('[data-objects-discard-panel]');
-    const keepEditingBtn = root.querySelector<HTMLButtonElement>('[data-objects-keep-editing]');
-    const discardBtn = root.querySelector<HTMLButtonElement>('[data-objects-discard]');
-
-    if (
-      !hidden ||
-      !list ||
-      !addBtn ||
-      !manageBtn ||
-      !itemTemplate ||
-      !dialog ||
-      !editor ||
-      !modalList ||
-      !rowTemplate ||
-      !saveBtn ||
-      !cancelBtn ||
-      !discardPanel ||
-      !keepEditingBtn ||
-      !discardBtn
-    ) {
-      return;
+    const hidden = requiredElement<HTMLInputElement>(root, '.diet-object-manager__field');
+    const list = requiredElement<HTMLElement>(root, '[data-objects-list]');
+    const itemTemplate = requiredElement<HTMLTemplateElement>(root, 'template[data-objects-item]');
+    const allowStructure = root.dataset.allowStructure === 'true';
+    if (!allowStructure && root.dataset.allowStructure !== 'false') {
+      throw new Error('[object-manager] allow-structure must be true or false');
     }
 
-    const indexToken = (root.getAttribute('data-index-token') || '__INDEX__').trim();
-    const labelPath = root.getAttribute('data-label-path') || '';
-    const minItems = parseItemLimit(root.getAttribute('data-min-items'));
-    const defaultItemAttribute = root.getAttribute('data-default-item') || '';
-    const editorLabel = dialog.getAttribute('aria-label') || 'Manage objects';
-    let defaultItem: unknown = null;
-    if (defaultItemAttribute) {
-      defaultItem = JSON.parse(decodeHtmlEntities(defaultItemAttribute)) as unknown;
-    }
-
-    const read = (): unknown[] => {
-      const raw =
-        hidden.value ||
-        hidden.getAttribute('value') ||
-        hidden.getAttribute('data-dieter-json') ||
-        '[]';
-      return parseJsonArray(raw);
+    const state: ObjectManagerState = {
+      manageButton: null,
+      lifecycle: null,
+      valueJson: hidden.value,
+      cleanupChildren: null,
+      removeListeners: [],
     };
+    states.set(root, state);
 
-    const write = (value: unknown[]): void => {
-      const json = stringify(value);
+    const indexToken = root.dataset.indexToken!;
+    const labelPath = root.dataset.labelPath!;
+    const minItems = parseItemLimit(root.dataset.minItems ?? null);
+    const read = (): Array<Record<string, unknown>> => parseJsonArray(hidden.value);
+    const write = (value: Array<Record<string, unknown>>): void => {
+      const json = JSON.stringify(value);
+      state.valueJson = json;
       hidden.value = json;
       hidden.setAttribute('data-dieter-json', json);
       hidden.dispatchEvent(new Event('input', { bubbles: true }));
     };
 
-    const getSignature = (items: unknown[]): string => {
-      const ids = items.map((item) => {
-        if (!isRecord(item)) return '';
-        return typeof item.id === 'string' ? item.id : '';
-      });
-      return `${items.length}:${ids.join('|')}`;
-    };
-
-    let lastSignature: string | null = null;
-    let cleanupChildren: (() => void) | null = null;
-
     const render = (): void => {
       const items = read();
-      lastSignature = getSignature(items);
-      cleanupChildren?.();
-      list.innerHTML = '';
-      const templateHtml = itemTemplate.innerHTML || '';
-      const basePath =
-        hidden.getAttribute('data-bob-path') || hidden.getAttribute('data-path') || '';
+      state.cleanupChildren?.();
+      list.replaceChildren();
+      const basePath = hidden.dataset.bobPath ?? hidden.dataset.path ?? '';
 
       items.forEach((itemData, index) => {
         const container = document.createElement('div');
         container.className = 'diet-object-manager__item';
-        container.setAttribute('data-object-index', String(index));
-        container.innerHTML = templateHtml.replace(new RegExp(indexToken, 'g'), String(index));
+        container.dataset.objectIndex = String(index);
+        container.innerHTML = itemTemplate.innerHTML.replaceAll(indexToken, String(index));
 
         container.querySelectorAll<HTMLElement>('[data-bob-path]').forEach((element) => {
-          const path = element.getAttribute('data-bob-path') || '';
-          const prefix = basePath ? `${basePath}.${index}.` : '';
-          if (!prefix || !path.startsWith(prefix)) return;
+          const path = element.dataset.bobPath!;
+          const prefix = `${basePath}.${index}.`;
+          if (!path.startsWith(prefix)) return;
           const fieldValue = getAt(itemData, path.slice(prefix.length));
-          if (fieldValue == null) return;
+          if (fieldValue === undefined) return;
 
           if (element instanceof HTMLInputElement) {
-            if (element.type === 'checkbox') {
-              element.checked = Boolean(fieldValue);
-              return;
-            }
-            if (element.dataset.dieterJson != null) {
-              const json = stringify(fieldValue);
+            if (element.type === 'checkbox') element.checked = Boolean(fieldValue);
+            else if (element.dataset.dieterJson != null) {
+              const json = JSON.stringify(fieldValue);
               element.value = json;
               element.setAttribute('data-dieter-json', json);
-              return;
-            }
-            if (element.type === 'hidden' && Array.isArray(fieldValue)) {
-              const json = stringify(fieldValue);
-              element.value = json;
-              element.setAttribute('data-dieter-json', json);
-              return;
-            }
-            element.value = String(fieldValue);
-            return;
-          }
-
-          if (element instanceof HTMLTextAreaElement) {
+            } else element.value = String(fieldValue);
+          } else if (element instanceof HTMLTextAreaElement) {
             element.value = String(fieldValue);
           }
         });
-        list.appendChild(container);
+        list.append(container);
       });
 
-      cleanupChildren = runChildHydrators(list, options);
-      const canManage = items.length > 1;
-      manageBtn.hidden = !canManage;
-      manageBtn.style.display = canManage ? '' : 'none';
-      dispatchControlsRendered(root, 'object-manager');
+      state.cleanupChildren = options?.hydrateChildren?.(list) ?? null;
+      if (state.manageButton) {
+        const canReorder = items.length > 1;
+        const canDelete = minItems == null || items.length > minItems;
+        state.manageButton.hidden = !canReorder && !canDelete;
+      }
+      root.dispatchEvent(
+        new CustomEvent('dieter-controls-rendered', {
+          bubbles: true,
+          detail: { source: 'object-manager' },
+        }),
+      );
     };
 
     const handleExternalSync = (event: Event): void => {
-      if (event.type !== 'external-sync') return;
-      try {
-        const detail = (event as CustomEvent<{ value?: unknown }>).detail;
-        const payload = detail && typeof detail.value !== 'undefined' ? detail.value : hidden.value;
-        const nextJson = typeof payload === 'string' ? payload : stringify(payload);
-        hidden.value = nextJson;
-        hidden.setAttribute('data-dieter-json', nextJson);
-
-        const nextItems = parseJsonArray(nextJson);
-        if (getSignature(nextItems) !== lastSignature) {
-          render();
-        }
-      } catch (error) {
-        if ((window as Window & { __CK_DEV__?: boolean }).__CK_DEV__ === true) {
-          console.warn('[object-manager] external sync failed', error);
-        }
-      }
+      const detail = (event as CustomEvent<{ value?: unknown }>).detail;
+      const next = detail && 'value' in detail ? detail.value : hidden.value;
+      const nextJson = typeof next === 'string' ? next : JSON.stringify(next);
+      parseJsonArray(nextJson);
+      if (nextJson === state.valueJson) return;
+      state.valueJson = nextJson;
+      hidden.value = nextJson;
+      hidden.setAttribute('data-dieter-json', nextJson);
+      render();
     };
-
-    hidden.addEventListener('external-sync', handleExternalSync);
+    registerListener(state, hidden, 'external-sync', handleExternalSync);
 
     const handleNestedChange = (event: Event): void => {
       const detail = (event as CustomEvent<{ bobIgnore?: boolean }>).detail;
       if (detail?.bobIgnore) return;
       const target = event.target;
       if (
-        !(target instanceof HTMLInputElement) &&
-        !(target instanceof HTMLTextAreaElement) &&
-        !(target instanceof HTMLSelectElement)
-      ) {
+        target === hidden ||
+        (!(target instanceof HTMLInputElement) &&
+          !(target instanceof HTMLTextAreaElement) &&
+          !(target instanceof HTMLSelectElement))
+      )
         return;
-      }
-      if (target === hidden) return;
 
-      const basePath =
-        hidden.getAttribute('data-bob-path') || hidden.getAttribute('data-path') || '';
-      if (!basePath) return;
-      const path = target.getAttribute('data-bob-path') || '';
+      const basePath = hidden.dataset.bobPath ?? hidden.dataset.path ?? '';
+      const path = target.dataset.bobPath ?? '';
       if (!path.startsWith(`${basePath}.`)) return;
       const parts = path.slice(basePath.length + 1).split('.');
       const itemIndex = parts.shift();
-      if (!itemIndex || !isIndex(itemIndex) || parts.length === 0) return;
+      if (!itemIndex || !/^\d+$/.test(itemIndex) || !parts.length) return;
 
       const items = read();
       const item = items[Number(itemIndex)];
-      if (!isRecord(item)) return;
-      let nextValue: unknown;
-      if (target instanceof HTMLInputElement && target.type === 'checkbox') {
-        nextValue = target.checked;
-      } else if (target instanceof HTMLInputElement && target.dataset.dieterJson != null) {
-        try {
-          nextValue = JSON.parse(target.value) as unknown;
-        } catch {
-          return;
-        }
-      } else {
-        nextValue = target.value;
-      }
-      setAt(item, parts.join('.'), nextValue);
+      if (!isRecord(item)) throw new Error('[object-manager] Nested item must be an object');
+      const nextValue =
+        target instanceof HTMLInputElement && target.type === 'checkbox'
+          ? target.checked
+          : target instanceof HTMLInputElement && target.dataset.dieterJson != null
+            ? JSON.parse(target.value)
+            : target.value;
+      setExistingAt(item, parts.join('.'), nextValue);
       write(items);
     };
+    registerListener(state, root, 'input', handleNestedChange, true);
+    registerListener(state, root, 'change', handleNestedChange, true);
 
-    root.addEventListener('input', handleNestedChange, true);
-    root.addEventListener('change', handleNestedChange, true);
+    if (allowStructure) {
+      const addButton = requiredElement<HTMLButtonElement>(root, '[data-objects-add]');
+      const manageButton = requiredElement<HTMLButtonElement>(root, '[data-objects-manage]');
+      const dialog = requiredElement<HTMLDialogElement>(root, '[data-objects-modal]');
+      const editor = requiredElement<HTMLElement>(dialog, '[data-objects-editor]');
+      const modalList = requiredElement<HTMLElement>(dialog, '[data-objects-modal-list]');
+      const rowTemplate = requiredElement<HTMLTemplateElement>(root, 'template[data-objects-row]');
+      const saveButton = requiredElement<HTMLButtonElement>(dialog, '[data-objects-save]');
+      const cancelButton = requiredElement<HTMLButtonElement>(dialog, '[data-objects-cancel]');
+      const discardPanel = requiredElement<HTMLElement>(dialog, '[data-objects-discard-panel]');
+      const keepEditingButton = requiredElement<HTMLButtonElement>(
+        dialog,
+        '[data-objects-keep-editing]',
+      );
+      const discardButton = requiredElement<HTMLButtonElement>(dialog, '[data-objects-discard]');
+      const discardTitle = requiredElement<HTMLElement>(
+        discardPanel,
+        '.diet-object-manager__title',
+      ).textContent!;
+      const editorTitle = requiredElement<HTMLElement>(
+        editor,
+        '.diet-object-manager__title',
+      ).textContent!;
+      const defaultItem = JSON.parse(root.dataset.defaultItem!);
+      if (!isRecord(defaultItem))
+        throw new Error('[object-manager] default-item must be an object');
 
-    addBtn.addEventListener('click', () => {
-      const next = read();
-      const clonedDefault = defaultItem ? deepClone(defaultItem) : null;
-      const item: Record<string, unknown> = isRecord(clonedDefault) ? clonedDefault : {};
-      if (!item.id) item.id = createId();
-      ensureIdsDeep(item);
-      next.push(item);
-      write(next);
-      render();
-    });
+      state.manageButton = manageButton;
 
-    let original: unknown[] = [];
-    let working: unknown[] = [];
-    let editorFocus: HTMLElement | null = null;
-
-    const isDirty = (): boolean =>
-      original.length !== working.length || original.some((item, index) => item !== working[index]);
-
-    const showEditor = (restoreFocus: boolean): void => {
-      discardPanel.hidden = true;
-      editor.hidden = false;
-      dialog.setAttribute('aria-label', editorLabel);
-      if (restoreFocus) {
-        const focusTarget = editorFocus?.isConnected ? editorFocus : cancelBtn;
-        focusTarget.focus({ preventScroll: true });
+      if (!Object.hasOwn(defaultItem, 'id')) {
+        throw new Error('[object-manager] default-item must declare an id field');
       }
-    };
 
-    const showDiscardConfirmation = (): void => {
-      editorFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
-      editor.hidden = true;
-      discardPanel.hidden = false;
-      dialog.setAttribute('aria-label', 'Discard changes?');
-      keepEditingBtn.focus({ preventScroll: true });
-    };
-
-    const requestClose = (): void => {
-      if (isDirty()) {
-        showDiscardConfirmation();
-        return;
-      }
-      lifecycle.close();
-    };
-
-    const lifecycle = createDialogLifecycle({
-      dialog,
-      initialFocus: cancelBtn,
-      requestDismiss: (reason) => {
-        if (reason === 'backdrop') return;
-        if (!discardPanel.hidden) {
-          showEditor(true);
-          return;
-        }
-        requestClose();
-      },
-    });
-
-    const rebuildRows = (): void => {
-      modalList.innerHTML = '';
-      const sourceRow = rowTemplate.content.firstElementChild;
-      if (!(sourceRow instanceof HTMLElement)) return;
-
-      working.forEach((item, index) => {
-        const row = sourceRow.cloneNode(true) as HTMLElement;
-        const labelElement = row.querySelector<HTMLElement>('[data-objects-label]');
-        const rawLabel = getAt(item, labelPath);
-        const label = rawLabel ? String(rawLabel) : `Object ${index + 1}`;
-        if (labelElement) labelElement.textContent = label;
-
-        const up = row.querySelector<HTMLButtonElement>('[data-objects-up]');
-        const down = row.querySelector<HTMLButtonElement>('[data-objects-down]');
-        const deleteButton = row.querySelector<HTMLButtonElement>('[data-objects-delete]');
-        setActionLabel(up, `Move ${label} up`);
-        setActionLabel(down, `Move ${label} down`);
-        setActionLabel(deleteButton, `Delete ${label}`);
-
-        if (deleteButton) {
-          deleteButton.disabled = minItems != null && working.length <= minItems;
-        }
-
-        up?.addEventListener('click', () => {
-          if (index === 0) return;
-          const [moved] = working.splice(index, 1);
-          working.splice(index - 1, 0, moved);
-          rebuildRows();
-        });
-        down?.addEventListener('click', () => {
-          if (index >= working.length - 1) return;
-          const [moved] = working.splice(index, 1);
-          working.splice(index + 1, 0, moved);
-          rebuildRows();
-        });
-        deleteButton?.addEventListener('click', () => {
-          if (minItems != null && working.length <= minItems) return;
-          working.splice(index, 1);
-          rebuildRows();
-        });
-        modalList.appendChild(row);
+      let original: Array<Record<string, unknown>> = [];
+      let working: Array<Record<string, unknown>> = [];
+      let editorFocus: HTMLElement | null = null;
+      const isDirty = (): boolean => JSON.stringify(original) !== JSON.stringify(working);
+      const showEditor = (restoreFocus: boolean): void => {
+        discardPanel.hidden = true;
+        editor.hidden = false;
+        dialog.setAttribute('aria-label', editorTitle);
+        if (restoreFocus) (editorFocus?.isConnected ? editorFocus : cancelButton).focus();
+      };
+      const showDiscard = (): void => {
+        editorFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+        editor.hidden = true;
+        discardPanel.hidden = false;
+        dialog.setAttribute('aria-label', discardTitle);
+        keepEditingButton.focus();
+      };
+      const lifecycle = createDialogLifecycle({
+        dialog,
+        initialFocus: cancelButton,
+        requestDismiss: (reason) => {
+          if (reason === 'backdrop') return;
+          if (!discardPanel.hidden) showEditor(true);
+          else if (isDirty()) showDiscard();
+          else lifecycle.close();
+        },
       });
-    };
+      state.lifecycle = lifecycle;
 
-    manageBtn.addEventListener('click', () => {
-      original = read();
-      working = original.slice();
-      editorFocus = null;
-      showEditor(false);
-      rebuildRows();
-      lifecycle.open(manageBtn);
-    });
+      const rebuildRows = (): void => {
+        modalList.replaceChildren();
+        const sourceRow = rowTemplate.content.firstElementChild;
+        if (!(sourceRow instanceof HTMLElement)) {
+          throw new Error('[object-manager] Row template is empty');
+        }
+        working.forEach((item, index) => {
+          const row = sourceRow.cloneNode(true) as HTMLElement;
+          const rawLabel = getAt(item, labelPath);
+          const label =
+            typeof rawLabel === 'string' && rawLabel.trim()
+              ? rawLabel
+              : fillTemplate(root.dataset.itemLabel!, '', index).trim();
+          requiredElement<HTMLElement>(row, '[data-objects-label]').textContent = label;
+          const up = requiredElement<HTMLButtonElement>(row, '[data-objects-up]');
+          const down = requiredElement<HTMLButtonElement>(row, '[data-objects-down]');
+          const remove = requiredElement<HTMLButtonElement>(row, '[data-objects-delete]');
+          const setLabel = (button: HTMLButtonElement, template: string) => {
+            const actionLabel = fillTemplate(template, label, index);
+            button.setAttribute('aria-label', actionLabel);
+            button.setAttribute('data-tooltip', actionLabel);
+          };
+          setLabel(up, root.dataset.moveUpLabel!);
+          setLabel(down, root.dataset.moveDownLabel!);
+          setLabel(remove, root.dataset.deleteLabel!);
+          up.disabled = index === 0;
+          down.disabled = index === working.length - 1;
+          remove.disabled = minItems != null && working.length <= minItems;
+          up.addEventListener('click', () => {
+            const [moved] = working.splice(index, 1);
+            working.splice(index - 1, 0, moved);
+            rebuildRows();
+          });
+          down.addEventListener('click', () => {
+            const [moved] = working.splice(index, 1);
+            working.splice(index + 1, 0, moved);
+            rebuildRows();
+          });
+          remove.addEventListener('click', () => {
+            working.splice(index, 1);
+            rebuildRows();
+          });
+          modalList.append(row);
+        });
+      };
 
-    saveBtn.addEventListener('click', () => {
-      write(working);
-      render();
-      lifecycle.close();
-    });
-    cancelBtn.addEventListener('click', requestClose);
-    keepEditingBtn.addEventListener('click', () => showEditor(true));
-    discardBtn.addEventListener('click', () => {
-      working = [];
-      lifecycle.close();
-    });
+      registerListener(state, addButton, 'click', () => {
+        const next = read();
+        const item = structuredClone(defaultItem);
+        assignDeclaredIds(item);
+        next.push(item);
+        write(next);
+        render();
+      });
+      registerListener(state, manageButton, 'click', () => {
+        original = read();
+        working = original.slice();
+        editorFocus = null;
+        showEditor(false);
+        rebuildRows();
+        lifecycle.open(manageButton);
+      });
+      registerListener(state, saveButton, 'click', () => {
+        write(working);
+        render();
+        lifecycle.close();
+      });
+      registerListener(state, cancelButton, 'click', () => {
+        if (isDirty()) showDiscard();
+        else lifecycle.close();
+      });
+      registerListener(state, keepEditingButton, 'click', () => showEditor(true));
+      registerListener(state, discardButton, 'click', () => lifecycle.close());
+    }
 
     render();
   });
+}
+
+export function destroyObjectManager(root: HTMLElement): void {
+  const state = states.get(root);
+  if (!state) return;
+  state.cleanupChildren?.();
+  state.lifecycle?.destroy();
+  state.removeListeners.forEach((remove) => remove());
+  states.delete(root);
 }

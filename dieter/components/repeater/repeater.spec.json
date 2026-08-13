@@ -1,16 +1,20 @@
 {
   "component": "repeater",
-  "syntax": "<tooldrawer-field type='repeater' size='{{SIZE}}' path='{{PATH}}' label='{{LABEL}}' />",
+  "syntax": "<tooldrawer-field type='repeater' size='{{SIZE}}' path='{{PATH}}' label='{{LABEL}}' add-label='{{ADD_LABEL}}' reorder-label='{{REORDER_LABEL}}' remove-label='{{REMOVE_LABEL}}' move-label='{{MOVE_LABEL}}' default-item='{{DEFAULT_ITEM}}' />",
   "attributes": {
     "size": { "enum": ["sm", "md", "lg"], "default": "md" },
-    "path": { "optional": true },
-    "label": { "optional": true },
+    "path": { "required": true },
+    "label": { "required": true },
     "labelPath": { "optional": true },
     "labelPlaceholder": { "optional": true },
-    "default-item": { "optional": true },
+    "labelInputLabel": { "optional": true },
+    "default-item": { "required": true },
     "toggleLabel": { "optional": true },
     "togglePath": { "optional": true },
-    "move-label": { "optional": true },
+    "add-label": { "required": true },
+    "reorder-label": { "required": true },
+    "remove-label": { "required": true },
+    "move-label": { "required": true },
     "add-open": { "optional": true }
   },
   "defaults": [
@@ -22,20 +26,41 @@
         "label": "Items",
         "addLabel": "Add item",
         "reorderLabel": "Reorder items",
+        "removeLabel": "Remove item {index}",
         "moveLabel": "Move item {index}",
         "size": "md",
+        "buttonSize": "medium",
+        "labelClass": "label-s",
+        "bodyClass": "body-s",
+        "path": "items",
         "labelInputLabel": "Title",
         "labelPlaceholder": "",
         "labelPath": "",
-        "defaultItem": "",
+        "defaultItem": "{&quot;id&quot;:&quot;&quot;,&quot;name&quot;:&quot;New item&quot;}",
         "toggleLabel": "Show",
         "togglePath": "",
-        "template": "<div class=\\\"diet-repeater__item-body\\\"><div class=\\\"diet-textfield\\\" data-size=\\\"md\\\"><label class=\\\"diet-textfield__control\\\"><span class=\\\"diet-textfield__display-label label-s\\\">Item</span><input class=\\\"diet-textfield__field body-s\\\" type=\\\"text\\\" data-path=\\\"items.__INDEX__\\\" placeholder=\\\"Item\\\" /></label></div></div>"
+        "value": "[{&quot;id&quot;:&quot;item-1&quot;,&quot;name&quot;:&quot;First item&quot;},{&quot;id&quot;:&quot;item-2&quot;,&quot;name&quot;:&quot;Second item&quot;}]",
+        "template": "<div class=\"diet-textfield\" data-size=\"md\"><label class=\"diet-textfield__control\"><span class=\"diet-textfield__display-label label-s\">Name</span><input class=\"diet-textfield__field body-s\" type=\"text\" data-bob-path=\"items.__INDEX__.name\" /></label></div>"
       },
       "sizeContext": {
-        "sm": { "size": "sm" },
-        "md": { "size": "md" },
-        "lg": { "size": "lg" }
+        "sm": {
+          "size": "sm",
+          "buttonSize": "small",
+          "labelClass": "label-xs",
+          "bodyClass": "body-xs"
+        },
+        "md": {
+          "size": "md",
+          "buttonSize": "medium",
+          "labelClass": "label-s",
+          "bodyClass": "body-s"
+        },
+        "lg": {
+          "size": "lg",
+          "buttonSize": "large",
+          "labelClass": "label-m",
+          "bodyClass": "body-m"
+        }
       }
     }
   ]

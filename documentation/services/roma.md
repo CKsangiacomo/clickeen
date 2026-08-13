@@ -456,8 +456,10 @@ updates only when the projected value actually changes; compiled empty fields
 are not defaults or fallback values.
 JSON controls use Dieter's `data-dieter-json` marker and generic component
 operations use `dieter-ops`; `data-bob-path` remains the host-owned field
-coordinate. Roma destroys hydrated Dropdown Actions, Border, Edit, Fill, Shadow, and Upload
-roots before replacing or unmounting the Widget Defaults control surface.
+coordinate. Roma destroys hydrated Dropdown Actions, Border, Edit, Fill,
+Shadow, Upload, Object Manager, and Repeater roots before replacing or
+unmounting the Widget Defaults control surface. Collection child hydrators and
+drafts therefore have the same lifecycle in Roma as in Bob.
 
 The persisted defaults split is `common` plus
 `widgets.{widgetType}.core`. `common` means one account default reused across

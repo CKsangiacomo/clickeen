@@ -1,28 +1,109 @@
 {
   "component": "object-manager",
-  "syntax": "<tooldrawer-field type='object-manager' path='{{PATH}}' add-label='{{ADD_LABEL}}' reorder-label='{{REORDER_LABEL}}' reorder-title='{{REORDER_TITLE}}' label-path='{{LABEL_PATH}}' template='{{TEMPLATE}}' />",
+  "syntax": "<tooldrawer-field type='object-manager' size='{{SIZE}}' path='{{PATH}}' allow-structure='{{ALLOW_STRUCTURE}}' add-label='{{ADD_LABEL}}' reorder-label='{{REORDER_LABEL}}' reorder-title='{{REORDER_TITLE}}' item-label='{{ITEM_LABEL}}' label-path='{{LABEL_PATH}}' template='{{TEMPLATE}}' />",
   "attributes": {
-    "path": {},
-    "add-label": { "optional": true },
-    "reorder-label": { "optional": true },
-    "reorder-title": { "optional": true },
-    "label-path": { "optional": true },
-    "template": { "optional": true },
-    "index-token": { "optional": true },
+    "size": { "enum": ["sm", "md", "lg"], "default": "md" },
+    "path": { "required": true },
+    "allow-structure": { "enum": ["true", "false"], "required": true },
+    "add-label": { "required": true },
+    "reorder-label": { "required": true },
+    "reorder-title": { "required": true },
+    "item-label": { "required": true },
+    "label-path": { "required": true },
+    "template": { "required": true },
+    "index-token": { "required": true },
     "default-item": { "optional": true }
   },
   "defaults": [
     {
       "id": "object-manager",
-      "spec": ["object-manager"],
+      "sizes": ["sm", "md", "lg"],
+      "spec": [
+        "diet-object-manager",
+        "data-size='{{size}}'",
+        "data-allow-structure='{{allowStructure}}'"
+      ],
       "context": {
+        "size": "md",
+        "buttonSize": "medium",
+        "labelClass": "label-s",
+        "bodyClass": "body-s",
+        "path": "items",
+        "allowStructure": "true",
+        "showStructure": true,
         "addLabel": "Add object",
-        "reorderLabel": "Manage objects",
-        "reorderTitle": "Manage objects",
-        "labelPath": "",
-        "template": "",
+        "reorderLabel": "Manage items",
+        "reorderTitle": "Manage items",
+        "itemLabel": "Item {index}",
+        "moveUpLabel": "Move {label} up",
+        "moveDownLabel": "Move {label} down",
+        "deleteLabel": "Delete {label}",
+        "cancelLabel": "Cancel",
+        "saveLabel": "Save",
+        "discardTitle": "Discard changes?",
+        "discardMessage": "Your reorder and delete changes have not been saved.",
+        "keepEditingLabel": "Keep editing",
+        "discardLabel": "Discard",
+        "labelPath": "name",
+        "template": "<div class=\"diet-textfield\" data-size=\"md\"><label class=\"diet-textfield__control\"><span class=\"diet-textfield__display-label label-s\">Name</span><input class=\"diet-textfield__field body-s\" type=\"text\" data-bob-path=\"items.__INDEX__.name\" /></label></div>",
         "indexToken": "__INDEX__",
-        "defaultItem": ""
+        "defaultItem": "{&quot;id&quot;:&quot;&quot;,&quot;name&quot;:&quot;New item&quot;}",
+        "value": "[{&quot;id&quot;:&quot;item-1&quot;,&quot;name&quot;:&quot;First item&quot;},{&quot;id&quot;:&quot;item-2&quot;,&quot;name&quot;:&quot;Second item&quot;}]"
+      },
+      "sizeContext": {
+        "sm": {
+          "size": "sm",
+          "buttonSize": "small",
+          "labelClass": "label-xs",
+          "bodyClass": "body-xs"
+        },
+        "md": {
+          "size": "md",
+          "buttonSize": "medium",
+          "labelClass": "label-s",
+          "bodyClass": "body-s"
+        },
+        "lg": {
+          "size": "lg",
+          "buttonSize": "large",
+          "labelClass": "label-m",
+          "bodyClass": "body-m"
+        }
+      }
+    },
+    {
+      "id": "object-manager-without-structural-actions",
+      "title": "Caller-owned fields only",
+      "spec": [
+        "diet-object-manager",
+        "data-size='md'",
+        "data-allow-structure='false'"
+      ],
+      "context": {
+        "size": "md",
+        "buttonSize": "medium",
+        "labelClass": "label-s",
+        "bodyClass": "body-s",
+        "path": "items",
+        "allowStructure": "false",
+        "showStructure": false,
+        "addLabel": "Add object",
+        "reorderLabel": "Manage items",
+        "reorderTitle": "Manage items",
+        "itemLabel": "Item {index}",
+        "moveUpLabel": "Move {label} up",
+        "moveDownLabel": "Move {label} down",
+        "deleteLabel": "Delete {label}",
+        "cancelLabel": "Cancel",
+        "saveLabel": "Save",
+        "discardTitle": "Discard changes?",
+        "discardMessage": "Your reorder and delete changes have not been saved.",
+        "keepEditingLabel": "Keep editing",
+        "discardLabel": "Discard",
+        "labelPath": "name",
+        "template": "<div class=\"diet-textfield\" data-size=\"md\"><label class=\"diet-textfield__control\"><span class=\"diet-textfield__display-label label-s\">Name</span><input class=\"diet-textfield__field body-s\" type=\"text\" data-bob-path=\"items.__INDEX__.name\" /></label></div>",
+        "indexToken": "__INDEX__",
+        "value": "[{&quot;id&quot;:&quot;item-1&quot;,&quot;name&quot;:&quot;First item&quot;},{&quot;id&quot;:&quot;item-2&quot;,&quot;name&quot;:&quot;Second item&quot;}]"
       }
     }
   ]

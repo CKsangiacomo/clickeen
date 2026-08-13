@@ -21,15 +21,6 @@ function normalizeJsonAttrValue(raw: string): string {
   return JSON.stringify(parsed);
 }
 
-function parseBooleanAttr(value: string | undefined): boolean | undefined {
-  if (!value) return undefined;
-  const normalized = value.trim().toLowerCase();
-  if (!normalized) return undefined;
-  if (['true', '1', 'yes', 'on'].includes(normalized)) return true;
-  if (['false', '0', 'no', 'off'].includes(normalized)) return false;
-  return undefined;
-}
-
 function parseFillModes(value: string | undefined): string[] | null {
   if (!value) return null;
   const modes = value.split(',');
@@ -87,12 +78,7 @@ async function renderNestedTooldrawerFields(
     }
 
     const { stencil: nestedStencil, spec: nestedSpec } = await loadStencil(typeInner);
-    const nestedContext = await buildContext(
-      typeInner,
-      attrsInner,
-      nestedSpec,
-      loadStencil,
-    );
+    const nestedContext = await buildContext(typeInner, attrsInner, nestedSpec, loadStencil);
     let rendered = renderComponentStencil(nestedStencil, nestedContext);
     rendered = coerceRenderedToBobPaths(rendered, (nestedContext as Record<string, unknown>).path);
     const showIf = attrsInner['show-if'] || '';
@@ -130,23 +116,11 @@ export async function buildContext(
   // Dieter example context.
   const placeholder = attrs.placeholder ?? '';
   const objectType = attrs.objectType || attrs['object-type'] || '';
-  const value = pathAttr
-    ? component === 'dropdown-upload'
-      ? 'null'
-      : ''
-    : attrs.value || '';
+  const value = pathAttr ? (component === 'dropdown-upload' ? 'null' : '') : attrs.value || '';
   const optionsRaw = attrs.options || '';
   const headerLabel = attrs.headerLabel || '';
-  const reorderLabel =
-    attrs.reorderLabel ||
-    attrs['reorder-label'] ||
-    (merged.reorderLabel as string) ||
-    'Reorder items';
-  const reorderTitle =
-    attrs.reorderTitle ||
-    attrs['reorder-title'] ||
-    (merged.reorderTitle as string) ||
-    'Reorder items';
+  const reorderLabel = attrs.reorderLabel || attrs['reorder-label'] || '';
+  const reorderTitle = attrs.reorderTitle || attrs['reorder-title'] || '';
   const reorderLabelPath =
     attrs.reorderLabelPath ||
     attrs['reorder-label-path'] ||
@@ -159,41 +133,24 @@ export async function buildContext(
     attrs['reorder-threshold'] ||
     (merged.reorderThreshold as string) ||
     '';
-  const defaultItemRaw =
-    attrs.defaultItem || attrs['default-item'] || (merged.defaultItem as string) || '';
+  const defaultItemRaw = attrs.defaultItem || attrs['default-item'] || '';
   const defaultItem = normalizeJsonAttrValue(defaultItemRaw);
-  const addLabel =
-    attrs.addLabel || attrs['add-label'] || (merged.addLabel as string) || 'Add item';
-  const removeLabel =
-    attrs.removeLabel ||
-    attrs['remove-label'] ||
-    (merged.removeLabel as string) ||
-    'Remove item {index}';
-  const moveLabel =
-    attrs.moveLabel || attrs['move-label'] || (merged.moveLabel as string) || 'Move item {index}';
-  const addOpen = attrs.addOpen || attrs['add-open'] || (merged.addOpen as string) || '';
+  const addLabel = attrs.addLabel || attrs['add-label'] || '';
+  const removeLabel = attrs.removeLabel || attrs['remove-label'] || '';
+  const moveLabel = attrs.moveLabel || attrs['move-label'] || '';
+  const addOpen = attrs.addOpen || attrs['add-open'] || '';
   const rowPath = attrs.rowPath || attrs['row-path'] || (merged.rowPath as string) || '';
   const columnsRaw = attrs.columns || '';
   const columns = columnsRaw ? normalizeJsonAttrValue(columnsRaw) : '';
   const title = attrs.title || label;
-  const emptyLabel =
-    attrs.emptyLabel || attrs['empty-label'] || '';
-  const closeLabel =
-    attrs.closeLabel || attrs['close-label'] || '';
-  const cancelLabel =
-    attrs.cancelLabel || attrs['cancel-label'] || '';
-  const saveLabel =
-    attrs.saveLabel || attrs['save-label'] || '';
-  const discardTitle =
-    attrs.discardTitle || attrs['discard-title'] || '';
-  const discardMessage =
-    attrs.discardMessage || attrs['discard-message'] || '';
-  const keepEditingLabel =
-    attrs.keepEditingLabel ||
-    attrs['keep-editing-label'] ||
-    '';
-  const discardLabel =
-    attrs.discardLabel || attrs['discard-label'] || '';
+  const emptyLabel = attrs.emptyLabel || attrs['empty-label'] || '';
+  const closeLabel = attrs.closeLabel || attrs['close-label'] || '';
+  const cancelLabel = attrs.cancelLabel || attrs['cancel-label'] || '';
+  const saveLabel = attrs.saveLabel || attrs['save-label'] || '';
+  const discardTitle = attrs.discardTitle || attrs['discard-title'] || '';
+  const discardMessage = attrs.discardMessage || attrs['discard-message'] || '';
+  const keepEditingLabel = attrs.keepEditingLabel || attrs['keep-editing-label'] || '';
+  const discardLabel = attrs.discardLabel || attrs['discard-label'] || '';
   const idBase = pathAttr || label || `${component}-${size}`;
   const id = sanitizeId(`${component}-${idBase}`);
 
@@ -218,9 +175,8 @@ export async function buildContext(
   const min = attrs.min || (merged.min as string) || '';
   const max = attrs.max || (merged.max as string) || '';
   const step = attrs.step || (merged.step as string) || '';
-  const allowStructureRaw =
-    attrs.allowStructure || attrs['allow-structure'] || (merged.allowStructure as string) || 'true';
-  const allowStructure = parseBooleanAttr(allowStructureRaw) === false ? 'false' : 'true';
+  const allowStructureRaw = attrs.allowStructure || attrs['allow-structure'];
+  const allowStructure = allowStructureRaw?.trim() ?? '';
 
   const accept = attrs.accept || '';
   const popoverWidth =
@@ -237,12 +193,62 @@ export async function buildContext(
       ['upload-label', attrs.uploadLabel || attrs['upload-label']],
       ['replace-label', attrs.replaceLabel || attrs['replace-label']],
       ['remove-label', attrs.removeLabel || attrs['remove-label']],
-      ['upload-asset-error-label', attrs.uploadAssetErrorLabel || attrs['upload-asset-error-label']],
-      ['preview-asset-error-label', attrs.previewAssetErrorLabel || attrs['preview-asset-error-label']],
+      [
+        'upload-asset-error-label',
+        attrs.uploadAssetErrorLabel || attrs['upload-asset-error-label'],
+      ],
+      [
+        'preview-asset-error-label',
+        attrs.previewAssetErrorLabel || attrs['preview-asset-error-label'],
+      ],
     ] as const;
     const missing = requiredUploadInputs.find(([, value]) => !value?.trim());
     if (missing) {
       throw new Error(`[BobCompiler] dropdown-upload requires ${missing[0]}`);
+    }
+  }
+
+  if (component === 'object-manager') {
+    if (allowStructure !== 'true' && allowStructure !== 'false') {
+      throw new Error('[BobCompiler] object-manager allow-structure must be true or false');
+    }
+    const requiredObjectManagerInputs = [
+      ['path', pathAttr],
+      ['size', attrs.size],
+      ['allow-structure', allowStructure],
+      ['add-label', addLabel],
+      ['reorder-label', reorderLabel],
+      ['reorder-title', reorderTitle],
+      ['item-label', attrs.itemLabel || attrs['item-label']],
+      ['label-path', attrs.labelPath || attrs['label-path']],
+      ['index-token', attrs.indexToken || attrs['index-token']],
+      ['template', attrs.template],
+    ] as const;
+    const missing = requiredObjectManagerInputs.find(([, input]) => !input?.trim());
+    if (missing) throw new Error(`[BobCompiler] object-manager requires ${missing[0]}`);
+    if (allowStructure === 'true' && !defaultItem) {
+      throw new Error('[BobCompiler] structural object-manager requires default-item');
+    }
+  }
+
+  if (component === 'repeater') {
+    const requiredRepeaterInputs = [
+      ['path', pathAttr],
+      ['size', attrs.size],
+      ['label', label],
+      ['add-label', addLabel],
+      ['reorder-label', reorderLabel],
+      ['remove-label', removeLabel],
+      ['move-label', moveLabel],
+      ['default-item', defaultItem],
+      ['template', attrs.template],
+    ] as const;
+    const missing = requiredRepeaterInputs.find(([, input]) => !input?.trim());
+    if (missing) throw new Error(`[BobCompiler] repeater requires ${missing[0]}`);
+    const labelPath = attrs.labelPath || attrs['label-path'] || '';
+    const labelInputLabel = attrs.labelInputLabel || attrs['label-input-label'] || '';
+    if (labelPath.trim() && !labelInputLabel.trim()) {
+      throw new Error('[BobCompiler] repeater with label-path requires label-input-label');
     }
   }
 
@@ -262,6 +268,7 @@ export async function buildContext(
     max,
     step,
     allowStructure,
+    showStructure: allowStructure === 'true',
     accept: component === 'dropdown-upload' ? accept : undefined,
     popoverWidth,
     axis: component === 'dropdown-shadow' ? axis : undefined,
@@ -277,19 +284,21 @@ export async function buildContext(
         : removeLabel,
     moveLabel,
     addOpen,
+    itemLabel: attrs.itemLabel || attrs['item-label'] || '',
+    moveUpLabel: attrs.moveUpLabel || attrs['move-up-label'] || '',
+    moveDownLabel: attrs.moveDownLabel || attrs['move-down-label'] || '',
+    deleteLabel: attrs.deleteLabel || attrs['delete-label'] || '',
     labelPath: attrs.labelPath || attrs['label-path'] || (merged.labelPath as string) || '',
     labelInputLabel:
       attrs.labelInputLabel ||
       attrs['label-input-label'] ||
       (merged.labelInputLabel as string) ||
-      label ||
-      'Title',
+      '',
     labelPlaceholder:
       attrs.labelPlaceholder ||
       attrs['label-placeholder'] ||
       (merged.labelPlaceholder as string) ||
       '',
-    labelSize: attrs.labelSize || attrs['label-size'] || (merged.labelSize as string) || size,
     toggleLabel: attrs.toggleLabel || attrs['toggle-label'] || (merged.toggleLabel as string) || '',
     togglePath: attrs.togglePath || attrs['toggle-path'] || (merged.togglePath as string) || '',
     reorderLabel,
@@ -317,8 +326,7 @@ export async function buildContext(
     widthLabel: attrs.widthLabel || attrs['width-label'] || '',
     addLinkLabel: attrs.addLinkLabel || attrs['add-link-label'] || '',
     boldLabel: attrs.boldLabel || attrs['bold-label'] || '',
-    clearFormattingLabel:
-      attrs.clearFormattingLabel || attrs['clear-formatting-label'] || '',
+    clearFormattingLabel: attrs.clearFormattingLabel || attrs['clear-formatting-label'] || '',
     italicLabel: attrs.italicLabel || attrs['italic-label'] || '',
     linkLabel: attrs.linkLabel || attrs['link-label'] || '',
     removeLinkLabel: attrs.removeLinkLabel || attrs['remove-link-label'] || '',
@@ -331,10 +339,8 @@ export async function buildContext(
     videoFillLabel: attrs.videoFillLabel || attrs['video-fill-label'] || '',
     angleLabel: attrs.angleLabel || attrs['angle-label'] || '',
     gradientStopsLabel: attrs.gradientStopsLabel || attrs['gradient-stops-label'] || '',
-    addGradientStopLabel:
-      attrs.addGradientStopLabel || attrs['add-gradient-stop-label'] || '',
-    editGradientStopLabel:
-      attrs.editGradientStopLabel || attrs['edit-gradient-stop-label'] || '',
+    addGradientStopLabel: attrs.addGradientStopLabel || attrs['add-gradient-stop-label'] || '',
+    editGradientStopLabel: attrs.editGradientStopLabel || attrs['edit-gradient-stop-label'] || '',
     enabledLabel: attrs.enabledLabel || attrs['enabled-label'] || '',
     removeGradientStopLabel:
       attrs.removeGradientStopLabel || attrs['remove-gradient-stop-label'] || '',
@@ -346,10 +352,8 @@ export async function buildContext(
     loadingAssetsLabel: attrs.loadingAssetsLabel || attrs['loading-assets-label'] || '',
     noAssetsLabel: attrs.noAssetsLabel || attrs['no-assets-label'] || '',
     useAssetLabel: attrs.useAssetLabel || attrs['use-asset-label'] || '',
-    loadAssetsErrorLabel:
-      attrs.loadAssetsErrorLabel || attrs['load-assets-error-label'] || '',
-    uploadAssetErrorLabel:
-      attrs.uploadAssetErrorLabel || attrs['upload-asset-error-label'] || '',
+    loadAssetsErrorLabel: attrs.loadAssetsErrorLabel || attrs['load-assets-error-label'] || '',
+    uploadAssetErrorLabel: attrs.uploadAssetErrorLabel || attrs['upload-asset-error-label'] || '',
     previewAssetErrorLabel:
       attrs.previewAssetErrorLabel || attrs['preview-asset-error-label'] || '',
     blurLabel: attrs.blurLabel || attrs['blur-label'] || '',
@@ -386,7 +390,8 @@ export async function buildContext(
       md: { buttonSize: 'medium', buttonIconSize: '16' },
       lg: { buttonSize: 'large', buttonIconSize: '20' },
     } as const;
-    const buttonContext = buttonByControlSize[size as keyof typeof buttonByControlSize] ?? buttonByControlSize.md;
+    const buttonContext =
+      buttonByControlSize[size as keyof typeof buttonByControlSize] ?? buttonByControlSize.md;
 
     Object.assign(merged, {
       // Defaults to a good a11y label for widget controls.
