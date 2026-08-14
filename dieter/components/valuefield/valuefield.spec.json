@@ -4,36 +4,93 @@
   "attributes": {
     "size": { "enum": ["sm", "md", "lg"], "default": "md" },
     "path": { "optional": true },
-    "label": { "optional": true },
+    "label": { "required": true },
     "value": { "optional": true },
     "min": { "optional": true },
     "max": { "optional": true },
     "step": { "optional": true },
-    "show-if": { "optional": true },
-    "show-when": { "optional": true }
+    "disabled": { "optional": true }
   },
   "binding": { "path": "instanceData[PATH]", "type": "number" },
   "defaults": [
     {
-      "id": "valuefield",
+      "id": "valuefield-sizes",
+      "title": "Caller-bounded number",
       "sizes": ["sm", "md", "lg"],
-      "spec": ["diet-valuefield", "data-size='{{size}}'"],
+      "spec": ["diet-valuefield", "data-size='{{size}}'", "min='0' max='100' step='1'"],
       "context": {
         "size": "md",
         "id": "valuefield-{{size}}",
         "label": "Label",
         "value": "0",
         "path": "",
-        "min": "",
-        "max": "",
-        "step": "",
-        "labelClass": "label-s",
-        "bodyClass": "body-s"
-      },
-      "sizeContext": {
-        "sm": { "labelClass": "label-xs", "bodyClass": "body-xs" },
-        "md": { "labelClass": "label-s", "bodyClass": "body-s" },
-        "lg": { "labelClass": "label-m", "bodyClass": "body-m" }
+        "min": "0",
+        "max": "100",
+        "step": "1",
+        "hasMin": true,
+        "hasMax": true,
+        "hasStep": true,
+        "disabled": false
+      }
+    },
+    {
+      "id": "valuefield-long",
+      "title": "Content-sized longer value",
+      "sizes": ["md"],
+      "spec": ["diet-valuefield", "data-size='md'", "content-sized value"],
+      "context": {
+        "size": "md",
+        "id": "valuefield-long",
+        "label": "Label",
+        "value": "2500.75",
+        "path": "",
+        "min": "0",
+        "max": "10000",
+        "step": "0.01",
+        "hasMin": true,
+        "hasMax": true,
+        "hasStep": true,
+        "disabled": false
+      }
+    },
+    {
+      "id": "valuefield-negative",
+      "title": "Caller-authorized negative range",
+      "sizes": ["md"],
+      "spec": ["diet-valuefield", "data-size='md'", "min='-2' max='2' step='0.001'"],
+      "context": {
+        "size": "md",
+        "id": "valuefield-negative",
+        "label": "Letter spacing",
+        "value": "-0.25",
+        "path": "",
+        "min": "-2",
+        "max": "2",
+        "step": "0.001",
+        "hasMin": true,
+        "hasMax": true,
+        "hasStep": true,
+        "disabled": false
+      }
+    },
+    {
+      "id": "valuefield-disabled",
+      "title": "Disabled",
+      "sizes": ["md"],
+      "spec": ["diet-valuefield", "data-size='md'", "disabled"],
+      "context": {
+        "size": "md",
+        "id": "valuefield-disabled",
+        "label": "Label",
+        "value": "24",
+        "path": "",
+        "min": "0",
+        "max": "100",
+        "step": "1",
+        "hasMin": true,
+        "hasMax": true,
+        "hasStep": true,
+        "disabled": true
       }
     }
   ]

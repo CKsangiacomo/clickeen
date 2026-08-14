@@ -9,38 +9,37 @@
   `dieter/components/index.ts`.
 - System mechanics (hydration model, spec binding, build): see [`dieter.md`](dieter.md). This doc is the per-component lookup; that doc explains the system once.
 
-## Catalog (26 non-empty source directories including `shared`)
+## Catalog (25 non-empty source directories including `shared`)
 
 Legend: ✅ exported from `index.ts` · Direct host import · ⊘ no custom hydrator.
 
-| Group | Component | Hydrate / binding | Status |
-| --- | --- | --- | --- |
-| atoms | `button` | Native button/link, spec `string`, `data-size`/`data-type` | ⊘ |
-| atoms | `icon` | — (CSS-only wrapper) | ⊘ |
-| atoms | `tabs` | Native radio-group behavior, caller-owned labels | ⊘ |
-| atoms | `segmented` | Native radio-group behavior, caller-owned labels | ⊘ |
-| atoms | `toggle` | Native checkbox behavior | ⊘ |
-| atoms | `slider` | `hydrateSlider` / `destroySlider`, numeric binding | ✅ |
-| inputs | `textfield` | `hydrateTextfield` | ✅ |
-| inputs | `valuefield` | `hydrateValuefield` | ✅ |
-| inputs | `textedit` | `hydrateTextedit` (largest; 7 `.ts` modules) | ✅ |
-| choosers | `choice-tiles` | `hydrateChoiceTiles`, `string` | ✅ |
-| choosers | `object-manager` | `hydrateObjectManager` / `destroyObjectManager`, top-level object composition | ✅ |
-| choosers | `repeater` | `hydrateRepeater` / `destroyRepeater`, nested inline collection editing | ✅ |
-| choosers | `bulk-edit` | `hydrateBulkEdit`, `row-path` | ✅ |
-| dropdowns | `dropdown-fill` | `hydrateDropdownFill` / `destroyDropdownFill`, exact fill JSON | ✅ |
-| dropdowns | `dropdown-actions` | `hydrateDropdownActions` / `destroyDropdownActions`, `string` | ✅ |
-| dropdowns | `dropdown-border` | `hydrateDropdownBorder` / `destroyDropdownBorder`, exact border JSON | ✅ |
-| dropdowns | `dropdown-shadow` | `hydrateDropdownShadow` / `destroyDropdownShadow`, exact shadow JSON | ✅ |
-| dropdowns | `dropdown-upload` | `hydrateDropdownUpload` / `destroyDropdownUpload`, exact asset JSON | ✅ |
-| dropdowns | `dropdown-edit` | `hydrateDropdownEdit` / `destroyDropdownEdit`, exact inline HTML string | ✅ |
-| dropdowns | `menuactions` | native action row, unbound | ⊘ |
-| composites | `popover` | — (CSS/HTML/spec; container) | ⊘ |
-| structural | `table` | semantic table visual base and overflow shell | ⊘ |
-| structural | `popup` | blocking native-dialog visual structure | ⊘ |
-| activity | `agent-activity` | — (transient narration strip) | ⊘ |
-| operational | `tooltip` | CSS label from `data-tooltip` | ⊘ |
-| other | `shared/` | helpers (`account-assets`, `dialog-lifecycle`, `dropdownToggle`) — not rendered | — |
+| Group       | Component          | Hydrate / binding                                                               | Status |
+| ----------- | ------------------ | ------------------------------------------------------------------------------- | ------ |
+| atoms       | `button`           | Native button/link, spec `string`, `data-size`/`data-type`                      | ⊘      |
+| atoms       | `icon`             | — (CSS-only wrapper)                                                            | ⊘      |
+| atoms       | `tabs`             | Native radio-group behavior, caller-owned labels                                | ⊘      |
+| atoms       | `segmented`        | Native radio-group behavior, caller-owned labels                                | ⊘      |
+| atoms       | `toggle`           | Native checkbox behavior                                                        | ⊘      |
+| atoms       | `slider`           | `hydrateSlider` / `destroySlider`, numeric binding                              | ✅     |
+| inputs      | `textfield`        | Native one-line string input                                                    | ⊘      |
+| inputs      | `valuefield`       | Native finite-number input with caller bounds                                   | ⊘      |
+| choosers    | `choice-tiles`     | `hydrateChoiceTiles`, `string`                                                  | ✅     |
+| choosers    | `object-manager`   | `hydrateObjectManager` / `destroyObjectManager`, top-level object composition   | ✅     |
+| choosers    | `repeater`         | `hydrateRepeater` / `destroyRepeater`, nested inline collection editing         | ✅     |
+| choosers    | `bulk-edit`        | `hydrateBulkEdit`, `row-path`                                                   | ✅     |
+| dropdowns   | `dropdown-fill`    | `hydrateDropdownFill` / `destroyDropdownFill`, exact fill JSON                  | ✅     |
+| dropdowns   | `dropdown-actions` | `hydrateDropdownActions` / `destroyDropdownActions`, `string`                   | ✅     |
+| dropdowns   | `dropdown-border`  | `hydrateDropdownBorder` / `destroyDropdownBorder`, exact border JSON            | ✅     |
+| dropdowns   | `dropdown-shadow`  | `hydrateDropdownShadow` / `destroyDropdownShadow`, exact shadow JSON            | ✅     |
+| dropdowns   | `dropdown-upload`  | `hydrateDropdownUpload` / `destroyDropdownUpload`, exact asset JSON             | ✅     |
+| dropdowns   | `dropdown-edit`    | `hydrateDropdownEdit` / `destroyDropdownEdit`, exact inline HTML string         | ✅     |
+| dropdowns   | `menuactions`      | native action row, unbound                                                      | ⊘      |
+| composites  | `popover`          | — (CSS/HTML/spec; container)                                                    | ⊘      |
+| structural  | `table`            | semantic table visual base and overflow shell                                   | ⊘      |
+| structural  | `popup`            | blocking native-dialog visual structure                                         | ⊘      |
+| activity    | `agent-activity`   | — (transient narration strip)                                                   | ⊘      |
+| operational | `tooltip`          | CSS label from `data-tooltip`                                                   | ⊘      |
+| other       | `shared/`          | helpers (`account-assets`, `dialog-lifecycle`, `dropdownToggle`) — not rendered | —      |
 
 ## Component Contract
 
@@ -70,6 +69,11 @@ The governing component product law is:
 - A component may expose generic values, events, slots, and binding inputs. A
   host adapter may connect those to its state, but the component must not
   interpret the host's product domain.
+- Dieter does not install a custom keyboard-navigation program or a blue
+  focus-ring treatment across components. Native controls retain their native
+  input, selection, and dismissal behavior. Blue presentation communicates an
+  actual selected or active product state; ordinary hover and editing use
+  neutral component surfaces.
 - Shared presentation belongs in an existing Dieter primitive or shared Dieter
   source. Components may share geometry without merging their distinct jobs.
   Any source that violates these rules is a component defect to correct in its
@@ -221,6 +225,7 @@ The governing component product law is:
   words are caller inputs from the Widget-adjacent ToolDrawer label file.
   There is no inferred media capability, component copy catalog, fallback
   fill, repaired value, or compatibility value shape.
+
 - Dropdown Shadow edits one exact object:
   `{enabled:boolean,inset:boolean,x:number,y:number,blur:number,spread:number,color:string,alpha:number}`.
   Its closed row shows exact opacity followed by the base-color chip while
@@ -262,10 +267,28 @@ The governing component product law is:
 - Menu Actions remains a separate menu-row primitive with the single
   `sm|md|lg` size API described above. Low-level geometry tokens remain
   internal source mechanics.
-- `textrename` is deleted because it had no product consumer.
+- `textedit` is deleted because it had no product consumer.
+- Textfield is one native caller-labelled one-line string editor with no custom
+  hydrator. Its required `sm|md|lg` size owns the row height, radius, label and
+  value typography, spacing, hover, editing, and disabled presentation. At rest
+  the complete leading label remains visible and only the trailing current
+  value may ellipsize; while editing the label yields the complete row writing
+  surface. Placeholder text is optional exact caller copy. Textfield does not
+  invent a placeholder, binding path, validation, product meaning, or locale.
+- Valuefield is one native caller-labelled finite-number editor with no custom
+  hydrator. Its required `sm|md|lg` size owns the row and a content-sized
+  trailing numeric editor. Rest keeps the exact value on the shared right rail;
+  hover belongs to the complete row, and editing reveals one neutral trailing
+  surface whose width grows with the numeric content while remaining bounded
+  by the available row. The caller declares the exact inclusive `min` and
+  `max` that belong to that field; signed values remain legal when the caller
+  declares a signed range. Hosts reject non-finite and out-of-bounds edits
+  without clamping, coercing, substituting, or changing the current draft.
+  Native `step` remains browser input metadata, not a second Dieter validation
+  rule.
 - Toggle is a native checkbox HTML/CSS/spec contract with no custom hydrator.
   Its required `sm|md|lg` size owns the complete row, label typography, switch
-  rail, hover, checked, focus, and disabled presentation. The complete row is
+  rail, hover, checked, and disabled presentation. The complete row is
   the native label and activates the checkbox. A disabled Toggle presents one
   disabled state on the complete row; consumers do not dim or resize only the
   switch. Every visible label is exact caller copy.
@@ -285,7 +308,7 @@ The governing component product law is:
 - Segmented is one native radio group with `sm|md|lg` geometry and
   `txt|ic|ictxt` content shapes. The radio input is the sole checked and
   disabled authority; Dieter CSS owns the rail, selected surface, typography,
-  Icon ladder, hover, focus, and disabled presentation. Each segment contains
+  Icon ladder, hover, and disabled presentation. Each segment contains
   direct presentational content rather than a nested Button, and no hydrator
   mirrors state through `aria-pressed`. Visible labels, icon-only accessible
   names, and the group name are exact caller inputs. Widget options resolve
@@ -362,6 +385,9 @@ and checkbox, declared by the caller. It does not contain Logo Showcase,
 upload, account-asset, or account-policy behavior. The caller supplies its
 trigger, dialog, action, column, placeholder, and empty-state words; a Widget
 ToolDrawer use supplies all of them through that Widget's adjacent label file.
+Bob derives each exact string or boolean item path from the same declared
+`path`, optional `row-path`, and `columns`; no hidden child fields or
+consumer-specific allowlist is required.
 
 Dieter Popover owns the attached floating surface, padding, radius, shadow,
 header/body structure, and open-state presentation. Its standard header is a
@@ -394,9 +420,10 @@ contract.
 ## Application Inputs And Tables
 
 Applications compose forms from Dieter's actual input contracts. Single-line
-text uses `textfield`, immediate choices use `dropdown-actions`, and multiline
-content uses `textedit`. Apps retain labels, validation copy, values, layout,
-and product behavior; they do not create a parallel generic field family.
+text uses `textfield`, immediate choices use `dropdown-actions`, and ToolDrawer
+inline rich text uses `dropdown-edit`. Apps retain labels, values, layout, and
+product behavior; they do not create a parallel generic field family. There is
+no current generic long-form application editor.
 
 Dieter Table owns width, alignment, borders, base spacing, and horizontal
 overflow. Roma owns table data and state. DevStudio retains policy-specific
@@ -476,5 +503,5 @@ Current inventory detail: Dieter components are source modules consumed
 directly by Bob, Roma, and DevStudio; there is no runtime component manifest.
 `shared/` contains helpers and is not a rendered component.
 `command-activity` and `operational-table` are absent from current tracked
-source. DevStudio generates 23 source-backed component pages. Historical 126
+source. DevStudio generates 22 source-backed component pages. Historical 126
 audits remain point-in-time evidence.

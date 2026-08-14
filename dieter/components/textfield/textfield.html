@@ -1,13 +1,13 @@
 <div class="diet-textfield" data-size="{{size}}">
   <label class="diet-textfield__control">
-    <span class="diet-textfield__display-label {{labelClass}}{{#if label}}{{else}} is-hidden{{/if}}">{{#if label}}{{label}}{{/if}}</span>
+    <span class="diet-textfield__display-label{{#if label}}{{else}} is-hidden{{/if}}">{{#if label}}{{label}}{{/if}}</span>
     <input
       id="{{id}}"
       type="text"
-      class="diet-textfield__field {{bodyClass}}"
+      class="diet-textfield__field"
       aria-label="{{label}}"
       value="{{value}}"
-      placeholder="{{hint}}"{{#if path}} data-path="{{path}}"{{/if}}{{#if databinding}} data-databinding="{{databinding}}"{{/if}}
+      {{#if placeholder}}placeholder="{{placeholder}}" {{/if}}{{#if path}}data-path="{{path}}" {{/if}}{{#if disabled}}disabled{{/if}}
     />
   </label>
 </div>

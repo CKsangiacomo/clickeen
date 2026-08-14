@@ -44,8 +44,7 @@
 }
 
 .diet-bulk-edit__input:focus {
-  outline: 2px solid color-mix(in oklab, var(--color-system-blue), transparent 50%);
-  outline-offset: 1px;
+  outline: none;
 }
 
 .diet-bulk-edit__checkbox {

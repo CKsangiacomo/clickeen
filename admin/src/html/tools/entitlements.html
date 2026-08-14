@@ -77,7 +77,11 @@
     width: 100%;
   }
 
-  .entitlements-valuefield .diet-valuefield__field {
+  .entitlements-valuefield.diet-valuefield
+    > .diet-valuefield__control
+    .diet-valuefield__field {
+    field-sizing: fixed;
+    inline-size: 100%;
     text-align: right;
   }
 

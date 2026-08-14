@@ -9,32 +9,32 @@ in Dieter.
 
 ## Authority
 
-| Concern | Current authority |
-| --- | --- |
-| Design-system source | `dieter/**` |
-| Package | `@ck/dieter` for source ownership and typechecking |
-| Bob/Roma UI | Compile Dieter source directly |
-| Prague UI | Compile Dieter token source directly |
-| Widget runtime | Materialize required Dieter CSS into instance `styles.css` |
-| Public Dieter files | R2 `dieter/icons/svg/**` only |
-| Icon authoring | Human-operated `tooling/sf-symbols/**` |
+| Concern              | Current authority                                          |
+| -------------------- | ---------------------------------------------------------- |
+| Design-system source | `dieter/**`                                                |
+| Package              | `@ck/dieter` for source ownership and typechecking         |
+| Bob/Roma UI          | Compile Dieter source directly                             |
+| Prague UI            | Compile Dieter token source directly                       |
+| Widget runtime       | Materialize required Dieter CSS into instance `styles.css` |
+| Public Dieter files  | R2 `dieter/icons/svg/**` only                              |
+| Icon authoring       | Human-operated `tooling/sf-symbols/**`                     |
 
 There is no Dieter build bundle, generated Tokyo mirror, browser manifest, or
 `window.Dieter` runtime.
 
 ## Source Layout
 
-| Path | Purpose |
-| --- | --- |
-| `dieter/tokens/` | Canonical token CSS. |
-| `dieter/layouts/main-container/` | Canonical `main-container > left-nav + page` layout CSS, example HTML, and spec. |
-| `dieter/components/{component}/` | Component CSS, stencil, spec, and optional hydrator. |
-| `dieter/components/shared/` | Small source helpers shared by existing components, including compact property-row geometry. |
-| `dieter/components/index.ts` | Explicit component-hydrator exports. |
-| `dieter/icons/svg/` | Generated SVG icon source deployed to R2 and consumed by product surfaces. |
-| `dieter/icons/icons.json` | Input to the human-operated SF extraction tool; not a product registry. |
-| `dieter/styles.css` | Bob/Roma source CSS entrypoint. |
-| `tooling/sf-symbols/` | Manual SF Symbols extraction/generation tool. |
+| Path                             | Purpose                                                                                      |
+| -------------------------------- | -------------------------------------------------------------------------------------------- |
+| `dieter/tokens/`                 | Canonical token CSS.                                                                         |
+| `dieter/layouts/main-container/` | Canonical `main-container > left-nav + page` layout CSS, example HTML, and spec.             |
+| `dieter/components/{component}/` | Component CSS, stencil, spec, and optional hydrator.                                         |
+| `dieter/components/shared/`      | Small source helpers shared by existing components, including compact property-row geometry. |
+| `dieter/components/index.ts`     | Explicit component-hydrator exports.                                                         |
+| `dieter/icons/svg/`              | Generated SVG icon source deployed to R2 and consumed by product surfaces.                   |
+| `dieter/icons/icons.json`        | Input to the human-operated SF extraction tool; not a product registry.                      |
+| `dieter/styles.css`              | Bob/Roma source CSS entrypoint.                                                              |
+| `tooling/sf-symbols/`            | Manual SF Symbols extraction/generation tool.                                                |
 
 Component folders normally contain:
 
@@ -87,7 +87,10 @@ portrait; consumer code owns only open state and navigation/page content.
 
 Compact property controls share row geometry through
 `dieter/components/shared/property-row.css`. Components continue to own their
-specific input, switch, dropdown, popover, hover, focus, and disabled behavior.
+specific input, switch, dropdown, popover, editing, selected, and disabled
+behavior. The complete property row owns neutral hover presentation. Dieter
+does not install a custom keyboard-navigation program or blue focus-ring
+treatment; blue is reserved for actual selected or active product state.
 
 Dieter components are consumer-agnostic primitives. They own reusable
 structure, presentation, and interaction, not Widget paths, account policy, or
@@ -129,7 +132,7 @@ file.
 
 Toggle is one native checkbox-label primitive. Its required `sm|md|lg` root
 size owns the complete row, caller-label typography, switch geometry, and
-checked, hover, focus, and disabled presentation. The complete visible row
+checked, hover, and disabled presentation. The complete visible row
 activates the checkbox. Toggle has no component copy, custom hydrator, product
 meaning, or consumer-local disabled treatment.
 
@@ -141,6 +144,23 @@ signal after exact programmatic value projection; its destroy function removes
 those listeners. Slider does not invent units, a trailing value, validation,
 defaults, or product behavior. Compound dropdown editors may compose their own
 exact caller-labelled value rail while reusing the same Slider.
+
+Textfield is one native one-line string primitive with no hydrator. The caller
+supplies the exact label, current value, optional placeholder, path, and
+disabled state. Its `sm|md|lg` root owns the complete row geometry and
+typography. The complete leading label never truncates; the trailing current
+value may ellipsize at rest, and editing turns the row into the writing surface.
+Dieter does not substitute demonstration copy or interpret the path.
+
+Valuefield is one native finite-number primitive with no hydrator. The caller
+supplies the exact label, value, and any inclusive `min`/`max` bounds. Its
+`sm|md|lg` root owns the row and content-sized trailing numeric editor. Rest
+keeps the exact value on the shared right rail, complete-row hover is neutral,
+and the neutral edit surface grows with the numeric content while remaining
+bounded by the row. Product hosts reject non-finite and caller-out-of-bounds
+edits without clamping, coercing, or changing the current value. Signed ranges
+remain caller-authorized, and native `step` metadata is not a second validation
+authority.
 
 Tabs is one native caller-labelled radio group with no browser hydrator.
 Native checked and disabled state remain the behavior authority; Dieter CSS

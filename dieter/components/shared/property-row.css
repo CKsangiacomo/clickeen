@@ -1,7 +1,6 @@
 /* Shared geometry for compact property rows in editor and dashboard panels. */
 .diet-dropdown-header,
 .diet-textfield__control,
-.diet-textfield__inner,
 .diet-toggle,
 .diet-valuefield__control {
   display: flex;
@@ -22,21 +21,30 @@
   color: inherit;
   font: inherit;
   text-align: inherit;
-  transition: background-color var(--duration-base) var(--easing-standard), border-color var(--duration-base) var(--easing-standard);
+  transition:
+    background-color var(--duration-base) var(--easing-standard),
+    border-color var(--duration-base) var(--easing-standard);
   cursor: pointer;
 }
 
-.diet-dropdown-header:hover {
+.diet-dropdown-header:hover,
+.diet-textfield__control:hover:not(:has(.diet-textfield__field:disabled)),
+.diet-toggle:hover:not(:has(.diet-toggle__input:disabled)),
+.diet-valuefield__control:hover:not(:has(.diet-valuefield__field:disabled)) {
   background: color-mix(in oklab, var(--color-system-white), var(--color-system-black) 6%);
+}
+
+.diet-dropdown-header:focus-visible {
+  outline: none;
 }
 
 .diet-textfield__display-label,
 .diet-toggle__label,
 .diet-valuefield__label {
-  flex: 0 1 auto;
-  min-inline-size: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  flex: 0 0 auto;
+  min-inline-size: auto;
+  overflow: visible;
+  text-overflow: clip;
   white-space: nowrap;
 }
 

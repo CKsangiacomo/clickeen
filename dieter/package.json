@@ -9,8 +9,7 @@
     "@lexical/link": "0.48.0",
     "@lexical/rich-text": "0.48.0",
     "@lexical/selection": "0.48.0",
-    "lexical": "0.48.0",
-    "tldts": "^6.1.86"
+    "lexical": "0.48.0"
   },
   "scripts": {
     "typecheck": "tsc -p tsconfig.json --noEmit"

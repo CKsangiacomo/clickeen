@@ -111,7 +111,6 @@ const TEXT_CONTROL_CONTAINER_XPATH = [
   'contains(concat(" ", normalize-space(@class), " "), " diet-dropdown-edit ")',
   ' or contains(concat(" ", normalize-space(@class), " "), " diet-dropdown-upload ")',
   ' or contains(concat(" ", normalize-space(@class), " "), " diet-textfield ")',
-  ' or contains(concat(" ", normalize-space(@class), " "), " diet-textedit ")',
   ' or contains(concat(" ", normalize-space(@class), " "), " diet-valuefield ")',
   '][1]',
 ].join('');

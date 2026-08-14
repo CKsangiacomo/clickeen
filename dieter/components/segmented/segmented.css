@@ -126,10 +126,6 @@
   color: var(--seg-active-color);
 }
 
-.diet-segment__input:focus-visible ~ .diet-segment__surface {
-  box-shadow: 0 0 0 0.125rem var(--color-system-blue);
-}
-
 .diet-segment:has(.diet-segment__input:disabled) {
   cursor: default;
 }

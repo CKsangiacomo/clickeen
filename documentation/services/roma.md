@@ -59,9 +59,9 @@ Roma does not add another title or action band above the iframe. The `/builder`
 landing route remains an ordinary Roma page because no editor is open there.
 
 Roma's single-line text controls use Dieter Textfield, choice controls use
-Dropdown Actions, multiline content uses Textedit, and semantic table
-definitions use Dieter Table. Roma retains their values, labels, validation,
-data, actions, and layout.
+Dropdown Actions, and semantic table definitions use Dieter Table. Roma
+retains their values, labels, validation, data, actions, and layout. Roma has no
+generic long-form editor.
 Page-header filters compose Dieter's icon-text Button, Popover, and Menu
 Actions primitives; they sit directly beside the page title, show the current
 filter in the trigger without a redundant chevron, and omit the field-style
@@ -172,31 +172,31 @@ accepted or preserved as usable context.
 Browser code calls Roma same-origin routes. Roma server routes call the owning
 service:
 
-| Roma route family           | Owner behind Roma                                      |
-| --------------------------- | ------------------------------------------------------ |
-| `/api/session/**`           | Berlin                                                 |
-| `/api/me/**`                | Berlin                                                 |
-| `/api/account/team/**`      | Berlin                                                 |
-| `/api/account/locales`      | Roma account settings mutation; Berlin bootstrap read context |
-| `/api/account/widgets/**`   | Tokyo-worker through product control                   |
-| `/api/account/instances/**` | Tokyo-worker through product control                   |
-| `/api/account/assets/**`    | Tokyo-worker through asset control                     |
-| `/api/account/usage`        | Tokyo-worker storage facts plus account policy context |
-| `/api/account/widget-defaults` | Roma defaults document backed by Tokyo-worker        |
-| `/api/builder/:instanceId/open` | Roma Builder-open envelope backed by Tokyo-worker    |
-| `/widget-editors/:widgetname.json` | Deploy-built static Bob editor artifact       |
-| `/api/account/instances/:instanceId/copilot` | Product Copilot `/turn` through Roma grants (SSE relay) |
+| Roma route family                            | Owner behind Roma                                             |
+| -------------------------------------------- | ------------------------------------------------------------- |
+| `/api/session/**`                            | Berlin                                                        |
+| `/api/me/**`                                 | Berlin                                                        |
+| `/api/account/team/**`                       | Berlin                                                        |
+| `/api/account/locales`                       | Roma account settings mutation; Berlin bootstrap read context |
+| `/api/account/widgets/**`                    | Tokyo-worker through product control                          |
+| `/api/account/instances/**`                  | Tokyo-worker through product control                          |
+| `/api/account/assets/**`                     | Tokyo-worker through asset control                            |
+| `/api/account/usage`                         | Tokyo-worker storage facts plus account policy context        |
+| `/api/account/widget-defaults`               | Roma defaults document backed by Tokyo-worker                 |
+| `/api/builder/:instanceId/open`              | Roma Builder-open envelope backed by Tokyo-worker             |
+| `/widget-editors/:widgetname.json`           | Deploy-built static Bob editor artifact                       |
+| `/api/account/instances/:instanceId/copilot` | Product Copilot `/turn` through Roma grants (SSE relay)       |
 
 Roma attaches the account authz capsule and account public id to private
 Tokyo-worker calls.
 
 Current account-governance routes include:
 
-| Roma route | Owner behind Roma |
-| --- | --- |
-| `DELETE /api/account` | Roma disabled account deletion conflict response |
-| `POST /api/account/owner-transfer` | Berlin owner-transfer governance |
-| `POST /api/account/lifecycle/tier-drop/dismiss` | Berlin account lifecycle notice dismissal |
+| Roma route                                      | Owner behind Roma                                |
+| ----------------------------------------------- | ------------------------------------------------ |
+| `DELETE /api/account`                           | Roma disabled account deletion conflict response |
+| `POST /api/account/owner-transfer`              | Berlin owner-transfer governance                 |
+| `POST /api/account/lifecycle/tier-drop/dismiss` | Berlin account lifecycle notice dismissal        |
 
 ## Builder Orchestration
 
@@ -466,6 +466,11 @@ unmounting the Widget Defaults control surface. Collection child hydrators and
 drafts therefore have the same lifecycle in Roma as in Bob; Slider releases
 its native progress listener. Range values remain exact Roma draft values and
 the shared Slider hydrator owns only their visual progress presentation.
+Textfield values remain exact strings and retain exact caller placeholders.
+Valuefield control metadata retains the caller's inclusive `min` and `max`;
+Roma changes the Widget Defaults draft only for a finite value inside those
+bounds. Invalid input stays visible in the native field but does not clamp,
+coerce, substitute, or mutate the draft.
 Nested Object Manager/Repeater controls keep neutral `data-path` coordinates;
 Roma binds only the true outer `data-bob-path` collection field and receives
 one exact array update. Segmented controls rely on the same native radio state
@@ -600,20 +605,20 @@ Runtime evidence comes from cloud-dev Cloudflare surfaces.
 
 Required runtime configuration:
 
-| Name | Purpose |
-| --- | --- |
-| `NEXT_PUBLIC_BOB_URL` | Bob Builder iframe origin. |
-| `NEXT_PUBLIC_TOKYO_URL` | Tokyo public static/resource origin. |
-| `NEXT_PUBLIC_CLK_LIVE_URL` | Public widget serving origin for copy/open snippets. |
-| `BERLIN_BASE_URL` | Berlin auth/session authority. |
-| `PRODUCT_COPILOT_BASE_URL` | Product Copilot worker origin where used. |
-| `TRANSLATION_AGENT` | Cloudflare service binding for Translation Agent Worker. |
-| `TOKYO_ASSET_CONTROL` | Cloudflare service binding for account asset operations. |
-| `TOKYO_PRODUCT_CONTROL` | Cloudflare service binding for product/account instance operations. |
-| `USAGE_KV` | Roma request-rate-limit counters and current monthly Copilot turn counters. Counter corruption and missing bindings fail closed. Cloudflare KV has no compare-and-swap, so simultaneous Copilot requests can reserve from the same observed count. |
-| `SUPABASE_URL` | Roma account settings database URL; supplied in cloud-dev CI/env. |
-| `SUPABASE_SERVICE_ROLE_KEY` | Roma service-role account settings writes; supplied as a secret. |
-| `ROMA_AI_GRANT_PRIVATE_KEY_PEM` | Roma-only RS256 signing key for Product Copilot and Translation Agent grants. |
+| Name                            | Purpose                                                                                                                                                                                                                                            |
+| ------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `NEXT_PUBLIC_BOB_URL`           | Bob Builder iframe origin.                                                                                                                                                                                                                         |
+| `NEXT_PUBLIC_TOKYO_URL`         | Tokyo public static/resource origin.                                                                                                                                                                                                               |
+| `NEXT_PUBLIC_CLK_LIVE_URL`      | Public widget serving origin for copy/open snippets.                                                                                                                                                                                               |
+| `BERLIN_BASE_URL`               | Berlin auth/session authority.                                                                                                                                                                                                                     |
+| `PRODUCT_COPILOT_BASE_URL`      | Product Copilot worker origin where used.                                                                                                                                                                                                          |
+| `TRANSLATION_AGENT`             | Cloudflare service binding for Translation Agent Worker.                                                                                                                                                                                           |
+| `TOKYO_ASSET_CONTROL`           | Cloudflare service binding for account asset operations.                                                                                                                                                                                           |
+| `TOKYO_PRODUCT_CONTROL`         | Cloudflare service binding for product/account instance operations.                                                                                                                                                                                |
+| `USAGE_KV`                      | Roma request-rate-limit counters and current monthly Copilot turn counters. Counter corruption and missing bindings fail closed. Cloudflare KV has no compare-and-swap, so simultaneous Copilot requests can reserve from the same observed count. |
+| `SUPABASE_URL`                  | Roma account settings database URL; supplied in cloud-dev CI/env.                                                                                                                                                                                  |
+| `SUPABASE_SERVICE_ROLE_KEY`     | Roma service-role account settings writes; supplied as a secret.                                                                                                                                                                                   |
+| `ROMA_AI_GRANT_PRIVATE_KEY_PEM` | Roma-only RS256 signing key for Product Copilot and Translation Agent grants.                                                                                                                                                                      |
 
 Cloudflare Pages config evidence uses:
 

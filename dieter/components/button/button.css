@@ -103,6 +103,10 @@
   transform: translateY(1px);
 }
 
+.diet-button:focus-visible {
+  outline: none;
+}
+
 .diet-button:disabled,
 .diet-button[aria-disabled="true"] {
   opacity: 0.48;

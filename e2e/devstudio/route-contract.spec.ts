@@ -20,10 +20,12 @@ async function guardUnexpectedApiMutations(page: Page) {
 
 async function openPolicyEditor(page: Page) {
   const entitlements = page.waitForResponse(
-    (response) => response.url().endsWith(ENTITLEMENT_MATRIX_PATH) && response.request().method() === 'GET',
+    (response) =>
+      response.url().endsWith(ENTITLEMENT_MATRIX_PATH) && response.request().method() === 'GET',
   );
   const aiRuntime = page.waitForResponse(
-    (response) => response.url().endsWith(AI_RUNTIME_MATRIX_PATH) && response.request().method() === 'GET',
+    (response) =>
+      response.url().endsWith(AI_RUNTIME_MATRIX_PATH) && response.request().method() === 'GET',
   );
 
   await page.goto('/#/policy/entitlements');
@@ -52,7 +54,11 @@ async function triggerTextInputSave(page: Page, sectionTitle: string) {
 
 async function expectPolicyEditorBusy(page: Page) {
   await expect(page.getByRole('button', { name: 'Reload' })).toBeDisabled();
-  await expect(page.locator('#entitlements-root input:not([disabled]), #entitlements-root select:not([disabled])')).toHaveCount(0);
+  await expect(
+    page.locator(
+      '#entitlements-root input:not([disabled]), #entitlements-root select:not([disabled])',
+    ),
+  ).toHaveCount(0);
 }
 
 const navGroups = [
@@ -69,7 +75,7 @@ const navGroups = [
   },
   {
     title: 'Dieter Components',
-    count: 23,
+    count: 22,
     routes: [
       { path: '/#/dieter/agent-activity', title: 'Agent Activity' },
       { path: '/#/dieter/bulk-edit', title: 'Bulk Edit' },
@@ -90,7 +96,6 @@ const navGroups = [
       { path: '/#/dieter/slider', title: 'Slider' },
       { path: '/#/dieter/table', title: 'Table' },
       { path: '/#/dieter/tabs', title: 'Tabs' },
-      { path: '/#/dieter/textedit', title: 'Textedit' },
       { path: '/#/dieter/textfield', title: 'Textfield' },
       { path: '/#/dieter/toggle', title: 'Toggle' },
       { path: '/#/dieter/valuefield', title: 'Valuefield' },
@@ -195,7 +200,9 @@ test.describe('DevStudio route contract', () => {
     });
   });
 
-  test('actual DevStudio main-container uses the shared Compact navigation state', async ({ page }) => {
+  test('actual DevStudio main-container uses the shared Compact navigation state', async ({
+    page,
+  }) => {
     await page.setViewportSize({ width: 560, height: 640 });
     await page.goto('/#/dieter/core-styles');
 
@@ -219,8 +226,7 @@ test.describe('DevStudio route contract', () => {
       .toBe(8);
 
     const compactShell = await page.evaluate(() => {
-      const navigationElement =
-        document.querySelector<HTMLElement>('.main-container > .left-nav');
+      const navigationElement = document.querySelector<HTMLElement>('.main-container > .left-nav');
       const workspace = document.querySelector<HTMLElement>('.main-container > .page');
       if (!navigationElement || !workspace) throw new Error('Shared shell is missing');
       const navigationRect = navigationElement.getBoundingClientRect();
@@ -297,10 +303,14 @@ test.describe('DevStudio route contract', () => {
     const actions = page.locator('.page__header > .page__actions');
     await expect(actions).toBeVisible();
     await expect(actions.getByRole('button', { name: 'Reload' })).toHaveCount(1);
-    await expect(page.locator('.page__content').getByRole('button', { name: 'Reload' })).toHaveCount(0);
+    await expect(
+      page.locator('.page__content').getByRole('button', { name: 'Reload' }),
+    ).toHaveCount(0);
   });
 
-  test('Table exposes the six governed compositions and exact shared presentation', async ({ page }) => {
+  test('Table exposes the six governed compositions and exact shared presentation', async ({
+    page,
+  }) => {
     await page.goto('/#/dieter/table');
     const compositions = page.locator('[data-table-composition]');
     await expect(compositions).toHaveCount(6);
@@ -390,23 +400,217 @@ test.describe('DevStudio route contract', () => {
       tokenProbe.remove();
       return {
         activeColor,
-        ascending: readIcon('[data-table-composition="sortable-ascending"] [aria-sort="ascending"] .diet-icon'),
-        ascendingInactive: readIcon('[data-table-composition="sortable-ascending"] [aria-sort="none"] .diet-icon'),
-        descending: readIcon('[data-table-composition="sortable-descending"] [aria-sort="descending"] .diet-icon'),
-        descendingInactive: readIcon('[data-table-composition="sortable-descending"] [aria-sort="none"] .diet-icon'),
+        ascending: readIcon(
+          '[data-table-composition="sortable-ascending"] [aria-sort="ascending"] .diet-icon',
+        ),
+        ascendingInactive: readIcon(
+          '[data-table-composition="sortable-ascending"] [aria-sort="none"] .diet-icon',
+        ),
+        descending: readIcon(
+          '[data-table-composition="sortable-descending"] [aria-sort="descending"] .diet-icon',
+        ),
+        descendingInactive: readIcon(
+          '[data-table-composition="sortable-descending"] [aria-sort="none"] .diet-icon',
+        ),
         inactiveColor,
       };
     });
-    expect(sortPresentation.ascending).toMatchObject({ color: sortPresentation.activeColor, width: 12, height: 12 });
-    expect(sortPresentation.descending).toMatchObject({ color: sortPresentation.activeColor, width: 12, height: 12 });
-    expect(sortPresentation.ascendingInactive).toMatchObject({ color: sortPresentation.inactiveColor, width: 12, height: 12 });
-    expect(sortPresentation.descendingInactive).toMatchObject({ color: sortPresentation.inactiveColor, width: 12, height: 12 });
+    expect(sortPresentation.ascending).toMatchObject({
+      color: sortPresentation.activeColor,
+      width: 12,
+      height: 12,
+    });
+    expect(sortPresentation.descending).toMatchObject({
+      color: sortPresentation.activeColor,
+      width: 12,
+      height: 12,
+    });
+    expect(sortPresentation.ascendingInactive).toMatchObject({
+      color: sortPresentation.inactiveColor,
+      width: 12,
+      height: 12,
+    });
+    expect(sortPresentation.descendingInactive).toMatchObject({
+      color: sortPresentation.inactiveColor,
+      width: 12,
+      height: 12,
+    });
     expect(sortPresentation.ascending.path).not.toBe(sortPresentation.descending.path);
     expect(sortPresentation.ascending.path).not.toBe(sortPresentation.ascendingInactive.path);
     expect(sortPresentation.descending.path).not.toBe(sortPresentation.descendingInactive.path);
   });
 
-  test('Layouts reveals the exact source contract and edits its four tokens through the foundation path', async ({ page }) => {
+  test('Textfield and Valuefield expose the exact compact native-input geometry', async ({
+    page,
+  }) => {
+    await page.goto('/#/dieter/textfield');
+    const textfieldGeometry = await page.locator('.diet-textfield').evaluateAll((roots) =>
+      roots.slice(0, 3).map((root) => {
+        const control = root.querySelector<HTMLElement>('.diet-textfield__control');
+        const field = root.querySelector<HTMLInputElement>('.diet-textfield__field');
+        if (!control || !field) throw new Error('Textfield reveal is incomplete.');
+        const controlStyle = getComputedStyle(control);
+        return {
+          fontSize: getComputedStyle(field).fontSize,
+          height: control.getBoundingClientRect().height,
+          radius: controlStyle.borderRadius,
+        };
+      }),
+    );
+    expect(textfieldGeometry).toEqual([
+      { fontSize: '11px', height: 20, radius: '4px' },
+      { fontSize: '13px', height: 24, radius: '6px' },
+      { fontSize: '14px', height: 28, radius: '8px' },
+    ]);
+    const placeholderField = page.locator('#textfield-placeholder');
+    await expect(placeholderField).toHaveAttribute('placeholder', 'Enter text');
+    await expect(page.locator('input[placeholder="Hint text"]')).toHaveCount(0);
+    await placeholderField.focus();
+    await expect(
+      placeholderField.locator('xpath=..').locator('.diet-textfield__display-label'),
+    ).toBeHidden();
+    await expect(placeholderField).toHaveCSS('text-align', 'start');
+    await expect(page.locator('#textfield-disabled')).toBeDisabled();
+
+    await page.goto('/#/dieter/valuefield');
+    const valuefieldGeometry = await page.locator('.diet-valuefield').evaluateAll((roots) =>
+      roots.slice(0, 3).map((root) => {
+        const control = root.querySelector<HTMLElement>('.diet-valuefield__control');
+        const slot = root.querySelector<HTMLElement>('.diet-valuefield__input');
+        const field = root.querySelector<HTMLInputElement>('.diet-valuefield__field');
+        if (!control || !slot || !field) throw new Error('Valuefield reveal is incomplete.');
+        const controlStyle = getComputedStyle(control);
+        const slotStyle = getComputedStyle(slot);
+        return {
+          fieldSizing: getComputedStyle(field).getPropertyValue('field-sizing'),
+          fieldWidth: field.getBoundingClientRect().width,
+          fontSize: getComputedStyle(field).fontSize,
+          height: control.getBoundingClientRect().height,
+          paddingEnd: slotStyle.paddingInlineEnd,
+          paddingStart: slotStyle.paddingInlineStart,
+          radius: controlStyle.borderRadius,
+          slotWidth: slot.getBoundingClientRect().width,
+        };
+      }),
+    );
+    expect(valuefieldGeometry).toEqual([
+      {
+        fieldSizing: 'content',
+        fieldWidth: expect.any(Number),
+        fontSize: '11px',
+        height: 20,
+        paddingEnd: '8px',
+        paddingStart: '8px',
+        radius: '4px',
+        slotWidth: expect.any(Number),
+      },
+      {
+        fieldSizing: 'content',
+        fieldWidth: expect.any(Number),
+        fontSize: '13px',
+        height: 24,
+        paddingEnd: '8px',
+        paddingStart: '8px',
+        radius: '6px',
+        slotWidth: expect.any(Number),
+      },
+      {
+        fieldSizing: 'content',
+        fieldWidth: expect.any(Number),
+        fontSize: '14px',
+        height: 28,
+        paddingEnd: '8px',
+        paddingStart: '8px',
+        radius: '8px',
+        slotWidth: expect.any(Number),
+      },
+    ]);
+    for (const geometry of valuefieldGeometry) {
+      expect(geometry.slotWidth - geometry.fieldWidth).toBeCloseTo(16, 3);
+      expect(geometry.slotWidth).toBeLessThan(40);
+    }
+
+    const mediumValuefield = page.locator('.diet-valuefield').nth(1);
+    const mediumControl = mediumValuefield.locator('.diet-valuefield__control');
+    const mediumSlot = mediumValuefield.locator('.diet-valuefield__input');
+    const mediumField = mediumValuefield.locator('.diet-valuefield__field');
+    const restPresentation = await mediumControl.evaluate((control) => {
+      const slot = control.querySelector<HTMLElement>('.diet-valuefield__input');
+      if (!slot) throw new Error('Valuefield slot is missing.');
+      return {
+        rowBackground: getComputedStyle(control).backgroundColor,
+        slotBackground: getComputedStyle(slot).backgroundColor,
+      };
+    });
+    await mediumControl.hover();
+    await page.waitForTimeout(250);
+    const hoverPresentation = await mediumControl.evaluate((control) => {
+      const slot = control.querySelector<HTMLElement>('.diet-valuefield__input');
+      if (!slot) throw new Error('Valuefield slot is missing.');
+      return {
+        rowBackground: getComputedStyle(control).backgroundColor,
+        slotBackground: getComputedStyle(slot).backgroundColor,
+      };
+    });
+    expect(hoverPresentation.rowBackground).not.toBe(restPresentation.rowBackground);
+    expect(hoverPresentation.slotBackground).toBe(restPresentation.slotBackground);
+
+    await mediumField.focus();
+    await page.mouse.move(0, 0);
+    await expect
+      .poll(() => mediumControl.evaluate((control) => getComputedStyle(control).backgroundColor))
+      .toBe(hoverPresentation.rowBackground);
+    const editPresentation = await mediumControl.evaluate((control) => {
+      const slot = control.querySelector<HTMLElement>('.diet-valuefield__input');
+      if (!slot) throw new Error('Valuefield slot is missing.');
+      const controlStyle = getComputedStyle(control);
+      const slotStyle = getComputedStyle(slot);
+      return {
+        borderColor: controlStyle.borderColor,
+        boxShadow: slotStyle.boxShadow,
+        rowBackground: controlStyle.backgroundColor,
+        slotBackground: slotStyle.backgroundColor,
+      };
+    });
+    expect(editPresentation.rowBackground).toBe(hoverPresentation.rowBackground);
+    expect(editPresentation.slotBackground).not.toBe(editPresentation.rowBackground);
+    expect(editPresentation.boxShadow).toBe('none');
+    expect(editPresentation.borderColor).toBe('rgba(0, 0, 0, 0)');
+
+    const shortSlotWidth = await mediumSlot.evaluate((slot) => slot.getBoundingClientRect().width);
+    const shortRightInset = await mediumField.evaluate((field) => {
+      const control = field.closest<HTMLElement>('.diet-valuefield__control');
+      if (!control) throw new Error('Valuefield control is missing.');
+      return control.getBoundingClientRect().right - field.getBoundingClientRect().right;
+    });
+    await mediumField.fill('100');
+    const expandedGeometry = await mediumField.evaluate((field) => {
+      const control = field.closest<HTMLElement>('.diet-valuefield__control');
+      const slot = field.closest<HTMLElement>('.diet-valuefield__input');
+      if (!control || !slot) throw new Error('Valuefield geometry is incomplete.');
+      return {
+        rightInset: control.getBoundingClientRect().right - field.getBoundingClientRect().right,
+        slotWidth: slot.getBoundingClientRect().width,
+      };
+    });
+    expect(expandedGeometry.slotWidth).toBeGreaterThan(shortSlotWidth);
+    expect(shortRightInset).toBeCloseTo(9, 3);
+    expect(expandedGeometry.rightInset).toBeCloseTo(shortRightInset, 3);
+
+    const longSlotWidth = await page
+      .locator('#valuefield-long')
+      .locator('xpath=..')
+      .evaluate((slot) => slot.getBoundingClientRect().width);
+    expect(longSlotWidth).toBeGreaterThan(shortSlotWidth);
+    await expect(page.locator('#valuefield-sm')).toHaveAttribute('min', '0');
+    await expect(page.locator('#valuefield-negative')).toHaveValue('-0.25');
+    await expect(page.locator('#valuefield-negative')).toHaveAttribute('min', '-2');
+    await expect(page.locator('#valuefield-disabled')).toBeDisabled();
+  });
+
+  test('Layouts reveals the exact source contract and edits its four tokens through the foundation path', async ({
+    page,
+  }) => {
     await page.route('**/api/dieter/tokens/foundation', async (route) => {
       if (route.request().method() !== 'GET') return route.fallback();
       await route.fulfill({
@@ -428,16 +632,20 @@ test.describe('DevStudio route contract', () => {
     });
 
     await page.goto('/#/dieter/layouts');
-    await expect(page.locator('[data-layout-source="dieter/layouts/main-container"]')).toBeVisible();
+    await expect(
+      page.locator('[data-layout-source="dieter/layouts/main-container"]'),
+    ).toBeVisible();
     await expect(page.locator('[data-layout-example]')).toHaveCount(3);
     await expect(page.locator('[data-token-edit="foundation"]')).toHaveCount(4);
-    const sectionOrder = await page.locator('.layouts-page > :is(p, details, section)').evaluateAll((nodes) =>
-      nodes.map((node) => {
-        if (node.tagName === 'P') return 'explanation';
-        if (node.tagName === 'DETAILS') return 'source';
-        return node.id || node.querySelector('h2')?.id || '';
-      }),
-    );
+    const sectionOrder = await page
+      .locator('.layouts-page > :is(p, details, section)')
+      .evaluateAll((nodes) =>
+        nodes.map((node) => {
+          if (node.tagName === 'P') return 'explanation';
+          if (node.tagName === 'DETAILS') return 'source';
+          return node.id || node.querySelector('h2')?.id || '';
+        }),
+      );
     expect(sectionOrder).toEqual(['explanation', 'source', 'layout-examples', 'layout-properties']);
 
     for (const frame of await page.locator('[data-layout-example] iframe').all()) {
@@ -453,7 +661,10 @@ test.describe('DevStudio route contract', () => {
     await expect(fullFrame.locator('.main-container > .left-nav')).toHaveCSS('width', '256px');
 
     const openFrame = page.locator('[data-layout-example="compact-open"] iframe').contentFrame();
-    await expect(openFrame.locator('.main-container')).toHaveAttribute('data-navigation-open', 'true');
+    await expect(openFrame.locator('.main-container')).toHaveAttribute(
+      'data-navigation-open',
+      'true',
+    );
     await expect(openFrame.locator('.main-container > .left-nav')).toHaveCSS('width', '320px');
 
     await page.getByRole('button', { name: 'Edit --layout-page-padding' }).click();
@@ -462,7 +673,9 @@ test.describe('DevStudio route contract', () => {
     await expect(layoutTokenSelect.locator('option')).toHaveCount(4);
   });
 
-  test('Core styles uses an explicit edit action and one token-dialog state at a time', async ({ page }) => {
+  test('Core styles uses an explicit edit action and one token-dialog state at a time', async ({
+    page,
+  }) => {
     const unexpectedMutations = await guardUnexpectedApiMutations(page);
     await page.route('**/api/dieter/tokens/foundation', async (route) => {
       if (route.request().method() !== 'GET') return route.fallback();
@@ -693,7 +906,9 @@ test.describe('DevStudio route contract', () => {
     }
   });
 
-  test('Policy Editor exposes initial and reload failure truth without raw detail', async ({ page }) => {
+  test('Policy Editor exposes initial and reload failure truth without raw detail', async ({
+    page,
+  }) => {
     const unexpectedMutations = await guardUnexpectedApiMutations(page);
     let readMode: 'initial-delayed-fail' | 'live' | 'delayed-fail' = 'initial-delayed-fail';
     let releaseInitial!: () => void;
@@ -715,7 +930,9 @@ test.describe('DevStudio route contract', () => {
         await route.fulfill({
           status: 503,
           contentType: 'application/json',
-          body: JSON.stringify({ error: { reasonKey: 'coreui.errors.db.readFailed', detail: rawSentinel } }),
+          body: JSON.stringify({
+            error: { reasonKey: 'coreui.errors.db.readFailed', detail: rawSentinel },
+          }),
         });
       });
     }
@@ -744,7 +961,9 @@ test.describe('DevStudio route contract', () => {
     expect(unexpectedMutations).toEqual([]);
   });
 
-  test('Policy Editor reports entitlement save failure, partial success, and saved state without mutation', async ({ page }) => {
+  test('Policy Editor reports entitlement save failure, partial success, and saved state without mutation', async ({
+    page,
+  }) => {
     const unexpectedMutations = await guardUnexpectedApiMutations(page);
     const posts: string[] = [];
     let responseIndex = 0;
@@ -765,22 +984,36 @@ test.describe('DevStudio route contract', () => {
         await route.fulfill({
           status: 503,
           contentType: 'application/json',
-          body: JSON.stringify({ error: { reasonKey: 'coreui.errors.db.writeFailed', detail: rawSentinel } }),
+          body: JSON.stringify({
+            error: { reasonKey: 'coreui.errors.db.writeFailed', detail: rawSentinel },
+          }),
         });
         return;
       }
       if (index === 1) {
-        await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true, path: entitlementPath }) });
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({ ok: true, path: entitlementPath }),
+        });
         return;
       }
-      const returnedMatrix = structuredClone(entitlementMatrix) as { tiers?: unknown; entitlements?: unknown };
-      if (!Array.isArray(returnedMatrix.tiers) || !returnedMatrix.entitlements || typeof returnedMatrix.entitlements !== 'object') {
+      const returnedMatrix = structuredClone(entitlementMatrix) as {
+        tiers?: unknown;
+        entitlements?: unknown;
+      };
+      if (
+        !Array.isArray(returnedMatrix.tiers) ||
+        !returnedMatrix.entitlements ||
+        typeof returnedMatrix.entitlements !== 'object'
+      ) {
         throw new Error('Entitlement matrix fixture is invalid');
       }
-      (returnedMatrix.entitlements as Record<string, unknown>)[ENTITLEMENT_RETURNED_MATRIX_PROOF] = {
-        kind: 'limit',
-        values: Object.fromEntries(returnedMatrix.tiers.map((tier) => [String(tier), 126])),
-      };
+      (returnedMatrix.entitlements as Record<string, unknown>)[ENTITLEMENT_RETURNED_MATRIX_PROOF] =
+        {
+          kind: 'limit',
+          values: Object.fromEntries(returnedMatrix.tiers.map((tier) => [String(tier), 126])),
+        };
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
@@ -790,7 +1023,8 @@ test.describe('DevStudio route contract', () => {
 
     let entitlementGets = 0;
     page.on('request', (request) => {
-      if (request.method() === 'GET' && new URL(request.url()).pathname === ENTITLEMENT_MATRIX_PATH) entitlementGets += 1;
+      if (request.method() === 'GET' && new URL(request.url()).pathname === ENTITLEMENT_MATRIX_PATH)
+        entitlementGets += 1;
     });
     const loaded = await openPolicyEditor(page);
     entitlementMatrix = loaded.entitlements.matrix;
@@ -807,7 +1041,9 @@ test.describe('DevStudio route contract', () => {
     await disabledPlanInput.evaluate((element) => element.dispatchEvent(new Event('blur')));
     await expect.poll(() => posts.length).toBe(1);
     releaseFirstSave();
-    await expect(page.getByRole('alert')).toHaveText('Entitlement changes could not be saved. Try again.');
+    await expect(page.getByRole('alert')).toHaveText(
+      'Entitlement changes could not be saved. Try again.',
+    );
     await expect(page.getByText(rawSentinel)).toHaveCount(0);
 
     await triggerTextInputSave(page, 'Plan Limits');
@@ -828,7 +1064,9 @@ test.describe('DevStudio route contract', () => {
     expect(unexpectedMutations).toEqual([]);
   });
 
-  test('Policy Editor reports AI save failure, partial success, and saved state without mutation', async ({ page }) => {
+  test('Policy Editor reports AI save failure, partial success, and saved state without mutation', async ({
+    page,
+  }) => {
     const unexpectedMutations = await guardUnexpectedApiMutations(page);
     const posts: string[] = [];
     let responseIndex = 0;
@@ -839,7 +1077,8 @@ test.describe('DevStudio route contract', () => {
     let aiProofCoordinate: { agentId: string; tier: string; field: string } | null = null;
 
     page.on('request', (request) => {
-      if (request.method() === 'GET' && new URL(request.url()).pathname === AI_RUNTIME_MATRIX_PATH) aiRuntimeGets += 1;
+      if (request.method() === 'GET' && new URL(request.url()).pathname === AI_RUNTIME_MATRIX_PATH)
+        aiRuntimeGets += 1;
     });
 
     await page.route(`**${AI_RUNTIME_CELL_PATH}`, async (route) => {
@@ -850,31 +1089,45 @@ test.describe('DevStudio route contract', () => {
         await route.fulfill({
           status: 503,
           contentType: 'application/json',
-          body: JSON.stringify({ error: { reasonKey: 'coreui.errors.db.writeFailed', detail: rawSentinel } }),
+          body: JSON.stringify({
+            error: { reasonKey: 'coreui.errors.db.writeFailed', detail: rawSentinel },
+          }),
         });
         return;
       }
       if (index === 1) {
-        await route.fulfill({ status: 200, contentType: 'text/plain', body: 'UNREADABLE_AI_POLICY_RESPONSE' });
+        await route.fulfill({
+          status: 200,
+          contentType: 'text/plain',
+          body: 'UNREADABLE_AI_POLICY_RESPONSE',
+        });
         return;
       }
-      const payload = route.request().postDataJSON() as { agentId?: unknown; tier?: unknown; field?: unknown };
+      const payload = route.request().postDataJSON() as {
+        agentId?: unknown;
+        tier?: unknown;
+        field?: unknown;
+      };
       const agentId = String(payload.agentId || '');
       const tier = String(payload.tier || '');
       const field = String(payload.field || '');
       const returnedMatrix = structuredClone(aiRuntimeMatrix) as { agents?: unknown };
-      if (!returnedMatrix.agents || typeof returnedMatrix.agents !== 'object') throw new Error('AI runtime matrix fixture is invalid');
+      if (!returnedMatrix.agents || typeof returnedMatrix.agents !== 'object')
+        throw new Error('AI runtime matrix fixture is invalid');
       const agentTiers = (returnedMatrix.agents as Record<string, unknown>)[agentId];
-      if (!agentTiers || typeof agentTiers !== 'object') throw new Error('AI runtime agent fixture is invalid');
+      if (!agentTiers || typeof agentTiers !== 'object')
+        throw new Error('AI runtime agent fixture is invalid');
       const config = (agentTiers as Record<string, unknown>)[tier];
-      if (!config || typeof config !== 'object') throw new Error('AI runtime tier fixture is invalid');
+      if (!config || typeof config !== 'object')
+        throw new Error('AI runtime tier fixture is invalid');
       const configRecord = config as Record<string, unknown>;
       if (field === 'maxTurnsPerThread') {
         configRecord.maxTurnsPerThread = AI_RETURNED_MATRIX_PROOF_VALUE;
       } else {
-        const budget = configRecord.budget && typeof configRecord.budget === 'object'
-          ? { ...(configRecord.budget as Record<string, unknown>) }
-          : {};
+        const budget =
+          configRecord.budget && typeof configRecord.budget === 'object'
+            ? { ...(configRecord.budget as Record<string, unknown>) }
+            : {};
         budget[field] = AI_RETURNED_MATRIX_PROOF_VALUE;
         configRecord.budget = budget;
       }
@@ -891,7 +1144,9 @@ test.describe('DevStudio route contract', () => {
     aiRuntimePath = loaded.aiRuntime.path;
 
     await triggerTextInputSave(page, 'Customer Copilots');
-    await expect(page.getByRole('alert')).toHaveText('AI policy changes could not be saved. Try again.');
+    await expect(page.getByRole('alert')).toHaveText(
+      'AI policy changes could not be saved. Try again.',
+    );
     await expect(page.getByText(rawSentinel)).toHaveCount(0);
 
     await triggerTextInputSave(page, 'Customer Copilots');
@@ -905,7 +1160,9 @@ test.describe('DevStudio route contract', () => {
     await expect(page.getByRole('heading', { name: 'Customer Copilots' })).toBeVisible();
     expect(aiProofCoordinate).not.toBeNull();
     await expect(
-      page.getByLabel(`${aiProofCoordinate!.agentId} ${aiProofCoordinate!.tier} ${aiProofCoordinate!.field}`),
+      page.getByLabel(
+        `${aiProofCoordinate!.agentId} ${aiProofCoordinate!.tier} ${aiProofCoordinate!.field}`,
+      ),
     ).toHaveValue(String(AI_RETURNED_MATRIX_PROOF_VALUE));
 
     expect(posts).toEqual([AI_RUNTIME_CELL_PATH, AI_RUNTIME_CELL_PATH, AI_RUNTIME_CELL_PATH]);

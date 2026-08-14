@@ -12,17 +12,17 @@ accountPublicId: CLICKEEN
 
 ## Runtime Authority
 
-| Concern | Current authority |
-| --- | --- |
-| App source | `admin/` |
-| Cloudflare Pages project | `devstudio` |
-| Canonical host | `https://devstudio.clickeen.com` |
-| Production branch | `main` |
-| Build command | `pnpm build` |
-| Build output | `admin/dist` |
-| Auth/session | Berlin login + DevStudio Pages session finish route |
-| Write path | Pages Functions under `admin/functions/**` |
-| Commit branch | `DEVSTUDIO_GITHUB_REPOSITORY` + `DEVSTUDIO_GITHUB_BRANCH` |
+| Concern                  | Current authority                                         |
+| ------------------------ | --------------------------------------------------------- |
+| App source               | `admin/`                                                  |
+| Cloudflare Pages project | `devstudio`                                               |
+| Canonical host           | `https://devstudio.clickeen.com`                          |
+| Production branch        | `main`                                                    |
+| Build command            | `pnpm build`                                              |
+| Build output             | `admin/dist`                                              |
+| Auth/session             | Berlin login + DevStudio Pages session finish route       |
+| Write path               | Pages Functions under `admin/functions/**`                |
+| Commit branch            | `DEVSTUDIO_GITHUB_REPOSITORY` + `DEVSTUDIO_GITHUB_BRANCH` |
 
 Non-canonical Pages origins redirect or block through `admin/functions/_middleware.js` unless Cloudflare project health behavior requires otherwise.
 
@@ -79,12 +79,12 @@ without trimming, normalization, substitution, or a Git commit.
 
 ## Current Sections
 
-| Section | Runtime source |
-| --- | --- |
-| Foundations: Core styles, Colors, Icons, Typography, Layouts | Generated from Dieter token, icon, and layout source through DevStudio static page generation. Core styles groups 53 non-layout foundation tokens. Layouts maps the three current layout families: the Roma/DevStudio application shell, Bob editor, and public Widget composition. It shows exact class taxonomy, owners, consumers, source paths, and the four editable application-layout properties. |
-| Dieter Components | Generated/static component showcase pages from Dieter component specs and snippets. |
-| Entitlements | Pages Functions read/write entitlement policy files through GitHub. The same tool also renders AI runtime policy editing backed by `/api/ai-runtime/*`. |
-| LLM Management | Read-only generated visibility into managed model configuration. It is not a runtime API-backed editor. The existing per-agent, per-tier AI runtime matrix (`packages/ck-policy/ai-runtime.matrix.json`) remains the model/token/timeout/turn-policy authority. Product Copilot preserves the existing 8/16/30/50 `maxTurnsPerThread` tier values, now applied to model steps in Bob's open Copilot thread. Translation Agent preserves one governed model call per chunk (`maxTurnsPerThread: 1`). The tier turn value is enforced in Bob's CopilotPane, which refuses continuation past the limit and terminates visibly as incomplete. |
+| Section                                                      | Runtime source                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| ------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Foundations: Core styles, Colors, Icons, Typography, Layouts | Generated from Dieter token, icon, and layout source through DevStudio static page generation. Core styles groups 53 non-layout foundation tokens. Layouts maps the three current layout families: the Roma/DevStudio application shell, Bob editor, and public Widget composition. It shows exact class taxonomy, owners, consumers, source paths, and the four editable application-layout properties.                                                                                                                                                                                                                                  |
+| Dieter Components                                            | Generated/static component showcase pages from Dieter component specs and snippets.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| Entitlements                                                 | Pages Functions read/write entitlement policy files through GitHub. The same tool also renders AI runtime policy editing backed by `/api/ai-runtime/*`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| LLM Management                                               | Read-only generated visibility into managed model configuration. It is not a runtime API-backed editor. The existing per-agent, per-tier AI runtime matrix (`packages/ck-policy/ai-runtime.matrix.json`) remains the model/token/timeout/turn-policy authority. Product Copilot preserves the existing 8/16/30/50 `maxTurnsPerThread` tier values, now applied to model steps in Bob's open Copilot thread. Translation Agent preserves one governed model call per chunk (`maxTurnsPerThread: 1`). The tier turn value is enforced in Bob's CopilotPane, which refuses continuation past the limit and terminates visibly as incomplete. |
 
 Foundation and Policy Editor tables use Dieter Table. DevStudio still owns
 their columns, editable cells, data, and mutation behavior. The token editor
@@ -105,7 +105,7 @@ header, row, cell, border, or overflow presentation locally.
 
 Hash routes are generated from `admin/src/html/**` and route data in
 `admin/src/data/routes.ts`. There is no separate design-system admin app. The
-current generated inventory is 5 Foundation routes, 23 Dieter Component routes,
+current generated inventory is 5 Foundation routes, 22 Dieter Component routes,
 and 2 Policy routes. CSS-only Dieter contracts do not create empty showcase
 routes.
 
@@ -161,22 +161,29 @@ icon-and-text ladder plus compact text-only and icon-only selected, unselected,
 and disabled groups; it has no nested Button or state-mirroring hydrator. The retired standalone Popaddlink route is
 absent because link editing is now an internal Dropdown Edit sheet.
 
+Textfield and Valuefield are generated from their real native-input stencils.
+Both reveal the exact `sm|md|lg` geometry and disabled state. Textfield also
+reveals an empty value with caller-supplied placeholder copy; Valuefield reveals
+ordinary nonnegative caller bounds, a caller-authorized signed range, and
+content-sized short and longer numeric editors with complete-row neutral hover.
+These pages install no component hydrator and invent no product validation.
+
 ## Pages Functions
 
-| Route | Purpose |
-| --- | --- |
-| `GET /api/entitlements/matrix` | Read committed entitlement matrix. |
-| `POST /api/entitlements/matrix/cell` | Validate and commit one entitlement matrix edit. |
-| `GET /api/ai-runtime/matrix` | Read committed AI runtime policy matrix. |
-| `POST /api/ai-runtime/matrix/cell` | Validate and commit one AI runtime policy edit. |
-| `GET /api/session/login/google` | Start Berlin login for DevStudio. |
-| `GET /api/session/finish` | Redeem Berlin finish transaction and set DevStudio session cookie. |
-| `GET /api/dieter/tokens/colors` | Read source-controlled Dieter color tokens. |
-| `POST /api/dieter/tokens/colors/value` | Validate and commit one Dieter color token edit. |
-| `GET /api/dieter/tokens/foundation` | Read recognized source-controlled Dieter foundation tokens. |
-| `POST /api/dieter/tokens/foundation/value` | Validate and commit one recognized Dieter foundation token edit. |
-| `GET /api/dieter/tokens/typography` | Read source-controlled Dieter typography tokens. |
-| `POST /api/dieter/tokens/typography/value` | Validate and commit one Dieter typography token edit. |
+| Route                                      | Purpose                                                            |
+| ------------------------------------------ | ------------------------------------------------------------------ |
+| `GET /api/entitlements/matrix`             | Read committed entitlement matrix.                                 |
+| `POST /api/entitlements/matrix/cell`       | Validate and commit one entitlement matrix edit.                   |
+| `GET /api/ai-runtime/matrix`               | Read committed AI runtime policy matrix.                           |
+| `POST /api/ai-runtime/matrix/cell`         | Validate and commit one AI runtime policy edit.                    |
+| `GET /api/session/login/google`            | Start Berlin login for DevStudio.                                  |
+| `GET /api/session/finish`                  | Redeem Berlin finish transaction and set DevStudio session cookie. |
+| `GET /api/dieter/tokens/colors`            | Read source-controlled Dieter color tokens.                        |
+| `POST /api/dieter/tokens/colors/value`     | Validate and commit one Dieter color token edit.                   |
+| `GET /api/dieter/tokens/foundation`        | Read recognized source-controlled Dieter foundation tokens.        |
+| `POST /api/dieter/tokens/foundation/value` | Validate and commit one recognized Dieter foundation token edit.   |
+| `GET /api/dieter/tokens/typography`        | Read source-controlled Dieter typography tokens.                   |
+| `POST /api/dieter/tokens/typography/value` | Validate and commit one Dieter typography token edit.              |
 
 Every write uses GitHub SHA conflict checks. A stale write fails; it does not overwrite current `main`.
 
@@ -235,14 +242,14 @@ Cloudflare Access is not the DevStudio auth boundary.
 
 Configured in `admin/wrangler.toml` and Cloudflare Pages:
 
-| Name | Purpose |
-| --- | --- |
-| `BERLIN_BASE_URL` | Berlin session/finish verification. |
-| `DEVSTUDIO_CANONICAL_ORIGIN` | Canonical host enforcement. |
-| `DEVSTUDIO_GITHUB_BRANCH` | Commit branch, currently `main`. |
-| `DEVSTUDIO_GITHUB_REPOSITORY` | Repository for source-controlled writes. |
-| `ENV_STAGE` | Runtime stage label. |
-| `DEVSTUDIO_GITHUB_TOKEN` | Pages secret for GitHub contents reads/writes. |
+| Name                          | Purpose                                        |
+| ----------------------------- | ---------------------------------------------- |
+| `BERLIN_BASE_URL`             | Berlin session/finish verification.            |
+| `DEVSTUDIO_CANONICAL_ORIGIN`  | Canonical host enforcement.                    |
+| `DEVSTUDIO_GITHUB_BRANCH`     | Commit branch, currently `main`.               |
+| `DEVSTUDIO_GITHUB_REPOSITORY` | Repository for source-controlled writes.       |
+| `ENV_STAGE`                   | Runtime stage label.                           |
+| `DEVSTUDIO_GITHUB_TOKEN`      | Pages secret for GitHub contents reads/writes. |
 
 Cloudflare API commands require root `.env.local` values:
 

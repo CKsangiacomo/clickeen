@@ -10,7 +10,7 @@
      • .diet-toggle--block → inline-size: 100%
      • .diet-toggle--split → justify-content: space-between (label left, switch right)
    Behaviour:
-   - :checked updates track color and translates knob; focus ring forwarded to visual switch.
+   - :checked updates track color and translates knob.
 */
 
 .diet-toggle {
@@ -120,15 +120,6 @@
 /* When active, make the label system black */
 .diet-toggle:has(.diet-toggle__input:checked) .diet-toggle__label {
   color: var(--color-system-black);
-}
-
-.diet-toggle:hover:not(:has(.diet-toggle__input:disabled)) {
-  background: color-mix(in oklab, var(--color-system-white), var(--color-system-black) 6%);
-}
-
-.diet-toggle:focus-within {
-  background: var(--color-system-white);
-  border-color: var(--color-system-blue);
 }
 
 /* Disabled */

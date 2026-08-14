@@ -152,9 +152,13 @@ export async function buildContext(
     throw new Error(`[BobCompiler] dropdown-fill control "${pathAttr}" requires fill-modes`);
   }
   const axis = attrs.axis || attrs['data-axis'] || (merged.axis as string) || '';
-  const min = attrs.min || (merged.min as string) || '';
-  const max = attrs.max || (merged.max as string) || '';
-  const step = attrs.step || (merged.step as string) || '';
+  const min = attrs.min ?? '';
+  const max = attrs.max ?? '';
+  const step = attrs.step ?? '';
+  const hasMin = attrs.min !== undefined;
+  const hasMax = attrs.max !== undefined;
+  const hasStep = attrs.step !== undefined;
+  const disabled = attrs.disabled === 'true' || merged.disabled === true;
   const allowStructureRaw = attrs.allowStructure || attrs['allow-structure'];
   const allowStructure = allowStructureRaw?.trim() ?? '';
 
@@ -247,6 +251,10 @@ export async function buildContext(
     min,
     max,
     step,
+    hasMin,
+    hasMax,
+    hasStep,
+    disabled,
     allowStructure,
     showStructure: allowStructure === 'true',
     accept: component === 'dropdown-upload' ? accept : undefined,

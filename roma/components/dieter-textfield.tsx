@@ -16,16 +16,13 @@ export function DieterTextfield({
   className?: string;
   inputClassName?: string;
 }) {
-  const bodyClass = controlSize === 'sm' ? 'body-xs' : controlSize === 'lg' ? 'body-m' : 'body-s';
-  const labelClass = controlSize === 'sm' ? 'label-xs' : controlSize === 'lg' ? 'label-m' : 'label-s';
-
   return (
     <div className={`diet-textfield${className ? ` ${className}` : ''}`} data-size={controlSize}>
       <label className="diet-textfield__control">
-        <span className={`diet-textfield__display-label ${labelClass}${label ? '' : ' is-hidden'}`}>{label}</span>
+        <span className={`diet-textfield__display-label${label ? '' : ' is-hidden'}`}>{label}</span>
         <input
           {...inputProps}
-          className={`diet-textfield__field ${bodyClass}${inputClassName ? ` ${inputClassName}` : ''}`}
+          className={`diet-textfield__field${inputClassName ? ` ${inputClassName}` : ''}`}
           aria-label={inputProps['aria-label'] ?? label}
         />
       </label>

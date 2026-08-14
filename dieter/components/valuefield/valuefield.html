@@ -1,9 +1,9 @@
 <div class="diet-valuefield" data-size="{{size}}">
   <label class="diet-valuefield__control">
     <span
-      class="diet-valuefield__label {{labelClass}}{{#if label}}{{else}} is-hidden{{/if}}"
+      class="diet-valuefield__label{{#if label}}{{else}} is-hidden{{/if}}"
     >{{#if label}}{{label}}{{/if}}</span>
-    <span class="diet-valuefield__input {{bodyClass}}">
+    <span class="diet-valuefield__input">
       <input
         id="{{id}}"
         type="number"
@@ -12,7 +12,7 @@
         aria-label="{{label}}"
         value="{{value}}"
         {{#if path}}data-path="{{path}}" {{/if}}
-        {{#if min}}min="{{min}}" {{/if}}{{#if max}}max="{{max}}" {{/if}}{{#if step}}step="{{step}}"{{/if}}
+        {{#if hasMin}}min="{{min}}" {{/if}}{{#if hasMax}}max="{{max}}" {{/if}}{{#if hasStep}}step="{{step}}" {{/if}}{{#if disabled}}disabled{{/if}}
       />
     </span>
   </label>

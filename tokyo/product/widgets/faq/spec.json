@@ -580,7 +580,9 @@
                 "label": "$label:layout.field.faq.layout.gap.valuefield.label",
                 "attrs": {
                   "group-label": "",
-                  "size": "md"
+                  "size": "md",
+                  "min": 0,
+                  "max": 160
                 }
               },
               {
@@ -652,7 +654,10 @@
                 },
                 "attrs": {
                   "group-label": "",
-                  "size": "md"
+                  "size": "md",
+                  "min": 1,
+                  "max": 4,
+                  "step": 1
                 }
               },
               {
@@ -668,7 +673,10 @@
                 },
                 "attrs": {
                   "group-label": "",
-                  "size": "md"
+                  "size": "md",
+                  "min": 1,
+                  "max": 2,
+                  "step": 1
                 }
               },
               {
@@ -787,7 +795,9 @@
                 },
                 "attrs": {
                   "group-label": "",
-                  "size": "md"
+                  "size": "md",
+                  "min": 0,
+                  "max": 160
                 }
               },
               {
@@ -802,7 +812,9 @@
                 },
                 "attrs": {
                   "group-label": "",
-                  "size": "md"
+                  "size": "md",
+                  "min": 0,
+                  "max": 160
                 }
               },
               {
@@ -817,7 +829,9 @@
                 },
                 "attrs": {
                   "group-label": "",
-                  "size": "md"
+                  "size": "md",
+                  "min": 0,
+                  "max": 160
                 }
               },
               {
@@ -832,7 +846,9 @@
                 },
                 "attrs": {
                   "group-label": "",
-                  "size": "md"
+                  "size": "md",
+                  "min": 0,
+                  "max": 160
                 }
               },
               {
@@ -847,7 +863,9 @@
                 },
                 "attrs": {
                   "group-label": "",
-                  "size": "md"
+                  "size": "md",
+                  "min": 0,
+                  "max": 160
                 }
               }
             ],

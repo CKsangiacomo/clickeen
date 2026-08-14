@@ -244,9 +244,9 @@ function SelectField({
   return (
     <div className="diet-textfield" data-size="md">
       <label className="diet-textfield__control">
-        <span className="diet-textfield__display-label label-s">{label}</span>
+        <span className="diet-textfield__display-label">{label}</span>
         <select
-          className="diet-textfield__field body-s"
+          className="diet-textfield__field"
           value={value}
           onMouseDown={onClick}
           onChange={(event) => onChange(event.target.value)}

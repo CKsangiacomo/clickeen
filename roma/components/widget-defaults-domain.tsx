@@ -1,9 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import {
-  BOB_WIDGET_PANEL_IDS,
-} from '@clickeen/bob/control-host';
+import { BOB_WIDGET_PANEL_IDS } from '@clickeen/bob/control-host';
 import {
   isCommonWidgetControlPath,
   listCommonWidgetAccountDefaultMetadataPaths,
@@ -45,6 +43,8 @@ type DefaultsControl = {
   path: string;
   label?: string;
   showIf?: string;
+  min?: number;
+  max?: number;
 };
 
 type WidgetDefaultsEntry = {
@@ -159,6 +159,8 @@ function normalizeCompiledControl(raw: unknown, order: number): DefaultsControl 
     ...(typeof raw.groupLabel === 'string' && raw.groupLabel ? { groupLabel: raw.groupLabel } : {}),
     ...(typeof raw.label === 'string' && raw.label ? { label: raw.label } : {}),
     ...(typeof raw.showIf === 'string' && raw.showIf ? { showIf: raw.showIf } : {}),
+    ...(typeof raw.min === 'number' && Number.isFinite(raw.min) ? { min: raw.min } : {}),
+    ...(typeof raw.max === 'number' && Number.isFinite(raw.max) ? { max: raw.max } : {}),
   };
 }
 
@@ -217,10 +219,7 @@ function collectDefaultPaths(value: unknown, prefix = ''): string[] {
 function WidgetDefaultsCoreSection(args: {
   entry: WidgetDefaultsEntry;
   fontLibrary: AccountFontLibrary;
-  onOps: (
-    widgetType: string,
-    ops: Array<{ path: string; value: unknown }>,
-  ) => void;
+  onOps: (widgetType: string, ops: Array<{ path: string; value: unknown }>) => void;
   onContractError: (widgetType: string, message: string) => void;
   onReadyChange: (widgetType: string, ready: boolean) => void;
 }) {
@@ -261,7 +260,9 @@ export function WidgetDefaultsDomain() {
   const [baseline, setBaseline] = useState<AccountWidgetDefaultsDocument | null>(null);
   const [draft, setDraft] = useState<AccountWidgetDefaultsDocument | null>(null);
   const [compiledControls, setCompiledControls] = useState<Record<string, DefaultsControl[]>>({});
-  const [compiledPayloads, setCompiledPayloads] = useState<Record<string, BuilderControlPayload>>({});
+  const [compiledPayloads, setCompiledPayloads] = useState<Record<string, BuilderControlPayload>>(
+    {},
+  );
   const [compiledWidgetLabels, setCompiledWidgetLabels] = useState<Record<string, string>>({});
   const [commonControlsReady, setCommonControlsReady] = useState(false);
   const [commonContractError, setCommonContractError] = useState('');
@@ -286,7 +287,8 @@ export function WidgetDefaultsDomain() {
     .map((widgetType) => [widgetType, coreContractErrors[widgetType]] as const)
     .filter((entry): entry is readonly [string, string] => Boolean(entry[1]));
   const coreControlsReadyForAll =
-    widgetTypes.length > 0 && widgetTypes.every((widgetType) => coreControlsReady[widgetType] === true);
+    widgetTypes.length > 0 &&
+    widgetTypes.every((widgetType) => coreControlsReady[widgetType] === true);
   const saveBlocked =
     Boolean(commonContractError) ||
     !commonControlsReady ||
@@ -355,7 +357,9 @@ export function WidgetDefaultsDomain() {
         );
         setCommonControlsReady(false);
         setCommonContractError('');
-        setCoreControlsReady(Object.fromEntries(entries.map(([widgetType]) => [widgetType, false])));
+        setCoreControlsReady(
+          Object.fromEntries(entries.map(([widgetType]) => [widgetType, false])),
+        );
         setCoreContractErrors({});
       })
       .catch(() => {
@@ -480,16 +484,16 @@ export function WidgetDefaultsDomain() {
   }, [compiledControls, compiledWidgetLabels, controlsLoaded, draft, widgetTypes]);
 
   const updateCommonOps = useCallback((ops: Array<{ path: string; value: unknown }>) => {
-        setDraft((current) =>
-          current
-            ? {
-                ...current,
-                common: ops.reduce(
-                  (common, op) => setPathValue(common, op.path, op.value),
-                  current.common,
-                ),
-              }
-            : current,
+    setDraft((current) =>
+      current
+        ? {
+            ...current,
+            common: ops.reduce(
+              (common, op) => setPathValue(common, op.path, op.value),
+              current.common,
+            ),
+          }
+        : current,
     );
   }, []);
 
@@ -521,29 +525,26 @@ export function WidgetDefaultsDomain() {
     }
   }, []);
 
-  const updateWidgetOps = useCallback((
-    widgetType: string,
-    ops: Array<{ path: string; value: unknown }>,
-  ) => {
-    setDraft((current) => {
-      if (!current) return current;
-      const existing = current.widgets[widgetType];
-      if (!existing) return current;
-      return {
-        ...current,
-        widgets: {
-          ...current.widgets,
-          [widgetType]: {
-            ...existing,
-            core: ops.reduce(
-              (core, op) => setPathValue(core, op.path, op.value),
-              existing.core,
-            ),
+  const updateWidgetOps = useCallback(
+    (widgetType: string, ops: Array<{ path: string; value: unknown }>) => {
+      setDraft((current) => {
+        if (!current) return current;
+        const existing = current.widgets[widgetType];
+        if (!existing) return current;
+        return {
+          ...current,
+          widgets: {
+            ...current.widgets,
+            [widgetType]: {
+              ...existing,
+              core: ops.reduce((core, op) => setPathValue(core, op.path, op.value), existing.core),
+            },
           },
-        },
-      };
-    });
-  }, []);
+        };
+      });
+    },
+    [],
+  );
 
   const discard = useCallback(() => {
     if (!baseline) return;
@@ -578,7 +579,11 @@ export function WidgetDefaultsDomain() {
   }, [accountApi, draft, saveBlocked, saving]);
 
   if (loading) {
-    return <section className="rd-canvas-module body-m" role="status">Loading widget defaults...</section>;
+    return (
+      <section className="rd-canvas-module body-m" role="status">
+        Loading widget defaults...
+      </section>
+    );
   }
 
   if (!draft) {
@@ -609,13 +614,17 @@ export function WidgetDefaultsDomain() {
             <p className="body-s widget-defaults-error">{error}</p>
           </div>
           <p className="body-m">
-            Widget defaults require compiled Builder metadata. Fix the common controls or the widget spec
-            before editing defaults.
+            Widget defaults require compiled Builder metadata. Fix the common controls or the widget
+            spec before editing defaults.
           </p>
         </section>
       );
     }
-    return <section className="rd-canvas-module body-m" role="status">Loading Builder controls...</section>;
+    return (
+      <section className="rd-canvas-module body-m" role="status">
+        Loading Builder controls...
+      </section>
+    );
   }
 
   if (unmappedDefaultPaths.length > 0) {
@@ -644,8 +653,8 @@ export function WidgetDefaultsDomain() {
           <p className="body-s widget-defaults-error">{commonContractError}</p>
         </div>
         <p className="body-m">
-          Widget defaults require rendered Builder controls and Dieter hydration. Fix the common controls or
-          the widget spec before editing defaults.
+          Widget defaults require rendered Builder controls and Dieter hydration. Fix the common
+          controls or the widget spec before editing defaults.
         </p>
       </section>
     );
@@ -658,13 +667,16 @@ export function WidgetDefaultsDomain() {
           <h2 className="heading-4">Widget Defaults Contract Error</h2>
           <pre className="widget-defaults-contract-error__paths body-s">
             {coreContractErrorEntries
-              .map(([widgetType, message]) => `${compiledWidgetLabels[widgetType] ?? widgetType}: ${message}`)
+              .map(
+                ([widgetType, message]) =>
+                  `${compiledWidgetLabels[widgetType] ?? widgetType}: ${message}`,
+              )
               .join('\n')}
           </pre>
         </div>
         <p className="body-m">
-          Widget defaults require rendered Builder controls and Dieter hydration. Fix the widget spec
-          before editing defaults.
+          Widget defaults require rendered Builder controls and Dieter hydration. Fix the widget
+          spec before editing defaults.
         </p>
       </section>
     );
@@ -675,8 +687,16 @@ export function WidgetDefaultsDomain() {
       <section className="widget-defaults">
         <div className="widget-defaults-toolbar">
           <div>
-            {compiledLoading ? <p className="body-s" role="status">Loading Builder controls...</p> : null}
-            {error ? <p className="body-s widget-defaults-error" role="alert">{error}</p> : null}
+            {compiledLoading ? (
+              <p className="body-s" role="status">
+                Loading Builder controls...
+              </p>
+            ) : null}
+            {error ? (
+              <p className="body-s widget-defaults-error" role="alert">
+                {error}
+              </p>
+            ) : null}
           </div>
           <div className="widget-defaults-actions">
             <button

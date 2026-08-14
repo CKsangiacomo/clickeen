@@ -339,28 +339,6 @@
                         "type": "dropdown-fill",
                         "path": "logoshowcase.strips.__STRIP__.logos.__INDEX__.logoFill",
                         "label": "$label:content.field.logoshowcase.strips.strip.logos.index.logo-fill.dropdown-fill.label",
-                        "template": [
-                          {
-                            "kind": "field",
-                            "type": "textfield",
-                            "path": "logoshowcase.strips.__STRIP__.logos.__INDEX__.name",
-                            "label": "$label:content.field.logoshowcase.strips.strip.logos.index.name.textfield.label",
-                            "attrs": {
-                              "size": "sm",
-                              "placeholder": "$label:content.field.logoshowcase.strips.strip.logos.index.name.textfield.attr.placeholder"
-                            }
-                          },
-                          {
-                            "kind": "field",
-                            "type": "textfield",
-                            "path": "logoshowcase.strips.__STRIP__.logos.__INDEX__.caption",
-                            "label": "$label:content.field.logoshowcase.strips.strip.logos.index.caption.textfield.label",
-                            "attrs": {
-                              "size": "sm",
-                              "placeholder": "$label:content.field.logoshowcase.strips.strip.logos.index.caption.textfield.attr.placeholder"
-                            }
-                          }
-                        ],
                         "attrs": {
                           "size": "md",
                           "fill-modes": "image",
@@ -603,7 +581,8 @@
                 },
                 "attrs": {
                   "group-label": "",
-                  "size": "md"
+                  "size": "md",
+                  "min": 0
                 }
               },
               {
@@ -619,7 +598,8 @@
                 },
                 "attrs": {
                   "group-label": "",
-                  "size": "md"
+                  "size": "md",
+                  "min": 0
                 }
               },
               {
@@ -725,7 +705,8 @@
                 "label": "$label:layout.field.logoshowcase.spacing.gap.valuefield.label",
                 "attrs": {
                   "group-label": "",
-                  "size": "md"
+                  "size": "md",
+                  "min": 0
                 }
               },
               {
@@ -741,7 +722,8 @@
                 },
                 "attrs": {
                   "group-label": "",
-                  "size": "md"
+                  "size": "md",
+                  "min": 0
                 }
               },
               {
@@ -752,7 +734,8 @@
                 "label": "$label:layout.field.logoshowcase.spacing.strip-gap.valuefield.label",
                 "attrs": {
                   "group-label": "",
-                  "size": "md"
+                  "size": "md",
+                  "min": 0
                 }
               },
               {
@@ -763,7 +746,8 @@
                 "label": "$label:layout.field.logoshowcase.spacing.mobile-gap.valuefield.label",
                 "attrs": {
                   "group-label": "",
-                  "size": "md"
+                  "size": "md",
+                  "min": 0
                 }
               },
               {
@@ -774,7 +758,8 @@
                 "label": "$label:layout.field.logoshowcase.spacing.mobile-strip-gap.valuefield.label",
                 "attrs": {
                   "group-label": "",
-                  "size": "md"
+                  "size": "md",
+                  "min": 0
                 }
               },
               {
@@ -833,7 +818,10 @@
                 "label": "$label:appearance.field.logoshowcase.appearance.logo-opacity.valuefield.label",
                 "attrs": {
                   "group-label": "",
-                  "size": "md"
+                  "size": "md",
+                  "min": 0,
+                  "max": 1,
+                  "step": 0.01
                 }
               }
             ]

@@ -212,7 +212,8 @@ function inferControlMetadata(
   )
     return { kind: 'string' };
   if (control.type === 'slider' || control.type === 'valuefield') return { kind: 'number' };
-  if (control.type === 'dropdown-fill' || control.type === 'dropdown-upload') return { kind: 'json' };
+  if (control.type === 'dropdown-fill' || control.type === 'dropdown-upload')
+    return { kind: 'json' };
 
   if (control.type === 'repeater' || control.type === 'object-manager') {
     const itemIdPath =
@@ -319,6 +320,43 @@ function collectControlsFromMarkup(markup: string, panelId: PanelId, controls: C
         step,
         required,
       });
+      if (type === 'bulk-edit') {
+        const columnsRaw = attrs.columns;
+        const columns = columnsRaw ? (JSON.parse(columnsRaw) as unknown) : null;
+        if (!Array.isArray(columns)) {
+          throw new Error(`[BobCompiler] bulk-edit control "${path}" requires columns`);
+        }
+        const rowPath = (attrs.rowPath || attrs['row-path'] || '').trim();
+        columns.forEach((column, index) => {
+          if (!column || typeof column !== 'object' || Array.isArray(column)) {
+            throw new Error(
+              `[BobCompiler] bulk-edit control "${path}" column ${index} must be an object`,
+            );
+          }
+          const columnPath = String((column as Record<string, unknown>).path || '').trim();
+          const columnLabel = String((column as Record<string, unknown>).label || '').trim();
+          const columnControl = (column as Record<string, unknown>).control;
+          const derivedType =
+            columnControl === 'text' ? 'textfield' : columnControl === 'checkbox' ? 'toggle' : '';
+          if (!columnPath || !columnLabel || !derivedType) {
+            throw new Error(
+              `[BobCompiler] bulk-edit control "${path}" column ${index} requires path, label, and text|checkbox control`,
+            );
+          }
+          const itemPath = rowPath
+            ? `${path}.__INDEX__.${rowPath}.__INDEX__.${columnPath}`
+            : `${path}.__INDEX__.${columnPath}`;
+          controls.push({
+            panelId,
+            groupId,
+            groupLabel: explicitGroupLabel || undefined,
+            type: derivedType,
+            path: itemPath,
+            label: columnLabel,
+            showIf,
+          });
+        });
+      }
       addDerivedPath(
         attrs.labelPath || attrs['label-path'],
         attrs.labelInputLabel || attrs['label-input-label'],

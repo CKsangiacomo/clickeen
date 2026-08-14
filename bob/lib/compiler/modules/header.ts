@@ -77,14 +77,14 @@ export function buildHeaderLayoutPanelFields({
     "  <tooldrawer-cluster label='Header'>",
     `    <tooldrawer-field-headerlayout group-label='' type='dropdown-actions' size='md' path='header.placement' label='Header placement' placeholder='Choose placement' value='{{header.placement}}' options='${headerPlacementOptions}' show-if=\"header.enabled == true\" />`,
     `    <tooldrawer-field-headerlayout group-label='' type='dropdown-actions' size='md' path='header.alignment' label='Header alignment' placeholder='Choose alignment' value='{{header.alignment}}' options='${headerAlignmentOptions}' show-if=\"header.enabled == true\" />`,
-    `    <tooldrawer-field-headerlayout group-label='' type='valuefield' size='md' path='header.gap' label='Header/content gap (px)' show-if=\"header.enabled == true\" />`,
-    `    <tooldrawer-field-headerlayout group-label='' type='valuefield' size='md' path='header.textGap' label='Title/subtitle gap (px)' show-if=\"header.enabled == true && header.showSubtitle == true\" />`,
+    `    <tooldrawer-field-headerlayout group-label='' type='valuefield' size='md' path='header.gap' label='Header/content gap (px)' min='0' show-if=\"header.enabled == true\" />`,
+    `    <tooldrawer-field-headerlayout group-label='' type='valuefield' size='md' path='header.textGap' label='Title/subtitle gap (px)' min='0' show-if=\"header.enabled == true && header.showSubtitle == true\" />`,
   ];
 
   if (includeCta) {
     fields.push(
       `    <tooldrawer-field-headerlayout group-label='' type='dropdown-actions' size='md' path='header.ctaPlacement' label='Header CTA position' placeholder='Choose position' value='{{header.ctaPlacement}}' options='${headerCtaPlacementOptions}' show-if=\"header.enabled == true && headerCta.enabled == true\" />`,
-      `    <tooldrawer-field-headerlayout group-label='' type='valuefield' size='md' path='header.innerGap' label='Text/header CTA gap (px)' show-if=\"header.enabled == true && headerCta.enabled == true\" />`,
+      `    <tooldrawer-field-headerlayout group-label='' type='valuefield' size='md' path='header.innerGap' label='Text/header CTA gap (px)' min='0' show-if=\"header.enabled == true && headerCta.enabled == true\" />`,
     );
   }
 
@@ -101,15 +101,15 @@ export function buildHeaderAppearancePanelFields({
     '  <tooldrawer-cluster label=\'Header CTA\' show-if=\"header.enabled == true && headerCta.enabled == true\">',
     `    <tooldrawer-field-headerappearance group-label='' type='dropdown-actions' size='md' path='appearance.headerCta.sizePreset' label='Size' placeholder='Choose size' value='{{appearance.headerCta.sizePreset}}' options='${sizePresetOptions}' />`,
     "    <tooldrawer-field-headerappearance group-label='' type='toggle' size='md' path='appearance.headerCta.paddingLinked' label='Link padding' value='{{appearance.headerCta.paddingLinked}}' default='true' />",
-    "    <tooldrawer-field-headerappearance group-label='' type='valuefield' size='md' path='appearance.headerCta.paddingInline' label='Padding (px)' show-if=\"appearance.headerCta.paddingLinked == true\" />",
-    "    <tooldrawer-field-headerappearance group-label='' type='valuefield' size='md' path='appearance.headerCta.paddingInline' label='Horizontal padding (px)' show-if=\"appearance.headerCta.paddingLinked == false\" />",
-    "    <tooldrawer-field-headerappearance group-label='' type='valuefield' size='md' path='appearance.headerCta.paddingBlock' label='Vertical padding (px)' show-if=\"appearance.headerCta.paddingLinked == false\" />",
+    "    <tooldrawer-field-headerappearance group-label='' type='valuefield' size='md' path='appearance.headerCta.paddingInline' label='Padding (px)' min='0' show-if=\"appearance.headerCta.paddingLinked == true\" />",
+    "    <tooldrawer-field-headerappearance group-label='' type='valuefield' size='md' path='appearance.headerCta.paddingInline' label='Horizontal padding (px)' min='0' show-if=\"appearance.headerCta.paddingLinked == false\" />",
+    "    <tooldrawer-field-headerappearance group-label='' type='valuefield' size='md' path='appearance.headerCta.paddingBlock' label='Vertical padding (px)' min='0' show-if=\"appearance.headerCta.paddingLinked == false\" />",
     "    <tooldrawer-field-headerappearance group-label='' type='dropdown-fill' size='md' fill-modes='color' path='appearance.headerCta.background' label='' value='{{appearance.headerCta.background}}' />",
     "    <tooldrawer-field-headerappearance group-label='' type='dropdown-fill' size='md' fill-modes='color' path='appearance.headerCta.textColor' label='' value='{{appearance.headerCta.textColor}}' />",
     "    <tooldrawer-field-headerappearance group-label='' type='dropdown-border' size='md' path='appearance.headerCta.border' label='' value='{{appearance.headerCta.border}}' />",
     `    <tooldrawer-field-headerappearance group-label='' type='dropdown-actions' size='md' path='appearance.headerCta.radius' label='Corner radius' placeholder='Choose radius' value='{{appearance.headerCta.radius}}' options='${radiusOptions}' />`,
     `    <tooldrawer-field-headerappearance group-label='' type='dropdown-actions' size='md' path='appearance.headerCta.iconSizePreset' label='Icon size' placeholder='Choose size' value='{{appearance.headerCta.iconSizePreset}}' options='${sizePresetOptions}' show-if=\"headerCta.iconEnabled == true\" />`,
-    "    <tooldrawer-field-headerappearance group-label='' type='valuefield' size='md' path='appearance.headerCta.iconSize' label='Custom icon size (px)' show-if=\"headerCta.iconEnabled == true && appearance.headerCta.iconSizePreset == 'custom'\" />",
+    "    <tooldrawer-field-headerappearance group-label='' type='valuefield' size='md' path='appearance.headerCta.iconSize' label='Custom icon size (px)' min='0' show-if=\"headerCta.iconEnabled == true && appearance.headerCta.iconSizePreset == 'custom'\" />",
     '  </tooldrawer-cluster>',
   ];
 }

@@ -12,6 +12,8 @@ import { buildContext } from '../lib/compiler/stencils';
 import { DEFAULT_PANELS } from '../components/TdMenu';
 import { controlHostClusterId } from '../components/td-menu-content/dom';
 import { expandLinkedOps } from '../components/td-menu-content/linkedOps';
+import { validateValueStrict } from '../lib/edit/controls';
+import { applyWidgetOps } from '../lib/edit/ops';
 import { BOB_MENU_PANEL_IDS, BOB_WIDGET_PANEL_IDS } from '../lib/types';
 import {
   assertCompiledEditorContract,
@@ -93,6 +95,36 @@ function readAuthoredClusters(panel: AuthoredPanel): AuthoredCluster[] {
 
 function captureAll(source: string, pattern: RegExp): string[][] {
   return Array.from(source.matchAll(pattern), (match) => match.slice(1));
+}
+
+function collectTextfieldPlaceholders(value: unknown): string[] {
+  const placeholders: string[] = [];
+  const visit = (candidate: unknown) => {
+    if (Array.isArray(candidate)) {
+      candidate.forEach(visit);
+      return;
+    }
+    if (!candidate || typeof candidate !== 'object') return;
+    const record = candidate as JsonObject;
+    if (record.kind === 'field' && record.type === 'textfield') {
+      const attrs = record.attrs;
+      if (attrs && typeof attrs === 'object' && !Array.isArray(attrs)) {
+        const placeholder = (attrs as JsonObject).placeholder;
+        if (typeof placeholder === 'string' && placeholder) placeholders.push(placeholder);
+      }
+    }
+    Object.entries(record).forEach(([key, child]) => {
+      if (key !== 'template') visit(child);
+    });
+    if (
+      Array.isArray(record.template) &&
+      (record.type === 'object-manager' || record.type === 'repeater')
+    ) {
+      record.template.forEach(visit);
+    }
+  };
+  visit(value);
+  return placeholders;
 }
 
 function assertCompiledClusterState(args: {
@@ -201,7 +233,7 @@ function assertDropdownEditLabels(args: {
       `${args.widgetType} Dropdown Edit ${index} labels Link sheet`,
     );
     assert.ok(
-      root.includes(`diet-textfield__display-label label-s">${label('url')}</span>`),
+      root.includes(`diet-textfield__display-label">${label('url')}</span>`),
       `${args.widgetType} Dropdown Edit ${index} labels URL`,
     );
     const closeStart = root.indexOf('diet-dropdown-edit__link-close');
@@ -360,7 +392,11 @@ function assertCollectionEditorContract(args: {
     `${args.widgetType} exposes only its top-level collection host boundaries`,
   );
   hostCollectionFields.forEach(([dieterPath, bobPath]) => {
-    assert.equal(bobPath, dieterPath, `${args.widgetType} preserves the exact host collection path`);
+    assert.equal(
+      bobPath,
+      dieterPath,
+      `${args.widgetType} preserves the exact host collection path`,
+    );
   });
   assert.doesNotMatch(
     args.html,
@@ -459,9 +495,21 @@ function assertSegmentedEditorContract(args: { widgetType: string; html: string 
     const surfaces = root.match(/class="[^"]*\bdiet-segment__surface\b[^"]*"/g)?.length ?? 0;
     const contents = root.match(/class="[^"]*\bdiet-segment__content\b[^"]*"/g)?.length ?? 0;
     assert.ok(inputs > 1, `${args.widgetType} Segmented ${index} has a real radio group`);
-    assert.equal(surfaces, inputs, `${args.widgetType} Segmented ${index} has one surface per radio`);
-    assert.equal(contents, inputs, `${args.widgetType} Segmented ${index} has one content node per radio`);
-    assert.doesNotMatch(root, /diet-button|aria-pressed/, `${args.widgetType} Segmented ${index} has no mirrored Button state`);
+    assert.equal(
+      surfaces,
+      inputs,
+      `${args.widgetType} Segmented ${index} has one surface per radio`,
+    );
+    assert.equal(
+      contents,
+      inputs,
+      `${args.widgetType} Segmented ${index} has one content node per radio`,
+    );
+    assert.doesNotMatch(
+      root,
+      /diet-button|aria-pressed/,
+      `${args.widgetType} Segmented ${index} has no mirrored Button state`,
+    );
   });
 }
 
@@ -532,6 +580,91 @@ function testInsideShadowLinkOpsPreserveHiddenValues(): void {
   );
 }
 
+function testValuefieldNumericContract(): void {
+  const bounded = {
+    panelId: 'layout' as const,
+    type: 'valuefield',
+    path: 'layout.gap',
+    kind: 'number' as const,
+    min: 0,
+    max: 160,
+    step: 1,
+  };
+  assert.deepEqual(validateValueStrict(bounded, 24), { ok: true });
+  assert.equal(validateValueStrict(bounded, '24').ok, false);
+  assert.equal(validateValueStrict(bounded, Number.NaN).ok, false);
+  assert.equal(validateValueStrict(bounded, -1).ok, false);
+  assert.equal(validateValueStrict(bounded, 161).ok, false);
+  assert.deepEqual(
+    validateValueStrict({ ...bounded, path: 'typography.tracking', min: -2, max: 2 }, -0.25),
+    { ok: true },
+  );
+  assert.deepEqual(
+    validateValueStrict({ ...bounded, step: 10 }, 25),
+    { ok: true },
+    'step remains input guidance rather than a second numeric validator',
+  );
+}
+
+function assertCompiledValuefieldBounds(
+  controls: Array<{ path: string; type: string; min?: number; max?: number; step?: number }>,
+  path: string,
+  expected: { min?: number; max?: number; step?: number },
+): void {
+  const control = controls.find((candidate) => candidate.path === path);
+  assert.equal(control?.type, 'valuefield', `${path} compiles as Valuefield`);
+  assert.equal(control?.min, expected.min, `${path} preserves caller min`);
+  assert.equal(control?.max, expected.max, `${path} preserves caller max`);
+  assert.equal(control?.step, expected.step, `${path} preserves caller step`);
+}
+
+function assertRenderedValuefieldBounds(
+  widgetType: string,
+  html: string,
+  controls: Array<{ path: string; type: string; min?: number; max?: number; step?: number }>,
+): void {
+  const tags = html.match(/<input\b[^>]*class="diet-valuefield__field"[^>]*>/g) ?? [];
+  assert.ok(tags.length > 0, `${widgetType} renders Valuefields`);
+  const seenPaths = new Set<string>();
+
+  tags.forEach((tag) => {
+    const bobPath = tag.match(/data-bob-path="([^"]+)"/)?.[1];
+    const neutralPath = tag.match(/data-path="([^"]+)"/)?.[1];
+    const path = bobPath ?? neutralPath;
+    assert.ok(path, `${widgetType} rendered Valuefield has an exact path`);
+    seenPaths.add(path);
+    if (bobPath && neutralPath) {
+      assert.equal(bobPath, neutralPath, `${widgetType}:${path} host and neutral paths agree`);
+    }
+    const control = controls.find((candidate) => candidate.path === path);
+    assert.equal(control?.type, 'valuefield', `${widgetType}:${path} maps to Valuefield metadata`);
+
+    const readAttr = (name: 'min' | 'max' | 'step') =>
+      tag.match(new RegExp(`\\s${name}="([^"]+)"`))?.[1];
+    assert.equal(
+      readAttr('min'),
+      control?.min === undefined ? undefined : String(control.min),
+      `${widgetType}:${path} renders exact min`,
+    );
+    assert.equal(
+      readAttr('max'),
+      control?.max === undefined ? undefined : String(control.max),
+      `${widgetType}:${path} renders exact max`,
+    );
+    assert.equal(
+      readAttr('step'),
+      control?.step === undefined ? undefined : String(control.step),
+      `${widgetType}:${path} renders exact step`,
+    );
+  });
+
+  controls
+    .filter((control) => control.type === 'valuefield')
+    .forEach((control) => {
+      assert.ok(seenPaths.has(control.path), `${widgetType}:${control.path} renders a Valuefield`);
+    });
+}
+
 async function testEveryWidgetEditorContract(): Promise<void> {
   const widgets = discoverWidgetSpecs();
   assert.ok(widgets.length > 0, 'at least one widget spec is discovered');
@@ -578,6 +711,7 @@ async function testEveryWidgetEditorContract(): Promise<void> {
       tokyoBaseUrl: '',
       tooldrawerLabels: labels,
     });
+    const combinedHtml = compiled.panels.map((panel) => panel.html).join('\n');
     assert.deepEqual(
       compiled.panels.map((panel) => panel.id),
       BOB_WIDGET_PANEL_IDS,
@@ -593,31 +727,91 @@ async function testEveryWidgetEditorContract(): Promise<void> {
       'Translation Agent',
       `${widgetType} compiles its exact Agent Activity title`,
     );
+    assert.doesNotMatch(
+      combinedHtml,
+      /placeholder="Hint text"/,
+      `${widgetType} contains no DevStudio Textfield placeholder`,
+    );
+    compiled.controls
+      .filter((control) => control.type === 'toggle')
+      .forEach((control) => {
+        assert.equal(control.min, undefined, `${widgetType}:${control.path} Toggle has no min`);
+        assert.equal(control.max, undefined, `${widgetType}:${control.path} Toggle has no max`);
+        assert.equal(control.step, undefined, `${widgetType}:${control.path} Toggle has no step`);
+      });
+    assertRenderedValuefieldBounds(widgetType, combinedHtml, compiled.controls);
+    for (const placeholder of collectTextfieldPlaceholders(resolved.widget)) {
+      assert.ok(
+        combinedHtml.includes(`placeholder="${encodeHtmlEntities(placeholder)}"`),
+        `${widgetType} compiles the exact caller-owned Textfield placeholder ${placeholder}`,
+      );
+    }
+    if (widgetType === 'countdown') {
+      assertCompiledValuefieldBounds(compiled.controls, 'countdown.timer.timeAmount', {});
+      assertCompiledValuefieldBounds(compiled.controls, 'countdown.timer.countDuration', {});
+      assertCompiledValuefieldBounds(compiled.controls, 'countdown.timer.targetNumber', {});
+      assertCompiledValuefieldBounds(compiled.controls, 'countdown.timer.startingNumber', {});
+    }
+    if (widgetType === 'faq') {
+      assertCompiledValuefieldBounds(compiled.controls, 'faq.layout.gap', { min: 0, max: 160 });
+      assertCompiledValuefieldBounds(compiled.controls, 'faq.layout.columns.desktop', {
+        min: 1,
+        max: 4,
+        step: 1,
+      });
+      assertCompiledValuefieldBounds(compiled.controls, 'faq.layout.columns.mobile', {
+        min: 1,
+        max: 2,
+        step: 1,
+      });
+    }
+    if (widgetType === 'logoshowcase') {
+      assertCompiledValuefieldBounds(
+        compiled.controls,
+        'logoshowcase.typeConfig.carousel.autoSlideDelayMs',
+        { min: 0 },
+      );
+      assertCompiledValuefieldBounds(
+        compiled.controls,
+        'logoshowcase.typeConfig.carousel.speed',
+        {},
+      );
+      assertCompiledValuefieldBounds(compiled.controls, 'logoshowcase.spacing.gap', { min: 0 });
+      assertCompiledValuefieldBounds(compiled.controls, 'logoshowcase.appearance.logoOpacity', {
+        min: 0,
+        max: 1,
+        step: 0.01,
+      });
+    }
     assertDropdownEditLabels({
       widgetType,
-      html: compiled.panels.map((panel) => panel.html).join('\n'),
+      html: combinedHtml,
       labels: (labels as { labels: Record<string, string> }).labels,
     });
     assertDropdownShadowLabels({
       widgetType,
-      html: compiled.panels.map((panel) => panel.html).join('\n'),
+      html: combinedHtml,
       labels: (labels as { labels: Record<string, string> }).labels,
     });
     assertCollectionEditorContract({
       widgetType,
-      html: compiled.panels.map((panel) => panel.html).join('\n'),
+      html: combinedHtml,
       labels: (labels as { labels: Record<string, string> }).labels,
     });
     assertSegmentedEditorContract({
       widgetType,
-      html: compiled.panels.map((panel) => panel.html).join('\n'),
+      html: combinedHtml,
     });
     if (widgetType === 'faq') {
       const sectionTitle = compiled.controls.find(
         (control) => control.path === 'faq.sections.__SECTION__.title',
       );
       assert.equal(sectionTitle?.type, 'textfield', 'FAQ section title keeps textfield metadata');
-      assert.equal(sectionTitle?.label, 'Section', 'FAQ section title keeps its caller-owned label');
+      assert.equal(
+        sectionTitle?.label,
+        'Section',
+        'FAQ section title keeps its caller-owned label',
+      );
     }
     if (widgetType === 'logoshowcase') {
       const contentHtml = compiled.panels.find((panel) => panel.id === 'content')?.html ?? '';
@@ -632,9 +826,45 @@ async function testEveryWidgetEditorContract(): Promise<void> {
         ),
         'Logo Showcase keeps its caller-declared add-open target',
       );
+      const bulkColumns = [
+        ['name', 'textfield', 'string'],
+        ['caption', 'textfield', 'string'],
+        ['href', 'textfield', 'string'],
+        ['targetBlank', 'toggle', 'boolean'],
+        ['nofollow', 'toggle', 'boolean'],
+        ['alt', 'textfield', 'string'],
+        ['title', 'textfield', 'string'],
+      ] as const;
+      bulkColumns.forEach(([columnPath, type, kind]) => {
+        const control = compiled.controls.find(
+          (candidate) =>
+            candidate.path === `logoshowcase.strips.__INDEX__.logos.__INDEX__.${columnPath}`,
+        );
+        assert.equal(control?.type, type, `Logo Showcase Bulk Edit compiles ${columnPath}`);
+        assert.equal(control?.kind, kind, `Logo Showcase Bulk Edit types ${columnPath}`);
+      });
+      assert.doesNotMatch(
+        contentHtml,
+        /data-path="logoshowcase\.strips\.__STRIP__\.logos\.__INDEX__\.(?:name|caption)"/,
+        'Logo Showcase Dropdown Fill contains no fake Name or Caption Textfield',
+      );
+      const bulkSave = applyWidgetOps({
+        data: compiled.defaults,
+        controls: compiled.controls,
+        ops: [
+          { op: 'set', path: 'logoshowcase.strips.0.logos.0.name', value: 'Example' },
+          { op: 'set', path: 'logoshowcase.strips.0.logos.0.caption', value: 'Caption' },
+          { op: 'set', path: 'logoshowcase.strips.0.logos.0.href', value: 'https://example.com' },
+          { op: 'set', path: 'logoshowcase.strips.0.logos.0.targetBlank', value: true },
+          { op: 'set', path: 'logoshowcase.strips.0.logos.0.nofollow', value: true },
+          { op: 'set', path: 'logoshowcase.strips.0.logos.0.alt', value: 'Example logo' },
+          { op: 'set', path: 'logoshowcase.strips.0.logos.0.title', value: 'Example title' },
+        ],
+      });
+      assert.equal(bulkSave.ok, true, 'Logo Showcase Bulk Edit accepts one complete save batch');
     }
     const combinedBodyIds = captureAll(
-      compiled.panels.map((panel) => panel.html).join('\n'),
+      combinedHtml,
       /class="tdmenucontent__cluster-body" id="([^"]+)"/g,
     ).map(([id]) => id);
     assert.equal(
@@ -1028,6 +1258,8 @@ async function main(): Promise<void> {
   console.log('PASS Dropdown Upload joins its exact Widget-owned component copy');
   testInsideShadowLinkOpsPreserveHiddenValues();
   console.log('PASS inside-shadow link edits preserve hidden shadow values');
+  testValuefieldNumericContract();
+  console.log('PASS Valuefield accepts finite caller-bounded numbers without coercion');
 }
 
 void main();

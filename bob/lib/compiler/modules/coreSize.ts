@@ -27,10 +27,10 @@ export function buildCoreSizeLayoutPanelFields(defaults: JsonObject): string[] {
   return [
     `  <tooldrawer-cluster label='${label}'>`,
     `    <tooldrawer-field-coresize group-label='' type='dropdown-actions' size='md' path='coreSize.mode' label='Sizing' placeholder='Choose sizing' value='{{coreSize.mode}}' options='${coreSizeModeOptions}' />`,
-    "    <tooldrawer-field-coresize group-label='' type='valuefield' size='md' path='coreSize.fixedHeight' label='Height (px)' show-if=\"coreSize.mode == 'fixed'\" />",
-    "    <tooldrawer-field-coresize group-label='' type='valuefield' size='md' path='coreSize.minHeight' label='Minimum height (px)' show-if=\"coreSize.mode == 'responsive'\" />",
-    "    <tooldrawer-field-coresize group-label='' type='valuefield' size='md' path='coreSize.preferredVw' label='Preferred viewport height (vw)' show-if=\"coreSize.mode == 'responsive'\" />",
-    "    <tooldrawer-field-coresize group-label='' type='valuefield' size='md' path='coreSize.maxHeight' label='Maximum height (px)' show-if=\"coreSize.mode == 'responsive'\" />",
+    "    <tooldrawer-field-coresize group-label='' type='valuefield' size='md' path='coreSize.fixedHeight' label='Height (px)' min='0' max='2000' show-if=\"coreSize.mode == 'fixed'\" />",
+    "    <tooldrawer-field-coresize group-label='' type='valuefield' size='md' path='coreSize.minHeight' label='Minimum height (px)' min='0' max='2000' show-if=\"coreSize.mode == 'responsive'\" />",
+    "    <tooldrawer-field-coresize group-label='' type='valuefield' size='md' path='coreSize.preferredVw' label='Preferred viewport height (vw)' min='0' max='200' show-if=\"coreSize.mode == 'responsive'\" />",
+    "    <tooldrawer-field-coresize group-label='' type='valuefield' size='md' path='coreSize.maxHeight' label='Maximum height (px)' min='0' max='2400' show-if=\"coreSize.mode == 'responsive'\" />",
     '  </tooldrawer-cluster>',
   ];
 }

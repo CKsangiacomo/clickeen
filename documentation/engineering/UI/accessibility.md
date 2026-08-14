@@ -63,7 +63,7 @@ owning PRD before changing it.
   `dropdown-actions`, `dropdown-fill`, `dropdown-border`, `dropdown-shadow`,
   `dropdown-upload`, and `dropdown-edit`. Bulk Edit's one-file import remains
   its own composite workflow rather than a second Dropdown Upload producer.
-  Unconsumed `textrename` is deleted.
+  Unconsumed `textedit` is deleted.
 - Dialog/popover mechanics belong to [`dialogs-and-modals.md`](dialogs-and-modals.md).
   This document only names existing surfaces and exposes truthful status/error
   state.

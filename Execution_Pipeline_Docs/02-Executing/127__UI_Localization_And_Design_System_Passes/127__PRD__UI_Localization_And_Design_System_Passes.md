@@ -135,33 +135,33 @@ unnecessary live editor rebuild.
 
 ## 4. Authority Map
 
-| Concern | Authority |
-| --- | --- |
-| User primary language and UI-language preference persistence | Michael/Supabase person truth |
-| Profile normalization and bootstrap identity | Berlin |
-| User-facing preference command and Bob-open coordination | Roma |
-| Bob Chrome source | `bob/l10n/` when installed in Stage 3 |
-| Roma Chrome source | `roma/l10n/` when installed in Stage 4 |
-| ToolDrawer structure | Widget `spec.json` |
-| ToolDrawer copy | Adjacent Widget `{widgetType}_tooldrawer_l10n_labels/` |
-| Component structure, appearance, and behavior | Dieter |
-| Widget editor compilation | Bob compiler and existing artifact generation |
-| Open-editor draft state | Bob browser memory |
-| Current documentation | `documentation/` |
-| Execution memory and evidence | This PRD 127 folder |
+| Concern                                                      | Authority                                              |
+| ------------------------------------------------------------ | ------------------------------------------------------ |
+| User primary language and UI-language preference persistence | Michael/Supabase person truth                          |
+| Profile normalization and bootstrap identity                 | Berlin                                                 |
+| User-facing preference command and Bob-open coordination     | Roma                                                   |
+| Bob Chrome source                                            | `bob/l10n/` when installed in Stage 3                  |
+| Roma Chrome source                                           | `roma/l10n/` when installed in Stage 4                 |
+| ToolDrawer structure                                         | Widget `spec.json`                                     |
+| ToolDrawer copy                                              | Adjacent Widget `{widgetType}_tooldrawer_l10n_labels/` |
+| Component structure, appearance, and behavior                | Dieter                                                 |
+| Widget editor compilation                                    | Bob compiler and existing artifact generation          |
+| Open-editor draft state                                      | Bob browser memory                                     |
+| Current documentation                                        | `documentation/`                                       |
+| Execution memory and evidence                                | This PRD 127 folder                                    |
 
 No stage may move one of these concerns into another authority merely because
 the code is convenient there.
 
 ## 5. Stage Status
 
-| Stage | Status | Release state |
-| --- | --- | --- |
-| Stage 1 — Scaffold only | Complete | Committed, pushed, and deployed; no non-English experience is exposed |
-| Stage 2 — Dieter UI pass | In progress: Foundations, Agent Activity, Bulk Edit, Button, Choice Tiles, Dropdown Actions, Popover, Dropdown Border, Dropdown Edit, Dropdown Fill, Dropdown Shadow, Dropdown Upload, Menuactions, Object Manager, Repeater, Popup, Segmented, Slider, Table, Tabs, and Toggle complete and re-audited as consumer-agnostic primitives; standalone Popaddlink is deleted and its one real job is internal to Dropdown Edit | Textedit is the next component pass |
-| Stage 3 — Bob UI pass | Not started | No authority to begin until explicitly directed |
-| Stage 4 — Roma UI pass | Not started | No authority to begin until explicitly directed |
-| Stage 5 — Translation pass | Not started | No translations may be generated yet |
+| Stage                      | Status                                                                                                                                                                                                                                               | Release state                                                         |
+| -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| Stage 1 — Scaffold only    | Complete                                                                                                                                                                                                                                             | Committed, pushed, and deployed; no non-English experience is exposed |
+| Stage 2 — Dieter UI pass   | In progress: Foundations and every current Dieter component through Textfield and Valuefield are complete and re-audited as consumer-agnostic primitives; standalone Popaddlink and Textedit are deleted because their jobs were duplicate or unused | The Widget catalog is the next Stage 2 DevStudio tab                  |
+| Stage 3 — Bob UI pass      | Not started                                                                                                                                                                                                                                          | No authority to begin until explicitly directed                       |
+| Stage 4 — Roma UI pass     | Not started                                                                                                                                                                                                                                          | No authority to begin until explicitly directed                       |
+| Stage 5 — Translation pass | Not started                                                                                                                                                                                                                                          | No translations may be generated yet                                  |
 
 Update this table when a stage actually changes state. Do not infer completion
 from the presence of scaffolding.
@@ -280,10 +280,9 @@ Review in this order:
 17. Slider
 18. Table
 19. Tabs
-20. Textedit
-21. Textfield
-22. Toggle
-23. Valuefield
+20. Textfield
+21. Toggle
+22. Valuefield
 
 For every component used inside ToolDrawer panels:
 
@@ -1163,7 +1162,7 @@ authorizes it.
 
   Toggle remains a native checkbox-label primitive. Its root `sm|md|lg` size
   now owns label typography as well as the switch, and the complete row owns
-  checked, hover, focus, and disabled presentation. Redundant nested consumer
+  checked, hover, and disabled presentation. Redundant nested consumer
   typography inputs are removed from the completed Dropdown Border, Fill,
   Shadow, and Repeater compositions. DevStudio reveals checked, unchecked, and
   disabled states. Slider and Toggle labels and every Tabs group/option label
@@ -1276,3 +1275,109 @@ authorizes it.
   and unchanged row-action/editable-cell composition. The final independent
   V1-V8 audit is recorded with the final verification of this pass. No direct
   deployment or remote product-data mutation is part of the Table pass.
+
+- **Duplicate rich-text prototype hard deletion — passed locally,
+  2026-08-14.** The unused experimental rich-text component is deleted from
+  Dieter, Bob and Roma host support, DevStudio generation and navigation,
+  active tests, package dependencies, and current documentation. It had zero
+  current Widget declarations and zero generated editor controls, so no stored
+  value, Widget contract, product-data migration, compatibility path, or
+  translation work exists. Dropdown Edit remains the single current ToolDrawer
+  rich-text authority, with 24 exact generated controls across the eight
+  current Widgets and the existing ten-label caller contract unchanged.
+
+  DevStudio now generates 22 component pages. Focused Dieter governance and
+  typecheck, DevStudio generation/build/typecheck, Bob editor-contract and
+  typecheck, Roma Widget Defaults/command-gate checks, all eight Widget
+  artifact pairs, root lint/typecheck, zero-residue scans, and diff checks pass.
+  A future long-form writing surface must begin from a real Widget product
+  contract rather than preserving this obsolete prototype. No deployment or
+  remote-state mutation is part of this deletion pass.
+
+- **Textfield and Valuefield — passed locally, 2026-08-14.** Textfield is one
+  native, caller-labelled one-line string primitive with no hydrator. Its
+  `sm|md|lg` root owns the complete row height, radius, typography, spacing,
+  hover, editing, and disabled presentation. The complete leading label remains
+  visible at rest, only the trailing current value may ellipsize, and editing
+  turns the row into the writing surface. Exact optional placeholders come
+  from the caller; Dieter demonstration copy no longer enters compiled product
+  controls.
+
+  Valuefield is one native finite-number primitive with no hydrator. The same
+  root size owns its row and content-sized trailing number editor. Rest keeps
+  the exact value on the shared right rail; hover belongs to the complete row,
+  and editing uses one neutral white trailing surface that grows with the
+  numeric content while remaining bounded by the available row. Exact inclusive
+  `min`, `max`, and native `step` attributes come only from the declaring
+  field; the compiler no longer substitutes DevStudio's example `0..100`
+  range. Bob and Roma Widget Defaults accept finite values inside the declared
+  bounds, preserve zero and signed caller ranges, and reject non-finite or
+  out-of-bounds edits without coercion, clamping, replacement, or draft
+  mutation. `step` remains browser input metadata rather than a second value
+  validator.
+
+  Existing caller bounds were made explicit only where the current field truth
+  is inclusive. Countdown's positive-only time amount/count duration and Logo
+  Showcase's positive-only continuous speed remain unbounded at the primitive
+  boundary because their current Widget runtime law is exclusive `>0`; the
+  next Widget-catalog pass must choose the product input resolution before an
+  inclusive minimum can be authored. The existing shared Core Size runtime's
+  cross-field clamp/default behavior likewise remains with the owning Widget
+  catalog/runtime pass rather than being hidden inside Valuefield.
+
+  The same audit removed a stale Logo Showcase metadata workaround. Bulk Edit
+  now derives all seven string/boolean item controls from its existing generic
+  `path`, `row-path`, and `columns` declaration, so one complete Logo-details
+  Save batch passes the ordinary compiled-control boundary. The two fake
+  Textfields and four adjacent label keys hidden under Dropdown Fill are gone;
+  Dropdown Fill continues to own only `logoFill`, and the visible Bulk Edit UX
+  and Widget-owned copy are unchanged.
+
+  DevStudio generates 22 component pages and reveals exact native Textfield
+  and Valuefield geometry, caller placeholders, zero bounds, signed ranges,
+  and disabled states. All eight Widget editor artifact pairs are exact and
+  every rendered Valuefield's bound attributes match its compiled metadata.
+  Focused verification passed: Dieter typecheck/governance; DevStudio
+  generation/build/typecheck and Chromium geometry; Bob editor-contract,
+  complete Bulk Edit batch, and typecheck; Roma Widget Defaults numeric
+  acceptance, command gates, and typecheck; Widget source generation; all
+  eight artifact pairs; root typecheck/lint; and diff checks. The independent
+  final V1-V8 audit is recorded with the final verification of this pass. No
+  commit, push, deployment, route, storage, product-data, translation,
+  Cloudflare, or PRD 128 operation is part of this local pass.
+
+- **Systemic focus-state and Valuefield geometry correction — passed locally,
+  2026-08-14.** Dieter no longer adds blue focus-only decoration to Buttons,
+  compact property rows, Dropdown triggers, Bulk Edit fields, Segmented,
+  Slider, Textfield, Toggle, Valuefield, or Dropdown Fill's gradient-stop
+  action. Native input, selection, editing, dialog containment, and dismissal
+  behavior remain intact. Blue presentation remains only where it communicates
+  a real selected, active, drag, or product-action state; ordinary hover and
+  editing use neutral component surfaces.
+
+  Valuefield keeps the complete caller label on the leading rail and the exact
+  number on the shared trailing rail. The row owns hover; editing keeps a
+  neutral row with one white trailing surface. The native number input uses
+  CSS intrinsic content sizing, a one-character minimum, the existing 8px
+  control padding, and the available row as its maximum. The editor therefore
+  grows with the value while preserving the same right alignment as Toggle and
+  Dropdown trailing elements. No JavaScript sizing, hydrator, new variant,
+  validation rule, fallback, coercion, or compatibility path was added.
+
+  DevStudio's existing policy-specific full-width numeric compositions retain
+  their explicit local full-width geometry; the canonical intrinsic rule is
+  scoped to the complete Valuefield structure. Caller copy, Widget-adjacent
+  labels, compiled paths, inclusive bounds, Bob/Roma numeric acceptance,
+  Widget artifacts, stored values, routes, product data, and public Widget
+  behavior are unchanged.
+
+  Focused verification passed: Dieter typecheck/governance; exact DevStudio
+  generation/build/typecheck; Bob editor contract and typecheck; Roma Widget
+  Defaults, command-gate, and typecheck checks; all eight Widget artifact
+  pairs; root typecheck/lint; Tokyo product-root dry run; and diff checks. Local
+  Chromium loaded all 22 generated component routes and proved the exact
+  `20/24/28px` Valuefield size ladder, content-sized live editor growth, 8px
+  slot padding, 9px effective right inset, complete-row hover, neutral edit
+  surface, absence of blue focus decoration, and the preserved full-width
+  DevStudio Entitlements composition. The independent final audit passed
+  V1–V8 with no remaining defect.

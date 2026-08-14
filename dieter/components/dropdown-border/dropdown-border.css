@@ -43,21 +43,29 @@
 }
 
 .diet-dropdown-border .diet-dropdown-header-label,
-.diet-dropdown-border .diet-popover__header-label,
-.diet-dropdown-border .diet-textfield__display-label {
-  font: 500 var(--dropdown-border-font-size)/var(--dropdown-border-line-height) "Inter Tight", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+.diet-dropdown-border .diet-popover__header-label {
+  font:
+    500 var(--dropdown-border-font-size) / var(--dropdown-border-line-height) 'Inter Tight',
+    'Inter',
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    'Helvetica Neue',
+    Arial,
+    sans-serif;
   letter-spacing: -0.02em;
 }
 
-.diet-dropdown-border .diet-dropdown-header-value,
-.diet-dropdown-border .diet-textfield__field {
-  font: 400 var(--dropdown-border-font-size)/var(--dropdown-border-line-height) "Inter Tight", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
-}
-
-.diet-dropdown-border .diet-dropdown-header:focus-visible {
-  outline: none;
-  background: var(--color-system-white);
-  border-color: var(--color-system-blue);
+.diet-dropdown-border .diet-dropdown-header-value {
+  font:
+    400 var(--dropdown-border-font-size) / var(--dropdown-border-line-height) 'Inter Tight',
+    'Inter',
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    'Helvetica Neue',
+    Arial,
+    sans-serif;
 }
 
 .diet-dropdown-border .diet-dropdown-header-value {
@@ -147,7 +155,11 @@
   padding: 0.125rem;
   border: none;
   border-radius: var(--dropdown-border-radius);
-  background: repeating-conic-gradient(var(--color-system-gray-6-step4) 0% 25%, var(--color-system-white) 0% 50%) 50% / 0.75rem 0.75rem;
+  background: repeating-conic-gradient(
+      var(--color-system-gray-6-step4) 0% 25%,
+      var(--color-system-white) 0% 50%
+    )
+    50% / 0.75rem 0.75rem;
   cursor: pointer;
 }
 

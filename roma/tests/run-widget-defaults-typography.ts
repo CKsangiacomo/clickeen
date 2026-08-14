@@ -13,6 +13,7 @@ import {
   normalizeAccountWidgetDefaultsDocument,
   type AccountWidgetDefaultsDocument,
 } from '../lib/account-widget-defaults-direct';
+import { readValuefieldInput } from '../components/widget-defaults-builder-controls';
 
 function fontLibraryWithAccountFont(): AccountFontLibrary {
   const library = createDefaultAccountFontLibrary();
@@ -62,6 +63,11 @@ async function document(): Promise<AccountWidgetDefaultsDocument> {
 }
 
 async function main(): Promise<void> {
+  assert.equal(readValuefieldInput(0, { min: 0, max: 160 }), 0);
+  assert.equal(readValuefieldInput(-0.25, { min: -2, max: 2 }), -0.25);
+  assert.equal(readValuefieldInput(-1, { min: 0, max: 160 }), null);
+  assert.equal(readValuefieldInput(161, { min: 0, max: 160 }), null);
+  assert.equal(readValuefieldInput(Number.NaN, { min: 0, max: 160 }), null);
   const request = new NextRequest('https://roma.test/api/account/widget-defaults');
   const globalOrio = createDefaultAccountFontLibrary().fonts.Orio;
   assert.equal(globalOrio?.source, 'tokyo');

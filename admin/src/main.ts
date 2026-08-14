@@ -38,9 +38,6 @@ import {
   hydrateDropdownShadow,
   hydrateDropdownUpload,
   hydrateSlider,
-  hydrateTextedit,
-  hydrateTextfield,
-  hydrateValuefield,
   hydrateObjectManager,
   hydrateRepeater,
 } from '@dieter/components';
@@ -386,9 +383,6 @@ function hydrateDieterComponents(scope: Element | DocumentFragment): () => void 
   hydrateChoiceTiles(scope);
   hydrateObjectManager(scope, nested);
   hydrateRepeater(scope, nested);
-  hydrateTextfield(scope);
-  hydrateValuefield(scope);
-  hydrateTextedit(scope);
   hydrateDropdownActions(scope);
   hydrateDropdownBorder(scope);
   hydrateDropdownFill(scope, { accountAssets: showcaseAccountAssets });
@@ -532,8 +526,8 @@ async function openTokenEditor(
           </div>
           <div class="diet-textfield" data-size="sm">
             <label class="diet-textfield__control">
-              <span class="diet-textfield__display-label label-xs">Value</span>
-              <input class="diet-textfield__field body-xs" name="value" type="text" autocomplete="off" autocapitalize="none" spellcheck="false" aria-label="Value" aria-describedby="devstudio-token-editor-status" disabled />
+              <span class="diet-textfield__display-label">Value</span>
+              <input class="diet-textfield__field" name="value" type="text" autocomplete="off" autocapitalize="none" spellcheck="false" aria-label="Value" aria-describedby="devstudio-token-editor-status" disabled />
             </label>
           </div>
           <div class="devstudio-token-editor__diff body-xs" id="devstudio-token-editor-status" aria-live="polite">Loading token source…</div>
@@ -572,7 +566,6 @@ async function openTokenEditor(
   document.body.append(dialog);
   tokenEditor = dialog;
   hydrateIcons(dialog);
-  hydrateTextfield(dialog);
 
   const form = dialog.querySelector<HTMLFormElement>('form');
   const editorView = dialog.querySelector<HTMLElement>('[data-token-editor-work]');

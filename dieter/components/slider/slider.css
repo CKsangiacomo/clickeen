@@ -86,8 +86,7 @@
 }
 
 .diet-slider__input:focus-visible {
-  outline: 2px solid color-mix(in srgb, var(--color-system-blue), transparent 40%);
-  outline-offset: 2px;
+  outline: none;
 }
 
 .diet-slider__input:disabled {

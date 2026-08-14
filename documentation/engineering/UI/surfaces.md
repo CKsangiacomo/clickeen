@@ -61,8 +61,8 @@ full-width page, and uses the existing elevated shadow. Consumer content uses
 Preserve the existing backdrop, white/muted surfaces, borders, and shadows. This
 program does not create a new depth or tonal ramp.
 
-Textfield, Dropdown Actions, Textedit, Table, and Popup use the Dieter contracts
-defined in [`components.md`](components.md). Dieter owns their shared
+Textfield, Dropdown Actions, Dropdown Edit, Table, and Popup use the Dieter
+contracts defined in [`components.md`](components.md). Dieter owns their shared
 appearance and structural mechanics. Apps retain labels, validation, values,
 data, policy, behavior, and composition.
 

@@ -7,16 +7,16 @@
 
     <figure class="dieter-component-preview-280-wrapper">
       <figcaption class="spec-wrapper dieter-spec-wrapper">
-
-        <span class="spec-line body-xs">diet-valuefield</span><span class="spec-line body-xs">data-size='sm'</span>
+        <strong class="body-s">Caller-bounded number</strong>
+        <span class="spec-line body-xs">diet-valuefield</span><span class="spec-line body-xs">data-size='sm'</span><span class="spec-line body-xs">min='0' max='100' step='1'</span>
       </figcaption>
       <div class="dieter-preview">
         <div class="diet-valuefield" data-size="sm">
   <label class="diet-valuefield__control">
     <span
-      class="diet-valuefield__label label-xs"
+      class="diet-valuefield__label"
     >Label</span>
-    <span class="diet-valuefield__input body-xs">
+    <span class="diet-valuefield__input">
       <input
         id="valuefield-sm"
         type="number"
@@ -25,7 +25,7 @@
         aria-label="Label"
         value="0"
 
-
+        min="0" max="100" step="1"
       />
     </span>
   </label>
@@ -35,16 +35,16 @@
     </figure>
     <figure class="dieter-component-preview-280-wrapper">
       <figcaption class="spec-wrapper dieter-spec-wrapper">
-
-        <span class="spec-line body-xs">diet-valuefield</span><span class="spec-line body-xs">data-size='md'</span>
+        <strong class="body-s">Caller-bounded number</strong>
+        <span class="spec-line body-xs">diet-valuefield</span><span class="spec-line body-xs">data-size='md'</span><span class="spec-line body-xs">min='0' max='100' step='1'</span>
       </figcaption>
       <div class="dieter-preview">
         <div class="diet-valuefield" data-size="md">
   <label class="diet-valuefield__control">
     <span
-      class="diet-valuefield__label label-s"
+      class="diet-valuefield__label"
     >Label</span>
-    <span class="diet-valuefield__input body-s">
+    <span class="diet-valuefield__input">
       <input
         id="valuefield-md"
         type="number"
@@ -53,7 +53,7 @@
         aria-label="Label"
         value="0"
 
-
+        min="0" max="100" step="1"
       />
     </span>
   </label>
@@ -63,16 +63,16 @@
     </figure>
     <figure class="dieter-component-preview-280-wrapper">
       <figcaption class="spec-wrapper dieter-spec-wrapper">
-
-        <span class="spec-line body-xs">diet-valuefield</span><span class="spec-line body-xs">data-size='lg'</span>
+        <strong class="body-s">Caller-bounded number</strong>
+        <span class="spec-line body-xs">diet-valuefield</span><span class="spec-line body-xs">data-size='lg'</span><span class="spec-line body-xs">min='0' max='100' step='1'</span>
       </figcaption>
       <div class="dieter-preview">
         <div class="diet-valuefield" data-size="lg">
   <label class="diet-valuefield__control">
     <span
-      class="diet-valuefield__label label-m"
+      class="diet-valuefield__label"
     >Label</span>
-    <span class="diet-valuefield__input body-m">
+    <span class="diet-valuefield__input">
       <input
         id="valuefield-lg"
         type="number"
@@ -81,7 +81,103 @@
         aria-label="Label"
         value="0"
 
+        min="0" max="100" step="1"
+      />
+    </span>
+  </label>
+</div>
 
+      </div>
+    </figure>
+    </div>
+
+    <div class="dieter-component-row">
+
+    <figure class="dieter-component-preview-280-wrapper">
+      <figcaption class="spec-wrapper dieter-spec-wrapper">
+        <strong class="body-s">Content-sized longer value</strong>
+        <span class="spec-line body-xs">diet-valuefield</span><span class="spec-line body-xs">data-size='md'</span><span class="spec-line body-xs">content-sized value</span>
+      </figcaption>
+      <div class="dieter-preview">
+        <div class="diet-valuefield" data-size="md">
+  <label class="diet-valuefield__control">
+    <span
+      class="diet-valuefield__label"
+    >Label</span>
+    <span class="diet-valuefield__input">
+      <input
+        id="valuefield-long"
+        type="number"
+        inputmode="decimal"
+        class="diet-valuefield__field"
+        aria-label="Label"
+        value="2500.75"
+
+        min="0" max="10000" step="0.01"
+      />
+    </span>
+  </label>
+</div>
+
+      </div>
+    </figure>
+    </div>
+
+    <div class="dieter-component-row">
+
+    <figure class="dieter-component-preview-280-wrapper">
+      <figcaption class="spec-wrapper dieter-spec-wrapper">
+        <strong class="body-s">Caller-authorized negative range</strong>
+        <span class="spec-line body-xs">diet-valuefield</span><span class="spec-line body-xs">data-size='md'</span><span class="spec-line body-xs">min='-2' max='2' step='0.001'</span>
+      </figcaption>
+      <div class="dieter-preview">
+        <div class="diet-valuefield" data-size="md">
+  <label class="diet-valuefield__control">
+    <span
+      class="diet-valuefield__label"
+    >Letter spacing</span>
+    <span class="diet-valuefield__input">
+      <input
+        id="valuefield-negative"
+        type="number"
+        inputmode="decimal"
+        class="diet-valuefield__field"
+        aria-label="Letter spacing"
+        value="-0.25"
+
+        min="-2" max="2" step="0.001"
+      />
+    </span>
+  </label>
+</div>
+
+      </div>
+    </figure>
+    </div>
+
+    <div class="dieter-component-row">
+
+    <figure class="dieter-component-preview-280-wrapper">
+      <figcaption class="spec-wrapper dieter-spec-wrapper">
+        <strong class="body-s">Disabled</strong>
+        <span class="spec-line body-xs">diet-valuefield</span><span class="spec-line body-xs">data-size='md'</span><span class="spec-line body-xs">disabled</span>
+      </figcaption>
+      <div class="dieter-preview">
+        <div class="diet-valuefield" data-size="md">
+  <label class="diet-valuefield__control">
+    <span
+      class="diet-valuefield__label"
+    >Label</span>
+    <span class="diet-valuefield__input">
+      <input
+        id="valuefield-disabled"
+        type="number"
+        inputmode="decimal"
+        class="diet-valuefield__field"
+        aria-label="Label"
+        value="24"
+
+        min="0" max="100" step="1" disabled
       />
     </span>
   </label>

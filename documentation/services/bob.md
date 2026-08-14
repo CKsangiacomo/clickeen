@@ -123,6 +123,13 @@ pending asset resolution, and the collection controls release their nested
 hydrators and retained draft state. Slider releases its native progress
 listener.
 
+Textfield and Valuefield use native input behavior and require no teardown.
+Bob compiles exact caller labels and optional Textfield placeholders into the
+panel; Dieter demonstration copy never becomes product copy. Valuefield edits
+pass only when the input is finite and inside the exact caller-declared
+inclusive bounds. Bob does not clamp, coerce, substitute, or enforce `step` as
+a second value rule; signed caller ranges remain valid.
+
 ## Dieter Icons
 
 Bob preserves Dieter `data-icon` names in compiled controls and application
@@ -344,7 +351,11 @@ Bob's current product UI is English. ToolDrawer labels compile from each
 widget's adjacent English label file, including the static Agent Activity title
 and the field/component labels used by global Dieter stencils. Bulk Edit's
 trigger, dialog, action, column, placeholder, and empty-state words use that
-same Widget-adjacent contract. Bob also owns the account-font capability
+same Widget-adjacent contract. Its compiled string and boolean item controls
+come directly from the existing Bulk Edit `path`, optional `row-path`, and
+column declarations, so the complete modal Save batch uses the ordinary
+compiled-control boundary without hidden Dropdown Fill fields. Bob also owns
+the account-font capability
 filtering applied to generic Dropdown Actions; Dieter does not inspect
 typography paths or font metadata. Bob chrome and other reusable Dieter
 component copy remain their current
@@ -831,8 +842,8 @@ compatibility flags: nodejs_compat_populate_process_env, nodejs_compat
 
 Runtime env:
 
-| Name | Purpose |
-| --- | --- |
+| Name                    | Purpose                                                                   |
+| ----------------------- | ------------------------------------------------------------------------- |
 | `NEXT_PUBLIC_TOKYO_URL` | Tokyo public static/resource origin for widget software and Dieter media. |
 
 Before any Cloudflare Pages, custom-domain, DNS, or Pages config operation, run:

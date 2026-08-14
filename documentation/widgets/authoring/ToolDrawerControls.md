@@ -29,13 +29,13 @@ settings
 Widget specs declare each exactly once. Missing, duplicate, or unknown panels
 fail compilation. Bob emits them in the canonical order shown above.
 
-| Panel | Owns |
-| --- | --- |
-| `content` | Header content, Core text/content, Core media choices, repeatable items, content toggles. |
-| `layout` | Header layout, Stage/Pod layout, Core sizing, columns, gaps, arrangement, carousel behavior. |
+| Panel        | Owns                                                                                         |
+| ------------ | -------------------------------------------------------------------------------------------- |
+| `content`    | Header content, Core text/content, Core media choices, repeatable items, content toggles.    |
+| `layout`     | Header layout, Stage/Pod layout, Core sizing, columns, gaps, arrangement, carousel behavior. |
 | `appearance` | Header/Header CTA appearance, Stage/Pod appearance, Core colors, surfaces, borders, shadows. |
-| `typography` | Shared typography roles. |
-| `settings` | Runtime/product behavior such as branding and social share. |
+| `typography` | Shared typography roles.                                                                     |
+| `settings`   | Runtime/product behavior such as branding and social share.                                  |
 
 ## Authoring Model
 
@@ -141,6 +141,10 @@ Bulk Edit follows the same rule: its trigger, dialog, actions, column labels,
 placeholders, and empty-state copy are ordinary `$label` inputs owned by the
 adjacent Widget label file. Dieter owns only the generic array-table workflow;
 it has no Logo Showcase, upload, account-asset, or policy branch.
+The compiler derives each column's exact string or boolean item coordinate from
+the declared Bulk Edit `path`, optional `row-path`, and `columns`. Do not add
+hidden child fields to another component merely to make Bulk Edit columns
+editable.
 Copy inside other reusable Dieter stencils and shared compiler modules remains
 with those current sources until its component pass moves it deliberately.
 
@@ -260,7 +264,6 @@ object-manager
 repeater
 segmented
 slider
-textedit
 textfield
 toggle
 valuefield
@@ -305,12 +308,22 @@ same geometry. Dropdown Actions, Border, Edit, Fill, Shadow, and Upload all use
 that shared rest structure; their standard top-level Popovers repeat only the
 caller label and inherit the row's `sm|md|lg` radius. Each dropdown's actual
 editing, selection, or upload workflow remains component-owned. Numeric fields
-use stable slots rather than content-measured widths. Toggle rows are native
-labels, so the complete visible row activates the checkbox. Component stencils
-render labels exactly as authored and do not inject punctuation. Text fields
-and numeric fields share the same resting row geometry; text fields use the row
-as their editing surface, while numeric fields keep hover, focus, and editing
-inside the compact trailing value slot.
+use one content-sized trailing editor bounded by the remaining row rather than
+a fixed slot. Toggle rows are native labels, so the complete visible row
+activates the checkbox. Component stencils render labels exactly as authored
+and do not inject punctuation. Text fields and numeric fields share the same
+resting row geometry; text fields use the row as their editing surface, while
+numeric fields use complete-row hover and one neutral trailing edit surface
+that grows with the exact value while preserving the shared right rail.
+
+`textfield` requires exact caller `label` copy and may receive an exact caller
+`placeholder`; Widget-authored values use `$label:` keys from that Widget's
+adjacent ToolDrawer label file. The compiler never replaces a missing caller
+placeholder with Dieter demonstration copy. `valuefield` receives its numeric
+meaning from the caller: declare the exact inclusive `min` and `max` when the
+field is bounded. A signed field declares a signed range. Bob and Roma reject
+non-finite and out-of-bounds edits without clamping or rewriting the draft;
+`step` remains native input metadata rather than a second acceptance rule.
 
 `dropdown-fill` uses explicit fill modes in field attrs. Use the hyphenated
 attribute name `fill-modes` in authored specs and list only the exact

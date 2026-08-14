@@ -33,6 +33,9 @@ export type BuilderControlPayload = {
 export type BuilderDefaultsControl = {
   path: string;
   panelId: string;
+  type: string;
+  min?: number;
+  max?: number;
 };
 
 type BuilderDefaultsControlsProps = {
@@ -80,6 +83,20 @@ function isFiniteNumber(value: unknown): value is number {
   return typeof value === 'number' && Number.isFinite(value);
 }
 
+export function readValuefieldInput(
+  value: number,
+  control: Pick<BuilderDefaultsControl, 'min' | 'max'>,
+): number | null {
+  if (
+    !Number.isFinite(value) ||
+    (typeof control.min === 'number' && value < control.min) ||
+    (typeof control.max === 'number' && value > control.max)
+  ) {
+    return null;
+  }
+  return value;
+}
+
 function valueForTextField(value: unknown): string {
   if (value == null) return '';
   if (typeof value === 'string') return value;
@@ -102,9 +119,11 @@ function filterPanelHtml(panel: BuilderControlPanel, allowedPaths: Set<string>):
   const template = document.createElement('template');
   template.innerHTML = panel.html;
 
-  Array.from(template.content.querySelectorAll<HTMLElement>('[data-bob-group]')).forEach((group) => {
-    if (!fragmentHasAllowedPath(group, allowedPaths)) group.remove();
-  });
+  Array.from(template.content.querySelectorAll<HTMLElement>('[data-bob-group]')).forEach(
+    (group) => {
+      if (!fragmentHasAllowedPath(group, allowedPaths)) group.remove();
+    },
+  );
 
   Array.from(template.content.querySelectorAll<HTMLElement>('[data-bob-path]')).forEach((field) => {
     const path = controlPath(field);
@@ -206,7 +225,6 @@ function syncFieldValue(field: HTMLElement, values: Record<string, unknown>) {
     (field.dataset.dieterJson != null ||
       field.classList.contains('diet-dropdown-actions__value-field') ||
       field.classList.contains('diet-dropdown-edit__field') ||
-      field.classList.contains('diet-textedit__field') ||
       field.classList.contains('diet-choice-tiles__field'))
   ) {
     field.dispatchEvent(new CustomEvent('external-sync', { detail: { value: nextValue } }));
@@ -239,7 +257,11 @@ function valueFromField(target: HTMLElement, values: Record<string, unknown>): u
     return Number.isFinite(target.valueAsNumber) ? target.valueAsNumber : target.value;
   }
 
-  if (target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement || target instanceof HTMLSelectElement) {
+  if (
+    target instanceof HTMLInputElement ||
+    target instanceof HTMLTextAreaElement ||
+    target instanceof HTMLSelectElement
+  ) {
     return target.value;
   }
 
@@ -352,10 +374,18 @@ export function WidgetDefaultsBuilderControls({
       if (target instanceof HTMLInputElement && target.type === 'radio' && !target.checked) return;
       const path = resolvePathFromTarget(target);
       if (!path) return;
+      const control = controls.find((candidate) => candidate.path === path);
+      let value = valueFromField(target, valuesRef.current);
+      if (control?.type === 'valuefield') {
+        if (!(target instanceof HTMLInputElement) || target.type !== 'number') return;
+        const numericValue = readValuefieldInput(target.valueAsNumber, control);
+        if (numericValue === null) return;
+        value = numericValue;
+      }
       const expanded = expandTypographyFamilyOps({
         instanceData: valuesRef.current,
         fontLibrary,
-        ops: [{ op: 'set', path, value: valueFromField(target, valuesRef.current) }],
+        ops: [{ op: 'set', path, value }],
       });
       if (expanded) {
         onOps(
@@ -405,6 +435,7 @@ export function WidgetDefaultsBuilderControls({
     onContractError,
     onOps,
     onReadyChange,
+    controls,
     panelBuild.missingPaths,
     panelHtml,
     fontLibrary,
@@ -419,7 +450,9 @@ export function WidgetDefaultsBuilderControls({
   }, [values]);
 
   if (!payload) {
-    return <p className="body-s widget-defaults-error">Compiled Builder controls are unavailable.</p>;
+    return (
+      <p className="body-s widget-defaults-error">Compiled Builder controls are unavailable.</p>
+    );
   }
 
   if (!panelHtml) {
@@ -429,7 +462,8 @@ export function WidgetDefaultsBuilderControls({
   if (panelBuild.missingPaths.length > 0) {
     return (
       <p className="body-s widget-defaults-error">
-        Compiled Builder controls are missing {scopeLabel} paths: {panelBuild.missingPaths.join(', ')}
+        Compiled Builder controls are missing {scopeLabel} paths:{' '}
+        {panelBuild.missingPaths.join(', ')}
       </p>
     );
   }

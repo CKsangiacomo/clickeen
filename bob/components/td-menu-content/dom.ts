@@ -18,9 +18,6 @@ import {
   hydrateDropdownShadow,
   hydrateDropdownUpload,
   hydrateSlider,
-  hydrateTextedit,
-  hydrateTextfield,
-  hydrateValuefield,
   hydrateObjectManager,
   hydrateRepeater,
 } from '../../../dieter/components';
@@ -70,9 +67,6 @@ export function runHydrators(scope: HTMLElement, deps: DieterHydratorDeps): () =
     hydrateSlider(scope);
     hydrateObjectManager(scope, nestedDeps);
     hydrateRepeater(scope, nestedDeps);
-    hydrateTextedit(scope);
-    hydrateTextfield(scope);
-    hydrateValuefield(scope);
     hydrateIcons(scope);
   } catch (error) {
     destroy();
