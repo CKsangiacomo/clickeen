@@ -11,8 +11,8 @@
     "cellPadding": "--space-3 / --space-4",
     "headerSeparator": "--color-system-gray-step3",
     "bodySeparator": "--color-system-gray-step5",
-    "inactiveSortIcon": "chevron.down.dotted.2 / --color-system-gray-5",
-    "activeSortIcons": "chevron.up.2 or chevron.down.2 / --color-system-gray",
+    "inactiveSortIcon": "chevron.down.dotted.2 / --color-system-gray-3",
+    "activeSortIcons": "chevron.up.2 or chevron.down.2 / --color-system-gray-2",
     "previewWidth": "24%, minimum 8rem",
     "actionWidth": "content"
   },

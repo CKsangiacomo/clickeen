@@ -380,8 +380,8 @@ stripes, and small preview and action column composition classes. Apps own
 data and behavior, not another table presentation. When an app makes a column
 sortable, its header uses a `small` quaternary Dieter Button containing a 12px
 Dieter Icon. Inactive columns use `chevron.down.dotted.2` with
-`--color-system-gray-5`; the active column uses `chevron.up.2` or
-`chevron.down.2` with `--color-system-gray`. The app still owns sort state,
+`--color-system-gray-3`; the active column uses `chevron.up.2` or
+`chevron.down.2` with `--color-system-gray-2`. The app still owns sort state,
 direction, the exact icon, and row ordering.
 
 ## Icon Delivery

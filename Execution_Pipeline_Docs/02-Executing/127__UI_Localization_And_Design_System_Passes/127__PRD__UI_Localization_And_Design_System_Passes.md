@@ -1253,9 +1253,9 @@ authorizes it.
   tables still own the selected column, direction, and row order. Their
   existing `small` quaternary sort Buttons now use the exact Dieter icon
   treatment: inactive columns show `chevron.down.dotted.2` with
-  `--color-system-gray-5`; an active ascending column shows `chevron.up.2` and
+  `--color-system-gray-3`; an active ascending column shows `chevron.up.2` and
   an active descending column shows `chevron.down.2`, both with
-  `--color-system-gray`. No Table sorting controller, hydrator, React table
+  `--color-system-gray-2`. No Table sorting controller, hydrator, React table
   layer, compatibility path, or second state authority was added.
 
   DevStudio now reveals ordinary, active-ascending, active-descending,

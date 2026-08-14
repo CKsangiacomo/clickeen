@@ -418,8 +418,8 @@ composition classes rather than consumer-local base styling.
 Sortable headers remain app-owned behavior composed inside Dieter Table. Their
 control is a `small` quaternary `.diet-button` with a 12px `.diet-icon`:
 inactive columns use `chevron.down.dotted.2` with
-`--color-system-gray-5`; the active column uses `chevron.up.2` or
-`chevron.down.2` with `--color-system-gray`. Dieter owns the color treatment
+`--color-system-gray-3`; the active column uses `chevron.up.2` or
+`chevron.down.2` with `--color-system-gray-2`. Dieter owns the color treatment
 through `aria-sort`; apps own the exact icon derived from their selected
 column and direction, plus row ordering.
 

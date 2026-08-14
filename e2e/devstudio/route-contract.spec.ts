@@ -382,10 +382,10 @@ test.describe('DevStudio route contract', () => {
         };
       };
       const tokenProbe = document.createElement('span');
-      tokenProbe.style.color = 'var(--color-system-gray)';
+      tokenProbe.style.color = 'var(--color-system-gray-2)';
       document.body.append(tokenProbe);
       const activeColor = getComputedStyle(tokenProbe).color;
-      tokenProbe.style.color = 'var(--color-system-gray-5)';
+      tokenProbe.style.color = 'var(--color-system-gray-3)';
       const inactiveColor = getComputedStyle(tokenProbe).color;
       tokenProbe.remove();
       return {

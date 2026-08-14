@@ -30,12 +30,12 @@
 }
 
 .diet-table__table th[aria-sort] > .diet-button {
-  --button-color: var(--color-system-gray-5);
+  --button-color: var(--color-system-gray-3);
 }
 
 .diet-table__table th[aria-sort='ascending'] > .diet-button,
 .diet-table__table th[aria-sort='descending'] > .diet-button {
-  --button-color: var(--color-system-gray);
+  --button-color: var(--color-system-gray-2);
 }
 
 .diet-table__table tbody > tr > * {
