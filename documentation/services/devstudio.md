@@ -149,7 +149,11 @@ stencils and hydrators, not DevStudio imitations.
 Popup reveals exactly the three structural small, medium, and large frames.
 The large example proves body scrolling inside the viewport-bound frame; the
 page does not invent information, form, confirmation, or dirty-workflow Popup
-types. Every generated title uses the shared `heading-4` treatment.
+types. The small example proves a `heading-4` title plus the optional
+caller-labelled Dieter dismiss Icon; the medium example proves a titleless
+frame with an exact caller-owned accessible name; and the large example proves
+a titled frame without a dismiss action. These are structural compositions,
+not new Popup variants or dismissal policy.
 
 Segmented, Slider, Tabs, and Toggle are generated from their real Dieter stencils and
 specs. Slider reveals `sm|md|lg` progress values plus disabled state and uses

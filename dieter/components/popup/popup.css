@@ -4,9 +4,9 @@
   max-inline-size: none;
   max-block-size: calc(100dvh - (2 * var(--space-4)));
   margin: auto;
-  padding: 0;
+  padding: var(--space-6);
   overflow: hidden;
-  border: 1px solid var(--role-border);
+  border: 0;
   border-radius: var(--control-radius-2xl);
   background: var(--role-surface);
   color: var(--color-text);
@@ -34,18 +34,12 @@
   background: color-mix(in oklab, var(--color-system-black), transparent 65%);
 }
 
-.diet-popup__header,
-.diet-popup__body,
-.diet-popup__footer {
-  padding: var(--space-5);
-}
-
 .diet-popup__header {
+  grid-row: 1;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: var(--space-3);
-  border-block-end: 1px solid var(--role-border);
 }
 
 .diet-popup__header > :is(h1, h2, h3, p) {
@@ -53,8 +47,14 @@
 }
 
 .diet-popup__body {
+  grid-row: 2;
   min-block-size: 0;
   overflow: auto;
+}
+
+.diet-popup__header + .diet-popup__body,
+.diet-popup__body + .diet-popup__footer {
+  margin-block-start: var(--space-5);
 }
 
 .diet-popup__body > :first-child {
@@ -66,7 +66,12 @@
 }
 
 .diet-popup__footer {
-  border-block-start: 1px solid var(--role-border);
+  grid-row: 3;
+}
+
+.diet-popup__dismiss {
+  flex: 0 0 auto;
+  margin-inline-start: auto;
 }
 
 .diet-popup__actions {

@@ -351,6 +351,25 @@ async function testDieterLayoutTableAndPopupConsumption(): Promise<void> {
     assert.match(source, /className="diet-popup__footer"/, `${relativePath} must use the Popup footer`);
     assert.doesNotMatch(source, /roma-modal/, `${relativePath} must not retain the Roma modal base`);
   }
+
+  for (const relativePath of [
+    'components/assets-domain.tsx',
+    'components/widgets-domain.tsx',
+    'components/widget-copy-code-dialog.tsx',
+    'components/roma-upsell-dialog.tsx',
+  ]) {
+    const source = await readRoute(relativePath);
+    assert.match(source, /diet-popup__dismiss/, `${relativePath} must compose the optional Popup dismiss action`);
+    assert.match(source, /data-icon="multiply"/, `${relativePath} must use the Dieter multiply Icon`);
+  }
+
+  for (const relativePath of [
+    'components/roma-account-notice-modal.tsx',
+    'components/roma-unsaved-changes-dialog.tsx',
+  ]) {
+    const source = await readRoute(relativePath);
+    assert.doesNotMatch(source, /diet-popup__dismiss/, `${relativePath} must retain its required-decision dismissal policy`);
+  }
 }
 
 async function run(): Promise<void> {

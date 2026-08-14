@@ -1,11 +1,14 @@
 {
   "component": "popup",
-  "syntax": "<dialog class='diet-popup' data-size='{{size}}'>…</dialog>",
+  "syntax": "<dialog class='diet-popup' data-size='{{size}}' aria-labelledby='{{titleId}}'>…</dialog>; without a visible title, use aria-label='{{accessibleName}}'",
   "attributes": {
     "size": {
       "enum": ["small", "medium", "large"],
       "default": "medium"
-    }
+    },
+    "title": { "optional": true },
+    "accessible-name": { "description": "Required when title is not rendered." },
+    "dismiss-label": { "optional": true }
   },
   "defaults": [
     {
@@ -16,6 +19,8 @@
         "id": "popup-small",
         "size": "small",
         "title": "Popup title",
+        "accessibleName": "Popup title",
+        "dismissLabel": "Close",
         "body": "<p>Caller-owned content belongs in the Popup body.</p>",
         "secondaryAction": "Secondary",
         "primaryAction": "Primary"
@@ -23,12 +28,14 @@
     },
     {
       "id": "popup-medium",
-      "title": "Medium",
-      "spec": ["diet-popup", "data-size='medium'", "native dialog"],
+      "title": "Medium without visible title",
+      "spec": ["diet-popup", "data-size='medium'", "native dialog", "caller-owned accessible name"],
       "context": {
         "id": "popup-medium",
         "size": "medium",
-        "title": "Popup title",
+        "title": "",
+        "accessibleName": "Medium Popup",
+        "dismissLabel": "Close",
         "body": "<p>Caller-owned content belongs in the Popup body.</p><p>The shared frame owns the header, scrolling body and footer layout.</p>",
         "secondaryAction": "Secondary",
         "primaryAction": "Primary"
@@ -42,6 +49,8 @@
         "id": "popup-large",
         "size": "large",
         "title": "Popup title",
+        "accessibleName": "Popup title",
+        "dismissLabel": "",
         "body": "<p>Caller-owned content belongs in the Popup body.</p><p>Long content scrolls inside the body while the header and footer remain in the shared frame.</p><p>Section one demonstrates body flow.</p><p>Section two demonstrates body flow.</p><p>Section three demonstrates body flow.</p><p>Section four demonstrates body flow.</p><p>Section five demonstrates body flow.</p><p>Section six demonstrates body flow.</p><p>Section seven demonstrates body flow.</p><p>Section eight demonstrates body flow.</p><p>Section nine demonstrates body flow.</p><p>Section ten demonstrates body flow.</p><p>Section eleven demonstrates body flow.</p><p>Section twelve demonstrates body flow.</p><p>Section thirteen demonstrates body flow.</p><p>Section fourteen demonstrates body flow.</p><p>Section fifteen demonstrates body flow.</p><p>Section sixteen demonstrates body flow.</p><p>Section seventeen demonstrates body flow.</p><p>Section eighteen demonstrates body flow.</p><p>Section nineteen demonstrates body flow.</p><p>Section twenty demonstrates body flow.</p><p>Section twenty-one demonstrates body flow.</p><p>Section twenty-two demonstrates body flow.</p><p>Section twenty-three demonstrates body flow.</p><p>Section twenty-four demonstrates body flow.</p><p>Section twenty-five demonstrates body flow.</p><p>Section twenty-six demonstrates body flow.</p><p>Section twenty-seven demonstrates body flow.</p><p>Section twenty-eight demonstrates body flow.</p><p>Section twenty-nine demonstrates body flow.</p><p>Section thirty demonstrates body flow.</p>",
         "secondaryAction": "Secondary",
         "primaryAction": "Primary"

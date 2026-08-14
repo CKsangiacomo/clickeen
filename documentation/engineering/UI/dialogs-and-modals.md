@@ -51,12 +51,19 @@ Reusable Dieter code may own those mechanics. The owning product surface keeps
 workflow state, copy, validation, and persistence.
 
 Dieter Popup is the shared visual and structural contract for blocking native
-`<dialog>` elements. It owns the backdrop, frame, viewport fit, border, radius,
-shadow, small/medium/large size, `heading-4` title treatment, and
-header/body/footer/action slots. It does
-not choose dismissal policy or persist work. Those remain governed by the
-matrix below and implemented by the owning workflow with the existing shared
-dialog lifecycle.
+`<dialog>` elements. It owns the backdrop, seamless elevated surface, viewport
+fit, radius, small/medium/large size, generous outer inset, section spacing,
+body scrolling, and header/body/footer/action slots. It does not draw an outer
+stroke or internal header/footer dividers. A visible title is optional; when
+present it uses `heading-4` and names the dialog, and when absent the caller
+must provide the exact alternate accessible name.
+
+Popup also owns the optional dismiss composition: a medium quaternary Dieter
+Button with the `multiply` Icon. The caller owns its accessible label and may
+render it only when the workflow's existing dismissal law allows the same
+action. Popup does not choose dismissal policy, invent Close copy, or persist
+work. Those remain governed by the matrix below and implemented by the owning
+workflow with the existing shared dialog lifecycle.
 
 Native browser `beforeunload` remains the browser-boundary guard. In-product
 unsaved-work decisions use the product dialog contract; they do not use

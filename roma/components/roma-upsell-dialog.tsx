@@ -49,6 +49,16 @@ export function RomaUpsellDialog({
         <h2 id="roma-upsell-title" className="heading-4">
           Upgrade Clickeen
         </h2>
+        <button
+          className="diet-button diet-popup__dismiss"
+          data-size="medium"
+          data-type="quaternary"
+          type="button"
+          aria-label="Close"
+          onClick={onClose}
+        >
+          <span className="diet-icon" data-icon="multiply" aria-hidden="true" />
+        </button>
       </header>
       <div className="diet-popup__body">
         {reason ? <p className="body-m">{reason}</p> : null}

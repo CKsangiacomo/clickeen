@@ -656,6 +656,17 @@ export function AssetsDomain({
               </h2>
               <p className="body-m">Upload multiple files in one run. Each file is processed independently and failures do not block other files.</p>
             </div>
+            <button
+              className="diet-button diet-popup__dismiss"
+              data-size="medium"
+              data-type="quaternary"
+              type="button"
+              aria-label="Close"
+              onClick={() => setBulkUploadOpen(false)}
+              disabled={bulkUploadBusy}
+            >
+              <span className="diet-icon" data-icon="multiply" aria-hidden="true" />
+            </button>
           </header>
           <div className="diet-popup__body">
             <div className="roma-inline-stack" role={failedBulkCount > 0 && !bulkUploadBusy ? 'alert' : 'status'} aria-live="polite">

@@ -12,9 +12,16 @@
       </figcaption>
       <div class="dieter-preview">
         <dialog class="diet-popup" data-size="small" aria-labelledby="popup-small-title" open>
+
   <header class="diet-popup__header">
     <h2 class="heading-4" id="popup-small-title">Popup title</h2>
+
+    <button class="diet-button diet-popup__dismiss" data-size="medium" data-type="quaternary" type="button" aria-label="Close">
+      <span class="diet-icon" data-icon="multiply" aria-hidden="true"></span>
+    </button>
+
   </header>
+
   <div class="diet-popup__body"><p>Caller-owned content belongs in the Popup body.</p></div>
   <footer class="diet-popup__footer">
     <div class="diet-popup__actions">
@@ -36,14 +43,20 @@
 
     <figure class="dieter-component-preview-full-wrapper">
       <figcaption class="spec-wrapper dieter-spec-wrapper">
-        <strong class="body-s">Medium</strong>
-        <span class="spec-line body-xs">diet-popup</span><span class="spec-line body-xs">data-size='medium'</span><span class="spec-line body-xs">native dialog</span>
+        <strong class="body-s">Medium without visible title</strong>
+        <span class="spec-line body-xs">diet-popup</span><span class="spec-line body-xs">data-size='medium'</span><span class="spec-line body-xs">native dialog</span><span class="spec-line body-xs">caller-owned accessible name</span>
       </figcaption>
       <div class="dieter-preview">
-        <dialog class="diet-popup" data-size="medium" aria-labelledby="popup-medium-title" open>
+        <dialog class="diet-popup" data-size="medium" aria-label="Medium Popup" open>
+
+
   <header class="diet-popup__header">
-    <h2 class="heading-4" id="popup-medium-title">Popup title</h2>
+    <button class="diet-button diet-popup__dismiss" data-size="medium" data-type="quaternary" type="button" aria-label="Close">
+      <span class="diet-icon" data-icon="multiply" aria-hidden="true"></span>
+    </button>
   </header>
+
+
   <div class="diet-popup__body"><p>Caller-owned content belongs in the Popup body.</p><p>The shared frame owns the header, scrolling body and footer layout.</p></div>
   <footer class="diet-popup__footer">
     <div class="diet-popup__actions">
@@ -70,9 +83,12 @@
       </figcaption>
       <div class="dieter-preview">
         <dialog class="diet-popup" data-size="large" aria-labelledby="popup-large-title" open>
+
   <header class="diet-popup__header">
     <h2 class="heading-4" id="popup-large-title">Popup title</h2>
+
   </header>
+
   <div class="diet-popup__body"><p>Caller-owned content belongs in the Popup body.</p><p>Long content scrolls inside the body while the header and footer remain in the shared frame.</p><p>Section one demonstrates body flow.</p><p>Section two demonstrates body flow.</p><p>Section three demonstrates body flow.</p><p>Section four demonstrates body flow.</p><p>Section five demonstrates body flow.</p><p>Section six demonstrates body flow.</p><p>Section seven demonstrates body flow.</p><p>Section eight demonstrates body flow.</p><p>Section nine demonstrates body flow.</p><p>Section ten demonstrates body flow.</p><p>Section eleven demonstrates body flow.</p><p>Section twelve demonstrates body flow.</p><p>Section thirteen demonstrates body flow.</p><p>Section fourteen demonstrates body flow.</p><p>Section fifteen demonstrates body flow.</p><p>Section sixteen demonstrates body flow.</p><p>Section seventeen demonstrates body flow.</p><p>Section eighteen demonstrates body flow.</p><p>Section nineteen demonstrates body flow.</p><p>Section twenty demonstrates body flow.</p><p>Section twenty-one demonstrates body flow.</p><p>Section twenty-two demonstrates body flow.</p><p>Section twenty-three demonstrates body flow.</p><p>Section twenty-four demonstrates body flow.</p><p>Section twenty-five demonstrates body flow.</p><p>Section twenty-six demonstrates body flow.</p><p>Section twenty-seven demonstrates body flow.</p><p>Section twenty-eight demonstrates body flow.</p><p>Section twenty-nine demonstrates body flow.</p><p>Section thirty demonstrates body flow.</p></div>
   <footer class="diet-popup__footer">
     <div class="diet-popup__actions">

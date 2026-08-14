@@ -257,6 +257,7 @@ export function hydrateObjectManager(
       const modalList = requiredElement<HTMLElement>(dialog, '[data-objects-modal-list]');
       const rowTemplate = requiredElement<HTMLTemplateElement>(root, 'template[data-objects-row]');
       const saveButton = requiredElement<HTMLButtonElement>(dialog, '[data-objects-save]');
+      const closeButton = requiredElement<HTMLButtonElement>(dialog, '[data-objects-close]');
       const cancelButton = requiredElement<HTMLButtonElement>(dialog, '[data-objects-cancel]');
       const discardPanel = requiredElement<HTMLElement>(dialog, '[data-objects-discard-panel]');
       const keepEditingButton = requiredElement<HTMLButtonElement>(
@@ -378,10 +379,12 @@ export function hydrateObjectManager(
         render();
         lifecycle.close();
       });
-      registerListener(state, cancelButton, 'click', () => {
+      const requestClose = () => {
         if (isDirty()) showDiscard();
         else lifecycle.close();
-      });
+      };
+      registerListener(state, closeButton, 'click', requestClose);
+      registerListener(state, cancelButton, 'click', requestClose);
       registerListener(state, keepEditingButton, 'click', () => showEditor(true));
       registerListener(state, discardButton, 'click', () => lifecycle.close());
     }

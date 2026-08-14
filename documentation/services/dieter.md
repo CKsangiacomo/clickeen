@@ -206,10 +206,16 @@ its parent, and only the parent reaches the host. A caller may declare one exact
 current document or shadow root without knowing the consumer or Widget.
 
 Popup is the shared native-dialog frame. It owns backdrop, viewport fit,
-small/medium/large width, header/body/footer layout, body scrolling, and action
-alignment. Every Popup title uses the existing `heading-4` class. Callers own
-the title/body/action strings, accessible naming, workflow, persistence, and
-dismissal policy through the existing dialog lifecycle.
+small/medium/large width, the seamless borderless elevated surface,
+`--space-6` outer inset, `--space-5` section separation, header/body/footer
+layout, body scrolling, and action alignment. When present, the Popup title
+uses the existing `heading-4` class. A titleless Popup requires the caller's
+exact alternate accessible name. The optional dismiss presentation is one
+medium quaternary Button with the Dieter `multiply` Icon; its accessible label
+and binding come from the caller. Callers own all title/body/action strings,
+accessible naming, workflow, persistence, and dismissal policy through the
+existing dialog lifecycle. Dieter never adds a dismiss path merely because the
+surface can render one.
 
 Dropdown Actions owns the compact immediate-choice row and its attached
 Popover composition. The closed row shows caller-supplied label and current

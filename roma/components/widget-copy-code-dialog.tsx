@@ -75,6 +75,16 @@ export function WidgetCopyCodeDialog({
     <dialog ref={dialogRef} className="diet-popup" aria-labelledby="roma-widget-code-title">
       <header className="diet-popup__header">
         <h2 id="roma-widget-code-title" className="heading-4">Copy code</h2>
+        <button
+          className="diet-button diet-popup__dismiss"
+          data-size="medium"
+          data-type="quaternary"
+          type="button"
+          aria-label="Close"
+          onClick={onClose}
+        >
+          <span className="diet-icon" data-icon="multiply" aria-hidden="true" />
+        </button>
       </header>
       <div className="diet-popup__body">
         <p className="body-m">Use {instanceName} on your website.</p>

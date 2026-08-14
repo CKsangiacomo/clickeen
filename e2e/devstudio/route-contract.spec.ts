@@ -440,6 +440,103 @@ test.describe('DevStudio route contract', () => {
     expect(sortPresentation.descending.path).not.toBe(sortPresentation.descendingInactive.path);
   });
 
+  test('Popup exposes the seamless surface, optional title and caller-owned dismiss composition', async ({
+    page,
+  }) => {
+    await page.goto('/#/dieter/popup');
+
+    const dialogs = page.locator('.component-page .diet-popup');
+    await expect(dialogs).toHaveCount(3);
+
+    const small = dialogs.nth(0);
+    const titleless = dialogs.nth(1);
+    const large = dialogs.nth(2);
+
+    await expect(small.getByRole('heading', { name: 'Popup title' })).toHaveCount(1);
+    await expect(small.locator('.diet-popup__dismiss')).toHaveAttribute('aria-label', 'Close');
+    await expect(titleless).toHaveAttribute('aria-label', 'Medium Popup');
+    await expect(titleless.locator('.diet-popup__header h2')).toHaveCount(0);
+    await expect(titleless.locator('.diet-popup__dismiss')).toHaveAttribute('aria-label', 'Close');
+    await expect(large.getByRole('heading', { name: 'Popup title' })).toHaveCount(1);
+    await expect(large.locator('.diet-popup__dismiss')).toHaveCount(0);
+
+    const presentation = await small.evaluate((dialog) => {
+      const header = dialog.querySelector<HTMLElement>('.diet-popup__header');
+      const body = dialog.querySelector<HTMLElement>('.diet-popup__body');
+      const footer = dialog.querySelector<HTMLElement>('.diet-popup__footer');
+      const dismiss = dialog.querySelector<HTMLElement>('.diet-popup__dismiss');
+      if (!header || !body || !footer || !dismiss) throw new Error('Popup reveal is incomplete.');
+      const dialogStyle = getComputedStyle(dialog);
+      return {
+        borderWidth: dialogStyle.borderWidth,
+        paddingBlockStart: dialogStyle.paddingBlockStart,
+        paddingInlineStart: dialogStyle.paddingInlineStart,
+        headerDivider: getComputedStyle(header).borderBlockEndWidth,
+        footerDivider: getComputedStyle(footer).borderBlockStartWidth,
+        bodyGap: getComputedStyle(body).marginBlockStart,
+        footerGap: getComputedStyle(footer).marginBlockStart,
+        dismissHeight: dismiss.getBoundingClientRect().height,
+        dismissWidth: dismiss.getBoundingClientRect().width,
+        dismissIconHeight: dismiss.querySelector<HTMLElement>('.diet-icon')?.getBoundingClientRect().height,
+      };
+    });
+    expect(presentation).toEqual({
+      borderWidth: '0px',
+      paddingBlockStart: '24px',
+      paddingInlineStart: '24px',
+      headerDivider: '0px',
+      footerDivider: '0px',
+      bodyGap: '20px',
+      footerGap: '20px',
+      dismissHeight: 28,
+      dismissWidth: 28,
+      dismissIconHeight: 16,
+    });
+
+    const largeScroll = await large.evaluate((dialog) => {
+      const body = dialog.querySelector<HTMLElement>('.diet-popup__body');
+      if (!body) throw new Error('Large Popup body is missing.');
+      return {
+        contained: dialog.scrollHeight <= dialog.clientHeight,
+        bodyScrolls: body.scrollHeight > body.clientHeight,
+      };
+    });
+    expect(largeScroll).toEqual({ contained: true, bodyScrolls: true });
+  });
+
+  test('Popup dismiss composition preserves Bulk Edit and Object Manager close policy', async ({
+    page,
+  }) => {
+    await page.goto('/#/dieter/bulk-edit');
+    const bulkEdit = page.locator('.diet-bulk-edit').first();
+    const bulkDialog = bulkEdit.locator('[data-bulk-modal]');
+    await bulkEdit.locator('[data-bulk-open]').click();
+    await expect(bulkDialog).toHaveJSProperty('open', true);
+    await bulkDialog.locator('.diet-popup__dismiss').click();
+    await expect(bulkDialog).toHaveJSProperty('open', false);
+
+    await page.goto('/#/dieter/object-manager');
+    const objectManager = page
+      .locator('.diet-object-manager[data-allow-structure="true"]')
+      .first();
+    const objectDialog = objectManager.locator('[data-objects-modal]');
+    const manage = objectManager.locator('[data-objects-manage]');
+
+    await manage.click();
+    await expect(objectDialog).toHaveJSProperty('open', true);
+    await objectDialog.locator('.diet-popup__dismiss').click();
+    await expect(objectDialog).toHaveJSProperty('open', false);
+
+    await manage.click();
+    await objectDialog.locator('[data-objects-delete]').first().click();
+    await objectDialog.locator('.diet-popup__dismiss').click();
+    await expect(objectDialog).toHaveJSProperty('open', true);
+    await expect(objectDialog.locator('[data-objects-discard-panel]')).toBeVisible();
+    await expect(objectDialog.locator('[data-objects-editor]')).toBeHidden();
+    await objectDialog.locator('[data-objects-keep-editing]').click();
+    await expect(objectDialog.locator('[data-objects-editor]')).toBeVisible();
+  });
+
   test('Textfield and Valuefield expose the exact compact native-input geometry', async ({
     page,
   }) => {

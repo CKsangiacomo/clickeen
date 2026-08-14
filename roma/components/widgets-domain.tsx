@@ -87,6 +87,16 @@ function WidgetUpgradePromptDialog({
         <h2 id="roma-widgets-upgrade-title" className="heading-4">
           {prompt?.message}
         </h2>
+        <button
+          className="diet-button diet-popup__dismiss"
+          data-size="medium"
+          data-type="quaternary"
+          type="button"
+          aria-label="Close"
+          onClick={onClose}
+        >
+          <span className="diet-icon" data-icon="multiply" aria-hidden="true" />
+        </button>
       </header>
       <div className="diet-popup__body">
         {prompt ? (

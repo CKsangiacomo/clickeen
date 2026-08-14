@@ -420,6 +420,13 @@ function assertCollectionEditorContract(args: {
       `${args.widgetType} emits structural UI only when declared`,
     );
     if (contract.structural) {
+      const cancelLabel = encodeHtmlEntities(
+        args.labels['component.object-manager.cancel.label'],
+      );
+      assert.ok(
+        args.html.includes(`aria-label="${cancelLabel}" data-objects-close`),
+        `${args.widgetType} gives the Object Manager dismiss action its exact caller label`,
+      );
       for (const key of [
         'cancel',
         'delete',
@@ -438,6 +445,12 @@ function assertCollectionEditorContract(args: {
           `${args.widgetType} resolves Object Manager ${key}`,
         );
       }
+    } else {
+      assert.doesNotMatch(
+        args.html,
+        /data-objects-close/,
+        `${args.widgetType} emits no Object Manager dismiss action without structural UI`,
+      );
     }
     const itemLabels = Object.entries(args.labels)
       .filter(([key]) => key.includes('.object-manager.item-label'))
@@ -815,6 +828,12 @@ async function testEveryWidgetEditorContract(): Promise<void> {
     }
     if (widgetType === 'logoshowcase') {
       const contentHtml = compiled.panels.find((panel) => panel.id === 'content')?.html ?? '';
+      assert.ok(
+        contentHtml.includes(
+          `aria-label="${encodeHtmlEntities((labels as any).labels['content.field.logoshowcase.strips.bulk-edit.attr.close-label'])}" data-bulk-close`,
+        ),
+        'Logo Showcase gives the Bulk Edit dismiss action its exact caller label',
+      );
       assert.equal(
         contentHtml.match(/data-bob-group="content-logos"/g)?.length ?? 0,
         2,

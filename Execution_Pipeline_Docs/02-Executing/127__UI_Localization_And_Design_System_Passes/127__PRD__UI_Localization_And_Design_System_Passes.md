@@ -1381,3 +1381,45 @@ authorizes it.
   surface, absence of blue focus decoration, and the preserved full-width
   DevStudio Entitlements composition. The independent final audit passed
   V1–V8 with no remaining defect.
+
+- **Popup seamless-surface and optional-title correction — passed locally,
+  2026-08-14.** Popup remains the single Dieter blocking-dialog presentation
+  authority. Its small/medium/large frame now uses one continuous borderless
+  elevated surface, `--space-6` outer padding, and `--space-5` separation
+  between header, scrolling body, and footer without internal horizontal
+  dividers. Existing viewport containment, radius, backdrop, elevation, body
+  scrolling, action alignment, and shared native-dialog lifecycle remain
+  unchanged.
+
+  A visible title is now optional. When present it retains `heading-4` and
+  names the dialog; when absent the caller must provide the exact accessible
+  name. An optional medium quaternary Dieter Button with the `multiply` Icon
+  provides dismiss presentation. Its accessible label and action binding are
+  caller-owned, so Dieter adds no copy, automatic close behavior, validator,
+  fallback, controller, registry, or alternate modal system.
+
+  Existing approved dismissal policy is preserved. Bulk Edit, Object Manager,
+  Bob upsell, Roma upsell/widget-upgrade/copy-code, Roma Bulk Upload, and the
+  DevStudio token editor bind the Icon to their existing close/cancel path;
+  dirty Bulk Edit/Object Manager/DevStudio views still require their explicit
+  discard decision, and Roma Bulk Upload keeps dismissal disabled while busy.
+  Roma's account tier-drop notice and unsaved-changes confirmation do not gain
+  the optional action. All footer workflow actions remain.
+
+  DevStudio now reveals title-plus-dismiss, titleless-with-accessible-name, and
+  title-without-dismiss structures from the real Popup stencil. Bulk Edit and
+  Object Manager retain their exact Widget-adjacent caller labels, while Bob
+  and Roma Chrome strings remain with their current owning surfaces for the
+  later localization passes.
+
+  Focused verification passed: Dieter typecheck/governance; exact DevStudio
+  generation/build/typecheck; Bob editor-contract, accessibility-copy, and
+  typecheck; Roma command-gate and typecheck checks; Widget source validation;
+  all eight editor/materializer artifact pairs; root typecheck/lint; Tokyo
+  product-root dry run; and diff checks. Local Chromium proved all three Popup
+  structures and exact computed geometry, including the borderless frame,
+  24px outer padding, 20px section rhythm, 28px dismiss Button, 16px Icon, and
+  contained large-body scrolling. It also proved clean Bulk Edit/Object Manager
+  dismissal and the existing dirty Object Manager discard decision. Commit,
+  push, Git-connected exact-SHA rollout, and live owning-surface reconciliation
+  follow this local execution record.

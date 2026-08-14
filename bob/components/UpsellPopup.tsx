@@ -72,6 +72,16 @@ export function UpsellPopup({ open, reasonKey, cta, onClose }: UpsellPopupProps)
     >
       <header className="diet-popup__header">
         <h2 className="heading-4" id="bob-upsell-title">{headline}</h2>
+        <button
+          className="diet-button diet-popup__dismiss"
+          data-size="medium"
+          data-type="quaternary"
+          type="button"
+          aria-label="Not now"
+          onClick={close}
+        >
+          <span className="diet-icon" data-icon="multiply" aria-hidden="true" />
+        </button>
       </header>
       <div className="diet-popup__body">
         <div className="body-m">{reasonCopy}</div>

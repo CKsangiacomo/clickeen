@@ -62,7 +62,8 @@ test.describe('Roma Builder authenticated smoke', () => {
     await expect(copyCodeDialog.getByRole('heading', { name: 'Widget URL' })).toBeVisible();
     await expect(copyCodeDialog.getByRole('heading', { name: 'Embed code' })).toBeVisible();
     await expect(copyCodeDialog.getByRole('heading', { name: 'Script code' })).toBeVisible();
-    await copyCodeDialog.getByRole('button', { name: 'Close' }).click();
+    await expect(copyCodeDialog.locator('.diet-popup__dismiss')).toHaveAttribute('aria-label', 'Close');
+    await copyCodeDialog.locator('.diet-popup__footer').getByRole('button', { name: 'Close' }).click();
     await expect(copyCodeDialog).toBeHidden();
 
     await page.screenshot({ path: testInfo.outputPath('builder-open.png'), fullPage: true });

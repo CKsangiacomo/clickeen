@@ -452,12 +452,20 @@ column and direction, plus row ordering.
 
 Dieter Popup owns the blocking native `<dialog>` appearance and structural
 slots: header, body, footer, and actions, with small, medium, and large sizes.
-Every Popup title uses the existing `heading-4` treatment; the caller supplies
-the exact title and the dialog's truthful accessible name.
-Product owners keep workflow state, copy, validation, persistence, and the
-accepted dismissal behavior. Bulk Edit, Object Manager, DevStudio token
-editing, Roma blocking dialogs, and Bob's plan-limit prompt consume Popup
-without adding a second modal framework.
+The Popup is one continuous elevated surface: it has no outer stroke or
+internal header/footer rules, uses the shared `2xl` radius, and provides one
+`--space-6` outer inset with `--space-5` separation between the structural
+sections. When a visible title is present it uses the existing `heading-4`
+treatment and names the dialog. A caller may omit the visible title only when
+it supplies the exact alternate accessible name.
+
+The optional dismiss presentation is one medium quaternary Dieter Button with
+the `multiply` Icon. The caller supplies its accessible label and binds it to
+an already-approved dismissal path. Popup owns no Close word and never decides
+whether dismissal is allowed. Product owners keep workflow state, copy,
+validation, persistence, and the accepted dismissal behavior. Bulk Edit,
+Object Manager, DevStudio token editing, Roma blocking dialogs, and Bob's
+plan-limit prompt consume Popup without adding a second modal framework.
 
 ## Agent Activity Contract
 

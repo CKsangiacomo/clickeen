@@ -1,7 +1,22 @@
-<dialog class="diet-popup" data-size="{{size}}" aria-labelledby="{{id}}-title" open>
+<dialog class="diet-popup" data-size="{{size}}" {{#if title}}aria-labelledby="{{id}}-title"{{else}}aria-label="{{accessibleName}}"{{/if}} open>
+  {{#if title}}
   <header class="diet-popup__header">
     <h2 class="heading-4" id="{{id}}-title">{{title}}</h2>
+    {{#if dismissLabel}}
+    <button class="diet-button diet-popup__dismiss" data-size="medium" data-type="quaternary" type="button" aria-label="{{dismissLabel}}">
+      <span class="diet-icon" data-icon="multiply" aria-hidden="true"></span>
+    </button>
+    {{/if}}
   </header>
+  {{else}}
+  {{#if dismissLabel}}
+  <header class="diet-popup__header">
+    <button class="diet-button diet-popup__dismiss" data-size="medium" data-type="quaternary" type="button" aria-label="{{dismissLabel}}">
+      <span class="diet-icon" data-icon="multiply" aria-hidden="true"></span>
+    </button>
+  </header>
+  {{/if}}
+  {{/if}}
   <div class="diet-popup__body">{{body}}</div>
   <footer class="diet-popup__footer">
     <div class="diet-popup__actions">

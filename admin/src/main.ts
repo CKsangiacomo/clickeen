@@ -506,8 +506,8 @@ async function openTokenEditor(
             <h2 class="heading-4" id="devstudio-token-editor-title">Edit token</h2>
             <p class="body-xs">Update the source-controlled Dieter value.</p>
           </div>
-          <button class="diet-button" data-size="small" data-type="quaternary" type="button" data-token-editor-close aria-label="Close">
-            <span class="diet-icon" aria-hidden="true" data-icon="multiply" data-size="12"></span>
+          <button class="diet-button diet-popup__dismiss" data-size="medium" data-type="quaternary" type="button" data-token-editor-close aria-label="Close">
+            <span class="diet-icon" aria-hidden="true" data-icon="multiply"></span>
           </button>
         </header>
         <div class="diet-popup__body devstudio-token-editor__body">
