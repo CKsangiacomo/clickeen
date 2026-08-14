@@ -730,8 +730,8 @@ export function WidgetsDomain({
                           data-size="12"
                           style={{
                             '--diet-icon-source': `url("/dieter/icons/svg/${sort.key === 'widget'
-                              ? sort.direction === 'ascending' ? 'arrow.up.svg' : 'arrow.down.svg'
-                              : 'arrow.up.arrow.down.svg'}")`,
+                              ? sort.direction === 'ascending' ? 'chevron.up.2.svg' : 'chevron.down.2.svg'
+                              : 'chevron.down.dotted.2.svg'}")`,
                           } as CSSProperties}
                           aria-hidden="true"
                         />
@@ -752,8 +752,8 @@ export function WidgetsDomain({
                           data-size="12"
                           style={{
                             '--diet-icon-source': `url("/dieter/icons/svg/${sort.key === 'name'
-                              ? sort.direction === 'ascending' ? 'arrow.up.svg' : 'arrow.down.svg'
-                              : 'arrow.up.arrow.down.svg'}")`,
+                              ? sort.direction === 'ascending' ? 'chevron.up.2.svg' : 'chevron.down.2.svg'
+                              : 'chevron.down.dotted.2.svg'}")`,
                           } as CSSProperties}
                           aria-hidden="true"
                         />
@@ -774,8 +774,8 @@ export function WidgetsDomain({
                           data-size="12"
                           style={{
                             '--diet-icon-source': `url("/dieter/icons/svg/${sort.key === 'status'
-                              ? sort.direction === 'ascending' ? 'arrow.up.svg' : 'arrow.down.svg'
-                              : 'arrow.up.arrow.down.svg'}")`,
+                              ? sort.direction === 'ascending' ? 'chevron.up.2.svg' : 'chevron.down.2.svg'
+                              : 'chevron.down.dotted.2.svg'}")`,
                           } as CSSProperties}
                           aria-hidden="true"
                         />

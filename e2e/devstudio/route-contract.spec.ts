@@ -300,11 +300,13 @@ test.describe('DevStudio route contract', () => {
     await expect(page.locator('.page__content').getByRole('button', { name: 'Reload' })).toHaveCount(0);
   });
 
-  test('Table exposes the four governed compositions including real horizontal overflow', async ({ page }) => {
+  test('Table exposes the six governed compositions and exact shared presentation', async ({ page }) => {
     await page.goto('/#/dieter/table');
     const compositions = page.locator('[data-table-composition]');
-    await expect(compositions).toHaveCount(4);
+    await expect(compositions).toHaveCount(6);
     await expect(page.getByText('Ordinary', { exact: true })).toBeVisible();
+    await expect(page.getByText('Sortable columns — ascending', { exact: true })).toBeVisible();
+    await expect(page.getByText('Sortable columns — descending', { exact: true })).toBeVisible();
     await expect(page.getByText('Horizontal overflow', { exact: true })).toBeVisible();
     await expect(page.getByText('Row action', { exact: true })).toBeVisible();
     await expect(page.getByText('Editable cell', { exact: true })).toBeVisible();
@@ -322,14 +324,26 @@ test.describe('DevStudio route contract', () => {
       const bodyCell = element.querySelector<HTMLElement>('tbody td');
       if (!header || !rowHeader || !bodyCell) throw new Error('Table example is incomplete.');
       const frameStyle = getComputedStyle(element);
+      const headerStyle = getComputedStyle(header);
       const bodyStyle = getComputedStyle(bodyCell);
+      const tokenProbe = document.createElement('span');
+      tokenProbe.style.color = 'var(--color-system-gray-step3)';
+      element.append(tokenProbe);
+      const headerDivider = getComputedStyle(tokenProbe).color;
+      tokenProbe.style.color = 'var(--color-system-gray-step5)';
+      const bodyDivider = getComputedStyle(tokenProbe).color;
+      tokenProbe.remove();
       return {
         frameBorderWidth: frameStyle.borderWidth,
         frameBorderRadius: frameStyle.borderRadius,
         frameBoxShadow: frameStyle.boxShadow,
-        headerBackground: getComputedStyle(header).backgroundColor,
+        headerBackground: headerStyle.backgroundColor,
+        headerDivider: headerStyle.borderBlockEndColor,
+        expectedHeaderDivider: headerDivider,
         rowHeaderBackground: getComputedStyle(rowHeader).backgroundColor,
         bodyBackground: bodyStyle.backgroundColor,
+        bodyDivider: bodyStyle.borderBlockEndColor,
+        expectedBodyDivider: bodyDivider,
         bodyPaddingBlockStart: bodyStyle.paddingBlockStart,
         bodyPaddingInlineStart: bodyStyle.paddingInlineStart,
         bodyInlineStartBorder: bodyStyle.borderInlineStartWidth,
@@ -337,11 +351,13 @@ test.describe('DevStudio route contract', () => {
       };
     });
     expect(ordinaryPresentation.frameBorderWidth).toBe('0px');
-    expect(ordinaryPresentation.frameBorderRadius).toBe('16px');
-    expect(ordinaryPresentation.frameBoxShadow).not.toBe('none');
-    expect(ordinaryPresentation.headerBackground).not.toBe(ordinaryPresentation.bodyBackground);
+    expect(ordinaryPresentation.frameBorderRadius).toBe('8px');
+    expect(ordinaryPresentation.frameBoxShadow).toBe('none');
+    expect(ordinaryPresentation.headerBackground).toBe(ordinaryPresentation.bodyBackground);
+    expect(ordinaryPresentation.headerDivider).toBe(ordinaryPresentation.expectedHeaderDivider);
     expect(ordinaryPresentation.rowHeaderBackground).toBe(ordinaryPresentation.bodyBackground);
-    expect(ordinaryPresentation.bodyPaddingBlockStart).toBe('8px');
+    expect(ordinaryPresentation.bodyDivider).toBe(ordinaryPresentation.expectedBodyDivider);
+    expect(ordinaryPresentation.bodyPaddingBlockStart).toBe('12px');
     expect(ordinaryPresentation.bodyPaddingInlineStart).toBe('16px');
     expect(ordinaryPresentation.bodyInlineStartBorder).toBe('0px');
     expect(ordinaryPresentation.bodyInlineEndBorder).toBe('0px');
@@ -352,6 +368,42 @@ test.describe('DevStudio route contract', () => {
     for (const actionCell of await actionCells.all()) {
       await expect(actionCell).toHaveCSS('text-align', 'end');
     }
+
+    const sortPresentation = await page.evaluate(() => {
+      const readIcon = (selector: string) => {
+        const icon = document.querySelector<HTMLElement>(selector);
+        const path = icon?.querySelector('path');
+        if (!icon || !path) throw new Error(`Missing Table sort Icon: ${selector}`);
+        return {
+          color: getComputedStyle(icon).color,
+          height: icon.getBoundingClientRect().height,
+          path: path.getAttribute('d'),
+          width: icon.getBoundingClientRect().width,
+        };
+      };
+      const tokenProbe = document.createElement('span');
+      tokenProbe.style.color = 'var(--color-system-gray)';
+      document.body.append(tokenProbe);
+      const activeColor = getComputedStyle(tokenProbe).color;
+      tokenProbe.style.color = 'var(--color-system-gray-5)';
+      const inactiveColor = getComputedStyle(tokenProbe).color;
+      tokenProbe.remove();
+      return {
+        activeColor,
+        ascending: readIcon('[data-table-composition="sortable-ascending"] [aria-sort="ascending"] .diet-icon'),
+        ascendingInactive: readIcon('[data-table-composition="sortable-ascending"] [aria-sort="none"] .diet-icon'),
+        descending: readIcon('[data-table-composition="sortable-descending"] [aria-sort="descending"] .diet-icon'),
+        descendingInactive: readIcon('[data-table-composition="sortable-descending"] [aria-sort="none"] .diet-icon'),
+        inactiveColor,
+      };
+    });
+    expect(sortPresentation.ascending).toMatchObject({ color: sortPresentation.activeColor, width: 12, height: 12 });
+    expect(sortPresentation.descending).toMatchObject({ color: sortPresentation.activeColor, width: 12, height: 12 });
+    expect(sortPresentation.ascendingInactive).toMatchObject({ color: sortPresentation.inactiveColor, width: 12, height: 12 });
+    expect(sortPresentation.descendingInactive).toMatchObject({ color: sortPresentation.inactiveColor, width: 12, height: 12 });
+    expect(sortPresentation.ascending.path).not.toBe(sortPresentation.descending.path);
+    expect(sortPresentation.ascending.path).not.toBe(sortPresentation.ascendingInactive.path);
+    expect(sortPresentation.descending.path).not.toBe(sortPresentation.descendingInactive.path);
   });
 
   test('Layouts reveals the exact source contract and edits its four tokens through the foundation path', async ({ page }) => {

@@ -254,8 +254,13 @@ async function testDieterLayoutTableAndPopupConsumption(): Promise<void> {
     /\.roma-layout|\.roma-modal|\.rd-header|\.rd-domain|\.roma-portrait-boundary/,
   );
   assert.doesNotMatch(romaCss, /pointer:\s*coarse|orientation:\s*portrait/);
-  assert.match(tableCss, /th\[aria-sort\] > \.diet-button \{\s+--button-color: var\(--color-system-gray-3\);/);
-  assert.match(tableCss, /th\[aria-sort='ascending'\] > \.diet-button,[\s\S]*?th\[aria-sort='descending'\] > \.diet-button \{\s+--button-color: var\(--color-system-black\);/);
+  assert.match(tableCss, /border-radius: var\(--control-radius-lg\);/);
+  assert.doesNotMatch(tableCss, /box-shadow:/);
+  assert.match(tableCss, /padding: var\(--space-3\) var\(--space-4\);/);
+  assert.match(tableCss, /border-block-end: 1px solid var\(--color-system-gray-step5\);/);
+  assert.match(tableCss, /border-block-end-color: var\(--color-system-gray-step3\);/);
+  assert.match(tableCss, /th\[aria-sort\] > \.diet-button \{\s+--button-color: var\(--color-system-gray-5\);/);
+  assert.match(tableCss, /th\[aria-sort='ascending'\] > \.diet-button,[\s\S]*?th\[aria-sort='descending'\] > \.diet-button \{\s+--button-color: var\(--color-system-gray\);/);
 
   assert.match(assetsPage, /<AssetsDomain assetFilter=\{assetFilter\} onHeaderActions=\{setHeaderActions\} \/>/);
   assert.doesNotMatch(assetsPage, /useRomaAccountContext|useRomaAccountApi|refreshToken|onLoadingChange/);
@@ -302,6 +307,10 @@ async function testDieterLayoutTableAndPopupConsumption(): Promise<void> {
       assert.match(header, /className="diet-button"[\s\S]*?data-size="small"/);
       assert.match(header, /className="diet-icon diet-icon-mask"/);
     }
+    assert.match(source, /'chevron\.up\.2\.svg'/, `${domain} ascending sort must use chevron.up.2`);
+    assert.match(source, /'chevron\.down\.2\.svg'/, `${domain} descending sort must use chevron.down.2`);
+    assert.match(source, /'chevron\.down\.dotted\.2\.svg'/, `${domain} inactive sort must use chevron.down.dotted.2`);
+    assert.doesNotMatch(source, /'arrow\.up\.svg'|'arrow\.down\.svg'|'arrow\.up\.arrow\.down\.svg'/);
   }
 
   for (const [label, key] of [

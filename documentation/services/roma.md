@@ -334,8 +334,10 @@ for a published instance, a small Copy code action that opens Roma's shared
 public-code Popup. Edit is the direct row action; Rename, Duplicate, and Delete
 remain in one ellipsis menu. The header status filter and the Widget, Instance
 name, and Published sorts are client-side projections over the validated
-account list. Their headers use the shared `sm` Dieter sort control: the active
-sort is black and inactive sorts are gray.
+account list. Their headers use the shared `small` Dieter sort control. The active
+sort uses `chevron.up.2` or `chevron.down.2` with
+`--color-system-gray`; inactive sorts use `chevron.down.dotted.2` with
+`--color-system-gray-5`.
 
 Rename, Duplicate, and Delete use the same unbound Dieter Menu Actions row.
 Roma owns their exact Chrome wording and command handlers; Menu Actions owns
@@ -412,8 +414,10 @@ The page header owns Upload asset, Upload in bulk, and Refresh list. The
 account-dependent commands remain inside the Roma account boundary and report
 only their current actions and busy state to that header. The asset table uses
 the Dieter table contract; Asset, Type, and Size use the same inline label plus
-`sm` Dieter icon-button sorting pattern as the Widgets table. Dieter renders
-the active sort control black and inactive sort controls gray.
+`small` Dieter icon-button sorting pattern as the Widgets table. Active sort
+controls use `chevron.up.2` or `chevron.down.2` with
+`--color-system-gray`; inactive controls use `chevron.down.dotted.2` with
+`--color-system-gray-5`.
 
 The active asset route chain is:
 

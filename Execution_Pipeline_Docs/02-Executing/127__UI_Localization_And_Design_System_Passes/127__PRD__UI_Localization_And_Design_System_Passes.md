@@ -158,7 +158,7 @@ the code is convenient there.
 | Stage | Status | Release state |
 | --- | --- | --- |
 | Stage 1 — Scaffold only | Complete | Committed, pushed, and deployed; no non-English experience is exposed |
-| Stage 2 — Dieter UI pass | In progress: Foundations, Agent Activity, Bulk Edit, Button, Choice Tiles, Dropdown Actions, Popover, Dropdown Border, Dropdown Edit, Dropdown Fill, Dropdown Shadow, Dropdown Upload, Menuactions, Object Manager, Repeater, Popup, Segmented, Slider, Tabs, and Toggle complete and re-audited as consumer-agnostic primitives; standalone Popaddlink is deleted and its one real job is internal to Dropdown Edit | Table is the next component pass |
+| Stage 2 — Dieter UI pass | In progress: Foundations, Agent Activity, Bulk Edit, Button, Choice Tiles, Dropdown Actions, Popover, Dropdown Border, Dropdown Edit, Dropdown Fill, Dropdown Shadow, Dropdown Upload, Menuactions, Object Manager, Repeater, Popup, Segmented, Slider, Table, Tabs, and Toggle complete and re-audited as consumer-agnostic primitives; standalone Popaddlink is deleted and its one real job is internal to Dropdown Edit | Textedit is the next component pass |
 | Stage 3 — Bob UI pass | Not started | No authority to begin until explicitly directed |
 | Stage 4 — Roma UI pass | Not started | No authority to begin until explicitly directed |
 | Stage 5 — Translation pass | Not started | No translations may be generated yet |
@@ -1176,8 +1176,8 @@ authorizes it.
   typecheck, Roma Widget Defaults/command-gate checks, Widget definition-source
   generation, all eight editor artifact pairs, root typecheck/lint, and diff
   checks. The independent V1–V8 result is recorded with the final verification
-  of this pass. This work is local only: it is not committed, pushed, deployed,
-  or live.
+  of this pass. The source is committed and pushed on `main`; no direct deploy
+  or remote-data operation was used.
 
 - **Object Manager, Repeater, Popup, and Segmented correction pass — passed
   locally, 2026-08-14.** Object Manager and Repeater now expose one exact
@@ -1237,5 +1237,42 @@ authorizes it.
   operation, native Segmented selected/disabled behavior, Object Manager's
   root-sized modal actions, and Popup's three structural sizes with contained
   large-body scrolling. The final independent V1–V8 audit found no violation.
-  This correction pass is local only: it is not committed, pushed, deployed,
-  or live.
+  The correction source is committed and pushed on `main`; no direct deploy or
+  remote-data operation was used.
+
+- **Table — passed locally, 2026-08-14.** Dieter Table remains one
+  consumer-agnostic semantic table surface. It now uses the existing `lg`
+  radius with no elevation, the shared white surface for both header and body,
+  `--space-3` block and `--space-4` inline cell padding, a
+  `--color-system-gray-step3` column-header underline, and
+  `--color-system-gray-step5` body-row dividers. It retains horizontal
+  overflow, semantic table markup, action/preview composition classes, and no
+  vertical rules or zebra stripes.
+
+  Sorting remains application behavior. Roma's existing Widgets and Assets
+  tables still own the selected column, direction, and row order. Their
+  existing `small` quaternary sort Buttons now use the exact Dieter icon
+  treatment: inactive columns show `chevron.down.dotted.2` with
+  `--color-system-gray-5`; an active ascending column shows `chevron.up.2` and
+  an active descending column shows `chevron.down.2`, both with
+  `--color-system-gray`. No Table sorting controller, hydrator, React table
+  layer, compatibility path, or second state authority was added.
+
+  DevStudio now reveals ordinary, active-ascending, active-descending,
+  horizontal-overflow, row-action, and editable-cell compositions generated
+  directly from the Table spec. Table owns no words: Roma and DevStudio retain
+  their Chrome/example copy, and Logo Showcase Bulk Edit retains its exact
+  Widget-adjacent ToolDrawer copy. No Dieter catalog, locale file, Widget label
+  migration, storage, route, account-data, translation, Cloudflare topology,
+  or PRD 128 work is part of this pass.
+
+  Focused verification passed: Dieter typecheck/governance; exact DevStudio
+  generation/typecheck/build and focused Table route contract; Roma
+  Table/command gates and typecheck; Bob
+  editor-contract and typecheck; and generated Widget artifact reconciliation.
+  Local Chromium proved the exact 8px radius, no shadow, 12px/16px cell
+  padding, shared header surface, requested header/body divider tokens, 12px
+  inactive/ascending/descending Icons and colors, real horizontal overflow,
+  and unchanged row-action/editable-cell composition. The final independent
+  V1-V8 audit is recorded with the final verification of this pass. No direct
+  deployment or remote product-data mutation is part of the Table pass.

@@ -551,8 +551,8 @@ export function AssetsDomain({
                     data-size="12"
                     style={{
                       '--diet-icon-source': `url("/dieter/icons/svg/${sort.key === 'filename'
-                        ? sort.direction === 'ascending' ? 'arrow.up.svg' : 'arrow.down.svg'
-                        : 'arrow.up.arrow.down.svg'}")`,
+                        ? sort.direction === 'ascending' ? 'chevron.up.2.svg' : 'chevron.down.2.svg'
+                        : 'chevron.down.dotted.2.svg'}")`,
                     } as CSSProperties}
                     aria-hidden="true"
                   />
@@ -573,8 +573,8 @@ export function AssetsDomain({
                     data-size="12"
                     style={{
                       '--diet-icon-source': `url("/dieter/icons/svg/${sort.key === 'assetType'
-                        ? sort.direction === 'ascending' ? 'arrow.up.svg' : 'arrow.down.svg'
-                        : 'arrow.up.arrow.down.svg'}")`,
+                        ? sort.direction === 'ascending' ? 'chevron.up.2.svg' : 'chevron.down.2.svg'
+                        : 'chevron.down.dotted.2.svg'}")`,
                     } as CSSProperties}
                     aria-hidden="true"
                   />
@@ -596,8 +596,8 @@ export function AssetsDomain({
                     data-size="12"
                     style={{
                       '--diet-icon-source': `url("/dieter/icons/svg/${sort.key === 'sizeBytes'
-                        ? sort.direction === 'ascending' ? 'arrow.up.svg' : 'arrow.down.svg'
-                        : 'arrow.up.arrow.down.svg'}")`,
+                        ? sort.direction === 'ascending' ? 'chevron.up.2.svg' : 'chevron.down.2.svg'
+                        : 'chevron.down.dotted.2.svg'}")`,
                     } as CSSProperties}
                     aria-hidden="true"
                   />

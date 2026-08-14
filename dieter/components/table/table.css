@@ -3,9 +3,8 @@
   max-inline-size: 100%;
   overflow-x: auto;
   border: 0;
-  border-radius: var(--control-radius-2xl);
+  border-radius: var(--control-radius-lg);
   background: var(--role-surface);
-  box-shadow: var(--shadow-floating);
 }
 
 .diet-table__table {
@@ -19,23 +18,24 @@
 
 .diet-table__table th,
 .diet-table__table td {
-  padding: var(--space-2) var(--space-4);
-  border-block-end: 1px solid var(--role-border);
+  padding: var(--space-3) var(--space-4);
+  border-block-end: 1px solid var(--color-system-gray-step5);
   text-align: start;
   vertical-align: middle;
 }
 
 .diet-table__table thead > tr > th {
-  background: var(--role-surface-muted);
+  border-block-end-color: var(--color-system-gray-step3);
+  background: var(--role-surface);
 }
 
 .diet-table__table th[aria-sort] > .diet-button {
-  --button-color: var(--color-system-gray-3);
+  --button-color: var(--color-system-gray-5);
 }
 
 .diet-table__table th[aria-sort='ascending'] > .diet-button,
 .diet-table__table th[aria-sort='descending'] > .diet-button {
-  --button-color: var(--color-system-black);
+  --button-color: var(--color-system-gray);
 }
 
 .diet-table__table tbody > tr > * {

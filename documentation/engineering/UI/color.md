@@ -33,7 +33,7 @@ Their exact meanings are:
 | --- | --- |
 | `--role-surface-bg` | Outer application and page canvas. |
 | `--role-surface` | Contained surfaces such as tables, popups, fields, and neutral controls. |
-| `--role-surface-muted` | Secondary chrome such as navigation planes and table headers. |
+| `--role-surface-muted` | Secondary chrome such as navigation planes and muted controls. |
 | `--role-border` | Structural and control boundaries. |
 | `--role-error` | Error text and error boundaries; it is not structural chrome or an error-fill contract. |
 

@@ -91,6 +91,11 @@ their columns, editable cells, data, and mutation behavior. The token editor
 uses Dieter Popup while retaining DevStudio's source-write workflow and
 dismissal state.
 
+The generated Table component route reveals the ordinary shared surface,
+app-owned sortable-header composition, horizontal overflow, row actions, and
+editable cells. The sortable reveal uses the real inactive and active Dieter
+icon treatments without implementing sorting inside DevStudio or Dieter.
+
 DevStudio operational text uses only the complete classes shown on its
 Typography route. Page titles use `heading-2`, section titles use `heading-4`,
 Table column headers use `label-s`, and all Table body cells use `body-s`.

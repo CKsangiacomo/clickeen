@@ -4,12 +4,15 @@
   "attributes": {},
   "presentation": {
     "surface": "--role-surface",
-    "headerSurface": "--role-surface-muted",
+    "headerSurface": "--role-surface",
     "border": "none",
-    "radius": "--control-radius-2xl",
-    "elevation": "--shadow-floating",
-    "cellPadding": "--space-2 / --space-4",
-    "separatorSource": "--role-border",
+    "radius": "--control-radius-lg",
+    "elevation": "none",
+    "cellPadding": "--space-3 / --space-4",
+    "headerSeparator": "--color-system-gray-step3",
+    "bodySeparator": "--color-system-gray-step5",
+    "inactiveSortIcon": "chevron.down.dotted.2 / --color-system-gray-5",
+    "activeSortIcons": "chevron.up.2 or chevron.down.2 / --color-system-gray",
     "previewWidth": "24%, minimum 8rem",
     "actionWidth": "content"
   },
@@ -19,6 +22,20 @@
       "title": "Ordinary",
       "spec": ["Semantic rows and columns"],
       "html": "<div class='diet-table' data-table-composition='ordinary'><table class='diet-table__table'><caption class='sr-only'>Ordinary content records</caption><thead><tr><th class='label-s' scope='col'>Name</th><th class='label-s' scope='col'>Status</th></tr></thead><tbody><tr><th class='body-s' scope='row'>Homepage notice</th><td class='body-s'>Active</td></tr><tr><th class='body-s' scope='row'>Product recommendation</th><td class='body-s'>Draft</td></tr></tbody></table></div>",
+      "context": {}
+    },
+    {
+      "id": "sortable-ascending",
+      "title": "Sortable columns — ascending",
+      "spec": ["The app owns sort state; Table owns the shared icon treatment"],
+      "html": "<div class='diet-table' data-table-composition='sortable-ascending'><table class='diet-table__table'><caption class='sr-only'>Sortable content records</caption><thead><tr><th class='label-s' scope='col' aria-sort='ascending'><span>Name</span> <button class='diet-button' data-size='small' data-type='quaternary' type='button' aria-label='Sort by name'><span class='diet-icon' data-size='12' data-icon='chevron.up.2' aria-hidden='true'></span></button></th><th class='label-s' scope='col' aria-sort='none'><span>Status</span> <button class='diet-button' data-size='small' data-type='quaternary' type='button' aria-label='Sort by status'><span class='diet-icon' data-size='12' data-icon='chevron.down.dotted.2' aria-hidden='true'></span></button></th></tr></thead><tbody><tr><th class='body-s' scope='row'>Homepage notice</th><td class='body-s'>Active</td></tr><tr><th class='body-s' scope='row'>Product recommendation</th><td class='body-s'>Draft</td></tr></tbody></table></div>",
+      "context": {}
+    },
+    {
+      "id": "sortable-descending",
+      "title": "Sortable columns — descending",
+      "spec": ["The active descending column uses its exact direction icon"],
+      "html": "<div class='diet-table' data-table-composition='sortable-descending'><table class='diet-table__table'><caption class='sr-only'>Sortable descending content records</caption><thead><tr><th class='label-s' scope='col' aria-sort='none'><span>Name</span> <button class='diet-button' data-size='small' data-type='quaternary' type='button' aria-label='Sort by name'><span class='diet-icon' data-size='12' data-icon='chevron.down.dotted.2' aria-hidden='true'></span></button></th><th class='label-s' scope='col' aria-sort='descending'><span>Status</span> <button class='diet-button' data-size='small' data-type='quaternary' type='button' aria-label='Sort by status'><span class='diet-icon' data-size='12' data-icon='chevron.down.2' aria-hidden='true'></span></button></th></tr></thead><tbody><tr><th class='body-s' scope='row'>Product recommendation</th><td class='body-s'>Draft</td></tr><tr><th class='body-s' scope='row'>Homepage notice</th><td class='body-s'>Active</td></tr></tbody></table></div>",
       "context": {}
     },
     {

@@ -372,17 +372,17 @@ one Typography-page action rather than attaching a misleading editor to every
 visual-class row.
 
 Dieter Table uses `label-s` for column headers and `body-s` for every body
-header/data cell. Its body and row-header cells use `--role-surface`; only the
-column-header band uses `--role-surface-muted`. The shared table is a
-borderless `2xl` surface with floating elevation, `--space-2`/`--space-4` cell
-padding, direct role-border horizontal dividers, no vertical rules or zebra
+header/data cell. The header and body use `--role-surface`. The shared table is
+a borderless `lg` surface with no elevation, `--space-3`/`--space-4` cell
+padding, a `--color-system-gray-step3` column-header underline,
+`--color-system-gray-step5` body-row dividers, no vertical rules or zebra
 stripes, and small preview and action column composition classes. Apps own
 data and behavior, not another table presentation. When an app makes a column
 sortable, its header uses a `small` quaternary Dieter Button containing a 12px
-Dieter Icon. Dieter renders inactive
-sort controls with `--color-system-gray-3` and the active ascending or
-descending control with `--color-system-black`; the app still owns sort state
-and direction.
+Dieter Icon. Inactive columns use `chevron.down.dotted.2` with
+`--color-system-gray-5`; the active column uses `chevron.up.2` or
+`chevron.down.2` with `--color-system-gray`. The app still owns sort state,
+direction, the exact icon, and row ordering.
 
 ## Icon Delivery
 

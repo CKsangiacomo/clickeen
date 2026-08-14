@@ -405,10 +405,11 @@ not own sorting, pagination, data policy, or a React table abstraction.
 DevStudio and Roma consume those input contracts directly. Dieter, Roma, and
 DevStudio tables consume `table`.
 
-Table body and row-header cells use the shared surface; only column headers use
-the muted surface. Table is a borderless `2xl` surface with floating elevation
-and direct role-border horizontal row dividers, with no vertical rules or zebra
-stripes. Cells use `--space-2` block and `--space-4` inline padding. Column
+Table column headers, row headers, and body cells all use the shared surface.
+Table is a borderless `lg` surface with no elevation. The column-header
+underline uses `--color-system-gray-step3`; body-row dividers use
+`--color-system-gray-step5`. There are no vertical rules or zebra stripes.
+Cells use `--space-3` block and `--space-4` inline padding. Column
 headers use `label-s`; every body `th` and `td` uses `body-s`; action controls
 retain their Dieter component typography. Technical values receive no separate
 monospace treatment. Preview and action columns use the small Table-owned
@@ -416,10 +417,11 @@ composition classes rather than consumer-local base styling.
 
 Sortable headers remain app-owned behavior composed inside Dieter Table. Their
 control is a `small` quaternary `.diet-button` with a 12px `.diet-icon`:
-inactive columns use
-`--color-system-gray-3`, while the active ascending or descending column uses
-`--color-system-black`. Dieter owns that presentation through `aria-sort`; apps
-own the selected column, direction, and row ordering.
+inactive columns use `chevron.down.dotted.2` with
+`--color-system-gray-5`; the active column uses `chevron.up.2` or
+`chevron.down.2` with `--color-system-gray`. Dieter owns the color treatment
+through `aria-sort`; apps own the exact icon derived from their selected
+column and direction, plus row ordering.
 
 Dieter Popup owns the blocking native `<dialog>` appearance and structural
 slots: header, body, footer, and actions, with small, medium, and large sizes.
