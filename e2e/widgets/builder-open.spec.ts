@@ -21,7 +21,7 @@ test.describe('Roma Builder authenticated smoke', () => {
     const bobIframe = page.locator('iframe[title="Bob Builder"]');
     const bobFrame = page.frameLocator('iframe[title="Bob Builder"]');
     await expect(bobFrame.locator('.topdrawer')).toBeVisible({ timeout: 20_000 });
-    await expect(bobFrame.getByRole('button', { name: /Manual/i })).toBeVisible({ timeout: 20_000 });
+    await expect(bobFrame.getByRole('radio', { name: 'Manual' })).toBeVisible({ timeout: 20_000 });
     await expect(bobFrame.getByText('Content').first()).toBeVisible();
     await expect(bobFrame.locator('.topdrawer-instance-title')).toBeVisible({ timeout: 30_000 });
     await expect(bobFrame.locator('section.workspace[data-widget-ready="true"]')).toBeVisible({
